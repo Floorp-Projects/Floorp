@@ -43,8 +43,6 @@
     <string name="mozac_feature_prompts_content_description_input_label">Testua idazteko eremua sartzeko etiketa</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Aukeratu kolore bat</string>
-    <!-- Title of the Identity Credential provider dialog choose. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Aukeratu saio-hasiera hornitzailea</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Baimendu</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
@@ -127,4 +125,16 @@
     <string name="mozac_feature_prompts_collapse_address_content_description">Tolestu iradokitako helbideak</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Kudeatu helbideak</string>
+
+    <!-- Federated Credential Management prompts -->
+    <!--Content description for the Account picture in the Select Account FedCM prompt -->
+    <string name="mozac_feature_prompts_account_picture">Kontuaren argazkia</string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Aukeratu saio-hasiera hornitzailea</string>
+    <!-- Title of an account picker dialog for identity credentials. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account">Aukeratu kontua</string>
+    <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Erabili %1$s saio-hasiera hornitzaile gisa</string>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[%1$s hornitzailean %2$s kontuarekin saioa hastea bere <a href="%3$s">pribatutasun-politika</a> eta <a href="%4$s">zerbitzuaren baldintzen</a> menpe dago]]></string>
 </resources>

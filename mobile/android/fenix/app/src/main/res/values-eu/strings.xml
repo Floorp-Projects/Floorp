@@ -304,51 +304,51 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Une honetan ez</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Egizu %s zure lehenengo nabigatzailea</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Egizu %s zure lehenengo nabigatzailea</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Egizu Firefox zure lehenengo nabigatzailea</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">%1$s(e)k jendea jartzen  du irabazi-asmoen aurretik eta zure pribatutasuna defendatzen du guneen arteko jarraipen-elementuak blokeatuz.\n\nArgibide gehiago gure %2$s.</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s(e)k jendea jartzen  du irabazi-asmoen aurretik eta zure pribatutasuna defendatzen du guneen arteko jarraipen-elementuak blokeatuz.\n\nArgibide gehiago gure %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefoxek jendea jartzen du irabazi-asmoen aurretik eta zure pribatutasuna defendatzen du guneen arteko jarraipen-elementuak blokeatuz.\n\nArgibide gehiago gure pribatutasun-oharrean.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">pribatutasun-oharrean</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">pribatutasun-oharrean</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Ezarri nabigatzaile lehenetsi gisa</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Ezarri nabigatzaile lehenetsi gisa</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Une honetan ez</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Une honetan ez</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Egin salto telefonotik ordenagailu eramangarrira eta atzera</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Egin salto telefonotik ordenagailu eramangarrira eta atzera</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Erabili zure beste gailuetako fitxak eta pasahitzak, utzitako lekutik jarraitu ahal izateko.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Erabili zure beste gailuetako fitxak eta pasahitzak, utzitako lekutik jarraitu ahal izateko.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Hasi saioa</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Hasi saioa</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Une honetan ez</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Une honetan ez</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Jakinarazpenek %s(r)i zuku gehiago ateratzen laguntzen dute</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Jakinarazpenek %s(r)i zuku gehiago ateratzen laguntzen dute</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Jakinarazpenek Firefoxi zuku gehiago ateratzen laguntzen dizute</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Bidali fitxak gailuen artean, kudeatu deskargak eta eskuratu %s(r)i zuku gehien ateratzeko aholkuak.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Bidali fitxak gailuen artean, kudeatu deskargak eta eskuratu %s(r)i zuku gehien ateratzeko aholkuak.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Bidali fitxak gailuen artean, kudeatu deskargak eta eskuratu Firefoxi zuku gehien ateratzeko aholkuak.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Aktibatu jakinarazpenak</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Aktibatu jakinarazpenak</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Une honetan ez</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Une honetan ez</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -429,17 +429,11 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Bidali eskaera</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Cookie iragarki-banden murrizpena</string>
-    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Eskatu gune honetarako euskarria?</string>
-    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">Gunearen euskarria gehitzeko eskaera bidalita.</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text_2">Eskaera bidalita</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Aktibatuta gune honetarako</string>
-    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Gunearen euskarria gehitzeko eskaera bidalita</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Euskarri-eskaera bidalita</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -448,8 +442,6 @@
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Aktibatu cookie iragarki-banden murrizpena %1$s gunerako?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Desaktibatu cookie iragarki-banden murrizpena %1$s gunerako?</string>
-    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Cookie iragarki-banden murrizpenak oraindik ez du gune honetarako euskarririk. Gure taldeak webgune hau berrikusi eta etorkizunean bere euskarria gehitzea nahi duzu?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s(e)k ezin ditu cookie-eskaerak automatikoki baztertu gune honetan. Etorkizunean gune honetarako euskarria gehitzeko eskaera bidal dezakezu.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -555,6 +547,11 @@
     <string name="preferences_open_links_in_apps_never">Inoiz ez</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Kanpoko deskarga-kudeatzailea</string>
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Gaitu Gecko erregistroak</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">Aplikaziotik irteten aldaketak aplikatzeko…</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Gehigarriak</string>
 
@@ -638,6 +635,8 @@
     <string name="addon_already_installed">Gehigarria instalatuta dago jada</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Kudeatu kontua</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sinkronizatu orain</string>
     <!-- Preference category for sync -->
@@ -1214,6 +1213,10 @@
     <string name="share_save_to_pdf">Gorde PDF gisa</string>
     <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
     <string name="unable_to_save_to_pdf_error">Ezin da PDFa sortu</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">Ezin da inprimatu</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">Inprimatu</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Bidali gailura</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1506,12 +1509,8 @@
     <string name="etp_settings">Babesaren ezarpenak</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Jarraipenaren babes hobetua</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Nabigatu inor segika izan gabe</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
     <string name="preference_enhanced_tracking_protection_summary">Orain cookien erabateko babesarekin, guneen arteko jarraipen-elementuetarako gure oztopo boteretsuena.</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Mantendu zure datuak zuretzat. Lineako zure jardueraren jarraipena egiten duten elementu ohikoenetatik babesten zaitu %s(e)k.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">Lineako zure jardueraren jarraipena egiten duten elementu ohikoenetatik babesten zaitu %s(e)k.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1519,15 +1518,11 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Oinarrizkoa (lehenetsia)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Pribatutasunerako eta errendimendurako orekatua. Orriak ohi bezala kargatuko dira.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_5">Orriak ohi bezala kargatuko dira baina jarraipen-elementu gutxiago blokeatuko dira.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Jarraipenaren oinarrizko babesak blokeatzen duena</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Zorrotza</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Jarraipen-elementu gehiago blokeatzen ditu orriak azkarrago karga daitezen baina orriko zenbait eginbide hauts litezke.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_4">Jarraipenaren babes sendoagoa eta errendimendu hobea baina baliteke zenbait gune ondo ez ibiltzea.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
