@@ -7007,9 +7007,7 @@ bool nsContentUtils::AllowXULXBLForPrincipal(nsIPrincipal* aPrincipal) {
     return true;
   }
 
-  return (StaticPrefs::dom_allow_XUL_XBL_for_file() &&
-          aPrincipal->SchemeIs("file")) ||
-         IsSitePermAllow(aPrincipal, "allowXULXBL"_ns);
+  return xpc::IsInAutomation() && IsSitePermAllow(aPrincipal, "allowXULXBL"_ns);
 }
 
 bool nsContentUtils::IsPDFJSEnabled() {
