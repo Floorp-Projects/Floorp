@@ -2184,11 +2184,6 @@
   value: true
   mirror: always
 
-- name: dom.allow_XUL_XBL_for_file
-  type: bool
-  value: false
-  mirror: always
-
 # Checks if offscreen animation throttling is enabled.
 - name: dom.animations.offscreen-throttling
   type: bool
