@@ -213,7 +213,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "ec8238fc87b15f4531ee9d2a1752063b7bd53291"
+        "revision": "58714a456fd697998a01f822a268dc1cdd63f401"
     },
     "ca-valencia": {
         "pin": false,
@@ -303,7 +303,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "2f82819a8498c32e13f9b00da45324bc48f52c8d"
+        "revision": "668cf42570effd413ffd204726933160a9e0c9e6"
     },
     "de": {
         "pin": false,
@@ -1623,7 +1623,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "2dc96ae1937e475b5843e84c8d11a252fbfab075"
+        "revision": "33a17449aad7cd0d812669d691ef056646b49ac9"
     },
     "tl": {
         "pin": false,
