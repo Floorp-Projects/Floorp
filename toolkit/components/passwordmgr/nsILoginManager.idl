@@ -147,30 +147,21 @@ interface nsILoginManager : nsISupports {
 
   /**
    * Fetch all logins in the login manager. An array is always returned;
-   * if there are no logins the array is empty.
-   *
-   * @deprecated Use `getAllLoginsAsync` instead.
-   *
-   * @return An array of nsILoginInfo objects.
-   */
-  Array<nsILoginInfo> getAllLogins();
-
-  /**
-   * Like getAllLogins, but asynchronous. This method is faster when large
-   * amounts of logins are present since it will handle decryption in one batch.
+   * if there are no logins the array is empty. Decryption is handled in
+   * one batch.
    *
    * @return A promise which resolves with a JS Array of nsILoginInfo objects.
    */
-  Promise getAllLoginsAsync();
+  Promise getAllLogins();
 
   /**
-   * Like getAllLoginsAsync, but with a callback returning the search results.
+   * Like getAllLogins, but with a callback returning the search results.
    *
    * @param {nsILoginSearchCallback} aCallback
    *        The interface to notify when the search is complete.
    *
    */
-  void getAllLoginsWithCallbackAsync(in nsILoginSearchCallback aCallback);
+  void getAllLoginsWithCallback(in nsILoginSearchCallback aCallback);
 
   /**
    * Obtain a list of all origins for which password saving is disabled.
