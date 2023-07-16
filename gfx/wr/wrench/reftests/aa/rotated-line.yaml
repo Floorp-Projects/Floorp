@@ -1,0 +1,13 @@
+# Ensure that under certain transformations with single pixel width
+# lines, the AA is applied correctly along the primitive
+---
+root:
+  items:
+    -
+      type: stacking-context
+      transform-origin: 200 200
+      transform: rotate(45)
+      items:
+        - type: rect
+          bounds: 200 200 1 200
+          color: black
