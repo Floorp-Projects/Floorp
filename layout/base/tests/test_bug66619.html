@@ -21,27 +21,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=66619
 
 SimpleTest.waitForExplicitFinish();
 
-function run()
-{
+function assert_fully_in_view(element) {
+  let rect = element.getBoundingClientRect();
+  ok(rect.top >= 0, `${element.id} top`);
+  ok(rect.bottom <= window.innerHeight, `${element.id} bottom`);
+}
+
+function run() {
   is(window.scrollY, 0, "window should initially be at top");
+  let first = document.getElementById("first");
+  let second = document.getElementById("second");
+  let third = document.getElementById("third");
 
-  document.getElementById("first").focus();
-  var first = window.scrollY;
-  isnot(first, 0, "we scrolled to first anchor");
-  ok(first + window.innerHeight > 4000,
+  first.focus();
+  let firstOffset = window.scrollY;
+  isnot(firstOffset, 0, "we scrolled to first anchor");
+  ok(firstOffset + window.innerHeight > 4000,
      "we scrolled enough to show the anchor");
+  assert_fully_in_view(first);
 
   window.scrollTo(0, 0);
-  document.getElementById("second").focus();
-  var second = window.scrollY;
+  second.focus();
+  let secondOffset = window.scrollY;
+  assert_fully_in_view(second);
 
   window.scrollTo(0, 0);
-  document.getElementById("third").focus();
-  var third = window.scrollY;
+  third.focus();
+  let thirdOffset = window.scrollY;
+  assert_fully_in_view(third);
 
-  is(second, first, "we scrolled the second line of the anchor into view");
-  isnot(third, second, "we scrolled the second line of the anchor into view");
-  ok(third > second, "we scrolled the second line of the anchor into view");
+  ok(secondOffset > firstOffset, "we scrolled the second line of the anchor into view");
+  ok(thirdOffset > secondOffset, "we scrolled the second line of the anchor into view");
 
   window.scrollTo(0, 0); // make the results visible
   SimpleTest.finish();
