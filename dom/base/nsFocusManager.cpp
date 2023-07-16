@@ -2903,17 +2903,10 @@ void nsFocusManager::ScrollIntoView(PresShell* aPresShell, nsIContent* aContent,
     return;
   }
 
-  // If the scroll is triggered by a tab scroll, center the target element.
-  WhereToScroll whereToScroll(WhereToScroll::Nearest);
-  if (aFlags & FLAG_BYKEY) {
-    whereToScroll = WhereToScroll::Center;
-  }
-
   // If the noscroll flag isn't set, scroll the newly focused element into view.
-  aPresShell->ScrollContentIntoView(
-      aContent, ScrollAxis(whereToScroll, WhenToScroll::IfNotVisible),
-      ScrollAxis(whereToScroll, WhenToScroll::IfNotVisible),
-      ScrollFlags::ScrollOverflowHidden);
+  const ScrollAxis axis(WhereToScroll::Center, WhenToScroll::IfNotVisible);
+  aPresShell->ScrollContentIntoView(aContent, axis, axis,
+                                    ScrollFlags::ScrollOverflowHidden);
   // Scroll the input / textarea selection into view, unless focused with the
   // mouse, see bug 572649.
   if (aFlags & FLAG_BYMOUSE) {
