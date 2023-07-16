@@ -230,18 +230,21 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
 
           nsHtml5String type =
               aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
+          nsAutoString typeString;
+          type.ToString(typeString);
           if (!mHasSeenImportMap) {
-            // If we see an importmap, we don't want to later start
-            // speculative loads for modulepreloads, since such load might
-            // finish before the importmap is created.
-            nsAutoString typeString;
-            type.ToString(typeString);
+            // If we see an importmap, we don't want to later start speculative
+            // loads for modulepreloads, since such load might finish before
+            // the importmap is created. This also applies to module scripts so
+            // that any modulepreload integrity checks can be performed before
+            // the modules scripts are loaded.
             mHasSeenImportMap =
                 typeString.LowerCaseFindASCII("importmap") != kNotFound;
           }
           nsHtml5String url =
               aAttributes->getValue(nsHtml5AttributeName::ATTR_SRC);
-          if (url) {
+          if (url && !(mHasSeenImportMap &&
+                       typeString.LowerCaseFindASCII("module") != kNotFound)) {
             nsHtml5String charset =
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
             nsHtml5String crossOrigin =
