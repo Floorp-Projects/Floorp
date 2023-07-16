@@ -823,7 +823,7 @@ const workspaceFunctions = {
   },
 
   Backup: {
-    backupWorkspace() {
+    async backupWorkspace() {
       //backup workspace tabs url
       let tabs = gBrowser.tabs;
       let tabsURL = [];
@@ -850,49 +850,45 @@ const workspaceFunctions = {
       };
 
       let backupDataString = JSON.stringify(backupDataObject);
+
+      // file tools
       const file = FileUtils.getFile("ProfD", ["floorp-workspace-backup.json"]);
 
+      // Path tools
+      const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+      const path = PathUtils.join(PROFILE_DIR, "floorp-workspace-backup.json")
+
+      const encoder = new TextEncoder("UTF-8");
+      const decoder = new TextDecoder("UTF-8");
+
       if (file.exists()) {
-        backupDataString = "\r" + backupDataString;
-        const fstream = Cc[
-          "@mozilla.org/network/file-input-stream;1"
-        ].createInstance(Ci.nsIFileInputStream);
-        fstream.init(file, -1, 0, 0);
-        const inputStream = NetUtil.readInputStreamToString(
-          fstream,
-          fstream.available()
-        );
-        fstream.close();
+        //check lines
+        let read = await IOUtils.read(path);
+        let inputStream = decoder.decode(read);
         let lines = inputStream.split("\r");
 
-        //if backup data is more than 10, delete old data
         if (lines.length > 9) {
-          lines.splice(0, 1);
-          let newBackupDataString = lines.join("\r");
-          const outputStream = FileUtils.openFileOutputStream(
-            file,
-            FileUtils.MODE_WRONLY |
-              FileUtils.MODE_CREATE |
-              FileUtils.MODE_APPEND
-          );
-          const data = new TextEncoder().encode(newBackupDataString);
-          file.remove(false);
-          outputStream.write(newBackupDataString, data.length);
-          outputStream.close();
-        }
+          lines.shift();
+          inputStream = lines.join("\r");
+          const doc = inputStream + backupDataString;
+          const data = encoder.encode(doc);
+          await IOUtils.write(path, data);
+        } 
+
+        //ファイルの内容を取得し、backupDataString を追記し、ファイルを上書き保存する
+        backupDataString = "\r" + backupDataString;
+        const doc = inputStream + backupDataString;
+        const data = encoder.encode(doc);
+        await IOUtils.write(path, data);
+        return;
       }
 
       //save backup data
-      const outputStream = FileUtils.openFileOutputStream(
-        file,
-        FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_APPEND
-      );
-      const data = new TextEncoder().encode(backupDataString);
-      outputStream.write(backupDataString, data.length);
-      outputStream.close();
+      const data = encoder.encode(backupDataString);
+      await IOUtils.write(path, data);
     },
 
-    restoreWorkspace(lineNum) {
+    async restoreWorkspace(lineNum) {
       //check lineNum is number or Object. for about:preferences#workspaces
       if (typeof lineNum === "object") {
         lineNum = lineNum.wrappedJSObject.lineNum;
@@ -904,17 +900,15 @@ const workspaceFunctions = {
       tagElem.textContent = displayNoneCSS;
       document.head.appendChild(tagElem);
 
-      const file = FileUtils.getFile("ProfD", ["floorp-workspace-backup.json"]);
-      //get backup data via NetUtil.jsm
-      const fstream = Cc[
-        "@mozilla.org/network/file-input-stream;1"
-      ].createInstance(Ci.nsIFileInputStream);
-      fstream.init(file, -1, 0, 0);
-      const inputStream = NetUtil.readInputStreamToString(
-        fstream,
-        fstream.available()
-      );
-      fstream.close();
+      // encoding tools
+      const decoder = new TextDecoder("UTF-8");
+
+      // Path tools
+      const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+      const path = PathUtils.join(PROFILE_DIR, "floorp-workspace-backup.json");
+
+      let read = await IOUtils.read(path);
+      let inputStream = decoder.decode(read);
 
       //read backup data line by line
       let lines = inputStream.split("\r");
