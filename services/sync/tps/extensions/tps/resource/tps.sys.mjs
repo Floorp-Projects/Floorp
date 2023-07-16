@@ -500,7 +500,7 @@ export var TPS = {
         "executing action " + action.toUpperCase() + " on passwords"
       );
     } catch (e) {
-      lazy.DumpPasswords();
+      await lazy.DumpPasswords();
       throw e;
     }
   },

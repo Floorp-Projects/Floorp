@@ -42,8 +42,9 @@ async function setupWithOneLogin(pageUrl) {
   let origin = window.location.origin;
   await setStoredLoginsAsync([origin, origin, null, "user1", "pass1"]);
 
-  let chromeScript = runInParent(function testSetup() {
-    for (let l of Services.logins.getAllLogins()) {
+  let chromeScript = runInParent(async function testSetup() {
+    let logins = await Services.logins.getAllLogins();
+    for (let l of logins) {
       info("Got login: " + l.username + ", " + l.password);
     }
   });

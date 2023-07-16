@@ -117,7 +117,7 @@ add_task(async function test_clickNever() {
   );
 
   Assert.equal(
-    Services.logins.getAllLogins().length,
+    (await Services.logins.getAllLogins()).length,
     0,
     "Should not have any logins yet"
   );
@@ -148,7 +148,7 @@ add_task(async function test_clickNever() {
   );
 
   Assert.equal(
-    Services.logins.getAllLogins().length,
+    (await Services.logins.getAllLogins()).length,
     0,
     "Should not have any logins yet"
   );
@@ -178,7 +178,7 @@ add_task(async function test_clickRemember() {
       Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
 
       Assert.equal(
-        Services.logins.getAllLogins().length,
+        (await Services.logins.getAllLogins()).length,
         0,
         "Should not have any logins yet"
       );
@@ -195,7 +195,7 @@ add_task(async function test_clickRemember() {
 
   await storageChangedPromise;
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(
@@ -232,7 +232,7 @@ add_task(async function test_clickRemember() {
     }
   );
 
-  logins = Services.logins.getAllLogins();
+  logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(login.username, "notifyu1", "Check the username used");
@@ -271,7 +271,7 @@ add_task(async function test_rememberSignonsFalse() {
   );
 
   Assert.equal(
-    Services.logins.getAllLogins().length,
+    (await Services.logins.getAllLogins()).length,
     0,
     "Should not have any logins yet"
   );
@@ -302,7 +302,7 @@ add_task(async function test_rememberSignonsTrue() {
   );
 
   Assert.equal(
-    Services.logins.getAllLogins().length,
+    (await Services.logins.getAllLogins()).length,
     0,
     "Should not have any logins yet"
   );
@@ -336,7 +336,7 @@ add_task(async function test_autocompleteOffUsername() {
   );
 
   Assert.equal(
-    Services.logins.getAllLogins().length,
+    (await Services.logins.getAllLogins()).length,
     0,
     "Should not have any logins yet"
   );
@@ -368,7 +368,7 @@ add_task(async function test_autocompleteOffPassword() {
   );
 
   Assert.equal(
-    Services.logins.getAllLogins().length,
+    (await Services.logins.getAllLogins()).length,
     0,
     "Should not have any logins yet"
   );
@@ -398,7 +398,7 @@ add_task(async function test_autocompleteOffForm() {
   );
 
   Assert.equal(
-    Services.logins.getAllLogins().length,
+    (await Services.logins.getAllLogins()).length,
     0,
     "Should not have any logins yet"
   );
@@ -422,7 +422,7 @@ add_task(async function test_noPasswordField() {
   );
 
   Assert.equal(
-    Services.logins.getAllLogins().length,
+    (await Services.logins.getAllLogins()).length,
     0,
     "Should not have any logins yet"
   );
@@ -473,7 +473,7 @@ add_task(async function test_pwOnlyNewLoginMatchesUPForm() {
     }
   );
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(login.username, "notifyu1", "Check the username");
@@ -540,7 +540,7 @@ add_task(async function test_pwOnlyOldLoginMatchesUPForm() {
     }
   );
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(login.username, "notifyu1", "Check the username");
@@ -570,7 +570,7 @@ add_task(async function test_pwOnlyFormMatchesLogin() {
     }
   );
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(login.username, "notifyu1", "Check the username");
@@ -602,7 +602,7 @@ add_task(async function test_pwOnlyFormDoesntMatchExisting() {
     }
   );
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(login.username, "notifyu1B", "Check the username unchanged");
@@ -643,7 +643,7 @@ add_task(async function test_changeUPLoginOnUPForm_dont() {
     }
   );
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(login.username, "notifyu1", "Check the username unchanged");
@@ -690,7 +690,7 @@ add_task(async function test_changeUPLoginOnUPForm_remove() {
     }
   );
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 0, "Should have 0 logins");
 });
 
@@ -735,14 +735,14 @@ add_task(async function test_changeUPLoginOnUPForm_change() {
     }
   );
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(login.username, "notifyu1", "Check the username unchanged");
   Assert.equal(login.password, "pass2", "Check the password changed");
   Assert.equal(login.timesUsed, 2, "Check times used");
 
-  checkOnlyLoginWasUsedTwice({ justChanged: true });
+  await checkOnlyLoginWasUsedTwice({ justChanged: true });
 
   // cleanup
   login1.password = "pass2";
@@ -782,7 +782,7 @@ add_task(async function test_changePLoginOnUPForm() {
     }
   );
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(login.username, "", "Check the username unchanged");
@@ -823,7 +823,7 @@ add_task(async function test_changePLoginOnPForm() {
     }
   );
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(login.username, "", "Check the username unchanged");
@@ -865,7 +865,7 @@ add_task(async function test_checkUPSaveText() {
   );
 
   Assert.equal(
-    Services.logins.getAllLogins().length,
+    (await Services.logins.getAllLogins()).length,
     0,
     "Should not have any logins yet"
   );
@@ -899,7 +899,7 @@ add_task(async function test_checkPSaveText() {
   );
 
   Assert.equal(
-    Services.logins.getAllLogins().length,
+    (await Services.logins.getAllLogins()).length,
     0,
     "Should not have any logins yet"
   );
@@ -928,7 +928,7 @@ add_task(async function test_capture2pw0un() {
   );
 
   Assert.equal(
-    Services.logins.getAllLogins().length,
+    (await Services.logins.getAllLogins()).length,
     0,
     "Should not have any logins yet"
   );
@@ -958,7 +958,7 @@ add_task(async function test_change2pw0unExistingDifferentUP() {
     }
   );
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(login.username, "notifyu1B", "Check the username unchanged");
@@ -992,7 +992,7 @@ add_task(async function test_change2pw0unExistingDifferentP() {
     }
   );
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(login.username, "", "Check the username unchanged");
@@ -1024,14 +1024,14 @@ add_task(async function test_change2pw0unExistingWithSameP() {
     }
   );
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(login.username, "", "Check the username unchanged");
   Assert.equal(login.password, "notifyp1", "Check the password unchanged");
   Assert.equal(login.timesUsed, 2, "Check times used incremented");
 
-  checkOnlyLoginWasUsedTwice({ justChanged: false });
+  await checkOnlyLoginWasUsedTwice({ justChanged: false });
 
   Services.logins.removeLogin(login2);
 });
@@ -1063,14 +1063,14 @@ add_task(async function test_changeUPLoginOnPUpdateForm() {
     }
   );
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(login.username, "notifyu1", "Check the username unchanged");
   Assert.equal(login.password, "pass2", "Check the password changed");
   Assert.equal(login.timesUsed, 2, "Check times used");
 
-  checkOnlyLoginWasUsedTwice({ justChanged: true });
+  await checkOnlyLoginWasUsedTwice({ justChanged: true });
 
   // cleanup
   login1.password = "pass2";
@@ -1106,7 +1106,7 @@ add_task(async function test_recipeCaptureFields_NewLogin() {
       Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
 
       // Sanity check, no logins should exist yet.
-      let logins = Services.logins.getAllLogins();
+      let logins = await Services.logins.getAllLogins();
       Assert.equal(logins.length, 0, "Should not have any logins yet");
 
       await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
@@ -1117,7 +1117,7 @@ add_task(async function test_recipeCaptureFields_NewLogin() {
 
   await storageChangedPromise;
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(login.username, "notifyu1", "Check the username unchanged");
@@ -1150,8 +1150,8 @@ add_task(async function test_recipeCaptureFields_ExistingLogin() {
     "http://example.org"
   );
 
-  checkOnlyLoginWasUsedTwice({ justChanged: false });
-  let logins = Services.logins.getAllLogins();
+  await checkOnlyLoginWasUsedTwice({ justChanged: false });
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(login.username, "notifyu1", "Check the username unchanged");
@@ -1186,7 +1186,7 @@ add_task(async function test_saveUsingEnter() {
         Assert.ok(notif, "got notification popup");
         Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
         Assert.equal(
-          Services.logins.getAllLogins().length,
+          (await Services.logins.getAllLogins()).length,
           0,
           "Should not have any logins yet"
         );
@@ -1200,7 +1200,7 @@ add_task(async function test_saveUsingEnter() {
 
     await storageChangedPromise;
 
-    let logins = Services.logins.getAllLogins();
+    let logins = await Services.logins.getAllLogins();
     Assert.equal(logins.length, 1, "Should only have 1 login");
     let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
     Assert.equal(

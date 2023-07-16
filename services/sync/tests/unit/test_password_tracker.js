@@ -155,7 +155,7 @@ add_task(async function test_removeAllLogins() {
       Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
 
       if (syncBeforeRemove) {
-        let logins = await Services.logins.getAllLoginsAsync(true);
+        let logins = await Services.logins.getAllLogins();
         for (let login of logins) {
           engine.markSynced(login.guid);
         }

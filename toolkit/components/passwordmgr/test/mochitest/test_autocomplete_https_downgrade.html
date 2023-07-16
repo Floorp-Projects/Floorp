@@ -72,9 +72,9 @@ add_task(async function test_autocomplete_https_downgrade() {
   info("test_autocomplete_http, setup with " + HTTP_FORM_URL);
   await setup(HTTP_FORM_URL);
 
-  LoginManager.getAllLogins().then(logins => {
-    info("got logins: " + logins.map(l => l.origin));
-  });
+  let logins = await LoginManager.getAllLogins();
+  info("got logins: " + logins.map(l => l.origin));
+
   // from a HTTP page, look for matching logins, we should never offer a login with an HTTPS scheme
   // we're expecting just login2 as a match
   let isCrossOrigin = false;

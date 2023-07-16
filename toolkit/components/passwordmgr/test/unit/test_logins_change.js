@@ -29,7 +29,7 @@ async function checkLoginInvalid(aLoginInfo, aExpectedError) {
     Services.logins.addLoginAsync(aLoginInfo),
     aExpectedError
   );
-  LoginTestUtils.checkLogins([]);
+  await LoginTestUtils.checkLogins([]);
 
   // Add a login for the modification tests.
   let testLogin = TestData.formLogin({ origin: "http://modify.example.com" });
@@ -58,7 +58,7 @@ async function checkLoginInvalid(aLoginInfo, aExpectedError) {
   );
 
   // Verify that no data was stored by the previous calls.
-  LoginTestUtils.checkLogins([testLogin]);
+  await LoginTestUtils.checkLogins([testLogin]);
   Services.logins.removeLogin(testLogin);
 }
 
@@ -93,7 +93,7 @@ function compareAttributes(objectA, objectB, attributes) {
 add_task(async function test_addLogin_removeLogin() {
   // Each login from the test data should be valid and added to the list.
   await Services.logins.addLogins(TestData.loginList());
-  LoginTestUtils.checkLogins(TestData.loginList());
+  await LoginTestUtils.checkLogins(TestData.loginList());
 
   // Trying to add each login again should result in an error.
   for (let loginInfo of TestData.loginList()) {
@@ -108,7 +108,7 @@ add_task(async function test_addLogin_removeLogin() {
     Services.logins.removeLogin(loginInfo);
   }
 
-  LoginTestUtils.checkLogins([]);
+  await LoginTestUtils.checkLogins([]);
 });
 
 add_task(async function add_login_works_with_empty_array() {
@@ -292,7 +292,7 @@ add_task(async function test_removeAllUserFacingLogins() {
   await Services.logins.addLogins(TestData.loginList());
 
   Services.logins.removeAllUserFacingLogins();
-  LoginTestUtils.checkLogins([]);
+  await LoginTestUtils.checkLogins([]);
 
   // The function should also work when there are no logins to delete.
   Services.logins.removeAllUserFacingLogins();
@@ -322,7 +322,7 @@ add_task(async function test_modifyLogin_nsILoginInfo() {
   Services.logins.modifyLogin(loginInfo, updatedLoginInfo);
 
   // The data should now match the second login.
-  LoginTestUtils.checkLogins([updatedLoginInfo]);
+  await LoginTestUtils.checkLogins([updatedLoginInfo]);
   Assert.throws(
     () => Services.logins.modifyLogin(loginInfo, updatedLoginInfo),
     /No matching logins/
@@ -330,18 +330,18 @@ add_task(async function test_modifyLogin_nsILoginInfo() {
 
   // The login can be changed to have a different type and origin.
   Services.logins.modifyLogin(updatedLoginInfo, differentLoginInfo);
-  LoginTestUtils.checkLogins([differentLoginInfo]);
+  await LoginTestUtils.checkLogins([differentLoginInfo]);
 
   // It is now possible to add a login with the old type and origin.
   await Services.logins.addLoginAsync(loginInfo);
-  LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
+  await LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
 
   // Modifying a login to match an existing one should not be possible.
   Assert.throws(
     () => Services.logins.modifyLogin(loginInfo, differentLoginInfo),
     /already exists/
   );
-  LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
+  await LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
 
   LoginTestUtils.clearData();
 });
@@ -388,7 +388,7 @@ add_task(async function test_modifyLogin_nsIProperyBag() {
   );
 
   // The data should now match the second login.
-  LoginTestUtils.checkLogins([updatedLoginInfo]);
+  await LoginTestUtils.checkLogins([updatedLoginInfo]);
   Assert.throws(
     () => Services.logins.modifyLogin(loginInfo, newPropertyBag()),
     /No matching logins/
@@ -411,18 +411,18 @@ add_task(async function test_modifyLogin_nsIProperyBag() {
 
   // The login can be changed to have a different type and origin.
   Services.logins.modifyLogin(updatedLoginInfo, differentLoginProperties);
-  LoginTestUtils.checkLogins([differentLoginInfo]);
+  await LoginTestUtils.checkLogins([differentLoginInfo]);
 
   // It is now possible to add a login with the old type and origin.
   await Services.logins.addLoginAsync(loginInfo);
-  LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
+  await LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
 
   // Modifying a login to match an existing one should not be possible.
   Assert.throws(
     () => Services.logins.modifyLogin(loginInfo, differentLoginProperties),
     /already exists/
   );
-  LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
+  await LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
 
   LoginTestUtils.clearData();
 });
@@ -579,10 +579,10 @@ add_task(async function test_addLogin_badDates() {
       Services.logins.addLoginAsync(loginInfo),
       /invalid date properties/
     );
-    Assert.equal(Services.logins.getAllLogins().length, 0);
+    Assert.equal((await Services.logins.getAllLogins()).length, 0);
   }
 
-  LoginTestUtils.checkLogins([]);
+  await LoginTestUtils.checkLogins([]);
 });
 
 /**

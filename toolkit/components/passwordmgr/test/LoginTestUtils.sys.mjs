@@ -88,9 +88,9 @@ export const LoginTestUtils = {
    * array.  If no `checkFn` is provided, the comparison uses the "equals"
    * method of nsILoginInfo, that does not include nsILoginMetaInfo properties in the test.
    */
-  checkLogins(expectedLogins, msg = "checkLogins", checkFn = undefined) {
+  async checkLogins(expectedLogins, msg = "checkLogins", checkFn = undefined) {
     this.assertLoginListsEqual(
-      Services.logins.getAllLogins(),
+      await Services.logins.getAllLogins(),
       expectedLogins,
       msg,
       checkFn
