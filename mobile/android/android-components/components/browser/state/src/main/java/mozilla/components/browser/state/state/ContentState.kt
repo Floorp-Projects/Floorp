@@ -21,48 +21,51 @@ import mozilla.components.concept.engine.window.WindowRequest
 /**
  * Value type that represents the state of the content within a [SessionState].
  *
- * @property url the loading or loaded URL.
- * @property private whether or not the session is private.
- * @property title the title of the current page.
- * @property progress the loading progress of the current page.
- * @property searchTerms the last used search terms, or an empty string if no
+ * @property url The loading or loaded URL.
+ * @property private Whether or not the session is private.
+ * @property title The title of the current page.
+ * @property progress The loading progress of the current page denoted as 0-100.
+ * @property loading True if state is loading.
+ * @property searchTerms The last used search terms, or an empty string if no
  * search was executed for this session.
- * @property securityInfo the security information as [SecurityInfoState],
+ * @property securityInfo The security information as [SecurityInfoState],
  * describing whether or not the this session is for a secure URL, as well
  * as the host and SSL certificate authority.
- * @property icon the icon of the page currently loaded by this session.
+ * @property icon The icon of the page currently loaded by this session.
  * @property download Last unhandled download request.
  * @property share Last unhandled request to share an internet resource that first needs to be downloaded.
  * @property copy Last unhandled request to copy an internet resource that first needs to be downloaded.
- * @property hitResult the target of the latest long click operation.
- * @property promptRequests current[PromptRequest]s.
- * @property findResults the list of results of the latest "find in page" operation.
- * @property windowRequest the last received [WindowRequest].
- * @property searchRequest the last received [SearchRequest]
- * @property fullScreen true if the page is full screen, false if not.
- * @property layoutInDisplayCutoutMode the display layout cutout mode state.
- * @property canGoBack whether or not there's an history item to navigate back to.
- * @property canGoForward whether or not there's an history item to navigate forward to.
- * @property webAppManifest the Web App Manifest for the currently visited page (or null).
- * @property firstContentfulPaint whether or not the first contentful paint has happened.
- * @property pictureInPictureEnabled True if the session is being displayed in PIP mode.
- * @property loadRequest last [LoadRequestState] if this session.
- * @property permissionIndicator Holds the state of any site permission that was granted/denied
+ * @property hitResult The target of the latest long click operation.
+ * @property promptRequests Current[PromptRequest]s.
+ * @property findResults The list of results of the latest "find in page" operation.
+ * @property windowRequest The last received [WindowRequest].
+ * @property searchRequest The last received [SearchRequest].
+ * @property fullScreen True if the page is full screen, false if not.
+ * @property layoutInDisplayCutoutMode The display layout cutout mode state.
+ * @property canGoBack Whether or not there's a history item to navigate back to.
+ * @property canGoForward Whether or not there's a history item to navigate forward to.
+ * @property webAppManifest The Web App Manifest for the currently visited page (or null).
+ * @property firstContentfulPaint Whether or not the first contentful paint has happened.
+ * @property history The [HistoryState] of this state.
+ * @property permissionHighlights Holds the state of any site permission that was granted/denied
  * that should be brought to the user's attention, for example when media content is not able to
  * play because the autoplay settings.
+ * @property permissionRequestsList Holds unprocessed content requests.
  * @property appPermissionRequestsList Holds unprocessed app requests.
+ * @property pictureInPictureEnabled True if the session is being displayed in PIP mode.
+ * @property loadRequest The last [LoadRequestState] of this session.
  * @property refreshCanceled Indicates if an intent of refreshing was canceled.
  * True if a page refresh was cancelled by the user, defaults to false. Note that this is not about
  * stopping an ongoing page load but useful in cases like swipe-to-refresh which allow users to
  * cancel or abort before a page is refreshed.
  * @property recordingDevices List of recording devices (e.g. camera or microphone) currently in use
  * by web content.
- * @property desktopMode true if desktop mode is enabled, otherwise false.
- * @property appIntent the last received [AppIntentState].
- * @property showToolbarAsExpanded whether the dynamic toolbar should be forced as expanded.
- * @property previewImageUrl the preview image of the page (e.g. the hero image), if available.
- * @property isSearch whether or not the last url load request is the result of a search.
- * @property hasFormData whether or not the content has filled out form data.
+ * @property desktopMode True if desktop mode is enabled, otherwise false.
+ * @property appIntent The last received [AppIntentState].
+ * @property showToolbarAsExpanded Whether the dynamic toolbar should be forced as expanded.
+ * @property previewImageUrl The preview image of the page (e.g. the hero image), if available.
+ * @property isSearch Whether or not the last url load request is the result of a search.
+ * @property hasFormData Whether or not the content has filled out form data.
  */
 data class ContentState(
     val url: String,
