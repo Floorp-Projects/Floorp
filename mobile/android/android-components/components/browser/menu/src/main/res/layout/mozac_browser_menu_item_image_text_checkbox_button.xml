@@ -29,6 +29,9 @@
         android:gravity="center_vertical"
         android:importantForAccessibility="no"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/checkbox"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintStart_toEndOf="@id/image"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Item" />
