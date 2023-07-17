@@ -55,8 +55,7 @@ JSLinearString* ParseTemporalCalendarString(JSContext* cx,
  * ParseTemporalTimeString ( isoString )
  */
 bool ParseTemporalTimeString(JSContext* cx, JS::Handle<JSString*> str,
-                             PlainTime* result,
-                             JS::MutableHandle<JSString*> calendar);
+                             PlainTime* result);
 
 /**
  * ParseTemporalDateString ( isoString )
