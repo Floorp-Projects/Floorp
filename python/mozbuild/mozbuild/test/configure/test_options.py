@@ -1024,15 +1024,15 @@ class TestOptionHelp(unittest.TestCase):
 
                 Options: [defaults in brackets after descriptions]
                   Options from python/mozbuild/mozbuild/test/configure/test_options.py:
-                    --disable-titi            Disable Titi
-                    --disable-tutu            Disable Tutu
-                    --enable-hoge={a,b}       Hoge
-                    --enable-tata={a,b}       Enable Tata [a]
-                    --enable-toto             Enable Toto
-                    --enable-tutu={a,b}       Enable Tutu
                     --foo                     Foo
                     --with-bar                Bar
+                    --enable-hoge={a,b}       Hoge
                     --with-fuga               Fuga [a]
+                    --enable-toto             Enable Toto
+                    --disable-titi            Disable Titi
+                    --enable-tutu={a,b}       Enable Tutu
+                    --disable-tutu            Disable Tutu
+                    --enable-tata={a,b}       Enable Tata [a]
 
 
                 Environment variables:
