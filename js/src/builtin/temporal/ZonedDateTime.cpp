@@ -785,37 +785,33 @@ void NanosecondsAndDays::trace(JSTracer* trc) {
 }
 
 /**
- * NanosecondsToDays ( nanoseconds, relativeTo )
+ * NanosecondsToDays ( nanoseconds, zonedRelativeTo )
  */
 bool js::temporal::NanosecondsToDays(
     JSContext* cx, const InstantSpan& nanoseconds,
-    Handle<Wrapped<ZonedDateTimeObject*>> relativeTo,
+    Handle<Wrapped<ZonedDateTimeObject*>> zonedRelativeTo,
     MutableHandle<NanosecondsAndDays> result) {
   MOZ_ASSERT(IsValidInstantSpan(nanoseconds));
 
   // Step 1.
-  auto dayLengthNs =
-      InstantSpan::fromNanoseconds(ToNanoseconds(TemporalUnit::Day));
-
-  // Step 2.
   if (nanoseconds == InstantSpan{}) {
-    result.initialize(int64_t(0), InstantSpan{}, dayLengthNs);
+    result.initialize(
+        int64_t(0), InstantSpan{},
+        InstantSpan::fromNanoseconds(ToNanoseconds(TemporalUnit::Day)));
     return true;
   }
 
-  // Step 3.
+  // Step 2.
   int32_t sign = nanoseconds < InstantSpan{} ? -1 : 1;
 
-  // Step 4. (Not applicable)
-
-  // Step 5.
-  auto* unwrappedRelativeTo = relativeTo.unwrap(cx);
-  if (!unwrappedRelativeTo) {
+  // Step 3.
+  auto* unwrappedZonedRelativeTo = zonedRelativeTo.unwrap(cx);
+  if (!unwrappedZonedRelativeTo) {
     return false;
   }
-  auto startNs = ToInstant(unwrappedRelativeTo);
-  Rooted<TimeZoneValue> timeZone(cx, unwrappedRelativeTo->timeZone());
-  Rooted<CalendarValue> calendar(cx, unwrappedRelativeTo->calendar());
+  auto startNs = ToInstant(unwrappedZonedRelativeTo);
+  Rooted<TimeZoneValue> timeZone(cx, unwrappedZonedRelativeTo->timeZone());
+  Rooted<CalendarValue> calendar(cx, unwrappedZonedRelativeTo->calendar());
 
   if (!timeZone.wrap(cx)) {
     return false;
@@ -824,42 +820,42 @@ bool js::temporal::NanosecondsToDays(
     return false;
   }
 
-  // Steps 6-7.
+  // Steps 4-5.
   PlainDateTime startDateTime;
   if (!GetPlainDateTimeFor(cx, timeZone, startNs, &startDateTime)) {
     return false;
   }
 
-  // Step 8.
+  // Step 6.
   //
   // NB: This addition can't overflow, because we've checked that |nanoseconds|
-  // can be represented as an Instant difference value.
+  // can be represented as an InstantSpan value.
   auto endNs = startNs + nanoseconds;
 
-  // Step 9.
+  // Step 7.
   if (!IsValidEpochInstant(endNs)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_INSTANT_INVALID);
     return false;
   }
 
-  // Steps 10-11.
+  // Steps 8-9.
   PlainDateTime endDateTime;
   if (!GetPlainDateTimeFor(cx, timeZone, endNs, &endDateTime)) {
     return false;
   }
 
-  // Step 12.
+  // Step 10.
   Duration dateDifference;
   if (!DifferenceISODateTime(cx, startDateTime, endDateTime, calendar,
                              TemporalUnit::Day, &dateDifference)) {
     return false;
   }
 
-  // Step 13.
+  // Step 11.
   double days = dateDifference.days;
 
-  // Step 14.
+  // Step 12.
   Instant intermediateNs;
   if (!AddZonedDateTime(cx, startNs, timeZone, calendar, {0, 0, 0, days},
                         &intermediateNs)) {
@@ -871,9 +867,9 @@ bool js::temporal::NanosecondsToDays(
   // Overflows can be safely ignored, because they take too long to happen.
   int64_t daysToSubtract = 0;
 
-  // Step 15.
+  // Step 13.
   if (sign > 0) {
-    // Step 15.a.
+    // Step 13.a.
     while (days > double(daysToSubtract) && intermediateNs > endNs) {
       // This loop can iterate indefinitely when given a specially crafted
       // time zone object, so we need to check for interrupts.
@@ -881,10 +877,10 @@ bool js::temporal::NanosecondsToDays(
         return false;
       }
 
-      // Step 15.a.i.
+      // Step 13.a.i.
       daysToSubtract += 1;
 
-      // Step 15.a.ii.
+      // Step 13.a.ii.
       double durationDays = days - double(daysToSubtract);
       if (!AddZonedDateTime(cx, startNs, timeZone, calendar,
                             {0, 0, 0, durationDays}, &intermediateNs)) {
@@ -898,7 +894,7 @@ bool js::temporal::NanosecondsToDays(
 
   MOZ_ASSERT_IF(days == double(daysToSubtract), intermediateNs == startNs);
 
-  // Step 16.
+  // Step 14.
   auto ns = endNs - intermediateNs;
   MOZ_ASSERT(IsValidInstantSpan(ns));
 
@@ -906,7 +902,8 @@ bool js::temporal::NanosecondsToDays(
   // Overflows can be safely ignored, because they take too long to happen.
   int64_t daysToAdd = -daysToSubtract;
 
-  // Steps 17-18.
+  // Steps 15-17.
+  InstantSpan dayLengthNs{};
   while (true) {
     // This loop can iterate indefinitely when given a specially crafted time
     // zone object, so we need to check for interrupts.
@@ -914,7 +911,7 @@ bool js::temporal::NanosecondsToDays(
       return false;
     }
 
-    // Step 18.a.
+    // Step 17.a.
     Instant oneDayFartherNs;
     if (!AddZonedDateTime(cx, intermediateNs, timeZone, calendar,
                           {0, 0, 0, double(sign)}, &oneDayFartherNs)) {
@@ -922,7 +919,7 @@ bool js::temporal::NanosecondsToDays(
     }
     MOZ_ASSERT(IsValidEpochInstant(oneDayFartherNs));
 
-    // Step 18.b.
+    // Step 17.b.
     dayLengthNs = oneDayFartherNs - intermediateNs;
     MOZ_ASSERT(IsValidInstantSpan(dayLengthNs));
 
@@ -955,27 +952,27 @@ bool js::temporal::NanosecondsToDays(
     // |endNs| and |oneDayFartherNs| are both valid epoch instant values, so the
     // difference is a valid epoch instant difference value, too.
 
-    // Step 18.c.
+    // Step 17.c.
     auto diff = ns - dayLengthNs;
     MOZ_ASSERT(IsValidInstantSpan(diff));
     MOZ_ASSERT(diff == (endNs - oneDayFartherNs));
 
     if (diff == InstantSpan{} || ((diff < InstantSpan{}) == (sign < 0))) {
-      // Step 18.c.i.
+      // Step 17.c.i.
       ns = diff;
 
-      // Step 18.c.ii.
+      // Step 17.c.ii.
       intermediateNs = oneDayFartherNs;
 
-      // Step 18.c.iii.
+      // Step 17.c.iii.
       daysToAdd += sign;
     } else {
-      // Step 18.d.
+      // Step 17.d.
       break;
     }
   }
 
-  // Step 19.
+  // Step 18.
   if (sign > 0) {
     bool totalDaysIsNegative;
     if (int64_t daysInt; mozilla::NumberEqualsInt64(days, &daysInt)) {
@@ -998,7 +995,7 @@ bool js::temporal::NanosecondsToDays(
     }
   }
 
-  // Step 20.
+  // Step 19.
   if (sign < 0) {
     // |daysToAdd| can't be positive for |sign = -1|.
     MOZ_ASSERT(daysToAdd <= 0);
@@ -1046,10 +1043,10 @@ bool js::temporal::NanosecondsToDays(
     MOZ_ASSERT(ns >= InstantSpan{});
   }
 
-  // Step 23.
+  // Step 22.
   MOZ_ASSERT(ns.abs() < dayLengthNs.abs());
 
-  // Step 24.
+  // Step 23.
   int64_t daysInt;
   if (mozilla::NumberEqualsInt64(days, &daysInt)) {
     auto daysChecked = mozilla::CheckedInt64(daysInt) + daysToAdd;
