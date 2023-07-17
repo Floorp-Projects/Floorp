@@ -474,3 +474,67 @@ snap_test_type
 For Snap tests tasks, used to disambiguate task label
 
 .. _primary one: https://taskcluster-taskgraph.readthedocs.io/en/latest/reference/transforms/from_deps.html#primary-kind
+
+build-type
+==========
+To do.
+
+component
+=========
+To do.
+
+treeherder-group
+================
+To do.
+
+apks
+====
+To do.
+
+nightly-task
+============
+To do.
+
+release-type
+============
+To do.
+
+shipping-product
+================
+To do.
+
+artifacts
+=========
+To do.
+
+screenshots
+===========
+To do.
+
+legacy
+======
+To do.
+
+is_final_chunked_task
+=====================
+To do.
+
+run_on_tasks_for
+================
+XXX Should not be needed!
+
+primary-kind-dependency
+=======================
+https://taskcluster-taskgraph.readthedocs.io/en/latest/reference/transforms/from_deps.html#primary-kind
+
+nightly-test
+============
+To do.
+
+abi
+===
+To do.
+
+apk
+===
+To do.

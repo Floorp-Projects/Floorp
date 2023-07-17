@@ -40,3 +40,5 @@ following ``run-using`` are available
   * ``always-optimized``
   * ``fetch-url``
   * ``python-test``
+  * ``gradlew``
+  * ``run-commands``
