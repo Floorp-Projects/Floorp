@@ -169,7 +169,7 @@ bool BoxAnyRef(JSContext* cx, HandleValue val, MutableHandleAnyRef result);
 JSObject* BoxBoxableValue(JSContext* cx, HandleValue val);
 
 // Given any AnyRef, unbox it as a JS Value.  If it is a reference to a wasm
-// object it will be reflected as a JSObject* representing some TypedObject
+// object it will be reflected as a JSObject* representing some WasmGcObject
 // instance.
 
 Value UnboxAnyRef(AnyRef val);
