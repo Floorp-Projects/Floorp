@@ -1668,43 +1668,57 @@ static bool ZonedDateTime_compare(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
- * get Temporal.ZonedDateTime.prototype.calendar
+ * get Temporal.ZonedDateTime.prototype.calendarId
  */
-static bool ZonedDateTime_calendar(JSContext* cx, const CallArgs& args) {
-  // Step 3.
+static bool ZonedDateTime_calendarId(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
-  args.rval().setObject(*zonedDateTime->calendar());
+
+  // Step 3.
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
+  auto* calendarId = ToTemporalCalendarIdentifier(cx, calendar);
+  if (!calendarId) {
+    return false;
+  }
+
+  args.rval().setString(calendarId);
   return true;
 }
 
 /**
- * get Temporal.ZonedDateTime.prototype.calendar
+ * get Temporal.ZonedDateTime.prototype.calendarId
  */
-static bool ZonedDateTime_calendar(JSContext* cx, unsigned argc, Value* vp) {
+static bool ZonedDateTime_calendarId(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-2.
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_calendar>(cx,
-                                                                       args);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_calendarId>(cx,
+                                                                         args);
 }
 
 /**
- * get Temporal.ZonedDateTime.prototype.timeZone
+ * get Temporal.ZonedDateTime.prototype.timeZoneId
  */
-static bool ZonedDateTime_timeZone(JSContext* cx, const CallArgs& args) {
-  // Step 3.
+static bool ZonedDateTime_timeZoneId(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
-  args.rval().setObject(*zonedDateTime->timeZone());
+
+  // Step 3.
+  Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
+  auto* timeZoneId = ToTemporalTimeZoneIdentifier(cx, timeZone);
+  if (!timeZoneId) {
+    return false;
+  }
+
+  args.rval().setString(timeZoneId);
   return true;
 }
 
 /**
- * get Temporal.ZonedDateTime.prototype.timeZone
+ * get Temporal.ZonedDateTime.prototype.timeZoneId
  */
-static bool ZonedDateTime_timeZone(JSContext* cx, unsigned argc, Value* vp) {
+static bool ZonedDateTime_timeZoneId(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-2.
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_timeZone>(cx,
-                                                                       args);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_timeZoneId>(cx,
+                                                                         args);
 }
 
 /**
@@ -3751,6 +3765,60 @@ static bool ZonedDateTime_getISOFields(JSContext* cx, unsigned argc,
       cx, args);
 }
 
+/**
+ * Temporal.ZonedDateTime.prototype.getCalendar ( )
+ */
+static bool ZonedDateTime_getCalendar(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
+
+  // Step 3.
+  auto* obj = ToTemporalCalendarObject(cx, calendar);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.getCalendar ( )
+ */
+static bool ZonedDateTime_getCalendar(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_getCalendar>(cx,
+                                                                          args);
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.getTimeZone ( )
+ */
+static bool ZonedDateTime_getTimeZone(JSContext* cx, const CallArgs& args) {
+  auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
+  Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
+
+  // Step 3.
+  auto* obj = ToTemporalTimeZoneObject(cx, timeZone);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.ZonedDateTime.prototype.getTimeZone ( )
+ */
+static bool ZonedDateTime_getTimeZone(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsZonedDateTime, ZonedDateTime_getTimeZone>(cx,
+                                                                          args);
+}
+
 const JSClass ZonedDateTimeObject::class_ = {
     "Temporal.ZonedDateTime",
     JSCLASS_HAS_RESERVED_SLOTS(ZonedDateTimeObject::SLOT_COUNT) |
@@ -3791,12 +3859,14 @@ static const JSFunctionSpec ZonedDateTime_prototype_methods[] = {
     JS_FN("toPlainYearMonth", ZonedDateTime_toPlainYearMonth, 0, 0),
     JS_FN("toPlainMonthDay", ZonedDateTime_toPlainMonthDay, 0, 0),
     JS_FN("getISOFields", ZonedDateTime_getISOFields, 0, 0),
+    JS_FN("getCalendar", ZonedDateTime_getCalendar, 0, 0),
+    JS_FN("getTimeZone", ZonedDateTime_getTimeZone, 0, 0),
     JS_FS_END,
 };
 
 static const JSPropertySpec ZonedDateTime_prototype_properties[] = {
-    JS_PSG("calendar", ZonedDateTime_calendar, 0),
-    JS_PSG("timeZone", ZonedDateTime_timeZone, 0),
+    JS_PSG("calendarId", ZonedDateTime_calendarId, 0),
+    JS_PSG("timeZoneId", ZonedDateTime_timeZoneId, 0),
     JS_PSG("year", ZonedDateTime_year, 0),
     JS_PSG("month", ZonedDateTime_month, 0),
     JS_PSG("monthCode", ZonedDateTime_monthCode, 0),

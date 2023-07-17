@@ -1371,23 +1371,30 @@ static bool PlainDateTime_compare(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
- * get Temporal.PlainDateTime.prototype.calendar
+ * get Temporal.PlainDateTime.prototype.calendarId
  */
-static bool PlainDateTime_calendar(JSContext* cx, const CallArgs& args) {
-  // Step 3.
+static bool PlainDateTime_calendarId(JSContext* cx, const CallArgs& args) {
   auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
-  args.rval().setObject(*dateTime->calendar());
+
+  // Step 3.
+  Rooted<CalendarValue> calendar(cx, dateTime->calendar());
+  auto* calendarId = ToTemporalCalendarIdentifier(cx, calendar);
+  if (!calendarId) {
+    return false;
+  }
+
+  args.rval().setString(calendarId);
   return true;
 }
 
 /**
- * get Temporal.PlainDateTime.prototype.calendar
+ * get Temporal.PlainDateTime.prototype.calendarId
  */
-static bool PlainDateTime_calendar(JSContext* cx, unsigned argc, Value* vp) {
+static bool PlainDateTime_calendarId(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-2.
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_calendar>(cx,
-                                                                       args);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_calendarId>(cx,
+                                                                         args);
 }
 
 /**
@@ -2451,6 +2458,33 @@ static bool PlainDateTime_getISOFields(JSContext* cx, unsigned argc,
 }
 
 /**
+ * Temporal.PlainDateTime.prototype.getCalendar ( )
+ */
+static bool PlainDateTime_getCalendar(JSContext* cx, const CallArgs& args) {
+  auto* temporalDateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<CalendarValue> calendar(cx, temporalDateTime->calendar());
+
+  // Step 3.
+  auto* obj = ToTemporalCalendarObject(cx, calendar);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainDateTime.prototype.getCalendar ( )
+ */
+static bool PlainDateTime_getCalendar(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDateTime, PlainDateTime_getCalendar>(cx,
+                                                                          args);
+}
+
+/**
  * Temporal.PlainDateTime.prototype.toZonedDateTime ( temporalTimeZoneLike [ ,
  * options ] )
  */
@@ -2691,11 +2725,12 @@ static const JSFunctionSpec PlainDateTime_prototype_methods[] = {
     JS_FN("toPlainMonthDay", PlainDateTime_toPlainMonthDay, 0, 0),
     JS_FN("toPlainTime", PlainDateTime_toPlainTime, 0, 0),
     JS_FN("getISOFields", PlainDateTime_getISOFields, 0, 0),
+    JS_FN("getCalendar", PlainDateTime_getCalendar, 0, 0),
     JS_FS_END,
 };
 
 static const JSPropertySpec PlainDateTime_prototype_properties[] = {
-    JS_PSG("calendar", PlainDateTime_calendar, 0),
+    JS_PSG("calendarId", PlainDateTime_calendarId, 0),
     JS_PSG("year", PlainDateTime_year, 0),
     JS_PSG("month", PlainDateTime_month, 0),
     JS_PSG("monthCode", PlainDateTime_monthCode, 0),

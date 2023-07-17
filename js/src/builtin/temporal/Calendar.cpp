@@ -790,6 +790,18 @@ JSString* js::temporal::ToTemporalCalendarIdentifier(
   return identifier.toString();
 }
 
+/**
+ * ToTemporalCalendarObject ( calendarSlotValue )
+ */
+JSObject* js::temporal::ToTemporalCalendarObject(
+    JSContext* cx, Handle<CalendarValue> calendar) {
+  // Step 1.
+  return calendar;
+
+  // Step 2.
+  // TODO: String calendars not yet implemented.
+}
+
 static bool ToCalendarField(JSContext* cx, JSLinearString* linear,
                             CalendarField* result) {
   if (StringEqualsLiteral(linear, "year")) {
@@ -3315,8 +3327,14 @@ static bool Calendar_from(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  Rooted<CalendarValue> obj(cx);
-  if (!ToTemporalCalendar(cx, args.get(0), &obj)) {
+  Rooted<CalendarValue> calendar(cx);
+  if (!ToTemporalCalendar(cx, args.get(0), &calendar)) {
+    return false;
+  }
+
+  // Step 2.
+  auto* obj = ToTemporalCalendarObject(cx, calendar);
+  if (!obj) {
     return false;
   }
 
