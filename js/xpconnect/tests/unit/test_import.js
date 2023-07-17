@@ -2,48 +2,48 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var AppConstants;
+var TestFile;
 function run_test() {
   var scope = {};
-  var exports = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", scope);
-  Assert.equal(typeof(scope.AppConstants), "object");
-  Assert.equal(typeof(scope.AppConstants.isPlatformAndVersionAtLeast), "function");
+  var exports = ChromeUtils.import("resource://test/TestFile.jsm", scope);
+  Assert.equal(typeof(scope.TestFile), "object");
+  Assert.equal(typeof(scope.TestFile.doTest), "function");
 
-  equal(scope.AppConstants, exports.AppConstants);
-  deepEqual(Object.keys(scope), ["AppConstants"]);
-  deepEqual(Object.keys(exports), ["AppConstants"]);
+  equal(scope.TestFile, exports.TestFile);
+  deepEqual(Object.keys(scope), ["TestFile"]);
+  deepEqual(Object.keys(exports), ["TestFile"]);
 
-  exports = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-  equal(scope.AppConstants, exports.AppConstants);
-  deepEqual(Object.keys(exports), ["AppConstants"]);
+  exports = ChromeUtils.import("resource://test/TestFile.jsm");
+  equal(scope.TestFile, exports.TestFile);
+  deepEqual(Object.keys(exports), ["TestFile"]);
 
   // access module's global object directly without importing any
   // symbols
   Assert.throws(
-    () => ChromeUtils.import("resource://gre/modules/AppConstants.jsm", null),
+    () => ChromeUtils.import("resource://test/TestFile.jsm", null),
     TypeError
   );
 
   // import symbols to our global object
   Assert.equal(typeof(Cu.import), "function");
-  ({AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm"));
-  Assert.equal(typeof(AppConstants), "object");
-  Assert.equal(typeof(AppConstants.isPlatformAndVersionAtLeast), "function");
+  ({TestFile} = ChromeUtils.import("resource://test/TestFile.jsm"));
+  Assert.equal(typeof(TestFile), "object");
+  Assert.equal(typeof(TestFile.doTest), "function");
 
   // try on a new object
   var scope2 = {};
-  ChromeUtils.import("resource://gre/modules/AppConstants.jsm", scope2);
-  Assert.equal(typeof(scope2.AppConstants), "object");
-  Assert.equal(typeof(scope2.AppConstants.isPlatformAndVersionAtLeast), "function");
+  ChromeUtils.import("resource://test/TestFile.jsm", scope2);
+  Assert.equal(typeof(scope2.TestFile), "object");
+  Assert.equal(typeof(scope2.TestFile.doTest), "function");
 
-  Assert.ok(scope2.AppConstants == scope.AppConstants);
+  Assert.ok(scope2.TestFile == scope.TestFile);
 
   // try on a new object using the resolved URL
   var res = Cc["@mozilla.org/network/protocol;1?name=resource"]
               .getService(Ci.nsIResProtocolHandler);
   var resURI = Cc["@mozilla.org/network/io-service;1"]
                  .getService(Ci.nsIIOService)
-                 .newURI("resource://gre/modules/AppConstants.jsm");
+                 .newURI("resource://test/TestFile.jsm");
   dump("resURI: " + resURI + "\n");
   var filePath = res.resolveURI(resURI);
   var scope3 = {};
@@ -55,7 +55,7 @@ function run_test() {
   // make sure we throw when the second arg is bogus
   var didThrow = false;
   try {
-      ChromeUtils.import("resource://gre/modules/AppConstants.jsm", "wrong");
+      ChromeUtils.import("resource://test/TestFile.jsm", "wrong");
   } catch (ex) {
       print("exception (expected): " + ex);
       didThrow = true;
