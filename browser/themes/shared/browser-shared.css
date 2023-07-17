@@ -183,17 +183,20 @@ toolbar[brighttext] :is(a, .text-link):-moz-lwtheme,
   transition: var(--ext-theme-background-transition);
 }
 
-/* Bookmark toolbar */
+/* Bookmarks toolbar */
 
 #PersonalToolbar {
+  padding-inline: 6px;
+  /* For vertical sliding animation: */
   overflow: clip;
   max-height: 4em;
-  padding-inline: 6px;
 }
 
 :root[uidensity=compact] #PersonalToolbar {
   padding-inline: 2px;
 }
+
+/* Bookmarks toolbar vertical sliding animation */
 
 :root[sessionrestored] #PersonalToolbar:not(.instant) {
   transition: min-height 170ms ease-out, max-height 170ms ease-out, var(--ext-theme-background-transition);
@@ -207,6 +210,35 @@ toolbar[brighttext] :is(a, .text-link):-moz-lwtheme,
 :root[sessionrestored] #PersonalToolbar:not(.instant)[collapsed=true] {
   transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
 }
+
+#PersonalToolbar[collapsed=true].instant {
+  visibility: collapse;
+}
+
+/* Bookmarks toolbar only-on-new-tab mode */
+
+:root[BookmarksToolbarOverlapsBrowser] {
+  --bookmarks-toolbar-height: max(28px, 2em);
+}
+
+:root[BookmarksToolbarOverlapsBrowser] #PersonalToolbar {
+  height: var(--bookmarks-toolbar-height);
+}
+
+:root[BookmarksToolbarOverlapsBrowser] #navigator-toolbox-background {
+  /* Overlap the content area by the height of the bookmarks toolbar so that
+     temporarily showing the toolbar doesn't resize the content area. */
+  margin-bottom: calc(-1 * var(--bookmarks-toolbar-height));
+  z-index: 1;
+}
+
+:root[BookmarksToolbarOverlapsBrowser] .newTabBrowserPanel {
+  /* Make room for the bookmarks toolbar so that it won't actually overlap the
+     new tab page. */
+  padding-top: var(--bookmarks-toolbar-height);
+}
+
+/* Bookmarks toolbar empty message */
 
 #PersonalToolbar[collapsed=false]:not([initialized]) > #personal-toolbar-empty {
   visibility: hidden;
@@ -232,9 +264,7 @@ toolbar[brighttext] :is(a, .text-link):-moz-lwtheme,
   z-index: 1;
 }
 
-#PersonalToolbar[collapsed=true].instant {
-  visibility: collapse;
-}
+/* Bookmarks toolbar in customize mode */
 
 #PersonalToolbar[customizing] {
   outline: 1px dashed;
@@ -246,12 +276,15 @@ toolbar[brighttext] :is(a, .text-link):-moz-lwtheme,
   min-height: 22px;
 }
 
+/* Bookmarks toolbar drop indicator */
+
 #PlacesToolbarDropIndicator {
   list-style-image: url(chrome://browser/skin/toolbar-drag-indicator.svg);
   pointer-events: none;
 }
 
-/* rules for menupopup drop indicators */
+/* Menupopup drop indicators */
+
 menupopup::part(drop-indicator-container) {
   /* TODO(emilio): When menupopups get ported to modern flex layout we can
    * probably simplify this substantially, by making the indicator position:
