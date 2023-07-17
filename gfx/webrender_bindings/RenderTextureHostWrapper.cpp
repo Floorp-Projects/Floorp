@@ -215,6 +215,26 @@ bool RenderTextureHostWrapper::IsWrappingAsyncRemoteTexture() {
   return mTextureId.isSome();
 }
 
+void RenderTextureHostWrapper::SetIsSoftwareDecodedVideo() {
+  if (mTextureId.isSome()) {
+    EnsureRemoteTexture();
+  }
+  if (!mTextureHost) {
+    return;
+  }
+  return mTextureHost->SetIsSoftwareDecodedVideo();
+}
+
+bool RenderTextureHostWrapper::IsSoftwareDecodedVideo() {
+  if (mTextureId.isSome()) {
+    EnsureRemoteTexture();
+  }
+  if (!mTextureHost) {
+    return false;
+  }
+  return mTextureHost->IsSoftwareDecodedVideo();
+}
+
 size_t RenderTextureHostWrapper::GetPlaneCount() const {
   if (RenderTextureHostSWGL* swglHost = EnsureRenderTextureHostSWGL()) {
     return swglHost->GetPlaneCount();
