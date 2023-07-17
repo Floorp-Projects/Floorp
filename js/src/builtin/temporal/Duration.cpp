@@ -3308,22 +3308,16 @@ static bool AdjustRoundedDurationDaysSlow(
   MOZ_ASSERT(IsValidInstantSpan(dayLengthNs));
 
   // Step 9.
-  Rooted<BigInt*> diff(cx, BigInt::sub(cx, timeRemainderNs, dayLengthNs));
-  if (!diff) {
+  Rooted<BigInt*> oneDayLess(cx, BigInt::sub(cx, timeRemainderNs, dayLengthNs));
+  if (!oneDayLess) {
     return false;
-  }
-
-  if ((direction > 0 && diff->sign() < 0) ||
-      (direction < 0 && diff->sign() > 0)) {
-    *result = duration;
-    return true;
   }
 
   // Step 10.
-  timeRemainderNs =
-      RoundTemporalInstant(cx, diff, increment, unit, roundingMode);
-  if (!timeRemainderNs) {
-    return false;
+  if ((direction > 0 && oneDayLess->sign() < 0) ||
+      (direction < 0 && oneDayLess->sign() > 0)) {
+    *result = duration;
+    return true;
   }
 
   // Step 11.
@@ -3341,13 +3335,20 @@ static bool AdjustRoundedDurationDaysSlow(
   }
 
   // Step 12.
+  timeRemainderNs =
+      RoundTemporalInstant(cx, oneDayLess, increment, unit, roundingMode);
+  if (!timeRemainderNs) {
+    return false;
+  }
+
+  // Step 13.
   TimeDuration adjustedTimeDuration;
   if (!::BalanceTimeDurationSlow(cx, timeRemainderNs, TemporalUnit::Hour,
                                  &adjustedTimeDuration)) {
     return false;
   }
 
-  // Step 13.
+  // Step 14.
   *result = {
       adjustedDateDuration.years,        adjustedDateDuration.months,
       adjustedDateDuration.weeks,        adjustedDateDuration.days,
@@ -3429,22 +3430,25 @@ bool js::temporal::AdjustRoundedDurationDays(
   }
 
   // Step 9.
-  auto checkedDiff = *timeRemainderNs - dayLength.toNanoseconds();
-  if (!checkedDiff.isValid()) {
+  auto checkedOneDayLess = *timeRemainderNs - dayLength.toNanoseconds();
+  if (!checkedOneDayLess.isValid()) {
     return AdjustRoundedDurationDaysSlow(cx, duration, increment, unit,
                                          roundingMode, relativeTo, dayLength,
                                          result);
   }
-  auto diff = checkedDiff.value();
+  auto oneDayLess = checkedOneDayLess.value();
 
-  if ((direction > 0 && diff < 0) || (direction < 0 && diff > 0)) {
+  // Step 10.
+  if ((direction > 0 && oneDayLess < 0) || (direction < 0 && oneDayLess > 0)) {
     *result = duration;
     return true;
   }
 
-  // Step 10.
+  // FIXME: spec issue - don't pass years,months,weeks,days to RoundDuration.
+
+  // Step 12. (Reordered)
   auto roundedTimeRemainderNs =
-      ::RoundTemporalInstant(diff, increment, unit, roundingMode);
+      ::RoundTemporalInstant(oneDayLess, increment, unit, roundingMode);
   if (!roundedTimeRemainderNs.isValid()) {
     return AdjustRoundedDurationDaysSlow(cx, duration, increment, unit,
                                          roundingMode, relativeTo, dayLength,
@@ -3465,7 +3469,7 @@ bool js::temporal::AdjustRoundedDurationDays(
     return false;
   }
 
-  // Step 12.
+  // Step 13.
   auto adjustedTimeDuration =
       ::BalanceTimeDuration(roundedTimeRemainderNs.value(), TemporalUnit::Hour);
 
@@ -3503,7 +3507,7 @@ bool js::temporal::AdjustRoundedDurationDays(
   //
   // clang-format on
 
-  // Step 13.
+  // Step 14.
   *result = {
       adjustedDateDuration.years,        adjustedDateDuration.months,
       adjustedDateDuration.weeks,        adjustedDateDuration.days,
