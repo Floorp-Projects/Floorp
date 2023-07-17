@@ -115,13 +115,7 @@ class InputResultDetailTest : BaseSessionTest() {
                             PanZoomController.SCROLLABLE_FLAG_NONE
                         }
 
-                        // FIXME: There are a couple of bugs here:
-                        //  1. In the case where touch-action allows the scrolling, the
-                        //     overscroll directions shouldn't depend on the presence of
-                        //     an event handler, but they do.
-                        //  2. In the case where touch-action doesn't allow the scrolling,
-                        //     the overscroll directions should probably be NONE.
-                        var expectedOverscrollDirections = if (touchAction != "none" && !scrollable && event) {
+                        var expectedOverscrollDirections = if (touchAction == "none") {
                             PanZoomController.OVERSCROLL_FLAG_NONE
                         } else {
                             (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL)

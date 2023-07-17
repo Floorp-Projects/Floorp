@@ -462,7 +462,7 @@ TEST_F(APZEventResultTesterMock, HandledByRootApzcFlag) {
                                      /*aPreventDefault=*/false);
   EXPECT_EQ(delayedAnswer,
             (APZHandledResult{APZHandledPlace::Unhandled, SideBits::eNone,
-                              ScrollDirections()}));
+                              EitherScrollDirection}));
 
   // Repeat the tap on the bottom half, with no event handler.
   // Make sure we get an eager answer of `Unhandled`.
