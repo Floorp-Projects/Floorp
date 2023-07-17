@@ -591,8 +591,9 @@ bool Module::instantiateMemories(
         return false;
       }
 
-      Rooted<ArrayBufferObjectMaybeShared*> buffer(cx);
-      if (!CreateWasmBuffer(cx, desc, &buffer)) {
+      Rooted<ArrayBufferObjectMaybeShared*> buffer(cx,
+                                                   CreateWasmBuffer(cx, desc));
+      if (!buffer) {
         return false;
       }
 
