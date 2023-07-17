@@ -378,7 +378,7 @@ static Wrapped<PlainDateObject*> ToTemporalDate(
     Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
     Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
-    if (!cx->compartment()->wrap(cx, &timeZone)) {
+    if (!timeZone.wrap(cx)) {
       return nullptr;
     }
     if (!calendar.wrap(cx)) {
@@ -2262,7 +2262,7 @@ static bool PlainDate_toZonedDateTime(JSContext* cx, const CallArgs& args) {
     // Steps 3.a-b.
     if (item->canUnwrapAs<TimeZoneObject>()) {
       // Step 3.a.i.
-      timeZone = item;
+      timeZone.set(TimeZoneValue(item));
 
       // Step 3.a.ii.
       temporalTime.setUndefined();

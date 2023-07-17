@@ -502,7 +502,7 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
       Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
       Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
-      if (!cx->compartment()->wrap(cx, &timeZone)) {
+      if (!timeZone.wrap(cx)) {
         return nullptr;
       }
       if (!calendar.wrap(cx)) {

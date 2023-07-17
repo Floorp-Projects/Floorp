@@ -147,18 +147,13 @@ static JSString* SystemTimeZoneIdentifier(JSContext* cx) {
   return cx->names().UTC;
 }
 
-/**
- * SystemTimeZone ( )
- */
-static TimeZoneObject* SystemTimeZone(JSContext* cx) {
-  // Step 1.
-  Rooted<JSString*> identifier(cx, DefaultTimeZone(cx));
-  if (!identifier) {
+static BuiltinTimeZoneObject* SystemTimeZoneObject(JSContext* cx) {
+  Rooted<JSString*> timeZoneIdentifier(cx, SystemTimeZoneIdentifier(cx));
+  if (!timeZoneIdentifier) {
     return nullptr;
   }
 
-  // Step 2.
-  return CreateTemporalTimeZone(cx, identifier);
+  return CreateTemporalTimeZone(cx, timeZoneIdentifier);
 }
 
 /**
@@ -209,10 +204,11 @@ static PlainDateTimeObject* SystemDateTime(JSContext* cx,
   // Steps 1-2.
   Rooted<TimeZoneValue> timeZone(cx);
   if (temporalTimeZoneLike.isUndefined()) {
-    timeZone = SystemTimeZone(cx);
-    if (!timeZone) {
+    auto* timeZoneObj = SystemTimeZoneObject(cx);
+    if (!timeZoneObj) {
       return nullptr;
     }
+    timeZone.set(TimeZoneValue(timeZoneObj));
   } else {
     if (!ToTemporalTimeZone(cx, temporalTimeZoneLike, &timeZone)) {
       return nullptr;
@@ -244,10 +240,11 @@ static ZonedDateTimeObject* SystemZonedDateTime(
   // Steps 1-2.
   Rooted<TimeZoneValue> timeZone(cx);
   if (temporalTimeZoneLike.isUndefined()) {
-    timeZone = SystemTimeZone(cx);
-    if (!timeZone) {
+    auto* timeZoneObj = SystemTimeZoneObject(cx);
+    if (!timeZoneObj) {
       return nullptr;
     }
+    timeZone.set(TimeZoneValue(timeZoneObj));
   } else {
     if (!ToTemporalTimeZone(cx, temporalTimeZoneLike, &timeZone)) {
       return nullptr;

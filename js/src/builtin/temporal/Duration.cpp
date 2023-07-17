@@ -635,7 +635,7 @@ static bool CalculateOffsetShift(JSContext* cx, Handle<JSObject*> relativeTo,
   Rooted<CalendarValue> calendar(cx, zonedRelativeTo->calendar());
 
   // Wrap into the current compartment.
-  if (!cx->compartment()->wrap(cx, &timeZone)) {
+  if (!timeZone.wrap(cx)) {
     return false;
   }
   if (!calendar.wrap(cx)) {
@@ -735,7 +735,7 @@ static ZonedDateTimeObject* MoveRelativeZonedDateTime(
   Rooted<TimeZoneValue> timeZone(cx, unwrappedZonedDateTime->timeZone());
   Rooted<CalendarValue> calendar(cx, unwrappedZonedDateTime->calendar());
 
-  if (!cx->compartment()->wrap(cx, &timeZone)) {
+  if (!timeZone.wrap(cx)) {
     return nullptr;
   }
   if (!calendar.wrap(cx)) {
@@ -1712,7 +1712,7 @@ static bool BalancePossiblyInfiniteDuration(
   Rooted<TimeZoneValue> timeZone(cx, unwrappedRelativeTo->timeZone());
   Rooted<CalendarValue> calendar(cx, unwrappedRelativeTo->calendar());
 
-  if (!cx->compartment()->wrap(cx, &timeZone)) {
+  if (!timeZone.wrap(cx)) {
     return false;
   }
   if (!calendar.wrap(cx)) {
@@ -3168,7 +3168,7 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
   Rooted<TimeZoneValue> timeZone(cx, unwrappedRelativeTo->timeZone());
   Rooted<CalendarValue> calendar(cx, unwrappedRelativeTo->calendar());
 
-  if (!cx->compartment()->wrap(cx, &timeZone)) {
+  if (!timeZone.wrap(cx)) {
     return false;
   }
   if (!calendar.wrap(cx)) {
@@ -3407,7 +3407,7 @@ bool js::temporal::AdjustRoundedDurationDays(
   Rooted<TimeZoneValue> timeZone(cx, unwrappedRelativeTo->timeZone());
   Rooted<CalendarValue> calendar(cx, unwrappedRelativeTo->calendar());
 
-  if (!cx->compartment()->wrap(cx, &timeZone)) {
+  if (!timeZone.wrap(cx)) {
     return false;
   }
   if (!calendar.wrap(cx)) {

@@ -971,10 +971,11 @@ static JSString* TemporalInstantToString(JSContext* cx,
   // Steps 3-4.
   Rooted<TimeZoneValue> outputTimeZone(cx, timeZone);
   if (!timeZone) {
-    outputTimeZone = CreateTemporalTimeZoneUTC(cx);
-    if (!outputTimeZone) {
+    auto* utcTimeZone = CreateTemporalTimeZoneUTC(cx);
+    if (!utcTimeZone) {
       return nullptr;
     }
+    outputTimeZone.set(TimeZoneValue(utcTimeZone));
   }
 
   // Step 5.

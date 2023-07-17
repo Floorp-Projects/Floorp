@@ -18,6 +18,7 @@
 #include "vm/NativeObject.h"
 
 class JSLinearString;
+class JS_PUBLIC_API JSTracer;
 struct JSClassOps;
 
 namespace js {
@@ -30,11 +31,8 @@ class TimeZone;
 
 namespace js::temporal {
 
-class TimeZoneObject : public NativeObject {
+class TimeZoneObjectMaybeBuiltin : public NativeObject {
  public:
-  static const JSClass class_;
-  static const JSClass& protoClass_;
-
   static constexpr uint32_t IDENTIFIER_SLOT = 0;
   static constexpr uint32_t OFFSET_NANOSECONDS_SLOT = 1;
   static constexpr uint32_t INTL_TIMEZONE_SLOT = 2;
@@ -63,14 +61,163 @@ class TimeZoneObject : public NativeObject {
     setFixedSlot(INTL_TIMEZONE_SLOT, JS::PrivateValue(timeZone));
   }
 
- private:
-  static const JSClassOps classOps_;
-  static const ClassSpec classSpec_;
-
+ protected:
   static void finalize(JS::GCContext* gcx, JSObject* obj);
 };
 
-using TimeZoneValue = JSObject*;
+class TimeZoneObject : public TimeZoneObjectMaybeBuiltin {
+ public:
+  static const JSClass class_;
+  static const JSClass& protoClass_;
+
+ private:
+  static const JSClassOps classOps_;
+  static const ClassSpec classSpec_;
+};
+
+class BuiltinTimeZoneObject : public TimeZoneObjectMaybeBuiltin {
+ public:
+  static const JSClass class_;
+
+ private:
+  static const JSClassOps classOps_;
+};
+
+/**
+ * Temporal time zones can be either objects or strings. Objects are either
+ * instances of `Temporal.TimeZone` or user-defined time zones. Strings are
+ * either canonical time zone identifiers or time zone offset strings.
+ *
+ * Examples of valid Temporal time zones:
+ * - Any object
+ * - "UTC"
+ * - "America/New_York"
+ * - "+00:00"
+ * - "+00:00:00.000000001"
+ *
+ * Examples of invalid Temporal time zones:
+ * - Number values
+ * - "utc" (wrong case)
+ * - "Etc/UTC" (canonical name is "UTC")
+ * - "+00" (missing minutes part)
+ * - "+00:00:00" (extra seconds part)
+ * - "+00:00:00.000000010" (trailing zero)
+ * - "-00:00" (wrong sign for zero offset)
+ *
+ * String-valued Temporal time zones are an optimization to avoid allocating
+ * `Temporal.TimeZone` objects when creating `Temporal.ZonedDateTime` objects.
+ * For example `Temporal.ZonedDateTime.from("1970-01-01[UTC]")` doesn't require
+ * to allocate a fresh `Temporal.TimeZone` object for the "UTC" time zone.
+ *
+ * The specification creates new `Temporal.TimeZone` objects whenever any
+ * operation is performed on a string-valued Temporal time zone. This newly
+ * created object can't be accessed by the user and implementations are expected
+ * to optimize away the allocation.
+ *
+ * The following two implementation approaches are possible:
+ *
+ * 1. Represent string-valued time zones as JSStrings. Additionally keep a
+ *    mapping from JSString to `mozilla::intl::TimeZone` to avoid repeatedly
+ *    creating new `mozilla::intl::TimeZone` for time zone operations. Offset
+ *    string time zones have to be special cased, because they don't use
+ *    `mozilla::intl::TimeZone`. Either detect offset strings by checking the
+ *    time zone identifier or store offset strings as the offset in nanoseconds
+ *    value to avoid reparsing the offset string again and again.
+ * 2. Represent string-valued time zones as `Temporal.TimeZone`-like objects.
+ *    These internal `Temporal.TimeZone`-like objects must not be exposed to
+ *    user-code.
+ *
+ * Option 2 is a bit easier to implement, so we use this approach for now.
+ */
+class TimeZoneValue final {
+  JSObject* object_ = nullptr;
+
+ public:
+  /**
+   * Default initialize this TimeZoneValue.
+   */
+  TimeZoneValue() = default;
+
+  /**
+   * Initialize this TimeZoneValue with a "string" time zone object.
+   */
+  explicit TimeZoneValue(BuiltinTimeZoneObject* timeZone) : object_(timeZone) {
+    MOZ_ASSERT(isString());
+  }
+
+  /**
+   * Initialize this TimeZoneValue with an "object" time zone object.
+   */
+  explicit TimeZoneValue(JSObject* timeZone) : object_(timeZone) {
+    MOZ_ASSERT(isObject());
+  }
+
+  /**
+   * Initialize this TimeZoneValue from a slot Value, which must be either a
+   * "string" or "object" time zone object.
+   */
+  explicit TimeZoneValue(const JS::Value& value) : object_(&value.toObject()) {}
+
+  /**
+   * Return true if this TimeZoneValue is not null.
+   */
+  explicit operator bool() const { return !!object_; }
+
+  /**
+   * Return true if this TimeZoneValue is a "string" time zone.
+   */
+  bool isString() const {
+    return object_ && object_->is<BuiltinTimeZoneObject>();
+  }
+
+  /**
+   * Return true if this TimeZoneValue is an "object" time zone.
+   */
+  bool isObject() const { return object_ && !isString(); }
+
+  /**
+   * Return this "string" time zone.
+   */
+  auto* toString() const {
+    MOZ_ASSERT(isString());
+    return &object_->as<BuiltinTimeZoneObject>();
+  }
+
+  /**
+   * Return this "object" time zone.
+   */
+  JSObject* toObject() const {
+    MOZ_ASSERT(isObject());
+    return object_;
+  }
+
+  /**
+   * Return the Value representation of this TimeZoneValue.
+   */
+  JS::Value toValue() const {
+    if (isString()) {
+      return JS::StringValue(toString()->identifier());
+    }
+
+    MOZ_ASSERT(object_);
+    return JS::ObjectValue(*object_);
+  }
+
+  /**
+   * Return the slot Value representation of this TimeZoneValue.
+   */
+  JS::Value toSlotValue() const {
+    MOZ_ASSERT(object_);
+    return JS::ObjectValue(*object_);
+  }
+
+  // Helper methods for (Mutable)WrappedPtrOperations.
+  auto address() { return &object_; }
+  auto address() const { return &object_; }
+
+  // Trace implementation.
+  void trace(JSTracer* trc);
+};
 
 struct Instant;
 struct PlainDateTime;
@@ -103,13 +250,13 @@ JSString* ValidateAndCanonicalizeTimeZoneName(JSContext* cx,
 /**
  * CreateTemporalTimeZone ( identifier [ , newTarget ] )
  */
-TimeZoneObject* CreateTemporalTimeZone(JSContext* cx,
-                                       JS::Handle<JSString*> identifier);
+BuiltinTimeZoneObject* CreateTemporalTimeZone(JSContext* cx,
+                                              JS::Handle<JSString*> identifier);
 
 /**
  * CreateTemporalTimeZone ( identifier [ , newTarget ] )
  */
-TimeZoneObject* CreateTemporalTimeZoneUTC(JSContext* cx);
+BuiltinTimeZoneObject* CreateTemporalTimeZoneUTC(JSContext* cx);
 
 /**
  * ToTemporalTimeZoneSlotValue ( temporalTimeZoneLike )
@@ -208,6 +355,66 @@ JSString* FormatTimeZoneOffsetString(JSContext* cx, int64_t offsetNanoseconds);
 JSString* FormatISOTimeZoneOffsetString(JSContext* cx,
                                         int64_t offsetNanoseconds);
 
+// Helper for MutableWrappedPtrOperations.
+bool WrapTimeZoneValueObject(JSContext* cx,
+                             JS::MutableHandle<JSObject*> timeZone);
+
 } /* namespace js::temporal */
+
+template <>
+inline bool JSObject::is<js::temporal::TimeZoneObjectMaybeBuiltin>() const {
+  return is<js::temporal::TimeZoneObject>() ||
+         is<js::temporal::BuiltinTimeZoneObject>();
+}
+
+namespace js {
+
+template <typename Wrapper>
+class WrappedPtrOperations<temporal::TimeZoneValue, Wrapper> {
+  const auto& container() const {
+    return static_cast<const Wrapper*>(this)->get();
+  }
+
+ public:
+  explicit operator bool() const { return !!container(); }
+
+  bool isString() const { return container().isString(); }
+
+  bool isObject() const { return container().isObject(); }
+
+  JS::Handle<temporal::BuiltinTimeZoneObject*> toString() const {
+    MOZ_ASSERT(container().isString());
+    auto h = JS::Handle<JSObject*>::fromMarkedLocation(container().address());
+    return h.template as<temporal::BuiltinTimeZoneObject>();
+  }
+
+  JS::Handle<JSObject*> toObject() const {
+    MOZ_ASSERT(container().isObject());
+    return JS::Handle<JSObject*>::fromMarkedLocation(container().address());
+  }
+
+  JS::Value toValue() const { return container().toValue(); }
+
+  JS::Value toSlotValue() const { return container().toSlotValue(); }
+};
+
+template <typename Wrapper>
+class MutableWrappedPtrOperations<temporal::TimeZoneValue, Wrapper>
+    : public WrappedPtrOperations<temporal::TimeZoneValue, Wrapper> {
+  auto& container() { return static_cast<Wrapper*>(this)->get(); }
+
+ public:
+  /**
+   * Wrap the time zone value into the current compartment.
+   */
+  bool wrap(JSContext* cx) {
+    MOZ_ASSERT(container().isString() || container().isObject());
+    auto mh =
+        JS::MutableHandle<JSObject*>::fromMarkedLocation(container().address());
+    return temporal::WrapTimeZoneValueObject(cx, mh);
+  }
+};
+
+} /* namespace js */
 
 #endif /* builtin_temporal_TimeZone_h */
