@@ -10,8 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[SecureContext, Pref="dom.audioworklet.enabled",
- Exposed=Window]
+[SecureContext, Exposed=Window]
 interface AudioParamMap {
     readonly maplike<DOMString, AudioParam>;
 };
