@@ -4733,12 +4733,7 @@
   type: bool
   value: true
   mirror: always
-
-- name: dom.window.history.async
-  type: bool
-  value: true
-  mirror: always
-
+  
 - name: dom.window.clientinformation.enabled
   type: bool
   value: true
