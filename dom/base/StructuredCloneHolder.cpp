@@ -1104,7 +1104,8 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
 
   if (StaticPrefs::dom_media_webcodecs_enabled() &&
       aTag == SCTAG_DOM_VIDEOFRAME &&
-      CloneScope() == StructuredCloneScope::SameProcess) {
+      CloneScope() == StructuredCloneScope::SameProcess &&
+      aCloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
     JS::Rooted<JSObject*> global(aCx, mGlobal->GetGlobalJSObject());
     if (VideoFrame_Binding::ConstructorEnabled(aCx, global)) {
       return VideoFrame::ReadStructuredClone(aCx, mGlobal, aReader,
@@ -1372,7 +1373,8 @@ StructuredCloneHolder::CustomReadTransferHandler(
 
   if (StaticPrefs::dom_media_webcodecs_enabled() &&
       aTag == SCTAG_DOM_VIDEOFRAME &&
-      CloneScope() == StructuredCloneScope::SameProcess) {
+      CloneScope() == StructuredCloneScope::SameProcess &&
+      aCloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
     MOZ_ASSERT(aContent);
 
     JS::Rooted<JSObject*> globalObj(aCx, mGlobal->GetGlobalJSObject());
