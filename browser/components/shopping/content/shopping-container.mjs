@@ -10,6 +10,8 @@ import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import "chrome://browser/content/shopping/highlights.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/shopping/settings.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/shopping/adjusted-rating.mjs";
 
 export class ShoppingContainer extends MozLitElement {
   static properties = {
@@ -63,6 +65,9 @@ export class ShoppingContainer extends MozLitElement {
           ></button>
         </div>
         <div id="content">
+          <adjusted-rating
+            rating=${this.data.adjusted_rating}
+          ></adjusted-rating>
           <review-highlights></review-highlights>
           <shopping-settings></shopping-settings>
         </div>
