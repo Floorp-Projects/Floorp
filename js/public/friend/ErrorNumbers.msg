@@ -824,7 +824,7 @@ MSG_DEF(JSMSG_TEMPORAL_INVALID_UNIT_RANGE,          0, JSEXN_RANGEERR, "smallest
 MSG_DEF(JSMSG_TEMPORAL_INVALID_UNIT_OPTION,         2, JSEXN_RANGEERR, "{0} is not a valid {1} option in this context")
 MSG_DEF(JSMSG_TEMPORAL_INVALID_NUMBER,              1, JSEXN_RANGEERR, "{0} must be larger than zero")
 MSG_DEF(JSMSG_TEMPORAL_INVALID_INTEGER,             1, JSEXN_RANGEERR, "{0} must be an integer")
-MSG_DEF(JSMSG_TEMPORAL_INVALID_OBJECT,              2, JSEXN_RANGEERR, "{0} mustn't be a {1} object")
+MSG_DEF(JSMSG_TEMPORAL_INVALID_OBJECT,              2, JSEXN_TYPEERR, "{0} mustn't be a {1} object")
 MSG_DEF(JSMSG_TEMPORAL_MISSING_OPTION,              1, JSEXN_RANGEERR, "undefined {0} option")
 MSG_DEF(JSMSG_TEMPORAL_MISSING_PROPERTY,            1, JSEXN_TYPEERR, "{0} property is undefined")
 MSG_DEF(JSMSG_TEMPORAL_UNEXPECTED_PROPERTY,         1, JSEXN_TYPEERR, "{0} property is not undefined")

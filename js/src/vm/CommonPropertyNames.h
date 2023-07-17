@@ -272,6 +272,7 @@
   MACRO_(hour12, hour12, "hour12")                                             \
   MACRO_(hourCycle, hourCycle, "hourCycle")                                    \
   MACRO_(hours, hours, "hours")                                                \
+  MACRO2(id, id, "id")                                                         \
   MACRO2(if, if_, "if")                                                        \
   MACRO_(ignoreCase, ignoreCase, "ignoreCase")                                 \
   MACRO_(ignorePunctuation, ignorePunctuation, "ignorePunctuation")            \
