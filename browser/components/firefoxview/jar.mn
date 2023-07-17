@@ -31,6 +31,11 @@ browser.jar:
     content/browser/firefoxview/recentlyclosed.mjs
     content/browser/firefoxview/viewpage.mjs
     content/browser/firefoxview/recently-closed-empty.svg (content/recently-closed-empty.svg)
+    content/browser/firefoxview/category-history.svg (content/category-history.svg)
+    content/browser/firefoxview/category-opentabs.svg (content/category-opentabs.svg)
+    content/browser/firefoxview/category-overview.svg (content/category-overview.svg)
+    content/browser/firefoxview/category-recentlyclosed.svg (content/category-recentlyclosed.svg)
+    content/browser/firefoxview/category-syncedtabs.svg (content/category-syncedtabs.svg)
     content/browser/firefoxview/tab-pickup-empty.svg (content/tab-pickup-empty.svg)
     content/browser/callout-tab-pickup.svg (content/callout-tab-pickup.svg)
     content/browser/callout-tab-pickup-dark.svg (content/callout-tab-pickup-dark.svg)
