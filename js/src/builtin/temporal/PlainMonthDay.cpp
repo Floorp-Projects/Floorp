@@ -164,19 +164,7 @@ static bool ToTemporalCalendarForMonthDay(JSContext* cx,
                                           Handle<JSObject*> object,
                                           MutableHandle<CalendarValue> result) {
   if (auto* unwrapped = object->maybeUnwrapIf<T>()) {
-    if constexpr (std::is_same_v<T, PlainTimeObject>) {
-      AutoRealm ar(cx, unwrapped);
-      Rooted<PlainTimeObject*> plainTime(cx, unwrapped);
-
-      auto* calendar = PlainTimeObject::getOrCreateCalendar(cx, plainTime);
-      if (!calendar) {
-        return false;
-      }
-
-      result.set(calendar);
-    } else {
-      result.set(unwrapped->calendar());
-    }
+    result.set(unwrapped->calendar());
     return cx->compartment()->wrap(cx, result);
   }
 
@@ -212,7 +200,7 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
     Rooted<CalendarValue> calendar(cx);
     bool calendarAbsent = false;
     if (!::ToTemporalCalendarForMonthDay<PlainDateObject, PlainDateTimeObject,
-                                         PlainTimeObject, PlainYearMonthObject,
+                                         PlainYearMonthObject,
                                          ZonedDateTimeObject>(cx, itemObj,
                                                               &calendar)) {
       return nullptr;

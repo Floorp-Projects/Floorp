@@ -360,9 +360,6 @@ static PlainTimeObject* CreateTemporalTime(JSContext* cx, const CallArgs& args,
                        Int32Value(nanosecond));
 
   // Step 10.
-  object->setFixedSlot(PlainTimeObject::CALENDAR_SLOT, NullValue());
-
-  // Step 11.
   return object;
 }
 
@@ -407,9 +404,6 @@ PlainTimeObject* js::temporal::CreateTemporalTime(JSContext* cx,
                        Int32Value(nanosecond));
 
   // Step 10.
-  object->setFixedSlot(PlainTimeObject::CALENDAR_SLOT, NullValue());
-
-  // Step 11.
   return object;
 }
 
@@ -1876,17 +1870,6 @@ static bool AddDurationToOrSubtractDurationFromPlainTime(
   return true;
 }
 
-JSObject* js::temporal::PlainTimeObject::createCalendar(
-    JSContext* cx, Handle<PlainTimeObject*> obj) {
-  auto* calendar = GetISO8601Calendar(cx);
-  if (!calendar) {
-    return nullptr;
-  }
-
-  obj->setCalendar(calendar);
-  return calendar;
-}
-
 /**
  * Temporal.PlainTime ( [ hour [ , minute [ , second [ , millisecond [ ,
  * microsecond [ , nanosecond ] ] ] ] ] ] )
@@ -2026,32 +2009,6 @@ static bool PlainTime_compare(JSContext* cx, unsigned argc, Value* vp) {
   // Step 3.
   args.rval().setInt32(CompareTemporalTime(one, two));
   return true;
-}
-
-/**
- * get Temporal.PlainTime.prototype.calendar
- */
-static bool PlainTime_calendar(JSContext* cx, const CallArgs& args) {
-  Rooted<PlainTimeObject*> temporalTime(
-      cx, &args.thisv().toObject().as<PlainTimeObject>());
-
-  // Step 3.
-  auto* calendar = PlainTimeObject::getOrCreateCalendar(cx, temporalTime);
-  if (!calendar) {
-    return false;
-  }
-
-  args.rval().setObject(*calendar);
-  return true;
-}
-
-/**
- * get Temporal.PlainTime.prototype.calendar
- */
-static bool PlainTime_calendar(JSContext* cx, unsigned argc, Value* vp) {
-  // Steps 1-2.
-  CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsPlainTime, PlainTime_calendar>(cx, args);
 }
 
 /**
@@ -2555,57 +2512,46 @@ static bool PlainTime_getISOFields(JSContext* cx, const CallArgs& args) {
       cx, &args.thisv().toObject().as<PlainTimeObject>());
   auto time = ToPlainTime(temporalTime);
 
-  auto* calendar = PlainTimeObject::getOrCreateCalendar(cx, temporalTime);
-  if (!calendar) {
-    return false;
-  }
-
   // Step 3.
   Rooted<IdValueVector> fields(cx, IdValueVector(cx));
 
   // Step 4.
-  if (!fields.emplaceBack(NameToId(cx->names().calendar),
-                          ObjectValue(*calendar))) {
-    return false;
-  }
-
-  // Step 5.
   if (!fields.emplaceBack(NameToId(cx->names().isoHour),
                           Int32Value(time.hour))) {
     return false;
   }
 
-  // Step 6.
+  // Step 5.
   if (!fields.emplaceBack(NameToId(cx->names().isoMicrosecond),
                           Int32Value(time.microsecond))) {
     return false;
   }
 
-  // Step 7.
+  // Step 6.
   if (!fields.emplaceBack(NameToId(cx->names().isoMillisecond),
                           Int32Value(time.millisecond))) {
     return false;
   }
 
-  // Step 8.
+  // Step 7.
   if (!fields.emplaceBack(NameToId(cx->names().isoMinute),
                           Int32Value(time.minute))) {
     return false;
   }
 
-  // Step 9.
+  // Step 8.
   if (!fields.emplaceBack(NameToId(cx->names().isoNanosecond),
                           Int32Value(time.nanosecond))) {
     return false;
   }
 
-  // Step 10.
+  // Step 9.
   if (!fields.emplaceBack(NameToId(cx->names().isoSecond),
                           Int32Value(time.second))) {
     return false;
   }
 
-  // Step 11.
+  // Step 10.
   auto* obj =
       NewPlainObjectWithUniqueNames(cx, fields.begin(), fields.length());
   if (!obj) {
@@ -2793,7 +2739,6 @@ static const JSFunctionSpec PlainTime_prototype_methods[] = {
 };
 
 static const JSPropertySpec PlainTime_prototype_properties[] = {
-    JS_PSG("calendar", PlainTime_calendar, 0),
     JS_PSG("hour", PlainTime_hour, 0),
     JS_PSG("minute", PlainTime_minute, 0),
     JS_PSG("second", PlainTime_second, 0),
