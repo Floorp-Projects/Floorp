@@ -586,6 +586,7 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
         operation == PlainYearMonthDuration::Add ? "add" : "subtract";
     options = RequireObjectArg(cx, "options", name, args[1]);
   } else {
+    // TODO: Avoid creating an options object if not necessary.
     options = NewPlainObjectWithProto(cx, nullptr);
   }
   if (!options) {
@@ -611,35 +612,104 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
   }
 
   // Step 8.
-  int32_t sign = DurationSign(
-      {duration.years, duration.months, duration.weeks, balanceResult.days});
+  Rooted<PlainObject*> fieldsCopy(cx, CopyOptions(cx, fields));
+  if (!fieldsCopy) {
+    return false;
+  }
 
-  // Steps 9-10.
-  Rooted<Value> day(cx);
-  if (sign < 0) {
-    // Step 9.
-    Rooted<Value> yearMonthValue(cx, ObjectValue(*yearMonth));
-    if (!CalendarDaysInMonth(cx, calendar, yearMonthValue, &day)) {
-      return false;
-    }
-  } else {
-    // Step 10.
-    day.setInt32(1);
+  // Step 9.
+  Value one = Int32Value(1);
+  auto handleOne = Handle<Value>::fromMarkedLocation(&one);
+  if (!DefineDataProperty(cx, fields, cx->names().day, handleOne)) {
+    return false;
+  }
+
+  // Step 10.
+  Rooted<Wrapped<PlainDateObject*>> intermediateDate(
+      cx, CalendarDateFromFields(cx, calendar, fields));
+  if (!intermediateDate) {
+    return false;
   }
 
   // Step 11.
-  if (!DefineDataProperty(cx, fields, cx->names().day, day)) {
-    return false;
-  }
+  int32_t sign = DurationSign(
+      {duration.years, duration.months, duration.weeks, balanceResult.days});
+
+  // FIXME: spec bug - calendar can be a string.
+  // https://github.com/tc39/proposal-temporal/issues/2619
 
   // Step 12.
-  Rooted<Wrapped<PlainDateObject*>> date(
-      cx, CalendarDateFromFields(cx, calendar, fields));
-  if (!date) {
-    return false;
+  Rooted<Value> dateAdd(cx);
+  if (calendar.isObject()) {
+    Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+
+    if (!GetMethod(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
+      return false;
+    }
   }
 
-  // Step 13.
+  // Steps 13-14.
+  Rooted<Wrapped<PlainDateObject*>> date(cx);
+  if (sign < 0) {
+    // |intermediateDate| is initialized to the first day of |yearMonth|'s
+    // month. Compute the last day of |yearMonth|'s month by first adding one
+    // month and then subtracting one day.
+    //
+    // This is roughly equivalent to these calls:
+    //
+    // js> var ym = new Temporal.PlainYearMonth(2023, 1);
+    // js> ym.toPlainDate({day: 1}).add({months: 1}).subtract({days: 1}).day
+    // 31
+    //
+    // For many calendars this is equivalent to `ym.daysInMonth`, except when
+    // some days are skipped, for example consider the Julian-to-Gregorian
+    // calendar transition.
+
+    // Step 13.a.
+    Duration oneMonthDuration = {0, 1};
+
+    // Step 13.b.
+    Rooted<Wrapped<PlainDateObject*>> nextMonth(
+        cx, CalendarDateAdd(cx, calendar, intermediateDate, oneMonthDuration,
+                            dateAdd));
+    if (!nextMonth) {
+      return false;
+    }
+
+    // Step 13.c.
+    Duration minusDayDuration = {0, 0, 0, -1};
+
+    // Step 13.d.
+    Rooted<Wrapped<PlainDateObject*>> endOfMonth(
+        cx,
+        CalendarDateAdd(cx, calendar, nextMonth, minusDayDuration, dateAdd));
+    if (!endOfMonth) {
+      return false;
+    }
+
+    // Step 13.e.
+    Rooted<Value> endOfMonthValue(cx, ObjectValue(*endOfMonth));
+    Rooted<Value> day(cx);
+    if (!CalendarDay(cx, calendar, endOfMonthValue, &day)) {
+      return false;
+    }
+
+    // Step 13.f.
+    if (!DefineDataProperty(cx, fieldsCopy, cx->names().day, day)) {
+      return false;
+    }
+
+    // Step 13.g.
+    date = CalendarDateFromFields(cx, calendar, fieldsCopy);
+    if (!date) {
+      return false;
+    }
+  } else {
+    // Step 14.a.
+    date = intermediateDate;
+  }
+
+  // Step 15.
   Rooted<DurationObject*> durationToAdd(
       cx, CreateTemporalDuration(cx, {duration.years, duration.months,
                                       duration.weeks, balanceResult.days}));
@@ -647,27 +717,30 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
     return false;
   }
 
-  // Step 14.
+  // FIXME: spec issue - unnecessary call to GetOptionsObject
+  // https://github.com/tc39/proposal-temporal/issues/2620
+
+  // Step 16.
   Rooted<PlainObject*> optionsCopy(cx, CopyOptions(cx, options));
   if (!optionsCopy) {
     return false;
   }
 
-  // Step 15.
+  // Step 17.
   Rooted<Wrapped<PlainDateObject*>> addedDate(
-      cx, CalendarDateAdd(cx, calendar, date, durationToAdd, options));
+      cx, CalendarDateAdd(cx, calendar, date, durationToAdd, options, dateAdd));
   if (!addedDate) {
     return false;
   }
 
-  // Step 16.
+  // Step 18.
   Rooted<PlainObject*> addedDateFields(
       cx, PrepareTemporalFields(cx, addedDate, fieldNames));
   if (!addedDateFields) {
     return false;
   }
 
-  // Step 17.
+  // Step 19.
   auto obj =
       CalendarYearMonthFromFields(cx, calendar, addedDateFields, optionsCopy);
   if (!obj) {
