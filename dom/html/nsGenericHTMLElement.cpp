@@ -3454,13 +3454,20 @@ void nsGenericHTMLElement::FocusPreviousElementAfterHidingPopover() {
 }
 
 // https://html.spec.whatwg.org/multipage/popover.html#dom-togglepopover
-void nsGenericHTMLElement::TogglePopover(const Optional<bool>& aForce,
+bool nsGenericHTMLElement::TogglePopover(const Optional<bool>& aForce,
                                          ErrorResult& aRv) {
   if (PopoverOpen() && (!aForce.WasPassed() || !aForce.Value())) {
     HidePopover(aRv);
   } else if (!aForce.WasPassed() || aForce.Value()) {
     ShowPopover(aRv);
+  } else {
+    CheckPopoverValidity(GetPopoverData()
+                             ? GetPopoverData()->GetPopoverVisibilityState()
+                             : PopoverVisibilityState::Showing,
+                         nullptr, aRv);
   }
+
+  return PopoverOpen();
 }
 
 // https://html.spec.whatwg.org/multipage/popover.html#popover-focusing-steps
