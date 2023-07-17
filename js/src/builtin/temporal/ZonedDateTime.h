@@ -48,7 +48,7 @@ class ZonedDateTimeObject : public NativeObject {
   }
 
   TimeZoneValue timeZone() const {
-    return &getFixedSlot(TIMEZONE_SLOT).toObject();
+    return TimeZoneValue(getFixedSlot(TIMEZONE_SLOT));
   }
 
   CalendarValue calendar() const {

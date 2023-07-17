@@ -614,7 +614,7 @@ static Wrapped<PlainTimeObject*> ToTemporalTime(JSContext* cx,
       auto epochInstant = ToInstant(zonedDateTime);
       Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
 
-      if (!cx->compartment()->wrap(cx, &timeZone)) {
+      if (!timeZone.wrap(cx)) {
         return nullptr;
       }
 
