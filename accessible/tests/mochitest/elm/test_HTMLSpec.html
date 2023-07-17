@@ -421,9 +421,6 @@
       // ////////////////////////////////////////////////////////////////////////
       // HTML:dialog
 
-      // XXX: Remove the pushing of the pref and just run the test once the
-      // dialog element is enabled by default.
-      await SpecialPowers.pushPrefEnv({ set: [["dom.dialog_element.enabled", true]] });
       obj = {
         role: ROLE_DIALOG,
         children: [
