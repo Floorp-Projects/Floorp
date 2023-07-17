@@ -35,7 +35,9 @@ function configureTest() {
 
   var cl = new consoleListener();
 
-  return SpecialPowers.pushPrefEnv({ "set": [["dom.paintWorklet.enabled", true]] });
+  return SpecialPowers.pushPrefEnv(
+    {"set": [["dom.paintWorklet.enabled", true],
+             ["dom.worklet.enabled", true]]});
 }
 
 // This function is called into an iframe.
