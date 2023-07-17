@@ -119,6 +119,12 @@ bool GetTemporalCalendarWithISODefault(JSContext* cx,
 JSString* ToTemporalCalendarIdentifier(JSContext* cx,
                                        JS::Handle<CalendarValue> calendar);
 
+/**
+ * ToTemporalCalendarObject ( calendarSlotValue )
+ */
+JSObject* ToTemporalCalendarObject(JSContext* cx,
+                                   JS::Handle<CalendarValue> calendar);
+
 enum class CalendarField {
   Year,
   Month,

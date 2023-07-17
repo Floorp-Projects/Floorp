@@ -1403,22 +1403,29 @@ static bool PlainDate_compare(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
- * get Temporal.PlainDate.prototype.calendar
+ * get Temporal.PlainDate.prototype.calendarId
  */
-static bool PlainDate_calendar(JSContext* cx, const CallArgs& args) {
-  // Step 3.
+static bool PlainDate_calendarId(JSContext* cx, const CallArgs& args) {
   auto* temporalDate = &args.thisv().toObject().as<PlainDateObject>();
-  args.rval().setObject(*temporalDate->calendar());
+  Rooted<CalendarValue> calendar(cx, temporalDate->calendar());
+
+  // Step 3.
+  auto* calendarId = ToTemporalCalendarIdentifier(cx, calendar);
+  if (!calendarId) {
+    return false;
+  }
+
+  args.rval().setString(calendarId);
   return true;
 }
 
 /**
- * get Temporal.PlainDate.prototype.calendar
+ * get Temporal.PlainDate.prototype.calendarId
  */
-static bool PlainDate_calendar(JSContext* cx, unsigned argc, Value* vp) {
+static bool PlainDate_calendarId(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-2.
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsPlainDate, PlainDate_calendar>(cx, args);
+  return CallNonGenericMethod<IsPlainDate, PlainDate_calendarId>(cx, args);
 }
 
 /**
@@ -1906,6 +1913,32 @@ static bool PlainDate_getISOFields(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-2.
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsPlainDate, PlainDate_getISOFields>(cx, args);
+}
+
+/**
+ * Temporal.PlainDate.prototype.getCalendar ( )
+ */
+static bool PlainDate_getCalendar(JSContext* cx, const CallArgs& args) {
+  auto* temporalDate = &args.thisv().toObject().as<PlainDateObject>();
+  Rooted<CalendarValue> calendar(cx, temporalDate->calendar());
+
+  // Step 3.
+  auto* obj = ToTemporalCalendarObject(cx, calendar);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/**
+ * Temporal.PlainDate.prototype.getCalendar ( )
+ */
+static bool PlainDate_getCalendar(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainDate, PlainDate_getCalendar>(cx, args);
 }
 
 /**
@@ -2439,6 +2472,7 @@ static const JSFunctionSpec PlainDate_prototype_methods[] = {
     JS_FN("toPlainYearMonth", PlainDate_toPlainYearMonth, 0, 0),
     JS_FN("toPlainDateTime", PlainDate_toPlainDateTime, 0, 0),
     JS_FN("getISOFields", PlainDate_getISOFields, 0, 0),
+    JS_FN("getCalendar", PlainDate_getCalendar, 0, 0),
     JS_FN("add", PlainDate_add, 1, 0),
     JS_FN("subtract", PlainDate_subtract, 1, 0),
     JS_FN("with", PlainDate_with, 1, 0),
@@ -2455,7 +2489,7 @@ static const JSFunctionSpec PlainDate_prototype_methods[] = {
 };
 
 static const JSPropertySpec PlainDate_prototype_properties[] = {
-    JS_PSG("calendar", PlainDate_calendar, 0),
+    JS_PSG("calendarId", PlainDate_calendarId, 0),
     JS_PSG("year", PlainDate_year, 0),
     JS_PSG("month", PlainDate_month, 0),
     JS_PSG("monthCode", PlainDate_monthCode, 0),

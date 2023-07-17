@@ -125,6 +125,12 @@ bool ToTemporalTimeZone(JSContext* cx, JS::Handle<JSString*> string,
                         JS::MutableHandle<TimeZoneValue> result);
 
 /**
+ * ToTemporalTimeZoneObject ( timeZoneSlotValue )
+ */
+JSObject* ToTemporalTimeZoneObject(JSContext* cx,
+                                   JS::Handle<TimeZoneValue> timeZone);
+
+/**
  * GetPlainDateTimeFor ( timeZone, instant, calendar )
  */
 PlainDateTimeObject* GetPlainDateTimeFor(JSContext* cx,
