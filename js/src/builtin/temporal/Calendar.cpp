@@ -2851,7 +2851,7 @@ static bool BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
 
   // Step 8.
   TimeDuration balanceResult;
-  if (!BalanceDuration(cx, duration, TemporalUnit::Day, &balanceResult)) {
+  if (!BalanceTimeDuration(cx, duration, TemporalUnit::Day, &balanceResult)) {
     return false;
   }
 

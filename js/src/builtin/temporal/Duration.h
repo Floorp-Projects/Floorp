@@ -123,18 +123,18 @@ bool ToTemporalDurationRecord(JSContext* cx,
                               Duration* result);
 
 /**
- * BalanceDuration ( days, hours, minutes, seconds, milliseconds, microseconds,
- * nanoseconds, largestUnit [ , relativeTo ] )
+ * BalanceTimeDuration ( days, hours, minutes, seconds, milliseconds,
+ * microseconds, nanoseconds, largestUnit [ , relativeTo ] )
  */
-bool BalanceDuration(JSContext* cx, const Duration& duration,
-                     TemporalUnit largestUnit, TimeDuration* result);
+bool BalanceTimeDuration(JSContext* cx, const Duration& duration,
+                         TemporalUnit largestUnit, TimeDuration* result);
 
 /**
- * BalanceDuration ( days, hours, minutes, seconds, milliseconds, microseconds,
- * nanoseconds, largestUnit [ , relativeTo ] )
+ * BalanceTimeDuration ( days, hours, minutes, seconds, milliseconds,
+ * microseconds, nanoseconds, largestUnit [ , relativeTo ] )
  */
-bool BalanceDuration(JSContext* cx, const InstantSpan& nanoseconds,
-                     TemporalUnit largestUnit, TimeDuration* result);
+bool BalanceTimeDuration(JSContext* cx, const InstantSpan& nanoseconds,
+                         TemporalUnit largestUnit, TimeDuration* result);
 
 /**
  * AdjustRoundedDurationDays ( years, months, weeks, days, hours, minutes,

@@ -826,20 +826,20 @@ static bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
                                   adjustedDate.day - timeSign);
 
     // Step 7.b.
-    if (!BalanceDuration(cx,
-                         {
-                             0,
-                             0,
-                             0,
-                             double(-timeSign),
-                             timeDifference.hours,
-                             timeDifference.minutes,
-                             timeDifference.seconds,
-                             timeDifference.milliseconds,
-                             timeDifference.microseconds,
-                             timeDifference.nanoseconds,
-                         },
-                         largestUnit, &timeDifference)) {
+    if (!BalanceTimeDuration(cx,
+                             {
+                                 0,
+                                 0,
+                                 0,
+                                 double(-timeSign),
+                                 timeDifference.hours,
+                                 timeDifference.minutes,
+                                 timeDifference.seconds,
+                                 timeDifference.milliseconds,
+                                 timeDifference.microseconds,
+                                 timeDifference.nanoseconds,
+                             },
+                             largestUnit, &timeDifference)) {
       return false;
     }
   }
@@ -900,20 +900,20 @@ static bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
 
   // Step 14.
   TimeDuration balanceResult;
-  if (!BalanceDuration(cx,
-                       {
-                           0,
-                           0,
-                           0,
-                           dateDifference.days,
-                           timeDifference.hours,
-                           timeDifference.minutes,
-                           timeDifference.seconds,
-                           timeDifference.milliseconds,
-                           timeDifference.microseconds,
-                           timeDifference.nanoseconds,
-                       },
-                       largestUnit, &balanceResult)) {
+  if (!BalanceTimeDuration(cx,
+                           {
+                               0,
+                               0,
+                               0,
+                               dateDifference.days,
+                               timeDifference.hours,
+                               timeDifference.minutes,
+                               timeDifference.seconds,
+                               timeDifference.milliseconds,
+                               timeDifference.microseconds,
+                               timeDifference.nanoseconds,
+                           },
+                           largestUnit, &balanceResult)) {
     return false;
   }
 
@@ -1067,7 +1067,7 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
 
   // Step 9.
   TimeDuration result;
-  if (!BalanceDuration(cx, roundResult, settings.largestUnit, &result)) {
+  if (!BalanceTimeDuration(cx, roundResult, settings.largestUnit, &result)) {
     return false;
   }
 
