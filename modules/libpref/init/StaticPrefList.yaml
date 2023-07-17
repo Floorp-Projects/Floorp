@@ -10801,11 +10801,6 @@
   value: true
   mirror: always
 
-- name: media.peerconnection.dtmf.enabled
-  type: bool
-  value: true
-  mirror: always
-
 - name: media.peerconnection.identity.enabled
   type: bool
   value: true

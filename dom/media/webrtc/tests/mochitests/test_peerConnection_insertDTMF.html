@@ -66,8 +66,7 @@ runNetworkTest(() => {
     }
   ]);
 
-  return pushPrefs(['media.peerconnection.dtmf.enabled', true])
-    .then(() => test.run());
+  return test.run();
 });
 
 </script>
