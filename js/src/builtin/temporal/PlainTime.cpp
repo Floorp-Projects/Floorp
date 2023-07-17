@@ -619,7 +619,7 @@ static Wrapped<PlainTimeObject*> ToTemporalTime(JSContext* cx,
     if (auto* zonedDateTime = itemObj->maybeUnwrapIf<ZonedDateTimeObject>()) {
       auto epochInstant = ToInstant(zonedDateTime);
       Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-      Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+      Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
       if (!cx->compartment()->wrap(cx, &timeZone)) {
         return nullptr;
@@ -644,8 +644,8 @@ static Wrapped<PlainTimeObject*> ToTemporalTime(JSContext* cx,
     }
 
     // Step 3.d.
-    Rooted<JSObject*> calendar(cx,
-                               GetTemporalCalendarWithISODefault(cx, itemObj));
+    Rooted<CalendarValue> calendar(
+        cx, GetTemporalCalendarWithISODefault(cx, itemObj));
     if (!calendar) {
       return nullptr;
     }
@@ -2434,7 +2434,7 @@ static bool PlainTime_toPlainDateTime(JSContext* cx, const CallArgs& args) {
 
   // Step 3.
   PlainDate date;
-  Rooted<JSObject*> calendar(cx);
+  Rooted<CalendarValue> calendar(cx);
   if (!ToTemporalDate(cx, args.get(0), &date, &calendar)) {
     return false;
   }
@@ -2490,7 +2490,7 @@ static bool PlainTime_toZonedDateTime(JSContext* cx, const CallArgs& args) {
 
   // Step 6.
   PlainDate date;
-  Rooted<JSObject*> calendar(cx);
+  Rooted<CalendarValue> calendar(cx);
   if (!ToTemporalDate(cx, temporalDateLike, &date, &calendar)) {
     return false;
   }

@@ -72,7 +72,7 @@ static inline bool IsPlainMonthDay(Handle<Value> v) {
  */
 static PlainMonthDayObject* CreateTemporalMonthDay(
     JSContext* cx, const CallArgs& args, double isoYear, double isoMonth,
-    double isoDay, Handle<JSObject*> calendar) {
+    double isoDay, Handle<CalendarValue> calendar) {
   MOZ_ASSERT(IsInteger(isoYear));
   MOZ_ASSERT(IsInteger(isoMonth));
   MOZ_ASSERT(IsInteger(isoDay));
@@ -122,7 +122,7 @@ static PlainMonthDayObject* CreateTemporalMonthDay(
  * newTarget ] )
  */
 PlainMonthDayObject* js::temporal::CreateTemporalMonthDay(
-    JSContext* cx, const PlainDate& date, Handle<JSObject*> calendar) {
+    JSContext* cx, const PlainDate& date, Handle<CalendarValue> calendar) {
   auto& [isoYear, isoMonth, isoDay] = date;
 
   // Step 1.
@@ -162,7 +162,7 @@ PlainMonthDayObject* js::temporal::CreateTemporalMonthDay(
 template <typename T, typename... Ts>
 static bool ToTemporalCalendarForMonthDay(JSContext* cx,
                                           Handle<JSObject*> object,
-                                          MutableHandle<JSObject*> result) {
+                                          MutableHandle<CalendarValue> result) {
   if (auto* unwrapped = object->maybeUnwrapIf<T>()) {
     if constexpr (std::is_same_v<T, PlainTimeObject>) {
       AutoRealm ar(cx, unwrapped);
@@ -209,7 +209,7 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
     }
 
     // Steps 4.b-c.
-    Rooted<JSObject*> calendar(cx);
+    Rooted<CalendarValue> calendar(cx);
     bool calendarAbsent = false;
     if (!::ToTemporalCalendarForMonthDay<PlainDateObject, PlainDateTimeObject,
                                          PlainTimeObject, PlainYearMonthObject,
@@ -315,7 +315,7 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
     calendarLike.setString(calendarString);
   }
 
-  Rooted<JSObject*> calendar(
+  Rooted<CalendarValue> calendar(
       cx, ToTemporalCalendarWithISODefault(cx, calendarLike));
   if (!calendar) {
     return nullptr;
@@ -348,7 +348,7 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
  */
 static bool ToTemporalMonthDay(JSContext* cx, Handle<Value> item,
                                PlainDate* result,
-                               MutableHandle<JSObject*> calendar) {
+                               MutableHandle<CalendarValue> calendar) {
   auto* obj = ToTemporalMonthDay(cx, item).unwrapOrNull();
   if (!obj) {
     return false;
@@ -379,7 +379,7 @@ static JSString* TemporalMonthDayToString(JSContext* cx,
   }
 
   // Step 6. (Reordered)
-  Rooted<JSObject*> calendar(cx, monthDay->calendar());
+  Rooted<CalendarValue> calendar(cx, monthDay->calendar());
   JSString* str = CalendarToString(cx, calendar);
   if (!str) {
     return nullptr;
@@ -459,8 +459,8 @@ static bool PlainMonthDayConstructor(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 5.
-  Rooted<JSObject*> calendar(cx,
-                             ToTemporalCalendarWithISODefault(cx, args.get(2)));
+  Rooted<CalendarValue> calendar(
+      cx, ToTemporalCalendarWithISODefault(cx, args.get(2)));
   if (!calendar) {
     return false;
   }
@@ -506,7 +506,7 @@ static bool PlainMonthDay_from(JSContext* cx, unsigned argc, Value* vp) {
     if (auto* monthDay = item->maybeUnwrapIf<PlainMonthDayObject>()) {
       auto date = ToPlainDate(monthDay);
 
-      Rooted<JSObject*> calendar(cx, monthDay->calendar());
+      Rooted<CalendarValue> calendar(cx, monthDay->calendar());
       if (!cx->compartment()->wrap(cx, &calendar)) {
         return false;
       }
@@ -566,7 +566,7 @@ static bool PlainMonthDay_calendar(JSContext* cx, unsigned argc, Value* vp) {
 static bool PlainMonthDay_monthCode(JSContext* cx, const CallArgs& args) {
   // Step 3.
   auto* monthDay = &args.thisv().toObject().as<PlainMonthDayObject>();
-  Rooted<JSObject*> calendar(cx, monthDay->calendar());
+  Rooted<CalendarValue> calendar(cx, monthDay->calendar());
 
   // Step 4.
   return CalendarMonthCode(cx, calendar, args.thisv(), args.rval());
@@ -588,7 +588,7 @@ static bool PlainMonthDay_monthCode(JSContext* cx, unsigned argc, Value* vp) {
 static bool PlainMonthDay_day(JSContext* cx, const CallArgs& args) {
   // Step 3.
   auto* monthDay = &args.thisv().toObject().as<PlainMonthDayObject>();
-  Rooted<JSObject*> calendar(cx, monthDay->calendar());
+  Rooted<CalendarValue> calendar(cx, monthDay->calendar());
 
   // Step 4.
   return CalendarDay(cx, calendar, args.thisv(), args.rval());
@@ -634,7 +634,7 @@ static bool PlainMonthDay_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 6.
-  Rooted<JSObject*> calendar(cx, monthDay->calendar());
+  Rooted<CalendarValue> calendar(cx, monthDay->calendar());
 
   // Step 7.
   JS::RootedVector<PropertyKey> fieldNames(cx);
@@ -698,11 +698,11 @@ static bool PlainMonthDay_with(JSContext* cx, unsigned argc, Value* vp) {
 static bool PlainMonthDay_equals(JSContext* cx, const CallArgs& args) {
   auto* monthDay = &args.thisv().toObject().as<PlainMonthDayObject>();
   auto date = ToPlainDate(monthDay);
-  Rooted<JSObject*> calendar(cx, monthDay->calendar());
+  Rooted<CalendarValue> calendar(cx, monthDay->calendar());
 
   // Step 3.
   PlainDate other;
-  Rooted<JSObject*> otherCalendar(cx);
+  Rooted<CalendarValue> otherCalendar(cx);
   if (!ToTemporalMonthDay(cx, args.get(0), &other, &otherCalendar)) {
     return false;
   }
@@ -849,7 +849,7 @@ static bool PlainMonthDay_toPlainDate(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 4.
-  Rooted<JSObject*> calendar(cx, monthDay->calendar());
+  Rooted<CalendarValue> calendar(cx, monthDay->calendar());
 
   // Step 5.
   JS::RootedVector<PropertyKey> receiverFieldNames(cx);

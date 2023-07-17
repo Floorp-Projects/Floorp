@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 
+#include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/Wrapped.h"
 #include "js/RootingAPI.h"
@@ -47,7 +48,9 @@ class ZonedDateTimeObject : public NativeObject {
 
   JSObject* timeZone() const { return &getFixedSlot(TIMEZONE_SLOT).toObject(); }
 
-  JSObject* calendar() const { return &getFixedSlot(CALENDAR_SLOT).toObject(); }
+  CalendarValue calendar() const {
+    return &getFixedSlot(CALENDAR_SLOT).toObject();
+  }
 
  private:
   static const ClassSpec classSpec_;
@@ -70,7 +73,7 @@ enum class TemporalUnit;
  */
 ZonedDateTimeObject* CreateTemporalZonedDateTime(
     JSContext* cx, const Instant& instant, JS::Handle<JSObject*> timeZone,
-    JS::Handle<JSObject*> calendar);
+    JS::Handle<CalendarValue> calendar);
 
 /**
  * AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months,
@@ -79,8 +82,8 @@ ZonedDateTimeObject* CreateTemporalZonedDateTime(
  */
 bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
                       JS::Handle<JSObject*> timeZone,
-                      JS::Handle<JSObject*> calendar, const Duration& duration,
-                      Instant* result);
+                      JS::Handle<CalendarValue> calendar,
+                      const Duration& duration, Instant* result);
 
 /**
  * DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit, options
@@ -88,7 +91,7 @@ bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
  */
 bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
                              const Instant& ns2, JS::Handle<JSObject*> timeZone,
-                             JS::Handle<JSObject*> calendar,
+                             JS::Handle<CalendarValue> calendar,
                              TemporalUnit largestUnit, Duration* result);
 
 struct NanosecondsAndDays final {

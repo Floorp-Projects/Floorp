@@ -218,7 +218,7 @@ static PlainDateTimeObject* SystemDateTime(JSContext* cx,
   }
 
   // Step 3.
-  Rooted<JSObject*> calendar(cx, ToTemporalCalendar(cx, calendarLike));
+  Rooted<CalendarValue> calendar(cx, ToTemporalCalendar(cx, calendarLike));
   if (!calendar) {
     return nullptr;
   }
@@ -251,7 +251,7 @@ static ZonedDateTimeObject* SystemZonedDateTime(
   }
 
   // Step 3.
-  Rooted<JSObject*> calendar(cx, ToTemporalCalendar(cx, calendarLike));
+  Rooted<CalendarValue> calendar(cx, ToTemporalCalendar(cx, calendarLike));
   if (!calendar) {
     return nullptr;
   }
@@ -323,7 +323,7 @@ static bool Temporal_Now_plainDateTimeISO(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  JSObject* calendar = GetISO8601Calendar(cx);
+  CalendarValue calendar = GetISO8601Calendar(cx);
   if (!calendar) {
     return false;
   }
@@ -364,7 +364,7 @@ static bool Temporal_Now_zonedDateTimeISO(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  JSObject* calendar = GetISO8601Calendar(cx);
+  CalendarValue calendar = GetISO8601Calendar(cx);
   if (!calendar) {
     return false;
   }
@@ -391,7 +391,7 @@ static bool Temporal_Now_plainDate(JSContext* cx, unsigned argc, Value* vp) {
   if (!dateTime) {
     return false;
   }
-  Rooted<JSObject*> calendar(cx, dateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
   // Step 2.
   auto* result = CreateTemporalDate(cx, ToPlainDate(dateTime), calendar);
@@ -410,7 +410,7 @@ static bool Temporal_Now_plainDateISO(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  Rooted<JSObject*> calendar(cx, GetISO8601Calendar(cx));
+  Rooted<CalendarValue> calendar(cx, GetISO8601Calendar(cx));
   if (!calendar) {
     return false;
   }
@@ -439,7 +439,7 @@ static bool Temporal_Now_plainTimeISO(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  Rooted<JSObject*> calendar(cx, GetISO8601Calendar(cx));
+  Rooted<CalendarValue> calendar(cx, GetISO8601Calendar(cx));
   if (!calendar) {
     return false;
   }
