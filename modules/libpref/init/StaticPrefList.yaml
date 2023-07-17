@@ -752,12 +752,10 @@
 
 # If this is true, APZ fully recalculates the scroll thumb size and
 # position in the compositor. This leads to the size and position
-# being more accurate in scenarios such as async zooming, but the
-# recalculation code is error-prone so it's nightly-only for now
-# to give it more baking time.
+# being more accurate in scenarios such as async zooming.
 - name: apz.scrollthumb.recalc
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 - name: apz.test.fails_with_native_injection
