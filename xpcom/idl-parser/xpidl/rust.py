@@ -449,7 +449,8 @@ pub struct %(name)s {
 
     // Make the rust compiler aware that there might be interior mutability
     // in what actually implements the interface. This works around UB
-    // introduced by https://github.com/llvm/llvm-project/commit/01859da84bad95fd51d6a03b08b60c660e642a4f
+    // introduced by
+    // https://github.com/llvm/llvm-project/commit/01859da84bad95fd51d6a03b08b60c660e642a4f
     // that a rust lint would make blatantly obvious, but doesn't exist.
     // (See https://github.com/rust-lang/rust/issues/111229).
     // This prevents optimizations, but those optimizations weren't available
