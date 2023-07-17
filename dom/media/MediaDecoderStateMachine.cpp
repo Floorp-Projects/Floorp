@@ -3348,6 +3348,7 @@ RefPtr<ShutdownPromise> MediaDecoderStateMachine::ShutdownState::Enter() {
   master->mMetadataManager.Disconnect();
   master->mOnMediaNotSeekable.Disconnect();
   master->mAudibleListener.DisconnectIfExists();
+  master->mAudioSinkAudioGapListener.DisconnectIfExists();
 
   // Disconnect canonicals and mirrors before shutting down our task queue.
   master->mStreamName.DisconnectIfConnected();
@@ -3445,6 +3446,11 @@ void MediaDecoderStateMachine::AudioAudibleChanged(bool aAudible) {
   mIsAudioDataAudible = aAudible;
 }
 
+void MediaDecoderStateMachine::OnAudioSinkAudioGapDetected(int64_t aGapFrames) {
+  LOG("OnAudioSinkAudioGapDetected, gap-frames=%" PRId64, aGapFrames);
+  mOnPlaybackEvent.Notify(MediaPlaybackEvent::AudioSinkAudioGapDetected);
+}
+
 MediaSink* MediaDecoderStateMachine::CreateAudioSink() {
   MOZ_ASSERT(OnTaskQueue());
   if (mOutputCaptureState != MediaDecoder::OutputCaptureState::None) {
@@ -3468,10 +3474,14 @@ MediaSink* MediaDecoderStateMachine::CreateAudioSink() {
     UniquePtr<AudioSink> audioSink{new AudioSink(
         mTaskQueue, mAudioQueue, Info().mAudio, mShouldResistFingerprinting)};
     mAudibleListener.DisconnectIfExists();
+    mAudioSinkAudioGapListener.DisconnectIfExists();
     // Audible state would be updated later after the sink starts.
     AudioAudibleChanged(false);
     mAudibleListener = audioSink->AudibleEvent().Connect(
         mTaskQueue, this, &MediaDecoderStateMachine::AudioAudibleChanged);
+    mAudioSinkAudioGapListener = audioSink->AudioGapEvent().Connect(
+        mTaskQueue, this,
+        &MediaDecoderStateMachine::OnAudioSinkAudioGapDetected);
     return audioSink;
   };
   return new AudioSinkWrapper(
@@ -4472,6 +4482,7 @@ void MediaDecoderStateMachine::SuspendMediaSink() {
   mIsMediaSinkSuspended = true;
   StopMediaSink();
   mMediaSink->Shutdown();
+  mOnPlaybackEvent.Notify(MediaPlaybackEvent::SuspendedMediaSink);
 }
 
 void MediaDecoderStateMachine::InvokeResumeMediaSink() {
@@ -4497,6 +4508,7 @@ void MediaDecoderStateMachine::ResumeMediaSink() {
     mMediaSink = CreateMediaSink();
     MaybeStartPlayback();
   }
+  mOnPlaybackEvent.Notify(MediaPlaybackEvent::ResumedMediaSink);
 }
 
 void MediaDecoderStateMachine::UpdateSecondaryVideoContainer() {
