@@ -320,7 +320,7 @@ class Option(object):
         self.nargs = nargs
         has_choices = choices is not None
         if isinstance(self.default, PositiveOptionValue):
-            if has_choices and len(self.default) == 0 and nargs not in ("?", "*"):
+            if has_choices and len(self.default) == 0:
                 raise InvalidOptionError(
                     "A `default` must be given along with `choices`"
                 )

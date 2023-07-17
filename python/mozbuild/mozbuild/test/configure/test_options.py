@@ -2,13 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import textwrap
 import unittest
-from io import StringIO
 
 from mozunit import main
 
-from mozbuild.configure.help import HelpFormatter
 from mozbuild.configure.options import (
     CommandLineHelper,
     ConflictingOptionError,
@@ -22,7 +19,7 @@ from mozbuild.configure.options import (
 
 class Option(Option):
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("help", "Dummy help")
+        kwargs["help"] = "Dummy help"
         super(Option, self).__init__(*args, **kwargs)
 
 
@@ -256,17 +253,6 @@ class TestOption(unittest.TestCase):
         value = option.get_value("--with-option=b,a")
         self.assertTrue(value)
         self.assertEqual(PositiveOptionValue(("b", "a")), value)
-
-        # Default is enabled without a value, but the option can be also be disabled or
-        # used with a value.
-        option = Option("--without-option", nargs="*", choices=("a", "b"))
-        value = option.get_value("--with-option")
-        self.assertEqual(PositiveOptionValue(), value)
-        value = option.get_value("--with-option=a")
-        self.assertEqual(PositiveOptionValue(("a",)), value)
-        with self.assertRaises(InvalidOptionError) as e:
-            option.get_value("--with-option=c")
-        self.assertEqual(str(e.exception), "'c' is not one of 'a', 'b'")
 
         # Test nargs inference from choices
         option = Option("--with-option", choices=("a", "b"))
@@ -913,135 +899,6 @@ class TestCommandLineHelper(unittest.TestCase):
             "BAZ=1 can not be set by environment. Values are accepted from: implied",
         ):
             helper.handle(baz)
-
-
-class TestOptionHelp(unittest.TestCase):
-    def test_option_help(self):
-        formatter = HelpFormatter("configure_argv0")
-
-        out = StringIO()
-        formatter.usage(out)
-        self.assertEqual(
-            out.getvalue(),
-            textwrap.dedent(
-                """\
-                Usage: configure_argv0 [options]
-                """
-            ),
-        )
-
-        formatter.add(Option("--foo", help="Foo"))
-        out = StringIO()
-        formatter.usage(out)
-        self.assertEqual(
-            out.getvalue(),
-            textwrap.dedent(
-                """\
-                Usage: configure_argv0 [options]
-
-                Options: [defaults in brackets after descriptions]
-                  Options from python/mozbuild/mozbuild/test/configure/test_options.py:
-                    --foo                     Foo
-
-                """
-            ),
-        )
-
-        formatter.add(Option("--with-bar", env="BAR", help="Bar"))
-        out = StringIO()
-        formatter.usage(out)
-        self.assertEqual(
-            out.getvalue(),
-            textwrap.dedent(
-                """\
-                Usage: configure_argv0 [options]
-
-                Options: [defaults in brackets after descriptions]
-                  Options from python/mozbuild/mozbuild/test/configure/test_options.py:
-                    --foo                     Foo
-                    --with-bar                Bar
-
-                """
-            ),
-        )
-
-        formatter.add(Option(env="QUX", help="Qux"))
-        out = StringIO()
-        formatter.usage(out)
-        self.assertEqual(
-            out.getvalue(),
-            textwrap.dedent(
-                """\
-                Usage: configure_argv0 [options]
-
-                Options: [defaults in brackets after descriptions]
-                  Options from python/mozbuild/mozbuild/test/configure/test_options.py:
-                    --foo                     Foo
-                    --with-bar                Bar
-
-
-                Environment variables:
-                  Options from python/mozbuild/mozbuild/test/configure/test_options.py:
-                    QUX                       Qux
-
-                """
-            ),
-        )
-
-        formatter.add(Option("--enable-hoge", choices=("a", "b"), help="Hoge"))
-        formatter.add(Option("--with-fuga", nargs=1, default="a", help="Fuga"))
-        formatter.add(
-            Option("--enable-toto", default=False, help="{Enable|Disable} Toto")
-        )
-        formatter.add(
-            Option("--enable-titi", default=True, help="{Enable|Disable} Titi")
-        )
-        formatter.add(
-            Option(
-                "--disable-tutu",
-                nargs="*",
-                choices=("a", "b"),
-                help="{Enable|Disable} Tutu",
-            )
-        )
-        formatter.add(
-            Option(
-                "--enable-tata",
-                nargs="+",
-                default="a",
-                choices=("a", "b"),
-                help="Enable Tata",
-            )
-        )
-        out = StringIO()
-        formatter.usage(out)
-        self.maxDiff = None
-        self.assertEqual(
-            out.getvalue(),
-            textwrap.dedent(
-                """\
-                Usage: configure_argv0 [options]
-
-                Options: [defaults in brackets after descriptions]
-                  Options from python/mozbuild/mozbuild/test/configure/test_options.py:
-                    --foo                     Foo
-                    --with-bar                Bar
-                    --enable-hoge={a,b}       Hoge
-                    --with-fuga               Fuga [a]
-                    --enable-toto             Enable Toto
-                    --disable-titi            Disable Titi
-                    --enable-tutu={a,b}       Enable Tutu
-                    --disable-tutu            Disable Tutu
-                    --enable-tata={a,b}       Enable Tata [a]
-
-
-                Environment variables:
-                  Options from python/mozbuild/mozbuild/test/configure/test_options.py:
-                    QUX                       Qux
-
-                """
-            ),
-        )
 
 
 if __name__ == "__main__":
