@@ -2817,11 +2817,6 @@
   value: false
   mirror: always
 
-- name: dom.input_events.beforeinput.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether innerWidth / innerHeight return rounded or fractional sizes.
 #
 # NOTE(emilio): Fractional sizes are not web-compatible, see the regressions

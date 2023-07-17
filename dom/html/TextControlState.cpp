@@ -2859,7 +2859,6 @@ bool TextControlState::SetValueWithoutTextEditor(
     nsString inputEventData(aHandlingSetValue.GetSettingValue());
     if (aHandlingSetValue.ValueSetterOptionsRef().contains(
             ValueSetterOption::BySetUserInputAPI) &&
-        StaticPrefs::dom_input_events_beforeinput_enabled() &&
         !aHandlingSetValue.HasBeforeInputEventDispatched()) {
       // This probably occurs when session restorer sets the old value with
       // `setUserInput`.  If so, we need to dispatch "beforeinput" event of

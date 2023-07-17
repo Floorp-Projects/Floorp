@@ -41,13 +41,11 @@ partial interface InputEvent
   // Enable `getTargetRanges()` only when `beforeinput` event is enabled
   // because this may be used for feature detection of `beforeinput` event
   // support (due to Chrome not supporting `onbeforeinput` attribute).
-  [Pref="dom.input_events.beforeinput.enabled"]
   sequence<StaticRange> getTargetRanges();
 };
 
 partial dictionary InputEventInit
 {
   DataTransfer? dataTransfer = null;
-  [Pref="dom.input_events.beforeinput.enabled"]
   sequence<StaticRange> targetRanges = [];
 };
