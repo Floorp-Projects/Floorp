@@ -627,6 +627,17 @@ def write_interface(iface, fd):
                     "val": member.getValue(),
                 }
             )
+        if type(member) == xpidl.CEnum:
+            for var in member.variants:
+                consts.append(
+                    const_wrapper_tmpl
+                    % {
+                        "docs": "",
+                        "type": member.rustType("in"),
+                        "name": var.name,
+                        "val": var.getValue(),
+                    }
+                )
 
     methods = []
     for member in iface.members:
