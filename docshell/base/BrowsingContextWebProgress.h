@@ -10,7 +10,6 @@
 #include "nsTObserverArray.h"
 #include "nsWeakReference.h"
 #include "nsCycleCollectionParticipant.h"
-#include "mozilla/BounceTrackingState.h"
 
 namespace mozilla::dom {
 
@@ -62,8 +61,6 @@ class BrowsingContextWebProgress final : public nsIWebProgress,
 
   void SetLoadType(uint32_t aLoadType) { mLoadType = aLoadType; }
 
-  already_AddRefed<BounceTrackingState> GetBounceTrackingState();
-
  private:
   virtual ~BrowsingContextWebProgress();
 
@@ -94,8 +91,6 @@ class BrowsingContextWebProgress final : public nsIWebProgress,
   // discarded while loading a document to avoid noise caused by process
   // switches.
   bool mIsLoadingDocument = false;
-
-  RefPtr<mozilla::BounceTrackingState> mBounceTrackingState;
 };
 
 }  // namespace mozilla::dom
