@@ -298,45 +298,45 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Niy teroz</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Dej rokić aplikacyji %s za twoja nojlepszo przeglōndarka</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Dej rokić aplikacyji %s za twoja nojlepszo przeglōndarka</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Dej robić aplikacyji Firefox za twoja nojlepszo przeglōndarka</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">ô prywatności</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">ô prywatności</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Nastow za bazowo przeglōndarka</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Nastow za bazowo przeglōndarka</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Niy teroz</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Niy teroz</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Skokej miyndzy telefōnym a laptopym a nazod</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Skokej miyndzy telefōnym a laptopym a nazod</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Ôtwiyrej karty i hasła z inkszych maszin, coby robić dalij z tego samego miejsca.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Ôtwiyrej karty i hasła z inkszych maszin, coby robić dalij z tego samego miejsca.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Wloguj sie</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Wloguj sie</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Niy teroz</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Niy teroz</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Powiadōmiynia pōmogajōm ci lepij używać aplikacyjo %s</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Powiadōmiynia pōmogajōm ci lepij używać aplikacyjo %s</string>
 
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Powiadōmiynia pōmogajōm ci lepij używać aplikacyjo Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Posyłej karty miyndzy maszinami, regyruj pobraniami i zbiyrej dorady, jak nojlepij używać aplikacyjo %s.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Posyłej karty miyndzy maszinami, regyruj pobraniami i zbiyrej dorady, jak nojlepij używać aplikacyjo %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Posyłej karty miyndzy maszinami, regyruj pobraniami i zbiyrej dorady, jak nojlepij używać aplikacyjo Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Załōncz powiadōmiynia</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Załōncz powiadōmiynia</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Niy teroz</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Niy teroz</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1333,6 +1333,19 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Skōńcz</string>
 
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Czas do skasowanio</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Kasuje historyjo (społym z historyjōm synchrōnizowanōm na inkszych maszinach), cookies i inksze dane przeglōndanio.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Kasuje historyjo (społym z historyjōm synchrōnizowanōm na inkszych maszinach)</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Ôstatnio godzina</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Dzisio a wczora</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Wszysko</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s skasuje ôbrane dane przeglōndanio.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1345,6 +1358,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Kasowanie danych przeglōndanio…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Skasuj wszystkie strōny we %s</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Pociep</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1352,9 +1367,26 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Grupa skasowano</string>
 
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">Witej w lepszym internecie</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Przeglōndarka zbudowano do ludzi, a niy do profitu.</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Przeglōndej ôd miejsca, kaj sie skōńczyło</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Synchrōnizuj karty i hasła miyndzy maszinami, coby snadnie przełōnczać ekrany.</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">Wloguj sie</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Synchrōnizacyjo je załōnczōno</string>
 
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Ôchrōna prywatności w bazowych sztalōnkach</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">%1$s autōmatycznie niy dowo fyrmōm śledzic cie po kryjōmu po necu.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Z pōłnōm ôchrōnōm cookies, co zastawio śledzōnce elymynty, coby niy używały cookies do śledzynio cie po internecie.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standardowo (bazowe)</string>
     <!-- text for standard blocking option button description -->
@@ -1366,9 +1398,17 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Ôbier, kaj mo być posek z noczyniami</string>
 
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Miyj go na dole, abo pōnknij na gōra. </string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Mosz kōntrola nad swojimi danymi</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Firefox dowo ci kōntrola nad tym, co udostympniosz online i co udostympniosz nōm.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Poczytej ô naszych prawidłach prywatności</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">Jeześ fertich, coby ôdewrzić cudny internet?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Zacznij przeglōndać internet</string>
 
@@ -1421,14 +1461,22 @@
     <string name="etp_settings">Sztalōnki ôchrōny</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Polepszōno ôchrōna ôd śledzynio</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary">Teroz z pōłnym ôchrōnōm cookies, naszōm nojsiylniyjszōm baryjerōm przeciw elymyntōm, co śledzōm miyndzy strōnami.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s brōni cie przed mockōm nojpopularniyjszych śledzōncych elymyntōw, kere badajōm, co robisz online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Przewiydz sie wiyncyj</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standardowo (bazowe)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5">Strōny bydōm sie normalnie ladować, ale zaszperujōm mynij śledzōncych elymyntōw.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Co je szperowane przi standardowyj ôchrōnie ôd śledzynio</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Surowo</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Lepszo ôchrōna przed śłedzōncymi elymyntami i lepszo sprowność, ale niykere strōny mogōm niy fungować dobrze.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Co je szperowane przi surowyj ôchrōnie ôd śledzynio</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1448,6 +1496,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Wszyske śledzōnce elymynta z inkszych firmōw (niykere strōny mogōm niy fungować dobrze)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Wszyskie cookies (niykere strōny mogōm niy fungować dobrze)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Izolacyjo cookies miyndzy strōnami</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Śledzōnco zawartość</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1467,9 +1517,81 @@
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Elymynty śledzōnce ôd społecznościowych serwisōw</string>
 
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Ôbgraniczo możnoś społecznościowych serwisōw do śledzynio twojij aktywności w necu.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Cookies elymyntōw, co śledzōm miyndzy strōnami</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Cookies, co śledzōm miyndzy strōnami</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Szperuje cookies, kerych reklamowe nece i analityczne firmy używajōm do zbiyranio informacyjōw ô twojim przeglōndaniu po roztōmajtych strōnach.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Połno ôchrōna cookies izoluje cookies na strōnie, na keryj żeś je, tak co elymynty śledzōnce, bez przikłod reklamowe nece, niy idōm za tobōm miyndzy strōnami.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Elymynty, co fedrujōm kryptopiniōndze</string>
+
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Niy dowo ôszydnym skryptōm fedrować cyfrowych piniyndzy na twojij maszinie. </string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Elymynty, co rychtujōm ôdcisk ôd przeglōndarki</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Niy dowo zbiyrać danych ô twojij maszinie, z kerymi idzie jōm zidyntyfikować i użyć do śledzynio. </string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Śledzōnco zawartość</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Przewiydz sie wiyncyj</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Sparcie</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Awaryje</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Ô prywatności</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Poznej swoje prawa</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Informacyjo ô licyncyji</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Biblioteki, kerych używōmy</string>
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Myni debugowanio: do załōnczynio ôstały kliki: %1$d</string>
+    <string name="about_debug_menu_toast_done">Myni debugowanio je załōnczōne</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Kopiuj</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Wraź i idź</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Wraź</string>
+
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL je skopiowane do kamerlika</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Przedej na dōmowy ekran</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Pociep</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Przidej</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Idź dalij do stōny</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Miano ôd skrōtu</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Idzie leko przidać ta strōna na dōmowy ekran swojij masziny, coby mieć snadny dostymp i gibcyj przeglōndać internet choby bez aplikacyjo.</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Dane logowanio i hasła</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Spamiyntane dane logowanio i hasła</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Pytej sie przed spamiyntaniym</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Żodyn roz niy spamiyntuj</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Autōmatycznie wypōłnianie w aplikacyji %1$s</string>
 
     </resources>
