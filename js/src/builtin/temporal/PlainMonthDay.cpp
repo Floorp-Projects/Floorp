@@ -229,8 +229,7 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
       calendarAbsent = calendarLike.isUndefined();
 
       // Step 4.c.iv.
-      calendar = ToTemporalCalendarWithISODefault(cx, calendarLike);
-      if (!calendar) {
+      if (!ToTemporalCalendarWithISODefault(cx, calendarLike, &calendar)) {
         return nullptr;
       }
     }
@@ -316,8 +315,8 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
   }
 
   Rooted<CalendarValue> calendar(
-      cx, ToTemporalCalendarWithISODefault(cx, calendarLike));
-  if (!calendar) {
+      cx);
+  if (!ToTemporalCalendarWithISODefault(cx, calendarLike, &calendar)) {
     return nullptr;
   }
 
@@ -459,9 +458,8 @@ static bool PlainMonthDayConstructor(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 5.
-  Rooted<CalendarValue> calendar(
-      cx, ToTemporalCalendarWithISODefault(cx, args.get(2)));
-  if (!calendar) {
+  Rooted<CalendarValue> calendar(cx);
+  if (!ToTemporalCalendarWithISODefault(cx, args.get(2), &calendar)) {
     return false;
   }
 

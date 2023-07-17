@@ -622,8 +622,9 @@ static bool ToTemporalCalendar(JSContext* cx, Handle<JSObject*> object,
 /**
  * ToTemporalCalendar ( temporalCalendarLike )
  */
-JSObject* js::temporal::ToTemporalCalendar(JSContext* cx,
-                                           Handle<Value> temporalCalendarLike) {
+bool js::temporal::ToTemporalCalendar(JSContext* cx,
+                                      Handle<Value> temporalCalendarLike,
+                                      MutableHandle<CalendarValue> result) {
   // Step 1.
   Rooted<Value> calendarLike(cx, temporalCalendarLike);
   if (calendarLike.isObject()) {
@@ -631,7 +632,8 @@ JSObject* js::temporal::ToTemporalCalendar(JSContext* cx,
 
     // Step 1.a.
     if (obj->canUnwrapAs<CalendarObject>()) {
-      return obj;
+      result.set(obj);
+      return true;
     }
 
     // Step 1.b.
@@ -640,10 +642,11 @@ JSObject* js::temporal::ToTemporalCalendar(JSContext* cx,
                               PlainMonthDayObject, PlainTimeObject,
                               PlainYearMonthObject, ZonedDateTimeObject>(
             cx, obj, &calendar)) {
-      return nullptr;
+      return false;
     }
     if (calendar) {
-      return calendar;
+      result.set(calendar);
+      return true;
     }
 
     // Step 1.c.
@@ -651,21 +654,22 @@ JSObject* js::temporal::ToTemporalCalendar(JSContext* cx,
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_TEMPORAL_INVALID_OBJECT,
                                "Temporal.Calendar", "Temporal.TimeZone");
-      return nullptr;
+      return false;
     }
 
     // Step 1.d.
     bool hasCalendar;
     if (!HasProperty(cx, obj, cx->names().calendar, &hasCalendar)) {
-      return nullptr;
+      return false;
     }
     if (!hasCalendar) {
-      return obj;
+      result.set(obj);
+      return true;
     }
 
     // Step 1.e.
     if (!GetProperty(cx, obj, obj, cx->names().calendar, &calendarLike)) {
-      return nullptr;
+      return false;
     }
 
     // Step 1.f.
@@ -680,7 +684,7 @@ JSObject* js::temporal::ToTemporalCalendar(JSContext* cx,
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                  JSMSG_TEMPORAL_INVALID_OBJECT,
                                  "Temporal.Calendar", "Temporal.TimeZone");
-        return nullptr;
+        return false;
       }
 
       // FIXME: spec issue - does this check is actually useful? In which case
@@ -688,10 +692,11 @@ JSObject* js::temporal::ToTemporalCalendar(JSContext* cx,
 
       // Step 1.f.ii.
       if (!HasProperty(cx, obj, cx->names().calendar, &hasCalendar)) {
-        return nullptr;
+        return false;
       }
       if (!hasCalendar) {
-        return obj;
+        result.set(obj);
+        return true;
       }
     }
   }
@@ -699,64 +704,69 @@ JSObject* js::temporal::ToTemporalCalendar(JSContext* cx,
   // Step 2.
   Rooted<JSString*> str(cx, JS::ToString(cx, calendarLike));
   if (!str) {
-    return nullptr;
+    return false;
   }
 
   // Step 3.
   Rooted<JSLinearString*> identifier(cx, ParseTemporalCalendarString(cx, str));
   if (!identifier) {
-    return nullptr;
+    return false;
   }
 
   // Step 4.
   identifier = ThrowIfNotBuiltinCalendar(cx, identifier);
   if (!identifier) {
-    return nullptr;
+    return false;
   }
 
   // Step 5.
-  return CreateTemporalCalendar(cx, identifier);
+  result.set(CreateTemporalCalendar(cx, identifier));
+  return !!result;
 }
 
 /**
  * ToTemporalCalendarWithISODefault ( temporalCalendarLike )
  */
-JSObject* js::temporal::ToTemporalCalendarWithISODefault(
-    JSContext* cx, Handle<Value> temporalCalendarLike) {
+bool js::temporal::ToTemporalCalendarWithISODefault(
+    JSContext* cx, Handle<Value> temporalCalendarLike,
+    MutableHandle<CalendarValue> result) {
   // Step 1.
   if (temporalCalendarLike.isUndefined()) {
-    return GetISO8601Calendar(cx);
+    result.set(GetISO8601Calendar(cx));
+    return !!result;
   }
 
   // Step 2.
-  return ToTemporalCalendar(cx, temporalCalendarLike);
+  return ToTemporalCalendar(cx, temporalCalendarLike, result);
 }
 
 /**
  * GetTemporalCalendarWithISODefault ( item )
  */
-JSObject* js::temporal::GetTemporalCalendarWithISODefault(
-    JSContext* cx, Handle<JSObject*> item) {
+bool js::temporal::GetTemporalCalendarWithISODefault(
+    JSContext* cx, Handle<JSObject*> item,
+    MutableHandle<CalendarValue> result) {
   // Step 1.
   Rooted<CalendarValue> calendar(cx);
   if (!::ToTemporalCalendar<PlainDateObject, PlainDateTimeObject,
                             PlainMonthDayObject, PlainTimeObject,
                             PlainYearMonthObject, ZonedDateTimeObject>(
           cx, item, &calendar)) {
-    return nullptr;
+    return false;
   }
   if (calendar) {
-    return calendar;
+    result.set(calendar);
+    return true;
   }
 
   // Step 2.
   Rooted<Value> calendarValue(cx);
   if (!GetProperty(cx, item, item, cx->names().calendar, &calendarValue)) {
-    return nullptr;
+    return false;
   }
 
   // Step 3.
-  return ToTemporalCalendarWithISODefault(cx, calendarValue);
+  return ToTemporalCalendarWithISODefault(cx, calendarValue, result);
 }
 
 static bool ToCalendarField(JSContext* cx, JSLinearString* linear,
@@ -3107,51 +3117,56 @@ bool js::temporal::CalendarEqualsOrThrow(JSContext* cx,
 /**
  * ConsolidateCalendars ( one, two )
  */
-JSObject* js::temporal::ConsolidateCalendars(JSContext* cx,
-                                             Handle<CalendarValue> one,
-                                             Handle<CalendarValue> two) {
+bool js::temporal::ConsolidateCalendars(JSContext* cx,
+                                        Handle<CalendarValue> one,
+                                        Handle<CalendarValue> two,
+                                        MutableHandle<CalendarValue> result) {
   // Step 1.
   if (one == two) {
-    return two;
+    result.set(two);
+    return true;
   }
 
   // Step 2.
   Rooted<JSString*> calendarOne(cx, CalendarToString(cx, one));
   if (!calendarOne) {
-    return nullptr;
+    return false;
   }
 
   // Step 3.
   Rooted<JSString*> calendarTwo(cx, CalendarToString(cx, two));
   if (!calendarTwo) {
-    return nullptr;
+    return false;
   }
 
   // Step 4.
   bool equals;
   if (!EqualStrings(cx, calendarOne, calendarTwo, &equals)) {
-    return nullptr;
+    return false;
   }
   if (equals) {
-    return two;
+    result.set(two);
+    return true;
   }
 
   // Step 5.
   bool isoCalendarOne;
   if (!IsISOCalendar(cx, calendarOne, &isoCalendarOne)) {
-    return nullptr;
+    return false;
   }
   if (isoCalendarOne) {
-    return two;
+    result.set(two);
+    return true;
   }
 
   // Step 6.
   bool isoCalendarTwo;
   if (!IsISOCalendar(cx, calendarTwo, &isoCalendarTwo)) {
-    return nullptr;
+    return false;
   }
   if (isoCalendarTwo) {
-    return one;
+    result.set(one);
+    return true;
   }
 
   // Step 7.
@@ -3162,7 +3177,7 @@ JSObject* js::temporal::ConsolidateCalendars(JSContext* cx,
                                charsOne.get(), charsTwo.get());
     }
   }
-  return nullptr;
+  return false;
 }
 
 /**
@@ -3296,8 +3311,8 @@ static bool Calendar_from(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  auto* obj = ToTemporalCalendar(cx, args.get(0));
-  if (!obj) {
+  Rooted<CalendarValue> obj(cx);
+  if (!ToTemporalCalendar(cx, args.get(0), &obj)) {
     return false;
   }
 

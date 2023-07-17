@@ -543,8 +543,7 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
     }
 
     // Step 3.d.
-    calendar = GetTemporalCalendarWithISODefault(cx, itemObj);
-    if (!calendar) {
+    if (!GetTemporalCalendarWithISODefault(cx, itemObj, &calendar)) {
       return nullptr;
     }
 
@@ -611,8 +610,7 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
       calendarValue.setString(calendarString);
     }
 
-    calendar = ToTemporalCalendarWithISODefault(cx, calendarValue);
-    if (!calendar) {
+    if (!ToTemporalCalendarWithISODefault(cx, calendarValue, &calendar)) {
       return nullptr;
     }
   }
@@ -1277,9 +1275,8 @@ static bool PlainDateTimeConstructor(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 11.
-  Rooted<CalendarValue> calendar(
-      cx, ToTemporalCalendarWithISODefault(cx, args.get(9)));
-  if (!calendar) {
+  Rooted<CalendarValue> calendar(cx);
+  if (!ToTemporalCalendarWithISODefault(cx, args.get(9), &calendar)) {
     return false;
   }
 
@@ -1948,8 +1945,7 @@ static bool PlainDateTime_withPlainDate(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 4.
-  calendar = ConsolidateCalendars(cx, calendar, dateCalendar);
-  if (!calendar) {
+  if (!ConsolidateCalendars(cx, calendar, dateCalendar, &calendar)) {
     return false;
   }
 
@@ -1982,8 +1978,8 @@ static bool PlainDateTime_withCalendar(JSContext* cx, const CallArgs& args) {
   auto dateTime = ToPlainDateTime(temporalDateTime);
 
   // Step 3.
-  Rooted<CalendarValue> calendar(cx, ToTemporalCalendar(cx, args.get(0)));
-  if (!calendar) {
+  Rooted<CalendarValue> calendar(cx);
+  if (!ToTemporalCalendar(cx, args.get(0), &calendar)) {
     return false;
   }
 

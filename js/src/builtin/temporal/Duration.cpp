@@ -3926,8 +3926,7 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
     }
 
     // Step 6.c.
-    calendar = GetTemporalCalendarWithISODefault(cx, obj);
-    if (!calendar) {
+    if (!GetTemporalCalendarWithISODefault(cx, obj, &calendar)) {
       return false;
     }
 
@@ -4045,8 +4044,7 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
       calendarValue.setString(calendarString);
     }
 
-    calendar = ToTemporalCalendarWithISODefault(cx, calendarValue);
-    if (!calendar) {
+    if (!ToTemporalCalendarWithISODefault(cx, calendarValue, &calendar)) {
       return false;
     }
 
