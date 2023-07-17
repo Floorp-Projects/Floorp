@@ -31,7 +31,6 @@ interface mixin GlobalEventHandlers {
            attribute EventHandler onfocus;
            attribute EventHandler oncancel;
            attribute EventHandler onauxclick;
-           [Pref="dom.input_events.beforeinput.enabled"]
            attribute EventHandler onbeforeinput;
            [Pref="dom.element.popover.enabled"]
            attribute EventHandler onbeforetoggle;

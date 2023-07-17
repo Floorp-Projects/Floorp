@@ -300,31 +300,25 @@ HTMLEditor::HTMLEditor(const Document& aDocument)
       mDefaultParagraphSeparator(ParagraphSeparator::div) {}
 
 HTMLEditor::~HTMLEditor() {
-  // Collect the data of `beforeinput` event only when it's enabled because
-  // web apps should switch their behavior with feature detection with
-  // checking `onbeforeinput` or `getTargetRanges`.
-  if (StaticPrefs::dom_input_events_beforeinput_enabled()) {
-    Telemetry::Accumulate(
-        Telemetry::HTMLEDITORS_WITH_BEFOREINPUT_LISTENERS,
-        MayHaveBeforeInputEventListenersForTelemetry() ? 1 : 0);
-    Telemetry::Accumulate(
-        Telemetry::HTMLEDITORS_OVERRIDDEN_BY_BEFOREINPUT_LISTENERS,
-        mHasBeforeInputBeenCanceled ? 1 : 0);
-    Telemetry::Accumulate(
-        Telemetry::
-            HTMLEDITORS_WITH_MUTATION_LISTENERS_WITHOUT_BEFOREINPUT_LISTENERS,
-        !MayHaveBeforeInputEventListenersForTelemetry() &&
-                MayHaveMutationEventListeners()
-            ? 1
-            : 0);
-    Telemetry::Accumulate(
-        Telemetry::
-            HTMLEDITORS_WITH_MUTATION_OBSERVERS_WITHOUT_BEFOREINPUT_LISTENERS,
-        !MayHaveBeforeInputEventListenersForTelemetry() &&
-                MutationObserverHasObservedNodeForTelemetry()
-            ? 1
-            : 0);
-  }
+  Telemetry::Accumulate(Telemetry::HTMLEDITORS_WITH_BEFOREINPUT_LISTENERS,
+                        MayHaveBeforeInputEventListenersForTelemetry() ? 1 : 0);
+  Telemetry::Accumulate(
+      Telemetry::HTMLEDITORS_OVERRIDDEN_BY_BEFOREINPUT_LISTENERS,
+      mHasBeforeInputBeenCanceled ? 1 : 0);
+  Telemetry::Accumulate(
+      Telemetry::
+          HTMLEDITORS_WITH_MUTATION_LISTENERS_WITHOUT_BEFOREINPUT_LISTENERS,
+      !MayHaveBeforeInputEventListenersForTelemetry() &&
+              MayHaveMutationEventListeners()
+          ? 1
+          : 0);
+  Telemetry::Accumulate(
+      Telemetry::
+          HTMLEDITORS_WITH_MUTATION_OBSERVERS_WITHOUT_BEFOREINPUT_LISTENERS,
+      !MayHaveBeforeInputEventListenersForTelemetry() &&
+              MutationObserverHasObservedNodeForTelemetry()
+          ? 1
+          : 0);
 
   mPendingStylesToApplyToNewContent = nullptr;
 
