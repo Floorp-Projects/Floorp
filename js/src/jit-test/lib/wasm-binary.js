@@ -260,8 +260,8 @@ function varU32(u32) {
 }
 
 function varS32(s32) {
-    assertEq(s32 >= -Math.pow(2,31), true);
-    assertEq(s32 < Math.pow(2,31), true);
+    assertEq(s32 >= -Math.pow(2,31), true, `varS32 input must be number between -2^31 and 2^31-1, got ${s32}`);
+    assertEq(s32 < Math.pow(2,31), true, `varS32 input must be number between -2^31 and 2^31-1, got ${s32}`);
     var bytes = [];
     do {
         var byte = s32 & 0x7f;

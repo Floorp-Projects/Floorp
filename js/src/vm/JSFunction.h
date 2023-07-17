@@ -23,6 +23,7 @@
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
+#include "wasm/WasmTypeDef.h"
 
 class JSJitInfo;
 
@@ -612,6 +613,8 @@ class JSFunction : public js::NativeObject {
     return static_cast<void**>(nativeJitInfoOrInterpretedScript());
   }
   inline js::wasm::Instance& wasmInstance() const;
+  inline js::wasm::SuperTypeVector& wasmSuperTypeVector() const;
+  inline const js::wasm::TypeDef* wasmTypeDef() const;
 
   bool isDerivedClassConstructor() const;
   bool isSyntheticFunction() const;
@@ -762,11 +765,12 @@ class FunctionExtended : public JSFunction {
   enum {
     FirstExtendedSlot = JSFunction::SlotCount,
     SecondExtendedSlot,
+    ThirdExtendedSlot,
 
     SlotCount
   };
 
-  static const uint32_t NUM_EXTENDED_SLOTS = 2;
+  static const uint32_t NUM_EXTENDED_SLOTS = 3;
 
   static const uint32_t METHOD_HOMEOBJECT_SLOT = 0;
 
@@ -778,6 +782,10 @@ class FunctionExtended : public JSFunction {
   // wasm/asm.js exported functions store the wasm::Instance pointer of their
   // instance.
   static const uint32_t WASM_INSTANCE_SLOT = 1;
+
+  // wasm/asm.js exported functions store a pointer to their
+  // wasm::SuperTypeVector for downcasting.
+  static const uint32_t WASM_STV_SLOT = 2;
 
   // asm.js module functions store their WasmModuleObject in the first slot.
   static const uint32_t ASMJS_MODULE_SLOT = 0;
@@ -791,6 +799,9 @@ class FunctionExtended : public JSFunction {
   }
   static inline size_t offsetOfMethodHomeObjectSlot() {
     return offsetOfExtendedSlot(METHOD_HOMEOBJECT_SLOT);
+  }
+  static inline size_t offsetOfWasmSTV() {
+    return offsetOfExtendedSlot(WASM_STV_SLOT);
   }
 
  private:
@@ -836,6 +847,19 @@ inline js::wasm::Instance& JSFunction::wasmInstance() const {
       !getExtendedSlot(js::FunctionExtended::WASM_INSTANCE_SLOT).isUndefined());
   return *static_cast<js::wasm::Instance*>(
       getExtendedSlot(js::FunctionExtended::WASM_INSTANCE_SLOT).toPrivate());
+}
+
+inline js::wasm::SuperTypeVector& JSFunction::wasmSuperTypeVector() const {
+  MOZ_ASSERT(isWasm());
+  MOZ_ASSERT(
+      !getExtendedSlot(js::FunctionExtended::WASM_STV_SLOT).isUndefined());
+  return *static_cast<js::wasm::SuperTypeVector*>(
+      getExtendedSlot(js::FunctionExtended::WASM_STV_SLOT).toPrivate());
+}
+
+inline const js::wasm::TypeDef* JSFunction::wasmTypeDef() const {
+  MOZ_ASSERT(isWasm());
+  return wasmSuperTypeVector().typeDef();
 }
 
 namespace js {

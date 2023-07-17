@@ -60,7 +60,7 @@ namespace gc {
 #define FOR_EACH_OBJECT_ALLOCKIND(D) \
  /* AllocKind              TraceKind     TypeName           SizedType          BGFinal Nursery Compact */ \
     D(FUNCTION,            Object,       JSObject,          JSObject_Slots4,   true,   true,   true) \
-    D(FUNCTION_EXTENDED,   Object,       JSObject,          JSObject_Slots6,   true,   true,   true) \
+    D(FUNCTION_EXTENDED,   Object,       JSObject,          JSObject_Slots7,   true,   true,   true) \
     D(OBJECT0,             Object,       JSObject,          JSObject_Slots0,   false,  true,   true) \
     D(OBJECT0_BACKGROUND,  Object,       JSObject,          JSObject_Slots0,   true,   true,   true) \
     D(OBJECT2,             Object,       JSObject,          JSObject_Slots2,   false,  true,   true) \

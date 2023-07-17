@@ -17147,14 +17147,35 @@ void CodeGenerator::visitWasmTrapIfNull(LWasmTrapIfNull* lir) {
   masm.bind(&nonNull);
 }
 
-void CodeGenerator::visitWasmGcObjectIsSubtypeOfAbstract(
-    LWasmGcObjectIsSubtypeOfAbstract* ins) {
+static void BranchWasmRefIsSubtype(MacroAssembler& masm, Register ref,
+                                   const wasm::RefType& sourceType,
+                                   const wasm::RefType& destType, Label* label,
+                                   Register superSuperTypeVector,
+                                   Register scratch1, Register scratch2) {
+  if (destType.isAnyHierarchy()) {
+    masm.branchWasmRefIsSubtypeAny(ref, sourceType, destType, label,
+                                   /*onSuccess=*/true, superSuperTypeVector,
+                                   scratch1, scratch2);
+  } else if (destType.isFuncHierarchy()) {
+    masm.branchWasmRefIsSubtypeFunc(ref, sourceType, destType, label,
+                                    /*onSuccess=*/true, superSuperTypeVector,
+                                    scratch1, scratch2);
+  } else if (destType.isExternHierarchy()) {
+    masm.branchWasmRefIsSubtypeExtern(ref, sourceType, destType, label,
+                                      /*onSuccess=*/true);
+  } else {
+    MOZ_CRASH("could not generate casting code for unknown type hierarchy");
+  }
+}
+
+void CodeGenerator::visitWasmRefIsSubtypeOfAbstract(
+    LWasmRefIsSubtypeOfAbstract* ins) {
   MOZ_ASSERT(gen->compilingWasm());
 
-  const MWasmGcObjectIsSubtypeOfAbstract* mir = ins->mir();
+  const MWasmRefIsSubtypeOfAbstract* mir = ins->mir();
   MOZ_ASSERT(!mir->destType().isTypeRef());
 
-  Register object = ToRegister(ins->object());
+  Register ref = ToRegister(ins->ref());
   Register superSuperTypeVector = Register::Invalid();
   Register scratch1 = ToTempRegisterOrInvalid(ins->temp0());
   Register scratch2 = Register::Invalid();
@@ -17162,9 +17183,8 @@ void CodeGenerator::visitWasmGcObjectIsSubtypeOfAbstract(
   Label onSuccess;
   Label onFail;
   Label join;
-  masm.branchWasmGcObjectIsRefType(
-      object, mir->sourceType(), mir->destType(), &onSuccess,
-      /*onSuccess=*/true, superSuperTypeVector, scratch1, scratch2);
+  BranchWasmRefIsSubtype(masm, ref, mir->sourceType(), mir->destType(),
+                         &onSuccess, superSuperTypeVector, scratch1, scratch2);
   masm.bind(&onFail);
   masm.xor32(result, result);
   masm.jump(&join);
@@ -17173,23 +17193,22 @@ void CodeGenerator::visitWasmGcObjectIsSubtypeOfAbstract(
   masm.bind(&join);
 }
 
-void CodeGenerator::visitWasmGcObjectIsSubtypeOfConcrete(
-    LWasmGcObjectIsSubtypeOfConcrete* ins) {
+void CodeGenerator::visitWasmRefIsSubtypeOfConcrete(
+    LWasmRefIsSubtypeOfConcrete* ins) {
   MOZ_ASSERT(gen->compilingWasm());
 
-  const MWasmGcObjectIsSubtypeOfConcrete* mir = ins->mir();
+  const MWasmRefIsSubtypeOfConcrete* mir = ins->mir();
   MOZ_ASSERT(mir->destType().isTypeRef());
 
-  Register object = ToRegister(ins->object());
+  Register ref = ToRegister(ins->ref());
   Register superSuperTypeVector = ToRegister(ins->superSuperTypeVector());
   Register scratch1 = ToRegister(ins->temp0());
   Register scratch2 = ToTempRegisterOrInvalid(ins->temp1());
   Register result = ToRegister(ins->output());
   Label onSuccess;
   Label join;
-  masm.branchWasmGcObjectIsRefType(
-      object, mir->sourceType(), mir->destType(), &onSuccess,
-      /*onSuccess=*/true, superSuperTypeVector, scratch1, scratch2);
+  BranchWasmRefIsSubtype(masm, ref, mir->sourceType(), mir->destType(),
+                         &onSuccess, superSuperTypeVector, scratch1, scratch2);
   masm.move32(Imm32(0), result);
   masm.jump(&join);
   masm.bind(&onSuccess);
@@ -17197,31 +17216,30 @@ void CodeGenerator::visitWasmGcObjectIsSubtypeOfConcrete(
   masm.bind(&join);
 }
 
-void CodeGenerator::visitWasmGcObjectIsSubtypeOfAbstractAndBranch(
-    LWasmGcObjectIsSubtypeOfAbstractAndBranch* ins) {
+void CodeGenerator::visitWasmRefIsSubtypeOfAbstractAndBranch(
+    LWasmRefIsSubtypeOfAbstractAndBranch* ins) {
   MOZ_ASSERT(gen->compilingWasm());
-  Register object = ToRegister(ins->object());
+  Register ref = ToRegister(ins->ref());
   Register scratch1 = ToTempRegisterOrInvalid(ins->temp0());
   Label* onSuccess = getJumpLabelForBranch(ins->ifTrue());
   Label* onFail = getJumpLabelForBranch(ins->ifFalse());
-  masm.branchWasmGcObjectIsRefType(
-      object, ins->sourceType(), ins->destType(), onSuccess,
-      /*onSuccess=*/true, Register::Invalid(), scratch1, Register::Invalid());
+  BranchWasmRefIsSubtype(masm, ref, ins->sourceType(), ins->destType(),
+                         onSuccess, Register::Invalid(), scratch1,
+                         Register::Invalid());
   masm.jump(onFail);
 }
 
-void CodeGenerator::visitWasmGcObjectIsSubtypeOfConcreteAndBranch(
-    LWasmGcObjectIsSubtypeOfConcreteAndBranch* ins) {
+void CodeGenerator::visitWasmRefIsSubtypeOfConcreteAndBranch(
+    LWasmRefIsSubtypeOfConcreteAndBranch* ins) {
   MOZ_ASSERT(gen->compilingWasm());
-  Register object = ToRegister(ins->object());
+  Register ref = ToRegister(ins->ref());
   Register superSuperTypeVector = ToRegister(ins->superSuperTypeVector());
   Register scratch1 = ToRegister(ins->temp0());
   Register scratch2 = ToTempRegisterOrInvalid(ins->temp1());
   Label* onSuccess = getJumpLabelForBranch(ins->ifTrue());
   Label* onFail = getJumpLabelForBranch(ins->ifFalse());
-  masm.branchWasmGcObjectIsRefType(
-      object, ins->sourceType(), ins->destType(), onSuccess,
-      /*onSuccess=*/true, superSuperTypeVector, scratch1, scratch2);
+  BranchWasmRefIsSubtype(masm, ref, ins->sourceType(), ins->destType(),
+                         onSuccess, superSuperTypeVector, scratch1, scratch2);
   masm.jump(onFail);
 }
 

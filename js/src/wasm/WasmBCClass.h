@@ -1702,10 +1702,10 @@ struct BaseCompiler final {
   // Common code for both old and new ref.cast instructions.
   void emitRefCastCommon(RefType sourceType, RefType destType);
 
-  // Allocate registers and branch if the given object is a subtype of the given
-  // heap type.
-  void branchGcRefType(RegRef object, RefType sourceType, RefType destType,
-                       Label* label, bool onSuccess);
+  // Allocate registers and branch if the given wasm ref is a subtype of the
+  // given heap type.
+  void branchIfRefSubtype(RegRef ref, RefType sourceType, RefType destType,
+                          Label* label, bool onSuccess);
 
   // Write `value` to wasm struct `object`, at `areaBase + areaOffset`.  The
   // caller must decide on the in- vs out-of-lineness before the call and set
