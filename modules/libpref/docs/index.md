@@ -118,7 +118,7 @@ See also the section on static prefs below.
 
 ### Static prefs
 There is a special kind of pref called a static pref. Static prefs are defined
-in `StaticPrefList.yaml`.
+in `StaticPrefList.yaml`. See that file for more documentation.
 
 If a static pref is defined in both `StaticPrefList.yaml` and a pref data
 file, the latter definition will take precedence. A pref shouldn't appear in
@@ -139,7 +139,10 @@ Each static pref has a *mirror* kind.
 An `always` or `once` static pref can only be used for prefs with
 bool/int/float values, not strings or complex values.
 
-Each mirror variable is read-only, accessible via a getter function.
+Each mirror variable is read-only, accessible via a getter function. The base
+name of the getter function is the same as the pref's name, but with '.' or '-'
+converted to '_'. Sometimes a suffix is added, e.g. _AtStartup for the mirror
+once kind.
 
 Mirror variables have two benefits. First, they allow C++ and Rust code to get
 the pref value directly from the variable instead of requiring a slow hash
