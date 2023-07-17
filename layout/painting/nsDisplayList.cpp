@@ -7677,6 +7677,9 @@ void nsDisplayText::RenderToContext(gfxContext* aCtx,
       // necessary. This is done here because we want selection be
       // compressed at the same time as text.
       gfxPoint pt = nsLayoutUtils::PointToGfxPoint(framePt, A2D);
+      if (f->GetTextRun(nsTextFrame::eInflated)->IsRightToLeft()) {
+        pt.x += gfxFloat(f->GetSize().width) / A2D;
+      }
       gfxMatrix mat = aCtx->CurrentMatrixDouble()
                           .PreTranslate(pt)
                           .PreScale(scaleFactor, 1.0)
