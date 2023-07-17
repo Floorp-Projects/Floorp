@@ -48,6 +48,8 @@ class RenderTextureHostWrapper final : public RenderTextureHostSWGL {
   RenderAndroidSurfaceTextureHost* AsRenderAndroidSurfaceTextureHost() override;
   RenderTextureHostSWGL* AsRenderTextureHostSWGL() override;
   bool IsWrappingAsyncRemoteTexture() override;
+  void SetIsSoftwareDecodedVideo() override;
+  bool IsSoftwareDecodedVideo() override;
 
   // RenderTextureHostSWGL
   size_t GetPlaneCount() const override;
