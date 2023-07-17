@@ -1164,10 +1164,14 @@ template <typename T>
   MOZ_ASSERT(!obj->isSharedMemory());
   if (srcArray->isSharedMemory()) {
     if (!ElementSpecific<T, SharedOps>::setFromTypedArray(obj, srcArray, 0)) {
+      MOZ_ASSERT_UNREACHABLE(
+          "setFromTypedArray can only fail for overlapping buffers");
       return nullptr;
     }
   } else {
     if (!ElementSpecific<T, UnsharedOps>::setFromTypedArray(obj, srcArray, 0)) {
+      MOZ_ASSERT_UNREACHABLE(
+          "setFromTypedArray can only fail for overlapping buffers");
       return nullptr;
     }
   }
@@ -1559,9 +1563,12 @@ static bool SetTypedArrayFromTypedArray(JSContext* cx,
 
   // Steps 6-12, 16-24.
   switch (target->type()) {
-#define SET_FROM_TYPED_ARRAY(_, T, N)                                \
-  case Scalar::N:                                                    \
-    if (!SetFromTypedArray<T>(target, source, offset)) return false; \
+#define SET_FROM_TYPED_ARRAY(_, T, N)                    \
+  case Scalar::N:                                        \
+    if (!SetFromTypedArray<T>(target, source, offset)) { \
+      ReportOutOfMemory(cx);                             \
+      return false;                                      \
+    }                                                    \
     break;
     JS_FOR_EACH_TYPED_ARRAY(SET_FROM_TYPED_ARRAY)
 #undef SET_FROM_TYPED_ARRAY
