@@ -226,12 +226,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       return NS_OK;
 
     // New CSS 2 Color definitions
-    case ColorID::Activeborder:
-      idx = COLOR_ACTIVEBORDER;
-      break;
-    case ColorID::Activecaption:
-      idx = COLOR_ACTIVECAPTION;
-      break;
     case ColorID::Appworkspace:
       idx = COLOR_APPWORKSPACE;
       break;
@@ -254,9 +248,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::MozButtonhovertext:
     case ColorID::MozButtonactivetext:
       idx = COLOR_BTNTEXT;
-      break;
-    case ColorID::Captiontext:
-      idx = COLOR_CAPTIONTEXT;
       break;
     case ColorID::MozCellhighlighttext:
       aColor = NS_RGB(0, 0, 0);
@@ -299,15 +290,24 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       }
       aColor = NS_TRANSPARENT;
       return NS_OK;
-    case ColorID::Inactiveborder:
-      idx = COLOR_INACTIVEBORDER;
-      break;
+    case ColorID::Activecaption:
+      aColor = mTitlebarColors.Get(aScheme, true).mBg;
+      return NS_OK;
+    case ColorID::Captiontext:
+      aColor = mTitlebarColors.Get(aScheme, true).mFg;
+      return NS_OK;
+    case ColorID::Activeborder:
+      aColor = mTitlebarColors.Get(aScheme, true).mBorder;
+      return NS_OK;
     case ColorID::Inactivecaption:
-      idx = COLOR_INACTIVECAPTION;
-      break;
+      aColor = mTitlebarColors.Get(aScheme, false).mBg;
+      return NS_OK;
     case ColorID::Inactivecaptiontext:
-      idx = COLOR_INACTIVECAPTIONTEXT;
-      break;
+      aColor = mTitlebarColors.Get(aScheme, false).mFg;
+      return NS_OK;
+    case ColorID::Inactiveborder:
+      aColor = mTitlebarColors.Get(aScheme, false).mBorder;
+      return NS_OK;
     case ColorID::Infobackground:
       idx = COLOR_INFOBK;
       break;
@@ -371,19 +371,10 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       idx = COLOR_3DFACE;
       break;
     case ColorID::Accentcolor:
-      if (mColorAccent) {
-        aColor = *mColorAccent;
-      } else {
-        // Seems to be the default color (hardcoded because of bug 1065998)
-        aColor = NS_RGB(0, 120, 215);
-      }
+      aColor = mColorAccent;
       return NS_OK;
     case ColorID::Accentcolortext:
-      if (mColorAccentText) {
-        aColor = *mColorAccentText;
-      } else {
-        aColor = NS_RGB(255, 255, 255);
-      }
+      aColor = mColorAccentText;
       return NS_OK;
     case ColorID::MozWinMediatext:
       if (mColorMediaText) {
@@ -521,35 +512,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled();
       break;
     case IntID::WindowsAccentColorInTitlebar: {
-      aResult = 0;
-      if (NS_WARN_IF(!mColorAccent)) {
-        break;
-      }
-
-      if (!mDwmKey) {
-        mDwmKey = do_CreateInstance("@mozilla.org/windows-registry-key;1");
-        if (!mDwmKey) {
-          break;
-        }
-      }
-      uint32_t colorPrevalence;
-      nsresult rv = mDwmKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                                  u"SOFTWARE\\Microsoft\\Windows\\DWM"_ns,
-                                  nsIWindowsRegKey::ACCESS_QUERY_VALUE);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      // The ColorPrevalence value is set to 1 when the "Show color on title
-      // bar" setting in the Color section of Window's Personalization settings
-      // is turned on.
-      aResult = (NS_SUCCEEDED(mDwmKey->ReadIntValue(u"ColorPrevalence"_ns,
-                                                    &colorPrevalence)) &&
-                 colorPrevalence == 1)
-                    ? 1
-                    : 0;
-
-      mDwmKey->Close();
+      aResult = mTitlebarColors.mUseAccent;
     } break;
     case IntID::WindowsGlass:
       // Aero Glass is only available prior to Windows 8 when DWM is used.
@@ -830,10 +793,7 @@ char16_t nsLookAndFeel::GetPasswordCharacterImpl() {
   return UNICODE_BLACK_CIRCLE_CHAR;
 }
 
-static Maybe<nscolor> GetAccentColorText(const Maybe<nscolor>& aAccentColor) {
-  if (!aAccentColor) {
-    return Nothing();
-  }
+static nscolor GetAccentColorText(const nscolor aAccentColor) {
   // We want the color that we return for text that will be drawn over
   // a background that has the accent color to have good contrast with
   // the accent color.  Windows itself uses either white or black text
@@ -842,11 +802,17 @@ static Maybe<nscolor> GetAccentColorText(const Maybe<nscolor>& aAccentColor) {
   // value.  This algorithm should match what Windows does.  It comes from:
   //
   // https://docs.microsoft.com/en-us/windows/uwp/style/color
-  float luminance = (NS_GET_R(*aAccentColor) * 2 + NS_GET_G(*aAccentColor) * 5 +
-                     NS_GET_B(*aAccentColor)) /
+  float luminance = (NS_GET_R(aAccentColor) * 2 + NS_GET_G(aAccentColor) * 5 +
+                     NS_GET_B(aAccentColor)) /
                     8;
+  return luminance <= 128 ? NS_RGB(255, 255, 255) : NS_RGB(0, 0, 0);
+}
 
-  return Some(luminance <= 128 ? NS_RGB(255, 255, 255) : NS_RGB(0, 0, 0));
+static Maybe<nscolor> GetAccentColorText(const Maybe<nscolor>& aAccentColor) {
+  if (!aAccentColor) {
+    return Nothing();
+  }
+  return Some(GetAccentColorText(*aAccentColor));
 }
 
 nscolor nsLookAndFeel::GetColorForSysColorIndex(int index) {
@@ -854,14 +820,101 @@ nscolor nsLookAndFeel::GetColorForSysColorIndex(int index) {
   return mSysColorTable[index - SYS_COLOR_MIN];
 }
 
+auto nsLookAndFeel::ComputeTitlebarColors() -> TitlebarColors {
+  TitlebarColors result;
+
+  // Start with the native / non-accent-in-titlebar colors.
+  result.mActiveLight = {GetColorForSysColorIndex(COLOR_ACTIVECAPTION),
+                         GetColorForSysColorIndex(COLOR_CAPTIONTEXT),
+                         GetColorForSysColorIndex(COLOR_ACTIVEBORDER)};
+
+  result.mInactiveLight = {GetColorForSysColorIndex(COLOR_INACTIVECAPTION),
+                           GetColorForSysColorIndex(COLOR_INACTIVECAPTIONTEXT),
+                           GetColorForSysColorIndex(COLOR_INACTIVEBORDER)};
+
+  // Foreground and background taken from Windows Mica material theme colors.
+  result.mActiveDark = {NS_RGB(0x2e, 0x2e, 0x2e), NS_RGB(0xff, 0xff, 0xff),
+                        NS_RGB(57, 57, 57)};
+  result.mInactiveDark = {NS_RGB(0x33, 0x33, 0x33), NS_RGB(0xff, 0xff, 0xff),
+                          NS_RGB(57, 57, 57)};
+
+  nsCOMPtr<nsIWindowsRegKey> dwmKey =
+      do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  if (!dwmKey) {
+    return result;
+  }
+  // TODO(bug 1825241): Somehow get notified when this changes? Hopefully the
+  // sys color notification is enough.
+  nsresult rv = dwmKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                             u"SOFTWARE\\Microsoft\\Windows\\DWM"_ns,
+                             nsIWindowsRegKey::ACCESS_QUERY_VALUE);
+  NS_ENSURE_SUCCESS(rv, result);
+
+  auto close = mozilla::MakeScopeExit([&] { dwmKey->Close(); });
+
+  auto ReadColor = [&](const nsAString& aName) -> Maybe<nscolor> {
+    uint32_t color;
+    if (NS_SUCCEEDED(dwmKey->ReadIntValue(aName, &color))) {
+      // The order of the color components in the DWORD stored in the registry
+      // happens to be the same order as we store the components in nscolor
+      // so we can just assign directly here.
+      return Some(color);
+    }
+    return Nothing();
+  };
+
+  result.mAccent = ReadColor(u"AccentColor"_ns);
+  result.mAccentText = GetAccentColorText(result.mAccent);
+
+  if (!result.mAccent) {
+    return result;
+  }
+
+  result.mAccentInactive = ReadColor(u"AccentColorInactive"_ns);
+  result.mAccentInactiveText = GetAccentColorText(result.mAccentInactive);
+
+  // The ColorPrevalence value is set to 1 when the "Show color on title bar"
+  // setting in the Color section of Window's Personalization settings is
+  // turned on.
+  uint32_t prevalence = 0;
+  result.mUseAccent =
+      NS_SUCCEEDED(dwmKey->ReadIntValue(u"ColorPrevalence"_ns, &prevalence)) &&
+      prevalence == 1;
+  if (result.mUseAccent) {
+    // TODO(emilio): Consider reading ColorizationColorBalance to compute a
+    // more correct border color, see [1]. Though for opaque accent colors this
+    // isn't needed.
+    //
+    // [1]:
+    // https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:ui/color/win/accent_color_observer.cc;l=42;drc=9d4eb7ed25296abba8fd525a6bdd0fdbf4bcdd9f
+    result.mActiveLight = result.mActiveDark = {
+        *result.mAccent, *result.mAccentText, *result.mAccent};
+    if (result.mAccentInactive) {
+      result.mInactiveLight = result.mInactiveDark = {
+          *result.mAccentInactive, *result.mAccentInactiveText,
+          *result.mAccentInactive};
+    } else {
+      // The 153 matches the .6 opacity from browser-aero.css, which says it
+      // was calculated to match the opacity change of Windows Explorer
+      // titlebar text change for inactive windows.
+      result.mInactiveLight = {
+          NS_ComposeColors(*result.mAccent, NS_RGBA(255, 255, 255, 153)),
+          NS_ComposeColors(*result.mAccentText, NS_RGBA(255, 255, 255, 153)),
+          NS_RGB(57, 57, 57)};
+      result.mInactiveDark = {
+          NS_ComposeColors(*result.mAccent, NS_RGBA(0, 0, 0, 153)),
+          NS_ComposeColors(*result.mAccentText, NS_RGBA(0, 0, 0, 153)),
+          NS_RGB(57, 57, 57)};
+    }
+  }
+  return result;
+}
+
 void nsLookAndFeel::EnsureInit() {
   if (mInitialized) {
     return;
   }
   mInitialized = true;
-
-  mColorAccent = WindowsUIUtils::GetAccentColor();
-  mColorAccentText = GetAccentColorText(mColorAccent);
 
   if (nsUXThemeData::IsAppThemed()) {
     mColorMenuHoverText =
@@ -887,6 +940,21 @@ void nsLookAndFeel::EnsureInit() {
       WindowsUIUtils::GetSystemColor(ColorScheme::Dark, COLOR_HIGHLIGHT);
   mDarkHighlightText =
       WindowsUIUtils::GetSystemColor(ColorScheme::Dark, COLOR_HIGHLIGHTTEXT);
+
+  mTitlebarColors = ComputeTitlebarColors();
+
+  mColorAccent = [&] {
+    if (auto accent = WindowsUIUtils::GetAccentColor()) {
+      return *accent;
+    }
+    // Try the titlebar accent as a fallback.
+    if (mTitlebarColors.mAccent) {
+      return *mTitlebarColors.mAccent;
+    }
+    // Seems to be the default color (hardcoded because of bug 1065998)
+    return NS_RGB(0, 120, 215);
+  }();
+  mColorAccentText = GetAccentColorText(mColorAccent);
 
   RecordTelemetry();
 }

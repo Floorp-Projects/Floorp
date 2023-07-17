@@ -48,12 +48,12 @@
       @media (-moz-windows-default-theme) {
         @media (-moz-windows-accent-color-in-titlebar) {
           :root[sizemode=normal][tabsintitlebar] #navigator-toolbox {
-            border-top: .5px solid AccentColor;
+            border-top: .5px solid ActiveBorder;
           }
         }
 
-        :root[sizemode=normal][tabsintitlebar]:-moz-window-inactive #navigator-toolbox {
-          border-top-color: rgb(57,57,57);
+        :root[sizemode=normal][tabsintitlebar] #navigator-toolbox:-moz-window-inactive {
+          border-top-color: InactiveBorder;
         }
 
         :root[tabsintitlebar] .tab-label:-moz-window-inactive {
