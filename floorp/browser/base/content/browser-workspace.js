@@ -896,7 +896,7 @@ const workspaceFunctions = {
 
       //hide all elements
       let tagElem = document.createElement("style");
-      displayNoneCSS = ` * {display: none !important;}`;
+      displayNoneCSS = ` #browser, #statusBar  {display: none !important;}`;
       tagElem.textContent = displayNoneCSS;
       document.head.appendChild(tagElem);
 
@@ -996,7 +996,7 @@ startWorkspace = function () {
   Services.obs.addObserver(workspaceFunctions.Backup.restoreWorkspace, "backupWorkspace");
 
   //run codes
-  if (document.querySelector(".tabbrowser-tab[labeldirection]") !== null) {
+  if (typeof gBrowser !== 'undefined') {
     window.setTimeout(
       workspaceFunctions.Backup.backupWorkspace,
       300
@@ -1007,7 +1007,7 @@ startWorkspace = function () {
     );
     window.setTimeout(
       workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace,
-      1100
+      900
     );
     window.setTimeout(setEvenyListeners, 1300);
   } else {

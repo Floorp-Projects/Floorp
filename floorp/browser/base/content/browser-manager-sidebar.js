@@ -1,7 +1,13 @@
+/* eslint-disable mozilla/no-compare-against-boolean-literals */
+/* eslint-disable complexity */
+/* eslint-disable no-nested-ternary */
+/* eslint-disable no-undef */
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
  let {
     BrowserManagerSidebar
   } = ChromeUtils.import("resource:///modules/BrowserManagerSidebar.jsm")
@@ -155,7 +161,7 @@
           bmsController.controllFunctions.changeVisibleWenpanel();
         }
         bmsController.controllFunctions.changeCheckPanel(document.getElementById("sidebar-splitter2").getAttribute("hidden") != "true");
-        if (selectedwebpanel != null) selectedwebpanel.hidden = false;
+        if (selectedwebpanel != null) {selectedwebpanel.hidden = false;}
       },
       unloadWebpanel:(id)=>{
         let sidebarsplit2 = document.getElementById("sidebar-splitter2");
@@ -184,7 +190,7 @@
         }
         if (doChecked) {
           let selectedNode = document.querySelector(`#select-${bmsController.nowPage}`);
-          if (selectedNode != null) selectedNode.setAttribute("checked", "true")
+          if (selectedNode != null) {selectedNode.setAttribute("checked", "true")}
         }
       },
       changeVisibleBrowserManagerSidebar:(doVisible) => {
@@ -195,7 +201,7 @@
         }
       },
       changeVisibleCommandButton: (hidden) => {
-        for (let elem of sidebar_icons) document.getElementById(elem).hidden = hidden
+        for (let elem of sidebar_icons) {document.getElementById(elem).hidden = hidden}
       },
       changeVisibleWenpanel: () => {
         let siderbar2header = document.getElementById("sidebar2-header");
@@ -236,7 +242,7 @@
         let isFloorp = false
         bmsController.controllFunctions.setSidebarWidth(webpanel_id)
         if (webpanelURL.startsWith("floorp//")) {
-          if (webpanelURL == "floorp//tst") isTST = true
+          if (webpanelURL == "floorp//tst") {isTST = true}
           isFloorp = true
           webpanelURL = STATIC_SIDEBAR_DATA[webpanelURL].url
           isWeb = false
@@ -300,8 +306,8 @@
             sidebarItem.classList.add("sidepanel-icon");
             sidebarItem.classList.add("sicon-list");
             sidebarItem.setAttribute("oncommand", "bmsController.eventFunctions.selectSidebarItem()");
-            if (BROWSER_SIDEBAR_DATA.data[elem]["url"].slice(0, 8) == "floorp//") {
-              if (BROWSER_SIDEBAR_DATA.data[elem]["url"] in STATIC_SIDEBAR_DATA) {
+            if (BROWSER_SIDEBAR_DATA.data[elem].url.slice(0, 8) == "floorp//") {
+              if (BROWSER_SIDEBAR_DATA.data[elem].url in STATIC_SIDEBAR_DATA) {
                 //0~4 - StaticModeSetter | Browser Manager, Bookmark, History, Downloads, TreeStyleTab have l10n & Delete panel
                 sidebarItem.setAttribute("data-l10n-id", "show-" + STATIC_SIDEBAR_DATA[BROWSER_SIDEBAR_DATA.data[elem].url].l10n);
                 sidebarItem.setAttribute("context", "all-panel-context");
@@ -310,11 +316,11 @@
               //5~ CustomURLSetter | Custom URL have l10n, Userangent, Delete panel & etc...
               sidebarItem.classList.add("webpanel-icon");
               sidebarItem.setAttribute("context", "webpanel-context");
-              sidebarItem.setAttribute("tooltiptext", BROWSER_SIDEBAR_DATA.data[elem]["url"]);
+              sidebarItem.setAttribute("tooltiptext", BROWSER_SIDEBAR_DATA.data[elem].url);
             }
 
-            if (BROWSER_SIDEBAR_DATA.data[elem]["url"].slice(0, 9) == "extension") {
-              sidebarItem.setAttribute("tooltiptext", BROWSER_SIDEBAR_DATA.data[elem]["url"].split(",")[1]);
+            if (BROWSER_SIDEBAR_DATA.data[elem].url.slice(0, 9) == "extension") {
+              sidebarItem.setAttribute("tooltiptext", BROWSER_SIDEBAR_DATA.data[elem].url.split(",")[1]);
               sidebarItem.className += " extension-icon"
               let listTexts = "chrome://browser/content/BMS-extension-needs-white-bg.txt";
               fetch(listTexts).then((response) => {
@@ -322,7 +328,7 @@
               }).then((text) => {
                 let lines = text.split(/\r?\n/);
                 for (let line of lines) {
-                  if(line == BROWSER_SIDEBAR_DATA.data[elem]["url"].split(",")[2]){
+                  if(line == BROWSER_SIDEBAR_DATA.data[elem].url.split(",")[2]){
                     sidebarItem.className += " extension-icon-add-white"
                     break;
                   }
@@ -349,8 +355,8 @@
             document.getElementById("panelBox").insertBefore(sidebarItem, document.getElementById("add-button"));
           } else {
             sidebarItem = document.getElementById(`select-${elem}`)
-            if (BROWSER_SIDEBAR_DATA.data[elem]["url"].slice(0, 8) == "floorp//") {
-              if (BROWSER_SIDEBAR_DATA.data[elem]["url"] in STATIC_SIDEBAR_DATA) {
+            if (BROWSER_SIDEBAR_DATA.data[elem].url.slice(0, 8) == "floorp//") {
+              if (BROWSER_SIDEBAR_DATA.data[elem].url in STATIC_SIDEBAR_DATA) {
                 sidebarItem.classList.remove("webpanel-icon");
                 sidebarItem.setAttribute("data-l10n-id", "show-" + STATIC_SIDEBAR_DATA[BROWSER_SIDEBAR_DATA.data[elem].url].l10n);
                 sidebarItem.setAttribute("context", "all-panel-context");

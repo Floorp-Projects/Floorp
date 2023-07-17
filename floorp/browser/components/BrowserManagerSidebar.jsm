@@ -8,7 +8,6 @@ const EXPORTED_SYMBOLS = ["BrowserManagerSidebar"];
 const { Services } = ChromeUtils.import(
     "resource://gre/modules/Services.jsm"
 );
-const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 
 let BrowserManagerSidebar = {
     STATIC_SIDEBAR_DATA:{
