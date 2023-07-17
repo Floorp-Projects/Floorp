@@ -710,12 +710,8 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
   }
 
   // Step 15.
-  Rooted<DurationObject*> durationToAdd(
-      cx, CreateTemporalDuration(cx, {duration.years, duration.months,
-                                      duration.weeks, balanceResult.days}));
-  if (!durationToAdd) {
-    return false;
-  }
+  Duration durationToAdd = {duration.years, duration.months, duration.weeks,
+                            balanceResult.days};
 
   // FIXME: spec issue - unnecessary call to GetOptionsObject
   // https://github.com/tc39/proposal-temporal/issues/2620

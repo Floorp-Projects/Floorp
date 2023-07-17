@@ -773,19 +773,11 @@ static bool AddDateTime(JSContext* cx, const PlainDateTime& dateTime,
   }
 
   // Step 3.
-  Rooted<PlainDateObject*> datePart(
-      cx, CreateTemporalDate(cx, dateTime.date, calendar));
-  if (!datePart) {
-    return false;
-  }
+  const auto& datePart = dateTime.date;
 
   // Step 4.
-  Rooted<DurationObject*> dateDuration(
-      cx, CreateTemporalDuration(cx, {duration.years, duration.months,
-                                      duration.weeks, daysResult}));
-  if (!dateDuration) {
-    return false;
-  }
+  Duration dateDuration = {duration.years, duration.months, duration.weeks,
+                           daysResult};
 
   // Step 5.
   PlainDate addedDate;

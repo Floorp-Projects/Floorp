@@ -2010,11 +2010,7 @@ static bool PlainDate_subtract(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 5.
-  Rooted<DurationObject*> negatedDuration(
-      cx, CreateTemporalDuration(cx, duration.negate()));
-  if (!negatedDuration) {
-    return false;
-  }
+  auto negatedDuration = duration.negate();
 
   // Step 6.
   auto result =
