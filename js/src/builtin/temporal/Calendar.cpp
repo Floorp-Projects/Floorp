@@ -2157,7 +2157,7 @@ static PlainDateObject* BuiltinCalendarDateFromFields(
 static bool Calendar_dateFromFields(JSContext* cx, unsigned argc, Value* vp);
 
 /**
- * CalendarDateFromFields ( calendar, fields [ , options ] )
+ * CalendarDateFromFields ( calendar, fields [, options [, dateFromFields ] ] )
  */
 static Wrapped<PlainDateObject*> CalendarDateFromFields(
     JSContext* cx, Handle<CalendarValue> calendar, Handle<JSObject*> fields,
@@ -2183,6 +2183,7 @@ static Wrapped<PlainDateObject*> CalendarDateFromFields(
     return BuiltinCalendarDateFromFields(cx, fields, maybeOptions);
   }
 
+  // Step 4.
   Rooted<Value> thisv(cx, ObjectValue(*calendarObj));
   Rooted<Value> rval(cx);
 
@@ -2198,33 +2199,33 @@ static Wrapped<PlainDateObject*> CalendarDateFromFields(
     return nullptr;
   }
 
-  // Step 4.
+  // Step 5.
   if (!rval.isObject() || !rval.toObject().canUnwrapAs<PlainDateObject>()) {
     ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, rval,
                      nullptr, "not a PlainDate object");
     return nullptr;
   }
 
-  // Step 5.
+  // Step 6.
   return &rval.toObject();
 }
 
 /**
- * CalendarDateFromFields ( calendar, fields [ , options ] )
+ * CalendarDateFromFields ( calendar, fields [, options [, dateFromFields ] ] )
  */
 Wrapped<PlainDateObject*> js::temporal::CalendarDateFromFields(
     JSContext* cx, Handle<CalendarValue> calendar, Handle<JSObject*> fields) {
-  // Steps 1-4.
+  // Steps 1-6.
   return ::CalendarDateFromFields(cx, calendar, fields, nullptr);
 }
 
 /**
- * CalendarDateFromFields ( calendar, fields [ , options ] )
+ * CalendarDateFromFields ( calendar, fields [, options [, dateFromFields ] ] )
  */
 Wrapped<PlainDateObject*> js::temporal::CalendarDateFromFields(
     JSContext* cx, Handle<CalendarValue> calendar, Handle<JSObject*> fields,
     Handle<JSObject*> options) {
-  // Steps 1-4.
+  // Steps 1-6.
   return ::CalendarDateFromFields(cx, calendar, fields, options);
 }
 
