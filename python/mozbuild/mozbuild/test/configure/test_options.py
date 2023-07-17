@@ -2,10 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import textwrap
 import unittest
+from io import StringIO
 
 from mozunit import main
 
+from mozbuild.configure.help import HelpFormatter
 from mozbuild.configure.options import (
     CommandLineHelper,
     ConflictingOptionError,
@@ -19,7 +22,7 @@ from mozbuild.configure.options import (
 
 class Option(Option):
     def __init__(self, *args, **kwargs):
-        kwargs["help"] = "Dummy help"
+        kwargs.setdefault("help", "Dummy help")
         super(Option, self).__init__(*args, **kwargs)
 
 
@@ -899,6 +902,115 @@ class TestCommandLineHelper(unittest.TestCase):
             "BAZ=1 can not be set by environment. Values are accepted from: implied",
         ):
             helper.handle(baz)
+
+
+class TestOptionHelp(unittest.TestCase):
+    def test_option_help(self):
+        formatter = HelpFormatter("configure_argv0")
+
+        out = StringIO()
+        formatter.usage(out)
+        self.assertEqual(
+            out.getvalue(),
+            textwrap.dedent(
+                """\
+                Usage: configure_argv0 [options]
+                """
+            ),
+        )
+
+        formatter.add(Option("--foo", help="Foo"))
+        out = StringIO()
+        formatter.usage(out)
+        self.assertEqual(
+            out.getvalue(),
+            textwrap.dedent(
+                """\
+                Usage: configure_argv0 [options]
+
+                Options: [defaults in brackets after descriptions]
+                  Options from python/mozbuild/mozbuild/test/configure/test_options.py:
+                    --foo                     Foo
+
+                """
+            ),
+        )
+
+        formatter.add(Option("--with-bar", env="BAR", help="Bar"))
+        out = StringIO()
+        formatter.usage(out)
+        self.assertEqual(
+            out.getvalue(),
+            textwrap.dedent(
+                """\
+                Usage: configure_argv0 [options]
+
+                Options: [defaults in brackets after descriptions]
+                  Options from python/mozbuild/mozbuild/test/configure/test_options.py:
+                    --foo                     Foo
+                    --with-bar                Bar
+
+                """
+            ),
+        )
+
+        formatter.add(Option(env="QUX", help="Qux"))
+        out = StringIO()
+        formatter.usage(out)
+        self.assertEqual(
+            out.getvalue(),
+            textwrap.dedent(
+                """\
+                Usage: configure_argv0 [options]
+
+                Options: [defaults in brackets after descriptions]
+                  Options from python/mozbuild/mozbuild/test/configure/test_options.py:
+                    --foo                     Foo
+                    --with-bar                Bar
+
+
+                Environment variables:
+                  Options from python/mozbuild/mozbuild/test/configure/test_options.py:
+                    QUX                       Qux
+
+                """
+            ),
+        )
+
+        formatter.add(Option("--enable-hoge", choices=("a", "b"), help="Hoge"))
+        formatter.add(Option("--with-fuga", nargs=1, default="a", help="Fuga"))
+        formatter.add(
+            Option("--enable-toto", default=False, help="{Enable|Disable} Toto")
+        )
+        formatter.add(
+            Option("--enable-titi", default=True, help="{Enable|Disable} Titi")
+        )
+        out = StringIO()
+        formatter.usage(out)
+        self.maxDiff = None
+        self.assertEqual(
+            out.getvalue(),
+            textwrap.dedent(
+                """\
+                Usage: configure_argv0 [options]
+
+                Options: [defaults in brackets after descriptions]
+                  Options from python/mozbuild/mozbuild/test/configure/test_options.py:
+                    --disable-titi            Disable Titi
+                    --enable-hoge={a,b}       Hoge
+                    --enable-toto             Enable Toto
+                    --foo                     Foo
+                    --with-bar                Bar
+                    --with-fuga               Fuga [a]
+
+
+                Environment variables:
+                  Options from python/mozbuild/mozbuild/test/configure/test_options.py:
+                    QUX                       Qux
+
+                """
+            ),
+        )
 
 
 if __name__ == "__main__":
