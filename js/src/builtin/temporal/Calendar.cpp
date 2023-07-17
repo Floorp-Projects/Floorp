@@ -112,19 +112,24 @@ bool js::temporal::WrapCalendarValue(JSContext* cx,
   return cx->compartment()->wrap(cx, calendar);
 }
 
-// IterableToListOfType which only accepts strings
+/**
+ * IteratorToListOfType ( iteratorRecord, elementTypes )
+ *
+ * With `elementTypes = « String »`.
+ *
+ * This implementation accepts an iterable instead of an iterator record.
+ */
 static bool IterableToListOfStrings(
     JSContext* cx, Handle<Value> items,
     MutableHandle<JS::StackGCVector<PropertyKey>> list) {
-  // Step 1.
   JS::ForOfIterator iterator(cx);
   if (!iterator.init(items)) {
     return false;
   }
 
-  // Step 2. (Not applicable in our implementation.)
+  // Step 1. (Not applicable in our implementation.)
 
-  // Steps 3-4.
+  // Steps 2-3.
   Rooted<Value> nextValue(cx);
   Rooted<PropertyKey> value(cx);
   while (true) {
@@ -153,7 +158,7 @@ static bool IterableToListOfStrings(
     return false;
   }
 
-  // Step 5.
+  // Step 4.
   return true;
 }
 
@@ -1059,7 +1064,6 @@ bool js::temporal::CalendarFields(
     if (arrayIterationSane) {
       return BuiltinCalendarFields(cx, fieldNames, result.get());
     }
-
     return BuiltinCalendarFieldsSlow(cx, calendar, fieldNames, result);
   }
 
@@ -1084,15 +1088,7 @@ bool js::temporal::CalendarFields(
     }
 
     if (arrayIterationSane) {
-      // Step 2. (Not applicable.)
-
-      // Step 3.
-      if (!BuiltinCalendarFields(cx, fieldNames, result.get())) {
-        return false;
-      }
-
-      // Step 4. (Not applicable.)
-      return true;
+      return BuiltinCalendarFields(cx, fieldNames, result.get());
     }
   }
 
@@ -1123,7 +1119,7 @@ bool js::temporal::CalendarFields(
   // FIXME: spec issue - maybe also check for duplicates here?
   // https://github.com/tc39/proposal-temporal/issues/2532
 
-  // Step 2.
+  // Steps 3-4.
   if (!IterableToListOfStrings(cx, fieldsArray, result)) {
     return false;
   }
