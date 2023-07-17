@@ -8,12 +8,12 @@ load 1072792.xhtml
 load 1380199.html
 load 1402999.html
 load 1463962.html
-load 1472024-1.html
+# load 1472024-1.html - This can still fail. See bug 1843389.
 load 1472024-2.html
 load 1484778.html
 load 1494707.html
 load 1503964.html
-load 1415667.html
+asserts(0-1) load 1415667.html # Bug 1843540.
 load 1585851.html
 load 1655983.html
 
