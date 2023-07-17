@@ -977,7 +977,7 @@ WasmArrayRawBuffer* ArrayBufferObject::BufferContents::wasmBuffer() const {
 template <typename ObjT, typename RawbufT>
 static bool CreateSpecificWasmBuffer(
     JSContext* cx, const wasm::MemoryDesc& memory,
-    MutableHandleArrayBufferObjectMaybeShared maybeSharedObject) {
+    MutableHandle<ArrayBufferObjectMaybeShared*> maybeSharedObject) {
   bool useHugeMemory = wasm::IsHugeMemoryEnabled(memory.indexType());
   Pages initialPages = memory.initialPages();
   Maybe<Pages> sourceMaxPages = memory.maximumPages();
@@ -1040,7 +1040,7 @@ static bool CreateSpecificWasmBuffer(
 
   // ObjT::createFromNewRawBuffer assumes ownership of |buffer| even in case
   // of failure.
-  RootedArrayBufferObjectMaybeShared object(
+  Rooted<ArrayBufferObjectMaybeShared*> object(
       cx, ObjT::createFromNewRawBuffer(cx, buffer, initialPages.byteLength()));
   if (!object) {
     return false;
@@ -1088,7 +1088,7 @@ static bool CreateSpecificWasmBuffer(
 }
 
 bool js::CreateWasmBuffer(JSContext* cx, const wasm::MemoryDesc& memory,
-                          MutableHandleArrayBufferObjectMaybeShared buffer) {
+                          MutableHandle<ArrayBufferObjectMaybeShared*> buffer) {
   MOZ_RELEASE_ASSERT(memory.initialPages() <=
                      wasm::MaxMemoryPages(memory.indexType()));
   MOZ_RELEASE_ASSERT(cx->wasm().haveSignalHandlers);
@@ -1334,7 +1334,7 @@ static void CheckStealPreconditions(Handle<ArrayBufferObject*> buffer,
 
 /* static */
 ArrayBufferObject* ArrayBufferObject::wasmGrowToPagesInPlace(
-    wasm::IndexType t, Pages newPages, HandleArrayBufferObject oldBuf,
+    wasm::IndexType t, Pages newPages, Handle<ArrayBufferObject*> oldBuf,
     JSContext* cx) {
   CheckStealPreconditions(oldBuf, cx);
 
@@ -1390,7 +1390,7 @@ ArrayBufferObject* ArrayBufferObject::wasmGrowToPagesInPlace(
 
 /* static */
 ArrayBufferObject* ArrayBufferObject::wasmMovingGrowToPages(
-    IndexType t, Pages newPages, HandleArrayBufferObject oldBuf,
+    IndexType t, Pages newPages, Handle<ArrayBufferObject*> oldBuf,
     JSContext* cx) {
   // On failure, do not throw and ensure that the original buffer is
   // unmodified and valid.
@@ -1440,7 +1440,7 @@ ArrayBufferObject* ArrayBufferObject::wasmMovingGrowToPages(
 }
 
 /* static */
-void ArrayBufferObject::wasmDiscard(HandleArrayBufferObject buf,
+void ArrayBufferObject::wasmDiscard(Handle<ArrayBufferObject*> buf,
                                     uint64_t byteOffset, uint64_t byteLen) {
   MOZ_ASSERT(buf->isWasm());
   buf->contents().wasmBuffer()->discard(byteOffset, byteLen);

@@ -144,13 +144,6 @@ class ArrayBufferObjectMaybeShared : public NativeObject {
   inline bool isWasm() const;
 };
 
-using RootedArrayBufferObjectMaybeShared =
-    Rooted<ArrayBufferObjectMaybeShared*>;
-using HandleArrayBufferObjectMaybeShared =
-    Handle<ArrayBufferObjectMaybeShared*>;
-using MutableHandleArrayBufferObjectMaybeShared =
-    MutableHandle<ArrayBufferObjectMaybeShared*>;
-
 /*
  * ArrayBufferObject
  *
@@ -521,14 +514,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   }
 };
 
-using RootedArrayBufferObject = Rooted<ArrayBufferObject*>;
-using HandleArrayBufferObject = Handle<ArrayBufferObject*>;
-using MutableHandleArrayBufferObject = MutableHandle<ArrayBufferObject*>;
-
 // Create a buffer for a wasm memory, whose type is determined by
 // memory.indexType().
 bool CreateWasmBuffer(JSContext* cx, const wasm::MemoryDesc& memory,
-                      MutableHandleArrayBufferObjectMaybeShared buffer);
+                      MutableHandle<ArrayBufferObjectMaybeShared*> buffer);
 
 // Per-compartment table that manages the relationship between array buffers
 // and the views that use their storage.
