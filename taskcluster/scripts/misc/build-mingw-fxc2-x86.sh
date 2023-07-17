@@ -14,6 +14,7 @@ cd $MOZ_FETCHES_DIR/fxc2
 make -j$(nproc) x86
 
 cp fxc2.exe $INSTALL_DIR/bin/
+cp dll/d3dcompiler_47_32.dll $INSTALL_DIR/bin/d3dcompiler_47.dll
 
 # --------------
 
