@@ -93,14 +93,14 @@ int64_t MakeDate(int32_t year, int32_t month, int32_t day);
 CalendarObject* GetISO8601Calendar(JSContext* cx);
 
 /**
- * ToTemporalCalendar ( temporalCalendarLike )
+ * ToTemporalCalendarSlotValue ( temporalCalendarLike [ , default ] )
  */
 bool ToTemporalCalendar(JSContext* cx,
                         JS::Handle<JS::Value> temporalCalendarLike,
                         JS::MutableHandle<CalendarValue> result);
 
 /**
- * ToTemporalCalendarWithISODefault ( temporalCalendarLike )
+ * ToTemporalCalendarSlotValue ( temporalCalendarLike [ , default ] )
  */
 bool ToTemporalCalendarWithISODefault(
     JSContext* cx, JS::Handle<JS::Value> temporalCalendarLike,
