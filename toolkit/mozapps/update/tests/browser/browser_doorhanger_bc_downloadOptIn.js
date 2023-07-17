@@ -8,7 +8,7 @@ add_task(async function doorhanger_bc_downloadOptIn() {
     set: [
       [
         "app.releaseNotesURL.prompt",
-        `${URL_HOST}/%LOCALE%/firefox/%VERSION%/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=updateprompt`,
+        `${URL_HOST}/%LOCALE%/firefox/%VERSION%/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-desktop&utm_campaign=updateprompt`,
       ],
     ],
   });
@@ -32,12 +32,13 @@ add_task(async function doorhanger_bc_downloadOptIn() {
 
   await runDoorhangerUpdateTest(params, [
     {
+      // Test that the Learn More link opens the correct release notes page.
       notificationId: "update-available",
       button: n => n.querySelector(".popup-notification-learnmore-link"),
       checkActiveUpdate: null,
       pageURLs: {
         manual: Services.urlFormatter.formatURL(
-          `${URL_HOST}/%LOCALE%/firefox/${versionString}/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=updateprompt`
+          `${URL_HOST}/%LOCALE%/firefox/${versionString}/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-desktop&utm_campaign=updateprompt`
         ),
       },
     },
