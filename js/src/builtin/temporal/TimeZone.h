@@ -112,14 +112,14 @@ TimeZoneObject* CreateTemporalTimeZone(JSContext* cx,
 TimeZoneObject* CreateTemporalTimeZoneUTC(JSContext* cx);
 
 /**
- * ToTemporalTimeZone ( temporalTimeZoneLike )
+ * ToTemporalTimeZoneSlotValue ( temporalTimeZoneLike )
  */
 bool ToTemporalTimeZone(JSContext* cx,
                         JS::Handle<JS::Value> temporalTimeZoneLike,
                         JS::MutableHandle<TimeZoneValue> result);
 
 /**
- * ToTemporalTimeZone ( temporalTimeZoneLike )
+ * ToTemporalTimeZoneSlotValue ( temporalTimeZoneLike )
  */
 bool ToTemporalTimeZone(JSContext* cx, JS::Handle<JSString*> string,
                         JS::MutableHandle<TimeZoneValue> result);
