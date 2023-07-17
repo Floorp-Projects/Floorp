@@ -46,7 +46,7 @@ class HelpFormatter(object):
             options_by_category.items(), key=lambda x: x[0]
         ):
             ret.append("  " + category + ":")
-            for option in sorted(options, key=lambda opt: opt.option):
+            for option in options:
                 opt = option.option
                 if option.choices:
                     opt += "={%s}" % ",".join(option.choices)
