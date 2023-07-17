@@ -26,10 +26,6 @@ class DataViewObject : public ArrayBufferViewObject {
  private:
   static const ClassSpec classSpec_;
 
-  static bool is(HandleValue v) {
-    return v.isObject() && v.toObject().hasClass(&class_);
-  }
-
   template <typename NativeType>
   SharedMem<uint8_t*> getDataPointer(uint64_t offset, bool* isSharedMemory);
 
