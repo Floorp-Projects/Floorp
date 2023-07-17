@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Bounce!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <p>Nothing to see here...</p>
+    <script>
+      // Wrap the entire block so we can run async code.
+      (async () => {
+        let url = new URL(location.href);
+
+        let redirectDelay = url.searchParams.get("redirectDelay");
+        if(redirectDelay != null) {
+          redirectDelay = Number.parseInt(redirectDelay);
+        } else {
+          redirectDelay = 50;
+        }
+
+        let setCookie = url.searchParams.get("setCookie");
+        if (setCookie) {
+          let cookie = document.cookie;
+
+          if (cookie) {
+            console.info("Received cookie", cookie);
+          } else {
+            let newCookie = `id=${Math.random()}`;
+            console.info("Setting new cookie", newCookie);
+            document.cookie = newCookie;
+          }
+        }
+
+        let target = url.searchParams.get("target");
+        if (target) {
+          console.info("redirecting to", target);
+          setTimeout(() => {
+            location.href = target;
+          }, redirectDelay);
+        }
+      })();
+    </script>
+  </body>
+</html>
