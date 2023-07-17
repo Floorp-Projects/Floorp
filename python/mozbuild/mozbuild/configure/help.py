@@ -19,7 +19,26 @@ class HelpFormatter(object):
         if option.possible_origins == ("implied",):
             # Don't display help if our option can only be implied.
             return
-        self.options.append(option)
+        if (
+            option.default
+            and len(option.default) == 0
+            and option.choices
+            and option.nargs in ("?", "*")
+        ):
+            # Uncommon case where the option defaults to an enabled value,
+            # but can take values. The help should mention both the disabling
+            # flag and the enabling flag that takes values.
+            # Because format_options_by_category does not handle the original
+            # Option very well, we create two fresh ones for what should appear
+            # in the help.
+            option_1 = Option(
+                option.option, default=False, choices=option.choices, help=option.help
+            )
+            option_2 = Option(option.option, default=True, help=option.help)
+            self.options.append(option_1)
+            self.options.append(option_2)
+        else:
+            self.options.append(option)
 
     def format_options_by_category(self, options_by_category):
         ret = []
