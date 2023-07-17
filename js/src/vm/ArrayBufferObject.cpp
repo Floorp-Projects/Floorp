@@ -1819,12 +1819,8 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
 
   MOZ_ASSERT(initialSize == rawBuffer->byteLength());
 
-  buffer->setByteLength(initialSize);
-  buffer->setFlags(0);
-  buffer->setFirstView(nullptr);
-
   auto contents = BufferContents::createWasm(rawBuffer->dataPointer());
-  buffer->setDataPointer(contents);
+  buffer->initialize(initialSize, contents);
 
   AddCellMemory(buffer, initialSize, MemoryUse::ArrayBufferContents);
 
