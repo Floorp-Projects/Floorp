@@ -2668,16 +2668,16 @@ uint64_t WasmMemoryObject::grow(Handle<WasmMemoryObject*> memory,
     return uint64_t(int64_t(-1));
   }
 
-  RootedArrayBufferObject newBuf(cx);
-
+  ArrayBufferObject* newBuf;
   if (memory->movingGrowable()) {
     MOZ_ASSERT(!memory->isHuge());
-    if (!ArrayBufferObject::wasmMovingGrowToPages(memory->indexType(), newPages,
-                                                  oldBuf, &newBuf, cx)) {
-      return uint64_t(int64_t(-1));
-    }
-  } else if (!ArrayBufferObject::wasmGrowToPagesInPlace(
-                 memory->indexType(), newPages, oldBuf, &newBuf, cx)) {
+    newBuf = ArrayBufferObject::wasmMovingGrowToPages(memory->indexType(),
+                                                      newPages, oldBuf, cx);
+  } else {
+    newBuf = ArrayBufferObject::wasmGrowToPagesInPlace(memory->indexType(),
+                                                       newPages, oldBuf, cx);
+  }
+  if (!newBuf) {
     return uint64_t(int64_t(-1));
   }
 
