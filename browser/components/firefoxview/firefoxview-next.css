@@ -74,19 +74,19 @@ body {
 }
 
 fxview-category-button[name="overview"]::part(icon) {
-  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+  background-image: url("chrome://browser/content/firefoxview/category-overview.svg");
 }
 fxview-category-button[name="opentabs"]::part(icon) {
-  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+  background-image: url("chrome://browser/content/firefoxview/category-opentabs.svg");
 }
 fxview-category-button[name="recentlyclosed"]::part(icon) {
-  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+  background-image: url("chrome://browser/content/firefoxview/category-recentlyclosed.svg");
 }
-fxview-category-button[name="synced-tabs"]::part(icon) {
-  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+fxview-category-button[name="syncedtabs"]::part(icon) {
+  background-image: url("chrome://browser/content/firefoxview/category-syncedtabs.svg");
 }
 fxview-category-button[name="history"]::part(icon) {
-  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+  background-image: url("chrome://browser/content/firefoxview/category-history.svg");
 }
 
 fxview-tab-list.with-dismiss-button::part(secondary-button) {
