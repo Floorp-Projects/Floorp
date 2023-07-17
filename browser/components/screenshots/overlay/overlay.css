@@ -2,75 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#screenshots-component {
-  --in-content-page-background: #fff;
-
-  --in-content-button-text-color: rgb(21, 20, 26);
-  --in-content-button-text-color-hover: var(--in-content-text-color);
-  --in-content-button-text-color-active: var(--in-content-button-text-color);
-  --in-content-button-background: rgba(207,207,216,.33);
-  --in-content-button-background-hover: rgba(207,207,216,.66);
-  --in-content-button-background-active: rgb(207,207,216);
-  --in-content-button-border-color: transparent;
-  --in-content-button-border-color-hover: transparent;
-  --in-content-button-border-color-active: transparent;
-
-  --in-content-primary-button-text-color: rgb(251,251,254);
-  --in-content-primary-button-text-color-hover: var(--in-content-primary-button-text-color);
-  --in-content-primary-button-text-color-active: var(--in-content-primary-button-text-color);
-  --in-content-primary-button-background: #0061e0;
-  --in-content-primary-button-background-hover: #0250bb;
-  --in-content-primary-button-background-active: #053e94;
-  --in-content-primary-button-border-color: transparent;
-  --in-content-primary-button-border-color-hover: transparent;
-  --in-content-primary-button-border-color-active: transparent;
-
-  --in-content-focus-outline-color: var(--in-content-primary-button-background);
-}
-
-@media (prefers-color-scheme: dark) {
-  #screenshots-component {
-    --in-content-page-background: #42414d;
-
-    --in-content-button-text-color: rgb(251,251,254);
-    --in-content-button-background: rgb(43,42,51);
-    --in-content-button-background-hover: rgb(82,82,94);
-    --in-content-button-background-active: rgb(91,91,102);
-
-    --in-content-primary-button-text-color: rgb(43,42,51);
-    --in-content-primary-button-background: rgb(0,221,255);
-    --in-content-primary-button-background-hover: rgb(128,235,255);
-    --in-content-primary-button-background-active: rgb(170,242,255);
-  }
-}
-
-@media (forced-colors: active), (prefers-contrast) {
-  #screenshots-component {
-    --in-content-page-background: Canvas;
-
-    --in-content-button-text-color: ButtonText;
-    --in-content-button-text-color-hover: SelectedItemText;
-    --in-content-button-text-color-active: SelectedItem;
-    --in-content-button-background: ButtonFace;
-    --in-content-button-background-hover: SelectedItem;
-    --in-content-button-background-active: SelectedItemText;
-    --in-content-button-border-color: ButtonText;
-    --in-content-button-border-color-hover: SelectedItemText;
-    --in-content-button-border-color-active: SelectedItem;
-
-    --in-content-primary-button-text-color: ButtonFace;
-    --in-content-primary-button-text-color-hover: SelectedItemText;
-    --in-content-primary-button-text-color-active: SelectedItem;
-    --in-content-primary-button-background: ButtonText;
-    --in-content-primary-button-background-hover: SelectedItem;
-    --in-content-primary-button-background-active: SelectedItemText;
-    --in-content-primary-button-border-color: ButtonFace;
-    --in-content-primary-button-border-color-hover: SelectedItemText;
-    --in-content-primary-button-border-color-active: SelectedItem;
-
-    --in-content-focus-outline-color: -moz-DialogText;
-  }
-}
+@import url("chrome://global/skin/in-content/common.css");
 
 #screenshots-component {
   width: 100%;
@@ -79,26 +11,12 @@
   user-select: none;
   pointer-events: auto;
   touch-action: none;
+  font: message-box;
 }
 
-/**
- * Overlay content is position: fixed as we need to allow for the possiblily
- * of the document scrolling or changing size while the overlay is visible
- */
 #screenshots-overlay-container {
-  /*
-  Content CSS applying to the html element can impact the overlay.
-  To avoid that, possible cases have been set to initial.
-  */
-  text-transform: initial;
-  text-indent: initial;
-  letter-spacing: initial;
-  word-spacing: initial;
-  color: initial;
-  direction: initial;
-  writing-mode: initial;
-  z-index: 1;
   position: absolute;
+  z-index: 1;
   pointer-events: auto;
   cursor: crosshair;
 }
@@ -141,66 +59,14 @@
 }
 
 .screenshots-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-flex;
   cursor: pointer;
   text-align: center;
   user-select: none;
   white-space: nowrap;
-  min-height: 36px;
-  font-size: 15px;
-  min-width: 36px;
   z-index: 6;
+  min-width: 32px;
   margin-inline: 4px;
-  font-family: "Segoe UI", sans-serif;
-
-  /* Below styles are copied from common-shared.css */
-  appearance: none;
-  padding: 7px 15px;
-  text-decoration: none;
-  font-weight: 600;
-  margin: 4px;
-  border: 1px solid var(--in-content-button-border-color);
-  color: var(--in-content-button-text-color);
-  border-radius: 4px;
-  background-color: var(--in-content-button-background);
-}
-
-.screenshots-button:focus-visible,
-#screenshots-cancel-button:focus-visible {
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: 2px;
-}
-
-.screenshots-button:hover {
-  background-color: var(--in-content-button-background-hover);
-  border-color: var(--in-content-button-border-color-hover);
-  color: var(--in-content-button-text-color-hover);
-}
-
-.screenshots-button:active {
-  background-color: var(--in-content-button-background-active);
-  border-color: var(--in-content-button-border-color-active);
-  color: var(--in-content-button-text-color-active);
-}
-
-.primary {
-  background-color: var(--in-content-primary-button-background);
-  border-color: var(--in-content-primary-button-border-color);
-  color: var(--in-content-primary-button-text-color);
-}
-
-.primary:hover {
-  background-color: var(--in-content-primary-button-background-hover);
-  border-color: var(--in-content-primary-button-border-color-hover);
-  color: var(--in-content-primary-button-text-color-hover);
-}
-
-.primary:active {
-  background-color: var(--in-content-primary-button-background-active);
-  border-color: var(--in-content-primary-button-border-color-active);
-  color: var(--in-content-primary-button-text-color-active);
 }
 
 #screenshots-cancel-button {
@@ -310,7 +176,6 @@
   justify-content: center;
   animation: pulse 125ms cubic-bezier(0.07, 0.95, 0, 1);
   color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "segoe ui", "helvetica neue", helvetica, ubuntu, roboto, noto, arial, sans-serif;
   font-size: 24px;
   line-height: 32px;
   text-align: center;
@@ -327,20 +192,11 @@
 #hover-highlight {
   animation: fade-in 125ms forwards cubic-bezier(0.07, 0.95, 0, 1);
   background: rgba(255, 255, 255, 0.2);
+  border: 2px dashed rgba(255, 255, 255, 0.4);
   border-radius: 1px;
   pointer-events: none;
   position: absolute;
   z-index: 11;
-}
-
-#hover-highlight::before {
-  border: 2px dashed rgba(255, 255, 255, 0.4);
-  bottom: 0;
-  content: "";
-  inset-inline-start: 0;
-  position: absolute;
-  inset-inline-end: 0;
-  top: 0;
 }
 
 .bghighlight {
