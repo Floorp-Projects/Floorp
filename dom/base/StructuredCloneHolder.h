@@ -89,7 +89,8 @@ class StructuredCloneHolderBase {
   // allowed. Otherwise only arrayBuffers will be transferred.
 
   virtual bool CustomReadTransferHandler(
-      JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
+      JSContext* aCx, JSStructuredCloneReader* aReader,
+      const JS::CloneDataPolicy& aCloneDataPolicy, uint32_t aTag,
       void* aContent, uint64_t aExtraData,
       JS::MutableHandle<JSObject*> aReturnObject);
 
@@ -282,7 +283,8 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
                                   bool* aSameProcessScopeRequired) override;
 
   virtual bool CustomReadTransferHandler(
-      JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
+      JSContext* aCx, JSStructuredCloneReader* aReader,
+      const JS::CloneDataPolicy& aCloneDataPolicy, uint32_t aTag,
       void* aContent, uint64_t aExtraData,
       JS::MutableHandle<JSObject*> aReturnObject) override;
 

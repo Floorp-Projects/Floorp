@@ -3301,8 +3301,8 @@ bool JSStructuredCloneReader::readTransferMap() {
         ReportDataCloneError(cx, callbacks, JS_SCERR_TRANSFERABLE, closure);
         return false;
       }
-      if (!callbacks->readTransfer(cx, this, tag, content, extraData, closure,
-                                   &obj)) {
+      if (!callbacks->readTransfer(cx, this, cloneDataPolicy, tag, content,
+                                   extraData, closure, &obj)) {
         if (!cx->isExceptionPending()) {
           ReportDataCloneError(cx, callbacks, JS_SCERR_TRANSFERABLE, closure);
         }
