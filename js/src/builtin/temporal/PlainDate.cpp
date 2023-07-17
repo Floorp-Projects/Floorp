@@ -1198,7 +1198,8 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     }
 
     // Step 4.
-    Rooted<PlainObject*> resolvedOptions(cx, CopyOptions(cx, options));
+    Rooted<PlainObject*> resolvedOptions(cx,
+                                         SnapshotOwnProperties(cx, options));
     if (!resolvedOptions) {
       return false;
     }

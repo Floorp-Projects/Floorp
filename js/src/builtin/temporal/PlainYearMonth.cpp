@@ -427,7 +427,7 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
     }
 
     // Step 5.
-    resolvedOptions = CopyOptions(cx, options);
+    resolvedOptions = SnapshotOwnProperties(cx, options);
     if (!resolvedOptions) {
       return false;
     }
@@ -612,7 +612,7 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
   }
 
   // Step 8.
-  Rooted<PlainObject*> fieldsCopy(cx, CopyOptions(cx, fields));
+  Rooted<PlainObject*> fieldsCopy(cx, SnapshotOwnProperties(cx, fields));
   if (!fieldsCopy) {
     return false;
   }
@@ -717,7 +717,7 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
   // https://github.com/tc39/proposal-temporal/issues/2620
 
   // Step 16.
-  Rooted<PlainObject*> optionsCopy(cx, CopyOptions(cx, options));
+  Rooted<PlainObject*> optionsCopy(cx, SnapshotOwnProperties(cx, options));
   if (!optionsCopy) {
     return false;
   }

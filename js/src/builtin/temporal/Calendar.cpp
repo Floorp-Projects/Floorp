@@ -4370,7 +4370,7 @@ static bool Calendar_fields(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Calendar.prototype.mergeFields ( fields, additionalFields )
  */
 static bool Calendar_mergeFields(JSContext* cx, const CallArgs& args) {
-  // Step 11.
+  // Step 7. (Reordered)
   MOZ_ASSERT(IsISO8601Calendar(&args.thisv().toObject().as<CalendarObject>()));
 
   // Step 3.
@@ -4379,37 +4379,25 @@ static bool Calendar_mergeFields(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 4.
-  Rooted<PlainObject*> fieldsCopy(cx, NewPlainObjectWithProto(cx, nullptr));
+  Rooted<PlainObject*> fieldsCopy(
+      cx, SnapshotOwnPropertiesIgnoreUndefined(cx, fields));
   if (!fieldsCopy) {
     return false;
   }
 
-  // Step 5.
-  if (!CopyDataPropertiesIgnoreUndefined(cx, fieldsCopy, fields)) {
-    return false;
-  }
-
-  // Step 6.
+  // Step 4.
   Rooted<JSObject*> additionalFields(cx, JS::ToObject(cx, args.get(1)));
   if (!additionalFields) {
     return false;
   }
 
-  // Step 7.
   Rooted<PlainObject*> additionalFieldsCopy(
-      cx, NewPlainObjectWithProto(cx, nullptr));
+      cx, SnapshotOwnPropertiesIgnoreUndefined(cx, additionalFields));
   if (!additionalFieldsCopy) {
     return false;
   }
 
-  // Step 8.
-  if (!CopyDataPropertiesIgnoreUndefined(cx, additionalFieldsCopy,
-                                         additionalFields)) {
-    return false;
-  }
-
-  // Steps 9-10.
+  // Steps 5-6.
   //
   // JSITER_HIDDEN doesn't need to be passed, because CopyDataProperties creates
   // all properties as enumerable.
@@ -4419,19 +4407,19 @@ static bool Calendar_mergeFields(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 12.
+  // Step 8.
   Rooted<PropertyHashSet> overriddenKeys(cx, PropertyHashSet(cx));
   if (!ISOFieldKeysToIgnore(cx, additionalKeys, overriddenKeys.get())) {
     return false;
   }
 
-  // Step 13.
+  // Step 9.
   Rooted<PlainObject*> merged(cx, NewPlainObjectWithProto(cx, nullptr));
   if (!merged) {
     return false;
   }
 
-  // Steps 14-15.
+  // Steps 10-11.
   //
   // JSITER_HIDDEN doesn't need to be passed, because CopyDataProperties creates
   // all properties as enumerable.
@@ -4441,23 +4429,23 @@ static bool Calendar_mergeFields(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 16.
+  // Step 12.
   Rooted<Value> propValue(cx);
   for (size_t i = 0; i < fieldsKeys.length(); i++) {
     Handle<PropertyKey> key = fieldsKeys[i];
 
-    // Step 16.a.
+    // Step 12.a.
     // FIXME: spec issue - unnecessary initialisation
     // https://github.com/tc39/proposal-temporal/issues/2549
 
-    // Steps 16.b-c.
+    // Steps 12.b-c.
     if (overriddenKeys.has(key)) {
       if (!GetProperty(cx, additionalFieldsCopy, additionalFieldsCopy, key,
                        &propValue)) {
         return false;
       }
 
-      // Step 16.d. (Reordered)
+      // Step 12.d. (Reordered)
       if (propValue.isUndefined()) {
         // The property can be undefined if the key is "month" or "monthCode".
         MOZ_ASSERT(key.isAtom(cx->names().month) ||
@@ -4474,18 +4462,18 @@ static bool Calendar_mergeFields(JSContext* cx, const CallArgs& args) {
       MOZ_ASSERT(!propValue.isUndefined());
     }
 
-    // Step 16.d.
+    // Step 12.d.
     if (!DefineDataProperty(cx, merged, key, propValue)) {
       return false;
     }
   }
 
-  // Step 17.
+  // Step 13.
   if (!CopyDataProperties(cx, merged, additionalFieldsCopy)) {
     return false;
   }
 
-  // Step 18.
+  // Step 14.
   args.rval().setObject(*merged);
   return true;
 }

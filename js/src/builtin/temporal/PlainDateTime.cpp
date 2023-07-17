@@ -871,7 +871,8 @@ static bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
     // https://github.com/tc39/proposal-temporal/issues/2525
 
     // Step 11.
-    Rooted<PlainObject*> untilOptions(cx, CopyOptions(cx, maybeOptions));
+    Rooted<PlainObject*> untilOptions(cx,
+                                      SnapshotOwnProperties(cx, maybeOptions));
     if (!untilOptions) {
       return false;
     }
@@ -1014,7 +1015,8 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     }
 
     // Step 4.
-    Rooted<PlainObject*> resolvedOptions(cx, CopyOptions(cx, options));
+    Rooted<PlainObject*> resolvedOptions(cx,
+                                         SnapshotOwnProperties(cx, options));
     if (!resolvedOptions) {
       return false;
     }
