@@ -7,6 +7,8 @@
 #include "chrome/common/ipc_channel_win.h"
 
 #include <windows.h>
+#include <winternl.h>
+#include <ntstatus.h>
 #include <sstream>
 
 #include "base/command_line.h"
@@ -253,7 +255,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
           input_state_.is_pending = this;
           return true;
         }
-        if (err != ERROR_BROKEN_PIPE) {
+        if (err != ERROR_BROKEN_PIPE && err != ERROR_NO_DATA) {
           CHROMIUM_LOG(ERROR)
               << "pipe error in connection to " << other_pid_ << ": " << err;
         }
@@ -378,7 +380,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
     DCHECK(context);
     if (!context || bytes_written == 0) {
       DWORD err = GetLastError();
-      if (err != ERROR_BROKEN_PIPE) {
+      if (err != ERROR_BROKEN_PIPE && err != ERROR_NO_DATA) {
         CHROMIUM_LOG(ERROR)
             << "pipe error in connection to " << other_pid_ << ": " << err;
       }
@@ -441,7 +443,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
 
       return true;
     }
-    if (err != ERROR_BROKEN_PIPE) {
+    if (err != ERROR_BROKEN_PIPE && err != ERROR_NO_DATA) {
       CHROMIUM_LOG(ERROR) << "pipe error in connection to " << other_pid_
                           << ": " << err;
     }
@@ -510,6 +512,39 @@ void Channel::ChannelImpl::StartAcceptingHandles(Mode mode) {
   }
 }
 
+// This logic is borrowed from Chromium's `base/win/nt_status.cc`, and is used
+// to detect and silence DuplicateHandle errors caused due to the other process
+// exiting.
+//
+// https://source.chromium.org/chromium/chromium/src/+/main:base/win/nt_status.cc;drc=e4622aaeccea84652488d1822c28c78b7115684f
+static NTSTATUS GetLastNtStatus() {
+  using GetLastNtStatusFn = NTSTATUS NTAPI (*)();
+
+  static constexpr const wchar_t kNtDllName[] = L"ntdll.dll";
+  static constexpr const char kLastStatusFnName[] = "RtlGetLastNtStatus";
+
+  // This is equivalent to calling NtCurrentTeb() and extracting
+  // LastStatusValue from the returned _TEB structure, except that the public
+  // _TEB struct definition does not actually specify the location of the
+  // LastStatusValue field. We avoid depending on such a definition by
+  // internally using RtlGetLastNtStatus() from ntdll.dll instead.
+  static auto* get_last_nt_status = reinterpret_cast<GetLastNtStatusFn>(
+      ::GetProcAddress(::GetModuleHandle(kNtDllName), kLastStatusFnName));
+  return get_last_nt_status();
+}
+
+// ERROR_ACCESS_DENIED may indicate that the remote process (which could be
+// either the source or destination process here) is already terminated or has
+// begun termination and therefore no longer has a handle table. We don't want
+// these cases to crash because we know they happen in practice and are
+// largely unavoidable.
+//
+// https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:mojo/core/platform_handle_in_transit.cc;l=47-53;drc=fdfd85f836e0e59c79ed9bf6d527a2b8f7fdeb6e
+static bool WasOtherProcessExitingError(DWORD error) {
+  return error == ERROR_ACCESS_DENIED &&
+         GetLastNtStatus() == STATUS_PROCESS_IS_TERMINATING;
+}
+
 static uint32_t HandleToUint32(HANDLE h) {
   // Cast through uintptr_t and then unsigned int to make the truncation to
   // 32 bits explicit. Handles are size of-pointer but are always 32-bit values.
@@ -575,10 +610,14 @@ bool Channel::ChannelImpl::AcceptHandles(Message& msg) {
                              getter_Transfers(local_handle), 0, FALSE,
                              DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE)) {
         DWORD err = GetLastError();
-        CHROMIUM_LOG(ERROR)
-            << "DuplicateHandle failed for handle " << ipc_handle
-            << " from process " << other_pid_ << " for message " << msg.name()
-            << " in AcceptHandles with error: " << err;
+        // Don't log out a scary looking error if this failed due to the target
+        // process terminating.
+        if (!WasOtherProcessExitingError(err)) {
+          CHROMIUM_LOG(ERROR)
+              << "DuplicateHandle failed for handle " << ipc_handle
+              << " from process " << other_pid_ << " for message " << msg.name()
+              << " in AcceptHandles with error: " << err;
+        }
         return false;
       }
     } else {
@@ -646,10 +685,14 @@ bool Channel::ChannelImpl::TransferHandles(Message& msg) {
                              other_process_, &ipc_handle, 0, FALSE,
                              DUPLICATE_SAME_ACCESS)) {
         DWORD err = GetLastError();
-        CHROMIUM_LOG(ERROR) << "DuplicateHandle failed for handle "
-                            << (HANDLE)local_handle.get() << " to process "
-                            << other_pid_ << " for message " << msg.name()
-                            << " in TransferHandles with error: " << err;
+        // Don't log out a scary looking error if this failed due to the target
+        // process terminating.
+        if (!WasOtherProcessExitingError(err)) {
+          CHROMIUM_LOG(ERROR) << "DuplicateHandle failed for handle "
+                              << (HANDLE)local_handle.get() << " to process "
+                              << other_pid_ << " for message " << msg.name()
+                              << " in TransferHandles with error: " << err;
+        }
         return false;
       }
     } else {
