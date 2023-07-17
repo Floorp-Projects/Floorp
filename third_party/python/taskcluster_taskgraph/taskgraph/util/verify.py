@@ -6,8 +6,8 @@
 import logging
 import sys
 from abc import ABC, abstractmethod
-
-import attr
+from dataclasses import dataclass, field
+from typing import Callable, Dict, List, Union
 
 from taskgraph.config import GraphConfig
 from taskgraph.parameters import Parameters
@@ -18,16 +18,16 @@ from taskgraph.util.treeherder import join_symbol
 logger = logging.getLogger(__name__)
 
 
-@attr.s(frozen=True)
+@dataclass(frozen=True)
 class Verification(ABC):
-    func = attr.ib()
+    func: Callable
 
     @abstractmethod
     def verify(self, **kwargs) -> None:
         pass
 
 
-@attr.s(frozen=True)
+@dataclass(frozen=True)
 class InitialVerification(Verification):
     """Verification that doesn't depend on any generation state."""
 
@@ -35,11 +35,11 @@ class InitialVerification(Verification):
         self.func()
 
 
-@attr.s(frozen=True)
+@dataclass(frozen=True)
 class GraphVerification(Verification):
     """Verification for a TaskGraph object."""
 
-    run_on_projects = attr.ib(default=None)
+    run_on_projects: Union[List, None] = field(default=None)
 
     def verify(
         self, graph: TaskGraph, graph_config: GraphConfig, parameters: Parameters
@@ -65,7 +65,7 @@ class GraphVerification(Verification):
         )
 
 
-@attr.s(frozen=True)
+@dataclass(frozen=True)
 class ParametersVerification(Verification):
     """Verification for a set of parameters."""
 
@@ -73,7 +73,7 @@ class ParametersVerification(Verification):
         self.func(parameters)
 
 
-@attr.s(frozen=True)
+@dataclass(frozen=True)
 class KindsVerification(Verification):
     """Verification for kinds."""
 
@@ -81,7 +81,7 @@ class KindsVerification(Verification):
         self.func(kinds)
 
 
-@attr.s(frozen=True)
+@dataclass(frozen=True)
 class VerificationSequence:
     """
     Container for a sequence of verifications over a TaskGraph. Each
@@ -91,7 +91,7 @@ class VerificationSequence:
     that was passed for each task.
     """
 
-    _verifications = attr.ib(factory=dict)
+    _verifications: Dict = field(default_factory=dict)
     _verification_types = {
         "graph": GraphVerification,
         "initial": InitialVerification,

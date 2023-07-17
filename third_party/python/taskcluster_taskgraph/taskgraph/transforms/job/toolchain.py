@@ -5,7 +5,7 @@
 Support for running toolchain-building jobs via dedicated scripts
 """
 
-from voluptuous import Any, Optional, Required
+from voluptuous import ALLOW_EXTRA, Any, Optional, Required
 
 import taskgraph
 from taskgraph.transforms.job import configure_taskdesc_for_run, run_job_using
@@ -49,7 +49,8 @@ toolchain_run_schema = Schema(
         ): {str: object},
         # Base work directory used to set up the task.
         Required("workdir"): str,
-    }
+    },
+    extra=ALLOW_EXTRA,
 )
 
 

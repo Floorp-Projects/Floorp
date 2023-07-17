@@ -59,6 +59,6 @@ def add_new_jobs_action(parameters, graph_config, input, task_group_id, task_id)
             label_to_taskid,
             parameters,
             decision_task_id,
-            i,
+            f"{i}",
         )
     combine_task_graph_files(list(range(times)))
