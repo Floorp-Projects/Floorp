@@ -966,7 +966,7 @@ static bool BuiltinGetOffsetNanosecondsFor(
 }
 
 /**
- * GetOffsetNanosecondsFor ( timeZone, instant )
+ * GetOffsetNanosecondsFor ( timeZone, instant [ , getOffsetNanosecondsFor ] )
  */
 static bool GetOffsetNanosecondsFor(JSContext* cx, Handle<JSObject*> timeZone,
                                     Handle<Wrapped<InstantObject*>> instant,
@@ -1008,7 +1008,7 @@ static bool TimeZone_getOffsetNanosecondsFor(JSContext* cx, unsigned argc,
                                              Value* vp);
 
 /**
- * GetOffsetNanosecondsFor ( timeZone, instant )
+ * GetOffsetNanosecondsFor ( timeZone, instant [ , getOffsetNanosecondsFor ] )
  */
 bool js::temporal::GetOffsetNanosecondsFor(
     JSContext* cx, Handle<TimeZoneValue> timeZone,
@@ -1024,7 +1024,7 @@ bool js::temporal::GetOffsetNanosecondsFor(
         cx, timeZone.toString(), ToInstant(unwrapped), offsetNanoseconds);
   }
 
-  // Step 1.
+  // Step 2.
   Rooted<JSObject*> timeZoneObj(cx, timeZone.toObject());
   Rooted<Value> getOffsetNanosecondsFor(cx);
   if (!GetMethodForCall(cx, timeZoneObj, cx->names().getOffsetNanosecondsFor,
@@ -1046,13 +1046,13 @@ bool js::temporal::GetOffsetNanosecondsFor(
                                           offsetNanoseconds);
   }
 
-  // Steps 2-7.
+  // Steps 3-8.
   return ::GetOffsetNanosecondsFor(cx, timeZoneObj, instant,
                                    getOffsetNanosecondsFor, offsetNanoseconds);
 }
 
 /**
- * GetOffsetNanosecondsFor ( timeZone, instant )
+ * GetOffsetNanosecondsFor ( timeZone, instant [ , getOffsetNanosecondsFor ] )
  */
 bool js::temporal::GetOffsetNanosecondsFor(JSContext* cx,
                                            Handle<TimeZoneValue> timeZone,
@@ -1387,21 +1387,19 @@ static bool TimeZone_getPossibleInstantsFor(JSContext* cx, unsigned argc,
                                             Value* vp);
 
 /**
- * GetPossibleInstantsFor ( timeZone, dateTime )
+ * GetPossibleInstantsFor ( timeZone, dateTime [ , getPossibleInstantsFor ] )
  */
 bool js::temporal::GetPossibleInstantsFor(
     JSContext* cx, Handle<TimeZoneValue> timeZone,
     Handle<Wrapped<PlainDateTimeObject*>> dateTime,
     MutableHandle<InstantVector> list) {
-  // Step 1. (Not applicable in our implementation.)
-
-  // Step 2.
+  // Step 1.
   if (timeZone.isString()) {
     return BuiltinGetPossibleInstantsFor(cx, timeZone.toString(), dateTime,
                                          list);
   }
 
-  // Step 3.
+  // Step 2.
   Rooted<JSObject*> timeZoneObj(cx, timeZone.toObject());
   Rooted<Value> getPossibleInstantsFor(cx);
   if (!GetMethodForCall(cx, timeZoneObj, cx->names().getPossibleInstantsFor,
@@ -1433,6 +1431,7 @@ bool js::temporal::GetPossibleInstantsFor(
   // FIXME: spec issue - are duplicates allowed?
   // https://github.com/tc39/proposal-temporal/issues/2532
 
+  // Step 3.
   Rooted<Value> thisv(cx, ObjectValue(*timeZoneObj));
   Rooted<Value> arg(cx, ObjectValue(*dateTime));
   Rooted<Value> rval(cx);
