@@ -3,6 +3,13 @@ window.onload = function () {
   if (parent == this || !location.search.includes("worklet_iframe")) {
     SimpleTest.waitForExplicitFinish();
 
+    // Let configureTest be optional.
+    if (!window.configureTest) {
+      window.configureTest = function () {
+        return Promise.resolve();
+      };
+    }
+
     configureTest().then(() => {
       var iframe = document.createElement("iframe");
       iframe.src = location.href + "?worklet_iframe";
