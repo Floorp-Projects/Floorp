@@ -1,0 +1,127 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_BounceTrackingState_h
+#define mozilla_BounceTrackingState_h
+
+#include "mozilla/WeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
+#include "nsStringFwd.h"
+#include "nsIWebProgressListener.h"
+#include "nsWeakReference.h"
+
+class nsIChannel;
+class nsITimer;
+class nsIPrincipal;
+
+namespace mozilla {
+
+class BounceTrackingProtection;
+class BounceTrackingRecord;
+
+namespace dom {
+class CanonicalBrowsingContext;
+class BrowsingContext;
+class BrowsingContextWebProgress;
+}  // namespace dom
+
+/**
+ * This class manages the bounce tracking state for a given tab. It is attached
+ * to top-level CanonicalBrowsingContexts.
+ */
+class BounceTrackingState : public nsIWebProgressListener,
+                            public nsSupportsWeakReference,
+                            public SupportsWeakPtr {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIWEBPROGRESSLISTENER
+
+  // Gets or creates an existing BrowsingContextState keyed by browserId. May
+  // return nullptr if the given web progress / browsing context is not suitable
+  // (see ShouldCreateBounceTrackingStateForWebProgress).
+  static already_AddRefed<BounceTrackingState> GetOrCreate(
+      dom::BrowsingContextWebProgress* aWebProgress);
+
+  BounceTrackingRecord* GetBounceTrackingRecord();
+
+  void ResetBounceTrackingRecord();
+
+  // Callback for when we received a response from the server and are about to
+  // create a document for the response. Calls into
+  // BounceTrackingState::OnResponseReceived.
+  nsresult OnDocumentStartRequest(nsIChannel* aChannel);
+
+  // At the start of a navigation, either initialize a new bounce tracking
+  // record, or append a client-side redirect to the current bounce tracking
+  // record.
+  // Should only be called for top level content navigations.
+  nsresult OnStartNavigation(nsIPrincipal* aTriggeringPrincipal,
+                             const bool aHasValidUserGestureActivation);
+
+  // Whether the given BrowsingContext should hold a BounceTrackingState
+  // instance to monitor bounce tracking navigations.
+  static bool ShouldCreateBounceTrackingStateForBC(
+      dom::CanonicalBrowsingContext* aBrowsingContext);
+
+  // Get the currently associated BrowsingContext. Returns nullptr if it has not
+  // been attached yet.
+  already_AddRefed<dom::BrowsingContext> CurrentBrowsingContext();
+
+  uint64_t GetBrowserId() { return mBrowserId; }
+
+  // Create a string that describes this object. Used for logging.
+  nsCString Describe();
+
+ private:
+  explicit BounceTrackingState();
+  virtual ~BounceTrackingState();
+
+  uint64_t mBrowserId{};
+
+  // Reference to the BounceTrackingProtection singleton.
+  RefPtr<BounceTrackingProtection> mBounceTrackingProtection;
+
+  // Record to keep track of extended navigation data. Reset on extended
+  // navigation end.
+  RefPtr<BounceTrackingRecord> mBounceTrackingRecord;
+
+  // Timer to wait to wait for a client redirect after a navigation ends.
+  RefPtr<nsITimer> mClientBounceDetectionTimeout;
+
+  // Whether the given web progress should hold a BounceTrackingState
+  // instance to monitor bounce tracking navigations.
+  static bool ShouldCreateBounceTrackingStateForWebProgress(
+      dom::BrowsingContextWebProgress* aWebProgress);
+
+  // Init to be called after creation, attaches nsIWebProgressListener.
+  nsresult Init(dom::BrowsingContextWebProgress* aWebProgress);
+
+  // When the response is received at the end of a navigation, fill the
+  // bounce set.
+  nsresult OnResponseReceived(const nsTArray<nsCString>& aSiteList);
+
+  // When the document is loaded at the end of a navigation, update the
+  // final host.
+  nsresult OnDocumentLoaded(nsIPrincipal* aDocumentPrincipal);
+
+  // TODO: Bug 1839918: Detection of stateful bounces.
+
+  // Record sites which have accessed storage in the current extended
+  // navigation.
+  nsresult OnStorageAccess();
+
+  // Record sites which have activated service workers in the current
+  // extended navigation.
+  nsresult OnServiceWorkerActivation();
+
+  // Record sites which have written cookies in the current extended
+  // navigation.
+  nsresult OnNetworkCookieWrite();
+};
+
+}  // namespace mozilla
+
+#endif
