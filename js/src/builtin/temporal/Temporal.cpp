@@ -723,45 +723,6 @@ static BigInt* RoundNumberToIncrementSlow(JSContext* cx, Handle<BigInt*> x,
 /**
  * RoundNumberToIncrement ( x, increment, roundingMode )
  */
-BigInt* js::temporal::RoundNumberToIncrement(
-    JSContext* cx, Handle<BigInt*> x, int64_t increment,
-    TemporalRoundingMode roundingMode) {
-  MOZ_ASSERT(increment > 0);
-  MOZ_ASSERT(increment <= ToNanoseconds(TemporalUnit::Day));
-
-  // Fast path for the default case.
-  if (increment == 1) {
-    return x;
-  }
-
-  // Dividing zero is always zero.
-  if (x->isZero()) {
-    return x;
-  }
-
-  // Fast-path when we can perform the whole computation with int64 values.
-  int64_t num;
-  if (BigInt::isInt64(x, &num)) {
-    // Steps 1-8.
-    int64_t rounded = Divide(num, increment, roundingMode);
-
-    // Step 9.
-    mozilla::CheckedInt64 result = rounded;
-    result *= increment;
-    if (result.isValid()) {
-      if (result.value() == num) {
-        return x;
-      }
-      return BigInt::createFromInt64(cx, result.value());
-    }
-  }
-
-  return RoundNumberToIncrementSlow(cx, x, increment, roundingMode);
-}
-
-/**
- * RoundNumberToIncrement ( x, increment, roundingMode )
- */
 bool js::temporal::RoundNumberToIncrement(JSContext* cx, const Instant& x,
                                           int64_t increment,
                                           TemporalRoundingMode roundingMode,
