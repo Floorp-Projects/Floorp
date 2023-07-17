@@ -20,9 +20,15 @@ HRESULT MFPMPHostWrapper::RuntimeClassInitialize(
   return S_OK;
 }
 
-MFPMPHostWrapper::MFPMPHostWrapper() { LOG("MFPMPHostWrapper created"); }
+MFPMPHostWrapper::MFPMPHostWrapper() {
+  MOZ_COUNT_CTOR(MFPMPHostWrapper);
+  LOG("MFPMPHostWrapper created");
+}
 
-MFPMPHostWrapper::~MFPMPHostWrapper() { LOG("MFPMPHostWrapper destroyed"); };
+MFPMPHostWrapper::~MFPMPHostWrapper() {
+  MOZ_COUNT_DTOR(MFPMPHostWrapper);
+  LOG("MFPMPHostWrapper destroyed");
+};
 
 STDMETHODIMP MFPMPHostWrapper::LockProcess() {
   LOG("LockProcess");

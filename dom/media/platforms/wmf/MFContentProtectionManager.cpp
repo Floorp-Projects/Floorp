@@ -30,7 +30,13 @@ class ScopedHString final {
   HSTRING mString;
 };
 
+MFContentProtectionManager::MFContentProtectionManager() {
+  MOZ_COUNT_CTOR(MFContentProtectionManager);
+  LOG("MFContentProtectionManager created");
+}
+
 MFContentProtectionManager::~MFContentProtectionManager() {
+  MOZ_COUNT_DTOR(MFContentProtectionManager);
   LOG("MFContentProtectionManager destroyed");
 }
 
