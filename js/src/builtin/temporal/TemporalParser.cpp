@@ -2759,8 +2759,7 @@ static auto ParseTemporalTimeString(Handle<JSLinearString*> str) {
  * ParseTemporalTimeString ( isoString )
  */
 bool js::temporal::ParseTemporalTimeString(JSContext* cx, Handle<JSString*> str,
-                                           PlainTime* result,
-                                           MutableHandle<JSString*> calendar) {
+                                           PlainTime* result) {
   Rooted<JSLinearString*> linear(cx, str->ensureLinear(cx));
   if (!linear) {
     return false;
@@ -2788,13 +2787,6 @@ bool js::temporal::ParseTemporalTimeString(JSContext* cx, Handle<JSString*> str,
     return false;
   }
   *result = dateTime.time;
-
-  if (parsed.calendar.present()) {
-    calendar.set(ToString(cx, linear, parsed.calendar));
-    if (!calendar) {
-      return false;
-    }
-  }
 
   // Step 5.
   return true;

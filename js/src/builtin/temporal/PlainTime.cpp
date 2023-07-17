@@ -613,12 +613,8 @@ static Wrapped<PlainTimeObject*> ToTemporalTime(JSContext* cx,
     if (auto* zonedDateTime = itemObj->maybeUnwrapIf<ZonedDateTimeObject>()) {
       auto epochInstant = ToInstant(zonedDateTime);
       Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
-      Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
       if (!cx->compartment()->wrap(cx, &timeZone)) {
-        return nullptr;
-      }
-      if (!cx->compartment()->wrap(cx, &calendar)) {
         return nullptr;
       }
 
@@ -638,38 +634,12 @@ static Wrapped<PlainTimeObject*> ToTemporalTime(JSContext* cx,
     }
 
     // Step 3.d.
-    Rooted<CalendarValue> calendar(cx);
-    if (!GetTemporalCalendarWithISODefault(cx, itemObj, &calendar)) {
-      return nullptr;
-    }
-
-    // Step 3.e.
-    JSString* calendarId = CalendarToString(cx, calendar);
-    if (!calendarId) {
-      return nullptr;
-    }
-
-    JSLinearString* linear = calendarId->ensureLinear(cx);
-    if (!linear) {
-      return nullptr;
-    }
-
-    if (!StringEqualsLiteral(linear, "iso8601")) {
-      if (auto chars = QuoteString(cx, linear, '"')) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                 JSMSG_TEMPORAL_PLAIN_TIME_CALENDAR_NOT_ISO8601,
-                                 chars.get());
-      }
-      return nullptr;
-    }
-
-    // Step 3.f.
     TimeRecord timeResult;
     if (!ToTemporalTimeRecord(cx, itemObj, &timeResult)) {
       return nullptr;
     }
 
-    // Step 3.g.
+    // Step 3.e.
     if (!RegulateTime(cx, timeResult, overflow, &result)) {
       return nullptr;
     }
@@ -683,30 +653,12 @@ static Wrapped<PlainTimeObject*> ToTemporalTime(JSContext* cx,
     }
 
     // Step 4.b.
-    Rooted<JSString*> calendar(cx);
-    if (!ParseTemporalTimeString(cx, string, &result, &calendar)) {
+    if (!ParseTemporalTimeString(cx, string, &result)) {
       return nullptr;
     }
 
     // Step 4.c.
     MOZ_ASSERT(IsValidTime(result));
-
-    // Step 4.d.
-    if (calendar) {
-      JSLinearString* linear = calendar->ensureLinear(cx);
-      if (!linear) {
-        return nullptr;
-      }
-
-      if (!StringEqualsAscii(linear, "iso8601")) {
-        if (auto chars = QuoteString(cx, linear)) {
-          JS_ReportErrorNumberUTF8(
-              cx, GetErrorMessage, nullptr,
-              JSMSG_TEMPORAL_PLAIN_TIME_CALENDAR_NOT_ISO8601, chars.get());
-        }
-        return nullptr;
-      }
-    }
   }
 
   // Step 5.
