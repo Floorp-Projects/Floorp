@@ -58,6 +58,38 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   char16_t GetPasswordCharacterImpl() override;
 
  private:
+  struct TitlebarColors {
+    // NOTE: These are the DWM accent colors, which might not match the
+    // UISettings/UWP accent color in some cases, see bug 1796730.
+    mozilla::Maybe<nscolor> mAccent;
+    mozilla::Maybe<nscolor> mAccentText;
+    mozilla::Maybe<nscolor> mAccentInactive;
+    mozilla::Maybe<nscolor> mAccentInactiveText;
+
+    bool mUseAccent = false;
+
+    struct Set {
+      nscolor mBg = 0;
+      nscolor mFg = 0;
+      nscolor mBorder = 0;
+    };
+
+    Set mActiveLight;
+    Set mActiveDark;
+
+    Set mInactiveLight;
+    Set mInactiveDark;
+
+    const Set& Get(mozilla::ColorScheme aScheme, bool aActive) const {
+      if (aScheme == mozilla::ColorScheme::Dark) {
+        return aActive ? mActiveDark : mInactiveDark;
+      }
+      return aActive ? mActiveLight : mInactiveLight;
+    }
+  };
+
+  TitlebarColors ComputeTitlebarColors();
+
   nscolor GetColorForSysColorIndex(int index);
 
   LookAndFeelFont GetLookAndFeelFontInternal(const LOGFONTW& aLogFont,
@@ -67,21 +99,22 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   // Cached colors and flags indicating success in their retrieval.
   mozilla::Maybe<nscolor> mColorMenuHoverText;
-  mozilla::Maybe<nscolor> mColorAccent;
-  mozilla::Maybe<nscolor> mColorAccentText;
   mozilla::Maybe<nscolor> mColorMediaText;
   mozilla::Maybe<nscolor> mColorCommunicationsText;
 
   mozilla::Maybe<nscolor> mDarkHighlight;
   mozilla::Maybe<nscolor> mDarkHighlightText;
 
+  TitlebarColors mTitlebarColors;
+
+  nscolor mColorAccent = 0;
+  nscolor mColorAccentText = 0;
+
   nscolor mSysColorTable[SYS_COLOR_COUNT];
 
   bool mInitialized = false;
 
   void EnsureInit();
-
-  nsCOMPtr<nsIWindowsRegKey> mDwmKey;
 };
 
 #endif
