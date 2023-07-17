@@ -35,7 +35,7 @@ function setVerticalTabs() {
       while (list.hasMoreElements()) { if (list.getNext() != window) return; }
 
       if (typeof gBrowser !== 'undefined') {
-        window.setTimeout(setWorkspaceLabel, 900);
+        window.setTimeout(setWorkspaceLabel, 1200);
       } else {
         window.setTimeout(checkBrowserIsStartup, 100);
         return;
