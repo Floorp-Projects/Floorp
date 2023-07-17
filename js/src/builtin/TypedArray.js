@@ -32,11 +32,6 @@ function IsDetachedBuffer(buffer) {
   );
 
   // Shared array buffers are not detachable.
-  //
-  // This check is more expensive than desirable, but IsDetachedBuffer is
-  // only hot for non-shared memory in SetFromNonTypedArray, so there is an
-  // optimization in place there to avoid incurring the cost here.  An
-  // alternative is to give SharedArrayBuffer the same layout as ArrayBuffer.
   if ((buffer = GuardToArrayBuffer(buffer)) === null) {
     return false;
   }
