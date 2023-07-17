@@ -7205,6 +7205,7 @@ void HTMLMediaElement::SetAudibleState(bool aAudible) {
     mIsAudioTrackAudible = aAudible;
     NotifyAudioPlaybackChanged(
         AudioChannelService::AudibleChangedReasons::eDataAudibleChanged);
+    DispatchAsyncTestingEvent(u"mozaudiblestatechanged"_ns);
   }
 }
 
