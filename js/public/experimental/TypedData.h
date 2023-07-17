@@ -358,13 +358,13 @@ class JS_PUBLIC_API ArrayBufferOrView {
 };
 
 class JS_PUBLIC_API ArrayBuffer : public ArrayBufferOrView {
+  static const JSClass* const UnsharedClass;
+  static const JSClass* const SharedClass;
+
  protected:
   explicit ArrayBuffer(JSObject* unwrapped) : ArrayBufferOrView(unwrapped) {}
 
  public:
-  static const JSClass* const UnsharedClass;
-  static const JSClass* const SharedClass;
-
   static ArrayBuffer fromObject(JSObject* unwrapped) {
     if (unwrapped) {
       const JSClass* clasp = GetClass(unwrapped);
@@ -424,12 +424,12 @@ class JS_PUBLIC_API ArrayBufferView : public ArrayBufferOrView {
 };
 
 class JS_PUBLIC_API DataView : public ArrayBufferView {
+  static const JSClass* const ClassPtr;
+
  protected:
   explicit DataView(JSObject* unwrapped) : ArrayBufferView(unwrapped) {}
 
  public:
-  static const JSClass* const ClassPtr;
-
   static DataView fromObject(JSObject* unwrapped) {
     if (unwrapped && GetClass(unwrapped) == ClassPtr) {
       return DataView(unwrapped);
