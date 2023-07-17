@@ -254,7 +254,8 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
           return true;
         }
         if (err != ERROR_BROKEN_PIPE) {
-          CHROMIUM_LOG(ERROR) << "pipe error: " << err;
+          CHROMIUM_LOG(ERROR)
+              << "pipe error in connection to " << other_pid_ << ": " << err;
         }
         return false;
       }
@@ -378,7 +379,8 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
     if (!context || bytes_written == 0) {
       DWORD err = GetLastError();
       if (err != ERROR_BROKEN_PIPE) {
-        CHROMIUM_LOG(ERROR) << "pipe error: " << err;
+        CHROMIUM_LOG(ERROR)
+            << "pipe error in connection to " << other_pid_ << ": " << err;
       }
       return false;
     }
@@ -440,7 +442,8 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
       return true;
     }
     if (err != ERROR_BROKEN_PIPE) {
-      CHROMIUM_LOG(ERROR) << "pipe error: " << err;
+      CHROMIUM_LOG(ERROR) << "pipe error in connection to " << other_pid_
+                          << ": " << err;
     }
     return false;
   }
@@ -549,29 +552,45 @@ bool Channel::ChannelImpl::AcceptHandles(Message& msg) {
   // Read in the handles themselves, transferring ownership as required.
   nsTArray<mozilla::UniqueFileHandle> handles(num_handles);
   for (uint32_t handleValue : payload) {
-    HANDLE handle = Uint32ToHandle(handleValue);
+    HANDLE ipc_handle = Uint32ToHandle(handleValue);
+    if (!ipc_handle || ipc_handle == INVALID_HANDLE_VALUE) {
+      CHROMIUM_LOG(ERROR)
+          << "Attempt to accept invalid or null handle from process "
+          << other_pid_ << " for message " << msg.name() << " in AcceptHandles";
+      return false;
+    }
 
     // If we're the privileged process, the remote process will have leaked
     // the sent handles in its local address space, and be relying on us to
     // duplicate them, otherwise the remote privileged side will have
     // transferred the handles to us already.
+    mozilla::UniqueFileHandle local_handle;
     if (privileged_) {
+      MOZ_ASSERT(other_process_, "other_process_ cannot be null");
       if (other_process_ == INVALID_HANDLE_VALUE) {
         CHROMIUM_LOG(ERROR) << "other_process_ is invalid in AcceptHandles";
         return false;
       }
-      if (!::DuplicateHandle(other_process_, handle, GetCurrentProcess(),
-                             &handle, 0, FALSE,
+      if (!::DuplicateHandle(other_process_, ipc_handle, GetCurrentProcess(),
+                             getter_Transfers(local_handle), 0, FALSE,
                              DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE)) {
-        CHROMIUM_LOG(ERROR) << "DuplicateHandle failed for handle " << handle
-                            << " in AcceptHandles";
+        DWORD err = GetLastError();
+        CHROMIUM_LOG(ERROR)
+            << "DuplicateHandle failed for handle " << ipc_handle
+            << " from process " << other_pid_ << " for message " << msg.name()
+            << " in AcceptHandles with error: " << err;
         return false;
       }
+    } else {
+      local_handle.reset(ipc_handle);
     }
+
+    MOZ_DIAGNOSTIC_ASSERT(
+        local_handle, "Accepting invalid or null handle from another process");
 
     // The handle is directly owned by this process now, and can be added to
     // our `handles` array.
-    handles.AppendElement(mozilla::UniqueFileHandle(handle));
+    handles.AppendElement(std::move(local_handle));
   }
 
   // We're done with the handle footer, truncate the message at that point.
@@ -602,29 +621,49 @@ bool Channel::ChannelImpl::TransferHandles(Message& msg) {
 
   nsTArray<uint32_t> payload(num_handles);
   for (uint32_t i = 0; i < num_handles; ++i) {
-    // Release ownership of the handle. It'll be cloned when the parent process
-    // transfers it with DuplicateHandle either in this process or the remote
-    // process.
-    HANDLE handle = msg.attached_handles_[i].release();
+    // Take ownership of the handle.
+    mozilla::UniqueFileHandle local_handle =
+        std::move(msg.attached_handles_[i]);
+    if (!local_handle) {
+      CHROMIUM_LOG(ERROR)
+          << "Attempt to transfer invalid or null handle to process "
+          << other_pid_ << " for message " << msg.name()
+          << " in TransferHandles";
+      return false;
+    }
 
     // If we're the privileged process, transfer the HANDLE to our remote before
     // sending the message. Otherwise, the remote privileged process will
     // transfer the handle for us, so leak it.
+    HANDLE ipc_handle = NULL;
     if (privileged_) {
+      MOZ_ASSERT(other_process_, "other_process_ cannot be null");
       if (other_process_ == INVALID_HANDLE_VALUE) {
         CHROMIUM_LOG(ERROR) << "other_process_ is invalid in TransferHandles";
         return false;
       }
-      if (!::DuplicateHandle(GetCurrentProcess(), handle, other_process_,
-                             &handle, 0, FALSE,
-                             DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE)) {
-        CHROMIUM_LOG(ERROR) << "DuplicateHandle failed for handle " << handle
-                            << " in TransferHandles";
+      if (!::DuplicateHandle(GetCurrentProcess(), local_handle.get(),
+                             other_process_, &ipc_handle, 0, FALSE,
+                             DUPLICATE_SAME_ACCESS)) {
+        DWORD err = GetLastError();
+        CHROMIUM_LOG(ERROR) << "DuplicateHandle failed for handle "
+                            << (HANDLE)local_handle.get() << " to process "
+                            << other_pid_ << " for message " << msg.name()
+                            << " in TransferHandles with error: " << err;
         return false;
       }
+    } else {
+      // Release ownership of the handle. It'll be closed when the parent
+      // process transfers it with DuplicateHandle in the remote privileged
+      // process.
+      ipc_handle = local_handle.release();
     }
 
-    payload.AppendElement(HandleToUint32(handle));
+    MOZ_DIAGNOSTIC_ASSERT(
+        ipc_handle && ipc_handle != INVALID_HANDLE_VALUE,
+        "Transferring invalid or null handle to another process");
+
+    payload.AppendElement(HandleToUint32(ipc_handle));
   }
   msg.attached_handles_.Clear();
 
