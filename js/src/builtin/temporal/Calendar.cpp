@@ -2834,56 +2834,44 @@ JSObject* js::temporal::CalendarMergeFields(
 /**
  * Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] )
  */
-static PlainDateObject* BuiltinCalendarAdd(JSContext* cx,
-                                           Handle<Value> dateValue,
-                                           Handle<Value> durationValue,
-                                           Handle<Value> optionsValue) {
-  // Steps 1-3. (Not applicable)
-
-  // Step 4.
-  PlainDate date;
-  if (!ToTemporalDate(cx, dateValue, &date)) {
-    return nullptr;
-  }
-
-  // Step 5.
-  Duration duration;
-  if (!ToTemporalDuration(cx, durationValue, &duration)) {
-    return nullptr;
-  }
-
-  // Step 6.
-  Rooted<JSObject*> options(cx);
-  if (!optionsValue.isUndefined()) {
-    options = RequireObjectArg(cx, "options", "dateAdd", optionsValue);
-    if (!options) {
-      return nullptr;
-    }
-  }
+static bool BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
+                               const Duration& duration,
+                               Handle<JSObject*> options, PlainDate* result) {
+  // Steps 1-6. (Not applicable)
 
   // Step 7.
   auto overflow = TemporalOverflow::Constrain;
   if (options) {
     if (!ToTemporalOverflow(cx, options, &overflow)) {
-      return nullptr;
+      return false;
     }
   }
 
   // Step 8.
   TimeDuration balanceResult;
   if (!BalanceDuration(cx, duration, TemporalUnit::Day, &balanceResult)) {
-    return nullptr;
+    return false;
   }
 
   // Step 9.
   Duration addDuration = {duration.years, duration.months, duration.weeks,
                           balanceResult.days};
+  return AddISODate(cx, date, addDuration, overflow, result);
+}
+
+/**
+ * Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] )
+ */
+static PlainDateObject* BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
+                                           const Duration& duration,
+                                           Handle<JSObject*> options) {
+  // Steps 1-6. (Not applicable)
+
+  // Steps 7-9.
   PlainDate result;
-  if (!AddISODate(cx, date, addDuration, overflow, &result)) {
+  if (!BuiltinCalendarAdd(cx, date, duration, options, &result)) {
     return nullptr;
   }
-
-  // TODO: Add version which returns |PlainDate|.
 
   // Step 10.
   Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));
@@ -2893,16 +2881,50 @@ static PlainDateObject* BuiltinCalendarAdd(JSContext* cx,
 /**
  * Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] )
  */
-static bool BuiltinCalendarAdd(JSContext* cx, Handle<Value> dateValue,
-                               Handle<Value> durationValue,
-                               Handle<Value> optionsValue, PlainDate* result) {
-  auto* obj = BuiltinCalendarAdd(cx, dateValue, durationValue, optionsValue);
-  if (!obj) {
+static PlainDateObject* BuiltinCalendarAdd(
+    JSContext* cx, Handle<Wrapped<PlainDateObject*>> dateObj,
+    Handle<Wrapped<DurationObject*>> durationObj, Handle<JSObject*> options) {
+  // Steps 1-5. (Not applicable)
+
+  auto* unwrappedDate = dateObj.unwrap(cx);
+  if (!unwrappedDate) {
+    return nullptr;
+  }
+  auto date = ToPlainDate(unwrappedDate);
+
+  auto* unwrappedDuration = durationObj.unwrap(cx);
+  if (!unwrappedDuration) {
+    return nullptr;
+  }
+  Duration duration = ToDuration(unwrappedDuration);
+
+  // Steps 6-10.
+  return BuiltinCalendarAdd(cx, date, duration, options);
+}
+
+/**
+ * Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] )
+ */
+static bool BuiltinCalendarAdd(JSContext* cx,
+                               Handle<Wrapped<PlainDateObject*>> dateObj,
+                               Handle<Wrapped<DurationObject*>> durationObj,
+                               Handle<JSObject*> options, PlainDate* result) {
+  // Steps 1-5. (Not applicable)
+
+  auto* unwrappedDate = dateObj.unwrap(cx);
+  if (!unwrappedDate) {
     return false;
   }
+  auto date = ToPlainDate(unwrappedDate);
 
-  *result = ToPlainDate(obj);
-  return true;
+  auto* unwrappedDuration = durationObj.unwrap(cx);
+  if (!unwrappedDuration) {
+    return false;
+  }
+  Duration duration = ToDuration(unwrappedDuration);
+
+  // Steps 6-10.
+  return BuiltinCalendarAdd(cx, date, duration, options, result);
 }
 
 static bool Calendar_dateAdd(JSContext* cx, unsigned argc, Value* vp);
@@ -2913,21 +2935,17 @@ static bool Calendar_dateAdd(JSContext* cx, unsigned argc, Value* vp);
 static Wrapped<PlainDateObject*> CalendarDateAdd(
     JSContext* cx, Handle<JSObject*> calendar,
     Handle<Wrapped<PlainDateObject*>> date,
-    Handle<Wrapped<DurationObject*>> duration, Handle<Value> options,
+    Handle<Wrapped<DurationObject*>> duration, Handle<JSObject*> options,
     Handle<Value> dateAdd) {
-  MOZ_ASSERT(options.isObject() || options.isUndefined());
-
   // FIXME: spec bug - structured header wrong, |dateAdd| can be undefined.
   // https://github.com/tc39/proposal-temporal/issues/2527
 
-  // Steps 1-2. (Not applicable)
+  // Steps 1-3. (Not applicable)
 
   // Fast-path for the default implementation.
   if (calendar->is<CalendarObject>() &&
       IsNativeFunction(dateAdd, Calendar_dateAdd)) {
-    Rooted<Value> dateValue(cx, ObjectValue(*date));
-    Rooted<Value> durationValue(cx, ObjectValue(*duration));
-    return BuiltinCalendarAdd(cx, dateValue, durationValue, options);
+    return BuiltinCalendarAdd(cx, date, duration, options);
   }
 
   if (!IsCallable(dateAdd)) {
@@ -2936,28 +2954,90 @@ static Wrapped<PlainDateObject*> CalendarDateAdd(
     return nullptr;
   }
 
-  // Step 3.
+  // Step 4.
   Rooted<Value> thisv(cx, ObjectValue(*calendar));
   Rooted<Value> rval(cx);
 
   FixedInvokeArgs<3> args(cx);
   args[0].setObject(*date);
   args[1].setObject(*duration);
-  args[2].set(options);
+  if (options) {
+    args[2].setObject(*options);
+  } else {
+    args[2].setUndefined();
+  }
 
   if (!Call(cx, dateAdd, thisv, args, &rval)) {
     return nullptr;
   }
 
-  // Step 4.
+  // Step 5.
   if (!rval.isObject() || !rval.toObject().canUnwrapAs<PlainDateObject>()) {
     ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, rval,
                      nullptr, "not a PlainDate object");
     return nullptr;
   }
 
-  // Step 5.
+  // Step 6.
   return &rval.toObject();
+}
+
+/**
+ * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
+ */
+static bool CalendarDateAdd(JSContext* cx, Handle<JSObject*> calendar,
+                            Handle<Wrapped<PlainDateObject*>> date,
+                            Handle<Wrapped<DurationObject*>> duration,
+                            Handle<JSObject*> options, Handle<Value> dateAdd,
+                            PlainDate* result) {
+  auto obj = CalendarDateAdd(cx, calendar, date, duration, options, dateAdd);
+  if (!obj) {
+    return false;
+  }
+
+  *result = ToPlainDate(&obj.unwrap());
+  return true;
+}
+
+/**
+ * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
+ */
+Wrapped<PlainDateObject*> js::temporal::CalendarDateAdd(
+    JSContext* cx, Handle<CalendarValue> calendar,
+    Handle<Wrapped<PlainDateObject*>> date, const Duration& duration,
+    Handle<Value> dateAdd) {
+  Rooted<DurationObject*> durationObj(cx, CreateTemporalDuration(cx, duration));
+  if (!durationObj) {
+    return nullptr;
+  }
+  return CalendarDateAdd(cx, calendar, date, durationObj, dateAdd);
+}
+
+/**
+ * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
+ */
+Wrapped<PlainDateObject*> js::temporal::CalendarDateAdd(
+    JSContext* cx, Handle<CalendarValue> calendar,
+    Handle<Wrapped<PlainDateObject*>> date, const Duration& duration,
+    Handle<JSObject*> options, Handle<Value> dateAdd) {
+  Rooted<DurationObject*> durationObj(cx, CreateTemporalDuration(cx, duration));
+  if (!durationObj) {
+    return nullptr;
+  }
+
+  // Step 1. (Not applicable).
+
+  // Step 2.
+  if (calendar.isString()) {
+    return BuiltinCalendarAdd(cx, date, durationObj, options);
+  }
+
+  // Step 3.  (Not applicable).
+
+  // Steps 4-6.
+  Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+  return ::CalendarDateAdd(cx, calendarObj, date, durationObj, options,
+                           dateAdd);
 }
 
 /**
@@ -2968,13 +3048,11 @@ Wrapped<PlainDateObject*> js::temporal::CalendarDateAdd(
     Handle<Wrapped<PlainDateObject*>> date,
     Handle<Wrapped<DurationObject*>> duration, Handle<Value> dateAdd) {
   // Step 1.
-  Handle<Value> options = UndefinedHandleValue;
+  Handle<JSObject*> options = nullptr;
 
   // Step 2.
   if (calendar.isString()) {
-    Rooted<Value> dateValue(cx, ObjectValue(*date));
-    Rooted<Value> durationValue(cx, ObjectValue(*duration));
-    return BuiltinCalendarAdd(cx, dateValue, durationValue, options);
+    return BuiltinCalendarAdd(cx, date, duration, options);
   }
 
   // Steps 3-6.
@@ -2993,10 +3071,7 @@ Wrapped<PlainDateObject*> js::temporal::CalendarDateAdd(
 
   // Step 2.
   if (calendar.isString()) {
-    Rooted<Value> dateValue(cx, ObjectValue(*date));
-    Rooted<Value> durationValue(cx, ObjectValue(*duration));
-    Rooted<Value> optionsValue(cx, ObjectValue(*options));
-    return BuiltinCalendarAdd(cx, dateValue, durationValue, optionsValue);
+    return BuiltinCalendarAdd(cx, date, duration, options);
   }
 
   // Step 3.
@@ -3007,9 +3082,29 @@ Wrapped<PlainDateObject*> js::temporal::CalendarDateAdd(
   }
 
   // Steps 4-6.
-  Rooted<Value> optionsValue(cx, ObjectValue(*options));
-  return ::CalendarDateAdd(cx, calendarObj, date, duration, optionsValue,
-                           dateAdd);
+  return ::CalendarDateAdd(cx, calendarObj, date, duration, options, dateAdd);
+}
+
+/**
+ * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
+ */
+Wrapped<PlainDateObject*> js::temporal::CalendarDateAdd(
+    JSContext* cx, Handle<CalendarValue> calendar,
+    Handle<Wrapped<PlainDateObject*>> date,
+    Handle<Wrapped<DurationObject*>> duration, Handle<JSObject*> options,
+    Handle<Value> dateAdd) {
+  // Step 1. (Not applicable).
+
+  // Step 2.
+  if (calendar.isString()) {
+    return BuiltinCalendarAdd(cx, date, duration, options);
+  }
+
+  // Step 3. (Not applicable)
+
+  // Steps 4-6.
+  Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+  return ::CalendarDateAdd(cx, calendarObj, date, duration, options, dateAdd);
 }
 
 /**
@@ -3021,13 +3116,23 @@ bool js::temporal::CalendarDateAdd(JSContext* cx,
                                    Handle<Wrapped<DurationObject*>> duration,
                                    Handle<JSObject*> options,
                                    PlainDate* result) {
-  auto obj = CalendarDateAdd(cx, calendar, date, duration, options);
-  if (!obj) {
+  // Step 1. (Not applicable)
+
+  // Step 2.
+  if (calendar.isString()) {
+    return BuiltinCalendarAdd(cx, date, duration, options, result);
+  }
+
+  // Step 3.
+  Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+  Rooted<Value> dateAdd(cx);
+  if (!GetMethodForCall(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
     return false;
   }
 
-  *result = ToPlainDate(&obj.unwrap());
-  return true;
+  // Steps 4-6.
+  return ::CalendarDateAdd(cx, calendarObj, date, duration, options, dateAdd,
+                           result);
 }
 
 /**
@@ -3039,13 +3144,11 @@ bool js::temporal::CalendarDateAdd(JSContext* cx,
                                    Handle<Wrapped<DurationObject*>> duration,
                                    PlainDate* result) {
   // Step 1.
-  Handle<Value> options = UndefinedHandleValue;
+  Handle<JSObject*> options = nullptr;
 
   // Step 2.
   if (calendar.isString()) {
-    Rooted<Value> dateValue(cx, ObjectValue(*date));
-    Rooted<Value> durationValue(cx, ObjectValue(*duration));
-    return BuiltinCalendarAdd(cx, dateValue, durationValue, options, result);
+    return BuiltinCalendarAdd(cx, date, duration, options, result);
   }
 
   // Step 3.
@@ -3056,14 +3159,8 @@ bool js::temporal::CalendarDateAdd(JSContext* cx,
   }
 
   // Steps 4-6.
-  auto obj =
-      ::CalendarDateAdd(cx, calendarObj, date, duration, options, dateAdd);
-  if (!obj) {
-    return false;
-  }
-
-  *result = ToPlainDate(&obj.unwrap());
-  return true;
+  return ::CalendarDateAdd(cx, calendarObj, date, duration, options, dateAdd,
+                           result);
 }
 
 /**
@@ -3075,25 +3172,17 @@ bool js::temporal::CalendarDateAdd(JSContext* cx,
                                    Handle<Wrapped<DurationObject*>> duration,
                                    Handle<Value> dateAdd, PlainDate* result) {
   // Step 1.
-  Handle<Value> options = UndefinedHandleValue;
+  Handle<JSObject*> options = nullptr;
 
   // Step 2.
   if (calendar.isString()) {
-    Rooted<Value> dateValue(cx, ObjectValue(*date));
-    Rooted<Value> durationValue(cx, ObjectValue(*duration));
-    return BuiltinCalendarAdd(cx, dateValue, durationValue, options, result);
+    return BuiltinCalendarAdd(cx, date, duration, options, result);
   }
 
   // Steps 3-6.
   Rooted<JSObject*> calendarObj(cx, calendar.toObject());
-  auto obj =
-      ::CalendarDateAdd(cx, calendarObj, date, duration, options, dateAdd);
-  if (!obj) {
-    return false;
-  }
-
-  *result = ToPlainDate(&obj.unwrap());
-  return true;
+  return ::CalendarDateAdd(cx, calendarObj, date, duration, options, dateAdd,
+                           result);
 }
 
 /**
@@ -3752,8 +3841,29 @@ static bool Calendar_dateAdd(JSContext* cx, const CallArgs& args) {
   // Step 3.
   MOZ_ASSERT(IsISO8601Calendar(&args.thisv().toObject().as<CalendarObject>()));
 
-  // Steps 4-10.
-  auto* obj = BuiltinCalendarAdd(cx, args.get(0), args.get(1), args.get(2));
+  // Step 4.
+  PlainDate date;
+  if (!ToTemporalDate(cx, args.get(0), &date)) {
+    return false;
+  }
+
+  // Step 5.
+  Duration duration;
+  if (!ToTemporalDuration(cx, args.get(1), &duration)) {
+    return false;
+  }
+
+  // Step 6.
+  Rooted<JSObject*> options(cx);
+  if (args.hasDefined(2)) {
+    options = RequireObjectArg(cx, "options", "dateAdd", args[2]);
+    if (!options) {
+      return false;
+    }
+  }
+
+  // Steps 7-10.
+  auto* obj = BuiltinCalendarAdd(cx, date, duration, options);
   if (!obj) {
     return false;
   }
