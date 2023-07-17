@@ -6745,7 +6745,7 @@ void nsIFrame::DidReflow(nsPresContext* aPresContext,
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS, ("nsIFrame::DidReflow"));
 
   if (IsHiddenByContentVisibilityOfInFlowParentForLayout()) {
-    RemoveStateBits(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW);
+    RemoveStateBits(NS_FRAME_IN_REFLOW);
     return;
   }
 
@@ -6893,8 +6893,11 @@ bool nsIFrame::HidesContentForLayout() const {
 
 bool nsIFrame::IsHiddenByContentVisibilityOfInFlowParentForLayout() const {
   const auto* parent = GetInFlowParent();
+  // The anonymous children owned by parent are important for properly sizing
+  // their parents.
   return parent && parent->HidesContentForLayout() &&
-         !(Style()->IsAnonBox() && !IsFrameOfType(nsIFrame::eLineParticipant));
+         !(parent->HasAnyStateBits(NS_FRAME_OWNS_ANON_BOXES) &&
+           Style()->IsAnonBox());
 }
 
 bool nsIFrame::IsHiddenByContentVisibilityOnAnyAncestor(
@@ -6903,9 +6906,10 @@ bool nsIFrame::IsHiddenByContentVisibilityOnAnyAncestor(
     return false;
   }
 
-  bool isAnonymousBlock =
-      Style()->IsAnonBox() && !IsFrameOfType(nsIFrame::eLineParticipant);
-  for (nsIFrame* cur = GetInFlowParent(); cur; cur = cur->GetInFlowParent()) {
+  auto* parent = GetInFlowParent();
+  bool isAnonymousBlock = Style()->IsAnonBox() && parent &&
+                          parent->HasAnyStateBits(NS_FRAME_OWNS_ANON_BOXES);
+  for (nsIFrame* cur = parent; cur; cur = cur->GetInFlowParent()) {
     if (!isAnonymousBlock && cur->HidesContent(aInclude)) {
       return true;
     }
