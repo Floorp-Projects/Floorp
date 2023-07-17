@@ -313,7 +313,7 @@ static PlainDateObject* CreateTemporalDate(JSContext* cx, const CallArgs& args,
   object->setFixedSlot(PlainDateObject::ISO_DAY_SLOT, Int32Value(isoDay));
 
   // Step 8.
-  object->setFixedSlot(PlainDateObject::CALENDAR_SLOT, ObjectValue(*calendar));
+  object->setFixedSlot(PlainDateObject::CALENDAR_SLOT, calendar.toValue());
 
   // Step 9.
   return object;
@@ -354,7 +354,7 @@ PlainDateObject* js::temporal::CreateTemporalDate(
   object->setFixedSlot(PlainDateObject::ISO_DAY_SLOT, Int32Value(isoDay));
 
   // Step 8.
-  object->setFixedSlot(PlainDateObject::CALENDAR_SLOT, ObjectValue(*calendar));
+  object->setFixedSlot(PlainDateObject::CALENDAR_SLOT, calendar.toValue());
 
   // Step 9.
   return object;
@@ -381,7 +381,7 @@ static Wrapped<PlainDateObject*> ToTemporalDate(
     if (!cx->compartment()->wrap(cx, &timeZone)) {
       return nullptr;
     }
-    if (!cx->compartment()->wrap(cx, &calendar)) {
+    if (!calendar.wrap(cx)) {
       return nullptr;
     }
 
@@ -407,7 +407,7 @@ static Wrapped<PlainDateObject*> ToTemporalDate(
   if (auto* dateTime = item->maybeUnwrapIf<PlainDateTimeObject>()) {
     auto date = ToPlainDate(dateTime);
     Rooted<CalendarValue> calendar(cx, dateTime->calendar());
-    if (!cx->compartment()->wrap(cx, &calendar)) {
+    if (!calendar.wrap(cx)) {
       return nullptr;
     }
 
@@ -485,18 +485,15 @@ static Wrapped<PlainDateObject*> ToTemporalDate(
   // Step 7.
   MOZ_ASSERT(IsValidISODate(result));
 
-  // Step 8.
-  Rooted<Value> calendarLike(cx);
+  // Steps 8-11.
+  Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));
   if (calendarString) {
-    calendarLike.setString(calendarString);
+    if (!ToBuiltinCalendar(cx, calendarString, &calendar)) {
+      return nullptr;
+    }
   }
 
-  Rooted<CalendarValue> calendar(cx);
-  if (!ToTemporalCalendarWithISODefault(cx, calendarLike, &calendar)) {
-    return nullptr;
-  }
-
-  // Step 9.
+  // Step 12.
   return CreateTemporalDate(cx, result, calendar);
 }
 
@@ -543,7 +540,7 @@ bool js::temporal::ToTemporalDate(JSContext* cx, Handle<Value> item,
 
   *result = ToPlainDate(obj);
   calendar.set(obj->calendar());
-  return cx->compartment()->wrap(cx, calendar);
+  return calendar.wrap(cx);
 }
 
 /**
@@ -1181,7 +1178,7 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
   Rooted<Wrapped<PlainDateObject*>> other(cx, wrappedOther);
 
   Rooted<CalendarValue> otherCalendar(cx, wrappedOther.unwrap().calendar());
-  if (!cx->compartment()->wrap(cx, &otherCalendar)) {
+  if (!otherCalendar.wrap(cx)) {
     return false;
   }
 
@@ -1346,7 +1343,7 @@ static bool PlainDate_from(JSContext* cx, unsigned argc, Value* vp) {
       auto date = ToPlainDate(temporalDate);
 
       Rooted<CalendarValue> calendar(cx, temporalDate->calendar());
-      if (!cx->compartment()->wrap(cx, &calendar)) {
+      if (!calendar.wrap(cx)) {
         return false;
       }
 
@@ -1761,18 +1758,26 @@ static bool PlainDate_toPlainMonthDay(JSContext* cx, const CallArgs& args) {
 
   // Optimization for built-in objects.
   do {
-    if (!calendar->is<CalendarObject>()) {
-      break;
-    }
-    auto builtinCalendar = calendar.as<CalendarObject>();
-
     // Step 4.
     static constexpr std::initializer_list<CalendarField> fieldNames = {
         CalendarField::Day, CalendarField::MonthCode};
 
     // Step 5.
-    if (!IsBuiltinAccess(cx, builtinCalendar, fieldNames)) {
-      break;
+    if (calendar.isObject()) {
+      Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+      if (!calendarObj->is<CalendarObject>()) {
+        break;
+      }
+      auto builtinCalendar = calendarObj.as<CalendarObject>();
+
+      // Step 5.
+      if (!IsBuiltinAccess(cx, builtinCalendar, fieldNames)) {
+        break;
+      }
+    } else {
+      if (!IsBuiltinAccessForStringCalendar(cx)) {
+        break;
+      }
     }
     if (!IsBuiltinAccess(cx, temporalDate, fieldNames)) {
       break;
@@ -1873,8 +1878,7 @@ static bool PlainDate_getISOFields(JSContext* cx, const CallArgs& args) {
   Rooted<IdValueVector> fields(cx, IdValueVector(cx));
 
   // Step 4.
-  if (!fields.emplaceBack(NameToId(cx->names().calendar),
-                          ObjectValue(*calendar))) {
+  if (!fields.emplaceBack(NameToId(cx->names().calendar), calendar.toValue())) {
     return false;
   }
 

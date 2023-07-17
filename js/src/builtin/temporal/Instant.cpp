@@ -977,35 +977,35 @@ static JSString* TemporalInstantToString(JSContext* cx,
     }
   }
 
-  // Step 5. (Not applicable in our implementation.)
-
-  // Step 6.
+  // Step 5.
   PlainDateTime dateTime;
   if (!GetPlainDateTimeFor(cx, outputTimeZone, instant, &dateTime)) {
     return nullptr;
   }
 
-  // Step 7.
+  // Step 6.
+  Rooted<CalendarValue> isoCalendar(cx, CalendarValue(cx->names().iso8601));
   Rooted<JSString*> dateTimeString(
-      cx, TemporalDateTimeToString(cx, dateTime, precision));
+      cx, TemporalDateTimeToString(cx, dateTime, isoCalendar, precision,
+                                   CalendarOption::Never));
   if (!dateTimeString) {
     return nullptr;
   }
 
-  // Steps 8-9.
+  // Steps 7-8.
   Rooted<JSString*> timeZoneString(cx);
   if (!timeZone) {
-    // Step 8.a.
+    // Step 7.a.
     timeZoneString = cx->staticStrings().lookup("Z", 1);
     MOZ_ASSERT(timeZoneString);
   } else {
-    // Step 9.a.
+    // Step 8.a.
     int64_t offsetNs;
     if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNs)) {
       return nullptr;
     }
 
-    // Step 9.b.
+    // Step 8.b.
     timeZoneString = FormatISOTimeZoneOffsetString(cx, offsetNs);
     if (!timeZoneString) {
       return nullptr;
@@ -1882,12 +1882,7 @@ static bool Instant_toZonedDateTimeISO(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 4.
-  Rooted<CalendarObject*> calendar(cx, GetISO8601Calendar(cx));
-  if (!calendar) {
-    return false;
-  }
-
-  // Step 5.
+  Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));
   auto* result = CreateTemporalZonedDateTime(cx, instant, timeZone, calendar);
   if (!result) {
     return false;

@@ -46,7 +46,7 @@ class PlainDateObject : public NativeObject {
   int32_t isoDay() const { return getFixedSlot(ISO_DAY_SLOT).toInt32(); }
 
   CalendarValue calendar() const {
-    return &getFixedSlot(CALENDAR_SLOT).toObject();
+    return CalendarValue(getFixedSlot(CALENDAR_SLOT));
   }
 
  private:
