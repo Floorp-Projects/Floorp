@@ -8322,16 +8322,6 @@
   value: true
   mirror: always
 
-# Whether we should return an empty style on invalid pseudo-elements starting
-# with a colon.
-#
-# Old behavior is returning an empty style if the string starts with a double
-# colon, and return the regular style otherwise.
-- name: layout.css.computed-style.new-invalid-pseudo-element-behavior
-  type: bool
-  value: true
-  mirror: always
-
 # Whether computed local-fragment-only image urls serialize using the same
 # rules as filter/mask/etc (not resolving the URL for local refs).
 #

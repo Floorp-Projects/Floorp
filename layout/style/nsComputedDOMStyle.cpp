@@ -68,21 +68,6 @@ using namespace mozilla::dom;
  * returned by the getComputedStyle() function.
  */
 
-static bool ShouldReturnEmptyStyleForInvalidPseudoElement(
-    const nsAString& aPseudoElt) {
-  // Old behavior is historical. New behavior is as discussed in
-  // https://github.com/w3c/csswg-drafts/issues/6501.
-  if (!StaticPrefs::
-          layout_css_computed_style_new_invalid_pseudo_element_behavior()) {
-    if (aPseudoElt.Length() < 2) {
-      return false;
-    }
-    const char16_t* chars = aPseudoElt.BeginReading();
-    return chars[0] == u':' && chars[1] == u':';
-  }
-  return !aPseudoElt.IsEmpty() && aPseudoElt.First() == u':';
-}
-
 already_AddRefed<nsComputedDOMStyle> NS_NewComputedDOMStyle(
     dom::Element* aElement, const nsAString& aPseudoElt, Document* aDocument,
     nsComputedDOMStyle::StyleType aStyleType, mozilla::ErrorResult&) {
@@ -90,7 +75,7 @@ already_AddRefed<nsComputedDOMStyle> NS_NewComputedDOMStyle(
       aPseudoElt, CSSEnabledState::ForAllContent);
   auto returnEmpty = nsComputedDOMStyle::AlwaysReturnEmptyStyle::No;
   if (!pseudo) {
-    if (ShouldReturnEmptyStyleForInvalidPseudoElement(aPseudoElt)) {
+    if (!aPseudoElt.IsEmpty() && aPseudoElt.First() == u':') {
       returnEmpty = nsComputedDOMStyle::AlwaysReturnEmptyStyle::Yes;
     }
     pseudo.emplace(PseudoStyleType::NotPseudo);
