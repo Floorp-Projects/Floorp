@@ -6,6 +6,11 @@ import { ShoppingProduct } from "chrome://global/content/shopping/ShoppingProduc
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/shopping/highlights.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/shopping/settings.mjs";
+
 export class ShoppingContainer extends MozLitElement {
   static properties = {
     data: { type: Object },
@@ -34,7 +39,34 @@ export class ShoppingContainer extends MozLitElement {
     if (!this.data) {
       return html`<p>loading...</p>`;
     }
-    return html` <p>${JSON.stringify(this.data)}</p> `;
+    return html`<link
+        rel="stylesheet"
+        href="chrome://browser/content/shopping/shopping-container.css"
+      />
+      <link
+        rel="stylesheet"
+        href="chrome://global/skin/in-content/common.css"
+      />
+      <div id="shopping-container">
+        <div id="header-wrapper">
+          <div id="shopping-header">
+            <span id="shopping-icon"></span>
+            <span
+              id="header"
+              data-l10n-id="shopping-main-container-title"
+            ></span>
+          </div>
+          <button
+            id="close-button"
+            class="ghost-button"
+            data-l10n-id="shopping-close-button"
+          ></button>
+        </div>
+        <div id="content">
+          <review-highlights></review-highlights>
+          <shopping-settings></shopping-settings>
+        </div>
+      </div>`;
   }
 }
 

@@ -6,11 +6,11 @@
 
 :host {
   display: block;
-  width: 288px;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 8px;
   background-color: var(--in-content-page-background);
   box-shadow: var(--shadow-10);
+  box-sizing: border-box;
 }
 
 .shopping-card {
