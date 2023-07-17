@@ -9,10 +9,11 @@
 #include "chrome/common/child_process.h"
 #include "mozilla/ipc/NodeController.h"
 
-ChildThread::ChildThread(Thread::Options options)
+ChildThread::ChildThread(Thread::Options options, base::ProcessId parent_pid)
     : Thread("IPC I/O Child"),
       owner_loop_(MessageLoop::current()),
-      options_(options) {
+      options_(options),
+      parent_pid_(parent_pid) {
   DCHECK(owner_loop_);
 }
 
@@ -32,16 +33,16 @@ void ChildThread::Init() {
   // to start the initial IPC connection to the parent process.
   IPC::Channel::ChannelHandle client_handle(
       IPC::Channel::GetClientChannelHandle());
-  auto channel = mozilla::MakeUnique<IPC::Channel>(std::move(client_handle),
-                                                   IPC::Channel::MODE_CLIENT);
+  auto channel = mozilla::MakeUnique<IPC::Channel>(
+      std::move(client_handle), IPC::Channel::MODE_CLIENT, parent_pid_);
 #if defined(XP_WIN)
   channel->StartAcceptingHandles(IPC::Channel::MODE_CLIENT);
 #elif defined(XP_DARWIN)
   channel->StartAcceptingMachPorts(IPC::Channel::MODE_CLIENT);
 #endif
 
-  initial_port_ =
-      mozilla::ipc::NodeController::InitChildProcess(std::move(channel));
+  initial_port_ = mozilla::ipc::NodeController::InitChildProcess(
+      std::move(channel), parent_pid_);
 }
 
 void ChildThread::CleanUp() { mozilla::ipc::NodeController::CleanUp(); }

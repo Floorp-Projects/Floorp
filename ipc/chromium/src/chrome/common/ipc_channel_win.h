@@ -15,6 +15,7 @@
 #include <string>
 
 #include "base/message_loop.h"
+#include "base/process.h"
 #include "base/task.h"
 #include "nsISupportsImpl.h"
 
@@ -34,18 +35,14 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   using ChannelHandle = Channel::ChannelHandle;
 
   // Mirror methods of Channel, see ipc_channel.h for description.
-  ChannelImpl(ChannelHandle pipe, Mode mode);
+  ChannelImpl(ChannelHandle pipe, Mode mode, base::ProcessId other_pid);
   bool Connect(Listener* listener) MOZ_EXCLUDES(SendMutex());
   void Close() MOZ_EXCLUDES(SendMutex());
   void StartAcceptingHandles(Mode mode) MOZ_EXCLUDES(SendMutex());
   // NOTE: `Send` may be called on threads other than the I/O thread.
   bool Send(mozilla::UniquePtr<Message> message) MOZ_EXCLUDES(SendMutex());
 
-  int32_t OtherPid() {
-    IOThread().AssertOnCurrentThread();
-    chan_cap_.NoteOnIOThread();
-    return other_pid_;
-  }
+  void SetOtherPid(base::ProcessId other_pid);
 
   // See the comment in ipc_channel.h for info on IsClosed()
   // NOTE: `IsClosed` may be called on threads other than the I/O thread.
@@ -70,8 +67,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
       MOZ_REQUIRES(SendMutex());
   void OutputQueuePop() MOZ_REQUIRES(SendMutex());
 
-  void SetOtherPid(int other_pid) MOZ_REQUIRES(IOThread())
-      MOZ_EXCLUDES(SendMutex());
   bool EnqueueHelloMessage() MOZ_REQUIRES(SendMutex(), IOThread());
   void CloseLocked() MOZ_REQUIRES(SendMutex(), IOThread());
 
@@ -151,7 +146,8 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
 
   // We keep track of the PID of the other side of this channel so that we can
   // record this when generating logs of IPC messages.
-  int32_t other_pid_ MOZ_GUARDED_BY(chan_cap_) = -1;
+  base::ProcessId other_pid_ MOZ_GUARDED_BY(chan_cap_) =
+      base::kInvalidProcessId;
 
   // Whether or not to accept handles from a remote process, and whether this
   // process is the privileged side of a IPC::Channel which can transfer
