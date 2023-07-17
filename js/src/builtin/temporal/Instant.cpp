@@ -1033,7 +1033,7 @@ static bool DifferenceTemporalInstant(JSContext* cx,
     return false;
   }
 
-  // Steps 3-5.
+  // Steps 3-4.
   DifferenceSettings settings;
   if (args.hasDefined(1)) {
     Rooted<JSObject*> options(
@@ -1043,25 +1043,19 @@ static bool DifferenceTemporalInstant(JSContext* cx,
     }
 
     // Step 3.
-    Rooted<PlainObject*> resolvedOptions(cx,
-                                         NewPlainObjectWithProto(cx, nullptr));
+    Rooted<PlainObject*> resolvedOptions(cx, CopyOptions(cx, options));
     if (!resolvedOptions) {
       return false;
     }
 
     // Step 4.
-    if (!CopyDataProperties(cx, resolvedOptions, options)) {
-      return false;
-    }
-
-    // Step 5.
     if (!GetDifferenceSettings(
             cx, operation, resolvedOptions, TemporalUnitGroup::Time,
             TemporalUnit::Nanosecond, TemporalUnit::Second, &settings)) {
       return false;
     }
   } else {
-    // Steps 3-5.
+    // Steps 3-4.
     settings = {
         TemporalUnit::Nanosecond,
         TemporalUnit::Second,
@@ -1070,7 +1064,7 @@ static bool DifferenceTemporalInstant(JSContext* cx,
     };
   }
 
-  // Step 6.
+  // Step 5.
   Duration difference;
   if (!DifferenceInstant(cx, instant, other, settings.roundingIncrement,
                          settings.smallestUnit, settings.largestUnit,
@@ -1078,7 +1072,7 @@ static bool DifferenceTemporalInstant(JSContext* cx,
     return false;
   }
 
-  // Step 7.
+  // Step 6.
   if (operation == TemporalDifference::Since) {
     difference = difference.negate();
   }

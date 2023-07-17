@@ -427,17 +427,12 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
     }
 
     // Step 5.
-    resolvedOptions = NewPlainObjectWithProto(cx, nullptr);
+    resolvedOptions = CopyOptions(cx, options);
     if (!resolvedOptions) {
       return false;
     }
 
     // Step 6.
-    if (!CopyDataProperties(cx, resolvedOptions, options)) {
-      return false;
-    }
-
-    // Step 7.
     if (!GetDifferenceSettings(cx, operation, resolvedOptions,
                                TemporalUnitGroup::Date, TemporalUnit::Month,
                                TemporalUnit::Month, TemporalUnit::Year,
@@ -445,7 +440,7 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
       return false;
     }
 
-    // Step 8.
+    // Step 7.
     Rooted<Value> largestUnitValue(
         cx, StringValue(TemporalUnitToString(cx, settings.largestUnit)));
     if (!DefineDataProperty(cx, resolvedOptions, cx->names().largestUnit,
@@ -453,7 +448,7 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
       return false;
     }
   } else {
-    // Steps 5-7.
+    // Steps 5-6.
     settings = {
         TemporalUnit::Month,
         TemporalUnit::Year,
@@ -461,10 +456,10 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
         Increment{1},
     };
 
-    // Step 8. (Not applicable in our implementation.)
+    // Step 7. (Not applicable in our implementation.)
   }
 
-  // Step 9.
+  // Step 8.
   JS::RootedVector<PropertyKey> fieldNames(cx);
   if (!CalendarFields(cx, calendar,
                       {CalendarField::MonthCode, CalendarField::Year},
@@ -472,47 +467,47 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
     return false;
   }
 
-  // Step 10.
+  // Step 9.
   Rooted<PlainObject*> thisFields(
       cx, PrepareTemporalFields(cx, yearMonth, fieldNames));
   if (!thisFields) {
     return false;
   }
 
-  // Step 11.
+  // Step 10.
   Value one = Int32Value(1);
   auto handleOne = Handle<Value>::fromMarkedLocation(&one);
   if (!DefineDataProperty(cx, thisFields, cx->names().day, handleOne)) {
     return false;
   }
 
-  // Step 12.
+  // Step 11.
   Rooted<Wrapped<PlainDateObject*>> thisDate(
       cx, CalendarDateFromFields(cx, calendar, thisFields));
   if (!thisDate) {
     return false;
   }
 
-  // Step 13.
+  // Step 12.
   Rooted<PlainObject*> otherFields(
       cx, PrepareTemporalFields(cx, other, fieldNames));
   if (!otherFields) {
     return false;
   }
 
-  // Step 14.
+  // Step 13.
   if (!DefineDataProperty(cx, otherFields, cx->names().day, handleOne)) {
     return false;
   }
 
-  // Step 15.
+  // Step 14.
   Rooted<Wrapped<PlainDateObject*>> otherDate(
       cx, CalendarDateFromFields(cx, calendar, otherFields));
   if (!otherDate) {
     return false;
   }
 
-  // Step 16.
+  // Step 15.
   Duration result;
   if (resolvedOptions) {
     if (!CalendarDateUntil(cx, calendar, thisDate, otherDate, resolvedOptions,
@@ -529,7 +524,7 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
   // We only care about years and months here, all other fields are set to zero.
   Duration duration = {result.years, result.months};
 
-  // Step 17.
+  // Step 16.
   if (settings.smallestUnit != TemporalUnit::Month ||
       settings.roundingIncrement != Increment{1}) {
     Duration rounded;
@@ -542,7 +537,7 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
     duration = {rounded.years, rounded.months};
   }
 
-  // Step 18.
+  // Step 17.
   if (operation == TemporalDifference::Since) {
     duration = duration.negate();
   }
@@ -653,31 +648,26 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
   }
 
   // Step 14.
-  Rooted<PlainObject*> optionsCopy(cx, NewPlainObjectWithProto(cx, nullptr));
+  Rooted<PlainObject*> optionsCopy(cx, CopyOptions(cx, options));
   if (!optionsCopy) {
     return false;
   }
 
   // Step 15.
-  if (!CopyDataProperties(cx, optionsCopy, options)) {
-    return false;
-  }
-
-  // Step 16.
   Rooted<Wrapped<PlainDateObject*>> addedDate(
       cx, CalendarDateAdd(cx, calendar, date, durationToAdd, options));
   if (!addedDate) {
     return false;
   }
 
-  // Step 17.
+  // Step 16.
   Rooted<PlainObject*> addedDateFields(
       cx, PrepareTemporalFields(cx, addedDate, fieldNames));
   if (!addedDateFields) {
     return false;
   }
 
-  // Step 18.
+  // Step 17.
   auto obj =
       CalendarYearMonthFromFields(cx, calendar, addedDateFields, optionsCopy);
   if (!obj) {

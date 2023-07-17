@@ -1676,6 +1676,26 @@ bool js::temporal::GetMethodForCall(JSContext* cx, Handle<JSObject*> object,
 }
 
 /**
+ * CopyOptions ( ... )
+ */
+PlainObject* js::temporal::CopyOptions(JSContext* cx,
+                                       JS::Handle<JSObject*> options) {
+  // Step 1.
+  Rooted<PlainObject*> optionsCopy(cx, NewPlainObjectWithProto(cx, nullptr));
+  if (!optionsCopy) {
+    return nullptr;
+  }
+
+  // Step 2.
+  if (!CopyDataProperties(cx, optionsCopy, options)) {
+    return nullptr;
+  }
+
+  // Step 3.
+  return optionsCopy;
+}
+
+/**
  * CopyDataProperties ( target, source, excludedKeys [ , excludedValues ] )
  *
  * Implementation when |excludedKeys| and |excludedValues| are both empty lists.

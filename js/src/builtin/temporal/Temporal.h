@@ -355,6 +355,11 @@ bool GetMethodForCall(JSContext* cx, JS::Handle<JSObject*> object,
                       JS::MutableHandle<JS::Value> result);
 
 /**
+ * CopyOptions ( ... )
+ */
+PlainObject* CopyOptions(JSContext* cx, JS::Handle<JSObject*> options);
+
+/**
  * CopyDataProperties ( target, source, excludedKeys [ , excludedValues ] )
  */
 bool CopyDataProperties(JSContext* cx, JS::Handle<PlainObject*> target,

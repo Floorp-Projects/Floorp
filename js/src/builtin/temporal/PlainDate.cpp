@@ -1187,7 +1187,7 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     return false;
   }
 
-  // Steps 4-8.
+  // Steps 4-7.
   DifferenceSettings settings;
   Duration duration;
   if (args.hasDefined(1)) {
@@ -1198,25 +1198,19 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     }
 
     // Step 4.
-    Rooted<PlainObject*> resolvedOptions(cx,
-                                         NewPlainObjectWithProto(cx, nullptr));
+    Rooted<PlainObject*> resolvedOptions(cx, CopyOptions(cx, options));
     if (!resolvedOptions) {
       return false;
     }
 
     // Step 5.
-    if (!CopyDataProperties(cx, resolvedOptions, options)) {
-      return false;
-    }
-
-    // Step 6.
     if (!GetDifferenceSettings(cx, operation, resolvedOptions,
                                TemporalUnitGroup::Date, TemporalUnit::Day,
                                TemporalUnit::Day, &settings)) {
       return false;
     }
 
-    // Step 7.
+    // Step 6.
     Rooted<Value> largestUnitValue(
         cx, StringValue(TemporalUnitToString(cx, settings.largestUnit)));
     if (!DefineDataProperty(cx, resolvedOptions, cx->names().largestUnit,
@@ -1224,7 +1218,7 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
       return false;
     }
 
-    // Step 8.
+    // Step 7.
     Duration result;
     if (!CalendarDateUntil(cx, calendar, temporalDate, other, resolvedOptions,
                            &result)) {
@@ -1232,7 +1226,7 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     }
     duration = result.date();
   } else {
-    // Steps 4-7.
+    // Steps 4-6.
     settings = {
         TemporalUnit::Day,
         TemporalUnit::Day,
@@ -1240,7 +1234,7 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
         Increment{1},
     };
 
-    // Step 8.
+    // Step 7.
     Duration result;
     if (!CalendarDateUntil(cx, calendar, temporalDate, other,
                            settings.largestUnit, &result)) {
@@ -1249,10 +1243,10 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     duration = result.date();
   }
 
-  // Step 9.
+  // Step 8.
   if (settings.smallestUnit != TemporalUnit::Day ||
       settings.roundingIncrement != Increment{1}) {
-    // Step 9.a.
+    // Step 8.a.
     if (!temporal::RoundDuration(cx, duration.date(),
                                  settings.roundingIncrement,
                                  settings.smallestUnit, settings.roundingMode,
@@ -1261,7 +1255,7 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     }
   }
 
-  // Step 10.
+  // Step 9.
   if (operation == TemporalDifference::Since) {
     duration = duration.negate();
   }
