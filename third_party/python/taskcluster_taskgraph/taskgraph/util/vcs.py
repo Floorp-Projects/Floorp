@@ -166,10 +166,7 @@ class Repository(ABC):
     @abstractmethod
     def find_latest_common_revision(self, base_ref_or_rev, head_rev):
         """Find the latest revision that is common to both the given
-        ``head_rev`` and ``base_ref_or_rev``.
-
-        If no common revision exists, ``Repository.NULL_REVISION`` will
-        be returned."""
+        ``head_rev`` and ``base_ref_or_rev``"""
 
     @abstractmethod
     def does_revision_exist_locally(self, revision):
@@ -228,8 +225,8 @@ class HgRepository(Repository):
         return self.run("path", "-T", "{url}", remote).strip()
 
     def get_commit_message(self, revision=None):
-        revision = revision or "."
-        return self.run("log", "-r", revision, "-T", "{desc}")
+        revision = revision or self.head_rev
+        return self.run("log", "-r", ".", "-T", "{desc}")
 
     def _format_diff_filter(self, diff_filter, for_status=False):
         df = diff_filter.lower()
@@ -299,18 +296,17 @@ class HgRepository(Repository):
         return self.run("update", "--check", ref)
 
     def find_latest_common_revision(self, base_ref_or_rev, head_rev):
-        ancestor = self.run(
+        return self.run(
             "log",
             "-r",
             f"last(ancestors('{base_ref_or_rev}') and ancestors('{head_rev}'))",
             "--template",
             "{node}",
         ).strip()
-        return ancestor or self.NULL_REVISION
 
     def does_revision_exist_locally(self, revision):
         try:
-            return bool(self.run("log", "-r", revision).strip())
+            return self.run("log", "-r", revision).strip() != ""
         except subprocess.CalledProcessError as e:
             # Error code 255 comes with the message:
             # "abort: unknown revision $REVISION"
@@ -419,8 +415,8 @@ class GitRepository(Repository):
         return self.run("remote", "get-url", remote).strip()
 
     def get_commit_message(self, revision=None):
-        revision = revision or "HEAD"
-        return self.run("log", "-n1", "--format=%B", revision)
+        revision = revision or self.head_rev
+        return self.run("log", "-n1", "--format=%B")
 
     def get_changed_files(
         self, diff_filter="ADM", mode="unstaged", rev=None, base_rev=None
@@ -486,10 +482,7 @@ class GitRepository(Repository):
         self.run("checkout", ref)
 
     def find_latest_common_revision(self, base_ref_or_rev, head_rev):
-        try:
-            return self.run("merge-base", base_ref_or_rev, head_rev).strip()
-        except subprocess.CalledProcessError:
-            return self.NULL_REVISION
+        return self.run("merge-base", base_ref_or_rev, head_rev).strip()
 
     def does_revision_exist_locally(self, revision):
         try:
