@@ -3825,7 +3825,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                            wasm::SymbolicAddress builtin,
                                            wasm::FailureMode failureMode);
 
-  // Perform a subtype check that `object` is a subtype of `type`, branching to
+  // Perform a subtype check that `ref` is a subtype of `type`, branching to
   // `label` depending on `onSuccess`. `type` must be in the `any` hierarchy.
   //
   // `superSuperTypeVector` is required iff the destination type is a concrete
@@ -3833,17 +3833,39 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // not none. `scratch2` is required iff the destination type is a concrete
   // type and its `subTypingDepth` is >= wasm::MinSuperTypeVectorLength.
   //
-  // `object` and `superSuperTypeVector` are preserved. Scratch registers are
+  // `ref` and `superSuperTypeVector` are preserved. Scratch registers are
   // clobbered.
-  void branchWasmGcObjectIsRefType(Register object, wasm::RefType sourceType,
-                                   wasm::RefType destType, Label* label,
-                                   bool onSuccess,
-                                   Register superSuperTypeVector,
-                                   Register scratch1, Register scratch2);
-  static bool needScratch1ForBranchWasmGcRefType(wasm::RefType type);
-  static bool needScratch2ForBranchWasmGcRefType(wasm::RefType type);
-  static bool needSuperSuperTypeVectorForBranchWasmGcRefType(
+  void branchWasmRefIsSubtypeAny(Register ref, wasm::RefType sourceType,
+                                 wasm::RefType destType, Label* label,
+                                 bool onSuccess, Register superSuperTypeVector,
+                                 Register scratch1, Register scratch2);
+  static bool needScratch1ForBranchWasmRefIsSubtypeAny(wasm::RefType type);
+  static bool needScratch2ForBranchWasmRefIsSubtypeAny(wasm::RefType type);
+  static bool needSuperSTVForBranchWasmRefIsSubtypeAny(wasm::RefType type);
+
+  // Perform a subtype check that `ref` is a subtype of `type`, branching to
+  // `label` depending on `onSuccess`. `type` must be in the `func` hierarchy.
+  //
+  // `superSuperTypeVector` and `scratch1` are required iff the destination type
+  // is a concrete type (not func and not nofunc). `scratch2` is required iff
+  // the destination type is a concrete type and its `subTypingDepth` is >=
+  // wasm::MinSuperTypeVectorLength.
+  //
+  // `ref` and `superSuperTypeVector` are preserved. Scratch registers are
+  // clobbered.
+  void branchWasmRefIsSubtypeFunc(Register ref, wasm::RefType sourceType,
+                                  wasm::RefType destType, Label* label,
+                                  bool onSuccess, Register superSuperTypeVector,
+                                  Register scratch1, Register scratch2);
+  static bool needSuperSTVAndScratch1ForBranchWasmRefIsSubtypeFunc(
       wasm::RefType type);
+  static bool needScratch2ForBranchWasmRefIsSubtypeFunc(wasm::RefType type);
+
+  // Perform a subtype check that `ref` is a subtype of `type`, branching to
+  // `label` depending on `onSuccess`. `type` must be in the `extern` hierarchy.
+  void branchWasmRefIsSubtypeExtern(Register ref, wasm::RefType sourceType,
+                                    wasm::RefType destType, Label* label,
+                                    bool onSuccess);
 
   // Perform a subtype check that `subSuperTypeVector` is a subtype of
   // `superSuperTypeVector`, branching to `label` depending on `onSuccess`.

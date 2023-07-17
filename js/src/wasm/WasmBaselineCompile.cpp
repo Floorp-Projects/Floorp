@@ -3170,11 +3170,12 @@ bool BaseCompiler::jumpConditionalWithResults(BranchState* b, RegRef object,
     }
     if (b->stackHeight != resultsBase) {
       Label notTaken;
-      // Temporarily take the result registers so that branchGcHeapType doesn't
-      // use them.
+      // Temporarily take the result registers so that branchIfRefSubtype
+      // doesn't use them.
       needIntegerResultRegisters(b->resultType);
-      branchGcRefType(object, sourceType, destType, &notTaken,
-                      /*onSuccess=*/b->invertBranch ? !onSuccess : onSuccess);
+      branchIfRefSubtype(
+          object, sourceType, destType, &notTaken,
+          /*onSuccess=*/b->invertBranch ? !onSuccess : onSuccess);
       freeIntegerResultRegisters(b->resultType);
 
       // Shuffle stack args.
@@ -3186,8 +3187,8 @@ bool BaseCompiler::jumpConditionalWithResults(BranchState* b, RegRef object,
     }
   }
 
-  branchGcRefType(object, sourceType, destType, b->label,
-                  /*onSuccess=*/b->invertBranch ? !onSuccess : onSuccess);
+  branchIfRefSubtype(object, sourceType, destType, b->label,
+                     /*onSuccess=*/b->invertBranch ? !onSuccess : onSuccess);
   return true;
 }
 #endif
@@ -7359,7 +7360,8 @@ void BaseCompiler::emitRefTestCommon(RefType sourceType, RefType destType) {
   RegRef object = popRef();
   RegI32 result = needI32();
 
-  branchGcRefType(object, sourceType, destType, &success, /*onSuccess=*/true);
+  branchIfRefSubtype(object, sourceType, destType, &success,
+                     /*onSuccess=*/true);
   masm.xor32(result, result);
   masm.jump(&join);
   masm.bind(&success);
@@ -7371,13 +7373,13 @@ void BaseCompiler::emitRefTestCommon(RefType sourceType, RefType destType) {
 }
 
 void BaseCompiler::emitRefCastCommon(RefType sourceType, RefType destType) {
-  RegRef object = popRef();
+  RegRef ref = popRef();
 
   Label success;
-  branchGcRefType(object, sourceType, destType, &success, /*onSuccess=*/true);
+  branchIfRefSubtype(ref, sourceType, destType, &success, /*onSuccess=*/true);
   masm.wasmTrap(Trap::BadCast, bytecodeOffset());
   masm.bind(&success);
-  pushRef(object);
+  pushRef(ref);
 }
 
 bool BaseCompiler::emitRefTestV5() {
@@ -7399,34 +7401,67 @@ bool BaseCompiler::emitRefTestV5() {
   return true;
 }
 
-void BaseCompiler::branchGcRefType(RegRef object, RefType sourceType,
-                                   RefType destType, Label* label,
-                                   bool onSuccess) {
-  RegPtr superSuperTypeVector;
-  if (MacroAssembler::needSuperSuperTypeVectorForBranchWasmGcRefType(
-          destType)) {
-    uint32_t typeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
-    superSuperTypeVector = loadSuperTypeVector(typeIndex);
-  }
-  RegI32 scratch1 = MacroAssembler::needScratch1ForBranchWasmGcRefType(destType)
-                        ? needI32()
-                        : RegI32::Invalid();
-  RegI32 scratch2 = MacroAssembler::needScratch2ForBranchWasmGcRefType(destType)
-                        ? needI32()
-                        : RegI32::Invalid();
+void BaseCompiler::branchIfRefSubtype(RegRef ref, RefType sourceType,
+                                      RefType destType, Label* label,
+                                      bool onSuccess) {
+  if (destType.isAnyHierarchy()) {
+    RegPtr superSuperTypeVector;
+    if (MacroAssembler::needSuperSTVForBranchWasmRefIsSubtypeAny(destType)) {
+      uint32_t typeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
+      superSuperTypeVector = loadSuperTypeVector(typeIndex);
+    }
+    RegI32 scratch1 =
+        MacroAssembler::needScratch1ForBranchWasmRefIsSubtypeAny(destType)
+            ? needI32()
+            : RegI32::Invalid();
+    RegI32 scratch2 =
+        MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeAny(destType)
+            ? needI32()
+            : RegI32::Invalid();
 
-  masm.branchWasmGcObjectIsRefType(object, sourceType, destType, label,
-                                   onSuccess, superSuperTypeVector, scratch1,
-                                   scratch2);
+    masm.branchWasmRefIsSubtypeAny(ref, sourceType, destType, label, onSuccess,
+                                   superSuperTypeVector, scratch1, scratch2);
 
-  if (scratch2.isValid()) {
-    freeI32(scratch2);
-  }
-  if (scratch1.isValid()) {
-    freeI32(scratch1);
-  }
-  if (superSuperTypeVector.isValid()) {
-    freePtr(superSuperTypeVector);
+    if (scratch2.isValid()) {
+      freeI32(scratch2);
+    }
+    if (scratch1.isValid()) {
+      freeI32(scratch1);
+    }
+    if (superSuperTypeVector.isValid()) {
+      freePtr(superSuperTypeVector);
+    }
+  } else if (destType.isFuncHierarchy()) {
+    RegPtr superSuperTypeVector;
+    RegI32 scratch1;
+    if (MacroAssembler::needSuperSTVAndScratch1ForBranchWasmRefIsSubtypeFunc(
+            destType)) {
+      uint32_t typeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
+      superSuperTypeVector = loadSuperTypeVector(typeIndex);
+      scratch1 = needI32();
+    }
+    RegI32 scratch2 =
+        MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeFunc(destType)
+            ? needI32()
+            : RegI32::Invalid();
+
+    masm.branchWasmRefIsSubtypeFunc(ref, sourceType, destType, label, onSuccess,
+                                    superSuperTypeVector, scratch1, scratch2);
+
+    if (scratch2.isValid()) {
+      freeI32(scratch2);
+    }
+    if (scratch1.isValid()) {
+      freeI32(scratch1);
+    }
+    if (superSuperTypeVector.isValid()) {
+      freePtr(superSuperTypeVector);
+    }
+  } else if (destType.isExternHierarchy()) {
+    masm.branchWasmRefIsSubtypeExtern(ref, sourceType, destType, label,
+                                      onSuccess);
+  } else {
+    MOZ_CRASH("unknown type hierarchy in cast");
   }
 }
 

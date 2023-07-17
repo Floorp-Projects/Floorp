@@ -99,7 +99,7 @@ static constexpr inline size_t GetGCKindSlots(AllocKind thingKind) {
     case AllocKind::OBJECT4_BACKGROUND:
       return 4;
     case AllocKind::FUNCTION_EXTENDED:
-      return 6;
+      return 7;
     case AllocKind::OBJECT8:
     case AllocKind::OBJECT8_BACKGROUND:
       return 8;
