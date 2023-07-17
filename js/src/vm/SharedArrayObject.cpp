@@ -67,10 +67,7 @@ SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(size_t length) {
   }
 
   uint8_t* buffer = p + sizeof(SharedArrayRawBuffer);
-  auto* rawbuf =
-      new (p) SharedArrayRawBuffer(/* isWasm = */ false, buffer, length);
-  MOZ_ASSERT(rawbuf->length_ == length);  // Deallocation needs this
-  return rawbuf;
+  return new (p) SharedArrayRawBuffer(/* isWasm = */ false, buffer, length);
 }
 
 WasmSharedArrayRawBuffer* WasmSharedArrayRawBuffer::AllocateWasm(
@@ -105,11 +102,9 @@ WasmSharedArrayRawBuffer* WasmSharedArrayRawBuffer::AllocateWasm(
 
   uint8_t* buffer = reinterpret_cast<uint8_t*>(p) + gc::SystemPageSize();
   uint8_t* base = buffer - sizeof(WasmSharedArrayRawBuffer);
-  auto* rawbuf = new (base) WasmSharedArrayRawBuffer(
+  return new (base) WasmSharedArrayRawBuffer(
       buffer, length, indexType, clampedMaxPages,
       sourceMaxPages.valueOr(Pages(0)), computedMappedSize);
-  MOZ_ASSERT(rawbuf->length_ == length);  // Deallocation needs this
-  return rawbuf;
 }
 
 void WasmSharedArrayRawBuffer::tryGrowMaxPagesInPlace(Pages deltaMaxPages) {
