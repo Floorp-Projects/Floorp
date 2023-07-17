@@ -32,4 +32,10 @@ shopping-settings-recommendations-toggle =
   .label = Show products recommended by { -brand-product-name }
 shopping-settings-opt-out-button = Turn off review quality check
 
+## Strings for the adjusted rating component
+
+shopping-adjusted-rating-label =
+  .label = Adjusted rating
+shopping-adjusted-rating-unreliable-reviews = Unreliable reviews removed
+
 ##
