@@ -1,0 +1,65 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#shopping-container {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  position: fixed;
+  height: 100%;
+  background-color: var(--in-content-box-background-odd);
+}
+
+#shopping-icon {
+  width: 32px;
+  height: 32px;
+  display: block;
+  background-image: url("chrome://branding/content/icon32.png");
+}
+
+#header-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-block: 16px 8px;
+  padding-inline: 16px 8px;
+}
+
+#shopping-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#header {
+  font-size: 1.3125em;
+  font-weight: 600;
+}
+
+#close-button {
+  min-width: 32px;
+  min-height: 32px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  background-image: url("chrome://global/skin/icons/close.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+#content {
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  padding: 0 16px 16px;
+}

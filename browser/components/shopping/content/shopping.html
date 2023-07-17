@@ -14,10 +14,6 @@
     <link rel="localization" href="preview/shopping.ftl" />
 
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
-    <link
-      rel="stylesheet"
-      href="chrome://browser/content/shopping/shopping.css"
-    />
 
     <script src="chrome://global/content/customElements.js"></script>
     <script
@@ -35,8 +31,9 @@
     <title data-l10n-id="shopping-page-title"></title>
   </head>
   <body>
+    <shopping-container></shopping-container>
+    <!-- TODO: Remove below elements when tests for review-highlights and shopping-settings are updated -->
     <review-highlights hidden></review-highlights>
     <shopping-settings></shopping-settings>
-    <shopping-container></shopping-container>
   </body>
 </html>
