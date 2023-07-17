@@ -794,3 +794,7 @@ Injects attribution information into en-US installers.
 attribution-l10n
 ----------------
 Injects attribution information into localized installers.
+
+snap-upstream-build
+-------------------
+Perform a Firefox Snap build using upstream tooling
