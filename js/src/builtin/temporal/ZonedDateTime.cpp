@@ -3432,7 +3432,6 @@ static bool ZonedDateTime_toPlainTime(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-5.
   PlainDateTime temporalDateTime;
