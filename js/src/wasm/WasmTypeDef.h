@@ -1457,19 +1457,19 @@ inline bool RefType::castPossible(RefType sourceType, RefType destType) {
 // # GC types
 //
 // For GC types, an entry is always created in the global data area and a
-// unique RttValue (see wasm/TypedObject.h) is stored there. This RttValue
+// unique RttValue (see wasm/WasmGcObject.h) is stored there. This RttValue
 // is the value given by 'rtt.canon $t' for each type definition. As each entry
 // is given a unique value and no canonicalization is done (which would require
 // hash-consing of infinite-trees), this is not yet spec compliant.
 //
 // # wasm::Instance and the global type context
 //
-// As GC objects (aka TypedObject) may outlive the module they are created in,
-// types are additionally transferred to a wasm::Context (which is part of
-// JSContext) upon instantiation. This wasm::Context contains the
-// 'global type context' that RTTValues refer to by type index. Types are never
-// freed from the global type context as that would shift the index space. In
-// the future, this will be fixed.
+// As GC objects may outlive the module they are created in, types are
+// additionally transferred to a wasm::Context (which is part of JSContext) upon
+// instantiation. This wasm::Context contains the 'global type context' that
+// RTTValues refer to by type index. Types are never freed from the global type
+// context as that would shift the index space. In the future, this will be
+// fixed.
 
 }  // namespace wasm
 }  // namespace js

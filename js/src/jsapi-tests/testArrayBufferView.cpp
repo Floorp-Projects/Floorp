@@ -63,19 +63,6 @@ BEGIN_TEST(testArrayBufferView_type) {
   CHECK((TestViewType<JS::TypedArray<Scalar::Float64>, 9, 72>(cx)));
   CHECK((TestViewType<JS::DataView, 8, 8>(cx)));
 
-  JS::Rooted<JS::Value> hasTypedObject(cx);
-  EVAL("typeof TypedObject !== 'undefined'", &hasTypedObject);
-  if (hasTypedObject.isTrue()) {
-    JS::Rooted<JS::Value> tval(cx);
-    EVAL(
-        "var T = new TypedObject.StructType({ x: TypedObject.uint32 });\n"
-        "new T(new ArrayBuffer(4));",
-        &tval);
-
-    JS::Rooted<JSObject*> tobj(cx, &tval.toObject());
-    CHECK(!JS_IsArrayBufferViewObject(tobj));
-  }
-
   return true;
 }
 

@@ -67,7 +67,7 @@ var bin = wasmTextToBinary(
       (func (export "mk_int_node") (param i32) (param externref) (result eqref)
        (struct.new $int_node (local.get 0) (local.get 1)))
 
-      ;; Too big to fit in an InlineTypedObject.
+      ;; Too big to fit in an inline WasmGcObject.
 
       (type $bigger (struct
                      (field $a i32)

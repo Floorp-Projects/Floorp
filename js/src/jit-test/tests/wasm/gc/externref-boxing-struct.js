@@ -8,7 +8,7 @@
 //  - tables, see externref-boxing.js
 //  - function parameters and returns, see externref-boxing.js
 //  - struct fields [for the gc feature], this file
-//  - TypedObject fields when we construct with the externref type; this file
+//  - WasmGcObject fields when we construct with the externref type; this file
 
 // Struct fields of externref type can receive their value in these ways:
 //

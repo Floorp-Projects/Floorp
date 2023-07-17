@@ -64,7 +64,6 @@ uint64_t WasmReservedBytes();
 //
 //
 // - JSObject
-//   - TypedObject (declared in wasm/TypedObject.h)
 //   - NativeObject
 //     - ArrayBufferObjectMaybeShared
 //       - ArrayBufferObject
@@ -100,14 +99,13 @@ uint64_t WasmReservedBytes();
 // (1) malloc'ed or mmap'ed data owned by an ArrayBufferObject.
 // (2) Data allocated inline with an ArrayBufferObject.
 // (3) Data allocated inline with a TypedArrayObject.
-// (4) Data allocated inline with an InlineTypedObject.
 //
 // An ArrayBufferObject may point to any of these sources of data, except (3).
 // All array buffer views may point to any of these sources of data, except
 // that (3) may only be pointed to by the typed array the data is inline with.
 //
-// During a minor GC, (3) and (4) may move. During a compacting GC, (2), (3),
-// and (4) may move.
+// During a minor GC, (3) may move. During a compacting GC, (2) and (3) may
+// move.
 
 class ArrayBufferObjectMaybeShared;
 
@@ -157,10 +155,9 @@ using MutableHandleArrayBufferObjectMaybeShared =
  * ArrayBufferObject
  *
  * This class holds the underlying raw buffer that the various ArrayBufferViews
- * (eg DataViewObject, the TypedArrays, TypedObjects) access. It can be created
- * explicitly and used to construct an ArrayBufferView, or can be created
- * lazily when it is first accessed for a TypedArrayObject or TypedObject that
- * doesn't have an explicit buffer.
+ * (DataViewObject and the TypedArrays) access. It can be created explicitly and
+ * used to construct an ArrayBufferView, or can be created lazily when it is
+ * first accessed for a TypedArrayObject that doesn't have an explicit buffer.
  *
  * ArrayBufferObject (or really the underlying memory) /is not racy/: the
  * memory is private to a single worker.
