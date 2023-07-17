@@ -26,7 +26,7 @@ interface BaseAudioContext : EventTarget {
     readonly        attribute double               currentTime;
     readonly        attribute AudioListener        listener;
     readonly        attribute AudioContextState    state;
-    [Throws, SameObject, SecureContext, Pref="dom.audioworklet.enabled"]
+    [Throws, SameObject, SecureContext]
     readonly        attribute AudioWorklet         audioWorklet;
 
     [NewObject]

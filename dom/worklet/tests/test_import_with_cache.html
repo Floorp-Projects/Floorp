@@ -9,13 +9,6 @@
 <body>
 
 <script type="application/javascript">
-
-function configureTest() {
-  return SpecialPowers.pushPrefEnv(
-    {"set": [["dom.audioworklet.enabled", true],
-             ["dom.worklet.enabled", true]]});
-}
-
 // This function is called into an iframe.
 function runTestInIframe() {
   var audioContext = new AudioContext();
