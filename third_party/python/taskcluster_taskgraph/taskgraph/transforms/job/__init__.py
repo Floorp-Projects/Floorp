@@ -55,6 +55,7 @@ job_description_schema = Schema(
         Optional("run-on-projects"): task_description_schema["run-on-projects"],
         Optional("run-on-tasks-for"): task_description_schema["run-on-tasks-for"],
         Optional("run-on-git-branches"): task_description_schema["run-on-git-branches"],
+        Optional("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("always-target"): task_description_schema["always-target"],
         Exclusive("optimization", "optimization"): task_description_schema[
             "optimization"

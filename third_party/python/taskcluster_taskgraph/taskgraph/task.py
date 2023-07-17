@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Union
 
-import attr
 
-
-@attr.s
+@dataclass
 class Task:
     """
     Representation of a task in a TaskGraph.  Each Task has, at creation:
@@ -31,18 +31,18 @@ class Task:
     display, comparison, serialization, etc. It has no functionality of its own.
     """
 
-    kind = attr.ib()
-    label = attr.ib()
-    attributes = attr.ib()
-    task = attr.ib()
-    description = attr.ib(default="")
-    task_id = attr.ib(default=None, init=False)
-    optimization = attr.ib(default=None)
-    dependencies = attr.ib(factory=dict)
-    soft_dependencies = attr.ib(factory=list)
-    if_dependencies = attr.ib(factory=list)
+    kind: str
+    label: str
+    attributes: Dict
+    task: Dict
+    description: str = ""
+    task_id: Union[str, None] = field(default=None, init=False)
+    optimization: Union[Dict[str, Any], None] = field(default=None)
+    dependencies: Dict = field(default_factory=dict)
+    soft_dependencies: List = field(default_factory=list)
+    if_dependencies: List = field(default_factory=list)
 
-    def __attrs_post_init__(self):
+    def __post_init__(self):
         self.attributes["kind"] = self.kind
 
     def to_json(self):
