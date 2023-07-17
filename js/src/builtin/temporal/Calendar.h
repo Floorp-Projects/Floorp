@@ -15,6 +15,7 @@
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "vm/NativeObject.h"
+#include "vm/StringType.h"
 
 namespace js {
 struct ClassSpec;
@@ -32,8 +33,8 @@ class CalendarObject : public NativeObject {
   static constexpr uint32_t IDENTIFIER_SLOT = 0;
   static constexpr uint32_t SLOT_COUNT = 1;
 
-  JSString* identifier() const {
-    return getFixedSlot(IDENTIFIER_SLOT).toString();
+  JSLinearString* identifier() const {
+    return &getFixedSlot(IDENTIFIER_SLOT).toString()->asLinear();
   }
 
  private:
