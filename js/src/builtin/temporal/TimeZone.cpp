@@ -2091,15 +2091,10 @@ static bool TimeZone_toString(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.TimeZone.prototype.toJSON ( )
  */
 static bool TimeZone_toJSON(JSContext* cx, const CallArgs& args) {
-  Rooted<TimeZoneValue> timeZone(cx, &args.thisv().toObject());
+  auto* timeZone = &args.thisv().toObject().as<TimeZoneObject>();
 
-  // Step 3.
-  JSString* str = TimeZoneToString(cx, timeZone);
-  if (!str) {
-    return false;
-  }
-
-  args.rval().setString(str);
+  // Steps 3-4.
+  args.rval().setString(timeZone->identifier());
   return true;
 }
 
