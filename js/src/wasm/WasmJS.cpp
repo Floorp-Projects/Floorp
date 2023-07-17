@@ -2060,9 +2060,8 @@ bool WasmInstanceObject::getExportedFunction(
   const Instance& instance = instanceObj->instance();
   const FuncExport& funcExport =
       instance.metadata(instance.code().bestTier()).lookupFuncExport(funcIndex);
-  const TypeDef& funcTypeDef =
-      instance.metadata().getFuncExportTypeDef(funcExport);
-  unsigned numArgs = funcTypeDef.funcType().args().length();
+  const FuncType& funcType = instance.metadata().getFuncExportType(funcExport);
+  unsigned numArgs = funcType.args().length();
 
   if (instance.isAsmJS()) {
     // asm.js needs to act like a normal JS function which means having the
@@ -2104,7 +2103,7 @@ bool WasmInstanceObject::getExportedFunction(
     // separate 4kb code page. Most eagerly-accessed functions are not called,
     // so use a shared, provisional (and slow) lazy stub as JitEntry and wait
     // until Instance::callExport() to create the fast entry stubs.
-    if (funcTypeDef.funcType().canHaveJitEntry()) {
+    if (funcType.canHaveJitEntry()) {
       if (!funcExport.hasEagerStubs()) {
         if (!EnsureBuiltinThunksInitialized()) {
           return false;
@@ -2122,8 +2121,6 @@ bool WasmInstanceObject::getExportedFunction(
 
   fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT,
                        PrivateValue(const_cast<Instance*>(&instance)));
-  fun->setExtendedSlot(FunctionExtended::WASM_STV_SLOT,
-                       PrivateValue((void*)funcTypeDef.superTypeVector()));
 
   const CodeTier& codeTier =
       instance.code().codeTier(instance.code().bestTier());
