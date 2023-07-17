@@ -38,7 +38,8 @@ class WorkerModuleLoader : public JS::loader::ModuleLoaderBase {
                                            JS::loader::ModuleLoaderBase)
 
   WorkerModuleLoader(WorkerScriptLoader* aScriptLoader,
-                     nsIGlobalObject* aGlobalObject);
+                     nsIGlobalObject* aGlobalObject,
+                     nsISerialEventTarget* aEventTarget);
 
  private:
   ~WorkerModuleLoader() = default;
@@ -46,6 +47,9 @@ class WorkerModuleLoader : public JS::loader::ModuleLoaderBase {
   bool CreateDynamicImportLoader();
   void SetScriptLoader(JS::loader::ScriptLoaderInterface* aLoader) {
     mLoader = aLoader;
+  }
+  void SetEventTarget(nsISerialEventTarget* aEventTarget) {
+    mEventTarget = aEventTarget;
   }
 
   WorkerScriptLoader* GetCurrentScriptLoader();
