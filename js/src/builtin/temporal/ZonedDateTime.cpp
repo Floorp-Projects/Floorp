@@ -1160,8 +1160,8 @@ static bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
 
   // Step 13.
   TimeDuration timeDifference;
-  if (!BalanceDuration(cx, nanosAndDays.nanoseconds(), TemporalUnit::Hour,
-                       &timeDifference)) {
+  if (!BalanceTimeDuration(cx, nanosAndDays.nanoseconds(), TemporalUnit::Hour,
+                           &timeDifference)) {
     return false;
   }
 

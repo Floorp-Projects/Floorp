@@ -915,7 +915,7 @@ bool js::temporal::DifferenceInstant(JSContext* cx, const Instant& ns1,
 
   // Step 8.
   TimeDuration balanced;
-  if (!BalanceDuration(cx, roundResult, largestUnit, &balanced)) {
+  if (!BalanceTimeDuration(cx, roundResult, largestUnit, &balanced)) {
     return false;
   }
   MOZ_ASSERT(balanced.days == 0);

@@ -751,8 +751,8 @@ static int64_t TotalDurationNanoseconds(const Duration& duration) {
 }
 
 /**
- * BalanceDuration ( days, hours, minutes, seconds, milliseconds, microseconds,
- * nanoseconds, largestUnit [ , relativeTo ] )
+ * BalanceTimeDuration ( days, hours, minutes, seconds, milliseconds,
+ * microseconds, nanoseconds, largestUnit [ , relativeTo ] )
  */
 static Duration BalanceTimeDuration(const Duration& duration,
                                     TemporalUnit largestUnit) {
