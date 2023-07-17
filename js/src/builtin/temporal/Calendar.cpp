@@ -595,19 +595,7 @@ template <typename T, typename... Ts>
 static bool ToTemporalCalendar(JSContext* cx, Handle<JSObject*> object,
                                MutableHandle<CalendarValue> result) {
   if (auto* unwrapped = object->maybeUnwrapIf<T>()) {
-    if constexpr (std::is_same_v<T, PlainTimeObject>) {
-      AutoRealm ar(cx, unwrapped);
-      Rooted<PlainTimeObject*> plainTime(cx, unwrapped);
-
-      auto* calendar = PlainTimeObject::getOrCreateCalendar(cx, plainTime);
-      if (!calendar) {
-        return false;
-      }
-
-      result.set(calendar);
-    } else {
-      result.set(unwrapped->calendar());
-    }
+    result.set(unwrapped->calendar());
     return cx->compartment()->wrap(cx, result);
   }
 
@@ -639,9 +627,8 @@ bool js::temporal::ToTemporalCalendar(JSContext* cx,
     // Step 1.b.
     Rooted<CalendarValue> calendar(cx);
     if (!::ToTemporalCalendar<PlainDateObject, PlainDateTimeObject,
-                              PlainMonthDayObject, PlainTimeObject,
-                              PlainYearMonthObject, ZonedDateTimeObject>(
-            cx, obj, &calendar)) {
+                              PlainMonthDayObject, PlainYearMonthObject,
+                              ZonedDateTimeObject>(cx, obj, &calendar)) {
       return false;
     }
     if (calendar) {
@@ -749,9 +736,8 @@ bool js::temporal::GetTemporalCalendarWithISODefault(
   // Step 1.
   Rooted<CalendarValue> calendar(cx);
   if (!::ToTemporalCalendar<PlainDateObject, PlainDateTimeObject,
-                            PlainMonthDayObject, PlainTimeObject,
-                            PlainYearMonthObject, ZonedDateTimeObject>(
-          cx, item, &calendar)) {
+                            PlainMonthDayObject, PlainYearMonthObject,
+                            ZonedDateTimeObject>(cx, item, &calendar)) {
     return false;
   }
   if (calendar) {

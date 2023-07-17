@@ -37,8 +37,7 @@ class PlainTimeObject : public NativeObject {
   static constexpr uint32_t ISO_MILLISECOND_SLOT = 3;
   static constexpr uint32_t ISO_MICROSECOND_SLOT = 4;
   static constexpr uint32_t ISO_NANOSECOND_SLOT = 5;
-  static constexpr uint32_t CALENDAR_SLOT = 6;
-  static constexpr uint32_t SLOT_COUNT = 7;
+  static constexpr uint32_t SLOT_COUNT = 6;
 
   int32_t isoHour() const { return getFixedSlot(ISO_HOUR_SLOT).toInt32(); }
 
@@ -58,26 +57,7 @@ class PlainTimeObject : public NativeObject {
     return getFixedSlot(ISO_NANOSECOND_SLOT).toInt32();
   }
 
-  JSObject* getCalendar() const {
-    return getFixedSlot(CALENDAR_SLOT).toObjectOrNull();
-  }
-
-  void setCalendar(JSObject* calendar) {
-    setFixedSlot(CALENDAR_SLOT, JS::ObjectValue(*calendar));
-  }
-
-  static JSObject* getOrCreateCalendar(JSContext* cx,
-                                       JS::Handle<PlainTimeObject*> obj) {
-    if (auto* calendar = obj->getCalendar()) {
-      return calendar;
-    }
-    return createCalendar(cx, obj);
-  }
-
  private:
-  static JSObject* createCalendar(JSContext* cx,
-                                  JS::Handle<PlainTimeObject*> obj);
-
   static const ClassSpec classSpec_;
 };
 
