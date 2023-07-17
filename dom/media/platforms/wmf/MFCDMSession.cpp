@@ -52,10 +52,10 @@ class MFCDMSession::SessionCallbacks final
           Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
           IMFContentDecryptionModuleSessionCallbacks> {
  public:
-  SessionCallbacks() = default;
+  SessionCallbacks() { MOZ_COUNT_CTOR(SessionCallbacks); };
   SessionCallbacks(const SessionCallbacks&) = delete;
   SessionCallbacks& operator=(const SessionCallbacks&) = delete;
-  ~SessionCallbacks() = default;
+  ~SessionCallbacks() { MOZ_COUNT_DTOR(SessionCallbacks); }
 
   HRESULT RuntimeClassInitialize() { return S_OK; }
 
@@ -113,6 +113,7 @@ MFCDMSession::MFCDMSession(IMFContentDecryptionModuleSession* aSession,
   MOZ_ASSERT(aSession);
   MOZ_ASSERT(aCallback);
   MOZ_ASSERT(aManagerThread);
+  MOZ_COUNT_CTOR(MFCDMSession);
   mKeyMessageListener = aCallback->KeyMessageEvent().Connect(
       mManagerThread, this, &MFCDMSession::OnSessionKeyMessage);
   mKeyChangeListener = aCallback->KeyChangeEvent().Connect(
@@ -120,6 +121,7 @@ MFCDMSession::MFCDMSession(IMFContentDecryptionModuleSession* aSession,
 }
 
 MFCDMSession::~MFCDMSession() {
+  MOZ_COUNT_DTOR(MFCDMSession);
   // TODO : maybe disconnect them in `Close()`?
   mKeyChangeListener.DisconnectIfExists();
   mKeyMessageListener.DisconnectIfExists();
