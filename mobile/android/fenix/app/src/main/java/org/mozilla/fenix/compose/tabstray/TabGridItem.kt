@@ -9,7 +9,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -32,6 +31,7 @@ import androidx.compose.material.Card
 import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.rememberDismissState
 import androidx.compose.material.ripple.rememberRipple
@@ -204,16 +204,21 @@ fun TabGridItem(
                         }
 
                         if (!multiSelectionEnabled) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.mozac_ic_cross_24),
-                                contentDescription = stringResource(id = R.string.close_tab),
-                                tint = FirefoxTheme.colors.iconPrimary,
+                            IconButton(
                                 modifier = Modifier
-                                    .clickable { onCloseClick(tab) }
                                     .size(24.dp)
                                     .align(Alignment.CenterVertically)
                                     .testTag(TabsTrayTestTag.tabItemClose),
-                            )
+                                onClick = {
+                                    onCloseClick(tab)
+                                },
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.mozac_ic_cross_20),
+                                    contentDescription = stringResource(id = R.string.close_tab),
+                                    tint = FirefoxTheme.colors.iconPrimary,
+                                )
+                            }
                         }
                     }
 
