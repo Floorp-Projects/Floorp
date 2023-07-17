@@ -232,6 +232,14 @@ JSObject* CalendarMergeFields(JSContext* cx, JS::Handle<CalendarValue> calendar,
 Wrapped<PlainDateObject*> CalendarDateAdd(
     JSContext* cx, JS::Handle<CalendarValue> calendar,
     JS::Handle<Wrapped<PlainDateObject*>> date, const Duration& duration,
+    JS::Handle<JSObject*> options);
+
+/**
+ * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
+ */
+Wrapped<PlainDateObject*> CalendarDateAdd(
+    JSContext* cx, JS::Handle<CalendarValue> calendar,
+    JS::Handle<Wrapped<PlainDateObject*>> date, const Duration& duration,
     JS::Handle<JS::Value> dateAdd);
 
 /**
@@ -263,35 +271,24 @@ Wrapped<PlainDateObject*> CalendarDateAdd(
 /**
  * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
  */
-Wrapped<PlainDateObject*> CalendarDateAdd(
-    JSContext* cx, JS::Handle<CalendarValue> calendar,
-    JS::Handle<Wrapped<PlainDateObject*>> date,
-    JS::Handle<Wrapped<DurationObject*>> duration,
-    JS::Handle<JSObject*> options, JS::Handle<JS::Value> dateAdd);
-
-/**
- * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
- */
 bool CalendarDateAdd(JSContext* cx, JS::Handle<CalendarValue> calendar,
-                     JS::Handle<PlainDateObject*> date,
-                     JS::Handle<Wrapped<DurationObject*>> duration,
-                     JS::Handle<JSObject*> options, PlainDate* result);
-
-/**
- * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
- */
-bool CalendarDateAdd(JSContext* cx, JS::Handle<CalendarValue> calendar,
-                     JS::Handle<PlainDateObject*> date,
-                     JS::Handle<Wrapped<DurationObject*>> duration,
+                     const PlainDate& date, const Duration& duration,
                      PlainDate* result);
 
 /**
  * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
  */
 bool CalendarDateAdd(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                     const PlainDate& date, const Duration& duration,
+                     JS::Handle<JSObject*> options, PlainDate* result);
+
+/**
+ * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
+ */
+bool CalendarDateAdd(JSContext* cx, JS::Handle<CalendarValue> calendar,
                      JS::Handle<Wrapped<PlainDateObject*>> date,
-                     JS::Handle<Wrapped<DurationObject*>> duration,
-                     JS::Handle<JS::Value> dateAdd, PlainDate* result);
+                     const Duration& duration, JS::Handle<JS::Value> dateAdd,
+                     PlainDate* result);
 
 /**
  * CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] )
