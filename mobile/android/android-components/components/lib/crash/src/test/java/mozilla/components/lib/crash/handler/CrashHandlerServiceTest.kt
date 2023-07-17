@@ -22,6 +22,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
 
@@ -108,5 +109,14 @@ class CrashHandlerServiceTest {
         verify(reporter)!!.onCrash(any(), any())
         verify(reporter)!!.sendCrashReport(any(), any())
         verify(reporter, never())!!.sendNonFatalCrashIntent(any(), any())
+    }
+
+    @Test
+    fun `CrashHandlerService null intent in onStartCommand`() = runTestOnMain {
+        doNothing().`when`(service)!!.handleCrashIntent(any(), any())
+
+        service!!.onStartCommand(null, 0, 0)
+
+        verify(service, times(0))!!.handleCrashIntent(any(), any())
     }
 }

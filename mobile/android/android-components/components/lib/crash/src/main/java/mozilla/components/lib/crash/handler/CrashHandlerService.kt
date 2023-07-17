@@ -28,10 +28,13 @@ private const val NOTIFICATION_TAG = "mozac.lib.crash.handlecrash"
 class CrashHandlerService : Service() {
     private val crashReporter: CrashReporter by lazy { CrashReporter.requireInstance }
 
-    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        crashReporter.logger.error("CrashHandlerService received native code crash")
-        handleCrashIntent(intent)
-
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent != null) {
+            crashReporter.logger.error("CrashHandlerService received native code crash")
+            handleCrashIntent(intent)
+        } else {
+            crashReporter.logger.error("CrashHandlerService received a null intent unable to handle")
+        }
         return START_NOT_STICKY
     }
 
