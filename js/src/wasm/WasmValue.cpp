@@ -25,11 +25,13 @@
 #include "vm/BigIntType.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
+#include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/StringType.h"
 #include "wasm/WasmGcObject.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmLog.h"
+#include "wasm/WasmTypeDef.h"
 
 #include "vm/JSObject-inl.h"
 
@@ -311,6 +313,13 @@ bool wasm::CheckTypeRefValue(JSContext* cx, const TypeDef* typeDef,
         obj.as<WasmGcObject>().isRuntimeSubtypeOf(typeDef)) {
       vp.set(AnyRef::fromJSObject(&obj.as<WasmGcObject>()));
       return true;
+    }
+    if (obj.is<JSFunction>() && obj.as<JSFunction>().isWasm()) {
+      JSFunction& funcObj = obj.as<JSFunction>();
+      if (TypeDef::isSubTypeOf(funcObj.wasmTypeDef(), typeDef)) {
+        vp.set(AnyRef::fromJSObject(&funcObj));
+        return true;
+      }
     }
   }
 

@@ -3747,28 +3747,25 @@ class LIonToWasmCallI64 : public LIonToWasmCallBase<INT64_PIECES> {
       : LIonToWasmCallBase<INT64_PIECES>(classOpcode, numOperands, temp) {}
 };
 
-class LWasmGcObjectIsSubtypeOfAbstractAndBranch
+class LWasmRefIsSubtypeOfAbstractAndBranch
     : public LControlInstructionHelper<2, 2, 2> {
   wasm::RefType sourceType_;
   wasm::RefType destType_;
 
  public:
-  LIR_HEADER(WasmGcObjectIsSubtypeOfAbstractAndBranch)
+  LIR_HEADER(WasmRefIsSubtypeOfAbstractAndBranch)
 
-  static constexpr uint32_t Object = 0;
+  static constexpr uint32_t Ref = 0;
 
-  LWasmGcObjectIsSubtypeOfAbstractAndBranch(MBasicBlock* ifTrue,
-                                            MBasicBlock* ifFalse,
-                                            wasm::RefType sourceType,
-                                            wasm::RefType destType,
-                                            const LAllocation& object,
-                                            const LDefinition& temp0)
+  LWasmRefIsSubtypeOfAbstractAndBranch(
+      MBasicBlock* ifTrue, MBasicBlock* ifFalse, wasm::RefType sourceType,
+      wasm::RefType destType, const LAllocation& ref, const LDefinition& temp0)
       : LControlInstructionHelper(classOpcode),
         sourceType_(sourceType),
         destType_(destType) {
     setSuccessor(0, ifTrue);
     setSuccessor(1, ifFalse);
-    setOperand(Object, object);
+    setOperand(Ref, ref);
     setTemp(0, temp0);
   }
 
@@ -3778,24 +3775,24 @@ class LWasmGcObjectIsSubtypeOfAbstractAndBranch
   MBasicBlock* ifTrue() const { return getSuccessor(0); }
   MBasicBlock* ifFalse() const { return getSuccessor(1); }
 
-  const LAllocation* object() { return getOperand(Object); }
+  const LAllocation* ref() { return getOperand(Ref); }
   const LDefinition* temp0() { return getTemp(0); }
 };
 
-class LWasmGcObjectIsSubtypeOfConcreteAndBranch
+class LWasmRefIsSubtypeOfConcreteAndBranch
     : public LControlInstructionHelper<2, 2, 2> {
   wasm::RefType sourceType_;
   wasm::RefType destType_;
 
  public:
-  LIR_HEADER(WasmGcObjectIsSubtypeOfConcreteAndBranch)
+  LIR_HEADER(WasmRefIsSubtypeOfConcreteAndBranch)
 
-  static constexpr uint32_t Object = 0;
+  static constexpr uint32_t Ref = 0;
   static constexpr uint32_t SuperSuperTypeVector = 1;
 
-  LWasmGcObjectIsSubtypeOfConcreteAndBranch(
+  LWasmRefIsSubtypeOfConcreteAndBranch(
       MBasicBlock* ifTrue, MBasicBlock* ifFalse, wasm::RefType sourceType,
-      wasm::RefType destType, const LAllocation& object,
+      wasm::RefType destType, const LAllocation& ref,
       const LAllocation& superSuperTypeVector, const LDefinition& temp0,
       const LDefinition& temp1)
       : LControlInstructionHelper(classOpcode),
@@ -3803,7 +3800,7 @@ class LWasmGcObjectIsSubtypeOfConcreteAndBranch
         destType_(destType) {
     setSuccessor(0, ifTrue);
     setSuccessor(1, ifFalse);
-    setOperand(Object, object);
+    setOperand(Ref, ref);
     setOperand(SuperSuperTypeVector, superSuperTypeVector);
     setTemp(0, temp0);
     setTemp(1, temp1);
@@ -3815,7 +3812,7 @@ class LWasmGcObjectIsSubtypeOfConcreteAndBranch
   MBasicBlock* ifTrue() const { return getSuccessor(0); }
   MBasicBlock* ifFalse() const { return getSuccessor(1); }
 
-  const LAllocation* object() { return getOperand(Object); }
+  const LAllocation* ref() { return getOperand(Ref); }
   const LAllocation* superSuperTypeVector() {
     return getOperand(SuperSuperTypeVector);
   }

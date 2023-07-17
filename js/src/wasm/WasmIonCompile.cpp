@@ -4233,18 +4233,18 @@ class FunctionCompiler {
     return true;
   }
 
-  [[nodiscard]] MDefinition* isGcObjectSubtypeOf(MDefinition* object,
-                                                 RefType sourceType,
-                                                 RefType destType) {
+  [[nodiscard]] MDefinition* isRefSubtypeOf(MDefinition* ref,
+                                            RefType sourceType,
+                                            RefType destType) {
     MInstruction* isSubTypeOf = nullptr;
     if (destType.isTypeRef()) {
       uint32_t typeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
       MDefinition* superSuperTypeVector = loadSuperTypeVector(typeIndex);
-      isSubTypeOf = MWasmGcObjectIsSubtypeOfConcrete::New(
-          alloc(), object, superSuperTypeVector, sourceType, destType);
+      isSubTypeOf = MWasmRefIsSubtypeOfConcrete::New(
+          alloc(), ref, superSuperTypeVector, sourceType, destType);
     } else {
-      isSubTypeOf = MWasmGcObjectIsSubtypeOfAbstract::New(alloc(), object,
-                                                          sourceType, destType);
+      isSubTypeOf =
+          MWasmRefIsSubtypeOfAbstract::New(alloc(), ref, sourceType, destType);
     }
     MOZ_ASSERT(isSubTypeOf);
 
@@ -4258,7 +4258,7 @@ class FunctionCompiler {
   // this point.
   [[nodiscard]] bool refCast(MDefinition* ref, RefType sourceType,
                              RefType destType) {
-    MDefinition* success = isGcObjectSubtypeOf(ref, sourceType, destType);
+    MDefinition* success = isRefSubtypeOf(ref, sourceType, destType);
     if (!success) {
       return false;
     }
@@ -4272,7 +4272,7 @@ class FunctionCompiler {
   // is possible to downcast `ref` to `destType`.
   [[nodiscard]] MDefinition* refTest(MDefinition* ref, RefType sourceType,
                                      RefType destType) {
-    return isGcObjectSubtypeOf(ref, sourceType, destType);
+    return isRefSubtypeOf(ref, sourceType, destType);
   }
 
   // Generates MIR for br_on_cast and br_on_cast_fail.
@@ -4301,7 +4301,7 @@ class FunctionCompiler {
     MDefinition* ref = values.back();
     MOZ_ASSERT(ref->type() == MIRType::RefOrNull);
 
-    MDefinition* success = isGcObjectSubtypeOf(ref, sourceType, destType);
+    MDefinition* success = isRefSubtypeOf(ref, sourceType, destType);
     if (!success) {
       return false;
     }

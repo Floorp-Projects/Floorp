@@ -7254,7 +7254,7 @@ static MDefinition* FoldTrivialWasmCasts(TempAllocator& alloc,
   return nullptr;
 }
 
-MDefinition* MWasmGcObjectIsSubtypeOfAbstract::foldsTo(TempAllocator& alloc) {
+MDefinition* MWasmRefIsSubtypeOfAbstract::foldsTo(TempAllocator& alloc) {
   MDefinition* folded = FoldTrivialWasmCasts(alloc, sourceType(), destType());
   if (folded) {
     return folded;
@@ -7262,7 +7262,7 @@ MDefinition* MWasmGcObjectIsSubtypeOfAbstract::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
-MDefinition* MWasmGcObjectIsSubtypeOfConcrete::foldsTo(TempAllocator& alloc) {
+MDefinition* MWasmRefIsSubtypeOfConcrete::foldsTo(TempAllocator& alloc) {
   MDefinition* folded = FoldTrivialWasmCasts(alloc, sourceType(), destType());
   if (folded) {
     return folded;

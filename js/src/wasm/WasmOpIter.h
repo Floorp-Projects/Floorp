@@ -3566,10 +3566,6 @@ inline bool OpIter<Policy>::readRefTest(bool nullable, RefType* sourceType,
   }
   *sourceType = inputType.valTypeOr(RefType::any()).refType();
 
-  if (!destType->isAnyHierarchy()) {
-    return fail("ref.test only supports the any hierarchy for now");
-  }
-
   return push(ValType(ValType::I32));
 }
 
@@ -3587,10 +3583,6 @@ inline bool OpIter<Policy>::readRefCast(bool nullable, RefType* sourceType,
     return false;
   }
   *sourceType = inputType.valTypeOr(RefType::any()).refType();
-
-  if (!destType->isAnyHierarchy()) {
-    return fail("ref.cast only supports the any hierarchy for now");
-  }
 
   return push(*destType);
 }
@@ -3673,12 +3665,6 @@ inline bool OpIter<Policy>::readBrOnCast(bool* onSuccess,
       destNullable ? immediateSourceType.asNonNullable() : immediateSourceType;
   RefType typeOnBranch = *onSuccess ? typeOnSuccess : typeOnFail;
   RefType typeOnFallthrough = *onSuccess ? typeOnFail : typeOnSuccess;
-
-  if (!typeOnSuccess.isAnyHierarchy() || !typeOnFail.isAnyHierarchy()) {
-    return fail(
-        "br_on_cast and br_on_cast_fail only support the any hierarchy for "
-        "now");
-  }
 
   // Get the branch target type, which will also determine the type of extra
   // values that are passed along on branch.
