@@ -58,6 +58,7 @@ const SAMEORIGIN_BASE = get_host_info().HTTPS_ORIGIN;
 const CROSSORIGIN_BASE = get_host_info().HTTPS_NOTSAMESITE_ORIGIN;
 const SAMEORIGIN_HELPER = SAMEORIGIN_BASE + HELPER;
 const CROSSORIGIN_HELPER = CROSSORIGIN_BASE + HELPER;
+const SERVICE_WORKER = 'videoFrame-serialization.crossAgentCluster.serviceworker.js';
 
 promise_test(async () => {
   const target = (await appendIframe(SAMEORIGIN_HELPER)).contentWindow;
@@ -100,7 +101,7 @@ promise_test(async () => {
 }, 'Verify frames cannot be passed to sharedworker');
 
 promise_test(async () => {
-  navigator.serviceWorker.register('videoFrame-serialization.crossAgentCluster.serviceworker.js');
+  navigator.serviceWorker.register(SERVICE_WORKER);
   navigator.serviceWorker.ready.then((registration) => {
     let frame = createVideoFrame(50);
     registration.active.postMessage(frame);
@@ -154,7 +155,7 @@ promise_test(async () => {
 }, 'Verify frames cannot be transferred to a sharedworker');
 
 promise_test(async () => {
-  navigator.serviceWorker.register('videoFrame-serialization.crossAgentCluster.serviceworker.js');
+  navigator.serviceWorker.register(SERVICE_WORKER);
   navigator.serviceWorker.ready.then((registration) => {
     let frame = createVideoFrame(100);
     registration.active.postMessage(frame, [frame]);
@@ -179,7 +180,7 @@ promise_test(async () => {
 }, 'Verify frames is unavailable in sharedworker');
 
 promise_test(async () => {
-  navigator.serviceWorker.register('videoFrame-serialization.crossAgentCluster.serviceworker.js');
+  navigator.serviceWorker.register(SERVICE_WORKER);
   let registration = await navigator.serviceWorker.ready;
   registration.active.postMessage('create-frame');
   const received = await new Promise(resolve => navigator.serviceWorker.onmessage = (e) => {
