@@ -302,25 +302,25 @@
     object: WordSized
   mir_op: true
 
-- name: WasmRefIsSubtypeOfConcrete
+- name: WasmGcObjectIsSubtypeOfConcrete
   mir_op: true
   operands:
-    ref: WordSized
+    object: WordSized
     superSuperTypeVector: WordSized
   result_type: WordSized
   num_temps: 2
 
-- name: WasmRefIsSubtypeOfAbstract
+- name: WasmGcObjectIsSubtypeOfAbstract
   mir_op: true
   operands:
-    ref: WordSized
+    object: WordSized
   result_type: WordSized
   num_temps: 1
 
-- name: WasmRefIsSubtypeOfConcreteAndBranch
+- name: WasmGcObjectIsSubtypeOfConcreteAndBranch
   gen_boilerplate: false
 
-- name: WasmRefIsSubtypeOfAbstractAndBranch
+- name: WasmGcObjectIsSubtypeOfAbstractAndBranch
   gen_boilerplate: false
 
 - name: WasmReinterpret

@@ -11402,14 +11402,15 @@ class MWasmStoreFieldRefKA : public MAryInstruction<4>,
 #endif
 };
 
-class MWasmRefIsSubtypeOfAbstract : public MUnaryInstruction,
-                                    public NoTypePolicy::Data {
+class MWasmGcObjectIsSubtypeOfAbstract : public MUnaryInstruction,
+                                         public NoTypePolicy::Data {
   wasm::RefType sourceType_;
   wasm::RefType destType_;
 
-  MWasmRefIsSubtypeOfAbstract(MDefinition* ref, wasm::RefType sourceType,
-                              wasm::RefType destType)
-      : MUnaryInstruction(classOpcode, ref),
+  MWasmGcObjectIsSubtypeOfAbstract(MDefinition* object,
+                                   wasm::RefType sourceType,
+                                   wasm::RefType destType)
+      : MUnaryInstruction(classOpcode, object),
         sourceType_(sourceType),
         destType_(destType) {
     MOZ_ASSERT(!destType.isTypeRef());
@@ -11418,17 +11419,18 @@ class MWasmRefIsSubtypeOfAbstract : public MUnaryInstruction,
   }
 
  public:
-  INSTRUCTION_HEADER(WasmRefIsSubtypeOfAbstract)
+  INSTRUCTION_HEADER(WasmGcObjectIsSubtypeOfAbstract)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, ref))
+  NAMED_OPERANDS((0, object))
 
   wasm::RefType sourceType() const { return sourceType_; };
   wasm::RefType destType() const { return destType_; };
 
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins) &&
-           sourceType() == ins->toWasmRefIsSubtypeOfAbstract()->sourceType() &&
-           destType() == ins->toWasmRefIsSubtypeOfAbstract()->destType();
+           sourceType() ==
+               ins->toWasmGcObjectIsSubtypeOfAbstract()->sourceType() &&
+           destType() == ins->toWasmGcObjectIsSubtypeOfAbstract()->destType();
   }
 
   HashNumber valueHash() const override {
@@ -11441,18 +11443,19 @@ class MWasmRefIsSubtypeOfAbstract : public MUnaryInstruction,
   MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
-// Tests if the wasm ref `ref` is a subtype of `superSuperTypeVector`.
+// Tests if the WasmGcObject, `object`, is a subtype of `superSuperTypeVector`.
 // The actual super type definition must be known at compile time, so that the
 // subtyping depth of super type depth can be used.
-class MWasmRefIsSubtypeOfConcrete : public MBinaryInstruction,
-                                    public NoTypePolicy::Data {
+class MWasmGcObjectIsSubtypeOfConcrete : public MBinaryInstruction,
+                                         public NoTypePolicy::Data {
   wasm::RefType sourceType_;
   wasm::RefType destType_;
 
-  MWasmRefIsSubtypeOfConcrete(MDefinition* ref,
-                              MDefinition* superSuperTypeVector,
-                              wasm::RefType sourceType, wasm::RefType destType)
-      : MBinaryInstruction(classOpcode, ref, superSuperTypeVector),
+  MWasmGcObjectIsSubtypeOfConcrete(MDefinition* object,
+                                   MDefinition* superSuperTypeVector,
+                                   wasm::RefType sourceType,
+                                   wasm::RefType destType)
+      : MBinaryInstruction(classOpcode, object, superSuperTypeVector),
         sourceType_(sourceType),
         destType_(destType) {
     MOZ_ASSERT(destType.isTypeRef());
@@ -11461,17 +11464,18 @@ class MWasmRefIsSubtypeOfConcrete : public MBinaryInstruction,
   }
 
  public:
-  INSTRUCTION_HEADER(WasmRefIsSubtypeOfConcrete)
+  INSTRUCTION_HEADER(WasmGcObjectIsSubtypeOfConcrete)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, ref), (1, superSuperTypeVector))
+  NAMED_OPERANDS((0, object), (1, superSuperTypeVector))
 
   wasm::RefType sourceType() const { return sourceType_; };
   wasm::RefType destType() const { return destType_; };
 
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins) &&
-           sourceType() == ins->toWasmRefIsSubtypeOfConcrete()->sourceType() &&
-           destType() == ins->toWasmRefIsSubtypeOfConcrete()->destType();
+           sourceType() ==
+               ins->toWasmGcObjectIsSubtypeOfConcrete()->sourceType() &&
+           destType() == ins->toWasmGcObjectIsSubtypeOfConcrete()->destType();
   }
 
   HashNumber valueHash() const override {

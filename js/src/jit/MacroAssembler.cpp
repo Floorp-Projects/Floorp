@@ -37,7 +37,6 @@
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
-#include "vm/JSFunction.h"
 #include "vm/TypedArrayObject.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCodegenConstants.h"
@@ -4910,41 +4909,37 @@ void MacroAssembler::wasmCallRef(const wasm::CallSiteDesc& desc,
   bind(&done);
 }
 
-bool MacroAssembler::needScratch1ForBranchWasmRefIsSubtypeAny(
-    wasm::RefType type) {
+bool MacroAssembler::needScratch1ForBranchWasmGcRefType(wasm::RefType type) {
   MOZ_ASSERT(type.isValid());
   MOZ_ASSERT(type.isAnyHierarchy());
   return !type.isNone() && !type.isAny();
 }
 
-bool MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeAny(
-    wasm::RefType type) {
+bool MacroAssembler::needScratch2ForBranchWasmGcRefType(wasm::RefType type) {
   MOZ_ASSERT(type.isValid());
   MOZ_ASSERT(type.isAnyHierarchy());
   return type.isTypeRef() &&
          type.typeDef()->subTypingDepth() >= wasm::MinSuperTypeVectorLength;
 }
 
-bool MacroAssembler::needSuperSTVForBranchWasmRefIsSubtypeAny(
+bool MacroAssembler::needSuperSuperTypeVectorForBranchWasmGcRefType(
     wasm::RefType type) {
-  MOZ_ASSERT(type.isValid());
-  MOZ_ASSERT(type.isAnyHierarchy());
   return type.isTypeRef();
 }
 
-void MacroAssembler::branchWasmRefIsSubtypeAny(
-    Register ref, wasm::RefType sourceType, wasm::RefType destType,
+void MacroAssembler::branchWasmGcObjectIsRefType(
+    Register object, wasm::RefType sourceType, wasm::RefType destType,
     Label* label, bool onSuccess, Register superSuperTypeVector,
     Register scratch1, Register scratch2) {
   MOZ_ASSERT(sourceType.isValid());
   MOZ_ASSERT(destType.isValid());
   MOZ_ASSERT(sourceType.isAnyHierarchy());
   MOZ_ASSERT(destType.isAnyHierarchy());
-  MOZ_ASSERT_IF(needScratch1ForBranchWasmRefIsSubtypeAny(destType),
+  MOZ_ASSERT_IF(needScratch1ForBranchWasmGcRefType(destType),
                 scratch1 != Register::Invalid());
-  MOZ_ASSERT_IF(needScratch2ForBranchWasmRefIsSubtypeAny(destType),
+  MOZ_ASSERT_IF(needScratch2ForBranchWasmGcRefType(destType),
                 scratch2 != Register::Invalid());
-  MOZ_ASSERT_IF(needSuperSTVForBranchWasmRefIsSubtypeAny(destType),
+  MOZ_ASSERT_IF(needSuperSuperTypeVectorForBranchWasmGcRefType(destType),
                 superSuperTypeVector != Register::Invalid());
 
   Label fallthrough;
@@ -4954,7 +4949,7 @@ void MacroAssembler::branchWasmRefIsSubtypeAny(
 
   // Check for null.
   if (sourceType.isNullable()) {
-    branchTestPtr(Assembler::Zero, ref, ref, nullLabel);
+    branchTestPtr(Assembler::Zero, object, object, nullLabel);
   }
 
   // The only value that can inhabit 'none' is null. So, early out if we got
@@ -4976,7 +4971,7 @@ void MacroAssembler::branchWasmRefIsSubtypeAny(
   // Test for non-gc objects.
   MOZ_ASSERT(scratch1 != Register::Invalid());
   if (!wasm::RefType::isSubTypeOf(sourceType, wasm::RefType::eq())) {
-    branchTestObjectIsWasmGcObject(false, ref, scratch1, failLabel);
+    branchTestObjectIsWasmGcObject(false, object, scratch1, failLabel);
   }
 
   if (destType.isEq()) {
@@ -4994,7 +4989,7 @@ void MacroAssembler::branchWasmRefIsSubtypeAny(
   // requires loading the object's superTypeVector->typeDef->kind, and checking
   // that it is correct.
 
-  loadPtr(Address(ref, int32_t(WasmGcObject::offsetOfSuperTypeVector())),
+  loadPtr(Address(object, int32_t(WasmGcObject::offsetOfSuperTypeVector())),
           scratch1);
   if (destType.isTypeRef()) {
     // concrete type, do superTypeVector check
@@ -5014,106 +5009,6 @@ void MacroAssembler::branchWasmRefIsSubtypeAny(
 
   // The cast failed.
   jump(failLabel);
-  bind(&fallthrough);
-}
-
-bool MacroAssembler::needSuperSTVAndScratch1ForBranchWasmRefIsSubtypeFunc(
-    wasm::RefType type) {
-  MOZ_ASSERT(type.isValid());
-  MOZ_ASSERT(type.isFuncHierarchy());
-  return type.isTypeRef();
-}
-
-bool MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeFunc(
-    wasm::RefType type) {
-  MOZ_ASSERT(type.isValid());
-  MOZ_ASSERT(type.isFuncHierarchy());
-  return type.isTypeRef() &&
-         type.typeDef()->subTypingDepth() >= wasm::MinSuperTypeVectorLength;
-}
-
-void MacroAssembler::branchWasmRefIsSubtypeFunc(
-    Register ref, wasm::RefType sourceType, wasm::RefType destType,
-    Label* label, bool onSuccess, Register superSuperTypeVector,
-    Register scratch1, Register scratch2) {
-  MOZ_ASSERT(sourceType.isValid());
-  MOZ_ASSERT(destType.isValid());
-  MOZ_ASSERT(sourceType.isFuncHierarchy());
-  MOZ_ASSERT(destType.isFuncHierarchy());
-  MOZ_ASSERT_IF(needSuperSTVAndScratch1ForBranchWasmRefIsSubtypeFunc(destType),
-                superSuperTypeVector != Register::Invalid() &&
-                    scratch1 != Register::Invalid());
-  MOZ_ASSERT_IF(needScratch2ForBranchWasmRefIsSubtypeFunc(destType),
-                scratch2 != Register::Invalid());
-
-  Label fallthrough;
-  Label* successLabel = onSuccess ? label : &fallthrough;
-  Label* failLabel = onSuccess ? &fallthrough : label;
-  Label* nullLabel = destType.isNullable() ? successLabel : failLabel;
-
-  // Check for null.
-  if (sourceType.isNullable()) {
-    branchTestPtr(Assembler::Zero, ref, ref, nullLabel);
-  }
-
-  // The only value that can inhabit 'nofunc' is null. So, early out if we got
-  // not-null.
-  if (destType.isNoFunc()) {
-    jump(failLabel);
-    bind(&fallthrough);
-    return;
-  }
-
-  if (destType.isFunc()) {
-    // No further checks for 'func' (any func)
-    jump(successLabel);
-    bind(&fallthrough);
-    return;
-  }
-
-  // In the func hierarchy, a supertype vector check is now sufficient for all
-  // remaining cases.
-  loadPrivate(Address(ref, int32_t(FunctionExtended::offsetOfWasmSTV())),
-              scratch1);
-  branchWasmSuperTypeVectorIsSubtype(scratch1, superSuperTypeVector, scratch2,
-                                     destType.typeDef()->subTypingDepth(),
-                                     successLabel, true);
-
-  // If we didn't branch away, the cast failed.
-  jump(failLabel);
-  bind(&fallthrough);
-}
-
-void MacroAssembler::branchWasmRefIsSubtypeExtern(Register ref,
-                                                  wasm::RefType sourceType,
-                                                  wasm::RefType destType,
-                                                  Label* label,
-                                                  bool onSuccess) {
-  MOZ_ASSERT(sourceType.isValid());
-  MOZ_ASSERT(destType.isValid());
-  MOZ_ASSERT(sourceType.isExternHierarchy());
-  MOZ_ASSERT(destType.isExternHierarchy());
-
-  Label fallthrough;
-  Label* successLabel = onSuccess ? label : &fallthrough;
-  Label* failLabel = onSuccess ? &fallthrough : label;
-  Label* nullLabel = destType.isNullable() ? successLabel : failLabel;
-
-  // Check for null.
-  if (sourceType.isNullable()) {
-    branchTestPtr(Assembler::Zero, ref, ref, nullLabel);
-  }
-
-  // The only value that can inhabit 'noextern' is null. So, early out if we got
-  // not-null.
-  if (destType.isNoExtern()) {
-    jump(failLabel);
-    bind(&fallthrough);
-    return;
-  }
-
-  // There are no other possible types except externref, so succeed!
-  jump(successLabel);
   bind(&fallthrough);
 }
 
