@@ -254,6 +254,7 @@ class MediaDecoderStateMachine
   void OnVideoPopped(const RefPtr<VideoData>& aSample);
 
   void AudioAudibleChanged(bool aAudible);
+  void OnAudioSinkAudioGapDetected(int64_t aGapFrames);
 
   void SetPlaybackRate(double aPlaybackRate) override;
   void SetIsLiveStream(bool aIsLiveStream) override {
@@ -494,6 +495,8 @@ class MediaDecoderStateMachine
   MediaEventListener mVideoQueueListener;
   MediaEventListener mAudibleListener;
   MediaEventListener mOnMediaNotSeekable;
+  // Debug usage for detecting audio gap in the audio sink.
+  MediaEventListener mAudioSinkAudioGapListener;
 
   const bool mIsMSE;
 

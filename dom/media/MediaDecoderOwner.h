@@ -33,6 +33,9 @@ class MediaDecoderOwner {
   // Dispatch an asynchronous event to the decoder owner
   virtual void DispatchAsyncEvent(const nsAString& aName) = 0;
 
+  // Dispatch an asynchronous test-only event to the decoder owner
+  virtual void DispatchAsyncTestingEvent(const nsAString& aName){};
+
   // Triggers a recomputation of readyState.
   virtual void UpdateReadyState() = 0;
 
