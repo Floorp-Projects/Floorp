@@ -19,8 +19,7 @@ dictionary AudioWorkletNodeOptions : AudioNodeOptions {
              object                    processorOptions;
 };
 
-[SecureContext, Pref="dom.audioworklet.enabled",
- Exposed=Window]
+[SecureContext, Exposed=Window]
 interface AudioWorkletNode : AudioNode {
     [Throws]
     constructor(BaseAudioContext context, DOMString name,
