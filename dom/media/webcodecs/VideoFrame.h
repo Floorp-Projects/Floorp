@@ -59,6 +59,7 @@ struct VideoFrameData {
                  gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
                  Maybe<uint64_t> aDuration, int64_t aTimestamp,
                  const VideoColorSpaceInit& aColorSpace);
+  VideoFrameData(const VideoFrameData& aData) = default;
 
   const RefPtr<layers::Image> mImage;
   const Maybe<VideoPixelFormat> mFormat;
@@ -70,12 +71,8 @@ struct VideoFrameData {
 };
 
 struct VideoFrameSerializedData : VideoFrameData {
-  VideoFrameSerializedData(layers::Image* aImage,
-                           const Maybe<VideoPixelFormat>& aFormat,
-                           gfx::IntSize aCodedSize, gfx::IntRect aVisibleRect,
-                           gfx::IntSize aDisplaySize, Maybe<uint64_t> aDuration,
-                           int64_t aTimestamp,
-                           const VideoColorSpaceInit& aColorSpace);
+  VideoFrameSerializedData(const VideoFrameData& aData,
+                           gfx::IntSize aCodedSize);
 
   const gfx::IntSize mCodedSize;
 };
@@ -91,7 +88,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
              gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
              const Maybe<uint64_t>& aDuration, int64_t aTimestamp,
              const VideoColorSpaceInit& aColorSpace);
-
+  VideoFrame(nsIGlobalObject* aParent, const VideoFrameSerializedData& aData);
   VideoFrame(const VideoFrame& aOther);
 
  protected:
@@ -214,6 +211,8 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
  private:
   // VideoFrame can run on either main thread or worker thread.
   void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(VideoFrame); }
+
+  VideoFrameData GetVideoFrameData() const;
 
   // A class representing the VideoFrame's data.
   class Resource final {

@@ -1091,18 +1091,14 @@ VideoFrameData::VideoFrameData(layers::Image* aImage,
       mTimestamp(aTimestamp),
       mColorSpace(aColorSpace) {}
 
-VideoFrameSerializedData::VideoFrameSerializedData(
-    layers::Image* aImage, const Maybe<VideoPixelFormat>& aFormat,
-    gfx::IntSize aCodedSize, gfx::IntRect aVisibleRect,
-    gfx::IntSize aDisplaySize, Maybe<uint64_t> aDuration, int64_t aTimestamp,
-    const VideoColorSpaceInit& aColorSpace)
-    : VideoFrameData(aImage, aFormat, aVisibleRect, aDisplaySize, aDuration,
-                     aTimestamp, aColorSpace),
-      mCodedSize(aCodedSize) {}
+VideoFrameSerializedData::VideoFrameSerializedData(const VideoFrameData& aData,
+                                                   gfx::IntSize aCodedSize)
+    : VideoFrameData(aData), mCodedSize(aCodedSize) {}
 
 /*
  * W3C Webcodecs VideoFrame implementation
  */
+
 VideoFrame::VideoFrame(nsIGlobalObject* aParent,
                        const RefPtr<layers::Image>& aImage,
                        const Maybe<VideoPixelFormat>& aFormat,
@@ -1120,6 +1116,25 @@ VideoFrame::VideoFrame(nsIGlobalObject* aParent,
   MOZ_ASSERT(mParent);
   mResource.emplace(
       Resource(aImage, aFormat.map([](const VideoPixelFormat& aPixelFormat) {
+        return VideoFrame::Format(aPixelFormat);
+      })));
+  if (!mResource->mFormat) {
+    LOGW("Create a VideoFrame with an unrecognized image format");
+  }
+}
+
+VideoFrame::VideoFrame(nsIGlobalObject* aParent,
+                       const VideoFrameSerializedData& aData)
+    : mParent(aParent),
+      mCodedSize(aData.mCodedSize),
+      mVisibleRect(aData.mVisibleRect),
+      mDisplaySize(aData.mDisplaySize),
+      mDuration(aData.mDuration),
+      mTimestamp(aData.mTimestamp),
+      mColorSpace(aData.mColorSpace) {
+  MOZ_ASSERT(mParent);
+  mResource.emplace(Resource(
+      aData.mImage, aData.mFormat.map([](const VideoPixelFormat& aPixelFormat) {
         return VideoFrame::Format(aPixelFormat);
       })));
   if (!mResource->mFormat) {
@@ -1496,13 +1511,7 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
   }
 
   auto r = InitializeFrameFromOtherFrame(
-      global.get(),
-      VideoFrameData(aVideoFrame.mResource->mImage.get(),
-                     aVideoFrame.mResource->TryPixelFormat(),
-                     aVideoFrame.mVisibleRect, aVideoFrame.mDisplaySize,
-                     aVideoFrame.mDuration, aVideoFrame.mTimestamp,
-                     aVideoFrame.mColorSpace),
-      aInit);
+      global.get(), aVideoFrame.GetVideoFrameData(), aInit);
   if (r.isErr()) {
     aRv.ThrowTypeError(r.unwrapErr());
     return nullptr;
@@ -1763,10 +1772,7 @@ JSObject* VideoFrame::ReadStructuredClone(
   // in the scope below. Otherwise, the static analysis infers the RefPtr cannot
   // be safely destructed while the unrooted return JSObject* is on the stack.
   {
-    RefPtr<VideoFrame> frame = MakeAndAddRef<VideoFrame>(
-        aGlobal, aData.mImage, aData.mFormat, aData.mCodedSize,
-        aData.mVisibleRect, aData.mDisplaySize, aData.mDuration,
-        aData.mTimestamp, aData.mColorSpace);
+    RefPtr<VideoFrame> frame = MakeAndAddRef<VideoFrame>(aGlobal, aData);
     if (!GetOrCreateDOMReflector(aCx, frame, &value) || !value.isObject()) {
       return nullptr;
     }
@@ -1785,12 +1791,10 @@ bool VideoFrame::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
 
   // Indexing the image and send the index to the receiver.
   const uint32_t index = aHolder->VideoFrames().Length();
-  RefPtr<layers::Image> image(mResource->mImage.get());
   // The serialization is limited to the same process scope so it's ok to
   // serialize a reference instead of a copy.
-  aHolder->VideoFrames().AppendElement(VideoFrameSerializedData(
-      image.get(), mResource->TryPixelFormat(), mCodedSize, mVisibleRect,
-      mDisplaySize, mDuration, mTimestamp, mColorSpace));
+  aHolder->VideoFrames().AppendElement(
+      VideoFrameSerializedData(GetVideoFrameData(), mCodedSize));
 
   return !NS_WARN_IF(!JS_WriteUint32Pair(aWriter, SCTAG_DOM_VIDEOFRAME, index));
 }
@@ -1803,10 +1807,7 @@ UniquePtr<VideoFrame::TransferredData> VideoFrame::Transfer() {
     return nullptr;
   }
 
-  Resource r = mResource.extract();
-  auto frame = MakeUnique<TransferredData>(
-      r.mImage.get(), r.TryPixelFormat(), mCodedSize, mVisibleRect,
-      mDisplaySize, mDuration, mTimestamp, mColorSpace);
+  auto frame = MakeUnique<TransferredData>(GetVideoFrameData(), mCodedSize);
   Close();
   return frame;
 }
@@ -1817,10 +1818,13 @@ already_AddRefed<VideoFrame> VideoFrame::FromTransferred(
     nsIGlobalObject* aGlobal, TransferredData* aData) {
   MOZ_ASSERT(aData);
 
-  return MakeAndAddRef<VideoFrame>(aGlobal, aData->mImage, aData->mFormat,
-                                   aData->mCodedSize, aData->mVisibleRect,
-                                   aData->mDisplaySize, aData->mDuration,
-                                   aData->mTimestamp, aData->mColorSpace);
+  return MakeAndAddRef<VideoFrame>(aGlobal, *aData);
+}
+
+VideoFrameData VideoFrame::GetVideoFrameData() const {
+  return VideoFrameData(mResource->mImage.get(), mResource->TryPixelFormat(),
+                        mVisibleRect, mDisplaySize, mDuration, mTimestamp,
+                        mColorSpace);
 }
 
 /*
