@@ -2,20 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.transform:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
     - android_taskgraph.transforms.build_components:transforms
     - android_taskgraph.transforms.gradle_optimization:transforms
-    - taskgraph.transforms.job:transforms
-    - taskgraph.transforms.task:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
 
 kind-dependencies:
     - toolchain
     - external-gradle-dependencies
 
 
-task-defaults:
+job-defaults:
     attributes:
         build-type: regular
         code-review: true
@@ -32,25 +32,23 @@ task-defaults:
     include-coverage: true
     run:
         pre-gradlew:
-            - ["cd", "android-components"]
+            - ["cd", "mobile/android/android-components"]
         using: gradlew
         use-caches: false
-    run-on-tasks-for:
-        - github-pull-request
-        - github-pull-request-untrusted
-        - github-push
     treeherder:
         kind: build
         platform: AC-android-all/opt
         tier: 1
         symbol: '{treeherder_group}(B)'
-    worker-type: b-android-large
+    worker-type: b-linux-large-gcp
     worker:
         chain-of-trust: true
-        docker-image: {in-tree: base}
+        docker-image: {in-tree: android-components}
         max-run-time: 1200
+        env:
+            ANDROID_SDK_ROOT: /builds/worker/fetches/android-sdk-linux
 
-tasks:
+jobs:
     gecko:
         run:
             gradlew:
