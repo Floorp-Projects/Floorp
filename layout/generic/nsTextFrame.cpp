@@ -6836,6 +6836,9 @@ void nsTextFrame::DrawTextRunAndDecorations(
       scaledRestorer.SetContext(aParams.context);
       gfxMatrix unscaled = aParams.context->CurrentMatrixDouble();
       gfxPoint pt(x / app, y / app);
+      if (GetTextRun(nsTextFrame::eInflated)->IsRightToLeft()) {
+        pt.x += gfxFloat(frameSize.width) / app;
+      }
       unscaled.PreTranslate(pt)
           .PreScale(1.0f / scaleFactor, 1.0f)
           .PreTranslate(-pt);
