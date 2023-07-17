@@ -7628,8 +7628,7 @@ class StreamCacheEntryObject : public NativeObject {
 
     auto& bytes =
         args.thisv().toObject().as<StreamCacheEntryObject>().cache().bytes();
-    RootedArrayBufferObject buffer(
-        cx, ArrayBufferObject::createZeroed(cx, bytes.length()));
+    auto* buffer = ArrayBufferObject::createZeroed(cx, bytes.length());
     if (!buffer) {
       return false;
     }

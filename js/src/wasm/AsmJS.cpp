@@ -6956,7 +6956,7 @@ static bool TryInstantiate(JSContext* cx, CallArgs args, const Module& module,
 
   if (module.metadata().memories.length() != 0) {
     MOZ_ASSERT(module.metadata().memories.length() == 1);
-    RootedArrayBufferObject buffer(cx);
+    Rooted<ArrayBufferObject*> buffer(cx);
     if (!CheckBuffer(cx, metadata, bufferVal, &buffer)) {
       return false;
     }
