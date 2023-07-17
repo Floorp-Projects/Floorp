@@ -149,10 +149,7 @@ enum DeviceAction<'a> {
         wgc::command::RenderBundleEncoder,
         wgc::command::RenderBundleDescriptor<'a>,
     ),
-    CreateRenderBundleError(
-        id::RenderBundleId,
-        wgc::Label<'a>,
-    ),
+    CreateRenderBundleError(id::RenderBundleId, wgc::Label<'a>),
     CreateCommandEncoder(
         id::CommandEncoderId,
         wgt::CommandEncoderDescriptor<wgc::Label<'a>>,
