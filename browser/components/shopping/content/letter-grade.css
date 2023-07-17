@@ -1,0 +1,138 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/in-content/common.css");
+
+:host {
+  --background-term-a: #1BB861;
+  --background-term-b: #0D70DF;
+  --background-term-c: #FFB811;
+  --background-term-d: #F87919;
+  --background-term-f: #D51235;
+  --in-content-box-border-color: rgba(0, 0, 0, 0.15);
+  --inner-border: 1px solid var(--in-content-box-border-color);
+  --letter-grade-height: 1.5rem;
+  --letter-grade-width: 1.5rem;
+  --letter-grade-term-inline-padding: 0.25rem;
+}
+
+#letter-grade-wrapper {
+  border-radius: 4px;
+  color: #000;
+  display: flex;
+  font-weight: 600;
+  height: var(--letter-grade-height);
+  line-height: 150%;
+  margin: 0;
+  overflow: hidden;
+  width: max-content;
+}
+
+#letter-grade-term {
+  align-items: center;
+  align-self: stretch;
+  box-sizing: border-box;
+  display: flex;
+  flex-shrink: 0;
+  font-size: 1em;
+  justify-content: center;
+  margin: 0;
+  padding: 0.0625rem var(--letter-grade-term-inline-padding);
+  text-align: center;
+  width: var(--letter-grade-width);
+}
+
+:host([showdescription]) #letter-grade-term  {
+  /* For border "shadow" inside the container */
+  border-block: var(--inner-border);
+  border-inline-start: var(--inner-border);
+  border-start-start-radius: 4px;
+  border-end-start-radius: 4px;
+  /* Add 1px padding so that the letter does not shift when changing
+   * between the show description and no description variants. */
+  padding-inline-end: calc(var(--letter-grade-term-inline-padding) + 1px);
+}
+
+:host(:not([showdescription])) #letter-grade-term {
+  border: var(--inner-border);
+  border-radius: 4px;
+}
+
+#letter-grade-description {
+  /* For border "shadow" inside the container */
+  border-block: var(--inner-border);
+  border-inline-end: var(--inner-border);
+  border-start-end-radius: 4px;
+  border-end-end-radius: 4px;
+
+  align-items: center;
+  align-self: stretch;
+  box-sizing: border-box;
+  display: flex;
+  font-size: 0.87rem;
+  margin: 0;
+  padding: 0.125rem 0.5rem;
+}
+
+/* Letter grade colors */
+
+:host([letter="A"]) #letter-grade-term {
+  background-color: var(--background-term-a);
+}
+
+:host([letter="A"]) #letter-grade-description {
+  background-color: color-mix(in srgb, var(--background-term-a) 15%, #FFF);
+}
+
+:host([letter="B"]) #letter-grade-term {
+  background-color: var(--background-term-b);
+  /* Override dark font */
+  color: #FFF;
+}
+
+:host([letter="B"]) #letter-grade-description {
+  background-color: color-mix(in srgb, var(--background-term-b) 15%, #FFF);
+}
+
+:host([letter="C"]) #letter-grade-term {
+  background-color: var(--background-term-c);
+}
+
+:host([letter="C"]) #letter-grade-description {
+  background-color: color-mix(in srgb, var(--background-term-c) 15%, #FFF);
+}
+
+:host([letter="D"]) #letter-grade-term {
+  background-color: var(--background-term-d);
+}
+
+:host([letter="D"]) #letter-grade-description {
+  background-color: color-mix(in srgb, var(--background-term-d) 15%, #FFF);
+}
+
+:host([letter="F"]) #letter-grade-term {
+  background-color: var(--background-term-f);
+  /* Override dark font */
+  color: #FFF;
+}
+
+:host([letter="F"]) #letter-grade-description {
+  background-color: color-mix(in srgb, var(--background-term-f) 15%, #FFF);
+}
+
+@media (prefers-contrast) {
+  :host {
+    --in-content-box-border-color: unset;
+  }
+
+  #letter-grade-term {
+    background-color: var(--in-content-page-color) !important;
+    color: var(--in-content-page-background) !important;
+  }
+
+  #letter-grade-description {
+    background-color: var(--in-content-page-background) !important;
+    color: var(--in-content-page-color) !important;
+  }
+}
