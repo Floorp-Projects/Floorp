@@ -201,11 +201,6 @@ JSString* FormatTimeZoneOffsetString(JSContext* cx, int64_t offsetNanoseconds);
  */
 JSString* FormatISOTimeZoneOffsetString(JSContext* cx,
                                         int64_t offsetNanoseconds);
-/**
- * Perform `ToString(timeZone)` with an optimization when the built-in
- * Temporal.TimeZone.prototype.toString method is called.
- */
-JSString* TimeZoneToString(JSContext* cx, JS::Handle<TimeZoneValue> timeZone);
 
 } /* namespace js::temporal */
 
