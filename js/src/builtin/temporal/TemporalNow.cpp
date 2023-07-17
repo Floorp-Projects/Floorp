@@ -465,7 +465,7 @@ static const JSPropertySpec TemporalNow_properties[] = {
 };
 
 static JSObject* CreateTemporalNowObject(JSContext* cx, JSProtoKey key) {
-  RootedObject proto(cx, &cx->global()->getObjectPrototype());
+  Rooted<JSObject*> proto(cx, &cx->global()->getObjectPrototype());
   return NewTenuredObjectWithGivenProto(cx, &TemporalNowObject::class_, proto);
 }
 

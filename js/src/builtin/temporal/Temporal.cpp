@@ -1515,13 +1515,11 @@ static JSObject* MaybeUnwrapIf(JSObject* object) {
 // https://github.com/tc39/proposal-temporal/issues/2534
 
 /**
- * RejectObjectWithCalendarOrTimeZone ( object )
+ * RejectTemporalLikeObject ( object )
  */
-bool js::temporal::RejectObjectWithCalendarOrTimeZone(
-    JSContext* cx, Handle<JSObject*> object) {
-  // Step 1. (Not applicable in our implementation.)
-
-  // Step 2.
+bool js::temporal::RejectTemporalLikeObject(JSContext* cx,
+                                            Handle<JSObject*> object) {
+  // Step 1.
   if (auto* unwrapped =
           MaybeUnwrapIf<PlainDateObject, PlainDateTimeObject,
                         PlainMonthDayObject, PlainTimeObject,
@@ -1534,30 +1532,31 @@ bool js::temporal::RejectObjectWithCalendarOrTimeZone(
 
   Rooted<Value> property(cx);
 
-  // Step 3.
+  // Step 2.
   if (!GetProperty(cx, object, object, cx->names().calendar, &property)) {
     return false;
   }
 
-  // Step 4.
+  // Step 3.
   if (!property.isUndefined()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_UNEXPECTED_PROPERTY, "calendar");
     return false;
   }
 
-  // Step 5.
+  // Step 4.
   if (!GetProperty(cx, object, object, cx->names().timeZone, &property)) {
     return false;
   }
 
-  // Step 6.
+  // Step 5.
   if (!property.isUndefined()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_UNEXPECTED_PROPERTY, "timeZone");
     return false;
   }
 
+  // Step 6.
   return true;
 }
 
@@ -1885,7 +1884,7 @@ bool js::temporal::GetDifferenceSettings(
 }
 
 static JSObject* CreateTemporalObject(JSContext* cx, JSProtoKey key) {
-  RootedObject proto(cx, &cx->global()->getObjectPrototype());
+  Rooted<JSObject*> proto(cx, &cx->global()->getObjectPrototype());
 
   // The |Temporal| object is just a plain object with some "static" data
   // properties and some constructor properties.
