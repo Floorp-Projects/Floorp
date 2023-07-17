@@ -7,7 +7,7 @@
 
 // This file contains the functions that are used by the floorp browser
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-command.js", this);
-
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-overrides.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-tabbar.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-design.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-rest-mode.js", this);
