@@ -231,6 +231,22 @@ JSObject* CalendarMergeFields(JSContext* cx, JS::Handle<CalendarValue> calendar,
  */
 Wrapped<PlainDateObject*> CalendarDateAdd(
     JSContext* cx, JS::Handle<CalendarValue> calendar,
+    JS::Handle<Wrapped<PlainDateObject*>> date, const Duration& duration,
+    JS::Handle<JS::Value> dateAdd);
+
+/**
+ * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
+ */
+Wrapped<PlainDateObject*> CalendarDateAdd(
+    JSContext* cx, JS::Handle<CalendarValue> calendar,
+    JS::Handle<Wrapped<PlainDateObject*>> date, const Duration& duration,
+    JS::Handle<JSObject*> options, JS::Handle<JS::Value> dateAdd);
+
+/**
+ * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
+ */
+Wrapped<PlainDateObject*> CalendarDateAdd(
+    JSContext* cx, JS::Handle<CalendarValue> calendar,
     JS::Handle<Wrapped<PlainDateObject*>> date,
     JS::Handle<Wrapped<DurationObject*>> duration,
     JS::Handle<JS::Value> dateAdd);
@@ -243,6 +259,15 @@ Wrapped<PlainDateObject*> CalendarDateAdd(
     JS::Handle<Wrapped<PlainDateObject*>> date,
     JS::Handle<Wrapped<DurationObject*>> duration,
     JS::Handle<JSObject*> options);
+
+/**
+ * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
+ */
+Wrapped<PlainDateObject*> CalendarDateAdd(
+    JSContext* cx, JS::Handle<CalendarValue> calendar,
+    JS::Handle<Wrapped<PlainDateObject*>> date,
+    JS::Handle<Wrapped<DurationObject*>> duration,
+    JS::Handle<JSObject*> options, JS::Handle<JS::Value> dateAdd);
 
 /**
  * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
