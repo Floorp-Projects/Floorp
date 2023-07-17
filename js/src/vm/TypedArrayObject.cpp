@@ -704,6 +704,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
     // Step 6.
     size_t bufferByteLength = bufferMaybeUnwrapped->byteLength();
+    MOZ_ASSERT(bufferByteLength <= MaxByteLength);
 
     size_t len;
     if (lengthIndex == UINT64_MAX) {
@@ -747,14 +748,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       len = size_t(lengthIndex);
     }
 
-    if (len > MaxByteLength / BYTES_PER_ELEMENT) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TYPED_ARRAY_CONSTRUCT_TOO_LARGE,
-                                Scalar::name(ArrayTypeID()));
-      return false;
-    }
-
-    MOZ_ASSERT(len < SIZE_MAX);
+    MOZ_ASSERT(len <= MaxByteLength / BYTES_PER_ELEMENT);
     *length = len;
     return true;
   }
