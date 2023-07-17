@@ -644,9 +644,8 @@ static Wrapped<PlainTimeObject*> ToTemporalTime(JSContext* cx,
     }
 
     // Step 3.d.
-    Rooted<CalendarValue> calendar(
-        cx, GetTemporalCalendarWithISODefault(cx, itemObj));
-    if (!calendar) {
+    Rooted<CalendarValue> calendar(cx);
+    if (!GetTemporalCalendarWithISODefault(cx, itemObj, &calendar)) {
       return nullptr;
     }
 

@@ -1815,9 +1815,8 @@ static bool TimeZone_getPlainDateTimeFor(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 4.
-  Rooted<CalendarValue> calendar(
-      cx, ToTemporalCalendarWithISODefault(cx, args.get(1)));
-  if (!calendar) {
+  Rooted<CalendarValue> calendar(cx);
+  if (!ToTemporalCalendarWithISODefault(cx, args.get(1), &calendar)) {
     return false;
   }
 

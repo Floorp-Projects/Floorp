@@ -255,8 +255,7 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
     }
 
     // Step 5.b.
-    calendar = GetTemporalCalendarWithISODefault(cx, itemObj);
-    if (!calendar) {
+    if (!GetTemporalCalendarWithISODefault(cx, itemObj, &calendar)) {
       return nullptr;
     }
 
@@ -411,8 +410,7 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
       calendarValue.setString(calendarString);
     }
 
-    calendar = ToTemporalCalendarWithISODefault(cx, calendarValue);
-    if (!calendar) {
+    if (!ToTemporalCalendarWithISODefault(cx, calendarValue, &calendar)) {
       return nullptr;
     }
 
@@ -1535,9 +1533,8 @@ static bool ZonedDateTimeConstructor(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 5.
-  Rooted<CalendarValue> calendar(
-      cx, ToTemporalCalendarWithISODefault(cx, args.get(2)));
-  if (!calendar) {
+  Rooted<CalendarValue> calendar(cx);
+  if (!ToTemporalCalendarWithISODefault(cx, args.get(2), &calendar)) {
     return false;
   }
 
@@ -2754,8 +2751,7 @@ static bool ZonedDateTime_withPlainDate(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 7.
-  calendar = ConsolidateCalendars(cx, calendar, plainDateCalendar);
-  if (!calendar) {
+  if (!ConsolidateCalendars(cx, calendar, plainDateCalendar, &calendar)) {
     return false;
   }
 
@@ -2839,8 +2835,8 @@ static bool ZonedDateTime_withCalendar(JSContext* cx, const CallArgs& args) {
   Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
 
   // Step 3.
-  Rooted<CalendarValue> calendar(cx, ToTemporalCalendar(cx, args.get(0)));
-  if (!calendar) {
+  Rooted<CalendarValue> calendar(cx);
+  if (!ToTemporalCalendar(cx, args.get(0), &calendar)) {
     return false;
   }
 
