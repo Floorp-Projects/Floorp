@@ -2360,7 +2360,7 @@ bool WasmMemoryObject::bufferGetterImpl(JSContext* cx, const CallArgs& args) {
     MOZ_ASSERT(memoryLength >= buffer->byteLength());
 
     if (memoryLength > buffer->byteLength()) {
-      RootedSharedArrayBufferObject newBuffer(
+      Rooted<SharedArrayBufferObject*> newBuffer(
           cx, SharedArrayBufferObject::New(
                   cx, memoryObj->sharedArrayRawBuffer(), memoryLength));
       if (!newBuffer) {
@@ -2701,7 +2701,7 @@ void WasmMemoryObject::discard(Handle<WasmMemoryObject*> memory,
                                uint64_t byteOffset, uint64_t byteLen,
                                JSContext* cx) {
   if (memory->isShared()) {
-    RootedSharedArrayBufferObject buf(
+    Rooted<SharedArrayBufferObject*> buf(
         cx, &memory->buffer().as<SharedArrayBufferObject>());
     SharedArrayBufferObject::wasmDiscard(buf, byteOffset, byteLen);
   } else {

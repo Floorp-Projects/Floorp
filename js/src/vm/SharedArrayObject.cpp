@@ -479,7 +479,7 @@ SharedArrayBufferObject* SharedArrayBufferObject::createFromNewRawBuffer(
 }
 
 /* static */
-void SharedArrayBufferObject::wasmDiscard(HandleSharedArrayBufferObject buf,
+void SharedArrayBufferObject::wasmDiscard(Handle<SharedArrayBufferObject*> buf,
                                           uint64_t byteOffset,
                                           uint64_t byteLen) {
   MOZ_ASSERT(buf->isWasm());
