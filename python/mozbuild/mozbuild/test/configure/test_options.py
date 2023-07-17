@@ -257,6 +257,17 @@ class TestOption(unittest.TestCase):
         self.assertTrue(value)
         self.assertEqual(PositiveOptionValue(("b", "a")), value)
 
+        # Default is enabled without a value, but the option can be also be disabled or
+        # used with a value.
+        option = Option("--without-option", nargs="*", choices=("a", "b"))
+        value = option.get_value("--with-option")
+        self.assertEqual(PositiveOptionValue(), value)
+        value = option.get_value("--with-option=a")
+        self.assertEqual(PositiveOptionValue(("a",)), value)
+        with self.assertRaises(InvalidOptionError) as e:
+            option.get_value("--with-option=c")
+        self.assertEqual(str(e.exception), "'c' is not one of 'a', 'b'")
+
         # Test nargs inference from choices
         option = Option("--with-option", choices=("a", "b"))
         self.assertEqual(option.nargs, 1)
@@ -985,6 +996,23 @@ class TestOptionHelp(unittest.TestCase):
         formatter.add(
             Option("--enable-titi", default=True, help="{Enable|Disable} Titi")
         )
+        formatter.add(
+            Option(
+                "--disable-tutu",
+                nargs="*",
+                choices=("a", "b"),
+                help="{Enable|Disable} Tutu",
+            )
+        )
+        formatter.add(
+            Option(
+                "--enable-tata",
+                nargs="+",
+                default="a",
+                choices=("a", "b"),
+                help="Enable Tata",
+            )
+        )
         out = StringIO()
         formatter.usage(out)
         self.maxDiff = None
@@ -997,8 +1025,11 @@ class TestOptionHelp(unittest.TestCase):
                 Options: [defaults in brackets after descriptions]
                   Options from python/mozbuild/mozbuild/test/configure/test_options.py:
                     --disable-titi            Disable Titi
+                    --disable-tutu            Disable Tutu
                     --enable-hoge={a,b}       Hoge
+                    --enable-tata={a,b}       Enable Tata [a]
                     --enable-toto             Enable Toto
+                    --enable-tutu={a,b}       Enable Tutu
                     --foo                     Foo
                     --with-bar                Bar
                     --with-fuga               Fuga [a]
