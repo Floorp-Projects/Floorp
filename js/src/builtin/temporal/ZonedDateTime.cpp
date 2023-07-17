@@ -1336,7 +1336,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return false;
   }
 
-  // Steps 4-7.
+  // Steps 4-6.
   Rooted<PlainObject*> resolvedOptions(cx);
   DifferenceSettings settings;
   if (args.hasDefined(1)) {
@@ -1347,24 +1347,19 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     }
 
     // Step 4.
-    resolvedOptions = NewPlainObjectWithProto(cx, nullptr);
+    resolvedOptions = CopyOptions(cx, options);
     if (!resolvedOptions) {
       return false;
     }
 
     // Step 5.
-    if (!CopyDataProperties(cx, resolvedOptions, options)) {
-      return false;
-    }
-
-    // Step 6.
     if (!GetDifferenceSettings(
             cx, operation, resolvedOptions, TemporalUnitGroup::DateTime,
             TemporalUnit::Nanosecond, TemporalUnit::Hour, &settings)) {
       return false;
     }
 
-    // Step 7.
+    // Step 6.
     Rooted<Value> largestUnitValue(
         cx, StringValue(TemporalUnitToString(cx, settings.largestUnit)));
     if (!DefineDataProperty(cx, resolvedOptions, cx->names().largestUnit,
@@ -1372,7 +1367,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
       return false;
     }
   } else {
-    // Steps 4-6.
+    // Steps 4-5.
     settings = {
         TemporalUnit::Nanosecond,
         TemporalUnit::Hour,
@@ -1380,14 +1375,14 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
         Increment{1},
     };
 
-    // Step 7. (Not applicable in our implementation.)
+    // Step 6. (Not applicable in our implementation.)
   }
 
-  // Step 8.
+  // Step 7.
   if (settings.largestUnit > TemporalUnit::Day) {
     MOZ_ASSERT(settings.smallestUnit >= settings.largestUnit);
 
-    // Step 8.a.
+    // Step 7.a.
     Duration difference;
     if (!DifferenceInstant(cx, epochInstant, otherInstant,
                            settings.roundingIncrement, settings.smallestUnit,
@@ -1396,7 +1391,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
       return false;
     }
 
-    // Step 8.b.
+    // Step 7.b.
     if (operation == TemporalDifference::Since) {
       difference = difference.negate();
     }
@@ -1413,12 +1408,12 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
   // FIXME: spec issue - move this step next to the calendar validation?
   // https://github.com/tc39/proposal-temporal/issues/2533
 
-  // Step 9.
+  // Step 8.
   if (!TimeZoneEqualsOrThrow(cx, timeZone, otherTimeZone)) {
     return false;
   }
 
-  // Step 10.
+  // Step 9.
   Duration difference;
   if (resolvedOptions) {
     if (!::DifferenceZonedDateTime(cx, epochInstant, otherInstant, timeZone,
@@ -1434,7 +1429,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     }
   }
 
-  // Step 11.
+  // Step 10.
   Duration roundResult;
   if (!RoundDuration(cx, difference, settings.roundingIncrement,
                      settings.smallestUnit, settings.roundingMode,
@@ -1443,7 +1438,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 12.
+  // Step 11.
   Duration result;
   if (!AdjustRoundedDurationDays(cx, roundResult, settings.roundingIncrement,
                                  settings.smallestUnit, settings.roundingMode,
@@ -1451,7 +1446,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 13.
+  // Step 12.
   if (operation == TemporalDifference::Since) {
     result = result.negate();
   }

@@ -879,17 +879,12 @@ static bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
     // https://github.com/tc39/proposal-temporal/issues/2525
 
     // Step 11.
-    Rooted<PlainObject*> untilOptions(cx, NewPlainObjectWithProto(cx, nullptr));
+    Rooted<PlainObject*> untilOptions(cx, CopyOptions(cx, maybeOptions));
     if (!untilOptions) {
       return false;
     }
 
     // Step 12.
-    if (!CopyDataProperties(cx, untilOptions, maybeOptions)) {
-      return false;
-    }
-
-    // Step 13.
     Rooted<Value> largestUnitValue(
         cx, StringValue(TemporalUnitToString(cx, dateLargestUnit)));
     if (!DefineDataProperty(cx, untilOptions, cx->names().largestUnit,
@@ -897,20 +892,20 @@ static bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
       return false;
     }
 
-    // Step 14.
+    // Step 13.
     if (!CalendarDateUntil(cx, calendar, date1, date2, untilOptions,
                            &dateDifference)) {
       return false;
     }
   } else {
-    // Steps 11-14.
+    // Steps 11-13.
     if (!CalendarDateUntil(cx, calendar, date1, date2, dateLargestUnit,
                            &dateDifference)) {
       return false;
     }
   }
 
-  // Step 15.
+  // Step 14.
   TimeDuration balanceResult;
   if (!BalanceDuration(cx,
                        {
@@ -929,7 +924,7 @@ static bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
     return false;
   }
 
-  // Step 16.
+  // Step 15.
   *result = {dateDifference.years,       dateDifference.months,
              dateDifference.weeks,       balanceResult.days,
              balanceResult.hours,        balanceResult.minutes,
@@ -1016,7 +1011,7 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     return false;
   }
 
-  // Steps 4-7.
+  // Steps 4-6.
   DifferenceSettings settings;
   Duration diff;
   if (args.hasDefined(1)) {
@@ -1027,32 +1022,26 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     }
 
     // Step 4.
-    Rooted<PlainObject*> resolvedOptions(cx,
-                                         NewPlainObjectWithProto(cx, nullptr));
+    Rooted<PlainObject*> resolvedOptions(cx, CopyOptions(cx, options));
     if (!resolvedOptions) {
       return false;
     }
 
     // Step 5.
-    if (!CopyDataProperties(cx, resolvedOptions, options)) {
-      return false;
-    }
-
-    // Step 6.
     if (!GetDifferenceSettings(
             cx, operation, resolvedOptions, TemporalUnitGroup::DateTime,
             TemporalUnit::Nanosecond, TemporalUnit::Day, &settings)) {
       return false;
     }
 
-    // Step 7.
+    // Step 6.
     if (!::DifferenceISODateTime(cx, ToPlainDateTime(dateTime), other, calendar,
                                  settings.largestUnit, resolvedOptions,
                                  &diff)) {
       return false;
     }
   } else {
-    // Steps 4-6.
+    // Steps 4-5.
     settings = {
         TemporalUnit::Nanosecond,
         TemporalUnit::Day,
@@ -1060,21 +1049,21 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
         Increment{1},
     };
 
-    // Step 7.
+    // Step 6.
     if (!::DifferenceISODateTime(cx, ToPlainDateTime(dateTime), other, calendar,
                                  settings.largestUnit, nullptr, &diff)) {
       return false;
     }
   }
 
-  // Step 8.
+  // Step 7.
   Rooted<PlainDateObject*> relativeTo(
       cx, CreateTemporalDate(cx, ToPlainDate(dateTime), calendar));
   if (!relativeTo) {
     return false;
   }
 
-  // Step 9.
+  // Step 8.
   Duration roundResult;
   if (!temporal::RoundDuration(cx, diff, settings.roundingIncrement,
                                settings.smallestUnit, settings.roundingMode,
@@ -1082,13 +1071,13 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 10.
+  // Step 9.
   TimeDuration result;
   if (!BalanceDuration(cx, roundResult, settings.largestUnit, &result)) {
     return false;
   }
 
-  // Step 11.
+  // Step 10.
   Duration duration = {
       roundResult.years,  roundResult.months,  roundResult.weeks,
       result.days,        result.hours,        result.minutes,

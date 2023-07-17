@@ -1718,7 +1718,7 @@ static bool DifferenceTemporalPlainTime(JSContext* cx,
     return false;
   }
 
-  // Steps 3-5.
+  // Steps 3-4.
   DifferenceSettings settings;
   if (args.hasDefined(1)) {
     Rooted<JSObject*> options(
@@ -1728,25 +1728,19 @@ static bool DifferenceTemporalPlainTime(JSContext* cx,
     }
 
     // Step 3.
-    Rooted<PlainObject*> resolvedOptions(cx,
-                                         NewPlainObjectWithProto(cx, nullptr));
+    Rooted<PlainObject*> resolvedOptions(cx, CopyOptions(cx, options));
     if (!resolvedOptions) {
       return false;
     }
 
     // Step 4.
-    if (!CopyDataProperties(cx, resolvedOptions, options)) {
-      return false;
-    }
-
-    // Step 5.
     if (!GetDifferenceSettings(
             cx, operation, resolvedOptions, TemporalUnitGroup::Time,
             TemporalUnit::Nanosecond, TemporalUnit::Hour, &settings)) {
       return false;
     }
   } else {
-    // Steps 3-5.
+    // Steps 3-4.
     settings = {
         TemporalUnit::Nanosecond,
         TemporalUnit::Hour,
@@ -1755,10 +1749,10 @@ static bool DifferenceTemporalPlainTime(JSContext* cx,
     };
   }
 
-  // Step 6.
+  // Step 5.
   auto diff = DifferenceTime(temporalTime, other);
 
-  // Step 7.
+  // Step 6.
   Duration roundedDuration;
   if (!RoundDuration(cx, diff.toDuration().time(), settings.roundingIncrement,
                      settings.smallestUnit, settings.roundingMode,
@@ -1766,11 +1760,11 @@ static bool DifferenceTemporalPlainTime(JSContext* cx,
     return false;
   }
 
-  // Step 8.
+  // Step 7.
   auto balancedDuration =
       BalanceTimeDuration(roundedDuration, settings.largestUnit);
 
-  // Step 9.
+  // Step 8.
   if (operation == TemporalDifference::Since) {
     balancedDuration = balancedDuration.negate();
   }
