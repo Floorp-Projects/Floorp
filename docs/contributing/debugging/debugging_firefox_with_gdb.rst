@@ -258,26 +258,7 @@ See also
 
 
 -  `Mike Conley's blog post https://mikeconley.ca/blog/2014/04/25/electrolysis-debugging-child-processes-of-content-for-make-benefit-glorious-browser-of-firefox`
--  `Debugging <https://developer.mozilla.org/En/Debugging>`__
 -  `Performance tools <https://wiki.mozilla.org/Performance:Tools>`__
 -  `Fun with
    gdb <https://blog.mozilla.com/sfink/2011/02/22/fun-with-gdb/>`__ by
    Steve Fink
--  `Archer pretty printers for
-   SpiderMonkey <https://hg.mozilla.org/users/jblandy_mozilla.com/archer-mozilla>`__
-   (`blog
-   post <https://itcouldbesomuchbetter.wordpress.com/2010/12/20/debugging-spidermonkey-with-archer-2/>`__)
--  `More pretty
-   printers <https://hg.mozilla.org/users/josh_joshmatthews.net/archer-mozilla/>`__
-   for Gecko internals (`blog
-   post <https://www.joshmatthews.net/blog/2011/06/nscomptr-has-never-been-so-pretty/>`__)
-
-.. container:: originaldocinfo
-
-   .. rubric:: Original Document Information
-      :name: Original_Document_Information
-
-   -  `History <http://bonsai-www.mozilla.org/cvslog.cgi?file=mozilla-org/html/unix/debugging-faq.html&rev=&root=/www/>`__
-   -  Copyright Information: © 1998-2008 by individual mozilla.org
-      contributors; content available under a `Creative Commons
-      license <https://www.mozilla.org/foundation/licensing/website-content.html>`__

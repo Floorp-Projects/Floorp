@@ -1092,19 +1092,3 @@ Class Reference
     .. cpp:function:: void SetLength(size_type)
 
     .. cpp:function:: Result<BulkWriteHandle<char_type>, nsresult> BulkWrite(size_type aCapacity, size_type aPrefixToPreserve, bool aAllowShrinking)
-
-
-Original Document Information
------------------------------
-
-This document was originally hosted on MDN as part of the XPCOM guide.
-
-* Author: `Alec Flett <mailto:alecf@flett.org>`_
-* Copyright Information: Portions of this content are © 1998–2007 by individual mozilla.org contributors; content available under a Creative Commons license.
-* Thanks to David Baron for `actual docs <http://dbaron.org/mozilla/coding-practices>`_,
-* Peter Annema for lots of direction
-* Myk Melez for some more docs
-* David Bradley for a diagram
-* Revised by Darin Fisher for Mozilla 1.7
-* Revised by Jungshik Shin to clarify character encoding issues
-* Migrated to in-tree documentation by Nika Layzell
