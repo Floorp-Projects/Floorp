@@ -8,6 +8,7 @@
 #include "ContentBlockingUserInteraction.h"
 #include "AntiTrackingUtils.h"
 
+#include "mozilla/BounceTrackingProtection.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/PermissionManager.h"
 #include "nsIPrincipal.h"
@@ -25,6 +26,17 @@ void ContentBlockingUserInteraction::Observe(nsIPrincipal* aPrincipal) {
 
   if (XRE_IsParentProcess()) {
     LOG_PRIN(("Saving the userInteraction for %s", _spec), aPrincipal);
+
+    // The bounce tracking protection has its own interaction store.
+    RefPtr<BounceTrackingProtection> bounceTrackingProtection =
+        BounceTrackingProtection::GetSingleton();
+    // May be nullptr if the feature is disabled.
+    if (bounceTrackingProtection) {
+      nsresult rv = bounceTrackingProtection->RecordUserActivation(aPrincipal);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        LOG(("BounceTrackingProtection::RecordUserActivation failed."));
+      }
+    }
 
     PermissionManager* permManager = PermissionManager::GetInstance();
     if (NS_WARN_IF(!permManager)) {
