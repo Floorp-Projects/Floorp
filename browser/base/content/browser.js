@@ -5192,9 +5192,8 @@ var XULBrowserWindow = {
     BookmarkingUI.onLocationChange();
     // If we've actually changed document, update the toolbar visibility.
     if (!isSameDocument) {
-      let bookmarksToolbar = gNavToolbox.querySelector("#PersonalToolbar");
       setToolbarVisibility(
-        bookmarksToolbar,
+        BookmarkingUI.toolbar,
         gBookmarksToolbarVisibility,
         false,
         false
@@ -6493,32 +6492,38 @@ function setToolbarVisibility(
     hidingAttribute = "collapsed";
   }
 
-  // For the bookmarks toolbar, we need to persist state before toggling
-  // the visibility in this window, because the state can be different
-  // (newtab vs never or always) even when that won't change visibility
-  // in this window.
-  if (persist && toolbar.id == "PersonalToolbar") {
-    let prefValue;
-    if (typeof isVisible == "string") {
-      prefValue = isVisible;
-    } else {
-      prefValue = isVisible ? "always" : "never";
+  if (toolbar == BookmarkingUI.toolbar) {
+    // For the bookmarks toolbar, we need to persist state before toggling
+    // the visibility in this window, because the state can be different
+    // (newtab vs never or always) even when that won't change visibility
+    // in this window.
+    if (persist) {
+      let prefValue;
+      if (typeof isVisible == "string") {
+        prefValue = isVisible;
+      } else {
+        prefValue = isVisible ? "always" : "never";
+      }
+      Services.prefs.setCharPref(
+        "browser.toolbars.bookmarks.visibility",
+        prefValue
+      );
     }
-    Services.prefs.setCharPref(
-      "browser.toolbars.bookmarks.visibility",
-      prefValue
-    );
-  }
 
-  if (typeof isVisible == "string") {
+    const overlapAttr = "BookmarksToolbarOverlapsBrowser";
     switch (isVisible) {
+      case true:
       case "always":
         isVisible = true;
+        document.documentElement.toggleAttribute(overlapAttr, false);
         break;
+      case false:
       case "never":
         isVisible = false;
+        document.documentElement.toggleAttribute(overlapAttr, false);
         break;
       case "newtab":
+      default:
         let currentURI = gBrowser?.currentURI;
         if (!gBrowserInit.domContentLoaded) {
           let uriToLoad = gBrowserInit.uriToLoadPromise;
@@ -6532,10 +6537,8 @@ function setToolbarVisibility(
             } catch (ex) {}
           }
         }
-        isVisible =
-          !!currentURI &&
-          (BookmarkingUI.isOnNewTabPage({ currentURI }) ||
-            currentURI?.spec == "chrome://browser/content/blanktab.html");
+        isVisible = BookmarkingUI.isOnNewTabPage(currentURI);
+        document.documentElement.toggleAttribute(overlapAttr, isVisible);
         break;
     }
   }

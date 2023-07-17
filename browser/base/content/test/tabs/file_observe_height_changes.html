@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+  /* This lets us measure the height of the viewport
+     by measuring documentElement.offsetHeight. */
+  html { height: 100vh }
+</style>
+<script>
+  let mostRecentHeight = 0;
+  let heightChanges = 0;
+  function checkDocumentHeight() {
+    let curHeight = document.documentElement.offsetHeight;
+    if (curHeight != mostRecentHeight) {
+      mostRecentHeight = curHeight;
+      document.body.innerText = heightChanges++;
+    }
+    requestAnimationFrame(checkDocumentHeight);
+  }
+</script>
+<body onload="checkDocumentHeight();">
+</body>

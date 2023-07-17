@@ -1413,7 +1413,10 @@ var BookmarkingUI = {
     );
   },
 
-  isOnNewTabPage({ currentURI }) {
+  isOnNewTabPage(uri) {
+    if (!uri) {
+      return false;
+    }
     // Prevent loading AboutNewTab.sys.mjs during startup path if it
     // is only the newTabURL getter we are interested in.
     let newTabURL = Cu.isESModuleLoaded(
@@ -1428,12 +1431,28 @@ var BookmarkingUI = {
     if (newTabURL == "about:blank") {
       newTabURL = "about:newtab";
     }
-    let newTabURLs = [newTabURL, "about:home"];
+    let newTabURLs = [
+      newTabURL,
+      "about:home",
+      "chrome://browser/content/blanktab.html",
+    ];
     if (PrivateBrowsingUtils.isWindowPrivate(window)) {
       newTabURLs.push("about:privatebrowsing");
     }
-    return newTabURLs.some(uri => currentURI?.spec.startsWith(uri));
+    return newTabURLs.some(newTabUriString =>
+      this._newTabURI(newTabUriString)?.equalsExceptRef(uri)
+    );
   },
+
+  _newTabURI(uriString) {
+    let uri = this._newTabURICache.get(uriString);
+    if (uri === undefined) {
+      uri = Services.io.newURI(uriString);
+      this._newTabURICache.set(uriString, uri);
+    }
+    return uri;
+  },
+  _newTabURICache: new Map(),
 
   buildBookmarksToolbarSubmenu(toolbar) {
     let alwaysShowMenuItem = document.createXULElement("menuitem");
