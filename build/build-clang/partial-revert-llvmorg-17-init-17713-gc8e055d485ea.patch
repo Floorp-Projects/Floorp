@@ -1,0 +1,33 @@
+Revert the parts of c8e055d485eabf1c8830d77797e3686ced0f7754 that require
+cead4eceb01b935fae07bf4a7e91911b344d2fec, which we revert.
+
+diff --git a/llvm/include/llvm/DebugInfo/BTF/BTFContext.h b/llvm/include/llvm/DebugInfo/BTF/BTFContext.h
+index c16bee613322..7b0412b91c2e 100644
+--- a/llvm/include/llvm/DebugInfo/BTF/BTFContext.h
++++ b/llvm/include/llvm/DebugInfo/BTF/BTFContext.h
+@@ -34,9 +34,6 @@ public:
+       object::SectionedAddress Address,
+       DILineInfoSpecifier Specifier = DILineInfoSpecifier()) override;
+ 
+-  DILineInfo
+-  getLineInfoForDataAddress(object::SectionedAddress Address) override;
+-
+   DILineInfoTable getLineInfoForAddressRange(
+       object::SectionedAddress Address, uint64_t Size,
+       DILineInfoSpecifier Specifier = DILineInfoSpecifier()) override;
+diff --git a/llvm/lib/DebugInfo/BTF/BTFContext.cpp b/llvm/lib/DebugInfo/BTF/BTFContext.cpp
+index 24898739b824..da0f9982881f 100644
+--- a/llvm/lib/DebugInfo/BTF/BTFContext.cpp
++++ b/llvm/lib/DebugInfo/BTF/BTFContext.cpp
+@@ -34,11 +34,6 @@ DILineInfo BTFContext::getLineInfoForAddress(SectionedAddress Address,
+   return Result;
+ }
+ 
+-DILineInfo BTFContext::getLineInfoForDataAddress(SectionedAddress Address) {
+-  // BTF does not convey such information.
+-  return {};
+-}
+-
+ DILineInfoTable
+ BTFContext::getLineInfoForAddressRange(SectionedAddress Address, uint64_t Size,
+                                        DILineInfoSpecifier Specifier) {
