@@ -5277,6 +5277,7 @@ class CustomSerializableObject : public NativeObject {
   }
 
   static bool ReadTransfer(JSContext* cx, JSStructuredCloneReader* r,
+                           const JS::CloneDataPolicy& cloneDataPolicy,
                            uint32_t tag, void* content, uint64_t extraData,
                            void* closure,
                            JS::MutableHandleObject returnObject) {

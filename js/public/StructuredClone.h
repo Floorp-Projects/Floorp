@@ -313,7 +313,8 @@ typedef void (*StructuredCloneErrorOp)(JSContext* cx, uint32_t errorid,
  * will only contain a backreference to the already-read object.
  */
 typedef bool (*ReadTransferStructuredCloneOp)(
-    JSContext* cx, JSStructuredCloneReader* r, uint32_t tag, void* content,
+    JSContext* cx, JSStructuredCloneReader* r,
+    const JS::CloneDataPolicy& aCloneDataPolicy, uint32_t tag, void* content,
     uint64_t extraData, void* closure, JS::MutableHandleObject returnObject);
 
 /**
