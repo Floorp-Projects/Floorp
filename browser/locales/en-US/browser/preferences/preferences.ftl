@@ -583,6 +583,10 @@ browsing-use-cursor-navigation =
     .label = Always use the cursor keys to navigate within pages
     .accesskey = k
 
+browsing-use-full-keyboard-navigation =
+    .label = Use the tab key to move focus between form controls and links
+    .accesskey = t
+
 browsing-search-on-start-typing =
     .label = Search for text when you start typing
     .accesskey = x
