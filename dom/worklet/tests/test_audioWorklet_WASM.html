@@ -12,7 +12,8 @@
 
 function configureTest() {
   return SpecialPowers.pushPrefEnv(
-    {"set": [
+    {"set": [["dom.audioworklet.enabled", true],
+             ["dom.worklet.enabled", true],
              ["dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled", true],
              ["browser.tabs.remote.useCrossOriginOpenerPolicy", true],
              ["browser.tabs.remote.useCrossOriginEmbedderPolicy", true],

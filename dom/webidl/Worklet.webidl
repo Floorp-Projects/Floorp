@@ -7,7 +7,8 @@
  * https://drafts.css-houdini.org/worklets/#idl-index
  */
 
-[SecureContext, Exposed=Window]
+[SecureContext, Pref="dom.worklet.enabled",
+ Exposed=Window]
 interface Worklet {
   [NewObject, Throws, NeedsCallerType]
   Promise<undefined> addModule(USVString moduleURL, optional WorkletOptions options = {});
