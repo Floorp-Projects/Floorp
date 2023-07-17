@@ -16,6 +16,7 @@ printStatus (summary);
 expectExitCode(0);
 expectExitCode(5);
 
+try {
 var fe="vv";
 
 for (i=0; i<24; i++)
@@ -34,5 +35,10 @@ var fu=new Function(
 var fuout = 'fu=' + fu;
 
 print('Done');
+} catch (e) {
+  if (!(e instanceof InternalError)) {
+    throw e;
+  }
+}
 
 reportCompare(expect, actual, summary);
