@@ -41,9 +41,7 @@ from mercurial import (
 # Causes worker to purge caches on process exit and for task to retry.
 EXIT_PURGE_CACHE = 72
 
-testedwith = (
-    b"4.5 4.6 4.7 4.8 4.9 5.0 5.1 5.2 5.3 5.4 5.5 5.6 5.7 5.8 5.9 6.0 6.1 6.2 6.3 6.4"
-)
+testedwith = b"4.5 4.6 4.7 4.8 4.9 5.0 5.1 5.2 5.3 5.4 5.5 5.6 5.7 5.8 5.9"
 minimumhgversion = b"4.5"
 
 cmdtable = {}
@@ -179,8 +177,6 @@ def robustcheckout(
     # worker.backgroundclose only makes things faster if running anti-virus,
     # which our automation doesn't. Disable it.
     ui.setconfig(b"worker", b"backgroundclose", False)
-    # Don't wait forever if the connection hangs
-    ui.setconfig(b"http", b"timeout", 600)
 
     # By default the progress bar starts after 3s and updates every 0.1s. We
     # change this so it shows and updates every 1.0s.
@@ -498,10 +494,6 @@ def _docheckout(
             ui.warn(b"ssl error: %s\n" % pycompat.bytestr(str(e)))
             handlenetworkfailure()
             return True
-        elif isinstance(e, urllibcompat.urlerr.httperror) and e.code >= 500:
-            ui.warn(b"http error: %s\n" % pycompat.bytestr(str(e.reason)))
-            handlenetworkfailure()
-            return True
         elif isinstance(e, urllibcompat.urlerr.urlerror):
             if isinstance(e.reason, socket.error):
                 ui.warn(b"socket error: %s\n" % pycompat.bytestr(str(e.reason)))
@@ -515,10 +507,6 @@ def _docheckout(
                         pycompat.bytestr(str(e.reason)),
                     )
                 )
-        elif isinstance(e, socket.timeout):
-            ui.warn(b"socket timeout\n")
-            handlenetworkfailure()
-            return True
         else:
             ui.warn(
                 b"unhandled exception during network operation; type: %s; "
@@ -539,12 +527,7 @@ def _docheckout(
         rootnode = peerlookup(clonepeer, b"0")
     except error.RepoLookupError:
         raise error.Abort(b"unable to resolve root revision from clone " b"source")
-    except (
-        error.Abort,
-        ssl.SSLError,
-        urllibcompat.urlerr.urlerror,
-        socket.timeout,
-    ) as e:
+    except (error.Abort, ssl.SSLError, urllibcompat.urlerr.urlerror) as e:
         if handlepullerror(e):
             return callself()
         raise
@@ -637,12 +620,7 @@ def _docheckout(
                     shareopts=shareopts,
                     stream=True,
                 )
-        except (
-            error.Abort,
-            ssl.SSLError,
-            urllibcompat.urlerr.urlerror,
-            socket.timeout,
-        ) as e:
+        except (error.Abort, ssl.SSLError, urllibcompat.urlerr.urlerror) as e:
             if handlepullerror(e):
                 return callself()
             raise
@@ -710,12 +688,7 @@ def _docheckout(
                     pullop = exchange.pull(repo, remote, heads=pullrevs)
                     if not pullop.rheads:
                         raise error.Abort(b"unable to pull requested revision")
-        except (
-            error.Abort,
-            ssl.SSLError,
-            urllibcompat.urlerr.urlerror,
-            socket.timeout,
-        ) as e:
+        except (error.Abort, ssl.SSLError, urllibcompat.urlerr.urlerror) as e:
             if handlepullerror(e):
                 return callself()
             raise
@@ -812,14 +785,7 @@ def _docheckout(
             # one to change the sparse profile and another to update to the new
             # revision. This is not desired. But there's not a good API in
             # Mercurial to do this as one operation.
-            # TRACKING hg64 - Mercurial 6.4 and later require call to
-            # dirstate.changing_parents(repo)
-            def parentchange(repo):
-                if util.safehasattr(repo.dirstate, "changing_parents"):
-                    return repo.dirstate.changing_parents(repo)
-                return repo.dirstate.parentchange()
-
-            with repo.wlock(), parentchange(repo), timeit(
+            with repo.wlock(), repo.dirstate.parentchange(), timeit(
                 "sparse_update_config", "sparse-update-config"
             ):
                 # pylint --py3k: W1636

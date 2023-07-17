@@ -8,9 +8,8 @@
 
 import os
 import re
-from dataclasses import dataclass
-from typing import Callable
 
+import attr
 from voluptuous import Extra, Optional, Required
 
 import taskgraph
@@ -57,10 +56,10 @@ FETCH_SCHEMA = Schema(
 fetch_builders = {}
 
 
-@dataclass(frozen=True)
+@attr.s(frozen=True)
 class FetchBuilder:
-    schema: Schema
-    builder: Callable
+    schema = attr.ib(type=Schema)
+    builder = attr.ib()
 
 
 def fetch_builder(name, schema):
