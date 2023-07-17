@@ -23,30 +23,19 @@ def add_common_config(config, tasks):
             "external-gradle-dependencies.tar.xz"
         ]
 
-        optimization = task.setdefault("optimization", {})
-        if config.params["tasks_for"] == "github-push" or config.params[
-            "tasks_for"
-        ].startswith("github-pull-request"):
-            optimization[
-                "skip-unless-changed"
-            ] = []  # Paths are dynamically added by transforms
-
-        task.setdefault("run-on-tasks-for", [])
-
         run = task.setdefault("run", {})
         run["using"] = "gradlew"
         run["use-caches"] = False
-        run["workdir"] = "/builds/worker"
 
         treeherder = task.setdefault("treeherder", {})
         treeherder["kind"] = "build"
         treeherder["tier"] = 1
 
-        task["worker-type"] = "b-android-large"
+        task["worker-type"] = "b-linux-large-gcp"
 
         worker = task.setdefault("worker", {})
         worker["docker-image"] = {}
-        worker["docker-image"]["in-tree"] = "base"
+        worker["docker-image"]["in-tree"] = "android-components"
         worker["max-run-time"] = 7200
         worker["chain-of-trust"] = True
 
