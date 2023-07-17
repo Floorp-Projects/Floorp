@@ -765,6 +765,31 @@ bool js::temporal::GetTemporalCalendarWithISODefault(
   return ToTemporalCalendarWithISODefault(cx, calendarValue, result);
 }
 
+/**
+ * ToTemporalCalendarIdentifier ( calendarSlotValue )
+ */
+JSString* js::temporal::ToTemporalCalendarIdentifier(
+    JSContext* cx, Handle<CalendarValue> calendar) {
+  // Step 1.
+  // TODO: String calendars yet implemented.
+
+  // Step 2.
+  Rooted<Value> identifier(cx);
+  if (!GetProperty(cx, calendar, calendar, cx->names().id, &identifier)) {
+    return nullptr;
+  }
+
+  // Step 3.
+  if (!identifier.isString()) {
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, identifier,
+                     nullptr, "not a string");
+    return nullptr;
+  }
+
+  // Step 4.
+  return identifier.toString();
+}
+
 static bool ToCalendarField(JSContext* cx, JSLinearString* linear,
                             CalendarField* result) {
   if (StringEqualsLiteral(linear, "year")) {
@@ -3051,13 +3076,13 @@ bool js::temporal::CalendarEquals(JSContext* cx, Handle<CalendarValue> one,
   }
 
   // Step 2.
-  Rooted<JSString*> calendarOne(cx, CalendarToString(cx, one));
+  Rooted<JSString*> calendarOne(cx, ToTemporalCalendarIdentifier(cx, one));
   if (!calendarOne) {
     return false;
   }
 
   // Step 3.
-  JSString* calendarTwo = CalendarToString(cx, two);
+  JSString* calendarTwo = ToTemporalCalendarIdentifier(cx, two);
   if (!calendarTwo) {
     return false;
   }
@@ -3078,13 +3103,13 @@ bool js::temporal::CalendarEqualsOrThrow(JSContext* cx,
   }
 
   // Step 2.
-  Rooted<JSString*> calendarOne(cx, CalendarToString(cx, one));
+  Rooted<JSString*> calendarOne(cx, ToTemporalCalendarIdentifier(cx, one));
   if (!calendarOne) {
     return false;
   }
 
   // Step 3.
-  JSString* calendarTwo = CalendarToString(cx, two);
+  JSString* calendarTwo = ToTemporalCalendarIdentifier(cx, two);
   if (!calendarTwo) {
     return false;
   }
@@ -3124,13 +3149,13 @@ bool js::temporal::ConsolidateCalendars(JSContext* cx,
   }
 
   // Step 2.
-  Rooted<JSString*> calendarOne(cx, CalendarToString(cx, one));
+  Rooted<JSString*> calendarOne(cx, ToTemporalCalendarIdentifier(cx, one));
   if (!calendarOne) {
     return false;
   }
 
   // Step 3.
-  Rooted<JSString*> calendarTwo(cx, CalendarToString(cx, two));
+  Rooted<JSString*> calendarTwo(cx, ToTemporalCalendarIdentifier(cx, two));
   if (!calendarTwo) {
     return false;
   }
@@ -3177,26 +3202,26 @@ bool js::temporal::ConsolidateCalendars(JSContext* cx,
 }
 
 /**
- * MaybeFormatCalendarAnnotation ( calendarObject, showCalendar )
+ * MaybeFormatCalendarAnnotation ( calendar, showCalendar )
  */
-bool js::temporal::MaybeFormatCalendarAnnotation(
-    JSContext* cx, JSStringBuilder& result,
-    Handle<CalendarValue> calendarObject, CalendarOption showCalendar) {
+bool js::temporal::MaybeFormatCalendarAnnotation(JSContext* cx,
+                                                 JSStringBuilder& result,
+                                                 Handle<CalendarValue> calendar,
+                                                 CalendarOption showCalendar) {
   // Step 1.
   if (showCalendar == CalendarOption::Never) {
     return true;
   }
 
-  // Step 2. (Not applicable in our implementation.)
-
-  // Step 3.
-  Rooted<JSString*> calendarID(cx, CalendarToString(cx, calendarObject));
-  if (!calendarID) {
+  // Step 2.
+  Rooted<JSString*> calendarIdentifier(
+      cx, ToTemporalCalendarIdentifier(cx, calendar));
+  if (!calendarIdentifier) {
     return false;
   }
 
-  // Step 4.
-  return FormatCalendarAnnotation(cx, result, calendarID, showCalendar);
+  // Step 3.
+  return FormatCalendarAnnotation(cx, result, calendarIdentifier, showCalendar);
 }
 
 /**
@@ -3243,23 +3268,6 @@ bool js::temporal::FormatCalendarAnnotation(JSContext* cx,
     return false;
   }
   return true;
-}
-
-static bool Calendar_toString(JSContext* cx, unsigned argc, Value* vp);
-
-JSString* js::temporal::CalendarToString(JSContext* cx,
-                                         Handle<CalendarValue> calendar) {
-  if (calendar->is<CalendarObject>() &&
-      HasNoToPrimitiveMethodPure(calendar, cx) &&
-      HasNativeMethodPure(calendar, cx->names().toString, Calendar_toString,
-                          cx)) {
-    JSString* id = calendar->as<CalendarObject>().identifier();
-    MOZ_ASSERT(id);
-    return id;
-  }
-
-  Rooted<Value> calendarValue(cx, ObjectValue(*calendar));
-  return JS::ToString(cx, calendarValue);
 }
 
 /**
