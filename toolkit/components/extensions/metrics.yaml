@@ -28,6 +28,23 @@ extensions:
     data_sensitivity:
       - technical
     telemetry_mirror: EXTENSIONS_STARTUPCACHE_LOAD_TIME
+  process_event:
+    type: labeled_counter
+    expires: never
+    description: |
+      Counters for how many times the extension process has crashed or been created.
+    lifetime: application
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1830157/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1830157#c7
+    data_sensitivity:
+      - technical
+    labels:
+      - crashed
+      - created
 
 extensions.apis.dnr:
 
