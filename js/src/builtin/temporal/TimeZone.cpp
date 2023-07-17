@@ -249,23 +249,6 @@ JSString* js::temporal::ValidateAndCanonicalizeTimeZoneName(
   return CanonicalizeTimeZoneName(cx, validatedTimeZone);
 }
 
-static bool TimeZone_toString(JSContext* cx, unsigned argc, Value* vp);
-
-JSString* js::temporal::TimeZoneToString(JSContext* cx,
-                                         Handle<TimeZoneValue> timeZone) {
-  if (timeZone->is<TimeZoneObject>() &&
-      HasNoToPrimitiveMethodPure(timeZone, cx) &&
-      HasNativeMethodPure(timeZone, cx->names().toString, TimeZone_toString,
-                          cx)) {
-    JSString* id = timeZone->as<TimeZoneObject>().identifier();
-    MOZ_ASSERT(id);
-    return id;
-  }
-
-  Rooted<Value> timeZoneValue(cx, ObjectValue(*timeZone));
-  return JS::ToString(cx, timeZoneValue);
-}
-
 class EpochInstantList final {
   // GetNamedTimeZoneEpochNanoseconds can return up-to two elements.
   static constexpr size_t MaxLength = 2;
