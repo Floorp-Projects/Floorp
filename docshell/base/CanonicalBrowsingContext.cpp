@@ -3034,6 +3034,14 @@ CanonicalBrowsingContext::GetMostRecentLoadingSessionHistoryEntry() {
   return entry.forget();
 }
 
+already_AddRefed<BounceTrackingState>
+CanonicalBrowsingContext::GetBounceTrackingState() {
+  if (!mWebProgress) {
+    return nullptr;
+  }
+  return mWebProgress->GetBounceTrackingState();
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(CanonicalBrowsingContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CanonicalBrowsingContext,
