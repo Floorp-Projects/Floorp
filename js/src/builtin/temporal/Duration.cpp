@@ -1912,21 +1912,21 @@ static bool UnbalanceDurationRelativeSlow(
     return false;
   }
 
-  // Step 1.
+  // Steps 1-3.
   MOZ_ASSERT(largestUnit != TemporalUnit::Year);
   MOZ_ASSERT(!years->isZero() || !months->isZero() || !weeks->isZero() ||
              !days->isZero());
 
-  // Step 2. (Not applicable)
+  // Step 4. (Not applicable)
 
-  // Step 3.
+  // Step 5.
   MOZ_ASSERT(sign == -1 || sign == 1);
 
-  // Steps 4-8. (Not applicable)
+  // Steps 6-10. (Not applicable)
 
-  // Steps 9-11.
+  // Steps 11-13.
   if (largestUnit == TemporalUnit::Month) {
-    // Steps 9.a-c. (Not applicable)
+    // Steps 11.a-c. (Not applicable)
 
     if (amountToAdd) {
       Rooted<BigInt*> toAdd(cx, BigInt::createFromDouble(cx, amountToAdd));
@@ -1949,34 +1949,34 @@ static bool UnbalanceDurationRelativeSlow(
       }
     }
 
-    // Step 9.d.
+    // Step 11.d.
     Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx);
     Rooted<BigInt*> oneYearMonths(cx);
     while (!years->isZero()) {
-      // Step 9.d.i.
+      // Step 11.d.i.
       newRelativeTo =
           CalendarDateAdd(cx, calendar, dateRelativeTo, oneYear, dateAdd);
       if (!newRelativeTo) {
         return false;
       }
 
-      // Steps 9.d.ii-iv.
+      // Steps 11.d.ii-iv.
       Duration untilResult;
       if (!CalendarDateUntil(cx, calendar, dateRelativeTo, newRelativeTo,
                              TemporalUnit::Month, dateUntil, &untilResult)) {
         return false;
       }
 
-      // Step 9.d.v.
+      // Step 11.d.v.
       oneYearMonths = BigInt::createFromDouble(cx, untilResult.months);
       if (!oneYearMonths) {
         return false;
       }
 
-      // Step 9.d.vi.
+      // Step 11.d.vi.
       dateRelativeTo.set(newRelativeTo);
 
-      // Step 9.d.vii.
+      // Step 11.d.vii.
       if (sign < 0) {
         years = BigInt::inc(cx, years);
       } else {
@@ -1986,14 +1986,14 @@ static bool UnbalanceDurationRelativeSlow(
         return false;
       }
 
-      // Step 9.d.viii.
+      // Step 11.d.viii.
       months = BigInt::add(cx, months, oneYearMonths);
       if (!months) {
         return false;
       }
     }
   } else if (largestUnit == TemporalUnit::Week) {
-    // Steps 10.a-b. (Not applicable)
+    // Steps 12.a-c. (Not applicable)
 
     if (amountToAdd) {
       Rooted<BigInt*> toAdd(cx, BigInt::createFromDouble(cx, amountToAdd));
@@ -2028,10 +2028,10 @@ static bool UnbalanceDurationRelativeSlow(
       }
     }
 
-    // Step 10.c.
+    // Step 12.d.
     Rooted<BigInt*> oneYearDays(cx);
     while (!years->isZero()) {
-      // Steps 10.c.i-ii.
+      // Steps 12.d.i-ii.
       int32_t oneYearDaysInt;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
                             dateRelativeTo, &oneYearDaysInt)) {
@@ -2042,13 +2042,13 @@ static bool UnbalanceDurationRelativeSlow(
         return false;
       }
 
-      // Step 10.c.iii.
+      // Step 12.d.iii.
       days = BigInt::add(cx, days, oneYearDays);
       if (!days) {
         return false;
       }
 
-      // Step 10.c.iv.
+      // Step 12.d.iv.
       if (sign < 0) {
         years = BigInt::inc(cx, years);
       } else {
@@ -2059,10 +2059,10 @@ static bool UnbalanceDurationRelativeSlow(
       }
     }
 
-    // Step 10.d.
+    // Step 12.e.
     Rooted<BigInt*> oneMonthDays(cx);
     while (!months->isZero()) {
-      // Steps 10.d.i-ii.
+      // Steps 12.e.i-ii.
       int32_t oneMonthDaysInt;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
                             dateRelativeTo, &oneMonthDaysInt)) {
@@ -2073,13 +2073,13 @@ static bool UnbalanceDurationRelativeSlow(
         return false;
       }
 
-      // Step 10.d.iii.
+      // Step 12.e.iii.
       days = BigInt::add(cx, days, oneMonthDays);
       if (!days) {
         return false;
       }
 
-      // Step 10.d.iv.
+      // Step 12.e.iv.
       if (sign < 0) {
         months = BigInt::inc(cx, months);
       } else {
@@ -2133,14 +2133,14 @@ static bool UnbalanceDurationRelativeSlow(
       }
     }
 
-    // Step 11.a.
+    // Step 13.a.
 
-    // Steps 11.a.i-ii. (Not applicable)
+    // Steps 13.a.i-iii. (Not applicable)
 
-    // Step 11.a.iii.
+    // Step 13.a.iv.
     Rooted<BigInt*> oneYearDays(cx);
     while (!years->isZero()) {
-      // Steps 11.a.iii.1-2.
+      // Steps 13.a.iv.1-2.
       int32_t oneYearDaysInt;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
                             dateRelativeTo, &oneYearDaysInt)) {
@@ -2151,13 +2151,13 @@ static bool UnbalanceDurationRelativeSlow(
         return false;
       }
 
-      // Step 11.a.iii.3.
+      // Step 13.a.iv.3.
       days = BigInt::add(cx, days, oneYearDays);
       if (!days) {
         return false;
       }
 
-      // Step 11.a.iii.4.
+      // Step 13.a.iv.4.
       if (sign < 0) {
         years = BigInt::inc(cx, years);
       } else {
@@ -2168,10 +2168,10 @@ static bool UnbalanceDurationRelativeSlow(
       }
     }
 
-    // Step 11.a.iv.
+    // Step 13.a.v.
     Rooted<BigInt*> oneMonthDays(cx);
     while (!months->isZero()) {
-      // Steps 11.a.iv.1-2.
+      // Steps 13.a.v.1-2.
       int32_t oneMonthDaysInt;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
                             dateRelativeTo, &oneMonthDaysInt)) {
@@ -2182,13 +2182,13 @@ static bool UnbalanceDurationRelativeSlow(
         return false;
       }
 
-      // Step 11.a.iv.3.
+      // Step 13.a.v.3.
       days = BigInt::add(cx, days, oneMonthDays);
       if (!days) {
         return false;
       }
 
-      // Step 11.a.iv.4.
+      // Step 13.a.v.4.
       if (sign < 0) {
         months = BigInt::inc(cx, months);
       } else {
@@ -2199,10 +2199,10 @@ static bool UnbalanceDurationRelativeSlow(
       }
     }
 
-    // Step 11.a.v.
+    // Step 13.a.vi.
     Rooted<BigInt*> oneWeekDays(cx);
     while (!weeks->isZero()) {
-      // Steps 11.a.v.1-2.
+      // Steps 13.a.vi.1-2.
       int32_t oneWeekDaysInt;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneWeek, dateAdd,
                             dateRelativeTo, &oneWeekDaysInt)) {
@@ -2213,13 +2213,13 @@ static bool UnbalanceDurationRelativeSlow(
         return false;
       }
 
-      // Step 11.a.v.3.
+      // Step 13.a.vi.3.
       days = BigInt::add(cx, days, oneWeekDays);
       if (!days) {
         return false;
       }
 
-      // Step 11.a.v.4.
+      // Step 13.a.vi.4.
       if (sign < 0) {
         weeks = BigInt::inc(cx, weeks);
       } else {
@@ -2231,7 +2231,7 @@ static bool UnbalanceDurationRelativeSlow(
     }
   }
 
-  // Step 12.
+  // Step 14.
   return CreateDateDurationRecord(
       cx, BigInt::numberValue(years), BigInt::numberValue(months),
       BigInt::numberValue(weeks), BigInt::numberValue(days), result);
@@ -2252,42 +2252,42 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
   double weeks = duration.weeks;
   double days = duration.days;
 
-  // Step 1.
+  // Steps 1-3.
   if (largestUnit == TemporalUnit::Year ||
       (years == 0 && months == 0 && weeks == 0 && days == 0)) {
-    // Step 1.a.
+    // Step 3.a.
     *result = CreateDateDurationRecord(years, months, weeks, days);
     return true;
   }
 
-  // Step 2.
+  // Step 4.
   int32_t sign = DurationSign({years, months, weeks, days});
 
-  // Step 3.
+  // Step 5.
   MOZ_ASSERT(sign != 0);
 
-  // Step 4.
+  // Step 6.
   Rooted<DurationObject*> oneYear(cx,
                                   CreateTemporalDuration(cx, {double(sign)}));
   if (!oneYear) {
     return false;
   }
 
-  // Step 5.
+  // Step 7.
   Rooted<DurationObject*> oneMonth(
       cx, CreateTemporalDuration(cx, {0, double(sign)}));
   if (!oneMonth) {
     return false;
   }
 
-  // Step 6.
+  // Step 8.
   Rooted<DurationObject*> oneWeek(
       cx, CreateTemporalDuration(cx, {0, 0, double(sign)}));
   if (!oneWeek) {
     return false;
   }
 
-  // Steps 7-8.
+  // Step 9.
   auto date = ToTemporalDate(cx, relativeTo);
   if (!date) {
     return false;
@@ -2299,22 +2299,24 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
     return false;
   }
 
-  // Steps 9-11.
-  if (largestUnit == TemporalUnit::Month) {
-    // Step 9.a. (Not applicable in our implementation.)
+  // Step 10. (Not applicable)
 
-    // Steps 9.b-c.
+  // Steps 11-13.
+  if (largestUnit == TemporalUnit::Month) {
+    // Step 11.a. (Not applicable in our implementation.)
+
+    // Steps 11.b-c.
     Rooted<Value> dateAdd(cx);
     Rooted<Value> dateUntil(cx);
     if (calendar.isObject()) {
       Rooted<JSObject*> calendarObj(cx, calendar.toObject());
 
-      // Step 9.b.
+      // Step 11.b.
       if (!GetMethod(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
         return false;
       }
 
-      // Step 9.c.
+      // Step 11.c.
       if (!GetMethod(cx, calendarObj, cx->names().dateUntil, &dateUntil)) {
         return false;
       }
@@ -2329,27 +2331,27 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
                                            dateAdd, dateUntil, result);
     }
 
-    // Step 9.d.
+    // Step 11.d.
     Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx);
     while (years != 0) {
-      // Step 9.d.i.
+      // Step 11.d.i.
       newRelativeTo =
           CalendarDateAdd(cx, calendar, dateRelativeTo, oneYear, dateAdd);
       if (!newRelativeTo) {
         return false;
       }
 
-      // Steps 9.d.ii-iv.
+      // Steps 11.d.ii-iv.
       Duration untilResult;
       if (!CalendarDateUntil(cx, calendar, dateRelativeTo, newRelativeTo,
                              TemporalUnit::Month, dateUntil, &untilResult)) {
         return false;
       }
 
-      // Step 9.d.v.
+      // Step 11.d.v.
       double oneYearMonths = untilResult.months;
 
-      // Step 9.d.vi.
+      // Step 11.d.vi.
       dateRelativeTo = newRelativeTo;
 
       // Go to the slow path when the result is inexact.
@@ -2360,16 +2362,16 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
             UndefinedHandleValue, result);
       }
 
-      // Step 9.d.vii.
+      // Step 11.d.vii.
       years -= sign;
 
-      // Step 9.d.viii.
+      // Step 11.d.viii.
       months += oneYearMonths;
     }
   } else if (largestUnit == TemporalUnit::Week) {
-    // Step 10.a. (Not applicable in our implementation.)
+    // Step 12.a. (Not applicable in our implementation.)
 
-    // Steps 10.b-c.
+    // Steps 12.b-c.
     Rooted<Value> dateAdd(cx);
     if (calendar.isObject()) {
       Rooted<JSObject*> calendarObj(cx, calendar.toObject());
@@ -2387,9 +2389,9 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
           UndefinedHandleValue, result);
     }
 
-    // Step 10.d.
+    // Step 12.d.
     while (years != 0) {
-      // Steps 10.d.i-ii.
+      // Steps 12.d.i-ii.
       int32_t oneYearDays;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
                             &dateRelativeTo, &oneYearDays)) {
@@ -2404,16 +2406,16 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
             UndefinedHandleValue, result);
       }
 
-      // Step 10.d.iii.
+      // Step 12.d.iii.
       days += oneYearDays;
 
-      // Step 10.d.iv.
+      // Step 12.d.iv.
       years -= sign;
     }
 
-    // Step 10.e.
+    // Step 12.e.
     while (months != 0) {
-      // Steps 10.e.i-ii.
+      // Steps 12.e.i-ii.
       int32_t oneMonthDays;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
                             &dateRelativeTo, &oneMonthDays)) {
@@ -2428,20 +2430,20 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
             UndefinedHandleValue, result);
       }
 
-      // Step 10.e.iii.
+      // Step 12.e.iii.
       days += oneMonthDays;
 
-      // Step 10.e.iv.
+      // Step 12.e.iv.
       months -= sign;
     }
   } else if (years != 0 || months != 0 || weeks != 0) {
-    // Step 11.a.
+    // Step 13.a.
 
     // FIXME: why don't we unconditionally throw an error for missing calendars?
 
-    // Step 11.a.i. (Not applicable in our implementation.)
+    // Step 13.a.i. (Not applicable in our implementation.)
 
-    // Step 11.a.ii.
+    // Steps 13.a.ii-iii.
     Rooted<Value> dateAdd(cx);
     if (calendar.isObject()) {
       Rooted<JSObject*> calendarObj(cx, calendar.toObject());
@@ -2459,9 +2461,9 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
           UndefinedHandleValue, result);
     }
 
-    // Step 11.a.iii.
+    // Step 13.a.iv.
     while (years != 0) {
-      // Steps 11.a.iii.1-2.
+      // Steps 13.a.iv.1-2.
       int32_t oneYearDays;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
                             &dateRelativeTo, &oneYearDays)) {
@@ -2476,16 +2478,16 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
             UndefinedHandleValue, result);
       }
 
-      // Step 11.a.iii.3.
+      // Step 13.a.iv.3.
       days += oneYearDays;
 
-      // Step 11.a.iii.4.
+      // Step 13.a.iv.4.
       years -= sign;
     }
 
-    // Step 11.a.iv.
+    // Step 13.a.v.
     while (months != 0) {
-      // Steps 11.a.iv.1-2.
+      // Steps 13.a.v.1-2.
       int32_t oneMonthDays;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
                             &dateRelativeTo, &oneMonthDays)) {
@@ -2500,16 +2502,16 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
             UndefinedHandleValue, result);
       }
 
-      // Step 11.a.iv.3.
+      // Step 13.a.v.3.
       days += oneMonthDays;
 
-      // Step 11.a.iv.4.
+      // Step 13.a.v.4.
       months -= sign;
     }
 
-    // Step 11.a.v.
+    // Step 13.a.vi.
     while (weeks != 0) {
-      // Steps 11.a.v.1-2.
+      // Steps 13.a.vi.1-2.
       int32_t oneWeekDays;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneWeek, dateAdd,
                             &dateRelativeTo, &oneWeekDays)) {
@@ -2524,15 +2526,15 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
             UndefinedHandleValue, result);
       }
 
-      // Step 11.a.v.3.
+      // Step 13.a.vi.3.
       days += oneWeekDays;
 
-      // Step 11.a.v.4.
+      // Step 13.a.vi.4.
       weeks -= sign;
     }
   }
 
-  // Step 12.
+  // Step 14.
   return CreateDateDurationRecord(cx, years, months, weeks, days, result);
 }
 
@@ -2550,35 +2552,35 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
   double weeks = duration.weeks;
   double days = duration.days;
 
-  // Step 1.
+  // Steps 1-3.
   if (largestUnit == TemporalUnit::Year ||
       (years == 0 && months == 0 && weeks == 0 && days == 0)) {
-    // Step 1.a.
+    // Step 3.a.
     *result = CreateDateDurationRecord(years, months, weeks, days);
     return true;
   }
 
-  // Steps 2-8. (Not applicable in our implementation.)
+  // Steps 4-10. (Not applicable in our implementation.)
 
-  // Steps 9-11.
+  // Steps 11-13.
   if (largestUnit == TemporalUnit::Month) {
-    // Step 9.a.
+    // Step 11.a.
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_DURATION_UNCOMPARABLE, "calendar");
     return false;
   } else if (largestUnit == TemporalUnit::Week) {
-    // Step 10.a.
+    // Step 12.a.
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_DURATION_UNCOMPARABLE, "calendar");
     return false;
   } else if (years != 0 || months != 0 || weeks != 0) {
-    // Step 11.a.i.
+    // Step 13.a.i.
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_DURATION_UNCOMPARABLE, "calendar");
     return false;
   }
 
-  // Step 12.
+  // Step 14.
   *result = CreateDateDurationRecord(years, months, weeks, days);
   return true;
 }
