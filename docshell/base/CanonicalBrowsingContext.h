@@ -37,7 +37,6 @@ class nsITimer;
 
 namespace mozilla {
 enum class CallState;
-class BounceTrackingState;
 
 namespace embedding {
 class PrintData;
@@ -381,8 +380,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void RecomputeAppWindowVisibility();
 
   already_AddRefed<nsISHEntry> GetMostRecentLoadingSessionHistoryEntry();
-
-  already_AddRefed<BounceTrackingState> GetBounceTrackingState();
 
  protected:
   // Called when the browsing context is being discarded.
