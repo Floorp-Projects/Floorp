@@ -11,8 +11,7 @@
  * and create derivative works of this document.
  */
 
-[Func="mozilla::dom::HTMLDialogElement::IsDialogEnabled",
- Exposed=Window]
+[Exposed=Window]
 interface HTMLDialogElement : HTMLElement {
   [HTMLConstructor] constructor();
 

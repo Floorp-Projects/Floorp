@@ -7,37 +7,18 @@
 #include "mozilla/dom/HTMLDialogElement.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/HTMLDialogElementBinding.h"
-#include "mozilla/dom/HTMLUnknownElement.h"
-#include "mozilla/StaticPrefs_dom.h"
 
 #include "nsContentUtils.h"
 #include "nsFocusManager.h"
 #include "nsIFrame.h"
 
-// Expand NS_IMPL_NS_NEW_HTML_ELEMENT(Dialog) with pref check
-nsGenericHTMLElement* NS_NewHTMLDialogElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-    mozilla::dom::FromParser aFromParser) {
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);
-  auto* nim = nodeInfo->NodeInfoManager();
-  bool isChromeDocument = nsContentUtils::IsChromeDoc(nodeInfo->GetDocument());
-  if (mozilla::StaticPrefs::dom_dialog_element_enabled() || isChromeDocument) {
-    return new (nim) mozilla::dom::HTMLDialogElement(nodeInfo.forget());
-  }
-  return new (nim) mozilla::dom::HTMLUnknownElement(nodeInfo.forget());
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Dialog)
 
 namespace mozilla::dom {
 
 HTMLDialogElement::~HTMLDialogElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLDialogElement)
-
-bool HTMLDialogElement::IsDialogEnabled(JSContext* aCx,
-                                        JS::Handle<JSObject*> aObj) {
-  return StaticPrefs::dom_dialog_element_enabled() ||
-         nsContentUtils::IsSystemCaller(aCx);
-}
 
 void HTMLDialogElement::Close(
     const mozilla::dom::Optional<nsAString>& aReturnValue) {

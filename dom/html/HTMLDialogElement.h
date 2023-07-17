@@ -25,8 +25,6 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
 
   nsresult Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const override;
 
-  static bool IsDialogEnabled(JSContext* aCx, JS::Handle<JSObject*> aObj);
-
   bool Open() const { return GetBoolAttr(nsGkAtoms::open); }
   void SetOpen(bool aOpen, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::open, aOpen, aError);
