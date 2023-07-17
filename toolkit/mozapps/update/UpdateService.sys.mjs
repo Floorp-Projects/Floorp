@@ -757,6 +757,46 @@ function promiseLangPacksUpdated(update) {
   return Promise.resolve();
 }
 
+/*
+ * See nsIUpdateService.idl
+ */
+function isAppBaseDirWritable() {
+  let appDirTestFile = "";
+
+  try {
+    appDirTestFile = getAppBaseDir();
+    appDirTestFile.append(FILE_UPDATE_TEST);
+  } catch (e) {
+    LOG(
+      "isAppBaseDirWritable - Base directory or test path could not be " +
+        `determined: ${e}`
+    );
+    return false;
+  }
+
+  try {
+    LOG(
+      `isAppBaseDirWritable - testing write access for ${appDirTestFile.path}`
+    );
+
+    if (appDirTestFile.exists()) {
+      appDirTestFile.remove(false);
+    }
+    // if we're unable to create the test file this will throw an exception:
+    appDirTestFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+    appDirTestFile.remove(false);
+    LOG(`isAppBaseDirWritable - Path is writable: ${appDirTestFile.path}`);
+    return true;
+  } catch (e) {
+    LOG(
+      `isAppBaseDirWritable - Path '${appDirTestFile.path}' ` +
+        `is not writable: ${e}`
+    );
+  }
+  // No write access to the installation directory
+  return false;
+}
+
 /**
  * Determines whether or not an update can be applied. This is always true on
  * Windows when the service is used. On Mac OS X and Linux, if the user has
@@ -815,19 +855,11 @@ function getCanApplyUpdates() {
         );
         userCanElevate = false;
       }
-      if (!userCanElevate) {
-        // if we're unable to create the test file this will throw an exception.
-        let appDirTestFile = getAppBaseDir();
-        appDirTestFile.append(FILE_UPDATE_TEST);
-        LOG("getCanApplyUpdates - testing write access " + appDirTestFile.path);
-        if (appDirTestFile.exists()) {
-          appDirTestFile.remove(false);
-        }
-        appDirTestFile.create(
-          Ci.nsIFile.NORMAL_FILE_TYPE,
-          FileUtils.PERMS_FILE
+      if (!userCanElevate && !isAppBaseDirWritable) {
+        LOG(
+          "getCanApplyUpdates - unable to apply updates, because the base " +
+            "directory is not writable."
         );
-        appDirTestFile.remove(false);
       }
     }
   } catch (e) {
@@ -3857,6 +3889,13 @@ UpdateService.prototype = {
       cleanupDownloadingUpdate();
     }
     AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_DOWNLOAD_UPDATE);
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  get isAppBaseDirWritable() {
+    return isAppBaseDirWritable();
   },
 
   get disabledForTesting() {

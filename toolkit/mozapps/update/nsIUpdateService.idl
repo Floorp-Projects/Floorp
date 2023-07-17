@@ -535,6 +535,13 @@ interface nsIApplicationUpdateService : nsISupports
   readonly attribute boolean manualUpdateOnly;
 
   /**
+   * Determines if the base directory is writable. If not, we assume that
+   * further permissions are required and that we are dealing with an elevated
+   * installation.
+   */
+  readonly attribute boolean isAppBaseDirWritable;
+
+  /**
    * This can be set to true to prevent updates being processed beyond starting
    * an update download. This should only be used when we are being run as a
    * background task.

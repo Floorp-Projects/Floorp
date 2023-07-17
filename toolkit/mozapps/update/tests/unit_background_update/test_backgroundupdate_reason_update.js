@@ -6,6 +6,12 @@
 
 "use strict";
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+});
+
 const { BackgroundUpdate } = ChromeUtils.importESModule(
   "resource://gre/modules/BackgroundUpdate.sys.mjs"
 );
@@ -232,6 +238,114 @@ add_task(async function test_reasons_update_manual_update_only() {
   result = await checkGleanPing();
   Assert.ok(!result.includes(REASON.MANUAL_UPDATE_ONLY));
 });
+
+// Ensure that we are starting on a clean machine without the service registry
+// key. Enable and disable the Nimbus feature that allows the background
+// updater to operate on unelevated installations, verifying that the
+// appropriate reason to not update is (respectively, is not) reported.
+add_task(
+  {
+    skip_if: () => AppConstants.platform != "win",
+  },
+  async function test_unelevated_nimbus_default() {
+    // Default is disabled.
+    Assert.equal(
+      false,
+      lazy.NimbusFeatures.backgroundUpdate.getVariable(
+        "allowUpdatesForUnelevatedInstallions"
+      ),
+      "default is disabled"
+    );
+
+    let r = await reasons();
+    Assert.ok(
+      r.includes(BackgroundUpdate.REASON.SERVICE_REGISTRY_KEY_MISSING),
+      `SERVICE_REGISTRY_KEY_MISSING in ${JSON.stringify(r)}`
+    );
+  }
+);
+
+add_task(
+  {
+    skip_if: () => AppConstants.platform != "win",
+  },
+  async function test_unelevated_nimbus_enabled() {
+    let r;
+
+    // Enable feature.
+    Services.prefs.setBoolPref(
+      "app.update.background.allowUpdatesForUnelevatedInstallations",
+      true
+    );
+    registerCleanupFunction(() => {
+      Services.prefs.clearUserPref(
+        "app.update.background.allowUpdatesForUnelevatedInstallations"
+      );
+    });
+
+    // execute!
+    r = await reasons();
+    Assert.ok(
+      !r.includes(BackgroundUpdate.REASON.SERVICE_REGISTRY_KEY_MISSING),
+      `no SERVICE_REGISTRY_KEY_MISSING in ${JSON.stringify(r)}`
+    );
+    Assert.ok(
+      !r.includes(BackgroundUpdate.REASON.APPBASEDIR_NOT_WRITABLE),
+      `no APPBASEDIR_NOT_WRITABLE in ${JSON.stringify(r)}`
+    );
+
+    // the test directory usually is writable, but we now create a file and keep
+    // it open, so that the test file can neither be deleted nor recreated and
+    // appears to be locked. With that we re-execute the test and expect to find
+    // APPBASEDIR_NOT_WRITABLE in the telemetry data.
+    let appDirTestFile = Services.dirsvc.get(
+      XRE_EXECUTABLE_FILE,
+      Ci.nsIFile
+    ).parent;
+    appDirTestFile.append(FILE_UPDATE_TEST);
+    appDirTestFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+
+    var outputStream = Cc[
+      "@mozilla.org/network/file-output-stream;1"
+    ].createInstance(Ci.nsIFileOutputStream);
+    //                              WR_ONLY|CREATE|TRUNC
+    outputStream.init(appDirTestFile, 0x02 | 0x08 | 0x20, 0o644, null);
+    registerCleanupFunction(() => {
+      outputStream.close();
+      appDirTestFile.remove(false);
+    });
+    // after the preperation: execute again!
+    r = await reasons();
+    Assert.ok(
+      r.includes(BackgroundUpdate.REASON.APPBASEDIR_NOT_WRITABLE),
+      `no APPBASEDIR_NOT_WRITABLE in ${JSON.stringify(r)}`
+    );
+  }
+);
+
+add_task(
+  {
+    skip_if: () => AppConstants.platform != "win",
+  },
+  async function test_unelevated_nimbus_disabled() {
+    // Disable feature.
+    Services.prefs.setBoolPref(
+      "app.update.background.allowUpdatesForUnelevatedInstallations",
+      false
+    );
+    registerCleanupFunction(() => {
+      Services.prefs.clearUserPref(
+        "app.update.background.allowUpdatesForUnelevatedInstallations"
+      );
+    });
+
+    let r = await reasons();
+    Assert.ok(
+      r.includes(BackgroundUpdate.REASON.SERVICE_REGISTRY_KEY_MISSING),
+      `SERVICE_REGISTRY_KEY_MISSING in ${JSON.stringify(r)}`
+    );
+  }
+);
 
 add_task(() => {
   // `setupTestCommon()` calls `do_test_pending()`; this calls
