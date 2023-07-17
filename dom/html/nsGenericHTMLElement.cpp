@@ -2056,16 +2056,15 @@ void nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
              "aFormIdElement shouldn't be set if aBindToTree is true!");
 
   bool needStateUpdate = false;
+  HTMLFormElement* form = GetFormInternal();
   if (!aBindToTree) {
-    HTMLFormElement* form = GetFormInternal();
     needStateUpdate = form && form->IsDefaultSubmitElement(this);
     ClearForm(true, false);
+    form = nullptr;
   }
 
-  // We have to get form again since the above ClearForm() call might update the
-  // form value.
-  HTMLFormElement* oldForm = GetFormInternal();
-  if (!oldForm) {
+  HTMLFormElement* oldForm = form;
+  if (!form) {
     // If @form is set, we have to use that to find the form.
     nsAutoString formId;
     if (GetAttr(nsGkAtoms::form, formId)) {
@@ -2086,7 +2085,8 @@ void nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
 
         if (element && element->IsHTMLElement(nsGkAtoms::form) &&
             nsContentUtils::IsInSameAnonymousTree(this, element)) {
-          SetFormInternal(static_cast<HTMLFormElement*>(element), aBindToTree);
+          form = static_cast<HTMLFormElement*>(element);
+          SetFormInternal(form, aBindToTree);
         }
       }
     } else {
@@ -2096,11 +2096,11 @@ void nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
       // it to the right value.  Also note that even if being bound here didn't
       // change our parent, we still need to search, since our parent chain
       // probably changed _somewhere_.
-      SetFormInternal(FindAncestorForm(), aBindToTree);
+      form = FindAncestorForm();
+      SetFormInternal(form, aBindToTree);
     }
   }
 
-  HTMLFormElement* form = GetFormInternal();
   if (form && !HasFlag(ADDED_TO_FORM)) {
     // Now we need to add ourselves to the form
     nsAutoString nameVal, idVal;
