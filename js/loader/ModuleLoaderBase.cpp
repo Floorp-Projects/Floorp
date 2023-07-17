@@ -851,7 +851,7 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
 
   MOZ_ASSERT(aRequest->mModuleScript);
   MOZ_ASSERT(!aRequest->mModuleScript->HasParseError());
-  MOZ_ASSERT(!aRequest->IsReadyToRun());
+  MOZ_ASSERT(aRequest->IsFetching() || aRequest->IsCompiling());
 
   auto visitedSet = aRequest->mVisitedSet;
   MOZ_ASSERT(visitedSet->Contains(aRequest->mURI));
@@ -885,26 +885,18 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
     return;
   }
 
+  MOZ_ASSERT(aRequest->mAwaitingImports == 0);
+  aRequest->mAwaitingImports = urls.Count();
+
   // For each url in urls, fetch a module script graph given url, module
   // script's CORS setting, and module script's settings object.
-  nsTArray<RefPtr<mozilla::GenericPromise>> importsReady;
   for (auto* url : urls) {
-    RefPtr<mozilla::GenericPromise> childReady =
-        StartFetchingModuleAndDependencies(aRequest, url);
-    importsReady.AppendElement(childReady);
+    StartFetchingModuleAndDependencies(aRequest, url);
   }
-
-  // Wait for all imports to become ready.
-  RefPtr<mozilla::GenericPromise::AllPromiseType> allReady =
-      mozilla::GenericPromise::All(mEventTarget, importsReady);
-  allReady->Then(mEventTarget, __func__, aRequest,
-                 &ModuleLoadRequest::DependenciesLoaded,
-                 &ModuleLoadRequest::ModuleErrored);
 }
 
-RefPtr<mozilla::GenericPromise>
-ModuleLoaderBase::StartFetchingModuleAndDependencies(ModuleLoadRequest* aParent,
-                                                     nsIURI* aURI) {
+void ModuleLoaderBase::StartFetchingModuleAndDependencies(
+    ModuleLoadRequest* aParent, nsIURI* aURI) {
   MOZ_ASSERT(aURI);
 
   RefPtr<ModuleLoadRequest> childRequest = CreateStaticImport(aURI, aParent);
@@ -924,20 +916,38 @@ ModuleLoaderBase::StartFetchingModuleAndDependencies(ModuleLoadRequest* aParent,
          url2.get()));
   }
 
-  RefPtr<mozilla::GenericPromise> ready = childRequest->mReady.Ensure(__func__);
+  MOZ_ASSERT(!childRequest->mWaitingParentRequest);
+  childRequest->mWaitingParentRequest = aParent;
 
   nsresult rv = StartModuleLoad(childRequest);
   if (NS_FAILED(rv)) {
     MOZ_ASSERT(!childRequest->mModuleScript);
     LOG(("ScriptLoadRequest (%p):   rejecting %p", aParent,
-         &childRequest->mReady));
+         childRequest.get()));
 
     mLoader->ReportErrorToConsole(childRequest, rv);
-    childRequest->mReady.Reject(rv, __func__);
-    return ready;
+    childRequest->LoadFailed();
+  }
+}
+
+void ModuleLoadRequest::ChildLoadComplete(bool aSuccess) {
+  RefPtr<ModuleLoadRequest> parent = mWaitingParentRequest;
+  MOZ_ASSERT(parent);
+  MOZ_ASSERT(parent->mAwaitingImports != 0);
+
+  mWaitingParentRequest = nullptr;
+  parent->mAwaitingImports--;
+
+  if (parent->IsReadyToRun()) {
+    MOZ_ASSERT_IF(!aSuccess, parent->IsErrored());
+    return;
   }
 
-  return ready;
+  if (!aSuccess) {
+    parent->ModuleErrored();
+  } else if (parent->mAwaitingImports == 0) {
+    parent->DependenciesLoaded();
+  }
 }
 
 void ModuleLoaderBase::StartDynamicImport(ModuleLoadRequest* aRequest) {

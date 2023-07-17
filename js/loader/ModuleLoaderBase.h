@@ -23,7 +23,6 @@
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/JSExecutionContext.h"
 #include "mozilla/MaybeOneOf.h"
-#include "mozilla/MozPromise.h"
 #include "mozilla/UniquePtr.h"
 #include "ResolveResult.h"
 
@@ -163,8 +162,6 @@ class ScriptLoaderInterface : public nsISupports {
  * 10. The client calls EvaluateModule() to execute the top-level module.
  */
 class ModuleLoaderBase : public nsISupports {
-  using GenericPromise = mozilla::GenericPromise;
-
   /*
    * The set of requests that are waiting for an ongoing fetch to complete.
    */
@@ -193,8 +190,8 @@ class ModuleLoaderBase : public nsISupports {
   bool mImportMapsAllowed = true;
 
  protected:
-  // Event handler used to process MozPromise actions, used internally to wait
-  // for fetches to finish and for imports to become avilable.
+  // Event handler used to dispatch runnables, used internally to wait for
+  // fetches to finish and for imports to become avilable.
   nsCOMPtr<nsISerialEventTarget> mEventTarget;
   RefPtr<ScriptLoaderInterface> mLoader;
 
@@ -388,8 +385,8 @@ class ModuleLoaderBase : public nsISupports {
 
   void StartFetchingModuleDependencies(ModuleLoadRequest* aRequest);
 
-  RefPtr<GenericPromise> StartFetchingModuleAndDependencies(
-      ModuleLoadRequest* aParent, nsIURI* aURI);
+  void StartFetchingModuleAndDependencies(ModuleLoadRequest* aParent,
+                                          nsIURI* aURI);
 
   /**
    * Shorthand Wrapper for JSAPI FinishDynamicImport function for the reject
