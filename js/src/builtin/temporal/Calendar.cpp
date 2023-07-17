@@ -1976,9 +1976,9 @@ bool js::temporal::CalendarInLeapYear(JSContext* cx,
 }
 
 /**
- * ResolveISOMonth ( fields )
+ * ISOResolveMonth ( fields )
  */
-static bool ResolveISOMonth(JSContext* cx, Handle<TemporalFields> fields,
+static bool ISOResolveMonth(JSContext* cx, Handle<TemporalFields> fields,
                             double* result) {
   // Step 1. (Not applicable in our implementation.)
 
@@ -2006,9 +2006,9 @@ static bool ResolveISOMonth(JSContext* cx, Handle<TemporalFields> fields,
     return true;
   }
 
-  // Step 6. (Not applicable in our implementation.)
+  // Steps 6-7. (Not applicable in our implementation.)
 
-  // Step 7.
+  // Step 8.
   if (monthCode->length() != 3) {
     if (auto code = QuoteString(cx, monthCode)) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -2023,14 +2023,13 @@ static bool ResolveISOMonth(JSContext* cx, Handle<TemporalFields> fields,
     return false;
   }
 
-  // Step 8.
   char16_t chars[3] = {
       linear->latin1OrTwoByteChar(0),
       linear->latin1OrTwoByteChar(1),
       linear->latin1OrTwoByteChar(2),
   };
 
-  // Steps 8-10. (Partial)
+  // Steps 9-11. (Partial)
   if (chars[0] != 'M' || !mozilla::IsAsciiDigit(chars[1]) ||
       !mozilla::IsAsciiDigit(chars[2])) {
     if (auto code = QuoteString(cx, linear)) {
@@ -2041,11 +2040,11 @@ static bool ResolveISOMonth(JSContext* cx, Handle<TemporalFields> fields,
     return false;
   }
 
-  // Step 11.
+  // Step 12.
   int monthCodeNumber =
       AsciiDigitToNumber(chars[1]) * 10 + AsciiDigitToNumber(chars[2]);
 
-  // Step 10. (Partial)
+  // Step 11. (Partial)
   if (monthCodeNumber < 1 || monthCodeNumber > 12) {
     if (auto code = QuoteString(cx, linear)) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -2055,9 +2054,9 @@ static bool ResolveISOMonth(JSContext* cx, Handle<TemporalFields> fields,
     return false;
   }
 
-  // Step 12. (Not applicable in our implementation.)
+  // Step 13. (Not applicable in our implementation.)
 
-  // Step 13.
+  // Step 14.
   if (!std::isnan(month) && month != monthCodeNumber) {
     if (auto code = QuoteString(cx, linear)) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -2067,7 +2066,7 @@ static bool ResolveISOMonth(JSContext* cx, Handle<TemporalFields> fields,
     return false;
   }
 
-  // Step 14.
+  // Step 15.
   *result = monthCodeNumber;
   return true;
 }
@@ -2087,7 +2086,7 @@ static bool ISODateFromFields(JSContext* cx, Handle<TemporalFields> fields,
 
   // Step 5.
   double month;
-  if (!ResolveISOMonth(cx, fields, &month)) {
+  if (!ISOResolveMonth(cx, fields, &month)) {
     return false;
   }
 
@@ -2287,7 +2286,7 @@ static bool ISOYearMonthFromFields(JSContext* cx, Handle<TemporalFields> fields,
 
   // Step 5.
   double month;
-  if (!ResolveISOMonth(cx, fields, &month)) {
+  if (!ISOResolveMonth(cx, fields, &month)) {
     return false;
   }
 
@@ -2450,7 +2449,7 @@ static bool ISOMonthDayFromFields(JSContext* cx, Handle<TemporalFields> fields,
   }
 
   // Step 7.
-  if (!ResolveISOMonth(cx, fields, &month)) {
+  if (!ISOResolveMonth(cx, fields, &month)) {
     return false;
   }
 
