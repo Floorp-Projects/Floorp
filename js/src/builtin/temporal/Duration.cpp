@@ -5112,12 +5112,27 @@ static bool RoundDurationYear(JSContext* cx, const Duration& duration,
   }
   days += monthsWeeksInDays;
 
-  // |days| is an integer in our implementation, so we don't need to truncate.
-  MOZ_ASSERT(IsInteger(days));
+  // FIXME: spec issue - truncation doesn't match the spec polyfill.
+  // https://github.com/tc39/proposal-temporal/issues/2540
+
+  double truncatedDays = days;
+  if (nanosAndDays.nanoseconds() > InstantSpan{}) {
+    // Round toward positive infinity when the integer days are negative and the
+    // fractional part is positive.
+    if (truncatedDays < 0) {
+      truncatedDays += 1;
+    }
+  } else if (nanosAndDays.nanoseconds() < InstantSpan{}) {
+    // Round toward negative infinity when the integer days are positive and the
+    // fractional part is negative.
+    if (truncatedDays > 0) {
+      truncatedDays -= 1;
+    }
+  }
 
   // Step 9.i.
   Rooted<DurationObject*> wholeDaysDuration(
-      cx, CreateTemporalDuration(cx, {0, 0, 0, days}));
+      cx, CreateTemporalDuration(cx, {0, 0, 0, truncatedDays}));
   if (!wholeDaysDuration) {
     return false;
   }
