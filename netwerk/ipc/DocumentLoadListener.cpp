@@ -12,6 +12,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_extensions.h"
@@ -928,6 +929,27 @@ auto DocumentLoadListener::OpenDocument(
 
   nsLoadFlags loadFlags = aLoadState->CalculateChannelLoadFlags(
       browsingContext, std::move(aUriModified), std::move(aIsXFOError));
+
+  // Keep track of navigation for the Bounce Tracking Protection.
+  if (browsingContext->IsTopContent()) {
+    RefPtr<BounceTrackingState> bounceTrackingState =
+        browsingContext->GetBounceTrackingState();
+
+    // Not every browsing context has a BounceTrackingState. It's also null when
+    // the feature is disabled.
+    if (bounceTrackingState) {
+      nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+      nsresult rv =
+          loadInfo->GetTriggeringPrincipal(getter_AddRefs(triggeringPrincipal));
+
+      if (!NS_WARN_IF(NS_FAILED(rv))) {
+        DebugOnly<nsresult> rv = bounceTrackingState->OnStartNavigation(
+            triggeringPrincipal, loadInfo->GetHasValidUserGestureActivation());
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "BounceTrackingState::OnStartNavigation failed");
+      }
+    }
+  }
 
   return Open(aLoadState, loadInfo, loadFlags, aCacheKey, aChannelId,
               aAsyncOpenTime, aTiming, std::move(aInfo), false, aContentParent,
@@ -2515,6 +2537,24 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
     // We can also have multiple calls to OnStartRequest when dealing with
     // multi-part content, but only want to redirect once.
     return NS_OK;
+  }
+
+  // Keep track of server responses resulting in a document for the Bounce
+  // Tracking Protection.
+  if (mIsDocumentLoad && GetParentWindowContext() == nullptr &&
+      loadingContext->IsTopContent()) {
+    RefPtr<BounceTrackingState> bounceTrackingState =
+        loadingContext->GetBounceTrackingState();
+
+    // Not every browsing context has a BounceTrackingState. It's also null when
+    // the feature is disabled.
+    if (bounceTrackingState) {
+      DebugOnly<nsresult> rv =
+          bounceTrackingState->OnDocumentStartRequest(mChannel);
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "BounceTrackingState::OnDocumentStartRequest failed.");
+    }
   }
 
   mChannel->Suspend();
