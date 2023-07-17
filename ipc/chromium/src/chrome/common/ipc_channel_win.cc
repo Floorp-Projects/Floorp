@@ -14,6 +14,7 @@
 #include "base/command_line.h"
 #include "base/compiler_specific.h"
 #include "base/logging.h"
+#include "base/process.h"
 #include "base/process_util.h"
 #include "base/rand_util.h"
 #include "base/string_util.h"
@@ -44,11 +45,13 @@ Channel::ChannelImpl::State::~State() {
 
 //------------------------------------------------------------------------------
 
-Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode)
+Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode,
+                                  base::ProcessId other_pid)
     : chan_cap_("ChannelImpl::SendMutex",
                 MessageLoopForIO::current()->SerialEventTarget()),
       ALLOW_THIS_IN_INITIALIZER_LIST(input_state_(this)),
-      ALLOW_THIS_IN_INITIALIZER_LIST(output_state_(this)) {
+      ALLOW_THIS_IN_INITIALIZER_LIST(output_state_(this)),
+      other_pid_(other_pid) {
   Init(mode);
 
   if (!pipe) {
@@ -209,9 +212,13 @@ bool Channel::ChannelImpl::Connect(Listener* listener) {
   return true;
 }
 
-void Channel::ChannelImpl::SetOtherPid(int other_pid) {
+void Channel::ChannelImpl::SetOtherPid(base::ProcessId other_pid) {
+  IOThread().AssertOnCurrentThread();
   mozilla::MutexAutoLock lock(SendMutex());
   chan_cap_.NoteExclusiveAccess();
+  MOZ_RELEASE_ASSERT(
+      other_pid_ == base::kInvalidProcessId || other_pid_ == other_pid,
+      "Multiple sources of SetOtherPid disagree!");
   other_pid_ = other_pid;
 
   // Now that we know the remote pid, open a privileged handle to the
@@ -501,7 +508,7 @@ void Channel::ChannelImpl::StartAcceptingHandles(Mode mode) {
   accept_handles_ = true;
   privileged_ = mode == MODE_SERVER;
 
-  if (privileged_ && other_pid_ != -1 &&
+  if (privileged_ && other_pid_ != base::kInvalidProcessId &&
       other_process_ == INVALID_HANDLE_VALUE) {
     other_process_ = OpenProcess(PROCESS_DUP_HANDLE, false, other_pid_);
     if (!other_process_) {
@@ -721,8 +728,8 @@ bool Channel::ChannelImpl::TransferHandles(Message& msg) {
 
 //------------------------------------------------------------------------------
 // Channel's methods simply call through to ChannelImpl.
-Channel::Channel(ChannelHandle pipe, Mode mode)
-    : channel_impl_(new ChannelImpl(std::move(pipe), mode)) {
+Channel::Channel(ChannelHandle pipe, Mode mode, base::ProcessId other_pid)
+    : channel_impl_(new ChannelImpl(std::move(pipe), mode, other_pid)) {
   MOZ_COUNT_CTOR(IPC::Channel);
 }
 
@@ -742,7 +749,9 @@ bool Channel::Send(mozilla::UniquePtr<Message> message) {
   return channel_impl_->Send(std::move(message));
 }
 
-int32_t Channel::OtherPid() const { return channel_impl_->OtherPid(); }
+void Channel::SetOtherPid(base::ProcessId other_pid) {
+  channel_impl_->SetOtherPid(other_pid);
+}
 
 bool Channel::IsClosed() const { return channel_impl_->IsClosed(); }
 

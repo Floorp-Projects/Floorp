@@ -100,7 +100,7 @@ class NodeController final : public mojo::core::ports::NodeDelegate,
 
   // Called as the IO thread is started in a child process.
   static ScopedPort InitChildProcess(UniquePtr<IPC::Channel> aChannel,
-                                     int32_t aParentPid = -1);
+                                     base::ProcessId aParentPid);
 
   // Called when the IO thread is torn down.
   static void CleanUp();

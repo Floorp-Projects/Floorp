@@ -18,6 +18,7 @@
 #include <list>
 
 #include "base/message_loop.h"
+#include "base/process.h"
 #include "base/task.h"
 
 #include "mozilla/Maybe.h"
@@ -36,18 +37,14 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
       ChannelImpl, IOThread().GetEventTarget());
 
   // Mirror methods of Channel, see ipc_channel.h for description.
-  ChannelImpl(ChannelHandle pipe, Mode mode);
+  ChannelImpl(ChannelHandle pipe, Mode mode, base::ProcessId other_pid);
   bool Connect(Listener* listener) MOZ_EXCLUDES(SendMutex());
   void Close() MOZ_EXCLUDES(SendMutex());
 
   // NOTE: `Send` may be called on threads other than the I/O thread.
   bool Send(mozilla::UniquePtr<Message> message) MOZ_EXCLUDES(SendMutex());
 
-  int32_t OtherPid() {
-    IOThread().AssertOnCurrentThread();
-    chan_cap_.NoteOnIOThread();
-    return other_pid_;
-  }
+  void SetOtherPid(base::ProcessId other_pid);
 
   // See the comment in ipc_channel.h for info on IsClosed()
   // NOTE: `IsClosed` may be called on threads other than the I/O thread.
@@ -68,12 +65,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
 
   void Init(Mode mode) MOZ_REQUIRES(SendMutex(), IOThread());
   void SetPipe(int fd) MOZ_REQUIRES(SendMutex(), IOThread());
-  void SetOtherPid(int other_pid) MOZ_REQUIRES(IOThread())
-      MOZ_EXCLUDES(SendMutex()) {
-    mozilla::MutexAutoLock lock(SendMutex());
-    chan_cap_.NoteExclusiveAccess();
-    other_pid_ = other_pid;
-  }
   bool PipeBufHasSpaceAfter(size_t already_written)
       MOZ_REQUIRES_SHARED(chan_cap_);
   bool EnqueueHelloMessage() MOZ_REQUIRES(SendMutex(), IOThread());
@@ -180,7 +171,8 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
 
   // We keep track of the PID of the other side of this channel so that we can
   // record this when generating logs of IPC messages.
-  int32_t other_pid_ MOZ_GUARDED_BY(chan_cap_) = -1;
+  base::ProcessId other_pid_ MOZ_GUARDED_BY(chan_cap_) =
+      base::kInvalidProcessId;
 
 #if defined(XP_DARWIN)
   struct PendingDescriptors {

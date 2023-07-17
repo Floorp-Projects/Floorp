@@ -610,8 +610,9 @@ void NodeController::OnIntroduce(const NodeName& aFromNode,
     return;
   }
 
-  auto channel = MakeUnique<IPC::Channel>(std::move(aIntroduction.mHandle),
-                                          aIntroduction.mMode);
+  auto channel =
+      MakeUnique<IPC::Channel>(std::move(aIntroduction.mHandle),
+                               aIntroduction.mMode, aIntroduction.mOtherPid);
   auto nodeChannel = MakeRefPtr<NodeChannel>(
       aIntroduction.mName, std::move(channel), this, aIntroduction.mOtherPid);
 
@@ -786,7 +787,7 @@ void NodeController::InitBrokerProcess() {
 }
 
 ScopedPort NodeController::InitChildProcess(UniquePtr<IPC::Channel> aChannel,
-                                            int32_t aParentPid) {
+                                            base::ProcessId aParentPid) {
   AssertIOThread();
   MOZ_ASSERT(!gNodeController);
 

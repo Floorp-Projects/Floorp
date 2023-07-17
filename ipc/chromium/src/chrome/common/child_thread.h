@@ -19,7 +19,7 @@ class ResourceDispatcher;
 class ChildThread : public base::Thread {
  public:
   // Creates the thread.
-  explicit ChildThread(Thread::Options options);
+  ChildThread(Thread::Options options, base::ProcessId parent_pid);
   virtual ~ChildThread();
 
   mozilla::ipc::ScopedPort TakeInitialPort() {
@@ -47,6 +47,8 @@ class ChildThread : public base::Thread {
   mozilla::ipc::ScopedPort initial_port_;
 
   Thread::Options options_;
+
+  base::ProcessId parent_pid_;
 
   DISALLOW_EVIL_CONSTRUCTORS(ChildThread);
 };

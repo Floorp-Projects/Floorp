@@ -33,6 +33,7 @@
 #include "base/command_line.h"
 #include "base/eintr_wrapper.h"
 #include "base/logging.h"
+#include "base/process.h"
 #include "base/process_util.h"
 #include "base/string_util.h"
 #include "chrome/common/chrome_switches.h"
@@ -140,9 +141,11 @@ void Channel::SetClientChannelFd(int fd) { gClientChannelFd = fd; }
 
 int Channel::GetClientChannelHandle() { return gClientChannelFd; }
 
-Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode)
+Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode,
+                                  base::ProcessId other_pid)
     : chan_cap_("ChannelImpl::SendMutex",
-                MessageLoopForIO::current()->SerialEventTarget()) {
+                MessageLoopForIO::current()->SerialEventTarget()),
+      other_pid_(other_pid) {
   Init(mode);
   SetPipe(pipe.release());
 
@@ -243,6 +246,16 @@ bool Channel::ChannelImpl::ContinueConnect() {
   waiting_connect_ = false;
 
   return ProcessOutgoingMessages();
+}
+
+void Channel::ChannelImpl::SetOtherPid(base::ProcessId other_pid) {
+  IOThread().AssertOnCurrentThread();
+  mozilla::MutexAutoLock lock(SendMutex());
+  chan_cap_.NoteExclusiveAccess();
+  MOZ_RELEASE_ASSERT(
+      other_pid_ == base::kInvalidProcessId || other_pid_ == other_pid,
+      "Multiple sources of SetOtherPid disagree!");
+  other_pid_ = other_pid;
 }
 
 bool Channel::ChannelImpl::ProcessIncomingMessages() {
@@ -1163,8 +1176,8 @@ bool Channel::ChannelImpl::TransferMachPorts(Message& msg) {
 
 //------------------------------------------------------------------------------
 // Channel's methods simply call through to ChannelImpl.
-Channel::Channel(ChannelHandle pipe, Mode mode)
-    : channel_impl_(new ChannelImpl(std::move(pipe), mode)) {
+Channel::Channel(ChannelHandle pipe, Mode mode, base::ProcessId other_pid)
+    : channel_impl_(new ChannelImpl(std::move(pipe), mode, other_pid)) {
   MOZ_COUNT_CTOR(IPC::Channel);
 }
 
@@ -1180,7 +1193,9 @@ bool Channel::Send(mozilla::UniquePtr<Message> message) {
   return channel_impl_->Send(std::move(message));
 }
 
-int32_t Channel::OtherPid() const { return channel_impl_->OtherPid(); }
+void Channel::SetOtherPid(base::ProcessId other_pid) {
+  channel_impl_->SetOtherPid(other_pid);
+}
 
 bool Channel::IsClosed() const { return channel_impl_->IsClosed(); }
 

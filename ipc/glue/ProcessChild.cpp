@@ -33,7 +33,7 @@ ProcessChild* ProcessChild::gProcessChild;
 static Atomic<bool> sExpectingShutdown(false);
 
 ProcessChild::ProcessChild(ProcessId aParentPid, const nsID& aMessageChannelId)
-    : ChildProcess(new IOThreadChild()),
+    : ChildProcess(new IOThreadChild(aParentPid)),
       mUILoop(MessageLoop::current()),
       mParentPid(aParentPid),
       mMessageChannelId(aMessageChannelId) {

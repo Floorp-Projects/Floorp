@@ -20,10 +20,10 @@ namespace ipc {
 // IPC IO MessageLoop lives.
 class IOThreadChild : public ChildThread {
  public:
-  IOThreadChild()
+  explicit IOThreadChild(base::ProcessId aParentPid)
       : ChildThread(base::Thread::Options(MessageLoop::TYPE_IO,
-                                          0))  // stack size
-  {}
+                                          /* stack size */ 0),
+                    aParentPid) {}
 
   ~IOThreadChild() = default;
 

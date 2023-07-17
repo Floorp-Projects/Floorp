@@ -108,6 +108,8 @@ void NodeChannel::SetOtherPid(base::ProcessId aNewPid) {
     MOZ_RELEASE_ASSERT(previousPid == aNewPid,
                        "Different sources disagree on the correct pid?");
   }
+
+  mChannel->SetOtherPid(aNewPid);
 }
 
 #ifdef XP_MACOSX
