@@ -3243,6 +3243,12 @@ void MediaDecoderStateMachine::SeekingState::SeekCompleted() {
     mMaster->mOnPlaybackEvent.Notify(MediaPlaybackEvent::Invalidate);
   }
 
+  // `mLastClockTimeBeforeStopSink` stores the position from which we want to
+  // restart the media sink, but once the seeking completes, that position
+  // should be reset because the playback should start from a new position,
+  // instead of previous clock time.
+  mMaster->mLastClockTimeBeforeStopSink.reset();
+
   GoToNextState();
 }
 
@@ -3858,7 +3864,9 @@ RefPtr<MediaDecoder::SeekPromise> MediaDecoderStateMachine::Seek(
 void MediaDecoderStateMachine::StopMediaSink() {
   MOZ_ASSERT(OnTaskQueue());
   if (mMediaSink->IsStarted()) {
-    LOG("Stop MediaSink");
+    mLastClockTimeBeforeStopSink = Some(mMediaSink->GetPosition());
+    LOG("Stop MediaSink, last clock time (%" PRId64 ")",
+        (*mLastClockTimeBeforeStopSink).ToMicroseconds());
     mMediaSink->Stop();
     mMediaSinkAudioEndedPromise.DisconnectIfExists();
     mMediaSinkVideoEndedPromise.DisconnectIfExists();
@@ -4040,8 +4048,10 @@ nsresult MediaDecoderStateMachine::StartMediaSink() {
   }
 
   mAudioCompleted = false;
-  const auto startTime = GetMediaTime();
-  LOG("StartMediaSink, mediaTime=%" PRId64, startTime.ToMicroseconds());
+  const TimeUnit startTime = mLastClockTimeBeforeStopSink
+                                 ? *mLastClockTimeBeforeStopSink
+                                 : GetMediaTime();
+  LOG("Start sink, start time=%" PRId64, startTime.ToMicroseconds());
   nsresult rv = mMediaSink->Start(startTime, Info());
   StreamNameChanged();
 
