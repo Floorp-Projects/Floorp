@@ -16,6 +16,7 @@ load 1503964.html
 asserts(0-1) load 1415667.html # Bug 1843540.
 load 1585851.html
 load 1655983.html
+load 1838250.html
 
 # last_test_to_unload_testsuite.xhtml MUST be the last test in the list because it
 # is responsible for shutting down accessibility service affecting later tests.

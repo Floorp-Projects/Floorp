@@ -7383,13 +7383,13 @@ nsPoint nsTextFrame::GetPointFromIterator(const gfxSkipCharsIterator& aIter,
     }
   } else {
     point.y = 0;
+    if (Style()->IsTextCombined()) {
+      iSize *= GetTextCombineScaleFactor(this);
+    }
     if (mTextRun->IsInlineReversed()) {
       point.x = mRect.width - iSize;
     } else {
       point.x = iSize;
-    }
-    if (Style()->IsTextCombined()) {
-      point.x *= GetTextCombineScaleFactor(this);
     }
   }
   return point;
@@ -7468,8 +7468,18 @@ nsresult nsTextFrame::GetCharacterRectsInRange(int32_t aInOffset,
   }
 
   do {
-    MOZ_ASSERT(point == GetPointFromIterator(iter, properties),
-               "character position error!");
+    // Note that when IsTextCombined() is true, we may get a slight mismatch
+    // between `point`, which is accumulated one cluster at a time, applying
+    // the scale factor to each individual width, and the result of
+    // GetPointFromIterator, which measures the range up to the iterator
+    // position all at once and then scales the result. This can result in
+    // different rounding, so we relax this assertion a bit.
+    DebugOnly<nsPoint> p = GetPointFromIterator(iter, properties);
+    MOZ_ASSERT(
+        point == p || (Style()->IsTextCombined() &&
+                       std::abs(point.x - p.value.x) < AppUnitsPerCSSPixel() &&
+                       point.y == p.value.y),
+        "character position error!");
 
     // Measure to the end of the cluster.
     nscoord iSize = 0;
@@ -7507,17 +7517,18 @@ nsresult nsTextFrame::GetCharacterRectsInRange(int32_t aInOffset,
         point.y += iSize;
       }
     } else {
+      if (Style()->IsTextCombined()) {
+        // The scale factor applies to the inline advance of the glyphs, so it
+        // affects both the rect width and the origin point for the next glyph.
+        iSize *= GetTextCombineScaleFactor(this);
+      }
       rect.width = iSize;
       rect.height = mRect.height;
-      if (Style()->IsTextCombined()) {
-        rect.width *= GetTextCombineScaleFactor(this);
-      }
       if (mTextRun->IsInlineReversed()) {
         // The iterator above returns a point with the origin at the
         // top right instead of the top left. Move the origin to the top left by
-        // subtracting the character's width. This is intentionally done after
-        // GetTextCombineScaleFactor() so we use the final, scaled width.
-        rect.x -= rect.width;
+        // subtracting the character's width.
+        rect.x -= iSize;
         point.x -= iSize;
       } else {
         point.x += iSize;
