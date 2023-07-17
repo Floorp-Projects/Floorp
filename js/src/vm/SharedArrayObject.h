@@ -317,11 +317,6 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
   void dropRawBuffer();
 };
 
-using RootedSharedArrayBufferObject = Rooted<SharedArrayBufferObject*>;
-using HandleSharedArrayBufferObject = Handle<SharedArrayBufferObject*>;
-using MutableHandleSharedArrayBufferObject =
-    MutableHandle<SharedArrayBufferObject*>;
-
 }  // namespace js
 
 #endif  // vm_SharedArrayObject_h
