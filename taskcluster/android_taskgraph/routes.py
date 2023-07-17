@@ -5,7 +5,7 @@
 
 import time
 
-from taskgraph.transforms.task import index_builder
+from gecko_taskgraph.transforms.task import index_builder
 
 SIGNING_ROUTE_TEMPLATES = [
     "index.{trust_domain}.v3.{project}.{artifact_type}.{variant}.latest.{artifact_name}",
