@@ -519,12 +519,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     setFirstView(nullptr);
     setDataPointer(contents);
   }
-
-  void* initializeToInlineData(size_t byteLength) {
-    void* data = inlineDataPointer();
-    initialize(byteLength, BufferContents::createInlineData(data));
-    return data;
-  }
 };
 
 using RootedArrayBufferObject = Rooted<ArrayBufferObject*>;

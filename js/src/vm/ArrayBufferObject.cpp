@@ -1625,7 +1625,10 @@ ArrayBufferObject::createBufferAndData(
     buffer->initialize(nbytes, BufferContents::createMalloced(toFill));
     AddCellMemory(buffer, nbytes, MemoryUse::ArrayBufferContents);
   } else {
-    toFill = static_cast<uint8_t*>(buffer->initializeToInlineData(nbytes));
+    auto contents =
+        BufferContents::createInlineData(buffer->inlineDataPointer());
+    buffer->initialize(nbytes, contents);
+    toFill = contents.data();
     if constexpr (FillType == FillContents::Zero) {
       memset(toFill, 0, nbytes);
     }
