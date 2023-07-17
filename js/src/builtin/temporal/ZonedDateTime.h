@@ -110,11 +110,12 @@ struct NanosecondsAndDays final {
 };
 
 /**
- * NanosecondsToDays ( nanoseconds, relativeTo )
+ * NanosecondsToDays ( nanoseconds, zonedRelativeTo )
  */
-bool NanosecondsToDays(JSContext* cx, const InstantSpan& nanoseconds,
-                       JS::Handle<Wrapped<ZonedDateTimeObject*>> relativeTo,
-                       JS::MutableHandle<NanosecondsAndDays> result);
+bool NanosecondsToDays(
+    JSContext* cx, const InstantSpan& nanoseconds,
+    JS::Handle<Wrapped<ZonedDateTimeObject*>> zonedRelativeTo,
+    JS::MutableHandle<NanosecondsAndDays> result);
 
 enum class OffsetBehaviour { Option, Exact, Wall };
 

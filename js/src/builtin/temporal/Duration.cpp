@@ -915,26 +915,23 @@ struct NanosecondsAndDays final {
 };
 
 /**
- * NanosecondsToDays ( nanoseconds, relativeTo )
+ * Split duration into full days and remainding nanoseconds.
  */
 static ::NanosecondsAndDays NanosecondsToDays(int64_t nanoseconds) {
-  // Step 1.
   constexpr int64_t dayLengthNs = ToNanoseconds(TemporalUnit::Day);
 
   static_assert(INT64_MAX / dayLengthNs <= INT32_MAX,
                 "days doesn't exceed INT32_MAX");
 
-  // Steps 2-4.
   return {int32_t(nanoseconds / dayLengthNs), nanoseconds % dayLengthNs};
 }
 
 /**
- * NanosecondsToDays ( nanoseconds, relativeTo )
+ * Split duration into full days and remainding nanoseconds.
  */
 static bool NanosecondsToDaysSlow(
     JSContext* cx, Handle<BigInt*> nanoseconds,
     MutableHandle<temporal::NanosecondsAndDays> result) {
-  // Step 1.
   constexpr int64_t dayLengthNs = ToNanoseconds(TemporalUnit::Day);
 
   Rooted<BigInt*> dayLength(cx, BigInt::createFromInt64(cx, dayLengthNs));
@@ -942,10 +939,6 @@ static bool NanosecondsToDaysSlow(
     return false;
   }
 
-  // Step 2 is a fast path in the spec when |nanoseconds| is zero, but since
-  // we're already in the slow path don't worry about special casing it here.
-
-  // Steps 2-4.
   Rooted<BigInt*> days(cx);
   Rooted<BigInt*> nanos(cx);
   if (!BigInt::divmod(cx, nanoseconds, dayLength, &days, &nanos)) {
@@ -958,7 +951,7 @@ static bool NanosecondsToDaysSlow(
 }
 
 /**
- * NanosecondsToDays ( nanoseconds, relativeTo )
+ * Split duration into full days and remainding nanoseconds.
  */
 static bool NanosecondsToDays(
     JSContext* cx, const Duration& duration,
@@ -983,48 +976,48 @@ static bool NanosecondsToDays(
 }
 
 /**
- * NanosecondsToDays ( nanoseconds, relativeTo )
+ * NanosecondsToDays ( nanoseconds, zonedRelativeTo )
  */
-static bool NanosecondsToDaysError(JSContext* cx,
-                                   Handle<ZonedDateTimeObject*> relativeTo) {
-  // Steps 1-4. (Not applicable)
+static bool NanosecondsToDaysError(
+    JSContext* cx, Handle<ZonedDateTimeObject*> zonedRelativeTo) {
+  // Steps 1-2. (Not applicable)
 
-  // Step 5.
-  auto startNs = ToInstant(relativeTo);
-  Rooted<TimeZoneValue> timeZone(cx, relativeTo->timeZone());
+  // Step 3.
+  auto startNs = ToInstant(zonedRelativeTo);
+  Rooted<TimeZoneValue> timeZone(cx, zonedRelativeTo->timeZone());
 
   // FIXME: spec issue - consider moving GetPlainDateTimeFor after step 9 where
   // IsValidEpochNanoseconds is checked. That way we reduce extra observable
   // behaviour.
   // https://github.com/tc39/proposal-temporal/issues/2529
 
-  // Steps 6-7. (Executed just for possible side-effects.)
+  // Steps 4-5. (Executed just for possible side-effects.)
   PlainDateTime startDateTime;
   if (!GetPlainDateTimeFor(cx, timeZone, startNs, &startDateTime)) {
     return false;
   }
 
-  // Step 8 is |startNs + nanoseconds|, but when |nanoseconds| is too large the
-  // result isn't a valid epoch nanoseconds value and step 9 throws.
+  // Step 6 is |startNs + nanoseconds|, but when |nanoseconds| is too large the
+  // result isn't a valid epoch nanoseconds value and step 7 throws.
 
-  // Step 9.
+  // Step 7.
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_TEMPORAL_INSTANT_INVALID);
   return false;
 }
 
 /**
- * NanosecondsToDays ( nanoseconds, relativeTo )
+ * NanosecondsToDays ( nanoseconds, zonedRelativeTo )
  */
 static bool NanosecondsToDays(
     JSContext* cx, const Duration& duration,
-    Handle<ZonedDateTimeObject*> relativeTo,
+    Handle<ZonedDateTimeObject*> zonedRelativeTo,
     MutableHandle<temporal::NanosecondsAndDays> result) {
   if (auto total = TotalDurationNanoseconds(duration.time(), 0)) {
     auto nanoseconds = InstantSpan::fromNanoseconds(*total);
     MOZ_ASSERT(IsValidInstantSpan(nanoseconds));
 
-    return NanosecondsToDays(cx, nanoseconds, relativeTo, result);
+    return NanosecondsToDays(cx, nanoseconds, zonedRelativeTo, result);
   }
 
   auto* nanoseconds = TotalDurationNanosecondsSlow(cx, duration.time(), 0);
@@ -1033,9 +1026,10 @@ static bool NanosecondsToDays(
   }
 
   if (!IsValidInstantSpan(nanoseconds)) {
-    return NanosecondsToDaysError(cx, relativeTo);
+    return NanosecondsToDaysError(cx, zonedRelativeTo);
   }
-  return NanosecondsToDays(cx, ToInstantSpan(nanoseconds), relativeTo, result);
+  return NanosecondsToDays(cx, ToInstantSpan(nanoseconds), zonedRelativeTo,
+                           result);
 }
 
 /**
@@ -6550,21 +6544,21 @@ static bool RoundDuration(JSContext* cx, const Duration& duration,
   // Steps 6.b-e.
   Rooted<temporal::NanosecondsAndDays> nanosAndDays(cx);
   if (zonedRelativeTo) {
-    // Steps 6.b-c. (Reordered)
+    // Step 6.b.i. (Reordered)
     Rooted<ZonedDateTimeObject*> intermediate(
         cx, MoveRelativeZonedDateTime(cx, zonedRelativeTo, duration.date()));
     if (!intermediate) {
       return false;
     }
 
-    // Steps 6.a and 6.d.
+    // Steps 6.a and 6.b.ii.
     if (!NanosecondsToDays(cx, duration, intermediate, &nanosAndDays)) {
       return false;
     }
-  } else {
-    // Steps 6.b-c. (Not applicable)
 
-    // Steps 6.a and 6.d.
+    // Step 6.b.iii. (Not applicable in our implementation.)
+  } else {
+    // Steps 6.a and 6.c.
     if (!::NanosecondsToDays(cx, duration, &nanosAndDays)) {
       return false;
     }
@@ -6574,9 +6568,9 @@ static bool RoundDuration(JSContext* cx, const Duration& duration,
   // than |abs(nanosAndDays.dayLength)|.
   MOZ_ASSERT(nanosAndDays.nanoseconds().abs() < nanosAndDays.dayLength());
 
-  // Step 6.e. (Moved below)
+  // Step 6.d. (Moved below)
 
-  // Step 6.f. (Implicit)
+  // Step 6.e. (Implicit)
 
   // Steps 7 and 13-18. (Not applicable)
 
