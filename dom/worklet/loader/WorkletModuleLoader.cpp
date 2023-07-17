@@ -48,7 +48,8 @@ NS_INTERFACE_MAP_END_INHERITING(ModuleLoaderBase)
 
 WorkletModuleLoader::WorkletModuleLoader(WorkletScriptLoader* aScriptLoader,
                                          nsIGlobalObject* aGlobalObject)
-    : ModuleLoaderBase(aScriptLoader, aGlobalObject) {
+    : ModuleLoaderBase(aScriptLoader, aGlobalObject,
+                       GetCurrentSerialEventTarget()) {
   // This should be constructed on a worklet thread.
   MOZ_ASSERT(!NS_IsMainThread());
 }

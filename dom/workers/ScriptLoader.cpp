@@ -532,7 +532,7 @@ void WorkerScriptLoader::InitModuleLoader() {
     return;
   }
   RefPtr<WorkerModuleLoader> moduleLoader =
-      new WorkerModuleLoader(this, GetGlobal());
+      new WorkerModuleLoader(this, GetGlobal(), mSyncLoopTarget.get());
   if (mWorkerScriptType == WorkerScript) {
     mWorkerRef->Private()->GlobalScope()->InitModuleLoader(moduleLoader);
     return;
@@ -1210,13 +1210,6 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
 }
 
 void WorkerScriptLoader::TryShutdown() {
-  {
-    MutexAutoLock lock(CleanUpLock());
-    if (CleanedUp()) {
-      return;
-    }
-  }
-
   if (AllScriptsExecuted() && AllModuleRequestsLoaded()) {
     ShutdownScriptLoader(!mExecutionAborted, mMutedErrorFlag);
   }

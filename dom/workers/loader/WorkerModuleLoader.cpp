@@ -30,8 +30,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkerModuleLoader)
 NS_INTERFACE_MAP_END_INHERITING(JS::loader::ModuleLoaderBase)
 
 WorkerModuleLoader::WorkerModuleLoader(WorkerScriptLoader* aScriptLoader,
-                                       nsIGlobalObject* aGlobalObject)
-    : ModuleLoaderBase(aScriptLoader, aGlobalObject) {}
+                                       nsIGlobalObject* aGlobalObject,
+                                       nsISerialEventTarget* aEventTarget)
+    : ModuleLoaderBase(aScriptLoader, aGlobalObject, aEventTarget) {}
 
 nsIURI* WorkerModuleLoader::GetBaseURI() const {
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
@@ -74,6 +75,7 @@ bool WorkerModuleLoader::CreateDynamicImportLoader() {
   }
 
   SetScriptLoader(loader);
+  SetEventTarget(GetCurrentSerialEventTarget());
   return true;
 }
 
