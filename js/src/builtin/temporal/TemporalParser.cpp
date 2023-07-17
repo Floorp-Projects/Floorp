@@ -706,10 +706,8 @@ class TemporalParser final {
   }
 
   // TZChar :
-  //   Alpha
-  //   .
+  //   TZLeadingChar
   //   -
-  //   _
   //   [+Legacy] +
   //   [+Legacy] DecimalDigit
   bool tzCharLegacy() {
@@ -767,20 +765,22 @@ class TemporalParser final {
     return true;
   }
 
-  // AValChar :
-  //   Alpha
-  //   DecimalDigit
-  bool aValChar() {
-    if (!reader_.hasMore(1)) {
+  // AnnotationValueComponent :
+  //   Alpha AnnotationValueComponent?
+  //   DecimalDigit AnnotationValueComponent?
+  bool annotationValueComponent() {
+    size_t index = reader_.index();
+    size_t i = 0;
+    for (; index + i < reader_.length(); i++) {
+      auto ch = reader_.at(index + i);
+      if (!mozilla::IsAsciiAlphanumeric(ch)) {
+        break;
+      }
+    }
+    if (i == 0) {
       return false;
     }
-
-    CharT ch = reader_.current();
-    if (!mozilla::IsAsciiAlphanumeric(ch)) {
-      return false;
-    }
-
-    reader_.advance(1);
+    reader_.advance(i);
     return true;
   }
 
@@ -843,7 +843,6 @@ class TemporalParser final {
   bool timeZoneIANANameComponent();
   mozilla::Result<TimeZoneName, ParserError> timeZoneIANAName();
 
-  bool annotationValueComponent();
   mozilla::Result<AnnotationKey, ParserError> annotationKey();
   mozilla::Result<AnnotationValue, ParserError> annotationValue();
   mozilla::Result<Annotation, ParserError> annotation();
@@ -933,13 +932,8 @@ mozilla::Result<PlainDate, ParserError> TemporalParser<CharT>::date() {
   PlainDate result = {};
 
   // DateYear :
-  //  DateFourDigitYear
-  //  DateExtendedYear
-
-  // DateFourDigitYear :
-  //   DecimalDigit{1,4}
-  // DateExtendedYear :
-  //   Sign DecimalDigit{1,6}
+  //  DecimalDigit{4}
+  //  Sign DecimalDigit{6}
   if (auto year = digits(4)) {
     result.year = year.value();
   } else if (hasSign()) {
@@ -1005,10 +999,11 @@ mozilla::Result<PlainTime, ParserError> TemporalParser<CharT>::timeSpec() {
   PlainTime result = {};
 
   // TimeHour :
-  //   Hour
+  //   Hour[+Padded]
   //
-  // Hour :
-  //   0 DecimalDigit
+  // Hour[Padded] :
+  //   [~Padded] DecimalDigit
+  //   [~Padded] 0 DecimalDigit
   //   1 DecimalDigit
   //   20
   //   21
@@ -1200,7 +1195,8 @@ TemporalParser<CharT>::timeZoneAnnotation() {
   //
   // TimeZoneIdentifier :
   //   TimeZoneIANAName
-  //   TimeZoneUTCOffsetName
+  //   TimeZoneUTCOffsetName[+Extended]
+  //   TimeZoneUTCOffsetName[~Extended]
 
   if (!character('[')) {
     return mozilla::Err(JSMSG_TEMPORAL_PARSER_BRACKET_BEFORE_TIMEZONE);
@@ -1236,36 +1232,18 @@ mozilla::Result<TimeZoneName, ParserError>
 TemporalParser<CharT>::timeZoneIANAName() {
   // TimeZoneIANAName :
   //   TimeZoneIANANameTail[~Legacy]
-  //   TimeZoneIANALegacyName
-  //
-  // UnpaddedHour :
-  //   DecimalDigit
-  //   1 DecimalDigit
-  //   20
-  //   21
-  //   22
-  //   23
+  //   TimeZoneIANANameTail[+Legacy] but only if IsLegacyIANATimeZoneName of
+  //                                 TimeZoneIANANameTail is true
   //
   // TimeZoneIANANameTail[Legacy] :
   //   TimeZoneIANANameComponent[?Legacy]
   //   TimeZoneIANANameComponent[?Legacy] / TimeZoneIANANameTail[?Legacy]
-  //
-  // TimeZoneIANALegacyName :
-  //   Etc/GMT ASCIISign UnpaddedHour
-  //   Etc/GMT0
-  //   GMT0
-  //   GMT-0
-  //   GMT+0
-  //   EST5EDT
-  //   CST6CDT
-  //   MST7MDT
-  //   PST8PDT
 
   size_t start = reader_.index();
 
   // NOTE: Time zone names are parsed with legacy mode always enabled. If the
-  // name contains legacy name components, but doesn't match the
-  // |TimeZoneIANALegacyName| production, it'll be rejected during the time zone
+  // name contains legacy name components, but doesn't pass the
+  // |IsLegacyIANATimeZoneName| test, it'll be rejected during the time zone
   // name validation step which happens after parsing.
 
   do {
@@ -1441,7 +1419,8 @@ mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalTimeZoneString() {
   // TimeZoneIdentifier :
   //   TimeZoneIANAName
-  //   TimeZoneUTCOffsetName
+  //   TimeZoneUTCOffsetName[+Extended]
+  //   TimeZoneUTCOffsetName[~Extended]
 
   if (hasTzLeadingChar()) {
     if (auto name = timeZoneIANAName(); name.isOk() && reader_.atEnd()) {
@@ -2025,28 +2004,11 @@ bool js::temporal::ParseTemporalDurationString(JSContext* cx,
 }
 
 template <typename CharT>
-bool TemporalParser<CharT>::annotationValueComponent() {
-  // AnnotationValueComponent :
-  //   AValChar AnnotationValueComponent?
-  //
-  // AValChar :
-  //   Alpha
-  //   DecimalDigit
-  bool hasOne = false;
-  while (aValChar()) {
-    hasOne = true;
-  }
-  return hasOne;
-}
-
-template <typename CharT>
 mozilla::Result<AnnotationKey, ParserError>
 TemporalParser<CharT>::annotationKey() {
   // AnnotationKey :
-  //   AKeyLeadingChar AnnotationKeyTail?
-  //
-  // AnnotationKeyTail :
-  //   AKeyChar AnnotationKeyTail?
+  //    AKeyLeadingChar
+  //    AnnotationKey AKeyChar
 
   size_t start = reader_.index();
 
@@ -2065,11 +2027,8 @@ template <typename CharT>
 mozilla::Result<AnnotationValue, ParserError>
 TemporalParser<CharT>::annotationValue() {
   // AnnotationValue :
-  //   AnnotationValueTail
-  //
-  // AnnotationValueTail :
   //   AnnotationValueComponent
-  //   AnnotationValueComponent - AnnotationValueTail
+  //   AnnotationValueComponent - AnnotationValue
 
   size_t start = reader_.index();
 
@@ -2423,13 +2382,8 @@ TemporalParser<CharT>::dateSpecYearMonth() {
   PlainDate result = {};
 
   // DateYear :
-  //  DateFourDigitYear
-  //  DateExtendedYear
-
-  // DateFourDigitYear :
-  //   DecimalDigit{1,4}
-  // DateExtendedYear :
-  //   Sign DecimalDigit{1,6}
+  //  DecimalDigit{4}
+  //  Sign DecimalDigit{6}
   if (auto year = digits(4)) {
     result.year = year.value();
   } else if (hasSign()) {
@@ -2472,10 +2426,8 @@ template <typename CharT>
 mozilla::Result<PlainDate, ParserError>
 TemporalParser<CharT>::dateSpecMonthDay() {
   // DateSpecMonthDay :
-  //   TwoDashes? DateMonth -? DateDay
-  //
-  // TwoDashes :
-  //   --
+  //   -- DateMonth -? DateDay
+  //   DateMonth -? DateDay
   PlainDate result = {};
 
   string("--");
