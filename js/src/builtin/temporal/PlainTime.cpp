@@ -618,7 +618,7 @@ static Wrapped<PlainTimeObject*> ToTemporalTime(JSContext* cx,
     // Step 3.b.
     if (auto* zonedDateTime = itemObj->maybeUnwrapIf<ZonedDateTimeObject>()) {
       auto epochInstant = ToInstant(zonedDateTime);
-      Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
+      Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
       Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
       if (!cx->compartment()->wrap(cx, &timeZone)) {
@@ -2510,7 +2510,8 @@ static bool PlainTime_toZonedDateTime(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 9.
-  Rooted<JSObject*> timeZone(cx, ToTemporalTimeZone(cx, temporalTimeZoneLike));
+  Rooted<TimeZoneValue> timeZone(cx,
+                                 ToTemporalTimeZone(cx, temporalTimeZoneLike));
   if (!timeZone) {
     return false;
   }

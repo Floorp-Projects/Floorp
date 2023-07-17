@@ -207,7 +207,7 @@ static PlainDateTimeObject* SystemDateTime(JSContext* cx,
                                            Handle<Value> temporalTimeZoneLike,
                                            Handle<Value> calendarLike) {
   // Steps 1-2.
-  Rooted<JSObject*> timeZone(cx);
+  Rooted<TimeZoneValue> timeZone(cx);
   if (temporalTimeZoneLike.isUndefined()) {
     timeZone = SystemTimeZone(cx);
   } else {
@@ -240,7 +240,7 @@ static ZonedDateTimeObject* SystemZonedDateTime(
     JSContext* cx, Handle<Value> temporalTimeZoneLike,
     Handle<Value> calendarLike) {
   // Steps 1-2.
-  Rooted<JSObject*> timeZone(cx);
+  Rooted<TimeZoneValue> timeZone(cx);
   if (temporalTimeZoneLike.isUndefined()) {
     timeZone = SystemTimeZone(cx);
   } else {

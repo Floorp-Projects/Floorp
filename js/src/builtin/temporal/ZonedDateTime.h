@@ -11,6 +11,7 @@
 
 #include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/TemporalTypes.h"
+#include "builtin/temporal/TimeZone.h"
 #include "builtin/temporal/Wrapped.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
@@ -46,7 +47,9 @@ class ZonedDateTimeObject : public NativeObject {
     return nanoseconds;
   }
 
-  JSObject* timeZone() const { return &getFixedSlot(TIMEZONE_SLOT).toObject(); }
+  TimeZoneValue timeZone() const {
+    return &getFixedSlot(TIMEZONE_SLOT).toObject();
+  }
 
   CalendarValue calendar() const {
     return &getFixedSlot(CALENDAR_SLOT).toObject();
@@ -72,7 +75,7 @@ enum class TemporalUnit;
  * newTarget ] )
  */
 ZonedDateTimeObject* CreateTemporalZonedDateTime(
-    JSContext* cx, const Instant& instant, JS::Handle<JSObject*> timeZone,
+    JSContext* cx, const Instant& instant, JS::Handle<TimeZoneValue> timeZone,
     JS::Handle<CalendarValue> calendar);
 
 /**
@@ -81,7 +84,7 @@ ZonedDateTimeObject* CreateTemporalZonedDateTime(
  * [ , options ] )
  */
 bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
-                      JS::Handle<JSObject*> timeZone,
+                      JS::Handle<TimeZoneValue> timeZone,
                       JS::Handle<CalendarValue> calendar,
                       const Duration& duration, Instant* result);
 
@@ -90,7 +93,8 @@ bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
  * )
  */
 bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
-                             const Instant& ns2, JS::Handle<JSObject*> timeZone,
+                             const Instant& ns2,
+                             JS::Handle<TimeZoneValue> timeZone,
                              JS::Handle<CalendarValue> calendar,
                              TemporalUnit largestUnit, Duration* result);
 
@@ -124,7 +128,7 @@ enum class MatchBehaviour { MatchExactly, MatchMinutes };
 bool InterpretISODateTimeOffset(JSContext* cx, const PlainDateTime& dateTime,
                                 OffsetBehaviour offsetBehaviour,
                                 int64_t offsetNanoseconds,
-                                JS::Handle<JSObject*> timeZone,
+                                JS::Handle<TimeZoneValue> timeZone,
                                 TemporalDisambiguation disambiguation,
                                 TemporalOffset offsetOption,
                                 MatchBehaviour matchBehaviour, Instant* result);
