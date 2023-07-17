@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: taskcluster-taskgraph
-Version: 5.6.1
+Version: 5.6.2
 Summary: Build taskcluster taskgraphs
 Home-page: https://github.com/taskcluster/taskgraph
 Classifier: Development Status :: 5 - Production/Stable
@@ -17,7 +17,7 @@ Requires-Dist: appdirs (>=1.4)
 Requires-Dist: cookiecutter (~=2.1)
 Requires-Dist: json-e (>=2.7)
 Requires-Dist: mozilla-repo-urls
-Requires-Dist: PyYAML (>=5.4)
+Requires-Dist: PyYAML (>=5.3.1)
 Requires-Dist: redo (>=2.0)
 Requires-Dist: requests (>=2.25)
 Requires-Dist: requests-unixsocket (>=0.2)
