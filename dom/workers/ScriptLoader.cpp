@@ -532,7 +532,7 @@ void WorkerScriptLoader::InitModuleLoader() {
     return;
   }
   RefPtr<WorkerModuleLoader> moduleLoader =
-      new WorkerModuleLoader(this, GetGlobal(), mSyncLoopTarget.get());
+      new WorkerModuleLoader(this, GetGlobal());
   if (mWorkerScriptType == WorkerScript) {
     mWorkerRef->Private()->GlobalScope()->InitModuleLoader(moduleLoader);
     return;

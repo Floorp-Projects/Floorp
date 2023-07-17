@@ -55,7 +55,7 @@ NS_INTERFACE_MAP_END_INHERITING(JS::loader::ModuleLoaderBase)
 
 ComponentModuleLoader::ComponentModuleLoader(
     ComponentScriptLoader* aScriptLoader, nsIGlobalObject* aGlobalObject)
-    : ModuleLoaderBase(aScriptLoader, aGlobalObject, new SyncEventTarget()) {}
+    : ModuleLoaderBase(aScriptLoader, aGlobalObject) {}
 
 ComponentModuleLoader::~ComponentModuleLoader() {
   MOZ_ASSERT(mLoadRequests.isEmpty());
