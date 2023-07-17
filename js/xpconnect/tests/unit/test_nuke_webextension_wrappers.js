@@ -1,7 +1,6 @@
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1273251
 
 const {NetUtil} = ChromeUtils.importESModule("resource://gre/modules/NetUtil.sys.mjs");
-ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
 const {TestUtils} = ChromeUtils.importESModule("resource://testing-common/TestUtils.sys.mjs");
 
 function getWindowlessBrowser(url) {
