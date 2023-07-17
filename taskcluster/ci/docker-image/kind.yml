@@ -66,10 +66,19 @@ jobs:
         definition: debian-raw
         args:
             BASE_IMAGE: ubuntu:focal
+    ubuntu2204-raw:
+        symbol: I(ub22-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: ubuntu:jammy
     ubuntu2004-packages:
         symbol: I(ub20-pkg)
         definition: debian-packages
         parent: ubuntu2004-raw
+    ubuntu2204-packages:
+        symbol: I(ub22-pkg)
+        definition: debian-packages
+        parent: ubuntu2204-raw
     ubuntu2004-base:
         symbol: I(ub20-base)
         definition: debian-base
@@ -77,6 +86,13 @@ jobs:
         packages:
             - ub20-mercurial
             - ub20-python-zstandard
+    ubuntu2204-base:
+        symbol: I(ub22-base)
+        definition: debian-base
+        parent: ubuntu2204-raw
+        packages:
+            - ub22-mercurial
+            - ub22-python-zstandard
     # Neither the debian8-*raw nor the debian8-*packages images can have
     # packages dependencies.
     debian8-raw:
