@@ -975,9 +975,8 @@ WasmArrayRawBuffer* ArrayBufferObject::BufferContents::wasmBuffer() const {
 }
 
 template <typename ObjT, typename RawbufT>
-static bool CreateSpecificWasmBuffer(
-    JSContext* cx, const wasm::MemoryDesc& memory,
-    MutableHandle<ArrayBufferObjectMaybeShared*> maybeSharedObject) {
+static ArrayBufferObjectMaybeShared* CreateSpecificWasmBuffer(
+    JSContext* cx, const wasm::MemoryDesc& memory) {
   bool useHugeMemory = wasm::IsHugeMemoryEnabled(memory.indexType());
   Pages initialPages = memory.initialPages();
   Maybe<Pages> sourceMaxPages = memory.maximumPages();
@@ -1004,7 +1003,7 @@ static bool CreateSpecificWasmBuffer(
       }
 
       ReportOutOfMemory(cx);
-      return false;
+      return nullptr;
     }
 
     // If we fail, and have a sourceMaxPages, try to reserve the biggest
@@ -1013,7 +1012,7 @@ static bool CreateSpecificWasmBuffer(
       wasm::Log(cx, "new Memory({initial=%" PRIu64 " pages}) failed",
                 initialPages.value());
       ReportOutOfMemory(cx);
-      return false;
+      return nullptr;
     }
 
     uint64_t cur = clampedMaxPages.value() / 2;
@@ -1029,7 +1028,7 @@ static bool CreateSpecificWasmBuffer(
       wasm::Log(cx, "new Memory({initial=%" PRIu64 " pages}) failed",
                 initialPages.value());
       ReportOutOfMemory(cx);
-      return false;
+      return nullptr;
     }
 
     // Try to grow our chunk as much as possible.
@@ -1043,10 +1042,8 @@ static bool CreateSpecificWasmBuffer(
   Rooted<ArrayBufferObjectMaybeShared*> object(
       cx, ObjT::createFromNewRawBuffer(cx, buffer, initialPages.byteLength()));
   if (!object) {
-    return false;
+    return nullptr;
   }
-
-  maybeSharedObject.set(object);
 
   // See MaximumLiveMappedBuffers comment above.
   if (wasmReservedBytes > WasmReservedBytesStartSyncFullGC) {
@@ -1084,11 +1081,11 @@ static bool CreateSpecificWasmBuffer(
               initialPages.value());
   }
 
-  return true;
+  return object;
 }
 
-bool js::CreateWasmBuffer(JSContext* cx, const wasm::MemoryDesc& memory,
-                          MutableHandle<ArrayBufferObjectMaybeShared*> buffer) {
+ArrayBufferObjectMaybeShared* js::CreateWasmBuffer(
+    JSContext* cx, const wasm::MemoryDesc& memory) {
   MOZ_RELEASE_ASSERT(memory.initialPages() <=
                      wasm::MaxMemoryPages(memory.indexType()));
   MOZ_RELEASE_ASSERT(cx->wasm().haveSignalHandlers);
@@ -1097,14 +1094,13 @@ bool js::CreateWasmBuffer(JSContext* cx, const wasm::MemoryDesc& memory,
     if (!cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_WASM_NO_SHMEM_LINK);
-      return false;
+      return nullptr;
     }
     return CreateSpecificWasmBuffer<SharedArrayBufferObject,
-                                    WasmSharedArrayRawBuffer>(cx, memory,
-                                                              buffer);
+                                    WasmSharedArrayRawBuffer>(cx, memory);
   }
   return CreateSpecificWasmBuffer<ArrayBufferObject, WasmArrayRawBuffer>(
-      cx, memory, buffer);
+      cx, memory);
 }
 
 bool ArrayBufferObject::prepareForAsmJS() {

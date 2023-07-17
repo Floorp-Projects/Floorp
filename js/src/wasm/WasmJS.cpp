@@ -2322,8 +2322,9 @@ bool WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   }
   MemoryDesc memory(limits);
 
-  Rooted<ArrayBufferObjectMaybeShared*> buffer(cx);
-  if (!CreateWasmBuffer(cx, memory, &buffer)) {
+  Rooted<ArrayBufferObjectMaybeShared*> buffer(cx,
+                                               CreateWasmBuffer(cx, memory));
+  if (!buffer) {
     return false;
   }
 

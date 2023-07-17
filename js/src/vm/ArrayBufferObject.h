@@ -516,8 +516,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
 // Create a buffer for a wasm memory, whose type is determined by
 // memory.indexType().
-bool CreateWasmBuffer(JSContext* cx, const wasm::MemoryDesc& memory,
-                      MutableHandle<ArrayBufferObjectMaybeShared*> buffer);
+ArrayBufferObjectMaybeShared* CreateWasmBuffer(JSContext* cx,
+                                               const wasm::MemoryDesc& memory);
 
 // Per-compartment table that manages the relationship between array buffers
 // and the views that use their storage.
