@@ -53,6 +53,7 @@ using namespace js::temporal;
 // TODO: Better error message for empty strings?
 // TODO: Add string input to error message?
 // TODO: Better error messages, for example display current character?
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1839676
 
 struct StringName final {
   // Start position and length of this name.
@@ -2121,30 +2122,34 @@ TemporalParser<CharT>::annotations() {
 
   MOZ_ASSERT(hasAnnotationStart());
 
-  CalendarName cal;
+  CalendarName calendar;
+  bool calendarWasCritical = false;
   while (hasAnnotationStart()) {
     auto anno = annotation();
     if (anno.isErr()) {
       return anno.propagateErr();
     }
+    auto [key, value, critical] = anno.unwrap();
 
     // FIXME: spec issue - ignore case for "[u-ca=" to match BCP47?
     // https://github.com/tc39/proposal-temporal/issues/2524
 
     static constexpr std::string_view ca = "u-ca";
 
-    auto key = anno.unwrap().key;
     auto keySpan = reader_.substring(key);
     if (keySpan.size() == ca.length() &&
         std::equal(ca.begin(), ca.end(), keySpan.data())) {
-      if (!cal.present()) {
-        cal = anno.unwrap().value;
+      if (!calendar.present()) {
+        calendar = value;
+        calendarWasCritical = critical;
+      } else if (critical || calendarWasCritical) {
+        return mozilla::Err(JSMSG_TEMPORAL_PARSER_INVALID_CRITICAL_ANNOTATION);
       }
-    } else if (anno.unwrap().critical) {
+    } else if (critical) {
       return mozilla::Err(JSMSG_TEMPORAL_PARSER_INVALID_CRITICAL_ANNOTATION);
     }
   }
-  return cal;
+  return calendar;
 }
 
 template <typename CharT>
@@ -2789,9 +2794,6 @@ TemporalParser<CharT>::parseTemporalMonthDayString() {
   if (auto monthDay = annotatedMonthDay(); monthDay.isOk() && reader_.atEnd()) {
     auto result = monthDay.unwrap();
 
-    // FIXME: spec bug - actually needs to check all calendar annotations
-    // https://github.com/tc39/proposal-temporal/issues/2538
-
     // ParseISODateTime, step 3.
     if (result.calendar.present() &&
         !IsISO8601Calendar(reader_.substring(result.calendar))) {
@@ -2891,9 +2893,6 @@ TemporalParser<CharT>::parseTemporalYearMonthString() {
   if (auto yearMonth = annotatedYearMonth();
       yearMonth.isOk() && reader_.atEnd()) {
     auto result = yearMonth.unwrap();
-
-    // FIXME: spec bug - actually needs to check all calendar annotations
-    // https://github.com/tc39/proposal-temporal/issues/2538
 
     // ParseISODateTime, step 3.
     if (result.calendar.present() &&
