@@ -314,8 +314,7 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
     calendarLike.setString(calendarString);
   }
 
-  Rooted<CalendarValue> calendar(
-      cx);
+  Rooted<CalendarValue> calendar(cx);
   if (!ToTemporalCalendarWithISODefault(cx, calendarLike, &calendar)) {
     return nullptr;
   }

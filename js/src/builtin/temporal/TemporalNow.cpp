@@ -210,11 +210,13 @@ static PlainDateTimeObject* SystemDateTime(JSContext* cx,
   Rooted<TimeZoneValue> timeZone(cx);
   if (temporalTimeZoneLike.isUndefined()) {
     timeZone = SystemTimeZone(cx);
+    if (!timeZone) {
+      return nullptr;
+    }
   } else {
-    timeZone = ToTemporalTimeZone(cx, temporalTimeZoneLike);
-  }
-  if (!timeZone) {
-    return nullptr;
+    if (!ToTemporalTimeZone(cx, temporalTimeZoneLike, &timeZone)) {
+      return nullptr;
+    }
   }
 
   // Step 3.
@@ -243,11 +245,13 @@ static ZonedDateTimeObject* SystemZonedDateTime(
   Rooted<TimeZoneValue> timeZone(cx);
   if (temporalTimeZoneLike.isUndefined()) {
     timeZone = SystemTimeZone(cx);
+    if (!timeZone) {
+      return nullptr;
+    }
   } else {
-    timeZone = ToTemporalTimeZone(cx, temporalTimeZoneLike);
-  }
-  if (!timeZone) {
-    return nullptr;
+    if (!ToTemporalTimeZone(cx, temporalTimeZoneLike, &timeZone)) {
+      return nullptr;
+    }
   }
 
   // Step 3.
