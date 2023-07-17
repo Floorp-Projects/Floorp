@@ -22,7 +22,6 @@ interface RTCRtpSender {
   undefined setStreams(MediaStream... streams);
   [NewObject]
   Promise<RTCStatsReport> getStats();
-  [Pref="media.peerconnection.dtmf.enabled"]
   readonly attribute RTCDTMFSender? dtmf;
   [ChromeOnly]
   sequence<MediaStream> getStreams();

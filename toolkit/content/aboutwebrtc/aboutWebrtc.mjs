@@ -1715,7 +1715,6 @@ async function renderMediaCtx(rndr) {
     boolPref("media.navigator.video.use_transport_cc"),
     boolPref("media.navigator.audio.use_fec"),
     boolPref("media.navigator.video.red_ulpfec_enabled"),
-    boolPref("media.peerconnection.dtmf.enabled"),
   ];
 
   const inner = rndr.elems_div({}, [

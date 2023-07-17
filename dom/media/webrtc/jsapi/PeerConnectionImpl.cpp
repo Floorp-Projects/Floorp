@@ -620,8 +620,7 @@ class ConfigureCodec {
         mUseRemb(false),
         mUseTransportCC(false),
         mUseAudioFec(false),
-        mRedUlpfecEnabled(false),
-        mDtmfEnabled(false) {
+        mRedUlpfecEnabled(false) {
     mSoftwareH264Enabled = PeerConnectionCtx::GetInstance()->gmpHasH264();
 
     if (WebrtcVideoConduit::HasH264Hardware()) {
@@ -672,10 +671,6 @@ class ConfigureCodec {
 
     branch->GetBoolPref("media.navigator.video.red_ulpfec_enabled",
                         &mRedUlpfecEnabled);
-
-    // media.peerconnection.dtmf.enabled controls both sdp generation for
-    // DTMF support as well as DTMF exposure to DOM
-    branch->GetBoolPref("media.peerconnection.dtmf.enabled", &mDtmfEnabled);
   }
 
   void operator()(UniquePtr<JsepCodecDescription>& codec) const {
@@ -686,7 +681,7 @@ class ConfigureCodec {
         if (audioCodec.mName == "opus") {
           audioCodec.mFECEnabled = mUseAudioFec;
         } else if (audioCodec.mName == "telephone-event") {
-          audioCodec.mEnabled = mDtmfEnabled;
+          audioCodec.mEnabled = true;
         }
       } break;
       case SdpMediaSection::kVideo: {
@@ -765,7 +760,6 @@ class ConfigureCodec {
   bool mUseTransportCC;
   bool mUseAudioFec;
   bool mRedUlpfecEnabled;
-  bool mDtmfEnabled;
 };
 
 class ConfigureRedCodec {
