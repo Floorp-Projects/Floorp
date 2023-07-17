@@ -241,7 +241,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   gfx::IntRect mVisibleRect;
   gfx::IntSize mDisplaySize;
 
-  Maybe<uint64_t> mDuration;  // Nothing() after `Close()`d
+  Maybe<uint64_t> mDuration;
   int64_t mTimestamp;
   VideoColorSpaceInit mColorSpace;
 };
