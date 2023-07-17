@@ -16,8 +16,8 @@
 #include "nsRefPtrHashtable.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsILoadInfo.h"    // nsSecurityFlags
-#include "nsINode.h"        // nsIURI
+#include "nsILoadInfo.h"  // nsSecurityFlags
+#include "nsINode.h"      // nsIURI
 #include "nsURIHashKey.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/JSExecutionContext.h"
