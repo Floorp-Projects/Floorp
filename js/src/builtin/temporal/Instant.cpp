@@ -964,12 +964,12 @@ bool js::temporal::RoundTemporalInstant(JSContext* cx, const Instant& ns,
  */
 static JSString* TemporalInstantToString(JSContext* cx,
                                          Handle<InstantObject*> instant,
-                                         Handle<JSObject*> timeZone,
+                                         Handle<TimeZoneValue> timeZone,
                                          Precision precision) {
   // Steps 1-2. (Not applicable in our implementation.)
 
   // Steps 3-4.
-  Rooted<JSObject*> outputTimeZone(cx, timeZone);
+  Rooted<TimeZoneValue> outputTimeZone(cx, timeZone);
   if (!timeZone) {
     outputTimeZone = CreateTemporalTimeZoneUTC(cx);
     if (!outputTimeZone) {
@@ -1646,7 +1646,7 @@ static bool Instant_equals(JSContext* cx, unsigned argc, Value* vp) {
 static bool Instant_toString(JSContext* cx, const CallArgs& args) {
   auto instant = ToInstant(&args.thisv().toObject().as<InstantObject>());
 
-  Rooted<JSObject*> timeZone(cx);
+  Rooted<TimeZoneValue> timeZone(cx);
   auto roundingMode = TemporalRoundingMode::Trunc;
   SecondsStringPrecision precision = {Precision::Auto(),
                                       TemporalUnit::Nanosecond, Increment{1}};
@@ -1743,7 +1743,7 @@ static bool Instant_toLocaleString(JSContext* cx, const CallArgs& args) {
                                  &args.thisv().toObject().as<InstantObject>());
 
   // Step 3.
-  Rooted<JSObject*> timeZone(cx);
+  Rooted<TimeZoneValue> timeZone(cx);
   JSString* str =
       TemporalInstantToString(cx, instant, timeZone, Precision::Auto());
   if (!str) {
@@ -1771,7 +1771,7 @@ static bool Instant_toJSON(JSContext* cx, const CallArgs& args) {
                                  &args.thisv().toObject().as<InstantObject>());
 
   // Step 3.
-  Rooted<JSObject*> timeZone(cx);
+  Rooted<TimeZoneValue> timeZone(cx);
   JSString* str =
       TemporalInstantToString(cx, instant, timeZone, Precision::Auto());
   if (!str) {
@@ -1846,7 +1846,7 @@ static bool Instant_toZonedDateTime(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 9.
-  Rooted<JSObject*> timeZone(cx, ToTemporalTimeZone(cx, timeZoneLike));
+  Rooted<TimeZoneValue> timeZone(cx, ToTemporalTimeZone(cx, timeZoneLike));
   if (!timeZone) {
     return false;
   }
@@ -1877,7 +1877,7 @@ static bool Instant_toZonedDateTimeISO(JSContext* cx, const CallArgs& args) {
   auto instant = ToInstant(&args.thisv().toObject().as<InstantObject>());
 
   // Step 3.
-  Rooted<JSObject*> timeZone(cx, ToTemporalTimeZone(cx, args.get(0)));
+  Rooted<TimeZoneValue> timeZone(cx, ToTemporalTimeZone(cx, args.get(0)));
   if (!timeZone) {
     return false;
   }

@@ -631,7 +631,7 @@ static bool CalculateOffsetShift(JSContext* cx, Handle<JSObject*> relativeTo,
   }
 
   auto epochInstant = ToInstant(zonedRelativeTo);
-  Rooted<JSObject*> timeZone(cx, zonedRelativeTo->timeZone());
+  Rooted<TimeZoneValue> timeZone(cx, zonedRelativeTo->timeZone());
   Rooted<CalendarValue> calendar(cx, zonedRelativeTo->calendar());
 
   // Wrap into the current compartment.
@@ -732,7 +732,7 @@ static ZonedDateTimeObject* MoveRelativeZonedDateTime(
     return nullptr;
   }
   auto instant = ToInstant(unwrappedZonedDateTime);
-  Rooted<JSObject*> timeZone(cx, unwrappedZonedDateTime->timeZone());
+  Rooted<TimeZoneValue> timeZone(cx, unwrappedZonedDateTime->timeZone());
   Rooted<CalendarValue> calendar(cx, unwrappedZonedDateTime->calendar());
 
   if (!cx->compartment()->wrap(cx, &timeZone)) {
@@ -991,7 +991,7 @@ static bool NanosecondsToDaysError(JSContext* cx,
 
   // Step 5.
   auto startNs = ToInstant(relativeTo);
-  Rooted<JSObject*> timeZone(cx, relativeTo->timeZone());
+  Rooted<TimeZoneValue> timeZone(cx, relativeTo->timeZone());
 
   // FIXME: spec issue - consider moving GetPlainDateTimeFor after step 9 where
   // IsValidEpochNanoseconds is checked. That way we reduce extra observable
@@ -1709,7 +1709,7 @@ static bool BalancePossiblyInfiniteDuration(
     return false;
   }
   auto epochInstant = ToInstant(unwrappedRelativeTo);
-  Rooted<JSObject*> timeZone(cx, unwrappedRelativeTo->timeZone());
+  Rooted<TimeZoneValue> timeZone(cx, unwrappedRelativeTo->timeZone());
   Rooted<CalendarValue> calendar(cx, unwrappedRelativeTo->calendar());
 
   if (!cx->compartment()->wrap(cx, &timeZone)) {
@@ -3138,7 +3138,7 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
     return false;
   }
   auto epochInstant = ToInstant(unwrappedRelativeTo);
-  Rooted<JSObject*> timeZone(cx, unwrappedRelativeTo->timeZone());
+  Rooted<TimeZoneValue> timeZone(cx, unwrappedRelativeTo->timeZone());
   Rooted<CalendarValue> calendar(cx, unwrappedRelativeTo->calendar());
 
   if (!cx->compartment()->wrap(cx, &timeZone)) {
@@ -3377,7 +3377,7 @@ bool js::temporal::AdjustRoundedDurationDays(
     return false;
   }
   auto nanoseconds = ToInstant(unwrappedRelativeTo);
-  Rooted<JSObject*> timeZone(cx, unwrappedRelativeTo->timeZone());
+  Rooted<TimeZoneValue> timeZone(cx, unwrappedRelativeTo->timeZone());
   Rooted<CalendarValue> calendar(cx, unwrappedRelativeTo->calendar());
 
   if (!cx->compartment()->wrap(cx, &timeZone)) {
@@ -3892,7 +3892,7 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
   // Steps 6-7.
   PlainDateTime dateTime;
   Rooted<CalendarValue> calendar(cx);
-  Rooted<JSObject*> timeZone(cx);
+  Rooted<TimeZoneValue> timeZone(cx);
   int64_t offsetNs;
   if (value.isObject()) {
     Rooted<JSObject*> obj(cx, &value.toObject());
