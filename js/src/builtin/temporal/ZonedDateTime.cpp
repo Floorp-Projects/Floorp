@@ -104,7 +104,7 @@ bool js::temporal::InterpretISODateTimeOffset(
   MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
 
   // Step 1.
-  Rooted<JSObject*> calendar(cx, GetISO8601Calendar(cx));
+  Rooted<CalendarValue> calendar(cx, GetISO8601Calendar(cx));
   if (!calendar) {
     return false;
   }
@@ -241,7 +241,7 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
   int64_t offsetNanoseconds = 0;
 
   // Step 5.
-  Rooted<JSObject*> calendar(cx);
+  Rooted<CalendarValue> calendar(cx);
   Rooted<JSObject*> timeZone(cx);
   PlainDateTime dateTime;
   auto disambiguation = TemporalDisambiguation::Compatible;
@@ -476,7 +476,7 @@ static bool ToTemporalZonedDateTime(JSContext* cx, Handle<Value> item,
 static bool ToTemporalZonedDateTime(JSContext* cx, Handle<Value> item,
                                     Instant* instant,
                                     MutableHandle<JSObject*> timeZone,
-                                    MutableHandle<JSObject*> calendar) {
+                                    MutableHandle<CalendarValue> calendar) {
   auto* obj = ToTemporalZonedDateTime(cx, item).unwrapOrNull();
   if (!obj) {
     return false;
@@ -495,7 +495,7 @@ static bool ToTemporalZonedDateTime(JSContext* cx, Handle<Value> item,
  */
 static ZonedDateTimeObject* CreateTemporalZonedDateTime(
     JSContext* cx, const CallArgs& args, Handle<BigInt*> epochNanoseconds,
-    Handle<JSObject*> timeZone, Handle<JSObject*> calendar) {
+    Handle<JSObject*> timeZone, Handle<CalendarValue> calendar) {
   // Step 1.
   MOZ_ASSERT(IsValidEpochNanoseconds(epochNanoseconds));
 
@@ -534,7 +534,7 @@ static ZonedDateTimeObject* CreateTemporalZonedDateTime(
  */
 ZonedDateTimeObject* js::temporal::CreateTemporalZonedDateTime(
     JSContext* cx, const Instant& instant, Handle<JSObject*> timeZone,
-    Handle<JSObject*> calendar) {
+    Handle<CalendarValue> calendar) {
   // Step 1.
   MOZ_ASSERT(IsValidEpochInstant(instant));
 
@@ -659,7 +659,7 @@ static JSString* TemporalZonedDateTimeToString(
   }
 
   // Step 14.
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
   if (!MaybeFormatCalendarAnnotation(cx, result, calendar, showCalendar)) {
     return nullptr;
   }
@@ -675,7 +675,7 @@ static JSString* TemporalZonedDateTimeToString(
  */
 static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
                              Handle<JSObject*> timeZone,
-                             Handle<JSObject*> calendar,
+                             Handle<CalendarValue> calendar,
                              const Duration& duration,
                              Handle<JSObject*> maybeOptions, Instant* result) {
   MOZ_ASSERT(IsValidEpochInstant(epochNanoseconds));
@@ -750,7 +750,7 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
  */
 bool js::temporal::AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
                                     Handle<JSObject*> timeZone,
-                                    Handle<JSObject*> calendar,
+                                    Handle<CalendarValue> calendar,
                                     const Duration& duration, Instant* result) {
   return ::AddZonedDateTime(cx, epochInstant, timeZone, calendar, duration,
                             nullptr, result);
@@ -800,7 +800,7 @@ bool js::temporal::NanosecondsToDays(
   }
   auto startNs = ToInstant(unwrappedRelativeTo);
   Rooted<JSObject*> timeZone(cx, unwrappedRelativeTo->timeZone());
-  Rooted<JSObject*> calendar(cx, unwrappedRelativeTo->calendar());
+  Rooted<CalendarValue> calendar(cx, unwrappedRelativeTo->calendar());
 
   if (!cx->compartment()->wrap(cx, &timeZone)) {
     return false;
@@ -1072,7 +1072,7 @@ bool js::temporal::NanosecondsToDays(
 static bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
                                     const Instant& ns2,
                                     Handle<JSObject*> timeZone,
-                                    Handle<JSObject*> calendar,
+                                    Handle<CalendarValue> calendar,
                                     TemporalUnit largestUnit,
                                     Handle<PlainObject*> maybeOptions,
                                     Duration* result) {
@@ -1169,7 +1169,7 @@ static bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
 bool js::temporal::DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
                                            const Instant& ns2,
                                            Handle<JSObject*> timeZone,
-                                           Handle<JSObject*> calendar,
+                                           Handle<CalendarValue> calendar,
                                            TemporalUnit largestUnit,
                                            Duration* result) {
   return ::DifferenceZonedDateTime(cx, ns1, ns2, timeZone, calendar,
@@ -1296,14 +1296,14 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
       cx, &args.thisv().toObject().as<ZonedDateTimeObject>());
   auto epochInstant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Step 1. (Not applicable in our implementation.)
 
   // Step 2.
   Instant otherInstant;
   Rooted<JSObject*> otherTimeZone(cx);
-  Rooted<JSObject*> otherCalendar(cx);
+  Rooted<CalendarValue> otherCalendar(cx);
   if (!ToTemporalZonedDateTime(cx, args.get(0), &otherInstant, &otherTimeZone,
                                &otherCalendar)) {
     return false;
@@ -1460,7 +1460,7 @@ static bool AddDurationToOrSubtractDurationFromZonedDateTime(
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
 
   // Step 5. (Reordered)
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Step 2.
   Duration duration;
@@ -1535,8 +1535,8 @@ static bool ZonedDateTimeConstructor(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 5.
-  Rooted<JSObject*> calendar(cx,
-                             ToTemporalCalendarWithISODefault(cx, args.get(2)));
+  Rooted<CalendarValue> calendar(
+      cx, ToTemporalCalendarWithISODefault(cx, args.get(2)));
   if (!calendar) {
     return false;
   }
@@ -1573,7 +1573,7 @@ static bool ZonedDateTime_from(JSContext* cx, unsigned argc, Value* vp) {
     if (auto* zonedDateTime = item->maybeUnwrapIf<ZonedDateTimeObject>()) {
       auto epochInstant = ToInstant(zonedDateTime);
       Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-      Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+      Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
       if (!cx->compartment()->wrap(cx, &timeZone)) {
         return false;
@@ -1694,7 +1694,7 @@ static bool ZonedDateTime_year(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
   auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
@@ -1723,7 +1723,7 @@ static bool ZonedDateTime_month(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
   auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
@@ -1752,7 +1752,7 @@ static bool ZonedDateTime_monthCode(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
   auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
@@ -1782,7 +1782,7 @@ static bool ZonedDateTime_day(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
   auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
@@ -2094,7 +2094,7 @@ static bool ZonedDateTime_dayOfWeek(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
   auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
@@ -2124,7 +2124,7 @@ static bool ZonedDateTime_dayOfYear(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
   auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
@@ -2154,7 +2154,7 @@ static bool ZonedDateTime_weekOfYear(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
   auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
@@ -2184,7 +2184,7 @@ static bool ZonedDateTime_yearOfWeek(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
   auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
@@ -2299,7 +2299,7 @@ static bool ZonedDateTime_daysInWeek(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
   auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
@@ -2329,7 +2329,7 @@ static bool ZonedDateTime_daysInMonth(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
   auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
@@ -2359,7 +2359,7 @@ static bool ZonedDateTime_daysInYear(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
   auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
@@ -2389,7 +2389,7 @@ static bool ZonedDateTime_monthsInYear(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
   auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
@@ -2420,7 +2420,7 @@ static bool ZonedDateTime_inLeapYear(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
   auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
@@ -2546,7 +2546,7 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 6.
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Step 7.
   JS::RootedVector<PropertyKey> fieldNames(cx);
@@ -2678,7 +2678,7 @@ static bool ZonedDateTime_withPlainTime(JSContext* cx, const CallArgs& args) {
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
 
   // Step 7. (Reordered)
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-4.
   PlainTime time = {};
@@ -2735,14 +2735,14 @@ static bool ZonedDateTime_withPlainTime(JSContext* cx, unsigned argc,
 static bool ZonedDateTime_withPlainDate(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto epochInstant = ToInstant(zonedDateTime);
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Step 4. (Reordered)
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
 
   // Step 3.
   PlainDate date;
-  Rooted<JSObject*> plainDateCalendar(cx);
+  Rooted<CalendarValue> plainDateCalendar(cx);
   if (!ToTemporalDate(cx, args.get(0), &date, &plainDateCalendar)) {
     return false;
   }
@@ -2800,7 +2800,7 @@ static bool ZonedDateTime_withPlainDate(JSContext* cx, unsigned argc,
 static bool ZonedDateTime_withTimeZone(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto epochNanoseconds = ToInstant(zonedDateTime);
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Step 3.
   Rooted<JSObject*> timeZone(cx, ToTemporalTimeZone(cx, args.get(0)));
@@ -2839,7 +2839,7 @@ static bool ZonedDateTime_withCalendar(JSContext* cx, const CallArgs& args) {
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
 
   // Step 3.
-  Rooted<JSObject*> calendar(cx, ToTemporalCalendar(cx, args.get(0)));
+  Rooted<CalendarValue> calendar(cx, ToTemporalCalendar(cx, args.get(0)));
   if (!calendar) {
     return false;
   }
@@ -2948,7 +2948,7 @@ static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
 
   // Step 15. (Reordered)
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-12.
   auto smallestUnit = TemporalUnit::Auto;
@@ -3121,12 +3121,12 @@ static bool ZonedDateTime_equals(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto epochNanoseconds = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Step 3.
   Instant otherEpochNanoseconds;
   Rooted<JSObject*> otherTimeZone(cx);
-  Rooted<JSObject*> otherCalendar(cx);
+  Rooted<CalendarValue> otherCalendar(cx);
   if (!ToTemporalZonedDateTime(cx, args.get(0), &otherEpochNanoseconds,
                                &otherTimeZone, &otherCalendar)) {
     return false;
@@ -3324,7 +3324,7 @@ static bool ZonedDateTime_startOfDay(JSContext* cx, const CallArgs& args) {
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
 
   // Step 4.
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 5-6.
   PlainDateTime temporalDateTime;
@@ -3403,7 +3403,7 @@ static bool ZonedDateTime_toPlainDate(JSContext* cx, const CallArgs& args) {
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
 
   // Step 5.
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-4 and 6.
   PlainDateTime temporalDateTime;
@@ -3438,7 +3438,7 @@ static bool ZonedDateTime_toPlainTime(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-5.
   PlainDateTime temporalDateTime;
@@ -3473,7 +3473,7 @@ static bool ZonedDateTime_toPlainDateTime(JSContext* cx, const CallArgs& args) {
   auto* zonedDateTime = &args.thisv().toObject().as<ZonedDateTimeObject>();
   auto instant = ToInstant(zonedDateTime);
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-5.
   auto* result = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
@@ -3506,7 +3506,7 @@ static bool ZonedDateTime_toPlainYearMonth(JSContext* cx,
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
 
   // Step 5.
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-4 and 6.
   Rooted<PlainDateTimeObject*> temporalDateTime(
@@ -3560,7 +3560,7 @@ static bool ZonedDateTime_toPlainMonthDay(JSContext* cx, const CallArgs& args) {
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
 
   // Step 5.
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-4 and 6.
   Rooted<PlainDateTimeObject*> temporalDateTime(
@@ -3619,7 +3619,7 @@ static bool ZonedDateTime_getISOFields(JSContext* cx, const CallArgs& args) {
   Rooted<JSObject*> timeZone(cx, zonedDateTime->timeZone());
 
   // Step 6. (Reordered)
-  Rooted<JSObject*> calendar(cx, zonedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Step 5.
   Rooted<InstantObject*> instant(cx, CreateTemporalInstant(cx, epochInstant));

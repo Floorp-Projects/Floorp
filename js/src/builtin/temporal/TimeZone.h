@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/Wrapped.h"
 #include "js/GCVector.h"
 #include "js/RootingAPI.h"
@@ -122,7 +123,7 @@ TimeZoneObject* ToTemporalTimeZone(JSContext* cx, JS::Handle<JSString*> string);
 PlainDateTimeObject* GetPlainDateTimeFor(JSContext* cx,
                                          JS::Handle<JSObject*> timeZone,
                                          const Instant& instant,
-                                         JS::Handle<JSObject*> calendar);
+                                         JS::Handle<CalendarValue> calendar);
 
 /**
  * GetPlainDateTimeFor ( timeZone, instant, calendar )

@@ -1164,7 +1164,7 @@ static bool GetPlainDateTimeFor(JSContext* cx, Handle<JSObject*> timeZone,
  */
 static PlainDateTimeObject* GetPlainDateTimeFor(
     JSContext* cx, Handle<JSObject*> timeZone,
-    Handle<Wrapped<InstantObject*>> instant, Handle<JSObject*> calendar) {
+    Handle<Wrapped<InstantObject*>> instant, Handle<CalendarValue> calendar) {
   PlainDateTime dateTime;
   if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return nullptr;
@@ -1182,7 +1182,7 @@ static PlainDateTimeObject* GetPlainDateTimeFor(
  */
 PlainDateTimeObject* js::temporal::GetPlainDateTimeFor(
     JSContext* cx, Handle<JSObject*> timeZone, const Instant& instant,
-    Handle<JSObject*> calendar) {
+    Handle<CalendarValue> calendar) {
   MOZ_ASSERT(IsValidEpochInstant(instant));
 
   Rooted<InstantObject*> obj(cx, CreateTemporalInstant(cx, instant));
@@ -1387,7 +1387,7 @@ bool js::temporal::GetPossibleInstantsFor(
  * minutes, seconds, milliseconds, microseconds, nanoseconds, options )
  */
 static bool AddDateTime(JSContext* cx, const PlainDateTime& dateTime,
-                        int64_t nanoseconds, Handle<JSObject*> calendar,
+                        int64_t nanoseconds, Handle<CalendarValue> calendar,
                         PlainDateTime* result) {
   MOZ_ASSERT(std::abs(nanoseconds) <= 2 * ToNanoseconds(TemporalUnit::Day));
 
@@ -1480,7 +1480,7 @@ Wrapped<InstantObject*> js::temporal::DisambiguatePossibleInstants(
   }
 
   auto dateTime = ToPlainDateTime(unwrappedDateTime);
-  Rooted<JSObject*> calendar(cx, unwrappedDateTime->calendar());
+  Rooted<CalendarValue> calendar(cx, unwrappedDateTime->calendar());
   if (!cx->compartment()->wrap(cx, &calendar)) {
     return nullptr;
   }
@@ -1816,8 +1816,8 @@ static bool TimeZone_getPlainDateTimeFor(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 4.
-  Rooted<JSObject*> calendar(cx,
-                             ToTemporalCalendarWithISODefault(cx, args.get(1)));
+  Rooted<CalendarValue> calendar(
+      cx, ToTemporalCalendarWithISODefault(cx, args.get(1)));
   if (!calendar) {
     return false;
   }
