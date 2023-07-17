@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media Engine only test : test EME API for PlayReady key system</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+/**
+ * This test is used to ensure that the basic EME API operations work on the
+ * PlayReady's key system.
+ */
+
+add_task(async function setupTestingPrefs() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.wmf.media-engine.enabled", 1],
+      ["media.eme.playready.enabled", true],
+    ],
+  });
+});
+
+add_task(async function testPlayReadyKeySystemRequest() {
+  // From https://testweb.playready.microsoft.com/Content/Content3X
+  const KID_H264 = '{"kids":["a2c786d0f9ef4cb3b333cd323a4284a5"]}';
+  const sessionTypes = ['temporary', 'persistent-license'];
+  const keySystem = "com.microsoft.playready.recommendation";
+  for (const sessionType of sessionTypes) {
+    const configs = [{
+      initDataTypes: ['keyids'],
+      videoCapabilities: [{ contentType: `video/mp4;codecs="avc1.640028"` }],
+      sessionTypes : [sessionType],
+    }];
+    info(`requestMediaKeySystemAccess for ${keySystem}`);
+    let access = await navigator.requestMediaKeySystemAccess(keySystem, configs)
+        .catch(e => ok(false, `failed to create key system access`));
+
+    info('creating media key');
+    let mediaKeys = await access.createMediaKeys()
+      .catch(e => ok(false, `failed to create media key`));;
+
+    info(`creating a ${sessionType} media key session`);
+    let session = mediaKeys.createSession(sessionType);
+    let messagePromise = new Promise(r => {
+      session.addEventListener('message', event => {
+        is(event.messageType, 'license-request',
+            'MediaKeyMessage type should be license-request');
+        ok(true, `created request and received message event`);
+        session.close().then(() => { r(); });
+      });
+    });
+    await session.generateRequest(
+        'keyids',
+        new TextEncoder().encode(KID_H264))
+          .catch(e => ok(false, `failed to generate request`));
+    await messagePromise;
+  }
+});
+
+</script>
+</body>
+</html>
