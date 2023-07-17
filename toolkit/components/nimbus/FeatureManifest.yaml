@@ -1667,3 +1667,22 @@ firefoxViewNext:
       type: boolean
       fallbackPref: "browser.tabs.firefox-view-next"
       description: "Whether or not to enable the new Firefox View"
+
+backgroundUpdate:
+  description: Prefs to control aspects of the background update process.
+  owner: install-update@mozilla.com
+  hasExposure: true
+  exposureDescription: >-
+    The exposure event is sent when scheduling the background task and both the
+    feature is enabled and the service registry key (Mozilla Maintenance
+    Service) is *not* available for this installation. That is the first time
+    the feature can impact Firefox behaviour and the user experience.
+  isEarlyStartup: false
+  variables:
+    allowUpdatesForUnelevatedInstallions:
+      description: >-
+        Allow the background update process to download and apply updates when
+        the Mozilla Maintenance Service is unavailable but the installation
+        directory can be written.
+      type: boolean
+      fallbackPref: app.update.background.allowUpdatesForUnelevatedInstallations
