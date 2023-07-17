@@ -1531,7 +1531,7 @@ bool js::ReportIncompatibleSelfHostedMethod(JSContext* cx,
   // in the somethingSelfHosted, not in the sort() call.
 
   static const char* const internalNames[] = {
-      "IsTypedArrayEnsuringArrayBuffer",
+      "EnsureTypedArrayWithArrayBuffer",
       "RegExpSearchSlowPath",
       "RegExpReplaceSlowPath",
       "RegExpMatchSlowPath",
