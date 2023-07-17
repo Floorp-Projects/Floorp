@@ -1491,7 +1491,7 @@ Wrapped<InstantObject*> js::temporal::DisambiguatePossibleInstants(
 
   auto dateTime = ToPlainDateTime(unwrappedDateTime);
   Rooted<CalendarValue> calendar(cx, unwrappedDateTime->calendar());
-  if (!cx->compartment()->wrap(cx, &calendar)) {
+  if (!calendar.wrap(cx)) {
     return nullptr;
   }
 

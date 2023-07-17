@@ -333,7 +333,7 @@ static PlainDateTimeObject* CreateTemporalDateTime(
 
   // Step 15.
   dateTime->setFixedSlot(PlainDateTimeObject::CALENDAR_SLOT,
-                         ObjectValue(*calendar));
+                         calendar.toValue());
 
   // Step 16.
   return dateTime;
@@ -402,8 +402,7 @@ PlainDateTimeObject* js::temporal::CreateTemporalDateTime(
                        Int32Value(nanosecond));
 
   // Step 15.
-  object->setFixedSlot(PlainDateTimeObject::CALENDAR_SLOT,
-                       ObjectValue(*calendar));
+  object->setFixedSlot(PlainDateTimeObject::CALENDAR_SLOT, calendar.toValue());
 
   // Step 16.
   return object;
@@ -506,7 +505,7 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
       if (!cx->compartment()->wrap(cx, &timeZone)) {
         return nullptr;
       }
-      if (!cx->compartment()->wrap(cx, &calendar)) {
+      if (!calendar.wrap(cx)) {
         return nullptr;
       }
 
@@ -526,7 +525,7 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
     if (auto* date = itemObj->maybeUnwrapIf<PlainDateObject>()) {
       PlainDateTime dateTime = {ToPlainDate(date), {}};
       Rooted<CalendarValue> calendar(cx, date->calendar());
-      if (!cx->compartment()->wrap(cx, &calendar)) {
+      if (!calendar.wrap(cx)) {
         return nullptr;
       }
 
@@ -604,14 +603,13 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
     // Step 4.e.
     MOZ_ASSERT(IsValidTime(result.time));
 
-    // Step 4.f.
-    Rooted<Value> calendarValue(cx);
+    // Steps 4.f-i.
     if (calendarString) {
-      calendarValue.setString(calendarString);
-    }
-
-    if (!ToTemporalCalendarWithISODefault(cx, calendarValue, &calendar)) {
-      return nullptr;
+      if (!ToBuiltinCalendar(cx, calendarString, &calendar)) {
+        return nullptr;
+      }
+    } else {
+      calendar.set(CalendarValue(cx->names().iso8601));
     }
   }
 
@@ -654,20 +652,18 @@ static bool ToTemporalDateTime(JSContext* cx, Handle<Value> item,
 
   *result = ToPlainDateTime(obj);
   calendar.set(obj->calendar());
-  return cx->compartment()->wrap(cx, calendar);
+  return calendar.wrap(cx);
 }
 
 /**
  * TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second,
  * millisecond, microsecond, nanosecond, calendar, precision, showCalendar )
  */
-static JSString* TemporalDateTimeToString(JSContext* cx,
-                                          const PlainDateTime& dateTime,
-                                          Handle<CalendarValue> maybeCalendar,
-                                          Precision precision,
-                                          CalendarOption showCalendar) {
-  MOZ_ASSERT_IF(!maybeCalendar, showCalendar == CalendarOption::Never);
-
+JSString* js::temporal::TemporalDateTimeToString(JSContext* cx,
+                                                 const PlainDateTime& dateTime,
+                                                 Handle<CalendarValue> calendar,
+                                                 Precision precision,
+                                                 CalendarOption showCalendar) {
   JSStringBuilder result(cx);
 
   // Note: This doesn't reserve too much space, because the string builder
@@ -728,40 +724,13 @@ static JSString* TemporalDateTimeToString(JSContext* cx,
   // Step 7.
   FormatSecondsStringPart(result, dateTime.time, precision);
 
-  if (maybeCalendar) {
-    // Step 8.
-    if (!MaybeFormatCalendarAnnotation(cx, result, maybeCalendar,
-                                       showCalendar)) {
-      return nullptr;
-    }
+  // Step 8.
+  if (!MaybeFormatCalendarAnnotation(cx, result, calendar, showCalendar)) {
+    return nullptr;
   }
 
   // Step 9.
   return result.finishString();
-}
-
-/**
- * TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second,
- * millisecond, microsecond, nanosecond, calendar, precision, showCalendar )
- */
-JSString* js::temporal::TemporalDateTimeToString(JSContext* cx,
-                                                 const PlainDateTime& dateTime,
-                                                 Handle<CalendarValue> calendar,
-                                                 Precision precision,
-                                                 CalendarOption showCalendar) {
-  return ::TemporalDateTimeToString(cx, dateTime, calendar, precision,
-                                    showCalendar);
-}
-
-/**
- * TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second,
- * millisecond, microsecond, nanosecond, calendar, precision, showCalendar )
- */
-JSString* js::temporal::TemporalDateTimeToString(JSContext* cx,
-                                                 const PlainDateTime& dateTime,
-                                                 Precision precision) {
-  return ::TemporalDateTimeToString(cx, dateTime, nullptr, precision,
-                                    CalendarOption::Never);
 }
 
 /**
@@ -1314,7 +1283,7 @@ static bool PlainDateTime_from(JSContext* cx, unsigned argc, Value* vp) {
       auto dateTime = ToPlainDateTime(temporalDateTime);
 
       Rooted<CalendarValue> calendar(cx, temporalDateTime->calendar());
-      if (!cx->compartment()->wrap(cx, &calendar)) {
+      if (!calendar.wrap(cx)) {
         return false;
       }
 
@@ -2376,8 +2345,7 @@ static bool PlainDateTime_getISOFields(JSContext* cx, const CallArgs& args) {
   Rooted<IdValueVector> fields(cx, IdValueVector(cx));
 
   // Step 4.
-  if (!fields.emplaceBack(NameToId(cx->names().calendar),
-                          ObjectValue(*calendar))) {
+  if (!fields.emplaceBack(NameToId(cx->names().calendar), calendar.toValue())) {
     return false;
   }
 

@@ -17,6 +17,8 @@
 #include "vm/NativeObject.h"
 #include "vm/StringType.h"
 
+class JS_PUBLIC_API JSTracer;
+
 namespace js {
 struct ClassSpec;
 class JSStringBuilder;
@@ -41,7 +43,75 @@ class CalendarObject : public NativeObject {
   static const ClassSpec classSpec_;
 };
 
-using CalendarValue = JSObject*;
+/**
+ * Calendar value, which is either a string containing a canonical calendar
+ * identifier or an object.
+ */
+class CalendarValue final {
+  JS::Value value_{};
+
+ public:
+  /**
+   * Default initialize this CalendarValue.
+   */
+  CalendarValue() = default;
+
+  /**
+   * Default initialize this CalendarValue.
+   */
+  explicit CalendarValue(const Value& value) : value_(value) {
+    MOZ_ASSERT(value.isString() || value.isObject());
+    MOZ_ASSERT_IF(value.isString(), value.toString()->isLinear());
+  }
+
+  /**
+   * Initialize this CalendarValue with a canonical calendar identifier.
+   */
+  explicit CalendarValue(JSLinearString* calendarId)
+      : value_(JS::StringValue(calendarId)) {}
+
+  /**
+   * Initialize this CalendarValue with a calendar object.
+   */
+  explicit CalendarValue(JSObject* calendar)
+      : value_(JS::ObjectValue(*calendar)) {}
+
+  /**
+   * Return true iff this CalendarValue is initialized with either a canonical
+   * calendar identifier or a calendar object.
+   */
+  explicit operator bool() const { return !value_.isUndefined(); }
+
+  /**
+   * Return this CalendarValue as a JS::Value.
+   */
+  JS::Value toValue() const { return value_; }
+
+  /**
+   * Return true if this CalendarValue is a string.
+   */
+  bool isString() const { return value_.isString(); }
+
+  /**
+   * Return true if this CalendarValue is an object.
+   */
+  bool isObject() const { return value_.isObject(); }
+
+  /**
+   * Return the calendar identifier.
+   */
+  JSLinearString* toString() const { return &value_.toString()->asLinear(); }
+
+  /**
+   * Return the calendar object.
+   */
+  JSObject* toObject() const { return &value_.toObject(); }
+
+  void trace(JSTracer* trc);
+
+  JS::Value* valueDoNotUse() { return &value_; }
+  JS::Value const* valueDoNotUse() const { return &value_; }
+};
 
 struct Duration;
 struct PlainDate;
@@ -89,9 +159,11 @@ int64_t MakeDate(const PlainDateTime& dateTime);
 int64_t MakeDate(int32_t year, int32_t month, int32_t day);
 
 /**
- * GetISO8601Calendar ( )
+ * Return the case-normalized calendar identifier if |id| is a built-in calendar
+ * identifier. Otherwise throws a RangeError.
  */
-CalendarObject* GetISO8601Calendar(JSContext* cx);
+bool ToBuiltinCalendar(JSContext* cx, JS::Handle<JSString*> id,
+                       JS::MutableHandle<CalendarValue> result);
 
 /**
  * ToTemporalCalendarSlotValue ( temporalCalendarLike [ , default ] )
@@ -403,6 +475,58 @@ bool FormatCalendarAnnotation(JSContext* cx, JSStringBuilder& result,
 bool IsBuiltinAccess(JSContext* cx, JS::Handle<CalendarObject*> calendar,
                      std::initializer_list<CalendarField> fieldNames);
 
+/**
+ * Return true when accessing the calendar fields can be optimized.
+ * Otherwise returns false.
+ */
+bool IsBuiltinAccessForStringCalendar(JSContext* cx);
+
+// Helper for MutableWrappedPtrOperations.
+bool WrapCalendarValue(JSContext* cx, JS::MutableHandle<JS::Value> calendar);
+
 } /* namespace js::temporal */
+
+namespace js {
+
+template <typename Wrapper>
+class WrappedPtrOperations<temporal::CalendarValue, Wrapper> {
+  const auto& container() const {
+    return static_cast<const Wrapper*>(this)->get();
+  }
+
+ public:
+  explicit operator bool() const { return bool(container()); }
+
+  JS::Handle<JS::Value> toValue() const {
+    return JS::Handle<JS::Value>::fromMarkedLocation(
+        container().valueDoNotUse());
+  }
+
+  bool isString() const { return container().isString(); }
+
+  bool isObject() const { return container().isObject(); }
+
+  JSLinearString* toString() const { return container().toString(); }
+
+  JSObject* toObject() const { return container().toObject(); }
+};
+
+template <typename Wrapper>
+class MutableWrappedPtrOperations<temporal::CalendarValue, Wrapper>
+    : public WrappedPtrOperations<temporal::CalendarValue, Wrapper> {
+  auto& container() { return static_cast<Wrapper*>(this)->get(); }
+
+  JS::MutableHandle<JS::Value> toMutableValue() {
+    return JS::MutableHandle<JS::Value>::fromMarkedLocation(
+        container().valueDoNotUse());
+  }
+
+ public:
+  bool wrap(JSContext* cx) {
+    return temporal::WrapCalendarValue(cx, toMutableValue());
+  }
+};
+
+} /* namespace js */
 
 #endif /* builtin_temporal_Calendar_h */

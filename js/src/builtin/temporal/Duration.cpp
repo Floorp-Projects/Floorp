@@ -638,7 +638,7 @@ static bool CalculateOffsetShift(JSContext* cx, Handle<JSObject*> relativeTo,
   if (!cx->compartment()->wrap(cx, &timeZone)) {
     return false;
   }
-  if (!cx->compartment()->wrap(cx, &calendar)) {
+  if (!calendar.wrap(cx)) {
     return false;
   }
 
@@ -738,7 +738,7 @@ static ZonedDateTimeObject* MoveRelativeZonedDateTime(
   if (!cx->compartment()->wrap(cx, &timeZone)) {
     return nullptr;
   }
-  if (!cx->compartment()->wrap(cx, &calendar)) {
+  if (!calendar.wrap(cx)) {
     return nullptr;
   }
 
@@ -1715,7 +1715,7 @@ static bool BalancePossiblyInfiniteDuration(
   if (!cx->compartment()->wrap(cx, &timeZone)) {
     return false;
   }
-  if (!cx->compartment()->wrap(cx, &calendar)) {
+  if (!calendar.wrap(cx)) {
     return false;
   }
 
@@ -2295,7 +2295,7 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
   Rooted<Wrapped<PlainDateObject*>> dateRelativeTo(cx, date);
 
   Rooted<CalendarValue> calendar(cx, date.unwrap().calendar());
-  if (!cx->compartment()->wrap(cx, &calendar)) {
+  if (!calendar.wrap(cx)) {
     return false;
   }
 
@@ -2303,16 +2303,21 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
   if (largestUnit == TemporalUnit::Month) {
     // Step 9.a. (Not applicable in our implementation.)
 
-    // Step 9.b.
+    // Steps 9.b-c.
     Rooted<Value> dateAdd(cx);
-    if (!GetMethod(cx, calendar, cx->names().dateAdd, &dateAdd)) {
-      return false;
-    }
-
-    // Step 9.c.
     Rooted<Value> dateUntil(cx);
-    if (!GetMethod(cx, calendar, cx->names().dateUntil, &dateUntil)) {
-      return false;
+    if (calendar.isObject()) {
+      Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+
+      // Step 9.b.
+      if (!GetMethod(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
+        return false;
+      }
+
+      // Step 9.c.
+      if (!GetMethod(cx, calendarObj, cx->names().dateUntil, &dateUntil)) {
+        return false;
+      }
     }
 
     // Go to the slow path when the result is inexact.
@@ -2364,10 +2369,13 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
   } else if (largestUnit == TemporalUnit::Week) {
     // Step 10.a. (Not applicable in our implementation.)
 
-    // Step 10.b.
+    // Steps 10.b-c.
     Rooted<Value> dateAdd(cx);
-    if (!GetMethod(cx, calendar, cx->names().dateAdd, &dateAdd)) {
-      return false;
+    if (calendar.isObject()) {
+      Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+      if (!GetMethod(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
+        return false;
+      }
     }
 
     // Go to the slow path when the result is inexact.
@@ -2379,9 +2387,9 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
           UndefinedHandleValue, result);
     }
 
-    // Step 10.c.
+    // Step 10.d.
     while (years != 0) {
-      // Steps 10.c.i-ii.
+      // Steps 10.d.i-ii.
       int32_t oneYearDays;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
                             &dateRelativeTo, &oneYearDays)) {
@@ -2396,16 +2404,16 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
             UndefinedHandleValue, result);
       }
 
-      // Step 10.c.iii.
+      // Step 10.d.iii.
       days += oneYearDays;
 
-      // Step 10.c.iv.
+      // Step 10.d.iv.
       years -= sign;
     }
 
-    // Step 10.d.
+    // Step 10.e.
     while (months != 0) {
-      // Steps 10.d.i-ii.
+      // Steps 10.e.i-ii.
       int32_t oneMonthDays;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
                             &dateRelativeTo, &oneMonthDays)) {
@@ -2420,10 +2428,10 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
             UndefinedHandleValue, result);
       }
 
-      // Step 10.d.iii.
+      // Step 10.e.iii.
       days += oneMonthDays;
 
-      // Step 10.d.iv.
+      // Step 10.e.iv.
       months -= sign;
     }
   } else if (years != 0 || months != 0 || weeks != 0) {
@@ -2435,8 +2443,11 @@ static bool UnbalanceDurationRelative(JSContext* cx, const Duration& duration,
 
     // Step 11.a.ii.
     Rooted<Value> dateAdd(cx);
-    if (!GetMethod(cx, calendar, cx->names().dateAdd, &dateAdd)) {
-      return false;
+    if (calendar.isObject()) {
+      Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+      if (!GetMethod(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
+        return false;
+      }
     }
 
     // Go to the slow path when the result is inexact.
@@ -2715,7 +2726,7 @@ static bool BalanceDurationRelative(JSContext* cx, const Duration& duration,
 
   // Step 9.
   Rooted<CalendarValue> calendar(cx, date.unwrap().calendar());
-  if (!cx->compartment()->wrap(cx, &calendar)) {
+  if (!calendar.wrap(cx)) {
     return false;
   }
 
@@ -2723,8 +2734,11 @@ static bool BalanceDurationRelative(JSContext* cx, const Duration& duration,
   if (largestUnit == TemporalUnit::Year) {
     // Step 10.a.
     Rooted<Value> dateAdd(cx);
-    if (!GetMethodForCall(cx, calendar, cx->names().dateAdd, &dateAdd)) {
-      return false;
+    if (calendar.isObject()) {
+      Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+      if (!GetMethodForCall(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
+        return false;
+      }
     }
 
     // Steps 10.b-d.
@@ -2805,8 +2819,12 @@ static bool BalanceDurationRelative(JSContext* cx, const Duration& duration,
 
     // Step 10.k.
     Rooted<Value> dateUntil(cx);
-    if (!GetMethodForCall(cx, calendar, cx->names().dateUntil, &dateUntil)) {
-      return false;
+    if (calendar.isObject()) {
+      Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+      if (!GetMethodForCall(cx, calendarObj, cx->names().dateUntil,
+                            &dateUntil)) {
+        return false;
+      }
     }
 
     // Steps 10.l-n.
@@ -2887,8 +2905,11 @@ static bool BalanceDurationRelative(JSContext* cx, const Duration& duration,
   } else if (largestUnit == TemporalUnit::Month) {
     // Step 11.a.
     Rooted<Value> dateAdd(cx);
-    if (!GetMethodForCall(cx, calendar, cx->names().dateAdd, &dateAdd)) {
-      return false;
+    if (calendar.isObject()) {
+      Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+      if (!GetMethodForCall(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
+        return false;
+      }
     }
 
     // Steps 11.b-d.
@@ -2934,8 +2955,11 @@ static bool BalanceDurationRelative(JSContext* cx, const Duration& duration,
 
     // Step 12.b.
     Rooted<Value> dateAdd(cx);
-    if (!GetMethodForCall(cx, calendar, cx->names().dateAdd, &dateAdd)) {
-      return false;
+    if (calendar.isObject()) {
+      Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+      if (!GetMethodForCall(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
+        return false;
+      }
     }
 
     // Steps 12.c-e.
@@ -3047,7 +3071,7 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
   }
   Rooted<CalendarValue> calendar(cx, unwrappedRelativeTo->calendar());
 
-  if (!cx->compartment()->wrap(cx, &calendar)) {
+  if (!calendar.wrap(cx)) {
     return false;
   }
 
@@ -3067,8 +3091,11 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
 
   // Step 5.d.
   Rooted<Value> dateAdd(cx);
-  if (!GetMethodForCall(cx, calendar, cx->names().dateAdd, &dateAdd)) {
-    return false;
+  if (calendar.isObject()) {
+    Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+    if (!GetMethodForCall(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
+      return false;
+    }
   }
 
   // Step 5.e.
@@ -3144,7 +3171,7 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
   if (!cx->compartment()->wrap(cx, &timeZone)) {
     return false;
   }
-  if (!cx->compartment()->wrap(cx, &calendar)) {
+  if (!calendar.wrap(cx)) {
     return false;
   }
 
@@ -3383,7 +3410,7 @@ bool js::temporal::AdjustRoundedDurationDays(
   if (!cx->compartment()->wrap(cx, &timeZone)) {
     return false;
   }
-  if (!cx->compartment()->wrap(cx, &calendar)) {
+  if (!calendar.wrap(cx)) {
     return false;
   }
 
@@ -3912,7 +3939,7 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
       auto plainDateTime = ToPlainDate(dateTime);
 
       Rooted<CalendarValue> calendar(cx, dateTime->calendar());
-      if (!cx->compartment()->wrap(cx, &calendar)) {
+      if (!calendar.wrap(cx)) {
         return false;
       }
 
@@ -4037,36 +4064,36 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
       return false;
     }
 
-    // Step 7.c.
-    Rooted<Value> calendarValue(cx);
-    if (calendarString) {
-      calendarValue.setString(calendarString);
-    }
+    // Step 7.c. (Not applicable in our implementation.)
 
-    if (!ToTemporalCalendarWithISODefault(cx, calendarValue, &calendar)) {
-      return false;
-    }
-
-    // Step 7.d. (Not applicable in our implementation.)
-
-    // Steps 7.e-g.
+    // Steps 7.e-f.
     if (timeZoneName) {
+      // Step 7.f.i.
       if (!ToTemporalTimeZone(cx, timeZoneName, &timeZone)) {
         return false;
       }
+
+      // Steps 7.f.ii-iii.
+      if (isUTC) {
+        offsetBehaviour = OffsetBehaviour::Exact;
+      } else if (!hasOffset) {
+        offsetBehaviour = OffsetBehaviour::Wall;
+      }
+
+      // Step 7.f.iv.
+      matchBehaviour = MatchBehaviour::MatchMinutes;
     } else {
       MOZ_ASSERT(!timeZone);
     }
 
-    // Steps 7.h-i.
-    if (isUTC) {
-      offsetBehaviour = OffsetBehaviour::Exact;
-    } else if (!hasOffset) {
-      offsetBehaviour = OffsetBehaviour::Wall;
+    // Steps 7.g-j.
+    if (calendarString) {
+      if (!ToBuiltinCalendar(cx, calendarString, &calendar)) {
+        return false;
+      }
+    } else {
+      calendar.set(CalendarValue(cx->names().iso8601));
     }
-
-    // Step 7.j.
-    matchBehaviour = MatchBehaviour::MatchMinutes;
 
     // Steps 9-10.
     if (timeZone) {
@@ -5014,8 +5041,11 @@ static bool RoundDurationYear(JSContext* cx, const Duration& duration,
 
   // Step 9.b.
   Rooted<Value> dateAdd(cx);
-  if (!GetMethodForCall(cx, calendar, cx->names().dateAdd, &dateAdd)) {
-    return false;
+  if (calendar.isObject()) {
+    Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+    if (!GetMethodForCall(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
+      return false;
+    }
   }
 
   // Step 9.c.
@@ -5562,8 +5592,11 @@ static bool RoundDurationMonth(
 
   // Step 10.b.
   Rooted<Value> dateAdd(cx);
-  if (!GetMethodForCall(cx, calendar, cx->names().dateAdd, &dateAdd)) {
-    return false;
+  if (calendar.isObject()) {
+    Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+    if (!GetMethodForCall(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
+      return false;
+    }
   }
 
   // Step 10.c.
@@ -5998,8 +6031,11 @@ static bool RoundDurationWeekSlow(
 
   // Step 11.c.
   Rooted<Value> dateAdd(cx);
-  if (!GetMethodForCall(cx, calendar, cx->names().dateAdd, &dateAdd)) {
-    return false;
+  if (calendar.isObject()) {
+    Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+    if (!GetMethodForCall(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
+      return false;
+    }
   }
 
   // Steps 11.d-k and 19-21.
@@ -6096,8 +6132,11 @@ static bool RoundDurationWeek(JSContext* cx, const Duration& duration,
 
   // Step 11.c.
   Rooted<Value> dateAdd(cx);
-  if (!GetMethodForCall(cx, calendar, cx->names().dateAdd, &dateAdd)) {
-    return false;
+  if (calendar.isObject()) {
+    Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+    if (!GetMethodForCall(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
+      return false;
+    }
   }
 
   // Steps 11.d-f.
@@ -6459,8 +6498,8 @@ static bool RoundDuration(JSContext* cx, const Duration& duration,
     zonedRelativeTo = relativeTo;
 
     // Step 4.c.
-    calendar = unwrapped->calendar();
-    if (!cx->compartment()->wrap(cx, &calendar)) {
+    calendar.set(unwrapped->calendar());
+    if (!calendar.wrap(cx)) {
       return false;
     }
 
@@ -6474,8 +6513,8 @@ static bool RoundDuration(JSContext* cx, const Duration& duration,
     dateRelativeTo = relativeTo;
 
     // Step 4.c.
-    calendar = unwrapped->calendar();
-    if (!cx->compartment()->wrap(cx, &calendar)) {
+    calendar.set(unwrapped->calendar());
+    if (!calendar.wrap(cx)) {
       return false;
     }
   } else if (IsDeadProxyObject(relativeTo)) {

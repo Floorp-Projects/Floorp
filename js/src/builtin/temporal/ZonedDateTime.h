@@ -52,7 +52,7 @@ class ZonedDateTimeObject : public NativeObject {
   }
 
   CalendarValue calendar() const {
-    return &getFixedSlot(CALENDAR_SLOT).toObject();
+    return CalendarValue(getFixedSlot(CALENDAR_SLOT));
   }
 
  private:

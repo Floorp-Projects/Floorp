@@ -327,14 +327,8 @@ static bool Temporal_Now_plainDateTimeISO(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  CalendarValue calendar = GetISO8601Calendar(cx);
-  if (!calendar) {
-    return false;
-  }
-  Rooted<Value> calendarValue(cx, ObjectValue(*calendar));
-
-  // Step 2.
-  auto* result = SystemDateTime(cx, args.get(0), calendarValue);
+  Rooted<Value> calendar(cx, StringValue(cx->names().iso8601));
+  auto* result = SystemDateTime(cx, args.get(0), calendar);
   if (!result) {
     return false;
   }
@@ -368,14 +362,8 @@ static bool Temporal_Now_zonedDateTimeISO(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  CalendarValue calendar = GetISO8601Calendar(cx);
-  if (!calendar) {
-    return false;
-  }
-  Rooted<Value> calendarValue(cx, ObjectValue(*calendar));
-
-  // Step 2.
-  auto* result = SystemZonedDateTime(cx, args.get(0), calendarValue);
+  Rooted<Value> calendar(cx, StringValue(cx->names().iso8601));
+  auto* result = SystemZonedDateTime(cx, args.get(0), calendar);
   if (!result) {
     return false;
   }
@@ -414,19 +402,14 @@ static bool Temporal_Now_plainDateISO(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  Rooted<CalendarValue> calendar(cx, GetISO8601Calendar(cx));
-  if (!calendar) {
-    return false;
-  }
-  Rooted<Value> calendarValue(cx, ObjectValue(*calendar));
-
-  // Step 2.
+  Rooted<Value> calendarValue(cx, StringValue(cx->names().iso8601));
   auto* dateTime = SystemDateTime(cx, args.get(0), calendarValue);
   if (!dateTime) {
     return false;
   }
 
-  // Step 3.
+  // Step 2.
+  Rooted<CalendarValue> calendar(cx, dateTime->calendar());
   auto* result = CreateTemporalDate(cx, ToPlainDate(dateTime), calendar);
   if (!result) {
     return false;
@@ -443,19 +426,13 @@ static bool Temporal_Now_plainTimeISO(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  Rooted<CalendarValue> calendar(cx, GetISO8601Calendar(cx));
-  if (!calendar) {
-    return false;
-  }
-  Rooted<Value> calendarValue(cx, ObjectValue(*calendar));
-
-  // Step 2.
-  auto* dateTime = SystemDateTime(cx, args.get(0), calendarValue);
+  Rooted<Value> calendar(cx, StringValue(cx->names().iso8601));
+  auto* dateTime = SystemDateTime(cx, args.get(0), calendar);
   if (!dateTime) {
     return false;
   }
 
-  // Step 3.
+  // Step 2.
   auto* result = CreateTemporalTime(cx, ToPlainTime(dateTime));
   if (!result) {
     return false;

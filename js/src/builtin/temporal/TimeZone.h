@@ -10,7 +10,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/Wrapped.h"
 #include "js/GCVector.h"
 #include "js/RootingAPI.h"
@@ -75,6 +74,7 @@ using TimeZoneValue = JSObject*;
 
 struct Instant;
 struct PlainDateTime;
+class CalendarValue;
 class InstantObject;
 class PlainDateTimeObject;
 enum class TemporalDisambiguation;

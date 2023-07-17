@@ -69,7 +69,7 @@ class PlainDateTimeObject : public NativeObject {
   }
 
   CalendarValue calendar() const {
-    return &getFixedSlot(CALENDAR_SLOT).toObject();
+    return CalendarValue(getFixedSlot(CALENDAR_SLOT));
   }
 
  private:
@@ -157,13 +157,6 @@ JSString* TemporalDateTimeToString(JSContext* cx, const PlainDateTime& dateTime,
                                    JS::Handle<CalendarValue> calendar,
                                    Precision precision,
                                    CalendarOption showCalendar);
-
-/**
- * TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second,
- * millisecond, microsecond, nanosecond, calendar, precision, showCalendar )
- */
-JSString* TemporalDateTimeToString(JSContext* cx, const PlainDateTime& dateTime,
-                                   Precision precision);
 
 /**
  * InterpretTemporalDateTimeFields ( calendar, fields, options )

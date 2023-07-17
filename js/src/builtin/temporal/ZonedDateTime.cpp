@@ -104,12 +104,10 @@ bool js::temporal::InterpretISODateTimeOffset(
   MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
 
   // Step 1.
-  Rooted<CalendarValue> calendar(cx, GetISO8601Calendar(cx));
-  if (!calendar) {
-    return false;
-  }
+  MOZ_ASSERT(IsValidISODate(dateTime.date));
 
   // Step 2.
+  Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));
   Rooted<PlainDateTimeObject*> temporalDateTime(
       cx, CreateTemporalDateTime(cx, dateTime, calendar));
   if (!temporalDateTime) {
@@ -385,6 +383,11 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
     // Step 6.d.
     MOZ_ASSERT(timeZoneString);
 
+    // Step 6.e.
+    if (!ToTemporalTimeZone(cx, timeZoneString, &timeZone)) {
+      return nullptr;
+    }
+
     // Step 6.f. (Not applicable in our implementation.)
 
     // Step 6.g.
@@ -397,36 +400,30 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
       offsetBehaviour = OffsetBehaviour::Wall;
     }
 
-    // Steps 6.e and 6.i.
-    if (!ToTemporalTimeZone(cx, timeZoneString, &timeZone)) {
-      return nullptr;
-    }
-
-    // Step 6.j.
-    Rooted<Value> calendarValue(cx);
+    // Steps 6.i-l.
     if (calendarString) {
-      calendarValue.setString(calendarString);
+      if (!ToBuiltinCalendar(cx, calendarString, &calendar)) {
+        return nullptr;
+      }
+    } else {
+      calendar.set(CalendarValue(cx->names().iso8601));
     }
 
-    if (!ToTemporalCalendarWithISODefault(cx, calendarValue, &calendar)) {
-      return nullptr;
-    }
-
-    // Step 6.k.
+    // Step 6.m.
     matchBehaviour = MatchBehaviour::MatchMinutes;
 
     if (maybeOptions) {
-      // Step 6.l.
+      // Step 6.n.
       if (!ToTemporalDisambiguation(cx, maybeOptions, &disambiguation)) {
         return nullptr;
       }
 
-      // Step 6.m.
+      // Step 6.o.
       if (!ToTemporalOffset(cx, maybeOptions, &offsetOption)) {
         return nullptr;
       }
 
-      // Step 6.n.
+      // Step 6.p.
       TemporalOverflow ignored;
       if (!ToTemporalOverflow(cx, maybeOptions, &ignored)) {
         return nullptr;
@@ -481,8 +478,7 @@ static bool ToTemporalZonedDateTime(JSContext* cx, Handle<Value> item,
   *instant = ToInstant(obj);
   timeZone.set(obj->timeZone());
   calendar.set(obj->calendar());
-  return cx->compartment()->wrap(cx, timeZone) &&
-         cx->compartment()->wrap(cx, calendar);
+  return cx->compartment()->wrap(cx, timeZone) && calendar.wrap(cx);
 }
 
 /**
@@ -518,7 +514,7 @@ static ZonedDateTimeObject* CreateTemporalZonedDateTime(
   obj->setFixedSlot(ZonedDateTimeObject::TIMEZONE_SLOT, ObjectValue(*timeZone));
 
   // Step 6.
-  obj->setFixedSlot(ZonedDateTimeObject::CALENDAR_SLOT, ObjectValue(*calendar));
+  obj->setFixedSlot(ZonedDateTimeObject::CALENDAR_SLOT, calendar.toValue());
 
   // Step 7.
   return obj;
@@ -550,7 +546,7 @@ ZonedDateTimeObject* js::temporal::CreateTemporalZonedDateTime(
   obj->setFixedSlot(ZonedDateTimeObject::TIMEZONE_SLOT, ObjectValue(*timeZone));
 
   // Step 6.
-  obj->setFixedSlot(ZonedDateTimeObject::CALENDAR_SLOT, ObjectValue(*calendar));
+  obj->setFixedSlot(ZonedDateTimeObject::CALENDAR_SLOT, calendar.toValue());
 
   // Step 7.
   return obj;
@@ -613,19 +609,14 @@ static JSString* TemporalZonedDateTimeToString(
   }
 
   // Step 7.
-  Rooted<CalendarObject*> isoCalendar(cx, GetISO8601Calendar(cx));
-  if (!isoCalendar) {
-    return nullptr;
-  }
-
-  // Step 8.
   PlainDateTime temporalDateTime;
   if (!js::temporal::GetPlainDateTimeFor(cx, timeZone, instant,
                                          &temporalDateTime)) {
     return nullptr;
   }
 
-  // Step 9.
+  // Step 8.
+  Rooted<CalendarValue> isoCalendar(cx, CalendarValue(cx->names().iso8601));
   JSString* dateTimeString = TemporalDateTimeToString(
       cx, temporalDateTime, isoCalendar, precision, CalendarOption::Never);
   if (!dateTimeString) {
@@ -635,16 +626,16 @@ static JSString* TemporalZonedDateTimeToString(
     return nullptr;
   }
 
-  // Steps 10-11.
+  // Steps 9-10.
   if (showOffset != ShowOffsetOption::Never) {
-    // Step 11.a.
+    // Step 10.a.
     int64_t offsetNs;
     if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNs)) {
       return nullptr;
     }
     MOZ_ASSERT(std::abs(offsetNs) < ToNanoseconds(TemporalUnit::Day));
 
-    // Step 11.b.
+    // Step 10.b.
     JSString* offsetString = FormatISOTimeZoneOffsetString(cx, offsetNs);
     if (!offsetString) {
       return nullptr;
@@ -654,18 +645,21 @@ static JSString* TemporalZonedDateTimeToString(
     }
   }
 
-  // Steps 12-13.
+  // Steps 11-12.
   if (showTimeZone != TimeZoneNameOption::Never) {
+    // Step 12.c. (Partial)
     if (!result.append('[')) {
       return nullptr;
     }
 
+    // Step 12.b. (Reordered)
     if (showTimeZone == TimeZoneNameOption::Critical) {
       if (!result.append('!')) {
         return nullptr;
       }
     }
 
+    // Step 12.a.
     JSString* timeZoneIdentifier = ToTemporalTimeZoneIdentifier(cx, timeZone);
     if (!timeZoneIdentifier) {
       return nullptr;
@@ -674,18 +668,19 @@ static JSString* TemporalZonedDateTimeToString(
       return nullptr;
     }
 
+    // Step 12.c. (Partial)
     if (!result.append(']')) {
       return nullptr;
     }
   }
 
-  // Step 14.
+  // Step 13.
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
   if (!MaybeFormatCalendarAnnotation(cx, result, calendar, showCalendar)) {
     return nullptr;
   }
 
-  // Step 15.
+  // Step 14.
   return result.finishString();
 }
 
@@ -826,7 +821,7 @@ bool js::temporal::NanosecondsToDays(
   if (!cx->compartment()->wrap(cx, &timeZone)) {
     return false;
   }
-  if (!cx->compartment()->wrap(cx, &calendar)) {
+  if (!calendar.wrap(cx)) {
     return false;
   }
 
@@ -1598,7 +1593,7 @@ static bool ZonedDateTime_from(JSContext* cx, unsigned argc, Value* vp) {
       if (!cx->compartment()->wrap(cx, &timeZone)) {
         return false;
       }
-      if (!cx->compartment()->wrap(cx, &calendar)) {
+      if (!calendar.wrap(cx)) {
         return false;
       }
 
@@ -2250,59 +2245,54 @@ static bool ZonedDateTime_hoursInDay(JSContext* cx, const CallArgs& args) {
 
   // Step 3.
   Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
+  Rooted<CalendarValue> isoCalendar(cx, CalendarValue(cx->names().iso8601));
 
-  // Step 5.
-  Rooted<CalendarObject*> isoCalendar(cx, GetISO8601Calendar(cx));
-  if (!isoCalendar) {
-    return false;
-  }
-
-  // Steps 4 and 6.
+  // Steps 4-5.
   PlainDateTime temporalDateTime;
   if (!GetPlainDateTimeFor(cx, timeZone, epochInstant, &temporalDateTime)) {
     return false;
   }
 
-  // Steps 7-9.
+  // Steps 6-8.
   const auto& date = temporalDateTime.date;
 
-  // Step 10.
+  // Step 9.
   Rooted<PlainDateTimeObject*> today(
       cx, CreateTemporalDateTime(cx, {date, {}}, isoCalendar));
   if (!today) {
     return false;
   }
 
-  // Step 11.
+  // Step 10.
   PlainDate tomorrowFields =
       BalanceISODate(date.year, date.month, date.day + 1);
 
-  // Step 12.
+  // Step 11.
   Rooted<PlainDateTimeObject*> tomorrow(
       cx, CreateTemporalDateTime(cx, {tomorrowFields, {}}, isoCalendar));
   if (!tomorrow) {
     return false;
   }
 
-  // Step 13.
+  // Step 12.
   Instant todayInstant;
   if (!GetInstantFor(cx, timeZone, today, TemporalDisambiguation::Compatible,
                      &todayInstant)) {
     return false;
   }
 
-  // Step 14.
+  // Step 13.
   Instant tomorrowInstant;
   if (!GetInstantFor(cx, timeZone, tomorrow, TemporalDisambiguation::Compatible,
                      &tomorrowInstant)) {
     return false;
   }
 
-  // Step 15.
+  // Step 14.
   auto diffNs = tomorrowInstant - todayInstant;
   MOZ_ASSERT(IsValidInstantSpan(diffNs));
 
-  // Step 16.
+  // Step 15.
   constexpr int32_t secPerHour = 60 * 60;
   constexpr int64_t nsPerSec = ToNanoseconds(TemporalUnit::Second);
   constexpr double nsPerHour = ToNanoseconds(TemporalUnit::Hour);
@@ -3060,26 +3050,21 @@ static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 17.
-  Rooted<CalendarObject*> isoCalendar(cx, GetISO8601Calendar(cx));
-  if (!isoCalendar) {
-    return false;
-  }
-
-  // Step 18.
+  Rooted<CalendarValue> isoCalendar(cx, CalendarValue(cx->names().iso8601));
   Rooted<PlainDateTimeObject*> dtStart(
       cx, CreateTemporalDateTime(cx, {temporalDateTime.date}, isoCalendar));
   if (!dtStart) {
     return false;
   }
 
-  // Steps 19-20.
+  // Steps 18-19.
   Instant startNs;
   if (!GetInstantFor(cx, timeZone, dtStart, TemporalDisambiguation::Compatible,
                      &startNs)) {
     return false;
   }
 
-  // Step 21.
+  // Step 20.
   Instant endNs;
   if (!AddZonedDateTime(cx, startNs, timeZone, calendar, {0, 0, 0, 1},
                         &endNs)) {
@@ -3087,11 +3072,11 @@ static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
   }
   MOZ_ASSERT(IsValidEpochInstant(endNs));
 
-  // Step 22.
+  // Step 21.
   auto dayLengthNs = endNs - startNs;
   MOZ_ASSERT(IsValidInstantSpan(dayLengthNs));
 
-  // Step 23.
+  // Step 22.
   if (dayLengthNs <= InstantSpan{}) {
     JS_ReportErrorNumberASCII(
         cx, GetErrorMessage, nullptr,
@@ -3099,26 +3084,26 @@ static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 25.
+  // Step 24.
   int64_t offsetNanoseconds;
   if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNanoseconds)) {
     return false;
   }
   MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
 
-  // Step 24. (Reordered to throw exceptions in correct order.)
+  // Step 23. (Reordered to throw exceptions in correct order.)
   //
   // Per spec, out-of-range date values throw a RangeError when
   // CreateTemporalDateTime in InterpretISODateTimeOffset is called. This
   // implementation throws the RangeError in RoundISODateTime, therefore steps
-  // 24 and 25 have to be switched.
+  // 23 and 24 have to be switched.
   PlainDateTime roundResult;
   if (!RoundISODateTime(cx, temporalDateTime, roundingIncrement, smallestUnit,
                         roundingMode, dayLengthNs, &roundResult)) {
     return false;
   }
 
-  // Step 26.
+  // Step 25.
   Instant epochNanoseconds;
   if (!InterpretISODateTimeOffset(
           cx, roundResult, OffsetBehaviour::Option, offsetNanoseconds, timeZone,
@@ -3127,7 +3112,7 @@ static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 27.
+  // Step 26.
   auto* result =
       CreateTemporalZonedDateTime(cx, epochNanoseconds, timeZone, calendar);
   if (!result) {
@@ -3673,8 +3658,7 @@ static bool ZonedDateTime_getISOFields(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 9.
-  if (!fields.emplaceBack(NameToId(cx->names().calendar),
-                          ObjectValue(*calendar))) {
+  if (!fields.emplaceBack(NameToId(cx->names().calendar), calendar.toValue())) {
     return false;
   }
 
