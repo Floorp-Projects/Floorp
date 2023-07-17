@@ -113,6 +113,12 @@ bool GetTemporalCalendarWithISODefault(JSContext* cx,
                                        JS::Handle<JSObject*> item,
                                        JS::MutableHandle<CalendarValue> result);
 
+/**
+ * ToTemporalCalendarIdentifier ( calendarSlotValue )
+ */
+JSString* ToTemporalCalendarIdentifier(JSContext* cx,
+                                       JS::Handle<CalendarValue> calendar);
+
 enum class CalendarField {
   Year,
   Month,
@@ -370,10 +376,10 @@ bool ConsolidateCalendars(JSContext* cx, JS::Handle<CalendarValue> one,
                           JS::MutableHandle<CalendarValue> result);
 
 /**
- * MaybeFormatCalendarAnnotation ( calendarObject, showCalendar )
+ * MaybeFormatCalendarAnnotation ( calendar, showCalendar )
  */
 bool MaybeFormatCalendarAnnotation(JSContext* cx, JSStringBuilder& result,
-                                   JS::Handle<CalendarValue> calendarObject,
+                                   JS::Handle<CalendarValue> calendar,
                                    CalendarOption showCalendar);
 
 /**
@@ -382,12 +388,6 @@ bool MaybeFormatCalendarAnnotation(JSContext* cx, JSStringBuilder& result,
 bool FormatCalendarAnnotation(JSContext* cx, JSStringBuilder& result,
                               JS::Handle<JSString*> id,
                               CalendarOption showCalendar);
-
-/**
- * Perform `ToString(calendar)` with an optimization when the built-in
- * Temporal.Calendar.prototype.toString method is called.
- */
-JSString* CalendarToString(JSContext* cx, JS::Handle<CalendarValue> calendar);
 
 /**
  * Return true when accessing the calendar fields |fieldNames| can be optimized.
