@@ -603,7 +603,7 @@ static bool PlainMonthDay_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 4.
-  if (!RejectObjectWithCalendarOrTimeZone(cx, temporalMonthDayLike)) {
+  if (!RejectTemporalLikeObject(cx, temporalMonthDayLike)) {
     return false;
   }
 

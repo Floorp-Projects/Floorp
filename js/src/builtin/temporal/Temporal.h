@@ -220,8 +220,6 @@ bool ToCalendarNameOption(JSContext* cx, JS::Handle<JSObject*> options,
 
 /**
  * Precision when displaying fractional seconds.
- *
- *
  */
 class Precision final {
   int8_t value_;
@@ -326,10 +324,9 @@ bool ToShowOffsetOption(JSContext* cx, JS::Handle<JSObject*> options,
                         ShowOffsetOption* result);
 
 /**
- * RejectObjectWithCalendarOrTimeZone ( object )
+ * RejectTemporalLikeObject ( object )
  */
-bool RejectObjectWithCalendarOrTimeZone(JSContext* cx,
-                                        JS::Handle<JSObject*> object);
+bool RejectTemporalLikeObject(JSContext* cx, JS::Handle<JSObject*> object);
 
 /**
  * ToPositiveIntegerWithTruncation ( argument )

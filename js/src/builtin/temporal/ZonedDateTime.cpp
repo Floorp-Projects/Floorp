@@ -2560,7 +2560,7 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 4.
-  if (!RejectObjectWithCalendarOrTimeZone(cx, temporalZonedDateTimeLike)) {
+  if (!RejectTemporalLikeObject(cx, temporalZonedDateTimeLike)) {
     return false;
   }
 

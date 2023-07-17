@@ -2128,7 +2128,7 @@ static bool PlainTime_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 4.
-  if (!RejectObjectWithCalendarOrTimeZone(cx, temporalTimeLike)) {
+  if (!RejectTemporalLikeObject(cx, temporalTimeLike)) {
     return false;
   }
 
