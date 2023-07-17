@@ -166,6 +166,7 @@ suites:
             upload: "Measures http/2 file upload throughput"
             upload-h3: "Measures http/3 file upload throughput"
             sample-python-support: "A sample test that uses a python support file to modify the test command."
+            connect: "Verifies that connection time on a pageload is zero when a speculative connection has first been made"
     interactive:
         description: "Browsertime tests that interact with the webpage. Includes responsiveness tests as they make use of this support for navigation. These form of tests allow the specification of browsertime commands through the test manifest."
         tests:
