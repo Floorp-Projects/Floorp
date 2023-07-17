@@ -76,8 +76,8 @@ struct BaseMargin {
     left = aLeft;
   }
 
-  T LeftRight() const { return left + right; }
-  T TopBottom() const { return top + bottom; }
+  Coord LeftRight() const { return left + right; }
+  Coord TopBottom() const { return top + bottom; }
 
   Coord& Side(SideT aSide) {
     // This is ugly!
