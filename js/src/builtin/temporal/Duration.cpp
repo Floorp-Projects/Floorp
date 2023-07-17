@@ -3987,8 +3987,7 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
 
     // Step 6.m.
     if (!timeZoneValue.isUndefined()) {
-      timeZone = ToTemporalTimeZone(cx, timeZoneValue);
-      if (!timeZone) {
+      if (!ToTemporalTimeZone(cx, timeZoneValue, &timeZone)) {
         return false;
       }
     }
@@ -4052,8 +4051,7 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
 
     // Steps 7.e-g.
     if (timeZoneName) {
-      timeZone = ToTemporalTimeZone(cx, timeZoneName);
-      if (!timeZone) {
+      if (!ToTemporalTimeZone(cx, timeZoneName, &timeZone)) {
         return false;
       }
     } else {

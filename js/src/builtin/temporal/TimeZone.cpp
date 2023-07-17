@@ -733,8 +733,8 @@ TimeZoneObject* js::temporal::CreateTemporalTimeZoneUTC(JSContext* cx) {
 /**
  * ToTemporalTimeZone ( temporalTimeZoneLike )
  */
-TimeZoneObject* js::temporal::ToTemporalTimeZone(JSContext* cx,
-                                                 Handle<JSString*> string) {
+bool js::temporal::ToTemporalTimeZone(JSContext* cx, Handle<JSString*> string,
+                                      MutableHandle<TimeZoneValue> result) {
   // Steps 1-2. (Not applicable)
 
   // Step 3.
@@ -742,7 +742,7 @@ TimeZoneObject* js::temporal::ToTemporalTimeZone(JSContext* cx,
   int64_t offsetNanoseconds = 0;
   if (!ParseTemporalTimeZoneString(cx, string, &timeZoneName,
                                    &offsetNanoseconds)) {
-    return nullptr;
+    return false;
   }
 
   // Steps 4-5.
@@ -752,22 +752,35 @@ TimeZoneObject* js::temporal::ToTemporalTimeZone(JSContext* cx,
     // Step 4.b.
     timeZoneName = ValidateAndCanonicalizeTimeZoneName(cx, timeZoneName);
     if (!timeZoneName) {
-      return nullptr;
+      return false;
     }
 
     // Steps 4.c and 5.
-    return ::CreateTemporalTimeZone(cx, timeZoneName);
+    auto* obj = ::CreateTemporalTimeZone(cx, timeZoneName);
+    if (!obj) {
+      return false;
+    }
+
+    result.set(obj);
+    return true;
   }
 
   // Step 6.
-  return ::CreateTemporalTimeZone(cx, offsetNanoseconds);
+  auto* obj = ::CreateTemporalTimeZone(cx, offsetNanoseconds);
+  if (!obj) {
+    return false;
+  }
+
+  result.set(obj);
+  return true;
 }
 
 /**
  * ToTemporalTimeZone ( temporalTimeZoneLike )
  */
-JSObject* js::temporal::ToTemporalTimeZone(JSContext* cx,
-                                           Handle<Value> temporalTimeZoneLike) {
+bool js::temporal::ToTemporalTimeZone(JSContext* cx,
+                                      Handle<Value> temporalTimeZoneLike,
+                                      MutableHandle<TimeZoneValue> result) {
   // Step 1.
   Rooted<Value> timeZoneLike(cx, temporalTimeZoneLike);
   if (timeZoneLike.isObject()) {
@@ -775,16 +788,18 @@ JSObject* js::temporal::ToTemporalTimeZone(JSContext* cx,
 
     // Step 1.a.
     if (obj->canUnwrapAs<TimeZoneObject>()) {
-      return obj;
+      result.set(obj);
+      return true;
     }
 
     // Step 1.b.
     if (auto* zonedDateTime = obj->maybeUnwrapIf<ZonedDateTimeObject>()) {
       Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
       if (!cx->compartment()->wrap(cx, &timeZone)) {
-        return nullptr;
+        return false;
       }
-      return timeZone;
+      result.set(timeZone);
+      return true;
     }
 
     // Step 1.c.
@@ -792,21 +807,22 @@ JSObject* js::temporal::ToTemporalTimeZone(JSContext* cx,
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_TEMPORAL_INVALID_OBJECT,
                                "Temporal.TimeZone", "Temporal.Calendar");
-      return nullptr;
+      return false;
     }
 
     // Step 1.d.
     bool hasTimeZone;
     if (!HasProperty(cx, obj, cx->names().timeZone, &hasTimeZone)) {
-      return nullptr;
+      return false;
     }
     if (!hasTimeZone) {
-      return obj;
+      result.set(obj);
+      return true;
     }
 
     // Step 1.e.
     if (!GetProperty(cx, obj, obj, cx->names().timeZone, &timeZoneLike)) {
-      return nullptr;
+      return false;
     }
 
     // Step 1.f.
@@ -821,7 +837,7 @@ JSObject* js::temporal::ToTemporalTimeZone(JSContext* cx,
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                  JSMSG_TEMPORAL_INVALID_OBJECT,
                                  "Temporal.TimeZone", "Temporal.Calendar");
-        return nullptr;
+        return false;
       }
 
       // FIXME: spec issue - does this check is actually useful? In which case
@@ -829,10 +845,11 @@ JSObject* js::temporal::ToTemporalTimeZone(JSContext* cx,
 
       // Step 1.f.ii.
       if (!HasProperty(cx, obj, cx->names().timeZone, &hasTimeZone)) {
-        return nullptr;
+        return false;
       }
       if (!hasTimeZone) {
-        return obj;
+        result.set(obj);
+        return true;
       }
     }
   }
@@ -840,7 +857,7 @@ JSObject* js::temporal::ToTemporalTimeZone(JSContext* cx,
   // Step 2.
   Rooted<JSString*> identifier(cx, JS::ToString(cx, timeZoneLike));
   if (!identifier) {
-    return nullptr;
+    return false;
   }
 
   // The string representation of (most) other types can never be parsed as a
@@ -856,11 +873,11 @@ JSObject* js::temporal::ToTemporalTimeZone(JSContext* cx,
       !timeZoneLike.isNumeric()) {
     ReportValueError(cx, JSMSG_TEMPORAL_TIMEZONE_PARSE_BAD_TYPE,
                      JSDVG_IGNORE_STACK, timeZoneLike, nullptr);
-    return nullptr;
+    return false;
   }
 
   // Steps 3-6.
-  return ToTemporalTimeZone(cx, identifier);
+  return ToTemporalTimeZone(cx, identifier, result);
 }
 
 /**
@@ -1723,8 +1740,8 @@ static bool TimeZone_from(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  JSObject* timeZone = ToTemporalTimeZone(cx, args.get(0));
-  if (!timeZone) {
+  Rooted<TimeZoneValue> timeZone(cx);
+  if (!ToTemporalTimeZone(cx, args.get(0), &timeZone)) {
     return false;
   }
 

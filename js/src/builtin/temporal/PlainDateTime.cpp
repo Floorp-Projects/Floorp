@@ -2460,8 +2460,8 @@ static bool PlainDateTime_toZonedDateTime(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
   // Step 3.
-  Rooted<TimeZoneValue> timeZone(cx, ToTemporalTimeZone(cx, args.get(0)));
-  if (!timeZone) {
+  Rooted<TimeZoneValue> timeZone(cx);
+  if (!ToTemporalTimeZone(cx, args.get(0), &timeZone)) {
     return false;
   }
 

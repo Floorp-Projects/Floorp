@@ -1692,8 +1692,7 @@ static bool Instant_toString(JSContext* cx, const CallArgs& args) {
 
     // Step 10.
     if (!value.isUndefined()) {
-      timeZone = ToTemporalTimeZone(cx, value);
-      if (!timeZone) {
+      if (!ToTemporalTimeZone(cx, value, &timeZone)) {
         return false;
       }
     }
@@ -1846,8 +1845,8 @@ static bool Instant_toZonedDateTime(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 9.
-  Rooted<TimeZoneValue> timeZone(cx, ToTemporalTimeZone(cx, timeZoneLike));
-  if (!timeZone) {
+  Rooted<TimeZoneValue> timeZone(cx);
+  if (!ToTemporalTimeZone(cx, timeZoneLike, &timeZone)) {
     return false;
   }
 
@@ -1877,8 +1876,8 @@ static bool Instant_toZonedDateTimeISO(JSContext* cx, const CallArgs& args) {
   auto instant = ToInstant(&args.thisv().toObject().as<InstantObject>());
 
   // Step 3.
-  Rooted<TimeZoneValue> timeZone(cx, ToTemporalTimeZone(cx, args.get(0)));
-  if (!timeZone) {
+  Rooted<TimeZoneValue> timeZone(cx);
+  if (!ToTemporalTimeZone(cx, args.get(0), &timeZone)) {
     return false;
   }
 
