@@ -1781,27 +1781,6 @@ TemporalParser<CharT>::parseTemporalDurationString(JSContext* cx) {
     return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_TIME_DESIGNATOR);
   }
 
-  // FIXME: spec issue - can the grammar be rewritten this way?
-  // https://github.com/tc39/proposal-temporal/issues/2282
-  //
-  // clang-format off
-  //
-  // DurationHoursPart :
-  //   DurationWholeHours HoursDesignator DurationMinutesPart
-  //   DurationWholeHours HoursDesignator DurationSecondsPart?
-  //   DurationWholeHours DurationHoursFraction HoursDesignator
-  //
-  // DurationMinutesPart :
-  //   DurationWholeMinutes MinutesDesignator DurationSecondsPart?
-  //   DurationWholeMinutes DurationMinutesFraction MinutesDesignator
-  //
-  // DurationSecondsPart :
-  //   DurationWholeSeconds DurationSecondsFraction? SecondsDesignator
-  //
-  // clang-format on
-  //
-  // This avoids having to disallow minutes/seconds after fractional hours.
-
   double num;
   mozilla::Maybe<int32_t> frac;
   auto digitsAndFraction = [&]() {
@@ -1821,8 +1800,9 @@ TemporalParser<CharT>::parseTemporalDurationString(JSContext* cx) {
   // clang-format off
   //
   // DurationHoursPart :
-  //  DurationWholeHours DurationHoursFraction? HoursDesignator DurationMinutesPart
-  //  DurationWholeHours DurationHoursFraction? HoursDesignator DurationSecondsPart?
+  //   DurationWholeHours DurationHoursFraction HoursDesignator
+  //   DurationWholeHours HoursDesignator DurationMinutesPart
+  //   DurationWholeHours HoursDesignator DurationSecondsPart?
   //
   // DurationWholeHours :
   //   DecimalDigits[~Sep]
@@ -1850,7 +1830,8 @@ TemporalParser<CharT>::parseTemporalDurationString(JSContext* cx) {
   // clang-format off
   //
   // DurationMinutesPart :
-  //   DurationWholeMinutes DurationMinutesFraction? MinutesDesignator DurationSecondsPart?
+  //   DurationWholeMinutes DurationMinutesFraction MinutesDesignator
+  //   DurationWholeMinutes MinutesDesignator DurationSecondsPart?
   //
   // DurationWholeMinutes :
   //   DecimalDigits[~Sep]
@@ -1958,7 +1939,11 @@ bool js::temporal::ParseTemporalDurationString(JSContext* cx,
     MOZ_ASSERT(parsed.hoursFraction > 0);
     MOZ_ASSERT(parsed.hoursFraction < 1'000'000'000);
 
-    // Step 9.a. (Not applicable in our implementation.)
+    // Step 9.a.
+    MOZ_ASSERT(parsed.minutes == 0);
+    MOZ_ASSERT(parsed.minutesFraction == 0);
+    MOZ_ASSERT(parsed.seconds == 0);
+    MOZ_ASSERT(parsed.secondsFraction == 0);
 
     // Steps 9.b-d.
     int64_t h = int64_t(parsed.hoursFraction) * 60;
@@ -1977,7 +1962,9 @@ bool js::temporal::ParseTemporalDurationString(JSContext* cx,
     MOZ_ASSERT(parsed.minutesFraction > 0);
     MOZ_ASSERT(parsed.minutesFraction < 1'000'000'000);
 
-    // Step 11.a. (Not applicable in our implementation.)
+    // Step 11.a.
+    MOZ_ASSERT(parsed.seconds == 0);
+    MOZ_ASSERT(parsed.secondsFraction == 0);
 
     // Step 10.
     minutes = parsed.minutes;
