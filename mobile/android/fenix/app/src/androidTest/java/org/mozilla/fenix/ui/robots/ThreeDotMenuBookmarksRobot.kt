@@ -8,6 +8,7 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.click
 
 /**
@@ -45,11 +46,25 @@ class ThreeDotMenuBookmarksRobot {
             return TabDrawerRobot.Transition()
         }
 
+        fun clickOpenInNewTab(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+            openInNewTabButton().click()
+
+            ComposeTabDrawerRobot(composeTestRule).interact()
+            return ComposeTabDrawerRobot.Transition(composeTestRule)
+        }
+
         fun clickOpenInPrivateTab(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             openInPrivateTabButton().click()
 
             TabDrawerRobot().interact()
             return TabDrawerRobot.Transition()
+        }
+
+        fun clickOpenInPrivateTab(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+            openInPrivateTabButton().click()
+
+            ComposeTabDrawerRobot(composeTestRule).interact()
+            return ComposeTabDrawerRobot.Transition(composeTestRule)
         }
 
         fun clickOpenAllInTabs(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
@@ -59,11 +74,25 @@ class ThreeDotMenuBookmarksRobot {
             return TabDrawerRobot.Transition()
         }
 
+        fun clickOpenAllInTabs(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+            openAllInTabsButton().click()
+
+            ComposeTabDrawerRobot(composeTestRule).interact()
+            return ComposeTabDrawerRobot.Transition(composeTestRule)
+        }
+
         fun clickOpenAllInPrivateTabs(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             openAllInPrivateTabsButton().click()
 
             TabDrawerRobot().interact()
             return TabDrawerRobot.Transition()
+        }
+
+        fun clickOpenAllInPrivateTabs(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+            openAllInPrivateTabsButton().click()
+
+            ComposeTabDrawerRobot(composeTestRule).interact()
+            return ComposeTabDrawerRobot.Transition(composeTestRule)
         }
 
         fun clickDelete(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {

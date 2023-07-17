@@ -131,6 +131,13 @@ class LibrarySubMenusMultipleSelectionToolbarRobot {
             TabDrawerRobot().interact()
             return TabDrawerRobot.Transition()
         }
+
+        fun clickOpenPrivateTab(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+            openInPrivateTabButton().click()
+
+            ComposeTabDrawerRobot(composeTestRule).interact()
+            return ComposeTabDrawerRobot.Transition(composeTestRule)
+        }
     }
 }
 
