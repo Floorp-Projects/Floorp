@@ -2155,7 +2155,7 @@ static bool TimeZone_getPreviousTransition(JSContext* cx, unsigned argc,
 static bool TimeZone_toString(JSContext* cx, const CallArgs& args) {
   auto* timeZone = &args.thisv().toObject().as<TimeZoneObject>();
 
-  // Step 3.
+  // Steps 3-4.
   args.rval().setString(timeZone->identifier());
   return true;
 }
@@ -2195,7 +2195,7 @@ static bool TimeZone_toJSON(JSContext* cx, unsigned argc, Value* vp) {
 static bool TimeZone_id(JSContext* cx, const CallArgs& args) {
   auto* timeZone = &args.thisv().toObject().as<TimeZoneObject>();
 
-  // Step 3.
+  // Steps 3-4.
   args.rval().setString(timeZone->identifier());
   return true;
 }
