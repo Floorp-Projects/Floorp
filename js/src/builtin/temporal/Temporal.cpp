@@ -1676,33 +1676,13 @@ bool js::temporal::GetMethodForCall(JSContext* cx, Handle<JSObject*> object,
 }
 
 /**
- * CopyOptions ( ... )
- */
-PlainObject* js::temporal::CopyOptions(JSContext* cx,
-                                       JS::Handle<JSObject*> options) {
-  // Step 1.
-  Rooted<PlainObject*> optionsCopy(cx, NewPlainObjectWithProto(cx, nullptr));
-  if (!optionsCopy) {
-    return nullptr;
-  }
-
-  // Step 2.
-  if (!CopyDataProperties(cx, optionsCopy, options)) {
-    return nullptr;
-  }
-
-  // Step 3.
-  return optionsCopy;
-}
-
-/**
  * CopyDataProperties ( target, source, excludedKeys [ , excludedValues ] )
  *
  * Implementation when |excludedKeys| and |excludedValues| are both empty lists.
  */
 bool js::temporal::CopyDataProperties(JSContext* cx,
-                                      JS::Handle<PlainObject*> target,
-                                      JS::Handle<JSObject*> source) {
+                                      Handle<PlainObject*> target,
+                                      Handle<JSObject*> source) {
   // Optimization for the common case when |source| is a native object.
   if (source->is<NativeObject>()) {
     bool optimized = false;
@@ -1765,9 +1745,9 @@ bool js::temporal::CopyDataProperties(JSContext* cx,
  * Implementation when |excludedKeys| is an empty list and |excludedValues| is
  * the list «undefined».
  */
-bool js::temporal::CopyDataPropertiesIgnoreUndefined(
-    JSContext* cx, JS::Handle<PlainObject*> target,
-    JS::Handle<JSObject*> source) {
+static bool CopyDataPropertiesIgnoreUndefined(JSContext* cx,
+                                              Handle<PlainObject*> target,
+                                              Handle<JSObject*> source) {
   // Step 1-2. (Not applicable)
 
   // Step 3.
@@ -1813,6 +1793,49 @@ bool js::temporal::CopyDataPropertiesIgnoreUndefined(
 
   // Step 5.
   return true;
+}
+
+/**
+ * SnapshotOwnProperties ( source, proto [, excludedKeys [, excludedValues ] ] )
+ */
+PlainObject* js::temporal::SnapshotOwnProperties(JSContext* cx,
+                                                 Handle<JSObject*> source) {
+  // Step 1.
+  Rooted<PlainObject*> copy(cx, NewPlainObjectWithProto(cx, nullptr));
+  if (!copy) {
+    return nullptr;
+  }
+
+  // Steps 2-4.
+  if (!CopyDataProperties(cx, copy, source)) {
+    return nullptr;
+  }
+
+  // Step 3.
+  return copy;
+}
+
+/**
+ * SnapshotOwnProperties ( source, proto [, excludedKeys [, excludedValues ] ] )
+ *
+ * Implementation when |excludedKeys| is an empty list and |excludedValues| is
+ * the list «undefined».
+ */
+PlainObject* js::temporal::SnapshotOwnPropertiesIgnoreUndefined(
+    JSContext* cx, Handle<JSObject*> source) {
+  // Step 1.
+  Rooted<PlainObject*> copy(cx, NewPlainObjectWithProto(cx, nullptr));
+  if (!copy) {
+    return nullptr;
+  }
+
+  // Steps 2-4.
+  if (!CopyDataPropertiesIgnoreUndefined(cx, copy, source)) {
+    return nullptr;
+  }
+
+  // Step 3.
+  return copy;
 }
 
 /**
