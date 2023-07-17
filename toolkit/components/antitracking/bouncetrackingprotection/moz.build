@@ -37,3 +37,7 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = "xul"
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/browser.ini",
+]
