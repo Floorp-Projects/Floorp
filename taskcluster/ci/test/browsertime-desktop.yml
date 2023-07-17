@@ -718,3 +718,18 @@ browsertime-upload:
     fetches:
         fetch:
             - upload-speed-test-file
+
+browsertime-speculative:
+    raptor:
+        apps: [firefox]
+        run-visual-metrics: true
+        subtests: [connect]
+    description: Raptor (browsertime) speculative connect pageload tests
+    max-run-time: 420
+    run-on-projects:
+        by-test-platform:
+            windows.*-32.*: []
+            .*64.*shippable-qr/.*: [autoland]
+            default: []
+    tier: 2
+    treeherder-symbol: Btime(speculative)
