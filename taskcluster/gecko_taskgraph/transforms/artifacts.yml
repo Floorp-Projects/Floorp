@@ -2,15 +2,19 @@
 win:
     target.crashreporter-symbols-full.tar.zst: shortest
     sccache.log: shortest
+    sccache-stats.json: shortest
 
 linux:
     target.crashreporter-symbols-full.tar.zst: shortest
     sccache.log: shortest
+    sccache-stats.json: shortest
 
 macos:
     target.crashreporter-symbols-full.tar.zst: shortest
     sccache.log: shortest
+    sccache-stats.json: shortest
 
 android:
     target.crashreporter-symbols-full.tar.zst: shortest
     sccache.log: shortest
+    sccache-stats.json: shortest
