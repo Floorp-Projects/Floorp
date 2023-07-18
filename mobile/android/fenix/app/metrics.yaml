@@ -2564,6 +2564,25 @@ metrics:
     metadata:
       tags:
         - Experiments
+  search_page_load_time:
+    type: timing_distribution
+    time_unit: millisecond
+    lifetime: application
+    description: The time that it takes to load the Search content.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1842604
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/2889
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 128
+    metadata:
+      tags:
+        - Experiments
 
 customize_home:
   most_visited_sites:

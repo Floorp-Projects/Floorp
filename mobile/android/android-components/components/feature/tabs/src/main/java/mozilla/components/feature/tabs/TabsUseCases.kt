@@ -148,6 +148,7 @@ class TabsUseCases(
          * @param historyMetadata the [HistoryMetadataKey] of the new tab in case this tab
          * was opened from history.
          * @param isSearch whether or not the provided URL is the result of a search.
+         * @param searchEngineName The search engine name.
          * @return The ID of the created tab.
          */
         @Suppress("LongParameterList")
@@ -164,6 +165,7 @@ class TabsUseCases(
             private: Boolean = false,
             historyMetadata: HistoryMetadataKey? = null,
             isSearch: Boolean = false,
+            searchEngineName: String? = null,
         ): String {
             val tab = createTab(
                 url = url,
@@ -179,7 +181,7 @@ class TabsUseCases(
 
             store.dispatch(TabListAction.AddTabAction(tab, select = selectTab))
 
-            store.dispatch(ContentAction.UpdateIsSearchAction(tab.id, isSearch))
+            store.dispatch(ContentAction.UpdateIsSearchAction(tab.id, isSearch, searchEngineName))
 
             // If an engine session is specified then loading will have already started when linking
             // the tab to its engine session. Otherwise we ask to load the URL here.

@@ -47,6 +47,7 @@ class ServiceWorkerSupportTest {
             private = eq(false), // default
             historyMetadata = eq(null), // default
             isSearch = eq(false), // default
+            searchEngineName = eq(null), // default
         )
     }
 }

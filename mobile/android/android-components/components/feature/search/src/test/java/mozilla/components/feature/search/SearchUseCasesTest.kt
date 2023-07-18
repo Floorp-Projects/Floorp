@@ -49,12 +49,13 @@ class SearchUseCasesTest {
 
     private val searchTerms = "mozilla android"
     private val searchUrl = "https://example.org/?q=mozilla%20android"
+    private val searchEngineName = "Test"
 
     @Before
     fun setup() {
         searchEngine = createSearchEngine(
-            "Test",
-            "https://example.org/?q={searchTerms}",
+            name = searchEngineName,
+            url = "https://example.org/?q={searchTerms}",
             icon = mock(),
         )
 
@@ -85,24 +86,62 @@ class SearchUseCasesTest {
     }
 
     @Test
-    fun defaultSearch() {
+    fun `GIVEN existing Session and Tab WHEN default search invoked THEN expected actions are dispatched`() {
+        val id = "mozilla"
         store.dispatch(
             TabListAction.AddTabAction(
-                createTab("https://www.mozilla.org", id = "mozilla"),
+                tab = createTab(url = "https://www.mozilla.org", id = id),
                 select = true,
             ),
         ).joinBlocking()
 
-        useCases.defaultSearch(searchTerms)
+        useCases.defaultSearch(
+            searchTerms = searchTerms,
+            searchEngine = searchEngine,
+        )
         store.waitUntilIdle()
 
+        val isSearchAction = middleware.findFirstAction(ContentAction.UpdateIsSearchAction::class)
+        assertEquals(id, isSearchAction.sessionId)
+        assertEquals(true, isSearchAction.isSearch)
+        assertEquals(searchEngineName, isSearchAction.searchEngineName)
+
         middleware.assertLastAction(EngineAction.LoadUrlAction::class) { action ->
-            assertEquals("mozilla", action.tabId)
+            assertEquals(id, action.tabId)
             assertEquals(searchUrl, action.url)
         }
-        val isSearchAction = middleware.findFirstAction(ContentAction.UpdateIsSearchAction::class)
-        assertEquals("mozilla", isSearchAction.sessionId)
-        assertEquals(true, isSearchAction.isSearch)
+    }
+
+    @Test
+    fun `GIVEN existing Session, no existing Tab WHEN default search invoked THEN add tab is called`() {
+        val newTabUseCase: TabsUseCases.AddNewTabUseCase = mock()
+        whenever(tabsUseCases.addTab).thenReturn(newTabUseCase)
+        val newTabId = "9876"
+        whenever(
+            newTabUseCase(
+                url = searchUrl,
+                isSearch = true,
+                searchEngineName = searchEngineName,
+            ),
+        ).thenReturn(newTabId)
+
+        useCases.defaultSearch(
+            searchTerms = searchTerms,
+            sessionId = "mozilla",
+            searchEngine = searchEngine,
+        )
+        store.waitUntilIdle()
+
+        verify(newTabUseCase).invoke(
+            url = searchUrl,
+            isSearch = true,
+            searchEngineName = searchEngineName,
+        )
+
+        middleware.assertLastAction(ContentAction.UpdateSearchTermsAction::class) { action ->
+            assertEquals(newTabId, action.sessionId)
+            assertEquals(searchTerms, action.searchTerms)
+        }
     }
 
     @Test

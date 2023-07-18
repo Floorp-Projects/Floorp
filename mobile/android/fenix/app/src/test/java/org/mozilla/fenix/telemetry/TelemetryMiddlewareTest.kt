@@ -22,6 +22,7 @@ import mozilla.components.support.base.android.Clock
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.telemetry.glean.internal.TimerId
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -44,6 +45,8 @@ import org.mozilla.fenix.utils.Settings
 import org.robolectric.shadows.ShadowLooper
 import org.mozilla.fenix.GleanMetrics.EngineTab as EngineMetrics
 
+private const val SEARCH_ENGINE_NAME = "Test"
+
 @RunWith(FenixRobolectricTestRunner::class)
 class TelemetryMiddlewareTest {
 
@@ -60,12 +63,21 @@ class TelemetryMiddlewareTest {
 
     private val clock = FakeClock()
     private val metrics: MetricController = mockk()
+    private val searchState: MutableMap<String, TimerId> = mutableMapOf()
+    private val timerId = Metrics.searchPageLoadTime.start()
 
     @Before
     fun setUp() {
         Clock.delegate = clock
         settings = Settings(testContext)
-        telemetryMiddleware = TelemetryMiddleware(testContext, settings, metrics)
+        telemetryMiddleware = TelemetryMiddleware(
+            context = testContext,
+            settings = settings,
+            metrics = metrics,
+            nimbusSearchEngine = SEARCH_ENGINE_NAME,
+            searchState = searchState,
+            timerId = timerId,
+        )
         store = BrowserStore(
             middleware = listOf(telemetryMiddleware) + EngineMiddleware.create(engine = mockk()),
             initialState = BrowserState(),
@@ -77,6 +89,117 @@ class TelemetryMiddlewareTest {
     @After
     fun tearDown() {
         Clock.reset()
+    }
+
+    @Test
+    fun `WHEN action is UpdateIsSearchAction & all valid args THEN searchState is updated with session id and timer id`() {
+        assertTrue(searchState.isEmpty())
+
+        val sessionId = "1235"
+        store.dispatch(ContentAction.UpdateIsSearchAction(sessionId, true, SEARCH_ENGINE_NAME))
+            .joinBlocking()
+
+        assertEquals(1, searchState.size)
+        assertEquals(mutableMapOf(sessionId to timerId), searchState)
+    }
+
+    @Test
+    fun `WHEN action is UpdateIsSearchAction & action is not search THEN searchState is not updated`() {
+        assertTrue(searchState.isEmpty())
+
+        val sessionId = "1235"
+        store.dispatch(ContentAction.UpdateIsSearchAction(sessionId, false, SEARCH_ENGINE_NAME))
+            .joinBlocking()
+
+        assertTrue(searchState.isEmpty())
+    }
+
+    @Test
+    fun `WHEN action is UpdateIsSearchAction & search engine name is empty THEN searchState is not updated`() {
+        assertTrue(searchState.isEmpty())
+
+        val sessionId = "1235"
+        store.dispatch(ContentAction.UpdateIsSearchAction(sessionId, true, ""))
+            .joinBlocking()
+
+        assertTrue(searchState.isEmpty())
+    }
+
+    @Test
+    fun `WHEN action is UpdateIsSearchAction & search engine name is different to Nimbus THEN searchState is not updated`() {
+        assertTrue(searchState.isEmpty())
+
+        val sessionId = "1235"
+        store.dispatch(ContentAction.UpdateIsSearchAction(sessionId, true, "$SEARCH_ENGINE_NAME 2"))
+            .joinBlocking()
+
+        assertTrue(searchState.isEmpty())
+    }
+
+    @Test
+    fun `WHEN action is UpdateLoadingStateAction & progress completed THEN telemetry is added & searchState is empty`() {
+        assertNull(Metrics.searchPageLoadTime.testGetValue())
+
+        // Start searchState
+        val sessionId = "1235"
+        store.dispatch(ContentAction.UpdateIsSearchAction(sessionId, true, SEARCH_ENGINE_NAME))
+            .joinBlocking()
+
+        assertEquals(1, searchState.size)
+        assertEquals(mutableMapOf(sessionId to timerId), searchState)
+
+        // Update hasFinishedLoading
+        val tab = createTab(
+            id = sessionId,
+            url = "https://mozilla.org",
+        ).let { it.copy(content = it.content.copy(progress = 100)) }
+
+        assertNull(Events.normalAndPrivateUriCount.testGetValue())
+
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+        store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
+        assertNull(Events.normalAndPrivateUriCount.testGetValue())
+
+        store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
+        val count = Events.normalAndPrivateUriCount.testGetValue()!!
+        assertEquals(1, count)
+
+        // Finish searchState
+        assertNotNull(Metrics.searchPageLoadTime.testGetValue())
+        assertTrue(searchState.isEmpty())
+    }
+
+    @Test
+    fun `WHEN action is UpdateLoadingStateAction & progress not completed THEN no telemetry & searchState is empty`() {
+        assertNull(Metrics.searchPageLoadTime.testGetValue())
+
+        // Start searchState
+        val sessionId = "1235"
+        store.dispatch(ContentAction.UpdateIsSearchAction(sessionId, true, SEARCH_ENGINE_NAME))
+            .joinBlocking()
+
+        assertEquals(1, searchState.size)
+        assertEquals(mutableMapOf(sessionId to timerId), searchState)
+
+        // Update hasFinishedLoading
+        val tab = createTab(
+            id = sessionId,
+            url = "https://mozilla.org",
+        ).let { it.copy(content = it.content.copy(progress = 50)) }
+
+        assertNull(Events.normalAndPrivateUriCount.testGetValue())
+
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+        store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
+        assertNull(Events.normalAndPrivateUriCount.testGetValue())
+
+        store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
+        val count = Events.normalAndPrivateUriCount.testGetValue()!!
+        assertEquals(1, count)
+
+        // Finish searchState
+        assertNull(Metrics.searchPageLoadTime.testGetValue())
+        assertTrue(searchState.isEmpty())
     }
 
     @Test
