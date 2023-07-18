@@ -66,7 +66,7 @@ def main():
         "* [Automated UI Testing Documentation](https://github.com/mozilla-mobile/shared-docs/blob/main/android/ui-testing.md)\n"
     )
     print(
-        "* Mobile Test Engineering on [Mana](https://mana.mozilla.org/wiki/display/MTE/Mobile+Test+Engineering) | [Slack](https://mozilla.slack.com/archives/C02KDDS9QM9) | [Alerts](https://mozilla.slack.com/archives/C0134KJ4JHL)\n"
+        "* Mobile Test Engineering on [Confluence](https://mozilla-hub.atlassian.net/wiki/spaces/MTE/overview) | [Slack](https://mozilla.slack.com/archives/C02KDDS9QM9) | [Alerts](https://mozilla.slack.com/archives/C0134KJ4JHL)\n"
     )
 
 
