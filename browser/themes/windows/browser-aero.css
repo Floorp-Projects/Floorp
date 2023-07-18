@@ -2,278 +2,197 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:root {
-  --glass-active-border-color: rgb(37, 44, 51);
-  --glass-inactive-border-color: rgb(102, 102, 102);
-  --glass-shadow-color: hsla(240,5%,5%,0.3);
-}
+@media (-moz-windows-default-theme) {
+  @media (-moz-windows-accent-color-in-titlebar) {
+    :root[sizemode=normal][tabsintitlebar] #navigator-toolbox {
+      border-top: .5px solid ActiveBorder;
+    }
+  }
 
-@media (-moz-platform: windows-win7),
-       (-moz-platform: windows-win8) {
-  @media (-moz-windows-classic: 0) {
-    :root[sizemode="normal"] #toolbar-menubar:not([autohide="true"]) > #menubar-items,
-    :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
-      margin-top: 1px;
-    }
-    /**
-     * Except for Windows 8, Windows 7 Aero and Windows 7 Aero Basic, the
-     * -moz-window-button-box appearance on the .titlebar-buttonbox adds an
-     * unwanted margin at the top of the button box.
-     *
-     * For Windows 8 and Windows Aero (which both use the compositor):
-     *   We want the -moz-window-button-box applied in the restored case,
-     *   and -moz-window-button-box-maximized in the maximized case.
-     *
-     * For Windows Aero Basic:
-     *   The margin is also unwanted in the maximized case, but we want
-     *   it in the restored window case.
-     */
-    :root[sizemode="normal"] .titlebar-buttonbox {
-      appearance: auto;
-      -moz-default-appearance: -moz-window-button-box;
-    }
+  :root[sizemode=normal][tabsintitlebar]:-moz-window-inactive #navigator-toolbox {
+    border-top-color: InactiveBorder;
+  }
 
-    @media (-moz-windows-compositor) {
-      :root[sizemode="maximized"] .titlebar-buttonbox {
-        appearance: auto;
-        -moz-default-appearance: -moz-window-button-box-maximized;
-      }
-    }
+  :root[tabsintitlebar] .tab-label:-moz-window-inactive {
+    /* Calculated to match the opacity change of Windows Explorer
+       titlebar text change for inactive windows. */
+    opacity: .6;
+  }
+
+  :root[tabsintitlebar] .tab-secondary-label:-moz-window-inactive {
+    opacity: .6;
   }
 }
 
-@media (-moz-windows-compositor) {
-  @media not (-moz-platform: windows-win7) {
-    @media not (-moz-platform: windows-win8) {
-      @media (-moz-windows-default-theme) {
-        @media (-moz-windows-accent-color-in-titlebar) {
-          :root[sizemode=normal][tabsintitlebar] #navigator-toolbox {
-            border-top: .5px solid ActiveBorder;
-          }
-        }
-
-        :root[sizemode=normal][tabsintitlebar] #navigator-toolbox:-moz-window-inactive {
-          border-top-color: InactiveBorder;
-        }
-
-        :root[tabsintitlebar] .tab-label:-moz-window-inactive {
-          /* Calculated to match the opacity change of Windows Explorer
-             titlebar text change for inactive windows. */
-          opacity: .6;
-        }
-
-        :root[tabsintitlebar] .tab-secondary-label:-moz-window-inactive {
-          opacity: .6;
-        }
-      }
-
-      /* See bug 1715990 about why we do this ourselves on HCM */
-      @media (prefers-contrast) {
-        :root[tabsintitlebar]:not(:-moz-lwtheme) {
-          background-color: ActiveCaption;
-          color: CaptionText;
-        }
-
-        :root[tabsintitlebar]:not(:-moz-lwtheme):-moz-window-inactive {
-          background-color: InactiveCaption;
-          color: InactiveCaptionText;
-        }
-      }
-
-      .titlebar-buttonbox,
-      .titlebar-button {
-        appearance: none !important;
-      }
-
-      .titlebar-button {
-        border: none;
-        margin: 0 !important;
-        padding: 8px 17px;
-        -moz-context-properties: stroke;
-        stroke: currentColor;
-      }
-
-      .titlebar-button > .toolbarbutton-icon {
-        width: 12px;
-        height: 12px;
-      }
-
-      .titlebar-min {
-        list-style-image: url(chrome://browser/skin/window-controls/minimize.svg);
-      }
-
-      .titlebar-max {
-        list-style-image: url(chrome://browser/skin/window-controls/maximize.svg);
-      }
-
-      .titlebar-restore {
-        list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
-      }
-
-      .titlebar-restore > .toolbarbutton-icon:-moz-locale-dir(rtl) {
-        transform: scaleX(-1);
-      }
-
-      .titlebar-close {
-        list-style-image: url(chrome://browser/skin/window-controls/close.svg);
-      }
-
-      :root[lwtheme-image] .titlebar-button {
-        -moz-context-properties: unset;
-      }
-      :root[lwtheme-image] .titlebar-min {
-        list-style-image: url(chrome://browser/skin/window-controls/minimize-themes.svg);
-      }
-      :root[lwtheme-image] .titlebar-max {
-        list-style-image: url(chrome://browser/skin/window-controls/maximize-themes.svg);
-      }
-      :root[lwtheme-image] .titlebar-restore {
-        list-style-image: url(chrome://browser/skin/window-controls/restore-themes.svg);
-      }
-      :root[lwtheme-image] .titlebar-close {
-        list-style-image: url(chrome://browser/skin/window-controls/close-themes.svg);
-      }
-
-      /* the 12px image renders a 10px icon, and the 10px upscaled gets rounded to 12.5, which
-       * rounds up to 13px, which makes the icon one pixel too big on 1.25dppx. Fix: */
-      @media (min-resolution: 1.20dppx) and (max-resolution: 1.45dppx) {
-        .titlebar-button > .toolbarbutton-icon {
-          width: 11.5px;
-          height: 11.5px;
-        }
-      }
-
-      /* 175% dpi should result in the same device pixel sizes as 150% dpi. */
-      @media (min-resolution: 1.70dppx) and (max-resolution: 1.95dppx) {
-        .titlebar-button {
-          padding-inline: 14.1px;
-        }
-
-        .titlebar-button > .toolbarbutton-icon {
-          width: 10.8px;
-          height: 10.8px;
-        }
-      }
-
-      /* 225% dpi should result in the same device pixel sizes as 200% dpi. */
-      @media (min-resolution: 2.20dppx) and (max-resolution: 2.45dppx) {
-        .titlebar-button {
-          padding-inline: 15.3333px;
-        }
-
-        .titlebar-button > .toolbarbutton-icon {
-          width: 10.8px;
-          height: 10.8px;
-        }
-      }
-
-      /* 275% dpi should result in the same device pixel sizes as 250% dpi. */
-      @media (min-resolution: 2.70dppx) and (max-resolution: 2.95dppx) {
-        /* NB: todo: this should also change padding on the buttons
-         * themselves, but without a device to test this on, it's
-         * impossible to know by how much. */
-        .titlebar-button > .toolbarbutton-icon {
-          width: 10.8px;
-          height: 10.8px;
-        }
-      }
-
-      @media (-moz-windows-default-theme) {
-        #main-menubar > menu[_moz-menuactive="true"] {
-          color: inherit;
-        }
-
-        #main-menubar > menu[_moz-menuactive="true"],
-        .titlebar-button:hover {
-          background-color: hsla(0,0%,0%,.12);
-        }
-        .titlebar-button:hover:active {
-          background-color: hsla(0,0%,0%,.22);
-        }
-
-        #toolbar-menubar[brighttext] > #menubar-items > #main-menubar > menu[_moz-menuactive="true"],
-        toolbar[brighttext] .titlebar-button:not(.titlebar-close):hover {
-          background-color: hsla(0,0%,100%,.22);
-        }
-        toolbar[brighttext] .titlebar-button:not(.titlebar-close):hover:active {
-          background-color: hsla(0,0%,100%,.32);
-        }
-
-        .titlebar-close:hover {
-          stroke: white;
-          background-color: hsl(355,86%,49%);
-        }
-        .titlebar-close:hover:active {
-          background-color: hsl(355,82%,69%);
-        }
-
-        .titlebar-button:not(:hover) > .toolbarbutton-icon:-moz-window-inactive {
-          opacity: 0.5;
-        }
-      }
-
-      @media (-moz-windows-default-theme: 0) {
-        .titlebar-button {
-          background-color: -moz-field;
-          stroke: ButtonText;
-        }
-        .titlebar-button:hover {
-          background-color: SelectedItem;
-          stroke: SelectedItemText;
-        }
-
-        .titlebar-min {
-          list-style-image: url(chrome://browser/skin/window-controls/minimize-highcontrast.svg);
-        }
-
-        .titlebar-max {
-          list-style-image: url(chrome://browser/skin/window-controls/maximize-highcontrast.svg);
-        }
-
-        .titlebar-restore {
-          list-style-image: url(chrome://browser/skin/window-controls/restore-highcontrast.svg);
-        }
-
-        .titlebar-close {
-          list-style-image: url(chrome://browser/skin/window-controls/close-highcontrast.svg);
-        }
-      }
-    }
+/* See bug 1715990 about why we do this ourselves on HCM */
+@media (prefers-contrast) {
+  :root[tabsintitlebar]:not(:-moz-lwtheme) {
+    background-color: ActiveCaption;
+    color: CaptionText;
   }
 
-  @media (-moz-platform: windows-win7),
-         (-moz-platform: windows-win8) {
-    :root {
-      background-color: transparent;
-      appearance: auto;
-      -moz-default-appearance: -moz-win-borderless-glass;
-    }
+  :root[tabsintitlebar]:not(:-moz-lwtheme):-moz-window-inactive {
+    background-color: InactiveCaption;
+    color: InactiveCaptionText;
+  }
+}
 
-    :root[sizemode="maximized"] .titlebar-buttonbox {
-      margin-inline-end: 3px;
-    }
+.titlebar-buttonbox,
+.titlebar-button {
+  appearance: none !important;
+}
 
-    /* These should be hidden w/ glass enabled. Windows draws its own buttons. */
-    .titlebar-button {
-      display: none;
-    }
+.titlebar-button {
+  border: none;
+  margin: 0 !important;
+  padding: 8px 17px;
+  -moz-context-properties: stroke;
+  stroke: currentColor;
+}
 
-    /* The borders on the glass frame are ours, and inside #browser, and on
-     * win7 we want to make sure they are "glassy", so we can't use #browser
-     * as the exclude-glass container. We use #appcontent instead. */
-    #appcontent {
-      appearance: auto;
-      -moz-default-appearance: -moz-win-exclude-glass;
-    }
+.titlebar-button > .toolbarbutton-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.titlebar-min {
+  list-style-image: url(chrome://browser/skin/window-controls/minimize.svg);
+}
+
+.titlebar-max {
+  list-style-image: url(chrome://browser/skin/window-controls/maximize.svg);
+}
+
+.titlebar-restore {
+  list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
+}
+
+.titlebar-restore > .toolbarbutton-icon:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
+.titlebar-close {
+  list-style-image: url(chrome://browser/skin/window-controls/close.svg);
+}
+
+:root[lwtheme-image] .titlebar-button {
+  -moz-context-properties: unset;
+}
+:root[lwtheme-image] .titlebar-min {
+  list-style-image: url(chrome://browser/skin/window-controls/minimize-themes.svg);
+}
+:root[lwtheme-image] .titlebar-max {
+  list-style-image: url(chrome://browser/skin/window-controls/maximize-themes.svg);
+}
+:root[lwtheme-image] .titlebar-restore {
+  list-style-image: url(chrome://browser/skin/window-controls/restore-themes.svg);
+}
+:root[lwtheme-image] .titlebar-close {
+  list-style-image: url(chrome://browser/skin/window-controls/close-themes.svg);
+}
+
+/* the 12px image renders a 10px icon, and the 10px upscaled gets rounded to 12.5, which
+ * rounds up to 13px, which makes the icon one pixel too big on 1.25dppx. Fix: */
+@media (min-resolution: 1.20dppx) and (max-resolution: 1.45dppx) {
+  .titlebar-button > .toolbarbutton-icon {
+    width: 11.5px;
+    height: 11.5px;
+  }
+}
+
+/* 175% dpi should result in the same device pixel sizes as 150% dpi. */
+@media (min-resolution: 1.70dppx) and (max-resolution: 1.95dppx) {
+  .titlebar-button {
+    padding-inline: 14.1px;
   }
 
-  @media (-moz-platform: windows-win8) {
-    /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
-     * Borders for win7 are below, win10 only needs something like this when
-     * drawing in the titlebar (-moz-windows-accent-color-in-titlebar). */
-    #main-window[sizemode="normal"] #navigator-toolbox:-moz-lwtheme {
-      border-top: 1px solid var(--glass-shadow-color);
-    }
+  .titlebar-button > .toolbarbutton-icon {
+    width: 10.8px;
+    height: 10.8px;
+  }
+}
+
+/* 225% dpi should result in the same device pixel sizes as 200% dpi. */
+@media (min-resolution: 2.20dppx) and (max-resolution: 2.45dppx) {
+  .titlebar-button {
+    padding-inline: 15.3333px;
+  }
+
+  .titlebar-button > .toolbarbutton-icon {
+    width: 10.8px;
+    height: 10.8px;
+  }
+}
+
+/* 275% dpi should result in the same device pixel sizes as 250% dpi. */
+@media (min-resolution: 2.70dppx) and (max-resolution: 2.95dppx) {
+  /* NB: todo: this should also change padding on the buttons
+   * themselves, but without a device to test this on, it's
+   * impossible to know by how much. */
+  .titlebar-button > .toolbarbutton-icon {
+    width: 10.8px;
+    height: 10.8px;
+  }
+}
+
+@media (-moz-windows-default-theme) {
+  #main-menubar > menu[_moz-menuactive="true"] {
+    color: inherit;
+  }
+
+  #main-menubar > menu[_moz-menuactive="true"],
+  .titlebar-button:hover {
+    background-color: hsla(0,0%,0%,.12);
+  }
+  .titlebar-button:hover:active {
+    background-color: hsla(0,0%,0%,.22);
+  }
+
+  #toolbar-menubar[brighttext] > #menubar-items > #main-menubar > menu[_moz-menuactive="true"],
+  toolbar[brighttext] .titlebar-button:not(.titlebar-close):hover {
+    background-color: hsla(0,0%,100%,.22);
+  }
+  toolbar[brighttext] .titlebar-button:not(.titlebar-close):hover:active {
+    background-color: hsla(0,0%,100%,.32);
+  }
+
+  .titlebar-close:hover {
+    stroke: white;
+    background-color: hsl(355,86%,49%);
+  }
+  .titlebar-close:hover:active {
+    background-color: hsl(355,82%,69%);
+  }
+
+  .titlebar-button:not(:hover) > .toolbarbutton-icon:-moz-window-inactive {
+    opacity: 0.5;
+  }
+}
+
+@media (-moz-windows-default-theme: 0) {
+  .titlebar-button {
+    background-color: -moz-field;
+    stroke: ButtonText;
+  }
+  .titlebar-button:hover {
+    background-color: SelectedItem;
+    stroke: SelectedItemText;
+  }
+
+  .titlebar-min {
+    list-style-image: url(chrome://browser/skin/window-controls/minimize-highcontrast.svg);
+  }
+
+  .titlebar-max {
+    list-style-image: url(chrome://browser/skin/window-controls/maximize-highcontrast.svg);
+  }
+
+  .titlebar-restore {
+    list-style-image: url(chrome://browser/skin/window-controls/restore-highcontrast.svg);
+  }
+
+  .titlebar-close {
+    list-style-image: url(chrome://browser/skin/window-controls/close-highcontrast.svg);
   }
 
   :root[darkwindowframe="true"]:not(:-moz-window-inactive, :-moz-lwtheme) {
@@ -282,60 +201,5 @@
 
   #appcontent:not(:-moz-lwtheme) {
     background-color: -moz-dialog;
-  }
-}
-
-@media (-moz-windows-glass) {
-  #toolbar-menubar:not(:-moz-lwtheme) {
-    text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
-  }
-
-  #main-menubar:not(:-moz-lwtheme, :-moz-window-inactive) {
-    background-color: rgba(255,255,255,.5);
-    color: black;
-    border-radius: 4px;
-  }
-
-  /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
-   * We use a different border for win8, and this win10+ only needs this if
-   * drawing in the titlebar (-moz-windows-accent-color-in-titlebar). */
-  #main-window[sizemode="normal"] #navigator-toolbox:-moz-lwtheme {
-    border-top: 1px solid var(--glass-active-border-color);
-    padding-top: 1px;
-    box-shadow: 0 1px 0 rgba(255,255,255,.6) inset;
-  }
-
-  #main-window[sizemode="normal"] #navigator-toolbox:-moz-lwtheme:-moz-window-inactive {
-    border-top-color: var(--glass-inactive-border-color);
-  }
-}
-
-/* Aero Basic */
-@media (-moz-windows-compositor: 0) {
-  @media (-moz-windows-default-theme) {
-    :root {
-      background-color: rgb(185,209,234);
-    }
-    :root:-moz-window-inactive {
-      background-color: rgb(215,228,242);
-    }
-
-    /* Render a window top border for lwthemes: */
-    #main-window[tabsintitlebar][sizemode="normal"] #navigator-toolbox:-moz-lwtheme {
-      background-image: linear-gradient(to bottom,
-            var(--glass-active-border-color) 0, var(--glass-active-border-color) 1px,
-            rgba(255,255,255,.6) 1px, rgba(255,255,255,.6) 2px, transparent 2px);
-    }
-
-    #main-window[tabsintitlebar][sizemode="normal"] #navigator-toolbox:-moz-lwtheme:-moz-window-inactive {
-      background-image: linear-gradient(to bottom,
-            var(--glass-inactive-border-color) 0, var(--glass-inactive-border-color) 1px,
-            rgba(255,255,255,.6) 1px, rgba(255,255,255,.6) 2px, transparent 2px);
-    }
-  }
-
-  #print-preview-toolbar:not(:-moz-lwtheme) {
-    appearance: auto;
-    -moz-default-appearance: -moz-win-browsertabbar-toolbox;
   }
 }

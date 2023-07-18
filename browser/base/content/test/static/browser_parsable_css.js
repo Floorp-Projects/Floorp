@@ -286,12 +286,7 @@ let customPropsToReferencesMap = new Map();
 function neverMatches(mediaList) {
   const perPlatformMediaQueryMap = {
     macosx: ["(-moz-platform: macos)"],
-    win: [
-      "(-moz-platform: windows)",
-      "(-moz-platform: windows-win7)",
-      "(-moz-platform: windows-win8)",
-      "(-moz-platform: windows-win10)",
-    ],
+    win: ["(-moz-platform: windows)"],
     linux: ["(-moz-platform: linux)"],
     android: ["(-moz-platform: android)"],
   };

@@ -23,45 +23,22 @@ panel {
   margin: calc(-1 * var(--panel-shadow-margin));
 }
 
-@media not (-moz-windows-non-native-menus) {
-  menupopup {
-    appearance: auto;
-    -moz-default-appearance: menupopup;
+menupopup {
+  /* Prevent any background or border around the outside of the shadow. */
+  background-color: transparent;
+  border: none;
 
-    /* Native menus are always light */
-    color-scheme: light !important;
-
-    /* We set the background-color / border here so that it doesn't interfere with native styling. */
-    background-color: Menu;
-    border: 1px solid ThreeDShadow;
-    --panel-background: transparent;
-    --panel-border-color: transparent;
-    --nested-margin: -3px;
-    --panel-shadow-margin: 0px;
-  }
+  --panel-border-radius: 4px;
+  --panel-padding: 4px 0;
+  --panel-border-color: ThreeDShadow;
+  --panel-background: Menu;
+  --nested-margin: -10px;
 }
 
-@media (-moz-windows-non-native-menus) {
-  menupopup {
-    /* Disable the default appearance so we can override the native styling. */
-    appearance: none;
-
-    /* Prevent any background or border around the outside of the shadow. */
-    background-color: transparent;
-    border: none;
-
-    --panel-border-radius: 4px;
-    --panel-padding: 4px 0;
-    --panel-border-color: ThreeDShadow;
-    --panel-background: Menu;
-    --nested-margin: -10px;
-  }
-
-  menupopup > menuitem,
-  menupopup > menu {
-    padding-block: 0.5em;
-    padding-inline-start: 1em;
-  }
+menupopup > menuitem,
+menupopup > menu {
+  padding-block: 0.5em;
+  padding-inline-start: 1em;
 }
 
 menupopup > menu > menupopup {
@@ -112,14 +89,4 @@ menulist > menupopup {
   background-color: transparent;
   border: none;
   min-width: 0;
-}
-
-@media not (-moz-windows-non-native-menus) {
-  /* For Win10, the popup itself needs to have a transparent background because
-     otherwise the background color would appear behind the drop shadow. */
-  menulist > menupopup {
-    color: FieldText;
-    --panel-background: Field;
-    --panel-border-color: ThreeDShadow;
-  }
 }

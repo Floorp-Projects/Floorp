@@ -167,7 +167,7 @@
   fill-opacity: var(--urlbar-icon-fill-opacity);
 }
 
-@media (-moz-platform: windows-win10) {
+@media (-moz-platform: windows) {
   #PopupSearchAutoComplete {
     --panel-border-radius: var(--arrowpanel-border-radius);
   }

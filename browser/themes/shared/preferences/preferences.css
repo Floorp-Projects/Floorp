@@ -575,14 +575,6 @@ a[is="moz-support-link"]:not(.sidebar-footer-link) {
   margin-inline-start: 0;
 }
 
-@media (-moz-platform: windows-win7),
-       (-moz-platform: windows-win8) {
-  #windows-sso,
-  #windows-sso-caption {
-    display: none;
-  }
-}
-
 /**
  * Dialog
  */

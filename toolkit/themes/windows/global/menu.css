@@ -20,29 +20,9 @@ menubar {
 menu,
 menuitem,
 menucaption {
-  appearance: auto;
-  -moz-default-appearance: menuitem;
   flex-shrink: 0;
   align-items: center;
   list-style-image: none;
-}
-
-@media (-moz-windows-non-native-menus) {
-  /* For Windows 10, prevent using native OS drawing of certain menu elements,
-     especially background colors and shadows. */
-  menu, menuitem, menucaption {
-    appearance: none;
-  }
-
-  /* Menu item text also needs native drawing disabled. */
-  menu > .menu-text,
-  menuitem > .menu-text,
-  menu > .menu-iconic-text,
-  menuitem > .menu-iconic-text {
-    appearance: none;
-    margin-inline-start: 0 !important; /* need !important to override the other !important below... */
-    padding-inline-end: 0;
-  }
 }
 
 menu:where([disabled="true"]),
@@ -53,20 +33,9 @@ menuitem:where([_moz-menuactive="true"][disabled="true"]) {
   text-shadow: none;
 }
 
-@media (-moz-windows-non-native-menus) {
-  menu:where([_moz-menuactive="true"][disabled="true"]),
-  menuitem:where([_moz-menuactive="true"][disabled="true"]) {
-    background-color: -moz-menuhoverdisabled;
-  }
-}
-
-@media (-moz-windows-classic) {
-  menu[disabled="true"],
-  menubar > menu[disabled="true"][_moz-menuactive="true"],
-  menuitem[disabled="true"] {
-    color: ThreeDShadow;
-    text-shadow: 1px 1px ThreeDHighlight;
-  }
+menu:where([_moz-menuactive="true"][disabled="true"]),
+menuitem:where([_moz-menuactive="true"][disabled="true"]) {
+  background-color: -moz-menuhoverdisabled;
 }
 
 menuitem[default="true"],
@@ -89,25 +58,9 @@ menubar > menu:-moz-window-inactive {
   padding: 1px 0;
 }
 
-.menu-text {
-  padding-inline-start: 1.45em !important;
-  appearance: auto;
-  -moz-default-appearance: menuitemtext;
-}
-
-.menu-text,
-.menu-iconic-text {
-  margin-inline-start: 2px !important;
-  padding-inline-end: 2px;
-}
-
 .menu-accel,
 .menu-iconic-accel {
   margin-inline: 0.74em 1.35em !important;
-}
-
-.menu-iconic-left {
-  width: 1.45em;
 }
 
 .menu-iconic-icon {
@@ -122,62 +75,31 @@ menubar > menu:-moz-window-inactive {
   padding-top: 2px;
 }
 
-/* Don't leave space for icons on Win10. */
-@media (-moz-windows-non-native-menus) {
-  .menu-text {
-    padding-inline-start: 0 !important;
-  }
-}
-
 /* ..... menu arrow box ..... */
 
+/* Override the native menu arrow with a custom one for Win10. */
 .menu-right {
-  appearance: auto;
-  -moz-default-appearance: menuarrow;
-  margin-inline-end: -2px;
-  list-style-image: none;
-  width: 1.28em;
-  padding-top: 1px;
+  list-style-image: url("chrome://global/skin/icons/arrow-right.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: var(--menu-icon-opacity);
+  margin-inline-end: 1em;
 }
 
-/* Override the native menu arrow with a custom one for Win10. */
-@media (-moz-windows-non-native-menus) {
-  .menu-right {
-    appearance: none;
-    width: unset;
-    list-style-image: url("chrome://global/skin/icons/arrow-right.svg");
-    -moz-context-properties: fill, fill-opacity;
-    fill: currentColor;
-    fill-opacity: var(--menu-icon-opacity);
-    margin-inline-end: 1em;
-    padding-top: 0;
-  }
+.menu-right > image {
+  /* Do not make this smaller than the size of the svg, but upscale for
+   * people with large fonts. */
+  width: max(1em, 16px);
+}
 
-  .menu-right > image {
-    /* Do not make this smaller than the size of the svg, but upscale for
-     * people with large fonts. */
-    width: max(1em, 16px);
-  }
-
-  .menu-right:-moz-locale-dir(rtl) {
-    list-style-image: url("chrome://global/skin/icons/arrow-left.svg");
-  }
+.menu-right:-moz-locale-dir(rtl) {
+  list-style-image: url("chrome://global/skin/icons/arrow-left.svg");
 }
 
 /* ::::: menu/menuitems in menubar ::::: */
 
 menubar > menu[_moz-menuactive="true"]:not([disabled="true"]) {
   color: -moz-menubarhovertext;
-}
-
-@media (-moz-windows-classic) {
-  menubar > menu {
-    border: 2px solid transparent;
-  }
-
-  menubar > menu[_moz-menuactive="true"][open="true"] {
-    border-width: 3px 1px 1px 3px;
-  }
 }
 
 menubar > menu:-moz-lwtheme {
@@ -193,18 +115,6 @@ menubar > menu:-moz-lwtheme[_moz-menuactive="true"]:not([disabled="true"]) {
   background-color: SelectedItem;
   color: SelectedItemText;
   text-shadow: none;
-}
-
-@media (-moz-windows-default-theme) {
-  menubar > menu:-moz-lwtheme {
-    appearance: auto;
-    -moz-default-appearance: menuitem;
-  }
-
-  menubar > menu:-moz-lwtheme[_moz-menuactive="true"]:not([disabled="true"]) {
-    color: inherit !important;
-    text-shadow: inherit;
-  }
 }
 
 /* ..... internal content .... */
@@ -235,27 +145,10 @@ menulist > menupopup > menu {
   max-width: none;
 }
 
-@media (-moz-windows-non-native-menus) {
-  menulist > menupopup > menuitem {
-    padding-inline-end: 1em;
-  }
+menulist > menupopup > menuitem {
+  padding-inline-end: 1em;
 }
 
-@media not (-moz-windows-non-native-menus) {
-  menulist > menupopup > menuitem,
-  menulist > menupopup > menucaption,
-  menulist > menupopup > menu {
-    appearance: none !important;
-    border: 1px solid transparent;
-    padding-inline: 5px;
-  }
-
-  menulist > menupopup > menuitem[_moz-menuactive="true"],
-  menulist > menupopup > menu[_moz-menuactive="true"] {
-    background-color: highlight;
-    color: highlighttext;
-  }
-}
 
 menulist > menupopup > menuitem > .menu-iconic-left,
 menulist > menupopup > menucaption > .menu-iconic-left,
@@ -273,93 +166,42 @@ menulist > menupopup > menuitem[_moz-menuactive="true"][disabled="true"] {
   color: GrayText;
 }
 
-@media (-moz-windows-classic) {
-  menulist > menupopup > menuitem[disabled="true"]:not([_moz-menuactive="true"]) {
-    color: GrayText;
-    text-shadow: none;
-  }
-}
-
 menulist > menupopup > :is(menuitem, menucaption):not(.menuitem-iconic) > .menu-iconic-text {
   margin: 0 !important;
 }
 
 /* ::::: checkbox and radio menuitems ::::: */
 
-menuitem:is([type="checkbox"], [checked="true"]) {
-  appearance: auto;
-  -moz-default-appearance: checkmenuitem;
+menupopup[needsgutter] menu:not([icon], .menu-iconic),
+menupopup[needsgutter] menuitem:not([checked="true"], [icon], .menuitem-iconic) {
+  padding-inline-start: 36px;
 }
 
-menuitem:is([type="checkbox"], [checked="true"]) > .menu-iconic-left {
-  appearance: auto;
-  -moz-default-appearance: menucheckbox;
-  padding-top: 0;
+.menu-iconic > .menu-iconic-left,
+.menuitem-iconic > .menu-iconic-left {
+  margin-inline-end: 8px;
 }
 
-menuitem[type="radio"] {
-  appearance: auto;
-  -moz-default-appearance: radiomenuitem;
+menuitem[checked="true"] {
+  padding-inline-start: 12px;
 }
 
-menuitem[type="radio"] > .menu-iconic-left {
-  appearance: auto;
-  -moz-default-appearance: menuradio;
-  padding-top: 0;
-}
-
-menuitem:is([type="checkbox"], [checked="true"], [type="radio"]) > .menu-iconic-left > .menu-iconic-icon {
-  /* prevent .menu-iconic-icon from enforcing a minimal height of 16px (see bug 411064)
-     XXXzeniko apply that .menu-iconic-icon rule only for children of .menu-iconic */
-  display: none;
-}
-
-@media (-moz-windows-non-native-menus) {
-  menupopup[needsgutter] menu:not([icon], .menu-iconic),
-  menupopup[needsgutter] menuitem:not([checked="true"], [icon], .menuitem-iconic) {
-    padding-inline-start: 36px;
-  }
-
-  /* For Windows 10, checkbox, radio and iconified menuitems need the default
-     appearance disabled so they pick up our custom styles instead. */
-  .menu-iconic-left,
-  menuitem[type="checkbox"],
-  menuitem[type="radio"] {
-    appearance: none !important; /* to override more specific selectors above. */
-    width: unset;
-  }
-
-  .menu-iconic > .menu-iconic-left,
-  .menuitem-iconic > .menu-iconic-left {
-    margin-inline-end: 8px;
-  }
-
-  menuitem[checked="true"] {
-    padding-inline-start: 12px;
-  }
-
-  /* We need to do something to override the default style for selected
-     checkboxes and radio buttons because the native drawing we use on other
-     Windows versions looks pretty bad with the Win10 styles, so for now we'll
-     insert a generic checkmark icon for both types. */
-  menuitem[checked="true"] > .menu-iconic-left {
-    -moz-context-properties: fill, fill-opacity;
-    fill: currentColor;
-    fill-opacity: var(--menu-icon-opacity);
-    list-style-image: url("chrome://global/skin/icons/menu-check.svg");
-    width: 16px;
-    margin-inline-end: 8px;
-  }
-  menuitem[checked="true"] > .menu-iconic-left > .menu-iconic-icon {
-    display: initial;
-  }
+/* We need to do something to override the default style for selected
+   checkboxes and radio buttons because the native drawing we use on other
+   Windows versions looks pretty bad with the Win10 styles, so for now we'll
+   insert a generic checkmark icon for both types. */
+menuitem[checked="true"] > .menu-iconic-left {
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: var(--menu-icon-opacity);
+  list-style-image: url("chrome://global/skin/icons/menu-check.svg");
+  width: 16px;
+  margin-inline-end: 8px;
 }
 
 /* ::::: menuseparator ::::: */
 
-@media (-moz-windows-non-native-menus) {
-  menuseparator {
-    /* The side padding should align with the start of the menu item text. */
-    padding-inline: 1em;
-  }
+menuseparator {
+  /* The side padding should align with the start of the menu item text. */
+  padding-inline: 1em;
 }

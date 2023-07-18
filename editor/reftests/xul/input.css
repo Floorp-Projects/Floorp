@@ -20,12 +20,6 @@ html|input.empty {
   color: graytext;
 }
 
-@media (-moz-windows-default-theme) and (-moz-platform: windows-win7) {
-  :root:not(.winxp) html|input.empty {
-    font-style: italic;
-  }
-}
-
 html|input.num {
   text-align: end;
 }

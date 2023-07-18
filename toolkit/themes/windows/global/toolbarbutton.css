@@ -29,17 +29,6 @@ toolbarbutton:where([disabled="true"]) {
   text-shadow: none;
 }
 
-@media (-moz-windows-classic) {
-  @media not (prefers-contrast) {
-    toolbarbutton:where([disabled="true"]) {
-      text-shadow: 1px 1px ThreeDHighlight;
-    }
-  }
-  toolbarbutton:where([disabled="true"]) {
-    color: ThreeDShadow;
-  }
-}
-
 @media (-moz-windows-default-theme) {
   :root[lwtheme-image] toolbarbutton {
     text-shadow: none;
