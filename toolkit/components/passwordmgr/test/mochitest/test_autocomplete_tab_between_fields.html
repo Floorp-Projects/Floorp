@@ -17,8 +17,8 @@
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-const { TestUtils } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 const availableLogins = {

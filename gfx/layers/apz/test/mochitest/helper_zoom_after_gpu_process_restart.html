@@ -19,8 +19,8 @@ async function test() {
     const gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
 
     if (gfxInfo.usingGPUProcess) {
-      const { TestUtils } = ChromeUtils.import(
-        "resource://testing-common/TestUtils.jsm"
+      const { TestUtils } = ChromeUtils.importESModule(
+        "resource://testing-common/TestUtils.sys.mjs"
       );
       let promise = TestUtils.topicObserved("compositor-reinitialized");
 
