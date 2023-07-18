@@ -18,9 +18,9 @@ namespace jit {
 static const size_t MaxCodeBytesPerProcess = 140 * 1024 * 1024;
 #else
 // This is the largest number which satisfies various alignment static
-// asserts that is <= INT32_MAX. The INT32_MAX limit is required for making a
-// single call to RtlInstallFunctionTableCallback(). (This limit could be
-// relaxed in the future by making multiple calls.)
+// asserts that is <= INT32_MAX. If we ever want to increase this, we need to
+// ensure RtlAddGrowableFunctionTable does the right thing because
+// RUNTIME_FUNCTION::EndAddress is a (32-bit) DWORD.
 static const size_t MaxCodeBytesPerProcess = 2044 * 1024 * 1024;
 #endif
 
