@@ -27,7 +27,9 @@ var win;
 var timeoutID;
 var menu;
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {AppConstants} = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 
 function beginTest() {
     if (AppConstants.platform == "macosx" && SpecialPowers.getBoolPref("widget.macos.native-context-menus", false)) {

@@ -27,8 +27,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1630828
 <script type="application/javascript">
 <![CDATA[
 
-const { AppConstants } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 function waitForEvent(target, event) {

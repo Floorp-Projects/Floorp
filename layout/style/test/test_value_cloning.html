@@ -13,9 +13,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=375363
 <p id="display"><iframe id="iframe" src="about:blank"></iframe></p>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-const { AppConstants } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 
 /** Test for cloning of CSS property values (including 'inherit', 'initial' and 'unset') **/
 var test_queue = [];

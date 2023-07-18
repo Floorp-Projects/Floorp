@@ -11,8 +11,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1448048
   <script type="application/javascript">
 
     /** Test for Bug 1448048 **/
-    var { AppConstants } = SpecialPowers.ChromeUtils.import(
-      "resource://gre/modules/AppConstants.jsm"
+    var { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+      "resource://gre/modules/AppConstants.sys.mjs"
     );
     if (AppConstants.NIGHTLY_BUILD) {
       is(typeof Components, "undefined", "Should be no Components shim on Nightly");

@@ -26,7 +26,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=789773
    */
   SimpleTest.waitForExplicitFinish();
 
-  const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+  const {AppConstants} = ChromeUtils.importESModule(
+    "resource://gre/modules/AppConstants.sys.mjs"
+  );
 
   var calledListenerForBrowserChromeURL = false;
   var testProgressListener = {

@@ -316,7 +316,9 @@
 
     function testsFinished(aTests) {
       if (gConfig.closeWhenDone) {
-        const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+        const {AppConstants} = ChromeUtils.importESModule(
+          "resource://gre/modules/AppConstants.sys.mjs"
+        );
         if (
           !AppConstants.RELEASE_OR_BETA &&
           !AppConstants.DEBUG &&

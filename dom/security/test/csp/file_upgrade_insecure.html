@@ -50,8 +50,8 @@
   <!-- websockets: upgrade ws:// to wss://-->
   <script type="application/javascript">
     // WebSocket tests are not supported on Android yet. Bug 1566168
-    const { AppConstants } = SpecialPowers.ChromeUtils.import(
-      "resource://gre/modules/AppConstants.jsm"
+    const { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+      "resource://gre/modules/AppConstants.sys.mjs"
     );
     if (AppConstants.platform !== "android") {
       var mySocket = new WebSocket("ws://example.com/tests/dom/security/test/csp/file_upgrade_insecure");

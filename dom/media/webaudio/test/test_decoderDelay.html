@@ -9,8 +9,9 @@
 <body>
   <script class="testbody" type="text/javascript">
     SimpleTest.waitForExplicitFinish();
-    const {AppConstants} =
-      SpecialPowers.ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+    const {AppConstants} = SpecialPowers.ChromeUtils.importESModule(
+      "resource://gre/modules/AppConstants.sys.mjs"
+    );
 
     var tests_half_a_second = [
       "half-a-second-1ch-44100-aac.mp4",
