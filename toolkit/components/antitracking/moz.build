@@ -9,6 +9,10 @@ with Files("**"):
 
 JAR_MANIFESTS += ["jar.mn"]
 
+DIRS += [
+    "bouncetrackingprotection",
+]
+
 XPIDL_SOURCES += [
     "nsIContentBlockingAllowList.idl",
     "nsIPartitioningExceptionListService.idl",
