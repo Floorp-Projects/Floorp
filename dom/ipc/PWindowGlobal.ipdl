@@ -209,6 +209,9 @@ parent:
   // purpose built UI.
   async DiscoverIdentityCredentialFromExternalSource(IdentityCredentialRequestOptions aOptions) 
       returns (IPCIdentityCredential? identityCredential);
+
+child:
+  async NotifyPermissionChange(nsCString type);
 };
 
 } // namespace dom

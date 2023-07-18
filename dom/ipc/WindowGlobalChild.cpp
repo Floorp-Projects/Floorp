@@ -547,6 +547,18 @@ IPCResult WindowGlobalChild::RecvRawMessage(
   return IPC_OK();
 }
 
+IPCResult WindowGlobalChild::RecvNotifyPermissionChange(
+    const nsCString& aType) {
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+  NS_ENSURE_TRUE(observerService,
+                 IPC_FAIL(this, "Failed to get observer service"));
+  nsPIDOMWindowInner* notifyTarget =
+      static_cast<nsPIDOMWindowInner*>(this->GetWindowGlobal());
+  observerService->NotifyObservers(notifyTarget, "perm-changed-notify-only",
+                                   NS_ConvertUTF8toUTF16(aType).get());
+  return IPC_OK();
+}
+
 void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
   // Registers a DOM Window with the profiler. It re-registers the same Inner
   // Window ID with different URIs because when a Browsing context is first
