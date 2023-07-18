@@ -237,7 +237,9 @@ export var TelemetryTestUtils = {
     Assert.equal(
       filtered.length,
       expectedEvents.length,
-      "After filtering we must have the expected number of events."
+      `After filtering we must have the expected number of events. Filtered events: ${JSON.stringify(
+        filtered
+      )}`
     );
     if (expectedEvents.length === 0) {
       // Job's done!
