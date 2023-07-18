@@ -306,9 +306,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
     case ColorID::MozMacMenuselect:
       color = GetColorFromNSColor(NSColor.alternateSelectedControlColor);
       break;
-    case ColorID::MozButtondefault:
-      color = NS_RGB(0xDC, 0xDC, 0xDC);
-      break;
     case ColorID::MozCellhighlight:
     case ColorID::MozMacSecondaryhighlight:
       // For inactive list selection
