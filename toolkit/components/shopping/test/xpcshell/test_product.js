@@ -3,7 +3,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-/* global createHttpServer */
+/* global createHttpServer, readFile */
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 const {
   ANALYSIS_RESPONSE_SCHEMA,
@@ -18,14 +21,84 @@ const { ShoppingProduct, isProductURL } = ChromeUtils.importESModule(
   "chrome://global/content/shopping/ShoppingProduct.mjs"
 );
 
-const ANALYSIS_API_MOCK = "http://example.com/analysis_response.json";
+const ANALYSIS_API_MOCK = "http://example.com/api/analysis_response.json";
 const RECOMMENDATIONS_API_MOCK =
-  "http://example.com/recommendations_response.json";
+  "http://example.com/api/recommendations_response.json";
 const ANALYSIS_API_MOCK_INVALID =
-  "http://example.com/invalid_analysis_response.json";
+  "http://example.com/api/invalid_analysis_response.json";
+const API_SERVICE_UNAVAILABLE =
+  "http://example.com/errors/service_unavailable.json";
+const API_ERROR_ONCE = "http://example.com/errors/error_once.json";
+const API_ERROR_BAD_REQUEST = "http://example.com/errors/bad_request.json";
+const API_ERROR_UNPROCESSABLE =
+  "http://example.com/errors/unprocessable_entity.json";
 
 const server = createHttpServer({ hosts: ["example.com"] });
-server.registerDirectory("/", do_get_file("/data"));
+server.registerDirectory("/api/", do_get_file("/data"));
+
+// Path to test API call that will always fail.
+server.registerPathHandler(
+  new URL(API_SERVICE_UNAVAILABLE).pathname,
+  (request, response) => {
+    response.setStatusLine(request.httpVersion, 503, "Service Unavailable");
+    response.setHeader(
+      "Content-Type",
+      "application/json; charset=utf-8",
+      false
+    );
+    response.write(readFile("data/service_unavailable.json", false));
+  }
+);
+
+// Path to test API call that will fail once and then succeeded.
+let apiErrors = 0;
+server.registerPathHandler(
+  new URL(API_ERROR_ONCE).pathname,
+  (request, response) => {
+    response.setHeader(
+      "Content-Type",
+      "application/json; charset=utf-8",
+      false
+    );
+    if (apiErrors == 0) {
+      response.setStatusLine(request.httpVersion, 503, "Service Unavailable");
+      response.write(readFile("/data/service_unavailable.json"));
+      apiErrors++;
+    } else {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.write(readFile("/data/analysis_response.json"));
+      apiErrors = 0;
+    }
+  }
+);
+
+// Request is missing required parameters.
+server.registerPathHandler(
+  new URL(API_ERROR_BAD_REQUEST).pathname,
+  (request, response) => {
+    response.setStatusLine(request.httpVersion, 400, "Bad Request");
+    response.setHeader(
+      "Content-Type",
+      "application/json; charset=utf-8",
+      false
+    );
+    response.write(readFile("data/bad_request.json", false));
+  }
+);
+
+// Request contains a nonsense product identifier or non supported website.
+server.registerPathHandler(
+  new URL(API_ERROR_UNPROCESSABLE).pathname,
+  (request, response) => {
+    response.setStatusLine(request.httpVersion, 422, "Unprocessable entity");
+    response.setHeader(
+      "Content-Type",
+      "application/json; charset=utf-8",
+      false
+    );
+    response.write(readFile("data/unprocessable_entity.json", false));
+  }
+);
 
 add_task(async function test_product_requestAnalysis() {
   let uri = new URL("https://www.walmart.com/ip/926485654");
@@ -76,6 +149,96 @@ add_task(async function test_product_requestRecommendations() {
     Assert.ok(
       Array.isArray(recommendations),
       "Recommendations array is loaded from JSON and validated"
+    );
+  }
+});
+
+add_task(async function test_product_requestAnalysis_retry_failure() {
+  const TEST_TIMEOUT = 100;
+  const RETRIES = 3;
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+  let spy = sinon.spy(product, "request");
+  let startTime = Cu.now();
+  let totalTime = TEST_TIMEOUT * Math.pow(2, RETRIES - 1);
+
+  if (product.isProduct()) {
+    let analysis = await product.requestAnalysis(true, undefined, {
+      url: API_SERVICE_UNAVAILABLE,
+      requestSchema: ANALYSIS_REQUEST_SCHEMA,
+      responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+    });
+    Assert.equal(analysis, null, "Analysis object is null");
+    Assert.equal(
+      spy.callCount,
+      RETRIES + 1,
+      `Request was retried ${RETRIES} times after a failure`
+    );
+    Assert.ok(
+      Cu.now() - startTime >= totalTime,
+      `Waited for at least ${totalTime}ms`
+    );
+  }
+});
+
+add_task(async function test_product_requestAnalysis_retry_success() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+  let spy = sinon.spy(product, "request");
+  // Make sure API error count is reset
+  apiErrors = 0;
+  if (product.isProduct()) {
+    let analysis = await product.requestAnalysis(true, undefined, {
+      url: API_ERROR_ONCE,
+      requestSchema: ANALYSIS_REQUEST_SCHEMA,
+      responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+    });
+    Assert.equal(spy.callCount, 2, `Request succeeded after a failure`);
+    Assert.ok(
+      typeof analysis == "object",
+      "Analysis object is loaded from JSON and validated"
+    );
+  }
+});
+
+add_task(async function test_product_bad_request() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+
+  if (product.isProduct()) {
+    let errorResult = await product.requestAnalysis(true, undefined, {
+      url: API_ERROR_BAD_REQUEST,
+      requestSchema: ANALYSIS_REQUEST_SCHEMA,
+      responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+    });
+    Assert.ok(
+      typeof errorResult == "object",
+      "Error object is loaded from JSON"
+    );
+    Assert.equal(errorResult.status, 400, "Error status is passed");
+    Assert.equal(errorResult.error, "Bad Request", "Error message is passed");
+  }
+});
+
+add_task(async function test_product_unprocessable_entity() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+
+  if (product.isProduct()) {
+    let errorResult = await product.requestAnalysis(true, undefined, {
+      url: API_ERROR_UNPROCESSABLE,
+      requestSchema: ANALYSIS_REQUEST_SCHEMA,
+      responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+    });
+    Assert.ok(
+      typeof errorResult == "object",
+      "Error object is loaded from JSON"
+    );
+    Assert.equal(errorResult.status, 422, "Error status is passed");
+    Assert.equal(
+      errorResult.error,
+      "Unprocessable entity",
+      "Error message is passed"
     );
   }
 });
@@ -322,5 +485,23 @@ add_task(function test_isProductURL() {
     isProductURL("1234"),
     false,
     "Passing a junk string returns false"
+  );
+});
+
+add_task(async function test_product_uninit() {
+  let product = new ShoppingProduct();
+
+  Assert.equal(
+    product._abortController.signal.aborted,
+    false,
+    "Abort signal is false"
+  );
+
+  product.uninit();
+
+  Assert.equal(
+    product._abortController.signal.aborted,
+    true,
+    "Abort signal is given after uninit"
   );
 });
