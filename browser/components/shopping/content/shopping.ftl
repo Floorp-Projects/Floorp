@@ -55,4 +55,9 @@ shopping-adjusted-rating-label =
   .label = Adjusted rating
 shopping-adjusted-rating-unreliable-reviews = Unreliable reviews removed
 
+## Strings for the review reliability component
+
+shopping-review-reliability-label =
+  .label = How reliable are these reviews?
+
 ##

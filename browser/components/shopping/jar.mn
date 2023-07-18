@@ -18,3 +18,4 @@ browser.jar:
     content/browser/shopping/settings.css (content/settings.css)
     content/browser/shopping/shopping-container.mjs (content/shopping-container.mjs)
     content/browser/shopping/adjusted-rating.mjs (content/adjusted-rating.mjs)
+    content/browser/shopping/reliability.mjs (content/reliability.mjs)

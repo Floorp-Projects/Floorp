@@ -12,6 +12,8 @@ import "chrome://browser/content/shopping/highlights.mjs";
 import "chrome://browser/content/shopping/settings.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/shopping/adjusted-rating.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/shopping/reliability.mjs";
 
 export class ShoppingContainer extends MozLitElement {
   static properties = {
@@ -65,6 +67,7 @@ export class ShoppingContainer extends MozLitElement {
           ></button>
         </div>
         <div id="content">
+          <review-reliability letter=${this.data.grade}></review-reliability>
           <adjusted-rating
             rating=${this.data.adjusted_rating}
           ></adjusted-rating>
