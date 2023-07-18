@@ -6,6 +6,7 @@ Transform the signing task into an actual task description.
 """
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.dependencies import get_primary_dependency
 from taskgraph.util.treeherder import join_symbol
 
 from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -19,8 +20,7 @@ transforms = TransformSequence()
 @transforms.add
 def make_signing_description(config, jobs):
     for job in jobs:
-        dep_job = job["primary-dependency"]
-        job["depname"] = dep_job.label
+        dep_job = get_primary_dependency(config, job)
 
         # add the chunk number to the TH symbol
         symbol = job.get("treeherder", {}).get("symbol", "Bs")
@@ -37,10 +37,12 @@ def make_signing_description(config, jobs):
 @transforms.add
 def define_upstream_artifacts(config, jobs):
     for job in jobs:
-        dep_job = job["primary-dependency"]
+        dep_job = get_primary_dependency(config, job)
         upstream_artifact_task = job.pop("upstream-artifact-task", dep_job)
 
-        job["attributes"] = copy_attributes_from_dependent_job(dep_job)
+        job.setdefault("attributes", {}).update(
+            copy_attributes_from_dependent_job(dep_job)
+        )
         if dep_job.attributes.get("chunk_locales"):
             # Used for l10n attribute passthrough
             job["attributes"]["chunk_locales"] = dep_job.attributes.get("chunk_locales")
