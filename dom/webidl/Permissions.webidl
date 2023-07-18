@@ -12,8 +12,7 @@ enum PermissionName {
   "notifications",
   "push",
   "persistent-storage",
-  "midi",
-  "storage-access" // Defined in https://privacycg.github.io/storage-access/#permissions-integration
+  "midi"
 };
 
 [GenerateInit]
@@ -33,4 +32,6 @@ dictionary MidiPermissionDescriptor : PermissionDescriptor {
 interface Permissions {
   [NewObject]
   Promise<PermissionStatus> query(object permission);
+  [NewObject, Pref="dom.permissions.revoke.enable"]
+  Promise<PermissionStatus> revoke(object permission);
 };

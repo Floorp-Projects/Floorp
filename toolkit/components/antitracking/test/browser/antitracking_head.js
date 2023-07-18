@@ -36,8 +36,7 @@ this.AntiTracking = {
       .STATE_COOKIES_BLOCKED_TRACKER,
     iframeSandbox = null,
     accessRemoval = null,
-    callbackAfterRemoval = null,
-    iframeAllow = null
+    callbackAfterRemoval = null
   ) {
     // Normal mode
     this.runTest(
@@ -52,8 +51,7 @@ this.AntiTracking = {
       false,
       iframeSandbox,
       accessRemoval,
-      callbackAfterRemoval,
-      iframeAllow
+      callbackAfterRemoval
     );
 
     // Private mode
@@ -69,8 +67,7 @@ this.AntiTracking = {
       true,
       iframeSandbox,
       accessRemoval,
-      callbackAfterRemoval,
-      iframeAllow
+      callbackAfterRemoval
     );
   },
 
@@ -87,8 +84,7 @@ this.AntiTracking = {
     runInPrivateWindow = false,
     iframeSandbox = null,
     accessRemoval = null,
-    callbackAfterRemoval = null,
-    iframeAllow = null
+    callbackAfterRemoval = null
   ) {
     let runExtraTests = true;
     let options = {};
@@ -132,7 +128,6 @@ this.AntiTracking = {
       iframeSandbox,
       accessRemoval,
       callbackAfterRemoval,
-      iframeAllow,
     });
     this._createCleanupTask(cleanupFunction);
 
@@ -157,7 +152,6 @@ this.AntiTracking = {
           iframeSandbox,
           accessRemoval: null, // only passed with non-blocking callback
           callbackAfterRemoval: null,
-          iframeAllow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -172,7 +166,6 @@ this.AntiTracking = {
           iframeSandbox,
           accessRemoval: null, // only passed with non-blocking callback
           callbackAfterRemoval: null,
-          iframeAllow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -189,7 +182,6 @@ this.AntiTracking = {
           iframeSandbox,
           accessRemoval: null, // only passed with non-blocking callback
           callbackAfterRemoval: null,
-          iframeAllow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -204,7 +196,6 @@ this.AntiTracking = {
           iframeSandbox,
           accessRemoval: null, // only passed with non-blocking callback
           callbackAfterRemoval: null,
-          iframeAllow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -222,7 +213,6 @@ this.AntiTracking = {
           iframeSandbox,
           accessRemoval: null, // only passed with non-blocking callback
           callbackAfterRemoval: null,
-          iframeAllow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -240,7 +230,6 @@ this.AntiTracking = {
           iframeSandbox,
           accessRemoval,
           callbackAfterRemoval,
-          iframeAllow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -260,7 +249,6 @@ this.AntiTracking = {
           iframeSandbox,
           accessRemoval,
           callbackAfterRemoval,
-          iframeAllow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -279,7 +267,6 @@ this.AntiTracking = {
           accessRemoval: null, // only passed with non-blocking callback
           callbackAfterRemoval: null,
           thirdPartyPage: TEST_ANOTHER_3RD_PARTY_PAGE,
-          iframeAllow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -294,7 +281,6 @@ this.AntiTracking = {
           iframeSandbox,
           accessRemoval,
           callbackAfterRemoval,
-          iframeAllow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -310,7 +296,6 @@ this.AntiTracking = {
           accessRemoval: null, // only passed with non-blocking callback
           callbackAfterRemoval: null,
           thirdPartyPage: TEST_ANOTHER_3RD_PARTY_PAGE,
-          iframeAllow,
         });
         this._createCleanupTask(cleanupFunction);
       } else {
@@ -326,7 +311,6 @@ this.AntiTracking = {
           iframeSandbox,
           accessRemoval: options.accessRemoval,
           callbackAfterRemoval: options.callbackAfterRemoval,
-          iframeAllow,
         });
         this._createCleanupTask(cleanupFunction);
       }
@@ -342,8 +326,7 @@ this.AntiTracking = {
           runInPrivateWindow,
           iframeSandbox,
           false,
-          extraPrefs,
-          iframeAllow
+          extraPrefs
         );
         this._createCleanupTask(cleanupFunction);
 
@@ -358,8 +341,7 @@ this.AntiTracking = {
           [
             ["network.cookie.rejectForeignWithExceptions.enabled", true],
             ...(extraPrefs || []),
-          ],
-          iframeAllow
+          ]
         );
         this._createCleanupTask(cleanupFunction);
 
@@ -372,8 +354,7 @@ this.AntiTracking = {
           runInPrivateWindow,
           iframeSandbox,
           true,
-          extraPrefs,
-          iframeAllow
+          extraPrefs
         );
         this._createCleanupTask(cleanupFunction);
 
@@ -388,8 +369,7 @@ this.AntiTracking = {
           [
             ["network.cookie.rejectForeignWithExceptions.enabled", true],
             ...(extraPrefs || []),
-          ],
-          iframeAllow
+          ]
         );
         this._createCleanupTask(cleanupFunction);
       }
@@ -405,8 +385,7 @@ this.AntiTracking = {
           runInPrivateWindow,
           iframeSandbox,
           false,
-          extraPrefs,
-          iframeAllow
+          extraPrefs
         );
         this._createCleanupTask(cleanupFunction);
 
@@ -421,8 +400,7 @@ this.AntiTracking = {
           [
             ["network.cookie.rejectForeignWithExceptions.enabled", true],
             ...(extraPrefs || []),
-          ],
-          iframeAllow
+          ]
         );
         this._createCleanupTask(cleanupFunction);
 
@@ -435,8 +413,7 @@ this.AntiTracking = {
           runInPrivateWindow,
           iframeSandbox,
           true,
-          extraPrefs,
-          iframeAllow
+          extraPrefs
         );
         this._createCleanupTask(cleanupFunction);
 
@@ -451,8 +428,7 @@ this.AntiTracking = {
           [
             ["network.cookie.rejectForeignWithExceptions.enabled", true],
             ...(extraPrefs || []),
-          ],
-          iframeAllow
+          ]
         );
         this._createCleanupTask(cleanupFunction);
       }
@@ -596,8 +572,6 @@ this.AntiTracking = {
           " window " +
           " with iframe sandbox set to " +
           options.iframeSandbox +
-          " and iframe allow set to " +
-          options.iframeAllow +
           " and access removal set to " +
           options.accessRemoval +
           (typeof options.thirdPartyPage == "string"
@@ -753,7 +727,6 @@ this.AntiTracking = {
               : null,
             accessRemoval: options.accessRemoval,
             iframeSandbox: options.iframeSandbox,
-            iframeAllow: options.iframeAllow,
             allowList: options.allowList,
             doAccessRemovalChecks,
           },
@@ -770,9 +743,6 @@ this.AntiTracking = {
             };
             if (typeof obj.iframeSandbox == "string") {
               ifr.setAttribute("sandbox", obj.iframeSandbox);
-            }
-            if (typeof obj.iframeAllow == "string") {
-              ifr.setAttribute("allow", obj.iframeAllow);
             }
 
             content.addEventListener("message", function msg(event) {
@@ -812,9 +782,6 @@ this.AntiTracking = {
                   };
                   if (typeof obj.iframeSandbox == "string") {
                     ifr.setAttribute("sandbox", obj.iframeSandbox);
-                  }
-                  if (typeof obj.iframeAllow == "string") {
-                    ifr.setAttribute("allow", obj.iframeAllow);
                   }
 
                   content.addEventListener("message", function msg(event) {
@@ -877,7 +844,6 @@ this.AntiTracking = {
                 ? options.callbackAfterRemoval.toString()
                 : null,
               iframeSandbox: options.iframeSandbox,
-              iframeAllow: options.iframeAllow,
             },
           ],
           async function (obj) {
@@ -890,9 +856,6 @@ this.AntiTracking = {
             };
             if (typeof obj.iframeSandbox == "string") {
               ifr.setAttribute("sandbox", obj.iframeSandbox);
-            }
-            if (typeof obj.iframeAllow == "string") {
-              ifr.setAttribute("allow", obj.iframeAllow);
             }
 
             content.addEventListener("message", function msg(event) {
@@ -1039,8 +1002,7 @@ this.AntiTracking = {
     runInPrivateWindow,
     iframeSandbox,
     testInSubIFrame,
-    extraPrefs,
-    iframeAllow
+    extraPrefs
   ) {
     add_task(async function () {
       info(
@@ -1105,7 +1067,6 @@ this.AntiTracking = {
             blockingCallback: blockingCallback.toString(),
             nonBlockingCallback: nonBlockingCallback.toString(),
             iframeSandbox,
-            iframeAllow,
           },
         ],
         async function (obj) {
@@ -1117,9 +1078,6 @@ this.AntiTracking = {
             };
             if (typeof obj.iframeSandbox == "string") {
               ifr.setAttribute("sandbox", obj.iframeSandbox);
-            }
-            if (typeof obj.iframeAllow == "string") {
-              ifr.setAttribute("allow", obj.iframeAllow);
             }
 
             content.addEventListener("message", function msg(event) {
@@ -1165,8 +1123,7 @@ this.AntiTracking = {
     runInPrivateWindow,
     iframeSandbox,
     testInSubIFrame,
-    extraPrefs,
-    iframeAllow
+    extraPrefs
   ) {
     add_task(async function () {
       info(
@@ -1231,7 +1188,6 @@ this.AntiTracking = {
             popup: TEST_POPUP_PAGE,
             blockingCallback: blockingCallback.toString(),
             iframeSandbox,
-            iframeAllow,
           },
         ],
         async function (obj) {
@@ -1241,9 +1197,6 @@ this.AntiTracking = {
           });
           if (typeof obj.iframeSandbox == "string") {
             ifr.setAttribute("sandbox", obj.iframeSandbox);
-          }
-          if (typeof obj.iframeAllow == "string") {
-            ifr.setAttribute("allow", obj.iframeAllow);
           }
           content.document.body.appendChild(ifr);
           ifr.src = obj.page;
@@ -1365,7 +1318,6 @@ this.AntiTracking = {
             popup: TEST_POPUP_PAGE,
             nonBlockingCallback: nonBlockingCallback.toString(),
             iframeSandbox,
-            iframeAllow,
           },
         ],
         async function (obj) {
@@ -1375,9 +1327,6 @@ this.AntiTracking = {
           });
           if (typeof obj.iframeSandbox == "string") {
             ifr.setAttribute("sandbox", obj.iframeSandbox);
-          }
-          if (typeof obj.iframeAllow == "string") {
-            ifr.setAttribute("allow", obj.iframeAllow);
           }
           content.document.body.appendChild(ifr);
           ifr.src = obj.page;

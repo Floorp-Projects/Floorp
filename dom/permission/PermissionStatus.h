@@ -10,8 +10,6 @@
 #include "mozilla/dom/PermissionsBinding.h"
 #include "mozilla/dom/PermissionStatusBinding.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/MozPromise.h"
-#include "nsIPermission.h"
 
 namespace mozilla::dom {
 
@@ -21,11 +19,9 @@ class PermissionStatus : public DOMEventTargetHelper {
   friend class PermissionObserver;
 
  public:
-  using CreatePromise = MozPromise<RefPtr<PermissionStatus>, nsresult, true>;
-  using SimplePromise = MozPromise<nsresult, nsresult, true>;
-
-  static RefPtr<CreatePromise> Create(nsPIDOMWindowInner* aWindow,
-                                      PermissionName aName);
+  static already_AddRefed<PermissionStatus> Create(nsPIDOMWindowInner* aWindow,
+                                                   PermissionName aName,
+                                                   ErrorResult& aRv);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -38,7 +34,7 @@ class PermissionStatus : public DOMEventTargetHelper {
 
   PermissionName Name() const { return mName; }
 
-  RefPtr<SimplePromise> Init();
+  nsresult Init();
 
  protected:
   ~PermissionStatus();
@@ -58,26 +54,16 @@ class PermissionStatus : public DOMEventTargetHelper {
   virtual nsLiteralCString GetPermissionType();
 
  private:
-  virtual RefPtr<SimplePromise> UpdateState();
+  nsresult UpdateState();
 
-  // These functions should be called when an permission is updated which may
-  // change the state of this PermissionStatus. MaybeUpdatedBy accepts the
-  // permission object itself that is update. When the permission's key is not
-  // same-origin with this object's owner window, such as for secondary-keyed
-  // permissions like `3rdPartyFrameStorage^...`, MaybeUpdatedByNotifyOnly will
-  // be called with the updated window as an argument. MaybeUpdatedByNotifyOnly
-  // must be defined by PermissionStatus inheritors that are double-keyed.
-  virtual bool MaybeUpdatedBy(nsIPermission* aPermission) const;
-  virtual bool MaybeUpdatedByNotifyOnly(nsPIDOMWindowInner* aInnerWindow) const;
+  already_AddRefed<nsIPrincipal> GetPrincipal() const;
 
   void PermissionChanged();
 
   PermissionName mName;
+  PermissionState mState;
 
   RefPtr<PermissionObserver> mObserver;
-
- protected:
-  PermissionState mState;
 };
 
 }  // namespace mozilla::dom
