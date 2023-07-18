@@ -13,14 +13,16 @@ namespace mozilla::dom {
 
 class MidiPermissionStatus final : public PermissionStatus {
  public:
-  static RefPtr<CreatePromise> Create(nsPIDOMWindowInner* aWindow, bool aSysex);
+  static already_AddRefed<PermissionStatus> Create(nsPIDOMWindowInner* aWindow,
+                                                   bool aSysex,
+                                                   ErrorResult& aRv);
 
  private:
   ~MidiPermissionStatus() {}
 
   MidiPermissionStatus(nsPIDOMWindowInner* aWindow, bool aSysex);
 
-  nsLiteralCString GetPermissionType() override;
+  virtual nsLiteralCString GetPermissionType() override;
 
   bool mSysex;
 };

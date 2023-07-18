@@ -35,6 +35,8 @@ class PermissionObserver final : public nsIObserver,
   PermissionObserver();
   virtual ~PermissionObserver();
 
+  void Notify(PermissionName aName, nsIPrincipal& aPrincipal);
+
   nsTArray<PermissionStatus*> mSinks;
 };
 

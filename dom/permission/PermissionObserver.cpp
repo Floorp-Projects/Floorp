@@ -7,10 +7,8 @@
 #include "PermissionObserver.h"
 
 #include "mozilla/dom/PermissionStatus.h"
-#include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/Services.h"
 #include "mozilla/UniquePtr.h"
-#include "nsGlobalWindowInner.h"
 #include "nsIObserverService.h"
 #include "nsIPermission.h"
 #include "PermissionUtils.h"
@@ -48,11 +46,6 @@ already_AddRefed<PermissionObserver> PermissionObserver::GetInstance() {
       return nullptr;
     }
 
-    rv = obs->AddObserver(instance, "perm-changed-notify-only", true);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
-    }
-
     gInstance = instance;
   }
 
@@ -73,57 +66,47 @@ void PermissionObserver::RemoveSink(PermissionStatus* aSink) {
   mSinks.RemoveElement(aSink);
 }
 
+void PermissionObserver::Notify(PermissionName aName,
+                                nsIPrincipal& aPrincipal) {
+  for (auto* sink : mSinks) {
+    if (sink->mName != aName) {
+      continue;
+    }
+
+    nsCOMPtr<nsIPrincipal> sinkPrincipal = sink->GetPrincipal();
+    if (NS_WARN_IF(!sinkPrincipal) || !aPrincipal.Equals(sinkPrincipal)) {
+      continue;
+    }
+
+    sink->PermissionChanged();
+  }
+}
+
 NS_IMETHODIMP
 PermissionObserver::Observe(nsISupports* aSubject, const char* aTopic,
                             const char16_t* aData) {
-  MOZ_ASSERT(!strcmp(aTopic, "perm-changed") ||
-             !strcmp(aTopic, "perm-changed-notify-only"));
+  MOZ_ASSERT(!strcmp(aTopic, "perm-changed"));
 
   if (mSinks.IsEmpty()) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPermission> perm = nullptr;
-  nsCOMPtr<nsPIDOMWindowInner> innerWindow = nullptr;
-  nsAutoCString type;
-
-  if (!strcmp(aTopic, "perm-changed")) {
-    perm = do_QueryInterface(aSubject);
-    if (!perm) {
-      return NS_OK;
-    }
-    perm->GetType(type);
-  } else if (!strcmp(aTopic, "perm-changed-notify-only")) {
-    innerWindow = do_QueryInterface(aSubject);
-    if (!innerWindow) {
-      return NS_OK;
-    }
-    type = NS_ConvertUTF16toUTF8(aData);
+  nsCOMPtr<nsIPermission> perm = do_QueryInterface(aSubject);
+  if (!perm) {
+    return NS_OK;
   }
 
+  nsCOMPtr<nsIPrincipal> principal;
+  perm->GetPrincipal(getter_AddRefs(principal));
+  if (!principal) {
+    return NS_OK;
+  }
+
+  nsAutoCString type;
+  perm->GetType(type);
   Maybe<PermissionName> permission = TypeToPermissionName(type);
   if (permission) {
-    for (auto* sink : mSinks) {
-      if (sink->mName != permission.value()) {
-        continue;
-      }
-      // Check for permissions that are changed for this sink's principal
-      // via the "perm-changed" notification. These permissions affect
-      // the window the sink (PermissionStatus) is held in directly.
-      if (perm && sink->MaybeUpdatedBy(perm)) {
-        sink->PermissionChanged();
-      }
-      // Check for permissions that are changed for this sink's principal
-      // via the "perm-changed-notify-only" notification. These permissions
-      // affect the window the sink (PermissionStatus) is held in indirectly- if
-      // the window is same-party with the secondary key of a permission. For
-      // example, a "3rdPartyFrameStorage^https://example.com" permission would
-      // return true on these checks where sink is in a window that is same-site
-      // with https://example.com.
-      if (innerWindow && sink->MaybeUpdatedByNotifyOnly(innerWindow)) {
-        sink->PermissionChanged();
-      }
-    }
+    Notify(permission.value(), *principal);
   }
 
   return NS_OK;

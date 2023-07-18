@@ -1433,6 +1433,20 @@ bool ContentParent::ValidatePrincipal(
   return remoteTypeSiteOriginNoSuffix.Equals(siteOriginNoSuffix);
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvRemovePermission(
+    nsIPrincipal* aPrincipal, const nsACString& aPermissionType,
+    nsresult* aRv) {
+  if (!aPrincipal) {
+    return IPC_FAIL(this, "No principal");
+  }
+
+  if (!ValidatePrincipal(aPrincipal)) {
+    LogAndAssertFailedPrincipalValidationInfo(aPrincipal, __func__);
+  }
+  *aRv = Permissions::RemovePermission(aPrincipal, aPermissionType);
+  return IPC_OK();
+}
+
 /*static*/
 already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
     const TabContext& aContext, Element* aFrameElement,

@@ -37,7 +37,6 @@ static FeatureMap sSupportedFeatures[] = {
     {"web-share", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"gamepad", FeaturePolicyUtils::FeaturePolicyValue::eAll},
     {"speaker-selection", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
-    {"storage-access", FeaturePolicyUtils::FeaturePolicyValue::eAll},
 };
 
 /*

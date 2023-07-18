@@ -18,8 +18,7 @@ static const nsLiteralCString kPermissionTypes[] = {
     "persistent-storage"_ns,
     // "midi" is the only public permission but internally we have both "midi"
     // and "midi-sysex" (and yes, this is confusing).
-    "midi"_ns,
-    "storage-access"_ns
+    "midi"_ns
     // clang-format on
 };
 
@@ -38,12 +37,6 @@ Maybe<PermissionName> TypeToPermissionName(const nsACString& aType) {
   // name is "midi" so we have to special-case it here...
   if (aType.Equals("midi-sysex"_ns)) {
     return Some(PermissionName::Midi);
-  }
-
-  // "storage-access" permissions are also annoying and require a special case.
-  if (StringBeginsWith(aType, "3rdPartyStorage^"_ns) ||
-      StringBeginsWith(aType, "3rdPartyFrameStorage^"_ns)) {
-    return Some(PermissionName::Storage_access);
   }
 
   for (size_t i = 0; i < ArrayLength(kPermissionTypes); ++i) {
