@@ -20,6 +20,7 @@ import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -235,6 +236,22 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
             .assert(hasText("$numOfTabs selected"))
     }
 
+    /**
+     * Verifies a tab's media button matches [action] when there is only one tab with media.
+     */
+    fun verifyTabMediaControlButtonState(action: String) {
+        composeTestRule.tabMediaControlButton(action)
+            .assertExists()
+    }
+
+    /**
+     * Clicks a tab's media button when there is only one tab with media.
+     */
+    fun clickTabMediaControlButton(action: String) {
+        composeTestRule.tabMediaControlButton(action)
+            .performClick()
+    }
+
     class Transition(private val composeTestRule: HomeActivityComposeTestRule) {
 
         fun openNewTab(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
@@ -367,6 +384,13 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
 
             CollectionRobot().interact()
             return CollectionRobot.Transition()
+        }
+
+        fun clickShareAllTabsButton(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
+            composeTestRule.dropdownMenuItemShareAllTabs().performClick()
+
+            ShareOverlayRobot().interact()
+            return ShareOverlayRobot.Transition()
         }
     }
 }
@@ -515,3 +539,8 @@ private fun ComposeTestRule.multiSelectionCounter() = onNodeWithTag(TabsTrayTest
  * Obtains the Tabs Tray banner handle.
  */
 private fun ComposeTestRule.bannerHandle() = onNodeWithTag(TabsTrayTestTag.bannerHandle)
+
+/**
+ * Obtains the media control button with the given [action] as its content description.
+ */
+private fun ComposeTestRule.tabMediaControlButton(action: String) = onNodeWithContentDescription(action)
