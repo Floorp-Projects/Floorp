@@ -29,12 +29,13 @@ async function showDialog(dialogOptions) {
 }
 
 add_task(async function test_specialAction() {
+  const sandbox = sinon.createSandbox();
   let message = (await PanelTestProvider.getMessages()).find(
     m => m.id === "MULTISTAGE_SPOTLIGHT_MESSAGE"
   );
-  let dispatchStub = sinon.stub();
+  let dispatchStub = sandbox.stub();
   let browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
-  let specialActionStub = sinon.stub(SpecialMessageActions, "handleAction");
+  let specialActionStub = sandbox.stub(SpecialMessageActions, "handleAction");
 
   let win = await showDialog({ message, browser, dispatchStub });
   await waitForClick("button.primary", win);
@@ -51,7 +52,7 @@ add_task(async function test_specialAction() {
     "Should be called with button action"
   );
 
-  specialActionStub.restore();
+  sandbox.restore();
 });
 
 add_task(async function test_embedded_import() {

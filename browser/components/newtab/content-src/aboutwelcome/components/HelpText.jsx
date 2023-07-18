@@ -4,6 +4,7 @@
 
 import React from "react";
 import { Localized } from "./MSLocalized";
+import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
 const MS_STRING_PROP = "string_id";
 
 export const HelpText = props => {
@@ -20,6 +21,9 @@ export const HelpText = props => {
               data-l10n-name="help-img"
               className={`helptext-img ${props.position}`}
               src={props.hasImg.src}
+              loading={AboutWelcomeUtils.getLoadingStrategyFor(
+                props.hasImg.src
+              )}
               alt=""
             ></img>
           </p>
@@ -33,6 +37,7 @@ export const HelpText = props => {
           <img
             className={`helptext-img ${props.position} end`}
             src={props.hasImg.src}
+            loading={AboutWelcomeUtils.getLoadingStrategyFor(props.hasImg.src)}
             alt=""
           />
         </p>
