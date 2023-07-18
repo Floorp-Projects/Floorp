@@ -8,7 +8,7 @@
   url: "https://www.mozilla.org/%LOCALE%/{product}/{version}/releasenotes/"
 - type: show-url
   # yamllint disable-line rule:line-length
-  url: "https://www.mozilla.org/{product}/{version}/whatsnew/?oldversion=%OLD_VERSION%"
+  url: "https://www.mozilla.org/{product}/{version}/whatsnew/?oldversion=%OLD_VERSION%&utm_medium=firefox-desktop&utm_source=update&utm_campaign={version.major_number}"
   conditions:
       blob-types: [wnp]
       release-types: [release, release-rc]
@@ -19,7 +19,7 @@
       versions: ["<{version.major_number}.0"]
 - type: show-url
   # yamllint disable-line rule:line-length
-  url: "https://www.mozilla.org/%LOCALE%/{product}/{version.major_number}.0beta/whatsnew/?oldversion=%OLD_VERSION%"
+  url: "https://www.mozilla.org/%LOCALE%/{product}/{version.major_number}.0beta/whatsnew/?oldversion=%OLD_VERSION%&utm_medium=firefox-desktop&utm_source=update&utm_campaign={version.major_number}.0beta"
   conditions:
       blob-types: [wnp]
       release-types: [beta, release-rc]
@@ -73,7 +73,7 @@
           - zh-TW
 - type: show-url
   # yamllint disable-line rule:line-length
-  url: "https://www.mozilla.org/%LOCALE%/{product}/{version.major_number}.0a2/whatsnew/?oldversion=%OLD_VERSION%"
+  url: "https://www.mozilla.org/%LOCALE%/{product}/{version.major_number}.0a2/whatsnew/?oldversion=%OLD_VERSION%&utm_medium=firefox-desktop&utm_source=update&utm_campaign={version.major_number}.0a2"
   conditions:
       blob-types: [wnp]
       release-types: [beta]
