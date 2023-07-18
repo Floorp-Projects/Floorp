@@ -12,7 +12,9 @@
 <script type="text/javascript">
 "use strict";
 
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {FileUtils} = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
+);
 
 const PROMPTLESS_DOWNLOAD_PREF = "browser.download.useDownloadDir";
 
