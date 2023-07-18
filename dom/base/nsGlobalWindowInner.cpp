@@ -3297,14 +3297,6 @@ bool nsGlobalWindowInner::IsPrivilegedChromeWindow(JSContext*, JSObject* aObj) {
 }
 
 /* static */
-bool nsGlobalWindowInner::IsRequestIdleCallbackEnabled(JSContext* aCx,
-                                                       JSObject*) {
-  // The requestIdleCallback should always be enabled for system code.
-  return StaticPrefs::dom_requestIdleCallback_enabled() ||
-         nsContentUtils::IsSystemCaller(aCx);
-}
-
-/* static */
 bool nsGlobalWindowInner::DeviceSensorsEnabled(JSContext*, JSObject*) {
   return Preferences::GetBool("device.sensors.enabled");
 }

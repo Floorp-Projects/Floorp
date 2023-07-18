@@ -746,10 +746,9 @@ partial interface Window {
 Window includes WindowOrWorkerGlobalScope;
 
 partial interface Window {
-  [Throws, Func="nsGlobalWindowInner::IsRequestIdleCallbackEnabled"]
+  [Throws]
   unsigned long requestIdleCallback(IdleRequestCallback callback,
                                     optional IdleRequestOptions options = {});
-  [Func="nsGlobalWindowInner::IsRequestIdleCallbackEnabled"]
   undefined     cancelIdleCallback(unsigned long handle);
 };
 
