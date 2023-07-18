@@ -14,7 +14,9 @@
 
   <script type="text/javascript">
 
-  const { ContentTask } = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+  const { ContentTask } = ChromeUtils.importESModule(
+    "resource://testing-common/ContentTask.sys.mjs"
+  );
   ContentTask.setTestScope(window.arguments[0].wrappedJSObject);
 
   function expectUseGlobalHistory(id, expected) {

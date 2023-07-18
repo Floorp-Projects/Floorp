@@ -11,7 +11,9 @@
 <script>
 <![CDATA[
 
-const { ContentTask } = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+const { ContentTask } = ChromeUtils.importESModule(
+  "resource://testing-common/ContentTask.sys.mjs"
+);
 
 function dropOnRemoteBrowserAsync(browser, data, shouldExpectStateChange) {
   ContentTask.setTestScope(window); // Need this so is/isnot/ok are available inside the contenttask

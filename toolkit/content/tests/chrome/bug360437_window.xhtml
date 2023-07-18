@@ -19,7 +19,9 @@
 
   <script type="application/javascript"><![CDATA[
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-    const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+    const {ContentTask} = ChromeUtils.importESModule(
+      "resource://testing-common/ContentTask.sys.mjs"
+    );
     ContentTask.setTestScope(window.arguments[0]);
 
     var gFindBar = null;
