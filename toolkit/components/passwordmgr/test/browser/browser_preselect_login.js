@@ -190,7 +190,6 @@ add_task(async function test_new_login_url_has_correct_hash() {
     },
     async function (gBrowser) {
       await SpecialPowers.spawn(gBrowser, [], async () => {
-        const loginItem = content.document.querySelector("login-item");
         const loginList =
           content.document.querySelector("login-list").shadowRoot;
         const createLoginButton = loginList.querySelector(
@@ -200,8 +199,11 @@ add_task(async function test_new_login_url_has_correct_hash() {
         createLoginButton.click();
 
         await ContentTaskUtils.waitForCondition(
-          () => loginItem.dataset.isNewLogin,
-          "Wait for login item to enter new login mode"
+          () =>
+            ContentTaskUtils.is_visible(
+              loginList.querySelector("#new-login-list-item")
+            ),
+          "Wait for new login-list-item to become visible"
         );
 
         Assert.equal(
