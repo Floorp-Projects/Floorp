@@ -55,7 +55,7 @@ add_task(async function testClosedTabData() {
     "browser.sessionstore.max_tabs_undo",
     test_state.windows[0]._closedTabs.length
   );
-  await setWindowState(newWin, test_state);
+  await setWindowState(newWin, test_state, true);
 
   let closedTabs = SessionStore.getClosedTabDataForWindow(newWin);
 
