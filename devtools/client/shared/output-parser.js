@@ -372,9 +372,6 @@ class OutputParser {
     while (!done) {
       const token = tokenStream.nextToken();
       if (!token) {
-        if (options.expectFont && fontFamilyNameParts.length !== 0) {
-          this.#appendFontFamily(fontFamilyNameParts.join(""), options);
-        }
         break;
       }
 
@@ -614,6 +611,10 @@ class OutputParser {
         token.tokenType === "percentage" ||
         token.tokenType === "dimension";
       previousWasBang = token.tokenType === "symbol" && token.text === "!";
+    }
+
+    if (options.expectFont && fontFamilyNameParts.length !== 0) {
+      this.#appendFontFamily(fontFamilyNameParts.join(""), options);
     }
 
     let result = this.#toDOM();
