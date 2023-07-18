@@ -274,7 +274,7 @@ class SaveToPDFMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN a print request WHEN it fails unexpectedly THEN unknown failure telemetry is sent`() = runTestOnMain {
+    fun `GIVEN a print request WHEN it fails unexpectedly THEN unknown failure telemetry is sent AND a snackbar error is shown`() = runTestOnMain {
         val exceptionToThrow = RuntimeException("No Print Spooler")
         val middleware = SaveToPDFMiddleware(testContext)
         val mockEngineSession: EngineSession = mockk<EngineSession>().apply {
@@ -307,10 +307,19 @@ class SaveToPDFMiddlewareTest {
         assertEquals("unknown", reason)
         val source = response?.extra?.get("source")
         assertEquals("unknown", source)
+        verify {
+            appStore.dispatch(
+                AppAction.UpdateStandardSnackbarErrorAction(
+                    StandardSnackbarError(
+                        testContext.getString(R.string.unable_to_print_error),
+                    ),
+                ),
+            )
+        }
     }
 
     @Test
-    fun `GIVEN a print request WHEN it fails due to print exception THEN print exception failure telemetry is sent`() = runTestOnMain {
+    fun `GIVEN a print request WHEN it fails due to print exception THEN print exception failure telemetry is sent AND a snackbar error is shown`() = runTestOnMain {
         val exceptionToThrow = MockGeckoPrintException()
         val middleware = SaveToPDFMiddleware(testContext)
         val mockEngineSession: EngineSession = mockk<EngineSession>().apply {
@@ -341,6 +350,15 @@ class SaveToPDFMiddlewareTest {
         assertEquals("no_settings_service", reason)
         val source = response?.extra?.get("source")
         assertEquals("unknown", source)
+        verify {
+            appStore.dispatch(
+                AppAction.UpdateStandardSnackbarErrorAction(
+                    StandardSnackbarError(
+                        testContext.getString(R.string.unable_to_print_error),
+                    ),
+                ),
+            )
+        }
     }
 
     @Test

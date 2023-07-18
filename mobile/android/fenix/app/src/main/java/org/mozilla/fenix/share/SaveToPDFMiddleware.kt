@@ -5,8 +5,6 @@
 package org.mozilla.fenix.share
 
 import android.content.Context
-import android.widget.Toast
-import android.widget.Toast.LENGTH_LONG
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +21,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.StandardSnackbarError
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.ext.components
-import org.mozilla.gecko.util.ThreadUtils
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.GeckoPrintException.ERROR_NO_ACTIVITY_CONTEXT
 import org.mozilla.geckoview.GeckoSession.GeckoPrintException.ERROR_NO_ACTIVITY_CONTEXT_DELEGATE
@@ -78,11 +75,13 @@ class SaveToPDFMiddleware(
                 postTelemetryCompleted(ctx.state.findTab(action.tabId), isPrint = true)
             }
             is EngineAction.PrintContentExceptionAction -> {
-                // Bug 1840894 - will update this toast to a snackbar with new snackbar error component
-                ThreadUtils.runOnUiThread {
-                    Toast.makeText(context, R.string.unable_to_print_error, LENGTH_LONG).show()
-                }
-
+                context.components.appStore.dispatch(
+                    AppAction.UpdateStandardSnackbarErrorAction(
+                        StandardSnackbarError(
+                            context.getString(R.string.unable_to_print_error),
+                        ),
+                    ),
+                )
                 postTelemetryFailed(ctx.state.findTab(action.tabId), action.throwable, isPrint = true)
             }
             else -> {
