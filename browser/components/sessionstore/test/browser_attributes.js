@@ -18,7 +18,7 @@ add_task(async function test() {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:robots");
   await promiseBrowserLoaded(tab.linkedBrowser);
 
-  // Because there is debounce logic in ContentLinkHandler.jsm to reduce the
+  // Because there is debounce logic in FaviconLoader.sys.mjs to reduce the
   // favicon loads, we have to wait some time before checking that icon was
   // stored properly.
   await BrowserTestUtils.waitForCondition(

@@ -68,7 +68,7 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
 
   let expectedTabs = [];
   let tab = win.gBrowser.selectedTab;
-  // Because there is debounce logic in ContentLinkHandler.jsm to reduce the
+  // Because there is debounce logic in FaviconLoader.sys.mjs to reduce the
   // favicon loads, we have to wait some time before checking that icon was
   // stored properly. If that page doesn't have favicon links, let it timeout.
   try {

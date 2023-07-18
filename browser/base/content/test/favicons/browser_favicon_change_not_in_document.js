@@ -8,7 +8,7 @@ const TEST_URL = TEST_ROOT + "file_favicon_change_not_in_document.html";
  * This test tests a link element won't fire DOMLinkChanged/DOMLinkAdded unless
  * it is added to the DOM. See more details in bug 1083895.
  *
- * Note that there is debounce logic in ContentLinkHandler.jsm, adding a new
+ * Note that there is debounce logic in FaviconLoader.sys.mjs, adding a new
  * icon link after the icon parsing timeout will trigger a new icon extraction
  * cycle. Hence, there should be two favicons loads in this test as it appends
  * a new link to the DOM in the timeout callback defined in the test HTML page.
