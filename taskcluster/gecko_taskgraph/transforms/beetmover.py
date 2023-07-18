@@ -6,11 +6,10 @@ Transform the beetmover task into an actual task description.
 """
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.dependencies import get_primary_dependency
-from taskgraph.util.schema import Schema
 from taskgraph.util.treeherder import replace_group
 from voluptuous import Optional, Required
 
+from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
 from gecko_taskgraph.util.scriptworker import (
@@ -22,11 +21,10 @@ from gecko_taskgraph.util.scriptworker import (
 
 transforms = TransformSequence()
 
-beetmover_description_schema = Schema(
+beetmover_description_schema = schema.extend(
     {
-        # unique label to describe this beetmover task
-        Required("label"): str,
-        Required("dependencies"): task_description_schema["dependencies"],
+        # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
+        Optional("label"): str,
         # treeherder is allowed here to override any defaults we use for beetmover.  See
         # taskcluster/gecko_taskgraph/transforms/task.py for the schema details, and the
         # below transforms for defaults of various values.
@@ -36,17 +34,8 @@ beetmover_description_schema = Schema(
         Required("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
         Optional("attributes"): task_description_schema["attributes"],
-        Optional("job-from"): task_description_schema["job-from"],
     }
 )
-
-
-@transforms.add
-def remove_name(config, jobs):
-    for job in jobs:
-        if "name" in job:
-            del job["name"]
-        yield job
 
 
 transforms.add_validate(beetmover_description_schema)
@@ -55,9 +44,7 @@ transforms.add_validate(beetmover_description_schema)
 @transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
-        dep_job = get_primary_dependency(config, job)
-        assert dep_job
-
+        dep_job = job["primary-dependency"]
         attributes = dep_job.attributes
 
         treeherder = job.get("treeherder", {})

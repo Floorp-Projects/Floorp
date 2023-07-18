@@ -7,7 +7,6 @@ Transform the signing task into an actual task description.
 
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.dependencies import get_primary_dependency
 
 from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
 from gecko_taskgraph.util.signed_artifacts import (
@@ -23,7 +22,7 @@ def add_signed_routes(config, jobs):
     this corresponds to, with .signed inserted, for all gecko.v2 routes"""
 
     for job in jobs:
-        dep_job = get_primary_dependency(config, job)
+        dep_job = job["primary-dependency"]
         enable_signing_routes = job.pop("enable-signing-routes", True)
 
         job["routes"] = []
@@ -41,12 +40,10 @@ def add_signed_routes(config, jobs):
 @transforms.add
 def define_upstream_artifacts(config, jobs):
     for job in jobs:
-        dep_job = get_primary_dependency(config, job)
+        dep_job = job["primary-dependency"]
         upstream_artifact_task = job.pop("upstream-artifact-task", dep_job)
 
-        job.setdefault("attributes", {}).update(
-            copy_attributes_from_dependent_job(dep_job)
-        )
+        job["attributes"] = copy_attributes_from_dependent_job(dep_job)
 
         artifacts_specifications = generate_specifications_of_artifacts_to_sign(
             config,

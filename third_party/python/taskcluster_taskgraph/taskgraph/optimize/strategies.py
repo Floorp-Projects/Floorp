@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 @register_strategy("index-search")
 class IndexSearch(OptimizationStrategy):
+
     # A task with no dependencies remaining after optimization will be replaced
     # if artifacts exist for the corresponding index_paths.
     # Otherwise, we're in one of the following cases:
