@@ -221,7 +221,11 @@ void WebRenderLayerManager::TakeCompositionPayloads(
 bool WebRenderLayerManager::BeginTransactionWithTarget(gfxContext* aTarget,
                                                        const nsCString& aURL) {
   mTarget = aTarget;
-  return BeginTransaction(aURL);
+  bool retval = BeginTransaction(aURL);
+  if (!retval) {
+    mTarget = nullptr;
+  }
+  return retval;
 }
 
 bool WebRenderLayerManager::BeginTransaction(const nsCString& aURL) {
@@ -244,6 +248,8 @@ bool WebRenderLayerManager::BeginTransaction(const nsCString& aURL) {
 }
 
 bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
+  auto clearTarget = MakeScopeExit([&] { mTarget = nullptr; });
+
   // If we haven't sent a display list (since creation or since the last time we
   // sent ClearDisplayList to the parent) then we can't do an empty transaction
   // because the parent doesn't have a display list for us and we need to send a
@@ -330,6 +336,8 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     WrFiltersHolder&& aFilters, WebRenderBackgroundData* aBackground,
     const double aGeckoDLBuildTime) {
   AUTO_PROFILER_TRACING_MARKER("Paint", "WrDisplayList", GRAPHICS);
+
+  auto clearTarget = MakeScopeExit([&] { mTarget = nullptr; });
 
   // Since we don't do repeat transactions right now, just set the time
   mAnimationReadyTime = TimeStamp::Now();
@@ -501,6 +509,8 @@ IntRect ToOutsideIntRect(const gfxRect& aRect) {
 }
 
 void WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize) {
+  auto clearTarget = MakeScopeExit([&] { mTarget = nullptr; });
+
   if (!mTarget || !mTarget->GetDrawTarget() || aSize.IsEmpty()) {
     return;
   }

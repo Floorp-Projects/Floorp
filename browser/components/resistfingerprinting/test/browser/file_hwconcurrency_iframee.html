@@ -1,17 +1,29 @@
 <!DOCTYPE html>
 <meta charset="utf8">
 <script>
+var parent_window;
+let params = new URLSearchParams(document.location.search);
+if (params.get("mode") == "popup") {
+  parent_window = window.opener;
+} else {
+  parent_window = window.parent;
+}
+
 window.onload = async () => {
-  parent.postMessage("ready", "*");
+  parent_window.postMessage("ready", "*");
 }
 
 window.addEventListener("message", async function listener(event) {
   if (event.data[0] == "gimme") {
-  	let result = {
-      hardwareConcurrency : navigator.hardwareConcurrency
-    };
-    parent.postMessage(result, "*")
+    let result = give_result();
+    parent_window.postMessage(result, "*")
   }
 });
+
+function give_result() {
+  return {
+      hardwareConcurrency : navigator.hardwareConcurrency
+    };
+}
 </script>
 <output id="result"></output>

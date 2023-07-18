@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<script src="shared_test_funcs.js"></script>
+<script>
+var popup = undefined;
+function createPopup() {
+  if(popup === undefined) {
+    console.log("TKTK: Creating popup");
+    let s = `
+      window.addEventListener('message', async function listener(event) {
+        if (event.data[0] == 'popup_is_ready') {
+          window.opener.postMessage(["popup_ready"], "*");
+        } else if (event.data[0] == 'popup_request') {
+          let result = {
+            hardwareConcurrency : navigator.hardwareConcurrency
+          };
+          window.opener.postMessage(['popup_response', result], '*');
+          window.close();
+        }
+      });
+      setInterval(function() {
+        if(!window.opener || window.opener.closed) {
+          window.close();
+        }
+      }, 50);`;
+
+    popup = window.open("about:blank", "");
+    popup.eval(s);
+  } else {
+    console.log("TKTK: popup already exists");
+  }
+}
+window.addEventListener("load", createPopup);
+console.log("TKTK: Adding initial load");
+
+async function runTheTest(iframe_domain, cross_origin_domain, mode) {
+  await new Promise(r => setTimeout(r, 2000));
+  console.log("TKTK: runTheTest() popup =", (popup === undefined ? "undefined" : "something"));
+   if (document.readyState !== 'complete') {
+      console.log("TKTK: !== complete");
+      createPopup();
+  } else if(popup === undefined) {
+      console.log("TKTK: popup is undefined");
+      createPopup();
+  }
+  console.log("TKTK: now popup =", (popup === undefined ? "undefined" : "something"));
+  popup.postMessage(["popup_is_ready", cross_origin_domain], "*");
+  await waitForMessage("popup_ready", `*`);
+
+  const promiseForRFPTest = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      resolve(event.data[1]);
+    }, { once: true });
+  });
+
+  popup.postMessage(["popup_request", cross_origin_domain], "*");
+  var result = await promiseForRFPTest;
+
+  popup.close();
+
+  return result;
+}
+
+</script>
+<output id="result"></output>

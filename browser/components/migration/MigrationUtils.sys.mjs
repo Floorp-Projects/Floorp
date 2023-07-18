@@ -267,6 +267,9 @@ class MigrationUtils {
             console.error(ex);
           }
           previousExceptionMessage = ex.message;
+          if (ex.name == "NS_ERROR_FILE_CORRUPTED") {
+            break;
+          }
         } finally {
           try {
             if (didOpen) {

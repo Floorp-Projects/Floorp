@@ -79,6 +79,22 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
     mStoredObjects.insert(aObject);
   }
 
+  /**
+   * This is a combination of HasStoredObject and AddStoredObject, so that we
+   * only have to call ProcessPendingDeletions once, which involves locking.
+   * @param aObject the object to store if not already stored
+   * @return true if the object was not already stored, false if it was
+   */
+  bool TryAddStoredObject(const ReferencePtr aObject) {
+    ProcessPendingDeletions();
+    if (mStoredObjects.find(aObject) != mStoredObjects.end()) {
+      return false;
+    }
+
+    mStoredObjects.insert(aObject);
+    return true;
+  }
+
   void AddPendingDeletion(std::function<void()>&& aPendingDeletion) {
     auto lockedPendingDeletions = mPendingDeletions.Lock();
     lockedPendingDeletions->emplace_back(std::move(aPendingDeletion));
@@ -120,9 +136,13 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
     mStoredSurfaces.erase(aSurface);
   }
 
+#if defined(DEBUG)
+  // Only used within debug assertions.
   bool HasStoredObject(const ReferencePtr aObject) {
+    ProcessPendingDeletions();
     return mStoredObjects.find(aObject) != mStoredObjects.end();
   }
+#endif
 
   void AddStoredFontData(const uint64_t aFontDataKey) {
     mStoredFontData.insert(aFontDataKey);

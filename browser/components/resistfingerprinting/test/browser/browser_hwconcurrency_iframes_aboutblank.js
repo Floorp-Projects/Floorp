@@ -4,6 +4,8 @@
  * Covers the following cases:
  *  - RFP is disabled entirely
  *  - RFP is enabled entirely
+ *  - FPP is enabled entirely
+
  *
  *  - (A) RFP is exempted on the framer and framee and (if needed) on another cross-origin domain
  *  - (B) RFP is exempted on the framer and framee but is not on another (if needed) cross-origin domain
@@ -57,6 +59,9 @@ add_task(defaultsTest.bind(null, uri, testHWConcurrency, expectedResults));
 
 expectedResults = structuredClone(allSpoofed);
 add_task(simpleRFPTest.bind(null, uri, testHWConcurrency, expectedResults));
+
+expectedResults = structuredClone(allSpoofed);
+add_task(simpleFPPTest.bind(null, uri, testHWConcurrency, expectedResults));
 
 // (A) RFP is exempted on the framer and framee and (if needed) on another cross-origin domain
 expectedResults = structuredClone(allNotSpoofed);

@@ -10,6 +10,8 @@
 #include "prenv.h"
 
 #include "IMContextWrapper.h"
+
+#include "GRefPtr.h"
 #include "nsGtkKeyUtils.h"
 #include "nsWindow.h"
 #include "mozilla/AutoRestore.h"
@@ -543,6 +545,8 @@ void IMContextWrapper::Init() {
 void IMContextWrapper::Shutdown() { SelectionStyleProvider::Shutdown(); }
 
 IMContextWrapper::~IMContextWrapper() {
+  MOZ_ASSERT(!mContext);
+  MOZ_ASSERT(!mComposingContext);
   if (this == sLastFocusedContext) {
     sLastFocusedContext = nullptr;
   }
@@ -645,7 +649,7 @@ void IMContextWrapper::OnDestroyWindow(nsWindow* aWindow) {
 
   /**
    * NOTE:
-   *   The given window is the owner of this, so, we must release the
+   *   The given window is the owner of this, so, we must disconnect from the
    *   contexts now.  But that might be referred from other nsWindows
    *   (they are children of this.  But we don't know why there are the
    *   cases).  So, we need to clear the pointers that refers to contexts
@@ -654,12 +658,14 @@ void IMContextWrapper::OnDestroyWindow(nsWindow* aWindow) {
   if (mContext) {
     PrepareToDestroyContext(mContext);
     gtk_im_context_set_client_window(mContext, nullptr);
+    g_signal_handlers_disconnect_by_data(mContext, this);
     g_object_unref(mContext);
     mContext = nullptr;
   }
 
   if (mSimpleContext) {
     gtk_im_context_set_client_window(mSimpleContext, nullptr);
+    g_signal_handlers_disconnect_by_data(mSimpleContext, this);
     g_object_unref(mSimpleContext);
     mSimpleContext = nullptr;
   }
@@ -1724,7 +1730,17 @@ void IMContextWrapper::OnEndCompositionNative(GtkIMContext* aContext) {
 /* static */
 void IMContextWrapper::OnChangeCompositionCallback(GtkIMContext* aContext,
                                                    IMContextWrapper* aModule) {
-  aModule->OnChangeCompositionNative(aContext);
+  RefPtr module = aModule;
+  module->OnChangeCompositionNative(aContext);
+
+  if (module->IsDestroyed()) {
+    // A strong reference is already held during "preedit-changed" emission,
+    // but _ibus_context_destroy_cb() in ibus 1.5.28 and
+    // _fcitx_im_context_close_im_cb() in fcitx 4.2.9.9 want their
+    // GtkIMContexts to live a little longer.  See bug 1824634.
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction(__func__, [context = RefPtr{aContext}]() {}));
+  }
 }
 
 void IMContextWrapper::OnChangeCompositionNative(GtkIMContext* aContext) {

@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1689216551728,
+      "derHash": "BI45u7axXvg1JfFjGSzqDfIdP/q6+rfGOQn7FVPuSWY=",
+      "subject": "CN=DigiCert TLS RSA4096 Root G5,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "ME0xCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjElMCMGA1UEAxMcRGlnaUNlcnQgVExTIFJTQTQwOTYgUm9vdCBHNQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "848ebe136181541e5beff9a01c3d3daf731035aa92fea51a5187e18a79301512",
+        "size": 1943,
+        "filename": "ape1HIIZ6T5d7GS61YBs3rD4NVvkfnVwELcCRW4Bqv0=.pem",
+        "location": "security-state-staging/intermediates/3ca9a022-a475-4980-bbd9-c30239c7dceb.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ape1HIIZ6T5d7GS61YBs3rD4NVvkfnVwELcCRW4Bqv0=",
+      "crlite_enrolled": false,
+      "id": "378b3536-a4c0-47ee-9864-eee566deb701",
+      "last_modified": 1689217066476
+    },
+    {
       "schema": 1687877276036,
       "derHash": "wKn7Ql0O3rxyvGxHrT06K2gkXtHVmliDvxnOn4xN7R8=",
       "subject": "CN=Actalis DV Server ACME CA G1,O=Actalis S.p.A.,L=Ponte San Pietro,ST=Bergamo,C=IT",
@@ -27577,5 +27595,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1688741823367
+  "timestamp": 1689217066476
 }

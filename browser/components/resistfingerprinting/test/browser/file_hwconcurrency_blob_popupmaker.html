@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<script src="shared_test_funcs.js"></script>
+<script type="text/javascript">
+var popup;
+async function runTheTest(iframe_domain, cross_origin_domain, mode) {
+  let s = `<html><script>
+    console.log("TKTK: Loaded popup");
+    function give_result() {
+      console.log("TKTK: popup: give_result()");
+      return {
+          hardwareConcurrency : navigator.hardwareConcurrency
+        };
+    }
+    window.addEventListener('load', async function listener(event) {
+      console.log("TKTK: popup: loaded");
+        window.opener.postMessage(["popup_ready"], "*");
+    });
+    window.addEventListener('message', async function listener(event) {
+        console.log("TKTK: popup: message");
+        if (event.data[0] == 'popup_request') {
+          console.log("TKTK: popup: popup_request");
+          let result = give_result();
+          window.opener.postMessage(['popup_response', result], '*');
+          window.close();
+        }
+    });`;
+  // eslint-disable-next-line
+  s += `</` + `script></html>`;
+
+  let params = new URLSearchParams(document.location.search);
+  let options = "";
+  if (params.get("submode") == "noopener") {
+    options = "noopener";
+  }
+
+  let b = new Blob([s], { type: "text/html" });
+  let url = URL.createObjectURL(b);
+  popup = window.open(url, "", options);
+
+  if (params.get("submode") == "noopener") {
+    return {};
+  }
+
+  console.log("TKTK: popup created");
+  await waitForMessage("popup_ready", `*`);
+  console.log("TKTK: got ready message");
+
+  const promiseForRFPTest = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      console.log("TKTK: got response message");
+      resolve(event.data[1]);
+    }, { once: true });
+  });
+
+  popup.postMessage(["popup_request", cross_origin_domain], "*");
+  var result = await promiseForRFPTest;
+
+  popup.close();
+  console.log("TKTK: closed popup");
+
+  return result;
+}
+</script>
+<body>
+<output id="result"></output>
+</body>

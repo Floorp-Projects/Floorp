@@ -22,9 +22,11 @@ export function addUtmParams(url, utmTerm) {
   if (typeof returnUrl === "string") {
     returnUrl = new URL(url);
   }
-  Object.keys(BASE_PARAMS).forEach(key => {
-    returnUrl.searchParams.append(key, BASE_PARAMS[key]);
-  });
+  for (let [key, value] of Object.entries(BASE_PARAMS)) {
+    if (!returnUrl.searchParams.has(key)) {
+      returnUrl.searchParams.append(key, value);
+    }
+  }
   returnUrl.searchParams.append("utm_term", utmTerm);
   return returnUrl;
 }

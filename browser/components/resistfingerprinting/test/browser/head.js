@@ -4,6 +4,11 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  ContentBlockingAllowList:
+    "resource://gre/modules/ContentBlockingAllowList.sys.mjs",
+});
+
 const TEST_PATH =
   "http://example.net/browser/browser/" +
   "components/resistfingerprinting/test/browser/";
@@ -644,27 +649,85 @@ const IFRAME_DOMAIN = "example.org";
 const CROSS_ORIGIN_DOMAIN = "example.net";
 
 async function runActualTest(uri, testFunction, expectedResults, extraData) {
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: uri,
-    },
-    async function (browser) {
-      let result = await SpecialPowers.spawn(
-        browser,
-        [IFRAME_DOMAIN, CROSS_ORIGIN_DOMAIN, extraData],
-        async function (iframe_domain_, cross_origin_domain_, extraData_) {
-          return content.wrappedJSObject.runTheTest(
-            iframe_domain_,
-            cross_origin_domain_,
-            extraData_
-          );
-        }
-      );
+  let browserWin = gBrowser;
+  let openedWin = null;
 
-      testFunction(result, expectedResults, extraData);
+  if ("private_window" in extraData) {
+    openedWin = await BrowserTestUtils.openNewBrowserWindow({
+      private: true,
+    });
+    browserWin = openedWin.gBrowser;
+  }
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(browserWin, uri);
+
+  if ("etp_reload" in extraData) {
+    ContentBlockingAllowList.add(tab.linkedBrowser);
+    await BrowserTestUtils.reloadTab(tab);
+  }
+
+  /*
+   * We expect that `runTheTest` is going to be able to communicate with the iframe
+   * or tab that it opens, but if it cannot (because we are using noopener), we kind
+   * of hack around and get the data directly.
+   */
+  if ("noopener" in extraData) {
+    var popupTabPromise = BrowserTestUtils.waitForNewTab(
+      browserWin,
+      extraData.await_uri
+    );
+  }
+
+  // In SpecialPowers.spawn, extraData goes through a structuredClone, which cannot clone
+  // functions. await_uri is sometimes a function.  This filters out keys that are used by
+  // this function (runActualTest) and not by runTheTest or testFunction. It avoids the
+  // cloning issue, and avoids polluting the object in those called functions.
+  let filterExtraData = function (x) {
+    let banned_keys = ["private_window", "etp_reload", "noopener", "await_uri"];
+    return Object.fromEntries(
+      Object.entries(x).filter(([k, v]) => !banned_keys.includes(k))
+    );
+  };
+
+  let result = await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [IFRAME_DOMAIN, CROSS_ORIGIN_DOMAIN, filterExtraData(extraData)],
+    async function (iframe_domain_, cross_origin_domain_, extraData_) {
+      return content.wrappedJSObject.runTheTest(
+        iframe_domain_,
+        cross_origin_domain_,
+        extraData_
+      );
     }
   );
+
+  if ("noopener" in extraData) {
+    await popupTabPromise;
+    if (Services.appinfo.OS === "WINNT") {
+      await new Promise(r => setTimeout(r, 1000));
+    }
+
+    let popup_tab = browserWin.tabs[browserWin.tabs.length - 1];
+    result = await SpecialPowers.spawn(
+      popup_tab.linkedBrowser,
+      [],
+      async function () {
+        let r = content.wrappedJSObject.give_result();
+        return r;
+      }
+    );
+    BrowserTestUtils.removeTab(popup_tab);
+  }
+
+  testFunction(result, expectedResults, extraData);
+
+  if ("etp_reload" in extraData) {
+    ContentBlockingAllowList.remove(tab.linkedBrowser);
+  }
+  BrowserTestUtils.removeTab(tab);
+  if ("private_window" in extraData) {
+    await BrowserTestUtils.closeWindow(openedWin);
+  }
 }
 
 async function defaultsTest(
@@ -677,7 +740,7 @@ async function defaultsTest(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "default";
+  extraData.testDesc = extraData.testDesc || "default";
   expectedResults.shouldRFPApply = false;
   if (extraPrefs != undefined) {
     await SpecialPowers.pushPrefEnv({
@@ -700,10 +763,83 @@ async function simpleRFPTest(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "simple RFP enabled";
+  extraData.testDesc = extraData.testDesc || "simple RFP enabled";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.resistFingerprinting", true]].concat(extraPrefs || []),
+  });
+
+  await runActualTest(uri, testFunction, expectedResults, extraData);
+
+  await SpecialPowers.popPrefEnv();
+}
+
+async function simplePBMRFPTest(
+  uri,
+  testFunction,
+  expectedResults,
+  extraData,
+  extraPrefs
+) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.private_window = true;
+  extraData.testDesc = extraData.testDesc || "simple RFP in PBM enabled";
+  expectedResults.shouldRFPApply = true;
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.resistFingerprinting.pbmode", true]].concat(
+      extraPrefs || []
+    ),
+  });
+
+  await runActualTest(uri, testFunction, expectedResults, extraData);
+
+  await SpecialPowers.popPrefEnv();
+}
+
+async function simpleFPPTest(
+  uri,
+  testFunction,
+  expectedResults,
+  extraData,
+  extraPrefs
+) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.testDesc = extraData.testDesc || "simple FPP enabled";
+  expectedResults.shouldRFPApply = true;
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.fingerprintingProtection", true],
+      ["privacy.fingerprintingProtection.overrides", "+NavigatorHWConcurrency"],
+    ].concat(extraPrefs || []),
+  });
+
+  await runActualTest(uri, testFunction, expectedResults, extraData);
+
+  await SpecialPowers.popPrefEnv();
+}
+
+async function simplePBMFPPTest(
+  uri,
+  testFunction,
+  expectedResults,
+  extraData,
+  extraPrefs
+) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.private_window = true;
+  extraData.testDesc = extraData.testDesc || "simple FPP in PBM enabled";
+  expectedResults.shouldRFPApply = true;
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.fingerprintingProtection.pbmode", true],
+      ["privacy.fingerprintingProtection.overrides", "+HardwareConcurrency"],
+    ].concat(extraPrefs || []),
   });
 
   await runActualTest(uri, testFunction, expectedResults, extraData);
@@ -722,7 +858,7 @@ async function testA(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (A)";
+  extraData.testDesc = extraData.testDesc || "test (A)";
   expectedResults.shouldRFPApply = false;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -750,7 +886,7 @@ async function testB(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (B)";
+  extraData.testDesc = extraData.testDesc || "test (B)";
   expectedResults.shouldRFPApply = false;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -778,7 +914,7 @@ async function testC(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (C)";
+  extraData.testDesc = extraData.testDesc || "test (C)";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -806,7 +942,7 @@ async function testD(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (D)";
+  extraData.testDesc = extraData.testDesc || "test (D)";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -831,7 +967,7 @@ async function testE(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (E)";
+  extraData.testDesc = extraData.testDesc || "test (E)";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -859,7 +995,7 @@ async function testF(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (F)";
+  extraData.testDesc = extraData.testDesc || "test (F)";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -884,7 +1020,7 @@ async function testG(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (G)";
+  extraData.testDesc = extraData.testDesc || "test (G)";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -912,7 +1048,7 @@ async function testH(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (H)";
+  extraData.testDesc = extraData.testDesc || "test (H)";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [

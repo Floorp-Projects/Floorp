@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<script src="shared_test_funcs.js"></script>
+<script type="text/javascript">
+var popup;
+async function runTheTest(iframe_domain, cross_origin_domain, mode) {
+  let s = `<!DOCTYPE html><html><script>
+    function give_result() {
+      return {
+          hardwareConcurrency : navigator.hardwareConcurrency
+        };
+    }
+    window.addEventListener('load', async function listener(event) {
+        window.opener.postMessage(["popup_ready"], "*");
+    });
+    window.addEventListener('message', async function listener(event) {
+      if (event.data[0] == 'popup_is_ready') {
+        window.opener.postMessage(["popup_ready"], "*");
+      } else if (event.data[0] == 'popup_request') {
+        let result = give_result();
+        window.opener.postMessage(['popup_response', result], '*');
+      }
+    });`;
+  // eslint-disable-next-line
+  s += `</` + `script></html>`;
+
+  let params = new URLSearchParams(document.location.search);
+  let options = "";
+  if (params.get("submode") == "noopener") {
+    options = "noopener";
+  }
+
+  let url = "data:text/html;charset=utf-8," + s;
+  popup = window.open(url, "", options);
+
+  if (params.get("submode") == "noopener") {
+    return {};
+  }
+
+  await waitForMessage("popup_ready", `*`);
+
+  const promiseForRFPTest = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      resolve(event.data[1]);
+    }, { once: true });
+  });
+
+  popup.postMessage(["popup_request", cross_origin_domain], "*");
+  var result = await promiseForRFPTest;
+
+  popup.close();
+
+  return result;
+}
+</script>
+<body>
+<output id="result"></output>
+</body>
