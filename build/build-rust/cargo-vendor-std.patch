@@ -9,7 +9,7 @@ Most of these changes just add/edit tests for the functionality. Only the
 change to src/cargo/core/compiler/standard_lib.rs is important.
 
 diff --git a/src/cargo/core/compiler/standard_lib.rs b/src/cargo/core/compiler/standard_lib.rs
-index e0baebd51..547b84147 100644
+index c456c58d5..333389bc8 100644
 --- a/src/cargo/core/compiler/standard_lib.rs
 +++ b/src/cargo/core/compiler/standard_lib.rs
 @@ -11,6 +11,7 @@ use crate::ops::{self, Packages};
@@ -20,7 +20,7 @@ index e0baebd51..547b84147 100644
  use std::path::PathBuf;
  
  use super::BuildConfig;
-@@ -74,27 +75,45 @@ pub fn resolve_std<'cfg>(
+@@ -73,27 +74,45 @@ pub fn resolve_std<'cfg>(
      }
  
      let src_path = detect_sysroot_src_path(target_data)?;
@@ -41,9 +41,9 @@ index e0baebd51..547b84147 100644
 +    let special_std_prefix = "rustc-std-workspace-";
 +    let libs_path = src_path.join(libs_prefix);
 +
-+    // Crates in rust-src to build. libtest is in some sense the "root" package
++    // Crates in rust-src to build. libsysroot is in some sense the "root" package
 +    // of std, as nothing else depends on it, so it must be explicitly added.
-+    let mut members = vec![format!("{}test", libs_prefix)];
++    let mut members = vec![format!("{}sysroot", libs_prefix)];
 +
 +    // If rust-src contains a "vendor" directory, then patch in all the crates it contains.
 +    let vendor_path = src_path.join("vendor");
@@ -77,23 +77,20 @@ index e0baebd51..547b84147 100644
 -        String::from("library/std"),
 -        String::from("library/core"),
 -        String::from("library/alloc"),
--        String::from("library/test"),
+-        String::from("library/sysroot"),
 -    ];
      let ws_config = crate::core::WorkspaceConfig::Root(crate::core::WorkspaceRootConfig::new(
          &src_path,
          &Some(members),
 diff --git a/tests/testsuite/mock-std/library/test/Cargo.toml b/tests/testsuite/mock-std/library/test/Cargo.toml
-index 299db7bfd..eb81bbf5e 100644
+index b9f51eda7..fed5f3973 100644
 --- a/tests/testsuite/mock-std/library/test/Cargo.toml
 +++ b/tests/testsuite/mock-std/library/test/Cargo.toml
-@@ -10,6 +10,7 @@ std = { path = "../std" }
+@@ -9,3 +9,4 @@ std = { path = "../std" }
  panic_unwind = { path = "../panic_unwind" }
  compiler_builtins = { path = "../compiler_builtins" }
  registry-dep-using-std = { version = "*", features = ['mockbuild'] }
 +registry-dep-only-used-by-test = { version = "*" }
- 
- [features]
- panic-unwind = []
 diff --git a/tests/testsuite/mock-std/library/test/src/lib.rs b/tests/testsuite/mock-std/library/test/src/lib.rs
 index a112855f5..224b89bb2 100644
 --- a/tests/testsuite/mock-std/library/test/src/lib.rs
