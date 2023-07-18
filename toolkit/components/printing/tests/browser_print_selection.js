@@ -78,7 +78,7 @@ add_task(async function print_selection_parent_process() {
   );
 
   await BrowserTestUtils.withNewTab("about:support", async function (browser) {
-    ok(!browser.isRemote, "Page loaded in parent process");
+    ok(!browser.isRemoteBrowser, "Page loaded in parent process");
     let selectedText = await SpecialPowers.spawn(
       browser.browsingContext,
       [],
