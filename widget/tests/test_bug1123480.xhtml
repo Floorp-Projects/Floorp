@@ -97,7 +97,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
 
     // Repeat procedure of plain text selection with private browsing
     // disabled and enabled
-    const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+    const {PrivateBrowsingUtils} = ChromeUtils.importESModule(
+      "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
+    );
     for (let private of [false, true]) {
       var win = window.browsingContext.topChromeWindow.open("about:blank", "_blank", "chrome, width=500, height=200" + (private ? ", private" : ""));
       ok(win, private ? "should open private window" : "should open non-private window");
