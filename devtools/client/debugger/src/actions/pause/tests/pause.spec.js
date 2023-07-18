@@ -264,11 +264,10 @@ describe("pause", () => {
           location: originalLocation,
           originalDisplayName: "fooBar",
           originalVariables: undefined,
-          scope: { bindings: { arguments: [], variables: {} } },
-          source: null,
           state: undefined,
           this: undefined,
           thread: "FakeThread",
+          type: undefined,
         },
         {
           asyncCause: undefined,
@@ -281,11 +280,10 @@ describe("pause", () => {
           location: originalLocation2,
           originalDisplayName: "barZoo",
           originalVariables: undefined,
-          scope: { bindings: { arguments: [], variables: {} } },
-          source: null,
           state: undefined,
           this: undefined,
           thread: "FakeThread",
+          type: undefined,
         },
       ]);
     });
