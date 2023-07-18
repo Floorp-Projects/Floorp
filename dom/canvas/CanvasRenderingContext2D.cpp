@@ -465,8 +465,12 @@ class AdjustedTargetForFilter {
 
     const gfx::FilterDescription& filter = mCtx->CurrentState().filter;
     MOZ_RELEASE_ASSERT(!filter.mPrimitives.IsEmpty());
-    if (filter.mPrimitives.LastElement().IsTainted() && mCtx->mCanvasElement) {
-      mCtx->mCanvasElement->SetWriteOnly();
+    if (filter.mPrimitives.LastElement().IsTainted()) {
+      if (mCtx->mCanvasElement) {
+        mCtx->mCanvasElement->SetWriteOnly();
+      } else if (mCtx->mOffscreenCanvas) {
+        mCtx->mOffscreenCanvas->SetWriteOnly();
+      }
     }
   }
 
@@ -5795,9 +5799,10 @@ already_AddRefed<ImageData> CanvasRenderingContext2D::GetImageData(
 
   // Check only if we have a canvas element; if we were created with a docshell,
   // then it's special internal use.
-  // FIXME(aosmond): OffscreenCanvas security check??!
   if (IsWriteOnly() ||
-      (mCanvasElement && !mCanvasElement->CallerCanRead(aCx))) {
+      (mCanvasElement && !mCanvasElement->CallerCanRead(aSubjectPrincipal)) ||
+      (mOffscreenCanvas &&
+       !mOffscreenCanvas->CallerCanRead(aSubjectPrincipal))) {
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
@@ -6317,6 +6322,8 @@ void CanvasRenderingContext2D::SetWriteOnly() {
   mWriteOnly = true;
   if (mCanvasElement) {
     mCanvasElement->SetWriteOnly();
+  } else if (mOffscreenCanvas) {
+    mOffscreenCanvas->SetWriteOnly();
   }
 }
 
