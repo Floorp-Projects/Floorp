@@ -48,8 +48,7 @@ describe("PreviewFunction", () => {
     it("should be be set to userDisplayName if defined", () => {
       const item = {
         name: "",
-        userDisplayName: "chuck",
-        displayName: "norris",
+        displayName: "chuck",
       };
       const returnedSpan = render({ func: item });
       expect(returnedSpan.children().first().first().text()).toEqual("chuck");
