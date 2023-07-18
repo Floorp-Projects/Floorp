@@ -6,16 +6,21 @@ Transform the beetmover task into an actual task description.
 """
 
 import logging
+from typing import List
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.dependencies import get_dependencies, get_primary_dependency
+from taskgraph.util.schema import Schema
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.treeherder import inherit_treeherder_from_dep, replace_group
 from voluptuous import Optional, Required
 
-from gecko_taskgraph.loader.multi_dep import schema
 from gecko_taskgraph.transforms.beetmover import craft_release_properties
 from gecko_taskgraph.transforms.task import task_description_schema
-from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
+from gecko_taskgraph.util.attributes import (
+    copy_attributes_from_dependent_job,
+    sorted_unique_list,
+)
 from gecko_taskgraph.util.partials import (
     get_balrog_platform_name,
     get_partials_artifacts_from_params,
@@ -32,10 +37,11 @@ from gecko_taskgraph.util.scriptworker import (
 logger = logging.getLogger(__name__)
 
 
-beetmover_description_schema = schema.extend(
+beetmover_description_schema = Schema(
     {
         # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
         Required("label"): str,
+        Required("dependencies"): task_description_schema["dependencies"],
         # treeherder is allowed here to override any defaults we use for beetmover.  See
         # taskcluster/gecko_taskgraph/transforms/task.py for the schema details, and the
         # below transforms for defaults of various values.
@@ -44,50 +50,70 @@ beetmover_description_schema = schema.extend(
         # locale is passed only for l10n beetmoving
         Optional("locale"): str,
         Required("shipping-phase"): task_description_schema["shipping-phase"],
-        # Optional until we fix asan (run_on_projects?)
-        Optional("shipping-product"): task_description_schema["shipping-product"],
+        Optional("job-from"): task_description_schema["job-from"],
     }
 )
 
 transforms = TransformSequence()
+
+
+@transforms.add
+def remove_name(config, jobs):
+    for job in jobs:
+        if "name" in job:
+            del job["name"]
+        yield job
+
+
 transforms.add_validate(beetmover_description_schema)
 
 
-def get_task_by_suffix(tasks, suffix):
+def get_label_by_suffix(labels: List, suffix: str):
     """
-    Given tasks<dict>, returns the key to the task with provided suffix<str>
-    Raises exception if more than one task is found
+    Given list of labels, returns the label with provided suffix
+    Raises exception if more than one label is found.
 
     Args:
-        tasks (Dict): Map of labels to tasks
-        suffix (str): Suffix for the desired task
+        labels (List): List of labels
+        suffix (str): Suffix for the desired label
 
     Returns
-        str: The key to the desired task
+        str: The desired label
     """
-    labels = []
-    for label in tasks.keys():
-        if label.endswith(suffix):
-            labels.append(label)
+    labels = [l for l in labels if l.endswith(suffix)]
     if len(labels) > 1:
         raise Exception(
-            f"There should only be a single task with suffix: {suffix} - found {len(labels)}"
+            f"There should only be a single label with suffix: {suffix} - found {len(labels)}"
         )
     return labels[0]
 
 
 @transforms.add
+def gather_required_signoffs(config, jobs):
+    for job in jobs:
+        job.setdefault("attributes", {})["required_signoffs"] = sorted_unique_list(
+            *(
+                dep.attributes.get("required_signoffs", [])
+                for dep in get_dependencies(config, job)
+            )
+        )
+        yield job
+
+
+@transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
-        dep_job = job["primary-dependency"]
+        dep_job = get_primary_dependency(config, job)
+        assert dep_job
+
         attributes = dep_job.attributes
 
         treeherder = inherit_treeherder_from_dep(job, dep_job)
         upstream_symbol = dep_job.task["extra"]["treeherder"]["symbol"]
-        if "build" in job["dependent-tasks"]:
-            upstream_symbol = job["dependent-tasks"]["build"].task["extra"][
-                "treeherder"
-            ]["symbol"]
+        if "build" in job["dependencies"]:
+            build_label = job["dependencies"]["build"]
+            build_dep = config.kind_dependencies_tasks[build_label]
+            upstream_symbol = build_dep.task["extra"]["treeherder"]["symbol"]
         treeherder.setdefault("symbol", replace_group(upstream_symbol, "BMR"))
         label = job["label"]
         description = (
@@ -99,7 +125,9 @@ def make_task_description(config, jobs):
             )
         )
 
-        upstream_deps = job["dependent-tasks"]
+        upstream_deps = {
+            k: config.kind_dependencies_tasks[v] for k, v in job["dependencies"].items()
+        }
 
         signing_name = "build-signing"
         build_name = "build"
@@ -121,11 +149,14 @@ def make_task_description(config, jobs):
 
         # The upstream "signing" task for macosx is either *-mac-signing or *-mac-notarization
         if attributes.get("build_platform", "").startswith("macosx"):
+            signing_name = None
             # We use the signing task on level 1 and notarization on level 3
             if int(config.params.get("level", 0)) < 3:
-                signing_name = get_task_by_suffix(upstream_deps, "-mac-signing")
+                signing_name = get_label_by_suffix(job["dependencies"], "-mac-signing")
             else:
-                signing_name = get_task_by_suffix(upstream_deps, "-mac-notarization")
+                signing_name = get_label_by_suffix(
+                    job["dependencies"], "-mac-notarization"
+                )
             if not signing_name:
                 raise Exception("Could not find upstream kind for mac signing.")
 
