@@ -4,6 +4,8 @@
 
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { ViewPage } from "./viewpage.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/migration/migration-wizard.mjs";
 
 const { PlacesQuery } = ChromeUtils.importESModule(
   "resource://gre/modules/PlacesQuery.sys.mjs"
@@ -11,10 +13,17 @@ const { PlacesQuery } = ChromeUtils.importESModule(
 const { BrowserUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/BrowserUtils.sys.mjs"
 );
+const { ProfileAge } = ChromeUtils.importESModule(
+  "resource://gre/modules/ProfileAge.sys.mjs"
+);
+let XPCOMUtils = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+).XPCOMUtils;
 
-function getWindow() {
-  return window.browsingContext.embedderWindowGlobal.browsingContext.window;
-}
+const NEVER_REMEMBER_HISTORY_PREF = "browser.privatebrowsing.autostart";
+const HAS_IMPORTED_HISTORY_PREF = "browser.migrate.interactions.history";
+const IMPORT_HISTORY_DISMISSED_PREF =
+  "browser.tabs.firefox-view.importHistory.dismissed";
 
 class HistoryInView extends ViewPage {
   constructor() {
@@ -26,6 +35,8 @@ class HistoryInView extends ViewPage {
     this.maxTabsLength = -1;
     this.placesQuery = new PlacesQuery();
     this.sortOption = "date";
+    this.profileAge = 8;
+    this.fullyUpdated = false;
   }
 
   async connectedCallback() {
@@ -35,15 +46,47 @@ class HistoryInView extends ViewPage {
       this.allHistoryItems = [...newHistory];
       this.resetHistoryMaps();
     });
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "importHistoryDismissedPref",
+      IMPORT_HISTORY_DISMISSED_PREF,
+      false,
+      () => {
+        this.requestUpdate();
+      }
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "hasImportedHistoryPref",
+      HAS_IMPORTED_HISTORY_PREF,
+      false,
+      () => {
+        this.requestUpdate();
+      }
+    );
+    if (!this.importHistoryDismissedPref && !this.hasImportedHistoryPrefs) {
+      let profileAccessor = await ProfileAge();
+      let profileCreateTime = await profileAccessor.created;
+      let timeNow = new Date().getTime();
+      let profileAge = timeNow - profileCreateTime;
+      // Convert milliseconds to days
+      this.profileAge = profileAge / 1000 / 60 / 60 / 24;
+    }
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     this.placesQuery.close();
+    this.migrationWizardDialog.removeEventListener(
+      "MigrationWizard:Close",
+      this.migrationWizardDialog
+    );
   }
 
   static queries = {
-    cards: { all: "card-container" },
+    cards: { all: "card-container:not([hidden])" },
+    migrationWizardDialog: "#migrationWizardDialog",
+    emptyState: "fxview-empty-state",
   };
 
   static properties = {
@@ -51,6 +94,8 @@ class HistoryInView extends ViewPage {
     allHistoryItems: { type: Array },
     historyMapByDate: { type: Array },
     historyMapBySite: { type: Array },
+    // Making profileAge a reactive property for testing
+    profileAge: { type: Number },
     sortOption: { type: String },
   };
 
@@ -237,7 +282,7 @@ class HistoryInView extends ViewPage {
   }
 
   onPrimaryAction(e) {
-    let currentWindow = getWindow();
+    let currentWindow = this.getWindow();
     if (currentWindow.openTrustedLinkIn) {
       let where = BrowserUtils.whereToOpenLink(
         e.detail.originalEvent,
@@ -261,7 +306,51 @@ class HistoryInView extends ViewPage {
 
   showAllHistory() {
     // Open History view in Library window
-    getWindow().PlacesCommandHook.showPlacesOrganizer("History");
+    this.getWindow().PlacesCommandHook.showPlacesOrganizer("History");
+  }
+
+  async openMigrationWizard() {
+    let migrationWizardDialog = this.migrationWizardDialog;
+
+    if (migrationWizardDialog.open) {
+      return;
+    }
+
+    await customElements.whenDefined("migration-wizard");
+
+    // If we've been opened before, remove the old wizard and insert a
+    // new one to put it back into its starting state.
+    if (!migrationWizardDialog.firstElementChild) {
+      let wizard = document.createElement("migration-wizard");
+      wizard.toggleAttribute("dialog-mode", true);
+      migrationWizardDialog.appendChild(wizard);
+    }
+    migrationWizardDialog.firstElementChild.requestState();
+
+    this.migrationWizardDialog.addEventListener(
+      "MigrationWizard:Close",
+      function (e) {
+        e.currentTarget.close();
+      }
+    );
+
+    migrationWizardDialog.showModal();
+  }
+
+  shouldShowImportBanner() {
+    return (
+      this.profileAge < 8 &&
+      !this.hasImportedHistoryPref &&
+      !this.importHistoryDismissedPref
+    );
+  }
+
+  dismissImportHistory() {
+    Services.prefs.setBoolPref(IMPORT_HISTORY_DISMISSED_PREF, true);
+  }
+
+  updated() {
+    this.fullyUpdated = true;
   }
 
   panelListTemplate() {
@@ -338,11 +427,41 @@ class HistoryInView extends ViewPage {
   }
 
   emptyMessageTemplate() {
-    // TO-DO: Bug 1826604 - Add History empty states and banner
+    let descriptionHeader;
+    let descriptionLabels;
+    let descriptionLink;
+    if (Services.prefs.getBoolPref(NEVER_REMEMBER_HISTORY_PREF, false)) {
+      // History pref set to never remember history
+      descriptionHeader = "firefoxview-dont-remember-history-empty-header";
+      descriptionLabels = [
+        "firefoxview-dont-remember-history-empty-description",
+        "firefoxview-dont-remember-history-empty-description-two",
+      ];
+      descriptionLink = {
+        url: "about:preferences#privacy",
+        name: "history-settings-url-two",
+      };
+    } else {
+      descriptionHeader = "firefoxview-history-empty-header";
+      descriptionLabels = [
+        "firefoxview-history-empty-description",
+        "firefoxview-history-empty-description-two",
+      ];
+      descriptionLink = {
+        url: "about:preferences#privacy",
+        name: "history-settings-url",
+      };
+    }
     return html`
-      <card-container hideHeader="true" class"empty-state history">
-        <p slot="main">EMPTY MESSAGE</p>
-      </card-container>
+      <fxview-empty-state
+        headerLabel=${descriptionHeader}
+        .descriptionLabels=${descriptionLabels}
+        .descriptionLink=${descriptionLink}
+        class="empty-state history"
+        ?isSelectedTab=${this.selectedTab}
+        mainImageUrl="chrome://browser/content/firefoxview/history-empty.svg"
+      >
+      </fxview-empty-state>
     `;
   }
 
@@ -359,6 +478,7 @@ class HistoryInView extends ViewPage {
         rel="stylesheet"
         href="chrome://browser/content/firefoxview/history.css"
       />
+      <dialog id="migrationWizardDialog"></dialog>
       <div class="sticky-container bottom-fade">
         <h2 class="page-header" data-l10n-id="firefoxview-history-header"></h2>
         <span class="history-sort-options">
@@ -368,7 +488,7 @@ class HistoryInView extends ViewPage {
               id="sort-by-date"
               name="history-sort-option"
               value="date"
-              checked
+              ?checked=${this.sortOption === "date"}
               @click=${this.onChangeSortOption}
             />
             <label
@@ -381,6 +501,7 @@ class HistoryInView extends ViewPage {
               type="radio"
               name="history-sort-option"
               value="site"
+              ?checked=${this.sortOption === "site"}
               @click=${this.onChangeSortOption}
             />
             <label
@@ -391,11 +512,40 @@ class HistoryInView extends ViewPage {
         </span>
       </div>
       <div class="cards-container">
+        <card-container
+          class="import-history-banner"
+          hideHeader="true"
+          ?hidden=${!this.shouldShowImportBanner()}
+        >
+          <div slot="main">
+            <span class="banner-text">
+              <span data-l10n-id="firefoxview-import-history-header"></span>
+              <span
+                data-l10n-id="firefoxview-import-history-description"
+              ></span>
+            </span>
+            <span class="buttons">
+              <button
+                class="primary choose-browser"
+                data-l10n-id="firefoxview-choose-browser-button"
+                @click=${this.openMigrationWizard}
+              ></button>
+              <button
+                class="close ghost-button"
+                data-l10n-id="firefoxview-import-history-close-button"
+                @click=${this.dismissImportHistory}
+              ></button>
+            </span>
+          </div>
+        </card-container>
         ${!this.allHistoryItems.length
           ? this.emptyMessageTemplate()
           : this.historyCardsTemplate()}
       </div>
-      <div class="show-all-history-footer">
+      <div
+        class="show-all-history-footer"
+        ?hidden=${!this.allHistoryItems.length}
+      >
         <span
           class="show-all-history-link"
           data-l10n-id="firefoxview-show-all-history"
@@ -406,6 +556,7 @@ class HistoryInView extends ViewPage {
   }
 
   willUpdate() {
+    this.fullyUpdated = false;
     this.sortHistoryData();
     this.normalizeHistoryData();
     if (this.allHistoryItems.length) {

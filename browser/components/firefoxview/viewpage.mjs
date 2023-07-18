@@ -38,4 +38,8 @@ export class ViewPage extends MozLitElement {
   exit() {
     this.selectedTab = false;
   }
+
+  getWindow() {
+    return window.browsingContext.embedderWindowGlobal.browsingContext.window;
+  }
 }

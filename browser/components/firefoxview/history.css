@@ -23,3 +23,60 @@
 .show-all-history-link {
   text-decoration: underline;
 }
+
+.import-history-banner .banner-text {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.95rem;
+  gap: 6px;
+}
+
+.import-history-banner .banner-text span:first-child {
+  font-weight: 600;
+}
+
+.import-history-banner [slot="main"] {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  padding: 8px;
+}
+
+.import-history-banner .buttons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.choose-browser {
+  font-size: 0.87em;
+  cursor: pointer;
+}
+
+.import-history-banner .close {
+  background-image: url("chrome://global/skin/icons/close-12.svg");
+  background-repeat: no-repeat;
+  background-position: center center;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  min-width: auto;
+  min-height: auto;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+dialog {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px 0 rgba(0,0,0,0.3);
+  padding: 24px;
+}
+
+@media (prefers-color-scheme: dark) {
+  dialog {
+    --in-content-page-background: #42414d;
+  }
+}

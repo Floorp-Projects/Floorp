@@ -15,7 +15,8 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  * @property {string} headerIconUrl - (Optional) The chrome:// url for an icon to be displayed within the header
  * @property {string} headerLabel - (Optional) The l10n id for the header text for the empty/error state
  * @property {boolean} isSelectedTab - (Optional) True if the component is the selected navigation tab - defaults to false
- * @property {string} descriptionLabels - (Required) An array of l10n id for the secondary description text for the empty/error state
+ * @property {Array} descriptionLabels - (Required) An array of l10n ids for the secondary description text for the empty/error state
+ * @property {object} descriptionLink - (Optional) An object describing the l10n name and url needed within a description label
  * @property {string} mainImageUrl - (Optional) The chrome:// url for the main image of the empty/error state
  */
 class FxviewEmptyState extends MozLitElement {
@@ -28,13 +29,14 @@ class FxviewEmptyState extends MozLitElement {
     headerLabel: { type: String },
     headerIconUrl: { type: String },
     isSelectedTab: { type: Boolean },
-    descriptionLabel: { type: String },
+    descriptionLabel: { type: Array },
+    desciptionLink: { type: Object },
     mainImageUrl: { type: String },
   };
 
   static queries = {
     headerEl: ".header",
-    descriptionEl: ".description",
+    descriptionEls: { all: ".description" },
   };
 
   render() {
@@ -62,7 +64,14 @@ class FxviewEmptyState extends MozLitElement {
                (descLabel, index) => html`<p
                  class="description ${index !== 0 ? "secondary" : null}"
                  data-l10n-id=${descLabel}
-               ></p>`
+               >
+                 <a
+                   ?hidden=${!this.descriptionLink}
+                   data-l10n-name=${this.descriptionLink.name}
+                   href=${this.descriptionLink.url}
+                   target="_blank"
+                 />
+               </p>`
              )}
              <slot name="primary-action"></slot>
            </div>
