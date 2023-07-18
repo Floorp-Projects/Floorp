@@ -57,6 +57,10 @@ features:
         description: Configuration of the notification worker for all notification messages.
         type: NotificationConfig
         default: {}
+      message-under-experiment:
+        description: Deprecated in favor of `MessageData#experiment`. This will be removed in future releases.
+        type: Option<String>
+        default: null
     defaults:
 
 objects:
