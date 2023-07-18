@@ -42,7 +42,8 @@ struct NSSCipherStrategy {
 
   static Span<const uint8_t> SerializeKey(const KeyType& aKey);
 
-  static KeyType DeserializeKey(const Span<const uint8_t>& aSerializedKey);
+  static Maybe<KeyType> DeserializeKey(
+      const Span<const uint8_t>& aSerializedKey);
 
  private:
   // XXX Remove EarlyDestructible, remove moving of the CipherStrategy.
