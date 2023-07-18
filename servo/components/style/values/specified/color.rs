@@ -231,6 +231,12 @@ pub enum SystemColor {
     /// Used for menubar item text when hovered.
     MozMenubarhovertext,
 
+    /// Colors used for the header bar (sorta like the tab bar / menubar).
+    MozHeaderbar,
+    MozHeaderbartext,
+    MozHeaderbarinactive,
+    MozHeaderbarinactivetext,
+
     /// On platforms where these colors are the same as -moz-field, use
     /// -moz-fieldtext as foreground color
     MozEventreerow,

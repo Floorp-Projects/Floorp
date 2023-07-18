@@ -81,6 +81,12 @@ static GtkWidget* CreateMenuPopupWidget() {
   return widget;
 }
 
+static GtkWidget* CreateMenuBarWidget() {
+  GtkWidget* widget = gtk_menu_bar_new();
+  AddToWindowContainer(widget);
+  return widget;
+}
+
 static GtkWidget* CreateProgressWidget() {
   GtkWidget* widget = gtk_progress_bar_new();
   AddToWindowContainer(widget);
@@ -717,6 +723,8 @@ static GtkWidget* CreateWidget(WidgetNodeType aAppearance) {
       return CreateScrollbarWidget(aAppearance, GTK_ORIENTATION_VERTICAL);
     case MOZ_GTK_MENUPOPUP:
       return CreateMenuPopupWidget();
+    case MOZ_GTK_MENUBAR:
+      return CreateMenuBarWidget();
     case MOZ_GTK_EXPANDER:
       return CreateExpanderWidget();
     case MOZ_GTK_FRAME:
@@ -933,6 +941,9 @@ static GtkStyleContext* GetWidgetRootStyle(WidgetNodeType aNodeType) {
   switch (aNodeType) {
     case MOZ_GTK_MENUITEM:
       style = CreateStyleForWidget(gtk_menu_item_new(), MOZ_GTK_MENUPOPUP);
+      break;
+    case MOZ_GTK_MENUBARITEM:
+      style = CreateStyleForWidget(gtk_menu_item_new(), MOZ_GTK_MENUBAR);
       break;
     case MOZ_GTK_TEXT_VIEW:
       style =

@@ -235,10 +235,14 @@ enum WidgetNodeType : int {
   MOZ_GTK_MENUPOPUP,
   /* Paints the arrow of menuitems that contain submenus */
   MOZ_GTK_MENUARROW,
+  /* Menubar for -moz-headerbar colors */
+  MOZ_GTK_MENUBAR,
   /* Paints an arrow in a toolbar button. flags is a GtkArrowType. */
   MOZ_GTK_TOOLBARBUTTON_ARROW,
   /* Paints items of popup menus. */
   MOZ_GTK_MENUITEM,
+  /* Menubar menuitem for foreground colors. */
+  MOZ_GTK_MENUBARITEM,
   /* GtkVPaned base class */
   MOZ_GTK_SPLITTER_HORIZONTAL,
   /* GtkHPaned base class */

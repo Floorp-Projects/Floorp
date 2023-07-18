@@ -622,20 +622,28 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       aColor = mTitlebarInactive.mFg;
       break;
     case ColorID::Infobackground:
-      // tooltip background color
       aColor = mInfo.mBg;
       break;
     case ColorID::Infotext:
-      // tooltip text color
       aColor = mInfo.mFg;
       break;
     case ColorID::Menu:
-      // menu background
       aColor = mMenu.mBg;
       break;
     case ColorID::Menutext:
-      // menu text
       aColor = mMenu.mFg;
+      break;
+    case ColorID::MozHeaderbar:
+      aColor = mHeaderBar.mBg;
+      break;
+    case ColorID::MozHeaderbartext:
+      aColor = mHeaderBar.mFg;
+      break;
+    case ColorID::MozHeaderbarinactive:
+      aColor = mHeaderBarInactive.mBg;
+      break;
+    case ColorID::MozHeaderbarinactivetext:
+      aColor = mHeaderBarInactive.mFg;
       break;
     case ColorID::Threedface:
     case ColorID::Buttonface:
@@ -1303,11 +1311,9 @@ void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
   //   https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/named-colors.html#accent-colors
   //
   // So we manually do that.
-  if (mSystemTheme.mName.EqualsLiteral("Adwaita") ||
-      mSystemTheme.mName.EqualsLiteral("Adwaita-dark")) {
+  if (mSystemTheme.mFamily == ThemeFamily::Adwaita) {
     auto& dark = mSystemTheme.mIsDark ? mSystemTheme : mAltTheme;
     auto& light = mSystemTheme.mIsDark ? mAltTheme : mSystemTheme;
-
     dark.mAccent = light.mAccent;
   }
 
@@ -1578,13 +1584,18 @@ static nscolor GetBackgroundColor(
   return NS_TRANSPARENT;
 }
 
+static nscolor GetTextColor(GtkStyleContext* aStyle,
+                            GtkStateFlags aState = GTK_STATE_FLAG_NORMAL) {
+  GdkRGBA color;
+  gtk_style_context_get_color(aStyle, aState, &color);
+  return GDK_RGBA_TO_NS_RGBA(color);
+}
+
 using ColorPair = nsLookAndFeel::ColorPair;
 static ColorPair GetColorPair(GtkStyleContext* aStyle,
                               GtkStateFlags aState = GTK_STATE_FLAG_NORMAL) {
   ColorPair result;
-  GdkRGBA color;
-  gtk_style_context_get_color(aStyle, aState, &color);
-  result.mFg = GDK_RGBA_TO_NS_RGBA(color);
+  result.mFg = GetTextColor(aStyle, aState);
   result.mBg = GetBackgroundColor(aStyle, result.mFg, aState);
   return result;
 }
@@ -1639,6 +1650,19 @@ static void PreferDarkerBackground(ColorPair& aPair) {
 
 void nsLookAndFeel::PerThemeData::Init() {
   mName = GetGtkTheme();
+
+  mFamily = [&] {
+    if (mName.EqualsLiteral("Adwaita") || mName.EqualsLiteral("Adwaita-dark")) {
+      return ThemeFamily::Adwaita;
+    }
+    if (mName.EqualsLiteral("Breeze") || mName.EqualsLiteral("Breeze-Dark")) {
+      return ThemeFamily::Breeze;
+    }
+    if (StringBeginsWith(mName, "Yaru"_ns)) {
+      return ThemeFamily::Yaru;
+    }
+    return ThemeFamily::Other;
+  }();
 
   GtkStyleContext* style;
 
@@ -1741,8 +1765,7 @@ void nsLookAndFeel::PerThemeData::Init() {
   // Window colors
   style = GetStyleContext(MOZ_GTK_WINDOW);
 
-  gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
-  mWindow.mFg = GDK_RGBA_TO_NS_RGBA(color);
+  mWindow.mFg = GetTextColor(style);
   mWindow.mBg = GetBackgroundColor(style, mWindow.mFg);
 
   gtk_style_context_get_border_color(style, GTK_STATE_FLAG_NORMAL, &color);
@@ -1760,9 +1783,7 @@ void nsLookAndFeel::PerThemeData::Init() {
 
   // tooltip foreground and background
   style = GetStyleContext(MOZ_GTK_TOOLTIP_BOX_LABEL);
-  gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
-  mInfo.mFg = GDK_RGBA_TO_NS_RGBA(color);
-
+  mInfo.mFg = GetTextColor(style);
   style = GetStyleContext(MOZ_GTK_TOOLTIP);
   mInfo.mBg = GetBackgroundColor(style, mInfo.mFg);
 
@@ -1774,20 +1795,47 @@ void nsLookAndFeel::PerThemeData::Init() {
     GetSystemFontInfo(accelStyle, &mMenuFontName, &mMenuFontStyle);
 
     gtk_style_context_get_color(accelStyle, GTK_STATE_FLAG_NORMAL, &color);
-    mMenu.mFg = GDK_RGBA_TO_NS_RGBA(color);
-    gtk_style_context_get_color(accelStyle, GTK_STATE_FLAG_INSENSITIVE, &color);
-    mGrayText = GDK_RGBA_TO_NS_RGBA(color);
+    mMenu.mFg = GetTextColor(accelStyle);
+    mGrayText = GetTextColor(accelStyle, GTK_STATE_FLAG_INSENSITIVE);
     g_object_unref(accelStyle);
   }
 
-  const auto effectiveHeaderBarStyle =
+  const auto effectiveTitlebarStyle =
       HeaderBarShouldDrawContainer(MOZ_GTK_HEADER_BAR) ? MOZ_GTK_HEADERBAR_FIXED
                                                        : MOZ_GTK_HEADER_BAR;
-  style = GetStyleContext(effectiveHeaderBarStyle);
+  style = GetStyleContext(effectiveTitlebarStyle);
   {
     mTitlebar = GetColorPair(style, GTK_STATE_FLAG_NORMAL);
     mTitlebarInactive = GetColorPair(style, GTK_STATE_FLAG_BACKDROP);
     mTitlebarRadius = IsSolidCSDStyleUsed() ? 0 : GetBorderRadius(style);
+  }
+
+  // We special-case the header bar color in Adwaita, Yaru and Breeze to be the
+  // titlebar color, because it looks better and matches what apps do by
+  // default, see bug 1838460.
+  // For breeze we read the KDE colors directly, if available.
+  // For most other themes, we use the menubar.
+  // FIXME(emilio): Can we do something a bit less special-case-y?
+  if (mFamily == ThemeFamily::Adwaita || mFamily == ThemeFamily::Yaru ||
+      mFamily == ThemeFamily::Breeze) {
+    mHeaderBar = mTitlebar;
+    mHeaderBarInactive = mTitlebarInactive;
+    if (mFamily == ThemeFamily::Breeze) {
+      GetNamedColorPair(style, "theme_header_background_breeze",
+                        "theme_header_foreground_breeze", &mHeaderBar);
+      GetNamedColorPair(style, "theme_header_background_backdrop_breeze",
+                        "theme_header_foreground_backdrop_breeze",
+                        &mHeaderBarInactive);
+    }
+  } else {
+    style = GetStyleContext(MOZ_GTK_MENUBARITEM);
+    mHeaderBar.mFg = GetTextColor(style);
+    mHeaderBarInactive.mFg = GetTextColor(style, GTK_STATE_FLAG_BACKDROP);
+
+    style = GetStyleContext(MOZ_GTK_MENUBAR);
+    mHeaderBar.mBg = GetBackgroundColor(style, mHeaderBar.mFg);
+    mHeaderBarInactive.mBg = GetBackgroundColor(style, mHeaderBarInactive.mFg,
+                                                GTK_STATE_FLAG_BACKDROP);
   }
 
   style = GetStyleContext(MOZ_GTK_MENUPOPUP);

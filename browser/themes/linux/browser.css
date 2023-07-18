@@ -141,20 +141,10 @@ menuitem.bookmark-item {
   min-height: 0;
 }
 
-#titlebar {
-  background-color: ActiveCaption;
-  color: CaptionText;
-}
-
-#titlebar:-moz-window-inactive {
-  background-color: InactiveCaption;
-  color: InactiveCaptionText;
-}
-
 #TabsToolbar,
 #toolbar-menubar,
 #main-menubar,
-#titlebar:-moz-lwtheme {
+#titlebar {
   appearance: none;
   background-color: transparent;
   color: inherit;
@@ -294,18 +284,42 @@ menuitem.bookmark-item {
   background-color: transparent;
 }
 
+#navigator-toolbox-background {
+  background-color: -moz-headerbar;
+  color: -moz-headerbartext;
+}
+
+#navigator-toolbox-background:-moz-window-inactive {
+  background-color: -moz-headerbarinactive;
+  color: -moz-headerbarinactivetext;
+}
+
 :root[tabsintitlebar] #navigator-toolbox-background {
   appearance: auto;
   -moz-default-appearance: -moz-window-titlebar-maximized;
+  background-color: transparent;
+  color: CaptionText;
+}
+
+:root[tabsintitlebar] #navigator-toolbox-background:-moz-window-inactive {
+  color: InactiveCaptionText;
 }
 
 :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox-background {
   -moz-default-appearance: -moz-window-titlebar;
 }
 
-:root[tabsintitlebar] #titlebar {
-  /* Use the toolbox background */
+/*
+ * NOTE: The odd :is() selector is needed so that specificity is greater than
+ * the tabsintitlebar + inactive rule above.
+ *
+ * Note that we still want to use the native titlebar appearance, even if the
+ * background is visually overridden by the lightweight theme, in order to
+ * draw the corners correctly.
+ */
+:root:is([tabsintitlebar], *) #navigator-toolbox-background:-moz-lwtheme {
   background-color: transparent;
+  color: inherit;
 }
 
 :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox:-moz-lwtheme,
