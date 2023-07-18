@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-from taskgraph.transforms.task import payload_builder
+from gecko_taskgraph.transforms.task import payload_builder
 from taskgraph.util.schema import taskref_or_string
 from voluptuous import Any, Optional, Required
 
