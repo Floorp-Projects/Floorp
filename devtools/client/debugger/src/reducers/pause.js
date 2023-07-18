@@ -10,6 +10,7 @@
  */
 
 import { prefs } from "../utils/prefs";
+import { findClosestFunction } from "../utils/ast";
 
 // Pause state associated with an individual thread.
 
@@ -226,6 +227,18 @@ function update(state = initialPauseState(), action) {
       return updateThreadState({ frames });
     }
 
+    case "SET_SYMBOLS": {
+      // Ignore the beginning of this async action
+      if (action.status === "start") {
+        return state;
+      }
+      return updateFrameOriginalDisplayName(
+        state,
+        action.location.source,
+        action.value
+      );
+    }
+
     case "ADD_SCOPES": {
       const { status, value } = action;
       const selectedFrameId = action.selectedFrame.id;
@@ -415,6 +428,97 @@ function getPauseLocation(state, action) {
     location: frame.location,
     generatedLocation: frame.generatedLocation,
   };
+}
+
+/**
+ * For frames related to non-WASM original sources, try to lookup for the function
+ * name in the original source. The server will provide the function name in `displayName`
+ * in the generated source, but not in the original source.
+ * This information will be stored in frame's `originalDisplayName` attribute
+ */
+function mapDisplayName(frame, symbols) {
+  // Ignore WASM original frames
+  if (frame.isOriginal) {
+    return frame;
+  }
+  // When it is a regular (non original) JS source, the server already returns a valid displayName attribute.
+  if (!frame.location.source.isOriginal) {
+    return frame;
+  }
+  // Ignore the frame if we already computed this attribute from `mapFrames` action
+  if (frame.originalDisplayName) {
+    return frame;
+  }
+
+  if (!symbols.functions) {
+    return frame;
+  }
+
+  const originalDisplayName = getOriginalDisplayNameForOriginalLocation(
+    symbols,
+    frame.location
+  );
+  if (!originalDisplayName) {
+    return frame;
+  }
+
+  // Fork the object to force a re-render
+  return { ...frame, originalDisplayName };
+}
+
+function updateFrameOriginalDisplayName(state, source, symbols) {
+  // Only map display names for original sources
+  if (!source.isOriginal) {
+    return state;
+  }
+
+  // Update all thread's frame's `originalDisplayName` attribute
+  // if some frames relate to the symbols source.
+  let newState = null;
+  for (const threadActorId in state.threads) {
+    const thread = state.threads[threadActorId];
+    if (!thread.frames) {
+      continue;
+    }
+    // Only try updating frames if at least one frame object relates to the source
+    // for which we just fetched the symbols
+    const shouldUpdateThreadFrames = thread.frames.some(
+      frame => frame.location.source == source
+    );
+    if (!shouldUpdateThreadFrames) {
+      continue;
+    }
+    // Now only process frames matching the symbols source
+    const frames = thread.frames.map(frame =>
+      frame.location.source == source ? mapDisplayName(frame, symbols) : frame
+    );
+    if (!newState) {
+      newState = { ...state };
+    }
+    newState.threads[threadActorId] = {
+      ...thread,
+      frames,
+    };
+  }
+  return newState ? newState : state;
+}
+
+/**
+ * For a given location, return the closest function name.
+ *
+ * @param {Object} symbols
+ *        Symbols object for the passed location.
+ * @param {Object} location
+ *        A location
+ */
+export function getOriginalDisplayNameForOriginalLocation(symbols, location) {
+  if (!symbols.functions) {
+    return null;
+  }
+
+  const originalFunction = findClosestFunction(symbols, location);
+
+  return originalFunction ? originalFunction.name : null;
 }
 
 export default update;
