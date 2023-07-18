@@ -11,8 +11,6 @@
   <script>
     "use strict";
 
-    const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
-
     const TEST_PATH = PathUtils.join(PathUtils.tempDir, "test-ioutils-getfile");
 
     add_task(async function test_getFile() {
