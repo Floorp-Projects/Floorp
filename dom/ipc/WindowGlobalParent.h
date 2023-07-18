@@ -151,7 +151,9 @@ class WindowGlobalParent final : public WindowContext,
 
   void GetContentBlockingLog(nsAString& aLog);
 
-  bool IsInitialDocument() { return mIsInitialDocument; }
+  bool IsInitialDocument() {
+    return mIsInitialDocument.isSome() && mIsInitialDocument.value();
+  }
 
   already_AddRefed<mozilla::dom::Promise> PermitUnload(
       PermitUnloadAction aAction, uint32_t aTimeout, mozilla::ErrorResult& aRv);
@@ -252,7 +254,12 @@ class WindowGlobalParent final : public WindowContext,
   mozilla::ipc::IPCResult RecvUpdateDocumentTitle(const nsString& aTitle);
   mozilla::ipc::IPCResult RecvUpdateHttpsOnlyStatus(uint32_t aHttpsOnlyStatus);
   mozilla::ipc::IPCResult RecvSetIsInitialDocument(bool aIsInitialDocument) {
-    mIsInitialDocument = aIsInitialDocument;
+    if (aIsInitialDocument && mIsInitialDocument.isSome() &&
+        (mIsInitialDocument.value() != aIsInitialDocument)) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+
+    mIsInitialDocument = Some(aIsInitialDocument);
     return IPC_OK();
   }
   mozilla::ipc::IPCResult RecvUpdateDocumentSecurityInfo(
@@ -337,7 +344,7 @@ class WindowGlobalParent final : public WindowContext,
   nsCOMPtr<nsIURI> mDocumentURI;
   Maybe<nsString> mDocumentTitle;
 
-  bool mIsInitialDocument;
+  Maybe<bool> mIsInitialDocument;
 
   // True if this window has a "beforeunload" event listener.
   bool mHasBeforeUnload;
