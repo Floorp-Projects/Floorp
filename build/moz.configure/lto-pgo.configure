@@ -79,9 +79,16 @@ def pgo_profile_path(path, pgo_use, profdata, build_env):
 set_config("PGO_PROFILE_PATH", pgo_profile_path)
 
 
-@depends(c_compiler, pgo_profile_path, target_is_windows)
+pgo_temporal = c_compiler.try_compile(
+    flags=["-fprofile-generate", "-mllvm", "-pgo-temporal-instrumentation"],
+    check_msg="whether the C compiler supports temporal instrumentation",
+    when="--enable-profile-generate",
+)
+
+
+@depends(c_compiler, pgo_profile_path, target_is_windows, pgo_temporal)
 @imports("multiprocessing")
-def pgo_flags(compiler, profdata, target_is_windows):
+def pgo_flags(compiler, profdata, target_is_windows, pgo_temporal):
     if compiler.type == "gcc":
         return namespace(
             gen_cflags=["-fprofile-generate"],
@@ -99,6 +106,9 @@ def pgo_flags(compiler, profdata, target_is_windows):
             gen_ldflags = ["-fprofile-generate"]
 
         gen_cflags = [prefix + "-fprofile-generate"]
+        if pgo_temporal:
+            gen_cflags += ["-mllvm", "-pgo-temporal-instrumentation"]
+
         if target_is_windows:
             # native llvm-profdata.exe on Windows can't read profile data
             # if name compression is enabled (which cross-compiling enables
