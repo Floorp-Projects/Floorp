@@ -12,7 +12,9 @@
   <script>
     "use strict";
 
-    const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+    const { Assert } = ChromeUtils.importESModule(
+      "resource://testing-common/Assert.sys.mjs"
+    );
     const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
 
     // This is an impossible sequence of bytes in an UTF-8 encoded file.

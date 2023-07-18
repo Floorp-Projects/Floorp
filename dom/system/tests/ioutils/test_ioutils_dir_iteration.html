@@ -12,7 +12,9 @@
   <script>
     "use strict";
 
-    const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+    const { Assert } = ChromeUtils.importESModule(
+      "resource://testing-common/Assert.sys.mjs"
+    );
 
     add_task(async function iterate_dir_failure() {
       let notExists = PathUtils.join(PathUtils.tempDir, 'does_not_exist_dir.tmp.d');
