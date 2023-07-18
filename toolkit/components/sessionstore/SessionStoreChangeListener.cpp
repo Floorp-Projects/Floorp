@@ -119,14 +119,16 @@ SessionStoreChangeListener::HandleEvent(dom::Event* aEvent) {
     return NS_OK;
   }
 
-  nsAutoString eventType;
-  aEvent->GetType(eventType);
+  WidgetEvent* event = aEvent->WidgetEventPtr();
+  EventMessage eventMessage = event->mMessage;
 
-  if (eventType == kInput) {
+  if (eventMessage == eEditorInput ||
+      (eventMessage == eUnidentifiedEvent &&
+       event->mSpecifiedEventType == nsGkAtoms::oninput)) {
     RecordChange(windowContext, Change::Input);
-  } else if (eventType == kScroll) {
+  } else if (eventMessage == eScroll) {
     RecordChange(windowContext, Change::Scroll);
-  } else if (eventType == kResize && browsingContext->IsTop()) {
+  } else if (eventMessage == eResize && browsingContext->IsTop()) {
     RecordChange(windowContext, Change::Resize);
   }
   return NS_OK;
