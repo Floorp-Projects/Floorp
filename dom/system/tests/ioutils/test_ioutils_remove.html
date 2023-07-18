@@ -12,7 +12,9 @@
   <script>
     "use strict";
 
-    const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+    const { Assert } = ChromeUtils.importESModule(
+      "resource://testing-common/Assert.sys.mjs"
+    );
     const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
 
     add_task(async function test_create_and_remove_file() {

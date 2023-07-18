@@ -52,8 +52,6 @@
 </div>
 <pre id="test"></pre>
 <script>
-  const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
-
   function assertBasicProperties(link, { l10nId, l10nName, supportPage, supportUrl, utmContent }) {
     is(link.localName, "a", "Check that it is an anchor");
     is(link.constructor.name, "MozSupportLink", "Element should be a 'moz-support-link'");

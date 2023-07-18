@@ -16,7 +16,9 @@
   const { AppConstants } = ChromeUtils.import(
     "resource://gre/modules/AppConstants.jsm"
   );
-  const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+  const { Assert } = ChromeUtils.importESModule(
+    "resource://testing-common/Assert.sys.mjs"
+  );
 
   const UNRECOGNIZED_PATH = /Could not initialize path: NS_ERROR_FILE_UNRECOGNIZED_PATH/;
   const SPLIT_RELATIVE_ABSOLUTE = /PathUtils.splitRelative requires a relative path/;
