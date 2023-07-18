@@ -2016,8 +2016,6 @@ pref("browser.promo.pin.enabled", true);
 // Set to true for Fx113 (see bug 1808611)
 pref("browser.promo.cookiebanners.enabled", false);
 
-// Comma separated string of mozilla vpn supported platforms.
-pref("browser.contentblocking.report.vpn_platforms", "win,mac,linux");
 pref("browser.contentblocking.report.hide_vpn_banner", false);
 pref("browser.contentblocking.report.vpn_sub_id", "sub_HrfCZF7VPHzZkA");
 
