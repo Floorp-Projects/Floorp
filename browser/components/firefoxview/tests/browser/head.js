@@ -243,7 +243,7 @@ function setupRecentDeviceListMocks() {
 }
 
 function getMockTabData(clients) {
-  return SyncedTabs._internal._createRecentTabsList(clients, 3);
+  return SyncedTabs._internal._createRecentTabsList(clients, 10);
 }
 
 async function setupListState(browser) {
@@ -335,6 +335,9 @@ function setupMocks({ fxaDevices = null, state, syncEnabled = true }) {
         syncEnabled: gUIStateSyncEnabled,
       }),
     };
+  });
+  sandbox.stub(SyncedTabs, "getTabClients").callsFake(() => {
+    return Promise.resolve(fxaDevices);
   });
   return sandbox;
 }
@@ -570,3 +573,13 @@ registerCleanupFunction(() => {
   // that might have prevented it
   gSandbox?.restore();
 });
+
+function navigateToCategory(document, category) {
+  const navigation = document.querySelector("fxview-category-navigation");
+  let navButton = Array.from(navigation.categoryButtons).filter(
+    categoryButton => {
+      return categoryButton.name === category;
+    }
+  )[0];
+  navButton.buttonEl.click();
+}

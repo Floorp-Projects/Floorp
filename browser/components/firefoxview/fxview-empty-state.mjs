@@ -29,7 +29,7 @@ class FxviewEmptyState extends MozLitElement {
     headerLabel: { type: String },
     headerIconUrl: { type: String },
     isSelectedTab: { type: Boolean },
-    descriptionLabel: { type: Array },
+    descriptionLabels: { type: Array },
     desciptionLink: { type: Object },
     mainImageUrl: { type: String },
   };
@@ -63,12 +63,12 @@ class FxviewEmptyState extends MozLitElement {
                this.descriptionLabels,
                (descLabel, index) => html`<p
                  class="description ${index !== 0 ? "secondary" : null}"
-                 data-l10n-id=${descLabel}
+                 data-l10n-id="${descLabel}"
                >
                  <a
                    ?hidden=${!this.descriptionLink}
-                   data-l10n-name=${this.descriptionLink.name}
-                   href=${this.descriptionLink.url}
+                   data-l10n-name=${ifDefined(this.descriptionLink?.name)}
+                   href=${ifDefined(this.descriptionLink?.url)}
                    target="_blank"
                  />
                </p>`

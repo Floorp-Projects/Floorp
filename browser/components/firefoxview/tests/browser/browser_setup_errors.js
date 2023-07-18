@@ -14,11 +14,13 @@ async function setupWithDesktopDevices(state = UIState.STATUS_SIGNED_IN) {
         name: "This Device",
         isCurrentDevice: true,
         type: "desktop",
+        tabs: [],
       },
       {
         id: 2,
         name: "Other Device",
         type: "desktop",
+        tabs: [],
       },
     ],
   });

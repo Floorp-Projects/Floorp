@@ -13,6 +13,8 @@ browser.jar:
     content/browser/firefoxview/history.mjs
     content/browser/firefoxview/opentabs.mjs
     content/browser/firefoxview/view-opentabs.css
+    content/browser/firefoxview/syncedtabs.mjs
+    content/browser/firefoxview/view-syncedtabs.css
     content/browser/firefoxview/overview.mjs
     content/browser/firefoxview/firefoxview.css
     content/browser/firefoxview/firefoxview-next.css
@@ -38,6 +40,7 @@ browser.jar:
     content/browser/firefoxview/category-recentlyclosed.svg (content/category-recentlyclosed.svg)
     content/browser/firefoxview/category-syncedtabs.svg (content/category-syncedtabs.svg)
     content/browser/firefoxview/tab-pickup-empty.svg (content/tab-pickup-empty.svg)
+    content/browser/firefoxview/synced-tabs-error.svg (content/synced-tabs-error.svg)
     content/browser/callout-tab-pickup.svg (content/callout-tab-pickup.svg)
     content/browser/callout-tab-pickup-dark.svg (content/callout-tab-pickup-dark.svg)
     content/browser/cfr-lightning.svg (content/cfr-lightning.svg)

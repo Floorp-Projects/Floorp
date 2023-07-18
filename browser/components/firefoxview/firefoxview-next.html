@@ -13,6 +13,7 @@
     <meta name="color-scheme" content="light dark" />
     <title data-l10n-id="firefoxview-page-title"></title>
     <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="toolkit/branding/accounts.ftl" />
     <link rel="localization" href="browser/firefoxView.ftl" />
     <link rel="localization" href="toolkit/branding/brandings.ftl" />
     <link rel="localization" href="browser/migrationWizard.ftl" />
@@ -39,6 +40,10 @@
     <script
       type="module"
       src="chrome://browser/content/firefoxview/fxview-category-navigation.mjs"
+    ></script>
+    <script
+      type="module"
+      src="chrome://browser/content/firefoxview/syncedtabs.mjs"
     ></script>
     <script src="chrome://browser/content/contentTheme.js"></script>
   </head>
@@ -95,6 +100,7 @@
         <view-history name="history"></view-history>
         <view-opentabs name="opentabs"></view-opentabs>
         <view-recentlyclosed name="recentlyclosed"></view-recentlyclosed>
+        <view-syncedtabs name="syncedtabs"></view-syncedtabs>
       </named-deck>
     </main>
     <script src="chrome://browser/content/firefoxview/firefoxview-next.mjs"></script>

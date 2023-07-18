@@ -14,6 +14,7 @@
   --fxview-text-primary-color: var(--newtab-text-primary-color, var(--in-content-page-color));
   --fxview-text-color-hover: var(--newtab-text-primary-color);
   --fxview-primary-action-background: var(--newtab-primary-action-background, #0061e0);
+  --fxview-border: var(--fc-border-light, #CFCFD8);
 
   /* ensure utility button hover states match those of the rest of the page */
   --in-content-button-background-hover: var(--fxview-element-background-hover);

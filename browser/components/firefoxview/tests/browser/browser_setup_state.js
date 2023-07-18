@@ -32,11 +32,13 @@ async function setupWithDesktopDevices() {
         name: "This Device",
         isCurrentDevice: true,
         type: "desktop",
+        tabs: [],
       },
       {
         id: 2,
         name: "Other Device",
         type: "desktop",
+        tabs: [],
       },
     ],
   });
@@ -119,6 +121,7 @@ add_task(async function test_signed_in() {
         name: "This Device",
         isCurrentDevice: true,
         type: "desktop",
+        tabs: [],
       },
     ],
   });
@@ -176,6 +179,7 @@ add_task(async function test_support_links() {
         name: "This Device",
         isCurrentDevice: true,
         type: "desktop",
+        tabs: [],
       },
     ],
   });
@@ -202,11 +206,13 @@ add_task(async function test_2nd_desktop_connected() {
         name: "This Device",
         isCurrentDevice: true,
         type: "desktop",
+        tabs: [],
       },
       {
         id: 2,
         name: "Other Device",
         type: "desktop",
+        tabs: [],
       },
     ],
   });
@@ -246,11 +252,13 @@ add_task(async function test_mobile_connected() {
         name: "This Device",
         isCurrentDevice: true,
         type: "desktop",
+        tabs: [],
       },
       {
         id: 2,
         name: "Other Device",
         type: "mobile",
+        tabs: [],
       },
     ],
   });
@@ -290,11 +298,13 @@ add_task(async function test_tablet_connected() {
         name: "This Device",
         isCurrentDevice: true,
         type: "desktop",
+        tabs: [],
       },
       {
         id: 2,
         name: "Other Device",
         type: "tablet",
+        tabs: [],
       },
     ],
   });
@@ -334,11 +344,13 @@ add_task(async function test_tab_sync_enabled() {
         name: "This Device",
         isCurrentDevice: true,
         type: "desktop",
+        tabs: [],
       },
       {
         id: 2,
         name: "Other Device",
         type: "mobile",
+        tabs: [],
       },
     ],
   });
@@ -413,6 +425,7 @@ add_task(async function test_mobile_promo() {
       id: 3,
       name: "Mobile Device",
       type: "mobile",
+      tabs: [],
     });
 
     Services.obs.notifyObservers(null, "fxaccounts:devicelist_updated");
@@ -555,6 +568,7 @@ add_task(async function test_mobile_promo_windows() {
           id: 3,
           name: "Mobile Device",
           type: "mobile",
+          tabs: [],
         });
 
         Services.obs.notifyObservers(null, "fxaccounts:devicelist_updated");
@@ -711,6 +725,7 @@ add_task(async function test_close_device_connected_tab() {
         name: "This Device",
         isCurrentDevice: true,
         type: "desktop",
+        tabs: [],
       },
     ],
   });

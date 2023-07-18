@@ -15,12 +15,14 @@ function setupWithFxaDevices() {
         name: "My desktop",
         isCurrentDevice: true,
         type: "desktop",
+        tabs: [],
       },
       {
         id: 2,
         name: "Other device",
         isCurrentDevice: false,
         type: "mobile",
+        tabs: [],
       },
     ],
   }));
