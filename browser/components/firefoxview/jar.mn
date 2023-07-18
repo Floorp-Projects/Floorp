@@ -30,6 +30,7 @@ browser.jar:
     content/browser/firefoxview/recently-closed-tabs.mjs
     content/browser/firefoxview/recentlyclosed.mjs
     content/browser/firefoxview/viewpage.mjs
+    content/browser/firefoxview/history-empty.svg (content/history-empty.svg)
     content/browser/firefoxview/recently-closed-empty.svg (content/recently-closed-empty.svg)
     content/browser/firefoxview/category-history.svg (content/category-history.svg)
     content/browser/firefoxview/category-opentabs.svg (content/category-opentabs.svg)

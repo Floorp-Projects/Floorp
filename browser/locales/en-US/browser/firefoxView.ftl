@@ -138,7 +138,7 @@ firefoxview-synced-tabs-header = Tabs from other devices
 
 ##
 
-# Used for a link in collapsible cards, in the 'Recent browsing' page of Firefox View
+# Used for a link in collapsible cards, in the ’Recent browsing’ page of Firefox View
 firefoxview-view-all-link = View all
 
 # Variables:
@@ -173,3 +173,35 @@ firefoxview-history-date-prev-month = { DATETIME($date, month: "long", year: "nu
 firefoxview-show-all-history = Show all history
 
 firefoxview-view-more-browsing-history = View more browsing history
+
+## Message displayed in Firefox View when the user has no history data
+
+firefoxview-history-empty-header = Get back to where you’ve been
+firefoxview-history-empty-description = As you browse, the pages you visit will be listed here.
+firefoxview-history-empty-description-two = Protecting your privacy is at the heart of what we do. It’s why you can control the activity { -brand-product-name } remembers, in your <a data-l10n-name="history-settings-url">history settings</a>.
+
+##
+
+# Button text for choosing a browser within the ’Import history from another browser’ banner
+firefoxview-choose-browser-button = Choose browser
+  .title = Choose browser
+
+## Message displayed in Firefox View when the user has chosen to never remember History
+
+firefoxview-dont-remember-history-empty-header = Nothing to show
+firefoxview-dont-remember-history-empty-description = Protecting your privacy is at the heart of what we do. It’s why you can control the activity { -brand-product-name } remembers.
+firefoxview-dont-remember-history-empty-description-two = Based on your current settings, { -brand-product-name } doesn’t remember your activity as you browse. To change that, <a data-l10n-name="history-settings-url-two">change your history settings to remember your history</a>.
+
+##
+
+# This label is read by screen readers when focusing the close button for the "Import history from another browser" banner in Firefox View
+firefoxview-import-history-close-button =
+  .aria-label = Close
+  .title = Close
+
+## Text displayed in a dismissable banner to import bookmarks/history from another browser
+
+firefoxview-import-history-header = Import history from another browser
+firefoxview-import-history-description = Make { -brand-product-name } your go-to browser. Import browsing history, bookmarks, and more.
+
+##
