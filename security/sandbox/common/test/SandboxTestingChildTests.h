@@ -841,7 +841,7 @@ void RunTestsUtilityAudioDecoder(SandboxTestingChild* child,
 #  endif           // XP_MACOSX
 #else              // XP_UNIX
 #  ifdef XP_WIN
-  RunWinTestWin32k(child, false);
+  RunWinTestWin32k(child);
 #  endif  // XP_WIN
   child->ReportNoTests();
 #endif    // XP_UNIX
