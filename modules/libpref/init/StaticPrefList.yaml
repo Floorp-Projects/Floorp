@@ -4700,11 +4700,6 @@
 #endif
   mirror: always
 
-- name: dom.webnotifications.serviceworker.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Is support for Window.event enabled?
 - name: dom.window.event.enabled
   type: bool
