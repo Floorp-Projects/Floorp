@@ -212,3 +212,40 @@ AntiTracking.runTest(
   false, // no user-interaction test
   0 // no blocking notifications
 );
+
+AntiTracking.runTest(
+  "Storage Access API called in a Permission Policy controlled iframe",
+  // blocking callback
+  async _ => {
+    let [threw, rejected] = await callRequestStorageAccess();
+    ok(!threw, "requestStorageAccess should not throw");
+    ok(rejected, "requestStorageAccess shouldn't be available");
+  },
+
+  null, // non-blocking callback
+  // cleanup function
+  async _ => {
+    // Only clear the user-interaction permissions for the tracker here so that
+    // the next test has a clean slate.
+    await new Promise(resolve => {
+      Services.clearData.deleteDataFromHost(
+        Services.io.newURI(TEST_3RD_PARTY_DOMAIN).host,
+        true,
+        Ci.nsIClearDataService.CLEAR_PERMISSIONS,
+        value => resolve()
+      );
+    });
+  },
+  [
+    ["dom.storage_access.enabled", true],
+    [APS_PREF, true],
+  ], // extra prefs
+  false, // no window open test
+  false, // no user-interaction test
+  Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, // expected blocking notifications
+  false, // run in normal window
+  null,
+  null,
+  null,
+  "storage-access ()" // Disable the storage-access feature
+);
