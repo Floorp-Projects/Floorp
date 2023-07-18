@@ -20,7 +20,9 @@ let expectedConsoleCalls = [];
 
 function doConsoleCalls(aState)
 {
-  const { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  const { ConsoleAPI } = ChromeUtils.importESModule(
+    "resource://gre/modules/Console.sys.mjs"
+  );
   const console = new ConsoleAPI({
     innerID: window.top.windowGlobalChild.innerWindowId
   });
