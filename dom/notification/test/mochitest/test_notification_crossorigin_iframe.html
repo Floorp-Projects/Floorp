@@ -17,13 +17,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1560741
   <script class="testbody" type="text/javascript">
   SimpleTest.waitForExplicitFinish();
 
-  const kBlankURL = "https://example.com/tests/dom/notification/test/mochitest/blank.html";
+  const kBlankURL = "https://example.org/tests/dom/notification/test/mochitest/blank.html";
 
   (async function runTest() {
     await SpecialPowers.pushPrefEnv({"set": [
       ["notification.prompt.testing", true],
       ["notification.prompt.testing.allow", true],
-      ["dom.webnotifications.allowinsecure", true],
     ]});
 
     let iframe = document.createElement("iframe");

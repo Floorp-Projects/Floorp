@@ -483,8 +483,7 @@ NotificationPermissionRequest::Run() {
 
     if (mPrincipal->SchemeIs("file")) {
       mPermission = NotificationPermission::Granted;
-    } else if (!StaticPrefs::dom_webnotifications_allowinsecure() &&
-               !mWindow->IsSecureContext()) {
+    } else if (!mWindow->IsSecureContext()) {
       mPermission = NotificationPermission::Denied;
       blocked = true;
       nsCOMPtr<Document> doc = mWindow->GetExtantDoc();

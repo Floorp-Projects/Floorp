@@ -4666,11 +4666,6 @@
   value: true
   mirror: always
 
-- name: dom.webnotifications.allowinsecure
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: dom.webnotifications.allowcrossoriginiframe
   type: RelaxedAtomicBool
   value: false
