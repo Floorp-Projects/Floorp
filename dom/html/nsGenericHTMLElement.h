@@ -151,7 +151,6 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
     return false;
   }
 
-  void AssertPopoverAttributeStateCorrespondsToAttributePresence() const;
   mozilla::dom::PopoverAttributeState GetPopoverAttributeState() const;
   void PopoverPseudoStateUpdate(bool aOpen, bool aNotify);
   bool PopoverOpen() const;
