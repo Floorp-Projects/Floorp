@@ -52,14 +52,25 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   static bool ShouldHonorThemeScrollbarColors();
   mozilla::Maybe<ColorScheme> ComputeColorSchemeSetting();
 
+  enum class ThemeFamily : uint8_t {
+    // Adwaita, the default GTK theme.
+    Adwaita,
+    // Breeze, the default KDE theme.
+    Breeze,
+    // Yaru, the default Ubuntu theme.
+    Yaru,
+    Other,
+  };
+
   // We use up to two themes (one light, one dark), which might have different
   // sets of fonts and colors.
   struct PerThemeData {
     nsCString mName;
-
     bool mIsDark = false;
     bool mHighContrast = false;
     bool mPreferDarkTheme = false;
+
+    ThemeFamily mFamily = ThemeFamily::Other;
 
     // NOTE(emilio): This is unused, but if we need to we can use it to override
     // system colors with standins like we do for the non-native theme.
@@ -80,6 +91,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     ColorPair mInfo;
     ColorPair mMenu;
     ColorPair mMenuHover;
+    ColorPair mHeaderBar;
+    ColorPair mHeaderBarInactive;
     ColorPair mButton;
     ColorPair mButtonHover;
     nscolor mButtonActiveText = kBlack;
