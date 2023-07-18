@@ -70,18 +70,19 @@ elements (such as buttons).
 
 Current templates include\:
 
-* Moments Page - appears on start-up as a full content page
-* Contextual Feature Recommendation - highlighted word in the Location Bar
-  that, if clicked, drops down a panel with information about a feature
-  relevant to that user at that time
-* About Welcome - shown on startup for new users in about:welcome content page
-* Snippets - short messages that appear on New Tab Page to highlight products,
-  features and initiatives
-* Infobars - Shown at the top of browser content area these can be per tab
-  (switching tabs hides it) or global (persistent across tabs)
-* Spotlight - This is a window level modal, all other interactions are prevented,
-  the user is given a primary and a secondary button to interact with the modal.
-* PrivateBrowsing - Message shown inside about:PrivateBrowsing content page
+.. In theory, we ought to be able to use the :glob: directive here to
+.. automatically generate the list below. For unknown reasons, however,
+.. `mach doc` _sometimes_ gets confused and refuses to find patterns like
+.. `*.md`.
+.. toctree::
+  :maxdepth: 1
+
+  moments-page
+  contextual-feature-recommendation
+  about-welcome
+  infobars
+  spotlight
+  private-browsing
 
 Detailed Docs
 -------------
