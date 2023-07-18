@@ -49,7 +49,7 @@
     <string name="menu_remove_from_shortcuts">Chawelesaj pa ramb’al b’e</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Jas Kxajtajik</string>
+    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">Jas Kxajtajik</string>
     <string name="menu_settings">Taq wiqitajem</string>
     <string name="menu_about">Chi rij</string>
     <string name="menu_help">Tob\'anem</string>
@@ -176,10 +176,13 @@
     <string name="preference_category_search">Utzukuxik</string>
 
     <!-- Title of "switch" preference that enables/disables search suggestions -->
-    <string name="preference_show_search_suggestions">cha’riqa’</string>
+    <string name="preference_show_search_suggestions"></string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">Ya\'om chi uloq</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Ch’ich’ rech tzukunem</string>
 
     <!-- Text that is shown below a "switch" preference that is enabled. -->
     <string name="preference_state_on">Utzijik</string>
@@ -311,6 +314,9 @@
     <string name="preference_search_add2">+ Chaya\' jun chi ch\'ich\' rech tzukub\'al</string>
     <string name="preference_search_remove_title">Chawelesaj taq ch\'ich\' rech tzukub\'al</string>
     <string name="preference_search_remove">Relesaxik</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Chaya‘ jun chik ch‘ich‘ rech tzukub‘al</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Chaya\' ch\'ich\' rech tzukub\'al</string>

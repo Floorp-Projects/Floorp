@@ -547,6 +547,11 @@
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Ekstern nedlastingshandsamar</string>
 
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Slå på Gecko-loggar</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">Avsluttar applikasjonen for å leggje til endringar…</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Tillegg</string>
 
