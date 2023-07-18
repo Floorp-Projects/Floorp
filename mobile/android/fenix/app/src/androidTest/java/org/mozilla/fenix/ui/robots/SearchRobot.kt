@@ -90,8 +90,6 @@ class SearchRobot {
         }
     }
 
-    fun verifySearchEngineButton() = assertSearchButton()
-
     fun verifySearchEngineSuggestionResults(rule: ComposeTestRule, searchSuggestion: String) {
         rule.waitForIdle()
         for (i in 1..RETRY_COUNT) {
@@ -400,13 +398,6 @@ private fun clearButton() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_clear_view"))
 
 private fun searchWrapper() = mDevice.findObject(UiSelector().resourceId("$packageName:id/search_wrapper"))
-
-private fun assertSearchButton() =
-    assertTrue(
-        mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/search_engines_shortcut_button"),
-        ).waitForExists(waitingTime),
-    )
 
 private val searchSelectorButton = itemWithResId("$packageName:id/search_selector")
 

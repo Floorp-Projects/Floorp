@@ -59,6 +59,8 @@ import org.mozilla.fenix.ui.robots.searchScreen
 class SearchTest {
     lateinit var searchMockServer: MockWebServer
     lateinit var queryString: String
+    private val generalEnginesList = listOf("DuckDuckGo", "Google", "Bing")
+    private val topicEnginesList = listOf("Amazon.com", "Wikipedia", "eBay")
 
     @get:Rule
     val activityTestRule = AndroidComposeTestRule(
@@ -98,11 +100,6 @@ class SearchTest {
             typeSearch("mozilla ")
             verifyScanButtonVisibility(visible = false)
             verifyVoiceSearchButtonVisibility(enabled = true)
-            clickClearButton()
-            clickSearchSelectorButton()
-            selectTemporarySearchMethod("Amazon.com")
-            verifyScanButtonVisibility(visible = false)
-            verifyVoiceSearchButtonVisibility(enabled = true)
         }
     }
 
@@ -117,6 +114,51 @@ class SearchTest {
                 "DuckDuckGo", "Google", "Amazon.com", "Wikipedia", "Bing", "eBay",
                 "Bookmarks", "Tabs", "History", "Search settings",
             )
+        }
+    }
+
+    @Test
+    fun searchPlaceholderForDefaultEnginesTest() {
+        generalEnginesList.forEach {
+            homeScreen {
+            }.openSearch {
+                clickSearchSelectorButton()
+            }.clickSearchEngineSettings {
+                openDefaultSearchEngineMenu()
+                changeDefaultSearchEngine(it)
+                exitMenu()
+            }
+            navigationToolbar {
+                verifySearchBarPlaceholder("Search or enter address")
+            }
+        }
+    }
+
+    @Test
+    fun searchPlaceholderForOtherGeneralSearchEnginesTest() {
+        val generalEnginesList = listOf("DuckDuckGo", "Bing")
+
+        generalEnginesList.forEach {
+            homeScreen {
+            }.openSearch {
+                clickSearchSelectorButton()
+                selectTemporarySearchMethod(it)
+                verifySearchBarPlaceholder("Search the web")
+            }.dismissSearchBar {}
+        }
+    }
+
+    @Test
+    fun searchPlaceholderForTopicSearchEngineTest() {
+        val topicEnginesList = listOf("Amazon.com", "Wikipedia", "eBay")
+
+        topicEnginesList.forEach {
+            homeScreen {
+            }.openSearch {
+                clickSearchSelectorButton()
+                selectTemporarySearchMethod(it)
+                verifySearchBarPlaceholder("Enter search terms")
+            }.dismissSearchBar {}
         }
     }
 
@@ -152,6 +194,27 @@ class SearchTest {
             clickScanButton()
             grantSystemPermission()
             verifyScannerOpen()
+        }
+    }
+
+    @Test
+    fun scanButtonAvailableOnlyForGeneralSearchEnginesTest() {
+        generalEnginesList.forEach {
+            homeScreen {
+            }.openSearch {
+                clickSearchSelectorButton()
+                selectTemporarySearchMethod(it)
+                verifyScanButtonVisibility(visible = true)
+            }.dismissSearchBar {}
+        }
+
+        topicEnginesList.forEach {
+            homeScreen {
+            }.openSearch {
+                clickSearchSelectorButton()
+                selectTemporarySearchMethod(it)
+                verifyScanButtonVisibility(visible = false)
+            }.dismissSearchBar {}
         }
     }
 
