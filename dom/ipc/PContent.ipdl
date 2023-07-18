@@ -1583,8 +1583,6 @@ parent:
       nullable nsIReferrerInfo aReferrerInfo,
       OriginAttributes aOriginAttributes);
 
-    sync RemovePermission(nullable nsIPrincipal principal, nsCString permissionType) returns (nsresult rv);
-
     /**
      * Tell the parent that a decoder's' benchmark has been completed.
      * The result can then be stored in permanent storage.
