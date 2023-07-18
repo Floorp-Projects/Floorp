@@ -81,17 +81,26 @@ let SyncedTabsInternal = {
     return reFilter.test(tab.url) || reFilter.test(tab.title);
   },
 
-  _createRecentTabsList(clients, maxCount) {
+  _createRecentTabsList(
+    clients,
+    maxCount,
+    extraParams = { removeAllDupes: true, removeDeviceDupes: false }
+  ) {
     let tabs = [];
 
     for (let client of clients) {
+      if (extraParams.removeDeviceDupes) {
+        client.tabs = this._filterRecentTabsDupes(client.tabs);
+      }
       for (let tab of client.tabs) {
         tab.device = client.name;
         tab.deviceType = client.clientType;
       }
       tabs = [...tabs, ...client.tabs.reverse()];
     }
-    tabs = this._filterRecentTabsDupes(tabs);
+    if (extraParams.removeAllDupes) {
+      tabs = this._filterRecentTabsDupes(tabs);
+    }
     tabs = tabs.sort((a, b) => b.lastUsed - a.lastUsed).slice(0, maxCount);
     return tabs;
   },
@@ -327,8 +336,8 @@ export var SyncedTabs = {
   // Get list of synced tabs across all devices/clients
   // truncated by value of maxCount param, sorted by
   // lastUsed value, and filtered for duplicate URLs
-  async getRecentTabs(maxCount) {
+  async getRecentTabs(maxCount, extraParams) {
     let clients = await this.getTabClients();
-    return this._internal._createRecentTabsList(clients, maxCount);
+    return this._internal._createRecentTabsList(clients, maxCount, extraParams);
   },
 };

@@ -1,0 +1,59 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ @import url("chrome://global/skin/in-content/common.css");
+
+.icon {
+  vertical-align: bottom;
+  margin-inline-end: 5px;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-position: center center;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.phone, .mobile {
+  background-image: url('chrome://browser/skin/device-phone.svg');
+}
+
+.desktop {
+  background-image: url('chrome://browser/skin/device-desktop.svg');
+}
+
+.tablet {
+  background-image: url('chrome://browser/skin/device-tablet.svg');
+}
+
+h2 {
+  display: flex;
+  align-items: center;
+}
+
+.notabs {
+  margin-top: 15px;
+}
+
+.blackbox {
+  border: 1px solid var(--fxview-border);
+  text-align: center;
+  height: 70px;
+  border-radius: 8px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button.primary {
+  white-space: nowrap;
+  min-width: fit-content;
+}
+
+label {
+  display: flex;
+  align-items: center;
+}

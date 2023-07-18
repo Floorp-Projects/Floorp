@@ -17,11 +17,13 @@ function setupRecentDeviceListMocks() {
       name: "My desktop",
       isCurrentDevice: true,
       type: "desktop",
+      tabs: [],
     },
     {
       id: 2,
       name: "My iphone",
       type: "mobile",
+      tabs: [],
     },
   ]);
 
