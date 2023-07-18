@@ -1236,6 +1236,19 @@ const SNAPSHOT_SCHEMA = {
         },
       },
     },
+    legacyUserStylesheets: {
+      type: "object",
+      properties: {
+        active: {
+          required: true,
+          type: "boolean",
+        },
+        types: {
+          required: true,
+          type: "array",
+        },
+      },
+    },
   },
 };
 

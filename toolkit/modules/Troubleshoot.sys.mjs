@@ -453,6 +453,25 @@ var dataProviders = {
     );
   },
 
+  async legacyUserStylesheets(done) {
+    if (AppConstants.platform == "android") {
+      done({ active: false, types: [] });
+      return;
+    }
+
+    let active = Services.prefs.getBoolPref(
+      "toolkit.legacyUserProfileCustomizations.stylesheets"
+    );
+    let types = [];
+    for (let name of ["userChrome.css", "userContent.css"]) {
+      let path = PathUtils.join(PathUtils.profileDir, "chrome", name);
+      if (await IOUtils.exists(path)) {
+        types.push(name);
+      }
+    }
+    done({ active, types });
+  },
+
   async environmentVariables(done) {
     let Subprocess;
     try {
