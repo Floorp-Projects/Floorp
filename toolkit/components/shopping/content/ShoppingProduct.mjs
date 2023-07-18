@@ -15,7 +15,11 @@ import {
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ProductValidator: "chrome://global/content/shopping/ProductValidator.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
+
+const API_RETRIES = 3;
+const API_RETRY_TIMEOUT = 100;
 
 /**
  * @typedef {object} Product
@@ -57,15 +61,16 @@ export class ShoppingProduct {
    *
    * @param {URL} url
    *  URL to get the product info from.
-   * @param {object} options
-   *  allowValidationFailure: true
+   * @param {object} [options]
+   * @param {object} [options.allowValidationFailure=true]
+   *  Should validation failures be allowed or return null
    */
   constructor(url, options = { allowValidationFailure: true }) {
     this.allowValidationFailure = !!options.allowValidationFailure;
     this.analysis = undefined;
     this.recommendations = undefined;
 
-    this.abortController = new AbortController();
+    this._abortController = new AbortController();
 
     if (url && URL.isInstance(url)) {
       let product = this.constructor.fromURL(url);
@@ -206,12 +211,12 @@ export class ShoppingProduct {
       website: product.host,
     };
 
-    let result = await this.#request(
-      options.url,
-      requestOptions,
-      options.requestSchema,
-      options.responseSchema
-    );
+    let { url, requestSchema, responseSchema } = options;
+
+    let result = await this.request(url, requestOptions, {
+      requestSchema,
+      responseSchema,
+    });
 
     this.analysis = result;
 
@@ -253,13 +258,11 @@ export class ShoppingProduct {
       product_id: product.id,
       website: product.host,
     };
-
-    let result = await this.#request(
-      options.url,
-      requestOptions,
-      options.requestSchema,
-      options.responseSchema
-    );
+    let { url, requestSchema, responseSchema } = options;
+    let result = await this.request(url, requestOptions, {
+      requestSchema,
+      responseSchema,
+    });
 
     this.recommendations = result;
 
@@ -269,24 +272,42 @@ export class ShoppingProduct {
   /**
    * Request method for shopping API.
    *
-   * @param {string} ApiURL
+   * @param {string} apiURL
    *  URL string for the API to request.
    * @param {object} bodyObj
-   *  Options to send to the API.
-   * @param {string} RequestSchemaURL
+   *  What to send to the API.
+   * @param {object} [options]
+   *  Options for validation and retries.
+   * @param {string} [options.requestSchema]
    *  URL string for the JSON Schema to validated the request.
-   * @param {string} ResponseSchemaURL
+   * @param {string} [options.responseSchema]
    *  URL string for the JSON Schema to validated the response.
+   * @param {int} [options.failCount]
+   *  Current number of failures for this request.
+   * @param {int} [options.maxRetries=API_RETRIES]
+   *  Max number of allowed failures.
+   * @param {int} [options.retryTimeout=API_RETRY_TIMEOUT]
+   *  Minimum time to wait.
    * @returns {object} result
    *  Parsed JSON API result or null.
    */
-  async #request(ApiURL, bodyObj = {}, RequestSchemaURL, ResponseSchemaURL) {
-    let responseOk;
+  async request(apiURL, bodyObj = {}, options = {}) {
+    let {
+      requestSchema,
+      responseSchema,
+      failCount = 0,
+      maxRetries = API_RETRIES,
+      retryTimeout = API_RETRY_TIMEOUT,
+    } = options;
 
-    if (bodyObj && RequestSchemaURL) {
+    if (this._abortController.signal.aborted) {
+      return null;
+    }
+
+    if (bodyObj && requestSchema) {
       let validRequest = await lazy.ProductValidator.validate(
         bodyObj,
-        RequestSchemaURL,
+        requestSchema,
         this.allowValidationFailure
       );
       if (!validRequest && !this.allowValidationFailure) {
@@ -294,23 +315,23 @@ export class ShoppingProduct {
       }
     }
 
-    let result = await fetch(ApiURL, {
+    let resp = await fetch(apiURL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
       body: JSON.stringify(bodyObj),
-      signal: this.abortController.signal,
-    }).then(resp => {
-      responseOk = resp.ok;
-      return resp.json();
+      signal: this._abortController.signal,
     });
+    let responseOk = resp.ok;
+    let responseStatus = resp.status;
+    let result = await resp.json();
 
-    if (responseOk && ResponseSchemaURL) {
+    if (responseOk && responseSchema) {
       let validResponse = await lazy.ProductValidator.validate(
         result,
-        ResponseSchemaURL,
+        responseSchema,
         this.allowValidationFailure
       );
       if (!validResponse && !this.allowValidationFailure) {
@@ -318,11 +339,28 @@ export class ShoppingProduct {
       }
     }
 
+    // Retry failed results and 500 errors.
+    if (!result || (!responseOk && responseStatus >= 500)) {
+      failCount++;
+      // Make sure we still want to retry
+      if (failCount > maxRetries) {
+        return null;
+      }
+      // Wait for a back off timeout base on the number of failures.
+      let backOff = retryTimeout * Math.pow(2, failCount - 1);
+
+      await new Promise(resolve => lazy.setTimeout(resolve, backOff));
+
+      // Try the request again.
+      options.failCount = failCount;
+      result = await this.request(apiURL, bodyObj, options);
+    }
+
     return result;
   }
 
-  destroy() {
-    this.abortController.abort();
+  uninit() {
+    this._abortController.abort();
   }
 }
 
