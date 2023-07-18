@@ -511,7 +511,13 @@ bool DecryptingInputStream<CipherStrategy>::Deserialize(
 
   Init(WrapNotNull<nsCOMPtr<nsIInputStream>>(std::move(stream)),
        params.blockSize());
-  mKey.init(mCipherStrategy.DeserializeKey(params.key()));
+
+  auto key = mCipherStrategy.DeserializeKey(params.key());
+  if (NS_WARN_IF(!key)) {
+    return false;
+  }
+
+  mKey.init(*key);
   if (NS_WARN_IF(
           NS_FAILED(mCipherStrategy.Init(CipherMode::Decrypt, params.key())))) {
     return false;
