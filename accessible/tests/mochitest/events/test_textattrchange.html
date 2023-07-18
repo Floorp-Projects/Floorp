@@ -22,7 +22,9 @@
 
   <script type="application/javascript">
 
-    const {InlineSpellChecker} = ChromeUtils.import("resource://gre/modules/InlineSpellChecker.jsm");
+    const {InlineSpellChecker} = ChromeUtils.importESModule(
+      "resource://gre/modules/InlineSpellChecker.sys.mjs"
+    );
 
     function spelledTextInvoker(aID) {
       this.DOMNode = getNode(aID);
