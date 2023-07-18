@@ -197,8 +197,15 @@ But your instrumentation might be on any process, so how do you test it?
 In this case there's a slight addition to the Usual Test Format:
 1) Assert no value in the metric
 2) Express behaviour
-3) _Flush all pending FOG IPC operations with `Services.fog.testFlushAllChildren()`_
+3) _Flush all pending FOG IPC operations with `await Services.fog.testFlushAllChildren()`_
 4) Assert correct value in the metric.
+
+**NOTE:** We learned in
+[bug 1843178](https://bugzilla.mozilla.org/show_bug.cgi?id=1843178)
+that the list of all content processes that `Services.fog.testFlushAllChildren()`
+uses is very quickly updated after the end of a call to `BrowserUtils.withNewTab(...)`.
+If you are using `withNewTab`, you should consider calling `testFlushAllChildren()`
+_within_ the callback.
 
 ## GTests/Google Tests
 
