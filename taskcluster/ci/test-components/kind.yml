@@ -2,20 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.transform:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
     - android_taskgraph.transforms.ui_tests:transforms
     - android_taskgraph.transforms.gradle_optimization:transforms
-    - taskgraph.transforms.job:transforms
-    - taskgraph.transforms.task:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
 
 kind-dependencies:
     - toolchain
     - external-gradle-dependencies
 
 
-task-defaults:
+job-defaults:
     attributes:
         build-type: debug
         code-review: true
@@ -32,7 +32,7 @@ task-defaults:
         # TODO Generate APKs in a build task instead
         gradlew: ['clean', 'assembleGecko', 'assembleAndroidTest', 'assembleDebug']
         pre-gradlew:
-            - ["cd", "android-components"]
+            - ["cd", "mobile/android/android-components"]
         secrets:
             - name: project/mobile/firefox-android/android-components/firebase
               key: firebaseToken
@@ -40,31 +40,29 @@ task-defaults:
               json: true
         using: gradlew
         use-caches: false
-    run-on-tasks-for:
-        - github-pull-request
-        - github-push
     treeherder:
         kind: test
         platform: 'AC-ui-test/opt'
         tier: 2
-    worker-type: b-android-large
+    worker-type: b-linux-large-gcp
     worker:
         artifacts:
             - name: public
               path: /builds/worker/artifacts
               type: directory
-        docker-image: {in-tree: ui-tests}
+        docker-image: {in-tree: android-ui-tests}
         env:
             GOOGLE_APPLICATION_CREDENTIALS: '.firebase_token.json'
             GOOGLE_PROJECT: moz-android-components-230120
+            ANDROID_SDK_ROOT: /builds/worker/fetches/android-sdk-linux
         max-run-time: 2400
     optimization:
         skip-unless-changed:
-            - android-components/automation/taskcluster/androidTest/ui-test.sh
+            - mobile/android/android-components/automation/taskcluster/androidTest/ui-test.sh
             # More paths are dynamically added by transforms
 
 
-tasks:
+jobs:
     unit-browser-engine-gecko-nightly:
         component: browser
         description: 'Run unit tests on device for browser component'
