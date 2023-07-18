@@ -141,12 +141,14 @@ Span<const uint8_t> NSSCipherStrategy::SerializeKey(const KeyType& aKey) {
   return Span(aKey);
 }
 
-NSSCipherStrategy::KeyType NSSCipherStrategy::DeserializeKey(
+Maybe<NSSCipherStrategy::KeyType> NSSCipherStrategy::DeserializeKey(
     const Span<const uint8_t>& aSerializedKey) {
   KeyType res;
-  MOZ_ASSERT(res.size() == aSerializedKey.size());
+  if (res.size() != aSerializedKey.size()) {
+    return Nothing();
+  }
   std::copy(aSerializedKey.cbegin(), aSerializedKey.cend(), res.begin());
-  return res;
+  return Some(res);
 }
 
 }  // namespace mozilla::dom::quota
