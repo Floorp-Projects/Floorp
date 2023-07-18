@@ -15,7 +15,9 @@
     const { Assert } = ChromeUtils.importESModule(
       "resource://testing-common/Assert.sys.mjs"
     );
-    const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+    const { ObjectUtils } = ChromeUtils.importESModule(
+      "resource://gre/modules/ObjectUtils.sys.mjs"
+    );
 
     add_task(async function test_read_failure() {
       const doesNotExist = PathUtils.join(PathUtils.tempDir, "does_not_exist.tmp");
