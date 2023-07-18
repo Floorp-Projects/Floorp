@@ -150,9 +150,6 @@ static const char sIntPrefs[][45] = {
     "ui.chosenMenuItemsShouldBlink",
     "ui.windowsAccentColorInTitlebar",
     "ui.windowsDefaultTheme",
-    "ui.dwmCompositor",
-    "ui.windowsClassic",
-    "ui.windowsGlass",
     "ui.macGraphiteTheme",
     "ui.macBigSurTheme",
     "ui.macRTL",
@@ -487,27 +484,11 @@ void nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure) {
   }
 }
 
-bool LookAndFeel::WindowsNonNativeMenusEnabled() {
-  switch (StaticPrefs::browser_display_windows_non_native_menus()) {
-    case 0:
-      return false;
-    case 1:
-      return true;
-    default:
-#ifdef XP_WIN
-      return IsWin10OrLater();
-#else
-      return false;
-#endif
-  }
-}
-
 static constexpr struct {
   nsLiteralCString mName;
   widget::ThemeChangeKind mChangeKind =
       widget::ThemeChangeKind::MediaQueriesOnly;
 } kMediaQueryPrefs[] = {
-    {"browser.display.windows.non_native_menus"_ns},
     // Affects whether standins are used for the accent color.
     {"widget.non-native-theme.use-theme-accent"_ns,
      widget::ThemeChangeKind::Style},

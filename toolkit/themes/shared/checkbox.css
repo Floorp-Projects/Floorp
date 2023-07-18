@@ -119,13 +119,6 @@ checkbox:not([native]):focus-visible > .checkbox-check {
     color: GrayText;
   }
 
-  @media (-moz-windows-classic) {
-    checkbox[native][disabled="true"] {
-      color: ThreeDShadow;
-      text-shadow: 1px 1px ThreeDHighlight;
-    }
-  }
-
   /* ::::: checkmark image ::::: */
 
   .checkbox-check[native] {

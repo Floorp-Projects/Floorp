@@ -52,10 +52,3 @@ radiogroup:focus-visible > radio[focused="true"] > .radio-label-box {
 radio[disabled="true"] {
   color: GrayText;
 }
-
-@media (-moz-windows-classic) {
-  radio[disabled="true"] {
-    color: ThreeDShadow;
-    text-shadow: 1px 1px ThreeDHighlight;
-  }
-}

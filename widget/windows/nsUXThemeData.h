@@ -38,13 +38,6 @@ enum nsUXThemeClass {
   eUXNumClasses
 };
 
-enum CmdButtonIdx {
-  CMDBUTTONIDX_MINIMIZE = 0,
-  CMDBUTTONIDX_RESTORE,
-  CMDBUTTONIDX_CLOSE,
-  CMDBUTTONIDX_BUTTONBOX
-};
-
 class nsUXThemeData {
   // This class makes sure we don't attempt to open a theme if the previous
   // loading attempt has failed because OpenThemeData is a heavy task and
@@ -68,22 +61,9 @@ class nsUXThemeData {
   };
 
   static ThemeHandle sThemes[eUXNumClasses];
-
-  // We initialize sCommandButtonBoxMetrics separately as a performance
-  // optimization to avoid fetching dummy values for sCommandButtonMetrics
-  // when we don't need those.
-  static SIZE sCommandButtonMetrics[3];
-  static bool sCommandButtonMetricsInitialized;
-  static SIZE sCommandButtonBoxMetrics;
-  static bool sCommandButtonBoxMetricsInitialized;
-
   static const wchar_t* GetClassName(nsUXThemeClass);
-  static void EnsureCommandButtonMetrics();
-  static void EnsureCommandButtonBoxMetrics();
 
  public:
-  static bool sTitlebarInfoPopulatedAero;
-  static bool sTitlebarInfoPopulatedThemed;
   static bool sIsDefaultWindowsTheme;
   static bool sIsHighContrastOn;
 
@@ -91,22 +71,8 @@ class nsUXThemeData {
   static HANDLE GetTheme(nsUXThemeClass cls);
   static HMODULE GetThemeDLL();
 
-  // nsWindow calls this to update desktop settings info
-  static void UpdateTitlebarInfo(HWND aWnd);
-
-  static SIZE GetCommandButtonMetrics(CmdButtonIdx aMetric) {
-    EnsureCommandButtonMetrics();
-    return sCommandButtonMetrics[aMetric];
-  }
-  static SIZE GetCommandButtonBoxMetrics() {
-    EnsureCommandButtonBoxMetrics();
-    return sCommandButtonBoxMetrics;
-  }
   static void UpdateNativeThemeInfo();
   static bool IsDefaultWindowTheme();
   static bool IsHighContrastOn();
-
-  static bool AreFlatMenusEnabled();
-  static bool IsAppThemed();
 };
 #endif  // __UXThemeData_h__

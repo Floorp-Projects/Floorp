@@ -15,19 +15,14 @@
   background-color: -moz-Dialog;
   color: -moz-DialogText;
   font: message-box;
+  /* Override some menu color variables for light browser themes. */
+  --menu-icon-opacity: 0.7;
 }
 
-@media (-moz-windows-non-native-menus) {
+/* Override the menu color variables for dark browser themes. */
+@media (prefers-color-scheme: dark) {
   :root {
-    /* Override some menu color variables for light browser themes. */
-    --menu-icon-opacity: 0.7;
-  }
-
-  /* Override the menu color variables for dark browser themes. */
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --menu-icon-opacity: 1;
-    }
+    --menu-icon-opacity: 1;
   }
 }
 
@@ -107,15 +102,6 @@ xul|separator.groove[orient="vertical"] {
   border-right: 1px solid ThreeDHighlight;
   width: 0;
   margin-inline: 0.4em;
-}
-
-/* Windows classic disabled labels */
-
-@media (-moz-windows-classic) {
-  xul|label[disabled="true"] {
-    color: ThreeDShadow;
-    text-shadow: 1px 1px ThreeDHighlight;
-  }
 }
 
 /* Input margins */

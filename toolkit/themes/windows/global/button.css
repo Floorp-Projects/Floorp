@@ -50,7 +50,7 @@ button:focus-visible {
 
 /* .......... default/hover/focused state .......... */
 
-@media (prefers-contrast) and (-moz-windows-compositor) {
+@media (prefers-contrast) {
   /* This is for high-contrast black and white themes on Windows 8 and later,
      where the native appearance renders a different background (which
      appears to be equivalent to the Highlight color) if the button is in the
@@ -67,13 +67,6 @@ button:focus-visible {
 button:where([disabled="true"]) {
   color: GrayText;
   background-color: ButtonFace;
-}
-
-@media (-moz-windows-classic) {
-  button:where([disabled="true"]) {
-    color: ThreeDShadow;
-    text-shadow: 1px 1px ThreeDHighlight;
-  }
 }
 
 /* ::::: menu buttons ::::: */
