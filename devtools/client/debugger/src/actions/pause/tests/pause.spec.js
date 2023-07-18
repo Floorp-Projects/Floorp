@@ -150,7 +150,6 @@ describe("pause", () => {
           id: mockFrameId,
           generatedLocation,
           location: generatedLocation,
-          originalDisplayName: "foo",
           library: null,
           scope: {
             bindings: {

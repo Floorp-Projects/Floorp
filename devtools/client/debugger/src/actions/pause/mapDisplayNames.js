@@ -6,8 +6,25 @@ import { getFrames, getSymbols, getCurrentThread } from "../../selectors";
 
 import { findClosestFunction } from "../../utils/ast";
 
+/**
+ * For frames related to non-WASM original sources, try to lookup for the function
+ * name in the original source. The server will provide the function name in `displayName`
+ * in the generated source, but not in the original source.
+ * This information will be stored in frame's `originalDisplayName` attribute
+ */
 function mapDisplayName(frame, { getState }) {
+  // Ignore WASM original frames
   if (frame.isOriginal) {
+    return frame;
+  }
+  // When it is a regular (non original) JS source, the server already returns a valid displayName attribute.
+  if (!frame.location.source.isOriginal) {
+    return frame;
+  }
+  // Ignore the frame if we already computed this attribute.
+  // Given that the action is called on every source selection,
+  // we will recall this method on all frames for each selection.
+  if (frame.originalDisplayName) {
     return frame;
   }
 

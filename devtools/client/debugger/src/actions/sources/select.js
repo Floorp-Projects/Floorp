@@ -204,6 +204,9 @@ export function selectLocation(location, { keepContext = true } = {}) {
     // /!\ we don't historicaly wait for this async action
     dispatch(setInScopeLines());
 
+    // Set frame's `originalDisplayName` attribute for original sources.
+    // Do that right here, as it requires to have computed the symbols
+    // for the related source.
     if (getIsCurrentThreadPaused(getState())) {
       await dispatch(mapDisplayNames());
     }
