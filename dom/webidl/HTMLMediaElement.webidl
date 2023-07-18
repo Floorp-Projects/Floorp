@@ -168,11 +168,6 @@ partial interface HTMLMediaElement {
   // from playing.
   [ChromeOnly]
   readonly attribute boolean isSuspendedByInactiveDocOrDocShell;
-
-  // Used for testing to suspend/resume underlying media decoder and resources
-  // for the media element.
-  [ChromeOnly]
-  undefined setSuspend(boolean aSuspend);
 };
 
 /*

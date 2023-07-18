@@ -655,9 +655,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // For use by mochitests.
   bool IsVideoDecodingSuspended() const;
 
-  // For use by mochitests. Suspend or resume the media decoder and resources.
-  void SetSuspend(bool aSuspend);
-
   // These functions return accumulated time, which are used for the telemetry
   // usage. Return -1 for error.
   double TotalVideoPlayTime() const;

@@ -372,15 +372,6 @@ void MediaDecoder::OnPlaybackEvent(MediaPlaybackEvent&& aEvent) {
     case MediaPlaybackEvent::VideoOnlySeekCompleted:
       GetOwner()->DispatchAsyncEvent(u"mozvideoonlyseekcompleted"_ns);
       break;
-    case MediaPlaybackEvent::AudioSinkAudioGapDetected:
-      GetOwner()->DispatchAsyncTestingEvent(u"mozaudiosinkaudiogapdetected"_ns);
-      break;
-    case MediaPlaybackEvent::SuspendedMediaSink:
-      GetOwner()->DispatchAsyncTestingEvent(u"mozsuspendedmediasink"_ns);
-      break;
-    case MediaPlaybackEvent::ResumedMediaSink:
-      GetOwner()->DispatchAsyncTestingEvent(u"mozresumedmediasink"_ns);
-      break;
     default:
       break;
   }
