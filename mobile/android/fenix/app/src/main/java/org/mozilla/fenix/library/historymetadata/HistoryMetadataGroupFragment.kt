@@ -46,6 +46,7 @@ import org.mozilla.fenix.library.historymetadata.controller.DefaultHistoryMetada
 import org.mozilla.fenix.library.historymetadata.interactor.DefaultHistoryMetadataGroupInteractor
 import org.mozilla.fenix.library.historymetadata.interactor.HistoryMetadataGroupInteractor
 import org.mozilla.fenix.library.historymetadata.view.HistoryMetadataGroupView
+import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.utils.allowUndo
 
 /**
@@ -191,7 +192,7 @@ class HistoryMetadataGroupFragment :
                     supportActionBar?.hide()
                 }
 
-                showTabTray()
+                showTabTray(openInPrivate = true)
                 true
             }
             R.id.history_delete -> {
@@ -241,10 +242,16 @@ class HistoryMetadataGroupFragment :
         }
     }
 
-    private fun showTabTray() {
+    private fun showTabTray(openInPrivate: Boolean = false) {
         findNavController().nav(
             R.id.historyMetadataGroupFragment,
-            HistoryMetadataGroupFragmentDirections.actionGlobalTabsTrayFragment(),
+            HistoryMetadataGroupFragmentDirections.actionGlobalTabsTrayFragment(
+                page = if (openInPrivate) {
+                    Page.PrivateTabs
+                } else {
+                    Page.NormalTabs
+                },
+            ),
         )
     }
 
