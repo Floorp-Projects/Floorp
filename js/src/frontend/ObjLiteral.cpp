@@ -27,7 +27,7 @@
 #include "vm/PlainObject.h"                        // PlainObject
 
 #include "gc/ObjectKind-inl.h"    // gc::GetGCObjectKind
-#include "vm/JSAtom-inl.h"        // AtomToId
+#include "vm/JSAtomUtils-inl.h"   // AtomToId
 #include "vm/JSObject-inl.h"      // NewBuiltinClassInstance
 #include "vm/NativeObject-inl.h"  // AddDataPropertyNonDelegate
 

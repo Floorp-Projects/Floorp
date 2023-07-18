@@ -26,7 +26,7 @@
 #include "js/Value.h"
 #include "util/StringBuffer.h"
 #include "vm/Interpreter.h"
-#include "vm/JSAtom.h"
+#include "vm/JSAtomUtils.h"  // ToAtom
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/JSONParser.h"
@@ -41,7 +41,7 @@
 
 #include "builtin/Array-inl.h"
 #include "vm/GeckoProfiler-inl.h"
-#include "vm/JSAtom-inl.h"
+#include "vm/JSAtomUtils-inl.h"  // AtomToId, PrimitiveValueToId, IndexToId, IdToString,
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

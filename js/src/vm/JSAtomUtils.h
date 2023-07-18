@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_JSAtom_h
-#define vm_JSAtom_h
+#ifndef vm_JSAtomUtils_h
+#define vm_JSAtomUtils_h
 
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
@@ -110,4 +110,4 @@ bool AtomIsMarked(JS::Zone* zone, const JS::Value& value);
 
 } /* namespace js */
 
-#endif /* vm_JSAtom_h */
+#endif /* vm_JSAtomUtils_h */

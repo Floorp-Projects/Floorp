@@ -8,7 +8,7 @@
  * JS atom table.
  */
 
-#include "vm/JSAtom-inl.h"
+#include "vm/JSAtomUtils-inl.h"
 
 #include "mozilla/HashFunctions.h"  // mozilla::HashStringKnownLength
 #include "mozilla/RangedPtr.h"

@@ -46,7 +46,7 @@
 #include "util/StringBuffer.h"
 #include "vm/BigIntType.h"
 #include "vm/GlobalObject.h"
-#include "vm/JSAtom.h"
+#include "vm/JSAtomUtils.h"  // Atomize, AtomizeString
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/StaticStrings.h"
@@ -54,6 +54,7 @@
 
 #include "vm/Compartment-inl.h"  // For js::UnwrapAndTypeCheckThis
 #include "vm/GeckoProfiler-inl.h"
+#include "vm/JSAtomUtils-inl.h"  // BackfillIndexInCharBuffer
 #include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/StringType-inl.h"

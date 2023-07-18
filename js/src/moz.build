@@ -380,7 +380,7 @@ UNIFIED_SOURCES += [
     "vm/Iteration.cpp",
     "vm/Iterator.cpp",
     "vm/JitActivation.cpp",
-    "vm/JSAtom.cpp",
+    "vm/JSAtomUtils.cpp",
     "vm/JSContext.cpp",
     "vm/JSFunction.cpp",
     "vm/JSObject.cpp",

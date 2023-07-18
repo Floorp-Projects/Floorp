@@ -45,8 +45,8 @@
 #include "util/StringBuffer.h"
 #include "vm/Compartment.h"
 #include "vm/ErrorObject.h"
-#include "vm/FrameIter.h"  // js::NonBuiltinFrameIter
-#include "vm/JSAtom.h"
+#include "vm/FrameIter.h"    // js::NonBuiltinFrameIter
+#include "vm/JSAtomUtils.h"  // ClassName
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"

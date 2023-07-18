@@ -10,7 +10,7 @@
 #include "vm/JSContext.h"
 #include "vm/SymbolType.h"
 
-#include "vm/JSAtom-inl.h"
+#include "vm/JSAtomUtils-inl.h"  // AtomToId
 
 using namespace js;
 

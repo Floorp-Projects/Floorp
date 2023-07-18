@@ -24,13 +24,13 @@
 #include "js/Printf.h"
 #include "js/Value.h"
 
-#include "vm/JSAtom.h"
+#include "vm/JSAtomUtils.h"  // Atomize
 #include "vm/JSObject.h"
 #include "vm/StringType.h"
 #include "wasm/WasmFeatures.h"
 #include "wasm/WasmJS.h"
 
-#include "vm/JSAtom-inl.h"
+#include "vm/JSAtomUtils-inl.h"  // AtomToId
 #include "vm/JSObject-inl.h"
 
 using namespace js;

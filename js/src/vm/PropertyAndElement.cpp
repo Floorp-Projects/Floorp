@@ -25,15 +25,15 @@
 #include "js/Value.h"               // JS::Value, JS::*Value
 #include "vm/FunctionPrefixKind.h"  // js::FunctionPrefixKind
 #include "vm/GlobalObject.h"        // js::GlobalObject
-#include "vm/JSAtom.h"              // JSAtom, js::Atomize, js::AtomizeChars
+#include "vm/JSAtomUtils.h"         // js::Atomize, js::AtomizeChars
 #include "vm/JSContext.h"           // JSContext, CHECK_THREAD
 #include "vm/JSFunction.h"          // js::IdToFunctionName, js::DefineFunction
 #include "vm/JSObject.h"            // JSObject, js::DefineFunctions
 #include "vm/ObjectOperations.h"  // js::DefineProperty, js::DefineDataProperty, js::HasOwnProperty
 #include "vm/PropertyResult.h"  // js::PropertyResult
-#include "vm/StringType.h"      // js::PropertyName
+#include "vm/StringType.h"      // JSAtom, js::PropertyName
 
-#include "vm/JSAtom-inl.h"            // js::AtomToId, js::IndexToId
+#include "vm/JSAtomUtils-inl.h"       // js::AtomToId, js::IndexToId
 #include "vm/JSContext-inl.h"         // JSContext::check
 #include "vm/JSObject-inl.h"          // js::NewBuiltinClassInstance
 #include "vm/NativeObject-inl.h"      // js::NativeLookupOwnPropertyNoResolve

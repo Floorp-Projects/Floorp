@@ -37,7 +37,7 @@
 #include "js/Result.h"
 #include "js/StableStringChars.h"
 #include "vm/GlobalObject.h"
-#include "vm/JSAtom.h"
+#include "vm/JSAtomUtils.h"  // ClassName
 #include "vm/JSContext.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/StringType.h"

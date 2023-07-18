@@ -24,7 +24,6 @@
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/Proxy.h"
 #include "util/Unicode.h"
-#include "vm/JSAtom.h"
 #include "vm/StaticStrings.h"
 
 #include "jit/JitScript-inl.h"

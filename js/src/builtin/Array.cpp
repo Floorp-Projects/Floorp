@@ -55,7 +55,7 @@
 #include "vm/ArrayObject-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/IsGivenTypeObject-inl.h"
-#include "vm/JSAtom-inl.h"
+#include "vm/JSAtomUtils-inl.h"  // PrimitiveValueToId, IndexToId
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

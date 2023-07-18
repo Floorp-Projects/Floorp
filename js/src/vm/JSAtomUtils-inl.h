@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_JSAtom_inl_h
-#define vm_JSAtom_inl_h
+#ifndef vm_JSAtomUtils_inl_h
+#define vm_JSAtomUtils_inl_h
 
-#include "vm/JSAtom.h"
+#include "vm/JSAtomUtils.h"
 
 #include "mozilla/RangedPtr.h"
 
@@ -154,4 +154,4 @@ inline Handle<PropertyName*> ClassName(JSProtoKey key, JSAtomState& atomState) {
 
 }  // namespace js
 
-#endif /* vm_JSAtom_inl_h */
+#endif /* vm_JSAtomUtils_inl_h */

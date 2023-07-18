@@ -7,7 +7,7 @@
 
 #include "jsapi-tests/tests.h"
 #include "util/StringBuffer.h"
-#include "vm/JSAtom.h"
+#include "vm/JSAtomUtils.h"  // AtomizeString
 
 BEGIN_TEST(testStringBuffer_finishString) {
   JSString* str = JS_NewStringCopyZ(cx, "foopy");

@@ -23,7 +23,7 @@
 #include "js/RootingAPI.h"            // for Rooted, MutableHandle
 #include "util/Identifier.h"          // for IsIdentifier
 #include "vm/Compartment.h"           // for Compartment
-#include "vm/JSAtom.h"                // for Atomize
+#include "vm/JSAtomUtils.h"           // for Atomize
 #include "vm/JSContext.h"             // for JSContext
 #include "vm/JSFunction.h"            // for JSFunction
 #include "vm/JSObject.h"              // for JSObject, RequireObject,

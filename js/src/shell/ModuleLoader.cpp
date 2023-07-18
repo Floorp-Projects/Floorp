@@ -23,7 +23,7 @@
 #include "shell/OSObject.h"
 #include "shell/StringUtils.h"
 #include "util/Text.h"
-#include "vm/JSAtom.h"
+#include "vm/JSAtomUtils.h"  // AtomizeString, PinAtom
 #include "vm/JSContext.h"
 #include "vm/StringType.h"
 

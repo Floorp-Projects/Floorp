@@ -57,7 +57,7 @@
 #include "vm/GeneratorObject.h"        // for AbstractGeneratorObject
 #include "vm/GlobalObject.h"           // for GlobalObject
 #include "vm/Interpreter.h"            // for Call, ExecuteKernel
-#include "vm/JSAtom.h"                 // for Atomize
+#include "vm/JSAtomUtils.h"            // for Atomize, AtomizeUTF8Chars
 #include "vm/JSContext.h"              // for JSContext, ReportValueError
 #include "vm/JSFunction.h"             // for JSFunction, NewNativeFunction
 #include "vm/JSObject.h"               // for JSObject, RequireObject
