@@ -358,6 +358,31 @@ class ComposeCollectionTest {
     }
 
     @Test
+    fun undoTabRemovalFromCollectionTest() {
+        val webPage = getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(webPage.url) {
+        }.openComposeTabDrawer(composeTestRule) {
+            createCollection(webPage.title, collectionName = collectionName)
+            closeTab()
+        }
+
+        homeScreen {
+            verifyCollectionIsDisplayed(collectionName)
+        }.expandCollection(collectionName) {
+            verifyTabSavedInCollection(webPage.title, true)
+            removeTabFromCollection(webPage.title)
+        }
+        homeScreen {
+            verifySnackBarText("Collection deleted")
+            clickSnackbarButton("UNDO")
+            verifyCollectionIsDisplayed(collectionName, true)
+            verifyCollectionIsDisplayed(collectionName, true)
+        }
+    }
+
+    @Test
     fun swipeLeftToRemoveTabFromCollectionTest() {
         val testPage = getGenericAsset(mockWebServer, 1)
 
@@ -379,6 +404,8 @@ class ComposeCollectionTest {
             verifyTabSavedInCollection(testPage.title, false)
         }
         homeScreen {
+            verifySnackBarText("Collection deleted")
+            verifySnackBarText("UNDO")
             verifyCollectionIsDisplayed(collectionName, false)
         }
     }
@@ -405,6 +432,8 @@ class ComposeCollectionTest {
             verifyTabSavedInCollection(testPage.title, false)
         }
         homeScreen {
+            verifySnackBarText("Collection deleted")
+            verifySnackBarText("UNDO")
             verifyCollectionIsDisplayed(collectionName, false)
         }
     }
