@@ -499,6 +499,7 @@ class HistoryInView extends ViewPage {
           <div class="history-sort-option">
             <input
               type="radio"
+              id="sort-by-site"
               name="history-sort-option"
               value="site"
               ?checked=${this.sortOption === "site"}
