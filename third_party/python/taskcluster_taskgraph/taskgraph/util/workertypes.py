@@ -2,17 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-import attr
+from dataclasses import dataclass
 
 from .keyed_by import evaluate_keyed_by
 from .memoize import memoize
 
 
-@attr.s
+@dataclass
 class _BuiltinWorkerType:
-    provisioner = attr.ib(str)
-    worker_type = attr.ib(str)
+    provisioner: str
+    worker_type: str
 
     @property
     def implementation(self):
@@ -66,10 +65,14 @@ def get_worker_type(graph_config, alias, level):
         worker_config["provisioner"],
         alias,
         {"level": level},
-    ).format(level=level)
+    ).format(
+        **{"alias": alias, "level": level, "trust-domain": graph_config["trust-domain"]}
+    )
     worker_type = evaluate_keyed_by(
         worker_config["worker-type"],
         alias,
         {"level": level},
-    ).format(level=level, alias=alias)
+    ).format(
+        **{"alias": alias, "level": level, "trust-domain": graph_config["trust-domain"]}
+    )
     return provisioner, worker_type

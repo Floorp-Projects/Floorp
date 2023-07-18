@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import concurrent.futures as futures
 import json
 import logging
 import sys
+from concurrent import futures
 
 from slugid import nice as slugid
 

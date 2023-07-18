@@ -151,7 +151,6 @@ def load_image(url, imageName=None, imageTag=None):
         req.raise_for_status()
 
         with zstd.ZstdDecompressor().stream_reader(req.raw) as ifh:
-
             tarin = tarfile.open(
                 mode="r|",
                 fileobj=ifh,
