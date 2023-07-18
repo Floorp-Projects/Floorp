@@ -428,15 +428,18 @@ export var SessionStore = {
 
   /**
    * Get the closed tab data associated with all matching windows
-   * @param {Window} [aWindow] Optional window argument used to determine if we're collecting data for private or non-private windows
+   * @param {Window} [aWindow] Optional window argument used to determine if we're collecting data for private or non-private windows, will
+   *                           default to non-private only due to SessionStoreInternal._getTopWindow(false).
    */
   getClosedTabData: function ss_getClosedTabData(aWindow) {
     if (!SessionStoreInternal._closedTabsFromAllWindowsEnabled) {
       return this.getClosedTabDataForWindow(
-        aWindow ?? SessionStoreInternal._getTopWindow()
+        aWindow ?? SessionStoreInternal._getTopWindow(false)
       );
     }
-    return SessionStoreInternal.getClosedTabData(aWindow);
+    return SessionStoreInternal.getClosedTabData(
+      aWindow ?? SessionStoreInternal._getTopWindow(false)
+    );
   },
 
   /**

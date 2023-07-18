@@ -168,15 +168,17 @@ class RecentlyClosedTabsList extends MozLitElement {
 
   getClosedTabsDataForOpenWindows() {
     // get closed tabs in currently-open windows
-    const closedTabsData = lazy.SessionStore.getClosedTabData().map(tabData => {
-      // flatten the object; move properties of `.state` into the top-level object
-      const stateData = tabData.state;
-      delete tabData.state;
-      return {
-        ...tabData,
-        ...stateData,
-      };
-    });
+    const closedTabsData = lazy.SessionStore.getClosedTabData(getWindow()).map(
+      tabData => {
+        // flatten the object; move properties of `.state` into the top-level object
+        const stateData = tabData.state;
+        delete tabData.state;
+        return {
+          ...tabData,
+          ...stateData,
+        };
+      }
+    );
     return closedTabsData;
   }
 
