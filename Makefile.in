@@ -152,7 +152,7 @@ include $(topsrcdir)/config/rules.mk
 
 ifdef SCCACHE_VERBOSE_STATS
 default::
-	-$(CCACHE) --show-stats --stats-format=json > sccache-stats.json
+	-$(CCACHE) --show-stats --stats-format=json > '$(UPLOAD_PATH)/sccache-stats.json'
 	@echo "===SCCACHE STATS==="
 	-$(CCACHE) --show-stats
 	@echo "==================="
