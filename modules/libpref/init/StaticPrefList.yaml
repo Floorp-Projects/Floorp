@@ -13474,6 +13474,30 @@
   value: ""
   mirror: never
 
+# Main pref to enable / disable the feature.
+- name: privacy.bounceTrackingProtection.enabled
+  type: bool
+  value: false
+  mirror: once
+
+# How long to wait for a client redirect after a navigation ends.
+- name: privacy.bounceTrackingProtection.clientBounceDetectionTimerPeriodMS
+  type: uint32_t
+  value: 10000
+  mirror: always
+
+# Whether only bounces that access storage should be considered trackers.
+- name: privacy.bounceTrackingProtection.requireStatefulBounces
+  type: bool
+  value: false
+  mirror: always
+
+# To be used in test environments to enable observer messages.
+- name: privacy.bounceTrackingProtection.enableTestMode
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "prompts."
 #---------------------------------------------------------------------------
