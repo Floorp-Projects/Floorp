@@ -1193,6 +1193,13 @@ pref("browser.sessionstore.cleanup.forget_closed_after", 1209600000);
 // Platform collects session storage data for session store
 pref("browser.sessionstore.collect_session_storage", true);
 
+// temporary pref that will be removed in a future release, see bug 1836952
+#ifdef NIGHTLY_BUILD
+  pref("browser.sessionstore.persist_closed_tabs_between_sessions", true);
+#else
+  pref("browser.sessionstore.persist_closed_tabs_between_sessions", false);
+#endif
+
 // Don't quit the browser when Ctrl + Q is pressed.
 pref("browser.quitShortcut.disabled", false);
 

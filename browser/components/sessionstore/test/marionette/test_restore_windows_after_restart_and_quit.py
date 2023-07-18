@@ -11,6 +11,12 @@ sys.path.append(os.path.dirname(__file__))
 from session_store_test_case import SessionStoreTestCase
 
 
+def inline(title):
+    return "data:text/html;charset=utf-8,<html><head><title>{}</title></head><body></body></html>".format(
+        title
+    )
+
+
 class TestSessionStoreEnabledAllWindows(SessionStoreTestCase):
     def setUp(self, include_private=True):
         """Setup for the test, enabling session restore.
