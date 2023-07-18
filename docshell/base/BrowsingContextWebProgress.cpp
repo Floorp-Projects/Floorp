@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BrowsingContextWebProgress.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/BounceTrackingState.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
@@ -12,6 +14,7 @@
 #include "nsPrintfCString.h"
 #include "nsIChannel.h"
 #include "xptinfo.h"
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -162,6 +165,14 @@ void BrowsingContextWebProgress::ContextDiscarded() {
 void BrowsingContextWebProgress::ContextReplaced(
     CanonicalBrowsingContext* aNewContext) {
   mCurrentBrowsingContext = aNewContext;
+}
+
+already_AddRefed<BounceTrackingState>
+BrowsingContextWebProgress::GetBounceTrackingState() {
+  if (!mBounceTrackingState) {
+    mBounceTrackingState = BounceTrackingState::GetOrCreate(this);
+  }
+  return do_AddRef(mBounceTrackingState);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
