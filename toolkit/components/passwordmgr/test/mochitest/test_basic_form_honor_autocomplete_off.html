@@ -19,10 +19,6 @@ Login Manager test: autofilling when autocomplete=off
 <script class="testbody" type="text/javascript">
 /** Test for Login Manager: multiple login autocomplete. **/
 
-let { ContentTaskUtils } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/ContentTaskUtils.jsm"
-);
-
 // Check for expected username/password in form.
 function checkFormValues(form, expectedUsername, expectedPassword) {
   let uname = form.querySelector("[name='uname']");

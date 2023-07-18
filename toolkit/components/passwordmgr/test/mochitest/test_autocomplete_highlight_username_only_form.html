@@ -14,8 +14,8 @@
 <div id="content"></div>
 <pre id="test">
 <script>
-const { ContentTaskUtils } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/ContentTaskUtils.jsm"
+const { ContentTaskUtils } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/ContentTaskUtils.sys.mjs"
 );
 
 add_setup(async () => {
