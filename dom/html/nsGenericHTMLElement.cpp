@@ -489,8 +489,10 @@ nsresult nsGenericHTMLElement::BindToTree(BindContext& aContext,
 void nsGenericHTMLElement::UnbindFromTree(bool aNullParent) {
   if (IsInComposedDoc()) {
     // https://html.spec.whatwg.org/#dom-trees:hide-popover-algorithm
-    AssertPopoverAttributeStateCorrespondsToAttributePresence();
-    if (GetPopoverAttributeState() != PopoverAttributeState::None) {
+    // If removedNode's popover attribute is not in the no popover state, then
+    // run the hide popover algorithm given removedNode, false, false, and
+    // false.
+    if (GetPopoverData()) {
       HidePopoverWithoutRunningScript();
     }
     RegUnRegAccessKey(false);
@@ -3209,13 +3211,15 @@ bool nsGenericHTMLElement::PopoverOpen() const {
 bool nsGenericHTMLElement::CheckPopoverValidity(
     PopoverVisibilityState aExpectedState, Document* aExpectedDocument,
     ErrorResult& aRv) {
-  AssertPopoverAttributeStateCorrespondsToAttributePresence();
   const PopoverData* data = GetPopoverData();
   if (!data ||
       data->GetPopoverAttributeState() == PopoverAttributeState::None) {
+    MOZ_ASSERT(!HasAttr(nsGkAtoms::popover));
     aRv.ThrowNotSupportedError("Element is in the no popover state");
     return false;
   }
+
+  MOZ_ASSERT(HasAttr(nsGkAtoms::popover));
 
   if (data->GetPopoverVisibilityState() != aExpectedState) {
     return false;
@@ -3244,20 +3248,6 @@ bool nsGenericHTMLElement::CheckPopoverValidity(
   }
 
   return true;
-}
-
-void nsGenericHTMLElement::
-    AssertPopoverAttributeStateCorrespondsToAttributePresence() const {
-#ifdef DEBUG
-  if (GetPopoverAttributeState() == PopoverAttributeState::None) {
-    MOZ_ASSERT(!HasAttr(nsGkAtoms::popover));
-  } else {
-    MOZ_ASSERT(HasAttr(nsGkAtoms::popover));
-  }
-#else
-  {
-  }
-#endif  // DEBUG
 }
 
 PopoverAttributeState nsGenericHTMLElement::GetPopoverAttributeState() const {
@@ -3377,8 +3367,6 @@ void nsGenericHTMLElement::ShowPopoverInternal(Element* aInvoker,
     }
     document->HideAllPopoversUntil(*ancestor, false,
                                    /* aFireEvents = */ !wasShowingOrHiding);
-
-    AssertPopoverAttributeStateCorrespondsToAttributePresence();
     if (GetPopoverAttributeState() != originalState) {
       aRv.ThrowInvalidStateError(
           "The value of the popover attribute was changed while hiding the "
@@ -3415,7 +3403,6 @@ void nsGenericHTMLElement::ShowPopoverInternal(Element* aInvoker,
 
   // Run the popover focusing steps given element.
   FocusPopover();
-  AssertPopoverAttributeStateCorrespondsToAttributePresence();
   if (shouldRestoreFocus &&
       GetPopoverAttributeState() != PopoverAttributeState::None) {
     GetPopoverData()->SetPreviouslyFocusedElement(originallyFocusedElement);
