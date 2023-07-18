@@ -17,8 +17,8 @@
 const { BrowserTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/BrowserTestUtils.sys.mjs"
 );
-const { ContentTask } = ChromeUtils.import(
-  "resource://testing-common/ContentTask.jsm"
+const { ContentTask } = ChromeUtils.importESModule(
+  "resource://testing-common/ContentTask.sys.mjs"
 );
 
 var fm = Cc["@mozilla.org/focus-manager;1"].
