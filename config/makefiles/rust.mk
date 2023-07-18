@@ -277,7 +277,7 @@ endif
 
 # Work around https://github.com/rust-lang/rust/issues/112480
 ifdef MOZ_DEBUG_RUST
-ifeq (i686-pc-windows-msvc,$(RUST_TARGET))
+ifneq (,$(filter i686-pc-windows-%,$(RUST_TARGET)))
 RUSTFLAGS += -Zmir-enable-passes=-CheckAlignment
 RUSTC_BOOTSTRAP := 1
 endif
