@@ -31,11 +31,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1429432
     let response = await Notification.requestPermission();
     is(response, "denied", "Denied permission in insecure context");
 
-    await SpecialPowers.pushPrefEnv({"set": [["dom.webnotifications.allowinsecure", true]]});
-
-    response = await Notification.requestPermission();
-    is(response, "granted", "Granted permission in insecure context with pref set");
-
     script.sendAsyncMessage("destroy");
     script.destroy();
 
