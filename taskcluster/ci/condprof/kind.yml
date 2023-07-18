@@ -29,7 +29,6 @@ job-defaults:
     worker:
         taskcluster-proxy: true
         max-run-time: 10800
-    use-system-python: false
 jobs:
     windows2012-64-firefox:
         worker-type: b-win2022
@@ -88,8 +87,8 @@ jobs:
                 - linux64-geckodriver
         run:
             command: >-
-                python3 -m venv . &&
-                bin/python3 condprof/main.py
+                python3.7 -m venv . &&
+                bin/python3.7 condprof/main.py
                 ${EXTRA_ARGS}
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --firefox ${MOZ_FETCHES_DIR}/firefox/firefox-bin

@@ -28,7 +28,6 @@ diff_description_schema = Schema(
         Optional("run-on-projects"): task_description_schema["run-on-projects"],
         Optional("scopes"): task_description_schema["scopes"],
         Optional("treeherder"): task_description_schema["treeherder"],
-        Optional("use-system-python"): bool,
         Optional("worker"): job_description_schema["worker"],
         Optional("worker-type"): task_description_schema["worker-type"],
     }
@@ -83,9 +82,4 @@ def generate_scenarios(config, tasks):
                 "dependencies": copy_task(task["dependencies"]),
                 "fetches": copy_task(task["fetches"]),
             }
-
-            use_system_python = task.get("use-system-python", None)
-            if use_system_python is not None:
-                taskdesc["use-system-python"] = use_system_python
-
             yield taskdesc
