@@ -2943,8 +2943,7 @@ void XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
       mAuthorRequestHeaders.Get("content-type", uploadContentType);
       if (uploadContentType.IsVoid()) {
         uploadContentType = defaultContentType;
-      } else if (aBodyIsDocumentOrString &&
-                 StaticPrefs::dom_xhr_standard_content_type_normalization()) {
+      } else if (aBodyIsDocumentOrString) {
         UniquePtr<CMimeType> contentTypeRecord =
             CMimeType::Parse(uploadContentType);
         nsAutoCString charset;

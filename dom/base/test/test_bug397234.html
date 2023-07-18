@@ -16,10 +16,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=397234
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({set: [["dom.xhr.standard_content_type_normalization", true]]},
-function() {
-
 /** Test for Bug 397234 **/
 var req = new XMLHttpRequest();
 req.open("POST", window.location.href);
@@ -32,9 +28,6 @@ is(SpecialPowers.wrap(req).channel
       .getRequestHeader("Content-Type"),
    "text/plain;charset=UTF-8",
    "Headers should match");
-
-SimpleTest.finish();
-});
 </script>
 </pre>
 </body>
