@@ -64,7 +64,6 @@ add_setup(async function () {
       ["dom.serviceWorkers.exemptFromPerDomainMax", true],
       ["dom.serviceWorkers.enabled", true],
       ["dom.serviceWorkers.testing.enabled", true],
-      ["dom.webnotifications.serviceworker.enabled", true],
       ["notification.prompt.testing", true],
       ["dom.serviceWorkers.disable_open_click_delay", 1000],
       ["dom.serviceWorkers.idle_timeout", 299999],

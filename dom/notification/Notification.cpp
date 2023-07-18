@@ -672,17 +672,6 @@ NotificationTask::Run() {
 
 // static
 bool Notification::PrefEnabled(JSContext* aCx, JSObject* aObj) {
-  if (!NS_IsMainThread()) {
-    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-    if (!workerPrivate) {
-      return false;
-    }
-
-    if (workerPrivate->IsServiceWorker()) {
-      return StaticPrefs::dom_webnotifications_serviceworker_enabled();
-    }
-  }
-
   return StaticPrefs::dom_webnotifications_enabled();
 }
 
