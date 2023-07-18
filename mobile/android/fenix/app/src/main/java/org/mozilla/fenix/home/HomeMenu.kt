@@ -204,12 +204,18 @@ class HomeMenu(
                 null
             }
 
+        // Since syncSignIn & accountAuth items take us to the same place -> we won't show them in the same time
+        // We will show syncSignIn item when the accountAuth item:
+        //    1. is not needed or
+        //    2. it is needed, but the account manager is not available yet
+        val syncSignInMenuItem = if (accountAuthItem == null) syncSignInMenuItem() else null
+
         val menuItems = listOfNotNull(
             bookmarksItem,
             historyItem,
             downloadsItem,
             extensionsItem,
-            syncSignInMenuItem(),
+            syncSignInMenuItem,
             accountAuthItem,
             if (Config.channel.isMozillaOnline) manageAccountAndDevicesItem else null,
             BrowserMenuDivider(),
