@@ -3377,6 +3377,8 @@ void nsGenericHTMLElement::ShowPopoverInternal(Element* aInvoker,
     }
     document->HideAllPopoversUntil(*ancestor, false,
                                    /* aFireEvents = */ !wasShowingOrHiding);
+
+    AssertPopoverAttributeStateCorrespondsToAttributePresence();
     if (GetPopoverAttributeState() != originalState) {
       aRv.ThrowInvalidStateError(
           "The value of the popover attribute was changed while hiding the "
@@ -3413,6 +3415,7 @@ void nsGenericHTMLElement::ShowPopoverInternal(Element* aInvoker,
 
   // Run the popover focusing steps given element.
   FocusPopover();
+  AssertPopoverAttributeStateCorrespondsToAttributePresence();
   if (shouldRestoreFocus &&
       GetPopoverAttributeState() != PopoverAttributeState::None) {
     GetPopoverData()->SetPreviouslyFocusedElement(originallyFocusedElement);

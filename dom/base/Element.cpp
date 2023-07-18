@@ -4273,6 +4273,9 @@ void Element::ClearServoData(Document* aDoc) {
 
 bool Element::IsAutoPopover() const {
   const auto* htmlElement = nsGenericHTMLElement::FromNode(this);
+  if (htmlElement) {
+    htmlElement->AssertPopoverAttributeStateCorrespondsToAttributePresence();
+  }
   return htmlElement &&
          htmlElement->GetPopoverAttributeState() == PopoverAttributeState::Auto;
 }
