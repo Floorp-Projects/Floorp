@@ -793,12 +793,7 @@ class MarkupContextMenu {
       })
     );
 
-    if (
-      Services.prefs.getBoolPref(
-        "devtools.markup.mutationBreakpoints.enabled"
-      ) &&
-      this.selection.nodeFront.mutationBreakpoints
-    ) {
+    if (this.selection.nodeFront.mutationBreakpoints) {
       menu.append(
         new MenuItem({
           label: INSPECTOR_L10N.getStr("inspectorBreakpointSubmenu.label"),
