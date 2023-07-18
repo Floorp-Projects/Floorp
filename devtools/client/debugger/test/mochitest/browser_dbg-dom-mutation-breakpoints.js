@@ -16,7 +16,6 @@ const DMB_TEST_URL =
   "https://example.com/browser/devtools/client/debugger/test/mochitest/examples/doc-dom-mutation.html";
 
 async function enableMutationBreakpoints() {
-  await pushPref("devtools.markup.mutationBreakpoints.enabled", true);
   await pushPref("devtools.debugger.dom-mutation-breakpoints-visible", true);
 }
 
