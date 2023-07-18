@@ -106,7 +106,7 @@ vendored:third_party/python/pylru
 vendored:third_party/python/pyparsing
 vendored:third_party/python/pyrsistent
 vendored:third_party/python/python-hglib
-vendored:third_party/python/PyYAML/lib3/
+vendored:third_party/python/PyYAML/lib
 vendored:third_party/python/redo
 vendored:third_party/python/requests
 vendored:third_party/python/requests_unixsocket
