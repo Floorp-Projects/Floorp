@@ -21,7 +21,7 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/mozilla-spidermonkey/jsparagus"
 
 [profile.release]
-debug = true
+debug = 2
 
 [lib]
 
