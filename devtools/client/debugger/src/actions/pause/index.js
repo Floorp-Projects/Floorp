@@ -23,7 +23,6 @@ export { continueToHere } from "./continueToHere";
 export { breakOnNext } from "./breakOnNext";
 export { resetBreakpointsPaneState } from "./resetBreakpointsPaneState";
 export { mapFrames } from "./mapFrames";
-export { mapDisplayNames } from "./mapDisplayNames";
 export { pauseOnExceptions } from "./pauseOnExceptions";
 export { selectFrame } from "./selectFrame";
 export { toggleSkipPausing, setSkipPausing } from "./skipPausing";

@@ -62,4 +62,33 @@ add_task(async function () {
   is(getScopeLabel(dbg, 11), "binaryLookup:o(n, e, r)");
   is(getScopeLabel(dbg, 12), "comparer:t(n, e)");
   is(getScopeLabel(dbg, 13), "fancySort");
+
+  const frameLabels = [
+    ...findAllElementsWithSelector(dbg, ".pane.frames .frame .title"),
+  ].map(el => el.textContent);
+  // The frame display named are mapped to the original source.
+  // For example "fancySort" method is named "u" in the generated source.
+  Assert.deepEqual(frameLabels, [
+    "comparer",
+    "binaryLookup",
+    "fancySort",
+    "fancySort",
+    "test",
+  ]);
+
+  info(
+    "Verify that original function names are displayed in frames on source selection"
+  );
+  await selectSource(dbg, "test.js");
+
+  const frameLabelsAfterUpdate = [
+    ...findAllElementsWithSelector(dbg, ".pane.frames .frame .title"),
+  ].map(el => el.textContent);
+  Assert.deepEqual(frameLabelsAfterUpdate, [
+    "comparer",
+    "binaryLookup",
+    "fancySort",
+    "fancySort",
+    "originalTestName", // <== this frame was updated
+  ]);
 });
