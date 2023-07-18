@@ -1448,6 +1448,24 @@ export class UrlbarInput {
 
     this.setValueFromResult({ result });
   }
+  /**
+   * Clears displayed autofill values and unsets the autofill placeholder.
+   */
+  #clearAutofill() {
+    if (!this._autofillPlaceholder) {
+      return;
+    }
+    let currentSelectionStart = this.selectionStart;
+
+    // Overriding this value clears the selection.
+    this.inputField.value = this.value.substring(
+      0,
+      this._autofillPlaceholder.selectionStart
+    );
+    this._autofillPlaceholder = null;
+    // Restore selection
+    this.setSelectionRange(currentSelectionStart, currentSelectionStart);
+  }
 
   /**
    * Invoked by the controller when the first result is received.
@@ -2284,8 +2302,9 @@ export class UrlbarInput {
       this.selectionEnd == value.length &&
       !this.searchMode?.engineName &&
       this.searchMode?.source != lazy.UrlbarUtils.RESULT_SOURCE.SEARCH;
+
     if (!allowAutofill) {
-      this._autofillPlaceholder = null;
+      this.#clearAutofill();
       return false;
     }
 
@@ -2657,7 +2676,13 @@ export class UrlbarInput {
     // beginning.  Do not allow it to be trimmed.
     this._setValue(value, false);
     this.inputField.setSelectionRange(selectionStart, selectionEnd);
-    this._autofillPlaceholder = { value, type, adaptiveHistoryInput };
+    this._autofillPlaceholder = {
+      value,
+      type,
+      adaptiveHistoryInput,
+      selectionStart,
+      selectionEnd,
+    };
   }
 
   /**
