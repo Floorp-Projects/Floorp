@@ -42,9 +42,6 @@ struct MediaPlaybackEvent {
     CancelVideoSuspendTimer,
     VideoOnlySeekBegin,
     VideoOnlySeekCompleted,
-    AudioSinkAudioGapDetected,
-    SuspendedMediaSink,
-    ResumedMediaSink,
   } mType;
 
   using DataType = Variant<Nothing, int64_t>;

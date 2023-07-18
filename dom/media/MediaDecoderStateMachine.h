@@ -254,7 +254,6 @@ class MediaDecoderStateMachine
   void OnVideoPopped(const RefPtr<VideoData>& aSample);
 
   void AudioAudibleChanged(bool aAudible);
-  void OnAudioSinkAudioGapDetected(int64_t aGapFrames);
 
   void SetPlaybackRate(double aPlaybackRate) override;
   void SetIsLiveStream(bool aIsLiveStream) override {
@@ -495,8 +494,6 @@ class MediaDecoderStateMachine
   MediaEventListener mVideoQueueListener;
   MediaEventListener mAudibleListener;
   MediaEventListener mOnMediaNotSeekable;
-  // Debug usage for detecting audio gap in the audio sink.
-  MediaEventListener mAudioSinkAudioGapListener;
 
   const bool mIsMSE;
 
@@ -561,12 +558,6 @@ class MediaDecoderStateMachine
   // restricted like starting the sink or changing sink id. The flag is valid
   // after Initialization. TaskQueue thread only.
   bool mIsMediaSinkSuspended = false;
-
-  // This stores the last clock time before the media sink got shutdown, and
-  // we might use that as the next start time when we re-create the media sink
-  // later, which ensures the clock time is monotonically increased even if
-  // the media sinks have been changed multiple times.
-  Maybe<media::TimeUnit> mLastClockTimeBeforeStopSink;
 
  public:
   AbstractCanonical<PrincipalHandle>* CanonicalOutputPrincipal() {

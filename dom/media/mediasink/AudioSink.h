@@ -6,7 +6,6 @@
 #ifndef AudioSink_h__
 #define AudioSink_h__
 
-#include <stdint.h>
 #include "AudioStream.h"
 #include "AudibilityMonitor.h"
 #include "MediaEventSource.h"
@@ -80,7 +79,6 @@ class AudioSink : private AudioStream::DataSource {
   void SetPlaying(bool aPlaying);
 
   MediaEventSource<bool>& AudibleEvent() { return mAudibleEvent; }
-  MediaEventSource<int64_t>& AudioGapEvent() { return mAudioGapEvent; }
 
   void GetDebugInfo(dom::MediaSinkDebugInfo& aInfo);
 
@@ -173,8 +171,6 @@ class AudioSink : private AudioStream::DataSource {
   MediaEventProducer<bool> mAudibleEvent;
   // Only signed on the real-time audio thread.
   MediaEventProducer<void> mAudioPopped;
-  // Debug purpose for detecting audio gap.
-  MediaEventProducer<int64_t> mAudioGapEvent;
 
   Atomic<bool> mProcessedQueueFinished;
   MediaQueue<AudioData>& mAudioQueue;
