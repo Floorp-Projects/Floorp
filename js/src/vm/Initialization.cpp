@@ -129,8 +129,6 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
   install_rust_hooks();
 #endif
 
-  PRMJ_NowInit();
-
   if (frontendOnly == FrontendOnly::No) {
     // The first invocation of `ProcessCreation` creates a temporary thread
     // and crashes if that fails, i.e. because we're out of memory. To prevent
@@ -278,17 +276,6 @@ static void ShutdownImpl(JS::detail::FrontendOnly frontendOnly) {
   }
 
   js::wasm::ShutDown();
-
-  // The only difficult-to-address reason for the restriction that you can't
-  // call JS_Init/stuff/JS_ShutDown multiple times is the Windows PRMJ
-  // NowInit initialization code, which uses PR_CallOnce to initialize the
-  // PRMJ_Now subsystem.  (For reinitialization to be permitted, we'd need to
-  // "reset" the called-once status -- doable, but more trouble than it's
-  // worth now.)  Initializing that subsystem from JS_Init eliminates the
-  // problem, but initialization can take a comparatively long time (15ms or
-  // so), so we really don't want to do it in JS_Init, and we really do want
-  // to do it only when PRMJ_Now is eventually called.
-  PRMJ_NowShutdown();
 
 #if JS_HAS_INTL_API
   mozilla::intl::ICU4CLibrary::Cleanup();
