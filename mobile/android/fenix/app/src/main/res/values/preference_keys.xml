@@ -364,4 +364,8 @@
     <!-- Notification Pre Permission Prompt -->
     <string name="pref_key_notification_pre_permission_prompt_enabled">pref_key_notification_pre_permission_prompt_enabled</string>
     <string name="pref_key_is_notification_pre_permission_prompt_shown">pref_key_is_notification_pre_permission_prompt_shown</string>
+
+    <!--Shopping -->
+    <string name="pref_key_is_review_quality_check_enabled">pref_key_is_review_quality_check_enabled</string>
+    <string name="pref_key_is_review_quality_check_product_recommendations_enabled">pref_key_is_review_quality_check_product_recommendations_enabled</string>
 </resources>
