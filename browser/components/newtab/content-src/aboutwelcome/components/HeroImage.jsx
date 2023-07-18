@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
+import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
 
 export const HeroImage = props => {
   const { height, url, alt } = props;
@@ -16,6 +17,7 @@ export const HeroImage = props => {
       <img
         style={height ? { height } : null}
         src={url}
+        loading={AboutWelcomeUtils.getLoadingStrategyFor(url)}
         alt={alt || ""}
         role={alt ? null : "presentation"}
       />

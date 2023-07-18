@@ -67,6 +67,9 @@ export const AboutWelcomeUtils = {
       })
     );
   },
+  getLoadingStrategyFor(url) {
+    return url?.startsWith("http") ? "lazy" : "eager";
+  },
 };
 
 export const DEFAULT_RTAMO_CONTENT = {

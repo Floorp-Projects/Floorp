@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Localized } from "./MSLocalized";
+import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
 import { Colorways } from "./MRColorways";
 import { MobileDownloads } from "./MobileDownloads";
 import { MultiSelect } from "./MultiSelect";
@@ -158,6 +159,20 @@ export class ProtonScreen extends React.PureComponent {
     alt = "",
     height,
   }) {
+    function getLoadingStrategy() {
+      for (let url of [
+        imageURL,
+        darkModeImageURL,
+        reducedMotionImageURL,
+        darkModeReducedMotionImageURL,
+      ]) {
+        if (AboutWelcomeUtils.getLoadingStrategyFor(url) === "lazy") {
+          return "lazy";
+        }
+      }
+      return "eager";
+    }
+
     return (
       <picture className="logo-container">
         {darkModeReducedMotionImageURL ? (
@@ -182,6 +197,7 @@ export class ProtonScreen extends React.PureComponent {
           className="brand-logo"
           style={{ height }}
           src={imageURL}
+          loading={getLoadingStrategy()}
           alt={alt}
           role={alt ? null : "presentation"}
         />
@@ -415,8 +431,11 @@ export class ProtonScreen extends React.PureComponent {
                 <img
                   className={`${isTheme ? "rtamo-theme-icon" : "brand-logo"}`}
                   src={this.props.iconURL}
-                  role="presentation"
+                  loading={AboutWelcomeUtils.getLoadingStrategyFor(
+                    this.props.iconURL
+                  )}
                   alt=""
+                  role="presentation"
                 />
               </div>
             ) : null}
