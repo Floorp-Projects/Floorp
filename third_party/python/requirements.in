@@ -31,7 +31,7 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pylru==1.0.9
 python-hglib==2.4
-pyyaml==5.4.1
+pyyaml==6.0.1
 redo==2.0.3
 requests==2.25.1
 requests-unixsocket==0.2.0

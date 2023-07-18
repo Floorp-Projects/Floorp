@@ -1,58 +1,29 @@
 
-from error import *
+from .error import *
 
-from tokens import *
-from events import *
-from nodes import *
+from .tokens import *
+from .events import *
+from .nodes import *
 
-from loader import *
-from dumper import *
+from .loader import *
+from .dumper import *
 
-__version__ = '5.4.1'
-
+__version__ = '6.0.1'
 try:
-    from cyaml import *
+    from .cyaml import *
     __with_libyaml__ = True
 except ImportError:
     __with_libyaml__ = False
 
+import io
 
 #------------------------------------------------------------------------------
-# Warnings control
+# XXX "Warnings control" is now deprecated. Leaving in the API function to not
+# break code that uses it.
 #------------------------------------------------------------------------------
-
-# 'Global' warnings state:
-_warnings_enabled = {
-    'YAMLLoadWarning': True,
-}
-
-# Get or set global warnings' state
 def warnings(settings=None):
     if settings is None:
-        return _warnings_enabled
-
-    if type(settings) is dict:
-        for key in settings:
-            if key in _warnings_enabled:
-                _warnings_enabled[key] = settings[key]
-
-# Warn when load() is called without Loader=...
-class YAMLLoadWarning(RuntimeWarning):
-    pass
-
-def load_warning(method):
-    if _warnings_enabled['YAMLLoadWarning'] is False:
-        return
-
-    import warnings
-
-    message = (
-        "calling yaml.%s() without Loader=... is deprecated, as the "
-        "default Loader is unsafe. Please read "
-        "https://msg.pyyaml.org/load for full details."
-    ) % method
-
-    warnings.warn(message, YAMLLoadWarning, stacklevel=3)
+        return {}
 
 #------------------------------------------------------------------------------
 def scan(stream, Loader=Loader):
@@ -100,30 +71,22 @@ def compose_all(stream, Loader=Loader):
     finally:
         loader.dispose()
 
-def load(stream, Loader=None):
+def load(stream, Loader):
     """
     Parse the first YAML document in a stream
     and produce the corresponding Python object.
     """
-    if Loader is None:
-        load_warning('load')
-        Loader = FullLoader
-
     loader = Loader(stream)
     try:
         return loader.get_single_data()
     finally:
         loader.dispose()
 
-def load_all(stream, Loader=None):
+def load_all(stream, Loader):
     """
     Parse all YAML documents in a stream
     and produce corresponding Python objects.
     """
-    if Loader is None:
-        load_warning('load_all')
-        Loader = FullLoader
-
     loader = Loader(stream)
     try:
         while loader.check_data():
@@ -200,8 +163,7 @@ def emit(events, stream=None, Dumper=Dumper,
     """
     getvalue = None
     if stream is None:
-        from StringIO import StringIO
-        stream = StringIO()
+        stream = io.StringIO()
         getvalue = stream.getvalue
     dumper = Dumper(stream, canonical=canonical, indent=indent, width=width,
             allow_unicode=allow_unicode, line_break=line_break)
@@ -216,7 +178,7 @@ def emit(events, stream=None, Dumper=Dumper,
 def serialize_all(nodes, stream=None, Dumper=Dumper,
         canonical=None, indent=None, width=None,
         allow_unicode=None, line_break=None,
-        encoding='utf-8', explicit_start=None, explicit_end=None,
+        encoding=None, explicit_start=None, explicit_end=None,
         version=None, tags=None):
     """
     Serialize a sequence of representation trees into a YAML stream.
@@ -225,10 +187,9 @@ def serialize_all(nodes, stream=None, Dumper=Dumper,
     getvalue = None
     if stream is None:
         if encoding is None:
-            from StringIO import StringIO
+            stream = io.StringIO()
         else:
-            from cStringIO import StringIO
-        stream = StringIO()
+            stream = io.BytesIO()
         getvalue = stream.getvalue
     dumper = Dumper(stream, canonical=canonical, indent=indent, width=width,
             allow_unicode=allow_unicode, line_break=line_break,
@@ -255,7 +216,7 @@ def dump_all(documents, stream=None, Dumper=Dumper,
         default_style=None, default_flow_style=False,
         canonical=None, indent=None, width=None,
         allow_unicode=None, line_break=None,
-        encoding='utf-8', explicit_start=None, explicit_end=None,
+        encoding=None, explicit_start=None, explicit_end=None,
         version=None, tags=None, sort_keys=True):
     """
     Serialize a sequence of Python objects into a YAML stream.
@@ -264,10 +225,9 @@ def dump_all(documents, stream=None, Dumper=Dumper,
     getvalue = None
     if stream is None:
         if encoding is None:
-            from StringIO import StringIO
+            stream = io.StringIO()
         else:
-            from cStringIO import StringIO
-        stream = StringIO()
+            stream = io.BytesIO()
         getvalue = stream.getvalue
     dumper = Dumper(stream, default_style=default_style,
             default_flow_style=default_flow_style,
@@ -399,13 +359,12 @@ class YAMLObjectMetaclass(type):
 
             cls.yaml_dumper.add_representer(cls, cls.to_yaml)
 
-class YAMLObject(object):
+class YAMLObject(metaclass=YAMLObjectMetaclass):
     """
     An object that can dump itself to a YAML stream
     and load itself from a YAML stream.
     """
 
-    __metaclass__ = YAMLObjectMetaclass
     __slots__ = ()  # no direct instantiation, so allow immutable subclasses
 
     yaml_loader = [Loader, FullLoader, UnsafeLoader]
@@ -414,18 +373,18 @@ class YAMLObject(object):
     yaml_tag = None
     yaml_flow_style = None
 
+    @classmethod
     def from_yaml(cls, loader, node):
         """
         Convert a representation node to a Python object.
         """
         return loader.construct_yaml_object(node, cls)
-    from_yaml = classmethod(from_yaml)
 
+    @classmethod
     def to_yaml(cls, dumper, data):
         """
         Convert a Python object to a representation node.
         """
         return dumper.represent_yaml_object(cls.yaml_tag, data, cls,
                 flow_style=cls.yaml_flow_style)
-    to_yaml = classmethod(to_yaml)
 
