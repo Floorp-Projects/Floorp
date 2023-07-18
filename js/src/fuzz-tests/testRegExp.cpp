@@ -12,7 +12,7 @@
 #include "fuzz-tests/tests.h"
 #include "irregexp/RegExpAPI.h"
 #include "vm/Interpreter.h"
-#include "vm/JSAtom.h"
+#include "vm/JSAtomUtils.h"  // AtomizeUTF8Chars
 #include "vm/MatchPairs.h"
 
 #include "vm/JSContext-inl.h"

@@ -11,7 +11,7 @@
 #include "js/Exception.h"   // JS_IsExceptionPending, JS_ClearPendingException
 #include "js/RootingAPI.h"  // JS::Rooted, JS::MutableHandle
 #include "jsapi-tests/tests.h"  // BEGIN_TEST, END_TEST, CHECK
-#include "vm/JSAtom.h"          // js::AtomizeChars, js::AtomizeUTF8Chars
+#include "vm/JSAtomUtils.h"     // js::AtomizeChars, js::AtomizeUTF8Chars
 #include "vm/StringType.h"      // JSAtom
 
 using mozilla::DecodeOneUtf8CodePoint;

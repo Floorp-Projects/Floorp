@@ -30,7 +30,7 @@
 #include "vm/StringType.h"    // js::NameToId
 #include "vm/SymbolType.h"    // JS::Symbol
 
-#include "vm/JSAtom-inl.h"  // js::IndexToId
+#include "vm/JSAtomUtils-inl.h"  // js::PrimitiveValueToId, js::IndexToId
 
 namespace js {
 

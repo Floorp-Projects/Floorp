@@ -43,8 +43,8 @@
 #include "vm/BytecodeLocation.h"
 #include "vm/CodeCoverage.h"
 #include "vm/EnvironmentObject.h"
-#include "vm/FrameIter.h"  // js::{,Script}FrameIter
-#include "vm/JSAtom.h"
+#include "vm/FrameIter.h"    // js::{,Script}FrameIter
+#include "vm/JSAtomUtils.h"  // AtomToPrintableString, Atomize
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"

@@ -42,7 +42,7 @@
 
 #include "debugger/DebugAPI-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
-#include "vm/JSAtom-inl.h"
+#include "vm/JSAtomUtils-inl.h"  // AtomToId
 #include "wasm/WasmInstance-inl.h"
 
 using namespace js;

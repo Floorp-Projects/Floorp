@@ -23,13 +23,14 @@
 #include "js/RootingAPI.h"              // JS::MutableHandle
 #include "js/Value.h"                   // JS::Value
 #include "vm/EnvironmentObject.h"       // js::ModuleEnvironmentObject
+#include "vm/JSAtomUtils.h"             // AtomizeString
 #include "vm/JSContext.h"               // CHECK_THREAD, JSContext
 #include "vm/JSObject.h"                // JSObject
 #include "vm/List.h"                    // ListObject
 #include "vm/Runtime.h"                 // JSRuntime
 
-#include "vm/JSAtom-inl.h"
-#include "vm/JSContext-inl.h"  // JSContext::{c,releaseC}heck
+#include "vm/JSAtomUtils-inl.h"  // AtomToId
+#include "vm/JSContext-inl.h"    // JSContext::{c,releaseC}heck
 
 using namespace js;
 

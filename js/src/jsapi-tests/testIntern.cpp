@@ -6,7 +6,7 @@
 #include "gc/Marking.h"
 #include "jsapi-tests/tests.h"
 #include "util/Text.h"
-#include "vm/JSAtom.h"
+#include "vm/JSAtomUtils.h"  // Atomize
 #include "vm/StringType.h"
 
 BEGIN_TEST(testAtomizedIsNotPinned) {
