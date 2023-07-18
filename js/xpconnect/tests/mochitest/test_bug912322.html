@@ -10,8 +10,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=912322
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
-  var { AppConstants } = SpecialPowers.ChromeUtils.import(
-    "resource://gre/modules/AppConstants.jsm"
+  var { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+    "resource://gre/modules/AppConstants.sys.mjs"
   );
   // Test window.controllers.
   if (AppConstants.RELEASE_OR_BETA) {

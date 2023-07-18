@@ -182,8 +182,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
 <script type="application/javascript">
 "use strict";
 
-const { AppConstants } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 /** Test for css3-animations running on the compositor thread (Bug 964646) **/
  

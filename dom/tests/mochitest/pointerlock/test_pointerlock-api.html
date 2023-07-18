@@ -17,8 +17,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
     </div>
     <pre id="test">
       <script type="application/javascript">
-        const { AppConstants } = SpecialPowers.ChromeUtils.import(
-          "resource://gre/modules/AppConstants.jsm"
+        const { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+          "resource://gre/modules/AppConstants.sys.mjs"
         );
 
         /**

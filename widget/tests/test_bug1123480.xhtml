@@ -24,7 +24,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
   var SHORT_STRING_NO_CACHE = "short string that will never be cached to the disk";
 
   function isWindows() {
-    const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+    const {AppConstants} = ChromeUtils.importESModule(
+      "resource://gre/modules/AppConstants.sys.mjs"
+    );
     return AppConstants.platform === 'win';
   }
 

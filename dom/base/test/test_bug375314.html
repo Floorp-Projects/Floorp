@@ -23,9 +23,6 @@ var lastContentType = -1;
 const testURL = window.location.href + "/this/is/the/test/url";
 const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
-var { AppConstants } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 
 // Content policy / factory implementation for the test
 var policyID = SpecialPowers.wrap(SpecialPowers.Components).ID("{b80e19d0-878f-d41b-2654-194714a4115c}");

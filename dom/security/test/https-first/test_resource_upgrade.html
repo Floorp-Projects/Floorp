@@ -29,9 +29,6 @@
      * received by the server (*.sjs) were actually *http* requests.
      */
 
-    const { AppConstants } = SpecialPowers.ChromeUtils.import(
-      "resource://gre/modules/AppConstants.jsm"
-    );
     const splitRegex = /^(.*)-(.*)$/
     const testConfig = {
       topLevelScheme: "http://",
