@@ -7,18 +7,30 @@ import re
 
 
 def attrmatch(attributes, **kwargs):
-    """Determine whether the given set of task attributes matches.  The
-    conditions are given as keyword arguments, where each keyword names an
-    attribute.  The keyword value can be a literal, a set, or a callable.  A
-    literal must match the attribute exactly.  Given a set, the attribute value
-    must be in the set.  A callable is called with the attribute value.  If an
-    attribute is specified as a keyword argument but not present in the
-    attributes, the result is False."""
+    """Determine whether the given set of task attributes matches.
+
+    The conditions are given as keyword arguments, where each keyword names an
+    attribute. The keyword value can be a literal, a set, or a callable:
+
+        * A literal must match the attribute exactly.
+        * Given a set or list, the attribute value must be contained within it.
+        * A callable is called with the attribute value and returns a boolean.
+
+    If an attribute is specified as a keyword argument but not present in the
+    task's attributes, the result is False.
+
+    Args:
+        attributes (dict): The task's attributes object.
+        kwargs (dict): The conditions the task's attributes must satisfy in
+                       order to match.
+    Returns:
+        bool: Whether the task's attributes match the conditions or not.
+    """
     for kwkey, kwval in kwargs.items():
         if kwkey not in attributes:
             return False
         attval = attributes[kwkey]
-        if isinstance(kwval, set):
+        if isinstance(kwval, (set, list)):
             if attval not in kwval:
                 return False
         elif callable(kwval):

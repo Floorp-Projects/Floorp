@@ -176,7 +176,7 @@ def retrigger_action(parameters, graph_config, input, task_group_id, task_id):
             label_to_taskid,
             parameters,
             decision_task_id,
-            i,
+            f"{i}",
         )
 
         logger.info(f"Scheduled {label}{with_downstream}(time {i + 1}/{times})")
