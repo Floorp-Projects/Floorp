@@ -800,4 +800,33 @@ function testParseFontFamily(doc, parser) {
     const frag = parser.parseCssProperty("font-family", definition, {});
     is(frag.textContent, output, desc + " text content matches");
   }
+
+  info("Test font-family with custom properties");
+  const frag = parser.parseCssProperty(
+    "font-family",
+    "var(--family, Georgia, serif)",
+    {
+      getVariableValue: () => {},
+      unmatchedVariableClass: "unmatched-class",
+      fontFamilyClass: "ruleview-font-family",
+    }
+  );
+  const target = doc.createElement("div");
+  target.appendChild(frag);
+  is(
+    target.innerHTML,
+    // prettier-ignore
+    `<span>var(` +
+      `<span class="unmatched-class" data-variable="--family is not set">` +
+        `--family` +
+      `</span>` +
+      `,` +
+      `<span> ` +
+        `<span class="ruleview-font-family">Georgia</span>` +
+        `, ` +
+        `<span class="ruleview-font-family">serif</span>` +
+      `</span>)` +
+    `</span>`,
+    "Got expected output for font-family with custom properties"
+  );
 }
