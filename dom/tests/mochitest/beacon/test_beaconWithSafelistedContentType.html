@@ -23,9 +23,6 @@ SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, beginTest);
 const {BrowserTestUtils} = ChromeUtils.importESModule(
   "resource://testing-common/BrowserTestUtils.sys.mjs"
 );
-const { clearInterval, setInterval } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
-);
 
 function whenDelayedStartupFinished(aWindow, aCallback) {
   Services.obs.addObserver(function observer(aSubject, aTopic) {
