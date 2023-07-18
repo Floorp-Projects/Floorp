@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.name_sanity:transforms
-    - gecko_taskgraph.transforms.beetmover_geckoview:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.beetmover_geckoview
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
     - build-signing
@@ -35,30 +36,32 @@ not-for-build-platforms:
     - linux64-asan-reporter-shippable/opt
     - win64-asan-reporter-shippable/opt
 
-job-template:
-    attributes:
-        artifact_map: taskcluster/gecko_taskgraph/manifests/fennec_geckoview.yml
-    run-on-projects: ['mozilla-release']
-    run-on-hg-branches:
-        by-project:
-            mozilla-release:
-                - '^GECKOVIEW_\d+_RELBRANCH$'
-            default:
-                - 'all'
-    shipping-phase:
-        by-project:
-            # Beetmoving geckoview makes it available to the official maven repo.
-            # That happens:
-            # 1. as part of the ship-geckoview graph on mozilla-central
-            # 2. as part of Firefox promote graphs on both mozilla-beta and mozilla-release
-            # 3. at every patch uplifted on the GECKOVIEW_XX_RELBRANCH on mozilla-release
-            # Reminder: There is no Android/geckoview build on ESR.
-            #
-            # The logic of point 2 is handled in target_tasks directly because it's mixing and
-            # matching 2 different shipping-products
-            mozilla-release: build
-            default: promote
-    bucket-scope:
-        by-release-level:
-            production: 'project:releng:beetmover:bucket:maven-production'
-            staging: 'project:releng:beetmover:bucket:maven-staging'
+jobs:
+    beetmover-geckoview:
+        from-deps: {}
+        attributes:
+            artifact_map: taskcluster/gecko_taskgraph/manifests/fennec_geckoview.yml
+        run-on-projects: ['mozilla-release']
+        run-on-hg-branches:
+            by-project:
+                mozilla-release:
+                    - '^GECKOVIEW_\d+_RELBRANCH$'
+                default:
+                    - 'all'
+        shipping-phase:
+            by-project:
+                # Beetmoving geckoview makes it available to the official maven repo.
+                # That happens:
+                # 1. as part of the ship-geckoview graph on mozilla-central
+                # 2. as part of Firefox promote graphs on both mozilla-beta and mozilla-release
+                # 3. at every patch uplifted on the GECKOVIEW_XX_RELBRANCH on mozilla-release
+                # Reminder: There is no Android/geckoview build on ESR.
+                #
+                # The logic of point 2 is handled in target_tasks directly because it's mixing and
+                # matching 2 different shipping-products
+                mozilla-release: build
+                default: promote
+        bucket-scope:
+            by-release-level:
+                production: 'project:releng:beetmover:bucket:maven-production'
+                staging: 'project:releng:beetmover:bucket:maven-staging'

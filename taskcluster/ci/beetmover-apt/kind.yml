@@ -2,17 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
+    - taskgraph.transforms.from_deps
     - gecko_taskgraph.transforms.release:run_on_releases
-    - gecko_taskgraph.transforms.beetmover_apt:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - gecko_taskgraph.transforms.beetmover_apt
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
-    - beetmover-repackage
-
-primary-dependency:
     - beetmover-repackage
 
 only-for-build-platforms:
@@ -21,6 +19,8 @@ only-for-build-platforms:
     - linux-devedition/opt
     - linux64-devedition/opt
 
-job-template:
-    run-on-releases:
-        - nightly
+jobs:
+    beetmover-apt:
+        from-deps: {}
+        run-on-releases:
+            - nightly

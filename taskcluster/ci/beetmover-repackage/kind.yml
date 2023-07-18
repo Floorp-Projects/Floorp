@@ -2,28 +2,29 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.multi_dep:loader
-
-group-by: single-locale
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.name_sanity:transforms
-    - gecko_taskgraph.transforms.beetmover_repackage_l10n:transforms
-    - gecko_taskgraph.transforms.beetmover_repackage:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.beetmover_repackage_l10n
+    - gecko_taskgraph.transforms.beetmover_repackage
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
+    # Primary dependencies
+    - repackage
+    - repackage-l10n
+    # Other dependencies
     - build
     - build-signing
     - build-mac-signing
     - build-mac-notarization
-    - repackage
     - repackage-signing
     - shippable-l10n
     - shippable-l10n-signing
     - shippable-l10n-mac-signing
     - shippable-l10n-mac-notarization
-    - repackage-l10n
     - repackage-signing-l10n
     - partials
     - partials-signing
@@ -37,10 +38,6 @@ kind-dependencies:
     - attribution-l10n
     - repackage-deb
     - repackage-deb-l10n
-
-primary-dependency:
-    - repackage
-    - repackage-l10n
 
 only-for-build-platforms:
     - linux-shippable/opt
@@ -58,10 +55,13 @@ only-for-build-platforms:
     - linux64-asan-reporter-shippable/opt
     - win64-asan-reporter-shippable/opt
 
-job-template:
-    shipping-phase: promote
-    attributes:
-        artifact_map:
-            by-release-type:
-                beta|release.*|esr.*: taskcluster/gecko_taskgraph/manifests/firefox_candidates.yml
-                default: taskcluster/gecko_taskgraph/manifests/firefox_nightly.yml
+jobs:
+    beetmover-repackage:
+        from-deps:
+            group-by: single-locale
+        shipping-phase: promote
+        attributes:
+            artifact_map:
+                by-release-type:
+                    beta|release.*|esr.*: taskcluster/gecko_taskgraph/manifests/firefox_candidates.yml
+                    default: taskcluster/gecko_taskgraph/manifests/firefox_nightly.yml

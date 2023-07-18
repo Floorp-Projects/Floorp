@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.name_sanity:transforms
-    - gecko_taskgraph.transforms.beetmover_checksums:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.beetmover_checksums
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
     - beetmover-repackage
@@ -16,11 +17,13 @@ only-for-attributes:
     - nightly
     - shippable
 
-job-template:
-    shipping-phase: promote
-    attributes:
-        artifact_prefix: public
-        artifact_map:
-            by-release-type:
-                beta|release.*|esr.*: taskcluster/gecko_taskgraph/manifests/firefox_candidates_checksums.yml
-                default: taskcluster/gecko_taskgraph/manifests/firefox_nightly_checksums.yml
+jobs:
+    beetmover-checksums:
+        from-deps: {}
+        shipping-phase: promote
+        attributes:
+            artifact_prefix: public
+            artifact_map:
+                by-release-type:
+                    beta|release.*|esr.*: taskcluster/gecko_taskgraph/manifests/firefox_candidates_checksums.yml
+                    default: taskcluster/gecko_taskgraph/manifests/firefox_nightly_checksums.yml
