@@ -49,7 +49,9 @@ struct DummyCipherStrategy {
 
   static Span<const uint8_t> SerializeKey(const KeyType&) { return {}; }
 
-  static KeyType DeserializeKey(const Span<const uint8_t>&) { return {}; }
+  static Maybe<KeyType> DeserializeKey(const Span<const uint8_t>&) {
+    return Some(KeyType{});
+  }
 };
 }  // namespace mozilla::dom::quota
 
