@@ -22,7 +22,9 @@
 
 const NUM_MESSAGES = 4000;
 const NUM_STREAMING = 100;
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {FileUtils} = ChromeUtils.importESModule(
+  "resource://gre/modules/FileUtils.sys.mjs"
+);
 Services.prefs.setIntPref("devtools.hud.loglimit", NUM_MESSAGES);
 const WebConsoleWrapper = browserRequire("devtools/client/webconsole/webconsole-wrapper");
 const actions =
