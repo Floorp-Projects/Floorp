@@ -7,20 +7,19 @@ package mozilla.components.feature.search.telemetry
 /**
  * Cookie details used to identify follow-on searches.
  *
- * @property extraCodeParam the query parameter name in the URL that indicates
+ * @property extraCodeParamName the query parameter name in the URL that indicates
  * this might be a follow-on search.
  * @property extraCodePrefixes possible values for the query parameter in the URL that indicates
  * this might be a follow-on search.
  * @property host the hostname on which the cookie is stored.
  * @property name the name of the cookie to check.
- * @property codeParam the name of parameter within the cookie.
- * @property codePrefixes possible values for the parameter within the cookie.
+ * @property codeParamName the name of parameter within the cookie.
  */
-internal data class SearchProviderCookie(
-    val extraCodeParam: String,
+data class SearchProviderCookie(
+    val extraCodeParamName: String,
     val extraCodePrefixes: List<String>,
     val host: String,
     val name: String,
-    val codeParam: String,
+    val codeParamName: String,
     val codePrefixes: List<String>,
 )

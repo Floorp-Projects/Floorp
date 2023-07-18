@@ -43,7 +43,7 @@ class InContentTelemetry : BaseSearchTelemetry() {
         val uri = Uri.parse(url)
         val paramSet = uri.queryParameterNames
 
-        if (!paramSet.contains(provider.queryParam)) {
+        if (!paramSet.contains(provider.queryParamName)) {
             return
         }
 

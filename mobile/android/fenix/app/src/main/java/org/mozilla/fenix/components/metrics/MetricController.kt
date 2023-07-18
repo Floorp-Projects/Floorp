@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components.metrics
 
+import android.util.Log
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.menu.facts.BrowserMenuFacts
 import mozilla.components.browser.toolbar.facts.ToolbarFacts
@@ -390,13 +391,16 @@ internal class ReleaseMetricController(
         }
 
         Component.FEATURE_SEARCH to AdsTelemetry.SERP_ADD_CLICKED -> {
+            Log.d("Sarah", "SERP_ADD_CLICKED")
             BrowserSearch.adClicks[value!!].add()
             track(Event.GrowthData.SerpAdClicked)
         }
         Component.FEATURE_SEARCH to AdsTelemetry.SERP_SHOWN_WITH_ADDS -> {
+            Log.d("Sarah", "SERP_SHOWN_WITH_ADDS")
             BrowserSearch.withAds[value!!].add()
         }
         Component.FEATURE_SEARCH to InContentTelemetry.IN_CONTENT_SEARCH -> {
+            Log.d("Sarah", "IN_CONTENT_SEARCH")
             BrowserSearch.inContent[value!!].add()
             track(Event.GrowthData.UserActivated(fromSearch = true))
         }

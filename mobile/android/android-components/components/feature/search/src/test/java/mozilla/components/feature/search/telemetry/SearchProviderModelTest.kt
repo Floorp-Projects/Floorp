@@ -10,12 +10,14 @@ import org.junit.Test
 class SearchProviderModelTest {
     private val testSearchProvider =
         SearchProviderModel(
-            name = "test",
-            regexp = "test",
-            queryParam = "test",
-            codeParam = "test",
-            codePrefixes = listOf(),
-            followOnParams = listOf(),
+            schema = 1671479978127,
+            taggedCodes = listOf("mzl", "813cf1dd", "16eeffc4"),
+            telemetryId = "test",
+            organicCodes = listOf(),
+            codeParamName = "tt",
+            queryParamName = "q",
+            searchPageRegexp = "^https://www\\.ecosia\\.org/",
+            expectedOrganicCodes = listOf(),
             extraAdServersRegexps = listOf(
                 "^https:\\/\\/www\\.bing\\.com\\/acli?c?k",
                 "^https:\\/\\/www\\.bing\\.com\\/fd\\/ls\\/GLinkPingPost\\.aspx.*acli?c?k",

@@ -114,7 +114,7 @@ class InContentTelemetryTest {
 
     @Test
     fun `GIVEN a Baidu search WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
-        val url = "https://m.baidu.com/s?from=1000969a&word=aaa"
+        val url = "https://www.baidu.com/s?tn=monline_dg&wd=aaa"
         val facts = mutableListOf<Fact>()
         Facts.registerProcessor(
             object : FactProcessor {
@@ -130,7 +130,7 @@ class InContentTelemetryTest {
         assertEquals(Component.FEATURE_SEARCH, facts[0].component)
         assertEquals(Action.INTERACTION, facts[0].action)
         assertEquals(InContentTelemetry.IN_CONTENT_SEARCH, facts[0].item)
-        assertEquals("baidu.in-content.sap._1000969a", facts[0].value)
+        assertEquals("baidu.in-content.sap.monline_dg", facts[0].value)
     }
 
     @Test
@@ -240,7 +240,7 @@ class InContentTelemetryTest {
 
     @Test
     fun `GIVEN a Baidu sap-follow-on WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
-        val url = "https://m.baidu.com/s?from=1000969a&word=aaa&oq=random"
+        val url = "https://www.baidu.com/s?tn=monline_dg&wd=aaa&oq=random"
         val facts = mutableListOf<Fact>()
         Facts.registerProcessor(
             object : FactProcessor {
@@ -256,12 +256,12 @@ class InContentTelemetryTest {
         assertEquals(Component.FEATURE_SEARCH, facts[0].component)
         assertEquals(Action.INTERACTION, facts[0].action)
         assertEquals(InContentTelemetry.IN_CONTENT_SEARCH, facts[0].item)
-        assertEquals("baidu.in-content.sap-follow-on._1000969a", facts[0].value)
+        assertEquals("baidu.in-content.sap-follow-on.monline_dg", facts[0].value)
     }
 
     @Test
     fun `GIVEN a Bing sap-follow-on with cookies WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
-        val url = "https://www.bing.com/search?q=aaa&pc=MOZMBA&form=QBRERANDOM"
+        val url = "https://www.bing.com/search?q=aaa&pc=MOZL&form=QBRERANDOM"
         val facts = mutableListOf<Fact>()
         Facts.registerProcessor(
             object : FactProcessor {
@@ -277,7 +277,7 @@ class InContentTelemetryTest {
         assertEquals(Component.FEATURE_SEARCH, facts[0].component)
         assertEquals(Action.INTERACTION, facts[0].action)
         assertEquals(InContentTelemetry.IN_CONTENT_SEARCH, facts[0].item)
-        assertEquals("bing.in-content.sap-follow-on.mozmba", facts[0].value)
+        assertEquals("bing.in-content.sap-follow-on.mozl", facts[0].value)
     }
 
     @Test
@@ -323,6 +323,27 @@ class InContentTelemetryTest {
     }
 
     @Test
+    fun `GIVEN a DuckDuckGo organic search with expected organic code WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
+        val url = "https://duckduckgo.com/?t=ha&q=aaa"
+        val facts = mutableListOf<Fact>()
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    facts.add(fact)
+                }
+            },
+        )
+
+        telemetry.trackPartnerUrlTypeMetric(url, listOf())
+
+        assertEquals(1, facts.size)
+        assertEquals(Component.FEATURE_SEARCH, facts[0].component)
+        assertEquals(Action.INTERACTION, facts[0].action)
+        assertEquals(InContentTelemetry.IN_CONTENT_SEARCH, facts[0].item)
+        assertEquals("duckduckgo.in-content.organic.none", facts[0].value)
+    }
+
+    @Test
     fun `GIVEN a Bing organic search WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://www.bing.com/search?q=aaa"
         val facts = mutableListOf<Fact>()
@@ -345,7 +366,7 @@ class InContentTelemetryTest {
 
     @Test
     fun `GIVEN a Baidu organic search WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
-        val url = "https://m.baidu.com/s?word=aaa"
+        val url = "https://www.baidu.com/s?wd=aaa"
         val facts = mutableListOf<Fact>()
         Facts.registerProcessor(
             object : FactProcessor {
@@ -367,7 +388,7 @@ class InContentTelemetryTest {
     private fun createCookieList(): List<JSONObject> {
         val first = JSONObject()
         first.put("name", "SRCHS")
-        first.put("value", "PC=MOZMBA")
+        first.put("value", "PC=MOZL")
         val second = JSONObject()
         second.put("name", "RANDOM")
         second.put("value", "RANDOM")

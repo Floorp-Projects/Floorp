@@ -11,17 +11,6 @@ private const val SEARCH_TYPE_SAP_FOLLOW_ON = "sap-follow-on"
 private const val SEARCH_TYPE_SAP = "sap"
 private const val SEARCH_TYPE_ORGANIC = "organic"
 private const val CHANNEL_KEY = "channel"
-private val validCodeSet = setOf(
-    "MOZ2", "MOZ4", "MOZ5", "MOZA", "MOZB", "MOZD", "MOZE", "MOZI", "MOZM", "MOZO", "MOZT",
-    "MOZW", "MOZSL01", "MOZSL02", "MOZSL03", "monline_dg", "monline_3_dg", "monline_4_dg",
-    "monline_7_dg", "firefox-a", "firefox-b", "firefox-b-1", "firefox-b-ab", "firefox-b-1-ab",
-    "firefox-b-d", "firefox-b-1-d", "firefox-b-e", "firefox-b-1-e", "firefox-b-m",
-    "firefox-b-1-m", "firefox-b-o", "firefox-b-1-o", "firefox-b-lm", "firefox-b-1-lm",
-    "firefox-b-lg", "firefox-b-huawei-h1611", "firefox-b-is-oem1", "firefox-b-oem1",
-    "firefox-b-oem2", "firefox-b-tinno", "firefox-b-pn-wt", "firefox-b-pn-wt-us", "ubuntu",
-    "ffab", "ffcm", "ffhp", "ffip", "ffit", "ffnt", "ffocus", "ffsb", "fpas",
-    "newext", "1000969a", null,
-)
 private val validChannelSet = setOf("ts")
 
 /**
@@ -29,31 +18,44 @@ private val validChannelSet = setOf("ts")
  *
  * @see [TrackKeyInfo.createTrackKey]
  */
+@Suppress("NestedBlockDepth", "ComplexMethod")
 internal fun getTrackKey(
     provider: SearchProviderModel,
     uri: Uri,
     cookies: List<JSONObject>,
 ): String {
+    var type = SEARCH_TYPE_ORGANIC
     val paramSet = uri.queryParameterNames
     var code: String? = null
 
-    if (provider.codeParam.isNotEmpty()) {
-        code = uri.getQueryParameter(provider.codeParam)
+    if (provider.codeParamName.isNotEmpty()) {
+        code = uri.getQueryParameter(provider.codeParamName)
         if (code.isNullOrEmpty() &&
-            provider.name == "baidu" &&
+            provider.telemetryId == "baidu" &&
             uri.toString().contains("from=")
         ) {
             code = uri.toString().substringAfter("from=", "")
                 .substringBefore("/", "")
         }
+        if (!code.isNullOrEmpty()) {
+            if (provider.taggedCodes.contains(code)) {
+                type = SEARCH_TYPE_SAP
+                if (!provider.followOnParamNames.isNullOrEmpty() &&
+                    provider.followOnParamNames.any { prefix ->
+                        paramSet.contains(prefix)
+                    }
+                ) {
+                    type = SEARCH_TYPE_SAP_FOLLOW_ON
+                }
+            } else if (provider.organicCodes?.contains(code) == true) {
+                type = SEARCH_TYPE_ORGANIC
+            } else if (provider.expectedOrganicCodes?.contains(code) == true) {
+                code = "none"
+            } else {
+                code = "other"
+            }
 
-        // For Bug 1751920
-        if (!validCodeSet.contains(code)) {
-            code = "other"
-        }
-
-        // Glean doesn't allow code starting with a figure
-        if (code != null && code.isNotEmpty()) {
+            // Glean doesn't allow code starting with a figure
             val codeStart = code.first()
             if (codeStart.isDigit()) {
                 code = "_$code"
@@ -62,7 +64,7 @@ internal fun getTrackKey(
 
         // Try cookies first because Bing has followOnCookies and valid code, but no
         // followOnParams => would tracks organic instead of sap-follow-on
-        if (provider.followOnCookies.isNotEmpty()) {
+        if (!provider.followOnCookies.isNullOrEmpty()) {
             // Checks if engine contains a valid follow-on cookie, otherwise return default
             getTrackKeyFromCookies(provider, uri, cookies)?.let {
                 return it.createTrackKey()
@@ -70,7 +72,7 @@ internal fun getTrackKey(
         }
 
         // For Bing if it didn't have a valid cookie and for all the other search engines
-        if (hasValidCode(uri.getQueryParameter(provider.codeParam), provider)) {
+        if (hasValidCode(uri.getQueryParameter(provider.codeParamName), provider)) {
             var channel = uri.getQueryParameter(CHANNEL_KEY)
 
             // For Bug 1751955
@@ -78,13 +80,20 @@ internal fun getTrackKey(
                 channel = null
             }
 
-            val type = getSapType(provider.followOnParams, paramSet)
-            return TrackKeyInfo(provider.name, type, code, channel).createTrackKey()
+            type = if (provider.followOnParamNames == null) {
+                SEARCH_TYPE_SAP
+            } else {
+                getSapType(provider.followOnParamNames, paramSet)
+            }
+            return TrackKeyInfo(provider.telemetryId, type, code, channel).createTrackKey()
         }
     }
 
     // Default to organic search type if no code parameter was found.
-    return TrackKeyInfo(provider.name, SEARCH_TYPE_ORGANIC, code).createTrackKey()
+    if (code.isNullOrEmpty()) {
+        code = "none"
+    }
+    return TrackKeyInfo(provider.telemetryId, type, code).createTrackKey()
 }
 
 private fun getTrackKeyFromCookies(
@@ -93,8 +102,8 @@ private fun getTrackKeyFromCookies(
     cookies: List<JSONObject>,
 ): TrackKeyInfo? {
     // Especially Bing requires lots of extra work related to cookies.
-    for (followOnCookie in provider.followOnCookies) {
-        val eCode = uri.getQueryParameter(followOnCookie.extraCodeParam)
+    for (followOnCookie in provider.followOnCookies!!) {
+        val eCode = uri.getQueryParameter(followOnCookie.extraCodeParamName)
         if (eCode == null || !followOnCookie.extraCodePrefixes.any { prefix ->
                 eCode.startsWith(prefix)
             }
@@ -113,14 +122,14 @@ private fun getTrackKeyFromCookies(
                 .split("=")
                 .map { item -> item.trim() }
 
-            if (valueList.size == 2 && valueList[0] == followOnCookie.codeParam &&
-                followOnCookie.codePrefixes.any { prefix ->
+            if (valueList.size == 2 && valueList[0] == followOnCookie.codeParamName &&
+                provider.taggedCodes.any { prefix ->
                     valueList[1].startsWith(
                         prefix,
                     )
                 }
             ) {
-                return TrackKeyInfo(provider.name, SEARCH_TYPE_SAP_FOLLOW_ON, valueList[1])
+                return TrackKeyInfo(provider.telemetryId, SEARCH_TYPE_SAP_FOLLOW_ON, valueList[1])
             }
         }
     }
@@ -137,4 +146,4 @@ private fun getSapType(followOnParams: List<String>, paramSet: Set<String>): Str
 }
 
 private fun hasValidCode(code: String?, provider: SearchProviderModel): Boolean =
-    code != null && provider.codePrefixes.any { prefix -> code.startsWith(prefix) }
+    code != null && provider.taggedCodes.any { prefix -> code.startsWith(prefix) }

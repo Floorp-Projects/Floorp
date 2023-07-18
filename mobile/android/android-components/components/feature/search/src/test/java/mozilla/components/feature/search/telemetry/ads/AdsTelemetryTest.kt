@@ -170,7 +170,7 @@ class AdsTelemetryTest {
 
     @Test
     fun `GIVEN a Bing sap-follow-on with cookies WHEN checkIfAddWasClicked is called THEN emit an appropriate SERP_ADD_CLICKED Fact`() {
-        val url = "https://www.bing.com/search?q=aaa&pc=MOZMBA&form=QBRERANDOM"
+        val url = "https://www.bing.com/search?q=aaa&pc=MOZL&form=QBRERANDOM"
         telemetry.cachedCookies = createCookieList()
         val facts = mutableListOf<Fact>()
         Facts.registerProcessor(
@@ -187,13 +187,13 @@ class AdsTelemetryTest {
         assertEquals(Component.FEATURE_SEARCH, facts[0].component)
         assertEquals(Action.INTERACTION, facts[0].action)
         assertEquals(AdsTelemetry.SERP_ADD_CLICKED, facts[0].item)
-        assertEquals("bing.in-content.sap-follow-on.mozmba", facts[0].value)
+        assertEquals("bing.in-content.sap-follow-on.mozl", facts[0].value)
     }
 
     private fun createCookieList(): List<JSONObject> {
         val first = JSONObject()
         first.put("name", "SRCHS")
-        first.put("value", "PC=MOZMBA")
+        first.put("value", "PC=MOZL")
         val second = JSONObject()
         second.put("name", "RANDOM")
         second.put("value", "RANDOM")

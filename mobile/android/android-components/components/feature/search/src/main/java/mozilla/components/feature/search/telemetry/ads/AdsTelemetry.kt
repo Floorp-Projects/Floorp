@@ -75,7 +75,7 @@ class AdsTelemetry : BaseSearchTelemetry() {
         val provider = getProviderForUrl(url) ?: return
         val paramSet = uri.queryParameterNames
 
-        if (!paramSet.contains(provider.queryParam) || !provider.containsAdLinks(urlPath)) {
+        if (!paramSet.contains(provider.queryParamName) || !provider.containsAdLinks(urlPath)) {
             // Do nothing if the URL does not have the search provider's query parameter or
             // there were no ad clicks.
             return

@@ -20,11 +20,24 @@ class BaseSearchTelemetryTest {
 
     private lateinit var baseTelemetry: BaseSearchTelemetry
     private lateinit var handler: BaseSearchTelemetry.SearchTelemetryMessageHandler
+    private fun createMockProviderList(): List<SearchProviderModel> = listOf(
+        SearchProviderModel(
+            schema = 1671479978127,
+            taggedCodes = listOf("abc", "xyz", "def"),
+            telemetryId = "google",
+            organicCodes = emptyList(),
+            codeParamName = "tt",
+            queryParamName = "q",
+            searchPageRegexp = "^https://www\\.example\\.org/",
+            extraAdServersRegexps = listOf("^https://www\\.google\\.(?:.+)/search"),
+            expectedOrganicCodes = emptyList(),
+        ),
+    )
 
     @Before
     fun setup() {
         baseTelemetry = spy(
-            object : BaseSearchTelemetry() {
+            object : BaseSearchTelemetry(createMockProviderList()) {
 
                 override fun install(engine: Engine, store: BrowserStore) {
                     // mock, do nothing
@@ -62,13 +75,6 @@ class BaseSearchTelemetryTest {
         val url = "https://www.mozilla.com/search?q=firefox"
 
         assertEquals(null, baseTelemetry.getProviderForUrl(url))
-    }
-
-    @Test
-    fun `GIVEN a search provider exists for the url WHEN getProviderForUrl is called THEN return that provider`() {
-        val url = "https://www.google.com/search?q=computers"
-
-        assertEquals("google", baseTelemetry.getProviderForUrl(url)?.name)
     }
 
     @Test(expected = IllegalStateException::class)
