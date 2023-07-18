@@ -403,8 +403,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   static bool IsPrivilegedChromeWindow(JSContext*, JSObject* aObj);
 
-  static bool IsRequestIdleCallbackEnabled(JSContext* aCx, JSObject*);
-
   static bool DeviceSensorsEnabled(JSContext*, JSObject*);
 
   static bool CachesEnabled(JSContext* aCx, JSObject*);

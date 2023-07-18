@@ -3544,12 +3544,6 @@
   value: 100
   mirror: always
 
-# Enable requestIdleCallback API
-- name: dom.requestIdleCallback.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Enable Screen Orientation lock
 - name: dom.screenorientation.allow-lock
   type: bool
