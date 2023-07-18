@@ -2,25 +2,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.transform:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
     - taskgraph.transforms.from_deps
     - android_taskgraph.transforms.post_dummy
     - android_taskgraph.transforms.chunk
-    - taskgraph.transforms.task
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
-    - beetmover
+    - beetmover-components
 
-tasks:
+jobs:
     post-beetmover:
         description: Dummy task to wait on all builds before publishing them
         from-deps:
             group-by: build-type
             unique-kinds: false
             copy-attributes: true
-        run-on-tasks-for: []
         attributes:
             component: all
         worker-type: succeed
