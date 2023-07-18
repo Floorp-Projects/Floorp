@@ -1460,8 +1460,8 @@ class _ASRouter {
       `entering addImpression for ${message.id}`
     );
 
-    const groupsWithFrequency = this.state.groups.filter(
-      ({ frequency, id }) => frequency && message.groups.includes(id)
+    const groupsWithFrequency = this.state.groups?.filter(
+      ({ frequency, id }) => frequency && message.groups?.includes(id)
     );
     // We only need to store impressions for messages that have frequency, or
     // that have providers that have frequency
