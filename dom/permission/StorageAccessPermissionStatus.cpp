@@ -9,6 +9,7 @@
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/PermissionStatus.h"
 #include "mozilla/dom/PermissionStatusBinding.h"
 
@@ -46,6 +47,13 @@ StorageAccessPermissionStatus::UpdateState() {
   WindowGlobalChild* wgc = window->GetWindowGlobalChild();
   if (NS_WARN_IF(!wgc)) {
     return SimplePromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  // Perform a Permission Policy Request
+  if (!FeaturePolicyUtils::IsFeatureAllowed(window->GetExtantDoc(),
+                                            u"storage-access"_ns)) {
+    mState = PermissionState::Prompt;
+    return SimplePromise::CreateAndResolve(NS_OK, __func__);
   }
 
   RefPtr<StorageAccessPermissionStatus> self(this);
