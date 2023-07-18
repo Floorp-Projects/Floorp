@@ -14,8 +14,8 @@
 <script type="text/javascript">
 "use strict";
 
-const { TestUtils } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 add_task(async function setup() {

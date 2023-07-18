@@ -25,7 +25,9 @@ const UPDATE_URL = "http://mochi.test:8888/tests/toolkit/components/url-classifi
 var Cc = SpecialPowers.Cc;
 var Ci = SpecialPowers.Ci;
 
-const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+const {TestUtils} = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
+);
 
 var timer = Cc["@mozilla.org/timer;1"]
             .createInstance(Ci.nsITimer);

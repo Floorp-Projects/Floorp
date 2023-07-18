@@ -13,7 +13,9 @@
   <option value="ab2">
 </datalist>
 <script>
-const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
+const { TestUtils } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
+);
 
 const DATALIST_DATA = {
   "a": ["a1", "a2", "ab1", "ab2"],
