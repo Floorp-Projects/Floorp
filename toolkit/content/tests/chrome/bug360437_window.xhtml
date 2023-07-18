@@ -18,7 +18,9 @@
         title="360437 test">
 
   <script type="application/javascript"><![CDATA[
-    const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+    const {BrowserTestUtils} = ChromeUtils.importESModule(
+      "resource://testing-common/BrowserTestUtils.sys.mjs"
+    );
     const {ContentTask} = ChromeUtils.importESModule(
       "resource://testing-common/ContentTask.sys.mjs"
     );

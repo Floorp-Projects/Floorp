@@ -212,7 +212,7 @@ async function waitForPreloaded(browser) {
 
 /**
  * Helper function to navigate and wait for page to load
- * https://searchfox.org/mozilla-central/rev/b2716c233e9b4398fc5923cbe150e7f83c7c6c5b/testing/mochitest/BrowserTestUtils/BrowserTestUtils.jsm#383
+ * https://searchfox.org/mozilla-central/rev/314b4297e899feaf260e7a7d1a9566a218216e7a/testing/mochitest/BrowserTestUtils/BrowserTestUtils.sys.mjs#404
  */
 async function waitForUrlLoad(url) {
   let browser = gBrowser.selectedBrowser;

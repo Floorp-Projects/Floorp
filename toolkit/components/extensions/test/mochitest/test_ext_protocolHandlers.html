@@ -224,8 +224,8 @@ add_task(async function test_protocolHandler() {
     /* eslint-env mozilla/chrome-script */
     const CONTENT_HANDLING_URL =
       "chrome://mozapps/content/handling/appChooser.xhtml";
-    const { BrowserTestUtils } = ChromeUtils.import(
-      "resource://testing-common/BrowserTestUtils.jsm"
+    const { BrowserTestUtils } = ChromeUtils.importESModule(
+      "resource://testing-common/BrowserTestUtils.sys.mjs"
     );
 
     let windowOpen = BrowserTestUtils.domWindowOpenedAndLoaded();

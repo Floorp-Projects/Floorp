@@ -20,7 +20,9 @@
 var mainWindow = window.window.browsingContext.topChromeWindow;
 var contentPage1 = "http://www.example.com/chrome/toolkit/components/url-classifier/tests/mochitest/bug_1580416.html";
 
-const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+const {BrowserTestUtils} = ChromeUtils.importESModule(
+  "resource://testing-common/BrowserTestUtils.sys.mjs"
+);
 const {TestUtils} = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
