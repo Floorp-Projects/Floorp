@@ -4761,12 +4761,6 @@
   value: true
   mirror: always
 
-# Enable content type normalization of XHR uploads via MIME Sniffing standard
-- name: dom.xhr.standard_content_type_normalization
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # When this pref is set, parent documents may consider child iframes have
 # loaded while they are still loading.
 - name: dom.cross_origin_iframes_loaded_in_background
