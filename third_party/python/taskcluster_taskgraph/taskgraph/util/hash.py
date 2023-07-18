@@ -19,6 +19,12 @@ def hash_path(path):
         return hashlib.sha256(fh.read()).hexdigest()
 
 
+def _find_files(base_path):
+    for path in Path(base_path).rglob("*"):
+        if path.is_file():
+            yield str(path)
+
+
 def hash_paths(base_path, patterns):
     """
     Give a list of path patterns, return a digest of the contents of all
@@ -32,7 +38,8 @@ def hash_paths(base_path, patterns):
 
     found = set()
     for pattern in patterns:
-        matches = _find_matching_files(base_path, pattern)
+        files = _find_files(base_path)
+        matches = [path for path in files if mozpath.match(path, pattern)]
         if matches:
             found.update(matches)
         else:
@@ -45,14 +52,3 @@ def hash_paths(base_path, patterns):
             ).encode("utf-8")
         )
     return h.hexdigest()
-
-
-@memoize
-def _find_matching_files(base_path, pattern):
-    files = _get_all_files(base_path)
-    return [path for path in files if mozpath.match(path, pattern)]
-
-
-@memoize
-def _get_all_files(base_path):
-    return [str(path) for path in Path(base_path).rglob("*") if path.is_file()]

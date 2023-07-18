@@ -6,9 +6,8 @@
 import logging
 import os
 import sys
-from dataclasses import dataclass
-from typing import Dict
 
+import attr
 from voluptuous import All, Any, Extra, Length, Optional, Required
 
 from .util import path
@@ -35,11 +34,6 @@ graph_config_schema = Schema(
                 "lowest",
             ),
         ),
-        Optional(
-            "task-deadline-after",
-            description="Default 'deadline' for tasks, in relative date format. "
-            "Eg: '1 week'",
-        ): optionally_keyed_by("project", str),
         Required("workers"): {
             Required("aliases"): {
                 str: {
@@ -61,10 +55,6 @@ graph_config_schema = Schema(
                 description="The taskcluster index prefix to use for caching tasks. "
                 "Defaults to `trust-domain`.",
             ): str,
-            Optional(
-                "index-path-regexes",
-                description="Regular expressions matching index paths to be summarized.",
-            ): [str],
             Required("repositories"): All(
                 {
                     str: {
@@ -84,10 +74,10 @@ graph_config_schema = Schema(
 """Schema for GraphConfig"""
 
 
-@dataclass(frozen=True, eq=False)
+@attr.s(frozen=True, cmp=False)
 class GraphConfig:
-    _config: Dict
-    root_dir: str
+    _config = attr.ib()
+    root_dir = attr.ib()
 
     _PATH_MODIFIED = False
 
@@ -143,4 +133,4 @@ def load_graph_config(root_dir):
     config = load_yaml(config_yml)
 
     validate_graph_config(config)
-    return GraphConfig(config, root_dir=root_dir)
+    return GraphConfig(config=config, root_dir=root_dir)

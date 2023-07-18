@@ -4,7 +4,6 @@
 
 
 from taskgraph.task import Task
-from taskgraph.util.dependencies import group_by as tg_group_by
 from taskgraph.util.schema import Schema
 from voluptuous import Required
 
@@ -121,14 +120,6 @@ def group_tasks(config, tasks):
         yield dependencies
 
 
-@tg_group_by("single")
-def single_grouping(config, tasks):
-    for task in tasks:
-        if skip_only_or_not(config.config, task):
-            continue
-        yield [task]
-
-
 @group_by("platform")
 def platform_grouping(config, tasks):
     groups = {}
@@ -145,13 +136,6 @@ def platform_grouping(config, tasks):
 
         groups.setdefault((platform, build_type, product), []).append(task)
     return groups
-
-
-# Temporary shim function
-@tg_group_by("platform")
-def tg_platform_grouping(config, tasks):
-    groups = platform_grouping(config.config, tasks)
-    return groups.values()
 
 
 @group_by("single-locale")
@@ -191,13 +175,6 @@ def single_locale_grouping(config, tasks):
     return groups
 
 
-# Temporary shim function
-@tg_group_by("single-locale")
-def tg_locale_grouping(config, tasks):
-    groups = single_locale_grouping(config.config, tasks)
-    return groups.values()
-
-
 @group_by("chunk-locales")
 def chunk_locale_grouping(config, tasks):
     """Split by a chunk_locale (but also by platform, build-type, product)
@@ -226,13 +203,6 @@ def chunk_locale_grouping(config, tasks):
             groups[chunk_locale_key].append(task)
 
     return groups
-
-
-# Temporary shim function
-@tg_group_by("chunk-locales")
-def tg_chunk_locale_grouping(config, tasks):
-    groups = chunk_locale_grouping(config.config, tasks)
-    return groups.values()
 
 
 @group_by("partner-repack-ids")
@@ -264,13 +234,6 @@ def partner_repack_ids_grouping(config, tasks):
             groups[partner_repack_ids_key].append(task)
 
     return groups
-
-
-# Temporary shim function
-@tg_group_by("partner-repack-ids")
-def tg_partner_repack_ids_grouping(config, tasks):
-    groups = partner_repack_ids_grouping(config.config, tasks)
-    return groups.values()
 
 
 def assert_unique_members(kinds, error_msg=None):

@@ -6,11 +6,11 @@ Transform the signing task into an actual task description.
 """
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.dependencies import get_primary_dependency
 from taskgraph.util.keyed_by import evaluate_keyed_by
-from taskgraph.util.schema import Schema, taskref_or_string
+from taskgraph.util.schema import taskref_or_string
 from voluptuous import Optional, Required
 
+from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import (
     copy_attributes_from_dependent_job,
@@ -23,7 +23,7 @@ from gecko_taskgraph.util.scriptworker import (
 
 transforms = TransformSequence()
 
-signing_description_schema = Schema(
+signing_description_schema = schema.extend(
     {
         # Artifacts from dep task to sign - Sync with taskgraph/transforms/task.py
         # because this is passed directly into the signingscript worker
@@ -39,6 +39,8 @@ signing_description_schema = Schema(
                 Required("formats"): [str],
             }
         ],
+        # depname is used in taskref's to identify the taskID of the unsigned things
+        Required("depname"): str,
         # attributes for this task
         Optional("attributes"): {str: object},
         # unique label to describe this signing task, defaults to {dep.label}-signing
@@ -51,7 +53,7 @@ signing_description_schema = Schema(
         Optional("routes"): [str],
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
-        Required("dependencies"): task_description_schema["dependencies"],
+        Optional("dependent-tasks"): {str: object},
         # Optional control for how long a task may run (aka maxRunTime)
         Optional("max-run-time"): int,
         Optional("extra"): {str: object},
@@ -59,17 +61,16 @@ signing_description_schema = Schema(
         Optional("repacks-per-chunk"): int,
         # Override the default priority for the project
         Optional("priority"): task_description_schema["priority"],
-        Optional("job-from"): task_description_schema["job-from"],
     }
 )
 
 
 @transforms.add
-def delete_name(config, jobs):
-    """Delete the 'name' key if it exists, we don't use it."""
+def set_defaults(config, jobs):
     for job in jobs:
-        if "name" in job:
-            del job["name"]
+        if not job.get("depname"):
+            dep_job = job["primary-dependency"]
+            job["depname"] = dep_job.kind
         yield job
 
 
@@ -79,12 +80,11 @@ transforms.add_validate(signing_description_schema)
 @transforms.add
 def add_entitlements_link(config, jobs):
     for job in jobs:
-        dep_job = get_primary_dependency(config, job)
         entitlements_path = evaluate_keyed_by(
             config.graph_config["mac-notarization"]["mac-entitlements"],
             "mac entitlements",
             {
-                "platform": dep_job.attributes.get("build_platform"),
+                "platform": job["primary-dependency"].attributes.get("build_platform"),
                 "release-level": release_level(config.params["project"]),
             },
         )
@@ -98,12 +98,11 @@ def add_entitlements_link(config, jobs):
 @transforms.add
 def add_requirements_link(config, jobs):
     for job in jobs:
-        dep_job = get_primary_dependency(config, job)
         requirements_path = evaluate_keyed_by(
             config.graph_config["mac-notarization"]["mac-requirements"],
             "mac requirements",
             {
-                "platform": dep_job.attributes.get("build_platform"),
+                "platform": job["primary-dependency"].attributes.get("build_platform"),
             },
         )
         if requirements_path:
@@ -116,7 +115,7 @@ def add_requirements_link(config, jobs):
 @transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
-        dep_job = get_primary_dependency(config, job)
+        dep_job = job["primary-dependency"]
         attributes = dep_job.attributes
 
         signing_format_scopes = []
@@ -196,7 +195,7 @@ def make_task_description(config, jobs):
                 "max-run-time": job.get("max-run-time", 3600),
             },
             "scopes": [signing_cert_scope] + signing_format_scopes,
-            "dependencies": job["dependencies"],
+            "dependencies": _generate_dependencies(job),
             "attributes": attributes,
             "run-on-projects": dep_job.attributes.get("run_on_projects"),
             "optimization": dep_job.optimization,
@@ -241,6 +240,15 @@ def make_task_description(config, jobs):
             task["priority"] = job["priority"]
 
         yield task
+
+
+def _generate_dependencies(job):
+    if isinstance(job.get("dependent-tasks"), dict):
+        deps = {}
+        for k, v in job["dependent-tasks"].items():
+            deps[k] = v.label
+        return deps
+    return {job["depname"]: job["primary-dependency"].label}
 
 
 def _generate_treeherder_platform(dep_th_platform, build_platform, build_type):

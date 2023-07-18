@@ -7,7 +7,6 @@ Uses attributes from `primary-dependency`.
 """
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.dependencies import get_primary_dependency
 
 transforms = TransformSequence()
 
@@ -17,11 +16,7 @@ def make_label(config, jobs):
     """Generate a sane label for a new task constructed from a dependency
     Using attributes from the dependent job and the current task kind"""
     for job in jobs:
-        if "primary-dependency" in job:
-            dep_job = job["primary-dependency"]
-        else:
-            dep_job = get_primary_dependency(config, job)
-
+        dep_job = job["primary-dependency"]
         attr = dep_job.attributes.get
 
         if attr("locale", job.get("locale")):

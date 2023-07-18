@@ -10,7 +10,6 @@ import copy
 
 from mozbuild.chunkify import chunkify
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.dependencies import get_primary_dependency
 
 from gecko_taskgraph.util.partners import (
     apply_partner_priority,
@@ -24,12 +23,7 @@ transforms.add(apply_partner_priority)
 @transforms.add
 def chunk_partners(config, jobs):
     for job in jobs:
-        # We need to support both the `multi_dep` and `from_deps` approach for now.
-        if "primary-dependency" in job:
-            dep_job = job["primary-dependency"]
-        else:
-            dep_job = get_primary_dependency(config, job)
-
+        dep_job = job["primary-dependency"]
         build_platform = dep_job.attributes["build_platform"]
         repack_id = dep_job.task.get("extra", {}).get("repack_id")
         repack_ids = dep_job.task.get("extra", {}).get("repack_ids")
