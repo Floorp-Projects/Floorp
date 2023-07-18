@@ -560,8 +560,11 @@ var PlacesCommandHook = {
     });
   },
 
-  searchHistory() {
-    gURLBar.search(UrlbarTokenizer.RESTRICT.HISTORY, {
+  async searchHistory() {
+    let win =
+      BrowserWindowTracker.getTopWindow() ??
+      (await BrowserWindowTracker.promiseOpenWindow());
+    win.gURLBar.search(UrlbarTokenizer.RESTRICT.HISTORY, {
       searchModeEntry: "historymenu",
     });
   },

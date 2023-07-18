@@ -250,6 +250,9 @@
                 <menuitem id="hiddenTabsMenu"
                           oncommand="gTabsPanel.showHiddenTabsPanel(event, 'hidden-tabs-menuitem');"
                           hidden="true" data-l10n-id="menu-history-hidden-tabs"/>
+                <menuitem id="menu_searchHistory"
+                          command="History:SearchHistory"
+                          data-l10n-id="menu-history-search"/>
                 <menu id="historyUndoMenu"
                       disabled="true" data-l10n-id="menu-history-undo-menu">
                   <menupopup id="historyUndoPopup"
