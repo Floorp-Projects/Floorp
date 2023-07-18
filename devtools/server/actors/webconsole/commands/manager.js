@@ -253,15 +253,26 @@ exports.WebConsoleCommandsManager = WebConsoleCommandsManager;
  */
 
 /**
- * Find a node by ID.
+ * Find the first node matching a CSS selector.
  *
- * @param string id
- *        The ID of the element you want.
+ * @param string selector
+ *        A string that is passed to window.document.querySelector
+ * @param [optional] Node element
+ *        An optional Node to replace window.document
  * @return Node or null
  *         The result of calling document.querySelector(selector).
  */
-WebConsoleCommandsManager.register("$", function (owner, selector) {
+WebConsoleCommandsManager.register("$", function (owner, selector, element) {
   try {
+    if (
+      element &&
+      element.querySelector &&
+      (element.nodeType == Node.ELEMENT_NODE ||
+        element.nodeType == Node.DOCUMENT_NODE ||
+        element.nodeType == Node.DOCUMENT_FRAGMENT_NODE)
+    ) {
+      return element.querySelector(selector);
+    }
     return owner.window.document.querySelector(selector);
   } catch (err) {
     // Throw an error like `err` but that belongs to `owner.window`.
@@ -274,25 +285,35 @@ WebConsoleCommandsManager.register("$", function (owner, selector) {
  *
  * @param string selector
  *        A string that is passed to window.document.querySelectorAll.
- * @return NodeList
- *         Returns the result of document.querySelectorAll(selector).
+ * @param [optional] Node element
+ *        An optional Node to replace window.document
+ * @return array of Node
+ *         The result of calling document.querySelector(selector) in an array.
  */
-WebConsoleCommandsManager.register("$$", function (owner, selector) {
-  let nodes;
+WebConsoleCommandsManager.register("$$", function (owner, selector, element) {
+  let scope = owner.window.document;
   try {
-    nodes = owner.window.document.querySelectorAll(selector);
+    if (
+      element &&
+      element.querySelectorAll &&
+      (element.nodeType == Node.ELEMENT_NODE ||
+        element.nodeType == Node.DOCUMENT_NODE ||
+        element.nodeType == Node.DOCUMENT_FRAGMENT_NODE)
+    ) {
+      scope = element;
+    }
+    const nodes = scope.querySelectorAll(selector);
+    const result = new owner.window.Array();
+    // Calling owner.window.Array.from() doesn't work without accessing the
+    // wrappedJSObject, so just loop through the results instead.
+    for (let i = 0; i < nodes.length; i++) {
+      result.push(nodes[i]);
+    }
+    return result;
   } catch (err) {
     // Throw an error like `err` but that belongs to `owner.window`.
     throw new owner.window.DOMException(err.message, err.name);
   }
-
-  // Calling owner.window.Array.from() doesn't work without accessing the
-  // wrappedJSObject, so just loop through the results instead.
-  const result = new owner.window.Array();
-  for (let i = 0; i < nodes.length; i++) {
-    result.push(nodes[i]);
-  }
-  return result;
 });
 
 /**
