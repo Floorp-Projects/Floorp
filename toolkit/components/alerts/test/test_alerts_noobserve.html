@@ -23,7 +23,9 @@ const Ci = SpecialPowers.Ci;
 
 const chromeScript = SpecialPowers.loadChromeScript(_ => {
   /* eslint-env mozilla/chrome-script */
-  const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+  const {setTimeout} = ChromeUtils.importESModule(
+    "resource://gre/modules/Timer.sys.mjs"
+  );
 
   function anyXULAlertsVisible() {
     var windows = Services.wm.getEnumerator("alert:alert");
