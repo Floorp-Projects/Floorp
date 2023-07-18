@@ -9,6 +9,10 @@ const TEST_URI = `data:text/html,<!DOCTYPE html>
     <li>First</li>
     <li>Second</li>
   </ul>
+  <ul id="myList">
+    <li id="myListItem1" class="inMyList">First</li>
+    <li id="myListItem2" class="inMyList">Second</li>
+  </ul>
   <aside>Sidebar</aside>
 </main>
 `;
@@ -36,14 +40,14 @@ add_task(async function () {
   message = await executeAndWaitForResultMessage(
     hud,
     "$$('main > ul > li')",
-    "Array [ li, li ]"
+    "Array(4) [ li, li, li#myListItem1.inMyList, li#myListItem2.inMyList ]"
   );
   ok(message, "`$$('main > ul > li')` worked");
 
   message = await executeAndWaitForResultMessage(
     hud,
     "$$('main > ul > li').map(el => el.tagName).join(' - ')",
-    "LI - LI"
+    "LI - LI - LI - LI"
   );
   ok(message, "`$$` result can be used right away");
 
@@ -56,4 +60,25 @@ add_task(async function () {
     "':foo' is not a valid selector"
   );
   ok(message, "`$$(':foo')` returns an error message");
+
+  message = await executeAndWaitForResultMessage(
+    hud,
+    "$$('li', document.querySelector('ul#myList'))",
+    "Array [ li#myListItem1.inMyList, li#myListItem2.inMyList ]"
+  );
+  ok(message, "`$$('li', document.querySelector('ul#myList'))` worked");
+
+  message = await executeAndWaitForErrorMessage(
+    hud,
+    "$$('li', $(':foo'))",
+    "':foo' is not a valid selector"
+  );
+  ok(message, "`$$('li', $(':foo'))` returns an error message");
+
+  message = await executeAndWaitForResultMessage(
+    hud,
+    "$$('li', $('div'))",
+    "Array(4) [ li, li, li#myListItem1.inMyList, li#myListItem2.inMyList ]"
+  );
+  ok(message, "`$$('li', $('div'))` worked");
 });

@@ -9,6 +9,10 @@ const TEST_URI = `data:text/html,<!DOCTYPE html>
     <li>First</li>
     <li>Second</li>
   </ul>
+  <ul id="myList">
+    <li id="myListItem1" class="inMyList">First</li>
+    <li id="myListItem2" class="inMyList">Second</li>
+  </ul>
   <aside>Sidebar</aside>
 </main>
 `;
@@ -46,4 +50,25 @@ add_task(async function () {
     "':foo' is not a valid selector"
   );
   ok(message, "`$(':foo')` returns an error message");
+
+  message = await executeAndWaitForResultMessage(
+    hud,
+    "$('li', document.querySelector('ul#myList'))",
+    '<li id="myListItem1" class="inMyList">'
+  );
+  ok(message, "`$('li', document.querySelector('ul#myList'))` worked");
+
+  message = await executeAndWaitForErrorMessage(
+    hud,
+    "$('li', $(':foo'))",
+    "':foo' is not a valid selector"
+  );
+  ok(message, "`$('li', $(':foo'))` returns an error message");
+
+  message = await executeAndWaitForResultMessage(
+    hud,
+    "$('li', $('div'))",
+    "<li>"
+  );
+  ok(message, "`$('li', $('div'))` worked");
 });
