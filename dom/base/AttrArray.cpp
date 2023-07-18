@@ -242,10 +242,13 @@ void AttrArray::Compact() {
     return;
   }
 
-  Impl* impl = mImpl.release();
-  impl = static_cast<Impl*>(
-      realloc(impl, Impl::AllocationSizeForAttributes(impl->mAttrCount)));
-  MOZ_ASSERT(impl, "failed to reallocate to a smaller buffer!");
+  Impl* oldImpl = mImpl.release();
+  Impl* impl = static_cast<Impl*>(
+      realloc(oldImpl, Impl::AllocationSizeForAttributes(oldImpl->mAttrCount)));
+  if (!impl) {
+    mImpl.reset(oldImpl);
+    return;
+  }
   impl->mCapacity = impl->mAttrCount;
   mImpl.reset(impl);
 }
@@ -314,9 +317,12 @@ bool AttrArray::GrowBy(uint32_t aGrowSize) {
              Impl::AllocationSizeForAttributes(capacity.value()));
 
   const bool needToInitialize = !mImpl;
-  Impl* newImpl =
-      static_cast<Impl*>(realloc(mImpl.release(), sizeInBytes.value()));
-  NS_ENSURE_TRUE(newImpl, false);
+  Impl* oldImpl = mImpl.release();
+  Impl* newImpl = static_cast<Impl*>(realloc(oldImpl, sizeInBytes.value()));
+  if (!newImpl) {
+    mImpl.reset(oldImpl);
+    return false;
+  }
 
   mImpl.reset(newImpl);
 
