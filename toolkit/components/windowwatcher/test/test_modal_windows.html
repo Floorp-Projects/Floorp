@@ -13,7 +13,9 @@ that is opened reports itself as being modal.
 
   <script type="application/javascript">
 
-  const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+  const {BrowserTestUtils} = ChromeUtils.importESModule(
+    "resource://testing-common/BrowserTestUtils.sys.mjs"
+  );
 
   add_task(async function() {
     BrowserTestUtils.domWindowOpened().then((win) => {

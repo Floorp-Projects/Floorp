@@ -17,7 +17,9 @@
 
 <pre id="test">
 <script class="testbody" type="application/javascript">
-const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+const {BrowserTestUtils} = ChromeUtils.importESModule(
+  "resource://testing-common/BrowserTestUtils.sys.mjs"
+);
 
 let video, controlBar, playButton;
 

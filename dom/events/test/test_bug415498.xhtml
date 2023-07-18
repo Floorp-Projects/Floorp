@@ -18,7 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
 
   <pre id="test">
   <script class="testbody" type="application/javascript"><![CDATA[
-    const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+    const {BrowserTestUtils} = ChromeUtils.importESModule(
+      "resource://testing-common/BrowserTestUtils.sys.mjs"
+    );
 
     /** Test for Bug 415498 **/
     SimpleTest.waitForExplicitFinish();

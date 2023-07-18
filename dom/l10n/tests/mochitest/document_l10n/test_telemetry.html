@@ -7,8 +7,8 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  const { BrowserTestUtils } = ChromeUtils.import(
-    "resource://testing-common/BrowserTestUtils.jsm"
+  const { BrowserTestUtils } = ChromeUtils.importESModule(
+    "resource://testing-common/BrowserTestUtils.sys.mjs"
   );
 
   SimpleTest.waitForExplicitFinish();

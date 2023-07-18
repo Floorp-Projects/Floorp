@@ -62,8 +62,8 @@ fxview-category-button[name="category-five"]::part(icon) {
     "chrome://browser/content/utilityOverlay.js",
     this
   );
-  const { BrowserTestUtils } = ChromeUtils.import(
-    "resource://testing-common/BrowserTestUtils.jsm"
+  const { BrowserTestUtils } = ChromeUtils.importESModule(
+    "resource://testing-common/BrowserTestUtils.sys.mjs"
   );
 
 const fxviewCategoryNav = document.querySelector("fxview-category-navigation");

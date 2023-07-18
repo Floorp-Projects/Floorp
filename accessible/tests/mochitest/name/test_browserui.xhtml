@@ -15,8 +15,8 @@
 
   <script type="application/javascript">
   <![CDATA[
-    const { BrowserTestUtils } = ChromeUtils.import(
-      "resource://testing-common/BrowserTestUtils.jsm");
+    const { BrowserTestUtils } = ChromeUtils.importESModule(
+      "resource://testing-common/BrowserTestUtils.sys.mjs");
     const ABOUT_MOZILLA_URL = "about:mozilla";
     const ABOUT_LICENSE_URL = "about:license";
 
