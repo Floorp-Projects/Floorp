@@ -11,8 +11,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1782142
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1062578">Bug 1782142</a>
 <div id="host"></div>
 <script>
-let { ContentTaskUtils } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/ContentTaskUtils.jsm"
+let { ContentTaskUtils } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/ContentTaskUtils.sys.mjs"
 );
 
 // Setup shadow DOM
