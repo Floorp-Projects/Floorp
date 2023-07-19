@@ -7,14 +7,22 @@
  */
 export class TranslationsTelemetry {
   /**
+   * Telemetry functions for the Translations panel.
+   * @returns {Panel}
+   */
+  static panel() {
+    return Panel;
+  }
+
+  /**
    * Records a telemetry event when full page translation fails.
    *
-   * @param {Error} error
+   * @param {string} errorMessage
    */
-  static onError(error) {
+  static onError(errorMessage) {
     Glean.translations.errorRate.addToNumerator(1);
     Glean.translations.error.record({
-      reason: String(error),
+      reason: errorMessage,
     });
   }
 
@@ -32,6 +40,22 @@ export class TranslationsTelemetry {
       from_language: data.fromLanguage,
       to_language: data.toLanguage,
       auto_translate: data.autoTranslate,
+    });
+  }
+}
+
+/**
+ * Telemetry functions for the Translations panel
+ */
+class Panel {
+  /**
+   * Records a telemetry event when the translations panel is opened.
+   *
+   * @param {boolean} openedFromAppMenu
+   */
+  static onOpen(openedFromAppMenu) {
+    Glean.translationsPanel.open.record({
+      opened_from: openedFromAppMenu ? "appMenu" : "translationsButton",
     });
   }
 }

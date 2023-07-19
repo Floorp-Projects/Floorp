@@ -296,6 +296,14 @@ export class TranslationsParent extends JSWindowActorParent {
   static testAutomaticPopup = false;
 
   /**
+   * Telemetry functions for Translations
+   * @returns {TranslationsTelemetry}
+   */
+  static telemetry() {
+    return lazy.TranslationsTelemetry;
+  }
+
+  /**
    * Offer translations (for instance by automatically opening the popup panel) whenever
    * languages are detected, but only do it once per host per session.
    * @param {LangTags} detectedLanguages
@@ -590,6 +598,10 @@ export class TranslationsParent extends JSWindowActorParent {
       }
       case "Translations:GetSupportedLanguages": {
         return TranslationsParent.getSupportedLanguages();
+      }
+      case "Translations:SendTelemetryError": {
+        TranslationsParent.telemetry().onError(data.errorMessage);
+        break;
       }
       case "Translations:ReportLangTags": {
         const { documentElementLang, href } = data;
@@ -1769,7 +1781,7 @@ export class TranslationsParent extends JSWindowActorParent {
         fromLanguage,
         toLanguage,
       };
-      lazy.TranslationsTelemetry.onTranslate({
+      TranslationsParent.telemetry().onTranslate({
         fromLanguage,
         toLanguage,
         autoTranslate: reportAsAutoTranslate,

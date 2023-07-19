@@ -884,7 +884,7 @@ var TranslationsPanel = new (class {
 
     panel.addEventListener(
       "ViewShown",
-      () => TranslationsTelemetry.onOpenPanel(openedFromAppMenu),
+      () => TranslationsParent.telemetry().panel().onOpen(openedFromAppMenu),
       { once: true }
     );
 
