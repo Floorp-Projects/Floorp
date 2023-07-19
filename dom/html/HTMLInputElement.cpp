@@ -19,6 +19,7 @@
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/GetFilesHelper.h"
+#include "mozilla/dom/NumericInputTypes.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/InputType.h"
 #include "mozilla/dom/UserActivation.h"
@@ -1632,15 +1633,10 @@ void HTMLInputElement::SetValue(const nsAString& aValue, CallerType aCallerType,
       // NOTE: this is currently quite expensive work (too much string
       // manipulation). We should probably optimize that.
       nsAutoString currentValue;
-      GetValue(currentValue, aCallerType);
+      GetNonFileValueInternal(currentValue);
 
-      // Some types sanitize value, so GetValue doesn't return pure
-      // previous value correctly.
-      //
-      // FIXME(emilio): Shouldn't above just use GetNonFileValueInternal() to
-      // get the unsanitized value?
       nsresult rv = SetValueInternal(
-          aValue, SanitizesOnValueGetter() ? nullptr : &currentValue,
+          aValue, &currentValue,
           {ValueSetterOption::ByContentAPI, ValueSetterOption::SetValueChanged,
            ValueSetterOption::MoveCursorToEndIfValueChanged});
       if (NS_FAILED(rv)) {
@@ -2645,7 +2641,14 @@ nsresult HTMLInputElement::SetValueInternal(
       // prevent doing it if it's useless.
       nsAutoString value(aValue);
 
-      if (mDoneCreating) {
+      if (mDoneCreating &&
+          !(mType == FormControlType::InputNumber &&
+            aOptions.contains(ValueSetterOption::BySetUserInputAPI))) {
+        // When the value of a number input is set by a script, we need to make
+        // sure the value is a valid floating-point number.
+        // https://html.spec.whatwg.org/#valid-floating-point-number
+        // When it's set by a user, however, we need to be more permissive, so
+        // we don't sanitize its value here. See bug 1839572.
         SanitizeValue(value);
       }
       // else DoneCreatingElement calls us again once mDoneCreating is true
@@ -4586,7 +4589,7 @@ void HTMLInputElement::SanitizeValue(nsAString& aValue,
           aValue);
     } break;
     case FormControlType::InputNumber: {
-      if (!aValue.IsEmpty() &&
+      if (aKind == SanitizationKind::Other && !aValue.IsEmpty() &&
           (aValue.First() == '+' || aValue.Last() == '.')) {
         // A value with a leading plus or trailing dot should fail to parse.
         // However, the localized parser accepts this, and when we convert it
