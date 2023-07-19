@@ -1289,14 +1289,11 @@ nsresult GfxInfo::GetFeatureStatusImpl(
     if (!StaticPrefs::media_hardware_video_decoding_enabled_AtStartup()) {
       return ret;
     }
-    bool probeHWDecode = false;
-#ifdef MOZ_WAYLAND
-    probeHWDecode =
+    bool probeHWDecode =
         mIsAccelerated &&
         (*aStatus == nsIGfxInfo::FEATURE_STATUS_OK ||
          StaticPrefs::media_hardware_video_decoding_force_enabled_AtStartup() ||
          StaticPrefs::media_ffmpeg_vaapi_enabled_AtStartup());
-#endif
     if (probeHWDecode) {
       GetDataVAAPI();
       GetDataV4L2();
