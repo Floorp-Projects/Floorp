@@ -29,7 +29,6 @@ from mach.decorators import (
     SettingsProvider,
     SubCommand,
 )
-from voluptuous import All, Boolean, Required, Schema
 
 import mozbuild.settings  # noqa need @SettingsProvider hook to execute
 from mozbuild.base import (
@@ -113,6 +112,8 @@ To do so, add the corresponding file in <mozilla-root-dir>/build/cargo, followin
 
 
 def _cargo_config_yaml_schema():
+    from voluptuous import All, Boolean, Required, Schema
+
     def starts_with_cargo(s):
         if s.startswith("cargo-"):
             return s
