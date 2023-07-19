@@ -25,7 +25,6 @@ UNIFIED_SOURCES += [
     "CompatibilityUIA.cpp",
     "DocAccessibleWrap.cpp",
     "EnumVariant.cpp",
-    "HyperTextAccessibleWrap.cpp",
     "IUnknownImpl.cpp",
     "MsaaAccessible.cpp",
     "MsaaDocAccessible.cpp",

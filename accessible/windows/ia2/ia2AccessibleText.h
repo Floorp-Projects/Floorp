@@ -19,8 +19,8 @@ template <class T>
 class StaticRefPtr;
 
 namespace a11y {
+class HyperTextAccessible;
 class HyperTextAccessibleBase;
-class HyperTextAccessibleWrap;
 
 class ia2AccessibleText : public IAccessibleText {
  public:
@@ -146,7 +146,7 @@ class ia2AccessibleText : public IAccessibleText {
    * E_NOTIMPL: It isn't a LocalAccessible (so we can't support the method
    * being called yet).
    */
-  std::pair<HyperTextAccessibleWrap*, HRESULT> LocalTextAcc();
+  std::pair<HyperTextAccessible*, HRESULT> LocalTextAcc();
 };
 
 }  // namespace a11y
