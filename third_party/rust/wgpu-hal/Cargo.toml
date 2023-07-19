@@ -64,7 +64,7 @@ optional = true
 [dependencies.naga]
 version = "0.12.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "76003dc0035d53a474d366dcdf49d2e4d12e921f"
+rev = "409239c0e2313bfd0dc4fd64f8c3021185ccef1b"
 features = ["clone"]
 
 [dependencies.profiling]
@@ -84,7 +84,7 @@ winit = "0.27.1"
 [dev-dependencies.naga]
 version = "0.12.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "76003dc0035d53a474d366dcdf49d2e4d12e921f"
+rev = "409239c0e2313bfd0dc4fd64f8c3021185ccef1b"
 features = ["wgsl-in"]
 
 [features]
@@ -220,9 +220,7 @@ version = "0.5"
 optional = true
 
 [target."cfg(windows)".dependencies.d3d12]
-version = "0.6.0"
-git = "https://github.com/gfx-rs/d3d12-rs"
-rev = "b940b1d71"
+version = "0.7"
 features = ["libloading"]
 optional = true
 

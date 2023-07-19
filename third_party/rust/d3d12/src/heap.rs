@@ -1,7 +1,7 @@
-use crate::com::WeakPtr;
+use crate::com::ComPtr;
 use winapi::um::d3d12;
 
-pub type Heap = WeakPtr<d3d12::ID3D12Heap>;
+pub type Heap = ComPtr<d3d12::ID3D12Heap>;
 
 #[repr(u32)]
 #[derive(Clone, Copy)]
@@ -30,6 +30,7 @@ pub enum MemoryPool {
 }
 
 bitflags! {
+    #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     pub struct HeapFlags: u32 {
         const NONE = d3d12::D3D12_HEAP_FLAG_NONE;
         const SHARED = d3d12::D3D12_HEAP_FLAG_SHARED;

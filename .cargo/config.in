@@ -25,24 +25,19 @@ git = "https://github.com/franziskuskiefer/cose-rust"
 rev = "43c22248d136c8b38fe42ea709d08da6355cf04b"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/gfx-rs/d3d12-rs?rev=b940b1d71"]
-git = "https://github.com/gfx-rs/d3d12-rs"
-rev = "b940b1d71"
-replace-with = "vendored-sources"
-
 [source."git+https://github.com/gfx-rs/metal-rs.git?rev=a6a0446"]
 git = "https://github.com/gfx-rs/metal-rs.git"
 rev = "a6a0446"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/gfx-rs/naga?rev=76003dc0035d53a474d366dcdf49d2e4d12e921f"]
+[source."git+https://github.com/gfx-rs/naga?rev=409239c0e2313bfd0dc4fd64f8c3021185ccef1b"]
 git = "https://github.com/gfx-rs/naga"
-rev = "76003dc0035d53a474d366dcdf49d2e4d12e921f"
+rev = "409239c0e2313bfd0dc4fd64f8c3021185ccef1b"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/gfx-rs/wgpu?rev=e4eb5b38ecb5646ec354c16ff1128f7e49c0f020"]
+[source."git+https://github.com/gfx-rs/wgpu?rev=1161a22f4fbb4fc204eb06f2ac4243f83e0e980d"]
 git = "https://github.com/gfx-rs/wgpu"
-rev = "e4eb5b38ecb5646ec354c16ff1128f7e49c0f020"
+rev = "1161a22f4fbb4fc204eb06f2ac4243f83e0e980d"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/glandium/warp?rev=4af45fae95bc98b0eba1ef0db17e1dac471bb23d"]

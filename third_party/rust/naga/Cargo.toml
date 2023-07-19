@@ -108,7 +108,7 @@ version = "0.3"
 features = []
 
 [dev-dependencies.hlsl-snapshots]
-path = "./xtask/hlsl-snapshots"
+path = "./hlsl-snapshots"
 
 [dev-dependencies.rspirv]
 version = "0.11"

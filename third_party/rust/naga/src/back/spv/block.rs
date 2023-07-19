@@ -7,7 +7,7 @@ use super::{
     Dimension, Error, Instruction, LocalType, LookupType, LoopContext, ResultMember, Writer,
     WriterFlags,
 };
-use crate::{arena::Handle, proc::TypeResolution};
+use crate::{arena::Handle, proc::TypeResolution, Statement};
 use spirv::Word;
 
 fn get_dimension(type_inner: &crate::TypeInner) -> Dimension {
@@ -58,6 +58,12 @@ pub enum BlockExit {
         /// The loop header block id
         preamble_id: Word,
     },
+}
+
+#[derive(Debug)]
+pub(crate) struct DebugInfoInner<'a> {
+    pub source_code: &'a str,
+    pub source_file_id: Word,
 }
 
 impl Writer {
@@ -231,6 +237,29 @@ impl<'w> BlockContext<'w> {
 
         let result_type_id = self.get_expression_type_id(&self.fun_info[expr_handle].ty);
         let id = match self.ir_function.expressions[expr_handle] {
+            crate::Expression::Literal(literal) => self.writer.get_constant_scalar(literal),
+            crate::Expression::Constant(handle) => {
+                let init = self.ir_module.constants[handle].init;
+                self.writer.constant_ids[init.index()]
+            }
+            crate::Expression::ZeroValue(_) => self.writer.write_constant_null(result_type_id),
+            crate::Expression::Compose {
+                ty: _,
+                ref components,
+            } => {
+                self.temp_list.clear();
+                for &component in components {
+                    self.temp_list.push(self.cached[component]);
+                }
+
+                let id = self.gen_id();
+                block.body.push(Instruction::composite_construct(
+                    result_type_id,
+                    id,
+                    &self.temp_list,
+                ));
+                id
+            }
             crate::Expression::Access { base, index: _ } if self.is_intermediate(base) => {
                 // See `is_intermediate`; we'll handle this later in
                 // `write_expression_pointer`.
@@ -366,9 +395,6 @@ impl<'w> BlockContext<'w> {
             crate::Expression::GlobalVariable(handle) => {
                 self.writer.global_variables[handle.index()].access_id
             }
-            crate::Expression::Constant(handle) => self.writer.constant_ids[handle.index()],
-            crate::Expression::ZeroValue(_) => self.writer.write_constant_null(result_type_id),
-            crate::Expression::Literal(literal) => self.writer.get_constant_scalar(literal),
             crate::Expression::Splat { size, value } => {
                 let value_id = self.cached[value];
                 let components = [value_id; 4];
@@ -396,23 +422,6 @@ impl<'w> BlockContext<'w> {
                     id,
                     vector_id,
                     vector_id,
-                    &self.temp_list,
-                ));
-                id
-            }
-            crate::Expression::Compose {
-                ty: _,
-                ref components,
-            } => {
-                self.temp_list.clear();
-                for &component in components {
-                    self.temp_list.push(self.cached[component]);
-                }
-
-                let id = self.gen_id();
-                block.body.push(Instruction::composite_construct(
-                    result_type_id,
-                    id,
                     &self.temp_list,
                 ));
                 id
@@ -1699,13 +1708,32 @@ impl<'w> BlockContext<'w> {
     pub(super) fn write_block(
         &mut self,
         label_id: Word,
-        statements: &[crate::Statement],
+        naga_block: &crate::Block,
         exit: BlockExit,
         loop_context: LoopContext,
+        debug_info: Option<&DebugInfoInner>,
     ) -> Result<(), Error> {
         let mut block = Block::new(label_id);
-
-        for statement in statements {
+        for (statement, span) in naga_block.span_iter() {
+            if let (Some(debug_info), false) = (
+                debug_info,
+                matches!(
+                    statement,
+                    &(Statement::Block(..)
+                        | Statement::Break
+                        | Statement::Continue
+                        | Statement::Kill
+                        | Statement::Return { .. }
+                        | Statement::Loop { .. })
+                ),
+            ) {
+                let loc: crate::SourceLocation = span.location(debug_info.source_code);
+                block.body.push(Instruction::line(
+                    debug_info.source_file_id,
+                    loc.line_number,
+                    loc.line_position,
+                ));
+            };
             match *statement {
                 crate::Statement::Emit(ref range) => {
                     for handle in range.clone() {
@@ -1722,6 +1750,7 @@ impl<'w> BlockContext<'w> {
                         block_statements,
                         BlockExit::Branch { target: merge_id },
                         loop_context,
+                        debug_info,
                     )?;
 
                     block = Block::new(merge_id);
@@ -1765,6 +1794,7 @@ impl<'w> BlockContext<'w> {
                             accept,
                             BlockExit::Branch { target: merge_id },
                             loop_context,
+                            debug_info,
                         )?;
                     }
                     if let Some(block_id) = reject_id {
@@ -1773,6 +1803,7 @@ impl<'w> BlockContext<'w> {
                             reject,
                             BlockExit::Branch { target: merge_id },
                             loop_context,
+                            debug_info,
                         )?;
                     }
 
@@ -1852,6 +1883,7 @@ impl<'w> BlockContext<'w> {
                                 target: case_finish_id,
                             },
                             inner_context,
+                            debug_info,
                         )?;
                     }
 
@@ -1873,6 +1905,16 @@ impl<'w> BlockContext<'w> {
                     // SPIR-V requires the continuing to the `OpLoopMerge`,
                     // so we have to start a new block with it.
                     block = Block::new(preamble_id);
+                    // HACK the loop statement is begin with branch instruction,
+                    // so we need to put `OpLine` debug info before merge instruction
+                    if let Some(debug_info) = debug_info {
+                        let loc: crate::SourceLocation = span.location(debug_info.source_code);
+                        block.body.push(Instruction::line(
+                            debug_info.source_file_id,
+                            loc.line_number,
+                            loc.line_position,
+                        ))
+                    }
                     block.body.push(Instruction::loop_merge(
                         merge_id,
                         continuing_id,
@@ -1890,6 +1932,7 @@ impl<'w> BlockContext<'w> {
                             continuing_id: Some(continuing_id),
                             break_id: Some(merge_id),
                         },
+                        debug_info,
                     )?;
 
                     let exit = match break_if {
@@ -1910,6 +1953,7 @@ impl<'w> BlockContext<'w> {
                             continuing_id: None,
                             break_id: Some(merge_id),
                         },
+                        debug_info,
                     )?;
 
                     block = Block::new(merge_id);

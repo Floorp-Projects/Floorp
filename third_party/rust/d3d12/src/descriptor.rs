@@ -1,4 +1,4 @@
-use crate::{com::WeakPtr, Blob, D3DResult, Error, TextureAddressMode};
+use crate::{com::ComPtr, Blob, D3DResult, Error, TextureAddressMode};
 use std::{fmt, mem, ops::Range};
 use winapi::{shared::dxgiformat, um::d3d12};
 
@@ -21,12 +21,13 @@ pub enum DescriptorHeapType {
 }
 
 bitflags! {
+    #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     pub struct DescriptorHeapFlags: u32 {
         const SHADER_VISIBLE = d3d12::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     }
 }
 
-pub type DescriptorHeap = WeakPtr<d3d12::ID3D12DescriptorHeap>;
+pub type DescriptorHeap = ComPtr<d3d12::ID3D12DescriptorHeap>;
 
 impl DescriptorHeap {
     pub fn start_cpu_descriptor(&self) -> CpuDescriptor {
@@ -253,6 +254,7 @@ pub enum RootSignatureVersion {
 }
 
 bitflags! {
+    #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     pub struct RootSignatureFlags: u32 {
         const ALLOW_IA_INPUT_LAYOUT = d3d12::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
         const DENY_VS_ROOT_ACCESS = d3d12::D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS;
@@ -263,7 +265,7 @@ bitflags! {
     }
 }
 
-pub type RootSignature = WeakPtr<d3d12::ID3D12RootSignature>;
+pub type RootSignature = ComPtr<d3d12::ID3D12RootSignature>;
 pub type BlobResult = D3DResult<(Blob, Error)>;
 
 #[cfg(feature = "libloading")]
