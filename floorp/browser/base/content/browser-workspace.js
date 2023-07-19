@@ -996,18 +996,18 @@ startWorkspace = function () {
   Services.obs.addObserver(workspaceFunctions.Backup.restoreWorkspace, "backupWorkspace");
 
   //run codes
-  if (typeof gBrowser !== 'undefined') {
+  if (gBrowser !== undefined && gBrowserInit !== undefined) {
     window.setTimeout(
       workspaceFunctions.Backup.backupWorkspace,
-      300
+      700
     );
     window.setTimeout(
       workspaceFunctions.manageWorkspaceFunctions.initWorkspace,
-      500
+      900
     );
     window.setTimeout(
       workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace,
-      900
+      1000
     );
     window.setTimeout(setEvenyListeners, 1300);
   } else {
