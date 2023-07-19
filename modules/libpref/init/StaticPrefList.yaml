@@ -8228,13 +8228,6 @@
   mirror: always
   rust: true
 
-# Whether the `accent-color` css property is enabled.
-- name: layout.css.accent-color.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Whether the `color-scheme` css property and meta tags are enabled.
 - name: layout.css.color-scheme.enabled
   type: RelaxedAtomicBool
