@@ -12,7 +12,9 @@
 <script type="text/javascript">
 "use strict";
 
-const {webrequest_test} = ChromeUtils.import(SimpleTest.getTestFileURL("webrequest_test.jsm"));
+const {webrequest_test} = ChromeUtils.importESModule(
+  SimpleTest.getTestFileURL("webrequest_test.sys.mjs")
+);
 let {testFetch, testXHR} = webrequest_test;
 
 // Here we test that any requests originating from a system principal are not
