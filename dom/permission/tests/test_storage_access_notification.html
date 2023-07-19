@@ -1,0 +1,50 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test for Permissions API</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+    'use strict';
+
+    SimpleTest.waitForExplicitFinish();
+
+    async function setPermission(type, allow) {
+      await SpecialPowers.popPermissions();
+      await SpecialPowers.pushPermissions(
+            [{ type, allow, context: document }]
+          );
+    }
+
+    const {
+      UNKNOWN_ACTION,
+      PROMPT_ACTION,
+      ALLOW_ACTION,
+      DENY_ACTION
+    } = SpecialPowers.Ci.nsIPermissionManager;
+
+    window.addEventListener(
+      "message",
+      (event) => {
+        if (event.data == "ready") {
+          setPermission("3rdPartyFrameStorage^https://example.org", ALLOW_ACTION);
+        } else {
+          is(event.data, "granted", "storage-access permission should change to granted after the permission is set");
+          SimpleTest.finish();
+        }
+      }
+    );
+    </script>
+</head>
+
+<body>
+  <iframe id="frame" src="https://example.org/tests/dom/permission/tests/file_storage_access_notification_helper.html"/>
+</body>
+
+</html>

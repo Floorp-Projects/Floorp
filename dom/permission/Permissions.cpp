@@ -13,6 +13,7 @@
 #include "mozilla/dom/PermissionStatus.h"
 #include "mozilla/dom/PermissionsBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/StorageAccessPermissionStatus.h"
 #include "mozilla/Components.h"
 #include "nsIPermissionManager.h"
 #include "PermissionUtils.h"
@@ -61,6 +62,8 @@ CreatePermissionStatus(JSContext* aCx, JS::Handle<JSObject*> aPermission,
       bool sysex = midiPerm.mSysex.WasPassed() && midiPerm.mSysex.Value();
       return MidiPermissionStatus::Create(aWindow, sysex);
     }
+    case PermissionName::Storage_access:
+      return StorageAccessPermissionStatus::Create(aWindow);
     case PermissionName::Geolocation:
     case PermissionName::Notifications:
     case PermissionName::Push:
