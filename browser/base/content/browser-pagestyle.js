@@ -18,7 +18,6 @@ var gPageStyleMenu = {
       // rather than throwing exceptions immediately.
       styleSheetInfo = {
         filteredStyleSheets: [],
-        authorStyleDisabled: false,
         preferredStyleSheetSet: true,
       };
     }
@@ -36,7 +35,8 @@ var gPageStyleMenu = {
 
     let styleSheets = styleSheetInfo.filteredStyleSheets;
     var currentStyleSheets = {};
-    var styleDisabled = styleSheetInfo.authorStyleDisabled;
+    var styleDisabled =
+      !!gBrowser.selectedBrowser.browsingContext?.authorStyleDisabledDefault;
     var haveAltSheets = false;
     var altStyleSelected = false;
 
@@ -110,7 +110,6 @@ var gPageStyleMenu = {
    */
   switchStyleSheet(title) {
     let sheetData = this._getStyleSheetInfo(gBrowser.selectedBrowser);
-    sheetData.authorStyleDisabled = false;
     for (let sheet of sheetData.filteredStyleSheets) {
       sheet.disabled = sheet.title !== title;
     }
@@ -121,8 +120,6 @@ var gPageStyleMenu = {
    * Disable all stylesheets. Called with View > Page Style > No Style.
    */
   disableStyle() {
-    let sheetData = this._getStyleSheetInfo(gBrowser.selectedBrowser);
-    sheetData.authorStyleDisabled = true;
     this._sendMessageToAll("PageStyle:Disable", {});
   },
 };

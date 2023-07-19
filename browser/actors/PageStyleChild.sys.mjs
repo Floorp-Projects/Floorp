@@ -133,7 +133,6 @@ export class PageStyleChild extends JSWindowActorChild {
       let filteredStyleSheets = this.#collectStyleSheets(window);
       this.sendAsyncMessage("PageStyle:Add", {
         filteredStyleSheets,
-        authorStyleDisabled: this.docShell.contentViewer.authorStyleDisabled,
         preferredStyleSheetSet: this.document.preferredStyleSheetSet,
       });
     });

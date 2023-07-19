@@ -21,10 +21,6 @@ export class PageStyleParent extends JSWindowActorParent {
   //     The URL of the stylesheet. Stylesheets loaded via a data URL will
   //     have this property set to null.
   //
-  // authorStyleDisabled (bool):
-  //   Whether or not the user currently has "No Style" selected for
-  //   the current page.
-  //
   // preferredStyleSheetSet (bool):
   //   Whether or not the user currently has the "Default" style selected
   //   for the current page.
@@ -68,7 +64,6 @@ export class PageStyleParent extends JSWindowActorParent {
     if (!this.#styleSheetInfo) {
       this.#styleSheetInfo = {
         filteredStyleSheets: [],
-        authorStyleDisabled: false,
         preferredStyleSheetSet: true,
       };
     }
