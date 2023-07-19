@@ -130,3 +130,16 @@ Manual Debugging on Google Chrome
 ---------------------------------
 
 Same as on Firefox desktop above, but use the Google Chrome console: View ==> Developer ==> Developer Tools.
+
+Debugging local Python environment
+**********************************
+
+Sometimes your local system python will not behave as expected with some of the performance test suites (like Raptor) due to how the virtual environment gets set up. It is presently unclear what the underlying reason is for this, and this issue seems to pop up most frequently on macOS and sometimes Linux.
+
+To determine if this may be the issue, the failure log will likely have something like ``'/usr/local/lib/Python3' (no such file), '/usr/lib/Python3' (no such file)`` within it.
+
+If clobbering your environment and/or removing your ``obj-*`` directory does not work, it is recommended that you consider trying an alternative method to managing your local python environment like e.g. `pyenv <https://github.com/pyenv/pyenv>`_. There are some other alternatives `listed here <https://firefox-source-docs.mozilla.org/build/buildsystem/python.html#installing-python-manually>`_ as well.
+
+For example if you choose to use pyenv, after following the `installation instructions <https://github.com/pyenv/pyenv#installation>`_ you can use pyenv to install and manage multiple Python versions, and easily switch back and forth between them. Pyenv uses shim executables to intercept your Python commands, and as a result, provide a way to supersede the system python/mozilla-central virtual env issues mentioned above. Further information on how it works can be `found here <https://github.com/pyenv/pyenv#how-it-works>`_. **Note** you `may` have to re-install moz-phab upon installing and using a new Python version through pyenv, but this is fairly simple to do so.
+
+If these suggestions do not work, reach out to #perftest on Element!
