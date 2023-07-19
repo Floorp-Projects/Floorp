@@ -153,8 +153,6 @@ uint16_t RotorControlRule::Match(Accessible* aAcc) {
       case roles::SPINBUTTON:
       case roles::DETAILS:
       case roles::CHECKBUTTON:
-      case roles::COLOR_CHOOSER:
-      case roles::BUTTONDROPDOWNGRID:  // xul colorpicker
       case roles::LISTBOX:
       case roles::COMBOBOX:
       case roles::EDITCOMBOBOX:
