@@ -4864,10 +4864,6 @@ static const JSFunctionSpec array_methods[] = {
     JS_SELF_HOSTED_FN("forEach", "ArrayForEach", 1, 0),
     JS_SELF_HOSTED_FN("map", "ArrayMap", 1, 0),
     JS_SELF_HOSTED_FN("filter", "ArrayFilter", 1, 0),
-#ifdef NIGHTLY_BUILD
-    JS_SELF_HOSTED_FN("group", "ArrayGroup", 1, 0),
-    JS_SELF_HOSTED_FN("groupToMap", "ArrayGroupToMap", 1, 0),
-#endif
     JS_SELF_HOSTED_FN("reduce", "ArrayReduce", 1, 0),
     JS_SELF_HOSTED_FN("reduceRight", "ArrayReduceRight", 1, 0),
     JS_SELF_HOSTED_FN("some", "ArraySome", 1, 0),
@@ -5153,15 +5149,6 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
       !DefineDataProperty(cx, unscopables, cx->names().values, value)) {
     return false;
   }
-
-#ifdef NIGHTLY_BUILD
-  if (cx->realm()->creationOptions().getArrayGroupingEnabled()) {
-    if (!DefineDataProperty(cx, unscopables, cx->names().group, value) ||
-        !DefineDataProperty(cx, unscopables, cx->names().groupToMap, value)) {
-      return false;
-    }
-  }
-#endif
 
   // FIXME: Once bug 1826643 is fixed, the names should be moved into the first
   // "or" clause in this method so that they will be alphabetized.
