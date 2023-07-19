@@ -1108,17 +1108,27 @@ export class UrlbarView {
       return true;
     }
     let row = this.#rows.children[rowIndex];
+    // Don't replace a suggestedIndex result with a non-suggestedIndex result
+    // or vice versa.
     if (result.hasSuggestedIndex != row.result.hasSuggestedIndex) {
-      // Don't replace a suggestedIndex result with a non-suggestedIndex result
-      // or vice versa.
       return false;
     }
+    // Don't replace a suggestedIndex result with another suggestedIndex
+    // result if the suggestedIndex values are different.
     if (
       result.hasSuggestedIndex &&
       result.suggestedIndex != row.result.suggestedIndex
     ) {
-      // Don't replace a suggestedIndex result with another suggestedIndex
-      // result if the suggestedIndex values are different.
+      return false;
+    }
+    // To avoid flickering results while typing, don't try to reuse results from
+    // different providers.
+    // For example user types "moz", provider A returns results much earlier
+    // than provider B, but results from provider B stabilize in the view at the
+    // end of the search. Typing the next letter "i" results from the faster
+    // provider A would temporarily replace old results from provider B, just
+    // to be replaced as soon as provider B returns its results.
+    if (result.providerName != row.result.providerName) {
       return false;
     }
     let resultIsSearchSuggestion = this.#resultIsSearchSuggestion(result);
