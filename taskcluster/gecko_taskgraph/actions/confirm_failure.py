@@ -61,27 +61,43 @@ def get_failures(task_id, task_definition):
                 dirs.add(l["group_results"].group())
 
             elif "test" in l.keys():
-                test_path = l["test"]
-                if "==" in test_path or "!=" in test_path:
-                    test_path = test_path.split(" ")[0]
-
-                if "status" not in l and "expected" not in l:
+                if not l["test"]:
+                    print("Warning: no testname in errorsummary line: %s" % l)
                     continue
+                if "signature" in l.keys():
+                    # dealing with a crash
+                    test_path = l["test"].split(" ")[0]
+                    if "web-platform" in task_definition["extra"]["suite"]:
+                        test_path = fix_wpt_name(test_path)
+                    else:
+                        test_path = [test_path]
 
-                if l["status"] != l["expected"]:
-                    if l["status"] not in l.get("known_intermittent", []):
-                        if "web-platform" in task_definition["extra"]["suite"]:
-                            test_path = fix_wpt_name(test_path)
-                        else:
-                            test_path = [test_path]
+                    if test_path:
+                        tests.update(test_path)
 
-                        if test_path:
-                            tests.update(test_path)
+                else:
+                    test_path = l["test"]
+                    if "==" in test_path or "!=" in test_path:
+                        test_path = test_path.split(" ")[0]
+
+                    if "status" not in l and "expected" not in l:
+                        continue
+
+                    if l["status"] != l["expected"]:
+                        if l["status"] not in l.get("known_intermittent", []):
+                            if "web-platform" in task_definition["extra"]["suite"]:
+                                test_path = fix_wpt_name(test_path)
+                            else:
+                                test_path = [test_path]
+
+                            if test_path:
+                                tests.update(test_path)
 
                 # only run the failing test not both test + dir
                 if l["group"] in dirs:
                     dirs.remove(l["group"])
 
+            # TODO: this reduces jobs, but misses NEW failures if there are many failures
             if len(tests) > 4:
                 break
 
@@ -116,12 +132,11 @@ def create_confirm_failure_tasks(task_definition, failures, level):
 
     th_dict = task_definition["extra"]["treeherder"]
     symbol = th_dict["symbol"]
-    is_windows = "windows" in th_dict["machine"]["platform"]
 
     suite = task_definition["extra"]["suite"]
     if "-coverage" in suite:
         suite = suite[: suite.index("-coverage")]
-    is_wpt = "web-platform-tests" in suite
+    is_wpt = "web-platform" in suite
 
     # command is a copy of task_definition['payload']['command'] from the original task.
     # It is used to create the new version containing the
@@ -164,17 +179,15 @@ def create_confirm_failure_tasks(task_definition, failures, level):
 
         for failure_path in failures[failure_group]:
             th_dict["symbol"] = symbol + failure_group_suffix
-            fpath = failure_path
+            fpath = failure_path.replace("\\", "/")
             if is_wpt:
-                if failure_path.startswith("/_mozilla"):
+                if fpath.startswith("/_mozilla"):
                     fpath = (
                         "testing/web-platform/mozilla/tests"
-                        + failure_path.split("_mozilla")[1]
+                        + fpath.split("_mozilla")[1]
                     )
                 else:
-                    fpath = "testing/web-platform/tests" + failure_path
-            if is_windows:
-                fpath = "\\".join(failure_path.split("/"))
+                    fpath = "testing/web-platform/tests" + fpath
             task_definition["payload"]["env"]["MOZHARNESS_TEST_PATHS"] = json.dumps(
                 {suite: [fpath]}, sort_keys=True
             )
