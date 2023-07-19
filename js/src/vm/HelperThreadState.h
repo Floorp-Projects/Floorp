@@ -495,16 +495,6 @@ static inline GlobalHelperThreadState& HelperThreadState() {
   return *gHelperThreadState;
 }
 
-class MOZ_RAII AutoSetHelperThreadContext {
-  JSContext* cx;
-  AutoLockHelperThreadState& lock;
-
- public:
-  AutoSetHelperThreadContext(const JS::ContextOptions& options,
-                             AutoLockHelperThreadState& lock);
-  ~AutoSetHelperThreadContext();
-};
-
 struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
                    public JS::OffThreadToken,
                    public HelperThreadTask {
