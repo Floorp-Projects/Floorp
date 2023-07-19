@@ -105,11 +105,10 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
     mStoredError = aStoredError;
   }
 
-  nsIInputStream* MaybeGetInputStreamIfUnread() {
-    MOZ_ASSERT(!Disturbed());
+  BodyStreamHolder* GetBodyStreamHolder() {
     if (UnderlyingSourceAlgorithmsBase* algorithms =
             Controller()->GetAlgorithms()) {
-      return algorithms->MaybeGetInputStreamIfUnread();
+      return algorithms->GetBodyStreamHolder();
     }
     return nullptr;
   }

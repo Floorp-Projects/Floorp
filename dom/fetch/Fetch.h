@@ -16,6 +16,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/AbortSignal.h"
 #include "mozilla/dom/BodyConsumer.h"
+#include "mozilla/dom/BodyStream.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/FetchStreamReader.h"
 #include "mozilla/dom/ReadableStream.h"
@@ -128,24 +129,12 @@ nsresult ExtractByteStreamFromBody(const fetch::ResponseBodyInit& aBodyInit,
  *
  * The pump is always released on the main thread.
  */
-
-class FetchBodyBase : public nsISupports {
- public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(FetchBodyBase)
-
- protected:
-  virtual ~FetchBodyBase() = default;
-
-  RefPtr<ReadableStream> mReadableStreamBody;
-};
-
 template <class Derived>
-class FetchBody : public FetchBodyBase, public AbortFollower {
+class FetchBody : public BodyStreamHolder, public AbortFollower {
  public:
-  using FetchBodyBase::QueryInterface;
+  using BodyStreamHolder::QueryInterface;
 
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(FetchBody, FetchBodyBase)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(FetchBody, BodyStreamHolder)
 
   bool BodyUsed() const;
 
