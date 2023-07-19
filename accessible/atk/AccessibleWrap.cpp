@@ -950,286 +950,6 @@ void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
   aProxy->SetWrapper(0);
 }
 
-nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
-  nsresult rv = LocalAccessible::HandleAccEvent(aEvent);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (IPCAccessibilityActive()) {
-    return NS_OK;
-  }
-
-  LocalAccessible* accessible = aEvent->GetAccessible();
-  NS_ENSURE_TRUE(accessible, NS_ERROR_FAILURE);
-
-  // The accessible can become defunct if we have an xpcom event listener
-  // which decides it would be fun to change the DOM and flush layout.
-  if (accessible->IsDefunct()) return NS_OK;
-
-  uint32_t type = aEvent->GetEventType();
-
-  AtkObject* atkObj = AccessibleWrap::GetAtkObject(accessible);
-
-  // We don't create ATK objects for plain text leaves, just return NS_OK in
-  // such case.
-  if (!atkObj) {
-    NS_ASSERTION(type == nsIAccessibleEvent::EVENT_SHOW ||
-                     type == nsIAccessibleEvent::EVENT_HIDE,
-                 "Event other than SHOW and HIDE fired for plain text leaves");
-    return NS_OK;
-  }
-
-  AccessibleWrap* accWrap = GetAccessibleWrap(atkObj);
-  if (!accWrap) {
-    return NS_OK;  // Node is shut down
-  }
-
-  switch (type) {
-    case nsIAccessibleEvent::EVENT_STATE_CHANGE: {
-      AccStateChangeEvent* event = downcast_accEvent(aEvent);
-      MAI_ATK_OBJECT(atkObj)->FireStateChangeEvent(event->GetState(),
-                                                   event->IsStateEnabled());
-      break;
-    }
-
-    case nsIAccessibleEvent::EVENT_TEXT_REMOVED:
-    case nsIAccessibleEvent::EVENT_TEXT_INSERTED: {
-      AccTextChangeEvent* event = downcast_accEvent(aEvent);
-      NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
-
-      MAI_ATK_OBJECT(atkObj)->FireTextChangeEvent(
-          event->ModifiedText(), event->GetStartOffset(), event->GetLength(),
-          event->IsTextInserted(), event->IsFromUserInput());
-
-      return NS_OK;
-    }
-
-    case nsIAccessibleEvent::EVENT_FOCUS: {
-      a11y::RootAccessible* rootAccWrap = accWrap->RootAccessible();
-      if (rootAccWrap && rootAccWrap->IsActivated()) {
-        atk_focus_tracker_notify(atkObj);
-        // Fire state change event for focus
-        atk_object_notify_state_change(atkObj, ATK_STATE_FOCUSED, true);
-        return NS_OK;
-      }
-    } break;
-
-    case nsIAccessibleEvent::EVENT_NAME_CHANGE: {
-      nsAutoString newName;
-      accessible->Name(newName);
-
-      MaybeFireNameChange(atkObj, newName);
-
-      break;
-    }
-
-    case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
-    case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
-      if (accessible->HasNumericValue()) {
-        // Make sure this is a numeric value. Don't fire for string value
-        // changes (e.g. text editing) ATK values are always numeric.
-        g_object_notify((GObject*)atkObj, "accessible-value");
-      }
-      break;
-
-    case nsIAccessibleEvent::EVENT_SELECTION:
-    case nsIAccessibleEvent::EVENT_SELECTION_ADD:
-    case nsIAccessibleEvent::EVENT_SELECTION_REMOVE: {
-      // XXX: dupe events may be fired
-      AccSelChangeEvent* selChangeEvent = downcast_accEvent(aEvent);
-      g_signal_emit_by_name(
-          AccessibleWrap::GetAtkObject(selChangeEvent->Widget()),
-          "selection_changed");
-      break;
-    }
-
-    case nsIAccessibleEvent::EVENT_SELECTION_WITHIN: {
-      g_signal_emit_by_name(atkObj, "selection_changed");
-      break;
-    }
-
-    case nsIAccessibleEvent::EVENT_ALERT:
-      // A hack using state change showing events as alert events.
-      atk_object_notify_state_change(atkObj, ATK_STATE_SHOWING, true);
-      break;
-
-    case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
-      g_signal_emit_by_name(atkObj, "text_selection_changed");
-      break;
-
-    case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED: {
-      AccCaretMoveEvent* caretMoveEvent = downcast_accEvent(aEvent);
-      NS_ASSERTION(caretMoveEvent, "Event needs event data");
-      if (!caretMoveEvent) break;
-
-      int32_t caretOffset = caretMoveEvent->GetCaretOffset();
-      g_signal_emit_by_name(atkObj, "text_caret_moved", caretOffset);
-    } break;
-
-    case nsIAccessibleEvent::EVENT_TEXT_ATTRIBUTE_CHANGED:
-      g_signal_emit_by_name(atkObj, "text-attributes-changed");
-      break;
-
-    case nsIAccessibleEvent::EVENT_TABLE_MODEL_CHANGED:
-      g_signal_emit_by_name(atkObj, "model_changed");
-      break;
-
-    case nsIAccessibleEvent::EVENT_TABLE_ROW_INSERT: {
-      AccTableChangeEvent* tableEvent = downcast_accEvent(aEvent);
-      NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
-
-      int32_t rowIndex = tableEvent->GetIndex();
-      int32_t numRows = tableEvent->GetCount();
-
-      g_signal_emit_by_name(atkObj, "row_inserted", rowIndex, numRows);
-    } break;
-
-    case nsIAccessibleEvent::EVENT_TABLE_ROW_DELETE: {
-      AccTableChangeEvent* tableEvent = downcast_accEvent(aEvent);
-      NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
-
-      int32_t rowIndex = tableEvent->GetIndex();
-      int32_t numRows = tableEvent->GetCount();
-
-      g_signal_emit_by_name(atkObj, "row_deleted", rowIndex, numRows);
-    } break;
-
-    case nsIAccessibleEvent::EVENT_TABLE_ROW_REORDER: {
-      g_signal_emit_by_name(atkObj, "row_reordered");
-      break;
-    }
-
-    case nsIAccessibleEvent::EVENT_TABLE_COLUMN_INSERT: {
-      AccTableChangeEvent* tableEvent = downcast_accEvent(aEvent);
-      NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
-
-      int32_t colIndex = tableEvent->GetIndex();
-      int32_t numCols = tableEvent->GetCount();
-      g_signal_emit_by_name(atkObj, "column_inserted", colIndex, numCols);
-    } break;
-
-    case nsIAccessibleEvent::EVENT_TABLE_COLUMN_DELETE: {
-      AccTableChangeEvent* tableEvent = downcast_accEvent(aEvent);
-      NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
-
-      int32_t colIndex = tableEvent->GetIndex();
-      int32_t numCols = tableEvent->GetCount();
-      g_signal_emit_by_name(atkObj, "column_deleted", colIndex, numCols);
-    } break;
-
-    case nsIAccessibleEvent::EVENT_TABLE_COLUMN_REORDER:
-      g_signal_emit_by_name(atkObj, "column_reordered");
-      break;
-
-    case nsIAccessibleEvent::EVENT_SECTION_CHANGED:
-      g_signal_emit_by_name(atkObj, "visible_data_changed");
-      break;
-
-    case nsIAccessibleEvent::EVENT_SHOW: {
-      AccMutationEvent* event = downcast_accEvent(aEvent);
-      LocalAccessible* parentAcc =
-          event ? event->LocalParent() : accessible->LocalParent();
-      AtkObject* parent = AccessibleWrap::GetAtkObject(parentAcc);
-      NS_ENSURE_STATE(parent);
-      auto obj = reinterpret_cast<MaiAtkObject*>(atkObj);
-      obj->FireAtkShowHideEvent(parent, true, aEvent->IsFromUserInput());
-      return NS_OK;
-    }
-
-    case nsIAccessibleEvent::EVENT_HIDE: {
-      // XXX - Handle native dialog accessibles.
-      if (!accessible->IsRoot() && accessible->HasARIARole() &&
-          accessible->ARIARole() == roles::DIALOG) {
-        guint id = g_signal_lookup("deactivate", MAI_TYPE_ATK_OBJECT);
-        g_signal_emit(atkObj, id, 0);
-      }
-
-      AccMutationEvent* event = downcast_accEvent(aEvent);
-      LocalAccessible* parentAcc =
-          event ? event->LocalParent() : accessible->LocalParent();
-      AtkObject* parent = AccessibleWrap::GetAtkObject(parentAcc);
-      NS_ENSURE_STATE(parent);
-      auto obj = reinterpret_cast<MaiAtkObject*>(atkObj);
-      obj->FireAtkShowHideEvent(parent, false, aEvent->IsFromUserInput());
-      return NS_OK;
-    }
-
-      /*
-       * Because dealing with menu is very different between nsIAccessible
-       * and ATK, and the menu activity is important, specially transfer the
-       * following two event.
-       * Need more verification by AT test.
-       */
-    case nsIAccessibleEvent::EVENT_MENU_START:
-    case nsIAccessibleEvent::EVENT_MENU_END:
-      break;
-
-    case nsIAccessibleEvent::EVENT_WINDOW_ACTIVATE: {
-      guint id = g_signal_lookup("activate", MAI_TYPE_ATK_OBJECT);
-      g_signal_emit(atkObj, id, 0);
-
-      // Always fire a current focus event after activation.
-      FocusMgr()->ForceFocusEvent();
-    } break;
-
-    case nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE: {
-      guint id = g_signal_lookup("deactivate", MAI_TYPE_ATK_OBJECT);
-      g_signal_emit(atkObj, id, 0);
-    } break;
-
-    case nsIAccessibleEvent::EVENT_WINDOW_MAXIMIZE: {
-      guint id = g_signal_lookup("maximize", MAI_TYPE_ATK_OBJECT);
-      g_signal_emit(atkObj, id, 0);
-    } break;
-
-    case nsIAccessibleEvent::EVENT_WINDOW_MINIMIZE: {
-      guint id = g_signal_lookup("minimize", MAI_TYPE_ATK_OBJECT);
-      g_signal_emit(atkObj, id, 0);
-    } break;
-
-    case nsIAccessibleEvent::EVENT_WINDOW_RESTORE: {
-      guint id = g_signal_lookup("restore", MAI_TYPE_ATK_OBJECT);
-      g_signal_emit(atkObj, id, 0);
-    } break;
-
-    case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
-      if (accessible->IsDoc()) {
-        g_signal_emit_by_name(atkObj, "load_complete");
-      }
-      // XXX - Handle native dialog accessibles.
-      if (!accessible->IsRoot() && accessible->HasARIARole() &&
-          accessible->ARIARole() == roles::DIALOG) {
-        guint id = g_signal_lookup("activate", MAI_TYPE_ATK_OBJECT);
-        g_signal_emit(atkObj, id, 0);
-      }
-      break;
-
-    case nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD:
-      if (accessible->IsDoc()) {
-        g_signal_emit_by_name(atkObj, "reload");
-      }
-      break;
-
-    case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED:
-      if (accessible->IsDoc()) {
-        g_signal_emit_by_name(atkObj, "load_stopped");
-      }
-      break;
-
-    case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
-      atk_focus_tracker_notify(atkObj);  // fire extra focus event
-      atk_object_notify_state_change(atkObj, ATK_STATE_VISIBLE, true);
-      atk_object_notify_state_change(atkObj, ATK_STATE_SHOWING, true);
-      break;
-
-    case nsIAccessibleEvent::EVENT_MENUPOPUP_END:
-      atk_object_notify_state_change(atkObj, ATK_STATE_VISIBLE, false);
-      atk_object_notify_state_change(atkObj, ATK_STATE_SHOWING, false);
-      break;
-  }
-
-  return NS_OK;
-}
-
 void a11y::PlatformEvent(Accessible* aTarget, uint32_t aEventType) {
   AtkObject* wrapper = GetWrapperFor(aTarget);
 
@@ -1237,6 +957,12 @@ void a11y::PlatformEvent(Accessible* aTarget, uint32_t aEventType) {
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
       if (aTarget->IsDoc()) {
         g_signal_emit_by_name(wrapper, "load_complete");
+      }
+      // XXX - Handle native dialog accessibles.
+      if (!aTarget->IsRoot() && aTarget->HasARIARole() &&
+          aTarget->Role() == roles::DIALOG) {
+        guint id = g_signal_lookup("activate", MAI_TYPE_ATK_OBJECT);
+        g_signal_emit(wrapper, id, 0);
       }
       break;
     case nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD:
@@ -1263,7 +989,12 @@ void a11y::PlatformEvent(Accessible* aTarget, uint32_t aEventType) {
       atk_object_notify_state_change(wrapper, ATK_STATE_SHOWING, true);
       break;
     case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
-      g_object_notify((GObject*)wrapper, "accessible-value");
+    case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
+      if (aTarget->HasNumericValue()) {
+        // Make sure this is a numeric value. Don't fire for string value
+        // changes (e.g. text editing) ATK values are always numeric.
+        g_object_notify((GObject*)wrapper, "accessible-value");
+      }
       break;
     case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
       g_signal_emit_by_name(wrapper, "text_selection_changed");
@@ -1274,6 +1005,39 @@ void a11y::PlatformEvent(Accessible* aTarget, uint32_t aEventType) {
     case nsIAccessibleEvent::EVENT_TEXT_ATTRIBUTE_CHANGED:
       g_signal_emit_by_name(wrapper, "text-attributes-changed");
       break;
+    case nsIAccessibleEvent::EVENT_NAME_CHANGE: {
+      nsAutoString newName;
+      aTarget->Name(newName);
+      MaybeFireNameChange(wrapper, newName);
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_WINDOW_ACTIVATE: {
+      guint id = g_signal_lookup("activate", MAI_TYPE_ATK_OBJECT);
+      g_signal_emit(wrapper, id, 0);
+      // Always fire a current focus event after activation.
+      FocusMgr()->ForceFocusEvent();
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE: {
+      guint id = g_signal_lookup("deactivate", MAI_TYPE_ATK_OBJECT);
+      g_signal_emit(wrapper, id, 0);
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_WINDOW_MAXIMIZE: {
+      guint id = g_signal_lookup("maximize", MAI_TYPE_ATK_OBJECT);
+      g_signal_emit(wrapper, id, 0);
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_WINDOW_MINIMIZE: {
+      guint id = g_signal_lookup("minimize", MAI_TYPE_ATK_OBJECT);
+      g_signal_emit(wrapper, id, 0);
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_WINDOW_RESTORE: {
+      guint id = g_signal_lookup("restore", MAI_TYPE_ATK_OBJECT);
+      g_signal_emit(wrapper, id, 0);
+      break;
+    }
   }
 }
 
@@ -1286,6 +1050,15 @@ void a11y::PlatformStateChangeEvent(Accessible* aTarget, uint64_t aState,
 void a11y::PlatformFocusEvent(Accessible* aTarget,
                               const LayoutDeviceIntRect& aCaretRect) {
   AtkObject* wrapper = GetWrapperFor(aTarget);
+
+  // XXX Do we really need this check? If so, do we need a similar check for
+  // RemoteAccessible?
+  if (LocalAccessible* localTarget = aTarget->AsLocal()) {
+    a11y::RootAccessible* rootAcc = localTarget->RootAccessible();
+    if (!rootAcc || !rootAcc->IsActivated()) {
+      return;
+    }
+  }
 
   atk_focus_tracker_notify(wrapper);
   atk_object_notify_state_change(wrapper, ATK_STATE_FOCUSED, true);
@@ -1372,7 +1145,17 @@ void MaiAtkObject::FireTextChangeEvent(const nsAString& aStr, int32_t aStart,
 
 void a11y::PlatformShowHideEvent(Accessible* aTarget, Accessible* aParent,
                                  bool aInsert, bool aFromUser) {
-  MaiAtkObject* obj = MAI_ATK_OBJECT(GetWrapperFor(aTarget));
+  AtkObject* atkObj = GetWrapperFor(aTarget);
+  if (!aInsert) {
+    // XXX - Handle native dialog accessibles.
+    if (!aTarget->IsRoot() && aTarget->HasARIARole() &&
+        aTarget->Role() == roles::DIALOG) {
+      guint id = g_signal_lookup("deactivate", MAI_TYPE_ATK_OBJECT);
+      g_signal_emit(atkObj, id, 0);
+    }
+  }
+
+  MaiAtkObject* obj = MAI_ATK_OBJECT(atkObj);
   obj->FireAtkShowHideEvent(GetWrapperFor(aParent), aInsert, aFromUser);
 }
 
