@@ -28,7 +28,9 @@ SimpleTest.waitForExplicitFinish();
 const {FxAccounts} = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccounts.sys.mjs"
 );
-const {FxAccountsClient} = ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
+const {FxAccountsClient} = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccountsClient.sys.mjs"
+);
 
 const TEST_SERVER =
   "http://mochi.test:8888/chrome/services/fxaccounts/tests/mochitest/file_invalidEmailCase.sjs?path=";
