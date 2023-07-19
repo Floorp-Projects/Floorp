@@ -488,15 +488,6 @@ bool js::HasOffThreadIonCompile(Realm* realm) {
 }
 #endif
 
-struct MOZ_RAII AutoSetContextFrontendErrors {
-  explicit AutoSetContextFrontendErrors(FrontendContext* fc) {
-    fc->linkWithJSContext(TlsContext.get());
-  }
-  ~AutoSetContextFrontendErrors() {
-    TlsContext.get()->setFrontendErrors(nullptr);
-  }
-};
-
 AutoSetHelperThreadContext::AutoSetHelperThreadContext(
     const JS::ContextOptions& options, AutoLockHelperThreadState& lock)
     : lock(lock) {
@@ -615,7 +606,6 @@ void ParseTask::scheduleDelazifyTask(AutoLockHelperThreadState& lock) {
   {
     AutoSetHelperThreadContext usesContext(contextOptions, lock);
     AutoUnlockHelperThreadState unlock(lock);
-    AutoSetContextRuntime ascr(runtime);
 
     task = DelazifyTask::Create(runtime, contextOptions, options, *stencil_);
     if (!task) {
@@ -902,7 +892,6 @@ UniquePtr<DelazifyTask> DelazifyTask::Create(
     return nullptr;
   }
 
-  AutoSetContextFrontendErrors recordErrors(&task->fc_);
   RefPtr<ScriptSource> source(stencil.source);
   DelazificationCache& cache = DelazificationCache::getSingleton();
   if (!cache.startCaching(std::move(source))) {
@@ -1022,9 +1011,6 @@ void DelazifyTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
 
 bool DelazifyTask::runTask() {
   fc_.setStackQuota(HelperThreadState().stackQuota);
-
-  AutoSetContextRuntime ascr(runtime);
-  AutoSetContextFrontendErrors recordErrors(&this->fc_);
 
   using namespace js::frontend;
 
