@@ -118,13 +118,6 @@ bool CompositorWidgetParent::InitCompositor(layers::Compositor* aCompositor) {
   return true;
 }
 
-bool CompositorWidgetParent::HasGlass() const {
-  MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread() ||
-             wr::RenderThread::IsInRenderThread());
-
-  return mTransparencyMode == uint32_t(TransparencyMode::BorderlessGlass);
-}
-
 bool CompositorWidgetParent::IsHidden() const { return ::IsIconic(mWnd); }
 
 mozilla::ipc::IPCResult CompositorWidgetParent::RecvInitialize(

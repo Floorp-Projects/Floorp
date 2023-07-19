@@ -37,12 +37,8 @@
   }
 }
 
-.titlebar-buttonbox,
 .titlebar-button {
   appearance: none !important;
-}
-
-.titlebar-button {
   border: none;
   margin: 0 !important;
   padding: 8px 17px;

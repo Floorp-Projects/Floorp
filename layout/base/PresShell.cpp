@@ -5442,14 +5442,8 @@ PresShell::CanvasBackground PresShell::ComputeCanvasBackground() const {
   nscolor color = NS_RGBA(0, 0, 0, 0);
   bool drawBackgroundImage = false;
   bool drawBackgroundColor = false;
-  const nsStyleDisplay* disp = bgFrame->StyleDisplay();
-  StyleAppearance appearance = disp->EffectiveAppearance();
-  if (bgFrame->IsThemed(disp) &&
-      appearance != StyleAppearance::MozWinBorderlessGlass) {
-    // Ignore the CSS background-color if -moz-appearance is used and it is
-    // not one of the glass values. (Windows 7 Glass has traditionally not
-    // overridden background colors, so we preserve that behavior for now.)
-  } else {
+  if (!bgFrame->IsThemed()) {
+    // Ignore the CSS background-color if -moz-appearance is used.
     color = nsCSSRendering::DetermineBackgroundColor(
         mPresContext, bgFrame->Style(), canvas, drawBackgroundImage,
         drawBackgroundColor);

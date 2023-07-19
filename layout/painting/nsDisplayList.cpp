@@ -651,7 +651,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mCurrentContainerASR(nullptr),
       mCurrentFrame(aReferenceFrame),
       mCurrentReferenceFrame(aReferenceFrame),
-      mGlassDisplayItem(nullptr),
       mCaretFrame(nullptr),
       mScrollInfoItemsForHoisting(nullptr),
       mFirstClipChainToDestroy(nullptr),
@@ -661,7 +660,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mFilterASR(nullptr),
       mDirtyRect(-1, -1, -1, -1),
       mBuildingExtraPagesForPageNum(0),
-      mHasGlassItemDuringPartial(false),
       mMode(aMode),
       mContainsBlendMode(false),
       mIsBuildingScrollbar(false),
@@ -857,46 +855,6 @@ void nsDisplayListBuilder::MarkFrameForDisplayIfVisible(
   AddFrameMarkedForDisplayIfVisible(aFrame);
 
   MarkFrameForDisplayIfVisibleInternal(aFrame, aStopAtFrame);
-}
-
-void nsDisplayListBuilder::SetGlassDisplayItem(nsDisplayItem* aItem) {
-  // Web pages or extensions could trigger the "Multiple glass backgrounds
-  // found?" warning by using -moz-appearance:win-borderless-glass etc on their
-  // own elements (as long as they are root frames, which is rare as each doc
-  // only gets one near the root). We only care about the first one, since that
-  // will be the background of the root window.
-
-  if (IsPartialUpdate()) {
-    if (aItem->Frame()->Style()->IsRootElementStyle()) {
-#ifdef DEBUG
-      if (mHasGlassItemDuringPartial) {
-        NS_WARNING("Multiple glass backgrounds found?");
-      } else
-#endif
-          if (!mHasGlassItemDuringPartial) {
-        mHasGlassItemDuringPartial = true;
-        aItem->SetIsGlassItem();
-      }
-    }
-    return;
-  }
-
-  if (aItem->Frame()->Style()->IsRootElementStyle()) {
-#ifdef DEBUG
-    if (mGlassDisplayItem) {
-      NS_WARNING("Multiple glass backgrounds found?");
-    } else
-#endif
-        if (!mGlassDisplayItem) {
-      mGlassDisplayItem = aItem;
-      mGlassDisplayItem->SetIsGlassItem();
-    }
-  }
-}
-
-bool nsDisplayListBuilder::NeedToForceTransparentSurfaceForItem(
-    nsDisplayItem* aItem) {
-  return aItem == mGlassDisplayItem;
 }
 
 void nsDisplayListBuilder::SetIsRelativeToLayoutViewport() {
@@ -1827,7 +1785,6 @@ void nsDisplayListBuilder::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const {
   n += mDocumentWillChangeBudgets.ShallowSizeOfExcludingThis(mallocSizeOf);
   n += mFrameWillChangeBudgets.ShallowSizeOfExcludingThis(mallocSizeOf);
   n += mEffectsUpdates.ShallowSizeOfExcludingThis(mallocSizeOf);
-  n += mWindowExcludeGlassRegion.SizeOfExcludingThis(mallocSizeOf);
   n += mRetainedWindowDraggingRegion.SizeOfExcludingThis(mallocSizeOf);
   n += mRetainedWindowNoDraggingRegion.SizeOfExcludingThis(mallocSizeOf);
   n += mRetainedWindowOpaqueRegion.SizeOfExcludingThis(mallocSizeOf);
@@ -1898,19 +1855,13 @@ void nsDisplayListBuilder::WeakFrameRegion::RemoveModifiedFramesAndRects() {
 void nsDisplayListBuilder::RemoveModifiedWindowRegions() {
   mRetainedWindowDraggingRegion.RemoveModifiedFramesAndRects();
   mRetainedWindowNoDraggingRegion.RemoveModifiedFramesAndRects();
-  mWindowExcludeGlassRegion.RemoveModifiedFramesAndRects();
   mRetainedWindowOpaqueRegion.RemoveModifiedFramesAndRects();
-
-  mHasGlassItemDuringPartial = false;
 }
 
 void nsDisplayListBuilder::ClearRetainedWindowRegions() {
   mRetainedWindowDraggingRegion.Clear();
   mRetainedWindowNoDraggingRegion.Clear();
-  mWindowExcludeGlassRegion.Clear();
   mRetainedWindowOpaqueRegion.Clear();
-
-  mGlassDisplayItem = nullptr;
 }
 
 const uint32_t gWillChangeAreaMultiplier = 3;
@@ -3132,13 +3083,6 @@ static void DealWithWindowsAppearanceHacks(nsIFrame* aFrame,
     return;
   }
 
-  if (defaultAppearance == StyleAppearance::MozWinExcludeGlass) {
-    // Check for frames that are marked as a part of the region used in
-    // calculating glass margins on Windows.
-    aBuilder->AddWindowExcludeGlassRegion(
-        aFrame, nsRect(aBuilder->ToReferenceFrame(aFrame), aFrame->GetSize()));
-  }
-
   if (auto type = disp.GetWindowButtonType()) {
     if (auto* widget = aFrame->GetNearestWidget()) {
       auto rect = LayoutDevicePixel::FromAppUnitsToNearest(
@@ -3726,10 +3670,6 @@ void nsDisplayThemedBackground::Init(nsDisplayListBuilder* aBuilder) {
     RegisterThemeGeometry(aBuilder, this, StyleFrame(), type);
   }
 
-  if (mAppearance == StyleAppearance::MozWinBorderlessGlass) {
-    aBuilder->SetGlassDisplayItem(this);
-  }
-
   mBounds = GetBoundsInternal();
 }
 
@@ -3761,9 +3701,6 @@ nsRegion nsDisplayThemedBackground::GetOpaqueRegion(
 
 Maybe<nscolor> nsDisplayThemedBackground::IsUniform(
     nsDisplayListBuilder* aBuilder) const {
-  if (mAppearance == StyleAppearance::MozWinBorderlessGlass) {
-    return Some(NS_RGBA(0, 0, 0, 0));
-  }
   return Nothing();
 }
 

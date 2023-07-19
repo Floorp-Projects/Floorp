@@ -43,7 +43,7 @@ struct ParamTraits<mozilla::widget::TransparencyMode>
     : ContiguousEnumSerializerInclusive<
           mozilla::widget::TransparencyMode,
           mozilla::widget::TransparencyMode::Opaque,
-          mozilla::widget::TransparencyMode::BorderlessGlass> {};
+          mozilla::widget::TransparencyMode::Transparent> {};
 
 template <>
 struct ParamTraits<nsCursor>

@@ -292,12 +292,6 @@ bool InProcessWinCompositorWidget::GetWindowIsFullyOccluded() const {
   return isFullyOccluded;
 }
 
-bool InProcessWinCompositorWidget::HasGlass() const {
-  MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread() ||
-             wr::RenderThread::IsInRenderThread());
-  return TransparencyModeIs(TransparencyMode::BorderlessGlass);
-}
-
 void InProcessWinCompositorWidget::ClearTransparentWindow() {
   gfx::CriticalSectionAutoEnter presentLock(&mPresentLock);
   MutexAutoLock lock(mTransparentSurfaceLock);
