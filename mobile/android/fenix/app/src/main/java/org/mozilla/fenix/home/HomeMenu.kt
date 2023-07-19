@@ -24,7 +24,9 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.GleanMetrics.AppMenu
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.AccountState
 import org.mozilla.fenix.components.accounts.FenixAccountManager
@@ -181,6 +183,7 @@ class HomeMenu(
             primaryTextColor,
         ) {
             onItemTapped.invoke(Item.CustomizeHome)
+            AppMenu.customizeHomepage.record(NoExtras())
         }
 
         // Use nimbus to set the icon and title.

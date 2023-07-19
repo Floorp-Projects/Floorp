@@ -6773,6 +6773,20 @@ top_sites:
       tags:
         - Shortcuts
 app_menu:
+  customize_homepage:
+    type: event
+    description: |
+      User has tapped on Customize Homepage in the app menu.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841156
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/2726
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: never
   sign_into_sync:
     type: counter
     description: |
