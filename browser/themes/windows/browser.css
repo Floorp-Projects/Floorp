@@ -111,11 +111,6 @@
 }
 
 .titlebar-buttonbox {
-  /* For all Windows configurations except for Windows Aero and Windows Aero Basic,
-   * the default -moz-default-appearance of -moz-window-button-box and
-   * -moz-window-button-box-maximized adds unwanted margins to the button box. We
-   * special case Windows Aero and Windows Aero Basic in browser-aero.css.
-   */
   appearance: none;
   /* The button box must appear on top of the navigator-toolbox in order for
    * click and hover mouse events to work properly for the button in the restored

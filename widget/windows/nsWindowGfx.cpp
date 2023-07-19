@@ -175,20 +175,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
   KnowsCompositor* knowsCompositor = renderer->AsKnowsCompositor();
   WebRenderLayerManager* layerManager = renderer->AsWebRender();
 
-  // Clear window by transparent black when compositor window is used in GPU
-  // process and non-client area rendering by DWM is enabled.
-  // It is for showing non-client area rendering. See nsWindow::UpdateGlass().
-  if (HasGlass() && knowsCompositor && knowsCompositor->GetUseCompositorWnd()) {
-    HDC hdc;
-    RECT rect;
-    hdc = ::GetWindowDC(mWnd);
-    ::GetWindowRect(mWnd, &rect);
-    ::MapWindowPoints(nullptr, mWnd, (LPPOINT)&rect, 2);
-    ::FillRect(hdc, &rect,
-               reinterpret_cast<HBRUSH>(GetStockObject(BLACK_BRUSH)));
-    ReleaseDC(mWnd, hdc);
-  }
-
   if (mClearNCEdge) {
     // We need to clear this edge of the non-client region to black (once).
     HDC hdc;
@@ -326,16 +312,15 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
         // don't need to double buffer with anything but GDI
         BufferMode doubleBuffering = mozilla::layers::BufferMode::BUFFER_NONE;
         switch (mTransparencyMode) {
-          case TransparencyMode::BorderlessGlass:
-          default:
-            // If we're not doing translucency, then double buffer
-            doubleBuffering = mozilla::layers::BufferMode::BUFFERED;
-            break;
           case TransparencyMode::Transparent:
             // If we're rendering with translucency, we're going to be
             // rendering the whole window; make sure we clear it first
             dt->ClearRect(
                 Rect(0.f, 0.f, dt->GetSize().width, dt->GetSize().height));
+            break;
+          default:
+            // If we're not doing translucency, then double buffer
+            doubleBuffering = mozilla::layers::BufferMode::BUFFERED;
             break;
         }
 

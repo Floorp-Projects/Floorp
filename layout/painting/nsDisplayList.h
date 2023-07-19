@@ -1439,32 +1439,6 @@ class nsDisplayListBuilder {
   }
 
   /**
-   * Accumulates the bounds of box frames that have moz-appearance
-   * -moz-win-exclude-glass style. Used in setting glass margins on
-   * Windows.
-   *
-   * We set the window opaque region (from which glass margins are computed)
-   * to the intersection of the glass region specified here and the opaque
-   * region computed during painting. So the excluded glass region actually
-   * *limits* the extent of the opaque area reported to Windows. We limit it
-   * so that changes to the computed opaque region (which can vary based on
-   * region optimizations and the placement of UI elements) outside the
-   * -moz-win-exclude-glass area don't affect the glass margins reported to
-   * Windows; changing those margins willy-nilly can cause the Windows 7 glass
-   * haze effect to jump around disconcertingly.
-   */
-  void AddWindowExcludeGlassRegion(nsIFrame* aFrame, const nsRect& aBounds) {
-    mWindowExcludeGlassRegion.Add(aFrame, aBounds);
-  }
-
-  /**
-   * Returns the window exclude glass region.
-   */
-  nsRegion GetWindowExcludeGlassRegion() const {
-    return mWindowExcludeGlassRegion.ToRegion();
-  }
-
-  /**
    * Accumulates opaque stuff into the window opaque region.
    */
   void AddWindowOpaqueRegion(nsIFrame* aFrame, const nsRect& aBounds) {
@@ -1482,12 +1456,6 @@ class nsDisplayListBuilder {
     return IsRetainingDisplayList() ? mRetainedWindowOpaqueRegion.ToRegion()
                                     : mWindowOpaqueRegion;
   }
-
-  void SetGlassDisplayItem(nsDisplayItem* aItem);
-  void ClearGlassDisplayItem() { mGlassDisplayItem = nullptr; }
-  nsDisplayItem* GetGlassDisplayItem() { return mGlassDisplayItem; }
-
-  bool NeedToForceTransparentSurfaceForItem(nsDisplayItem* aItem);
 
   /**
    * mContainsBlendMode is true if we processed a display item that
@@ -1794,11 +1762,6 @@ class nsDisplayListBuilder {
   // The reference frame for mCurrentFrame.
   const nsIFrame* mCurrentReferenceFrame;
 
-  // The display item for the Windows window glass background, if any
-  // Set during full display list builds or during display list merging only,
-  // partial display list builds don't touch this.
-  nsDisplayItem* mGlassDisplayItem;
-
   nsIFrame* mCaretFrame;
   // A temporary list that we append scroll info items to while building
   // display items for the contents of frames with SVG effects.
@@ -1845,7 +1808,6 @@ class nsDisplayListBuilder {
   nsTHashSet<nsDisplayItem*> mReuseableItems;
 
   // Tracked regions used for retained display list.
-  WeakFrameRegion mWindowExcludeGlassRegion;
   WeakFrameRegion mRetainedWindowDraggingRegion;
   WeakFrameRegion mRetainedWindowNoDraggingRegion;
 
@@ -1884,10 +1846,6 @@ class nsDisplayListBuilder {
   Preserves3DContext mPreserves3DCtx;
 
   uint8_t mBuildingExtraPagesForPageNum;
-
-  // If we've encountered a glass item yet, only used during partial display
-  // list builds.
-  bool mHasGlassItemDuringPartial;
 
   nsDisplayListBuilderMode mMode;
   static uint32_t sPaintSequenceNumber;
@@ -2599,9 +2557,6 @@ class nsDisplayItem {
   void SetPainted() { mItemFlags += ItemFlag::Painted; }
 #endif
 
-  void SetIsGlassItem() { mItemFlags += ItemFlag::IsGlassItem; }
-  bool IsGlassItem() { return mItemFlags.contains(ItemFlag::IsGlassItem); }
-
   /**
    * Function to create the WebRenderCommands.
    * We should check if the layer state is
@@ -2849,7 +2804,6 @@ class nsDisplayItem {
     Combines3DTransformWithAncestors,
     ForceNotVisible,
     HasHitTestInfo,
-    IsGlassItem,
 #ifdef MOZ_DUMP_PAINTING
     // True if this frame has been painted.
     Painted,

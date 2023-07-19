@@ -74,11 +74,8 @@ enum class BorderStyle : int16_t {
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(BorderStyle)
 
 enum class TransparencyMode : uint8_t {
-  Opaque = 0,       // Fully opaque
-  Transparent,      // Parts of the window may be transparent
-  BorderlessGlass,  // Transparent parts of the window has windows 7
-                    // glass effect, without a border around opaque
-                    // areas.
+  Opaque = 0,   // Fully opaque
+  Transparent,  // Parts of the window may be transparent
   // If you add to the end here, you must update the serialization code in
   // WidgetMessageUtils.h
 };
