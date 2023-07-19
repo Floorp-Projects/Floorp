@@ -1064,10 +1064,6 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "RTCDTMFToneChangeEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "RTCEncodedAudioFrame", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "RTCEncodedVideoFrame", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "RTCIceCandidate", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "RTCPeerConnection", insecureContext: true },
@@ -1075,8 +1071,6 @@ let interfaceNamesInGlobalScope = [
   { name: "RTCPeerConnectionIceEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "RTCRtpReceiver", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "RTCRtpScriptTransform", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "RTCRtpSender", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!

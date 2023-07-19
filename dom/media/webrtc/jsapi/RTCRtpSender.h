@@ -36,7 +36,6 @@ class RTCDtlsTransport;
 class RTCDTMFSender;
 struct RTCRtpCapabilities;
 class RTCRtpTransceiver;
-class RTCRtpScriptTransform;
 
 class RTCRtpSender : public nsISupports,
                      public nsWrapperCache,
@@ -75,11 +74,6 @@ class RTCRtpSender : public nsISupports,
   static void CheckAndRectifyEncodings(
       Sequence<RTCRtpEncodingParameters>& aEncodings, bool aVideo,
       ErrorResult& aRv);
-
-  RTCRtpScriptTransform* GetTransform() const { return mTransform; }
-
-  void SetTransform(RTCRtpScriptTransform* aTransform, ErrorResult& aError);
-  bool GenerateKeyFrame(const Maybe<std::string>& aRid);
 
   nsPIDOMWindowInner* GetParentObject() const;
   nsTArray<RefPtr<RTCStatsPromise>> GetStatsInternal(
@@ -132,10 +126,6 @@ class RTCRtpSender : public nsISupports,
   Canonical<std::string>& CanonicalCname() { return mCname; }
   Canonical<bool>& CanonicalTransmitting() override { return mTransmitting; }
 
-  Canonical<RefPtr<FrameTransformerProxy>>& CanonicalFrameTransformerProxy() {
-    return mFrameTransformerProxy;
-  }
-
   bool HasPendingSetParameters() const { return mPendingParameters.isSome(); }
   void InvalidateLastReturnedParameters() {
     mLastReturnedParameters = Nothing();
@@ -181,7 +171,6 @@ class RTCRtpSender : public nsISupports,
   RefPtr<MediaTransportHandler> mTransportHandler;
   RefPtr<RTCRtpTransceiver> mTransceiver;
   nsTArray<RefPtr<DOMMediaStream>> mStreams;
-  RefPtr<RTCRtpScriptTransform> mTransform;
   bool mHaveSetupTransport = false;
   // TODO(bug 1803388): Remove this stuff once it is no longer needed.
   bool mAllowOldSetParameters = false;
@@ -262,7 +251,6 @@ class RTCRtpSender : public nsISupports,
   Canonical<webrtc::VideoCodecMode> mVideoCodecMode;
   Canonical<std::string> mCname;
   Canonical<bool> mTransmitting;
-  Canonical<RefPtr<FrameTransformerProxy>> mFrameTransformerProxy;
 };
 
 }  // namespace dom

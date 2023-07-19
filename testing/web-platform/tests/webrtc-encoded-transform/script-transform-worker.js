@@ -1,12 +1,8 @@
 onrtctransform = (event) => {
     const transformer = event.transformer;
-    transformer.options.port.onmessage = (event) => {
-      if (event.data == "ping") {
-        transformer.options.port.postMessage("pong");
-      }
-    };
+    transformer.options.port.onmessage = (event) => transformer.options.port.postMessage(event.data);
 
-    transformer.options.port.postMessage("started");
+    self.postMessage("started");
     transformer.reader = transformer.readable.getReader();
     transformer.writer = transformer.writable.getWriter();
 
@@ -15,14 +11,10 @@ onrtctransform = (event) => {
         transformer.reader.read().then(chunk => {
             if (chunk.done)
                 return;
-            if (chunk.value instanceof RTCEncodedVideoFrame) {
-                transformer.options.port.postMessage("video chunk");
-                if (chunk.value.type == "key") {
-                  transformer.options.port.postMessage("video keyframe");
-                }
-            }
+            if (chunk.value instanceof RTCEncodedVideoFrame)
+                self.postMessage("video chunk");
             else if (chunk.value instanceof RTCEncodedAudioFrame)
-                transformer.options.port.postMessage("audio chunk");
+                self.postMessage("audio chunk");
             transformer.writer.write(chunk.value);
             process(transformer);
         });

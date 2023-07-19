@@ -359,7 +359,6 @@ NS_EVENT_MESSAGE(eAfterPrint)
 
 NS_EVENT_MESSAGE(eMessage)
 NS_EVENT_MESSAGE(eMessageError)
-NS_EVENT_MESSAGE(eRTCTransform)
 
 // Menu open event
 NS_EVENT_MESSAGE(eOpen)

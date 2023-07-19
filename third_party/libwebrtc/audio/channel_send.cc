@@ -285,16 +285,12 @@ class RtpPacketSenderProxy : public RtpPacketSender {
   void EnqueuePackets(
       std::vector<std::unique_ptr<RtpPacketToSend>> packets) override {
     MutexLock lock(&mutex_);
-    if (rtp_packet_pacer_) {
-      rtp_packet_pacer_->EnqueuePackets(std::move(packets));
-    }
+    rtp_packet_pacer_->EnqueuePackets(std::move(packets));
   }
 
   void RemovePacketsForSsrc(uint32_t ssrc) override {
     MutexLock lock(&mutex_);
-    if (rtp_packet_pacer_) {
-      rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
-    }
+    rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
   }
 
  private:
@@ -538,6 +534,8 @@ ChannelSend::ChannelSend(
 
   int error = audio_coding_->RegisterTransportCallback(this);
   RTC_DCHECK_EQ(0, error);
+  if (frame_transformer)
+    InitFrameTransformerDelegate(std::move(frame_transformer));
 }
 
 ChannelSend::~ChannelSend() {
