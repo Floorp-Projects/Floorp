@@ -122,6 +122,7 @@
 #include "vm/SavedStacks.h"
 #include "vm/ScopeKind.h"
 #include "vm/Stack.h"
+#include "vm/StencilCache.h"   // DelazificationCache
 #include "vm/StencilObject.h"  // StencilObject, StencilXDRBufferObject
 #include "vm/StringObject.h"
 #include "vm/StringType.h"
@@ -2115,7 +2116,7 @@ static bool IsInStencilCache(JSContext* cx, unsigned argc, Value* vp) {
   JSFunction* fun = &args[0].toObject().as<JSFunction>();
   BaseScript* script = fun->baseScript();
   RefPtr<ScriptSource> ss = script->scriptSource();
-  StencilCache& cache = cx->runtime()->caches().delazificationCache;
+  DelazificationCache& cache = DelazificationCache::getSingleton();
   auto guard = cache.isSourceCached(ss);
   if (!guard) {
     args.rval().setBoolean(false);
@@ -2144,7 +2145,7 @@ static bool WaitForStencilCache(JSContext* cx, unsigned argc, Value* vp) {
   JSFunction* fun = &args[0].toObject().as<JSFunction>();
   BaseScript* script = fun->baseScript();
   RefPtr<ScriptSource> ss = script->scriptSource();
-  StencilCache& cache = cx->runtime()->caches().delazificationCache;
+  DelazificationCache& cache = DelazificationCache::getSingleton();
   StencilContext key(ss, script->extent());
 
   AutoLockHelperThreadState lock;
