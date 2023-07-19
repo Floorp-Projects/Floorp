@@ -66,18 +66,18 @@ void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
   }
 }
 
-void a11y::PlatformEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
+void a11y::PlatformEvent(Accessible* aTarget, uint32_t aEventType) {
   MsaaAccessible::FireWinEvent(aTarget, aEventType);
 }
 
-void a11y::PlatformStateChangeEvent(RemoteAccessible* aTarget, uint64_t, bool) {
+void a11y::PlatformStateChangeEvent(Accessible* aTarget, uint64_t, bool) {
   MsaaAccessible::FireWinEvent(aTarget, nsIAccessibleEvent::EVENT_STATE_CHANGE);
 }
 
-void a11y::PlatformFocusEvent(RemoteAccessible* aTarget,
+void a11y::PlatformFocusEvent(Accessible* aTarget,
                               const LayoutDeviceIntRect& aCaretRect) {
-  FocusManager* focusMgr = FocusMgr();
-  if (focusMgr && focusMgr->FocusedLocalAccessible()) {
+  if (aTarget->IsRemote() && FocusMgr() &&
+      FocusMgr()->FocusedLocalAccessible()) {
     // This is a focus event from a remote document, but focus has moved out
     // of that document into the chrome since that event was sent. For example,
     // this can happen when choosing File menu -> New Tab. See bug 1471466.
@@ -88,22 +88,24 @@ void a11y::PlatformFocusEvent(RemoteAccessible* aTarget,
     return;
   }
 
-  AccessibleWrap::UpdateSystemCaretFor(aTarget, aCaretRect);
+  // XXX Don't assume aTarget is remote.
+  AccessibleWrap::UpdateSystemCaretFor(aTarget->AsRemote(), aCaretRect);
   MsaaAccessible::FireWinEvent(aTarget, nsIAccessibleEvent::EVENT_FOCUS);
 }
 
-void a11y::PlatformCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
+void a11y::PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
                                   bool aIsSelectionCollapsed,
                                   int32_t aGranularity,
                                   const LayoutDeviceIntRect& aCaretRect) {
-  AccessibleWrap::UpdateSystemCaretFor(aTarget, aCaretRect);
+  // XXX Don't assume aTarget is remote.
+  AccessibleWrap::UpdateSystemCaretFor(aTarget->AsRemote(), aCaretRect);
   MsaaAccessible::FireWinEvent(aTarget,
                                nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED);
 }
 
-void a11y::PlatformTextChangeEvent(RemoteAccessible* aText,
-                                   const nsAString& aStr, int32_t aStart,
-                                   uint32_t aLen, bool aInsert, bool) {
+void a11y::PlatformTextChangeEvent(Accessible* aText, const nsAString& aStr,
+                                   int32_t aStart, uint32_t aLen, bool aInsert,
+                                   bool) {
   uint32_t eventType = aInsert ? nsIAccessibleEvent::EVENT_TEXT_INSERTED
                                : nsIAccessibleEvent::EVENT_TEXT_REMOVED;
   MOZ_ASSERT(aText->IsHyperText());
@@ -112,14 +114,14 @@ void a11y::PlatformTextChangeEvent(RemoteAccessible* aText,
   MsaaAccessible::FireWinEvent(aText, eventType);
 }
 
-void a11y::PlatformShowHideEvent(RemoteAccessible* aTarget, RemoteAccessible*,
-                                 bool aInsert, bool) {
+void a11y::PlatformShowHideEvent(Accessible* aTarget, Accessible*, bool aInsert,
+                                 bool) {
   uint32_t event =
       aInsert ? nsIAccessibleEvent::EVENT_SHOW : nsIAccessibleEvent::EVENT_HIDE;
   MsaaAccessible::FireWinEvent(aTarget, event);
 }
 
-void a11y::PlatformSelectionEvent(RemoteAccessible* aTarget, RemoteAccessible*,
+void a11y::PlatformSelectionEvent(Accessible* aTarget, Accessible*,
                                   uint32_t aType) {
   MsaaAccessible::FireWinEvent(aTarget, aType);
 }

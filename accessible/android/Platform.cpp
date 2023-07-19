@@ -84,7 +84,7 @@ void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
   SessionAccessibility::UnregisterAccessible(aProxy);
 }
 
-void a11y::PlatformEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
+void a11y::PlatformEvent(Accessible* aTarget, uint32_t aEventType) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
   if (!sessionAcc) {
@@ -100,7 +100,7 @@ void a11y::PlatformEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
   }
 }
 
-void a11y::PlatformStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
+void a11y::PlatformStateChangeEvent(Accessible* aTarget, uint64_t aState,
                                     bool aEnabled) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
@@ -131,7 +131,7 @@ void a11y::PlatformStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
   }
 }
 
-void a11y::PlatformFocusEvent(RemoteAccessible* aTarget,
+void a11y::PlatformFocusEvent(Accessible* aTarget,
                               const LayoutDeviceIntRect& aCaretRect) {
   if (RefPtr<SessionAccessibility> sessionAcc =
           SessionAccessibility::GetInstanceFor(aTarget)) {
@@ -139,7 +139,7 @@ void a11y::PlatformFocusEvent(RemoteAccessible* aTarget,
   }
 }
 
-void a11y::PlatformCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
+void a11y::PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
                                   bool aIsSelectionCollapsed,
                                   int32_t aGranularity,
                                   const LayoutDeviceIntRect& aCaretRect) {
@@ -151,10 +151,9 @@ void a11y::PlatformCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
   }
 }
 
-void a11y::PlatformTextChangeEvent(RemoteAccessible* aTarget,
-                                   const nsAString& aStr, int32_t aStart,
-                                   uint32_t aLen, bool aIsInsert,
-                                   bool aFromUser) {
+void a11y::PlatformTextChangeEvent(Accessible* aTarget, const nsAString& aStr,
+                                   int32_t aStart, uint32_t aLen,
+                                   bool aIsInsert, bool aFromUser) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
 
@@ -164,19 +163,17 @@ void a11y::PlatformTextChangeEvent(RemoteAccessible* aTarget,
   }
 }
 
-void a11y::PlatformShowHideEvent(RemoteAccessible* aTarget,
-                                 RemoteAccessible* aParent, bool aInsert,
-                                 bool aFromUser) {
+void a11y::PlatformShowHideEvent(Accessible* aTarget, Accessible* aParent,
+                                 bool aInsert, bool aFromUser) {
   // We rely on the window content changed events to be dispatched
   // after the viewport cache is refreshed.
 }
 
-void a11y::PlatformSelectionEvent(RemoteAccessible*, RemoteAccessible*,
-                                  uint32_t) {}
+void a11y::PlatformSelectionEvent(Accessible*, Accessible*, uint32_t) {}
 
-void a11y::PlatformVirtualCursorChangeEvent(RemoteAccessible* aTarget,
-                                            RemoteAccessible* aOldPosition,
-                                            RemoteAccessible* aNewPosition,
+void a11y::PlatformVirtualCursorChangeEvent(Accessible* aTarget,
+                                            Accessible* aOldPosition,
+                                            Accessible* aNewPosition,
                                             int16_t aReason, bool aFromUser) {
   if (!aNewPosition || !aFromUser) {
     return;
@@ -196,10 +193,9 @@ void a11y::PlatformVirtualCursorChangeEvent(RemoteAccessible* aTarget,
   }
 }
 
-void a11y::PlatformScrollingEvent(RemoteAccessible* aTarget,
-                                  uint32_t aEventType, uint32_t aScrollX,
-                                  uint32_t aScrollY, uint32_t aMaxScrollX,
-                                  uint32_t aMaxScrollY) {
+void a11y::PlatformScrollingEvent(Accessible* aTarget, uint32_t aEventType,
+                                  uint32_t aScrollX, uint32_t aScrollY,
+                                  uint32_t aMaxScrollX, uint32_t aMaxScrollY) {
   if (aEventType == nsIAccessibleEvent::EVENT_SCROLLING) {
     RefPtr<SessionAccessibility> sessionAcc =
         SessionAccessibility::GetInstanceFor(aTarget);
@@ -211,7 +207,7 @@ void a11y::PlatformScrollingEvent(RemoteAccessible* aTarget,
   }
 }
 
-void a11y::PlatformAnnouncementEvent(RemoteAccessible* aTarget,
+void a11y::PlatformAnnouncementEvent(Accessible* aTarget,
                                      const nsAString& aAnnouncement,
                                      uint16_t aPriority) {
   RefPtr<SessionAccessibility> sessionAcc =

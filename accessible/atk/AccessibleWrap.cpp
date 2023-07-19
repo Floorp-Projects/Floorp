@@ -1230,7 +1230,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   return NS_OK;
 }
 
-void a11y::PlatformEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
+void a11y::PlatformEvent(Accessible* aTarget, uint32_t aEventType) {
   AtkObject* wrapper = GetWrapperFor(aTarget);
 
   switch (aEventType) {
@@ -1277,13 +1277,13 @@ void a11y::PlatformEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
   }
 }
 
-void a11y::PlatformStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
+void a11y::PlatformStateChangeEvent(Accessible* aTarget, uint64_t aState,
                                     bool aEnabled) {
   MaiAtkObject* atkObj = MAI_ATK_OBJECT(GetWrapperFor(aTarget));
   atkObj->FireStateChangeEvent(aState, aEnabled);
 }
 
-void a11y::PlatformFocusEvent(RemoteAccessible* aTarget,
+void a11y::PlatformFocusEvent(Accessible* aTarget,
                               const LayoutDeviceIntRect& aCaretRect) {
   AtkObject* wrapper = GetWrapperFor(aTarget);
 
@@ -1291,7 +1291,7 @@ void a11y::PlatformFocusEvent(RemoteAccessible* aTarget,
   atk_object_notify_state_change(wrapper, ATK_STATE_FOCUSED, true);
 }
 
-void a11y::PlatformCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
+void a11y::PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
                                   bool aIsSelectionCollapsed,
                                   int32_t aGranularity,
                                   const LayoutDeviceIntRect& aCaretRect) {
@@ -1328,10 +1328,9 @@ void MaiAtkObject::FireStateChangeEvent(uint64_t aState, bool aEnabled) {
   }
 }
 
-void a11y::PlatformTextChangeEvent(RemoteAccessible* aTarget,
-                                   const nsAString& aStr, int32_t aStart,
-                                   uint32_t aLen, bool aIsInsert,
-                                   bool aFromUser) {
+void a11y::PlatformTextChangeEvent(Accessible* aTarget, const nsAString& aStr,
+                                   int32_t aStart, uint32_t aLen,
+                                   bool aIsInsert, bool aFromUser) {
   MaiAtkObject* atkObj = MAI_ATK_OBJECT(GetWrapperFor(aTarget));
   atkObj->FireTextChangeEvent(aStr, aStart, aLen, aIsInsert, aFromUser);
 }
@@ -1371,9 +1370,8 @@ void MaiAtkObject::FireTextChangeEvent(const nsAString& aStr, int32_t aStart,
   }
 }
 
-void a11y::PlatformShowHideEvent(RemoteAccessible* aTarget,
-                                 RemoteAccessible* aParent, bool aInsert,
-                                 bool aFromUser) {
+void a11y::PlatformShowHideEvent(Accessible* aTarget, Accessible* aParent,
+                                 bool aInsert, bool aFromUser) {
   MaiAtkObject* obj = MAI_ATK_OBJECT(GetWrapperFor(aTarget));
   obj->FireAtkShowHideEvent(GetWrapperFor(aParent), aInsert, aFromUser);
 }
@@ -1393,8 +1391,7 @@ void MaiAtkObject::FireAtkShowHideEvent(AtkObject* aParent, bool aIsAdded,
   g_signal_emit_by_name(aParent, signal_name, indexInParent, this, nullptr);
 }
 
-void a11y::PlatformSelectionEvent(RemoteAccessible*, RemoteAccessible* aWidget,
-                                  uint32_t) {
+void a11y::PlatformSelectionEvent(Accessible*, Accessible* aWidget, uint32_t) {
   MaiAtkObject* obj = MAI_ATK_OBJECT(GetWrapperFor(aWidget));
   g_signal_emit_by_name(obj, "selection_changed");
 }

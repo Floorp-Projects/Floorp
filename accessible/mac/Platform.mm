@@ -15,6 +15,7 @@
 #include "mozTableAccessible.h"
 #include "mozTextAccessible.h"
 #include "MOXWebAreaAccessible.h"
+#include "nsAccUtils.h"
 
 #include "nsAppShell.h"
 #include "nsCocoaUtils.h"
@@ -82,7 +83,7 @@ void ProxyDestroyed(RemoteAccessible* aProxy) {
   }
 }
 
-void PlatformEvent(RemoteAccessible* aProxy, uint32_t aEventType) {
+void PlatformEvent(Accessible* aTarget, uint32_t aEventType) {
   // Ignore event that we don't escape below, they aren't yet supported.
   if (aEventType != nsIAccessibleEvent::EVENT_ALERT &&
       aEventType != nsIAccessibleEvent::EVENT_VALUE_CHANGE &&
@@ -97,33 +98,33 @@ void PlatformEvent(RemoteAccessible* aProxy, uint32_t aEventType) {
     return;
   }
 
-  mozAccessible* wrapper = GetNativeFromGeckoAccessible(aProxy);
+  mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget);
   if (wrapper) {
     [wrapper handleAccessibleEvent:aEventType];
   }
 }
 
-void PlatformStateChangeEvent(RemoteAccessible* aProxy, uint64_t aState,
+void PlatformStateChangeEvent(Accessible* aTarget, uint64_t aState,
                               bool aEnabled) {
-  mozAccessible* wrapper = GetNativeFromGeckoAccessible(aProxy);
+  mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget);
   if (wrapper) {
     [wrapper stateChanged:aState isEnabled:aEnabled];
   }
 }
 
-void PlatformFocusEvent(RemoteAccessible* aTarget,
+void PlatformFocusEvent(Accessible* aTarget,
                         const LayoutDeviceIntRect& aCaretRect) {
   if (mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget)) {
     [wrapper handleAccessibleEvent:nsIAccessibleEvent::EVENT_FOCUS];
   }
 }
 
-void PlatformCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
+void PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
                             bool aIsSelectionCollapsed, int32_t aGranularity,
                             const LayoutDeviceIntRect& aCaretRect) {
   mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget);
-  MOXTextMarkerDelegate* delegate =
-      [MOXTextMarkerDelegate getOrCreateForDoc:aTarget->Document()];
+  MOXTextMarkerDelegate* delegate = [MOXTextMarkerDelegate
+      getOrCreateForDoc:nsAccUtils::DocumentFor(aTarget)];
   [delegate setCaretOffset:aTarget at:aOffset moveGranularity:aGranularity];
   if (aIsSelectionCollapsed) {
     // If selection is collapsed, invalidate selection.
@@ -142,13 +143,13 @@ void PlatformCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
   }
 }
 
-void PlatformTextChangeEvent(RemoteAccessible* aTarget, const nsAString& aStr,
+void PlatformTextChangeEvent(Accessible* aTarget, const nsAString& aStr,
                              int32_t aStart, uint32_t aLen, bool aIsInsert,
                              bool aFromUser) {
-  RemoteAccessible* acc = aTarget;
+  Accessible* acc = aTarget;
   // If there is a text input ancestor, use it as the event source.
   while (acc && GetTypeFromRole(acc->Role()) != [mozTextAccessible class]) {
-    acc = acc->RemoteParent();
+    acc = acc->Parent();
   }
   mozAccessible* wrapper = GetNativeFromGeckoAccessible(acc ? acc : aTarget);
   [wrapper handleAccessibleTextChangeEvent:nsCocoaUtils::ToNSString(aStr)
@@ -157,10 +158,10 @@ void PlatformTextChangeEvent(RemoteAccessible* aTarget, const nsAString& aStr,
                                         at:aStart];
 }
 
-void PlatformShowHideEvent(RemoteAccessible*, RemoteAccessible*, bool, bool) {}
+void PlatformShowHideEvent(Accessible*, Accessible*, bool, bool) {}
 
-void PlatformSelectionEvent(RemoteAccessible* aTarget,
-                            RemoteAccessible* aWidget, uint32_t aEventType) {
+void PlatformSelectionEvent(Accessible* aTarget, Accessible* aWidget,
+                            uint32_t aEventType) {
   mozAccessible* wrapper = GetNativeFromGeckoAccessible(aWidget);
   if (wrapper) {
     [wrapper handleAccessibleEvent:aEventType];
@@ -168,11 +169,12 @@ void PlatformSelectionEvent(RemoteAccessible* aTarget,
 }
 
 void PlatformTextSelectionChangeEvent(
-    RemoteAccessible* aTarget, const nsTArray<TextRangeData>& aSelection) {
+    Accessible* aTarget, const nsTArray<TextRangeData>& aSelection) {
   if (aSelection.Length()) {
-    MOXTextMarkerDelegate* delegate =
-        [MOXTextMarkerDelegate getOrCreateForDoc:aTarget->Document()];
-    DocAccessibleParent* doc = aTarget->Document();
+    // XXX Don't assume aTarget is remote.
+    MOXTextMarkerDelegate* delegate = [MOXTextMarkerDelegate
+        getOrCreateForDoc:aTarget->AsRemote()->Document()];
+    DocAccessibleParent* doc = aTarget->AsRemote()->Document();
     RemoteAccessible* startContainer =
         doc->GetAccessible(aSelection[0].StartID());
     RemoteAccessible* endContainer = doc->GetAccessible(aSelection[0].EndID());
@@ -190,8 +192,7 @@ void PlatformTextSelectionChangeEvent(
   }
 }
 
-void PlatformRoleChangedEvent(RemoteAccessible* aTarget,
-                              const a11y::role& aRole,
+void PlatformRoleChangedEvent(Accessible* aTarget, const a11y::role& aRole,
                               uint8_t aRoleMapEntryIndex) {
   if (mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget)) {
     [wrapper handleRoleChanged:aRole];
