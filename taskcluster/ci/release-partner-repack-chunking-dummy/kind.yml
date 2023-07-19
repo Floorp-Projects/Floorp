@@ -32,5 +32,3 @@ job-template:
     description: Dummy task to deal with fanning out Linux partner repacks
     run-on-projects: []
     worker-type: succeed
-    worker:
-        implementation: succeed

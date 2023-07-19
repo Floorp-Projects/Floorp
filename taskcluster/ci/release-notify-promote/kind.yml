@@ -20,8 +20,6 @@ job-defaults:
     run-on-projects: []
     shipping-phase: promote
     worker-type: succeed
-    worker:
-        implementation: succeed
     notifications:
         subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} is in the candidates directory"
         message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} is in the candidates directory"

@@ -19,8 +19,6 @@ jobs:
         shipping-phase: promote
         shipping-product: firefox
         worker-type: succeed
-        worker:
-            implementation: succeed
 
     devedition-promote:
         name: post-langpack-dummy
@@ -29,5 +27,3 @@ jobs:
         shipping-phase: promote
         shipping-product: devedition
         worker-type: succeed
-        worker:
-            implementation: succeed

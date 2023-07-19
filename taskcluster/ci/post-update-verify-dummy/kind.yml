@@ -17,5 +17,3 @@ job-template:
     run-on-projects: []
     shipping-phase: promote
     worker-type: succeed
-    worker:
-        implementation: succeed

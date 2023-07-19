@@ -21,8 +21,6 @@ job-defaults:
     run-on-projects: []
     shipping-phase: ship
     worker-type: succeed
-    worker:
-        implementation: succeed
     notifications:
         emails:
             by-project:
