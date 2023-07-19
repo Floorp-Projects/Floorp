@@ -35,6 +35,7 @@ pub enum MTLTextureCompressionType {
 
 bitflags! {
     /// See <https://developer.apple.com/documentation/metal/mtltextureusage>
+    #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
     pub struct MTLTextureUsage: NSUInteger {
         const Unknown         = 0x0000;
         const ShaderRead      = 0x0001;

@@ -20,7 +20,11 @@ impl super::Device {
         library: &Arc<d3d12::D3D12Lib>,
         dx12_shader_compiler: wgt::Dx12Compiler,
     ) -> Result<Self, crate::DeviceError> {
-        let mem_allocator = super::suballocation::create_allocator_wrapper(&raw)?;
+        let mem_allocator = if private_caps.suballocation_supported {
+            super::suballocation::create_allocator_wrapper(&raw)?
+        } else {
+            None
+        };
 
         let dxc_container = match dx12_shader_compiler {
             wgt::Dx12Compiler::Dxc {
@@ -292,6 +296,17 @@ impl super::Device {
             size,
             mip_level_count,
             sample_count,
+            allocation: None,
+        }
+    }
+
+    pub unsafe fn buffer_from_raw(
+        resource: d3d12::Resource,
+        size: wgt::BufferAddress,
+    ) -> super::Buffer {
+        super::Buffer {
+            resource,
+            size,
             allocation: None,
         }
     }

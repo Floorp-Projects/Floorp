@@ -195,6 +195,7 @@ bitflags! {
     /// Only available on (macos(11.0), ios(14.0))
     ///
     /// See <https://developer.apple.com/documentation/metal/mtlfunctionoptions/>
+    #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
     pub struct MTLFunctionOptions: NSUInteger {
         const None = 0;
         const CompileToBinary = 1 << 0;

@@ -8,7 +8,7 @@
 use super::*;
 
 bitflags! {
-    #[derive(Default)]
+    #[derive(Copy, Clone, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
     pub struct MTLAccelerationStructureInstanceOptions: u32 {
         const None = 0;
         const DisableTriangleCulling = (1 << 0);
