@@ -1441,12 +1441,6 @@ JS::OffThreadToken* js::StartOffThreadDecodeStencil(
   return StartOffThreadParseTask(cx, std::move(task), compileOptions);
 }
 
-bool js::CurrentThreadIsParseThread() {
-  JSContext* cx = TlsContext.get();
-  // Check whether this is a ParseTask or a DelazifyTask.
-  return cx && cx->isHelperThreadContext() && cx->frontendErrors();
-}
-
 bool GlobalHelperThreadState::ensureInitialized() {
   MOZ_ASSERT(CanUseExtraThreads());
   MOZ_ASSERT(this == &HelperThreadState());

@@ -244,7 +244,6 @@ using ContextData = ProtectedDataContextArg<CheckContextLocal, T>;
 enum class AllowedHelperThread {
   None,
   GCTask,
-  ParseTask,
   IonCompile,
   GCTaskOrIonCompile,
 };
@@ -268,10 +267,6 @@ using MainThreadOrGCTaskData =
 template <typename T>
 using MainThreadOrIonCompileData =
     ProtectedDataNoCheckArgs<CheckMainThread<AllowedHelperThread::IonCompile>,
-                             T>;
-template <typename T>
-using MainThreadOrParseData =
-    ProtectedDataNoCheckArgs<CheckMainThread<AllowedHelperThread::ParseTask>,
                              T>;
 
 // Runtime wide locks which might protect some data.
