@@ -248,7 +248,7 @@ enum class DelazifyFailureReason {
 };
 
 extern already_AddRefed<CompilationStencil> DelazifyCanonicalScriptedFunction(
-    JSContext* cx, FrontendContext* fc, js::LifoAlloc& tempLifoAlloc,
+    FrontendContext* fc, js::LifoAlloc& tempLifoAlloc,
     const JS::PrefableCompileOptions& prefableOptions,
     ScopeBindingCache* scopeCache, CompilationStencil& context,
     ScriptIndex scriptIndex, DelazifyFailureReason* failureReason);
