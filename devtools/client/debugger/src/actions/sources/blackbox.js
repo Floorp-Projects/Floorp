@@ -7,10 +7,7 @@
  * @module actions/sources
  */
 
-import {
-  isOriginalId,
-  originalToGeneratedId,
-} from "devtools/client/shared/source-map-loader/index";
+import { originalToGeneratedId } from "devtools/client/shared/source-map-loader/index";
 import { recordEvent } from "../../utils/telemetry";
 import { toggleBreakpoints } from "../breakpoints";
 import {
@@ -31,7 +28,7 @@ export async function blackboxSourceActorsForSource(
   // If the source is the original, then get the source id of its generated file
   // and the range for where the original is represented in the generated file
   // (which might be a bundle including other files).
-  if (isOriginalId(source.id)) {
+  if (source.isOriginal) {
     sourceId = originalToGeneratedId(source.id);
     const range = await sourceMapLoader.getFileGeneratedRange(source.id);
     ranges = [];

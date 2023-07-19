@@ -55,8 +55,6 @@ const {
 
 const {
   isGeneratedId,
-  isOriginalId,
-  originalToGeneratedId,
 } = require("devtools/client/shared/source-map-loader/index");
 
 const DEBUGGER_L10N = new LocalizationHelper(

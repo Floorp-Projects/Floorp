@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { isOriginalId } from "devtools/client/shared/source-map-loader/index";
 import {
   getBreakableLines,
   getSourceActorBreakableLines,
@@ -28,7 +27,7 @@ function calculateBreakableLines(positions) {
 export function setBreakableLines(location) {
   return async ({ getState, dispatch, client }) => {
     let breakableLines;
-    if (isOriginalId(location.source.id)) {
+    if (location.source.isOriginal) {
       const positions = await dispatch(setBreakpointPositions(location));
       breakableLines = calculateBreakableLines(positions);
 

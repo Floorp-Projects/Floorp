@@ -10,10 +10,7 @@ import {
 
 import { comparePosition, createLocation } from "../../utils/location";
 
-import {
-  originalToGeneratedId,
-  isOriginalId,
-} from "devtools/client/shared/source-map-loader/index";
+import { originalToGeneratedId } from "devtools/client/shared/source-map-loader/index";
 import { getSource } from "../../selectors";
 import { addBreakpoint, removeBreakpointAtGeneratedLocation } from ".";
 
@@ -41,15 +38,13 @@ async function findBreakpointPosition({ getState, dispatch }, location) {
 //   has changed, we need to make sure that only a single breakpoint is added
 //   to the reducer for the new location corresponding to the original location
 //   in the pending breakpoint.
-export function syncPendingBreakpoint(sourceId, pendingBreakpoint) {
+export function syncPendingBreakpoint(source, pendingBreakpoint) {
   return async thunkArgs => {
     const { getState, client, dispatch } = thunkArgs;
 
-    const source = getSource(getState(), sourceId);
-
-    const generatedSourceId = isOriginalId(sourceId)
-      ? originalToGeneratedId(sourceId)
-      : sourceId;
+    const generatedSourceId = source.isOriginal
+      ? originalToGeneratedId(source.id)
+      : source.id;
 
     const generatedSource = getSource(getState(), generatedSourceId);
 
