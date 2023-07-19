@@ -3982,7 +3982,7 @@ dependencies = [
  "cfg-if 1.0.0",
  "instant",
  "libc",
- "redox_syscall",
+ "redox_syscall 0.2.999",
  "smallvec",
  "winapi",
 ]
@@ -4382,12 +4382,14 @@ dependencies = [
 
 [[package]]
 name = "redox_syscall"
-version = "0.2.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb5a58c1855b4b6819d59012155603f0b22ad30cad752600aadfcb695265519a"
+version = "0.2.999"
 dependencies = [
- "bitflags 1.3.2",
+ "redox_syscall 0.3.999",
 ]
+
+[[package]]
+name = "redox_syscall"
+version = "0.3.999"
 
 [[package]]
 name = "redox_users"
@@ -5177,7 +5179,7 @@ dependencies = [
  "cfg-if 1.0.0",
  "fastrand",
  "libc",
- "redox_syscall",
+ "redox_syscall 0.2.999",
  "remove_dir_all",
  "winapi",
 ]
