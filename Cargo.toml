@@ -99,6 +99,10 @@ mozbuild = { path = "build/rust/mozbuild" }
 # Workspace hack
 mozilla-central-workspace-hack = { path = "build/workspace-hack" }
 
+# windows-targets replacement. It avoids the large dependencies of the original
+# crate, which we don't really need as we require MSVC anyways.
+windows-targets = { path = "build/rust/windows-targets" }
+
 # Dummy oslog replacement. It's only used by glean in code that is not actually used.
 oslog = { path = "build/rust/oslog" }
 

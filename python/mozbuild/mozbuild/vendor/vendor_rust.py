@@ -95,6 +95,7 @@ PACKAGES_WE_ALWAYS_WANT_AN_OVERRIDE_OF = [
     "autocfg",
     "cmake",
     "vcpkg",
+    "windows-targets",
 ]
 
 
