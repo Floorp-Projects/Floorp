@@ -6,7 +6,6 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  pktApi: "chrome://pocket/content/pktApi.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   ReaderMode: "resource://gre/modules/ReaderMode.sys.mjs",
 });
@@ -95,45 +94,6 @@ export class AboutReaderParent extends JSWindowActorParent {
         let cachedArticle = gCachedArticles.get(message.data.url);
         gCachedArticles.delete(message.data.url);
         return cachedArticle;
-      }
-      case "Reader:PocketLoginStatusRequest": {
-        return lazy.pktApi.isUserLoggedIn();
-      }
-      case "Reader:PocketGetArticleInfo": {
-        return new Promise(resolve => {
-          lazy.pktApi.getArticleInfo(message.data.url, {
-            success: data => {
-              resolve(data);
-            },
-            error: error => {
-              resolve(null);
-            },
-          });
-        });
-      }
-      case "Reader:PocketGetArticleRecs": {
-        return new Promise(resolve => {
-          lazy.pktApi.getRecsForItem(message.data.itemID, {
-            success: data => {
-              resolve(data);
-            },
-            error: error => {
-              resolve(null);
-            },
-          });
-        });
-      }
-      case "Reader:PocketSaveArticle": {
-        return new Promise(resolve => {
-          lazy.pktApi.addLink(message.data.url, {
-            success: data => {
-              resolve(data);
-            },
-            error: error => {
-              resolve(null);
-            },
-          });
-        });
       }
       case "Reader:FaviconRequest": {
         try {

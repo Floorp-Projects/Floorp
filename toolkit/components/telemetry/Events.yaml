@@ -167,21 +167,6 @@ readermode:
       label: The type of button clicked.
     products:
       - "firefox"
-  pocket_cta:
-    objects: ["close_cta", "sign_up_click", "rec_click", "minimize_recs_click", "cta_seen", "rec_saved"]
-    release_channel_collection: opt-out
-    record_in_processes: ["content"]
-    description: >
-      Reader Mode Pocket CTA events
-    bug_numbers: [1726395]
-    notification_emails:
-      - "kirill@getpocket.com"
-      - "sdowne@getpocket.com"
-    expiry_version: never
-    extra_keys:
-      logged_in: Pocket user login status.
-    products:
-      - "firefox"
 
 addonsManager:
   install:
