@@ -104,6 +104,20 @@ bool AccessibleWrap::IsRootForHWND() {
   return thisHwnd != parentHwnd;
 }
 
+/* static */
+void AccessibleWrap::UpdateSystemCaretFor(
+    Accessible* aAccessible, const LayoutDeviceIntRect& aCaretRect) {
+  if (LocalAccessible* localAcc = aAccessible->AsLocal()) {
+    // XXX We need the widget for LocalAccessible, so we have to call
+    // HyperTextAccessible::GetCaretRect. We should find some way of avoiding
+    // the need for the widget.
+    UpdateSystemCaretFor(localAcc);
+  } else {
+    UpdateSystemCaretFor(aAccessible->AsRemote(), aCaretRect);
+  }
+}
+
+/* static */
 void AccessibleWrap::UpdateSystemCaretFor(LocalAccessible* aAccessible) {
   // Move the system caret so that Windows Tablet Edition and tradional ATs with
   // off-screen model can follow the caret
