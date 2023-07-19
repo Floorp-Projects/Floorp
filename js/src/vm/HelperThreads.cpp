@@ -2188,19 +2188,6 @@ void GlobalHelperThreadState::destroyParseTask(JSRuntime* rt,
   js_delete(parseTask);
 }
 
-void JSContext::addPendingOverRecursed() {
-  if (errors_) {
-    errors_->overRecursed = true;
-  }
-}
-
-void JSContext::addPendingOutOfMemory() {
-  // Keep in sync with recoverFromOutOfMemory.
-  if (errors_) {
-    errors_->outOfMemory = true;
-  }
-}
-
 bool js::EnqueueOffThreadCompression(JSContext* cx,
                                      UniquePtr<SourceCompressionTask> task) {
   MOZ_ASSERT(cx->isMainThreadContext());

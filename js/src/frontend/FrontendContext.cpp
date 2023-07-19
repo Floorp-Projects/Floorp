@@ -205,12 +205,6 @@ void FrontendContext::convertToRuntimeError(
   }
 }
 
-void FrontendContext::linkWithJSContext(JSContext* cx) {
-  if (cx) {
-    cx->setFrontendErrors(&errors_);
-  }
-}
-
 #ifdef DEBUG
 static size_t GetTid() {
 #  if defined(_WIN32)
