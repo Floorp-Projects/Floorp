@@ -137,7 +137,7 @@ pref("floorp.browser.workspace.tab.enabled",true);
 pref("floorp.titlebar.favicon.color", false);
 
 // [実験] 新しいタブのオーバーライド
-pref("floorp.newtab.overrides.newtaburl", "")
+pref("floorp.newtab.overrides.newtaburl", "");
 
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
