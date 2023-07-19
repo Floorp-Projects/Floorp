@@ -6371,3 +6371,7 @@ dependencies = [
  "crossbeam-utils",
  "flate2",
 ]
+
+[[patch.unused]]
+name = "windows-targets"
+version = "0.48.999"
