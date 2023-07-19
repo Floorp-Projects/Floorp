@@ -8228,13 +8228,6 @@
   mirror: always
   rust: true
 
-# Whether the `color-scheme` css property and meta tags are enabled.
-- name: layout.css.color-scheme.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # This pref controls whether the `prefers-color-scheme` value of iframes images
 # reacts to the embedder `color-scheme` in content.
 - name: layout.css.iframe-embedder-prefers-color-scheme.content.enabled
