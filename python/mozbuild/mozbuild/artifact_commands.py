@@ -264,6 +264,10 @@ def artifact_toolchain(
     """Download, cache and install pre-built toolchains."""
     import time
 
+    # As a result of the selective module loading changes, this import has to be
+    # done here. It is not explicitly used, but it has an implicit side-effect
+    # (bringing in TASKCLUSTER_ROOT_URL) which is necessary.
+    import gecko_taskgraph.main  # noqa: F401
     import redo
     import requests
     from taskgraph.util.taskcluster import get_artifact_url
