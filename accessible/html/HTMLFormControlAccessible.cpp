@@ -443,10 +443,7 @@ already_AddRefed<EditorBase> HTMLTextFieldAccessible::GetEditor() const {
 bool HTMLTextFieldAccessible::IsWidget() const { return true; }
 
 LocalAccessible* HTMLTextFieldAccessible::ContainerWidget() const {
-  if (!mParent || mParent->Role() != roles::AUTOCOMPLETE) {
-    return nullptr;
-  }
-  return mParent;
+  return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

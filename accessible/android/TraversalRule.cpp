@@ -174,7 +174,6 @@ uint16_t TraversalRule::ControlMatch(Accessible* aAccessible) {
     case roles::SPINBUTTON:
     case roles::TOGGLE_BUTTON:
     case roles::BUTTONDROPDOWN:
-    case roles::BUTTONDROPDOWNGRID:
     case roles::COMBOBOX:
     case roles::LISTBOX:
     case roles::ENTRY:
@@ -234,7 +233,6 @@ uint16_t TraversalRule::DefaultMatch(Accessible* aAccessible) {
         return nsIAccessibleTraversalRule::FILTER_MATCH;
       }
       break;
-    case roles::HEADER:
     case roles::HEADING:
     case roles::COLUMNHEADER:
     case roles::ROWHEADER:

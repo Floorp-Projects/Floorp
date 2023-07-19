@@ -17,12 +17,6 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_NOTHING = 0;
 
   /**
-   * Represents a title or caption bar for a window. It is used by MSAA only,
-   * supported automatically by MS Windows.
-   */
-  const unsigned long ROLE_TITLEBAR = 1;
-
-  /**
    * Represents the menu bar (positioned beneath the title bar of a window)
    * from which menus are selected by the user. The role is used by
    * xul:menubar or role="menubar".
@@ -36,28 +30,6 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_SCROLLBAR = 3;
 
   /**
-   * Represents a special mouse pointer, which allows a user to manipulate user
-   * interface elements such as windows. For example, a user clicks and drags
-   * a sizing grip in the lower-right corner of a window to resize it.
-   */
-  const unsigned long ROLE_GRIP = 4;
-
-  /**
-   * Represents a system sound, which is associated with various system events.
-   */
-  const unsigned long ROLE_SOUND = 5;
-
-  /**
-   * Represents the system mouse pointer.
-   */
-  const unsigned long ROLE_CURSOR = 6;
-
-  /**
-   * Represents the system caret. The role is supported for caret.
-   */
-  const unsigned long ROLE_CARET = 7;
-
-  /**
    * Represents an alert or a condition that a user should be notified about.
    * Assistive Technologies typically respond to the role by reading the entire
    * onscreen contents of containers advertising this role. Should be used for
@@ -65,13 +37,6 @@ interface nsIAccessibleRole : nsISupports
    * role="alert".
    */
   const unsigned long ROLE_ALERT = 8;
-
-  /**
-   * Represents the window frame, which contains child objects such as
-   * a title bar, client, and other objects contained in a window. The role
-   * is supported automatically by MS Windows.
-   */
-  const unsigned long ROLE_WINDOW = 9;
 
   /**
    * A sub-document (<frame> or <iframe>)
@@ -118,20 +83,10 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_PANE = 16;
 
   /**
-   * Represents a graphical image used to represent data.
-   */
-  const unsigned long ROLE_CHART = 17;
-
-  /**
    * Represents a dialog box or message box. It is used for xul:dialog,
    * role="dialog".
    */
   const unsigned long ROLE_DIALOG = 18;
-
-  /**
-   * Represents a window border.
-   */
-  const unsigned long ROLE_BORDER = 19;
 
   /**
    * Logically groups other objects. There is not always a parent-child
@@ -166,7 +121,7 @@ interface nsIAccessibleRole : nsISupports
    * Represents a table that contains rows and columns of cells, and optionally,
    * row headers and column headers. It is used for html:table,
    * role="grid". Also refer to the following roles: ROLE_COLUMNHEADER,
-   * ROLE_ROWHEADER, ROLE_COLUMN, ROLE_ROW, ROLE_CELL.
+   * ROLE_ROWHEADER, ROLE_ROW, ROLE_CELL.
    */
   const unsigned long ROLE_TABLE = 24;
 
@@ -182,11 +137,6 @@ interface nsIAccessibleRole : nsISupports
    * It is used for role="rowheader". Also, see ROLE_TABLE.
    */
   const unsigned long ROLE_ROWHEADER = 26;
-
-  /**
-   * Represents a column of cells within a table. Also, see ROLE_TABLE.
-   */
-  const unsigned long ROLE_COLUMN = 27;
 
   /**
    * Represents a row of cells within a table. Also, see ROLE_TABLE.
@@ -205,17 +155,6 @@ interface nsIAccessibleRole : nsISupports
    * xul:label@class="text-link", html:a, html:area.
    */
   const unsigned long ROLE_LINK = 30;
-
-  /**
-   * Displays a Help topic in the form of a ToolTip or Help balloon.
-   */
-  const unsigned long ROLE_HELPBALLOON = 31;
-
-  /**
-   * Represents a cartoon-like graphic object, such as Microsoft Office
-   * Assistant, which is displayed to provide help to users of an application.
-   */
-  const unsigned long ROLE_CHARACTER = 32;
 
   /**
    * Represents a list box, allowing the user to select one or more items. It
@@ -253,12 +192,6 @@ interface nsIAccessibleRole : nsISupports
    * role="tabpanel".
    */
   const unsigned long ROLE_PROPERTYPAGE = 38;
-
-  /**
-   * Represents an indicator, such as a pointer graphic, that points to the
-   * current item.
-   */
-  const unsigned long ROLE_INDICATOR = 39;
 
   /**
    * Represents a picture. Is is used for xul:image, html:img.
@@ -306,27 +239,11 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_COMBOBOX = 46;
 
   /**
-   * Represents the calendar control.
-   */
-  const unsigned long ROLE_DROPLIST = 47;
-
-  /**
    * Represents a progress bar, dynamically showing the user the percent
    * complete of an operation in progress. It is used for html:progress,
    * role="progressbar".
    */
   const unsigned long ROLE_PROGRESSBAR = 48;
-
-  /**
-   * Represents a dial or knob whose purpose is to allow a user to set a value.
-   */
-  const unsigned long ROLE_DIAL = 49;
-
-  /**
-   * Represents a hot-key field that allows the user to enter a combination or
-   * sequence of keystrokes.
-   */
-  const unsigned long ROLE_HOTKEYFIELD = 50;
 
   /**
    * Represents a slider, which allows the user to adjust a setting in given
@@ -354,12 +271,6 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_ANIMATION = 54;
 
   /**
-   * Represents a mathematical equation. It is used by MATHML, where there is a
-   * rich DOM subtree for an equation. Use ROLE_FLAT_EQUATION for <img role="math" alt="[TeX]"/>
-   */
-  const unsigned long ROLE_EQUATION = 55;
-
-  /**
    * Represents a button that drops down a list of items.
    */
   const unsigned long ROLE_BUTTONDROPDOWN = 56;
@@ -368,11 +279,6 @@ interface nsIAccessibleRole : nsISupports
    * Represents a button that drops down a menu.
    */
   const unsigned long ROLE_BUTTONMENU = 57;
-
-  /**
-   * Represents a button that drops down a grid. It is used for xul:colorpicker.
-   */
-  const unsigned long ROLE_BUTTONDROPDOWNGRID = 58;
 
   /**
    * Represents blank space between other objects.
@@ -386,34 +292,6 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_PAGETABLIST = 60;
 
   /**
-   * Represents a control that displays time.
-   */
-  const unsigned long ROLE_CLOCK = 61;
-
-  /**
-   * Represents a button on a toolbar that has a drop-down list icon directly
-   * adjacent to the button.
-   */
-  const unsigned long ROLE_SPLITBUTTON = 62;
-
-  /**
-   * Represents an edit control designed for an Internet Protocol (IP) address.
-   * The edit control is divided into sections for the different parts of the
-   * IP address.
-   */
-  const unsigned long ROLE_IPADDRESS = 63;
-
-  /**
-   * Represents a label control that has an accelerator.
-   */
-  const unsigned long ROLE_ACCEL_LABEL = 64;
-
-  /**
-   * Represents an arrow in one of the four cardinal directions.
-   */
-  const unsigned long ROLE_ARROW  = 65;
-
-  /**
    * Represents a control that can be drawn into and is used to trap events.
    * It is used for html:canvas.
    */
@@ -425,47 +303,9 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_CHECK_MENU_ITEM = 67;
 
   /**
-   * Represents a specialized dialog that lets the user choose a color.
-   */
-  const unsigned long ROLE_COLOR_CHOOSER  = 68;
-
-  /**
    * Represents control whose purpose is to allow a user to edit a date.
    */
   const unsigned long ROLE_DATE_EDITOR = 69;
-
-  /**
-   * An iconified internal frame in an ROLE_DESKTOP_PANE. Also refer to
-   * ROLE_INTERNAL_FRAME.
-   */
-  const unsigned long ROLE_DESKTOP_ICON = 70;
-
-  /**
-   * A desktop pane. A pane that supports internal frames and iconified
-   * versions of those internal frames.
-   */
-  const unsigned long ROLE_DESKTOP_FRAME = 71;
-
-  /**
-   * A directory pane. A pane that allows the user to navigate through
-   * and select the contents of a directory. May be used by a file chooser.
-   * Also refer to ROLE_FILE_CHOOSER.
-   */
-  const unsigned long ROLE_DIRECTORY_PANE = 72;
-
-  /**
-   * A file chooser. A specialized dialog that displays the files in the
-   * directory and lets the user select a file, browse a different directory,
-   * or specify a filename. May use the directory pane to show the contents of
-   * a directory. Also refer to ROLE_DIRECTORY_PANE.
-   */
-  const unsigned long ROLE_FILE_CHOOSER = 73;
-
-  /**
-   * A font chooser. A font chooser is a component that lets the user pick
-   * various attributes for fonts.
-   */
-  const unsigned long ROLE_FONT_CHOOSER = 74;
 
   /**
    * Frame role. A top level window with a title bar, border, menu bar, etc.
@@ -474,40 +314,9 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_CHROME_WINDOW = 75;
 
   /**
-   *  A glass pane. A pane that is guaranteed to be painted on top of all
-   * panes beneath it. Also refer to ROLE_ROOT_PANE.
-   */
-  const unsigned long ROLE_GLASS_PANE = 76;
-
-  /**
-   * A document container for HTML, whose children represent the document
-   * content.
-   */
-  const unsigned long ROLE_HTML_CONTAINER = 77;
-
-  /**
-   * A small fixed size picture, typically used to decorate components.
-   */
-  const unsigned long ROLE_ICON = 78;
-
-  /**
    * Presents an icon or short string in an interface.
    */
   const unsigned long ROLE_LABEL = 79;
-
-  /**
-   * A layered pane. A specialized pane that allows its children to be drawn
-   * in layers, providing a form of stacking order. This is usually the pane
-   * that holds the menu bar as  well as the pane that contains most of the
-   * visual components in a window. Also refer to ROLE_GLASS_PANE and
-   * ROLE_ROOT_PANE.
-   */
-  const unsigned long ROLE_LAYERED_PANE = 80;
-
-  /**
-   * A specialized pane whose primary use is inside a dialog.
-   */
-  const unsigned long ROLE_OPTION_PANE = 81;
 
   /**
    * A text object uses for passwords, or other places where the text content
@@ -516,57 +325,9 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_PASSWORD_TEXT = 82;
 
   /**
-   * A temporary window that is usually used to offer the user a list of
-   * choices, and then hides when the user selects one of those choices.
-   */
-  const unsigned long ROLE_POPUP_MENU = 83;
-
-  /**
    * A radio button that is a menu item.
    */
   const unsigned long ROLE_RADIO_MENU_ITEM = 84;
-
-  /**
-   * A root pane. A specialized pane that has a glass pane and a layered pane
-   * as its children. Also refer to ROLE_GLASS_PANE and ROLE_LAYERED_PANE.
-   */
-  const unsigned long ROLE_ROOT_PANE = 85;
-
-  /**
-   * A scroll pane. An object that allows a user to incrementally view a large
-   * amount of information.  Its children can include scroll bars and a
-   * viewport. Also refer to ROLE_VIEW_PORT.
-   */
-  const unsigned long ROLE_SCROLL_PANE = 86;
-
-  /**
-   * A split pane. A specialized panel that presents two other panels at the
-   * same time. Between the two panels is a divider the user can manipulate to
-   * make one panel larger and the other panel smaller.
-   */
-  const unsigned long ROLE_SPLIT_PANE = 87;
-
-  /**
-   * The header for a column of a table.
-   * XXX: it looks this role is dupe of ROLE_COLUMNHEADER.
-   */
-  const unsigned long ROLE_TABLE_COLUMN_HEADER = 88;
-
-  /**
-   * The header for a row of a table.
-   * XXX: it looks this role is dupe of ROLE_ROWHEADER
-   */
-  const unsigned long ROLE_TABLE_ROW_HEADER = 89;
-
-  /**
-   * A menu item used to tear off and reattach its menu.
-   */
-  const unsigned long ROLE_TEAR_OFF_MENU_ITEM = 90;
-
-  /**
-   * Represents an accessible terminal.
-   */
-  const unsigned long ROLE_TERMINAL = 91;
 
   /**
    * Collection of objects that constitute a logical text entity.
@@ -587,44 +348,9 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_TREE_TABLE = 94;
 
   /**
-   * A viewport. An object usually used in a scroll pane. It represents the
-   * portion of the entire data that the user can see. As the user manipulates
-   * the scroll bars, the contents of the viewport can change. Also refer to
-   * ROLE_SCROLL_PANE.
-   */
-  const unsigned long ROLE_VIEWPORT = 95;
-
-  /**
-   * Header of a document page. Also refer to ROLE_FOOTER.
-   */
-  const unsigned long ROLE_HEADER = 96;
-
-  /**
-   * Footer of a document page. Also refer to ROLE_HEADER.
-   */
-  const unsigned long ROLE_FOOTER = 97;
-
-  /**
    * A paragraph of text.
    */
   const unsigned long ROLE_PARAGRAPH = 98;
-
-  /**
-   * A ruler such as those used in word processors.
-   */
-  const unsigned long ROLE_RULER = 99;
-
-  /**
-   * A text entry having dialog or list containing items for insertion into
-   * an entry widget, for instance a list of words for completion of a
-   * text entry. It is used for xul:textbox@autocomplete
-   */
-  const unsigned long ROLE_AUTOCOMPLETE = 100;
-
-  /**
-   *  An editable text object in a toolbar.
-   */
-  const unsigned long ROLE_EDITBAR = 101;
 
   /**
    * An control whose textual content may be entered or modified by the user.
@@ -650,34 +376,16 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_HEADING = 105;
 
   /**
-   * An object representing a page of document content.  It is used in documents
-   * which are accessed by the user on a page by page basis.
-   */
-  const unsigned long ROLE_PAGE = 106;
-
-  /**
    * A container of document content.  An example of the use of this role is to
    * represent an html:div.
    */
   const unsigned long ROLE_SECTION = 107;
 
   /**
-   * An object which is redundant with another object in the accessible
-   * hierarchy. ATs typically ignore objects with this role.
-   */
-  const unsigned long ROLE_REDUNDANT_OBJECT = 108;
-
-  /**
    * A container of form controls. An example of the use of this role is to
    * represent an html:form.
    */
   const unsigned long ROLE_FORM = 109;
-
-  /**
-   * An object which is used to allow input of characters not found on a
-   * keyboard, such as the input of Chinese characters on a Western keyboard.
-   */
-  const unsigned long ROLE_IME = 110;
 
   /**
    * XXX: document this.
@@ -689,11 +397,6 @@ interface nsIAccessibleRole : nsISupports
    * to display another menu.
    */
   const unsigned long ROLE_PARENT_MENUITEM = 112;
-
-  /**
-   * A calendar that allows the user to select a date.
-   */
-  const unsigned long ROLE_CALENDAR = 113;
 
   /**
    * A list of items that is shown by combobox.
@@ -736,11 +439,6 @@ interface nsIAccessibleRole : nsISupports
    * Also, see ROLE_TABLE.
    */
   const unsigned long ROLE_GRID_CELL = 121;
-
-  /**
-   * Represents an embedded object. It is used for html:object or html:embed.
-   */
-  const unsigned long ROLE_EMBEDDED_OBJECT = 122;
 
   /**
    * A note. Originally intended to be hidden until activated, but now also used
