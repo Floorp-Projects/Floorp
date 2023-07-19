@@ -96,28 +96,6 @@ void WorkerNavigator::SetLanguages(const nsTArray<nsString>& aLanguages) {
   mProperties.mLanguages = aLanguages.Clone();
 }
 
-void WorkerNavigator::GetAppName(nsString& aAppName,
-                                 CallerType aCallerType) const {
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(workerPrivate);
-
-  if (aCallerType != CallerType::System) {
-    if (workerPrivate->ShouldResistFingerprinting(
-            RFPTarget::NavigatorAppName)) {
-      // See nsRFPService.h for spoofed value.
-      aAppName.AssignLiteral(SPOOFED_APPNAME);
-      return;
-    }
-
-    if (!mProperties.mAppNameOverridden.IsEmpty()) {
-      aAppName = mProperties.mAppNameOverridden;
-      return;
-    }
-  }
-
-  aAppName = mProperties.mAppName;
-}
-
 void WorkerNavigator::GetAppVersion(nsString& aAppVersion,
                                     CallerType aCallerType,
                                     ErrorResult& aRv) const {

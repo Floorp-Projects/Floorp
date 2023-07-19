@@ -15,19 +15,16 @@
 <pre id="test"></pre>
 <script class="testbody" type="text/javascript">
 
-  ok(navigator.appName, "This is used just to populate the cache");
   ok(navigator.appVersion, "This is used just to populate the cache");
-
-  // B2G could have an empty platform.
-  info(navigator.platform);
-
+  ok(navigator.platform, "This is used just to populate the cache");
   ok(navigator.userAgent, "This is used just to populate the cache");
+  ok(navigator.buildID, "This is used just to populate the cache");
 
   SpecialPowers.pushPrefEnv({"set": [
-    ["general.appname.override", "appName overridden"],
     ["general.appversion.override", "appVersion overridden"],
     ["general.platform.override", "platform overridden"],
     ["general.useragent.override", "userAgent overridden"],
+    ["general.buildID.override", "buildID overridden"],
     ]},
     function() {
       var ifr = document.createElement('IFRAME');
@@ -35,10 +32,10 @@
 
       ifr.addEventListener('load', function() {
         var nav = ifr.contentWindow.navigator;
-        isnot(navigator.appName, nav.appName, "appName should match");
         isnot(navigator.appVersion, nav.appVersion, "appVersion should match");
         isnot(navigator.platform, nav.platform, "platform should match");
         isnot(navigator.userAgent, nav.userAgent, "userAgent should match");
+        isnot(navigator.buildID, nav.buildID, "buildID should match");
         SimpleTest.finish();
       });
 

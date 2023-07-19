@@ -114,6 +114,7 @@ const CONST_PRODUCT = "Gecko";
 const CONST_PRODUCTSUB = "20100101";
 const CONST_VENDOR = "";
 const CONST_VENDORSUB = "";
+const CONST_LEGACY_BUILD_ID = "20181001000000";
 
 const appVersion = parseInt(Services.appinfo.version);
 const rvVersion =
@@ -227,6 +228,11 @@ async function testNavigator() {
     result.appName,
     CONST_APPNAME,
     "Navigator.appName reports correct constant value."
+  );
+  is(
+    result.buildID,
+    CONST_LEGACY_BUILD_ID,
+    "Navigator.buildID reports correct constant value."
   );
   is(
     result.product,
@@ -438,11 +444,11 @@ add_task(async function setupResistFingerprinting() {
 add_task(async function runOverrideTest() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["general.appname.override", "appName overridden"],
       ["general.appversion.override", "appVersion overridden"],
       ["general.platform.override", "platform overridden"],
       ["general.useragent.override", "userAgent overridden"],
       ["general.oscpu.override", "oscpu overridden"],
+      ["general.buildID.override", "buildID overridden"],
     ],
   });
 
@@ -452,7 +458,7 @@ add_task(async function runOverrideTest() {
 
   await testUserAgentHeader();
 
-  // Pop general.appname.override etc
+  // Pop general.appversion.override etc
   await SpecialPowers.popPrefEnv();
 
   // Pop privacy.resistFingerprinting

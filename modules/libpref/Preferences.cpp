@@ -6110,7 +6110,6 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("extensions.foobaz"),
     PREF_LIST_ENTRY(
         "extensions.formautofill.creditCards.heuristics.testConfidence"),
-    PREF_LIST_ENTRY("general.appname.override"),
     PREF_LIST_ENTRY("general.appversion.override"),
     PREF_LIST_ENTRY("general.buildID.override"),
     PREF_LIST_ENTRY("general.oscpu.override"),

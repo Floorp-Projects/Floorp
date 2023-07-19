@@ -992,18 +992,6 @@ void PrefLanguagesChanged(const char* /* aPrefName */, void* /* aClosure */) {
   }
 }
 
-void AppNameOverrideChanged(const char* /* aPrefName */, void* /* aClosure */) {
-  AssertIsOnMainThread();
-
-  nsAutoString override;
-  Preferences::GetString("general.appname.override", override);
-
-  RuntimeService* runtime = RuntimeService::GetService();
-  if (runtime) {
-    runtime->UpdateAppNameOverridePreference(override);
-  }
-}
-
 void AppVersionOverrideChanged(const char* /* aPrefName */,
                                void* /* aClosure */) {
   AssertIsOnMainThread();
@@ -1172,9 +1160,6 @@ bool RuntimeService::RegisterWorker(WorkerPrivate& aWorkerPrivate) {
     }
   } else {
     if (!mNavigatorPropertiesLoaded) {
-      Navigator::AppName(mNavigatorProperties.mAppName,
-                         aWorkerPrivate.GetDocument(),
-                         false /* aUsePrefOverriddenValue */);
       if (NS_FAILED(Navigator::GetAppVersion(
               mNavigatorProperties.mAppVersion, aWorkerPrivate.GetDocument(),
               false /* aUsePrefOverriddenValue */)) ||
@@ -1407,7 +1392,6 @@ nsresult RuntimeService::Init() {
           LoadGCZealOptions, PREF_JS_OPTIONS_PREFIX PREF_GCZEAL)) ||
 #endif
       WORKER_PREF("intl.accept_languages", PrefLanguagesChanged) ||
-      WORKER_PREF("general.appname.override", AppNameOverrideChanged) ||
       WORKER_PREF("general.appversion.override", AppVersionOverrideChanged) ||
       WORKER_PREF("general.platform.override", PlatformOverrideChanged) ||
       NS_FAILED(Preferences::RegisterPrefixCallbackAndCall(
@@ -1657,7 +1641,6 @@ void RuntimeService::Cleanup() {
     if (NS_FAILED(Preferences::UnregisterPrefixCallback(
             LoadContextOptions, PREF_JS_OPTIONS_PREFIX)) ||
         WORKER_PREF("intl.accept_languages", PrefLanguagesChanged) ||
-        WORKER_PREF("general.appname.override", AppNameOverrideChanged) ||
         WORKER_PREF("general.appversion.override", AppVersionOverrideChanged) ||
         WORKER_PREF("general.platform.override", PlatformOverrideChanged) ||
 #ifdef JS_GC_ZEAL
@@ -1813,11 +1796,6 @@ void RuntimeService::UpdateAllWorkerContextOptions() {
   BroadcastAllWorkers([](auto& worker) {
     worker.UpdateContextOptions(sDefaultJSSettings->contextOptions);
   });
-}
-
-void RuntimeService::UpdateAppNameOverridePreference(const nsAString& aValue) {
-  AssertIsOnMainThread();
-  mNavigatorProperties.mAppNameOverridden = aValue;
 }
 
 void RuntimeService::UpdateAppVersionOverridePreference(
