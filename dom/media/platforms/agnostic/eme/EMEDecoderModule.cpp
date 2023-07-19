@@ -259,6 +259,10 @@ class EMEDecryptor final : public MediaDataDecoder,
     return decoder->Shutdown();
   }
 
+  nsCString GetProcessName() const override {
+    return mDecoder->GetProcessName();
+  }
+
   nsCString GetDescriptionName() const override {
     return mDecoder->GetDescriptionName();
   }
