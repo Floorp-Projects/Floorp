@@ -803,29 +803,48 @@ class PageAction {
     }
   }
 
+  _getVisibleElement(id) {
+    const element = id && this.window.document.getElementById(id);
+    if (!element) {
+      return null; // element doesn't exist at all
+    }
+    const { visibility, display } = this.window.getComputedStyle(element);
+    if (
+      !this.window.isElementVisible(element) ||
+      visibility !== "visible" ||
+      display === "none"
+    ) {
+      // CSS rules like visibility: hidden or display: none. these result in
+      // element being invisible and unclickable.
+      return null;
+    }
+    let widget = lazy.CustomizableUI.getWidget(id);
+    if (widget && (!widget.areaType || widget.areaType.includes("panel"))) {
+      // the element is a customizable widget (a toolbar item, e.g. the reload
+      // button or the downloads button). widgets can be in various areas, like
+      // the overflow panel (the chevron button that appears when your window is
+      // so small the toolbar overflows. they can also be in the customization
+      // palette, which is an element in the browser chrome, but it looks like a
+      // tab/page. it appears when you right click the toolbar and click Customize
+      // Toolbar. widgets in the palette are always present in the chrome's DOM.
+      // but they're totally invisible except in customize mode. so if a widget is
+      // in the palette, its areaType will be undefined.
+      return null;
+    }
+    return element;
+  }
+
   async showPopup() {
     const browser = this.window.gBrowser.selectedBrowser;
     const message = RecommendationMap.get(browser);
     const { content } = message;
-    let anchor;
 
     // A hacky way of setting the popup anchor outside the usual url bar icon box
-    // See https://searchfox.org/mozilla-central/rev/847b64cc28b74b44c379f9bff4f415b97da1c6d7/toolkit/modules/PopupNotifications.jsm#42
-    //If the anchor has been moved to the overflow menu ('menu-panel') and an alt_anchor_id has been provided, we want to use the alt_anchor_id
-
-    if (
-      content.alt_anchor_id &&
-      lazy.CustomizableUI.getWidget(content.anchor_id).areaType.includes(
-        "panel"
-      )
-    ) {
-      anchor = this.window.document.getElementById(content.alt_anchor_id);
-    } else {
-      anchor =
-        this.window.document.getElementById(content.anchor_id) ||
-        this.container;
-    }
-    browser.cfrpopupnotificationanchor = anchor;
+    // See https://searchfox.org/mozilla-central/rev/eb07633057d66ab25f9db4c5900eeb6913da7579/toolkit/modules/PopupNotifications.sys.mjs#44
+    browser.cfrpopupnotificationanchor =
+      this._getVisibleElement(content.anchor_id) ||
+      this._getVisibleElement(content.alt_anchor_id) ||
+      this.container;
 
     await this._renderPopup(message, browser);
   }
@@ -836,7 +855,7 @@ class PageAction {
     const { content } = message;
 
     // A hacky way of setting the popup anchor outside the usual url bar icon box
-    // See https://searchfox.org/mozilla-central/rev/c5c002f81f08a73e04868e0c2bf0eb113f200b03/toolkit/modules/PopupNotifications.sys.mjs#40
+    // See https://searchfox.org/mozilla-central/rev/eb07633057d66ab25f9db4c5900eeb6913da7579/toolkit/modules/PopupNotifications.sys.mjs#44
     browser.cfrpopupnotificationanchor =
       this.window.document.getElementById(content.anchor_id) || this.container;
 
