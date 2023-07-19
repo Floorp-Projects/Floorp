@@ -30,11 +30,7 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    SpecialPowers.pushPrefEnv({
-      set: [["mathml.legacy_mathvariant_attribute.disabled", true]],
-    }).then(() => {
-      addA11yLoadEvent(doTest);
-    });
+    addA11yLoadEvent(doTest);
   </script>
 </head>
 <body style="font-size: 12pt">
