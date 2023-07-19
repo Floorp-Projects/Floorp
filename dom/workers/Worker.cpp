@@ -16,6 +16,13 @@
 #include "nsContentUtils.h"
 #include "nsGlobalWindowOuter.h"
 #include "WorkerPrivate.h"
+#include "EventWithOptionsRunnable.h"
+#include "js/RootingAPI.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "nsISupports.h"
+#include "nsDebug.h"
+#include "mozilla/dom/WorkerStatus.h"
+#include "mozilla/RefPtr.h"
 
 #ifdef XP_WIN
 #  undef PostMessage
@@ -175,6 +182,34 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                          const StructuredSerializeOptions& aOptions,
                          ErrorResult& aRv) {
   PostMessage(aCx, aMessage, aOptions.mTransfer, aRv);
+}
+
+void Worker::PostEventWithOptions(JSContext* aCx,
+                                  JS::Handle<JS::Value> aOptions,
+                                  const Sequence<JSObject*>& aTransferable,
+                                  EventWithOptionsRunnable* aRunnable,
+                                  ErrorResult& aRv) {
+  NS_ASSERT_OWNINGTHREAD(Worker);
+
+  if (NS_WARN_IF(!mWorkerPrivate ||
+                 mWorkerPrivate->ParentStatusProtected() > Running)) {
+    return;
+  }
+  RefPtr<WorkerPrivate> workerPrivate = mWorkerPrivate;
+  Unused << workerPrivate;
+
+  aRunnable->InitOptions(aCx, aOptions, aTransferable, aRv);
+
+  if (NS_WARN_IF(!mWorkerPrivate ||
+                 mWorkerPrivate->ParentStatusProtected() > Running)) {
+    return;
+  }
+
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  Unused << NS_WARN_IF(!aRunnable->Dispatch());
 }
 
 void Worker::Terminate() {

@@ -30,3 +30,9 @@ interface RTCRtpSender {
   [ChromeOnly]
   undefined setTrack(MediaStreamTrack? track);
 };
+
+// https://w3c.github.io/webrtc-encoded-transform/#specification
+partial interface RTCRtpSender {
+  [SetterThrows,
+   Pref="media.peerconnection.scripttransform.enabled"] attribute RTCRtpTransform? transform;
+};

@@ -38,6 +38,7 @@ struct RTCRtpCapabilities;
 struct RTCRtpContributingSource;
 struct RTCRtpSynchronizationSource;
 class RTCRtpTransceiver;
+class RTCRtpScriptTransform;
 
 class RTCRtpReceiver : public nsISupports,
                        public nsWrapperCache,
@@ -71,6 +72,10 @@ class RTCRtpReceiver : public nsISupports,
   void MozInsertAudioLevelForContributingSource(
       const uint32_t aSource, const DOMHighResTimeStamp aTimestamp,
       const uint32_t aRtpTimestamp, const bool aHasLevel, const uint8_t aLevel);
+
+  RTCRtpScriptTransform* GetTransform() const { return mTransform; }
+
+  void SetTransform(RTCRtpScriptTransform* aTransform, ErrorResult& aError);
 
   nsPIDOMWindowInner* GetParentObject() const;
   nsTArray<RefPtr<RTCStatsPromise>> GetStatsInternal(
@@ -120,6 +125,9 @@ class RTCRtpReceiver : public nsISupports,
   // ALPN negotiation.
   void UpdatePrincipalPrivacy(PrincipalPrivacy aPrivacy);
 
+  // Called by FrameTransformerProxy
+  void RequestKeyFrame();
+
   void OnRtcpBye();
   void OnRtcpTimeout();
 
@@ -141,10 +149,16 @@ class RTCRtpReceiver : public nsISupports,
   Canonical<std::vector<VideoCodecConfig>>& CanonicalVideoCodecs() {
     return mVideoCodecs;
   }
+
   Canonical<Maybe<RtpRtcpConfig>>& CanonicalVideoRtpRtcpConfig() {
     return mVideoRtpRtcpConfig;
   }
+
   Canonical<bool>& CanonicalReceiving() override { return mReceiving; }
+
+  Canonical<RefPtr<FrameTransformerProxy>>& CanonicalFrameTransformerProxy() {
+    return mFrameTransformerProxy;
+  }
 
  private:
   virtual ~RTCRtpReceiver();
@@ -168,6 +182,7 @@ class RTCRtpReceiver : public nsISupports,
   RefPtr<MediaPipelineReceive> mPipeline;
   RefPtr<MediaTransportHandler> mTransportHandler;
   RefPtr<RTCRtpTransceiver> mTransceiver;
+  RefPtr<RTCRtpScriptTransform> mTransform;
   // This is [[AssociatedRemoteMediaStreams]], basically. We do not keep the
   // streams themselves here, because that would require this object to know
   // where the stream list for the whole RTCPeerConnection lives..
@@ -191,6 +206,7 @@ class RTCRtpReceiver : public nsISupports,
   Canonical<std::vector<VideoCodecConfig>> mVideoCodecs;
   Canonical<Maybe<RtpRtcpConfig>> mVideoRtpRtcpConfig;
   Canonical<bool> mReceiving;
+  Canonical<RefPtr<FrameTransformerProxy>> mFrameTransformerProxy;
 };
 
 }  // namespace dom
