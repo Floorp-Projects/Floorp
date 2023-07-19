@@ -924,13 +924,15 @@ enum class GCNurseryProgress {
  */
 using GCNurseryCollectionCallback = void (*)(JSContext* cx,
                                              GCNurseryProgress progress,
-                                             GCReason reason);
+                                             GCReason reason, void* data);
 
 /**
- * Set the nursery collection callback for the given runtime. When set, it will
+ * Add and remove nursery collection callbacks for the given runtime. These will
  * be called at the start and end of every nursery collection.
  */
-extern JS_PUBLIC_API GCNurseryCollectionCallback SetGCNurseryCollectionCallback(
+extern JS_PUBLIC_API bool AddGCNurseryCollectionCallback(
+    JSContext* cx, GCNurseryCollectionCallback callback, void* data);
+extern JS_PUBLIC_API void RemoveGCNurseryCollectionCallback(
     JSContext* cx, GCNurseryCollectionCallback callback);
 
 typedef void (*DoCycleCollectionCallback)(JSContext* cx);

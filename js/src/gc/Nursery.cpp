@@ -1163,8 +1163,11 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
 
   AutoGCSession session(gc, JS::HeapState::MinorCollecting);
 
-  stats().beginNurseryCollection(reason);
+  stats().beginNurseryCollection();
   gcprobes::MinorGCStart();
+
+  gc->callNurseryCollectionCallbacks(
+      JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START, reason);
 
   maybeClearProfileDurations();
   startProfile(ProfileKey::Total);
@@ -1238,7 +1241,10 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   TimeDuration totalTime = profileDurations_[ProfileKey::Total];
   sendTelemetry(reason, totalTime, wasEmpty, promotionRate, sitesPretenured);
 
-  stats().endNurseryCollection(reason);  // Calls GCNurseryCollectionCallback.
+  gc->callNurseryCollectionCallbacks(
+      JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END, reason);
+
+  stats().endNurseryCollection();
   gcprobes::MinorGCEnd();
 
   timeInChunkAlloc_ = mozilla::TimeDuration::Zero();
