@@ -161,6 +161,16 @@ static void WlLogHandler(const char* format, va_list args) {
   char error[1000];
   VsprintfLiteral(error, format, args);
   gfxCriticalNote << "Wayland protocol error: " << error;
+
+  // See Bug 1826583 for reference.
+  // "warning: queue %p destroyed while proxies still attached" is non-fatal
+  // warning and we don't want to crash because of it.
+  if (strstr(error, "warning:") &&
+      strstr(error, "destroyed while proxies still attached")) {
+    return;
+  }
+
+  MOZ_CRASH_UNSAFE(error);
 }
 
 nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
