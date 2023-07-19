@@ -18,6 +18,10 @@ XPCSHELL_TESTS_MANIFESTS += [
     "unit_ipc/xpcshell.ini",
 ]
 
+EXTRA_JS_MODULES["netwerk-perf"] += [
+    "perf/NetworkThrottlingUtils.sys.mjs",
+]
+
 TESTING_JS_MODULES += [
     "browser/cookie_filtering_helper.sys.mjs",
     "browser/early_hint_preload_test_helper.sys.mjs",
