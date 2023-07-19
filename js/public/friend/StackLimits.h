@@ -75,8 +75,6 @@ class MOZ_RAII AutoCheckRecursionLimit {
 
   JS_PUBLIC_API JS::StackKind stackKindForCurrentPrincipal(JSContext* cx) const;
 
-  JS_PUBLIC_API void assertMainThread(JSContext* cx) const;
-
 #ifdef __wasi__
   // The JSContext outlives AutoCheckRecursionLimit so it is safe to use raw
   // pointer here.
@@ -203,7 +201,6 @@ AutoCheckRecursionLimit::getStackLimitSlow(JSContext* cx) const {
 MOZ_ALWAYS_INLINE JS::NativeStackLimit
 AutoCheckRecursionLimit::getStackLimitHelper(JSContext* cx, JS::StackKind kind,
                                              int extraAllowance) const {
-  assertMainThread(cx);
   JS::NativeStackLimit limit =
       JS::RootingContext::get(cx)->nativeStackLimit[kind];
 #if JS_STACK_GROWTH_DIRECTION > 0

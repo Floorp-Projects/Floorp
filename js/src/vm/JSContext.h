@@ -127,10 +127,7 @@ enum class ContextKind {
   Uninitialized,
 
   // Context for the main thread of a JSRuntime.
-  MainThread,
-
-  // Context for a helper thread.
-  HelperThread
+  MainThread
 };
 
 #ifdef DEBUG
@@ -201,10 +198,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   bool isInitialized() const { return kind_ != js::ContextKind::Uninitialized; }
 #endif
 
-  bool isMainThreadContext() const {
-    return kind_ == js::ContextKind::MainThread;
-  }
-
   template <typename T>
   bool isInsideCurrentZone(T thing) const {
     return thing->zoneFromAnyThread() == zone_;
@@ -250,7 +243,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   JS::StackKind stackKindForCurrentPrincipal();
   JS::NativeStackLimit stackLimitForCurrentPrincipal();
   JS::NativeStackLimit stackLimit(JS::StackKind kind) {
-    MOZ_ASSERT(isMainThreadContext());
     return nativeStackLimit[kind];
   }
   JS::NativeStackLimit stackLimitForJitCode(JS::StackKind kind);
@@ -417,10 +409,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   mozilla::Maybe<JS::NativeStackBase> nativeStackBase_;
 
  public:
-  JS::NativeStackBase nativeStackBase() const {
-    MOZ_ASSERT(isMainThreadContext());
-    return *nativeStackBase_;
-  }
+  JS::NativeStackBase nativeStackBase() const { return *nativeStackBase_; }
 
  public:
   /* If non-null, report JavaScript entry points to this monitor. */
@@ -827,12 +816,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
  public:
   void* addressOfInterruptBits() { return &interruptBits_; }
-  void* addressOfJitStackLimit() {
-    MOZ_ASSERT(isMainThreadContext());
-    return &jitStackLimit;
-  }
+  void* addressOfJitStackLimit() { return &jitStackLimit; }
   void* addressOfJitStackLimitNoInterrupt() {
-    MOZ_ASSERT(isMainThreadContext());
     return &jitStackLimitNoInterrupt;
   }
   void* addressOfZone() { return &zone_; }

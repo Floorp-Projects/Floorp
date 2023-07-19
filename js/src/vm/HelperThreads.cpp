@@ -2190,8 +2190,6 @@ void GlobalHelperThreadState::destroyParseTask(JSRuntime* rt,
 
 bool js::EnqueueOffThreadCompression(JSContext* cx,
                                      UniquePtr<SourceCompressionTask> task) {
-  MOZ_ASSERT(cx->isMainThreadContext());
-
   AutoLockHelperThreadState lock;
 
   auto& pending = HelperThreadState().compressionPendingList(lock);

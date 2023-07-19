@@ -3490,7 +3490,6 @@ static bool NeedToCollectNursery(GCRuntime* gc) {
 
 #ifdef DEBUG
 static const char* DescribeBudget(const SliceBudget& budget) {
-  MOZ_ASSERT(TlsContext.get()->isMainThreadContext());
   constexpr size_t length = 32;
   static char buffer[length];
   budget.describe(buffer, length);

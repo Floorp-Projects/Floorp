@@ -106,8 +106,6 @@ static inline T* AllocateObjectBuffer(JSContext* cx, uint32_t count) {
 template <typename T>
 static inline T* AllocateObjectBuffer(JSContext* cx, JSObject* obj,
                                       uint32_t count) {
-  MOZ_ASSERT(cx->isMainThreadContext());
-
   size_t nbytes = RoundUp(count * sizeof(T), sizeof(Value));
   auto* buffer =
       static_cast<T*>(cx->nursery().allocateBuffer(cx->zone(), obj, nbytes));
@@ -122,8 +120,6 @@ template <typename T>
 static inline T* ReallocateObjectBuffer(JSContext* cx, JSObject* obj,
                                         T* oldBuffer, uint32_t oldCount,
                                         uint32_t newCount) {
-  MOZ_ASSERT(cx->isMainThreadContext());
-
   T* buffer = static_cast<T*>(cx->nursery().reallocateBuffer(
       obj->zone(), obj, oldBuffer, oldCount * sizeof(T), newCount * sizeof(T)));
   if (!buffer) {
@@ -136,8 +132,6 @@ static inline T* ReallocateObjectBuffer(JSContext* cx, JSObject* obj,
 static inline JS::BigInt::Digit* AllocateBigIntDigits(JSContext* cx,
                                                       JS::BigInt* bi,
                                                       uint32_t length) {
-  MOZ_ASSERT(cx->isMainThreadContext());
-
   size_t nbytes = RoundUp(length * sizeof(JS::BigInt::Digit), sizeof(Value));
   auto* digits =
       static_cast<JS::BigInt::Digit*>(cx->nursery().allocateBuffer(bi, nbytes));
@@ -151,8 +145,6 @@ static inline JS::BigInt::Digit* AllocateBigIntDigits(JSContext* cx,
 static inline JS::BigInt::Digit* ReallocateBigIntDigits(
     JSContext* cx, JS::BigInt* bi, JS::BigInt::Digit* oldDigits,
     uint32_t oldLength, uint32_t newLength) {
-  MOZ_ASSERT(cx->isMainThreadContext());
-
   size_t oldBytes =
       RoundUp(oldLength * sizeof(JS::BigInt::Digit), sizeof(Value));
   size_t newBytes =
