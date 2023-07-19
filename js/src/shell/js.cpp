@@ -11501,10 +11501,10 @@ bool InitOptionParser(OptionParser& op) {
   !op.addBoolOption('\0', "no-wasm-" SHELL,                                \
                     STAGE == WasmFeatureStage::Experimental                \
                         ? "No-op."                                         \
-                        : "Disable wasm " SHELL "feature.") ||             \
+                        : "Disable wasm " SHELL " feature.") ||            \
       !op.addBoolOption('\0', "wasm-" SHELL,                               \
                         STAGE == WasmFeatureStage::Experimental            \
-                            ? "Enable wasm " SHELL "feature."              \
+                            ? "Enable wasm " SHELL " feature."             \
                             : "No-op.") ||
       JS_FOR_WASM_FEATURES(WASM_FEATURE)
 #undef WASM_FEATURE
@@ -12167,11 +12167,14 @@ bool SetContextWasmOptions(JSContext* cx, const OptionParser& op) {
     }
   }
 
-#define WASM_FEATURE(NAME, LOWER_NAME, STAGE, COMPILE_PRED, COMPILER_PRED,    \
-                     FLAG_PRED, FLAG_FORCE_ON, SHELL, ...)                    \
-  enableWasm##NAME = op.getBoolOption(stage == WasmFeatureStage::Experimental \
-                                          ? "wasm-" SHELL                     \
-                                          : "no-wasm-" SHELL);                \
+#define WASM_FEATURE(NAME, LOWER_NAME, STAGE, COMPILE_PRED, COMPILER_PRED, \
+                     FLAG_PRED, FLAG_FORCE_ON, SHELL, ...)                 \
+  if (STAGE == WasmFeatureStage::Experimental) {                           \
+    enableWasm##NAME = op.getBoolOption("wasm-" SHELL);                    \
+  } else {                                                                 \
+    enableWasm##NAME = !op.getBoolOption("no-wasm-" SHELL);                \
+  }
+
   JS_FOR_WASM_FEATURES(WASM_FEATURE);
 #undef WASM_FEATURE
 
