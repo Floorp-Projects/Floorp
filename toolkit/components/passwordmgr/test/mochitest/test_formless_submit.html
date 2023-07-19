@@ -9,8 +9,8 @@
 </head>
 <body>
 <script type="application/javascript">
-const { LoginFormFactory } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/LoginFormFactory.jsm"
+const { LoginFormFactory } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/LoginFormFactory.sys.mjs"
 );
 const { LoginManagerChild } = SpecialPowers.ChromeUtils.import(
   "resource://gre/modules/LoginManagerChild.jsm"
