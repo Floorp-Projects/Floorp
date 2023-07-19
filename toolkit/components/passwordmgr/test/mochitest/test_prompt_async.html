@@ -10,8 +10,8 @@
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
     <script class="testbody" type="text/javascript">
-      const { NetUtil } = SpecialPowers.ChromeUtils.import(
-        "resource://gre/modules/NetUtil.jsm"
+      const { NetUtil } = SpecialPowers.ChromeUtils.importESModule(
+        "resource://gre/modules/NetUtil.sys.mjs"
       );
       const { TestUtils } = SpecialPowers.ChromeUtils.importESModule(
         "resource://testing-common/TestUtils.sys.mjs"

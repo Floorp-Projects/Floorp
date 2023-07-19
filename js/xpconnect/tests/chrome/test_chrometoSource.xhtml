@@ -14,7 +14,9 @@
   <!-- test code goes here -->
   <script type="application/javascript" src="outoflinexulscript.js"></script>
   <script type="application/javascript"><![CDATA[
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const {NetUtil} = ChromeUtils.importESModule(
+  "resource://gre/modules/NetUtil.sys.mjs"
+);
 let base = /.*\//.exec(window.location.href)[0];
 const {checkFromJSM} = ChromeUtils.import(base + "file_expandosharing.jsm");
 

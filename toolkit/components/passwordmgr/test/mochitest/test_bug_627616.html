@@ -80,7 +80,9 @@
     const mm = runInParent(() => {
       const { classes: parentCc, interfaces: parentCi } = Components;
 
-      const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+      const {NetUtil} = ChromeUtils.importESModule(
+        "resource://gre/modules/NetUtil.sys.mjs"
+      );
 
       const channel = NetUtil.newChannel({
         uri: "http://example.com",
