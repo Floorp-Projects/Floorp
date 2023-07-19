@@ -2210,7 +2210,6 @@ JSString* js::ToStringSlow(
 
   Value v = arg;
   if (!v.isPrimitive()) {
-    MOZ_ASSERT(!cx->isHelperThreadContext());
     if (!allowGC) {
       return nullptr;
     }
@@ -2233,7 +2232,6 @@ JSString* js::ToStringSlow(
   } else if (v.isNull()) {
     str = cx->names().null;
   } else if (v.isSymbol()) {
-    MOZ_ASSERT(!cx->isHelperThreadContext());
     if (allowGC) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_SYMBOL_TO_STRING);

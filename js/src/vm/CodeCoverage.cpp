@@ -593,8 +593,6 @@ bool InitScriptCoverage(JSContext* cx, JSScript* script) {
   MOZ_ASSERT(script->hasBytecode(),
              "Only initialize coverage data for fully initialized scripts.");
 
-  MOZ_ASSERT(!cx->isHelperThreadContext());
-
   const char* filename = script->filename();
   if (!filename) {
     return true;

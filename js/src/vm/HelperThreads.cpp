@@ -489,15 +489,9 @@ bool js::HasOffThreadIonCompile(Realm* realm) {
 
 ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx,
                      JS::OffThreadCompileCallback callback, void* callbackData)
-    : kind(kind), options(cx), callback(callback), callbackData(callbackData) {
-  // Note that |cx| is the main thread context here but the parse task will
-  // run with a different, helper thread, context.
-  MOZ_ASSERT(!cx->isHelperThreadContext());
-}
+    : kind(kind), options(cx), callback(callback), callbackData(callbackData) {}
 
 bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options) {
-  MOZ_ASSERT(!cx->isHelperThreadContext());
-
   if (!this->options.copy(cx, options)) {
     return false;
   }
@@ -2109,7 +2103,6 @@ ParseTask* GlobalHelperThreadState::removeFinishedParseTask(
 
 UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
     JSContext* cx, JS::OffThreadToken* token) {
-  MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(cx->realm());
 
   UniquePtr<ParseTask> parseTask(removeFinishedParseTask(cx, token));

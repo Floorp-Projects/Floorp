@@ -72,7 +72,7 @@ class MOZ_RAII AutoAssertReportedException {
     }
 
     // TODO: Remove this once JSContext is removed from frontend.
-    if (maybeCx_ && !maybeCx_->isHelperThreadContext()) {
+    if (maybeCx_) {
       MOZ_ASSERT(maybeCx_->isExceptionPending() || fc_->hadErrors());
     } else {
       MOZ_ASSERT(fc_->hadErrors());
@@ -241,8 +241,7 @@ template <typename Unit>
       return false;
     }
     if (extensibleStencil) {
-      if (input.options.populateDelazificationCache() &&
-          !maybeCx->isHelperThreadContext()) {
+      if (input.options.populateDelazificationCache()) {
         BorrowingCompilationStencil borrowingStencil(*extensibleStencil);
         StartOffThreadDelazification(maybeCx, input.options, borrowingStencil);
 
@@ -306,8 +305,7 @@ template <typename Unit>
     return false;
   }
 
-  if (input.options.populateDelazificationCache() && maybeCx &&
-      !maybeCx->isHelperThreadContext()) {
+  if (input.options.populateDelazificationCache() && maybeCx) {
     BorrowingCompilationStencil borrowingStencil(compiler.stencil());
     StartOffThreadDelazification(maybeCx, input.options, borrowingStencil);
 
@@ -450,8 +448,6 @@ bool frontend::InstantiateStencils(JSContext* cx, CompilationInput& input,
       return false;
     }
   }
-
-  MOZ_ASSERT(!cx->isHelperThreadContext());
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!stencil.source->tryCompressOffThread(cx)) {
@@ -1478,8 +1474,6 @@ static JSFunction* CompileStandaloneFunction(
     fun = gcOutput.get().getFunctionNoBaseIndex(
         CompilationStencil::TopLevelIndex);
     MOZ_ASSERT(fun->hasBytecode() || IsAsmJSModule(fun));
-
-    MOZ_ASSERT(!cx->isHelperThreadContext());
 
     // Enqueue an off-thread source compression task after finishing parsing.
     if (!source->tryCompressOffThread(cx)) {

@@ -318,19 +318,15 @@ static void MaybeReportOverRecursedForDifferentialTesting() {
 }
 
 void JSContext::onOverRecursed() {
-  if (isHelperThreadContext()) {
-    addPendingOverRecursed();
-  } else {
-    // Try to construct an over-recursed error and then update the exception
-    // status to `OverRecursed`. Creating the error can fail, so check there
-    // is a reasonable looking exception pending before updating status.
-    JS_ReportErrorNumberASCII(this, GetErrorMessage, nullptr,
-                              JSMSG_OVER_RECURSED);
-    if (isExceptionPending() && !isThrowingOutOfMemory()) {
-      MOZ_ASSERT(unwrappedException().isObject());
-      MOZ_ASSERT(status == JS::ExceptionStatus::Throwing);
-      status = JS::ExceptionStatus::OverRecursed;
-    }
+  // Try to construct an over-recursed error and then update the exception
+  // status to `OverRecursed`. Creating the error can fail, so check there
+  // is a reasonable looking exception pending before updating status.
+  JS_ReportErrorNumberASCII(this, GetErrorMessage, nullptr,
+                            JSMSG_OVER_RECURSED);
+  if (isExceptionPending() && !isThrowingOutOfMemory()) {
+    MOZ_ASSERT(unwrappedException().isObject());
+    MOZ_ASSERT(status == JS::ExceptionStatus::Throwing);
+    status = JS::ExceptionStatus::OverRecursed;
   }
 
   reportResourceExhaustion();
@@ -725,24 +721,13 @@ JSObject* js::CreateErrorNotesArray(JSContext* cx, JSErrorReport* report) {
 }
 
 void JSContext::recoverFromOutOfMemory() {
-  if (isHelperThreadContext()) {
-    // Keep in sync with addPendingOutOfMemory.
-    if (FrontendErrors* errors = frontendErrors()) {
-      errors->outOfMemory = false;
-    }
-  } else {
-    if (isExceptionPending()) {
-      MOZ_ASSERT(isThrowingOutOfMemory());
-      clearPendingException();
-    }
+  if (isExceptionPending()) {
+    MOZ_ASSERT(isThrowingOutOfMemory());
+    clearPendingException();
   }
 }
 
 void JSContext::reportAllocationOverflow() {
-  if (isHelperThreadContext()) {
-    return;
-  }
-
   gc::AutoSuppressGC suppressGC(this);
   JS_ReportErrorNumberASCII(this, GetErrorMessage, nullptr,
                             JSMSG_ALLOC_OVERFLOW);
@@ -963,16 +948,7 @@ js::UniquePtr<JS::JobQueue::SavedJobQueue> InternalJobQueue::saveJobQueue(
 }
 
 mozilla::GenericErrorResult<OOM> JSContext::alreadyReportedOOM() {
-#ifdef DEBUG
-  if (isHelperThreadContext()) {
-    // Keep in sync with addPendingOutOfMemory.
-    if (FrontendErrors* errors = frontendErrors()) {
-      MOZ_ASSERT(errors->outOfMemory);
-    }
-  } else {
-    MOZ_ASSERT(isThrowingOutOfMemory());
-  }
-#endif
+  MOZ_ASSERT(isThrowingOutOfMemory());
   return mozilla::Err(JS::OOM());
 }
 
