@@ -4677,11 +4677,7 @@
 
 - name: dom.webnotifications.requireinteraction.enabled
   type: RelaxedAtomicBool
-#if defined(XP_WIN)
-  value: true
-#else
   value: @IS_NIGHTLY_BUILD@
-#endif
   mirror: always
 
 - name: dom.webnotifications.silent.enabled
