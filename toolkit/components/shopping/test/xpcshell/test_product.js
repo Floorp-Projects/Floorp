@@ -505,3 +505,22 @@ add_task(async function test_product_uninit() {
     "Abort signal is given after uninit"
   );
 });
+
+add_task(function test_new_ShoppingProduct() {
+  let product_string =
+    "https://www.amazon.com/Furmax-Electric-Adjustable-Standing-Computer/dp/B09TJGHL5F/";
+  let product_url = new URL(product_string);
+  let product_uri = Services.io.newURI(product_string);
+  let productURL = new ShoppingProduct(product_url);
+  Assert.equal(
+    productURL.isProduct(),
+    true,
+    "Passing a product URL returns a valid product"
+  );
+  let productURI = new ShoppingProduct(product_uri);
+  Assert.equal(
+    productURI.isProduct(),
+    true,
+    "Passing a product URI returns a valid product"
+  );
+});
