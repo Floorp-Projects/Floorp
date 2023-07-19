@@ -4104,7 +4104,7 @@ def run_test_harness(parser, options):
     )
 
     options.runByManifest = False
-    if options.flavor in ("plain", "browser", "chrome"):
+    if options.flavor in ("plain", "a11y", "browser", "chrome"):
         options.runByManifest = True
 
     if options.verify or options.verify_fission:
