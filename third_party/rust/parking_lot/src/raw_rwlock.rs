@@ -12,12 +12,11 @@ use core::{
     cell::Cell,
     sync::atomic::{AtomicUsize, Ordering},
 };
-use instant::Instant;
 use lock_api::{RawRwLock as RawRwLock_, RawRwLockUpgrade};
 use parking_lot_core::{
     self, deadlock, FilterOp, ParkResult, ParkToken, SpinWait, UnparkResult, UnparkToken,
 };
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 // This reader-writer lock implementation is based on Boost's upgrade_mutex:
 // https://github.com/boostorg/thread/blob/fc08c1fe2840baeeee143440fba31ef9e9a813c8/include/boost/thread/v2/shared_mutex.hpp#L432
@@ -143,6 +142,12 @@ unsafe impl lock_api::RawRwLock for RawRwLock {
     fn is_locked(&self) -> bool {
         let state = self.state.load(Ordering::Relaxed);
         state & (WRITER_BIT | READERS_MASK) != 0
+    }
+
+    #[inline]
+    fn is_locked_exclusive(&self) -> bool {
+        let state = self.state.load(Ordering::Relaxed);
+        state & (WRITER_BIT) != 0
     }
 }
 
@@ -983,8 +988,8 @@ impl RawRwLock {
                 if let Err(x) = self.state.compare_exchange_weak(
                     state,
                     state | WRITER_PARKED_BIT,
-                    Ordering::Relaxed,
-                    Ordering::Relaxed,
+                    Ordering::Acquire,
+                    Ordering::Acquire,
                 ) {
                     state = x;
                     continue;

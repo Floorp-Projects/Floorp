@@ -1514,7 +1514,7 @@ dependencies = [
  "error-support-macros",
  "lazy_static",
  "log",
- "parking_lot 0.12.999",
+ "parking_lot",
  "uniffi",
 ]
 
@@ -2618,7 +2618,7 @@ version = "0.1.0"
 source = "git+https://github.com/mozilla/application-services?rev=86c84c217036c12283d19368867323a66bf35883#86c84c217036c12283d19368867323a66bf35883"
 dependencies = [
  "lazy_static",
- "parking_lot 0.12.999",
+ "parking_lot",
  "rusqlite",
 ]
 
@@ -3957,34 +3957,25 @@ dependencies = [
 
 [[package]]
 name = "parking_lot"
-version = "0.11.2"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d17b78036a60663b797adeaee46f5c9dfebb86948d1255007a1d6be0271ff99"
+checksum = "3742b2c103b9f06bc9fff0a37ff4912935851bee6d36f3c02bcc755bcfec228f"
 dependencies = [
- "instant",
  "lock_api",
  "parking_lot_core",
 ]
 
 [[package]]
-name = "parking_lot"
-version = "0.12.999"
-dependencies = [
- "parking_lot 0.11.2",
-]
-
-[[package]]
 name = "parking_lot_core"
-version = "0.8.6"
+version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60a2cfe6f0ad2bfc16aefa463b497d5c7a5ecd44a23efa72aa342d90177356dc"
+checksum = "93f00c865fe7cabf650081affecd3871070f26767e7b2070a3ffae14c654b447"
 dependencies = [
  "cfg-if 1.0.0",
- "instant",
  "libc",
- "redox_syscall 0.2.999",
+ "redox_syscall 0.3.999",
  "smallvec",
- "winapi",
+ "windows-targets",
 ]
 
 [[package]]
@@ -5000,7 +4991,7 @@ dependencies = [
  "num-traits",
  "num_cpus",
  "owning_ref",
- "parking_lot 0.11.2",
+ "parking_lot",
  "precomputed-hash",
  "rayon",
  "regex",
@@ -5787,7 +5778,7 @@ dependencies = [
  "ffi-support",
  "log",
  "once_cell",
- "parking_lot 0.12.999",
+ "parking_lot",
  "prost",
  "prost-derive",
  "serde",
@@ -5948,7 +5939,7 @@ dependencies = [
  "lazy_static",
  "log",
  "nss_build_common",
- "parking_lot 0.12.999",
+ "parking_lot",
  "rusqlite",
  "serde",
  "serde_derive",
@@ -6106,7 +6097,7 @@ dependencies = [
  "codespan-reporting",
  "log",
  "naga",
- "parking_lot 0.12.999",
+ "parking_lot",
  "profiling",
  "ron",
  "rustc-hash",
@@ -6141,7 +6132,7 @@ dependencies = [
  "metal",
  "naga",
  "objc",
- "parking_lot 0.12.999",
+ "parking_lot",
  "profiling",
  "range-alloc",
  "raw-window-handle",
@@ -6172,7 +6163,7 @@ dependencies = [
  "bincode",
  "log",
  "nsstring",
- "parking_lot 0.11.2",
+ "parking_lot",
  "serde",
  "static_prefs",
  "wgpu-core",
@@ -6221,6 +6212,14 @@ name = "winapi-x86_64-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
+
+[[package]]
+name = "windows-targets"
+version = "0.48.999"
+dependencies = [
+ "quote",
+ "syn 2.0.18",
+]
 
 [[package]]
 name = "wineventlog"
@@ -6371,7 +6370,3 @@ dependencies = [
  "crossbeam-utils",
  "flate2",
 ]
-
-[[patch.unused]]
-name = "windows-targets"
-version = "0.48.999"

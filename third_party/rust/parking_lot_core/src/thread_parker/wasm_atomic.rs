@@ -5,40 +5,12 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use cfg_if::cfg_if;
 use core::{
     arch::wasm32,
     sync::atomic::{AtomicI32, Ordering},
 };
-use instant::Instant;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use std::{convert::TryFrom, thread};
-
-cfg_if! {
-    if #[cfg(all(
-        target_arch = "wasm32",
-        target_os = "unknown",
-        target_vendor = "unknown"
-    ))] {
-        // This function serves as a polyfill for `Instant::checked_duration_since`, which is
-        // currently not implemented for wasm32-unknown-unknown.
-        // TODO: Remove this shim once it
-        fn checked_duration_since_now(other: Instant) -> Option<Duration> {
-            let now = Instant::now();
-
-            if other < now {
-                None
-            } else {
-                Some(other.duration_since(now))
-            }
-        }
-    } else {
-        // If we are not targeting wasm32, we can use the native `checked_duration_since`.
-        fn checked_duration_since_now(timeout: Instant) -> Option<Duration> {
-            timeout.checked_duration_since(Instant::now())
-        }
-    }
-}
 
 // Helper type for putting a thread to sleep until some other thread wakes it up
 pub struct ThreadParker {
@@ -83,7 +55,7 @@ impl super::ThreadParkerT for ThreadParker {
     #[inline]
     unsafe fn park_until(&self, timeout: Instant) -> bool {
         while self.parked.load(Ordering::Acquire) == PARKED {
-            if let Some(left) = checked_duration_since_now(timeout) {
+            if let Some(left) = timeout.checked_duration_since(Instant::now()) {
                 let nanos_left = i64::try_from(left.as_nanos()).unwrap_or(i64::max_value());
                 let r = wasm32::memory_atomic_wait32(self.ptr(), PARKED, nanos_left);
                 debug_assert!(r == 0 || r == 1 || r == 2);

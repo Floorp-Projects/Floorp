@@ -46,7 +46,7 @@
 #![cfg_attr(
     all(
         feature = "nightly",
-        target_arch = "wasm32",
+        target_family = "wasm",
         target_feature = "atomics"
     ),
     feature(stdsimd)

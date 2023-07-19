@@ -11,24 +11,21 @@ use lock_api;
 /// A mutual exclusive primitive that is always fair, useful for protecting shared data
 ///
 /// This mutex will block threads waiting for the lock to become available. The
-/// mutex can also be statically initialized or created via a `new`
+/// mutex can be statically initialized or created by the `new`
 /// constructor. Each mutex has a type parameter which represents the data that
 /// it is protecting. The data can only be accessed through the RAII guards
 /// returned from `lock` and `try_lock`, which guarantees that the data is only
 /// ever accessed when the mutex is locked.
 ///
-/// The regular mutex provided by `parking_lot` uses eventual locking fairness
+/// The regular mutex provided by `parking_lot` uses eventual fairness
 /// (after some time it will default to the fair algorithm), but eventual
-/// fairness does not provide the same garantees a always fair method would.
-/// Fair mutexes are generally slower, but sometimes needed. This wrapper was
-/// created to avoid using a unfair protocol when it's forbidden by mistake.
+/// fairness does not provide the same guarantees an always fair method would.
+/// Fair mutexes are generally slower, but sometimes needed.
 ///
-/// In a fair mutex the lock is provided to whichever thread asked first,
-/// they form a queue and always follow the first-in first-out order. This
-/// means some thread in the queue won't be able to steal the lock and use it fast
-/// to increase throughput, at the cost of latency. Since the response time will grow
-/// for some threads that are waiting for the lock and losing to faster but later ones,
-/// but it may make sending more responses possible.
+/// In a fair mutex the waiters form a queue, and the lock is always granted to
+/// the next requester in the queue, in first-in first-out order. This ensures
+/// that one thread cannot starve others by quickly re-acquiring the lock after
+/// releasing it.
 ///
 /// A fair mutex may not be interesting if threads have different priorities (this is known as
 /// priority inversion).
@@ -38,7 +35,7 @@ use lock_api;
 /// - No poisoning, the lock is released normally on panic.
 /// - Only requires 1 byte of space, whereas the standard library boxes the
 ///   `FairMutex` due to platform limitations.
-/// - Can be statically constructed (requires the `const_fn` nightly feature).
+/// - Can be statically constructed.
 /// - Does not require any drop glue when dropped.
 /// - Inline fast path for the uncontended case.
 /// - Efficient handling of micro-contention using adaptive spinning.
