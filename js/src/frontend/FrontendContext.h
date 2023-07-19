@@ -153,8 +153,6 @@ class FrontendContext {
 
   void convertToRuntimeError(JSContext* cx, Warning warning = Warning::Report);
 
-  void linkWithJSContext(JSContext* cx);
-
   mozilla::Maybe<CompileError>& maybeError() { return errors_.error; }
   Vector<CompileError, 0, SystemAllocPolicy>& warnings() {
     return errors_.warnings;

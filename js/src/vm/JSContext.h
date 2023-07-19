@@ -75,8 +75,6 @@ class MOZ_RAII AutoCycleDetector {
 
 struct AutoResolving;
 
-struct FrontendErrors;  // vm/HelperThreadState.h
-
 class InternalJobQueue : public JS::JobQueue {
  public:
   explicit InternalJobQueue(JSContext* cx)
@@ -171,8 +169,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   js::WriteOnceData<js::ContextKind> kind_;
 
   js::ContextData<JS::ContextOptions> options_;
-
-  js::FrontendErrors* errors_;
 
   // Are we currently timing execution? This flag ensures that we do not
   // double-count execution time in reentrant situations.
@@ -296,9 +292,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   inline void leaveRealm(JS::Realm* oldRealm);
 
-  void setFrontendErrors(js::FrontendErrors* errors) { errors_ = errors; }
-  js::FrontendErrors* frontendErrors() const { return errors_; }
-
   // Threads may freely access any data in their realm, compartment and zone.
   JS::Compartment* compartment() const {
     return realm_ ? JS::GetCompartmentForRealm(realm_) : nullptr;
@@ -338,10 +331,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   // Interface for recording telemetry metrics.
   js::Metrics metrics() { return js::Metrics(runtime_); }
-
-  // Methods specific to any HelperThread for the context.
-  void addPendingOverRecursed();
-  void addPendingOutOfMemory();
 
   JSRuntime* runtime() { return runtime_; }
   const JSRuntime* runtime() const { return runtime_; }
