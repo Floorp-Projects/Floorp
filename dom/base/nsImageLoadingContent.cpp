@@ -1807,9 +1807,6 @@ bool nsImageLoadingContent::ScriptedImageObserver::CancelRequests() {
 
 Element* nsImageLoadingContent::FindImageMap() {
   nsIContent* thisContent = AsContent();
-  if (!thisContent->IsHTMLElement(nsGkAtoms::img)) {
-    return nullptr;
-  }
   Element* thisElement = thisContent->AsElement();
 
   nsAutoString useMap;
