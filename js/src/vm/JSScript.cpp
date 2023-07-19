@@ -1091,16 +1091,33 @@ void ScriptSource::performDelayedConvertToCompressedSource(
   g->pendingCompressed.destroy();
 }
 
+void ScriptSource::PinnedUnitsBase::addReader() {
+  auto guard = source_->readers_.lock();
+  guard->count++;
+}
+
+template <typename Unit>
+void ScriptSource::PinnedUnitsBase::removeReader() {
+  // Note: We use a Mutex with Exclusive access, such that no PinnedUnits
+  // instance is live while we are compressing the source.
+  auto guard = source_->readers_.lock();
+  MOZ_ASSERT(guard->count > 0);
+  if (--guard->count) {
+    source_->performDelayedConvertToCompressedSource<Unit>(guard);
+  }
+}
+
 template <typename Unit>
 ScriptSource::PinnedUnits<Unit>::~PinnedUnits() {
   if (units_) {
-    // Note: We use a Mutex with Exclusive access, such that no PinnedUnits
-    // instance is live while we are compressing the source.
-    auto guard = source_->readers_.lock();
-    MOZ_ASSERT(guard->count > 0);
-    if (--guard->count) {
-      source_->performDelayedConvertToCompressedSource<Unit>(guard);
-    }
+    removeReader<Unit>();
+  }
+}
+
+template <typename Unit>
+ScriptSource::PinnedUnitsIfUncompressed<Unit>::~PinnedUnitsIfUncompressed() {
+  if (units_) {
+    removeReader<Unit>();
   }
 }
 
@@ -1211,6 +1228,22 @@ const Unit* ScriptSource::units(JSContext* cx,
 }
 
 template <typename Unit>
+const Unit* ScriptSource::uncompressedUnits(size_t begin, size_t len) {
+  MOZ_ASSERT(begin <= length());
+  MOZ_ASSERT(begin + len <= length());
+
+  if (!isUncompressed<Unit>()) {
+    return nullptr;
+  }
+
+  const Unit* units = uncompressedData<Unit>()->units();
+  if (!units) {
+    return nullptr;
+  }
+  return units + begin;
+}
+
+template <typename Unit>
 ScriptSource::PinnedUnits<Unit>::PinnedUnits(
     JSContext* cx, ScriptSource* source,
     UncompressedSourceCache::AutoHoldEntry& holder, size_t begin, size_t len)
@@ -1219,13 +1252,27 @@ ScriptSource::PinnedUnits<Unit>::PinnedUnits(
 
   units_ = source->units<Unit>(cx, holder, begin, len);
   if (units_) {
-    auto guard = source->readers_.lock();
-    guard->count++;
+    addReader();
   }
 }
 
 template class ScriptSource::PinnedUnits<Utf8Unit>;
 template class ScriptSource::PinnedUnits<char16_t>;
+
+template <typename Unit>
+ScriptSource::PinnedUnitsIfUncompressed<Unit>::PinnedUnitsIfUncompressed(
+    ScriptSource* source, size_t begin, size_t len)
+    : PinnedUnitsBase(source) {
+  MOZ_ASSERT(source->hasSourceType<Unit>(), "must pin units of source's type");
+
+  units_ = source->uncompressedUnits<Unit>(begin, len);
+  if (units_) {
+    addReader();
+  }
+}
+
+template class ScriptSource::PinnedUnitsIfUncompressed<Utf8Unit>;
+template class ScriptSource::PinnedUnitsIfUncompressed<char16_t>;
 
 JSLinearString* ScriptSource::substring(JSContext* cx, size_t start,
                                         size_t stop) {

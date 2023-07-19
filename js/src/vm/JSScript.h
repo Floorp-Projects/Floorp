@@ -421,6 +421,11 @@ class ScriptSource {
     ScriptSource* source_;
 
     explicit PinnedUnitsBase(ScriptSource* source) : source_(source) {}
+
+    void addReader();
+
+    template <typename Unit>
+    void removeReader();
   };
 
  public:
@@ -439,6 +444,22 @@ class ScriptSource {
                 size_t len);
 
     ~PinnedUnits();
+
+    const Unit* get() const { return units_; }
+
+    const typename SourceTypeTraits<Unit>::CharT* asChars() const {
+      return SourceTypeTraits<Unit>::toString(get());
+    }
+  };
+
+  template <typename Unit>
+  class PinnedUnitsIfUncompressed : public PinnedUnitsBase {
+    const Unit* units_;
+
+   public:
+    PinnedUnitsIfUncompressed(ScriptSource* source, size_t begin, size_t len);
+
+    ~PinnedUnitsIfUncompressed();
 
     const Unit* get() const { return units_; }
 
@@ -632,6 +653,9 @@ class ScriptSource {
   template <typename Unit>
   const Unit* units(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& asp,
                     size_t begin, size_t len);
+
+  template <typename Unit>
+  const Unit* uncompressedUnits(size_t begin, size_t len);
 
  public:
   // When creating a JSString* from TwoByte source characters, we don't try to

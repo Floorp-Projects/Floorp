@@ -13,7 +13,7 @@
 
 #include <algorithm>
 
-#include "frontend/BytecodeCompiler.h"  // frontend::DelazifyCanonicalScriptedFunction
+#include "frontend/BytecodeCompiler.h"  // frontend::DelazifyCanonicalScriptedFunction, frontend::DelazifyFailureReason
 #include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationInput, BorrowingCompilationStencil, ScriptStencilRef}
 #include "frontend/FrontendContext.h"
 #include "frontend/ScopeBindingCache.h"  // frontend::ScopeBindingCache
@@ -1051,9 +1051,19 @@ bool DelazifyTask::runTask(JSContext* cx) {
       MOZ_ASSERT(!scriptRef.scriptData().hasSharedData());
 
       // Parse and generate bytecode for the inner function.
+      DelazifyFailureReason failureReason;
       innerStencil = DelazifyCanonicalScriptedFunction(
-          cx, &fc_, initialPrefableOptions, &scopeCache, borrow, scriptIndex);
+          cx, &fc_, initialPrefableOptions, &scopeCache, borrow, scriptIndex,
+          &failureReason);
       if (!innerStencil) {
+        if (failureReason == DelazifyFailureReason::Compressed) {
+          // The script source is already compressed, and delazification cannot
+          // be performed without decompressing.
+          // There is no reason to keep our eager delazification going.
+          strategy->clear();
+          return true;
+        }
+
         return false;
       }
 
