@@ -52,8 +52,8 @@ add_task(async function test_contentscript_devtools_sandbox_metadata() {
 
   await extension.awaitFinish("contentScript.executed");
 
-  const { ExtensionContent } = SpecialPowers.ChromeUtils.import(
-    "resource://gre/modules/ExtensionContent.jsm"
+  const { ExtensionContent } = SpecialPowers.ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionContent.sys.mjs"
   );
 
   let res = ExtensionContent.getContentScriptGlobals(win);
