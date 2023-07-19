@@ -170,6 +170,35 @@ nested `Block` is not available in the `Block`'s parents. Such a value would
 need to be stored in a local variable to be carried upwards in the statement
 tree.
 
+## Constant expressions
+
+A Naga *constant expression* is one of the following [`Expression`]
+variants, whose operands (if any) are also constant expressions:
+- [`Literal`]
+- [`Constant`], for [`Constant`s][const_type] whose [`override`] is [`None`]
+- [`ZeroValue`], for fixed-size types
+- [`Compose`]
+- [`Access`]
+- [`AccessIndex`]
+- [`Splat`]
+- [`Swizzle`]
+- [`Unary`]
+- [`Binary`]
+- [`Select`]
+- [`Relational`]
+- [`Math`]
+- [`As`]
+
+A constant expression can be evaluated at module translation time.
+
+## Override expressions
+
+A Naga *override expression* is the same as a [constant expression],
+except that it is also allowed to refer to [`Constant`s][const_type]
+whose [`override`] is something other than [`None`].
+
+An override expression can be evaluated at pipeline creation time.
+
 [`AtomicResult`]: Expression::AtomicResult
 [`RayQueryProceedResult`]: Expression::RayQueryProceedResult
 [`CallResult`]: Expression::CallResult
@@ -194,6 +223,26 @@ tree.
 
 [`Validator::validate`]: valid::Validator::validate
 [`ModuleInfo`]: valid::ModuleInfo
+
+[`Literal`]: Expression::Literal
+[`ZeroValue`]: Expression::ZeroValue
+[`Compose`]: Expression::Compose
+[`Access`]: Expression::Access
+[`AccessIndex`]: Expression::AccessIndex
+[`Splat`]: Expression::Splat
+[`Swizzle`]: Expression::Swizzle
+[`Unary`]: Expression::Unary
+[`Binary`]: Expression::Binary
+[`Select`]: Expression::Select
+[`Relational`]: Expression::Relational
+[`Math`]: Expression::Math
+[`As`]: Expression::As
+
+[const_type]: Constant
+[`override`]: Constant::override
+[`None`]: Override::None
+
+[constant expression]: index.html#constant-expressions
 */
 
 #![allow(
@@ -254,6 +303,11 @@ pub type FastHashMap<K, T> = rustc_hash::FxHashMap<K, T>;
 /// Hash set that is faster but not resilient to DoS attacks.
 pub type FastHashSet<K> = rustc_hash::FxHashSet<K>;
 
+/// Insertion-order-preserving hash set (`IndexSet<K>`), but with the same
+/// hasher as `FastHashSet<K>` (faster but not resilient to DoS attacks).
+pub type FastIndexSet<K> =
+    indexmap::IndexSet<K, std::hash::BuildHasherDefault<rustc_hash::FxHasher>>;
+
 /// Map of expressions that have associated variable names
 pub(crate) type NamedExpressions = indexmap::IndexMap<
     Handle<Expression>,
@@ -284,7 +338,7 @@ pub(crate) type NamedExpressions = indexmap::IndexMap<
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct EarlyDepthTest {
-    conservative: Option<ConservativeDepth>,
+    pub conservative: Option<ConservativeDepth>,
 }
 /// Enables adjusting depth without disabling early Z.
 ///
@@ -791,18 +845,6 @@ pub enum TypeInner {
     BindingArray { base: Handle<Type>, size: ArraySize },
 }
 
-/// Constant value.
-#[derive(Debug, PartialEq)]
-#[cfg_attr(feature = "clone", derive(Clone))]
-#[cfg_attr(feature = "serialize", derive(Serialize))]
-#[cfg_attr(feature = "deserialize", derive(Deserialize))]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-pub struct Constant {
-    pub name: Option<String>,
-    pub specialization: Option<u32>,
-    pub inner: ConstantInner,
-}
-
 #[derive(Debug, Clone, Copy, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
@@ -815,32 +857,42 @@ pub enum Literal {
     Bool(bool),
 }
 
-/// A literal scalar value, used in constants.
-#[derive(Debug, Clone, Copy, PartialOrd)]
+#[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "clone", derive(Clone))]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-pub enum ScalarValue {
-    Sint(i64),
-    Uint(u64),
-    Float(f64),
-    Bool(bool),
+pub enum Override {
+    None,
+    ByName,
+    ByNameOrId(u32),
 }
 
-/// Additional information, dependent on the kind of constant.
-#[derive(Clone, Debug, PartialEq)]
+/// Constant value.
+#[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "clone", derive(Clone))]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-pub enum ConstantInner {
-    Scalar {
-        width: Bytes,
-        value: ScalarValue,
-    },
-    Composite {
-        ty: Handle<Type>,
-        components: Vec<Handle<Constant>>,
-    },
+pub struct Constant {
+    pub name: Option<String>,
+    pub r#override: Override,
+    pub ty: Handle<Type>,
+
+    /// The value of the constant.
+    ///
+    /// This [`Handle`] refers to [`Module::const_expressions`], not
+    /// any [`Function::expressions`] arena.
+    ///
+    /// If [`override`] is [`None`], then this must be a Naga
+    /// [constant expression]. Otherwise, this may be a Naga
+    /// [override expression] or [constant expression].
+    ///
+    /// [`override`]: Constant::override
+    /// [`None`]: Override::None
+    /// [constant expression]: index.html#constant-expressions
+    /// [override expression]: index.html#override-expressions
+    pub init: Handle<Expression>,
 }
 
 /// Describes how an input/output variable is to be bound.
@@ -902,7 +954,9 @@ pub struct GlobalVariable {
     /// The type of this variable.
     pub ty: Handle<Type>,
     /// Initial value for this variable.
-    pub init: Option<Handle<Constant>>,
+    ///
+    /// Expression handle lives in const_expressions
+    pub init: Option<Handle<Expression>>,
 }
 
 /// Variable defined at function level.
@@ -916,7 +970,9 @@ pub struct LocalVariable {
     /// The type of this variable.
     pub ty: Handle<Type>,
     /// Initial value for this variable.
-    pub init: Option<Handle<Constant>>,
+    ///
+    /// Expression handle lives in const_expressions
+    pub init: Option<Handle<Expression>>,
 }
 
 /// Operation that can be applied on a single value.
@@ -1219,6 +1275,11 @@ pub enum Expression {
     Constant(Handle<Constant>),
     /// Zero value of a type.
     ZeroValue(Handle<Type>),
+    /// Composite expression.
+    Compose {
+        ty: Handle<Type>,
+        components: Vec<Handle<Expression>>,
+    },
 
     /// Array access with a computed index.
     ///
@@ -1289,11 +1350,6 @@ pub enum Expression {
         vector: Handle<Expression>,
         pattern: [SwizzleComponent; 4],
     },
-    /// Composite expression.
-    Compose {
-        ty: Handle<Type>,
-        components: Vec<Handle<Expression>>,
-    },
 
     /// Reference a function parameter, by its index.
     ///
@@ -1342,7 +1398,8 @@ pub enum Expression {
         gather: Option<SwizzleComponent>,
         coordinate: Handle<Expression>,
         array_index: Option<Handle<Expression>>,
-        offset: Option<Handle<Constant>>,
+        /// Expression handle lives in const_expressions
+        offset: Option<Handle<Expression>>,
         level: SampleLevel,
         depth_ref: Option<Handle<Expression>>,
     },
@@ -1443,7 +1500,6 @@ pub enum Expression {
     Derivative {
         axis: DerivativeAxis,
         ctrl: DerivativeControl,
-        //modifier,
         expr: Handle<Expression>,
     },
     /// Call a relational function.
@@ -1505,7 +1561,6 @@ pub enum Expression {
 pub use block::Block;
 
 /// The value of the switch case.
-// Clone is used only for error reporting and is not intended for end users
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
@@ -1614,7 +1669,7 @@ pub enum Statement {
     /// [`body`]: SwitchCase::body
     /// [`Default`]: SwitchValue::Default
     Switch {
-        selector: Handle<Expression>, //int
+        selector: Handle<Expression>,
         cases: Vec<SwitchCase>,
     },
 
@@ -1934,6 +1989,14 @@ pub struct Module {
     pub constants: Arena<Constant>,
     /// Arena for the global variables defined in this module.
     pub global_variables: Arena<GlobalVariable>,
+    /// [Constant expressions] and [override expressions] used by this module.
+    ///
+    /// Each `Expression` must occur in the arena before any
+    /// `Expression` that uses its value.
+    ///
+    /// [Constant expressions]: index.html#constant-expressions
+    /// [override expressions]: index.html#override-expressions
+    pub const_expressions: Arena<Expression>,
     /// Arena for the functions defined in this module.
     ///
     /// Each function must appear in this arena strictly before all its callers.

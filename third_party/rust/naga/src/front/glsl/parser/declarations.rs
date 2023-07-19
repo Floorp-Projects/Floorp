@@ -244,7 +244,7 @@ impl<'source> ParsingContext<'source> {
                 .transpose()?;
 
             let is_const = ctx.qualifiers.storage.0 == StorageQualifier::Const;
-            let maybe_constant = if ctx.external {
+            let maybe_const_expr = if ctx.external {
                 if let Some((root, meta)) = init {
                     match frontend.solve_constant(ctx.ctx, root, meta) {
                         Ok(res) => Some(res),
@@ -260,9 +260,9 @@ impl<'source> ParsingContext<'source> {
                 None
             };
 
-            let pointer = ctx.add_var(frontend, ty, name, maybe_constant, meta)?;
+            let pointer = ctx.add_var(frontend, ty, name, maybe_const_expr, meta)?;
 
-            if let Some((value, _)) = init.filter(|_| maybe_constant.is_none()) {
+            if let Some((value, _)) = init.filter(|_| maybe_const_expr.is_none()) {
                 ctx.flush_expressions();
                 ctx.body.push(Statement::Store { pointer, value }, meta);
             }
@@ -628,35 +628,42 @@ impl<'source> ParsingContext<'source> {
         loop {
             // TODO: type_qualifier
 
-            let (mut ty, mut meta) = self.parse_type_non_void(frontend)?;
-            let (name, end_meta) = self.expect_ident(frontend)?;
+            let (base_ty, mut meta) = self.parse_type_non_void(frontend)?;
 
-            meta.subsume(end_meta);
+            loop {
+                let (name, name_meta) = self.expect_ident(frontend)?;
+                let mut ty = base_ty;
+                self.parse_array_specifier(frontend, &mut meta, &mut ty)?;
 
-            self.parse_array_specifier(frontend, &mut meta, &mut ty)?;
+                meta.subsume(name_meta);
+
+                let info = offset::calculate_offset(
+                    ty,
+                    meta,
+                    layout,
+                    &mut frontend.module.types,
+                    &mut frontend.errors,
+                );
+
+                let member_alignment = info.align;
+                span = member_alignment.round_up(span);
+                align = member_alignment.max(align);
+
+                members.push(StructMember {
+                    name: Some(name),
+                    ty: info.ty,
+                    binding: None,
+                    offset: span,
+                });
+
+                span += info.span;
+
+                if self.bump_if(frontend, TokenValue::Comma).is_none() {
+                    break;
+                }
+            }
 
             self.expect(frontend, TokenValue::Semicolon)?;
-
-            let info = offset::calculate_offset(
-                ty,
-                meta,
-                layout,
-                &mut frontend.module.types,
-                &mut frontend.errors,
-            );
-
-            let member_alignment = info.align;
-            span = member_alignment.round_up(span);
-            align = member_alignment.max(align);
-
-            members.push(StructMember {
-                name: Some(name),
-                ty: info.ty,
-                binding: None,
-                offset: span,
-            });
-
-            span += info.span;
 
             if let TokenValue::RightBrace = self.expect_peek(frontend)?.value {
                 break;
