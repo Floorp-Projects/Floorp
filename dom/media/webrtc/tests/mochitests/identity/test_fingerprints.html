@@ -10,8 +10,8 @@ createHTML({ title: "Test multiple identity fingerprints",  bug: "1005152" });
 
 // here we call the identity provider directly
 async function getIdentityAssertion(fingerprint) {
-  const { IdpSandbox } = SpecialPowers.ChromeUtils.import(
-    'resource://gre/modules/media/IdpSandbox.jsm'
+  const { IdpSandbox } = SpecialPowers.ChromeUtils.importESModule(
+    'resource://gre/modules/media/IdpSandbox.sys.mjs'
   );
   const sandbox = new IdpSandbox('example.com', 'idp.js', window);
   const idp = SpecialPowers.wrap(await sandbox.start());

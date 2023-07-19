@@ -7,8 +7,8 @@
 <body>
   <script class="testbody" type="application/javascript">
 "use strict";
-var { IdpSandbox } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/media/IdpSandbox.jsm"
+var { IdpSandbox } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/media/IdpSandbox.sys.mjs"
 );
 var dummyPayload = JSON.stringify({
   this: 'is',
