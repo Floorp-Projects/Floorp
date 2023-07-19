@@ -4,4 +4,3 @@
 
 browser.jar:
     content/browser/translations/translationsPanel.js          (content/translationsPanel.js)
-    content/browser/translations/TranslationsTelemetry.sys.mjs (TranslationsTelemetry.sys.mjs)

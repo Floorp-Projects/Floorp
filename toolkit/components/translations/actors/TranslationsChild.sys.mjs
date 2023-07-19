@@ -84,6 +84,11 @@ export class TranslationsChild extends JSWindowActorChild {
     }
   }
 
+  sendTelemetryError(error) {
+    const errorMessage = String(error);
+    this.sendAsyncMessage("Translations:SendTelemetryError", { errorMessage });
+  }
+
   getSupportedLanguages() {
     return this.sendQuery("Translations:GetSupportedLanguages");
   }
