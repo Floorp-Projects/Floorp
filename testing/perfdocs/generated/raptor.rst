@@ -1526,12 +1526,12 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-speedometer-mobile-fenix-nofis**
+      * - **browsertime-benchmark-speedometer-mobile-fenix-nofis**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **browsertime-speedometer-mobile-geckoview-nofis**
+      * - **browsertime-benchmark-speedometer-mobile-geckoview-nofis**
         - ❌
         - ❌
         - ❌
@@ -1547,17 +1547,17 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-speedometer-mobile-chrome-m-nofis**
+      * - **browsertime-benchmark-speedometer-mobile-chrome-m-nofis**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **browsertime-speedometer-mobile-fenix-nofis**
+      * - **browsertime-benchmark-speedometer-mobile-fenix-nofis**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **browsertime-speedometer-mobile-geckoview-nofis**
+      * - **browsertime-benchmark-speedometer-mobile-geckoview-nofis**
         - ✅
         - ✅
         - ❌
@@ -1826,12 +1826,12 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-speedometer-mobile-fenix-nofis**
+      * - **browsertime-benchmark-speedometer-mobile-fenix-nofis**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **browsertime-speedometer-mobile-geckoview-nofis**
+      * - **browsertime-benchmark-speedometer-mobile-geckoview-nofis**
         - ❌
         - ❌
         - ❌
@@ -1847,17 +1847,17 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-speedometer-mobile-chrome-m-nofis**
+      * - **browsertime-benchmark-speedometer-mobile-chrome-m-nofis**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **browsertime-speedometer-mobile-fenix-nofis**
+      * - **browsertime-benchmark-speedometer-mobile-fenix-nofis**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **browsertime-speedometer-mobile-geckoview-nofis**
+      * - **browsertime-benchmark-speedometer-mobile-geckoview-nofis**
         - ✅
         - ✅
         - ❌
@@ -2140,12 +2140,12 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-speedometer3-mobile-fenix-nofis**
+      * - **browsertime-benchmark-speedometer3-mobile-fenix-nofis**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **browsertime-speedometer3-mobile-geckoview-nofis**
+      * - **browsertime-benchmark-speedometer3-mobile-geckoview-nofis**
         - ❌
         - ❌
         - ❌
@@ -2161,17 +2161,17 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-speedometer3-mobile-chrome-m-nofis**
+      * - **browsertime-benchmark-speedometer3-mobile-chrome-m-nofis**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **browsertime-speedometer3-mobile-fenix-nofis**
+      * - **browsertime-benchmark-speedometer3-mobile-fenix-nofis**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **browsertime-speedometer3-mobile-geckoview-nofis**
+      * - **browsertime-benchmark-speedometer3-mobile-geckoview-nofis**
         - ✅
         - ✅
         - ❌
@@ -2449,12 +2449,12 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-speedometer3-mobile-fenix-nofis**
+      * - **browsertime-benchmark-speedometer3-mobile-fenix-nofis**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **browsertime-speedometer3-mobile-geckoview-nofis**
+      * - **browsertime-benchmark-speedometer3-mobile-geckoview-nofis**
         - ❌
         - ❌
         - ❌
@@ -2470,17 +2470,17 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-speedometer3-mobile-chrome-m-nofis**
+      * - **browsertime-benchmark-speedometer3-mobile-chrome-m-nofis**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **browsertime-speedometer3-mobile-fenix-nofis**
+      * - **browsertime-benchmark-speedometer3-mobile-fenix-nofis**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **browsertime-speedometer3-mobile-geckoview-nofis**
+      * - **browsertime-benchmark-speedometer3-mobile-geckoview-nofis**
         - ✅
         - ✅
         - ❌
@@ -3440,12 +3440,12 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-unity-webgl-mobile-fenix-nofis**
+      * - **browsertime-benchmark-unity-webgl-mobile-fenix-nofis**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **browsertime-unity-webgl-mobile-geckoview-nofis**
+      * - **browsertime-benchmark-unity-webgl-mobile-geckoview-nofis**
         - ❌
         - ❌
         - ❌
@@ -3461,17 +3461,17 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-unity-webgl-mobile-chrome-m-nofis**
+      * - **browsertime-benchmark-unity-webgl-mobile-chrome-m-nofis**
         - ✅
         - ❌
         - ❌
         - ❌
-      * - **browsertime-unity-webgl-mobile-fenix-nofis**
+      * - **browsertime-benchmark-unity-webgl-mobile-fenix-nofis**
         - ✅
         - ❌
         - ❌
         - ❌
-      * - **browsertime-unity-webgl-mobile-geckoview-nofis**
+      * - **browsertime-benchmark-unity-webgl-mobile-geckoview-nofis**
         - ✅
         - ✅
         - ❌
@@ -3727,12 +3727,12 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-unity-webgl-mobile-fenix-nofis**
+      * - **browsertime-benchmark-unity-webgl-mobile-fenix-nofis**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **browsertime-unity-webgl-mobile-geckoview-nofis**
+      * - **browsertime-benchmark-unity-webgl-mobile-geckoview-nofis**
         - ❌
         - ❌
         - ❌
@@ -3748,17 +3748,17 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-unity-webgl-mobile-chrome-m-nofis**
+      * - **browsertime-benchmark-unity-webgl-mobile-chrome-m-nofis**
         - ✅
         - ❌
         - ❌
         - ❌
-      * - **browsertime-unity-webgl-mobile-fenix-nofis**
+      * - **browsertime-benchmark-unity-webgl-mobile-fenix-nofis**
         - ✅
         - ❌
         - ❌
         - ❌
-      * - **browsertime-unity-webgl-mobile-geckoview-nofis**
+      * - **browsertime-benchmark-unity-webgl-mobile-geckoview-nofis**
         - ✅
         - ✅
         - ❌

@@ -292,7 +292,7 @@ browsertime-tp6m-profiling:
             android-hw-(a51).*aarch64-shippable-qr/opt: [mozilla-central]
             default: []
 
-browsertime-speedometer-mobile:
+browsertime-benchmark-speedometer-mobile:
     description: Browsertime Speedometer on Android
     run-without-variant: false
     raptor:
@@ -314,7 +314,7 @@ browsertime-speedometer-mobile:
         extra-options:
             - --test=speedometer
 
-browsertime-speedometer3-mobile:
+browsertime-benchmark-speedometer3-mobile:
     description: Browsertime Speedometer 3 on Android
     run-without-variant: false
     raptor:
@@ -337,7 +337,7 @@ browsertime-speedometer3-mobile:
         extra-options:
             - --test=speedometer3
 
-browsertime-unity-webgl-mobile:
+browsertime-benchmark-unity-webgl-mobile:
     description: Browsertime Unity WebGL on Android
     run-without-variant: false
     raptor:
