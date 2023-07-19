@@ -12,8 +12,8 @@
 const { LoginFormFactory } = SpecialPowers.ChromeUtils.importESModule(
   "resource://gre/modules/LoginFormFactory.sys.mjs"
 );
-const { LoginManagerChild } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/LoginManagerChild.jsm"
+const { LoginManagerChild } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/LoginManagerChild.sys.mjs"
 );
 
 function loadFrame() {

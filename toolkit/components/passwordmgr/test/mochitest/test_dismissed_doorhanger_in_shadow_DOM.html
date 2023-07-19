@@ -12,10 +12,6 @@
 <iframe></iframe>
 
 <script type="application/javascript">
-const { LoginManagerChild } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/LoginManagerChild.jsm"
-);
-
 add_setup(async () => {
   const readyPromise = registerRunTests();
   info("Waiting for setup and page load");
