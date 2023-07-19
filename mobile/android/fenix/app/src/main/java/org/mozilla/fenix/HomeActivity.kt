@@ -886,16 +886,18 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     // Stop active media when activity is destroyed.
     private fun stopMediaSession() {
-        components.core.store.state.tabs.forEach {
-            it.mediaSessionState?.controller?.stop()
-        }
+        if (isFinishing) {
+            components.core.store.state.tabs.forEach {
+                it.mediaSessionState?.controller?.stop()
+            }
 
-        components.core.store.state.findActiveMediaTab()?.let {
-            components.core.store.dispatch(
-                MediaSessionAction.DeactivatedMediaSessionAction(
-                    it.id,
-                ),
-            )
+            components.core.store.state.findActiveMediaTab()?.let {
+                components.core.store.dispatch(
+                    MediaSessionAction.DeactivatedMediaSessionAction(
+                        it.id,
+                    ),
+                )
+            }
         }
     }
 
