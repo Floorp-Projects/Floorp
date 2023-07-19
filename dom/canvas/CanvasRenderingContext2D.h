@@ -642,6 +642,12 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   // mContextAttributesHasAlpha.
   void UpdateIsOpaque();
 
+  // Shared implementation for Stroke() and Stroke(CanvasPath) methods.
+  void StrokeImpl(const mozilla::gfx::Path& aPath);
+
+  // Shared implementation for Fill() methods.
+  void FillImpl(const mozilla::gfx::Path& aPath);
+
   /**
    * Creates the error target, if it doesn't exist
    */

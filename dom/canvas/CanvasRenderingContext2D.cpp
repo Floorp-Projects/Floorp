@@ -3086,20 +3086,16 @@ void CanvasRenderingContext2D::BeginPath() {
   mPathPruned = false;
 }
 
-void CanvasRenderingContext2D::Fill(const CanvasWindingRule& aWinding) {
-  EnsureUserSpacePath(aWinding);
-
-  if (!mPath || mPath->IsEmpty()) {
+void CanvasRenderingContext2D::FillImpl(const gfx::Path& aPath) {
+  MOZ_ASSERT(IsTargetValid());
+  if (aPath.IsEmpty()) {
     return;
   }
 
   const bool needBounds = NeedToCalculateBounds();
-  if (!IsTargetValid()) {
-    return;
-  }
   gfx::Rect bounds;
   if (needBounds) {
-    bounds = mPath->GetBounds(mTarget->GetTransform());
+    bounds = aPath.GetBounds(mTarget->GetTransform());
   }
 
   AdjustedTarget target(this, bounds.IsEmpty() ? nullptr : &bounds, true);
@@ -3111,10 +3107,21 @@ void CanvasRenderingContext2D::Fill(const CanvasWindingRule& aWinding) {
   if (!IsTargetValid() || !target) {
     return;
   }
-  target.Fill(mPath,
+  target.Fill(&aPath,
               CanvasGeneralPattern().ForStyle(this, Style::FILL, mTarget),
               DrawOptions(CurrentState().globalAlpha, op));
   Redraw();
+}
+
+void CanvasRenderingContext2D::Fill(const CanvasWindingRule& aWinding) {
+  EnsureUserSpacePath(aWinding);
+  if (!IsTargetValid()) {
+    return;
+  }
+
+  if (mPath) {
+    FillImpl(*mPath);
+  }
 }
 
 void CanvasRenderingContext2D::Fill(const CanvasPath& aPath,
@@ -3125,38 +3132,14 @@ void CanvasRenderingContext2D::Fill(const CanvasPath& aPath,
   }
 
   RefPtr<gfx::Path> gfxpath = aPath.GetPath(aWinding, mTarget);
-  if (!gfxpath || gfxpath->IsEmpty()) {
-    return;
+  if (gfxpath) {
+    FillImpl(*gfxpath);
   }
-
-  const bool needBounds = NeedToCalculateBounds();
-  if (!IsTargetValid()) {
-    return;
-  }
-  gfx::Rect bounds;
-  if (needBounds) {
-    bounds = gfxpath->GetBounds(mTarget->GetTransform());
-  }
-
-  AdjustedTarget target(this, bounds.IsEmpty() ? nullptr : &bounds, true);
-  if (!target) {
-    return;
-  }
-
-  auto op = target.UsedOperation();
-  if (!IsTargetValid() || !target) {
-    return;
-  }
-  target.Fill(gfxpath,
-              CanvasGeneralPattern().ForStyle(this, Style::FILL, mTarget),
-              DrawOptions(CurrentState().globalAlpha, op));
-  Redraw();
 }
 
-void CanvasRenderingContext2D::Stroke() {
-  EnsureUserSpacePath();
-
-  if (!mPath || mPath->IsEmpty()) {
+void CanvasRenderingContext2D::StrokeImpl(const gfx::Path& aPath) {
+  MOZ_ASSERT(IsTargetValid());
+  if (aPath.IsEmpty()) {
     return;
   }
 
@@ -3173,7 +3156,7 @@ void CanvasRenderingContext2D::Stroke() {
   }
   gfx::Rect bounds;
   if (needBounds) {
-    bounds = mPath->GetStrokedBounds(strokeOptions, mTarget->GetTransform());
+    bounds = aPath.GetStrokedBounds(strokeOptions, mTarget->GetTransform());
   }
 
   AdjustedTarget target(this, bounds.IsEmpty() ? nullptr : &bounds, true);
@@ -3185,10 +3168,21 @@ void CanvasRenderingContext2D::Stroke() {
   if (!IsTargetValid() || !target) {
     return;
   }
-  target.Stroke(mPath,
+  target.Stroke(&aPath,
                 CanvasGeneralPattern().ForStyle(this, Style::STROKE, mTarget),
                 strokeOptions, DrawOptions(CurrentState().globalAlpha, op));
   Redraw();
+}
+
+void CanvasRenderingContext2D::Stroke() {
+  EnsureUserSpacePath();
+  if (!IsTargetValid()) {
+    return;
+  }
+
+  if (mPath) {
+    StrokeImpl(*mPath);
+  }
 }
 
 void CanvasRenderingContext2D::Stroke(const CanvasPath& aPath) {
@@ -3196,43 +3190,11 @@ void CanvasRenderingContext2D::Stroke(const CanvasPath& aPath) {
   if (!IsTargetValid()) {
     return;
   }
-
   RefPtr<gfx::Path> gfxpath =
       aPath.GetPath(CanvasWindingRule::Nonzero, mTarget);
-
-  if (!gfxpath || gfxpath->IsEmpty()) {
-    return;
+  if (gfxpath) {
+    StrokeImpl(*gfxpath);
   }
-
-  const ContextState* state = &CurrentState();
-  StrokeOptions strokeOptions(state->lineWidth, CanvasToGfx(state->lineJoin),
-                              CanvasToGfx(state->lineCap), state->miterLimit,
-                              state->dash.Length(), state->dash.Elements(),
-                              state->dashOffset);
-  state = nullptr;
-
-  const bool needBounds = NeedToCalculateBounds();
-  if (!IsTargetValid()) {
-    return;
-  }
-  gfx::Rect bounds;
-  if (needBounds) {
-    bounds = gfxpath->GetStrokedBounds(strokeOptions, mTarget->GetTransform());
-  }
-
-  AdjustedTarget target(this, bounds.IsEmpty() ? nullptr : &bounds, true);
-  if (!target) {
-    return;
-  }
-
-  auto op = target.UsedOperation();
-  if (!IsTargetValid() || !target) {
-    return;
-  }
-  target.Stroke(gfxpath,
-                CanvasGeneralPattern().ForStyle(this, Style::STROKE, mTarget),
-                strokeOptions, DrawOptions(CurrentState().globalAlpha, op));
-  Redraw();
 }
 
 void CanvasRenderingContext2D::DrawFocusIfNeeded(
@@ -3663,8 +3625,9 @@ void CanvasRenderingContext2D::EnsureWritablePath() {
 void CanvasRenderingContext2D::EnsureUserSpacePath(
     const CanvasWindingRule& aWinding) {
   FillRule fillRule = CurrentState().fillRule;
-  if (aWinding == CanvasWindingRule::Evenodd)
+  if (aWinding == CanvasWindingRule::Evenodd) {
     fillRule = FillRule::FILL_EVEN_ODD;
+  }
 
   EnsureTarget();
   if (!IsTargetValid()) {
