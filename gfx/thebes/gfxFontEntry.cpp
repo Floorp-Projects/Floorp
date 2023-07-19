@@ -28,9 +28,6 @@
 #include "nsStyleConsts.h"
 #include "mozilla/AppUnits.h"
 #include "mozilla/FloatingPoint.h"
-#ifdef MOZ_WASM_SANDBOXING_GRAPHITE
-#  include "mozilla/ipc/LibrarySandboxPreload.h"
-#endif
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
