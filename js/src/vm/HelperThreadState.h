@@ -33,7 +33,6 @@
 #include "gc/GCRuntime.h"                 // gc::GCRuntime
 #include "js/AllocPolicy.h"               // SystemAllocPolicy
 #include "js/CompileOptions.h"  // JS::OwningCompileOptions, JS::ReadOnlyCompileOptions
-#include "js/ContextOptions.h"              // JS::ContextOptions
 #include "js/experimental/CompileScript.h"  // JS::CompilationStorage
 #include "js/experimental/JSStencil.h"      // JS::InstantiationStorage
 #include "js/HelperThreadAPI.h"  // JS::HelperThreadTaskCallback, JS::DispatchReason
@@ -501,9 +500,6 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   ParseTaskKind kind;
   JS::OwningCompileOptions options;
 
-  // Context options from the main thread.
-  const JS::ContextOptions contextOptions;
-
   // HelperThreads are shared between all runtimes in the process so explicitly
   // track which one we are associated with.
   JSRuntime* runtime = nullptr;
@@ -643,9 +639,6 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
   // track which one we are associated with.
   JSRuntime* runtime = nullptr;
 
-  // Context options originally from the main thread.
-  const JS::ContextOptions contextOptions;
-
   const JS::PrefableCompileOptions initialPrefableOptions;
 
   // Queue of functions to be processed while delazifying.
@@ -664,11 +657,10 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
   // optimization and the VM should remain working even without this
   // optimization in place.
   static UniquePtr<DelazifyTask> Create(
-      JSRuntime* runtime, const JS::ContextOptions& contextOptions,
-      const JS::ReadOnlyCompileOptions& options,
+      JSRuntime* runtime, const JS::ReadOnlyCompileOptions& options,
       const frontend::CompilationStencil& stencil);
 
-  DelazifyTask(JSRuntime* runtime, const JS::ContextOptions& options,
+  DelazifyTask(JSRuntime* runtime,
                const JS::PrefableCompileOptions& initialPrefableOptions);
   ~DelazifyTask();
 
