@@ -199,6 +199,18 @@ invoked on property calls instead of an object with the given property
 This interface is usable by JavaScript classes. Must inherit from a
 ``scriptable`` interface.
 
+``rust_sync``
+`````````````
+
+This interface is safe to use from multiple threads concurrently. All child
+interfaces must also be marked with this property. Interfaces marked this way
+must be either non-scriptable or ``builtinclass``, and must use threadsafe
+reference counting.
+
+Interfaces marked as ``rust_sync`` will implement the ``Sync`` trait in Rust.
+For more details on what that means, read the trait's documentation:
+https://doc.rust-lang.org/nightly/std/marker/trait.Sync.html.
+
 Methods and Attributes
 ~~~~~~~~~~~~~~~~~~~~~~
 
