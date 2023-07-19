@@ -446,48 +446,48 @@ inline bool IPCAccessibilityActive() { return XRE_IsContentProcess(); }
  * nsAccessibilityService::GetStringEventType() method.
  */
 static const char kEventTypeNames[][40] = {
-    "unknown",                           //
-    "show",                              // EVENT_SHOW
-    "hide",                              // EVENT_HIDE
-    "reorder",                           // EVENT_REORDER
-    "focus",                             // EVENT_FOCUS
-    "state change",                      // EVENT_STATE_CHANGE
-    "name changed",                      // EVENT_NAME_CHANGE
-    "description change",                // EVENT_DESCRIPTION_CHANGE
-    "value change",                      // EVENT_VALUE_CHANGE
-    "selection",                         // EVENT_SELECTION
-    "selection add",                     // EVENT_SELECTION_ADD
-    "selection remove",                  // EVENT_SELECTION_REMOVE
-    "selection within",                  // EVENT_SELECTION_WITHIN
-    "alert",                             // EVENT_ALERT
-    "menu start",                        // EVENT_MENU_START
-    "menu end",                          // EVENT_MENU_END
-    "menupopup start",                   // EVENT_MENUPOPUP_START
-    "menupopup end",                     // EVENT_MENUPOPUP_END
-    "dragdrop start",                    // EVENT_DRAGDROP_START
-    "scrolling start",                   // EVENT_SCROLLING_START
-    "scrolling end",                     // EVENT_SCROLLING_END
-    "document load complete",            // EVENT_DOCUMENT_LOAD_COMPLETE
-    "document reload",                   // EVENT_DOCUMENT_RELOAD
-    "document load stopped",             // EVENT_DOCUMENT_LOAD_STOPPED
-    "text attribute changed",            // EVENT_TEXT_ATTRIBUTE_CHANGED
-    "text caret moved",                  // EVENT_TEXT_CARET_MOVED
-    "text inserted",                     // EVENT_TEXT_INSERTED
-    "text removed",                      // EVENT_TEXT_REMOVED
-    "text selection changed",            // EVENT_TEXT_SELECTION_CHANGED
-    "window activate",                   // EVENT_WINDOW_ACTIVATE
-    "window deactivate",                 // EVENT_WINDOW_DEACTIVATE
-    "window maximize",                   // EVENT_WINDOW_MAXIMIZE
-    "window minimize",                   // EVENT_WINDOW_MINIMIZE
-    "window restore",                    // EVENT_WINDOW_RESTORE
-    "object attribute changed",         // EVENT_OBJECT_ATTRIBUTE_CHANGED
-    "virtual cursor changed",           // EVENT_VIRTUALCURSOR_CHANGED
-    "text value change",                // EVENT_TEXT_VALUE_CHANGE
-    "scrolling",                        // EVENT_SCROLLING
-    "announcement",                     // EVENT_ANNOUNCEMENT
-    "live region added",                // EVENT_LIVE_REGION_ADDED
-    "live region removed",              // EVENT_LIVE_REGION_REMOVED
-    "inner reorder",                    // EVENT_INNER_REORDER
+    "unknown",                   //
+    "show",                      // EVENT_SHOW
+    "hide",                      // EVENT_HIDE
+    "reorder",                   // EVENT_REORDER
+    "focus",                     // EVENT_FOCUS
+    "state change",              // EVENT_STATE_CHANGE
+    "name changed",              // EVENT_NAME_CHANGE
+    "description change",        // EVENT_DESCRIPTION_CHANGE
+    "value change",              // EVENT_VALUE_CHANGE
+    "selection",                 // EVENT_SELECTION
+    "selection add",             // EVENT_SELECTION_ADD
+    "selection remove",          // EVENT_SELECTION_REMOVE
+    "selection within",          // EVENT_SELECTION_WITHIN
+    "alert",                     // EVENT_ALERT
+    "menu start",                // EVENT_MENU_START
+    "menu end",                  // EVENT_MENU_END
+    "menupopup start",           // EVENT_MENUPOPUP_START
+    "menupopup end",             // EVENT_MENUPOPUP_END
+    "dragdrop start",            // EVENT_DRAGDROP_START
+    "scrolling start",           // EVENT_SCROLLING_START
+    "scrolling end",             // EVENT_SCROLLING_END
+    "document load complete",    // EVENT_DOCUMENT_LOAD_COMPLETE
+    "document reload",           // EVENT_DOCUMENT_RELOAD
+    "document load stopped",     // EVENT_DOCUMENT_LOAD_STOPPED
+    "text attribute changed",    // EVENT_TEXT_ATTRIBUTE_CHANGED
+    "text caret moved",          // EVENT_TEXT_CARET_MOVED
+    "text inserted",             // EVENT_TEXT_INSERTED
+    "text removed",              // EVENT_TEXT_REMOVED
+    "text selection changed",    // EVENT_TEXT_SELECTION_CHANGED
+    "window activate",           // EVENT_WINDOW_ACTIVATE
+    "window deactivate",         // EVENT_WINDOW_DEACTIVATE
+    "window maximize",           // EVENT_WINDOW_MAXIMIZE
+    "window minimize",           // EVENT_WINDOW_MINIMIZE
+    "window restore",            // EVENT_WINDOW_RESTORE
+    "object attribute changed",  // EVENT_OBJECT_ATTRIBUTE_CHANGED
+    "virtual cursor changed",    // EVENT_VIRTUALCURSOR_CHANGED
+    "text value change",         // EVENT_TEXT_VALUE_CHANGE
+    "scrolling",                 // EVENT_SCROLLING
+    "announcement",              // EVENT_ANNOUNCEMENT
+    "live region added",         // EVENT_LIVE_REGION_ADDED
+    "live region removed",       // EVENT_LIVE_REGION_REMOVED
+    "inner reorder",             // EVENT_INNER_REORDER
 };
 
 #endif
