@@ -60,35 +60,6 @@ void AccessibleWrap::GetNativeInterface(void** aOutAccessible) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// LocalAccessible
-
-nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
-  nsresult rv = LocalAccessible::HandleAccEvent(aEvent);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (IPCAccessibilityActive()) {
-    return NS_OK;
-  }
-
-  uint32_t eventType = aEvent->GetEventType();
-
-  // Means we're not active.
-  NS_ENSURE_TRUE(!IsDefunct(), NS_ERROR_FAILURE);
-
-  LocalAccessible* accessible = aEvent->GetAccessible();
-  if (!accessible) return NS_OK;
-
-  if (eventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED ||
-      eventType == nsIAccessibleEvent::EVENT_FOCUS) {
-    UpdateSystemCaretFor(accessible);
-  }
-
-  MsaaAccessible::FireWinEvent(accessible, eventType);
-
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // AccessibleWrap
 
 //------- Helper methods ---------

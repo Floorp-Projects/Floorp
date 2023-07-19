@@ -17,22 +17,3 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 
 NS_IMPL_ISUPPORTS_INHERITED0(HyperTextAccessibleWrap, HyperTextAccessible)
-
-nsresult HyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
-  uint32_t eventType = aEvent->GetEventType();
-
-  if (eventType == nsIAccessibleEvent::EVENT_TEXT_REMOVED ||
-      eventType == nsIAccessibleEvent::EVENT_TEXT_INSERTED) {
-    LocalAccessible* accessible = aEvent->GetAccessible();
-    if (accessible && accessible->IsHyperText()) {
-      AccTextChangeEvent* event = downcast_accEvent(aEvent);
-      HyperTextAccessibleWrap* text =
-          static_cast<HyperTextAccessibleWrap*>(accessible->AsHyperText());
-      ia2AccessibleText::UpdateTextChangeData(
-          text, event->IsTextInserted(), event->ModifiedText(),
-          event->GetStartOffset(), event->GetLength());
-    }
-  }
-
-  return HyperTextAccessible::HandleAccEvent(aEvent);
-}

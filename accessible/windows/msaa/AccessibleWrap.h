@@ -34,7 +34,6 @@ class AccessibleWrap : public LocalAccessible {
 
  public:
   // LocalAccessible
-  virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
   virtual void Shutdown() override;
 
   // Helper methods

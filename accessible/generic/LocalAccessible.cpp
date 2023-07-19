@@ -13,6 +13,7 @@
 #include "DocAccessible-inl.h"
 #include "mozilla/a11y/AccAttributes.h"
 #include "mozilla/a11y/DocAccessibleChild.h"
+#include "mozilla/a11y/Platform.h"
 #include "nsAccUtils.h"
 #include "nsAccessibilityService.h"
 #include "ApplicationAccessible.h"
@@ -992,6 +993,115 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
 
   if (nsCoreUtils::AccEventObserversExist()) {
     nsCoreUtils::DispatchAccEvent(MakeXPCEvent(aEvent));
+  }
+
+  if (IPCAccessibilityActive()) {
+    return NS_OK;
+  }
+
+  if (IsDefunct()) {
+    // This could happen if there is an XPCOM observer, since script might run
+    // which mutates the tree.
+    return NS_OK;
+  }
+
+  LocalAccessible* target = aEvent->GetAccessible();
+  switch (aEvent->GetEventType()) {
+    case nsIAccessibleEvent::EVENT_SHOW:
+      PlatformShowHideEvent(target, target->LocalParent(), true,
+                            aEvent->IsFromUserInput());
+      break;
+    case nsIAccessibleEvent::EVENT_HIDE:
+      PlatformShowHideEvent(target, target->LocalParent(), false,
+                            aEvent->IsFromUserInput());
+      break;
+    case nsIAccessibleEvent::EVENT_STATE_CHANGE: {
+      AccStateChangeEvent* event = downcast_accEvent(aEvent);
+      PlatformStateChangeEvent(target, event->GetState(),
+                               event->IsStateEnabled());
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED: {
+      AccCaretMoveEvent* event = downcast_accEvent(aEvent);
+      LayoutDeviceIntRect rect;
+      // The caret rect is only used on Windows, so just pass an empty rect on
+      // other platforms.
+      // XXX We pass an empty rect on Windows as well because
+      // AccessibleWrap::UpdateSystemCaretFor currently needs to call
+      // HyperTextAccessible::GetCaretRect again to get the widget and there's
+      // no point calling it twice.
+      PlatformCaretMoveEvent(target, event->GetCaretOffset(),
+                             event->IsSelectionCollapsed(),
+                             event->GetGranularity(), rect);
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
+    case nsIAccessibleEvent::EVENT_TEXT_REMOVED: {
+      AccTextChangeEvent* event = downcast_accEvent(aEvent);
+      const nsString& text = event->ModifiedText();
+      PlatformTextChangeEvent(target, text, event->GetStartOffset(),
+                              event->GetLength(), event->IsTextInserted(),
+                              event->IsFromUserInput());
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_SELECTION:
+    case nsIAccessibleEvent::EVENT_SELECTION_ADD:
+    case nsIAccessibleEvent::EVENT_SELECTION_REMOVE: {
+      AccSelChangeEvent* selEvent = downcast_accEvent(aEvent);
+      PlatformSelectionEvent(target, selEvent->Widget(),
+                             aEvent->GetEventType());
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED: {
+#ifdef ANDROID
+      AccVCChangeEvent* vcEvent = downcast_accEvent(aEvent);
+      PlatformVirtualCursorChangeEvent(
+          target, vcEvent->OldAccessible(), vcEvent->NewAccessible(),
+          vcEvent->Reason(), vcEvent->IsFromUserInput());
+#endif
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_FOCUS: {
+      LayoutDeviceIntRect rect;
+      // The caret rect is only used on Windows, so just pass an empty rect on
+      // other platforms.
+#ifdef XP_WIN
+      if (HyperTextAccessible* text = target->AsHyperText()) {
+        nsIWidget* widget = nullptr;
+        rect = text->GetCaretRect(&widget);
+      }
+#endif
+      PlatformFocusEvent(target, rect);
+      break;
+    }
+#if defined(ANDROID)
+    case nsIAccessibleEvent::EVENT_SCROLLING_END:
+    case nsIAccessibleEvent::EVENT_SCROLLING: {
+      AccScrollingEvent* scrollingEvent = downcast_accEvent(aEvent);
+      PlatformScrollingEvent(
+          target, aEvent->GetEventType(), scrollingEvent->ScrollX(),
+          scrollingEvent->ScrollY(), scrollingEvent->MaxScrollX(),
+          scrollingEvent->MaxScrollY());
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_ANNOUNCEMENT: {
+      AccAnnouncementEvent* announcementEvent = downcast_accEvent(aEvent);
+      PlatformAnnouncementEvent(target, announcementEvent->Announcement(),
+                                announcementEvent->Priority());
+      break;
+    }
+#endif  // defined(ANDROID)
+#if defined(MOZ_WIDGET_COCOA)
+    case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED: {
+      AccTextSelChangeEvent* textSelChangeEvent = downcast_accEvent(aEvent);
+      AutoTArray<TextRange, 1> ranges;
+      textSelChangeEvent->SelectionRanges(&ranges);
+      PlatformTextSelectionChangeEvent(target, ranges);
+      break;
+    }
+#endif  // defined(MOZ_WIDGET_COCOA)
+    default:
+      PlatformEvent(target, aEvent->GetEventType());
   }
 
   return NS_OK;
