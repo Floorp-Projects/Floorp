@@ -32,7 +32,6 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-const uint32_t USE_ROLE_STRING = 0;
 static const VARIANT kVarChildIdSelf = {{{VT_I4}}};
 
 MsaaIdGenerator MsaaAccessible::sIDGen;
@@ -760,72 +759,9 @@ MsaaAccessible::get_accRole(
       msaaRole = ROLE_SYSTEM_OUTLINEITEM;
   }
 
-  // -- Try enumerated role
-  if (msaaRole != USE_ROLE_STRING) {
-    pvarRole->vt = VT_I4;
-    pvarRole->lVal = msaaRole;  // Normal enumerated role
-    return S_OK;
-  }
-
-  // -- Try BSTR role
-  // Could not map to known enumerated MSAA role like ROLE_BUTTON
-  // Use BSTR role to expose role attribute or tag name + namespace
-  // XXX We should remove this hack and map to standard MSAA roles, even though
-  // they're lossy. See bug 798492.
-  if (mAcc->IsRemote()) {
-    // We don't support unknown or multiple ARIA roles for RemoteAccessible
-    // here, nor can we support namespaces. No one should be relying on this
-    // anyway, so this is fine. We just want to avoid returning a failure here.
-    nsAtom* val = nullptr;
-    const nsRoleMapEntry* roleMap = mAcc->ARIARoleMap();
-    if (roleMap && roleMap->roleAtom != nsGkAtoms::_empty) {
-      val = roleMap->roleAtom;
-    } else {
-      val = mAcc->TagName();
-    }
-    if (!val) {
-      return E_FAIL;
-    }
-    pvarRole->vt = VT_BSTR;
-    pvarRole->bstrVal = ::SysAllocString(val->GetUTF16String());
-    return S_OK;
-  }
-
-  LocalAccessible* localAcc = mAcc->AsLocal();
-  MOZ_ASSERT(localAcc);
-  nsIContent* content = localAcc->GetContent();
-  if (!content) return E_FAIL;
-
-  if (content->IsElement()) {
-    nsAutoString roleString;
-    // Try the role attribute.
-    nsAccUtils::GetARIAAttr(content->AsElement(), nsGkAtoms::role, roleString);
-
-    if (roleString.IsEmpty()) {
-      // No role attribute (or it is an empty string).
-      // Use the tag name.
-      dom::Document* document = content->GetUncomposedDoc();
-      if (!document) return E_FAIL;
-
-      dom::NodeInfo* nodeInfo = content->NodeInfo();
-      nodeInfo->GetName(roleString);
-
-      // Only append name space if different from that of current document.
-      if (!nodeInfo->NamespaceEquals(document->GetDefaultNamespaceID())) {
-        nsAutoString nameSpaceURI;
-        nodeInfo->GetNamespaceURI(nameSpaceURI);
-        roleString += u", "_ns + nameSpaceURI;
-      }
-    }
-
-    if (!roleString.IsEmpty()) {
-      pvarRole->vt = VT_BSTR;
-      pvarRole->bstrVal = ::SysAllocString(roleString.get());
-      return S_OK;
-    }
-  }
-
-  return E_FAIL;
+  pvarRole->vt = VT_I4;
+  pvarRole->lVal = msaaRole;
+  return S_OK;
 }
 
 STDMETHODIMP
