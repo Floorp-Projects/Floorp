@@ -348,6 +348,17 @@ bool WeekInputType::ConvertNumberToString(Decimal aValue,
   // Adding 1 since day starts from 0.
   double dayInYear = JS::DayWithinYear(aValue.toDouble(), year) + 1;
 
+  // Return if aValue is outside the valid JS date-time range.
+  if (std::isnan(year) || std::isnan(month) || std::isnan(day) ||
+      std::isnan(dayInYear)) {
+    return false;
+  }
+
+  // DayOfWeek requires the year to be non-negative.
+  if (year < 0) {
+    return false;
+  }
+
   // Adding 1 since month starts from 0.
   uint32_t isoWeekday = DayOfWeek(year, month + 1, day, true);
   // Target on Wednesday since ISO 8601 states that week 1 is the week
