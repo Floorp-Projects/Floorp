@@ -1018,7 +1018,7 @@ class TestTranslationsTelemetry {
    * @param {string} name - The name of the metric.
    * @param {Object} event - The Glean event object.
    * @param {Object} expectations - The test expectations.
-   * @param {number} expectations.expectedLength - The expected length of the event.
+   * @param {number} expectations.expectedEventCount - The expected count of events.
    * @param {Array<function>} [expectations.allValuePredicates=[]]
    * - An array of function predicates to assert for all event values.
    * @param {Array<function>} [expectations.finalValuePredicates=[]]
@@ -1027,27 +1027,27 @@ class TestTranslationsTelemetry {
   static async assertEvent(
     name,
     event,
-    { expectedLength, allValuePredicates = [], finalValuePredicates = [] }
+    { expectedEventCount, allValuePredicates = [], finalValuePredicates = [] }
   ) {
     // Ensures that glean metrics are collected from all child processes
     // so that calls to testGetValue() are up to date.
     await Services.fog.testFlushAllChildren();
-    const values = event.testGetValue() ?? [];
-    const length = values.length;
+    const events = event.testGetValue() ?? [];
+    const eventCount = events.length;
 
     is(
-      length,
-      expectedLength,
-      `Telemetry event ${name} should have length ${expectedLength}`
+      eventCount,
+      expectedEventCount,
+      `There should be ${expectedEventCount} telemetry events of type ${name}`
     );
 
     if (allValuePredicates.length !== 0) {
       is(
-        length > 0,
+        eventCount > 0,
         true,
         `Telemetry event ${name} should contain values if allPredicates are specified`
       );
-      for (const value of values) {
+      for (const value of events) {
         for (const predicate of allValuePredicates) {
           is(
             predicate(value),
@@ -1060,13 +1060,13 @@ class TestTranslationsTelemetry {
 
     if (finalValuePredicates.length !== 0) {
       is(
-        length > 0,
+        eventCount > 0,
         true,
         `Telemetry event ${name} should contain values if finalPredicates are specified`
       );
       for (const predicate of finalValuePredicates) {
         is(
-          predicate(values[length - 1]),
+          predicate(events[eventCount - 1]),
           true,
           `Telemetry event ${name} finalPredicate { ${predicate.toString()} } should pass for final value`
         );

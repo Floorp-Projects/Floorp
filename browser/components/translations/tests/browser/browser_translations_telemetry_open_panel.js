@@ -16,7 +16,7 @@ add_task(async function test_translations_telemetry_open_panel() {
     "OpenPanel",
     Glean.translationsPanel.open,
     {
-      expectedLength: 0,
+      expectedEventCount: 0,
     }
   );
 
@@ -40,7 +40,7 @@ add_task(async function test_translations_telemetry_open_panel() {
     "OpenPanel",
     Glean.translationsPanel.open,
     {
-      expectedLength: 1,
+      expectedEventCount: 1,
       finalValuePredicates: [
         value => value.extra.opened_from === "translationsButton",
       ],
@@ -62,7 +62,7 @@ add_task(async function test_translations_telemetry_open_panel() {
     "OpenPanel",
     Glean.translationsPanel.open,
     {
-      expectedLength: 2,
+      expectedEventCount: 2,
       allValuePredicates: [
         value => value.extra.opened_from === "translationsButton",
       ],
