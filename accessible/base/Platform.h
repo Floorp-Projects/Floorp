@@ -24,6 +24,7 @@
 namespace mozilla {
 namespace a11y {
 
+class Accessible;
 class RemoteAccessible;
 
 enum EPlatformDisabledState {
@@ -87,36 +88,37 @@ void ProxyCreated(RemoteAccessible* aProxy);
 void ProxyDestroyed(RemoteAccessible*);
 
 /**
- * Callied when an event is fired on a proxied accessible.
+ * Called when an event is fired on an Accessible so that platforms may fire
+ * events if appropriate.
  */
-void PlatformEvent(RemoteAccessible* aTarget, uint32_t aEventType);
-void PlatformStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
+void PlatformEvent(Accessible* aTarget, uint32_t aEventType);
+void PlatformStateChangeEvent(Accessible* aTarget, uint64_t aState,
                               bool aEnabled);
 
-void PlatformFocusEvent(RemoteAccessible* aTarget,
+void PlatformFocusEvent(Accessible* aTarget,
                         const LayoutDeviceIntRect& aCaretRect);
-void PlatformCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
+void PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
                             bool aIsSelectionCollapsed, int32_t aGranularity,
                             const LayoutDeviceIntRect& aCaretRect);
-void PlatformTextChangeEvent(RemoteAccessible* aTarget, const nsAString& aStr,
+void PlatformTextChangeEvent(Accessible* aTarget, const nsAString& aStr,
                              int32_t aStart, uint32_t aLen, bool aIsInsert,
                              bool aFromUser);
-void PlatformShowHideEvent(RemoteAccessible* aTarget, RemoteAccessible* aParent,
+void PlatformShowHideEvent(Accessible* aTarget, Accessible* aParent,
                            bool aInsert, bool aFromUser);
-void PlatformSelectionEvent(RemoteAccessible* aTarget,
-                            RemoteAccessible* aWidget, uint32_t aType);
+void PlatformSelectionEvent(Accessible* aTarget, Accessible* aWidget,
+                            uint32_t aType);
 
 #if defined(ANDROID)
-void PlatformVirtualCursorChangeEvent(RemoteAccessible* aTarget,
-                                      RemoteAccessible* aOldPosition,
-                                      RemoteAccessible* aNewPosition,
-                                      int16_t aReason, bool aFromUser);
+void PlatformVirtualCursorChangeEvent(Accessible* aTarget,
+                                      Accessible* aOldPosition,
+                                      Accessible* aNewPosition, int16_t aReason,
+                                      bool aFromUser);
 
-void PlatformScrollingEvent(RemoteAccessible* aTarget, uint32_t aEventType,
+void PlatformScrollingEvent(Accessible* aTarget, uint32_t aEventType,
                             uint32_t aScrollX, uint32_t aScrollY,
                             uint32_t aMaxScrollX, uint32_t aMaxScrollY);
 
-void PlatformAnnouncementEvent(RemoteAccessible* aTarget,
+void PlatformAnnouncementEvent(Accessible* aTarget,
                                const nsAString& aAnnouncement,
                                uint16_t aPriority);
 
@@ -126,10 +128,9 @@ bool LocalizeString(const nsAString& aToken, nsAString& aLocalized);
 #ifdef MOZ_WIDGET_COCOA
 class TextRangeData;
 void PlatformTextSelectionChangeEvent(
-    RemoteAccessible* aTarget, const nsTArray<TextRangeData>& aSelection);
+    Accessible* aTarget, const nsTArray<TextRangeData>& aSelection);
 
-void PlatformRoleChangedEvent(RemoteAccessible* aTarget,
-                              const a11y::role& aRole,
+void PlatformRoleChangedEvent(Accessible* aTarget, const a11y::role& aRole,
                               uint8_t aRoleMapEntryIndex);
 #endif
 
