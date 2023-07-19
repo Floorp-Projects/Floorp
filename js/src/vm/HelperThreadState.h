@@ -712,7 +712,7 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
   }
 
   void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
-  [[nodiscard]] bool runTask(JSContext* cx);
+  [[nodiscard]] bool runTask();
   ThreadType threadType() override { return ThreadType::THREAD_TYPE_DELAZIFY; }
 };
 

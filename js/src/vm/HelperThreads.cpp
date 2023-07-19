@@ -997,8 +997,7 @@ void DelazifyTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
   {
     AutoSetHelperThreadContext usesContext(contextOptions, lock);
     AutoUnlockHelperThreadState unlock(lock);
-    JSContext* cx = TlsContext.get();
-    if (!runTask(cx)) {
+    if (!runTask()) {
       // NOTE: We do not report errors beyond this scope, as there is no where
       // to report these errors to. In the mean time, prevent the eager
       // delazification from running after any kind of errors.
@@ -1021,7 +1020,7 @@ void DelazifyTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
   }
 }
 
-bool DelazifyTask::runTask(JSContext* cx) {
+bool DelazifyTask::runTask() {
   fc_.setStackQuota(HelperThreadState().stackQuota);
 
   AutoSetContextRuntime ascr(runtime);
@@ -1053,7 +1052,7 @@ bool DelazifyTask::runTask(JSContext* cx) {
       // Parse and generate bytecode for the inner function.
       DelazifyFailureReason failureReason;
       innerStencil = DelazifyCanonicalScriptedFunction(
-          cx, &fc_, tempLifoAlloc, initialPrefableOptions, &scopeCache, borrow,
+          &fc_, tempLifoAlloc, initialPrefableOptions, &scopeCache, borrow,
           scriptIndex, &failureReason);
       if (!innerStencil) {
         if (failureReason == DelazifyFailureReason::Compressed) {
