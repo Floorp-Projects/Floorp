@@ -398,6 +398,10 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   JS::ConstUTF8CharsZ introducerFilename() const { return introducerFilename_; }
   const char16_t* sourceMapURL() const { return sourceMapURL_; }
 
+  const PrefableCompileOptions& prefableOptions() const {
+    return prefableOptions_;
+  }
+
   TransitiveCompileOptions(const TransitiveCompileOptions&) = delete;
   TransitiveCompileOptions& operator=(const TransitiveCompileOptions&) = delete;
 
