@@ -41,6 +41,7 @@ add_task(async function test_translations_telemetry_open_panel() {
     Glean.translationsPanel.open,
     {
       expectedEventCount: 1,
+      expectNewFlowId: true,
       finalValuePredicates: [
         value => value.extra.opened_from === "translationsButton",
       ],
@@ -63,6 +64,7 @@ add_task(async function test_translations_telemetry_open_panel() {
     Glean.translationsPanel.open,
     {
       expectedEventCount: 2,
+      expectNewFlowId: true,
       allValuePredicates: [
         value => value.extra.opened_from === "translationsButton",
       ],
