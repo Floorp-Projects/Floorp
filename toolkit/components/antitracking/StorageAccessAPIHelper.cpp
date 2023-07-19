@@ -12,11 +12,13 @@
 #include "mozilla/Components.h"
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/ContentBlockingUserInteraction.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/FeaturePolicy.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/CookieJarSettings.h"
@@ -864,6 +866,21 @@ Maybe<bool> StorageAccessAPIHelper::CheckCallingContextDecidesStorageAccessAPI(
 
   if (aDocument->IsTopLevelContentDocument()) {
     return Some(true);
+  }
+
+  if (aRequestingStorageAccess) {
+    // Perform a Permission Policy Request
+    dom::FeaturePolicy* policy = aDocument->FeaturePolicy();
+    MOZ_ASSERT(policy);
+
+    if (!policy->AllowsFeature(u"storage-access"_ns,
+                               dom::Optional<nsAString>())) {
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::errorFlag, nsLiteralCString("requestStorageAccess"),
+          aDocument, nsContentUtils::eDOM_PROPERTIES,
+          "RequestStorageAccessPermissionsPolicy");
+      return Some(false);
+    }
   }
 
   RefPtr<BrowsingContext> bc = aDocument->GetBrowsingContext();
