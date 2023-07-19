@@ -45,409 +45,183 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_REORDER = 0x0003;
 
   /**
-   * The active descendant of a component has changed. The active descendant
-   * is used in objects with transient children.
-   */
-  const unsigned long EVENT_ACTIVE_DECENDENT_CHANGED = 0x0004;
-
-  /**
    * An object has received the keyboard focus.
    */
-  const unsigned long EVENT_FOCUS = 0x0005;
+  const unsigned long EVENT_FOCUS = 0x0004;
 
   /**
    * An object's state has changed.
    */
-  const unsigned long EVENT_STATE_CHANGE = 0x0006;
-
-  /**
-   * An object has changed location, shape, or size.
-   */
-  const unsigned long EVENT_LOCATION_CHANGE = 0x0007;
+  const unsigned long EVENT_STATE_CHANGE = 0x0005;
 
   /**
    * An object's Name property has changed.
    */
-  const unsigned long EVENT_NAME_CHANGE = 0x0008;
+  const unsigned long EVENT_NAME_CHANGE = 0x0006;
 
   /**
    * An object's Description property has changed.
    */
-  const unsigned long EVENT_DESCRIPTION_CHANGE = 0x0009;
+  const unsigned long EVENT_DESCRIPTION_CHANGE = 0x0007;
 
   /**
    * An object's numeric Value has changed.
    */
-  const unsigned long EVENT_VALUE_CHANGE = 0x000A;
-
-  /**
-   * An object's help has changed.
-   */
-  const unsigned long EVENT_HELP_CHANGE = 0x000B;
-
-  /**
-   * An object's default action has changed.
-   */
-  const unsigned long EVENT_DEFACTION_CHANGE = 0x000C;
-
-  /**
-   * An object's action has changed.
-   */
-  const unsigned long EVENT_ACTION_CHANGE = 0x000D;
-
-  /**
-   * An object's keyboard shortcut has changed.
-   */
-  const unsigned long EVENT_ACCELERATOR_CHANGE = 0x000E;
+  const unsigned long EVENT_VALUE_CHANGE = 0x0008;
 
   /**
    * The selection within a container object has changed.
    */
-  const unsigned long EVENT_SELECTION = 0x000F;
+  const unsigned long EVENT_SELECTION = 0x0009;
 
   /**
    * An item within a container object has been added to the selection.
    */
-  const unsigned long EVENT_SELECTION_ADD = 0x0010;
+  const unsigned long EVENT_SELECTION_ADD = 0x000A;
 
   /**
    * An item within a container object has been removed from the selection.
    */
-  const unsigned long EVENT_SELECTION_REMOVE = 0x0011;
+  const unsigned long EVENT_SELECTION_REMOVE = 0x000B;
 
   /**
    * Numerous selection changes have occurred within a container object.
    */
-  const unsigned long EVENT_SELECTION_WITHIN = 0x0012;
+  const unsigned long EVENT_SELECTION_WITHIN = 0x000C;
 
   /**
    * An alert has been generated. Server applications send this event when a
    * user needs to know that a user interface element has changed.
    */
-  const unsigned long EVENT_ALERT = 0x0013;
-
-  /**
-   * The foreground window has changed.
-   */
-  const unsigned long EVENT_FOREGROUND = 0x0014;
+  const unsigned long EVENT_ALERT = 0x000D;
 
   /**
    * A menu item on the menu bar has been selected.
    */
-  const unsigned long EVENT_MENU_START = 0x0015;
+  const unsigned long EVENT_MENU_START = 0x000E;
 
   /**
    * A menu from the menu bar has been closed.
    */
-  const unsigned long EVENT_MENU_END = 0x0016;
+  const unsigned long EVENT_MENU_END = 0x000F;
 
   /**
    * A pop-up menu has been displayed.
    */
-  const unsigned long EVENT_MENUPOPUP_START = 0x0017;
+  const unsigned long EVENT_MENUPOPUP_START = 0x0010;
 
   /**
    * A pop-up menu has been closed.
    */
-  const unsigned long EVENT_MENUPOPUP_END = 0x0018;
-
-  /**
-   * A window has received mouse capture.
-   */
-  const unsigned long EVENT_CAPTURE_START = 0x0019;
-
-  /**
-   * A window has lost mouse capture.
-   */
-  const unsigned long EVENT_CAPTURE_END = 0x001A;
-
-  /**
-   * A window is being moved or resized.
-   */
-  const unsigned long EVENT_MOVESIZE_START = 0x001B;
-
-  /**
-  * The movement or resizing of a window has finished
-  */
-  const unsigned long EVENT_MOVESIZE_END = 0x001C;
-
-  /**
-   * A window has entered context-sensitive Help mode
-   */
-  const unsigned long EVENT_CONTEXTHELP_START = 0x001D;
-
-  /**
-   * A window has exited context-sensitive Help mode
-   */
-  const unsigned long EVENT_CONTEXTHELP_END = 0x001E;
+  const unsigned long EVENT_MENUPOPUP_END = 0x0011;
 
   /**
    * An application is about to enter drag-and-drop mode
    */
-  const unsigned long EVENT_DRAGDROP_START = 0x001F;
-
-  /**
-   * An application is about to exit drag-and-drop mode
-   */
-  const unsigned long EVENT_DRAGDROP_END = 0x0020;
-
-  /**
-   * A dialog box has been displayed
-   */
-  const unsigned long EVENT_DIALOG_START = 0x0021;
-
-  /**
-   * A dialog box has been closed
-   */
-  const unsigned long EVENT_DIALOG_END = 0x0022;
+  const unsigned long EVENT_DRAGDROP_START = 0x0012;
 
   /**
    * Scrolling has started on a scroll bar
    */
-  const unsigned long EVENT_SCROLLING_START = 0x0023;
+  const unsigned long EVENT_SCROLLING_START = 0x0013;
 
   /**
    * Scrolling has ended on a scroll bar
    */
-  const unsigned long EVENT_SCROLLING_END = 0x0024;
-
-  /**
-   * A window object is about to be minimized or maximized
-   */
-  const unsigned long EVENT_MINIMIZE_START = 0x0025;
-
-  /**
-   * A window object has been minimized or maximized
-   */
-  const unsigned long EVENT_MINIMIZE_END = 0x0026;
+  const unsigned long EVENT_SCROLLING_END = 0x0014;
 
   /**
    * The loading of the document has completed.
    */
-  const unsigned long EVENT_DOCUMENT_LOAD_COMPLETE = 0x0027;
+  const unsigned long EVENT_DOCUMENT_LOAD_COMPLETE = 0x0015;
 
   /**
    * The document contents are being reloaded.
    */
-  const unsigned long EVENT_DOCUMENT_RELOAD = 0x0028;
+  const unsigned long EVENT_DOCUMENT_RELOAD = 0x0016;
 
   /**
    * The loading of the document was interrupted.
    */
-  const unsigned long EVENT_DOCUMENT_LOAD_STOPPED = 0x0029;
-
-  /**
-   * The document wide attributes of the document object have changed.
-   */
-  const unsigned long EVENT_DOCUMENT_ATTRIBUTES_CHANGED = 0x002A;
-
-  /**
-   * The contents of the document have changed.
-   */
-  const unsigned long EVENT_DOCUMENT_CONTENT_CHANGED = 0x002B;
-
-  const unsigned long EVENT_PROPERTY_CHANGED = 0x002C;
-
-  /**
-   * A slide changed in a presentation document or a page boundary was
-   * crossed in a word processing document.
-   */
-  const unsigned long EVENT_PAGE_CHANGED = 0x002D;
+  const unsigned long EVENT_DOCUMENT_LOAD_STOPPED = 0x0017;
 
   /**
    * A text object's attributes changed.
    * Also see EVENT_OBJECT_ATTRIBUTE_CHANGED.
    */
-  const unsigned long EVENT_TEXT_ATTRIBUTE_CHANGED = 0x002E;
+  const unsigned long EVENT_TEXT_ATTRIBUTE_CHANGED = 0x0018;
 
   /**
    * The caret has moved to a new position.
    */
-  const unsigned long EVENT_TEXT_CARET_MOVED = 0x002F;
-
-  /**
-   * This event indicates general text changes, i.e. changes to text that is
-   * exposed through the IAccessibleText and IAccessibleEditableText interfaces.
-   */
-  const unsigned long EVENT_TEXT_CHANGED = 0x0030;
+  const unsigned long EVENT_TEXT_CARET_MOVED = 0x0019;
 
   /**
    * Text was inserted.
    */
-  const unsigned long EVENT_TEXT_INSERTED = 0x0031;
+  const unsigned long EVENT_TEXT_INSERTED = 0x001A;
 
   /**
    * Text was removed.
    */
-  const unsigned long EVENT_TEXT_REMOVED = 0x0032;
-
-  /**
-   * Text was updated.
-   */
-  const unsigned long EVENT_TEXT_UPDATED = 0x0033;
+  const unsigned long EVENT_TEXT_REMOVED = 0x001B;
 
   /**
    * The text selection changed.
    */
-  const unsigned long EVENT_TEXT_SELECTION_CHANGED = 0x0034;
+  const unsigned long EVENT_TEXT_SELECTION_CHANGED = 0x001C;
 
-  /**
-   * A visibile data event indicates the change of the visual appearance
-   * of an accessible object.  This includes for example most of the
-   * attributes available via the IAccessibleComponent interface.
-   */
-  const unsigned long EVENT_VISIBLE_DATA_CHANGED = 0x0035;
-
-  /**
-   * The caret moved from one column to the next.
-   */
-  const unsigned long EVENT_TEXT_COLUMN_CHANGED = 0x0036;
-
-  /**
-   * The caret moved from one section to the next.
-   */
-  const unsigned long EVENT_SECTION_CHANGED = 0x0037;
-
-  /**
-   * A table caption changed.
-   */
-  const unsigned long EVENT_TABLE_CAPTION_CHANGED = 0x0038;
-
-  /**
-   * A table's data changed.
-   */
-  const unsigned long EVENT_TABLE_MODEL_CHANGED = 0x0039;
-
-  /**
-   * A table's summary changed.
-   */
-  const unsigned long EVENT_TABLE_SUMMARY_CHANGED = 0x003A;
-
-  /**
-   * A table's row description changed.
-   */
-  const unsigned long EVENT_TABLE_ROW_DESCRIPTION_CHANGED = 0x003B;
-
-  /**
-   * A table's row header changed.
-   */
-  const unsigned long EVENT_TABLE_ROW_HEADER_CHANGED = 0x003C;
-
-  const unsigned long EVENT_TABLE_ROW_INSERT = 0x003D;
-  const unsigned long EVENT_TABLE_ROW_DELETE = 0x003E;
-  const unsigned long EVENT_TABLE_ROW_REORDER = 0x003F;
-
-  /**
-   * A table's column description changed.
-   */
-  const unsigned long EVENT_TABLE_COLUMN_DESCRIPTION_CHANGED = 0x0040;
-
-  /**
-   * A table's column header changed.
-   */
-  const unsigned long EVENT_TABLE_COLUMN_HEADER_CHANGED = 0x0041;
-
-  const unsigned long EVENT_TABLE_COLUMN_INSERT = 0x0042;
-  const unsigned long EVENT_TABLE_COLUMN_DELETE = 0x0043;
-  const unsigned long EVENT_TABLE_COLUMN_REORDER = 0x0044;
-
-  const unsigned long EVENT_WINDOW_ACTIVATE = 0x0045;
-  const unsigned long EVENT_WINDOW_CREATE = 0x0046;
-  const unsigned long EVENT_WINDOW_DEACTIVATE = 0x0047;
-  const unsigned long EVENT_WINDOW_DESTROY = 0x0048;
-  const unsigned long EVENT_WINDOW_MAXIMIZE = 0x0049;
-  const unsigned long EVENT_WINDOW_MINIMIZE = 0x004A;
-  const unsigned long EVENT_WINDOW_RESIZE = 0x004B;
-  const unsigned long EVENT_WINDOW_RESTORE = 0x004C;
-
-  /**
-   * The ending index of this link within the containing string has changed.
-   */
-  const unsigned long EVENT_HYPERLINK_END_INDEX_CHANGED = 0x004D;
-
-  /**
-   * The number of anchors assoicated with this hyperlink object has changed.
-   */
-  const unsigned long EVENT_HYPERLINK_NUMBER_OF_ANCHORS_CHANGED = 0x004E;
-
-  /**
-   * The hyperlink selected state changed from selected to unselected or
-   * from unselected to selected.
-   */
-  const unsigned long EVENT_HYPERLINK_SELECTED_LINK_CHANGED = 0x004F;
-
-  /**
-   * One of the links associated with the hypertext object has been activated.
-   */
-  const unsigned long EVENT_HYPERTEXT_LINK_ACTIVATED = 0x0050;
-
-  /**
-   * One of the links associated with the hypertext object has been selected.
-   */
-  const unsigned long EVENT_HYPERTEXT_LINK_SELECTED = 0x0051;
-
-  /**
-   * The starting index of this link within the containing string has changed.
-   */
-  const unsigned long EVENT_HYPERLINK_START_INDEX_CHANGED = 0x0052;
-
-  /**
-   * Focus has changed from one hypertext object to another, or focus moved
-   * from a non-hypertext object to a hypertext object, or focus moved from a
-   * hypertext object to a non-hypertext object.
-   */
-  const unsigned long EVENT_HYPERTEXT_CHANGED = 0x0053;
-
-  /**
-   * The number of hyperlinks associated with a hypertext object changed.
-   */
-  const unsigned long EVENT_HYPERTEXT_NLINKS_CHANGED = 0x0054;
+  const unsigned long EVENT_WINDOW_ACTIVATE = 0x001D;
+  const unsigned long EVENT_WINDOW_DEACTIVATE = 0x001E;
+  const unsigned long EVENT_WINDOW_MAXIMIZE = 0x001F;
+  const unsigned long EVENT_WINDOW_MINIMIZE = 0x0020;
+  const unsigned long EVENT_WINDOW_RESTORE = 0x0021;
 
   /**
    * An object's attributes changed. Also see EVENT_TEXT_ATTRIBUTE_CHANGED.
    */
-  const unsigned long EVENT_OBJECT_ATTRIBUTE_CHANGED = 0x0055;
+  const unsigned long EVENT_OBJECT_ATTRIBUTE_CHANGED = 0x0022;
 
   /**
    * A cursorable's virtual cursor has changed.
    */
-  const unsigned long EVENT_VIRTUALCURSOR_CHANGED = 0x0056;
+  const unsigned long EVENT_VIRTUALCURSOR_CHANGED = 0x0023;
 
   /**
    * An object's text Value has changed.
    */
-  const unsigned long EVENT_TEXT_VALUE_CHANGE = 0x0057;
+  const unsigned long EVENT_TEXT_VALUE_CHANGE = 0x0024;
 
   /**
    * An accessible's viewport is scrolling.
    */
-  const unsigned long EVENT_SCROLLING = 0x0058;
+  const unsigned long EVENT_SCROLLING = 0x0025;
 
   /**
    * An accessible is making an explicit announcement.
    */
-  const unsigned long EVENT_ANNOUNCEMENT = 0x0059;
+  const unsigned long EVENT_ANNOUNCEMENT = 0x0026;
 
   /**
    * A live region has been introduced. Mac only.
    */
-  const unsigned long EVENT_LIVE_REGION_ADDED = 0x005A;
+  const unsigned long EVENT_LIVE_REGION_ADDED = 0x0027;
 
   /**
    * A live region has been removed (aria-live attribute changed). Mac Only.
    */
-  const unsigned long EVENT_LIVE_REGION_REMOVED = 0x005B;
+  const unsigned long EVENT_LIVE_REGION_REMOVED = 0x0028;
 
   /**
    * A reorder event that has been coalesced into a mutation
    * of an ancestor's subtree.
    */
-  const unsigned long EVENT_INNER_REORDER = 0x005C;
+  const unsigned long EVENT_INNER_REORDER = 0x0029;
 
   /**
    * Help make sure event map does not get out-of-line.
    */
-  const unsigned long EVENT_LAST_ENTRY = 0x005D;
+  const unsigned long EVENT_LAST_ENTRY = 0x002A;
 
   /**
    * The type of event, based on the enumerated event values
