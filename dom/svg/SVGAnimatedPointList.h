@@ -46,6 +46,14 @@ class SVGAnimatedPointList {
  public:
   SVGAnimatedPointList() = default;
 
+  SVGAnimatedPointList& operator=(const SVGAnimatedPointList& aOther) {
+    mBaseVal = aOther.mBaseVal;
+    if (aOther.mAnimVal) {
+      mAnimVal = MakeUnique<SVGPointList>(*aOther.mAnimVal);
+    }
+    return *this;
+  }
+
   /**
    * Because it's so important that mBaseVal and its DOMSVGPointList wrapper
    * (if any) be kept in sync (see the comment in
