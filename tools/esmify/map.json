@@ -852,6 +852,7 @@
   "resource://gre/modules/narrate/Narrator.jsm": "toolkit/components/narrate/Narrator.jsm",
   "resource://gre/modules/narrate/VoiceSelect.jsm": "toolkit/components/narrate/VoiceSelect.jsm",
   "resource://gre/modules/netwerk-dns/PublicSuffixList.jsm": "netwerk/dns/PublicSuffixList.jsm",
+  "resource://gre/modules/netwerk-perf/NetworkThrottlingUtils.jsm": "netwerk/test/perf/NetworkThrottlingUtils.jsm",
   "resource://gre/modules/nsAsyncShutdown.jsm": "toolkit/components/asyncshutdown/nsAsyncShutdown.jsm",
   "resource://gre/modules/nsCrashMonitor.jsm": "toolkit/components/crashmonitor/nsCrashMonitor.jsm",
   "resource://gre/modules/nsFormAutoCompleteResult.jsm": "toolkit/components/satchel/nsFormAutoCompleteResult.jsm",
