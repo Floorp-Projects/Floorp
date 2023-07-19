@@ -111,7 +111,6 @@ bool JSContext::init(ContextKind kind) {
   // Skip most of the initialization if this thread will not be running JS.
   if (kind == ContextKind::MainThread) {
     TlsContext.set(this);
-    currentThread_ = ThreadId::ThisThreadId();
     nativeStackBase_.emplace(GetNativeStackBase());
 
     if (!fx.initInstance()) {
@@ -986,7 +985,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       runtime_(runtime),
       kind_(ContextKind::Uninitialized),
       options_(this, options),
-      freeUnusedMemory(false),
       measuringExecutionTime_(this, false),
       jitActivation(this, nullptr),
       isolate(this, nullptr),
