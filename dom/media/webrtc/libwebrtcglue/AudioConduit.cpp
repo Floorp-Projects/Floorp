@@ -122,8 +122,9 @@ RefPtr<GenericPromise> WebrtcAudioConduit::Shutdown() {
 
   mControl.mOnDtmfEventListener.DisconnectIfExists();
 
-  return InvokeAsync(mCallThread, "WebrtcAudioConduit::Shutdown (main thread)",
-                     [this, self = RefPtr<WebrtcAudioConduit>(this)] {
+  return InvokeAsync(
+      mCallThread, "WebrtcAudioConduit::Shutdown (main thread)",
+      [this, self = RefPtr<WebrtcAudioConduit>(this)] {
         mControl.mReceiving.DisconnectIfConnected();
         mControl.mTransmitting.DisconnectIfConnected();
         mControl.mLocalSsrcs.DisconnectIfConnected();
