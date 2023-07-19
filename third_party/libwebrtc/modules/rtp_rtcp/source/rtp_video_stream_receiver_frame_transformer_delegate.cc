@@ -76,8 +76,7 @@ RtpVideoStreamReceiverFrameTransformerDelegate::
     RtpVideoStreamReceiverFrameTransformerDelegate(
         RtpVideoFrameReceiver* receiver,
         rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-        rtc::Thread* network_thread,
-        uint32_t ssrc)
+        TaskQueueBase* network_thread, uint32_t ssrc)
     : receiver_(receiver),
       frame_transformer_(std::move(frame_transformer)),
       network_thread_(network_thread),
