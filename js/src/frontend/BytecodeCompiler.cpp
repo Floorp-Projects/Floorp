@@ -1135,9 +1135,9 @@ static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
 
 template <typename Unit>
 static bool CompileLazyFunctionToStencilMaybeInstantiate(
-    JSContext* cx, FrontendContext* fc, CompilationInput& input,
-    ScopeBindingCache* scopeCache, const Unit* units, size_t length,
-    BytecodeCompilerOutput& output) {
+    JSContext* cx, FrontendContext* fc, js::LifoAlloc& tempLifoAlloc,
+    CompilationInput& input, ScopeBindingCache* scopeCache, const Unit* units,
+    size_t length, BytecodeCompilerOutput& output) {
   MOZ_ASSERT(input.source);
 
   AutoAssertReportedException assertException(cx, fc);
@@ -1158,7 +1158,7 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
   InheritThis inheritThis =
       input.functionFlags().isArrow() ? InheritThis::Yes : InheritThis::No;
 
-  LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
+  LifoAllocScope parserAllocScope(&tempLifoAlloc);
   CompilationState compilationState(fc, parserAllocScope, input);
   compilationState.setFunctionKey(input.extent());
   MOZ_ASSERT(!compilationState.isInitialStencil());
@@ -1315,7 +1315,8 @@ static bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx,
   CompilationGCOutput* unusedGcOutput = nullptr;
   BytecodeCompilerOutput output(unusedGcOutput);
   return CompileLazyFunctionToStencilMaybeInstantiate(
-      cx, fc, input.get(), scopeCache, units.get(), sourceLength, output);
+      cx, fc, cx->tempLifoAlloc(), input.get(), scopeCache, units.get(),
+      sourceLength, output);
 }
 
 bool frontend::DelazifyCanonicalScriptedFunction(JSContext* cx,
@@ -1347,7 +1348,7 @@ bool frontend::DelazifyCanonicalScriptedFunction(JSContext* cx,
 template <typename Unit>
 static already_AddRefed<CompilationStencil>
 DelazifyCanonicalScriptedFunctionImpl(
-    JSContext* cx, FrontendContext* fc,
+    JSContext* cx, FrontendContext* fc, js::LifoAlloc& tempLifoAlloc,
     const JS::PrefableCompileOptions& prefableOptions,
     ScopeBindingCache* scopeCache, CompilationStencil& context,
     ScriptIndex scriptIndex, DelazifyFailureReason* failureReason) {
@@ -1397,7 +1398,8 @@ DelazifyCanonicalScriptedFunctionImpl(
   using OutputType = RefPtr<CompilationStencil>;
   BytecodeCompilerOutput output((OutputType()));
   if (!CompileLazyFunctionToStencilMaybeInstantiate(
-          cx, fc, input, scopeCache, units.get(), sourceLength, output)) {
+          cx, fc, tempLifoAlloc, input, scopeCache, units.get(), sourceLength,
+          output)) {
     *failureReason = DelazifyFailureReason::Other;
     return nullptr;
   }
@@ -1406,7 +1408,7 @@ DelazifyCanonicalScriptedFunctionImpl(
 
 already_AddRefed<CompilationStencil>
 frontend::DelazifyCanonicalScriptedFunction(
-    JSContext* cx, FrontendContext* fc,
+    JSContext* cx, FrontendContext* fc, js::LifoAlloc& tempLifoAlloc,
     const JS::PrefableCompileOptions& prefableOptions,
     ScopeBindingCache* scopeCache, CompilationStencil& context,
     ScriptIndex scriptIndex, DelazifyFailureReason* failureReason) {
@@ -1420,14 +1422,15 @@ frontend::DelazifyCanonicalScriptedFunction(
   if (ss->hasSourceType<Utf8Unit>()) {
     // UTF-8 source text.
     return DelazifyCanonicalScriptedFunctionImpl<Utf8Unit>(
-        cx, fc, prefableOptions, scopeCache, context, scriptIndex,
-        failureReason);
+        cx, fc, tempLifoAlloc, prefableOptions, scopeCache, context,
+        scriptIndex, failureReason);
   }
 
   // UTF-16 source text.
   MOZ_ASSERT(ss->hasSourceType<char16_t>());
   return DelazifyCanonicalScriptedFunctionImpl<char16_t>(
-      cx, fc, prefableOptions, scopeCache, context, scriptIndex, failureReason);
+      cx, fc, tempLifoAlloc, prefableOptions, scopeCache, context, scriptIndex,
+      failureReason);
 }
 
 static JSFunction* CompileStandaloneFunction(
