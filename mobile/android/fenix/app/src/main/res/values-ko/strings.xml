@@ -308,51 +308,51 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">나중에</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">%s를 기본 브라우저로 설정해 보세요</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">%s를 기본 브라우저로 설정해 보세요</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Firefox를 기본 브라우저로 설정해 보세요</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">%1$s는 이익보다 사람을 우선시하고 교차 사이트 추적기를 차단하여 개인 정보를 보호합니다.\n\n%2$s에서 더 알아보세요.</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s는 이익보다 사람을 우선시하고 교차 사이트 추적기를 차단하여 개인 정보를 보호합니다.\n\n%2$s에서 더 알아보세요.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox는 이익보다 사람을 우선시하고 교차 사이트 추적기를 차단하여 개인 정보를 보호합니다.\n\n개인정보처리방침에서 더 알아보세요.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">개인정보처리방침</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">개인정보처리방침</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">기본 브라우저로 설정</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">기본 브라우저로 설정</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">나중에</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">나중에</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">휴대전화에서 노트북으로 왔다가 다시 돌아가기</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">휴대전화에서 노트북으로 왔다가 다시 돌아가기</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">다른 기기에서 탭과 비밀번호를 가져와 중단한 부분부터 다시 시작하세요.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">다른 기기에서 탭과 비밀번호를 가져와 중단한 부분부터 다시 시작하세요.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">로그인</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">로그인</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">나중에</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">나중에</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">알림은 %s로 더 많은 작업을 수행하는 데 도움이 됩니다</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">알림은 %s로 더 많은 작업을 수행하는 데 도움이 됩니다</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">알림은 Firefox로 더 많은 작업을 수행하는 데 도움이 됩니다</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">기기 간에 탭을 보내고, 다운로드를 관리하고, %s를 최대한 활용하기 위한 팁을 얻으세요.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">기기 간에 탭을 보내고, 다운로드를 관리하고, %s를 최대한 활용하기 위한 팁을 얻으세요.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">기기 간에 탭을 보내고, 다운로드를 관리하고, Firefox를 최대한 활용하기 위한 팁을 얻으세요.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">알림 켜기</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">알림 켜기</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">나중에</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">나중에</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1236,8 +1236,10 @@
     <string name="share_button_content_description">공유</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">PDF로 저장</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">PDF를 생성할 수 없음</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">닫기</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">인쇄할 수 없음</string>
     <!-- Text for the print feature in the share and browser menu -->
