@@ -246,14 +246,18 @@ bitflags! {
     pub struct ParsingMode: u8 {
         /// In CSS; lengths must have units, except for zero values, where the unit can be omitted.
         /// <https://www.w3.org/TR/css3-values/#lengths>
-        const DEFAULT = 0x00;
+        const DEFAULT = 0;
         /// In SVG; a coordinate or length value without a unit identifier (e.g., "25") is assumed
         /// to be in user units (px).
         /// <https://www.w3.org/TR/SVG/coords.html#Units>
-        const ALLOW_UNITLESS_LENGTH = 0x01;
+        const ALLOW_UNITLESS_LENGTH = 1;
         /// In SVG; out-of-range values are not treated as an error in parsing.
         /// <https://www.w3.org/TR/SVG/implnote.html#RangeClamping>
-        const ALLOW_ALL_NUMERIC_VALUES = 0x02;
+        const ALLOW_ALL_NUMERIC_VALUES = 1 << 1;
+        /// In CSS Properties and Values, the initial value must be computationally
+        /// independent.
+        /// <https://drafts.css-houdini.org/css-properties-values-api-1/#ref-for-computationally-independent%E2%91%A0>
+        const DISALLOW_FONT_RELATIVE = 1 << 2;
     }
 }
 
@@ -268,6 +272,12 @@ impl ParsingMode {
     #[inline]
     pub fn allows_all_numeric_values(&self) -> bool {
         self.intersects(ParsingMode::ALLOW_ALL_NUMERIC_VALUES)
+    }
+
+    /// Whether the parsing mode allows font-relative units.
+    #[inline]
+    pub fn allows_font_relative_lengths(&self) -> bool {
+        !self.intersects(ParsingMode::DISALLOW_FONT_RELATIVE)
     }
 }
 

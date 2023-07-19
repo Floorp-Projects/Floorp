@@ -35,6 +35,7 @@ pub fn assert_parsing_mode_match() {
         ParsingMode_Default => ParsingMode::DEFAULT,
         ParsingMode_AllowUnitlessLength => ParsingMode::ALLOW_UNITLESS_LENGTH,
         ParsingMode_AllowAllNumericValues => ParsingMode::ALLOW_ALL_NUMERIC_VALUES,
+        ParsingMode_DisallowFontRelative => ParsingMode::DISALLOW_FONT_RELATIVE,
     }
 }
 
