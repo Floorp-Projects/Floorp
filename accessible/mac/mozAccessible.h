@@ -85,7 +85,7 @@ enum CheckedState {
 // Given a gecko accessibility event type, post the relevant
 // system accessibility notification.
 // Note: when overriding or adding new events, make sure your events aren't
-// filtered out in Platform::ProxyEvent or AccessibleWrap::HandleAccEvent!
+// filtered out in Platform::PlatformEvent or AccessibleWrap::HandleAccEvent!
 - (void)handleAccessibleEvent:(uint32_t)eventType;
 
 - (void)handleAccessibleTextChangeEvent:(NSString*)change

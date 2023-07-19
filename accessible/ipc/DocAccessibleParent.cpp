@@ -137,7 +137,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvShowEvent(
   }
 
   RemoteAccessible* target = parent->RemoteChildAt(newChildIdx);
-  ProxyShowHideEvent(target, parent, true, aFromUser);
+  PlatformShowHideEvent(target, parent, true, aFromUser);
 
   if (nsCOMPtr<nsIObserverService> obsService =
           services::GetObserverService()) {
@@ -286,7 +286,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvHideEvent(
   }
 
   RemoteAccessible* parent = root->RemoteParent();
-  ProxyShowHideEvent(root, parent, false, aFromUser);
+  PlatformShowHideEvent(root, parent, false, aFromUser);
 
   RefPtr<xpcAccHideEvent> event = nullptr;
   if (nsCoreUtils::AccEventObserversExist()) {
@@ -352,7 +352,7 @@ void DocAccessibleParent::FireEvent(RemoteAccessible* aAcc,
     UpdateStateCache(states::STALE | states::BUSY, false);
   }
 
-  ProxyEvent(aAcc, aEventType);
+  PlatformEvent(aAcc, aEventType);
 
   if (!nsCoreUtils::AccEventObserversExist()) {
     return;
@@ -385,7 +385,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvStateChangeEvent(
           services::GetObserverService()) {
     obsService->NotifyObservers(nullptr, NS_ACCESSIBLE_CACHE_TOPIC, nullptr);
   }
-  ProxyStateChangeEvent(target, aState, aEnabled);
+  PlatformStateChangeEvent(target, aState, aEnabled);
 
   if (!nsCoreUtils::AccEventObserversExist()) {
     return IPC_OK();
@@ -431,8 +431,8 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCaretMoveEvent(
     mTextSelections.AppendElement(TextRangeData(aID, aID, aOffset, aOffset));
   }
 
-  ProxyCaretMoveEvent(proxy, aOffset, aIsSelectionCollapsed, aGranularity,
-                      aCaretRect);
+  PlatformCaretMoveEvent(proxy, aOffset, aIsSelectionCollapsed, aGranularity,
+                         aCaretRect);
 
   if (!nsCoreUtils::AccEventObserversExist()) {
     return IPC_OK();
@@ -465,7 +465,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvTextChangeEvent(
     return IPC_OK();
   }
 
-  ProxyTextChangeEvent(target, aStr, aStart, aLen, aIsInsert, aFromUser);
+  PlatformTextChangeEvent(target, aStr, aStart, aLen, aIsInsert, aFromUser);
 
   if (!nsCoreUtils::AccEventObserversExist()) {
     return IPC_OK();
@@ -497,7 +497,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvSelectionEvent(
     return IPC_OK();
   }
 
-  ProxySelectionEvent(target, widget, aType);
+  PlatformSelectionEvent(target, widget, aType);
   if (!nsCoreUtils::AccEventObserversExist()) {
     return IPC_OK();
   }
@@ -529,8 +529,8 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvVirtualCursorChangeEvent(
   }
 
 #if defined(ANDROID)
-  ProxyVirtualCursorChangeEvent(target, oldPosition, newPosition, aReason,
-                                aFromUser);
+  PlatformVirtualCursorChangeEvent(target, oldPosition, newPosition, aReason,
+                                   aFromUser);
 #endif
 
   if (!nsCoreUtils::AccEventObserversExist()) {
@@ -565,10 +565,10 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvScrollingEvent(
   }
 
 #if defined(ANDROID)
-  ProxyScrollingEvent(target, aType, aScrollX, aScrollY, aMaxScrollX,
-                      aMaxScrollY);
+  PlatformScrollingEvent(target, aType, aScrollX, aScrollY, aMaxScrollX,
+                         aMaxScrollY);
 #else
-  ProxyEvent(target, aType);
+  PlatformEvent(target, aType);
 #endif
 
   if (!nsCoreUtils::AccEventObserversExist()) {
@@ -672,7 +672,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvAnnouncementEvent(
   }
 
 #  if defined(ANDROID)
-  ProxyAnnouncementEvent(target, aAnnouncement, aPriority);
+  PlatformAnnouncementEvent(target, aAnnouncement, aPriority);
 #  endif
 
   if (!nsCoreUtils::AccEventObserversExist()) {
@@ -707,9 +707,9 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvTextSelectionChangeEvent(
   mTextSelections.AppendElements(aSelection);
 
 #ifdef MOZ_WIDGET_COCOA
-  ProxyTextSelectionChangeEvent(target, aSelection);
+  PlatformTextSelectionChangeEvent(target, aSelection);
 #else
-  ProxyEvent(target, nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED);
+  PlatformEvent(target, nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED);
 #endif
 
   if (!nsCoreUtils::AccEventObserversExist()) {
@@ -738,7 +738,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvRoleChangedEvent(
   mRoleMapEntryIndex = aRoleMapEntryIndex;
 
 #ifdef MOZ_WIDGET_COCOA
-  ProxyRoleChangedEvent(this, aRole, aRoleMapEntryIndex);
+  PlatformRoleChangedEvent(this, aRole, aRoleMapEntryIndex);
 #endif
 
   return IPC_OK();
@@ -1065,7 +1065,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvFocusEvent(
 #endif
 
   mFocus = aID;
-  ProxyFocusEvent(proxy, aCaretRect);
+  PlatformFocusEvent(proxy, aCaretRect);
 
   if (!nsCoreUtils::AccEventObserversExist()) {
     return IPC_OK();

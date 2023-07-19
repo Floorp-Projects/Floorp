@@ -84,7 +84,7 @@ void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
   SessionAccessibility::UnregisterAccessible(aProxy);
 }
 
-void a11y::ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
+void a11y::PlatformEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
   if (!sessionAcc) {
@@ -100,8 +100,8 @@ void a11y::ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
   }
 }
 
-void a11y::ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
-                                 bool aEnabled) {
+void a11y::PlatformStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
+                                    bool aEnabled) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
 
@@ -131,17 +131,18 @@ void a11y::ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
   }
 }
 
-void a11y::ProxyFocusEvent(RemoteAccessible* aTarget,
-                           const LayoutDeviceIntRect& aCaretRect) {
+void a11y::PlatformFocusEvent(RemoteAccessible* aTarget,
+                              const LayoutDeviceIntRect& aCaretRect) {
   if (RefPtr<SessionAccessibility> sessionAcc =
           SessionAccessibility::GetInstanceFor(aTarget)) {
     sessionAcc->SendFocusEvent(aTarget);
   }
 }
 
-void a11y::ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
-                               bool aIsSelectionCollapsed, int32_t aGranularity,
-                               const LayoutDeviceIntRect& aCaretRect) {
+void a11y::PlatformCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
+                                  bool aIsSelectionCollapsed,
+                                  int32_t aGranularity,
+                                  const LayoutDeviceIntRect& aCaretRect) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
 
@@ -150,9 +151,10 @@ void a11y::ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
   }
 }
 
-void a11y::ProxyTextChangeEvent(RemoteAccessible* aTarget,
-                                const nsAString& aStr, int32_t aStart,
-                                uint32_t aLen, bool aIsInsert, bool aFromUser) {
+void a11y::PlatformTextChangeEvent(RemoteAccessible* aTarget,
+                                   const nsAString& aStr, int32_t aStart,
+                                   uint32_t aLen, bool aIsInsert,
+                                   bool aFromUser) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
 
@@ -162,20 +164,20 @@ void a11y::ProxyTextChangeEvent(RemoteAccessible* aTarget,
   }
 }
 
-void a11y::ProxyShowHideEvent(RemoteAccessible* aTarget,
-                              RemoteAccessible* aParent, bool aInsert,
-                              bool aFromUser) {
+void a11y::PlatformShowHideEvent(RemoteAccessible* aTarget,
+                                 RemoteAccessible* aParent, bool aInsert,
+                                 bool aFromUser) {
   // We rely on the window content changed events to be dispatched
   // after the viewport cache is refreshed.
 }
 
-void a11y::ProxySelectionEvent(RemoteAccessible*, RemoteAccessible*, uint32_t) {
-}
+void a11y::PlatformSelectionEvent(RemoteAccessible*, RemoteAccessible*,
+                                  uint32_t) {}
 
-void a11y::ProxyVirtualCursorChangeEvent(RemoteAccessible* aTarget,
-                                         RemoteAccessible* aOldPosition,
-                                         RemoteAccessible* aNewPosition,
-                                         int16_t aReason, bool aFromUser) {
+void a11y::PlatformVirtualCursorChangeEvent(RemoteAccessible* aTarget,
+                                            RemoteAccessible* aOldPosition,
+                                            RemoteAccessible* aNewPosition,
+                                            int16_t aReason, bool aFromUser) {
   if (!aNewPosition || !aFromUser) {
     return;
   }
@@ -194,9 +196,10 @@ void a11y::ProxyVirtualCursorChangeEvent(RemoteAccessible* aTarget,
   }
 }
 
-void a11y::ProxyScrollingEvent(RemoteAccessible* aTarget, uint32_t aEventType,
-                               uint32_t aScrollX, uint32_t aScrollY,
-                               uint32_t aMaxScrollX, uint32_t aMaxScrollY) {
+void a11y::PlatformScrollingEvent(RemoteAccessible* aTarget,
+                                  uint32_t aEventType, uint32_t aScrollX,
+                                  uint32_t aScrollY, uint32_t aMaxScrollX,
+                                  uint32_t aMaxScrollY) {
   if (aEventType == nsIAccessibleEvent::EVENT_SCROLLING) {
     RefPtr<SessionAccessibility> sessionAcc =
         SessionAccessibility::GetInstanceFor(aTarget);
@@ -208,9 +211,9 @@ void a11y::ProxyScrollingEvent(RemoteAccessible* aTarget, uint32_t aEventType,
   }
 }
 
-void a11y::ProxyAnnouncementEvent(RemoteAccessible* aTarget,
-                                  const nsAString& aAnnouncement,
-                                  uint16_t aPriority) {
+void a11y::PlatformAnnouncementEvent(RemoteAccessible* aTarget,
+                                     const nsAString& aAnnouncement,
+                                     uint16_t aPriority) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
 

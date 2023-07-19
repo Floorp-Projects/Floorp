@@ -82,7 +82,7 @@ void ProxyDestroyed(RemoteAccessible* aProxy) {
   }
 }
 
-void ProxyEvent(RemoteAccessible* aProxy, uint32_t aEventType) {
+void PlatformEvent(RemoteAccessible* aProxy, uint32_t aEventType) {
   // Ignore event that we don't escape below, they aren't yet supported.
   if (aEventType != nsIAccessibleEvent::EVENT_ALERT &&
       aEventType != nsIAccessibleEvent::EVENT_VALUE_CHANGE &&
@@ -103,24 +103,24 @@ void ProxyEvent(RemoteAccessible* aProxy, uint32_t aEventType) {
   }
 }
 
-void ProxyStateChangeEvent(RemoteAccessible* aProxy, uint64_t aState,
-                           bool aEnabled) {
+void PlatformStateChangeEvent(RemoteAccessible* aProxy, uint64_t aState,
+                              bool aEnabled) {
   mozAccessible* wrapper = GetNativeFromGeckoAccessible(aProxy);
   if (wrapper) {
     [wrapper stateChanged:aState isEnabled:aEnabled];
   }
 }
 
-void ProxyFocusEvent(RemoteAccessible* aTarget,
-                     const LayoutDeviceIntRect& aCaretRect) {
+void PlatformFocusEvent(RemoteAccessible* aTarget,
+                        const LayoutDeviceIntRect& aCaretRect) {
   if (mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget)) {
     [wrapper handleAccessibleEvent:nsIAccessibleEvent::EVENT_FOCUS];
   }
 }
 
-void ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
-                         bool aIsSelectionCollapsed, int32_t aGranularity,
-                         const LayoutDeviceIntRect& aCaretRect) {
+void PlatformCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
+                            bool aIsSelectionCollapsed, int32_t aGranularity,
+                            const LayoutDeviceIntRect& aCaretRect) {
   mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget);
   MOXTextMarkerDelegate* delegate =
       [MOXTextMarkerDelegate getOrCreateForDoc:aTarget->Document()];
@@ -142,9 +142,9 @@ void ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
   }
 }
 
-void ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsAString& aStr,
-                          int32_t aStart, uint32_t aLen, bool aIsInsert,
-                          bool aFromUser) {
+void PlatformTextChangeEvent(RemoteAccessible* aTarget, const nsAString& aStr,
+                             int32_t aStart, uint32_t aLen, bool aIsInsert,
+                             bool aFromUser) {
   RemoteAccessible* acc = aTarget;
   // If there is a text input ancestor, use it as the event source.
   while (acc && GetTypeFromRole(acc->Role()) != [mozTextAccessible class]) {
@@ -157,18 +157,18 @@ void ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsAString& aStr,
                                         at:aStart];
 }
 
-void ProxyShowHideEvent(RemoteAccessible*, RemoteAccessible*, bool, bool) {}
+void PlatformShowHideEvent(RemoteAccessible*, RemoteAccessible*, bool, bool) {}
 
-void ProxySelectionEvent(RemoteAccessible* aTarget, RemoteAccessible* aWidget,
-                         uint32_t aEventType) {
+void PlatformSelectionEvent(RemoteAccessible* aTarget,
+                            RemoteAccessible* aWidget, uint32_t aEventType) {
   mozAccessible* wrapper = GetNativeFromGeckoAccessible(aWidget);
   if (wrapper) {
     [wrapper handleAccessibleEvent:aEventType];
   }
 }
 
-void ProxyTextSelectionChangeEvent(RemoteAccessible* aTarget,
-                                   const nsTArray<TextRangeData>& aSelection) {
+void PlatformTextSelectionChangeEvent(
+    RemoteAccessible* aTarget, const nsTArray<TextRangeData>& aSelection) {
   if (aSelection.Length()) {
     MOXTextMarkerDelegate* delegate =
         [MOXTextMarkerDelegate getOrCreateForDoc:aTarget->Document()];
@@ -190,8 +190,9 @@ void ProxyTextSelectionChangeEvent(RemoteAccessible* aTarget,
   }
 }
 
-void ProxyRoleChangedEvent(RemoteAccessible* aTarget, const a11y::role& aRole,
-                           uint8_t aRoleMapEntryIndex) {
+void PlatformRoleChangedEvent(RemoteAccessible* aTarget,
+                              const a11y::role& aRole,
+                              uint8_t aRoleMapEntryIndex) {
   if (mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget)) {
     [wrapper handleRoleChanged:aRole];
   }

@@ -89,46 +89,48 @@ void ProxyDestroyed(RemoteAccessible*);
 /**
  * Callied when an event is fired on a proxied accessible.
  */
-void ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType);
-void ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
-                           bool aEnabled);
+void PlatformEvent(RemoteAccessible* aTarget, uint32_t aEventType);
+void PlatformStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
+                              bool aEnabled);
 
-void ProxyFocusEvent(RemoteAccessible* aTarget,
-                     const LayoutDeviceIntRect& aCaretRect);
-void ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
-                         bool aIsSelectionCollapsed, int32_t aGranularity,
-                         const LayoutDeviceIntRect& aCaretRect);
-void ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsAString& aStr,
-                          int32_t aStart, uint32_t aLen, bool aIsInsert,
-                          bool aFromUser);
-void ProxyShowHideEvent(RemoteAccessible* aTarget, RemoteAccessible* aParent,
-                        bool aInsert, bool aFromUser);
-void ProxySelectionEvent(RemoteAccessible* aTarget, RemoteAccessible* aWidget,
-                         uint32_t aType);
+void PlatformFocusEvent(RemoteAccessible* aTarget,
+                        const LayoutDeviceIntRect& aCaretRect);
+void PlatformCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
+                            bool aIsSelectionCollapsed, int32_t aGranularity,
+                            const LayoutDeviceIntRect& aCaretRect);
+void PlatformTextChangeEvent(RemoteAccessible* aTarget, const nsAString& aStr,
+                             int32_t aStart, uint32_t aLen, bool aIsInsert,
+                             bool aFromUser);
+void PlatformShowHideEvent(RemoteAccessible* aTarget, RemoteAccessible* aParent,
+                           bool aInsert, bool aFromUser);
+void PlatformSelectionEvent(RemoteAccessible* aTarget,
+                            RemoteAccessible* aWidget, uint32_t aType);
 
 #if defined(ANDROID)
-void ProxyVirtualCursorChangeEvent(RemoteAccessible* aTarget,
-                                   RemoteAccessible* aOldPosition,
-                                   RemoteAccessible* aNewPosition,
-                                   int16_t aReason, bool aFromUser);
+void PlatformVirtualCursorChangeEvent(RemoteAccessible* aTarget,
+                                      RemoteAccessible* aOldPosition,
+                                      RemoteAccessible* aNewPosition,
+                                      int16_t aReason, bool aFromUser);
 
-void ProxyScrollingEvent(RemoteAccessible* aTarget, uint32_t aEventType,
-                         uint32_t aScrollX, uint32_t aScrollY,
-                         uint32_t aMaxScrollX, uint32_t aMaxScrollY);
+void PlatformScrollingEvent(RemoteAccessible* aTarget, uint32_t aEventType,
+                            uint32_t aScrollX, uint32_t aScrollY,
+                            uint32_t aMaxScrollX, uint32_t aMaxScrollY);
 
-void ProxyAnnouncementEvent(RemoteAccessible* aTarget,
-                            const nsAString& aAnnouncement, uint16_t aPriority);
+void PlatformAnnouncementEvent(RemoteAccessible* aTarget,
+                               const nsAString& aAnnouncement,
+                               uint16_t aPriority);
 
 bool LocalizeString(const nsAString& aToken, nsAString& aLocalized);
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
 class TextRangeData;
-void ProxyTextSelectionChangeEvent(RemoteAccessible* aTarget,
-                                   const nsTArray<TextRangeData>& aSelection);
+void PlatformTextSelectionChangeEvent(
+    RemoteAccessible* aTarget, const nsTArray<TextRangeData>& aSelection);
 
-void ProxyRoleChangedEvent(RemoteAccessible* aTarget, const a11y::role& aRole,
-                           uint8_t aRoleMapEntryIndex);
+void PlatformRoleChangedEvent(RemoteAccessible* aTarget,
+                              const a11y::role& aRole,
+                              uint8_t aRoleMapEntryIndex);
 #endif
 
 }  // namespace a11y
