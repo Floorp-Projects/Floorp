@@ -163,8 +163,8 @@ async def test_response_headers(
         "status": 200,
         "statusText": "OK",
         "headers": (
-            {"name": "foo", "value": "bar"},
-            {"name": "baz", "value": "biz"},
+            {"name": "foo", "value": {"type": "string", "value": "bar"}},
+            {"name": "baz", "value": {"type": "string", "value": "biz"}},
         ),
         "protocol": "http/1.1",
     }

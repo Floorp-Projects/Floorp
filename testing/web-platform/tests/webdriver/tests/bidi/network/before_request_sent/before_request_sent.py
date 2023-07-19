@@ -135,7 +135,7 @@ async def test_request_headers(
 
     assert len(events) == 1
     expected_request = {
-        "headers": ({"name": "foo", "value": "bar"},),
+        "headers": ({"name": "foo", "value": {"type": "string", "value": "bar"}},),
         "method": "GET",
         "url": text_url,
     }
@@ -167,7 +167,7 @@ async def test_request_cookies(
 
     assert len(events) == 1
     expected_request = {
-        "cookies": ({"name": "foo", "value": "bar"},),
+        "cookies": ({"name": "foo", "value": {"type": "string", "value": "bar"}},),
         "method": "GET",
         "url": text_url,
     }
@@ -191,8 +191,8 @@ async def test_request_cookies(
 
     expected_request = {
         "cookies": (
-            {"name": "foo", "value": "bar"},
-            {"name": "fuu", "value": "baz"},
+            {"name": "foo", "value": {"type": "string", "value": "bar"}},
+            {"name": "fuu", "value": {"type": "string", "value": "baz"}},
         ),
         "method": "GET",
         "url": text_url,
