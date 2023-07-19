@@ -102,7 +102,6 @@ class AccEvent {
     eCaretMoveEvent,
     eTextSelChangeEvent,
     eSelectionChangeEvent,
-    eTableChangeEvent,
     eVirtualCursorChangeEvent,
     eObjectAttrChangedEvent,
     eScrollingEvent,
@@ -440,30 +439,6 @@ class AccSelChangeEvent : public AccEvent {
   AccSelChangeEvent* mPackedEvent;
 
   friend class EventQueue;
-};
-
-/**
- * Accessible table change event.
- */
-class AccTableChangeEvent : public AccEvent {
- public:
-  AccTableChangeEvent(LocalAccessible* aAccessible, uint32_t aEventType,
-                      int32_t aRowOrColIndex, int32_t aNumRowsOrCols);
-
-  // AccEvent
-  static const EventGroup kEventGroup = eTableChangeEvent;
-  virtual unsigned int GetEventGroups() const override {
-    return AccEvent::GetEventGroups() | (1U << eTableChangeEvent);
-  }
-
-  // AccTableChangeEvent
-  uint32_t GetIndex() const { return mRowOrColIndex; }
-  uint32_t GetCount() const { return mNumRowsOrCols; }
-
- private:
-  uint32_t mRowOrColIndex;  // the start row/column after which the rows are
-                            // inserted/deleted.
-  uint32_t mNumRowsOrCols;  // the number of inserted/deleted rows/columns
 };
 
 /**
