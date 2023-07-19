@@ -11,7 +11,7 @@
 
 #include "AccessibleText_i.c"
 
-#include "HyperTextAccessibleWrap.h"
+#include "HyperTextAccessible.h"
 #include "HyperTextAccessible-inl.h"
 #include "mozilla/ClearOnShutdown.h"
 
@@ -29,17 +29,19 @@ HyperTextAccessibleBase* ia2AccessibleText::TextAcc() {
   return acc ? acc->AsHyperTextBase() : nullptr;
 }
 
-std::pair<HyperTextAccessibleWrap*, HRESULT> ia2AccessibleText::LocalTextAcc() {
+std::pair<HyperTextAccessible*, HRESULT> ia2AccessibleText::LocalTextAcc() {
   auto hyp = static_cast<ia2AccessibleHypertext*>(this);
   Accessible* acc = hyp->Acc();
   if (!acc) {
     return {nullptr, CO_E_OBJNOTCONNECTED};
   }
-  auto localAcc = static_cast<AccessibleWrap*>(acc->AsLocal());
+  LocalAccessible* localAcc = acc->AsLocal();
   if (!localAcc) {
     return {nullptr, E_NOTIMPL};
   }
-  return {static_cast<HyperTextAccessibleWrap*>(localAcc), S_OK};
+  HyperTextAccessible* hypAcc = localAcc->AsHyperText();
+  MOZ_ASSERT(hypAcc);
+  return {hypAcc, S_OK};
 }
 
 // IAccessibleText
