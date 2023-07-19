@@ -36,6 +36,15 @@ class SVGTransformList {
   SVGTransformList() = default;
   ~SVGTransformList() = default;
 
+  SVGTransformList& operator=(const SVGTransformList& aOther) {
+    mItems.ClearAndRetainStorage();
+    // Best-effort, really.
+    Unused << mItems.AppendElements(aOther.mItems, fallible);
+    return *this;
+  }
+
+  SVGTransformList(const SVGTransformList& aOther) { *this = aOther; }
+
   // Only methods that don't make/permit modification to this list are public.
   // Only our friend classes can access methods that may change us.
 
