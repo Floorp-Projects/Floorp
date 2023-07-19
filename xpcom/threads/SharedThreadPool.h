@@ -8,7 +8,6 @@
 #define SharedThreadPool_h_
 
 #include <utility>
-#include <type_traits>
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/RefCountType.h"
 #include "nsCOMPtr.h"
@@ -53,7 +52,6 @@ class SharedThreadPool : public nsIThreadPool {
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override;
   NS_IMETHOD_(MozExternalRefCountType) Release(void) override;
-  using HasThreadSafeRefCnt = std::true_type;
 
   // Forward behaviour to wrapped thread pool implementation.
   NS_FORWARD_SAFE_NSITHREADPOOL(mPool);

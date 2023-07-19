@@ -43,7 +43,6 @@ derive_iface_tmpl = """\
 Interface {
     name: "%(name)s",
     base: %(base)s,
-    sync: %(sync)s,
     methods: %(methods)s,
 },
 """
@@ -74,7 +73,6 @@ def write_interface(iface, fd):
             % {
                 "name": iface.name,
                 "base": base,
-                "sync": "true" if iface.attributes.rust_sync else "false",
                 "methods": "Ok(&[\n%s])" % methods,
             }
         )
@@ -84,7 +82,6 @@ def write_interface(iface, fd):
             % {
                 "name": iface.name,
                 "base": base,
-                "sync": "false",
                 "methods": 'Err("%s")' % reason,
             }
         )
