@@ -99,7 +99,7 @@ export class AdmWikipedia extends BaseFeature {
           Promise.all(icons.map(i => rs.attachments.downloadToDisk(i)))
         ),
     ]);
-    if (rs != lazy.QuickSuggestRemoteSettings.rs) {
+    if (!this.isEnabled) {
       return;
     }
 
@@ -108,14 +108,14 @@ export class AdmWikipedia extends BaseFeature {
     this.logger.debug(`Got data with ${data.length} records`);
     for (let record of data) {
       let { buffer } = await rs.attachments.download(record);
-      if (rs != lazy.QuickSuggestRemoteSettings.rs) {
+      if (!this.isEnabled) {
         return;
       }
 
       let results = JSON.parse(new TextDecoder("utf-8").decode(buffer));
       this.logger.debug(`Adding ${results.length} results`);
       await suggestionsMap.add(results);
-      if (rs != lazy.QuickSuggestRemoteSettings.rs) {
+      if (!this.isEnabled) {
         return;
       }
     }
