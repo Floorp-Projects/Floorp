@@ -924,12 +924,12 @@ impl NoCalcLength {
             "pt" => Self::Absolute(AbsoluteLength::Pt(value)),
             "pc" => Self::Absolute(AbsoluteLength::Pc(value)),
             // font-relative
-            "em" => Self::FontRelative(FontRelativeLength::Em(value)),
-            "ex" => Self::FontRelative(FontRelativeLength::Ex(value)),
-            "ch" => Self::FontRelative(FontRelativeLength::Ch(value)),
-            "cap" => Self::FontRelative(FontRelativeLength::Cap(value)),
-            "ic" => Self::FontRelative(FontRelativeLength::Ic(value)),
-            "rem" => Self::FontRelative(FontRelativeLength::Rem(value)),
+            "em" if context.parsing_mode.allows_font_relative_lengths() => Self::FontRelative(FontRelativeLength::Em(value)),
+            "ex" if context.parsing_mode.allows_font_relative_lengths() => Self::FontRelative(FontRelativeLength::Ex(value)),
+            "ch" if context.parsing_mode.allows_font_relative_lengths() => Self::FontRelative(FontRelativeLength::Ch(value)),
+            "cap" if context.parsing_mode.allows_font_relative_lengths() => Self::FontRelative(FontRelativeLength::Cap(value)),
+            "ic" if context.parsing_mode.allows_font_relative_lengths() => Self::FontRelative(FontRelativeLength::Ic(value)),
+            "rem" if context.parsing_mode.allows_font_relative_lengths() => Self::FontRelative(FontRelativeLength::Rem(value)),
             // viewport percentages
             "vw" if !context.in_page_rule() => {
                 Self::ViewportPercentage(ViewportPercentageLength::Vw(value))
