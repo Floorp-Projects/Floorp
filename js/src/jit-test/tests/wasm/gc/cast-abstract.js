@@ -10,9 +10,9 @@ const preamble = `
   (type $s2 (sub $s1 (struct (field i32))))
   (type $a1 (sub (array (ref null $s1))))
   (type $a2 (sub $a1 (array (ref null $s2))))
-  (type $ft1 (func (param (ref $s1)) (result (ref null $a1))))
+  (type $ft1 (sub (func (param (ref $s1)) (result (ref null $a1)))))
   (type $ft2 (sub $ft1 (func (param (ref null $s1)) (result (ref null $a2)))))
-  (type $ft3 (func (param (ref $a2)) (result i32)))
+  (type $ft3 (sub (func (param (ref $a2)) (result i32))))
   (type $ft4 (sub $ft3 (func (param (ref $a1)) (result i32))))
 
   (func $f1 (type $ft1) ref.null $a1)
