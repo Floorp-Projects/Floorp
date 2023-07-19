@@ -107,6 +107,13 @@
       expected: 'denied',
     },
     {
+      id: 'query storage-access unknown',
+      top: UNKNOWN_ACTION,
+      name: 'storage-access',
+      type: '3rdPartyFrameStorage^https://example.org',
+      expected: 'prompt',
+    },
+    {
       id: 'query navigation top prompt',
       top: PROMPT_ACTION,
       name: 'geolocation',
@@ -133,6 +140,13 @@
       name: 'persistent-storage',
       type: 'persistent-storage',
       expected: 'denied',
+    },
+    {
+      id: 'query storage-access top prompt',
+      top: PROMPT_ACTION,
+      name: 'storage-access',
+      type: '3rdPartyFrameStorage^https://example.org',
+      expected: 'prompt',
     },
     {
       id: 'query navigation top denied',
@@ -163,6 +177,13 @@
       expected: 'denied',
     },
     {
+      id: 'query storage-access top denied',
+      top: DENY_ACTION,
+      name: 'storage-access',
+      type: '3rdPartyFrameStorage^https://example.org',
+      expected: 'prompt',
+    },
+    {
       id: 'query navigation top granted',
       top: ALLOW_ACTION,
       name: 'geolocation',
@@ -189,6 +210,13 @@
       name: 'persistent-storage',
       type: 'persistent-storage',
       expected: 'denied',
+    },
+    {
+      id: 'query storage-access top granted',
+      top: ALLOW_ACTION,
+      name: 'storage-access',
+      type: '3rdPartyFrameStorage^https://example.org',
+      expected: 'granted',
     },
     {
       id: 'query navigation top denied, iframe has allow attribute',
@@ -222,7 +250,38 @@
       type: 'geo',
       expected: 'prompt',
     },
-
+    {
+      id: 'query storage-access top denied, iframe has allow none attribute',
+      top: DENY_ACTION,
+      allow: "storage-access 'none'",
+      name: 'storage-access',
+      type: '3rdPartyFrameStorage^https://example.org',
+      expected: 'prompt',
+    },
+    {
+      id: 'query storage-access top granted, iframe has allow none attribute',
+      top: ALLOW_ACTION,
+      allow: "storage-access 'none'",
+      name: 'storage-access',
+      type: '3rdPartyFrameStorage^https://example.org',
+      expected: 'prompt',
+    },
+    {
+      id: 'query storage-access top prompt, iframe has allow none attribute',
+      top: PROMPT_ACTION,
+      allow: "storage-access 'none'",
+      name: 'storage-access',
+      type: '3rdPartyFrameStorage^https://example.org',
+      expected: 'prompt',
+    },
+    {
+      id: 'query storage-access top unknown, iframe has allow none attribute',
+      top: UNKNOWN_ACTION,
+      allow: "storage-access 'none'",
+      name: 'storage-access',
+      type: '3rdPartyFrameStorage^https://example.org',
+      expected: 'prompt',
+    },
   ];
 
   SimpleTest.waitForExplicitFinish();

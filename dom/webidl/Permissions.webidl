@@ -12,7 +12,8 @@ enum PermissionName {
   "notifications",
   "push",
   "persistent-storage",
-  "midi"
+  "midi",
+  "storage-access" // Defined in https://privacycg.github.io/storage-access/#permissions-integration
 };
 
 [GenerateInit]
