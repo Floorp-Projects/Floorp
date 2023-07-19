@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.BottomSheetHandle
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.shopping.state.ReviewQualityCheckState
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val bottomSheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
@@ -65,6 +66,13 @@ fun ReviewQualityCheckContent(
         Header()
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        ReviewGradeCard(
+            modifier = Modifier.fillMaxWidth(),
+            reviewGrade = ReviewQualityCheckState.Grade.B,
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -87,6 +95,24 @@ private fun Header() {
             color = FirefoxTheme.colors.textPrimary,
             style = FirefoxTheme.typography.headline6,
         )
+    }
+}
+
+@Composable
+private fun ReviewGradeCard(
+    reviewGrade: ReviewQualityCheckState.Grade,
+    modifier: Modifier = Modifier,
+) {
+    ReviewQualityCheckCard(modifier = modifier.semantics(mergeDescendants = true) {}) {
+        Text(
+            text = stringResource(R.string.review_quality_check_grade_title),
+            color = FirefoxTheme.colors.textPrimary,
+            style = FirefoxTheme.typography.headline8,
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        ReviewGradeExpanded(grade = reviewGrade)
     }
 }
 
