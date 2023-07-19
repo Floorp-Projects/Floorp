@@ -46,8 +46,7 @@ HTMLObjectElement::~HTMLObjectElement() {
 }
 
 bool HTMLObjectElement::IsInteractiveHTMLContent() const {
-  return HasAttr(nsGkAtoms::usemap) ||
-         nsGenericHTMLFormControlElement::IsInteractiveHTMLContent();
+  return nsGenericHTMLFormControlElement::IsInteractiveHTMLContent();
 }
 
 void HTMLObjectElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {
