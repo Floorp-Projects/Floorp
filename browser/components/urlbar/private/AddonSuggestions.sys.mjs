@@ -166,7 +166,7 @@ export class AddonSuggestions extends BaseFeature {
 
   async onRemoteSettingsSync(rs) {
     const records = await rs.get({ filters: { type: "amo-suggestions" } });
-    if (rs != lazy.QuickSuggestRemoteSettings.rs) {
+    if (!this.isEnabled) {
       return;
     }
 
@@ -174,7 +174,7 @@ export class AddonSuggestions extends BaseFeature {
 
     for (const record of records) {
       const { buffer } = await rs.attachments.download(record);
-      if (rs != lazy.QuickSuggestRemoteSettings.rs) {
+      if (!this.isEnabled) {
         return;
       }
 
@@ -183,7 +183,7 @@ export class AddonSuggestions extends BaseFeature {
         mapKeyword:
           lazy.SuggestionsMap.MAP_KEYWORD_PREFIXES_STARTING_AT_FIRST_WORD,
       });
-      if (rs != lazy.QuickSuggestRemoteSettings.rs) {
+      if (!this.isEnabled) {
         return;
       }
     }

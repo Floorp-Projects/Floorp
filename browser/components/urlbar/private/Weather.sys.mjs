@@ -160,7 +160,7 @@ export class Weather extends BaseFeature {
   async onRemoteSettingsSync(rs) {
     this.logger.debug("Loading weather config from remote settings");
     let records = await rs.get({ filters: { type: "weather" } });
-    if (rs != lazy.QuickSuggestRemoteSettings.rs) {
+    if (!this.isEnabled) {
       return;
     }
 
