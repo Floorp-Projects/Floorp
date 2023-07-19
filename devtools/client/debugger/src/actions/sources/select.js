@@ -7,8 +7,6 @@
  * @module actions/sources
  */
 
-import { isOriginalId } from "devtools/client/shared/source-map-loader/index";
-
 import { setSymbols } from "./symbols";
 import { setInScopeLines } from "../ast";
 import { togglePrettyPrint } from "./prettyPrint";
@@ -143,7 +141,7 @@ export function selectLocation(location, { keepContext = true } = {}) {
       getState()
     );
     if (keepContext) {
-      if (shouldSelectOriginalLocation != isOriginalId(location.source.id)) {
+      if (shouldSelectOriginalLocation != location.source.isOriginal) {
         // getRelatedMapLocation will convert to the related generated/original location.
         // i.e if the original location is passed, the related generated location will be returned and vice versa.
         location = await getRelatedMapLocation(location, thunkArgs);
@@ -156,7 +154,7 @@ export function selectLocation(location, { keepContext = true } = {}) {
         source = location.source;
       }
     } else {
-      shouldSelectOriginalLocation = isOriginalId(location.source.id);
+      shouldSelectOriginalLocation = location.source.isOriginal;
     }
 
     let sourceActor = location.sourceActor;

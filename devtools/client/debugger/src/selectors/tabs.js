@@ -6,7 +6,6 @@ import { createSelector } from "reselect";
 import { getPrettySourceURL } from "../utils/source";
 
 import { getSpecificSourceByURL } from "./sources";
-import { isOriginalId } from "devtools/client/shared/source-map-loader/index";
 import { isSimilarTab } from "../utils/tabs";
 
 export const getTabs = state => state.tabs.tabs;
@@ -48,7 +47,7 @@ export function getNewSelectedSource(state, tabList) {
   }
 
   const matchingTab = availableTabs.find(tab =>
-    isSimilarTab(tab, selectedSource.url, isOriginalId(selectedSource.id))
+    isSimilarTab(tab, selectedSource.url, selectedSource.isOriginal)
   );
 
   if (matchingTab) {
