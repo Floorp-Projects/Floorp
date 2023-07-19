@@ -46,7 +46,7 @@
 #include "threading/ProtectedData.h"      // WriteOnceData
 #include "vm/HelperThreads.h"  // AutoLockHelperThreadState, AutoUnlockHelperThreadState
 #include "vm/HelperThreadTask.h"             // HelperThreadTask
-#include "vm/JSContext.h"                    // JSContext, TlsContext
+#include "vm/JSContext.h"                    // JSContext
 #include "vm/JSScript.h"                     // ScriptSource
 #include "vm/Runtime.h"                      // JSRuntime
 #include "vm/SharedImmutableStringsCache.h"  // SharedImmutableString
@@ -503,13 +503,6 @@ class MOZ_RAII AutoSetHelperThreadContext {
   AutoSetHelperThreadContext(const JS::ContextOptions& options,
                              AutoLockHelperThreadState& lock);
   ~AutoSetHelperThreadContext();
-};
-
-struct MOZ_RAII AutoSetContextRuntime {
-  explicit AutoSetContextRuntime(JSRuntime* rt) {
-    TlsContext.get()->setRuntime(rt);
-  }
-  ~AutoSetContextRuntime() { TlsContext.get()->setRuntime(nullptr); }
 };
 
 struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
