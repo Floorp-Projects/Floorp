@@ -22,7 +22,7 @@ dictionary CSSStyleSheetInit {
 
 [Exposed=Window]
 interface CSSStyleSheet : StyleSheet {
-  [Throws, Pref="layout.css.constructable-stylesheets.enabled"]
+  [Throws]
   constructor(optional CSSStyleSheetInit options = {});
   [Pure, BinaryName="DOMOwnerRule"]
   readonly attribute CSSRule? ownerRule;
@@ -34,9 +34,9 @@ interface CSSStyleSheet : StyleSheet {
   unsigned long insertRule(UTF8String rule, optional unsigned long index = 0);
   [Throws, NeedsSubjectPrincipal]
   undefined deleteRule(unsigned long index);
-  [NewObject, Pref="layout.css.constructable-stylesheets.enabled"]
+  [NewObject]
   Promise<CSSStyleSheet> replace(UTF8String text);
-  [Throws, Pref="layout.css.constructable-stylesheets.enabled"]
+  [Throws]
   undefined replaceSync(UTF8String text);
 
   // Non-standard WebKit things.

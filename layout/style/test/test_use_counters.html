@@ -120,12 +120,6 @@ add_task(async () => {
 
 // Test on constructable stylesheets.
 add_task(async () => {
-  await SpecialPowers.pushPrefEnv({
-    "set": [
-      ["layout.css.constructable-stylesheets.enabled", true]
-    ]
-  });
-
   for (let test of [IMPLEMENTED_PROPERTIES, UNIMPLEMENTED_PROPERTIES]) {
     for (let method of ["replace", "replaceSync"]) {
       await iframe_reload();
