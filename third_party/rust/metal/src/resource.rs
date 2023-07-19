@@ -58,6 +58,7 @@ pub const MTLResourceHazardTrackingModeMask: NSUInteger = 0x3 << MTLResourceHaza
 bitflags! {
     /// See <https://developer.apple.com/documentation/metal/mtlresourceoptions>
     #[allow(non_upper_case_globals)]
+    #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
     pub struct MTLResourceOptions: NSUInteger {
         const CPUCacheModeDefaultCache  = (MTLCPUCacheMode::DefaultCache as NSUInteger) << MTLResourceCPUCacheModeShift;
         const CPUCacheModeWriteCombined = (MTLCPUCacheMode::WriteCombined as NSUInteger) << MTLResourceCPUCacheModeShift;
@@ -83,6 +84,7 @@ bitflags! {
     /// convert the resource to another format (for example, whether to decompress a color render target).
     ///
     /// See <https://developer.apple.com/documentation/metal/mtlresourceusage>
+    #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
     pub struct MTLResourceUsage: NSUInteger {
         /// An option that enables reading from the resource.
         const Read   = 1 << 0;

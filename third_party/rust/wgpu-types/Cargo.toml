@@ -51,6 +51,7 @@ version = "1"
 features = ["serde_derive"]
 
 [features]
+fragile-send-sync-non-atomic-wasm = []
 replay = ["serde"]
 strict_asserts = []
 trace = ["serde"]

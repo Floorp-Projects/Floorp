@@ -3,6 +3,7 @@ use super::*;
 bitflags! {
     /// See <https://developer.apple.com/documentation/metal/mtlindirectcommandtype/>
     #[allow(non_upper_case_globals)]
+    #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
     pub struct MTLIndirectCommandType: NSUInteger {
         const Draw                      = 1 << 0;
         const DrawIndexed               = 1 << 1;

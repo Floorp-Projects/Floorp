@@ -58,7 +58,7 @@ rustc-hash = "1.1"
 thiserror = "1"
 
 [dependencies.glow]
-version = "0.12.2"
+version = "0.12.3"
 optional = true
 
 [dependencies.naga]
@@ -88,7 +88,7 @@ rev = "76003dc0035d53a474d366dcdf49d2e4d12e921f"
 features = ["wgsl-in"]
 
 [features]
-default = []
+default = ["link"]
 dx11 = [
     "naga/hlsl-out",
     "d3d12",
@@ -113,12 +113,14 @@ dx12 = [
     "winapi/dxgi1_6",
 ]
 dxc_shader_compiler = ["hassle-rs"]
+fragile-send-sync-non-atomic-wasm = ["wgt/fragile-send-sync-non-atomic-wasm"]
 gles = [
     "naga/glsl-out",
     "glow",
     "khronos-egl",
     "libloading",
 ]
+link = ["metal/link"]
 metal = [
     "naga/msl-out",
     "block",
@@ -152,12 +154,16 @@ features = [
 
 [target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies]
 core-graphics-types = "0.1"
-metal = "0.25.0"
 objc = "0.2.5"
 
 [target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies.block]
 version = "0.1"
 optional = true
+
+[target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies.metal]
+git = "https://github.com/gfx-rs/metal-rs.git"
+rev = "a6a0446"
+default_features = false
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.ash]
 version = "0.37.3"

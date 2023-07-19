@@ -9,7 +9,7 @@ use super::*;
 
 use objc::runtime::{BOOL, YES};
 
-#[link(name = "MetalPerformanceShaders", kind = "framework")]
+#[cfg_attr(feature = "link", link(name = "MetalPerformanceShaders", kind = "framework"))]
 extern "C" {
     fn MPSSupportsMTLDevice(device: *const std::ffi::c_void) -> BOOL;
 }
@@ -40,6 +40,7 @@ pub enum MPSRayDataType {
 bitflags! {
     /// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsraymaskoptions>
     #[allow(non_upper_case_globals)]
+    #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
     pub struct MPSRayMaskOptions: NSUInteger {
         /// Enable primitive masks
         const Primitive = 1;
@@ -115,6 +116,7 @@ pub enum MPSAccelerationStructureStatus {
 bitflags! {
     /// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsaccelerationstructureusage>
     #[allow(non_upper_case_globals)]
+    #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
     pub struct MPSAccelerationStructureUsage: NSUInteger {
         /// No usage options specified
         const None = 0;

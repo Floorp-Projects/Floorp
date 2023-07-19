@@ -65,7 +65,6 @@ impl SharedEventRef {
             (*block).flags |= BLOCK_HAS_SIGNATURE | BLOCK_HAS_COPY_DISPOSE;
             (*block).extra = &BLOCK_EXTRA;
             let () = msg_send![self, notifyListener:listener atValue:value block:block];
-            mem::forget(block);
         }
 
         extern "C" fn dtor(_: *mut BlockBase<(&SharedEventRef, u64), ()>) {}
@@ -144,6 +143,7 @@ bitflags! {
     /// allowing for vertex and fragment processing to overlap in execution.
     ///
     /// See <https://developer.apple.com/documentation/metal/mtlrenderstages>
+    #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
     pub struct MTLRenderStages: NSUInteger {
         /// The vertex rendering stage.
         const Vertex = 1 << 0;
