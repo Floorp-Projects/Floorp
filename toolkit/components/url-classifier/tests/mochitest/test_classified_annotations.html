@@ -20,7 +20,9 @@ var contentPage = "http://mochi.test:8888/chrome/toolkit/components/url-classifi
 var Cc = SpecialPowers.Cc;
 var Ci = SpecialPowers.Ci;
 
-const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const {UrlClassifierTestUtils} = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
+);
 const {TestUtils} = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );

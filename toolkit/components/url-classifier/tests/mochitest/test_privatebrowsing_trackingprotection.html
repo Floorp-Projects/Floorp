@@ -19,7 +19,9 @@
 var mainWindow = window.browsingContext.topChromeWindow;
 var contentPage = "https://www.itisatrap.org/chrome/toolkit/components/url-classifier/tests/mochitest/classifiedAnnotatedPBFrame.html";
 
-const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const {UrlClassifierTestUtils} = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
+);
 const {TestUtils} = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );

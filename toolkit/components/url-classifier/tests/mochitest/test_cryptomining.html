@@ -67,7 +67,9 @@ async function runTest(test) {
 async function runTests() {
   let chromeScript = SpecialPowers.loadChromeScript(_ => {
     /* eslint-env mozilla/chrome-script */
-    const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+    const {UrlClassifierTestUtils} = ChromeUtils.importESModule(
+      "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
+    );
 
     addMessageListener("loadTrackers", __ => {
       return UrlClassifierTestUtils.addTestTrackers();
