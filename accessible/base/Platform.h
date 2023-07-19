@@ -126,9 +126,9 @@ bool LocalizeString(const nsAString& aToken, nsAString& aLocalized);
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
-class TextRangeData;
-void PlatformTextSelectionChangeEvent(
-    Accessible* aTarget, const nsTArray<TextRangeData>& aSelection);
+class TextRange;
+void PlatformTextSelectionChangeEvent(Accessible* aTarget,
+                                      const nsTArray<TextRange>& aSelection);
 
 void PlatformRoleChangedEvent(Accessible* aTarget, const a11y::role& aRole,
                               uint8_t aRoleMapEntryIndex);
