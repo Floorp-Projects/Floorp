@@ -390,7 +390,9 @@ iface_scriptable = """\
 
 iface_epilog = """};
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(%(name)s, %(defname)s_IID)
+  NS_DEFINE_STATIC_IID_ACCESSOR(%(name)s, %(defname)s_IID)"""
+
+iface_decl = """
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_%(macroname)s """
@@ -432,6 +434,13 @@ refcnt_infallible_tmpl = """\
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return already_AddRefed<%(realtype)s>(result);
   }
+"""
+
+iface_threadsafe_tmpl = """\
+namespace mozilla::detail {
+template <>
+class InterfaceNeedsThreadSafeRefCnt<%(name)s> : public std::true_type {};
+}
 """
 
 
@@ -600,6 +609,11 @@ def write_interface(iface, fd):
                     raise Exception("Unexpected interface member: %s" % member)
 
     fd.write(iface_epilog % names)
+
+    if iface.attributes.rust_sync:
+        fd.write(iface_threadsafe_tmpl % names)
+
+    fd.write(iface_decl % names)
 
     def writeDeclaration(fd, iface, virtual):
         declType = "NS_IMETHOD" if virtual else "nsresult"
