@@ -210,6 +210,8 @@ parent:
   async DiscoverIdentityCredentialFromExternalSource(IdentityCredentialRequestOptions aOptions) 
       returns (IPCIdentityCredential? identityCredential);
 
+  async HasStorageAccessPermission() returns(bool granted);
+
 child:
   async NotifyPermissionChange(nsCString type);
 };

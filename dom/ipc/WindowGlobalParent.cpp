@@ -8,6 +8,7 @@
 
 #include <algorithm>
 
+#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ContentBlockingAllowList.h"
@@ -1371,6 +1372,68 @@ IPCResult WindowGlobalParent::RecvDiscoverIdentityCredentialFromExternalSource(
             return aResolver(Some(aResult));
           },
           [aResolver](nsresult aErr) { aResolver(Nothing()); });
+  return IPC_OK();
+}
+
+IPCResult WindowGlobalParent::RecvHasStorageAccessPermission(
+    HasStorageAccessPermissionResolver&& aResolve) {
+  WindowGlobalParent* top = TopWindowContext();
+  if (!top) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  nsIPrincipal* topPrincipal = top->DocumentPrincipal();
+  nsIPrincipal* principal = DocumentPrincipal();
+
+  nsCOMPtr<nsIPermissionManager> permMgr =
+      components::PermissionManager::Service();
+  if (!permMgr) {
+    return IPC_FAIL(
+        this,
+        "Storage Access Permission: Failed to get Permission Manager service");
+  }
+
+  // Build the permission keys
+  nsAutoCString requestPermissionKey;
+  bool success = AntiTrackingUtils::CreateStoragePermissionKey(
+      principal, requestPermissionKey);
+  if (!success) {
+    return IPC_FAIL(
+        this,
+        "Storage Access Permission: Failed to create top level permission key");
+  }
+
+  nsAutoCString requestFramePermissionKey;
+  success = AntiTrackingUtils::CreateStorageFramePermissionKey(
+      principal, requestFramePermissionKey);
+  if (!success) {
+    return IPC_FAIL(
+        this,
+        "Storage Access Permission: Failed to create frame permission key");
+  }
+
+  // Test the permission
+  uint32_t access = nsIPermissionManager::UNKNOWN_ACTION;
+  nsresult rv = permMgr->TestPermissionFromPrincipal(
+      topPrincipal, requestPermissionKey, &access);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return IPC_FAIL(this,
+                    "Storage Access Permission: Permission Manager failed to "
+                    "test permission");
+  }
+  if (access == nsIPermissionManager::ALLOW_ACTION) {
+    aResolve(true);
+    return IPC_OK();
+  }
+
+  uint32_t frameAccess = nsIPermissionManager::UNKNOWN_ACTION;
+  rv = permMgr->TestPermissionFromPrincipal(
+      topPrincipal, requestFramePermissionKey, &frameAccess);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return IPC_FAIL(this,
+                    "Storage Access Permission: Permission Manager failed to "
+                    "test permission");
+  }
+  aResolve(frameAccess == nsIPermissionManager::ALLOW_ACTION);
   return IPC_OK();
 }
 
