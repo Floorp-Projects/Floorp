@@ -1498,8 +1498,6 @@ void GlobalHelperThreadState::finish(AutoLockHelperThreadState& lock) {
     freeList.popBack();
     jit::FreeIonCompileTask(task->compileTask());
   }
-
-  destroyHelperContexts(lock);
 }
 
 void GlobalHelperThreadState::finishThreads(AutoLockHelperThreadState& lock) {
@@ -1508,33 +1506,6 @@ void GlobalHelperThreadState::finishThreads(AutoLockHelperThreadState& lock) {
 
   if (InternalThreadPool::IsInitialized()) {
     InternalThreadPool::ShutDown(lock);
-  }
-}
-
-JSContext* GlobalHelperThreadState::getFirstUnusedContext(
-    AutoLockHelperThreadState& locked) {
-  for (auto& cx : helperContexts_) {
-    if (cx->contextAvailable(locked)) {
-      return cx;
-    }
-  }
-
-  MOZ_ASSERT(helperContexts_.length() < threadCount);
-
-  AutoEnterOOMUnsafeRegion oomUnsafe;
-  auto cx = js::MakeUnique<JSContext>(nullptr, JS::ContextOptions());
-  if (!cx || !cx->init(ContextKind::HelperThread) ||
-      !helperContexts_.append(cx.get())) {
-    oomUnsafe.crash("GlobalHelperThreadState::getFirstUnusedContext");
-  }
-
-  return cx.release();
-}
-
-void GlobalHelperThreadState::destroyHelperContexts(
-    AutoLockHelperThreadState& lock) {
-  while (helperContexts_.length() > 0) {
-    js_delete(helperContexts_.popCopy());
   }
 }
 
@@ -1660,24 +1631,6 @@ bool GlobalHelperThreadState::checkTaskThreadLimit(
   return true;
 }
 
-void GlobalHelperThreadState::triggerFreeUnusedMemory() {
-  if (!CanUseExtraThreads()) {
-    return;
-  }
-
-  AutoLockHelperThreadState lock;
-  for (auto& context : helperContexts_) {
-    if (context->shouldFreeUnusedMemory() && context->contextAvailable(lock)) {
-      // This context hasn't been used since the last time freeUnusedMemory
-      // was set. Free the temp LifoAlloc from the main thread.
-      context->tempLifoAllocNoCheck().freeAll();
-      context->setFreeUnusedMemory(false);
-    } else {
-      context->setFreeUnusedMemory(true);
-    }
-  }
-}
-
 static inline bool IsHelperThreadSimulatingOOM(js::ThreadType threadType) {
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
   return js::oom::simulator.targetThread() == threadType;
@@ -1717,7 +1670,6 @@ void GlobalHelperThreadState::addSizeOfIncludingThis(
       compressionWorklist_.sizeOfExcludingThis(mallocSizeOf) +
       compressionFinishedList_.sizeOfExcludingThis(mallocSizeOf) +
       gcParallelWorklist_.sizeOfExcludingThis(mallocSizeOf, lock) +
-      helperContexts_.sizeOfExcludingThis(mallocSizeOf) +
       helperTasks_.sizeOfExcludingThis(mallocSizeOf);
 
   // Report ParseTasks on wait lists
@@ -1746,17 +1698,6 @@ void GlobalHelperThreadState::addSizeOfIncludingThis(
   }
   for (auto task : wasmWorklist_tier2_) {
     htStats.wasmCompile += task->sizeOfExcludingThis(mallocSizeOf);
-  }
-
-  {
-    // Report memory used by the JSContexts.
-    // We're holding the helper state lock, and the JSContext memory reporter
-    // won't do anything more substantial than traversing data structures and
-    // getting their size, so disable ProtectedData checks.
-    AutoNoteSingleThreadedRegion anstr;
-    for (auto* cx : helperContexts_) {
-      htStats.contexts += cx->sizeOfIncludingThis(mallocSizeOf);
-    }
   }
 
   // Report number of helper threads.

@@ -172,14 +172,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   js::ContextData<JS::ContextOptions> options_;
 
-  // Thread that the JSContext is currently running on, if in use.
-  js::ThreadId currentThread_;
-
   js::FrontendErrors* errors_;
-
-  // When a helper thread is using a context, it may need to periodically
-  // free unused memory.
-  mozilla::Atomic<bool, mozilla::ReleaseAcquire> freeUnusedMemory;
 
   // Are we currently timing execution? This flag ensures that we do not
   // double-count execution time in reentrant situations.
@@ -193,17 +186,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // This is used by helper threads to change the runtime their context is
   // currently operating on.
   void setRuntime(JSRuntime* rt);
-
-  bool contextAvailable(js::AutoLockHelperThreadState& locked) {
-    MOZ_ASSERT(kind_ == js::ContextKind::HelperThread);
-    return currentThread_ == js::ThreadId();
-  }
-
-  void setFreeUnusedMemory(bool shouldFree) { freeUnusedMemory = shouldFree; }
-
-  bool shouldFreeUnusedMemory() const {
-    return kind_ == js::ContextKind::HelperThread && freeUnusedMemory;
-  }
 
   bool isMeasuringExecutionTime() const { return measuringExecutionTime_; }
   void setIsMeasuringExecutionTime(bool value) {
@@ -602,7 +584,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
  public:
   js::LifoAlloc& tempLifoAlloc() { return tempLifoAlloc_.ref(); }
   const js::LifoAlloc& tempLifoAlloc() const { return tempLifoAlloc_.ref(); }
-  js::LifoAlloc& tempLifoAllocNoCheck() { return tempLifoAlloc_.refNoCheck(); }
 
   js::ContextData<uint32_t> debuggerMutations;
 
