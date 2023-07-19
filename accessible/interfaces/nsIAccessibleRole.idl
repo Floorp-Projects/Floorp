@@ -21,13 +21,13 @@ interface nsIAccessibleRole : nsISupports
    * from which menus are selected by the user. The role is used by
    * xul:menubar or role="menubar".
    */
-  const unsigned long ROLE_MENUBAR = 2;
+  const unsigned long ROLE_MENUBAR = 1;
 
   /**
    * Represents a vertical or horizontal scroll bar, which is part of the client
    * area or used in a control.
    */
-  const unsigned long ROLE_SCROLLBAR = 3;
+  const unsigned long ROLE_SCROLLBAR = 2;
 
   /**
    * Represents an alert or a condition that a user should be notified about.
@@ -36,42 +36,42 @@ interface nsIAccessibleRole : nsISupports
    * warning dialogs, etc. The role is used by xul:browsermessage,
    * role="alert".
    */
-  const unsigned long ROLE_ALERT = 8;
+  const unsigned long ROLE_ALERT = 3;
 
   /**
    * A sub-document (<frame> or <iframe>)
    */
-  const unsigned long ROLE_INTERNAL_FRAME = 10;
+  const unsigned long ROLE_INTERNAL_FRAME = 4;
 
   /**
    * Represents a menu, which presents a list of options from which the user can
    * make a selection to perform an action. It is used for role="menu".
    */
-  const unsigned long ROLE_MENUPOPUP = 11;
+  const unsigned long ROLE_MENUPOPUP = 5;
 
   /**
    * Represents a menu item, which is an entry in a menu that a user can choose
    * to carry out a command, select an option. It is used for xul:menuitem,
    * role="menuitem".
    */
-  const unsigned long ROLE_MENUITEM = 12;
+  const unsigned long ROLE_MENUITEM = 6;
 
   /**
    * Represents a ToolTip that provides helpful hints.
    */
-  const unsigned long ROLE_TOOLTIP = 13;
+  const unsigned long ROLE_TOOLTIP = 7;
 
   /**
    * Represents a main window for an application. It is used for
    * role="application". Also refer to ROLE_APP_ROOT
    */
-  const unsigned long ROLE_APPLICATION = 14;
+  const unsigned long ROLE_APPLICATION = 8;
 
   /**
    * Represents a document window. A document window is always contained within
    * an application window. For role="document", see NON_NATIVE_DOCUMENT.
    */
-  const unsigned long ROLE_DOCUMENT = 15;
+  const unsigned long ROLE_DOCUMENT = 9;
 
   /**
    * Represents a pane within a frame or document window. Users can navigate
@@ -80,34 +80,34 @@ interface nsIAccessibleRole : nsISupports
    * of grouping lower than frame windows or documents, but above individual
    * controls. It is used for the first child of a <frame> or <iframe>.
    */
-  const unsigned long ROLE_PANE = 16;
+  const unsigned long ROLE_PANE = 10;
 
   /**
    * Represents a dialog box or message box. It is used for xul:dialog,
    * role="dialog".
    */
-  const unsigned long ROLE_DIALOG = 18;
+  const unsigned long ROLE_DIALOG = 11;
 
   /**
    * Logically groups other objects. There is not always a parent-child
    * relationship between the grouping object and the objects it contains. It
    * is used for html:textfield, xul:groupbox, role="group".
    */
-  const unsigned long ROLE_GROUPING = 20;
+  const unsigned long ROLE_GROUPING = 12;
 
   /**
    * Used to visually divide a space into two regions, such as a separator menu
    * item or a bar that divides split panes within a window. It is used for
    * xul:separator, html:hr, role="separator".
    */
-  const unsigned long ROLE_SEPARATOR = 21;
+  const unsigned long ROLE_SEPARATOR = 13;
 
   /**
    * Represents a toolbar, which is a grouping of controls (push buttons or
    * toggle buttons) that provides easy access to frequently used features. It
    * is used for xul:toolbar, role="toolbar".
    */
-  const unsigned long ROLE_TOOLBAR = 22;
+  const unsigned long ROLE_TOOLBAR = 14;
 
   /**
    * Represents a status bar, which is an area at the bottom of a window that
@@ -115,7 +115,7 @@ interface nsIAccessibleRole : nsISupports
    * or selected object. The status bar has multiple fields, which display
    * different kinds of information. It is used for xul:statusbar.
    */
-  const unsigned long ROLE_STATUSBAR = 23;
+  const unsigned long ROLE_STATUSBAR = 15;
 
   /**
    * Represents a table that contains rows and columns of cells, and optionally,
@@ -123,104 +123,104 @@ interface nsIAccessibleRole : nsISupports
    * role="grid". Also refer to the following roles: ROLE_COLUMNHEADER,
    * ROLE_ROWHEADER, ROLE_ROW, ROLE_CELL.
    */
-  const unsigned long ROLE_TABLE = 24;
+  const unsigned long ROLE_TABLE = 16;
 
   /**
    * Represents a column header, providing a visual label for a column in
    * a table. It is used for XUL tree column headers, html:th,
    * role="colheader". Also refer to ROLE_TABLE.
    */
-  const unsigned long ROLE_COLUMNHEADER = 25;
+  const unsigned long ROLE_COLUMNHEADER = 17;
 
   /**
    * Represents a row header, which provides a visual label for a table row.
    * It is used for role="rowheader". Also, see ROLE_TABLE.
    */
-  const unsigned long ROLE_ROWHEADER = 26;
+  const unsigned long ROLE_ROWHEADER = 18;
 
   /**
    * Represents a row of cells within a table. Also, see ROLE_TABLE.
    */
-  const unsigned long ROLE_ROW = 28;
+  const unsigned long ROLE_ROW = 19;
 
   /**
    * Represents a cell within a table. It is used for html:td and xul:tree cell.
    * Also, see ROLE_TABLE.
    */
-  const unsigned long ROLE_CELL = 29;
+  const unsigned long ROLE_CELL = 20;
 
   /**
    * Represents a link to something else. This object might look like text or
    * a graphic, but it acts like a button. It is used for
    * xul:label@class="text-link", html:a, html:area.
    */
-  const unsigned long ROLE_LINK = 30;
+  const unsigned long ROLE_LINK = 21;
 
   /**
    * Represents a list box, allowing the user to select one or more items. It
    * is used for xul:listbox, html:select@size, role="list". See also
    * ROLE_LIST_ITEM.
    */
-  const unsigned long ROLE_LIST = 33;
+  const unsigned long ROLE_LIST = 22;
 
   /**
    * Represents an item in a list. See also ROLE_LIST.
    */
-  const unsigned long ROLE_LISTITEM = 34;
+  const unsigned long ROLE_LISTITEM = 23;
 
   /**
    * Represents an outline or tree structure, such as a tree view control,
    * that displays a hierarchical list and allows the user to expand and
    * collapse branches. Is is used for role="tree".
    */
-  const unsigned long ROLE_OUTLINE = 35;
+  const unsigned long ROLE_OUTLINE = 24;
 
   /**
    * Represents an item in an outline or tree structure. It is used for
    * role="treeitem".
    */
-  const unsigned long ROLE_OUTLINEITEM = 36;
+  const unsigned long ROLE_OUTLINEITEM = 25;
 
   /**
    * Represents a page tab, it is a child of a page tab list. It is used for
    * xul:tab, role="treeitem". Also refer to ROLE_PAGETABLIST.
    */
-  const unsigned long ROLE_PAGETAB = 37;
+  const unsigned long ROLE_PAGETAB = 26;
 
   /**
    * Represents a property sheet. It is used for xul:tabpanel,
    * role="tabpanel".
    */
-  const unsigned long ROLE_PROPERTYPAGE = 38;
+  const unsigned long ROLE_PROPERTYPAGE = 27;
 
   /**
    * Represents a picture. Is is used for xul:image, html:img.
    */
-  const unsigned long ROLE_GRAPHIC = 40;
+  const unsigned long ROLE_GRAPHIC = 28;
 
   /**
    * Represents read-only text, such as labels for other controls or
    * instructions in a dialog box. Static text cannot be modified or selected.
    * Is is used for xul:label, xul:description, html:label, role="label".
    */
-  const unsigned long ROLE_STATICTEXT = 41;
+  const unsigned long ROLE_STATICTEXT = 29;
 
   /**
    * Represents selectable text that allows edits or is designated read-only.
    */
-  const unsigned long ROLE_TEXT_LEAF = 42;
+  const unsigned long ROLE_TEXT_LEAF = 30;
 
   /**
    * Represents a push button control. It is used for xul:button, html:button,
    * role="button".
    */
-  const unsigned long ROLE_PUSHBUTTON = 43;
+  const unsigned long ROLE_PUSHBUTTON = 31;
 
   /**
    * Represents a check box control. It is used for xul:checkbox,
    * html:input@type="checkbox", role="checkbox".
    */
-  const unsigned long ROLE_CHECKBUTTON = 44;
+  const unsigned long ROLE_CHECKBUTTON = 32;
 
   /**
    * Represents an option button, also called a radio button. It is one of a
@@ -229,138 +229,138 @@ interface nsIAccessibleRole : nsISupports
    * exclusive group. It is used for xul:radio, html:input@type="radio",
    * role="radio".
    */
-  const unsigned long ROLE_RADIOBUTTON = 45;
+  const unsigned long ROLE_RADIOBUTTON = 33;
 
   /**
    * Represents a combo box; a popup button with an associated list box that
    * provides a set of predefined choices. It is used for html:select with a
    * size of 1 and xul:menulist. See also ROLE_EDITCOMBOBOX.
    */
-  const unsigned long ROLE_COMBOBOX = 46;
+  const unsigned long ROLE_COMBOBOX = 34;
 
   /**
    * Represents a progress bar, dynamically showing the user the percent
    * complete of an operation in progress. It is used for html:progress,
    * role="progressbar".
    */
-  const unsigned long ROLE_PROGRESSBAR = 48;
+  const unsigned long ROLE_PROGRESSBAR = 35;
 
   /**
    * Represents a slider, which allows the user to adjust a setting in given
    * increments between minimum and maximum values. It is used by xul:scale,
    * role="slider".
    */
-  const unsigned long ROLE_SLIDER = 51;
+  const unsigned long ROLE_SLIDER = 36;
 
   /**
    * Represents a spin box, which is a control that allows the user to increment
    * or decrement the value displayed in a separate "buddy" control associated
    * with the spin box. It is used for input[type=number] spin buttons.
    */
-  const unsigned long ROLE_SPINBUTTON = 52;
+  const unsigned long ROLE_SPINBUTTON = 37;
 
   /**
    * Represents a graphical image used to diagram data. It is used for svg:svg.
    */
-  const unsigned long ROLE_DIAGRAM = 53;
+  const unsigned long ROLE_DIAGRAM = 38;
 
   /**
    * Represents an animation control, which contains content that changes over
    * time, such as a control that displays a series of bitmap frames.
    */
-  const unsigned long ROLE_ANIMATION = 54;
+  const unsigned long ROLE_ANIMATION = 39;
 
   /**
    * Represents a button that drops down a list of items.
    */
-  const unsigned long ROLE_BUTTONDROPDOWN = 56;
+  const unsigned long ROLE_BUTTONDROPDOWN = 40;
 
   /**
    * Represents a button that drops down a menu.
    */
-  const unsigned long ROLE_BUTTONMENU = 57;
+  const unsigned long ROLE_BUTTONMENU = 41;
 
   /**
    * Represents blank space between other objects.
    */
-  const unsigned long ROLE_WHITESPACE = 59;
+  const unsigned long ROLE_WHITESPACE = 42;
 
   /**
    * Represents a container of page tab controls. Is it used for xul:tabs,
    * DHTML: role="tabs". Also refer to ROLE_PAGETAB.
    */
-  const unsigned long ROLE_PAGETABLIST = 60;
+  const unsigned long ROLE_PAGETABLIST = 43;
 
   /**
    * Represents a control that can be drawn into and is used to trap events.
    * It is used for html:canvas.
    */
-  const unsigned long ROLE_CANVAS = 66;
+  const unsigned long ROLE_CANVAS = 44;
 
   /**
    * Represents a menu item with a check box.
    */
-  const unsigned long ROLE_CHECK_MENU_ITEM = 67;
+  const unsigned long ROLE_CHECK_MENU_ITEM = 45;
 
   /**
    * Represents control whose purpose is to allow a user to edit a date.
    */
-  const unsigned long ROLE_DATE_EDITOR = 69;
+  const unsigned long ROLE_DATE_EDITOR = 46;
 
   /**
    * Frame role. A top level window with a title bar, border, menu bar, etc.
    * It is often used as the primary window for an application.
    */
-  const unsigned long ROLE_CHROME_WINDOW = 75;
+  const unsigned long ROLE_CHROME_WINDOW = 47;
 
   /**
    * Presents an icon or short string in an interface.
    */
-  const unsigned long ROLE_LABEL = 79;
+  const unsigned long ROLE_LABEL = 48;
 
   /**
    * A text object uses for passwords, or other places where the text content
    * is not shown visibly to the user.
    */
-  const unsigned long ROLE_PASSWORD_TEXT = 82;
+  const unsigned long ROLE_PASSWORD_TEXT = 49;
 
   /**
    * A radio button that is a menu item.
    */
-  const unsigned long ROLE_RADIO_MENU_ITEM = 84;
+  const unsigned long ROLE_RADIO_MENU_ITEM = 50;
 
   /**
    * Collection of objects that constitute a logical text entity.
    */
-  const unsigned long ROLE_TEXT_CONTAINER = 92;
+  const unsigned long ROLE_TEXT_CONTAINER = 51;
 
   /**
    * A toggle button. A specialized push button that can be checked or
    * unchecked, but does not provide a separate indicator for the current state.
    */
-  const unsigned long ROLE_TOGGLE_BUTTON = 93;
+  const unsigned long ROLE_TOGGLE_BUTTON = 52;
 
   /**
    * Representas a control that is capable of expanding and collapsing rows as
    * well as showing multiple columns of data.
    * XXX: it looks like this role is dupe of ROLE_OUTLINE.
    */
-  const unsigned long ROLE_TREE_TABLE = 94;
+  const unsigned long ROLE_TREE_TABLE = 53;
 
   /**
    * A paragraph of text.
    */
-  const unsigned long ROLE_PARAGRAPH = 98;
+  const unsigned long ROLE_PARAGRAPH = 54;
 
   /**
    * An control whose textual content may be entered or modified by the user.
    */
-  const unsigned long ROLE_ENTRY = 102;
+  const unsigned long ROLE_ENTRY = 55;
 
   /**
    * A caption describing another object.
    */
-  const unsigned long ROLE_CAPTION = 103;
+  const unsigned long ROLE_CAPTION = 56;
 
   /**
    * An element containing content that assistive technology users may want to
@@ -368,331 +368,331 @@ interface nsIAccessibleRole : nsISupports
    * This role is used for role="document". For the container which holds the
    * content of a web page, see ROLE_DOCUMENT.
    */
-  const unsigned long ROLE_NON_NATIVE_DOCUMENT = 104;
+  const unsigned long ROLE_NON_NATIVE_DOCUMENT = 57;
 
   /**
    * Heading.
    */
-  const unsigned long ROLE_HEADING = 105;
+  const unsigned long ROLE_HEADING = 58;
 
   /**
    * A container of document content.  An example of the use of this role is to
    * represent an html:div.
    */
-  const unsigned long ROLE_SECTION = 107;
+  const unsigned long ROLE_SECTION = 59;
 
   /**
    * A container of form controls. An example of the use of this role is to
    * represent an html:form.
    */
-  const unsigned long ROLE_FORM = 109;
+  const unsigned long ROLE_FORM = 60;
 
   /**
    * XXX: document this.
    */
-  const unsigned long ROLE_APP_ROOT = 111;
+  const unsigned long ROLE_APP_ROOT = 61;
 
   /**
    * Represents a menu item, which is an entry in a menu that a user can choose
    * to display another menu.
    */
-  const unsigned long ROLE_PARENT_MENUITEM = 112;
+  const unsigned long ROLE_PARENT_MENUITEM = 62;
 
   /**
    * A list of items that is shown by combobox.
    */
-  const unsigned long ROLE_COMBOBOX_LIST = 114;
+  const unsigned long ROLE_COMBOBOX_LIST = 63;
 
   /**
    * A item of list that is shown by combobox;
    */
-  const unsigned long ROLE_COMBOBOX_OPTION = 115;
+  const unsigned long ROLE_COMBOBOX_OPTION = 64;
 
   /**
    * An image map -- has child links representing the areas
    */
-  const unsigned long ROLE_IMAGE_MAP = 116;
+  const unsigned long ROLE_IMAGE_MAP = 65;
 
   /**
    * An option in a listbox
    */
-  const unsigned long ROLE_OPTION = 117;
+  const unsigned long ROLE_OPTION = 66;
 
   /**
    * A rich option in a listbox, it can have other widgets as children
    */
-  const unsigned long ROLE_RICH_OPTION = 118;
+  const unsigned long ROLE_RICH_OPTION = 67;
 
   /**
    * A list of options
    */
-  const unsigned long ROLE_LISTBOX = 119;
+  const unsigned long ROLE_LISTBOX = 68;
 
   /**
    * Represents a mathematical equation in the accessible name
    */
-  const unsigned long ROLE_FLAT_EQUATION = 120;
+  const unsigned long ROLE_FLAT_EQUATION = 69;
 
   /**
    * Represents a cell within a grid. It is used for role="gridcell". Unlike
    * ROLE_CELL, it allows the calculation of the accessible name from subtree.
    * Also, see ROLE_TABLE.
    */
-  const unsigned long ROLE_GRID_CELL = 121;
+  const unsigned long ROLE_GRID_CELL = 70;
 
   /**
    * A note. Originally intended to be hidden until activated, but now also used
    * for things like html 'aside'.
    */
-  const unsigned long ROLE_NOTE = 123;
+  const unsigned long ROLE_NOTE = 71;
 
   /**
    * A figure. Used for things like HTML5 figure element.
    */
-  const unsigned long ROLE_FIGURE = 124;
+  const unsigned long ROLE_FIGURE = 72;
 
   /**
    * Represents a rich item with a check box.
    */
-  const unsigned long ROLE_CHECK_RICH_OPTION = 125;
+  const unsigned long ROLE_CHECK_RICH_OPTION = 73;
 
   /**
    * An HTML definition list <dl>
    */
-  const unsigned long ROLE_DEFINITION_LIST = 126;
+  const unsigned long ROLE_DEFINITION_LIST = 74;
 
   /**
    * An HTML definition term <dt>
    */
-  const unsigned long ROLE_TERM = 127;
+  const unsigned long ROLE_TERM = 75;
 
   /**
    * An HTML definition <dd>
    */
-  const unsigned long ROLE_DEFINITION = 128;
+  const unsigned long ROLE_DEFINITION = 76;
 
   /**
    * A keyboard or keypad key.
    */
-  const unsigned long ROLE_KEY = 129;
+  const unsigned long ROLE_KEY = 77;
 
   /**
    * A switch control widget.
    */
-  const unsigned long ROLE_SWITCH = 130;
+  const unsigned long ROLE_SWITCH = 78;
 
   /**
    * A block of MathML code (math).
    */
-  const unsigned long ROLE_MATHML_MATH = 131;
+  const unsigned long ROLE_MATHML_MATH = 79;
 
   /**
    * A MathML identifier (mi in MathML).
    */
-  const unsigned long ROLE_MATHML_IDENTIFIER = 132;
+  const unsigned long ROLE_MATHML_IDENTIFIER = 80;
 
   /**
    * A MathML number (mn in MathML).
    */
-  const unsigned long ROLE_MATHML_NUMBER = 133;
+  const unsigned long ROLE_MATHML_NUMBER = 81;
 
   /**
    * A MathML operator (mo in MathML).
    */
-  const unsigned long ROLE_MATHML_OPERATOR = 134;
+  const unsigned long ROLE_MATHML_OPERATOR = 82;
 
   /**
    * A MathML text (mtext in MathML).
    */
-  const unsigned long ROLE_MATHML_TEXT = 135;
+  const unsigned long ROLE_MATHML_TEXT = 83;
 
   /**
    * A MathML string literal (ms in MathML).
    */
-  const unsigned long ROLE_MATHML_STRING_LITERAL = 136;
+  const unsigned long ROLE_MATHML_STRING_LITERAL = 84;
 
   /**
    * A MathML glyph (mglyph in MathML).
    */
-  const unsigned long ROLE_MATHML_GLYPH = 137;
+  const unsigned long ROLE_MATHML_GLYPH = 85;
 
   /**
    * A MathML row (mrow in MathML).
    */
-  const unsigned long ROLE_MATHML_ROW = 138;
+  const unsigned long ROLE_MATHML_ROW = 86;
 
   /**
    * A MathML fraction (mfrac in MathML).
    */
-  const unsigned long ROLE_MATHML_FRACTION = 139;
+  const unsigned long ROLE_MATHML_FRACTION = 87;
 
   /**
    * A MathML square root (msqrt in MathML).
    */
-  const unsigned long ROLE_MATHML_SQUARE_ROOT = 140;
+  const unsigned long ROLE_MATHML_SQUARE_ROOT = 88;
 
   /**
    * A MathML root (mroot in MathML).
    */
-  const unsigned long ROLE_MATHML_ROOT = 141;
+  const unsigned long ROLE_MATHML_ROOT = 89;
 
   /**
    * A MathML enclosed element (menclose in MathML).
    */
-  const unsigned long ROLE_MATHML_ENCLOSED = 143;
+  const unsigned long ROLE_MATHML_ENCLOSED = 90;
 
   /**
    * A MathML styling element (mstyle in MathML).
    */
-  const unsigned long ROLE_MATHML_STYLE = 144;
+  const unsigned long ROLE_MATHML_STYLE = 91;
 
   /**
    * A MathML subscript (msub in MathML).
    */
-  const unsigned long ROLE_MATHML_SUB = 145;
+  const unsigned long ROLE_MATHML_SUB = 92;
 
   /**
    * A MathML superscript (msup in MathML).
    */
-  const unsigned long ROLE_MATHML_SUP = 146;
+  const unsigned long ROLE_MATHML_SUP = 93;
 
   /**
    * A MathML subscript and superscript (msubsup in MathML).
    */
-  const unsigned long ROLE_MATHML_SUB_SUP = 147;
+  const unsigned long ROLE_MATHML_SUB_SUP = 94;
 
   /**
    * A MathML underscript (munder in MathML).
    */
-  const unsigned long ROLE_MATHML_UNDER = 148;
+  const unsigned long ROLE_MATHML_UNDER = 95;
 
   /**
    * A MathML overscript (mover in MathML).
    */
-  const unsigned long ROLE_MATHML_OVER = 149;
+  const unsigned long ROLE_MATHML_OVER = 96;
 
   /**
    * A MathML underscript and overscript (munderover in MathML).
    */
-  const unsigned long ROLE_MATHML_UNDER_OVER = 150;
+  const unsigned long ROLE_MATHML_UNDER_OVER = 97;
 
   /**
    * A MathML multiple subscript and superscript element (mmultiscripts in
    * MathML).
    */
-  const unsigned long ROLE_MATHML_MULTISCRIPTS = 151;
+  const unsigned long ROLE_MATHML_MULTISCRIPTS = 98;
 
   /**
    * A MathML table (mtable in MathML).
    */
-  const unsigned long ROLE_MATHML_TABLE = 152;
+  const unsigned long ROLE_MATHML_TABLE = 99;
 
   /**
    * A MathML labelled table row (mlabeledtr in MathML).
    */
-  const unsigned long ROLE_MATHML_LABELED_ROW = 153;
+  const unsigned long ROLE_MATHML_LABELED_ROW = 100;
 
   /**
    * A MathML table row (mtr in MathML).
    */
-  const unsigned long ROLE_MATHML_TABLE_ROW = 154;
+  const unsigned long ROLE_MATHML_TABLE_ROW = 101;
 
   /**
    * A MathML table entry or cell (mtd in MathML).
    */
-  const unsigned long ROLE_MATHML_CELL = 155;
+  const unsigned long ROLE_MATHML_CELL = 102;
 
   /**
    * A MathML interactive element (maction in MathML).
    */
-  const unsigned long ROLE_MATHML_ACTION = 156;
+  const unsigned long ROLE_MATHML_ACTION = 103;
 
   /**
    * A MathML error message (merror in MathML).
    */
-  const unsigned long ROLE_MATHML_ERROR = 157;
+  const unsigned long ROLE_MATHML_ERROR = 104;
 
   /**
    * A MathML stacked (rows of numbers) element (mstack in MathML).
    */
-  const unsigned long ROLE_MATHML_STACK = 158;
+  const unsigned long ROLE_MATHML_STACK = 105;
 
   /**
    * A MathML long division element (mlongdiv in MathML).
    */
-  const unsigned long ROLE_MATHML_LONG_DIVISION = 159;
+  const unsigned long ROLE_MATHML_LONG_DIVISION = 106;
 
   /**
    * A MathML stack group (msgroup in MathML).
    */
-  const unsigned long ROLE_MATHML_STACK_GROUP = 160;
+  const unsigned long ROLE_MATHML_STACK_GROUP = 107;
 
   /**
    * A MathML stack row (msrow in MathML).
    */
-  const unsigned long ROLE_MATHML_STACK_ROW = 161;
+  const unsigned long ROLE_MATHML_STACK_ROW = 108;
 
   /**
    * MathML carries, borrows, or crossouts for a row (mscarries in MathML).
    */
-  const unsigned long ROLE_MATHML_STACK_CARRIES = 162;
+  const unsigned long ROLE_MATHML_STACK_CARRIES = 109;
 
   /**
    * A MathML carry, borrow, or crossout for a column (mscarry in MathML).
    */
-  const unsigned long ROLE_MATHML_STACK_CARRY = 163;
+  const unsigned long ROLE_MATHML_STACK_CARRY = 110;
 
   /**
    * A MathML line in a stack (msline in MathML).
    */
-  const unsigned long ROLE_MATHML_STACK_LINE = 164;
+  const unsigned long ROLE_MATHML_STACK_LINE = 111;
 
   /**
    * A group containing radio buttons
    */
-  const unsigned long ROLE_RADIO_GROUP = 165;
+  const unsigned long ROLE_RADIO_GROUP = 112;
 
   /**
    * A text container exposing brief amount of information. See related
    * TEXT_CONTAINER role.
    */
-  const unsigned long ROLE_TEXT = 166;
+  const unsigned long ROLE_TEXT = 113;
 
   /**
    * A text container exposing brief amount of information. See related
    * DETAILS role.
    */
-  const unsigned long ROLE_DETAILS = 167;
+  const unsigned long ROLE_DETAILS = 114;
 
   /**
    * A text container exposing brief amount of information. See related
    * SUMMARY role.
    */
-  const unsigned long ROLE_SUMMARY = 168;
+  const unsigned long ROLE_SUMMARY = 115;
 
   /**
    * An ARIA landmark. See related NAVIGATION role.
    */
-  const unsigned long ROLE_LANDMARK = 169;
+  const unsigned long ROLE_LANDMARK = 116;
 
   /**
    * A specific type of ARIA landmark. The ability to distinguish navigation
    * landmarks from other types of landmarks is needed because macOS has a
    * specific AXSubrole and AXRoleDescription for navigation landmarks.
    */
-  const unsigned long ROLE_NAVIGATION = 170;
+  const unsigned long ROLE_NAVIGATION = 117;
 
   /**
    * An object that contains the text of a footnote.
    */
-  const unsigned long ROLE_FOOTNOTE = 171;
+  const unsigned long ROLE_FOOTNOTE = 118;
 
   /**
    * A complete or self-contained composition in a document, page, application,
    * or site and that is, in principle, independently distributable or reusable,
    * e.g. in syndication.
    */
-  const unsigned long ROLE_ARTICLE = 172;
+  const unsigned long ROLE_ARTICLE = 119;
 
   /**
    * A perceivable section containing content that is relevant to a specific,
@@ -700,88 +700,88 @@ interface nsIAccessibleRole : nsISupports
    * want to be able to navigate to the section easily and to have it listed in
    * a summary of the page.
    */
-  const unsigned long ROLE_REGION = 173;
+  const unsigned long ROLE_REGION = 120;
 
   /**
    * Represents a control with a text input and a popup with a set of predefined
    * choices. It is used for ARIA's combobox role. See also ROLE_COMBOBOX.
    */
-  const unsigned long ROLE_EDITCOMBOBOX = 174;
+  const unsigned long ROLE_EDITCOMBOBOX = 121;
 
   /**
    * A section of content that is quoted from another source.
    */
-  const unsigned long ROLE_BLOCKQUOTE = 175;
+  const unsigned long ROLE_BLOCKQUOTE = 122;
 
   /**
    * Content previously deleted or proposed for deletion, e.g. in revision
    * history or a content view providing suggestions from reviewers.
    */
-  const unsigned long ROLE_CONTENT_DELETION = 176;
+  const unsigned long ROLE_CONTENT_DELETION = 123;
 
   /**
    * Content previously inserted or proposed for insertion, e.g. in revision
    * history or a content view providing suggestions from reviewers.
    */
-  const unsigned long ROLE_CONTENT_INSERTION = 177;
+  const unsigned long ROLE_CONTENT_INSERTION = 124;
 
   /**
    * An html:form element with a label provided by WAI-ARIA.
    * This may also be used if role="form" with a label should be exposed
    * differently in the future.
    */
-  const unsigned long ROLE_FORM_LANDMARK = 178;
+  const unsigned long ROLE_FORM_LANDMARK = 125;
 
   /**
    * The html:mark element.
    * May also be used if WAI-ARIA gets an equivalent role.
    */
-  const unsigned long ROLE_MARK = 179;
+  const unsigned long ROLE_MARK = 126;
 
   /**
    * The WAI-ARIA suggestion role.
    */
-  const unsigned long ROLE_SUGGESTION = 180;
+  const unsigned long ROLE_SUGGESTION = 127;
 
   /**
    * The WAI-ARIA comment role.
    */
-  const unsigned long ROLE_COMMENT = 181;
+  const unsigned long ROLE_COMMENT = 128;
 
   /**
    * A snippet of program code. ATs might want to treat this differently.
    */
-  const unsigned long ROLE_CODE = 182;
+  const unsigned long ROLE_CODE = 129;
 
   /**
    * Represents control whose purpose is to allow a user to edit a time.
    */
-  const unsigned long ROLE_TIME_EDITOR = 183;
+  const unsigned long ROLE_TIME_EDITOR = 130;
 
   /**
    * Represents the marker associated with a list item. In unordered lists,
    * this is a bullet, while in ordered lists this is a number.
    */
-  const unsigned long ROLE_LISTITEM_MARKER = 184;
+  const unsigned long ROLE_LISTITEM_MARKER = 131;
 
   /**
    * Essentially, this is a progress bar with a contextually defined
    * scale, ex. the strength of a password entered in an input.
    */
-  const unsigned long ROLE_METER = 185;
+  const unsigned long ROLE_METER = 132;
 
   /**
    * Represents phrasing content that is presented with vertical alignment
    * lower than the baseline and a smaller font size. For example, the "2" in
    * the chemical formula H2O.
    */
-  const unsigned long ROLE_SUBSCRIPT = 186;
+  const unsigned long ROLE_SUBSCRIPT = 133;
 
   /**
    * Represents phrasing content that is presented with vertical alignment
    * higher than the baseline and a smaller font size. For example, the
    * exponent in a math expression.
    */
-  const unsigned long ROLE_SUPERSCRIPT = 187;
+  const unsigned long ROLE_SUPERSCRIPT = 134;
 
 };
