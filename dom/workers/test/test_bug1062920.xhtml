@@ -17,8 +17,6 @@
 
     worker.onmessage = function(event) {
       is(event.data.appCodeName, navigator.appCodeName, "appCodeName should match");
-      is(event.data.appName, navigator.appName, "appName should match");
-      isnot(event.data.appName, "appName overridden", "appName is not overridden");
       is(event.data.appVersion, navigator.appVersion, "appVersion should match");
       isnot(event.data.appVersion, "appVersion overridden", "appVersion is not overridden");
       is(event.data.platform, navigator.platform, "platform should match");
@@ -31,7 +29,6 @@
 
   function replaceAndCheckValues() {
     SpecialPowers.pushPrefEnv({"set": [
-      ["general.appname.override", "appName overridden"],
       ["general.appversion.override", "appVersion overridden"],
       ["general.platform.override", "platform overridden"],
       ["general.useragent.override", "userAgent overridden"]

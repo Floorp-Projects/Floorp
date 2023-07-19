@@ -67,7 +67,9 @@ class WorkerNavigator final : public nsWrapperCache {
   void GetAppCodeName(nsString& aAppCodeName, ErrorResult& /* unused */) const {
     aAppCodeName.AssignLiteral("Mozilla");
   }
-  void GetAppName(nsString& aAppName, CallerType aCallerType) const;
+  void GetAppName(nsString& aAppName) const {
+    aAppName.AssignLiteral("Netscape");
+  }
 
   void GetAppVersion(nsString& aAppVersion, CallerType aCallerType,
                      ErrorResult& aRv) const;
