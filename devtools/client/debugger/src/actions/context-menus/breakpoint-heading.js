@@ -15,7 +15,7 @@ import {
 export function showBreakpointHeadingContextMenu(event, source) {
   return async ({ dispatch, getState }) => {
     const state = getState();
-    const breakpointsForSource = getBreakpointsForSource(state, source.id);
+    const breakpointsForSource = getBreakpointsForSource(state, source);
 
     const enableInSourceLabel = L10N.getStr(
       "breakpointHeadingsMenuItem.enableInSource.label"

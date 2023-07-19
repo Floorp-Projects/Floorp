@@ -155,7 +155,7 @@ async function toggleBreakpointsInRangesForBlackboxedSource({
 }) {
   const { dispatch, getState } = thunkArgs;
   for (const range of ranges) {
-    const breakpoints = getBreakpointsForSource(getState(), source.id, range);
+    const breakpoints = getBreakpointsForSource(getState(), source, range);
     await dispatch(toggleBreakpoints(shouldDisable, breakpoints));
   }
 }
@@ -167,7 +167,7 @@ async function toggleBreakpointsInBlackboxedSources({
 }) {
   const { dispatch, getState } = thunkArgs;
   for (const source of sources) {
-    const breakpoints = getBreakpointsForSource(getState(), source.id);
+    const breakpoints = getBreakpointsForSource(getState(), source);
     await dispatch(toggleBreakpoints(shouldDisable, breakpoints));
   }
 }
