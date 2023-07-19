@@ -38,6 +38,7 @@
 #include "vm/HelperThreadState.h"
 #include "vm/InternalThreadPool.h"
 #include "vm/MutexIDs.h"
+#include "vm/StencilCache.h"  // DelazificationCache
 #include "wasm/WasmGenerator.h"
 
 using namespace js;
@@ -903,7 +904,7 @@ UniquePtr<DelazifyTask> DelazifyTask::Create(
 
   AutoSetContextFrontendErrors recordErrors(&task->fc_);
   RefPtr<ScriptSource> source(stencil.source);
-  StencilCache& cache = runtime->caches().delazificationCache;
+  DelazificationCache& cache = DelazificationCache::getSingleton();
   if (!cache.startCaching(std::move(source))) {
     return nullptr;
   }
@@ -1068,7 +1069,7 @@ bool DelazifyTask::runTask(JSContext* cx) {
 
       // Add the generated stencil to the cache, to be consumed by the main
       // thread.
-      StencilCache& cache = runtime->caches().delazificationCache;
+      DelazificationCache& cache = DelazificationCache::getSingleton();
       StencilContext key(borrow.source, scriptRef.scriptExtra().extent);
       if (auto guard = cache.isSourceCached(borrow.source)) {
         if (!cache.putNew(guard, key, innerStencil.get())) {

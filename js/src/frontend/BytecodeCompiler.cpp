@@ -31,6 +31,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"       // ScriptSource, UncompressedSourceCache
 #include "vm/ModuleBuilder.h"  // js::ModuleBuilder
+#include "vm/StencilCache.h"   // DelazificationCache
 #include "vm/Time.h"           // AutoIncrementalTimer
 #include "wasm/AsmJS.h"
 
@@ -1090,7 +1091,7 @@ static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
     BytecodeCompilerOutput& output) {
   RefPtr<CompilationStencil> stencil;
   {
-    StencilCache& cache = cx->runtime()->caches().delazificationCache;
+    DelazificationCache& cache = DelazificationCache::getSingleton();
     auto guard = cache.isSourceCached(input.source);
     if (!guard) {
       return GetCachedResult::NotFound;
