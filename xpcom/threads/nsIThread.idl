@@ -36,7 +36,7 @@ native TimeDuration(mozilla::TimeDuration);
  *
  * See nsIThreadManager for the API used to create and locate threads.
  */
-[builtinclass, scriptable, uuid(5801d193-29d1-4964-a6b7-70eb697ddf2b)]
+[builtinclass, scriptable, rust_sync, uuid(5801d193-29d1-4964-a6b7-70eb697ddf2b)]
 interface nsIThread : nsISerialEventTarget
 {
   /**
