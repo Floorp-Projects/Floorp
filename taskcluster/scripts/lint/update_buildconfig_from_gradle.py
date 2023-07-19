@@ -45,9 +45,13 @@ def _get_upstream_deps_per_gradle_project(gradle_root, existing_build_config):
     # This is filed as https://bugzilla.mozilla.org/show_bug.cgi?id=1795152
     current_project_name = None
     print(f"Running command: {' '.join(cmd)}")
-    for line in subprocess.check_output(
-        cmd, universal_newlines=True, cwd=gradle_root
-    ).splitlines():
+    try:
+        output = subprocess.check_output(
+            cmd, universal_newlines=True, cwd=gradle_root)
+    except subprocess.CalledProcessError as cpe:
+        print(cpe.output)
+        raise
+    for line in output.splitlines():
         # If we find the start of a new component section, update our tracking
         # variable
         if line.startswith("Project"):
