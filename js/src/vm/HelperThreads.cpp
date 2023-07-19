@@ -1003,9 +1003,6 @@ void DelazifyTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
       // delazification from running after any kind of errors.
       strategy->clear();
     }
-    MOZ_ASSERT(cx->tempLifoAlloc().isEmpty());
-    cx->tempLifoAlloc().freeAll();
-    cx->frontendCollectionPool().purge();
     fc_.nameCollectionPool().purge();
   }
 
@@ -1039,6 +1036,8 @@ bool DelazifyTask::runTask(JSContext* cx) {
   // to use it, as it could be purged by a GC in the mean time.
   StencilScopeBindingCache scopeCache(merger);
 
+  LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+
   while (!strategy->done() || isInterrupted()) {
     RefPtr<CompilationStencil> innerStencil;
     ScriptIndex scriptIndex = strategy->next();
@@ -1053,8 +1052,8 @@ bool DelazifyTask::runTask(JSContext* cx) {
       // Parse and generate bytecode for the inner function.
       DelazifyFailureReason failureReason;
       innerStencil = DelazifyCanonicalScriptedFunction(
-          cx, &fc_, initialPrefableOptions, &scopeCache, borrow, scriptIndex,
-          &failureReason);
+          cx, &fc_, tempLifoAlloc, initialPrefableOptions, &scopeCache, borrow,
+          scriptIndex, &failureReason);
       if (!innerStencil) {
         if (failureReason == DelazifyFailureReason::Compressed) {
           // The script source is already compressed, and delazification cannot
