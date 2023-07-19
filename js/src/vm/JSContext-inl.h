@@ -290,10 +290,7 @@ inline void JSContext::enterAtomsZone() {
   setZone(runtime_->unsafeAtomsZone());
 }
 
-inline void JSContext::setZone(js::Zone* zone) {
-  MOZ_ASSERT(!isHelperThreadContext());
-  zone_ = zone;
-}
+inline void JSContext::setZone(js::Zone* zone) { zone_ = zone; }
 
 inline void JSContext::enterRealmOf(JSObject* target) {
   JS::AssertCellIsNotGray(target);

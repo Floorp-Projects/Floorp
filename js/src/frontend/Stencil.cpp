@@ -2094,7 +2094,6 @@ static bool InstantiateScriptSourceObject(JSContext* cx,
     return false;
   }
 
-  MOZ_ASSERT(!cx->isHelperThreadContext());
   Rooted<ScriptSourceObject*> sourceObject(cx, gcOutput.sourceObject);
   if (!ScriptSourceObject::initFromOptions(cx, sourceObject, options)) {
     return false;
@@ -2337,7 +2336,6 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
       return false;
     }
 
-    MOZ_ASSERT(!cx->isHelperThreadContext());
     if (!ModuleObject::Freeze(cx, module)) {
       return false;
     }

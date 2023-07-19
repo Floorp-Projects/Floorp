@@ -738,11 +738,6 @@ ScriptSourceObject* ScriptSourceObject::create(JSContext* cx,
 [[nodiscard]] static bool MaybeValidateFilename(
     JSContext* cx, Handle<ScriptSourceObject*> sso,
     const JS::InstantiateOptions& options) {
-  // When parsing off-thread we want to do filename validation on the main
-  // thread. This makes off-thread parsing more pure and is simpler because we
-  // can't easily throw exceptions off-thread.
-  MOZ_ASSERT(!cx->isHelperThreadContext());
-
   if (!gFilenameValidationCallback) {
     return true;
   }
@@ -1427,9 +1422,7 @@ bool ScriptSource::tryCompressOffThread(JSContext* cx) {
   // occur, that function may require changes.
 
   // The SourceCompressionTask needs to record the major GC number for
-  // scheduling. This cannot be accessed off-thread and must be handle in
-  // ParseTask::finish instead.
-  MOZ_ASSERT(!cx->isHelperThreadContext());
+  // scheduling.
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
 
   // If source compression was already attempted, do not queue a new task.
@@ -1719,9 +1712,6 @@ void SourceCompressionTask::complete() {
 
 bool js::SynchronouslyCompressSource(JSContext* cx,
                                      JS::Handle<BaseScript*> script) {
-  MOZ_ASSERT(!cx->isHelperThreadContext(),
-             "should only sync-compress on the main thread");
-
   // Finish all pending source compressions, including the single compression
   // task that may have been created (by |ScriptSource::tryCompressOffThread|)
   // just after the script was compiled.  Because we have flushed this queue,

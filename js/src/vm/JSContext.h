@@ -209,10 +209,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     return kind_ == js::ContextKind::MainThread;
   }
 
-  bool isHelperThreadContext() const {
-    return kind_ == js::ContextKind::HelperThread;
-  }
-
   template <typename T>
   bool isInsideCurrentZone(T thing) const {
     return thing->zoneFromAnyThread() == zone_;
@@ -226,10 +222,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   void onOutOfMemory();
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                       size_t nbytes, void* reallocPtr = nullptr) {
-    if (isHelperThreadContext()) {
-      addPendingOutOfMemory();
-      return nullptr;
-    }
     return runtime_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr, this);
   }
 
@@ -1106,9 +1098,8 @@ class MOZ_RAII AutoUnsafeCallWithABI {
 
 } /* namespace js */
 
-#define CHECK_THREAD(cx)                            \
-  MOZ_ASSERT_IF(cx, !cx->isHelperThreadContext() && \
-                        js::CurrentThreadCanAccessRuntime(cx->runtime()))
+#define CHECK_THREAD(cx) \
+  MOZ_ASSERT_IF(cx, js::CurrentThreadCanAccessRuntime(cx->runtime()))
 
 /**
  * [SMDOC] JS::Result transitional macros

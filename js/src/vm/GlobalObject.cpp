@@ -265,8 +265,6 @@ bool GlobalObject::resolveConstructor(JSContext* cx,
   // code below relies on this.
   AutoRealm ar(cx, global);
 
-  MOZ_ASSERT(!cx->isHelperThreadContext());
-
   // Prohibit collection of allocation metadata. Metadata builders shouldn't
   // need to observe lazily-constructed prototype objects coming into
   // existence. And assertions start to fail when the builder itself attempts
@@ -487,7 +485,6 @@ bool GlobalObject::maybeResolveGlobalThis(JSContext* cx,
 JSObject* GlobalObject::createBuiltinProto(JSContext* cx,
                                            Handle<GlobalObject*> global,
                                            ProtoKind kind, ObjectInitOp init) {
-  MOZ_ASSERT(!cx->isHelperThreadContext());
   if (!init(cx, global)) {
     return nullptr;
   }
@@ -499,7 +496,6 @@ JSObject* GlobalObject::createBuiltinProto(JSContext* cx,
                                            Handle<GlobalObject*> global,
                                            ProtoKind kind, Handle<JSAtom*> tag,
                                            ObjectInitWithTagOp init) {
-  MOZ_ASSERT(!cx->isHelperThreadContext());
   if (!init(cx, global, tag)) {
     return nullptr;
   }

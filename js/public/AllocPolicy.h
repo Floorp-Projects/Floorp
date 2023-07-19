@@ -144,12 +144,6 @@ class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
         onOutOfMemory(arenaId, allocFunc, bytes, reallocPtr));
   }
 
-#ifdef DEBUG
-  void assertNotJSContextOnHelperThread() const;
-#else
-  MOZ_ALWAYS_INLINE void assertNotJSContextOnHelperThread() const {}
-#endif /* DEBUG */
-
  public:
   MOZ_IMPLICIT TempAllocPolicy(JSContext* cx)
       : context_bits_(uintptr_t(cx) | JsContextTag) {
@@ -162,7 +156,6 @@ class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
 
   template <typename T>
   T* pod_arena_malloc(arena_id_t arenaId, size_t numElems) {
-    assertNotJSContextOnHelperThread();
     T* p = this->maybe_pod_arena_malloc<T>(arenaId, numElems);
     if (MOZ_UNLIKELY(!p)) {
       p = onOutOfMemoryTyped<T>(arenaId, AllocFunction::Malloc, numElems);
@@ -172,7 +165,6 @@ class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
 
   template <typename T>
   T* pod_arena_calloc(arena_id_t arenaId, size_t numElems) {
-    assertNotJSContextOnHelperThread();
     T* p = this->maybe_pod_arena_calloc<T>(arenaId, numElems);
     if (MOZ_UNLIKELY(!p)) {
       p = onOutOfMemoryTyped<T>(arenaId, AllocFunction::Calloc, numElems);
@@ -183,7 +175,6 @@ class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
   template <typename T>
   T* pod_arena_realloc(arena_id_t arenaId, T* prior, size_t oldSize,
                        size_t newSize) {
-    assertNotJSContextOnHelperThread();
     T* p2 = this->maybe_pod_arena_realloc<T>(arenaId, prior, oldSize, newSize);
     if (MOZ_UNLIKELY(!p2)) {
       p2 = onOutOfMemoryTyped<T>(arenaId, AllocFunction::Realloc, newSize,

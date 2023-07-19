@@ -1148,8 +1148,6 @@ static MOZ_ALWAYS_INLINE bool CallAddPropertyHook(JSContext* cx,
                                                   HandleValue value) {
   JSAddPropertyOp addProperty = obj->getClass()->getAddProperty();
   if (MOZ_UNLIKELY(addProperty)) {
-    MOZ_ASSERT(!cx->isHelperThreadContext());
-
     if (!CallJSAddPropertyOp(cx, addProperty, obj, id, value)) {
       NativeObject::removeProperty(cx, obj, id);
       return false;
@@ -1173,8 +1171,6 @@ static MOZ_ALWAYS_INLINE bool CallAddPropertyHookDense(
 
   JSAddPropertyOp addProperty = obj->getClass()->getAddProperty();
   if (MOZ_UNLIKELY(addProperty)) {
-    MOZ_ASSERT(!cx->isHelperThreadContext());
-
     RootedId id(cx, PropertyKey::Int(index));
     if (!CallJSAddPropertyOp(cx, addProperty, obj, id, value)) {
       obj->setDenseElementHole(index);
@@ -1439,7 +1435,6 @@ static bool GetExistingDataProperty(JSContext* cx, Handle<NativeObject*> obj,
     return true;
   }
 
-  MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_RELEASE_ASSERT(propInfo.isCustomDataProperty());
   return GetCustomDataProperty(cx, obj, id, vp);
 }
@@ -1529,7 +1524,6 @@ bool js::NativeDefineProperty(JSContext* cx, Handle<NativeObject*> obj,
         return result.fail(JSMSG_CANT_REDEFINE_PROP);
       }
 
-      MOZ_ASSERT(!cx->isHelperThreadContext());
       return ArraySetLength(cx, arr, id, desc_, result);
     }
 
@@ -1543,7 +1537,6 @@ bool js::NativeDefineProperty(JSContext* cx, Handle<NativeObject*> obj,
   } else if (obj->is<TypedArrayObject>()) {
     // 9.4.5.3 step 3. Indexed properties of typed arrays are special.
     if (mozilla::Maybe<uint64_t> index = ToTypedArrayIndex(id)) {
-      MOZ_ASSERT(!cx->isHelperThreadContext());
       Rooted<TypedArrayObject*> tobj(cx, &obj->as<TypedArrayObject>());
       return DefineTypedArrayElement(cx, tobj, index.value(), desc_, result);
     }
@@ -1710,7 +1703,6 @@ bool js::NativeDefineProperty(JSContext* cx, Handle<NativeObject*> obj,
       } else {
         // Step 7.a.i.2.
         bool same;
-        MOZ_ASSERT(!cx->isHelperThreadContext());
         if (!SameValue(cx, desc.value(), currentValue, &same)) {
           return false;
         }
@@ -1792,7 +1784,6 @@ bool js::NativeDefineAccessorProperty(JSContext* cx, Handle<NativeObject*> obj,
     // Off-thread callers should not get here: they must call this
     // function only with known-valid arguments. Populating a new
     // PlainObject with configurable properties is fine.
-    MOZ_ASSERT(!cx->isHelperThreadContext());
     result.reportError(cx, obj, id);
     return false;
   }
@@ -1811,7 +1802,6 @@ bool js::NativeDefineDataProperty(JSContext* cx, Handle<NativeObject*> obj,
     // Off-thread callers should not get here: they must call this
     // function only with known-valid arguments. Populating a new
     // PlainObject with configurable properties is fine.
-    MOZ_ASSERT(!cx->isHelperThreadContext());
     result.reportError(cx, obj, id);
     return false;
   }
@@ -2506,8 +2496,6 @@ static bool SetNonexistentProperty(JSContext* cx, Handle<NativeObject*> obj,
 
     // Step 5.e. Define the new data property.
     if (DefinePropertyOp op = obj->getOpsDefineProperty()) {
-      MOZ_ASSERT(!cx->isHelperThreadContext());
-
       Rooted<PropertyDescriptor> desc(
           cx, PropertyDescriptor::Data(v, {JS::PropertyAttribute::Configurable,
                                            JS::PropertyAttribute::Enumerable,

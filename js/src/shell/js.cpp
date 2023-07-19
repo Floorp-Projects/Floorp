@@ -2145,7 +2145,7 @@ static bool LoadScriptRelativeToScript(JSContext* cx, unsigned argc,
 
 static void my_LargeAllocFailCallback() {
   JSContext* cx = TlsContext.get();
-  if (!cx || cx->isHelperThreadContext()) {
+  if (!cx) {
     return;
   }
 
