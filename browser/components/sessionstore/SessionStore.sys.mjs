@@ -775,12 +775,12 @@ var SessionStoreInternal = {
   // A map (xul:browser -> object) that maps a browser associated with a
   // recently closed tab to all its necessary state information we need to
   // properly handle final update message.
-  _closedTabs: new WeakMap(),
+  _closingTabMap: new WeakMap(),
 
   // A map (xul:browser -> object) that maps a browser associated with a
   // recently closed tab due to a window closure to the tab state information
   // that is being stored in _closedWindows for that tab.
-  _closedWindowTabs: new WeakMap(),
+  _tabClosingByWindowMap: new WeakMap(),
 
   // A set of window data that has the potential to be saved in the _closedWindows
   // array for the session. We will remove window data from this set whenever
@@ -788,7 +788,7 @@ var SessionStoreInternal = {
   // purged, so that we don't accidentally save that data after the flush has
   // completed. Closed tabs use a more complicated mechanism for this particular
   // problem. When forgetClosedTab is called, the browser is removed from the
-  // _closedTabs map, so its data is not recorded. In the purge history case,
+  // _closingTabMap, so its data is not recorded. In the purge history case,
   // the closedTabs array per window is overwritten so that once the flush is
   // complete, the tab would only ever add itself to an array that SessionStore
   // no longer cares about. Bug 1230636 has been filed to make the tab case
@@ -1500,7 +1500,7 @@ var SessionStoreInternal = {
     // Handle any updates sent by the child after the tab was closed. This
     // might be the final update as sent by the "unload" handler but also
     // any async update message that was sent before the child unloaded.
-    let closedTab = this._closedTabs.get(permanentKey);
+    let closedTab = this._closingTabMap.get(permanentKey);
     if (closedTab) {
       // Update the closed tab's state. This will be reflected in its
       // window's list of closed tabs as that refers to the same object.
@@ -1511,13 +1511,14 @@ var SessionStoreInternal = {
   onFinalTabStateUpdateComplete(browser) {
     let permanentKey = browser.permanentKey;
     if (
-      this._closedTabs.has(permanentKey) &&
+      this._closingTabMap.has(permanentKey) &&
       !this._crashedBrowsers.has(permanentKey)
     ) {
-      let { winData, closedTabs, tabData } = this._closedTabs.get(permanentKey);
+      let { winData, closedTabs, tabData } =
+        this._closingTabMap.get(permanentKey);
 
       // We expect no further updates.
-      this._closedTabs.delete(permanentKey);
+      this._closingTabMap.delete(permanentKey);
 
       // The tab state no longer needs this reference.
       delete tabData.permanentKey;
@@ -2148,7 +2149,7 @@ var SessionStoreInternal = {
 
       for (let [tab, tabData] of tabMap) {
         let permanentKey = tab.linkedBrowser.permanentKey;
-        this._closedWindowTabs.set(permanentKey, tabData);
+        this._tabClosingByWindowMap.set(permanentKey, tabData);
       }
 
       if (isFullyLoaded && !winData.title) {
@@ -2212,10 +2213,10 @@ var SessionStoreInternal = {
         WINDOW_FLUSHING_PROMISES.delete(aWindow);
 
         for (let browser of browsers) {
-          if (this._closedWindowTabs.has(browser.permanentKey)) {
-            let tabData = this._closedWindowTabs.get(browser.permanentKey);
+          if (this._tabClosingByWindowMap.has(browser.permanentKey)) {
+            let tabData = this._tabClosingByWindowMap.get(browser.permanentKey);
             lazy.TabState.copyFromCache(browser.permanentKey, tabData);
-            this._closedWindowTabs.delete(browser.permanentKey);
+            this._tabClosingByWindowMap.delete(browser.permanentKey);
           }
         }
 
@@ -2876,7 +2877,11 @@ var SessionStoreInternal = {
 
     // Remember the closed tab to properly handle any last updates included in
     // the final "update" message sent by the frame script's unload handler.
-    this._closedTabs.set(permanentKey, { winData, closedTabs, tabData });
+    this._closingTabMap.set(permanentKey, {
+      winData,
+      closedTabs,
+      tabData,
+    });
   },
 
   /**
@@ -3080,8 +3085,8 @@ var SessionStoreInternal = {
     // closed tabs so that we will simply discard its last messages and will
     // not add it back to the list of closed tabs again.
     if (closedTab.permanentKey) {
-      this._closedTabs.delete(closedTab.permanentKey);
-      this._closedWindowTabs.delete(closedTab.permanentKey);
+      this._closingTabMap.delete(closedTab.permanentKey);
+      this._tabClosingByWindowMap.delete(closedTab.permanentKey);
       delete closedTab.permanentKey;
     }
 
