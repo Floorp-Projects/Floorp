@@ -358,11 +358,6 @@ js::AutoCheckRecursionLimit::stackKindForCurrentPrincipal(JSContext* cx) const {
   return cx->stackKindForCurrentPrincipal();
 }
 
-JS_PUBLIC_API void js::AutoCheckRecursionLimit::assertMainThread(
-    JSContext* cx) const {
-  MOZ_ASSERT(cx->isMainThreadContext());
-}
-
 JS::NativeStackLimit AutoCheckRecursionLimit::getStackLimit(
     FrontendContext* fc) const {
   return fc->stackLimit();

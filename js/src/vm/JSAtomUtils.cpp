@@ -731,8 +731,6 @@ static MOZ_ALWAYS_INLINE JSAtom* AllocateNewPermanentAtomNonStaticValidLength(
 }
 
 JSAtom* js::AtomizeString(JSContext* cx, JSString* str) {
-  MOZ_ASSERT(cx->isMainThreadContext());
-
   if (str->isAtom()) {
     return &str->asAtom();
   }

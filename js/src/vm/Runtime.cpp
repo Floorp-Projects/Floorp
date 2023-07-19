@@ -551,9 +551,6 @@ void JSRuntime::traceSharedIntlData(JSTracer* trc) {
 #endif
 
 SharedScriptDataTableHolder& JSRuntime::scriptDataTableHolder() {
-  // NOTE: Assert that this is not helper thread.
-  //       worker thread also has access to the per-runtime table holder.
-  MOZ_ASSERT(CurrentThreadIsMainThread());
   return scriptDataTableHolder_;
 }
 
@@ -775,10 +772,7 @@ bool js::CurrentThreadCanAccessZone(Zone* zone) {
 }
 
 #ifdef DEBUG
-bool js::CurrentThreadIsMainThread() {
-  JSContext* cx = TlsContext.get();
-  return cx && cx->isMainThreadContext();
-}
+bool js::CurrentThreadIsMainThread() { return !!TlsContext.get(); }
 #endif
 
 JS_PUBLIC_API void JS::SetJSContextProfilerSampleBufferRangeStart(
@@ -794,13 +788,11 @@ JS_PUBLIC_API bool JS::IsProfilingEnabledForContext(JSContext* cx) {
 JS_PUBLIC_API void JS::EnableRecordingAllocations(
     JSContext* cx, JS::RecordAllocationsCallback callback, double probability) {
   MOZ_ASSERT(cx);
-  MOZ_ASSERT(cx->isMainThreadContext());
   cx->runtime()->startRecordingAllocations(probability, callback);
 }
 
 JS_PUBLIC_API void JS::DisableRecordingAllocations(JSContext* cx) {
   MOZ_ASSERT(cx);
-  MOZ_ASSERT(cx->isMainThreadContext());
   cx->runtime()->stopRecordingAllocations();
 }
 

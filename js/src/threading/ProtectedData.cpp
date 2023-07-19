@@ -38,8 +38,7 @@ static inline bool OnHelperThread() {
 void CheckThreadLocal::check() const {
   JSContext* cx = TlsContext.get();
   MOZ_ASSERT(cx);
-  MOZ_ASSERT_IF(cx->isMainThreadContext(),
-                CurrentThreadCanAccessRuntime(cx->runtime()));
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
   MOZ_ASSERT(id == ThreadId::ThisThreadId());
 }
 
@@ -50,8 +49,7 @@ void CheckContextLocal::check() const {
 
   JSContext* cx = TlsContext.get();
   MOZ_ASSERT(cx);
-  MOZ_ASSERT_IF(cx->isMainThreadContext(),
-                CurrentThreadCanAccessRuntime(cx->runtime()));
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
   MOZ_ASSERT(cx_ == cx);
 }
 

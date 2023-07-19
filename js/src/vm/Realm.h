@@ -866,7 +866,6 @@ class MOZ_RAII AutoSetNewObjectMetadata {
  public:
   explicit inline AutoSetNewObjectMetadata(JSContext* cx) : cx_(cx) {
 #ifdef DEBUG
-    MOZ_ASSERT(cx->isMainThreadContext());
     MOZ_ASSERT(!cx->realm()->hasObjectPendingMetadata());
     cx_->realm()->incNumActiveAutoSetNewObjectMetadata();
 #endif

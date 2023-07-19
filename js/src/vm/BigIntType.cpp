@@ -1453,8 +1453,6 @@ JSLinearString* BigInt::toStringGeneric(JSContext* cx, HandleBigInt x,
 
 static void FreeDigits(JSContext* cx, BigInt* bi, BigInt::Digit* digits,
                        size_t nbytes) {
-  MOZ_ASSERT(cx->isMainThreadContext());
-
   if (bi->isTenured()) {
     MOZ_ASSERT(!cx->nursery().isInside(digits));
     js_free(digits);
