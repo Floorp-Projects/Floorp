@@ -132,7 +132,11 @@ def _make_artifacts(
     return artifacts
 
 
-@ArtifactSubCommand("artifact", "install", "Install a good pre-built artifact.")
+@ArtifactSubCommand(
+    "artifact",
+    "install",
+    "Install a good pre-built artifact.",
+)
 @CommandArgument(
     "source",
     metavar="SRC",
@@ -200,7 +204,10 @@ def artifact_clear_cache(command_context, tree=None, job=None, verbose=False):
     return 0
 
 
-@SubCommand("artifact", "toolchain")
+@SubCommand(
+    "artifact",
+    "toolchain",
+)
 @CommandArgument("--verbose", "-v", action="store_true", help="Print verbose output.")
 @CommandArgument(
     "--cache-dir",
