@@ -330,7 +330,7 @@ export function togglePrettyPrint(sourceId) {
     // Update frames to the new pretty/original source (in case we were paused)
     await dispatch(mapFrames(sourceActor.thread));
     // Update breakpoints locations to the new pretty/original source
-    await dispatch(updateBreakpointsForNewPrettyPrintedSource(sourceId));
+    await dispatch(updateBreakpointsForNewPrettyPrintedSource(source));
 
     return newPrettySource;
   };

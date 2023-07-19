@@ -33,16 +33,16 @@ export function getBreakpoint(state, location) {
 /**
  * Gets the breakpoints on a line or within a range of lines
  * @param {Object} state
- * @param {Number} sourceId
+ * @param {Number} source
  * @param {Number|Object} lines - line or an object with a start and end range of lines
  * @returns {Array} breakpoints
  */
-export function getBreakpointsForSource(state, sourceId, lines) {
-  if (!sourceId) {
+export function getBreakpointsForSource(state, source, lines) {
+  if (!source) {
     return [];
   }
 
-  const isGeneratedSource = isGeneratedId(sourceId);
+  const isGeneratedSource = isGeneratedId(source.id);
   const breakpoints = getBreakpointsList(state);
   return breakpoints.filter(bp => {
     const location = isGeneratedSource ? bp.generatedLocation : bp.location;
@@ -53,9 +53,9 @@ export function getBreakpointsForSource(state, sourceId, lines) {
           ? location.line == lines
           : location.line >= lines.start.line &&
             location.line <= lines.end.line;
-      return location.source.id === sourceId && isOnLineOrWithinRange;
+      return location.source === source && isOnLineOrWithinRange;
     }
-    return location.source.id === sourceId;
+    return location.source === source;
   });
 }
 
