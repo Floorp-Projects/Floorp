@@ -268,6 +268,10 @@ class MozbuildObject(ProcessExecutionMixin):
 
         return self._virtualenv_manager
 
+    @virtualenv_manager.setter
+    def virtualenv_manager(self, command_site_manager):
+        self._virtualenv_manager = command_site_manager
+
     @staticmethod
     @memoize
     def get_base_mozconfig_info(topsrcdir, path, env_mozconfig):
