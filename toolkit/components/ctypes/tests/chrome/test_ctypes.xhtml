@@ -14,7 +14,9 @@
 
   <script type="application/javascript">
   <![CDATA[
-    const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+    const {ctypes} = ChromeUtils.importESModule(
+      "resource://gre/modules/ctypes.sys.mjs"
+    );
 
     const CTYPES_TEST_LIB = ctypes.libraryName("jsctypes-test");
     const CTYPES_UNICODE_LIB = ctypes.libraryName("jsctyp\u00E8s-t\u00EB\u00DFt");
