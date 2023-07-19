@@ -555,14 +555,6 @@ ParseTask::~ParseTask() {
   MOZ_DIAGNOSTIC_ASSERT(!isInList());
 }
 
-void ParseTask::trace(JSTracer* trc) {
-  if (runtime != trc->runtime()) {
-    return;
-  }
-
-  compileStorage_.trace(trc);
-}
-
 size_t ParseTask::sizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   size_t compileStorageSize = compileStorage_.sizeOfIncludingThis(mallocSizeOf);
@@ -2213,8 +2205,7 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
   MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(cx->realm());
 
-  Rooted<UniquePtr<ParseTask>> parseTask(cx,
-                                         removeFinishedParseTask(cx, token));
+  UniquePtr<ParseTask> parseTask(removeFinishedParseTask(cx, token));
 
   parseTask->fc_.convertToRuntimeError(cx);
 
@@ -2222,14 +2213,14 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
     return nullptr;
   }
 
-  return std::move(parseTask.get());
+  return parseTask;
 }
 
 already_AddRefed<frontend::CompilationStencil>
 GlobalHelperThreadState::finishStencilTask(JSContext* cx,
                                            JS::OffThreadToken* token,
                                            JS::InstantiationStorage* storage) {
-  Rooted<UniquePtr<ParseTask>> parseTask(cx, finishParseTaskCommon(cx, token));
+  UniquePtr<ParseTask> parseTask(finishParseTaskCommon(cx, token));
   if (!parseTask) {
     return nullptr;
   }
@@ -2514,13 +2505,6 @@ void GlobalHelperThreadState::trace(JSTracer* trc) {
       task->trace(trc);
       task = task->getNext();
     }
-  }
-
-  for (auto& parseTask : parseWorklist_) {
-    parseTask->trace(trc);
-  }
-  for (auto parseTask : parseFinishedList_) {
-    parseTask->trace(trc);
   }
 }
 
