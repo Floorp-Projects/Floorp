@@ -251,13 +251,7 @@ function isExposed(exposure, global) {
 
 
 async function runTest() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.audioworklet.enabled", true],
-      ["dom.media.webcodecs.enabled", true],
-      ["dom.worklet.enabled", true],
-    ],
-  });
+  await SpecialPowers.pushPrefEnv({ set: [["dom.media.webcodecs.enabled", true]] });
 
   async function testDOMClass(domClass, exposure, createObject, transferable) {
     for ([globalName, webidlGlobal] of globals) {

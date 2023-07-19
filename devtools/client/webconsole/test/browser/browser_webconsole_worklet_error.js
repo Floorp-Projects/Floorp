@@ -11,13 +11,6 @@ const TEST_URI =
   "test/browser/test-error-worklet.html";
 
 add_task(async function () {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.audioworklet.enabled", true],
-      ["dom.worklet.enabled", true],
-    ],
-  });
-
   const hud = await openNewTabAndConsole(TEST_URI);
 
   await waitFor(() =>
