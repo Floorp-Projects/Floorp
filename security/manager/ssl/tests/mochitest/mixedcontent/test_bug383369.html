@@ -39,7 +39,7 @@
       prefBranch.setIntPref("folderList", 2);
 
       const { Downloads } =
-        ChromeUtils.import("resource://gre/modules/Downloads.jsm");
+        ChromeUtils.importESModule("resource://gre/modules/Downloads.sys.mjs");
       Downloads.getList(Downloads.PUBLIC).then(list => {
         list.addView({
           onDownloadAdded(aDownload) {
