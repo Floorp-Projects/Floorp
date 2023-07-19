@@ -25,7 +25,15 @@ fn discrete<T: Clone>(from: &T, to: &T, procedure: Procedure) -> Result<T, ()> {
             to.clone()
         })
     } else {
-        Err(())
+        // The discrete animation is not additive, so per spec [1] we should use the |from|, which
+        // is the underlying value. However this mismatches our animation mechanism (see
+        // composite_endpoint() in servo/ports/geckolib/glues.rs), which uses the effect value
+        // (i.e. |to| value here) [2]. So in order to match the behavior of other properties and
+        // other browsers, we use |to| value for addition and accumulation, i.e. Vresult = Vb.
+        //
+        // [1] https://drafts.csswg.org/css-values-4/#not-additive
+        // [2] https://github.com/w3c/csswg-drafts/issues/9070
+        Ok(to.clone())
     }
 }
 
