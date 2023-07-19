@@ -55,6 +55,7 @@ WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder(
   mCodecParams.mQPMax = 0;
   mCodecParams.mNumberOfSimulcastStreams = 0;
   mCodecParams.mMode = kGMPCodecModeInvalid;
+  mCodecParams.mLogLevel = GetGMPLibraryLogLevel();
   MOZ_ASSERT(!mPCHandle.empty());
 }
 
@@ -142,6 +143,7 @@ int32_t WebrtcGmpVideoEncoder::InitEncode(
   memset(&codecParams, 0, sizeof(codecParams));
 
   codecParams.mGMPApiVersion = kGMPVersion34;
+  codecParams.mLogLevel = GetGMPLibraryLogLevel();
   codecParams.mStartBitrate = aCodecSettings->startBitrate;
   codecParams.mMinBitrate = aCodecSettings->minBitrate;
   codecParams.mMaxBitrate = aCodecSettings->maxBitrate;
@@ -731,6 +733,7 @@ int32_t WebrtcGmpVideoDecoder::GmpInitDone(GMPVideoDecoderProxy* aGMP,
   GMPVideoCodec codec;
   memset(&codec, 0, sizeof(codec));
   codec.mGMPApiVersion = kGMPVersion34;
+  codec.mLogLevel = GetGMPLibraryLogLevel();
 
   // XXX this is currently a hack
   // GMPVideoCodecUnion codecSpecific;
