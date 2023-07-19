@@ -12,8 +12,8 @@
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async () => {
-  const { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  const { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+    "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
   );
   const editor = document.querySelector("div[contenteditable]");
   async function replaceWord(aMisspelledWord, aCorrectWord, aReplaceAll) {

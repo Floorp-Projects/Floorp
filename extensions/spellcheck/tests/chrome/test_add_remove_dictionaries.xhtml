@@ -65,8 +65,8 @@ function RunTest() {
   ok(map.exists());
   hunspell.addDirectory(map);
 
-  const {maybeOnSpellCheck} = ChromeUtils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm");
+  const {maybeOnSpellCheck} = ChromeUtils.importESModule(
+    "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs");
     maybeOnSpellCheck(textbox, function () {
 
     // test that base and map dictionaries are available

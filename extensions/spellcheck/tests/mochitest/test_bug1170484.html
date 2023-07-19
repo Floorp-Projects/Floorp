@@ -14,8 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1170484
   /** Test for Bug 1170484 */
   SimpleTest.waitForExplicitFinish();
 
-  var { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  var { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+    "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
   );
 
   SimpleTest.waitForFocus(doTest, window);

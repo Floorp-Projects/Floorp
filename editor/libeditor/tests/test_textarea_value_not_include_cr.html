@@ -72,8 +72,8 @@ SimpleTest.waitForFocus(async () => {
     let inlineSpellchecker = SpecialPowers.wrap(textarea).editor.getInlineSpellChecker(true);
     textarea.value = "abx ";
     await new Promise(resolve => {
-      const { onSpellCheck } = SpecialPowers.ChromeUtils.import(
-        "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+      const { onSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+        "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
       );
       onSpellCheck(textarea, () => {
         SimpleTest.executeSoon(resolve);

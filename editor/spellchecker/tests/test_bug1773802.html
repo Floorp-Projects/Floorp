@@ -22,8 +22,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1773802
 
 const Ci = SpecialPowers.Ci;
 
-let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
 );
 
 function getMisspelledWords(editor) {

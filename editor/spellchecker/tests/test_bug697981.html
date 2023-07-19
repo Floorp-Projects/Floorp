@@ -27,8 +27,8 @@ var elem_de;
 var editor_de;
 var script;
 
-var { maybeOnSpellCheck, onSpellCheck } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+var { maybeOnSpellCheck, onSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
 );
 
 /** Test for Bug 697981 **/

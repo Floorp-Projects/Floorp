@@ -30,8 +30,8 @@ SimpleTest.waitForFocus(() => {
 
   textarea.focus();
 
-  const { onSpellCheck } = SpecialPowers.ChromeUtils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  const { onSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+    "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
   );
   onSpellCheck(textarea, () => {
     spellChecker.UpdateCurrentDictionary(() => {

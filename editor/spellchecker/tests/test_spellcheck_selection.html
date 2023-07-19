@@ -10,8 +10,8 @@
 add_task(async function() {
   await new Promise(resolve => SimpleTest.waitForFocus(resolve));
 
-  let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+    "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
   );
 
   let editingHost = document.querySelector("div[contenteditable][lang=en-US]");

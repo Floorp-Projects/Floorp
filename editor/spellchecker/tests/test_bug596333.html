@@ -121,8 +121,8 @@ function runTest() {
   var edit = document.getElementById("edit");
   edit.focus();
 
-  onSpellCheck = SpecialPowers.ChromeUtils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  onSpellCheck = SpecialPowers.ChromeUtils.importESModule(
+    "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
   ).onSpellCheck;
   onSpellCheck(edit, runOnFocus);
 }

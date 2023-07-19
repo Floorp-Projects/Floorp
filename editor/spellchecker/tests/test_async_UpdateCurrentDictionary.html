@@ -24,8 +24,8 @@ function start() {
   var textarea = document.getElementById("editor");
   textarea.focus();
 
-  const { onSpellCheck } = SpecialPowers.ChromeUtils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  const { onSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+    "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
   )
   onSpellCheck(textarea, function() {
     var isc = SpecialPowers.wrap(textarea).editor.getInlineSpellChecker(false);

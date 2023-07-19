@@ -36,8 +36,8 @@ var script;
  * user behaviour.
  */
 
-let { maybeOnSpellCheck, onSpellCheck } = SpecialPowers.ChromeUtils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+let { maybeOnSpellCheck, onSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+    "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
 );
 
 SimpleTest.waitForExplicitFinish();

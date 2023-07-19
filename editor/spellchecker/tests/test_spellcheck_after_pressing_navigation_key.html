@@ -13,8 +13,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1729653
 <body>
 <textarea rows="20" cols="50">That undfgdfg seems OK.</textarea>
 <script>
-let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
 );
 
 function waitForTick() {

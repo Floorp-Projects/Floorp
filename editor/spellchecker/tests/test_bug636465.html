@@ -11,8 +11,8 @@
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-  const { onSpellCheck } = SpecialPowers.ChromeUtils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  const { onSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+    "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
   );
   var x = document.getElementById("x");
   x.focus();

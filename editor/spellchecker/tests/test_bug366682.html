@@ -45,8 +45,8 @@ function runTest() {
   editDoc().designMode = "on";
   editDoc().defaultView.focus();
 
-  const { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  const { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+    "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
   );
   maybeOnSpellCheck(editDoc().documentElement, evalTest);
 }

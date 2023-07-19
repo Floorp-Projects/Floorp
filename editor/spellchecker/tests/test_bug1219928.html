@@ -29,8 +29,8 @@ var spellchecker;
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  var { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  var { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+    "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
   );
 
   var elem = document.getElementById("en-US");

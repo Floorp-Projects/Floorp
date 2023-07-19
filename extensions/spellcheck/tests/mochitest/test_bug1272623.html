@@ -63,8 +63,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
   }
 
   add_task(async function() {
-    maybeOnSpellCheck = SpecialPowers.ChromeUtils.import(
-      "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+    maybeOnSpellCheck = SpecialPowers.ChromeUtils.importESModule(
+      "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
     ).maybeOnSpellCheck;
 
     // Wait for the page to be ready

@@ -19,8 +19,8 @@ x
   sel.addRange(range);
   p.parentNode.focus();
 
-  var { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  var { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+    "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
   );
   maybeOnSpellCheck(p.parentNode, function () {
     sendKey('DOWN');  // now after "1"

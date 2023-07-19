@@ -93,8 +93,8 @@ SimpleTest.waitForFocus(async () => {
         return aElement === textarea ? aElement.value : aElement.innerHTML;
       }
 
-      const { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
-        "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+      const { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+        "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
       );
       maybeOnSpellCheck(aElement, () => {
         SimpleTest.executeSoon(() => {

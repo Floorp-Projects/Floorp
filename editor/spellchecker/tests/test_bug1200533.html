@@ -106,8 +106,8 @@ function continueTest(evt) {
   var inlineSpellChecker = editor.getInlineSpellChecker(true);
   const is_en_US = SpecialPowers.Services.locale.appLocaleAsBCP47 == "en-US";
 
-  const { onSpellCheck } = SpecialPowers.ChromeUtils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  const { onSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+    "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
   );
   onSpellCheck(elem, async function() {
     var spellchecker = inlineSpellChecker.spellChecker;
