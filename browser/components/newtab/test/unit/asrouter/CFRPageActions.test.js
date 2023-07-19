@@ -934,54 +934,125 @@ describe("CFRPageActions", () => {
       let savedRec;
       let pageAction;
       let fakeAnchorId = "fake_anchor_id";
-      let sandboxShowPopup = sinon.createSandbox();
-      let fakePopUp = {
-        id: "fake_id",
-        template: "cfr_doorhanger",
-        content: {
-          skip_address_bar_notifier: true,
-          heading_text: "Fake Heading Text",
-          anchor_id: "fake_anchor_id",
-        },
-      };
+      let fakeAltAnchorId = "fake_alt_anchor_id";
+      let TEST_MESSAGE;
+      let getElmStub;
+      let getStyleStub;
+      let isElmVisibleStub;
+      let getWidgetStub;
       beforeEach(() => {
-        const { id, content } = fakePopUp;
+        TEST_MESSAGE = {
+          id: "fake_id",
+          template: "cfr_doorhanger",
+          content: {
+            skip_address_bar_notifier: true,
+            heading_text: "Fake Heading Text",
+            anchor_id: fakeAnchorId,
+          },
+        };
+        getElmStub = sandbox
+          .stub(window.document, "getElementById")
+          .callsFake(id => ({ id }));
+        getStyleStub = sandbox
+          .stub(window, "getComputedStyle")
+          .returns({ display: "block", visibility: "visible" });
+        isElmVisibleStub = sandbox.stub().returns(true);
+        getWidgetStub = sandbox.stub();
+        globals.set({
+          CustomizableUI: { getWidget: getWidgetStub },
+          isElementVisible: isElmVisibleStub,
+        });
+
         savedRec = {
-          id,
+          id: TEST_MESSAGE.id,
           host: fakeHost,
-          content,
+          content: TEST_MESSAGE.content,
         };
         CFRPageActions.RecommendationMap.set(fakeBrowser, savedRec);
         pageAction = new PageAction(window, dispatchStub);
-
-        sandboxShowPopup.stub(window.document, "getElementById");
-        sandboxShowPopup.stub(pageAction, "_renderPopup");
-        globals.set({
-          CustomizableUI: {
-            getWidget: sandboxShowPopup
-              .stub()
-              .withArgs(fakeAnchorId)
-              .returns({ areaType: "menu-panel" }),
-          },
-        });
+        sandbox.stub(pageAction, "_renderPopup");
       });
       afterEach(() => {
-        sandboxShowPopup.restore();
+        sandbox.restore();
         globals.restore();
       });
 
-      it("Should use default anchor_id if an alternate hasn't been provided", async () => {
+      it("should use anchor_id if element exists and is not a customizable widget", async () => {
         await pageAction.showPopup();
-
-        assert.calledWith(window.document.getElementById, fakeAnchorId);
+        assert.equal(fakeBrowser.cfrpopupnotificationanchor.id, fakeAnchorId);
       });
 
-      it("Should use alt_anchor_if if one has been provided AND the anchor_id has been removed", async () => {
-        let fakeAltAnchorId = "fake_alt_anchor_id";
-
-        fakePopUp.content.alt_anchor_id = fakeAltAnchorId;
+      it("should use anchor_id if element exists and is in the toolbar", async () => {
+        getWidgetStub.withArgs(fakeAnchorId).returns({ areaType: "toolbar" });
         await pageAction.showPopup();
-        assert.calledWith(window.document.getElementById, fakeAltAnchorId);
+        assert.equal(fakeBrowser.cfrpopupnotificationanchor.id, fakeAnchorId);
+      });
+
+      it("should use default container if element exists but is in the widget overflow panel", async () => {
+        getWidgetStub
+          .withArgs(fakeAnchorId)
+          .returns({ areaType: "menu-panel" });
+        await pageAction.showPopup();
+        assert.equal(
+          fakeBrowser.cfrpopupnotificationanchor.id,
+          pageAction.container.id
+        );
+      });
+
+      it("should use default container if element exists but is in the customization palette", async () => {
+        getWidgetStub.withArgs(fakeAnchorId).returns({ areaType: null });
+        await pageAction.showPopup();
+        assert.equal(
+          fakeBrowser.cfrpopupnotificationanchor.id,
+          pageAction.container.id
+        );
+      });
+
+      it("should use alt_anchor_id if one has been provided and the anchor_id element cannot be found", async () => {
+        TEST_MESSAGE.content.alt_anchor_id = fakeAltAnchorId;
+        getElmStub.withArgs(fakeAnchorId).returns(null);
+        await pageAction.showPopup();
+        assert.equal(
+          fakeBrowser.cfrpopupnotificationanchor.id,
+          fakeAltAnchorId
+        );
+      });
+
+      it("should use alt_anchor_id if one has been provided and the anchor_id element is hidden by CSS", async () => {
+        TEST_MESSAGE.content.alt_anchor_id = fakeAltAnchorId;
+        getStyleStub
+          .withArgs(sandbox.match({ id: fakeAnchorId }))
+          .returns({ display: "none", visibility: "visible" });
+        await pageAction.showPopup();
+        assert.equal(
+          fakeBrowser.cfrpopupnotificationanchor.id,
+          fakeAltAnchorId
+        );
+      });
+
+      it("should use alt_anchor_id if one has been provided and the anchor_id element has no height/width", async () => {
+        TEST_MESSAGE.content.alt_anchor_id = fakeAltAnchorId;
+        isElmVisibleStub
+          .withArgs(sandbox.match({ id: fakeAnchorId }))
+          .returns(false);
+        await pageAction.showPopup();
+        assert.equal(
+          fakeBrowser.cfrpopupnotificationanchor.id,
+          fakeAltAnchorId
+        );
+      });
+
+      it("should use default container if the anchor_id and alt_anchor_id are both not visible", async () => {
+        TEST_MESSAGE.content.alt_anchor_id = fakeAltAnchorId;
+        getStyleStub
+          .withArgs(sandbox.match({ id: fakeAnchorId }))
+          .returns({ display: "none", visibility: "visible" });
+        getWidgetStub.withArgs(fakeAltAnchorId).returns({ areaType: null });
+        await pageAction.showPopup();
+        assert.equal(
+          fakeBrowser.cfrpopupnotificationanchor.id,
+          pageAction.container.id
+        );
       });
     });
 
