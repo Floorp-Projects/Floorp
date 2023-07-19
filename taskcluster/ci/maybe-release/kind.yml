@@ -10,10 +10,7 @@ transforms:
 
 job-defaults:
     description: Check recent releases and trigger a new ship-it phase if worthwhile.
-    worker-type:
-        by-release-level:
-            production: scriptworker-k8s/gecko-3-shipit
-            staging: scriptworker-k8s/gecko-1-shipit
+    worker-type: shipit
     worker:
         implementation: shipit-maybe-release
     scopes:

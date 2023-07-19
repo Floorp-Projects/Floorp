@@ -560,6 +560,14 @@ workers:
                 by-release-level:
                     production: '{trust-domain}-3-beetmover'
                     staging: '{trust-domain}-1-beetmover'
+        shipit:
+            provisioner: scriptworker-k8s
+            implementation: shipit
+            os: scriptworker
+            worker-type:
+                by-release-level:
+                    production: '{trust-domain}-3-shipit'
+                    staging: '{trust-domain}-1-shipit'
         linux-depsigning:
             provisioner: scriptworker-k8s
             implementation: scriptworker-signing
