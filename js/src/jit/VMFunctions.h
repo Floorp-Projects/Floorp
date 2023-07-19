@@ -411,9 +411,6 @@ bool OperatorIn(JSContext* cx, HandleValue key, HandleObject obj, bool* out);
 void PostWriteBarrier(JSRuntime* rt, js::gc::Cell* cell);
 void PostGlobalWriteBarrier(JSRuntime* rt, GlobalObject* obj);
 
-enum class IndexInBounds { Yes, Maybe };
-
-template <IndexInBounds InBounds>
 void PostWriteElementBarrier(JSRuntime* rt, JSObject* obj, int32_t index);
 
 // If |str| represents an int32, assign it to |result| and return true.
