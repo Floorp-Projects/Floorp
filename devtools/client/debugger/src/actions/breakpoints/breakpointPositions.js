@@ -4,7 +4,6 @@
 
 import {
   isOriginalId,
-  isGeneratedId,
   originalToGeneratedId,
 } from "devtools/client/shared/source-map-loader/index";
 
@@ -245,7 +244,7 @@ export const setBreakpointPositions = memoizeableAction(
       }
 
       if (
-        isGeneratedId(location.source.id) &&
+        !location.source.isOriginal &&
         location.line &&
         !positions[location.line]
       ) {
@@ -258,7 +257,7 @@ export const setBreakpointPositions = memoizeableAction(
     },
     createKey(location, { getState }) {
       const key = generatedSourceActorKey(getState(), location.source.id);
-      return isGeneratedId(location.source.id) && location.line
+      return !location.source.isOriginal && location.line
         ? `${key}-${location.line}`
         : key;
     },

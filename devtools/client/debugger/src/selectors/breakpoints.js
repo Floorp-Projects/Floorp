@@ -4,7 +4,6 @@
 
 import { createSelector } from "reselect";
 
-import { isGeneratedId } from "devtools/client/shared/source-map-loader/index";
 import { makeBreakpointId } from "../utils/breakpoint";
 
 // This method is only used from the main test helper
@@ -42,10 +41,9 @@ export function getBreakpointsForSource(state, source, lines) {
     return [];
   }
 
-  const isGeneratedSource = isGeneratedId(source.id);
   const breakpoints = getBreakpointsList(state);
   return breakpoints.filter(bp => {
-    const location = isGeneratedSource ? bp.generatedLocation : bp.location;
+    const location = source.isOriginal ? bp.location : bp.generatedLocation;
 
     if (lines) {
       const isOnLineOrWithinRange =

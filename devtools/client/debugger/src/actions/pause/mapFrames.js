@@ -17,7 +17,6 @@ import {
   debuggerToSourceMapLocation,
   sourceMapToDebuggerLocation,
 } from "../../utils/location";
-import { isGeneratedId } from "devtools/client/shared/source-map-loader/index";
 import { annotateFramesWithLibrary } from "../../utils/pause/frames/annotateFrames";
 import { createWasmOriginalFrame } from "../../client/firefox/create";
 import { getOriginalDisplayNameForOriginalLocation } from "../../reducers/pause";
@@ -66,7 +65,7 @@ async function updateFrameLocationAndDisplayName(frame, thunkArgs) {
 }
 
 function isWasmOriginalSourceFrame(frame) {
-  if (isGeneratedId(frame.location.source.id)) {
+  if (!frame.location.source.isOriginal) {
     return false;
   }
 
