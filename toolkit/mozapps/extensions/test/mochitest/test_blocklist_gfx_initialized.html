@@ -15,8 +15,8 @@ add_task(async function check_GfxBlocklistRS_initialized() {
     // specific functionality would lazily initialize the blocklist, negating
     // the value of this test.
     let initialized = await SpecialPowers.spawnChrome([], async () => {
-        const { BlocklistPrivate } = ChromeUtils.import(
-            "resource://gre/modules/Blocklist.jsm"
+        const { BlocklistPrivate } = ChromeUtils.importESModule(
+            "resource://gre/modules/Blocklist.sys.mjs"
         );
 
         return BlocklistPrivate.GfxBlocklistRS._initialized;
