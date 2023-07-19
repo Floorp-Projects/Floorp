@@ -12,15 +12,21 @@
 namespace mozilla::dom {
 
 /* static */
-already_AddRefed<PermissionStatus> MidiPermissionStatus::Create(
-    nsPIDOMWindowInner* aWindow, bool aSysex, ErrorResult& aRv) {
+RefPtr<PermissionStatus::CreatePromise> MidiPermissionStatus::Create(
+    nsPIDOMWindowInner* aWindow, bool aSysex) {
   RefPtr<PermissionStatus> status = new MidiPermissionStatus(aWindow, aSysex);
-  aRv = status->Init();
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  return status.forget();
+  return status->Init()->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [status](nsresult aOk) {
+        MOZ_ASSERT(NS_SUCCEEDED(aOk));
+        return MozPromise<RefPtr<PermissionStatus>, nsresult,
+                          true>::CreateAndResolve(status, __func__);
+      },
+      [](nsresult aError) {
+        MOZ_ASSERT(NS_FAILED(aError));
+        return MozPromise<RefPtr<PermissionStatus>, nsresult,
+                          true>::CreateAndReject(aError, __func__);
+      });
 }
 
 MidiPermissionStatus::MidiPermissionStatus(nsPIDOMWindowInner* aWindow,
