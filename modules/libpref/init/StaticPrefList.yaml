@@ -2233,12 +2233,6 @@
   value: @IS_NOT_NIGHTLY_BUILD@
   mirror: always
 
-# Is support for AudioWorklet enabled?
-- name: dom.audioworklet.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for Navigator.getBattery enabled?
 - name: dom.battery.enabled
   type: bool
@@ -4753,11 +4747,6 @@
 - name: dom.workers.testing.enabled
   type: RelaxedAtomicBool
   value: false
-  mirror: always
-
-- name: dom.worklet.enabled
-  type: bool
-  value: true
   mirror: always
 
 # When this pref is set, parent documents may consider child iframes have
