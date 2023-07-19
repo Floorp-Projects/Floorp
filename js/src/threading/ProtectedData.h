@@ -247,7 +247,6 @@ enum class AllowedHelperThread {
   ParseTask,
   IonCompile,
   GCTaskOrIonCompile,
-  ParseTaskOrIonCompile,
 };
 
 template <AllowedHelperThread Helper>
@@ -274,10 +273,6 @@ template <typename T>
 using MainThreadOrParseData =
     ProtectedDataNoCheckArgs<CheckMainThread<AllowedHelperThread::ParseTask>,
                              T>;
-
-template <typename T>
-using MainThreadOrParseOrIonCompileData = ProtectedDataNoCheckArgs<
-    CheckMainThread<AllowedHelperThread::ParseTaskOrIonCompile>, T>;
 
 // Runtime wide locks which might protect some data.
 enum class GlobalLock { GCLock, HelperThreadLock };

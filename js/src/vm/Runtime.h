@@ -984,7 +984,7 @@ struct JSRuntime {
   // but Ion needs to be able to access addresses inside here, which should be
   // safe, as the actual cache lookups will be performed on the main thread
   // through jitted code.
-  js::MainThreadOrParseOrIonCompileData<js::RuntimeCaches> caches_;
+  js::MainThreadOrIonCompileData<js::RuntimeCaches> caches_;
 
  public:
   js::RuntimeCaches& caches() { return caches_.ref(); }
