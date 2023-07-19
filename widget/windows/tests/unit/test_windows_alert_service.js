@@ -287,14 +287,24 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
   );
 
   alert = makeAlert({ name, title, text, imageURL, requireInteraction: true });
-  expected = `<toast scenario="reminder" launch="launch"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}</actions></toast>`;
+  expected = `<toast scenario="reminder" launch="launch"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}<action content="Dismiss"/></actions></toast>`;
   Assert.deepEqual(
     [
       expected.replace("<actions></actions>", "<actions/>"),
       {
         launch: parsedArgumentString({ action: "" }),
         actions: Object.fromEntries(
-          [parsedSettingsAction()].filter(x => x.length)
+          [
+            parsedSettingsAction(),
+            [
+              "Dismiss",
+              {
+                content: "Dismiss",
+                arguments: { "": undefined },
+                activationType: "background",
+              },
+            ],
+          ].filter(x => x.length)
         ),
       },
     ],

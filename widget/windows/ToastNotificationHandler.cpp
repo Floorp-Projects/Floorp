@@ -22,6 +22,7 @@
 #include "mozilla/Tokenizer.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/intl/Localization.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
 #include "nsDirectoryServiceDefs.h"
@@ -629,6 +630,25 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
                             /* actionPlacement */ u""_ns,
                             /* activationType */ activationTypeString);
     NS_ENSURE_TRUE(success, nullptr);
+  }
+
+  // Windows ignores scenario=reminder added by mRequiredInteraction if
+  // there's no non-contextmenu activationType=background action.
+  if (mRequireInteraction && !mActions.Length()) {
+    nsTArray<nsCString> resIds = {
+        "toolkit/global/alert.ftl"_ns,
+    };
+    RefPtr<intl::Localization> l10n = intl::Localization::Create(resIds, true);
+    IgnoredErrorResult rv;
+    nsAutoCString closeTitle;
+    l10n->FormatValueSync("notification-default-dismiss"_ns, {}, closeTitle,
+                          rv);
+    NS_ENSURE_TRUE(!rv.Failed(), nullptr);
+
+    NS_ENSURE_TRUE(
+        AddActionNode(toastXml, actionsNode, NS_ConvertUTF8toUTF16(closeTitle),
+                      launchArg, u""_ns, u""_ns, u"background"_ns),
+        nullptr);
   }
 
   ComPtr<IXmlNode> appendedChild;
