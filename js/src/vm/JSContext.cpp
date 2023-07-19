@@ -1085,27 +1085,6 @@ JSContext::~JSContext() {
   TlsContext.set(nullptr);
 }
 
-void JSContext::setHelperThread(const JS::ContextOptions& options,
-                                const AutoLockHelperThreadState& locked) {
-  MOZ_ASSERT(isHelperThreadContext());
-  MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), !TlsContext.get());
-  MOZ_ASSERT(currentThread_ == ThreadId());
-
-  TlsContext.set(this);
-  currentThread_ = ThreadId::ThisThreadId();
-  options_ = options;
-}
-
-void JSContext::clearHelperThread(const AutoLockHelperThreadState& locked) {
-  MOZ_ASSERT(isHelperThreadContext());
-  MOZ_ASSERT(TlsContext.get() == this);
-  MOZ_ASSERT(currentThread_ == ThreadId::ThisThreadId());
-
-  currentThread_ = ThreadId();
-  options_ = JS::ContextOptions();
-  TlsContext.set(nullptr);
-}
-
 void JSContext::setRuntime(JSRuntime* rt) {
   MOZ_ASSERT(!resolvingList);
   MOZ_ASSERT(!compartment());

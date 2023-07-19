@@ -194,10 +194,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // currently operating on.
   void setRuntime(JSRuntime* rt);
 
-  void setHelperThread(const JS::ContextOptions& options,
-                       const js::AutoLockHelperThreadState& locked);
-  void clearHelperThread(const js::AutoLockHelperThreadState& locked);
-
   bool contextAvailable(js::AutoLockHelperThreadState& locked) {
     MOZ_ASSERT(kind_ == js::ContextKind::HelperThread);
     return currentThread_ == js::ThreadId();
