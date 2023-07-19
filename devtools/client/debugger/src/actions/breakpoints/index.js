@@ -27,9 +27,6 @@ import {
 } from "./modify";
 import { getOriginalLocation } from "../../utils/source-maps";
 
-import { isOriginalId } from "devtools/client/shared/source-map-loader/index";
-// this will need to be changed so that addCLientBreakpoint is removed
-
 export * from "./breakpointPositions";
 export * from "./modify";
 export * from "./syncBreakpoint";
@@ -48,7 +45,7 @@ export function addHiddenBreakpoint(location) {
  */
 export function disableBreakpointsInSource(source) {
   return async ({ dispatch, getState, client }) => {
-    const breakpoints = getBreakpointsForSource(getState(), source.id);
+    const breakpoints = getBreakpointsForSource(getState(), source);
     for (const breakpoint of breakpoints) {
       if (!breakpoint.disabled) {
         dispatch(disableBreakpoint(breakpoint));
@@ -65,7 +62,7 @@ export function disableBreakpointsInSource(source) {
  */
 export function enableBreakpointsInSource(source) {
   return async ({ dispatch, getState, client }) => {
-    const breakpoints = getBreakpointsForSource(getState(), source.id);
+    const breakpoints = getBreakpointsForSource(getState(), source);
     for (const breakpoint of breakpoints) {
       if (breakpoint.disabled) {
         dispatch(enableBreakpoint(breakpoint));
@@ -153,7 +150,7 @@ export function removeBreakpoints(breakpoints) {
  */
 export function removeBreakpointsInSource(source) {
   return async ({ dispatch, getState, client }) => {
-    const breakpoints = getBreakpointsForSource(getState(), source.id);
+    const breakpoints = getBreakpointsForSource(getState(), source);
     for (const breakpoint of breakpoints) {
       dispatch(removeBreakpoint(breakpoint));
     }
@@ -169,16 +166,16 @@ export function removeBreakpointsInSource(source) {
  * non-pretty-printed (generated) source to the related pretty-printed
  * (original) source by querying the SourceMap service.
  *
- * @param {String} sourceId - the generated source id
+ * @param {String} source - the generated source
  */
-export function updateBreakpointsForNewPrettyPrintedSource(sourceId) {
+export function updateBreakpointsForNewPrettyPrintedSource(source) {
   return async thunkArgs => {
     const { dispatch, getState } = thunkArgs;
-    if (isOriginalId(sourceId)) {
+    if (source.isOriginal) {
       console.error("Can't update breakpoints on original sources");
       return;
     }
-    const breakpoints = getBreakpointsForSource(getState(), sourceId);
+    const breakpoints = getBreakpointsForSource(getState(), source);
     // Remap the breakpoints with the original location information from
     // the pretty-printed source.
     const newBreakpoints = await Promise.all(
@@ -252,35 +249,23 @@ export function addBreakpointAtLine(line, shouldLog = false, disabled = false) {
   };
 }
 
-export function removeBreakpointsAtLine(sourceId, line) {
+export function removeBreakpointsAtLine(source, line) {
   return ({ dispatch, getState }) => {
-    const breakpointsAtLine = getBreakpointsForSource(
-      getState(),
-      sourceId,
-      line
-    );
+    const breakpointsAtLine = getBreakpointsForSource(getState(), source, line);
     return dispatch(removeBreakpoints(breakpointsAtLine));
   };
 }
 
-export function disableBreakpointsAtLine(sourceId, line) {
+export function disableBreakpointsAtLine(source, line) {
   return ({ dispatch, getState }) => {
-    const breakpointsAtLine = getBreakpointsForSource(
-      getState(),
-      sourceId,
-      line
-    );
+    const breakpointsAtLine = getBreakpointsForSource(getState(), source, line);
     return dispatch(toggleBreakpoints(true, breakpointsAtLine));
   };
 }
 
-export function enableBreakpointsAtLine(sourceId, line) {
+export function enableBreakpointsAtLine(source, line) {
   return ({ dispatch, getState }) => {
-    const breakpointsAtLine = getBreakpointsForSource(
-      getState(),
-      sourceId,
-      line
-    );
+    const breakpointsAtLine = getBreakpointsForSource(getState(), source, line);
     return dispatch(toggleBreakpoints(false, breakpointsAtLine));
   };
 }

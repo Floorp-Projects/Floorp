@@ -43,6 +43,15 @@ class SVGPointList {
   SVGPointList() = default;
   ~SVGPointList() = default;
 
+  SVGPointList& operator=(const SVGPointList& aOther) {
+    mItems.ClearAndRetainStorage();
+    // Best-effort, really.
+    Unused << mItems.AppendElements(aOther.mItems, fallible);
+    return *this;
+  }
+
+  SVGPointList(const SVGPointList& aOther) { *this = aOther; }
+
   // Only methods that don't make/permit modification to this list are public.
   // Only our friend classes can access methods that may change us.
 

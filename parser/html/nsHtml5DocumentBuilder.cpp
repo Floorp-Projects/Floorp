@@ -90,7 +90,7 @@ void nsHtml5DocumentBuilder::SetDocumentMode(nsHtml5DocumentMode m) {
   }
   mDocument->SetCompatibilityMode(mode);
 
-  if (errMsgId) {
+  if (errMsgId && !mDocument->IsLoadedAsData()) {
     nsCOMPtr<nsIURI> docURI = mDocument->GetDocumentURI();
     bool isData = false;
     docURI->SchemeIs("data", &isData);

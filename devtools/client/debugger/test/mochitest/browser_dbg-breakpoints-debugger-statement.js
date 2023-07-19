@@ -90,5 +90,5 @@ function waitForBreakpointWithoutCondition(dbg, url, line, index) {
 
 function findBreakpoints(dbg, url, line) {
   const source = findSource(dbg, url);
-  return dbg.selectors.getBreakpointsForSource(source.id, line);
+  return dbg.selectors.getBreakpointsForSource(source, line);
 }

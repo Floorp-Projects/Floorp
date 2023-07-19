@@ -39,18 +39,6 @@ let expectedKeys = ["at",
                     "toSorted",
                     "toSpliced"];
 
-if (typeof getBuildConfiguration === "undefined") {
-  var getBuildConfiguration = SpecialPowers.Cu.getJSTestingFunctions().getBuildConfiguration;
-}
-
-if (typeof getRealmConfiguration === "undefined") {
-  var getRealmConfiguration = SpecialPowers.Cu.getJSTestingFunctions().getRealmConfiguration;
-}
-
-if (!getBuildConfiguration().release_or_beta && getRealmConfiguration().enableArrayGrouping) {
-    expectedKeys.push("group", "groupToMap");
-}
-
 assertDeepEq(keys, expectedKeys);
 
 for (let key of keys)

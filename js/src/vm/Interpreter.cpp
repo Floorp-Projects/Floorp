@@ -190,7 +190,7 @@ static bool IsSelfHostedOrKnownBuiltinCtor(JSFunction* fun, JSContext* cx) {
     return true;
   }
 
-  // GetBuiltinConstructor in ArrayGroupToMap
+  // GetBuiltinConstructor in MapGroupBy
   if (fun == cx->global()->maybeGetConstructor(JSProto_Map)) {
     return true;
   }

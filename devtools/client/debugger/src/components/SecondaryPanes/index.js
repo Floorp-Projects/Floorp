@@ -6,7 +6,6 @@ const SplitBox = require("devtools/client/shared/components/splitter/SplitBox");
 
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import { isGeneratedId } from "devtools/client/shared/source-map-loader/index";
 import { connect } from "../../utils/connect";
 
 import actions from "../../actions";
@@ -198,7 +197,7 @@ class SecondaryPanes extends Component {
 
     if (
       !selectedFrame ||
-      isGeneratedId(selectedFrame.location.source.id) ||
+      !selectedFrame.location.source.isOriginal ||
       source?.isPrettyPrinted
     ) {
       return null;

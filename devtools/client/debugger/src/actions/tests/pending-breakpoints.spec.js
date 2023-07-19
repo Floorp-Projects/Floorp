@@ -175,7 +175,7 @@ describe("initializing with disabled pending breakpoints in prefs", () => {
     await dispatch(actions.loadGeneratedSourceText(sourceActor));
 
     await waitForState(store, state => {
-      const bps = selectors.getBreakpointsForSource(state, source.id);
+      const bps = selectors.getBreakpointsForSource(state, source);
       return bps && !!Object.values(bps).length;
     });
 

@@ -1,9 +1,4 @@
-// |reftest| shell-option(--enable-array-grouping) skip-if(!Array.prototype.group)
-
-var BUGNUMBER = 1739648;
-var summary = "Implement Array.prototype.groupToMap || group";
-
-print(BUGNUMBER + ": " + summary);
+// |reftest| shell-option(--enable-array-grouping) skip-if(!Object.groupBy)
 
 function isNeg(x) {
   if (Object.is(x, -0) || x < 0) {
@@ -17,8 +12,8 @@ function isNeg(x) {
   const expectedObj = { neg: [-Infinity, -2, -1, -0], pos: [0, 1, 2, Infinity] };
   Object.setPrototypeOf(expectedObj, null);
 
-  const groupedArray = a1.group(x => isNeg(x) ? 'neg' : 'pos');
-  const mappedArray = a1.groupToMap(x => isNeg(x) ? 'neg' : 'pos');
+  const groupedArray = Object.groupBy(a1, x => isNeg(x) ? 'neg' : 'pos');
+  const mappedArray = Map.groupBy(a1, x => isNeg(x) ? 'neg' : 'pos');
 
   assertEq(Object.getPrototypeOf(groupedArray), null)
   assertDeepEq(groupedArray, expectedObj);
@@ -28,23 +23,23 @@ function isNeg(x) {
 
   const expectedObj2 = {"undefined": [1,2,3]}
   Object.setPrototypeOf(expectedObj2, null);
-  assertDeepEq([1,2,3].group(() => {}), expectedObj2);
-  assertDeepEq([].group(() => {}), Object.create(null));
-  assertDeepEq(([1,2,3].groupToMap(() => {})).get(undefined), [1,2,3]);
-  assertEq(([1,2,3].groupToMap(() => {})).size, 1);
+  assertDeepEq(Object.groupBy([1,2,3], () => {}), expectedObj2);
+  assertDeepEq(Object.groupBy([], () => {}), Object.create(null));
+  assertDeepEq((Map.groupBy([1,2,3], () => {})).get(undefined), [1,2,3]);
+  assertEq((Map.groupBy([1,2,3], () => {})).size, 1);
 
-  const negMappedArray = a1.groupToMap(x => isNeg(x) ? -0 : 0);
+  const negMappedArray = Map.groupBy(a1, x => isNeg(x) ? -0 : 0);
   assertDeepEq(negMappedArray.get(0), a1);
   assertDeepEq(negMappedArray.size, 1);
 
-  assertThrowsInstanceOf(() => [].group(undefined), TypeError);
-  assertThrowsInstanceOf(() => [].group(null), TypeError);
-  assertThrowsInstanceOf(() => [].group(0), TypeError);
-  assertThrowsInstanceOf(() => [].group(""), TypeError);
-  assertThrowsInstanceOf(() => [].groupToMap(undefined), TypeError);
-  assertThrowsInstanceOf(() => [].groupToMap(null), TypeError);
-  assertThrowsInstanceOf(() => [].groupToMap(0), TypeError);
-  assertThrowsInstanceOf(() => [].groupToMap(""), TypeError);
+  assertThrowsInstanceOf(() => Object.groupBy([], undefined), TypeError);
+  assertThrowsInstanceOf(() => Object.groupBy([], null), TypeError);
+  assertThrowsInstanceOf(() => Object.groupBy([], 0), TypeError);
+  assertThrowsInstanceOf(() => Object.groupBy([], ""), TypeError);
+  assertThrowsInstanceOf(() => Map.groupBy([], undefined), TypeError);
+  assertThrowsInstanceOf(() => Map.groupBy([], null), TypeError);
+  assertThrowsInstanceOf(() => Map.groupBy([], 0), TypeError);
+  assertThrowsInstanceOf(() => Map.groupBy([], ""), TypeError);
 }
 
 const array = [ 'test' ];
@@ -60,7 +55,7 @@ Object.defineProperty(Map.prototype, 4, {
   }
 });
 
-const map1 = array.groupToMap(key => key.length);
+const map1 = Map.groupBy(array, key => key.length);
 
 assertEq('test', map1.get(4)[0])
 
@@ -73,8 +68,8 @@ Object.defineProperty(Array.prototype, '4', {
   }
 });
 
-const map2 = array.groupToMap(key => key.length);
-const arr = array.group(key => key.length);
+const map2 = Map.groupBy(array, key => key.length);
+const arr = Object.groupBy(array, key => key.length);
 
 assertEq('test', map2.get(4)[0])
 assertEq('test', arr[4][0])
@@ -83,13 +78,13 @@ Object.defineProperty(Object.prototype, "foo", {
   get() { throw new Error("user observable object get"); },
   set(v) { throw new Error("user observable object set"); }
 });
-[1, 2, 3].group(() => 'foo');
+Object.groupBy([1, 2, 3], () => 'foo');
 
 // Ensure property key is correctly accessed
 count = 0;
-p = [1].group(() => ({ toString() { count++; return 10 } }));
+p = Object.groupBy([1], () => ({ toString() { count++; return 10 } }));
 assertEq(count, 1);
-[1].groupToMap(() => ({ toString() { count++; return 10 } }));
+Map.groupBy([1], () => ({ toString() { count++; return 10 } }));
 assertEq(count, 1);
 
 reportCompare(0, 0);

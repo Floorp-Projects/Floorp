@@ -2,18 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import {
-  originalToGeneratedId,
-  isOriginalId,
-} from "devtools/client/shared/source-map-loader/index";
+import { originalToGeneratedId } from "devtools/client/shared/source-map-loader/index";
 import { getSelectedFrame, getSelectedLocation, getCurrentThread } from ".";
 
-function getGeneratedId(sourceId) {
-  if (isOriginalId(sourceId)) {
-    return originalToGeneratedId(sourceId);
+function getGeneratedId(source) {
+  if (source.isOriginal) {
+    return originalToGeneratedId(source.id);
   }
 
-  return sourceId;
+  return source.id;
 }
 
 /*
@@ -29,12 +26,11 @@ export function isSelectedFrameVisible(state) {
     return false;
   }
 
-  if (isOriginalId(selectedLocation.source.id)) {
+  if (selectedLocation.source.isOriginal) {
     return selectedLocation.source.id === selectedFrame.location.source.id;
   }
 
   return (
-    selectedLocation.source.id ===
-    getGeneratedId(selectedFrame.location.source.id)
+    selectedLocation.source.id === getGeneratedId(selectedFrame.location.source)
   );
 }

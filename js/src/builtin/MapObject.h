@@ -192,6 +192,7 @@ class MapObject : public NativeObject {
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec staticProperties[];
+  static const JSFunctionSpec staticMethods[];
 
   PreBarrieredTable* nurseryTable() {
     MOZ_ASSERT(IsInsideNursery(this));

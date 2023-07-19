@@ -452,11 +452,12 @@ const JSClassOps MapObject::classOps_ = {
 const ClassSpec MapObject::classSpec_ = {
     GenericCreateConstructor<MapObject::construct, 0, gc::AllocKind::FUNCTION>,
     GenericCreatePrototype<MapObject>,
-    nullptr,
+    MapObject::staticMethods,
     MapObject::staticProperties,
     MapObject::methods,
     MapObject::properties,
-    MapObject::finishInit};
+    MapObject::finishInit,
+};
 
 const JSClass MapObject::class_ = {
     "Map",
@@ -464,17 +465,23 @@ const JSClass MapObject::class_ = {
         JSCLASS_HAS_RESERVED_SLOTS(MapObject::SlotCount) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_Map) | JSCLASS_FOREGROUND_FINALIZE |
         JSCLASS_SKIP_NURSERY_FINALIZE,
-    &MapObject::classOps_, &MapObject::classSpec_};
+    &MapObject::classOps_,
+    &MapObject::classSpec_,
+};
 
 const JSClass MapObject::protoClass_ = {
-    "Map.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_Map), JS_NULL_CLASS_OPS,
-    &MapObject::classSpec_};
+    "Map.prototype",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Map),
+    JS_NULL_CLASS_OPS,
+    &MapObject::classSpec_,
+};
 
 const JSPropertySpec MapObject::properties[] = {
     JS_PSG("size", size, 0),
-    JS_STRING_SYM_PS(toStringTag, "Map", JSPROP_READONLY), JS_PS_END};
+    JS_STRING_SYM_PS(toStringTag, "Map", JSPROP_READONLY),
+    JS_PS_END,
+};
 
-// clang-format off
 const JSFunctionSpec MapObject::methods[] = {
     JS_INLINABLE_FN("get", get, 1, 0, MapGet),
     JS_INLINABLE_FN("has", has, 1, 0, MapHas),
@@ -488,12 +495,20 @@ const JSFunctionSpec MapObject::methods[] = {
     // @@iterator is re-defined in finishInit so that it has the
     // same identity as |entries|.
     JS_SYM_FN(iterator, entries, 0, 0),
-    JS_FS_END
+    JS_FS_END,
 };
-// clang-format on
 
 const JSPropertySpec MapObject::staticProperties[] = {
-    JS_SELF_HOSTED_SYM_GET(species, "$MapSpecies", 0), JS_PS_END};
+    JS_SELF_HOSTED_SYM_GET(species, "$MapSpecies", 0),
+    JS_PS_END,
+};
+
+const JSFunctionSpec MapObject::staticMethods[] = {
+#ifdef NIGHTLY_BUILD
+    JS_SELF_HOSTED_FN("groupBy", "MapGroupBy", 2, 0),
+#endif
+    JS_FS_END,
+};
 
 /* static */ bool MapObject::finishInit(JSContext* cx, HandleObject ctor,
                                         HandleObject proto) {
@@ -1264,7 +1279,8 @@ const ClassSpec SetObject::classSpec_ = {
     SetObject::staticProperties,
     SetObject::methods,
     SetObject::properties,
-    SetObject::finishInit};
+    SetObject::finishInit,
+};
 
 const JSClass SetObject::class_ = {
     "Set",
@@ -1277,14 +1293,18 @@ const JSClass SetObject::class_ = {
 };
 
 const JSClass SetObject::protoClass_ = {
-    "Set.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_Set), JS_NULL_CLASS_OPS,
-    &SetObject::classSpec_};
+    "Set.prototype",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Set),
+    JS_NULL_CLASS_OPS,
+    &SetObject::classSpec_,
+};
 
 const JSPropertySpec SetObject::properties[] = {
     JS_PSG("size", size, 0),
-    JS_STRING_SYM_PS(toStringTag, "Set", JSPROP_READONLY), JS_PS_END};
+    JS_STRING_SYM_PS(toStringTag, "Set", JSPROP_READONLY),
+    JS_PS_END,
+};
 
-// clang-format off
 const JSFunctionSpec SetObject::methods[] = {
     JS_INLINABLE_FN("has", has, 1, 0, SetHas),
     JS_FN("add", add, 1, 0),
@@ -1306,12 +1326,14 @@ const JSFunctionSpec SetObject::methods[] = {
     // same identity as |values|.
     JS_FN("keys", values, 0, 0),
     JS_SYM_FN(iterator, values, 0, 0),
-    JS_FS_END
+    JS_FS_END,
 };
 // clang-format on
 
 const JSPropertySpec SetObject::staticProperties[] = {
-    JS_SELF_HOSTED_SYM_GET(species, "$SetSpecies", 0), JS_PS_END};
+    JS_SELF_HOSTED_SYM_GET(species, "$SetSpecies", 0),
+    JS_PS_END,
+};
 
 /* static */ bool SetObject::finishInit(JSContext* cx, HandleObject ctor,
                                         HandleObject proto) {

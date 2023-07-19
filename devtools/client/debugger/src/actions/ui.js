@@ -249,7 +249,7 @@ export function toggleSourceMapIgnoreList(shouldEnable) {
       const source = getSourceByURL(getState(), url);
       await blackboxSourceActorsForSource(thunkArgs, source, shouldEnable);
       // Disable breakpoints in sources on the ignore list
-      const breakpoints = getBreakpointsForSource(getState(), source.id);
+      const breakpoints = getBreakpointsForSource(getState(), source);
       await dispatch(toggleBreakpoints(shouldEnable, breakpoints));
     }
     await dispatch({

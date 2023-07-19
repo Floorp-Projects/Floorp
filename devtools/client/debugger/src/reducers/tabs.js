@@ -7,8 +7,6 @@
  * @module reducers/tabs
  */
 
-import { isOriginalId } from "devtools/client/shared/source-map-loader/index";
-
 import { isSimilarTab } from "../utils/tabs";
 
 export function initialTabState() {
@@ -56,7 +54,7 @@ function matchesSource(tab, source) {
 }
 
 function matchesUrl(tab, source) {
-  return tab.url === source.url && tab.isOriginal == isOriginalId(source.id);
+  return tab.url === source.url && tab.isOriginal == source.isOriginal;
 }
 
 function addVisibleTabsForSourceActors(state, sourceActors) {
@@ -156,7 +154,7 @@ function resetTabsForThread(state, threadActorID) {
  */
 function updateTabList(state, source, sourceActor) {
   const { url } = source;
-  const isOriginal = isOriginalId(source.id);
+  const isOriginal = source.isOriginal;
 
   let { tabs } = state;
   // Set currentIndex to -1 for URL-less tabs so that they aren't

@@ -55,8 +55,6 @@ const {
 
 const {
   isGeneratedId,
-  isOriginalId,
-  originalToGeneratedId,
 } = require("devtools/client/shared/source-map-loader/index");
 
 const DEBUGGER_L10N = new LocalizationHelper(
@@ -1077,16 +1075,13 @@ function disableBreakpoint(dbg, source, line, column) {
 
 function findBreakpoint(dbg, url, line) {
   const source = findSource(dbg, url);
-  return dbg.selectors.getBreakpointsForSource(source.id, line)[0];
+  return dbg.selectors.getBreakpointsForSource(source, line)[0];
 }
 
 // helper for finding column breakpoints.
 function findColumnBreakpoint(dbg, url, line, column) {
   const source = findSource(dbg, url);
-  const lineBreakpoints = dbg.selectors.getBreakpointsForSource(
-    source.id,
-    line
-  );
+  const lineBreakpoints = dbg.selectors.getBreakpointsForSource(source, line);
 
   return lineBreakpoints.find(bp => {
     return source.isOriginal

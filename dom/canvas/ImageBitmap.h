@@ -47,17 +47,18 @@ class CanvasRenderingContext2D;
 class CreateImageBitmapFromBlob;
 class CreateImageBitmapFromBlobTask;
 class CreateImageBitmapFromBlobWorkerTask;
+class ImageBitmapShutdownObserver;
 class File;
 class HTMLCanvasElement;
 class HTMLImageElement;
 class HTMLVideoElement;
-class ImageBitmapShutdownObserver;
 class ImageData;
 class ImageUtils;
 class Promise;
 class PostMessageEvent;  // For StructuredClone between windows.
 class SVGImageElement;
 class VideoFrame;
+class SendShutdownToWorkerThread;
 
 struct ImageBitmapCloneData final {
   RefPtr<gfx::DataSourceSurface> mSurface;
@@ -142,6 +143,7 @@ class ImageBitmap final : public nsISupports, public nsWrapperCache {
   friend CreateImageBitmapFromBlob;
   friend CreateImageBitmapFromBlobTask;
   friend CreateImageBitmapFromBlobWorkerTask;
+  friend ImageBitmapShutdownObserver;
 
   size_t GetAllocatedSize() const;
 
@@ -262,7 +264,7 @@ class ImageBitmap final : public nsISupports, public nsWrapperCache {
 
   gfxAlphaType mAlphaType;
 
-  RefPtr<ImageBitmapShutdownObserver> mShutdownObserver;
+  RefPtr<SendShutdownToWorkerThread> mShutdownRunnable;
 
   /*
    * Whether this object allocated allocated and owns the image data.
