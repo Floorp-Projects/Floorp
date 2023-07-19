@@ -13,7 +13,9 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
 
   <script type="application/javascript"><![CDATA[
-    var {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+    var {NetUtil} = ChromeUtils.importESModule(
+      "resource://gre/modules/NetUtil.sys.mjs"
+    );
 
     // Return the Element object for the specified element id
     function $(id) { return TestWindow.getDocument().getElementById(id); }
