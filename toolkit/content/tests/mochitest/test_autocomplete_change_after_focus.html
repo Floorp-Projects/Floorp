@@ -19,7 +19,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=998893
     await new Promise(resolve => {
       let chromeScript = SpecialPowers.loadChromeScript(function() {
         /* eslint-env mozilla/chrome-script */
-        const {FormHistory} = ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
+        const {FormHistory} = ChromeUtils.importESModule(
+          "resource://gre/modules/FormHistory.sys.mjs"
+        );
         FormHistory.update([
           { op: "bump", fieldname: "field1", value: "Default text option" },
           { op: "bump", fieldname: "field1", value: "New value option" },
