@@ -16,6 +16,7 @@
 #include "mozTextAccessible.h"
 #include "MOXWebAreaAccessible.h"
 #include "nsAccUtils.h"
+#include "TextRange.h"
 
 #include "nsAppShell.h"
 #include "nsCocoaUtils.h"
@@ -168,20 +169,15 @@ void PlatformSelectionEvent(Accessible* aTarget, Accessible* aWidget,
   }
 }
 
-void PlatformTextSelectionChangeEvent(
-    Accessible* aTarget, const nsTArray<TextRangeData>& aSelection) {
+void PlatformTextSelectionChangeEvent(Accessible* aTarget,
+                                      const nsTArray<TextRange>& aSelection) {
   if (aSelection.Length()) {
-    // XXX Don't assume aTarget is remote.
     MOXTextMarkerDelegate* delegate = [MOXTextMarkerDelegate
-        getOrCreateForDoc:aTarget->AsRemote()->Document()];
-    DocAccessibleParent* doc = aTarget->AsRemote()->Document();
-    RemoteAccessible* startContainer =
-        doc->GetAccessible(aSelection[0].StartID());
-    RemoteAccessible* endContainer = doc->GetAccessible(aSelection[0].EndID());
+        getOrCreateForDoc:nsAccUtils::DocumentFor(aTarget)];
     // Cache the selection.
-    [delegate setSelectionFrom:startContainer
+    [delegate setSelectionFrom:aSelection[0].StartContainer()
                             at:aSelection[0].StartOffset()
-                            to:endContainer
+                            to:aSelection[0].EndContainer()
                             at:aSelection[0].EndOffset()];
   }
 

@@ -707,7 +707,9 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvTextSelectionChangeEvent(
   mTextSelections.AppendElements(aSelection);
 
 #ifdef MOZ_WIDGET_COCOA
-  PlatformTextSelectionChangeEvent(target, aSelection);
+  AutoTArray<TextRange, 1> ranges;
+  SelectionRanges(&ranges);
+  PlatformTextSelectionChangeEvent(target, ranges);
 #else
   PlatformEvent(target, nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED);
 #endif
@@ -1083,6 +1085,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvFocusEvent(
 }
 
 void DocAccessibleParent::SelectionRanges(nsTArray<TextRange>* aRanges) const {
+  aRanges->SetCapacity(mTextSelections.Length());
   for (const auto& data : mTextSelections) {
     // Selection ranges should usually be in sync with the tree. However, tree
     // and selection updates happen using separate IPDL calls, so it's possible
