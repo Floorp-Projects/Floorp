@@ -437,13 +437,15 @@ struct_tmpl = """\
 
 #[repr(C)]
 pub struct %(name)s {
-    vtable: *const %(name)sVTable,
+    vtable: &'static %(name)sVTable,
 
     /// This field is a phantomdata to ensure that the VTable type and any
-    /// struct containing it is not safe to send across threads, as XPCOM is
-    /// generally not threadsafe.
+    /// struct containing it is not safe to send across threads by default, as
+    /// XPCOM is generally not threadsafe.
     ///
-    /// XPCOM interfaces in general are not safe to send across threads.
+    /// If this type is marked as [rust_sync], there will be explicit `Send` and
+    /// `Sync` implementations on this type, which will override the inherited
+    /// negative impls from `Rc`.
     __nosync: ::std::marker::PhantomData<::std::rc::Rc<u8>>,
 
     // Make the rust compiler aware that there might be interior mutability
@@ -509,6 +511,15 @@ impl %(name)s {
 """
 
 
+sendsync_tmpl = """\
+// This interface is marked as [rust_sync], meaning it is safe to be transferred
+// and used from multiple threads silmultaneously.  These override the default
+// from the __nosync marker type allowng the type to be sent between threads.
+unsafe impl Send for %(name)s {}
+unsafe impl Sync for %(name)s {}
+"""
+
+
 wrapper_tmpl = """\
 // The implementations of the function wrappers which are exposed to rust code.
 // Call these methods rather than manually calling through the VTable struct.
@@ -567,6 +578,9 @@ def write_interface(iface, fd):
             fd.write("/// `interface %s`\n///\n" % iface.name)
     printComments(fd, iface.doccomments, "")
     fd.write(struct_tmpl % names)
+
+    if iface.attributes.rust_sync:
+        fd.write(sendsync_tmpl % {"name": iface.name})
 
     if iface.base is not None:
         fd.write(
