@@ -1388,13 +1388,16 @@ DelazifyCanonicalScriptedFunctionImpl(
       .setNoScriptRval(false)
       .setSelfHostingMode(false);
 
-  Rooted<CompilationInput> input(cx, CompilationInput(options));
-  input.get().initFromStencil(context, scriptIndex, ss);
+  // CompilationInput initialized with initFromStencil only reference
+  // information from the CompilationStencil context and the ref-counted
+  // ScriptSource, which are both GC-free.
+  JS_HAZ_NON_GC_POINTER CompilationInput input(options);
+  input.initFromStencil(context, scriptIndex, ss);
 
   using OutputType = RefPtr<CompilationStencil>;
   BytecodeCompilerOutput output((OutputType()));
   if (!CompileLazyFunctionToStencilMaybeInstantiate(
-          cx, fc, input.get(), scopeCache, units.get(), sourceLength, output)) {
+          cx, fc, input, scopeCache, units.get(), sourceLength, output)) {
     *failureReason = DelazifyFailureReason::Other;
     return nullptr;
   }
