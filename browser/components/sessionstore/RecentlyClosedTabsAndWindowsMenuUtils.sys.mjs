@@ -274,7 +274,6 @@ function createRestoreAllEntry(
   aPrefixRestoreAll,
   aIsWindowsFragment,
   aRestoreAllLabel,
-  aEntryCount,
   aTagName
 ) {
   let restoreAllElements = aDocument.createXULElement(aTagName);
