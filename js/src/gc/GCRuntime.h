@@ -476,10 +476,14 @@ class GCRuntime {
   void removeWeakPointerCompartmentCallback(
       JSWeakPointerCompartmentCallback callback);
   JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
-  JS::GCNurseryCollectionCallback setNurseryCollectionCallback(
+  bool addNurseryCollectionCallback(JS::GCNurseryCollectionCallback callback,
+                                    void* data);
+  void removeNurseryCollectionCallback(
       JS::GCNurseryCollectionCallback callback);
   JS::DoCycleCollectionCallback setDoCycleCollectionCallback(
       JS::DoCycleCollectionCallback callback);
+  void callNurseryCollectionCallbacks(JS::GCNurseryProgress progress,
+                                      JS::GCReason reason);
 
   bool addFinalizationRegistry(JSContext* cx,
                                Handle<FinalizationRegistryObject*> registry);
@@ -1308,6 +1312,8 @@ class GCRuntime {
       updateWeakPointerZonesCallbacks;
   MainThreadData<CallbackVector<JSWeakPointerCompartmentCallback>>
       updateWeakPointerCompartmentCallbacks;
+  MainThreadData<CallbackVector<JS::GCNurseryCollectionCallback>>
+      nurseryCollectionCallbacks;
 
   /*
    * The trace operations to trace embedding-specific GC roots. One is for

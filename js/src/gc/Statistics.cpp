@@ -785,7 +785,6 @@ Statistics::Statistics(GCRuntime* gc)
       startingMajorGCNumber(0),
       startingSliceNumber(0),
       sliceCallback(nullptr),
-      nurseryCollectionCallback(nullptr),
       aborted(false),
       enableProfiling_(false),
       sliceCount_(0) {
@@ -873,13 +872,6 @@ JS::GCSliceCallback Statistics::setSliceCallback(
     JS::GCSliceCallback newCallback) {
   JS::GCSliceCallback oldCallback = sliceCallback;
   sliceCallback = newCallback;
-  return oldCallback;
-}
-
-JS::GCNurseryCollectionCallback Statistics::setNurseryCollectionCallback(
-    JS::GCNurseryCollectionCallback newCallback) {
-  auto oldCallback = nurseryCollectionCallback;
-  nurseryCollectionCallback = newCallback;
   return oldCallback;
 }
 
@@ -1151,23 +1143,12 @@ void Statistics::sendGCTelemetry() {
   }
 }
 
-void Statistics::beginNurseryCollection(JS::GCReason reason) {
+void Statistics::beginNurseryCollection() {
   count(COUNT_MINOR_GC);
   startingMinorGCNumber = gc->minorGCCount();
-  if (nurseryCollectionCallback) {
-    (*nurseryCollectionCallback)(
-        context(), JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START, reason);
-  }
 }
 
-void Statistics::endNurseryCollection(JS::GCReason reason) {
-  if (nurseryCollectionCallback) {
-    (*nurseryCollectionCallback)(
-        context(), JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END, reason);
-  }
-
-  tenuredAllocsSinceMinorGC = 0;
-}
+void Statistics::endNurseryCollection() { tenuredAllocsSinceMinorGC = 0; }
 
 Statistics::SliceData::SliceData(const SliceBudget& budget,
                                  Maybe<Trigger> trigger, JS::GCReason reason,

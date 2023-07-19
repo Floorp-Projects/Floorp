@@ -678,7 +678,6 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSContext* aCx)
       mJSRuntime(JS_GetRuntime(aCx)),
       mHasPendingIdleGCTask(false),
       mPrevGCSliceCallback(nullptr),
-      mPrevGCNurseryCollectionCallback(nullptr),
       mOutOfMemoryState(OOMState::OK),
       mLargeAllocationFailureState(OOMState::OK)
 #ifdef DEBUG
@@ -711,8 +710,8 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSContext* aCx)
     // currently possible. For now, add global markers only when we are on the
     // main thread, since the UI for this tracing data only displays data
     // relevant to the main-thread.
-    mPrevGCNurseryCollectionCallback =
-        JS::SetGCNurseryCollectionCallback(aCx, GCNurseryCollectionCallback);
+    JS::AddGCNurseryCollectionCallback(aCx, GCNurseryCollectionCallback,
+                                       nullptr);
   }
 
   JS_SetObjectsTenuredCallback(aCx, JSObjectsTenuredCb, this);
@@ -755,7 +754,7 @@ class JSLeakTracer : public JS::CallbackTracer {
 };
 #endif
 
-void CycleCollectedJSRuntime::Shutdown(JSContext* cx) {
+void CycleCollectedJSRuntime::Shutdown(JSContext* aCx) {
 #ifdef MOZ_JS_DEV_ERROR_INTERCEPTOR
   mErrorInterceptor.Shutdown(mJSRuntime);
 #endif  // MOZ_JS_DEV_ERROR_INTERCEPTOR
@@ -772,7 +771,11 @@ void CycleCollectedJSRuntime::Shutdown(JSContext* cx) {
   mShutdownCalled = true;
 #endif
 
-  JS_SetDestroyZoneCallback(cx, nullptr);
+  JS_SetDestroyZoneCallback(aCx, nullptr);
+
+  if (NS_IsMainThread()) {
+    JS::RemoveGCNurseryCollectionCallback(aCx, GCNurseryCollectionCallback);
+  }
 }
 
 CycleCollectedJSRuntime::~CycleCollectedJSRuntime() {
@@ -1171,8 +1174,8 @@ class MinorGCMarker : public TimelineMarker {
 
 /* static */
 void CycleCollectedJSRuntime::GCNurseryCollectionCallback(
-    JSContext* aContext, JS::GCNurseryProgress aProgress,
-    JS::GCReason aReason) {
+    JSContext* aContext, JS::GCNurseryProgress aProgress, JS::GCReason aReason,
+    void* data) {
   CycleCollectedJSRuntime* self = CycleCollectedJSRuntime::Get();
   MOZ_ASSERT(CycleCollectedJSContext::Get()->Context() == aContext);
   MOZ_ASSERT(NS_IsMainThread());
@@ -1227,10 +1230,6 @@ void CycleCollectedJSRuntime::GCNurseryCollectionCallback(
         GCMinorMarker{},
         ProfilerString8View::WrapNullTerminatedString(
             JS::MinorGcToJSON(aContext).get()));
-  }
-
-  if (self->mPrevGCNurseryCollectionCallback) {
-    self->mPrevGCNurseryCollectionCallback(aContext, aProgress, aReason);
   }
 }
 

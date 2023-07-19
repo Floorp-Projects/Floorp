@@ -233,8 +233,8 @@ struct Statistics {
 
   uint32_t allocsSinceMinorGCTenured() { return tenuredAllocsSinceMinorGC; }
 
-  void beginNurseryCollection(JS::GCReason reason);
-  void endNurseryCollection(JS::GCReason reason);
+  void beginNurseryCollection();
+  void endNurseryCollection();
 
   TimeStamp beginSCC();
   void endSCC(unsigned scc, TimeStamp start);
@@ -244,8 +244,6 @@ struct Statistics {
   UniqueChars formatDetailedMessage() const;
 
   JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
-  JS::GCNurseryCollectionCallback setNurseryCollectionCallback(
-      JS::GCNurseryCollectionCallback callback);
 
   TimeDuration clearMaxGCPauseAccumulator();
   TimeDuration getMaxGCPauseSinceClear();
@@ -424,7 +422,6 @@ struct Statistics {
   TimeDuration timeSinceLastGC;
 
   JS::GCSliceCallback sliceCallback;
-  JS::GCNurseryCollectionCallback nurseryCollectionCallback;
 
   /*
    * True if we saw an OOM while allocating slices or we saw an impossible

@@ -1509,9 +1509,22 @@ JS::GCSliceCallback GCRuntime::setSliceCallback(JS::GCSliceCallback callback) {
   return stats().setSliceCallback(callback);
 }
 
-JS::GCNurseryCollectionCallback GCRuntime::setNurseryCollectionCallback(
+bool GCRuntime::addNurseryCollectionCallback(
+    JS::GCNurseryCollectionCallback callback, void* data) {
+  return nurseryCollectionCallbacks.ref().append(
+      Callback<JS::GCNurseryCollectionCallback>(callback, data));
+}
+
+void GCRuntime::removeNurseryCollectionCallback(
     JS::GCNurseryCollectionCallback callback) {
-  return stats().setNurseryCollectionCallback(callback);
+  EraseCallback(nurseryCollectionCallbacks.ref(), callback);
+}
+
+void GCRuntime::callNurseryCollectionCallbacks(JS::GCNurseryProgress progress,
+                                               JS::GCReason reason) {
+  for (auto const& p : nurseryCollectionCallbacks.ref()) {
+    p.op(rt->mainContextFromOwnThread(), progress, reason, p.data);
+  }
 }
 
 JS::DoCycleCollectionCallback GCRuntime::setDoCycleCollectionCallback(

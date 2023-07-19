@@ -417,10 +417,14 @@ JS_PUBLIC_API JS::DoCycleCollectionCallback JS::SetDoCycleCollectionCallback(
   return cx->runtime()->gc.setDoCycleCollectionCallback(callback);
 }
 
-JS_PUBLIC_API JS::GCNurseryCollectionCallback
-JS::SetGCNurseryCollectionCallback(JSContext* cx,
-                                   GCNurseryCollectionCallback callback) {
-  return cx->runtime()->gc.setNurseryCollectionCallback(callback);
+JS_PUBLIC_API bool JS::AddGCNurseryCollectionCallback(
+    JSContext* cx, GCNurseryCollectionCallback callback, void* data) {
+  return cx->runtime()->gc.addNurseryCollectionCallback(callback, data);
+}
+
+JS_PUBLIC_API void JS::RemoveGCNurseryCollectionCallback(
+    JSContext* cx, GCNurseryCollectionCallback callback) {
+  return cx->runtime()->gc.removeNurseryCollectionCallback(callback);
 }
 
 JS_PUBLIC_API void JS::SetLowMemoryState(JSContext* cx, bool newState) {
