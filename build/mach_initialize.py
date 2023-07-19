@@ -137,7 +137,7 @@ def check_for_spaces(topsrcdir):
         )
 
 
-def initialize(topsrcdir, args=()):
+def initialize(topsrcdir):
     # This directory was deleted in bug 1666345, but there may be some ignored
     # files here. We can safely just delete it for the user so they don't have
     # to clean the repo themselves.
@@ -157,7 +157,7 @@ def initialize(topsrcdir, args=()):
         )
     ]
 
-    from mach.util import get_state_dir, get_virtualenv_base_dir, setenv
+    from mach.util import get_state_dir, setenv
 
     state_dir = _create_state_dir()
 
@@ -171,391 +171,219 @@ def initialize(topsrcdir, args=()):
 
     import mach.base
     import mach.main
-    from mach.main import MachCommandReference, get_argument_parser
+    from mach.main import MachCommandReference
 
     # Centralized registry of available mach commands
     MACH_COMMANDS = {
-        "addtest": MachCommandReference("testing/mach_commands.py"),
-        "addwidget": MachCommandReference("toolkit/content/widgets/mach_commands.py"),
-        "android": MachCommandReference("mobile/android/mach_commands.py"),
-        "android-emulator": MachCommandReference("mobile/android/mach_commands.py"),
-        "artifact": MachCommandReference(
-            "python/mozbuild/mozbuild/artifact_commands.py",
-        ),
-        "awsy-test": MachCommandReference("testing/awsy/mach_commands.py"),
-        "bootstrap": MachCommandReference(
-            "python/mozboot/mozboot/mach_commands.py",
-        ),
-        "browsertime": MachCommandReference("tools/browsertime/mach_commands.py"),
-        "build": MachCommandReference(
-            "python/mozbuild/mozbuild/build_commands.py",
-        ),
-        "build-backend": MachCommandReference(
-            "python/mozbuild/mozbuild/build_commands.py",
-        ),
-        "buildsymbols": MachCommandReference(
-            "python/mozbuild/mozbuild/mach_commands.py"
-        ),
-        "busted": MachCommandReference("tools/mach_commands.py"),
-        "cargo": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
-        "clang-format": MachCommandReference(
-            "python/mozbuild/mozbuild/code_analysis/mach_commands.py"
-        ),
-        "clang-tidy": MachCommandReference(
-            "python/mozbuild/mozbuild/code_analysis/mach_commands.py"
-        ),
-        "clobber": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
-        "compare-locales": MachCommandReference(
-            "tools/compare-locales/mach_commands.py"
-        ),
-        "compileflags": MachCommandReference(
-            "python/mozbuild/mozbuild/compilation/codecomplete.py"
-        ),
-        "configure": MachCommandReference("python/mozbuild/mozbuild/build_commands.py"),
-        "cppunittest": MachCommandReference("testing/mach_commands.py"),
-        "cramtest": MachCommandReference("testing/mach_commands.py"),
-        "crashtest": MachCommandReference("layout/tools/reftest/mach_commands.py"),
-        "data-review": MachCommandReference(
-            "toolkit/components/glean/build_scripts/mach_commands.py"
-        ),
+        "valgrind-test": MachCommandReference("build/valgrind/mach_commands.py"),
         "devtools-css-db": MachCommandReference(
             "devtools/shared/css/generated/mach_commands.py"
         ),
-        "doc": MachCommandReference("tools/moztreedocs/mach_commands.py"),
-        "doctor": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
-        "environment": MachCommandReference(
-            "python/mozbuild/mozbuild/mach_commands.py"
-        ),
-        "eslint": MachCommandReference("tools/lint/mach_commands.py"),
-        "esmify": MachCommandReference("tools/esmify/mach_commands.py"),
-        "fetch-condprofile": MachCommandReference(
-            "testing/condprofile/mach_commands.py"
-        ),
-        "file-info": MachCommandReference(
-            "python/mozbuild/mozbuild/frontend/mach_commands.py"
-        ),
-        "firefox-ui-functional": MachCommandReference(
-            "testing/firefox-ui/mach_commands.py"
-        ),
-        "fluent-migration-test": MachCommandReference("testing/mach_commands.py"),
-        "format": MachCommandReference("tools/lint/mach_commands.py"),
-        "geckodriver": MachCommandReference("testing/geckodriver/mach_commands.py"),
-        "geckoview-junit": MachCommandReference("testing/mochitest/mach_commands.py"),
-        "generate-test-certs": MachCommandReference(
-            "security/manager/tools/mach_commands.py"
-        ),
-        "gradle": MachCommandReference("mobile/android/mach_commands.py"),
-        "gradle-install": MachCommandReference("mobile/android/mach_commands.py"),
-        "gtest": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
+        "webidl-example": MachCommandReference("dom/bindings/mach_commands.py"),
+        "webidl-parser-test": MachCommandReference("dom/bindings/mach_commands.py"),
         "hazards": MachCommandReference(
             "js/src/devtools/rootAnalysis/mach_commands.py"
         ),
-        "ide": MachCommandReference(
-            "python/mozbuild/mozbuild/backend/mach_commands.py"
-        ),
-        "import-pr": MachCommandReference("tools/vcs/mach_commands.py"),
-        "install": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
-        "install-moz-phab": MachCommandReference("tools/phabricator/mach_commands.py"),
-        "jit-test": MachCommandReference("testing/mach_commands.py"),
-        "jsapi-tests": MachCommandReference("testing/mach_commands.py"),
-        "jsshell-bench": MachCommandReference("testing/mach_commands.py"),
+        "reftest": MachCommandReference("layout/tools/reftest/mach_commands.py"),
         "jstestbrowser": MachCommandReference("layout/tools/reftest/mach_commands.py"),
-        "jstests": MachCommandReference("testing/mach_commands.py"),
-        "l10n-cross-channel": MachCommandReference(
-            "tools/compare-locales/mach_commands.py"
-        ),
-        "lint": MachCommandReference("tools/lint/mach_commands.py"),
-        "logspam": MachCommandReference("tools/mach_commands.py"),
+        "crashtest": MachCommandReference("layout/tools/reftest/mach_commands.py"),
+        "android": MachCommandReference("mobile/android/mach_commands.py"),
+        "gradle": MachCommandReference("mobile/android/mach_commands.py"),
+        "gradle-install": MachCommandReference("mobile/android/mach_commands.py"),
         "mach-commands": MachCommandReference(
-            "python/mach/mach/commands/commandinfo.py"
-        ),
-        "mach-completion": MachCommandReference(
             "python/mach/mach/commands/commandinfo.py"
         ),
         "mach-debug-commands": MachCommandReference(
             "python/mach/mach/commands/commandinfo.py"
         ),
-        "marionette-test": MachCommandReference("testing/marionette/mach_commands.py"),
-        "mochitest": MachCommandReference("testing/mochitest/mach_commands.py"),
-        "mots": MachCommandReference("tools/mach_commands.py"),
-        "mozbuild-reference": MachCommandReference(
-            "python/mozbuild/mozbuild/frontend/mach_commands.py",
+        "mach-completion": MachCommandReference(
+            "python/mach/mach/commands/commandinfo.py"
         ),
-        "mozharness": MachCommandReference("testing/mozharness/mach_commands.py"),
-        "mozregression": MachCommandReference("tools/mach_commands.py"),
-        "node": MachCommandReference("tools/mach_commands.py"),
-        "npm": MachCommandReference("tools/mach_commands.py"),
-        "package": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
-        "package-multi-locale": MachCommandReference(
+        "settings": MachCommandReference("python/mach/mach/commands/settings.py"),
+        "python": MachCommandReference("python/mach_commands.py"),
+        "python-test": MachCommandReference("python/mach_commands.py"),
+        "bootstrap": MachCommandReference("python/mozboot/mozboot/mach_commands.py"),
+        "vcs-setup": MachCommandReference("python/mozboot/mozboot/mach_commands.py"),
+        "artifact": MachCommandReference(
+            "python/mozbuild/mozbuild/artifact_commands.py"
+        ),
+        "ide": MachCommandReference(
+            "python/mozbuild/mozbuild/backend/mach_commands.py"
+        ),
+        "build": MachCommandReference("python/mozbuild/mozbuild/build_commands.py"),
+        "configure": MachCommandReference("python/mozbuild/mozbuild/build_commands.py"),
+        "resource-usage": MachCommandReference(
+            "python/mozbuild/mozbuild/build_commands.py"
+        ),
+        "build-backend": MachCommandReference(
+            "python/mozbuild/mozbuild/build_commands.py"
+        ),
+        "clang-tidy": MachCommandReference(
+            "python/mozbuild/mozbuild/code_analysis/mach_commands.py"
+        ),
+        "static-analysis": MachCommandReference(
+            "python/mozbuild/mozbuild/code_analysis/mach_commands.py"
+        ),
+        "prettier-format": MachCommandReference(
+            "python/mozbuild/mozbuild/code_analysis/mach_commands.py"
+        ),
+        "clang-format": MachCommandReference(
+            "python/mozbuild/mozbuild/code_analysis/mach_commands.py"
+        ),
+        "compileflags": MachCommandReference(
+            "python/mozbuild/mozbuild/compilation/codecomplete.py"
+        ),
+        "mozbuild-reference": MachCommandReference(
+            "python/mozbuild/mozbuild/frontend/mach_commands.py"
+        ),
+        "file-info": MachCommandReference(
+            "python/mozbuild/mozbuild/frontend/mach_commands.py"
+        ),
+        "vendor": MachCommandReference(
+            "python/mozbuild/mozbuild/vendor/mach_commands.py"
+        ),
+        "watch": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
+        "cargo": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
+        "doctor": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
+        "clobber": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
+        "show-log": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
+        "warnings-summary": MachCommandReference(
             "python/mozbuild/mozbuild/mach_commands.py"
         ),
-        "pastebin": MachCommandReference("tools/mach_commands.py"),
-        "perf-data-review": MachCommandReference(
-            "toolkit/components/glean/build_scripts/mach_commands.py"
+        "warnings-list": MachCommandReference(
+            "python/mozbuild/mozbuild/mach_commands.py"
+        ),
+        "gtest": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
+        "package": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
+        "install": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
+        "run": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
+        "buildsymbols": MachCommandReference(
+            "python/mozbuild/mozbuild/mach_commands.py"
+        ),
+        "environment": MachCommandReference(
+            "python/mozbuild/mozbuild/mach_commands.py"
+        ),
+        "repackage": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
+        "package-multi-locale": MachCommandReference(
+            "python/mozbuild/mozbuild/mach_commands.py"
         ),
         "perftest": MachCommandReference(
             "python/mozperftest/mozperftest/mach_commands.py"
         ),
         "perftest-test": MachCommandReference(
-            "python/mozperftest/mozperftest/mach_commands.py",
-        ),
-        "perftest-tools": MachCommandReference(
             "python/mozperftest/mozperftest/mach_commands.py"
         ),
-        "power": MachCommandReference("tools/power/mach_commands.py"),
-        "prettier-format": MachCommandReference(
-            "python/mozbuild/mozbuild/code_analysis/mach_commands.py"
-        ),
-        "puppeteer-test": MachCommandReference("remote/mach_commands.py"),
-        "python": MachCommandReference("python/mach_commands.py"),
-        "python-test": MachCommandReference("python/mach_commands.py"),
-        "raptor": MachCommandReference("testing/raptor/mach_commands.py"),
-        "raptor-test": MachCommandReference("testing/raptor/mach_commands.py"),
-        "reftest": MachCommandReference("layout/tools/reftest/mach_commands.py"),
         "release": MachCommandReference(
             "python/mozrelease/mozrelease/mach_commands.py"
         ),
-        "release-history": MachCommandReference("taskcluster/mach_commands.py"),
         "remote": MachCommandReference("remote/mach_commands.py"),
-        "repackage": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
-        "resource-usage": MachCommandReference(
-            "python/mozbuild/mozbuild/build_commands.py",
+        "puppeteer-test": MachCommandReference("remote/mach_commands.py"),
+        "generate-test-certs": MachCommandReference(
+            "security/manager/tools/mach_commands.py"
         ),
-        "run": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
-        "run-condprofile": MachCommandReference("testing/condprofile/mach_commands.py"),
-        "rusttests": MachCommandReference("testing/mach_commands.py"),
-        "settings": MachCommandReference("python/mach/mach/commands/settings.py"),
-        "show-log": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
-        "static-analysis": MachCommandReference(
-            "python/mozbuild/mozbuild/code_analysis/mach_commands.py"
-        ),
-        "storybook": MachCommandReference(
-            "browser/components/storybook/mach_commands.py"
-        ),
-        "talos-test": MachCommandReference("testing/talos/mach_commands.py"),
+        "taskgraph": MachCommandReference("taskcluster/mach_commands.py"),
+        "taskcluster-load-image": MachCommandReference("taskcluster/mach_commands.py"),
         "taskcluster-build-image": MachCommandReference("taskcluster/mach_commands.py"),
         "taskcluster-image-digest": MachCommandReference(
             "taskcluster/mach_commands.py"
         ),
-        "taskcluster-load-image": MachCommandReference("taskcluster/mach_commands.py"),
-        "taskgraph": MachCommandReference("taskcluster/mach_commands.py"),
-        "telemetry-tests-client": MachCommandReference(
-            "toolkit/components/telemetry/tests/marionette/mach_commands.py"
+        "release-history": MachCommandReference("taskcluster/mach_commands.py"),
+        "awsy-test": MachCommandReference("testing/awsy/mach_commands.py"),
+        "fetch-condprofile": MachCommandReference(
+            "testing/condprofile/mach_commands.py"
         ),
+        "run-condprofile": MachCommandReference("testing/condprofile/mach_commands.py"),
+        "firefox-ui-functional": MachCommandReference(
+            "testing/firefox-ui/mach_commands.py"
+        ),
+        "geckodriver": MachCommandReference("testing/geckodriver/mach_commands.py"),
+        "addtest": MachCommandReference("testing/mach_commands.py"),
         "test": MachCommandReference("testing/mach_commands.py"),
+        "cppunittest": MachCommandReference("testing/mach_commands.py"),
+        "jstests": MachCommandReference("testing/mach_commands.py"),
+        "jit-test": MachCommandReference("testing/mach_commands.py"),
+        "jsapi-tests": MachCommandReference("testing/mach_commands.py"),
+        "jsshell-bench": MachCommandReference("testing/mach_commands.py"),
+        "cramtest": MachCommandReference("testing/mach_commands.py"),
         "test-info": MachCommandReference("testing/mach_commands.py"),
-        "test-interventions": MachCommandReference(
-            "testing/webcompat/mach_commands.py",
-        ),
+        "rusttests": MachCommandReference("testing/mach_commands.py"),
+        "fluent-migration-test": MachCommandReference("testing/mach_commands.py"),
+        "marionette-test": MachCommandReference("testing/marionette/mach_commands.py"),
+        "mochitest": MachCommandReference("testing/mochitest/mach_commands.py"),
+        "geckoview-junit": MachCommandReference("testing/mochitest/mach_commands.py"),
+        "mozharness": MachCommandReference("testing/mozharness/mach_commands.py"),
+        "raptor": MachCommandReference("testing/raptor/mach_commands.py"),
+        "raptor-test": MachCommandReference("testing/raptor/mach_commands.py"),
+        "talos-test": MachCommandReference("testing/talos/mach_commands.py"),
         "tps-build": MachCommandReference("testing/tps/mach_commands.py"),
-        "try": MachCommandReference("tools/tryselect/mach_commands.py"),
-        "uniffi": MachCommandReference(
-            "toolkit/components/uniffi-bindgen-gecko-js/mach_commands.py"
-        ),
-        "update-glean": MachCommandReference(
-            "toolkit/components/glean/build_scripts/mach_commands.py"
-        ),
-        "update-glean-tags": MachCommandReference(
-            "toolkit/components/glean/build_scripts/mach_commands.py"
-        ),
-        "valgrind-test": MachCommandReference("build/valgrind/mach_commands.py"),
-        "vcs-setup": MachCommandReference(
-            "python/mozboot/mozboot/mach_commands.py",
-        ),
-        "vendor": MachCommandReference(
-            "python/mozbuild/mozbuild/vendor/mach_commands.py",
-        ),
-        "warnings-list": MachCommandReference(
-            "python/mozbuild/mozbuild/mach_commands.py"
-        ),
-        "warnings-summary": MachCommandReference(
-            "python/mozbuild/mozbuild/mach_commands.py"
-        ),
-        "watch": MachCommandReference(
-            "python/mozbuild/mozbuild/mach_commands.py",
-        ),
         "web-platform-tests": MachCommandReference(
-            "testing/web-platform/mach_commands.py",
+            "testing/web-platform/mach_commands.py"
         ),
-        "web-platform-tests-update": MachCommandReference(
-            "testing/web-platform/mach_commands.py",
-        ),
-        "webidl-example": MachCommandReference("dom/bindings/mach_commands.py"),
-        "webidl-parser-test": MachCommandReference("dom/bindings/mach_commands.py"),
         "wpt": MachCommandReference("testing/web-platform/mach_commands.py"),
-        "wpt-fetch-logs": MachCommandReference("testing/web-platform/mach_commands.py"),
-        "wpt-fission-regressions": MachCommandReference(
+        "web-platform-tests-update": MachCommandReference(
             "testing/web-platform/mach_commands.py"
         ),
-        "wpt-interop-score": MachCommandReference(
-            "testing/web-platform/mach_commands.py"
-        ),
+        "wpt-update": MachCommandReference("testing/web-platform/mach_commands.py"),
         "wpt-manifest-update": MachCommandReference(
+            "testing/web-platform/mach_commands.py"
+        ),
+        "wpt-serve": MachCommandReference("testing/web-platform/mach_commands.py"),
+        "wpt-metadata-summary": MachCommandReference(
             "testing/web-platform/mach_commands.py"
         ),
         "wpt-metadata-merge": MachCommandReference(
             "testing/web-platform/mach_commands.py"
         ),
-        "wpt-metadata-summary": MachCommandReference(
+        "wpt-unittest": MachCommandReference("testing/web-platform/mach_commands.py"),
+        "wpt-test-paths": MachCommandReference("testing/web-platform/mach_commands.py"),
+        "wpt-fission-regressions": MachCommandReference(
             "testing/web-platform/mach_commands.py"
         ),
-        "wpt-serve": MachCommandReference("testing/web-platform/mach_commands.py"),
-        "wpt-test-paths": MachCommandReference("testing/web-platform/mach_commands.py"),
-        "wpt-unittest": MachCommandReference("testing/web-platform/mach_commands.py"),
-        "wpt-update": MachCommandReference("testing/web-platform/mach_commands.py"),
-        "xpcshell": MachCommandReference("js/xpconnect/mach_commands.py"),
         "xpcshell-test": MachCommandReference("testing/xpcshell/mach_commands.py"),
+        "telemetry-tests-client": MachCommandReference(
+            "toolkit/components/telemetry/tests/marionette/mach_commands.py"
+        ),
+        "data-review": MachCommandReference(
+            "toolkit/components/glean/build_scripts/mach_commands.py"
+        ),
+        "perf-data-review": MachCommandReference(
+            "toolkit/components/glean/build_scripts/mach_commands.py"
+        ),
+        "update-glean-tags": MachCommandReference(
+            "toolkit/components/glean/build_scripts/mach_commands.py"
+        ),
+        "update-glean": MachCommandReference(
+            "toolkit/components/glean/build_scripts/mach_commands.py"
+        ),
+        "browsertime": MachCommandReference("tools/browsertime/mach_commands.py"),
+        "compare-locales": MachCommandReference(
+            "tools/compare-locales/mach_commands.py"
+        ),
+        "l10n-cross-channel": MachCommandReference("tools/lint/mach_commands.py"),
+        "busted": MachCommandReference("tools/mach_commands.py"),
+        "pastebin": MachCommandReference("tools/mach_commands.py"),
+        "mozregression": MachCommandReference("tools/mach_commands.py"),
+        "node": MachCommandReference("tools/mach_commands.py"),
+        "npm": MachCommandReference("tools/mach_commands.py"),
+        "logspam": MachCommandReference("tools/mach_commands.py"),
+        "doc": MachCommandReference("tools/moztreedocs/mach_commands.py"),
+        "install-moz-phab": MachCommandReference("tools/phabricator/mach_commands.py"),
+        "power": MachCommandReference("tools/power/mach_commands.py"),
+        "try": MachCommandReference("tools/tryselect/mach_commands.py"),
+        "import-pr": MachCommandReference("tools/vcs/mach_commands.py"),
+        "test-interventions": MachCommandReference(
+            "testing/webcompat/mach_commands.py"
+        ),
+        "esmify": MachCommandReference("tools/esmify/mach_commands.py"),
+        "xpcshell": MachCommandReference("js/xpconnect/mach_commands.py"),
+        "uniffi": MachCommandReference(
+            "toolkit/components/uniffi-bindgen-gecko-js/mach_commands.py"
+        ),
+        "storybook": MachCommandReference(
+            "browser/components/storybook/mach_commands.py"
+        ),
+        "widgets": MachCommandReference("toolkit/content/widgets/mach_commands.py"),
     }
-
-    import argparse
-    import ast
-
-    class DecoratorVisitor(ast.NodeVisitor):
-        def __init__(self):
-            self.results = {}
-
-        def visit_FunctionDef(self, node):
-            # We only care about `Command` and `SubCommand` decorators, since
-            # they are the only ones that can specify virtualenv_name
-            decorators = [
-                decorator
-                for decorator in node.decorator_list
-                if isinstance(decorator, ast.Call)
-                and isinstance(decorator.func, ast.Name)
-                and decorator.func.id in ["SubCommand", "Command"]
-            ]
-
-            relevant_kwargs = ["command", "subcommand", "virtualenv_name"]
-
-            for decorator in decorators:
-                kwarg_dict = {}
-
-                for name, arg in zip(["command", "subcommand"], decorator.args):
-                    kwarg_dict[name] = arg.s
-
-                for keyword in decorator.keywords:
-                    if keyword.arg not in relevant_kwargs:
-                        # We only care about these 3 kwargs, so we can safely skip the rest
-                        continue
-
-                    kwarg_dict[keyword.arg] = getattr(keyword.value, "s", "")
-
-                command = kwarg_dict.pop("command")
-                self.results.setdefault(command, {})
-
-                sub_command = kwarg_dict.pop("subcommand", None)
-                virtualenv_name = kwarg_dict.pop("virtualenv_name", None)
-
-                if sub_command:
-                    self.results[command].setdefault("subcommands", {})
-                    sub_command_dict = self.results[command]["subcommands"].setdefault(
-                        sub_command, {}
-                    )
-
-                    if virtualenv_name:
-                        sub_command_dict["virtualenv_name"] = virtualenv_name
-                elif virtualenv_name:
-                    # If there is no `subcommand` we are in the `@Command`
-                    # decorator, and need to store the virtualenv_name for
-                    # the 'command'.
-                    self.results[command]["virtualenv_name"] = virtualenv_name
-
-            self.generic_visit(node)
-
-    def command_virtualenv_info_for_module(file_path):
-        command_module_path = Path(topsrcdir) / file_path
-        with command_module_path.open("r") as file:
-            content = file.read()
-
-        tree = ast.parse(content)
-        visitor = DecoratorVisitor()
-        visitor.visit(tree)
-
-        return visitor.results
-
-    class DetermineCommandVenvAction(argparse.Action):
-        def __init__(
-            self,
-            option_strings,
-            dest,
-            required=True,
-            default=None,
-        ):
-            # A proper API would have **kwargs here. However, since we are a little
-            # hacky, we intentionally omit it as a way of detecting potentially
-            # breaking changes with argparse's implementation.
-            #
-            # In a similar vein, default is passed in but is not needed, so we drop
-            # it.
-            argparse.Action.__init__(
-                self,
-                option_strings,
-                dest,
-                required=required,
-                help=argparse.SUPPRESS,
-                nargs=argparse.REMAINDER,
-            )
-
-        def __call__(self, parser, namespace, values, option_string=None):
-            if len(values) == 0:
-                return
-
-            command = values[0]
-            setattr(namespace, "command_name", command)
-
-            site = "common"
-
-            if len(values) > 1:
-                potential_sub_command_name = values[1]
-            else:
-                potential_sub_command_name = None
-
-            module_path = MACH_COMMANDS.get(command).module
-
-            module_dict = command_virtualenv_info_for_module(module_path)
-            command_dict = module_dict.get(command, {})
-
-            if not command_dict:
-                return
-
-            if (
-                potential_sub_command_name
-                and not potential_sub_command_name.startswith("-")
-            ):
-                all_sub_commands_dict = command_dict.get("subcommands", {})
-
-                if all_sub_commands_dict:
-                    sub_command_dict = all_sub_commands_dict.get(
-                        potential_sub_command_name, {}
-                    )
-
-                    if sub_command_dict:
-                        site = sub_command_dict.get("virtualenv_name", "common")
-            else:
-                site = command_dict.get("virtualenv_name", "common")
-
-            setattr(namespace, "site_name", site)
-
-    parser = get_argument_parser(action=DetermineCommandVenvAction)
-    namespace = parser.parse_args()
-
-    command_name = getattr(namespace, "command_name", None)
-    site_name = getattr(namespace, "site_name", "common")
-    command_site_manager = None
-
-    # the 'clobber' command needs to run in the 'mach' venv, so we
-    # don't want to activate any other virtualenv for it.
-    if command_name != "clobber":
-        from mach.site import CommandSiteManager
-
-        command_site_manager = CommandSiteManager.from_environment(
-            topsrcdir,
-            lambda: os.path.normpath(get_state_dir(True, topsrcdir=topsrcdir)),
-            site_name,
-            get_virtualenv_base_dir(topsrcdir),
-        )
-
-        command_site_manager.activate()
 
     # Set a reasonable limit to the number of open files.
     #
@@ -680,7 +508,7 @@ def initialize(topsrcdir, args=()):
     if "MACH_MAIN_PID" not in os.environ:
         setenv("MACH_MAIN_PID", str(os.getpid()))
 
-    driver = mach.main.Mach(os.getcwd(), command_site_manager)
+    driver = mach.main.Mach(os.getcwd())
     driver.populate_context_handler = populate_context
 
     if not driver.settings_paths:
@@ -701,14 +529,7 @@ def initialize(topsrcdir, args=()):
         ) or os.path.exists(os.path.join(topsrcdir, "INSTALL"))
     else:
         missing_ok = ()
-    if command_name not in MACH_COMMANDS:
-        command_modules_to_load = MACH_COMMANDS
-    else:
-        command_modules_to_load = {command_name: MACH_COMMANDS[command_name]}
-
-    driver.load_commands_from_spec(
-        command_modules_to_load, topsrcdir, missing_ok=missing_ok
-    )
+    driver.load_commands_from_spec(MACH_COMMANDS, topsrcdir, missing_ok=missing_ok)
     return driver
 
 

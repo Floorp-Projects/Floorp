@@ -132,11 +132,7 @@ def _make_artifacts(
     return artifacts
 
 
-@ArtifactSubCommand(
-    "artifact",
-    "install",
-    "Install a good pre-built artifact.",
-)
+@ArtifactSubCommand("artifact", "install", "Install a good pre-built artifact.")
 @CommandArgument(
     "source",
     metavar="SRC",
@@ -204,10 +200,7 @@ def artifact_clear_cache(command_context, tree=None, job=None, verbose=False):
     return 0
 
 
-@SubCommand(
-    "artifact",
-    "toolchain",
-)
+@SubCommand("artifact", "toolchain")
 @CommandArgument("--verbose", "-v", action="store_true", help="Print verbose output.")
 @CommandArgument(
     "--cache-dir",
@@ -271,10 +264,6 @@ def artifact_toolchain(
     """Download, cache and install pre-built toolchains."""
     import time
 
-    # As a result of the selective module loading changes, this import has to be
-    # done here. It is not explicitly used, but it has an implicit side-effect
-    # (bringing in TASKCLUSTER_ROOT_URL) which is necessary.
-    import gecko_taskgraph.main  # noqa: F401
     import redo
     import requests
     from taskgraph.util.taskcluster import get_artifact_url
