@@ -802,8 +802,12 @@ class WorkerFetchResponseRunnable final : public MainThreadWorkerRunnable {
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
+    if (mResolver->IsShutdown(aWorkerPrivate)) {
+      return true;
+    }
 
     RefPtr<Promise> promise = mResolver->WorkerPromise(aWorkerPrivate);
+    MOZ_ASSERT(promise);
     RefPtr<FetchObserver> fetchObserver =
         mResolver->GetFetchObserver(aWorkerPrivate);
 
