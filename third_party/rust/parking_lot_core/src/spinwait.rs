@@ -6,14 +6,14 @@
 // copied, modified, or distributed except according to those terms.
 
 use crate::thread_parker;
-use std::sync::atomic::spin_loop_hint;
+use core::hint::spin_loop;
 
 // Wastes some CPU time for the given number of iterations,
 // using a hint to indicate to the CPU that we are spinning.
 #[inline]
 fn cpu_relax(iterations: u32) {
     for _ in 0..iterations {
-        spin_loop_hint()
+        spin_loop()
     }
 }
 

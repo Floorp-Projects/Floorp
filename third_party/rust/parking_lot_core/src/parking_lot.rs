@@ -12,9 +12,33 @@ use core::{
     ptr,
     sync::atomic::{AtomicPtr, AtomicUsize, Ordering},
 };
-use instant::Instant;
 use smallvec::SmallVec;
-use std::time::Duration;
+use std::time::{Duration, Instant};
+
+// Don't use Instant on wasm32-unknown-unknown, it just panics.
+cfg_if::cfg_if! {
+    if #[cfg(all(
+        target_family = "wasm",
+        target_os = "unknown",
+        target_vendor = "unknown"
+    ))] {
+        #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+        struct TimeoutInstant;
+        impl TimeoutInstant {
+            fn now() -> TimeoutInstant {
+                TimeoutInstant
+            }
+        }
+        impl core::ops::Add<Duration> for TimeoutInstant {
+            type Output = Self;
+            fn add(self, _rhs: Duration) -> Self::Output {
+                TimeoutInstant
+            }
+        }
+    } else {
+        use std::time::Instant as TimeoutInstant;
+    }
+}
 
 static NUM_THREADS: AtomicUsize = AtomicUsize::new(0);
 
@@ -47,7 +71,7 @@ impl HashTable {
         let new_size = (num_threads * LOAD_FACTOR).next_power_of_two();
         let hash_bits = 0usize.leading_zeros() - new_size.leading_zeros() - 1;
 
-        let now = Instant::now();
+        let now = TimeoutInstant::now();
         let mut entries = Vec::with_capacity(new_size);
         for i in 0..new_size {
             // We must ensure the seed is not zero
@@ -77,7 +101,7 @@ struct Bucket {
 
 impl Bucket {
     #[inline]
-    pub fn new(timeout: Instant, seed: u32) -> Self {
+    pub fn new(timeout: TimeoutInstant, seed: u32) -> Self {
         Self {
             mutex: WordLock::new(),
             queue_head: Cell::new(ptr::null()),
@@ -89,7 +113,7 @@ impl Bucket {
 
 struct FairTimeout {
     // Next time at which point be_fair should be set
-    timeout: Instant,
+    timeout: TimeoutInstant,
 
     // the PRNG state for calculating the next timeout
     seed: u32,
@@ -97,14 +121,14 @@ struct FairTimeout {
 
 impl FairTimeout {
     #[inline]
-    fn new(timeout: Instant, seed: u32) -> FairTimeout {
+    fn new(timeout: TimeoutInstant, seed: u32) -> FairTimeout {
         FairTimeout { timeout, seed }
     }
 
     // Determine whether we should force a fair unlock, and update the timeout
     #[inline]
     fn should_timeout(&mut self) -> bool {
-        let now = Instant::now();
+        let now = TimeoutInstant::now();
         if now > self.timeout {
             // Time between 0 and 1ms.
             let nanos = self.gen_u32() % 1_000_000;
@@ -224,7 +248,7 @@ fn create_hashtable() -> &'static HashTable {
             // Free the table we created
             // SAFETY: `new_table` is created from `Box::into_raw` above and only freed here.
             unsafe {
-                Box::from_raw(new_table);
+                let _ = Box::from_raw(new_table);
             }
             old_table
         }
@@ -700,6 +724,10 @@ pub unsafe fn park(
 ///
 /// The `callback` function is called while the queue is locked and must not
 /// panic or call into any function in `parking_lot`.
+///
+/// The `parking_lot` functions are not re-entrant and calling this method
+/// from the context of an asynchronous signal handler may result in undefined
+/// behavior, including corruption of internal state and/or deadlocks.
 #[inline]
 pub unsafe fn unpark_one(
     key: usize,
@@ -777,6 +805,10 @@ pub unsafe fn unpark_one(
 /// You should only call this function with an address that you control, since
 /// you could otherwise interfere with the operation of other synchronization
 /// primitives.
+///
+/// The `parking_lot` functions are not re-entrant and calling this method
+/// from the context of an asynchronous signal handler may result in undefined
+/// behavior, including corruption of internal state and/or deadlocks.
 #[inline]
 pub unsafe fn unpark_all(key: usize, unpark_token: UnparkToken) -> usize {
     // Lock the bucket for the given key
