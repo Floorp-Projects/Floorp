@@ -45,6 +45,9 @@ translations:
     description: >
       The specific translations error that caused a full-page translation failure.
     extra_keys:
+      flow_id: &flow_id
+        type: string
+        description: A uuid to relate events associated with the current panel session.
       reason:
         type: string
         description: The reason for the error.
@@ -63,6 +66,7 @@ translations:
     description: >
       Triggers when a full-page translation request is sent.
     extra_keys:
+      flow_id: *flow_id
       from_language:
         type: string
         description: The language being translated from.
@@ -91,6 +95,7 @@ translations.panel:
     description: >
       Triggers when the translations panel is opened.
     extra_keys:
+      flow_id: *flow_id
       opened_from:
         type: string
         description: The method by which the translations panel was opened.
