@@ -265,12 +265,6 @@ impl ColorRenderTarget {
 
             match clip_node.item.kind {
                 ClipItemKind::RoundedRectangle { rect, radius, mode } => {
-                    let clip_transform_id = transforms.get_id(
-                        info.prim_spatial_node_index,
-                        clip_node.item.spatial_node_index,
-                        spatial_tree,
-                    );
-
                     let (fast_path, clip_address) = if radius.is_uniform().is_some() {
                         let mut writer = gpu_buffer_builder.write_blocks(3);
                         writer.push_one(rect);
@@ -300,12 +294,40 @@ impl ColorRenderTarget {
                         (false, clip_address)
                     };
 
+                    let draw_clip_prim = is_same_coord_system && mode == ClipMode::Clip;
+
+                    let (quad_transform_id, clip_prim_address, aa_flags, mask_transform_id) = if draw_clip_prim {
+                        let quad_transform_id = transforms.get_id(
+                            clip_node.item.spatial_node_index,
+                            info.raster_spatial_node_index,
+                            spatial_tree,
+                        );
+
+                        let clip_prim_address = write_prim_blocks(
+                            gpu_buffer_builder,
+                            rect,
+                            rect,
+                            PremultipliedColorF::WHITE,
+                            &[],
+                        );
+
+                        (quad_transform_id, clip_prim_address, EdgeAaSegmentMask::empty(), TransformPaletteId::IDENTITY)
+                    } else {
+                        let mask_transform_id = transforms.get_id(
+                            info.prim_spatial_node_index,
+                            clip_node.item.spatial_node_index,
+                            spatial_tree,
+                        );
+
+                        (info.transform_id, info.prim_address, info.edge_flags, mask_transform_id)
+                    };
+
                     add_quad_to_batch(
                         render_task_address,
-                        info.transform_id,
-                        info.prim_address,
+                        quad_transform_id,
+                        clip_prim_address,
                         info.quad_flags,
-                        info.edge_flags,
+                        aa_flags,
                         INVALID_SEGMENT_INDEX as u8,
                         RenderTaskId::INVALID,
                         ZBufferId(0),
@@ -313,7 +335,7 @@ impl ColorRenderTarget {
                         |_, prim| {
                             let instance = MaskInstance {
                                 prim,
-                                clip_transform_id,
+                                clip_transform_id: mask_transform_id,
                                 clip_address: clip_address.as_int(),
                                 info: [0; 2],
                             };
