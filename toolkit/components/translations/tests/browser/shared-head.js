@@ -341,6 +341,7 @@ async function setupActorTest({
       await closeTranslationsPanelIfOpen();
       BrowserTestUtils.removeTab(tab);
       await removeMocks();
+      TestTranslationsTelemetry.reset();
       return SpecialPowers.popPrefEnv();
     },
   };
@@ -492,6 +493,7 @@ async function loadTestPage({
       TranslationsParent.testAutomaticPopup = false;
       TranslationsParent.resetHostsOffered();
       BrowserTestUtils.removeTab(tab);
+      TestTranslationsTelemetry.reset();
       return Promise.all([
         SpecialPowers.popPrefEnv(),
         SpecialPowers.popPermissions(),
@@ -940,6 +942,7 @@ async function setupAboutPreferences(languagePairs) {
     gBrowser.removeCurrentTab();
     await removeMocks();
     await SpecialPowers.popPrefEnv();
+    TestTranslationsTelemetry.reset();
   }
 
   return {
@@ -993,6 +996,12 @@ async function mockLocales({ systemLocales, appLocales, webLanguages }) {
  * Helpful test functions for translations telemetry
  */
 class TestTranslationsTelemetry {
+  static #previousFlowId = null;
+
+  static reset() {
+    TestTranslationsTelemetry.#previousFlowId = null;
+  }
+
   /**
    * Asserts qualities about a counter telemetry metric.
    *
@@ -1019,6 +1028,9 @@ class TestTranslationsTelemetry {
    * @param {Object} event - The Glean event object.
    * @param {Object} expectations - The test expectations.
    * @param {number} expectations.expectedEventCount - The expected count of events.
+   * @param {boolean} expectations.expectNewFlowId
+   * - Expects the flowId to be different than the previous flowId if true,
+   *   and expects it to be the same if false.
    * @param {Array<function>} [expectations.allValuePredicates=[]]
    * - An array of function predicates to assert for all event values.
    * @param {Array<function>} [expectations.finalValuePredicates=[]]
@@ -1027,13 +1039,42 @@ class TestTranslationsTelemetry {
   static async assertEvent(
     name,
     event,
-    { expectedEventCount, allValuePredicates = [], finalValuePredicates = [] }
+    {
+      expectedEventCount,
+      expectNewFlowId = null,
+      allValuePredicates = [],
+      finalValuePredicates = [],
+    }
   ) {
     // Ensures that glean metrics are collected from all child processes
     // so that calls to testGetValue() are up to date.
     await Services.fog.testFlushAllChildren();
     const events = event.testGetValue() ?? [];
     const eventCount = events.length;
+
+    if (eventCount > 0 && expectNewFlowId !== null) {
+      const flowId = events[eventCount - 1].extra.flow_id;
+      if (expectNewFlowId) {
+        is(
+          events[eventCount - 1].extra.flow_id !==
+            TestTranslationsTelemetry.#previousFlowId,
+          true,
+          `The newest flowId ${flowId} should be different than the previous flowId ${
+            TestTranslationsTelemetry.#previousFlowId
+          }`
+        );
+      } else {
+        is(
+          events[eventCount - 1].extra.flow_id ===
+            TestTranslationsTelemetry.#previousFlowId,
+          true,
+          `The newest flowId ${flowId} should be equal to the previous flowId ${
+            TestTranslationsTelemetry.#previousFlowId
+          }`
+        );
+      }
+      TestTranslationsTelemetry.#previousFlowId = flowId;
+    }
 
     is(
       eventCount,

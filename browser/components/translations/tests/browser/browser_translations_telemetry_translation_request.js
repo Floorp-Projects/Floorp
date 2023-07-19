@@ -99,6 +99,7 @@ add_task(async function test_translations_telemetry_manual_translation() {
     Glean.translations.translationRequest,
     {
       expectedEventCount: 1,
+      expectNewFlowId: true,
       finalValuePredicates: [
         value => value.extra.from_language === "es",
         value => value.extra.to_language === "en",
@@ -161,6 +162,7 @@ add_task(async function test_translations_telemetry_auto_translation() {
     Glean.translations.translationRequest,
     {
       expectedEventCount: 1,
+      expectNewFlowId: true,
       finalValuePredicates: [
         value => value.extra.from_language === "es",
         value => value.extra.to_language === "en",
