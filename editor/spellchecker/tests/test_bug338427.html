@@ -20,8 +20,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338427
 
 /** Test for Bug 338427 **/
 function init() {
-    var { onSpellCheck } = SpecialPowers.ChromeUtils.import(
-      "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+    var { onSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+      "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
     );
     var textarea = document.getElementById("editor");
     var editor = SpecialPowers.wrap(textarea).editor;

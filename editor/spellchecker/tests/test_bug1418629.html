@@ -19,8 +19,8 @@
 <div id="edit1" contenteditable=true></div>
 
 <script>
-const { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+const { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
 );
 
 SimpleTest.waitForExplicitFinish();

@@ -21,8 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=432225
 
 /** Test for Bug 432225 **/
 
-let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
 );
 
 SimpleTest.waitForExplicitFinish();

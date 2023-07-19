@@ -44,8 +44,8 @@ function startTests()
   inputBox._input.focus();
   testNum = 0;
 
-  ({onSpellCheck} = ChromeUtils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"));
+  ({onSpellCheck} = ChromeUtils.importESModule(
+    "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"));
   onSpellCheck(inputBox._input, function () {
     bringUpContextMenu(inputBox);
   });

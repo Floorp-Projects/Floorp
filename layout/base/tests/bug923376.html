@@ -4,8 +4,8 @@
 <script>
 var div = document.body.firstChild;
 div.focus();
-var { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+var { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
 );
 maybeOnSpellCheck(div, function() {
   div.innerHTML = 'something missspelled<br>something elsed#';

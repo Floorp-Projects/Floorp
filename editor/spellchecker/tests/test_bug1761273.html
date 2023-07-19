@@ -24,8 +24,8 @@ const Ci = SpecialPowers.Ci;
 let {
   getDictionaryContentPref,
   onSpellCheck,
-} = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+} = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
 );
 
 /** Test for Bug 1402822 **/

@@ -23,8 +23,8 @@ fivee sixx<br>
 
 <script class="testbody" type="application/javascript">
 
-let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
 );
 
 /** Test for Bug 1100966 **/

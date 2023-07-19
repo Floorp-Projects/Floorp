@@ -8,8 +8,8 @@
 </head>
 <body>
 <script>
-let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
 );
 
 function waitForTick() {
