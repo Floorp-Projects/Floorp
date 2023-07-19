@@ -9,15 +9,77 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "http://example.com"
 );
 
-add_task(async function testRecentlyClosedDisabled() {
-  info("Check history recently closed tabs/windows section");
+async function openTab(URL) {
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  return tab;
+}
 
+async function closeTab(tab) {
+  const sessionStorePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
+  BrowserTestUtils.removeTab(tab);
+  await sessionStorePromise;
+}
+
+let panelMenuWidgetAdded = false;
+function prepareHistoryPanel() {
+  if (panelMenuWidgetAdded) {
+    return;
+  }
   CustomizableUI.addWidgetToArea(
     "history-panelmenu",
     CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
   );
   registerCleanupFunction(() => CustomizableUI.reset());
+}
 
+async function openRecentlyClosedTabsMenu() {
+  prepareHistoryPanel();
+  await openHistoryPanel();
+
+  let recentlyClosedTabs = document.getElementById("appMenuRecentlyClosedTabs");
+  let closeTabsPanel = document.getElementById(
+    "appMenu-library-recentlyClosedTabs"
+  );
+  let panelView = closeTabsPanel && PanelView.forNode(closeTabsPanel);
+  if (!panelView?.active) {
+    recentlyClosedTabs.click();
+    closeTabsPanel = document.getElementById(
+      "appMenu-library-recentlyClosedTabs"
+    );
+    await BrowserTestUtils.waitForEvent(closeTabsPanel, "ViewShown");
+    ok(
+      PanelView.forNode(closeTabsPanel)?.active,
+      "Opened 'Recently closed tabs' panel"
+    );
+  }
+
+  return closeTabsPanel;
+}
+
+async function resetClosedTabs(win) {
+  // Clear the lists of closed tabs.
+  let sessionStoreChanged;
+  let windows = win ? [win] : BrowserWindowTracker.orderedWindows;
+  for (win of windows) {
+    while (SessionStore.getClosedTabCountForWindow(win)) {
+      sessionStoreChanged = TestUtils.topicObserved(
+        "sessionstore-closed-objects-changed"
+      );
+      SessionStore.forgetClosedTab(win, 0);
+      await sessionStoreChanged;
+    }
+  }
+}
+
+registerCleanupFunction(async () => {
+  await resetClosedTabs();
+});
+
+add_task(async function testRecentlyClosedDisabled() {
+  info("Check history recently closed tabs/windows section");
+
+  prepareHistoryPanel();
   // We need to make sure the history is cleared before starting the test
   await Sanitizer.sanitize(["history"]);
 
@@ -46,11 +108,8 @@ add_task(async function testRecentlyClosedDisabled() {
   await hideHistoryPanel();
 
   gBrowser.selectedTab.focus();
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    TEST_PATH + "dummy_history_item.html"
-  );
-  BrowserTestUtils.removeTab(tab);
+  let tab = await openTab(TEST_PATH + "dummy_history_item.html");
+  await closeTab(tab);
 
   await openHistoryPanel();
 
@@ -101,11 +160,7 @@ add_task(async function testRecentlyClosedDisabled() {
 add_task(async function testRecentlyClosedTabsDisabledPersists() {
   info("Check history recently closed tabs/windows section");
 
-  CustomizableUI.addWidgetToArea(
-    "history-panelmenu",
-    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
-  );
-  registerCleanupFunction(() => CustomizableUI.reset());
+  prepareHistoryPanel();
 
   // We need to make sure the history is cleared before starting the test
   await Sanitizer.sanitize(["history"]);
@@ -148,6 +203,83 @@ add_task(async function testRecentlyClosedTabsDisabledPersists() {
   await BrowserTestUtils.closeWindow(newWin);
 });
 
+add_task(async function testRecentlyClosedRestoreAllTabs() {
+  // We need to make sure the history is cleared before starting the test
+  await Sanitizer.sanitize(["history"]);
+  await resetClosedTabs();
+
+  await BrowserTestUtils.withNewTab("about:mozilla", async browser => {
+    // Open and close a few of tabs
+    const closedTabUrls = [
+      "about:robots",
+      "https://example.com/",
+      "https://example.org/",
+    ];
+    for (let url of closedTabUrls) {
+      let tab = await openTab(url);
+      await closeTab(tab);
+    }
+
+    // Open the "Recently closed tabs" panel.
+    let closeTabsPanel = await openRecentlyClosedTabsMenu();
+
+    // Click the first toolbar button in the panel.
+    let toolbarButton = closeTabsPanel.querySelector(
+      ".panel-subview-body toolbarbutton"
+    );
+    let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+    EventUtils.sendMouseEvent({ type: "click" }, toolbarButton, window);
+
+    info("waiting for reopenedTab");
+    let reopenedTab = await newTabPromise;
+    is(
+      reopenedTab.linkedBrowser.currentURI.spec,
+      closedTabUrls.pop(),
+      "Opened correct URL"
+    );
+    info(`restored tab, total open tabs: ${gBrowser.tabs.length}`);
+    info("waiting for closeTab");
+    await closeTab(reopenedTab);
+
+    let origTabCount = gBrowser.tabs.length;
+    let reopenedTabs = [];
+
+    await openRecentlyClosedTabsMenu();
+    let restoreAllItem = closeTabsPanel.querySelector(".restoreallitem");
+    ok(
+      restoreAllItem && !restoreAllItem.hidden,
+      "Restore all menu item is not hidden"
+    );
+
+    let tabsReOpenedPromise = new Promise(resolve => {
+      gBrowser.tabContainer.addEventListener("TabOpen", function onTabOpen(e) {
+        reopenedTabs.push(e.target);
+        if (reopenedTabs.length == closedTabUrls.length) {
+          gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen);
+          resolve();
+        }
+      });
+    });
+    // Click the restore-all toolbar button in the panel.
+    EventUtils.sendMouseEvent({ type: "click" }, restoreAllItem, window);
+
+    info("waiting for restored tabs");
+    await tabsReOpenedPromise;
+
+    is(
+      gBrowser.tabs.length,
+      origTabCount + closedTabUrls.length,
+      "The expected number of closed tabs were restored"
+    );
+    info(
+      `restored ${reopenedTabs} tabs, total open tabs: ${gBrowser.tabs.length}`
+    );
+    for (let tab of reopenedTabs) {
+      await closeTab(tab);
+    }
+  });
+});
+
 add_task(async function testRecentlyClosedWindows() {
   // We need to make sure the history is cleared before starting the test
   await Sanitizer.sanitize(["history"]);
@@ -164,11 +296,7 @@ add_task(async function testRecentlyClosedWindows() {
   await loadedPromise;
   await BrowserTestUtils.closeWindow(newWin);
 
-  CustomizableUI.addWidgetToArea(
-    "history-panelmenu",
-    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
-  );
-  registerCleanupFunction(() => CustomizableUI.reset());
+  prepareHistoryPanel();
   await openHistoryPanel();
 
   // Open the "Recently closed windows" panel.
