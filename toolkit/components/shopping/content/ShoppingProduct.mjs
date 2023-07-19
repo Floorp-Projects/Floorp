@@ -72,6 +72,10 @@ export class ShoppingProduct {
 
     this._abortController = new AbortController();
 
+    if (url instanceof Ci.nsIURI) {
+      url = URL.fromURI(url);
+    }
+
     if (url && URL.isInstance(url)) {
       let product = this.constructor.fromURL(url);
       this.assignProduct(product);
