@@ -2411,9 +2411,6 @@ bool WarpCacheIRTranspiler::emitStoreDenseElementHole(ObjOperandId objId,
   auto* elements = MElements::New(alloc(), obj);
   add(elements);
 
-  auto* barrier = MPostWriteElementBarrier::New(alloc(), obj, rhs, index);
-  add(barrier);
-
   MInstruction* store;
   if (handleAdd) {
     // TODO(post-Warp): Consider changing MStoreElementHole to match IC code.
@@ -2423,6 +2420,9 @@ bool WarpCacheIRTranspiler::emitStoreDenseElementHole(ObjOperandId objId,
     add(length);
 
     index = addBoundsCheck(index, length);
+
+    auto* barrier = MPostWriteElementBarrier::New(alloc(), obj, rhs, index);
+    add(barrier);
 
     bool needsHoleCheck = false;
     store = MStoreElement::NewBarriered(alloc(), elements, index, rhs,
@@ -3388,16 +3388,6 @@ bool WarpCacheIRTranspiler::emitArrayPush(ObjOperandId objId,
                                           ValOperandId rhsId) {
   MDefinition* obj = getOperand(objId);
   MDefinition* value = getOperand(rhsId);
-
-  auto* elements = MElements::New(alloc(), obj);
-  add(elements);
-
-  auto* initLength = MInitializedLength::New(alloc(), elements);
-  add(initLength);
-
-  auto* barrier =
-      MPostWriteElementBarrier::New(alloc(), obj, value, initLength);
-  add(barrier);
 
   auto* ins = MArrayPush::New(alloc(), obj, value);
   addEffectful(ins);

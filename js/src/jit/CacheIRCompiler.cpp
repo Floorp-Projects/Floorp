@@ -7096,7 +7096,7 @@ void CacheIRCompiler::emitPostBarrierShared(Register obj,
   if (maybeIndex != InvalidReg) {
     masm.passABIArg(maybeIndex);
     using Fn = void (*)(JSRuntime* rt, JSObject* obj, int32_t index);
-    masm.callWithABI<Fn, PostWriteElementBarrier<IndexInBounds::Yes>>();
+    masm.callWithABI<Fn, PostWriteElementBarrier>();
   } else {
     using Fn = void (*)(JSRuntime* rt, js::gc::Cell* cell);
     masm.callWithABI<Fn, PostWriteBarrier>();
