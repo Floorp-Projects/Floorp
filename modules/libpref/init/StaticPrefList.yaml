@@ -6536,6 +6536,11 @@
     type: RelaxedAtomicBool
     value: true
     mirror: always
+  # Force triple buffering in overlay's video swap chain
+-   name: gfx.webrender.dcomp-video-force-triple-buffering
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 -   name: gfx.video.convert-i420-to-nv12.force-enabled
     type: bool
     value: false

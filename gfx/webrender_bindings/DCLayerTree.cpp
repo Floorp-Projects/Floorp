@@ -1290,6 +1290,8 @@ bool DCSurfaceVideo::CreateVideoSwapChain() {
   }
 
   auto swapChainFormat = GetSwapChainFormat();
+  bool useTripleBuffering =
+      StaticPrefs::gfx_webrender_dcomp_video_force_triple_buffering();
 
   DXGI_SWAP_CHAIN_DESC1 desc = {};
   desc.Width = mSwapChainSize.width;
@@ -1297,7 +1299,7 @@ bool DCSurfaceVideo::CreateVideoSwapChain() {
   desc.Format = swapChainFormat;
   desc.Stereo = FALSE;
   desc.SampleDesc.Count = 1;
-  desc.BufferCount = 2;
+  desc.BufferCount = useTripleBuffering ? 3 : 2;
   desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
   desc.Scaling = DXGI_SCALING_STRETCH;
   desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
