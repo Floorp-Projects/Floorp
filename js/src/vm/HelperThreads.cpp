@@ -22,7 +22,6 @@
 #include "jit/JitRuntime.h"
 #include "jit/JitScript.h"
 #include "js/CompileOptions.h"  // JS::CompileOptions, JS::DecodeOptions, JS::ReadOnlyCompileOptions
-#include "js/ContextOptions.h"  // JS::ContextOptions
 #include "js/experimental/CompileScript.h"
 #include "js/experimental/JSStencil.h"
 #include "js/friend/StackLimits.h"  // js::ReportOverRecursed
@@ -490,11 +489,7 @@ bool js::HasOffThreadIonCompile(Realm* realm) {
 
 ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx,
                      JS::OffThreadCompileCallback callback, void* callbackData)
-    : kind(kind),
-      options(cx),
-      contextOptions(cx->options()),
-      callback(callback),
-      callbackData(callbackData) {
+    : kind(kind), options(cx), callback(callback), callbackData(callbackData) {
   // Note that |cx| is the main thread context here but the parse task will
   // run with a different, helper thread, context.
   MOZ_ASSERT(!cx->isHelperThreadContext());
@@ -588,7 +583,7 @@ void ParseTask::scheduleDelazifyTask(AutoLockHelperThreadState& lock) {
   {
     AutoUnlockHelperThreadState unlock(lock);
 
-    task = DelazifyTask::Create(runtime, contextOptions, options, *stencil_);
+    task = DelazifyTask::Create(runtime, options, *stencil_);
     if (!task) {
       return;
     }
@@ -735,7 +730,7 @@ void js::StartOffThreadDelazification(
 
   JSRuntime* runtime = cx->runtime();
   UniquePtr<DelazifyTask> task;
-  task = DelazifyTask::Create(runtime, cx->options(), options, stencil);
+  task = DelazifyTask::Create(runtime, options, stencil);
   if (!task) {
     return;
   }
@@ -863,12 +858,10 @@ bool LargeFirstDelazification::insert(ScriptIndex index,
 }
 
 UniquePtr<DelazifyTask> DelazifyTask::Create(
-    JSRuntime* runtime, const JS::ContextOptions& contextOptions,
-    const JS::ReadOnlyCompileOptions& options,
+    JSRuntime* runtime, const JS::ReadOnlyCompileOptions& options,
     const frontend::CompilationStencil& stencil) {
   UniquePtr<DelazifyTask> task;
-  task.reset(
-      js_new<DelazifyTask>(runtime, contextOptions, options.prefableOptions()));
+  task.reset(js_new<DelazifyTask>(runtime, options.prefableOptions()));
   if (!task) {
     return nullptr;
   }
@@ -897,10 +890,9 @@ UniquePtr<DelazifyTask> DelazifyTask::Create(
 }
 
 DelazifyTask::DelazifyTask(
-    JSRuntime* runtime, const JS::ContextOptions& options,
+    JSRuntime* runtime,
     const JS::PrefableCompileOptions& initialPrefableOptions)
     : runtime(runtime),
-      contextOptions(options),
       initialPrefableOptions(initialPrefableOptions),
       merger() {}
 
