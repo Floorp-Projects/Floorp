@@ -12,8 +12,8 @@
 <script type="text/javascript">
 "use strict";
 
-const { ExtensionStorageIDB } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/ExtensionStorageIDB.jsm"
+const { ExtensionStorageIDB } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionStorageIDB.sys.mjs"
 );
 
 const storageTestHelpers = {
