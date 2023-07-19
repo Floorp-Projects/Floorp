@@ -12,7 +12,9 @@
 <script type="text/javascript">
 "use strict";
 
-var {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+var {UrlClassifierTestUtils} = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
+);
 
 function tp_background(expectFail = true) {
   fetch("https://tracking.example.com/example.txt").then(() => {

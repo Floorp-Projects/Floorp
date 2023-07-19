@@ -19,7 +19,9 @@ add_task(async function setup() {
 
   let chromeScript = SpecialPowers.loadChromeScript(async _ => {
     /* eslint-env mozilla/chrome-script */
-    const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+    const {UrlClassifierTestUtils} = ChromeUtils.importESModule(
+      "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
+    );
     await UrlClassifierTestUtils.addTestTrackers();
     sendAsyncMessage("trackersLoaded");
   });
@@ -116,7 +118,9 @@ add_task(async function teardown() {
       Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
     });
 
-    const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+    const {UrlClassifierTestUtils} = ChromeUtils.importESModule(
+      "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
+    );
     await UrlClassifierTestUtils.cleanupTestTrackers();
     sendAsyncMessage("trackersUnloaded");
   });
