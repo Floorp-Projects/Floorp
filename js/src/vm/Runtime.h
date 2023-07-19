@@ -1017,8 +1017,7 @@ struct JSRuntime {
 
   // The supported module import assertions.
   // https://tc39.es/proposal-import-assertions/#sec-hostgetsupportedimportassertions
-  js::MainThreadOrParseData<JS::ImportAssertionVector>
-      supportedImportAssertions;
+  js::MainThreadData<JS::ImportAssertionVector> supportedImportAssertions;
 
   // Hooks called when script private references are created and destroyed.
   js::MainThreadData<JS::ScriptPrivateReferenceHook> scriptPrivateAddRefHook;

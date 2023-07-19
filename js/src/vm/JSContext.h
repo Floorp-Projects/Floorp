@@ -137,7 +137,6 @@ enum class ContextKind {
 
 #ifdef DEBUG
 JSContext* MaybeGetJSContext();
-bool CurrentThreadIsParseThread();
 #endif
 
 enum class InterruptReason : uint32_t {
