@@ -1739,17 +1739,19 @@ security:
       - 1689269
       - 1754650
       - 1811156
+      - 1841930
     description: >
       Counts of how often Web Authentication was used in this session, keyed
       by authenticator protocol, method and result. Currently: CTAPRegisterFinish,
       CTAPRegisterAbort, CTAPSignFinish, CTAPSignAbort, U2FRegisterFinish,
       U2FRegisterAbort, U2FSignFinish, U2FSignAbort.
-    expires: "118"
+    expires: "124"
     kind: uint
     keyed: true
     notification_emails:
       - seceng-telemetry@mozilla.com
       - jschanck@mozilla.com
+      - dkeeler@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
