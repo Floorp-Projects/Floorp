@@ -118,7 +118,7 @@ export class AutoCompleteChild extends JSWindowActorChild {
   }
 
   openAutocompletePopup(input, element) {
-    if (this._popupOpen || !input) {
+    if (this._popupOpen || !input || !element?.isConnected) {
       return;
     }
 
