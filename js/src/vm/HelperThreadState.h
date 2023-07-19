@@ -555,8 +555,6 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
 
   bool runtimeMatches(JSRuntime* rt) { return runtime == rt; }
 
-  void trace(JSTracer* trc);
-
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
