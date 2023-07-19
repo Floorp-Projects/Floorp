@@ -1035,7 +1035,7 @@ items from that key's value."
 
     def _load_sccache_stats(self):
         stats_file = os.path.join(
-            self.query_abs_dirs()["abs_obj_dir"], "sccache-stats.json"
+            self.query_abs_dirs()["base_work_dir"], "cidata", "sccache-stats.json"
         )
         if not os.path.exists(stats_file):
             self.info("%s does not exist; not loading sccache stats" % stats_file)
