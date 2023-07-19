@@ -833,6 +833,23 @@ class Interface(object):
                     "builtinclass '%s'" % (self.name, self.base),
                     self.location,
                 )
+
+            if realbase.attributes.rust_sync and not self.attributes.rust_sync:
+                raise IDLError(
+                    "interface '%s' is not rust_sync but derives from rust_sync '%s'"
+                    % (self.name, self.base),
+                    self.location,
+                )
+
+            if (
+                self.attributes.rust_sync
+                and self.attributes.scriptable
+                and not self.attributes.builtinclass
+            ):
+                raise IDLError(
+                    "interface '%s' is rust_sync but is not builtinclass" % self.name,
+                    self.location,
+                )
         elif self.name != "nsISupports":
             raise IDLError(
                 "Interface '%s' must inherit from nsISupports" % self.name,
@@ -913,6 +930,7 @@ class InterfaceAttributes(object):
     builtinclass = False
     function = False
     main_process_scriptable_only = False
+    rust_sync = False
 
     def setuuid(self, value):
         self.uuid = value.lower()
@@ -929,6 +947,9 @@ class InterfaceAttributes(object):
     def setmain_process_scriptable_only(self):
         self.main_process_scriptable_only = True
 
+    def setrust_sync(self):
+        self.rust_sync = True
+
     actions = {
         "uuid": (True, setuuid),
         "scriptable": (False, setscriptable),
@@ -936,6 +957,7 @@ class InterfaceAttributes(object):
         "function": (False, setfunction),
         "object": (False, lambda self: True),
         "main_process_scriptable_only": (False, setmain_process_scriptable_only),
+        "rust_sync": (False, setrust_sync),
     }
 
     def __init__(self, attlist, location):
@@ -970,6 +992,8 @@ class InterfaceAttributes(object):
             l.append("\tfunction\n")
         if self.main_process_scriptable_only:
             l.append("\tmain_process_scriptable_only\n")
+        if self.rust_sync:
+            l.append("\trust_sync\n")
         return "".join(l)
 
 
