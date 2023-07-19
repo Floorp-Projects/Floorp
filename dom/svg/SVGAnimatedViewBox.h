@@ -43,6 +43,15 @@ class SVGAnimatedViewBox {
   friend class AutoChangeViewBoxNotifier;
   using SVGElement = dom::SVGElement;
 
+  SVGAnimatedViewBox& operator=(const SVGAnimatedViewBox& aOther) {
+    mBaseVal = aOther.mBaseVal;
+    if (aOther.mAnimVal) {
+      mAnimVal = MakeUnique<SVGViewBox>(*aOther.mAnimVal);
+    }
+    mHasBaseVal = aOther.mHasBaseVal;
+    return *this;
+  }
+
   void Init();
 
   /**

@@ -174,7 +174,7 @@ function checkPendingBreakpoints(source, sourceActor) {
 
     await Promise.all(
       pendingBreakpoints.map(pendingBp => {
-        return dispatch(syncPendingBreakpoint(source.id, pendingBp));
+        return dispatch(syncPendingBreakpoint(source, pendingBp));
       })
     );
   };

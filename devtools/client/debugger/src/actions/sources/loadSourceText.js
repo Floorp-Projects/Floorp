@@ -142,7 +142,7 @@ async function onSourceTextContentAvailable(
   }
 
   // Update the text in any breakpoints for this source by re-adding them.
-  const breakpoints = getBreakpointsForSource(getState(), source.id);
+  const breakpoints = getBreakpointsForSource(getState(), source);
   for (const breakpoint of breakpoints) {
     await dispatch(
       addBreakpoint(

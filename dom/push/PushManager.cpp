@@ -113,6 +113,12 @@ class GetSubscriptionResultRunnable final : public WorkerRunnable {
         mAppServerKey(std::move(aAppServerKey)) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
+    {
+      MutexAutoLock lock(mProxy->Lock());
+      if (mProxy->CleanedUp()) {
+        return true;
+      }
+    }
     RefPtr<Promise> promise = mProxy->WorkerPromise();
     if (NS_SUCCEEDED(mStatus)) {
       if (mEndpoint.IsEmpty()) {

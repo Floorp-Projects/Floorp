@@ -20,6 +20,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/PresShell.h"
@@ -206,15 +207,59 @@ nsresult SVGElement::CopyInnerTo(mozilla::dom::Element* aDest) {
   // If our destination is a print document, copy all the relevant length values
   // etc so that they match the state of the original node.
   if (aDest->OwnerDoc()->IsStaticDocument()) {
-    dest->GetLengthInfo().CopyAllFrom(GetLengthInfo());
+    LengthAttributesInfo lengthInfo = GetLengthInfo();
+    dest->GetLengthInfo().CopyAllFrom(lengthInfo);
+    if (SVGGeometryProperty::ElementMapsLengthsToStyle(this)) {
+      for (uint32_t i = 0; i < lengthInfo.mCount; i++) {
+        nsCSSPropertyID propId =
+            SVGGeometryProperty::AttrEnumToCSSPropId(this, i);
+
+        // We don't map use element width/height currently. We can remove this
+        // test when we do.
+        if (propId != eCSSProperty_UNKNOWN) {
+          dest->SMILOverrideStyle()->SetSMILValue(propId,
+                                                  lengthInfo.mValues[i]);
+        }
+      }
+    }
     dest->GetNumberInfo().CopyAllFrom(GetNumberInfo());
     dest->GetNumberPairInfo().CopyAllFrom(GetNumberPairInfo());
     dest->GetIntegerInfo().CopyAllFrom(GetIntegerInfo());
     dest->GetIntegerPairInfo().CopyAllFrom(GetIntegerPairInfo());
+    dest->GetBooleanInfo().CopyAllFrom(GetBooleanInfo());
+    if (const auto* orient = GetAnimatedOrient()) {
+      *dest->GetAnimatedOrient() = *orient;
+    }
+    if (const auto* viewBox = GetAnimatedViewBox()) {
+      *dest->GetAnimatedViewBox() = *viewBox;
+    }
+    if (const auto* preserveAspectRatio = GetAnimatedPreserveAspectRatio()) {
+      *dest->GetAnimatedPreserveAspectRatio() = *preserveAspectRatio;
+    }
     dest->GetEnumInfo().CopyAllFrom(GetEnumInfo());
     dest->GetStringInfo().CopyAllFrom(GetStringInfo());
     dest->GetLengthListInfo().CopyAllFrom(GetLengthListInfo());
     dest->GetNumberListInfo().CopyAllFrom(GetNumberListInfo());
+    if (const auto* pointList = GetAnimatedPointList()) {
+      *dest->GetAnimatedPointList() = *pointList;
+    }
+    if (const auto* pathSegList = GetAnimPathSegList()) {
+      *dest->GetAnimPathSegList() = *pathSegList;
+      dest->SMILOverrideStyle()->SetSMILValue(nsCSSPropertyID::eCSSProperty_d,
+                                              *pathSegList);
+    }
+    if (const auto* transformList = GetAnimatedTransformList()) {
+      *dest->GetAnimatedTransformList(DO_ALLOCATE) = *transformList;
+    }
+    if (const auto* animateMotionTransform = GetAnimateMotionTransform()) {
+      dest->SetAnimateMotionTransform(animateMotionTransform);
+    }
+    if (const auto* smilOverrideStyleDecoration =
+            GetSMILOverrideStyleDeclaration()) {
+      RefPtr<DeclarationBlock> declClone = smilOverrideStyleDecoration->Clone();
+      declClone->SetDirty();
+      dest->SetSMILOverrideStyleDeclaration(*declClone);
+    }
   }
 
   return NS_OK;

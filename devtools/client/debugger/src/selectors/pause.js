@@ -3,10 +3,8 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { getThreadPauseState } from "../reducers/pause";
-import { getSelectedSourceId, getSelectedLocation } from "./sources";
+import { getSelectedSource, getSelectedLocation } from "./sources";
 import { getBlackBoxRanges } from "./source-blackbox";
-
-import { isGeneratedId } from "devtools/client/shared/source-map-loader/index";
 
 // eslint-disable-next-line
 import { getSelectedLocation as _getSelectedLocation } from "../utils/selected-location";
@@ -142,8 +140,8 @@ export function getOriginalFrameScope(state, frame) {
     return null;
   }
   // Only compute original scope if we are currently showing an original source.
-  const sourceId = getSelectedSourceId(state);
-  if (!sourceId || isGeneratedId(sourceId)) {
+  const source = getSelectedSource(state);
+  if (!source || !source.isOriginal) {
     return null;
   }
 

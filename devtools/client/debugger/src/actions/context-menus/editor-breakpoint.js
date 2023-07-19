@@ -242,7 +242,7 @@ const removeBreakpointsOnLineItem = (location, dispatch) => ({
   accesskey: L10N.getStr("breakpointMenuItem.removeAllAtLine.accesskey"),
   disabled: false,
   click: () =>
-    dispatch(removeBreakpointsAtLine(location.source.id, location.line)),
+    dispatch(removeBreakpointsAtLine(location.source, location.line)),
 });
 
 const enableBreakpointsOnLineItem = (
@@ -260,7 +260,7 @@ const enableBreakpointsOnLineItem = (
     isSelectedSourceOnIgnoreList
   ),
   click: () =>
-    dispatch(enableBreakpointsAtLine(location.source.id, location.line)),
+    dispatch(enableBreakpointsAtLine(location.source, location.line)),
 });
 
 const disableBreakpointsOnLineItem = (location, dispatch) => ({
@@ -269,5 +269,5 @@ const disableBreakpointsOnLineItem = (location, dispatch) => ({
   accesskey: L10N.getStr("breakpointMenuItem.disableAllAtLine.accesskey"),
   disabled: false,
   click: () =>
-    dispatch(disableBreakpointsAtLine(location.source.id, location.line)),
+    dispatch(disableBreakpointsAtLine(location.source, location.line)),
 });
