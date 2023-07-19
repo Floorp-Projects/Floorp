@@ -1924,7 +1924,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
   }
 
   // Set up responseXML
-  // Note: Main Fetch step 18 requires to ignore body for head/connect methods.
+  // Fetch spec Main Fetch step 21: ignore body for head/connect methods.
   bool parseBody = (mResponseType == XMLHttpRequestResponseType::_empty ||
                     mResponseType == XMLHttpRequestResponseType::Document) &&
                    !(mRequestMethod.EqualsLiteral("HEAD") ||

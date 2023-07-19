@@ -1146,19 +1146,24 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
-  // We open a pipe so that we can immediately set the pipe's read end as the
-  // response's body. Setting the segment size to UINT32_MAX means that the
-  // pipe has infinite space. The nsIChannel will continue to buffer data in
-  // xpcom events even if we block on a fixed size pipe.  It might be possible
-  // to suspend the channel and then resume when there is space available, but
-  // for now use an infinite pipe to avoid blocking.
-  nsCOMPtr<nsIInputStream> pipeInputStream;
-  NS_NewPipe(getter_AddRefs(pipeInputStream), getter_AddRefs(mPipeOutputStream),
-             0, /* default segment size */
-             UINT32_MAX /* infinite pipe */,
-             true /* non-blocking input, otherwise you deadlock */,
-             false /* blocking output, since the pipe is 'in'finite */);
-  response->SetBody(pipeInputStream, contentLength);
+  // Fetch spec Main Fetch step 21: ignore body for head/connect methods.
+  nsAutoCString method;
+  mRequest->GetMethod(method);
+  if (!(method.EqualsLiteral("HEAD") || method.EqualsLiteral("CONNECT"))) {
+    // We open a pipe so that we can immediately set the pipe's read end as the
+    // response's body. Setting the segment size to UINT32_MAX means that the
+    // pipe has infinite space. The nsIChannel will continue to buffer data in
+    // xpcom events even if we block on a fixed size pipe.  It might be possible
+    // to suspend the channel and then resume when there is space available, but
+    // for now use an infinite pipe to avoid blocking.
+    nsCOMPtr<nsIInputStream> pipeInputStream;
+    NS_NewPipe(getter_AddRefs(pipeInputStream),
+               getter_AddRefs(mPipeOutputStream), 0, /* default segment size */
+               UINT32_MAX /* infinite pipe */,
+               true /* non-blocking input, otherwise you deadlock */,
+               false /* blocking output, since the pipe is 'in'finite */);
+    response->SetBody(pipeInputStream, contentLength);
+  }
 
   // If the request is a file channel, then remember the local path to
   // that file so we can later create File blobs rather than plain ones.
@@ -1311,6 +1316,16 @@ FetchDriver::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
   // NB: This can be called on any thread!  But we're guaranteed that it is
   // called between OnStartRequest and OnStopRequest, so we don't need to worry
   // about races.
+
+  if (!mPipeOutputStream) {
+    // We ignore the body for HEAD/CONNECT requests.
+    // nsIStreamListener mandates reading from the stream before returning.
+    uint32_t totalRead;
+    nsresult rv = aInputStream->ReadSegments(NS_DiscardSegment, nullptr, aCount,
+                                             &totalRead);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+  }
 
   if (mNeedToObserveOnDataAvailable) {
     mNeedToObserveOnDataAvailable = false;
