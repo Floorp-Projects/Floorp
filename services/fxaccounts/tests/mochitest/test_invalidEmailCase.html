@@ -25,7 +25,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=963835
 
 SimpleTest.waitForExplicitFinish();
 
-const {FxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
+const {FxAccounts} = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccounts.sys.mjs"
+);
 const {FxAccountsClient} = ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
 
 const TEST_SERVER =
