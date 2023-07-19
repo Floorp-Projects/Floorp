@@ -14,7 +14,9 @@
 
   <script type="application/javascript">
   <![CDATA[
-    const {DOMRequestIpcHelper} = ChromeUtils.import("resource://gre/modules/DOMRequestHelper.jsm");
+    const {DOMRequestIpcHelper} = ChromeUtils.importESModule(
+      "resource://gre/modules/DOMRequestHelper.sys.mjs"
+    );
     let obs = Cc["@mozilla.org/observer-service;1"].
               getService(Ci.nsIObserverService);
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
