@@ -55,6 +55,7 @@ enum class MediaSessionConduitLocalDirection : int { kSend, kRecv };
 class VideoSessionConduit;
 class AudioSessionConduit;
 class WebrtcCallWrapper;
+class FrameTransformerProxy;
 
 /**
  * 1. Abstract renderer for video data
@@ -412,6 +413,10 @@ class VideoSessionConduit : public MediaSessionConduit {
     size_t height;
   };
   virtual Maybe<Resolution> GetLastResolution() const = 0;
+
+  virtual void RequestKeyFrame(FrameTransformerProxy* aProxy) = 0;
+  virtual void GenerateKeyFrame(const Maybe<std::string>& aRid,
+                                FrameTransformerProxy* aProxy) = 0;
 
  protected:
   /* RTCP feedback settings, for unit testing purposes */

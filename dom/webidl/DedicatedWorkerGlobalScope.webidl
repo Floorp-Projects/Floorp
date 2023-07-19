@@ -37,3 +37,9 @@ interface DedicatedWorkerGlobalScope : WorkerGlobalScope {
   [Pref="dom.workers.requestAnimationFrame", Throws]
   undefined cancelAnimationFrame(long handle);
 };
+
+// https://w3c.github.io/webrtc-encoded-transform/#RTCEncodedAudioFrame-methods
+partial interface DedicatedWorkerGlobalScope {
+  [Pref="media.peerconnection.enabled",
+   Pref="media.peerconnection.scripttransform.enabled"] attribute EventHandler onrtctransform;
+};
