@@ -488,24 +488,6 @@ bool js::HasOffThreadIonCompile(Realm* realm) {
 }
 #endif
 
-AutoSetHelperThreadContext::AutoSetHelperThreadContext(
-    const JS::ContextOptions& options, AutoLockHelperThreadState& lock)
-    : lock(lock) {
-  cx = HelperThreadState().getFirstUnusedContext(lock);
-  MOZ_ASSERT(cx);
-  cx->setHelperThread(options, lock);
-}
-
-AutoSetHelperThreadContext::~AutoSetHelperThreadContext() {
-  cx->tempLifoAlloc().releaseAll();
-  if (cx->shouldFreeUnusedMemory()) {
-    cx->tempLifoAlloc().freeAll();
-    cx->setFreeUnusedMemory(false);
-  }
-  cx->clearHelperThread(lock);
-  cx = nullptr;
-}
-
 ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx,
                      JS::OffThreadCompileCallback callback, void* callbackData)
     : kind(kind),
@@ -604,7 +586,6 @@ void ParseTask::scheduleDelazifyTask(AutoLockHelperThreadState& lock) {
 
   UniquePtr<DelazifyTask> task;
   {
-    AutoSetHelperThreadContext usesContext(contextOptions, lock);
     AutoUnlockHelperThreadState unlock(lock);
 
     task = DelazifyTask::Create(runtime, contextOptions, options, *stencil_);
@@ -984,7 +965,6 @@ size_t DelazifyTask::sizeOfExcludingThis(
 
 void DelazifyTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
   {
-    AutoSetHelperThreadContext usesContext(contextOptions, lock);
     AutoUnlockHelperThreadState unlock(lock);
     if (!runTask()) {
       // NOTE: We do not report errors beyond this scope, as there is no where
