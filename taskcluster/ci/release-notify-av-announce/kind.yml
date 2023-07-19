@@ -18,8 +18,6 @@ job-defaults:
     run-on-projects: []
     shipping-phase: push
     worker-type: succeed
-    worker:
-        implementation: succeed
     notifications:
         # !t is a custom format option that calls .title() on the string.
         subject: "{task[shipping-product]!t} {release_config[version]} build{release_config[build_number]} release"

@@ -18,8 +18,6 @@ job-defaults:
     run-on-projects: []
     shipping-phase: push
     worker-type: succeed
-    worker:
-        implementation: succeed
     notifications:
         subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has been pushed to cdntest"
         message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has been pushed to cdntest"

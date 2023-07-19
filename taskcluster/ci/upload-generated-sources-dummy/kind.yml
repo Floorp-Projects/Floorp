@@ -20,5 +20,3 @@ kind-dependencies:
 job-template:
     description: Dummy task to pull in mac x64 and aarch64 upload-generated-symbols tasks
     worker-type: succeed
-    worker:
-        implementation: succeed

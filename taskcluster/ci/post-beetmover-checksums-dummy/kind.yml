@@ -22,8 +22,6 @@ jobs:
         shipping-phase: promote
         shipping-product: firefox
         worker-type: succeed
-        worker:
-            implementation: succeed
     devedition-promote:
         name: post-beetmover-checksums-dummy
         description: Dummy task to deal with max_dependencies
@@ -31,5 +29,3 @@ jobs:
         shipping-phase: promote
         shipping-product: devedition
         worker-type: succeed
-        worker:
-            implementation: succeed
