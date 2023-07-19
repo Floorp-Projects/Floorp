@@ -67,6 +67,7 @@ class SettingsHomepageTest {
             "Wikipedia",
             "Google",
         )
+        val genericURL = getGenericAsset(mockWebServer, 1)
 
         homeScreen {
             defaultTopSites.forEach { item ->
@@ -79,6 +80,13 @@ class SettingsHomepageTest {
             defaultTopSites.forEach { item ->
                 verifyNotExistingTopSitesList(item)
             }
+        }
+        // Disabling the "Shortcuts" homepage setting option should remove the "Add to shortcuts" from main menu option
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+        }.openThreeDotMenu {
+            expandMenu()
+            verifyAddToShortcutsButton(shouldExist = false)
         }
     }
 

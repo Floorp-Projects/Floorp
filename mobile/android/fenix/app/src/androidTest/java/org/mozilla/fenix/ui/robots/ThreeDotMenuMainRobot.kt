@@ -79,7 +79,8 @@ class ThreeDotMenuMainRobot {
     fun verifySelectTabs() = assertSelectTabsButton()
 
     fun verifyFindInPageButton() = assertItemContainingTextExists(findInPageButton)
-    fun verifyAddToShortcutsButton() = assertItemContainingTextExists(addToShortcutsButton)
+    fun verifyAddToShortcutsButton(shouldExist: Boolean) =
+        assertItemContainingTextExists(addToShortcutsButton, exists = shouldExist)
     fun verifyRemoveFromShortcutsButton() = assertRemoveFromShortcutsButton()
     fun verifyShareTabsOverlay() = assertShareTabsOverlay()
 
