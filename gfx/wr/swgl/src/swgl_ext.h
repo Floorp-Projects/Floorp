@@ -1605,9 +1605,12 @@ static bool commitLinearGradient(sampler2D sampler, int address, float size,
 
 template <bool CLAMP, typename V>
 static ALWAYS_INLINE V fastSqrt(V v) {
+  if (CLAMP) {
+    // Clamp to avoid zero or negative.
+    v = max(v, V(1.0e-12f));
+  }
 #if USE_SSE2 || USE_NEON
-  // Clamp to avoid zero in inversesqrt.
-  return v * inversesqrt(CLAMP ? max(v, V(1.0e-10f)) : v);
+  return v * inversesqrt(v);
 #else
   return sqrt(v);
 #endif
