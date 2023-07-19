@@ -23,10 +23,6 @@
 // JSContext represents a thread: there must be exactly one JSContext for each
 // thread running JS/Wasm.
 //
-// Internally, helper threads can also have a JSContext. They do not always have
-// an active context, but one may be requested by AutoSetHelperThreadContext,
-// which activates a pre-allocated JSContext for the duration of its lifetime.
-//
 // Runtime
 // -------
 // JSRuntime is very similar to JSContext: each runtime belongs to one context
