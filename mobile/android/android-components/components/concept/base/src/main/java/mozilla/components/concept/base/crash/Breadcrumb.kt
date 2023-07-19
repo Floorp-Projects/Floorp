@@ -45,7 +45,7 @@ data class Breadcrumb(
     val type: Type = Type.DEFAULT,
 
     /**
-     * Date of of the crash breadcrumb.
+     * Date of the crash breadcrumb.
      */
     val date: Date = Date(),
 ) : Parcelable, Comparable<Breadcrumb> {

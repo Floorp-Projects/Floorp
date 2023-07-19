@@ -118,3 +118,20 @@ crash:
     expires: never
     send_in_pings:
       - crash
+
+  cause:
+    type: string
+    description: >
+      The cause of the crash. May be one of `os_fault` or `java_exception`.
+    notification_emails:
+      - crash-reporting-wg@mozilla.org
+      - stability@mozilla.org
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1839697
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1839697#c5
+    data_sensitivity:
+      - technical
+    expires: never
+    send_in_pings:
+      - crash

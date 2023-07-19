@@ -39,6 +39,7 @@ In addition to those built-in metrics, the following metrics are added to the pi
 
 | Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefox/Data_Collection) |
 | --- | --- | --- | --- | --- | --- | --- |
+| crash.cause |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The cause of the crash. May be one of `os_fault` or `java_exception`.  |[Bug 1839697](https://bugzilla.mozilla.org/show_bug.cgi?id=1839697#c5)||never |1 |
 | crash.process_type |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The type of process that experienced a crash. See the full list of options [here](https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/crash-ping.html#process-types).  |[Bug 1790569](https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12)||never |1 |
 | crash.startup |[boolean](https://mozilla.github.io/glean/book/user/metrics/boolean.html) |If true, the crash occurred during process startup.  |[Bug 1790569](https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12)||never |1 |
 | crash.time |[datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) |The time at which the crash occurred.  |[Bug 1790569](https://bugzilla.mozilla.org/show_bug.cgi?id=1790569#c12)||never |1 |

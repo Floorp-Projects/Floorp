@@ -39,6 +39,10 @@ class GleanCrashReporterServiceTest {
         "{\"type\":\"ping\",\"uptimeNanos\":$uptime,\"processType\":\"$type\"," +
             "\"timeMillis\":$time,\"startup\":$startup,\"reason\":\"crash\"}"
 
+    private fun exceptionPingJson(uptime: Long, time: Long, startup: Boolean): String =
+        "{\"type\":\"ping\",\"uptimeNanos\":$uptime,\"processType\":\"main\"," +
+            "\"timeMillis\":$time,\"startup\":$startup,\"reason\":\"crash\",\"cause\":\"java_exception\"}"
+
     @Test
     fun `GleanCrashReporterService records all crash types`() {
         val crashTypes = hashMapOf(
@@ -187,42 +191,52 @@ class GleanCrashReporterServiceTest {
             // Get the file lines
             val lines = service.file.readLines().iterator()
             assertEquals(
-                "First element must be uncaught exception",
+                "element must be uncaught exception",
                 crashCountJson(GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY),
                 lines.next(),
             )
             assertEquals(
-                "Second element must be main process native code crash",
+                "element must be uncaught exception ping",
+                exceptionPingJson(0, 0, false),
+                lines.next(),
+            )
+            assertEquals(
+                "element must be main process native code crash",
                 crashCountJson(GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY),
                 lines.next(),
             )
             assertEquals(
-                "Third element must be main process crash ping",
+                "element must be main process crash ping",
                 crashPingJson(0, "main", 0, false),
                 lines.next(),
             )
             assertEquals(
-                "Fourth element must be uncaught exception",
+                "element must be uncaught exception",
                 crashCountJson(GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY),
                 lines.next(), // skip crash ping line in this test
             )
             assertEquals(
-                "Fifth element must be foreground child process native code crash",
+                "element must be uncaught exception ping",
+                exceptionPingJson(0, 0, false),
+                lines.next(),
+            )
+            assertEquals(
+                "element must be foreground child process native code crash",
                 crashCountJson(GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY),
                 lines.next(),
             )
             assertEquals(
-                "Third element must be foreground process crash ping",
+                "element must be foreground process crash ping",
                 crashPingJson(0, "content", 0, false),
                 lines.next(),
             )
             assertEquals(
-                "Sixth element must be background child process native code crash",
+                "element must be background child process native code crash",
                 crashCountJson(GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY),
                 lines.next(), // skip crash ping line
             )
             assertEquals(
-                "Third element must be background process crash ping",
+                "element must be background process crash ping",
                 crashPingJson(0, "utility", 0, false),
                 lines.next(),
             )
@@ -303,11 +317,16 @@ class GleanCrashReporterServiceTest {
 
             val lines = service.file.readLines()
             assertEquals(
-                "First must be native code crash",
+                "must be native code crash",
                 "{\"type\":\"count\",\"label\":\"${GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY}\"}",
                 lines.first(),
             )
-            assertEquals("bad data in here", lines[1])
+            assertEquals(
+                "must be uncaught exception ping",
+                exceptionPingJson(0, 0, false),
+                lines[1],
+            )
+            assertEquals("bad data in here", lines[2])
         }
 
         run {
@@ -362,6 +381,40 @@ class GleanCrashReporterServiceTest {
                 assertEquals(0L, GleanCrash.uptime.testGetValue())
                 assertEquals("main", GleanCrash.processType.testGetValue())
                 assertEquals(false, GleanCrash.startup.testGetValue())
+                assertEquals("os_fault", GleanCrash.cause.testGetValue())
+                pingReceived = true
+            }
+
+            GleanCrashReporterService(context)
+            assertTrue("Expected ping to be sent", pingReceived)
+        }
+    }
+
+    @Test
+    fun `GleanCrashReporterService serialized pings are forward compatible`() {
+        val service = spy(GleanCrashReporterService(context))
+
+        // Original ping fields (no e.g. `cause` field)
+        service.file.appendText(
+            "{\"type\":\"ping\",\"uptimeNanos\":0,\"processType\":\"main\"," +
+                "\"timeMillis\":0,\"startup\":false,\"reason\":\"crash\"}\n",
+        )
+
+        assertTrue("Persistence file must exist", service.file.exists())
+
+        run {
+            var pingReceived = false
+            GleanPings.crash.testBeforeNextSubmit { _ ->
+                val date = GregorianCalendar().apply {
+                    time = Date(0)
+                }
+                date.set(Calendar.SECOND, 0)
+                date.set(Calendar.MILLISECOND, 0)
+                assertEquals(date.time, GleanCrash.time.testGetValue())
+                assertEquals(0L, GleanCrash.uptime.testGetValue())
+                assertEquals("main", GleanCrash.processType.testGetValue())
+                assertEquals(false, GleanCrash.startup.testGetValue())
+                assertEquals("os_fault", GleanCrash.cause.testGetValue())
                 pingReceived = true
             }
 

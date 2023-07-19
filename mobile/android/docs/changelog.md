@@ -92,6 +92,10 @@ permalink: /changelog/
 * **support-ktx**
   * Removes ifChanged Flow extension functions in favour of `distintUntilChanged` and `distintUntilChangedBy`in `kotlin.coroutines.flow`.
 
+* **lib-crash**
+  * [Bug 1839697](https://bugzilla.mozilla.org/show_bug.cgi?id=1839697). Report Java exceptions in
+    the GleanCrashReporterService.
+
 # 115.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v114..releases_v115)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v115/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
