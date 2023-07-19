@@ -1346,10 +1346,11 @@ bool frontend::DelazifyCanonicalScriptedFunction(JSContext* cx,
 
 template <typename Unit>
 static already_AddRefed<CompilationStencil>
-DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, FrontendContext* fc,
-                                      ScopeBindingCache* scopeCache,
-                                      CompilationStencil& context,
-                                      ScriptIndex scriptIndex) {
+DelazifyCanonicalScriptedFunctionImpl(
+    JSContext* cx, FrontendContext* fc,
+    const JS::PrefableCompileOptions& prefableOptions,
+    ScopeBindingCache* scopeCache, CompilationStencil& context,
+    ScriptIndex scriptIndex) {
   ScriptStencilRef script{context, scriptIndex};
   const ScriptStencilExtra& extra = script.scriptExtra();
 
@@ -1381,7 +1382,7 @@ DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, FrontendContext* fc,
     return nullptr;
   }
 
-  JS::CompileOptions options(cx);
+  JS::CompileOptions options(prefableOptions);
   options.setMutedErrors(ss->mutedErrors())
       .setFileAndLine(ss->filename(), extra.extent.lineno)
       .setColumn(extra.extent.column)
@@ -1402,10 +1403,11 @@ DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, FrontendContext* fc,
 }
 
 already_AddRefed<CompilationStencil>
-frontend::DelazifyCanonicalScriptedFunction(JSContext* cx, FrontendContext* fc,
-                                            ScopeBindingCache* scopeCache,
-                                            CompilationStencil& context,
-                                            ScriptIndex scriptIndex) {
+frontend::DelazifyCanonicalScriptedFunction(
+    JSContext* cx, FrontendContext* fc,
+    const JS::PrefableCompileOptions& prefableOptions,
+    ScopeBindingCache* scopeCache, CompilationStencil& context,
+    ScriptIndex scriptIndex) {
   Maybe<AutoGeckoProfilerEntry> pseudoFrame;
   if (cx) {
     pseudoFrame.emplace(cx, "stencil script delazify",
@@ -1416,13 +1418,13 @@ frontend::DelazifyCanonicalScriptedFunction(JSContext* cx, FrontendContext* fc,
   if (ss->hasSourceType<Utf8Unit>()) {
     // UTF-8 source text.
     return DelazifyCanonicalScriptedFunctionImpl<Utf8Unit>(
-        cx, fc, scopeCache, context, scriptIndex);
+        cx, fc, prefableOptions, scopeCache, context, scriptIndex);
   }
 
   // UTF-16 source text.
   MOZ_ASSERT(ss->hasSourceType<char16_t>());
-  return DelazifyCanonicalScriptedFunctionImpl<char16_t>(cx, fc, scopeCache,
-                                                         context, scriptIndex);
+  return DelazifyCanonicalScriptedFunctionImpl<char16_t>(
+      cx, fc, prefableOptions, scopeCache, context, scriptIndex);
 }
 
 static JSFunction* CompileStandaloneFunction(
