@@ -45,7 +45,9 @@ class AccessibleWrap : public LocalAccessible {
    * We will use an invisible system caret.
    * Gecko is still responsible for drawing its own caret
    */
-  void UpdateSystemCaretFor(LocalAccessible* aAccessible);
+  static void UpdateSystemCaretFor(Accessible* aAccessible,
+                                   const LayoutDeviceIntRect& aCaretRect);
+  static void UpdateSystemCaretFor(LocalAccessible* aAccessible);
   static void UpdateSystemCaretFor(RemoteAccessible* aProxy,
                                    const LayoutDeviceIntRect& aCaretRect);
 
