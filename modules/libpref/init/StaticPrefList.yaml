@@ -10758,12 +10758,7 @@
 # navigator.mediaDevices and getUserMedia() support as well.
 # See also media.navigator.enabled
 - name: media.peerconnection.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-- name: media.peerconnection.scripttransform.enabled
-  type: RelaxedAtomicBool
+  type: bool
   value: true
   mirror: always
 

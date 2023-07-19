@@ -1934,8 +1934,6 @@ STATIC_ATOMS = [
     Atom("ondevicelight", "ondevicelight"),
     # MediaDevices device change event
     Atom("ondevicechange", "ondevicechange"),
-    # WebRTC events
-    Atom("onrtctransform", "onrtctransform"),
     # Internal Visual Viewport events
     Atom("onmozvisualresize", "onmozvisualresize"),
     Atom("onmozvisualscroll", "onmozvisualscroll"),
