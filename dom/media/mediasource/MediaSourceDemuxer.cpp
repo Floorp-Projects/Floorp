@@ -396,7 +396,9 @@ RefPtr<MediaSourceTrackDemuxer::SeekPromise> MediaSourceTrackDemuxer::DoSeek(
   RefPtr<MediaRawData> sample =
       mManager->GetSample(mType, TimeUnit::Zero(), result);
   MOZ_ASSERT(NS_SUCCEEDED(result) && sample);
-  mNextSample = Some(sample);
+  if (sample) {
+    mNextSample = Some(sample);
+  }
   mReset = false;
   {
     MonitorAutoLock mon(mMonitor);
@@ -456,6 +458,7 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples) {
       return SamplesPromise::CreateAndReject(result, __func__);
     }
   }
+  MOZ_DIAGNOSTIC_ASSERT(sample);
   RefPtr<SamplesHolder> samples = new SamplesHolder;
   samples->AppendSample(sample);
   {
