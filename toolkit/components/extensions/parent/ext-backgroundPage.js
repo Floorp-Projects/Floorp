@@ -348,16 +348,6 @@ this.backgroundPage = class extends ExtensionAPI {
     }
     this.bgInstance = null;
 
-    // When in PPB background pages all run in a private context.  This check
-    // simply avoids an extraneous error in the console since the BaseContext
-    // will throw.
-    if (
-      PrivateBrowsingUtils.permanentPrivateBrowsing &&
-      !extension.privateBrowsingAllowed
-    ) {
-      return;
-    }
-
     // Used by runtime messaging to wait for background page listeners.
     let bgStartupPromise = new Promise(resolve => {
       let done = () => {
@@ -649,6 +639,17 @@ this.backgroundPage = class extends ExtensionAPI {
 
   async onManifestEntry(entryName) {
     let { extension } = this;
+
+    // When in PPB background pages all run in a private context.  This check
+    // simply avoids an extraneous error in the console since the BaseContext
+    // will throw.
+    if (
+      PrivateBrowsingUtils.permanentPrivateBrowsing &&
+      !extension.privateBrowsingAllowed
+    ) {
+      return;
+    }
+
     extension.backgroundState = BACKGROUND_STATE.STOPPED;
 
     // runtime.onStartup event support.  We listen for the first
