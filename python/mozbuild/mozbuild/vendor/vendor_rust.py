@@ -75,20 +75,8 @@ Cargo.lock to the HEAD version, run `git checkout -- Cargo.lock` or
 """
 
 
-WINDOWS_UNDESIRABLE_REASON = """\
-The windows and windows-sys crates and their dependencies are too big to \
-vendor, and is a risk of version duplication due to its current update \
-cadence. Until this is worked out with upstream, we prefer to avoid them.\
-"""
-
 PACKAGES_WE_DONT_WANT = {
-    "windows-sys": WINDOWS_UNDESIRABLE_REASON,
-    "windows": WINDOWS_UNDESIRABLE_REASON,
-    "windows_aarch64_msvc": WINDOWS_UNDESIRABLE_REASON,
-    "windows_i686_gnu": WINDOWS_UNDESIRABLE_REASON,
-    "windows_i686_msvc": WINDOWS_UNDESIRABLE_REASON,
-    "windows_x86_64_gnu": WINDOWS_UNDESIRABLE_REASON,
-    "windows_x86_64_msvc": WINDOWS_UNDESIRABLE_REASON,
+    "windows": "The windows crate is too big to vendor.",
 }
 
 PACKAGES_WE_ALWAYS_WANT_AN_OVERRIDE_OF = [
