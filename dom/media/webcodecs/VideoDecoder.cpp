@@ -642,7 +642,9 @@ VideoColorSpaceInit VideoColorSpaceInternal::ToColorSpaceInit() const {
 /* static */
 UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
     const VideoDecoderConfig& aConfig) {
-  if (Validate(aConfig).isErr()) {
+  if (auto r = Validate(aConfig); r.isErr()) {
+    nsCString e = r.unwrapErr();
+    LOGE("Failed to create VideoDecoderConfigInternal: %s", e.get());
     return nullptr;
   }
 
@@ -650,6 +652,10 @@ UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
   if (aConfig.mDescription.WasPassed()) {
     auto rv = GetExtraData(aConfig.mDescription.Value());
     if (rv.isErr()) {  // Invalid description data.
+      LOGE(
+          "Failed to create VideoDecoderConfigInternal due to invalid "
+          "description data. Error: 0x%08" PRIx32,
+          static_cast<uint32_t>(rv.unwrapErr()));
       return nullptr;
     }
     description.emplace(rv.unwrap());
