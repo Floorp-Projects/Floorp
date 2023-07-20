@@ -31,7 +31,7 @@ interface nsIKeyValuePair;
 /**
  * The key/value service.  Enables retrieval of handles to key/value databases.
  */
-[scriptable, uuid(46c893dd-4c14-4de0-b33d-a1be18c6d062)]
+[scriptable, builtinclass, rust_sync, uuid(46c893dd-4c14-4de0-b33d-a1be18c6d062)]
 interface nsIKeyValueService : nsISupports {
     /**
      * Get a handle to an existing database or a newly-created one
@@ -55,7 +55,7 @@ interface nsIKeyValueService : nsISupports {
  * The types of the callbacks vary, but they can all be implemented in JS
  * via an object literal with the relevant methods.
  */
-[scriptable, uuid(c449398e-174c-425b-8195-da6aa0ccd9a5)]
+[scriptable, builtinclass, rust_sync, uuid(c449398e-174c-425b-8195-da6aa0ccd9a5)]
 interface nsIKeyValueDatabase : nsISupports {
     /**
      * Write the specified key/value pair to the database.
@@ -160,7 +160,7 @@ interface nsIKeyValuePair : nsISupports {
  * which is another reason why you should use the kvstore.jsm module from JS
  * instead of accessing this API directly.
  */
-[scriptable, uuid(b9ba7116-b7ff-4717-9a28-a08e6879b199)]
+[scriptable, builtinclass, rust_sync, uuid(b9ba7116-b7ff-4717-9a28-a08e6879b199)]
 interface nsIKeyValueEnumerator : nsISupports {
     bool hasMoreElements();
     nsIKeyValuePair getNext();
