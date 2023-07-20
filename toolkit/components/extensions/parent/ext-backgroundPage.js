@@ -74,7 +74,9 @@ function msSinceProcessStartExcludingSuspend() {
  * SUSPENDING: The background is suspending, runtime.onSuspend will be called.
  * STOPPED:    The background is not running.
  *
- * For persistent backgrounds, the SUSPENDING is not used.
+ * For persistent backgrounds, SUSPENDING is not used.
+ *
+ * See BackgroundContextOwner for the exact relation.
  */
 const BACKGROUND_STATE = {
   STARTING: "starting",
@@ -127,6 +129,7 @@ class BackgroundPage extends HiddenExtensionPage {
       });
 
       context = await contextPromise;
+      // NOTE: context can be null if the load failed.
 
       this.msSinceCreated = msSinceProcessStartExcludingSuspend();
 
@@ -179,6 +182,7 @@ class BackgroundWorker {
     const { extension } = this;
     let context;
     const contextPromise = new Promise(resolve => {
+      // TODO bug 1844486: resolve and/or unwatch when startup is interrupted.
       let unwatch = watchExtensionWorkerContextLoaded(
         { extension, viewType: "background_worker" },
         context => {
@@ -194,6 +198,10 @@ class BackgroundWorker {
     await serviceWorkerManager.registerForAddonPrincipal(
       this.extension.principal
     );
+
+    // TODO bug 1844486: Confirm that a shutdown() call during the above or
+    // below `await` calls can interrupt build() without leaving a stray worker
+    // registration behind.
 
     context = await contextPromise;
 
@@ -254,9 +262,288 @@ class BackgroundWorker {
   }
 }
 
-this.backgroundPage = class extends ExtensionAPI {
-  async build() {
+/**
+ * The BackgroundContextOwner is instantiated at most once per extension and
+ * tracks the state of the background context. State changes can be triggered
+ * by explicit calls to methods with the "setBgState" prefix, but also by the
+ * background context itself, e.g. via an extension process crash.
+ *
+ * This class identifies the following stages of interest:
+ *
+ * 1. Initially no active background, waiting for a signal to get started.
+ *    - method: none (at constructor and after setBgStateStopped)
+ *    - state: STOPPED
+ *    - context: null
+ * 2. Parent-triggered background startup
+ *    - method: setBgStateStarting
+ *    - state: STARTING (was STOPPED)
+ *    - context: null
+ * 3. Background context creation observed in parent
+ *    - method: none (observed by ExtensionParent's recvCreateProxyContext)
+ *      TODO: add method to observe and keep track of it sooner than stage 4.
+ *    - state: STARTING
+ *    - context: ProxyContextParent subclass (was null)
+ * 4. Parent-observed background startup completion
+ *    - method: setBgStateRunning
+ *    - state: RUNNING (was STARTING)
+ *    - context: ProxyContextParent (was null)
+ * 5. Background context unloaded for any reason
+ *    - method: setBgStateStopped
+ *      TODO bug 1844217: This is only implemented for process crashes and
+ *          intentionally triggered terminations, not navigations/reloads.
+ *          When unloads happen due to navigations/reloads, context will be
+ *          null but the state will still be RUNNING.
+ *    - state: STOPPED (was STOPPED, STARTING, RUNNING or SUSPENDING)
+ *    - context: null (was ProxyContextParent if stage 4 ran).
+ *    - Continue at stage 1 if the extension has not shut down yet.
+ */
+class BackgroundContextOwner {
+  /**
+   * @property {BackgroundBuilder} backgroundBuilder
+   *
+   * The source of parent-triggered background state changes.
+   */
+  backgroundBuilder;
+
+  /**
+   * @property {Extension} [extension]
+   *
+   * The Extension associated with the background. This is always set and
+   * cleared at extension shutdown.
+   */
+  extension;
+
+  /**
+   * @property {BackgroundPage|BackgroundWorker} [bgInstance]
+   *
+   * The BackgroundClass instance responsible for creating the background
+   * context. This is set as soon as there is a desire to start a background,
+   * and cleared as soon as the background context is not wanted any more.
+   *
+   * This field is set iff extension.backgroundState is not STOPPED.
+   */
+  bgInstance = null;
+
+  /**
+   * @property {ExtensionPageContextParent|BackgroundWorkerContextParent} [context]
+   *
+   * The parent-side counterpart to a background context in a child. The value
+   * is a subclass of ProxyContextParent, which manages its own lifetime. The
+   * class is ultimately instantiated through bgInstance. It can be destroyed by
+   * bgInstance or externally (e.g. by the context itself or a process crash).
+   * The reference to the context is cleared as soon as the context is unloaded.
+   *
+   * This is currently set when the background has fully loaded. To access the
+   * background context before that, use |extension.backgroundContext|.
+   *
+   * This field is set when extension.backgroundState is RUNNING or SUSPENDING.
+   */
+  context = null;
+
+  /**
+   * @param {BackgroundBuilder} backgroundBuilder
+   * @param {Extension} extension
+   */
+  constructor(backgroundBuilder, extension) {
+    this.backgroundBuilder = backgroundBuilder;
+    this.extension = extension;
+    this.onExtensionProcessCrashed = this.onExtensionProcessCrashed.bind(this);
+
+    extension.backgroundState = BACKGROUND_STATE.STOPPED;
+
+    extensions.on("extension-process-crash", this.onExtensionProcessCrashed);
+  }
+
+  /**
+   * setBgStateStarting - right before the background context is initialized.
+   *
+   * @param {BackgroundWorker|BackgroundPage} bgInstance
+   */
+  setBgStateStarting(bgInstance) {
+    if (!this.extension) {
+      throw new Error(`Cannot start background after extension shutdown.`);
+    }
     if (this.bgInstance) {
+      throw new Error(`Cannot start multiple background instances`);
+    }
+    this.extension.backgroundState = BACKGROUND_STATE.STARTING;
+    this.bgInstance = bgInstance;
+  }
+
+  /**
+   * setBgStateRunning - when the background context has fully loaded.
+   *
+   * This method may throw if the background should no longer be active; if that
+   * is the case, the caller should make sure that the background is cleaned up
+   * by calling setBgStateStopped.
+   *
+   * @param {ExtensionPageContextParent|BackgroundWorkerContextParent} context
+   */
+  setBgStateRunning(context) {
+    if (!this.extension) {
+      // Caller should have checked this.
+      throw new Error(`Extension has shut down before startup completion.`);
+    }
+    if (this.context) {
+      // This can currently not happen - we set the context only once.
+      // TODO bug 1844217: Handle navigation (bug 1286083). For now, reject.
+      throw new Error(`Context already set before at startup completion.`);
+    }
+    if (!context) {
+      throw new Error(`Context not found at startup completion.`);
+    }
+    if (context.unloaded) {
+      throw new Error(`Context has unloaded before startup completion.`);
+    }
+    this.extension.backgroundState = BACKGROUND_STATE.RUNNING;
+    this.context = context;
+    context.callOnClose(this);
+
+    // When the background startup completes successfully, update the set of
+    // events that should be persisted.
+    EventManager.clearPrimedListeners(this.extension, true);
+
+    // This notification will be balanced in setBgStateStopped / close.
+    notifyBackgroundScriptStatus(this.extension.id, true);
+
+    this.extension.emit("background-script-started");
+  }
+
+  /**
+   * setBgStateStopped - when the background context has unloaded or should be
+   * unloaded. Regardless of the actual state at the entry of this method, upon
+   * returning the background is considered stopped.
+   *
+   * If the context was active at the time of the invocation, the actual unload
+   * of |this.context| is asynchronous as it may involve a round-trip to the
+   * child process.
+   *
+   * @param {boolean} [isAppShutdown]
+   */
+  setBgStateStopped(isAppShutdown) {
+    const backgroundState = this.extension.backgroundState;
+    if (this.context) {
+      this.context.forgetOnClose(this);
+      this.context = null;
+      // This is the counterpart to the notification in setBgStateRunning.
+      notifyBackgroundScriptStatus(this.extension.id, false);
+    }
+
+    // We only need to call clearPrimedListeners for states STOPPED and STARTING
+    // because setBgStateRunning clears all primed listeners when it switches
+    // from STARTING to RUNNING. Further, the only way to get primed listeners
+    // is by a primeListeners call, which only happens in the STOPPED state.
+    if (
+      backgroundState === BACKGROUND_STATE.STOPPED ||
+      backgroundState === BACKGROUND_STATE.STARTING
+    ) {
+      EventManager.clearPrimedListeners(this.extension, false);
+    }
+
+    // Ensure there is no backgroundTimer running
+    this.backgroundBuilder.clearIdleTimer();
+
+    const bgInstance = this.bgInstance;
+    if (bgInstance) {
+      this.bgInstance = null;
+      isAppShutdown ||= Services.startup.shuttingDown;
+      // bgInstance.shutdown() unloads the associated context, if any.
+      bgInstance.shutdown(isAppShutdown);
+      this.backgroundBuilder.onBgInstanceShutdown(bgInstance);
+    }
+
+    this.extension.backgroundState = BACKGROUND_STATE.STOPPED;
+    if (backgroundState === BACKGROUND_STATE.STARTING) {
+      this.extension.emit("background-script-aborted");
+    }
+
+    if (this.extension.hasShutdown) {
+      this.extension = null;
+    } else if (this.extension.persistentBackground) {
+      // A crashed background page is gone until the extension restarts.
+      // TODO bug 1844490: Consider priming background pages like event pages.
+      // See also the end of terminateBackground().
+    } else {
+      // Prime again, so that a stopped background can always be revived when
+      // needed.
+      this.backgroundBuilder.primeBackground(false);
+    }
+  }
+
+  // Called by registration via context.callOnClose (if this.context is set).
+  close() {
+    // close() is called when:
+    // - background context unloads (without replacement context).
+    // - extension process crashes (without replacement context).
+    // - background context reloads (context likely replaced by new context).
+    // - background context navigates (context likely replaced by new context).
+    //
+    // When the background is gone without replacement, switch to STOPPED.
+    // TODO bug 1286083: Drop support for navigations.
+
+    // To fully maintain the state, we should call this.setBgStateStopped();
+    // But we cannot do that yet because that would close background pages upon
+    // reload and navigation, which would be a backwards-incompatible change.
+    // For now, we only do the bare minimum here.
+    //
+    // Note that once a navigation or reload starts, that the context is
+    // untracked. This is a pre-existing issue that we should fix later.
+    // TODO bug 1844217: Detect context replacement and update this.context.
+    if (this.context) {
+      this.context.forgetOnClose(this);
+      this.context = null;
+      // This is the counterpart to the notification in setBgStateRunning.
+      notifyBackgroundScriptStatus(this.extension.id, false);
+    }
+  }
+
+  onExtensionProcessCrashed(eventName, data) {
+    // data.childID holds the process ID of the crashed extension process.
+    // For now, assume that there is only one, so clean up unconditionally.
+
+    // We only need to clean up if a bgInstance has been created. Without it,
+    // there is only state in the parent process, not the child, and a crashed
+    // extension process doesn't affect us.
+    if (this.bgInstance) {
+      this.setBgStateStopped();
+    }
+  }
+
+  // Called by ExtensionAPI.onShutdown (once).
+  onShutdown(isAppShutdown) {
+    // If a background context was active during extension shutdown, then
+    // close() was called before onShutdown, which clears |this.extension|.
+    // If the background has not fully started yet, then we have to clear here.
+    if (this.extension) {
+      this.setBgStateStopped(isAppShutdown);
+    }
+    extensions.off("extension-process-crash", this.onExtensionProcessCrashed);
+  }
+}
+
+/**
+ * BackgroundBuilder manages the creation and parent-triggered termination of
+ * the background context. Non-parent-triggered terminations are usually due to
+ * an external cause (e.g. crashes) and detected by BackgroundContextOwner.
+ *
+ * Because these external terminations can happen at any time, and the creation
+ * and suspension of the background context is async, the methods of this
+ * BackgroundBuilder class necessarily need to check the state of the background
+ * before proceeding with the operation (and abort + clean up as needed).
+ *
+ * The following interruptions are explicitly accounted for:
+ * - Extension shuts down.
+ * - Background unloads for any reason.
+ * - Another background instance starts in the meantime.
+ */
+class BackgroundBuilder {
+  constructor(extension) {
+    this.extension = extension;
+    this.backgroundContextOwner = new BackgroundContextOwner(this, extension);
+  }
+
+  async build() {
+    if (this.backgroundContextOwner.bgInstance) {
       return;
     }
 
@@ -268,23 +555,19 @@ this.backgroundPage = class extends ExtensionAPI {
 
     let BackgroundClass = this.isWorker ? BackgroundWorker : BackgroundPage;
 
-    this.bgInstance = new BackgroundClass(extension, manifest.background);
+    const bgInstance = new BackgroundClass(extension, manifest.background);
+    this.backgroundContextOwner.setBgStateStarting(bgInstance);
     let context;
     try {
-      context = await this.bgInstance.build();
-      // Top level execution already happened, RUNNING is
-      // a touch after the fact.
-      if (context && this.extension) {
-        extension.backgroundState = BACKGROUND_STATE.RUNNING;
-      }
+      context = await bgInstance.build();
     } catch (e) {
       Cu.reportError(e);
-      if (extension.persistentListeners) {
-        // Clear the primed listeners, but leave them persisted.
-        EventManager.clearPrimedListeners(extension, false);
+      // If background startup gets interrupted (e.g. extension shutdown),
+      // bgInstance.shutdown() is called and backgroundContextOwner.bgInstance
+      // is cleared.
+      if (this.backgroundContextOwner.bgInstance === bgInstance) {
+        this.backgroundContextOwner.setBgStateStopped();
       }
-      extension.backgroundState = BACKGROUND_STATE.STOPPED;
-      extension.emit("background-script-aborted");
       return;
     }
 
@@ -296,28 +579,17 @@ this.backgroundPage = class extends ExtensionAPI {
       context.listenerPromises = null;
     }
 
-    if (extension.persistentListeners) {
-      // |this.extension| may be null if the extension was shut down.
-      // In that case, we still want to clear the primed listeners,
-      // but not update the persistent listeners in the startupData.
-      EventManager.clearPrimedListeners(extension, !!this.extension);
-    }
-
-    if (!context || !this.extension) {
-      extension.backgroundState = BACKGROUND_STATE.STOPPED;
-      extension.emit("background-script-aborted");
+    if (this.backgroundContextOwner.bgInstance !== bgInstance) {
+      // Background closed/restarted in the meantime.
       return;
     }
-    if (!context.unloaded) {
-      notifyBackgroundScriptStatus(extension.id, true);
-      context.callOnClose({
-        close() {
-          notifyBackgroundScriptStatus(extension.id, false);
-        },
-      });
-    }
 
-    extension.emit("background-script-started");
+    try {
+      this.backgroundContextOwner.setBgStateRunning(context);
+    } catch (e) {
+      Cu.reportError(e);
+      this.backgroundContextOwner.setBgStateStopped();
+    }
   }
 
   observe(subject, topic, data) {
@@ -343,10 +615,11 @@ this.backgroundPage = class extends ExtensionAPI {
   primeBackground(isInStartup = true) {
     let { extension } = this;
 
-    if (this.bgInstance) {
-      Cu.reportError(`background script exists before priming ${extension.id}`);
+    if (this.backgroundContextOwner.bgInstance) {
+      // This should never happen. The need to prime listeners is mutually
+      // exclusive with the existence of a background instance.
+      throw new Error(`bgInstance exists before priming ${extension.id}`);
     }
-    this.bgInstance = null;
 
     // Used by runtime messaging to wait for background page listeners.
     let bgStartupPromise = new Promise(resolve => {
@@ -445,6 +718,10 @@ this.backgroundPage = class extends ExtensionAPI {
     // After the background is started, initiate the first timer
     extension.once("background-script-started", resetBackgroundIdle);
 
+    // TODO bug 1844488: terminateBackground should account for externally
+    // triggered background restarts. It does currently performs various
+    // backgroundState checks, but it is possible for the background to have
+    // been crashes or restarted in the meantime.
     extension.terminateBackground = async ({
       ignoreDevToolsAttached = false,
       disableResetIdleForTest = false, // Disable all reset idle checks for testing purpose.
@@ -553,7 +830,6 @@ this.backgroundPage = class extends ExtensionAPI {
         return;
       }
       extension.off("background-script-reset-idle", resetBackgroundIdle);
-      this.onShutdown(false);
 
       // TODO(Bug 1790087): record similar telemetry for background service worker.
       if (!this.isWorker) {
@@ -563,9 +839,15 @@ this.backgroundPage = class extends ExtensionAPI {
         });
       }
 
-      EventManager.clearPrimedListeners(this.extension, false);
-      // Setup background startup listeners for next primed event.
-      this.primeBackground(false);
+      this.backgroundContextOwner.setBgStateStopped(false);
+      if (extension.persistentBackground && this.extension) {
+        // Several unit tests are currently relying on terminateBackground() to
+        // prime listeners. This is correct for event pages, but not for
+        // persistent background pages!
+        // TODO bug 1844490: Resolve inconsistency, see persistentBackground
+        // check in setBgStateStopped.
+        this.primeBackground(false);
+      }
     };
 
     EventManager.primeListeners(extension, isInStartup);
@@ -591,24 +873,16 @@ this.backgroundPage = class extends ExtensionAPI {
     });
   }
 
-  onShutdown(isAppShutdown) {
-    this.extension.backgroundState = BACKGROUND_STATE.STOPPED;
-    // Ensure there is no backgroundTimer running
-    this.clearIdleTimer();
+  onBgInstanceShutdown(bgInstance) {
+    const { msSinceCreated } = bgInstance;
+    const { extension } = this;
 
-    if (this.bgInstance) {
-      const { msSinceCreated } = this.bgInstance;
-      this.bgInstance.shutdown(isAppShutdown);
-      this.bgInstance = null;
+    // Emit an event for tests.
+    extension.emit("shutdown-background-script");
 
-      const { extension } = this;
-
-      // Emit an event for tests.
-      extension.emit("shutdown-background-script");
-
+    if (msSinceCreated) {
       const now = msSinceProcessStartExcludingSuspend();
       if (
-        msSinceCreated &&
         now &&
         // TODO(Bug 1790087): record similar telemetry for background service worker.
         !(this.isWorker || extension.persistentBackground)
@@ -618,11 +892,11 @@ this.backgroundPage = class extends ExtensionAPI {
           value: now - msSinceCreated,
         });
       }
-    } else {
-      EventManager.clearPrimedListeners(this.extension, false);
     }
   }
+}
 
+this.backgroundPage = class extends ExtensionAPI {
   async onManifestEntry(entryName) {
     let { extension } = this;
 
@@ -636,7 +910,7 @@ this.backgroundPage = class extends ExtensionAPI {
       return;
     }
 
-    extension.backgroundState = BACKGROUND_STATE.STOPPED;
+    this.backgroundBuilder = new BackgroundBuilder(extension);
 
     // runtime.onStartup event support.  We listen for the first
     // background startup then emit a first-run event.
@@ -644,7 +918,7 @@ this.backgroundPage = class extends ExtensionAPI {
       extension.emit("background-first-run");
     });
 
-    this.primeBackground();
+    this.backgroundBuilder.primeBackground();
 
     // Persistent backgrounds are started immediately except during APP_STARTUP.
     // Non-persistent backgrounds must be started immediately for new install or enable
@@ -657,7 +931,7 @@ this.backgroundPage = class extends ExtensionAPI {
     ) {
       // TODO bug 1543354: Avoid AsyncShutdown timeouts by removing the await
       // here, at least for non-test situations.
-      await this.build();
+      await this.backgroundBuilder.build();
 
       // The task in ExtensionParent.browserPaintedPromise below would be fully
       // skipped because of the above build() that sets bgInstance. Return early
@@ -668,7 +942,10 @@ this.backgroundPage = class extends ExtensionAPI {
     ExtensionParent.browserStartupPromise.then(() => {
       // Return early if the background has started in the meantime. This can
       // happen if a primed listener (isInStartup) has been triggered.
-      if (this.bgInstance) {
+      if (
+        !this.backgroundBuilder ||
+        this.backgroundBuilder.backgroundContextOwner.bgInstance
+      ) {
         return;
       }
 
@@ -692,5 +969,12 @@ this.backgroundPage = class extends ExtensionAPI {
         EventManager.primeListeners(extension, false);
       }
     });
+  }
+
+  onShutdown(isAppShutdown) {
+    if (this.backgroundBuilder) {
+      this.backgroundBuilder.backgroundContextOwner.onShutdown(isAppShutdown);
+      this.backgroundBuilder = null;
+    }
   }
 };
