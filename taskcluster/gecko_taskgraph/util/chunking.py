@@ -14,6 +14,7 @@ from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_runtime, tags
 from mozbuild.util import memoize
 from moztest.resolve import TEST_SUITES, TestManifestLoader, TestResolver
+from taskgraph.util.yaml import load_yaml
 
 from gecko_taskgraph import GECKO
 from gecko_taskgraph.util.bugbug import CT_LOW, BugbugTimeoutException, push_schedules
@@ -45,22 +46,11 @@ def guess_mozinfo_from_task(task, repo=""):
         "bits": 32 if "32" in arch else 64,
         "ccov": setting["build"].get("ccov", False),
         "debug": setting["build"]["type"] in ("debug", "debug-isolated-process"),
-        "e10s": not setting["runtime"].get("1proc", False),
-        "no-fission": "no-fission" in setting["runtime"].keys(),
-        "fission": any(
-            "1proc" not in key or "no-fission" not in key
-            for key in setting["runtime"].keys()
-        ),
         "headless": "-headless" in task["test-name"],
-        "condprof": "conditioned_profile" in setting["runtime"].keys(),
         "tsan": setting["build"].get("tsan", False),
-        "xorigin": any("xorigin" in key for key in setting["runtime"].keys()),
-        "socketprocess_networking": "socketprocess_networking"
-        in setting["runtime"].keys(),
         "nightly_build": repo in ["mozilla-central", "autoland", "try", ""],  # trunk
-        "http3": "http3" in setting["runtime"].keys(),
-        "wmfme": "wmf-media-engine" in setting["runtime"].keys(),
     }
+
     for platform in ("android", "linux", "mac", "win"):
         if p_os["name"].startswith(platform):
             info["os"] = platform
@@ -108,6 +98,25 @@ def guess_mozinfo_from_task(task, repo=""):
         if p_os["name"] == name and p_os["version"] == old_ver:
             info["os_version"] = new_ver
             break
+
+    test_variants = load_yaml(GECKO, "taskcluster", "ci", "test", "variants.yml")
+    for variant in test_variants:
+        tag = test_variants[variant]["suffix"]
+        value = variant in setting["runtime"].keys()
+
+        if tag == "1proc":
+            tag = "e10s"
+            value = not value
+        if tag == "fis":
+            tag = "fission"
+            value = any(
+                "1proc" not in key or "no-fission" not in key
+                for key in setting["runtime"].keys()
+            )
+        if tag == "xorigin":
+            value = any("xorigin" in key for key in setting["runtime"].keys())
+
+        info[tag] = value
 
     return info
 
