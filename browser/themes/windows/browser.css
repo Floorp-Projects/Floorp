@@ -38,6 +38,20 @@
   color: -moz-menuhovertext;
 }
 
+@media (-moz-windows-default-theme) {
+  #main-menubar > menu[_moz-menuactive="true"] {
+    color: inherit;
+  }
+
+  #main-menubar > menu[_moz-menuactive="true"] {
+    background-color: hsla(0,0%,0%,.12);
+  }
+
+  #toolbar-menubar[brighttext] > #menubar-items > #main-menubar > menu[_moz-menuactive="true"] {
+    background-color: hsla(0,0%,100%,.22);
+  }
+}
+
 /* Use a different color in inactive windows. */
 @media (-moz-windows-default-theme) {
   #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive {
@@ -100,16 +114,6 @@
 
 /* Titlebar */
 
-:root[tabsintitlebar][sizemode="normal"] #titlebar {
-  appearance: auto;
-  -moz-default-appearance: -moz-window-titlebar;
-}
-
-:root[tabsintitlebar][sizemode="maximized"] #titlebar {
-  appearance: auto;
-  -moz-default-appearance: -moz-window-titlebar-maximized;
-}
-
 .titlebar-buttonbox {
   appearance: none;
   /* The button box must appear on top of the navigator-toolbox in order for
@@ -127,31 +131,165 @@
 
 /* Window control buttons */
 
+.titlebar-button {
+  appearance: none;
+  border: none;
+  margin: 0;
+  padding: 8px 17px;
+  -moz-context-properties: stroke;
+  stroke: currentColor;
+}
+
+
 .titlebar-min {
-  appearance: auto;
+  /* Even though we use appearance: none, -moz-default-appearance is necessary
+   * for Windows 11's "snap layouts" feature, see
+   * DealWithWindowsAppearanceHacks */
   -moz-default-appearance: -moz-window-button-minimize;
-  margin-inline-end: 2px;
+  list-style-image: url(chrome://browser/skin/window-controls/minimize.svg);
 }
 
 .titlebar-max {
-  appearance: auto;
   -moz-default-appearance: -moz-window-button-maximize;
+  list-style-image: url(chrome://browser/skin/window-controls/maximize.svg);
 }
 
 .titlebar-restore {
-  appearance: auto;
   -moz-default-appearance: -moz-window-button-restore;
+  list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
 }
 
 .titlebar-close {
-  appearance: auto;
   -moz-default-appearance: -moz-window-button-close;
+  list-style-image: url(chrome://browser/skin/window-controls/close.svg);
 }
 
-:root[tabletmode] .titlebar-min,
-:root[tabletmode] .titlebar-restore,
-:root[tabletmode] .titlebar-max {
+:root[tabletmode] .titlebar-button {
   display: none;
+}
+
+.titlebar-button > .toolbarbutton-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.titlebar-restore > .toolbarbutton-icon:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
+:root[lwtheme-image] .titlebar-button {
+  -moz-context-properties: unset;
+}
+:root[lwtheme-image] .titlebar-min {
+  list-style-image: url(chrome://browser/skin/window-controls/minimize-themes.svg);
+}
+:root[lwtheme-image] .titlebar-max {
+  list-style-image: url(chrome://browser/skin/window-controls/maximize-themes.svg);
+}
+:root[lwtheme-image] .titlebar-restore {
+  list-style-image: url(chrome://browser/skin/window-controls/restore-themes.svg);
+}
+:root[lwtheme-image] .titlebar-close {
+  list-style-image: url(chrome://browser/skin/window-controls/close-themes.svg);
+}
+
+@media (-moz-windows-default-theme) {
+  .titlebar-button:hover {
+    background-color: hsla(0,0%,0%,.12);
+  }
+  .titlebar-button:hover:active {
+    background-color: hsla(0,0%,0%,.22);
+  }
+  toolbar[brighttext] .titlebar-button:not(.titlebar-close):hover {
+    background-color: hsla(0,0%,100%,.22);
+  }
+  toolbar[brighttext] .titlebar-button:not(.titlebar-close):hover:active {
+    background-color: hsla(0,0%,100%,.32);
+  }
+
+  .titlebar-close:hover {
+    stroke: white;
+    background-color: hsl(355,86%,49%);
+  }
+
+  .titlebar-close:hover:active {
+    background-color: hsl(355,82%,69%);
+  }
+
+  .titlebar-button:not(:hover) > .toolbarbutton-icon:-moz-window-inactive {
+    opacity: 0.5;
+  }
+}
+
+@media not (-moz-windows-default-theme) {
+  .titlebar-button {
+    background-color: -moz-field;
+    stroke: ButtonText;
+  }
+  .titlebar-button:hover {
+    background-color: SelectedItem;
+    stroke: SelectedItemText;
+  }
+
+  .titlebar-min {
+    list-style-image: url(chrome://browser/skin/window-controls/minimize-highcontrast.svg);
+  }
+
+  .titlebar-max {
+    list-style-image: url(chrome://browser/skin/window-controls/maximize-highcontrast.svg);
+  }
+
+  .titlebar-restore {
+    list-style-image: url(chrome://browser/skin/window-controls/restore-highcontrast.svg);
+  }
+
+  .titlebar-close {
+    list-style-image: url(chrome://browser/skin/window-controls/close-highcontrast.svg);
+  }
+}
+
+/* the 12px image renders a 10px icon, and the 10px upscaled gets rounded to 12.5, which
+ * rounds up to 13px, which makes the icon one pixel too big on 1.25dppx. Fix: */
+@media (1.20dppx <= resolution <= 1.45dppx) {
+  .titlebar-button > .toolbarbutton-icon {
+    width: 11.5px;
+    height: 11.5px;
+  }
+}
+
+/* 175% dpi should result in the same device pixel sizes as 150% dpi. */
+@media (1.70dppx <= resolution <= 1.95dppx) {
+  .titlebar-button {
+    padding-inline: 14.1px;
+  }
+
+  .titlebar-button > .toolbarbutton-icon {
+    width: 10.8px;
+    height: 10.8px;
+  }
+}
+
+/* 225% dpi should result in the same device pixel sizes as 200% dpi. */
+@media (2.20dppx <= resolution <= 2.45dppx) {
+  .titlebar-button {
+    padding-inline: 15.3333px;
+  }
+
+  .titlebar-button > .toolbarbutton-icon {
+    width: 10.8px;
+    height: 10.8px;
+  }
+}
+
+/* 275% dpi should result in the same device pixel sizes as 250% dpi. */
+@media (2.70dppx <= resolution <= 2.95dppx) {
+  /* NB: todo: this should also change padding on the buttons
+   * themselves, but without a device to test this on, it's
+   * impossible to know by how much. */
+  .titlebar-button > .toolbarbutton-icon {
+    width: 10.8px;
+    height: 10.8px;
+  }
 }
 
 /* Bookmark menus */
@@ -175,7 +313,6 @@ menuitem.bookmark-item {
 .bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-text {
   opacity: 0.7;
 }
-
 
 /* Address bar */
 

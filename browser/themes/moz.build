@@ -22,11 +22,6 @@ BROWSER_CHROME_MANIFESTS += [
 
 toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
 
-if toolkit == "windows":
-    EXTRA_JS_MODULES += [
-        "Windows8WindowFrameColor.sys.mjs",
-    ]
-
 if toolkit == "cocoa":
     DIRS += ["osx"]
 elif toolkit == "gtk":

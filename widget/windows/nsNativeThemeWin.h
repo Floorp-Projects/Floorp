@@ -87,8 +87,6 @@ class nsNativeThemeWin : public Theme {
 
   bool ThemeNeedsComboboxDropmarker() override;
 
-  bool WidgetAppearanceDependsOnWindowFocus(StyleAppearance) override;
-
   nsNativeThemeWin();
 
  protected:

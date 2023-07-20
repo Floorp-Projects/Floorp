@@ -34,7 +34,6 @@ enum nsUXThemeClass {
   eUXHeader,
   eUXListview,
   eUXMenu,
-  eUXWindowFrame,
   eUXNumClasses
 };
 
