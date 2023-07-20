@@ -62,4 +62,4 @@ impl Sprite {
     }
 }
 
-uniffi::include_scaffolding!("sprites");
+include!(concat!(env!("OUT_DIR"), "/sprites.uniffi.rs"));

@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::backend::CodeType;
+use crate::backend::{CodeOracle, CodeType};
 
-#[derive(Debug)]
 pub struct ObjectCodeType {
     id: String,
 }
@@ -16,11 +15,11 @@ impl ObjectCodeType {
 }
 
 impl CodeType for ObjectCodeType {
-    fn type_label(&self) -> String {
-        super::SwiftCodeOracle.class_name(&self.id)
+    fn type_label(&self, oracle: &dyn CodeOracle) -> String {
+        oracle.class_name(&self.id)
     }
 
-    fn canonical_name(&self) -> String {
+    fn canonical_name(&self, _oracle: &dyn CodeOracle) -> String {
         format!("Type{}", self.id)
     }
 }

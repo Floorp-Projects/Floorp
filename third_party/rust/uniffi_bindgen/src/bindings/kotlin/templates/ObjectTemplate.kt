@@ -1,4 +1,4 @@
-{%- let obj = ci|get_object_definition(name) %}
+{%- let obj = ci.get_object_definition(name).unwrap() %}
 {%- if self.include_once_check("ObjectRuntime.kt") %}{% include "ObjectRuntime.kt" %}{% endif %}
 {{- self.add_import("java.util.concurrent.atomic.AtomicLong") }}
 {{- self.add_import("java.util.concurrent.atomic.AtomicBoolean") }}
@@ -6,20 +6,15 @@
 public interface {{ type_name }}Interface {
     {% for meth in obj.methods() -%}
     {%- match meth.throws_type() -%}
-    {%- when Some with (throwable) -%}
-    @Throws({{ throwable|error_type_name }}::class)
-    {%- when None -%}
-    {%- endmatch %}
-    {% if meth.is_async() -%}
-    suspend fun {{ meth.name()|fn_name }}({% call kt::arg_list_decl(meth) %})
+    {%- when Some with (throwable) %}
+    @Throws({{ throwable|type_name }}::class)
     {%- else -%}
+    {%- endmatch %}
     fun {{ meth.name()|fn_name }}({% call kt::arg_list_decl(meth) %})
-    {%- endif %}
     {%- match meth.return_type() -%}
     {%- when Some with (return_type) %}: {{ return_type|type_name -}}
-    {%- when None -%}
-    {%- endmatch -%}
-
+    {%- else -%}
+    {%- endmatch %}
     {% endfor %}
 }
 
@@ -51,44 +46,11 @@ class {{ type_name }}(
     {% for meth in obj.methods() -%}
     {%- match meth.throws_type() -%}
     {%- when Some with (throwable) %}
-    @Throws({{ throwable|error_type_name }}::class)
+    @Throws({{ throwable|type_name }}::class)
     {%- else -%}
-    {%- endmatch -%}
-    {%- if meth.is_async() %}
-    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-    override suspend fun {{ meth.name()|fn_name }}({%- call kt::arg_list_decl(meth) -%}){% match meth.return_type() %}{% when Some with (return_type) %} : {{ return_type|type_name }}{% when None %}{%- endmatch %} {
-        // Create a new `CoroutineScope` for this operation, suspend the coroutine, and call the
-        // scaffolding function, passing it one of the callback handlers from `AsyncTypes.kt`.
-        //
-        // Make sure to retain a reference to the callback handler to ensure that it's not GCed before
-        // it's invoked
-        var callbackHolder: {{ func.result_type().borrow()|future_callback_handler }}? = null
-        return coroutineScope {
-            val scope = this
-            return@coroutineScope suspendCoroutine { continuation ->
-                try {
-                    val callback = {{ meth.result_type().borrow()|future_callback_handler }}(continuation)
-                    callbackHolder = callback
-                    callWithPointer { thisPtr ->
-                        rustCall { status ->
-                            _UniFFILib.INSTANCE.{{ meth.ffi_func().name() }}(
-                                thisPtr,
-                                {% call kt::arg_list_lowered(meth) %}
-                                FfiConverterForeignExecutor.lower(scope),
-                                callback,
-                                USize(0),
-                                status,
-                            )
-                        }
-                    }
-                } catch (e: Exception) {
-                    continuation.resumeWithException(e)
-                }
-            }
-        }
-    }
-    {%- else -%}
+    {%- endmatch %}
     {%- match meth.return_type() -%}
+
     {%- when Some with (return_type) -%}
     override fun {{ meth.name()|fn_name }}({% call kt::arg_list_protocol(meth) %}): {{ return_type|type_name }} =
         callWithPointer {
@@ -103,7 +65,6 @@ class {{ type_name }}(
             {%- call kt::to_ffi_call_with_prefix("it", meth) %}
         }
     {% endmatch %}
-    {% endif %}
     {% endfor %}
 
     {% if !obj.alternate_constructors().is_empty() -%}

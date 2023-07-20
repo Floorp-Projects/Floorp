@@ -1,8 +1,8 @@
-class FfiConverterFloat(FfiConverterPrimitiveFloat):
+class FfiConverterFloat(FfiConverterPrimitive):
     @staticmethod
     def read(buf):
         return buf.readFloat()
 
     @staticmethod
-    def writeUnchecked(value, buf):
+    def write(value, buf):
         buf.writeFloat(value)

@@ -16,5 +16,5 @@ fn test_error_when_singlethread_mode() {
         assert_eq!(ffi::sqlite3_initialize(), ffi::SQLITE_OK);
     }
     let res = Connection::open_in_memory();
-    res.unwrap_err();
+    assert!(res.is_err());
 }

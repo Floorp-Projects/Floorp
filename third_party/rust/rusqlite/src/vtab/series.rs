@@ -28,7 +28,6 @@ const SERIES_COLUMN_STOP: c_int = 2;
 const SERIES_COLUMN_STEP: c_int = 3;
 
 bitflags::bitflags! {
-    #[derive(Clone, Copy)]
     #[repr(C)]
     struct QueryPlanFlags: ::std::os::raw::c_int {
         // start = $value  -- constraint exists
@@ -42,7 +41,7 @@ bitflags::bitflags! {
         // output in ascending order
         const ASC  = 16;
         // Both start and stop
-        const BOTH  = QueryPlanFlags::START.bits() | QueryPlanFlags::STOP.bits();
+        const BOTH  = QueryPlanFlags::START.bits | QueryPlanFlags::STOP.bits;
     }
 }
 
@@ -116,7 +115,6 @@ unsafe impl<'vtab> VTab<'vtab> for SeriesTab {
         }
         if idx_num.contains(QueryPlanFlags::BOTH) {
             // Both start= and stop= boundaries are available.
-            #[allow(clippy::bool_to_int_with_if)]
             info.set_estimated_cost(f64::from(
                 2 - if idx_num.contains(QueryPlanFlags::STEP) {
                     1

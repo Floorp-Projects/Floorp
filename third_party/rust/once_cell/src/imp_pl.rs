@@ -58,7 +58,7 @@ impl<T> OnceCell<T> {
             //   but that is more complicated
             // - finally, if it returns Ok, we store the value and store the flag with
             //   `Release`, which synchronizes with `Acquire`s.
-            let f = unsafe { f.take().unwrap_unchecked() };
+            let f = unsafe { crate::unwrap_unchecked(f.take()) };
             match f() {
                 Ok(value) => unsafe {
                     // Safe b/c we have a unique access and no panic may happen
@@ -101,7 +101,7 @@ impl<T> OnceCell<T> {
     pub(crate) unsafe fn get_unchecked(&self) -> &T {
         debug_assert!(self.is_initialized());
         let slot = &*self.value.get();
-        slot.as_ref().unwrap_unchecked()
+        crate::unwrap_unchecked(slot.as_ref())
     }
 
     /// Gets the mutable reference to the underlying value.

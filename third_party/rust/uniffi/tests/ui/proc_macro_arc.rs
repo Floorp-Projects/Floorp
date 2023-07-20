@@ -2,9 +2,6 @@ use std::sync::Arc;
 
 fn main() {}
 
-// Normally this is defined by the scaffolding code, manually define it for the UI test
-pub struct UniFfiTag;
-
 pub struct Foo;
 
 #[uniffi::export]
@@ -21,4 +18,8 @@ mod child {
     fn take_foo(foo: Arc<Foo>) {
         match &*foo {}
     }
+}
+
+mod uniffi_types {
+    pub use super::Foo;
 }

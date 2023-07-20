@@ -1,10 +1,8 @@
 //! # Overview
 //!
-//! `once_cell` provides two new cell-like types, [`unsync::OnceCell`] and
-//! [`sync::OnceCell`]. A `OnceCell` might store arbitrary non-`Copy` types, can
-//! be assigned to at most once and provides direct access to the stored
-//! contents. The core API looks *roughly* like this (and there's much more
-//! inside, read on!):
+//! `once_cell` provides two new cell-like types, [`unsync::OnceCell`] and [`sync::OnceCell`]. A `OnceCell`
+//! might store arbitrary non-`Copy` types, can be assigned to at most once and provides direct access
+//! to the stored contents. The core API looks *roughly* like this (and there's much more inside, read on!):
 //!
 //! ```rust,ignore
 //! impl<T> OnceCell<T> {
@@ -14,12 +12,11 @@
 //! }
 //! ```
 //!
-//! Note that, like with [`RefCell`] and [`Mutex`], the `set` method requires
-//! only a shared reference. Because of the single assignment restriction `get`
-//! can return a `&T` instead of `Ref<T>` or `MutexGuard<T>`.
+//! Note that, like with [`RefCell`] and [`Mutex`], the `set` method requires only a shared reference.
+//! Because of the single assignment restriction `get` can return a `&T` instead of `Ref<T>`
+//! or `MutexGuard<T>`.
 //!
-//! The `sync` flavor is thread-safe (that is, implements the [`Sync`] trait),
-//! while the `unsync` one is not.
+//! The `sync` flavor is thread-safe (that is, implements the [`Sync`] trait), while the `unsync` one is not.
 //!
 //! [`unsync::OnceCell`]: unsync/struct.OnceCell.html
 //! [`sync::OnceCell`]: sync/struct.OnceCell.html
@@ -82,8 +79,7 @@
 //! }
 //! ```
 //!
-//! There are also the [`sync::Lazy`] and [`unsync::Lazy`] convenience types to
-//! streamline this pattern:
+//! There are also the [`sync::Lazy`] and [`unsync::Lazy`] convenience types to streamline this pattern:
 //!
 //! ```rust
 //! use std::{sync::Mutex, collections::HashMap};
@@ -124,8 +120,7 @@
 //! ```
 //!
 //! If you need a lazy field in a struct, you probably should use `OnceCell`
-//! directly, because that will allow you to access `self` during
-//! initialization.
+//! directly, because that will allow you to access `self` during initialization.
 //!
 //! ```rust
 //! use std::{fs, path::PathBuf};
@@ -161,8 +156,7 @@
 //! }
 //! ```
 //!
-//! This macro can be useful to avoid the "compile regex on every loop
-//! iteration" problem.
+//! This macro can be useful to avoid the "compile regex on every loop iteration" problem.
 //!
 //! ## Runtime `include_bytes!`
 //!
@@ -249,7 +243,7 @@
 //!     let b = B::default();
 //!     a.b.init(&b);
 //!     b.a.init(&a);
-//!
+//!     
 //!     let _a = &a.b.a.b.a;
 //! }
 //! ```
@@ -268,28 +262,23 @@
 //! |`Mutex<T>`            | `MutexGuard<T>`        | may deadlock at runtime, may block the thread |
 //! |`sync::OnceCell<T>`   | `&T`                   | assignable only once, may block the thread    |
 //!
-//! Technically, calling `get_or_init` will also cause a panic or a deadlock if
-//! it recursively calls itself. However, because the assignment can happen only
-//! once, such cases should be more rare than equivalents with `RefCell` and
-//! `Mutex`.
+//! Technically, calling `get_or_init` will also cause a panic or a deadlock if it recursively calls
+//! itself. However, because the assignment can happen only once, such cases should be more rare than
+//! equivalents with `RefCell` and `Mutex`.
 //!
 //! # Minimum Supported `rustc` Version
 //!
 //! This crate's minimum supported `rustc` version is `1.56.0`.
 //!
-//! If only the `std` feature is enabled, MSRV will be updated conservatively,
-//! supporting at least latest 8 versions of the compiler. When using other
-//! features, like `parking_lot`, MSRV might be updated more frequently, up to
-//! the latest stable. In both cases, increasing MSRV is *not* considered a
-//! semver-breaking change.
+//! If only the `std` feature is enabled, MSRV will be updated conservatively, supporting at least latest 8 versions of the compiler.
+//! When using other features, like `parking_lot`, MSRV might be updated more frequently, up to the latest stable.
+//! In both cases, increasing MSRV is *not* considered a semver-breaking change.
 //!
 //! # Implementation details
 //!
-//! The implementation is based on the
-//! [`lazy_static`](https://github.com/rust-lang-nursery/lazy-static.rs/) and
-//! [`lazy_cell`](https://github.com/indiv0/lazycell/) crates and
-//! [`std::sync::Once`]. In some sense, `once_cell` just streamlines and unifies
-//! those APIs.
+//! The implementation is based on the [`lazy_static`](https://github.com/rust-lang-nursery/lazy-static.rs/)
+//! and [`lazy_cell`](https://github.com/indiv0/lazycell/) crates and [`std::sync::Once`]. In some sense,
+//! `once_cell` just streamlines and unifies those APIs.
 //!
 //! To implement a sync flavor of `OnceCell`, this crates uses either a custom
 //! re-implementation of `std::sync::Once` or `parking_lot::Mutex`. This is
@@ -303,66 +292,46 @@
 //!
 //! # F.A.Q.
 //!
+//! **Should I use lazy_static or once_cell?**
+//!
+//! To the first approximation, `once_cell` is both more flexible and more convenient than `lazy_static`
+//! and should be preferred.
+//!
+//! Unlike `once_cell`, `lazy_static` supports spinlock-based implementation of blocking which works with
+//! `#![no_std]`.
+//!
+//! `lazy_static` has received significantly more real world testing, but `once_cell` is also a widely
+//! used crate.
+//!
 //! **Should I use the sync or unsync flavor?**
 //!
-//! Because Rust compiler checks thread safety for you, it's impossible to
-//! accidentally use `unsync` where `sync` is required. So, use `unsync` in
-//! single-threaded code and `sync` in multi-threaded. It's easy to switch
-//! between the two if code becomes multi-threaded later.
+//! Because Rust compiler checks thread safety for you, it's impossible to accidentally use `unsync` where
+//! `sync` is required. So, use `unsync` in single-threaded code and `sync` in multi-threaded. It's easy
+//! to switch between the two if code becomes multi-threaded later.
 //!
-//! At the moment, `unsync` has an additional benefit that reentrant
-//! initialization causes a panic, which might be easier to debug than a
-//! deadlock.
+//! At the moment, `unsync` has an additional benefit that reentrant initialization causes a panic, which
+//! might be easier to debug than a deadlock.
 //!
 //! **Does this crate support async?**
 //!
-//! No, but you can use
-//! [`async_once_cell`](https://crates.io/crates/async_once_cell) instead.
-//!
-//! **Does this crate support `no_std`?**
-//!
-//! Yes, but with caveats. `OnceCell` is a synchronization primitive which
-//! _semantically_ relies on blocking. `OnceCell` guarantees that at most one
-//! `f` will be called to compute the value. If two threads of execution call
-//! `get_or_init` concurrently, one of them has to wait.
-//!
-//! Waiting fundamentally requires OS support. Execution environment needs to
-//! understand who waits on whom to prevent deadlocks due to priority inversion.
-//! You _could_ make code to compile by blindly using pure spinlocks, but the
-//! runtime behavior would be subtly wrong.
-//!
-//! Given these constraints, `once_cell` provides the following options:
-//!
-//! - The `race` module provides similar, but distinct synchronization primitive
-//!   which is compatible with `no_std`. With `race`, the `f` function can be
-//!   called multiple times by different threads, but only one thread will win
-//!   to install the value.
-//! - `critical-section` feature (with a `-`, not `_`) uses `critical_section`
-//!   to implement blocking.
+//! No, but you can use [`async_once_cell`](https://crates.io/crates/async_once_cell) instead.
 //!
 //! **Can I bring my own mutex?**
 //!
-//! There is [generic_once_cell](https://crates.io/crates/generic_once_cell) to
-//! allow just that.
-//!
-//! **Should I use `std::cell::OnceCell`, `once_cell`, or `lazy_static`?**
-//!
-//! If you can use `std` version (your MSRV is at least 1.70, and you don't need
-//! extra features `once_cell` provides), use `std`. Otherwise, use `once_cell`.
-//! Don't use `lazy_static`.
+//! There is [generic_once_cell](https://crates.io/crates/generic_once_cell) to allow just that.
 //!
 //! # Related crates
 //!
-//! * Most of this crate's functionality is available in `std` starting with
-//!   Rust 1.70. See `std::cell::OnceCell` and `std::sync::OnceLock`.
 //! * [double-checked-cell](https://github.com/niklasf/double-checked-cell)
 //! * [lazy-init](https://crates.io/crates/lazy-init)
 //! * [lazycell](https://crates.io/crates/lazycell)
 //! * [mitochondria](https://crates.io/crates/mitochondria)
 //! * [lazy_static](https://crates.io/crates/lazy_static)
 //! * [async_once_cell](https://crates.io/crates/async_once_cell)
-//! * [generic_once_cell](https://crates.io/crates/generic_once_cell) (bring
-//!   your own mutex)
+//! * [generic_once_cell](https://crates.io/crates/generic_once_cell) (bring your own mutex)
+//!
+//! Most of this crate's functionality is available in `std` in nightly Rust.
+//! See the [tracking issue](https://github.com/rust-lang/rust/issues/74465).
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -389,6 +358,8 @@ pub mod unsync {
         ops::{Deref, DerefMut},
         panic::{RefUnwindSafe, UnwindSafe},
     };
+
+    use super::unwrap_unchecked;
 
     /// A cell which can be written to only once. It is not thread safe.
     ///
@@ -561,7 +532,7 @@ pub mod unsync {
             // checked that slot is currently `None`, so this write
             // maintains the `inner`'s invariant.
             *slot = Some(value);
-            Ok(unsafe { slot.as_ref().unwrap_unchecked() })
+            Ok(unsafe { unwrap_unchecked(slot.as_ref()) })
         }
 
         /// Gets the contents of the cell, initializing it with `f`
@@ -634,7 +605,7 @@ pub mod unsync {
             // `assert`, while keeping `set/get` would be sound, but it seems
             // better to panic, rather than to silently use an old value.
             assert!(self.set(val).is_ok(), "reentrant init");
-            Ok(unsafe { self.get().unwrap_unchecked() })
+            Ok(unsafe { unwrap_unchecked(self.get()) })
         }
 
         /// Takes the value out of this `OnceCell`, moving it back to an uninitialized state.
@@ -667,7 +638,7 @@ pub mod unsync {
         /// cell = OnceCell::new();
         /// ```
         pub fn take(&mut self) -> Option<T> {
-            mem::take(self).into_inner()
+            mem::replace(self, Self::default()).into_inner()
         }
 
         /// Consumes the `OnceCell`, returning the wrapped value.
@@ -794,14 +765,8 @@ pub mod unsync {
         /// assert_eq!(*lazy, 92);
         /// ```
         pub fn force_mut(this: &mut Lazy<T, F>) -> &mut T {
-            if this.cell.get_mut().is_none() {
-                let value = match this.init.get_mut().take() {
-                    Some(f) => f(),
-                    None => panic!("Lazy instance has previously been poisoned"),
-                };
-                this.cell = OnceCell::with_value(value);
-            }
-            this.cell.get_mut().unwrap_or_else(|| unreachable!())
+            Self::force(this);
+            Self::get_mut(this).unwrap_or_else(|| unreachable!())
         }
 
         /// Gets the reference to the result of this lazy value if
@@ -848,7 +813,8 @@ pub mod unsync {
 
     impl<T, F: FnOnce() -> T> DerefMut for Lazy<T, F> {
         fn deref_mut(&mut self) -> &mut T {
-            Lazy::force_mut(self)
+            Lazy::force(self);
+            self.cell.get_mut().unwrap_or_else(|| unreachable!())
         }
     }
 
@@ -870,7 +836,7 @@ pub mod sync {
         panic::RefUnwindSafe,
     };
 
-    use super::imp::OnceCell as Imp;
+    use super::{imp::OnceCell as Imp, unwrap_unchecked};
 
     /// A thread-safe cell which can be written to only once.
     ///
@@ -1081,7 +1047,7 @@ pub mod sync {
         /// ```
         pub fn try_insert(&self, value: T) -> Result<&T, (&T, T)> {
             let mut value = Some(value);
-            let res = self.get_or_init(|| unsafe { value.take().unwrap_unchecked() });
+            let res = self.get_or_init(|| unsafe { unwrap_unchecked(value.take()) });
             match value {
                 None => Ok(res),
                 Some(value) => Err((res, value)),
@@ -1197,7 +1163,7 @@ pub mod sync {
         /// cell = OnceCell::new();
         /// ```
         pub fn take(&mut self) -> Option<T> {
-            mem::take(self).into_inner()
+            mem::replace(self, Self::default()).into_inner()
         }
 
         /// Consumes the `OnceCell`, returning the wrapped value. Returns
@@ -1327,14 +1293,8 @@ pub mod sync {
         /// assert_eq!(Lazy::force_mut(&mut lazy), &mut 92);
         /// ```
         pub fn force_mut(this: &mut Lazy<T, F>) -> &mut T {
-            if this.cell.get_mut().is_none() {
-                let value = match this.init.get_mut().take() {
-                    Some(f) => f(),
-                    None => panic!("Lazy instance has previously been poisoned"),
-                };
-                this.cell = OnceCell::with_value(value);
-            }
-            this.cell.get_mut().unwrap_or_else(|| unreachable!())
+            Self::force(this);
+            Self::get_mut(this).unwrap_or_else(|| unreachable!())
         }
 
         /// Gets the reference to the result of this lazy value if
@@ -1381,7 +1341,8 @@ pub mod sync {
 
     impl<T, F: FnOnce() -> T> DerefMut for Lazy<T, F> {
         fn deref_mut(&mut self) -> &mut T {
-            Lazy::force_mut(self)
+            Lazy::force(self);
+            self.cell.get_mut().unwrap_or_else(|| unreachable!())
         }
     }
 
@@ -1412,3 +1373,15 @@ pub mod sync {
 
 #[cfg(feature = "race")]
 pub mod race;
+
+// Remove once MSRV is at least 1.58.
+#[inline]
+unsafe fn unwrap_unchecked<T>(val: Option<T>) -> T {
+    match val {
+        Some(value) => value,
+        None => {
+            debug_assert!(false);
+            core::hint::unreachable_unchecked()
+        }
+    }
+}

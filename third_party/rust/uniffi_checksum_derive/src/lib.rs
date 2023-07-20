@@ -1,19 +1,18 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#![cfg_attr(feature = "nightly", feature(proc_macro_expand))]
 
 //! Custom derive for uniffi_meta::Checksum
 
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{
-    parse_macro_input, Attribute, Data, DeriveInput, Expr, ExprLit, Fields, Index, Lit, Meta,
-};
+use syn::{parse_macro_input, Attribute, Data, DeriveInput, Expr, ExprLit, Fields, Index, Lit};
 
 fn has_ignore_attribute(attrs: &[Attribute]) -> bool {
     attrs.iter().any(|attr| {
-        if attr.path().is_ident("checksum_ignore") {
-            if let Meta::List(_) | Meta::NameValue(_) = &attr.meta {
+        if attr.path.is_ident("checksum_ignore") {
+            if !attr.tokens.is_empty() {
                 panic!("#[checksum_ignore] doesn't accept extra information");
             }
             true

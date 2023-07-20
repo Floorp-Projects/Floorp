@@ -68,7 +68,7 @@ void DeregisterCallbackHandler(uint64_t aInterfaceId, ErrorResult& aError);
  */
 MOZ_CAN_RUN_SCRIPT
 void QueueCallback(size_t aInterfaceId, uint64_t aHandle, uint32_t aMethod,
-                   const uint8_t* aArgsData, int32_t aArgsLen);
+                   RustBuffer aArgs);
 
 }  // namespace mozilla::uniffi
 
