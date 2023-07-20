@@ -396,6 +396,16 @@ class ThreadSafeAutoRefCnt {
   std::atomic<nsrefcnt> mValue;
 };
 
+namespace detail {
+
+// Type trait indicating whether a given XPCOM interface class may only be
+// implemented by types with threadsafe refcounts. This is specialized for
+// classes with the `rust_sync` annotation within XPIDL-generated header files,
+// and checked within macro-generated QueryInterface implementations.
+template <typename T>
+class InterfaceNeedsThreadSafeRefCnt : public std::false_type {};
+
+}
 }  // namespace mozilla
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1117,6 +1127,30 @@ void ProxyDeleteVoid(const char* aRunnableName,
 
 ///////////////////////////////////////////////////////////////////////////////
 
+namespace mozilla::detail {
+
+// Helper which is roughly equivalent to NS_GET_IID, which also performs static
+// assertions that `Class` is allowed to implement the given XPCOM interface.
+//
+// These assertions are done like this to allow them to be used within the
+// `NS_INTERFACE_TABLE_ENTRY` macro, though they are also used in
+// `NS_IMPL_QUERY_BODY`.
+template <typename Class, typename Interface>
+constexpr const nsIID& GetImplementedIID() {
+  if constexpr (mozilla::detail::InterfaceNeedsThreadSafeRefCnt<
+                    Interface>::value) {
+    static_assert(Class::HasThreadSafeRefCnt::value,
+                  "Cannot implement a threadsafe interface with "
+                  "non-threadsafe refcounting!");
+  }
+  return NS_GET_TEMPLATE_IID(Interface);
+}
+
+template <typename Class, typename Interface>
+constexpr const nsIID& kImplementedIID = GetImplementedIID<Class, Interface>();
+
+}
+
 /**
  * There are two ways of implementing QueryInterface, and we use both:
  *
@@ -1153,13 +1187,13 @@ nsresult NS_FASTCALL NS_TableDrivenQI(void* aThis, REFNSIID aIID,
 
 #define NS_INTERFACE_TABLE_BEGIN static const QITableEntry table[] = {
 #define NS_INTERFACE_TABLE_ENTRY(_class, _interface)                        \
-  {&NS_GET_IID(_interface),                                                 \
+  {&mozilla::detail::kImplementedIID<_class, _interface>,                   \
    int32_t(                                                                 \
        reinterpret_cast<char*>(static_cast<_interface*>((_class*)0x1000)) - \
        reinterpret_cast<char*>((_class*)0x1000))},
 
 #define NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, _interface, _implClass) \
-  {&NS_GET_IID(_interface),                                                \
+  {&mozilla::detail::kImplementedIID<_class, _interface>,                  \
    int32_t(reinterpret_cast<char*>(static_cast<_interface*>(               \
                static_cast<_implClass*>((_class*)0x1000))) -               \
            reinterpret_cast<char*>((_class*)0x1000))},
@@ -1214,31 +1248,35 @@ nsresult NS_FASTCALL NS_TableDrivenQI(void* aThis, REFNSIID aIID,
                  "QueryInterface requires a non-NULL destination!");         \
     nsISupports* foundInterface;
 
-#define NS_IMPL_QUERY_BODY(_interface)               \
-  if (aIID.Equals(NS_GET_IID(_interface)))           \
-    foundInterface = static_cast<_interface*>(this); \
+#define NS_IMPL_QUERY_BODY_IID(_interface)                                   \
+  mozilla::detail::kImplementedIID<std::remove_reference_t<decltype(*this)>, \
+                                   _interface>
+
+#define NS_IMPL_QUERY_BODY(_interface)                 \
+  if (aIID.Equals(NS_IMPL_QUERY_BODY_IID(_interface))) \
+    foundInterface = static_cast<_interface*>(this);   \
   else
 
-#define NS_IMPL_QUERY_BODY_CONDITIONAL(_interface, condition) \
-  if ((condition) && aIID.Equals(NS_GET_IID(_interface)))     \
-    foundInterface = static_cast<_interface*>(this);          \
+#define NS_IMPL_QUERY_BODY_CONDITIONAL(_interface, condition)         \
+  if ((condition) && aIID.Equals(NS_IMPL_QUERY_BODY_IID(_interface))) \
+    foundInterface = static_cast<_interface*>(this);                  \
   else
 
 #define NS_IMPL_QUERY_BODY_AMBIGUOUS(_interface, _implClass)                   \
-  if (aIID.Equals(NS_GET_IID(_interface)))                                     \
+  if (aIID.Equals(NS_IMPL_QUERY_BODY_IID(_interface)))                         \
     foundInterface = static_cast<_interface*>(static_cast<_implClass*>(this)); \
   else
 
 // Use this for querying to concrete class types which cannot be unambiguously
 // cast to nsISupports. See also nsQueryObject.h.
 #define NS_IMPL_QUERY_BODY_CONCRETE(_class)                       \
-  if (aIID.Equals(NS_GET_IID(_class))) {                          \
+  if (aIID.Equals(NS_IMPL_QUERY_BODY_IID(_class))) {              \
     *aInstancePtr = do_AddRef(static_cast<_class*>(this)).take(); \
     return NS_OK;                                                 \
   } else
 
 #define NS_IMPL_QUERY_BODY_AGGREGATED(_interface, _aggregate) \
-  if (aIID.Equals(NS_GET_IID(_interface)))                    \
+  if (aIID.Equals(NS_IMPL_QUERY_BODY_IID(_interface)))        \
     foundInterface = static_cast<_interface*>(_aggregate);    \
   else
 
