@@ -1038,8 +1038,14 @@ items from that key's value."
             self.query_abs_dirs()["base_work_dir"], "artifacts", "sccache-stats.json"
         )
         if not os.path.exists(stats_file):
-            self.info("%s does not exist; not loading sccache stats" % stats_file)
-            return
+            msg = "%s does not exist; not loading sccache stats" % stats_file
+            if os.environ.get("USE_SCCACHE") == "1":
+                # We know we use sccache but we didn't find it.
+                # Fails to make sure the dev knows it
+                self.fatal(msg)
+            else:
+                self.info(msg)
+                return
 
         with open(stats_file, "r") as fh:
             stats = json.load(fh)
