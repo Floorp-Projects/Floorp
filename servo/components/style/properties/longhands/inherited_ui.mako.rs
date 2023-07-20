@@ -87,6 +87,7 @@ ${helpers.predefined_type(
     "generics::color::ColorOrAuto::Auto",
     engines="gecko",
     spec="https://drafts.csswg.org/css-ui-4/#widget-accent",
+    gecko_pref="layout.css.accent-color.enabled",
     animation_value_type="ColorOrAuto",
     ignored_when_colors_disabled=True,
     has_effect_on_gecko_scrollbars=False,
