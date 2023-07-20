@@ -44,7 +44,6 @@ dependencies {
     testImplementation ComponentsDependencies.testing_junit
     testImplementation ComponentsDependencies.androidx_test_junit
     testImplementation ComponentsDependencies.testing_robolectric
-    testImplementation ComponentsDependencies.testing_mockito
 }
 
 apply from: '../../../android-lint.gradle'

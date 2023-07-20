@@ -37,7 +37,7 @@ dependencies {
     implementation ComponentsDependencies.kotlin_reflect
 
     implementation ComponentsDependencies.androidx_test_junit
-    implementation ComponentsDependencies.testing_mockito
+    api ComponentsDependencies.testing_mockito
     implementation ComponentsDependencies.testing_coroutines
     implementation ComponentsDependencies.androidx_fragment
     implementation  (ComponentsDependencies.testing_robolectric) {

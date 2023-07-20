@@ -44,7 +44,6 @@ dependencies {
 
     testImplementation ComponentsDependencies.testing_junit
     testImplementation ComponentsDependencies.testing_robolectric
-    testImplementation ComponentsDependencies.testing_mockito
     testImplementation ComponentsDependencies.testing_mockwebserver
     testImplementation ComponentsDependencies.androidx_work_testing
 

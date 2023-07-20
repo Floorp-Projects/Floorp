@@ -32,7 +32,6 @@ dependencies {
 
     testImplementation project(':support-test')
     testImplementation ComponentsDependencies.testing_junit
-    testImplementation ComponentsDependencies.testing_mockito
 }
 
 apply from: '../../../android-lint.gradle'

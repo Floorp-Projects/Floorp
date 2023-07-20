@@ -70,7 +70,6 @@ dependencies {
     testImplementation ComponentsDependencies.androidx_test_core
     testImplementation ComponentsDependencies.testing_coroutines
     testImplementation ComponentsDependencies.testing_junit
-    testImplementation ComponentsDependencies.testing_mockito
     testImplementation ComponentsDependencies.testing_robolectric
     testImplementation ComponentsDependencies.kotlin_coroutines
 

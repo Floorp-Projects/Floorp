@@ -35,7 +35,6 @@ dependencies {
 
     testImplementation ComponentsDependencies.androidx_test_junit
     testImplementation ComponentsDependencies.testing_robolectric
-    testImplementation ComponentsDependencies.testing_mockito
 }
 
 apply from: '../../../publish.gradle'

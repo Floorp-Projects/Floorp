@@ -50,7 +50,6 @@ dependencies {
     testImplementation ComponentsDependencies.kotlin_reflect
     testImplementation ComponentsDependencies.testing_coroutines
     testImplementation ComponentsDependencies.testing_robolectric
-    testImplementation ComponentsDependencies.testing_mockito
 
     androidTestImplementation project(':support-android-test')
     androidTestImplementation ComponentsDependencies.androidx_test_core
