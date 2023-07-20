@@ -10,7 +10,9 @@ use crate::color::{AbsoluteColor, ColorComponents, ColorFlags, ColorSpace};
 use crate::media_queries::Device;
 use crate::parser::{Parse, ParserContext};
 use crate::values::computed::{Color as ComputedColor, Context, ToComputedValue};
-use crate::values::generics::color::{GenericCaretColor, GenericColorMix, GenericColorOrAuto};
+use crate::values::generics::color::{
+    ColorMixFlags, GenericCaretColor, GenericColorMix, GenericColorOrAuto,
+};
 use crate::values::specified::calc::CalcNode;
 use crate::values::specified::Percentage;
 use crate::values::CustomIdent;
@@ -78,13 +80,16 @@ impl ColorMix {
                 return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
             }
 
+            // Pass RESULT_IN_MODERN_SYNTAX here, because the result of the color-mix() function
+            // should always be in the modern color syntax to allow for out of gamut results and
+            // to preserve floating point precision.
             Ok(ColorMix {
                 interpolation,
                 left,
                 left_percentage,
                 right,
                 right_percentage,
-                normalize_weights: true,
+                flags: ColorMixFlags::NORMALIZE_WEIGHTS | ColorMixFlags::RESULT_IN_MODERN_SYNTAX,
             })
         })
     }
@@ -874,7 +879,7 @@ impl Color {
                     left_percentage: Percentage(mix.left_percentage.get()),
                     right,
                     right_percentage: Percentage(mix.right_percentage.get()),
-                    normalize_weights: mix.normalize_weights,
+                    flags: mix.flags,
                 })
             },
             #[cfg(feature = "gecko")]

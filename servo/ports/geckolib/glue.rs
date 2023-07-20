@@ -14,6 +14,7 @@ use selectors::matching::IgnoreNthChildForInvalidation;
 use selectors::NthIndexCache;
 use servo_arc::{Arc, ArcBorrow};
 use smallvec::SmallVec;
+use style::values::generics::color::ColorMixFlags;
 use std::collections::BTreeSet;
 use std::fmt::Write;
 use std::iter;
@@ -7788,7 +7789,7 @@ pub extern "C" fn Servo_InterpolateColor(
         progress,
         right,
         1.0 - progress,
-        /* normalize_weights = */ false,
+        ColorMixFlags::empty(),
     )
 }
 

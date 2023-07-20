@@ -9,7 +9,7 @@ use crate::color::AbsoluteColor;
 use crate::values::animated::{Animate, Procedure, ToAnimatedZero};
 use crate::values::computed::Percentage;
 use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
-use crate::values::generics::color::{GenericColor, GenericColorMix};
+use crate::values::generics::color::{ColorMixFlags, GenericColor, GenericColorMix};
 
 impl Animate for AbsoluteColor {
     #[inline]
@@ -21,7 +21,7 @@ impl Animate for AbsoluteColor {
             left_weight as f32,
             other,
             right_weight as f32,
-            /* normalize_weights = */ false,
+            ColorMixFlags::empty(),
         ))
     }
 }
@@ -66,7 +66,7 @@ impl Animate for Color {
             right: other.clone(),
             right_percentage: Percentage(right_weight as f32),
             // See https://github.com/w3c/csswg-drafts/issues/7324
-            normalize_weights: false,
+            flags: ColorMixFlags::empty(),
         }))
     }
 }
