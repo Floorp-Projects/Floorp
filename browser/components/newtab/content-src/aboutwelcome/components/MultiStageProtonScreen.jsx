@@ -193,12 +193,15 @@ export class ProtonScreen extends React.PureComponent {
             media="(prefers-reduced-motion: reduce)"
           />
         ) : null}
+        <Localized text={alt}>
+          <div className="sr-only logo-alt" />
+        </Localized>
         <img
           className="brand-logo"
           style={{ height }}
           src={imageURL}
+          alt=""
           loading={getLoadingStrategy()}
-          alt={alt}
           role={alt ? null : "presentation"}
         />
       </picture>

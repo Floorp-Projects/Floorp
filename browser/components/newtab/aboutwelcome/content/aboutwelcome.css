@@ -716,6 +716,10 @@ html {
   height: 25px;
   margin-block: 0;
 }
+.onboardingContainer .screen[pos=split] .section-main .main-content .logo-alt {
+  width: inherit;
+  height: inherit;
+}
 .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text {
   margin-inline: 0 10px;
   margin-block: 10px 35px;
@@ -910,6 +914,10 @@ html {
   .onboardingContainer .screen[pos=split] .section-main .main-content .logo-container .brand-logo, .onboardingContainer .screen[pos=split] .section-main .main-content .logo-container .brand-logo:dir(rtl) {
     background-position: center;
   }
+  .onboardingContainer .screen[pos=split] .section-main .main-content .logo-container .logo-alt {
+    width: inherit;
+    height: inherit;
+  }
   .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text {
     align-items: center;
     text-align: center;
@@ -984,6 +992,10 @@ html {
   visibility: hidden;
   padding: unset;
   margin-top: 50px;
+}
+.onboardingContainer .logo-alt {
+  width: inherit;
+  height: inherit;
 }
 .onboardingContainer .rtamo-theme-icon {
   max-height: 30px;
