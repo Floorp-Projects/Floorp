@@ -75,6 +75,10 @@ menubar > menu:-moz-window-inactive {
   padding-top: 2px;
 }
 
+menuitem:is([type="checkbox"], [type="radio"]):not([checked="true"]) > .menu-iconic-left > .menu-iconic-icon {
+  display: none;
+}
+
 /* ..... menu arrow box ..... */
 
 /* Override the native menu arrow with a custom one for Win10. */
