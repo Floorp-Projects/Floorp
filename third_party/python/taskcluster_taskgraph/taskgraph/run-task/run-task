@@ -14,12 +14,10 @@ current time to improve log usefulness.
 """
 
 import sys
-from typing import Optional
 
 if sys.version_info[0:2] < (3, 5):
     print("run-task requires Python 3.5+")
     sys.exit(1)
-
 
 import argparse
 import datetime
@@ -27,7 +25,7 @@ import errno
 import io
 import json
 import os
-from pathlib import Path
+import platform
 import re
 import shutil
 import signal
@@ -35,21 +33,23 @@ import socket
 import stat
 import subprocess
 import time
-
 import urllib.error
 import urllib.request
-
+from pathlib import Path
 from threading import Thread
+from typing import Optional
 
 SECRET_BASEURL_TPL = "http://taskcluster/secrets/v1/secret/{}"
 
 GITHUB_SSH_FINGERPRINT = (
     b"github.com ssh-rsa "
-    b"AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkcc"
-    b"Krpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFz"
-    b"LQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaS"
-    b"jB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3sku"
-    b"a2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==\n"
+    b"AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY"
+    b"4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDP"
+    b"gVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyR"
+    b"kQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWO"
+    b"WRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZ"
+    b"yaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+"
+    b"2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=\n"
 )
 
 
@@ -594,7 +594,12 @@ def git_checkout(
     ssh_key_file: Optional[Path],
     ssh_known_hosts_file: Optional[Path],
 ):
-    env = {"PYTHONUNBUFFERED": "1"}
+    env = {
+        # abort if transfer speed is lower than 1kB/s for 1 minute
+        "GIT_HTTP_LOW_SPEED_LIMIT": "1024",
+        "GIT_HTTP_LOW_SPEED_TIME": "60",
+        "PYTHONUNBUFFERED": "1",
+    }
 
     if ssh_key_file and ssh_known_hosts_file:
         if not ssh_key_file.exists():
@@ -641,9 +646,27 @@ def git_checkout(
     # between the previous state before the force-push and the current state.
     #
     # Unlike base_ref just above, there is no need to checkout the revision:
-    # it's immediately avaiable after the fetch.
+    # it's immediately available after the fetch.
     if base_rev and base_rev != NULL_REVISION:
         args = ["git", "fetch", "origin", base_rev]
+
+        retry_required_command(b"vcs", args, cwd=destination_path, extra_env=env)
+
+    # If a ref was provided, it might be tag, so we need to make sure we fetch
+    # those. This is explicitly only done when base and head repo match,
+    # because it is the only scenario where tags could be present. (PRs, for
+    # example, always include an explicit rev.) Failure to do this could result
+    # in not having a tag, or worse: having an outdated version of one.
+    # `--force` is needed to be able to update an existing tag.
+    if ref and base_repo == head_repo:
+        args = [
+            "git",
+            "fetch",
+            "--tags",
+            "--force",
+            base_repo,
+            ref,
+        ]
 
         retry_required_command(b"vcs", args, cwd=destination_path, extra_env=env)
 
@@ -666,7 +689,9 @@ def git_checkout(
 
     if ref:
         args.extend(["-B", ref])
-    args.append(commit if commit else ref)
+
+    # `git fetch` set `FETCH_HEAD` reference to the last commit of the desired branch
+    args.append(commit if commit else "FETCH_HEAD")
 
     run_required_command(b"vcs", args, cwd=destination_path)
 
@@ -683,6 +708,7 @@ def git_checkout(
             "git",
             "submodule",
             "update",
+            "--force",  # Overrides any potential local changes
         ]
 
         run_required_command(b"vcs", args, cwd=destination_path)
@@ -898,7 +924,6 @@ def collect_vcs_options(args, project, name):
 
 
 def vcs_checkout_from_args(options):
-
     if not options["checkout"]:
         if options["ref"] and not options["revision"]:
             print("task should be defined in terms of non-symbolic revision")
@@ -1045,12 +1070,23 @@ def maybe_run_resource_monitoring():
     return process
 
 
+def _display_python_version():
+    print_line(
+        b"setup", b"Python version: %s\n" % platform.python_version().encode("utf-8")
+    )
+
+
 def main(args):
     os.environ["TASK_WORKDIR"] = os.getcwd()
     print_line(
         b"setup",
         b"run-task started in %s\n" % os.environ["TASK_WORKDIR"].encode("utf-8"),
     )
+    print_line(
+        b"setup",
+        b"Invoked by command: %s\n" % " ".join(args).encode("utf-8"),
+    )
+    _display_python_version()
     running_as_root = IS_POSIX and os.getuid() == 0
 
     # Arguments up to '--' are ours. After are for the main task
@@ -1090,7 +1126,7 @@ def main(args):
     # Sort repositories so that parent checkout paths come before children
     repositories.sort(key=lambda repo: Path(repo["checkout"] or "/").parts)
 
-    uid = gid = gids = None
+    uid = gid = gids = user = group = None
     if IS_POSIX and running_as_root:
         user, group, gids = get_posix_user_group(args.user, args.group)
         uid = user.pw_uid

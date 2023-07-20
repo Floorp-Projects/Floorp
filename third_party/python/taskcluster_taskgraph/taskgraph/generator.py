@@ -5,9 +5,8 @@
 import copy
 import logging
 import os
-from typing import AnyStr
-
-import attr
+from dataclasses import dataclass
+from typing import Dict
 
 from . import filter_tasks
 from .config import GraphConfig, load_graph_config
@@ -31,19 +30,18 @@ class KindNotFound(Exception):
     """
 
 
-@attr.s(frozen=True)
+@dataclass(frozen=True)
 class Kind:
-
-    name = attr.ib(type=AnyStr)
-    path = attr.ib(type=AnyStr)
-    config = attr.ib(type=dict)
-    graph_config = attr.ib(type=GraphConfig)
+    name: str
+    path: str
+    config: Dict
+    graph_config: GraphConfig
 
     def _get_loader(self):
         try:
             loader = self.config["loader"]
         except KeyError:
-            raise KeyError(f"{self.path!r} does not define `loader`")
+            loader = "taskgraph.loader.default:loader"
         return find_object(loader)
 
     def load_tasks(self, parameters, loaded_tasks, write_artifacts):
@@ -59,6 +57,9 @@ class Kind:
 
         transforms = TransformSequence()
         for xform_path in config["transforms"]:
+            if ":" not in xform_path:
+                xform_path = f"{xform_path}:transforms"
+
             transform = find_object(xform_path)
             transforms.add(transform)
 
@@ -326,6 +327,10 @@ class TaskGraphGenerator:
         edges = set()
         for t in full_task_set:
             for depname, dep in t.dependencies.items():
+                if dep not in all_tasks.keys():
+                    raise Exception(
+                        f"Task '{t.label}' lists a dependency that does not exist: '{dep}'"
+                    )
                 edges.add((t.label, dep, depname))
 
         full_task_graph = TaskGraph(all_tasks, Graph(full_task_set.graph.nodes, edges))
@@ -353,18 +358,14 @@ class TaskGraphGenerator:
         yield self.verify("target_task_set", target_task_set, graph_config, parameters)
 
         logger.info("Generating target task graph")
-        # include all docker-image build tasks here, in case they are needed for a graph morph
-        docker_image_tasks = {
-            t.label
-            for t in full_task_graph.tasks.values()
-            if t.attributes["kind"] == "docker-image"
-        }
         # include all tasks with `always_target` set
         if parameters["enable_always_target"]:
             always_target_tasks = {
                 t.label
                 for t in full_task_graph.tasks.values()
                 if t.attributes.get("always_target")
+                if parameters["enable_always_target"] is True
+                or t.kind in parameters["enable_always_target"]
             }
         else:
             always_target_tasks = set()
@@ -372,7 +373,7 @@ class TaskGraphGenerator:
             "Adding %d tasks with `always_target` attribute"
             % (len(always_target_tasks) - len(always_target_tasks & target_tasks))
         )
-        requested_tasks = target_tasks | docker_image_tasks | always_target_tasks
+        requested_tasks = target_tasks | always_target_tasks
         target_graph = full_task_graph.graph.transitive_closure(requested_tasks)
         target_task_graph = TaskGraph(
             {l: all_tasks[l] for l in target_graph.nodes}, target_graph

@@ -14,8 +14,9 @@ import os
 import re
 import time
 from copy import deepcopy
+from dataclasses import dataclass
+from typing import Callable
 
-import attr
 from voluptuous import All, Any, Extra, NotIn, Optional, Required
 
 from taskgraph import MAX_DEPENDENCIES
@@ -31,7 +32,7 @@ from taskgraph.util.schema import (
     taskref_or_string,
     validate_schema,
 )
-from taskgraph.util.treeherder import split_symbol
+from taskgraph.util.treeherder import split_symbol, treeherder_defaults
 from taskgraph.util.workertypes import worker_type_implementation
 
 from ..util import docker as dockerutil
@@ -95,20 +96,34 @@ task_description_schema = Schema(
         Optional("extra"): {str: object},
         # treeherder-related information; see
         # https://schemas.taskcluster.net/taskcluster-treeherder/v1/task-treeherder-config.json
+        # This may be provided in one of two ways:
+        # 1) A simple `true` will cause taskgraph to generate the required information
+        # 2) A dictionary with one or more of the required keys. Any key not present
+        #    will use a default as described below.
         # If not specified, no treeherder extra information or routes will be
         # added to the task
-        Optional("treeherder"): {
-            # either a bare symbol, or "grp(sym)".
-            "symbol": str,
-            # the job kind
-            "kind": Any("build", "test", "other"),
-            # tier for this task
-            "tier": int,
-            # task platform, in the form platform/collection, used to set
-            # treeherder.machine.platform and treeherder.collection or
-            # treeherder.labels
-            "platform": str,
-        },
+        Optional("treeherder"): Any(
+            True,
+            {
+                # either a bare symbol, or "grp(sym)".
+                # The default symbol is the uppercased first letter of each
+                # section of the kind (delimited by "-") all smooshed together.
+                # Eg: "test" becomes "T", "docker-image" becomes "DI", etc.
+                "symbol": Optional(str),
+                # the job kind
+                # If "build" or "test" is found in the kind name, this defaults
+                # to the appropriate value. Otherwise, defaults to "other"
+                "kind": Optional(Any("build", "test", "other")),
+                # tier for this task
+                # Defaults to 1
+                "tier": Optional(int),
+                # task platform, in the form platform/collection, used to set
+                # treeherder.machine.platform and treeherder.collection or
+                # treeherder.labels
+                # Defaults to "default/opt"
+                "platform": Optional(str),
+            },
+        ),
         # information for indexing this build so its artifacts can be discovered;
         # if omitted, the build will not be indexed.
         Optional("index"): {
@@ -142,6 +157,15 @@ task_description_schema = Schema(
         Optional("run-on-projects"): optionally_keyed_by("build-platform", [str]),
         Optional("run-on-tasks-for"): [str],
         Optional("run-on-git-branches"): [str],
+        # The `shipping_phase` attribute, defaulting to None. This specifies the
+        # release promotion phase that this task belongs to.
+        Optional("shipping-phase"): Any(
+            None,
+            "build",
+            "promote",
+            "push",
+            "ship",
+        ),
         # The `always-target` attribute will cause the task to be included in the
         # target_task_graph regardless of filtering. Tasks included in this manner
         # will be candidates for optimization even when `optimize_target_tasks` is
@@ -197,14 +221,21 @@ def get_default_priority(graph_config, project):
     )
 
 
+@memoize
+def get_default_deadline(graph_config, project):
+    return evaluate_keyed_by(
+        graph_config["task-deadline-after"], "Graph Config", {"project": project}
+    )
+
+
 # define a collection of payload builders, depending on the worker implementation
 payload_builders = {}
 
 
-@attr.s(frozen=True)
+@dataclass(frozen=True)
 class PayloadBuilder:
-    schema = attr.ib(type=Schema)
-    builder = attr.ib()
+    schema: Schema
+    builder: Callable
 
 
 def payload_builder(name, schema):
@@ -213,6 +244,7 @@ def payload_builder(name, schema):
     )
 
     def wrap(func):
+        assert name not in payload_builders, f"duplicate payload builder name {name}"
         payload_builders[name] = PayloadBuilder(schema, func)
         return func
 
@@ -225,6 +257,7 @@ index_builders = {}
 
 def index_builder(name):
     def wrap(func):
+        assert name not in index_builders, f"duplicate index builder name {name}"
         index_builders[name] = func
         return func
 
@@ -268,7 +301,6 @@ def verify_index(config, index):
         Required("loopback-audio"): bool,
         Required("docker-in-docker"): bool,  # (aka 'dind')
         Required("privileged"): bool,
-        Required("disable-seccomp"): bool,
         # Paths to Docker volumes.
         #
         # For in-tree Docker images, volumes can be parsed from Dockerfile.
@@ -406,10 +438,6 @@ def build_docker_worker_payload(config, task, task_def):
     if worker.get("privileged"):
         capabilities["privileged"] = True
         task_def["scopes"].append("docker-worker:capability:privileged")
-
-    if worker.get("disable-seccomp"):
-        capabilities["disableSeccomp"] = True
-        task_def["scopes"].append("docker-worker:capability:disableSeccomp")
 
     task_def["payload"] = payload = {
         "image": image,
@@ -598,6 +626,11 @@ def build_docker_worker_payload(config, task, task_def):
         Required("env"): {str: taskref_or_string},
         # the maximum time to run, in seconds
         Required("max-run-time"): int,
+        # the exit status code(s) that indicates the task should be retried
+        Optional("retry-exit-status"): [int],
+        # the exit status code(s) that indicates the caches used by the task
+        # should be purged
+        Optional("purge-caches-exit-status"): [int],
         # os user groups for test task workers
         Optional("os-groups"): [str],
         # feature for test task to run as administarotr
@@ -620,6 +653,8 @@ def build_generic_worker_payload(config, task, task_def):
     on_exit_status = {}
     if "retry-exit-status" in worker:
         on_exit_status["retry"] = worker["retry-exit-status"]
+    if "purge-caches-exit-status" in worker:
+        on_exit_status["purgeCaches"] = worker["purge-caches-exit-status"]
     if worker["os"] == "windows":
         on_exit_status.setdefault("retry", []).extend(
             [
@@ -836,7 +871,6 @@ def set_defaults(config, tasks):
             worker.setdefault("loopback-audio", False)
             worker.setdefault("docker-in-docker", False)
             worker.setdefault("privileged", False)
-            worker.setdefault("disable-seccomp", False)
             worker.setdefault("volumes", [])
             worker.setdefault("env", {})
             if "caches" in worker:
@@ -915,6 +949,78 @@ def add_generic_index_routes(config, task):
 
 
 @transforms.add
+def process_treeherder_metadata(config, tasks):
+    for task in tasks:
+        routes = task.get("routes", [])
+        extra = task.get("extra", {})
+        task_th = task.get("treeherder")
+
+        if task_th:
+            # This `merged_th` object is just an intermediary that combines
+            # the defaults and whatever is in the task. Ultimately, the task
+            # transforms this data a bit in the `treeherder` object that is
+            # eventually set in the task.
+            merged_th = treeherder_defaults(config.kind, task["label"])
+            if isinstance(task_th, dict):
+                merged_th.update(task_th)
+
+            treeherder = extra.setdefault("treeherder", {})
+            extra.setdefault("treeherder-platform", merged_th["platform"])
+
+            machine_platform, collection = merged_th["platform"].split("/", 1)
+            treeherder["machine"] = {"platform": machine_platform}
+            treeherder["collection"] = {collection: True}
+
+            group_names = config.graph_config["treeherder"]["group-names"]
+            groupSymbol, symbol = split_symbol(merged_th["symbol"])
+            if groupSymbol != "?":
+                treeherder["groupSymbol"] = groupSymbol
+                if groupSymbol not in group_names:
+                    path = os.path.join(config.path, task.get("task-from", ""))
+                    raise Exception(UNKNOWN_GROUP_NAME.format(groupSymbol, path))
+                treeherder["groupName"] = group_names[groupSymbol]
+            treeherder["symbol"] = symbol
+            if len(symbol) > 25 or len(groupSymbol) > 25:
+                raise RuntimeError(
+                    "Treeherder group and symbol names must not be longer than "
+                    "25 characters: {} (see {})".format(
+                        treeherder["symbol"],
+                        TC_TREEHERDER_SCHEMA_URL,
+                    )
+                )
+            treeherder["jobKind"] = merged_th["kind"]
+            treeherder["tier"] = merged_th["tier"]
+
+            branch_rev = get_branch_rev(config)
+
+            if config.params["tasks_for"].startswith("github-pull-request"):
+                # In the past we used `project` for this, but that ends up being
+                # set to the repository name of the _head_ repo, which is not correct
+                # (and causes scope issues) if it doesn't match the name of the
+                # base repo
+                base_project = config.params["base_repository"].split("/")[-1]
+                if base_project.endswith(".git"):
+                    base_project = base_project[:-4]
+                th_project_suffix = "-pr"
+            else:
+                base_project = config.params["project"]
+                th_project_suffix = ""
+
+            routes.append(
+                "{}.v2.{}.{}.{}".format(
+                    TREEHERDER_ROUTE_ROOT,
+                    base_project + th_project_suffix,
+                    branch_rev,
+                    config.params["pushlog_id"],
+                )
+            )
+
+        task["routes"] = routes
+        task["extra"] = extra
+        yield task
+
+
+@transforms.add
 def add_index_routes(config, tasks):
     for task in tasks:
         index = task.get("index", {})
@@ -926,7 +1032,7 @@ def add_index_routes(config, tasks):
         if rank == "by-tier":
             # rank is zero for non-tier-1 tasks and based on pushid for others;
             # this sorts tier-{2,3} builds below tier-1 in the index
-            tier = task.get("treeherder", {}).get("tier", 3)
+            tier = task.get("extra", {}).get("treeherder", {}).get("tier", 3)
             extra_index["rank"] = 0 if tier > 1 else int(config.params["build_date"])
         elif rank == "build_date":
             extra_index["rank"] = int(config.params["build_date"])
@@ -967,64 +1073,17 @@ def build_task(config, tasks):
         # set up extra
         extra = task.get("extra", {})
         extra["parent"] = os.environ.get("TASK_ID", "")
-        task_th = task.get("treeherder")
-        if task_th:
-            extra.setdefault("treeherder-platform", task_th["platform"])
-            treeherder = extra.setdefault("treeherder", {})
-
-            machine_platform, collection = task_th["platform"].split("/", 1)
-            treeherder["machine"] = {"platform": machine_platform}
-            treeherder["collection"] = {collection: True}
-
-            group_names = config.graph_config["treeherder"]["group-names"]
-            groupSymbol, symbol = split_symbol(task_th["symbol"])
-            if groupSymbol != "?":
-                treeherder["groupSymbol"] = groupSymbol
-                if groupSymbol not in group_names:
-                    path = os.path.join(config.path, task.get("task-from", ""))
-                    raise Exception(UNKNOWN_GROUP_NAME.format(groupSymbol, path))
-                treeherder["groupName"] = group_names[groupSymbol]
-            treeherder["symbol"] = symbol
-            if len(symbol) > 25 or len(groupSymbol) > 25:
-                raise RuntimeError(
-                    "Treeherder group and symbol names must not be longer than "
-                    "25 characters: {} (see {})".format(
-                        task_th["symbol"],
-                        TC_TREEHERDER_SCHEMA_URL,
-                    )
-                )
-            treeherder["jobKind"] = task_th["kind"]
-            treeherder["tier"] = task_th["tier"]
-
-            branch_rev = get_branch_rev(config)
-
-            if config.params["tasks_for"].startswith("github-pull-request"):
-                # In the past we used `project` for this, but that ends up being
-                # set to the repository name of the _head_ repo, which is not correct
-                # (and causes scope issues) if it doesn't match the name of the
-                # base repo
-                base_project = config.params["base_repository"].split("/")[-1]
-                if base_project.endswith(".git"):
-                    base_project = base_project[:-4]
-                th_project_suffix = "-pr"
-            else:
-                base_project = config.params["project"]
-                th_project_suffix = ""
-
-            routes.append(
-                "{}.v2.{}.{}.{}".format(
-                    TREEHERDER_ROUTE_ROOT,
-                    base_project + th_project_suffix,
-                    branch_rev,
-                    config.params["pushlog_id"],
-                )
-            )
 
         if "expires-after" not in task:
             task["expires-after"] = "28 days" if config.params.is_try() else "1 year"
 
         if "deadline-after" not in task:
-            task["deadline-after"] = "1 day"
+            if "task-deadline-after" in config.graph_config:
+                task["deadline-after"] = get_default_deadline(
+                    config.graph_config, config.params["project"]
+                )
+            else:
+                task["deadline-after"] = "1 day"
 
         if "priority" not in task:
             task["priority"] = get_default_priority(
@@ -1062,7 +1121,21 @@ def build_task(config, tasks):
         if task.get("requires", None):
             task_def["requires"] = task["requires"]
 
-        if task_th:
+        if task.get("extra", {}).get("treeherder"):
+            branch_rev = get_branch_rev(config)
+            if config.params["tasks_for"].startswith("github-pull-request"):
+                # In the past we used `project` for this, but that ends up being
+                # set to the repository name of the _head_ repo, which is not correct
+                # (and causes scope issues) if it doesn't match the name of the
+                # base repo
+                base_project = config.params["base_repository"].split("/")[-1]
+                if base_project.endswith(".git"):
+                    base_project = base_project[:-4]
+                th_project_suffix = "-pr"
+            else:
+                base_project = config.params["project"]
+                th_project_suffix = ""
+
             # link back to treeherder in description
             th_push_link = (
                 "https://treeherder.mozilla.org/#/jobs?repo={}&revision={}".format(
@@ -1095,6 +1168,14 @@ def build_task(config, tasks):
             attributes["run_on_git_branches"] = task["run-on-git-branches"]
 
         attributes["always_target"] = task["always-target"]
+        # This logic is here since downstream tasks don't always match their
+        # upstream dependency's shipping_phase.
+        # A text_type task['shipping-phase'] takes precedence, then
+        # an existing attributes['shipping_phase'], then fall back to None.
+        if task.get("shipping-phase") is not None:
+            attributes["shipping_phase"] = task["shipping-phase"]
+        else:
+            attributes.setdefault("shipping_phase", None)
 
         # Set MOZ_AUTOMATION on all jobs.
         if task["worker"]["implementation"] in (
@@ -1185,12 +1266,17 @@ def check_task_identifiers(config, tasks):
 def check_task_dependencies(config, tasks):
     """Ensures that tasks don't have more than 100 dependencies."""
     for task in tasks:
-        if len(task["dependencies"]) > MAX_DEPENDENCIES:
+        number_of_dependencies = (
+            len(task["dependencies"])
+            + len(task["if-dependencies"])
+            + len(task["soft-dependencies"])
+        )
+        if number_of_dependencies > MAX_DEPENDENCIES:
             raise Exception(
                 "task {}/{} has too many dependencies ({} > {})".format(
                     config.kind,
                     task["label"],
-                    len(task["dependencies"]),
+                    number_of_dependencies,
                     MAX_DEPENDENCIES,
                 )
             )
@@ -1216,10 +1302,11 @@ def check_caches_are_volumes(task):
         return
 
     raise Exception(
-        "task %s (image %s) has caches that are not declared as "
-        "Docker volumes: %s "
-        "(have you added them as VOLUMEs in the Dockerfile?)"
-        % (task["label"], task["worker"]["docker-image"], ", ".join(sorted(missing)))
+        "task {} (image {}) has caches that are not declared as "
+        "Docker volumes: {} "
+        "(have you added them as VOLUMEs in the Dockerfile?)".format(
+            task["label"], task["worker"]["docker-image"], ", ".join(sorted(missing))
+        )
     )
 
 
@@ -1272,17 +1359,17 @@ def check_run_task_caches(config, tasks):
 
             if not run_task:
                 raise Exception(
-                    "%s is using a cache (%s) reserved for run-task "
+                    f"{task['label']} is using a cache ({cache}) reserved for run-task "
                     "change the task to use run-task or use a different "
-                    "cache name" % (task["label"], cache)
+                    "cache name"
                 )
 
             if not cache.endswith(suffix):
                 raise Exception(
-                    "%s is using a cache (%s) reserved for run-task "
+                    f"{task['label']} is using a cache ({cache}) reserved for run-task "
                     "but the cache name is not dependent on the contents "
                     "of run-task; change the cache name to conform to the "
-                    "naming requirements" % (task["label"], cache)
+                    "naming requirements"
                 )
 
         yield task

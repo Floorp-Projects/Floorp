@@ -110,18 +110,6 @@ def derive_index_task(task, taskgraph, label_to_taskid, parameters, graph_config
     return task, taskgraph, label_to_taskid
 
 
-# these regular expressions capture route prefixes for which we have a star
-# scope, allowing them to be summarized.  Each should correspond to a star scope
-# in each Gecko `assume:repo:hg.mozilla.org/...` role.
-_SCOPE_SUMMARY_REGEXPS = [
-    # TODO Bug 1631839 - Remove these scopes once the migration is done
-    re.compile(r"(index:insert-task:project\.mobile\.fenix\.v2\.[^.]*\.).*"),
-    re.compile(
-        r"(index:insert-task:project\.mobile\.reference-browser\.v3\.[^.]*\.).*"
-    ),
-]
-
-
 def make_index_task(parent_task, taskgraph, label_to_taskid, parameters, graph_config):
     index_paths = [
         r.split(".", 1)[1] for r in parent_task.task["routes"] if r.startswith("index.")
@@ -138,19 +126,21 @@ def make_index_task(parent_task, taskgraph, label_to_taskid, parameters, graph_c
     # namespace-heavy index task might have more scopes than can fit in a
     # temporary credential.
     scopes = set()
-    domain_scope_regex = re.compile(
-        r"(index:insert-task:{trust_domain}\.v2\.[^.]*\.).*".format(
+    domain_index_regex = re.compile(
+        r"({trust_domain}\.v2\.[^.]*\.).*".format(
             trust_domain=re.escape(graph_config["trust-domain"])
         )
     )
-    all_scopes_summary_regexps = _SCOPE_SUMMARY_REGEXPS + [domain_scope_regex]
+    index_path_res = [domain_index_regex]
+    for path in graph_config["taskgraph"].get("index-path-regexes", ()):
+        index_path_res.append(re.compile(path))
     for path in index_paths:
-        scope = f"index:insert-task:{path}"
-        for summ_re in all_scopes_summary_regexps:
-            match = summ_re.match(scope)
+        for index_path_re in index_path_res:
+            match = index_path_re.match(path)
             if match:
-                scope = match.group(1) + "*"
+                path = match.group(1) + "*"
                 break
+        scope = f"index:insert-task:{path}"
         scopes.add(scope)
     task.task["scopes"] = sorted(scopes)
 

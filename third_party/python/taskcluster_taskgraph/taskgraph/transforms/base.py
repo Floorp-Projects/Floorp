@@ -4,9 +4,10 @@
 
 
 import re
-from typing import AnyStr
+from dataclasses import dataclass, field
+from typing import Dict, List, Union
 
-import attr
+from taskgraph.task import Task
 
 from ..config import GraphConfig
 from ..parameters import Parameters
@@ -14,20 +15,20 @@ from ..util.memoize import memoize
 from ..util.schema import Schema, validate_schema
 
 
-@attr.s(frozen=True)
+@dataclass(frozen=True)
 class RepoConfig:
-    prefix = attr.ib(type=str)
-    name = attr.ib(type=str)
-    base_repository = attr.ib(type=str)
-    head_repository = attr.ib(type=str)
-    head_ref = attr.ib(type=str)
-    type = attr.ib(type=str)
-    path = attr.ib(type=str, default="")
-    head_rev = attr.ib(type=str, default=None)
-    ssh_secret_name = attr.ib(type=str, default=None)
+    prefix: str
+    name: str
+    base_repository: str
+    head_repository: str
+    head_ref: str
+    type: str
+    path: str = ""
+    head_rev: Union[str, None] = None
+    ssh_secret_name: Union[str, None] = None
 
 
-@attr.s(frozen=True, cmp=False)
+@dataclass(frozen=True, eq=False)
 class TransformConfig:
     """
     A container for configuration affecting transforms.  The `config` argument
@@ -35,26 +36,26 @@ class TransformConfig:
     """
 
     # the name of the current kind
-    kind = attr.ib()
+    kind: str
 
     # the path to the kind configuration directory
-    path = attr.ib(type=AnyStr)
+    path: str
 
     # the parsed contents of kind.yml
-    config = attr.ib(type=dict)
+    config: Dict
 
     # the parameters for this task-graph generation run
-    params = attr.ib(type=Parameters)
+    params: Parameters
 
     # a dict of all the tasks associated with the kind dependencies of the
     # current kind
-    kind_dependencies_tasks = attr.ib(type=dict)
+    kind_dependencies_tasks: Dict[str, Task]
 
     # Global configuration of the taskgraph
-    graph_config = attr.ib(type=GraphConfig)
+    graph_config: GraphConfig
 
     # whether to write out artifacts for the decision task
-    write_artifacts = attr.ib(type=bool)
+    write_artifacts: bool
 
     @property
     @memoize
@@ -106,7 +107,7 @@ class TransformConfig:
         return repo_configs
 
 
-@attr.s()
+@dataclass()
 class TransformSequence:
     """
     Container for a sequence of transforms.  Each transform is represented as a
@@ -118,7 +119,7 @@ class TransformSequence:
     sequence.
     """
 
-    _transforms = attr.ib(factory=list)
+    _transforms: List = field(default_factory=list)
 
     def __call__(self, config, items):
         for xform in self._transforms:
@@ -135,9 +136,9 @@ class TransformSequence:
         self.add(ValidateSchema(schema))
 
 
-@attr.s
+@dataclass
 class ValidateSchema:
-    schema = attr.ib(type=Schema)
+    schema: Schema
 
     def __call__(self, config, tasks):
         for task in tasks:
