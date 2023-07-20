@@ -135,20 +135,25 @@ specified programmatically using one of a variety of methods (e.g., parsing try
 syntax or reading a project-specific configuration file).
 
 ``enable_always_target``
-    When ``True``, any task with the ``always_target`` attribute will be
-    included in the ``target_task_graph`` regardless of whether they were
-    filtered out by the ``target_tasks_method`` or not. Because they are not
-    part of the ``target_set``, they will still be eligible for optimization
-    when the ``optimize_target_tasks`` parameter is ``False``.
+   Can either be a boolean or a list of kinds.
+
+   When ``True``, any task with the ``always_target`` attribute will be included
+   in the ``target_task_graph`` regardless of whether they were filtered out by
+   the ``target_tasks_method`` or not. Because they are not part of the
+   ``target_set``, they will still be eligible for optimization when the
+   ``optimize_target_tasks`` parameter is ``False``.
+
+   When specified as a list of kinds, only tasks with a matching kind will be
+   eligible for addition to the graph.
 
 ``filters``
-    List of filter functions (from ``taskcluster/gecko_taskgraph/filter_tasks.py``) to
-    apply. This is usually defined internally, as filters are typically
-    global.
+   List of filter functions (from ``taskcluster/gecko_taskgraph/filter_tasks.py``) to
+   apply. This is usually defined internally, as filters are typically
+   global.
 
 ``target_tasks_method``
-    The method to use to determine the target task set.  This is the suffix of
-    one of the functions in ``taskcluster/gecko_taskgraph/target_tasks.py``.
+   The method to use to determine the target task set.  This is the suffix of
+   one of the functions in ``taskcluster/gecko_taskgraph/target_tasks.py``.
 
 ``release_history``
    History of recent releases by platform and locale, used when generating
