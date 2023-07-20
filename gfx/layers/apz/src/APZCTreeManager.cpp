@@ -2209,10 +2209,12 @@ void APZCTreeManager::SetupScrollbarDrag(
     LayerToParentLayerMatrix4x4 thumbTransform;
     {
       RecursiveMutexAutoLock lock(mTreeLock);
-      thumbTransform = ComputeTransformForNode(aScrollThumbNode.Get(lock));
+      thumbTransform =
+          ComputeTransformForScrollThumbNode(aScrollThumbNode.Get(lock));
     }
     // Only consider the translation, since we do not support both
     // zooming and scrollbar dragging on any platform.
+    // FIXME: We do now.
     OuterCSSCoord thumbStart =
         thumbData.mThumbStart +
         ((*thumbData.mDirection == ScrollDirection::eHorizontal)
@@ -3425,106 +3427,29 @@ SideBits APZCTreeManager::SidesStuckToRootContent(
   return result;
 }
 
-LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
+LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForScrollThumbNode(
     const HitTestingTreeNode* aNode) const {
   mTreeLock.AssertCurrentThreadIn();
-  // The async transforms applied here for hit-testing purposes, are intended
-  // to match the ones AsyncCompositionManager (or equivalent WebRender code)
-  // applies for rendering purposes.
-  // Note that with containerless scrolling, the layer structure looks like
-  // this:
-  //
-  //   root container layer
-  //     async zoom container layer
-  //       scrollable content layers (with scroll metadata)
-  //       fixed content layers (no scroll metadta, annotated isFixedPosition)
-  //     scrollbar layers
-  //
-  // The intended async transforms in this case are:
-  //  * On the async zoom container layer, the "visual" portion of the root
-  //    content APZC's async transform (which includes the zoom, and async
-  //    scrolling of the visual viewport relative to the layout viewport).
-  //  * On the scrollable layers bearing the root content APZC's scroll
-  //    metadata, the "layout" portion of the root content APZC's async
-  //    transform (which includes async scrolling of the layout viewport
-  //    relative to the scrollable rect origin).
-  if (AsyncPanZoomController* apzc = aNode->GetApzc()) {
-    // If the node represents scrollable content, apply the async transform
-    // from its APZC.
-    bool visualTransformIsInheritedFromAncestor =
-        /* we're the APZC whose visual transform might be on the async
-           zoom container */
-        apzc->IsRootContent() &&
-        /* there is an async zoom container on this subtree */
-        mAsyncZoomContainerSubtree == Some(aNode->GetLayersId()) &&
-        /* it's not us */
-        !aNode->GetAsyncZoomContainerId();
-    AsyncTransformComponents components =
-        visualTransformIsInheritedFromAncestor
-            ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
-            : LayoutAndVisual;
-    return aNode->GetTransform() *
-           CompleteAsyncTransform(apzc->GetCurrentAsyncTransformWithOverscroll(
-               AsyncPanZoomController::eForHitTesting, components));
-  } else if (aNode->GetAsyncZoomContainerId()) {
-    if (AsyncPanZoomController* rootContent =
-            FindRootContentApzcForLayersId(aNode->GetLayersId())) {
-      return aNode->GetTransform() *
-             CompleteAsyncTransform(
-                 rootContent->GetCurrentAsyncTransformWithOverscroll(
-                     AsyncPanZoomController::eForHitTesting,
-                     {AsyncTransformComponent::eVisual}));
-    }
-  } else if (aNode->IsScrollThumbNode()) {
-    // If the node represents a scrollbar thumb, compute and apply the
-    // transformation that will be applied to the thumb in
-    // AsyncCompositionManager.
-    ScrollableLayerGuid guid{aNode->GetLayersId(), 0,
-                             aNode->GetScrollTargetId()};
-    if (RefPtr<HitTestingTreeNode> scrollTargetNode = GetTargetNode(
-            guid, &ScrollableLayerGuid::EqualsIgnoringPresShell)) {
-      AsyncPanZoomController* scrollTargetApzc = scrollTargetNode->GetApzc();
-      MOZ_ASSERT(scrollTargetApzc);
-      return scrollTargetApzc->CallWithLastContentPaintMetrics(
-          [&](const FrameMetrics& aMetrics) {
-            return ComputeTransformForScrollThumb(
-                aNode->GetTransform() * AsyncTransformMatrix(),
-                scrollTargetNode->GetTransform().ToUnknownMatrix(),
-                scrollTargetApzc, aMetrics, aNode->GetScrollbarData(),
-                scrollTargetNode->IsAncestorOf(aNode));
-          });
-    }
-  } else if (IsFixedToRootContent(aNode)) {
-    ParentLayerPoint translation;
-    {
-      MutexAutoLock mapLock(mMapLock);
-      translation = ViewAs<ParentLayerPixel>(
-          apz::ComputeFixedMarginsOffset(
-              GetCompositorFixedLayerMargins(mapLock),
-              aNode->GetFixedPosSides(), mGeckoFixedLayerMargins),
-          PixelCastJustification::ScreenIsParentLayerForRoot);
-    }
-    return aNode->GetTransform() *
-           CompleteAsyncTransform(
-               AsyncTransformComponentMatrix::Translation(translation));
-  }
-  SideBits sides = SidesStuckToRootContent(aNode);
-  if (sides != SideBits::eNone) {
-    ParentLayerPoint translation;
-    {
-      MutexAutoLock mapLock(mMapLock);
-      translation = ViewAs<ParentLayerPixel>(
-          apz::ComputeFixedMarginsOffset(
-              GetCompositorFixedLayerMargins(mapLock), sides,
-              // For sticky layers, we don't need to factor
-              // mGeckoFixedLayerMargins because Gecko doesn't shift the
-              // position of sticky elements for dynamic toolbar movements.
-              ScreenMargin()),
-          PixelCastJustification::ScreenIsParentLayerForRoot);
-    }
-    return aNode->GetTransform() *
-           CompleteAsyncTransform(
-               AsyncTransformComponentMatrix::Translation(translation));
+  // The async transform applied here is for hit-testing purposes, and is
+  // intended to match the one we tell WebRender to apply in
+  // SampleForWebRender for rendering purposes.
+  MOZ_ASSERT(aNode->IsScrollThumbNode());
+  // If the scrollable element scrolled by the thumb is layerized, compute and
+  // apply the transformation that will be applied to the thumb in
+  // AsyncCompositionManager.
+  ScrollableLayerGuid guid{aNode->GetLayersId(), 0, aNode->GetScrollTargetId()};
+  if (RefPtr<HitTestingTreeNode> scrollTargetNode =
+          GetTargetNode(guid, &ScrollableLayerGuid::EqualsIgnoringPresShell)) {
+    AsyncPanZoomController* scrollTargetApzc = scrollTargetNode->GetApzc();
+    MOZ_ASSERT(scrollTargetApzc);
+    return scrollTargetApzc->CallWithLastContentPaintMetrics(
+        [&](const FrameMetrics& aMetrics) {
+          return ComputeTransformForScrollThumb(
+              aNode->GetTransform() * AsyncTransformMatrix(),
+              scrollTargetNode->GetTransform().ToUnknownMatrix(),
+              scrollTargetApzc, aMetrics, aNode->GetScrollbarData(),
+              scrollTargetNode->IsAncestorOf(aNode));
+        });
   }
   // Otherwise, the node does not have an async transform.
   return aNode->GetTransform() * AsyncTransformMatrix();

@@ -745,10 +745,10 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   void NotifyScrollbarDragRejected(const ScrollableLayerGuid& aGuid) const;
   void NotifyAutoscrollRejected(const ScrollableLayerGuid& aGuid) const;
 
-  // Returns the transform that converts from |aNode|'s coordinates to
-  // the coordinates of |aNode|'s parent in the hit-testing tree.
-  // Requires the caller to hold mTreeLock.
-  LayerToParentLayerMatrix4x4 ComputeTransformForNode(
+  // Returns the transform that converts from |aNode|'s coordinates
+  // to the coordinates of |aNode|'s parent in the hit-testing tree. Requires
+  // the caller to hold mTreeLock.
+  LayerToParentLayerMatrix4x4 ComputeTransformForScrollThumbNode(
       const HitTestingTreeNode* aNode) const MOZ_REQUIRES(mTreeLock);
 
   // Look up the GeckoContentController for the given layers id.
