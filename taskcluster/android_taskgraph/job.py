@@ -115,7 +115,7 @@ def _extract_gradlew_command(run, fetches_dir):
 
 def _generate_secret_command(secret):
     secret_command = [
-        "../taskcluster/scripts/get-secret.py",
+        "/builds/worker/checkouts/gecko/taskcluster/scripts/get-secret.py",
         "-s",
         secret["name"],
         "-k",
@@ -134,7 +134,7 @@ def _generate_secret_command(secret):
 
 def _generate_dummy_secret_command(secret):
     secret_command = [
-        "../taskcluster/scripts/write-dummy-secret.py",
+        "/builds/worker/checkouts/gecko/taskcluster/scripts/write-dummy-secret.py",
         "-f",
         secret["path"],
         "-c",
