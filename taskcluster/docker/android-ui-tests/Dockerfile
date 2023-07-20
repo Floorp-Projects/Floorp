@@ -8,8 +8,7 @@ LABEL maintainer="Richard Pappalardo <rpappalax@gmail.com>"
 #-- Test tools --------------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------------
 
-RUN apt-get install -y jq \
-    && apt-get clean
+RUN chown -R worker:worker ${HOME}/.config
 
 USER worker:worker
 
@@ -34,11 +33,10 @@ RUN URL_FLANK_BIN="$($CURL --silent 'https://api.github.com/repos/Flank/flank/re
     && chmod +x "${TEST_TOOLS}/flank.jar"
 
 # Used in parse-ui-test-fromfile.py
-RUN pip3 install junitparser
-RUN pip3 install beautifultable
+RUN pip3 install --break-system-packages junitparser beautifultable
 
 # Used for env var ingest in testrail.py
-RUN pip3 install python-dotenv
+RUN pip3 install --break-system-packages python-dotenv
 
 # run-task expects to run as root
 USER root
