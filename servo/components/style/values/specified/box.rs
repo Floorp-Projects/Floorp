@@ -1460,37 +1460,21 @@ pub enum Appearance {
     /// A groupbox.
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Groupbox,
-    /// Menu Bar background
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    Menubar,
     /// <menu> and <menuitem> appearances
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Menuitem,
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Checkmenuitem,
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    Radiomenuitem,
     /// For text on non-iconic menuitems only
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    Menuitemtext,
     /// The text part of a dropdown list, to left of button.
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MenulistText,
     /// Menu Popup background.
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Menupopup,
-    /// menu checkbox/radio appearances
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    Menucheckbox,
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    Menuradio,
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    Menuseparator,
+    /// Menu item arrow.
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Menuarrow,
-    /// An image in the menu gutter, like in bookmarks or history.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    Menuimage,
     /// The meter bar's meter indicator.
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Meterchunk,
