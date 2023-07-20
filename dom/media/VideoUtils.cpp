@@ -483,6 +483,176 @@ bool ExtractH264CodecDetails(const nsAString& aCodec, uint8_t& aProfile,
   return true;
 }
 
+bool IsH265ProfileRecognizable(uint8_t aProfile,
+                               int32_t aProfileCompabilityFlags) {
+  enum Profile {
+    eUnknown,
+    eHighThroughputScreenExtended,
+    eScalableRangeExtension,
+    eScreenExtended,
+    e3DMain,
+    eScalableMain,
+    eMultiviewMain,
+    eHighThroughput,
+    eRangeExtension,
+    eMain10,
+    eMain,
+    eMainStillPicture
+  };
+  Profile p = eUnknown;
+
+  // Spec A.3.8
+  if (aProfile == 11 || (aProfileCompabilityFlags & 0x800)) {
+    p = eHighThroughputScreenExtended;
+  }
+  // Spec H.11.1.2
+  if (aProfile == 10 || (aProfileCompabilityFlags & 0x400)) {
+    p = eScalableRangeExtension;
+  }
+  // Spec A.3.7
+  if (aProfile == 9 || (aProfileCompabilityFlags & 0x200)) {
+    p = eScreenExtended;
+  }
+  // Spec I.11.1.1
+  if (aProfile == 8 || (aProfileCompabilityFlags & 0x100)) {
+    p = e3DMain;
+  }
+  // Spec H.11.1.1
+  if (aProfile == 7 || (aProfileCompabilityFlags & 0x80)) {
+    p = eScalableMain;
+  }
+  // Spec G.11.1.1
+  if (aProfile == 6 || (aProfileCompabilityFlags & 0x40)) {
+    p = eMultiviewMain;
+  }
+  // Spec A.3.6
+  if (aProfile == 5 || (aProfileCompabilityFlags & 0x20)) {
+    p = eHighThroughput;
+  }
+  // Spec A.3.5
+  if (aProfile == 4 || (aProfileCompabilityFlags & 0x10)) {
+    p = eRangeExtension;
+  }
+  // Spec A.3.3
+  // NOTICE: Do not change the order of below sections
+  if (aProfile == 2 || (aProfileCompabilityFlags & 0x4)) {
+    p = eMain10;
+  }
+  // Spec A.3.2
+  // When aProfileCompabilityFlags[1] is equal to 1,
+  // aProfileCompabilityFlags[2] should be equal to 1 as well.
+  if (aProfile == 1 || (aProfileCompabilityFlags & 0x2)) {
+    p = eMain;
+  }
+  // Spec A.3.4
+  // When aProfileCompabilityFlags[3] is equal to 1,
+  // aProfileCompabilityFlags[1] and
+  // aProfileCompabilityFlags[2] should be equal to 1 as well.
+  if (aProfile == 3 || (aProfileCompabilityFlags & 0x8)) {
+    p = eMainStillPicture;
+  }
+
+  return p != eUnknown;
+}
+
+bool ExtractH265CodecDetails(const nsAString& aCodec, uint8_t& aProfile,
+                             uint8_t& aLevel, nsTArray<uint8_t>& aConstraints) {
+  // HEVC codec id consists of:
+  const size_t maxHevcCodecIdLength =
+      5 +  // 'hev1.' or 'hvc1.' prefix (5 chars)
+      4 +  // profile, e.g. '.A12' (max 4 chars)
+      9 +  // profile_compatibility, dot + 32-bit hex number (max 9 chars)
+      5 +  // tier and level, e.g. '.H120' (max 5 chars)
+      18;  // up to 6 constraint bytes, bytes are dot-separated and hex-encoded.
+
+  if (aCodec.Length() > maxHevcCodecIdLength) {
+    return false;
+  }
+
+  // Verify the codec starts with "hev1." or "hvc1.".
+  const nsAString& sample = Substring(aCodec, 0, 5);
+  if (!sample.EqualsASCII("hev1.") && !sample.EqualsASCII("hvc1.")) {
+    return false;
+  }
+
+  nsresult rv;
+  CheckedUint8 profile;
+  int32_t compabilityFlags = 0;
+  CheckedUint8 level = 0;
+  nsTArray<uint8_t> constraints;
+
+  auto splitter = aCodec.Split(u'.');
+  size_t count = 0;
+  for (auto iter = splitter.begin(); iter != splitter.end(); ++iter, ++count) {
+    const auto& fieldStr = *iter;
+    if (fieldStr.IsEmpty()) {
+      return false;
+    }
+
+    if (count == 0) {
+      MOZ_RELEASE_ASSERT(fieldStr.EqualsASCII("hev1") ||
+                         fieldStr.EqualsASCII("hvc1"));
+      continue;
+    }
+
+    if (count == 1) {  // profile
+      Maybe<uint8_t> validProfileSpace;
+      if (fieldStr.First() == u'A' || fieldStr.First() == u'B' ||
+          fieldStr.First() == u'C') {
+        validProfileSpace.emplace(1 + (fieldStr.First() - 'A'));
+      }
+      // If fieldStr.First() is not A, B, C or a digit, ToInteger() should fail.
+      profile = validProfileSpace ? Substring(fieldStr, 1).ToInteger(&rv)
+                                  : fieldStr.ToInteger(&rv);
+      if (NS_FAILED(rv) || !profile.isValid() || profile.value() > 0x1F) {
+        return false;
+      }
+      continue;
+    }
+
+    if (count == 2) {  // profile compatibility flags
+      compabilityFlags = fieldStr.ToInteger(&rv, 16);
+      NS_ENSURE_SUCCESS(rv, false);
+      continue;
+    }
+
+    if (count == 3) {  // tier and level
+      Maybe<uint8_t> validProfileTier;
+      if (fieldStr.First() == u'L' || fieldStr.First() == u'H') {
+        validProfileTier.emplace(fieldStr.First() == u'L' ? 0 : 1);
+      }
+      // If fieldStr.First() is not L, H, or a digit, ToInteger() should fail.
+      level = validProfileTier ? Substring(fieldStr, 1).ToInteger(&rv)
+                               : fieldStr.ToInteger(&rv);
+      if (NS_FAILED(rv) || !level.isValid()) {
+        return false;
+      }
+      continue;
+    }
+
+    // The rest is constraint bytes.
+    if (count > 10) {
+      return false;
+    }
+
+    CheckedUint8 byte(fieldStr.ToInteger(&rv, 16));
+    if (NS_FAILED(rv) || !byte.isValid()) {
+      return false;
+    }
+    constraints.AppendElement(byte.value());
+  }
+
+  if (count < 4 /* Parse til level at least */ || constraints.Length() > 6 ||
+      !IsH265ProfileRecognizable(profile.value(), compabilityFlags)) {
+    return false;
+  }
+
+  aProfile = profile.value();
+  aLevel = level.value();
+  aConstraints = std::move(constraints);
+  return true;
+}
+
 bool ExtractAV1CodecDetails(const nsAString& aCodec, uint8_t& aProfile,
                             uint8_t& aLevel, uint8_t& aTier, uint8_t& aBitDepth,
                             bool& aMonochrome, bool& aSubsamplingX,
@@ -914,6 +1084,13 @@ bool IsH264CodecString(const nsAString& aCodec) {
   uint8_t constraint = 0;
   uint8_t level = 0;
   return ExtractH264CodecDetails(aCodec, profile, constraint, level);
+}
+
+bool IsH265CodecString(const nsAString& aCodec) {
+  uint8_t profile = 0;
+  uint8_t level = 0;
+  nsTArray<uint8_t> constraints;
+  return ExtractH265CodecDetails(aCodec, profile, level, constraints);
 }
 
 bool IsAACCodecString(const nsAString& aCodec) {
