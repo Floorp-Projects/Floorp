@@ -16,7 +16,7 @@ interface HTMLScriptElement : HTMLElement {
   attribute DOMString src;
   [CEReactions, SetterThrows]
   attribute DOMString type;
-  [CEReactions, SetterThrows, Pref="dom.moduleScripts.enabled"]
+  [CEReactions, SetterThrows]
   attribute boolean noModule;
   [CEReactions, SetterThrows]
   attribute DOMString charset;

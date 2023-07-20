@@ -3147,12 +3147,6 @@
   value: true
   mirror: always
 
-# Is support for module scripts (<script type="module">) enabled for content?
-- name: dom.moduleScripts.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for import maps (<script type="importmap">) enabled for content?
 - name: dom.importMaps.enabled
   type: bool

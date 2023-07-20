@@ -50,7 +50,6 @@ worker.onmessage = function() {
 worker.postMessage("dummy");
 
 // --- test script modules
-SpecialPowers.pushPrefEnv({set: [["dom.moduleScripts.enabled", true]]}, function() {
   let testModuleScriptRedirectToData = document.getElementById("testModuleScriptRedirectToData");
   testModuleScriptRedirectToData.onerror = function() {
     ok(true, "module script that redirects to data: URI should not load");
@@ -61,7 +60,6 @@ SpecialPowers.pushPrefEnv({set: [["dom.moduleScripts.enabled", true]]}, function
     checkFinish();
   }
   testModuleScriptRedirectToData.src = "file_block_subresource_redir_to_data.sjs?modulescript";
-});
 
 </script>
 </body>

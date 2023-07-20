@@ -18125,11 +18125,6 @@ void Document::RecordNavigationTiming(ReadyState aReadyState) {
   }
 }
 
-bool Document::ModuleScriptsEnabled() const {
-  return nsContentUtils::IsChromeDoc(this) ||
-         StaticPrefs::dom_moduleScripts_enabled();
-}
-
 bool Document::ImportMapsEnabled() const {
   return nsContentUtils::IsChromeDoc(this) ||
          StaticPrefs::dom_importMaps_enabled();
