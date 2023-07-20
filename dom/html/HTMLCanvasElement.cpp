@@ -732,7 +732,7 @@ void HTMLCanvasElement::ToDataURL(JSContext* aCx, const nsAString& aType,
                                   nsIPrincipal& aSubjectPrincipal,
                                   ErrorResult& aRv) {
   // mWriteOnly check is redundant, but optimizes for the common case.
-  if (mWriteOnly && !CallerCanRead(aCx)) {
+  if (mWriteOnly && !CallerCanRead(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -918,7 +918,7 @@ void HTMLCanvasElement::ToBlob(JSContext* aCx, BlobCallback& aCallback,
                                nsIPrincipal& aSubjectPrincipal,
                                ErrorResult& aRv) {
   // mWriteOnly check is redundant, but optimizes for the common case.
-  if (mWriteOnly && !CallerCanRead(aCx)) {
+  if (mWriteOnly && !CallerCanRead(&aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -980,9 +980,9 @@ OffscreenCanvas* HTMLCanvasElement::TransferControlToOffscreen(
       MakeRefPtr<OffscreenCanvasDisplayHelper>(this, sz.width, sz.height);
   mOffscreenCanvas =
       new OffscreenCanvas(win->AsGlobal(), sz.width, sz.height, backend,
-                          textureType, mOffscreenDisplay);
+                          textureType, do_AddRef(mOffscreenDisplay));
   if (mWriteOnly) {
-    mOffscreenCanvas->SetWriteOnly();
+    mOffscreenCanvas->SetWriteOnly(mExpandedReader);
   }
 
   if (!mContextObserver) {
@@ -1023,25 +1023,27 @@ void HTMLCanvasElement::SetWriteOnly(
   mExpandedReader = aExpandedReader;
   mWriteOnly = true;
   if (mOffscreenCanvas) {
-    mOffscreenCanvas->SetWriteOnly();
+    mOffscreenCanvas->SetWriteOnly(aExpandedReader);
   }
 }
 
-bool HTMLCanvasElement::CallerCanRead(JSContext* aCx) const {
+bool HTMLCanvasElement::CallerCanRead(nsIPrincipal* aPrincipal) const {
   if (!mWriteOnly) {
     return true;
   }
 
-  nsIPrincipal* prin = nsContentUtils::SubjectPrincipal(aCx);
+  if (!aPrincipal) {
+    return false;
+  }
 
   // If mExpandedReader is set, this canvas was tainted only by
   // mExpandedReader's resources. So allow reading if the subject
   // principal subsumes mExpandedReader.
-  if (mExpandedReader && prin->Subsumes(mExpandedReader)) {
+  if (mExpandedReader && aPrincipal->Subsumes(mExpandedReader)) {
     return true;
   }
 
-  return nsContentUtils::PrincipalHasPermission(*prin,
+  return nsContentUtils::PrincipalHasPermission(*aPrincipal,
                                                 nsGkAtoms::all_urlsPermission);
 }
 
