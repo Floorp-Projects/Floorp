@@ -1288,10 +1288,6 @@ class GeckoEngineSession(
         override fun onShowDynamicToolbar(geckoSession: GeckoSession) {
             notifyObservers { onShowDynamicToolbar() }
         }
-
-        override fun onGetNimbusFeature(session: GeckoSession, featureId: String): JSONObject? {
-            return GeckoNimbus.getFeature(featureId)?.toJSONObject()
-        }
     }
 
     private fun createContentBlockingDelegate() = object : ContentBlocking.Delegate {
