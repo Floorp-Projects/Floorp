@@ -503,12 +503,7 @@
       Services.prefs.addObserver(fxSidebarPosition, bmsController.eventFunctions.setFlexOrder);
       Services.prefs.addObserver(floorpSidebarPosition, bmsController.eventFunctions.setFlexOrder);
       // Run function when browser start.
-      window.setTimeout(bmsController.eventFunctions.setFlexOrder, 1000);
-
-      // Set TST URL
-      if ("floorp//tst" in BROWSER_SIDEBAR_DATA.data) {
-        window.setTimeout(async() => {
-          BrowserManagerSidebar.STATIC_SIDEBAR_DATA["floorp//tst"].url = await BrowserManagerSidebar.getAdoonSidebarPage("treestyletab@piro.sakura.ne.jp")
-        }, 1250);
-      }
-    })()
+      SessionStore.promiseInitialized.then(() =>{
+        bmsController.eventFunctions.setFlexOrder();
+      });
+   })()

@@ -932,13 +932,15 @@ const workspaceFunctions = {
       }
 
       for (let i = 0; i < tabsURL.length; i++) {
-        gBrowser.addTab(tabsURL[i], {
-          skipAnimation: true,
-          inBackground: true,
-          skipLoad: false,
-          triggeringPrincipal:
-            Services.scriptSecurityManager.getSystemPrincipal(),
-        });
+        window.setTimeout(() => {
+          gBrowser.addTab(tabsURL[i], {
+            skipAnimation: true,
+            inBackground: true,
+            skipLoad: false,
+            triggeringPrincipal:
+              Services.scriptSecurityManager.getSystemPrincipal(),
+          });
+        }, 100);
       }
 
       //restore workspace
@@ -995,24 +997,17 @@ startWorkspace = function () {
   //use from about:prerferences
   Services.obs.addObserver(workspaceFunctions.Backup.restoreWorkspace, "backupWorkspace");
 
-  //run codes
-  if (gBrowser !== undefined && gBrowserInit !== undefined) {
-    window.setTimeout(
-      workspaceFunctions.Backup.backupWorkspace,
-      700
-    );
-    window.setTimeout(
-      workspaceFunctions.manageWorkspaceFunctions.initWorkspace,
-      900
-    );
-    window.setTimeout(
-      workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace,
-      1000
-    );
-    window.setTimeout(setEvenyListeners, 1300);
-  } else {
-    window.setTimeout(startWorkspace, 100);
-  }
+  // run code
+  SessionStore.promiseInitialized.then(() => {
+    // Bail out if the window has been closed in the meantime.
+    if (window.closed) {
+      return;
+    }
+
+    workspaceFunctions.Backup.backupWorkspace();
+    workspaceFunctions.manageWorkspaceFunctions.initWorkspace();
+    workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
+  });
 };
 
 startWorkspace();

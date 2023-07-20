@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -34,12 +35,9 @@ function setVerticalTabs() {
       let list = Services.wm.getEnumerator("navigator:browser");
       while (list.hasMoreElements()) { if (list.getNext() != window) return; }
 
-      if (gBrowser !== undefined && gBrowserInit !== undefined) {
-        window.setTimeout(setWorkspaceLabel, 1200);
-      } else {
-        window.setTimeout(checkBrowserIsStartup, 100);
-        return;
-      }
+      SessionStore.promiseInitialized.then(() => {
+        window.setTimeout(setWorkspaceLabel, 1000); 
+      });
     }
     checkBrowserIsStartup();
 
@@ -91,7 +89,6 @@ function setVerticalTabs() {
       },1000)
       tabBrowserArrowScrollBox.setAttribute("scrolledtostart","true")
       tabBrowserArrowScrollBox.removeAttribute("disabled");
-      let sidebarBox = document.getElementById("sidebar-box");
       //sidebarBox.style.removeProperty("overflow-y")
 
       //move workspace button
