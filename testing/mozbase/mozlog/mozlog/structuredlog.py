@@ -424,10 +424,11 @@ class StructuredLogger(object):
                 "Got test_start message before suite_start for test %s" % data["test"]
             )
             return
-        if data["test"] in self._state.running_tests:
+        test_key = (data.get("subsuite"), data["test"])
+        if test_key in self._state.running_tests:
             self.error("test_start for %s logged while in progress." % data["test"])
             return
-        self._state.running_tests.add(data["test"])
+        self._state.running_tests.add(test_key)
         self._log_data("test_start", data)
 
     @log_action(
@@ -460,7 +461,8 @@ class StructuredLogger(object):
         if data["expected"] == data["status"] or data["status"] == "SKIP":
             del data["expected"]
 
-        if data["test"] not in self._state.running_tests:
+        test_key = (data.get("subsuite"), data["test"])
+        if test_key not in self._state.running_tests:
             self.error(
                 "test_status for %s logged while not in progress. "
                 "Logged with data: %s" % (data["test"], json.dumps(data))
@@ -498,13 +500,14 @@ class StructuredLogger(object):
         if data["expected"] == data["status"] or data["status"] == "SKIP":
             del data["expected"]
 
-        if data["test"] not in self._state.running_tests:
+        test_key = (data.get("subsuite"), data["test"])
+        if test_key not in self._state.running_tests:
             self.error(
                 "test_end for %s logged while not in progress. "
                 "Logged with data: %s" % (data["test"], json.dumps(data))
             )
         else:
-            self._state.running_tests.remove(data["test"])
+            self._state.running_tests.remove(test_key)
             self._log_data("test_end", data)
 
     @log_action(
