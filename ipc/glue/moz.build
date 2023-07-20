@@ -114,15 +114,7 @@ else:
         "CrossProcessSemaphore_unimplemented.cpp",
     ]
 
-# Android has its own,
-# almost-but-not-quite-compatible-with-POSIX-or-/dev/shm shared memory
-# impl.
-if CONFIG["OS_TARGET"] == "Android":
-    EXPORTS.mozilla.ipc += ["SharedMemoryBasic_android.h"]
-    UNIFIED_SOURCES += [
-        "SharedMemoryBasic_android.cpp",
-    ]
-elif CONFIG["OS_ARCH"] == "Darwin":
+if CONFIG["OS_ARCH"] == "Darwin":
     EXPORTS.mozilla.ipc += ["SharedMemoryBasic_mach.h"]
     SOURCES += [
         "SharedMemoryBasic_mach.mm",
