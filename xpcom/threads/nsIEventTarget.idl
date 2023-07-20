@@ -17,7 +17,7 @@ class nsITargetShutdownTask;
 native alreadyAddRefed_nsIRunnable(already_AddRefed<nsIRunnable>);
 [ptr] native nsITargetShutdownTask(nsITargetShutdownTask);
 
-[builtinclass, scriptable, uuid(a03b8b63-af8b-4164-b0e5-c41e8b2b7cfa)]
+[builtinclass, scriptable, rust_sync, uuid(a03b8b63-af8b-4164-b0e5-c41e8b2b7cfa)]
 interface nsIEventTarget : nsISupports
 {
   /* until we can get rid of all uses, keep the non-alreadyAddRefed<> version */

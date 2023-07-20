@@ -28,7 +28,7 @@ interface nsIThreadPoolListener : nsISupports
  * anonymous (unnamed) worker threads.  An event dispatched to the thread pool
  * will be run on the next available worker thread.
  */
-[uuid(76ce99c9-8e43-489a-9789-f27cc4424965)]
+[rust_sync, uuid(76ce99c9-8e43-489a-9789-f27cc4424965)]
 interface nsIThreadPool : nsIEventTarget
 {
   /**
