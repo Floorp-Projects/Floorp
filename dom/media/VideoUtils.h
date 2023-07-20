@@ -347,6 +347,8 @@ bool ParseCodecsString(const nsAString& aCodecs,
 
 bool IsH264CodecString(const nsAString& aCodec);
 
+bool IsH265CodecString(const nsAString& aCodec);
+
 bool IsAACCodecString(const nsAString& aCodec);
 
 bool IsVP8CodecString(const nsAString& aCodec);
