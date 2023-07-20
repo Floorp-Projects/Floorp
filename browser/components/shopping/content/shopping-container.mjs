@@ -43,6 +43,7 @@ export class ShoppingContainer extends MozLitElement {
     if (!this.data) {
       return html`<p>loading...</p>`;
     }
+
     return html`<link
         rel="stylesheet"
         href="chrome://browser/content/shopping/shopping-container.css"
@@ -71,7 +72,9 @@ export class ShoppingContainer extends MozLitElement {
           <adjusted-rating
             rating=${this.data.adjusted_rating}
           ></adjusted-rating>
-          <review-highlights></review-highlights>
+          <review-highlights
+            .highlights=${this.data.highlights}
+          ></review-highlights>
           <shopping-settings></shopping-settings>
         </div>
       </div>`;
