@@ -856,10 +856,12 @@ class BrowsingContextModule extends Module {
       url = listener.currentURI.spec;
     }
 
+    const navigation =
+      this.messageHandler.navigationManager.getNavigationForBrowsingContext(
+        webProgress.browsingContext
+      );
     return {
-      // TODO: The navigation id should be a real id mapped to the navigation.
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1763122
-      navigation: null,
+      navigation: navigation ? navigation.id : null,
       url,
     };
   }
