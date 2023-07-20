@@ -10093,3 +10093,19 @@ app_icon:
     metadata:
       tags:
         - Tabs
+
+sync:
+  failed:
+    type: event
+    description: |
+      User sign-in/sync has failed.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841156
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/2726
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: never

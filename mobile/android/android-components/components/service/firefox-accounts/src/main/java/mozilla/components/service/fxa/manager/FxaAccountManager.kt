@@ -40,6 +40,7 @@ import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.asAuthFlowUrl
 import mozilla.components.service.fxa.asSyncAuthInfo
+import mozilla.components.service.fxa.emitSyncFailedFact
 import mozilla.components.service.fxa.into
 import mozilla.components.service.fxa.sync.SyncManager
 import mozilla.components.service.fxa.sync.SyncReason
@@ -53,8 +54,6 @@ import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.base.utils.NamedThreadFactory
 import java.io.Closeable
-import java.lang.Exception
-import java.lang.IllegalArgumentException
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
@@ -860,6 +859,7 @@ open class FxaAccountManager(
         }
 
         override fun onAuthenticationProblems() {
+            emitSyncFailedFact()
             syncManager.stop()
         }
     }

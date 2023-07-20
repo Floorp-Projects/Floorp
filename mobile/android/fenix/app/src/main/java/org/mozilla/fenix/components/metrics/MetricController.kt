@@ -26,6 +26,7 @@ import mozilla.components.feature.search.telemetry.incontent.InContentTelemetry
 import mozilla.components.feature.sitepermissions.SitePermissionsFacts
 import mozilla.components.feature.syncedtabs.facts.SyncedTabsFacts
 import mozilla.components.feature.top.sites.facts.TopSitesFacts
+import mozilla.components.service.fxa.SyncFacts
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
@@ -50,6 +51,7 @@ import org.mozilla.fenix.GleanMetrics.MediaState
 import org.mozilla.fenix.GleanMetrics.PerfAwesomebar
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.SitePermissions
+import org.mozilla.fenix.GleanMetrics.Sync
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.search.awesomebar.ShortcutsSuggestionProvider
 import org.mozilla.fenix.utils.Settings
@@ -351,6 +353,9 @@ internal class ReleaseMetricController(
                     // no-op
                 }
             }
+        }
+        Component.SERVICE_FIREFOX_ACCOUNTS to SyncFacts.Items.SYNC_FAILED -> {
+            Sync.failed.record(NoExtras())
         }
 
         else -> {
