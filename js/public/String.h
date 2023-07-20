@@ -26,7 +26,6 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, JS::ConstUTF8CharsZ
-#include "js/Id.h"                 // jsid, JSID_IS_STRING, JSID_TO_STRING
 #include "js/RootingAPI.h"         // JS::Handle
 #include "js/TypeDecls.h"          // JS::Latin1Char
 #include "js/UniquePtr.h"          // JS::UniquePtr
