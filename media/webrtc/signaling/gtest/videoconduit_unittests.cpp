@@ -532,10 +532,10 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecScaleResolutionBy) {
       Call()->CreateEncoderStreams(sink->mVideoFrame.width(),
                                    sink->mVideoFrame.height());
   ASSERT_EQ(videoStreams.size(), 2U);
-  ASSERT_EQ(videoStreams[0].width, 160U);
-  ASSERT_EQ(videoStreams[0].height, 90U);
-  ASSERT_EQ(videoStreams[1].width, 320U);
-  ASSERT_EQ(videoStreams[1].height, 180U);
+  ASSERT_EQ(videoStreams[0].width, 320U);
+  ASSERT_EQ(videoStreams[0].height, 180U);
+  ASSERT_EQ(videoStreams[1].width, 160U);
+  ASSERT_EQ(videoStreams[1].height, 90U);
 }
 
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecCodecMode) {
@@ -660,8 +660,8 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecRids) {
   });
   ASSERT_TRUE(Call()->mVideoSendConfig);
   ASSERT_EQ(Call()->mVideoSendConfig->rtp.rids.size(), 2U);
-  ASSERT_EQ(Call()->mVideoSendConfig->rtp.rids[0], "2");
-  ASSERT_EQ(Call()->mVideoSendConfig->rtp.rids[1], "1");
+  ASSERT_EQ(Call()->mVideoSendConfig->rtp.rids[0], "1");
+  ASSERT_EQ(Call()->mVideoSendConfig->rtp.rids[1], "2");
 }
 
 TEST_F(VideoConduitTest, TestOnSinkWantsChanged) {
@@ -835,12 +835,12 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastOddScreen) {
         Call()->CreateEncoderStreams(sink->mVideoFrame.width(),
                                      sink->mVideoFrame.height());
     ASSERT_EQ(videoStreams.size(), 3U);
-    EXPECT_EQ(videoStreams[2].width, 26U);
-    EXPECT_EQ(videoStreams[2].height, 24U);
+    EXPECT_EQ(videoStreams[0].width, 26U);
+    EXPECT_EQ(videoStreams[0].height, 24U);
     EXPECT_EQ(videoStreams[1].width, 13U);
     EXPECT_EQ(videoStreams[1].height, 12U);
-    EXPECT_EQ(videoStreams[0].width, 6U);
-    EXPECT_EQ(videoStreams[0].height, 6U);
+    EXPECT_EQ(videoStreams[2].width, 6U);
+    EXPECT_EQ(videoStreams[2].height, 6U);
   }
 
   mControl.Update([&](auto& aControl) {
@@ -897,12 +897,12 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastAllScaling) {
         Call()->CreateEncoderStreams(sink->mVideoFrame.width(),
                                      sink->mVideoFrame.height());
     ASSERT_EQ(videoStreams.size(), 3U);
-    EXPECT_EQ(videoStreams[2].width, 640U);
-    EXPECT_EQ(videoStreams[2].height, 360U);
+    EXPECT_EQ(videoStreams[0].width, 640U);
+    EXPECT_EQ(videoStreams[0].height, 360U);
     EXPECT_EQ(videoStreams[1].width, 320U);
     EXPECT_EQ(videoStreams[1].height, 180U);
-    EXPECT_EQ(videoStreams[0].width, 213U);
-    EXPECT_EQ(videoStreams[0].height, 120U);
+    EXPECT_EQ(videoStreams[2].width, 213U);
+    EXPECT_EQ(videoStreams[2].height, 120U);
   }
 
   SendVideoFrame(1281, 721, 2);
@@ -911,12 +911,12 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastAllScaling) {
         Call()->CreateEncoderStreams(sink->mVideoFrame.width(),
                                      sink->mVideoFrame.height());
     ASSERT_EQ(videoStreams.size(), 3U);
-    EXPECT_EQ(videoStreams[2].width, 640U);
-    EXPECT_EQ(videoStreams[2].height, 360U);
+    EXPECT_EQ(videoStreams[0].width, 640U);
+    EXPECT_EQ(videoStreams[0].height, 360U);
     EXPECT_EQ(videoStreams[1].width, 320U);
     EXPECT_EQ(videoStreams[1].height, 180U);
-    EXPECT_EQ(videoStreams[0].width, 213U);
-    EXPECT_EQ(videoStreams[0].height, 120U);
+    EXPECT_EQ(videoStreams[2].width, 213U);
+    EXPECT_EQ(videoStreams[2].height, 120U);
   }
 
   SendVideoFrame(1280, 720, 3);
@@ -925,12 +925,12 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastAllScaling) {
         Call()->CreateEncoderStreams(sink->mVideoFrame.width(),
                                      sink->mVideoFrame.height());
     ASSERT_EQ(videoStreams.size(), 3U);
-    EXPECT_EQ(videoStreams[2].width, 640U);
-    EXPECT_EQ(videoStreams[2].height, 360U);
+    EXPECT_EQ(videoStreams[0].width, 640U);
+    EXPECT_EQ(videoStreams[0].height, 360U);
     EXPECT_EQ(videoStreams[1].width, 320U);
     EXPECT_EQ(videoStreams[1].height, 180U);
-    EXPECT_EQ(videoStreams[0].width, 213U);
-    EXPECT_EQ(videoStreams[0].height, 120U);
+    EXPECT_EQ(videoStreams[2].width, 213U);
+    EXPECT_EQ(videoStreams[2].height, 120U);
   }
 
   mControl.Update([&](auto& aControl) {
@@ -947,12 +947,12 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastAllScaling) {
         Call()->CreateEncoderStreams(sink->mVideoFrame.width(),
                                      sink->mVideoFrame.height());
     ASSERT_EQ(videoStreams.size(), 3U);
-    EXPECT_EQ(videoStreams[2].width, 1280U);
-    EXPECT_EQ(videoStreams[2].height, 720U);
+    EXPECT_EQ(videoStreams[0].width, 1280U);
+    EXPECT_EQ(videoStreams[0].height, 720U);
     EXPECT_EQ(videoStreams[1].width, 640U);
     EXPECT_EQ(videoStreams[1].height, 360U);
-    EXPECT_EQ(videoStreams[0].width, 320U);
-    EXPECT_EQ(videoStreams[0].height, 180U);
+    EXPECT_EQ(videoStreams[2].width, 320U);
+    EXPECT_EQ(videoStreams[2].height, 180U);
   }
 }
 
@@ -1886,8 +1886,8 @@ TEST_F(VideoConduitTest, TestVideoEncodeSimulcastScaleResolutionBy) {
     const std::vector<webrtc::VideoStream> videoStreams =
         Call()->CreateEncoderStreams(sink->mVideoFrame.width(),
                                      sink->mVideoFrame.height());
-    ASSERT_EQ(videoStreams[2].width, 320U);
-    ASSERT_EQ(videoStreams[2].height, 240U);
+    ASSERT_EQ(videoStreams[0].width, 320U);
+    ASSERT_EQ(videoStreams[0].height, 240U);
     ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 1000U);
     ASSERT_EQ(sink->mOnFrameCount, 1U);
   }
@@ -1897,8 +1897,8 @@ TEST_F(VideoConduitTest, TestVideoEncodeSimulcastScaleResolutionBy) {
     const std::vector<webrtc::VideoStream> videoStreams =
         Call()->CreateEncoderStreams(sink->mVideoFrame.width(),
                                      sink->mVideoFrame.height());
-    ASSERT_EQ(videoStreams[2].width, 640U);
-    ASSERT_EQ(videoStreams[2].height, 360U);
+    ASSERT_EQ(videoStreams[0].width, 640U);
+    ASSERT_EQ(videoStreams[0].height, 360U);
     ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 2000U);
     ASSERT_EQ(sink->mOnFrameCount, 2U);
     mVideoConduit->RemoveSink(sink.get());
@@ -2036,7 +2036,7 @@ TEST_F(VideoConduitTest, TestVideoEncodeLargeScaleResolutionByStreamCreation) {
       ASSERT_EQ(videoStreams.size(), scales.size());
       for (size_t i = 0; i < scales.size(); ++i) {
         // Streams are backwards for some reason
-        const auto& stream = videoStreams[scales.size() - i - 1];
+        const auto& stream = videoStreams[i];
         const auto& scale = scales[i];
         if (scale == 200U) {
           EXPECT_EQ(stream.width, 3U);
@@ -2080,7 +2080,7 @@ TEST_F(VideoConduitTest, TestVideoEncodeResolutionAlignment) {
       ASSERT_EQ(videoStreams.size(), scales.size());
       for (size_t i = 0; i < videoStreams.size(); ++i) {
         // videoStreams is backwards
-        const auto& stream = videoStreams[videoStreams.size() - 1 - i];
+        const auto& stream = videoStreams[i];
         const auto& scale = scales[i];
         uint32_t expectation =
             480 / scale < static_cast<uint32_t>(alignment) ? 1 : 0;
