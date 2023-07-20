@@ -7849,6 +7849,7 @@ pub enum RegisterCustomPropertyResult {
 #[no_mangle]
 pub extern "C" fn Servo_RegisterCustomProperty(
     per_doc_data: &PerDocumentStyleData,
+    extra_data: *mut URLExtraData,
     name: &nsACString,
     syntax: &nsACString,
     inherits: bool,
@@ -7861,6 +7862,7 @@ pub extern "C" fn Servo_RegisterCustomProperty(
     use style::properties_and_values::syntax::Descriptor;
 
     let mut per_doc_data = per_doc_data.borrow_mut();
+    let url_data = unsafe { UrlExtraData::from_ptr_ref(&extra_data) };
     let name = unsafe { name.as_str_unchecked() };
     let syntax = unsafe { syntax.as_str_unchecked() };
     let initial_value = initial_value.map(|v| unsafe { v.as_str_unchecked() });
@@ -7895,7 +7897,9 @@ pub extern "C" fn Servo_RegisterCustomProperty(
         None => None,
     };
 
-    if let Err(error) = PropertyRuleData::validate_initial_value(&syntax, initial_value.as_ref()) {
+    if let Err(error) =
+        PropertyRuleData::validate_initial_value(&syntax, initial_value.as_ref(), url_data)
+    {
         return match error {
             ToRegistrationError::MissingInherits |
             ToRegistrationError::MissingSyntax => unreachable!(),

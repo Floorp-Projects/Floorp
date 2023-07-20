@@ -509,6 +509,19 @@ impl<A: Debug, B: Debug> Debug for Either<A, B> {
 pub struct CustomIdent(pub Atom);
 
 impl CustomIdent {
+    /// Parse a <custom-ident>
+    ///
+    /// TODO(zrhoffman, bug 1844501): Use CustomIdent::parse in more places instead of
+    /// CustomIdent::from_ident.
+    pub fn parse<'i, 't>(
+        input: &mut Parser<'i, 't>,
+        invalid: &[&str],
+    ) -> Result<Self, ParseError<'i>> {
+        let location = input.current_source_location();
+        let ident = input.expect_ident()?;
+        CustomIdent::from_ident(location, ident, invalid)
+    }
+
     /// Parse an already-tokenizer identifier
     pub fn from_ident<'i>(
         location: SourceLocation,
