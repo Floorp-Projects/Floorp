@@ -4,6 +4,27 @@
 
 #include "Mutex.h"
 
+#include <errno.h>
+
+#include "mozilla/Assertions.h"
+
+bool Mutex::TryLock() {
+#if defined(XP_WIN)
+  return !!TryEnterCriticalSection(&mMutex);
+#elif defined(XP_DARWIN)
+  return os_unfair_lock_trylock(&mMutex);
+#else
+  switch (pthread_mutex_trylock(&mMutex)) {
+    case 0:
+      return true;
+    case EBUSY:
+      return false;
+    default:
+      MOZ_CRASH("pthread_mutex_trylock error.");
+  }
+#endif
+}
+
 #if defined(XP_DARWIN)
 
 // static

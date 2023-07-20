@@ -126,6 +126,8 @@ struct MOZ_CAPABILITY("mutex") Mutex {
 #endif
   }
 
+  [[nodiscard]] bool TryLock() MOZ_TRY_ACQUIRE(true);
+
   inline void Unlock() MOZ_CAPABILITY_RELEASE() {
 #if defined(XP_WIN)
     LeaveCriticalSection(&mMutex);

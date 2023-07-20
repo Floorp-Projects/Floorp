@@ -757,8 +757,10 @@ class GMut {
     }
   }
 
-  void FillAddrInfo(GMutLock, uintptr_t aIndex, const void* aBaseAddr,
-                    bool isGuardPage, phc::AddrInfo& aOut) {
+  // This expects GMUt::sMutex to be locked but can't check it with a parameter
+  // since we try-lock it.
+  void FillAddrInfo(uintptr_t aIndex, const void* aBaseAddr, bool isGuardPage,
+                    phc::AddrInfo& aOut) {
     const AllocPageInfo& page = mAllocPages[aIndex];
     if (isGuardPage) {
       aOut.mKind = phc::AddrInfo::Kind::GuardPage;
@@ -1644,12 +1646,17 @@ class PHCBridge : public ReplaceMallocBridge {
     uintptr_t index = pk.AllocPageIndex();
 
     if (aOut) {
-      MutexAutoLock lock(GMut::sMutex);
-      gMut->FillAddrInfo(lock, index, aPtr, isGuardPage, *aOut);
-      LOG("IsPHCAllocation: %zu, %p, %zu, %zu, %zu\n", size_t(aOut->mKind),
-          aOut->mBaseAddr, aOut->mUsableSize,
-          aOut->mAllocStack.isSome() ? aOut->mAllocStack->mLength : 0,
-          aOut->mFreeStack.isSome() ? aOut->mFreeStack->mLength : 0);
+      if (GMut::sMutex.TryLock()) {
+        gMut->FillAddrInfo(index, aPtr, isGuardPage, *aOut);
+        LOG("IsPHCAllocation: %zu, %p, %zu, %zu, %zu\n", size_t(aOut->mKind),
+            aOut->mBaseAddr, aOut->mUsableSize,
+            aOut->mAllocStack.isSome() ? aOut->mAllocStack->mLength : 0,
+            aOut->mFreeStack.isSome() ? aOut->mFreeStack->mLength : 0);
+        GMut::sMutex.Unlock();
+      } else {
+        LOG("IsPHCAllocation: PHC is locked\n");
+        aOut->mPhcWasLocked = true;
+      }
     }
     return true;
   }
