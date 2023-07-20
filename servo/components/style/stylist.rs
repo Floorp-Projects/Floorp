@@ -2810,7 +2810,8 @@ impl CascadeData {
                     )?;
                 },
                 CssRule::Property(ref rule) => {
-                    if let Ok(registration) = rule.to_valid_registration() {
+                    let url_data = stylesheet.contents().url_data.read();
+                    if let Ok(registration) = rule.to_valid_registration(&url_data) {
                         self.custom_property_registrations.try_insert(
                             rule.name.0.clone(),
                             registration,

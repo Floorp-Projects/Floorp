@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+//! Used for parsing and serializing component names from the syntax string.
+
 use super::{Component, ComponentName, Multiplier};
 
 /// <https://drafts.css-houdini.org/css-properties-values-api-1/#supported-names>
@@ -40,6 +42,9 @@ pub enum DataType {
 }
 
 impl DataType {
+    /// Converts a component name from a pre-multiplied data type to its un-pre-multiplied equivalent.
+    ///
+    /// <https://drafts.css-houdini.org/css-properties-values-api-1/#pre-multiplied-data-type-name>
     pub fn unpremultiply(&self) -> Option<Component> {
         match *self {
             DataType::TransformList => Some(Component {
@@ -50,6 +55,7 @@ impl DataType {
         }
     }
 
+    /// Parses a syntax component name.
     pub fn from_str(ty: &str) -> Option<Self> {
         Some(match ty.as_bytes() {
             b"length" => DataType::Length,
@@ -68,24 +74,5 @@ impl DataType {
             b"transform-list" => DataType::TransformList,
             _ => return None,
         })
-    }
-
-    pub fn to_str(&self) -> &str {
-        match self {
-            DataType::Length => "length",
-            DataType::Number => "number",
-            DataType::Percentage => "percentage",
-            DataType::LengthPercentage => "length-percentage",
-            DataType::Color => "color",
-            DataType::Image => "image",
-            DataType::Url => "url",
-            DataType::Integer => "integer",
-            DataType::Angle => "angle",
-            DataType::Time => "time",
-            DataType::Resolution => "resolution",
-            DataType::TransformFunction => "transform-function",
-            DataType::CustomIdent => "custom-ident",
-            DataType::TransformList => "transform-list",
-        }
     }
 }

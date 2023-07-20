@@ -1448,8 +1448,8 @@ void ServoStyleSet::RegisterProperty(const PropertyDefinition& aDefinition,
                                      ErrorResult& aRv) {
   using Result = StyleRegisterCustomPropertyResult;
   auto result = Servo_RegisterCustomProperty(
-      RawData(), &aDefinition.mName, &aDefinition.mSyntax,
-      aDefinition.mInherits,
+      RawData(), mDocument->DefaultStyleAttrURLData(), &aDefinition.mName,
+      &aDefinition.mSyntax, aDefinition.mInherits,
       aDefinition.mInitialValue.WasPassed() ? &aDefinition.mInitialValue.Value()
                                             : nullptr);
   switch (result) {
