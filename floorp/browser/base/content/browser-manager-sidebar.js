@@ -59,6 +59,54 @@
           break
         }
       },
+      setFlexOrder: () => {
+        const fxSidebarPosition = "sidebar.position_start"
+        const floorpSidebarPosition = "floorp.browser.sidebar.right"
+        let fxSidebarPositionPref = Services.prefs.getBoolPref(fxSidebarPosition);
+        let floorpSidebarPositionPref = Services.prefs.getBoolPref(floorpSidebarPosition);
+        let fxSidebar = document.getElementById("sidebar-box");
+        let fxSidebarSplitter = document.getElementById("sidebar-splitter");
+        let floorpSidebar = document.getElementById("sidebar2-box");
+        let floorpSidebarSplitter = document.getElementById("sidebar-splitter2");
+        let floorpSidebarSelectBox = document.getElementById("sidebar-select-box");
+        let browserBox = document.getElementById("appcontent");
+    
+        // floorpSidebarSelectBox has to always be the window's last child
+        // Seeking opinions on whether we should nest.
+        if (fxSidebarPositionPref === true && floorpSidebarPositionPref === true) {
+            //Firefox's sidebar position: left, Floorp's sidebar position: right
+            fxSidebar.style.order = "0";
+            fxSidebarSplitter.style.order = "1";
+            browserBox.style.order = "2";
+            floorpSidebarSplitter.style.order = "3";
+            floorpSidebar.style.order = "4";
+            floorpSidebarSelectBox.style.order = "5";
+        } else if (fxSidebarPositionPref === true && floorpSidebarPositionPref === false) {
+            //Firefox's sidebar position: left, Floorp's sidebar position: left
+            floorpSidebarSelectBox.style.order = "0";
+            floorpSidebar.style.order = "1";
+            floorpSidebarSplitter.style.order = "2";
+            fxSidebar.style.order = "3";
+            fxSidebarSplitter.style.order = "4";
+            browserBox.style.order = "5";
+        } else if (fxSidebarPositionPref === false && floorpSidebarPositionPref === true) {
+            //Firefox's sidebar position: right, Floorp's sidebar position: right
+            browserBox.style.order = "0";
+            fxSidebarSplitter.style.order = "1";
+            fxSidebar.style.order = "2";
+            floorpSidebarSplitter.style.order = "3";
+            floorpSidebar.style.order = "4";
+            floorpSidebarSelectBox.style.order = "5";
+        } else if (fxSidebarPositionPref === false && floorpSidebarPositionPref === false) {
+            //Firefox's sidebar position: right, Floorp's sidebar position: left
+            floorpSidebarSelectBox.style.order = "0";
+            floorpSidebar.style.order = "1";
+            floorpSidebarSplitter.style.order = "2";
+            browserBox.style.order = "3";
+            fxSidebarSplitter.style.order = "4";
+            fxSidebar.style.order = "5";
+       }
+     },
       selectSidebarItem: () => {
         let custom_url_id = event.target.id.replace("select-", "")
         if (bmsController.nowPage == custom_url_id) {
@@ -445,6 +493,18 @@
         bmsController.controllFunctions.changeVisibleWenpanel();
       }
       window.bmsController = bmsController
+      
+      // Override Firefox's sidebar position & Floorp sidebar position.
+      // Listen to "sidebarcommand" event.
+      // Firefox pref: true = left, false = right
+      // Floorp pref: true = right, false = left
+      const fxSidebarPosition = "sidebar.position_start"
+      const floorpSidebarPosition = "floorp.browser.sidebar.right"
+      Services.prefs.addObserver(fxSidebarPosition, bmsController.eventFunctions.setFlexOrder);
+      Services.prefs.addObserver(floorpSidebarPosition, bmsController.eventFunctions.setFlexOrder);
+      // Run function when browser start.
+      window.setTimeout(bmsController.eventFunctions.setFlexOrder, 1000);
+
       // Set TST URL
       if ("floorp//tst" in BROWSER_SIDEBAR_DATA.data) {
         window.setTimeout(async() => {

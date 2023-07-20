@@ -43,7 +43,6 @@
 }
 
 .browser-sidebar2 {
-  order: 1 !important;
   background: var(--toolbar-bgcolor);
   border: var(--toolbar-bgcolor) 0.1px solid;
   border-bottom: solid 5px var(--toolbar-bgcolor);
@@ -53,6 +52,10 @@
   /*border-inline-width: unset !important;
   margin-inline: 0 auto !important;*/
   border-color: transparent;
+}
+
+#sidebar-splitter {
+  margin-inline: 0px !important;
 }
 
 .extension-icon-add-white > .toolbarbutton-icon {
@@ -72,7 +75,6 @@
 }
 
 #sidebar-select-box {
-  order: 0 !important;
   scrollbar-width: thin;
 }
 

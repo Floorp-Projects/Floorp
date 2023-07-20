@@ -172,26 +172,6 @@ UICustomPrefHandler("floorp.delete.browser.border", function(event) {
 
 /*------------------------------------------- sidebar -------------------------------------------*/
 
-UICustomPrefHandler("floorp.browser.sidebar.right", function(event) {
-  if (event.prefValue) {
-    var Tag = document.createElement("style");
-    Tag.textContent = `
-    .browser-sidebar2 {
-      order: 10 !important;
-    }
-    #sidebar-select-box{
-      order: 15 !important;
-    }
-    #sidebar-splitter2 {
-      order: 9 !important;
-    }`;
-    Tag.setAttribute("id", "floorp-sidebar2css");
-    document.head.appendChild(Tag);
-  } else {
-    document.getElementById("floorp-sidebar2css")?.remove();
-  }
-});
-
 if (!Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
   var Tag = document.createElement("style");
   Tag.textContent = `
