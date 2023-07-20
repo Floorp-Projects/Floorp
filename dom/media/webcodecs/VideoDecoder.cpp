@@ -90,17 +90,17 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
  */
 
 // https://w3c.github.io/webcodecs/#valid-videodecoderconfig
-static bool IsValid(const VideoDecoderConfig& aConfig) {
+static Result<Ok, nsCString> Validate(const VideoDecoderConfig& aConfig) {
   nsTArray<nsString> codecs;
   if (!ParseCodecsString(aConfig.mCodec, codecs) || codecs.Length() != 1 ||
       codecs[0] != aConfig.mCodec) {
-    return false;
+    return Err("invalid codec string"_ns);
   }
 
   // WebCodecs doesn't support theora
   if (!IsAV1CodecString(codecs[0]) && !IsVP9CodecString(codecs[0]) &&
       !IsVP8CodecString(codecs[0]) && !IsH264CodecString(codecs[0])) {
-    return false;
+    return Err("unsupported codec"_ns);
   }
 
   // Gecko allows codec string starts with vp9 or av1 but Webcodecs requires to
@@ -108,28 +108,31 @@ static bool IsValid(const VideoDecoderConfig& aConfig) {
   // https://www.w3.org/TR/webcodecs-codec-registry/#video-codec-registry
   if (StringBeginsWith(aConfig.mCodec, u"vp9"_ns) ||
       StringBeginsWith(aConfig.mCodec, u"av1"_ns)) {
-    return false;
+    return Err("invalid codec string"_ns);
   }
 
   if (aConfig.mCodedWidth.WasPassed() != aConfig.mCodedHeight.WasPassed()) {
-    return false;
+    return aConfig.mCodedWidth.WasPassed()
+               ? Err("Invalid VideoDecoderConfig: codedWidth passed without codedHeight"_ns)
+               : Err("Invalid VideoDecoderConfig: codedHeight passed without codedWidth"_ns);
   }
   if (aConfig.mCodedWidth.WasPassed() &&
       (aConfig.mCodedWidth.Value() == 0 || aConfig.mCodedHeight.Value() == 0)) {
-    return false;
+    return Err("codedWidth and/or codedHeight can't be zero"_ns);
   }
 
   if (aConfig.mDisplayAspectWidth.WasPassed() !=
       aConfig.mDisplayAspectHeight.WasPassed()) {
-    return false;
+    return Err(
+        "display aspect width or height cannot be set without the other"_ns);
   }
   if (aConfig.mDisplayAspectWidth.WasPassed() &&
       (aConfig.mDisplayAspectWidth.Value() == 0 ||
        aConfig.mDisplayAspectHeight.Value() == 0)) {
-    return false;
+    return Err("display aspect width and height cannot be zero"_ns);
   }
 
-  return true;
+  return Ok();
 }
 
 static nsTArray<nsCString> GuessMIMETypes(const nsAString& aCodec,
@@ -368,7 +371,7 @@ static Result<UniquePtr<TrackInfo>, nsresult> CreateVideoInfo(
 static Result<Ok, nsresult> CloneConfiguration(
     RootedDictionary<VideoDecoderConfig>& aDest, JSContext* aCx,
     const VideoDecoderConfig& aConfig) {
-  MOZ_ASSERT(IsValid(aConfig));
+  MOZ_ASSERT(Validate(aConfig).isOk());
 
   aDest.mCodec = aConfig.mCodec;
   if (aConfig.mCodedHeight.WasPassed()) {
@@ -639,7 +642,7 @@ VideoColorSpaceInit VideoColorSpaceInternal::ToColorSpaceInit() const {
 /* static */
 UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
     const VideoDecoderConfig& aConfig) {
-  if (!IsValid(aConfig)) {
+  if (Validate(aConfig).isErr()) {
     return nullptr;
   }
 
@@ -918,8 +921,8 @@ void VideoDecoder::Configure(const VideoDecoderConfig& aConfig,
   LOG("VideoDecoder %p, Configure: codec %s", this,
       NS_ConvertUTF16toUTF8(aConfig.mCodec).get());
 
-  if (!IsValid(aConfig)) {
-    aRv.ThrowTypeError("Invalid VideoDecoderConfig");
+  if (auto r = Validate(aConfig); r.isErr()) {
+    aRv.ThrowTypeError(r.unwrapErr());
     return;
   }
 
@@ -1045,8 +1048,8 @@ already_AddRefed<Promise> VideoDecoder::IsConfigSupported(
     return p.forget();
   }
 
-  if (!IsValid(aConfig)) {
-    p->MaybeRejectWithTypeError("Invalid VideoDecoderConfig");
+  if (auto r = Validate(aConfig); r.isErr()) {
+    p->MaybeRejectWithTypeError(r.unwrapErr());
     return p.forget();
   }
 
