@@ -245,14 +245,12 @@ nsresult nsWifiMonitor::DispatchScanToBackgroundThread(uint64_t aPollingId,
 #else
     // If this ASSERT fails, we've increased our default stack size and
     // may no longer need to special-case the stack size on macOS.
-    static_assert(kMacOS13MonitorStackSize >
+    static_assert(kMacOSWifiMonitorStackSize >
                   nsIThreadManager::DEFAULT_STACK_SIZE);
 
     // Mac needs a stack size larger than the default for CoreWLAN.
     nsIThreadManager::ThreadCreationOptions options = {
-        .stackSize = nsCocoaFeatures::OnVenturaOrLater()
-                         ? kMacOS13MonitorStackSize
-                         : nsIThreadManager::DEFAULT_STACK_SIZE};
+        .stackSize = kMacOSWifiMonitorStackSize};
 #endif
 
     nsresult rv = NS_NewNamedThread("Wifi Monitor", getter_AddRefs(mThread),
