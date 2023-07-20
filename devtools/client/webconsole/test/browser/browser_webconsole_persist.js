@@ -263,6 +263,37 @@ add_task(async function () {
   await closeToolbox();
 });
 
+add_task(async function consoleClearPersist() {
+  info("Testing that messages persist on console.clear if logs are persisted");
+
+  await pushPref("devtools.webconsole.persistlog", true);
+  const hud = await openNewTabAndConsole(TEST_COM_URI);
+
+  await logAndAssertInitialMessages(hud);
+
+  info("Send a console.clear() and another log from the content page");
+  const onConsoleClearPrevented = waitForMessageByType(
+    hud,
+    "console.clear() was prevented",
+    ".console-api"
+  );
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.wrappedJSObject.console.clear();
+    content.wrappedJSObject.console.log("after clear");
+  });
+
+  await waitForMessageByType(hud, "after clear", ".log");
+  await onConsoleClearPrevented;
+  ok(true, "console.clear was handled by the client");
+
+  ok(
+    findAllMessages(hud).length === INITIAL_LOGS_NUMBER + 2,
+    "All initial messages are still displayed, with the 2 new ones"
+  );
+
+  await closeToolbox();
+});
+
 function assertLastMessageIsNavigationMessage(hud, timeBeforeNavigation, url) {
   const { visibleMessages, mutableMessagesById } = hud.ui.wrapper
     .getStore()
