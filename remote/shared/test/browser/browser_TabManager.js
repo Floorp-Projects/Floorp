@@ -21,9 +21,7 @@ add_task(async function test_getBrowsingContextById() {
   is(TabManager.getBrowsingContextById("wrong-id"), null);
 
   info(`Navigate to ${TEST_URL}`);
-  const loaded = BrowserTestUtils.browserLoaded(browser);
-  BrowserTestUtils.loadURIString(browser, TEST_URL);
-  await loaded;
+  await loadURL(browser, TEST_URL);
 
   const contexts = browser.browsingContext.getAllBrowsingContextsInSubtree();
   is(contexts.length, 2, "Top context has 1 child");
@@ -132,9 +130,7 @@ add_task(async function test_getNavigableForBrowsingContext() {
   const browser = gBrowser.selectedBrowser;
 
   info(`Navigate to ${TEST_URL}`);
-  const loaded = BrowserTestUtils.browserLoaded(browser);
-  BrowserTestUtils.loadURIString(browser, TEST_URL);
-  await loaded;
+  await loadURL(browser, TEST_URL);
 
   const contexts = browser.browsingContext.getAllBrowsingContextsInSubtree();
   is(contexts.length, 2, "Top context has 1 child");
@@ -162,9 +158,7 @@ add_task(async function test_getTabForBrowsingContext() {
     const browser = tab.linkedBrowser;
 
     info(`Navigate to ${TEST_URL}`);
-    const loaded = BrowserTestUtils.browserLoaded(browser);
-    BrowserTestUtils.loadURIString(browser, TEST_URL);
-    await loaded;
+    await loadURL(browser, TEST_URL);
 
     const contexts = browser.browsingContext.getAllBrowsingContextsInSubtree();
     is(TabManager.getTabForBrowsingContext(contexts[0]), tab);
