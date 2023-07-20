@@ -11,10 +11,11 @@
 // megazord).  The combined library has a cargo dependency for each component and calls
 // uniffi_reexport_scaffolding!() for each one.
 
+#[allow(missing_docs)]
 #[doc(hidden)]
-pub fn uniffi_reexport_hack() {
-}
+pub const fn uniffi_reexport_hack() {}
 
+#[doc(hidden)]
 #[macro_export]
 macro_rules! uniffi_reexport_scaffolding {
     () => {

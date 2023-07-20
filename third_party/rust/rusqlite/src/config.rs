@@ -16,12 +16,12 @@ pub enum DbConfig {
     //SQLITE_DBCONFIG_MAINDBNAME = 1000, /* const char* */
     //SQLITE_DBCONFIG_LOOKASIDE = 1001,  /* void* int int */
     /// Enable or disable the enforcement of foreign key constraints.
-    SQLITE_DBCONFIG_ENABLE_FKEY = 1002,
+    SQLITE_DBCONFIG_ENABLE_FKEY = ffi::SQLITE_DBCONFIG_ENABLE_FKEY,
     /// Enable or disable triggers.
-    SQLITE_DBCONFIG_ENABLE_TRIGGER = 1003,
+    SQLITE_DBCONFIG_ENABLE_TRIGGER = ffi::SQLITE_DBCONFIG_ENABLE_TRIGGER,
     /// Enable or disable the fts3_tokenizer() function which is part of the
     /// FTS3 full-text search engine extension.
-    SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER = 1004, // 3.12.0
+    SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER = ffi::SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER, // 3.12.0
     //SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION = 1005,
     /// In WAL mode, enable or disable the checkpoint operation before closing
     /// the connection.
@@ -115,7 +115,7 @@ impl Connection {
             check(ffi::sqlite3_db_config(
                 c.db(),
                 config as c_int,
-                if new_val { 1 } else { 0 },
+                new_val as c_int,
                 &mut val,
             ))?;
             Ok(val != 0)

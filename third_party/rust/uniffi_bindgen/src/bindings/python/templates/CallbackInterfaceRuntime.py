@@ -40,6 +40,10 @@ class ConcurrentHandleMap:
 # Magic number for the Rust proxy to call using the same mechanism as every other method,
 # to free the callback once it's dropped by Rust.
 IDX_CALLBACK_FREE = 0
+# Return codes for callback calls
+UNIFFI_CALLBACK_SUCCESS = 0
+UNIFFI_CALLBACK_ERROR = 1
+UNIFFI_CALLBACK_UNEXPECTED_ERROR = 2
 
 class FfiConverterCallbackInterface:
     _handle_map = ConcurrentHandleMap()

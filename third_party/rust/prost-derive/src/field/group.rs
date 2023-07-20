@@ -95,7 +95,7 @@ impl Field {
                 ::prost::encoding::group::merge(
                     tag,
                     wire_type,
-                    #ident.get_or_insert_with(Default::default),
+                    #ident.get_or_insert_with(::core::default::Default::default),
                     buf,
                     ctx,
                 )

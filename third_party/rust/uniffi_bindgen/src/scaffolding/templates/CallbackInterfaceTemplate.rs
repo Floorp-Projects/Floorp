@@ -11,7 +11,7 @@
 //    - a `Drop` `impl`, which tells the foreign language to forget about the real callback object.
 #}
 {% let trait_name = cbi.name() -%}
-{% let trait_impl = cbi.type_().borrow()|ffi_converter_name -%}
+{% let trait_impl = format!("UniFFICallbackHandler{}", trait_name) %}
 {% let foreign_callback_internals = format!("foreign_callback_{}_internals", trait_name)|upper -%}
 
 // Register a foreign callback for getting across the FFI.
@@ -32,11 +32,17 @@ struct {{ trait_impl }} {
   handle: u64
 }
 
+impl {{ trait_impl }} {
+    fn new(handle: u64) -> Self {
+        Self { handle }
+    }
+}
+
 impl Drop for {{ trait_impl }} {
     fn drop(&mut self) {
-        let callback = {{ foreign_callback_internals }}.get_callback().unwrap();
-        let mut rbuf = uniffi::RustBuffer::new();
-        unsafe { callback(self.handle, uniffi::IDX_CALLBACK_FREE, Default::default(), &mut rbuf) };
+        {{ foreign_callback_internals }}.invoke_callback::<(), crate::UniFfiTag>(
+            self.handle, uniffi::IDX_CALLBACK_FREE, Default::default()
+        )
     }
 }
 
@@ -63,135 +69,14 @@ impl r#{{ trait_name }} for {{ trait_impl }} {
         let mut args_buf = Vec::new();
         {% endif -%}
         {%- for arg in meth.arguments() %}
-        {{ arg.type_().borrow()|ffi_converter }}::write(r#{{ arg.name() }}, &mut args_buf);
+        {{ arg.as_type().borrow()|ffi_converter }}::write(r#{{ arg.name() }}, &mut args_buf);
         {%- endfor -%}
         let args_rbuf = uniffi::RustBuffer::from_vec(args_buf);
 
-    {#- Calling into foreign code. #}
-        let callback = {{ foreign_callback_internals }}.get_callback().unwrap();
-
-        unsafe {
-            // SAFETY:
-            // * We're passing in a pointer to an empty buffer.
-            //   * Nothing allocated, so nothing to drop.
-            // * We expect the callback to write into that a valid allocated instance of a
-            //   RustBuffer.
-            let mut ret_rbuf = uniffi::RustBuffer::new();
-            let ret = callback(self.handle, {{ loop.index }}, args_rbuf, &mut ret_rbuf);
-            #[allow(clippy::let_and_return, clippy::let_unit_value)]
-            match ret {
-                1 => {
-                    // 1 indicates success with the return value written to the RustBuffer for
-                    //   non-void calls.
-                    let result = {
-                        {% match meth.return_type() -%}
-                        {%- when Some(return_type) -%}
-                        let vec = ret_rbuf.destroy_into_vec();
-                        let mut ret_buf = vec.as_slice();
-                        {{ return_type|ffi_converter }}::try_read(&mut ret_buf).unwrap()
-                        {%- else %}
-                        uniffi::RustBuffer::destroy(ret_rbuf);
-                        {%- endmatch %}
-                    };
-                    {%- if meth.throws() %}
-                    Ok(result)
-                    {%- else %}
-                    result
-                    {%- endif %}
-                }
-                -2 => {
-                    // -2 indicates an error written to the RustBuffer
-                    {% match meth.throws_type() -%}
-                    {% when Some(error_type) -%}
-                    let vec = ret_rbuf.destroy_into_vec();
-                    let mut ret_buf = vec.as_slice();
-                    Err({{ error_type|ffi_converter }}::try_read(&mut ret_buf).unwrap())
-                    {%- else -%}
-                    panic!("Callback return -2, but throws_type() is None");
-                    {%- endmatch %}
-                }
-                // 0 is a deprecated method to indicates success for void returns
-                0 => {
-                    uniffi::deps::log::error!("UniFFI: Callback interface returned 0. Please update the bindings code to return 1 for all successful calls");
-                    {% match (meth.return_type(), meth.throws()) %}
-                    {% when (Some(_), _) %}
-                    panic!("Callback returned 0 when we were expecting a return value");
-                    {% when (None, false) %}
-                    {% when (None, true) %}
-                    Ok(())
-                    {%- endmatch %}
-                }
-                // -1 indicates an unexpected error
-                {% match meth.throws_type() %}
-                {%- when Some(error_type) -%}
-                -1 => {
-                    let reason = if !ret_rbuf.is_empty() {
-                        match {{ Type::String.borrow()|ffi_converter }}::try_lift(ret_rbuf) {
-                            Ok(s) => s,
-                            Err(e) => {
-                                uniffi::deps::log::error!("{{ trait_name }} Error reading ret_buf: {e}");
-                                String::from("[Error reading reason]")
-                            }
-                        }
-                    } else {
-                        uniffi::RustBuffer::destroy(ret_rbuf);
-                        String::from("[Unknown Reason]")
-                    };
-                    let e: {{ error_type|type_rs }} = uniffi::UnexpectedUniFFICallbackError::from_reason(reason).into();
-                    Err(e)
-                }
-                {%- else %}
-                -1 => {
-                    if !ret_rbuf.is_empty() {
-                        let reason = match {{ Type::String.borrow()|ffi_converter }}::try_lift(ret_rbuf) {
-                            Ok(s) => s,
-                            Err(_) => {
-                                String::from("[Error reading reason]")
-                            }
-                        };
-                        panic!("callback failed. Reason: {}", reason);
-                    } else {
-                        panic!("Callback failed")
-                    }
-                },
-                {%- endmatch %}
-                // Other values should never be returned
-                _ => panic!("Callback failed with unexpected return code"),
-            }
-        }
+        {#- Calling into foreign code. #}
+        {{ foreign_callback_internals }}.invoke_callback::<{{ meth|return_type }}, crate::UniFfiTag>(self.handle, {{ loop.index }}, args_rbuf)
     }
     {%- endfor %}
 }
 
-unsafe impl uniffi::FfiConverter for {{ trait_impl }} {
-    // This RustType allows for rust code that inputs this type as a Box<dyn CallbackInterfaceTrait> param
-    type RustType = Box<dyn r#{{ trait_name }}>;
-    type FfiType = u64;
-
-    // Lower and write are tricky to implement because we have a dyn trait as our type.  There's
-    // probably a way to, but this carries lots of thread safety risks, down to impedance
-    // mismatches between Rust and foreign languages, and our uncertainty around implementations of
-    // concurrent handlemaps.
-    //
-    // The use case for them is also quite exotic: it's passing a foreign callback back to the foreign
-    // language.
-    //
-    // Until we have some certainty, and use cases, we shouldn't use them.
-    fn lower(_obj: Self::RustType) -> Self::FfiType {
-        panic!("Lowering CallbackInterface not supported")
-    }
-
-    fn write(_obj: Self::RustType, _buf: &mut std::vec::Vec<u8>) {
-        panic!("Writing CallbackInterface not supported")
-    }
-
-    fn try_lift(v: Self::FfiType) -> uniffi::deps::anyhow::Result<Self::RustType> {
-        Ok(Box::new(Self { handle: v }))
-    }
-
-    fn try_read(buf: &mut &[u8]) -> uniffi::deps::anyhow::Result<Self::RustType> {
-        use uniffi::deps::bytes::Buf;
-        uniffi::check_remaining(buf, 8)?;
-        <Self as uniffi::FfiConverter>::try_lift(buf.get_u64())
-    }
-}
+::uniffi::ffi_converter_callback_interface!(r#{{ trait_name }}, {{ trait_impl }}, "{{ cbi.name() }}", crate::UniFfiTag);

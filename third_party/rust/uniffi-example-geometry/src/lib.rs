@@ -44,4 +44,4 @@ pub fn intersection(ln1: Line, ln2: Line) -> Option<Point> {
     })
 }
 
-include!(concat!(env!("OUT_DIR"), "/geometry.uniffi.rs"));
+uniffi::include_scaffolding!("geometry");

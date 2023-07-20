@@ -106,6 +106,16 @@ class RustBufferStream
     read(size).force_encoding(Encoding::UTF_8)
   end
 
+  {% when Type::Bytes -%}
+
+  def readBytes
+    size = unpack_from 4, 'l>'
+
+    raise InternalError, 'Unexpected negative byte string length' if size.negative?
+
+    read(size).force_encoding(Encoding::BINARY)
+  end
+
   {% when Type::Timestamp -%}
   # The Timestamp type.
   ONE_SECOND_IN_NANOSECONDS = 10**9
@@ -140,7 +150,7 @@ class RustBufferStream
     Time.at(seconds, nanoseconds, :nanosecond, in: '+00:00').utc
   end
 
-  {% when Type::Object with (object_name) -%}
+  {% when Type::Object with { name: object_name, imp } -%}
   # The Object type {{ object_name }}.
 
   def read{{ canonical_type_name }}
@@ -148,8 +158,10 @@ class RustBufferStream
     return {{ object_name|class_name_rb }}._uniffi_allocate(pointer)
   end
 
-  {% when Type::Enum with (enum_name) -%}
-  {%- let e = ci.get_enum_definition(enum_name).unwrap() -%}
+  {% when Type::Enum with (name) -%}
+  {%- let e = ci|get_enum_definition(name) -%}
+  {% if !ci.is_name_used_as_error(name) %}
+  {% let enum_name = name %}
   # The Enum type {{ enum_name }}.
 
   def read{{ canonical_type_name }}
@@ -168,7 +180,7 @@ class RustBufferStream
         {%- if variant.has_fields() %}
         return {{ enum_name|class_name_rb }}::{{ variant.name()|enum_name_rb }}.new(
             {%- for field in variant.fields() %}
-            self.read{{ field.type_().canonical_name().borrow()|class_name_rb }}(){% if loop.last %}{% else %},{% endif %}
+            self.read{{ field.as_type().canonical_name().borrow()|class_name_rb }}(){% if loop.last %}{% else %},{% endif %}
             {%- endfor %}
         )
         {%- else %}
@@ -180,8 +192,9 @@ class RustBufferStream
     {%- endif %}
   end
 
-  {% when Type::Error with (error_name) -%}
-  {%- let e = ci.get_error_definition(error_name).unwrap().wrapped_enum() %}
+  {% else %}
+
+  {% let error_name = name %}
 
   # The Error type {{ error_name }}
 
@@ -203,7 +216,7 @@ class RustBufferStream
         {%- if variant.has_fields() %}
         return {{ error_name|class_name_rb }}::{{ variant.name()|class_name_rb }}.new(
             {%- for field in variant.fields() %}
-            read{{ field.type_().canonical_name().borrow()|class_name_rb }}(){% if loop.last %}{% else %},{% endif %}
+            read{{ field.as_type().canonical_name().borrow()|class_name_rb }}(){% if loop.last %}{% else %},{% endif %}
             {%- endfor %}
         )
         {%- else %}
@@ -215,15 +228,16 @@ class RustBufferStream
     raise InternalError, 'Unexpected variant tag for {{ canonical_type_name }}'
     {%- endif %}
   end
+  {% endif %}
 
   {% when Type::Record with (record_name) -%}
-  {%- let rec = ci.get_record_definition(record_name).unwrap() -%}
+  {%- let rec = ci|get_record_definition(record_name) -%}
   # The Record type {{ record_name }}.
 
   def read{{ canonical_type_name }}
     {{ rec.name()|class_name_rb }}.new(
       {%- for field in rec.fields() %}
-      read{{ field.type_().canonical_name().borrow()|class_name_rb }}{% if loop.last %}{% else %},{% endif %}
+      read{{ field.as_type().canonical_name().borrow()|class_name_rb }}{% if loop.last %}{% else %},{% endif %}
       {%- endfor %}
     )
   end

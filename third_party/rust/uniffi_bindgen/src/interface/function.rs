@@ -36,11 +36,11 @@ use std::convert::TryFrom;
 use anyhow::{bail, Result};
 use uniffi_meta::Checksum;
 
-use super::attributes::{ArgumentAttributes, Attribute, FunctionAttributes};
-use super::ffi::{FfiArgument, FfiFunction};
+use super::attributes::{ArgumentAttributes, FunctionAttributes};
+use super::ffi::{FfiArgument, FfiFunction, FfiType};
 use super::literal::{convert_default_value, Literal};
-use super::types::{Type, TypeIterator};
-use super::{convert_type, APIConverter, ComponentInterface};
+use super::types::{ObjectImpl, Type, TypeIterator};
+use super::{APIConverter, AsType, ComponentInterface};
 
 /// Represents a standalone function.
 ///
@@ -51,22 +51,32 @@ use super::{convert_type, APIConverter, ComponentInterface};
 #[derive(Debug, Clone, Checksum)]
 pub struct Function {
     pub(super) name: String,
+    pub(super) is_async: bool,
     pub(super) arguments: Vec<Argument>,
     pub(super) return_type: Option<Type>,
     // We don't include the FFIFunc in the hash calculation, because:
     //  - it is entirely determined by the other fields,
     //    so excluding it is safe.
-    //  - its `name` property includes a checksum derived from  the very
+    //  - its `name` property includes a checksum derived from the very
     //    hash value we're trying to calculate here, so excluding it
     //    avoids a weird circular dependency in the calculation.
     #[checksum_ignore]
     pub(super) ffi_func: FfiFunction,
-    pub(super) attributes: FunctionAttributes,
+    pub(super) throws: Option<Type>,
+    pub(super) checksum_fn_name: String,
+    // Force a checksum value.  This is used for functions from the proc-macro code, which uses a
+    // different checksum method.
+    #[checksum_ignore]
+    pub(super) checksum_override: Option<u16>,
 }
 
 impl Function {
     pub fn name(&self) -> &str {
         &self.name
+    }
+
+    pub fn is_async(&self) -> bool {
+        self.is_async
     }
 
     pub fn arguments(&self) -> Vec<&Argument> {
@@ -85,29 +95,37 @@ impl Function {
         &self.ffi_func
     }
 
+    pub fn checksum_fn_name(&self) -> &str {
+        &self.checksum_fn_name
+    }
+
+    pub fn checksum(&self) -> u16 {
+        self.checksum_override
+            .unwrap_or_else(|| uniffi_meta::checksum(self))
+    }
+
     pub fn throws(&self) -> bool {
-        self.attributes.get_throws_err().is_some()
+        self.throws.is_some()
     }
 
     pub fn throws_name(&self) -> Option<&str> {
-        self.attributes.get_throws_err()
+        super::throws_name(&self.throws)
     }
 
-    pub fn throws_type(&self) -> Option<Type> {
-        self.attributes
-            .get_throws_err()
-            .map(|name| Type::Error(name.to_owned()))
+    pub fn throws_type(&self) -> Option<&Type> {
+        self.throws.as_ref()
     }
 
-    pub fn derive_ffi_func(&mut self, ci_prefix: &str) -> Result<()> {
+    pub fn derive_ffi_func(&mut self, ci_namespace: &str) -> Result<()> {
         // The name is already set if the function is defined through a proc-macro invocation
         // rather than in UDL. Don't overwrite it in that case.
         if self.ffi_func.name.is_empty() {
-            self.ffi_func.name = format!("{ci_prefix}_{}", self.name);
+            self.ffi_func.name = uniffi_meta::fn_symbol_name(ci_namespace, &self.name);
         }
-
-        self.ffi_func.arguments = self.arguments.iter().map(|arg| arg.into()).collect();
-        self.ffi_func.return_type = self.return_type.as_ref().map(|rt| rt.into());
+        self.ffi_func.init(
+            self.return_type.as_ref().map(Into::into),
+            self.arguments.iter().map(Into::into),
+        );
         Ok(())
     }
 }
@@ -116,7 +134,7 @@ impl From<uniffi_meta::FnParamMetadata> for Argument {
     fn from(meta: uniffi_meta::FnParamMetadata) -> Self {
         Argument {
             name: meta.name,
-            type_: convert_type(&meta.ty),
+            type_: meta.ty.into(),
             by_ref: false,
             optional: false,
             default: None,
@@ -127,21 +145,32 @@ impl From<uniffi_meta::FnParamMetadata> for Argument {
 impl From<uniffi_meta::FnMetadata> for Function {
     fn from(meta: uniffi_meta::FnMetadata) -> Self {
         let ffi_name = meta.ffi_symbol_name();
-
-        let return_type = meta.return_type.map(|out| convert_type(&out));
+        let checksum_fn_name = meta.checksum_symbol_name();
+        let is_async = meta.is_async;
+        let return_type = meta.return_type.map(Into::into);
         let arguments = meta.inputs.into_iter().map(Into::into).collect();
 
         let ffi_func = FfiFunction {
             name: ffi_name,
+            is_async,
             ..FfiFunction::default()
+        };
+
+        let throws = match meta.throws {
+            None => None,
+            Some(uniffi_meta::Type::Enum { name, .. }) => Some(Type::Enum(name)),
+            _ => panic!("unsupported error type {:?}", meta.throws),
         };
 
         Self {
             name: meta.name,
+            is_async,
             arguments,
             return_type,
             ffi_func,
-            attributes: meta.throws.map(Attribute::Throws).into_iter().collect(),
+            throws,
+            checksum_fn_name,
+            checksum_override: Some(meta.checksum),
         }
     }
 }
@@ -158,15 +187,31 @@ impl APIConverter<Function> for weedle::namespace::NamespaceMember<'_> {
 impl APIConverter<Function> for weedle::namespace::OperationNamespaceMember<'_> {
     fn convert(&self, ci: &mut ComponentInterface) -> Result<Function> {
         let return_type = ci.resolve_return_type_expression(&self.return_type)?;
-        Ok(Function {
-            name: match self.identifier {
-                None => bail!("anonymous functions are not supported {:?}", self),
-                Some(id) => id.0.to_string(),
+        let name = match self.identifier {
+            None => bail!("anonymous functions are not supported {:?}", self),
+            Some(id) => id.0.to_string(),
+        };
+        let checksum_fn_name = uniffi_meta::fn_checksum_symbol_name(ci.namespace(), &name);
+        let attrs = FunctionAttributes::try_from(self.attributes.as_ref())?;
+        let throws = match attrs.get_throws_err() {
+            None => None,
+            Some(name) => match ci.get_type(name) {
+                Some(t) => {
+                    ci.note_name_used_as_error(name);
+                    Some(t)
+                }
+                None => bail!("unknown type for error: {name}"),
             },
+        };
+        Ok(Function {
+            name,
+            is_async: false,
             return_type,
             arguments: self.args.body.list.convert(ci)?,
             ffi_func: Default::default(),
-            attributes: FunctionAttributes::try_from(self.attributes.as_ref())?,
+            throws,
+            checksum_fn_name,
+            checksum_override: None,
         })
     }
 }
@@ -188,12 +233,12 @@ impl Argument {
         &self.name
     }
 
-    pub fn type_(&self) -> &Type {
-        &self.type_
-    }
-
     pub fn by_ref(&self) -> bool {
         self.by_ref
+    }
+
+    pub fn is_trait_ref(&self) -> bool {
+        matches!(&self.type_, Type::Object { imp, .. } if *imp == ObjectImpl::Trait)
     }
 
     pub fn default_value(&self) -> Option<&Literal> {
@@ -202,6 +247,12 @@ impl Argument {
 
     pub fn iter_types(&self) -> TypeIterator<'_> {
         self.type_.iter_types()
+    }
+}
+
+impl AsType for Argument {
+    fn as_type(&self) -> Type {
+        self.type_.clone()
     }
 }
 
@@ -241,6 +292,65 @@ impl APIConverter<Argument> for weedle::argument::SingleArgument<'_> {
     }
 }
 
+/// Combines the return and throws type of a function/method
+#[derive(Debug, PartialOrd, Ord, PartialEq, Eq)]
+pub struct ResultType {
+    pub return_type: Option<Type>,
+    pub throws_type: Option<Type>,
+}
+
+impl ResultType {
+    /// Get the `T` parameters for the `FutureCallback<T>` for this ResultType
+    pub fn future_callback_param(&self) -> FfiType {
+        match &self.return_type {
+            Some(t) => t.ffi_type(),
+            None => FfiType::UInt8,
+        }
+    }
+}
+
+/// Implemented by function-like types (Function, Method, Constructor)
+pub trait Callable {
+    fn arguments(&self) -> Vec<&Argument>;
+    fn return_type(&self) -> Option<Type>;
+    fn throws_type(&self) -> Option<Type>;
+    fn result_type(&self) -> ResultType {
+        ResultType {
+            return_type: self.return_type(),
+            throws_type: self.throws_type(),
+        }
+    }
+}
+
+impl Callable for Function {
+    fn arguments(&self) -> Vec<&Argument> {
+        self.arguments()
+    }
+
+    fn return_type(&self) -> Option<Type> {
+        self.return_type().cloned()
+    }
+
+    fn throws_type(&self) -> Option<Type> {
+        self.throws_type().cloned()
+    }
+}
+
+// Needed because Askama likes to add extra refs to variables
+impl<T: Callable> Callable for &T {
+    fn arguments(&self) -> Vec<&Argument> {
+        (*self).arguments()
+    }
+
+    fn return_type(&self) -> Option<Type> {
+        (*self).return_type()
+    }
+
+    fn throws_type(&self) -> Option<Type> {
+        (*self).throws_type()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -274,13 +384,15 @@ mod test {
             func2.return_type().unwrap().canonical_name(),
             "SequenceOptionalstring"
         );
-        assert!(matches!(func2.throws_type(), Some(Type::Error(s)) if s == "TestError"));
+        assert!(
+            matches!(func2.throws_type(), Some(Type::Enum(name)) if name == "TestError" && ci.is_name_used_as_error(name))
+        );
         assert_eq!(func2.arguments().len(), 2);
         assert_eq!(func2.arguments()[0].name(), "arg1");
-        assert_eq!(func2.arguments()[0].type_().canonical_name(), "u32");
+        assert_eq!(func2.arguments()[0].as_type().canonical_name(), "u32");
         assert_eq!(func2.arguments()[1].name(), "arg2");
         assert_eq!(
-            func2.arguments()[1].type_().canonical_name(),
+            func2.arguments()[1].as_type().canonical_name(),
             "TypeTestDict"
         );
         Ok(())
