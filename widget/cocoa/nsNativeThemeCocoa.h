@@ -170,7 +170,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
     eColorFill,       // mozilla::gfx::sRGBColor
     eMenuIcon,        // MenuIconParams
     eMenuItem,        // MenuItemParams
-    eMenuSeparator,   // MenuItemParams
     eCheckbox,        // CheckboxOrRadioParams
     eRadio,           // CheckboxOrRadioParams
     eButton,          // ButtonParams
@@ -205,9 +204,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
     }
     static WidgetInfo MenuItem(const MenuItemParams& aParams) {
       return WidgetInfo(Widget::eMenuItem, aParams);
-    }
-    static WidgetInfo MenuSeparator(const MenuItemParams& aParams) {
-      return WidgetInfo(Widget::eMenuSeparator, aParams);
     }
     static WidgetInfo Checkbox(const CheckboxOrRadioParams& aParams) {
       return WidgetInfo(Widget::eCheckbox, aParams);
@@ -375,8 +371,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
   NSSize GetMenuIconSize(MenuIcon aIcon);
   void DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect, const MenuIconParams& aParams);
   void DrawMenuItem(CGContextRef cgContext, const CGRect& inBoxRect, const MenuItemParams& aParams);
-  void DrawMenuSeparator(CGContextRef cgContext, const CGRect& inBoxRect,
-                         const MenuItemParams& aParams);
   void DrawHIThemeButton(CGContextRef cgContext, const HIRect& aRect, ThemeButtonKind aKind,
                          ThemeButtonValue aValue, ThemeDrawState aState,
                          ThemeButtonAdornment aAdornment, const ControlParams& aParams);

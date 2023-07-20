@@ -70,8 +70,6 @@ menubar > menu:-moz-window-inactive {
 
 .menu-iconic > .menu-iconic-left,
 .menuitem-iconic > .menu-iconic-left {
-  appearance: auto;
-  -moz-default-appearance: menuimage;
   padding-top: 2px;
 }
 
