@@ -36,7 +36,6 @@ function test() {
         ["dom.serviceWorkers.enabled", true],
         ["dom.serviceWorkers.exemptFromPerDomainMax", true],
         ["dom.serviceWorkers.testing.enabled", true],
-        ["dom.caches.enabled", true],
         ["browser.cache.disk.enable", false],
         ["browser.cache.memory.enable", false],
       ],

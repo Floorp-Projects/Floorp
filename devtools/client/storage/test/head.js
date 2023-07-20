@@ -59,7 +59,6 @@ const {
   LocalTabCommandsFactory,
 } = require("resource://devtools/client/framework/local-tab-commands-factory.js");
 const STORAGE_PREF = "devtools.storage.enabled";
-const DOM_CACHE = "dom.caches.enabled";
 const DUMPEMIT_PREF = "devtools.dump.emit";
 const DEBUGGERLOG_PREF = "devtools.debugger.log";
 
@@ -88,7 +87,6 @@ registerCleanupFunction(() => {
   gToolbox = gPanelWindow = gUI = null;
   Services.prefs.clearUserPref(CACHES_ON_HTTP_PREF);
   Services.prefs.clearUserPref(DEBUGGERLOG_PREF);
-  Services.prefs.clearUserPref(DOM_CACHE);
   Services.prefs.clearUserPref(DUMPEMIT_PREF);
   Services.prefs.clearUserPref(STORAGE_PREF);
 });

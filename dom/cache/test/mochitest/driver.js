@@ -29,7 +29,6 @@ function runTests(testFile, order) {
     await SpecialPowers.wrap(document).requestStorageAccess();
     return SpecialPowers.pushPrefEnv({
       set: [
-        ["dom.caches.enabled", true],
         ["dom.caches.testing.enabled", true],
         ["dom.serviceWorkers.enabled", true],
         ["dom.serviceWorkers.testing.enabled", true],
