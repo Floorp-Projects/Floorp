@@ -5872,6 +5872,15 @@ var TabsProgressListener = {
   },
 
   onLocationChange(aBrowser, aWebProgress, aRequest, aLocationURI, aFlags) {
+    // Filter out location changes in sub documents.
+    if (!aWebProgress.isTopLevel) {
+      return;
+    }
+
+    // Some shops use pushState to move between individual products, so
+    // the shopping code needs to be told about all of these.
+    ShoppingSidebarManager.onLocationChange(aBrowser, aLocationURI);
+
     // Filter out location changes caused by anchor navigation
     // or history.push/pop/replaceState.
     if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
@@ -5884,11 +5893,6 @@ var TabsProgressListener = {
         },
         "AboutReader"
       );
-      return;
-    }
-
-    // Filter out location changes in sub documents.
-    if (!aWebProgress.isTopLevel) {
       return;
     }
 
@@ -5908,7 +5912,6 @@ var TabsProgressListener = {
 
     FullZoom.onLocationChange(aLocationURI, false, aBrowser);
     CaptivePortalWatcher.onLocationChange(aBrowser);
-    ShoppingSidebarManager.onLocationChange(aBrowser, aLocationURI);
   },
 
   onLinkIconAvailable(browser, dataURI, iconURI) {
@@ -9987,6 +9990,12 @@ var ShoppingSidebarManager = {
     return isProductURL(locationURI);
   },
 
+  /**
+   * Called by TabsProgressListener whenever any browser navigates from one
+   * URL to another.
+   * Note that this includes hash changes / pushState navigations, because
+   * those can be significant for us.
+   */
   onLocationChange(aBrowser, aLocationURI) {
     if (!this._enabled) {
       return;
