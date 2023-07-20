@@ -179,6 +179,34 @@ class TestStructuredLog(BaseStructuredTest):
         self.logger.suite_end()
         self.assert_log_equals({"action": "suite_end"})
 
+    def test_add_subsuite(self):
+        self.logger.suite_start([])
+        self.logger.add_subsuite("other")
+        self.assert_log_equals(
+            {
+                "action": "add_subsuite",
+                "name": "other",
+                "run_info": {"subsuite": "other"},
+            }
+        )
+        self.logger.suite_end()
+
+    def test_add_subsuite_duplicate(self):
+        self.logger.suite_start([])
+        self.logger.add_subsuite("other")
+        # This should be a no-op
+        self.logger.add_subsuite("other")
+        self.assert_log_equals(
+            {
+                "action": "add_subsuite",
+                "name": "other",
+                "run_info": {"subsuite": "other"},
+            }
+        )
+        self.assert_log_equals({"action": "suite_start", "tests": {"default": []}})
+
+        self.logger.suite_end()
+
     def test_start(self):
         self.logger.suite_start([])
         self.logger.test_start("test1")
@@ -203,6 +231,20 @@ class TestStructuredLog(BaseStructuredTest):
                 "action": "log",
                 "message": "test_start for test1 logged while in progress.",
                 "level": "ERROR",
+            }
+        )
+        self.logger.suite_end()
+
+    def test_start_inprogress_subsuite(self):
+        self.logger.suite_start([])
+        self.logger.add_subsuite("other")
+        self.logger.test_start("test1")
+        self.logger.test_start("test1", subsuite="other")
+        self.assert_log_equals(
+            {
+                "action": "test_start",
+                "test": "test1",
+                "subsuite": "other",
             }
         )
         self.logger.suite_end()
@@ -396,6 +438,27 @@ class TestStructuredLog(BaseStructuredTest):
             self.pop_last_item()["message"].startswith(
                 "test_end for test1 logged while not in progress. Logged with data: {"
             )
+        )
+        self.logger.suite_end()
+
+    def test_end_no_start_subsuite(self):
+        self.logger.suite_start([])
+        self.logger.add_subsuite("other")
+        self.logger.test_start("test1", subsuite="other")
+        self.logger.test_end("test1", "PASS", expected="PASS")
+        self.assertTrue(
+            self.pop_last_item()["message"].startswith(
+                "test_end for test1 logged while not in progress. Logged with data: {"
+            )
+        )
+        self.logger.test_end("test1", "OK", subsuite="other")
+        self.assert_log_equals(
+            {
+                "action": "test_end",
+                "status": "OK",
+                "test": "test1",
+                "subsuite": "other",
+            }
         )
         self.logger.suite_end()
 
