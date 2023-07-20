@@ -67,6 +67,7 @@ def get_failures(task_id, task_definition):
                 if "signature" in l.keys():
                     # dealing with a crash
                     test_path = l["test"].split(" ")[0]
+                    test_path = test_path.split(":")[-1]
                     if "web-platform" in task_definition["extra"]["suite"]:
                         test_path = fix_wpt_name(test_path)
                     else:
@@ -77,6 +78,7 @@ def get_failures(task_id, task_definition):
 
                 else:
                     test_path = l["test"]
+                    test_path = test_path.split(":")[-1]
                     if "==" in test_path or "!=" in test_path:
                         test_path = test_path.split(" ")[0]
 
