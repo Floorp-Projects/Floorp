@@ -431,7 +431,6 @@ function setupEnvironment() {
   var defaultMochitestPrefs = {
     set: [
       ["media.peerconnection.enabled", true],
-      ["media.peerconnection.identity.enabled", true],
       ["media.peerconnection.identity.timeout", 120000],
       ["media.peerconnection.ice.stun_client_maximum_transmits", 14],
       ["media.peerconnection.ice.trickle_grace_period", 30000],

@@ -96,10 +96,8 @@ interface RTCPeerConnection : EventTarget  {
   [Throws, StaticClassOverride="mozilla::dom::RTCCertificate"]
   static Promise<RTCCertificate> generateCertificate (AlgorithmIdentifier keygenAlgorithm);
 
-  [Pref="media.peerconnection.identity.enabled"]
   undefined setIdentityProvider (DOMString provider,
                                  optional RTCIdentityProviderOptions options = {});
-  [Pref="media.peerconnection.identity.enabled"]
   Promise<DOMString> getIdentityAssertion();
   Promise<RTCSessionDescriptionInit> createOffer (optional RTCOfferOptions options = {});
   Promise<RTCSessionDescriptionInit> createAnswer (optional RTCAnswerOptions options = {});
@@ -118,9 +116,7 @@ interface RTCPeerConnection : EventTarget  {
   readonly attribute RTCIceConnectionState iceConnectionState;
   readonly attribute RTCPeerConnectionState connectionState;
   undefined restartIce ();
-  [Pref="media.peerconnection.identity.enabled"]
   readonly attribute Promise<RTCIdentityAssertion> peerIdentity;
-  [Pref="media.peerconnection.identity.enabled"]
   readonly attribute DOMString? idpLoginUrl;
 
   [ChromeOnly]
