@@ -129,3 +129,9 @@
     width: 20%;
   }
 }
+
+.card-container.inner {
+  border: 1px solid var(--fxview-border);
+  box-shadow: none;
+  margin-block: 8px 0;
+}

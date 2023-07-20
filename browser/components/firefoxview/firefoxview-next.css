@@ -29,6 +29,7 @@
   :root {
     --fxview-element-background-hover: color-mix(in srgb, var(--fxview-background-color) 80%, white);
     --fxview-element-background-active: color-mix(in srgb, var(--fxview-background-color) 60%, white);
+    --fxview-border: #8F8F9D;
     --newtab-background-color-secondary: #42414d;
     --newtab-primary-action-background: #00ddff;
   }
@@ -39,6 +40,7 @@
     --fxview-element-background-hover: ButtonText;
     --fxview-element-background-active: ButtonText;
     --fxview-text-color-hover: ButtonFace;
+    --fxview-border: var(--fc-border-hcm, -moz-dialogtext);
     --newtab-primary-action-background: LinkText;
     --newtab-background-color-secondary: Canvas;
   }
