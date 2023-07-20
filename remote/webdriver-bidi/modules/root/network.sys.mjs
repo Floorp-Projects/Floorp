@@ -7,6 +7,8 @@ import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  notifyNavigationStarted:
+    "chrome://remote/content/shared/NavigationManager.sys.mjs",
   NetworkListener:
     "chrome://remote/content/shared/listeners/NetworkListener.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
@@ -196,6 +198,7 @@ class NetworkModule extends Module {
     this.#networkListener.off("before-request-sent", this.#onBeforeRequestSent);
     this.#networkListener.off("response-completed", this.#onResponseEvent);
     this.#networkListener.off("response-started", this.#onResponseEvent);
+    this.#networkListener.destroy();
 
     this.#subscribedEvents = null;
   }
@@ -207,18 +210,46 @@ class NetworkModule extends Module {
     };
   }
 
+  #getOrCreateNavigationId(browsingContext, url) {
+    const navigation =
+      this.messageHandler.navigationManager.getNavigationForBrowsingContext(
+        browsingContext
+      );
+
+    // Check if an ongoing navigation is available for this browsing context.
+    // onBeforeRequestSent might be too early for the NavigationManager.
+    // TODO: Bug 1835704 to detect navigations earlier and avoid this.
+    if (navigation && !navigation.finished) {
+      return navigation.id;
+    }
+
+    // No ongoing navigation for this browsing context, create a new one.
+    return lazy.notifyNavigationStarted({ context: browsingContext, url }).id;
+  }
+
   #onBeforeRequestSent = (name, data) => {
-    const { contextId, requestData, timestamp, redirectCount } = data;
+    const {
+      contextId,
+      isNavigationRequest,
+      redirectCount,
+      requestData,
+      timestamp,
+    } = data;
+
+    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
 
     // Bug 1805479: Handle the initiator, including stacktrace details.
     const initiator = {
       type: InitiatorType.Other,
     };
 
+    const navigationId = isNavigationRequest
+      ? this.#getOrCreateNavigationId(browsingContext, requestData.url)
+      : null;
+
     const baseParameters = {
       context: contextId,
-      // Bug 1805405: Handle the navigation id.
-      navigation: null,
+      navigation: navigationId,
       redirectCount,
       request: requestData,
       timestamp,
@@ -229,7 +260,6 @@ class NetworkModule extends Module {
       initiator,
     });
 
-    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
     this.emitEvent(
       "network.beforeRequestSent",
       beforeRequestSentEvent,
@@ -238,13 +268,26 @@ class NetworkModule extends Module {
   };
 
   #onResponseEvent = (name, data) => {
-    const { contextId, requestData, responseData, timestamp, redirectCount } =
-      data;
+    const {
+      contextId,
+      isNavigationRequest,
+      redirectCount,
+      requestData,
+      responseData,
+      timestamp,
+    } = data;
+
+    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
+
+    const navigation = isNavigationRequest
+      ? this.messageHandler.navigationManager.getNavigationForBrowsingContext(
+          browsingContext
+        )
+      : null;
 
     const baseParameters = {
       context: contextId,
-      // Bug 1805405: Handle the navigation id.
-      navigation: null,
+      navigation: navigation ? navigation.id : null,
       redirectCount,
       request: requestData,
       timestamp,
@@ -260,7 +303,6 @@ class NetworkModule extends Module {
         ? "network.responseStarted"
         : "network.responseCompleted";
 
-    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
     this.emitEvent(
       protocolEventName,
       responseEvent,
