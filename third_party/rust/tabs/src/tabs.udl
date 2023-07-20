@@ -1,6 +1,9 @@
 [Custom]
 typedef string TabsGuid;
 
+[External="sync15"]
+typedef extern DeviceType;
+
 namespace tabs {
 
 };
@@ -34,12 +37,6 @@ interface TabsStore {
 
 };
 
-// Note that this enum is duplicated in fxa-client.udl (although the underlying type *is*
-// shared). This duplication exists because there's no direct dependency between that crate and
-// this one. We can probably remove the duplication when sync15 gets a .udl file, then we could
-// reference it via an `[Extern=...]typedef`
-enum TabsDeviceType { "Desktop", "Mobile", "Tablet", "VR", "TV", "Unknown" };
-
 dictionary RemoteTabRecord {
     string title;
     sequence<string> url_history;
@@ -51,7 +48,7 @@ dictionary RemoteTabRecord {
 dictionary ClientRemoteTabs {
     string client_id;
     string client_name;
-    TabsDeviceType device_type;
+    DeviceType device_type;
     // Number of ms since the unix epoch (as reported by the server's clock)
     i64 last_modified;
     sequence<RemoteTabRecord> remote_tabs;

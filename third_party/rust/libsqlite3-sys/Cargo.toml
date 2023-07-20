@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "libsqlite3-sys"
-version = "0.25.2"
+version = "0.26.0"
 authors = ["The rusqlite developers"]
 build = "build.rs"
 links = "sqlite3"
@@ -32,7 +32,7 @@ version = "0.9"
 optional = true
 
 [build-dependencies.bindgen]
-version = "0.60"
+version = "0.64"
 features = ["runtime"]
 optional = true
 default-features = false
@@ -69,21 +69,9 @@ bundled-windows = [
     "bundled_bindings",
 ]
 bundled_bindings = []
-default = ["min_sqlite_version_3_6_8"]
+default = ["min_sqlite_version_3_14_0"]
 in_gecko = []
-min_sqlite_version_3_6_23 = [
-    "pkg-config",
-    "vcpkg",
-]
-min_sqlite_version_3_6_8 = [
-    "pkg-config",
-    "vcpkg",
-]
-min_sqlite_version_3_7_16 = [
-    "pkg-config",
-    "vcpkg",
-]
-min_sqlite_version_3_7_7 = [
+min_sqlite_version_3_14_0 = [
     "pkg-config",
     "vcpkg",
 ]
@@ -95,5 +83,5 @@ session = [
 sqlcipher = []
 unlock_notify = []
 wasm32-wasi-vfs = []
-winsqlite3 = ["min_sqlite_version_3_7_16"]
+winsqlite3 = []
 with-asan = []

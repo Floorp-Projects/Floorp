@@ -75,13 +75,8 @@ unsafe fn report_error(ctx: *mut sqlite3_context, err: &Error) {
     // an explicit feature check for that, and this doesn't really warrant one.
     // We'll use the extended code if we're on the bundled version (since it's
     // at least 3.17.0) and the normal constraint error code if not.
-    #[cfg(feature = "modern_sqlite")]
     fn constraint_error_code() -> i32 {
         ffi::SQLITE_CONSTRAINT_FUNCTION
-    }
-    #[cfg(not(feature = "modern_sqlite"))]
-    fn constraint_error_code() -> i32 {
-        ffi::SQLITE_CONSTRAINT
     }
 
     if let Error::SqliteFailure(ref err, ref s) = *err {
@@ -168,8 +163,6 @@ impl Context<'_> {
     ///
     /// Will panic if `idx` is greater than or equal to
     /// [`self.len()`](Context::len).
-    #[cfg(feature = "modern_sqlite")] // 3.9.0
-    #[cfg_attr(docsrs, doc(cfg(feature = "modern_sqlite")))]
     pub fn get_subtype(&self, idx: usize) -> std::os::raw::c_uint {
         let arg = self.args[idx];
         unsafe { ffi::sqlite3_value_subtype(arg) }
@@ -249,8 +242,6 @@ impl Context<'_> {
     }
 
     /// Set the Subtype of an SQL function
-    #[cfg(feature = "modern_sqlite")] // 3.9.0
-    #[cfg_attr(docsrs, doc(cfg(feature = "modern_sqlite")))]
     pub fn set_result_subtype(&self, sub_type: std::os::raw::c_uint) {
         unsafe { ffi::sqlite3_result_subtype(self.ctx, sub_type) };
     }
@@ -829,9 +820,9 @@ mod test {
             FunctionFlags::SQLITE_UTF8 | FunctionFlags::SQLITE_DETERMINISTIC,
             half,
         )?;
-        let result: Result<f64> = db.query_row("SELECT half(6)", [], |r| r.get(0));
+        let result: f64 = db.one_column("SELECT half(6)")?;
 
-        assert!((3f64 - result?).abs() < f64::EPSILON);
+        assert!((3f64 - result).abs() < f64::EPSILON);
         Ok(())
     }
 
@@ -844,12 +835,12 @@ mod test {
             FunctionFlags::SQLITE_UTF8 | FunctionFlags::SQLITE_DETERMINISTIC,
             half,
         )?;
-        let result: Result<f64> = db.query_row("SELECT half(6)", [], |r| r.get(0));
-        assert!((3f64 - result?).abs() < f64::EPSILON);
+        let result: f64 = db.one_column("SELECT half(6)")?;
+        assert!((3f64 - result).abs() < f64::EPSILON);
 
         db.remove_function("half", 1)?;
-        let result: Result<f64> = db.query_row("SELECT half(6)", [], |r| r.get(0));
-        assert!(result.is_err());
+        let result: Result<f64> = db.one_column("SELECT half(6)");
+        result.unwrap_err();
         Ok(())
     }
 
@@ -894,18 +885,14 @@ mod test {
             regexp_with_auxilliary,
         )?;
 
-        let result: Result<bool> =
-            db.query_row("SELECT regexp('l.s[aeiouy]', 'lisa')", [], |r| r.get(0));
+        let result: bool = db.one_column("SELECT regexp('l.s[aeiouy]', 'lisa')")?;
 
-        assert!(result?);
+        assert!(result);
 
-        let result: Result<i64> = db.query_row(
-            "SELECT COUNT(*) FROM foo WHERE regexp('l.s[aeiouy]', x) == 1",
-            [],
-            |r| r.get(0),
-        );
+        let result: i64 =
+            db.one_column("SELECT COUNT(*) FROM foo WHERE regexp('l.s[aeiouy]', x) == 1")?;
 
-        assert_eq!(2, result?);
+        assert_eq!(2, result);
         Ok(())
     }
 
@@ -933,7 +920,7 @@ mod test {
             ("onetwo", "SELECT my_concat('one', 'two')"),
             ("abc", "SELECT my_concat('a', 'b', 'c')"),
         ] {
-            let result: String = db.query_row(query, [], |r| r.get(0))?;
+            let result: String = db.one_column(query)?;
             assert_eq!(expected, result);
         }
         Ok(())
@@ -952,11 +939,8 @@ mod test {
             Ok(true)
         })?;
 
-        let res: bool = db.query_row(
-            "SELECT example(0, i) FROM (SELECT 0 as i UNION SELECT 1)",
-            [],
-            |r| r.get(0),
-        )?;
+        let res: bool =
+            db.one_column("SELECT example(0, i) FROM (SELECT 0 as i UNION SELECT 1)")?;
         // Doesn't actually matter, we'll assert in the function if there's a problem.
         assert!(res);
         Ok(())
@@ -1007,11 +991,11 @@ mod test {
 
         // sum should return NULL when given no columns (contrast with count below)
         let no_result = "SELECT my_sum(i) FROM (SELECT 2 AS i WHERE 1 <> 1)";
-        let result: Option<i64> = db.query_row(no_result, [], |r| r.get(0))?;
+        let result: Option<i64> = db.one_column(no_result)?;
         assert!(result.is_none());
 
         let single_sum = "SELECT my_sum(i) FROM (SELECT 2 AS i UNION ALL SELECT 2)";
-        let result: i64 = db.query_row(single_sum, [], |r| r.get(0))?;
+        let result: i64 = db.one_column(single_sum)?;
         assert_eq!(4, result);
 
         let dual_sum = "SELECT my_sum(i), my_sum(j) FROM (SELECT 2 AS i, 1 AS j UNION ALL SELECT \
@@ -1033,11 +1017,11 @@ mod test {
 
         // count should return 0 when given no columns (contrast with sum above)
         let no_result = "SELECT my_count(i) FROM (SELECT 2 AS i WHERE 1 <> 1)";
-        let result: i64 = db.query_row(no_result, [], |r| r.get(0))?;
+        let result: i64 = db.one_column(no_result)?;
         assert_eq!(result, 0);
 
         let single_sum = "SELECT my_count(i) FROM (SELECT 2 AS i UNION ALL SELECT 2)";
-        let result: i64 = db.query_row(single_sum, [], |r| r.get(0))?;
+        let result: i64 = db.one_column(single_sum)?;
         assert_eq!(2, result);
         Ok(())
     }

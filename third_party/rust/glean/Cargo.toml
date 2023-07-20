@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.62"
 name = "glean"
-version = "53.0.0"
+version = "53.1.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -43,7 +43,7 @@ features = ["serde"]
 version = "0.5"
 
 [dependencies.glean-core]
-version = "53.0.0"
+version = "53.1.0"
 
 [dependencies.inherent]
 version = "1"
@@ -52,7 +52,7 @@ version = "1"
 version = "0.4.8"
 
 [dependencies.once_cell]
-version = "1.2.0"
+version = "1.18.0"
 
 [dependencies.serde]
 version = "1.0.104"

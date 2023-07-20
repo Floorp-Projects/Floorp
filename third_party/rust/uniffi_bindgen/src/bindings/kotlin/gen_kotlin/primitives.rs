@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::backend::{CodeOracle, CodeType, Literal};
+use crate::backend::{CodeType, Literal};
 use crate::interface::{types::Type, Radix};
 use paste::paste;
 
-fn render_literal(_oracle: &dyn CodeOracle, literal: &Literal) -> String {
+fn render_literal(literal: &Literal) -> String {
     fn typed_number(type_: &Type, num_str: String) -> String {
         match type_ {
             // Bytes, Shorts and Ints can all be inferred from the type.
@@ -50,15 +50,16 @@ fn render_literal(_oracle: &dyn CodeOracle, literal: &Literal) -> String {
 macro_rules! impl_code_type_for_primitive {
     ($T:ty, $class_name:literal) => {
         paste! {
+            #[derive(Debug)]
             pub struct $T;
 
             impl CodeType for $T  {
-                fn type_label(&self, _oracle: &dyn CodeOracle) -> String {
+                fn type_label(&self) -> String {
                     $class_name.into()
                 }
 
-                fn literal(&self, oracle: &dyn CodeOracle, literal: &Literal) -> String {
-                    render_literal(oracle, &literal)
+                fn literal(&self, literal: &Literal) -> String {
+                    render_literal(&literal)
                 }
             }
         }
@@ -67,6 +68,7 @@ macro_rules! impl_code_type_for_primitive {
 
 impl_code_type_for_primitive!(BooleanCodeType, "Boolean");
 impl_code_type_for_primitive!(StringCodeType, "String");
+impl_code_type_for_primitive!(BytesCodeType, "ByteArray");
 impl_code_type_for_primitive!(Int8CodeType, "Byte");
 impl_code_type_for_primitive!(Int16CodeType, "Short");
 impl_code_type_for_primitive!(Int32CodeType, "Int");

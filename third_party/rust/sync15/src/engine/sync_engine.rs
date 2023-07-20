@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use super::{CollectionRequest, IncomingChangeset, OutgoingChangeset};
+use super::CollectionRequest;
+use crate::bso::{IncomingBso, OutgoingBso};
 use crate::client_types::ClientData;
 use crate::{telemetry, CollectionName, Guid, ServerTimestamp};
 use anyhow::Result;
@@ -98,8 +99,24 @@ impl TryFrom<&str> for SyncEngineId {
 /// by a "store" (which is the generic term responsible for all storage
 /// associated with a component, including storage required for sync.)
 ///
-/// Low-level engine functionality. Engines that need custom reconciliation
-/// logic should use this.
+/// The model described by this trait is that engines first "stage" sets of incoming records,
+/// then apply them returning outgoing records, then handle the success (or otherwise) of each
+/// batch as it's uploaded.
+///
+/// Staging incoming records is (or should be ;) done in batches - eg, 1000 record chunks.
+/// Some engines will "stage" these into a database temp table, while ones expecting less records
+/// might just store them in memory.
+///
+/// For outgoing records, a single vec is supplied by the engine. The sync client will use the
+/// batch facilities of the server to make multiple POST requests and commit them.
+/// Sadly it's not truly atomic (there's a batch size limit) - so the model reflects that in that
+/// the engine gets told each time a batch is committed, which might happen more than once for the
+/// supplied vec. We should upgrade this model so the engine can avoid reading every outgoing
+/// record into memory at once (ie, we should try and better reflect the upload batch model at
+/// this level)
+///
+/// Sync Engines should not assume they live for exactly one sync, so `prepare_for_sync()` should
+/// clean up any state, including staged records, from previous syncs.
 ///
 /// Different engines will produce errors of different types.  To accommodate
 /// this, we force them all to return anyhow::Error.
@@ -140,7 +157,9 @@ pub trait SyncEngine {
     /// to generate keys and in what form they are exchanged. Finally, there's
     /// an assumption that sync engines are short-lived and only live for a
     /// single sync - this means that sync doesn't hold on to the key for an
-    /// extended period.
+    /// extended period. In practice, all sync engines which aren't a "bridged
+    /// engine" are short lived - we might need to rethink this later if we need
+    /// engines with local encryption keys to be used on desktop.
     ///
     /// This will panic if called by an engine that doesn't have explicit
     /// support for local encryption keys as that implies a degree of confusion
@@ -149,46 +168,51 @@ pub trait SyncEngine {
         unimplemented!("This engine does not support local encryption");
     }
 
-    /// `inbound` is a vector to support the case where
-    /// `get_collection_requests` returned multiple requests. The changesets are
-    /// in the same order as the requests were -- e.g. if `vec![req_a, req_b]`
-    /// was returned from `get_collection_requests`, `inbound` will have the
-    /// results from `req_a` as its first index, and those from `req_b` as it's
-    /// second.
-    fn apply_incoming(
+    /// Stage some incoming records. This might be called multiple times in the same sync
+    /// if we fetch the incoming records in batches.
+    ///
+    /// Note there is no timestamp provided here, because the procedure for fetching in batches
+    /// means that the timestamp advancing during a batch means we must abort and start again.
+    /// The final collection timestamp after staging all records is supplied to `apply()`
+    fn stage_incoming(
         &self,
-        inbound: Vec<IncomingChangeset>,
+        inbound: Vec<IncomingBso>,
         telem: &mut telemetry::Engine,
-    ) -> Result<OutgoingChangeset>;
-
-    fn sync_finished(
-        &self,
-        new_timestamp: ServerTimestamp,
-        records_synced: Vec<Guid>,
     ) -> Result<()>;
 
-    /// The engine is responsible for building collection requests. Engines
+    /// Apply the staged records, returning outgoing records.
+    /// Ideally we would adjust this model to better support batching of outgoing records
+    /// without needing to keep them all in memory (ie, an iterator or similar?)
+    fn apply(
+        &self,
+        timestamp: ServerTimestamp,
+        telem: &mut telemetry::Engine,
+    ) -> Result<Vec<OutgoingBso>>;
+
+    /// Indicates that the given record IDs were uploaded successfully to the server.
+    /// This may be called multiple times per sync, once for each batch. Batching is determined
+    /// dynamically based on payload sizes and counts via the server's advertised limits.
+    fn set_uploaded(&self, new_timestamp: ServerTimestamp, ids: Vec<Guid>) -> Result<()>;
+
+    /// Called once the sync is finished. Not currently called if uploads fail (which
+    /// seems sad, but the other batching confusion there needs sorting out first).
+    /// Many engines will have nothing to do here, as most "post upload" work should be
+    /// done in `set_uploaded()`
+    fn sync_finished(&self) -> Result<()> {
+        Ok(())
+    }
+
+    /// The engine is responsible for building a single collection request. Engines
     /// typically will store a lastModified timestamp and use that to build a
     /// request saying "give me full records since that date" - however, other
-    /// engines might do something fancier. This could even later be extended to
-    /// handle "backfills" etc
-    ///
-    /// To support more advanced use cases,  multiple requests can be returned
-    /// here - either from the same or different collections. The vast majority
-    /// of engines will just want to return zero or one item in their vector
-    /// (zero is a valid optimization when the server timestamp is the same as
-    /// the engine last saw, one when it is not)
-    ///
-    /// Important: In the case when more than one collection is requested, it's
-    /// assumed the last one is the "canonical" one. (That is, it must be for
-    /// "this" collection, its timestamp is used to represent the sync, etc).
-    /// (Note that multiple collection request support is currently unused, so
-    /// it might make sense to delete it - if we need it later, we may find a
-    /// better shape for our use-case)
-    fn get_collection_requests(
+    /// engines might do something fancier. It can return None if the server timestamp
+    /// has not advanced since the last sync.
+    /// This could even later be extended to handle "backfills", and we might end up
+    /// wanting one engine to use multiple collections (eg, as a "foreign key" via guid), etc.
+    fn get_collection_request(
         &self,
         server_timestamp: ServerTimestamp,
-    ) -> Result<Vec<CollectionRequest>>;
+    ) -> Result<Option<CollectionRequest>>;
 
     /// Get persisted sync IDs. If they don't match the global state we'll be
     /// `reset()` with the new IDs.

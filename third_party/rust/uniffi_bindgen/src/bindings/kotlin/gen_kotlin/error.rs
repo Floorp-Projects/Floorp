@@ -2,8 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::backend::{CodeOracle, CodeType, Literal};
+use crate::backend::{CodeType, Literal};
 
+// When a type is used as an error it gets a special CodeType.
+#[derive(Debug)]
 pub struct ErrorCodeType {
     id: String,
 }
@@ -15,15 +17,15 @@ impl ErrorCodeType {
 }
 
 impl CodeType for ErrorCodeType {
-    fn type_label(&self, oracle: &dyn CodeOracle) -> String {
-        oracle.error_name(&self.id)
+    fn type_label(&self) -> String {
+        super::KotlinCodeOracle.error_name(&self.id)
     }
 
-    fn canonical_name(&self, _oracle: &dyn CodeOracle) -> String {
+    fn canonical_name(&self) -> String {
         format!("Type{}", self.id)
     }
 
-    fn literal(&self, _oracle: &dyn CodeOracle, _literal: &Literal) -> String {
+    fn literal(&self, _literal: &Literal) -> String {
         unreachable!();
     }
 }

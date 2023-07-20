@@ -43,9 +43,20 @@ impl<T: std::fmt::Debug> std::fmt::Debug for IncomingKind<T> {
 impl IncomingBso {
     /// Convert an [IncomingBso] to an [IncomingContent] possibly holding a T.
     pub fn into_content<T: for<'de> serde::Deserialize<'de>>(self) -> IncomingContent<T> {
+        self.into_content_with_fixup(|_| {})
+    }
+
+    /// Like into_content, but adds an additional fixup step where the caller can adjust the
+    /// `serde_json::Value'
+    pub fn into_content_with_fixup<T: for<'de> serde::Deserialize<'de>>(
+        self,
+        fixup: impl FnOnce(&mut serde_json::Value),
+    ) -> IncomingContent<T> {
         match serde_json::from_str(&self.payload) {
-            Ok(json) => {
-                // We got a good serde_json::Value, see if it's a <T>.
+            Ok(mut json) => {
+                // We got a good serde_json::Value, run the fixup method
+                fixup(&mut json);
+                // ...now see if it's a <T>.
                 let kind = json_to_kind(json, &self.envelope.id);
                 IncomingContent {
                     envelope: self.envelope,
@@ -170,10 +181,16 @@ where
             }
         }
     };
-    match serde_json::from_value(json) {
+    match serde_path_to_error::deserialize(json) {
         Ok(v) => IncomingKind::Content(v),
         Err(e) => {
-            report_error!("invalid-incoming-content", "Invalid incoming T: {}", e);
+            report_error!(
+                "invalid-incoming-content",
+                "{}.{}: {}",
+                std::any::type_name::<T>(),
+                e.path(),
+                e.inner()
+            );
             IncomingKind::Malformed
         }
     }

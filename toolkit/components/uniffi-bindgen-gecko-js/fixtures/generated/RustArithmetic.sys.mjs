@@ -307,6 +307,7 @@ export class FfiConverterString extends FfiConverter {
 
 
 
+
 export class ArithmeticError extends Error {}
 
 
@@ -376,7 +377,7 @@ export function add(a,b) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                22, // arithmetic:arithmetic_fd12_add
+                22, // arithmetic:uniffi_arithmetic_fn_func_add
                 FfiConverterU64.lower(a),
                 FfiConverterU64.lower(b),
             )
@@ -410,7 +411,7 @@ export function sub(a,b) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                23, // arithmetic:arithmetic_fd12_sub
+                23, // arithmetic:uniffi_arithmetic_fn_func_sub
                 FfiConverterU64.lower(a),
                 FfiConverterU64.lower(b),
             )
@@ -444,7 +445,7 @@ export function div(dividend,divisor) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                24, // arithmetic:arithmetic_fd12_div
+                24, // arithmetic:uniffi_arithmetic_fn_func_div
                 FfiConverterU64.lower(dividend),
                 FfiConverterU64.lower(divisor),
             )
@@ -478,7 +479,7 @@ export function equal(a,b) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                25, // arithmetic:arithmetic_fd12_equal
+                25, // arithmetic:uniffi_arithmetic_fn_func_equal
                 FfiConverterU64.lower(a),
                 FfiConverterU64.lower(b),
             )

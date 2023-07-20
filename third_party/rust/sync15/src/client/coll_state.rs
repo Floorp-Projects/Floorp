@@ -168,8 +168,8 @@ mod tests {
     use super::super::request::{InfoCollections, InfoConfiguration};
     use super::super::CollectionKeys;
     use super::*;
+    use crate::bso::{IncomingBso, OutgoingBso};
     use crate::engine::CollectionRequest;
-    use crate::engine::{IncomingChangeset, OutgoingChangeset};
     use crate::record_types::{MetaGlobalEngine, MetaGlobalRecord};
     use crate::{telemetry, CollectionName};
     use anyhow::Result;
@@ -230,26 +230,34 @@ mod tests {
             self.collection_name.into()
         }
 
-        fn apply_incoming(
+        fn stage_incoming(
             &self,
-            _inbound: Vec<IncomingChangeset>,
+            _inbound: Vec<IncomingBso>,
             _telem: &mut telemetry::Engine,
-        ) -> Result<OutgoingChangeset> {
-            unreachable!("these tests shouldn't call these");
-        }
-
-        fn sync_finished(
-            &self,
-            _new_timestamp: ServerTimestamp,
-            _records_synced: Vec<Guid>,
         ) -> Result<()> {
             unreachable!("these tests shouldn't call these");
         }
 
-        fn get_collection_requests(
+        fn apply(
+            &self,
+            _timestamp: ServerTimestamp,
+            _telem: &mut telemetry::Engine,
+        ) -> Result<Vec<OutgoingBso>> {
+            unreachable!("these tests shouldn't call these");
+        }
+
+        fn set_uploaded(&self, _new_timestamp: ServerTimestamp, _ids: Vec<Guid>) -> Result<()> {
+            unreachable!("these tests shouldn't call these");
+        }
+
+        fn sync_finished(&self) -> Result<()> {
+            unreachable!("these tests shouldn't call these");
+        }
+
+        fn get_collection_request(
             &self,
             _server_timestamp: ServerTimestamp,
-        ) -> Result<Vec<CollectionRequest>> {
+        ) -> Result<Option<CollectionRequest>> {
             unreachable!("these tests shouldn't call these");
         }
 

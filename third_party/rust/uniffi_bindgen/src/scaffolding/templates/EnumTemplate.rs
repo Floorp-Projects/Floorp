@@ -7,39 +7,13 @@
 // public so other crates can refer to it via an `[External='crate'] typedef`
 #}
 
-#[doc(hidden)]
-pub struct {{ e.type_().borrow()|ffi_converter_name }};
-
-#[doc(hidden)]
-impl uniffi::RustBufferFfiConverter for {{ e.type_().borrow()|ffi_converter_name }} {
-    type RustType = r#{{ e.name() }};
-
-    fn write(obj: Self::RustType, buf: &mut std::vec::Vec<u8>) {
-        use uniffi::deps::bytes::BufMut;
-        match obj {
-            {%- for variant in e.variants() %}
-            r#{{ e.name() }}::r#{{ variant.name() }} { {% for field in variant.fields() %}r#{{ field.name() }}, {%- endfor %} } => {
-                buf.put_i32({{ loop.index }});
-                {% for field in variant.fields() -%}
-                {{ field.type_().borrow()|ffi_converter }}::write(r#{{ field.name() }}, buf);
-                {%- endfor %}
-            },
-            {%- endfor %}
-        };
-    }
-
-    fn try_read(buf: &mut &[u8]) -> uniffi::deps::anyhow::Result<r#{{ e.name() }}> {
-        use uniffi::deps::bytes::Buf;
-        uniffi::check_remaining(buf, 4)?;
-        Ok(match buf.get_i32() {
-            {%- for variant in e.variants() %}
-            {{ loop.index }} => r#{{ e.name() }}::r#{{ variant.name() }}{% if variant.has_fields() %} {
-                {% for field in variant.fields() %}
-                r#{{ field.name() }}: {{ field.type_().borrow()|ffi_converter }}::try_read(buf)?,
-                {%- endfor %}
-            }{% endif %},
-            {%- endfor %}
-            v => uniffi::deps::anyhow::bail!("Invalid {{ e.name() }} enum value: {}", v),
-        })
-    }
+#[::uniffi::ffi_converter_enum(tag = crate::UniFfiTag)]
+enum r#{{ e.name() }} {
+    {%- for variant in e.variants() %}
+    r#{{ variant.name() }} {
+        {%- for field in variant.fields() %}
+        r#{{ field.name() }}: {{ field.as_type().borrow()|type_rs }},
+        {%- endfor %}
+    },
+    {%- endfor %}
 }

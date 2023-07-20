@@ -7,7 +7,7 @@
 //! This module provides support for interpreting literal values from the UDL,
 //! which appear in places such as default arguments.
 
-use anyhow::{bail, Result};
+use anyhow::{bail, ensure, Context, Result};
 use uniffi_meta::Checksum;
 
 use super::types::Type;
@@ -32,6 +32,66 @@ pub enum Literal {
     EmptySequence,
     EmptyMap,
     Null,
+}
+
+impl Literal {
+    pub(crate) fn from_metadata(
+        name: &str,
+        ty: &Type,
+        default: uniffi_meta::Literal,
+    ) -> Result<Self> {
+        Ok(match default {
+            uniffi_meta::Literal::Str { value } => {
+                ensure!(
+                    matches!(ty, Type::String),
+                    "field {name} of type {ty:?} can't have a default value of type string"
+                );
+                Self::String(value)
+            }
+            uniffi_meta::Literal::Int { base10_digits } => {
+                macro_rules! parse_int {
+                    ($ty:ident, $variant:ident) => {
+                        Self::$variant(
+                            base10_digits
+                                .parse::<$ty>()
+                                .with_context(|| format!("parsing default for field {}", name))?
+                                .into(),
+                            Radix::Decimal,
+                            ty.to_owned(),
+                        )
+                    };
+                }
+
+                match ty {
+                    Type::UInt8 => parse_int!(u8, UInt),
+                    Type::Int8 => parse_int!(i8, Int),
+                    Type::UInt16 => parse_int!(u16, UInt),
+                    Type::Int16 => parse_int!(i16, Int),
+                    Type::UInt32 => parse_int!(u32, UInt),
+                    Type::Int32 => parse_int!(i32, Int),
+                    Type::UInt64 => parse_int!(u64, UInt),
+                    Type::Int64 => parse_int!(i64, Int),
+                    _ => {
+                        bail!("field {name} of type {ty:?} can't have a default value of type integer");
+                    }
+                }
+            }
+            uniffi_meta::Literal::Float { base10_digits } => match ty {
+                Type::Float32 => Self::Float(base10_digits, Type::Float32),
+                Type::Float64 => Self::Float(base10_digits, Type::Float64),
+                _ => {
+                    bail!("field {name} of type {ty:?} can't have a default value of type float");
+                }
+            },
+            uniffi_meta::Literal::Bool { value } => {
+                ensure!(
+                    matches!(ty, Type::String),
+                    "field {name} of type {ty:?} can't have a default value of type boolean"
+                );
+                Self::Boolean(value)
+            }
+        })
+    }
 }
 
 // Represent the radix of integer literal values.

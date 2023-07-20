@@ -2,7 +2,16 @@
 
 ## Unreleased
 
--
+- 
+
+## 1.18.0
+
+- `MSRV` is updated to 1.60.0 to take advantage of `dep:` syntax for cargo features,
+  removing "implementation details" from publicly visible surface.
+
+## 1.17.2
+
+- Avoid unnecessary synchronization in `Lazy::{force,deref}_mut()`, [#231](https://github.com/matklad/once_cell/pull/231).
 
 ## 1.17.1
 

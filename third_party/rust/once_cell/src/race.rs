@@ -351,7 +351,7 @@ mod once_box {
                 Ordering::AcqRel,
                 Ordering::Acquire,
             );
-            if let Err(_) = exchange {
+            if exchange.is_err() {
                 let value = unsafe { Box::from_raw(ptr) };
                 return Err(value);
             }

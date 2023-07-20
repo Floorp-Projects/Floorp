@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "rusqlite"
-version = "0.28.0"
+version = "0.29.0"
 authors = ["The rusqlite developers"]
 exclude = [
     "/.github/*",
@@ -35,18 +35,18 @@ license = "MIT"
 repository = "https://github.com/rusqlite/rusqlite"
 
 [package.metadata.docs.rs]
-features = ["modern-full"]
 all-features = false
-no-default-features = true
 default-target = "x86_64-unknown-linux-gnu"
+features = ["modern-full"]
+no-default-features = true
 rustdoc-args = [
     "--cfg",
     "docsrs",
 ]
 
 [package.metadata.playground]
-features = ["bundled-full"]
 all-features = false
+features = ["bundled-full"]
 
 [lib]
 name = "rusqlite"
@@ -70,7 +70,7 @@ name = "exec"
 harness = false
 
 [dependencies.bitflags]
-version = "1.2"
+version = "2.0"
 
 [dependencies.chrono]
 version = "0.4"
@@ -91,12 +91,8 @@ version = "0.1"
 [dependencies.hashlink]
 version = "0.8"
 
-[dependencies.lazy_static]
-version = "1.4"
-optional = true
-
 [dependencies.libsqlite3-sys]
-version = "0.25.0"
+version = "0.26.0"
 
 [dependencies.serde_json]
 version = "1.0"
@@ -146,8 +142,8 @@ features = ["v4"]
 
 [features]
 array = ["vtab"]
-backup = ["libsqlite3-sys/min_sqlite_version_3_6_23"]
-blob = ["libsqlite3-sys/min_sqlite_version_3_7_7"]
+backup = []
+blob = []
 buildtime_bindgen = ["libsqlite3-sys/buildtime_bindgen"]
 bundled = [
     "libsqlite3-sys/bundled",
@@ -173,7 +169,7 @@ csvtab = [
     "vtab",
 ]
 extra_check = []
-functions = ["libsqlite3-sys/min_sqlite_version_3_7_7"]
+functions = []
 hooks = []
 i128_blob = []
 in_gecko = [
@@ -208,16 +204,16 @@ modern-full = [
     "window",
 ]
 modern_sqlite = ["libsqlite3-sys/bundled_bindings"]
-release_memory = ["libsqlite3-sys/min_sqlite_version_3_7_16"]
+release_memory = []
 series = ["vtab"]
 session = [
     "libsqlite3-sys/session",
     "hooks",
 ]
 sqlcipher = ["libsqlite3-sys/sqlcipher"]
-trace = ["libsqlite3-sys/min_sqlite_version_3_6_23"]
+trace = []
 unlock_notify = ["libsqlite3-sys/unlock_notify"]
-vtab = ["libsqlite3-sys/min_sqlite_version_3_7_7"]
+vtab = []
 wasm32-wasi-vfs = ["libsqlite3-sys/wasm32-wasi-vfs"]
 window = ["functions"]
 winsqlite3 = ["libsqlite3-sys/winsqlite3"]

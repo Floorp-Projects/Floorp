@@ -79,7 +79,7 @@ struct BuildForeignLanguageTestCaseInput {
 }
 
 impl syn::parse::Parse for BuildForeignLanguageTestCaseInput {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+    fn parse(input: syn::parse::ParseStream<'_>) -> syn::Result<Self> {
         let test_scripts = Punctuated::<LitStr, Token![,]>::parse_terminated(input)?
             .iter()
             .map(|s| s.value())
