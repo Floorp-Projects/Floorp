@@ -340,7 +340,7 @@ this.backgroundPage = class extends ExtensionAPI {
     this.backgroundTimer = timer;
   }
 
-  async primeBackground(isInStartup = true) {
+  primeBackground(isInStartup = true) {
     let { extension } = this;
 
     if (this.bgInstance) {
@@ -565,26 +565,15 @@ this.backgroundPage = class extends ExtensionAPI {
 
       EventManager.clearPrimedListeners(this.extension, false);
       // Setup background startup listeners for next primed event.
-      await this.primeBackground(false);
+      this.primeBackground(false);
     };
-
-    // Persistent backgrounds are started immediately except during APP_STARTUP.
-    // Non-persistent backgrounds must be started immediately for new install or enable
-    // to initialize the addon and create the persisted listeners.
-    // updateReason is set when an extension is updated during APP_STARTUP.
-    if (
-      isInStartup &&
-      (extension.testNoDelayedStartup ||
-        extension.startupReason !== "APP_STARTUP" ||
-        extension.updateReason)
-    ) {
-      return this.build();
-    }
 
     EventManager.primeListeners(extension, isInStartup);
 
+    // TODO: start-background-script and background-script-event should be
+    // unregistered when build() starts or when the extension shuts down.
     extension.once("start-background-script", async () => {
-      if (!this.extension) {
+      if (!this.extension || this.extension.hasShutdown) {
         // Extension was shut down. Don't build the background page.
         // Primed listeners have been cleared in onShutdown.
         return;
@@ -594,10 +583,7 @@ this.backgroundPage = class extends ExtensionAPI {
 
     // There are two ways to start the background page:
     // 1. If a primed event fires, then start the background page as
-    //    soon as we have painted a browser window.  Note that we have
-    //    to touch browserPaintedPromise here to initialize the listener
-    //    or else we can miss it if the event occurs after the first
-    //    window is painted but before #2
+    //    soon as we have painted a browser window.
     // 2. After all windows have been restored on startup (see onManifestEntry).
     extension.once("background-script-event", async () => {
       await ExtensionParent.browserPaintedPromise;
@@ -658,11 +644,30 @@ this.backgroundPage = class extends ExtensionAPI {
       extension.emit("background-first-run");
     });
 
-    await this.primeBackground();
+    this.primeBackground();
+
+    // Persistent backgrounds are started immediately except during APP_STARTUP.
+    // Non-persistent backgrounds must be started immediately for new install or enable
+    // to initialize the addon and create the persisted listeners.
+    // updateReason is set when an extension is updated during APP_STARTUP.
+    if (
+      extension.testNoDelayedStartup ||
+      extension.startupReason !== "APP_STARTUP" ||
+      extension.updateReason
+    ) {
+      // TODO bug 1543354: Avoid AsyncShutdown timeouts by removing the await
+      // here, at least for non-test situations.
+      await this.build();
+
+      // The task in ExtensionParent.browserPaintedPromise below would be fully
+      // skipped because of the above build() that sets bgInstance. Return early
+      // so that it is obvious that the logic is skipped.
+      return;
+    }
 
     ExtensionParent.browserStartupPromise.then(() => {
-      // Return early if the background was created in the first
-      // primeBackground call.  This happens for install, upgrade, downgrade.
+      // Return early if the background has started in the meantime. This can
+      // happen if a primed listener (isInStartup) has been triggered.
       if (this.bgInstance) {
         return;
       }
