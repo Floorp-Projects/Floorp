@@ -1170,9 +1170,11 @@ def test_save_revision_treeherder(args, call_counts, exists_cache_file):
             {},
             [1, 0, 0, 1],
             (
-                "That's a lot of tests selected (300)!\n"
-                "These tests won't be triggered. If this was unexpected, "
-                "please file a bug in Testing :: Performance."
+                "\n\n----------------------------------------------------------------------------------------------\n"
+                f"You have selected {MAX_PERF_TASKS+1} total test runs! (selected tasks({MAX_PERF_TASKS+1}) * rebuild"
+                f" count(1) \nThese tests won't be triggered as the current maximum for a single ./mach try "
+                f"perf run is {MAX_PERF_TASKS}. \nIf this was unexpected, please file a bug in Testing :: Performance."
+                "\n----------------------------------------------------------------------------------------------\n\n"
             ),
             True,
         ),
@@ -1191,9 +1193,12 @@ def test_save_revision_treeherder(args, call_counts, exists_cache_file):
             {"show_all": True, "try_config": {"rebuild": 2}},
             [1, 0, 0, 1],
             (
-                "That's a lot of tests selected (300)!\n"
-                "These tests won't be triggered. If this was unexpected, "
-                "please file a bug in Testing :: Performance."
+                "\n\n----------------------------------------------------------------------------------------------\n"
+                f"You have selected {int((MAX_PERF_TASKS + 2) / 2) * 2} total test runs! (selected tasks("
+                f"{int((MAX_PERF_TASKS + 2) / 2)}) * rebuild"
+                f" count(2) \nThese tests won't be triggered as the current maximum for a single ./mach try "
+                f"perf run is {MAX_PERF_TASKS}. \nIf this was unexpected, please file a bug in Testing :: Performance."
+                "\n----------------------------------------------------------------------------------------------\n\n"
             ),
             True,
         ),

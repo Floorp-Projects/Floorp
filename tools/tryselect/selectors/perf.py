@@ -1158,11 +1158,14 @@ class PerfParser(CompareParser):
             print("No tasks selected")
             return None
 
-        if (len(selected_tasks) * rebuild) > MAX_PERF_TASKS:
+        total_task_count = len(selected_tasks) * rebuild
+        if total_task_count > MAX_PERF_TASKS:
             print(
-                "That's a lot of tests selected (%s)!\n"
-                "These tests won't be triggered. If this was unexpected, "
-                "please file a bug in Testing :: Performance." % MAX_PERF_TASKS
+                "\n\n----------------------------------------------------------------------------------------------\n"
+                f"You have selected {total_task_count} total test runs! (selected tasks({len(selected_tasks)}) * rebuild"
+                f" count({rebuild}) \nThese tests won't be triggered as the current maximum for a single ./mach try "
+                f"perf run is {MAX_PERF_TASKS}. \nIf this was unexpected, please file a bug in Testing :: Performance."
+                "\n----------------------------------------------------------------------------------------------\n\n"
             )
             return None
 
