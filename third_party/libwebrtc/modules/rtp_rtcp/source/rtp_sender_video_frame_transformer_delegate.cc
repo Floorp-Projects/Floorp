@@ -17,6 +17,7 @@
 #include "api/task_queue/task_queue_factory.h"
 #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/event.h"
 
 namespace webrtc {
 namespace {
@@ -214,6 +215,14 @@ void RTPSenderVideoFrameTransformerDelegate::Reset() {
     MutexLock lock(&sender_lock_);
     sender_ = nullptr;
   }
+  // Wait until all pending tasks are executed, to ensure that the last ref
+  // standing is not on the transformation queue.
+  rtc::Event flush;
+  transformation_queue_->PostTask([this, &flush]() {
+    RTC_DCHECK_RUN_ON(transformation_queue_.get());
+    flush.Set();
+  });
+  flush.Wait(rtc::Event::kForever);
 }
 
 std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
