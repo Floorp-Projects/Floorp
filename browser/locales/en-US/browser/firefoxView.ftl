@@ -130,6 +130,8 @@ firefoxview-overview-header = Recent browsing
 firefoxview-history-nav = History
   .title = History
 firefoxview-history-header = History
+firefoxview-history-context-delete = Delete from History
+    .accesskey = D
 
 ## Open Tabs in this context refers to all open tabs in the browser
 

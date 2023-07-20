@@ -7,15 +7,16 @@ import { ViewPage } from "./viewpage.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/migration/migration-wizard.mjs";
 
-const { FirefoxViewPlacesQuery } = ChromeUtils.importESModule(
-  "resource:///modules/firefox-view-places-query.sys.mjs"
-);
-const { BrowserUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/BrowserUtils.sys.mjs"
-);
-const { ProfileAge } = ChromeUtils.importESModule(
-  "resource://gre/modules/ProfileAge.sys.mjs"
-);
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  FirefoxViewPlacesQuery:
+    "resource:///modules/firefox-view-places-query.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
+});
+
 let XPCOMUtils = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 ).XPCOMUtils;
@@ -33,7 +34,7 @@ class HistoryInView extends ViewPage {
     this.historyMapBySite = [];
     // Setting maxTabsLength to -1 for no max
     this.maxTabsLength = -1;
-    this.placesQuery = new FirefoxViewPlacesQuery();
+    this.placesQuery = new lazy.FirefoxViewPlacesQuery();
     this.sortOption = "date";
     this.profileAge = 8;
     this.fullyUpdated = false;
@@ -66,7 +67,7 @@ class HistoryInView extends ViewPage {
       }
     );
     if (!this.importHistoryDismissedPref && !this.hasImportedHistoryPrefs) {
-      let profileAccessor = await ProfileAge();
+      let profileAccessor = await lazy.ProfileAge();
       let profileCreateTime = await profileAccessor.created;
       let timeNow = new Date().getTime();
       let profileAge = timeNow - profileCreateTime;
@@ -175,7 +176,7 @@ class HistoryInView extends ViewPage {
   onPrimaryAction(e) {
     let currentWindow = this.getWindow();
     if (currentWindow.openTrustedLinkIn) {
-      let where = BrowserUtils.whereToOpenLink(
+      let where = lazy.BrowserUtils.whereToOpenLink(
         e.detail.originalEvent,
         false,
         true
@@ -188,10 +189,15 @@ class HistoryInView extends ViewPage {
   }
 
   onSecondaryAction(e) {
+    this.triggerNode = e.originalTarget;
     e.target.querySelector("panel-list").toggle(e.detail.originalEvent);
   }
 
-  onChangeSortOption(e) {
+  deleteFromHistory(e) {
+    lazy.PlacesUtils.history.remove(this.triggerNode.url);
+  }
+
+  async onChangeSortOption(e) {
     this.sortOption = e.target.value;
     this.updateHistoryData();
   }
@@ -248,19 +254,28 @@ class HistoryInView extends ViewPage {
   panelListTemplate() {
     return html`
       <panel-list slot="menu">
-        <panel-item data-l10n-id="fxviewtabrow-delete"></panel-item>
         <panel-item
-          data-l10n-id="fxviewtabrow-forget-about-this-site"
+          @click=${this.deleteFromHistory}
+          data-l10n-id="firefoxview-history-context-delete"
+          data-l10n-attrs="accesskey"
         ></panel-item>
         <hr />
-        <panel-item data-l10n-id="fxviewtabrow-open-in-window"></panel-item>
         <panel-item
+          @click=${this.openInNewWindow}
+          data-l10n-id="fxviewtabrow-open-in-window"
+          data-l10n-attrs="accesskey"
+        ></panel-item>
+        <panel-item
+          @click=${this.openInNewPrivateWindow}
           data-l10n-id="fxviewtabrow-open-in-private-window"
+          data-l10n-attrs="accesskey"
         ></panel-item>
         <hr />
-        <panel-item data-l10n-id="fxviewtabrow-add-bookmark"></panel-item>
-        <panel-item data-l10n-id="fxviewtabrow-save-to-pocket"></panel-item>
-        <panel-item data-l10n-id="fxviewtabrow-copy-link"></panel-item>
+        <panel-item
+          @click=${this.copyLink}
+          data-l10n-id="fxviewtabrow-copy-link"
+          data-l10n-attrs="accesskey"
+        ></panel-item>
       </panel-list>
     `;
   }
