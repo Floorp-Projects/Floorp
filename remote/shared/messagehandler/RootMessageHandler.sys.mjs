@@ -7,6 +7,7 @@ import { MessageHandler } from "chrome://remote/content/shared/messagehandler/Me
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  NavigationManager: "chrome://remote/content/shared/NavigationManager.sys.mjs",
   RootTransport:
     "chrome://remote/content/shared/messagehandler/transports/RootTransport.sys.mjs",
   SessionData:
@@ -23,6 +24,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * layers (at the moment WindowGlobalMessageHandlers in content processes).
  */
 export class RootMessageHandler extends MessageHandler {
+  #navigationManager;
   #rootTransport;
   #sessionData;
 
@@ -63,6 +65,12 @@ export class RootMessageHandler extends MessageHandler {
 
     this.#rootTransport = new lazy.RootTransport(this);
     this.#sessionData = new lazy.SessionData(this);
+    this.#navigationManager = new lazy.NavigationManager();
+    this.#navigationManager.startMonitoring();
+  }
+
+  get navigationManager() {
+    return this.#navigationManager;
   }
 
   get sessionData() {
@@ -71,6 +79,7 @@ export class RootMessageHandler extends MessageHandler {
 
   destroy() {
     this.#sessionData.destroy();
+    this.#navigationManager.destroy();
     super.destroy();
   }
 
