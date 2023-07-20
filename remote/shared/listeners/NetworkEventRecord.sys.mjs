@@ -21,6 +21,7 @@ export class NetworkEventRecord {
   #channel;
   #contextId;
   #fromCache;
+  #isMainDocumentChannel;
   #networkListener;
   #redirectCount;
   #requestData;
@@ -41,6 +42,7 @@ export class NetworkEventRecord {
   constructor(networkEvent, channel, networkListener) {
     this.#channel = channel;
     this.#fromCache = networkEvent.fromCache;
+    this.#isMainDocumentChannel = channel.isMainDocumentChannel;
 
     this.#wrappedChannel = ChannelWrapper.get(channel);
 
@@ -229,6 +231,7 @@ export class NetworkEventRecord {
 
     this.#networkListener.emit("before-request-sent", {
       contextId: this.#contextId,
+      isNavigationRequest: this.#isMainDocumentChannel,
       redirectCount: this.#redirectCount,
       requestData: this.#requestData,
       timestamp: Date.now(),
@@ -240,6 +243,7 @@ export class NetworkEventRecord {
 
     this.#networkListener.emit("response-completed", {
       contextId: this.#contextId,
+      isNavigationRequest: this.#isMainDocumentChannel,
       redirectCount: this.#redirectCount,
       requestData: this.#requestData,
       responseData: this.#responseData,
@@ -252,6 +256,7 @@ export class NetworkEventRecord {
 
     this.#networkListener.emit("response-started", {
       contextId: this.#contextId,
+      isNavigationRequest: this.#isMainDocumentChannel,
       redirectCount: this.#redirectCount,
       requestData: this.#requestData,
       responseData: this.#responseData,
@@ -282,6 +287,11 @@ export class NetworkEventRecord {
     return timing - requestTime;
   }
 
+  #getBrowsingContext() {
+    const id = lazy.NetworkUtils.getChannelBrowsingContextID(this.#channel);
+    return BrowsingContext.get(id);
+  }
+
   /**
    * Retrieve the navigable id for the current browsing context associated to
    * the requests' channel. Network events are recorded in the parent process
@@ -291,9 +301,7 @@ export class NetworkEventRecord {
    *     The navigable id corresponding to the given browsing context.
    */
   #getContextId() {
-    const id = lazy.NetworkUtils.getChannelBrowsingContextID(this.#channel);
-    const browsingContext = BrowsingContext.get(id);
-    return lazy.TabManager.getIdForBrowsingContext(browsingContext);
+    return lazy.TabManager.getIdForBrowsingContext(this.#getBrowsingContext());
   }
 
   #getMimeType() {
