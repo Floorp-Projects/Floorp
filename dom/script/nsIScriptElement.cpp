@@ -65,8 +65,7 @@ void nsIScriptElement::DetermineKindFromType(
   GetScriptType(type);
 
   if (!type.IsEmpty()) {
-    if (aOwnerDoc->ModuleScriptsEnabled() &&
-        type.LowerCaseEqualsASCII("module")) {
+    if (type.LowerCaseEqualsASCII("module")) {
       mKind = ScriptKind::eModule;
     }
 

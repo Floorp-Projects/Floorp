@@ -917,8 +917,7 @@ bool ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement,
   // the nomodule attribute will be ignored".
   // "The nomodule attribute must not be specified on module scripts (and will
   // be ignored if it is)."
-  if (mDocument->ModuleScriptsEnabled() && scriptKind == ScriptKind::eClassic &&
-      scriptContent->IsHTMLElement() &&
+  if (scriptKind == ScriptKind::eClassic && scriptContent->IsHTMLElement() &&
       scriptContent->AsElement()->HasAttr(nsGkAtoms::nomodule)) {
     return false;
   }
@@ -3561,19 +3560,17 @@ void ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
 
   ScriptKind scriptKind = ScriptKind::eClassic;
 
-  if (mDocument->ModuleScriptsEnabled()) {
-    // Don't load nomodule scripts.
-    if (aNoModule) {
-      return;
-    }
+  // Don't load nomodule scripts.
+  if (aNoModule) {
+    return;
+  }
 
-    static const char kASCIIWhitespace[] = "\t\n\f\r ";
+  static const char kASCIIWhitespace[] = "\t\n\f\r ";
 
-    nsAutoString type(aType);
-    type.Trim(kASCIIWhitespace);
-    if (type.LowerCaseEqualsASCII("module")) {
-      scriptKind = ScriptKind::eModule;
-    }
+  nsAutoString type(aType);
+  type.Trim(kASCIIWhitespace);
+  if (type.LowerCaseEqualsASCII("module")) {
+    scriptKind = ScriptKind::eModule;
   }
 
   if (scriptKind == ScriptKind::eClassic && !aType.IsEmpty() &&

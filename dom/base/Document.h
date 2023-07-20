@@ -4029,8 +4029,6 @@ class Document : public nsINode,
 
   mozilla::dom::FeaturePolicy* FeaturePolicy() const;
 
-  bool ModuleScriptsEnabled() const;
-
   bool ImportMapsEnabled() const;
 
   /**

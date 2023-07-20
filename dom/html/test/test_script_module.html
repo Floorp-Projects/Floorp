@@ -10,7 +10,7 @@
   <script>
 onmessage = (e) => {
   if ("done" in e.data) {
-    next();
+    SimpleTest.finish();
   } else if ("check" in e.data) {
     ok(e.data.check, e.data.msg);
   } else {
@@ -18,38 +18,13 @@ onmessage = (e) => {
   }
 }
 
-var tests = [
-  function() {
-    SpecialPowers.pushPrefEnv({"set":[["dom.moduleScripts.enabled", true]]})
-    .then(() => {
-      var ifr = document.createElement('iframe');
-      ifr.src = "file_script_module.html";
-      document.body.appendChild(ifr);
-    });
-  },
 
-  function() {
-    SpecialPowers.pushPrefEnv({"set":[["dom.moduleScripts.enabled", false]]})
-    .then(() => {
-      var ifr = document.createElement('iframe');
-      ifr.src = "file_script_nomodule.html";
-      document.body.appendChild(ifr);
-    });
-  },
-];
+var ifr = document.createElement('iframe');
+ifr.src = "file_script_module.html";
+document.body.appendChild(ifr);
+
 
 SimpleTest.waitForExplicitFinish();
-next();
-
-function next() {
-  if (!tests.length) {
-    SimpleTest.finish();
-    return;
-  }
-
-  var test = tests.shift();
-  test();
-}
   </script>
 
 </body>
