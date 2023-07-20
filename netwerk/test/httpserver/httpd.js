@@ -2989,7 +2989,12 @@ ServerHandler.prototype = {
       response.setHeader("Content-Type", type, false);
       maybeAddInformationalResponse(file, metadata, response);
       maybeAddHeaders(file, metadata, response);
-      response.setHeader("Content-Length", "" + count, false);
+      // Allow overriding Content-Length
+      try {
+        response.getHeader("Content-Length");
+      } catch (e) {
+        response.setHeader("Content-Length", "" + count, false);
+      }
 
       let fis = new FileInputStream(
         file,
