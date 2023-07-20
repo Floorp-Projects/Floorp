@@ -59,7 +59,7 @@ async function testAboutWelcomeLogoFor(logo = {}) {
   let expected = [
     `.brand-logo[src="${
       logo.imageURL ?? "chrome://branding/content/about-logo.svg"
-    }"][alt="${logo.alt ?? ""}"]${logo.height ? `[style*="height"]` : ""}${
+    }"][alt=""]${logo.height ? `[style*="height"]` : ""}${
       logo.alt ? "" : `[role="presentation"]`
     }`,
   ];

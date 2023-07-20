@@ -523,6 +523,11 @@ html {
             margin-block: 0;
           }
 
+          .logo-alt {
+            width: inherit;
+            height: inherit;
+          }
+
           .welcome-text {
             margin-inline: 0 10px;
             margin-block: 10px 35px;
@@ -751,6 +756,11 @@ html {
                   background-position: center;
                 }
               }
+
+              .logo-alt {
+                width: inherit;
+                height: inherit;
+              }
             }
 
             .welcome-text {
@@ -859,6 +869,11 @@ html {
       padding: unset;
       margin-top: 50px;
     }
+  }
+
+  .logo-alt {
+    width: inherit;
+    height: inherit;
   }
 
   .rtamo-theme-icon {
