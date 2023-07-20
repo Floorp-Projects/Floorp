@@ -1140,7 +1140,7 @@ add_test({
 
     def testMissingHeadFile(self):
         """
-        Ensure that missing head file results in fatal error.
+        Ensure that missing head file results in fatal failure.
         """
         self.writeFile("test_basic.js", SIMPLE_PASSING_TEST)
         self.writeManifest([("test_basic.js", "head = missing.js")])
