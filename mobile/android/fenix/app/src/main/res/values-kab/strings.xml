@@ -305,44 +305,44 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Mačči tura</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Seqdec %s d iminig-inek amezwer.</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Seqdec %s d iminig-inek amezwer.</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Seqdec Firefox d iminig-inek amezwer</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">tasertit n tbaḍnit</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">tasertit n tbaḍnit</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Sbadu-t d iminig amezwer</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Sbadu-t d iminig amezwer</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Mačči tura</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Mačči tura</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Ɛeddi seg tiliɣri ɣer uselkim, neɣ seg uselkim ɣer tiliɣri</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Ɛeddi seg tiliɣri ɣer uselkim, neɣ seg uselkim ɣer tiliɣri</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Err-d accaren d wawalen uffiren seg yibenkan-ik·im-nniḍen i wakken ad tkemmleḍ segwanda i tḥebseḍ.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Err-d accaren d wawalen uffiren seg yibenkan-ik·im-nniḍen i wakken ad tkemmleḍ segwanda i tḥebseḍ.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Kcem</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Kcem</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Mačči tura</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Mačči tura</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Ilɣa ttɛawanen ad tgeḍ ugar akked %s</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Ilɣa ttɛawanen ad tgeḍ ugar akked %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Ilɣa ttɛawanen ad tgeḍ ugar akked Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Azen accaren gar ibenkan, sefrek isadaren, rnu awi iwellihen akken ara tfaṛseḍ ugar seg %s.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Azen accaren gar ibenkan, sefrek isadaren, rnu awi iwellihen akken ara tfaṛseḍ ugar seg %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Azen accaren gar ibenkan, sefrek isadaren, rnu awi iwellihen akken ara tfaṛseḍ ugar seg Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Rmed ilɣa</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Rmed ilɣa</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Mačči tura</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Mačči tura</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -419,17 +419,11 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Azen assuter</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Asenqes n yiɣarracen n yinagan n tuqqna</string>
-    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Ssuter tallalit i usmel-a?</string>
-    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">Assuter n usefrek n usmel yettwazen.</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text_2">Assuter yettwazen</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Rme i usmel-a</string>
-    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Assuter n usefrek n usmel yettwazen</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Assuter n tallalt yettwazen</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -439,8 +433,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Sens asenqes n yiɣerracen n yinagan n tuqqna i %1$s?</string>
 
-    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Asmel-a ur yettusefrak ara akka tura s usenqes n yiɣarracen n yinagan n tuqqna. Tebɣiḍ ad tessutreḍ tarbaɛt-nneɣ ad tessenqed asmel-a, ad ternu asefrek-ines ar sdat?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ad isfeḍ inagan n tuqqna n usmel-a syen ad issesfer asebter. Asfaḍ meṛṛa n yinagan n tuqqna yezmer ad ak·am-isseḥbes tuqqna neɣ ad yenɣel tiqecwalin n tiɣtin.</string>
 
@@ -544,6 +536,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_open_links_in_apps_never">Weṛǧin</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Amsefrak n usader azɣaray</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">Amdal n usnas i usnes n yibeddilen…</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Izegrar</string>
 
@@ -1209,8 +1204,14 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="share_button_content_description">Bḍu</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Kles d PDF</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">D awezɣi ad yettusirew PDF</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Zgel</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">Ur yizmir ara ad issigez</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">Siggez</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Azen ɣer yibenk</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1505,10 +1506,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="etp_settings">Iɣewwaren n tɣellist</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Ammesten yettwasǧehden mgal aḍfar</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Inig war ma ḍefṛen-k·kem</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Ḥrez isefka-ik i kečč. %s ad k-yemmesten seg tuget n yineḍfaṛen yettwassnen i yeṭṭafaṛen ayen i txeddmeḍ srid.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">%s ad k-yemmesten seg tuget n yineḍfaṛen yettwassnen i yeṭṭafaṛen ayen i txeddmeḍ srid.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1516,15 +1513,11 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Alugan (amezwer)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Yerked gar tbaḍnit akked temlellit. ISebtar ad d-alin s wudem amagnu.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_5">Isebtar ad d-alin s wudem amagnu, maca ad sweḥlen drus n yineḍfaren.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ayen iweḥlen s ummesten n tizeɣt mgal aḍfaṛ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Uḥriṣ</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Isewḥal ugar n ineḍfaren akken isebtar ad d-allin s wudem arurad, maca kra n tmahilin n usebter zemrent ad rẓent.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_4">Ammesten iǧǧehden mgal aḍfaṛ akked tmellit tufrint, maca kra n yismal zemren ur teddun ara akken iwata.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
@@ -1908,6 +1901,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="search_add_custom_engine_url_label">URL n uzrir n unadi</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Aḍris ara tnadiḍ</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2">URL yettwaseqdac i unadi</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Beddel aḍris n unadi “%s”. Amedya: \nhttps://www.google.com/search?q=%s</string>
 

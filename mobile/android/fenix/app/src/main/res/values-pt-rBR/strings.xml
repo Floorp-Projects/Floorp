@@ -302,51 +302,51 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Agora não</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Torne o %s seu navegador preferido</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Torne o %s seu navegador preferido</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Torne o Firefox seu navegador padrão</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">O %1$s coloca as pessoas acima dos lucros e defende sua privacidade bloqueando rastreadores entre sites.\n\nSaiba mais em nosso %2$s.</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">O %1$s coloca as pessoas acima dos lucros e defende sua privacidade bloqueando rastreadores entre sites.\n\nSaiba mais em nosso %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">O Firefox coloca as pessoas acima dos lucros e defende sua privacidade bloqueando rastreadores entre sites.\n\nSaiba mais em nosso aviso de privacidade.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">aviso de privacidade</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">aviso de privacidade</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Definir como navegador padrão</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Definir como navegador padrão</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Agora não</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Agora não</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Passe do celular para o computador e vice-versa</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Passe do celular para o computador e vice-versa</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Pegue abas e senhas de seus outros dispositivos para continuar de onde parou.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Pegue abas e senhas de seus outros dispositivos para continuar de onde parou.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Entrar</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Entrar</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Agora não</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Agora não</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Notificações ajudam você a aproveitar mais o %s</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Notificações ajudam você a aproveitar mais o %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Notificações ajudam você a aproveitar mais o Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Envie abas entre dispositivos, gerencie downloads e receba dicas de como aproveitar ao máximo o %s.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Envie abas entre dispositivos, gerencie downloads e receba dicas de como aproveitar ao máximo o %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Envie abas entre dispositivos, gerencie downloads e receba dicas de como aproveitar ao máximo o Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Ativar notificações</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Ativar notificações</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Agora não</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Agora não</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1206,8 +1206,10 @@
     <string name="share_button_content_description">Compartilhar</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Salvar como PDF</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">Não foi possível gerar PDF</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Descartar</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">Não foi possível imprimir</string>
     <!-- Text for the print feature in the share and browser menu -->

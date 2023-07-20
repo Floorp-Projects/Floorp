@@ -299,51 +299,51 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Nic nětko</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Wužiwajće %s po puću</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Wužiwajće %s po puću</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Wužiwajće Firefox po puću</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">%1$s ludźi nad dobytki staja a blokuje sydła přesahowace slědowaki, zo by wašu priwatnosć škitał.\n\nDalše informacije w našim %2$s.</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s ludźi nad dobytki staja a blokuje sydła přesahowace slědowaki, zo by wašu priwatnosć škitał.\n\nDalše informacije w našim %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox ludźi nad dobytki staja a blokuje sydła přesahowace slědowaki, zo by wašu priwatnosć škitał.\n\nDalše informacije w našej zdźělence priwatnosće.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">zdźělenka priwatnosće</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">zdźělenka priwatnosće</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Jako standardny wobhladowak nastajić</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Jako standardny wobhladowak nastajić</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Nic nětko</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Nic nětko</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Skočće wot smóratka do laptopa a wróćo</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Skočće wot smóratka do laptopa a wróćo</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Wobstarajće sej rajtarki a hesła z druhich gratow, zo byšće tam pokročował, hdźež sće přestał.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Wobstarajće sej rajtarki a hesła z druhich gratow, zo byšće tam pokročował, hdźež sće přestał.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Přizjewić</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Přizjewić</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Nic nětko</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Nic nětko</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Zdźělenki wam pomhaja, wjace z %s činić</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Zdźělenki wam pomhaja, wjace z %s činić</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Zdźělenki wam pomhaja, wjace z Firefox činić</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Sćelće rajtarki mjez gratami, rjadujće sćehnjenja a dóstańće pokiwy, zo byšće najwjace z %s wućahnył.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Sćelće rajtarki mjez gratami, rjadujće sćehnjenja a dóstańće pokiwy, zo byšće najwjace z %s wućahnył.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Sćelće rajtarki mjez gratami, rjadujće sćehnjenja a dóstańće pokiwy, zo byšće najwjace z Firefox wućahnył.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Zdźělenki zmóžnić</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Zdźělenki zmóžnić</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Nic nětko</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Nic nětko</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1206,8 +1206,10 @@
     <string name="share_button_content_description">Dźělić</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Jako PDF składować</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">PDF njeda so wutworić</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Zaćisnyć</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">Njeda so ćišćeć</string>
     <!-- Text for the print feature in the share and browser menu -->
