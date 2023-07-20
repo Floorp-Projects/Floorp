@@ -132,6 +132,7 @@ def fill_template(config, tasks):
                 "image_name": image_name,
                 "artifact_prefix": "public",
             },
+            "always-target": True,
             "expiration-policy": "long",
             "scopes": [],
             "treeherder": {
