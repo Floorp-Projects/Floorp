@@ -105,10 +105,13 @@ add_task(async function test_list_ordering() {
 
     let historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
-    await TestUtils.waitForCondition(async () => {
-      let history = await historyComponent.allHistoryItems;
-      return history.length === 24;
-    });
+    await TestUtils.waitForCondition(
+      () =>
+        [...historyComponent.allHistoryItems.values()].reduce(
+          (acc, { length }) => acc + length,
+          0
+        ) === 24
+    );
 
     let cards = historyComponent.cards;
     let actualNumOfCards = cards.length;
@@ -121,9 +124,13 @@ add_task(async function test_list_ordering() {
 
     let firstCard = cards[0];
 
-    ok(
-      firstCard.querySelector("[slot=header]").textContent.includes("Today"),
-      "The first card has a header for 'Today'."
+    info("The first card should have a header for 'Today'.");
+    await BrowserTestUtils.waitForMutationCondition(
+      firstCard.querySelector("[slot=header]"),
+      { attributes: true },
+      () =>
+        document.l10n.getAttributes(firstCard.querySelector("[slot=header]"))
+          .id === "firefoxview-history-date-today"
     );
 
     // Test number of cards when sorted by site/domain
@@ -132,12 +139,12 @@ add_task(async function test_list_ordering() {
     await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
 
     expectedNumOfCards = 4;
-    actualNumOfCards = historyComponent.cards.length;
 
-    is(
-      expectedNumOfCards,
-      actualNumOfCards,
-      `Total number of cards should be ${expectedNumOfCards}`
+    info(`Total number of cards should be ${expectedNumOfCards}`);
+    await BrowserTestUtils.waitForMutationCondition(
+      historyComponent.shadowRoot,
+      { childList: true, subtree: true },
+      () => expectedNumOfCards === historyComponent.cards.length
     );
     gBrowser.removeTab(gBrowser.selectedTab);
   });

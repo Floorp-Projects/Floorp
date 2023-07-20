@@ -42,8 +42,8 @@
   const { BrowserTestUtils } = ChromeUtils.importESModule(
     "resource://testing-common/BrowserTestUtils.sys.mjs"
   );
-  const { PlacesQuery } = ChromeUtils.importESModule(
-    "resource://gre/modules/PlacesQuery.sys.mjs"
+  const { FirefoxViewPlacesQuery } = ChromeUtils.importESModule(
+    "resource:///modules/firefox-view-places-query.sys.mjs"
   );
   const { PromiseUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/PromiseUtils.sys.mjs"
@@ -60,7 +60,7 @@
 
   const fxviewTabList = document.querySelector("fxview-tab-list");
   let tabItems = [];
-  const placesQuery = new PlacesQuery();
+  const placesQuery = new FirefoxViewPlacesQuery();
 
   const URLs = [
     "http://mochi.test:8888/browser/",
@@ -114,22 +114,10 @@
     });
     await historyUpdated.promise;
 
-    let normalized = normalizeHistoryData(history);
-    fxviewTabList.tabItems = normalized;
+    fxviewTabList.tabItems = [...history.values()].flat();
 
     await fxviewTabList.getUpdateComplete();
     tabItems = Array.from(fxviewTabList.rowEls);
-  }
-
-  function normalizeHistoryData(history) {
-    history.forEach(historyItem => {
-      historyItem.time = historyItem.date.getTime();
-      historyItem.icon = `page-icon:${historyItem.url}`;
-      historyItem.primaryL10nId = "fxviewtabrow-tabs-list-tab";
-      historyItem.primaryL10nArgs = JSON.stringify({ targetURI: historyItem.url });
-      historyItem.secondaryL10nId = "fxviewtabrow-open-menu-button";
-    });
-    return history;
   }
 
   function getCurrentDisplayDate() {
@@ -235,13 +223,12 @@
     await historyUpdated.promise;
 
     ok(
-      history.length === 5,
+      [...history.values()].reduce((acc, {length}) => acc + length, 0) === 5,
       "Five total history items after inserting another node"
     );
 
     // Update fxview-tab-list component with latest history data
-    let normalized = normalizeHistoryData(history);
-    fxviewTabList.tabItems = normalized;
+    fxviewTabList.tabItems = [...history.values()].flat();
     await fxviewTabList.getUpdateComplete();
     tabItems = Array.from(fxviewTabList.rowEls);
 

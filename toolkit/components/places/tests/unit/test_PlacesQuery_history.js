@@ -7,8 +7,19 @@ const { PlacesQuery } = ChromeUtils.importESModule(
   "resource://gre/modules/PlacesQuery.sys.mjs"
 );
 
+const placesQuery = new PlacesQuery();
+
+registerCleanupFunction(() => placesQuery.close());
+
+async function waitForUpdateHistoryTask(updateTask) {
+  const promise = new Promise(resolve =>
+    placesQuery.observeHistory(newHistory => resolve(newHistory))
+  );
+  await updateTask();
+  return promise;
+}
+
 add_task(async function test_visits_cache_is_updated() {
-  const placesQuery = new PlacesQuery();
   const now = new Date();
   info("Insert the first visit.");
   await PlacesUtils.history.insert({
@@ -17,22 +28,21 @@ add_task(async function test_visits_cache_is_updated() {
     visits: [{ date: now }],
   });
   let history = await placesQuery.getHistory();
+  const mapKey = placesQuery.getStartOfDayTimestamp(now);
+  history = history.get(mapKey);
   Assert.equal(history.length, 1);
   Assert.equal(history[0].url, "https://www.example.com/");
   Assert.equal(history[0].date.getTime(), now.getTime());
   Assert.equal(history[0].title, "Example Domain");
 
   info("Insert the next visit.");
-  let historyUpdated = PromiseUtils.defer();
-  placesQuery.observeHistory(newHistory => {
-    history = newHistory;
-    historyUpdated.resolve();
-  });
-  await PlacesUtils.history.insert({
-    url: "https://example.net/",
-    visits: [{ date: now }],
-  });
-  await historyUpdated.promise;
+  history = await waitForUpdateHistoryTask(() =>
+    PlacesUtils.history.insert({
+      url: "https://example.net/",
+      visits: [{ date: now }],
+    })
+  );
+  history = history.get(mapKey);
   Assert.equal(history.length, 2);
   Assert.equal(
     history[0].url,
@@ -42,22 +52,19 @@ add_task(async function test_visits_cache_is_updated() {
   Assert.equal(history[0].date.getTime(), now.getTime());
 
   info("Remove the first visit.");
-  historyUpdated = PromiseUtils.defer();
-  await PlacesUtils.history.remove("https://www.example.com/");
-  await historyUpdated.promise;
+  history = await waitForUpdateHistoryTask(() =>
+    PlacesUtils.history.remove("https://www.example.com/")
+  );
+  history = history.get(mapKey);
   Assert.equal(history.length, 1);
   Assert.equal(history[0].url, "https://example.net/");
 
   info("Remove all visits.");
-  historyUpdated = PromiseUtils.defer();
-  await PlacesUtils.history.clear();
-  await historyUpdated.promise;
-  Assert.equal(history.length, 0);
-  placesQuery.close();
+  history = await waitForUpdateHistoryTask(() => PlacesUtils.history.clear());
+  Assert.equal(history.size, 0);
 });
 
 add_task(async function test_filter_visits_by_age() {
-  const placesQuery = new PlacesQuery();
   await PlacesUtils.history.insertMany([
     {
       url: "https://www.example.com/",
@@ -68,39 +75,53 @@ add_task(async function test_filter_visits_by_age() {
       visits: [{ date: new Date() }],
     },
   ]);
-  const history = await placesQuery.getHistory({ daysOld: 1 });
+  let history = await placesQuery.getHistory({ daysOld: 1 });
+  history = [...history.values()].flat();
   Assert.equal(history.length, 1, "The older visit should be excluded.");
   Assert.equal(history[0].url, "https://example.net/");
   await PlacesUtils.history.clear();
-  placesQuery.close();
 });
 
-add_task(async function test_filter_redirecting_visits() {
-  const placesQuery = new PlacesQuery();
+add_task(async function test_visits_sort_option() {
+  const now = new Date();
+  info("Get history sorted by site.");
   await PlacesUtils.history.insertMany([
-    {
-      url: "http://google.com/",
-      visits: [{ transition: PlacesUtils.history.TRANSITIONS.TYPED }],
-    },
-    {
-      url: "https://www.google.com/",
-      visits: [
-        {
-          transition: PlacesUtils.history.TRANSITIONS.REDIRECT_PERMANENT,
-          referrer: "http://google.com/",
-        },
-      ],
-    },
+    { url: "https://www.reddit.com/", visits: [{ date: now }] },
+    { url: "https://twitter.com/", visits: [{ date: now }] },
   ]);
-  const history = await placesQuery.getHistory();
-  Assert.equal(history.length, 1, "Redirecting visits should be excluded.");
-  Assert.equal(history[0].url, "https://www.google.com/");
+  let history = await placesQuery.getHistory({ sortBy: "site" });
+  ["reddit.com", "twitter.com"].forEach(domain =>
+    Assert.ok(history.has(domain))
+  );
+
+  info("Insert the next visit.");
+  history = await waitForUpdateHistoryTask(() =>
+    PlacesUtils.history.insert({
+      url: "https://www.wikipedia.org/",
+      visits: [{ date: now }],
+    })
+  );
+  ["reddit.com", "twitter.com", "wikipedia.org"].forEach(domain =>
+    Assert.ok(history.has(domain))
+  );
+
+  info("Update the sort order.");
+  history = await placesQuery.getHistory({ sortBy: "date" });
+  const mapKey = placesQuery.getStartOfDayTimestamp(now);
+  Assert.equal(history.get(mapKey).length, 3);
+
+  info("Insert the next visit.");
+  history = await waitForUpdateHistoryTask(() =>
+    PlacesUtils.history.insert({
+      url: "https://www.youtube.com/",
+      visits: [{ date: now }],
+    })
+  );
+  Assert.equal(history.get(mapKey).length, 4);
   await PlacesUtils.history.clear();
-  placesQuery.close();
 });
 
 add_task(async function test_visits_limit_option() {
-  const placesQuery = new PlacesQuery();
   await PlacesUtils.history.insertMany([
     {
       url: "https://www.example.com/",
@@ -111,8 +132,8 @@ add_task(async function test_visits_limit_option() {
       visits: [{ date: new Date() }],
     },
   ]);
-  const history = await placesQuery.getHistory({ limit: 1 });
+  let history = await placesQuery.getHistory({ limit: 1 });
+  history = [...history.values()].flat();
   Assert.equal(history.length, 1, "Number of visits should be limited to 1.");
   await PlacesUtils.history.clear();
-  placesQuery.close();
 });
