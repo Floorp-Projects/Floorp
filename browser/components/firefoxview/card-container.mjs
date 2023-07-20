@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html, ifDefined } from "chrome://global/content/vendor/lit.all.mjs";
+import {
+  classMap,
+  html,
+  ifDefined,
+} from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
 /**
@@ -10,6 +14,7 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  *
  * @property {string} sectionLabel - The aria-label used for the section landmark if the header is hidden with hideHeader
  * @property {boolean} hideHeader - Optional property given if the card container should not display a header
+ * @property {boolean} isInnerCard - Optional property given if the card a nested card within another card and given a border rather than box-shadow
  * @property {boolean} preserveCollapseState - Whether or not the expanded/collapsed state should persist
  * @property {string} viewAllPage - The location hash for the 'View all' header link to navigate to
  */
@@ -22,6 +27,7 @@ class CardContainer extends MozLitElement {
   static properties = {
     sectionLabel: { type: String },
     hideHeader: { type: Boolean },
+    isInnerCard: { type: Boolean },
     preserveCollapseState: { type: Boolean },
     viewAllPage: { type: String },
   };
@@ -65,7 +71,7 @@ class CardContainer extends MozLitElement {
         aria-label=${ifDefined(this.sectionLabel)}
       >
         <details
-          class="card-container"
+          class=${classMap({ "card-container": true, inner: this.isInnerCard })}
           ?open=${this.isExpanded}
           @toggle=${this.onToggleContainer}
         >

@@ -222,4 +222,10 @@ firefoxview-import-history-close-button =
 firefoxview-import-history-header = Import history from another browser
 firefoxview-import-history-description = Make { -brand-short-name } your go-to browser. Import browsing history, bookmarks, and more.
 
+## Message displayed in Firefox View when the user has no recently closed tabs data
+
+firefoxview-recentlyclosed-empty-header = Closed a tab too soon?
+firefoxview-recentlyclosed-empty-description = Here you’ll find the tabs you recently closed, so you can reopen any of them quickly.
+firefoxview-recentlyclosed-empty-description-two = To find tabs from longer ago, view your <a data-l10n-name="history-url">browsing history</a>.
+
 ##

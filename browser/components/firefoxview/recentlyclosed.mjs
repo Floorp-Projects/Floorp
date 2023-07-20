@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html } from "chrome://global/content/vendor/lit.all.mjs";
+import { classMap, html } from "chrome://global/content/vendor/lit.all.mjs";
 import { ViewPage } from "./viewpage.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/firefoxview/card-container.mjs";
@@ -16,6 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const SS_NOTIFY_CLOSED_OBJECTS_CHANGED = "sessionstore-closed-objects-changed";
 const SS_NOTIFY_BROWSER_SHUTDOWN_FLUSH = "sessionstore-browser-shutdown-flush";
+const NEVER_REMEMBER_HISTORY_PREF = "browser.privatebrowsing.autostart";
 
 function getWindow() {
   return window.browsingContext.embedderWindowGlobal.browsingContext.window;
@@ -25,12 +26,14 @@ class RecentlyClosedTabsInView extends ViewPage {
   constructor() {
     super();
     this.boundObserve = (...args) => this.observe(...args);
+    this.fullyUpdated = false;
     this.maxTabsLength = this.overview ? 5 : 25;
     this.recentlyClosedTabs = [];
   }
 
   static queries = {
     cardEl: "card-container",
+    emptyState: "fxview-empty-state",
   };
 
   observe(subject, topic, data) {
@@ -164,6 +167,55 @@ class RecentlyClosedTabsInView extends ViewPage {
     lazy.SessionStore.forgetClosedTab(getWindow(), closedTabIndex);
   }
 
+  willUpdate() {
+    this.fullyUpdated = false;
+  }
+
+  updated() {
+    this.fullyUpdated = true;
+  }
+
+  emptyMessageTemplate() {
+    let descriptionHeader;
+    let descriptionLabels;
+    let descriptionLink;
+    if (Services.prefs.getBoolPref(NEVER_REMEMBER_HISTORY_PREF, false)) {
+      // History pref set to never remember history
+      descriptionHeader = "firefoxview-dont-remember-history-empty-header";
+      descriptionLabels = [
+        "firefoxview-dont-remember-history-empty-description",
+        "firefoxview-dont-remember-history-empty-description-two",
+      ];
+      descriptionLink = {
+        url: "about:preferences#privacy",
+        name: "history-settings-url-two",
+      };
+    } else {
+      descriptionHeader = "firefoxview-recentlyclosed-empty-header";
+      descriptionLabels = [
+        "firefoxview-recentlyclosed-empty-description",
+        "firefoxview-recentlyclosed-empty-description-two",
+      ];
+      descriptionLink = {
+        url: "about:firefoxview-next#history",
+        name: "history-url",
+        sameTarget: "true",
+      };
+    }
+    return html`
+      <fxview-empty-state
+        headerLabel=${descriptionHeader}
+        .descriptionLabels=${descriptionLabels}
+        .descriptionLink=${descriptionLink}
+        class="empty-state recentlyclosed"
+        ?isInnerCard=${this.overview}
+        ?isSelectedTab=${this.selectedTab}
+        mainImageUrl="chrome://browser/content/firefoxview/recentlyclosed-empty.svg"
+      >
+      </fxview-empty-state>
+    `;
+  }
+
   render() {
     if (!this.selectedTab && !this.overview) {
       return null;
@@ -179,13 +231,14 @@ class RecentlyClosedTabsInView extends ViewPage {
           data-l10n-id="firefoxview-recently-closed-header"
         ></h2>
       </div>
-      <div class="cards-container">
+      <div class=${classMap({ "cards-container": this.selectedTab })}>
         <card-container
           .viewAllPage=${this.overview && this.recentlyClosedTabs.length
             ? "recentlyclosed"
             : null}
           ?preserveCollapseState=${this.overview ? true : null}
           ?hideHeader=${this.selectedTab}
+          ?hidden=${!this.recentlyClosedTabs.length && !this.overview}
         >
           <h2
             slot="header"
@@ -200,9 +253,13 @@ class RecentlyClosedTabsInView extends ViewPage {
             @fxview-tab-list-secondary-action=${this.onDismissTab}
             @fxview-tab-list-primary-action=${this.onReopenTab}
           ></fxview-tab-list>
-          <div slot="main" ?hidden=${this.recentlyClosedTabs.length}>
-            <!-- TO-DO: Bug 1841795 - Add Recently Closed empty states -->
-          </div>
+          ${this.overview
+            ? html`
+                <div slot="main" ?hidden=${this.recentlyClosedTabs.length}>
+                  ${this.emptyMessageTemplate()}
+                </div>
+              `
+            : ""}
           <div
             slot="footer"
             name="history"
@@ -214,6 +271,13 @@ class RecentlyClosedTabsInView extends ViewPage {
             ></a>
           </div>
         </card-container>
+        ${this.selectedTab
+          ? html`
+              <div ?hidden=${this.recentlyClosedTabs.length}>
+                ${this.emptyMessageTemplate()}
+              </div>
+            `
+          : ""}
       </div>
     `;
   }

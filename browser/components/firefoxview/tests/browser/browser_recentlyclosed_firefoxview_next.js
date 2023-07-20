@@ -6,6 +6,7 @@ ChromeUtils.defineESModuleGetters(globalThis, {
 });
 
 const FXVIEW_NEXT_ENABLED_PREF = "browser.tabs.firefox-view-next";
+const NEVER_REMEMBER_HISTORY_PREF = "browser.privatebrowsing.autostart";
 
 function isElInViewport(element) {
   const boundingRect = element.getBoundingClientRect();
@@ -239,5 +240,59 @@ add_task(async function test_dismiss_tab() {
     while (gBrowser.tabs.length > 1) {
       BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
     }
+  });
+});
+
+add_task(async function test_emoty_states() {
+  Services.obs.notifyObservers(null, "browser:purge-session-history");
+  is(
+    SessionStore.getClosedTabCountForWindow(window),
+    0,
+    "Closed tab count after purging session history"
+  );
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    is(document.location.href, "about:firefoxview-next");
+
+    navigateToRecentlyClosed(document);
+    let recentlyClosedComponent = document.querySelector(
+      "view-recentlyclosed:not([slot=recentlyclosed])"
+    );
+
+    await TestUtils.waitForCondition(() => recentlyClosedComponent.emptyState);
+    let emptyStateCard = recentlyClosedComponent.emptyState;
+    ok(
+      emptyStateCard.headerEl.textContent.includes("Closed a tab too soon"),
+      "Initial empty state header has the expected text."
+    );
+    ok(
+      emptyStateCard.descriptionEls[0].textContent.includes(
+        "Here you’ll find the tabs you recently closed"
+      ),
+      "Initial empty state description has the expected text."
+    );
+
+    // Test empty state when History mode is set to never remember
+    Services.prefs.setBoolPref(NEVER_REMEMBER_HISTORY_PREF, true);
+    // Manually update the recentlyclosed component from the test, since changing this setting
+    // in about:preferences will require a browser reload
+    recentlyClosedComponent.requestUpdate();
+    await TestUtils.waitForCondition(
+      () => recentlyClosedComponent.fullyUpdated
+    );
+    emptyStateCard = recentlyClosedComponent.emptyState;
+    ok(
+      emptyStateCard.headerEl.textContent.includes("Nothing to show"),
+      "Empty state with never remember history header has the expected text."
+    );
+    ok(
+      emptyStateCard.descriptionEls[1].textContent.includes(
+        "remember your activity as you browse. To change that"
+      ),
+      "Empty state with never remember history description has the expected text."
+    );
+    // Reset History mode to Remember
+    Services.prefs.setBoolPref(NEVER_REMEMBER_HISTORY_PREF, false);
+    gBrowser.removeTab(gBrowser.selectedTab);
   });
 });
