@@ -111,9 +111,11 @@ typedef PRUint32 uint32;
 #endif /* __sun */
 
 #if defined(__hpux) || defined(__hppa)
+#ifndef BYTE_ORDER
 #define BYTE_ORDER BIG_ENDIAN
 #define BIG_ENDIAN 4321
 #define LITTLE_ENDIAN 1234 /* LSB first: i386, vax, all NT risc */
+#endif
 #endif
 
 #if defined(AIXV3) || defined(AIX)
