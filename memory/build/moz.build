@@ -28,6 +28,7 @@ if CONFIG["MOZ_MEMORY"]:
     UNIFIED_SOURCES += [
         "mozjemalloc.cpp",
         "mozmemory_wrap.cpp",
+        "Mutex.cpp",
     ]
 else:
     UNIFIED_SOURCES += [
@@ -38,7 +39,6 @@ if CONFIG["OS_TARGET"] == "Darwin" and (
     CONFIG["MOZ_REPLACE_MALLOC"] or CONFIG["MOZ_MEMORY"]
 ):
     SOURCES += [
-        "Mutex.cpp",
         "zone.c",
     ]
 

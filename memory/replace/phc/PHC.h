@@ -87,6 +87,9 @@ class AddrInfo {
   // - GuardPage: the mFreeStack value from the preceding allocation page.
   mozilla::Maybe<StackTrace> mFreeStack;
 
+  // True if PHC was locked and therefore we couldn't retrive some infomation.
+  bool mPhcWasLocked = false;
+
   // Default to no PHC info.
   AddrInfo()
       : mKind(Kind::Unknown),
