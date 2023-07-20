@@ -2287,12 +2287,6 @@
   value: false
   mirror: always
 
-# SW Cache API
-- name: dom.caches.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Exposes window.caches and skips SecureContext check.
 # dom.serviceWorkers.testing.enabled also includes the same effect.
 - name: dom.caches.testing.enabled

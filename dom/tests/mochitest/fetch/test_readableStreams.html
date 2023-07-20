@@ -12,8 +12,7 @@
 
 async function tests() {
   await SpecialPowers.pushPrefEnv({
-    "set": [["dom.caches.enabled", true],
-            ["dom.caches.testing.enabled", true],
+    "set": [["dom.caches.testing.enabled", true],
             ["dom.quotaManager.testing", true]]
   });
 

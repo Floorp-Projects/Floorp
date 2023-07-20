@@ -81,8 +81,7 @@ async function waitForIOToComplete(cache, request) {
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({
-  "set": [["dom.caches.enabled", true],
-          ["dom.caches.testing.enabled", true],
+  "set": [["dom.caches.testing.enabled", true],
           ["dom.quotaManager.testing", true],
           ["privacy.partition.always_partition_third_party_non_cookie_storage", false]],
 }, async function() {

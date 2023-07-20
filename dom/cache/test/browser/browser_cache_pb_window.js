@@ -139,10 +139,7 @@ function test() {
   let privateWin, privateTab;
   waitForExplicitFinish();
   SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.caches.enabled", true],
-      ["dom.caches.testing.enabled", true],
-    ],
+    set: [["dom.caches.testing.enabled", true]],
   })
     .then(() => {
       return BrowserTestUtils.openNewBrowserWindow({ private: true });
