@@ -431,15 +431,16 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
             promise->MaybeRejectWithOperationError(msg);
             return;
           }
-        }
-        if (StringEndsWith(keyU8, "Alignment"_ns)) {
-          if (!IsPowerOfTwo(requestedValue)) {
-            nsPrintfCString msg(
-                "requestDevice: Request for limit '%s' must be a power of two, "
-                "was %s.",
-                keyU8.get(), std::to_string(requestedValue).c_str());
-            promise->MaybeRejectWithOperationError(msg);
-            return;
+          if (StringEndsWith(keyU8, "Alignment"_ns)) {
+            if (!IsPowerOfTwo(requestedValue)) {
+              nsPrintfCString msg(
+                  "requestDevice: Request for limit '%s' must be a power of "
+                  "two, "
+                  "was %s.",
+                  keyU8.get(), std::to_string(requestedValue).c_str());
+              promise->MaybeRejectWithOperationError(msg);
+              return;
+            }
           }
         }
 
