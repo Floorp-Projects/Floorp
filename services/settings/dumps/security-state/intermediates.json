@@ -1,6 +1,78 @@
 {
   "data": [
     {
+      "schema": 1689778080731,
+      "derHash": "NIXD3+mMXVQoZTR5u5BidYDuiSiQpi2g2avOOiAC6OQ=",
+      "subject": "CN=HARICA Qualified Web Authentication Certificates RSA,OU=Hellenic Academic and Research Institutions CA,O=Greek Universities Network (GUnet),C=GR",
+      "subjectDN": "MIHMMQswCQYDVQQGEwJHUjErMCkGA1UECgwiR3JlZWsgVW5pdmVyc2l0aWVzIE5ldHdvcmsgKEdVbmV0KTEYMBYGA1UEYQwPVkFUR1ItMDk5MDI4MjIwMTcwNQYDVQQLDC5IZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENBMT0wOwYDVQQDDDRIQVJJQ0EgUXVhbGlmaWVkIFdlYiBBdXRoZW50aWNhdGlvbiBDZXJ0aWZpY2F0ZXMgUlNB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "71b428ec08883e3b36d19bde0bd55f5e6ed630fde1374b4a314e2c59b2beea94",
+        "size": 2536,
+        "filename": "kGxKeLInUl4Q9pvlALRV0c2jCDMtv5OZYa_lU99H6bo=.pem",
+        "location": "security-state-staging/intermediates/4b3fd075-b2f9-4f70-8d2c-a5227eb9ad5f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "kGxKeLInUl4Q9pvlALRV0c2jCDMtv5OZYa/lU99H6bo=",
+      "crlite_enrolled": false,
+      "id": "ee77bf83-a860-409b-8ad9-fcaec423630a",
+      "last_modified": 1689778623464
+    },
+    {
+      "schema": 1689778081208,
+      "derHash": "J0F6Cfp0ELkZihsGRc3+woB5716BQ68r22l3MQRQJ84=",
+      "subject": "CN=HARICA Qualified Web Authentication Certificates ECC,OU=Hellenic Academic and Research Institutions CA,O=Greek Universities Network (GUnet),C=GR",
+      "subjectDN": "MIHMMQswCQYDVQQGEwJHUjErMCkGA1UECgwiR3JlZWsgVW5pdmVyc2l0aWVzIE5ldHdvcmsgKEdVbmV0KTEYMBYGA1UEYQwPVkFUR1ItMDk5MDI4MjIwMTcwNQYDVQQLDC5IZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENBMT0wOwYDVQQDDDRIQVJJQ0EgUXVhbGlmaWVkIFdlYiBBdXRoZW50aWNhdGlvbiBDZXJ0aWZpY2F0ZXMgRUND",
+      "whitelist": false,
+      "attachment": {
+        "hash": "de7ccd366b8a725ed931973a31321e2c69c977923e50579fbfce98196b48cc09",
+        "size": 1390,
+        "filename": "IiSR2mjIu_mybjYwsW8uyrO-e9dRjlyeV1EtKlNv1pA=.pem",
+        "location": "security-state-staging/intermediates/66dc257b-983f-42e3-b77c-c9c327f2c3b8.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "IiSR2mjIu/mybjYwsW8uyrO+e9dRjlyeV1EtKlNv1pA=",
+      "crlite_enrolled": false,
+      "id": "e35b1761-7442-4ac3-9a1a-68be549a244d",
+      "last_modified": 1689778623461
+    },
+    {
+      "schema": 1689691684212,
+      "derHash": "PAfX78jUWPZowQ1PBvkFA8zSXVnis/HVizKITZ5OOAk=",
+      "subject": "CN=Xinnet OV SSL,O=北京新网数码信息技术有限公司,C=CN",
+      "subjectDN": "MFoxCzAJBgNVBAYTAkNOMTMwMQYDVQQKDCrljJfkuqzmlrDnvZHmlbDnoIHkv6Hmga/mioDmnK/mnInpmZDlhazlj7gxFjAUBgNVBAMMDVhpbm5ldCBPViBTU0w=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "5bc56588f2272b5e5fa493aa9f327168ddb2baa263b7064ea695ea8caaa8ba47",
+        "size": 2040,
+        "filename": "2KdOGXnlcULkcqXULv7vV5PeeErPEe6FeJY3L8Drx2w=.pem",
+        "location": "security-state-staging/intermediates/fd1e88e9-bb71-447d-9001-1717eec2f1a7.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "2KdOGXnlcULkcqXULv7vV5PeeErPEe6FeJY3L8Drx2w=",
+      "crlite_enrolled": false,
+      "id": "6744d4b9-1635-47c6-be96-76a90b26fbe6",
+      "last_modified": 1689692223153
+    },
+    {
+      "schema": 1689691683738,
+      "derHash": "nFOQL5UB9tiXZpmdvirRoUNkILZSU1zcLcUcz+L/7mg=",
+      "subject": "CN=Xinnet DV SSL,O=北京新网数码信息技术有限公司,C=CN",
+      "subjectDN": "MFoxCzAJBgNVBAYTAkNOMTMwMQYDVQQKDCrljJfkuqzmlrDnvZHmlbDnoIHkv6Hmga/mioDmnK/mnInpmZDlhazlj7gxFjAUBgNVBAMMDVhpbm5ldCBEViBTU0w=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "d04017e5c9db416bd66646d549499c895e65f2db3a17c410dc2a3b2f403bf6be",
+        "size": 2040,
+        "filename": "WAY4atziUUIgmtn8Iz3QwpKNcfxhcE26-YjX14s13IA=.pem",
+        "location": "security-state-staging/intermediates/7b2e5ed3-4e3d-4288-93b5-5ed13256c768.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "WAY4atziUUIgmtn8Iz3QwpKNcfxhcE26+YjX14s13IA=",
+      "crlite_enrolled": false,
+      "id": "b612a1b8-6da3-4822-8ecf-f6ae154d1d85",
+      "last_modified": 1689692223150
+    },
+    {
       "schema": 1689216551728,
       "derHash": "BI45u7axXvg1JfFjGSzqDfIdP/q6+rfGOQn7FVPuSWY=",
       "subject": "CN=DigiCert TLS RSA4096 Root G5,O=DigiCert\\, Inc.,C=US",
@@ -27595,5 +27667,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1689217066476
+  "timestamp": 1689778623464
 }
