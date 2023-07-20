@@ -1,12 +1,8 @@
-class FfiConverterUInt32(FfiConverterPrimitiveInt):
-    CLASS_NAME = "u32"
-    VALUE_MIN = 0
-    VALUE_MAX = 2**32
-
+class FfiConverterUInt32(FfiConverterPrimitive):
     @staticmethod
     def read(buf):
         return buf.readU32()
 
     @staticmethod
-    def writeUnchecked(value, buf):
+    def write(value, buf):
         buf.writeU32(value)

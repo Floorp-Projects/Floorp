@@ -2,66 +2,58 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::backend::{CodeType, Literal, Type};
+use crate::backend::{CodeOracle, CodeType, Literal, TypeIdentifier};
 
-#[derive(Debug)]
 pub struct OptionalCodeType {
-    inner: Type,
+    inner: TypeIdentifier,
 }
 
 impl OptionalCodeType {
-    pub fn new(inner: Type) -> Self {
+    pub fn new(inner: TypeIdentifier) -> Self {
         Self { inner }
     }
 }
 
 impl CodeType for OptionalCodeType {
-    fn type_label(&self) -> String {
-        format!("{}?", super::SwiftCodeOracle.find(&self.inner).type_label())
+    fn type_label(&self, oracle: &dyn CodeOracle) -> String {
+        format!("{}?", oracle.find(&self.inner).type_label(oracle))
     }
 
-    fn canonical_name(&self) -> String {
-        format!(
-            "Option{}",
-            super::SwiftCodeOracle.find(&self.inner).canonical_name()
-        )
+    fn canonical_name(&self, oracle: &dyn CodeOracle) -> String {
+        format!("Option{}", oracle.find(&self.inner).canonical_name(oracle))
     }
 
-    fn literal(&self, literal: &Literal) -> String {
+    fn literal(&self, oracle: &dyn CodeOracle, literal: &Literal) -> String {
         match literal {
             Literal::Null => "nil".into(),
-            _ => super::SwiftCodeOracle.find(&self.inner).literal(literal),
+            _ => oracle.find(&self.inner).literal(oracle, literal),
         }
     }
 }
 
-#[derive(Debug)]
 pub struct SequenceCodeType {
-    inner: Type,
+    inner: TypeIdentifier,
 }
 
 impl SequenceCodeType {
-    pub fn new(inner: Type) -> Self {
+    pub fn new(inner: TypeIdentifier) -> Self {
         Self { inner }
     }
 }
 
 impl CodeType for SequenceCodeType {
-    fn type_label(&self) -> String {
-        format!(
-            "[{}]",
-            super::SwiftCodeOracle.find(&self.inner).type_label()
-        )
+    fn type_label(&self, oracle: &dyn CodeOracle) -> String {
+        format!("[{}]", oracle.find(&self.inner).type_label(oracle))
     }
 
-    fn canonical_name(&self) -> String {
+    fn canonical_name(&self, oracle: &dyn CodeOracle) -> String {
         format!(
             "Sequence{}",
-            super::SwiftCodeOracle.find(&self.inner).canonical_name()
+            oracle.find(&self.inner).canonical_name(oracle)
         )
     }
 
-    fn literal(&self, literal: &Literal) -> String {
+    fn literal(&self, _oracle: &dyn CodeOracle, literal: &Literal) -> String {
         match literal {
             Literal::EmptySequence => "[]".into(),
             _ => unreachable!(),
@@ -69,36 +61,35 @@ impl CodeType for SequenceCodeType {
     }
 }
 
-#[derive(Debug)]
 pub struct MapCodeType {
-    key: Type,
-    value: Type,
+    key: TypeIdentifier,
+    value: TypeIdentifier,
 }
 
 impl MapCodeType {
-    pub fn new(key: Type, value: Type) -> Self {
+    pub fn new(key: TypeIdentifier, value: TypeIdentifier) -> Self {
         Self { key, value }
     }
 }
 
 impl CodeType for MapCodeType {
-    fn type_label(&self) -> String {
+    fn type_label(&self, oracle: &dyn CodeOracle) -> String {
         format!(
             "[{}: {}]",
-            super::SwiftCodeOracle.find(&self.key).type_label(),
-            super::SwiftCodeOracle.find(&self.value).type_label()
+            oracle.find(&self.key).type_label(oracle),
+            oracle.find(&self.value).type_label(oracle)
         )
     }
 
-    fn canonical_name(&self) -> String {
+    fn canonical_name(&self, oracle: &dyn CodeOracle) -> String {
         format!(
             "Dictionary{}{}",
-            super::SwiftCodeOracle.find(&self.key).canonical_name(),
-            super::SwiftCodeOracle.find(&self.value).canonical_name()
+            oracle.find(&self.key).canonical_name(oracle),
+            oracle.find(&self.value).canonical_name(oracle)
         )
     }
 
-    fn literal(&self, literal: &Literal) -> String {
+    fn literal(&self, _oracle: &dyn CodeOracle, literal: &Literal) -> String {
         match literal {
             Literal::EmptyMap => "[:]".into(),
             _ => unreachable!(),

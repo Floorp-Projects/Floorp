@@ -5,16 +5,7 @@
 use std::{collections::BTreeMap, hash::Hasher};
 pub use uniffi_checksum_derive::Checksum;
 
-use serde::Serialize;
-
-mod ffi_names;
-pub use ffi_names::*;
-
-mod group;
-pub use group::{group_metadata, MetadataGroup};
-
-mod reader;
-pub use reader::{read_metadata, read_metadata_type};
+use serde::{Deserialize, Serialize};
 
 /// Similar to std::hash::Hash.
 ///
@@ -104,120 +95,46 @@ impl Checksum for &str {
     }
 }
 
-// The namespace of a Component interface.
-//
-// This is used to match up the macro metadata with the UDL items.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
-pub struct NamespaceMetadata {
-    pub crate_name: String,
-    pub name: String,
-}
-
-// UDL file included with `include_scaffolding!()`
-//
-// This is to find the UDL files in library mode generation
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
-pub struct UdlFile {
-    pub module_path: String,
-    pub name: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Debug, Checksum, Deserialize, Serialize)]
 pub struct FnMetadata {
-    pub module_path: String,
+    pub module_path: Vec<String>,
     pub name: String,
-    pub is_async: bool,
     pub inputs: Vec<FnParamMetadata>,
     pub return_type: Option<Type>,
-    pub throws: Option<Type>,
-    pub checksum: u16,
+    pub throws: Option<String>,
 }
 
 impl FnMetadata {
     pub fn ffi_symbol_name(&self) -> String {
-        fn_symbol_name(&self.module_path, &self.name)
-    }
-
-    pub fn checksum_symbol_name(&self) -> String {
-        fn_checksum_symbol_name(&self.module_path, &self.name)
+        fn_ffi_symbol_name(&self.module_path, &self.name, checksum(self))
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
-pub struct ConstructorMetadata {
-    pub module_path: String,
-    pub self_name: String,
-    pub name: String,
-    pub inputs: Vec<FnParamMetadata>,
-    pub throws: Option<Type>,
-    pub checksum: u16,
-}
-
-impl ConstructorMetadata {
-    pub fn ffi_symbol_name(&self) -> String {
-        constructor_symbol_name(&self.module_path, &self.self_name, &self.name)
-    }
-
-    pub fn checksum_symbol_name(&self) -> String {
-        constructor_checksum_symbol_name(&self.module_path, &self.self_name, &self.name)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Debug, Checksum, Deserialize, Serialize)]
 pub struct MethodMetadata {
-    pub module_path: String,
+    pub module_path: Vec<String>,
     pub self_name: String,
     pub name: String,
-    pub is_async: bool,
     pub inputs: Vec<FnParamMetadata>,
     pub return_type: Option<Type>,
-    pub throws: Option<Type>,
-    pub checksum: u16,
+    pub throws: Option<String>,
 }
 
 impl MethodMetadata {
     pub fn ffi_symbol_name(&self) -> String {
-        method_symbol_name(&self.module_path, &self.self_name, &self.name)
-    }
-
-    pub fn checksum_symbol_name(&self) -> String {
-        method_checksum_symbol_name(&self.module_path, &self.self_name, &self.name)
+        let full_name = format!("impl_{}_{}", self.self_name, self.name);
+        fn_ffi_symbol_name(&self.module_path, &full_name, checksum(self))
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
-pub struct TraitMethodMetadata {
-    pub module_path: String,
-    pub trait_name: String,
-    // Note: the position of `index` is important since it causes callback interface methods to be
-    // ordered correctly in MetadataGroup.items
-    pub index: u32,
-    pub name: String,
-    pub is_async: bool,
-    pub inputs: Vec<FnParamMetadata>,
-    pub return_type: Option<Type>,
-    pub throws: Option<Type>,
-    pub checksum: u16,
-}
-
-impl TraitMethodMetadata {
-    pub fn ffi_symbol_name(&self) -> String {
-        method_symbol_name(&self.module_path, &self.trait_name, &self.name)
-    }
-
-    pub fn checksum_symbol_name(&self) -> String {
-        method_checksum_symbol_name(&self.module_path, &self.trait_name, &self.name)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Debug, Checksum, Deserialize, Serialize)]
 pub struct FnParamMetadata {
     pub name: String,
     #[serde(rename = "type")]
     pub ty: Type,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Checksum, Deserialize, Serialize)]
 pub enum Type {
     U8,
     U16,
@@ -231,26 +148,6 @@ pub enum Type {
     F64,
     Bool,
     String,
-    Duration,
-    ForeignExecutor,
-    SystemTime,
-    Enum {
-        name: String,
-    },
-    Record {
-        name: String,
-    },
-    ArcObject {
-        object_name: String,
-        is_trait: bool,
-    },
-    CallbackInterface {
-        name: String,
-    },
-    Custom {
-        name: String,
-        builtin: Box<Type>,
-    },
     Option {
         inner_type: Box<Type>,
     },
@@ -261,54 +158,44 @@ pub enum Type {
         key_type: Box<Type>,
         value_type: Box<Type>,
     },
+    ArcObject {
+        object_name: String,
+    },
+    Unresolved {
+        name: String,
+    },
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
-pub enum Literal {
-    Str { value: String },
-    Int { base10_digits: String },
-    Float { base10_digits: String },
-    Bool { value: bool },
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Debug, Checksum, Deserialize, Serialize)]
 pub struct RecordMetadata {
-    pub module_path: String,
+    pub module_path: Vec<String>,
     pub name: String,
     pub fields: Vec<FieldMetadata>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Debug, Checksum, Deserialize, Serialize)]
 pub struct FieldMetadata {
     pub name: String,
     #[serde(rename = "type")]
     pub ty: Type,
-    pub default: Option<Literal>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Debug, Checksum, Deserialize, Serialize)]
 pub struct EnumMetadata {
-    pub module_path: String,
+    pub module_path: Vec<String>,
     pub name: String,
     pub variants: Vec<VariantMetadata>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Debug, Checksum, Deserialize, Serialize)]
 pub struct VariantMetadata {
     pub name: String,
     pub fields: Vec<FieldMetadata>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Debug, Checksum, Deserialize, Serialize)]
 pub struct ObjectMetadata {
-    pub module_path: String,
-    pub name: String,
-    pub is_trait: bool,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
-pub struct CallbackInterfaceMetadata {
-    pub module_path: String,
+    pub module_path: Vec<String>,
     pub name: String,
 }
 
@@ -317,82 +204,48 @@ impl ObjectMetadata {
     ///
     /// This function is used to free the memory used by this object.
     pub fn free_ffi_symbol_name(&self) -> String {
-        free_fn_symbol_name(&self.module_path, &self.name)
+        let free_name = format!("object_free_{}", self.name);
+        fn_ffi_symbol_name(&self.module_path, &free_name, checksum(self))
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
-pub enum ErrorMetadata {
-    Enum { enum_: EnumMetadata, is_flat: bool },
-}
-
-impl ErrorMetadata {
-    pub fn name(&self) -> &String {
-        match self {
-            Self::Enum { enum_, .. } => &enum_.name,
-        }
-    }
-
-    pub fn module_path(&self) -> &String {
-        match self {
-            Self::Enum { enum_, .. } => &enum_.module_path,
-        }
-    }
+#[derive(Clone, Debug, Checksum, Deserialize, Serialize)]
+pub struct ErrorMetadata {
+    pub module_path: Vec<String>,
+    pub name: String,
+    pub variants: Vec<VariantMetadata>,
+    pub flat: bool,
 }
 
 /// Returns the last 16 bits of the value's hash as computed with [`SipHasher13`].
 ///
-/// This is used as a safeguard against different UniFFI versions being used for scaffolding and
-/// bindings generation.
+/// To be used as a checksum of FFI symbols, as a safeguard against different UniFFI versions being
+/// used for scaffolding and bindings generation.
 pub fn checksum<T: Checksum>(val: &T) -> u16 {
     let mut hasher = siphasher::sip::SipHasher13::new();
     val.checksum(&mut hasher);
     (hasher.finish() & 0x000000000000FFFF) as u16
 }
 
+pub fn fn_ffi_symbol_name(mod_path: &[String], name: &str, checksum: u16) -> String {
+    let mod_path = mod_path.join("__");
+    format!("_uniffi_{mod_path}_{name}_{checksum:x}")
+}
+
 /// Enum covering all the possible metadata types
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Debug, Checksum, Deserialize, Serialize)]
 pub enum Metadata {
-    Namespace(NamespaceMetadata),
-    UdlFile(UdlFile),
     Func(FnMetadata),
-    Object(ObjectMetadata),
-    CallbackInterface(CallbackInterfaceMetadata),
+    Method(MethodMetadata),
     Record(RecordMetadata),
     Enum(EnumMetadata),
+    Object(ObjectMetadata),
     Error(ErrorMetadata),
-    Constructor(ConstructorMetadata),
-    Method(MethodMetadata),
-    TraitMethod(TraitMethodMetadata),
-}
-
-impl Metadata {
-    pub fn read(data: &[u8]) -> anyhow::Result<Self> {
-        read_metadata(data)
-    }
-}
-
-impl From<NamespaceMetadata> for Metadata {
-    fn from(value: NamespaceMetadata) -> Metadata {
-        Self::Namespace(value)
-    }
-}
-
-impl From<UdlFile> for Metadata {
-    fn from(value: UdlFile) -> Metadata {
-        Self::UdlFile(value)
-    }
 }
 
 impl From<FnMetadata> for Metadata {
     fn from(value: FnMetadata) -> Metadata {
         Self::Func(value)
-    }
-}
-
-impl From<ConstructorMetadata> for Metadata {
-    fn from(c: ConstructorMetadata) -> Self {
-        Self::Constructor(c)
     }
 }
 
@@ -414,26 +267,14 @@ impl From<EnumMetadata> for Metadata {
     }
 }
 
-impl From<ErrorMetadata> for Metadata {
-    fn from(e: ErrorMetadata) -> Self {
-        Self::Error(e)
-    }
-}
-
 impl From<ObjectMetadata> for Metadata {
     fn from(v: ObjectMetadata) -> Self {
         Self::Object(v)
     }
 }
 
-impl From<CallbackInterfaceMetadata> for Metadata {
-    fn from(v: CallbackInterfaceMetadata) -> Self {
-        Self::CallbackInterface(v)
-    }
-}
-
-impl From<TraitMethodMetadata> for Metadata {
-    fn from(v: TraitMethodMetadata) -> Self {
-        Self::TraitMethod(v)
+impl From<ErrorMetadata> for Metadata {
+    fn from(v: ErrorMetadata) -> Self {
+        Self::Error(v)
     }
 }

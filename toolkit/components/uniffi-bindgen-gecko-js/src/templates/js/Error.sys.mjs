@@ -1,3 +1,4 @@
+{%- let error = ci.get_error_definition(name).unwrap() %}
 {%- let string_type = Type::String %}
 {%- let string_ffi_converter = string_type.ffi_converter() %}
 

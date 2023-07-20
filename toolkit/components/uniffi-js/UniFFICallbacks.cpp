@@ -14,7 +14,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtr.h"
 
 static mozilla::LazyLogModule UNIFFI_INVOKE_CALLBACK_LOGGER("uniffi");
 
@@ -80,9 +79,7 @@ void DeregisterCallbackHandler(uint64_t aInterfaceId, ErrorResult& aError) {
 
 MOZ_CAN_RUN_SCRIPT
 static void QueueCallbackInner(uint64_t aInterfaceId, uint64_t aHandle,
-                               uint32_t aMethod,
-                               UniquePtr<uint8_t[], JS::FreePolicy>&& aArgsData,
-                               int32_t aArgsLen) {
+                               uint32_t aMethod, OwnedRustBuffer aArgs) {
   MOZ_ASSERT(NS_IsMainThread());
 
   Maybe<CallbackInterfaceInfo> cbiInfo = GetCallbackInterfaceInfo(aInterfaceId);
@@ -110,17 +107,9 @@ static void QueueCallbackInner(uint64_t aInterfaceId, uint64_t aHandle,
   }
 
   dom::AutoEntryScript aes(global, cbiInfo->mName);
-
-  JS::Rooted<JSObject*> args(
-      aes.cx(),
-      JS::NewArrayBufferWithContents(aes.cx(), aArgsLen, std::move(aArgsData)));
-  if (!args) {
-    MOZ_LOG(UNIFFI_INVOKE_CALLBACK_LOGGER, LogLevel::Error,
-            ("[UniFFI] Failed to allocate buffer for arguments"));
-    return;
-  }
-
   IgnoredErrorResult error;
+  JS::Rooted<JSObject*> args(aes.cx(), aArgs.IntoArrayBuffer(aes.cx()));
+
   ihandler->Call(aHandle, aMethod, args, error);
 
   if (error.Failed()) {
@@ -131,29 +120,13 @@ static void QueueCallbackInner(uint64_t aInterfaceId, uint64_t aHandle,
 }
 
 void QueueCallback(uint64_t aInterfaceId, uint64_t aHandle, uint32_t aMethod,
-                   const uint8_t* aArgsData, int32_t aArgsLen) {
-  // Make a copy of aArgsData to be deserialized asynchronously on
-  // the main thread.
-  //
-  // This copy will be allocated in the ArrayBufferContentsArena, as
-  // ownership will be passed to an ArrayBuffer for deserialization.
-  UniquePtr<uint8_t[], JS::FreePolicy> argsDataOwned(
-      js_pod_arena_malloc<uint8_t>(js::ArrayBufferContentsArena, aArgsLen));
-  if (!argsDataOwned) {
-    MOZ_LOG(UNIFFI_INVOKE_CALLBACK_LOGGER, LogLevel::Error,
-            ("[UniFFI] Error allocating memory for arguments"));
-    return;
-  }
-  memcpy(argsDataOwned.get(), aArgsData, aArgsLen);
-
+                   RustBuffer aArgs) {
   nsresult dispatchResult =
       GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
-          "UniFFI callback", [=, argsDataOwned = std::move(argsDataOwned)]()
-                                 MOZ_CAN_RUN_SCRIPT_BOUNDARY mutable {
-                                   QueueCallbackInner(
-                                       aInterfaceId, aHandle, aMethod,
-                                       std::move(argsDataOwned), aArgsLen);
-                                 }));
+          "UniFFI callback", [=]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+            QueueCallbackInner(aInterfaceId, aHandle, aMethod,
+                               OwnedRustBuffer(aArgs));
+          }));
 
   if (NS_FAILED(dispatchResult)) {
     MOZ_LOG(UNIFFI_INVOKE_CALLBACK_LOGGER, LogLevel::Error,

@@ -1,3 +1,5 @@
+{%- let enum_ = ci.get_enum_definition(name).unwrap() -%}
+
 {%- if enum_.is_flat() -%}
 
 export const {{ enum_.nm() }} = {

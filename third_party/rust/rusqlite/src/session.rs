@@ -19,14 +19,12 @@ use crate::{errmsg_to_string, str_to_cstring, Connection, DatabaseName, Result};
 
 // https://sqlite.org/session.html
 
-type Filter = Option<Box<dyn Fn(&str) -> bool>>;
-
 /// An instance of this object is a session that can be
 /// used to record changes to a database.
 pub struct Session<'conn> {
     phantom: PhantomData<&'conn Connection>,
     s: *mut ffi::sqlite3_session,
-    filter: Filter,
+    filter: Option<Box<dyn Fn(&str) -> bool>>,
 }
 
 impl Session<'_> {
@@ -75,10 +73,13 @@ impl Session<'_> {
                 let c_slice = CStr::from_ptr(tbl_str).to_bytes();
                 str::from_utf8(c_slice)
             };
-            c_int::from(
+            if let Ok(true) =
                 catch_unwind(|| (*boxed_filter)(tbl_name.expect("non-utf8 table name")))
-                    .unwrap_or_default(),
-            )
+            {
+                1
+            } else {
+                0
+            }
         }
 
         match filter {
@@ -190,7 +191,7 @@ impl Session<'_> {
     #[inline]
     pub fn set_enabled(&mut self, enabled: bool) {
         unsafe {
-            ffi::sqlite3session_enable(self.s, c_int::from(enabled));
+            ffi::sqlite3session_enable(self.s, if enabled { 1 } else { 0 });
         }
     }
 
@@ -204,7 +205,7 @@ impl Session<'_> {
     #[inline]
     pub fn set_indirect(&mut self, indirect: bool) {
         unsafe {
-            ffi::sqlite3session_indirect(self.s, c_int::from(indirect));
+            ffi::sqlite3session_indirect(self.s, if indirect { 1 } else { 0 });
         }
     }
 }
@@ -655,7 +656,7 @@ impl Connection {
 /// See [here](https://sqlite.org/session.html#SQLITE_CHANGESET_CONFLICT) for details.
 #[allow(missing_docs)]
 #[repr(i32)]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 #[non_exhaustive]
 #[allow(clippy::upper_case_acronyms)]
 pub enum ConflictType {
@@ -683,7 +684,7 @@ impl From<i32> for ConflictType {
 /// See [here](https://sqlite.org/session.html#SQLITE_CHANGESET_ABORT) for details.
 #[allow(missing_docs)]
 #[repr(i32)]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 #[non_exhaustive]
 #[allow(clippy::upper_case_acronyms)]
 pub enum ConflictAction {
@@ -705,9 +706,13 @@ where
         str::from_utf8(c_slice)
     };
     match *tuple {
-        (Some(ref filter), _) => c_int::from(
-            catch_unwind(|| filter(tbl_name.expect("illegal table name"))).unwrap_or_default(),
-        ),
+        (Some(ref filter), _) => {
+            if let Ok(true) = catch_unwind(|| filter(tbl_name.expect("illegal table name"))) {
+                1
+            } else {
+                0
+            }
+        }
         _ => unimplemented!(),
     }
 }
@@ -779,7 +784,7 @@ mod test {
         assert!(session.is_empty());
 
         session.attach(None)?;
-        db.execute("INSERT INTO foo (t) VALUES (?1);", ["bar"])?;
+        db.execute("INSERT INTO foo (t) VALUES (?);", ["bar"])?;
 
         session.changeset()
     }
@@ -792,7 +797,7 @@ mod test {
         assert!(session.is_empty());
 
         session.attach(None)?;
-        db.execute("INSERT INTO foo (t) VALUES (?1);", ["bar"])?;
+        db.execute("INSERT INTO foo (t) VALUES (?);", ["bar"])?;
 
         let mut output = Vec::new();
         session.changeset_strm(&mut output)?;
@@ -852,7 +857,7 @@ mod test {
         )?;
 
         assert!(!CALLED.load(Ordering::Relaxed));
-        let check = db.query_row("SELECT 1 FROM foo WHERE t = ?1", ["bar"], |row| {
+        let check = db.query_row("SELECT 1 FROM foo WHERE t = ?", ["bar"], |row| {
             row.get::<_, i32>(0)
         })?;
         assert_eq!(1, check);
@@ -887,7 +892,7 @@ mod test {
             |_conflict_type, _item| ConflictAction::SQLITE_CHANGESET_OMIT,
         )?;
 
-        let check = db.query_row("SELECT 1 FROM foo WHERE t = ?1", ["bar"], |row| {
+        let check = db.query_row("SELECT 1 FROM foo WHERE t = ?", ["bar"], |row| {
             row.get::<_, i32>(0)
         })?;
         assert_eq!(1, check);
@@ -903,7 +908,7 @@ mod test {
         assert!(session.is_empty());
 
         session.attach(None)?;
-        db.execute("INSERT INTO foo (t) VALUES (?1);", ["bar"])?;
+        db.execute("INSERT INTO foo (t) VALUES (?);", ["bar"])?;
 
         assert!(!session.is_empty());
         Ok(())

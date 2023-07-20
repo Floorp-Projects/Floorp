@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::ffi::{rust_call, ForeignBytes, RustCallStatus};
+use crate::ffi::{call_with_output, ForeignBytes, RustCallStatus};
 
 /// Support for passing an allocated-by-Rust buffer of bytes over the FFI.
 ///
@@ -99,11 +99,6 @@ impl RustBuffer {
         self.len
             .try_into()
             .expect("buffer length negative or overflowed")
-    }
-
-    /// Get a pointer to the data
-    pub fn data_pointer(&self) -> *const u8 {
-        self.data
     }
 
     /// Returns true if the length of the buffer is 0.
@@ -212,8 +207,8 @@ pub extern "C" fn uniffi_rustbuffer_alloc(
     size: i32,
     call_status: &mut RustCallStatus,
 ) -> RustBuffer {
-    rust_call(call_status, || {
-        Ok(RustBuffer::new_with_size(size.max(0) as usize))
+    call_with_output(call_status, || {
+        RustBuffer::new_with_size(size.max(0) as usize)
     })
 }
 
@@ -230,9 +225,9 @@ pub unsafe extern "C" fn uniffi_rustbuffer_from_bytes(
     bytes: ForeignBytes,
     call_status: &mut RustCallStatus,
 ) -> RustBuffer {
-    rust_call(call_status, || {
+    call_with_output(call_status, || {
         let bytes = bytes.as_slice();
-        Ok(RustBuffer::from_vec(bytes.to_vec()))
+        RustBuffer::from_vec(bytes.to_vec())
     })
 }
 
@@ -244,10 +239,7 @@ pub unsafe extern "C" fn uniffi_rustbuffer_from_bytes(
 /// corrupting the allocator state.
 #[no_mangle]
 pub unsafe extern "C" fn uniffi_rustbuffer_free(buf: RustBuffer, call_status: &mut RustCallStatus) {
-    rust_call(call_status, || {
-        RustBuffer::destroy(buf);
-        Ok(())
-    })
+    call_with_output(call_status, || RustBuffer::destroy(buf))
 }
 
 /// Reserve additional capacity in a byte buffer that had previously been passed to the
@@ -271,13 +263,13 @@ pub unsafe extern "C" fn uniffi_rustbuffer_reserve(
     additional: i32,
     call_status: &mut RustCallStatus,
 ) -> RustBuffer {
-    rust_call(call_status, || {
+    call_with_output(call_status, || {
         let additional: usize = additional
             .try_into()
             .expect("additional buffer length negative or overflowed");
         let mut v = buf.destroy_into_vec();
         v.reserve(additional);
-        Ok(RustBuffer::from_vec(v))
+        RustBuffer::from_vec(v)
     })
 }
 

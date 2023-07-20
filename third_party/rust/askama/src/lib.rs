@@ -63,23 +63,14 @@
 #![deny(elided_lifetimes_in_paths)]
 #![deny(unreachable_pub)]
 
-mod error;
-pub mod filters;
-pub mod helpers;
+pub use askama_shared as shared;
 
-use std::fmt;
-
-pub use askama_derive::Template;
-pub use askama_escape::{Html, MarkupDisplay, Text};
-
-#[doc(hidden)]
-pub use crate as shared;
-pub use crate::error::{Error, Result};
+pub use askama_escape::{Html, Text};
 
 /// Main `Template` trait; implementations are generally derived
 ///
 /// If you need an object-safe template, use [`DynTemplate`].
-pub trait Template: fmt::Display {
+pub trait Template {
     /// Helper method which allocates a new `String` and renders into it
     fn render(&self) -> Result<String> {
         let mut buf = String::with_capacity(Self::SIZE_HINT);
@@ -87,14 +78,8 @@ pub trait Template: fmt::Display {
         Ok(buf)
     }
 
-    /// Renders the template to the given `writer` fmt buffer
+    /// Renders the template to the given `writer` buffer
     fn render_into(&self, writer: &mut (impl std::fmt::Write + ?Sized)) -> Result<()>;
-
-    /// Renders the template to the given `writer` io buffer
-    #[inline]
-    fn write_into(&self, writer: &mut (impl std::io::Write + ?Sized)) -> std::io::Result<()> {
-        writer.write_fmt(format_args!("{self}"))
-    }
 
     /// The template's extension, if provided
     const EXTENSION: Option<&'static str>;
@@ -113,11 +98,8 @@ pub trait DynTemplate {
     /// Helper method which allocates a new `String` and renders into it
     fn dyn_render(&self) -> Result<String>;
 
-    /// Renders the template to the given `writer` fmt buffer
+    /// Renders the template to the given `writer` buffer
     fn dyn_render_into(&self, writer: &mut dyn std::fmt::Write) -> Result<()>;
-
-    /// Renders the template to the given `writer` io buffer
-    fn dyn_write_into(&self, writer: &mut dyn std::io::Write) -> std::io::Result<()>;
 
     /// Helper function to inspect the template's extension
     fn extension(&self) -> Option<&'static str>;
@@ -138,11 +120,6 @@ impl<T: Template> DynTemplate for T {
         <Self as Template>::render_into(self, writer)
     }
 
-    #[inline]
-    fn dyn_write_into(&self, writer: &mut dyn std::io::Write) -> std::io::Result<()> {
-        writer.write_fmt(format_args!("{self}"))
-    }
-
     fn extension(&self) -> Option<&'static str> {
         Self::EXTENSION
     }
@@ -156,57 +133,16 @@ impl<T: Template> DynTemplate for T {
     }
 }
 
-impl fmt::Display for dyn DynTemplate {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.dyn_render_into(f).map_err(|_| ::std::fmt::Error {})
-    }
-}
+pub use crate::shared::filters;
+pub use crate::shared::helpers;
+pub use crate::shared::{read_config_file, Error, MarkupDisplay, Result};
+pub use askama_derive::*;
 
-#[cfg(test)]
-mod tests {
-    use std::fmt;
-
-    use super::*;
-    use crate::{DynTemplate, Template};
-
-    #[test]
-    fn dyn_template() {
-        struct Test;
-        impl Template for Test {
-            fn render_into(&self, writer: &mut (impl std::fmt::Write + ?Sized)) -> Result<()> {
-                Ok(writer.write_str("test")?)
-            }
-
-            const EXTENSION: Option<&'static str> = Some("txt");
-
-            const SIZE_HINT: usize = 4;
-
-            const MIME_TYPE: &'static str = "text/plain; charset=utf-8";
-        }
-
-        impl fmt::Display for Test {
-            #[inline]
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                self.render_into(f).map_err(|_| fmt::Error {})
-            }
-        }
-
-        fn render(t: &dyn DynTemplate) -> String {
-            t.dyn_render().unwrap()
-        }
-
-        let test = &Test as &dyn DynTemplate;
-
-        assert_eq!(render(test), "test");
-
-        assert_eq!(test.to_string(), "test");
-
-        assert_eq!(format!("{test}"), "test");
-
-        let mut vec = Vec::new();
-        test.dyn_write_into(&mut vec).unwrap();
-        assert_eq!(vec, vec![b't', b'e', b's', b't']);
-    }
+#[deprecated(since = "0.11.1", note = "The only function in this mod is deprecated")]
+pub mod mime {
+    #[cfg(all(feature = "mime_guess", feature = "mime"))]
+    #[deprecated(since = "0.11.1", note = "Use Template::MIME_TYPE instead")]
+    pub use crate::shared::extension_to_mime_type;
 }
 
 /// Old build script helper to rebuild crates if contained templates have changed
@@ -217,3 +153,33 @@ mod tests {
     note = "file-level dependency tracking is handled automatically without build script"
 )]
 pub fn rerun_if_templates_changed() {}
+
+#[cfg(test)]
+mod tests {
+    use super::{DynTemplate, Template};
+
+    #[test]
+    fn dyn_template() {
+        struct Test;
+        impl Template for Test {
+            fn render_into(
+                &self,
+                writer: &mut (impl std::fmt::Write + ?Sized),
+            ) -> askama_shared::Result<()> {
+                Ok(writer.write_str("test")?)
+            }
+
+            const EXTENSION: Option<&'static str> = Some("txt");
+
+            const SIZE_HINT: usize = 4;
+
+            const MIME_TYPE: &'static str = "text/plain; charset=utf-8";
+        }
+
+        fn render(t: &dyn DynTemplate) -> String {
+            t.dyn_render().unwrap()
+        }
+
+        assert_eq!(render(&Test), "test");
+    }
+}

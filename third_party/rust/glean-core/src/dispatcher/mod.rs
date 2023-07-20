@@ -172,10 +172,8 @@ impl DispatchGuard {
         // Blocking on the queue can only work if it is eventually flushed anyway.
 
         let task = Command::Task(Box::new(move || {
-            // In case the calling thread times out waiting for this
-            // the channel will be dropped.
-            // But in case the work continues we don't want to panic.
-            _ = tx.send(());
+            tx.send(())
+                .expect("(worker) Can't send message on single-use channel");
         }));
         self.sender
             .send(task)

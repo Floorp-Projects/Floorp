@@ -6,13 +6,17 @@ use super::{
     request::{NormalResponseHandler, UploadInfo},
     CollState, Sync15ClientResponse, Sync15StorageClient,
 };
-use crate::bso::{IncomingBso, OutgoingBso, OutgoingEncryptedBso};
-use crate::engine::CollectionRequest;
+use crate::bso::OutgoingEncryptedBso;
+use crate::engine::{CollectionRequest, IncomingChangeset, OutgoingChangeset};
 use crate::error::{self, Error, Result};
 use crate::{CollectionName, KeyBundle, ServerTimestamp};
 
-fn encrypt_outgoing(o: Vec<OutgoingBso>, key: &KeyBundle) -> Result<Vec<OutgoingEncryptedBso>> {
-    o.into_iter()
+pub fn encrypt_outgoing(
+    o: OutgoingChangeset,
+    key: &KeyBundle,
+) -> Result<Vec<OutgoingEncryptedBso>> {
+    o.changes
+        .into_iter()
         .map(|change| change.into_encrypted(key))
         .collect()
 }
@@ -21,8 +25,9 @@ pub fn fetch_incoming(
     client: &Sync15StorageClient,
     state: &CollState,
     collection_request: CollectionRequest,
-) -> Result<Vec<IncomingBso>> {
-    let (records, _timestamp) = match client.get_encrypted_records(collection_request)? {
+) -> Result<IncomingChangeset> {
+    let collection = collection_request.collection.clone();
+    let (records, timestamp) = match client.get_encrypted_records(collection_request)? {
         Sync15ClientResponse::Success {
             record,
             last_modified,
@@ -30,14 +35,15 @@ pub fn fetch_incoming(
         } => (record, last_modified),
         other => return Err(other.create_storage_error()),
     };
-    let mut result = Vec::with_capacity(records.len());
+    let mut result = IncomingChangeset::new(collection, timestamp);
+    result.changes.reserve(records.len());
     for record in records {
         // if we see a HMAC error, we've made an explicit decision to
         // NOT handle it here, but restart the global state machine.
         // That should cause us to re-read crypto/keys and things should
         // work (although if for some reason crypto/keys was updated but
         // not all storage was wiped we are probably screwed.)
-        result.push(record.into_decrypted(&state.key)?);
+        result.changes.push(record.into_decrypted(&state.key)?);
     }
     Ok(result)
 }
@@ -73,10 +79,10 @@ impl<'a> CollectionUpdate<'a> {
     pub fn new_from_changeset(
         client: &'a Sync15StorageClient,
         state: &'a CollState,
-        collection: CollectionName,
-        changeset: Vec<OutgoingBso>,
+        changeset: OutgoingChangeset,
         fully_atomic: bool,
     ) -> Result<CollectionUpdate<'a>> {
+        let collection = changeset.collection.clone();
         let to_update = encrypt_outgoing(changeset, &state.key)?;
         Ok(CollectionUpdate::new(
             client,

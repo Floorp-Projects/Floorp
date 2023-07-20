@@ -1,37 +1,36 @@
 {#
 // Template to call into rust. Used in several places.
 // Variable names in `arg_list_decl` should match up with arg lists
-// passed to rust via `arg_list_lowered`
+// passed to rust via `_arg_list_ffi_call`
 #}
 
 {%- macro to_ffi_call(func) -%}
     {%- match func.throws_type() %}
     {%- when Some with (e) %}
-    rustCallWithError({{ e|error_type_name }})
+    rustCallWithError({{ e|type_name}})
     {%- else %}
     rustCall()
     {%- endmatch %} { _status ->
-    _UniFFILib.INSTANCE.{{ func.ffi_func().name() }}({% call arg_list_lowered(func) -%} _status)
+    _UniFFILib.INSTANCE.{{ func.ffi_func().name() }}({% call _arg_list_ffi_call(func) -%}{% if func.arguments().len() > 0 %},{% endif %} _status)
 }
 {%- endmacro -%}
 
 {%- macro to_ffi_call_with_prefix(prefix, func) %}
     {%- match func.throws_type() %}
     {%- when Some with (e) %}
-    rustCallWithError({{ e|error_type_name }})
+    rustCallWithError({{ e|type_name}})
     {%- else %}
     rustCall()
     {%- endmatch %} { _status ->
     _UniFFILib.INSTANCE.{{ func.ffi_func().name() }}(
-        {{- prefix }},
-        {% call arg_list_lowered(func) %}
-        _status)
+        {{- prefix }}, {% call _arg_list_ffi_call(func) %}{% if func.arguments().len() > 0 %}, {% endif %} _status)
 }
 {%- endmacro %}
 
-{%- macro arg_list_lowered(func) %}
+{%- macro _arg_list_ffi_call(func) %}
     {%- for arg in func.arguments() %}
-        {{- arg|lower_fn }}({{ arg.name()|var_name }}),
+        {{- arg|lower_fn }}({{ arg.name()|var_name }})
+        {%- if !loop.last %}, {% endif %}
     {%- endfor %}
 {%- endmacro -%}
 
@@ -63,9 +62,9 @@
 -#}
 {%- macro arg_list_ffi_decl(func) %}
     {%- for arg in func.arguments() %}
-        {{- arg.name()|var_name }}: {{ arg.type_().borrow()|ffi_type_name_by_value -}},
+        {{- arg.name()|var_name }}: {{ arg.type_().borrow()|ffi_type_name -}},
     {%- endfor %}
-    {%- if func.has_rust_call_status_arg() %}_uniffi_out_err: RustCallStatus, {% endif %}
+    _uniffi_out_err: RustCallStatus
 {%- endmacro -%}
 
 // Macro for destroying fields
@@ -75,3 +74,9 @@
         this.{{ field.name()|var_name }}{%- if !loop.last %}, {% endif -%}
     {% endfor -%})
 {%- endmacro -%}
+
+{%- macro ffi_function_definition(func) %}
+fun {{ func.name()|fn_name }}(
+    {%- call arg_list_ffi_decl(func) %}
+){%- match func.return_type() -%}{%- when Some with (type_) %}: {{ type_|ffi_type_name }}{% when None %}: Unit{% endmatch %}
+{% endmacro %}

@@ -1,3 +1,4 @@
+{%- let e = ci.get_error_definition(name).unwrap() %}
 public enum {{ type_name }} {
 
     {% if e.is_flat() %}
@@ -12,12 +13,7 @@ public enum {{ type_name }} {
     {% endfor %}
 
     {%- endif %}
-
-    fileprivate static func uniffiErrorHandler(_ error: RustBuffer) throws -> Error {
-        return try {{ ffi_converter_name }}.lift(error)
-    }
 }
-
 
 public struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
     typealias SwiftType = {{ type_name }}
@@ -58,6 +54,7 @@ public struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
         {% for variant in e.variants() %}
         case let .{{ variant.name()|class_name }}(message):
             writeInt(&buf, Int32({{ loop.index }}))
+            {{ Type::String.borrow()|write_fn }}(message, into: &buf)
         {%- endfor %}
 
         {% else %}

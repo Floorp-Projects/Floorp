@@ -15,10 +15,7 @@
 
 require 'ffi'
 
-
 module {{ ci.namespace()|class_name_rb }}
-  {% include "Helpers.rb" %}
-
   {% include "RustBufferTemplate.rb" %}
   {% include "RustBufferStream.rb" %}
   {% include "RustBufferBuilder.rb" %}
@@ -31,9 +28,7 @@ module {{ ci.namespace()|class_name_rb }}
   # Public interface members begin here.
 
   {% for e in ci.enum_definitions() %}
-  {% if !ci.is_name_used_as_error(e.name()) %}
   {% include "EnumTemplate.rb" %}
-  {% endif %}
   {%- endfor -%}
 
   {%- for rec in ci.record_definitions() %}

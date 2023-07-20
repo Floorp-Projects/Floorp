@@ -290,4 +290,4 @@ pub struct OptionneurDictionnaire {
     dictionnaire_var: Option<minusculeMAJUSCULEEnum>,
 }
 
-uniffi::include_scaffolding!("rondpoint");
+include!(concat!(env!("OUT_DIR"), "/rondpoint.uniffi.rs"));

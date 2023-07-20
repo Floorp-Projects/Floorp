@@ -25,7 +25,7 @@ class RustBuffer(ctypes.Structure):
         )
 
     @contextlib.contextmanager
-    def allocWithBuilder(*args):
+    def allocWithBuilder():
         """Context-manger to allocate a buffer using a RustBufferBuilder.
 
         The allocated buffer will be automatically freed if an error occurs, ensuring that
@@ -46,24 +46,13 @@ class RustBuffer(ctypes.Structure):
         leak it even if an error occurs.
         """
         try:
-            s = RustBufferStream.from_rust_buffer(self)
+            s = RustBufferStream(self)
             yield s
             if s.remaining() != 0:
-                raise RuntimeError("junk data left in buffer at end of consumeWithStream")
+                raise RuntimeError("junk data left in buffer after consuming")
         finally:
             self.free()
 
-    @contextlib.contextmanager
-    def readWithStream(self):
-        """Context-manager to read a buffer using a RustBufferStream.
-
-        This is like consumeWithStream, but doesn't free the buffer afterwards.
-        It should only be used with borrowed `RustBuffer` data.
-        """
-        s = RustBufferStream.from_rust_buffer(self)
-        yield s
-        if s.remaining() != 0:
-            raise RuntimeError("junk data left in buffer at end of readWithStream")
 
 class ForeignBytes(ctypes.Structure):
     _fields_ = [
@@ -75,34 +64,29 @@ class ForeignBytes(ctypes.Structure):
         return "ForeignBytes(len={}, data={})".format(self.len, self.data[0:self.len])
 
 
-class RustBufferStream:
+class RustBufferStream(object):
     """
     Helper for structured reading of bytes from a RustBuffer
     """
 
-    def __init__(self, data, len):
-        self.data = data
-        self.len = len
+    def __init__(self, rbuf):
+        self.rbuf = rbuf
         self.offset = 0
 
-    @classmethod
-    def from_rust_buffer(cls, buf):
-        return cls(buf.data, buf.len)
-
     def remaining(self):
-        return self.len - self.offset
+        return self.rbuf.len - self.offset
 
     def _unpack_from(self, size, format):
-        if self.offset + size > self.len:
+        if self.offset + size > self.rbuf.len:
             raise InternalError("read past end of rust buffer")
-        value = struct.unpack(format, self.data[self.offset:self.offset+size])[0]
+        value = struct.unpack(format, self.rbuf.data[self.offset:self.offset+size])[0]
         self.offset += size
         return value
 
     def read(self, size):
-        if self.offset + size > self.len:
+        if self.offset + size > self.rbuf.len:
             raise InternalError("read past end of rust buffer")
-        data = self.data[self.offset:self.offset+size]
+        data = self.rbuf.data[self.offset:self.offset+size]
         self.offset += size
         return data
 
@@ -137,10 +121,8 @@ class RustBufferStream:
     def readDouble(self):
         return self._unpack_from(8, ">d")
 
-    def readCSizeT(self):
-        return self._unpack_from(ctypes.sizeof(ctypes.c_size_t) , "@N")
 
-class RustBufferBuilder:
+class RustBufferBuilder(object):
     """
     Helper for structured writing of bytes into a RustBuffer.
     """
@@ -206,6 +188,3 @@ class RustBufferBuilder:
 
     def writeDouble(self, v):
         self._pack_into(8, ">d", v)
-
-    def writeCSizeT(self, v):
-        self._pack_into(ctypes.sizeof(ctypes.c_size_t) , "@N", v)
