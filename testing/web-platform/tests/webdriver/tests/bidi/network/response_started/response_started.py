@@ -79,7 +79,7 @@ async def test_load_page_twice(
     events = network_events[RESPONSE_STARTED_EVENT]
 
     on_response_started = wait_for_event(RESPONSE_STARTED_EVENT)
-    await bidi_session.browsing_context.navigate(
+    result = await bidi_session.browsing_context.navigate(
         context=top_context["context"],
         url=html_url,
         wait="complete",
@@ -100,6 +100,7 @@ async def test_load_page_twice(
         events[0],
         expected_request=expected_request,
         expected_response=expected_response,
+        navigation=result["navigation"],
         redirect_count=0,
     )
 

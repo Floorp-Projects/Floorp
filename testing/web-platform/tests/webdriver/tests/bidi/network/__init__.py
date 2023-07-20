@@ -101,6 +101,7 @@ def assert_request_data(request_data, expected_request):
 def assert_base_parameters(
     event,
     context=None,
+    navigation=None,
     redirect_count=None,
     expected_request=None,
 ):
@@ -118,6 +119,9 @@ def assert_base_parameters(
     if context is not None:
         assert event["context"] == context
 
+    if navigation is not None:
+        assert event["navigation"] == navigation
+
     if redirect_count is not None:
         assert event["redirectCount"] == redirect_count
 
@@ -129,6 +133,7 @@ def assert_base_parameters(
 def assert_before_request_sent_event(
     event,
     context=None,
+    navigation=None,
     redirect_count=None,
     expected_request=None,
 ):
@@ -140,6 +145,7 @@ def assert_before_request_sent_event(
     assert_base_parameters(
         event,
         context=context,
+        navigation=navigation,
         redirect_count=redirect_count,
         expected_request=expected_request,
     )
@@ -181,6 +187,7 @@ def assert_response_data(response_data, expected_response):
 def assert_response_event(
     event,
     context=None,
+    navigation=None,
     redirect_count=None,
     expected_request=None,
     expected_response=None,
@@ -194,6 +201,7 @@ def assert_response_event(
     assert_base_parameters(
         event,
         context=context,
+        navigation=navigation,
         redirect_count=redirect_count,
         expected_request=expected_request,
     )
