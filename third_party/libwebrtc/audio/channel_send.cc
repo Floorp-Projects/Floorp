@@ -534,8 +534,6 @@ ChannelSend::ChannelSend(
 
   int error = audio_coding_->RegisterTransportCallback(this);
   RTC_DCHECK_EQ(0, error);
-  if (frame_transformer)
-    InitFrameTransformerDelegate(std::move(frame_transformer));
 }
 
 ChannelSend::~ChannelSend() {
