@@ -996,9 +996,10 @@ const ASRouterTriggerListeners = new Map([
         if (this._idleSince && this._quietSince) {
           const win = Services.wm.getMostRecentBrowserWindow();
           if (win && !isPrivateWindow(win) && !this._triggerTimeout) {
-            // Number of ms since the last user interaction/audio playback
+            // Time since the most recent user interaction/audio playback,
+            // reported as the number of milliseconds the user has been idle.
             const idleForMilliseconds =
-              Date.now() - Math.min(this._idleSince, this._quietSince);
+              Date.now() - Math.max(this._idleSince, this._quietSince);
             this._triggerTimeout = lazy.setTimeout(() => {
               this._triggerHandler(win.gBrowser.selectedBrowser, {
                 id: this.id,
