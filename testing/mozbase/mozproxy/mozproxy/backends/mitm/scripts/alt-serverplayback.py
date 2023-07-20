@@ -13,6 +13,7 @@
 # see Bug 1739418: https://bugzilla.mozilla.org/show_bug.cgi?id=1739418
 
 import hashlib
+import traceback
 import urllib
 from collections.abc import Hashable, Sequence
 from typing import Any, Optional
@@ -232,9 +233,11 @@ class AltServerPlayback:
         if not self.configured and ctx.options.alt_server_replay:
             self.configured = True
             try:
-                flows = io.read_flows_from_paths(ctx.options.alt_server_replay)
-            except exceptions.FlowReadException as e:
-                raise exceptions.OptionsError(str(e))
+                flows = io.read_flows_from_paths(
+                    ctx.options.alt_server_replay[0].split(",")
+                )
+            except exceptions.FlowReadException:
+                raise exceptions.OptionsError(str(traceback.print_exc()))
             self.load_flows(flows)
 
     def request(self, f: http.HTTPFlow) -> None:
