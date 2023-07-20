@@ -32,22 +32,27 @@ const {
 
 const defaultIdGenerator = new IdGenerator();
 
-function messagesAdd(packets, idGenerator = null) {
+function messagesAdd(packets, idGenerator = null, persistLogs = false) {
   if (idGenerator == null) {
     idGenerator = defaultIdGenerator;
   }
-  const messages = packets.map(packet => prepareMessage(packet, idGenerator));
+  const messages = packets.map(packet =>
+    prepareMessage(packet, idGenerator, persistLogs)
+  );
   // Sort the messages by their timestamps.
   messages.sort(getNaturalOrder);
-  for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].type === MESSAGE_TYPE.CLEAR) {
-      return batchActions([
-        messagesClear(),
-        {
-          type: MESSAGES_ADD,
-          messages: messages.slice(i),
-        },
-      ]);
+
+  if (!persistLogs) {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].type === MESSAGE_TYPE.CLEAR) {
+        return batchActions([
+          messagesClear(),
+          {
+            type: MESSAGES_ADD,
+            messages: messages.slice(i),
+          },
+        ]);
+      }
     }
   }
 

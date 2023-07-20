@@ -389,7 +389,10 @@ class WebConsoleWrapper {
           return;
         }
 
-        store.dispatch(actions.messagesAdd(this.queuedMessageAdds));
+        const { ui } = store.getState();
+        store.dispatch(
+          actions.messagesAdd(this.queuedMessageAdds, null, ui.persistLogs)
+        );
 
         const { length } = this.queuedMessageAdds;
 

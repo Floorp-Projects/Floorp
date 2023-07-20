@@ -77,9 +77,9 @@ const {
   NetworkEventMessage,
 } = require("resource://devtools/client/webconsole/types.js");
 
-function prepareMessage(resource, idGenerator) {
+function prepareMessage(resource, idGenerator, persistLogs) {
   if (!resource.source) {
-    resource = transformResource(resource);
+    resource = transformResource(resource, persistLogs);
   }
 
   resource.id = idGenerator.getNextId(resource);
@@ -91,11 +91,12 @@ function prepareMessage(resource, idGenerator) {
  *
  * @param {Object} resource: This can be either a simple RDP packet or an object emitted
  *                           by the Resource API.
+ * @param {Boolean} persistLogs: Value of the "Persist logs" setting
  */
-function transformResource(resource) {
+function transformResource(resource, persistLogs) {
   switch (resource.resourceType || resource.type) {
     case ResourceCommand.TYPES.CONSOLE_MESSAGE: {
-      return transformConsoleAPICallResource(resource);
+      return transformConsoleAPICallResource(resource, persistLogs);
     }
 
     case ResourceCommand.TYPES.PLATFORM_MESSAGE: {
@@ -126,7 +127,7 @@ function transformResource(resource) {
 }
 
 // eslint-disable-next-line complexity
-function transformConsoleAPICallResource(consoleMessageResource) {
+function transformConsoleAPICallResource(consoleMessageResource, persistLogs) {
   const { message, targetFront } = consoleMessageResource;
 
   let parameters = message.arguments;
@@ -139,7 +140,9 @@ function transformConsoleAPICallResource(consoleMessageResource) {
   switch (type) {
     case "clear":
       // We show a message to users when calls console.clear() is called.
-      parameters = [l10n.getStr("consoleCleared")];
+      parameters = [
+        l10n.getStr(persistLogs ? "preventedConsoleClear" : "consoleCleared"),
+      ];
       break;
     case "count":
     case "countReset":
