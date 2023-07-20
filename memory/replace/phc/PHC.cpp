@@ -729,7 +729,7 @@ class GMut {
 
   static void CrashOnGuardPage(void* aPtr) {
     // An operation on a guard page? This is a bounds violation. Deliberately
-    // touch the page in question, to cause a crash that triggers the usual PHC
+    // touch the page in question to cause a crash that triggers the usual PHC
     // machinery.
     LOG("CrashOnGuardPage(%p), bounds violation\n", aPtr);
     *static_cast<uint8_t*>(aPtr) = 0;
