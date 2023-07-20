@@ -245,3 +245,9 @@ jobs:
         args:
             SNAP_BASE: core22
             SNAP_LIST: "gnome-42-2204 gtk-common-themes gnome-42-2204-sdk"
+    android-components:
+        symbol: I(android-components)
+        parent: debian12-base
+    android-ui-tests:
+        symbol: I(android-ui-tests)
+        parent: android-components
