@@ -23,6 +23,18 @@ pub enum GenericColor<Percentage> {
     ColorMix(Box<GenericColorMix<Self, Percentage>>),
 }
 
+bitflags! {
+    /// Flags used to modify the calculation of a color mix result.
+    #[derive(Clone, Copy, Default, MallocSizeOf, PartialEq, ToShmem)]
+    #[repr(C)]
+    pub struct ColorMixFlags : u8 {
+        /// Normalize the weights of the mix.
+        const NORMALIZE_WEIGHTS = 1 << 0;
+        /// The result should always be converted to the modern color syntax.
+        const RESULT_IN_MODERN_SYNTAX = 1 << 1;
+    }
+}
+
 /// A restricted version of the css `color-mix()` function, which only supports
 /// percentages.
 ///
@@ -45,7 +57,7 @@ pub struct GenericColorMix<Color, Percentage> {
     pub left_percentage: Percentage,
     pub right: Color,
     pub right_percentage: Percentage,
-    pub normalize_weights: bool,
+    pub flags: ColorMixFlags,
 }
 
 pub use self::GenericColorMix as ColorMix;
@@ -106,7 +118,7 @@ impl<Percentage> ColorMix<GenericColor<Percentage>, Percentage> {
             self.left_percentage.to_percentage(),
             &right,
             self.right_percentage.to_percentage(),
-            self.normalize_weights,
+            self.flags,
         ))
     }
 }

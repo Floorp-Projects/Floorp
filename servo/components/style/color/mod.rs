@@ -211,6 +211,13 @@ impl AbsoluteColor {
         }
     }
 
+    /// Convert this color to the modern color syntax.
+    #[inline]
+    pub fn into_modern_syntax(mut self) -> Self {
+        self.flags |= ColorFlags::AS_COLOR_FUNCTION;
+        self
+    }
+
     /// Create a new [`AbsoluteColor`] from rgba values in the sRGB color space.
     pub fn srgb(red: f32, green: f32, blue: f32, alpha: f32) -> Self {
         Self::new(ColorSpace::Srgb, ColorComponents(red, green, blue), alpha)
@@ -237,9 +244,9 @@ impl AbsoluteColor {
         unsafe { color_components_as!(self, [f32; 4]) }
     }
 
-    /// Returns true if this color is in one of the legacy color formats.
+    /// Returns true if this color is in the legacy color syntax.
     #[inline]
-    pub fn is_legacy_color(&self) -> bool {
+    pub fn is_legacy_syntax(&self) -> bool {
         // rgb(), rgba(), hsl(), hsla(), hwb(), hwba()
         match self.color_space {
             ColorSpace::Srgb => !self.flags.contains(ColorFlags::AS_COLOR_FUNCTION),
@@ -262,9 +269,9 @@ impl AbsoluteColor {
             return self.clone();
         }
 
-        // We have simplified conversions that do not need to convert to XYZ
-        // first.  This improves performance, because it skips 2 matrix
-        // multiplications and reduces float rounding errors.
+        // We have simplified conversions that do not need to convert to XYZ first.  This improves
+        // performance, because it skips at least 2 matrix multiplications and reduces float
+        // rounding errors.
         match (self.color_space, color_space) {
             (Srgb, Hsl) => {
                 return Self::new(
@@ -391,16 +398,9 @@ impl ToCss for AbsoluteColor {
         let maybe_alpha = value_or_none!(self.alpha, ALPHA_IS_NONE);
 
         match self.color_space {
-            ColorSpace::Hsl => {
-                let rgb = convert::hsl_to_rgb(&self.components);
-                Self::new(ColorSpace::Srgb, rgb, self.alpha).to_css(dest)
-            },
+            ColorSpace::Hsl => self.to_color_space(ColorSpace::Srgb).to_css(dest),
 
-            ColorSpace::Hwb => {
-                let rgb = convert::hwb_to_rgb(&self.components);
-
-                Self::new(ColorSpace::Srgb, rgb, self.alpha).to_css(dest)
-            },
+            ColorSpace::Hwb => self.to_color_space(ColorSpace::Srgb).to_css(dest),
 
             ColorSpace::Srgb if !self.flags.contains(ColorFlags::AS_COLOR_FUNCTION) => {
                 // Althought we are passing Option<_> in here, the to_css fn

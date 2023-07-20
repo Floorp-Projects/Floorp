@@ -316,7 +316,7 @@ add_task(async function test_aboutwelcome_split_position() {
     // Expected styles:
     {
       // Override default text-link styles
-      "background-color": "rgba(21, 20, 26, 0.07)",
+      "background-color": "color(srgb 0.0823529 0.0784314 0.101961 / 0.07)",
       color: "rgb(21, 20, 26)",
     }
   );
@@ -491,7 +491,7 @@ add_task(async function test_aboutwelcome_with_progress_bar() {
     // Progress bar should have a gray background.
     is(
       content.window.getComputedStyle(progressBar)["background-color"],
-      "rgba(21, 20, 26, 0.25)",
+      "color(srgb 0.0823529 0.0784314 0.101961 / 0.25)",
       "Correct progress bar background"
     );
 

@@ -84,7 +84,7 @@ impl Color {
                     mix.left_percentage.to_percentage(),
                     &right,
                     mix.right_percentage.to_percentage(),
-                    mix.normalize_weights,
+                    mix.flags,
                 )
             },
         }
