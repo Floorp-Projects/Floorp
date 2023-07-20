@@ -498,9 +498,10 @@ void GeneralParser<ParseHandler, Unit>::reportMissingClosing(
 }
 
 template <class ParseHandler, typename Unit>
-void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
-    TaggedParserAtomIndex name, DeclarationKind prevKind, TokenPos pos,
-    uint32_t prevPos) {
+void GeneralParser<ParseHandler, Unit>::reportRedeclarationHelper(
+    TaggedParserAtomIndex& name, DeclarationKind& prevKind, TokenPos& pos,
+    uint32_t& prevPos, const unsigned& errorNumber,
+    const unsigned& noteErrorNumber) {
   UniqueChars bytes = this->parserAtoms().toPrintableString(name);
   if (!bytes) {
     ReportOutOfMemory(this->fc_);
@@ -508,7 +509,7 @@ void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
   }
 
   if (prevPos == DeclaredNameInfo::npos) {
-    errorAt(pos.begin, JSMSG_REDECLARED_VAR, DeclarationKindString(prevKind),
+    errorAt(pos.begin, errorNumber, DeclarationKindString(prevKind),
             bytes.get());
     return;
   }
@@ -529,13 +530,29 @@ void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
   SprintfLiteral(lineNumber, "%" PRIu32, line);
 
   if (!notes->addNoteASCII(this->fc_, getFilename().c_str(), 0, line, column,
-                           GetErrorMessage, nullptr, JSMSG_REDECLARED_PREV,
+                           GetErrorMessage, nullptr, noteErrorNumber,
                            lineNumber, columnNumber)) {
     return;
   }
 
-  errorWithNotesAt(std::move(notes), pos.begin, JSMSG_REDECLARED_VAR,
+  errorWithNotesAt(std::move(notes), pos.begin, errorNumber,
                    DeclarationKindString(prevKind), bytes.get());
+}
+
+template <class ParseHandler, typename Unit>
+void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
+    TaggedParserAtomIndex name, DeclarationKind prevKind, TokenPos pos,
+    uint32_t prevPos) {
+  reportRedeclarationHelper(name, prevKind, pos, prevPos, JSMSG_REDECLARED_VAR,
+                            JSMSG_PREV_DECLARATION);
+}
+
+template <class ParseHandler, typename Unit>
+void GeneralParser<ParseHandler, Unit>::reportMismatchedPlacement(
+    TaggedParserAtomIndex name, DeclarationKind prevKind, TokenPos pos,
+    uint32_t prevPos) {
+  reportRedeclarationHelper(name, prevKind, pos, prevPos,
+                            JSMSG_MISMATCHED_PLACEMENT, JSMSG_PREV_DECLARATION);
 }
 
 // notePositionalFormalParameter is called for both the arguments of a regular
@@ -861,7 +878,7 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredPrivateName(
       }
     }
 
-    reportRedeclaration(name, p->value()->kind(), pos, p->value()->pos());
+    reportMismatchedPlacement(name, p->value()->kind(), pos, p->value()->pos());
     return false;
   }
 
