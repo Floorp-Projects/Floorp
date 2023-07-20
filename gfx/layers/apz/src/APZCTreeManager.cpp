@@ -449,7 +449,7 @@ void APZCTreeManager::UpdateHitTestingTree(
                                  state.mNodesToDestroy.AppendElement(aNode);
                                });
   mRootNode = nullptr;
-  mAsyncZoomContainerSubtree = Nothing();
+  Maybe<LayersId> asyncZoomContainerSubtree = Nothing();
   int asyncZoomContainerNestingDepth = 0;
   bool haveNestedAsyncZoomContainers = false;
   nsTArray<LayersId> subtreesWithRootContentOutsideAsyncZoomContainer;
@@ -480,7 +480,7 @@ void APZCTreeManager::UpdateHitTestingTree(
             if (asyncZoomContainerNestingDepth > 0) {
               haveNestedAsyncZoomContainers = true;
             }
-            mAsyncZoomContainerSubtree = Some(layersId);
+            asyncZoomContainerSubtree = Some(layersId);
             ++asyncZoomContainerNestingDepth;
 
             auto it = mZoomConstraints.find(
@@ -613,9 +613,9 @@ void APZCTreeManager::UpdateHitTestingTree(
     mApzcTreeLog << "[end]\n";
 
     MOZ_ASSERT(
-        !mAsyncZoomContainerSubtree ||
+        !asyncZoomContainerSubtree ||
             !subtreesWithRootContentOutsideAsyncZoomContainer.Contains(
-                *mAsyncZoomContainerSubtree),
+                *asyncZoomContainerSubtree),
         "If there is an async zoom container, all scroll nodes with root "
         "content scroll metadata should be inside it");
     MOZ_ASSERT(!haveNestedAsyncZoomContainers,
