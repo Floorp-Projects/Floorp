@@ -240,7 +240,6 @@
   "resource:///modules/UrlbarValueFormatter.jsm": "browser/components/urlbar/UrlbarValueFormatter.jsm",
   "resource:///modules/UrlbarView.jsm": "browser/components/urlbar/UrlbarView.jsm",
   "resource:///modules/WebProtocolHandlerRegistrar.jsm": "browser/components/protocolhandler/WebProtocolHandlerRegistrar.jsm",
-  "resource:///modules/Windows8WindowFrameColor.jsm": "browser/themes/Windows8WindowFrameColor.jsm",
   "resource:///modules/WindowsJumpLists.jsm": "browser/modules/WindowsJumpLists.jsm",
   "resource:///modules/WindowsPreviewPerTab.jsm": "browser/modules/WindowsPreviewPerTab.jsm",
   "resource:///modules/ZoomUI.jsm": "browser/modules/ZoomUI.jsm",

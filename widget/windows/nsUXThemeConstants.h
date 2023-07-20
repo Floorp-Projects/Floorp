@@ -237,8 +237,6 @@ enum {
   WP_Count
 };
 
-enum FRAMESTATES { FS_ACTIVE = 1, FS_INACTIVE = 2 };
-
 enum {
   BS_NORMAL = 1,
   BS_HOT = 2,
