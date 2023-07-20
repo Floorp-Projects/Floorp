@@ -1522,6 +1522,11 @@ with only_when(compile_environment & depends(target.os)(lambda os: os != "WINNT"
     set_define("HAVE_ARC4RANDOM_BUF", check_symbol("arc4random_buf"))
     set_define("HAVE_MALLINFO", check_symbol("mallinfo"))
 
+# Checks for headers
+# ==============================================================
+with only_when(compile_environment & depends(target.os)(lambda os: os != "WINNT")):
+    set_define("HAVE_SYSIOCCOM_H", check_header("sys/ioccom.h"))
+
 # Elfhack
 # ==============================================================
 with only_when("--enable-compile-environment"):

@@ -27,6 +27,9 @@
 #  include <sys/eventfd.h>
 #endif
 #include <poll.h>
+#ifdef HAVE_SYSIOCCOM_H
+#  include <sys/ioccom.h>
+#endif
 #include <sys/ioctl.h>
 
 #include "mozilla/widget/gbm.h"
