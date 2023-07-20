@@ -36,11 +36,10 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
   }
 
   #getNavigationInfo(data) {
+    // Note: the navigation id is collected in the parent-process and will be
+    // added via event interception by the windowglobal-in-root module.
     return {
       context: this.messageHandler.context,
-      // TODO: The navigation id should be a real id mapped to the navigation.
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1763122
-      navigation: null,
       timestamp: Date.now(),
       url: data.target.URL,
     };
