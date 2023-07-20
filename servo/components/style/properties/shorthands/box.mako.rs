@@ -149,7 +149,6 @@ ${helpers.two_properties_shorthand(
                     engines="gecko"
                     sub_properties="offset-path offset-distance offset-rotate offset-anchor
                                     offset-position"
-                    gecko_pref="layout.css.motion-path.enabled",
                     spec="https://drafts.fxtf.org/motion-1/#offset-shorthand">
     use crate::parser::Parse;
     use crate::values::specified::motion::{OffsetPath, OffsetPosition, OffsetRotate};

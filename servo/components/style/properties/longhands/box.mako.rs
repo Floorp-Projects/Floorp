@@ -217,7 +217,6 @@ ${helpers.predefined_type(
     "computed::OffsetPath::none()",
     engines="gecko",
     animation_value_type="motion::OffsetPath",
-    gecko_pref="layout.css.motion-path.enabled",
     flags="CAN_ANIMATE_ON_COMPOSITOR",
     spec="https://drafts.fxtf.org/motion-1/#offset-path-property",
     servo_restyle_damage="reflow_out_of_flow"
@@ -230,7 +229,6 @@ ${helpers.predefined_type(
     "computed::LengthPercentage::zero()",
     engines="gecko",
     animation_value_type="ComputedValue",
-    gecko_pref="layout.css.motion-path.enabled",
     flags="CAN_ANIMATE_ON_COMPOSITOR",
     spec="https://drafts.fxtf.org/motion-1/#offset-distance-property",
     servo_restyle_damage="reflow_out_of_flow"
@@ -243,7 +241,6 @@ ${helpers.predefined_type(
     "computed::OffsetRotate::auto()",
     engines="gecko",
     animation_value_type="ComputedValue",
-    gecko_pref="layout.css.motion-path.enabled",
     flags="CAN_ANIMATE_ON_COMPOSITOR",
     spec="https://drafts.fxtf.org/motion-1/#offset-rotate-property",
     servo_restyle_damage="reflow_out_of_flow"
@@ -256,7 +253,6 @@ ${helpers.predefined_type(
     "computed::PositionOrAuto::auto()",
     engines="gecko",
     animation_value_type="ComputedValue",
-    gecko_pref="layout.css.motion-path.enabled",
     flags="CAN_ANIMATE_ON_COMPOSITOR",
     spec="https://drafts.fxtf.org/motion-1/#offset-anchor-property",
     servo_restyle_damage="reflow_out_of_flow",
