@@ -454,7 +454,9 @@ def run_job_using(worker_implementation, run_using, schema=None, defaults={}):
         if worker_implementation in for_run_using:
             raise Exception(
                 "run_job_using({!r}, {!r}) already exists: {!r}".format(
-                    run_using, worker_implementation, for_run_using[run_using]
+                    run_using,
+                    worker_implementation,
+                    for_run_using[worker_implementation],
                 )
             )
         for_run_using[worker_implementation] = (func, schema, defaults)
