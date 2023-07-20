@@ -7,6 +7,7 @@
 #include "mozilla/dom/WebGPUBinding.h"
 #include "Adapter.h"
 
+#include <algorithm>
 #include "Device.h"
 #include "Instance.h"
 #include "SupportedFeatures.h"
@@ -407,7 +408,7 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
         }
 
         const auto& limit = itr->second;
-        const auto& requestedValue = entry.mValue;
+        uint64_t requestedValue = entry.mValue;
         const auto supportedValueF64 = GetLimit(*mLimits->mFfi, limit);
         const auto supportedValue = static_cast<uint64_t>(supportedValueF64);
         if (StringBeginsWith(keyU8, "max"_ns)) {
@@ -420,6 +421,10 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
             promise->MaybeRejectWithOperationError(msg);
             return;
           }
+          // Clamp to default if lower than default
+          requestedValue =
+              std::max(requestedValue,
+                       static_cast<uint64_t>(GetLimit(deviceLimits, limit)));
         } else {
           MOZ_ASSERT(StringBeginsWith(keyU8, "min"_ns));
           if (requestedValue < supportedValue) {
@@ -442,6 +447,10 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
               return;
             }
           }
+          /// Clamp to default if higher than default
+          requestedValue =
+              std::min(requestedValue,
+                       static_cast<uint64_t>(GetLimit(deviceLimits, limit)));
         }
 
         SetLimit(&deviceLimits, limit, requestedValue);
