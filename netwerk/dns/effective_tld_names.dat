@@ -12167,7 +12167,6 @@ iobb.net
 // Submitted by Ihor Kolodyuk <ik@jelastic.com>
 mel.cloudlets.com.au
 cloud.interhostsolutions.be
-users.scale.virtualcloud.com.br
 mycloud.by
 alp1.ae.flow.ch
 appengine.flow.ch
@@ -12191,9 +12190,7 @@ ch.trendhosting.cloud
 de.trendhosting.cloud
 jele.club
 amscompute.com
-clicketcloud.com
 dopaas.com
-hidora.com
 paas.hosted-by-previder.com
 rag-cloud.hosteur.com
 rag-cloud-ch.hosteur.com
@@ -13394,6 +13391,10 @@ myspreadshop.co.uk
 // Standard Library : https://stdlib.com
 // Submitted by Jacob Lee <jacob@stdlib.com>
 api.stdlib.com
+
+// Storipress : https://storipress.com
+// Submitted by Benno Liu <benno@storipress.com>
+storipress.app
 
 // Storj Labs Inc. : https://storj.io/
 // Submitted by Philip Hutchins <hostmaster@storj.io>
