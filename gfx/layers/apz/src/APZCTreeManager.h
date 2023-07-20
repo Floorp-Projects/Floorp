@@ -820,11 +820,6 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   std::unordered_set<LayersId, LayersId::HashFn> mDetachedLayersIds
       MOZ_GUARDED_BY(mTreeLock);
 
-  /* If the current hit-testing tree contains an async zoom container
-   * node, this is set to the layers id of subtree that has the node.
-   */
-  Maybe<LayersId> mAsyncZoomContainerSubtree;
-
   /** A lock that protects mApzcMap, mScrollThumbInfo, mRootScrollbarInfo,
    * mFixedPositionInfo, and mStickyPositionInfo.
    */
