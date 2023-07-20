@@ -5,17 +5,17 @@
 Support for running jobs that are invoked via the `run-task` script.
 """
 
-
+import dataclasses
 import os
 
-import attr
-from voluptuous import Any, Optional, Required
+from voluptuous import Any, Extra, Optional, Required
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import support_vcs_checkout
 from taskgraph.transforms.task import taskref_or_string
 from taskgraph.util import path, taskcluster
 from taskgraph.util.schema import Schema
+from taskgraph.util.yaml import load_yaml
 
 EXEC_COMMANDS = {
     "bash": ["bash", "-cx"],
@@ -49,9 +49,18 @@ run_task_schema = Schema(
         # Context to substitute into the command using format string
         # substitution (e.g {value}). This is useful if certain aspects of the
         # command need to be generated in transforms.
-        Optional("command-context"): dict,
+        Optional("command-context"): {
+            # If present, loads a set of context variables from an unnested yaml
+            # file. If a value is present in both the provided file and directly
+            # in command-context, the latter will take priority.
+            Optional("from-file"): str,
+            Extra: object,
+        },
         # What to execute the command with in the event command is a string.
         Optional("exec-with"): Any(*list(EXEC_COMMANDS)),
+        # Command used to invoke the `run-task` script. Can be used if the script
+        # or Python installation is in a non-standard location on the workers.
+        Optional("run-task-command"): list,
         # Base work directory used to set up the task.
         Required("workdir"): str,
         # Whether to run as root. (defaults to False)
@@ -68,7 +77,7 @@ def common_setup(config, job, taskdesc, command):
             raise Exception("Must explicitly specify checkouts with multiple repos.")
         elif run["checkout"] is not True:
             repo_configs = {
-                repo: attr.evolve(repo_configs[repo], **config)
+                repo: dataclasses.replace(repo_configs[repo], **config)
                 for (repo, config) in run["checkout"].items()
             }
 
@@ -128,13 +137,32 @@ def script_url(config, script):
     return f"{tc_url}/api/queue/v1/task/{task_id}/artifacts/public/{script}"
 
 
+def substitute_command_context(command_context, command):
+    from_file = command_context.pop("from-file", None)
+    full_context = {}
+    if from_file:
+        full_context = load_yaml(from_file)
+    else:
+        full_context = {}
+
+    full_context.update(command_context)
+
+    if isinstance(command, list):
+        for i in range(len(command)):
+            command[i] = command[i].format(**full_context)
+    else:
+        command = command.format(**full_context)
+
+    return command
+
+
 @run_job_using(
     "docker-worker", "run-task", schema=run_task_schema, defaults=worker_defaults
 )
 def docker_worker_run_task(config, job, taskdesc):
     run = job["run"]
     worker = taskdesc["worker"] = job["worker"]
-    command = ["/usr/local/bin/run-task"]
+    command = run.pop("run-task-command", ["/usr/local/bin/run-task"])
     common_setup(config, job, taskdesc, command)
 
     if run.get("cache-dotcache"):
@@ -149,9 +177,12 @@ def docker_worker_run_task(config, job, taskdesc):
 
     run_command = run["command"]
 
-    command_context = run.get("command-context")
-    if command_context:
-        run_command = run_command.format(**command_context)
+    if run.get("command-context"):
+        run_command = substitute_command_context(
+            run.get("command-context"), run["command"]
+        )
+    else:
+        run_command = run["command"]
 
     # dict is for the case of `{'task-reference': str}`.
     if isinstance(run_command, str) or isinstance(run_command, dict):
@@ -174,12 +205,14 @@ def generic_worker_run_task(config, job, taskdesc):
     is_mac = worker["os"] == "macosx"
     is_bitbar = worker["os"] == "linux-bitbar"
 
-    if is_win:
-        command = ["C:/mozilla-build/python3/python3.exe", "run-task"]
-    elif is_mac:
-        command = ["/tools/python36/bin/python3", "run-task"]
-    else:
-        command = ["./run-task"]
+    command = run.pop("run-task-command", None)
+    if not command:
+        if is_win:
+            command = ["C:/mozilla-build/python3/python3.exe", "run-task"]
+        elif is_mac:
+            command = ["/tools/python36/bin/python3", "run-task"]
+        else:
+            command = ["./run-task"]
 
     common_setup(config, job, taskdesc, command)
 
@@ -217,10 +250,10 @@ def generic_worker_run_task(config, job, taskdesc):
         exec_cmd = EXEC_COMMANDS[run.pop("exec-with", "bash")]
         run_command = exec_cmd + [run_command]
 
-    command_context = run.get("command-context")
-    if command_context:
-        for i in range(len(run_command)):
-            run_command[i] = run_command[i].format(**command_context)
+    if run.get("command-context"):
+        run_command = substitute_command_context(
+            run.get("command-context"), run_command
+        )
 
     if run["run-as-root"]:
         command.extend(("--user", "root", "--group", "root"))

@@ -190,8 +190,8 @@ def stream_download(url, sha256=None, size=None, headers=None):
 
     req = urllib.request.Request(url, None, req_headers)
     with urllib.request.urlopen(
-        req, cafile=certifi.where()
-    ) if certifi else urllib.request.urlopen(req) as fh:
+        req, timeout=60, cafile=certifi.where()
+    ) if certifi else urllib.request.urlopen(req, timeout=60) as fh:
         if not url.endswith(".gz") and fh.info().get("Content-Encoding") == "gzip":
             fh = gzip.GzipFile(fileobj=fh)
 
@@ -321,7 +321,7 @@ def open_tar_stream(path: pathlib.Path):
     """"""
     if path.suffix == ".bz2":
         return bz2.open(str(path), "rb")
-    elif path.suffix == ".gz":
+    elif path.suffix in (".gz", ".tgz") :
         return gzip.open(str(path), "rb")
     elif path.suffix == ".xz":
         return lzma.open(str(path), "rb")
@@ -336,7 +336,7 @@ def open_tar_stream(path: pathlib.Path):
 
 def archive_type(path: pathlib.Path):
     """Attempt to identify a path as an extractable archive."""
-    if path.suffixes[-2:-1] == [".tar"]:
+    if path.suffixes[-2:-1] == [".tar"] or path.suffixes[-1:] == [".tgz"]:
         return "tar"
     elif path.suffix == ".zip":
         return "zip"
@@ -374,7 +374,7 @@ def extract_archive(path, dest_dir, typ):
     elif typ == "zip":
         # unzip from stdin has wonky behavior. We don't use a pipe for it.
         ifh = open(os.devnull, "rb")
-        args = ["unzip", "-o", str(path)]
+        args = ["unzip", "-q", "-o", str(path)]
         pipe_stdin = False
     else:
         raise ValueError("unknown archive format: %s" % path)

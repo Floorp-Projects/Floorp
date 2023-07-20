@@ -2,14 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-import attr
+from dataclasses import dataclass
+from typing import List
 
 from .graph import Graph
 from .task import Task
 
 
-@attr.s(frozen=True)
+@dataclass(frozen=True)
 class TaskGraph:
     """
     Representation of a task graph.
@@ -21,10 +21,10 @@ class TaskGraph:
     tasks are "linked from" their dependents.
     """
 
-    tasks = attr.ib()
-    graph = attr.ib()
+    tasks: List[Task]
+    graph: Graph
 
-    def __attrs_post_init__(self):
+    def __post_init__(self):
         assert set(self.tasks) == self.graph.nodes
 
     def for_each_task(self, f, *args, **kwargs):

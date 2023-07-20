@@ -55,6 +55,7 @@ job_description_schema = Schema(
         Optional("run-on-projects"): task_description_schema["run-on-projects"],
         Optional("run-on-tasks-for"): task_description_schema["run-on-tasks-for"],
         Optional("run-on-git-branches"): task_description_schema["run-on-git-branches"],
+        Optional("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("always-target"): task_description_schema["always-target"],
         Exclusive("optimization", "optimization"): task_description_schema[
             "optimization"
@@ -388,7 +389,9 @@ def run_job_using(worker_implementation, run_using, schema=None, defaults={}):
         if worker_implementation in for_run_using:
             raise Exception(
                 "run_job_using({!r}, {!r}) already exists: {!r}".format(
-                    run_using, worker_implementation, for_run_using[run_using]
+                    run_using,
+                    worker_implementation,
+                    for_run_using[worker_implementation],
                 )
             )
         for_run_using[worker_implementation] = (func, schema, defaults)

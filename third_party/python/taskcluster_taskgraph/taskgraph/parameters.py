@@ -37,7 +37,7 @@ base_schema = Schema(
         Required("build_date"): int,
         Required("build_number"): int,
         Required("do_not_optimize"): [str],
-        Required("enable_always_target"): bool,
+        Required("enable_always_target"): Any(bool, [str]),
         Required("existing_tasks"): {str: str},
         Required("filters"): [str],
         Required("head_ref"): str,
