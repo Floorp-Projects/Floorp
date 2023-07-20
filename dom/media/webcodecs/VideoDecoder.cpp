@@ -922,7 +922,9 @@ void VideoDecoder::Configure(const VideoDecoderConfig& aConfig,
       NS_ConvertUTF16toUTF8(aConfig.mCodec).get());
 
   if (auto r = Validate(aConfig); r.isErr()) {
-    aRv.ThrowTypeError(r.unwrapErr());
+    nsCString e = r.unwrapErr();
+    LOGE("config is invalid: %s", e.get());
+    aRv.ThrowTypeError(e);
     return;
   }
 
@@ -1049,7 +1051,9 @@ already_AddRefed<Promise> VideoDecoder::IsConfigSupported(
   }
 
   if (auto r = Validate(aConfig); r.isErr()) {
-    p->MaybeRejectWithTypeError(r.unwrapErr());
+    nsCString e = r.unwrapErr();
+    LOGE("config is invalid: %s", e.get());
+    p->MaybeRejectWithTypeError(e);
     return p.forget();
   }
 
