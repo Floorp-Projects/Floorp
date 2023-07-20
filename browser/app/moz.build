@@ -32,12 +32,16 @@ with Files("profile/firefox.js"):
 if CONFIG["MOZ_MACBUNDLE_NAME"]:
     DIRS += ["macbuild/Contents"]
 
+browser_linkage = "standalone"
+if CONFIG["FUZZING_SNAPSHOT"] or CONFIG["AFLFUZZ"]:
+    browser_linkage = "dependent"
+
 if CONFIG["MOZ_NO_PIE_COMPAT"]:
-    GeckoProgram(CONFIG["MOZ_APP_NAME"] + "-bin")
+    GeckoProgram(CONFIG["MOZ_APP_NAME"] + "-bin", linkage=browser_linkage)
 
     DIRS += ["no-pie"]
 else:
-    GeckoProgram(CONFIG["MOZ_APP_NAME"])
+    GeckoProgram(CONFIG["MOZ_APP_NAME"], linkage=browser_linkage)
 
 SOURCES += [
     "nsBrowserApp.cpp",
