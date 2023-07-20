@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 /* eslint-disable mozilla/no-compare-against-boolean-literals */
 /* eslint-disable complexity */
 /* eslint-disable no-nested-ternary */

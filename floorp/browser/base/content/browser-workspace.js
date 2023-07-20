@@ -1003,10 +1003,13 @@ startWorkspace = function () {
     if (window.closed) {
       return;
     }
-
-    workspaceFunctions.Backup.backupWorkspace();
-    workspaceFunctions.manageWorkspaceFunctions.initWorkspace();
-    workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
+    Promise.all([
+      workspaceFunctions.Backup.backupWorkspace(),
+      workspaceFunctions.manageWorkspaceFunctions.initWorkspace(),
+      workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace()
+    ]).then(() => {
+      setEvenyListeners();
+    });
   });
 };
 
