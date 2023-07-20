@@ -448,7 +448,7 @@ SVGLength& DOMSVGLength::InternalItem() {
 
 void DOMSVGLength::FlushStyleIfNeeded() {
   auto MaybeFlush = [](uint16_t aUnitType, SVGElement* aSVGElement) {
-    if (SVGLength::IsAbsoluteUnit(aUnitType)) {
+    if (!SVGLength::IsFontRelativeUnit(aUnitType)) {
       return;
     }
     if (auto* currentDoc = aSVGElement->GetComposedDoc()) {

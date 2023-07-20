@@ -31,34 +31,16 @@ using namespace mozilla;
 using namespace mozilla::css;
 using namespace mozilla::dom;
 
-nsCSSValue::nsCSSValue(int32_t aValue, nsCSSUnit aUnit) : mUnit(aUnit) {
-  MOZ_ASSERT(aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated,
-             "not an int value");
-  if (aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated) {
-    mValue.mInt = aValue;
-  } else {
-    mUnit = eCSSUnit_Null;
-    mValue.mInt = 0;
-  }
-}
-
 nsCSSValue::nsCSSValue(float aValue, nsCSSUnit aUnit) : mUnit(aUnit) {
-  MOZ_ASSERT(eCSSUnit_Percent <= aUnit, "not a float value");
-  if (eCSSUnit_Percent <= aUnit) {
-    mValue.mFloat = aValue;
-    MOZ_ASSERT(!std::isnan(mValue.mFloat));
-  } else {
-    mUnit = eCSSUnit_Null;
-    mValue.mInt = 0;
-  }
+  MOZ_ASSERT(eCSSUnit_Null == aUnit, "not a float value");
+  mValue = aValue;
+  MOZ_ASSERT(!std::isnan(mValue));
 }
 
 nsCSSValue::nsCSSValue(const nsCSSValue& aCopy) : mUnit(aCopy.mUnit) {
-  if (eCSSUnit_Percent <= mUnit) {
-    mValue.mFloat = aCopy.mValue.mFloat;
-    MOZ_ASSERT(!std::isnan(mValue.mFloat));
-  } else if (eCSSUnit_Integer <= mUnit && mUnit <= eCSSUnit_Enumerated) {
-    mValue.mInt = aCopy.mValue.mInt;
+  if (eCSSUnit_Null != mUnit) {
+    mValue = aCopy.mValue;
+    MOZ_ASSERT(!std::isnan(mValue));
   } else {
     MOZ_ASSERT_UNREACHABLE("unknown unit");
   }
@@ -87,19 +69,7 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const {
   if (mUnit != aOther.mUnit) {
     return false;
   }
-  if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
-    return mValue.mInt == aOther.mValue.mInt;
-  }
-  return mValue.mFloat == aOther.mValue.mFloat;
-}
-
-double nsCSSValue::GetAngleValueInDegrees() const {
-  // Note that this extends the value from float to double.
-  return GetAngleValue();
-}
-
-double nsCSSValue::GetAngleValueInRadians() const {
-  return GetAngleValueInDegrees() * M_PI / 180.0;
+  return mValue == aOther.mValue;
 }
 
 nscoord nsCSSValue::GetPixelLength() const {
@@ -108,7 +78,7 @@ nscoord nsCSSValue::GetPixelLength() const {
   double scaleFactor;
   switch (mUnit) {
     case eCSSUnit_Pixel:
-      return nsPresContext::CSSPixelsToAppUnits(mValue.mFloat);
+      return nsPresContext::CSSPixelsToAppUnits(mValue);
     case eCSSUnit_Pica:
       scaleFactor = 16.0;
       break;
@@ -131,24 +101,14 @@ nscoord nsCSSValue::GetPixelLength() const {
       NS_ERROR("should never get here");
       return 0;
   }
-  return nsPresContext::CSSPixelsToAppUnits(float(mValue.mFloat * scaleFactor));
-}
-
-void nsCSSValue::SetIntValue(int32_t aValue, nsCSSUnit aUnit) {
-  MOZ_ASSERT(aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated,
-             "not an int value");
-  Reset();
-  if (aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated) {
-    mUnit = aUnit;
-    mValue.mInt = aValue;
-  }
+  return nsPresContext::CSSPixelsToAppUnits(float(mValue * scaleFactor));
 }
 
 void nsCSSValue::SetPercentValue(float aValue) {
   Reset();
   mUnit = eCSSUnit_Percent;
-  mValue.mFloat = aValue;
-  MOZ_ASSERT(!std::isnan(mValue.mFloat));
+  mValue = aValue;
+  MOZ_ASSERT(!std::isnan(mValue));
 }
 
 void nsCSSValue::SetFloatValue(float aValue, nsCSSUnit aUnit) {
@@ -156,7 +116,7 @@ void nsCSSValue::SetFloatValue(float aValue, nsCSSUnit aUnit) {
   Reset();
   if (IsFloatUnit(aUnit)) {
     mUnit = aUnit;
-    mValue.mFloat = aValue;
-    MOZ_ASSERT(!std::isnan(mValue.mFloat));
+    mValue = aValue;
+    MOZ_ASSERT(!std::isnan(mValue));
   }
 }

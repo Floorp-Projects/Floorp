@@ -109,6 +109,8 @@ class SVGLength {
 
   static bool IsAbsoluteUnit(uint8_t aUnit);
 
+  static bool IsFontRelativeUnit(uint8_t aUnit);
+
   static float GetAbsUnitsPerAbsUnit(uint8_t aUnits, uint8_t aPerUnit);
 
   static nsCSSUnit SpecifiedUnitTypeToCSSUnit(uint8_t aSpecifiedUnit);
