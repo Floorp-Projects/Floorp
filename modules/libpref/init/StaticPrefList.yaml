@@ -10766,11 +10766,6 @@
   value: true
   mirror: always
 
-- name: media.peerconnection.identity.enabled
-  type: bool
-  value: true
-  mirror: always
-
 #ifdef MOZ_WEBRTC
   # Use MediaDataDecoder API for VP8/VP9 in WebRTC. This includes hardware
   # acceleration for decoding.
