@@ -63,6 +63,11 @@ bool SVGLength::IsAbsoluteUnit(uint8_t aUnit) {
          (aUnit >= SVG_LENGTHTYPE_PX && aUnit <= SVG_LENGTHTYPE_Q);
 }
 
+/*static*/
+bool SVGLength::IsFontRelativeUnit(uint8_t aUnit) {
+  return aUnit == SVG_LENGTHTYPE_EMS || aUnit == SVG_LENGTHTYPE_EXS;
+}
+
 /**
  * Helper to convert between different CSS absolute units without the need for
  * an element, which provides more flexibility at the DOM level (and without

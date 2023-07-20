@@ -49,44 +49,27 @@ bool Servo_CssUrlData_IsLocalRef(const RawServoCssUrlData* url);
 enum nsCSSUnit : uint32_t {
   eCSSUnit_Null = 0,  // (n/a) null unit, value is not specified
 
-  eCSSUnit_Integer = 70,     // (int) simple value
-  eCSSUnit_Enumerated = 71,  // (int) value has enumerated meaning
-
-  eCSSUnit_Percent = 100,  // (float) (1.0 == 100%) value is percentage of
+  eCSSUnit_Percent = 100,  // (1.0 == 100%) value is percentage of
                            // something
-  eCSSUnit_Number = 101,   // (float) value is numeric (usually multiplier,
+  eCSSUnit_Number = 101,   // value is numeric (usually multiplier,
                            // different behavior than percent)
 
   // Font relative measure
-  eCSSUnit_EM = 800,       // (float) == current font size
-  eCSSUnit_XHeight = 801,  // (float) distance from top of lower case x to
+  eCSSUnit_EM = 800,       // == current font size
+  eCSSUnit_XHeight = 801,  // distance from top of lower case x to
                            // baseline
-  eCSSUnit_Char = 802,     // (float) number of characters, used for width with
+  eCSSUnit_Char = 802,     // number of characters, used for width with
                            // monospace font
-  eCSSUnit_RootEM = 803,   // (float) == root element font size
+  eCSSUnit_RootEM = 803,   // == root element font size
 
   // Screen relative measure
-  eCSSUnit_Point = 900,       // (float) 4/3 of a CSS pixel
-  eCSSUnit_Inch = 901,        // (float) 96 CSS pixels
-  eCSSUnit_Millimeter = 902,  // (float) 96/25.4 CSS pixels
-  eCSSUnit_Centimeter = 903,  // (float) 96/2.54 CSS pixels
-  eCSSUnit_Pica = 904,        // (float) 12 points == 16 CSS pixls
-  eCSSUnit_Quarter = 905,     // (float) 96/101.6 CSS pixels
-  eCSSUnit_Pixel = 906,       // (float) CSS pixel unit
-
-  // Angular units
-  eCSSUnit_Degree = 1000,  // (float) 360 per circle
-
-  // Frequency units
-  eCSSUnit_Hertz = 2000,      // (float) 1/seconds
-  eCSSUnit_Kilohertz = 2001,  // (float) 1000 Hertz
-
-  // Time units
-  eCSSUnit_Seconds = 3000,       // (float) Standard time
-  eCSSUnit_Milliseconds = 3001,  // (float) 1/1000 second
-
-  // Flexible fraction (CSS Grid)
-  eCSSUnit_FlexFraction = 4000,  // (float) Fraction of free space
+  eCSSUnit_Point = 900,       // 4/3 of a CSS pixel
+  eCSSUnit_Inch = 901,        // 96 CSS pixels
+  eCSSUnit_Millimeter = 902,  // 96/25.4 CSS pixels
+  eCSSUnit_Centimeter = 903,  // 96/2.54 CSS pixels
+  eCSSUnit_Pica = 904,        // 12 points == 16 CSS pixls
+  eCSSUnit_Quarter = 905,     // 96/101.6 CSS pixels
+  eCSSUnit_Pixel = 906,       // CSS pixel unit
 };
 
 struct nsCSSValuePair;
@@ -101,17 +84,10 @@ class nsCSSValue {
  public:
   explicit nsCSSValue() : mUnit(eCSSUnit_Null) {}
 
-  nsCSSValue(int32_t aValue, nsCSSUnit aUnit);
   nsCSSValue(float aValue, nsCSSUnit aUnit);
   nsCSSValue(const nsCSSValue& aCopy);
   nsCSSValue(nsCSSValue&& aOther) : mUnit(aOther.mUnit), mValue(aOther.mValue) {
     aOther.mUnit = eCSSUnit_Null;
-  }
-  template <typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
-  explicit nsCSSValue(T aValue) : mUnit(eCSSUnit_Enumerated) {
-    static_assert(mozilla::EnumTypeFitsWithin<T, int32_t>::value,
-                  "aValue must be an enum that fits within mValue.mInt");
-    mValue.mInt = static_cast<int32_t>(aValue);
   }
 
   nsCSSValue& operator=(const nsCSSValue& aCopy);
@@ -124,21 +100,6 @@ class nsCSSValue {
   bool IsLengthUnit() const {
     return eCSSUnit_EM <= mUnit && mUnit <= eCSSUnit_Pixel;
   }
-  bool IsLengthPercentUnit() const {
-    return IsLengthUnit() || mUnit == eCSSUnit_Percent;
-  }
-  /**
-   * What the spec calls relative length units is, for us, split
-   * between relative length units and pixel length units.
-   *
-   * A "relative" length unit is a multiple of some derived metric,
-   * such as a font em-size, which itself was controlled by an input CSS
-   * length. Relative length units should not be scaled by zooming, since
-   * the underlying CSS length would already have been scaled.
-   */
-  bool IsRelativeLengthUnit() const {
-    return eCSSUnit_EM <= mUnit && mUnit <= eCSSUnit_RootEM;
-  }
   /**
    * A "pixel" length unit is a some multiple of CSS pixels.
    */
@@ -149,43 +110,18 @@ class nsCSSValue {
   static bool IsPercentLengthUnit(nsCSSUnit aUnit) {
     return aUnit == eCSSUnit_Percent;
   }
-  bool IsPercentLengthUnit() { return IsPercentLengthUnit(mUnit); }
   static bool IsFloatUnit(nsCSSUnit aUnit) { return eCSSUnit_Number <= aUnit; }
-  bool IsAngularUnit() const { return eCSSUnit_Degree == mUnit; }
-  bool IsFrequencyUnit() const {
-    return eCSSUnit_Hertz <= mUnit && mUnit <= eCSSUnit_Kilohertz;
-  }
-  bool IsTimeUnit() const {
-    return eCSSUnit_Seconds <= mUnit && mUnit <= eCSSUnit_Milliseconds;
-  }
-
-  int32_t GetIntValue() const {
-    MOZ_ASSERT(mUnit == eCSSUnit_Integer || mUnit == eCSSUnit_Enumerated,
-               "not an int value");
-    return mValue.mInt;
-  }
 
   float GetPercentValue() const {
     MOZ_ASSERT(mUnit == eCSSUnit_Percent, "not a percent value");
-    return mValue.mFloat;
+    return mValue;
   }
 
   float GetFloatValue() const {
     MOZ_ASSERT(eCSSUnit_Number <= mUnit, "not a float value");
-    MOZ_ASSERT(!std::isnan(mValue.mFloat));
-    return mValue.mFloat;
+    MOZ_ASSERT(!std::isnan(mValue));
+    return mValue;
   }
-
-  float GetAngleValue() const {
-    MOZ_ASSERT(eCSSUnit_Degree == mUnit, "not an angle value");
-    return mValue.mFloat;
-  }
-
-  // Converts any angle to radians.
-  double GetAngleValueInRadians() const;
-
-  // Converts any angle to degrees.
-  double GetAngleValueInDegrees() const;
 
   nscoord GetPixelLength() const;
 
@@ -193,24 +129,12 @@ class nsCSSValue {
   ~nsCSSValue() { Reset(); }
 
  public:
-  void SetIntValue(int32_t aValue, nsCSSUnit aUnit);
-  template <typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
-  void SetEnumValue(T aValue) {
-    static_assert(mozilla::EnumTypeFitsWithin<T, int32_t>::value,
-                  "aValue must be an enum that fits within mValue.mInt");
-    SetIntValue(static_cast<int32_t>(aValue), eCSSUnit_Enumerated);
-  }
   void SetPercentValue(float aValue);
   void SetFloatValue(float aValue, nsCSSUnit aUnit);
-  // converts the nscoord to pixels
-  void SetIntegerCoordValue(nscoord aCoord);
 
  protected:
   nsCSSUnit mUnit;
-  union {
-    int32_t mInt;
-    float mFloat;
-  } mValue;
+  float mValue;
 };
 
 #endif /* nsCSSValue_h___ */
