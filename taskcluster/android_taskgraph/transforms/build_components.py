@@ -5,7 +5,7 @@
 
 import datetime
 
-from mozilla_version.mobile import MobileVersion
+from mozilla_version.mobile import GeckoVersion
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
@@ -79,7 +79,7 @@ def _get_buildid(config):
 
 def get_nightly_version(config, version):
     buildid = _get_buildid(config)
-    parsed_version = MobileVersion.parse(version)
+    parsed_version = GeckoVersion.parse(version)
     return f"{parsed_version.major_number}.{parsed_version.minor_number}.{buildid}"
 
 
