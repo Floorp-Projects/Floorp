@@ -23,6 +23,7 @@ varying highp vec2 v_uv;
 #define PART_TOP        2
 #define PART_RIGHT      3
 #define PART_BOTTOM     4
+#define PART_ALL        5
 
 #define QF_IS_OPAQUE            1
 #define QF_APPLY_DEVICE_CLIP    2
@@ -227,11 +228,21 @@ PrimitiveInfo ps_quad_main(void) {
 #endif
             break;
         case PART_CENTER:
-        default:
             local_coverage_rect.p0.x += edge_aa_offset(EDGE_AA_LEFT, qi.edge_flags);
             local_coverage_rect.p1.x -= edge_aa_offset(EDGE_AA_RIGHT, qi.edge_flags);
             local_coverage_rect.p0.y += edge_aa_offset(EDGE_AA_TOP, qi.edge_flags);
             local_coverage_rect.p1.y -= edge_aa_offset(EDGE_AA_BOTTOM, qi.edge_flags);
+            break;
+        case PART_ALL:
+        default:
+#ifdef SWGL_ANTIALIAS
+            swgl_antiAlias(qi.edge_flags);
+#else
+            local_coverage_rect.p0.x -= edge_aa_offset(EDGE_AA_LEFT, qi.edge_flags);
+            local_coverage_rect.p1.x += edge_aa_offset(EDGE_AA_RIGHT, qi.edge_flags);
+            local_coverage_rect.p0.y -= edge_aa_offset(EDGE_AA_TOP, qi.edge_flags);
+            local_coverage_rect.p1.y += edge_aa_offset(EDGE_AA_BOTTOM, qi.edge_flags);
+#endif
             break;
     }
 
