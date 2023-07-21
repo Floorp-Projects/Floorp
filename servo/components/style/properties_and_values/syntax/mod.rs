@@ -293,14 +293,9 @@ impl<'a> Parser<'a> {
         let input = &self.input[self.position..];
         let mut input = CSSParserInput::new(input);
         let mut input = CSSParser::new(&mut input);
-        let location = input.current_source_location();
-        let name = input
-            .expect_ident()
-            .ok()
-            .and_then(|name| CustomIdent::from_ident(location, name, &[]).ok());
-        let name = match name {
-            Some(name) => name,
-            None => return Err(ParseError::InvalidName),
+        let name = match CustomIdent::parse(&mut input, &[]) {
+            Ok(name) => name,
+            Err(_) => return Err(ParseError::InvalidName),
         };
         self.position += input.position().byte_index();
         return Ok(ComponentName::Ident(name));

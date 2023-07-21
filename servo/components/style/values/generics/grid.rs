@@ -165,13 +165,13 @@ impl Parse for GridLine<specified::Integer> {
                     MIN_GRID_LINE,
                     cmp::min(value, MAX_GRID_LINE),
                 ));
-            } else if let Ok(name) = input.try_parse(|i| i.expect_ident_cloned()) {
+            } else if let Ok(name) = input.try_parse(|i| CustomIdent::parse(i, &["auto"])) {
                 if val_before_span || grid_line.ident != atom!("") {
                     return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError));
                 }
                 // NOTE(emilio): `span` is consumed above, so we only need to
                 // reject `auto`.
-                grid_line.ident = CustomIdent::from_ident(location, &name, &["auto"])?.0;
+                grid_line.ident = name.0;
             } else {
                 break;
             }

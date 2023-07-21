@@ -1132,37 +1132,32 @@ impl Parse for FontVariantAlternates {
                     match_ignore_ascii_case! { &name,
                         "swash" => {
                             check_if_parsed!(i, VariantAlternatesParsingFlags::SWASH);
-                            let location = i.current_source_location();
-                            let ident = CustomIdent::from_ident(location, i.expect_ident()?, &[])?;
+                            let ident = CustomIdent::parse(i, &[])?;
                             swash = Some(VariantAlternates::Swash(ident));
                             Ok(())
                         },
                         "stylistic" => {
                             check_if_parsed!(i, VariantAlternatesParsingFlags::STYLISTIC);
-                            let location = i.current_source_location();
-                            let ident = CustomIdent::from_ident(location, i.expect_ident()?, &[])?;
+                            let ident = CustomIdent::parse(i, &[])?;
                             stylistic = Some(VariantAlternates::Stylistic(ident));
                             Ok(())
                         },
                         "ornaments" => {
                             check_if_parsed!(i, VariantAlternatesParsingFlags::ORNAMENTS);
-                            let location = i.current_source_location();
-                            let ident = CustomIdent::from_ident(location, i.expect_ident()?, &[])?;
+                            let ident = CustomIdent::parse(i, &[])?;
                             ornaments = Some(VariantAlternates::Ornaments(ident));
                             Ok(())
                         },
                         "annotation" => {
                             check_if_parsed!(i, VariantAlternatesParsingFlags::ANNOTATION);
-                            let location = i.current_source_location();
-                            let ident = CustomIdent::from_ident(location, i.expect_ident()?, &[])?;
+                            let ident = CustomIdent::parse(i, &[])?;
                             annotation = Some(VariantAlternates::Annotation(ident));
                             Ok(())
                         },
                         "styleset" => {
                             check_if_parsed!(i, VariantAlternatesParsingFlags::STYLESET);
                             let idents = i.parse_comma_separated(|i| {
-                                let location = i.current_source_location();
-                                CustomIdent::from_ident(location, i.expect_ident()?, &[])
+                                CustomIdent::parse(i, &[])
                             })?;
                             styleset = Some(VariantAlternates::Styleset(idents.into()));
                             Ok(())
@@ -1170,8 +1165,7 @@ impl Parse for FontVariantAlternates {
                         "character-variant" => {
                             check_if_parsed!(i, VariantAlternatesParsingFlags::CHARACTER_VARIANT);
                             let idents = i.parse_comma_separated(|i| {
-                                let location = i.current_source_location();
-                                CustomIdent::from_ident(location, i.expect_ident()?, &[])
+                                CustomIdent::parse(i, &[])
                             })?;
                             character_variant = Some(VariantAlternates::CharacterVariant(idents.into()));
                             Ok(())

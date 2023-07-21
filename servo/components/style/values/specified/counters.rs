@@ -103,13 +103,8 @@ fn parse_counters<'i, 't>(
             Ok(&Token::Function(ref name))
                 if counter_type == CounterType::Reset && name.eq_ignore_ascii_case("reversed") =>
             {
-                input.parse_nested_block(|input| {
-                    let location = input.current_source_location();
-                    Ok((
-                        CustomIdent::from_ident(location, input.expect_ident()?, &["none"])?,
-                        true,
-                    ))
-                })?
+                input
+                    .parse_nested_block(|input| Ok((CustomIdent::parse(input, &["none"])?, true)))?
             },
             Ok(t) => {
                 let t = t.clone();
@@ -219,15 +214,13 @@ impl Parse for Content {
                     let result = match_ignore_ascii_case! { &name,
                         #[cfg(any(feature = "gecko", feature = "servo-layout-2013"))]
                         "counter" => input.parse_nested_block(|input| {
-                            let location = input.current_source_location();
-                            let name = CustomIdent::from_ident(location, input.expect_ident()?, &[])?;
+                            let name = CustomIdent::parse(input, &[])?;
                             let style = Content::parse_counter_style(context, input);
                             Ok(generics::ContentItem::Counter(name, style))
                         }),
                         #[cfg(any(feature = "gecko", feature = "servo-layout-2013"))]
                         "counters" => input.parse_nested_block(|input| {
-                            let location = input.current_source_location();
-                            let name = CustomIdent::from_ident(location, input.expect_ident()?, &[])?;
+                            let name = CustomIdent::parse(input, &[])?;
                             input.expect_comma()?;
                             let separator = input.expect_string()?.as_ref().to_owned().into();
                             let style = Content::parse_counter_style(context, input);
