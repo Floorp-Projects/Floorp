@@ -160,6 +160,20 @@ uint8_t* EncodedVideoChunk::Data() {
   return mBuffer->Data();
 }
 
+// https://w3c.github.io/webcodecs/#ref-for-deserialization-steps%E2%91%A0
+/* static */
+already_AddRefed<EncodedVideoChunk> EncodedVideoChunk::ReadStructuredClone(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    JSStructuredCloneReader* aReader) {
+  return nullptr;
+}
+
+// https://w3c.github.io/webcodecs/#ref-for-serialization-steps%E2%91%A0
+bool EncodedVideoChunk::WriteStructuredClone(
+    JSContext* aCx, JSStructuredCloneWriter* aWriter) const {
+  return false;
+}
+
 #undef LOGW
 #undef LOG_INTERNAL
 
