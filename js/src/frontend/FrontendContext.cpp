@@ -181,20 +181,24 @@ void FrontendContext::setCurrentJSContext(JSContext* cx) {
 #endif
 }
 
-void FrontendContext::convertToRuntimeError(
+bool FrontendContext::convertToRuntimeError(
     JSContext* cx, Warning warning /* = Warning::Report */) {
   // Report out of memory errors eagerly, or errors could be malformed.
   if (hadOutOfMemory()) {
     js::ReportOutOfMemory(cx);
-    return;
+    return false;
   }
 
   if (maybeError()) {
-    maybeError()->throwError(cx);
+    if (!maybeError()->throwError(cx)) {
+      return false;
+    }
   }
   if (warning == Warning::Report) {
     for (CompileError& error : warnings()) {
-      error.throwError(cx);
+      if (!error.throwError(cx)) {
+        return false;
+      }
     }
   }
   if (hadOverRecursed()) {
@@ -203,6 +207,7 @@ void FrontendContext::convertToRuntimeError(
   if (hadAllocationOverflow()) {
     js::ReportAllocationOverflow(cx);
   }
+  return true;
 }
 
 #ifdef DEBUG

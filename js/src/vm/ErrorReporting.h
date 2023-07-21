@@ -71,7 +71,7 @@ struct ErrorMetadata {
 
 class CompileError : public JSErrorReport {
  public:
-  void throwError(JSContext* cx);
+  bool throwError(JSContext* cx);
 };
 
 class MOZ_STACK_CLASS ReportExceptionClosure final
