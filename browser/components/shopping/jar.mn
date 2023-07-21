@@ -18,3 +18,5 @@ browser.jar:
     content/browser/shopping/shopping-container.mjs (content/shopping-container.mjs)
     content/browser/shopping/adjusted-rating.mjs (content/adjusted-rating.mjs)
     content/browser/shopping/reliability.mjs (content/reliability.mjs)
+    content/browser/shopping/analysis-explainer.css (content/analysis-explainer.css)
+    content/browser/shopping/analysis-explainer.mjs (content/analysis-explainer.mjs)
