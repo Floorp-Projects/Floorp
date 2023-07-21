@@ -81,6 +81,15 @@ hb_codepoint_t gfxHarfBuzzShaper::GetNominalGlyph(
     hb_codepoint_t unicode) const {
   hb_codepoint_t gid = 0;
 
+  if (!mCmapCache) {
+    mCmapCache = MakeUnique<CmapCache>();
+  }
+
+  auto cached = mCmapCache->Lookup(unicode);
+  if (cached) {
+    return cached.Data().mGlyphId;
+  }
+
   if (mUseFontGetGlyph) {
     gid = mFont->GetGlyph(unicode, 0);
   } else {
@@ -122,7 +131,7 @@ hb_codepoint_t gfxHarfBuzzShaper::GetNominalGlyph(
         gid = GetNominalGlyph(pua);
       }
       if (gid) {
-        return gid;
+        goto done;
       }
     }
     switch (unicode) {
@@ -139,6 +148,8 @@ hb_codepoint_t gfxHarfBuzzShaper::GetNominalGlyph(
     }
   }
 
+done:
+  cached.Set(CmapCacheData{unicode, gid});
   return gid;
 }
 
