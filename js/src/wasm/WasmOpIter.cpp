@@ -341,6 +341,7 @@ OpKind wasm::Classify(OpBytes op) {
         case GcOp::RefCastNull:
           WASM_GC_OP(OpKind::RefCast);
         case GcOp::BrOnCast:
+        case GcOp::BrOnCastFail:
           WASM_GC_OP(OpKind::BrOnCast);
         case GcOp::BrOnCastV5:
         case GcOp::BrOnCastHeapV5:

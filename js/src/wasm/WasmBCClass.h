@@ -1668,7 +1668,7 @@ struct BaseCompiler final {
                                         uint32_t labelRelativeDepth,
                                         const ResultType& labelType,
                                         RefType sourceType, RefType destType);
-  [[nodiscard]] bool emitBrOnCast();
+  [[nodiscard]] bool emitBrOnCast(bool onSuccess);
   [[nodiscard]] bool emitExternInternalize();
   [[nodiscard]] bool emitExternExternalize();
 
