@@ -110,6 +110,11 @@ git = "https://github.com/mozilla/uniffi-rs.git"
 rev = "bc7ff8977bf38d0fdd1a458810b14f434d4dc4de"
 replace-with = "vendored-sources"
 
+[source."git+https://github.com/rust-minidump/minidump-writer.git?rev=a15bd5cab6a3de251c0c23264be14b977c0af09c"]
+git = "https://github.com/rust-minidump/minidump-writer.git"
+rev = "a15bd5cab6a3de251c0c23264be14b977c0af09c"
+replace-with = "vendored-sources"
+
 
 # Take advantage of the fact that cargo will treat lines starting with #
 # as comments to add preprocessing directives. This file can thus by copied

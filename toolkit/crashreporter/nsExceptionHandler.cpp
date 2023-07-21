@@ -3894,3 +3894,39 @@ void SetNotificationPipeForChild(int childCrashFd) {
 #endif
 
 }  // namespace CrashReporter
+
+#if ANDROID_NDK_MAJOR_VERSION && (ANDROID_NDK_MAJOR_VERSION < 24)
+
+// Bionic introduced support for getgrgid_r() and getgrnam_r() only in version
+// 24 (that is Android Nougat / 7.1.2). Since we build with NDK version 23c we
+// can't link against those functions, but nix needs them and minidump-writer
+// relies on nix. These functions should never be called in practice hence we
+// implement them only to satisfy nix linking requirements but we crash if we
+// accidentally enter them.
+
+extern "C" {
+
+int getgrgid_r(gid_t gid, struct group* grp, char* buf, size_t buflen,
+               struct group** result) {
+  MOZ_CRASH("getgrgid_r() is not available");
+  return EPERM;
+}
+
+int getgrnam_r(const char* name, struct group* grp, char* buf, size_t buflen,
+               struct group** result) {
+  MOZ_CRASH("getgrnam_r() is not available");
+  return EPERM;
+}
+
+int mlockall(int flags) {
+  MOZ_CRASH("mlockall() is not available");
+  return EPERM;
+}
+
+int munlockall(void) {
+  MOZ_CRASH("munlockall() is not available");
+  return EPERM;
+}
+}
+
+#endif  // ANDROID_NDK_MAJOR_VERSION && (ANDROID_NDK_MAJOR_VERSION < 24)

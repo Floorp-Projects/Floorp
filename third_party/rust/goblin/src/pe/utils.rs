@@ -89,6 +89,9 @@ pub fn find_offset(
     opts: &options::ParseOptions,
 ) -> Option<usize> {
     if opts.resolve_rva {
+        if file_alignment == 0 || file_alignment & (file_alignment - 1) != 0 {
+            return None;
+        }
         for (i, section) in sections.iter().enumerate() {
             debug!(
                 "Checking {} for {:#x} ∈ {:#x}..{:#x}",

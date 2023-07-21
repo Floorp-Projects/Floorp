@@ -1,10 +1,12 @@
 #[cfg(target_os = "android")]
 use crate::linux::android::late_process_mappings;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+use crate::thread_info;
 use crate::{
     linux::{
         auxv_reader::{AuxvType, ProcfsAuxvIter},
         errors::{DumperError, InitError, ThreadInfoError},
-        maps_reader::{MappingInfo, MappingInfoParsingResult, DELETED_SUFFIX},
+        maps_reader::MappingInfo,
         thread_info::{Pid, ThreadInfo},
         LINUX_GATE_LIBRARY_NAME,
     },
@@ -15,13 +17,8 @@ use nix::{
     errno::Errno,
     sys::{ptrace, wait},
 };
-use std::{
-    collections::HashMap,
-    ffi::c_void,
-    io::{BufRead, BufReader},
-    path,
-    result::Result,
-};
+use procfs_core::process::MMPermissions;
+use std::{collections::HashMap, ffi::c_void, io::BufReader, path, result::Result};
 
 #[derive(Debug, Clone)]
 pub struct Thread {
@@ -36,6 +33,7 @@ pub struct PtraceDumper {
     pub threads: Vec<Thread>,
     pub auxv: HashMap<AuxvType, AuxvType>,
     pub mappings: Vec<MappingInfo>,
+    pub page_size: usize,
 }
 
 #[cfg(target_pointer_width = "32")]
@@ -76,6 +74,7 @@ impl PtraceDumper {
             threads: Vec::new(),
             auxv: HashMap::new(),
             mappings: Vec::new(),
+            page_size: 0,
         };
         dumper.init()?;
         Ok(dumper)
@@ -86,6 +85,10 @@ impl PtraceDumper {
         self.read_auxv()?;
         self.enumerate_threads()?;
         self.enumerate_mappings()?;
+        self.page_size = nix::unistd::sysconf(nix::unistd::SysconfVar::PAGE_SIZE)?
+            .expect("page size apparently unlimited: doesn't make sense.")
+            as usize;
+
         Ok(())
     }
 
@@ -146,7 +149,7 @@ impl PtraceDumper {
             // We thus test the stack pointer and exclude any threads that are part of
             // the seccomp sandbox's trusted code.
             let skip_thread;
-            let regs = ptrace::getregs(pid);
+            let regs = thread_info::ThreadInfo::getregs(pid.into());
             if let Ok(regs) = regs {
                 #[cfg(target_arch = "x86_64")]
                 {
@@ -265,11 +268,11 @@ impl PtraceDumper {
         // guaranteed (see http://crosbug.com/25355); therefore, try to use the
         // actual entry point to find the mapping.
         let at_entry;
-        #[cfg(target_arch = "arm")]
+        #[cfg(any(target_arch = "arm", all(target_os = "android", target_arch = "x86")))]
         {
             at_entry = 9;
         }
-        #[cfg(not(target_arch = "arm"))]
+        #[cfg(not(any(target_arch = "arm", all(target_os = "android", target_arch = "x86"))))]
         {
             at_entry = libc::AT_ENTRY;
         }
@@ -280,15 +283,11 @@ impl PtraceDumper {
         let maps_path = path::PathBuf::from(&filename);
         let maps_file = std::fs::File::open(maps_path).map_err(errmap)?;
 
-        for line in BufReader::new(maps_file).lines() {
-            // /proc/<pid>/maps looks like this
-            // 7fe34a863000-7fe34a864000 rw-p 00009000 00:31 4746408                    /usr/lib64/libogg.so.0.8.4
-            let line = line.map_err(errmap)?;
-            match MappingInfo::parse_from_line(&line, linux_gate_loc, self.mappings.last_mut()) {
-                Ok(MappingInfoParsingResult::Success(map)) => self.mappings.push(map),
-                Ok(MappingInfoParsingResult::SkipLine) | Err(_) => continue,
-            }
-        }
+        use procfs_core::FromRead;
+        self.mappings = procfs_core::process::MemoryMaps::from_read(maps_file)
+            .ok()
+            .and_then(|maps| MappingInfo::aggregate(maps, linux_gate_loc).ok())
+            .unwrap_or_default();
 
         if entry_point_loc != 0 {
             let mut swap_idx = None;
@@ -324,28 +323,52 @@ impl PtraceDumper {
         ThreadInfo::create(self.pid, self.threads[index].tid)
     }
 
-    // Get information about the stack, given the stack pointer. We don't try to
-    // walk the stack since we might not have all the information needed to do
-    // unwind. So we just grab, up to, 32k of stack.
+    // Returns a valid stack pointer and the mapping that contains the stack.
+    // The stack pointer will usually point within this mapping, but it might
+    // not in case of stack overflows, hence the returned pointer might be
+    // different from the one that was passed in.
     pub fn get_stack_info(&self, int_stack_pointer: usize) -> Result<(usize, usize), DumperError> {
-        // Move the stack pointer to the bottom of the page that it's in.
-        // NOTE: original code uses getpagesize(), which a) isn't there in Rust and
-        //       b) shouldn't be used, as its not portable (see man getpagesize)
-        let page_size = nix::unistd::sysconf(nix::unistd::SysconfVar::PAGE_SIZE)?
-            .expect("page size apparently unlimited: doesn't make sense.");
-        let stack_pointer = int_stack_pointer & !(page_size as usize - 1);
+        // Round the stack pointer to the nearest page, this will cause us to
+        // capture data below the stack pointer which might still be relevant.
+        let mut stack_pointer = int_stack_pointer & !(self.page_size - 1);
+        let mut mapping = self.find_mapping(stack_pointer);
 
-        // The number of bytes of stack which we try to capture.
-        let stack_to_capture = 32 * 1024;
+        // The guard page has been 1 MiB in size since kernel 4.12, older
+        // kernels used a 4 KiB one instead.
+        let guard_page_max_addr = stack_pointer + (1024 * 1024);
 
-        let mapping = self
-            .find_mapping(stack_pointer)
-            .ok_or(DumperError::NoStackPointerMapping)?;
-        let offset = stack_pointer - mapping.start_address;
-        let distance_to_end = mapping.size - offset;
-        let stack_len = std::cmp::min(distance_to_end, stack_to_capture);
+        // If we found no mapping, or the mapping we found has no permissions
+        // then we might have hit a guard page, try looking for a mapping in
+        // addresses past the stack pointer. Stack grows towards lower addresses
+        // on the platforms we care about so the stack should appear after the
+        // guard page.
+        while !Self::may_be_stack(mapping) && (stack_pointer <= guard_page_max_addr) {
+            stack_pointer += self.page_size;
+            mapping = self.find_mapping(stack_pointer);
+        }
 
-        Ok((stack_pointer, stack_len))
+        mapping
+            .map(|mapping| {
+                let valid_stack_pointer = if mapping.contains_address(stack_pointer) {
+                    stack_pointer
+                } else {
+                    mapping.start_address
+                };
+
+                let stack_len = mapping.size - (valid_stack_pointer - mapping.start_address);
+                (valid_stack_pointer, stack_len)
+            })
+            .ok_or(DumperError::NoStackPointerMapping)
+    }
+
+    fn may_be_stack(mapping: Option<&MappingInfo>) -> bool {
+        if let Some(mapping) = mapping {
+            return mapping
+                .permissions
+                .intersects(MMPermissions::READ | MMPermissions::WRITE);
+        }
+
+        false
     }
 
     pub fn sanitize_stack_copy(
@@ -374,7 +397,7 @@ impl PtraceDumper {
         // the bitfield length is 2^test_bits long.
         let test_bits = 11;
         // byte length of the corresponding array.
-        let array_size = 1 << (test_bits - 3);
+        let array_size: usize = 1 << (test_bits - 3);
         let array_mask = array_size - 1;
         // The amount to right shift pointers by. This captures the top bits
         // on 32 bit architectures. On 64 bit architectures this would be
@@ -394,7 +417,7 @@ impl PtraceDumper {
         // bit, modulo the bitfield size, is not set then there does not
         // exist a mapping in mappings that would contain that pointer.
         for mapping in &self.mappings {
-            if !mapping.executable {
+            if !mapping.is_executable() {
                 continue;
             }
             // For each mapping, work out the (unmodulo'ed) range of bits to
@@ -441,7 +464,7 @@ impl PtraceDumper {
             let test = addr >> shift;
             if could_hit_mapping[(test >> 3) & array_mask] & (1 << (test & 7)) != 0 {
                 if let Some(hit_mapping) = self.find_mapping_no_bias(addr) {
-                    if hit_mapping.executable {
+                    if hit_mapping.is_executable() {
                         last_hit_mapping = Some(hit_mapping);
                         continue;
                     }
@@ -553,7 +576,7 @@ impl PtraceDumper {
         }
 
         // Special-case linux-gate because it's not a real file.
-        if mapping.name.as_deref() == Some(LINUX_GATE_LIBRARY_NAME) {
+        if mapping.name.as_deref() == Some(LINUX_GATE_LIBRARY_NAME.as_ref()) {
             if pid == std::process::id().try_into()? {
                 let mem_slice = unsafe {
                     std::slice::from_raw_parts(mapping.start_address as *const u8, mapping.size)
@@ -568,26 +591,16 @@ impl PtraceDumper {
                 return Self::elf_file_identifier_from_mapped_file(&mem_slice);
             }
         }
-        let new_name = MappingInfo::handle_deleted_file_in_mapping(
-            mapping.name.as_deref().unwrap_or_default(),
-            pid,
-        )?;
 
-        let mem_slice = MappingInfo::get_mmap(&Some(new_name.clone()), mapping.offset)?;
+        let (filename, old_name) = mapping.fixup_deleted_file(pid)?;
+
+        let mem_slice = MappingInfo::get_mmap(&Some(filename), mapping.offset)?;
         let build_id = Self::elf_file_identifier_from_mapped_file(&mem_slice)?;
 
-        // This means we switched from "/my/binary" to "/proc/1234/exe", because /my/binary
-        // was deleted and thus has a "/my/binary (deleted)" entry. We found the mapping anyway
-        // so we remove the "(deleted)".
-        if let Some(old_name) = &mapping.name {
-            if &new_name != old_name {
-                mapping.name = Some(
-                    old_name
-                        .trim_end_matches(DELETED_SUFFIX)
-                        .trim_end()
-                        .to_string(),
-                );
-            }
+        // This means we switched from "/my/binary" to "/proc/1234/exe", change the mapping to
+        // remove the " (deleted)" portion.
+        if let Some(old_name) = old_name {
+            mapping.name = Some(old_name.into());
         }
         Ok(build_id)
     }

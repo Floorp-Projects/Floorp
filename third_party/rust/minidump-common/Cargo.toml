@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "minidump-common"
-version = "0.15.2"
+version = "0.17.0"
 authors = ["Ted Mielczarek <ted@mielczarek.org>"]
 description = "Some common types for working with minidump files."
 homepage = "https://github.com/rust-minidump/rust-minidump"

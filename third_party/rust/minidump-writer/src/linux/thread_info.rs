@@ -34,6 +34,7 @@ enum NT_Elf {
     //NT_PRPSINFO = 3,
     //NT_TASKSTRUCT = 4,
     //NT_AUXV = 6,
+    NT_ARM_VFP = 0x400, // ARM VFP/NEON registers
 }
 
 #[inline]
@@ -96,14 +97,14 @@ trait CommonThreadInfo {
     /// and therefore use the data field to return values. This function handles these
     /// requests.
     fn ptrace_get_data<T>(
-        request: ptrace::Request,
+        request: ptrace::RequestType,
         flag: Option<NT_Elf>,
         pid: nix::unistd::Pid,
     ) -> Result<T> {
         let mut data = std::mem::MaybeUninit::uninit();
         let res = unsafe {
             libc::ptrace(
-                request as ptrace::RequestType,
+                request,
                 libc::pid_t::from(pid),
                 flag.unwrap_or(NT_Elf::NT_NONE),
                 data.as_mut_ptr(),
@@ -119,7 +120,7 @@ trait CommonThreadInfo {
     /// and therefore use the data field to return values. This function handles these
     /// requests.
     fn ptrace_get_data_via_io<T>(
-        request: ptrace::Request,
+        request: ptrace::RequestType,
         flag: Option<NT_Elf>,
         pid: nix::unistd::Pid,
     ) -> Result<T> {
@@ -130,7 +131,7 @@ trait CommonThreadInfo {
         };
         let res = unsafe {
             libc::ptrace(
-                request as ptrace::RequestType,
+                request,
                 libc::pid_t::from(pid),
                 flag.unwrap_or(NT_Elf::NT_NONE),
                 &io as *const _,
@@ -142,19 +143,14 @@ trait CommonThreadInfo {
 
     /// COPY FROM CRATE nix BECAUSE ITS NOT PUBLIC
     fn ptrace_peek(
-        request: ptrace::Request,
+        request: ptrace::RequestType,
         pid: unistd::Pid,
         addr: ptrace::AddressType,
         data: *mut libc::c_void,
     ) -> nix::Result<libc::c_long> {
         let ret = unsafe {
             Errno::clear();
-            libc::ptrace(
-                request as ptrace::RequestType,
-                libc::pid_t::from(pid),
-                addr,
-                data,
-            )
+            libc::ptrace(request, libc::pid_t::from(pid), addr, data)
         };
         match Errno::result(ret) {
             Ok(..) | Err(Errno::UnknownErrno) => Ok(ret),

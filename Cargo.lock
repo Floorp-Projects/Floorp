@@ -321,7 +321,7 @@ dependencies = [
  "libc",
  "libudev",
  "log",
- "memoffset",
+ "memoffset 0.8.999",
  "nom",
  "nss-gk-api",
  "pkcs11-bindings",
@@ -930,9 +930,9 @@ dependencies = [
 
 [[package]]
 name = "crash-context"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d433b84b88830c0c253292a52fe43bd3f385668b6a39a84ce291e6e7db52724"
+checksum = "b85cef661eeca0c6675116310936972c520ebb0a33ddef16fd7efc957f4c1288"
 dependencies = [
  "cfg-if 1.0.0",
  "libc",
@@ -978,7 +978,7 @@ dependencies = [
  "autocfg",
  "cfg-if 1.0.0",
  "crossbeam-utils",
- "memoffset",
+ "memoffset 0.8.999",
  "scopeguard",
 ]
 
@@ -2294,9 +2294,16 @@ dependencies = [
 
 [[package]]
 name = "goblin"
-version = "0.6.0"
+version = "0.6.999"
+dependencies = [
+ "goblin 0.7.1",
+]
+
+[[package]]
+name = "goblin"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "572564d6cba7d09775202c8e7eebc4d534d5ae36578ab402fb21e182a0ac9505"
+checksum = "f27c1b4369c2cd341b5de549380158b105a04c331be5db9110eef7b6d2742134"
 dependencies = [
  "log",
  "plain",
@@ -3173,9 +3180,16 @@ dependencies = [
 
 [[package]]
 name = "memoffset"
-version = "0.8.0"
+version = "0.8.999"
+dependencies = [
+ "memoffset 0.9.0",
+]
+
+[[package]]
+name = "memoffset"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d61c719bcfbcf5d62b3a09efa6088de8c54bc0bfcd3ea7ae39fcc186108b8de1"
+checksum = "5a634b1c61a95585bd15607c6ab0c4e5b226e695ff2800ba0cdccddf208c406c"
 dependencies = [
  "autocfg",
 ]
@@ -3246,9 +3260,9 @@ dependencies = [
 
 [[package]]
 name = "minidump-common"
-version = "0.15.2"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "694717103b2c15f8c16ddfaec1333fe15673bc22b10ffa6164427415701974ba"
+checksum = "9114b15d86ee5e5c3e3b4d05821d17237adbf98c11dd07fc8f5a9b037a010ee5"
 dependencies = [
  "bitflags 1.3.2",
  "debugid",
@@ -3261,21 +3275,21 @@ dependencies = [
 
 [[package]]
 name = "minidump-writer"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8109e02c3cf4a587eea0bec18ccdfecc9041f91b5ebffa223b1e692c9a223c26"
+version = "0.8.1"
+source = "git+https://github.com/rust-minidump/minidump-writer.git?rev=a15bd5cab6a3de251c0c23264be14b977c0af09c#a15bd5cab6a3de251c0c23264be14b977c0af09c"
 dependencies = [
  "bitflags 2.999.999",
  "byteorder",
  "cfg-if 1.0.0",
  "crash-context",
- "goblin",
+ "goblin 0.7.1",
  "libc",
  "mach2",
  "memmap2",
- "memoffset",
+ "memoffset 0.9.0",
  "minidump-common",
  "nix 0.26.2",
+ "procfs-core",
  "scroll",
  "tempfile",
  "thiserror",
@@ -3390,10 +3404,10 @@ dependencies = [
 name = "mozannotation_server"
 version = "0.1.0"
 dependencies = [
- "goblin",
+ "goblin 0.7.1",
  "libc",
  "mach2",
- "memoffset",
+ "memoffset 0.8.999",
  "mozannotation_client",
  "nsstring",
  "thin-vec",
@@ -4194,6 +4208,16 @@ dependencies = [
  "nserror",
  "winapi",
  "xpcom",
+]
+
+[[package]]
+name = "procfs-core"
+version = "0.16.0-RC1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ee00a90a41543fce203e6a8771bad043bfd6d88de8fd4e3118435a233d0c3c4"
+dependencies = [
+ "bitflags 2.999.999",
+ "hex",
 ]
 
 [[package]]
@@ -5629,7 +5653,7 @@ dependencies = [
  "camino",
  "fs-err",
  "glob",
- "goblin",
+ "goblin 0.6.999",
  "heck",
  "once_cell",
  "paste",

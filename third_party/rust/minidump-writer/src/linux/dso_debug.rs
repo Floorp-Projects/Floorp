@@ -81,12 +81,12 @@ pub fn write_dso_debug_stream(
 ) -> Result<MDRawDirectory> {
     let at_phnum;
     let at_phdr;
-    #[cfg(target_arch = "arm")]
+    #[cfg(any(target_arch = "arm", all(target_os = "android", target_arch = "x86")))]
     {
         at_phdr = 3;
         at_phnum = 5;
     }
-    #[cfg(not(target_arch = "arm"))]
+    #[cfg(not(any(target_arch = "arm", all(target_os = "android", target_arch = "x86"))))]
     {
         at_phdr = libc::AT_PHDR;
         at_phnum = libc::AT_PHNUM;

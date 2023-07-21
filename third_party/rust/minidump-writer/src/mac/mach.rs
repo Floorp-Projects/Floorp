@@ -234,6 +234,7 @@ cfg_if::cfg_if! {
     }
 }
 
+#[repr(C, align(8))]
 pub struct ThreadState {
     pub state: [u32; THREAD_STATE_MAX],
     pub state_size: u32,

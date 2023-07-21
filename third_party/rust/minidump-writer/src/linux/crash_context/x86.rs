@@ -41,7 +41,7 @@ impl CrashContext {
 
         {
             let fs = &self.inner.float_state;
-            let mut out = &mut out.float_save;
+            let out = &mut out.float_save;
             out.control_word = fs.cw;
             out.status_word = fs.sw;
             out.tag_word = fs.tag;

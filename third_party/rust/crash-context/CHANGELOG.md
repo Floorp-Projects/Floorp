@@ -9,10 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.6.1] - 2023-06-19
+### Added
+- [PR#76](https://github.com/EmbarkStudios/crash-handling/pull/76) added support for `i686-linux-android` and `x86_64-linux-android`. Thanks [@gabrielesvelto](https://github.com/gabrielesvelto)!
+
 ## [0.6.0] - 2023-04-03
 ### Changed
 - [PR#70](https://github.com/EmbarkStudios/crash-handling/pull/70) removed the `winapi` dependency in favor of embedded bindings to avoid dependencies.
 - [PR#70](https://github.com/EmbarkStudios/crash-handling/pull/70) removed the asm implementations for Windows CPU context retrieval in favor of using `RtlCaptureContext`. This means that floating state is not captured, but is otherwise and improvement.
+
+### Added
+- [PR#68](https://github.com/EmbarkStudios/crash-handling/pull/68) added capture context support for x86 Windows, but this change was supplanted in [PR#70](https://github.com/EmbarkStudios/crash-handling/pull/70) to use `RtlCaptureContext` instead.
+
+### Fixed
+- [PR#71](https://github.com/EmbarkStudios/crash-handling/pull/71) fixed the definition of `mcontext_t` for `i686-unknow-linux`. Thanks [@afranchuk](https://github.com/afranchuk)!
 
 ## [0.5.1] - 2022-11-17
 ### Fixed
@@ -58,7 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial pass of crash-context, Linux only
 
 <!-- next-url -->
-[Unreleased]: https://github.com/EmbarkStudios/crash-handling/compare/crash-context-0.6.0...HEAD
+[Unreleased]: https://github.com/EmbarkStudios/crash-handling/compare/crash-context-0.6.1...HEAD
+[0.6.1]: https://github.com/EmbarkStudios/crash-handling/compare/crash-context-0.6.0...crash-context-0.6.1
 [0.6.0]: https://github.com/EmbarkStudios/crash-handling/compare/crash-context-0.5.1...crash-context-0.6.0
 [0.5.1]: https://github.com/EmbarkStudios/crash-handling/compare/crash-context-0.5.0...crash-context-0.5.1
 [0.5.0]: https://github.com/EmbarkStudios/crash-handling/compare/crash-context-0.4.0...crash-context-0.5.0

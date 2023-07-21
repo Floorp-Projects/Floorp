@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.8.1] - 2023-06-21
+### Added
+- [PR#70](https://github.com/rust-minidump/minidump-writer/pull/70) resolved [#8](https://github.com/rust-minidump/minidump-writer/issues/8) by adding support for writing `MemoryInfoListStream` on Linux/Android targets, this allows minidump consumers to process minidumps more easily without needing to parse and understand Linux-specific information. Thanks [@afranchuk](https://github.com/afranchuk)!
+- [PR#81](https://github.com/rust-minidump/minidump-writer/pull/81) stabilized `arm` and `aarch64` support for `unknown-linux` and `linux-android`, as well as adding support for `x86_64-linux-android`.
+
+### Changed
+- [PR#70](https://github.com/rust-minidump/minidump-writer/pull/70) replaced the custom reading of procfs information used when generating a minidump on Linux to use the `procfs` crate instead, removing a bunch of code.
+- [PR#80](https://github.com/rust-minidump/minidump-writer/pull/80) along with [PR#84](https://github.com/rust-minidump/minidump-writer/pull/84) replaced `procfs` with `procfs-core`, removing unneeded dependencies such as `windows-sys`.
+
+### Fixed
+- [PR#78](https://github.com/rust-minidump/minidump-writer/pull/78) resolved [#24](https://github.com/rust-minidump/minidump-writer/issues/24) by ignoring guard pages when dumping the stack to the minidump in the event of a stack overflow.
+- [PR#83](https://github.com/rust-minidump/minidump-writer/pull/83) resolved [#82](https://github.com/rust-minidump/minidump-writer/issues/82) by correctly aligning a structure.
+
 ## [0.8.0] - 2023-04-03
 ### Removed
 - [PR#77](https://github.com/rust-minidump/minidump-writer/pull/77) removed the dependency on `winapi`, all bindings are either part of `minidump-writer` or `crash-context` now.
@@ -71,7 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release, including basic support for `x86_64-unknown-linux-gnu/musl` and `x86_64-pc-windows-msvc`
 
 <!-- next-url -->
-[Unreleased]: https://github.com/rust-minidump/minidump-writer/compare/0.8.0...HEAD
+[Unreleased]: https://github.com/rust-minidump/minidump-writer/compare/0.8.1...HEAD
+[0.8.1]: https://github.com/rust-minidump/minidump-writer/compare/0.8.0...0.8.1
 [0.8.0]: https://github.com/rust-minidump/minidump-writer/compare/0.7.0...0.8.0
 [0.7.0]: https://github.com/rust-minidump/minidump-writer/compare/0.6.0...0.7.0
 [0.6.0]: https://github.com/rust-minidump/minidump-writer/compare/0.5.0...0.6.0

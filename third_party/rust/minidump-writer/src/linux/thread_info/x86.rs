@@ -1,11 +1,94 @@
 use super::{CommonThreadInfo, NT_Elf, Pid};
 use crate::{errors::ThreadInfoError, minidump_cpu::RawContextCPU, minidump_format::format};
 use core::mem::size_of_val;
-use libc::user;
-use nix::{sys::ptrace, unistd};
+#[cfg(all(not(target_os = "android"), target_arch = "x86"))]
+use libc::user_fpxregs_struct;
+#[cfg(not(all(target_os = "android", target_arch = "x86")))]
+use libc::{user, user_fpregs_struct, user_regs_struct};
+use nix::sys::ptrace;
 use scroll::Pwrite;
 
 type Result<T> = std::result::Result<T, ThreadInfoError>;
+
+// Not defined by libc on Android
+#[cfg(all(target_os = "android", target_arch = "x86"))]
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct user_regs_struct {
+    pub ebx: libc::c_long,
+    pub ecx: libc::c_long,
+    pub edx: libc::c_long,
+    pub esi: libc::c_long,
+    pub edi: libc::c_long,
+    pub ebp: libc::c_long,
+    pub eax: libc::c_long,
+    pub xds: libc::c_long,
+    pub xes: libc::c_long,
+    pub xfs: libc::c_long,
+    pub xgs: libc::c_long,
+    pub orig_eax: libc::c_long,
+    pub eip: libc::c_long,
+    pub xcs: libc::c_long,
+    pub eflags: libc::c_long,
+    pub esp: libc::c_long,
+    pub xss: libc::c_long,
+}
+
+// Not defined by libc on Android
+#[cfg(all(target_os = "android", target_arch = "x86"))]
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct user_fpxregs_struct {
+    pub cwd: libc::c_ushort,
+    pub swd: libc::c_ushort,
+    pub twd: libc::c_ushort,
+    pub fop: libc::c_ushort,
+    pub fip: libc::c_long,
+    pub fcs: libc::c_long,
+    pub foo: libc::c_long,
+    pub fos: libc::c_long,
+    pub mxcsr: libc::c_long,
+    __reserved: libc::c_long,
+    pub st_space: [libc::c_long; 32],
+    pub xmm_space: [libc::c_long; 32],
+    padding: [libc::c_long; 56],
+}
+
+// Not defined by libc on Android
+#[cfg(all(target_os = "android", target_arch = "x86"))]
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct user_fpregs_struct {
+    pub cwd: libc::c_long,
+    pub swd: libc::c_long,
+    pub twd: libc::c_long,
+    pub fip: libc::c_long,
+    pub fcs: libc::c_long,
+    pub foo: libc::c_long,
+    pub fos: libc::c_long,
+    pub st_space: [libc::c_long; 20],
+}
+
+#[cfg(all(target_os = "android", target_arch = "x86"))]
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct user {
+    pub regs: user_regs_struct,
+    pub u_fpvalid: libc::c_long,
+    pub i387: user_fpregs_struct,
+    pub u_tsize: libc::c_ulong,
+    pub u_dsize: libc::c_ulong,
+    pub u_ssize: libc::c_ulong,
+    pub start_code: libc::c_ulong,
+    pub start_stack: libc::c_ulong,
+    pub signal: libc::c_long,
+    __reserved: libc::c_int,
+    pub u_ar0: *mut user_regs_struct,
+    pub u_fpstate: *mut user_fpregs_struct,
+    pub magic: libc::c_ulong,
+    pub u_comm: [libc::c_char; 32],
+    pub u_debugreg: [libc::c_int; 8],
+}
 
 const NUM_DEBUG_REGISTERS: usize = 8;
 
@@ -13,41 +96,50 @@ pub struct ThreadInfoX86 {
     pub stack_pointer: usize,
     pub tgid: Pid, // thread group id
     pub ppid: Pid, // parent process
-    pub regs: libc::user_regs_struct,
-    pub fpregs: libc::user_fpregs_struct,
+    pub regs: user_regs_struct,
+    pub fpregs: user_fpregs_struct,
     #[cfg(target_arch = "x86_64")]
     pub dregs: [libc::c_ulonglong; NUM_DEBUG_REGISTERS],
     #[cfg(target_arch = "x86")]
     pub dregs: [libc::c_int; NUM_DEBUG_REGISTERS],
     #[cfg(target_arch = "x86")]
-    pub fpxregs: libc::user_fpxregs_struct,
+    pub fpxregs: user_fpxregs_struct,
 }
 
 impl CommonThreadInfo for ThreadInfoX86 {}
 
 impl ThreadInfoX86 {
     // nix currently doesn't support PTRACE_GETREGSET, so we have to do it ourselves
-    fn getregset(pid: Pid) -> Result<libc::user_regs_struct> {
-        Self::ptrace_get_data_via_io::<libc::user_regs_struct>(
-            ptrace::Request::PTRACE_GETREGSET,
+    fn getregset(pid: Pid) -> Result<user_regs_struct> {
+        Self::ptrace_get_data_via_io(
+            0x4204 as ptrace::RequestType, // PTRACE_GETREGSET
             Some(NT_Elf::NT_PRSTATUS),
             nix::unistd::Pid::from_raw(pid),
         )
     }
 
+    pub fn getregs(pid: Pid) -> Result<user_regs_struct> {
+        // TODO: nix restricts PTRACE_GETREGS to arm android for some reason
+        Self::ptrace_get_data(
+            12 as ptrace::RequestType, // PTRACE_GETREGS
+            None,
+            nix::unistd::Pid::from_raw(pid),
+        )
+    }
+
     // nix currently doesn't support PTRACE_GETREGSET, so we have to do it ourselves
-    fn getfpregset(pid: Pid) -> Result<libc::user_fpregs_struct> {
-        Self::ptrace_get_data_via_io::<libc::user_fpregs_struct>(
-            ptrace::Request::PTRACE_GETREGSET,
+    fn getfpregset(pid: Pid) -> Result<user_fpregs_struct> {
+        Self::ptrace_get_data_via_io(
+            0x4204 as ptrace::RequestType, // PTRACE_GETREGSET
             Some(NT_Elf::NT_PRFPREGSET),
             nix::unistd::Pid::from_raw(pid),
         )
     }
 
     // nix currently doesn't support PTRACE_GETFPREGS, so we have to do it ourselves
-    fn getfpregs(pid: Pid) -> Result<libc::user_fpregs_struct> {
-        Self::ptrace_get_data::<libc::user_fpregs_struct>(
-            ptrace::Request::PTRACE_GETFPREGS,
+    fn getfpregs(pid: Pid) -> Result<user_fpregs_struct> {
+        Self::ptrace_get_data(
+            14 as ptrace::RequestType, // PTRACE_GETFPREGS
             None,
             nix::unistd::Pid::from_raw(pid),
         )
@@ -55,9 +147,9 @@ impl ThreadInfoX86 {
 
     // nix currently doesn't support PTRACE_GETFPXREGS, so we have to do it ourselves
     #[cfg(target_arch = "x86")]
-    fn getfpxregs(pid: Pid) -> Result<libc::user_fpxregs_struct> {
-        Self::ptrace_get_data::<libc::user_fpxregs_struct>(
-            ptrace::Request::PTRACE_GETFPXREGS,
+    fn getfpxregs(pid: Pid) -> Result<user_fpxregs_struct> {
+        Self::ptrace_get_data(
+            18 as ptrace::RequestType, // PTRACE_GETFPXREGS
             None,
             nix::unistd::Pid::from_raw(pid),
         )
@@ -65,7 +157,7 @@ impl ThreadInfoX86 {
 
     fn peek_user(pid: Pid, addr: ptrace::AddressType) -> nix::Result<libc::c_long> {
         Self::ptrace_peek(
-            ptrace::Request::PTRACE_PEEKUSER,
+            ptrace::Request::PTRACE_PEEKUSER as ptrace::RequestType,
             nix::unistd::Pid::from_raw(pid),
             addr,
             std::ptr::null_mut(),
@@ -74,10 +166,10 @@ impl ThreadInfoX86 {
 
     pub fn create_impl(_pid: Pid, tid: Pid) -> Result<Self> {
         let (ppid, tgid) = Self::get_ppid_and_tgid(tid)?;
-        let regs = Self::getregset(tid).or_else(|_| ptrace::getregs(unistd::Pid::from_raw(tid)))?;
+        let regs = Self::getregset(tid).or_else(|_| Self::getregs(tid))?;
         let fpregs = Self::getfpregset(tid).or_else(|_| Self::getfpregs(tid))?;
         #[cfg(target_arch = "x86")]
-        let fpxregs: libc::user_fpxregs_struct;
+        let fpxregs: user_fpxregs_struct;
         #[cfg(target_arch = "x86")]
         {
             if cfg!(target_feature = "fxsr") {
