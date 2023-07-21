@@ -3542,14 +3542,12 @@ void ScriptLoader::ParsingComplete(bool aTerminated) {
   }
 }
 
-void ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
-                              const nsAString& aType,
-                              const nsAString& aCrossOrigin,
-                              const nsAString& aIntegrity, bool aScriptFromHead,
-                              bool aAsync, bool aDefer, bool aNoModule,
-                              bool aLinkPreload,
-                              const ReferrerPolicy aReferrerPolicy,
-                              uint64_t aEarlyHintPreloaderId) {
+void ScriptLoader::PreloadURI(
+    nsIURI* aURI, const nsAString& aCharset, const nsAString& aType,
+    const nsAString& aCrossOrigin, const nsAString& aNonce,
+    const nsAString& aIntegrity, bool aScriptFromHead, bool aAsync, bool aDefer,
+    bool aNoModule, bool aLinkPreload, const ReferrerPolicy aReferrerPolicy,
+    uint64_t aEarlyHintPreloaderId) {
   NS_ENSURE_TRUE_VOID(mDocument);
   // Check to see if scripts has been turned off.
   if (!mEnabled || !mDocument->IsScriptEnabled()) {
@@ -3592,8 +3590,8 @@ void ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
   // as a normal load.
   RefPtr<ScriptLoadRequest> request =
       CreateLoadRequest(scriptKind, aURI, nullptr, mDocument->NodePrincipal(),
-                        Element::StringToCORSMode(aCrossOrigin),
-                        /* aNonce = */ u""_ns, sriMetadata, aReferrerPolicy,
+                        Element::StringToCORSMode(aCrossOrigin), aNonce,
+                        sriMetadata, aReferrerPolicy,
                         aLinkPreload ? ParserMetadata::NotParserInserted
                                      : ParserMetadata::ParserInserted);
   request->GetScriptLoadContext()->mIsInline = false;

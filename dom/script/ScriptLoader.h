@@ -378,9 +378,9 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    */
   virtual void PreloadURI(nsIURI* aURI, const nsAString& aCharset,
                           const nsAString& aType, const nsAString& aCrossOrigin,
-                          const nsAString& aIntegrity, bool aScriptFromHead,
-                          bool aAsync, bool aDefer, bool aNoModule,
-                          bool aLinkPreload,
+                          const nsAString& aNonce, const nsAString& aIntegrity,
+                          bool aScriptFromHead, bool aAsync, bool aDefer,
+                          bool aNoModule, bool aLinkPreload,
                           const ReferrerPolicy aReferrerPolicy,
                           uint64_t aEarlyHintPreloaderId);
 
