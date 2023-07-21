@@ -1717,6 +1717,7 @@ void SVGObserverUtils::RemoveRenderingObserver(
                  "removing observer from an element we're not observing?");
     observers->Remove(aObserver);
     if (observers->IsEmpty()) {
+      aElement->RemoveProperty(nsGkAtoms::renderingobserverset);
       aElement->SetHasRenderingObservers(false);
     }
   }
@@ -1726,6 +1727,7 @@ void SVGObserverUtils::RemoveAllRenderingObservers(Element* aElement) {
   SVGRenderingObserverSet* observers = GetObserverSet(aElement);
   if (observers) {
     observers->RemoveAll();
+    aElement->RemoveProperty(nsGkAtoms::renderingobserverset);
     aElement->SetHasRenderingObservers(false);
   }
 }
