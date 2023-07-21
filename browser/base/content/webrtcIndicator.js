@@ -73,10 +73,9 @@ const WebRTCIndicator = {
       false
     );
 
-    this.hideGlobalIndicator = Services.prefs.getBoolPref(
-      "privacy.webrtc.hideGlobalIndicator",
-      false
-    );
+    this.hideGlobalIndicator =
+      Services.prefs.getBoolPref("privacy.webrtc.hideGlobalIndicator", false) ||
+      Services.appinfo.isWayland;
 
     if (this.hideGlobalIndicator) {
       this.setVisibility(false);
