@@ -98,7 +98,10 @@ UrlClassifierRemoteSettingsService.prototype = {
         // files after SafeBrowsing processes the data.
         let buffer = await rs.attachments.downloadAsBytes(entry);
         let bytes = new Uint8Array(buffer);
-        let strData = String.fromCharCode.apply(String, bytes);
+        let strData = "";
+        for (let i = 0; i < bytes.length; i++) {
+          strData += String.fromCharCode(bytes[i]);
+        }
 
         // Construct the payload
         payload += "i:" + reqTableName + "\n";
