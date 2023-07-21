@@ -26,6 +26,7 @@
 #include "nsIThreadRetargetableRequest.h"
 
 using JS::loader::ModuleLoadRequest;
+using JS::loader::ParserMetadata;
 using JS::loader::ScriptFetchOptions;
 using mozilla::dom::loader::WorkletModuleLoader;
 
@@ -93,6 +94,7 @@ NS_IMETHODIMP StartModuleLoadRunnable::RunOnWorkletThread() {
   // policy is the empty string, and fetch priority is "auto".
   RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
       CORSMode::CORS_NONE, ReferrerPolicy::_empty, /* aNonce = */ u""_ns,
+      ParserMetadata::NotParserInserted,
       /*triggeringPrincipal*/ nullptr);
 
   WorkletModuleLoader* moduleLoader =

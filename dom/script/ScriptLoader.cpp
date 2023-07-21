@@ -409,6 +409,8 @@ nsresult ScriptLoader::CheckContentPolicy(Document* aDocument,
       aDocument->NodePrincipal(),  // triggering principal
       requestingNode, nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
       contentPolicyType);
+  secCheckLoadInfo->SetParserCreatedScript(aElement->GetParserCreated() !=
+                                           mozilla::dom::NOT_FROM_PARSER);
   // Use nonce of the current element, instead of the preload, because those
   // are allowed to differ.
   secCheckLoadInfo->SetCspNonce(aNonce);
@@ -621,6 +623,8 @@ nsresult ScriptLoader::StartLoadInternal(
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+  loadInfo->SetParserCreatedScript(aRequest->ParserMetadata() ==
+                                   ParserMetadata::ParserInserted);
   loadInfo->SetCspNonce(aRequest->Nonce());
   if (aRequest->mIntegrity.IsValid()) {
     MOZ_ASSERT(!aRequest->mIntegrity.IsEmpty());
@@ -836,11 +840,12 @@ already_AddRefed<ScriptLoadRequest> ScriptLoader::CreateLoadRequest(
     ScriptKind aKind, nsIURI* aURI, nsIScriptElement* aElement,
     nsIPrincipal* aTriggeringPrincipal, CORSMode aCORSMode,
     const nsAString& aNonce, const SRIMetadata& aIntegrity,
-    ReferrerPolicy aReferrerPolicy) {
+    ReferrerPolicy aReferrerPolicy, ParserMetadata aParserMetadata) {
   nsIURI* referrer = mDocument->GetDocumentURIAsReferrer();
   nsCOMPtr<Element> domElement = do_QueryInterface(aElement);
-  RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
-      aCORSMode, aReferrerPolicy, aNonce, aTriggeringPrincipal, domElement);
+  RefPtr<ScriptFetchOptions> fetchOptions =
+      new ScriptFetchOptions(aCORSMode, aReferrerPolicy, aNonce,
+                             aParserMetadata, aTriggeringPrincipal, domElement);
   RefPtr<ScriptLoadContext> context = new ScriptLoadContext();
 
   if (aKind == ScriptKind::eClassic || aKind == ScriptKind::eImportMap) {
@@ -900,6 +905,12 @@ bool ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement,
   }
 
   return ProcessInlineScript(aElement, scriptKind);
+}
+
+static ParserMetadata GetParserMetadata(nsIScriptElement* aElement) {
+  return aElement->GetParserCreated() == mozilla::dom::NOT_FROM_PARSER
+             ? ParserMetadata::NotParserInserted
+             : ParserMetadata::ParserInserted;
 }
 
 bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
@@ -1010,10 +1021,11 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
 
     CORSMode ourCORSMode = aElement->GetCORSMode();
     ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
+    ParserMetadata parserMetadata = GetParserMetadata(aElement);
 
-    request =
-        CreateLoadRequest(aScriptKind, scriptURI, aElement, principal,
-                          ourCORSMode, nonce, sriMetadata, referrerPolicy);
+    request = CreateLoadRequest(aScriptKind, scriptURI, aElement, principal,
+                                ourCORSMode, nonce, sriMetadata, referrerPolicy,
+                                parserMetadata);
     request->GetScriptLoadContext()->mIsInline = false;
     request->GetScriptLoadContext()->SetScriptMode(
         aElement->GetScriptDeferred(), aElement->GetScriptAsync(), false);
@@ -1180,13 +1192,14 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   if (aScriptKind == ScriptKind::eModule) {
     corsMode = aElement->GetCORSMode();
   }
-
   ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
+  ParserMetadata parserMetadata = GetParserMetadata(aElement);
+
   RefPtr<ScriptLoadRequest> request =
       CreateLoadRequest(aScriptKind, mDocument->GetDocumentURI(), aElement,
                         mDocument->NodePrincipal(), corsMode, nonce,
                         SRIMetadata(),  // SRI doesn't apply
-                        referrerPolicy);
+                        referrerPolicy, parserMetadata);
   request->GetScriptLoadContext()->mIsInline = true;
   request->GetScriptLoadContext()->mLineNo = aElement->GetScriptLineNumber();
   request->GetScriptLoadContext()->mColumnNo =
@@ -3573,10 +3586,16 @@ void ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
   // cryptographic nonce, integrity metadata is integrity metadata, parser
   // metadata is "not-parser-inserted", credentials mode is credentials mode,
   // referrer policy is referrer policy, and fetch priority is fetch priority.
+  //
+  // We treat speculative <script> loads as parser-inserted, because they
+  // come from a parser. This will also match how they should be treated
+  // as a normal load.
   RefPtr<ScriptLoadRequest> request =
       CreateLoadRequest(scriptKind, aURI, nullptr, mDocument->NodePrincipal(),
                         Element::StringToCORSMode(aCrossOrigin),
-                        /* aNonce = */ u""_ns, sriMetadata, aReferrerPolicy);
+                        /* aNonce = */ u""_ns, sriMetadata, aReferrerPolicy,
+                        aLinkPreload ? ParserMetadata::NotParserInserted
+                                     : ParserMetadata::ParserInserted);
   request->GetScriptLoadContext()->mIsInline = false;
   request->GetScriptLoadContext()->mScriptFromHead = aScriptFromHead;
   request->GetScriptLoadContext()->SetScriptMode(aDefer, aAsync, aLinkPreload);
