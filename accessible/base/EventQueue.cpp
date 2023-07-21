@@ -108,6 +108,10 @@ bool EventQueue::PushNameOrDescriptionChange(AccEvent* aOrigEvent) {
       }
     }
 
+    if (parent->IsDoc()) {
+      // Never cross document boundaries.
+      break;
+    }
     parent = parent->LocalParent();
   } while (parent &&
            nsTextEquivUtils::HasNameRule(parent, eNameFromSubtreeIfReqRule));
