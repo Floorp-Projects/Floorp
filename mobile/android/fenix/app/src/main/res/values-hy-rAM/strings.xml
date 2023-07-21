@@ -299,51 +299,51 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Ոչ հիմա</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Դարձրեք %s-ը ձեր հիմնական դիտարկիչը</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Դարձրեք %s-ը ձեր հիմնական դիտարկիչը</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Դարձրեք Firefox-ը ձեր հիմնական դիտարկիչը</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">%1$s-ը մարդկանց վեր է դասում շահույթից և պաշտպանում է ձեր գաղտնիությունը՝ արգելափակելով միջկայքի հետագծիչները:\n\nԻմացեք ավելին մեր %2$s-ում:</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s-ը մարդկանց վեր է դասում շահույթից և պաշտպանում է ձեր գաղտնիությունը՝ արգելափակելով միջկայքի հետագծիչները:\n\nԻմացեք ավելին մեր %2$s-ում:</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox-ը մարդկանց վեր է դասում շահույթից և պաշտպանում է ձեր գաղտնիությունը՝ արգելափակելով միջկայքի հետագծիչները:\n\nԻմացեք ավելին մեր գաղտնիության ծանուցումներում:</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">գաղտնիության ծանուցում</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">գաղտնիության ծանուցում</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Կայել որպես սկզբնադիր դիտարկիչ</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Կայել որպես սկզբնադիր դիտարկիչ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Ոչ հիմա</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ոչ հիմա</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Անցեք հեռախոսից նոութբուք և հետ</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Անցեք հեռախոսից նոութբուք և հետ</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Ձեռք բերեք ներդիրներն ու գաղտնաբառերը ձեր մյուս սարքերից՝ շարունակելու այնտեղից, որտեղ թողել եք:</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Ձեռք բերեք ներդիրներն ու գաղտնաբառերը ձեր մյուս սարքերից՝ շարունակելու այնտեղից, որտեղ թողել եք:</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Մուտք գործել</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Մուտք գործել</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Ոչ հիմա</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Ոչ հիմա</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Ծանուցումներն օգնում են ձեզ ավելին անել %s-ի հետ</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Ծանուցումներն օգնում են ձեզ ավելին անել %s-ի հետ</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Ծանուցումներն օգնում են ձեզ ավելին անել Firefox-ի հետ</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Ուղարկեք ներդիրներ սարքերի միջև, կառավարեք ներբեռնումները և ստացեք խորհուրդներ %s-ից առավելագույնը քաղելու վերաբերյալ:</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Ուղարկեք ներդիրներ սարքերի միջև, կառավարեք ներբեռնումները և ստացեք խորհուրդներ %s-ից առավելագույնը քաղելու վերաբերյալ:</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Ուղարկեք ներդիրներ սարքերի միջև, կառավարեք ներբեռնումները և ստացեք խորհուրդներ Firefox-ից առավելագույնը քաղելու վերաբերյալ:</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Միացնել ծանուցումները</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Միացնել ծանուցումները</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Ոչ հիմա</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Ոչ հիմա</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1200,8 +1200,10 @@
 
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Պահել որպես PDF</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">Անհնար է ստեղծել PDF</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Բաց թողնել</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">Անհնար է տպել</string>
     <!-- Text for the print feature in the share and browser menu -->

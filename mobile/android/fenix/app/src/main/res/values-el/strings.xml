@@ -307,51 +307,51 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Όχι τώρα</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Ορίστε το %s ως το προεπιλεγμένο πρόγραμμα περιήγησής σας</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Ορίστε το %s ως το προεπιλεγμένο πρόγραμμα περιήγησής σας</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Ορίστε το FIrefox ως το προεπιλεγμένο πρόγραμμα περιήγησής σας</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">Το %1$s θέτει σε προτεραιότητα τους ανθρώπους και όχι τα κέρδη, προστατεύοντας το απόρρητό σας με αποκλεισμό των ιχνηλατών μεταξύ ιστοτόπων.\n\nΜάθετε περισσότερα στη %2$s μας.</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Το %1$s θέτει σε προτεραιότητα τους ανθρώπους και όχι τα κέρδη, προστατεύοντας το απόρρητό σας με αποκλεισμό των ιχνηλατών μεταξύ ιστοτόπων.\n\nΜάθετε περισσότερα στη %2$s μας.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Το Firefox θέτει σε προτεραιότητα τους ανθρώπους και όχι τα κέρδη, προστατεύοντας το απόρρητό σας με αποκλεισμό των ιχνηλατών μεταξύ ιστοτόπων.\n\nΜάθετε περισσότερα στη σημείωση απορρήτου μας.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">σημείωση απορρήτου</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">σημείωση απορρήτου</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Ορισμός ως προεπιλογή</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Ορισμός ως προεπιλογή</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Όχι τώρα</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Όχι τώρα</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Εναλλαγή από τηλέφωνο σε υπολογιστή και αντίστροφα</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Εναλλαγή από τηλέφωνο σε υπολογιστή και αντίστροφα</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Λάβετε καρτέλες και κωδικούς πρόσβασης από τις άλλες συσκευές σας για να συνεχίσετε από εκεί που σταματήσατε.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Λάβετε καρτέλες και κωδικούς πρόσβασης από τις άλλες συσκευές σας για να συνεχίσετε από εκεί που σταματήσατε.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Σύνδεση</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Σύνδεση</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Όχι τώρα</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Όχι τώρα</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Οι ειδοποιήσεις σάς βοηθούν να κάνετε περισσότερα με το %s</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Οι ειδοποιήσεις σάς βοηθούν να κάνετε περισσότερα με το %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Οι ειδοποιήσεις σάς βοηθούν να κάνετε περισσότερα με το Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Αποστολή καρτελών μεταξύ συσκευών, διαχείριση λήψεων και λήψη συμβουλών για την αξιοποίηση του %s στο έπακρο.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Αποστολή καρτελών μεταξύ συσκευών, διαχείριση λήψεων και λήψη συμβουλών για την αξιοποίηση του %s στο έπακρο.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Αποστολή καρτελών μεταξύ συσκευών, διαχείριση λήψεων και λήψη συμβουλών για την αξιοποίηση του Firefox στο έπακρο.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Ενεργοποίηση ειδοποιήσεων</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Ενεργοποίηση ειδοποιήσεων</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Όχι τώρα</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Όχι τώρα</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1214,8 +1214,10 @@
     <string name="share_button_content_description">Κοινή χρήση</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Αποθήκευση ως PDF</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">Δεν είναι δυνατή η δημιουργία PDF</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Απόρριψη</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">Αδυναμία εκτύπωσης</string>
     <!-- Text for the print feature in the share and browser menu -->

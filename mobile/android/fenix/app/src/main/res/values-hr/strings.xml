@@ -36,7 +36,7 @@
     <!-- Label of button in create collection dialog for creating a new collection  -->
     <string name="tab_tray_add_new_collection">Dodaj novu zbirku</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
-    <string name="tab_tray_add_new_collection_name">Ime</string>
+    <string name="tab_tray_add_new_collection_name">Naziv</string>
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
     <string name="tab_tray_select_collection">Odaberi zbirku</string>
     <!-- Content description for close button while in multiselect mode in tab tray -->
@@ -372,7 +372,7 @@
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Standardna tražilica</string>
     <!-- Preference for settings related to Search -->
-    <string name="preferences_search">Traži</string>
+    <string name="preferences_search">Tražilica</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Traka adrese</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -1898,7 +1898,7 @@
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">Naziv</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Ime</string>
+    <string name="search_add_custom_engine_name_hint">Naziv</string>
 
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">Naziv pretraživača</string>
