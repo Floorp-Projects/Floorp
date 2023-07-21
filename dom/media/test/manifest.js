@@ -531,6 +531,13 @@ var gPlayTests = [
   // tag. The ID3v1 tags should be at the end of the file, but software usually
   // play it anyway.
   { name: "id3v1afterlongid3v2.mp3", type: "audio/mpeg", duration: 0.5 },
+  // An VBR file with a padding value that is greater than an mp3 packet, and
+  // also subsequent packets after the theoretical EOF computed from metadata,
+  // to test padding trimming edge cases.
+  {
+    name: "padding-spanning-multiple-packets.mp3",
+    type: "audio/mpeg",
+  },
   // A truncated VBR MP3 with just enough frames to keep most decoders happy.
   // The Xing header reports the length of the file to be around 10 seconds, but
   // there is really only one second worth of data. We want MP3FrameParser to
