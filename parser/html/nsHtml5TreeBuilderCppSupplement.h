@@ -249,8 +249,6 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
             nsHtml5String crossOrigin =
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
-            nsHtml5String nonce =
-                aAttributes->getValue(nsHtml5AttributeName::ATTR_NONCE);
             nsHtml5String integrity =
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
             nsHtml5String referrerPolicy = aAttributes->getValue(
@@ -262,7 +260,7 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
             bool noModule =
                 aAttributes->contains(nsHtml5AttributeName::ATTR_NOMODULE);
             mSpeculativeLoadQueue.AppendElement()->InitScript(
-                url, charset, type, crossOrigin, /* aMedia = */ nullptr, nonce,
+                url, charset, type, crossOrigin, /* aMedia = */ nullptr,
                 integrity, referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
                 async, defer, noModule, false);
             mCurrentHtmlScriptIsAsyncOrDefer = async || defer;
@@ -329,10 +327,9 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                   nsHtml5String type =
                       aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
                   mSpeculativeLoadQueue.AppendElement()->InitScript(
-                      url, charset, type, crossOrigin, media,
-                      /* aNonce */ nullptr, integrity, referrerPolicy,
-                      mode == nsHtml5TreeBuilder::IN_HEAD, false, false, false,
-                      true);
+                      url, charset, type, crossOrigin, media, integrity,
+                      referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
+                      false, false, false, true);
                 } else if (as.LowerCaseEqualsASCII("style")) {
                   mSpeculativeLoadQueue.AppendElement()->InitStyle(
                       url, charset, crossOrigin, media, referrerPolicy,
@@ -379,10 +376,9 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                   nsHtml5String referrerPolicy = aAttributes->getValue(
                       nsHtml5AttributeName::ATTR_REFERRERPOLICY);
                   mSpeculativeLoadQueue.AppendElement()->InitScript(
-                      url, charset, type, crossOrigin, media,
-                      /* aNonce */ nullptr, integrity, referrerPolicy,
-                      mode == nsHtml5TreeBuilder::IN_HEAD, false, false, false,
-                      true);
+                      url, charset, type, crossOrigin, media, integrity,
+                      referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
+                      false, false, false, true);
                 }
               }
             }
@@ -473,14 +469,12 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
             nsHtml5String crossOrigin =
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
-            nsHtml5String nonce =
-                aAttributes->getValue(nsHtml5AttributeName::ATTR_NONCE);
             nsHtml5String integrity =
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
             nsHtml5String referrerPolicy = aAttributes->getValue(
                 nsHtml5AttributeName::ATTR_REFERRERPOLICY);
             mSpeculativeLoadQueue.AppendElement()->InitScript(
-                url, nullptr, type, crossOrigin, /* aMedia = */ nullptr, nonce,
+                url, nullptr, type, crossOrigin, /* aMedia = */ nullptr,
                 integrity, referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
                 false, false, false, false);
           }

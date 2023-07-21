@@ -55,8 +55,6 @@ class ModuleScript;
 class ScriptLoadRequest;
 class ScriptLoadRequestList;
 
-enum class ParserMetadata;
-
 }  // namespace loader
 }  // namespace JS
 
@@ -378,9 +376,9 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    */
   virtual void PreloadURI(nsIURI* aURI, const nsAString& aCharset,
                           const nsAString& aType, const nsAString& aCrossOrigin,
-                          const nsAString& aNonce, const nsAString& aIntegrity,
-                          bool aScriptFromHead, bool aAsync, bool aDefer,
-                          bool aNoModule, bool aLinkPreload,
+                          const nsAString& aIntegrity, bool aScriptFromHead,
+                          bool aAsync, bool aDefer, bool aNoModule,
+                          bool aLinkPreload,
                           const ReferrerPolicy aReferrerPolicy,
                           uint64_t aEarlyHintPreloaderId);
 
@@ -429,9 +427,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   already_AddRefed<ScriptLoadRequest> CreateLoadRequest(
       ScriptKind aKind, nsIURI* aURI, nsIScriptElement* aElement,
       nsIPrincipal* aTriggeringPrincipal, mozilla::CORSMode aCORSMode,
-      const nsAString& aNonce, const SRIMetadata& aIntegrity,
-      ReferrerPolicy aReferrerPolicy,
-      JS::loader::ParserMetadata aParserMetadata);
+      const SRIMetadata& aIntegrity, ReferrerPolicy aReferrerPolicy);
 
   /**
    * Unblocks the creator parser of the parser-blocking scripts.
@@ -465,10 +461,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   /**
    * Helper function to check the content policy for a given request.
    */
-  static nsresult CheckContentPolicy(Document* aDocument,
-                                     nsIScriptElement* aElement,
+  static nsresult CheckContentPolicy(Document* aDocument, nsISupports* aContext,
                                      const nsAString& aType,
-                                     const nsAString& aNonce,
                                      ScriptLoadRequest* aRequest);
 
   /**
