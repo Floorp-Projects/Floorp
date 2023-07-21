@@ -1237,12 +1237,14 @@ JS_PUBLIC_API bool JS::CheckRegExpSyntax(JSContext* cx, const char16_t* chars,
       dummyTokenStream, source, flags);
   error.set(UndefinedValue());
   if (!success) {
+    if (!fc.convertToRuntimeErrorAndClear()) {
+      return false;
+    }
     // We can fail because of OOM or over-recursion even if the syntax is valid.
-    if (fc.hadOutOfMemory() || fc.hadOverRecursed()) {
+    if (cx->isThrowingOutOfMemory() || cx->isThrowingOverRecursed()) {
       return false;
     }
 
-    fc.convertToRuntimeErrorAndClear();
     if (!cx->getPendingException(error)) {
       return false;
     }
