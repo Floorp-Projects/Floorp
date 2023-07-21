@@ -99,26 +99,12 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
   RefPtr<ScriptFetchOptions> options;
   nsIURI* baseURL = nullptr;
   if (aMaybeActiveScript) {
-    // https://html.spec.whatwg.org/multipage/webappapis.html#hostloadimportedmodule
-    // Step 6.3. Set fetchOptions to the new descendant script fetch options for
-    // referencingScript's fetch options.
     options = aMaybeActiveScript->GetFetchOptions();
     baseURL = aMaybeActiveScript->BaseURL();
   } else {
-    // https://html.spec.whatwg.org/multipage/webappapis.html#hostloadimportedmodule
-    // Step 4. Let fetchOptions be the default classic script fetch options.
-    //
-    // https://html.spec.whatwg.org/multipage/webappapis.html#default-classic-script-fetch-options
-    // The default classic script fetch options are a script fetch options whose
-    // cryptographic nonce is the empty string, integrity metadata is the empty
-    // string, parser metadata is "not-parser-inserted", credentials mode is
-    // "same-origin", referrer policy is the empty string, and fetch priority is
-    // "auto".
     ReferrerPolicy referrerPolicy = workerPrivate->GetReferrerPolicy();
-    options = new ScriptFetchOptions(
-        CORSMode::CORS_NONE, referrerPolicy,
-        /* aNonce = */ u""_ns, JS::loader::ParserMetadata::NotParserInserted,
-        nullptr);
+    options =
+        new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy, nullptr);
     baseURL = GetBaseURI();
   }
 

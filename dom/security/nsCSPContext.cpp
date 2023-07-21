@@ -481,7 +481,8 @@ nsCSPContext::GetAllowsEval(bool* outShouldReportViolation,
   *outAllowsEval = true;
 
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
-    if (!mPolicies[i]->allows(SCRIPT_SRC_DIRECTIVE, CSP_UNSAFE_EVAL, u""_ns)) {
+    if (!mPolicies[i]->allows(SCRIPT_SRC_DIRECTIVE, CSP_UNSAFE_EVAL, u""_ns,
+                              false)) {
       // policy is violated: must report the violation and allow the inline
       // script if the policy is report-only.
       *outShouldReportViolation = true;
@@ -508,8 +509,9 @@ nsCSPContext::GetAllowsWasmEval(bool* outShouldReportViolation,
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
     // Either 'unsafe-eval' or 'wasm-unsafe-eval' can allow this
     if (!mPolicies[i]->allows(SCRIPT_SRC_DIRECTIVE, CSP_WASM_UNSAFE_EVAL,
-                              u""_ns) &&
-        !mPolicies[i]->allows(SCRIPT_SRC_DIRECTIVE, CSP_UNSAFE_EVAL, u""_ns)) {
+                              u""_ns, false) &&
+        !mPolicies[i]->allows(SCRIPT_SRC_DIRECTIVE, CSP_UNSAFE_EVAL, u""_ns,
+                              false)) {
       // policy is violated: must report the violation and allow the inline
       // script if the policy is report-only.
       *outShouldReportViolation = true;
@@ -606,17 +608,15 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, bool aHasUnsafeHash,
 
   // always iterate all policies, otherwise we might not send out all reports
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
-    // https://w3c.github.io/webappsec-csp/#match-element-to-source-list
-    // Step 1. If §6.7.3.2 Does a source list allow all inline behavior for
-    // type? returns "Allows" given list and type, return "Matches".
-    if (mPolicies[i]->allowsAllInlineBehavior(aDirective)) {
-      continue;
-    }
+    bool allowed =
+        mPolicies[i]->allows(aDirective, CSP_UNSAFE_INLINE, u""_ns,
+                             aParserCreated) ||
+        mPolicies[i]->allows(aDirective, CSP_NONCE, aNonce, aParserCreated);
 
-    // Step 2. If type is "script" or "style", and §6.7.3.1 Is element
-    // nonceable? returns "Nonceable" when executed upon element: [...]
-    // TODO(Bug 1397308) Implement "is element nonceable?" CSP checks
-    if (mPolicies[i]->allows(aDirective, CSP_NONCE, aNonce)) {
+    // If the inlined script or style is allowed by either unsafe-inline or the
+    // nonce, go ahead and shortcut this loop so we can avoid allocating
+    // unecessary strings
+    if (allowed) {
       continue;
     }
 
@@ -634,28 +634,15 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, bool aHasUnsafeHash,
       content = aContentOfPseudoScript;
     }
 
-    // Step 3. Let unsafe-hashes flag be false.
-    // Step 4. For each expression of list: [...]
-    bool unsafeHashesFlag =
-        mPolicies[i]->allows(aDirective, CSP_UNSAFE_HASHES, u""_ns);
-
+    // Per https://w3c.github.io/webappsec-csp/#match-element-to-source-list
     // Step 5. If type is "script" or "style", or unsafe-hashes flag is true:
     //
     // aHasUnsafeHash is true for event handlers (type "script attribute"),
     // style= attributes (type "style attribute") and the javascript: protocol.
-    if (!aHasUnsafeHash || unsafeHashesFlag) {
-      if (mPolicies[i]->allows(aDirective, CSP_HASH, content)) {
-        continue;
-      }
-    }
-
-    // TODO(Bug 1844290): Figure out how/if strict-dynamic for inline scripts is
-    // specified
-    bool allowed = false;
-    if ((aDirective == SCRIPT_SRC_ELEM_DIRECTIVE ||
-         aDirective == SCRIPT_SRC_ATTR_DIRECTIVE) &&
-        mPolicies[i]->allows(aDirective, CSP_STRICT_DYNAMIC, u""_ns)) {
-      allowed = !aParserCreated;
+    if (!aHasUnsafeHash || mPolicies[i]->allows(aDirective, CSP_UNSAFE_HASHES,
+                                                u""_ns, aParserCreated)) {
+      allowed =
+          mPolicies[i]->allows(aDirective, CSP_HASH, content, aParserCreated);
     }
 
     if (!allowed) {
@@ -822,7 +809,7 @@ nsCSPContext::LogViolationDetails(
   for (uint32_t p = 0; p < mPolicies.Length(); p++) {
     NS_ASSERTION(mPolicies[p], "null pointer in nsTArray<nsCSPPolicy>");
 
-    if (mPolicies[p]->allows(SCRIPT_SRC_DIRECTIVE, keyword, u""_ns)) {
+    if (mPolicies[p]->allows(SCRIPT_SRC_DIRECTIVE, keyword, u""_ns, false)) {
       continue;
     }
 
