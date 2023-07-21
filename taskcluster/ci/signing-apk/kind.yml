@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.transform:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
     - taskgraph.transforms.from_deps
@@ -10,17 +10,18 @@ transforms:
     - android_taskgraph.transforms.treeherder:transforms
     - android_taskgraph.transforms.signing_android_app:transforms
     - android_taskgraph.transforms.notify:transforms
-    - taskgraph.transforms.task:transforms
+    - gecko_taskgraph.transforms.task:transforms
 
 kind-dependencies:
     - build-apk
 
-tasks:
+jobs:
     sign-apk:
         description: Sign Android APKs
         from-deps:
             copy-attributes: true
-        worker: {}
+        worker:
+            implementation: scriptworker-signing
         signing-format:
             by-build-type:
                 (focus-.*|klar-.*): autograph_focus
@@ -34,18 +35,18 @@ tasks:
                             type: signing
                         default: {}
                 default: {}
-        run-on-tasks-for:
+        run-on-projects:
             by-build-type:
-                (focus-debug|android-test-debug|nightly-firebase|android-test-nightly|beta-firebase|android-test-beta): [github-push]
+                (focus-debug|android-test-debug|nightly-firebase|android-test-nightly|beta-firebase|android-test-beta): [all]
                 # No test job runs on push against this build type. Although we do want nightly-simulation
                 # signed to use it in the gecko trees.
                 # We want beta on push so that we detect problem before shipping it
-                (fenix-nightly-simulation|fenix-beta-firebase|fenix-android-test-beta|fenix-nightly-firebase|fenix-android-test-nightly): [github-push]
+                (fenix-nightly-simulation|fenix-beta-firebase|fenix-android-test-beta|fenix-nightly-firebase|fenix-android-test-nightly): [all]
                 # bug 1851826
                 (fenix-android-test-mozillaonline): []
                 default: []
         treeherder:
-            job-symbol:
+            symbol:
                 by-build-type:
                     default: Bs
                     focus-(debug|nightly|beta|release)$: Bfs
