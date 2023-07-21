@@ -308,8 +308,29 @@ struct GlyphMetrics {
 };
 
 hb_position_t gfxHarfBuzzShaper::GetGlyphHAdvance(hb_codepoint_t glyph) const {
-  // font did not implement GetGlyphWidth, so get an unhinted value
-  // directly from the font tables
+  if (mUseFontGlyphWidths) {
+    if (!mWidthCache) {
+      mWidthCache = MakeUnique<WidthCache>();
+    }
+
+    auto cached = mWidthCache->Lookup(glyph);
+    if (cached) {
+      return cached.Data().mAdvance;
+    }
+
+    // We hold the lock in gfxFont before calling in to the shaper, so it is
+    // OK to call GetGlyphWidthLocked() here. We can't call the non-Locked
+    // version because that would attempt to recursively lock the font.
+    MOZ_PUSH_IGNORE_THREAD_SAFETY
+    hb_position_t advance = GetFont()->GetGlyphWidthLocked(glyph);
+    MOZ_POP_THREAD_SAFETY
+    cached.Set(WidthCacheData{glyph, advance});
+    return advance;
+  }
+
+  // Font did not implement GetGlyphWidth, so get an unhinted value
+  // directly from the font tables. This lookup is cheap enough that we
+  // don't create an MruCache for it.
 
   NS_ASSERTION((mNumLongHMetrics > 0) && mHmtxTable != nullptr,
                "font is lacking metrics, we shouldn't be here");
@@ -360,13 +381,7 @@ hb_position_t gfxHarfBuzzShaper::HBGetGlyphHAdvance(hb_font_t* font,
                                                     void* user_data) {
   const gfxHarfBuzzShaper::FontCallbackData* fcd =
       static_cast<const gfxHarfBuzzShaper::FontCallbackData*>(font_data);
-  const gfxHarfBuzzShaper* shaper = fcd->mShaper;
-  if (shaper->mUseFontGlyphWidths) {
-    MOZ_PUSH_IGNORE_THREAD_SAFETY
-    return shaper->GetFont()->GetGlyphWidthLocked(glyph);
-    MOZ_POP_THREAD_SAFETY
-  }
-  return shaper->GetGlyphHAdvance(glyph);
+  return fcd->mShaper->GetGlyphHAdvance(glyph);
 }
 
 /* static */
@@ -420,10 +435,7 @@ hb_bool_t gfxHarfBuzzShaper::HBGetGlyphVOrigin(hb_font_t* font, void* font_data,
 void gfxHarfBuzzShaper::GetGlyphVOrigin(hb_codepoint_t aGlyph,
                                         hb_position_t* aX,
                                         hb_position_t* aY) const {
-  MOZ_PUSH_IGNORE_THREAD_SAFETY
-  *aX = 0.5 * (mUseFontGlyphWidths ? mFont->GetGlyphWidthLocked(aGlyph)
-                                   : GetGlyphHAdvance(aGlyph));
-  MOZ_POP_THREAD_SAFETY
+  *aX = 0.5 * GetGlyphHAdvance(aGlyph);
 
   if (mVORGTable) {
     // We checked in Initialize() that the VORG table is safely readable,
