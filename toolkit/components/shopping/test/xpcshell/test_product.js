@@ -147,7 +147,10 @@ server.registerPathHandler(
       gExpectedOHTTPMethod,
       "Should get expected HTTP method"
     );
-    Assert.deepEqual(decodedRequest.headerNames, ["Accept", "Content-Type"]);
+    Assert.deepEqual(decodedRequest.headerNames.sort(), [
+      "Accept",
+      "Content-Type",
+    ]);
     Assert.deepEqual(decodedRequest.headerValues, [
       "application/json",
       "application/json",
