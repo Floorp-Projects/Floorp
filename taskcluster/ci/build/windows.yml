@@ -812,13 +812,11 @@ win32-rusttests/opt:
             disable_package_metrics: true
         mozconfig-variant: rusttests
     run-on-projects: ['mozilla-central']
-    use-sccache: true
     fetches:
         toolchain:
             - win64-clang
             - win64-rust
             - win64-cbindgen
-            - win64-sccache
             - win64-nasm
             - win64-node
             - win64-winchecksec
@@ -857,13 +855,11 @@ win32-rusttests/debug:
             disable_package_metrics: true
         mozconfig-variant: rusttests-debug
     run-on-projects: ['mozilla-central']
-    use-sccache: true
     fetches:
         toolchain:
             - win64-clang
             - win64-rust
             - win64-cbindgen
-            - win64-sccache
             - win64-nasm
             - win64-node
             - win64-winchecksec
@@ -899,13 +895,11 @@ win64-rusttests/opt:
             - builds/taskcluster_sub_win64/rusttests_opt.py
         mozconfig-variant: rusttests
     run-on-projects: ['mozilla-central']
-    use-sccache: true
     fetches:
         toolchain:
             - win64-clang
             - win64-rust
             - win64-cbindgen
-            - win64-sccache
             - win64-nasm
             - win64-node
             - win64-winchecksec
@@ -941,13 +935,11 @@ win64-rusttests/debug:
             - builds/taskcluster_sub_win64/rusttests_opt.py
         mozconfig-variant: rusttests-debug
     run-on-projects: ['trunk']
-    use-sccache: true
     fetches:
         toolchain:
             - win64-clang
             - win64-rust
             - win64-cbindgen
-            - win64-sccache
             - win64-nasm
             - win64-node
             - win64-winchecksec
