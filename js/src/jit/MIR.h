@@ -8467,14 +8467,11 @@ class MInCache : public MBinaryInstruction,
 };
 
 // Test whether the index is in the array bounds or a hole.
-class MInArray : public MQuaternaryInstruction, public ObjectPolicy<3>::Data {
-  bool needsNegativeIntCheck_;
+class MInArray : public MTernaryInstruction, public NoTypePolicy::Data {
+  bool needsNegativeIntCheck_ = true;
 
-  MInArray(MDefinition* elements, MDefinition* index, MDefinition* initLength,
-           MDefinition* object)
-      : MQuaternaryInstruction(classOpcode, elements, index, initLength,
-                               object),
-        needsNegativeIntCheck_(true) {
+  MInArray(MDefinition* elements, MDefinition* index, MDefinition* initLength)
+      : MTernaryInstruction(classOpcode, elements, index, initLength) {
     setResultType(MIRType::Boolean);
     setMovable();
 
@@ -8491,7 +8488,7 @@ class MInArray : public MQuaternaryInstruction, public ObjectPolicy<3>::Data {
  public:
   INSTRUCTION_HEADER(InArray)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, elements), (1, index), (2, initLength), (3, object))
+  NAMED_OPERANDS((0, elements), (1, index), (2, initLength))
 
   bool needsNegativeIntCheck() const { return needsNegativeIntCheck_; }
   void collectRangeInfoPreTrunc() override;

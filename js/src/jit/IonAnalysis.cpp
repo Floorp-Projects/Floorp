@@ -4151,6 +4151,7 @@ static bool NeedsKeepAlive(MInstruction* slotsOrElements, MInstruction* use) {
       case MDefinition::Opcode::ArrayLength:
       case MDefinition::Opcode::BoundsCheck:
       case MDefinition::Opcode::GuardElementNotHole:
+      case MDefinition::Opcode::InArray:
       case MDefinition::Opcode::SpectreMaskIndex:
       case MDefinition::Opcode::DebugEnterGCUnsafeRegion:
       case MDefinition::Opcode::DebugLeaveGCUnsafeRegion:
@@ -4207,14 +4208,6 @@ bool jit::AddKeepAliveInstructions(MIRGraph& graph) {
           MOZ_ASSERT_IF(!use->toStoreElementHole()->object()->isUnbox() &&
                             !ownerObject->isUnbox(),
                         use->toStoreElementHole()->object() == ownerObject);
-          continue;
-        }
-
-        if (use->isInArray()) {
-          // See StoreElementHole case above.
-          MOZ_ASSERT_IF(
-              !use->toInArray()->object()->isUnbox() && !ownerObject->isUnbox(),
-              use->toInArray()->object() == ownerObject);
           continue;
         }
 

@@ -3823,7 +3823,6 @@ void LIRGenerator::visitInArray(MInArray* ins) {
   MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
   MOZ_ASSERT(ins->initLength()->type() == MIRType::Int32);
-  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::Boolean);
 
   auto* lir = new (alloc()) LInArray(useRegister(ins->elements()),
