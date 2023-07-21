@@ -6,7 +6,7 @@ function wasmEvalText(str, imports) {
 }
 let { newElem, f1, f2, f3, f4 } = wasmEvalText(`
     (type $a (array funcref))
-    (elem $e funcref $f1 $f2 $f3 $f4)
+    (elem $e func $f1 $f2 $f3 $f4)
     (func $f1 )
     (func $f2 )
     (func $f3 )

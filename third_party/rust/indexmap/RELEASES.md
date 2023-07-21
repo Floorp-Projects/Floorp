@@ -1,3 +1,7 @@
+- 1.9.3
+
+  - Bump the `rustc-rayon` dependency, for compiler use only.
+
 - 1.9.2
 
   - `IndexMap` and `IndexSet` both implement `arbitrary::Arbitrary<'_>` and

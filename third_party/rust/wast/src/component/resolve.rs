@@ -170,7 +170,7 @@ impl<'a> Resolver<'a> {
                 }
                 self.export(&mut e.kind)
             }
-            ComponentField::Custom(_) => Ok(()),
+            ComponentField::Custom(_) | ComponentField::Producers(_) => Ok(()),
         }
     }
 
@@ -375,7 +375,9 @@ impl<'a> Resolver<'a> {
             }
             CanonicalFuncKind::ResourceNew(info) => return self.resolve_ns(&mut info.ty, Ns::Type),
             CanonicalFuncKind::ResourceRep(info) => return self.resolve_ns(&mut info.ty, Ns::Type),
-            CanonicalFuncKind::ResourceDrop(info) => return self.component_val_type(&mut info.ty),
+            CanonicalFuncKind::ResourceDrop(info) => {
+                return self.resolve_ns(&mut info.ty, Ns::Type)
+            }
         };
 
         for opt in opts {
@@ -845,7 +847,7 @@ impl<'a> ComponentState<'a> {
                 ComponentExportKind::Component(_) => self.components.register(e.id, "component")?,
                 ComponentExportKind::Type(_) => self.types.register(e.id, "type")?,
             },
-            ComponentField::Custom(_) => return Ok(()),
+            ComponentField::Custom(_) | ComponentField::Producers(_) => return Ok(()),
         };
 
         Ok(())

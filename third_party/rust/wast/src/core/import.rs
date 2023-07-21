@@ -59,7 +59,7 @@ pub enum ItemKind<'a> {
 impl<'a> Parse<'a> for ItemSig<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let mut l = parser.lookahead1();
-        if l.peek::<kw::func>() {
+        if l.peek::<kw::func>()? {
             let span = parser.parse::<kw::func>()?.0;
             Ok(ItemSig {
                 span,
@@ -67,7 +67,7 @@ impl<'a> Parse<'a> for ItemSig<'a> {
                 name: parser.parse()?,
                 kind: ItemKind::Func(parser.parse()?),
             })
-        } else if l.peek::<kw::table>() {
+        } else if l.peek::<kw::table>()? {
             let span = parser.parse::<kw::table>()?.0;
             Ok(ItemSig {
                 span,
@@ -75,7 +75,7 @@ impl<'a> Parse<'a> for ItemSig<'a> {
                 name: None,
                 kind: ItemKind::Table(parser.parse()?),
             })
-        } else if l.peek::<kw::memory>() {
+        } else if l.peek::<kw::memory>()? {
             let span = parser.parse::<kw::memory>()?.0;
             Ok(ItemSig {
                 span,
@@ -83,7 +83,7 @@ impl<'a> Parse<'a> for ItemSig<'a> {
                 name: None,
                 kind: ItemKind::Memory(parser.parse()?),
             })
-        } else if l.peek::<kw::global>() {
+        } else if l.peek::<kw::global>()? {
             let span = parser.parse::<kw::global>()?.0;
             Ok(ItemSig {
                 span,
@@ -91,7 +91,7 @@ impl<'a> Parse<'a> for ItemSig<'a> {
                 name: None,
                 kind: ItemKind::Global(parser.parse()?),
             })
-        } else if l.peek::<kw::tag>() {
+        } else if l.peek::<kw::tag>()? {
             let span = parser.parse::<kw::tag>()?.0;
             Ok(ItemSig {
                 span,
@@ -131,25 +131,25 @@ impl<'a> Parse<'a> for InlineImport<'a> {
 }
 
 impl Peek for InlineImport<'_> {
-    fn peek(cursor: Cursor<'_>) -> bool {
-        let cursor = match cursor.lparen() {
+    fn peek(cursor: Cursor<'_>) -> Result<bool> {
+        let cursor = match cursor.lparen()? {
             Some(cursor) => cursor,
-            None => return false,
+            None => return Ok(false),
         };
-        let cursor = match cursor.keyword() {
+        let cursor = match cursor.keyword()? {
             Some(("import", cursor)) => cursor,
-            _ => return false,
+            _ => return Ok(false),
         };
-        let cursor = match cursor.string() {
+        let cursor = match cursor.string()? {
             Some((_, cursor)) => cursor,
-            None => return false,
+            None => return Ok(false),
         };
-        let cursor = match cursor.string() {
+        let cursor = match cursor.string()? {
             Some((_, cursor)) => cursor,
-            None => return false,
+            None => return Ok(false),
         };
 
-        cursor.rparen().is_some()
+        Ok(cursor.rparen()?.is_some())
     }
 
     fn display() -> &'static str {

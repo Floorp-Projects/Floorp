@@ -1,5 +1,6 @@
 use crate::annotation;
 use crate::component::*;
+use crate::core::Producers;
 use crate::kw;
 use crate::parser::{Parse, Parser, Result};
 use crate::token::Index;
@@ -108,12 +109,14 @@ impl<'a> Component<'a> {
 impl<'a> Parse<'a> for Component<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let _r = parser.register_annotation("custom");
+        let _r = parser.register_annotation("producers");
+        let _r = parser.register_annotation("name");
 
         let span = parser.parse::<kw::component>()?.0;
         let id = parser.parse()?;
         let name = parser.parse()?;
 
-        let kind = if parser.peek::<kw::binary>() {
+        let kind = if parser.peek::<kw::binary>()? {
             parser.parse::<kw::binary>()?;
             let mut data = Vec::new();
             while !parser.is_empty() {
@@ -150,6 +153,7 @@ pub enum ComponentField<'a> {
     Import(ComponentImport<'a>),
     Export(ComponentExport<'a>),
     Custom(Custom<'a>),
+    Producers(Producers<'a>),
 }
 
 impl<'a> ComponentField<'a> {
@@ -164,46 +168,49 @@ impl<'a> ComponentField<'a> {
 
 impl<'a> Parse<'a> for ComponentField<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        if parser.peek::<kw::core>() {
-            if parser.peek2::<kw::module>() {
+        if parser.peek::<kw::core>()? {
+            if parser.peek2::<kw::module>()? {
                 return Ok(Self::CoreModule(parser.parse()?));
             }
-            if parser.peek2::<kw::instance>() {
+            if parser.peek2::<kw::instance>()? {
                 return Ok(Self::CoreInstance(parser.parse()?));
             }
-            if parser.peek2::<kw::r#type>() {
+            if parser.peek2::<kw::r#type>()? {
                 return Ok(Self::CoreType(parser.parse()?));
             }
-            if parser.peek2::<kw::func>() {
+            if parser.peek2::<kw::func>()? {
                 return Ok(Self::CoreFunc(parser.parse()?));
             }
         } else {
-            if parser.peek::<kw::component>() {
+            if parser.peek::<kw::component>()? {
                 return Ok(Self::Component(parser.parse()?));
             }
-            if parser.peek::<kw::instance>() {
+            if parser.peek::<kw::instance>()? {
                 return Ok(Self::Instance(parser.parse()?));
             }
-            if parser.peek::<kw::alias>() {
+            if parser.peek::<kw::alias>()? {
                 return Ok(Self::Alias(parser.parse()?));
             }
-            if parser.peek::<kw::r#type>() {
+            if parser.peek::<kw::r#type>()? {
                 return Ok(Self::Type(Type::parse_maybe_with_inline_exports(parser)?));
             }
-            if parser.peek::<kw::import>() {
+            if parser.peek::<kw::import>()? {
                 return Ok(Self::Import(parser.parse()?));
             }
-            if parser.peek::<kw::func>() {
+            if parser.peek::<kw::func>()? {
                 return Ok(Self::Func(parser.parse()?));
             }
-            if parser.peek::<kw::export>() {
+            if parser.peek::<kw::export>()? {
                 return Ok(Self::Export(parser.parse()?));
             }
-            if parser.peek::<kw::start>() {
+            if parser.peek::<kw::start>()? {
                 return Ok(Self::Start(parser.parse()?));
             }
-            if parser.peek::<annotation::custom>() {
+            if parser.peek::<annotation::custom>()? {
                 return Ok(Self::Custom(parser.parse()?));
+            }
+            if parser.peek::<annotation::producers>()? {
+                return Ok(Self::Producers(parser.parse()?));
             }
         }
         Err(parser.error("expected valid component field"))
@@ -226,12 +233,12 @@ impl<'a> Parse<'a> for Start<'a> {
         parser.parse::<kw::start>()?;
         let func = parser.parse()?;
         let mut args = Vec::new();
-        while !parser.is_empty() && !parser.peek2::<kw::result>() {
+        while !parser.is_empty() && !parser.peek2::<kw::result>()? {
             args.push(parser.parens(|parser| parser.parse())?);
         }
 
         let mut results = Vec::new();
-        while !parser.is_empty() && parser.peek2::<kw::result>() {
+        while !parser.is_empty() && parser.peek2::<kw::result>()? {
             results.push(parser.parens(|parser| {
                 parser.parse::<kw::result>()?;
                 parser.parens(|parser| {

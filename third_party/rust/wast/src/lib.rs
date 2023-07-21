@@ -101,7 +101,7 @@ macro_rules! custom_keyword {
         impl<'a> $crate::parser::Parse<'a> for $name {
             fn parse(parser: $crate::parser::Parser<'a>) -> $crate::parser::Result<Self> {
                 parser.step(|c| {
-                    if let Some((kw, rest)) = c.keyword() {
+                    if let Some((kw, rest)) = c.keyword()? {
                         if kw == $kw {
                             return Ok(($name(c.cur_span()), rest));
                         }
@@ -112,12 +112,12 @@ macro_rules! custom_keyword {
         }
 
         impl $crate::parser::Peek for $name {
-            fn peek(cursor: $crate::parser::Cursor<'_>) -> bool {
-                if let Some((kw, _rest)) = cursor.keyword() {
+            fn peek(cursor: $crate::parser::Cursor<'_>) -> $crate::parser::Result<bool> {
+                Ok(if let Some((kw, _rest)) = cursor.keyword()? {
                     kw == $kw
                 } else {
                     false
-                }
+                })
             }
 
             fn display() -> &'static str {
@@ -168,7 +168,7 @@ macro_rules! custom_reserved {
         impl<'a> $crate::parser::Parse<'a> for $name {
             fn parse(parser: $crate::parser::Parser<'a>) -> $crate::parser::Result<Self> {
                 parser.step(|c| {
-                    if let Some((rsv, rest)) = c.reserved() {
+                    if let Some((rsv, rest)) = c.reserved()? {
                         if rsv == $rsv {
                             return Ok(($name(c.cur_span()), rest));
                         }
@@ -179,11 +179,11 @@ macro_rules! custom_reserved {
         }
 
         impl $crate::parser::Peek for $name {
-            fn peek(cursor: $crate::parser::Cursor<'_>) -> bool {
-                if let Some((rsv, _rest)) = cursor.reserved() {
-                    rsv == $rsv
+            fn peek(cursor: $crate::parser::Cursor<'_>) -> Result<bool> {
+                if let Some((rsv, _rest)) = cursor.reserved()? {
+                    Ok(rsv == $rsv)
                 } else {
-                    false
+                    Ok(false)
                 }
             }
 
@@ -290,7 +290,7 @@ macro_rules! custom_reserved {
 ///     fn parse(parser: Parser<'a>) -> Result<Self> {
 ///         // and here `peek` works and our delegated parsing works because the
 ///         // annotation has been registered.
-///         if parser.peek::<annotation::producer>() {
+///         if parser.peek::<annotation::producer>()? {
 ///             return Ok(ModuleField::Producer(parser.parse()?));
 ///         }
 ///
@@ -317,8 +317,8 @@ macro_rules! annotation {
         impl<'a> $crate::parser::Parse<'a> for $name {
             fn parse(parser: $crate::parser::Parser<'a>) -> $crate::parser::Result<Self> {
                 parser.step(|c| {
-                    if let Some((a, rest)) = c.annotation() {
-                        if a == $annotation {
+                    if let Some((a, rest)) = c.reserved()? {
+                        if a == concat!("@", $annotation) {
                             return Ok(($name(c.cur_span()), rest));
                         }
                     }
@@ -328,12 +328,12 @@ macro_rules! annotation {
         }
 
         impl $crate::parser::Peek for $name {
-            fn peek(cursor: $crate::parser::Cursor<'_>) -> bool {
-                if let Some((a, _rest)) = cursor.annotation() {
-                    a == $annotation
+            fn peek(cursor: $crate::parser::Cursor<'_>) -> $crate::parser::Result<bool> {
+                Ok(if let Some((a, _rest)) = cursor.reserved()? {
+                    a == concat!("@", $annotation)
                 } else {
                     false
-                }
+                })
             }
 
             fn display() -> &'static str {

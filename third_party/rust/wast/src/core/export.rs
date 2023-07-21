@@ -44,19 +44,19 @@ impl<'a> Parse<'a> for Export<'a> {
 impl<'a> Parse<'a> for ExportKind {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let mut l = parser.lookahead1();
-        if l.peek::<kw::func>() {
+        if l.peek::<kw::func>()? {
             parser.parse::<kw::func>()?;
             Ok(ExportKind::Func)
-        } else if l.peek::<kw::table>() {
+        } else if l.peek::<kw::table>()? {
             parser.parse::<kw::table>()?;
             Ok(ExportKind::Table)
-        } else if l.peek::<kw::memory>() {
+        } else if l.peek::<kw::memory>()? {
             parser.parse::<kw::memory>()?;
             Ok(ExportKind::Memory)
-        } else if l.peek::<kw::global>() {
+        } else if l.peek::<kw::global>()? {
             parser.parse::<kw::global>()?;
             Ok(ExportKind::Global)
-        } else if l.peek::<kw::tag>() {
+        } else if l.peek::<kw::tag>()? {
             parser.parse::<kw::tag>()?;
             Ok(ExportKind::Tag)
         } else {
@@ -66,12 +66,12 @@ impl<'a> Parse<'a> for ExportKind {
 }
 
 impl Peek for ExportKind {
-    fn peek(cursor: Cursor<'_>) -> bool {
-        kw::func::peek(cursor)
-            || kw::table::peek(cursor)
-            || kw::memory::peek(cursor)
-            || kw::global::peek(cursor)
-            || kw::tag::peek(cursor)
+    fn peek(cursor: Cursor<'_>) -> Result<bool> {
+        Ok(kw::func::peek(cursor)?
+            || kw::table::peek(cursor)?
+            || kw::memory::peek(cursor)?
+            || kw::global::peek(cursor)?
+            || kw::tag::peek(cursor)?)
     }
     fn display() -> &'static str {
         "export kind"
@@ -113,7 +113,7 @@ pub struct InlineExport<'a> {
 impl<'a> Parse<'a> for InlineExport<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let mut names = Vec::new();
-        while parser.peek::<Self>() {
+        while parser.peek::<Self>()? {
             names.push(parser.parens(|p| {
                 p.parse::<kw::export>()?;
                 p.parse::<&str>()
@@ -124,20 +124,20 @@ impl<'a> Parse<'a> for InlineExport<'a> {
 }
 
 impl Peek for InlineExport<'_> {
-    fn peek(cursor: Cursor<'_>) -> bool {
-        let cursor = match cursor.lparen() {
+    fn peek(cursor: Cursor<'_>) -> Result<bool> {
+        let cursor = match cursor.lparen()? {
             Some(cursor) => cursor,
-            None => return false,
+            None => return Ok(false),
         };
-        let cursor = match cursor.keyword() {
+        let cursor = match cursor.keyword()? {
             Some(("export", cursor)) => cursor,
-            _ => return false,
+            _ => return Ok(false),
         };
-        let cursor = match cursor.string() {
+        let cursor = match cursor.string()? {
             Some((_, cursor)) => cursor,
-            None => return false,
+            None => return Ok(false),
         };
-        cursor.rparen().is_some()
+        Ok(cursor.rparen()?.is_some())
     }
 
     fn display() -> &'static str {

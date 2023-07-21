@@ -1,5 +1,5 @@
 use crate::limits::MAX_WASM_CANONICAL_OPTIONS;
-use crate::{BinaryReader, ComponentValType, FromReader, Result, SectionLimited};
+use crate::{BinaryReader, FromReader, Result, SectionLimited};
 
 /// Represents options for component functions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -50,9 +50,8 @@ pub enum CanonicalFunction {
     },
     /// A function which is used to drop resource handles of the specified type.
     ResourceDrop {
-        /// The type of the resource that's being dropped, either an (own T) or
-        /// a (borrow T)
-        ty: ComponentValType,
+        /// The type index of the resource that's being dropped.
+        resource: u32,
     },
     /// A function which returns the underlying i32-based representation of the
     /// specified resource.
@@ -95,7 +94,9 @@ impl<'a> FromReader<'a> for CanonicalFunction {
             0x02 => CanonicalFunction::ResourceNew {
                 resource: reader.read()?,
             },
-            0x03 => CanonicalFunction::ResourceDrop { ty: reader.read()? },
+            0x03 => CanonicalFunction::ResourceDrop {
+                resource: reader.read()?,
+            },
             0x04 => CanonicalFunction::ResourceRep {
                 resource: reader.read()?,
             },

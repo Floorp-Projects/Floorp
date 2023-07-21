@@ -12,7 +12,7 @@
 //! use wast::lexer::Lexer;
 //!
 //! let wat = "(module (func $foo))";
-//! for token in Lexer::new(wat) {
+//! for token in Lexer::new(wat).iter(0) {
 //!     println!("{:?}", token?);
 //! }
 //! # Ok(())
@@ -29,6 +29,7 @@ use crate::Error;
 use std::borrow::Cow;
 use std::char;
 use std::fmt;
+use std::slice;
 use std::str;
 
 /// A structure used to lex the s-expression syntax of WAT files.
@@ -38,60 +39,104 @@ use std::str;
 /// returned for any non-lexable text.
 #[derive(Clone)]
 pub struct Lexer<'a> {
-    remaining: &'a str,
     input: &'a str,
     allow_confusing_unicode: bool,
 }
 
-/// A fragment of source lex'd from an input string.
+/// A single token parsed from a `Lexer`.
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct Token {
+    /// The kind of token this represents, such as whether it's whitespace, a
+    /// keyword, etc.
+    pub kind: TokenKind,
+    /// The byte offset within the original source for where this token came
+    /// from.
+    pub offset: usize,
+    /// The byte length of this token as it resides in the original source.
+    //
+    // NB: this is `u32` to enable packing `Token` into two pointers of size.
+    // This does limit a single token to being at most 4G large, but that seems
+    // probably ok.
+    pub len: u32,
+}
+
+const _: () = {
+    assert!(std::mem::size_of::<Token>() <= std::mem::size_of::<u64>() * 2);
+};
+
+/// Classification of what was parsed from the input stream.
 ///
 /// This enumeration contains all kinds of fragments, including comments and
-/// whitespace. For most cases you'll probably ignore these and simply look at
-/// tokens.
-#[derive(Debug, PartialEq)]
-pub enum Token<'a> {
+/// whitespace.
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum TokenKind {
     /// A line comment, preceded with `;;`
-    LineComment(&'a str),
+    LineComment,
 
     /// A block comment, surrounded by `(;` and `;)`. Note that these can be
     /// nested.
-    BlockComment(&'a str),
+    BlockComment,
 
     /// A fragment of source that represents whitespace.
-    Whitespace(&'a str),
+    Whitespace,
 
     /// A left-parenthesis, including the source text for where it comes from.
-    LParen(&'a str),
+    LParen,
     /// A right-parenthesis, including the source text for where it comes from.
-    RParen(&'a str),
+    RParen,
 
     /// A string literal, which is actually a list of bytes.
-    String(WasmString<'a>),
+    String,
 
     /// An identifier (like `$foo`).
     ///
     /// All identifiers start with `$` and the payload here is the original
     /// source text.
-    Id(&'a str),
+    Id,
 
     /// A keyword, or something that starts with an alphabetic character.
     ///
     /// The payload here is the original source text.
-    Keyword(&'a str),
+    Keyword,
 
     /// A reserved series of `idchar` symbols. Unknown what this is meant to be
     /// used for, you'll probably generate an error about an unexpected token.
-    Reserved(&'a str),
+    Reserved,
 
     /// An integer.
-    Integer(Integer<'a>),
+    Integer(IntegerKind),
 
     /// A float.
-    Float(Float<'a>),
+    Float(FloatKind),
 }
 
-enum ReservedKind<'a> {
-    String(Cow<'a, [u8]>),
+/// Description of the parsed integer from the source.
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct IntegerKind {
+    sign: Option<SignToken>,
+    has_underscores: bool,
+    hex: bool,
+}
+
+/// Description of a parsed float from the source.
+#[allow(missing_docs)]
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum FloatKind {
+    #[doc(hidden)]
+    Inf { negative: bool },
+    #[doc(hidden)]
+    Nan { negative: bool },
+    #[doc(hidden)]
+    NanVal {
+        negative: bool,
+        has_underscores: bool,
+    },
+    #[doc(hidden)]
+    Normal { has_underscores: bool, hex: bool },
+}
+
+enum ReservedKind {
+    String,
     Idchars,
     Reserved,
 }
@@ -165,49 +210,22 @@ pub enum SignToken {
     Minus,
 }
 
-/// A parsed integer, signed or unsigned.
-///
-/// Methods can be use to access the value of the integer.
+/// A fully parsed integer from a source string with a payload ready to parse
+/// into an integral type.
 #[derive(Debug, PartialEq)]
-pub struct Integer<'a>(Box<IntegerInner<'a>>);
-
-#[derive(Debug, PartialEq)]
-struct IntegerInner<'a> {
+pub struct Integer<'a> {
     sign: Option<SignToken>,
-    src: &'a str,
     val: Cow<'a, str>,
     hex: bool,
 }
 
-/// A parsed float.
-///
-/// Methods can be use to access the value of the float.
-#[derive(Debug, PartialEq)]
-pub struct Float<'a>(Box<FloatInner<'a>>);
-
-#[derive(Debug, PartialEq)]
-struct FloatInner<'a> {
-    src: &'a str,
-    val: FloatVal<'a>,
-}
-
-/// A parsed string.
-#[derive(Debug, PartialEq)]
-pub struct WasmString<'a>(Box<WasmStringInner<'a>>);
-
-#[derive(Debug, PartialEq)]
-struct WasmStringInner<'a> {
-    src: &'a str,
-    val: Cow<'a, [u8]>,
-}
-
 /// Possible parsed float values
 #[derive(Debug, PartialEq, Eq)]
-pub enum FloatVal<'a> {
+pub enum Float<'a> {
     /// A float `NaN` representation
     Nan {
         /// The specific bits to encode for this float, optionally
-        val: Option<u64>,
+        val: Option<Cow<'a, str>>,
         /// Whether or not this is a negative `NaN` or not.
         negative: bool,
     },
@@ -267,7 +285,6 @@ impl<'a> Lexer<'a> {
     /// Creates a new lexer which will lex the `input` source string.
     pub fn new(input: &str) -> Lexer<'_> {
         Lexer {
-            remaining: input,
             input,
             allow_confusing_unicode: false,
         }
@@ -294,19 +311,35 @@ impl<'a> Lexer<'a> {
         self
     }
 
-    /// Lexes the next token in the input.
+    /// Lexes the next at the byte position `pos` in the input.
     ///
     /// Returns `Some` if a token is found or `None` if we're at EOF.
+    ///
+    /// The `pos` argument will be updated to point to the next token on a
+    /// successful parse.
     ///
     /// # Errors
     ///
     /// Returns an error if the input is malformed.
-    pub fn parse(&mut self) -> Result<Option<Token<'a>>, Error> {
-        let pos = self.cur();
+    pub fn parse(&self, pos: &mut usize) -> Result<Option<Token>, Error> {
+        let offset = *pos;
+        Ok(match self.parse_kind(pos)? {
+            Some(kind) => Some(Token {
+                kind,
+                offset,
+                len: (*pos - offset).try_into().unwrap(),
+            }),
+            None => None,
+        })
+    }
+
+    fn parse_kind(&self, pos: &mut usize) -> Result<Option<TokenKind>, Error> {
+        let start = *pos;
         // This `match` generally parses the grammar specified at
         //
         // https://webassembly.github.io/spec/core/text/lexical.html#text-token
-        let byte = match self.remaining.as_bytes().first() {
+        let remaining = &self.input.as_bytes()[start..];
+        let byte = match remaining.first() {
             Some(b) => b,
             None => return Ok(None),
         };
@@ -315,12 +348,12 @@ impl<'a> Lexer<'a> {
             // Open-parens check the next character to see if this is the start
             // of a block comment, otherwise it's just a bland left-paren
             // token.
-            b'(' => match self.remaining.as_bytes().get(1) {
+            b'(' => match remaining.get(1) {
                 Some(b';') => {
                     let mut level = 1;
                     // Note that we're doing a byte-level search here for the
                     // close-delimiter of `;)`. The actual source text is utf-8
-                    // encode in `self.remaining` but due to how utf-8 works we
+                    // encode in `remaining` but due to how utf-8 works we
                     // can safely search for an ASCII byte since it'll never
                     // otherwise appear in the middle of a codepoint and if we
                     // find it then it's guaranteed to be the right byte.
@@ -328,7 +361,7 @@ impl<'a> Lexer<'a> {
                     // Mainly we're avoiding the overhead of decoding utf-8
                     // characters into a Rust `char` since it's otherwise
                     // unnecessary work.
-                    let mut iter = self.remaining.as_bytes()[2..].iter();
+                    let mut iter = remaining[2..].iter();
                     while let Some(ch) = iter.next() {
                         match ch {
                             b'(' => {
@@ -342,51 +375,56 @@ impl<'a> Lexer<'a> {
                                     level -= 1;
                                     iter.next();
                                     if level == 0 {
-                                        let len = self.remaining.len() - iter.as_slice().len();
-                                        let (comment, remaining) = self.remaining.split_at(len);
-                                        self.remaining = remaining;
-                                        self.check_confusing_comment(comment)?;
-                                        return Ok(Some(Token::BlockComment(comment)));
+                                        let len = remaining.len() - iter.as_slice().len();
+                                        let comment = &self.input[start..][..len];
+                                        *pos += len;
+                                        self.check_confusing_comment(*pos, comment)?;
+                                        return Ok(Some(TokenKind::BlockComment));
                                     }
                                 }
                             }
                             _ => {}
                         }
                     }
-                    Err(self.error(pos, LexError::DanglingBlockComment))
+                    Err(self.error(start, LexError::DanglingBlockComment))
                 }
-                _ => Ok(Some(Token::LParen(self.split_first_byte()))),
+                _ => {
+                    *pos += 1;
+
+                    Ok(Some(TokenKind::LParen))
+                }
             },
 
-            b')' => Ok(Some(Token::RParen(self.split_first_byte()))),
+            b')' => {
+                *pos += 1;
+                Ok(Some(TokenKind::RParen))
+            }
 
             // https://webassembly.github.io/spec/core/text/lexical.html#white-space
-            b' ' | b'\n' | b'\r' | b'\t' => Ok(Some(Token::Whitespace(self.split_ws()))),
+            b' ' | b'\n' | b'\r' | b'\t' => {
+                self.skip_ws(pos);
+                Ok(Some(TokenKind::Whitespace))
+            }
 
             c @ (idchars!() | b'"') => {
-                let (kind, src) = self.split_reserved()?;
+                let (kind, src) = self.parse_reserved(pos)?;
                 match kind {
                     // If the reserved token was simply a single string then
                     // that is converted to a standalone string token
-                    ReservedKind::String(val) => {
-                        return Ok(Some(Token::String(WasmString(Box::new(WasmStringInner {
-                            val,
-                            src,
-                        })))));
-                    }
+                    ReservedKind::String => return Ok(Some(TokenKind::String)),
 
                     // If only idchars were consumed then this could be a
                     // specific kind of standalone token we're interested in.
                     ReservedKind::Idchars => {
                         // https://webassembly.github.io/spec/core/text/values.html#integers
-                        if let Some(number) = self.number(src) {
-                            return Ok(Some(number));
+                        if let Some(ret) = self.classify_number(src) {
+                            return Ok(Some(ret));
                         // https://webassembly.github.io/spec/core/text/values.html#text-id
                         } else if *c == b'$' && src.len() > 1 {
-                            return Ok(Some(Token::Id(src)));
+                            return Ok(Some(TokenKind::Id));
                         // https://webassembly.github.io/spec/core/text/lexical.html#text-keyword
                         } else if b'a' <= *c && *c <= b'z' {
-                            return Ok(Some(Token::Keyword(src)));
+                            return Ok(Some(TokenKind::Keyword));
                         }
                     }
 
@@ -397,7 +435,7 @@ impl<'a> Lexer<'a> {
                     ReservedKind::Reserved => {}
                 }
 
-                Ok(Some(Token::Reserved(src)))
+                Ok(Some(TokenKind::Reserved))
             }
 
             // This could be a line comment, otherwise `;` is a reserved token.
@@ -405,42 +443,42 @@ impl<'a> Lexer<'a> {
             //
             // Note that this character being considered as part of a
             // `reserved` token is part of the annotations proposal.
-            b';' => match self.remaining.as_bytes().get(1) {
+            b';' => match remaining.get(1) {
                 Some(b';') => {
-                    let comment = self.split_until(b'\n');
-                    self.check_confusing_comment(comment)?;
-                    Ok(Some(Token::LineComment(comment)))
+                    let comment = self.split_until(pos, b'\n');
+                    self.check_confusing_comment(*pos, comment)?;
+                    Ok(Some(TokenKind::LineComment))
                 }
-                _ => Ok(Some(Token::Reserved(self.split_first_byte()))),
+                _ => {
+                    *pos += 1;
+                    Ok(Some(TokenKind::Reserved))
+                }
             },
 
             // Other known reserved tokens other than `;`
             //
             // Note that these characters being considered as part of a
             // `reserved` token is part of the annotations proposal.
-            b',' | b'[' | b']' | b'{' | b'}' => Ok(Some(Token::Reserved(self.split_first_byte()))),
+            b',' | b'[' | b']' | b'{' | b'}' => {
+                *pos += 1;
+                Ok(Some(TokenKind::Reserved))
+            }
 
             _ => {
-                let ch = self.remaining.chars().next().unwrap();
-                Err(self.error(pos, LexError::Unexpected(ch)))
+                let ch = self.input[start..].chars().next().unwrap();
+                Err(self.error(*pos, LexError::Unexpected(ch)))
             }
         }
     }
 
-    fn split_first_byte(&mut self) -> &'a str {
-        let (token, remaining) = self.remaining.split_at(1);
-        self.remaining = remaining;
-        token
+    fn split_until(&self, pos: &mut usize, byte: u8) -> &'a str {
+        let remaining = &self.input[*pos..];
+        let byte_pos = memchr::memchr(byte, remaining.as_bytes()).unwrap_or(remaining.len());
+        *pos += byte_pos;
+        &remaining[..byte_pos]
     }
 
-    fn split_until(&mut self, byte: u8) -> &'a str {
-        let pos = memchr::memchr(byte, self.remaining.as_bytes()).unwrap_or(self.remaining.len());
-        let (ret, remaining) = self.remaining.split_at(pos);
-        self.remaining = remaining;
-        ret
-    }
-
-    fn split_ws(&mut self) -> &'a str {
+    fn skip_ws(&self, pos: &mut usize) {
         // This table is a byte lookup table to determine whether a byte is a
         // whitespace byte. There are only 4 whitespace bytes for the `*.wat`
         // format right now which are ' ', '\t', '\r', and '\n'. These 4 bytes
@@ -450,7 +488,7 @@ impl<'a> Lexer<'a> {
         // known that if these bytes are found they're guaranteed to be the
         // whitespace byte, so they can be safely skipped and we don't have to
         // do full utf-8 decoding. This means that the goal of this function is
-        // to find the first non-whitespace byte in `self.remaining`.
+        // to find the first non-whitespace byte in `remaining`.
         //
         // For now this lookup table seems to be the fastest, but projects like
         // https://github.com/lemire/despacer show other simd algorithms which
@@ -478,15 +516,13 @@ impl<'a> Lexer<'a> {
             /* 0xe0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             /* 0xf0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
-        let pos = self
-            .remaining
+        let remaining = &self.input[*pos..];
+        let non_ws_pos = remaining
             .as_bytes()
             .iter()
             .position(|b| WS[*b as usize] != 1)
-            .unwrap_or(self.remaining.len());
-        let (ret, remaining) = self.remaining.split_at(pos);
-        self.remaining = remaining;
-        ret
+            .unwrap_or(remaining.len());
+        *pos += non_ws_pos;
     }
 
     /// Splits off a "reserved" token which is then further processed later on
@@ -504,41 +540,32 @@ impl<'a> Lexer<'a> {
     /// tokens (e.g. `a"b"c`) and returning the classification of what was
     /// eaten. The classification assists in determining what the actual token
     /// here eaten looks like.
-    fn split_reserved(&mut self) -> Result<(ReservedKind<'a>, &'a str), Error> {
+    fn parse_reserved(&self, pos: &mut usize) -> Result<(ReservedKind, &'a str), Error> {
         let mut idchars = false;
         let mut strings = 0u32;
-        let mut last_string_val = None;
-        let mut pos = 0;
-        while let Some(byte) = self.remaining.as_bytes().get(pos) {
+        let start = *pos;
+        while let Some(byte) = self.input.as_bytes().get(*pos) {
             match byte {
                 // Normal `idchars` production which appends to the reserved
                 // token that's being produced.
                 idchars!() => {
                     idchars = true;
-                    pos += 1;
+                    *pos += 1;
                 }
 
                 // https://webassembly.github.io/spec/core/text/values.html#text-string
                 b'"' => {
                     strings += 1;
-                    pos += 1;
-                    let mut it = self.remaining[pos..].chars();
+                    *pos += 1;
+                    let mut it = self.input[*pos..].chars();
                     let result = Lexer::parse_str(&mut it, self.allow_confusing_unicode);
-                    pos = self.remaining.len() - it.as_str().len();
+                    *pos = self.input.len() - it.as_str().len();
                     match result {
-                        Ok(s) => last_string_val = Some(s),
+                        Ok(_) => {}
                         Err(e) => {
-                            let start = self.input.len() - self.remaining.len();
-                            self.remaining = &self.remaining[pos..];
                             let err_pos = match &e {
                                 LexError::UnexpectedEof => self.input.len(),
-                                _ => {
-                                    self.input[..start + pos]
-                                        .char_indices()
-                                        .next_back()
-                                        .unwrap()
-                                        .0
-                                }
+                                _ => self.input[..*pos].char_indices().next_back().unwrap().0,
                             };
                             return Err(self.error(err_pos, e));
                         }
@@ -549,17 +576,16 @@ impl<'a> Lexer<'a> {
                 _ => break,
             }
         }
-        let (ret, remaining) = self.remaining.split_at(pos);
-        self.remaining = remaining;
+        let ret = &self.input[start..*pos];
         Ok(match (idchars, strings) {
             (false, 0) => unreachable!(),
-            (false, 1) => (ReservedKind::String(last_string_val.unwrap()), ret),
+            (false, 1) => (ReservedKind::String, ret),
             (true, 0) => (ReservedKind::Idchars, ret),
             _ => (ReservedKind::Reserved, ret),
         })
     }
 
-    fn number(&self, src: &'a str) -> Option<Token<'a>> {
+    fn classify_number(&self, src: &str) -> Option<TokenKind> {
         let (sign, num) = if let Some(stripped) = src.strip_prefix('+') {
             (Some(SignToken::Plus), stripped)
         } else if let Some(stripped) = src.strip_prefix('-') {
@@ -572,51 +598,33 @@ impl<'a> Lexer<'a> {
 
         // Handle `inf` and `nan` which are special numbers here
         if num == "inf" {
-            return Some(Token::Float(Float(Box::new(FloatInner {
-                src,
-                val: FloatVal::Inf { negative },
-            }))));
+            return Some(TokenKind::Float(FloatKind::Inf { negative }));
         } else if num == "nan" {
-            return Some(Token::Float(Float(Box::new(FloatInner {
-                src,
-                val: FloatVal::Nan {
-                    val: None,
-                    negative,
-                },
-            }))));
+            return Some(TokenKind::Float(FloatKind::Nan { negative }));
         } else if let Some(stripped) = num.strip_prefix("nan:0x") {
-            let mut it = stripped.chars();
-            let to_parse = skip_undescores(&mut it, false, char::is_ascii_hexdigit)?;
+            let mut it = stripped.as_bytes().iter();
+            let has_underscores = skip_underscores(&mut it, |x| char::from(x).is_ascii_hexdigit())?;
             if it.next().is_some() {
                 return None;
             }
-            let n = u64::from_str_radix(&to_parse, 16).ok()?;
-            return Some(Token::Float(Float(Box::new(FloatInner {
-                src,
-                val: FloatVal::Nan {
-                    val: Some(n),
-                    negative,
-                },
-            }))));
+            return Some(TokenKind::Float(FloatKind::NanVal {
+                negative,
+                has_underscores,
+            }));
         }
 
         // Figure out if we're a hex number or not
-        let (mut it, hex, test_valid) = if let Some(stripped) = num.strip_prefix("0x") {
-            (
-                stripped.chars(),
-                true,
-                char::is_ascii_hexdigit as fn(&char) -> bool,
-            )
+        let test_valid: fn(u8) -> bool;
+        let (mut it, hex) = if let Some(stripped) = num.strip_prefix("0x") {
+            test_valid = |x: u8| char::from(x).is_ascii_hexdigit();
+            (stripped.as_bytes().iter(), true)
         } else {
-            (
-                num.chars(),
-                false,
-                char::is_ascii_digit as fn(&char) -> bool,
-            )
+            test_valid = |x: u8| char::from(x).is_ascii_digit();
+            (num.as_bytes().iter(), false)
         };
 
         // Evaluate the first part, moving out all underscores
-        let val = skip_undescores(&mut it, negative, test_valid)?;
+        let mut has_underscores = skip_underscores(&mut it, test_valid)?;
 
         match it.clone().next() {
             // If we're followed by something this may be a float so keep going.
@@ -624,47 +632,48 @@ impl<'a> Lexer<'a> {
 
             // Otherwise this is a valid integer literal!
             None => {
-                return Some(Token::Integer(Integer(Box::new(IntegerInner {
+                return Some(TokenKind::Integer(IntegerKind {
+                    has_underscores,
                     sign,
-                    src,
-                    val,
                     hex,
-                }))))
+                }))
             }
         }
 
         // A number can optionally be after the decimal so only actually try to
         // parse one if it's there.
-        let decimal = if it.clone().next() == Some('.') {
+        if it.clone().next() == Some(&b'.') {
             it.next();
             match it.clone().next() {
-                Some(c) if test_valid(&c) => Some(skip_undescores(&mut it, false, test_valid)?),
-                Some(_) | None => None,
+                Some(c) if test_valid(*c) => {
+                    if skip_underscores(&mut it, test_valid)? {
+                        has_underscores = true;
+                    }
+                }
+                Some(_) | None => {}
             }
-        } else {
-            None
         };
 
         // Figure out if there's an exponential part here to make a float, and
         // if so parse it but defer its actual calculation until later.
-        let exponent = match (hex, it.next()) {
-            (true, Some('p')) | (true, Some('P')) | (false, Some('e')) | (false, Some('E')) => {
-                let negative = match it.clone().next() {
-                    Some('-') => {
+        match (hex, it.next()) {
+            (true, Some(b'p')) | (true, Some(b'P')) | (false, Some(b'e')) | (false, Some(b'E')) => {
+                match it.clone().next() {
+                    Some(b'-') => {
                         it.next();
-                        true
                     }
-                    Some('+') => {
+                    Some(b'+') => {
                         it.next();
-                        false
                     }
-                    _ => false,
-                };
-                Some(skip_undescores(&mut it, negative, char::is_ascii_digit)?)
+                    _ => {}
+                }
+                if skip_underscores(&mut it, |x| char::from(x).is_ascii_digit())? {
+                    has_underscores = true;
+                }
             }
-            (_, None) => None,
+            (_, None) => {}
             _ => return None,
-        };
+        }
 
         // We should have eaten everything by now, if not then this is surely
         // not a float or integer literal.
@@ -672,73 +681,45 @@ impl<'a> Lexer<'a> {
             return None;
         }
 
-        return Some(Token::Float(Float(Box::new(FloatInner {
-            src,
-            val: FloatVal::Val {
-                hex,
-                integral: val,
-                exponent,
-                decimal,
-            },
-        }))));
+        return Some(TokenKind::Float(FloatKind::Normal {
+            has_underscores,
+            hex,
+        }));
 
-        fn skip_undescores<'a>(
-            it: &mut str::Chars<'a>,
-            negative: bool,
-            good: fn(&char) -> bool,
-        ) -> Option<Cow<'a, str>> {
-            enum State {
-                Raw,
-                Collecting(String),
-            }
+        fn skip_underscores<'a>(
+            it: &mut slice::Iter<'_, u8>,
+            good: fn(u8) -> bool,
+        ) -> Option<bool> {
             let mut last_underscore = false;
-            let mut state = if negative {
-                State::Collecting("-".to_string())
-            } else {
-                State::Raw
-            };
-            let input = it.as_str();
-            let first = it.next()?;
-            if !good(&first) {
+            let mut has_underscores = false;
+            let first = *it.next()?;
+            if !good(first) {
                 return None;
             }
-            if let State::Collecting(s) = &mut state {
-                s.push(first);
-            }
-            let mut last = 1;
             while let Some(c) = it.clone().next() {
-                if c == '_' && !last_underscore {
-                    if let State::Raw = state {
-                        state = State::Collecting(input[..last].to_string());
-                    }
+                if *c == b'_' && !last_underscore {
+                    has_underscores = true;
                     it.next();
                     last_underscore = true;
                     continue;
                 }
-                if !good(&c) {
+                if !good(*c) {
                     break;
-                }
-                if let State::Collecting(s) = &mut state {
-                    s.push(c);
                 }
                 last_underscore = false;
                 it.next();
-                last += 1;
             }
             if last_underscore {
                 return None;
             }
-            Some(match state {
-                State::Raw => input[..last].into(),
-                State::Collecting(s) => s.into(),
-            })
+            Some(has_underscores)
         }
     }
 
     /// Verifies that `comment`, which is about to be returned, has a "confusing
     /// unicode character" in it and should instead be transformed into an
     /// error.
-    fn check_confusing_comment(&self, comment: &str) -> Result<(), Error> {
+    fn check_confusing_comment(&self, end: usize, comment: &str) -> Result<(), Error> {
         if self.allow_confusing_unicode {
             return Ok(());
         }
@@ -760,7 +741,7 @@ impl<'a> Lexer<'a> {
                     // parsed `comment`, so we move backwards to where
                     // `comment` started and then add the index within
                     // `comment`.
-                    let pos = self.cur() - comment.len() + pos;
+                    let pos = end - comment.len() + pos;
                     return Err(self.error(pos, LexError::ConfusingUnicode(c)));
                 }
             }
@@ -889,40 +870,198 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    /// Returns the current position of our iterator through the input string
-    fn cur(&self) -> usize {
-        self.input.len() - self.remaining.len()
-    }
-
     /// Creates an error at `pos` with the specified `kind`
     fn error(&self, pos: usize, kind: LexError) -> Error {
         Error::lex(Span { offset: pos }, self.input, kind)
     }
-}
 
-impl<'a> Iterator for Lexer<'a> {
-    type Item = Result<Token<'a>, Error>;
+    /// Returns an iterator over all tokens in the original source string
+    /// starting at the `pos` specified.
+    pub fn iter(&self, mut pos: usize) -> impl Iterator<Item = Result<Token, Error>> + '_ {
+        std::iter::from_fn(move || self.parse(&mut pos).transpose())
+    }
 
-    fn next(&mut self) -> Option<Self::Item> {
-        self.parse().transpose()
+    /// Returns whether an annotation is present at `pos` and the name of the
+    /// annotation.
+    pub fn annotation(&self, mut pos: usize) -> Option<&'a str> {
+        let bytes = self.input.as_bytes();
+        // Quickly reject anything that for sure isn't an annotation since this
+        // method is used every time an lparen is parsed.
+        if bytes.get(pos) != Some(&b'@') {
+            return None;
+        }
+        match self.parse(&mut pos) {
+            Ok(Some(token)) => {
+                match token.kind {
+                    TokenKind::Reserved => {}
+                    _ => return None,
+                }
+                if token.len == 1 {
+                    None // just the `@` character isn't a valid annotation
+                } else {
+                    Some(&token.src(self.input)[1..])
+                }
+            }
+            Ok(None) | Err(_) => None,
+        }
     }
 }
 
-impl<'a> Token<'a> {
+impl Token {
     /// Returns the original source text for this token.
-    pub fn src(&self) -> &'a str {
-        match self {
-            Token::Whitespace(s) => s,
-            Token::BlockComment(s) => s,
-            Token::LineComment(s) => s,
-            Token::LParen(s) => s,
-            Token::RParen(s) => s,
-            Token::String(s) => s.src(),
-            Token::Id(s) => s,
-            Token::Keyword(s) => s,
-            Token::Reserved(s) => s,
-            Token::Integer(i) => i.src(),
-            Token::Float(f) => f.src(),
+    pub fn src<'a>(&self, s: &'a str) -> &'a str {
+        &s[self.offset..][..self.len.try_into().unwrap()]
+    }
+
+    /// Returns the identifier, without the leading `$` symbol, that this token
+    /// represents.
+    ///
+    /// Should only be used with `TokenKind::Id`.
+    pub fn id<'a>(&self, s: &'a str) -> &'a str {
+        &self.src(s)[1..]
+    }
+
+    /// Returns the keyword this token represents.
+    ///
+    /// Should only be used with `TokenKind::Keyword`.
+    pub fn keyword<'a>(&self, s: &'a str) -> &'a str {
+        self.src(s)
+    }
+
+    /// Returns the reserved string this token represents.
+    ///
+    /// Should only be used with `TokenKind::Reserved`.
+    pub fn reserved<'a>(&self, s: &'a str) -> &'a str {
+        self.src(s)
+    }
+
+    /// Returns the parsed string that this token represents.
+    ///
+    /// This returns either a raw byte slice into the source if that's possible
+    /// or an owned representation to handle escaped characters and such.
+    ///
+    /// Should only be used with `TokenKind::String`.
+    pub fn string<'a>(&self, s: &'a str) -> Cow<'a, [u8]> {
+        let mut ch = self.src(s).chars();
+        ch.next().unwrap();
+        Lexer::parse_str(&mut ch, true).unwrap()
+    }
+
+    /// Returns the decomposed float token that this represents.
+    ///
+    /// This will slice up the float token into its component parts and return a
+    /// description of the float token in the source.
+    ///
+    /// Should only be used with `TokenKind::Float`.
+    pub fn float<'a>(&self, s: &'a str, kind: FloatKind) -> Float<'a> {
+        match kind {
+            FloatKind::Inf { negative } => Float::Inf { negative },
+            FloatKind::Nan { negative } => Float::Nan {
+                val: None,
+                negative,
+            },
+            FloatKind::NanVal {
+                negative,
+                has_underscores,
+            } => {
+                let src = self.src(s);
+                let src = if src.starts_with("n") { src } else { &src[1..] };
+                let mut val = Cow::Borrowed(src.strip_prefix("nan:0x").unwrap());
+                if has_underscores {
+                    *val.to_mut() = val.replace("_", "");
+                }
+                Float::Nan {
+                    val: Some(val),
+                    negative,
+                }
+            }
+            FloatKind::Normal {
+                has_underscores,
+                hex,
+            } => {
+                let src = self.src(s);
+                let (integral, decimal, exponent) = match src.find('.') {
+                    Some(i) => {
+                        let integral = &src[..i];
+                        let rest = &src[i + 1..];
+                        let exponent = if hex {
+                            rest.find('p').or_else(|| rest.find('P'))
+                        } else {
+                            rest.find('e').or_else(|| rest.find('E'))
+                        };
+                        match exponent {
+                            Some(i) => (integral, Some(&rest[..i]), Some(&rest[i + 1..])),
+                            None => (integral, Some(rest), None),
+                        }
+                    }
+                    None => {
+                        let exponent = if hex {
+                            src.find('p').or_else(|| src.find('P'))
+                        } else {
+                            src.find('e').or_else(|| src.find('E'))
+                        };
+                        match exponent {
+                            Some(i) => (&src[..i], None, Some(&src[i + 1..])),
+                            None => (src, None, None),
+                        }
+                    }
+                };
+                let mut integral = Cow::Borrowed(integral.strip_prefix('+').unwrap_or(integral));
+                let mut decimal = decimal.and_then(|s| {
+                    if s.is_empty() {
+                        None
+                    } else {
+                        Some(Cow::Borrowed(s))
+                    }
+                });
+                let mut exponent =
+                    exponent.map(|s| Cow::Borrowed(s.strip_prefix('+').unwrap_or(s)));
+                if has_underscores {
+                    *integral.to_mut() = integral.replace("_", "");
+                    if let Some(decimal) = &mut decimal {
+                        *decimal.to_mut() = decimal.replace("_", "");
+                    }
+                    if let Some(exponent) = &mut exponent {
+                        *exponent.to_mut() = exponent.replace("_", "");
+                    }
+                }
+                if hex {
+                    *integral.to_mut() = integral.replace("0x", "");
+                }
+                Float::Val {
+                    hex,
+                    integral,
+                    decimal,
+                    exponent,
+                }
+            }
+        }
+    }
+
+    /// Returns the decomposed integer token that this represents.
+    ///
+    /// This will slice up the integer token into its component parts and
+    /// return a description of the integer token in the source.
+    ///
+    /// Should only be used with `TokenKind::Integer`.
+    pub fn integer<'a>(&self, s: &'a str, kind: IntegerKind) -> Integer<'a> {
+        let src = self.src(s);
+        let val = match kind.sign {
+            Some(SignToken::Plus) => src.strip_prefix('+').unwrap(),
+            Some(SignToken::Minus) => src,
+            None => src,
+        };
+        let mut val = Cow::Borrowed(val);
+        if kind.has_underscores {
+            *val.to_mut() = val.replace("_", "");
+        }
+        if kind.hex {
+            *val.to_mut() = val.replace("0x", "");
+        }
+        Integer {
+            sign: kind.sign,
+            hex: kind.hex,
+            val,
         }
     }
 }
@@ -930,43 +1069,13 @@ impl<'a> Token<'a> {
 impl<'a> Integer<'a> {
     /// Returns the sign token for this integer.
     pub fn sign(&self) -> Option<SignToken> {
-        self.0.sign
+        self.sign
     }
 
-    /// Returns the original source text for this integer.
-    pub fn src(&self) -> &'a str {
-        self.0.src
-    }
-
-    /// Returns the value string that can be parsed for this integer, as well as
-    /// the base that it should be parsed in
+    /// Returns the value string that can be parsed for this integer, as well
+    /// as the base that it should be parsed in
     pub fn val(&self) -> (&str, u32) {
-        (&self.0.val, if self.0.hex { 16 } else { 10 })
-    }
-}
-
-impl<'a> Float<'a> {
-    /// Returns the original source text for this integer.
-    pub fn src(&self) -> &'a str {
-        self.0.src
-    }
-
-    /// Returns a parsed value of this float with all of the components still
-    /// listed as strings.
-    pub fn val(&self) -> &FloatVal<'a> {
-        &self.0.val
-    }
-}
-
-impl<'a> WasmString<'a> {
-    /// Returns the original source text for this string.
-    pub fn src(&self) -> &'a str {
-        self.0.src
-    }
-
-    /// Returns a parsed value, as a list of bytes, for this string.
-    pub fn val(&self) -> &[u8] {
-        &self.0.val
+        (&self.val, if self.hex { 16 } else { 10 })
     }
 }
 
@@ -1049,8 +1158,9 @@ mod tests {
     #[test]
     fn ws_smoke() {
         fn get_whitespace(input: &str) -> &str {
-            match Lexer::new(input).parse().expect("no first token") {
-                Some(Token::Whitespace(s)) => s,
+            let token = get_token(input);
+            match token.kind {
+                TokenKind::Whitespace => token.src(input),
                 other => panic!("unexpected {:?}", other),
             }
         }
@@ -1064,8 +1174,9 @@ mod tests {
     #[test]
     fn line_comment_smoke() {
         fn get_line_comment(input: &str) -> &str {
-            match Lexer::new(input).parse().expect("no first token") {
-                Some(Token::LineComment(s)) => s,
+            let token = get_token(input);
+            match token.kind {
+                TokenKind::LineComment => token.src(input),
                 other => panic!("unexpected {:?}", other),
             }
         }
@@ -1079,8 +1190,9 @@ mod tests {
     #[test]
     fn block_comment_smoke() {
         fn get_block_comment(input: &str) -> &str {
-            match Lexer::new(input).parse().expect("no first token") {
-                Some(Token::BlockComment(s)) => s,
+            let token = get_token(input);
+            match token.kind {
+                TokenKind::BlockComment => token.src(input),
                 other => panic!("unexpected {:?}", other),
             }
         }
@@ -1089,32 +1201,30 @@ mod tests {
         assert_eq!(get_block_comment("(; (;;) ;)"), "(; (;;) ;)");
     }
 
-    fn get_token(input: &str) -> Token<'_> {
+    fn get_token(input: &str) -> Token {
         Lexer::new(input)
-            .parse()
+            .parse(&mut 0)
             .expect("no first token")
             .expect("no token")
     }
 
     #[test]
     fn lparen() {
-        assert_eq!(get_token("(("), Token::LParen("("));
+        assert_eq!(get_token("((").kind, TokenKind::LParen);
     }
 
     #[test]
     fn rparen() {
-        assert_eq!(get_token(")("), Token::RParen(")"));
+        assert_eq!(get_token(")(").kind, TokenKind::RParen);
     }
 
     #[test]
     fn strings() {
         fn get_string(input: &str) -> Vec<u8> {
-            match get_token(input) {
-                Token::String(s) => {
-                    assert_eq!(input, s.src());
-                    s.val().to_vec()
-                }
-                other => panic!("not string {:?}", other),
+            let token = get_token(input);
+            match token.kind {
+                TokenKind::String => token.string(input).to_vec(),
+                other => panic!("not keyword {:?}", other),
             }
         }
         assert_eq!(&*get_string("\"\""), b"");
@@ -1146,25 +1256,27 @@ mod tests {
     #[test]
     fn id() {
         fn get_id(input: &str) -> &str {
-            match get_token(input) {
-                Token::Id(s) => s,
+            let token = get_token(input);
+            match token.kind {
+                TokenKind::Id => token.id(input),
                 other => panic!("not id {:?}", other),
             }
         }
-        assert_eq!(get_id("$x"), "$x");
-        assert_eq!(get_id("$xyz"), "$xyz");
-        assert_eq!(get_id("$x_z"), "$x_z");
-        assert_eq!(get_id("$0^"), "$0^");
-        assert_eq!(get_id("$0^;;"), "$0^");
-        assert_eq!(get_id("$0^ ;;"), "$0^");
+        assert_eq!(get_id("$x"), "x");
+        assert_eq!(get_id("$xyz"), "xyz");
+        assert_eq!(get_id("$x_z"), "x_z");
+        assert_eq!(get_id("$0^"), "0^");
+        assert_eq!(get_id("$0^;;"), "0^");
+        assert_eq!(get_id("$0^ ;;"), "0^");
     }
 
     #[test]
     fn keyword() {
         fn get_keyword(input: &str) -> &str {
-            match get_token(input) {
-                Token::Keyword(s) => s,
-                other => panic!("not id {:?}", other),
+            let token = get_token(input);
+            match token.kind {
+                TokenKind::Keyword => token.keyword(input),
+                other => panic!("not keyword {:?}", other),
             }
         }
         assert_eq!(get_keyword("x"), "x");
@@ -1177,8 +1289,9 @@ mod tests {
     #[test]
     fn reserved() {
         fn get_reserved(input: &str) -> &str {
-            match get_token(input) {
-                Token::Reserved(s) => s,
+            let token = get_token(input);
+            match token.kind {
+                TokenKind::Reserved => token.reserved(input),
                 other => panic!("not reserved {:?}", other),
             }
         }
@@ -1189,11 +1302,9 @@ mod tests {
     #[test]
     fn integer() {
         fn get_integer(input: &str) -> String {
-            match get_token(input) {
-                Token::Integer(i) => {
-                    assert_eq!(input, i.src());
-                    i.val().0.to_string()
-                }
+            let token = get_token(input);
+            match token.kind {
+                TokenKind::Integer(i) => token.integer(input, i).val.to_string(),
                 other => panic!("not integer {:?}", other),
             }
         }
@@ -1210,57 +1321,55 @@ mod tests {
 
     #[test]
     fn float() {
-        fn get_float(input: &str) -> FloatVal<'_> {
-            match get_token(input) {
-                Token::Float(i) => {
-                    assert_eq!(input, i.src());
-                    i.0.val
-                }
-                other => panic!("not reserved {:?}", other),
+        fn get_float(input: &str) -> Float<'_> {
+            let token = get_token(input);
+            match token.kind {
+                TokenKind::Float(f) => token.float(input, f),
+                other => panic!("not float {:?}", other),
             }
         }
         assert_eq!(
             get_float("nan"),
-            FloatVal::Nan {
+            Float::Nan {
                 val: None,
                 negative: false
             },
         );
         assert_eq!(
             get_float("-nan"),
-            FloatVal::Nan {
+            Float::Nan {
                 val: None,
                 negative: true,
             },
         );
         assert_eq!(
             get_float("+nan"),
-            FloatVal::Nan {
+            Float::Nan {
                 val: None,
                 negative: false,
             },
         );
         assert_eq!(
             get_float("+nan:0x1"),
-            FloatVal::Nan {
-                val: Some(1),
+            Float::Nan {
+                val: Some("1".into()),
                 negative: false,
             },
         );
         assert_eq!(
             get_float("nan:0x7f_ffff"),
-            FloatVal::Nan {
-                val: Some(0x7fffff),
+            Float::Nan {
+                val: Some("7fffff".into()),
                 negative: false,
             },
         );
-        assert_eq!(get_float("inf"), FloatVal::Inf { negative: false });
-        assert_eq!(get_float("-inf"), FloatVal::Inf { negative: true });
-        assert_eq!(get_float("+inf"), FloatVal::Inf { negative: false });
+        assert_eq!(get_float("inf"), Float::Inf { negative: false });
+        assert_eq!(get_float("-inf"), Float::Inf { negative: true });
+        assert_eq!(get_float("+inf"), Float::Inf { negative: false });
 
         assert_eq!(
             get_float("1.2"),
-            FloatVal::Val {
+            Float::Val {
                 integral: "1".into(),
                 decimal: Some("2".into()),
                 exponent: None,
@@ -1269,7 +1378,7 @@ mod tests {
         );
         assert_eq!(
             get_float("1.2e3"),
-            FloatVal::Val {
+            Float::Val {
                 integral: "1".into(),
                 decimal: Some("2".into()),
                 exponent: Some("3".into()),
@@ -1278,7 +1387,7 @@ mod tests {
         );
         assert_eq!(
             get_float("-1_2.1_1E+0_1"),
-            FloatVal::Val {
+            Float::Val {
                 integral: "-12".into(),
                 decimal: Some("11".into()),
                 exponent: Some("01".into()),
@@ -1287,7 +1396,7 @@ mod tests {
         );
         assert_eq!(
             get_float("+1_2.1_1E-0_1"),
-            FloatVal::Val {
+            Float::Val {
                 integral: "12".into(),
                 decimal: Some("11".into()),
                 exponent: Some("-01".into()),
@@ -1296,7 +1405,7 @@ mod tests {
         );
         assert_eq!(
             get_float("0x1_2.3_4p5_6"),
-            FloatVal::Val {
+            Float::Val {
                 integral: "12".into(),
                 decimal: Some("34".into()),
                 exponent: Some("56".into()),
@@ -1305,7 +1414,7 @@ mod tests {
         );
         assert_eq!(
             get_float("+0x1_2.3_4P-5_6"),
-            FloatVal::Val {
+            Float::Val {
                 integral: "12".into(),
                 decimal: Some("34".into()),
                 exponent: Some("-56".into()),
@@ -1314,7 +1423,7 @@ mod tests {
         );
         assert_eq!(
             get_float("1."),
-            FloatVal::Val {
+            Float::Val {
                 integral: "1".into(),
                 decimal: None,
                 exponent: None,
@@ -1323,7 +1432,7 @@ mod tests {
         );
         assert_eq!(
             get_float("0x1p-24"),
-            FloatVal::Val {
+            Float::Val {
                 integral: "1".into(),
                 decimal: None,
                 exponent: Some("-24".into()),

@@ -26,6 +26,24 @@ impl Section for CustomSection<'_> {
     }
 }
 
+/// A raw custom section where the bytes specified contain the leb-encoded
+/// length of the custom section, the custom section's name, and the custom
+/// section's data.
+#[derive(Clone, Debug)]
+pub struct RawCustomSection<'a>(pub &'a [u8]);
+
+impl Encode for RawCustomSection<'_> {
+    fn encode(&self, sink: &mut Vec<u8>) {
+        sink.extend(self.0);
+    }
+}
+
+impl Section for RawCustomSection<'_> {
+    fn id(&self) -> u8 {
+        SectionId::Custom.into()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

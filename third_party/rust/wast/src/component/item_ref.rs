@@ -1,7 +1,7 @@
 use crate::parser::{Cursor, Parse, Parser, Peek, Result};
 use crate::token::Index;
 
-fn peek<K: Peek>(cursor: Cursor) -> bool {
+fn peek<K: Peek>(cursor: Cursor) -> Result<bool> {
     // This is a little fancy because when parsing something like:
     //
     //      (type (component (type $foo)))
@@ -16,25 +16,25 @@ fn peek<K: Peek>(cursor: Cursor) -> bool {
     // strings.
 
     // Peek for the given keyword type
-    if !K::peek(cursor) {
-        return false;
+    if !K::peek(cursor)? {
+        return Ok(false);
     }
 
     // Move past the given keyword
-    let cursor = match cursor.keyword() {
+    let cursor = match cursor.keyword()? {
         Some((_, c)) => c,
-        _ => return false,
+        _ => return Ok(false),
     };
 
     // Peek an id or integer index, followed by `)` or string to disambiguate
-    match cursor
-        .id()
-        .map(|p| p.1)
-        .or_else(|| cursor.integer().map(|p| p.1))
-    {
-        Some(cursor) => cursor.rparen().is_some() || cursor.string().is_some(),
+    let cursor = match cursor.id()? {
+        Some((_, cursor)) => Some(cursor),
+        None => cursor.integer()?.map(|p| p.1),
+    };
+    Ok(match cursor {
+        Some(cursor) => cursor.rparen()?.is_some() || cursor.string()?.is_some(),
         None => false,
-    }
+    })
 }
 
 /// Parses core item references.
@@ -65,7 +65,7 @@ impl<'a, K: Parse<'a>> Parse<'a> for CoreItemRef<'a, K> {
 }
 
 impl<'a, K: Peek> Peek for CoreItemRef<'a, K> {
-    fn peek(cursor: Cursor<'_>) -> bool {
+    fn peek(cursor: Cursor<'_>) -> Result<bool> {
         peek::<K>(cursor)
     }
 
@@ -102,7 +102,7 @@ impl<'a, K: Parse<'a>> Parse<'a> for ItemRef<'a, K> {
 }
 
 impl<'a, K: Peek> Peek for ItemRef<'a, K> {
-    fn peek(cursor: Cursor<'_>) -> bool {
+    fn peek(cursor: Cursor<'_>) -> Result<bool> {
         peek::<K>(cursor)
     }
 
@@ -120,7 +120,7 @@ where
     K: Parse<'a> + Default,
 {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        if parser.peek::<Index<'_>>() {
+        if parser.peek::<Index<'_>>()? {
             Ok(IndexOrRef(ItemRef {
                 kind: K::default(),
                 idx: parser.parse()?,
@@ -141,7 +141,7 @@ where
     K: Parse<'a> + Default,
 {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        if parser.peek::<Index<'_>>() {
+        if parser.peek::<Index<'_>>()? {
             Ok(IndexOrCoreRef(CoreItemRef {
                 kind: K::default(),
                 idx: parser.parse()?,

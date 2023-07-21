@@ -31,7 +31,7 @@ impl Custom<'_> {
 
 impl<'a> Parse<'a> for Custom<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        if parser.peek::<annotation::producers>() {
+        if parser.peek::<annotation::producers>()? {
             Ok(Custom::Producers(parser.parse()?))
         } else {
             Ok(Custom::Raw(parser.parse()?))
@@ -90,7 +90,7 @@ impl<'a> Parse<'a> for RawCustomSection<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let span = parser.parse::<annotation::custom>()?.0;
         let name = parser.parse()?;
-        let place = if parser.peek::<token::LParen>() {
+        let place = if parser.peek::<token::LParen>()? {
             parser.parens(|p| p.parse())?
         } else {
             CustomPlace::AfterLast
@@ -111,16 +111,16 @@ impl<'a> Parse<'a> for RawCustomSection<'a> {
 impl<'a> Parse<'a> for CustomPlace {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let mut l = parser.lookahead1();
-        let ctor = if l.peek::<kw::before>() {
+        let ctor = if l.peek::<kw::before>()? {
             parser.parse::<kw::before>()?;
-            if l.peek::<kw::first>() {
+            if l.peek::<kw::first>()? {
                 parser.parse::<kw::first>()?;
                 return Ok(CustomPlace::BeforeFirst);
             }
             CustomPlace::Before as fn(CustomPlaceAnchor) -> _
-        } else if l.peek::<kw::after>() {
+        } else if l.peek::<kw::after>()? {
             parser.parse::<kw::after>()?;
-            if l.peek::<kw::last>() {
+            if l.peek::<kw::last>()? {
                 parser.parse::<kw::last>()?;
                 return Ok(CustomPlace::AfterLast);
             }
@@ -134,51 +134,51 @@ impl<'a> Parse<'a> for CustomPlace {
 
 impl<'a> Parse<'a> for CustomPlaceAnchor {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        if parser.peek::<kw::r#type>() {
+        if parser.peek::<kw::r#type>()? {
             parser.parse::<kw::r#type>()?;
             return Ok(CustomPlaceAnchor::Type);
         }
-        if parser.peek::<kw::import>() {
+        if parser.peek::<kw::import>()? {
             parser.parse::<kw::import>()?;
             return Ok(CustomPlaceAnchor::Import);
         }
-        if parser.peek::<kw::func>() {
+        if parser.peek::<kw::func>()? {
             parser.parse::<kw::func>()?;
             return Ok(CustomPlaceAnchor::Func);
         }
-        if parser.peek::<kw::table>() {
+        if parser.peek::<kw::table>()? {
             parser.parse::<kw::table>()?;
             return Ok(CustomPlaceAnchor::Table);
         }
-        if parser.peek::<kw::memory>() {
+        if parser.peek::<kw::memory>()? {
             parser.parse::<kw::memory>()?;
             return Ok(CustomPlaceAnchor::Memory);
         }
-        if parser.peek::<kw::global>() {
+        if parser.peek::<kw::global>()? {
             parser.parse::<kw::global>()?;
             return Ok(CustomPlaceAnchor::Global);
         }
-        if parser.peek::<kw::export>() {
+        if parser.peek::<kw::export>()? {
             parser.parse::<kw::export>()?;
             return Ok(CustomPlaceAnchor::Export);
         }
-        if parser.peek::<kw::start>() {
+        if parser.peek::<kw::start>()? {
             parser.parse::<kw::start>()?;
             return Ok(CustomPlaceAnchor::Start);
         }
-        if parser.peek::<kw::elem>() {
+        if parser.peek::<kw::elem>()? {
             parser.parse::<kw::elem>()?;
             return Ok(CustomPlaceAnchor::Elem);
         }
-        if parser.peek::<kw::code>() {
+        if parser.peek::<kw::code>()? {
             parser.parse::<kw::code>()?;
             return Ok(CustomPlaceAnchor::Code);
         }
-        if parser.peek::<kw::data>() {
+        if parser.peek::<kw::data>()? {
             parser.parse::<kw::data>()?;
             return Ok(CustomPlaceAnchor::Data);
         }
-        if parser.peek::<kw::tag>() {
+        if parser.peek::<kw::tag>()? {
             parser.parse::<kw::tag>()?;
             return Ok(CustomPlaceAnchor::Tag);
         }
@@ -203,13 +203,13 @@ impl<'a> Parse<'a> for Producers<'a> {
         while !parser.is_empty() {
             parser.parens(|parser| {
                 let mut l = parser.lookahead1();
-                let dst = if l.peek::<kw::language>() {
+                let dst = if l.peek::<kw::language>()? {
                     parser.parse::<kw::language>()?;
                     &mut languages
-                } else if l.peek::<kw::sdk>() {
+                } else if l.peek::<kw::sdk>()? {
                     parser.parse::<kw::sdk>()?;
                     &mut sdks
-                } else if l.peek::<kw::processed_by>() {
+                } else if l.peek::<kw::processed_by>()? {
                     parser.parse::<kw::processed_by>()?;
                     &mut processed_by
                 } else {

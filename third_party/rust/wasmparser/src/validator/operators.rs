@@ -3252,7 +3252,10 @@ where
                 segment
             ),
         };
-        if segment_ty != table.element_type {
+        if !self
+            .resources
+            .matches(ValType::Ref(segment_ty), ValType::Ref(table.element_type))
+        {
             bail!(self.offset, "type mismatch");
         }
         self.pop_operand(Some(ValType::I32))?;

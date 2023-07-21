@@ -41,9 +41,11 @@ impl<'a> Parse<'a> for Wat<'a> {
         }
 
         let _r = parser.register_annotation("custom");
-        let wat = if parser.peek2::<kw::module>() {
+        let _r = parser.register_annotation("producers");
+        let _r = parser.register_annotation("name");
+        let wat = if parser.peek2::<kw::module>()? {
             Wat::Module(parser.parens(|parser| parser.parse())?)
-        } else if parser.peek2::<kw::component>() {
+        } else if parser.peek2::<kw::component>()? {
             Wat::Component(parser.parens(|parser| parser.parse())?)
         } else {
             let fields = ModuleField::parse_remaining(parser)?;

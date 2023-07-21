@@ -38,7 +38,7 @@ pub enum FuncKind<'a> {
     /// Almost all functions, those defined inline in a wasm module.
     Inline {
         /// The list of locals, if any, for this function.
-        locals: Vec<Local<'a>>,
+        locals: Box<[Local<'a>]>,
 
         /// The instructions of the function.
         expression: Expression<'a>,
@@ -56,7 +56,7 @@ impl<'a> Parse<'a> for Func<'a> {
             (parser.parse()?, FuncKind::Import(import))
         } else {
             let ty = parser.parse()?;
-            let locals = Local::parse_remainder(parser)?;
+            let locals = Local::parse_remainder(parser)?.into();
             (
                 ty,
                 FuncKind::Inline {
@@ -95,7 +95,7 @@ pub struct Local<'a> {
 impl<'a> Local<'a> {
     pub(crate) fn parse_remainder(parser: Parser<'a>) -> Result<Vec<Local<'a>>> {
         let mut locals = Vec::new();
-        while parser.peek2::<kw::local>() {
+        while parser.peek2::<kw::local>()? {
             parser.parens(|p| {
                 p.parse::<kw::local>()?;
                 if p.is_empty() {

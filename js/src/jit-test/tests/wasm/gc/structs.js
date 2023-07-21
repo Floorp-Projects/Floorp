@@ -452,16 +452,6 @@ assertErrorMessage(() => ins.pop(),
     assertEq(ins.testg(10), 20);
 }
 
-// Test that field names must be unique in the module.
-
-assertErrorMessage(() => wasmTextToBinary(
-    `(module
-      (type $s (struct (field $x i32)))
-      (type $t (struct (field $x i32)))
-     )`),
-                  SyntaxError,
-                  /duplicate identifier for field/);
-
 // negative tests
 
 // Wrong type passed as initializer

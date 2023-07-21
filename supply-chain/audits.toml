@@ -3950,11 +3950,23 @@ user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-05-02"
 end = "2024-04-25"
 
+[[trusted.equivalent]]
+criteria = "safe-to-deploy"
+user-id = 539 # Josh Stone (cuviper)
+start = "2023-02-05"
+end = "2024-07-17"
+
 [[trusted.flate2]]
 criteria = "safe-to-deploy"
 user-id = 4333 # Josh Triplett (joshtriplett)
 start = "2020-09-30"
 end = "2024-05-05"
+
+[[trusted.hashbrown]]
+criteria = "safe-to-deploy"
+user-id = 2915 # Amanieu d'Antras (Amanieu)
+start = "2019-04-02"
+end = "2024-07-17"
 
 [[trusted.headers]]
 criteria = "safe-to-deploy"

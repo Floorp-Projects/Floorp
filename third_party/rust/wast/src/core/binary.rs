@@ -545,6 +545,10 @@ impl Encode for Elem<'_> {
                 offset.encode(e);
                 e.push(0x00); // extern_kind
             }
+            (ElemKind::Declared, ElemPayload::Indices(_)) => {
+                e.push(0x03); // flags
+                e.push(0x00); // extern_kind
+            }
             (
                 ElemKind::Active {
                     table: Index::Num(0, _),
@@ -571,10 +575,6 @@ impl Encode for Elem<'_> {
                 table.encode(e);
                 offset.encode(e);
                 ty.encode(e);
-            }
-            (ElemKind::Declared, ElemPayload::Indices(_)) => {
-                e.push(0x03); // flags
-                e.push(0x00); // extern_kind
             }
             (ElemKind::Declared, ElemPayload::Exprs { ty, .. }) => {
                 e.push(0x07); // flags
@@ -641,10 +641,10 @@ impl Encode for Func<'_> {
     }
 }
 
-impl Encode for Vec<Local<'_>> {
+impl Encode for Box<[Local<'_>]> {
     fn encode(&self, e: &mut Vec<u8>) {
         let mut locals_compressed = Vec::<(u32, ValType)>::new();
-        for local in self {
+        for local in self.iter() {
             if let Some((cnt, prev)) = locals_compressed.last_mut() {
                 if *prev == local.ty {
                     *cnt += 1;
@@ -919,7 +919,7 @@ fn find_names<'a>(
                 locals, expression, ..
             } = &f.kind
             {
-                for local in locals {
+                for local in locals.iter() {
                     if let Some(name) = get_name(&local.id, &local.name) {
                         local_names.push((local_idx, name));
                     }
@@ -1173,7 +1173,7 @@ impl Encode for RefCast<'_> {
     }
 }
 
-fn br_on_cast_flags(on_fail: bool, from_nullable: bool, to_nullable: bool) -> u8 {
+fn br_on_cast_flags(from_nullable: bool, to_nullable: bool) -> u8 {
     let mut flag = 0;
     if from_nullable {
         flag |= 1 << 0;
@@ -1181,18 +1181,14 @@ fn br_on_cast_flags(on_fail: bool, from_nullable: bool, to_nullable: bool) -> u8
     if to_nullable {
         flag |= 1 << 1;
     }
-    if on_fail {
-        flag |= 1 << 2;
-    }
     flag
 }
 
 impl Encode for BrOnCast<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
         e.push(0xfb);
-        e.push(0x4f);
+        e.push(0x4e);
         e.push(br_on_cast_flags(
-            false,
             self.from_type.nullable,
             self.to_type.nullable,
         ));
@@ -1207,7 +1203,6 @@ impl Encode for BrOnCastFail<'_> {
         e.push(0xfb);
         e.push(0x4f);
         e.push(br_on_cast_flags(
-            true,
             self.from_type.nullable,
             self.to_type.nullable,
         ));

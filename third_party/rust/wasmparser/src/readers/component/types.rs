@@ -1,7 +1,7 @@
 use crate::limits::*;
 use crate::{
     BinaryReader, ComponentAlias, ComponentExternName, ComponentImport, ComponentTypeRef,
-    FromReader, FuncType, Import, Result, SectionLimited, Type, TypeRef, ValType,
+    FromReader, FuncType, Import, Result, SectionLimited, SubType, TypeRef, ValType,
 };
 use std::fmt;
 
@@ -39,7 +39,7 @@ impl<'a> FromReader<'a> for CoreType<'a> {
 #[derive(Debug, Clone)]
 pub enum ModuleTypeDeclaration<'a> {
     /// The module type definition is for a type.
-    Type(Type),
+    Type(SubType),
     /// The module type definition is for an export.
     Export {
         /// The name of the exported item.

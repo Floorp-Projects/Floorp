@@ -213,10 +213,6 @@ notes = "Upstream project which we pin."
 [policy.wr_malloc_size_of]
 audit-as-crates-io = false
 
-[[exemptions.adler]]
-version = "1.0.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.ahash]]
 version = "0.7.6"
 criteria = "safe-to-deploy"
@@ -643,10 +639,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.phf_shared]]
 version = "0.10.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.pin-project-lite]]
-version = "0.2.9"
 criteria = "safe-to-deploy"
 
 [[exemptions.plain]]

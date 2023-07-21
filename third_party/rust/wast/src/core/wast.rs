@@ -33,7 +33,7 @@ static ARGS: &[(&str, fn(Parser<'_>) -> Result<WastArgCore<'_>>)] = {
 impl<'a> Parse<'a> for WastArgCore<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let parse = parser.step(|c| {
-            if let Some((kw, rest)) = c.keyword() {
+            if let Some((kw, rest)) = c.keyword()? {
                 if let Some(i) = ARGS.iter().position(|(name, _)| *name == kw) {
                     return Ok((ARGS[i].1, rest));
                 }
@@ -45,12 +45,12 @@ impl<'a> Parse<'a> for WastArgCore<'a> {
 }
 
 impl Peek for WastArgCore<'_> {
-    fn peek(cursor: Cursor<'_>) -> bool {
-        let kw = match cursor.keyword() {
+    fn peek(cursor: Cursor<'_>) -> Result<bool> {
+        let kw = match cursor.keyword()? {
             Some((kw, _)) => kw,
-            None => return false,
+            None => return Ok(false),
         };
-        ARGS.iter().find(|(name, _)| *name == kw).is_some()
+        Ok(ARGS.iter().find(|(name, _)| *name == kw).is_some())
     }
 
     fn display() -> &'static str {
@@ -105,7 +105,7 @@ static RETS: &[(&str, fn(Parser<'_>) -> Result<WastRetCore<'_>>)] = {
 impl<'a> Parse<'a> for WastRetCore<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let parse = parser.step(|c| {
-            if let Some((kw, rest)) = c.keyword() {
+            if let Some((kw, rest)) = c.keyword()? {
                 if let Some(i) = RETS.iter().position(|(name, _)| *name == kw) {
                     return Ok((RETS[i].1, rest));
                 }
@@ -117,12 +117,12 @@ impl<'a> Parse<'a> for WastRetCore<'a> {
 }
 
 impl Peek for WastRetCore<'_> {
-    fn peek(cursor: Cursor<'_>) -> bool {
-        let kw = match cursor.keyword() {
+    fn peek(cursor: Cursor<'_>) -> Result<bool> {
+        let kw = match cursor.keyword()? {
             Some((kw, _)) => kw,
-            None => return false,
+            None => return Ok(false),
         };
-        RETS.iter().find(|(name, _)| *name == kw).is_some()
+        Ok(RETS.iter().find(|(name, _)| *name == kw).is_some())
     }
 
     fn display() -> &'static str {
@@ -144,10 +144,10 @@ where
     T: Parse<'a>,
 {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        if parser.peek::<kw::nan_canonical>() {
+        if parser.peek::<kw::nan_canonical>()? {
             parser.parse::<kw::nan_canonical>()?;
             Ok(NanPattern::CanonicalNan)
-        } else if parser.peek::<kw::nan_arithmetic>() {
+        } else if parser.peek::<kw::nan_arithmetic>()? {
             parser.parse::<kw::nan_arithmetic>()?;
             Ok(NanPattern::ArithmeticNan)
         } else {
@@ -175,7 +175,7 @@ pub enum V128Pattern {
 impl<'a> Parse<'a> for V128Pattern {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let mut l = parser.lookahead1();
-        if l.peek::<kw::i8x16>() {
+        if l.peek::<kw::i8x16>()? {
             parser.parse::<kw::i8x16>()?;
             Ok(V128Pattern::I8x16([
                 parser.parse()?,
@@ -195,7 +195,7 @@ impl<'a> Parse<'a> for V128Pattern {
                 parser.parse()?,
                 parser.parse()?,
             ]))
-        } else if l.peek::<kw::i16x8>() {
+        } else if l.peek::<kw::i16x8>()? {
             parser.parse::<kw::i16x8>()?;
             Ok(V128Pattern::I16x8([
                 parser.parse()?,
@@ -207,7 +207,7 @@ impl<'a> Parse<'a> for V128Pattern {
                 parser.parse()?,
                 parser.parse()?,
             ]))
-        } else if l.peek::<kw::i32x4>() {
+        } else if l.peek::<kw::i32x4>()? {
             parser.parse::<kw::i32x4>()?;
             Ok(V128Pattern::I32x4([
                 parser.parse()?,
@@ -215,10 +215,10 @@ impl<'a> Parse<'a> for V128Pattern {
                 parser.parse()?,
                 parser.parse()?,
             ]))
-        } else if l.peek::<kw::i64x2>() {
+        } else if l.peek::<kw::i64x2>()? {
             parser.parse::<kw::i64x2>()?;
             Ok(V128Pattern::I64x2([parser.parse()?, parser.parse()?]))
-        } else if l.peek::<kw::f32x4>() {
+        } else if l.peek::<kw::f32x4>()? {
             parser.parse::<kw::f32x4>()?;
             Ok(V128Pattern::F32x4([
                 parser.parse()?,
@@ -226,7 +226,7 @@ impl<'a> Parse<'a> for V128Pattern {
                 parser.parse()?,
                 parser.parse()?,
             ]))
-        } else if l.peek::<kw::f64x2>() {
+        } else if l.peek::<kw::f64x2>()? {
             parser.parse::<kw::f64x2>()?;
             Ok(V128Pattern::F64x2([parser.parse()?, parser.parse()?]))
         } else {

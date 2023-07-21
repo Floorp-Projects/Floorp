@@ -1,6 +1,6 @@
 use crate::component::*;
 use crate::core;
-use crate::token::{Id, Index, NameAnnotation};
+use crate::token::{Id, Index, NameAnnotation, Span};
 use wasm_encoder::{
     CanonicalFunctionSection, ComponentAliasSection, ComponentDefinedTypeEncoder,
     ComponentExportSection, ComponentImportSection, ComponentInstanceSection, ComponentNameSection,
@@ -43,6 +43,7 @@ fn encode_fields(
             ComponentField::Import(i) => e.encode_import(i),
             ComponentField::Export(ex) => e.encode_export(ex),
             ComponentField::Custom(c) => e.encode_custom(c),
+            ComponentField::Producers(c) => e.encode_producers(c),
         }
     }
 
@@ -177,6 +178,18 @@ impl<'a> Encoder<'a> {
         // Flush any in-progress section before encoding the customs section
         self.flush(None);
         self.component.section(custom);
+    }
+
+    fn encode_producers(&mut self, custom: &core::Producers) {
+        use crate::encode::Encode;
+
+        let mut data = Vec::new();
+        custom.encode(&mut data);
+        self.encode_custom(&Custom {
+            name: "producers",
+            span: Span::from_offset(0),
+            data: vec![&data],
+        })
     }
 
     fn encode_core_module(&mut self, module: &CoreModule<'a>) {
@@ -327,7 +340,7 @@ impl<'a> Encoder<'a> {
             }
             CanonicalFuncKind::ResourceDrop(info) => {
                 self.core_func_names.push(name);
-                self.funcs.resource_drop((&info.ty).into());
+                self.funcs.resource_drop(info.ty.into());
             }
             CanonicalFuncKind::ResourceRep(info) => {
                 self.core_func_names.push(name);

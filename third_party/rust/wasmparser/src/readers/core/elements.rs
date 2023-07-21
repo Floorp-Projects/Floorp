@@ -26,8 +26,6 @@ pub struct Element<'a> {
     pub kind: ElementKind<'a>,
     /// The initial elements of the element segment.
     pub items: ElementItems<'a>,
-    /// The type of the elements.
-    pub ty: RefType,
     /// The range of the the element segment.
     pub range: Range<usize>,
 }
@@ -54,7 +52,7 @@ pub enum ElementItems<'a> {
     /// This element contains function indices.
     Functions(SectionLimited<'a, u32>),
     /// This element contains constant expressions used to initialize the table.
-    Expressions(SectionLimited<'a, ConstExpr<'a>>),
+    Expressions(RefType, SectionLimited<'a, ConstExpr<'a>>),
 }
 
 /// A reader for the element section of a WebAssembly module.
@@ -104,10 +102,10 @@ impl<'a> FromReader<'a> for Element<'a> {
         let exprs = flags & 0b100 != 0;
         let ty = if flags & 0b011 != 0 {
             if exprs {
-                reader.read()?
+                Some(reader.read()?)
             } else {
                 match reader.read()? {
-                    ExternalKind::Func => RefType::FUNCREF,
+                    ExternalKind::Func => None,
                     _ => {
                         return Err(BinaryReaderError::new(
                             "only the function external type is supported in elem segment",
@@ -117,7 +115,7 @@ impl<'a> FromReader<'a> for Element<'a> {
                 }
             }
         } else {
-            RefType::FUNCREF
+            None
         };
         // FIXME(#188) ideally wouldn't have to do skips here
         let data = reader.skip(|reader| {
@@ -134,11 +132,12 @@ impl<'a> FromReader<'a> for Element<'a> {
             Ok(())
         })?;
         let items = if exprs {
-            ElementItems::Expressions(SectionLimited::new(
-                data.remaining_buffer(),
-                data.original_position(),
-            )?)
+            ElementItems::Expressions(
+                ty.unwrap_or(RefType::FUNCREF),
+                SectionLimited::new(data.remaining_buffer(), data.original_position())?,
+            )
         } else {
+            assert!(ty.is_none());
             ElementItems::Functions(SectionLimited::new(
                 data.remaining_buffer(),
                 data.original_position(),
@@ -148,11 +147,6 @@ impl<'a> FromReader<'a> for Element<'a> {
         let elem_end = reader.original_position();
         let range = elem_start..elem_end;
 
-        Ok(Element {
-            kind,
-            items,
-            ty,
-            range,
-        })
+        Ok(Element { kind, items, range })
     }
 }

@@ -20,7 +20,7 @@ pub use self::names::*;
 pub use self::start::*;
 pub use self::types::*;
 
-use crate::{CustomSection, Encode, ProducersSection};
+use crate::{CustomSection, Encode, ProducersSection, RawCustomSection};
 
 // Core sorts extended by the component model
 const CORE_TYPE_SORT: u8 = 0x10;
@@ -148,6 +148,12 @@ impl Default for Component {
 }
 
 impl ComponentSection for CustomSection<'_> {
+    fn id(&self) -> u8 {
+        ComponentSectionId::CoreCustom.into()
+    }
+}
+
+impl ComponentSection for RawCustomSection<'_> {
     fn id(&self) -> u8 {
         ComponentSectionId::CoreCustom.into()
     }
