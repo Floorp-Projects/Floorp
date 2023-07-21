@@ -42,6 +42,8 @@ const MAX_MASK_SIZE: f32 = 4096.0;
 const MIN_BRUSH_SPLIT_SIZE: f32 = 256.0;
 const MIN_BRUSH_SPLIT_AREA: f32 = 128.0 * 128.0;
 
+const MIN_AA_SEGMENTS_SIZE: f32 = 4.0;
+
 pub fn prepare_primitives(
     store: &mut PrimitiveStore,
     prim_list: &mut PrimitiveList,
@@ -708,6 +710,13 @@ fn prepare_interned_prim_for_render(
                 let premul_color = color.premultiplied();
 
                 let mut quad_flags = QuadFlags::empty();
+
+                // Only use AA edge instances if the primitive is large enough to require it
+                let prim_size = prim_data.common.prim_rect.size();
+                if prim_size.width > MIN_AA_SEGMENTS_SIZE && prim_size.height > MIN_AA_SEGMENTS_SIZE {
+                    quad_flags |= QuadFlags::USE_AA_SEGMENTS;
+                }
+
                 if is_opaque {
                     quad_flags |= QuadFlags::IS_OPAQUE;
                 }
