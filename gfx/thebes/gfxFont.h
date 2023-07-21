@@ -2002,6 +2002,9 @@ class gfxFont {
   // The return value is interpreted as a horizontal advance in 16.16 fixed
   // point format.
   virtual int32_t GetGlyphWidth(uint16_t aGID) { return -1; }
+  virtual int32_t GetGlyphWidthLocked(uint16_t aGID) MOZ_REQUIRES(mLock) {
+    return -1;
+  }
 
   virtual bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
                               bool aTight = false) {
@@ -2028,14 +2031,16 @@ class gfxFont {
                  uint32_t aOffset,  // dest offset in gfxShapedText
                  uint32_t aLength, Script aScript, nsAtom* aLanguage,
                  bool aVertical, RoundingFlags aRounding,
-                 gfxShapedText* aShapedText);  // where to store the result
+                 gfxShapedText* aShapedText)  // where to store the result
+      MOZ_REQUIRES(mLock);
 
   // Call the appropriate shaper to generate glyphs for aText and store
   // them into aShapedText.
   virtual bool ShapeText(DrawTarget* aContext, const char16_t* aText,
                          uint32_t aOffset, uint32_t aLength, Script aScript,
                          nsAtom* aLanguage, bool aVertical,
-                         RoundingFlags aRounding, gfxShapedText* aShapedText);
+                         RoundingFlags aRounding, gfxShapedText* aShapedText)
+      MOZ_REQUIRES(mLock);
 
   // Helper to adjust for synthetic bold and set character-type flags
   // in the shaped text; implementations of ShapeText should call this

@@ -59,6 +59,9 @@ class gfxFT2FontBase : public gfxFont {
   int32_t GetGlyphWidth(uint16_t aGID) override {
     return GetCachedGlyphMetrics(aGID).mAdvance;
   }
+  int32_t GetGlyphWidthLocked(uint16_t aGID) MOZ_REQUIRES(mLock) override {
+    return GetCachedGlyphMetricsLocked(aGID).mAdvance;
+  }
 
   bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) override;
 
@@ -144,6 +147,9 @@ class gfxFT2FontBase : public gfxFont {
 
   const GlyphMetrics& GetCachedGlyphMetrics(
       uint16_t aGID, mozilla::gfx::IntRect* aBounds = nullptr) const;
+  const GlyphMetrics& GetCachedGlyphMetricsLocked(
+      uint16_t aGID, mozilla::gfx::IntRect* aBounds = nullptr) const
+      MOZ_REQUIRES(mLock);
 
   mutable mozilla::UniquePtr<nsTHashMap<nsUint32HashKey, GlyphMetrics>>
       mGlyphMetrics MOZ_GUARDED_BY(mLock);

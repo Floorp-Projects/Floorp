@@ -351,7 +351,9 @@ hb_position_t gfxHarfBuzzShaper::HBGetGlyphHAdvance(hb_font_t* font,
       static_cast<const gfxHarfBuzzShaper::FontCallbackData*>(font_data);
   const gfxHarfBuzzShaper* shaper = fcd->mShaper;
   if (shaper->mUseFontGlyphWidths) {
-    return shaper->GetFont()->GetGlyphWidth(glyph);
+    MOZ_PUSH_IGNORE_THREAD_SAFETY
+    return shaper->GetFont()->GetGlyphWidthLocked(glyph);
+    MOZ_POP_THREAD_SAFETY
   }
   return shaper->GetGlyphHAdvance(glyph);
 }
@@ -407,8 +409,10 @@ hb_bool_t gfxHarfBuzzShaper::HBGetGlyphVOrigin(hb_font_t* font, void* font_data,
 void gfxHarfBuzzShaper::GetGlyphVOrigin(hb_codepoint_t aGlyph,
                                         hb_position_t* aX,
                                         hb_position_t* aY) const {
-  *aX = 0.5 * (mUseFontGlyphWidths ? mFont->GetGlyphWidth(aGlyph)
+  MOZ_PUSH_IGNORE_THREAD_SAFETY
+  *aX = 0.5 * (mUseFontGlyphWidths ? mFont->GetGlyphWidthLocked(aGlyph)
                                    : GetGlyphHAdvance(aGlyph));
+  MOZ_POP_THREAD_SAFETY
 
   if (mVORGTable) {
     // We checked in Initialize() that the VORG table is safely readable,
