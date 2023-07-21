@@ -43,8 +43,11 @@ Filing / Managing Bugs
    filing from crash-stats, is helpful.
 -  It is _ok_ to link security bugs to non-security bugs with Blocks,
    Depends, Regressions, or See Also. Users with the editbugs permission
-   will be able to see the reference, but not view a restricted bug.
-   Users without the permission will not be able to see the link.
+   will be able to see the reference, but not view a restricted bug or
+   its summary. Users without the permission will not be able to see the link.
+   For critical severity bugs where even that seems problematic, consider
+   mentioning the bug in a comment on the security bug instead. We can always
+   fill in the links later after the fix has shipped.
 
 Developing the Patch
 ~~~~~~~~~~~~~~~~~~~~
@@ -52,11 +55,6 @@ Developing the Patch
 -  Comments in the code should not mention a security issue is being
    fixed. Don’t paint a picture or an arrow pointing to security issues
    any more than the code changes already do.
--  Avoid linking it to non-security bugs with Blocks, Depends, or See
-   Also, especially if those bugs may give a hint to the sort of
-   security issue involved. Mention the bug in a comment on the security
-   bug instead. We can always fill in the links later after the fix has
-   shipped.
 -  Do not push to Try servers if possible: this exposes the security
    issues for these critical and high rated bugs to public viewing. In
    an ideal case, testing of patches is done locally before final
