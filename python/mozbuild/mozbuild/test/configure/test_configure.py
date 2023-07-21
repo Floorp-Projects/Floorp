@@ -57,6 +57,8 @@ class TestConfigure(unittest.TestCase):
                     NegativeOptionValue(),
                     NegativeOptionValue(),
                     NegativeOptionValue(),
+                    NegativeOptionValue(),
+                    NegativeOptionValue(),
                 ),
                 "SIMPLE": NegativeOptionValue(),
                 "VALUES": NegativeOptionValue(),
@@ -80,9 +82,11 @@ class TestConfigure(unittest.TestCase):
             "    --help                    print this message\n"
             "\n"
             "  Options from python/mozbuild/mozbuild/test/configure/data/included.configure:\n"
-            "    --enable-imports-in-template\n                              Imports in template\n"
+            "    --enable-imports-in-template\n"
+            "                              Imports in template\n"
             "\n"
             "  Options from python/mozbuild/mozbuild/test/configure/data/moz.configure:\n"
+            "    --enable-choices={a,b,c}  Enable choices\n"
             "    --enable-include          Include\n"
             "    --enable-simple           Enable simple\n"
             "    --enable-values           Enable values\n"
@@ -91,8 +95,50 @@ class TestConfigure(unittest.TestCase):
             "    --option                  Option\n"
             "    --returned-choices        Choices\n"
             "    --with-imports            Imports\n"
+            "    --with-other-default      With other default\n"
             "    --with-returned-default   Returned default [not-simple]\n"
             "    --with-stuff              Build with stuff\n"
+            "    --without-thing           Build without thing\n"
+            "\n"
+            "\n"
+            "Environment variables:\n"
+            "  Options from python/mozbuild/mozbuild/test/configure/data/moz.configure:\n"
+            "    CC                        C Compiler\n"
+            "\n",
+            help.replace("\\", "/"),
+        )
+
+        help, config = self.get_config(
+            ["--help", "--enable-simple", "--enable-values=numeric"], prog="configure"
+        )
+
+        self.assertEqual({}, config)
+        self.maxDiff = None
+        self.assertEqual(
+            "Usage: configure [options]\n"
+            "\n"
+            "Options: [defaults in brackets after descriptions]\n"
+            "  Help options:\n"
+            "    --help                    print this message\n"
+            "\n"
+            "  Options from python/mozbuild/mozbuild/test/configure/data/included.configure:\n"
+            "    --enable-imports-in-template\n"
+            "                              Imports in template\n"
+            "\n"
+            "  Options from python/mozbuild/mozbuild/test/configure/data/moz.configure:\n"
+            "    --enable-choices={a,b,c}  Enable choices\n"
+            "    --enable-include          Include\n"
+            "    --enable-simple           Enable simple\n"
+            "    --enable-values           Enable values\n"
+            "    --enable-with-env         Enable with env\n"
+            "    --indirect-option         Indirectly defined option\n"
+            "    --option                  Option\n"
+            "    --returned-choices={0,1,2}\n"
+            "                              Choices\n"
+            "    --with-imports            Imports\n"
+            "    --with-returned-default   Returned default [simple]\n"
+            "    --with-stuff              Build with stuff\n"
+            "    --without-other-default   Without other default\n"
             "    --without-thing           Build without thing\n"
             "\n"
             "\n"
@@ -1228,8 +1274,6 @@ class TestConfigure(unittest.TestCase):
                   Options from python/mozbuild/mozbuild/test/configure/data/moz.configure:
                     --with-foo                foo
 
-
-                Environment variables:
             """
                 ),
             )
@@ -1249,8 +1293,6 @@ class TestConfigure(unittest.TestCase):
                     --with-foo                foo
                     --with-qux                qux
 
-
-                Environment variables:
             """
                 ),
             )

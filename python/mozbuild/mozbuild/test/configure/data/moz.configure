@@ -13,6 +13,9 @@ option("--enable-with-env", env="MOZ_WITH_ENV", help="Enable with env")
 # Optional values
 option("--enable-values", nargs="*", help="Enable values")
 
+# Optional values from a set of choices
+option("--enable-choices", nargs="*", choices=("a", "b", "c"), help="Enable choices")
+
 # Everything supported in the Option class is supported in option(). Assume
 # the tests of the Option class are extensive about this.
 
@@ -117,6 +120,18 @@ def default(value):
 set_config("DEFAULTED", default)
 
 
+@depends("--enable-simple")
+def other_default(simple):
+    return bool(simple)
+
+
+# When the default comes from the result of a @depends function, the help
+# string can be picked between two variants automatically.
+option(
+    "--with-other-default", default=other_default, help="{With|Without} other default"
+)
+
+
 @depends("--enable-values")
 def choices(values):
     if len(values):
@@ -138,7 +153,14 @@ set_config("CHOICES", returned_choices)
 
 # All options must be referenced by some @depends function.
 # It is possible to depend on multiple options/functions
-@depends("--without-thing", "--with-stuff", with_env4, "--option")
+@depends(
+    "--without-thing",
+    "--with-stuff",
+    with_env4,
+    "--option",
+    "--enable-choices",
+    "--with-other-default",
+)
 def remainder(*args):
     return args
 
