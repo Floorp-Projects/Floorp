@@ -7,7 +7,7 @@
  * https://w3c.github.io/webcodecs/#encodedvideochunk
  */
 
-[Exposed=(Window,DedicatedWorker), Pref="dom.media.webcodecs.enabled"]
+[Exposed=(Window,DedicatedWorker), Serializable, Pref="dom.media.webcodecs.enabled"]
 interface EncodedVideoChunk {
   [Throws]
   constructor(EncodedVideoChunkInit init);

@@ -73,6 +73,13 @@ class EncodedVideoChunk final : public nsISupports, public nsWrapperCache {
   // Non-webidl method.
   uint8_t* Data();
 
+  // [Serializable] implementations: {Read, Write}StructuredClone
+  static already_AddRefed<EncodedVideoChunk> ReadStructuredClone(
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      JSStructuredCloneReader* aReader);
+  bool WriteStructuredClone(JSContext* aCx,
+                            JSStructuredCloneWriter* aWriter) const;
+
  private:
   // EncodedVideoChunk can run on either main thread or worker thread.
   void AssertIsOnOwningThread() const {
