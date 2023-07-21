@@ -5,6 +5,7 @@ from itertools import islice
 
 from taskgraph import MAX_DEPENDENCIES
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.dependencies import get_primary_dependency
 
 from gecko_taskgraph.util.platforms import architecture
 from gecko_taskgraph.util.scriptworker import (
@@ -24,7 +25,7 @@ def beetmover_apt(config, tasks):
         or config.params["release_type"] == "nightly"
         else config.params["release_product"]
     )
-    filtered_tasks = filter_beetmover_apt_tasks(tasks, product)
+    filtered_tasks = filter_beetmover_apt_tasks(config, tasks, product)
     # There are too many beetmover-repackage dependencies for a single task
     # and we hit the taskgraph dependencies limit.
     # To work around this limitation, we chunk the would be task
@@ -34,7 +35,9 @@ def beetmover_apt(config, tasks):
         dependencies = {}
         gcs_sources = []
         for task in batch:
-            dep = task["primary-dependency"]
+            dep = get_primary_dependency(config, task)
+            assert dep
+
             dependencies[dep.label] = dep.label
             gcs_sources.extend(generate_artifact_registry_gcs_sources(dep))
         description = f"Batch {index + 1} of beetmover APT submissions for the {config.params['release_type']} .deb packages"
@@ -84,8 +87,11 @@ def batched(iterable, n):
         batch = tuple(islice(it, n))
 
 
-def filter_beetmover_apt_tasks(tasks, product):
-    return (task for task in tasks if filter_beetmover_apt_task(task, product))
+def filter_beetmover_apt_tasks(config, tasks, product):
+    for task in tasks:
+        task["primary-dependency"] = get_primary_dependency(config, task)
+        if filter_beetmover_apt_task(task, product):
+            yield task
 
 
 def filter_beetmover_apt_task(task, product):

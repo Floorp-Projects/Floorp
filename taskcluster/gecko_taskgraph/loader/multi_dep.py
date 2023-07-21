@@ -191,6 +191,13 @@ def single_locale_grouping(config, tasks):
     return groups
 
 
+# Temporary shim function
+@tg_group_by("single-locale")
+def tg_locale_grouping(config, tasks):
+    groups = single_locale_grouping(config.config, tasks)
+    return groups.values()
+
+
 @group_by("chunk-locales")
 def chunk_locale_grouping(config, tasks):
     """Split by a chunk_locale (but also by platform, build-type, product)
