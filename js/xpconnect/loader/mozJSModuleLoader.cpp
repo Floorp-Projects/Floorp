@@ -1804,8 +1804,9 @@ nsresult mozJSModuleLoader::ImportESModule(
       mModuleLoader->GetGlobalObject()->PrincipalOrNull();
   MOZ_ASSERT(principal);
 
-  RefPtr<ScriptFetchOptions> options = new ScriptFetchOptions(
-      CORS_NONE, dom::ReferrerPolicy::No_referrer, principal);
+  RefPtr<ScriptFetchOptions> options =
+      new ScriptFetchOptions(CORS_NONE, dom::ReferrerPolicy::No_referrer,
+                             /* aNonce = */ u""_ns, principal);
 
   RefPtr<ComponentLoadContext> context = new ComponentLoadContext();
   context->mSkipCheck = aSkipCheck;
