@@ -592,6 +592,10 @@ pref("toolkit.autocomplete.richBoundaryCutoff", 200);
 pref("toolkit.scrollbox.scrollIncrement", 20);
 pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
 
+pref("toolkit.shopping.useOHTTP", false);
+pref("toolkit.shopping.ohttpConfigURL", "");
+pref("toolkit.shopping.ohttpRelayURL", "");
+
 // Controls logging for Sqlite.sys.mjs.
 pref("toolkit.sqlitejsm.loglevel", "Error");
 

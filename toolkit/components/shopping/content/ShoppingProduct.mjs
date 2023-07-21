@@ -12,14 +12,54 @@ import {
   ProductConfig,
 } from "chrome://global/content/shopping/ProductConfig.mjs";
 
+let { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  OHTTPConfigManager: "resource://gre/modules/OHTTPConfigManager.sys.mjs",
   ProductValidator: "chrome://global/content/shopping/ProductValidator.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 const API_RETRIES = 3;
 const API_RETRY_TIMEOUT = 100;
+
+XPCOMUtils.defineLazyServiceGetters(lazy, {
+  ohttpService: [
+    "@mozilla.org/network/oblivious-http-service;1",
+    Ci.nsIObliviousHttpService,
+  ],
+});
+
+XPCOMUtils.defineLazyGetter(lazy, "decoder", () => new TextDecoder());
+
+const StringInputStream = Components.Constructor(
+  "@mozilla.org/io/string-input-stream;1",
+  "nsIStringInputStream",
+  "setData"
+);
+
+const BinaryInputStream = Components.Constructor(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
+
+function readFromStream(stream, count) {
+  let binaryStream = new BinaryInputStream(stream);
+  let arrayBuffer = new ArrayBuffer(count);
+  while (count > 0) {
+    let actuallyRead = binaryStream.readArrayBuffer(count, arrayBuffer);
+    if (!actuallyRead) {
+      throw new Error("Nothing read from input stream!");
+    }
+    count -= actuallyRead;
+  }
+  return lazy.decoder.decode(arrayBuffer);
+}
 
 /**
  * @typedef {object} Product
@@ -319,7 +359,7 @@ export class ShoppingProduct {
       }
     }
 
-    let resp = await fetch(apiURL, {
+    let requestOptions = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -327,20 +367,57 @@ export class ShoppingProduct {
       },
       body: JSON.stringify(bodyObj),
       signal: this._abortController.signal,
-    });
-    let responseOk = resp.ok;
-    let responseStatus = resp.status;
-    let result = await resp.json();
+    };
 
-    if (responseOk && responseSchema) {
-      let validResponse = await lazy.ProductValidator.validate(
-        result,
-        responseSchema,
-        this.allowValidationFailure
-      );
-      if (!validResponse && !this.allowValidationFailure) {
+    let requestPromise;
+    let { useOHTTP, ohttpRelayURL, ohttpConfigURL } =
+      lazy.NimbusFeatures.shopping2023.getAllVariables();
+    if (useOHTTP && ohttpRelayURL && ohttpConfigURL) {
+      let config = await this.getOHTTPConfig(ohttpConfigURL);
+      // In the time it took to fetch the OHTTP config, we might have been
+      // aborted...
+      if (requestOptions.signal.aborted) {
         return null;
       }
+      if (!config) {
+        console.error(
+          new Error(
+            "OHTTP was configured for shopping but we couldn't get a valid config."
+          )
+        );
+        return null;
+      }
+      requestPromise = this.ohttpRequest(
+        ohttpRelayURL,
+        config,
+        apiURL,
+        requestOptions
+      );
+    } else {
+      requestPromise = fetch(apiURL, requestOptions);
+    }
+
+    let result;
+    let responseOk;
+    let responseStatus;
+    try {
+      let response = await requestPromise;
+      responseOk = response.ok;
+      responseStatus = response.status;
+      result = await response.json();
+
+      if (responseOk && responseSchema) {
+        let validResponse = await lazy.ProductValidator.validate(
+          result,
+          responseSchema,
+          this.allowValidationFailure
+        );
+        if (!validResponse && !this.allowValidationFailure) {
+          return null;
+        }
+      }
+    } catch (error) {
+      console.error(error);
     }
 
     // Retry failed results and 500 errors.
@@ -361,6 +438,125 @@ export class ShoppingProduct {
     }
 
     return result;
+  }
+
+  /**
+   * Get a cached, or fetch a copy of, an OHTTP config from a given URL.
+   *
+   *
+   * @param {string} gatewayConfigURL
+   *   The URL for the config that needs to be fetched.
+   *   The URL should be complete (i.e. include the full path to the config).
+   * @returns {Uint8Array}
+   *   The config bytes.
+   */
+  async getOHTTPConfig(gatewayConfigURL) {
+    return lazy.OHTTPConfigManager.get(gatewayConfigURL);
+  }
+
+  /**
+   * Make a request over OHTTP.
+   *
+   * @param {string} obliviousHTTPRelay
+   *   The URL of the OHTTP relay to use.
+   * @param {Uint8Array} config
+   *   A byte array representing the OHTTP config.
+   * @param {string} requestURL
+   *   The URL of the request we want to make over the relay.
+   * @param {object} options
+   * @param {string} options.method
+   *   The HTTP method to use for the inner request. Only GET and POST
+   *   are supported right now.
+   * @param {string} options.body
+   *   The body content to send over the request.
+   * @param {object} options.headers
+   *   The request headers to set. Each property of the object represents
+   *   a header, with the key the header name and the value the header value.
+   * @param {AbortSignal} options.signal
+   *   If the consumer passes an AbortSignal object, aborting the signal
+   *   will abort the request.
+   *
+   * @returns {object}
+   *   Returns an object with properties mimicking that of a normal fetch():
+   *   .ok = boolean indicating whether the request was successful.
+   *   .status = integer representation of the HTTP status code
+   *   .headers = object representing the response headers.
+   *   .json() = method that returns the parsed JSON response body.
+   */
+  async ohttpRequest(
+    obliviousHTTPRelay,
+    config,
+    requestURL,
+    { method, body, headers, signal } = {}
+  ) {
+    let relayURI = Services.io.newURI(obliviousHTTPRelay);
+    let requestURI = Services.io.newURI(requestURL);
+    let obliviousHttpChannel = lazy.ohttpService
+      .newChannel(relayURI, requestURI, config)
+      .QueryInterface(Ci.nsIHttpChannel);
+
+    if (method == "POST") {
+      let uploadChannel = obliviousHttpChannel.QueryInterface(
+        Ci.nsIUploadChannel2
+      );
+      let bodyStream = new StringInputStream(body, body.length);
+      uploadChannel.explicitSetUploadStream(
+        bodyStream,
+        null,
+        -1,
+        "POST",
+        false
+      );
+    }
+
+    for (let headerName of Object.keys(headers)) {
+      obliviousHttpChannel.setRequestHeader(
+        headerName,
+        headers[headerName],
+        false
+      );
+    }
+    let abortHandler = e => {
+      obliviousHttpChannel.cancel(Cr.NS_BINDING_ABORTED);
+    };
+    signal.addEventListener("abort", abortHandler);
+    return new Promise((resolve, reject) => {
+      let listener = {
+        _buffer: "",
+        _headers: null,
+        QueryInterface: ChromeUtils.generateQI([
+          "nsIStreamListener",
+          "nsIRequestObserver",
+        ]),
+        onStartRequest(request) {
+          this._headers = {};
+          request
+            .QueryInterface(Ci.nsIHttpChannel)
+            .visitResponseHeaders((header, value) => {
+              this._headers[header.toLowerCase()] = value;
+            });
+        },
+        onDataAvailable(request, stream, offset, count) {
+          this._buffer += readFromStream(stream, count);
+        },
+        onStopRequest(request, requestStatus) {
+          signal.removeEventListener("abort", abortHandler);
+          let result = this._buffer;
+          let httpStatus = request.QueryInterface(
+            Ci.nsIHttpChannel
+          ).responseStatus;
+          resolve({
+            ok: requestStatus == Cr.NS_OK && httpStatus == 200,
+            status: httpStatus,
+            headers: this._headers,
+            json() {
+              return JSON.parse(result);
+            },
+          });
+        },
+      };
+      obliviousHttpChannel.asyncOpen(listener);
+    });
   }
 
   uninit() {
