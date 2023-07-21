@@ -454,7 +454,7 @@ class HistoryInView extends ViewPage {
       </div>
       <div
         class="show-all-history-footer"
-        ?hidden=${!this.allHistoryItems.length}
+        ?hidden=${!this.allHistoryItems.size}
       >
         <span
           class="show-all-history-link"
