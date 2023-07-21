@@ -1,4 +1,4 @@
-use crate::{encode_section, ComponentSection, ComponentSectionId, ComponentValType, Encode};
+use crate::{encode_section, ComponentSection, ComponentSectionId, Encode};
 
 /// Represents options for canonical function definitions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -129,9 +129,9 @@ impl CanonicalFunctionSection {
     }
 
     /// Defines a function which will drop the specified type of handle.
-    pub fn resource_drop(&mut self, ty: ComponentValType) -> &mut Self {
+    pub fn resource_drop(&mut self, ty_index: u32) -> &mut Self {
         self.bytes.push(0x03);
-        ty.encode(&mut self.bytes);
+        ty_index.encode(&mut self.bytes);
         self.num_added += 1;
         self
     }

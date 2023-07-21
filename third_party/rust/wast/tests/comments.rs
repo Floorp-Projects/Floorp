@@ -9,7 +9,7 @@ impl<'a> Parse<'a> for Comments<'a> {
         let comments = parser.step(|mut cursor| {
             let mut comments = Vec::new();
             loop {
-                let (comment, c) = match cursor.comment() {
+                let (comment, c) = match cursor.comment()? {
                     Some(pair) => pair,
                     None => break,
                 };

@@ -36,10 +36,10 @@ static CASES: &[(&str, fn(Parser<'_>) -> Result<WastVal<'_>>)] = {
     &[
         ("bool.const", |p| {
             let mut l = p.lookahead1();
-            if l.peek::<kw::true_>() {
+            if l.peek::<kw::true_>()? {
                 p.parse::<kw::true_>()?;
                 Ok(Bool(true))
-            } else if l.peek::<kw::false_>() {
+            } else if l.peek::<kw::false_>()? {
                 p.parse::<kw::false_>()?;
                 Ok(Bool(false))
             } else {
@@ -140,7 +140,7 @@ impl<'a> Parse<'a> for WastVal<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         parser.depth_check()?;
         let parse = parser.step(|c| {
-            if let Some((kw, rest)) = c.keyword() {
+            if let Some((kw, rest)) = c.keyword()? {
                 if let Some(i) = CASES.iter().position(|(name, _)| *name == kw) {
                     return Ok((CASES[i].1, rest));
                 }
@@ -152,12 +152,12 @@ impl<'a> Parse<'a> for WastVal<'a> {
 }
 
 impl Peek for WastVal<'_> {
-    fn peek(cursor: Cursor<'_>) -> bool {
-        let kw = match cursor.keyword() {
+    fn peek(cursor: Cursor<'_>) -> Result<bool> {
+        let kw = match cursor.keyword()? {
             Some((kw, _)) => kw,
-            None => return false,
+            None => return Ok(false),
         };
-        CASES.iter().any(|(name, _)| *name == kw)
+        Ok(CASES.iter().any(|(name, _)| *name == kw))
     }
 
     fn display() -> &'static str {

@@ -226,8 +226,8 @@ user-login = "seanmonstar"
 user-name = "Sean McArthur"
 
 [[publisher.indexmap]]
-version = "1.9.2"
-when = "2022-11-17"
+version = "1.9.3"
+when = "2023-03-24"
 user-id = 539
 user-login = "cuviper"
 user-name = "Josh Stone"
@@ -540,29 +540,29 @@ user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
 [[publisher.wasm-encoder]]
-version = "0.29.0"
-when = "2023-05-26"
+version = "0.31.0"
+when = "2023-07-17"
 user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
 [[publisher.wasm-smith]]
-version = "0.12.10"
-when = "2023-05-26"
+version = "0.12.12"
+when = "2023-07-17"
 user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
 [[publisher.wasmparser]]
-version = "0.107.0"
-when = "2023-05-26"
+version = "0.109.0"
+when = "2023-07-17"
 user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
 [[publisher.wast]]
-version = "60.0.0"
-when = "2023-05-26"
+version = "62.0.0"
+when = "2023-07-17"
 user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
@@ -648,6 +648,12 @@ repository of which I'm one of the primary maintainers and publishers for.
 I am employed by a member of the Bytecode Alliance and plan to continue doing
 so and will actively maintain this crate over time.
 """
+
+[[audits.bytecode-alliance.audits.adler]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+version = "1.0.2"
+notes = "This is a small crate which forbids unsafe code and is a straightforward implementation of the adler hashing algorithm."
 
 [[audits.bytecode-alliance.audits.arrayref]]
 who = "Nick Fitzgerald <fitzgen@gmail.com>"
@@ -881,30 +887,6 @@ throughout the ecosystem and skimming the crate shows no usage of `std::*` APIs
 and nothing suspicious.
 """
 
-[[audits.bytecode-alliance.audits.wasm-encoder]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-version = "0.25.0"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.audits.wasm-smith]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-run"
-version = "0.12.5"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.audits.wasmparser]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-version = "0.102.0"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.audits.wast]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-version = "55.0.0"
-notes = "The Bytecode Alliance is the author of this crate."
-
 [[audits.embark-studios.audits.anyhow]]
 who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-deploy"
@@ -1026,6 +1008,13 @@ who = "ChromeOS"
 criteria = "safe-to-run"
 version = "1.0.12"
 aggregated-from = "https://chromium.googlesource.com/chromiumos/third_party/rust_crates/+/refs/heads/main/cargo-vet/audits.toml?format=TEXT"
+
+[[audits.google.audits.pin-project-lite]]
+who = "David Koloski <dkoloski@google.com>"
+criteria = "safe-to-deploy"
+version = "0.2.9"
+notes = "Reviewed on https://fxrev.dev/824504"
+aggregated-from = "https://fuchsia.googlesource.com/fuchsia/+/refs/heads/main/third_party/rust_crates/supply-chain/audits.toml?format=TEXT"
 
 [[audits.google.audits.scoped-tls]]
 who = "George Burgess IV <gbiv@google.com>"

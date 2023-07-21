@@ -1,4 +1,5 @@
 use wasm_encoder::*;
+
 #[test]
 fn big_type_indices() {
     const N: u32 = 100_000;
@@ -13,7 +14,7 @@ fn big_type_indices() {
     module.section(&funcs);
 
     let mut elems = ElementSection::new();
-    elems.declared(RefType::FUNCREF, Elements::Functions(&[0]));
+    elems.declared(Elements::Functions(&[0]));
     module.section(&elems);
 
     let mut code = CodeSection::new();

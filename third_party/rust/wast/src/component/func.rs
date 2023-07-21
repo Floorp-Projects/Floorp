@@ -57,21 +57,21 @@ impl<'a> Parse<'a> for CoreFuncKind<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         parser.parens(|parser| {
             let mut l = parser.lookahead1();
-            if l.peek::<kw::canon>() {
+            if l.peek::<kw::canon>()? {
                 parser.parse::<kw::canon>()?;
-            } else if l.peek::<kw::alias>() {
+            } else if l.peek::<kw::alias>()? {
                 return Ok(Self::Alias(parser.parse()?));
             } else {
                 return Err(l.error());
             }
             let mut l = parser.lookahead1();
-            if l.peek::<kw::lower>() {
+            if l.peek::<kw::lower>()? {
                 Ok(CoreFuncKind::Lower(parser.parse()?))
-            } else if l.peek::<kw::resource_new>() {
+            } else if l.peek::<kw::resource_new>()? {
                 Ok(CoreFuncKind::ResourceNew(parser.parse()?))
-            } else if l.peek::<kw::resource_drop>() {
+            } else if l.peek::<kw::resource_drop>()? {
                 Ok(CoreFuncKind::ResourceDrop(parser.parse()?))
-            } else if l.peek::<kw::resource_rep>() {
+            } else if l.peek::<kw::resource_rep>()? {
                 Ok(CoreFuncKind::ResourceRep(parser.parse()?))
             } else {
                 Err(l.error())
@@ -153,7 +153,7 @@ impl<'a> Parse<'a> for FuncKind<'a> {
                 import,
                 ty: parser.parse()?,
             })
-        } else if parser.peek::<LParen>() && parser.peek2::<kw::alias>() {
+        } else if parser.peek::<LParen>()? && parser.peek2::<kw::alias>()? {
             parser.parens(|parser| Ok(Self::Alias(parser.parse()?)))
         } else {
             Ok(Self::Lift {
@@ -187,7 +187,7 @@ impl<'a> Parse<'a> for CanonicalFunc<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let span = parser.parse::<kw::canon>()?.0;
 
-        if parser.peek::<kw::lift>() {
+        if parser.peek::<kw::lift>()? {
             let info = parser.parse()?;
             let (id, name, ty) = parser.parens(|parser| {
                 parser.parse::<kw::func>()?;
@@ -203,13 +203,13 @@ impl<'a> Parse<'a> for CanonicalFunc<'a> {
                 name,
                 kind: CanonicalFuncKind::Lift { info, ty },
             })
-        } else if parser.peek::<kw::lower>() {
+        } else if parser.peek::<kw::lower>()? {
             Self::parse_core_func(span, parser, CanonicalFuncKind::Lower)
-        } else if parser.peek::<kw::resource_new>() {
+        } else if parser.peek::<kw::resource_new>()? {
             Self::parse_core_func(span, parser, CanonicalFuncKind::ResourceNew)
-        } else if parser.peek::<kw::resource_drop>() {
+        } else if parser.peek::<kw::resource_drop>()? {
             Self::parse_core_func(span, parser, CanonicalFuncKind::ResourceDrop)
-        } else if parser.peek::<kw::resource_rep>() {
+        } else if parser.peek::<kw::resource_rep>()? {
             Self::parse_core_func(span, parser, CanonicalFuncKind::ResourceRep)
         } else {
             Err(parser.error("expected `canon lift` or `canon lower`"))
@@ -362,8 +362,8 @@ impl Default for CanonResourceNew<'_> {
 /// Information relating to the `resource.drop` intrinsic.
 #[derive(Debug)]
 pub struct CanonResourceDrop<'a> {
-    /// The type that this intrinsic is dropping, either (borrow T) or (own T)
-    pub ty: ComponentValType<'a>,
+    /// The resource type that this intrinsic is dropping.
+    pub ty: Index<'a>,
 }
 
 impl<'a> Parse<'a> for CanonResourceDrop<'a> {
@@ -379,7 +379,7 @@ impl<'a> Parse<'a> for CanonResourceDrop<'a> {
 impl Default for CanonResourceDrop<'_> {
     fn default() -> Self {
         CanonResourceDrop {
-            ty: ComponentValType::Ref(Index::Num(0, Span::from_offset(0))),
+            ty: Index::Num(0, Span::from_offset(0)),
         }
     }
 }
@@ -429,30 +429,30 @@ pub enum CanonOpt<'a> {
 impl<'a> Parse<'a> for CanonOpt<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let mut l = parser.lookahead1();
-        if l.peek::<kw::string_utf8>() {
+        if l.peek::<kw::string_utf8>()? {
             parser.parse::<kw::string_utf8>()?;
             Ok(Self::StringUtf8)
-        } else if l.peek::<kw::string_utf16>() {
+        } else if l.peek::<kw::string_utf16>()? {
             parser.parse::<kw::string_utf16>()?;
             Ok(Self::StringUtf16)
-        } else if l.peek::<kw::string_latin1_utf16>() {
+        } else if l.peek::<kw::string_latin1_utf16>()? {
             parser.parse::<kw::string_latin1_utf16>()?;
             Ok(Self::StringLatin1Utf16)
-        } else if l.peek::<LParen>() {
+        } else if l.peek::<LParen>()? {
             parser.parens(|parser| {
                 let mut l = parser.lookahead1();
-                if l.peek::<kw::memory>() {
+                if l.peek::<kw::memory>()? {
                     let span = parser.parse::<kw::memory>()?.0;
                     Ok(CanonOpt::Memory(parse_trailing_item_ref(
                         kw::memory(span),
                         parser,
                     )?))
-                } else if l.peek::<kw::realloc>() {
+                } else if l.peek::<kw::realloc>()? {
                     parser.parse::<kw::realloc>()?;
                     Ok(CanonOpt::Realloc(
                         parser.parse::<IndexOrCoreRef<'_, _>>()?.0,
                     ))
-                } else if l.peek::<kw::post_return>() {
+                } else if l.peek::<kw::post_return>()? {
                     parser.parse::<kw::post_return>()?;
                     Ok(CanonOpt::PostReturn(
                         parser.parse::<IndexOrCoreRef<'_, _>>()?.0,

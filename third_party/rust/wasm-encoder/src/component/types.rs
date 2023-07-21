@@ -744,6 +744,12 @@ impl ComponentTypeSection {
     pub fn defined_type(&mut self) -> ComponentDefinedTypeEncoder<'_> {
         self.ty().defined_type()
     }
+
+    /// Defines a new resource type.
+    pub fn resource(&mut self, rep: ValType, dtor: Option<u32>) -> &mut Self {
+        self.ty().resource(rep, dtor);
+        self
+    }
 }
 
 impl Encode for ComponentTypeSection {

@@ -2390,7 +2390,7 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "http",
- "indexmap",
+ "indexmap 1.9.3",
  "slab",
  "tokio",
  "tokio-util",
@@ -2591,13 +2591,20 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "1.9.2"
+version = "1.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1885e79c1fc4b10f0e172c475f458b7f7b93061064d98c3293e98c5ba0c8b399"
+checksum = "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99"
 dependencies = [
  "autocfg",
  "hashbrown",
  "serde",
+]
+
+[[package]]
+name = "indexmap"
+version = "2.999.999"
+dependencies = [
+ "indexmap 1.9.3",
 ]
 
 [[package]]
@@ -2737,7 +2744,7 @@ version = "0.1.0"
 source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=64ba08e24749616de2344112f226d1ef4ba893ae#64ba08e24749616de2344112f226d1ef4ba893ae"
 dependencies = [
  "bumpalo",
- "indexmap",
+ "indexmap 1.9.3",
 ]
 
 [[package]]
@@ -2747,7 +2754,7 @@ source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=64ba08e24749
 dependencies = [
  "bumpalo",
  "byteorder",
- "indexmap",
+ "indexmap 1.9.3",
  "jsparagus-ast",
  "jsparagus-scope",
  "jsparagus-stencil",
@@ -2785,7 +2792,7 @@ name = "jsparagus-scope"
 version = "0.1.0"
 source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=64ba08e24749616de2344112f226d1ef4ba893ae#64ba08e24749616de2344112f226d1ef4ba893ae"
 dependencies = [
- "indexmap",
+ "indexmap 1.9.3",
  "jsparagus-ast",
  "jsparagus-stencil",
 ]
@@ -3460,7 +3467,7 @@ dependencies = [
  "getrandom",
  "hashbrown",
  "hyper",
- "indexmap",
+ "indexmap 1.9.3",
  "libc",
  "log",
  "memchr",
@@ -3581,7 +3588,7 @@ dependencies = [
  "bitflags 2.999.999",
  "codespan-reporting",
  "hexf-parse",
- "indexmap",
+ "indexmap 1.9.3",
  "log",
  "num-traits",
  "rustc-hash",
@@ -3656,7 +3663,7 @@ name = "neqo-transport"
 version = "0.6.4"
 source = "git+https://github.com/mozilla/neqo?tag=v0.6.4#80db3a01f3273c7e742ba560fa99246fc8b30c4f"
 dependencies = [
- "indexmap",
+ "indexmap 1.9.3",
  "lazy_static",
  "log",
  "neqo-common",
@@ -4152,7 +4159,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd39bc6cdc9355ad1dc5eeedefee696bb35c34caf21768741e81826c0bbd7225"
 dependencies = [
  "base64 0.13.999",
- "indexmap",
+ "indexmap 1.9.3",
  "line-wrap",
  "serde",
  "time 0.3.17",
@@ -4724,7 +4731,7 @@ version = "1.0.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cad406b69c91885b5107daf2c29572f6c8cdb3c66826821e286c533490c0bc76"
 dependencies = [
- "indexmap",
+ "indexmap 1.9.3",
  "itoa",
  "ryu",
  "serde",
@@ -4788,7 +4795,7 @@ version = "0.8.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "578a7433b776b56a35785ed5ce9a7e777ac0598aac5a6dd1b4b18a307c7fc71b"
 dependencies = [
- "indexmap",
+ "indexmap 1.9.3",
  "ryu",
  "serde",
  "yaml-rust",
@@ -4808,7 +4815,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4f1641177943b4e6faf7622463ae6dfe0f143eb88799e91e2e2e68ede568af5"
 dependencies = [
  "data-encoding",
- "indexmap",
+ "indexmap 1.9.3",
  "rust_decimal",
 ]
 
@@ -4999,7 +5006,7 @@ dependencies = [
  "euclid",
  "fxhash",
  "gecko-profiler",
- "indexmap",
+ "indexmap 1.9.3",
  "itertools",
  "itoa",
  "lazy_static",
@@ -5884,22 +5891,22 @@ version = "0.2.100"
 
 [[package]]
 name = "wasm-encoder"
-version = "0.29.0"
+version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18c41dbd92eaebf3612a39be316540b8377c871cb9bde6b064af962984912881"
+checksum = "06a3d1b4a575ffb873679402b2aedb3117555eb65c27b1b86c8a91e574bc2a2a"
 dependencies = [
  "leb128",
 ]
 
 [[package]]
 name = "wasm-smith"
-version = "0.12.10"
+version = "0.12.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "027ec1c470cd5d56c43b8e02040250b136ddb5975dd76a1c16915137f5f17e76"
+checksum = "706fc2c6fb0af287ea9147d343485536b5857b72cd32b1d4091619583b334103"
 dependencies = [
  "arbitrary",
  "flagset",
- "indexmap",
+ "indexmap 2.999.999",
  "leb128",
  "wasm-encoder",
  "wasmparser",
@@ -5907,19 +5914,19 @@ dependencies = [
 
 [[package]]
 name = "wasmparser"
-version = "0.107.0"
+version = "0.109.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29e3ac9b780c7dda0cac7a52a5d6d2d6707cc6e3451c9db209b6c758f40d7acb"
+checksum = "8bf9564f29de2890ee34406af52d2a92dec6ef044c8ddfc5add5db8dcfd36e6c"
 dependencies = [
- "indexmap",
+ "indexmap 2.999.999",
  "semver",
 ]
 
 [[package]]
 name = "wast"
-version = "60.0.0"
+version = "62.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd06cc744b536e30387e72a48fdd492105b9c938bb4f415c39c616a7a0a697ad"
+checksum = "c7f7ee878019d69436895f019b65f62c33da63595d8e857cbdc87c13ecb29a32"
 dependencies = [
  "leb128",
  "memchr",

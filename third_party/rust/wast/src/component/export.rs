@@ -119,19 +119,19 @@ impl<'a> Parse<'a> for ComponentExportKind<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         parser.parens(|parser| {
             let mut l = parser.lookahead1();
-            if l.peek::<kw::core>() {
+            if l.peek::<kw::core>()? {
                 // Remove core prefix
                 parser.parse::<kw::core>()?;
                 Ok(Self::CoreModule(parser.parse()?))
-            } else if l.peek::<kw::func>() {
+            } else if l.peek::<kw::func>()? {
                 Ok(Self::Func(parser.parse()?))
-            } else if l.peek::<kw::value>() {
+            } else if l.peek::<kw::value>()? {
                 Ok(Self::Value(parser.parse()?))
-            } else if l.peek::<kw::r#type>() {
+            } else if l.peek::<kw::r#type>()? {
                 Ok(Self::Type(parser.parse()?))
-            } else if l.peek::<kw::component>() {
+            } else if l.peek::<kw::component>()? {
                 Ok(Self::Component(parser.parse()?))
-            } else if l.peek::<kw::instance>() {
+            } else if l.peek::<kw::instance>()? {
                 Ok(Self::Instance(parser.parse()?))
             } else {
                 Err(l.error())
@@ -141,23 +141,23 @@ impl<'a> Parse<'a> for ComponentExportKind<'a> {
 }
 
 impl Peek for ComponentExportKind<'_> {
-    fn peek(cursor: Cursor) -> bool {
-        let cursor = match cursor.lparen() {
+    fn peek(cursor: Cursor) -> Result<bool> {
+        let cursor = match cursor.lparen()? {
             Some(c) => c,
-            None => return false,
+            None => return Ok(false),
         };
 
-        let cursor = match cursor.keyword() {
-            Some(("core", c)) => match c.keyword() {
+        let cursor = match cursor.keyword()? {
+            Some(("core", c)) => match c.keyword()? {
                 Some(("module", c)) => c,
-                _ => return false,
+                _ => return Ok(false),
             },
             Some(("func", c))
             | Some(("value", c))
             | Some(("type", c))
             | Some(("component", c))
             | Some(("instance", c)) => c,
-            _ => return false,
+            _ => return Ok(false),
         };
 
         Index::peek(cursor)
@@ -179,7 +179,7 @@ pub struct InlineExport<'a> {
 impl<'a> Parse<'a> for InlineExport<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let mut names = Vec::new();
-        while parser.peek::<Self>() {
+        while parser.peek::<Self>()? {
             names.push(parser.parens(|p| {
                 p.parse::<kw::export>()?;
                 p.parse()
@@ -190,39 +190,39 @@ impl<'a> Parse<'a> for InlineExport<'a> {
 }
 
 impl Peek for InlineExport<'_> {
-    fn peek(cursor: Cursor<'_>) -> bool {
-        let cursor = match cursor.lparen() {
+    fn peek(cursor: Cursor<'_>) -> Result<bool> {
+        let cursor = match cursor.lparen()? {
             Some(cursor) => cursor,
-            None => return false,
+            None => return Ok(false),
         };
-        let cursor = match cursor.keyword() {
+        let cursor = match cursor.keyword()? {
             Some(("export", cursor)) => cursor,
-            _ => return false,
+            _ => return Ok(false),
         };
 
         // (export "foo")
-        if let Some((_, cursor)) = cursor.string() {
-            return cursor.rparen().is_some();
+        if let Some((_, cursor)) = cursor.string()? {
+            return Ok(cursor.rparen()?.is_some());
         }
 
         // (export (interface "foo"))
-        let cursor = match cursor.lparen() {
+        let cursor = match cursor.lparen()? {
             Some(cursor) => cursor,
-            None => return false,
+            None => return Ok(false),
         };
-        let cursor = match cursor.keyword() {
+        let cursor = match cursor.keyword()? {
             Some(("interface", cursor)) => cursor,
-            _ => return false,
+            _ => return Ok(false),
         };
-        let cursor = match cursor.string() {
+        let cursor = match cursor.string()? {
             Some((_, cursor)) => cursor,
-            _ => return false,
+            _ => return Ok(false),
         };
-        let cursor = match cursor.rparen() {
+        let cursor = match cursor.rparen()? {
             Some(cursor) => cursor,
-            _ => return false,
+            _ => return Ok(false),
         };
-        cursor.rparen().is_some()
+        Ok(cursor.rparen()?.is_some())
     }
 
     fn display() -> &'static str {

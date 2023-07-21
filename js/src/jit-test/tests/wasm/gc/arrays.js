@@ -635,7 +635,7 @@ assertErrorMessage(() => wasmEvalText(`(module
 // validation: array-type imm-operand needs to be "in range"
 assertErrorMessage(() => wasmEvalText(`(module
         (type $a (array funcref))
-        (elem $e funcref $f1 $f2 $f3 $f4)
+        (elem $e func $f1 $f2 $f3 $f4)
         (func $f1 (export "f1"))
         (func $f2 (export "f2"))
         (func $f3 (export "f3"))
@@ -650,7 +650,7 @@ assertErrorMessage(() => wasmEvalText(`(module
 // validation: array-type imm-operand must refer to an array type
 assertErrorMessage(() => wasmEvalText(`(module
         (type $a (func (param i64) (result f64)))
-        (elem $e funcref $f1 $f2 $f3 $f4)
+        (elem $e func $f1 $f2 $f3 $f4)
         (func $f1 (export "f1"))
         (func $f2 (export "f2"))
         (func $f3 (export "f3"))
@@ -666,7 +666,7 @@ assertErrorMessage(() => wasmEvalText(`(module
 //   elements
 assertErrorMessage(() => wasmEvalText(`(module
         (type $a (array f32))
-        (elem $e funcref $f1 $f2 $f3 $f4)
+        (elem $e func $f1 $f2 $f3 $f4)
         (func $f1 (export "f1"))
         (func $f2 (export "f2"))
         (func $f3 (export "f3"))
@@ -681,7 +681,7 @@ assertErrorMessage(() => wasmEvalText(`(module
 // validation: destination elem type must be a supertype of src elem type
 assertErrorMessage(() => wasmEvalText(`(module
         (type $a (array eqref))
-        (elem $e funcref $f1)
+        (elem $e func $f1)
         (func $f1 (export "f1"))
         ;; The implied copy here is from elem-seg-of-funcrefs to
         ;; array-of-eqrefs, which must fail, because funcref isn't
@@ -696,7 +696,7 @@ assertErrorMessage(() => wasmEvalText(`(module
 // validation: segment index must be "in range"
 assertErrorMessage(() => wasmEvalText(`(module
         (type $a (array funcref))
-        (elem $e funcref $f1 $f2 $f3 $f4)
+        (elem $e func $f1 $f2 $f3 $f4)
         (func $f1 (export "f1"))
         (func $f2 (export "f2"))
         (func $f3 (export "f3"))
@@ -714,7 +714,7 @@ assertErrorMessage(() => wasmEvalText(`(module
     let { newElem } = wasmEvalText(`(module
         (table 4 funcref)
         (type $a (array funcref))
-        (elem $e (offset (i32.const 0)) funcref $f1 $f2 $f3 $f4)
+        (elem $e (offset (i32.const 0)) func $f1 $f2 $f3 $f4)
         (func $f1 (export "f1"))
         (func $f2 (export "f2"))
         (func $f3 (export "f3"))
@@ -736,7 +736,7 @@ assertErrorMessage(() => wasmEvalText(`(module
     let { newElem } = wasmEvalText(`(module
         (table 4 funcref)
         (type $a (array funcref))
-        (elem $e (offset (i32.const 0)) funcref $f1 $f2 $f3 $f4)
+        (elem $e (offset (i32.const 0)) func $f1 $f2 $f3 $f4)
         (func $f1 (export "f1"))
         (func $f2 (export "f2"))
         (func $f3 (export "f3"))
@@ -758,7 +758,7 @@ assertErrorMessage(() => wasmEvalText(`(module
     let { newElem } = wasmEvalText(`(module
         (table 4 funcref)
         (type $a (array funcref))
-        (elem $e (offset (i32.const 0)) funcref $f1 $f2 $f3 $f4)
+        (elem $e (offset (i32.const 0)) func $f1 $f2 $f3 $f4)
         (func $f1 (export "f1"))
         (func $f2 (export "f2"))
         (func $f3 (export "f3"))
@@ -777,7 +777,7 @@ assertErrorMessage(() => wasmEvalText(`(module
 {
     let { newElem } = wasmEvalText(`(module
         (type $a (array funcref))
-        (elem $e funcref $f1 $f2 $f3 $f4)
+        (elem $e func $f1 $f2 $f3 $f4)
         (func $f1 (export "f1"))
         (func $f2 (export "f2"))
         (func $f3 (export "f3"))
@@ -797,7 +797,7 @@ assertErrorMessage(() => wasmEvalText(`(module
 {
     let { newElem, f1, f2, f3, f4 } = wasmEvalText(`(module
         (type $a (array funcref))
-        (elem $e funcref $f1 $f2 $f3 $f4)
+        (elem $e func $f1 $f2 $f3 $f4)
         (func $f1 (export "f1"))
         (func $f2 (export "f2"))
         (func $f3 (export "f3"))

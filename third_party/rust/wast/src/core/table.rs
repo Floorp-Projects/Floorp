@@ -1,6 +1,6 @@
 use crate::core::*;
 use crate::kw;
-use crate::parser::{Parse, Parser, Result};
+use crate::parser::{Parse, Parser, Peek, Result};
 use crate::token::{Id, Index, LParen, NameAnnotation, Span};
 
 /// A WebAssembly `table` directive in a module.
@@ -56,23 +56,22 @@ impl<'a> Parse<'a> for Table<'a> {
 
         // Afterwards figure out which style this is, either:
         //
-        //  *   `elemtype (elem ...)`
-        //  *   `(import "a" "b") limits`
-        //  *   `limits`
+        //  * `elemtype (elem ...)`
+        //  * `(import "a" "b") limits`
+        //  * `limits`
         let mut l = parser.lookahead1();
-        let kind = if l.peek::<RefType>() {
+        let kind = if l.peek::<RefType>()? {
             let elem = parser.parse()?;
             let payload = parser.parens(|p| {
                 p.parse::<kw::elem>()?;
-                let ty = if parser.peek::<LParen>() {
-                    Some(elem)
+                if p.peek::<LParen>()? {
+                    ElemPayload::parse_exprs(p, elem)
                 } else {
-                    None
-                };
-                ElemPayload::parse_tail(parser, ty)
+                    ElemPayload::parse_indices(p, Some(elem))
+                }
             })?;
             TableKind::Inline { elem, payload }
-        } else if l.peek::<u32>() {
+        } else if l.peek::<u32>()? {
             TableKind::Normal {
                 ty: parser.parse()?,
                 init_expr: if !parser.is_empty() {
@@ -156,26 +155,47 @@ impl<'a> Parse<'a> for Elem<'a> {
         let id = parser.parse()?;
         let name = parser.parse()?;
 
-        let kind = if parser.peek::<kw::declare>() {
+        // Element segments can start in a number of different ways:
+        //
+        // * `(elem ...`
+        // * `(elem declare ...`
+        // * `(elem (table ...`
+        // * `(elem (offset ...`
+        // * `(elem (<instr> ...`
+        let mut table_omitted = false;
+        let kind = if parser.peek::<kw::declare>()? {
             parser.parse::<kw::declare>()?;
             ElemKind::Declared
-        } else if parser.peek::<u32>() || (parser.peek::<LParen>() && !parser.peek::<RefType>()) {
-            let table = if parser.peek::<u32>() {
+        } else if parser.peek::<u32>()?
+            || (parser.peek::<LParen>()? && !parser.peek::<RefType>()?)
+        {
+            let table = if parser.peek::<u32>()? {
                 // FIXME: this is only here to accomodate
                 // proposals/threads/imports.wast at this current moment in
                 // time, this probably should get removed when the threads
                 // proposal is rebased on the current spec.
+                table_omitted = true;
                 Index::Num(parser.parse()?, span)
-            } else if parser.peek2::<kw::table>() {
+            } else if parser.peek2::<kw::table>()? {
                 parser.parens(|p| {
                     p.parse::<kw::table>()?;
                     p.parse()
                 })?
             } else {
+                table_omitted = true;
                 Index::Num(0, span)
             };
+
+            // NB: this is technically not spec-compliant where the spec says
+            // that `(instr)` is equivalent to `(offset instr)` for
+            // single-element offsets. The test suite, however, has offsets of
+            // the form `(instr (instr-arg))` which doesn't seem to follow this.
+            // I don't know whether the test is correct or the spec is correct
+            // so we're left with this for now.
+            //
+            // In theory though this should use `parse_expr_or_single_instr`.
             let offset = parser.parens(|parser| {
-                if parser.peek::<kw::offset>() {
+                if parser.peek::<kw::offset>()? {
                     parser.parse::<kw::offset>()?;
                 }
                 parser.parse()
@@ -184,7 +204,31 @@ impl<'a> Parse<'a> for Elem<'a> {
         } else {
             ElemKind::Passive
         };
-        let payload = parser.parse()?;
+
+        // Element segments can have a number of ways to specify their element
+        // lists:
+        //
+        // * `func 0 1 ...` - list of indices
+        // * `<reftype> (ref.null func) ...` - list of expressions
+        // * `0 1 ...` - list of indices, only if the table was omitted for the
+        //   legacy way tables were printed.
+        let indices = if parser.peek::<kw::func>()? {
+            parser.parse::<kw::func>()?;
+            true
+        } else if parser.peek::<RefType>()? {
+            false
+        } else if table_omitted {
+            true
+        } else {
+            false // this will fall through to failing to parse a `RefType`
+        };
+        let payload = if indices {
+            ElemPayload::parse_indices(parser, None)?
+        } else {
+            let ty = parser.parse()?;
+            ElemPayload::parse_exprs(parser, ty)?
+        };
+
         Ok(Elem {
             span,
             id,
@@ -195,47 +239,67 @@ impl<'a> Parse<'a> for Elem<'a> {
     }
 }
 
-impl<'a> Parse<'a> for ElemPayload<'a> {
-    fn parse(parser: Parser<'a>) -> Result<Self> {
-        ElemPayload::parse_tail(parser, parser.parse()?)
-    }
-}
-
 impl<'a> ElemPayload<'a> {
-    fn parse_tail(parser: Parser<'a>, ty: Option<RefType<'a>>) -> Result<Self> {
-        let (must_use_indices, ty) = match ty {
-            None => {
-                parser.parse::<Option<kw::func>>()?;
-                (true, RefType::func())
-            }
-            Some(ty) => (false, ty),
+    fn parse_indices(parser: Parser<'a>, ty: Option<RefType<'a>>) -> Result<Self> {
+        let mut ret = match ty {
+            // If there is no requested type, then it's ok to parse a list of
+            // indices.
+            None => ElemPayload::Indices(Vec::new()),
+
+            // If the requested type is a `funcref` type then a list of indices
+            // can be parsed. This is because the list-of-indices encoding in
+            // the binary format can only accomodate the `funcref` type.
+            Some(ty) if ty == RefType::func() => ElemPayload::Indices(Vec::new()),
+
+            // Otherwise silently translate this list-of-indices into a
+            // list-of-expressions because that's the only way to accomodate a
+            // non-funcref type.
+            Some(ty) => ElemPayload::Exprs {
+                ty,
+                exprs: Vec::new(),
+            },
         };
-        if let HeapType::Func = ty.heap {
-            if must_use_indices || parser.peek::<Index<'_>>() {
-                let mut elems = Vec::new();
-                while !parser.is_empty() {
-                    elems.push(parser.parse()?);
+        while !parser.is_empty() {
+            let func = parser.parse()?;
+            match &mut ret {
+                ElemPayload::Indices(list) => list.push(func),
+                ElemPayload::Exprs { exprs, .. } => {
+                    let expr = Expression {
+                        instrs: [Instruction::RefFunc(func)].into(),
+                    };
+                    exprs.push(expr);
                 }
-                return Ok(ElemPayload::Indices(elems));
             }
         }
+        Ok(ret)
+    }
+
+    fn parse_exprs(parser: Parser<'a>, ty: RefType<'a>) -> Result<Self> {
         let mut exprs = Vec::new();
         while !parser.is_empty() {
-            let expr = parser.parens(|parser| {
-                if parser.peek::<kw::item>() {
-                    parser.parse::<kw::item>()?;
-                    parser.parse()
-                } else {
-                    // Without `item` this is "sugar" for a single-instruction
-                    // expression.
-                    let insn = parser.parse()?;
-                    Ok(Expression {
-                        instrs: [insn].into(),
-                    })
-                }
-            })?;
+            let expr = parse_expr_or_single_instr::<kw::item>(parser)?;
             exprs.push(expr);
         }
         Ok(ElemPayload::Exprs { exprs, ty })
     }
+}
+
+// Parses either `(T expr)` or `(instr)`, returning the resulting expression.
+fn parse_expr_or_single_instr<'a, T>(parser: Parser<'a>) -> Result<Expression<'a>>
+where
+    T: Parse<'a> + Peek,
+{
+    parser.parens(|parser| {
+        if parser.peek::<T>()? {
+            parser.parse::<T>()?;
+            parser.parse()
+        } else {
+            // Without `item` this is "sugar" for a single-instruction
+            // expression.
+            let insn = parser.parse()?;
+            Ok(Expression {
+                instrs: [insn].into(),
+            })
+        }
+    })
 }

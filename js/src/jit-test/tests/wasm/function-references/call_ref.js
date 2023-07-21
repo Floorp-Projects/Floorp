@@ -2,7 +2,7 @@
 
 let { plusOne } = wasmEvalText(`(module
   (; forward declaration so that ref.func works ;)
-  (elem declare $plusOneRef)
+  (elem declare func $plusOneRef)
   (type $t (func (param i32) (result i32)))
 
   (func $plusOneRef (param i32) (result i32)
@@ -49,7 +49,7 @@ wasmFailValidateText(`(module
 // signature mismatch
 wasmFailValidateText(`(module
   (type $t (func (param i32) (result i32)))
-  (elem declare $plusOneRef)
+  (elem declare func $plusOneRef)
   (func $plusOneRef (param f32) (result f32)
     (f32.add
       local.get 0
@@ -75,7 +75,7 @@ let { loadInt } = wasmEvalText(`(module
 
 let { callLoadInt } = wasmEvalText(`(module
   (type $t (func (result i32)))
-  (elem declare 0)
+  (elem declare func 0)
   (import "" "loadInt" (func (result i32)))
   (func (export "callLoadInt") (result i32)
     ref.func 0

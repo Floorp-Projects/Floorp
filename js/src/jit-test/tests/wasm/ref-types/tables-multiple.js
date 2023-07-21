@@ -413,7 +413,7 @@ assertErrorMessage(() => wasmEvalText(
       (func $f
        (table.copy 0 (i32.const 0) (i32.const 0) (i32.const 2))))`), // target without source
                    SyntaxError,
-                   /unexpected token, expected an identifier or u32/);
+                   /unexpected token, expected an index or an identifier/);
 
 // Make sure that dead code doesn't prevent compilation.
 wasmEvalText(

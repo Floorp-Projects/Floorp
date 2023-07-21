@@ -51,7 +51,7 @@ pub enum CoreInstanceKind<'a> {
 
 impl<'a> Parse<'a> for CoreInstanceKind<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        if parser.peek::<LParen>() && parser.peek2::<kw::instantiate>() {
+        if parser.peek::<LParen>()? && parser.peek2::<kw::instantiate>()? {
             parser.parens(|parser| {
                 parser.parse::<kw::instantiate>()?;
                 Ok(Self::Instantiate {
@@ -221,7 +221,7 @@ impl<'a> Parse<'a> for InstanceKind<'a> {
             });
         }
 
-        if parser.peek::<LParen>() && parser.peek2::<kw::instantiate>() {
+        if parser.peek::<LParen>()? && parser.peek2::<kw::instantiate>()? {
             parser.parens(|parser| {
                 parser.parse::<kw::instantiate>()?;
                 Ok(Self::Instantiate {

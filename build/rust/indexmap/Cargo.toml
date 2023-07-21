@@ -1,0 +1,11 @@
+[package]
+name = "indexmap"
+version = "2.999.999"
+edition = "2021"
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies.indexmap]
+version = "1.9.3"

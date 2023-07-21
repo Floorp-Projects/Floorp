@@ -59,7 +59,7 @@ impl<'a> Parse<'a> for Memory<'a> {
                 import,
                 ty: parser.parse()?,
             }
-        } else if l.peek::<LParen>() || parser.peek2::<LParen>() {
+        } else if l.peek::<LParen>()? || parser.peek2::<LParen>()? {
             let is_32 = if parser.parse::<Option<kw::i32>>()?.is_some() {
                 true
             } else {
@@ -74,7 +74,7 @@ impl<'a> Parse<'a> for Memory<'a> {
                 Ok(data)
             })?;
             MemoryKind::Inline { data, is_32 }
-        } else if l.peek::<u32>() || l.peek::<kw::i32>() || l.peek::<kw::i64>() {
+        } else if l.peek::<u32>()? || l.peek::<kw::i32>()? || l.peek::<kw::i64>()? {
             MemoryKind::Normal(parser.parse()?)
         } else {
             return Err(l.error());
@@ -133,19 +133,19 @@ impl<'a> Parse<'a> for Data<'a> {
         let id = parser.parse()?;
         let name = parser.parse()?;
 
-        let kind = if parser.peek::<&[u8]>() {
+        let kind = if parser.peek::<&[u8]>()? {
             DataKind::Passive
 
         // ... and otherwise we must be attached to a particular memory as well
         // as having an initialization offset.
         } else {
-            let memory = if parser.peek::<u32>() {
+            let memory = if parser.peek::<u32>()? {
                 // FIXME: this is only here to accomodate
                 // proposals/threads/imports.wast at this current moment in
                 // time, this probably should get removed when the threads
                 // proposal is rebased on the current spec.
                 Index::Num(parser.parse()?, span)
-            } else if parser.peek2::<kw::memory>() {
+            } else if parser.peek2::<kw::memory>()? {
                 parser.parens(|p| {
                     p.parse::<kw::memory>()?;
                     p.parse()
@@ -154,7 +154,7 @@ impl<'a> Parse<'a> for Data<'a> {
                 Index::Num(0, span)
             };
             let offset = parser.parens(|parser| {
-                if parser.peek::<kw::offset>() {
+                if parser.peek::<kw::offset>()? {
                     parser.parse::<kw::offset>()?;
                     parser.parse()
                 } else {
@@ -233,7 +233,7 @@ impl DataVal<'_> {
 
 impl<'a> Parse<'a> for DataVal<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        if !parser.peek::<LParen>() {
+        if !parser.peek::<LParen>()? {
             return Ok(DataVal::String(parser.parse()?));
         }
 
@@ -265,7 +265,7 @@ impl<'a> Parse<'a> for DataVal<'a> {
         where
             F: Fn(U, &mut Vec<u8>),
         {
-            if !lookahead.peek::<T>() {
+            if !lookahead.peek::<T>()? {
                 return Ok(false);
             }
             parser.parse::<T>()?;

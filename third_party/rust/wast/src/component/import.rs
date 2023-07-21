@@ -34,7 +34,7 @@ pub enum ComponentExternName<'a> {
 
 impl<'a> Parse<'a> for ComponentExternName<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        if parser.peek::<LParen>() {
+        if parser.peek::<LParen>()? {
             Ok(ComponentExternName::Interface(parser.parens(|p| {
                 p.parse::<kw::interface>()?;
                 p.parse()
@@ -78,23 +78,23 @@ impl<'a> Parse<'a> for ItemSigNoName<'a> {
 
 fn parse_item_sig<'a>(parser: Parser<'a>, name: bool) -> Result<ItemSig<'a>> {
     let mut l = parser.lookahead1();
-    let (span, parse_kind): (_, fn(Parser<'a>) -> Result<ItemSigKind>) = if l.peek::<kw::core>() {
+    let (span, parse_kind): (_, fn(Parser<'a>) -> Result<ItemSigKind>) = if l.peek::<kw::core>()? {
         let span = parser.parse::<kw::core>()?.0;
         parser.parse::<kw::module>()?;
         (span, |parser| Ok(ItemSigKind::CoreModule(parser.parse()?)))
-    } else if l.peek::<kw::func>() {
+    } else if l.peek::<kw::func>()? {
         let span = parser.parse::<kw::func>()?.0;
         (span, |parser| Ok(ItemSigKind::Func(parser.parse()?)))
-    } else if l.peek::<kw::component>() {
+    } else if l.peek::<kw::component>()? {
         let span = parser.parse::<kw::component>()?.0;
         (span, |parser| Ok(ItemSigKind::Component(parser.parse()?)))
-    } else if l.peek::<kw::instance>() {
+    } else if l.peek::<kw::instance>()? {
         let span = parser.parse::<kw::instance>()?.0;
         (span, |parser| Ok(ItemSigKind::Instance(parser.parse()?)))
-    } else if l.peek::<kw::value>() {
+    } else if l.peek::<kw::value>()? {
         let span = parser.parse::<kw::value>()?.0;
         (span, |parser| Ok(ItemSigKind::Value(parser.parse()?)))
-    } else if l.peek::<kw::r#type>() {
+    } else if l.peek::<kw::r#type>()? {
         let span = parser.parse::<kw::r#type>()?.0;
         (span, |parser| {
             Ok(ItemSigKind::Type(parser.parens(|parser| parser.parse())?))
@@ -139,10 +139,10 @@ pub enum TypeBounds<'a> {
 impl<'a> Parse<'a> for TypeBounds<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let mut l = parser.lookahead1();
-        if l.peek::<kw::eq>() {
+        if l.peek::<kw::eq>()? {
             parser.parse::<kw::eq>()?;
             Ok(Self::Eq(parser.parse()?))
-        } else if l.peek::<kw::sub>() {
+        } else if l.peek::<kw::sub>()? {
             parser.parse::<kw::sub>()?;
             parser.parse::<kw::resource>()?;
             Ok(Self::SubResource)
@@ -172,39 +172,39 @@ impl<'a> Parse<'a> for InlineImport<'a> {
 }
 
 impl Peek for InlineImport<'_> {
-    fn peek(cursor: Cursor<'_>) -> bool {
-        let cursor = match cursor.lparen() {
+    fn peek(cursor: Cursor<'_>) -> Result<bool> {
+        let cursor = match cursor.lparen()? {
             Some(cursor) => cursor,
-            None => return false,
+            None => return Ok(false),
         };
-        let cursor = match cursor.keyword() {
+        let cursor = match cursor.keyword()? {
             Some(("import", cursor)) => cursor,
-            _ => return false,
+            _ => return Ok(false),
         };
 
         // (import "foo")
-        if let Some((_, cursor)) = cursor.string() {
-            return cursor.rparen().is_some();
+        if let Some((_, cursor)) = cursor.string()? {
+            return Ok(cursor.rparen()?.is_some());
         }
 
         // (import (interface "foo"))
-        let cursor = match cursor.lparen() {
+        let cursor = match cursor.lparen()? {
             Some(cursor) => cursor,
-            None => return false,
+            None => return Ok(false),
         };
-        let cursor = match cursor.keyword() {
+        let cursor = match cursor.keyword()? {
             Some(("interface", cursor)) => cursor,
-            _ => return false,
+            _ => return Ok(false),
         };
-        let cursor = match cursor.string() {
+        let cursor = match cursor.string()? {
             Some((_, cursor)) => cursor,
-            _ => return false,
+            _ => return Ok(false),
         };
-        let cursor = match cursor.rparen() {
+        let cursor = match cursor.rparen()? {
             Some(cursor) => cursor,
-            _ => return false,
+            _ => return Ok(false),
         };
-        cursor.rparen().is_some()
+        Ok(cursor.rparen()?.is_some())
     }
 
     fn display() -> &'static str {

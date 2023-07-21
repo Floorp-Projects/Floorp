@@ -13,8 +13,11 @@
  * limitations under the License.
  */
 
-use crate::limits::{MAX_WASM_FUNCTION_PARAMS, MAX_WASM_FUNCTION_RETURNS};
-use crate::{BinaryReader, FromReader, Result, SectionLimited};
+use crate::limits::{
+    MAX_WASM_FUNCTION_PARAMS, MAX_WASM_FUNCTION_RETURNS, MAX_WASM_STRUCT_FIELDS,
+    MAX_WASM_SUPERTYPES,
+};
+use crate::{BinaryReader, BinaryReaderError, FromReader, Result, SectionLimited};
 use std::fmt::{self, Debug, Write};
 
 /// Represents the types of values in a WebAssembly module.
@@ -49,6 +52,12 @@ pub enum StorageType {
 const _: () = {
     assert!(std::mem::size_of::<ValType>() == 4);
 };
+
+pub(crate) trait Inherits {
+    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    where
+        F: Fn(u32) -> &'a SubType;
+}
 
 impl From<RefType> for ValType {
     fn from(ty: RefType) -> ValType {
@@ -85,6 +94,21 @@ impl ValType {
             0x7F | 0x7E | 0x7D | 0x7C | 0x7B | 0x70 | 0x6F | 0x6B | 0x6C | 0x6E | 0x65 | 0x69
             | 0x68 | 0x6D | 0x67 | 0x66 | 0x6A => true,
             _ => false,
+        }
+    }
+}
+
+impl Inherits for ValType {
+    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    where
+        F: Fn(u32) -> &'a SubType,
+    {
+        match (self, other) {
+            (Self::Ref(r1), Self::Ref(r2)) => r1.inherits(r2, type_at),
+            (
+                s @ (Self::I32 | Self::I64 | Self::F32 | Self::F64 | Self::V128 | Self::Ref(_)),
+                o,
+            ) => s == o,
         }
     }
 }
@@ -510,6 +534,17 @@ impl RefType {
     }
 }
 
+impl Inherits for RefType {
+    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    where
+        F: Fn(u32) -> &'a SubType,
+    {
+        self == other
+            || ((other.is_nullable() || !self.is_nullable())
+                && self.heap_type().inherits(&other.heap_type(), type_at))
+    }
+}
+
 impl<'a> FromReader<'a> for RefType {
     fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
         match reader.read()? {
@@ -595,6 +630,69 @@ pub enum HeapType {
     I31,
 }
 
+impl Inherits for HeapType {
+    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    where
+        F: Fn(u32) -> &'a SubType,
+    {
+        match (self, other) {
+            (HeapType::Indexed(a), HeapType::Indexed(b)) => {
+                a == b || type_at(*a).inherits(type_at(*b), type_at)
+            }
+            (HeapType::Indexed(a), HeapType::Func) => match type_at(*a).structural_type {
+                StructuralType::Func(_) => true,
+                _ => false,
+            },
+            (HeapType::Indexed(a), HeapType::Array) => match type_at(*a).structural_type {
+                StructuralType::Array(_) => true,
+                _ => false,
+            },
+            (HeapType::Indexed(a), HeapType::Struct) => match type_at(*a).structural_type {
+                StructuralType::Struct(_) => true,
+                _ => false,
+            },
+            (HeapType::Indexed(a), HeapType::Eq | HeapType::Any) => {
+                match type_at(*a).structural_type {
+                    StructuralType::Array(_) | StructuralType::Struct(_) => true,
+                    _ => false,
+                }
+            }
+            (HeapType::Eq, HeapType::Any) => true,
+            (HeapType::I31 | HeapType::Array | HeapType::Struct, HeapType::Eq | HeapType::Any) => {
+                true
+            }
+            (HeapType::None, HeapType::Indexed(a)) => match type_at(*a).structural_type {
+                StructuralType::Array(_) | StructuralType::Struct(_) => true,
+                _ => false,
+            },
+            (
+                HeapType::None,
+                HeapType::I31 | HeapType::Eq | HeapType::Any | HeapType::Array | HeapType::Struct,
+            ) => true,
+            (HeapType::NoExtern, HeapType::Extern) => true,
+            (HeapType::NoFunc, HeapType::Func) => true,
+            (HeapType::NoFunc, HeapType::Indexed(a)) => match type_at(*a).structural_type {
+                StructuralType::Func(_) => true,
+                _ => false,
+            },
+            (
+                a @ (HeapType::Func
+                | HeapType::Extern
+                | HeapType::Any
+                | HeapType::Indexed(_)
+                | HeapType::None
+                | HeapType::NoExtern
+                | HeapType::NoFunc
+                | HeapType::Eq
+                | HeapType::Struct
+                | HeapType::Array
+                | HeapType::I31),
+                b,
+            ) => a == b,
+        }
+    }
+}
+
 impl<'a> FromReader<'a> for HeapType {
     fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
         match reader.peek()? {
@@ -651,14 +749,38 @@ impl<'a> FromReader<'a> for HeapType {
     }
 }
 
-/// Represents a type in a WebAssembly module.
+/// Represents a structural type in a WebAssembly module.
 #[derive(Debug, Clone)]
-pub enum Type {
+pub enum StructuralType {
     /// The type is for a function.
     Func(FuncType),
     /// The type is for an array.
     Array(ArrayType),
-    // Struct(StructType),
+    /// The type is for a struct.
+    Struct(StructType),
+}
+
+/// Represents a subtype of possible other types in a WebAssembly module.
+#[derive(Debug, Clone)]
+pub struct SubType {
+    /// Is the subtype final.
+    pub is_final: bool,
+    /// The list of supertype indexes. As of GC MVP, there can be at most one supertype.
+    pub supertype_idx: Option<u32>,
+    /// The structural type of the subtype.
+    pub structural_type: StructuralType,
+}
+
+impl Inherits for SubType {
+    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    where
+        F: Fn(u32) -> &'a SubType,
+    {
+        !other.is_final
+            && self
+                .structural_type
+                .inherits(&other.structural_type, type_at)
+    }
 }
 
 /// Represents a type of a function in a WebAssembly module.
@@ -672,11 +794,38 @@ pub struct FuncType {
 
 /// Represents a type of an array in a WebAssembly module.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub struct ArrayType {
+pub struct ArrayType(pub FieldType);
+
+/// Represents a field type of an array or a struct.
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub struct FieldType {
     /// Array element type.
     pub element_type: StorageType,
     /// Are elements mutable.
     pub mutable: bool,
+}
+
+/// Represents a type of a struct in a WebAssembly module.
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub struct StructType {
+    /// Struct fields.
+    pub fields: Box<[FieldType]>,
+}
+
+impl Inherits for StructuralType {
+    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    where
+        F: Fn(u32) -> &'a SubType,
+    {
+        match (self, other) {
+            (StructuralType::Func(a), StructuralType::Func(b)) => a.inherits(b, type_at),
+            (StructuralType::Array(a), StructuralType::Array(b)) => a.inherits(b, type_at),
+            (StructuralType::Struct(a), StructuralType::Struct(b)) => a.inherits(b, type_at),
+            (StructuralType::Func(_), _) => false,
+            (StructuralType::Array(_), _) => false,
+            (StructuralType::Struct(_), _) => false,
+        }
+    }
 }
 
 impl Debug for FuncType {
@@ -747,6 +896,73 @@ impl FuncType {
         }
         s.push_str("]");
         s
+    }
+}
+
+impl Inherits for FuncType {
+    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    where
+        F: Fn(u32) -> &'a SubType,
+    {
+        self.params().len() == other.params().len()
+            && self.results().len() == other.results().len()
+            // Note: per GC spec, function subtypes are contravariant in their parameter types.
+            // Also see https://en.wikipedia.org/wiki/Covariance_and_contravariance_(computer_science)
+            && self
+                .params()
+                .iter()
+                .zip(other.params())
+                .fold(true, |r, (a, b)| r && b.inherits(a, type_at))
+            && self
+                .results()
+                .iter()
+                .zip(other.results())
+                .fold(true, |r, (a, b)| r && a.inherits(b, type_at))
+    }
+}
+
+impl Inherits for ArrayType {
+    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    where
+        F: Fn(u32) -> &'a SubType,
+    {
+        self.0.inherits(&other.0, type_at)
+    }
+}
+
+impl Inherits for FieldType {
+    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    where
+        F: Fn(u32) -> &'a SubType,
+    {
+        (other.mutable || !self.mutable) && self.element_type.inherits(&other.element_type, type_at)
+    }
+}
+
+impl Inherits for StorageType {
+    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    where
+        F: Fn(u32) -> &'a SubType,
+    {
+        match (self, other) {
+            (Self::Val(a), Self::Val(b)) => a.inherits(b, type_at),
+            (a @ (Self::I8 | Self::I16 | Self::Val(_)), b) => a == b,
+        }
+    }
+}
+
+impl Inherits for StructType {
+    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    where
+        F: Fn(u32) -> &'a SubType,
+    {
+        // Note: Structure types support width and depth subtyping.
+        self.fields.len() >= other.fields.len()
+            && self
+                .fields
+                .iter()
+                .zip(other.fields.iter())
+                .fold(true, |r, (a, b)| r && a.inherits(b, type_at))
     }
 }
 
@@ -828,14 +1044,50 @@ pub struct TagType {
 }
 
 /// A reader for the type section of a WebAssembly module.
-pub type TypeSectionReader<'a> = SectionLimited<'a, Type>;
+pub type TypeSectionReader<'a> = SectionLimited<'a, SubType>;
 
-impl<'a> FromReader<'a> for Type {
+impl<'a> FromReader<'a> for StructuralType {
     fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        read_structural_type(reader.read_u8()?, reader)
+    }
+}
+
+fn read_structural_type(
+    opcode: u8,
+    reader: &mut BinaryReader,
+) -> Result<StructuralType, BinaryReaderError> {
+    Ok(match opcode {
+        0x60 => StructuralType::Func(reader.read()?),
+        0x5e => StructuralType::Array(reader.read()?),
+        0x5f => StructuralType::Struct(reader.read()?),
+        x => return reader.invalid_leading_byte(x, "type"),
+    })
+}
+
+impl<'a> FromReader<'a> for SubType {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        let pos = reader.original_position();
         Ok(match reader.read_u8()? {
-            0x60 => Type::Func(reader.read()?),
-            0x5e => Type::Array(reader.read()?),
-            x => return reader.invalid_leading_byte(x, "type"),
+            opcode @ (0x4e | 0x50) => {
+                let idx_iter = reader.read_iter(MAX_WASM_SUPERTYPES, "supertype idxs")?;
+                let idxs = idx_iter.collect::<Result<Vec<u32>>>()?;
+                if idxs.len() > 1 {
+                    return Err(BinaryReaderError::new(
+                        "multiple supertypes not supported",
+                        pos,
+                    ));
+                }
+                SubType {
+                    is_final: opcode == 0x4e,
+                    supertype_idx: idxs.first().copied(),
+                    structural_type: read_structural_type(reader.read_u8()?, reader)?,
+                }
+            }
+            opcode => SubType {
+                is_final: false,
+                supertype_idx: None,
+                structural_type: read_structural_type(opcode, reader)?,
+            },
         })
     }
 }
@@ -855,11 +1107,11 @@ impl<'a> FromReader<'a> for FuncType {
     }
 }
 
-impl<'a> FromReader<'a> for ArrayType {
+impl<'a> FromReader<'a> for FieldType {
     fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
         let element_type = reader.read()?;
         let mutable = reader.read_u8()?;
-        Ok(ArrayType {
+        Ok(FieldType {
             element_type,
             mutable: match mutable {
                 0 => false,
@@ -869,6 +1121,21 @@ impl<'a> FromReader<'a> for ArrayType {
                     "invalid mutability byte for array type"
                 ),
             },
+        })
+    }
+}
+
+impl<'a> FromReader<'a> for ArrayType {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        Ok(ArrayType(FieldType::from_reader(reader)?))
+    }
+}
+
+impl<'a> FromReader<'a> for StructType {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        let fields = reader.read_iter(MAX_WASM_STRUCT_FIELDS, "struct fields")?;
+        Ok(StructType {
+            fields: fields.collect::<Result<_>>()?,
         })
     }
 }

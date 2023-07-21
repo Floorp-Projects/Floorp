@@ -3,6 +3,7 @@ use crate::core::*;
 use crate::names::{resolve_error, Namespace};
 use crate::token::{Id, Index};
 use crate::Error;
+use std::collections::HashMap;
 
 pub fn resolve<'a>(fields: &mut Vec<ModuleField<'a>>) -> Result<Resolver<'a>, Error> {
     let mut resolver = Resolver::default();
@@ -25,7 +26,7 @@ pub struct Resolver<'a> {
     tags: Namespace<'a>,
     datas: Namespace<'a>,
     elems: Namespace<'a>,
-    fields: Namespace<'a>,
+    fields: HashMap<u32, Namespace<'a>>,
     type_info: Vec<TypeInfo<'a>>,
 }
 
@@ -46,16 +47,20 @@ impl<'a> Resolver<'a> {
     }
 
     fn register_type(&mut self, ty: &Type<'a>) -> Result<(), Error> {
+        let type_index = self.types.register(ty.id, "type")?;
+
         match &ty.def {
             // For GC structure types we need to be sure to populate the
             // field namespace here as well.
             //
-            // The field namespace is global, but the resolved indices
-            // are relative to the struct they are defined in
+            // The field namespace is relative to the struct fields are defined in
             TypeDef::Struct(r#struct) => {
                 for (i, field) in r#struct.fields.iter().enumerate() {
                     if let Some(id) = field.id {
-                        self.fields.register_specific(id, i as u32, "field")?;
+                        self.fields
+                            .entry(type_index)
+                            .or_insert(Namespace::default())
+                            .register_specific(id, i as u32, "field")?;
                     }
                 }
             }
@@ -75,7 +80,6 @@ impl<'a> Resolver<'a> {
             _ => self.type_info.push(TypeInfo::Other),
         }
 
-        self.types.register(ty.id, "type")?;
         Ok(())
     }
 
@@ -176,7 +180,7 @@ impl<'a> Resolver<'a> {
                     }
 
                     // .. followed by locals themselves
-                    for local in locals {
+                    for local in locals.iter() {
                         scope.register(local.id, "local")?;
                     }
 
@@ -492,13 +496,13 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
 
             Let(t) => {
                 // Resolve (ref T) in locals
-                for local in &mut t.locals {
+                for local in t.locals.iter_mut() {
                     self.resolver.resolve_valtype(&mut local.ty)?;
                 }
 
                 // Register all locals defined in this let
                 let mut scope = Namespace::default();
-                for local in &t.locals {
+                for local in t.locals.iter() {
                     scope.register(local.id, "local")?;
                 }
                 self.scopes.push(scope);
@@ -604,14 +608,20 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 self.resolver.resolve_reftype(&mut i.from_type)?;
             }
 
-            StructNew(i) | StructNewDefault(i) | ArrayNew(i)
-            | ArrayNewDefault(i) | ArrayGet(i) | ArrayGetS(i) | ArrayGetU(i) | ArraySet(i) => {
+            StructNew(i) | StructNewDefault(i) | ArrayNew(i) | ArrayNewDefault(i) | ArrayGet(i)
+            | ArrayGetS(i) | ArrayGetU(i) | ArraySet(i) => {
                 self.resolver.resolve(i, Ns::Type)?;
             }
 
             StructSet(s) | StructGet(s) | StructGetS(s) | StructGetU(s) => {
-                self.resolver.resolve(&mut s.r#struct, Ns::Type)?;
-                self.resolver.fields.resolve(&mut s.field, "field")?;
+                let type_index = self.resolver.resolve(&mut s.r#struct, Ns::Type)?;
+                if let Index::Id(field_id) = s.field {
+                    self.resolver
+                        .fields
+                        .get(&type_index)
+                        .ok_or(Error::new(field_id.span(), format!("accessing a named field `{}` in a struct without named fields, type index {}", field_id.name(), type_index)))?
+                        .resolve(&mut s.field, "field")?;
+                }
             }
 
             ArrayNewFixed(a) => {
