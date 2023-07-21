@@ -165,6 +165,7 @@ UniquePtr<TrackInfo> MP3TrackDemuxer::GetInfo() const { return mInfo->Clone(); }
 
 RefPtr<MP3TrackDemuxer::SeekPromise> MP3TrackDemuxer::Seek(
     const TimeUnit& aTime) {
+  mRemainingEncoderPadding = AssertedCast<int32_t>(mEncoderPadding);
   // Efficiently seek to the position.
   FastSeek(aTime);
   // Correct seek position by scanning the next frames.
@@ -735,7 +736,7 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
   } else if (frame->mEOS &&
              mRemainingEncoderPadding <=
                  frame->mDuration.ToTicksAtRate(mSamplesPerSecond)) {
-    frame->mDuration -= Padding();
+    frame->mDuration -= TimeUnit(mRemainingEncoderPadding, mSamplesPerSecond);
     MOZ_ASSERT(frame->mDuration.IsPositiveOrZero());
     MP3LOG("Trimming last packet %s to [%s,%s]", Padding().ToString().get(),
            frame->mTime.ToString().get(), frame->GetEndTime().ToString().get());
