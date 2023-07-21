@@ -52,6 +52,7 @@ interface nsIFilePicker : nsISupports
                                                 // *.mpg; *.ogm; *.ogv; *.ogx;
                                                 // *.rm; *.rmvb; *.smil; *.webm;
                                                 // *.wmv; *.xvid
+  const long filterPDF        = 0x400;          // *.pdf;
 
   cenum CaptureTarget: 8 {
     captureNone     = 0,                        // No capture target specified.

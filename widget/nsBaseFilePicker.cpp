@@ -237,6 +237,11 @@ nsBaseFilePicker::AppendFilters(int32_t aFilterMask) {
     // should recognize and do the correct platform behavior for.
     AppendFilter(title, u"..apps"_ns);
   }
+  if (aFilterMask & filterPDF) {
+    titleBundle->GetStringFromName("pdfTitle", title);
+    filterBundle->GetStringFromName("pdfFilter", filter);
+    AppendFilter(title, filter);
+  }
   return NS_OK;
 }
 

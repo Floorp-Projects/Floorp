@@ -2943,7 +2943,8 @@ function BrowserOpenFileWindow() {
         nsIFilePicker.filterText |
         nsIFilePicker.filterImages |
         nsIFilePicker.filterXML |
-        nsIFilePicker.filterHTML
+        nsIFilePicker.filterHTML |
+        nsIFilePicker.filterPDF
     );
     fp.displayDirectory = gLastOpenDirectory.path;
     fp.open(fpCallback);
