@@ -430,10 +430,9 @@ export const FormAutofillHeuristics = {
       return true;
     }
 
-    // If the previous element is a cc field, these fields are very likely credit
-    // card fields. Correct the field name based on the number of fields found.
+    // If the previous element is a cc field, these fields is very likely cc expiry fields
     if (
-      lazy.FormAutofillUtils.isCreditCardField(
+      ["cc-number", "cc-name", "cc-type"].includes(
         scanner.getFieldDetailByIndex(scanner.parsingIndex - 1)?.fieldName
       )
     ) {
