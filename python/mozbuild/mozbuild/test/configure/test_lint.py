@@ -430,6 +430,30 @@ class TestLint(unittest.TestCase):
             "non-constant default",
         )
 
+    def test_dual_help(self):
+        # Help text for an option that can be both disabled and enabled with an
+        # optional value should contain {enable|disable} rule.
+        with self.moz_configure(
+            """
+            option('--disable-bar', nargs="*", choices=("a", "b"),
+                   help='{Enable|Disable} bar')
+        """
+        ):
+            self.lint_test()
+        with self.assertRaisesFromLine(ConfigureError, 2) as e:
+            with self.moz_configure(
+                """
+                option('--disable-bar', nargs="*", choices=("a", "b"),
+                       help='Enable bar')
+            """
+            ):
+                self.lint_test()
+        self.assertEqual(
+            str(e.exception),
+            '`help` should contain "{Enable|Disable}" because it '
+            "can be both disabled and enabled with an optional value",
+        )
+
     def test_large_offset(self):
         with self.assertRaisesFromLine(ConfigureError, 375):
             with self.moz_configure(

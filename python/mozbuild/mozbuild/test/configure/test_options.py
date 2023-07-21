@@ -254,6 +254,17 @@ class TestOption(unittest.TestCase):
         self.assertTrue(value)
         self.assertEqual(PositiveOptionValue(("b", "a")), value)
 
+        # Default is enabled without a value, but the option can be also be disabled or
+        # used with a value.
+        option = Option("--without-option", nargs="*", choices=("a", "b"))
+        value = option.get_value("--with-option")
+        self.assertEqual(PositiveOptionValue(), value)
+        value = option.get_value("--with-option=a")
+        self.assertEqual(PositiveOptionValue(("a",)), value)
+        with self.assertRaises(InvalidOptionError) as e:
+            option.get_value("--with-option=c")
+        self.assertEqual(str(e.exception), "'c' is not one of 'a', 'b'")
+
         # Test nargs inference from choices
         option = Option("--with-option", choices=("a", "b"))
         self.assertEqual(option.nargs, 1)

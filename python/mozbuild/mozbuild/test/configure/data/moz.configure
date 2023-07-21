@@ -151,6 +151,12 @@ def returned_choices(values):
 
 set_config("CHOICES", returned_choices)
 
+# Unusual case: an option can default to enabled, but still allow for optional
+# values. In that case, both --disable and --enable options will be shown in
+# configure --help, and the help message needs to include both variants.
+option("--disable-foo", nargs="*", choices=("x", "y"), help="{Enable|Disable} Foo")
+
+
 # All options must be referenced by some @depends function.
 # It is possible to depend on multiple options/functions
 @depends(
@@ -160,6 +166,7 @@ set_config("CHOICES", returned_choices)
     "--option",
     "--enable-choices",
     "--with-other-default",
+    "--disable-foo",
 )
 def remainder(*args):
     return args
