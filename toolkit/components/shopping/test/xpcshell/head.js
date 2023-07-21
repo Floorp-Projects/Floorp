@@ -40,3 +40,21 @@ function readFile(path) {
   fstream.close();
   return data;
 }
+
+/* These are constants but declared `var` so they can be used by the individual
+ * test files.
+ */
+var API_OHTTP_RELAY = "http://example.com/relay/";
+var API_OHTTP_CONFIG = "http://example.com/ohttp-config";
+
+function enableOHTTP(configURL = API_OHTTP_CONFIG) {
+  Services.prefs.setBoolPref("toolkit.shopping.useOHTTP", true);
+  Services.prefs.setCharPref("toolkit.shopping.ohttpConfigURL", configURL);
+  Services.prefs.setCharPref("toolkit.shopping.ohttpRelayURL", API_OHTTP_RELAY);
+}
+
+function disableOHTTP() {
+  for (let pref of ["useOHTTP", "ohttpRelayURL", "ohttpConfigURL"]) {
+    Services.prefs.clearUserPref(`toolkit.shopping.${pref}`);
+  }
+}

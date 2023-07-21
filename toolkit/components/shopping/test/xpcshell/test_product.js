@@ -8,6 +8,17 @@ const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
 
+function BinaryHttpResponse(status, headerNames, headerValues, content) {
+  this.status = status;
+  this.headerNames = headerNames;
+  this.headerValues = headerValues;
+  this.content = content;
+}
+
+BinaryHttpResponse.prototype = {
+  QueryInterface: ChromeUtils.generateQI(["nsIBinaryHttpResponse"]),
+};
+
 const {
   ANALYSIS_RESPONSE_SCHEMA,
   ANALYSIS_REQUEST_SCHEMA,
@@ -100,37 +111,187 @@ server.registerPathHandler(
   }
 );
 
+let ohttp = Cc["@mozilla.org/network/oblivious-http;1"].getService(
+  Ci.nsIObliviousHttp
+);
+let ohttpServer = ohttp.server();
+
+server.registerPathHandler(
+  new URL(API_OHTTP_CONFIG).pathname,
+  (request, response) => {
+    let bstream = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
+      Ci.nsIBinaryOutputStream
+    );
+    bstream.setOutputStream(response.bodyOutputStream);
+    bstream.writeByteArray(ohttpServer.encodedConfig);
+  }
+);
+
+let gExpectedOHTTPMethod = "POST";
+let gExpectedProductDetails;
+server.registerPathHandler(
+  new URL(API_OHTTP_RELAY).pathname,
+  async (request, response) => {
+    let inputStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+      Ci.nsIBinaryInputStream
+    );
+    inputStream.setInputStream(request.bodyInputStream);
+    let requestBody = inputStream.readByteArray(inputStream.available());
+    let ohttpRequest = ohttpServer.decapsulate(requestBody);
+    let bhttp = Cc["@mozilla.org/network/binary-http;1"].getService(
+      Ci.nsIBinaryHttp
+    );
+    let decodedRequest = bhttp.decodeRequest(ohttpRequest.request);
+    Assert.equal(
+      decodedRequest.method,
+      gExpectedOHTTPMethod,
+      "Should get expected HTTP method"
+    );
+    Assert.deepEqual(decodedRequest.headerNames, ["Accept", "Content-Type"]);
+    Assert.deepEqual(decodedRequest.headerValues, [
+      "application/json",
+      "application/json",
+    ]);
+    if (gExpectedOHTTPMethod == "POST") {
+      Assert.equal(
+        new TextDecoder().decode(new Uint8Array(decodedRequest.content)),
+        gExpectedProductDetails,
+        "Expected body content."
+      );
+    }
+
+    response.processAsync();
+    let innerResponse = await fetch("http://example.com" + decodedRequest.path);
+    let bytes = new Uint8Array(await innerResponse.arrayBuffer());
+    let binaryResponse = new BinaryHttpResponse(
+      innerResponse.status,
+      ["Content-Type"],
+      ["application/json"],
+      bytes
+    );
+    let encResponse = ohttpRequest.encapsulate(
+      bhttp.encodeResponse(binaryResponse)
+    );
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.setHeader("Content-Type", "message/ohttp-res", false);
+
+    let bstream = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
+      Ci.nsIBinaryOutputStream
+    );
+    bstream.setOutputStream(response.bodyOutputStream);
+    bstream.writeByteArray(encResponse);
+    response.finish();
+  }
+);
+
 add_task(async function test_product_requestAnalysis() {
   let uri = new URL("https://www.walmart.com/ip/926485654");
   let product = new ShoppingProduct(uri, { allowValidationFailure: false });
 
-  if (product.isProduct()) {
-    let analysis = await product.requestAnalysis(true, undefined, {
-      url: ANALYSIS_API_MOCK,
-      requestSchema: ANALYSIS_REQUEST_SCHEMA,
-      responseSchema: ANALYSIS_RESPONSE_SCHEMA,
-    });
+  Assert.ok(product.isProduct(), "Should recognize a valid product.");
 
-    Assert.ok(
-      typeof analysis == "object",
-      "Analysis object is loaded from JSON and validated"
-    );
-  }
+  let analysis = await product.requestAnalysis(true, undefined, {
+    url: ANALYSIS_API_MOCK,
+    requestSchema: ANALYSIS_REQUEST_SCHEMA,
+    responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+  });
+
+  Assert.ok(
+    typeof analysis == "object",
+    "Analysis object is loaded from JSON and validated"
+  );
+});
+
+add_task(async function test_product_requestAnalysis_OHTTP() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+
+  Assert.ok(product.isProduct(), "Should recognize a valid product.");
+
+  gExpectedProductDetails = JSON.stringify({
+    product_id: "926485654",
+    website: "walmart.com",
+  });
+
+  enableOHTTP();
+
+  let analysis = await product.requestAnalysis(true, undefined, {
+    url: ANALYSIS_API_MOCK,
+    requestSchema: ANALYSIS_REQUEST_SCHEMA,
+    responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+  });
+
+  Assert.deepEqual(
+    analysis,
+    await fetch(ANALYSIS_API_MOCK).then(r => r.json()),
+    "Analysis object is loaded from JSON and validated"
+  );
+
+  disableOHTTP();
 });
 
 add_task(async function test_product_requestAnalysis_invalid() {
   let uri = new URL("https://www.walmart.com/ip/926485654");
   let product = new ShoppingProduct(uri, { allowValidationFailure: false });
 
-  if (product.isProduct()) {
-    let analysis = await product.requestAnalysis(true, undefined, {
-      url: ANALYSIS_API_MOCK_INVALID,
-      requestSchema: ANALYSIS_REQUEST_SCHEMA,
-      responseSchema: ANALYSIS_RESPONSE_SCHEMA,
-    });
+  Assert.ok(product.isProduct(), "Should recognize a valid product.");
+  let analysis = await product.requestAnalysis(true, undefined, {
+    url: ANALYSIS_API_MOCK_INVALID,
+    requestSchema: ANALYSIS_REQUEST_SCHEMA,
+    responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+  });
 
-    Assert.equal(analysis, undefined, "Analysis object is invalidated");
-  }
+  Assert.equal(analysis, undefined, "Analysis object is invalidated");
+});
+
+add_task(async function test_product_requestAnalysis_broken_config() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+
+  Assert.ok(product.isProduct(), "Should recognize a valid product.");
+
+  gExpectedProductDetails = JSON.stringify({
+    product_id: "926485654",
+    website: "walmart.com",
+  });
+
+  enableOHTTP("http://example.com/thisdoesntexist");
+
+  let analysis = await product.requestAnalysis(true, undefined, {
+    url: ANALYSIS_API_MOCK,
+    requestSchema: ANALYSIS_REQUEST_SCHEMA,
+    responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+  });
+
+  // Because the config is missing, the OHTTP request can't be constructed,
+  // so we should fail.
+  Assert.equal(analysis, undefined, "Analysis object is invalidated");
+
+  disableOHTTP();
+});
+
+add_task(async function test_product_requestAnalysis_invalid_ohttp() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+
+  Assert.ok(product.isProduct(), "Should recognize a valid product.");
+
+  gExpectedProductDetails = JSON.stringify({
+    product_id: "926485654",
+    website: "walmart.com",
+  });
+
+  enableOHTTP();
+
+  let analysis = await product.requestAnalysis(true, undefined, {
+    url: ANALYSIS_API_MOCK_INVALID,
+    requestSchema: ANALYSIS_REQUEST_SCHEMA,
+    responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+  });
+
+  Assert.equal(analysis, undefined, "Analysis object is invalidated");
+
+  disableOHTTP();
 });
 
 add_task(async function test_product_requestRecommendations() {
@@ -486,6 +647,47 @@ add_task(function test_isProductURL() {
     false,
     "Passing a junk string returns false"
   );
+});
+
+add_task(async function test_ohttp_headers() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+
+  Assert.ok(product.isProduct(), "Should recognize a valid product.");
+
+  gExpectedProductDetails = JSON.stringify({
+    product_id: "926485654",
+    website: "walmart.com",
+  });
+
+  enableOHTTP();
+
+  let configURL = Services.prefs.getCharPref("toolkit.shopping.ohttpConfigURL");
+  let config = await product.getOHTTPConfig(configURL);
+  Assert.ok(config, "Should have gotten a config.");
+  let ohttpDetails = await product.ohttpRequest(
+    API_OHTTP_RELAY,
+    config,
+    ANALYSIS_API_MOCK,
+    {
+      method: "POST",
+      body: gExpectedProductDetails,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      signal: new AbortController().signal,
+    }
+  );
+  Assert.equal(ohttpDetails.status, 200, "Request should return 200 OK.");
+  Assert.ok(ohttpDetails.ok, "Request should succeed.");
+  let responseHeaders = ohttpDetails.headers;
+  Assert.deepEqual(
+    responseHeaders,
+    { "content-type": "application/json" },
+    "Should have expected response headers."
+  );
+  disableOHTTP();
 });
 
 add_task(async function test_product_uninit() {
