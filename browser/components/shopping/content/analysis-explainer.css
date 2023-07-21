@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/in-content/common.css");
+
+#analysis-explainer-wrapper p,
+#analysis-explainer-grades-list > li,
+.analysis-explainer-grading-scale-description {
+  line-height: 150%;
+}
+
+#analysis-explainer-grades-list {
+  padding: 0;
+  margin-inline-start: 1.05em;
+}
+
+#analysis-explainer-grading-scale-wrapper {
+  margin-inline-start: 0.54em;
+}
+
+#analysis-explainer-grading-scale-list {
+  list-style: none;
+  padding: 0;
+}
+
+.analysis-explainer-grading-scale-entry {
+  display: flex;
+  align-items: flex-start;
+  align-self: stretch;
+  gap: 0.54rem;
+  padding: 0.54em;
+  padding-inline-start: 0;
+}
+
+.analysis-explainer-grading-scale-letters {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.2rem;
+  width: 3.47em;
+}
+
+.analysis-explainer-grading-scale-description {
+  margin: 0;
+}

@@ -60,4 +60,33 @@ shopping-adjusted-rating-unreliable-reviews = Unreliable reviews removed
 shopping-review-reliability-label =
   .label = How reliable are these reviews?
 
+## Strings for the analysis explainer component
+
+shopping-analysis-explainer-label =
+  .label = How we determine review quality
+
+shopping-analysis-explainer-intro =
+  { -brand-product-name } uses AI technology from { -fakespot-brand-name } to analyze the quality and reliability of product reviews.
+  This is only provided to help you assess review quality, not product quality.
+
+shopping-analysis-explainer-grades-intro =
+  We assign each product’s reviews a <strong>letter grade</strong> from A to F.
+shopping-analysis-explainer-higher-grade-description =
+  A higher grade means we believe the reviews are likely from real customers who left honest, unbiased reviews.
+shopping-analysis-explainer-lower-grade-description =
+  A lower grade means we believe the reviews are likely from paid or biased reviewers.
+
+shopping-analysis-explainer-adjusted-rating-description =
+  The <strong>adjusted rating</strong> is based on review quality, with unreliable reviews removed.
+shopping-analysis-explainer-highlights-description =
+  <strong>Highlights</strong> are pulled from recent Amazon reviews (from the last 80 days), that we believe to be reliable.
+
+shopping-analysis-explainer-learn-more =
+  Learn more about <a data-l10n-name="review-quality-url">how { -fakespot-brand-name } determines review quality</a>.
+
+shopping-analysis-explainer-review-grading-scale = Review grading scale:
+shopping-analysis-explainer-review-grading-scale-reliable = We believe the reviews to be reliable
+shopping-analysis-explainer-review-grading-scale-mixed = We believe there’s a mix of reliable and unreliable reviews
+shopping-analysis-explainer-review-grading-scale-unreliable = We believe the reviews are unreliable
+
 ##
