@@ -257,6 +257,20 @@ add_setup(async function enableHtmlViews() {
       updateDate: new Date("2022-03-07T01:00:00"),
     },
     {
+      id: "addon4@mochi.test",
+      name: "Test add-on 4",
+      creator: { name: "Some name" },
+      description: "Short description",
+      userPermissions: {
+        origins: [],
+        permissions: ["alarms", "contextMenus"],
+      },
+      type: "extension",
+      reviewCount: 0,
+      reviewURL: "http://addons.mozilla.org/reviews",
+      averageRating: 0,
+    },
+    {
       // NOTE: Keep the mock properties in sync with the one that
       // SitePermsAddonWrapper would be providing in real synthetic
       // addon entries managed by the SitePermsAddonProvider.
@@ -1597,4 +1611,50 @@ add_task(async function testQuarantinedDomainsUserAllowedUI() {
   await regularExtension.unload();
   await SpecialPowers.popPrefEnv();
   await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function testRatingsElementVisibleIfReviewURLExists() {
+  let win = await loadInitialView("extension");
+  let id = "addon4@mochi.test";
+  let card = getAddonCard(win, id);
+
+  let loaded = waitForViewLoad(win);
+  card.querySelector('[action="expand"]').click();
+  await loaded;
+
+  card = getAddonCard(win, id);
+
+  let rows = getDetailRows(card);
+
+  let expectedRowCount = 5;
+  if (card.addon.canChangeQuarantineIgnored) {
+    expectedRowCount += 2;
+  }
+  is(rows.length, expectedRowCount, "Expected row count");
+
+  // Reviews.
+  // addon4@mochi.test is similar to addon1@mochi.test whose rows have already
+  // been checked in testFullDetails. Here we only check the last row
+  // which is unique to this test case due to the presence of "reviewURL".
+  let row = rows.pop();
+  await checkLabel(row, "rating");
+  let rating = row.lastElementChild;
+  ok(rating.classList.contains("addon-detail-rating"), "Found the rating el");
+  ok(!row.hidden, "The rating row is shown");
+  let mozFiveStar = rating.querySelector("moz-five-star");
+  is(mozFiveStar.rating, 0, "0 rating when there are no reviews");
+  let stars = Array.from(mozFiveStar.starEls);
+  let fullAttrs = stars.map(star => star.getAttribute("fill")).join(",");
+  is(fullAttrs, "empty,empty,empty,empty,empty", "All stars are empty");
+  let link = rating.querySelector("a");
+  let reviewsLink = formatUrl(
+    "addons-manager-reviews-link",
+    "http://addons.mozilla.org/reviews"
+  );
+  checkLink(link, reviewsLink, {
+    id: "addon-detail-reviews-link",
+    args: { numberOfReviews: 0 },
+  });
+
+  await closeView(win);
 });

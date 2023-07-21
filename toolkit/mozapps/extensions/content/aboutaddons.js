@@ -2316,7 +2316,7 @@ class AddonDetails extends HTMLElement {
 
     // Rating.
     let ratingRow = this.querySelector(".addon-detail-row-rating");
-    if (addon.averageRating) {
+    if (addon.reviewURL) {
       ratingRow.querySelector("moz-five-star").rating = addon.averageRating;
       let reviews = ratingRow.querySelector("a");
       reviews.href = formatUTMParams(
