@@ -969,17 +969,73 @@ class BrowsingContextModule extends Module {
     );
   };
 
+  #onLocationChange = async (eventName, data) => {
+    const { id, navigableId, url } = data;
+    const context = this.#getBrowsingContext(navigableId);
+
+    if (this.#subscribedEvents.has("browsingContext.fragmentNavigated")) {
+      const contextInfo = {
+        contextId: context.id,
+        type: lazy.WindowGlobalMessageHandler.type,
+      };
+      this.emitEvent(
+        "browsingContext.fragmentNavigated",
+        {
+          context: navigableId,
+          navigation: id,
+          timestamp: Date.now(),
+          url,
+        },
+        contextInfo
+      );
+    }
+  };
+
+  #startListeningLocationChanged() {
+    if (!this.#subscribedEvents.has("browsingContext.fragmentNavigated")) {
+      this.messageHandler.navigationManager.on(
+        "location-changed",
+        this.#onLocationChange
+      );
+    }
+  }
+
+  #stopListeningLocationChanged() {
+    if (this.#subscribedEvents.has("browsingContext.fragmentNavigated")) {
+      this.messageHandler.navigationManager.off(
+        "location-changed",
+        this.#onLocationChange
+      );
+    }
+  }
+
   #subscribeEvent(event) {
-    if (event === "browsingContext.contextCreated") {
-      this.#contextListener.startListening();
-      this.#subscribedEvents.add(event);
+    switch (event) {
+      case "browsingContext.contextCreated": {
+        this.#contextListener.startListening();
+        this.#subscribedEvents.add(event);
+        break;
+      }
+      case "browsingContext.fragmentNavigated": {
+        this.#startListeningLocationChanged();
+        this.#subscribedEvents.add(event);
+        break;
+      }
     }
   }
 
   #unsubscribeEvent(event) {
-    if (event === "browsingContext.contextCreated") {
-      this.#contextListener.stopListening();
-      this.#subscribedEvents.delete(event);
+    switch (event) {
+      case "browsingContext.contextCreated": {
+        this.#contextListener.stopListening();
+        this.#subscribedEvents.delete(event);
+        break;
+      }
+      case "browsingContext.fragmentNavigated": {
+        this.#stopListeningLocationChanged();
+        this.#subscribedEvents.delete(event);
+        break;
+      }
     }
   }
 
@@ -1016,6 +1072,7 @@ class BrowsingContextModule extends Module {
     return [
       "browsingContext.contextCreated",
       "browsingContext.domContentLoaded",
+      "browsingContext.fragmentNavigated",
       "browsingContext.load",
     ];
   }
