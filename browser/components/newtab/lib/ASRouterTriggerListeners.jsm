@@ -862,7 +862,7 @@ const ASRouterTriggerListeners = new Map([
       },
       get _soundPlaying() {
         return [...Services.wm.getEnumerator("navigator:browser")].some(win =>
-          win.gBrowser?.tabs.some(tab => tab.soundPlaying)
+          win.gBrowser?.tabs.some(tab => !tab.closing && tab.soundPlaying)
         );
       },
       init(triggerHandler) {
