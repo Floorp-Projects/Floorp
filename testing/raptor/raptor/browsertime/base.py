@@ -6,6 +6,7 @@
 
 import json
 import os
+import pathlib
 import re
 import sys
 from abc import ABCMeta, abstractmethod
@@ -147,6 +148,37 @@ class Browsertime(Perftest):
                 else:
                     chromedriver_version = DEFAULT_CHROMEVERSION
 
+                # Bug 1844578 - Remove this, and change the cd_extracted_names during task
+                # setup once all chrome versions use the new artifact setup.
+                cd_extracted_names_115 = {
+                    "windows": str(
+                        pathlib.Path("{}chromedriver-win32", "chromedriver.exe")
+                    ),
+                    "mac": str(pathlib.Path("{}chromedriver-mac-x64", "chromedriver")),
+                    "default": str(
+                        pathlib.Path("{}chromedriver-linux64", "chromedriver")
+                    ),
+                }
+
+                if int(chromedriver_version) >= 115:
+                    if "mac" in self.config["platform"]:
+                        self.browsertime_chromedriver = (
+                            self.browsertime_chromedriver.replace(
+                                "{}chromedriver", cd_extracted_names_115["mac"]
+                            )
+                        )
+                    elif "win" in self.config["platform"]:
+                        self.browsertime_chromedriver = (
+                            self.browsertime_chromedriver.replace(
+                                "{}chromedriver.exe", cd_extracted_names_115["windows"]
+                            )
+                        )
+                    else:
+                        self.browsertime_chromedriver = (
+                            self.browsertime_chromedriver.replace(
+                                "{}chromedriver", cd_extracted_names_115["default"]
+                            )
+                        )
                 self.browsertime_chromedriver = self.browsertime_chromedriver.format(
                     chromedriver_version
                 )
