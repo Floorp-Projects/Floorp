@@ -308,15 +308,6 @@ LoadInfo::LoadInfo(
       }
     }
   }
-
-  // in case this is a loadinfo for a parser generated script, then we store
-  // that bit of information so CSP strict-dynamic can query it.
-  if (!nsContentUtils::IsPreloadType(mInternalContentPolicyType)) {
-    nsCOMPtr<nsIScriptElement> script = do_QueryInterface(aLoadingContext);
-    if (script && script->GetParserCreated() != mozilla::dom::NOT_FROM_PARSER) {
-      mParserCreatedScript = true;
-    }
-  }
 }
 
 /* Constructor takes an outer window, but no loadingNode or loadingPrincipal.

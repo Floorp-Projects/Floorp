@@ -55,6 +55,8 @@ class ModuleScript;
 class ScriptLoadRequest;
 class ScriptLoadRequestList;
 
+enum class ParserMetadata;
+
 }  // namespace loader
 }  // namespace JS
 
@@ -428,7 +430,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
       ScriptKind aKind, nsIURI* aURI, nsIScriptElement* aElement,
       nsIPrincipal* aTriggeringPrincipal, mozilla::CORSMode aCORSMode,
       const nsAString& aNonce, const SRIMetadata& aIntegrity,
-      ReferrerPolicy aReferrerPolicy);
+      ReferrerPolicy aReferrerPolicy,
+      JS::loader::ParserMetadata aParserMetadata);
 
   /**
    * Unblocks the creator parser of the parser-blocking scripts.
