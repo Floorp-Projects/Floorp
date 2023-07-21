@@ -707,6 +707,18 @@ class MediaByteBuffer : public nsTArray<uint8_t> {
   ~MediaByteBuffer() = default;
 };
 
+// MediaAlignedByteBuffer is a ref counted AlignedByteBuffer whose memory
+// allocations are fallible.
+class MediaAlignedByteBuffer final : public AlignedByteBuffer {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaAlignedByteBuffer);
+  MediaAlignedByteBuffer() = default;
+  MediaAlignedByteBuffer(const uint8_t* aData, size_t aLength)
+      : AlignedByteBuffer(aData, aLength) {}
+
+ private:
+  ~MediaAlignedByteBuffer() = default;
+};
+
 }  // namespace mozilla
 
 #endif  // MediaData_h
