@@ -826,6 +826,43 @@ class Rule {
   }
 
   /**
+   * @returns {Boolean} Whether or not the rule is in a layer
+   */
+  isInLayer() {
+    return this.domRule.ancestorData.some(({ type }) => type === "layer");
+  }
+
+  /**
+   * Return whether this rule and the one passed are in the same layer,
+   * (as in described in the spec; this is not checking that the 2 rules are children
+   * of the same CSSLayerBlockRule)
+   *
+   * @param {Rule} otherRule: The rule we want to compare with
+   * @returns {Boolean}
+   */
+  isInDifferentLayer(otherRule) {
+    const filterLayer = ({ type }) => type === "layer";
+    const thisLayers = this.domRule.ancestorData.filter(filterLayer);
+    const otherRuleLayers = otherRule.domRule.ancestorData.filter(filterLayer);
+
+    if (thisLayers.length !== otherRuleLayers.length) {
+      return true;
+    }
+
+    return thisLayers.some((layer, i) => {
+      const otherRuleLayer = otherRuleLayers[i];
+      // For named layers, we can compare the layer name directly, since we want to identify
+      // the actual layer, not the specific CSSLayerBlockRule.
+      // For nameless layers though, we don't have a choice and we can only identify them
+      // via their CSSLayerBlockRule, so we're using the rule actorID.
+      return (
+        (layer.value || layer.actorID) !==
+        (otherRuleLayer.value || otherRuleLayer.actorID)
+      );
+    });
+  }
+
+  /**
    * See whether this rule has any non-invisible properties.
    * @return {Boolean} true if there is any visible property, or false
    *         if all properties are invisible

@@ -322,11 +322,18 @@ class ElementStyle {
     //   If the new property is a lower or equal priority, mark it as
     //   overridden.
     //
+    //   Note that this is different if layers are involved: if both
+    //   old and new properties have a high priority, and if the new
+    //   property is in a rule belonging to a layer that is different
+    //   from the the one the old property rule might be in,
+    //   mark the old property overridden and mark the property name as
+    //   taken by the new property.
+    //
     // _overriddenDirty will be set on each prop, indicating whether its
     // dirty status changed during this pass.
-    const taken = {};
+    const taken = new Map();
     for (const computedProp of computedProps) {
-      const earlier = taken[computedProp.name];
+      const earlier = taken.get(computedProp.name);
 
       // Prevent -webkit-gradient from being selected after unchecking
       // linear-gradient in this case:
@@ -342,7 +349,13 @@ class ElementStyle {
       if (
         earlier &&
         computedProp.priority === "important" &&
-        earlier.priority !== "important" &&
+        (earlier.priority !== "important" ||
+          // Even if the earlier property was important, if the current rule is in a layer
+          // it will take precedence, unless the earlier property rule was in the same layer.
+          (computedProp.textProp.rule?.isInLayer() &&
+            computedProp.textProp.rule.isInDifferentLayer(
+              earlier.textProp.rule
+            ))) &&
         // For !important only consider rules applying to the same parent node.
         computedProp.textProp.rule.inherited == earlier.textProp.rule.inherited
       ) {
@@ -359,7 +372,7 @@ class ElementStyle {
       computedProp.overridden = overridden;
 
       if (!computedProp.overridden && computedProp.textProp.enabled) {
-        taken[computedProp.name] = computedProp;
+        taken.set(computedProp.name, computedProp);
 
         if (isCssVariable(computedProp.name)) {
           variables.set(computedProp.name, computedProp.value);

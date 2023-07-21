@@ -453,6 +453,8 @@ class StyleRuleActor extends Actor {
         });
       } else if (ruleClassName === "CSSLayerBlockRule") {
         ancestorData.push({
+          // we need the actorID so we can uniquely identify nameless layers on the client
+          actorID: ancestorRule.actorID,
           type,
           value: rawRule.name,
         });
