@@ -3,28 +3,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-var gExpectedStatus = null;
-var gNextTestFunc = null;
-
 var prefs = Services.prefs;
 
-var asyncXHR = {
-  load() {
-    var request = new XMLHttpRequest();
-    request.open("GET", "http://localhost:4444/test_error_code.xml", true);
+function asyncXHR(expectedStatus, nextTestFunc) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "http://localhost:4444/test_error_code.xml", true);
 
-    var self = this;
-    request.addEventListener("error", function (event) {
-      self.onError(event);
-    });
-    request.send(null);
-  },
-  onError: function doAsyncRequest_onError(event) {
+  var sawError = false;
+  xhr.addEventListener("loadend", function doAsyncRequest_onLoad(event) {
+    Assert.ok(sawError, "Should have received an error");
+    nextTestFunc();
+  });
+  xhr.addEventListener("error", function doAsyncRequest_onError(event) {
     var request = event.target.channel.QueryInterface(Ci.nsIRequest);
-    Assert.equal(request.status, gExpectedStatus);
-    gNextTestFunc();
-  },
-};
+    Assert.equal(request.status, expectedStatus);
+    sawError = true;
+  });
+  xhr.send(null);
+}
 
 function run_test() {
   do_test_pending();
@@ -41,10 +37,8 @@ function run_test_pt1() {
   // We always resolve localhost as it's hardcoded without the following pref:
   prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
 
-  gExpectedStatus = Cr.NS_ERROR_OFFLINE;
-  gNextTestFunc = run_test_pt2;
   dump("Testing error returned by async XHR when the network is offline\n");
-  asyncXHR.load();
+  asyncXHR(Cr.NS_ERROR_OFFLINE, run_test_pt2);
 }
 
 // connection refused
@@ -53,10 +47,8 @@ function run_test_pt2() {
   prefs.clearUserPref("network.dns.offline-localhost");
   prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
 
-  gExpectedStatus = Cr.NS_ERROR_CONNECTION_REFUSED;
-  gNextTestFunc = end_test;
   dump("Testing error returned by aync XHR when the connection is refused\n");
-  asyncXHR.load();
+  asyncXHR(Cr.NS_ERROR_CONNECTION_REFUSED, end_test);
 }
 
 function end_test() {

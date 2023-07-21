@@ -333,7 +333,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   void Abort() {
     IgnoredErrorResult rv;
     AbortInternal(rv);
-    MOZ_ASSERT(!rv.Failed());
+    MOZ_ASSERT(!rv.Failed() || rv.ErrorCodeIs(NS_ERROR_DOM_ABORT_ERR));
   }
 
   virtual void Abort(ErrorResult& aRv) override;
@@ -408,6 +408,8 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   void SetOriginStack(UniquePtr<SerializedStackHolder> aOriginStack);
 
   void SetSource(UniquePtr<ProfileChunkedBuffer> aSource);
+
+  nsresult ErrorDetail() const { return mErrorLoadDetail; }
 
   virtual uint16_t ErrorCode() const override {
     return static_cast<uint16_t>(mErrorLoad);
@@ -680,6 +682,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   nsCOMPtr<nsITimer> mTimeoutTimer;
   void StartTimeoutTimer();
   void HandleTimeoutCallback();
+  void CancelTimeoutTimer();
 
   nsCOMPtr<nsIRunnable> mResumeTimeoutRunnable;
 
@@ -692,6 +695,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   void CancelSyncTimeoutTimer();
 
   ErrorType mErrorLoad;
+  nsresult mErrorLoadDetail;
   bool mErrorParsingXML;
   bool mWaitingForOnStopRequest;
   bool mProgressTimerIsActive;
@@ -715,9 +719,9 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   /**
    * Close the XMLHttpRequest's channels.
    */
-  void CloseRequest();
+  void CloseRequest(nsresult detail);
 
-  void TerminateOngoingFetch();
+  void TerminateOngoingFetch(nsresult detail);
 
   /**
    * Close the XMLHttpRequest's channels and dispatch appropriate progress

@@ -96,7 +96,24 @@ RequestTracker.prototype = {
       }, this.resetAfter);
     }
 
-    req.send(null);
+    var gotException;
+    var expectTimeoutException =
+      !this.async && inWorker && this.timeLimit > 0 && this.timeLimit < 3000;
+
+    try {
+      req.send(null);
+    } catch (e) {
+      gotException = e;
+      if (expectTimeoutException) {
+        ok(e.name == "TimeoutError", "Should be a TimeoutError");
+      }
+    }
+
+    if (gotException && !expectTimeoutException) {
+      ok(false, `expected no exception, got ${gotException}`);
+    } else if (!gotException && expectTimeoutException) {
+      ok(false, "expected timeout exception");
+    }
   },
 
   /**
