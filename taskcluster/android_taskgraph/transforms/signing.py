@@ -5,6 +5,7 @@
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
+from gecko_taskgraph.util.scriptworker import get_signing_cert_scope
 
 from ..build_config import CHECKSUMS_EXTENSIONS
 
@@ -17,7 +18,6 @@ def resolve_keys(config, tasks):
         for key in (
             "index",
             "worker-type",
-            "worker.signing-type",
             "treeherder.symbol",
         ):
             resolve_keyed_by(
@@ -80,4 +80,12 @@ def set_signing_format(config, tasks):
         for upstream_artifact in task["worker"]["upstream-artifacts"]:
             upstream_artifact["formats"] = ["autograph_gpg"]
 
+        yield task
+
+
+@transforms.add
+def add_signing_cert_scope(config, tasks):
+    signing_cert_scope = get_signing_cert_scope(config)
+    for task in tasks:
+        task.setdefault("scopes", []).append(signing_cert_scope)
         yield task

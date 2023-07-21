@@ -9,48 +9,6 @@ from voluptuous import Any, Optional, Required
 
 
 @payload_builder(
-    "scriptworker-signing",
-    schema={
-        Required("max-run-time"): int,
-        Required("signing-type"): str,
-        # list of artifact URLs for the artifacts that should be signed
-        Required("upstream-artifacts"): [
-            {
-                # taskId of the task with the artifact
-                Required("taskId"): taskref_or_string,
-                # type of signing task (for CoT)
-                Required("taskType"): str,
-                # Paths to the artifacts to sign
-                Required("paths"): [str],
-                # Signing formats to use on each of the paths
-                Required("formats"): [str],
-            }
-        ],
-    },
-)
-def build_scriptworker_signing_payload(config, task, task_def):
-    worker = task["worker"]
-
-    task_def["tags"]["worker-implementation"] = "scriptworker"
-
-    task_def["payload"] = {
-        "upstreamArtifacts": worker["upstream-artifacts"],
-    }
-
-    formats = set()
-    for artifacts in worker["upstream-artifacts"]:
-        formats.update(artifacts["formats"])
-
-    scope_prefix = config.graph_config["scriptworker"]["scope-prefix"]
-    task_def["scopes"].append(
-        "{}:signing:cert:{}".format(scope_prefix, worker["signing-type"])
-    )
-    task_def["scopes"].extend(
-        [f"{scope_prefix}:signing:format:{format}" for format in sorted(formats)]
-    )
-
-
-@payload_builder(
     "scriptworker-beetmover",
     schema={
         Required("action"): str,

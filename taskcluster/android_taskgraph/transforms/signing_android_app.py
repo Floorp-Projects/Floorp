@@ -60,15 +60,16 @@ def set_worker_type(config, tasks):
 
 
 @transforms.add
-def set_signing_type(config, tasks):
+def add_signing_cert_scope(config, tasks):
+    scope_prefix = config.graph_config["scriptworker"]["scope-prefix"]
     for task in tasks:
-        signing_type = "dep-signing"
+        cert = "dep-signing"
         if str(config.params["level"]) == "3":
             if task["attributes"]["build-type"] in ("fenix-beta", "fenix-release"):
-                signing_type = "fennec-production-signing"
+                cert = "fennec-production-signing"
             elif task["attributes"]["build-type"] in PRODUCTION_SIGNING_BUILD_TYPES:
-                signing_type = "production-signing"
-        task.setdefault("worker", {})["signing-type"] = signing_type
+                cert = "production-signing"
+        task.setdefault("scopes", []).append(f"{scope_prefix}:signing:cert:{cert}")
         yield task
 
 
