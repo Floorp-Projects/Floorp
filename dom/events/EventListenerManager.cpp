@@ -1174,7 +1174,7 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   RefPtr<JS::loader::ScriptFetchOptions> fetchOptions =
       new JS::loader::ScriptFetchOptions(
           CORS_NONE, aElement->OwnerDoc()->GetReferrerPolicy(),
-          aElement->OwnerDoc()->NodePrincipal());
+          /* aNonce = */ u""_ns, aElement->OwnerDoc()->NodePrincipal());
 
   RefPtr<JS::loader::EventScript> eventScript =
       new JS::loader::EventScript(fetchOptions, uri);

@@ -396,36 +396,26 @@ nsContentPolicyType ScriptLoadRequestToContentPolicyType(
 }
 
 nsresult ScriptLoader::CheckContentPolicy(Document* aDocument,
-                                          nsISupports* aContext,
+                                          nsIScriptElement* aElement,
                                           const nsAString& aType,
+                                          const nsAString& aNonce,
                                           ScriptLoadRequest* aRequest) {
   nsContentPolicyType contentPolicyType =
       ScriptLoadRequestToContentPolicyType(aRequest);
 
-  nsCOMPtr<nsINode> requestingNode = do_QueryInterface(aContext);
+  nsCOMPtr<nsINode> requestingNode = do_QueryInterface(aElement);
   nsCOMPtr<nsILoadInfo> secCheckLoadInfo = new net::LoadInfo(
       aDocument->NodePrincipal(),  // loading principal
       aDocument->NodePrincipal(),  // triggering principal
       requestingNode, nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
       contentPolicyType);
-
+  // Use nonce of the current element, instead of the preload, because those
+  // are allowed to differ.
+  secCheckLoadInfo->SetCspNonce(aNonce);
   if (aRequest->mIntegrity.IsValid()) {
     MOZ_ASSERT(!aRequest->mIntegrity.IsEmpty());
     secCheckLoadInfo->SetIntegrityMetadata(
         aRequest->mIntegrity.GetIntegrityString());
-  }
-
-  // snapshot the nonce at load start time for performing CSP checks
-  if (contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_SCRIPT ||
-      contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_MODULE) {
-    nsCOMPtr<nsINode> node = do_QueryInterface(aContext);
-    if (node) {
-      nsString* cspNonce =
-          static_cast<nsString*>(node->GetProperty(nsGkAtoms::nonce));
-      if (cspNonce) {
-        secCheckLoadInfo->SetCspNonce(*cspNonce);
-      }
-    }
   }
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
@@ -631,21 +621,10 @@ nsresult ScriptLoader::StartLoadInternal(
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+  loadInfo->SetCspNonce(aRequest->Nonce());
   if (aRequest->mIntegrity.IsValid()) {
     MOZ_ASSERT(!aRequest->mIntegrity.IsEmpty());
     loadInfo->SetIntegrityMetadata(aRequest->mIntegrity.GetIntegrityString());
-  }
-
-  // snapshot the nonce at load start time for performing CSP checks
-  if (contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_SCRIPT ||
-      contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_MODULE) {
-    if (context) {
-      nsString* cspNonce =
-          static_cast<nsString*>(context->GetProperty(nsGkAtoms::nonce));
-      if (cspNonce) {
-        loadInfo->SetCspNonce(*cspNonce);
-      }
-    }
   }
 
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobal = GetScriptGlobalObject();
@@ -831,6 +810,7 @@ bool ScriptLoader::PreloadURIComparator::Equals(const PreloadInfo& aPi,
 }
 
 static bool CSPAllowsInlineScript(nsIScriptElement* aElement,
+                                  const nsAString& aNonce,
                                   Document* aDocument) {
   nsCOMPtr<nsIContentSecurityPolicy> csp = aDocument->GetCsp();
   if (!csp) {
@@ -838,24 +818,14 @@ static bool CSPAllowsInlineScript(nsIScriptElement* aElement,
     return true;
   }
 
-  // query the nonce
-  nsCOMPtr<Element> scriptContent = do_QueryInterface(aElement);
-  nsAutoString nonce;
-  if (scriptContent) {
-    nsString* cspNonce =
-        static_cast<nsString*>(scriptContent->GetProperty(nsGkAtoms::nonce));
-    if (cspNonce) {
-      nonce = *cspNonce;
-    }
-  }
-
   bool parserCreated =
       aElement->GetParserCreated() != mozilla::dom::NOT_FROM_PARSER;
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
 
   bool allowInlineScript = false;
   nsresult rv = csp->GetAllowsInline(
       nsIContentSecurityPolicy::SCRIPT_SRC_ELEM_DIRECTIVE,
-      false /* aHasUnsafeHash */, nonce, parserCreated, scriptContent,
+      false /* aHasUnsafeHash */, aNonce, parserCreated, element,
       nullptr /* nsICSPEventListener */, u""_ns,
       aElement->GetScriptLineNumber(), aElement->GetScriptColumnNumber(),
       &allowInlineScript);
@@ -865,11 +835,12 @@ static bool CSPAllowsInlineScript(nsIScriptElement* aElement,
 already_AddRefed<ScriptLoadRequest> ScriptLoader::CreateLoadRequest(
     ScriptKind aKind, nsIURI* aURI, nsIScriptElement* aElement,
     nsIPrincipal* aTriggeringPrincipal, CORSMode aCORSMode,
-    const SRIMetadata& aIntegrity, ReferrerPolicy aReferrerPolicy) {
+    const nsAString& aNonce, const SRIMetadata& aIntegrity,
+    ReferrerPolicy aReferrerPolicy) {
   nsIURI* referrer = mDocument->GetDocumentURIAsReferrer();
   nsCOMPtr<Element> domElement = do_QueryInterface(aElement);
   RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
-      aCORSMode, aReferrerPolicy, aTriggeringPrincipal, domElement);
+      aCORSMode, aReferrerPolicy, aNonce, aTriggeringPrincipal, domElement);
   RefPtr<ScriptLoadContext> context = new ScriptLoadContext();
 
   if (aKind == ScriptKind::eClassic || aKind == ScriptKind::eImportMap) {
@@ -961,6 +932,12 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     return false;
   }
 
+  nsAutoString nonce;
+  if (nsString* cspNonce = static_cast<nsString*>(
+          aScriptContent->GetProperty(nsGkAtoms::nonce))) {
+    nonce = *cspNonce;
+  }
+
   SRIMetadata sriMetadata;
   {
     nsAutoString integrity;
@@ -971,8 +948,8 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
   RefPtr<ScriptLoadRequest> request =
       LookupPreloadRequest(aElement, aScriptKind, sriMetadata);
 
-  if (request &&
-      NS_FAILED(CheckContentPolicy(mDocument, aElement, aTypeAttr, request))) {
+  if (request && NS_FAILED(CheckContentPolicy(mDocument, aElement, aTypeAttr,
+                                              nonce, request))) {
     LOG(("ScriptLoader (%p): content policy check failed for preload", this));
 
     // Probably plans have changed; even though the preload was allowed seems
@@ -1034,8 +1011,9 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     CORSMode ourCORSMode = aElement->GetCORSMode();
     ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
 
-    request = CreateLoadRequest(aScriptKind, scriptURI, aElement, principal,
-                                ourCORSMode, sriMetadata, referrerPolicy);
+    request =
+        CreateLoadRequest(aScriptKind, scriptURI, aElement, principal,
+                          ourCORSMode, nonce, sriMetadata, referrerPolicy);
     request->GetScriptLoadContext()->mIsInline = false;
     request->GetScriptLoadContext()->SetScriptMode(
         aElement->GetScriptDeferred(), aElement->GetScriptAsync(), false);
@@ -1162,8 +1140,15 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
     return false;
   }
 
+  nsCOMPtr<nsINode> node = do_QueryInterface(aElement);
+  nsAutoString nonce;
+  if (nsString* cspNonce =
+          static_cast<nsString*>(node->GetProperty(nsGkAtoms::nonce))) {
+    nonce = *cspNonce;
+  }
+
   // Does CSP allow this inline script to run?
-  if (!CSPAllowsInlineScript(aElement, mDocument)) {
+  if (!CSPAllowsInlineScript(aElement, nonce, mDocument)) {
     return false;
   }
 
@@ -1199,7 +1184,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
   RefPtr<ScriptLoadRequest> request =
       CreateLoadRequest(aScriptKind, mDocument->GetDocumentURI(), aElement,
-                        mDocument->NodePrincipal(), corsMode,
+                        mDocument->NodePrincipal(), corsMode, nonce,
                         SRIMetadata(),  // SRI doesn't apply
                         referrerPolicy);
   request->GetScriptLoadContext()->mIsInline = true;
@@ -3582,9 +3567,16 @@ void ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
   SRIMetadata sriMetadata;
   GetSRIMetadata(aIntegrity, &sriMetadata);
 
-  RefPtr<ScriptLoadRequest> request = CreateLoadRequest(
-      scriptKind, aURI, nullptr, mDocument->NodePrincipal(),
-      Element::StringToCORSMode(aCrossOrigin), sriMetadata, aReferrerPolicy);
+  // For link type "modulepreload":
+  // https://html.spec.whatwg.org/multipage/links.html#link-type-modulepreload
+  // Step 11. Let options be a script fetch options whose cryptographic nonce is
+  // cryptographic nonce, integrity metadata is integrity metadata, parser
+  // metadata is "not-parser-inserted", credentials mode is credentials mode,
+  // referrer policy is referrer policy, and fetch priority is fetch priority.
+  RefPtr<ScriptLoadRequest> request =
+      CreateLoadRequest(scriptKind, aURI, nullptr, mDocument->NodePrincipal(),
+                        Element::StringToCORSMode(aCrossOrigin),
+                        /* aNonce = */ u""_ns, sriMetadata, aReferrerPolicy);
   request->GetScriptLoadContext()->mIsInline = false;
   request->GetScriptLoadContext()->mScriptFromHead = aScriptFromHead;
   request->GetScriptLoadContext()->SetScriptMode(aDefer, aAsync, aLinkPreload);

@@ -59,13 +59,6 @@ class ScriptLoadRequestList;
  * ScriptFetchOptions loosely corresponds to HTML's "script fetch options",
  * https://html.spec.whatwg.org/multipage/webappapis.html#script-fetch-options
  * with the exception of the following properties:
- *   cryptographic nonce
- *      The cryptographic nonce metadata used for the initial fetch and for
- *      fetching any imported modules. As this is populated by a DOM element,
- *      this is implemented via mozilla::dom::Element as the field
- *      mElement. The default value is an empty string, and is indicated
- *      when this field is a nullptr. Nonce is not represented on the dom
- *      side as per bug 1374612.
  *   parser metadata
  *      The parser metadata used for the initial fetch and for fetching any
  *      imported modules. This is populated from a mozilla::dom::Element and is
@@ -91,6 +84,7 @@ class ScriptFetchOptions {
 
   ScriptFetchOptions(mozilla::CORSMode aCORSMode,
                      enum mozilla::dom::ReferrerPolicy aReferrerPolicy,
+                     const nsAString& aNonce,
                      nsIPrincipal* aTriggeringPrincipal,
                      mozilla::dom::Element* aElement = nullptr);
 
@@ -106,6 +100,12 @@ class ScriptFetchOptions {
    *  imported modules
    */
   const enum mozilla::dom::ReferrerPolicy mReferrerPolicy;
+
+  /*
+   * The cryptographic nonce metadata used for the initial fetch and for
+   * fetching any imported modules.
+   */
+  const nsString mNonce;
 
   /*
    *  Used to determine CSP and if we are on the About page.
@@ -286,6 +286,8 @@ class ScriptLoadRequest
   enum mozilla::dom::ReferrerPolicy ReferrerPolicy() const {
     return mFetchOptions->mReferrerPolicy;
   }
+
+  const nsString& Nonce() const { return mFetchOptions->mNonce; }
 
   nsIPrincipal* TriggeringPrincipal() const {
     return mFetchOptions->mTriggeringPrincipal;
