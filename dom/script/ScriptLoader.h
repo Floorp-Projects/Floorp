@@ -427,7 +427,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   already_AddRefed<ScriptLoadRequest> CreateLoadRequest(
       ScriptKind aKind, nsIURI* aURI, nsIScriptElement* aElement,
       nsIPrincipal* aTriggeringPrincipal, mozilla::CORSMode aCORSMode,
-      const SRIMetadata& aIntegrity, ReferrerPolicy aReferrerPolicy);
+      const nsAString& aNonce, const SRIMetadata& aIntegrity,
+      ReferrerPolicy aReferrerPolicy);
 
   /**
    * Unblocks the creator parser of the parser-blocking scripts.
@@ -461,8 +462,10 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   /**
    * Helper function to check the content policy for a given request.
    */
-  static nsresult CheckContentPolicy(Document* aDocument, nsISupports* aContext,
+  static nsresult CheckContentPolicy(Document* aDocument,
+                                     nsIScriptElement* aElement,
                                      const nsAString& aType,
+                                     const nsAString& aNonce,
                                      ScriptLoadRequest* aRequest);
 
   /**
