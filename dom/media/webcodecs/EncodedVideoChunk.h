@@ -25,6 +25,7 @@ namespace dom {
 
 class MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer;
 class OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer;
+class StructuredCloneHolder;
 
 enum class EncodedVideoChunkType : uint8_t;
 struct EncodedVideoChunkInit;
@@ -34,7 +35,25 @@ struct EncodedVideoChunkInit;
 
 namespace mozilla::dom {
 
-class EncodedVideoChunk final : public nsISupports, public nsWrapperCache {
+class EncodedVideoChunkData {
+ public:
+  EncodedVideoChunkData(already_AddRefed<MediaAlignedByteBuffer> aBuffer,
+                        const EncodedVideoChunkType& aType, int64_t aTimestamp,
+                        Maybe<uint64_t>&& aDuration);
+  EncodedVideoChunkData(const EncodedVideoChunkData& aData) = default;
+  ~EncodedVideoChunkData() = default;
+
+ protected:
+  // mBuffer's byte length is guaranteed to be smaller than UINT32_MAX.
+  RefPtr<MediaAlignedByteBuffer> mBuffer;
+  EncodedVideoChunkType mType;
+  int64_t mTimestamp;
+  Maybe<uint64_t> mDuration;
+};
+
+class EncodedVideoChunk final : public EncodedVideoChunkData,
+                                public nsISupports,
+                                public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(EncodedVideoChunk)
@@ -44,6 +63,9 @@ class EncodedVideoChunk final : public nsISupports, public nsWrapperCache {
                     already_AddRefed<MediaAlignedByteBuffer> aBuffer,
                     const EncodedVideoChunkType& aType, int64_t aTimestamp,
                     Maybe<uint64_t>&& aDuration);
+
+  EncodedVideoChunk(nsIGlobalObject* aParent,
+                    const EncodedVideoChunkData& aData);
 
  protected:
   ~EncodedVideoChunk() = default;
@@ -74,11 +96,12 @@ class EncodedVideoChunk final : public nsISupports, public nsWrapperCache {
   uint8_t* Data();
 
   // [Serializable] implementations: {Read, Write}StructuredClone
-  static already_AddRefed<EncodedVideoChunk> ReadStructuredClone(
-      JSContext* aCx, nsIGlobalObject* aGlobal,
-      JSStructuredCloneReader* aReader);
-  bool WriteStructuredClone(JSContext* aCx,
-                            JSStructuredCloneWriter* aWriter) const;
+  static JSObject* ReadStructuredClone(JSContext* aCx, nsIGlobalObject* aGlobal,
+                                       JSStructuredCloneReader* aReader,
+                                       const EncodedVideoChunkData& aData);
+
+  bool WriteStructuredClone(JSStructuredCloneWriter* aWriter,
+                            StructuredCloneHolder* aHolder) const;
 
  private:
   // EncodedVideoChunk can run on either main thread or worker thread.
@@ -87,11 +110,6 @@ class EncodedVideoChunk final : public nsISupports, public nsWrapperCache {
   }
 
   nsCOMPtr<nsIGlobalObject> mParent;
-  // mBuffer's byte length is guaranteed to be smaller than UINT32_MAX.
-  RefPtr<MediaAlignedByteBuffer> mBuffer;
-  EncodedVideoChunkType mType;
-  int64_t mTimestamp;
-  Maybe<uint64_t> mDuration;
 };
 
 }  // namespace mozilla::dom

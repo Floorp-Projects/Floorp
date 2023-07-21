@@ -165,6 +165,7 @@ class StructuredCloneHolderBase {
 };
 
 class BlobImpl;
+class EncodedVideoChunkData;
 class MessagePort;
 class MessagePortIdentifier;
 struct VideoFrameSerializedData;
@@ -211,7 +212,7 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
   bool HasClonedDOMObjects() const {
     return !mBlobImplArray.IsEmpty() || !mWasmModuleArray.IsEmpty() ||
            !mClonedSurfaces.IsEmpty() || !mInputStreamArray.IsEmpty() ||
-           !mVideoFrames.IsEmpty();
+           !mVideoFrames.IsEmpty() || !mEncodedVideoChunks.IsEmpty();
   }
 
   nsTArray<RefPtr<BlobImpl>>& BlobImpls() {
@@ -268,6 +269,10 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
   }
 
   nsTArray<VideoFrameSerializedData>& VideoFrames() { return mVideoFrames; }
+
+  nsTArray<EncodedVideoChunkData>& EncodedVideoChunks() {
+    return mEncodedVideoChunks;
+  }
 
   // Implementations of the virtual methods to allow cloning of objects which
   // JS engine itself doesn't clone.
@@ -373,6 +378,9 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
 
   // Used for cloning VideoFrame in the structured cloning algorithm.
   nsTArray<VideoFrameSerializedData> mVideoFrames;
+
+  // Used for cloning EncodedVideoChunk in the structured cloning algorithm.
+  nsTArray<EncodedVideoChunkData> mEncodedVideoChunks;
 
   // This raw pointer is only set within ::Read() and is unset by the end.
   nsIGlobalObject* MOZ_NON_OWNING_REF mGlobal;

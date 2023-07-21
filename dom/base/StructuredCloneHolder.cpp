@@ -34,6 +34,8 @@
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/EncodedVideoChunk.h"
+#include "mozilla/dom/EncodedVideoChunkBinding.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
 #include "mozilla/dom/FileListBinding.h"
@@ -397,6 +399,7 @@ void StructuredCloneHolder::Read(nsIGlobalObject* aGlobal, JSContext* aCx,
     mClonedSurfaces.Clear();
     mInputStreamArray.Clear();
     mVideoFrames.Clear();
+    mEncodedVideoChunks.Clear();
     Clear();
   }
 }
@@ -1113,6 +1116,16 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
     }
   }
 
+  if (StaticPrefs::dom_media_webcodecs_enabled() &&
+      aTag == SCTAG_DOM_ENCODEDVIDEOCHUNK &&
+      CloneScope() == StructuredCloneScope::SameProcess) {
+    JS::Rooted<JSObject*> global(aCx, mGlobal->GetGlobalJSObject());
+    if (EncodedVideoChunk_Binding::ConstructorEnabled(aCx, global)) {
+      return EncodedVideoChunk::ReadStructuredClone(
+          aCx, mGlobal, aReader, EncodedVideoChunks()[aIndex]);
+    }
+  }
+
   return ReadFullySerializableObjects(aCx, aReader, aTag, false);
 }
 
@@ -1216,6 +1229,18 @@ bool StructuredCloneHolder::CustomWriteHandler(
       SameProcessScopeRequired(aSameProcessScopeRequired);
       return CloneScope() == StructuredCloneScope::SameProcess
                  ? videoFrame->WriteStructuredClone(aWriter, this)
+                 : false;
+    }
+  }
+
+  // See if this is a EncodedVideoChunk object.
+  if (StaticPrefs::dom_media_webcodecs_enabled()) {
+    EncodedVideoChunk* encodedVideoChunk = nullptr;
+    if (NS_SUCCEEDED(
+            UNWRAP_OBJECT(EncodedVideoChunk, &obj, encodedVideoChunk))) {
+      SameProcessScopeRequired(aSameProcessScopeRequired);
+      return CloneScope() == StructuredCloneScope::SameProcess
+                 ? encodedVideoChunk->WriteStructuredClone(aWriter, this)
                  : false;
     }
   }
