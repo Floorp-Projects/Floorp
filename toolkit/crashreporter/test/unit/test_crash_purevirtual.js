@@ -6,14 +6,6 @@ add_task(async function run_test() {
     return;
   }
 
-  var isOSX = "nsILocalFileMac" in Ci;
-  if (isOSX) {
-    dump(
-      "INFO | test_crash_purevirtual.js | TODO: purecalls not caught on OS X\n"
-    );
-    return;
-  }
-
   // Try crashing with a pure virtual call
   await do_crash(
     function () {

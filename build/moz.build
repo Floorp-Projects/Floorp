@@ -18,6 +18,8 @@ if CONFIG["OS_ARCH"] == "WINNT":
 else:
     DIRS += ["unix"]
 
+DIRS += ["pure_virtual"]
+
 if CONFIG["MOZ_STDCXX_COMPAT"]:
     DIRS += ["unix/stdc++compat"]
 
