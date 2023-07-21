@@ -13,7 +13,6 @@
 #include "ImageContainer.h"
 #include "MediaContainerType.h"
 #include "MediaData.h"
-#include "TimeUnits.h"
 #include "VideoUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
@@ -48,7 +47,6 @@
 #endif
 
 mozilla::LazyLogModule gWebCodecsLog("WebCodecs");
-using mozilla::media::TimeUnit;
 
 namespace mozilla::dom {
 
@@ -752,28 +750,9 @@ class DecodeMessage final
       public MessageRequestHolder<DecoderAgent::DecodePromise> {
  public:
   using Id = size_t;
-  struct ChunkData {
-    explicit ChunkData(EncodedVideoChunk& aChunk)
-        : mBuffer(aChunk.Data(), static_cast<size_t>(aChunk.ByteLength())),
-          mIsKey(aChunk.Type() == EncodedVideoChunkType::Key),
-          mTimestamp(aChunk.Timestamp()),
-          mDuration(NullableToMaybe(aChunk.GetDuration())) {
-      LOGV("Create %zu-byte ChunkData from %u-byte EncodedVideoChunk",
-           mBuffer ? mBuffer.Size() : 0, aChunk.ByteLength());
-    }
-
-    RefPtr<MediaRawData> IntoMediaRawData(
-        const RefPtr<MediaByteBuffer>& aExtraData,
-        const VideoDecoderConfigInternal& aConfig);
-
-    AlignedByteBuffer mBuffer;
-    const bool mIsKey;
-    const int64_t mTimestamp;
-    const Maybe<uint64_t> mDuration;
-  };
 
   DecodeMessage(Id aId, ConfigureMessage::Id aConfigId,
-                UniquePtr<ChunkData>&& aData)
+                UniquePtr<EncodedVideoChunkData>&& aData)
       : ControlMessage(
             nsPrintfCString("decode #%zu (config #%d)", aId, aConfigId)),
         mId(aId),
@@ -782,18 +761,41 @@ class DecodeMessage final
   virtual void Cancel() override { Disconnect(); }
   virtual bool IsProcessing() override { return Exists(); };
   virtual DecodeMessage* AsDecodeMessage() override { return this; }
-  RefPtr<MediaRawData> TakeData(const RefPtr<MediaByteBuffer>& aExtraData,
-                                const VideoDecoderConfigInternal& aConfig) {
+  already_AddRefed<MediaRawData> TakeData(
+      const RefPtr<MediaByteBuffer>& aExtraData,
+      const VideoDecoderConfigInternal& aConfig) {
     if (!mData) {
-      LOGE("No data in DecodeMessage");  // Data has been taken.
+      LOGE("No data in DecodeMessage");
       return nullptr;
     }
-    return mData->IntoMediaRawData(aExtraData, aConfig);
+
+    RefPtr<MediaRawData> sample = mData->TakeData();
+    if (!sample) {
+      LOGE("Take no data in DecodeMessage");
+      return nullptr;
+    }
+
+    // aExtraData is either provided by Configure() or a default one created for
+    // the decoder creation. If it's created for decoder creation only, we don't
+    // set it to sample.
+    if (aConfig.mDescription && aExtraData) {
+      sample->mExtraData = aExtraData;
+    }
+
+    LOGV(
+        "EncodedVideoChunkData %p converted to %zu-byte MediaRawData - time: "
+        "%" PRIi64 "us, timecode: %" PRIi64 "us, duration: %" PRIi64
+        "us, key-frame: %s, has extra data: %s",
+        mData.get(), sample->Size(), sample->mTime.ToMicroseconds(),
+        sample->mTimecode.ToMicroseconds(), sample->mDuration.ToMicroseconds(),
+        sample->mKeyframe ? "yes" : "no", sample->mExtraData ? "yes" : "no");
+
+    return sample.forget();
   }
   const Id mId;  // A unique id shown in log.
 
  private:
-  UniquePtr<ChunkData> mData;
+  UniquePtr<EncodedVideoChunkData> mData;
 };
 
 class FlushMessage final
@@ -822,45 +824,6 @@ class FlushMessage final
  private:
   RefPtr<Promise> mPromise;
 };
-
-RefPtr<MediaRawData> DecodeMessage::ChunkData::IntoMediaRawData(
-    const RefPtr<MediaByteBuffer>& aExtraData,
-    const VideoDecoderConfigInternal& aConfig) {
-  if (!mBuffer) {
-    LOGE("Chunk is empty!");
-    return nullptr;
-  }
-
-  RefPtr<MediaRawData> sample(new MediaRawData(std::move(mBuffer)));
-  sample->mKeyframe = mIsKey;
-  sample->mTime = TimeUnit::FromMicroseconds(mTimestamp);
-  sample->mTimecode = TimeUnit::FromMicroseconds(mTimestamp);
-
-  if (mDuration) {
-    CheckedInt64 duration(*mDuration);
-    if (!duration.isValid()) {
-      LOGE("Chunk's duration exceeds TimeUnit's limit");
-      return nullptr;
-    }
-    sample->mDuration = TimeUnit::FromMicroseconds(duration.value());
-  }
-
-  // aExtraData is either provided by Configure() or a default one created for
-  // the decoder creation. If it's created for decoder creation only, we don't
-  // set it to sample.
-  if (aConfig.mDescription && aExtraData) {
-    sample->mExtraData = aExtraData;
-  }
-
-  LOGV("Input chunk converted to %zu-byte MediaRawData - time: %" PRIi64
-       "us, timecode: %" PRIi64 "us, duration: %" PRIi64
-       "us, key-frame: %s, has extra data: %s",
-       sample->Size(), sample->mTime.ToMicroseconds(),
-       sample->mTimecode.ToMicroseconds(), sample->mDuration.ToMicroseconds(),
-       sample->mKeyframe ? "yes" : "no", sample->mExtraData ? "yes" : "no");
-
-  return sample.forget();
-}
 
 /*
  * Below are VideoDecoder implementation
@@ -983,8 +946,7 @@ void VideoDecoder::Decode(EncodedVideoChunk& aChunk, ErrorResult& aRv) {
 
   mDecodeQueueSize += 1;
   mControlMessageQueue.emplace(UniquePtr<ControlMessage>(
-      new DecodeMessage(++mDecodeCounter, mLatestConfigureId,
-                        MakeUnique<DecodeMessage::ChunkData>(aChunk))));
+      new DecodeMessage(++mDecodeCounter, mLatestConfigureId, aChunk.Clone())));
   LOGV("VideoDecoder %p enqueues %s", this,
        mControlMessageQueue.back()->ToString().get());
   ProcessControlMessageQueue();
