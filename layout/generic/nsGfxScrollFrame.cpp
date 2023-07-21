@@ -4202,6 +4202,9 @@ void nsHTMLScrollFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                         &copyOfDirtyRect,
                                         /* aSetBase = */ false, nullptr);
         if (mWillBuildScrollableLayer) {
+#ifndef MOZ_WIDGET_ANDROID
+          gfxCriticalNoteOnce << "inserted scroll frame";
+#endif
           asrSetter.InsertScrollFrame(this);
           aBuilder->SetDisablePartialUpdates(true);
         }
