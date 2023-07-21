@@ -137,16 +137,16 @@ void js::ReportErrorToGlobal(JSContext* cx, Handle<GlobalObject*> global,
   PrepareScriptEnvironmentAndInvoke(cx, global, report);
 }
 
-static void ReportError(JSContext* cx, JSErrorReport* reportp,
+static bool ReportError(JSContext* cx, JSErrorReport* reportp,
                         JSErrorCallback callback, void* userRef) {
   if (reportp->isWarning()) {
     CallWarningReporter(cx, reportp);
-    return;
+    return true;
   }
 
   // Check the error report, and set a JavaScript-catchable exception
   // if the error is defined to have an associated exception.
-  ErrorToException(cx, reportp, callback, userRef);
+  return ErrorToException(cx, reportp, callback, userRef);
 }
 
 /*
@@ -460,7 +460,9 @@ bool js::ReportErrorNumberVA(JSContext* cx, IsWarning isWarning,
     return false;
   }
 
-  ReportError(cx, &report, callback, userRef);
+  if (!ReportError(cx, &report, callback, userRef)) {
+    return false;
+  }
 
   return report.isWarning();
 }
@@ -501,7 +503,9 @@ static bool ReportErrorNumberArray(JSContext* cx, IsWarning isWarning,
     return false;
   }
 
-  ReportError(cx, &report, callback, userRef);
+  if (!ReportError(cx, &report, callback, userRef)) {
+    return false;
+  }
 
   return report.isWarning();
 }
@@ -550,7 +554,9 @@ bool js::ReportErrorVA(JSContext* cx, IsWarning isWarning, const char* format,
   }
   PopulateReportBlame(cx, &report);
 
-  ReportError(cx, &report, nullptr, nullptr);
+  if (!ReportError(cx, &report, nullptr, nullptr)) {
+    return false;
+  }
 
   return report.isWarning();
 }
