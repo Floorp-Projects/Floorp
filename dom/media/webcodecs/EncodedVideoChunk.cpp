@@ -8,6 +8,7 @@
 #include "mozilla/dom/EncodedVideoChunkBinding.h"
 
 #include "MediaData.h"
+#include "TimeUnits.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PodOperations.h"
@@ -16,6 +17,7 @@
 #include "mozilla/dom/WebCodecsUtils.h"
 
 extern mozilla::LazyLogModule gWebCodecsLog;
+using mozilla::media::TimeUnit;
 
 namespace mozilla::dom {
 
@@ -29,6 +31,11 @@ namespace mozilla::dom {
 #  undef LOGW
 #endif  // LOGW
 #define LOGW(msg, ...) LOG_INTERNAL(Warning, msg, ##__VA_ARGS__)
+
+#ifdef LOGE
+#  undef LOGE
+#endif  // LOGE
+#define LOGE(msg, ...) LOG_INTERNAL(Error, msg, ##__VA_ARGS__)
 
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(EncodedVideoChunk, mParent)
@@ -51,6 +58,53 @@ EncodedVideoChunkData::EncodedVideoChunkData(
   MOZ_ASSERT(mBuffer->Length() == mBuffer->Size());
   MOZ_ASSERT(mBuffer->Length() <=
              static_cast<size_t>(std::numeric_limits<uint32_t>::max()));
+}
+
+UniquePtr<EncodedVideoChunkData> EncodedVideoChunkData::Clone() {
+  if (!mBuffer) {
+    LOGE("No buffer in EncodedVideoChunkData %p to clone!", this);
+    return nullptr;
+  }
+
+  // Since EncodedVideoChunkData can be zero-sized, cloning a zero-sized chunk
+  // is allowed.
+  if (mBuffer->Size() == 0) {
+    LOGW("Cloning an empty EncodedVideoChunkData %p", this);
+  }
+
+  auto buffer =
+      MakeRefPtr<MediaAlignedByteBuffer>(mBuffer->Data(), mBuffer->Length());
+  if (!buffer) {
+    LOGE("OOM to copy EncodedVideoChunkData %p", this);
+    return nullptr;
+  }
+
+  return MakeUnique<EncodedVideoChunkData>(buffer.forget(), mType, mTimestamp,
+                                           Maybe<uint64_t>(mDuration));
+}
+
+already_AddRefed<MediaRawData> EncodedVideoChunkData::TakeData() {
+  if (!mBuffer || !(*mBuffer)) {
+    LOGE("EncodedVideoChunkData %p has no data!", this);
+    return nullptr;
+  }
+
+  RefPtr<MediaRawData> sample(new MediaRawData(std::move(*mBuffer)));
+  sample->mKeyframe = mType == EncodedVideoChunkType::Key;
+  sample->mTime = TimeUnit::FromMicroseconds(mTimestamp);
+  sample->mTimecode = TimeUnit::FromMicroseconds(mTimestamp);
+
+  if (mDuration) {
+    CheckedInt64 duration(*mDuration);
+    if (!duration.isValid()) {
+      LOGE("EncodedVideoChunkData %p 's duration exceeds TimeUnit's limit",
+           this);
+      return nullptr;
+    }
+    sample->mDuration = TimeUnit::FromMicroseconds(duration.value());
+  }
+
+  return sample.forget();
 }
 
 EncodedVideoChunk::EncodedVideoChunk(
@@ -168,11 +222,6 @@ void EncodedVideoChunk::CopyTo(
   PodCopy(buf.data(), mBuffer->Data(), mBuffer->Size());
 }
 
-uint8_t* EncodedVideoChunk::Data() {
-  MOZ_ASSERT(mBuffer);
-  return mBuffer->Data();
-}
-
 // https://w3c.github.io/webcodecs/#ref-for-deserialization-steps%E2%91%A0
 /* static */
 JSObject* EncodedVideoChunk::ReadStructuredClone(
@@ -210,6 +259,7 @@ bool EncodedVideoChunk::WriteStructuredClone(
 }
 
 #undef LOGW
+#undef LOGE
 #undef LOG_INTERNAL
 
 }  // namespace mozilla::dom

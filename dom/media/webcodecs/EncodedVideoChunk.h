@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -20,6 +21,7 @@ class nsIGlobalObject;
 namespace mozilla {
 
 class MediaAlignedByteBuffer;
+class MediaRawData;
 
 namespace dom {
 
@@ -42,6 +44,9 @@ class EncodedVideoChunkData {
                         Maybe<uint64_t>&& aDuration);
   EncodedVideoChunkData(const EncodedVideoChunkData& aData) = default;
   ~EncodedVideoChunkData() = default;
+
+  UniquePtr<EncodedVideoChunkData> Clone();
+  already_AddRefed<MediaRawData> TakeData();
 
  protected:
   // mBuffer's byte length is guaranteed to be smaller than UINT32_MAX.
@@ -91,9 +96,6 @@ class EncodedVideoChunk final : public EncodedVideoChunkData,
   void CopyTo(
       const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aDestination,
       ErrorResult& aRv);
-
-  // Non-webidl method.
-  uint8_t* Data();
 
   // [Serializable] implementations: {Read, Write}StructuredClone
   static JSObject* ReadStructuredClone(JSContext* aCx, nsIGlobalObject* aGlobal,
