@@ -1,13 +1,13 @@
-const data = new Uint8Array([
-  1, 2, 3, 4, 5, 6, 7, 8,
-  9, 10, 11, 12, 13, 14, 15, 16,
-]);
-let received = new Map();
+let videoFrameMap = new Map();
 self.onmessage = (e) => {
-  if (e.data == 'create-frame') {
+  if (e.data == 'create-VideoFrame') {
     let frameOrError = null;
     try {
-      frameOrError = new VideoFrame(data, {
+      frameOrError = new VideoFrame(
+        new Uint8Array([
+          1, 2, 3, 4, 5, 6, 7, 8,
+          9, 10, 11, 12, 13, 14, 15, 16,
+        ]), {
         timestamp: 0,
         codedWidth: 2,
         codedHeight: 2,
@@ -19,12 +19,12 @@ self.onmessage = (e) => {
     e.source.postMessage(frameOrError);
     return;
   }
-  if (e.data.hasOwnProperty('id')) {
+  if (e.data.hasOwnProperty('videoFrameId')) {
     e.source.postMessage(
-      received.get(e.data.id) ? 'RECEIVED' : 'NOT_RECEIVED');
+      videoFrameMap.get(e.data.videoFrameId) ? 'RECEIVED' : 'NOT_RECEIVED');
     return;
   }
   if (e.data.toString() == '[object VideoFrame]') {
-    received.set(e.data.timestamp, e.data);
+    videoFrameMap.set(e.data.timestamp, e.data);
   }
 };
