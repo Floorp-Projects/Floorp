@@ -65,7 +65,7 @@ class gfxFT2Font final : public gfxFT2FontBase {
   bool ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
                  uint32_t aOffset, uint32_t aLength, Script aScript,
                  nsAtom* aLanguage, bool aVertical, RoundingFlags aRounding,
-                 gfxShapedText* aShapedText) MOZ_REQUIRES(mLock) override;
+                 gfxShapedText* aShapedText) override;
 
   void FillGlyphDataForChar(FT_Face face, uint32_t ch, CachedGlyphData* gd);
 

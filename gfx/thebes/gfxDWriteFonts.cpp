@@ -666,11 +666,6 @@ bool gfxDWriteFont::ProvidesGlyphWidths() const {
 }
 
 int32_t gfxDWriteFont::GetGlyphWidth(uint16_t aGID) {
-  AutoWriteLock lock(mLock);
-  return GetGlyphWidthLocked(aGID);
-}
-
-int32_t gfxDWriteFont::GetGlyphWidthLocked(uint16_t aGID) {
   if (!mGlyphWidths) {
     mGlyphWidths = MakeUnique<nsTHashMap<nsUint32HashKey, int32_t>>(128);
   }

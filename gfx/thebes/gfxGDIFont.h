@@ -63,7 +63,7 @@ class gfxGDIFont final : public gfxFont {
   bool ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
                  uint32_t aOffset, uint32_t aLength, Script aScript,
                  nsAtom* aLanguage, bool aVertical, RoundingFlags aRounding,
-                 gfxShapedText* aShapedText) MOZ_REQUIRES(mLock) override;
+                 gfxShapedText* aShapedText) override;
 
   void Initialize();  // creates metrics and Cairo fonts
 
