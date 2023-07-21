@@ -4,8 +4,6 @@
 
 package org.mozilla.fenix.ui.robots
 
-import androidx.appcompat.widget.AppCompatTextView
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions
@@ -19,10 +17,10 @@ import androidx.test.espresso.matcher.ViewMatchers.withHint
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.containsString
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
@@ -110,12 +108,18 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
     fun clickLastUsedSortingOption() =
         itemContainingText(getStringResource(R.string.saved_logins_sort_strategy_last_used)).click()
 
-    fun verifySortedLogin(testRule: HomeActivityIntentTestRule, position: Int, loginTitle: String) {
-        val list = testRule.activity.findViewById<RecyclerView>(R.id.saved_logins_list)
-        val item = list.layoutManager?.findViewByPosition(position)
-        val title = item?.findViewById<AppCompatTextView>(R.id.webAddressView)
-        assertEquals(loginTitle, title?.text)
-    }
+    fun verifySortedLogin(position: Int, loginTitle: String) =
+        assertTrue(
+            mDevice.findObject(
+                UiSelector()
+                    .className("android.view.ViewGroup")
+                    .index(position),
+            ).getChild(
+                UiSelector()
+                    .resourceId("$packageName:id/webAddressView")
+                    .textContains(loginTitle),
+            ).waitForExists(waitingTime),
+        )
 
     fun searchLogin(searchTerm: String) =
         itemContainingText(getStringResource(R.string.preferences_passwords_saved_logins_search)).setText(searchTerm)
