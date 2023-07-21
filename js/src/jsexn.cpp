@@ -296,7 +296,7 @@ JS_PUBLIC_API JSLinearString* js::GetErrorTypeName(JSContext* cx,
   return ClassName(key, cx);
 }
 
-void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
+bool js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
                           JSErrorCallback callback, void* userRef) {
   MOZ_ASSERT(!reportp->isWarning());
 
@@ -312,7 +312,7 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
 
   // Prevent infinite recursion.
   if (cx->generatingError) {
-    return;
+    return false;
   }
 
   cx->generatingError = true;
@@ -321,7 +321,7 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
   // Create an exception object.
   RootedString messageStr(cx, reportp->newMessageString(cx));
   if (!messageStr) {
-    return;
+    return false;
   }
 
   Rooted<JSString*> fileName(cx);
@@ -329,7 +329,7 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     fileName =
         JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(filename, strlen(filename)));
     if (!fileName) {
-      return;
+      return false;
     }
   } else {
     fileName = cx->emptyString();
@@ -344,19 +344,19 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
 
   RootedObject stack(cx);
   if (!CaptureStack(cx, &stack)) {
-    return;
+    return false;
   }
 
   UniquePtr<JSErrorReport> report = CopyErrorReport(cx, reportp);
   if (!report) {
-    return;
+    return false;
   }
 
   ErrorObject* errObject =
       ErrorObject::create(cx, exnType, stack, fileName, sourceId, lineNumber,
                           columnNumber, std::move(report), messageStr, cause);
   if (!errObject) {
-    return;
+    return false;
   }
 
   // Throw it.
@@ -366,6 +366,7 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     nstack = &stack->as<SavedFrame>();
   }
   cx->setPendingException(errValue, nstack);
+  return true;
 }
 
 using SniffingBehavior = JS::ErrorReportBuilder::SniffingBehavior;
