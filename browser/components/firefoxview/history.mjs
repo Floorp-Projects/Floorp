@@ -390,7 +390,7 @@ class HistoryInView extends ViewPage {
       <dialog id="migrationWizardDialog"></dialog>
       <div class="sticky-container bottom-fade">
         <h2 class="page-header" data-l10n-id="firefoxview-history-header"></h2>
-        <span class="history-sort-options">
+        <div class="history-sort-options">
           <div class="history-sort-option">
             <input
               type="radio"
@@ -419,7 +419,7 @@ class HistoryInView extends ViewPage {
               data-l10n-id="firefoxview-sort-history-by-site-label"
             ></label>
           </div>
-        </span>
+        </div>
       </div>
       <div class="cards-container">
         <card-container
@@ -428,13 +428,13 @@ class HistoryInView extends ViewPage {
           ?hidden=${!this.shouldShowImportBanner()}
         >
           <div slot="main">
-            <span class="banner-text">
+            <div class="banner-text">
               <span data-l10n-id="firefoxview-import-history-header"></span>
               <span
                 data-l10n-id="firefoxview-import-history-description"
               ></span>
-            </span>
-            <span class="buttons">
+            </div>
+            <div class="buttons">
               <button
                 class="primary choose-browser"
                 data-l10n-id="firefoxview-choose-browser-button"
@@ -445,7 +445,7 @@ class HistoryInView extends ViewPage {
                 data-l10n-id="firefoxview-import-history-close-button"
                 @click=${this.dismissImportHistory}
               ></button>
-            </span>
+            </div>
           </div>
         </card-container>
         ${!this.allHistoryItems.size
