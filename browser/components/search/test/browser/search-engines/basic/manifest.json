@@ -14,7 +14,7 @@
       "name": "basic",
       "keyword": "@basic",
       "search_url": "https://mochi.test:8888/browser/browser/components/search/test/browser/?search={searchTerms}&foo=1",
-      "suggest_url": "https://mochi.test:8888/browser/browser/modules/test/browser/usageTelemetrySearchSuggestions.sjs?{searchTerms}"
+      "suggest_url": "https://example.com/browser/browser/components/search/test/browser/trendingSuggestionEngine.sjs?richsuggestions=true&query={searchTerms}"
     }
   }
 }

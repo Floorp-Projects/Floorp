@@ -806,10 +806,13 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     }
 
     // Discard form history and remote suggestions that dupe previously added
-    // suggestions or the heuristic.
+    // suggestions or the heuristic. We do not deduplicate rich suggestions so
+    // they do not visually disapear as the suggestion is completed and
+    // becomes the same url as the heuristic result.
     if (
       result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
-      result.payload.lowerCaseSuggestion
+      result.payload.lowerCaseSuggestion &&
+      !result.isRichSuggestion
     ) {
       let suggestion = result.payload.lowerCaseSuggestion.trim();
       if (!suggestion || state.suggestions.has(suggestion)) {
