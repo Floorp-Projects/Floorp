@@ -133,6 +133,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
+  CreditCardRecord: "resource://gre/modules/shared/CreditCardRecord.sys.mjs",
   FormAutofillNameUtils:
     "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs",
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
@@ -1838,68 +1839,7 @@ export class CreditCardsBase extends AutofillRecords {
   }
 
   _normalizeFields(creditCard) {
-    this._normalizeCCNameFields(creditCard);
-    this._normalizeCCNumberFields(creditCard);
-    this._normalizeCCExpirationDateFields(creditCard);
-    this._normalizeCCTypeFields(creditCard);
-  }
-
-  _normalizeCCNameFields(creditCard) {
-    if (
-      creditCard["cc-given-name"] ||
-      creditCard["cc-additional-name"] ||
-      creditCard["cc-family-name"]
-    ) {
-      if (!creditCard["cc-name"]) {
-        creditCard["cc-name"] = lazy.FormAutofillNameUtils.joinNameParts({
-          given: creditCard["cc-given-name"],
-          middle: creditCard["cc-additional-name"],
-          family: creditCard["cc-family-name"],
-        });
-      }
-    }
-    delete creditCard["cc-given-name"];
-    delete creditCard["cc-additional-name"];
-    delete creditCard["cc-family-name"];
-  }
-
-  _normalizeCCNumberFields(creditCard) {
-    if (!("cc-number" in creditCard)) {
-      return;
-    }
-
-    if (!lazy.CreditCard.isValidNumber(creditCard["cc-number"])) {
-      delete creditCard["cc-number"];
-      return;
-    }
-
-    const card = new lazy.CreditCard({ number: creditCard["cc-number"] });
-    creditCard["cc-number"] = card.number;
-  }
-
-  _normalizeCCExpirationDateFields(creditCard) {
-    let normalizedExpiration = lazy.CreditCard.normalizeExpiration({
-      expirationMonth: creditCard["cc-exp-month"],
-      expirationYear: creditCard["cc-exp-year"],
-      expirationString: creditCard["cc-exp"],
-    });
-    if (normalizedExpiration.month) {
-      creditCard["cc-exp-month"] = normalizedExpiration.month;
-    } else {
-      delete creditCard["cc-exp-month"];
-    }
-    if (normalizedExpiration.year) {
-      creditCard["cc-exp-year"] = normalizedExpiration.year;
-    } else {
-      delete creditCard["cc-exp-year"];
-    }
-    delete creditCard["cc-exp"];
-  }
-
-  _normalizeCCTypeFields(creditCard) {
-    // Let's overwrite the credit card type with auto-detect algorithm
-    creditCard["cc-type"] =
-      lazy.CreditCard.getType(creditCard["cc-number"]) ?? "";
+    lazy.CreditCardRecord.normalizeFields(creditCard);
   }
 
   _validateFields(creditCard) {
