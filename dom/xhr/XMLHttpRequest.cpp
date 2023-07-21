@@ -7,8 +7,11 @@
 #include "XMLHttpRequest.h"
 #include "XMLHttpRequestMainThread.h"
 #include "XMLHttpRequestWorker.h"
+#include "mozilla/Logging.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "nsGlobalWindowInner.h"
+
+mozilla::LazyLogModule gXMLHttpRequestLog("XMLHttpRequest");
 
 namespace mozilla::dom {
 
