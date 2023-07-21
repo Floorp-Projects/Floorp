@@ -10,7 +10,6 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -56,7 +55,6 @@ class HomeScreenTest {
         mockWebServer.shutdown()
     }
 
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1844580")
     @Test
     fun homeScreenItemsTest() {
         homeScreen {}.dismissOnboarding()
@@ -141,7 +139,6 @@ class HomeScreenTest {
         }
     }
 
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1844580")
     @Test
     fun verifyPocketHomepageStoriesTest() {
         activityTestRule.activityRule.applySettingsExceptions {
@@ -171,7 +168,6 @@ class HomeScreenTest {
         }
     }
 
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1844580")
     @Test
     fun openPocketStoryItemTest() {
         activityTestRule.activityRule.applySettingsExceptions {
@@ -209,7 +205,6 @@ class HomeScreenTest {
         }
     }
 
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1844580")
     @Test
     fun selectStoriesByTopicItemTest() {
         activityTestRule.activityRule.applySettingsExceptions {
