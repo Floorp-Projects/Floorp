@@ -87,8 +87,8 @@ are:
 -  All bugs with a needinfo request unanswered for more than 10 days
 
 There’s a tool with these queries to help you find bugs
-https://mozilla.github.io/triage-center/ and the source is at
-https://github.com/mozilla/triage-center/.
+https://bugdash.moz.tools/ and the source is at
+https://github.com/mozilla/bugdash/.
 
 If a bug is an enhancement it needs a priority set and a target release
 or program milestone. These bugs are normally reviewed by product
@@ -223,7 +223,7 @@ Multiple times weekly
 ~~~~~~~~~~~~~~~~~~~~~
 
 Use queries for the components you are responsible for in
-https://mozilla.github.io/triage-center/ to find bugs in
+https://github.com/mozilla/bugdash/ to find bugs in
 need of triage.
 
 For each untriaged bug:
@@ -243,7 +243,7 @@ Close minor bugs with unresponded needinfo flags.
 
 Follow up on needinfo flag requests.
 
-The `Triage Center tool <https://mozilla.github.io/triage-center/>`__ will help you find these.
+`BugDash <https://github.com/mozilla/bugdash/>`__ will help you find these.
 
 End of Iteration/Release Cycle
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
