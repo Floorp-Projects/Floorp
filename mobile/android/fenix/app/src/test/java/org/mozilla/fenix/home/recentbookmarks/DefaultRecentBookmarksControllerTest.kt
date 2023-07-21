@@ -11,10 +11,12 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.ALLOW_JAVASCRIPT_URL
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
@@ -28,11 +30,11 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.recentbookmarks.controller.DefaultRecentBookmarksController
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(FenixRobolectricTestRunner::class)
 class DefaultRecentBookmarksControllerTest {
 
@@ -44,31 +46,32 @@ class DefaultRecentBookmarksControllerTest {
 
     private val activity: HomeActivity = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxUnitFun = true)
+    private val selectTabUseCase: TabsUseCases = mockk(relaxed = true)
+    private val browserStore: BrowserStore = mockk(relaxed = true)
 
     private lateinit var controller: DefaultRecentBookmarksController
 
     @Before
     fun setup() {
         every { activity.openToBrowserAndLoad(any(), any(), any()) } just Runs
+        every { browserStore.state.tabs }.returns(emptyList())
 
         controller = spyk(
             DefaultRecentBookmarksController(
                 activity = activity,
                 navController = navController,
                 appStore = mockk(),
+                browserStore = browserStore,
+                selectTabUseCase = selectTabUseCase.selectTab,
             ),
         )
     }
 
     @Test
-    fun `WHEN a recently saved bookmark is clicked THEN the selected bookmark is opened`() {
+    fun `GIVEN no tabs WHEN a recently saved bookmark is clicked THEN the selected bookmark is opened in a new tab`() {
         assertNull(RecentBookmarks.bookmarkClicked.testGetValue())
 
-        val bookmark = RecentBookmark(
-            title = null,
-            url = "https://www.example.com",
-        )
-
+        val bookmark = RecentBookmark(title = null, url = "https://www.example.com")
         controller.handleBookmarkClicked(bookmark)
 
         verify {
@@ -78,6 +81,45 @@ class DefaultRecentBookmarksControllerTest {
                 flags = EngineSession.LoadUrlFlags.select(ALLOW_JAVASCRIPT_URL),
                 from = BrowserDirection.FromHome,
             )
+        }
+        assertNotNull(RecentBookmarks.bookmarkClicked.testGetValue())
+    }
+
+    @Test
+    fun `GIVEN no matching tabs WHEN a recently saved bookmark is clicked THEN the selected bookmark is opened in a new tab`() {
+        assertNull(RecentBookmarks.bookmarkClicked.testGetValue())
+
+        val testTab = createTab("https://www.not_example.com")
+        every { browserStore.state.tabs }.returns(listOf(testTab))
+
+        val bookmark = RecentBookmark(title = null, url = "https://www.example.com")
+        controller.handleBookmarkClicked(bookmark)
+
+        verify {
+            activity.openToBrowserAndLoad(
+                searchTermOrURL = bookmark.url!!,
+                newTab = true,
+                flags = EngineSession.LoadUrlFlags.select(ALLOW_JAVASCRIPT_URL),
+                from = BrowserDirection.FromHome,
+            )
+        }
+        assertNotNull(RecentBookmarks.bookmarkClicked.testGetValue())
+    }
+
+    @Test
+    fun `GIVEN matching tab WHEN a recently saved bookmark is clicked THEN the existing tab is opened`() {
+        assertNull(RecentBookmarks.bookmarkClicked.testGetValue())
+
+        val testUrl = "https://www.example.com"
+        val testTab = createTab(testUrl)
+        every { browserStore.state.tabs }.returns(listOf(testTab))
+
+        val bookmark = RecentBookmark(title = null, url = testUrl)
+        controller.handleBookmarkClicked(bookmark)
+
+        verify {
+            selectTabUseCase.invoke(testTab.id)
+            navController.navigate(R.id.browserFragment)
         }
         assertNotNull(RecentBookmarks.bookmarkClicked.testGetValue())
     }

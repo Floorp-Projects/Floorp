@@ -371,6 +371,8 @@ class HomeFragment : Fragment() {
                 activity = activity,
                 navController = findNavController(),
                 appStore = components.appStore,
+                browserStore = components.core.store,
+                selectTabUseCase = components.useCases.tabsUseCases.selectTab,
             ),
             recentVisitsController = DefaultRecentVisitsController(
                 navController = findNavController(),

@@ -6,11 +6,14 @@ package org.mozilla.fenix.home.recentbookmarks.controller
 
 import androidx.navigation.NavController
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.ALLOW_JAVASCRIPT_URL
+import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.home.HomeFragmentDirections
@@ -46,15 +49,27 @@ class DefaultRecentBookmarksController(
     private val activity: HomeActivity,
     private val navController: NavController,
     private val appStore: AppStore,
+    private val browserStore: BrowserStore,
+    private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
 ) : RecentBookmarksController {
 
     override fun handleBookmarkClicked(bookmark: RecentBookmark) {
-        activity.openToBrowserAndLoad(
-            searchTermOrURL = bookmark.url!!,
-            newTab = true,
-            from = BrowserDirection.FromHome,
-            flags = EngineSession.LoadUrlFlags.select(ALLOW_JAVASCRIPT_URL),
-        )
+        val bookmarkTab = browserStore.state.tabs.firstOrNull {
+            it.content.url == bookmark.url
+        }
+
+        if (bookmarkTab != null) {
+            selectTabUseCase.invoke(bookmarkTab.id)
+            navController.navigate(R.id.browserFragment)
+        } else {
+            activity.openToBrowserAndLoad(
+                searchTermOrURL = bookmark.url!!,
+                newTab = true,
+                from = BrowserDirection.FromHome,
+                flags = EngineSession.LoadUrlFlags.select(ALLOW_JAVASCRIPT_URL),
+            )
+        }
+
         RecentBookmarks.bookmarkClicked.add()
     }
 
