@@ -7017,7 +7017,7 @@ bool nsContentUtils::IsPDFJSEnabled() {
 }
 
 bool nsContentUtils::IsPDFJS(nsIPrincipal* aPrincipal) {
-  if (!aPrincipal) {
+  if (!aPrincipal || !aPrincipal->SchemeIs("resource")) {
     return false;
   }
   nsAutoCString spec;
