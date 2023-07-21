@@ -297,9 +297,10 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
     // string, parser metadata is "not-parser-inserted", credentials mode is
     // "same-origin", referrer policy is the empty string, and fetch priority is
     // "auto".
-    options = new ScriptFetchOptions(mozilla::CORS_NONE,
-                                     document->GetReferrerPolicy(),
-                                     /* aNonce = */ u""_ns, principal, nullptr);
+    options = new ScriptFetchOptions(
+        mozilla::CORS_NONE, document->GetReferrerPolicy(),
+        /* aNonce = */ u""_ns, ParserMetadata::NotParserInserted, principal,
+        nullptr);
     baseURL = document->GetDocBaseURI();
   }
 

@@ -55,15 +55,18 @@ class LoadContextBase;
 class ModuleLoadRequest;
 class ScriptLoadRequestList;
 
+// https://fetch.spec.whatwg.org/#concept-request-parser-metadata
+// All scripts are either "parser-inserted" or "not-parser-inserted", so
+// the empty string is not necessary.
+enum class ParserMetadata {
+  NotParserInserted,
+  ParserInserted,
+};
+
 /*
  * ScriptFetchOptions loosely corresponds to HTML's "script fetch options",
  * https://html.spec.whatwg.org/multipage/webappapis.html#script-fetch-options
  * with the exception of the following properties:
- *   parser metadata
- *      The parser metadata used for the initial fetch and for fetching any
- *      imported modules. This is populated from a mozilla::dom::Element and is
- *      handled by the field mElement. The default value is an empty string,
- *      and is indicated when this field is a nullptr.
  *   integrity metadata
  *      The integrity metadata used for the initial fetch. This is
  *      implemented in ScriptLoadRequest, as it changes for every
@@ -85,6 +88,7 @@ class ScriptFetchOptions {
   ScriptFetchOptions(mozilla::CORSMode aCORSMode,
                      enum mozilla::dom::ReferrerPolicy aReferrerPolicy,
                      const nsAString& aNonce,
+                     const ParserMetadata aParserMetadata,
                      nsIPrincipal* aTriggeringPrincipal,
                      mozilla::dom::Element* aElement = nullptr);
 
@@ -106,6 +110,12 @@ class ScriptFetchOptions {
    * fetching any imported modules.
    */
   const nsString mNonce;
+
+  /*
+   * The parser metadata used for the initial fetch and for fetching any
+   * imported modules
+   */
+  const ParserMetadata mParserMetadata;
 
   /*
    *  Used to determine CSP and if we are on the About page.
@@ -285,6 +295,10 @@ class ScriptLoadRequest
 
   enum mozilla::dom::ReferrerPolicy ReferrerPolicy() const {
     return mFetchOptions->mReferrerPolicy;
+  }
+
+  ParserMetadata ParserMetadata() const {
+    return mFetchOptions->mParserMetadata;
   }
 
   const nsString& Nonce() const { return mFetchOptions->mNonce; }

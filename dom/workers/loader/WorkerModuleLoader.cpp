@@ -115,8 +115,10 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
     // "same-origin", referrer policy is the empty string, and fetch priority is
     // "auto".
     ReferrerPolicy referrerPolicy = workerPrivate->GetReferrerPolicy();
-    options = new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy,
-                                     /* aNonce = */ u""_ns, nullptr);
+    options = new ScriptFetchOptions(
+        CORSMode::CORS_NONE, referrerPolicy,
+        /* aNonce = */ u""_ns, JS::loader::ParserMetadata::NotParserInserted,
+        nullptr);
     baseURL = GetBaseURI();
   }
 
