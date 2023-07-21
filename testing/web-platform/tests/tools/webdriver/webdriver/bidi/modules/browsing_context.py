@@ -29,6 +29,11 @@ ClipOptions = Union[ElementOptions, ViewportOptions]
 
 class BrowsingContext(BidiModule):
     @command
+    def activate(self,
+                 context: str) -> Mapping[str, Any]:
+        return {"context": context}
+
+    @command
     def capture_screenshot(
         self, context: str, clip: Optional[ClipOptions] = None
     ) -> Mapping[str, Any]:
