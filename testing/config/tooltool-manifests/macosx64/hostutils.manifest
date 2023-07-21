@@ -1,9 +1,9 @@
 [
   {
-    "filename": "host-utils-116.0a1.en-US.mac.tar.gz",
-    "size": 171929039,
+    "filename": "host-utils-117.0a1.en-US.mac.tar.gz",
+    "size": 163635877,
     "algorithm": "sha512",
-    "digest": "2ddae7f5fdd64926f849398e8f816757d0f03791782137e2ba897ccdeec63231fa3567621a3b633286bac7ce5ede5e4c4c1971a27e62a25e8838d40b1f650353",
+    "digest": "a0156e417021663ec566d9e276d6ceaa1b8b4910cc00f9f399c5eeb582226d2152fbf5bf5f5ce6d095f103a266c618a6174291ce16e827f30545bacfcf03440f",
     "unpack": true,
     "visibility": "public"
   }
