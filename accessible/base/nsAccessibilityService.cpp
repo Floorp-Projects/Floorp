@@ -456,7 +456,7 @@ nsAccessibilityService::ListenersChanged(nsIArray* aEventChanges) {
           }
 
           // A click listener change might mean losing or gaining an action.
-          acc->SendCache(CacheDomain::Actions, CacheUpdateType::Update);
+          document->QueueCacheUpdate(acc, CacheDomain::Actions);
         }
       }
     }

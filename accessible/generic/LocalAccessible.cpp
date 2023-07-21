@@ -1389,7 +1389,7 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
       (aAttribute == nsGkAtoms::aria_valuemax ||
        aAttribute == nsGkAtoms::aria_valuemin || aAttribute == nsGkAtoms::min ||
        aAttribute == nsGkAtoms::max || aAttribute == nsGkAtoms::step)) {
-    SendCache(CacheDomain::Value, CacheUpdateType::Update);
+    mDoc->QueueCacheUpdate(this, CacheDomain::Value);
     return;
   }
 
@@ -1409,7 +1409,7 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     } else {
       // We need to update the cache here since we won't get an event if
       // aria-valuenow is shadowed by aria-valuetext.
-      SendCache(CacheDomain::Value, CacheUpdateType::Update);
+      mDoc->QueueCacheUpdate(this, CacheDomain::Value);
     }
     return;
   }
@@ -1480,7 +1480,7 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
       (aModType == dom::MutationEvent_Binding::ADDITION ||
        aModType == dom::MutationEvent_Binding::REMOVAL)) {
     // The presence of aria-expanded adds an expand/collapse action.
-    SendCache(CacheDomain::Actions, CacheUpdateType::Update);
+    mDoc->QueueCacheUpdate(this, CacheDomain::Actions);
   }
 
   if (aAttribute == nsGkAtoms::href || aAttribute == nsGkAtoms::src) {
@@ -1550,7 +1550,7 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
   if (aAttribute == nsGkAtoms::aria_level ||
       aAttribute == nsGkAtoms::aria_setsize ||
       aAttribute == nsGkAtoms::aria_posinset) {
-    SendCache(CacheDomain::GroupInfo, CacheUpdateType::Update);
+    mDoc->QueueCacheUpdate(this, CacheDomain::GroupInfo);
     return;
   }
 
