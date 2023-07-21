@@ -39,4 +39,18 @@ assert.compareArray(Array.from(Iterator.from(new Number(5))), [0, 1, 2, 3, 4]);
 
 assert.compareArray(Array.from(Iterator.from('string')), ['s', 't', 'r', 'i', 'n', 'g']);
 
+const originalStringIterator = String.prototype[Symbol.iterator];
+let observedType;
+Object.defineProperty(String.prototype, Symbol.iterator, {
+  get() {
+    'use strict';
+    observedType = typeof this;
+    return originalStringIterator;
+  }
+});
+Iterator.from('');
+assert.sameValue(observedType, 'string');
+Iterator.from(new String(''));
+assert.sameValue(observedType, 'object');
+
 reportCompare(0, 0);
