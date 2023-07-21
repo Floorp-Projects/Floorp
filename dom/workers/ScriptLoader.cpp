@@ -641,8 +641,17 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
     loadContext->mLoadResult = rv;
   }
 
-  RefPtr<ScriptFetchOptions> fetchOptions =
-      new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy, nullptr);
+  // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-classic-worker-script
+  // Step 2.5. Let script be the result [...] and the default classic script
+  // fetch options.
+  //
+  // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-worklet/module-worker-script-graph
+  // Step 1. Let options be a script fetch options whose cryptographic nonce is
+  // the empty string, integrity metadata is the empty string, parser metadata
+  // is "not-parser-inserted", credentials mode is credentials mode, referrer
+  // policy is the empty string, and fetch priority is "auto".
+  RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
+      CORSMode::CORS_NONE, referrerPolicy, /* aNonce = */ u""_ns, nullptr);
 
   RefPtr<ScriptLoadRequest> request = nullptr;
   // Bug 1817259 - For now the debugger scripts are always loaded a Classic.
