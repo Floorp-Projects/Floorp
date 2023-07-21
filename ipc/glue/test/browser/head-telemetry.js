@@ -136,6 +136,48 @@ async function runTest({
   }
 }
 
+async function runTestWithEME() {
+  info(`Running tests with decoding from Utility for EME`);
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.utility-process.enabled", true],
+      ["toolkit.telemetry.ipcBatchTimeout", 0],
+    ],
+  });
+
+  const platform = Services.appinfo.OS;
+
+  for (let { src, expectations } of audioTestDataEME()) {
+    if (!(platform in expectations)) {
+      info(`Skipping ${src} for ${platform}`);
+      continue;
+    }
+
+    const expectation = expectations[platform];
+
+    info(`Add EME media tab`);
+    let tab = await addMediaTabWithEME(src.sourceBuffer, src.audioFile);
+
+    info("Play tab");
+    await play(
+      tab,
+      expectation.process,
+      expectation.decoder,
+      false, // expectContent
+      false, // expectJava
+      false, // expectError
+      true // withEME
+    );
+
+    info("Stop tab");
+    await stop(tab);
+
+    info("Remove tab");
+    await BrowserTestUtils.removeTab(tab);
+  }
+}
+
 function getTelemetry() {
   const telemetry = Telemetry.getSnapshotForKeyedScalars("main", false).content;
   return telemetry;
