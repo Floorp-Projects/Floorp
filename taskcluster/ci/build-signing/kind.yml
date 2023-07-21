@@ -2,22 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.multi_dep:loader
-
-group-by: platform
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.name_sanity:transforms
-    - gecko_taskgraph.transforms.upstream_artifact_task:transforms
-    - gecko_taskgraph.transforms.build_signing:transforms
-    - gecko_taskgraph.transforms.signing:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps:transforms
+    - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.upstream_artifact_task
+    - gecko_taskgraph.transforms.build_signing
+    - gecko_taskgraph.transforms.signing
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
-    - build
-    - build-fat-aar
-
-primary-dependency:
     - build
     - build-fat-aar
 
@@ -31,3 +26,8 @@ not-for-build-platforms:
     - macosx64-devedition/opt
     - macosx64/opt
     - macosx64/debug
+
+jobs:
+    build-signing:
+        from-deps:
+            group-by: platform

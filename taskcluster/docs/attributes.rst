@@ -459,3 +459,13 @@ supports-artifact-builds
 ========================
 
 If false, the task requires a compiled build and will not work with artifact builds.
+
+primary-kind-dependency
+=======================
+
+For tasks that were derived from a group of dependencies, this attribute
+denotes which dependent kind is the `primary one`_.
+
+Typically this is set by the ``taskgraph.transforms.from_deps`` transforms.
+
+.. _primary one: https://taskcluster-taskgraph.readthedocs.io/en/latest/reference/transforms/from_deps.html#primary-kind

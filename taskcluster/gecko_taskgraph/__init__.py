@@ -54,6 +54,7 @@ def register(graph_config):
         morph,  # noqa: trigger morph registration
         target_tasks,
     )
+    from gecko_taskgraph.loader import multi_dep  # noqa: trigger group_by registration
     from gecko_taskgraph.parameters import register_parameters
     from gecko_taskgraph.util.verify import verifications
 
