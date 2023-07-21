@@ -30,27 +30,6 @@ struct IntCoordTyped;
 template <class Units, class F = Float>
 struct CoordTyped;
 
-// CommonType<Coord, Primitive> is a metafunction that returns the type of the
-// result of an arithmetic operation on the underlying type of a strongly-typed
-// coordinate type 'Coord', and a primitive type 'Primitive'. C++ rules for
-// arithmetic conversions are designed to avoid losing information - for
-// example, the result of adding an int and a float is a float - and we want
-// the same behaviour when mixing our coordinate types with primitive types.
-// We get C++ to compute the desired result type using 'decltype'.
-
-template <class Coord, class Primitive>
-struct CommonType;
-
-template <class Units, class Rep, class Primitive>
-struct CommonType<IntCoordTyped<Units, Rep>, Primitive> {
-  using type = decltype(Rep() + Primitive());
-};
-
-template <class Units, class F, class Primitive>
-struct CommonType<CoordTyped<Units, F>, Primitive> {
-  using type = decltype(F() + Primitive());
-};
-
 // This is a base class that provides mixed-type operator overloads between
 // a strongly-typed Coord and a Primitive value. It is needed to avoid
 // ambiguities at mixed-type call sites, because Coord classes are implicitly
@@ -58,7 +37,7 @@ struct CommonType<CoordTyped<Units, F>, Primitive> {
 // to strongly-typed classes, we may be able to remove some or all of these
 // overloads.
 
-template <bool B, class Coord, class Primitive>
+template <bool Enable, class Coord, class Primitive>
 struct CoordOperatorsHelper {
   // Using SFINAE (Substitution Failure Is Not An Error) to suppress redundant
   // operators
@@ -71,19 +50,17 @@ struct CoordOperatorsHelper<true, Coord, Primitive> {
   friend bool operator!=(Coord aA, Primitive aB) { return aA.value != aB; }
   friend bool operator!=(Primitive aA, Coord aB) { return aA != aB.value; }
 
-  using result_type = typename CommonType<Coord, Primitive>::type;
-
-  friend result_type operator+(Coord aA, Primitive aB) { return aA.value + aB; }
-  friend result_type operator+(Primitive aA, Coord aB) { return aA + aB.value; }
-  friend result_type operator-(Coord aA, Primitive aB) { return aA.value - aB; }
-  friend result_type operator-(Primitive aA, Coord aB) { return aA - aB.value; }
-  friend result_type operator*(Coord aCoord, Primitive aScale) {
+  friend auto operator+(Coord aA, Primitive aB) { return aA.value + aB; }
+  friend auto operator+(Primitive aA, Coord aB) { return aA + aB.value; }
+  friend auto operator-(Coord aA, Primitive aB) { return aA.value - aB; }
+  friend auto operator-(Primitive aA, Coord aB) { return aA - aB.value; }
+  friend auto operator*(Coord aCoord, Primitive aScale) {
     return aCoord.value * aScale;
   }
-  friend result_type operator*(Primitive aScale, Coord aCoord) {
+  friend auto operator*(Primitive aScale, Coord aCoord) {
     return aScale * aCoord.value;
   }
-  friend result_type operator/(Coord aCoord, Primitive aScale) {
+  friend auto operator/(Coord aCoord, Primitive aScale) {
     return aCoord.value / aScale;
   }
   // 'scale / coord' is intentionally omitted because it doesn't make sense.
