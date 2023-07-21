@@ -527,6 +527,10 @@ var gPlayTests = [
   // and report that the stream is not MP3. However, it does not count ID3 tags
   // in that offset. This test case makes sure that ID3 exclusion holds.
   { name: "huge-id3.mp3", type: "audio/mpeg", duration: 1.0 },
+  // Half a second file of a sine with a large ID3v2 tag, followed by an ID3v1
+  // tag. The ID3v1 tags should be at the end of the file, but software usually
+  // play it anyway.
+  { name: "id3v1afterlongid3v2.mp3", type: "audio/mpeg", duration: 0.5 },
   // A truncated VBR MP3 with just enough frames to keep most decoders happy.
   // The Xing header reports the length of the file to be around 10 seconds, but
   // there is really only one second worth of data. We want MP3FrameParser to
