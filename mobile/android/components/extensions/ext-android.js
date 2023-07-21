@@ -596,6 +596,11 @@ extensions.on("startup", (type, extension) => {
 extensions.on("page-shutdown", (type, context) => {
   if (context.viewType == "tab") {
     const window = context.xulBrowser.ownerGlobal;
+    if (!windowTracker.isBrowserWindow(window)) {
+      // Content in non-browser window, e.g. ContentPage in xpcshell uses
+      // chrome://extensions/content/dummy.xhtml as the window.
+      return;
+    }
     GeckoViewTabBridge.closeTab({
       window,
       extensionId: context.extension.id,
