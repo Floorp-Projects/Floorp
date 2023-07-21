@@ -400,6 +400,9 @@ Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
   // in WR, and put their IDs into |clipIds|.
   for (const DisplayItemClipChain* chain = aChain; chain;
        chain = chain->mParent) {
+    MOZ_DIAGNOSTIC_ASSERT(chain->mOnStack || !chain->mASR ||
+                          chain->mASR->mScrollableFrame);
+
     if (!chain->mClip.HasClip()) {
       // This item in the chain is a no-op, skip over it
       continue;

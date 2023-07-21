@@ -69,7 +69,7 @@ struct DisplayItemClipChain {
         mASR(aASR),
         mParent(aParent),
         mNextClipChainToDestroy(aNextClipChainToDestroy)
-#ifdef DEBUG
+#if defined(DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
         ,
         mOnStack(true)
 #endif
@@ -79,7 +79,7 @@ struct DisplayItemClipChain {
   DisplayItemClipChain()
       : mASR(nullptr),
         mNextClipChainToDestroy(nullptr)
-#ifdef DEBUG
+#if defined(DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
         ,
         mOnStack(true)
 #endif
@@ -91,7 +91,7 @@ struct DisplayItemClipChain {
   RefPtr<const DisplayItemClipChain> mParent;
   uint32_t mRefCount = 0;
   DisplayItemClipChain* mNextClipChainToDestroy;
-#ifdef DEBUG
+#if defined(DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   bool mOnStack;
 #endif
 };
