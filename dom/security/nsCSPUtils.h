@@ -225,8 +225,7 @@ class nsCSPBaseSrc {
   nsCSPBaseSrc();
   virtual ~nsCSPBaseSrc();
 
-  virtual bool permits(nsIURI* aUri, const nsAString& aNonce,
-                       bool aWasRedirected, bool aReportOnly,
+  virtual bool permits(nsIURI* aUri, bool aWasRedirected, bool aReportOnly,
                        bool aUpgradeInsecure, bool aParserCreated) const;
   virtual bool allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
                       bool aParserCreated) const;
@@ -238,6 +237,7 @@ class nsCSPBaseSrc {
   virtual bool isReportSample() const { return false; }
 
   virtual bool isHash() const { return false; }
+  virtual bool isNonce() const { return false; }
 
  protected:
   // invalidate srcs if 'script-dynamic' is present or also invalidate
@@ -252,9 +252,8 @@ class nsCSPSchemeSrc : public nsCSPBaseSrc {
   explicit nsCSPSchemeSrc(const nsAString& aScheme);
   virtual ~nsCSPSchemeSrc();
 
-  bool permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
-               bool aReportOnly, bool aUpgradeInsecure,
-               bool aParserCreated) const override;
+  bool permits(nsIURI* aUri, bool aWasRedirected, bool aReportOnly,
+               bool aUpgradeInsecure, bool aParserCreated) const override;
   bool visit(nsCSPSrcVisitor* aVisitor) const override;
   void toString(nsAString& outStr) const override;
 
@@ -271,9 +270,8 @@ class nsCSPHostSrc : public nsCSPBaseSrc {
   explicit nsCSPHostSrc(const nsAString& aHost);
   virtual ~nsCSPHostSrc();
 
-  bool permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
-               bool aReportOnly, bool aUpgradeInsecure,
-               bool aParserCreated) const override;
+  bool permits(nsIURI* aUri, bool aWasRedirected, bool aReportOnly,
+               bool aUpgradeInsecure, bool aParserCreated) const override;
   bool visit(nsCSPSrcVisitor* aVisitor) const override;
   void toString(nsAString& outStr) const override;
 
@@ -318,9 +316,8 @@ class nsCSPKeywordSrc : public nsCSPBaseSrc {
 
   bool allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
               bool aParserCreated) const override;
-  bool permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
-               bool aReportOnly, bool aUpgradeInsecure,
-               bool aParserCreated) const override;
+  bool permits(nsIURI* aUri, bool aWasRedirected, bool aReportOnly,
+               bool aUpgradeInsecure, bool aParserCreated) const override;
   bool visit(nsCSPSrcVisitor* aVisitor) const override;
   void toString(nsAString& outStr) const override;
 
@@ -347,9 +344,6 @@ class nsCSPNonceSrc : public nsCSPBaseSrc {
   explicit nsCSPNonceSrc(const nsAString& aNonce);
   virtual ~nsCSPNonceSrc();
 
-  bool permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
-               bool aReportOnly, bool aUpgradeInsecure,
-               bool aParserCreated) const override;
   bool allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
               bool aParserCreated) const override;
   bool visit(nsCSPSrcVisitor* aVisitor) const override;
@@ -362,6 +356,8 @@ class nsCSPNonceSrc : public nsCSPBaseSrc {
     // do *not* invalidate, because 'strict-dynamic' should
     // not invalidate nonces.
   }
+
+  bool isNonce() const final { return true; }
 
  private:
   nsString mNonce;
@@ -453,8 +449,7 @@ class nsCSPDirective {
   virtual ~nsCSPDirective();
 
   virtual bool permits(CSPDirective aDirective, nsILoadInfo* aLoadInfo,
-                       nsIURI* aUri, const nsAString& aNonce,
-                       bool aWasRedirected, bool aReportOnly,
+                       nsIURI* aUri, bool aWasRedirected, bool aReportOnly,
                        bool aUpgradeInsecure, bool aParserCreated) const;
   virtual bool allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
                       bool aParserCreated) const;
@@ -561,8 +556,8 @@ class nsBlockAllMixedContentDirective : public nsCSPDirective {
   ~nsBlockAllMixedContentDirective();
 
   bool permits(CSPDirective aDirective, nsILoadInfo* aLoadInfo, nsIURI* aUri,
-               const nsAString& aNonce, bool aWasRedirected, bool aReportOnly,
-               bool aUpgradeInsecure, bool aParserCreated) const override {
+               bool aWasRedirected, bool aReportOnly, bool aUpgradeInsecure,
+               bool aParserCreated) const override {
     return false;
   }
 
@@ -619,8 +614,8 @@ class nsUpgradeInsecureDirective : public nsCSPDirective {
   ~nsUpgradeInsecureDirective();
 
   bool permits(CSPDirective aDirective, nsILoadInfo* aLoadInfo, nsIURI* aUri,
-               const nsAString& aNonce, bool aWasRedirected, bool aReportOnly,
-               bool aUpgradeInsecure, bool aParserCreated) const override {
+               bool aWasRedirected, bool aReportOnly, bool aUpgradeInsecure,
+               bool aParserCreated) const override {
     return false;
   }
 
