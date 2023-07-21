@@ -34,6 +34,7 @@ class gfxMacFont final : public gfxFont {
   }
 
   int32_t GetGlyphWidth(uint16_t aGID) override;
+  int32_t GetGlyphWidthLocked(uint16_t aGID) MOZ_REQUIRES(mLock) override;
 
   bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) override;
 
@@ -66,7 +67,7 @@ class gfxMacFont final : public gfxFont {
   // override to prefer CoreText shaping with fonts that depend on AAT
   bool ShapeText(DrawTarget* aDrawTarget, const char16_t* aText, uint32_t aOffset, uint32_t aLength,
                  Script aScript, nsAtom* aLanguage, bool aVertical, RoundingFlags aRounding,
-                 gfxShapedText* aShapedText) override;
+                 gfxShapedText* aShapedText) MOZ_REQUIRES(mLock) override;
 
   void InitMetrics();
   void InitMetricsFromPlatform();

@@ -77,7 +77,9 @@ tainted_opaque_gr<float> gfxGraphiteShaper::GrGetAdvance(
       "Here the only use of a glyphid is for lookup to get a width. "
       "Implementations of GetGlyphWidth in this code base use a hashtable "
       "which is robust to unknown keys. So no validation is required.");
-  tainted_gr<float> ret = FixedToFloat(cb->mFont->GetGlyphWidth(glyphid));
+  MOZ_PUSH_IGNORE_THREAD_SAFETY
+  tainted_gr<float> ret = FixedToFloat(cb->mFont->GetGlyphWidthLocked(glyphid));
+  MOZ_POP_THREAD_SAFETY
   return ret.to_opaque();
 }
 

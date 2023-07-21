@@ -3126,8 +3126,8 @@ bool gfxFont::ProcessShapedWordInternal(
   }
 
   // We didn't find a cached word (or don't even have a cache yet), so create
-  // a new gfxShapedWord and cache it. We don't have to lock during shaping,
-  // only when it comes time to cache the new entry.
+  // a new gfxShapedWord and cache it. We must hold the lock during shaping,
+  // and in order to cache the new entry.
 
   gfxShapedWord* sw =
       gfxShapedWord::Create(aText, aLength, aRunScript, aLanguage,
@@ -3136,13 +3136,15 @@ bool gfxFont::ProcessShapedWordInternal(
     NS_WARNING("failed to create gfxShapedWord - expect missing text");
     return false;
   }
-  DebugOnly<bool> ok = ShapeText(aDrawTarget, aText, 0, aLength, aRunScript,
-                                 aLanguage, aVertical, aRounding, sw);
-  NS_WARNING_ASSERTION(ok, "failed to shape word - expect garbled text");
 
   {
-    // We're going to cache the new shaped word, so lock for writing now.
+    // We're going to shape and cache the new word, so lock for writing now.
     AutoWriteLock lock(mLock);
+
+    DebugOnly<bool> ok = ShapeText(aDrawTarget, aText, 0, aLength, aRunScript,
+                                   aLanguage, aVertical, aRounding, sw);
+    NS_WARNING_ASSERTION(ok, "failed to shape word - expect garbled text");
+
     if (!mWordCache) {
       mWordCache = MakeUnique<nsTHashtable<CacheHashEntry>>();
     } else {
@@ -3368,6 +3370,7 @@ bool gfxFont::ShapeFragmentWithoutWordCache(DrawTarget* aDrawTarget,
       }
     }
 
+    AutoWriteLock lock(mLock);
     ok = ShapeText(aDrawTarget, aText, aOffset, fragLen, aScript, aLanguage,
                    aVertical, aRounding, aTextRun);
 

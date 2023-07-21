@@ -740,8 +740,12 @@ const gfxFT2FontBase::GlyphMetrics& gfxFT2FontBase::GetCachedGlyphMetrics(
     }
   }
 
-  // We need to create/update the cache.
   AutoWriteLock lock(mLock);
+  return GetCachedGlyphMetricsLocked(aGID, aBounds);
+}
+
+const gfxFT2FontBase::GlyphMetrics& gfxFT2FontBase::GetCachedGlyphMetricsLocked(
+    uint16_t aGID, IntRect* aBounds) const {
   if (!mGlyphMetrics) {
     mGlyphMetrics =
         mozilla::MakeUnique<nsTHashMap<nsUint32HashKey, GlyphMetrics>>(128);
