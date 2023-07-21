@@ -1720,7 +1720,7 @@ extensions.startupCache:
       Unlike the related glean metric, this scalar has an expiring date,
       set as a deadline to consider removing the mirrored scalar in
       favor to just use the Glean metric).
-    expires: "118"
+    expires: "125"
     kind: uint
     notification_emails:
       - addons-dev-internal@mozilla.com
