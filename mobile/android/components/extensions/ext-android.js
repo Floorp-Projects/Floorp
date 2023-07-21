@@ -260,7 +260,7 @@ class TabTracker extends TabTrackerBase {
 
   getBrowserData(browser) {
     const window = browser.ownerGlobal;
-    const { tab } = window;
+    const tab = window?.tab;
     if (!tab) {
       return {
         tabId: -1,
