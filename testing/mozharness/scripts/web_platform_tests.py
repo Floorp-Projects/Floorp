@@ -365,6 +365,9 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             % os.path.join(
                 dirs["abs_test_extensions_dir"], "specialpowers@mozilla.org.xpi"
             ),
+            # Ensure that we don't get a Python traceback from handlers that will be
+            # added to the log summary
+            "--suppress-handler-traceback",
         ]
 
         is_windows_7 = (
