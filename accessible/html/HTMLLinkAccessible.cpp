@@ -11,6 +11,7 @@
 #include "States.h"
 
 #include "nsContentUtils.h"
+#include "mozilla/a11y/DocAccessible.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MutationEventBinding.h"
 
@@ -107,7 +108,7 @@ void HTMLLinkAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
   if (aAttribute == nsGkAtoms::href &&
       (aModType == dom::MutationEvent_Binding::ADDITION ||
        aModType == dom::MutationEvent_Binding::REMOVAL)) {
-    SendCache(CacheDomain::Actions, CacheUpdateType::Update);
+    mDoc->QueueCacheUpdate(this, CacheDomain::Actions);
   }
 }
 

@@ -65,8 +65,7 @@ void HTMLLabelAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
                                                aModType, aOldValue, aOldState);
 
   if (aAttribute == nsGkAtoms::_for) {
-    mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
-    SendCache(CacheDomain::Actions, CacheUpdateType::Update);
+    mDoc->QueueCacheUpdate(this, CacheDomain::Relations | CacheDomain::Actions);
   }
 }
 

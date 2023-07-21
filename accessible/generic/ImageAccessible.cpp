@@ -110,7 +110,7 @@ void ImageAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
   if (aAttribute == nsGkAtoms::longdesc &&
       (aModType == dom::MutationEvent_Binding::ADDITION ||
        aModType == dom::MutationEvent_Binding::REMOVAL)) {
-    SendCache(CacheDomain::Actions, CacheUpdateType::Update);
+    mDoc->QueueCacheUpdate(this, CacheDomain::Actions);
   }
 }
 
