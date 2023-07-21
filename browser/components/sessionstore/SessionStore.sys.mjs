@@ -765,7 +765,7 @@ var SessionStoreInternal = {
     let maxLength = this._max_tabs_undo * this._max_windows_undo;
 
     if (this._lastClosedActions.length > maxLength) {
-      this._lastClosedActions.splice(maxLength, this._lastClosedActions.length);
+      this._lastClosedActions = this._lastClosedActions.slice(-maxLength);
     }
   },
 
