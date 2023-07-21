@@ -59,6 +59,7 @@ class TestConfigure(unittest.TestCase):
                     NegativeOptionValue(),
                     NegativeOptionValue(),
                     NegativeOptionValue(),
+                    PositiveOptionValue(),
                 ),
                 "SIMPLE": NegativeOptionValue(),
                 "VALUES": NegativeOptionValue(),
@@ -86,7 +87,9 @@ class TestConfigure(unittest.TestCase):
             "                              Imports in template\n"
             "\n"
             "  Options from python/mozbuild/mozbuild/test/configure/data/moz.configure:\n"
+            "    --disable-foo             Disable Foo\n"
             "    --enable-choices={a,b,c}  Enable choices\n"
+            "    --enable-foo={x,y}        Enable Foo\n"
             "    --enable-include          Include\n"
             "    --enable-simple           Enable simple\n"
             "    --enable-values           Enable values\n"
@@ -126,7 +129,9 @@ class TestConfigure(unittest.TestCase):
             "                              Imports in template\n"
             "\n"
             "  Options from python/mozbuild/mozbuild/test/configure/data/moz.configure:\n"
+            "    --disable-foo             Disable Foo\n"
             "    --enable-choices={a,b,c}  Enable choices\n"
+            "    --enable-foo={x,y}        Enable Foo\n"
             "    --enable-include          Include\n"
             "    --enable-simple           Enable simple\n"
             "    --enable-values           Enable values\n"
