@@ -414,13 +414,14 @@ nsCSPBaseSrc* nsCSPParser::keywordSource() {
         !CSP_IsDirective(mCurDir[0],
                          nsIContentSecurityPolicy::SCRIPT_SRC_ELEM_DIRECTIVE) &&
         !CSP_IsDirective(mCurDir[0],
-                         nsIContentSecurityPolicy::SCRIPT_SRC_ATTR_DIRECTIVE)) {
-      // Todo: Enforce 'strict-dynamic' within default-src; see Bug 1313937
+                         nsIContentSecurityPolicy::SCRIPT_SRC_ATTR_DIRECTIVE) &&
+        !CSP_IsDirective(mCurDir[0],
+                         nsIContentSecurityPolicy::DEFAULT_SRC_DIRECTIVE)) {
       AutoTArray<nsString, 1> params = {u"strict-dynamic"_ns};
       logWarningErrorToConsole(nsIScriptError::warningFlag,
                                "ignoringStrictDynamic", params);
-      return nullptr;
     }
+
     mStrictDynamic = true;
     return new nsCSPKeywordSrc(CSP_UTF16KeywordToEnum(mCurToken));
   }
@@ -1073,40 +1074,26 @@ void nsCSPParser::directive() {
     srcs.InsertElementAt(0, keyword);
   }
 
-  // If policy contains 'strict-dynamic' invalidate all srcs within script-src.
-  if (mStrictDynamic) {
-    MOZ_ASSERT(
-        cspDir->equals(nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE) ||
-            cspDir->equals(
-                nsIContentSecurityPolicy::SCRIPT_SRC_ELEM_DIRECTIVE) ||
-            cspDir->equals(nsIContentSecurityPolicy::SCRIPT_SRC_ATTR_DIRECTIVE),
-        "strict-dynamic only allowed within script-src(-elem|attr)");
+  // If policy contains 'strict-dynamic' warn about ignored sources.
+  if (mStrictDynamic &&
+      !CSP_IsDirective(mCurDir[0],
+                       nsIContentSecurityPolicy::DEFAULT_SRC_DIRECTIVE)) {
     for (uint32_t i = 0; i < srcs.Length(); i++) {
-      // Please note that nsCSPNonceSrc as well as nsCSPHashSrc overwrite
-      // invalidate(), so it's fine to just call invalidate() on all srcs.
-      // Please also note that nsCSPKeywordSrc() can not be invalidated and
-      // always returns false unless the keyword is 'strict-dynamic' in which
-      // case we allow the load if the script is not parser created!
-      srcs[i]->invalidate();
-      // Log a message to the console that src will be ignored.
       nsAutoString srcStr;
       srcs[i]->toString(srcStr);
-      // Even though we invalidate all of the srcs internally, we don't want to
-      // log messages for the srcs: 'strict-dynamic', 'unsafe-inline',
-      // 'unsafe-hashes', nonces, and hashes, because those still apply even
-      // with 'strict-dynamic'.
-      // TODO the comment seems wrong 'unsafe-eval' vs 'unsafe-inline'.
-      if (!srcStr.EqualsASCII(CSP_EnumToUTF8Keyword(CSP_STRICT_DYNAMIC)) &&
-          !srcStr.EqualsASCII(CSP_EnumToUTF8Keyword(CSP_UNSAFE_EVAL)) &&
-          !srcStr.EqualsASCII(CSP_EnumToUTF8Keyword(CSP_UNSAFE_HASHES)) &&
-          !StringBeginsWith(
-              srcStr, nsDependentString(CSP_EnumToUTF16Keyword(CSP_NONCE))) &&
-          !StringBeginsWith(srcStr, u"'sha"_ns)) {
+      // Hashes and nonces continue to apply with 'strict-dynamic', as well as
+      // 'unsafe-eval', 'wasm-unsafe-eval' and 'unsafe-hashes'.
+      if (!srcs[i]->isKeyword(CSP_STRICT_DYNAMIC) &&
+          !srcs[i]->isKeyword(CSP_UNSAFE_EVAL) &&
+          !srcs[i]->isKeyword(CSP_WASM_UNSAFE_EVAL) &&
+          !srcs[i]->isKeyword(CSP_UNSAFE_HASHES) && !srcs[i]->isNonce() &&
+          !srcs[i]->isHash()) {
         AutoTArray<nsString, 2> params = {srcStr, mCurDir[0]};
         logWarningErrorToConsole(nsIScriptError::warningFlag,
                                  "ignoringScriptSrcForStrictDynamic", params);
       }
     }
+
     // Log a warning that all scripts might be blocked because the policy
     // contains 'strict-dynamic' but no valid nonce or hash.
     if (!mHasHashOrNonce) {
@@ -1127,8 +1114,6 @@ void nsCSPParser::directive() {
        cspDir->equals(nsIContentSecurityPolicy::STYLE_SRC_DIRECTIVE) ||
        cspDir->equals(nsIContentSecurityPolicy::STYLE_SRC_ELEM_DIRECTIVE) ||
        cspDir->equals(nsIContentSecurityPolicy::STYLE_SRC_ATTR_DIRECTIVE))) {
-    mUnsafeInlineKeywordSrc->invalidate();
-
     // Log to the console that unsafe-inline will be ignored.
     AutoTArray<nsString, 2> params = {u"'unsafe-inline'"_ns, mCurDir[0]};
     logWarningErrorToConsole(nsIScriptError::warningFlag,
