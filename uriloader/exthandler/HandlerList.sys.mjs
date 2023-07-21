@@ -33,22 +33,6 @@ export const kHandlerList = {
       },
     },
   },
-  csb: {
-    schemes: {
-      mailto: {
-        handlers: [
-          {
-            name: "Poczta Interia.pl",
-            uriTemplate: "http://poczta.interia.pl/mh/?mailto=%s",
-          },
-          {
-            name: "OnetPoczta",
-            uriTemplate: "http://poczta.onet.pl/napisz.html?uri=%s",
-          },
-        ],
-      },
-    },
-  },
   "es-CL": {
     schemes: {
       mailto: {
@@ -181,22 +165,6 @@ export const kHandlerList = {
           {
             name: "Gmail",
             uriTemplate: "https://mail.google.com/mail/?extsrc=mailto&url=%s",
-          },
-        ],
-      },
-    },
-  },
-  sah: {
-    schemes: {
-      mailto: {
-        handlers: [
-          {
-            name: "Яндекс.Почта",
-            uriTemplate: "https://mail.yandex.ru/compose?mailto=%s",
-          },
-          {
-            name: "Mail.Ru",
-            uriTemplate: "https://e.mail.ru/cgi-bin/sentmsg?mailto=%s",
           },
         ],
       },
