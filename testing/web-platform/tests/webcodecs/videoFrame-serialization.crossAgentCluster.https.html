@@ -58,7 +58,7 @@ const SAMEORIGIN_BASE = get_host_info().HTTPS_ORIGIN;
 const CROSSORIGIN_BASE = get_host_info().HTTPS_NOTSAMESITE_ORIGIN;
 const SAMEORIGIN_HELPER = SAMEORIGIN_BASE + HELPER;
 const CROSSORIGIN_HELPER = CROSSORIGIN_BASE + HELPER;
-const SERVICE_WORKER = 'videoFrame-serialization.crossAgentCluster.serviceworker.js';
+const SERVICE_WORKER = 'serialization.crossAgentCluster.serviceworker.js';
 
 promise_test(async () => {
   const target = (await appendIframe(SAMEORIGIN_HELPER)).contentWindow;
