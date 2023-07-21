@@ -1118,7 +1118,8 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
 
   if (StaticPrefs::dom_media_webcodecs_enabled() &&
       aTag == SCTAG_DOM_ENCODEDVIDEOCHUNK &&
-      CloneScope() == StructuredCloneScope::SameProcess) {
+      CloneScope() == StructuredCloneScope::SameProcess &&
+      aCloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
     JS::Rooted<JSObject*> global(aCx, mGlobal->GetGlobalJSObject());
     if (EncodedVideoChunk_Binding::ConstructorEnabled(aCx, global)) {
       return EncodedVideoChunk::ReadStructuredClone(
