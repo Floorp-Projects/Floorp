@@ -1,5 +1,23 @@
-commit 8ce9864511c1c83ba2d0b351da3390c9e33fd60e
-Author: André Bargull <andre.bargull@gmail.com>
-Date:   Thu Jun 29 16:56:28 2023 +0200
+commit 016e4bf8e84c36d1653c6bd53e74c93580d8b1ff
+Author: Guillaume Emont <guijemont@igalia.com>
+Date:   Mon Jul 17 16:55:34 2023 +0200
 
-    Add copy of transfer/transferToFixedLength tests with resizable-arraybuffer features removed
+    Temporal Issue 2532 (#3858)
+    
+    * Add tests for the new PrepareTemporalFields behavior for all direct callers
+    
+    See https://github.com/tc39/proposal-temporal/pull/2570
+    
+    * Add tests for the new PrepareTemporalFields behavior for indirect callers through ToTemporalDate
+    
+    * Add tests for the new PrepareTemporalFields behavior for indirect callers through ToTemporalDateTime
+    
+    * Add tests for the new PrepareTemporalFields behavior for indirect callers through ToTemporalZonedDateTime
+    
+    * Add tests for the new PrepareTemporalFields behavior for indirect callers through ToTemporalYearMonth
+    
+    * Add tests for the new PrepareTemporalFields behavior for indirect callers through ToTemporalMonthDay
+    
+    * Add tests for the new PrepareTemporalFields behavior for indirect callers through ToRelativeTemporalObject
+    
+    * Add tests for the new PrepareTemporalFields behavior for indirect callers through AddDurationToOrSubtractDurationFromPlainYearMonth
