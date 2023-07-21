@@ -8,8 +8,8 @@ license = "MPL-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-crash-context = "0.6.0"
-minidump-writer = "0.8.0"
+crash-context = "0.6.1"
+minidump-writer = "0.8.1"
 libc = "0.2.74"
 anyhow = "1.0"
 nsstring = { path = "../../../xpcom/rust/nsstring/" }

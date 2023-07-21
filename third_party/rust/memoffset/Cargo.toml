@@ -11,7 +11,7 @@
 
 [package]
 name = "memoffset"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["Gilad Naaman <gilad.naaman@gmail.com>"]
 description = "offset_of functionality for Rust structs."
 readme = "README.md"
@@ -34,3 +34,4 @@ version = "1"
 [features]
 default = []
 unstable_const = []
+unstable_offset_of = []

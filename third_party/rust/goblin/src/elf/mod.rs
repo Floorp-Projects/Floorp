@@ -307,6 +307,7 @@ if_sylvan! {
                 strtab = get_strtab(&section_headers, shdr.sh_link as usize)?;
             }
 
+            let mut is_pie = false;
             let mut soname = None;
             let mut libraries = vec![];
             let mut rpaths = vec![];
@@ -319,6 +320,8 @@ if_sylvan! {
             let dynamic = Dynamic::parse(bytes, &program_headers, ctx)?;
             if let Some(ref dynamic) = dynamic {
                 let dyn_info = &dynamic.info;
+
+                is_pie = dyn_info.flags_1 & dynamic::DF_1_PIE != 0;
                 dynstrtab = Strtab::parse(bytes,
                                           dyn_info.strtab,
                                           dyn_info.strsz,
@@ -379,6 +382,8 @@ if_sylvan! {
             let verdef = symver::VerdefSection::parse(bytes, &section_headers, ctx)?;
             let verneed = symver::VerneedSection::parse(bytes, &section_headers, ctx)?;
 
+            let is_lib = misc.is_lib && !is_pie;
+
             Ok(Elf {
                 header,
                 program_headers,
@@ -399,7 +404,7 @@ if_sylvan! {
                 rpaths,
                 runpaths,
                 is_64: misc.is_64,
-                is_lib: misc.is_lib,
+                is_lib,
                 entry: misc.entry,
                 little_endian: misc.little_endian,
                 ctx: ctx,

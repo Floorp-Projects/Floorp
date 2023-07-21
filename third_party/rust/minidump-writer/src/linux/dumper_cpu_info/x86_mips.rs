@@ -67,7 +67,7 @@ pub fn write_cpu_information(sys_info: &mut MDRawSystemInfo) -> Result<()> {
         };
 
         let mut is_first_entry = true;
-        for mut entry in cpu_info_table.iter_mut() {
+        for entry in cpu_info_table.iter_mut() {
             if !is_first_entry && entry.found {
                 // except for the 'processor' field, ignore repeated values.
                 continue;

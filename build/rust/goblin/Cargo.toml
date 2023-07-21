@@ -1,0 +1,11 @@
+[package]
+name = "goblin"
+version = "0.6.999"
+edition = "2018"
+license = "MIT/Apache-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies.goblin]
+version = "0.7.0"

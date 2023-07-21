@@ -2939,8 +2939,8 @@ set_config(
 # ==============================================================
 @depends(target)
 def oxidized_breakpad(target):
-    if target.kernel == "Linux" and target.os != "Android":
-        return target.cpu in ("x86", "x86_64")
+    if target.kernel == "Linux":
+        return target.cpu in ("aarch64", "arm", "x86", "x86_64")
     return False
 
 

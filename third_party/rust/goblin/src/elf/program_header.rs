@@ -22,6 +22,8 @@ pub const PT_NUM: u32 = 8;
 pub const PT_LOOS: u32 = 0x6000_0000;
 /// GCC .eh_frame_hdr segment
 pub const PT_GNU_EH_FRAME: u32 = 0x6474_e550;
+/// GNU property notes for linker and run-time loaders
+pub const PT_GNU_PROPERTY: u32 = 0x6474_e553;
 /// Indicates stack executability
 pub const PT_GNU_STACK: u32 = 0x6474_e551;
 /// Read-only after relocation
@@ -69,6 +71,7 @@ pub fn pt_to_str(pt: u32) -> &'static str {
         PT_NUM => "PT_NUM",
         PT_LOOS => "PT_LOOS",
         PT_GNU_EH_FRAME => "PT_GNU_EH_FRAME",
+        PT_GNU_PROPERTY => "PT_GNU_PROPERTY",
         PT_GNU_STACK => "PT_GNU_STACK",
         PT_GNU_RELRO => "PT_GNU_RELRO",
         PT_SUNWBSS => "PT_SUNWBSS",
