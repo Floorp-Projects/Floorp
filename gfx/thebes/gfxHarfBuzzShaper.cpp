@@ -1062,8 +1062,7 @@ static hb_bool_t HBUnicodeDecompose(hb_unicode_funcs_t* ufuncs,
   return false;
 }
 
-static void AddOpenTypeFeature(const uint32_t& aTag, uint32_t& aValue,
-                               void* aUserArg) {
+static void AddOpenTypeFeature(uint32_t aTag, uint32_t aValue, void* aUserArg) {
   nsTArray<hb_feature_t>* features =
       static_cast<nsTArray<hb_feature_t>*>(aUserArg);
 

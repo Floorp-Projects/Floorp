@@ -38,6 +38,7 @@
 #include "nsUnicodeProperties.h"
 #include "nsStyleConsts.h"
 #include "mozilla/AppUnits.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
@@ -550,7 +551,7 @@ static void LookupAlternateValues(const gfxFontFeatureValueSet& aFeatureLookup,
 void gfxFontShaper::MergeFontFeatures(
     const gfxFontStyle* aStyle, const nsTArray<gfxFontFeature>& aFontFeatures,
     bool aDisableLigatures, const nsACString& aFamilyName, bool aAddSmallCaps,
-    void (*aHandleFeature)(const uint32_t&, uint32_t&, void*),
+    void (*aHandleFeature)(uint32_t, uint32_t, void*),
     void* aHandleFeatureData) {
   const nsTArray<gfxFontFeature>& styleRuleFeatures = aStyle->featureSettings;
 
@@ -563,11 +564,29 @@ void gfxFontShaper::MergeFontFeatures(
     return;
   }
 
-  nsTHashMap<nsUint32HashKey, uint32_t> mergedFeatures;
+  AutoTArray<gfxFontFeature, 32> mergedFeatures;
+
+  struct FeatureTagCmp {
+    bool Equals(const gfxFontFeature& a, const gfxFontFeature& b) const {
+      return a.mTag == b.mTag;
+    }
+    bool LessThan(const gfxFontFeature& a, const gfxFontFeature& b) const {
+      return a.mTag < b.mTag;
+    }
+  } cmp;
+
+  auto addOrReplace = [&](const gfxFontFeature& aFeature) {
+    auto index = mergedFeatures.BinaryIndexOf(aFeature, cmp);
+    if (index == nsTArray<gfxFontFeature>::NoIndex) {
+      mergedFeatures.InsertElementSorted(aFeature, cmp);
+    } else {
+      mergedFeatures[index].mValue = aFeature.mValue;
+    }
+  };
 
   // add feature values from font
   for (const gfxFontFeature& feature : aFontFeatures) {
-    mergedFeatures.InsertOrUpdate(feature.mTag, feature.mValue);
+    addOrReplace(feature);
   }
 
   // font-variant-caps - handled here due to the need for fallback handling
@@ -578,33 +597,33 @@ void gfxFontShaper::MergeFontFeatures(
       break;
 
     case NS_FONT_VARIANT_CAPS_ALLSMALL:
-      mergedFeatures.InsertOrUpdate(HB_TAG('c', '2', 's', 'c'), 1);
+      addOrReplace(gfxFontFeature{HB_TAG('c', '2', 's', 'c'), 1});
       // fall through to the small-caps case
       [[fallthrough]];
 
     case NS_FONT_VARIANT_CAPS_SMALLCAPS:
-      mergedFeatures.InsertOrUpdate(HB_TAG('s', 'm', 'c', 'p'), 1);
+      addOrReplace(gfxFontFeature{HB_TAG('s', 'm', 'c', 'p'), 1});
       break;
 
     case NS_FONT_VARIANT_CAPS_ALLPETITE:
-      mergedFeatures.InsertOrUpdate(aAddSmallCaps ? HB_TAG('c', '2', 's', 'c')
-                                                  : HB_TAG('c', '2', 'p', 'c'),
-                                    1);
+      addOrReplace(gfxFontFeature{aAddSmallCaps ? HB_TAG('c', '2', 's', 'c')
+                                                : HB_TAG('c', '2', 'p', 'c'),
+                                  1});
       // fall through to the petite-caps case
       [[fallthrough]];
 
     case NS_FONT_VARIANT_CAPS_PETITECAPS:
-      mergedFeatures.InsertOrUpdate(aAddSmallCaps ? HB_TAG('s', 'm', 'c', 'p')
-                                                  : HB_TAG('p', 'c', 'a', 'p'),
-                                    1);
+      addOrReplace(gfxFontFeature{aAddSmallCaps ? HB_TAG('s', 'm', 'c', 'p')
+                                                : HB_TAG('p', 'c', 'a', 'p'),
+                                  1});
       break;
 
     case NS_FONT_VARIANT_CAPS_TITLING:
-      mergedFeatures.InsertOrUpdate(HB_TAG('t', 'i', 't', 'l'), 1);
+      addOrReplace(gfxFontFeature{HB_TAG('t', 'i', 't', 'l'), 1});
       break;
 
     case NS_FONT_VARIANT_CAPS_UNICASE:
-      mergedFeatures.InsertOrUpdate(HB_TAG('u', 'n', 'i', 'c'), 1);
+      addOrReplace(gfxFontFeature{HB_TAG('u', 'n', 'i', 'c'), 1});
       break;
 
     default:
@@ -617,10 +636,10 @@ void gfxFontShaper::MergeFontFeatures(
     case NS_FONT_VARIANT_POSITION_NORMAL:
       break;
     case NS_FONT_VARIANT_POSITION_SUPER:
-      mergedFeatures.InsertOrUpdate(HB_TAG('s', 'u', 'p', 's'), 1);
+      addOrReplace(gfxFontFeature{HB_TAG('s', 'u', 'p', 's'), 1});
       break;
     case NS_FONT_VARIANT_POSITION_SUB:
-      mergedFeatures.InsertOrUpdate(HB_TAG('s', 'u', 'b', 's'), 1);
+      addOrReplace(gfxFontFeature{HB_TAG('s', 'u', 'b', 's'), 1});
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected variantSubSuper");
@@ -638,15 +657,15 @@ void gfxFontShaper::MergeFontFeatures(
     }
 
     for (const gfxFontFeature& feature : featureList) {
-      mergedFeatures.InsertOrUpdate(feature.mTag, feature.mValue);
+      addOrReplace(gfxFontFeature{feature.mTag, feature.mValue});
     }
   }
 
   auto disableOptionalLigatures = [&]() -> void {
-    mergedFeatures.InsertOrUpdate(HB_TAG('l', 'i', 'g', 'a'), 0);
-    mergedFeatures.InsertOrUpdate(HB_TAG('c', 'l', 'i', 'g'), 0);
-    mergedFeatures.InsertOrUpdate(HB_TAG('d', 'l', 'i', 'g'), 0);
-    mergedFeatures.InsertOrUpdate(HB_TAG('h', 'l', 'i', 'g'), 0);
+    addOrReplace(gfxFontFeature{HB_TAG('l', 'i', 'g', 'a'), 0});
+    addOrReplace(gfxFontFeature{HB_TAG('c', 'l', 'i', 'g'), 0});
+    addOrReplace(gfxFontFeature{HB_TAG('d', 'l', 'i', 'g'), 0});
+    addOrReplace(gfxFontFeature{HB_TAG('h', 'l', 'i', 'g'), 0});
   };
 
   // Add features that are already resolved to tags & values in the style.
@@ -664,7 +683,7 @@ void gfxFontShaper::MergeFontFeatures(
       // features specified directly as tags will come last and therefore
       // take precedence over everything else.
       if (feature.mTag) {
-        mergedFeatures.InsertOrUpdate(feature.mTag, feature.mValue);
+        addOrReplace(gfxFontFeature{feature.mTag, feature.mValue});
       } else if (aDisableLigatures) {
         // Handle ligature-disabling setting at the boundary between high-
         // and low-level features.
@@ -673,10 +692,8 @@ void gfxFontShaper::MergeFontFeatures(
     }
   }
 
-  if (mergedFeatures.Count() != 0) {
-    for (auto iter = mergedFeatures.Iter(); !iter.Done(); iter.Next()) {
-      aHandleFeature(iter.Key(), iter.Data(), aHandleFeatureData);
-    }
+  for (const auto& f : mergedFeatures) {
+    aHandleFeature(f.mTag, f.mValue, aHandleFeatureData);
   }
 }
 
