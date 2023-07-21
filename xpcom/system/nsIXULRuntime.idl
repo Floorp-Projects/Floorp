@@ -342,6 +342,9 @@ interface nsIXULRuntime : nsISupports
   /** Returns the desktop environment identifier. Only meaningful on GTK */
   readonly attribute ACString desktopEnvironment;
 
+  /** Whether we use Wayland. Only meaningful on GTK */
+  readonly attribute boolean isWayland;
+
   /**
    * The path of the shortcut used to start the current process, or "" if none.
    *

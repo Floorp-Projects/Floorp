@@ -1620,6 +1620,16 @@ nsXULAppInfo::GetDesktopEnvironment(nsACString& aDesktopEnvironment) {
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetIsWayland(bool* aResult) {
+#ifdef MOZ_WIDGET_GTK
+  *aResult = GdkIsWaylandDisplay();
+#else
+  *aResult = false;
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::GetProcessStartupShortcut(nsAString& aShortcut) {
 #if defined(XP_WIN)
   if (XRE_IsParentProcess()) {
