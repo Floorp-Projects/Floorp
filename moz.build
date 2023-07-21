@@ -29,7 +29,7 @@ with Files("*configure*"):
     BUG_COMPONENT = ("Firefox Build System", "General")
 
 with Files("docs/**"):
-    BUG_COMPONENT = ("Firefox Build System", "Generated Documentation")
+    BUG_COMPONENT = ("Developer Infrastructure", "Source Documentation")
     SCHEDULES.exclusive = ["docs"]
 
 with Files("mach*"):

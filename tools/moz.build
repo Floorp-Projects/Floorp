@@ -20,7 +20,7 @@ with Files("lint/**"):
     BUG_COMPONENT = ("Developer Infrastructure", "Lint and Formatting")
 
 with Files("moztreedocs/**"):
-    BUG_COMPONENT = ("Firefox Build System", "Generated Documentation")
+    BUG_COMPONENT = ("Developer Infrastructure", "Source Documentation")
     SCHEDULES.exclusive = ["docs"]
 
 with Files("profiler/**"):
