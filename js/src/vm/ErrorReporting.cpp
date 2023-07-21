@@ -34,16 +34,16 @@ void js::CallWarningReporter(JSContext* cx, JSErrorReport* reportp) {
   }
 }
 
-void js::CompileError::throwError(JSContext* cx) {
+bool js::CompileError::throwError(JSContext* cx) {
   if (isWarning()) {
     CallWarningReporter(cx, this);
-    return;
+    return true;
   }
 
   // If there's a runtime exception type associated with this error
-  // number, set that as the pending exception.  For errors occuring at
+  // number, set that as the pending exception.  For errors occurring at
   // compile time, this is very likely to be a JSEXN_SYNTAXERR.
-  ErrorToException(cx, this, nullptr, nullptr);
+  return ErrorToException(cx, this, nullptr, nullptr);
 }
 
 bool js::ReportExceptionClosure::operator()(JSContext* cx) {

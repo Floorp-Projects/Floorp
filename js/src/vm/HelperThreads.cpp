@@ -2281,7 +2281,9 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
   Rooted<UniquePtr<ParseTask>> parseTask(cx,
                                          removeFinishedParseTask(cx, token));
 
-  parseTask->fc_.convertToRuntimeError(cx);
+  if (!parseTask->fc_.convertToRuntimeError(cx)) {
+    return nullptr;
+  }
 
   if (cx->isExceptionPending()) {
     return nullptr;
