@@ -11,7 +11,7 @@ use crate::values::generics::grid::{LineNameList, TrackBreadth, TrackRepeat, Tra
 use crate::values::generics::grid::{TrackList, TrackListValue};
 use crate::values::specified::{Integer, LengthPercentage};
 use crate::values::{CSSFloat, CustomIdent};
-use cssparser::{ParseError as CssParseError, Parser, Token};
+use cssparser::{Parser, Token};
 use std::mem;
 use style_traits::{ParseError, StyleParseErrorKind};
 
@@ -122,10 +122,7 @@ pub fn parse_line_names<'i, 't>(
     input.expect_square_bracket_block()?;
     input.parse_nested_block(|input| {
         let mut values = vec![];
-        while let Ok((loc, ident)) = input.try_parse(|i| -> Result<_, CssParseError<()>> {
-            Ok((i.current_source_location(), i.expect_ident_cloned()?))
-        }) {
-            let ident = CustomIdent::from_ident(loc, &ident, &["span", "auto"])?;
+        while let Ok(ident) = input.try_parse(|i| CustomIdent::parse(i, &["span", "auto"])) {
             values.push(ident);
         }
 

@@ -1315,10 +1315,9 @@ impl ContainerName {
             DISALLOWED_CONTAINER_NAMES,
         )?);
         if !for_query {
-            while let Ok(name) = input.try_parse(|input| {
-                let ident = input.expect_ident()?;
-                CustomIdent::from_ident(location, &ident, DISALLOWED_CONTAINER_NAMES)
-            }) {
+            while let Ok(name) =
+                input.try_parse(|input| CustomIdent::parse(input, DISALLOWED_CONTAINER_NAMES))
+            {
                 idents.push(name);
             }
         }
