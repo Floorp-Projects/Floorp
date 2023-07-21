@@ -27,6 +27,11 @@
   box-sizing: border-box;
 }
 
+:host([stay-open]) {
+  position: initial;
+  display: inline-block;
+}
+
 :host([inxulpanel]) {
   position: static;
   margin: 0;
