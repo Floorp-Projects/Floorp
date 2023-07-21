@@ -31,7 +31,7 @@ enum class YUVColorSpace : uint8_t;
 namespace dom {
 
 /*
- * The followings are helpers for VideoDecoder methods
+ * The followings are helpers for WebCodecs methods
  */
 
 nsTArray<nsCString> GuessContainers(const nsAString& aCodec);

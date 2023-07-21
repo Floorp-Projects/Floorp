@@ -11,6 +11,8 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
+#include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/WebCodecsUtils.h"
 
 extern mozilla::LazyLogModule gWebCodecsLog;
@@ -37,20 +39,31 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EncodedVideoChunk)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-EncodedVideoChunk::EncodedVideoChunk(
-    nsIGlobalObject* aParent, already_AddRefed<MediaAlignedByteBuffer> aBuffer,
+EncodedVideoChunkData::EncodedVideoChunkData(
+    already_AddRefed<MediaAlignedByteBuffer> aBuffer,
     const EncodedVideoChunkType& aType, int64_t aTimestamp,
     Maybe<uint64_t>&& aDuration)
-    : mParent(aParent),
-      mBuffer(aBuffer),
+    : mBuffer(aBuffer),
       mType(aType),
       mTimestamp(aTimestamp),
-      mDuration(std::move(aDuration)) {
+      mDuration(aDuration) {
   MOZ_ASSERT(mBuffer);
   MOZ_ASSERT(mBuffer->Length() == mBuffer->Size());
   MOZ_ASSERT(mBuffer->Length() <=
              static_cast<size_t>(std::numeric_limits<uint32_t>::max()));
 }
+
+EncodedVideoChunk::EncodedVideoChunk(
+    nsIGlobalObject* aParent, already_AddRefed<MediaAlignedByteBuffer> aBuffer,
+    const EncodedVideoChunkType& aType, int64_t aTimestamp,
+    Maybe<uint64_t>&& aDuration)
+    : EncodedVideoChunkData(std::move(aBuffer), aType, aTimestamp,
+                            std::move(aDuration)),
+      mParent(aParent) {}
+
+EncodedVideoChunk::EncodedVideoChunk(nsIGlobalObject* aParent,
+                                     const EncodedVideoChunkData& aData)
+    : EncodedVideoChunkData(aData), mParent(aParent) {}
 
 nsIGlobalObject* EncodedVideoChunk::GetParentObject() const {
   AssertIsOnOwningThread();
@@ -162,16 +175,38 @@ uint8_t* EncodedVideoChunk::Data() {
 
 // https://w3c.github.io/webcodecs/#ref-for-deserialization-steps%E2%91%A0
 /* static */
-already_AddRefed<EncodedVideoChunk> EncodedVideoChunk::ReadStructuredClone(
-    JSContext* aCx, nsIGlobalObject* aGlobal,
-    JSStructuredCloneReader* aReader) {
-  return nullptr;
+JSObject* EncodedVideoChunk::ReadStructuredClone(
+    JSContext* aCx, nsIGlobalObject* aGlobal, JSStructuredCloneReader* aReader,
+    const EncodedVideoChunkData& aData) {
+  JS::Rooted<JS::Value> value(aCx, JS::NullValue());
+  // To avoid a rooting hazard error from returning a raw JSObject* before
+  // running the RefPtr destructor, RefPtr needs to be destructed before
+  // returning the raw JSObject*, which is why the RefPtr<EncodedVideoChunk> is
+  // created in the scope below. Otherwise, the static analysis infers the
+  // RefPtr cannot be safely destructed while the unrooted return JSObject* is
+  // on the stack.
+  {
+    auto frame = MakeRefPtr<EncodedVideoChunk>(aGlobal, aData);
+    if (!GetOrCreateDOMReflector(aCx, frame, &value) || !value.isObject()) {
+      return nullptr;
+    }
+  }
+  return value.toObjectOrNull();
 }
 
 // https://w3c.github.io/webcodecs/#ref-for-serialization-steps%E2%91%A0
 bool EncodedVideoChunk::WriteStructuredClone(
-    JSContext* aCx, JSStructuredCloneWriter* aWriter) const {
-  return false;
+    JSStructuredCloneWriter* aWriter, StructuredCloneHolder* aHolder) const {
+  AssertIsOnOwningThread();
+
+  // Indexing the chunk and send the index to the receiver.
+  const uint32_t index =
+      static_cast<uint32_t>(aHolder->EncodedVideoChunks().Length());
+  // The serialization is limited to the same process scope so it's ok to
+  // serialize a reference instead of a copy.
+  aHolder->EncodedVideoChunks().AppendElement(EncodedVideoChunkData(*this));
+  return !NS_WARN_IF(
+      !JS_WriteUint32Pair(aWriter, SCTAG_DOM_ENCODEDVIDEOCHUNK, index));
 }
 
 #undef LOGW
