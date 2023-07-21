@@ -520,7 +520,8 @@ enum class GcOp {
   RefCast = 0x41,
   RefTestNull = 0x48,
   RefCastNull = 0x49,
-  BrOnCast = 0x4f,
+  BrOnCast = 0x4e,
+  BrOnCastFail = 0x4f,
 
   // Dart compatibility instruction
   RefAsStructV5 = 0x59,

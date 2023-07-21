@@ -673,11 +673,18 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                                    &nothing));
           }
           case uint16_t(GcOp::BrOnCast): {
-            bool unusedOnSuccess;
             uint32_t unusedRelativeDepth;
             RefType unusedSourceType;
             RefType unusedDestType;
-            CHECK(iter.readBrOnCast(&unusedOnSuccess, &unusedRelativeDepth,
+            CHECK(iter.readBrOnCast(true, &unusedRelativeDepth,
+                                    &unusedSourceType, &unusedDestType,
+                                    &unusedType, &nothings));
+          }
+          case uint16_t(GcOp::BrOnCastFail): {
+            uint32_t unusedRelativeDepth;
+            RefType unusedSourceType;
+            RefType unusedDestType;
+            CHECK(iter.readBrOnCast(false, &unusedRelativeDepth,
                                     &unusedSourceType, &unusedDestType,
                                     &unusedType, &nothings));
           }

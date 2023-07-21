@@ -7280,14 +7280,13 @@ static bool EmitRefCast(FunctionCompiler& f, bool nullable) {
   return true;
 }
 
-static bool EmitBrOnCast(FunctionCompiler& f) {
-  bool onSuccess;
+static bool EmitBrOnCast(FunctionCompiler& f, bool onSuccess) {
   uint32_t labelRelativeDepth;
   RefType sourceType;
   RefType destType;
   ResultType labelType;
   DefVector values;
-  if (!f.iter().readBrOnCast(&onSuccess, &labelRelativeDepth, &sourceType,
+  if (!f.iter().readBrOnCast(onSuccess, &labelRelativeDepth, &sourceType,
                              &destType, &labelType, &values)) {
     return false;
   }
@@ -7992,7 +7991,9 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(GcOp::RefCastV5):
             CHECK(EmitRefCastV5(f));
           case uint32_t(GcOp::BrOnCast):
-            CHECK(EmitBrOnCast(f));
+            CHECK(EmitBrOnCast(f, /*onSuccess=*/true));
+          case uint32_t(GcOp::BrOnCastFail):
+            CHECK(EmitBrOnCast(f, /*onSuccess=*/false));
           case uint32_t(GcOp::BrOnCastV5):
             CHECK(EmitBrOnCastCommonV5(f, /*onSuccess=*/true));
           case uint32_t(GcOp::BrOnCastFailV5):

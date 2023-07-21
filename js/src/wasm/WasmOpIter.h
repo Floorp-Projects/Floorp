@@ -786,7 +786,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                  RefType* destType, Value* ref);
   [[nodiscard]] bool readRefCast(bool nullable, RefType* sourceType,
                                  RefType* destType, Value* ref);
-  [[nodiscard]] bool readBrOnCast(bool* onSuccess, uint32_t* labelRelativeDepth,
+  [[nodiscard]] bool readBrOnCast(bool onSuccess, uint32_t* labelRelativeDepth,
                                   RefType* sourceType, RefType* destType,
                                   ResultType* labelType, ValueVector* values);
   [[nodiscard]] bool checkBrOnCastCommonV5(uint32_t labelRelativeDepth,
@@ -3622,7 +3622,7 @@ inline bool OpIter<Policy>::readRefCast(bool nullable, RefType* sourceType,
 // type that causes a branch (rt1\rt2 or rt2, depending).
 
 template <typename Policy>
-inline bool OpIter<Policy>::readBrOnCast(bool* onSuccess,
+inline bool OpIter<Policy>::readBrOnCast(bool onSuccess,
                                          uint32_t* labelRelativeDepth,
                                          RefType* sourceType, RefType* destType,
                                          ResultType* labelType,
@@ -3635,7 +3635,6 @@ inline bool OpIter<Policy>::readBrOnCast(bool* onSuccess,
   }
   bool sourceNullable = flags & (1 << 0);
   bool destNullable = flags & (1 << 1);
-  *onSuccess = !(flags & (1 << 2));
 
   if (!readVarU32(labelRelativeDepth)) {
     return fail("unable to read br_on_cast depth");
@@ -3663,8 +3662,8 @@ inline bool OpIter<Policy>::readBrOnCast(bool* onSuccess,
   // This is rt1\rt2
   RefType typeOnFail =
       destNullable ? immediateSourceType.asNonNullable() : immediateSourceType;
-  RefType typeOnBranch = *onSuccess ? typeOnSuccess : typeOnFail;
-  RefType typeOnFallthrough = *onSuccess ? typeOnFail : typeOnSuccess;
+  RefType typeOnBranch = onSuccess ? typeOnSuccess : typeOnFail;
+  RefType typeOnFallthrough = onSuccess ? typeOnFail : typeOnSuccess;
 
   // Get the branch target type, which will also determine the type of extra
   // values that are passed along on branch.
