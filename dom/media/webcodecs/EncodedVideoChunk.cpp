@@ -7,11 +7,26 @@
 #include "mozilla/dom/EncodedVideoChunk.h"
 #include "mozilla/dom/EncodedVideoChunkBinding.h"
 
+#include "MediaData.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Logging.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/dom/WebCodecsUtils.h"
 
+extern mozilla::LazyLogModule gWebCodecsLog;
+
 namespace mozilla::dom {
+
+#ifdef LOG_INTERNAL
+#  undef LOG_INTERNAL
+#endif  // LOG_INTERNAL
+#define LOG_INTERNAL(level, msg, ...) \
+  MOZ_LOG(gWebCodecsLog, LogLevel::level, (msg, ##__VA_ARGS__))
+
+#ifdef LOGW
+#  undef LOGW
+#endif  // LOGW
+#define LOGW(msg, ...) LOG_INTERNAL(Warning, msg, ##__VA_ARGS__)
 
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(EncodedVideoChunk, mParent)
@@ -22,19 +37,18 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EncodedVideoChunk)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-EncodedVideoChunk::EncodedVideoChunk(nsIGlobalObject* aParent,
-                                     UniquePtr<uint8_t[]>&& aBuffer,
-                                     size_t aByteLength,
-                                     const EncodedVideoChunkType& aType,
-                                     int64_t aTimestamp,
-                                     Maybe<uint64_t>&& aDuration)
+EncodedVideoChunk::EncodedVideoChunk(
+    nsIGlobalObject* aParent, already_AddRefed<MediaAlignedByteBuffer> aBuffer,
+    const EncodedVideoChunkType& aType, int64_t aTimestamp,
+    Maybe<uint64_t>&& aDuration)
     : mParent(aParent),
-      mBuffer(std::move(aBuffer)),
-      mByteLength(aByteLength),
+      mBuffer(aBuffer),
       mType(aType),
       mTimestamp(aTimestamp),
       mDuration(std::move(aDuration)) {
-  MOZ_ASSERT(mByteLength <=
+  MOZ_ASSERT(mBuffer);
+  MOZ_ASSERT(mBuffer->Length() == mBuffer->Size());
+  MOZ_ASSERT(mBuffer->Length() <=
              static_cast<size_t>(std::numeric_limits<uint32_t>::max()));
 }
 
@@ -76,17 +90,22 @@ already_AddRefed<EncodedVideoChunk> EncodedVideoChunk::Constructor(
     return nullptr;
   }
 
-  UniquePtr<uint8_t[]> buffer(new (fallible) uint8_t[buf.size_bytes()]);
-  if (!buffer) {
+  if (buf.size_bytes() == 0) {
+    LOGW("Buffer for constructing EncodedVideoChunk is empty!");
+  }
+
+  auto buffer =
+      MakeRefPtr<MediaAlignedByteBuffer>(buf.data(), buf.size_bytes());
+  // Instead of checking *buffer, size comparision is used to allow constructing
+  // a zero-sized EncodedVideoChunk.
+  if (!buffer || buffer->Size() != buf.size_bytes()) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
 
-  PodCopy(buffer.get(), buf.data(), buf.size_bytes());
-
   RefPtr<EncodedVideoChunk> chunk(new EncodedVideoChunk(
-      global, std::move(buffer), buf.size_bytes(), aInit.mType,
-      aInit.mTimestamp, OptionalToMaybe(aInit.mDuration)));
+      global, buffer.forget(), aInit.mType, aInit.mTimestamp,
+      OptionalToMaybe(aInit.mDuration)));
   return aRv.Failed() ? nullptr : chunk.forget();
 }
 
@@ -109,8 +128,9 @@ Nullable<uint64_t> EncodedVideoChunk::GetDuration() const {
 
 uint32_t EncodedVideoChunk::ByteLength() const {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(mBuffer);
 
-  return static_cast<uint32_t>(mByteLength);
+  return static_cast<uint32_t>(mBuffer->Length());
 }
 
 // https://w3c.github.io/webcodecs/#dom-encodedvideochunk-copyto
@@ -126,13 +146,21 @@ void EncodedVideoChunk::CopyTo(
   }
   Span<uint8_t> buf = r.unwrap();
 
-  if (mByteLength > buf.size_bytes()) {
+  if (mBuffer->Size() > buf.size_bytes()) {
     aRv.ThrowTypeError(
         "Destination ArrayBuffer smaller than source EncodedVideoChunk");
     return;
   }
 
-  PodCopy(buf.data(), mBuffer.get(), mByteLength);
+  PodCopy(buf.data(), mBuffer->Data(), mBuffer->Size());
 }
+
+uint8_t* EncodedVideoChunk::Data() {
+  MOZ_ASSERT(mBuffer);
+  return mBuffer->Data();
+}
+
+#undef LOGW
+#undef LOG_INTERNAL
 
 }  // namespace mozilla::dom

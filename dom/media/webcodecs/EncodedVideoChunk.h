@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -19,6 +18,9 @@
 class nsIGlobalObject;
 
 namespace mozilla {
+
+class MediaAlignedByteBuffer;
+
 namespace dom {
 
 class MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer;
@@ -38,9 +40,10 @@ class EncodedVideoChunk final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(EncodedVideoChunk)
 
  public:
-  EncodedVideoChunk(nsIGlobalObject* aParent, UniquePtr<uint8_t[]>&& aBuffer,
-                    size_t aByteLength, const EncodedVideoChunkType& aType,
-                    int64_t aTimestamp, Maybe<uint64_t>&& aDuration);
+  EncodedVideoChunk(nsIGlobalObject* aParent,
+                    already_AddRefed<MediaAlignedByteBuffer> aBuffer,
+                    const EncodedVideoChunkType& aType, int64_t aTimestamp,
+                    Maybe<uint64_t>&& aDuration);
 
  protected:
   ~EncodedVideoChunk() = default;
@@ -68,7 +71,7 @@ class EncodedVideoChunk final : public nsISupports, public nsWrapperCache {
       ErrorResult& aRv);
 
   // Non-webidl method.
-  uint8_t* Data() { return mBuffer.get(); }
+  uint8_t* Data();
 
  private:
   // EncodedVideoChunk can run on either main thread or worker thread.
@@ -77,8 +80,8 @@ class EncodedVideoChunk final : public nsISupports, public nsWrapperCache {
   }
 
   nsCOMPtr<nsIGlobalObject> mParent;
-  UniquePtr<uint8_t[]> mBuffer;
-  size_t mByteLength;  // guaranteed to be smaller than UINT32_MAX.
+  // mBuffer's byte length is guaranteed to be smaller than UINT32_MAX.
+  RefPtr<MediaAlignedByteBuffer> mBuffer;
   EncodedVideoChunkType mType;
   int64_t mTimestamp;
   Maybe<uint64_t> mDuration;
