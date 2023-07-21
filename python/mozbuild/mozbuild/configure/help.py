@@ -76,15 +76,23 @@ class HelpFormatter(object):
         for option in self.options:
             target = options_by_category if option.name else env_by_category
             target[option.category].append(option)
-        options_formatted = [
-            "Options: [defaults in brackets after descriptions]"
-        ] + self.format_options_by_category(options_by_category)
-        env_formatted = ["Environment variables:"] + self.format_options_by_category(
-            env_by_category
-        )
+        if options_by_category:
+            options_formatted = [
+                "Options: [defaults in brackets after descriptions]"
+            ] + self.format_options_by_category(options_by_category)
+        else:
+            options_formatted = []
+        if env_by_category:
+            env_formatted = [
+                "Environment variables:"
+            ] + self.format_options_by_category(env_by_category)
+        else:
+            env_formatted = []
         print(
             "\n\n".join(
-                "\n".join(t) for t in (self.intro, options_formatted, env_formatted)
+                "\n".join(t)
+                for t in (self.intro, options_formatted, env_formatted)
+                if t
             ),
             file=out,
         )
