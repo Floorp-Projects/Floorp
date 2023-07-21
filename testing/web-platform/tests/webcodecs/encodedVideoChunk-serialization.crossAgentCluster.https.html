@@ -49,6 +49,7 @@ const SAMEORIGIN_BASE = get_host_info().HTTPS_ORIGIN;
 const CROSSORIGIN_BASE = get_host_info().HTTPS_NOTSAMESITE_ORIGIN;
 const SAMEORIGIN_HELPER = SAMEORIGIN_BASE + HELPER;
 const CROSSORIGIN_HELPER = CROSSORIGIN_BASE + HELPER;
+const SERVICE_WORKER = 'serialization.crossAgentCluster.serviceworker.js';
 
 promise_test(async () => {
   const target = (await appendIframe(SAMEORIGIN_HELPER)).contentWindow;
@@ -104,7 +105,17 @@ promise_test(async () => {
   assert_equals(received, 'NOT_RECEIVED');
 }, 'Verify chunks cannot be passed to sharedworker');
 
-// TODO: Verify chunks cannot be passed to serviceworker
+promise_test(async () => {
+  navigator.serviceWorker.register(SERVICE_WORKER);
+  navigator.serviceWorker.ready.then((registration) => {
+    let chunk = createEncodedVideoChunk(60);
+    registration.active.postMessage(chunk);
+    registration.active.postMessage({'encodedVideoChunkId': 60});
+  });
+  const received = await new Promise(resolve =>
+    navigator.serviceWorker.onmessage = (e) => { resolve(e.data); });
+  assert_equals(received, 'NOT_RECEIVED');
+}, 'Verify chunks cannot be passed to serviceworker');
 
 promise_test(async () => {
   const blob = new Blob([document.querySelector('#sharedWorkerCode').textContent], {
@@ -118,7 +129,14 @@ promise_test(async () => {
   assert_true(received instanceof ReferenceError);
 }, 'Verify chunks is unavailable in sharedworker');
 
-// TODO: Verify chunks is unavailable in serviceworker
+promise_test(async () => {
+  navigator.serviceWorker.register(SERVICE_WORKER);
+  let registration = await navigator.serviceWorker.ready;
+  registration.active.postMessage('create-EncodedVideoChunk');
+  const received = await new Promise(resolve =>
+    navigator.serviceWorker.onmessage = (e) => { resolve(e.data); });
+  assert_true(received instanceof ReferenceError);
+}, 'Verify chunks is unavailable in serviceworker');
 
 function appendIframe(src) {
   const frame = document.createElement('iframe');
