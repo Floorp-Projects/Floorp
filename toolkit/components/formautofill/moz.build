@@ -12,6 +12,7 @@ with Files("**"):
 EXTRA_JS_MODULES.shared += [
     "shared/AddressComponent.sys.mjs",
     "shared/AddressParser.sys.mjs",
+    "shared/CreditCardRecord.sys.mjs",
     "shared/CreditCardRuleset.sys.mjs",
     "shared/FieldScanner.sys.mjs",
     "shared/FormAutofillHandler.sys.mjs",
