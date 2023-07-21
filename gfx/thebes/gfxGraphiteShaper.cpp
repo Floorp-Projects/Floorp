@@ -77,9 +77,7 @@ tainted_opaque_gr<float> gfxGraphiteShaper::GrGetAdvance(
       "Here the only use of a glyphid is for lookup to get a width. "
       "Implementations of GetGlyphWidth in this code base use a hashtable "
       "which is robust to unknown keys. So no validation is required.");
-  MOZ_PUSH_IGNORE_THREAD_SAFETY
-  tainted_gr<float> ret = FixedToFloat(cb->mFont->GetGlyphWidthLocked(glyphid));
-  MOZ_POP_THREAD_SAFETY
+  tainted_gr<float> ret = FixedToFloat(cb->mFont->GetGlyphWidth(glyphid));
   return ret.to_opaque();
 }
 
@@ -100,7 +98,7 @@ struct GrFontFeatures {
   rlbox_sandbox_gr* mSandbox;
 };
 
-static void AddFeature(uint32_t aTag, uint32_t aValue, void* aUserArg) {
+static void AddFeature(const uint32_t& aTag, uint32_t& aValue, void* aUserArg) {
   GrFontFeatures* f = static_cast<GrFontFeatures*>(aUserArg);
 
   tainted_gr<const gr_feature_ref*> fref =

@@ -502,18 +502,6 @@ int32_t gfxMacFont::GetGlyphWidth(uint16_t aGID) {
     }
   }
 
-  AutoWriteLock lock(mLock);
-  return GetGlyphWidthLocked(aGID);
-}
-
-int32_t gfxMacFont::GetGlyphWidthLocked(uint16_t aGID) {
-  if (mVariationFont) {
-    int cgAdvance;
-    if (::CGFontGetGlyphAdvances(mCGFont, &aGID, 1, &cgAdvance)) {
-      return cgAdvance * mFUnitsConvFactor * 0x10000;
-    }
-  }
-
   if (!mCTFont) {
     bool isInstalledFont =
         !mFontEntry->IsUserFont() || mFontEntry->IsLocalUserFont();

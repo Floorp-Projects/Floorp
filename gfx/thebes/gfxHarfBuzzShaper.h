@@ -11,7 +11,6 @@
 #include "harfbuzz/hb.h"
 #include "nsUnicodeProperties.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/MruCache.h"
 
 class gfxHarfBuzzShaper : public gfxFontShaper {
  public:
@@ -133,36 +132,6 @@ class gfxHarfBuzzShaper : public gfxFontShaper {
 
   // harfbuzz buffer for the shaping process
   hb_buffer_t* mBuffer;
-
-  struct CmapCacheData {
-    uint32_t mCodepoint;
-    uint32_t mGlyphId;
-  };
-
-  struct CmapCache
-      : public mozilla::MruCache<uint32_t, CmapCacheData, CmapCache, 251> {
-    static mozilla::HashNumber Hash(const uint32_t& aKey) { return aKey; }
-    static bool Match(const uint32_t& aKey, const CmapCacheData& aData) {
-      return aKey == aData.mCodepoint;
-    }
-  };
-
-  mutable mozilla::UniquePtr<CmapCache> mCmapCache;
-
-  struct WidthCacheData {
-    hb_codepoint_t mGlyphId;
-    hb_position_t mAdvance;
-  };
-
-  struct WidthCache
-      : public mozilla::MruCache<uint32_t, WidthCacheData, WidthCache, 251> {
-    static mozilla::HashNumber Hash(const hb_codepoint_t& aKey) { return aKey; }
-    static bool Match(const uint32_t& aKey, const WidthCacheData& aData) {
-      return aKey == aData.mGlyphId;
-    }
-  };
-
-  mutable mozilla::UniquePtr<WidthCache> mWidthCache;
 
   FontCallbackData mCallbackData;
 

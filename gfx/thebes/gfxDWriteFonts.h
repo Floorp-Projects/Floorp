@@ -56,7 +56,6 @@ class gfxDWriteFont final : public gfxFont {
   bool ProvidesGlyphWidths() const override;
 
   int32_t GetGlyphWidth(uint16_t aGID) override;
-  int32_t GetGlyphWidthLocked(uint16_t aGID) MOZ_REQUIRES(mLock) override;
 
   bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) override;
 
