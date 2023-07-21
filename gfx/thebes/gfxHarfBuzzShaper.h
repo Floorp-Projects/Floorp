@@ -149,6 +149,21 @@ class gfxHarfBuzzShaper : public gfxFontShaper {
 
   mutable mozilla::UniquePtr<CmapCache> mCmapCache;
 
+  struct WidthCacheData {
+    hb_codepoint_t mGlyphId;
+    hb_position_t mAdvance;
+  };
+
+  struct WidthCache
+      : public mozilla::MruCache<uint32_t, WidthCacheData, WidthCache, 251> {
+    static mozilla::HashNumber Hash(const hb_codepoint_t& aKey) { return aKey; }
+    static bool Match(const uint32_t& aKey, const WidthCacheData& aData) {
+      return aKey == aData.mGlyphId;
+    }
+  };
+
+  mutable mozilla::UniquePtr<WidthCache> mWidthCache;
+
   FontCallbackData mCallbackData;
 
   // Following table references etc are declared "mutable" because the
