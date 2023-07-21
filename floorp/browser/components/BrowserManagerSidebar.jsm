@@ -47,8 +47,8 @@ let BrowserManagerSidebar = {
         },
     },
 
-    DEFAULT_WEBPANEL:["https://freasearch.org","https://translate.google.com","https://misskey.io"],
-    prefsUpdate:function(){
+    DEFAULT_WEBPANEL:["https://translate.google.com","https://misskey.io"],
+    prefsUpdate(){
         let defaultPref = {data:{},index:[]}
         for(let elem in this.STATIC_SIDEBAR_DATA){
           if(this.STATIC_SIDEBAR_DATA[elem].enabled === false){
@@ -77,7 +77,7 @@ let BrowserManagerSidebar = {
         }
         
     },
-    getFavicon:function(sbar_url,elem){
+    getFavicon(sbar_url,elem){
         try {
             new URL(sbar_url);
           } catch (e) {
@@ -187,14 +187,14 @@ let BrowserManagerSidebar = {
             elem.classList.remove("extension-icon-add-white")
           }
     },
-    getAdoonSidebarPage:async function(addonId){
+    async getAdoonSidebarPage(addonId){
         let addonUUID = JSON.parse(Services.prefs.getStringPref("extensions.webextensions.uuids"))
         let manifestJSON = await (await fetch(`moz-extension://${addonUUID[addonId]}/manifest.json`)).json()
         let toURL = manifestJSON.sidebar_action.default_panel
         if(!toURL.startsWith("./")) toURL = "./" + toURL
         return (new URL(toURL ,`moz-extension://${addonUUID[addonId]}/`)).href 
     },
-    addPanel:function(url,uc){
+    addPanel(url,uc){
         let parentWindow = Services.wm.getMostRecentWindow("navigator:browser")
         let updateNumberDate = new Date()
         let updateNumber = `w${updateNumberDate.getFullYear()}${updateNumberDate.getMonth()}${updateNumberDate.getDate()}${updateNumberDate.getHours()}${updateNumberDate.getMinutes()}${updateNumberDate.getSeconds()}`
