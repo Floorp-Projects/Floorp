@@ -55,16 +55,6 @@ class HTMLTableCellAccessible : public HyperTextAccessibleWrap {
 
  protected:
   virtual ~HTMLTableCellAccessible() {}
-
-  /**
-   * Return nsITableCellLayout of the table cell frame.
-   */
-  nsITableCellLayout* GetCellLayout() const;
-
-  /**
-   * Return row and column indices of the cell.
-   */
-  nsresult GetCellIndexes(int32_t& aRowIdx, int32_t& aColIdx) const;
 };
 
 /**
@@ -123,8 +113,6 @@ class HTMLTableAccessible : public HyperTextAccessibleWrap {
   LocalAccessible* Caption() const;
   uint32_t ColCount() const;
   uint32_t RowCount();
-  uint32_t ColExtentAt(uint32_t aRowIdx, uint32_t aColIdx);
-  uint32_t RowExtentAt(uint32_t aRowIdx, uint32_t aColIdx);
   bool IsProbablyLayoutTable();
 
   static HTMLTableAccessible* GetFrom(LocalAccessible* aAcc) {
