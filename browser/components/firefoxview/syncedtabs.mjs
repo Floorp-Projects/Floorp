@@ -251,8 +251,32 @@ class SyncedTabsInView extends ViewPage {
     }
   }
 
-  onContextMenu(event) {
-    //TODO bug 1833664
+  onContextMenu(e) {
+    this.triggerNode = e.originalTarget;
+    e.target.querySelector("panel-list").toggle(e.detail.originalEvent);
+  }
+
+  panelListTemplate() {
+    return html`
+      <panel-list slot="menu">
+        <panel-item
+          @click=${this.openInNewWindow}
+          data-l10n-id="fxviewtabrow-open-in-window"
+          data-l10n-attrs="accesskey"
+        ></panel-item>
+        <panel-item
+          @click=${this.openInNewPrivateWindow}
+          data-l10n-id="fxviewtabrow-open-in-private-window"
+          data-l10n-attrs="accesskey"
+        ></panel-item>
+        <hr />
+        <panel-item
+          @click=${this.copyLink}
+          data-l10n-id="fxviewtabrow-copy-link"
+          data-l10n-attrs="accesskey"
+        ></panel-item>
+      </panel-list>
+    `;
   }
 
   noDeviceTabsTemplate(deviceName, deviceType) {
@@ -302,13 +326,17 @@ class SyncedTabsInView extends ViewPage {
           </h2>
           <fxview-tab-list
             slot="main"
+            class="syncedtabs"
+            hasPopup="menu"
             .tabItems=${ifDefined(
               this.getTabItems(renderInfo[deviceName].tabs)
             )}
             maxTabsLength=${this.maxTabsLength}
-            @fxview-tab-list-secondary-action=${this.onContextMenu}
             @fxview-tab-list-primary-action=${this.onOpenLink}
-          ></fxview-tab-list>
+            @fxview-tab-list-secondary-action=${this.onContextMenu}
+          >
+            ${this.panelListTemplate()}
+          </fxview-tab-list>
         </card-container>`);
       } else {
         renderArray.push(
@@ -426,6 +454,7 @@ class SyncedTabsInView extends ViewPage {
   }
 
   sendTabTelemetry(numTabs) {
+    /*
     Services.telemetry.recordEvent(
       "firefoxview-next",
       "synced_tabs",
@@ -435,6 +464,7 @@ class SyncedTabsInView extends ViewPage {
         count: numTabs.toString(),
       }
     );
+*/
   }
 }
 customElements.define("view-syncedtabs", SyncedTabsInView);
