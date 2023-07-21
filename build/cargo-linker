@@ -27,6 +27,13 @@
 import os
 import sys
 
+# This is not necessarily run with a virtualenv python, so add
+# the necessary directory for the shellutil module.
+base_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.join(base_dir, "python", "mozbuild"))
+from mozbuild.shellutil import split
+
+
 SANITIZERS = {
     "asan": "address",
     "hwasan": "hwaddress",
@@ -37,7 +44,7 @@ SANITIZERS = {
 
 use_clang_sanitizer = os.environ.get("MOZ_CLANG_NEWER_THAN_RUSTC_LLVM")
 wrap_ld = os.environ["MOZ_CARGO_WRAP_LD"]
-args = os.environ["MOZ_CARGO_WRAP_LDFLAGS"].split()
+args = split(os.environ["MOZ_CARGO_WRAP_LDFLAGS"])
 for arg in sys.argv[1:]:
     if arg in ["-lc++", "-lstdc++"]:
         wrap_ld = os.environ["MOZ_CARGO_WRAP_LD_CXX"]
@@ -54,5 +61,5 @@ for arg in sys.argv[1:]:
             continue
     args.append(arg)
 
-wrap_ld = wrap_ld.split()
+wrap_ld = split(wrap_ld)
 os.execvp(wrap_ld[0], wrap_ld + args)
