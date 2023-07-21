@@ -151,6 +151,63 @@
     },
     {
       "schemaVersion": "1.12.0",
+      "slug": "fx-release-android-re-engagement-notifications-114-rollout-v2",
+      "id": "fx-release-android-re-engagement-notifications-114-rollout-v2",
+      "arguments": {},
+      "application": "org.mozilla.firefox",
+      "appName": "fenix",
+      "appId": "org.mozilla.firefox",
+      "channel": "release",
+      "userFacingName": "Fx Release - Android re-engagement notifications 116 rollout v2",
+      "userFacingDescription": "Android message for Fx 116",
+      "isEnrollmentPaused": false,
+      "isRollout": true,
+      "bucketConfig": {
+        "randomizationUnit": "nimbus_id",
+        "namespace": "fenix-re-engagement-notification-release-mobile_first_run-rollout-2",
+        "start": 0,
+        "count": 10000,
+        "total": 10000
+      },
+      "featureIds": [
+        "re-engagement-notification"
+      ],
+      "probeSets": [],
+      "outcomes": [],
+      "branches": [
+        {
+          "slug": "control",
+          "ratio": 1,
+          "feature": {
+            "featureId": "this-is-included-for-mobile-pre-96-support",
+            "enabled": false,
+            "value": {}
+          },
+          "features": [
+            {
+              "featureId": "re-engagement-notification",
+              "enabled": true,
+              "value": {
+                "enabled": true,
+                "type": 0
+              }
+            }
+          ]
+        }
+      ],
+      "targeting": "(app_version|versionCompare('116.*') <= 0) && ((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('116.!') >= 0)))",
+      "startDate": "2023-07-21",
+      "enrollmentEndDate": "2023-09-19",
+      "endDate": null,
+      "proposedDuration": 60,
+      "proposedEnrollment": 60,
+      "referenceBranch": "control",
+      "featureValidationOptOut": false,
+      "localizations": null,
+      "locales": null
+    },
+    {
+      "schemaVersion": "1.12.0",
       "slug": "on-boarding-challenge-the-default",
       "id": "on-boarding-challenge-the-default",
       "arguments": {},
