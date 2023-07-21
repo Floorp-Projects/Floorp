@@ -1428,12 +1428,12 @@ ActiveScrolledRoot* nsDisplayListBuilder::AllocateActiveScrolledRoot(
 const DisplayItemClipChain* nsDisplayListBuilder::AllocateDisplayItemClipChain(
     const DisplayItemClip& aClip, const ActiveScrolledRoot* aASR,
     const DisplayItemClipChain* aParent) {
-  MOZ_ASSERT(!(aParent && aParent->mOnStack));
+  MOZ_DIAGNOSTIC_ASSERT(!(aParent && aParent->mOnStack));
   void* p = Allocate(sizeof(DisplayItemClipChain),
                      DisplayListArenaObjectId::CLIPCHAIN);
   DisplayItemClipChain* c = new (KnownNotNull, p)
       DisplayItemClipChain(aClip, aASR, aParent, mFirstClipChainToDestroy);
-#ifdef DEBUG
+#if defined(DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   c->mOnStack = false;
 #endif
   auto result = mClipDeduplicator.insert(c);

@@ -362,6 +362,9 @@ static Maybe<const ActiveScrolledRoot*> SelectContainerASR(
   const ActiveScrolledRoot* itemClipASR =
       aClipChain ? aClipChain->mASR : nullptr;
 
+  MOZ_DIAGNOSTIC_ASSERT(!aClipChain || aClipChain->mOnStack || !itemClipASR ||
+                        itemClipASR->mScrollableFrame);
+
   const ActiveScrolledRoot* finiteBoundsASR =
       ActiveScrolledRoot::PickDescendant(itemClipASR, aItemASR);
 
