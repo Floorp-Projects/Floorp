@@ -14,6 +14,7 @@ import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.filter
 import androidx.compose.ui.test.hasAnyChild
+import androidx.compose.ui.test.hasParent
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.longClick
@@ -273,6 +274,16 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
      */
     fun clickTabMediaControlButton(action: String) {
         composeTestRule.tabMediaControlButton(action)
+            .performClick()
+    }
+
+    /**
+     * Closes a tab with a given [title].
+     */
+    fun closeTabWithTitle(title: String) {
+        composeTestRule.onAllNodesWithTag(TabsTrayTestTag.tabItemClose)
+            .filter(hasParent(hasText(title)))
+            .onFirst()
             .performClick()
     }
 

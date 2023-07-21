@@ -831,6 +831,17 @@ class HomeScreenRobot {
             return TabDrawerRobot.Transition()
         }
 
+        fun clickJumpBackInShowAllButton(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+            mDevice
+                .findObject(
+                    UiSelector()
+                        .textContains(getStringResource(R.string.recent_tabs_show_all)),
+                ).clickAndWaitForNewWindow(waitingTime)
+
+            ComposeTabDrawerRobot(composeTestRule).interact()
+            return ComposeTabDrawerRobot.Transition(composeTestRule)
+        }
+
         fun clickJumpBackInItemWithTitle(itemTitle: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice
                 .findObject(
