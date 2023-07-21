@@ -99,3 +99,49 @@ add_task(async function test_indexedDB_principal() {
   await extension.unload();
   Services.prefs.clearUserPref("privacy.firstparty.isolate");
 });
+
+add_task(async function test_indexedDB_ext_privateBrowsing() {
+  Services.prefs.setBoolPref("dom.indexedDB.privateBrowsing.enabled", true);
+
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    incognitoOverride: "spanning",
+    files: {
+      "extpage.html": `<!DOCTYPE><script src="extpage.js"></script>`,
+      "extpage.js": async function () {
+        try {
+          const request = window.indexedDB.open("TestDatabasePrivateBrowsing");
+          await new Promise((resolve, reject) => {
+            request.onupgradeneeded = resolve;
+            request.onsuccess = resolve;
+            request.onerror = () => {
+              reject(request.error);
+            };
+          });
+          browser.test.notifyFail("indexedDB-expect-error-on-open");
+        } catch (err) {
+          browser.test.assertEq(
+            "InvalidStateError",
+            err.name,
+            "Expect an error raised on openeing indexedDB"
+          );
+          browser.test.notifyPass("indexedDB-expect-error-on-open");
+        }
+      },
+    },
+  });
+
+  await extension.startup();
+
+  const page = await ExtensionTestUtils.loadContentPage(
+    extension.extension.baseURI.resolve("extpage.html"),
+    { privateBrowsing: true }
+  );
+
+  await extension.awaitFinish("indexedDB-expect-error-on-open");
+
+  await page.close();
+  await extension.unload();
+
+  Services.prefs.clearUserPref("dom.indexedDB.privateBrowsing.enabled");
+});
