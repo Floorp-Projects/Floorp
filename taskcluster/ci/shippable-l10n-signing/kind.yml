@@ -2,21 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.multi_dep:loader
-
-group-by: chunk-locales
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.name_sanity:transforms
-    - gecko_taskgraph.transforms.upstream_artifact_task:transforms
-    - gecko_taskgraph.transforms.shippable_l10n_signing:transforms
-    - gecko_taskgraph.transforms.signing:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.upstream_artifact_task
+    - gecko_taskgraph.transforms.shippable_l10n_signing
+    - gecko_taskgraph.transforms.signing
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
-    - shippable-l10n
-
-primary-dependency:
     - shippable-l10n
 
 only-for-attributes:
@@ -28,3 +24,8 @@ not-for-build-platforms:
     - macosx64-devedition/opt
     - macosx64/opt
     - macosx64/debug
+
+jobs:
+    shippable-l10n-signing:
+        from-deps:
+            group-by: chunk-locales
