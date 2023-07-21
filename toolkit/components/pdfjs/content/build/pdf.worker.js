@@ -50,9 +50,8 @@ var _pdf_manager = __w_pdfjs_require__(6);
 var _annotation = __w_pdfjs_require__(10);
 var _cleanup_helper = __w_pdfjs_require__(72);
 var _writer = __w_pdfjs_require__(66);
-var _is_node = __w_pdfjs_require__(104);
-var _message_handler = __w_pdfjs_require__(105);
-var _worker_stream = __w_pdfjs_require__(106);
+var _message_handler = __w_pdfjs_require__(104);
+var _worker_stream = __w_pdfjs_require__(105);
 class WorkerTask {
   constructor(name) {
     this.name = name;
@@ -102,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.9.62';
+    const workerVersion = '3.9.104';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -496,23 +495,21 @@ class WorkerMessageHandler {
             filename
           };
         }
-        try {
-          return (0, _writer.incrementalUpdate)({
-            originalData: stream.bytes,
-            xrefInfo: newXrefInfo,
-            newRefs,
-            xref,
-            hasXfa: !!xfa,
-            xfaDatasetsRef,
-            hasXfaDatasetsEntry,
-            needAppearances,
-            acroFormRef,
-            acroForm,
-            xfaData
-          });
-        } finally {
+        return (0, _writer.incrementalUpdate)({
+          originalData: stream.bytes,
+          xrefInfo: newXrefInfo,
+          newRefs,
+          xref,
+          hasXfa: !!xfa,
+          xfaDatasetsRef,
+          hasXfaDatasetsEntry,
+          needAppearances,
+          acroFormRef,
+          acroForm,
+          xfaData
+        }).finally(() => {
           xref.resetNewTemporaryRef();
-        }
+        });
       });
     });
     handler.on("GetOperatorList", function (data, sink) {
@@ -624,7 +621,7 @@ exports.WorkerMessageHandler = WorkerMessageHandler;
 function isMessagePort(maybePort) {
   return typeof maybePort.postMessage === "function" && "onmessage" in maybePort;
 }
-if (typeof window === "undefined" && !_is_node.isNodeJS && typeof self !== "undefined" && isMessagePort(self)) {
+if (typeof window === "undefined" && !_util.isNodeJS && typeof self !== "undefined" && isMessagePort(self)) {
   WorkerMessageHandler.initializeFromPort(self);
 }
 
@@ -647,6 +644,7 @@ exports.getVerbosityLevel = getVerbosityLevel;
 exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
 exports.isArrayEqual = isArrayEqual;
+exports.isNodeJS = void 0;
 exports.normalizeUnicode = normalizeUnicode;
 exports.objectFromMap = objectFromMap;
 exports.objectSize = objectSize;
@@ -659,7 +657,8 @@ exports.stringToUTF8String = stringToUTF8String;
 exports.unreachable = unreachable;
 exports.utf8StringToString = utf8StringToString;
 exports.warn = warn;
-;
+const isNodeJS = false;
+exports.isNodeJS = isNodeJS;
 const IDENTITY_MATRIX = [1, 0, 0, 1, 0, 0];
 exports.IDENTITY_MATRIX = IDENTITY_MATRIX;
 const FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
@@ -3207,7 +3206,7 @@ class Page {
           isOffscreenCanvasSupported
         } = this.evaluatorOptions;
         if (missingBitmaps.size > 0) {
-          const annotationWithBitmaps = [];
+          const annotationWithBitmaps = newAnnotations.slice();
           for (const [key, annotation] of annotationStorage) {
             if (!key.startsWith(_util.AnnotationEditorPrefix)) {
               continue;
@@ -38309,7 +38308,7 @@ class PostScriptEvaluator {
           break;
         case "log":
           a = stack.pop();
-          stack.push(Math.log(a) / Math.LN10);
+          stack.push(Math.log10(a));
           break;
         case "lt":
           b = stack.pop();
@@ -57426,19 +57425,6 @@ exports.XRef = XRef;
 
 /***/ }),
 /* 104 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.isNodeJS = void 0;
-const isNodeJS = false;
-exports.isNodeJS = isNodeJS;
-
-/***/ }),
-/* 105 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -57851,7 +57837,7 @@ class MessageHandler {
 exports.MessageHandler = MessageHandler;
 
 /***/ }),
-/* 106 */
+/* 105 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -58013,8 +57999,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.9.62';
-const pdfjsBuild = '762d86a59';
+const pdfjsVersion = '3.9.104';
+const pdfjsBuild = '2a508b95e';
 })();
 
 /******/ 	return __webpack_exports__;
