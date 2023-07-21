@@ -443,8 +443,7 @@ class TestLint(unittest.TestCase):
         with self.assertRaisesFromLine(ConfigureError, 2) as e:
             with self.moz_configure(
                 """
-                option('--disable-bar', nargs="*", choices=("a", "b"),
-                       help='Enable bar')
+                option('--disable-bar', nargs="*", choices=("a", "b"), help='Enable bar')
             """
             ):
                 self.lint_test()
