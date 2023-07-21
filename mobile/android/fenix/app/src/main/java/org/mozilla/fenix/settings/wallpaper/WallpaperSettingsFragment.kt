@@ -69,7 +69,6 @@ class WallpaperSettingsFragment : Fragment() {
                                     val result = wallpaperUseCases.selectWallpaper(it)
                                     onWallpaperSelected(it, result, requireView())
                                 }
-                                context.settings().showWallpaperOnboarding = false
                             }
                         },
                         onLearnMoreClick = { url, collectionName ->
@@ -139,6 +138,8 @@ class WallpaperSettingsFragment : Fragment() {
             }
             else -> { /* noop */ }
         }
+
+        view.context.settings().showWallpaperOnboarding = false
     }
 
     override fun onResume() {
