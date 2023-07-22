@@ -15,6 +15,16 @@ body:
         
         For Japanese: 日本人の場合は、日本語で書いても構いません。
 
+  - type: checkboxes
+    attributes:
+      label: Attention!
+      description: |
+        **Windows 7/8.1 or lower does not support Floorp.**
+        Please check this box only if you understand this.
+      options:
+        - label: **I undertand that Floorp is NOT supported on Windows 7/8.1 or lower.**
+          required: true
+
   - type: textarea
     attributes:
       label: Describe the bug
