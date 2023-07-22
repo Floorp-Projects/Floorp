@@ -41,7 +41,8 @@ class SVGFilterFrame final : public SVGContainerFrame {
       : SVGContainerFrame(aStyle, aPresContext, kClassID),
         mLoopFlag(false),
         mNoHRefURI(false) {
-    AddStateBits(NS_FRAME_IS_NONDISPLAY);
+    AddStateBits(NS_FRAME_IS_NONDISPLAY |
+                 NS_STATE_SVG_RENDERING_OBSERVER_CONTAINER);
   }
 
  public:
