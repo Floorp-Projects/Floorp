@@ -26,9 +26,10 @@ const TEST_MESSAGE = {
       screens: [
         {
           id: "TEST_SCREEN_ID",
-          anchors: [{ selector: "#tabpickup-steps", arrow_position: "top" }],
+          parent_selector: "#tabpickup-steps",
           content: {
             position: "callout",
+            arrow_position: "top",
             title: {
               string_id: "Test",
             },

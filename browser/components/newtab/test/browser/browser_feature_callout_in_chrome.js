@@ -11,7 +11,6 @@ const { FeatureCalloutMessages } = ChromeUtils.importESModule(
 );
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  FeatureCallout: "resource:///modules/FeatureCallout.sys.mjs",
   FeatureCalloutBroker:
     "resource://activity-stream/lib/FeatureCalloutBroker.sys.mjs",
 });
@@ -50,12 +49,15 @@ const pdfMatch = sinon.match(val => {
   );
 });
 
-const validateCalloutCustomPosition = (element, absolutePosition, doc) => {
+const validateCalloutCustomPosition = (element, positionOverride, doc) => {
   const browserBox = doc.querySelector("hbox#browser");
-  for (let position in absolutePosition) {
-    if (Object.prototype.hasOwnProperty.call(absolutePosition, position)) {
-      // remove the `px` at the end of our absolute position strings
-      const relativePos = parseFloat(absolutePosition[position]);
+  for (let position in positionOverride) {
+    if (Object.prototype.hasOwnProperty.call(positionOverride, position)) {
+      // The substring here is to remove the `px` at the end of our position override strings
+      const relativePos = positionOverride[position].substring(
+        0,
+        positionOverride[position].length - 2
+      );
       const elPos = element.getBoundingClientRect()[position];
       const browserPos = browserBox.getBoundingClientRect()[position];
 
@@ -73,16 +75,22 @@ const validateCalloutCustomPosition = (element, absolutePosition, doc) => {
   return true;
 };
 
-const validateCalloutRTLPosition = (element, absolutePosition) => {
-  for (let position in absolutePosition) {
-    if (Object.prototype.hasOwnProperty.call(absolutePosition, position)) {
-      const pixels = parseFloat(absolutePosition[position]);
+const validateCalloutRTLPosition = (element, positionOverride) => {
+  for (let position in positionOverride) {
+    if (Object.prototype.hasOwnProperty.call(positionOverride, position)) {
+      const pixelPosition = positionOverride[position];
       if (position === "left") {
-        if (element.getBoundingClientRect().right !== pixels) {
+        const actualLeft = Number(
+          pixelPosition.substring(0, pixelPosition.length - 2)
+        );
+        if (element.getBoundingClientRect().right !== actualLeft) {
           return false;
         }
       } else if (position === "right") {
-        if (element.getBoundingClientRect().left !== pixels) {
+        const expectedLeft = Number(
+          pixelPosition.substring(0, pixelPosition.length - 2)
+        );
+        if (element.getBoundingClientRect().left !== expectedLeft) {
           return false;
         }
       }
@@ -103,11 +111,10 @@ const testMessage = {
       screens: [
         {
           id: "TEST_MESSAGE_1",
-          anchors: [
-            { selector: "#urlbar-container", arrow_position: "top-end" },
-          ],
+          parent_selector: "#urlbar-container",
           content: {
             position: "callout",
+            arrow_position: "top-end",
             title: {
               raw: "Test title",
             },
@@ -149,15 +156,14 @@ const newtabTestMessage = {
     screens: [
       {
         id: "TEST_MESSAGE_1",
-        anchors: [
-          {
-            selector: "hbox#browser",
-            arrow_position: "top-end",
-            absolute_position: { top: "45px", right: "55px" },
-          },
-        ],
+        parent_selector: "hbox#browser",
         content: {
           position: "callout",
+          callout_position_override: {
+            top: "45px",
+            right: "55px",
+          },
+          arrow_position: "top-end",
           title: "Test callout title",
           subtitle: "Test callout subtitle",
           primary_button: {
@@ -205,14 +211,10 @@ add_task(async function triggered_feature_tour_with_custom_pref() {
         screens: [
           {
             id: "FEATURE_CALLOUT_1",
-            anchors: [
-              {
-                selector: "#PanelUI-menu-button",
-                arrow_position: "top-center-arrow-end",
-              },
-            ],
+            parent_selector: "#PanelUI-menu-button",
             content: {
               position: "callout",
+              arrow_position: "top-center-arrow-end",
               title: {
                 string_id: "callout-pdfjs-edit-title",
               },
@@ -262,14 +264,10 @@ add_task(async function triggered_feature_tour_with_custom_pref() {
           },
           {
             id: "FEATURE_CALLOUT_2",
-            anchors: [
-              {
-                selector: "#back-button",
-                arrow_position: "top-center-arrow-start",
-              },
-            ],
+            parent_selector: "#back-button",
             content: {
               position: "callout",
+              arrow_position: "top-center-arrow-start",
               title: {
                 string_id: "callout-pdfjs-draw-title",
               },
@@ -343,14 +341,10 @@ add_task(async function triggered_feature_tour_with_custom_pref() {
         screens: [
           {
             id: "FEATURE_CALLOUT_TEST",
-            anchors: [
-              {
-                selector: "#urlbar-container",
-                arrow_position: "top-center-arrow-end",
-              },
-            ],
+            parent_selector: "#urlbar-container",
             content: {
               position: "callout",
+              arrow_position: "top-center-arrow-end",
               title: {
                 string_id: "callout-pdfjs-edit-title",
               },
@@ -886,10 +880,12 @@ add_task(
     const pdfTestMessageCalloutSelector =
       pdfTestMessage.message.content.screens[0].id;
 
-    pdfTestMessage.message.content.screens[0].anchors[0] = {
-      selector: "hbox#browser",
-      absolute_position: { top: "45px", right: "25px" },
-    };
+    pdfTestMessage.message.content.screens[0].parent_selector = "hbox#browser";
+    pdfTestMessage.message.content.screens[0].content.callout_position_override =
+      {
+        top: "45px",
+        right: "25px",
+      };
 
     const sandbox = sinon.createSandbox();
     const getMessagesStub = sandbox.stub(FeatureCalloutMessages, "getMessages");
@@ -909,7 +905,8 @@ add_task(
     ok(
       validateCalloutCustomPosition(
         callout,
-        pdfTestMessage.message.content.screens[0].anchors[0].absolute_position,
+        pdfTestMessage.message.content.screens[0].content
+          .callout_position_override,
         doc
       ),
       "Callout custom position is as expected"
@@ -925,7 +922,8 @@ add_task(
     ok(
       validateCalloutCustomPosition(
         callout,
-        pdfTestMessage.message.content.screens[0].anchors[0].absolute_position,
+        pdfTestMessage.message.content.screens[0].content
+          .callout_position_override,
         doc
       ),
       "Callout custom position is as expected while navigator toolbox height is extended"
@@ -945,10 +943,12 @@ add_task(
     const pdfTestMessageCalloutSelector =
       pdfTestMessage.message.content.screens[0].id;
 
-    pdfTestMessage.message.content.screens[0].anchors[0] = {
-      selector: "hbox#browser",
-      absolute_position: { top: "45px", right: "25px" },
-    };
+    pdfTestMessage.message.content.screens[0].parent_selector = "hbox#browser";
+    pdfTestMessage.message.content.screens[0].content.callout_position_override =
+      {
+        top: "45px",
+        right: "25px",
+      };
 
     const sandbox = sinon.createSandbox();
     const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
@@ -971,7 +971,8 @@ add_task(
     ok(
       validateCalloutRTLPosition(
         callout,
-        pdfTestMessage.message.content.screens[0].anchors[0].absolute_position
+        pdfTestMessage.message.content.screens[0].content
+          .callout_position_override
       ),
       "Callout custom position is rendered appropriately in RTL mode"
     );
@@ -1044,76 +1045,3 @@ add_task(
     sandbox.restore();
   }
 );
-
-add_task(async function first_anchor_selected_is_valid() {
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-  const config = {
-    win,
-    location: "chrome",
-    context: "chrome",
-    browser: win.gBrowser.selectedBrowser,
-    theme: { preset: "chrome" },
-  };
-
-  const message = JSON.parse(JSON.stringify(testMessage.message));
-  const sandbox = sinon.createSandbox();
-
-  const doc = win.document;
-  const featureCallout = new lazy.FeatureCallout(config);
-  const getAnchorSpy = sandbox.spy(featureCallout, "_getAnchor");
-  featureCallout.showFeatureCallout(message);
-  await waitForCalloutScreen(doc, message.content.screens[0].id);
-  ok(
-    getAnchorSpy.alwaysReturned(
-      sandbox.match(message.content.screens[0].anchors[0])
-    ),
-    "The first anchor is selected"
-  );
-  await BrowserTestUtils.closeWindow(win);
-  sandbox.restore();
-});
-
-add_task(async function first_anchor_selected_is_invalid() {
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-  const doc = win.document;
-  const config = {
-    win,
-    location: "chrome",
-    context: "chrome",
-    browser: win.gBrowser.selectedBrowser,
-    theme: { preset: "chrome" },
-  };
-
-  let stopReloadButton = doc.getElementById("stop-reload-button");
-
-  await gCustomizeMode.addToPanel(stopReloadButton);
-
-  const message = JSON.parse(JSON.stringify(testMessage.message));
-  message.content.screens[0].anchors = [
-    // element that does not exist
-    { selector: "#some-fake-id.some-fake-class", arrow_position: "top" },
-    // element that exists but has no height/width
-    { selector: "#a11y-announcement", arrow_position: "top" },
-    // element that exists but is hidden by CSS
-    { selector: "#window-modal-dialog", arrow_position: "top" },
-    // customizable widget that's in the overflow panel
-    { selector: "#stop-reload-button", arrow_position: "top" },
-    // element that is fully visible
-    { selector: "#PanelUI-menu-button", arrow_position: "top" },
-  ];
-  const sandbox = sinon.createSandbox();
-
-  const featureCallout = new lazy.FeatureCallout(config);
-  const getAnchorSpy = sandbox.spy(featureCallout, "_getAnchor");
-  featureCallout.showFeatureCallout(message);
-  await waitForCalloutScreen(doc, message.content.screens[0].id);
-  is(
-    getAnchorSpy.lastCall.returnValue.selector,
-    message.content.screens[0].anchors[4].selector,
-    "The first valid anchor (anchor 5) is selected"
-  );
-
-  CustomizableUI.reset();
-  await BrowserTestUtils.closeWindow(win);
-  sandbox.restore();
-});
