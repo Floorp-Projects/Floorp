@@ -793,35 +793,36 @@ struct DIGroup {
       nsDisplayItem* item = *it;
       MOZ_ASSERT(item);
 
+      if (item->GetType() == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+        continue;
+      }
+
       BlobItemData* data = GetBlobItemData(item);
       if (data->mInvisible) {
         continue;
       }
 
       LayerIntRect bounds = data->mRect;
-      auto bottomRight = bounds.BottomRight();
+
+      // skip empty items
+      if (bounds.IsEmpty()) {
+        continue;
+      }
 
       GP("Trying %s %p-%d %d %d %d %d\n", item->Name(), item->Frame(),
          item->GetPerFrameKey(), bounds.x, bounds.y, bounds.XMost(),
          bounds.YMost());
 
-      if (item->GetType() == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
-        continue;
-      }
+      auto bottomRight = bounds.BottomRight();
 
       GP("paint check invalid %d %d - %d %d\n", bottomRight.x.value,
          bottomRight.y.value, size.width, size.height);
-      // skip empty items
-      if (bounds.IsEmpty()) {
-        continue;
-      }
 
       bool dirty = true;
       auto preservedBounds = bounds.Intersect(mPreservedRect);
       if (!mInvalidRect.Contains(preservedBounds)) {
         GP("Passing\n");
         dirty = false;
-        BlobItemData* data = GetBlobItemData(item);
         if (data->mInvalid) {
           gfxCriticalError()
               << "DisplayItem" << item->Name() << "-should be invalid";
@@ -1041,11 +1042,6 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       // outside the invalid rect.
       if (aDirty) {
         auto filterItem = static_cast<nsDisplayFilters*>(aItem);
-
-        nsRegion visible(aItem->GetClippedBounds(mDisplayListBuilder));
-        nsRect buildingRect = aItem->GetBuildingRect();
-        visible.And(visible, buildingRect);
-
         filterItem->Paint(mDisplayListBuilder, aContext);
         TakeExternalSurfaces(aRecorder, aData->mExternalSurfaces, aRootManager,
                              aResources);
