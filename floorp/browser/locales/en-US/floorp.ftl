@@ -743,7 +743,7 @@ open-link-in-external-select-browser-option-default =
  .label = Default browser
 open-link-in-external-tab-context-menu = Open in external browser
 open-link-in-external-tab-dialog-title-error = Error
-open-link-in-external-tab-dialog-message-default-browser-not-found = Default browser isn't found or is not configured.
+open-link-in-external-tab-dialog-message-default-browser-not-found = Default browser is not found or is not configured.
 open-link-in-external-tab-dialog-message-selected-browser-not-found = The selected browser does not exist.
 
 
