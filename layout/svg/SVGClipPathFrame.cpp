@@ -376,12 +376,12 @@ nsresult SVGClipPathFrame::AttributeChanged(int32_t aNameSpaceID,
                                             int32_t aModType) {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::transform) {
-      SVGObserverUtils::InvalidateDirectRenderingObservers(this);
+      SVGObserverUtils::InvalidateRenderingObservers(this);
       SVGUtils::NotifyChildrenOfSVGChange(
           this, ISVGDisplayableFrame::TRANSFORM_CHANGED);
     }
     if (aAttribute == nsGkAtoms::clipPathUnits) {
-      SVGObserverUtils::InvalidateDirectRenderingObservers(this);
+      SVGObserverUtils::InvalidateRenderingObservers(this);
     }
   }
 

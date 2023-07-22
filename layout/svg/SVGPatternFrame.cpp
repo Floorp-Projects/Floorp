@@ -65,7 +65,7 @@ nsresult SVGPatternFrame::AttributeChanged(int32_t aNameSpaceID,
        aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height ||
        aAttribute == nsGkAtoms::preserveAspectRatio ||
        aAttribute == nsGkAtoms::viewBox)) {
-    SVGObserverUtils::InvalidateDirectRenderingObservers(this);
+    SVGObserverUtils::InvalidateRenderingObservers(this);
   }
 
   if ((aNameSpaceID == kNameSpaceID_XLink ||
@@ -75,7 +75,7 @@ nsresult SVGPatternFrame::AttributeChanged(int32_t aNameSpaceID,
     SVGObserverUtils::RemoveTemplateObserver(this);
     mNoHRefURI = false;
     // And update whoever references us
-    SVGObserverUtils::InvalidateDirectRenderingObservers(this);
+    SVGObserverUtils::InvalidateRenderingObservers(this);
   }
 
   return SVGPaintServerFrame::AttributeChanged(aNameSpaceID, aAttribute,

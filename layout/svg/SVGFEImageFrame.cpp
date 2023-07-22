@@ -130,7 +130,7 @@ nsresult SVGFEImageFrame::AttributeChanged(int32_t aNameSpaceID,
     MOZ_ASSERT(
         GetParent()->IsSVGFilterFrame(),
         "Observers observe the filter, so that's what we must invalidate");
-    SVGObserverUtils::InvalidateDirectRenderingObservers(GetParent());
+    SVGObserverUtils::InvalidateRenderingObservers(GetParent());
   }
 
   // Currently our SMIL implementation does not modify the DOM attributes. Once

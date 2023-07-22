@@ -44,7 +44,7 @@ nsresult SVGMarkerFrame::AttributeChanged(int32_t aNameSpaceID,
        aAttribute == nsGkAtoms::orient ||
        aAttribute == nsGkAtoms::preserveAspectRatio ||
        aAttribute == nsGkAtoms::viewBox)) {
-    SVGObserverUtils::InvalidateDirectRenderingObservers(this);
+    SVGObserverUtils::InvalidateRenderingObservers(this);
   }
 
   return SVGContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,

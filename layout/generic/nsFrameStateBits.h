@@ -429,6 +429,10 @@ FRAME_STATE_BIT(SVG, 23, NS_STATE_SVG_TEXT_IN_REFLOW)
 // to update the cached nsTextNode indexes that they correspond to.
 FRAME_STATE_BIT(SVG, 24, NS_STATE_SVG_TEXT_CORRESPONDENCE_DIRTY)
 
+// We can stop ancestor traversal of rendering observers when we hit
+// one a frame with this state bit.
+FRAME_STATE_BIT(SVG, 25, NS_STATE_SVG_RENDERING_OBSERVER_CONTAINER)
+
 // == Frame state bits that apply to text frames ==============================
 
 FRAME_STATE_GROUP(Text, nsTextFrame)
