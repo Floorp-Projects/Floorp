@@ -2604,6 +2604,24 @@ var gCSSProperties = {
     alias_for: "print-color-adjust",
     subproperties: ["print-color-adjust"],
   },
+  "color-scheme": {
+    domProp: "colorScheme",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["normal"],
+    other_values: [
+      "light",
+      "dark",
+      "light dark",
+      "light dark purple",
+      "light light dark",
+      "only light",
+      "only light dark",
+      "only light dark purple",
+      "light only",
+    ],
+    invalid_values: ["only normal", "normal only", "only light only"],
+  },
   columns: {
     domProp: "columns",
     inherited: false,
@@ -13677,27 +13695,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.color-mix.enabled")) {
     "color-mix(in srgb, red blue)",
     "color-mix(in srgb, red 10% blue)"
   );
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.color-scheme.enabled")) {
-  gCSSProperties["color-scheme"] = {
-    domProp: "colorScheme",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["normal"],
-    other_values: [
-      "light",
-      "dark",
-      "light dark",
-      "light dark purple",
-      "light light dark",
-      "only light",
-      "only light dark",
-      "only light dark purple",
-      "light only",
-    ],
-    invalid_values: ["only normal", "normal only", "only light only"],
-  };
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.forced-color-adjust.enabled")) {

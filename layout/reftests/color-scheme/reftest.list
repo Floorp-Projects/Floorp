@@ -1,5 +1,3 @@
-defaults pref(layout.css.color-scheme.enabled,true)
-
 != color-scheme-basic.html color-scheme-basic-notref.html
 != color-scheme-themed-button.html color-scheme-themed-button-notref.html
 
