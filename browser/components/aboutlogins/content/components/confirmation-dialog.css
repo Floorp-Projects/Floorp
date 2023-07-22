@@ -54,11 +54,13 @@
 .dismiss-icon {
   -moz-context-properties: fill;
   fill: currentColor;
+  user-select: none;
 }
 
 .warning-icon {
   -moz-context-properties: fill;
   fill: currentColor;
+  user-select: none;
   width: 40px;
   height: 40px;
   margin: 16px;
