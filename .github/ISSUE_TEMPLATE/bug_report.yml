@@ -19,7 +19,7 @@ body:
     attributes:
       label: Attention!
       description: |
-        **Windows 7/8.1 or lower does not support Floorp.**
+        **Windows 7/8.1 or lower does NOT support Floorp!**
         Please check this box only if you understand this.
       options:
         - label: I undertand that Floorp is NOT supported on Windows 7/8.1 or lower.
