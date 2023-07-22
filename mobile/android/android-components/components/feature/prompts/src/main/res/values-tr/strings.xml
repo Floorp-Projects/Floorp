@@ -43,10 +43,6 @@
     <string name="mozac_feature_prompts_content_description_input_label">Metin giriş alanı etiketi</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Bir renk seçin</string>
-    <!-- Title of the Identity Credential provider dialog choose. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Oturum açma sağlayıcısı seç</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account">Hesap seçin</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">İzin ver</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
@@ -133,4 +129,12 @@
     <!-- Federated Credential Management prompts -->
     <!--Content description for the Account picture in the Select Account FedCM prompt -->
     <string name="mozac_feature_prompts_account_picture">Hesap resmi</string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Oturum açma sağlayıcısı seç</string>
+    <!-- Title of an account picker dialog for identity credentials. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account">Hesap seçin</string>
+    <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Oturum açma sağlayıcısı olarak %1$s kullan</string>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[%2$s hesabıyla %1$s üzerinde oturum açtığınızda bu sağlayıcının <a href="%3$s">Gizlilik Politikası</a> ve <a href="%4$s">Hizmet Koşulları</a>’na tabi olursunuz]]></string>
 </resources>

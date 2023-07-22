@@ -302,52 +302,52 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Şimdi değil</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">%s varsayılan tarayıcınız olsun</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">%s varsayılan tarayıcınız olsun</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Firefox varsayılan tarayıcınız olsun</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">%1$s için paradan önce insanlık gelir. Siteler arası takip kodlarını engelleyerek gizliliğinizi koruyoruz.\n\nAyrıntıları %2$s bulabilirsiniz.</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s için paradan önce insanlık gelir. Siteler arası takip kodlarını engelleyerek gizliliğinizi koruyoruz.\n\nAyrıntıları %2$s bulabilirsiniz.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox için paradan önce insanlık gelir. Siteler arası takip kodlarını engelleyerek gizliliğinizi koruyoruz.\n\nAyrıntıları gizlilik bildirimimizde bulabilirsiniz.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">gizlilik bildirimimizde</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">gizlilik bildirimimizde</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Varsayılan tarayıcı yap</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Varsayılan tarayıcı yap</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Şimdi değil</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Şimdi değil</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Telefondan bilgisayara, bilgisayardan telefona geçin</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Telefondan bilgisayara, bilgisayardan telefona geçin</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Diğer cihazlarınızdaki sekmeleri ve parolaları alın, kaldığınız yerden devam edin.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Diğer cihazlarınızdaki sekmeleri ve parolaları alın, kaldığınız yerden devam edin.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Giriş yap</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Giriş yap</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Şimdi değil</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Şimdi değil</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Bildirimler sayesinde %s ile daha fazlasını yapın</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Bildirimler sayesinde %s ile daha fazlasını yapın</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Bildirimler sayesinde Firefox ile daha fazlasını yapın</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Sekmelerinizi cihazdan cihaza gönderin, indirmelerinizi yönetin ve %s ile ilgili ipuçları alın.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Sekmelerinizi cihazdan cihaza gönderin, indirmelerinizi yönetin ve %s ile ilgili ipuçları alın.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Sekmelerinizi cihazdan cihaza gönderin, indirmelerinizi yönetin ve Firefox ile ilgili ipuçları alın.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Bildirimleri aç</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Bildirimleri aç</string>
 
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Şimdi değil</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Şimdi değil</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -545,6 +545,8 @@
     <string name="preferences_open_links_in_apps_never">Asla</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Harici indirme yöneticisi</string>
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Gecko günlük kaydını etkinleştir</string>
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">Değişiklikleri uygulamak için uygulamadan çıkılıyor…</string>
 
@@ -1204,8 +1206,10 @@
     <string name="share_button_content_description">Paylaş</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">PDF olarak kaydet</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">PDF oluşturulamadı</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Kapat</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">Yazdırılamadı</string>
     <!-- Text for the print feature in the share and browser menu -->

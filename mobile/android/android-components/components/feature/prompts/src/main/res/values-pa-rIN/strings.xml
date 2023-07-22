@@ -136,4 +136,6 @@
     <string name="mozac_feature_prompts_identity_credentials_choose_account">ਖਾਤਾ ਚੁਣੋ</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">%1$s ਨੂੰ ਲਾਗਇਨ ਪੂਰਕ ਵਜੋਂ ਵਰਤੋਂ</string>
-    </resources>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[%1$s ਵਿੱਚ %2$s ਖਾਤੇ ਨਾਲ ਲਾਗਇਨ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ, ਜੋ ਕਿ <a href="%3$s">ਪਰਦੇਦਾਰੀ ਨੀਤੀ</a> ਅਤੇ <a href="%4$s">ਸੇਵਾ ਦੀਆਂ ਸ਼ਰਤਾਂ</a> ਦੇ ਅਧੀਨ ਹੈ।]]></string>
+</resources>

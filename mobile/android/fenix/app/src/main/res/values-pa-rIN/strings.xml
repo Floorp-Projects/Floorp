@@ -308,52 +308,52 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">ਹੁਣੇ ਨਹੀਂ</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">%s ਨੂੰ ਆਪਣਾ ਪੱਕਾ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">%s ਨੂੰ ਆਪਣਾ ਪੱਕਾ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Firefox ਨੂੰ ਆਪਣਾ ਪੱਕਾ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">%1$s ਫ਼ਾਇਦੇ ਤੋਂ ਪਹਿਲਾਂ ਲੋਕਾਂ ਨੂੰ ਰੱਖਦਾ ਹੈ ਅਤੇ ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾ ਕੇ ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ ਦੀ ਰੱਖਿਆ ਕਰਦਾ ਹੈ।\n\nਸਾਡੇ %2$s ਬਾਰੇ ਹੋਰ ਜਾਣੋ।</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s ਫ਼ਾਇਦੇ ਤੋਂ ਪਹਿਲਾਂ ਲੋਕਾਂ ਨੂੰ ਰੱਖਦਾ ਹੈ ਅਤੇ ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾ ਕੇ ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ ਦੀ ਰੱਖਿਆ ਕਰਦਾ ਹੈ।\n\nਸਾਡੇ %2$s ਬਾਰੇ ਹੋਰ ਜਾਣੋ।</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox ਫ਼ਾਇਦੇ ਨਾਲੋਂ ਲੋਕਾਂ ਨੂੰ ਪਹਿਲ ਦਿੰਦਾ ਹੈ ਅਤੇ ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾ ਕੇ ਤੁਹਾਡੇ ਪਰਦੇਦਾਰੀ ਨੂੰ ਬਚਾਉਂਦਾ ਹੈ।\n\nਹੋਰ ਜਾਣਕਾਰੀ ਸਾਡੀ ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ ਨੂੰ ਪੜ੍ਹੋ।</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">ਮੂਲ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">ਮੂਲ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">ਹੁਣੇ ਨਹੀਂ</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">ਹੁਣੇ ਨਹੀਂ</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">ਫ਼ੋਨ ਤੋਂ ਲੈਪਟਾਪ ਉੱਤੇ ਜਾਓ ਤੇ ਵਾਪਸ ਆਓ</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">ਫ਼ੋਨ ਤੋਂ ਲੈਪਟਾਪ ਉੱਤੇ ਜਾਓ ਤੇ ਵਾਪਸ ਆਓ</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">ਆਪਣੇ ਹੋਰ ਡਿਵਾਈਸਾਂ ਉੱਤੇ ਜਿੱਥੇ ਤੁਸੀਂ ਟੈਬਾਂ ਤੇ ਪਾਸਵਰਡਾਂ ਨੂੰ ਜਿੱਥੇ ਛੱਡਿਆ ਸੀ, ਓਥੋਂ ਹੀ ਲਵੋ।</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">ਆਪਣੇ ਹੋਰ ਡਿਵਾਈਸਾਂ ਉੱਤੇ ਜਿੱਥੇ ਤੁਸੀਂ ਟੈਬਾਂ ਤੇ ਪਾਸਵਰਡਾਂ ਨੂੰ ਜਿੱਥੇ ਛੱਡਿਆ ਸੀ, ਓਥੋਂ ਹੀ ਲਵੋ।</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">ਸਾਈਨ ਇਨ</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">ਸਾਈਨ ਇਨ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">ਹੁਣੇ ਨਹੀਂ</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">ਹੁਣੇ ਨਹੀਂ</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">ਨੋਟੀਫ਼ਿਕੇਸ਼ਨ ਤੁਹਾਨੂੰ %s ਨਾਲ ਹੋਰ ਕਰਨ ਦੀ ਮਦਦ ਕਰਦੇ ਹਨ</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">ਨੋਟੀਫ਼ਿਕੇਸ਼ਨ ਤੁਹਾਨੂੰ %s ਨਾਲ ਹੋਰ ਕਰਨ ਦੀ ਮਦਦ ਕਰਦੇ ਹਨ</string>
 
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">ਨੋਟੀਫ਼ਿਕੇਸ਼ਨ ਤੁਹਾਨੂੰ Firefox ਨਾਲ ਵੱਧ ਕੰਮ ਦੀ ਮਦਦ ਕਰਦੇ ਹਨ</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">ਡਿਵਾਈਸਾਂ ਵਿੱਚ ਟੈਬਾਂ ਭੇਜੋ, ਡਾਊਨਲੋਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ ਅਤੇ %s ਦਾ ਭਰਪੂਰ ਫ਼ਾਇਦਾ ਲੈਣ ਲਈ ਹੋਰ ਸੁਝਾਅ ਲਵੋ।</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">ਡਿਵਾਈਸਾਂ ਵਿੱਚ ਟੈਬਾਂ ਭੇਜੋ, ਡਾਊਨਲੋਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ ਅਤੇ %s ਦਾ ਭਰਪੂਰ ਫ਼ਾਇਦਾ ਲੈਣ ਲਈ ਹੋਰ ਸੁਝਾਅ ਲਵੋ।</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">ਟੈਬਾਂ ਨੂੰ ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ ਭੇਜੋ, ਡਾਊਨਲੋਡ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ ਅਤੇ Firefox ਦਾ ਪੂਰਾ ਫ਼ਾਇਦਾ ਲੈਣ ਲਈ ਸੁਝਾਅ ਲਵੋ।</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">ਸੂਚਨਾਵਾਂ ਚਾਲੂ ਕਰੋ</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">ਸੂਚਨਾਵਾਂ ਚਾਲੂ ਕਰੋ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">ਹੁਣੇ ਨਹੀਂ</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">ਹੁਣੇ ਨਹੀਂ</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1222,8 +1222,10 @@
     <string name="share_button_content_description">ਸਾਂਝਾ ਕਰੋ</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">PDF ਵਜੋਂ ਸੰਭਾਲੋ</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">PDF ਬਣਾਉਣ ਲਈ ਅਸਮਰੱਥ</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">ਖ਼ਾਰਜ ਕਰੋ</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">ਛਾਪਣ ਲਈ ਅਸਮਰੱਥ ਹੈ</string>
     <!-- Text for the print feature in the share and browser menu -->
