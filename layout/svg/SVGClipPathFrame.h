@@ -36,7 +36,8 @@ class SVGClipPathFrame final : public SVGContainerFrame {
       : SVGContainerFrame(aStyle, aPresContext, kClassID),
         mIsBeingProcessed(false) {
     AddStateBits(NS_FRAME_IS_NONDISPLAY | NS_STATE_SVG_CLIPPATH_CHILD |
-                 NS_FRAME_MAY_BE_TRANSFORMED);
+                 NS_FRAME_MAY_BE_TRANSFORMED |
+                 NS_STATE_SVG_RENDERING_OBSERVER_CONTAINER);
   }
 
  public:

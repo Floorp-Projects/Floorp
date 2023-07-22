@@ -55,7 +55,7 @@ nsresult SVGGradientFrame::AttributeChanged(int32_t aNameSpaceID,
       (aAttribute == nsGkAtoms::gradientUnits ||
        aAttribute == nsGkAtoms::gradientTransform ||
        aAttribute == nsGkAtoms::spreadMethod)) {
-    SVGObserverUtils::InvalidateDirectRenderingObservers(this);
+    SVGObserverUtils::InvalidateRenderingObservers(this);
   } else if ((aNameSpaceID == kNameSpaceID_XLink ||
               aNameSpaceID == kNameSpaceID_None) &&
              aAttribute == nsGkAtoms::href) {
@@ -63,7 +63,7 @@ nsresult SVGGradientFrame::AttributeChanged(int32_t aNameSpaceID,
     SVGObserverUtils::RemoveTemplateObserver(this);
     mNoHRefURI = false;
     // And update whoever references us
-    SVGObserverUtils::InvalidateDirectRenderingObservers(this);
+    SVGObserverUtils::InvalidateRenderingObservers(this);
   }
 
   return SVGPaintServerFrame::AttributeChanged(aNameSpaceID, aAttribute,
@@ -406,7 +406,7 @@ nsresult SVGLinearGradientFrame::AttributeChanged(int32_t aNameSpaceID,
   if (aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsGkAtoms::x1 || aAttribute == nsGkAtoms::y1 ||
        aAttribute == nsGkAtoms::x2 || aAttribute == nsGkAtoms::y2)) {
-    SVGObserverUtils::InvalidateDirectRenderingObservers(this);
+    SVGObserverUtils::InvalidateRenderingObservers(this);
   }
 
   return SVGGradientFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
@@ -495,7 +495,7 @@ nsresult SVGRadialGradientFrame::AttributeChanged(int32_t aNameSpaceID,
       (aAttribute == nsGkAtoms::r || aAttribute == nsGkAtoms::cx ||
        aAttribute == nsGkAtoms::cy || aAttribute == nsGkAtoms::fx ||
        aAttribute == nsGkAtoms::fy)) {
-    SVGObserverUtils::InvalidateDirectRenderingObservers(this);
+    SVGObserverUtils::InvalidateRenderingObservers(this);
   }
 
   return SVGGradientFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
