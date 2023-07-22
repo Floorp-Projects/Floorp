@@ -45,6 +45,7 @@ case `uname -s` in
 
         # see https://bugs.python.org/issue44065
         sed -i -e 's,$CC --print-multiarch,:,' ${python_src}/configure
+        export LDFLAGS="${LDFLAGS} -Wl,-rpath -Wl,@loader_path/../.."
         ;;
     Linux)
         export LDFLAGS="${LDFLAGS} -Wl,-rpath,\\\$ORIGIN/../.."
@@ -71,6 +72,19 @@ ${work_dir}/python/bin/python3 -m pip install --upgrade pip==23.0
 ${work_dir}/python/bin/python3 -m pip install -r ${GECKO_PATH}/build/psutil_requirements.txt -r ${GECKO_PATH}/build/zstandard_requirements.txt
 
 case `uname -s` in
+    Darwin)
+        cp /usr/local/opt/openssl/lib/libssl*.dylib ${work_dir}/python/lib/
+        cp /usr/local/opt/openssl/lib/libcrypto*.dylib ${work_dir}/python/lib/
+
+        # Instruct the loader to search for the lib in rpath instead of the one used during linking
+        install_name_tool -change /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib @rpath/libssl.1.1.dylib ${work_dir}/python/lib/python3.8/lib-dynload/_ssl.cpython-38-darwin.so
+        install_name_tool -change /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib ${work_dir}/python/lib/python3.8/lib-dynload/_ssl.cpython-38-darwin.so
+        # Also modify the shipped libssl to use the shipped libcrypto
+        install_name_tool -change /usr/local/Cellar/openssl@1.1/1.1.1h/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib ${work_dir}/python/lib/libssl.1.1.dylib
+
+        # sanity check
+        ${work_dir}/python/bin/python3 -c "import ssl"
+        ;;
     Linux)
         cp /usr/lib/x86_64-linux-gnu/libffi.so.* ${work_dir}/python/lib/
         cp /usr/lib/x86_64-linux-gnu/libssl.so.* ${work_dir}/python/lib/
