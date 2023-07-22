@@ -22,7 +22,7 @@ body:
         **Windows 7/8.1 or lower does not support Floorp.**
         Please check this box only if you understand this.
       options:
-        - label: **I undertand that Floorp is NOT supported on Windows 7/8.1 or lower.**
+        - label: I undertand that Floorp is NOT supported on Windows 7/8.1 or lower.
           required: true
 
   - type: textarea
