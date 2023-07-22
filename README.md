@@ -310,3 +310,9 @@ Notice: If you are "showdown" developer & doesn't list your name, please contact
 - Author: [yokoffing](https://github.com/yokoffing)
 
 Notice: Betterfox is not included in Floorp itself, but is downloaded from the Internet.
+
+
+## Repository View Counter
+
+<div align='center'><a href='https://www.websitecounterfree.com'><img src='https://www.websitecounterfree.com/c.php?d=9&id=38248&s=1' border='0' alt='Free Website Counter'></a><br/><small>
+<a href='https://www.websitecounterfree.com'>Free Website Counter: Since 2023 7/22</a></small></div>
