@@ -421,6 +421,8 @@ bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm,
     }
 #if defined(JS_ION_PERF)
     rangeRecorder.recordVMWrapperOffset(fun.name());
+#else
+    rangeRecorder.recordOffset("Trampoline: VMWrapper");
 #endif
 
     MOZ_ASSERT(functionWrapperOffsets_.length() == size_t(id));
