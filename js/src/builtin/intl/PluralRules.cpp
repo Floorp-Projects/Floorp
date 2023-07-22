@@ -225,7 +225,15 @@ static mozilla::intl::PluralRules* NewPluralRules(
 
     options.mSignificantDigits = mozilla::Some(
         std::make_pair(minimumSignificantDigits, maximumSignificantDigits));
-  } else {
+  }
+
+  bool hasMinimumFractionDigits;
+  if (!HasProperty(cx, internals, cx->names().minimumFractionDigits,
+                   &hasMinimumFractionDigits)) {
+    return nullptr;
+  }
+
+  if (hasMinimumFractionDigits) {
     if (!GetProperty(cx, internals, internals,
                      cx->names().minimumFractionDigits, &value)) {
       return nullptr;

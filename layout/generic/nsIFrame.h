@@ -4541,6 +4541,17 @@ class nsIFrame : public nsQueryFrame {
   }
 
   /**
+   * Returns true if the frame is an SVG Rendering Observer container.
+   */
+  bool IsRenderingObserverContainer() const {
+    // NS_FRAME_SVG_LAYOUT is used as a proxy to check for an SVG frame because
+    // NS_STATE_SVG_RENDERING_OBSERVER_CONTAINER is an SVG specific state bit.
+    return HasAllStateBits(NS_FRAME_SVG_LAYOUT |
+                           NS_STATE_SVG_RENDERING_OBSERVER_CONTAINER) ||
+           IsSVGOuterSVGFrame();
+  }
+
+  /**
    * Return whether this frame keeps track of overflow areas. (Frames for
    * non-display SVG elements -- e.g. <clipPath> -- do not maintain overflow
    * areas, because they're never painted.)

@@ -150,7 +150,7 @@ nsresult SVGMaskFrame::AttributeChanged(int32_t aNameSpaceID,
        aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height ||
        aAttribute == nsGkAtoms::maskUnits ||
        aAttribute == nsGkAtoms::maskContentUnits)) {
-    SVGObserverUtils::InvalidateDirectRenderingObservers(this);
+    SVGObserverUtils::InvalidateRenderingObservers(this);
   }
 
   return SVGContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,

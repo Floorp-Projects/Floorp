@@ -98,7 +98,7 @@ nsresult SVGFEContainerFrame::AttributeChanged(int32_t aNameSpaceID,
     MOZ_ASSERT(
         GetParent()->IsSVGFilterFrame(),
         "Observers observe the filter, so that's what we must invalidate");
-    SVGObserverUtils::InvalidateDirectRenderingObservers(GetParent());
+    SVGObserverUtils::InvalidateRenderingObservers(GetParent());
   }
 
   return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);

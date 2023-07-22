@@ -49,7 +49,8 @@ class SVGMarkerFrame final : public SVGContainerFrame {
         mMarkedFrame(nullptr),
         mInUse(false),
         mInUse2(false) {
-    AddStateBits(NS_FRAME_IS_NONDISPLAY);
+    AddStateBits(NS_FRAME_IS_NONDISPLAY |
+                 NS_STATE_SVG_RENDERING_OBSERVER_CONTAINER);
   }
 
  public:
