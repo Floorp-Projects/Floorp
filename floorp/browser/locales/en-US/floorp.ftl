@@ -146,7 +146,7 @@ system-theme-auto =
 ## user interface prefernces
 
 ui-preference = Browser appearance
-preferences-browser-appearance-description = You can choose from a variety of great third-party designs. Some designs may not be compatible with your configuration.
+preferences-browser-appearance-description = You can choose one of the wonderful third-party Floorp designs. Some designs may not be compatible with your configuration.
 
 firefox-proton =
  .label = Firefox modern Proton UI
@@ -743,7 +743,7 @@ open-link-in-external-select-browser-option-default =
  .label = Default browser
 open-link-in-external-tab-context-menu = Open in external browser
 open-link-in-external-tab-dialog-title-error = Error
-open-link-in-external-tab-dialog-message-default-browser-not-found = Default browser does not exist or is not configured.
+open-link-in-external-tab-dialog-message-default-browser-not-found = Default browser is not found or is not configured.
 open-link-in-external-tab-dialog-message-selected-browser-not-found = The selected browser does not exist.
 
 
@@ -813,18 +813,18 @@ sharemode-menuitem =
 
 welcome-login-to-firefox-account = Login to Firefox Account
 welcome-to-floorp = Welcome to Floorp !
-welcome-discribe-floorp = Floorp is a browser that flexibly supports various environments and is based on Firefox. It is a browser that is easy to use and has a lot of features.
+welcome-discribe-floorp = Floorp is a feature-rich flexible browser that supports various environments and is based on Firefox.
 welcome-start-setup = Ready to jump in?
 welcome-skip-to-start-browsing = Skip to Start Browsing
 welcome-select-preferences-template = Select a template
 welcome-minimum-template = Basic
 welcome-enable-basic-features = Enable basic features & settings for a simple experience.
 welcome-medium-template = Medium
-welcome-enable-some-features = Enable some features & settings for a better experience.
+welcome-enable-some-features = Enable additional features & settings for a better experience.
 welcome-maximum-template = Advanced
-welcome-enable-most-of-features = Most flexible features & settings. Recommended for advanced users.
+welcome-enable-most-of-features = Enable advanced features & settings. Recommended for experienced users.
 welcome-select-browser-design = Select a Browser Design
-welcome-discribe-browser-design = You can choose from a variety of great third-party or Floorp's designs. OS specific designs are also available at Preferences.
+welcome-discribe-browser-design = You can choose one of the wonderful third-party Floorp designs. OS specific designs are also available at Preferences.
 welcome-design-lepton-name = Lepton Original Design
 welcome-design-photon-name = Lepton Photon Design
 welcome-design-ProtonFix-name = Lepton ProtonFix Design
