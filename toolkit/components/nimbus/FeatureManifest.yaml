@@ -788,6 +788,12 @@ password-autocomplete:
     firefoxRelayIntegration:
       type: boolean
       description: Can show Firefox Relay integration offer?
+
+cm-csv-import:
+  description: Importing logins from CSV files
+  owner: issozi@mozilla.com
+  hasExposure: false
+  variables:
     csvImport:
       type: boolean
       description: Can show CSV Import in about:logins or Migration Wizard
