@@ -55,8 +55,9 @@ add_task(
       set: [[featureTourPref, getPrefValueByScreen(2)]],
     });
     const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
-    testMessage.message.content.screens[1].content.arrow_position = "start";
-    testMessage.message.content.screens[1].parent_selector = ".brand-logo";
+    testMessage.message.content.screens[1].anchors = [
+      { selector: ".brand-logo", arrow_position: "start" },
+    ];
     const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
     await BrowserTestUtils.withNewTab(
@@ -222,7 +223,7 @@ add_task(async function feature_callout_top_end_positioning() {
     set: [[featureTourPref, defaultPrefValue]],
   });
   const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
-  testMessage.message.content.screens[0].content.arrow_position = "top-end";
+  testMessage.message.content.screens[0].anchors[0].arrow_position = "top-end";
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
   await BrowserTestUtils.withNewTab(
@@ -264,7 +265,8 @@ add_task(async function feature_callout_top_start_positioning() {
     set: [[featureTourPref, defaultPrefValue]],
   });
   const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
-  testMessage.message.content.screens[0].content.arrow_position = "top-start";
+  testMessage.message.content.screens[0].anchors[0].arrow_position =
+    "top-start";
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
   await BrowserTestUtils.withNewTab(
@@ -312,7 +314,8 @@ add_task(
     });
 
     const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
-    testMessage.message.content.screens[0].content.arrow_position = "top-end";
+    testMessage.message.content.screens[0].anchors[0].arrow_position =
+      "top-end";
     const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
     await BrowserTestUtils.withNewTab(
@@ -362,10 +365,9 @@ add_task(async function feature_callout_is_larger_than_its_parent() {
         screens: [
           {
             id: "FEATURE_CALLOUT_1",
-            parent_selector: ".brand-icon",
+            anchors: [{ selector: ".brand-icon", arrow_position: "end" }],
             content: {
               position: "callout",
-              arrow_position: "end",
               title: "callout-firefox-view-tab-pickup-title",
               subtitle: {
                 string_id: "callout-firefox-view-tab-pickup-subtitle",
