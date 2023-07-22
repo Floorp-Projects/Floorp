@@ -178,14 +178,10 @@ const MESSAGES = () => {
         screens: [
           {
             id: "FEATURE_CALLOUT_1",
-            anchors: [
-              {
-                selector: "#tab-pickup-container",
-                arrow_position: "top",
-              },
-            ],
+            parent_selector: "#tab-pickup-container",
             content: {
               position: "callout",
+              arrow_position: "top",
               title: {
                 string_id: "callout-firefox-view-tab-pickup-title",
               },
@@ -229,27 +225,14 @@ const MESSAGES = () => {
                   },
                 },
               },
-              page_event_listeners: [
-                {
-                  params: {
-                    type: "toggle",
-                    selectors: "#tab-pickup-container",
-                  },
-                  action: { reposition: true },
-                },
-              ],
             },
           },
           {
             id: "FEATURE_CALLOUT_2",
-            anchors: [
-              {
-                selector: "#recently-closed-tabs-container",
-                arrow_position: "bottom",
-              },
-            ],
+            parent_selector: "#recently-closed-tabs-container",
             content: {
               position: "callout",
+              arrow_position: "bottom",
               title: {
                 string_id: "callout-firefox-view-recently-closed-title",
               },
@@ -287,15 +270,6 @@ const MESSAGES = () => {
                   },
                 },
               },
-              page_event_listeners: [
-                {
-                  params: {
-                    type: "toggle",
-                    selectors: "#recently-closed-tabs-container",
-                  },
-                  action: { reposition: true },
-                },
-              ],
             },
           },
         ],
@@ -319,14 +293,10 @@ const MESSAGES = () => {
         screens: [
           {
             id: "FIREFOX_VIEW_TAB_PICKUP_REMINDER",
-            anchors: [
-              {
-                selector: "#tab-pickup-container",
-                arrow_position: "top",
-              },
-            ],
+            parent_selector: "#tab-pickup-container",
             content: {
               position: "callout",
+              arrow_position: "top",
               title: {
                 string_id:
                   "continuous-onboarding-firefox-view-tab-pickup-title",
@@ -359,15 +329,6 @@ const MESSAGES = () => {
                   navigate: true,
                 },
               },
-              page_event_listeners: [
-                {
-                  params: {
-                    type: "toggle",
-                    selectors: "#tab-pickup-container",
-                  },
-                  action: { reposition: true },
-                },
-              ],
             },
           },
         ],
@@ -393,15 +354,14 @@ const MESSAGES = () => {
         screens: [
           {
             id: "FEATURE_CALLOUT_1_A",
-            anchors: [
-              {
-                selector: "hbox#browser",
-                arrow_position: "top-end",
-                absolute_position: { top: "45px", right: "55px" },
-              },
-            ],
+            parent_selector: "hbox#browser",
             content: {
               position: "callout",
+              callout_position_override: {
+                top: "45px",
+                right: "55px",
+              },
+              arrow_position: "top-end",
               title: {
                 string_id: "callout-pdfjs-edit-title",
               },
@@ -443,15 +403,14 @@ const MESSAGES = () => {
           },
           {
             id: "FEATURE_CALLOUT_2_A",
-            anchors: [
-              {
-                selector: "hbox#browser",
-                arrow_position: "top-end",
-                absolute_position: { top: "45px", right: "25px" },
-              },
-            ],
+            parent_selector: "hbox#browser",
             content: {
               position: "callout",
+              callout_position_override: {
+                top: "45px",
+                right: "25px",
+              },
+              arrow_position: "top-end",
               title: {
                 string_id: "callout-pdfjs-draw-title",
               },
@@ -513,15 +472,14 @@ const MESSAGES = () => {
         screens: [
           {
             id: "FEATURE_CALLOUT_1_B",
-            anchors: [
-              {
-                selector: "hbox#browser",
-                arrow_position: "top-end",
-                absolute_position: { top: "45px", right: "55px" },
-              },
-            ],
+            parent_selector: "hbox#browser",
             content: {
               position: "callout",
+              callout_position_override: {
+                top: "45px",
+                right: "55px",
+              },
+              arrow_position: "top-end",
               title: {
                 string_id: "callout-pdfjs-edit-title",
               },
@@ -563,15 +521,14 @@ const MESSAGES = () => {
           },
           {
             id: "FEATURE_CALLOUT_2_B",
-            anchors: [
-              {
-                selector: "hbox#browser",
-                arrow_position: "top-end",
-                absolute_position: { top: "45px", right: "25px" },
-              },
-            ],
+            parent_selector: "hbox#browser",
             content: {
               position: "callout",
+              callout_position_override: {
+                top: "45px",
+                right: "25px",
+              },
+              arrow_position: "top-end",
               title: {
                 string_id: "callout-pdfjs-draw-title",
               },
