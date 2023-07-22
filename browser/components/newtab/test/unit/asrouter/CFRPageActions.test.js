@@ -940,6 +940,7 @@ describe("CFRPageActions", () => {
       let getStyleStub;
       let isElmVisibleStub;
       let getWidgetStub;
+      let isCustomizingStub;
       beforeEach(() => {
         TEST_MESSAGE = {
           id: "fake_id",
@@ -958,8 +959,10 @@ describe("CFRPageActions", () => {
           .returns({ display: "block", visibility: "visible" });
         isElmVisibleStub = sandbox.stub().returns(true);
         getWidgetStub = sandbox.stub();
+        isCustomizingStub = sandbox.stub().returns(false);
         globals.set({
           CustomizableUI: { getWidget: getWidgetStub },
+          CustomizationHandler: { isCustomizing: isCustomizingStub },
           isElementVisible: isElmVisibleStub,
         });
 
@@ -1001,6 +1004,7 @@ describe("CFRPageActions", () => {
 
       it("should use default container if element exists but is in the customization palette", async () => {
         getWidgetStub.withArgs(fakeAnchorId).returns({ areaType: null });
+        isCustomizingStub.returns(true);
         await pageAction.showPopup();
         assert.equal(
           fakeBrowser.cfrpopupnotificationanchor.id,
@@ -1048,6 +1052,7 @@ describe("CFRPageActions", () => {
           .withArgs(sandbox.match({ id: fakeAnchorId }))
           .returns({ display: "none", visibility: "visible" });
         getWidgetStub.withArgs(fakeAltAnchorId).returns({ areaType: null });
+        isCustomizingStub.returns(true);
         await pageAction.showPopup();
         assert.equal(
           fakeBrowser.cfrpopupnotificationanchor.id,

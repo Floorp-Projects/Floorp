@@ -819,16 +819,16 @@ class PageAction {
       return null;
     }
     let widget = lazy.CustomizableUI.getWidget(id);
-    if (widget && (!widget.areaType || widget.areaType.includes("panel"))) {
-      // the element is a customizable widget (a toolbar item, e.g. the reload
-      // button or the downloads button). widgets can be in various areas, like
-      // the overflow panel (the chevron button that appears when your window is
-      // so small the toolbar overflows. they can also be in the customization
-      // palette, which is an element in the browser chrome, but it looks like a
-      // tab/page. it appears when you right click the toolbar and click Customize
-      // Toolbar. widgets in the palette are always present in the chrome's DOM.
-      // but they're totally invisible except in customize mode. so if a widget is
-      // in the palette, its areaType will be undefined.
+    if (
+      widget &&
+      (this.window.CustomizationHandler.isCustomizing() ||
+        widget.areaType?.includes("panel"))
+    ) {
+      // The element is a customizable widget (a toolbar item, e.g. the
+      // reload button or the downloads button). Widgets can be in various
+      // areas, like the overflow panel or the customization palette.
+      // Widgets in the palette are present in the chrome's DOM during
+      // customization, but can't be used.
       return null;
     }
     return element;
