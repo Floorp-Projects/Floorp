@@ -228,7 +228,7 @@ async function startup() {
 
 (async() => {
   let enabled = await browser.aboutConfigPrefs.getPref("floorp.tabbar.style");
-  if (enabled == 1 || enabled == 2) {
+  if (enabled == 1) {
     browser.theme.onUpdated.addListener(async details => {
       if ((await browser.storage.local.get('fitLightness')).fitLightness !== false) {
         // Re-apply options, so the lightness settings fit the new theme

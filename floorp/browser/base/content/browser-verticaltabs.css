@@ -97,9 +97,6 @@
      --scrollbtn-outer-padding: 0px;
    }
    
-   #tabbrowser-tabs[positionpinnedtabs]>#tabbrowser-arrowscrollbox::part(scrollbox) {
-     padding-inline: 0 !important;
-   }
    
    #tabbrowser-arrowscrollbox-periphery {
      width: -moz-available;
@@ -174,20 +171,6 @@
    }
    
    
-   /* UI size */
-   
-    :root[uidensity=touch] .tabbrowser-tab[pinned] {
-     max-width: 3.2em !important;
-     width: 3.2em !important;
-     min-width: 3.2em !important;
-   }
-   
-    :root[uidensity=compact] .tabbrowser-tab[pinned] {
-     max-width: 2.5em !important;
-     width: 2.5em !important;
-     min-width: 2.5em !important;
-   }
-   
    tab>stack, .tabbrowser-tab {
      height: unset !important;
      width: -moz-available !important;
@@ -215,3 +198,27 @@
    #tabbrowser-arrowscrollbox-periphery > .closing-tabs-spacer {
     display: none !important;
    }
+
+   #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] {
+    min-width: -moz-available !important;
+  }
+  
+  .tab-icon-stack[pinned="true"] {
+    margin-inline-end: 5.5px;
+  }
+  
+  .tab-label-container[pinned="true"][flex] {
+    display: inherit !important;
+  }
+  
+  :root[uidensity] .tabbrowser-tab[context][class], .tabbrowser-tab[context][class] {
+    min-width: -moz-available !important;
+  }
+  
+  .tab-label-container[pinned="true"]::after {
+    content: "Pinned";
+    font-size: 8.5px;
+    margin-top: -5px;
+    color: var(--panel-description-color);
+    font-weight: bold;
+  }

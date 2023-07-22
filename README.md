@@ -293,6 +293,8 @@ Notice: If you are "userChromeJS Loader" developer & doesn't list your name, ple
 - [MIT](https://github.com/numirias/paxmod/blob/master/LICENSE)
 - Author: [numirias](https://github.com/numirias/)
 
+Notice: Paxmod is used for reference material and multi-level tab implementation of vertical tabs.
+
 ### 📦 showdown
 
 - [showdown](https://github.com/showdownjs/showdown)
@@ -308,27 +310,3 @@ Notice: If you are "showdown" developer & doesn't list your name, please contact
 - Author: [yokoffing](https://github.com/yokoffing)
 
 Notice: Betterfox is not included in Floorp itself, but is downloaded from the Internet.
-
-### 📦 uBlock Origin
-
-- [uBlock Origin](https://github.com/gorhill/uBlock)
-- [GNU GPLv3](https://github.com/gorhill/uBlock/blob/master/LICENSE.txt)
-- Author: [gorhill](https://github.com/gorhill/uBlock)
-
-Notice: uBlock Origin is not included in Floorp itself & Floorp doesn't install it by itsself. In "about:prefernces" Floorp recommends installing uBlock Origin. Do not make the mistake of including the GPL.
-
-### 📦 Gesturefy
-
-- [Gesturefy](https://github.com/Robbendebiene/Gesturefy)
-- [GNU GPLv3](https://github.com/Robbendebiene/Gesturefy/blob/master/LICENSE)
-- Author: [Robbendebiene](https://github.com/Robbendebiene)
-
-Notice: Gesturefy is not included in Floorp itself & Floorp doesn't install it by itsself. In "about:prefernces" Floorp recommends installing Gesturefy. Do not make the mistake of including the GPL.
-
-### 📦 Facebook Container
-
-- [Facebook Container](https://github.com/mozilla/contain-facebook)
-- [Mozilla Public License 2.0](https://github.com/mozilla/contain-facebook/blob/main/LICENSE)
-- Author: [Mozilla](https://mozilla.org)
-
-Notice: Facebook Container is not included in Floorp. In "about:prefernces" Floorp recommends installing Facebook Container.
