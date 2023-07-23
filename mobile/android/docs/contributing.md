@@ -12,8 +12,8 @@ Before contributing, please review our [Community Participation Guidelines](http
 
 ## Docs
 
-* [Contributing to Mozilla Mobile's Android projects](https://github.com/mozilla-mobile/shared-docs/blob/main/android/CONTRIBUTING.md)
-* [Contributing code to Mozilla's Android projects](https://github.com/mozilla-mobile/shared-docs/blob/main/android/CONTRIBUTING_code.md)
+* [Contributing to Mozilla Mobile's Android projects](https://github.com/mozilla-mobile/firefox-android/blob/main/docs/shared/android/CONTRIBUTING.md)
+* [Contributing code to Mozilla's Android projects](https://github.com/mozilla-mobile/firefox-android/blob/main/docs/shared/android/CONTRIBUTING_code.md)
 
 ### Project
 

@@ -1,7 +1,7 @@
 # Contributing code to Mozilla's Android projects
 Thank you for taking the time to contribute to one of Mozilla's Android
 projects! 🔥 🦊 ❤️ 🤖! 🎉 👍 For a full list of projects, see
-[the README](../README.md#android).
+[the README](../../../README.md).
 
 Before contributing, please review our [Community Participation Guidelines].
 

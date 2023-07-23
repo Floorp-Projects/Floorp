@@ -19,19 +19,19 @@ For the sake of simplicity, when a Pull Request (or merge request) is created, a
 
 Subsequently, a handoff to Firebase Test Lab occurs to provide an environment of UI test execution.
 
-For a more detailed document on Taskcluster see [here](https://github.com/mozilla-mobile/shared-docs/blob/main/android/taskcluster_guide.md).
+For a more detailed document on Taskcluster see [here](https://github.com/mozilla-mobile/firefox-android/blob/main/docs/shared/android/taskcluster_guide.md).
 
 ## Firebase Test Lab
 
 We use [Firebase Test Lab](https://firebase.google.com/docs/test-lab) to conduct automated on-device testing. Firebase Test Lab is a cloud-based testing platform that allows us to test our apps and websites in a way that is similar to how we would test them on a physical device.
 
-For more information on physical device testing see [here](https://github.com/mozilla-mobile/shared-docs/blob/main/android/device_testing.md).
+For more information on physical device testing see [here](https://github.com/mozilla-mobile/firefox-android/blob/main/docs/shared/android/device_testing.md).
 
 Executable Espresso and UI Automator UI tests run on virtual devices by default and the test suite will run automatically on all Pull Requests and merges on the `main` branch. Test results and test artifacts are immediately available after test execution.
 
 _Espresso and UI Automator are Google's core UI testing libraries on Android: they provide APIs to select views, perform actions on them, and assert state without reaching into implementation details._
 
-For a more detailed document on testing styles and technologies used by the Android teams at Mozilla see [here](https://github.com/mozilla-mobile/shared-docs/blob/main/android/testing.md)
+For a more detailed document on testing styles and technologies used by the Android teams at Mozilla see [here](https://github.com/mozilla-mobile/firefox-android/blob/main/docs/shared/android/testing.md)
 
 # Treeherder
 

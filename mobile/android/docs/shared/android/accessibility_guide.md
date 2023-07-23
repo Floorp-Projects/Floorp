@@ -34,10 +34,10 @@ For example, take this layout that represents a menu item that consists of an im
 </LinearLayout>
 ```
 When a user swipes right past this composite view, the cursor will first land on the LinearLayout, and then on the TextView:
-<img alt="Animation of cursor landing menu items and their text children" src="https://github.com/mozilla-mobile/shared-docs/raw/master/android/images/double-nav.gif" width="240">
+<img alt="Animation of cursor landing menu items and their text children" src="https://github.com/mozilla-mobile/firefox-android/raw/main/docs/shared/android/images/double-nav.gif" width="240">
 
 This is both inefficient and confusing for the user, since they will encounter each item twice. To streamline this experience, set `android:importantForAccessibility="no"` on the `TextView`. This will tell TalkBack not to bother with that node:
-<img alt="Animation of cursor only landing on menu items" src="https://github.com/mozilla-mobile/shared-docs/raw/master/android/images/single-nav.gif" width="240">
+<img alt="Animation of cursor only landing on menu items" src="https://github.com/mozilla-mobile/firefox-android/raw/main/docs/shared/android/images/single-nav.gif" width="240">
 
 ## Automated testing
 You can regularly use [the Accessibility Scanner][scanner] to get a cursory overview of how the accessibility of your app is doing.
