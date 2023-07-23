@@ -44,6 +44,24 @@ add_task(async function external_load() {
   waitForExplicitFinish();
   Services.obs.addObserver(checkSecFetchUser, "http-on-stop-request");
 
+  let headersChecked = new Promise(resolve => {
+    let reqStopped = async (subject, topic, data) => {
+      Services.obs.removeObserver(reqStopped, "http-on-stop-request");
+      resolve();
+    };
+    Services.obs.addObserver(reqStopped, "http-on-stop-request");
+  });
+
+  // System fetch. Shouldn't use Sec- headers for that.
+  gExpectedHeader = {
+    "sec-fetch-site": null,
+    "sec-fetch-mode": null,
+    "sec-fetch-dest": null,
+    "sec-fetch-user": null,
+  };
+  await window.fetch(`${TEST_PATH}file_dummy_link.html?sysfetch`);
+  await headersChecked;
+
   // Simulate an external load in the *current* window with
   // Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL and the system principal.
   gExpectedHeader = {
