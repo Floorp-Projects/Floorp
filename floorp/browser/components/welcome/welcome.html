@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="chrome://global/skin/in-content/common-shared.css">
     <link rel="stylesheet" href="chrome://browser/content/welcome/welcome.css">
     <link rel="localization" href="browser/floorp.ftl" />
+    <link rel="localization" href="branding/brand.ftl">
     <script src="chrome://browser/content/welcome/welcome.js"></script>
     <meta charset="UTF-8">
     <title data-l10n-id="welcome-to-floorp"></title>
@@ -24,38 +25,46 @@
                 <img id="first-floorp-welcome-logo" src="chrome://branding/content/about-logo.svg">
                 <h1 data-l10n-id="welcome-to-floorp" id="first-floorp-welcome-big-text" class="welcome-big-text"></h1>
                 <div data-l10n-id="welcome-discribe-floorp" id="first-discribe-floorp-text"></div>
-                <button data-l10n-id="welcome-start-setup" id="first-floorp-welcome-button" class="welcome-button primary"></button> 
+                <button data-l10n-id="welcome-start-setup" id="first-floorp-welcome-button" class="go-next-page-button welcome-button primary"></button> 
                 <a data-l10n-id="welcome-skip-to-start-browsing" id="first-skip-setup-process" href="about:home"></a>
+              </div>
+
+              <div id="import-data-welcome-box" class="welcome-setups">
+                <h1 data-l10n-id="welcome-import-data" id="import-data-floorp-welcome-big-text" class="welcome-big-text"></h1>
+                <div data-l10n-id="welcome-import-data-description" id="import-data-discribe-floorp-text"></div>
+                <button data-l10n-id="welcome-import-data-button" id="import-data-floorp-welcome-button" class="go-next-page-button welcome-button primary"></button> 
+                <a data-l10n-id="welcome-import-data-skip" id="first-skip-setup-process" href="about:home"></a>
               </div>
 
               <div id="second-select-template-box" class="welcome-setups">
                 <h1 data-l10n-id="welcome-select-preferences-template" class="welcome-big-text"></h1>
                 <div id="second-template-options-flex-box">
                   <div class="second-template-option">
-                    <img class="second-option-icons" src="chrome://branding/content/about-logo.svg">
+                    <img class="second-option-icons" src="chrome://browser/skin/icons/welcome-image-first-option.png">
                     <div class="second-template-option-text">
                       <h2 data-l10n-id="welcome-minimum-template" class="second-template-option-title"></h2>
                       <p data-l10n-id="welcome-enable-basic-features" class="second-template-option-description"></p>
                     </div>
-                    <button data-l10n-id="welcome-select-button" class="template-option-button primary"></button>
+                    <button id="apply-minimum-setting" data-l10n-id="welcome-select-button" class="template-option-button primary"></button>
                   </div>
                   <div class="second-template-option">
-                    <img class="second-option-icons" src="chrome://branding/content/about-logo.svg">
+                    <img class="second-option-icons" src="chrome://browser/skin/icons/welcome-image-second-option.png">
                     <div class="second-template-option-text">
                       <h2 data-l10n-id="welcome-medium-template" class="second-template-option-title"></h2>
                       <p data-l10n-id="welcome-enable-some-features" class="second-template-option-description"></p>
                     </div>
-                    <button data-l10n-id="welcome-select-button" class="template-option-button primary"></button>
+                    <button id="apply-default-setting" data-l10n-id="welcome-select-button" class="template-option-button primary"></button>
                   </div>
                   <div class="second-template-option">
-                    <img class="second-option-icons" src="chrome://branding/content/about-logo.svg">
+                    <img class="second-option-icons" src="chrome://browser/skin/icons/welcome-image-third-option.png">
                     <div class="second-template-option-text">
                       <h2 data-l10n-id="welcome-maximum-template" class="second-template-option-title"></h2>
                       <p data-l10n-id="welcome-enable-most-of-features" class="second-template-option-description"></p>
                     </div>
-                    <button data-l10n-id="welcome-select-button" class="template-option-button primary"></button>
+                    <button id="apply-maximum-setting" data-l10n-id="welcome-select-button" class="template-option-button primary"></button>
                   </div>
                 </div>
+                <button data-l10n-id="welcome-go-next-setup" id="second-select-button" class="go-next-page-button"></button>
               </div>
 
               <div id="third-design-setup-box" class="welcome-setups">
@@ -118,14 +127,20 @@
                             <div class="third-img-design-box">
                               <img src="chrome://browser/skin/design-images/firefox-proton-dark.jpg" width="114" height="42">
                             </div>
-                            <span class="third-design-name" data-l10n-id="welcome-design-floorp-fluerial-name"></span>
+                            <span class="third-design-name" data-l10n-id="welcome-design-firefox-proton-name"></span>
                           </span>
                         </button>
                       </div>
                     </li>
                   </ul>
                 </div>
-                <button data-l10n-id="welcome-select-button" id="third-design-select-button" class="go-next-page-button primary"></button>
+                <button data-l10n-id="welcome-go-next-setup" id="third-design-select-button" class="go-next-page-button design-select-button"></button>
+              </div>
+
+              <div id="last-welcome-box" class="welcome-setups">
+                <h1 data-l10n-id="welcome-finish-setup" id="last-finish-setup" class="welcome-big-text"></h1>
+                <div data-l10n-id="welcome-finish-setup-description" id="last-finish-setup-floorp-text"></div>
+                <button data-l10n-id="welcomet-finish-setup" id="exsit-setup-button" class="welcome-button primary"></button> 
               </div>
 
             </div>

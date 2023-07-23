@@ -54,6 +54,11 @@ browser.jar:
   skin/classic/browser/design-images/floorp-fluerial-dark.jpg               (design-images/floorp-fluerial-dark.jpg)
   skin/classic/browser/design-images/floorp-fluerial-white.jpg              (design-images/floorp-fluerial-white.jpg)
 
+# template icons
+  skin/classic/browser/icons/welcome-image-first-option.png         (icons/welcome-image-first-option.png)
+  skin/classic/browser/icons/welcome-image-second-option.png        (icons/welcome-image-second-option.png)
+  skin/classic/browser/icons/welcome-image-third-option.png         (icons/welcome-image-third-option.png)
+
 # Lepton
   skin/classic/browser/lepton/photonChrome-multitab.css                     (designs/lepton/photonChrome-multitab.css)
   skin/classic/browser/lepton/photonContent-multitab.css                    (designs/lepton/photonContent-multitab.css)
