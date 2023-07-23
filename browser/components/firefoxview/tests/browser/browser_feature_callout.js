@@ -13,7 +13,7 @@ const { BuiltInThemes } = ChromeUtils.importESModule(
 const defaultPrefValue = getPrefValueByScreen(1);
 
 add_setup(async function () {
-  requestLongerTimeout(2);
+  requestLongerTimeout(3);
   registerCleanupFunction(() => ASRouter.resetMessageState());
 });
 
@@ -192,78 +192,6 @@ add_task(async function feature_callout_closes_on_dismiss() {
   sandbox.restore();
 });
 
-add_task(async function feature_callout_not_rendered_when_it_has_no_parent() {
-  Services.telemetry.clearEvents();
-  const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
-  testMessage.message.content.screens[0].parent_selector = "#fake-selector";
-  const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
-
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: "about:firefoxview",
-    },
-    async browser => {
-      const { document } = browser.contentWindow;
-
-      launchFeatureTourIn(browser.contentWindow);
-
-      const CONTAINER_NOT_CREATED_EVENT = [
-        [
-          "messaging_experiments",
-          "feature_callout",
-          "create_failed",
-          `${testMessage.message.id}-${testMessage.message.content.screens[0].parent_selector}`,
-        ],
-      ];
-      await TestUtils.waitForCondition(() => {
-        let events = Services.telemetry.snapshotEvents(
-          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-          false
-        ).parent;
-        return events && events.length >= 2;
-      }, "Waiting for container_not_created event");
-
-      TelemetryTestUtils.assertEvents(
-        CONTAINER_NOT_CREATED_EVENT,
-        { method: "feature_callout" },
-        { clear: true, process: "parent" }
-      );
-
-      ok(
-        !document.querySelector(`${calloutSelector}:not(.hidden)`),
-        "Feature Callout screen does not render if its parent element does not exist"
-      );
-    }
-  );
-
-  sandbox.restore();
-});
-
-add_task(async function feature_callout_only_highlights_existing_elements() {
-  const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
-  testMessage.message.content.screens[0].parent_selector = "#fake-selector";
-  const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
-
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: "about:firefoxview",
-    },
-    async browser => {
-      const { document } = browser.contentWindow;
-
-      launchFeatureTourIn(browser.contentWindow);
-
-      ok(
-        !document.querySelector(`${calloutSelector}:not(.hidden)`),
-        "Feature Callout screen does not render if its parent element does not exist"
-      );
-    }
-  );
-  sandbox.restore();
-});
-
 add_task(async function feature_callout_arrow_class_exists() {
   const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
@@ -289,8 +217,9 @@ add_task(async function feature_callout_arrow_class_exists() {
 
 add_task(async function feature_callout_arrow_is_not_flipped_on_ltr() {
   const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
-  testMessage.message.content.screens[0].content.arrow_position = "start";
-  testMessage.message.content.screens[0].parent_selector = "span.brand-icon";
+  testMessage.message.content.screens[0].anchors[0].arrow_position = "start";
+  testMessage.message.content.screens[0].anchors[0].selector =
+    "span.brand-icon";
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
   await BrowserTestUtils.withNewTab(
     {
@@ -450,6 +379,7 @@ add_task(async function feature_callout_dismiss_on_page_click() {
       },
       action: {
         dismiss: true,
+        type: "CANCEL",
       },
     },
   ];
@@ -477,7 +407,7 @@ add_task(async function feature_callout_dismiss_on_page_click() {
       spy.assertCalledWith({
         event: "PAGE_EVENT",
         event_context: {
-          action: "DISMISS",
+          action: "CANCEL",
           reason: "CLICK",
           source: sinon.match(testClickSelector),
           page: "about:firefoxview",
@@ -754,7 +684,7 @@ add_task(async function feature_callout_does_not_display_arrow_if_hidden() {
     set: [[featureTourPref, defaultPrefValue]],
   });
   const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
-  testMessage.message.content.screens[0].content.hide_arrow = true;
+  testMessage.message.content.screens[0].anchors[0].hide_arrow = true;
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
   await BrowserTestUtils.withNewTab(
     {

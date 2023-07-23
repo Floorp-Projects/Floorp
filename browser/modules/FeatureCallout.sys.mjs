@@ -7,6 +7,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   PageEventManager: "resource://activity-stream/lib/PageEventManager.sys.mjs",
 });
 
@@ -136,10 +137,6 @@ export class FeatureCallout {
   _addPositionListeners() {
     if (!this._positionListenersRegistered) {
       this.win.addEventListener("resize", this);
-      const parentEl = this.doc.querySelector(
-        this.currentScreen?.parent_selector
-      );
-      parentEl?.addEventListener("toggle", this);
       this._positionListenersRegistered = true;
     }
   }
@@ -147,10 +144,6 @@ export class FeatureCallout {
   _removePositionListeners() {
     if (this._positionListenersRegistered) {
       this.win.removeEventListener("resize", this);
-      const parentEl = this.doc.querySelector(
-        this.currentScreen?.parent_selector
-      );
-      parentEl?.removeEventListener("toggle", this);
       this._positionListenersRegistered = false;
     }
   }
@@ -229,13 +222,29 @@ export class FeatureCallout {
             nextMessage = this.message;
           }
         }
-        await this._updateConfig(nextMessage);
         this._container?.remove();
         this._removePositionListeners();
         this.doc.querySelector(`[src="${BUNDLE_SRC}"]`)?.remove();
+        if (nextMessage) {
+          const isMessageUnblocked = await lazy.ASRouter.isUnblockedMessage(
+            nextMessage
+          );
+          if (!isMessageUnblocked) {
+            this.endTour();
+            return;
+          }
+        }
+        let updated = await this._updateConfig(nextMessage);
+        if (!updated) {
+          this.endTour();
+          return;
+        }
         this._addCalloutLinkElements();
         this._setupWindowFunctions();
-        await this._renderCallout();
+        let rendering = await this._renderCallout();
+        if (!rendering) {
+          this.endTour();
+        }
       }, TRANSITION_MS);
     }
   }
@@ -325,7 +334,6 @@ export class FeatureCallout {
     };
     const addLocalization = hrefs => {
       hrefs.forEach(href => {
-        // eslint-disable-next-line no-undef
         this.win.MozXULElement.insertFTLIfNeeded(href);
       });
     };
@@ -345,23 +353,165 @@ export class FeatureCallout {
     ]);
   }
 
-  _createContainer() {
-    let parent = this.doc.querySelector(this.currentScreen?.parent_selector);
-    // Don't render the callout if the parent element is not present.
-    // This means the message was misconfigured, mistargeted, or the
-    // content of the parent page is not as expected.
-    if (!parent && !this.currentScreen?.content?.callout_position_override) {
-      if (this.message?.template === "feature_callout") {
-        Services.telemetry.recordEvent(
-          "messaging_experiments",
-          "feature_callout",
-          "create_failed",
-          `${this.message.id || "no_message"}-${
-            this.currentScreen?.parent_selector || "no_current_screen"
-          }`
-        );
-      }
+  /**
+   * @typedef {
+   * | "topleft"
+   * | "topright"
+   * | "bottomleft"
+   * | "bottomright"
+   * | "leftcenter"
+   * | "rightcenter"
+   * | "topcenter"
+   * | "bottomcenter"
+   * } PopupAttachmentPoint
+   *
+   * @see nsMenuPopupFrame
+   *
+   * Each attachment point corresponds to an attachment point on the edge of a
+   * frame. For example, "topleft" corresponds to the frame's top left corner,
+   * and "rightcenter" corresponds to the center of the right edge of the frame.
+   */
 
+  /**
+   * @typedef {Object} PanelPosition Specifies how the callout panel should be
+   *   positioned relative to the anchor element, by providing which point on
+   *   the callout should be aligned with which point on the anchor element.
+   * @property {PopupAttachmentPoint} anchor_attachment
+   * @property {PopupAttachmentPoint} callout_attachment
+   * @property {Number} [offset_x] Offset in pixels to apply to the callout
+   *   position in the horizontal direction.
+   * @property {Number} [offset_y] The same in the vertical direction.
+   *
+   * This is used when you want the callout to be displayed as a <panel>
+   * element. A panel is critical when the callout is displayed in the browser
+   * chrome, anchored to an element whose position on the screen is dynamic,
+   * such as a button. When the anchor moves, the panel will automatically move
+   * with it. Also, when the elements are aligned so that the callout would
+   * extend beyond the edge of the screen, the panel will automatically flip
+   * itself to the other side of the anchor element. This requires specifying
+   * both an anchor attachment point and a callout attachment point. For
+   * example, to get the callout to appear under a button, with its arrow on the
+   * right side of the callout:
+   * { anchor_attachment: "bottomcenter", callout_attachment: "topright" }
+   */
+
+  /**
+   * @typedef {
+   * | "top"
+   * | "bottom"
+   * | "end"
+   * | "start"
+   * | "top-end"
+   * | "top-start"
+   * | "top-center-arrow-end"
+   * | "top-center-arrow-start"
+   * } ArrowPosition
+   *
+   * @see FeatureCallout._positionCallout()
+   * The position of the callout arrow relative to the callout container. Only
+   * used for HTML callouts, typically in content pages.
+   */
+
+  /**
+   * @typedef {Object} PositionOverride CSS properties to override
+   *   the callout's position relative to the anchor element. Although the
+   *   callout is not actually a child of the anchor element, this allows
+   *   absolute positioning of the callout relative to the anchor element. In
+   *   other words, { top: "0px", left: "0px" } will position the callout in the
+   *   top left corner of the anchor element, in the same way these properties
+   *   would position a child element.
+   * @property {String} [top]
+   * @property {String} [left]
+   * @property {String} [right]
+   * @property {String} [bottom]
+   */
+
+  /**
+   * @typedef {Object} AnchorConfig
+   * @property {String} [selector] CSS selector for the anchor node.
+   * @property {PanelPosition} [panel_position] Used to show the callout in a
+   *   XUL panel. Only works in chrome documents, like the main browser window.
+   * @property {ArrowPosition} [arrow_position] Used to show the callout in an
+   *   HTML div container. Mutually exclusive with panel_position.
+   * @property {PositionOverride} [absolute_position] Only used for HTML
+   *   callouts, i.e. when panel_position is not specified. Allows absolute
+   *   positioning of the callout relative to the anchor element.
+   * @property {Boolean} [hide_arrow] Whether to hide the arrow.
+   */
+
+  /**
+   * @typedef {Object} Anchor
+   * @property {String} [selector]
+   * @property {PanelPosition} [panel_position]
+   * @property {ArrowPosition} [arrow_position]
+   * @property {PositionOverride} [absolute_position]
+   * @property {Boolean} [hide_arrow]
+   * @property {Element} [element]
+   */
+
+  /**
+   * Return the first visible anchor element for the current screen. Screens can
+   * specify multiple anchors in an array, and the first one that is visible
+   * will be used. If none are visible, return null.
+   * @returns {Anchor|null}
+   */
+  _getAnchor() {
+    /** @type {AnchorConfig[]} */
+    const anchors = this.currentScreen?.anchors || [];
+    for (let anchor of anchors) {
+      const element =
+        anchor.selector && this.doc.querySelector(anchor.selector);
+      if (!element) {
+        continue; // Element doesn't exist at all.
+      }
+      const isVisible = () => {
+        if (
+          this.context === "chrome" &&
+          typeof this.win.isElementVisible === "function"
+        ) {
+          // In chrome windows, we can use the isElementVisible function to
+          // check that the element has non-zero width and height. If it was
+          // hidden, it would most likely have zero width and/or height.
+          if (!this.win.isElementVisible(element)) {
+            return false;
+          }
+        }
+        // CSS rules like visibility: hidden or display: none. These result in
+        // element being invisible and unclickable.
+        const { visibility, display } = this.win.getComputedStyle(element);
+        return visibility === "visible" && display !== "none";
+      };
+      if (!isVisible()) {
+        continue;
+      }
+      if (
+        this.context === "chrome" &&
+        element.id &&
+        anchor.selector.includes("#" + element.id)
+      ) {
+        let widget = lazy.CustomizableUI.getWidget(element.id);
+        if (
+          widget &&
+          (this.win.CustomizationHandler.isCustomizing() ||
+            widget.areaType?.includes("panel"))
+        ) {
+          // The element is a customizable widget (a toolbar item, e.g. the
+          // reload button or the downloads button). Widgets can be in various
+          // areas, like the overflow panel or the customization palette.
+          // Widgets in the palette are present in the chrome's DOM during
+          // customization, but can't be used.
+          continue;
+        }
+      }
+      return { ...anchor, element };
+    }
+    return null;
+  }
+
+  _createContainer() {
+    const anchor = this._getAnchor();
+    // Don't render the callout if none of the anchors is visible.
+    if (!anchor) {
       return false;
     }
 
@@ -373,10 +523,7 @@ export class FeatureCallout {
         "callout-arrow",
         "hidden"
       );
-      this._container.classList.toggle(
-        "hidden-arrow",
-        !!this.currentScreen?.content?.hide_arrow
-      );
+      this._container.classList.toggle("hidden-arrow", !!anchor.hide_arrow);
       this._container.id = CONTAINER_ID;
       // This value is reported as the "page" in about:welcome telemetry
       this._container.dataset.page = this.location;
@@ -396,9 +543,12 @@ export class FeatureCallout {
    */
   _positionCallout() {
     const container = this._container;
-    const parentEl = this.doc.querySelector(
-      this.currentScreen?.parent_selector
-    );
+    const anchor = this._getAnchor();
+    if (!container || !anchor) {
+      this.endTour();
+      return;
+    }
+    const parentEl = anchor.element;
     const doc = this.doc;
     // All possible arrow positions
     // If the position contains a dash, the value before the dash
@@ -415,24 +565,15 @@ export class FeatureCallout {
       "top-center-arrow-end",
       "top-center-arrow-start",
     ];
-    const arrowPosition = this.currentScreen?.content?.arrow_position || "top";
+    const arrowPosition = anchor.arrow_position || "top";
     // Callout arrow should overlap the parent element by 5px
     const arrowWidth = 12;
     const arrowHeight = Math.hypot(arrowWidth, arrowWidth);
-    // If the message specifies no overlap, we move the callout away so the
-    // arrow doesn't overlap at all.
-    const overlapAmount = this.currentScreen?.content?.noCalloutOverlap ? 0 : 5;
+    const overlapAmount = 5;
     let overlap = overlapAmount - arrowHeight;
     // Is the document layout right to left?
     const RTL = this.doc.dir === "rtl";
-    const customPosition =
-      this.currentScreen?.content.callout_position_override;
-
-    // Early exit if the container doesn't exist,
-    // or if we're missing a parent element and don't have a custom callout position
-    if (!container || (!parentEl && !customPosition)) {
-      return;
-    }
+    const customPosition = anchor.absolute_position;
 
     const getOffset = el => {
       const rect = el.getBoundingClientRect();
@@ -488,23 +629,25 @@ export class FeatureCallout {
     };
 
     const addValueToPixelValue = (value, pixelValue) => {
-      return `${Number(pixelValue.split("px")[0]) + value}px`;
+      return `${parseFloat(pixelValue) + value}px`;
     };
 
     const subtractPixelValueFromValue = (pixelValue, value) => {
-      return `${value - Number(pixelValue.split("px")[0])}px`;
+      return `${value - parseFloat(pixelValue)}px`;
     };
 
     const overridePosition = () => {
-      // We override _every_ positioner here, because we want to manually set all
-      // container.style.positions in every positioner's "position" function
+      // We override _every_ positioner here, because we want to manually set
+      // all container.style.positions in every positioner's "position" function
       // regardless of the actual arrow position
-      // Note: We override the position functions with new functions here,
-      // but they don't actually get executed until the respective position functions are called
-      // and this function is not executed unless the message has a custom position property.
 
-      // We're positioning relative to a parent element's bounds,
-      // if that parent element exists.
+      // Note: We override the position functions with new functions here, but
+      // they don't actually get executed until the respective position
+      // functions are called and this function is not executed unless the
+      // message has a custom position property.
+
+      // We're positioning relative to a parent element's bounds, if that parent
+      // element exists.
 
       for (const position in positioners) {
         positioners[position].position = () => {
@@ -854,21 +997,29 @@ export class FeatureCallout {
       return;
     }
 
-    const AWParent = new lazy.AboutWelcomeParent();
-    this.win.addEventListener("unload", () => AWParent.didDestroy());
-    const receive = name => data =>
-      AWParent.onContentMessage(`AWPage:${name}`, data, this.doc);
+    const handleActorMessage =
+      lazy.AboutWelcomeParent.prototype.onContentMessage.bind({});
+    const getActionHandler = name => data =>
+      handleActorMessage(`AWPage:${name}`, data, this.doc);
 
+    const telemetryMessageHandler = getActionHandler("TELEMETRY_EVENT");
+    const AWSendEventTelemetry = data => {
+      if (this.config?.metrics !== "block") {
+        return telemetryMessageHandler(data);
+      }
+      return null;
+    };
     this._windowFuncs = {
       AWGetFeatureConfig: () => this.config,
-      AWGetSelectedTheme: receive("GET_SELECTED_THEME"),
+      AWGetSelectedTheme: getActionHandler("GET_SELECTED_THEME"),
       // Do not send telemetry if message config sets metrics as 'block'.
-      AWSendEventTelemetry:
-        this.config?.metrics !== "block" ? receive("TELEMETRY_EVENT") : null,
-      AWSendToDeviceEmailsSupported: receive("SEND_TO_DEVICE_EMAILS_SUPPORTED"),
-      AWSendToParent: (name, data) => receive(name)(data),
+      AWSendEventTelemetry,
+      AWSendToDeviceEmailsSupported: getActionHandler(
+        "SEND_TO_DEVICE_EMAILS_SUPPORTED"
+      ),
+      AWSendToParent: (name, data) => getActionHandler(name)(data),
       AWFinish: () => this.endTour(),
-      AWEvaluateScreenTargeting: receive("EVALUATE_SCREEN_TARGETING"),
+      AWEvaluateScreenTargeting: getActionHandler("EVALUATE_SCREEN_TARGETING"),
     };
     for (const [name, func] of Object.entries(this._windowFuncs)) {
       this.win[name] = func;
@@ -1103,6 +1254,7 @@ export class FeatureCallout {
    * @property {String} [type] Action type, e.g. `OPEN_URL`
    * @property {Object} [data] Extra data, properties depend on action type
    * @property {Boolean} [dismiss] Dismiss screen after performing action?
+   * @property {Boolean} [reposition] Reposition screen after performing action?
    */
   _attachPageEventListeners(listeners) {
     listeners?.forEach(({ params, action }) =>
@@ -1127,17 +1279,17 @@ export class FeatureCallout {
     const page = this.location;
     const message_id = this.config?.id.toUpperCase();
     const source = this._getUniqueElementIdentifier(event.target);
-    this.win.AWSendEventTelemetry?.({
-      event: "PAGE_EVENT",
-      event_context: {
-        action: action.type ?? (action.dismiss ? "DISMISS" : ""),
-        reason: event.type?.toUpperCase(),
-        source,
-        page,
-      },
-      message_id,
-    });
     if (action.type) {
+      this.win.AWSendEventTelemetry?.({
+        event: "PAGE_EVENT",
+        event_context: {
+          action: action.type,
+          reason: event.type?.toUpperCase(),
+          source,
+          page,
+        },
+        message_id,
+      });
       this.win.AWSendToParent("SPECIAL_ACTION", action);
     }
     if (action.dismiss) {
@@ -1147,6 +1299,9 @@ export class FeatureCallout {
         message_id,
       });
       this._dismiss();
+    }
+    if (action.reposition) {
+      this.win.requestAnimationFrame(() => this._positionCallout());
     }
   }
 
@@ -1232,8 +1387,11 @@ export class FeatureCallout {
 
     this._addCalloutLinkElements();
     this._setupWindowFunctions();
-    let rendering = await this._renderCallout();
-    return rendering && !!this.currentScreen;
+    let rendering = (await this._renderCallout()) && !!this.currentScreen;
+    if (!rendering) {
+      this.endTour();
+    }
+    return rendering;
   }
 
   /**
