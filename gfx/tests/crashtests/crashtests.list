@@ -183,9 +183,9 @@ load 1509123.html
 pref(widget.windows.window_occlusion_tracking.enabled,false) load 1494062-blob-image-wraplist-clip.html # Bug 1819154
 load texture-allocator-zero-region.html
 load 1524418.html
-pref(layout.css.individual-transform.enabled,true) load 1529149.html
+load 1529149.html
 load 1541113.html
-pref(layout.css.individual-transform.enabled,true) load 1547169.html
+load 1547169.html
 load 1535657.html
 load 1566206.html
 load 1615141.html
