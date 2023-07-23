@@ -140,7 +140,7 @@ private fun AppState.toAdapterList(settings: Settings): List<AdapterItem> = when
         showCollectionPlaceholder,
         messaging.messageToShow[FenixMessageSurfaceId.HOMESCREEN],
         shouldShowRecentTabs(settings),
-        shouldShowRecentSyncedTabs(settings),
+        shouldShowRecentSyncedTabs(),
         recentHistory,
         pocketStories,
         firstFrameDrawn,

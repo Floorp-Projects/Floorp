@@ -11,32 +11,16 @@ import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
 /**
  * Converts a list of [SyncedDeviceTabs] into a list of [SyncedTabsListItem].
  */
-fun List<SyncedDeviceTabs>.toComposeList(
-    taskContinuityEnabled: Boolean,
-): List<SyncedTabsListItem> = asSequence().flatMap { (device, tabs) ->
-    if (taskContinuityEnabled) {
-        val deviceTabs = if (tabs.isEmpty()) {
-            emptyList()
-        } else {
-            tabs.map {
-                val url = it.active().url
-                val titleText = it.active().title.ifEmpty { url.trimmed() }
-                SyncedTabsListItem.Tab(titleText, url, it)
-            }
-        }
-
-        sequenceOf(SyncedTabsListItem.DeviceSection(device.displayName, deviceTabs))
+fun List<SyncedDeviceTabs>.toComposeList(): List<SyncedTabsListItem> = asSequence().flatMap { (device, tabs) ->
+    val deviceTabs = if (tabs.isEmpty()) {
+        emptyList()
     } else {
-        val deviceTabs = if (tabs.isEmpty()) {
-            sequenceOf(SyncedTabsListItem.NoTabs)
-        } else {
-            tabs.asSequence().map {
-                val url = it.active().url
-                val titleText = it.active().title.ifEmpty { url.trimmed() }
-                SyncedTabsListItem.Tab(titleText, url, it)
-            }
+        tabs.map {
+            val url = it.active().url
+            val titleText = it.active().title.ifEmpty { url.trimmed() }
+            SyncedTabsListItem.Tab(titleText, url, it)
         }
-
-        sequenceOf(SyncedTabsListItem.Device(device.displayName)) + deviceTabs
     }
+
+    sequenceOf(SyncedTabsListItem.DeviceSection(device.displayName, deviceTabs))
 }.toList()

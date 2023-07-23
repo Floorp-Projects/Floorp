@@ -50,7 +50,6 @@ private const val EXPANDED_BY_DEFAULT = true
  * Top-level list UI for displaying Synced Tabs in the Tabs Tray.
  *
  * @param syncedTabs The tab UI items to be displayed.
- * @param taskContinuityEnabled Indicates whether the Task Continuity enhancements should be visible for users.
  * @param onTabClick The lambda for handling clicks on synced tabs.
  */
 @SuppressWarnings("LongMethod")
@@ -58,7 +57,6 @@ private const val EXPANDED_BY_DEFAULT = true
 @Composable
 fun SyncedTabsList(
     syncedTabs: List<SyncedTabsListItem>,
-    taskContinuityEnabled: Boolean,
     onTabClick: (SyncTab) -> Unit,
 ) {
     val listState = rememberLazyListState()
@@ -71,70 +69,46 @@ fun SyncedTabsList(
             .testTag(TabsTrayTestTag.syncedTabsList),
         state = listState,
     ) {
-        if (taskContinuityEnabled) {
-            syncedTabs.forEachIndexed { index, syncedTabItem ->
-                when (syncedTabItem) {
-                    is SyncedTabsListItem.DeviceSection -> {
-                        val sectionExpanded = expandedState[index]
+        syncedTabs.forEachIndexed { index, syncedTabItem ->
+            when (syncedTabItem) {
+                is SyncedTabsListItem.DeviceSection -> {
+                    val sectionExpanded = expandedState[index]
 
-                        stickyHeader {
-                            SyncedTabsSectionHeader(
-                                headerText = syncedTabItem.displayName,
-                                expanded = sectionExpanded,
-                            ) {
-                                expandedState[index] = !sectionExpanded
-                            }
-                        }
-
-                        if (sectionExpanded) {
-                            if (syncedTabItem.tabs.isNotEmpty()) {
-                                items(syncedTabItem.tabs) { syncedTab ->
-                                    FaviconListItem(
-                                        label = syncedTab.displayTitle,
-                                        description = syncedTab.displayURL,
-                                        url = syncedTab.displayURL,
-                                        onClick = { onTabClick(syncedTab.tab) },
-                                    )
-                                }
-                            } else {
-                                item { SyncedTabsNoTabsItem() }
-                            }
+                    stickyHeader {
+                        SyncedTabsSectionHeader(
+                            headerText = syncedTabItem.displayName,
+                            expanded = sectionExpanded,
+                        ) {
+                            expandedState[index] = !sectionExpanded
                         }
                     }
 
-                    is SyncedTabsListItem.Error -> {
-                        item {
-                            SyncedTabsErrorItem(
-                                errorText = syncedTabItem.errorText,
-                                errorButton = syncedTabItem.errorButton,
-                            )
+                    if (sectionExpanded) {
+                        if (syncedTabItem.tabs.isNotEmpty()) {
+                            items(syncedTabItem.tabs) { syncedTab ->
+                                FaviconListItem(
+                                    label = syncedTab.displayTitle,
+                                    description = syncedTab.displayURL,
+                                    url = syncedTab.displayURL,
+                                    onClick = { onTabClick(syncedTab.tab) },
+                                )
+                            }
+                        } else {
+                            item { SyncedTabsNoTabsItem() }
                         }
-                    }
-                    else -> {
-                        // no-op
                     }
                 }
-            }
-        } else {
-            items(syncedTabs) { syncedTabItem ->
-                when (syncedTabItem) {
-                    is SyncedTabsListItem.Device -> SyncedTabsSectionHeader(headerText = syncedTabItem.displayName)
-                    is SyncedTabsListItem.Error -> SyncedTabsErrorItem(
-                        errorText = syncedTabItem.errorText,
-                        errorButton = syncedTabItem.errorButton,
-                    )
-                    is SyncedTabsListItem.NoTabs -> SyncedTabsNoTabsItem()
-                    is SyncedTabsListItem.Tab -> {
-                        FaviconListItem(
-                            label = syncedTabItem.displayTitle,
-                            description = syncedTabItem.displayURL,
-                            url = syncedTabItem.displayURL,
-                            onClick = { onTabClick(syncedTabItem.tab) },
+
+                is SyncedTabsListItem.Error -> {
+                    item {
+                        SyncedTabsErrorItem(
+                            errorText = syncedTabItem.errorText,
+                            errorButton = syncedTabItem.errorButton,
                         )
                     }
-                    else -> {
-                        // no-op
-                    }
+                }
+                else -> {
+                    // no-op
                 }
             }
         }
@@ -300,7 +274,6 @@ private fun SyncedTabsListPreview() {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             SyncedTabsList(
                 syncedTabs = getFakeSyncedTabList(),
-                taskContinuityEnabled = true,
             ) {
                 println("Tab clicked")
             }

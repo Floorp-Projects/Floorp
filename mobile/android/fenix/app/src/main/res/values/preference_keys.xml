@@ -250,8 +250,6 @@
     <string name="pref_key_show_top_sites" translatable="false">pref_key_show_top_sites</string>
     <!-- Whether or not the sponsored shortcuts are shown along with the top recent sites shortcuts -->
     <string name="pref_key_enable_contile" translatable="false">pref_key_enable_contile</string>
-    <!-- Whether or not the Task Continuity enhancements are shown -->
-    <string name="pref_key_enable_task_continuity" translatable="false">pref_key_enable_task_continuity</string>
     <!-- Query containing the search parameters to be hidden from the top frecent sites  -->
     <string name="pref_key_frecency_filter_query" translatable="false">pref_key_frecency_filter_query</string>
 

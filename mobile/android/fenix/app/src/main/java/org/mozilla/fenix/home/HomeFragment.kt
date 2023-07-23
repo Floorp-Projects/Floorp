@@ -294,21 +294,19 @@ class HomeFragment : Fragment() {
                 view = binding.root,
             )
 
-            if (requireContext().settings().enableTaskContinuityEnhancements) {
-                recentSyncedTabFeature.set(
-                    feature = RecentSyncedTabFeature(
-                        context = requireContext(),
-                        appStore = requireComponents.appStore,
-                        syncStore = requireComponents.backgroundServices.syncStore,
-                        storage = requireComponents.backgroundServices.syncedTabsStorage,
-                        accountManager = requireComponents.backgroundServices.accountManager,
-                        historyStorage = requireComponents.core.historyStorage,
-                        coroutineScope = viewLifecycleOwner.lifecycleScope,
-                    ),
-                    owner = viewLifecycleOwner,
-                    view = binding.root,
-                )
-            }
+            recentSyncedTabFeature.set(
+                feature = RecentSyncedTabFeature(
+                    context = requireContext(),
+                    appStore = requireComponents.appStore,
+                    syncStore = requireComponents.backgroundServices.syncStore,
+                    storage = requireComponents.backgroundServices.syncedTabsStorage,
+                    accountManager = requireComponents.backgroundServices.accountManager,
+                    historyStorage = requireComponents.core.historyStorage,
+                    coroutineScope = viewLifecycleOwner.lifecycleScope,
+                ),
+                owner = viewLifecycleOwner,
+                view = binding.root,
+            )
         }
 
         if (requireContext().settings().showRecentBookmarksFeature) {

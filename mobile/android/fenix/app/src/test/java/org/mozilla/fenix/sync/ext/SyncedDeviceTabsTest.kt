@@ -82,7 +82,7 @@ class SyncedDeviceTabsTest {
     @Test
     fun `GIVEN two synced devices WHEN the compose list is generated THEN two device section is returned`() {
         val syncedDeviceList = listOf(oneTabDevice, twoTabDevice)
-        val listData = syncedDeviceList.toComposeList(taskContinuityEnabled = true)
+        val listData = syncedDeviceList.toComposeList()
 
         assertEquals(2, listData.count())
         assertTrue(listData[0] is SyncedTabsListItem.DeviceSection)
@@ -94,7 +94,7 @@ class SyncedDeviceTabsTest {
     @Test
     fun `GIVEN one synced device with no tabs WHEN the compose list is generated THEN one device with an empty tabs list is returned`() {
         val syncedDeviceList = listOf(noTabDevice)
-        val listData = syncedDeviceList.toComposeList(taskContinuityEnabled = true)
+        val listData = syncedDeviceList.toComposeList()
 
         assertEquals(1, listData.count())
         assertTrue(listData[0] is SyncedTabsListItem.DeviceSection)

@@ -1624,14 +1624,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Indicates if the Task Continuity enhancements are enabled.
-     */
-    var enableTaskContinuityEnhancements by booleanPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_enable_task_continuity),
-        default = true,
-    )
-
-    /**
      * Indicates if the Unified Search feature should be visible.
      */
     var showUnifiedSearchFeature by lazyFeatureFlagPreference(

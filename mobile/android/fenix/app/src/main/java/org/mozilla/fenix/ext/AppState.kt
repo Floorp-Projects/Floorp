@@ -187,9 +187,8 @@ fun AppState.shouldShowRecentTabs(settings: Settings): Boolean {
 }
 
 /**
- * Determines whether a recent synced tab section should be shown, based on user preference
- * and the availability of Synced tabs.
+ * Determines whether a recent synced tab section should be shown, based on the availability of Synced tabs.
  */
-fun AppState.shouldShowRecentSyncedTabs(settings: Settings): Boolean {
-    return (settings.enableTaskContinuityEnhancements && recentSyncedTabState is RecentSyncedTabState.Success)
+fun AppState.shouldShowRecentSyncedTabs(): Boolean {
+    return recentSyncedTabState is RecentSyncedTabState.Success
 }
