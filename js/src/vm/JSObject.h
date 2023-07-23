@@ -890,6 +890,14 @@ extern bool LookupNameUnqualified(JSContext* cx, Handle<PropertyName*> name,
 
 namespace js {
 
+/*
+ * Family of Pure property lookup functions. The bool return does NOT have the
+ * standard SpiderMonkey semantics. The return value means "can this operation
+ * be performed and produce a valid result without any side effects?". If any of
+ * these return true, then the outparam can be inspected to determine the
+ * result.
+ */
+
 bool LookupPropertyPure(JSContext* cx, JSObject* obj, jsid id,
                         NativeObject** objp, PropertyResult* propp);
 
