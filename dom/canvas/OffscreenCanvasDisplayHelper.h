@@ -20,6 +20,8 @@
 
 namespace mozilla::dom {
 class HTMLCanvasElement;
+class OffscreenCanvas;
+class ThreadSafeWorkerRef;
 
 struct OffscreenCanvasDisplayData final {
   mozilla::gfx::IntSize mSize = {0, 0};
@@ -41,13 +43,18 @@ class OffscreenCanvasDisplayHelper final {
 
   RefPtr<layers::ImageContainer> GetImageContainer() const;
 
-  void UpdateContext(CanvasContextType aType, const Maybe<int32_t>& aChildId);
+  void UpdateContext(OffscreenCanvas* aOffscreenCanvas,
+                     RefPtr<ThreadSafeWorkerRef>&& aWorkerRef,
+                     CanvasContextType aType, const Maybe<int32_t>& aChildId);
+
+  void FlushForDisplay();
 
   bool CommitFrameToCompositor(nsICanvasRenderingContextInternal* aContext,
                                layers::TextureType aTextureType,
                                const Maybe<OffscreenCanvasDisplayData>& aData);
 
-  void Destroy();
+  void DestroyCanvas();
+  void DestroyElement();
 
   already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot();
   already_AddRefed<mozilla::layers::Image> GetAsImage();
@@ -64,8 +71,11 @@ class OffscreenCanvasDisplayHelper final {
 
   mutable Mutex mMutex;
   HTMLCanvasElement* MOZ_NON_OWNING_REF mCanvasElement MOZ_GUARDED_BY(mMutex);
+  OffscreenCanvas* MOZ_NON_OWNING_REF mOffscreenCanvas MOZ_GUARDED_BY(mMutex) =
+      nullptr;
   RefPtr<layers::ImageContainer> mImageContainer MOZ_GUARDED_BY(mMutex);
   RefPtr<gfx::SourceSurface> mFrontBufferSurface MOZ_GUARDED_BY(mMutex);
+  RefPtr<ThreadSafeWorkerRef> mWorkerRef MOZ_GUARDED_BY(mMutex);
 
   OffscreenCanvasDisplayData mData MOZ_GUARDED_BY(mMutex);
   CanvasContextType mType MOZ_GUARDED_BY(mMutex) = CanvasContextType::NoContext;

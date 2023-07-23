@@ -474,7 +474,7 @@ HTMLCanvasElement::~HTMLCanvasElement() { Destroy(); }
 
 void HTMLCanvasElement::Destroy() {
   if (mOffscreenDisplay) {
-    mOffscreenDisplay->Destroy();
+    mOffscreenDisplay->DestroyElement();
     mOffscreenDisplay = nullptr;
     mImageContainer = nullptr;
   }
@@ -1067,6 +1067,12 @@ void HTMLCanvasElement::SetHeight(uint32_t aHeight, ErrorResult& aRv) {
   }
 
   SetUnsignedIntAttr(nsGkAtoms::height, aHeight, DEFAULT_CANVAS_HEIGHT, aRv);
+}
+
+void HTMLCanvasElement::FlushOffscreenCanvas() {
+  if (mOffscreenDisplay) {
+    mOffscreenDisplay->FlushForDisplay();
+  }
 }
 
 void HTMLCanvasElement::InvalidateCanvasPlaceholder(uint32_t aWidth,
