@@ -11,7 +11,7 @@ async function testCallout(config) {
   const featureCallout = new FeatureCallout(config);
   const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
   const screen = testMessage.message.content.screens[1];
-  screen.parent_selector = "body";
+  screen.anchors[0].selector = "body";
   testMessage.message.content.screens = [screen];
   featureCallout.showFeatureCallout(testMessage.message);
   await waitForCalloutScreen(config.win.document, screen.id);
