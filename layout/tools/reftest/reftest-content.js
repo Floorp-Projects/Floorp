@@ -653,7 +653,9 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
         removeEventListener("Reftest:MozAfterPaintFromChild", FromChildAfterPaintListener, false);
         CheckForLivenessOfContentRootElement();
         if (attrModifiedObserver) {
-            attrModifiedObserver.disconnect();
+            if (!Cu.isDeadWrapper(attrModifiedObserver)) {
+                attrModifiedObserver.disconnect();
+            }
             attrModifiedObserver = null;
         }
         gTimeoutHook = null;
