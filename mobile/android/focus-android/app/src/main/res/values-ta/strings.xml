@@ -50,7 +50,7 @@
     <string name="menu_remove_from_shortcuts">குறுக்குவழி நீக்கு</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">புதிதாய் என்ன</string>
+    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">புதிதாய் என்ன</string>
     <string name="menu_settings">அமைவுகள்</string>
     <string name="menu_about">போக்கசு பற்றி</string>
     <string name="menu_help">உதவி</string>
@@ -67,6 +67,8 @@
     trackers have been blocked for the currently loaded website.  -->
     <string name="menu_trackers_blocked_subtitle">இதை முடக்குவது சில இணையதளச் சிக்கல்களைச் சரிசெய்யலாம்</string>
 
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">உள்ளடக்க தடுப்பு</string>
     <!-- This is the subtitle content blocking toggle -->
     <string name="menu_content_blocking_subtitle">சில இணையதளங்களைச் சரிசெய்ய அணைக்கவும்</string>
 
@@ -101,10 +103,6 @@
          of 25 characters. -->
     <string name="shortcut_erase_long_label">உலாவல் வரலாற்றை அகற்று</string>
 
-
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">அந்தரங்க நிலையில் உலாவு</string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">தனியுரிமை மற்றும் பாதுகாப்பு</string>
@@ -496,7 +494,7 @@
 
     <!-- Tracking protection bottom sheet -->
 
-    <!-- Promote SearchWidget Dialog -->
+     <!-- Promote SearchWidget Dialog -->
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
