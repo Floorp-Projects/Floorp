@@ -265,3 +265,47 @@ add_task(async function test_tabs() {
   });
   await tearDown(sandbox);
 });
+
+add_task(async function test_empty_desktop_same_name() {
+  const sandbox = setupMocks({
+    state: UIState.STATUS_SIGNED_IN,
+    fxaDevices: [
+      {
+        id: 1,
+        name: "A Device",
+        isCurrentDevice: true,
+        type: "desktop",
+        tabs: [],
+      },
+      {
+        id: 2,
+        name: "A Device",
+        type: "desktop",
+        tabs: [],
+      },
+    ],
+  });
+
+  await withFirefoxView({ openNewWindow: true }, async browser => {
+    const { document } = browser.contentWindow;
+    navigateToCategory(document, "syncedtabs");
+    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+
+    let syncedTabsComponent = document.querySelector(
+      "view-syncedtabs:not([slot=syncedtabs])"
+    );
+    await syncedTabsComponent.updateComplete;
+    // I don't love this, but I'm out of ideas
+    await TestUtils.waitForTick();
+    let noTabs = syncedTabsComponent.shadowRoot.querySelectorAll(".notabs");
+    is(noTabs.length, 1, "Should be 1 empty devices");
+
+    let headers =
+      syncedTabsComponent.shadowRoot.querySelectorAll("h2[slot=header]");
+    ok(
+      headers[0].textContent.includes("A Device"),
+      "Text is correct (Desktop)"
+    );
+  });
+  await tearDown(sandbox);
+});

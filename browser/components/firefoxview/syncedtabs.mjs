@@ -302,11 +302,7 @@ class SyncedTabsInView extends ViewPage {
       renderInfo[tab.device].tabs.push(tab);
     }
     // Add devices without tabs
-    let currentDevice = TabsSetupFlowManager.currentDevice;
     for (let device of this.devices) {
-      if (device.name == currentDevice) {
-        continue;
-      }
       if (!(device.name in renderInfo)) {
         renderInfo[device.name] = {
           deviceType: device.type,
