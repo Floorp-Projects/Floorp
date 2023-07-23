@@ -179,7 +179,6 @@ ${helpers.predefined_type(
     animation_value_type="ComputedValue",
     boxed=True,
     flags="CAN_ANIMATE_ON_COMPOSITOR",
-    gecko_pref="layout.css.individual-transform.enabled",
     spec="https://drafts.csswg.org/css-transforms-2/#individual-transforms",
     servo_restyle_damage = "reflow_out_of_flow",
 )}
@@ -192,7 +191,6 @@ ${helpers.predefined_type(
     animation_value_type="ComputedValue",
     boxed=True,
     flags="CAN_ANIMATE_ON_COMPOSITOR",
-    gecko_pref="layout.css.individual-transform.enabled",
     spec="https://drafts.csswg.org/css-transforms-2/#individual-transforms",
     servo_restyle_damage = "reflow_out_of_flow",
 )}
@@ -205,7 +203,6 @@ ${helpers.predefined_type(
     animation_value_type="ComputedValue",
     boxed=True,
     flags="CAN_ANIMATE_ON_COMPOSITOR",
-    gecko_pref="layout.css.individual-transform.enabled",
     spec="https://drafts.csswg.org/css-transforms-2/#individual-transforms",
     servo_restyle_damage="reflow_out_of_flow",
 )}
