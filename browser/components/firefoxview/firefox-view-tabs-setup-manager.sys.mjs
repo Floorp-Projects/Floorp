@@ -201,17 +201,6 @@ export const TabsSetupFlowManager = new (class {
     );
   }
 
-  get currentDevice() {
-    if (!this.fxaSignedIn) {
-      return null;
-    }
-    let recentDevices = lazy.fxAccounts.device?.recentDeviceList;
-    if (!recentDevices) {
-      return null;
-    }
-    return recentDevices.find(device => device.isCurrentDevice)?.name;
-  }
-
   get secondaryDeviceConnected() {
     if (!this.fxaSignedIn) {
       return false;

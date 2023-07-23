@@ -337,7 +337,10 @@ function setupMocks({ fxaDevices = null, state, syncEnabled = true }) {
     };
   });
   sandbox.stub(SyncedTabs, "getTabClients").callsFake(() => {
-    return Promise.resolve(fxaDevices);
+    // The real getTabClients does not return the current device
+    return Promise.resolve(
+      fxaDevices.filter(device => !device.isCurrentDevice)
+    );
   });
   return sandbox;
 }
