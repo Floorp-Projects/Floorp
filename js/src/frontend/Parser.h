@@ -1936,26 +1936,6 @@ FunctionScope::ParserData* NewEmptyFunctionScopeData(FrontendContext* fc,
                                                      LifoAlloc& alloc,
                                                      uint32_t numBindings);
 
-mozilla::Maybe<GlobalScope::ParserData*> NewGlobalScopeData(
-    JSContext* cx, FrontendContext* fc, ParseContext::Scope& scope,
-    LifoAlloc& alloc, ParseContext* pc);
-
-mozilla::Maybe<EvalScope::ParserData*> NewEvalScopeData(
-    JSContext* cx, FrontendContext* fc, ParseContext::Scope& scope,
-    LifoAlloc& alloc, ParseContext* pc);
-
-mozilla::Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
-    JSContext* cx, FrontendContext* fc, ParseContext::Scope& scope,
-    bool hasParameterExprs, LifoAlloc& alloc, ParseContext* pc);
-
-mozilla::Maybe<VarScope::ParserData*> NewVarScopeData(
-    JSContext* cx, FrontendContext* fc, ParseContext::Scope& scope,
-    LifoAlloc& alloc, ParseContext* pc);
-
-mozilla::Maybe<LexicalScope::ParserData*> NewLexicalScopeData(
-    JSContext* cx, FrontendContext* fc, ParseContext::Scope& scope,
-    LifoAlloc& alloc, ParseContext* pc);
-
 bool FunctionScopeHasClosedOverBindings(ParseContext* pc);
 bool LexicalScopeHasClosedOverBindings(ParseContext* pc,
                                        ParseContext::Scope& scope);
