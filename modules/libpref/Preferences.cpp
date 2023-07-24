@@ -6088,6 +6088,7 @@ static const PrefListEntry sRestrictFromWebContentProcesses[] = {
 // StaticPrefList) and would normally by blocklisted but we allow them through
 // anyway, so this override list acts as an allowlist
 static const PrefListEntry sDynamicPrefOverrideList[]{
+    PREF_LIST_ENTRY("accessibility.tabfocus"),
     PREF_LIST_ENTRY("app.update.channel"),
     PREF_LIST_ENTRY("apz.subtest"),
     PREF_LIST_ENTRY("autoadmin.global_config_url"),  // Bug 1780575
