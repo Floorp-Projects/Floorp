@@ -94,6 +94,17 @@ var snapshotFormatters = {
     if (AppConstants.platform == "macosx") {
       $("rosetta-box").textContent = data.rosetta;
     }
+    if (AppConstants.platform == "win") {
+      const translatedList = await Promise.all(
+        data.pointingDevices.map(deviceName => {
+          return document.l10n.formatValue(deviceName);
+        })
+      );
+
+      const formatter = new Intl.ListFormat();
+
+      $("pointing-devices-box").textContent = formatter.format(translatedList);
+    }
     $("binary-box").textContent = Services.dirsvc.get(
       "XREExeF",
       Ci.nsIFile

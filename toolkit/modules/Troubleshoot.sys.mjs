@@ -254,6 +254,13 @@ var dataProviders = {
       data.rosetta = Services.sysinfo.getProperty("rosettaStatus");
     } catch (e) {}
 
+    try {
+      // Windows - Get info about attached pointing devices
+      data.pointingDevices = Services.sysinfo
+        .getProperty("pointingDevices")
+        .split(",");
+    } catch (e) {}
+
     data.numTotalWindows = 0;
     data.numFissionWindows = 0;
     data.numRemoteWindows = 0;

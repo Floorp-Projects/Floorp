@@ -1541,19 +1541,71 @@ PointerCapabilities WinUtils::GetPrimaryPointerCapabilities() {
   return PointerCapabilities::None;
 }
 
+static bool SystemHasTouchscreen() {
+  int digitizerMetrics = ::GetSystemMetrics(SM_DIGITIZER);
+  return (digitizerMetrics & NID_INTEGRATED_TOUCH) ||
+         (digitizerMetrics & NID_EXTERNAL_TOUCH);
+}
+
+static bool SystemHasPenDigitizer() {
+  int digitizerMetrics = ::GetSystemMetrics(SM_DIGITIZER);
+  return (digitizerMetrics & NID_INTEGRATED_PEN) ||
+         (digitizerMetrics & NID_EXTERNAL_PEN);
+}
+
+static bool SystemHasMouse() {
+  // As per MSDN, this value is rarely false because of virtual mice, and
+  // some machines report the existance of a mouse port as a mouse.
+  //
+  // We probably could try to distinguish if we wanted, but a virtual mouse
+  // might be there for a reason, and maybe we shouldn't assume we know
+  // better.
+  return !!::GetSystemMetrics(SM_MOUSEPRESENT);
+}
+
 /* static */
 PointerCapabilities WinUtils::GetAllPointerCapabilities() {
-  PointerCapabilities result = PointerCapabilities::None;
+  PointerCapabilities pointerCapabilities = PointerCapabilities::None;
 
-  if (IsTabletDevice() || IsTouchDeviceSupportPresent()) {
-    result |= PointerCapabilities::Coarse;
+  if (SystemHasTouchscreen()) {
+    pointerCapabilities |= PointerCapabilities::Coarse;
   }
 
-  if (IsMousePresent()) {
-    result |= PointerCapabilities::Fine | PointerCapabilities::Hover;
+  if (SystemHasPenDigitizer() || SystemHasMouse()) {
+    pointerCapabilities |=
+        PointerCapabilities::Fine | PointerCapabilities::Hover;
   }
 
-  return result;
+  return pointerCapabilities;
+}
+
+void WinUtils::GetPointerExplanation(nsAString* aExplanation) {
+  // To support localization, we will return a comma-separated list of
+  // Fluent IDs
+  *aExplanation = u"pointing-device-none";
+
+  bool first = true;
+  auto append = [&](const char16_t* str) {
+    if (first) {
+      aExplanation->Truncate();
+      first = false;
+    } else {
+      aExplanation->Append(u",");
+    }
+    aExplanation->Append(str);
+  };
+
+  if (SystemHasTouchscreen()) {
+    append(u"pointing-device-touchscreen");
+  }
+
+  if (SystemHasPenDigitizer()) {
+    append(u"pointing-device-pen-digitizer");
+  }
+
+  if (SystemHasMouse()) {
+    append(u"pointing-device-mouse");
+  }
 }
 
 /* static */
