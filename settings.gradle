@@ -5,15 +5,8 @@ def topsrcdir = rootProject.projectDir.absolutePath
 apply from: "${topsrcdir}/mobile/android/gradle/mach_env.gradle"
 
 def commandLine = ["${topsrcdir}/mach", "environment", "--format", "json", "--verbose"]
-if (System.properties['os.name'].toLowerCase().contains('windows')) {
-    // gradle is called before parsing config.status, we cannot use PYTHON
-    // value.
-    if (System.env.MOZILLABUILD) {
-        def mozillabuild = System.env.MOZILLABUILD.toLowerCase()
-        if (mozillabuild) {
-            commandLine.addAll(0, ["${mozillabuild}/python3/python3.exe"])
-        }
-    }
+if (System.env.GRADLE_MACH_PYTHON) {
+    commandLine.addAll(0, [System.env.GRADLE_MACH_PYTHON])
 }
 
 def proc = commandLine.execute(machEnv(topsrcdir), new File(topsrcdir))

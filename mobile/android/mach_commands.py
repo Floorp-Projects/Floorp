@@ -5,6 +5,7 @@
 import argparse
 import logging
 import os
+import sys
 
 import mozpack.path as mozpath
 from mach.decorators import Command, CommandArgument, SubCommand
@@ -492,6 +493,8 @@ def gradle(command_context, args, verbose=False):
             "GRADLE_OPTS": "-Dfile.encoding=utf-8",
             "JAVA_HOME": java_home,
             "JAVA_TOOL_OPTIONS": "-Dfile.encoding=utf-8",
+            # Let Gradle get the right Python path on Windows
+            "GRADLE_MACH_PYTHON": sys.executable,
         }
     )
     # Set ANDROID_SDK_ROOT if --with-android-sdk was set.
