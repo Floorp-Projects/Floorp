@@ -58,6 +58,8 @@ class PanelActionBase {
     extension.on("add-permissions", () => this.updateOnChange());
     // eslint-disable-next-line mozilla/balanced-listeners
     extension.on("remove-permissions", () => this.updateOnChange());
+    // eslint-disable-next-line mozilla/balanced-listeners
+    extension.on("update-ignore-quarantine", () => this.updateOnChange());
 
     // When preloading a popup we temporarily grant active tab permissions to
     // the preloaded popup. If we don't end up opening we need to clear this

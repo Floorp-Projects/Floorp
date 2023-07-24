@@ -644,6 +644,7 @@ var ExtensionAddonObserver = {
       extension.setSharedData("", extension.serialize());
       Services.ppmm.sharedData.flush();
 
+      extension.emit("update-ignore-quarantine");
       extension.broadcast("Extension:UpdateIgnoreQuarantine", {
         id: extension.id,
         ignoreQuarantine: addon.quarantineIgnoredByUser,
