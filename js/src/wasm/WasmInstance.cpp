@@ -1963,12 +1963,19 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
 
       // If `typeDef` is a struct, cache its size here, so that allocators
       // don't have to chase back through `typeDef` to determine that.
+      // Similarly, if `typeDef` is an array, cache its array element size
+      // here.
+      MOZ_ASSERT(typeDefData->unused == 0);
       if (typeDef.kind() == TypeDefKind::Struct) {
         typeDefData->structTypeSize = typeDef.structType().size_;
         // StructLayout::close ensures this is an integral number of words.
         MOZ_ASSERT((typeDefData->structTypeSize % sizeof(uintptr_t)) == 0);
       } else {
-        MOZ_ASSERT(typeDefData->structTypeSize == 0);
+        uint32_t arrayElemSize = typeDef.arrayType().elementType_.size();
+        typeDefData->arrayElemSize = arrayElemSize;
+        MOZ_ASSERT(arrayElemSize == 16 || arrayElemSize == 8 ||
+                   arrayElemSize == 4 || arrayElemSize == 2 ||
+                   arrayElemSize == 1);
       }
     } else if (typeDef.kind() == TypeDefKind::Func) {
       // Nothing to do; the default values are OK.
