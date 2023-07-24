@@ -49,7 +49,7 @@ class AppLinksUseCasesTest {
     private val javascriptUrl = "javascript:'hello, world'"
     private val jarUrl = "jar:file://some/path/test.html"
     private val fileType = "audio/mpeg"
-    private val layerUrl = "https://exmaple.com"
+    private val layerUrl = "https://example.com"
     private val layerPackage = "com.example.app"
     private val layerActivity = "com.example2.app.intentActivity"
     private val appIntentWithPackageAndFallback =

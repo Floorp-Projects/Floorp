@@ -8,12 +8,14 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.SystemClock
 import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ALWAYS_ALLOW_SCHEMES
 import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ALWAYS_DENY_SCHEMES
 import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ENGINE_SUPPORTED_SCHEMES
+import mozilla.components.support.ktx.android.net.isHttpOrHttps
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 
 private const val WWW = "www."
@@ -73,7 +75,7 @@ class AppLinksInterceptor(
         this.launchInApp = launchInApp
     }
 
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "ReturnCount")
     override fun onLoadRequest(
         engineSession: EngineSession,
         uri: String,
@@ -112,6 +114,10 @@ class AppLinksInterceptor(
 
         val redirect = useCases.interceptedAppLinkRedirect(uri)
         val result = handleRedirect(redirect, uri, alwaysAllowedSchemes.contains(uriScheme))
+
+        if (inUserDoNotIntercept(uri, redirect.appIntent)) {
+            return null
+        }
 
         if (redirect.isRedirect()) {
             if (launchFromInterceptor && result is RequestInterceptor.InterceptionResponse.AppIntent) {
@@ -179,5 +185,41 @@ class AppLinksInterceptor(
             url.startsWith(MAPS) -> url.replaceFirst(MAPS, "")
             else -> url
         }
+    }
+
+    companion object {
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        internal var userDoNotInterceptCache: MutableMap<Int, Long> = mutableMapOf()
+
+        @VisibleForTesting
+        internal fun getCacheKey(url: String, appIntent: Intent?): Int? {
+            return Uri.parse(url)?.let { uri ->
+                when {
+                    appIntent?.component?.packageName != null -> appIntent.component?.packageName
+                    !uri.isHttpOrHttps -> uri.scheme
+                    else -> uri.host // worst case we do not prompt again on this host
+                }.hashCode()
+            }
+        }
+
+        @VisibleForTesting
+        internal fun inUserDoNotIntercept(url: String, appIntent: Intent?): Boolean {
+            val cacheKey = getCacheKey(url, appIntent)
+            val cacheTimeStamp = userDoNotInterceptCache[cacheKey]
+            val currentTimeStamp = SystemClock.elapsedRealtime()
+
+            return cacheTimeStamp != null &&
+                currentTimeStamp <= (cacheTimeStamp + APP_LINKS_DO_NOT_OPEN_CACHE_INTERVAL)
+        }
+
+        internal fun addUserDoNotIntercept(url: String, appIntent: Intent?) {
+            val cacheKey = getCacheKey(url, appIntent)
+            cacheKey?.let {
+                userDoNotInterceptCache[it] = SystemClock.elapsedRealtime()
+            }
+        }
+
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        internal const val APP_LINKS_DO_NOT_OPEN_CACHE_INTERVAL = 60 * 60 * 1000L // 1 hour
     }
 }

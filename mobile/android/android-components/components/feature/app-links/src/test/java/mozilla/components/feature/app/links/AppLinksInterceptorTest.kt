@@ -4,21 +4,28 @@
 
 package mozilla.components.feature.app.links
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.feature.app.links.AppLinksInterceptor.Companion.APP_LINKS_DO_NOT_OPEN_CACHE_INTERVAL
+import mozilla.components.feature.app.links.AppLinksInterceptor.Companion.addUserDoNotIntercept
+import mozilla.components.feature.app.links.AppLinksInterceptor.Companion.inUserDoNotIntercept
+import mozilla.components.feature.app.links.AppLinksInterceptor.Companion.userDoNotInterceptCache
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -560,5 +567,63 @@ class AppLinksInterceptorTest {
         assertFalse(appLinksInterceptor.isSameDomain("www.google.ca", "www.google.com"))
         assertFalse(appLinksInterceptor.isSameDomain("maps.google.ca", "m.google.com"))
         assertFalse(appLinksInterceptor.isSameDomain("accounts.google.com", "www.google.com"))
+    }
+
+    @Test
+    fun `WHEN request is in user do not intercept cache THEN request is not intercepted`() {
+        appLinksInterceptor = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = true,
+            launchInApp = { true },
+            useCases = mockUseCases,
+        )
+
+        var response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, true, false, false, false, false)
+        assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
+
+        addUserDoNotIntercept("https://soundcloud.com", null)
+
+        response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, true, false, false, false, false)
+        assertNull(response)
+    }
+
+    @Test
+    fun `WHEN added to user do not open cache THEN return true if user do no intercept cache exists`() {
+        addUserDoNotIntercept("test://test.com", null)
+        assertTrue(inUserDoNotIntercept("test://test.com", null))
+        assertFalse(inUserDoNotIntercept("https://test.com", null))
+
+        addUserDoNotIntercept("http://test.com", null)
+        assertTrue(inUserDoNotIntercept("https://test.com", null))
+        assertFalse(inUserDoNotIntercept("https://example.com", null))
+
+        val testIntent: Intent = mock()
+        val componentName: ComponentName = mock()
+        doReturn(componentName).`when`(testIntent).component
+        doReturn("app.example.com").`when`(componentName).packageName
+
+        addUserDoNotIntercept("https://example.com", testIntent)
+        assertTrue(inUserDoNotIntercept("https://example.com", testIntent))
+        assertTrue(inUserDoNotIntercept("https://test.com", testIntent))
+
+        doReturn("app.test.com").`when`(componentName).packageName
+        assertFalse(inUserDoNotIntercept("https://test.com", testIntent))
+        assertFalse(inUserDoNotIntercept("https://mozilla.org", null))
+    }
+
+    @Test
+    fun `WHEN user do not open cache expires THEN return false`() {
+        val testIntent: Intent = mock()
+        val componentName: ComponentName = mock()
+        doReturn(componentName).`when`(testIntent).component
+        doReturn("app.example.com").`when`(componentName).packageName
+
+        addUserDoNotIntercept("https://example.com", testIntent)
+        assertTrue(inUserDoNotIntercept("https://example.com", testIntent))
+        assertTrue(inUserDoNotIntercept("https://test.com", testIntent))
+
+        userDoNotInterceptCache["app.example.com".hashCode()] = -APP_LINKS_DO_NOT_OPEN_CACHE_INTERVAL
+        assertFalse(inUserDoNotIntercept("https://example.com", testIntent))
+        assertFalse(inUserDoNotIntercept("https://test.com", testIntent))
     }
 }
