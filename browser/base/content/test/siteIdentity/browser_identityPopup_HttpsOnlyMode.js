@@ -15,7 +15,6 @@ add_task(async function () {
     name: "No HTTPS-Only UI",
     initialScheme: "https",
     initialPermission: 0,
-    permissionScheme: "https",
     isUiVisible: false,
   });
 
@@ -26,7 +25,6 @@ add_task(async function () {
     name: "Add HTTPS-Only exemption",
     initialScheme: "http",
     initialPermission: 0,
-    permissionScheme: "https",
     isUiVisible: true,
     selectPermission: 1,
     expectReload: true,
@@ -40,7 +38,6 @@ add_task(async function () {
     name: "Switch between HTTPS-Only exemption modes",
     initialScheme: "http",
     initialPermission: 1,
-    permissionScheme: "http",
     isUiVisible: true,
     selectPermission: 2,
     expectReload: false,
@@ -110,7 +107,6 @@ add_task(async function () {
     name: "Remove HTTPS-Only exemption again",
     initialScheme: "http",
     initialPermission: 2,
-    permissionScheme: "http",
     isUiVisible: true,
     selectPermission: 0,
     expectReload: true,
@@ -120,19 +116,12 @@ add_task(async function () {
 
 async function runTest(options) {
   // Set the initial permission
-  setPermission(WEBSITE(options.permissionScheme), options.initialPermission);
+  setPermission(WEBSITE("http"), options.initialPermission);
 
   await BrowserTestUtils.withNewTab(
     WEBSITE(options.initialScheme),
     async function (browser) {
       const name = options.name + " | ";
-
-      // Check if the site has the expected scheme
-      is(
-        browser.currentURI.scheme,
-        options.permissionScheme,
-        name + "Expected scheme should match actual scheme"
-      );
 
       // Open the identity popup.
       let { gIdentityHandler } = gBrowser.ownerGlobal;
@@ -190,7 +179,7 @@ async function runTest(options) {
 
       // Check if the permission was sucessfully changed
       is(
-        getPermission(WEBSITE(options.permissionScheme)),
+        getPermission(WEBSITE("http")),
         options.selectPermission,
         name + "Set permission should match the one selected from the menulist."
       );
