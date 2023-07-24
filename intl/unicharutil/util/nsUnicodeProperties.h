@@ -159,13 +159,17 @@ uint32_t GetFullWidthInverse(uint32_t aCh);
 bool IsClusterExtender(uint32_t aCh, uint8_t aCategory);
 
 inline bool IsClusterExtender(uint32_t aCh) {
-  return IsClusterExtender(aCh, GetGeneralCategory(aCh));
+  // There are no cluster-extender characters before the first combining-
+  // character block at U+03xx, so we short-circuit here to avoid the cost
+  // of calling GetGeneralCategory for Latin-1 letters etc.
+  return aCh >= 0x0300 && IsClusterExtender(aCh, GetGeneralCategory(aCh));
 }
 
 bool IsClusterExtenderExcludingJoiners(uint32_t aCh, uint8_t aCategory);
 
 inline bool IsClusterExtenderExcludingJoiners(uint32_t aCh) {
-  return IsClusterExtenderExcludingJoiners(aCh, GetGeneralCategory(aCh));
+  return aCh >= 0x0300 &&
+         IsClusterExtenderExcludingJoiners(aCh, GetGeneralCategory(aCh));
 }
 
 // Count the number of grapheme clusters in the given string
