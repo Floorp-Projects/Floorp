@@ -20,6 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FirefoxProfileMigrator: "resource:///modules/FirefoxProfileMigrator.sys.mjs",
   InternalTestingProfileMigrator:
     "resource:///modules/InternalTestingProfileMigrator.sys.mjs",
+  LoginCSVImport: "resource://gre/modules/LoginCSVImport.sys.mjs",
   MigrationWizardConstants:
     "chrome://browser/content/migration/migration-wizard-constants.mjs",
   PasswordFileMigrator: "resource:///modules/FileMigrators.sys.mjs",
@@ -30,10 +31,6 @@ if (AppConstants.platform == "macosx") {
     SafariProfileMigrator: "resource:///modules/SafariProfileMigrator.sys.mjs",
   });
 }
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  LoginCSVImport: "resource://gre/modules/LoginCSVImport.jsm",
-});
 
 /**
  * Set to true once the first instance of MigrationWizardParent has received

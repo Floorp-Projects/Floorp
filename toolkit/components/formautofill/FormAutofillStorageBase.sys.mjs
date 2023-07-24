@@ -127,11 +127,11 @@
  */
 
 import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AutofillTelemetry: "resource://autofill/AutofillTelemetry.sys.mjs",
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
   CreditCardRecord: "resource://gre/modules/shared/CreditCardRecord.sys.mjs",
   FormAutofillNameUtils:
@@ -139,10 +139,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
   PhoneNumber: "resource://autofill/phonenumberutils/PhoneNumber.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AutofillTelemetry: "resource://autofill/AutofillTelemetry.jsm",
 });
 
 const CryptoHash = Components.Constructor(

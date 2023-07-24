@@ -353,6 +353,7 @@
   "resource://app/modules/translation/BingTranslator.jsm": "browser/components/translation/BingTranslator.jsm",
   "resource://app/modules/translation/GoogleTranslator.jsm": "browser/components/translation/GoogleTranslator.jsm",
   "resource://app/modules/translation/YandexTranslator.jsm": "browser/components/translation/YandexTranslator.jsm",
+  "resource://autofill/AutofillTelemetry.jsm": "toolkit/components/formautofill/AutofillTelemetry.jsm",
   "resource://autofill/CreditCardRuleset.jsm": "toolkit/components/formautofill/CreditCardRuleset.jsm",
   "resource://autofill/FormAutofill.jsm": "toolkit/components/formautofill/FormAutofill.jsm",
   "resource://autofill/FormAutofillChild.jsm": "toolkit/components/formautofill/FormAutofillChild.jsm",

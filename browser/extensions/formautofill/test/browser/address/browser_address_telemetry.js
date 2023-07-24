@@ -4,8 +4,8 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
-const { AddressTelemetry } = ChromeUtils.import(
-  "resource://autofill/AutofillTelemetry.jsm"
+const { AddressTelemetry } = ChromeUtils.importESModule(
+  "resource://autofill/AutofillTelemetry.sys.mjs"
 );
 
 // Preference definitions
