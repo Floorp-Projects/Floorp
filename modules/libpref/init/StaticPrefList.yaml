@@ -3330,7 +3330,7 @@
 # Push
 - name: dom.push.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # This enables the SVGPathSeg APIs
@@ -4580,7 +4580,7 @@
   type: RelaxedAtomicBool
   value: @IS_NOT_ANDROID@
   mirror: always
-  
+
 # Is the 'assign' API for slot element enabled?
 - name: dom.shadowdom.slot.assign.enabled
   type: bool
@@ -4691,7 +4691,7 @@
   type: bool
   value: true
   mirror: always
-  
+
 - name: dom.window.clientinformation.enabled
   type: bool
   value: true
