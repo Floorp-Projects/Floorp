@@ -1,0 +1,146 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+name: Windows aarch64 Build without PGO
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    name: Build
+
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        runs-on: ['ubuntu-22.04']
+
+    steps:
+    - name: Init
+      run: |
+        export RUNNER_USERDIR=`echo ~`
+        echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
+
+    - name: Clean up (Self-hosted only)
+      if: contains(matrix.runs-on, 'self-hosted')
+      run: |
+        rm -rf $RUNNER_USERDIR/output
+        rm -rf $RUNNER_USERDIR/win-cross
+        rm -rf $RUNNER_USERDIR/.mozbuild
+        rm -rf $RUNNER_USERDIR/.cargo
+        rm -rf $RUNNER_USERDIR/l10n-central
+        rm -rf $GITHUB_WORKSPACE
+        mkdir $GITHUB_WORKSPACE
+
+    - name: Change PPA mirror servers
+      run: |
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
+
+    - name: Setup Disk & Swap Space 💿
+      if: matrix.runs-on == 'ubuntu-22.04'
+      run: |
+        echo Before:
+        free -h
+        df -h
+
+        echo
+        echo
+
+        sudo swapoff /mnt/swapfile
+        sudo rm /mnt/swapfile
+        sudo fallocate -l 10G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+
+        sudo fallocate -l 10G /home/runner/swapfile2
+        sudo chmod 600 /home/runner/swapfile2
+        sudo mkswap /home/runner/swapfile2
+        sudo swapon /home/runner/swapfile2
+
+        echo
+        echo
+
+        echo After:
+        free -h
+        df -h
+
+    - uses: actions/checkout@v3
+      name: Clone 🧬
+
+    - name: Clone l10n-central 🧬
+      run: |
+        git clone --depth 1 https://github.com/Floorp-Projects/l10n-central.git $RUNNER_USERDIR/l10n-central
+
+    - name: Setup 🪛
+      run: |
+        mkdir -p $RUNNER_USERDIR/win-cross
+
+        cp ./.github/mozconfig_win_aarch64_pgo_base mozconfig
+        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
+        echo 'ac_add_options --with-l10n-base=$RUNNER_USERDIR/l10n-central/l10n-central' >> mozconfig
+        sudo apt update
+        sudo apt install zstd p7zip-full
+
+        echo Setup wine
+        aria2c "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-1.toolchains.v3.linux64-wine.latest/artifacts/public%2Fbuild%2Fwine.tar.zst" -o wine.tar.zst
+        tar --zstd -xvf wine.tar.zst -C $RUNNER_USERDIR/win-cross
+        rm wine.tar.zst
+
+        echo Setup Visual Studio
+        sudo apt install -y msitools python3-pip
+        ./mach python --virtualenv build taskcluster/scripts/misc/get_vs.py build/vs/vs2019.yaml $RUNNER_USERDIR/win-cross/vs2019
+        chmod -R +x "$RUNNER_USERDIR/win-cross/vs2019"
+
+        ./mach --no-interactive bootstrap --application-choice browser
+        echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
+
+        export DISPLAY_VERSION=`cat browser/config/version_display.txt`
+        export UPDATE_CHANNEL="release"
+        echo "DISPLAY_VERSION=$DISPLAY_VERSION" >> $GITHUB_ENV
+        echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
+
+    - name: setup Rust 🦀
+      run: |
+        rustup target add aarch64-pc-windows-msvc
+
+    - name: Build 🔨
+      run: |
+        ./mach build
+
+    - name: Package 📦
+      run: |
+        ./mach package
+        ./mach package-multi-locale --locales ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW
+
+    - name: Copy 📂
+      run: |
+        mkdir $RUNNER_USERDIR/output
+        cp obj-aarch64-pc-windows-msvc/dist/install/sea/floorp-*.en-US.win64-aarch64.installer-stub.exe $RUNNER_USERDIR/output/
+        cp obj-aarch64-pc-windows-msvc/dist/install/sea/floorp-*.en-US.win64-aarch64.installer.exe $RUNNER_USERDIR/output/
+        cp obj-aarch64-pc-windows-msvc/dist/floorp-*.en-US.win64-aarch64.zip $RUNNER_USERDIR/output/
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@master
+      with:
+        name: floorp-windows-aarch64-package
+        path: ${{ env.RUNNER_USERDIR }}/output
+
+    - name: Clean up (Self-hosted only)
+      if: contains(matrix.runs-on, 'self-hosted')
+      run: |
+        rm -rf $RUNNER_USERDIR/output
+        rm -rf $RUNNER_USERDIR/win-cross
+        rm -rf $RUNNER_USERDIR/.mozbuild
+        rm -rf $RUNNER_USERDIR/.cargo
+        rm -rf $RUNNER_USERDIR/l10n-central
+        rm -rf $GITHUB_WORKSPACE
+        mkdir $GITHUB_WORKSPACE
