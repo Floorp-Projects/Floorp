@@ -1237,7 +1237,7 @@ void ContextChecks::check(AbstractFramePtr frame, int argIndex) {
 }
 #endif
 
-void AutoEnterOOMUnsafeRegion::crash(const char* reason) {
+void AutoEnterOOMUnsafeRegion::crash_impl(const char* reason) {
   char msgbuf[1024];
   js::NoteIntentionalCrash();
   SprintfLiteral(msgbuf, "[unhandlable oom] %s", reason);
@@ -1254,14 +1254,14 @@ mozilla::Atomic<AutoEnterOOMUnsafeRegion::AnnotateOOMAllocationSizeCallback,
                 mozilla::Relaxed>
     AutoEnterOOMUnsafeRegion::annotateOOMSizeCallback(nullptr);
 
-void AutoEnterOOMUnsafeRegion::crash(size_t size, const char* reason) {
+void AutoEnterOOMUnsafeRegion::crash_impl(size_t size, const char* reason) {
   {
     JS::AutoSuppressGCAnalysis suppress;
     if (annotateOOMSizeCallback) {
       annotateOOMSizeCallback(size);
     }
   }
-  crash(reason);
+  crash_impl(reason);
 }
 
 void ExternalValueArray::trace(JSTracer* trc) {
