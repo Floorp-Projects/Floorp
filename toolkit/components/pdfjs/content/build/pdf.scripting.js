@@ -477,12 +477,10 @@ class Field extends _pdf_object.PDFObject {
       indices.forEach(i => {
         this._value.push(this._items[i].displayValue);
       });
-    } else {
-      if (indices.length > 0) {
-        indices = indices.splice(1, indices.length - 1);
-        this._currentValueIndices = indices[0];
-        this._value = this._items[this._currentValueIndices];
-      }
+    } else if (indices.length > 0) {
+      indices = indices.splice(1, indices.length - 1);
+      this._currentValueIndices = indices[0];
+      this._value = this._items[this._currentValueIndices];
     }
     this._send({
       id: this._id,
@@ -691,12 +689,10 @@ class Field extends _pdf_object.PDFObject {
           --this._currentValueIndices[index];
         }
       }
-    } else {
-      if (this._currentValueIndices === nIdx) {
-        this._currentValueIndices = this.numItems > 0 ? 0 : -1;
-      } else if (this._currentValueIndices > nIdx) {
-        --this._currentValueIndices;
-      }
+    } else if (this._currentValueIndices === nIdx) {
+      this._currentValueIndices = this.numItems > 0 ? 0 : -1;
+    } else if (this._currentValueIndices > nIdx) {
+      --this._currentValueIndices;
     }
     this._send({
       id: this._id,
@@ -4252,8 +4248,8 @@ Object.defineProperty(exports, "initSandbox", ({
   }
 }));
 var _initialization = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.9.104';
-const pdfjsBuild = '2a508b95e';
+const pdfjsVersion = '3.9.130';
+const pdfjsBuild = '71f113bf8';
 })();
 
 /******/ 	return __webpack_exports__;

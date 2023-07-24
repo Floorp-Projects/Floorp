@@ -939,7 +939,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.9.104',
+    apiVersion: '3.9.130',
     data,
     password,
     disableAutoFetch,
@@ -2595,9 +2595,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.9.104';
+const version = '3.9.130';
 exports.version = version;
-const build = '2a508b95e';
+const build = '71f113bf8';
 exports.build = build;
 
 /***/ }),
@@ -5755,7 +5755,12 @@ function resetCtxToDefault(ctx) {
     ctx.setLineDash([]);
     ctx.lineDashOffset = 0;
   }
-  ctx.filter = "none";
+  const {
+    filter
+  } = ctx;
+  if (filter !== "none" && filter !== "") {
+    ctx.filter = "none";
+  }
 }
 function composeSMaskBackdrop(bytes, r0, g0, b0) {
   const length = bytes.length;
@@ -7196,7 +7201,12 @@ class CanvasGraphics {
     const height = imgData.height;
     const ctx = this.ctx;
     this.save();
-    ctx.filter = "none";
+    const {
+      filter
+    } = ctx;
+    if (filter !== "none" && filter !== "") {
+      ctx.filter = "none";
+    }
     ctx.scale(1 / width, -1 / height);
     let imgToPaint;
     if (imgData.bitmap) {
@@ -12676,9 +12686,12 @@ class XfaLayer {
         break;
       case "select":
         if (storedData.value !== null) {
+          html.setAttribute("value", storedData.value);
           for (const option of element.children) {
             if (option.attributes.value === storedData.value) {
               option.attributes.selected = true;
+            } else if (option.attributes.hasOwnProperty("selected")) {
+              delete option.attributes.selected;
             }
           }
         }
@@ -14231,8 +14244,8 @@ var _tools = __w_pdfjs_require__(5);
 var _annotation_layer = __w_pdfjs_require__(23);
 var _worker_options = __w_pdfjs_require__(14);
 var _xfa_layer = __w_pdfjs_require__(25);
-const pdfjsVersion = '3.9.104';
-const pdfjsBuild = '2a508b95e';
+const pdfjsVersion = '3.9.130';
+const pdfjsBuild = '71f113bf8';
 })();
 
 /******/ 	return __webpack_exports__;
