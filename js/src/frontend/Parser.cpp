@@ -9793,7 +9793,7 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
       //   DecoratorList[?Yield, ?Await] opt ClassDeclaration[?Yield, ~Default]
 #ifdef ENABLE_DECORATORS
     case TokenKind::At:
-      return classDefinition(yieldHandling, ClassExpression, NameRequired);
+      return classDefinition(yieldHandling, ClassStatement, NameRequired);
 #endif
 
     case TokenKind::Class:
