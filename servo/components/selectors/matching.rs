@@ -78,7 +78,8 @@ impl ElementSelectorFlags {
 /// Holds per-compound-selector data.
 struct LocalMatchingContext<'a, 'b: 'a, Impl: SelectorImpl> {
     shared: &'a mut MatchingContext<'b, Impl>,
-    quirks_data: Option<(Rightmost, SelectorIter<'a, Impl>)>,
+    rightmost: Rightmost,
+    quirks_data: Option<SelectorIter<'a, Impl>>,
 }
 
 #[inline(always)]
@@ -207,8 +208,11 @@ where
             }
         }
     }
-
-    matches_complex_selector(selector.iter_from(offset), element, context)
+    matches_complex_selector(
+        selector.iter_from(offset),
+        element,
+        context,
+        if offset == 0 { Rightmost::Yes } else { Rightmost::No })
 }
 
 /// Whether a compound selector matched, and whether it was the rightmost
@@ -245,6 +249,10 @@ where
 
     let mut local_context = LocalMatchingContext {
         shared: context,
+        // We have no info if this is an outer selector. This function is called in
+        // an invalidation context, which only calls this for non-subject (i.e.
+        // Non-rightmost) positions.
+        rightmost: Rightmost::No,
         quirks_data: None,
     };
 
@@ -296,10 +304,11 @@ where
 
 /// Matches a complex selector.
 #[inline(always)]
-pub fn matches_complex_selector<E>(
+fn matches_complex_selector<E>(
     mut iter: SelectorIter<E::Impl>,
     element: &E,
     context: &mut MatchingContext<E::Impl>,
+    rightmost: Rightmost,
 ) -> bool
 where
     E: Element,
@@ -336,7 +345,7 @@ where
         debug_assert_eq!(next_sequence, Combinator::PseudoElement);
     }
 
-    let result = matches_complex_selector_internal(iter, element, context, Rightmost::Yes);
+    let result = matches_complex_selector_internal(iter, element, context, rightmost);
 
     matches!(result, SelectorMatchingResult::Matched)
 }
@@ -346,9 +355,10 @@ fn matches_complex_selector_list<E: Element>(
     list: &[Selector<E::Impl>],
     element: &E,
     context: &mut MatchingContext<E::Impl>,
+    rightmost: Rightmost,
 ) -> bool {
     for selector in list {
-        if matches_complex_selector(selector.iter(), element, context) {
+        if matches_complex_selector(selector.iter(), element, context, rightmost) {
             return true;
         }
     }
@@ -360,11 +370,17 @@ fn matches_relative_selectors<E: Element>(
     selectors: &[RelativeSelector<E::Impl>],
     element: &E,
     context: &mut MatchingContext<E::Impl>,
+    rightmost: Rightmost,
 ) -> bool {
-    // If we've considered anchoring `:has()` selector while trying to match this element,
-    // mark it as such, as it has implications on style sharing (See style sharing
-    // code for further information).
-    context.considered_relative_selector = RelativeSelectorMatchingState::ConsideredAnchor;
+    // Relative selectors have different implications, depending on if the relative
+    // selector is in the subject position or not (See style sharing code for
+    // further information)
+    if rightmost == Rightmost::Yes {
+        context.considered_relative_selector.considered_anchor();
+    } else {
+        context.considered_relative_selector.considered();
+    }
+
     for RelativeSelector {
         match_hint,
         selector,
@@ -387,10 +403,10 @@ fn matches_relative_selectors<E: Element>(
         while let Some(el) = next_element {
             // TODO(dshin): `:has()` matching can get expensive when determining style changes.
             // We'll need caching/filtering here, which is tracked in bug 1822177.
-            if matches_complex_selector(selector.iter(), &el, context) {
+            if matches_complex_selector(selector.iter(), &el, context, rightmost) {
                 return true;
             }
-            if traverse_subtree && matches_relative_selector_subtree(selector, &el, context) {
+            if traverse_subtree && matches_relative_selector_subtree(selector, &el, context, rightmost) {
                 return true;
             }
             if !traverse_siblings {
@@ -407,15 +423,16 @@ fn matches_relative_selector_subtree<E: Element>(
     selector: &Selector<E::Impl>,
     element: &E,
     context: &mut MatchingContext<E::Impl>,
+    rightmost: Rightmost,
 ) -> bool {
     let mut current = element.first_element_child();
 
     while let Some(el) = current {
-        if matches_complex_selector(selector.iter(), &el, context) {
+        if matches_complex_selector(selector.iter(), &el, context, rightmost) {
             return true;
         }
 
-        if matches_relative_selector_subtree(selector, &el, context) {
+        if matches_relative_selector_subtree(selector, &el, context, rightmost) {
             return true;
         }
 
@@ -700,6 +717,7 @@ fn matches_host<E>(
     element: &E,
     selector: Option<&Selector<E::Impl>>,
     context: &mut MatchingContext<E::Impl>,
+    rightmost: Rightmost,
 ) -> bool
 where
     E: Element,
@@ -712,7 +730,7 @@ where
         return false;
     }
     selector.map_or(true, |selector| {
-        context.nest(|context| matches_complex_selector(selector.iter(), element, context))
+        context.nest(|context| matches_complex_selector(selector.iter(), element, context, rightmost))
     })
 }
 
@@ -720,6 +738,7 @@ fn matches_slotted<E>(
     element: &E,
     selector: &Selector<E::Impl>,
     context: &mut MatchingContext<E::Impl>,
+    rightmost: Rightmost,
 ) -> bool
 where
     E: Element,
@@ -728,7 +747,7 @@ where
     if element.is_html_slot_element() {
         return false;
     }
-    context.nest(|context| matches_complex_selector(selector.iter(), element, context))
+    context.nest(|context| matches_complex_selector(selector.iter(), element, context, rightmost))
 }
 
 fn matches_rare_attribute_selector<E>(
@@ -776,12 +795,13 @@ where
     E: Element,
 {
     let quirks_data = if context.quirks_mode() == QuirksMode::Quirks {
-        Some((rightmost, selector_iter.clone()))
+        Some(selector_iter.clone())
     } else {
         None
     };
     let mut local_context = LocalMatchingContext {
         shared: context,
+        rightmost,
         quirks_data,
     };
     selector_iter.all(|simple| matches_simple_selector(simple, element, &mut local_context))
@@ -797,6 +817,7 @@ where
     E: Element,
 {
     debug_assert!(context.shared.is_nested() || !context.shared.in_negation());
+    let rightmost = context.rightmost;
     match *selector {
         Component::ID(ref id) => {
             element.has_id(id, context.shared.classes_and_ids_case_sensitivity())
@@ -827,7 +848,7 @@ where
             matches_rare_attribute_selector(element, attr_sel)
         },
         Component::Part(ref parts) => matches_part(element, parts, &mut context.shared),
-        Component::Slotted(ref selector) => matches_slotted(element, selector, &mut context.shared),
+        Component::Slotted(ref selector) => matches_slotted(element, selector, &mut context.shared, rightmost),
         Component::PseudoElement(ref pseudo) => {
             element.match_pseudo_element(pseudo, context.shared)
         },
@@ -840,10 +861,10 @@ where
             element.has_namespace(&ns.borrow())
         },
         Component::NonTSPseudoClass(ref pc) => {
-            if let Some((ref rightmost, ref iter)) = context.quirks_data {
+            if let Some(ref iter) = context.quirks_data {
                 if pc.is_active_or_hover() &&
                     !element.is_link() &&
-                    hover_and_active_quirk_applies(iter, context.shared, *rightmost)
+                    hover_and_active_quirk_applies(iter, context.shared, context.rightmost)
                 {
                     return false;
                 }
@@ -858,7 +879,7 @@ where
             element.is_empty()
         },
         Component::Host(ref selector) => {
-            matches_host(element, selector.as_ref(), &mut context.shared)
+            matches_host(element, selector.as_ref(), &mut context.shared, rightmost)
         },
         Component::ParentSelector |
         Component::Scope => match context.shared.scope_element {
@@ -866,7 +887,7 @@ where
             None => element.is_root(),
         },
         Component::Nth(ref nth_data) => {
-            matches_generic_nth_child(element, context.shared, nth_data, &[])
+            matches_generic_nth_child(element, context.shared, nth_data, &[], rightmost)
         },
         Component::NthOf(ref nth_of_data) => context.shared.nest(|context| {
             matches_generic_nth_child(
@@ -874,19 +895,22 @@ where
                 context,
                 nth_of_data.nth_data(),
                 nth_of_data.selectors(),
+                rightmost,
             )
         }),
         Component::Is(ref list) | Component::Where(ref list) => context
             .shared
-            .nest(|context| matches_complex_selector_list(list, element, context)),
+            .nest(|context| matches_complex_selector_list(list, element, context, rightmost)),
         Component::Negation(ref list) => context
             .shared
-            .nest_for_negation(|context| !matches_complex_selector_list(list, element, context)),
-        Component::Has(ref relative_selectors) => context
+            .nest_for_negation(|context| !matches_complex_selector_list(list, element, context, rightmost)),
+        Component::Has(ref relative_selectors) => {
+            context
             .shared
             .nest_for_relative_selector(element.opaque(), |context| {
-                matches_relative_selectors(relative_selectors, element, context)
-            }),
+                matches_relative_selectors(relative_selectors, element, context, rightmost)
+            })
+        },
         Component::Combinator(_) => unsafe {
             debug_unreachable!("Shouldn't try to selector-match combinators")
         },
@@ -939,6 +963,7 @@ fn matches_generic_nth_child<E>(
     context: &mut MatchingContext<E::Impl>,
     nth_data: &NthSelectorData,
     selectors: &[Selector<E::Impl>],
+    rightmost: Rightmost,
 ) -> bool
 where
     E: Element,
@@ -948,7 +973,7 @@ where
     }
     let has_selectors = !selectors.is_empty();
     let selectors_match =
-        !has_selectors || matches_complex_selector_list(selectors, element, context);
+        !has_selectors || matches_complex_selector_list(selectors, element, context, rightmost);
     if context.ignores_nth_child_selectors_for_invalidation() {
         return selectors_match && !context.in_negation();
     }
@@ -965,11 +990,13 @@ where
             context,
             &NthSelectorData::first(is_of_type),
             selectors,
+            rightmost,
         ) && matches_generic_nth_child(
             element,
             context,
             &NthSelectorData::last(is_of_type),
             selectors,
+            rightmost,
         );
     }
 
@@ -1022,6 +1049,7 @@ where
             is_of_type,
             is_from_end,
             /* check_cache = */ true,
+            rightmost,
         );
         context
             .nth_index_cache(is_of_type, is_from_end, selectors)
@@ -1036,7 +1064,8 @@ where
             selectors,
             is_of_type,
             is_from_end,
-            /* check_cache = */ false
+            /* check_cache = */ false,
+            rightmost,
         ),
         "invalid cache"
     );
@@ -1059,6 +1088,7 @@ fn nth_child_index<E>(
     is_of_type: bool,
     is_from_end: bool,
     check_cache: bool,
+    rightmost: Rightmost,
 ) -> i32
 where
     E: Element,
@@ -1082,7 +1112,7 @@ where
             let matches = if is_of_type {
                 element.is_same_type(&curr)
             } else if !selectors.is_empty() {
-                matches_complex_selector_list(selectors, &curr, context)
+                matches_complex_selector_list(selectors, &curr, context, rightmost)
             } else {
                 true
             };
@@ -1113,7 +1143,7 @@ where
         let matches = if is_of_type {
             element.is_same_type(&curr)
         } else if !selectors.is_empty() {
-            matches_complex_selector_list(selectors, &curr, context)
+            matches_complex_selector_list(selectors, &curr, context, rightmost)
         } else {
             true
         };

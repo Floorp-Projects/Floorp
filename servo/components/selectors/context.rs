@@ -122,6 +122,25 @@ pub enum RelativeSelectorMatchingState {
     ConsideredAnchor,
 }
 
+impl RelativeSelectorMatchingState {
+    /// Update the matching state to indicate that the relative selector matching
+    /// happened in the subject position.
+    pub fn considered_anchor(&mut self) {
+        *self = Self::ConsideredAnchor;
+    }
+
+    /// Update the matching state to indicate that the relative selector matching
+    /// happened in a non-subject position.
+    pub fn considered(&mut self) {
+        // Being considered an anchor is stronger (e.g. `:has(.a):is(:has(.b) .c)`).
+        if *self == Self::ConsideredAnchor {
+            *self = Self::ConsideredAnchor;
+        } else {
+            *self = Self::Considered;
+        }
+    }
+}
+
 /// Data associated with the matching process for a element.  This context is
 /// used across many selectors for an element, so it's not appropriate for
 /// transient data that applies to only a single selector.
@@ -372,7 +391,6 @@ where
             "Nesting should've been rejected at parse time"
         );
         self.current_relative_selector_anchor = Some(anchor);
-        self.considered_relative_selector = RelativeSelectorMatchingState::Considered;
         let result = self.nest(f);
         self.current_relative_selector_anchor = None;
         result
