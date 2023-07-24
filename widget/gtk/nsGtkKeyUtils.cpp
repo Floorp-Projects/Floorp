@@ -1734,6 +1734,79 @@ bool KeymapWrapper::HandleKeyReleaseEvent(nsWindow* aWindow,
   return true;
 }
 
+guint KeymapWrapper::GetModifierState(GdkEventKey* aGdkKeyEvent,
+                                      KeymapWrapper* aWrapper) {
+  guint state = aGdkKeyEvent->state;
+  if (!aGdkKeyEvent->is_modifier) {
+    return state;
+  }
+#ifdef MOZ_X11
+  // NOTE: The state of given key event indicates adjacent state of
+  // modifier keys.  E.g., even if the event is Shift key press event,
+  // the bit for Shift is still false.  By the same token, even if the
+  // event is Shift key release event, the bit for Shift is still true.
+  // Unfortunately, gdk_keyboard_get_modifiers() returns current modifier
+  // state.  It means if there're some pending modifier key press or
+  // key release events, the result isn't what we want.
+  GdkDisplay* gdkDisplay = gdk_display_get_default();
+  if (GdkIsX11Display(gdkDisplay)) {
+    GdkDisplay* gdkDisplay = gdk_display_get_default();
+    Display* display = gdk_x11_display_get_xdisplay(gdkDisplay);
+    if (XEventsQueued(display, QueuedAfterReading)) {
+      XEvent nextEvent;
+      XPeekEvent(display, &nextEvent);
+      if (nextEvent.type == aWrapper->mXKBBaseEventCode) {
+        XkbEvent* XKBEvent = (XkbEvent*)&nextEvent;
+        if (XKBEvent->any.xkb_type == XkbStateNotify) {
+          XkbStateNotifyEvent* stateNotifyEvent =
+              (XkbStateNotifyEvent*)XKBEvent;
+          state &= ~0xFF;
+          state |= stateNotifyEvent->lookup_mods;
+        }
+      }
+    }
+    return state;
+  }
+#endif
+#ifdef MOZ_WAYLAND
+  int mask = 0;
+  switch (aGdkKeyEvent->keyval) {
+    case GDK_Shift_L:
+    case GDK_Shift_R:
+      mask = aWrapper->GetModifierMask(SHIFT);
+      break;
+    case GDK_Control_L:
+    case GDK_Control_R:
+      mask = aWrapper->GetModifierMask(CTRL);
+      break;
+    case GDK_Alt_L:
+    case GDK_Alt_R:
+      mask = aWrapper->GetModifierMask(ALT);
+      break;
+    case GDK_Super_L:
+    case GDK_Super_R:
+      mask = aWrapper->GetModifierMask(SUPER);
+      break;
+    case GDK_Hyper_L:
+    case GDK_Hyper_R:
+      mask = aWrapper->GetModifierMask(HYPER);
+      break;
+    case GDK_Meta_L:
+    case GDK_Meta_R:
+      mask = aWrapper->GetModifierMask(META);
+      break;
+    default:
+      break;
+  }
+  if (aGdkKeyEvent->type == GDK_KEY_PRESS) {
+    state |= mask;
+  } else {
+    state &= ~mask;
+  }
+  return state;
+#endif
+}
+
 /* static */
 void KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
                                  GdkEventKey* aGdkKeyEvent,
@@ -1771,33 +1844,7 @@ void KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
     aKeyEvent.mKeyCode = 0;
   }
 
-  // NOTE: The state of given key event indicates adjacent state of
-  // modifier keys.  E.g., even if the event is Shift key press event,
-  // the bit for Shift is still false.  By the same token, even if the
-  // event is Shift key release event, the bit for Shift is still true.
-  // Unfortunately, gdk_keyboard_get_modifiers() returns current modifier
-  // state.  It means if there're some pending modifier key press or
-  // key release events, the result isn't what we want.
-  guint modifierState = aGdkKeyEvent->state;
-  GdkDisplay* gdkDisplay = gdk_display_get_default();
-#ifdef MOZ_X11
-  if (aGdkKeyEvent->is_modifier && GdkIsX11Display(gdkDisplay)) {
-    Display* display = gdk_x11_display_get_xdisplay(gdkDisplay);
-    if (XEventsQueued(display, QueuedAfterReading)) {
-      XEvent nextEvent;
-      XPeekEvent(display, &nextEvent);
-      if (nextEvent.type == keymapWrapper->mXKBBaseEventCode) {
-        XkbEvent* XKBEvent = (XkbEvent*)&nextEvent;
-        if (XKBEvent->any.xkb_type == XkbStateNotify) {
-          XkbStateNotifyEvent* stateNotifyEvent =
-              (XkbStateNotifyEvent*)XKBEvent;
-          modifierState &= ~0xFF;
-          modifierState |= stateNotifyEvent->lookup_mods;
-        }
-      }
-    }
-  }
-#endif
+  const guint modifierState = GetModifierState(aGdkKeyEvent, keymapWrapper);
   InitInputEvent(aKeyEvent, modifierState);
 
   switch (aGdkKeyEvent->keyval) {
