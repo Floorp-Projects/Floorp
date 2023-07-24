@@ -422,6 +422,7 @@ async function loadTestPage({
       // Enabled by default.
       ["browser.translations.enable", true],
       ["browser.translations.logLevel", "All"],
+      ["browser.translations.panelShown", true],
       ...(prefs ?? []),
     ],
   });

@@ -231,6 +231,8 @@
   skin/classic/browser/tabbrowser/tab-loading-inverted.png     (../shared/tabbrowser/tab-loading-inverted.png)
   skin/classic/browser/tabbrowser/tab-loading-inverted@2x.png  (../shared/tabbrowser/tab-loading-inverted@2x.png)
 
+  skin/classic/browser/translations/beta.svg                   (../shared/translations/beta.svg)
+
   skin/classic/browser/update-badge.svg                        (../shared/update-badge.svg)
   skin/classic/browser/profiler-popup-backdrop.png             (../shared/profiler-popup-backdrop.png)
   skin/classic/browser/tab-crashed.svg                         (../shared/incontent-icons/tab-crashed.svg)
