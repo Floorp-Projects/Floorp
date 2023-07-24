@@ -39,7 +39,6 @@ export const PdfJsDefaultPreferences = Object.freeze({
  "scrollModeOnLoad": -1,
  "spreadModeOnLoad": -1,
  "textLayerMode": 1,
- "useOnlyCssZoom": false,
  "viewerCssTheme": 0,
  "viewOnLoad": 0,
  "disableAutoFetch": false,
