@@ -1,5 +1,7 @@
 .. -*- Mode: rst; fill-column: 80; -*-
 
+.. _geckoview-contributor-guide:
+
 =================
 Contributor Guide
 =================
