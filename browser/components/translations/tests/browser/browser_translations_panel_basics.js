@@ -17,7 +17,7 @@ add_task(async function test_translations_panel_basics() {
     "The button is available."
   );
 
-  is(button.getAttribute("data-l10n-id"), "urlbar-translations-button2");
+  is(button.getAttribute("data-l10n-id"), "urlbar-translations-button");
 
   await runInPage(async TranslationsTest => {
     const { getH1 } = TranslationsTest.getSelectors();
