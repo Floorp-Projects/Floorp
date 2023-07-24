@@ -10186,11 +10186,6 @@
     value: true
     mirror: always
 
--   name: media.wmf.low-latency.force-disabled
-    type: RelaxedAtomicBool
-    value: false
-    mirror: always
-
 -   name: media.wmf.skip-blacklist
     type: RelaxedAtomicBool
     value: false
