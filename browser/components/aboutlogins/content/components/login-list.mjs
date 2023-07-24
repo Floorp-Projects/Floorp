@@ -139,7 +139,15 @@ export default class LoginList extends HTMLElement {
     this._list.addEventListener("click", this);
     this.addEventListener("keydown", this);
     this.addEventListener("keyup", this);
-    this._createLoginButton.addEventListener("click", this);
+
+    // TODO: Using the addEventListener to listen for clicks and pass the event handler due to a CSP error.
+    // This will be fixed as login-list itself is converted into a lit component. We will then be able to use the onclick
+    // prop of login-command-button as seen in the example below (functionality works and passes tests).
+    // this._createLoginButton.onClick = e => this.handleCreateNewLogin(e);
+
+    this._createLoginButton.addEventListener("click", e =>
+      this.handleCreateNewLogin(e)
+    );
   }
 
   get #activeDescendant() {
@@ -288,19 +296,18 @@ export default class LoginList extends HTMLElement {
     return section;
   }
 
+  handleCreateNewLogin() {
+    window.dispatchEvent(
+      new CustomEvent("AboutLoginsShowBlankLogin", {
+        cancelable: true,
+      })
+    );
+    recordTelemetryEvent({ object: "new_login", method: "new" });
+  }
+
   handleEvent(event) {
     switch (event.type) {
       case "click": {
-        if (event.originalTarget == this._createLoginButton) {
-          window.dispatchEvent(
-            new CustomEvent("AboutLoginsShowBlankLogin", {
-              cancelable: true,
-            })
-          );
-          recordTelemetryEvent({ object: "new_login", method: "new" });
-          return;
-        }
-
         let listItem = event.originalTarget.closest(".login-list-item");
         if (!listItem || !listItem.dataset.guid) {
           return;

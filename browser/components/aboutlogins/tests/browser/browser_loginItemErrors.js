@@ -117,7 +117,9 @@ add_task(async function test_showLoginItemErrors() {
       const loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
       );
-      const editButton = loginItem.shadowRoot.querySelector(".edit-button");
+      const editButton = loginItem.shadowRoot
+        .querySelector(".edit-button")
+        .shadowRoot.querySelector("button");
       editButton.click();
 
       const updateEvent = Cu.cloneInto(
