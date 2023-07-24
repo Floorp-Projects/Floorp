@@ -1427,11 +1427,11 @@ class gfxFontGroup final : public gfxTextRunFactory {
   // If *aLoading is true, a relevant resource is already being loaded so no
   // new download will be initiated; if a download is started, *aLoading will
   // be set to true on return.
-  already_AddRefed<gfxFont> GetFontAt(int32_t i, uint32_t aCh, bool* aLoading);
+  already_AddRefed<gfxFont> GetFontAt(uint32_t i, uint32_t aCh, bool* aLoading);
 
   // Simplified version of GetFontAt() for use where we just need a font for
   // metrics, math layout tables, etc.
-  already_AddRefed<gfxFont> GetFontAt(int32_t i, uint32_t aCh = 0x20) {
+  already_AddRefed<gfxFont> GetFontAt(uint32_t i, uint32_t aCh = 0x20) {
     bool loading = false;
     return GetFontAt(i, aCh, &loading);
   }
