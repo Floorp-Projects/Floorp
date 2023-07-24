@@ -56,7 +56,7 @@ enable-show-pinned-tabs-title =
 Mouse-side-button =
   .label = Optimise browser for mouse with side buttons
 
-tabbar-preference = Tabbar
+tabbar-preference = Tabbar (Mac not supported)
 
 None-mode = 
  .label= Normal mode
@@ -65,7 +65,7 @@ hide-horizontality-tabs =
  .label= Hide horizontal tabbar
 
 verticalTab-setting =
- .label = Optimise browser for vertical tabs
+ .label = Optimise browser for vertical tabs 
 
 move-tabbar-position =
  .label = Show tabbar at the bottom of the toolbar
@@ -783,7 +783,7 @@ floorp-show-all-downloads =
 
 workspace-prompt-title = Floorp Workspace
 please-enter-workspace-name = Please enter new workspace name.
-please-enter-workspace-name-2 = Only alphabetic and numeric workspace are allowed.
+please-enter-workspace-name-2 = Please enter characters other than symbols except spaces.
 workspace-error = ERROR!
 workspace-error-discription = Workspace name is invalid or already exists.
 

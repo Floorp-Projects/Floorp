@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function(){
     memos = JSON.parse(memos);
     showMemos();
   } else {
-    memos = {"titles": [l10n.formatValueSync("memo-welcome-title")], "contents": [`${l10n.formatValueSync("memo-first-tip")}\n\n${l10n.formatValueSync("memo-second-tip")}\n${l10n.formatValueSync("memo-third-tip")}\n\n${l10n.formatValueSync("memo-fourth-tip")}`] };
+    memos = {"titles": [l10n.formatValueSync("memo-welcome-title")], "contents": [`${l10n.formatValueSync("memo-first-tip")}\n\n${l10n.formatValueSync("memo-second-tip")}\n${l10n.formatValueSync("memo-third-tip")}`] };
     memoInput.value = memos.contents[0];
     memoTitleInput.value = memos.titles[0];
     Services.prefs.setStringPref("floorp.browser.note.memos", JSON.stringify(memos));
