@@ -518,7 +518,11 @@ function parseDeclarationsInternal(
 
   // Handle whatever trailing properties or values might still be there
   if (current) {
-    if (!lastProp.name) {
+    // If nested rule doesn't have closing bracket
+    if (isInNested && nestingLevel > 0) {
+      // We need to remove the previous (nested) pending declaration
+      declarations.pop();
+    } else if (!lastProp.name) {
       // Ignore this case in comments.
       if (!inComment) {
         // Trailing property found, e.g. p1:v1;p2:v2;p3
