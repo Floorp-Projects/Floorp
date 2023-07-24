@@ -27,6 +27,7 @@ The tool is built to be conservative about the number of tests to run, so if you
                                 Select specific platforms to target. Android only available with --android. Available platforms: android-a51, android,
                                 windows, linux, macosx, desktop
             --apps [ [ ...]]      Select specific applications to target from: firefox, chrome, chromium, geckoview, fenix, chrome-m, safari
+            --clear-cache         Deletes the try_perf_revision_cache file
 
         task configuration arguments:
             --artifact            Force artifact builds where possible.

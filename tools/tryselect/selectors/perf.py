@@ -277,6 +277,14 @@ class PerfParser(CompareParser):
             },
         ],
         [
+            ["--clear-cache"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Deletes the try_perf_revision_cache file",
+            },
+        ],
+        [
             ["--extra-args"],
             {
                 "nargs": "*",
@@ -1125,6 +1133,7 @@ class PerfParser(CompareParser):
         query=None,
         detect_changes=False,
         rebuild=1,
+        clear_cache=False,
         **kwargs,
     ):
         # Setup fzf
@@ -1133,6 +1142,10 @@ class PerfParser(CompareParser):
         if not fzf:
             print(FZF_NOT_FOUND)
             return 1
+
+        if clear_cache:
+            print(f"Removing cached {cache_file} file")
+            cache_file.unlink(missing_ok=True)
 
         all_tasks, dep_cache, cache_dir = setup_tasks_for_fzf(
             not dry_run,
