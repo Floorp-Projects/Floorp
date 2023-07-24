@@ -167,6 +167,11 @@ void moz_container_wayland_egl_window_set_size(MozContainer* container,
   MozContainerWayland* wl_container = &container->wl_container;
   MutexAutoLock lock(*wl_container->container_lock);
   if (wl_container->eglwindow) {
+    LOGCONTAINER(
+        "moz_container_wayland_egl_window_set_size [%p] scaled %d x %d scale "
+        "%d\n",
+        (void*)moz_container_get_nsWindow(container), aSize.width, aSize.height,
+        wl_container->buffer_scale);
     wl_egl_window_resize(wl_container->eglwindow, aSize.width, aSize.height, 0,
                          0);
   }

@@ -4024,9 +4024,13 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
   //   Override-redirect windows are children of the root window so parent
   //   coordinates are root coordinates.
 
-  LOG("configure event %d,%d -> %d x %d scale %d\n", aEvent->x, aEvent->y,
-      aEvent->width, aEvent->height,
-      mGdkWindow ? gdk_window_get_scale_factor(mGdkWindow) : -1);
+#ifdef MOZ_LOGGING
+  int scale = mGdkWindow ? gdk_window_get_scale_factor(mGdkWindow) : -1;
+  LOG("configure event %d,%d -> %d x %d direct mGdkWindow scale %d (scaled "
+      "size %d x %d)\n",
+      aEvent->x, aEvent->y, aEvent->width, aEvent->height, scale,
+      aEvent->width * scale, aEvent->height * scale);
+#endif
 
   if (mPendingConfigures > 0) {
     mPendingConfigures--;
@@ -9712,10 +9716,14 @@ void nsWindow::SetEGLNativeWindowSize(
   if (!mContainer || !GdkIsWaylandDisplay()) {
     return;
   }
+
+  gint scale = GdkCeiledScaleFactor();
   if (moz_container_wayland_egl_window_needs_size_update(
-          mContainer, aEGLWindowSize.ToUnknownSize(), GdkCeiledScaleFactor())) {
-    LOG("nsWindow::SetEGLNativeWindowSize() %d x %d", aEGLWindowSize.width,
-        aEGLWindowSize.height);
+          mContainer, aEGLWindowSize.ToUnknownSize(), scale)) {
+    LOG("nsWindow::SetEGLNativeWindowSize() %d x %d scale %d (unscaled %d x "
+        "%d)",
+        aEGLWindowSize.width, aEGLWindowSize.height, scale,
+        aEGLWindowSize.width / scale, aEGLWindowSize.height / scale);
     moz_container_wayland_egl_window_set_size(mContainer,
                                               aEGLWindowSize.ToUnknownSize());
     moz_container_wayland_set_scale_factor(mContainer);
