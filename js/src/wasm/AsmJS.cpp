@@ -1957,8 +1957,8 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
     ErrorMetadata metadata;
     if (ts.computeErrorMetadata(&metadata, AsVariant(offset))) {
       if (ts.anyCharsAccess().options().throwOnAsmJSValidationFailure()) {
-        ReportCompileErrorLatin1(fc_, std::move(metadata), nullptr,
-                                 JSMSG_USE_ASM_TYPE_FAIL, &args);
+        ReportCompileErrorLatin1VA(fc_, std::move(metadata), nullptr,
+                                   JSMSG_USE_ASM_TYPE_FAIL, &args);
       } else {
         // asm.js type failure is indicated by calling one of the fail*
         // functions below.  These functions always return false to

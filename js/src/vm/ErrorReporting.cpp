@@ -113,14 +113,35 @@ static void ReportCompileErrorImpl(FrontendContext* fc,
 
 void js::ReportCompileErrorLatin1(FrontendContext* fc, ErrorMetadata&& metadata,
                                   UniquePtr<JSErrorNotes> notes,
-                                  unsigned errorNumber, va_list* args) {
-  ReportCompileErrorImpl(fc, std::move(metadata), std::move(notes), errorNumber,
-                         args, ArgumentsAreLatin1);
+                                  unsigned errorNumber, ...) {
+  va_list args;
+  va_start(args, errorNumber);
+  ReportCompileErrorLatin1VA(fc, std::move(metadata), std::move(notes),
+                             errorNumber, &args);
+  va_end(args);
 }
 
 void js::ReportCompileErrorUTF8(FrontendContext* fc, ErrorMetadata&& metadata,
                                 UniquePtr<JSErrorNotes> notes,
-                                unsigned errorNumber, va_list* args) {
+                                unsigned errorNumber, ...) {
+  va_list args;
+  va_start(args, errorNumber);
+  ReportCompileErrorUTF8VA(fc, std::move(metadata), std::move(notes),
+                           errorNumber, &args);
+  va_end(args);
+}
+
+void js::ReportCompileErrorLatin1VA(FrontendContext* fc,
+                                    ErrorMetadata&& metadata,
+                                    UniquePtr<JSErrorNotes> notes,
+                                    unsigned errorNumber, va_list* args) {
+  ReportCompileErrorImpl(fc, std::move(metadata), std::move(notes), errorNumber,
+                         args, ArgumentsAreLatin1);
+}
+
+void js::ReportCompileErrorUTF8VA(FrontendContext* fc, ErrorMetadata&& metadata,
+                                  UniquePtr<JSErrorNotes> notes,
+                                  unsigned errorNumber, va_list* args) {
   ReportCompileErrorImpl(fc, std::move(metadata), std::move(notes), errorNumber,
                          args, ArgumentsAreUTF8);
 }
