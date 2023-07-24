@@ -10,40 +10,41 @@ add_task(async function test_adjusted_rating() {
       gBrowser,
     },
     async browser => {
-      await SpecialPowers.spawn(browser, [], async function () {
-        let rating = 2.5;
-        let adjustedRating = content.document.createElement("adjusted-rating");
-        adjustedRating.rating = rating;
-        content.document.body.appendChild(adjustedRating);
+      const { document } = browser.contentWindow;
+      let rating = MOCK_POPULATED_DATA.adjusted_rating;
 
-        await adjustedRating.updateComplete;
+      let shoppingContainer = document.querySelector("shopping-container");
+      shoppingContainer.data = MOCK_POPULATED_DATA;
+      await shoppingContainer.updateComplete;
 
-        let mozFiveStar = adjustedRating.ratingEl;
-        ok(mozFiveStar, "The moz-five-star element exists");
+      let adjustedRating = shoppingContainer.adjustedRatingEl;
+      await adjustedRating.updateComplete;
 
-        is(mozFiveStar.rating, rating, `The moz-five-star rating is ${rating}`);
-        is(
-          adjustedRating.rating,
-          rating,
-          `The adjusted rating "rating" is ${rating}`
-        );
+      let mozFiveStar = adjustedRating.ratingEl;
+      ok(mozFiveStar, "The moz-five-star element exists");
 
-        rating = 5;
-        adjustedRating.rating = rating;
+      is(mozFiveStar.rating, rating, `The moz-five-star rating is ${rating}`);
+      is(
+        adjustedRating.rating,
+        rating,
+        `The adjusted rating "rating" is ${rating}`
+      );
 
-        await adjustedRating.updateComplete;
+      rating = 2.55;
+      adjustedRating.rating = rating;
 
-        is(
-          mozFiveStar.rating,
-          rating,
-          `The moz-five-star rating is now ${rating}`
-        );
-        is(
-          adjustedRating.rating,
-          rating,
-          `The adjusted rating "rating" is now ${rating}`
-        );
-      });
+      await adjustedRating.updateComplete;
+
+      is(
+        mozFiveStar.rating,
+        rating,
+        `The moz-five-star rating is now ${rating}`
+      );
+      is(
+        adjustedRating.rating,
+        rating,
+        `The adjusted rating "rating" is now ${rating}`
+      );
     }
   );
 });

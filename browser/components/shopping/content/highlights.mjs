@@ -95,6 +95,7 @@ class ReviewHighlights extends MozLitElement {
 
   render() {
     if (!this.#highlightsMap) {
+      this.hidden = true;
       return null;
     }
 

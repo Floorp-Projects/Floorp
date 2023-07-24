@@ -22,6 +22,15 @@ export class ShoppingContainer extends MozLitElement {
     data: { type: Object },
   };
 
+  static get queries() {
+    return {
+      reviewReliabilityEl: "review-reliability",
+      adjustedRatingEl: "adjusted-rating",
+      highlightsEl: "review-highlights",
+      settingsEl: "shopping-settings",
+    };
+  }
+
   connectedCallback() {
     super.connectedCallback();
     if (!this.data) {
