@@ -200,19 +200,32 @@ dom::Document* ResponsiveImageSelector::Document() {
   return mOwnerNode->OwnerDoc();
 }
 
-void ResponsiveImageSelector::SetDefaultSource(const nsAString& aURLString,
-                                               nsIPrincipal* aPrincipal) {
+void ResponsiveImageSelector::ClearDefaultSource() {
   ClearSelectedCandidate();
-
   // Check if the last element of our candidates is a default
   if (!mCandidates.IsEmpty() && mCandidates.LastElement().IsDefault()) {
     mCandidates.RemoveLastElement();
   }
+}
 
-  mDefaultSourceURL = aURLString;
+void ResponsiveImageSelector::SetDefaultSource(nsIURI* aURI,
+                                               nsIPrincipal* aPrincipal) {
+  ClearDefaultSource();
   mDefaultSourceTriggeringPrincipal = aPrincipal;
+  mDefaultSourceURL = VoidString();
+  if (aURI) {
+    nsAutoCString spec;
+    aURI->GetSpec(spec);
+    CopyUTF8toUTF16(spec, mDefaultSourceURL);
+  }
+  MaybeAppendDefaultCandidate();
+}
 
-  // Add new default to end of list
+void ResponsiveImageSelector::SetDefaultSource(const nsAString& aURLString,
+                                               nsIPrincipal* aPrincipal) {
+  ClearDefaultSource();
+  mDefaultSourceTriggeringPrincipal = aPrincipal;
+  mDefaultSourceURL = aURLString;
   MaybeAppendDefaultCandidate();
 }
 

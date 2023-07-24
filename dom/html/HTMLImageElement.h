@@ -368,12 +368,12 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   // Override for nsImageLoadingContent.
   nsIContent* AsContent() override { return this; }
 
-  // This is a weak reference that this element and the HTMLFormElement
-  // cooperate in maintaining.
-  HTMLFormElement* mForm;
-
   // Created when we're tracking responsive image state
   RefPtr<ResponsiveImageSelector> mResponsiveSelector;
+
+  // This is a weak reference that this element and the HTMLFormElement
+  // cooperate in maintaining.
+  HTMLFormElement* mForm = nullptr;
 
  private:
   bool SourceElementMatches(Element* aSourceElement);
@@ -419,16 +419,16 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   // Queue an image load task (via microtask).
   void QueueImageLoadTask(bool aAlwaysLoad);
 
-  bool mInDocResponsiveContent;
-
   RefPtr<ImageLoadTask> mPendingImageLoadTask;
+  nsCOMPtr<nsIURI> mSrcURI;
   nsCOMPtr<nsIPrincipal> mSrcTriggeringPrincipal;
   nsCOMPtr<nsIPrincipal> mSrcsetTriggeringPrincipal;
 
   // Last URL that was attempted to load by this element.
   nsCOMPtr<nsIURI> mLastSelectedSource;
   // Last pixel density that was selected.
-  double mCurrentDensity;
+  double mCurrentDensity = 1.0;
+  bool mInDocResponsiveContent = false;
 };
 
 }  // namespace dom
