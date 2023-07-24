@@ -341,8 +341,6 @@ pref("layout.accessiblecaret.hapticfeedback", true);
 // a smarter phone-number selection for direct-dial ActionBar action.
 pref("layout.accessiblecaret.extend_selection_for_phone_number", true);
 
-pref("dom.serviceWorkers.enabled", true);
-
 // Allow service workers to open windows for a longer period after a notification
 // click on mobile.  This is to account for some devices being quite slow.
 pref("dom.serviceWorkers.disable_open_click_delay", 5000);
