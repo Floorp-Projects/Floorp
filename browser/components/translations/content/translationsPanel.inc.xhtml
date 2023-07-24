@@ -111,7 +111,13 @@
       </hbox>
 
       <vbox class="translations-panel-content">
-        <description id="translations-panel-error-unsupported-hint"></description>
+        <html:div>
+          <html:span id="translations-panel-error-unsupported-hint"></html:span>
+          <html:a is="moz-support-link"
+                  data-l10n-id="translations-panel-learn-more-link"
+                  support-page="website-translation"
+                  onclick="TranslationsPanel.close()" />
+        </html:div>
       </vbox>
 
       <hbox class="panel-footer translations-panel-footer">
