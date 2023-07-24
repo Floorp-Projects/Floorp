@@ -50,7 +50,7 @@ add_heuristic_tests([
   },
   {
     description:
-      "Apply credit card expiry heuristic only when the previous field is a cc field",
+      "Do not apply credit card expiry heuristic only when the previous field is not a cc field",
     fixtureData: `
         <html>
         <body>
@@ -81,6 +81,44 @@ add_heuristic_tests([
       },
       {
         fields: [{ fieldName: "cc-number", reason: "autocomplete" }],
+      },
+    ],
+  },
+  {
+    description:
+      "Apply credit card expiry heuristic only when the previous fields has a credit card number field",
+    fixtureData: `
+        <html>
+        <body>
+          <form>
+            <input type="text" autocomplete="cc-number"/>
+            <input type="text" autocomplete="cc-name"/>
+            <input type="text" placeholder="month"/>
+          </form>
+          <form>
+            <input type="text" autocomplete="cc-number"/>
+            <input type="text" autocomplete="cc-family-name"/>
+            <input type="text" autocomplete="cc-given-name"/>
+            <input type="text" placeholder="month"/>
+          </form>
+        </body>
+        </html>
+      `,
+    expectedResult: [
+      {
+        fields: [
+          { fieldName: "cc-number", reason: "autocomplete" },
+          { fieldName: "cc-name", reason: "autocomplete" },
+          { fieldName: "cc-exp", reason: "update-heuristic" },
+        ],
+      },
+      {
+        fields: [
+          { fieldName: "cc-number", reason: "autocomplete" },
+          { fieldName: "cc-family-name", reason: "autocomplete" },
+          { fieldName: "cc-given-name", reason: "autocomplete" },
+          { fieldName: "cc-exp", reason: "update-heuristic" },
+        ],
       },
     ],
   },
