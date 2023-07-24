@@ -1757,7 +1757,6 @@ const selectors = {
     `${selectors.resultItems}:nth-child(${i})[title$="${name}"]`,
   fileMatch: ".project-text-search .line-value",
   popup: ".popover",
-  tooltip: ".tooltip",
   previewPopup: ".preview-popup",
   openInspector: "button.open-inspector",
   outlineItem: i =>
@@ -2262,12 +2261,21 @@ async function tryHovering(dbg, line, column, elementName) {
 
   return { element, tokenEl };
 }
-
+/**
+ * Hovers and asserts tooltip previews with simple text expressions (i.e numbers and strings)
+ * @param {*} dbg
+ * @param {Number} line
+ * @param {Number} column
+ * @param {Object} options
+ * @param {String}  options.result - Expected text shown in the preview
+ * @param {String}  options.expression - The expression hovered over
+ * @param {Boolean} options.doNotClose - Set to true to not close the tooltip
+ */
 async function assertPreviewTextValue(
   dbg,
   line,
   column,
-  { text, expression, doNotClose = false }
+  { result, expression, doNotClose = false }
 ) {
   const { element: previewEl, tokenEl } = await tryHovering(
     dbg,
@@ -2285,11 +2293,11 @@ async function assertPreviewTextValue(
   );
 
   ok(
-    previewEl.innerText.includes(text),
+    previewEl.innerText.includes(result),
     "Popup preview text shown to user. Got: " +
       previewEl.innerText +
       " Expected: " +
-      text
+      result
   );
 
   if (!doNotClose) {
@@ -2297,27 +2305,11 @@ async function assertPreviewTextValue(
   }
 }
 
-async function assertPreviewTooltip(dbg, line, column, { result, expression }) {
-  const { element: previewEl, tokenEl } = await tryHovering(
-    dbg,
-    line,
-    column,
-    "tooltip"
-  );
-
-  ok(
-    tokenEl.innerText.includes(expression),
-    "Tooltip preview hovered expression is correct. Got: " +
-      tokenEl.innerText +
-      " Expected: " +
-      expression
-  );
-
-  is(previewEl.innerText, result, "Tooltip preview text shown to user");
-
-  await closePreviewForToken(dbg, tokenEl);
-}
-
+/**
+ * Asserts multiple previews
+ * @param {*} dbg
+ * @param {Array} previews
+ */
 async function assertPreviews(dbg, previews) {
   for (const { line, column, expression, result, fields } of previews) {
     if (fields && result) {
@@ -2332,6 +2324,16 @@ async function assertPreviews(dbg, previews) {
         column,
         "popup"
       );
+
+      info("Wait for top level node to expand and child nodes to load");
+      await waitForElementWithSelector(
+        dbg,
+        ".preview-popup .node:first-of-type .arrow.expanded"
+      );
+      await waitUntil(
+        () => popupEl.querySelectorAll(".preview-popup .node").length > 1
+      );
+
       const oiNodes = Array.from(
         popupEl.querySelectorAll(".preview-popup .node")
       );
@@ -2355,7 +2357,7 @@ async function assertPreviews(dbg, previews) {
     } else {
       await assertPreviewTextValue(dbg, line, column, {
         expression,
-        text: result,
+        result,
       });
     }
   }
