@@ -379,6 +379,10 @@ const SNAPSHOT_SCHEMA = {
         diskAvailableBytes: {
           type: "number",
         },
+        pointingDevices: {
+          required: false,
+          type: "array",
+        },
       },
     },
     crashes: {
