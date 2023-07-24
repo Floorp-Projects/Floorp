@@ -35,6 +35,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use byteorder::WriteBytesExt;
+use mp4parse::unstable::rational_scale;
 use std::convert::TryFrom;
 use std::convert::TryInto;
 
@@ -628,15 +629,21 @@ pub unsafe extern "C" fn mp4parse_get_track_info(
 
     let track = &context.tracks[track_index];
 
-    if let (Some(timescale), Some(_)) = (track.timescale, context.timescale) {
+    if let (Some(timescale), Some(context_timescale)) = (track.timescale, context.timescale) {
         info.time_scale = timescale.0 as u32;
         let media_time: CheckedInteger<u64> = track
             .media_time
             .map_or(0.into(), |media_time| media_time.0.into());
 
-        let empty_duration: CheckedInteger<u64> = track
-            .empty_duration
-            .map_or(0.into(), |empty_duration| empty_duration.0.into());
+        // Empty duration is in the context's timescale, convert it and return it in the track's
+        // timescale
+        let empty_duration: CheckedInteger<u64> =
+            match track.empty_duration.map_or(Some(0), |empty_duration| {
+                rational_scale(empty_duration.0, context_timescale.0, timescale.0)
+            }) {
+                Some(time) => mp4parse::unstable::CheckedInteger(time),
+                None => return Mp4parseStatus::Invalid,
+            };
 
         info.media_time = match media_time - empty_duration {
             Some(difference) => difference,

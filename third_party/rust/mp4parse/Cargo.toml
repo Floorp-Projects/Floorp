@@ -22,6 +22,7 @@ authors = [
 ]
 exclude = [
     "*.mp4",
+    "*.avif",
     "av1-avif/*",
 ]
 description = "Parser for ISO base media file format (mp4)"

@@ -20,7 +20,10 @@ authors = [
     "Jon Bauman <jbauman@mozilla.com>",
     "Bryce Seager van Dyk <bvandyk@mozilla.com>",
 ]
-exclude = ["*.mp4"]
+exclude = [
+    "*.mp4",
+    "*.avif",
+]
 description = "Parser for ISO base media file format (mp4)"
 documentation = "https://docs.rs/mp4parse_capi/"
 readme = "README.md"
