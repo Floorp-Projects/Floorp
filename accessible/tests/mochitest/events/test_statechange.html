@@ -138,21 +138,6 @@
       await p;
     }
 
-    async function testLinked() {
-      let p = waitForStateChange("link1", STATE_LINKED, false, false);
-      getNode("link1").removeAttribute("href");
-      await p;
-
-      p = waitForStateChange("link2", STATE_LINKED, false, false);
-      getNode("link2").removeAttribute("onclick");
-      await p;
-
-      p = waitForStateChange("link3", STATE_LINKED, true, false);
-      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-      getNode("link3").setAttribute("href", "http://example.com");
-      await p;
-    }
-
     async function testHasPopup() {
       let p = waitForStateChange("popupButton", STATE_HASPOPUP, true, false);
       getNode("popupButton").setAttribute("aria-haspopup", "true");
@@ -433,8 +418,6 @@
 
       await testReadonlyUntilEditable();
 
-      await testLinked();
-
       await testHasPopup();
 
       await toggleStateChange("textbox", "aria-multiline", EXT_STATE_MULTI_LINE, true);
@@ -536,10 +519,6 @@
   <div id="sentinel"></div>
 
   <input id="text1">
-
-  <a id="link1" href="#">I am a link link</a>
-  <a id="link2" onclick="console.log('hi')">I am a link-ish link</a>
-  <a id="link3">I am a non-link link</a>
 
   <div id="textbox" role="textbox" aria-multiline="false">hello</div>
 

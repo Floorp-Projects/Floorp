@@ -142,18 +142,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       // Named anchor, should never have state_linked
       var namedAnchorAcc = getAccessible("namedAnchor",
                                          [nsIAccessibleHyperLink]);
-      testThis("namedAnchor", namedAnchorAcc, ROLE_LINK, 1,
-               "This should never be of state_linked", true, 196, 197);
-      testStates(namedAnchorAcc, STATE_SELECTABLE,
-                 0, (STATE_FOCUSABLE | STATE_LINKED));
+      testThis("namedAnchor", namedAnchorAcc, ROLE_TEXT, 1,
+               null, true, 196, 197);
+      testStates(namedAnchorAcc, 0, 0, (STATE_FOCUSABLE | STATE_LINKED));
       testAction("namedAnchor", namedAnchorAcc, "");
 
       // ////////////////////////////////////////////////////////////////////////
       // No link (hasn't any attribute), should never have state_linked
       var noLinkAcc = getAccessible("noLink",
                                     [nsIAccessibleHyperLink]);
-      testThis("noLink", noLinkAcc, ROLE_LINK, 1,
-               "This should never be of state_linked", true, 254, 255);
+      testThis("noLink", noLinkAcc, ROLE_TEXT, 1,
+               null, true, 254, 255);
       testStates(noLinkAcc, 0, 0, (STATE_FOCUSABLE | STATE_LINKED));
       testAction("noLink", noLinkAcc, "");
 

@@ -338,6 +338,7 @@ const markupTests = [
     <span id="l1">test2</span>
     <span id="l2">test3</span>
     <a id="a"
+       href=""
        aria-label="test1"
        aria-labelledby="l1 l2"
        title="test4">test5</a>`,
@@ -350,6 +351,7 @@ const markupTests = [
     <span id="l1">test2</span>
     <span id="l2">test3</span>
     <a id="a-img"
+       href=""
        aria-label="test1"
        aria-labelledby="l1 l2"
        title="test4"><img alt="test5"/></a>`,

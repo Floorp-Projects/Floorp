@@ -39,18 +39,6 @@ addAccessibleTask(
   }
 );
 
-function waitForLinkedChange(id, isEnabled) {
-  return waitForEvent(EVENT_STATE_CHANGE, e => {
-    e.QueryInterface(nsIAccessibleStateChangeEvent);
-    return (
-      e.state == STATE_LINKED &&
-      !e.isExtraState &&
-      isEnabled == e.isEnabled &&
-      id == getAccessibleDOMNodeID(e.accessible)
-    );
-  });
-}
-
 /**
  * Test linked vs unlinked anchor tags
  */
@@ -92,36 +80,39 @@ addAccessibleTask(
       "bare <a> gets correct group role"
     );
 
-    let stateChanged = waitForLinkedChange("link1", false);
+    let onRecreation = waitForEvent(EVENT_SHOW, "link1");
     await SpecialPowers.spawn(browser, [], () => {
       content.document.getElementById("link1").removeAttribute("href");
     });
-    await stateChanged;
+    await onRecreation;
+    link1 = getNativeInterface(accDoc, "link1");
     is(
       link1.getAttributeValue("AXRole"),
       "AXGroup",
       "<a> stripped from href gets group role"
     );
 
-    stateChanged = waitForLinkedChange("link2", false);
+    onRecreation = waitForEvent(EVENT_SHOW, "link2");
     await SpecialPowers.spawn(browser, [], () => {
       content.document.getElementById("link2").removeAttribute("onclick");
     });
-    await stateChanged;
+    await onRecreation;
+    link2 = getNativeInterface(accDoc, "link2");
     is(
       link2.getAttributeValue("AXRole"),
       "AXGroup",
       "<a> stripped from onclick gets group role"
     );
 
-    stateChanged = waitForLinkedChange("link3", true);
+    onRecreation = waitForEvent(EVENT_SHOW, "link3");
     await SpecialPowers.spawn(browser, [], () => {
       content.document
         .getElementById("link3")
         // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         .setAttribute("href", "http://example.com");
     });
-    await stateChanged;
+    await onRecreation;
+    link3 = getNativeInterface(accDoc, "link3");
     is(
       link3.getAttributeValue("AXRole"),
       "AXLink",
@@ -212,7 +203,7 @@ addAccessibleTask(
       link5
         .getAttributeValue("AXLinkedUIElements")[0]
         .getAttributeValue("AXTitle"),
-      "I have a name",
+      "",
       "Link 5 is linked to a named element"
     );
     is(

@@ -483,11 +483,7 @@ add_task(async function () {
     ],
     ["<embed> with video data type and aria-label", "#embed-3", null],
     ["<embed> with video data type and aria-labelledby", "#embed-4", null],
-    [
-      "Link with no inner content",
-      "#link-1",
-      { score: FAIL, issue: INTERACTIVE_NO_NAME },
-    ],
+    ["Link with no inner content", "#link-1", null],
     ["Link with inner content", "#link-2", null],
     [
       "Link with href and no inner content",

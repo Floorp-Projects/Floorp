@@ -75,10 +75,6 @@
       getNode("div").removeAttribute("tabindex");
       await p;
 
-      p = waitForEvent(...focusableStateChange("link", false));
-      getNode("link").removeAttribute("href");
-      await p;
-
       info("add contenteditable");
       // Expect editable change on non-input,
       // and don't expect event on a native input.
@@ -120,8 +116,6 @@
   <button id="button2"></button>
 
   <div id="div">Hello</div>
-
-  <a id="link" href="#">A link</a>
 
   <input id="input" value="Hello">
 </body>
