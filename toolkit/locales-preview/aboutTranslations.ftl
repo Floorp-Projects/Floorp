@@ -8,18 +8,10 @@ about-translations-header = { -translations-brand-name }
 about-translations-results-placeholder = Translation
 # Text displayed on from-language dropdown when no language is selected
 about-translations-detect = Detect language
-# Text displayed on a language dropdown when the language is in beta
-# Variables:
-#   $language (string) - The localized display name of the language
-about-translations-displayname-beta = { $language } BETA
 # Text displayed on from-language dropdown when a language is detected
 # Variables:
 #   $language (string) - The localized display name of the detected language
 about-translations-detect-lang = Detect language ({ $language })
-# Text displayed on from-language dropdown when a beta language is detected
-# Variables:
-#   $language (string) - The localized display name of the detected language
-about-translations-detect-lang-beta = Detect language ({ $language } BETA)
 # Text displayed on to-language dropdown when no language is selected
 about-translations-select = Select language
 about-translations-textarea =

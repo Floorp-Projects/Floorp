@@ -295,8 +295,8 @@ export interface LanguagePair { fromLang: string, toLang: string };
  */
 export interface SupportedLanguages {
   languagePairs: LanguagePair[],
-  fromLanguages: Array<{ langTag: string, isBeta: boolean, displayName: string, }>,
-  toLanguages: Array<{ langTag: string, isBeta: boolean, displayName: string }>,
+  fromLanguages: Array<{ langTag: string, displayName: string, }>,
+  toLanguages: Array<{ langTag: string, displayName: string }>,
 }
 
 export type TranslationErrors = "engine-load-error";

@@ -9,8 +9,8 @@
 add_task(async function test_about_translations_debounce() {
   await openAboutTranslations({
     languagePairs: [
-      { fromLang: "en", toLang: "fr", isBeta: false },
-      { fromLang: "fr", toLang: "en", isBeta: false },
+      { fromLang: "en", toLang: "fr" },
+      { fromLang: "fr", toLang: "en" },
     ],
     runInPage: async ({ selectors }) => {
       const { document, window } = content;

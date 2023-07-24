@@ -286,9 +286,9 @@ class TranslationsState {
       ({ langTag: existingTag }) => existingTag === langTag
     );
     if (entry) {
-      const { displayName, isBeta } = entry;
+      const { displayName } = entry;
       await this.setFromLanguage(langTag);
-      this.ui.setDetectOptionTextContent(displayName, isBeta);
+      this.ui.setDetectOptionTextContent(displayName);
     }
   }
 
@@ -390,41 +390,17 @@ class TranslationsUI {
     const supportedLanguages = await this.state.supportedLanguages;
 
     // Update the DOM elements with the display names.
-    for (const {
-      langTag,
-      isBeta,
-      displayName,
-    } of supportedLanguages.toLanguages) {
+    for (const { langTag, displayName } of supportedLanguages.toLanguages) {
       const option = document.createElement("option");
       option.value = langTag;
-      if (isBeta) {
-        document.l10n.setAttributes(
-          option,
-          "about-translations-displayname-beta",
-          { language: displayName }
-        );
-      } else {
-        option.text = displayName;
-      }
+      option.text = displayName;
       this.languageTo.add(option);
     }
 
-    for (const {
-      langTag,
-      isBeta,
-      displayName,
-    } of supportedLanguages.fromLanguages) {
+    for (const { langTag, displayName } of supportedLanguages.fromLanguages) {
       const option = document.createElement("option");
       option.value = langTag;
-      if (isBeta) {
-        document.l10n.setAttributes(
-          option,
-          "about-translations-displayname-beta",
-          { language: displayName }
-        );
-      } else {
-        option.text = displayName;
-      }
+      option.text = displayName;
       this.languageFrom.add(option);
     }
 
@@ -488,14 +464,12 @@ class TranslationsUI {
    *
    * @param {string} displayName
    */
-  setDetectOptionTextContent(displayName, isBeta = false) {
+  setDetectOptionTextContent(displayName) {
     // Set the text to the fluent value that takes an arg to display the language name.
     if (displayName) {
       document.l10n.setAttributes(
         this.#detectOption,
-        isBeta
-          ? "about-translations-detect-lang-beta"
-          : "about-translations-detect-lang",
+        "about-translations-detect-lang",
         { language: displayName }
       );
     } else {

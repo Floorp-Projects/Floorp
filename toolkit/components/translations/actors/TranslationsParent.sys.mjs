@@ -910,11 +910,10 @@ export class TranslationsParent extends JSWindowActorParent {
         TranslationsParent.#getTranslationModelRecords().then(records => {
           const languagePairMap = new Map();
 
-          for (const { fromLang, toLang, version } of records.values()) {
-            const isBeta = Services.vc.compare(version, "1.0") < 0;
+          for (const { fromLang, toLang } of records.values()) {
             const key = TranslationsParent.languagePairKey(fromLang, toLang);
             if (!languagePairMap.has(key)) {
-              languagePairMap.set(key, { fromLang, toLang, isBeta });
+              languagePairMap.set(key, { fromLang, toLang });
             }
           }
           return Array.from(languagePairMap.values());
@@ -936,31 +935,14 @@ export class TranslationsParent extends JSWindowActorParent {
   static async getSupportedLanguages() {
     const languagePairs = await TranslationsParent.getLanguagePairs();
 
-    /** @type {Map<string, boolean>} */
-    const fromLanguages = new Map();
-    /** @type {Map<string, boolean>} */
-    const toLanguages = new Map();
+    /** @type {Set<string>} */
+    const fromLanguages = new Set();
+    /** @type {Set<string>} */
+    const toLanguages = new Set();
 
-    for (const { fromLang, toLang, isBeta } of languagePairs) {
-      // [BetaLanguage, BetaLanguage]       => isBeta == true,
-      // [BetaLanguage, NonBetaLanguage]    => isBeta == true,
-      // [NonBetaLanguage, BetaLanguage]    => isBeta == true,
-      // [NonBetaLanguage, NonBetaLanguage] => isBeta == false,
-      if (isBeta) {
-        // If these languages are part of a beta languagePair, at least one of them is a beta language
-        // but the other may not be, so only tentatively mark them as beta if there is no entry.
-        if (!fromLanguages.has(fromLang)) {
-          fromLanguages.set(fromLang, isBeta);
-        }
-        if (!toLanguages.has(toLang)) {
-          toLanguages.set(toLang, isBeta);
-        }
-      } else {
-        // If these languages are part of a non-beta languagePair, then they are both
-        // guaranteed to be non-beta languages. Idempotently overwrite any previous entry.
-        fromLanguages.set(fromLang, isBeta);
-        toLanguages.set(toLang, isBeta);
-      }
+    for (const { fromLang, toLang } of languagePairs) {
+      fromLanguages.add(fromLang);
+      toLanguages.add(toLang);
     }
 
     // Build a map of the langTag to the display name.
@@ -981,9 +963,8 @@ export class TranslationsParent extends JSWindowActorParent {
       }
     }
 
-    const addDisplayName = ([langTag, isBeta]) => ({
+    const addDisplayName = langTag => ({
       langTag,
-      isBeta,
       displayName: displayNames.get(langTag),
     });
 
@@ -991,10 +972,10 @@ export class TranslationsParent extends JSWindowActorParent {
 
     return {
       languagePairs,
-      fromLanguages: Array.from(fromLanguages.entries())
+      fromLanguages: Array.from(fromLanguages.keys())
         .map(addDisplayName)
         .sort(sort),
-      toLanguages: Array.from(toLanguages.entries())
+      toLanguages: Array.from(toLanguages.keys())
         .map(addDisplayName)
         .sort(sort),
     };

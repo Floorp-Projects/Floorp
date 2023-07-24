@@ -11,10 +11,10 @@
 add_task(async function test_about_translations_translations() {
   await openAboutTranslations({
     languagePairs: [
-      { fromLang: "en", toLang: "fr", isBeta: false },
-      { fromLang: "fr", toLang: "en", isBeta: false },
+      { fromLang: "en", toLang: "fr" },
+      { fromLang: "fr", toLang: "en" },
       // This is not a bi-directional translation.
-      { fromLang: "is", toLang: "en", isBeta: true },
+      { fromLang: "is", toLang: "en" },
     ],
     runInPage: async ({ selectors }) => {
       const { document, window } = content;
@@ -108,8 +108,8 @@ add_task(async function test_about_translations_translations() {
 add_task(async function test_about_translations_html() {
   await openAboutTranslations({
     languagePairs: [
-      { fromLang: "en", toLang: "fr", isBeta: false },
-      { fromLang: "fr", toLang: "en", isBeta: false },
+      { fromLang: "en", toLang: "fr" },
+      { fromLang: "fr", toLang: "en" },
     ],
     prefs: [["browser.translations.useHTML", true]],
     runInPage: async ({ selectors }) => {
@@ -176,8 +176,8 @@ add_task(async function test_about_translations_language_identification() {
     detectedLangTag: "en",
     detectedLanguageConfidence: "0.98",
     languagePairs: [
-      { fromLang: "en", toLang: "fr", isBeta: false },
-      { fromLang: "fr", toLang: "en", isBeta: false },
+      { fromLang: "en", toLang: "fr" },
+      { fromLang: "fr", toLang: "en" },
     ],
     prefs: [["browser.translations.languageIdentification.useFastText", true]],
     runInPage: async ({ selectors }) => {

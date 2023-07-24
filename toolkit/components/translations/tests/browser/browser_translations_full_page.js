@@ -10,8 +10,8 @@ add_task(async function test_full_page_translation() {
   await autoTranslatePage({
     page: TRANSLATIONS_TESTER_ES,
     languagePairs: [
-      { fromLang: "es", toLang: "en", isBeta: false },
-      { fromLang: "en", toLang: "es", isBeta: false },
+      { fromLang: "es", toLang: "en" },
+      { fromLang: "en", toLang: "es" },
     ],
     runInPage: async TranslationsTest => {
       const selectors = TranslationsTest.getSelectors();
@@ -63,8 +63,8 @@ add_task(async function test_about_translations_enabled() {
   await autoTranslatePage({
     page: TRANSLATIONS_TESTER_EN,
     languagePairs: [
-      { fromLang: "es", toLang: "en", isBeta: false },
-      { fromLang: "en", toLang: "es", isBeta: false },
+      { fromLang: "es", toLang: "en" },
+      { fromLang: "en", toLang: "es" },
     ],
     runInPage: async () => {
       const { document } = content;
@@ -103,8 +103,8 @@ add_task(async function test_language_identification_for_page_translation() {
     resolveLanguageIdDownloads: true,
     prefs: [["browser.translations.languageIdentification.useFastText", true]],
     languagePairs: [
-      { fromLang: "es", toLang: "en", isBeta: false },
-      { fromLang: "en", toLang: "es", isBeta: false },
+      { fromLang: "es", toLang: "en" },
+      { fromLang: "en", toLang: "es" },
     ],
     runInPage: async TranslationsTest => {
       const selectors = TranslationsTest.getSelectors();
