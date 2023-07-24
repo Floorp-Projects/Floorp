@@ -31,12 +31,12 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.jsm",
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 
 const MOBILE_PROMO_DISMISSED_PREF =

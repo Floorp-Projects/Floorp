@@ -14,8 +14,8 @@ const LoginInfo = Components.Constructor(
   "init"
 );
 
-const { LoginCSVImport } = ChromeUtils.import(
-  "resource://gre/modules/LoginCSVImport.jsm"
+const { LoginCSVImport } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginCSVImport.sys.mjs"
 );
 
 const { FileTestUtils } = ChromeUtils.importESModule(

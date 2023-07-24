@@ -9,13 +9,8 @@ const { XPIInstall } = ChromeUtils.import(
 
 ChromeUtils.defineESModuleGetters(this, {
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
+  Management: "resource://gre/modules/Extension.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "Management",
-  "resource://gre/modules/Extension.jsm"
-);
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();

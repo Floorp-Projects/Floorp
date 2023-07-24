@@ -8,13 +8,9 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  AutofillTelemetry: "resource://autofill/AutofillTelemetry.sys.mjs",
   formAutofillStorage: "resource://autofill/FormAutofillStorage.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "AutofillTelemetry",
-  "resource://autofill/AutofillTelemetry.jsm"
-);
 
 class AutofillEditDialog {
   constructor(subStorageName, elements, record) {

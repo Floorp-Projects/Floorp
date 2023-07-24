@@ -111,12 +111,6 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  SelectionChangedMenulist: "resource:///modules/SelectionChangedMenulist.jsm",
-  SiteDataManager: "resource:///modules/SiteDataManager.jsm",
-  TransientPrefs: "resource:///modules/TransientPrefs.jsm",
-});
-
 XPCOMUtils.defineLazyGetter(this, "gSubDialog", function () {
   const { SubDialogManager } = ChromeUtils.importESModule(
     "resource://gre/modules/SubDialog.sys.mjs"
