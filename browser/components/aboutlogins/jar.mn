@@ -28,6 +28,8 @@ browser.jar:
   content/browser/aboutlogins/components/login-list.mjs                   (content/components/login-list.mjs)
   content/browser/aboutlogins/components/login-list-item.mjs              (content/components/login-list-item.mjs)
   content/browser/aboutlogins/components/login-list-section.mjs           (content/components/login-list-section.mjs)
+  content/browser/aboutlogins/components/login-command-button.mjs         (content/components/login-command-button.mjs)
+  content/browser/aboutlogins/components/login-command-button.css         (content/components/login-command-button.css)
   content/browser/aboutlogins/components/menu-button.css                 (content/components/menu-button.css)
   content/browser/aboutlogins/components/menu-button.mjs                  (content/components/menu-button.mjs)
   content/browser/aboutlogins/components/login-timeline.css              (content/components/login-timeline.css)
