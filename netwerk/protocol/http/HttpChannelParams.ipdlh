@@ -59,6 +59,7 @@ struct HttpChannelOnStartRequestArgs
   bool hasHTTPSRR;
   bool isProxyUsed;
   uint8_t redirectCount;
+  nsCString protocolVersion;
 };
 
 struct HttpChannelAltDataStream

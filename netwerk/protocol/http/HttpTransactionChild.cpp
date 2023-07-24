@@ -95,7 +95,7 @@ nsresult HttpTransactionChild::InitInternal(
     };
   }
 
-  std::function<void(TransactionObserverResult &&)> observer;
+  std::function<void(TransactionObserverResult&&)> observer;
   if (aHasTransactionObserver) {
     nsMainThreadPtrHandle<HttpTransactionChild> handle(
         new nsMainThreadPtrHolder<HttpTransactionChild>(
@@ -509,7 +509,6 @@ ResourceTimingStructArgs HttpTransactionChild::GetTimingAttributes() {
   args.encodedBodySize() = mLogicalOffset;
   args.redirectStart() = mRedirectStart;
   args.redirectEnd() = mRedirectEnd;
-  args.protocolVersion() = mProtocolVersion;
   return args;
 }
 
