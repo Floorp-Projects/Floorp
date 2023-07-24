@@ -2011,9 +2011,9 @@ bool gfxFontGroup::HasFont(const gfxFontEntry* aFontEntry) {
   return false;
 }
 
-already_AddRefed<gfxFont> gfxFontGroup::GetFontAt(int32_t i, uint32_t aCh,
+already_AddRefed<gfxFont> gfxFontGroup::GetFontAt(uint32_t i, uint32_t aCh,
                                                   bool* aLoading) {
-  if (uint32_t(i) >= mFonts.Length()) {
+  if (i >= mFonts.Length()) {
     return nullptr;
   }
 
