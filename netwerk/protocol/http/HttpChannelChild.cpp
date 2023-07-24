@@ -429,6 +429,7 @@ void HttpChannelChild::OnStartRequest(
   mCacheEntryAvailable = aArgs.cacheEntryAvailable();
   mCacheEntryId = aArgs.cacheEntryId();
   mCacheFetchCount = aArgs.cacheFetchCount();
+  mProtocolVersion = aArgs.protocolVersion();
   mCacheExpirationTime = aArgs.cacheExpirationTime();
   mSelfAddr = aArgs.selfAddr();
   mPeerAddr = aArgs.peerAddr();
@@ -900,7 +901,6 @@ void HttpChannelChild::OnStopRequest(
   mRedirectEndTimeStamp = aTiming.redirectEnd();
   mTransferSize = aTiming.transferSize();
   mEncodedBodySize = aTiming.encodedBodySize();
-  mProtocolVersion = aTiming.protocolVersion();
 
   mCacheReadStart = aTiming.cacheReadStart();
   mCacheReadEnd = aTiming.cacheReadEnd();
