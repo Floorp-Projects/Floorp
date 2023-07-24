@@ -61,6 +61,10 @@
      min-width: -moz-available !important;
      width: auto;
    }
+
+   #TabsToolbar-customization-target {
+      min-height: 100% !important;
+   }
    
    #TabsToolbar-customization-target>.toolbarbutton-1 {
      display: none !important;
