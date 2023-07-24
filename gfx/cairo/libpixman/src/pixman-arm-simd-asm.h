@@ -112,64 +112,96 @@
  */
 
 .macro pixldst op, cond=al, numbytes, reg0, reg1, reg2, reg3, base, unaligned=0
- .if numbytes == 16
-  .if unaligned == 1
-        op&r&cond    WK&reg0, [base], #4
-        op&r&cond    WK&reg1, [base], #4
-        op&r&cond    WK&reg2, [base], #4
-        op&r&cond    WK&reg3, [base], #4
+ .if \numbytes == 16
+  .if \unaligned == 1
+        \op\()r\()\cond    WK\()\reg0, [\base], #4
+        \op\()r\()\cond    WK\()\reg1, [\base], #4
+        \op\()r\()\cond    WK\()\reg2, [\base], #4
+        \op\()r\()\cond    WK\()\reg3, [\base], #4
   .else
-        op&m&cond&ia base!, {WK&reg0,WK&reg1,WK&reg2,WK&reg3}
+#ifdef __clang__
+        \op\()mia\()\cond  \base!, {WK\()\reg0,WK\()\reg1,WK\()\reg2,WK\()\reg3}
+#else
+        \op\()m\()\cond\()ia  \base!, {WK\()\reg0,WK\()\reg1,WK\()\reg2,WK\()\reg3}
+#endif
   .endif
- .elseif numbytes == 8
-  .if unaligned == 1
-        op&r&cond    WK&reg0, [base], #4
-        op&r&cond    WK&reg1, [base], #4
+ .elseif \numbytes == 8
+  .if \unaligned == 1
+        \op\()r\()\cond    WK\()\reg0, [\base], #4
+        \op\()r\()\cond    WK\()\reg1, [\base], #4
   .else
-        op&m&cond&ia base!, {WK&reg0,WK&reg1}
+#ifdef __clang__
+        \op\()mia\()\cond  \base!, {WK\()\reg0,WK\()\reg1}
+#else
+        \op\()m\()\cond\()ia  \base!, {WK\()\reg0,WK\()\reg1}
+#endif
   .endif
- .elseif numbytes == 4
-        op&r&cond    WK&reg0, [base], #4
- .elseif numbytes == 2
-        op&r&cond&h  WK&reg0, [base], #2
- .elseif numbytes == 1
-        op&r&cond&b  WK&reg0, [base], #1
+ .elseif \numbytes == 4
+        \op\()r\()\cond    WK\()\reg0, [\base], #4
+ .elseif \numbytes == 2
+#ifdef __clang__
+        \op\()rh\()\cond   WK\()\reg0, [\base], #2
+#else
+        \op\()r\()\cond\()h   WK\()\reg0, [\base], #2
+#endif
+ .elseif \numbytes == 1
+#ifdef __clang__
+        \op\()rb\()\cond   WK\()\reg0, [\base], #1
+#else
+        \op\()r\()\cond\()b   WK\()\reg0, [\base], #1
+#endif
  .else
-  .error "unsupported size: numbytes"
+  .error "unsupported size: \numbytes"
  .endif
 .endm
 
 .macro pixst_baseupdated cond, numbytes, reg0, reg1, reg2, reg3, base
- .if numbytes == 16
-        stm&cond&db base, {WK&reg0,WK&reg1,WK&reg2,WK&reg3}
- .elseif numbytes == 8
-        stm&cond&db base, {WK&reg0,WK&reg1}
- .elseif numbytes == 4
-        str&cond    WK&reg0, [base, #-4]
- .elseif numbytes == 2
-        str&cond&h  WK&reg0, [base, #-2]
- .elseif numbytes == 1
-        str&cond&b  WK&reg0, [base, #-1]
+ .if \numbytes == 16
+#ifdef __clang__
+        stm\()\cond\()db \base, {WK\()\reg0,WK\()\reg1,WK\()\reg2,WK\()\reg3}
+#else
+        stmdb\()\cond \base, {WK\()\reg0,WK\()\reg1,WK\()\reg2,WK\()\reg3}
+#endif
+ .elseif \numbytes == 8
+#ifdef __clang__
+        stmdb\()\cond \base, {WK\()\reg0,WK\()\reg1}
+#else
+        stm\()\cond\()db \base, {WK\()\reg0,WK\()\reg1}
+#endif
+ .elseif \numbytes == 4
+        str\()\cond    WK\()\reg0, [\base, #-4]
+ .elseif \numbytes == 2
+#ifdef __clang__
+        strh\()\cond   WK\()\reg0, [\base, #-2]
+#else
+        str\()\cond\()h   WK\()\reg0, [\base, #-2]
+#endif
+ .elseif \numbytes == 1
+#ifdef __clang__
+        strb\()\cond   WK\()\reg0, [\base, #-1]
+#else
+        str\()\cond\()b   WK\()\reg0, [\base, #-1]
+#endif
  .else
-  .error "unsupported size: numbytes"
+  .error "unsupported size: \numbytes"
  .endif
 .endm
 
 .macro pixld cond, numbytes, firstreg, base, unaligned
-        pixldst ld, cond, numbytes, %(firstreg+0), %(firstreg+1), %(firstreg+2), %(firstreg+3), base, unaligned
+        pixldst ld, \cond, \numbytes, %(\firstreg+0), %(\firstreg+1), %(\firstreg+2), %(\firstreg+3), \base, \unaligned
 .endm
 
 .macro pixst cond, numbytes, firstreg, base
  .if (flags) & FLAG_DST_READWRITE
-        pixst_baseupdated cond, numbytes, %(firstreg+0), %(firstreg+1), %(firstreg+2), %(firstreg+3), base
+        pixst_baseupdated \cond, \numbytes, %(\firstreg+0), %(\firstreg+1), %(\firstreg+2), %(\firstreg+3), \base
  .else
-        pixldst st, cond, numbytes, %(firstreg+0), %(firstreg+1), %(firstreg+2), %(firstreg+3), base
+        pixldst st, \cond, \numbytes, %(\firstreg+0), %(\firstreg+1), %(\firstreg+2), %(\firstreg+3), \base
  .endif
 .endm
 
 .macro PF a, x:vararg
  .if (PREFETCH_TYPE_CURRENT == PREFETCH_TYPE_STANDARD)
-        a x
+        \a \x
  .endif
 .endm
 
@@ -179,11 +211,11 @@
  * between 0 and prefetch_distance (inclusive) cache lines ahead so there
  * are no gaps when the inner loop starts.
  */
- .if bpp > 0
-        PF  bic,    ptr, base, #31
+ .if \bpp > 0
+        PF  bic,    \ptr, \base, #31
   .set OFFSET, 0
   .rept prefetch_distance+1
-        PF  pld,    [ptr, #OFFSET]
+        PF  pld,    [\ptr, #OFFSET]
    .set OFFSET, OFFSET+32
   .endr
  .endif
@@ -201,42 +233,42 @@
  * and test if extra_needed is <= 0, <= 32, or > 32 (where > 32 is only
  * possible when there are 4 src bytes for every 1 dst byte).
  */
- .if bpp > 0
-  .ifc base,DST
+ .if \bpp > 0
+  .ifc \base,DST
         /* The test can be simplified further when preloading the destination */
-        PF  tst,    base, #16
+        PF  tst,    \base, #16
         PF  beq,    61f
   .else
-   .if bpp/dst_w_bpp == 4
-        PF  add,    SCRATCH, base, WK0, lsl #bpp_shift-dst_bpp_shift
+   .if \bpp/dst_w_bpp == 4
+        PF  add,    SCRATCH, \base, WK0, lsl #\bpp_shift-dst_bpp_shift
         PF  and,    SCRATCH, SCRATCH, #31
-        PF  rsb,    SCRATCH, SCRATCH, WK0, lsl #bpp_shift-dst_bpp_shift
+        PF  rsb,    SCRATCH, SCRATCH, WK0, lsl #\bpp_shift-dst_bpp_shift
         PF  sub,    SCRATCH, SCRATCH, #1        /* so now ranges are -16..-1 / 0..31 / 32..63 */
         PF  movs,   SCRATCH, SCRATCH, lsl #32-6 /* so this sets         NC   /  nc   /   Nc   */
         PF  bcs,    61f
         PF  bpl,    60f
         PF  pld,    [ptr, #32*(prefetch_distance+2)]
    .else
-        PF  mov,    SCRATCH, base, lsl #32-5
-        PF  add,    SCRATCH, SCRATCH, WK0, lsl #32-5+bpp_shift-dst_bpp_shift
-        PF  rsbs,   SCRATCH, SCRATCH, WK0, lsl #32-5+bpp_shift-dst_bpp_shift
+        PF  mov,    SCRATCH, \base, lsl #32-5
+        PF  add,    SCRATCH, SCRATCH, WK0, lsl #32-5+\bpp_shift-dst_bpp_shift
+        PF  rsbs,   SCRATCH, SCRATCH, WK0, lsl #32-5+\bpp_shift-dst_bpp_shift
         PF  bls,    61f
    .endif
   .endif
-60:     PF  pld,    [ptr, #32*(prefetch_distance+1)]
+60:     PF  pld,    [\ptr, #32*(prefetch_distance+1)]
 61:
  .endif
 .endm
 
 #define IS_END_OF_GROUP(INDEX,SIZE) ((SIZE) < 2 || ((INDEX) & ~((INDEX)+1)) & ((SIZE)/2))
 .macro preload_middle   bpp, base, scratch_holds_offset
- .if bpp > 0
+ .if \bpp > 0
         /* prefetch distance = 256/bpp, stm distance = 128/dst_w_bpp */
-  .if IS_END_OF_GROUP(SUBBLOCK,256/128*dst_w_bpp/bpp)
-   .if scratch_holds_offset
-        PF  pld,    [base, SCRATCH]
+  .if IS_END_OF_GROUP(SUBBLOCK,256/128*dst_w_bpp/\bpp)
+   .if \scratch_holds_offset
+        PF  pld,    [\base, SCRATCH]
    .else
-        PF  bic,    SCRATCH, base, #31
+        PF  bic,    SCRATCH, \base, #31
         PF  pld,    [SCRATCH, #32*prefetch_distance]
    .endif
   .endif
@@ -244,28 +276,28 @@
 .endm
 
 .macro preload_trailing  bpp, bpp_shift, base
- .if bpp > 0
-  .if bpp*pix_per_block > 256
+ .if \bpp > 0
+  .if \bpp*pix_per_block > 256
         /* Calculations are more complex if more than one fetch per block */
-        PF  and,    WK1, base, #31
-        PF  add,    WK1, WK1, WK0, lsl #bpp_shift
-        PF  add,    WK1, WK1, #32*(bpp*pix_per_block/256-1)*(prefetch_distance+1)
-        PF  bic,    SCRATCH, base, #31
+        PF  and,    WK1, \base, #31
+        PF  add,    WK1, WK1, WK0, lsl #\bpp_shift
+        PF  add,    WK1, WK1, #32*(\bpp*pix_per_block/256-1)*(prefetch_distance+1)
+        PF  bic,    SCRATCH, \base, #31
 80:     PF  pld,    [SCRATCH, #32*(prefetch_distance+1)]
         PF  add,    SCRATCH, SCRATCH, #32
         PF  subs,   WK1, WK1, #32
         PF  bhi,    80b
   .else
         /* If exactly one fetch per block, then we need either 0, 1 or 2 extra preloads */
-        PF  mov,    SCRATCH, base, lsl #32-5
-        PF  adds,   SCRATCH, SCRATCH, X, lsl #32-5+bpp_shift
+        PF  mov,    SCRATCH, \base, lsl #32-5
+        PF  adds,   SCRATCH, SCRATCH, X, lsl #32-5+\bpp_shift
         PF  adceqs, SCRATCH, SCRATCH, #0
         /* The instruction above has two effects: ensures Z is only
          * set if C was clear (so Z indicates that both shifted quantities
          * were 0), and clears C if Z was set (so C indicates that the sum
          * of the shifted quantities was greater and not equal to 32) */
         PF  beq,    82f
-        PF  bic,    SCRATCH, base, #31
+        PF  bic,    SCRATCH, \base, #31
         PF  bcc,    81f
         PF  pld,    [SCRATCH, #32*(prefetch_distance+2)]
 81:     PF  pld,    [SCRATCH, #32*(prefetch_distance+1)]
@@ -288,12 +320,12 @@
  * "bpp_shift" - log2 of ("bpp"/8) (except if "bpp"=0 of course)
  * "base" - base address register of channel to preload (SRC, MASK or DST)
  */
- .if bpp > 0
-  .if narrow_case && (bpp <= dst_w_bpp)
+ .if \bpp > 0
+  .if \narrow_case && (\bpp <= dst_w_bpp)
         /* In these cases, each line for each channel is in either 1 or 2 cache lines */
-        PF  bic,    WK0, base, #31
+        PF  bic,    WK0, \base, #31
         PF  pld,    [WK0]
-        PF  add,    WK1, base, X, LSL #bpp_shift
+        PF  add,    WK1, \base, X, LSL #\bpp_shift
         PF  sub,    WK1, WK1, #1
         PF  bic,    WK1, WK1, #31
         PF  cmp,    WK1, WK0
@@ -301,9 +333,9 @@
         PF  pld,    [WK1]
 90:
   .else
-        PF  bic,    WK0, base, #31
+        PF  bic,    WK0, \base, #31
         PF  pld,    [WK0]
-        PF  add,    WK1, base, X, lsl #bpp_shift
+        PF  add,    WK1, \base, X, lsl #\bpp_shift
         PF  sub,    WK1, WK1, #1
         PF  bic,    WK1, WK1, #31
         PF  cmp,    WK1, WK0
@@ -319,56 +351,56 @@
 
 
 .macro conditional_process1_helper  cond, process_head, process_tail, numbytes, firstreg, unaligned_src, unaligned_mask, decrementx
-        process_head  cond, numbytes, firstreg, unaligned_src, unaligned_mask, 0
- .if decrementx
-        sub&cond X, X, #8*numbytes/dst_w_bpp
+        \process_head  \cond, \numbytes, \firstreg, \unaligned_src, \unaligned_mask, 0
+ .if \decrementx
+        sub\()\cond X, X, #8*\numbytes/dst_w_bpp
  .endif
-        process_tail  cond, numbytes, firstreg
+        \process_tail  \cond, \numbytes, \firstreg
  .if !((flags) & FLAG_PROCESS_DOES_STORE)
-        pixst   cond, numbytes, firstreg, DST
+        pixst   \cond, \numbytes, \firstreg, DST
  .endif
 .endm
 
 .macro conditional_process1  cond, process_head, process_tail, numbytes, firstreg, unaligned_src, unaligned_mask, decrementx
  .if (flags) & FLAG_BRANCH_OVER
-  .ifc cond,mi
+  .ifc \cond,mi
         bpl     100f
   .endif
-  .ifc cond,cs
+  .ifc \cond,cs
         bcc     100f
   .endif
-  .ifc cond,ne
+  .ifc \cond,ne
         beq     100f
   .endif
-        conditional_process1_helper  , process_head, process_tail, numbytes, firstreg, unaligned_src, unaligned_mask, decrementx
+        conditional_process1_helper  , \process_head, \process_tail, \numbytes, \firstreg, \unaligned_src, \unaligned_mask, \decrementx
 100:
  .else
-        conditional_process1_helper  cond, process_head, process_tail, numbytes, firstreg, unaligned_src, unaligned_mask, decrementx
+        conditional_process1_helper  \cond, \process_head, \process_tail, \numbytes, \firstreg, \unaligned_src, \unaligned_mask, \decrementx
  .endif
 .endm
 
 .macro conditional_process2  test, cond1, cond2, process_head, process_tail, numbytes1, numbytes2, firstreg1, firstreg2, unaligned_src, unaligned_mask, decrementx
  .if (flags) & (FLAG_DST_READWRITE | FLAG_BRANCH_OVER | FLAG_PROCESS_CORRUPTS_PSR | FLAG_PROCESS_DOES_STORE)
         /* Can't interleave reads and writes */
-        test
-        conditional_process1  cond1, process_head, process_tail, numbytes1, firstreg1, unaligned_src, unaligned_mask, decrementx
+        \test
+        conditional_process1  \cond1, \process_head, \process_tail, \numbytes1, \firstreg1, \unaligned_src, \unaligned_mask, \decrementx
   .if (flags) & FLAG_PROCESS_CORRUPTS_PSR
-        test
+        \test
   .endif
-        conditional_process1  cond2, process_head, process_tail, numbytes2, firstreg2, unaligned_src, unaligned_mask, decrementx
+        conditional_process1  \cond2, \process_head, \process_tail, \numbytes2, \firstreg2, \unaligned_src, \unaligned_mask, \decrementx
  .else
         /* Can interleave reads and writes for better scheduling */
-        test
-        process_head  cond1, numbytes1, firstreg1, unaligned_src, unaligned_mask, 0
-        process_head  cond2, numbytes2, firstreg2, unaligned_src, unaligned_mask, 0
-  .if decrementx
-        sub&cond1 X, X, #8*numbytes1/dst_w_bpp
-        sub&cond2 X, X, #8*numbytes2/dst_w_bpp
+        \test
+        \process_head  \cond1, \numbytes1, \firstreg1, \unaligned_src, \unaligned_mask, 0
+        \process_head  \cond2, \numbytes2, \firstreg2, \unaligned_src, \unaligned_mask, 0
+  .if \decrementx
+        sub\()\cond1 X, X, #8*\numbytes1/dst_w_bpp
+        sub\()\cond2 X, X, #8*\numbytes2/dst_w_bpp
   .endif
-        process_tail  cond1, numbytes1, firstreg1
-        process_tail  cond2, numbytes2, firstreg2
-        pixst   cond1, numbytes1, firstreg1, DST
-        pixst   cond2, numbytes2, firstreg2, DST
+        \process_tail  \cond1, \numbytes1, \firstreg1
+        \process_tail  \cond2, \numbytes2, \firstreg2
+        pixst   \cond1, \numbytes1, \firstreg1, DST
+        pixst   \cond2, \numbytes2, \firstreg2, DST
  .endif
 .endm
 
@@ -400,12 +432,12 @@
  .endif
         /* Use unaligned loads in all cases for simplicity */
  .if dst_w_bpp == 8
-        conditional_process2  test_bits_1_0_ptr, mi, cs, process_head, process_tail, 1, 2, 1, 2, 1, 1, DECREMENT_X
+        conditional_process2  test_bits_1_0_ptr, mi, cs, \process_head, \process_tail, 1, 2, 1, 2, 1, 1, DECREMENT_X
  .elseif dst_w_bpp == 16
         test_bits_1_0_ptr
-        conditional_process1  cs, process_head, process_tail, 2, 2, 1, 1, DECREMENT_X
+        conditional_process1  cs, \process_head, \process_tail, 2, 2, 1, 1, DECREMENT_X
  .endif
-        conditional_process2  test_bits_3_2_ptr, mi, cs, process_head, process_tail, 4, 8, 1, 2, 1, 1, DECREMENT_X
+        conditional_process2  test_bits_3_2_ptr, mi, cs, \process_head, \process_tail, 4, 8, 1, 2, 1, 1, DECREMENT_X
  .if (flags) & FLAG_PROCESS_CORRUPTS_WK0
         ldr     X, [sp, #LINE_SAVED_REG_COUNT*4]
  .endif
@@ -424,12 +456,12 @@
 .endm
 
 .macro trailing_15bytes  process_head, process_tail, unaligned_src, unaligned_mask
-        conditional_process2  test_bits_3_2_pix, cs, mi, process_head, process_tail, 8, 4, 0, 2, unaligned_src, unaligned_mask, 0
+        conditional_process2  test_bits_3_2_pix, cs, mi, \process_head, \process_tail, 8, 4, 0, 2, \unaligned_src, \unaligned_mask, 0
  .if dst_w_bpp == 16
         test_bits_1_0_pix
-        conditional_process1  cs, process_head, process_tail, 2, 0, unaligned_src, unaligned_mask, 0
+        conditional_process1  cs, \process_head, \process_tail, 2, 0, \unaligned_src, \unaligned_mask, 0
  .elseif dst_w_bpp == 8
-        conditional_process2  test_bits_1_0_pix, cs, mi, process_head, process_tail, 2, 1, 0, 1, unaligned_src, unaligned_mask, 0
+        conditional_process2  test_bits_1_0_pix, cs, mi, \process_head, \process_tail, 2, 1, 0, 1, \unaligned_src, \unaligned_mask, 0
  .endif
 .endm
 
@@ -438,7 +470,7 @@
 110:
  .set SUBBLOCK, 0 /* this is a count of STMs; there can be up to 8 STMs per block */
  .rept pix_per_block*dst_w_bpp/128
-        process_head  , 16, 0, unaligned_src, unaligned_mask, 1
+        \process_head  , 16, 0, \unaligned_src, \unaligned_mask, 1
   .if (src_bpp > 0) && (mask_bpp == 0) && ((flags) & FLAG_PROCESS_PRESERVES_SCRATCH)
         preload_middle  src_bpp, SRC, 1
   .elseif (src_bpp == 0) && (mask_bpp > 0) && ((flags) & FLAG_PROCESS_PRESERVES_SCRATCH)
@@ -453,9 +485,9 @@
          * preloads for, to achieve staggered prefetches for multiple channels, because there are
          * always two STMs per prefetch, so there is always an opposite STM on which to put the
          * preload. Note, no need to BIC the base register here */
-        PF  pld,    [DST, #32*prefetch_distance - dst_alignment]
+        PF  pld,    [DST, #32*prefetch_distance - \dst_alignment]
   .endif
-        process_tail  , 16, 0
+        \process_tail  , 16, 0
   .if !((flags) & FLAG_PROCESS_DOES_STORE)
         pixst   , 16, 0, DST
   .endif
@@ -470,11 +502,11 @@
  .if dst_r_bpp > 0
         tst     DST, #16
         bne     111f
-        process_inner_loop  process_head, process_tail, unaligned_src, unaligned_mask, 16 + DST_PRELOAD_BIAS
+        \process_inner_loop  \process_head, \process_tail, \unaligned_src, \unaligned_mask, 16 + DST_PRELOAD_BIAS
         b       112f
 111:
  .endif
-        process_inner_loop  process_head, process_tail, unaligned_src, unaligned_mask, 0 + DST_PRELOAD_BIAS
+        \process_inner_loop  \process_head, \process_tail, \unaligned_src, \unaligned_mask, 0 + DST_PRELOAD_BIAS
 112:
         /* Just before the final (prefetch_distance+1) 32-byte blocks, deal with final preloads */
  .if (src_bpp*pix_per_block > 256) || (mask_bpp*pix_per_block > 256) || (dst_r_bpp*pix_per_block > 256)
@@ -487,13 +519,13 @@
  .endif
         add     X, X, #(prefetch_distance+2)*pix_per_block - 128/dst_w_bpp
         /* The remainder of the line is handled identically to the medium case */
-        medium_case_inner_loop_and_trailing_pixels  process_head, process_tail,, exit_label, unaligned_src, unaligned_mask
+        medium_case_inner_loop_and_trailing_pixels  \process_head, \process_tail,, \exit_label, \unaligned_src, \unaligned_mask
 .endm
 
 .macro medium_case_inner_loop_and_trailing_pixels  process_head, process_tail, unused, exit_label, unaligned_src, unaligned_mask
 120:
-        process_head  , 16, 0, unaligned_src, unaligned_mask, 0
-        process_tail  , 16, 0
+        \process_head  , 16, 0, \unaligned_src, \unaligned_mask, 0
+        \process_tail  , 16, 0
  .if !((flags) & FLAG_PROCESS_DOES_STORE)
         pixst   , 16, 0, DST
  .endif
@@ -501,16 +533,16 @@
         bhs     120b
         /* Trailing pixels */
         tst     X, #128/dst_w_bpp - 1
-        beq     exit_label
-        trailing_15bytes  process_head, process_tail, unaligned_src, unaligned_mask
+        beq     \exit_label
+        trailing_15bytes  \process_head, \process_tail, \unaligned_src, \unaligned_mask
 .endm
 
 .macro narrow_case_inner_loop_and_trailing_pixels  process_head, process_tail, unused, exit_label, unaligned_src, unaligned_mask
         tst     X, #16*8/dst_w_bpp
-        conditional_process1  ne, process_head, process_tail, 16, 0, unaligned_src, unaligned_mask, 0
+        conditional_process1  ne, \process_head, \process_tail, 16, 0, \unaligned_src, \unaligned_mask, 0
         /* Trailing pixels */
         /* In narrow case, it's relatively unlikely to be aligned, so let's do without a branch here */
-        trailing_15bytes  process_head, process_tail, unaligned_src, unaligned_mask
+        trailing_15bytes  \process_head, \process_tail, \unaligned_src, \unaligned_mask
 .endm
 
 .macro switch_on_alignment  action, process_head, process_tail, process_inner_loop, exit_label
@@ -523,37 +555,37 @@
         tst     SRC, #3
         bne     140f
   .endif
-        action  process_head, process_tail, process_inner_loop, exit_label, 0, 0
+        \action  \process_head, \process_tail, \process_inner_loop, \exit_label, 0, 0
   .if src_bpp == 8 || src_bpp == 16
-        b       exit_label
+        b       \exit_label
 140:
-        action  process_head, process_tail, process_inner_loop, exit_label, 1, 0
+        \action  \process_head, \process_tail, \process_inner_loop, \exit_label, 1, 0
   .endif
  .if mask_bpp == 8 || mask_bpp == 16
-        b       exit_label
+        b       \exit_label
 141:
   .if src_bpp == 8 || src_bpp == 16
         tst     SRC, #3
         bne     142f
   .endif
-        action  process_head, process_tail, process_inner_loop, exit_label, 0, 1
+        \action  \process_head, \process_tail, \process_inner_loop, \exit_label, 0, 1
   .if src_bpp == 8 || src_bpp == 16
-        b       exit_label
+        b       \exit_label
 142:
-        action  process_head, process_tail, process_inner_loop, exit_label, 1, 1
+        \action  \process_head, \process_tail, \process_inner_loop, \exit_label, 1, 1
   .endif
  .endif
 .endm
 
 
 .macro end_of_line      restore_x, vars_spilled, loop_label, last_one
- .if vars_spilled
+ .if \vars_spilled
         /* Sadly, GAS doesn't seem have an equivalent of the DCI directive? */
         /* This is ldmia sp,{} */
         .word   0xE89D0000 | LINE_SAVED_REGS
  .endif
         subs    Y, Y, #1
- .if vars_spilled
+ .if \vars_spilled
   .if (LINE_SAVED_REGS) & (1<<1)
         str     Y, [sp]
   .endif
@@ -565,18 +597,18 @@
  .if mask_bpp > 0
         add     MASK, MASK, STRIDE_M
  .endif
- .if restore_x
+ .if \restore_x
         mov     X, ORIG_W
  .endif
-        bhs     loop_label
- .ifc "last_one",""
-  .if vars_spilled
+        bhs     \loop_label
+ .ifc "\last_one",""
+  .if \vars_spilled
         b       197f
   .else
         b       198f
   .endif
  .else
-  .if (!vars_spilled) && ((flags) & FLAG_SPILL_LINE_VARS)
+  .if (!\vars_spilled) && ((flags) & FLAG_SPILL_LINE_VARS)
         b       198f
   .endif
  .endif
@@ -596,17 +628,17 @@
                                    process_tail, \
                                    process_inner_loop
 
-    pixman_asm_function fname
+    pixman_asm_function \fname
 
 /*
  * Make some macro arguments globally visible and accessible
  * from other macros
  */
- .set src_bpp, src_bpp_
- .set mask_bpp, mask_bpp_
- .set dst_w_bpp, dst_w_bpp_
- .set flags, flags_
- .set prefetch_distance, prefetch_distance_
+ .set src_bpp, \src_bpp_
+ .set mask_bpp, \mask_bpp_
+ .set dst_w_bpp, \dst_w_bpp_
+ .set flags, \flags_
+ .set prefetch_distance, \prefetch_distance_
 
 /*
  * Select prefetch type for this function.
@@ -732,7 +764,7 @@
         sub     Y, Y, #1
 #endif
 
-        init
+        \init
 
  .if (flags) & FLAG_PROCESS_CORRUPTS_WK0
         /* Reserve a word in which to store X during leading pixels */
@@ -773,7 +805,7 @@
    .set LOCALS_STACK_OFFSET, LOCALS_STACK_OFFSET + LINE_SAVED_REG_COUNT*4
   .endif
 151:    /* New line */
-        newline
+        \newline
         preload_leading_step1  src_bpp, WK1, SRC
         preload_leading_step1  mask_bpp, WK2, MASK
   .if ((flags) & FLAG_NO_PRELOAD_DST) == 0
@@ -790,7 +822,7 @@
         preload_leading_step2  dst_r_bpp, dst_bpp_shift, WK3, DST
   .endif
 
-        leading_15bytes  process_head, process_tail
+        leading_15bytes  \process_head, \process_tail
         
 154:    /* Destination now 16-byte aligned; we have at least one prefetch on each channel as well as at least one 16-byte output block */
   .if (src_bpp > 0) && (mask_bpp == 0) && ((flags) & FLAG_PROCESS_PRESERVES_SCRATCH)
@@ -800,10 +832,10 @@
         and     SCRATCH, MASK, #31
         rsb     SCRATCH, SCRATCH, #32*prefetch_distance
   .endif
-  .ifc "process_inner_loop",""
-        switch_on_alignment  wide_case_inner_loop_and_trailing_pixels, process_head, process_tail, wide_case_inner_loop, 157f
+  .ifc "\process_inner_loop",""
+        switch_on_alignment  wide_case_inner_loop_and_trailing_pixels, \process_head, \process_tail, wide_case_inner_loop, 157f
   .else
-        switch_on_alignment  wide_case_inner_loop_and_trailing_pixels, process_head, process_tail, process_inner_loop, 157f
+        switch_on_alignment  wide_case_inner_loop_and_trailing_pixels, \process_head, \process_tail, \process_inner_loop, 157f
   .endif
 
 157:    /* Check for another line */
@@ -825,7 +857,7 @@
   .set LOCALS_STACK_OFFSET, LOCALS_STACK_OFFSET + LINE_SAVED_REG_COUNT*4
  .endif
 161:    /* New line */
-        newline
+        \newline
         preload_line 0, src_bpp, src_bpp_shift, SRC  /* in: X, corrupts: WK0-WK1 */
         preload_line 0, mask_bpp, mask_bpp_shift, MASK
  .if ((flags) & FLAG_NO_PRELOAD_DST) == 0
@@ -837,10 +869,10 @@
         beq     164f
         rsb     WK0, WK0, #16 /* number of leading bytes until destination aligned */
         
-        leading_15bytes  process_head, process_tail
+        leading_15bytes  \process_head, \process_tail
         
 164:    /* Destination now 16-byte aligned; we have at least one 16-byte output block */
-        switch_on_alignment  medium_case_inner_loop_and_trailing_pixels, process_head, process_tail,, 167f
+        switch_on_alignment  medium_case_inner_loop_and_trailing_pixels, \process_head, \process_tail,, 167f
         
 167:    /* Check for another line */
         end_of_line 1, %((flags) & FLAG_SPILL_LINE_VARS_NON_WIDE), 161b
@@ -856,7 +888,7 @@
         .word   0xE92D0000 | LINE_SAVED_REGS
  .endif
 171:    /* New line */
-        newline
+        \newline
         preload_line 1, src_bpp, src_bpp_shift, SRC  /* in: X, corrupts: WK0-WK1 */
         preload_line 1, mask_bpp, mask_bpp_shift, MASK
  .if ((flags) & FLAG_NO_PRELOAD_DST) == 0
@@ -868,8 +900,8 @@
         beq     174f
 172:    subs    X, X, #1
         blo     177f
-        process_head  , 1, 0, 1, 1, 0
-        process_tail  , 1, 0
+        \process_head  , 1, 0, 1, 1, 0
+        \process_tail  , 1, 0
   .if !((flags) & FLAG_PROCESS_DOES_STORE)
         pixst   , 1, 0, DST
   .endif
@@ -880,15 +912,15 @@
         beq     174f
         subs    X, X, #1
         blo     177f
-        process_head  , 2, 0, 1, 1, 0
-        process_tail  , 2, 0
+        \process_head  , 2, 0, 1, 1, 0
+        \process_tail  , 2, 0
   .if !((flags) & FLAG_PROCESS_DOES_STORE)
         pixst   , 2, 0, DST
   .endif
  .endif
 
 174:    /* Destination now 4-byte aligned; we have 0 or more output bytes to go */
-        switch_on_alignment  narrow_case_inner_loop_and_trailing_pixels, process_head, process_tail,, 177f
+        switch_on_alignment  narrow_case_inner_loop_and_trailing_pixels, \process_head, \process_tail,, 177f
 
 177:    /* Check for another line */
         end_of_line %(dst_w_bpp < 32), %((flags) & FLAG_SPILL_LINE_VARS_NON_WIDE), 171b, last_one
@@ -908,7 +940,7 @@
         add     sp, sp, #4
  .endif
 
-        cleanup
+        \cleanup
 
 #ifdef DEBUG_PARAMS
         add     sp, sp, #9*4 /* junk the debug copy of arguments */
@@ -932,13 +964,15 @@
     .unreq  WK3
     .unreq  SCRATCH
     .unreq  ORIG_W
+#ifndef __clang__
     .endfunc
+#endif
 .endm
 
 .macro line_saved_regs  x:vararg
  .set LINE_SAVED_REGS, 0
  .set LINE_SAVED_REG_COUNT, 0
- .irp SAVED_REG,x
+ .irp SAVED_REG,\x
   .ifc "SAVED_REG","Y"
    .set LINE_SAVED_REGS, LINE_SAVED_REGS | (1<<1)
    .set LINE_SAVED_REG_COUNT, LINE_SAVED_REG_COUNT + 1

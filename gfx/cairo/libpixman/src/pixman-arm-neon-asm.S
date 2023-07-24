@@ -34,6 +34,12 @@
  *  - pixman_composite_over_n_8_0565_asm_neon
  */
 
+#ifdef __clang__
+#define ldrgeb ldrbge
+#define subges subsge
+#define subpls subspl
+#endif
+
 /* Prevent the stack from becoming executable for no reason... */
 #if defined(__linux__) && defined(__ELF__)
 .section .note.GNU-stack,"",%progbits
@@ -260,13 +266,13 @@
     vshrn.u16   d7, q2, #3
     vsli.u16    q2, q2, #5
         vshll.u8    q14, d16, #8
-                                    PF add PF_X, PF_X, #8
+                                    PF add, PF_X, PF_X, #8
         vshll.u8    q8, d19, #8
-                                    PF tst PF_CTL, #0xF
+                                    PF tst, PF_CTL, #0xF
     vsri.u8     d6, d6, #5
-                                    PF addne PF_X, PF_X, #8
+                                    PF addne, PF_X, PF_X, #8
     vmvn.8      d3, d3
-                                    PF subne PF_CTL, PF_CTL, #1
+                                    PF subne, PF_CTL, PF_CTL, #1
     vsri.u8     d7, d7, #6
     vshrn.u16   d30, q2, #2
     vmull.u8    q10, d3, d6
@@ -275,18 +281,18 @@
     vmull.u8    q12, d3, d30
                                     PF pld, [PF_DST, PF_X, lsl #dst_bpp_shift]
         vsri.u16    q14, q8, #5
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
         vshll.u8    q9, d18, #8
     vrshr.u16   q13, q10, #8
-                                    PF subge PF_X, PF_X, ORIG_W
+                                    PF subge, PF_X, PF_X, ORIG_W
     vrshr.u16   q3, q11, #8
     vrshr.u16   q15, q12, #8
-                                    PF subges PF_CTL, PF_CTL, #0x10
+                                    PF subges, PF_CTL, PF_CTL, #0x10
         vsri.u16    q14, q9, #11
-                                    PF ldrgeb DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
     vraddhn.u16 d20, q10, q13
     vraddhn.u16 d23, q11, q3
-                                    PF ldrgeb DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
     vraddhn.u16 d22, q12, q15
         vst1.16     {d28, d29}, [DST_W, :128]!
 .endm
@@ -434,20 +440,20 @@ generate_composite_function \
 
 .macro pixman_composite_src_8888_0565_process_pixblock_tail_head
         vsri.u16    q14, q8, #5
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0xF
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0xF
     fetch_src_pixblock
-                                    PF addne PF_X, PF_X, #8
-                                    PF subne PF_CTL, PF_CTL, #1
+                                    PF addne, PF_X, PF_X, #8
+                                    PF subne, PF_CTL, PF_CTL, #1
         vsri.u16    q14, q9, #11
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
                                     PF pld, [PF_SRC, PF_X, lsl #src_bpp_shift]
     vshll.u8    q8, d1, #8
         vst1.16     {d28, d29}, [DST_W, :128]!
-                                    PF subge PF_X, PF_X, ORIG_W
-                                    PF subges PF_CTL, PF_CTL, #0x10
+                                    PF subge, PF_X, PF_X, ORIG_W
+                                    PF subges, PF_CTL, PF_CTL, #0x10
     vshll.u8    q14, d2, #8
-                                    PF ldrgeb DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
     vshll.u8    q9, d0, #8
 .endm
 
@@ -509,20 +515,20 @@ generate_composite_function \
 
 .macro pixman_composite_add_8_8_process_pixblock_tail_head
     fetch_src_pixblock
-                                    PF add PF_X, PF_X, #32
-                                    PF tst PF_CTL, #0xF
+                                    PF add, PF_X, PF_X, #32
+                                    PF tst, PF_CTL, #0xF
     vld1.8      {d4, d5, d6, d7}, [DST_R, :128]!
-                                    PF addne PF_X, PF_X, #32
-                                    PF subne PF_CTL, PF_CTL, #1
+                                    PF addne, PF_X, PF_X, #32
+                                    PF subne, PF_CTL, PF_CTL, #1
         vst1.8      {d28, d29, d30, d31}, [DST_W, :128]!
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
                                     PF pld, [PF_SRC, PF_X, lsl #src_bpp_shift]
                                     PF pld, [PF_DST, PF_X, lsl #dst_bpp_shift]
-                                    PF subge PF_X, PF_X, ORIG_W
-                                    PF subges PF_CTL, PF_CTL, #0x10
+                                    PF subge, PF_X, PF_X, ORIG_W
+                                    PF subges, PF_CTL, PF_CTL, #0x10
     vqadd.u8    q14, q0, q2
-                                    PF ldrgeb DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
-                                    PF ldrgeb DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
     vqadd.u8    q15, q1, q3
 .endm
 
@@ -541,20 +547,20 @@ generate_composite_function \
 
 .macro pixman_composite_add_8888_8888_process_pixblock_tail_head
     fetch_src_pixblock
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0xF
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0xF
     vld1.32     {d4, d5, d6, d7}, [DST_R, :128]!
-                                    PF addne PF_X, PF_X, #8
-                                    PF subne PF_CTL, PF_CTL, #1
+                                    PF addne, PF_X, PF_X, #8
+                                    PF subne, PF_CTL, PF_CTL, #1
         vst1.32     {d28, d29, d30, d31}, [DST_W, :128]!
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
                                     PF pld, [PF_SRC, PF_X, lsl #src_bpp_shift]
                                     PF pld, [PF_DST, PF_X, lsl #dst_bpp_shift]
-                                    PF subge PF_X, PF_X, ORIG_W
-                                    PF subges PF_CTL, PF_CTL, #0x10
+                                    PF subge, PF_X, PF_X, ORIG_W
+                                    PF subges, PF_CTL, PF_CTL, #0x10
     vqadd.u8    q14, q0, q2
-                                    PF ldrgeb DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
-                                    PF ldrgeb DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
     vqadd.u8    q15, q1, q3
 .endm
 
@@ -604,16 +610,16 @@ generate_composite_function_single_scanline \
 .macro pixman_composite_out_reverse_8888_8888_process_pixblock_tail_head
     vld4.8      {d4, d5, d6, d7}, [DST_R, :128]!
         vrshr.u16   q14, q8, #8
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0xF
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0xF
         vrshr.u16   q15, q9, #8
         vrshr.u16   q12, q10, #8
         vrshr.u16   q13, q11, #8
-                                    PF addne PF_X, PF_X, #8
-                                    PF subne PF_CTL, PF_CTL, #1
+                                    PF addne, PF_X, PF_X, #8
+                                    PF subne, PF_CTL, PF_CTL, #1
         vraddhn.u16 d28, q14, q8
         vraddhn.u16 d29, q15, q9
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
         vraddhn.u16 d30, q12, q10
         vraddhn.u16 d31, q13, q11
     fetch_src_pixblock
@@ -621,13 +627,13 @@ generate_composite_function_single_scanline \
     vmvn.8      d22, d3
                                     PF pld, [PF_DST, PF_X, lsl #dst_bpp_shift]
         vst4.8      {d28, d29, d30, d31}, [DST_W, :128]!
-                                    PF subge PF_X, PF_X, ORIG_W
+                                    PF subge, PF_X, PF_X, ORIG_W
     vmull.u8    q8, d22, d4
-                                    PF subges PF_CTL, PF_CTL, #0x10
+                                    PF subsge, PF_CTL, PF_CTL, #0x10
     vmull.u8    q9, d22, d5
-                                    PF ldrgeb DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
     vmull.u8    q10, d22, d6
-                                    PF ldrgeb DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
     vmull.u8    q11, d22, d7
 .endm
 
@@ -656,16 +662,16 @@ generate_composite_function_single_scanline \
 .macro pixman_composite_over_8888_8888_process_pixblock_tail_head
     vld4.8      {d4, d5, d6, d7}, [DST_R, :128]!
         vrshr.u16   q14, q8, #8
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0xF
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0xF
         vrshr.u16   q15, q9, #8
         vrshr.u16   q12, q10, #8
         vrshr.u16   q13, q11, #8
-                                    PF addne PF_X, PF_X, #8
-                                    PF subne PF_CTL, PF_CTL, #1
+                                    PF addne, PF_X, PF_X, #8
+                                    PF subne, PF_CTL, PF_CTL, #1
         vraddhn.u16 d28, q14, q8
         vraddhn.u16 d29, q15, q9
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
         vraddhn.u16 d30, q12, q10
         vraddhn.u16 d31, q13, q11
         vqadd.u8    q14, q0, q14
@@ -675,13 +681,13 @@ generate_composite_function_single_scanline \
     vmvn.8      d22, d3
                                     PF pld, [PF_DST, PF_X, lsl #dst_bpp_shift]
         vst4.8      {d28, d29, d30, d31}, [DST_W, :128]!
-                                    PF subge PF_X, PF_X, ORIG_W
+                                    PF subge, PF_X, PF_X, ORIG_W
     vmull.u8    q8, d22, d4
-                                    PF subges PF_CTL, PF_CTL, #0x10
+                                    PF subges, PF_CTL, PF_CTL, #0x10
     vmull.u8    q9, d22, d5
-                                    PF ldrgeb DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
     vmull.u8    q10, d22, d6
-                                    PF ldrgeb DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
     vmull.u8    q11, d22, d7
 .endm
 
@@ -742,20 +748,20 @@ generate_composite_function_single_scanline \
         vraddhn.u16 d31, q3, q11
     vld4.8      {d4, d5, d6, d7}, [DST_R, :128]!
         vqadd.u8    q14, q0, q14
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0x0F
-                                    PF addne PF_X, PF_X, #8
-                                    PF subne PF_CTL, PF_CTL, #1
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0x0F
+                                    PF addne, PF_X, PF_X, #8
+                                    PF subne, PF_CTL, PF_CTL, #1
         vqadd.u8    q15, q1, q15
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
     vmull.u8    q8, d24, d4
                                     PF pld, [PF_DST, PF_X, lsl #dst_bpp_shift]
     vmull.u8    q9, d24, d5
-                                    PF subge PF_X, PF_X, ORIG_W
+                                    PF subge, PF_X, PF_X, ORIG_W
     vmull.u8    q10, d24, d6
-                                    PF subges PF_CTL, PF_CTL, #0x10
+                                    PF subges, PF_CTL, PF_CTL, #0x10
     vmull.u8    q11, d24, d7
-                                    PF ldrgeb DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
         vst4.8      {d28, d29, d30, d31}, [DST_W, :128]!
 .endm
 
@@ -784,16 +790,16 @@ generate_composite_function \
 
 .macro pixman_composite_over_reverse_n_8888_process_pixblock_tail_head
         vrshr.u16   q14, q8, #8
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0xF
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0xF
         vrshr.u16   q15, q9, #8
         vrshr.u16   q12, q10, #8
         vrshr.u16   q13, q11, #8
-                                    PF addne PF_X, PF_X, #8
-                                    PF subne PF_CTL, PF_CTL, #1
+                                    PF addne, PF_X, PF_X, #8
+                                    PF subne, PF_CTL, PF_CTL, #1
         vraddhn.u16 d28, q14, q8
         vraddhn.u16 d29, q15, q9
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
         vraddhn.u16 d30, q12, q10
         vraddhn.u16 d31, q13, q11
         vqadd.u8    q14, q0, q14
@@ -802,12 +808,12 @@ generate_composite_function \
     vmvn.8      d22, d3
                                     PF pld, [PF_DST, PF_X, lsl #dst_bpp_shift]
         vst4.8      {d28, d29, d30, d31}, [DST_W, :128]!
-                                    PF subge PF_X, PF_X, ORIG_W
+                                    PF subge, PF_X, PF_X, ORIG_W
     vmull.u8    q8, d22, d4
-                                    PF subges PF_CTL, PF_CTL, #0x10
+                                    PF subges, PF_CTL, PF_CTL, #0x10
     vmull.u8    q9, d22, d5
     vmull.u8    q10, d22, d6
-                                    PF ldrgeb DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
     vmull.u8    q11, d22, d7
 .endm
 
@@ -1245,23 +1251,23 @@ generate_composite_function \
 
 .macro pixman_composite_src_n_8_8888_process_pixblock_tail_head
     fetch_mask_pixblock
-                                    PF add PF_X, PF_X, #8
+                                    PF add, PF_X, PF_X, #8
         vrshrn.u16  d28, q8, #8
-                                    PF tst PF_CTL, #0x0F
+                                    PF tst, PF_CTL, #0x0F
         vrshrn.u16  d29, q9, #8
-                                    PF addne PF_X, PF_X, #8
+                                    PF addne, PF_X, PF_X, #8
         vrshrn.u16  d30, q10, #8
-                                    PF subne PF_CTL, PF_CTL, #1
+                                    PF subne, PF_CTL, PF_CTL, #1
         vrshrn.u16  d31, q11, #8
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
     vmull.u8    q8, d24, d0
                                     PF pld, [PF_MASK, PF_X, lsl #mask_bpp_shift]
     vmull.u8    q9, d24, d1
-                                    PF subge PF_X, PF_X, ORIG_W
+                                    PF subge, PF_X, PF_X, ORIG_W
     vmull.u8    q10, d24, d2
-                                    PF subges PF_CTL, PF_CTL, #0x10
+                                    PF subges, PF_CTL, PF_CTL, #0x10
     vmull.u8    q11, d24, d3
-                                    PF ldrgeb DUMMY, [PF_MASK, MASK_STRIDE, lsl #mask_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_MASK, MASK_STRIDE, lsl #mask_bpp_shift]!
         vst4.8      {d28, d29, d30, d31}, [DST_W, :128]!
     vrsra.u16   q8, q8, #8
     vrsra.u16   q9, q9, #8
@@ -1314,23 +1320,23 @@ generate_composite_function \
 
 .macro pixman_composite_src_n_8_8_process_pixblock_tail_head
     fetch_mask_pixblock
-                                    PF add PF_X, PF_X, #8
+                                    PF add, PF_X, PF_X, #8
         vrshrn.u16  d28, q0, #8
-                                    PF tst PF_CTL, #0x0F
+                                    PF tst, PF_CTL, #0x0F
         vrshrn.u16  d29, q1, #8
-                                    PF addne PF_X, PF_X, #8
+                                    PF addne, PF_X, PF_X, #8
         vrshrn.u16  d30, q2, #8
-                                    PF subne PF_CTL, PF_CTL, #1
+                                    PF subne, PF_CTL, PF_CTL, #1
         vrshrn.u16  d31, q3, #8
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
     vmull.u8    q0,  d24, d16
                                     PF pld, [PF_MASK, PF_X, lsl #mask_bpp_shift]
     vmull.u8    q1,  d25, d16
-                                    PF subge PF_X, PF_X, ORIG_W
+                                    PF subge, PF_X, PF_X, ORIG_W
     vmull.u8    q2,  d26, d16
-                                    PF subges PF_CTL, PF_CTL, #0x10
+                                    PF subges, PF_CTL, PF_CTL, #0x10
     vmull.u8    q3,  d27, d16
-                                    PF ldrgeb DUMMY, [PF_MASK, MASK_STRIDE, lsl #mask_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_MASK, MASK_STRIDE, lsl #mask_bpp_shift]!
         vst1.8      {d28, d29, d30, d31}, [DST_W, :128]!
     vrsra.u16   q0, q0,  #8
     vrsra.u16   q1, q1,  #8
@@ -1408,27 +1414,27 @@ generate_composite_function \
         vrshr.u16   q15, q9, #8
     fetch_mask_pixblock
         vrshr.u16   q6, q10, #8
-                                    PF add PF_X, PF_X, #8
+                                    PF add, PF_X, PF_X, #8
         vrshr.u16   q7, q11, #8
-                                    PF tst PF_CTL, #0x0F
+                                    PF tst, PF_CTL, #0x0F
         vraddhn.u16 d28, q14, q8
-                                    PF addne PF_X, PF_X, #8
+                                    PF addne, PF_X, PF_X, #8
         vraddhn.u16 d29, q15, q9
-                                    PF subne PF_CTL, PF_CTL, #1
+                                    PF subne, PF_CTL, PF_CTL, #1
         vraddhn.u16 d30, q6, q10
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
         vraddhn.u16 d31, q7, q11
                                     PF pld, [PF_DST, PF_X, lsl #dst_bpp_shift]
     vmull.u8    q6, d24, d8
                                     PF pld, [PF_MASK, PF_X, lsl #mask_bpp_shift]
     vmull.u8    q7, d24, d9
-                                    PF subge PF_X, PF_X, ORIG_W
+                                    PF subge, PF_X, PF_X, ORIG_W
     vmull.u8    q8, d24, d10
-                                    PF subges PF_CTL, PF_CTL, #0x10
+                                    PF subges, PF_CTL, PF_CTL, #0x10
     vmull.u8    q9, d24, d11
-                                    PF ldrgeb DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
         vqadd.u8    q14, q0, q14
-                                    PF ldrgeb DUMMY, [PF_MASK, MASK_STRIDE, lsl #mask_bpp_shift]!
+                                    PF ldrgeb, DUMMY, [PF_MASK, MASK_STRIDE, lsl #mask_bpp_shift]!
         vqadd.u8    q15, q1, q15
     vrshr.u16   q10, q6, #8
     vrshr.u16   q11, q7, #8
@@ -2425,21 +2431,21 @@ generate_composite_function \
         vrshr.u16   q13, q10, #8
     fetch_src_pixblock
         vraddhn.u16 d30, q11, q8
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0xF
-                                    PF addne PF_X, PF_X, #8
-                                    PF subne PF_CTL, PF_CTL, #1
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0xF
+                                    PF addne, PF_X, PF_X, #8
+                                    PF subne, PF_CTL, PF_CTL, #1
         vraddhn.u16 d29, q12, q9
         vraddhn.u16 d28, q13, q10
     vmull.u8    q8, d3, d0
     vmull.u8    q9, d3, d1
     vmull.u8    q10, d3, d2
         vst4.8 {d28, d29, d30, d31}, [DST_W, :128]!
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
                                     PF pld, [PF_SRC, PF_X, lsl #src_bpp_shift]
-                                    PF subge PF_X, PF_X, ORIG_W
-                                    PF subges PF_CTL, PF_CTL, #0x10
-                                    PF ldrgeb DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
+                                    PF subge, PF_X, PF_X, ORIG_W
+                                    PF subges, PF_CTL, PF_CTL, #0x10
+                                    PF ldrgeb, DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
 .endm
 
 generate_composite_function \
@@ -2482,21 +2488,21 @@ generate_composite_function \
         vrshr.u16   q13, q10, #8
     fetch_src_pixblock
         vraddhn.u16 d28, q11, q8
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0xF
-                                    PF addne PF_X, PF_X, #8
-                                    PF subne PF_CTL, PF_CTL, #1
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0xF
+                                    PF addne, PF_X, PF_X, #8
+                                    PF subne, PF_CTL, PF_CTL, #1
         vraddhn.u16 d29, q12, q9
         vraddhn.u16 d30, q13, q10
     vmull.u8    q8, d3, d0
     vmull.u8    q9, d3, d1
     vmull.u8    q10, d3, d2
         vst4.8 {d28, d29, d30, d31}, [DST_W, :128]!
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
                                     PF pld, [PF_SRC, PF_X, lsl #src_bpp_shift]
-                                    PF subge PF_X, PF_X, ORIG_W
-                                    PF subges PF_CTL, PF_CTL, #0x10
-                                    PF ldrgeb DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
+                                    PF subge, PF_X, PF_X, ORIG_W
+                                    PF subges, PF_CTL, PF_CTL, #0x10
+                                    PF ldrgeb, DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
 .endm
 
 generate_composite_function \
@@ -2841,28 +2847,28 @@ generate_composite_function_nearest_scanline \
     mov       TMP1, X, asr #16
     add       X, X, UX
     add       TMP1, TOP, TMP1, asl #2
-    vld1.32   {reg1}, [TMP1], STRIDE
-    vld1.32   {reg2}, [TMP1]
+    vld1.32   {\reg1}, [TMP1], STRIDE
+    vld1.32   {\reg2}, [TMP1]
 .endm
 
 .macro bilinear_load_0565 reg1, reg2, tmp
     mov       TMP1, X, asr #16
     add       X, X, UX
     add       TMP1, TOP, TMP1, asl #1
-    vld1.32   {reg2[0]}, [TMP1], STRIDE
-    vld1.32   {reg2[1]}, [TMP1]
-    convert_four_0565_to_x888_packed reg2, reg1, reg2, tmp
+    vld1.32   {\reg2[0]}, [TMP1], STRIDE
+    vld1.32   {\reg2[1]}, [TMP1]
+    convert_four_0565_to_x888_packed \reg2, \reg1, \reg2, \tmp
 .endm
 
 .macro bilinear_load_and_vertical_interpolate_two_8888 \
                     acc1, acc2, reg1, reg2, reg3, reg4, tmp1, tmp2
 
-    bilinear_load_8888 reg1, reg2, tmp1
-    vmull.u8  acc1, reg1, d28
-    vmlal.u8  acc1, reg2, d29
-    bilinear_load_8888 reg3, reg4, tmp2
-    vmull.u8  acc2, reg3, d28
-    vmlal.u8  acc2, reg4, d29
+    bilinear_load_8888 \reg1, \reg2, \tmp1
+    vmull.u8  \acc1, \reg1, d28
+    vmlal.u8  \acc1, \reg2, d29
+    bilinear_load_8888 \reg3, \reg4, \tmp2
+    vmull.u8  \acc2, \reg3, d28
+    vmlal.u8  \acc2, \reg4, d29
 .endm
 
 .macro bilinear_load_and_vertical_interpolate_four_8888 \
@@ -2870,9 +2876,9 @@ generate_composite_function_nearest_scanline \
                 yacc1, yacc2, yreg1, yreg2, yreg3, yreg4, yacc2lo, yacc2hi
 
     bilinear_load_and_vertical_interpolate_two_8888 \
-                xacc1, xacc2, xreg1, xreg2, xreg3, xreg4, xacc2lo, xacc2hi
+                \xacc1, \xacc2, \xreg1, \xreg2, \xreg3, \xreg4, \xacc2lo, \xacc2hi
     bilinear_load_and_vertical_interpolate_two_8888 \
-                yacc1, yacc2, yreg1, yreg2, yreg3, yreg4, yacc2lo, yacc2hi
+                \yacc1, \yacc2, \yreg1, \yreg2, \yreg3, \yreg4, \yacc2lo, \yacc2hi
 .endm
 
 .macro bilinear_load_and_vertical_interpolate_two_0565 \
@@ -2884,19 +2890,19 @@ generate_composite_function_nearest_scanline \
     mov       TMP2, X, asr #16
     add       X, X, UX
     add       TMP2, TOP, TMP2, asl #1
-    vld1.32   {acc2lo[0]}, [TMP1], STRIDE
-    vld1.32   {acc2hi[0]}, [TMP2], STRIDE
-    vld1.32   {acc2lo[1]}, [TMP1]
-    vld1.32   {acc2hi[1]}, [TMP2]
-    convert_0565_to_x888 acc2, reg3, reg2, reg1
-    vzip.u8   reg1, reg3
-    vzip.u8   reg2, reg4
-    vzip.u8   reg3, reg4
-    vzip.u8   reg1, reg2
-    vmull.u8  acc1, reg1, d28
-    vmlal.u8  acc1, reg2, d29
-    vmull.u8  acc2, reg3, d28
-    vmlal.u8  acc2, reg4, d29
+    vld1.32   {\acc2lo[0]}, [TMP1], STRIDE
+    vld1.32   {\acc2hi[0]}, [TMP2], STRIDE
+    vld1.32   {\acc2lo[1]}, [TMP1]
+    vld1.32   {\acc2hi[1]}, [TMP2]
+    convert_0565_to_x888 \acc2, \reg3, \reg2, \reg1
+    vzip.u8   \reg1, \reg3
+    vzip.u8   \reg2, \reg4
+    vzip.u8   \reg3, \reg4
+    vzip.u8   \reg1, \reg2
+    vmull.u8  \acc1, \reg1, d28
+    vmlal.u8  \acc1, \reg2, d29
+    vmull.u8  \acc2, \reg3, d28
+    vmlal.u8  \acc2, \reg4, d29
 .endm
 
 .macro bilinear_load_and_vertical_interpolate_four_0565 \
@@ -2909,49 +2915,49 @@ generate_composite_function_nearest_scanline \
     mov       TMP2, X, asr #16
     add       X, X, UX
     add       TMP2, TOP, TMP2, asl #1
-    vld1.32   {xacc2lo[0]}, [TMP1], STRIDE
-    vld1.32   {xacc2hi[0]}, [TMP2], STRIDE
-    vld1.32   {xacc2lo[1]}, [TMP1]
-    vld1.32   {xacc2hi[1]}, [TMP2]
-    convert_0565_to_x888 xacc2, xreg3, xreg2, xreg1
+    vld1.32   {\xacc2lo[0]}, [TMP1], STRIDE
+    vld1.32   {\xacc2hi[0]}, [TMP2], STRIDE
+    vld1.32   {\xacc2lo[1]}, [TMP1]
+    vld1.32   {\xacc2hi[1]}, [TMP2]
+    convert_0565_to_x888 \xacc2, \xreg3, \xreg2, \xreg1
     mov       TMP1, X, asr #16
     add       X, X, UX
     add       TMP1, TOP, TMP1, asl #1
     mov       TMP2, X, asr #16
     add       X, X, UX
     add       TMP2, TOP, TMP2, asl #1
-    vld1.32   {yacc2lo[0]}, [TMP1], STRIDE
-    vzip.u8   xreg1, xreg3
-    vld1.32   {yacc2hi[0]}, [TMP2], STRIDE
-    vzip.u8   xreg2, xreg4
-    vld1.32   {yacc2lo[1]}, [TMP1]
-    vzip.u8   xreg3, xreg4
-    vld1.32   {yacc2hi[1]}, [TMP2]
-    vzip.u8   xreg1, xreg2
-    convert_0565_to_x888 yacc2, yreg3, yreg2, yreg1
-    vmull.u8  xacc1, xreg1, d28
-    vzip.u8   yreg1, yreg3
-    vmlal.u8  xacc1, xreg2, d29
-    vzip.u8   yreg2, yreg4
-    vmull.u8  xacc2, xreg3, d28
-    vzip.u8   yreg3, yreg4
-    vmlal.u8  xacc2, xreg4, d29
-    vzip.u8   yreg1, yreg2
-    vmull.u8  yacc1, yreg1, d28
-    vmlal.u8  yacc1, yreg2, d29
-    vmull.u8  yacc2, yreg3, d28
-    vmlal.u8  yacc2, yreg4, d29
+    vld1.32   {\yacc2lo[0]}, [TMP1], STRIDE
+    vzip.u8   \xreg1, \xreg3
+    vld1.32   {\yacc2hi[0]}, [TMP2], STRIDE
+    vzip.u8   \xreg2, \xreg4
+    vld1.32   {\yacc2lo[1]}, [TMP1]
+    vzip.u8   \xreg3, \xreg4
+    vld1.32   {\yacc2hi[1]}, [TMP2]
+    vzip.u8   \xreg1, \xreg2
+    convert_0565_to_x888 \yacc2, \yreg3, \yreg2, \yreg1
+    vmull.u8  \xacc1, \xreg1, d28
+    vzip.u8   \yreg1, \yreg3
+    vmlal.u8  \xacc1, \xreg2, d29
+    vzip.u8   \yreg2, \yreg4
+    vmull.u8  \xacc2, \xreg3, d28
+    vzip.u8   \yreg3, \yreg4
+    vmlal.u8  \xacc2, \xreg4, d29
+    vzip.u8   \yreg1, \yreg2
+    vmull.u8  \yacc1, \yreg1, d28
+    vmlal.u8  \yacc1, \yreg2, d29
+    vmull.u8  \yacc2, \yreg3, d28
+    vmlal.u8  \yacc2, \yreg4, d29
 .endm
 
 .macro bilinear_store_8888 numpix, tmp1, tmp2
-.if numpix == 4
+.if \numpix == 4
     vst1.32   {d0, d1}, [OUT, :128]!
-.elseif numpix == 2
+.elseif \numpix == 2
     vst1.32   {d0}, [OUT, :64]!
-.elseif numpix == 1
+.elseif \numpix == 1
     vst1.32   {d0[0]}, [OUT, :32]!
 .else
-    .error bilinear_store_8888 numpix is unsupported
+    .error bilinear_store_8888 \numpix is unsupported
 .endif
 .endm
 
@@ -2960,20 +2966,20 @@ generate_composite_function_nearest_scanline \
     vuzp.u8 d2, d3
     vuzp.u8 d1, d3
     vuzp.u8 d0, d2
-    convert_8888_to_0565 d2, d1, d0, q1, tmp1, tmp2
-.if numpix == 4
+    convert_8888_to_0565 d2, d1, d0, q1, \tmp1, \tmp2
+.if \numpix == 4
     vst1.16   {d2}, [OUT, :64]!
-.elseif numpix == 2
+.elseif \numpix == 2
     vst1.32   {d2[0]}, [OUT, :32]!
-.elseif numpix == 1
+.elseif \numpix == 1
     vst1.16   {d2[0]}, [OUT, :16]!
 .else
-    .error bilinear_store_0565 numpix is unsupported
+    .error bilinear_store_0565 \numpix is unsupported
 .endif
 .endm
 
 .macro bilinear_interpolate_last_pixel src_fmt, dst_fmt
-    bilinear_load_&src_fmt d0, d1, d2
+    bilinear_load_\()\src_fmt d0, d1, d2
     vmull.u8  q1, d0, d28
     vmlal.u8  q1, d1, d29
     /* 5 cycles bubble */
@@ -2985,11 +2991,11 @@ generate_composite_function_nearest_scanline \
     /* 3 cycles bubble */
     vmovn.u16 d0, q0
     /* 1 cycle bubble */
-    bilinear_store_&dst_fmt 1, q2, q3
+    bilinear_store_\()\dst_fmt 1, q2, q3
 .endm
 
 .macro bilinear_interpolate_two_pixels src_fmt, dst_fmt
-    bilinear_load_and_vertical_interpolate_two_&src_fmt \
+    bilinear_load_and_vertical_interpolate_two_\()\src_fmt \
                 q1, q11, d0, d1, d20, d21, d22, d23
     vshll.u16 q0, d2, #BILINEAR_INTERPOLATION_BITS
     vmlsl.u16 q0, d2, d30
@@ -3002,11 +3008,11 @@ generate_composite_function_nearest_scanline \
     vshr.u16  q15, q12, #(16 - BILINEAR_INTERPOLATION_BITS)
     vadd.u16  q12, q12, q13
     vmovn.u16 d0, q0
-    bilinear_store_&dst_fmt 2, q2, q3
+    bilinear_store_\()\dst_fmt 2, q2, q3
 .endm
 
 .macro bilinear_interpolate_four_pixels src_fmt, dst_fmt
-    bilinear_load_and_vertical_interpolate_four_&src_fmt \
+    bilinear_load_and_vertical_interpolate_four_\()\src_fmt \
                 q1, q11, d0, d1, d20, d21, d22, d23 \
                 q3, q9,  d4, d5, d16, d17, d18, d19
     pld       [TMP1, PF_OFFS]
@@ -3034,54 +3040,54 @@ generate_composite_function_nearest_scanline \
     vmovn.u16 d0, q0
     vmovn.u16 d1, q2
     vadd.u16  q12, q12, q13
-    bilinear_store_&dst_fmt 4, q2, q3
+    bilinear_store_\()\dst_fmt 4, q2, q3
 .endm
 
 .macro bilinear_interpolate_four_pixels_head src_fmt, dst_fmt
-.ifdef have_bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt
-    bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt&_head
+.ifdef have_bilinear_interpolate_four_pixels_\()\src_fmt\()_\()\dst_fmt
+    bilinear_interpolate_four_pixels_\()\src_fmt\()_\()\dst_fmt\()_head
 .else
-    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels \src_fmt, \dst_fmt
 .endif
 .endm
 
 .macro bilinear_interpolate_four_pixels_tail src_fmt, dst_fmt
-.ifdef have_bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt
-    bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt&_tail
+.ifdef have_bilinear_interpolate_four_pixels_\()\src_fmt\()_\()\dst_fmt
+    bilinear_interpolate_four_pixels_\()\src_fmt\()_\()\dst_fmt\()_tail
 .endif
 .endm
 
 .macro bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
-.ifdef have_bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt
-    bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt&_tail_head
+.ifdef have_bilinear_interpolate_four_pixels_\()\src_fmt\()_\()\dst_fmt
+    bilinear_interpolate_four_pixels_\()\src_fmt\()_\()\dst_fmt\()_tail_head
 .else
-    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels \src_fmt, \dst_fmt
 .endif
 .endm
 
 .macro bilinear_interpolate_eight_pixels_head src_fmt, dst_fmt
-.ifdef have_bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt
-    bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt&_head
+.ifdef have_bilinear_interpolate_eight_pixels_\()\src_fmt\()_\()\dst_fmt
+    bilinear_interpolate_eight_pixels_\()\src_fmt\()_\()\dst_fmt\()_head
 .else
-    bilinear_interpolate_four_pixels_head src_fmt, dst_fmt
-    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_head \src_fmt, \dst_fmt
+    bilinear_interpolate_four_pixels_tail_head \src_fmt, \dst_fmt
 .endif
 .endm
 
 .macro bilinear_interpolate_eight_pixels_tail src_fmt, dst_fmt
-.ifdef have_bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt
-    bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt&_tail
+.ifdef have_bilinear_interpolate_eight_pixels_\()\src_fmt\()_\()\dst_fmt
+    bilinear_interpolate_eight_pixels_\()\src_fmt\()_\()\dst_fmt\()_tail
 .else
-    bilinear_interpolate_four_pixels_tail src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_tail \src_fmt, \dst_fmt
 .endif
 .endm
 
 .macro bilinear_interpolate_eight_pixels_tail_head src_fmt, dst_fmt
-.ifdef have_bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt
-    bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt&_tail_head
+.ifdef have_bilinear_interpolate_eight_pixels_\()\src_fmt\()_\()\dst_fmt
+    bilinear_interpolate_eight_pixels_\()\src_fmt\()_\()\dst_fmt\()_tail_head
 .else
-    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
-    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_tail_head \src_fmt, \dst_fmt
+    bilinear_interpolate_four_pixels_tail_head \src_fmt, \dst_fmt
 .endif
 .endm
 
@@ -3106,7 +3112,7 @@ generate_composite_function_nearest_scanline \
                                        src_bpp_shift, dst_bpp_shift, \
                                        prefetch_distance, flags
 
-pixman_asm_function fname
+pixman_asm_function \fname
     OUT       .req      r0
     TOP       .req      r1
     BOTTOM    .req      r2
@@ -3124,11 +3130,11 @@ pixman_asm_function fname
 
     mov       ip, sp
     push      {r4, r5, r6, r7, r8, r9}
-    mov       PF_OFFS, #prefetch_distance
+    mov       PF_OFFS, #\prefetch_distance
     ldmia     ip, {WB, X, UX, WIDTH}
     mul       PF_OFFS, PF_OFFS, UX
 
-.if ((flags) & BILINEAR_FLAG_USE_ALL_NEON_REGS) != 0
+.if ((\flags) & BILINEAR_FLAG_USE_ALL_NEON_REGS) != 0
     vpush     {d8-d15}
 .endif
 
@@ -3151,7 +3157,7 @@ pixman_asm_function fname
     beq       0f
     vshr.u16  q15, q12, #(16 - BILINEAR_INTERPOLATION_BITS)
     vadd.u16  q12, q12, q13
-    bilinear_interpolate_last_pixel src_fmt, dst_fmt
+    bilinear_interpolate_last_pixel \src_fmt, \dst_fmt
     sub       WIDTH, WIDTH, #1
 0:
     vadd.u16  q13, q13, q13
@@ -3162,62 +3168,62 @@ pixman_asm_function fname
     blt       0f
     tst       OUT, #(1 << (dst_bpp_shift + 1))
     beq       0f
-    bilinear_interpolate_two_pixels src_fmt, dst_fmt
+    bilinear_interpolate_two_pixels \src_fmt, \dst_fmt
     sub       WIDTH, WIDTH, #2
 0:
-.if ((flags) & BILINEAR_FLAG_UNROLL_8) != 0
+.if ((\flags) & BILINEAR_FLAG_UNROLL_8) != 0
 /*********** 8 pixels per iteration *****************/
     cmp       WIDTH, #4
     blt       0f
     tst       OUT, #(1 << (dst_bpp_shift + 2))
     beq       0f
-    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels \src_fmt, \dst_fmt
     sub       WIDTH, WIDTH, #4
 0:
     subs      WIDTH, WIDTH, #8
     blt       1f
     mov       PF_OFFS, PF_OFFS, asr #(16 - src_bpp_shift)
-    bilinear_interpolate_eight_pixels_head src_fmt, dst_fmt
+    bilinear_interpolate_eight_pixels_head \src_fmt, \dst_fmt
     subs      WIDTH, WIDTH, #8
     blt       5f
 0:
-    bilinear_interpolate_eight_pixels_tail_head src_fmt, dst_fmt
+    bilinear_interpolate_eight_pixels_tail_head \src_fmt, \dst_fmt
     subs      WIDTH, WIDTH, #8
     bge       0b
 5:
-    bilinear_interpolate_eight_pixels_tail src_fmt, dst_fmt
+    bilinear_interpolate_eight_pixels_tail \src_fmt, \dst_fmt
 1:
     tst       WIDTH, #4
     beq       2f
-    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels \src_fmt, \dst_fmt
 2:
 .else
 /*********** 4 pixels per iteration *****************/
     subs      WIDTH, WIDTH, #4
     blt       1f
     mov       PF_OFFS, PF_OFFS, asr #(16 - src_bpp_shift)
-    bilinear_interpolate_four_pixels_head src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_head \src_fmt, \dst_fmt
     subs      WIDTH, WIDTH, #4
     blt       5f
 0:
-    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_tail_head \src_fmt, \dst_fmt
     subs      WIDTH, WIDTH, #4
     bge       0b
 5:
-    bilinear_interpolate_four_pixels_tail src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_tail \src_fmt, \dst_fmt
 1:
 /****************************************************/
 .endif
     /* handle the remaining trailing pixels */
     tst       WIDTH, #2
     beq       2f
-    bilinear_interpolate_two_pixels src_fmt, dst_fmt
+    bilinear_interpolate_two_pixels \src_fmt, \dst_fmt
 2:
     tst       WIDTH, #1
     beq       3f
-    bilinear_interpolate_last_pixel src_fmt, dst_fmt
+    bilinear_interpolate_last_pixel \src_fmt, \dst_fmt
 3:
-.if ((flags) & BILINEAR_FLAG_USE_ALL_NEON_REGS) != 0
+.if ((\flags) & BILINEAR_FLAG_USE_ALL_NEON_REGS) != 0
     vpop      {d8-d15}
 .endif
     pop       {r4, r5, r6, r7, r8, r9}
@@ -3236,7 +3242,9 @@ pixman_asm_function fname
     .unreq    TMP3
     .unreq    TMP4
     .unreq    STRIDE
+#ifndef __clang__
 .endfunc
+#endif
 
 .endm
 
