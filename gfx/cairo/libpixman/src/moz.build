@@ -103,11 +103,6 @@ elif CONFIG['CPU_ARCH'] in ('ppc', 'ppc64'):
         SOURCES += ['pixman-vmx.c']
         SOURCES['pixman-vmx.c'].flags += ['-maltivec']
 
-if CONFIG['CC_TYPE'] == 'clang':
-    ASFLAGS += [
-        '-no-integrated-as',
-    ]    
-
 # Suppress warnings in third-party code.
 CFLAGS += [
     '-Wno-address',
