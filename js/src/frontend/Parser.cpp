@@ -1085,10 +1085,9 @@ static MOZ_ALWAYS_INLINE void InitializeBindingData(
   data->length = count;
 }
 
-Maybe<GlobalScope::ParserData*> NewGlobalScopeData(FrontendContext* fc,
-                                                   ParseContext::Scope& scope,
-                                                   LifoAlloc& alloc,
-                                                   ParseContext* pc) {
+static Maybe<GlobalScope::ParserData*> NewGlobalScopeData(
+    FrontendContext* fc, ParseContext::Scope& scope, LifoAlloc& alloc,
+    ParseContext* pc) {
   ParserBindingNameVector vars(fc);
   ParserBindingNameVector lets(fc);
   ParserBindingNameVector consts(fc);
@@ -1150,10 +1149,9 @@ Maybe<GlobalScope::ParserData*> ParserBase::newGlobalScopeData(
   return NewGlobalScopeData(fc_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<ModuleScope::ParserData*> NewModuleScopeData(FrontendContext* fc,
-                                                   ParseContext::Scope& scope,
-                                                   LifoAlloc& alloc,
-                                                   ParseContext* pc) {
+static Maybe<ModuleScope::ParserData*> NewModuleScopeData(
+    FrontendContext* fc, ParseContext::Scope& scope, LifoAlloc& alloc,
+    ParseContext* pc) {
   ParserBindingNameVector imports(fc);
   ParserBindingNameVector vars(fc);
   ParserBindingNameVector lets(fc);
@@ -1218,10 +1216,9 @@ Maybe<ModuleScope::ParserData*> ParserBase::newModuleScopeData(
   return NewModuleScopeData(fc_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<EvalScope::ParserData*> NewEvalScopeData(FrontendContext* fc,
-                                               ParseContext::Scope& scope,
-                                               LifoAlloc& alloc,
-                                               ParseContext* pc) {
+static Maybe<EvalScope::ParserData*> NewEvalScopeData(
+    FrontendContext* fc, ParseContext::Scope& scope, LifoAlloc& alloc,
+    ParseContext* pc) {
   ParserBindingNameVector vars(fc);
 
   // Treat all bindings as closed over in non-strict eval.
@@ -1260,7 +1257,7 @@ Maybe<EvalScope::ParserData*> ParserBase::newEvalScopeData(
   return NewEvalScopeData(fc_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
+static Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
     FrontendContext* fc, ParseContext::Scope& scope, bool hasParameterExprs,
     LifoAlloc& alloc, ParseContext* pc) {
   ParserBindingNameVector positionalFormals(fc);
@@ -1397,10 +1394,10 @@ VarScope::ParserData* NewEmptyVarScopeData(FrontendContext* fc,
   return NewEmptyBindingData<VarScope>(fc, alloc, numBindings);
 }
 
-Maybe<VarScope::ParserData*> NewVarScopeData(FrontendContext* fc,
-                                             ParseContext::Scope& scope,
-                                             LifoAlloc& alloc,
-                                             ParseContext* pc) {
+static Maybe<VarScope::ParserData*> NewVarScopeData(FrontendContext* fc,
+                                                    ParseContext::Scope& scope,
+                                                    LifoAlloc& alloc,
+                                                    ParseContext* pc) {
   ParserBindingNameVector vars(fc);
 
   bool allBindingsClosedOver =
@@ -1452,10 +1449,9 @@ Maybe<VarScope::ParserData*> ParserBase::newVarScopeData(
   return NewVarScopeData(fc_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<LexicalScope::ParserData*> NewLexicalScopeData(FrontendContext* fc,
-                                                     ParseContext::Scope& scope,
-                                                     LifoAlloc& alloc,
-                                                     ParseContext* pc) {
+static Maybe<LexicalScope::ParserData*> NewLexicalScopeData(
+    FrontendContext* fc, ParseContext::Scope& scope, LifoAlloc& alloc,
+    ParseContext* pc) {
   ParserBindingNameVector lets(fc);
   ParserBindingNameVector consts(fc);
 
@@ -1532,7 +1528,7 @@ Maybe<LexicalScope::ParserData*> ParserBase::newLexicalScopeData(
   return NewLexicalScopeData(fc_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
+static Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
     FrontendContext* fc, ParseContext::Scope& scope, LifoAlloc& alloc,
     ParseContext* pc) {
   ParserBindingNameVector privateBrand(fc);
