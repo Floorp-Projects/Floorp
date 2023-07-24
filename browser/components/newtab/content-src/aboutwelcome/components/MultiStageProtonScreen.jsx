@@ -60,6 +60,7 @@ export const MultiStageProtonScreen = props => {
       messageId={props.messageId}
       negotiatedLanguage={props.negotiatedLanguage}
       langPackInstallPhase={props.langPackInstallPhase}
+      forceHideStepsIndicator={props.forceHideStepsIndicator}
     />
   );
 };
@@ -371,12 +372,16 @@ export class ProtonScreen extends React.PureComponent {
       isFirstScreen,
       isLastScreen,
       isSingleScreen,
+      forceHideStepsIndicator,
     } = this.props;
     const includeNoodles = content.has_noodles;
     // The default screen position is "center"
     const isCenterPosition = content.position === "center" || !content.position;
     const hideStepsIndicator =
-      autoAdvance || content?.video_container || isSingleScreen;
+      autoAdvance ||
+      content?.video_container ||
+      isSingleScreen ||
+      forceHideStepsIndicator;
     const textColorClass = content.text_color
       ? `${content.text_color}-text`
       : "";

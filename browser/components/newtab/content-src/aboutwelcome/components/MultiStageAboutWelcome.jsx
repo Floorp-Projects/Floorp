@@ -244,6 +244,7 @@ export const MultiStageAboutWelcome = props => {
               autoAdvance={screen.auto_advance}
               negotiatedLanguage={negotiatedLanguage}
               langPackInstallPhase={langPackInstallPhase}
+              forceHideStepsIndicator={screen.force_hide_steps_indicator}
             />
           ) : null;
         })}
@@ -480,6 +481,7 @@ export class WelcomeScreen extends React.PureComponent {
         isSingleScreen={this.props.isSingleScreen}
         startsWithCorner={this.props.startsWithCorner}
         autoAdvance={this.props.autoAdvance}
+        forceHideStepsIndicator={this.props.forceHideStepsIndicator}
       />
     );
   }

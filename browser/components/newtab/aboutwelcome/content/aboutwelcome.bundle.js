@@ -399,7 +399,8 @@ const MultiStageAboutWelcome = props => {
       setActiveMultiSelect: setActiveMultiSelect,
       autoAdvance: screen.auto_advance,
       negotiatedLanguage: negotiatedLanguage,
-      langPackInstallPhase: langPackInstallPhase
+      langPackInstallPhase: langPackInstallPhase,
+      forceHideStepsIndicator: screen.force_hide_steps_indicator
     }) : null;
   })));
 };
@@ -628,7 +629,8 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       isLastScreen: this.props.isLastScreen,
       isSingleScreen: this.props.isSingleScreen,
       startsWithCorner: this.props.startsWithCorner,
-      autoAdvance: this.props.autoAdvance
+      autoAdvance: this.props.autoAdvance,
+      forceHideStepsIndicator: this.props.forceHideStepsIndicator
     });
   }
 
@@ -826,7 +828,8 @@ const MultiStageProtonScreen = props => {
     iconURL: props.iconURL,
     messageId: props.messageId,
     negotiatedLanguage: props.negotiatedLanguage,
-    langPackInstallPhase: props.langPackInstallPhase
+    langPackInstallPhase: props.langPackInstallPhase,
+    forceHideStepsIndicator: props.forceHideStepsIndicator
   });
 };
 const ProtonScreenActionButtons = props => {
@@ -1068,12 +1071,13 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       isTheme,
       isFirstScreen,
       isLastScreen,
-      isSingleScreen
+      isSingleScreen,
+      forceHideStepsIndicator
     } = this.props;
     const includeNoodles = content.has_noodles; // The default screen position is "center"
 
     const isCenterPosition = content.position === "center" || !content.position;
-    const hideStepsIndicator = autoAdvance || (content === null || content === void 0 ? void 0 : content.video_container) || isSingleScreen;
+    const hideStepsIndicator = autoAdvance || (content === null || content === void 0 ? void 0 : content.video_container) || isSingleScreen || forceHideStepsIndicator;
     const textColorClass = content.text_color ? `${content.text_color}-text` : ""; // Assign proton screen style 'screen-1' or 'screen-2' to centered screens
     // by checking if screen order is even or odd.
 

@@ -227,6 +227,18 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.equal(wrapper.find(".steps.progress-bar").exists(), false);
     });
 
+    it("should not render a steps indicator if steps indicator is force hidden", () => {
+      const SCREEN_PROPS = {
+        content: {
+          title: "test title",
+        },
+        forceHideStepsIndicator: true,
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      assert.equal(wrapper.find(".steps").exists(), false);
+    });
+
     it("should render a progress bar if there are 2 steps", () => {
       const SCREEN_PROPS = {
         content: {
