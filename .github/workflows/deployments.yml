@@ -1235,8 +1235,8 @@ jobs:
 
     - name: Sign to .app 🖋️
       run: |
-        chmod +x ./floorp/codesign/codesign.bash
-
+        chmod +x ./floorp/build/codesign/mac/codesign.bash
+  
         ./floorp/build/codesign/mac/codesign.bash \
           -a ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app \
           -i "${{ secrets.macOS_AppleDeveloperId }}" \
