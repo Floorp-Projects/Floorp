@@ -120,7 +120,6 @@ jobs:
                 - builds/taskcluster_sub_win64/searchfox_debug.py
             extra-config:
                 mozconfig_platform: win64
-        use-sccache: true
         fetches:
             toolchain:
                 - linux64-clang
@@ -129,7 +128,6 @@ jobs:
                 - linux64-nasm
                 - linux64-node
                 - linux64-cbindgen
-                - linux64-sccache
                 - linux64-dump_syms
                 - linux64-wine
                 - linux64-winchecksec
