@@ -10183,7 +10183,7 @@
 
 -   name: media.wmf.low-latency.enabled
     type: RelaxedAtomicBool
-    value: false
+    value: true
     mirror: always
 
 -   name: media.wmf.low-latency.force-disabled
