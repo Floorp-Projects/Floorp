@@ -18,6 +18,7 @@
 #include <ostream>
 #include <vector>
 
+#include "lib/extras/dec/decode.h"
 #include "lib/extras/dec/jxl.h"
 #include "lib/extras/enc/jxl.h"
 #include "lib/extras/packed_image.h"
@@ -28,6 +29,14 @@
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/enc_params.h"
+
+#define TEST_LIBJPEG_SUPPORT()                                              \
+  do {                                                                      \
+    if (!jxl::extras::CanDecode(jxl::extras::Codec::kJPG)) {                \
+      fprintf(stderr, "Skipping test because of missing libjpeg codec.\n"); \
+      return;                                                               \
+    }                                                                       \
+  } while (0)
 
 namespace jxl {
 
@@ -95,9 +104,6 @@ jxl::CodecInOut SomeTestImageToCodecInOut(const std::vector<uint8_t>& buf,
                                           size_t ysize);
 
 bool Near(double expected, double value, double max_dist);
-
-// Based on highway scalar implementation, for testing
-float LoadFloat16(uint16_t bits16);
 
 float LoadLEFloat16(const uint8_t* p);
 

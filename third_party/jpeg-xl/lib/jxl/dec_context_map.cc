@@ -64,13 +64,16 @@ Status DecodeContextMap(std::vector<uint8_t>* context_map, size_t* num_htrees,
                          /*disallow_lz77=*/context_map->size() <= 2));
     ANSSymbolReader reader(&code, input);
     size_t i = 0;
+    uint32_t maxsym = 0;
     while (i < context_map->size()) {
-      uint32_t sym = reader.ReadHybridUint(0, input, dummy_ctx_map);
-      if (sym >= kMaxClusters) {
-        return JXL_FAILURE("Invalid cluster ID");
-      }
+      uint32_t sym = reader.ReadHybridUintInlined</*uses_lz77=*/true>(
+          0, input, dummy_ctx_map);
+      maxsym = sym > maxsym ? sym : maxsym;
       (*context_map)[i] = sym;
       i++;
+    }
+    if (maxsym >= kMaxClusters) {
+      return JXL_FAILURE("Invalid cluster ID");
     }
     if (!reader.CheckANSFinalState()) {
       return JXL_FAILURE("Invalid context map");

@@ -25,7 +25,8 @@ float LoadFloat16(uint16_t bits16) {
 
   // Subnormal or zero
   if (biased_exp == 0) {
-    const float subnormal = (1.0f / 16384) * (mantissa * (1.0f / 1024));
+    const float subnormal =
+        (1.0f / 16384) * (static_cast<float>(mantissa) * (1.0f / 1024));
     return sign ? -subnormal : subnormal;
   }
 

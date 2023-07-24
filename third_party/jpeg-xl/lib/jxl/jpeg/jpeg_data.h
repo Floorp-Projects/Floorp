@@ -173,7 +173,7 @@ struct JPEGData : public Fields {
   Status VisitFields(Visitor* visitor) override;
 #else
   Status VisitFields(Visitor* /* visitor */) override {
-    JXL_ABORT("JPEG transcoding support not enabled");
+    JXL_UNREACHABLE("JPEG transcoding support not enabled");
   }
 #endif  // JPEGXL_ENABLE_TRANSCODE_JPEG
 
@@ -206,7 +206,7 @@ Status SetJPEGDataFromICC(const PaddedBytes& icc, jpeg::JPEGData* jpeg_data);
 #else
 static JXL_INLINE Status SetJPEGDataFromICC(const PaddedBytes& /* icc */,
                                             jpeg::JPEGData* /* jpeg_data */) {
-  JXL_ABORT("JPEG transcoding support not enabled");
+  JXL_UNREACHABLE("JPEG transcoding support not enabled");
 }
 #endif  // JPEGXL_ENABLE_TRANSCODE_JPEG
 

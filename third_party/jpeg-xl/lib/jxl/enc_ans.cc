@@ -32,7 +32,10 @@ namespace jxl {
 
 namespace {
 
-bool ans_fuzzer_friendly_ = false;
+#if !JXL_IS_DEBUG_BUILD
+constexpr
+#endif
+    bool ans_fuzzer_friendly_ = false;
 
 static const int kMaxNumSymbolsForSmallCode = 4;
 
@@ -1463,7 +1466,7 @@ void ApplyLZ77(const HistogramParams& params, size_t num_contexts,
   } else if (params.lz77_method == HistogramParams::LZ77Method::kOptimal) {
     ApplyLZ77_Optimal(params, num_contexts, tokens, lz77, tokens_lz77);
   } else {
-    JXL_ABORT("Not implemented");
+    JXL_UNREACHABLE("Not implemented");
   }
 }
 }  // namespace

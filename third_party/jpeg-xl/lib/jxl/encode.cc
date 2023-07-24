@@ -375,23 +375,26 @@ JxlEncoderStatus JxlEncoderStruct::RefillOutputByteQueue() {
            level_message)
               .c_str());
     }
-
+    jxl::AuxOut* aux_out =
+        input.frame ? input.frame->option_values.aux_out : nullptr;
     jxl::BitWriter writer;
-    if (!WriteCodestreamHeaders(&metadata, &writer, nullptr)) {
+    if (!WriteCodestreamHeaders(&metadata, &writer, aux_out)) {
       return JXL_API_ERROR(this, JXL_ENC_ERR_GENERIC,
                            "Failed to write codestream header");
     }
     // Only send ICC (at least several hundred bytes) if fields aren't enough.
     if (metadata.m.color_encoding.WantICC()) {
       if (!jxl::WriteICC(metadata.m.color_encoding.ICC(), &writer,
-                         jxl::kLayerHeader, nullptr)) {
+                         jxl::kLayerHeader, aux_out)) {
         return JXL_API_ERROR(this, JXL_ENC_ERR_GENERIC,
                              "Failed to write ICC profile");
       }
     }
     // TODO(lode): preview should be added here if a preview image is added
 
+    jxl::BitWriter::Allotment allotment(&writer, 8);
     writer.ZeroPadToByte();
+    allotment.ReclaimAndCharge(&writer, jxl::kLayerHeader, aux_out);
 
     // Not actually the end of frame, but the end of metadata/ICC, but helps
     // the next frame to start here for indexing purposes.
@@ -564,7 +567,7 @@ JxlEncoderStatus JxlEncoderStruct::RefillOutputByteQueue() {
       if (!jxl::EncodeFrame(input_frame->option_values.cparams, frame_info,
                             &metadata, input_frame->frame, &enc_state, cms,
                             thread_pool.get(), &writer,
-                            /*aux_out=*/nullptr)) {
+                            input_frame->option_values.aux_out)) {
         return JXL_API_ERROR(this, JXL_ENC_ERR_GENERIC,
                              "Failed to encode frame");
       }
@@ -692,7 +695,8 @@ JxlEncoderStatus JxlEncoderSetICCProfile(JxlEncoder* enc,
   }
   jxl::PaddedBytes icc;
   icc.assign(icc_profile, icc_profile + size);
-  if (!enc->metadata.m.color_encoding.SetICC(std::move(icc))) {
+  if (!enc->metadata.m.color_encoding.SetICC(
+          std::move(icc), enc->cms_set ? &enc->cms : nullptr)) {
     return JXL_API_ERROR(enc, JXL_ENC_ERR_BAD_INPUT,
                          "ICC profile could not be set");
   }
@@ -715,8 +719,8 @@ JxlEncoderStatus JxlEncoderSetICCProfile(JxlEncoder* enc,
     jxl::SetIntensityTarget(&enc->metadata.m);
   }
 
-  if (!enc->basic_info.uses_original_profile) {
-    enc->metadata.m.color_encoding.DecideIfWantICC();
+  if (!enc->basic_info.uses_original_profile && enc->cms_set) {
+    enc->metadata.m.color_encoding.DecideIfWantICC(enc->cms);
   }
 
   return JXL_ENC_SUCCESS;
@@ -1275,6 +1279,13 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
     case JXL_ENC_FRAME_SETTING_JPEG_COMPRESS_BOXES:
       frame_settings->values.cparams.jpeg_compress_boxes = value;
       return JXL_ENC_SUCCESS;
+    case JXL_ENC_FRAME_SETTING_BUFFERING:
+      if (value < 0 || value > 3) {
+        return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
+                             "Buffering has to be in [0..3]");
+      }
+      return JXL_ENC_SUCCESS;
+
     default:
       return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
                            "Unknown option");
@@ -1364,6 +1375,7 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetFloatOption(
     case JXL_ENC_FRAME_SETTING_BROTLI_EFFORT:
     case JXL_ENC_FRAME_SETTING_FILL_ENUM:
     case JXL_ENC_FRAME_SETTING_JPEG_COMPRESS_BOXES:
+    case JXL_ENC_FRAME_SETTING_BUFFERING:
       return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
                            "Int option, try setting it with "
                            "JxlEncoderFrameSettingsSetOption");
@@ -1385,6 +1397,7 @@ JxlEncoder* JxlEncoderCreate(const JxlMemoryManager* memory_manager) {
   enc->memory_manager = local_memory_manager;
   // TODO(sboukortt): add an API function to set this.
   enc->cms = jxl::GetJxlCms();
+  enc->cms_set = true;
 
   // Initialize all the field values.
   JxlEncoderReset(enc);
@@ -1467,6 +1480,7 @@ int JxlEncoderGetRequiredCodestreamLevel(const JxlEncoder* enc) {
 void JxlEncoderSetCms(JxlEncoder* enc, JxlCmsInterface cms) {
   jxl::msan::MemoryIsInitialized(&cms, sizeof(cms));
   enc->cms = cms;
+  enc->cms_set = true;
 }
 
 JxlEncoderStatus JxlEncoderSetParallelRunner(JxlEncoder* enc,
@@ -2082,4 +2096,93 @@ void JxlColorEncodingSetToLinearSRGB(JxlColorEncoding* color_encoding,
 
 void JxlEncoderAllowExpertOptions(JxlEncoder* enc) {
   enc->allow_expert_options = true;
+}
+
+JXL_EXPORT void JxlEncoderSetDebugImageCallback(
+    JxlEncoderFrameSettings* frame_settings, JxlDebugImageCallback callback,
+    void* opaque) {
+  frame_settings->values.cparams.debug_image = callback;
+  frame_settings->values.cparams.debug_image_opaque = opaque;
+}
+
+JXL_EXPORT JxlEncoderStats* JxlEncoderStatsCreate() {
+  return new JxlEncoderStats();
+}
+
+JXL_EXPORT void JxlEncoderStatsDestroy(JxlEncoderStats* stats) {
+  if (stats) delete stats;
+}
+
+JXL_EXPORT void JxlEncoderCollectStats(JxlEncoderFrameSettings* frame_settings,
+                                       JxlEncoderStats* stats) {
+  if (!stats) return;
+  frame_settings->values.aux_out = &stats->aux_out;
+}
+
+JXL_EXPORT size_t JxlEncoderStatsGet(const JxlEncoderStats* stats,
+                                     JxlEncoderStatsKey key) {
+  if (!stats) return 0;
+  const jxl::AuxOut& aux_out = stats->aux_out;
+  switch (key) {
+    case JXL_ENC_STAT_HEADER_BITS:
+      return aux_out.layers[jxl::kLayerHeader].total_bits;
+    case JXL_ENC_STAT_TOC_BITS:
+      return aux_out.layers[jxl::kLayerTOC].total_bits;
+    case JXL_ENC_STAT_DICTIONARY_BITS:
+      return aux_out.layers[jxl::kLayerDictionary].total_bits;
+    case JXL_ENC_STAT_SPLINES_BITS:
+      return aux_out.layers[jxl::kLayerSplines].total_bits;
+    case JXL_ENC_STAT_NOISE_BITS:
+      return aux_out.layers[jxl::kLayerNoise].total_bits;
+    case JXL_ENC_STAT_QUANT_BITS:
+      return aux_out.layers[jxl::kLayerQuant].total_bits;
+    case JXL_ENC_STAT_MODULAR_TREE_BITS:
+      return aux_out.layers[jxl::kLayerModularTree].total_bits;
+    case JXL_ENC_STAT_MODULAR_GLOBAL_BITS:
+      return aux_out.layers[jxl::kLayerModularGlobal].total_bits;
+    case JXL_ENC_STAT_DC_BITS:
+      return aux_out.layers[jxl::kLayerDC].total_bits;
+    case JXL_ENC_STAT_MODULAR_DC_GROUP_BITS:
+      return aux_out.layers[jxl::kLayerModularDcGroup].total_bits;
+    case JXL_ENC_STAT_CONTROL_FIELDS_BITS:
+      return aux_out.layers[jxl::kLayerControlFields].total_bits;
+    case JXL_ENC_STAT_COEF_ORDER_BITS:
+      return aux_out.layers[jxl::kLayerOrder].total_bits;
+    case JXL_ENC_STAT_AC_HISTOGRAM_BITS:
+      return aux_out.layers[jxl::kLayerAC].total_bits;
+    case JXL_ENC_STAT_AC_BITS:
+      return aux_out.layers[jxl::kLayerACTokens].total_bits;
+    case JXL_ENC_STAT_MODULAR_AC_GROUP_BITS:
+      return aux_out.layers[jxl::kLayerModularAcGroup].total_bits;
+    case JXL_ENC_STAT_NUM_SMALL_BLOCKS:
+      return aux_out.num_small_blocks;
+    case JXL_ENC_STAT_NUM_DCT4X8_BLOCKS:
+      return aux_out.num_dct4x8_blocks;
+    case JXL_ENC_STAT_NUM_AFV_BLOCKS:
+      return aux_out.num_afv_blocks;
+    case JXL_ENC_STAT_NUM_DCT8_BLOCKS:
+      return aux_out.num_dct8_blocks;
+    case JXL_ENC_STAT_NUM_DCT8X32_BLOCKS:
+      return aux_out.num_dct16_blocks;
+    case JXL_ENC_STAT_NUM_DCT16_BLOCKS:
+      return aux_out.num_dct16x32_blocks;
+    case JXL_ENC_STAT_NUM_DCT16X32_BLOCKS:
+      return aux_out.num_dct32_blocks;
+    case JXL_ENC_STAT_NUM_DCT32_BLOCKS:
+      return aux_out.num_dct32x64_blocks;
+    case JXL_ENC_STAT_NUM_DCT32X64_BLOCKS:
+      return aux_out.num_dct32x64_blocks;
+    case JXL_ENC_STAT_NUM_DCT64_BLOCKS:
+      return aux_out.num_dct64_blocks;
+    case JXL_ENC_STAT_NUM_BUTTERAUGLI_ITERS:
+      return aux_out.num_butteraugli_iters;
+    default:
+      return 0;
+  }
+}
+
+JXL_EXPORT void JxlEncoderStatsMerge(JxlEncoderStats* stats,
+                                     const JxlEncoderStats* other) {
+  if (!stats || !other) return;
+  stats->aux_out.Assimilate(other->aux_out);
 }

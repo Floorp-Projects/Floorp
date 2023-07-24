@@ -522,98 +522,32 @@ bool EncodeDCTBlockSequential(const coeff_t* coeffs, HuffmanCodeTable* dc_huff,
   WriteBits(bw, dc_nbits, temp & ((1u << dc_nbits) - 1));
   int16_t r = 0;
 
-  // Manually unfolded loop over kJPEGNaturalOrder[k] for k=1..63
-#define kloop(jpeg_natural_order_of_k)                            \
-  {                                                               \
-    if ((temp = coeffs[jpeg_natural_order_of_k]) == 0) {          \
-      r++;                                                        \
-    } else {                                                      \
-      temp2 = temp >> (8 * sizeof(coeff_t) - 1);                  \
-      temp += temp2;                                              \
-      temp2 ^= temp;                                              \
-      if (JXL_UNLIKELY(r > 15)) {                                 \
-        WriteSymbol<kOutputMode>(0xf0, ac_huff, bw);              \
-        r -= 16;                                                  \
-      }                                                           \
-      if (JXL_UNLIKELY(r > 15)) {                                 \
-        WriteSymbol<kOutputMode>(0xf0, ac_huff, bw);              \
-        r -= 16;                                                  \
-      }                                                           \
-      if (JXL_UNLIKELY(r > 15)) {                                 \
-        WriteSymbol<kOutputMode>(0xf0, ac_huff, bw);              \
-        r -= 16;                                                  \
-      }                                                           \
-      int ac_nbits = FloorLog2Nonzero<uint32_t>(temp2) + 1;       \
-      int symbol = (r << 4u) + ac_nbits;                          \
-      WriteSymbolBits<kOutputMode>(symbol, ac_huff, bw, ac_nbits, \
-                                   temp & ((1 << ac_nbits) - 1)); \
-      r = 0;                                                      \
-    }                                                             \
+  for (size_t i = 1; i < 64; i++) {
+    if ((temp = coeffs[kJPEGNaturalOrder[i]]) == 0) {
+      r++;
+    } else {
+      temp2 = temp >> (8 * sizeof(coeff_t) - 1);
+      temp += temp2;
+      temp2 ^= temp;
+      if (JXL_UNLIKELY(r > 15)) {
+        WriteSymbol<kOutputMode>(0xf0, ac_huff, bw);
+        r -= 16;
+      }
+      if (JXL_UNLIKELY(r > 15)) {
+        WriteSymbol<kOutputMode>(0xf0, ac_huff, bw);
+        r -= 16;
+      }
+      if (JXL_UNLIKELY(r > 15)) {
+        WriteSymbol<kOutputMode>(0xf0, ac_huff, bw);
+        r -= 16;
+      }
+      int ac_nbits = FloorLog2Nonzero<uint32_t>(temp2) + 1;
+      int symbol = (r << 4u) + ac_nbits;
+      WriteSymbolBits<kOutputMode>(symbol, ac_huff, bw, ac_nbits,
+                                   temp & ((1 << ac_nbits) - 1));
+      r = 0;
+    }
   }
-
-  kloop(1);
-  kloop(8);
-  kloop(16);
-  kloop(9);
-  kloop(2);
-  kloop(3);
-  kloop(10);
-  kloop(17);
-  kloop(24);
-  kloop(32);
-  kloop(25);
-  kloop(18);
-  kloop(11);
-  kloop(4);
-  kloop(5);
-  kloop(12);
-  kloop(19);
-  kloop(26);
-  kloop(33);
-  kloop(40);
-  kloop(48);
-  kloop(41);
-  kloop(34);
-  kloop(27);
-  kloop(20);
-  kloop(13);
-  kloop(6);
-  kloop(7);
-  kloop(14);
-  kloop(21);
-  kloop(28);
-  kloop(35);
-  kloop(42);
-  kloop(49);
-  kloop(56);
-  kloop(57);
-  kloop(50);
-  kloop(43);
-  kloop(36);
-  kloop(29);
-  kloop(22);
-  kloop(15);
-  kloop(23);
-  kloop(30);
-  kloop(37);
-  kloop(44);
-  kloop(51);
-  kloop(58);
-  kloop(59);
-  kloop(52);
-  kloop(45);
-  kloop(38);
-  kloop(31);
-  kloop(39);
-  kloop(46);
-  kloop(53);
-  kloop(60);
-  kloop(61);
-  kloop(54);
-  kloop(47);
-  kloop(55);
-  kloop(62);
-  kloop(63);
 
   for (int i = 0; i < num_zero_runs; ++i) {
     WriteSymbol<kOutputMode>(0xf0, ac_huff, bw);

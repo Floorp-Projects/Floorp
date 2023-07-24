@@ -7,18 +7,10 @@
 
 #include <locale>
 
-#if JPEGXL_ENABLE_APNG
 #include "lib/extras/dec/apng.h"
-#endif
-#if JPEGXL_ENABLE_EXR
 #include "lib/extras/dec/exr.h"
-#endif
-#if JPEGXL_ENABLE_GIF
 #include "lib/extras/dec/gif.h"
-#endif
-#if JPEGXL_ENABLE_JPEG
 #include "lib/extras/dec/jpg.h"
-#endif
 #include "lib/extras/dec/jxl.h"
 #include "lib/extras/dec/pgx.h"
 #include "lib/extras/dec/pnm.h"
@@ -52,25 +44,6 @@ void BasenameAndExtension(std::string path, std::string* basename,
 }
 
 }  // namespace
-
-std::vector<Codec> AvailableCodecs() {
-  std::vector<Codec> out;
-#if JPEGXL_ENABLE_APNG
-  out.push_back(Codec::kPNG);
-#endif
-#if JPEGXL_ENABLE_EXR
-  out.push_back(Codec::kEXR);
-#endif
-#if JPEGXL_ENABLE_GIF
-  out.push_back(Codec::kGIF);
-#endif
-#if JPEGXL_ENABLE_JPEG
-  out.push_back(Codec::kJPG);
-#endif
-  out.push_back(Codec::kPGX);
-  out.push_back(Codec::kPNM);
-  return out;
-}
 
 Codec CodecFromPath(std::string path, size_t* JXL_RESTRICT bits_per_sample,
                     std::string* basename, std::string* extension) {
@@ -106,6 +79,25 @@ Codec CodecFromPath(std::string path, size_t* JXL_RESTRICT bits_per_sample,
   return Codec::kUnknown;
 }
 
+bool CanDecode(Codec codec) {
+  switch (codec) {
+    case Codec::kEXR:
+      return CanDecodeEXR();
+    case Codec::kGIF:
+      return CanDecodeGIF();
+    case Codec::kJPG:
+      return CanDecodeJPG();
+    case Codec::kPNG:
+      return CanDecodeAPNG();
+    case Codec::kPNM:
+    case Codec::kPGX:
+    case Codec::kJXL:
+      return true;
+    default:
+      return false;
+  }
+}
+
 Status DecodeBytes(const Span<const uint8_t> bytes,
                    const ColorHints& color_hints, extras::PackedPixelFile* ppf,
                    const SizeConstraints* constraints, Codec* orig_codec) {
@@ -118,11 +110,9 @@ Status DecodeBytes(const Span<const uint8_t> bytes,
   ppf->info.orientation = JXL_ORIENT_IDENTITY;
 
   const auto choose_codec = [&]() -> Codec {
-#if JPEGXL_ENABLE_APNG
     if (DecodeImageAPNG(bytes, color_hints, ppf, constraints)) {
       return Codec::kPNG;
     }
-#endif
     if (DecodeImagePGX(bytes, color_hints, ppf, constraints)) {
       return Codec::kPGX;
     }
@@ -135,21 +125,15 @@ Status DecodeBytes(const Span<const uint8_t> bytes,
                        ppf)) {
       return Codec::kJXL;
     }
-#if JPEGXL_ENABLE_GIF
     if (DecodeImageGIF(bytes, color_hints, ppf, constraints)) {
       return Codec::kGIF;
     }
-#endif
-#if JPEGXL_ENABLE_JPEG
     if (DecodeImageJPG(bytes, color_hints, ppf, constraints)) {
       return Codec::kJPG;
     }
-#endif
-#if JPEGXL_ENABLE_EXR
     if (DecodeImageEXR(bytes, color_hints, ppf, constraints)) {
       return Codec::kEXR;
     }
-#endif
     return Codec::kUnknown;
   };
 

@@ -225,6 +225,7 @@ void JxlFastLosslessPrepareHeader(JxlFastLosslessFrameState* frame,
 
   bool have_alpha = (frame->nb_chans == 2 || frame->nb_chans == 4);
 
+#if FJXL_STANDALONE
   if (add_image_header) {
     // Signature
     output->Write(16, 0x0AFF);
@@ -301,6 +302,9 @@ void JxlFastLosslessPrepareHeader(JxlFastLosslessFrameState* frame,
     // No ICC, no preview. Frame should start at byte boundery.
     output->ZeroPadToByte();
   }
+#else
+  assert(!add_image_header);
+#endif
 
   // Handcrafted frame header.
   output->Write(1, 0);     // all_default
@@ -3800,6 +3804,7 @@ namespace AVX512 {
 
 extern "C" {
 
+#if FJXL_STANDALONE
 size_t JxlFastLosslessEncode(const unsigned char* rgba, size_t width,
                              size_t row_stride, size_t height, size_t nb_chans,
                              size_t bitdepth, int big_endian, int effort,
@@ -3820,6 +3825,7 @@ size_t JxlFastLosslessEncode(const unsigned char* rgba, size_t width,
   }
   return total;
 }
+#endif
 
 JxlFastLosslessFrameState* JxlFastLosslessPrepareFrame(
     const unsigned char* rgba, size_t width, size_t row_stride, size_t height,

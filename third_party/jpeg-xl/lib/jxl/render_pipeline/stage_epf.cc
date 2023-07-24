@@ -516,7 +516,7 @@ std::unique_ptr<RenderPipelineStage> GetEPFStage(const LoopFilter& lf,
     case 2:
       return HWY_DYNAMIC_DISPATCH(GetEPFStage2)(lf, sigma);
     default:
-      JXL_ABORT("Invalid EPF stage");
+      JXL_UNREACHABLE("Invalid EPF stage");
   }
 }
 

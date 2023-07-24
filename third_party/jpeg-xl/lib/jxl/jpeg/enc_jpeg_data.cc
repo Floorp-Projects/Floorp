@@ -230,7 +230,7 @@ Status SetColorEncodingFromJpegData(const jpeg::JPEGData& jpg,
     return true;
   }
 
-  return color_encoding->SetICC(std::move(icc_profile));
+  return color_encoding->SetICC(std::move(icc_profile), /*cms=*/nullptr);
 }
 
 Status EncodeJPEGData(JPEGData& jpeg_data, PaddedBytes* bytes,

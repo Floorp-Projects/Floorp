@@ -46,14 +46,6 @@ bool OutOfBounds(size_t a, size_t b, size_t size) {
   return false;
 }
 
-bool SumOverflows(size_t a, size_t b, size_t c) {
-  size_t sum = a + b;
-  if (sum < b) return true;
-  sum += c;
-  if (sum < c) return true;
-  return false;
-}
-
 JXL_INLINE size_t InitialBasicInfoSizeHint() {
   // Amount of bytes before the start of the codestream in the container format,
   // assuming that the codestream is the first box after the signature and
@@ -85,11 +77,21 @@ JXL_INLINE size_t InitialBasicInfoSizeHint() {
    JXL_DEC_ERROR)
 #endif  // JXL_CRASH_ON_ERROR
 
+// Error caused by bad input (invalid file) rather than incorrect API usage.
+// For now there is no way to distinguish these two types of errors yet.
+#define JXL_INPUT_ERROR(format, ...) JXL_API_ERROR(format, ##__VA_ARGS__)
+
 JxlDecoderStatus ConvertStatus(JxlDecoderStatus status) { return status; }
 
 JxlDecoderStatus ConvertStatus(jxl::Status status) {
   return status ? JXL_DEC_SUCCESS : JXL_DEC_ERROR;
 }
+
+#define JXL_API_RETURN_IF_ERROR(expr)               \
+  {                                                 \
+    JxlDecoderStatus status_ = ConvertStatus(expr); \
+    if (status_ != JXL_DEC_SUCCESS) return status_; \
+  }
 
 JxlSignature ReadSignature(const uint8_t* buf, size_t len, size_t* pos) {
   if (*pos >= len) return JXL_SIG_NOT_ENOUGH_BYTES;
@@ -165,9 +167,8 @@ uint32_t GetBitDepth(JxlBitDepth bit_depth, const T& metadata,
     return metadata.bit_depth.bits_per_sample;
   } else if (bit_depth.type == JXL_BIT_DEPTH_CUSTOM) {
     return bit_depth.bits_per_sample;
-  } else {
-    return 0;
   }
+  return 0;
 }
 
 enum class DecoderStage : uint32_t {
@@ -842,7 +843,7 @@ void JxlDecoderSkipFrames(JxlDecoder* dec, size_t amount) {
 
 JxlDecoderStatus JxlDecoderSkipCurrentFrame(JxlDecoder* dec) {
   if (dec->frame_stage != FrameStage::kFull) {
-    return JXL_DEC_ERROR;
+    return JXL_API_ERROR("JxlDecoderSkipCurrentFrame called at the wrong time");
   }
   JXL_DASSERT(dec->frame_dec);
   dec->frame_stage = FrameStage::kHeader;
@@ -857,7 +858,8 @@ JXL_EXPORT JxlDecoderStatus
 JxlDecoderSetParallelRunner(JxlDecoder* dec, JxlParallelRunner parallel_runner,
                             void* parallel_runner_opaque) {
   if (dec->stage != DecoderStage::kInited) {
-    return JXL_API_ERROR("parallel_runner must be set before starting");
+    return JXL_API_ERROR(
+        "JxlDecoderSetParallelRunner must be called before starting");
   }
   dec->thread_pool.reset(
       new jxl::ThreadPool(parallel_runner, parallel_runner_opaque));
@@ -965,12 +967,6 @@ JxlDecoderStatus ReadBundle(JxlDecoder* dec, Span<const uint8_t> data,
   return JXL_DEC_SUCCESS;
 }
 
-#define JXL_API_RETURN_IF_ERROR(expr)               \
-  {                                                 \
-    JxlDecoderStatus status_ = ConvertStatus(expr); \
-    if (status_ != JXL_DEC_SUCCESS) return status_; \
-  }
-
 std::unique_ptr<BitReader, std::function<void(BitReader*)>> GetBitReader(
     Span<const uint8_t> span) {
   BitReader* reader = new BitReader(span);
@@ -995,7 +991,7 @@ JxlDecoderStatus JxlDecoderReadBasicInfo(JxlDecoder* dec) {
       return dec->RequestMoreInput();
     }
     if (span.data()[0] != 0xff || span.data()[1] != jxl::kCodestreamMarker) {
-      return JXL_API_ERROR("invalid signature");
+      return JXL_INPUT_ERROR("invalid signature");
     }
     dec->got_codestream_signature = true;
     dec->AdvanceCodestream(2);
@@ -1018,7 +1014,7 @@ JxlDecoderStatus JxlDecoderReadBasicInfo(JxlDecoder* dec) {
 
   if (!CheckSizeLimit(dec, dec->metadata.size.xsize(),
                       dec->metadata.size.ysize())) {
-    return JXL_API_ERROR("image is too large");
+    return JXL_INPUT_ERROR("image is too large");
   }
 
   return JXL_DEC_SUCCESS;
@@ -1135,17 +1131,17 @@ JxlDecoderStatus JxlDecoderProcessSections(JxlDecoder* dec) {
     // If any bit reader indicates out of bounds, it's an error, not just
     // needing more input, since we ensure only bit readers containing
     // a complete section are provided to the FrameDecoder.
-    return JXL_API_ERROR("frame out of bounds");
+    return JXL_INPUT_ERROR("frame out of bounds");
   }
   if (!status) {
-    return JXL_API_ERROR("frame processing failed");
+    return JXL_INPUT_ERROR("frame processing failed");
   }
   for (size_t i = 0; i < section_status.size(); ++i) {
     auto status = section_status[i];
     if (status == jxl::FrameDecoder::kDone) {
       dec->section_processed[section_info[i].index] = 1;
     } else if (status != jxl::FrameDecoder::kSkipped) {
-      return JXL_API_ERROR("unexpected section status");
+      return JXL_INPUT_ERROR("unexpected section status");
     }
   }
   size_t completed_prefix_bytes = 0;
@@ -1250,14 +1246,14 @@ JxlDecoderStatus JxlDecoderProcessCodestream(JxlDecoder* dec) {
           status.code() == StatusCode::kNotEnoughBytes) {
         return dec->RequestMoreInput();
       } else if (!status) {
-        return JXL_API_ERROR("invalid frame header");
+        return JXL_INPUT_ERROR("invalid frame header");
       }
       dec->AdvanceCodestream(reader->TotalBitsConsumed() / kBitsPerByte);
       *dec->frame_header = dec->frame_dec->GetFrameHeader();
       jxl::FrameDimensions frame_dim = dec->frame_header->ToFrameDimensions();
       if (!CheckSizeLimit(dec, frame_dim.xsize_upsampled_padded,
                           frame_dim.ysize_upsampled_padded)) {
-        return JXL_API_ERROR("frame is too large");
+        return JXL_INPUT_ERROR("frame is too large");
       }
       bool output_needed =
           (dec->preview_frame ? (dec->events_wanted & JXL_DEC_PREVIEW_IMAGE)
@@ -1269,11 +1265,11 @@ JxlDecoderStatus JxlDecoderProcessCodestream(JxlDecoder* dec) {
         // No overflow, checked in CheckSizeLimit.
         size_t num_pixels = frame_dim.xsize * frame_dim.ysize;
         if (dec->used_cpu_base + num_pixels < dec->used_cpu_base) {
-          return JXL_API_ERROR("used too much CPU");
+          return JXL_INPUT_ERROR("image too large");
         }
         dec->used_cpu_base += num_pixels;
         if (dec->used_cpu_base > dec->cpu_limit_base) {
-          return JXL_API_ERROR("used too much CPU");
+          return JXL_INPUT_ERROR("image too large");
         }
       }
       dec->remaining_frame_size = dec->frame_dec->SumSectionSizes();
@@ -1472,7 +1468,7 @@ JxlDecoderStatus JxlDecoderProcessCodestream(JxlDecoder* dec) {
       }
 
       if (!dec->frame_dec->FinalizeFrame()) {
-        return JXL_API_ERROR("decoding frame failed");
+        return JXL_INPUT_ERROR("decoding frame failed");
       }
 #if JPEGXL_ENABLE_TRANSCODE_JPEG
       // If jpeg output was requested, we merely return the JXL_DEC_FULL_IMAGE
@@ -1601,10 +1597,10 @@ static JxlDecoderStatus ParseBoxHeader(const uint8_t* in, size_t size,
   pos += 4;
   *header_size = pos - box_start;
   if (*box_size > 0 && *box_size < *header_size) {
-    return JXL_API_ERROR("invalid box size");
+    return JXL_INPUT_ERROR("invalid box size");
   }
-  if (SumOverflows(file_pos, pos, *box_size)) {
-    return JXL_API_ERROR("Box size overflow");
+  if (file_pos + *box_size < file_pos) {
+    return JXL_INPUT_ERROR("Box size overflow");
   }
   return JXL_DEC_SUCCESS;
 }
@@ -1793,10 +1789,10 @@ static JxlDecoderStatus HandleBoxes(JxlDecoder* dec) {
         return JXL_DEC_SUCCESS;
       }
       if (dec->box_count == 2 && memcmp(dec->box_type, "ftyp", 4) != 0) {
-        return JXL_API_ERROR("the second box must be the ftyp box");
+        return JXL_INPUT_ERROR("the second box must be the ftyp box");
       }
       if (memcmp(dec->box_type, "ftyp", 4) == 0 && dec->box_count != 2) {
-        return JXL_API_ERROR("the ftyp box must come second");
+        return JXL_INPUT_ERROR("the ftyp box must come second");
       }
 
       dec->box_contents_unbounded = (box_size == 0);
@@ -1841,7 +1837,7 @@ static JxlDecoderStatus HandleBoxes(JxlDecoder* dec) {
         dec->box_stage = BoxStage::kFtyp;
       } else if (memcmp(dec->box_type, "jxlc", 4) == 0) {
         if (dec->last_codestream_seen) {
-          return JXL_API_ERROR("there can only be one jxlc box");
+          return JXL_INPUT_ERROR("there can only be one jxlc box");
         }
         dec->last_codestream_seen = true;
         dec->box_stage = BoxStage::kCodestream;
@@ -1851,7 +1847,7 @@ static JxlDecoderStatus HandleBoxes(JxlDecoder* dec) {
       } else if ((dec->orig_events_wanted & JXL_DEC_JPEG_RECONSTRUCTION) &&
                  memcmp(dec->box_type, "jbrd", 4) == 0) {
         if (!(dec->events_wanted & JXL_DEC_JPEG_RECONSTRUCTION)) {
-          return JXL_API_ERROR(
+          return JXL_INPUT_ERROR(
               "multiple JPEG reconstruction boxes not supported");
         }
         dec->box_stage = BoxStage::kJpegRecon;
@@ -1867,22 +1863,22 @@ static JxlDecoderStatus HandleBoxes(JxlDecoder* dec) {
       }
     } else if (dec->box_stage == BoxStage::kFtyp) {
       if (dec->box_contents_size < 12) {
-        return JXL_API_ERROR("file type box too small");
+        return JXL_INPUT_ERROR("file type box too small");
       }
       if (dec->avail_in < 4) return JXL_DEC_NEED_MORE_INPUT;
       if (memcmp(dec->next_in, "jxl ", 4) != 0) {
-        return JXL_API_ERROR("file type box major brand must be \"jxl \"");
+        return JXL_INPUT_ERROR("file type box major brand must be \"jxl \"");
       }
       dec->AdvanceInput(4);
       dec->box_stage = BoxStage::kSkip;
     } else if (dec->box_stage == BoxStage::kPartialCodestream) {
       if (dec->last_codestream_seen) {
-        return JXL_API_ERROR("cannot have jxlp box after last jxlp box");
+        return JXL_INPUT_ERROR("cannot have jxlp box after last jxlp box");
       }
       // TODO(lode): error if box is unbounded but last bit not set
       if (dec->avail_in < 4) return JXL_DEC_NEED_MORE_INPUT;
       if (!dec->box_contents_unbounded && dec->box_contents_size < 4) {
-        return JXL_API_ERROR("jxlp box too small to contain index");
+        return JXL_INPUT_ERROR("jxlp box too small to contain index");
       }
       size_t jxlp_index = LoadBE32(dec->next_in);
       // The high bit of jxlp_index indicates whether this is the last
@@ -1946,22 +1942,22 @@ static JxlDecoderStatus HandleBoxes(JxlDecoder* dec) {
         size_t num_xmp = jxl::JxlToJpegDecoder::NumXmpMarkers(*jpeg_data);
         if (num_exif) {
           if (num_exif > 1) {
-            return JXL_API_ERROR(
+            return JXL_INPUT_ERROR(
                 "multiple exif markers for JPEG reconstruction not supported");
           }
           if (JXL_DEC_SUCCESS != jxl::JxlToJpegDecoder::ExifBoxContentSize(
                                      *jpeg_data, &dec->recon_exif_size)) {
-            return JXL_API_ERROR("invalid jbrd exif size");
+            return JXL_INPUT_ERROR("invalid jbrd exif size");
           }
         }
         if (num_xmp) {
           if (num_xmp > 1) {
-            return JXL_API_ERROR(
+            return JXL_INPUT_ERROR(
                 "multiple XMP markers for JPEG reconstruction not supported");
           }
           if (JXL_DEC_SUCCESS != jxl::JxlToJpegDecoder::XmlBoxContentSize(
                                      *jpeg_data, &dec->recon_xmp_size)) {
-            return JXL_API_ERROR("invalid jbrd XMP size");
+            return JXL_INPUT_ERROR("invalid jbrd XMP size");
           }
         }
 
@@ -2027,10 +2023,10 @@ JxlDecoderStatus JxlDecoderProcessInput(JxlDecoder* dec) {
 
   if (!dec->got_signature) {
     JxlSignature sig = JxlSignatureCheck(dec->next_in, dec->avail_in);
-    if (sig == JXL_SIG_INVALID) return JXL_API_ERROR("invalid signature");
+    if (sig == JXL_SIG_INVALID) return JXL_INPUT_ERROR("invalid signature");
     if (sig == JXL_SIG_NOT_ENOUGH_BYTES) {
       if (dec->input_closed) {
-        return JXL_API_ERROR("file too small for signature");
+        return JXL_INPUT_ERROR("file too small for signature");
       }
       return JXL_DEC_NEED_MORE_INPUT;
     }
@@ -2047,18 +2043,18 @@ JxlDecoderStatus JxlDecoderProcessInput(JxlDecoder* dec) {
   JxlDecoderStatus status = HandleBoxes(dec);
 
   if (status == JXL_DEC_NEED_MORE_INPUT && dec->input_closed) {
-    return JXL_API_ERROR("missing input");
+    return JXL_INPUT_ERROR("premature end of input");
   }
 
   // Even if the box handling returns success, certain types of
   // data may be missing.
   if (status == JXL_DEC_SUCCESS) {
     if (dec->CanUseMoreCodestreamInput()) {
-      return JXL_API_ERROR("codestream never finished");
+      return JXL_INPUT_ERROR("codestream never finished");
     }
 #if JPEGXL_ENABLE_TRANSCODE_JPEG
     if (dec->JbrdNeedMoreBoxes()) {
-      return JXL_API_ERROR("missing metadata boxes for jpeg reconstruction");
+      return JXL_INPUT_ERROR("missing metadata boxes for jpeg reconstruction");
     }
 #endif
   }
@@ -2769,12 +2765,11 @@ template <typename T>
 JxlDecoderStatus VerifyOutputBitDepth(JxlBitDepth bit_depth, const T& metadata,
                                       JxlPixelFormat format) {
   uint32_t bits_per_sample = GetBitDepth(bit_depth, metadata, format);
-  if (format.data_type == JXL_TYPE_UINT8 &&
-      (bits_per_sample == 0 || bits_per_sample > 8)) {
+  if (bits_per_sample == 0) return JXL_API_ERROR("Invalid output bit depth");
+  if (format.data_type == JXL_TYPE_UINT8 && bits_per_sample > 8) {
     return JXL_API_ERROR("Invalid bit depth %u for uint8 output",
                          bits_per_sample);
-  } else if (format.data_type == JXL_TYPE_UINT16 &&
-             (bits_per_sample == 0 || bits_per_sample > 16)) {
+  } else if (format.data_type == JXL_TYPE_UINT16 && bits_per_sample > 16) {
     return JXL_API_ERROR("Invalid bit depth %u for uint16 output",
                          bits_per_sample);
   }

@@ -235,18 +235,8 @@ void StoreFloatRow(const float* JXL_RESTRICT* rows_in, size_t num_channels,
 
 void JXL_INLINE Store8(uint32_t value, uint8_t* dest) { *dest = value & 0xff; }
 
-// Maximum number of channels for the ConvertChannelsToExternal function.
-const size_t kConvertMaxChannels = 4;
+}  // namespace
 
-// Converts a list of channels to an interleaved image, applying transformations
-// when needed.
-// The input channels are given as a (non-const!) array of channel pointers and
-// interleaved in that order.
-//
-// Note: if a pointer in channels[] is nullptr, a 1.0 value will be used
-// instead. This is useful for handling when a user requests an alpha channel
-// from an image that doesn't have one. The first channel in the list may not
-// be nullptr, since it is used to determine the image size.
 Status ConvertChannelsToExternal(const ImageF* channels[], size_t num_channels,
                                  size_t bits_per_sample, bool float_out,
                                  JxlEndianness endianness, size_t stride,
@@ -447,8 +437,6 @@ Status ConvertChannelsToExternal(const ImageF* channels[], size_t num_channels,
   }
   return true;
 }
-
-}  // namespace
 
 Status ConvertToExternal(const jxl::ImageBundle& ib, size_t bits_per_sample,
                          bool float_out, size_t num_channels,

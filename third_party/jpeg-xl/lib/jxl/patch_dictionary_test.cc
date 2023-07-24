@@ -48,10 +48,10 @@ TEST(PatchDictionaryTest, GrayscaleVarDCT) {
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _, &compressed_size));
   EXPECT_LE(compressed_size, 14000u);
   // Without patches: ~1.2
-  EXPECT_LE(
-      ButteraugliDistance(io.frames, io2.frames, cparams.ba_params, GetJxlCms(),
-                          /*distmap=*/nullptr),
-      1.1);
+  EXPECT_LE(ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
+                                GetJxlCms(),
+                                /*distmap=*/nullptr),
+            1.1);
 }
 
 }  // namespace

@@ -28,7 +28,7 @@ BitWriter::Allotment::Allotment(BitWriter* JXL_RESTRICT writer, size_t max_bits)
 BitWriter::Allotment::~Allotment() {
   if (!called_) {
     // Not calling is a bug - unused storage will not be reclaimed.
-    JXL_ABORT("Did not call Allotment::ReclaimUnused");
+    JXL_UNREACHABLE("Did not call Allotment::ReclaimUnused");
   }
 }
 

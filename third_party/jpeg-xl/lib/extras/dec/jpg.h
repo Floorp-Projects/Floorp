@@ -23,6 +23,8 @@ struct SizeConstraints;
 
 namespace extras {
 
+bool CanDecodeJPG();
+
 struct JPGDecompressParams {
   int num_colors = 0;
   bool two_pass_quant = false;

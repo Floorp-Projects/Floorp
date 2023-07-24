@@ -80,7 +80,7 @@ void PerformBlending(const float* const* bg, const float* const* fg,
     } else if (ec_blending[i].mode == PatchBlendMode::kNone) {
       if (xsize) memcpy(tmp.Row(3 + i), bg[3 + i] + x0, xsize * sizeof(**fg));
     } else {
-      JXL_ABORT("Unreachable");
+      JXL_UNREACHABLE("new PatchBlendMode?");
     }
   }
   size_t alpha = color_blending.alpha_channel;
@@ -142,7 +142,7 @@ void PerformBlending(const float* const* bg, const float* const* fg,
       memcpy(tmp.Row(p), bg[p] + x0, xsize * sizeof(**fg));
     }
   } else {
-    JXL_ABORT("Unreachable");
+    JXL_UNREACHABLE("new PatchBlendMode?");
   }
   for (size_t i = 0; i < 3 + num_ec; i++) {
     if (xsize != 0) memcpy(out[i] + x0, tmp.Row(i), xsize * sizeof(**out));

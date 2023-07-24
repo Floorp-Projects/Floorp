@@ -68,10 +68,10 @@ namespace jxl {
 #define JXL_DEBUG_V_LEVEL 0
 #endif  // JXL_DEBUG_V_LEVEL
 
-// Pass -DJXL_DEBUG_ON_ABORT=0 to disable the debug messages on JXL_ASSERT,
-// JXL_CHECK and JXL_ABORT.
+// Pass -DJXL_DEBUG_ON_ABORT={0,1} to force disable/enable the debug messages on
+// JXL_ASSERT, JXL_CHECK and JXL_ABORT.
 #ifndef JXL_DEBUG_ON_ABORT
-#define JXL_DEBUG_ON_ABORT 1
+#define JXL_DEBUG_ON_ABORT JXL_DEBUG_ON_ERROR
 #endif  // JXL_DEBUG_ON_ABORT
 
 // Print a debug message on standard error. You should use the JXL_DEBUG macro
@@ -150,6 +150,21 @@ JXL_NORETURN inline JXL_NOINLINE bool Abort() {
   ((JXL_DEBUG_ON_ABORT) && ::jxl::Debug(("%s:%d: JXL_ABORT: " format "\n"), \
                                         __FILE__, __LINE__, ##__VA_ARGS__), \
    ::jxl::Abort())
+
+// Use this for code paths that are unreachable unless the code would change
+// to make it reachable, in which case it will print a warning and abort in
+// debug builds. In release builds no code is produced for this, so only use
+// this if this path is really unreachable.
+#define JXL_UNREACHABLE(format, ...)                                   \
+  do {                                                                 \
+    if (JXL_DEBUG_WARNING) {                                           \
+      ::jxl::Debug(("%s:%d: JXL_UNREACHABLE: " format "\n"), __FILE__, \
+                   __LINE__, ##__VA_ARGS__);                           \
+      ::jxl::Abort();                                                  \
+    } else {                                                           \
+      JXL_UNREACHABLE_BUILTIN;                                         \
+    }                                                                  \
+  } while (0)
 
 // Does not guarantee running the code, use only for debug mode checks.
 #if JXL_ENABLE_ASSERT

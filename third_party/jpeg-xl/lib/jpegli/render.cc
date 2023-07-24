@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <hwy/aligned_allocator.h>
+#include <vector>
 
 #include "lib/jpegli/color_quantize.h"
 #include "lib/jpegli/color_transform.h"

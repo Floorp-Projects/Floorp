@@ -46,6 +46,7 @@ TEST(PreviewTest, RoundtripGivenPreview) {
   CompressParams cparams;
   cparams.butteraugli_distance = 2.0;
   cparams.speed_tier = SpeedTier::kSquirrel;
+  cparams.SetCms(GetJxlCms());
 
   CodecInOut io2;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _));
@@ -55,13 +56,13 @@ TEST(PreviewTest, RoundtripGivenPreview) {
   EXPECT_EQ(preview_ysize, io2.preview_frame.ysize());
 
   EXPECT_LE(ButteraugliDistance(io.preview_frame, io2.preview_frame,
-                                cparams.ba_params, GetJxlCms(),
+                                ButteraugliParams(), GetJxlCms(),
                                 /*distmap=*/nullptr),
             2.5);
-  EXPECT_LE(
-      ButteraugliDistance(io.Main(), io2.Main(), cparams.ba_params, GetJxlCms(),
-                          /*distmap=*/nullptr),
-      2.5);
+  EXPECT_LE(ButteraugliDistance(io.Main(), io2.Main(), ButteraugliParams(),
+                                GetJxlCms(),
+                                /*distmap=*/nullptr),
+            2.5);
 }
 
 }  // namespace

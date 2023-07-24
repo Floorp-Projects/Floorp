@@ -65,10 +65,6 @@ struct AcStrategyHeuristics {
   PassesEncoderState* enc_state;
 };
 
-// Debug.
-void DumpAcStrategy(const AcStrategyImage& ac_strategy, size_t xsize,
-                    size_t ysize, const char* tag, AuxOut* aux_out);
-
 }  // namespace jxl
 
 #endif  // LIB_JXL_ENC_AC_STRATEGY_H_

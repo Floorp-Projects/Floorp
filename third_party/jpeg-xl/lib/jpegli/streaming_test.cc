@@ -107,7 +107,7 @@ TEST_P(StreamingTestParam, TestStreaming) {
     cinfo.image_width = input.xsize;
     cinfo.image_height = input.ysize;
     cinfo.input_components = input.components;
-    cinfo.in_color_space = input.color_space;
+    cinfo.in_color_space = (J_COLOR_SPACE)input.color_space;
     jpegli_set_defaults(&cinfo);
     cinfo.comp_info[0].v_samp_factor = config.jparams.v_sampling[0];
     jpegli_set_progressive_level(&cinfo, 0);

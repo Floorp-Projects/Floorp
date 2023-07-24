@@ -5,10 +5,12 @@
 
 #include "lib/extras/enc/exr.h"
 
+#if JPEGXL_ENABLE_EXR
 #include <ImfChromaticitiesAttribute.h>
 #include <ImfIO.h>
 #include <ImfRgbaFile.h>
 #include <ImfStandardAttributes.h>
+#endif
 #include <jxl/codestream_header.h>
 
 #include <vector>
@@ -19,6 +21,7 @@
 namespace jxl {
 namespace extras {
 
+#if JPEGXL_ENABLE_EXR
 namespace {
 
 namespace OpenEXR = OPENEXR_IMF_NAMESPACE;
@@ -191,9 +194,14 @@ class EXREncoder : public Encoder {
 };
 
 }  // namespace
+#endif
 
 std::unique_ptr<Encoder> GetEXREncoder() {
+#if JPEGXL_ENABLE_EXR
   return jxl::make_unique<EXREncoder>();
+#else
+  return nullptr;
+#endif
 }
 
 }  // namespace extras

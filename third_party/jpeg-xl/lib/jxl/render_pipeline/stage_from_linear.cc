@@ -166,7 +166,7 @@ std::unique_ptr<RenderPipelineStage> GetFromLinearStage(
         MakePerChannelOp(OpGamma{output_encoding_info.inverse_gamma}));
   } else {
     // This is a programming error.
-    JXL_ABORT("Invalid target encoding");
+    JXL_UNREACHABLE("Invalid target encoding");
   }
 }
 

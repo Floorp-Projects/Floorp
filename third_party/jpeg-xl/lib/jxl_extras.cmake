@@ -6,16 +6,20 @@
 include(compatibility.cmake)
 include(jxl_lists.cmake)
 
-# Object library for those parts of extras that do not depend on jxl internals,
-# jpegli, or external codec libraries. We will create two versions of these
-# object files, one with and one without -DJPEGXL_ENABLE_* definitions for
-# external codec support.
+# Object library for those parts of extras that do not depend on jxl internals
+# or jpegli. We will create two versions of these object files, one with and one
+# without external codec support compiled in.
 list(APPEND JPEGXL_EXTRAS_CORE_SOURCES
   "${JPEGXL_INTERNAL_EXTRAS_SOURCES}"
+  "${JPEGXL_INTERNAL_CODEC_APNG_SOURCES}"
+  "${JPEGXL_INTERNAL_CODEC_EXR_SOURCES}"
+  "${JPEGXL_INTERNAL_CODEC_JPG_SOURCES}"
   "${JPEGXL_INTERNAL_CODEC_JXL_SOURCES}"
   "${JPEGXL_INTERNAL_CODEC_PGX_SOURCES}"
   "${JPEGXL_INTERNAL_CODEC_PNM_SOURCES}"
   "${JPEGXL_INTERNAL_CODEC_NPY_SOURCES}"
+  extras/dec/gif.cc
+  extras/dec/gif.h
 )
 foreach(LIB jxl_extras_core-obj jxl_extras_core_nocodec-obj)
   add_library("${LIB}" OBJECT "${JPEGXL_EXTRAS_CORE_SOURCES}")
@@ -23,34 +27,20 @@ foreach(LIB jxl_extras_core-obj jxl_extras_core_nocodec-obj)
 endforeach()
 list(APPEND JXL_EXTRAS_OBJECTS $<TARGET_OBJECTS:jxl_extras_core-obj>)
 
-# Object library for those parts of extras that depend on jxl internals, with
-# and without codec support.
-foreach(LIB jxl_extras_internal-obj jxl_extras_internal_nocodec-obj)
-  add_library("${LIB}" OBJECT
-    "${JPEGXL_INTERNAL_EXTRAS_FOR_TOOLS_SOURCES}"
-  )
-  list(APPEND JXL_EXTRAS_OBJECT_LIBRARIES "${LIB}")
-endforeach()
+# Object library for those parts of extras that depend on jxl internals.
+add_library(jxl_extras_internal-obj OBJECT
+  "${JPEGXL_INTERNAL_EXTRAS_FOR_TOOLS_SOURCES}"
+)
+list(APPEND JXL_EXTRAS_OBJECT_LIBRARIES jxl_extras_internal-obj)
 list(APPEND JXL_EXTRAS_OBJECTS $<TARGET_OBJECTS:jxl_extras_internal-obj>)
 
-# Object library for encoders/decoders that depend on external codec libraries.
-# The actual sources, dependencies and compile definitions will be populated
-# later based on what codecs we find.
-add_library(jxl_extras_codec-obj OBJECT)
-list(APPEND JXL_EXTRAS_OBJECT_LIBRARIES jxl_extras_codec-obj)
-list(APPEND JXL_EXTRAS_OBJECTS $<TARGET_OBJECTS:jxl_extras_codec-obj>)
 set(JXL_EXTRAS_CODEC_INTERNAL_LIBRARIES)
-set(JXL_EXTRAS_CODEC_PUBLIC_DEFINITIONS)
 
 find_package(GIF 5.1)
 if(GIF_FOUND)
-  target_sources(jxl_extras_codec-obj PRIVATE
-    extras/dec/gif.cc
-    extras/dec/gif.h
-  )
-  target_include_directories(jxl_extras_codec-obj PRIVATE "${GIF_INCLUDE_DIRS}")
+  target_include_directories(jxl_extras_core-obj PRIVATE "${GIF_INCLUDE_DIRS}")
+  target_compile_definitions(jxl_extras_core-obj PRIVATE -DJPEGXL_ENABLE_GIF=1)
   list(APPEND JXL_EXTRAS_CODEC_INTERNAL_LIBRARIES ${GIF_LIBRARIES})
-  list(APPEND JXL_EXTRAS_CODEC_PUBLIC_DEFINITIONS -DJPEGXL_ENABLE_GIF=1)
   if(JPEGXL_DEP_LICENSE_DIR)
     configure_file("${JPEGXL_DEP_LICENSE_DIR}/libgif-dev/copyright"
                    ${PROJECT_BINARY_DIR}/LICENSE.libgif COPYONLY)
@@ -59,29 +49,29 @@ endif()
 
 find_package(JPEG)
 if(JPEG_FOUND)
-  target_sources(jxl_extras_codec-obj PRIVATE
-    "${JPEGXL_INTERNAL_CODEC_JPG_SOURCES}"
-  )
-  target_include_directories(jxl_extras_codec-obj PRIVATE
-    "${JPEG_INCLUDE_DIRS}"
-  )
+  target_include_directories(jxl_extras_core-obj PRIVATE "${JPEG_INCLUDE_DIRS}")
+  target_compile_definitions(jxl_extras_core-obj PRIVATE -DJPEGXL_ENABLE_JPEG=1)
   list(APPEND JXL_EXTRAS_CODEC_INTERNAL_LIBRARIES ${JPEG_LIBRARIES})
-  list(APPEND JXL_EXTRAS_CODEC_PUBLIC_DEFINITIONS -DJPEGXL_ENABLE_JPEG=1)
   if(JPEGXL_DEP_LICENSE_DIR)
     configure_file("${JPEGXL_DEP_LICENSE_DIR}/libjpeg-dev/copyright"
                    ${PROJECT_BINARY_DIR}/LICENSE.libjpeg COPYONLY)
   endif()  # JPEGXL_DEP_LICENSE_DIR
 endif()
 
-if(JPEG_FOUND AND JPEGXL_ENABLE_JPEGLI)
+if (JPEGXL_ENABLE_SJPEG)
+  target_compile_definitions(jxl_extras_core-obj PRIVATE
+    -DJPEGXL_ENABLE_SJPEG=1)
+  target_include_directories(jxl_extras_core-obj PRIVATE
+    ../third_party/sjpeg/src)
+  list(APPEND JXL_EXTRAS_CODEC_INTERNAL_LIBRARIES sjpeg)
+endif()
+
+if(JPEGXL_ENABLE_JPEGLI)
   add_library(jxl_extras_jpegli-obj OBJECT
     "${JPEGXL_INTERNAL_CODEC_JPEGLI_SOURCES}"
   )
-  target_compile_definitions(jxl_extras_jpegli-obj PRIVATE
-    -DJPEGXL_ENABLE_JPEGLI=1
-  )
   target_include_directories(jxl_extras_jpegli-obj PRIVATE
-    "${JPEG_INCLUDE_DIRS}"
+    "${CMAKE_CURRENT_BINARY_DIR}/include/jpegli"
   )
   list(APPEND JXL_EXTRAS_OBJECT_LIBRARIES jxl_extras_jpegli-obj)
   list(APPEND JXL_EXTRAS_OBJECTS $<TARGET_OBJECTS:jxl_extras_jpegli-obj>)
@@ -91,12 +81,9 @@ if(NOT JPEGXL_BUNDLE_LIBPNG)
   find_package(PNG)
 endif()
 if(PNG_FOUND)
-  target_sources(jxl_extras_codec-obj PRIVATE
-    "${JPEGXL_INTERNAL_CODEC_APNG_SOURCES}"
-  )
-  target_include_directories(jxl_extras_codec-obj PRIVATE "${PNG_INCLUDE_DIRS}")
+  target_include_directories(jxl_extras_core-obj PRIVATE "${PNG_INCLUDE_DIRS}")
+  target_compile_definitions(jxl_extras_core-obj PRIVATE -DJPEGXL_ENABLE_APNG=1)
   list(APPEND JXL_EXTRAS_CODEC_INTERNAL_LIBRARIES ${PNG_LIBRARIES})
-  list(APPEND JXL_EXTRAS_CODEC_PUBLIC_DEFINITIONS -DJPEGXL_ENABLE_APNG=1)
   configure_file(extras/LICENSE.apngdis
                  ${PROJECT_BINARY_DIR}/LICENSE.apngdis COPYONLY)
 endif()
@@ -104,13 +91,10 @@ endif()
 if (JPEGXL_ENABLE_OPENEXR)
 pkg_check_modules(OpenEXR IMPORTED_TARGET OpenEXR)
 if (OpenEXR_FOUND)
-  target_sources(jxl_extras_codec-obj PRIVATE
-    "${JPEGXL_INTERNAL_CODEC_EXR_SOURCES}"
-  )
-  list(APPEND JXL_EXTRAS_CODEC_PUBLIC_DEFINITIONS -DJPEGXL_ENABLE_EXR=1)
-  target_include_directories(jxl_extras_codec-obj PRIVATE
+  target_include_directories(jxl_extras_core-obj PRIVATE
     "${OpenEXR_INCLUDE_DIRS}"
   )
+  target_compile_definitions(jxl_extras_core-obj PRIVATE -DJPEGXL_ENABLE_EXR=1)
   list(APPEND JXL_EXTRAS_CODEC_INTERNAL_LIBRARIES PkgConfig::OpenEXR)
   if(JPEGXL_DEP_LICENSE_DIR)
     configure_file("${JPEGXL_DEP_LICENSE_DIR}/libopenexr-dev/copyright"
@@ -143,17 +127,11 @@ foreach(LIB ${JXL_EXTRAS_OBJECT_LIBRARIES})
   )
 endforeach()
 
-foreach(LIB jxl_extras_core-obj jxl_extras_internal-obj jxl_extras_codec-obj)
-  target_compile_definitions("${LIB}" PUBLIC
-    ${JXL_EXTRAS_CODEC_PUBLIC_DEFINITIONS}
-  )
-endforeach()
-
 # Define an extras library that does not have the image codecs, only the core
 # extras code. This is needed for some of the fuzzers.
 add_library(jxl_extras_nocodec-static STATIC EXCLUDE_FROM_ALL
   $<TARGET_OBJECTS:jxl_extras_core_nocodec-obj>
-  $<TARGET_OBJECTS:jxl_extras_internal_nocodec-obj>
+  $<TARGET_OBJECTS:jxl_extras_internal-obj>
 )
 target_link_libraries(jxl_extras_nocodec-static PUBLIC
   jxl-static
@@ -164,19 +142,12 @@ target_link_libraries(jxl_extras_nocodec-static PUBLIC
 # jxl library which are not accessible from outside the library in the
 # shared library case.
 add_library(jxl_extras-static STATIC EXCLUDE_FROM_ALL ${JXL_EXTRAS_OBJECTS})
-target_compile_definitions(jxl_extras-static PUBLIC
-  ${JXL_EXTRAS_CODEC_PUBLIC_DEFINITIONS}
-)
 target_link_libraries(jxl_extras-static PUBLIC
   ${JXL_EXTRAS_CODEC_INTERNAL_LIBRARIES}
   jxl-static
   jxl_threads-static
 )
-if (JPEGXL_ENABLE_SJPEG)
-  target_compile_definitions(jxl_extras-static PUBLIC -DJPEGXL_ENABLE_SJPEG=1)
-  target_link_libraries(jxl_extras-static PRIVATE sjpeg)
-endif ()
-if(JPEG_FOUND AND JPEGXL_ENABLE_JPEGLI)
+if(JPEGXL_ENABLE_JPEGLI)
   target_compile_definitions(jxl_extras-static PUBLIC -DJPEGXL_ENABLE_JPEGLI=1)
   target_link_libraries(jxl_extras-static PRIVATE jpegli-static)
 endif()
@@ -184,10 +155,6 @@ endif()
 ### Static library that does not depend on internal parts of jxl library.
 add_library(jxl_extras_codec-static STATIC
   $<TARGET_OBJECTS:jxl_extras_core-obj>
-  $<TARGET_OBJECTS:jxl_extras_codec-obj>
-)
-target_compile_definitions(jxl_extras_codec-static PUBLIC
-  ${JXL_EXTRAS_CODEC_PUBLIC_DEFINITIONS}
 )
 target_link_libraries(jxl_extras_codec-static PRIVATE
   ${JXL_EXTRAS_CODEC_INTERNAL_LIBRARIES}
@@ -198,11 +165,7 @@ target_link_libraries(jxl_extras_codec-static PRIVATE
 ### Used by cjxl and djxl binaries.
 if (BUILD_SHARED_LIBS)
 add_library(jxl_extras_codec SHARED
-  $<TARGET_OBJECTS:jxl_extras_codec-obj>
   $<TARGET_OBJECTS:jxl_extras_core-obj>
-)
-target_compile_definitions(jxl_extras_codec PUBLIC
-  ${JXL_EXTRAS_CODEC_PUBLIC_DEFINITIONS}
 )
 target_link_libraries(jxl_extras_codec PRIVATE
   ${JXL_EXTRAS_CODEC_INTERNAL_LIBRARIES}

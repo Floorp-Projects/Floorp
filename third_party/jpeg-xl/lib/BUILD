@@ -23,6 +23,8 @@ load(
     "libjxl_extras_for_tools_sources",
     "libjxl_extras_sources",
     #'libjxl_gbench_sources',
+    "libjxl_jpegli_lib_version",
+    "libjxl_jpegli_libjpeg_helper_files",
     "libjxl_jpegli_sources",
     "libjxl_jpegli_testlib_files",
     "libjxl_jpegli_tests",
@@ -55,6 +57,7 @@ load(
     "libjxl_test_timeouts",
 )
 load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 
 DEFAULT_VISIBILITY = ["//:__subpackages__"]
 
@@ -123,12 +126,50 @@ cc_library(
     strip_include_prefix = INCLUDES_DIR,
 )
 
+JPEGLI_JCONFIG_H = INCLUDES_DIR + "/jpegli/jconfig.h"
+
+JPEGLI_JMORECFG_H = INCLUDES_DIR + "/jpegli/jmorecfg.h"
+
+JPEGLI_JPEGLIB_H = INCLUDES_DIR + "/jpegli/jpeglib.h"
+
+copy_file(
+    name = "expand_jconfig",
+    src = "@libjpeg_turbo//:jconfig.h",
+    out = JPEGLI_JCONFIG_H,
+    compatible_with = DEFAULT_COMPATIBILITY,
+)
+
+copy_file(
+    name = "copy_jmorecfg",
+    src = "@libjpeg_turbo//:jmorecfg.h",
+    out = JPEGLI_JMORECFG_H,
+    compatible_with = DEFAULT_COMPATIBILITY,
+)
+
+copy_file(
+    name = "copy_jpeglib",
+    src = "@libjpeg_turbo//:jpeglib.h",
+    out = JPEGLI_JPEGLIB_H,
+    compatible_with = DEFAULT_COMPATIBILITY,
+)
+
 cc_library(
     name = "includes",
     hdrs = libjxl_public_headers + [JXL_EXPORT_H],
     compatible_with = DEFAULT_COMPATIBILITY,
     strip_include_prefix = INCLUDES_DIR,
     deps = [":jxl_version"],
+)
+
+cc_library(
+    name = "libjpeg_includes",
+    hdrs = [
+        JPEGLI_JCONFIG_H,
+        JPEGLI_JMORECFG_H,
+        JPEGLI_JPEGLIB_H,
+    ],
+    compatible_with = DEFAULT_COMPATIBILITY,
+    strip_include_prefix = INCLUDES_DIR + "/jpegli",
 )
 
 cc_library(
@@ -190,7 +231,8 @@ cc_library(
     compatible_with = DEFAULT_COMPATIBILITY,
     deps = [
         ":jpegxl_private",
-    ] + libjxl_deps_hwy + libjxl_deps_jpeg,
+        ":libjpeg_includes",
+    ] + libjxl_deps_hwy,
 )
 
 # TODO(eustas): build codecs separately?
@@ -214,7 +256,7 @@ cc_library(
     ] + libjxl_deps_exr + libjxl_deps_gif + libjxl_deps_jpeg + libjxl_deps_png,
 )
 
-TESTLIB_FILES = libjxl_testlib_files + libjxl_jpegli_testlib_files
+TESTLIB_FILES = libjxl_testlib_files + libjxl_jpegli_testlib_files + libjxl_jpegli_libjpeg_helper_files
 
 cc_library(
     name = "test_utils",

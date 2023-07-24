@@ -6,13 +6,10 @@
 #ifndef LIB_JPEGLI_ENCODE_INTERNAL_H_
 #define LIB_JPEGLI_ENCODE_INTERNAL_H_
 
-/* clang-format off */
 #include <stdint.h>
-#include <stdio.h>
-#include <jpeglib.h>
-/* clang-format on */
 
 #include "lib/jpegli/bit_writer.h"
+#include "lib/jpegli/common.h"
 #include "lib/jpegli/common_internal.h"
 #include "lib/jpegli/encode.h"
 

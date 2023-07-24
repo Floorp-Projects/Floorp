@@ -58,7 +58,9 @@ struct JXLCompressParams {
   // If runner_opaque is set, the decoder uses this parallel runner.
   JxlParallelRunner runner = JxlThreadParallelRunner;
   void* runner_opaque = nullptr;
-
+  JxlDebugImageCallback debug_image = nullptr;
+  void* debug_image_opaque = nullptr;
+  JxlEncoderStats* stats = nullptr;
   bool allow_expert_options = false;
 
   void AddOption(JxlEncoderFrameSettingId id, int64_t val) {

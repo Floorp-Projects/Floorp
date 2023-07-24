@@ -45,11 +45,14 @@
 #include "lib/extras/exif.h"
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/printf_macros.h"
+#if JPEGXL_ENABLE_APNG
 #include "png.h" /* original (unpatched) libpng is ok */
+#endif
 
 namespace jxl {
 namespace extras {
 
+#if JPEGXL_ENABLE_APNG
 namespace {
 
 constexpr unsigned char kExifSignature[6] = {0x45, 0x78, 0x69,
@@ -158,7 +161,7 @@ class BlobsWriterPNG {
   }
 };
 
-void MaybeAddCICP(JxlColorEncoding c_enc, png_structp png_ptr,
+void MaybeAddCICP(const JxlColorEncoding& c_enc, png_structp png_ptr,
                   png_infop info_ptr) {
   png_byte cicp_data[4] = {};
   png_unknown_chunk cicp_chunk;
@@ -193,6 +196,51 @@ void MaybeAddCICP(JxlColorEncoding c_enc, png_structp png_ptr,
   png_set_keep_unknown_chunks(png_ptr, 3,
                               reinterpret_cast<const png_byte*>("cICP"), 1);
   png_set_unknown_chunks(png_ptr, info_ptr, &cicp_chunk, 1);
+}
+
+bool MaybeAddSRGB(const JxlColorEncoding& c_enc, png_structp png_ptr,
+                  png_infop info_ptr) {
+  if (c_enc.transfer_function == JXL_TRANSFER_FUNCTION_SRGB &&
+      (c_enc.color_space == JXL_COLOR_SPACE_GRAY ||
+       (c_enc.color_space == JXL_COLOR_SPACE_RGB &&
+        c_enc.primaries == JXL_PRIMARIES_SRGB &&
+        c_enc.white_point == JXL_WHITE_POINT_D65))) {
+    png_set_sRGB(png_ptr, info_ptr, c_enc.rendering_intent);
+    png_set_cHRM_fixed(png_ptr, info_ptr, 31270, 32900, 64000, 33000, 30000,
+                       60000, 15000, 6000);
+    png_set_gAMA_fixed(png_ptr, info_ptr, 45455);
+    return true;
+  }
+  return false;
+}
+
+void MaybeAddCHRM(const JxlColorEncoding& c_enc, png_structp png_ptr,
+                  png_infop info_ptr) {
+  if (c_enc.color_space != JXL_COLOR_SPACE_RGB) return;
+  if (c_enc.primaries == 0) return;
+  png_set_cHRM(png_ptr, info_ptr, c_enc.white_point_xy[0],
+               c_enc.white_point_xy[1], c_enc.primaries_red_xy[0],
+               c_enc.primaries_red_xy[1], c_enc.primaries_green_xy[0],
+               c_enc.primaries_green_xy[1], c_enc.primaries_blue_xy[0],
+               c_enc.primaries_blue_xy[1]);
+}
+
+void MaybeAddGAMA(const JxlColorEncoding& c_enc, png_structp png_ptr,
+                  png_infop info_ptr) {
+  switch (c_enc.transfer_function) {
+    case JXL_TRANSFER_FUNCTION_LINEAR:
+      png_set_gAMA_fixed(png_ptr, info_ptr, PNG_FP_1);
+      break;
+    case JXL_TRANSFER_FUNCTION_SRGB:
+      png_set_gAMA_fixed(png_ptr, info_ptr, 45455);
+      break;
+    case JXL_TRANSFER_FUNCTION_GAMMA:
+      png_set_gAMA(png_ptr, info_ptr, c_enc.gamma);
+      break;
+
+    default:;
+      // No gAMA chunk.
+  }
 }
 
 Status APNGEncoder::EncodePackedPixelFileToAPNG(
@@ -274,11 +322,17 @@ Status APNGEncoder::EncodePackedPixelFileToAPNG(
                  PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE,
                  PNG_FILTER_TYPE_BASE);
     if (count == 0) {
-      MaybeAddCICP(ppf.color_encoding, png_ptr, info_ptr);
-      if (!ppf.icc.empty()) {
-        png_set_benign_errors(png_ptr, 1);
-        png_set_iCCP(png_ptr, info_ptr, "1", 0, ppf.icc.data(), ppf.icc.size());
+      if (!MaybeAddSRGB(ppf.color_encoding, png_ptr, info_ptr)) {
+        MaybeAddCICP(ppf.color_encoding, png_ptr, info_ptr);
+        if (!ppf.icc.empty()) {
+          png_set_benign_errors(png_ptr, 1);
+          png_set_iCCP(png_ptr, info_ptr, "1", 0, ppf.icc.data(),
+                       ppf.icc.size());
+        }
+        MaybeAddCHRM(ppf.color_encoding, png_ptr, info_ptr);
+        MaybeAddGAMA(ppf.color_encoding, png_ptr, info_ptr);
       }
+
       std::vector<std::string> textstrings;
       JXL_RETURN_IF_ERROR(BlobsWriterPNG::Encode(ppf.metadata, &textstrings));
       for (size_t kk = 0; kk + 1 < textstrings.size(); kk += 2) {
@@ -362,9 +416,14 @@ Status APNGEncoder::EncodePackedPixelFileToAPNG(
 }
 
 }  // namespace
+#endif
 
 std::unique_ptr<Encoder> GetAPNGEncoder() {
+#if JPEGXL_ENABLE_APNG
   return jxl::make_unique<APNGEncoder>();
+#else
+  return nullptr;
+#endif
 }
 
 }  // namespace extras

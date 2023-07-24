@@ -18,14 +18,11 @@ test_includes() {
     if [ ! -e "$f" ]; then
       continue
     fi
-    # Check that the public files (in lib/include/ directory) don't use the full
-    # path to the public header since users of the library will include the
-    # library as: #include "jxl/foobar.h".
-    if [[ "${f#lib/include/}" != "${f}" ]]; then
-      if grep -i -H -n -E '#include\s*[<"]lib/include/jxl' "$f" >&2; then
-        echo "Don't add \"include/\" to the include path of public headers." >&2
-        ret=1
-      fi
+    # Check that the full paths to the public headers are not used, since users
+    # of the library will include the library as: #include "jxl/foobar.h".
+    if grep -i -H -n -E '#include\s*[<"]lib/include/jxl' "$f" >&2; then
+      echo "Don't add \"include/\" to the include path of public headers." >&2
+      ret=1
     fi
 
     if [[ "${f#third_party/}" == "$f" ]]; then

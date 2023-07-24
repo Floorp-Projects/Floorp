@@ -25,6 +25,21 @@
 extern "C" {
 #endif
 
+/** Parses an ICC profile and populates @p c and @p cmyk with the data.
+ *
+ * @param user_data JxlCmsInterface::set_fields_data passed as-is.
+ * @param icc_data the ICC data to parse.
+ * @param icc_size how many bytes of icc_data are valid.
+ * @param c a JxlColorEncoding to populate if applicable.
+ * @param cmyk a boolean to set to whether the colorspace is a CMYK colorspace.
+ * @return Whether the relevant fields in @p c were successfully populated.
+ */
+typedef JXL_BOOL (*jpegxl_cms_set_fields_from_icc_func)(void* user_data,
+                                                        const uint8_t* icc_data,
+                                                        size_t icc_size,
+                                                        JxlColorEncoding* c,
+                                                        JXL_BOOL* cmyk);
+
 /** Represents an input or output colorspace to a color transform, as a
  * serialized ICC profile. */
 typedef struct {
@@ -207,6 +222,11 @@ typedef void (*jpegxl_cms_destroy_func)(void*);
  * @enddot
  */
 typedef struct {
+  /** CMS-specific data that will be passed to @ref set_fields_from_icc. */
+  void* set_fields_data;
+  /** Populates a JxlColorEncoding from an ICC profile. */
+  jpegxl_cms_set_fields_from_icc_func set_fields_from_icc;
+
   /** CMS-specific data that will be passed to @ref init. */
   void* init_data;
   /** Prepares a colorspace transform as described in the documentation of @ref

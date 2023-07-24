@@ -23,6 +23,8 @@ struct SizeConstraints;
 
 namespace extras {
 
+bool CanDecodeAPNG();
+
 // Decodes `bytes` into `ppf`.
 Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
                        PackedPixelFile* ppf,
