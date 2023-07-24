@@ -260,10 +260,19 @@ export const SecondaryCTA = props => {
   let buttonStyling = props.content.secondary_button?.has_arrow_icon
     ? `secondary arrow-icon`
     : `secondary`;
-  const isTextLink = props.content.position !== "split";
+  const isTextLink =
+    props.content.position !== "split" &&
+    props.content.tiles?.type !== "addons-picker";
+  const isPrimary = props.content.secondary_button?.style === "primary";
 
   if (isTextLink) {
     buttonStyling += " text-link";
+  }
+
+  if (isPrimary) {
+    buttonStyling = props.content.secondary_button?.has_arrow_icon
+      ? `primary arrow-icon`
+      : `primary`;
   }
 
   return (

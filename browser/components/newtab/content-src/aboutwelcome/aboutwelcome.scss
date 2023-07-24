@@ -15,7 +15,7 @@ $split-screen-height: 550px;
 $small-main-section-height: 450px;
 $small-secondary-section-height: 100px;
 $noodle-buffer: 106px;
-$video-section-width: 800px;
+$double-section-width: 800px;
 
 html {
   height: 100%;
@@ -292,7 +292,7 @@ html {
         align-items: center;
 
         .section-main {
-          width: $video-section-width;
+          width: $double-section-width;
           height: $split-screen-height;
         }
 
@@ -335,6 +335,119 @@ html {
 
               color: var(--in-content-button-text-color);
             }
+          }
+        }
+      }
+
+      &.addons-picker {
+        justify-content: center;
+        align-items: center;
+        background: none;
+
+        .section-main {
+          width: $double-section-width;
+          height: $split-screen-height;
+        }
+
+        .main-content {
+          background-color: var(--in-content-page-background);
+          border-radius: 8px;
+          box-shadow: 0 2px 14px rgba(58, 57, 68, 20%);
+          overflow: hidden;
+
+          .welcome-text {
+            display: flex;
+            margin: 0;
+          }
+
+          .main-content-inner {
+            padding: 25px 56px 0;
+            justify-content: space-between;
+          }
+
+          h1,
+          h2 {
+            align-self: start;
+          }
+
+          h2 {
+            font-size: 15px;
+            text-align: start;
+          }
+
+          .brand-logo {
+            display: block;
+            margin: 40px 56px 0;
+            transition: var(--transition);
+            height: 30px;
+          }
+
+          .additional-cta {
+            display: block;
+            margin: 8px 0;
+
+            &.cta-link {
+              background: none;
+              padding: 0;
+              font-weight: normal;
+
+              @include text-link-styles;
+            }
+
+            &.secondary {
+              &:hover {
+                background-color: var(--in-content-button-background-hover);
+              }
+            }
+          }
+
+          .secondary-cta {
+            @include arrow-icon-styles;
+
+            justify-content: end;
+
+            .secondary {
+              @include secondary-cta-styles;
+
+              color: var(--in-content-button-text-color);
+            }
+          }
+        }
+
+        .addon-container {
+          display: flex;
+          border: 1px solid var(--in-content-border-color);
+          box-shadow: 0 1px 2px 0 var(--in-content-border-color);
+          border-radius: 4px;
+          margin: 5px auto;
+          text-align: start;
+
+          .rtamo-icon {
+            img {
+              margin: 10px;
+            }
+          }
+
+          .addon-details {
+            display: grid;
+            width: 70%;
+          }
+
+          .addon-title {
+            margin: 10px 0 3px;
+            font-size: 16px;
+            font-weight: 600;
+          }
+
+          .addon-description {
+            margin: 2px 0 10px;
+            font-size: 13px;
+            font-weight: 400;
+          }
+
+          button {
+            align-self: center;
+            margin-inline: auto 12px;
           }
         }
       }
