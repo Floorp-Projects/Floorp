@@ -60,7 +60,11 @@ add_task(async function () {
     { selector: "element", ancestorRulesData: null, declarations: [] },
     {
       selector: `&`,
-      ancestorRulesData: [`body`, `@media screen`],
+      // prettier-ignore
+      ancestorRulesData: [
+        `body {`,
+        `  @media screen {`
+      ],
       declarations: [{ name: "container-name", value: "main" }],
     },
     {
@@ -78,7 +82,11 @@ add_task(async function () {
     { selector: "element", ancestorRulesData: null, declarations: [] },
     {
       selector: `& h1`,
-      ancestorRulesData: [`body`, `@media screen`],
+      // prettier-ignore
+      ancestorRulesData: [
+        `body {`,
+        `  @media screen {`
+      ],
       declarations: [{ name: "border-color", value: "gold" }],
     },
   ]);
@@ -88,7 +96,12 @@ add_task(async function () {
     { selector: "element", ancestorRulesData: null, declarations: [] },
     {
       selector: `.foo`,
-      ancestorRulesData: [`body`, `@media screen`, `& h1`],
+      // prettier-ignore
+      ancestorRulesData: [
+        `body {`,
+        `  @media screen {`,
+        `    & h1 {`
+      ],
       declarations: [{ name: "color", value: "white" }],
     },
   ]);
@@ -98,7 +111,12 @@ add_task(async function () {
     { selector: "element", ancestorRulesData: null, declarations: [] },
     {
       selector: `#bar`,
-      ancestorRulesData: [`body`, `@media screen`, `& h1`],
+      // prettier-ignore
+      ancestorRulesData: [
+        `body {`,
+        `  @media screen {`,
+        `    & h1 {`
+      ],
       declarations: [{ name: "text-decoration", value: "underline" }],
     },
   ]);
@@ -109,10 +127,10 @@ add_task(async function () {
     {
       selector: `& + nav`,
       ancestorRulesData: [
-        `body`,
-        `@media screen`,
-        `& h1`,
-        `@container main (width > 10px)`,
+        `body {`,
+        `  @media screen {`,
+        `    & h1 {`,
+        `      @container main (width > 10px) {`,
       ],
       declarations: [{ name: "border", value: "1px solid" }],
     },
@@ -124,11 +142,11 @@ add_task(async function () {
     {
       selector: `[href]`,
       ancestorRulesData: [
-        `body`,
-        `@media screen`,
-        `& h1`,
-        `@container main (width > 10px)`,
-        `& + nav`,
+        `body {`,
+        `  @media screen {`,
+        `    & h1 {`,
+        `      @container main (width > 10px) {`,
+        `        & + nav {`,
       ],
       declarations: [{ name: "background-color", value: "lightgreen" }],
     },

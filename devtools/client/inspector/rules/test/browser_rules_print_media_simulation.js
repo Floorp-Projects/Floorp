@@ -50,7 +50,7 @@ add_task(async function () {
   );
   is(
     getRuleViewAncestorRulesDataTextByIndex(view, 1),
-    "@media print",
+    "@media print {",
     "Media queries information are displayed"
   );
 
@@ -63,7 +63,7 @@ add_task(async function () {
   );
   is(
     getRuleViewAncestorRulesDataTextByIndex(view, 1),
-    "@media print",
+    "@media print {",
     "Media queries information are displayed for the node on the remote iframe as well"
   );
 

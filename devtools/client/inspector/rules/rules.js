@@ -1502,9 +1502,12 @@ CssRuleView.prototype = {
       return false;
     }
 
+    const ancestorSelectors = element.querySelectorAll(
+      ".ruleview-rule-ancestor-selectorcontainer"
+    );
+
     let isHighlighted = false;
-    for (let i = 0; i < element.childNodes.length; i++) {
-      const child = element.childNodes[i];
+    for (const child of ancestorSelectors) {
       const dataText = child.innerText.toLowerCase();
       const matches = this.searchData.strictSearchValue
         ? dataText === this.searchData.strictSearchValue

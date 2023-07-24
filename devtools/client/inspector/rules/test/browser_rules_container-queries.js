@@ -65,11 +65,11 @@ add_task(async function () {
     { selector: "element", ancestorRulesData: null },
     {
       selector: `h1, [test-hint="container"]`,
-      ancestorRulesData: ["@container mycontainer (1px < width < 10000px)"],
+      ancestorRulesData: ["@container mycontainer (1px < width < 10000px) {"],
     },
     {
       selector: `h1, [test-hint="nocontainername"]`,
-      ancestorRulesData: ["@container (width > 0px)"],
+      ancestorRulesData: ["@container (width > 0px) {"],
     },
   ]);
 
@@ -108,11 +108,11 @@ add_task(async function () {
     { selector: "element", ancestorRulesData: null },
     {
       selector: `div, [test-hint="container-duplicate-name--section"]`,
-      ancestorRulesData: ["@container mycontainer (1px < width < 10000px)"],
+      ancestorRulesData: ["@container mycontainer (1px < width < 10000px) {"],
     },
     {
       selector: `section, [test-hint="container-duplicate-name--body"]`,
-      ancestorRulesData: ["@container mycontainer (1px < width < 10000px)"],
+      ancestorRulesData: ["@container mycontainer (1px < width < 10000px) {"],
     },
   ]);
 
