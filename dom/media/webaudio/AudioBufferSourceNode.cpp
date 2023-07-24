@@ -465,8 +465,6 @@ class AudioBufferSourceNodeEngine final : public AudioNodeEngine {
       playbackRate = 1.0f;
     }
 
-    detune = std::min(std::max(-1200.f, detune), 1200.f);
-
     int32_t outRate = ComputeFinalOutSampleRate(playbackRate, detune);
     UpdateResampler(outRate, aChannels);
   }

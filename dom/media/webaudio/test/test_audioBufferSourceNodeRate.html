@@ -28,12 +28,12 @@ for (var i = 0; i < bufarray.length; i++) {
 }
 
 source.buffer = buf;
-source.playbackRate.value = 0.5; // 50% slowdown
+source.playbackRate.value = 0.25; // slowdown to 25% speed
 source.connect(off.destination);
 source.start(0);
 
 source2.buffer = buf;
-source2.detune.value = -1200; // one octave -> 50% slowdown
+source2.detune.value = -2400; // two octaves -> slowdown to 25% speed
 source2.connect(off2.destination);
 source2.start(0);
 
@@ -46,7 +46,7 @@ off.startRendering().then((renderedPlaybackRate) => {
   off2.startRendering().then((renderedDetune) => {
     var rmsValue = rms(renderedDetune, 0, 22050);
     ok(rmsValue != 0, "Resampling happened (rms of the second part " + rmsValue + ")");
-    // The two buffers should be the same: detune of -1200 is a 50% slowdown
+    // The two buffers should be the same: detune of -2400 is a slowdown to 25% speed
     compareBuffers(renderedPlaybackRate, renderedDetune);
     SimpleTest.finish();
   });
