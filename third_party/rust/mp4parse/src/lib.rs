@@ -1888,135 +1888,6 @@ impl DataBox {
     }
 }
 
-#[cfg(test)]
-mod media_data_box_tests {
-    use super::*;
-
-    impl DataBox {
-        fn at_offset(file_offset: u64, data: std::vec::Vec<u8>) -> Self {
-            DataBox {
-                metadata: DataBoxMetadata::Mdat { file_offset },
-                data: data.into(),
-            }
-        }
-    }
-
-    #[test]
-    fn extent_with_length_before_mdat_returns_none() {
-        let mdat = DataBox::at_offset(100, vec![1; 5]);
-        let extent = Extent::WithLength { offset: 0, len: 2 };
-
-        assert!(mdat.get(&extent).is_none());
-    }
-
-    #[test]
-    fn extent_to_end_before_mdat_returns_none() {
-        let mdat = DataBox::at_offset(100, vec![1; 5]);
-        let extent = Extent::ToEnd { offset: 0 };
-
-        assert!(mdat.get(&extent).is_none());
-    }
-
-    #[test]
-    fn extent_with_length_crossing_front_mdat_boundary_returns_none() {
-        let mdat = DataBox::at_offset(100, vec![1; 5]);
-        let extent = Extent::WithLength { offset: 99, len: 3 };
-
-        assert!(mdat.get(&extent).is_none());
-    }
-
-    #[test]
-    fn extent_with_length_which_is_subset_of_mdat() {
-        let mdat = DataBox::at_offset(100, vec![1; 5]);
-        let extent = Extent::WithLength {
-            offset: 101,
-            len: 2,
-        };
-
-        assert_eq!(mdat.get(&extent), Some(&[1, 1][..]));
-    }
-
-    #[test]
-    fn extent_to_end_which_is_subset_of_mdat() {
-        let mdat = DataBox::at_offset(100, vec![1; 5]);
-        let extent = Extent::ToEnd { offset: 101 };
-
-        assert_eq!(mdat.get(&extent), Some(&[1, 1, 1, 1][..]));
-    }
-
-    #[test]
-    fn extent_with_length_which_is_all_of_mdat() {
-        let mdat = DataBox::at_offset(100, vec![1; 5]);
-        let extent = Extent::WithLength {
-            offset: 100,
-            len: 5,
-        };
-
-        assert_eq!(mdat.get(&extent), Some(mdat.data.as_slice()));
-    }
-
-    #[test]
-    fn extent_to_end_which_is_all_of_mdat() {
-        let mdat = DataBox::at_offset(100, vec![1; 5]);
-        let extent = Extent::ToEnd { offset: 100 };
-
-        assert_eq!(mdat.get(&extent), Some(mdat.data.as_slice()));
-    }
-
-    #[test]
-    fn extent_with_length_crossing_back_mdat_boundary_returns_none() {
-        let mdat = DataBox::at_offset(100, vec![1; 5]);
-        let extent = Extent::WithLength {
-            offset: 103,
-            len: 3,
-        };
-
-        assert!(mdat.get(&extent).is_none());
-    }
-
-    #[test]
-    fn extent_with_length_after_mdat_returns_none() {
-        let mdat = DataBox::at_offset(100, vec![1; 5]);
-        let extent = Extent::WithLength {
-            offset: 200,
-            len: 2,
-        };
-
-        assert!(mdat.get(&extent).is_none());
-    }
-
-    #[test]
-    fn extent_to_end_after_mdat_returns_none() {
-        let mdat = DataBox::at_offset(100, vec![1; 5]);
-        let extent = Extent::ToEnd { offset: 200 };
-
-        assert!(mdat.get(&extent).is_none());
-    }
-
-    #[test]
-    fn extent_with_length_which_overflows_usize() {
-        let mdat = DataBox::at_offset(std::u64::MAX - 1, vec![1; 5]);
-        let extent = Extent::WithLength {
-            offset: std::u64::MAX,
-            len: std::usize::MAX,
-        };
-
-        assert!(mdat.get(&extent).is_none());
-    }
-
-    // The end of the range would overflow `usize` if it were calculated, but
-    // because the range end is unbounded, we don't calculate it.
-    #[test]
-    fn extent_to_end_which_overflows_usize() {
-        let mdat = DataBox::at_offset(std::u64::MAX - 1, vec![1; 5]);
-        let extent = Extent::ToEnd {
-            offset: std::u64::MAX,
-        };
-
-        assert_eq!(mdat.get(&extent), Some(&[1, 1, 1, 1][..]));
-    }
-}
-
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 struct PropertyIndex(u16);
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd)]
@@ -6288,4 +6159,133 @@ fn be_u64<T: ReadBytesExt>(src: &mut T) -> Result<u64> {
 fn write_be_u32<T: WriteBytesExt>(des: &mut T, num: u32) -> Result<()> {
     des.write_u32::<byteorder::BigEndian>(num)
         .map_err(From::from)
+}
+
+#[cfg(test)]
+mod media_data_box_tests {
+    use super::*;
+
+    impl DataBox {
+        fn at_offset(file_offset: u64, data: std::vec::Vec<u8>) -> Self {
+            DataBox {
+                metadata: DataBoxMetadata::Mdat { file_offset },
+                data: data.into(),
+            }
+        }
+    }
+
+    #[test]
+    fn extent_with_length_before_mdat_returns_none() {
+        let mdat = DataBox::at_offset(100, vec![1; 5]);
+        let extent = Extent::WithLength { offset: 0, len: 2 };
+
+        assert!(mdat.get(&extent).is_none());
+    }
+
+    #[test]
+    fn extent_to_end_before_mdat_returns_none() {
+        let mdat = DataBox::at_offset(100, vec![1; 5]);
+        let extent = Extent::ToEnd { offset: 0 };
+
+        assert!(mdat.get(&extent).is_none());
+    }
+
+    #[test]
+    fn extent_with_length_crossing_front_mdat_boundary_returns_none() {
+        let mdat = DataBox::at_offset(100, vec![1; 5]);
+        let extent = Extent::WithLength { offset: 99, len: 3 };
+
+        assert!(mdat.get(&extent).is_none());
+    }
+
+    #[test]
+    fn extent_with_length_which_is_subset_of_mdat() {
+        let mdat = DataBox::at_offset(100, vec![1; 5]);
+        let extent = Extent::WithLength {
+            offset: 101,
+            len: 2,
+        };
+
+        assert_eq!(mdat.get(&extent), Some(&[1, 1][..]));
+    }
+
+    #[test]
+    fn extent_to_end_which_is_subset_of_mdat() {
+        let mdat = DataBox::at_offset(100, vec![1; 5]);
+        let extent = Extent::ToEnd { offset: 101 };
+
+        assert_eq!(mdat.get(&extent), Some(&[1, 1, 1, 1][..]));
+    }
+
+    #[test]
+    fn extent_with_length_which_is_all_of_mdat() {
+        let mdat = DataBox::at_offset(100, vec![1; 5]);
+        let extent = Extent::WithLength {
+            offset: 100,
+            len: 5,
+        };
+
+        assert_eq!(mdat.get(&extent), Some(mdat.data.as_slice()));
+    }
+
+    #[test]
+    fn extent_to_end_which_is_all_of_mdat() {
+        let mdat = DataBox::at_offset(100, vec![1; 5]);
+        let extent = Extent::ToEnd { offset: 100 };
+
+        assert_eq!(mdat.get(&extent), Some(mdat.data.as_slice()));
+    }
+
+    #[test]
+    fn extent_with_length_crossing_back_mdat_boundary_returns_none() {
+        let mdat = DataBox::at_offset(100, vec![1; 5]);
+        let extent = Extent::WithLength {
+            offset: 103,
+            len: 3,
+        };
+
+        assert!(mdat.get(&extent).is_none());
+    }
+
+    #[test]
+    fn extent_with_length_after_mdat_returns_none() {
+        let mdat = DataBox::at_offset(100, vec![1; 5]);
+        let extent = Extent::WithLength {
+            offset: 200,
+            len: 2,
+        };
+
+        assert!(mdat.get(&extent).is_none());
+    }
+
+    #[test]
+    fn extent_to_end_after_mdat_returns_none() {
+        let mdat = DataBox::at_offset(100, vec![1; 5]);
+        let extent = Extent::ToEnd { offset: 200 };
+
+        assert!(mdat.get(&extent).is_none());
+    }
+
+    #[test]
+    fn extent_with_length_which_overflows_usize() {
+        let mdat = DataBox::at_offset(std::u64::MAX - 1, vec![1; 5]);
+        let extent = Extent::WithLength {
+            offset: std::u64::MAX,
+            len: std::usize::MAX,
+        };
+
+        assert!(mdat.get(&extent).is_none());
+    }
+
+    // The end of the range would overflow `usize` if it were calculated, but
+    // because the range end is unbounded, we don't calculate it.
+    #[test]
+    fn extent_to_end_which_overflows_usize() {
+        let mdat = DataBox::at_offset(std::u64::MAX - 1, vec![1; 5]);
+        let extent = Extent::ToEnd {
+            offset: std::u64::MAX,
+        };
+
+        assert_eq!(mdat.get(&extent), Some(&[1, 1, 1, 1][..]));
+    }
 }
