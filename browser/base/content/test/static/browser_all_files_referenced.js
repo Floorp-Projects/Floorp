@@ -13,7 +13,7 @@ var isDevtools = SimpleTest.harnessParameters.subsuite == "devtools";
 // This list should contain only path prefixes. It is meant to stop the test
 // from reporting things that *are* referenced, but for which the test can't
 // find any reference because the URIs are constructed programatically.
-// If you need to whitelist specific files, please use the 'whitelist' object.
+// If you need to allowlist specific files, please use the 'allowlist' object.
 var gExceptionPaths = [
   "resource://app/defaults/settings/blocklists/",
   "resource://app/defaults/settings/security-state/",
@@ -101,10 +101,10 @@ if (AppConstants.NIGHTLY_BUILD) {
   );
 }
 
-// Each whitelist entry should have a comment indicating which file is
-// referencing the whitelisted file in a way that the test can't detect, or a
+// Each allowlist entry should have a comment indicating which file is
+// referencing the listed file in a way that the test can't detect, or a
 // bug number to remove or use the file if it is indeed currently unreferenced.
-var whitelist = [
+var allowlist = [
   // toolkit/components/pdfjs/content/PdfStreamConverter.sys.mjs
   { file: "chrome://pdf.js/locale/chrome.properties" },
   { file: "chrome://pdf.js/locale/viewer.properties" },
@@ -207,7 +207,7 @@ var whitelist = [
   { file: "resource://pdf.js/web/debugger.js" },
   { file: "resource://pdf.js/web/debugger.css" },
 
-  // Starting from here, files in the whitelist are bugs that need fixing.
+  // Starting from here, files in the allowlist are bugs that need fixing.
   // Bug 1339424 (wontfix?)
   {
     file: "chrome://browser/locale/taskbar.properties",
@@ -288,29 +288,29 @@ var whitelist = [
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
   // This path is refereneced in nsFxrCommandLineHandler.cpp, which is only
-  // compiled in Windows. Whitelisted this path so that non-Windows builds
+  // compiled in Windows. This path is allowed so that non-Windows builds
   // can access the FxR UI via --chrome rather than --fxr (which includes VR-
   // specific functionality)
-  whitelist.push({ file: "chrome://fxr/content/fxrui.html" });
+  allowlist.push({ file: "chrome://fxr/content/fxrui.html" });
 }
 
 if (AppConstants.platform == "android") {
   // The l10n build system can't package string files only for some platforms.
   // Referenced by aboutGlean.html
-  whitelist.push({
+  allowlist.push({
     file: "resource://gre/localization/en-US/toolkit/about/aboutGlean.ftl",
   });
 }
 
 if (AppConstants.MOZ_UPDATE_AGENT && !AppConstants.MOZ_BACKGROUNDTASKS) {
   // Task scheduling is only used for background updates right now.
-  whitelist.push({
+  allowlist.push({
     file: "resource://gre/modules/TaskScheduler.sys.mjs",
   });
 }
 
-whitelist = new Set(
-  whitelist
+allowlist = new Set(
+  allowlist
     .filter(
       item =>
         "isFromDevTools" in item == isDevtools &&
@@ -320,7 +320,7 @@ whitelist = new Set(
     .map(item => item.file)
 );
 
-const ignorableWhitelist = new Set([
+const ignorableAllowlist = new Set([
   // The following files are outside of the omni.ja file, so we only catch them
   // when testing on a non-packaged build.
 
@@ -333,8 +333,8 @@ const ignorableWhitelist = new Set([
   // Bug 1351669 - obsolete test file
   "resource://gre/res/test.properties",
 ]);
-for (let entry of ignorableWhitelist) {
-  whitelist.add(entry);
+for (let entry of ignorableAllowlist) {
+  allowlist.add(entry);
 }
 
 if (!isDevtools) {
@@ -349,17 +349,17 @@ if (!isDevtools) {
     "tabs.sys.mjs",
     "extension-storage.sys.mjs",
   ]) {
-    whitelist.add("resource://services-sync/engines/" + module);
+    allowlist.add("resource://services-sync/engines/" + module);
   }
   // resource://devtools/shared/worker/loader.js,
   // resource://devtools/shared/loader/builtin-modules.js
   if (!AppConstants.ENABLE_WEBDRIVER) {
-    whitelist.add("resource://gre/modules/jsdebugger.sys.mjs");
+    allowlist.add("resource://gre/modules/jsdebugger.sys.mjs");
   }
 }
 
 if (AppConstants.MOZ_CODE_COVERAGE) {
-  whitelist.add(
+  allowlist.add(
     "chrome://remote/content/marionette/PerTestCoverageUtils.sys.mjs"
   );
 }
@@ -385,9 +385,9 @@ var gComponentsSet = new Set();
 // In this map when the value is a Set of URLs, the file is referenced if any
 // of the files in the Set is referenced.
 // When the value is null, the file is referenced unconditionally.
-// When the value is a string, "whitelist-direct" means that we have not found
-// any reference in the code, but have a matching whitelist entry for this file.
-// "whitelist" means that the file is indirectly whitelisted, ie. a whitelisted
+// When the value is a string, "allowlist-direct" means that we have not found
+// any reference in the code, but have a matching allowlist entry for this file.
+// "allowlist" means that the file is indirectly allowlisted, ie. a allowlisted
 // file causes this file to be referenced.
 var gReferencesFromCode = new Map();
 
@@ -953,8 +953,8 @@ add_task(async function checkAllTheFiles() {
           let refType = gReferencesFromCode.get(ref);
           if (
             refType === null || // unconditionally referenced
-            refType == "whitelist" ||
-            refType == "whitelist-direct"
+            refType == "allowlist" ||
+            refType == "allowlist-direct"
           ) {
             return false;
           }
@@ -966,7 +966,7 @@ add_task(async function checkAllTheFiles() {
 
   let unreferencedFiles = chromeFiles;
 
-  let removeReferenced = useWhitelist => {
+  let removeReferenced = useAllowlist => {
     let foundReference = false;
     unreferencedFiles = unreferencedFiles.filter(f => {
       let rv = isUnreferenced(f);
@@ -978,15 +978,15 @@ add_task(async function checkAllTheFiles() {
       }
       if (!rv) {
         foundReference = true;
-        if (useWhitelist) {
+        if (useAllowlist) {
           info(
-            "indirectly whitelisted file: " +
+            "indirectly allowlisted file: " +
               f +
               " used from " +
               listCodeReferences(gReferencesFromCode.get(f))
           );
         }
-        gReferencesFromCode.set(f, useWhitelist ? "whitelist" : null);
+        gReferencesFromCode.set(f, useAllowlist ? "allowlist" : null);
       }
       return rv;
     });
@@ -997,17 +997,17 @@ add_task(async function checkAllTheFiles() {
     // As long as removeReferenced returns true, some files have been marked
     // as referenced, so we need to run it again.
   }
-  // Marked as referenced the files that have been explicitly whitelisted.
+  // Marked as referenced the files that have been explicitly allowed.
   unreferencedFiles = unreferencedFiles.filter(file => {
-    if (whitelist.has(file)) {
-      whitelist.delete(file);
-      gReferencesFromCode.set(file, "whitelist-direct");
+    if (allowlist.has(file)) {
+      allowlist.delete(file);
+      gReferencesFromCode.set(file, "allowlist-direct");
       return false;
     }
     return true;
   });
   // Run the process again, this time when more files are marked as referenced,
-  // it's a consequence of the whitelist.
+  // it's a consequence of the allowlist.
   while (removeReferenced(true)) {
     // As long as removeReferenced returns true, we need to run it again.
   }
@@ -1040,11 +1040,11 @@ add_task(async function checkAllTheFiles() {
     }
   }
 
-  for (let file of whitelist) {
-    if (ignorableWhitelist.has(file)) {
-      info("ignored unused whitelist entry: " + file);
+  for (let file of allowlist) {
+    if (ignorableAllowlist.has(file)) {
+      info("ignored unused allowlist entry: " + file);
     } else {
-      ok(false, "unused whitelist entry: " + file);
+      ok(false, "unused allowlist entry: " + file);
     }
   }
 
@@ -1067,7 +1067,7 @@ add_task(async function checkAllTheFiles() {
         continue;
       }
 
-      // TODO: bug 1349010 - add a whitelist and make this reliable enough
+      // TODO: bug 1349010 - add a allowlist and make this reliable enough
       // that we could make the test fail when this catches something new.
       let refList = listCodeReferences(refs);
       let msg = "missing file: " + file;
