@@ -1,10 +1,18 @@
 "use strict";
 
-const { ExtensionPermissions } = ChromeUtils.importESModule(
+const { ExtensionPermissions, QuarantinedDomains } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionPermissions.sys.mjs"
 );
 
 loadTestSubscript("head_unified_extensions.js");
+
+const RED =
+  "iVBORw0KGgoAAAANSUhEUgAAANwAAADcCAYAAAAbWs+BAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4gIUARQAHY8+4wAAApBJREFUeNrt3cFqAjEUhlEjvv8rXzciiiBGk/He5JxdN2U649dY+KmnEwAAAAAv2uMXEeGOwERntwAEB4IDBAeCAwQHggPBAYIDwQGCA8GB4ADBgeAAwYHgAMGB4EBwgOCgpkuKq2it/r8Li2hbvGKqP6s/PycnHHv9YvSWEgQHCA4EBwgOBAeCAwQHggMEByXM+QRUE6D3suwuPafDn5MTDg50KXnVPSdxa54y/oYDwQGCA8EBggPBAYIDwYHggBE+X5rY3Y3Tey97Nn2eU+rnlGfaZa6Ft5SA4EBwgOBAcCA4QHAgOEBwIDjgZu60y1xrDPtIJxwgOBAcIDgQHAgOEBwIDhAcCA4EBwgOBAcIDgQHCA4EB4IDBAeCAwQHggPBAYIDwQGCA8GB4ADBgeAAwYHgAMGB4GADcz9y2McIgxMOBAeCAwQHggMEB4IDwQGCA8EBggPBATdP6+KIGPRdW7i1LCFi6ALfCQfeUoLgAMGB4ADBgeBAcIDgQHCA4CCdOVvK7quwveQgg7eRTjjwlhIQHAgOBAcIDgQHCA4EB4IDBAfl5dhSdl+17SX3F22rdLlOOBAcCA4QHAgOEBwIDgQHCA4EBwgO0qm5pez6Ce0uSym2jXTCgeAAwYHgQHCA4EBwgOBAcCA4QHBQ3vpbyu47Yns51OLbSCccCA4QHAgOBAcIDgQHCA4EB4ID5jDt+vkObjgFM9dywoHgAMGB4EBwgOBAcIDgQHAgOEBwsA5bysPveMLtpW2kEw4EBwgOBAcIDgQHggMEB4IDBAeCg33ZUqZ/Ql9sL20jnXCA4EBwIDhAcCA4QHAgOBAcIDgQHNOZai3DlhKccCA4QHAgOEBwIDgQHCA4AAAAAGA1VyxaWIohrgXFAAAAAElFTkSuQmCC";
+
+const l10n = new Localization(
+  ["branding/brand.ftl", "browser/extensionsUI.ftl"],
+  true
+);
 
 async function makeExtension({
   useAddonManager = "temporary",
@@ -31,6 +39,9 @@ async function makeExtension({
       default_popup: "popup.html",
       default_area: default_area || "navbar",
     },
+    icons: {
+      16: "red.png",
+    },
   };
   if (manifest_version < 3) {
     manifest.browser_action = manifest.action;
@@ -50,33 +61,36 @@ async function makeExtension({
         browser.test.sendMessage("revoked", origins.join());
       });
 
-      if (browser.menus) {
-        let submenu = browser.menus.create({
-          id: "parent",
-          title: "submenu",
-          contexts: ["action"],
-        });
-        browser.menus.create({
-          id: "child1",
-          title: "child1",
-          parentId: submenu,
-        });
-        await new Promise(resolve => {
-          browser.menus.create(
-            {
-              id: "child2",
-              title: "child2",
-              parentId: submenu,
-            },
-            resolve
-          );
-        });
-      }
+      browser.runtime.onInstalled.addListener(async () => {
+        if (browser.menus) {
+          let submenu = browser.menus.create({
+            id: "parent",
+            title: "submenu",
+            contexts: ["action"],
+          });
+          browser.menus.create({
+            id: "child1",
+            title: "child1",
+            parentId: submenu,
+          });
+          await new Promise(resolve => {
+            browser.menus.create(
+              {
+                id: "child2",
+                title: "child2",
+                parentId: submenu,
+              },
+              resolve
+            );
+          });
+        }
 
-      browser.test.sendMessage("ready");
+        browser.test.sendMessage("ready");
+      });
     },
 
     files: {
+      "red.png": imageBufferFromDataURI(RED),
       "popup.html": `<!DOCTYPE html><meta charset=utf-8>Test Popup`,
     },
   });
@@ -91,10 +105,36 @@ async function makeExtension({
   return ext;
 }
 
+async function testQuarantinePopup(popup) {
+  let [title, line1, line2] = await l10n.formatMessages([
+    {
+      id: "webext-quarantine-confirmation-title",
+      args: { addonName: "Generated extension" },
+    },
+    "webext-quarantine-confirmation-line-1",
+    "webext-quarantine-confirmation-line-2",
+  ]);
+  let [titleEl, , helpEl] = popup.querySelectorAll("description");
+
+  ok(popup.getAttribute("icon").endsWith("/red.png"), "Correct icon.");
+
+  is(title.value, titleEl.textContent, "Correct title.");
+  is(line1.value + "\n\n" + line2.value, helpEl.textContent, "Correct lines.");
+}
+
 async function testOriginControls(
   extension,
   { contextMenuId },
-  { items, selected, click, granted, revoked, attention, quarantined }
+  {
+    items,
+    selected,
+    click,
+    granted,
+    revoked,
+    attention,
+    quarantined,
+    allowQuarantine,
+  }
 ) {
   info(
     `Testing ${extension.id} on ${gBrowser.currentURI.spec} with contextMenuId=${contextMenuId}.`
@@ -183,6 +223,11 @@ async function testOriginControls(
     itemToClick = visibleOriginItems[click];
   }
 
+  let quarantinePopup;
+  if (itemToClick && quarantined) {
+    quarantinePopup = promisePopupNotificationShown("addon-webext-permissions");
+  }
+
   // Clicking a menu item of the unified extensions context menu should close
   // the unified extensions panel automatically.
   let panelHidden =
@@ -209,6 +254,17 @@ async function testOriginControls(
     info("Waiting for the permissions.onRemoved event.");
     let host = await extension.awaitMessage("revoked");
     is(host, revoked.join(), "Expected host permission revoked.");
+  }
+
+  if (quarantinePopup) {
+    let popup = await quarantinePopup;
+    await testQuarantinePopup(popup);
+
+    if (allowQuarantine) {
+      popup.button.click();
+    } else {
+      popup.secondaryButton.click();
+    }
   }
 }
 
@@ -292,7 +348,14 @@ const originControlsInContextMenu = async options => {
   }
 
   const NO_ACCESS = { id: "origin-controls-no-access", args: null };
-  const QUARANTINED = { id: "origin-controls-quarantined", args: null };
+  const QUARANTINED = {
+    id: "origin-controls-quarantined-status",
+    args: null,
+  };
+  const ALLOW_QUARANTINED = {
+    id: "origin-controls-quarantined-allow",
+    args: null,
+  };
   const ACCESS_OPTIONS = { id: "origin-controls-options", args: null };
   const ALL_SITES = { id: "origin-controls-option-all-domains", args: null };
   const WHEN_CLICKED = {
@@ -382,6 +445,11 @@ const originControlsInContextMenu = async options => {
     ],
   });
 
+  // Reset quarantined state between test runs.
+  QuarantinedDomains.setUserAllowedAddonIdPref(ext2.id, false);
+  QuarantinedDomains.setUserAllowedAddonIdPref(ext4.id, false);
+  QuarantinedDomains.setUserAllowedAddonIdPref(ext5.id, false);
+
   await BrowserTestUtils.withNewTab("http://mochi.test:8888/", async () => {
     await testOriginControls(ext1, options, {
       items: [NO_ACCESS],
@@ -389,26 +457,60 @@ const originControlsInContextMenu = async options => {
     });
 
     await testOriginControls(ext2, options, {
-      items: [QUARANTINED],
+      items: [QUARANTINED, ALLOW_QUARANTINED],
       attention: true,
       quarantined: true,
+      click: 1,
+      allowQuarantine: false,
     });
+    // Still quarantined.
+    await testOriginControls(ext2, options, {
+      items: [QUARANTINED, ALLOW_QUARANTINED],
+      attention: true,
+      quarantined: true,
+      click: 1,
+      allowQuarantine: true,
+    });
+    // Not quarantined anymore.
+    await testOriginControls(ext2, options, {
+      items: [ACCESS_OPTIONS, WHEN_CLICKED],
+      selected: 1,
+      attention: true,
+      quarantined: false,
+    });
+
     await testOriginControls(ext3, options, {
-      items: [QUARANTINED],
-      attention: true,
-      quarantined: true,
-    });
-    await testOriginControls(ext4, options, {
-      items: [QUARANTINED],
+      items: [QUARANTINED, ALLOW_QUARANTINED],
       attention: true,
       quarantined: true,
     });
 
-    // MV2 normally don't have controls, but we show the quarantined status.
-    await testOriginControls(ext5, options, {
-      items: [QUARANTINED],
+    await testOriginControls(ext4, options, {
+      items: [QUARANTINED, ALLOW_QUARANTINED],
       attention: true,
       quarantined: true,
+      click: 1,
+      allowQuarantine: true,
+    });
+    await testOriginControls(ext4, options, {
+      items: [ACCESS_OPTIONS, ALL_SITES],
+      selected: 1,
+      attention: false,
+      quarantined: false,
+    });
+
+    // MV2 normally don't have controls, but we always show for quarantined.
+    await testOriginControls(ext5, options, {
+      items: [QUARANTINED, ALLOW_QUARANTINED],
+      attention: true,
+      quarantined: true,
+      click: 1,
+      allowQuarantine: true,
+    });
+    await testOriginControls(ext5, options, {
+      items: [],
+      attention: false,
+      quarantined: false,
     });
 
     if (unifiedButton) {
