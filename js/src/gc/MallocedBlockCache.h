@@ -70,9 +70,13 @@ class MallocedBlockCache {
 
   ~MallocedBlockCache();
 
-  // Allocation and freeing.
-  [[nodiscard]] PointerAndUint7 alloc(size_t size);
-  void free(PointerAndUint7 blockAndListID);
+  // Allocation and freeing.  Use `alloc` to allocate.  `allowSlow` is
+  // `alloc`s fallback path.  Do not call it directly, since it doesn't handle
+  // all cases by itself.
+  [[nodiscard]] inline PointerAndUint7 alloc(size_t size);
+  [[nodiscard]] MOZ_NEVER_INLINE PointerAndUint7 allowSlow(size_t size);
+
+  inline void free(PointerAndUint7 blockAndListID);
 
   // Allows users to gradually hand blocks back to js_free, so as to avoid
   // space leaks in long-running scenarios.  The specified percentage of
@@ -84,6 +88,75 @@ class MallocedBlockCache {
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
+
+inline PointerAndUint7 MallocedBlockCache::alloc(size_t size) {
+  // Figure out which free list can give us a block of size `size`, after it
+  // has been rounded up to a multiple of `step`.
+  //
+  // Example mapping for STEP = 16 and NUM_LISTS = 8, after rounding up:
+  //   0 never holds any blocks (denotes "too large")
+  //   1 holds blocks of size  16
+  //   2 holds blocks of size  32
+  //   3 holds blocks of size  48
+  //   4 holds blocks of size  64
+  //   5 holds blocks of size  80
+  //   6 holds blocks of size  96
+  //   7 holds blocks of size 112
+  //
+  // For a request of size n:
+  // * if n == 0, fail
+  // * else
+  //      round n up to a multiple of STEP
+  //      let i = n / STEP
+  //      if i >= NUM_LISTS
+  //         alloc direct from js_malloc, and return listID = 0
+  //      if lists[i] is nonempty, use lists[i] and return listID = i.
+  //      else
+  //         let p = js_malloc(n)
+  //         return p and listID = i.
+
+  // We're never expected to handle zero-sized blocks.
+  MOZ_ASSERT(size > 0);
+
+  size = js::RoundUp(size, STEP);
+  size_t i = size / STEP;
+  MOZ_ASSERT(i > 0);
+
+  // Fast path: try to pull a block from the relevant list.
+  if (MOZ_LIKELY(i < NUM_LISTS &&       // "block is small enough to cache"
+                 !lists[i].empty())) {  // "a cached block is available"
+    // Check that i is the right list
+    MOZ_ASSERT(i * STEP == size);
+    void* block = lists[i].popCopy();
+    return PointerAndUint7(block, i);
+  }
+
+  // Fallback path for all other cases.
+  return allowSlow(size);
+}
+
+inline void MallocedBlockCache::free(PointerAndUint7 blockAndListID) {
+  // This is a whole lot simpler than the ::alloc case, since we are given the
+  // listId and don't have to compute it (not that we have any way to).
+  void* block = blockAndListID.pointer();
+  uint32_t listID = blockAndListID.uint7();
+  MOZ_ASSERT(block);
+  MOZ_ASSERT(listID < NUM_LISTS);
+  if (MOZ_UNLIKELY(listID == OVERSIZE_BLOCK_LIST_ID)) {
+    // It was too large for recycling; go straight to js_free.
+    js_free(block);
+    return;
+  }
+
+  // Put it back on list `listId`, first poisoning it for safety.
+  memset(block, JS_NOTINUSE_TRAILER_PATTERN, listID * STEP);
+  MOZ_MAKE_MEM_UNDEFINED(block, listID * STEP);
+  if (MOZ_UNLIKELY(!lists[listID].append(block))) {
+    // OOM'd while doing admin.  Hand it off to js_free and forget about the
+    // OOM.
+    js_free(block);
+  }
+}
 
 }  // namespace gc
 }  // namespace js
