@@ -869,6 +869,14 @@ void gfxShapedText::AdjustAdvancesForSyntheticBold(float aSynBoldOffset,
   }
 }
 
+size_t gfxShapedWord::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+  size_t total = aMallocSizeOf(this);
+  if (mDetailedGlyphs) {
+    total += mDetailedGlyphs->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  return total;
+}
+
 float gfxFont::AngleForSyntheticOblique() const {
   // First check conditions that mean no synthetic slant should be used:
   if (mStyle.style == FontSlantStyle::NORMAL) {
@@ -3052,16 +3060,16 @@ gfxFont::RunMetrics gfxFont::Measure(const gfxTextRun* aTextRun,
 bool gfxFont::AgeCachedWords() {
   mozilla::AutoWriteLock lock(mLock);
   if (mWordCache) {
-    for (auto it = mWordCache->Iter(); !it.Done(); it.Next()) {
-      CacheHashEntry* entry = it.Get();
-      if (!entry->mShapedWord) {
-        NS_ASSERTION(entry->mShapedWord, "cache entry has no gfxShapedWord!");
-        it.Remove();
-      } else if (entry->mShapedWord->IncrementAge() == kShapedWordCacheMaxAge) {
-        it.Remove();
+    for (auto it = mWordCache->modIter(); !it.done(); it.next()) {
+      auto& entry = it.get().value();
+      if (!entry) {
+        NS_ASSERTION(entry, "cache entry has no gfxShapedWord!");
+        it.remove();
+      } else if (entry->IncrementAge() == kShapedWordCacheMaxAge) {
+        it.remove();
       }
     }
-    return mWordCache->IsEmpty();
+    return mWordCache->empty();
   }
   return true;
 }
@@ -3103,23 +3111,22 @@ bool gfxFont::ProcessShapedWordInternal(
     int32_t aAppUnitsPerDevUnit, gfx::ShapedTextFlags aFlags,
     RoundingFlags aRounding, gfxTextPerfMetrics* aTextPerf GFX_MAYBE_UNUSED,
     Func aCallback) {
-  CacheHashKey key(aText, aLength, aHash, aRunScript, aLanguage,
+  WordCacheKey key(aText, aLength, aHash, aRunScript, aLanguage,
                    aAppUnitsPerDevUnit, aFlags, aRounding);
   {
     // If we have a word cache, attempt to look up the word in it.
     AutoReadLock lock(mLock);
     if (mWordCache) {
       // if there's a cached entry for this word, just return it
-      if (CacheHashEntry* entry = mWordCache->GetEntry(key)) {
-        gfxShapedWord* sw = entry->mShapedWord.get();
-        sw->ResetAge();
+      if (auto entry = mWordCache->lookup(key)) {
+        entry->value()->ResetAge();
 #ifndef RELEASE_OR_BETA
         if (aTextPerf) {
           // XXX we should make sure this is atomic
           aTextPerf->current.wordCacheHit++;
         }
 #endif
-        aCallback(sw);
+        aCallback(entry->value().get());
         return true;
       }
     }
@@ -3129,91 +3136,94 @@ bool gfxFont::ProcessShapedWordInternal(
   // a new gfxShapedWord and cache it. We don't have to lock during shaping,
   // only when it comes time to cache the new entry.
 
-  gfxShapedWord* sw =
+  UniquePtr<gfxShapedWord> newShapedWord(
       gfxShapedWord::Create(aText, aLength, aRunScript, aLanguage,
-                            aAppUnitsPerDevUnit, aFlags, aRounding);
-  if (!sw) {
+                            aAppUnitsPerDevUnit, aFlags, aRounding));
+  if (!newShapedWord) {
     NS_WARNING("failed to create gfxShapedWord - expect missing text");
     return false;
   }
-  DebugOnly<bool> ok = ShapeText(aDrawTarget, aText, 0, aLength, aRunScript,
-                                 aLanguage, aVertical, aRounding, sw);
+  DebugOnly<bool> ok =
+      ShapeText(aDrawTarget, aText, 0, aLength, aRunScript, aLanguage,
+                aVertical, aRounding, newShapedWord.get());
   NS_WARNING_ASSERTION(ok, "failed to shape word - expect garbled text");
 
   {
     // We're going to cache the new shaped word, so lock for writing now.
     AutoWriteLock lock(mLock);
     if (!mWordCache) {
-      mWordCache = MakeUnique<nsTHashtable<CacheHashEntry>>();
+      mWordCache = MakeUnique<HashMap<WordCacheKey, UniquePtr<gfxShapedWord>,
+                                      WordCacheKey::HashPolicy>>();
     } else {
       // If the cache is getting too big, flush it and start over.
       uint32_t wordCacheMaxEntries =
           gfxPlatform::GetPlatform()->WordCacheMaxEntries();
-      if (mWordCache->Count() > wordCacheMaxEntries) {
+      if (mWordCache->count() > wordCacheMaxEntries) {
         // Flush the cache if it is getting overly big.
         NS_WARNING("flushing shaped-word cache");
         ClearCachedWordsLocked();
       }
     }
-    CacheHashEntry* entry = mWordCache->PutEntry(key, fallible);
-    if (!entry) {
-      NS_WARNING("failed to create word cache entry - expect missing text");
-      delete sw;
-      return false;
+
+    // Update key so that it references the text stored in the newShapedWord,
+    // which is guaranteed to live as long as the hashtable entry.
+    if ((key.mTextIs8Bit = newShapedWord->TextIs8Bit())) {
+      key.mText.mSingle = newShapedWord->Text8Bit();
+    } else {
+      key.mText.mDouble = newShapedWord->TextUnicode();
     }
+    auto entry = mWordCache->lookupForAdd(key);
 
     // It's unlikely, but maybe another thread got there before us...
-    if (entry->mShapedWord) {
-      // Just discard the newly-created word, and use the existing one.
-      delete sw;
-      sw = entry->mShapedWord.get();
-      sw->ResetAge();
+    if (entry) {
+      // Use the existing entry; the newShapedWord will be discarded.
+      entry->value()->ResetAge();
 #ifndef RELEASE_OR_BETA
       if (aTextPerf) {
         aTextPerf->current.wordCacheHit++;
       }
 #endif
-      aCallback(sw);
+      aCallback(entry->value().get());
       return true;
     }
 
-    entry->mShapedWord.reset(sw);
+    if (!mWordCache->add(entry, key, std::move(newShapedWord))) {
+      NS_WARNING("failed to cache gfxShapedWord - expect missing text");
+      return false;
+    }
 
 #ifndef RELEASE_OR_BETA
     if (aTextPerf) {
       aTextPerf->current.wordCacheMiss++;
     }
 #endif
-    aCallback(sw);
+    aCallback(entry->value().get());
   }
 
   gfxFontCache::GetCache()->RunWordCacheExpirationTimer();
   return true;
 }
 
-bool gfxFont::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const {
-  const gfxShapedWord* sw = mShapedWord.get();
-  if (!sw) {
+bool gfxFont::WordCacheKey::HashPolicy::match(const Key& aKey,
+                                              const Lookup& aLookup) {
+  if (aKey.mLength != aLookup.mLength || aKey.mFlags != aLookup.mFlags ||
+      aKey.mRounding != aLookup.mRounding ||
+      aKey.mAppUnitsPerDevUnit != aLookup.mAppUnitsPerDevUnit ||
+      aKey.mScript != aLookup.mScript || aKey.mLanguage != aLookup.mLanguage) {
     return false;
   }
-  if (sw->GetLength() != aKey->mLength || sw->GetFlags() != aKey->mFlags ||
-      sw->GetRounding() != aKey->mRounding ||
-      sw->GetAppUnitsPerDevUnit() != aKey->mAppUnitsPerDevUnit ||
-      sw->GetScript() != aKey->mScript ||
-      sw->GetLanguage() != aKey->mLanguage) {
-    return false;
-  }
-  if (sw->TextIs8Bit()) {
-    if (aKey->mTextIs8Bit) {
-      return (0 == memcmp(sw->Text8Bit(), aKey->mText.mSingle,
-                          aKey->mLength * sizeof(uint8_t)));
+
+  if (aKey.mTextIs8Bit) {
+    if (aLookup.mTextIs8Bit) {
+      return (0 == memcmp(aKey.mText.mSingle, aLookup.mText.mSingle,
+                          aKey.mLength * sizeof(uint8_t)));
     }
-    // The key has 16-bit text, even though all the characters are < 256,
+    // The lookup key has 16-bit text, even though all the characters are < 256,
     // so the TEXT_IS_8BIT flag was set and the cached ShapedWord we're
     // comparing with will have 8-bit text.
-    const uint8_t* s1 = sw->Text8Bit();
-    const char16_t* s2 = aKey->mText.mDouble;
-    const char16_t* s2end = s2 + aKey->mLength;
+    const uint8_t* s1 = aKey.mText.mSingle;
+    const char16_t* s2 = aLookup.mText.mDouble;
+    const char16_t* s2end = s2 + aKey.mLength;
     while (s2 < s2end) {
       if (*s1++ != *s2++) {
         return false;
@@ -3221,11 +3231,11 @@ bool gfxFont::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const {
     }
     return true;
   }
-  NS_ASSERTION(!(aKey->mFlags & gfx::ShapedTextFlags::TEXT_IS_8BIT) &&
-                   !aKey->mTextIs8Bit,
+  NS_ASSERTION(!(aLookup.mFlags & gfx::ShapedTextFlags::TEXT_IS_8BIT) &&
+                   !aLookup.mTextIs8Bit,
                "didn't expect 8-bit text here");
-  return (0 == memcmp(sw->TextUnicode(), aKey->mText.mDouble,
-                      aKey->mLength * sizeof(char16_t)));
+  return (0 == memcmp(aKey.mText.mDouble, aLookup.mText.mDouble,
+                      aKey.mLength * sizeof(char16_t)));
 }
 
 bool gfxFont::ProcessSingleSpaceShapedWord(
@@ -4504,7 +4514,12 @@ void gfxFont::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
         mGlyphExtentsArray[i]->SizeOfIncludingThis(aMallocSizeOf);
   }
   if (mWordCache) {
-    aSizes->mShapedWords += mWordCache->SizeOfIncludingThis(aMallocSizeOf);
+    aSizes->mShapedWords +=
+        mWordCache->shallowSizeOfIncludingThis(aMallocSizeOf);
+    for (auto it = mWordCache->iter(); !it.done(); it.next()) {
+      aSizes->mShapedWords +=
+          it.get().value()->SizeOfIncludingThis(aMallocSizeOf);
+    }
   }
 }
 
