@@ -35,42 +35,6 @@ class PromiseNativeHandler : public nsISupports {
                                 ErrorResult& aRv) = 0;
 };
 
-// This base class exists solely to use NS_IMPL_ISUPPORTS because it doesn't
-// support template classes.
-class MozPromiseRejectOnDestructionBase : public PromiseNativeHandler {
-  NS_DECL_ISUPPORTS
-
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {}
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {}
-
- protected:
-  ~MozPromiseRejectOnDestructionBase() override = default;
-};
-
-// Use this when you subscribe to a JS promise to settle a MozPromise that is
-// not guaranteed to be settled by anyone else.
-template <typename T>
-class MozPromiseRejectOnDestruction final
-    : public MozPromiseRejectOnDestructionBase {
- public:
-  // (Accepting RefPtr<T> instead of T* because compiler fails to implicitly
-  // convert it at call sites)
-  explicit MozPromiseRejectOnDestruction(const RefPtr<T>& aMozPromise)
-      : mMozPromise(aMozPromise) {
-    MOZ_ASSERT(aMozPromise);
-  }
-
- protected:
-  ~MozPromiseRejectOnDestruction() override {
-    // Rejecting will be no-op if the promise is already settled
-    mMozPromise->Reject(NS_BINDING_ABORTED, __func__);
-  }
-
-  RefPtr<T> mMozPromise;
-};
-
 // This class is used to set C++ callbacks once a dom Promise a resolved or
 // rejected.
 class DomPromiseListener final : public PromiseNativeHandler {
