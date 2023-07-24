@@ -4,6 +4,8 @@
 
 #include "frontend/DecoratorEmitter.h"
 
+#include "mozilla/Assertions.h"
+
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/CallOrNewEmitter.h"
 #include "frontend/IfEmitter.h"
@@ -45,7 +47,7 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
       return false;
     }
 
-    if (!emitCallDecorator(kind, key, isStatic, decorator)) {
+    if (!emitCallDecoratorForElement(kind, key, isStatic, decorator)) {
       return false;
     }
 
@@ -177,7 +179,7 @@ bool DecoratorEmitter::emitApplyDecoratorsToFieldDefinition(
       return false;
     }
 
-    if (!emitCallDecorator(Kind::Field, key, isStatic, decorator)) {
+    if (!emitCallDecoratorForElement(Kind::Field, key, isStatic, decorator)) {
       //          [stack] ARRAY INDEX RETVAL
       return false;
     }
@@ -356,7 +358,8 @@ bool DecoratorEmitter::emitApplyDecoratorsToAccessorDefinition(
 
     // Step 5.j. Let newValue be ? Call(decorator, decoratorReceiver,
     //           « value, context »).
-    if (!emitCallDecorator(Kind::Accessor, key, isStatic, decorator)) {
+    if (!emitCallDecoratorForElement(Kind::Accessor, key, isStatic,
+                                     decorator)) {
       //          [stack] GETTER SETTER ARRAY INDEX RETVAL
       return false;
     }
@@ -451,6 +454,135 @@ bool DecoratorEmitter::emitApplyDecoratorsToAccessorDefinition(
   //          [stack] GETTER SETTER ARRAY
 }
 
+bool DecoratorEmitter::emitApplyDecoratorsToClassDefinition(
+    ParseNode* key, ListNode* decorators) {
+  // This function expects a class constructor to already be on the stack. It
+  // applies each decorator to the class constructor, possibly replacing it with
+  // the return value of the decorator.
+  //          [stack] CTOR
+
+  // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-applydecoratorstoclassdefinition
+  // Step 1. For each element decoratorRecord of decorators, do
+  for (ParseNode* decorator : decorators->contents()) {
+    // Step 1.a. Let decorator be decoratorRecord.[[Decorator]].
+    // Step 1.b. Let decoratorReceiver be decoratorRecord.[[Receiver]].
+    // Step 1.c. Let decorationState be the Record { [[Finished]]: false }.
+    if (!emitDecorationState()) {
+      return false;
+    }
+
+    CallOrNewEmitter cone(bce_, JSOp::Call,
+                          CallOrNewEmitter::ArgumentsKind::Other,
+                          ValueUsage::WantValue);
+
+    if (!emitDecoratorCallee(cone, decorator)) {
+      //          [stack] CTOR CALLEE THIS?
+      return false;
+    }
+
+    if (!cone.emitThis()) {
+      //          [stack] CTOR CALLEE THIS
+      return false;
+    }
+
+    if (!cone.prepareForNonSpreadArguments()) {
+      return false;
+    }
+
+    // Duplicate the class definition to pass it as an argument
+    // to the decorator.
+    if (!bce_->emitDupAt(2)) {
+      //          [stack] CTOR CALLEE THIS CTOR
+      return false;
+    }
+
+    // Step 1.d. Let context be CreateDecoratorContextObject(class, className,
+    //           extraInitializers, decorationState).
+    if (!emitCreateDecoratorContextObject(Kind::Class, key, false,
+                                          decorator->pn_pos)) {
+      //          [stack] CTOR CALLEE THIS CTOR context
+      return false;
+    }
+
+    // Step 1.e. Let newDef be ? Call(decorator, decoratorReceiver, « classDef,
+    //           context »).
+    if (!cone.emitEnd(2, decorator->pn_pos.begin)) {
+      //          [stack] CTOR NEWCTOR
+      return false;
+    }
+
+    // Step 1.f. Set decorationState.[[Finished]] to true.
+    if (!emitUpdateDecorationState()) {
+      return false;
+    }
+
+    if (!emitCheckIsUndefined()) {
+      //          [stack] CTOR NEWCTOR ISUNDEFINED
+      return false;
+    }
+
+    InternalIfEmitter ie(bce_);
+    if (!ie.emitThenElse()) {
+      //          [stack] CTOR NEWCTOR
+      return false;
+    }
+
+    // Pop the undefined NEWDEF from the stack, leaving the original value in
+    // place.
+    if (!bce_->emitPopN(1)) {
+      //          [stack] CTOR
+      return false;
+    }
+
+    if (!ie.emitElseIf(mozilla::Nothing())) {
+      return false;
+    }
+
+    // Step 1.g. If IsCallable(newDef) is true, then
+    // Step 1.g.i. Set classDef to newDef.
+    if (!emitCheckIsCallable()) {
+      //              [stack] CTOR NEWCTOR ISCALLABLE_RESULT
+      return false;
+    }
+
+    if (!ie.emitThenElse()) {
+      //          [stack] CTOR NEWCTOR
+      return false;
+    }
+
+    if (!bce_->emit1(JSOp::Swap)) {
+      //          [stack] NEWCTOR CTOR
+      return false;
+    }
+    if (!bce_->emitPopN(1)) {
+      //          [stack] NEWCTOR
+      return false;
+    }
+
+    // Step 1.h. Else if newDef is not undefined, then
+    // Step 1.h.i. Throw a TypeError exception.
+    if (!ie.emitElse()) {
+      return false;
+    }
+
+    if (!bce_->emitPopN(1)) {
+      //          [stack] CTOR
+      return false;
+    }
+    if (!bce_->emit2(JSOp::ThrowMsg,
+                     uint8_t(ThrowMsgKind::DecoratorInvalidReturnType))) {
+      return false;
+    }
+
+    if (!ie.emitEnd()) {
+      return false;
+    }
+  }
+
+  // Step 2. Return classDef.
+  return true;
+}
+
 bool DecoratorEmitter::emitInitializeFieldOrAccessor() {
   //          [stack] THIS INITIALIZERS
 
@@ -526,11 +658,11 @@ bool DecoratorEmitter::emitInitializeFieldOrAccessor() {
   }
 
   // Step 5. For each element initializer of elementRecord.[[Initializers]], do
-  WhileEmitter wh(bce_);
+  InternalWhileEmitter wh(bce_);
   // At this point, we have no context to determine offsets in the
   // code for this while statement. Ideally, it would correspond to
   // the field we're initializing.
-  if (!wh.emitCond(0, 0, 0)) {
+  if (!wh.emitCond()) {
     //          [stack] THIS FIELDNAME VALUE INITIALIZERS LENGTH INDEX
     return false;
   }
@@ -674,24 +806,11 @@ bool DecoratorEmitter::emitUpdateDecorationState() {
   return true;
 }
 
-[[nodiscard]] bool DecoratorEmitter::emitCallDecorator(Kind kind,
-                                                       ParseNode* key,
-                                                       bool isStatic,
-                                                       ParseNode* decorator) {
-  // Except for fields, this method expects the value to be passed
-  // to the decorator to be on top of the stack. For methods, getters and
-  // setters this is the method itself. For accessors it is an object
-  // containing the getter and setter associated with the accessor.
-  //          [stack] VAL?
-  // Prepare to call decorator
-  CallOrNewEmitter cone(bce_, JSOp::Call,
-                        CallOrNewEmitter::ArgumentsKind::Other,
-                        ValueUsage::WantValue);
-
+bool DecoratorEmitter::emitDecoratorCallee(CallOrNewEmitter& cone,
+                                           ParseNode* decorator) {
   // DecoratorMemberExpression: IdentifierReference e.g. @dec
   if (decorator->is<NameNode>()) {
     if (!cone.emitNameCallee(decorator->as<NameNode>().name())) {
-      //          [stack] VAL? CALLEE THIS?
       return false;
     }
   } else if (decorator->is<ListNode>()) {
@@ -744,6 +863,28 @@ bool DecoratorEmitter::emitUpdateDecorationState() {
     if (!bce_->emitTree(decorator)) {
       return false;
     }
+  }
+
+  return true;
+}
+
+bool DecoratorEmitter::emitCallDecoratorForElement(Kind kind, ParseNode* key,
+                                                   bool isStatic,
+                                                   ParseNode* decorator) {
+  MOZ_ASSERT(kind != Kind::Class);
+  // Except for fields, this method expects the value to be passed
+  // to the decorator to be on top of the stack. For methods, getters and
+  // setters this is the method itself. For accessors it is an object
+  // containing the getter and setter associated with the accessor.
+  //          [stack] VAL?
+  // Prepare to call decorator
+  CallOrNewEmitter cone(bce_, JSOp::Call,
+                        CallOrNewEmitter::ArgumentsKind::Other,
+                        ValueUsage::WantValue);
+
+  if (!emitDecoratorCallee(cone, decorator)) {
+    //          [stack] VAL? CALLEE THIS?
+    return false;
   }
 
   if (!cone.emitThis()) {
@@ -857,7 +998,8 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
                                                         TokenPos pos) {
   // Step 1. Let contextObj be OrdinaryObjectCreate(%Object.prototype%).
   ObjectEmitter oe(bce_);
-  if (!oe.emitObject(/* propertyCount */ 6)) {
+  size_t propertyCount = kind == Kind::Class ? 3 : 6;
+  if (!oe.emitObject(propertyCount)) {
     //          [stack] context
     return false;
   }
@@ -865,53 +1007,40 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
     return false;
   }
 
-  if (kind == Kind::Method) {
-    // Step 2. If kind is method, let kindStr be "method".
-    if (!bce_->emitStringOp(
-            JSOp::String,
-            frontend::TaggedParserAtomIndex::WellKnown::method())) {
-      //          [stack] context "method"
-      return false;
-    }
-  } else if (kind == Kind::Getter) {
-    // Step 3. Else if kind is getter, let kindStr be "getter".
-    if (!bce_->emitStringOp(
-            JSOp::String,
-            frontend::TaggedParserAtomIndex::WellKnown::getter())) {
-      //          [stack] context "getter"
-      return false;
-    }
-  } else if (kind == Kind::Setter) {
-    // Step 4. Else if kind is setter, let kindStr be "setter".
-    if (!bce_->emitStringOp(
-            JSOp::String,
-            frontend::TaggedParserAtomIndex::WellKnown::setter())) {
-      //          [stack] context "setter"
-      return false;
-    }
-  } else if (kind == Kind::Accessor) {
-    // Step 5. Else if kind is accessor, let kindStr be "accessor".
-    if (!bce_->emitStringOp(
-            JSOp::String,
-            frontend::TaggedParserAtomIndex::WellKnown::accessor())) {
-      //          [stack] context "accessor"
-      return false;
-    }
-  } else if (kind == Kind::Field) {
-    // Step 6. Else if kind is field, let kindStr be "field".
-    if (!bce_->emitStringOp(
-            JSOp::String,
-            frontend::TaggedParserAtomIndex::WellKnown::field())) {
-      //          [stack] context "field"
-      return false;
-    }
-  } else {
-    // clang-format off
-    // Step 7. Else,
-    // Step 7.a. Assert: kind is class.
-    // Step 7.b. Let kindStr be "class".
-    // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1793963.
-    // clang-format on
+  TaggedParserAtomIndex kindStr;
+  switch (kind) {
+    case Kind::Method:
+      // Step 2. If kind is method, let kindStr be "method".
+      kindStr = frontend::TaggedParserAtomIndex::WellKnown::method();
+      break;
+    case Kind::Getter:
+      // Step 3. Else if kind is getter, let kindStr be "getter".
+      kindStr = frontend::TaggedParserAtomIndex::WellKnown::getter();
+      break;
+    case Kind::Setter:
+      // Step 4. Else if kind is setter, let kindStr be "setter".
+      kindStr = frontend::TaggedParserAtomIndex::WellKnown::setter();
+      break;
+    case Kind::Accessor:
+      // Step 5. Else if kind is accessor, let kindStr be "accessor".
+      kindStr = frontend::TaggedParserAtomIndex::WellKnown::accessor();
+      break;
+    case Kind::Field:
+      // Step 6. Else if kind is field, let kindStr be "field".
+      kindStr = frontend::TaggedParserAtomIndex::WellKnown::field();
+      break;
+    case Kind::Class:
+      // Step 7. Else,
+      // Step 7.a. Assert: kind is class.
+      // Step 7.b. Let kindStr be "class".
+      kindStr = frontend::TaggedParserAtomIndex::WellKnown::class_();
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown kind");
+      break;
+  }
+  if (!bce_->emitStringOp(JSOp::String, kindStr)) {
+    //          [stack] context kindStr
     return false;
   }
 
@@ -923,6 +1052,8 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
   }
   // Step 9. If kind is not class, then
   if (kind != Kind::Class) {
+    MOZ_ASSERT(key != nullptr, "Expect key to be present except for classes");
+
     // Step 9.a. Perform ! CreateDataPropertyOrThrow(contextObj, "access",
     //           CreateDecoratorAccessObject(kind, name)).
     if (!oe.prepareForPropValue(pos.begin, PropertyEmitter::Kind::Prototype)) {
@@ -991,10 +1122,25 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
       return false;
     }
   } else {
-    // Steo 10. Else,
+    // Step 10. Else,
     // Step 10.a. Perform ! CreateDataPropertyOrThrow(contextObj, "name", name).
-    // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1793963
-    return false;
+    if (!oe.prepareForPropValue(pos.begin, PropertyEmitter::Kind::Prototype)) {
+      return false;
+    }
+    if (key != nullptr) {
+      if (!bce_->emitStringOp(JSOp::String, key->as<NameNode>().atom())) {
+        return false;
+      }
+    } else {
+      if (!bce_->emit1(JSOp::Undefined)) {
+        return false;
+      }
+    }
+    if (!oe.emitInit(frontend::AccessorType::None,
+                     frontend::TaggedParserAtomIndex::WellKnown::name())) {
+      //          [stack] context
+      return false;
+    }
   }
   // Step 11. Let addInitializer be CreateAddInitializerFunction(initializers,
   //          decorationState).

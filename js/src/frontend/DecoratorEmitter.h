@@ -6,6 +6,7 @@
 #define frontend_DecoratorEmitter_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 
 #include "frontend/ParseNode.h"
 
@@ -32,6 +33,9 @@ class MOZ_STACK_CLASS DecoratorEmitter {
   [[nodiscard]] bool emitApplyDecoratorsToAccessorDefinition(
       ParseNode* key, ListNode* decorators, bool isStatic);
 
+  [[nodiscard]] bool emitApplyDecoratorsToClassDefinition(ParseNode* key,
+                                                          ListNode* decorators);
+
   [[nodiscard]] bool emitInitializeFieldOrAccessor();
 
  private:
@@ -41,8 +45,12 @@ class MOZ_STACK_CLASS DecoratorEmitter {
 
   [[nodiscard]] bool emitUpdateDecorationState();
 
-  [[nodiscard]] bool emitCallDecorator(Kind kind, ParseNode* key, bool isStatic,
-                                       ParseNode* decorator);
+  [[nodiscard]] bool emitDecoratorCallee(CallOrNewEmitter& cone,
+                                         ParseNode* decorator);
+
+  [[nodiscard]] bool emitCallDecoratorForElement(Kind kind, ParseNode* key,
+                                                 bool isStatic,
+                                                 ParseNode* decorator);
 
   [[nodiscard]] bool emitCreateDecoratorAccessObject();
 

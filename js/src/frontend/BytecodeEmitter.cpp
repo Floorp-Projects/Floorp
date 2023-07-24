@@ -10393,11 +10393,11 @@ bool BytecodeEmitter::emitInitializeInstanceMembers(
       return false;
     }
 
-    WhileEmitter wh(this);
+    InternalWhileEmitter wh(this);
     // At this point, we have no context to determine offsets in the
     // code for this while statement. Ideally, it would correspond to
     // the field we're initializing.
-    if (!wh.emitCond(0, 0, 0)) {
+    if (!wh.emitCond()) {
       //          [stack] ARRAY LENGTH INDEX
       return false;
     }
@@ -11660,6 +11660,19 @@ bool BytecodeEmitter::emitClass(
     //              [stack] CTOR
     return false;
   }
+
+#if ENABLE_DECORATORS
+  if (classNode->decorators() != nullptr) {
+    DecoratorEmitter de(this);
+    NameNode* className =
+        classNode->names() ? classNode->names()->innerBinding() : nullptr;
+    if (!de.emitApplyDecoratorsToClassDefinition(className,
+                                                 classNode->decorators())) {
+      //            [stack] CTOR
+      return false;
+    }
+  }
+#endif
 
   if (!ce.emitEnd(kind)) {
     //              [stack] # class declaration
