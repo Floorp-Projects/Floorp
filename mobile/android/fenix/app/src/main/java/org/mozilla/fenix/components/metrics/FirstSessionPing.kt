@@ -35,7 +35,6 @@ class FirstSessionPing(private val context: Context) {
      *
      * @return true if it was already triggered, false otherwise.
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun wasAlreadyTriggered(): Boolean {
         return prefs.getBoolean("ping_sent", false)
     }

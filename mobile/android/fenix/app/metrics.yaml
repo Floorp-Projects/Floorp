@@ -7256,6 +7256,28 @@ first_session:
       tags:
         - Performance
         - Attribution
+  adjust_attribution_timespan:
+    type: timespan
+    time_unit: millisecond
+    send_in_pings:
+      - first-session
+      - metrics
+    description: >
+      The time that it takes to derive the attribution parameters by
+      the Adjust SDK.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1823492
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/2974
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 124
+    metadata:
+      tags:
+        - Performance
+        - Attribution
 play_store_attribution:
   source:
     type: string
