@@ -1086,8 +1086,9 @@ bool nsCSPDirective::permits(CSPDirective aDirective, nsILoadInfo* aLoadInfo,
   MOZ_ASSERT(equals(aDirective) || isDefaultDirective());
 
   if (CSPUTILSLOGENABLED()) {
-    CSPUTILSLOG(
-        ("nsCSPDirective::permits, aUri: %s", aUri->GetSpecOrDefault().get()));
+    CSPUTILSLOG(("nsCSPDirective::permits, aUri: %s, aDirective: %s",
+                 aUri->GetSpecOrDefault().get(),
+                 CSP_CSPDirectiveToString(aDirective)));
   }
 
   if (aLoadInfo) {
@@ -1097,6 +1098,7 @@ bool nsCSPDirective::permits(CSPDirective aDirective, nsILoadInfo* aLoadInfo,
       // list? on request’s cryptographic nonce metadata and this directive’s
       // value is "Matches", return "Allowed".
       if (DoesNonceMatchSourceList(aLoadInfo, mSrcs)) {
+        CSPUTILSLOG(("  Allowed by matching nonce (style)"));
         return true;
       }
     }
@@ -1109,6 +1111,7 @@ bool nsCSPDirective::permits(CSPDirective aDirective, nsILoadInfo* aLoadInfo,
       // list? on request’s cryptographic nonce metadata and this directive’s
       // value is "Matches", return "Allowed".
       if (DoesNonceMatchSourceList(aLoadInfo, mSrcs)) {
+        CSPUTILSLOG(("  Allowed by matching nonce (script-like)"));
         return true;
       }
 
@@ -1190,6 +1193,8 @@ bool nsCSPDirective::permits(CSPDirective aDirective, nsILoadInfo* aLoadInfo,
           // Step 1.3.5. If bypass due to integrity match is true, return
           // "Allowed".
           if (bypass) {
+            CSPUTILSLOG(
+                ("  Allowed by matching integrity metadata (script-like)"));
             return true;
           }
         }
@@ -1203,7 +1208,15 @@ bool nsCSPDirective::permits(CSPDirective aDirective, nsILoadInfo* aLoadInfo,
                                          nsIContentPolicy::TYPE_XSLT) {
         // Step 1.4.1  If the request’s parser metadata is "parser-inserted",
         // return "Blocked". Otherwise, return "Allowed".
-        return !aLoadInfo->GetParserCreatedScript();
+        if (aLoadInfo->GetParserCreatedScript()) {
+          CSPUTILSLOG(
+              ("  Blocked by 'strict-dynamic' because parser-inserted"));
+          return false;
+        }
+
+        CSPUTILSLOG(
+            ("  Allowed by 'strict-dynamic' because not-parser-inserted"));
+        return true;
       }
     }
   }
@@ -1219,7 +1232,7 @@ bool nsCSPDirective::permits(CSPDirective aDirective, nsILoadInfo* aLoadInfo,
 
 bool nsCSPDirective::allows(enum CSPKeyword aKeyword,
                             const nsAString& aHashOrNonce) const {
-  CSPUTILSLOG(("nsCSPDirective::allows, aKeyWord: %s, a HashOrNonce: %s",
+  CSPUTILSLOG(("nsCSPDirective::allows, aKeyWord: %s, aHashOrNonce: %s",
                CSP_EnumToUTF8Keyword(aKeyword),
                NS_ConvertUTF16toUTF8(aHashOrNonce).get()));
 
@@ -1560,8 +1573,8 @@ bool nsCSPPolicy::permits(CSPDirective aDir, nsILoadInfo* aLoadInfo,
                           nsIURI* aUri, bool aWasRedirected, bool aSpecific,
                           nsAString& outViolatedDirective) const {
   if (CSPUTILSLOGENABLED()) {
-    CSPUTILSLOG(("nsCSPPolicy::permits, aUri: %s, aDir: %d, aSpecific: %s",
-                 aUri->GetSpecOrDefault().get(), aDir,
+    CSPUTILSLOG(("nsCSPPolicy::permits, aUri: %s, aDir: %s, aSpecific: %s",
+                 aUri->GetSpecOrDefault().get(), CSP_CSPDirectiveToString(aDir),
                  aSpecific ? "true" : "false"));
   }
 
