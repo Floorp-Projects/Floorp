@@ -161,9 +161,7 @@ void MFMediaEngineParent::CreateMediaEngine() {
   RETURN_VOID_IF_FAILED(CoCreateInstance(CLSID_MFMediaEngineClassFactory,
                                          nullptr, CLSCTX_INPROC_SERVER,
                                          IID_PPV_ARGS(&factory)));
-  const bool isLowLatency =
-      StaticPrefs::media_wmf_low_latency_enabled() &&
-      !StaticPrefs::media_wmf_low_latency_force_disabled();
+  const bool isLowLatency = StaticPrefs::media_wmf_low_latency_enabled();
   static const DWORD MF_MEDIA_ENGINE_DEFAULT = 0;
   RETURN_VOID_IF_FAILED(factory->CreateInstance(
       isLowLatency ? MF_MEDIA_ENGINE_REAL_TIME_MODE : MF_MEDIA_ENGINE_DEFAULT,
