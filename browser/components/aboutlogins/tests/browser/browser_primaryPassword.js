@@ -95,9 +95,9 @@ add_task(async function test() {
   mpDialogShown = forceAuthTimeoutAndWaitForMPDialog("cancel");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
-    let copyButton = loginItem.shadowRoot
-      .querySelector(".copy-password-button")
-      .shadowRoot.querySelector("button");
+    let copyButton = loginItem.shadowRoot.querySelector(
+      ".copy-password-button"
+    );
     copyButton.click();
   });
   await mpDialogShown;
@@ -106,14 +106,21 @@ add_task(async function test() {
   info("Clicking copy password button again");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
-    let copyButton = loginItem.shadowRoot
-      .querySelector(".copy-password-button")
-      .shadowRoot.querySelector("button");
+    let copyButton = loginItem.shadowRoot.querySelector(
+      ".copy-password-button"
+    );
     copyButton.click();
   });
   await mpDialogShown;
   info("Primary Password dialog shown and authenticated");
   await SpecialPowers.spawn(browser, [], async function () {
+    let loginItem = content.document.querySelector("login-item");
+    let copyButton = loginItem.shadowRoot.querySelector(
+      ".copy-password-button"
+    );
+    await ContentTaskUtils.waitForCondition(() => {
+      return copyButton.disabled;
+    }, "Waiting for copy button to be disabled");
     info("Password was copied to clipboard");
   });
 
@@ -163,8 +170,7 @@ add_task(async function test() {
   await SpecialPowers.spawn(browser, [], async function createNewToggle() {
     let createButton = content.document
       .querySelector("login-list")
-      .shadowRoot.querySelector(".create-login-button")
-      .shadowRoot.querySelector("button");
+      .shadowRoot.querySelector(".create-login-button");
     createButton.click();
 
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));

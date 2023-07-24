@@ -148,9 +148,7 @@ add_task(async function test_login_item() {
       }, "Waiting for login item to get populated");
       Assert.ok(loginItemPopulated, "The login item should get populated");
 
-      let editButton = loginItem.shadowRoot
-        .querySelector(".edit-button")
-        .shadowRoot.querySelector("button");
+      let editButton = loginItem.shadowRoot.querySelector(".edit-button");
       editButton.click();
     }
   );
@@ -170,9 +168,7 @@ add_task(async function test_login_item() {
   });
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
-    let editButton = loginItem.shadowRoot
-      .querySelector(".edit-button")
-      .shadowRoot.querySelector("button");
+    let editButton = loginItem.shadowRoot.querySelector(".edit-button");
     editButton.click();
   });
   info("waiting for oskeystore auth #2");
@@ -191,9 +187,7 @@ add_task(async function test_login_item() {
   });
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
-    let editButton = loginItem.shadowRoot
-      .querySelector(".edit-button")
-      .shadowRoot.querySelector("button");
+    let editButton = loginItem.shadowRoot.querySelector(".edit-button");
     editButton.click();
   });
   info("waiting for oskeystore auth #3");
@@ -248,9 +242,7 @@ add_task(async function test_login_item() {
       saveChangesButton.click();
 
       await ContentTaskUtils.waitForCondition(() => {
-        let editButton = loginItem.shadowRoot
-          .querySelector(".edit-button")
-          .shadowRoot.querySelector("button");
+        let editButton = loginItem.shadowRoot.querySelector(".edit-button");
         return !editButton.disabled;
       }, "Waiting to exit edit mode");
 
@@ -298,9 +290,7 @@ add_task(async function test_login_item() {
   });
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
-    let editButton = loginItem.shadowRoot
-      .querySelector(".edit-button")
-      .shadowRoot.querySelector("button");
+    let editButton = loginItem.shadowRoot.querySelector(".edit-button");
     editButton.click();
   });
   info("waiting for oskeystore auth #4");
@@ -378,9 +368,7 @@ add_task(async function test_login_item() {
   });
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
-    let editButton = loginItem.shadowRoot
-      .querySelector(".edit-button")
-      .shadowRoot.querySelector("button");
+    let editButton = loginItem.shadowRoot.querySelector(".edit-button");
     editButton.click();
   });
   info("waiting for oskeystore auth #5");
@@ -402,9 +390,7 @@ add_task(async function test_login_item() {
         loginItem.dataset.editing,
         "LoginItem should be in 'edit' mode"
       );
-      let deleteButton = loginItem.shadowRoot
-        .querySelector(".delete-button")
-        .shadowRoot.querySelector("button");
+      let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
       deleteButton.click();
       let confirmDeleteDialog = Cu.waiveXrays(
         content.document.querySelector("confirmation-dialog")
