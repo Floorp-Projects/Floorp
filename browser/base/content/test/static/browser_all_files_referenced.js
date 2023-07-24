@@ -50,7 +50,6 @@ var gExceptionPaths = [
 
   // Exclude all services-automation because they are used through webdriver
   "resource://gre/modules/services-automation/",
-  "resource://services-automation/ServicesAutomation.jsm",
 
   // Paths from this folder are constructed in NetErrorParent.sys.mjs based on
   // the type of cert or net error the user is encountering.
@@ -69,7 +68,7 @@ var gExceptionPaths = [
   // Activity stream schemas are referenced programmatically.
   "resource://activity-stream/schemas",
 
-  // Localization file added programatically in featureCallout.jsm
+  // Localization file added programatically in FeatureCallout.sys.mjs
   "resource://app/localization/en-US/browser/featureCallout.ftl",
 ];
 
@@ -84,7 +83,7 @@ if (AppConstants.MOZ_BACKGROUNDTASKS) {
   // These preferences are active only when we're in background task mode.
   gExceptionPaths.push("resource://gre/defaults/backgroundtasks/");
   gExceptionPaths.push("resource://app/defaults/backgroundtasks/");
-  // `BackgroundTask_id.jsm` is loaded at runtime by `app --backgroundtask id ...`.
+  // `BackgroundTask_*.sys.mjs` are loaded at runtime by `app --backgroundtask id ...`.
   gExceptionPaths.push("resource://gre/modules/backgroundtasks/");
   gExceptionPaths.push("resource://app/modules/backgroundtasks/");
 }
@@ -106,7 +105,7 @@ if (AppConstants.NIGHTLY_BUILD) {
 // referencing the whitelisted file in a way that the test can't detect, or a
 // bug number to remove or use the file if it is indeed currently unreferenced.
 var whitelist = [
-  // toolkit/components/pdfjs/content/PdfStreamConverter.jsm
+  // toolkit/components/pdfjs/content/PdfStreamConverter.sys.mjs
   { file: "chrome://pdf.js/locale/chrome.properties" },
   { file: "chrome://pdf.js/locale/viewer.properties" },
 
@@ -255,7 +254,7 @@ var whitelist = [
   // dom/xml/nsXMLPrettyPrinter.cpp
   { file: "resource://gre/localization/en-US/dom/XMLPrettyPrint.ftl" },
 
-  // tookit/mozapps/update/BackgroundUpdate.jsm
+  // tookit/mozapps/update/BackgroundUpdate.sys.mjs
   {
     file: "resource://gre/localization/en-US/toolkit/updates/backgroundupdate.ftl",
   },
@@ -306,7 +305,7 @@ if (AppConstants.platform == "android") {
 if (AppConstants.MOZ_UPDATE_AGENT && !AppConstants.MOZ_BACKGROUNDTASKS) {
   // Task scheduling is only used for background updates right now.
   whitelist.push({
-    file: "resource://gre/modules/TaskScheduler.jsm",
+    file: "resource://gre/modules/TaskScheduler.sys.mjs",
   });
 }
 
