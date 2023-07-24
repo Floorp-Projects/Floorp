@@ -497,7 +497,7 @@ export class TranslationsParent extends JSWindowActorParent {
       }
 
       if (
-        Services.prefs.prefHasDefaultValue("intl.accept_languages") &&
+        !Services.prefs.prefHasUserValue("intl.accept_languages") &&
         Services.locale.appLocaleAsBCP47 !== "en" &&
         !Services.locale.appLocaleAsBCP47.startsWith("en-")
       ) {
