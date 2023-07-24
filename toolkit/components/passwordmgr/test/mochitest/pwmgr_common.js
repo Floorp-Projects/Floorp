@@ -634,7 +634,7 @@ function checkUnmodifiedForm(formNum) {
  * @param existingPasswordFieldsCount the number of password fields
  * that begin on the test page.
  */
-function registerRunTests(existingPasswordFieldsCount = 0) {
+function registerRunTests(existingPasswordFieldsCount = 0, callback) {
   return new Promise(resolve => {
     function onDOMContentLoaded() {
       var form = document.createElement("form");
@@ -666,8 +666,7 @@ function registerRunTests(existingPasswordFieldsCount = 0) {
         SpecialPowers.removeObserver(observer, "passwordmgr-processed-form");
         form.remove();
         SimpleTest.executeSoon(() => {
-          var runTestEvent = new Event("runTests");
-          window.dispatchEvent(runTestEvent);
+          callback?.();
           resolve();
         });
       });
@@ -804,90 +803,38 @@ async function loadFormIntoWindow(origin, html, win, expectedCount = 1, task) {
   await processedPromise;
 }
 
-function getTelemetryEvents(options) {
-  return new Promise(resolve => {
-    PWMGR_COMMON_PARENT.addMessageListener(
-      "getTelemetryEvents",
-      function gotResult(events) {
-        info(
-          "CONTENT: getTelemetryEvents gotResult: " + JSON.stringify(events)
-        );
-        PWMGR_COMMON_PARENT.removeMessageListener(
-          "getTelemetryEvents",
-          gotResult
-        );
-        resolve(events);
-      }
-    );
-    PWMGR_COMMON_PARENT.sendAsyncMessage("getTelemetryEvents", options);
-  });
+async function getTelemetryEvents(options) {
+  let events = await PWMGR_COMMON_PARENT.sendQuery(
+    "getTelemetryEvents",
+    options
+  );
+  info("CONTENT: getTelemetryEvents gotResult: " + JSON.stringify(events));
+  return events;
 }
 
 function loadRecipes(recipes) {
   info("Loading recipes");
-  return new Promise(resolve => {
-    PWMGR_COMMON_PARENT.addMessageListener("loadedRecipes", function loaded() {
-      PWMGR_COMMON_PARENT.removeMessageListener("loadedRecipes", loaded);
-      resolve(recipes);
-    });
-    PWMGR_COMMON_PARENT.sendAsyncMessage("loadRecipes", recipes);
-  });
+  return PWMGR_COMMON_PARENT.sendQuery("loadRecipes", recipes);
 }
 
 function resetRecipes() {
   info("Resetting recipes");
-  return new Promise(resolve => {
-    PWMGR_COMMON_PARENT.addMessageListener("recipesReset", function reset() {
-      PWMGR_COMMON_PARENT.removeMessageListener("recipesReset", reset);
-      resolve();
-    });
-    PWMGR_COMMON_PARENT.sendAsyncMessage("resetRecipes");
-  });
+  return PWMGR_COMMON_PARENT.sendQuery("resetRecipes");
 }
 
-function resetWebsitesWithSharedCredential() {
-  info("Resetting the 'websites-with-shared-credential-backend' collection");
-  return new Promise(resolve => {
-    PWMGR_COMMON_PARENT.addMessageListener(
-      "resetWebsitesWithSharedCredential",
-      function reset() {
-        PWMGR_COMMON_PARENT.removeMessageListener(
-          "resetWebsitesWithSharedCredential",
-          reset
-        );
-        resolve();
-      }
-    );
-    PWMGR_COMMON_PARENT.sendAsyncMessage("resetWebsitesWithSharedCredential");
+async function promiseStorageChanged(expectedChangeTypes) {
+  let result = await PWMGR_COMMON_PARENT.sendQuery("storageChanged", {
+    expectedChangeTypes,
   });
+
+  if (result) {
+    ok(false, result);
+  }
 }
 
-function promiseStorageChanged(expectedChangeTypes) {
-  return new Promise((resolve, reject) => {
-    function onStorageChanged({ topic, data }) {
-      let changeType = expectedChangeTypes.shift();
-      is(data, changeType, "Check expected passwordmgr-storage-changed type");
-      if (expectedChangeTypes.length === 0) {
-        PWMGR_COMMON_PARENT.removeMessageListener(
-          "storageChanged",
-          onStorageChanged
-        );
-        resolve();
-      }
-    }
-    PWMGR_COMMON_PARENT.addMessageListener("storageChanged", onStorageChanged);
-  });
-}
-
-function promisePromptShown(expectedTopic) {
-  return new Promise((resolve, reject) => {
-    function onPromptShown({ topic, data }) {
-      is(topic, expectedTopic, "Check expected prompt topic");
-      PWMGR_COMMON_PARENT.removeMessageListener("promptShown", onPromptShown);
-      resolve();
-    }
-    PWMGR_COMMON_PARENT.addMessageListener("promptShown", onPromptShown);
-  });
+async function promisePromptShown(expectedTopic) {
+  let topic = await PWMGR_COMMON_PARENT.sendQuery("promptShown");
+  is(topic, expectedTopic, "Check expected prompt topic");
 }
 
 /**
@@ -984,21 +931,20 @@ function setFormAndWaitForFieldFilled(
 }
 
 /**
- * Run commonInit synchronously in the parent then run the test function after the runTests event.
+ * Run commonInit synchronously in the parent then run the test function if supplied.
  *
  * @param {Function} aFunction The test function to run
  */
-function runChecksAfterCommonInit(aFunction = null) {
+async function runChecksAfterCommonInit(aFunction = null) {
   SimpleTest.waitForExplicitFinish();
-  if (aFunction) {
-    window.addEventListener("runTests", aFunction);
-    PWMGR_COMMON_PARENT.addMessageListener("registerRunTests", () =>
-      registerRunTests()
-    );
-  }
-  PWMGR_COMMON_PARENT.sendAsyncMessage("setupParent", {
+  await PWMGR_COMMON_PARENT.sendQuery("setupParent", {
     testDependsOnDeprecatedLogin: gTestDependsOnDeprecatedLogin,
   });
+
+  if (aFunction) {
+    await registerRunTests(0, aFunction);
+  }
+
   return PWMGR_COMMON_PARENT;
 }
 

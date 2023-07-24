@@ -9,17 +9,14 @@
 </head>
 <body>
 <script type="application/javascript">
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("loginFrame").addEventListener("load", (evt) => {
-    // Tell the parent to setup test logins.
-    PWMGR_COMMON_PARENT.sendAsyncMessage("setupParent", { selfFilling: true, testDependsOnDeprecatedLogin: true });
-  });
-});
-
+gTestDependsOnDeprecatedLogin = true;
 let doneSetupPromise = new Promise(resolve => {
-  // When the setup is done, load a recipe for this test.
-  PWMGR_COMMON_PARENT.addMessageListener("doneSetup", function doneSetup() {
-    resolve();
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("loginFrame").addEventListener("load", async evt => {
+      // Tell the parent to setup test logins.
+      await runChecksAfterCommonInit();
+      resolve();
+    });
   });
 });
 

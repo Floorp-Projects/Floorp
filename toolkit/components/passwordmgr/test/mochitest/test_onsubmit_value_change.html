@@ -12,11 +12,12 @@
 Login Manager test: input value change right after onsubmit event
 
 <script>
-  let chromeScript = runChecksAfterCommonInit();
+  let chromeScriptPromise = runChecksAfterCommonInit();
 
-  function getSubmitMessage() {
+  async function getSubmitMessage() {
     info("getSubmitMessage");
-    return new Promise((resolve, reject) => {
+    let chromeScript = await chromeScriptPromise;
+    return new Promise(resolve => {
       chromeScript.addMessageListener("formSubmissionProcessed", function processed(...args) {
         info("got formSubmissionProcessed");
         chromeScript.removeMessageListener("formSubmissionProcessed", processed);
