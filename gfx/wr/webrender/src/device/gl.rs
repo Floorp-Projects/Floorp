@@ -1841,11 +1841,19 @@ impl Device {
             true
         };
 
-        // We have encountered rendering errors on a variety of Adreno GPUs specifically on driver
-        // version V@0490, so block this extension on that driver version.
-        let supports_qcom_tiled_rendering =
+        let supports_qcom_tiled_rendering = if is_adreno && version_string.contains("V@0490") {
+            // We have encountered rendering errors on a variety of Adreno GPUs specifically on
+            // driver version V@0490, so block this extension on that driver version. See bug 1828248.
+            false
+        } else if renderer_name == "Adreno (TM) 308"
+            && (version_string.contains("V@331") || version_string.contains("V@415"))
+        {
+            // And specifically on Areno 308 GPUs we have encountered rendering errors on driver
+            // versions V@331 and V@415. See bug 1843749.
+            false
+        } else {
             supports_extension(&extensions, "GL_QCOM_tiled_rendering")
-                && !(is_adreno && version_string.contains("V@0490"));
+        };
 
         // On some Adreno 3xx devices the vertex array object must be unbound and rebound after
         // an attached buffer has been orphaned.
