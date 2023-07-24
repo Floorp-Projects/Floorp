@@ -139,16 +139,36 @@ class WasmArrayObject : public WasmGcObject {
   // AllocKind for object creation
   static gc::AllocKind allocKind();
 
-  // Creates a new array typed object, optionally initialized to zero, for the
-  // specified number of elements.  Reports an error if the number of elements
-  // is too large, or if there is an out of memory error.  The element type,
-  // shape, class pointer, alloc site and alloc kind are taken from
-  // `typeDefData`; the initial heap must be specified separately.
+  // Creates a new non-empty array typed object, optionally initialized to
+  // zero, for the specified number of elements.  Reports an error if the
+  // number of elements is too large, or if there is an out of memory error.
+  // The element type, shape, class pointer, alloc site and alloc kind are
+  // taken from `typeDefData`; the initial heap must be specified separately.
+  // The number of elements is assumed and debug-asserted to be non-zero.
   template <bool ZeroFields>
-  static WasmArrayObject* createArray(JSContext* cx,
-                                      wasm::TypeDefInstanceData* typeDefData,
-                                      js::gc::Heap initialHeap,
-                                      uint32_t numElements);
+  static WasmArrayObject* createArrayNonEmpty(
+      JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
+      js::gc::Heap initialHeap, uint32_t numElements);
+
+  // Creates a new empty array typed object, for zero elements.  Reports an
+  // error if there is an out of memory error.  The element type, shape, class
+  // pointer, alloc site and alloc kind are taken from `typeDefData`; the
+  // initial heap must be specified separately.  The number of elements is
+  // assumed and debug-asserted to be zero.
+  static WasmArrayObject* createArrayEmpty(
+      JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
+      js::gc::Heap initialHeap);
+
+  // This just selects one of the above two routines, depending on
+  // `numElements`.
+  template <bool ZeroFields>
+  static MOZ_ALWAYS_INLINE WasmArrayObject* createArray(
+      JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
+      js::gc::Heap initialHeap, uint32_t numElements) {
+    return numElements == 0 ? createArrayEmpty(cx, typeDefData, initialHeap)
+                            : createArrayNonEmpty<ZeroFields>(
+                                  cx, typeDefData, initialHeap, numElements);
+  }
 
   // JIT accessors
   static constexpr size_t offsetOfNumElements() {
