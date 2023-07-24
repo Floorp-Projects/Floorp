@@ -13,7 +13,7 @@ var isDevtools = SimpleTest.harnessParameters.subsuite == "devtools";
 // This list should contain only path prefixes. It is meant to stop the test
 // from reporting things that *are* referenced, but for which the test can't
 // find any reference because the URIs are constructed programatically.
-// If you need to allowlist specific files, please use the 'allowlist' object.
+// If you need to whitelist specific files, please use the 'whitelist' object.
 var gExceptionPaths = [
   "resource://app/defaults/settings/blocklists/",
   "resource://app/defaults/settings/security-state/",
@@ -50,6 +50,7 @@ var gExceptionPaths = [
 
   // Exclude all services-automation because they are used through webdriver
   "resource://gre/modules/services-automation/",
+  "resource://services-automation/ServicesAutomation.jsm",
 
   // Paths from this folder are constructed in NetErrorParent.sys.mjs based on
   // the type of cert or net error the user is encountering.
@@ -68,7 +69,7 @@ var gExceptionPaths = [
   // Activity stream schemas are referenced programmatically.
   "resource://activity-stream/schemas",
 
-  // Localization file added programatically in FeatureCallout.sys.mjs
+  // Localization file added programatically in featureCallout.jsm
   "resource://app/localization/en-US/browser/featureCallout.ftl",
 ];
 
@@ -83,7 +84,7 @@ if (AppConstants.MOZ_BACKGROUNDTASKS) {
   // These preferences are active only when we're in background task mode.
   gExceptionPaths.push("resource://gre/defaults/backgroundtasks/");
   gExceptionPaths.push("resource://app/defaults/backgroundtasks/");
-  // `BackgroundTask_*.sys.mjs` are loaded at runtime by `app --backgroundtask id ...`.
+  // `BackgroundTask_id.jsm` is loaded at runtime by `app --backgroundtask id ...`.
   gExceptionPaths.push("resource://gre/modules/backgroundtasks/");
   gExceptionPaths.push("resource://app/modules/backgroundtasks/");
 }
@@ -101,11 +102,11 @@ if (AppConstants.NIGHTLY_BUILD) {
   );
 }
 
-// Each allowlist entry should have a comment indicating which file is
-// referencing the listed file in a way that the test can't detect, or a
+// Each whitelist entry should have a comment indicating which file is
+// referencing the whitelisted file in a way that the test can't detect, or a
 // bug number to remove or use the file if it is indeed currently unreferenced.
-var allowlist = [
-  // toolkit/components/pdfjs/content/PdfStreamConverter.sys.mjs
+var whitelist = [
+  // toolkit/components/pdfjs/content/PdfStreamConverter.jsm
   { file: "chrome://pdf.js/locale/chrome.properties" },
   { file: "chrome://pdf.js/locale/viewer.properties" },
 
@@ -207,7 +208,7 @@ var allowlist = [
   { file: "resource://pdf.js/web/debugger.js" },
   { file: "resource://pdf.js/web/debugger.css" },
 
-  // Starting from here, files in the allowlist are bugs that need fixing.
+  // Starting from here, files in the whitelist are bugs that need fixing.
   // Bug 1339424 (wontfix?)
   {
     file: "chrome://browser/locale/taskbar.properties",
@@ -254,7 +255,7 @@ var allowlist = [
   // dom/xml/nsXMLPrettyPrinter.cpp
   { file: "resource://gre/localization/en-US/dom/XMLPrettyPrint.ftl" },
 
-  // tookit/mozapps/update/BackgroundUpdate.sys.mjs
+  // tookit/mozapps/update/BackgroundUpdate.jsm
   {
     file: "resource://gre/localization/en-US/toolkit/updates/backgroundupdate.ftl",
   },
@@ -288,29 +289,29 @@ var allowlist = [
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
   // This path is refereneced in nsFxrCommandLineHandler.cpp, which is only
-  // compiled in Windows. This path is allowed so that non-Windows builds
+  // compiled in Windows. Whitelisted this path so that non-Windows builds
   // can access the FxR UI via --chrome rather than --fxr (which includes VR-
   // specific functionality)
-  allowlist.push({ file: "chrome://fxr/content/fxrui.html" });
+  whitelist.push({ file: "chrome://fxr/content/fxrui.html" });
 }
 
 if (AppConstants.platform == "android") {
   // The l10n build system can't package string files only for some platforms.
   // Referenced by aboutGlean.html
-  allowlist.push({
+  whitelist.push({
     file: "resource://gre/localization/en-US/toolkit/about/aboutGlean.ftl",
   });
 }
 
 if (AppConstants.MOZ_UPDATE_AGENT && !AppConstants.MOZ_BACKGROUNDTASKS) {
   // Task scheduling is only used for background updates right now.
-  allowlist.push({
-    file: "resource://gre/modules/TaskScheduler.sys.mjs",
+  whitelist.push({
+    file: "resource://gre/modules/TaskScheduler.jsm",
   });
 }
 
-allowlist = new Set(
-  allowlist
+whitelist = new Set(
+  whitelist
     .filter(
       item =>
         "isFromDevTools" in item == isDevtools &&
@@ -320,7 +321,7 @@ allowlist = new Set(
     .map(item => item.file)
 );
 
-const ignorableAllowlist = new Set([
+const ignorableWhitelist = new Set([
   // The following files are outside of the omni.ja file, so we only catch them
   // when testing on a non-packaged build.
 
@@ -333,8 +334,8 @@ const ignorableAllowlist = new Set([
   // Bug 1351669 - obsolete test file
   "resource://gre/res/test.properties",
 ]);
-for (let entry of ignorableAllowlist) {
-  allowlist.add(entry);
+for (let entry of ignorableWhitelist) {
+  whitelist.add(entry);
 }
 
 if (!isDevtools) {
@@ -349,17 +350,17 @@ if (!isDevtools) {
     "tabs.sys.mjs",
     "extension-storage.sys.mjs",
   ]) {
-    allowlist.add("resource://services-sync/engines/" + module);
+    whitelist.add("resource://services-sync/engines/" + module);
   }
   // resource://devtools/shared/worker/loader.js,
   // resource://devtools/shared/loader/builtin-modules.js
   if (!AppConstants.ENABLE_WEBDRIVER) {
-    allowlist.add("resource://gre/modules/jsdebugger.sys.mjs");
+    whitelist.add("resource://gre/modules/jsdebugger.sys.mjs");
   }
 }
 
 if (AppConstants.MOZ_CODE_COVERAGE) {
-  allowlist.add(
+  whitelist.add(
     "chrome://remote/content/marionette/PerTestCoverageUtils.sys.mjs"
   );
 }
@@ -385,9 +386,9 @@ var gComponentsSet = new Set();
 // In this map when the value is a Set of URLs, the file is referenced if any
 // of the files in the Set is referenced.
 // When the value is null, the file is referenced unconditionally.
-// When the value is a string, "allowlist-direct" means that we have not found
-// any reference in the code, but have a matching allowlist entry for this file.
-// "allowlist" means that the file is indirectly allowlisted, ie. a allowlisted
+// When the value is a string, "whitelist-direct" means that we have not found
+// any reference in the code, but have a matching whitelist entry for this file.
+// "whitelist" means that the file is indirectly whitelisted, ie. a whitelisted
 // file causes this file to be referenced.
 var gReferencesFromCode = new Map();
 
@@ -953,8 +954,8 @@ add_task(async function checkAllTheFiles() {
           let refType = gReferencesFromCode.get(ref);
           if (
             refType === null || // unconditionally referenced
-            refType == "allowlist" ||
-            refType == "allowlist-direct"
+            refType == "whitelist" ||
+            refType == "whitelist-direct"
           ) {
             return false;
           }
@@ -966,7 +967,7 @@ add_task(async function checkAllTheFiles() {
 
   let unreferencedFiles = chromeFiles;
 
-  let removeReferenced = useAllowlist => {
+  let removeReferenced = useWhitelist => {
     let foundReference = false;
     unreferencedFiles = unreferencedFiles.filter(f => {
       let rv = isUnreferenced(f);
@@ -978,15 +979,15 @@ add_task(async function checkAllTheFiles() {
       }
       if (!rv) {
         foundReference = true;
-        if (useAllowlist) {
+        if (useWhitelist) {
           info(
-            "indirectly allowlisted file: " +
+            "indirectly whitelisted file: " +
               f +
               " used from " +
               listCodeReferences(gReferencesFromCode.get(f))
           );
         }
-        gReferencesFromCode.set(f, useAllowlist ? "allowlist" : null);
+        gReferencesFromCode.set(f, useWhitelist ? "whitelist" : null);
       }
       return rv;
     });
@@ -997,17 +998,17 @@ add_task(async function checkAllTheFiles() {
     // As long as removeReferenced returns true, some files have been marked
     // as referenced, so we need to run it again.
   }
-  // Marked as referenced the files that have been explicitly allowed.
+  // Marked as referenced the files that have been explicitly whitelisted.
   unreferencedFiles = unreferencedFiles.filter(file => {
-    if (allowlist.has(file)) {
-      allowlist.delete(file);
-      gReferencesFromCode.set(file, "allowlist-direct");
+    if (whitelist.has(file)) {
+      whitelist.delete(file);
+      gReferencesFromCode.set(file, "whitelist-direct");
       return false;
     }
     return true;
   });
   // Run the process again, this time when more files are marked as referenced,
-  // it's a consequence of the allowlist.
+  // it's a consequence of the whitelist.
   while (removeReferenced(true)) {
     // As long as removeReferenced returns true, we need to run it again.
   }
@@ -1040,11 +1041,11 @@ add_task(async function checkAllTheFiles() {
     }
   }
 
-  for (let file of allowlist) {
-    if (ignorableAllowlist.has(file)) {
-      info("ignored unused allowlist entry: " + file);
+  for (let file of whitelist) {
+    if (ignorableWhitelist.has(file)) {
+      info("ignored unused whitelist entry: " + file);
     } else {
-      ok(false, "unused allowlist entry: " + file);
+      ok(false, "unused whitelist entry: " + file);
     }
   }
 
@@ -1067,7 +1068,7 @@ add_task(async function checkAllTheFiles() {
         continue;
       }
 
-      // TODO: bug 1349010 - add a allowlist and make this reliable enough
+      // TODO: bug 1349010 - add a whitelist and make this reliable enough
       // that we could make the test fail when this catches something new.
       let refList = listCodeReferences(refs);
       let msg = "missing file: " + file;
