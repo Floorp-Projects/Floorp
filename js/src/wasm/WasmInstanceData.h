@@ -54,7 +54,7 @@ struct TypeDefInstanceData {
         shape(nullptr),
         clasp(nullptr),
         allocKind(gc::AllocKind::LIMIT),
-        structTypeSize(0) {}
+        unused(0) {}
 
   // The canonicalized pointer to this type definition. This is kept alive by
   // the type context associated with the instance.
@@ -73,11 +73,22 @@ struct TypeDefInstanceData {
   gc::AllocSite allocSite;
   gc::AllocKind allocKind;
 
-  // This field is only meaningful for structs and should otherwise be zero.
-  // It caches the value of `typeDef->structType().size_` (a size in bytes),
-  // so that allocators of structs don't need to chase from this struct
-  // through `typeDef` to find the value.
-  uint32_t structTypeSize;
+  // This union is only meaningful for structs and arrays, and should
+  // otherwise be set to zero:
+  //
+  // * if `typeDef` refers to a struct type, then it caches the value of
+  //   `typeDef->structType().size_` (a size in bytes)
+  //
+  // * if `typeDef` refers to an array type, then it caches the value of
+  //   `typeDef->arrayType().elementType_.size()` (also a size in bytes)
+  //
+  // This is so that allocators of structs and arrays don't need to chase from
+  // this TypeDefInstanceData through `typeDef` to find the value.
+  union {
+    uint32_t structTypeSize;
+    uint32_t arrayElemSize;
+    uint32_t unused;
+  };
 };
 
 // FuncImportInstanceData describes the region of wasm global memory allocated

@@ -364,13 +364,15 @@ WasmArrayObject* WasmArrayObject::createArray(
   MOZ_ASSERT(!typeDefData->clasp->isNativeObject());
   debugCheckNewObject(typeDefData->shape, typeDefData->allocKind, initialHeap);
 
-  const TypeDef* typeDef = typeDefData->typeDef;
+  mozilla::DebugOnly<const TypeDef*> typeDef = typeDefData->typeDef;
   MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Array);
 
   // Calculate the byte length of the outline storage, being careful to check
   // for overflow.  Note this logic assumes that MaxArrayPayloadBytes is
   // within uint32_t range.
-  CheckedUint32 outlineBytes = typeDef->arrayType().elementType_.size();
+  uint32_t elementTypeSize = typeDefData->arrayElemSize;
+  MOZ_ASSERT(elementTypeSize == typeDef->arrayType().elementType_.size());
+  CheckedUint32 outlineBytes = elementTypeSize;
   outlineBytes *= numElements;
   if (!outlineBytes.isValid() ||
       outlineBytes.value() > uint32_t(MaxArrayPayloadBytes)) {
