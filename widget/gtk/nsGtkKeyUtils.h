@@ -492,6 +492,9 @@ class KeymapWrapper {
   void WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
                                          GdkEventKey* aGdkKeyEvent);
 
+  static guint GetModifierState(GdkEventKey* aGdkKeyEvent,
+                                KeymapWrapper* aWrapper);
+
 #ifdef MOZ_WAYLAND
   /**
    * Utility function to set Xkb modifier key mask.
