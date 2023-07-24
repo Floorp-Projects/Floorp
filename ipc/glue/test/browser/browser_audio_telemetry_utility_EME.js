@@ -22,9 +22,10 @@ add_task(async function testAudioDecodingInUtility() {
 
 add_task(async function testUtilityTelemetry() {
   const platform = Services.appinfo.OS;
+  const extraKey = getExtraKey({ rddPref: true, utilityPref: true });
   for (let exp of utilityPerCodecs[platform]) {
     if (exp.codecs.includes("aac")) {
-      await verifyTelemetryForProcess(exp.process, ["aac"], "");
+      await verifyTelemetryForProcess(exp.process, ["aac"], extraKey);
     }
   }
 });
