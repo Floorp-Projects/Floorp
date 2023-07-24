@@ -17,6 +17,35 @@
   padding-bottom: 0;
 }
 
+h1.translations-panel-header-wrapper {
+  flex-grow: 0;
+}
+
+.translations-panel-beta {
+  flex-shrink: 0;
+  flex-grow: 1;
+}
+
+.translations-panel-beta-icon {
+  list-style-image: url(chrome://browser/skin/translations/beta.svg);
+  width: 34px;
+  height: 20px;
+  -moz-context-properties: fill, stroke;
+  fill: currentColor;
+  stroke: currentColor;
+  margin: 2px 8px;
+}
+
+@media not (prefers-contrast) and (prefers-color-scheme: light) {
+  .translations-panel-beta-icon {
+    opacity: 0.8;
+  }
+}
+
+#translations-panel-intro {
+  line-height: 1.6;
+}
+
 #translations-panel-settings > image {
   /* Override the panel-info-button with a gear icon. */
   list-style-image: url(chrome://global/skin/icons/settings.svg);
@@ -24,6 +53,7 @@
 
 .translations-panel-content {
   padding: var(--arrowpanel-padding);
+  padding-block-end: 8px;
   gap: var(--arrowpanel-padding);
 }
 
