@@ -214,7 +214,6 @@
 
       // strange cases
       testStates("aria_link_link", STATE_LINKED);
-      testStates("aria_link_anchor", STATE_SELECTABLE);
 
       // some landmarks that break accessibility for these native elements
       // Note that these are illegal uses by web authors as per WAI-ARIA in HTML
@@ -553,7 +552,6 @@
 
   <!-- strange edge case: please don't do this in the wild -->
   <a id="aria_link_link" role="link" href="foo">link</a>
-  <a id="aria_link_anchor" role="link" name="link_anchor">link</a>
 
   <!-- landmarks: links -->
   <a id="aria_application_link" role="application" href="foo">app</a>

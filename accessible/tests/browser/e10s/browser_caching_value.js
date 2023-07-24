@@ -280,7 +280,7 @@ addAccessibleTask(
 addAccessibleTask(
   `<a id="link" href="https://example.com/">Test</a>`,
   async function (browser, docAcc) {
-    const link = findAccessibleChildByID(docAcc, "link");
+    let link = findAccessibleChildByID(docAcc, "link");
     is(link.value, "https://example.com/", "link initial value correct");
     const textLeaf = link.firstChild;
     is(textLeaf.value, "https://example.com/", "link initial value correct");
@@ -294,11 +294,27 @@ addAccessibleTask(
     );
 
     info("Removing link href");
+    let onRecreation = waitForEvents({
+      expected: [
+        [EVENT_HIDE, link],
+        [EVENT_SHOW, "link"],
+      ],
+    });
     await invokeSetAttribute(browser, "link", "href");
+    await onRecreation;
+    link = findAccessibleChildByID(docAcc, "link");
     await untilCacheIs(() => link.value, "", "link value empty after removal");
 
     info("Setting link href");
+    onRecreation = waitForEvents({
+      expected: [
+        [EVENT_HIDE, link],
+        [EVENT_SHOW, "link"],
+      ],
+    });
     await invokeSetAttribute(browser, "link", "href", "https://example.com/");
+    await onRecreation;
+    link = findAccessibleChildByID(docAcc, "link");
     await untilCacheIs(
       () => link.value,
       "https://example.com/",
