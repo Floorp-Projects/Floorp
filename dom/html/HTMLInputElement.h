@@ -1584,6 +1584,10 @@ class HTMLInputElement final : public TextControlElement,
     switch (mType) {
       case FormControlType::InputText:
       case FormControlType::InputSearch:
+      case FormControlType::InputEmail:
+      case FormControlType::InputHidden:
+      case FormControlType::InputTel:
+      case FormControlType::InputUrl:
         return true;
       default:
         return false;
