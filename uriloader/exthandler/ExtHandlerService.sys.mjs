@@ -158,6 +158,24 @@ HandlerService.prototype = {
       }
       let { handlers } = existingSchemeInfo;
       for (let newHandler of localeHandlers.schemes[scheme].handlers) {
+        if (!newHandler.uriTemplate) {
+          console.error(
+            `Ignoring protocol handler for ${scheme} without a uriTemplate!`
+          );
+          continue;
+        }
+        if (!newHandler.uriTemplate.startsWith("https://")) {
+          console.error(
+            `Ignoring protocol handler for ${scheme} with insecure template URL ${newHandler.uriTemplate}.`
+          );
+          continue;
+        }
+        if (!newHandler.uriTemplate.toLowerCase().includes("%s")) {
+          console.error(
+            `Ignoring protocol handler for ${scheme} with invalid template URL ${newHandler.uriTemplate}.`
+          );
+          continue;
+        }
         // If there is already a handler registered with the same template
         // URL, ignore the new one:
         let matchingTemplate = handler =>

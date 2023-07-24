@@ -157,3 +157,46 @@ add_task(async function test_migrations() {
   );
   await deleteHandlerStore();
 });
+
+/**
+ * Check that non-https templates or ones without a '%s' are ignored.
+ */
+add_task(async function invalid_handlers_are_rejected() {
+  let schemes = kHandlerList.default.schemes;
+  schemes.myfancyinvalidstuff = {
+    handlers: [
+      {
+        name: "No template at all",
+      },
+      {
+        name: "Not secure",
+        uriTemplate: "http://example.com/%s",
+      },
+      {
+        name: "No replacement percent-s bit",
+        uriTemplate: "https://example.com/",
+      },
+      {
+        name: "Actually valid",
+        uriTemplate: "https://example.com/%s",
+      },
+    ],
+  };
+  gHandlerService.wrappedJSObject._injectDefaultProtocolHandlers();
+  // Now check the result:
+  let handler = gExternalProtocolService.getProtocolHandlerInfo(
+    "myfancyinvalidstuff"
+  );
+
+  let expectedURIs = ["https://example.com/%s"];
+
+  Assert.deepEqual(
+    Array.from(
+      handler.possibleApplicationHandlers.enumerate(Ci.nsIWebHandlerApp),
+      e => e.uriTemplate
+    ),
+    expectedURIs,
+    "Should have seen only 1 handler added."
+  );
+  await deleteHandlerStore();
+});
