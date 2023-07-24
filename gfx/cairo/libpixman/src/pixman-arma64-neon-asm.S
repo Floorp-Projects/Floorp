@@ -267,54 +267,54 @@
     sli         v4.8h, v4.8h, #5
         ushll       v14.8h, v17.8b, #7
         sli         v14.8h, v14.8h, #1
-                                    PF add PF_X, PF_X, #8
+                                    PF add, PF_X, PF_X, #8
         ushll       v8.8h, v19.8b, #7
         sli         v8.8h, v8.8h,  #1
-                                    PF tst PF_CTL, #0xF
+                                    PF tst, PF_CTL, #0xF
     sri         v6.8b, v6.8b, #5
-                                    PF beq 10f
-                                    PF add PF_X, PF_X, #8
+                                    PF beq, 10f
+                                    PF add, PF_X, PF_X, #8
 10:
     mvn         v3.8b, v3.8b
-                                    PF beq 10f
-                                    PF sub PF_CTL, PF_CTL, #1
+                                    PF beq, 10f
+                                    PF sub, PF_CTL, PF_CTL, #1
 10:
     sri         v7.8b, v7.8b, #6
     shrn        v30.8b, v4.8h, #2
     umull       v10.8h, v3.8b, v6.8b
-                                    PF lsl DUMMY, PF_X, #src_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_SRC, DUMMY]
+                                    PF lsl, DUMMY, PF_X, #src_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_SRC, DUMMY]
     umull       v11.8h, v3.8b, v7.8b
     umull       v12.8h, v3.8b, v30.8b
-                                    PF lsl DUMMY, PF_X, #dst_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_DST, DUMMY]
+                                    PF lsl, DUMMY, PF_X, #dst_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_DST, DUMMY]
         sri         v14.8h, v8.8h, #5
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
         ushll       v9.8h, v18.8b, #7
         sli         v9.8h, v9.8h, #1
     urshr       v17.8h, v10.8h, #8
-                                    PF ble 10f
-                                    PF sub PF_X, PF_X, ORIG_W
+                                    PF ble, 10f
+                                    PF sub, PF_X, PF_X, ORIG_W
 10:
     urshr       v19.8h, v11.8h, #8
     urshr       v18.8h, v12.8h, #8
-                                    PF ble 10f
-                                    PF subs PF_CTL, PF_CTL, #0x10
+                                    PF ble, 10f
+                                    PF subs, PF_CTL, PF_CTL, #0x10
 10:
         sri         v14.8h, v9.8h, #11
         mov         v28.d[0], v14.d[0]
         mov         v29.d[0], v14.d[1]
-                                    PF ble 10f
-                                    PF lsl DUMMY, SRC_STRIDE, #src_bpp_shift
-                                    PF ldrsb DUMMY, [PF_SRC, DUMMY]
-                                    PF add PF_SRC, PF_SRC, #1
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, SRC_STRIDE, #src_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_SRC, DUMMY]
+                                    PF add, PF_SRC, PF_SRC, #1
 10:
     raddhn      v20.8b, v10.8h, v17.8h
     raddhn      v23.8b, v11.8h, v19.8h
-                                    PF ble 10f
-                                    PF lsl DUMMY, DST_STRIDE, #dst_bpp_shift
-                                    PF ldrsb DUMMY, [PF_DST, DUMMY]
-                                    PF add PF_DST, PF_SRC, #1
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, DST_STRIDE, #dst_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_DST, DUMMY]
+                                    PF add, PF_DST, PF_SRC, #1
 10:
     raddhn      v22.8b, v12.8h, v18.8h
         st1         {v14.8h}, [DST_W], #16
@@ -474,32 +474,32 @@ generate_composite_function \
 
 .macro pixman_composite_src_8888_0565_process_pixblock_tail_head
         sri         v14.8h, v8.8h, #5
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0xF
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0xF
     fetch_src_pixblock
-                                    PF beq 10f
-                                    PF add PF_X, PF_X, #8
-                                    PF sub PF_CTL, PF_CTL, #1
+                                    PF beq, 10f
+                                    PF add, PF_X, PF_X, #8
+                                    PF sub, PF_CTL, PF_CTL, #1
 10:
         sri         v14.8h, v9.8h, #11
         mov         v28.d[0], v14.d[0]
         mov         v29.d[0], v14.d[1]
-                                    PF cmp PF_X, ORIG_W
-                                    PF lsl DUMMY, PF_X, #src_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_SRC, DUMMY]
+                                    PF cmp, PF_X, ORIG_W
+                                    PF lsl, DUMMY, PF_X, #src_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_SRC, DUMMY]
     ushll       v8.8h, v1.8b, #7
     sli         v8.8h, v8.8h, #1
         st1        {v14.8h}, [DST_W], #16
-                                    PF ble 10f
-                                    PF sub PF_X, PF_X, ORIG_W
-                                    PF subs PF_CTL, PF_CTL, #0x10
+                                    PF ble, 10f
+                                    PF sub, PF_X, PF_X, ORIG_W
+                                    PF subs, PF_CTL, PF_CTL, #0x10
 10:
     ushll       v14.8h, v2.8b, #7
     sli         v14.8h, v14.8h, #1
-                                    PF ble 10f
-                                    PF lsl DUMMY, SRC_STRIDE, #src_bpp_shift
-                                    PF ldrsb DUMMY, [PF_SRC, DUMMY]
-                                    PF add PF_SRC, PF_SRC, #1
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, SRC_STRIDE, #src_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_SRC, DUMMY]
+                                    PF add, PF_SRC, PF_SRC, #1
 10:
     ushll       v9.8h, v0.8b, #7
     sli         v9.8h, v9.8h, #1
@@ -566,31 +566,31 @@ generate_composite_function \
 
 .macro pixman_composite_add_8_8_process_pixblock_tail_head
     fetch_src_pixblock
-                                    PF add PF_X, PF_X, #32
-                                    PF tst PF_CTL, #0xF
+                                    PF add, PF_X, PF_X, #32
+                                    PF tst, PF_CTL, #0xF
     ld1         {v4.8b, v5.8b, v6.8b, v7.8b}, [DST_R], #32
-                                    PF beq 10f
-                                    PF add PF_X, PF_X, #32
-                                    PF sub PF_CTL, PF_CTL, #1
+                                    PF beq, 10f
+                                    PF add, PF_X, PF_X, #32
+                                    PF sub, PF_CTL, PF_CTL, #1
 10:
         st1     {v28.8b, v29.8b, v30.8b, v31.8b}, [DST_W], #32
-                                    PF cmp PF_X, ORIG_W
-                                    PF lsl DUMMY, PF_X, #src_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_SRC, DUMMY]
-                                    PF lsl DUMMY, PF_X, #dst_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_DST, DUMMY]
-                                    PF ble 10f
-                                    PF sub PF_X, PF_X, ORIG_W
-                                    PF subs PF_CTL, PF_CTL, #0x10
+                                    PF cmp, PF_X, ORIG_W
+                                    PF lsl, DUMMY, PF_X, #src_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_SRC, DUMMY]
+                                    PF lsl, DUMMY, PF_X, #dst_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_DST, DUMMY]
+                                    PF ble, 10f
+                                    PF sub, PF_X, PF_X, ORIG_W
+                                    PF subs, PF_CTL, PF_CTL, #0x10
 10:
     uqadd       v28.8b, v0.8b, v4.8b
-                                    PF ble 10f
-                                    PF lsl DUMMY, SRC_STRIDE, #src_bpp_shift
-                                    PF ldrsb DUMMY, [PF_SRC, DUMMY]
-                                    PF add PF_SRC, PF_SRC, #1
-                                    PF lsl DUMMY, DST_STRIDE, #dst_bpp_shift
-                                    PF ldrsb DUMMY, [PF_DST, DUMMY]
-                                    PF add PF_DST, PF_DST, #1
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, SRC_STRIDE, #src_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_SRC, DUMMY]
+                                    PF add, PF_SRC, PF_SRC, #1
+                                    PF lsl, DUMMY, DST_STRIDE, #dst_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_DST, DUMMY]
+                                    PF add, PF_DST, PF_DST, #1
 10:
     uqadd       v29.8b, v1.8b, v5.8b
     uqadd       v30.8b, v2.8b, v6.8b
@@ -612,31 +612,31 @@ generate_composite_function \
 
 .macro pixman_composite_add_8888_8888_process_pixblock_tail_head
     fetch_src_pixblock
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0xF
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0xF
     ld1         {v4.8b, v5.8b, v6.8b, v7.8b}, [DST_R], #32
-                                    PF beq 10f
-                                    PF add PF_X, PF_X, #8
-                                    PF sub PF_CTL, PF_CTL, #1
+                                    PF beq, 10f
+                                    PF add, PF_X, PF_X, #8
+                                    PF sub, PF_CTL, PF_CTL, #1
 10:
         st1     {v28.8b, v29.8b, v30.8b, v31.8b}, [DST_W], #32
-                                    PF cmp PF_X, ORIG_W
-                                    PF lsl DUMMY, PF_X, #src_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_SRC, DUMMY]
-                                    PF lsl DUMMY, PF_X, #dst_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_DST, DUMMY]
-                                    PF ble 10f
-                                    PF sub PF_X, PF_X, ORIG_W
-                                    PF subs PF_CTL, PF_CTL, #0x10
+                                    PF cmp, PF_X, ORIG_W
+                                    PF lsl, DUMMY, PF_X, #src_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_SRC, DUMMY]
+                                    PF lsl, DUMMY, PF_X, #dst_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_DST, DUMMY]
+                                    PF ble, 10f
+                                    PF sub, PF_X, PF_X, ORIG_W
+                                    PF subs, PF_CTL, PF_CTL, #0x10
 10:
     uqadd       v28.8b, v0.8b, v4.8b
-                                    PF ble 10f
-                                    PF lsl DUMMY, SRC_STRIDE, #src_bpp_shift
-                                    PF ldrsb DUMMY, [PF_SRC, DUMMY]
-                                    PF add PF_SRC, PF_SRC, #1
-                                    PF lsl DUMMY, DST_STRIDE, #dst_bpp_shift
-                                    PF ldrsb DUMMY, [PF_DST, DUMMY]
-                                    PF add PF_DST, PF_DST, #1
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, SRC_STRIDE, #src_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_SRC, DUMMY]
+                                    PF add, PF_SRC, PF_SRC, #1
+                                    PF lsl, DUMMY, DST_STRIDE, #dst_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_DST, DUMMY]
+                                    PF add, PF_DST, PF_DST, #1
 10:
     uqadd       v29.8b, v1.8b, v5.8b
     uqadd       v30.8b, v2.8b, v6.8b
@@ -689,45 +689,45 @@ generate_composite_function_single_scanline \
 .macro pixman_composite_out_reverse_8888_8888_process_pixblock_tail_head
      ld4        {v4.8b, v5.8b, v6.8b, v7.8b}, [DST_R], #32
         urshr       v14.8h, v8.8h, #8
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0xF
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0xF
         urshr       v15.8h, v9.8h, #8
         urshr       v16.8h, v10.8h, #8
         urshr       v17.8h, v11.8h, #8
-                                    PF beq 10f
-                                    PF add PF_X, PF_X, #8
-                                    PF sub PF_CTL, PF_CTL, #1
+                                    PF beq, 10f
+                                    PF add, PF_X, PF_X, #8
+                                    PF sub, PF_CTL, PF_CTL, #1
 10:
         raddhn      v28.8b, v14.8h, v8.8h
         raddhn      v29.8b, v15.8h, v9.8h
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
         raddhn      v30.8b, v16.8h, v10.8h
         raddhn      v31.8b, v17.8h, v11.8h
     fetch_src_pixblock
-                                    PF lsl DUMMY, PF_X, #src_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_SRC, DUMMY]
+                                    PF lsl, DUMMY, PF_X, #src_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_SRC, DUMMY]
     mvn         v22.8b, v3.8b
-                                    PF lsl DUMMY, PF_X, #dst_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_DST, DUMMY]
+                                    PF lsl, DUMMY, PF_X, #dst_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_DST, DUMMY]
          st4        {v28.8b, v29.8b, v30.8b, v31.8b}, [DST_W], #32
-                                    PF ble 10f
-                                    PF sub PF_X, PF_X, ORIG_W
+                                    PF ble, 10f
+                                    PF sub, PF_X, PF_X, ORIG_W
 10:
     umull      v8.8h, v22.8b, v4.8b
-                                    PF ble 10f
-                                    PF subs PF_CTL, PF_CTL, #0x10
+                                    PF ble, 10f
+                                    PF subs, PF_CTL, PF_CTL, #0x10
 10:
     umull      v9.8h, v22.8b, v5.8b
-                                    PF ble 10f
-                                    PF lsl DUMMY, SRC_STRIDE, #src_bpp_shift
-                                    PF ldrsb DUMMY, [PF_SRC, DUMMY]
-                                    PF add PF_SRC, PF_SRC, #1
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, SRC_STRIDE, #src_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_SRC, DUMMY]
+                                    PF add, PF_SRC, PF_SRC, #1
 10:
     umull      v10.8h, v22.8b, v6.8b
-                                    PF ble 10f
-                                    PF lsl DUMMY, DST_STRIDE, #dst_bpp_shift
-                                    PF ldrsb DUMMY, [PF_DST, DUMMY]
-                                    PF add PF_DST, PF_DST, #1
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, DST_STRIDE, #dst_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_DST, DUMMY]
+                                    PF add, PF_DST, PF_DST, #1
 10:
      umull     v11.8h, v22.8b, v7.8b
 .endm
@@ -759,18 +759,18 @@ generate_composite_function_single_scanline \
 .macro pixman_composite_over_8888_8888_process_pixblock_tail_head
      ld4        {v4.8b, v5.8b, v6.8b, v7.8b}, [DST_R], #32
         urshr       v14.8h, v8.8h, #8
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0xF
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0xF
         urshr       v15.8h, v9.8h, #8
         urshr       v16.8h, v10.8h, #8
         urshr       v17.8h, v11.8h, #8
-                                    PF beq 10f
-                                    PF add PF_X, PF_X, #8
-                                    PF sub PF_CTL, PF_CTL, #1
+                                    PF beq, 10f
+                                    PF add, PF_X, PF_X, #8
+                                    PF sub, PF_CTL, PF_CTL, #1
 10:
         raddhn      v28.8b, v14.8h, v8.8h
         raddhn      v29.8b, v15.8h, v9.8h
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
         raddhn      v30.8b, v16.8h, v10.8h
         raddhn      v31.8b, v17.8h, v11.8h
         uqadd       v28.8b, v0.8b, v28.8b
@@ -778,30 +778,30 @@ generate_composite_function_single_scanline \
         uqadd       v30.8b, v2.8b, v30.8b
         uqadd       v31.8b, v3.8b, v31.8b
     fetch_src_pixblock
-                                    PF lsl DUMMY, PF_X, #src_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_SRC, DUMMY]
+                                    PF lsl, DUMMY, PF_X, #src_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_SRC, DUMMY]
     mvn        v22.8b, v3.8b
-                                    PF lsl DUMMY, PF_X, #dst_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_DST, DUMMY]
+                                    PF lsl, DUMMY, PF_X, #dst_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_DST, DUMMY]
          st4        {v28.8b, v29.8b, v30.8b, v31.8b}, [DST_W], #32
-                                    PF ble 10f
-                                    PF sub PF_X, PF_X, ORIG_W
+                                    PF ble, 10f
+                                    PF sub, PF_X, PF_X, ORIG_W
 10:
     umull      v8.8h, v22.8b, v4.8b
-                                    PF ble 10f
-                                    PF subs PF_CTL, PF_CTL, #0x10
+                                    PF ble, 10f
+                                    PF subs, PF_CTL, PF_CTL, #0x10
 10:
     umull      v9.8h, v22.8b, v5.8b
-                                    PF ble 10f
-                                    PF lsl DUMMY, SRC_STRIDE, #src_bpp_shift
-                                    PF ldrsb DUMMY, [PF_SRC, DUMMY]
-                                    PF add PF_SRC, PF_SRC, #1
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, SRC_STRIDE, #src_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_SRC, DUMMY]
+                                    PF add, PF_SRC, PF_SRC, #1
 10:
     umull      v10.8h, v22.8b, v6.8b
-                                    PF ble 10f
-                                    PF lsl DUMMY, DST_STRIDE, #dst_bpp_shift
-                                    PF ldrsb DUMMY, [PF_DST, DUMMY]
-                                    PF add PF_DST, PF_DST, #1
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, DST_STRIDE, #dst_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_DST, DUMMY]
+                                    PF add, PF_DST, PF_DST, #1
 10:
     umull      v11.8h, v22.8b, v7.8b
 .endm
@@ -865,30 +865,30 @@ generate_composite_function_single_scanline \
         raddhn      v31.8b, v17.8h, v11.8h
     ld4         {v4.8b, v5.8b, v6.8b, v7.8b}, [DST_R], #32
         uqadd       v28.8b, v0.8b, v28.8b
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0x0F
-                                    PF beq 10f
-                                    PF add PF_X, PF_X, #8
-                                    PF sub PF_CTL, PF_CTL, #1
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0x0F
+                                    PF beq, 10f
+                                    PF add, PF_X, PF_X, #8
+                                    PF sub, PF_CTL, PF_CTL, #1
 10:
         uqadd       v29.8b, v1.8b, v29.8b
         uqadd       v30.8b, v2.8b, v30.8b
         uqadd       v31.8b, v3.8b, v31.8b
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
     umull       v8.8h, v24.8b, v4.8b
-                                    PF lsl DUMMY, PF_X, #dst_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_DST, DUMMY]
+                                    PF lsl, DUMMY, PF_X, #dst_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_DST, DUMMY]
     umull       v9.8h, v24.8b, v5.8b
-                                    PF ble 10f
-                                    PF sub PF_X, PF_X, ORIG_W
+                                    PF ble, 10f
+                                    PF sub, PF_X, PF_X, ORIG_W
 10:
     umull       v10.8h, v24.8b, v6.8b
-                                    PF subs PF_CTL, PF_CTL, #0x10
+                                    PF subs, PF_CTL, PF_CTL, #0x10
     umull       v11.8h, v24.8b, v7.8b
-                                    PF ble 10f
-                                    PF lsl DUMMY, DST_STRIDE, #dst_bpp_shift
-                                    PF ldrsb DUMMY, [PF_DST, DUMMY]
-                                    PF add PF_DST, PF_DST, #1
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, DST_STRIDE, #dst_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_DST, DUMMY]
+                                    PF add, PF_DST, PF_DST, #1
 10:
         st4         {v28.8b, v29.8b, v30.8b, v31.8b}, [DST_W], #32
 .endm
@@ -917,18 +917,18 @@ generate_composite_function \
 
 .macro pixman_composite_over_reverse_n_8888_process_pixblock_tail_head
         urshr       v14.8h, v8.8h, #8
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0xF
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0xF
         urshr       v15.8h, v9.8h, #8
         urshr       v12.8h, v10.8h, #8
         urshr       v13.8h, v11.8h, #8
-                                    PF beq 10f
-                                    PF add PF_X, PF_X, #8
-                                    PF sub PF_CTL, PF_CTL, #1
+                                    PF beq, 10f
+                                    PF add, PF_X, PF_X, #8
+                                    PF sub, PF_CTL, PF_CTL, #1
 10:
         raddhn      v28.8b, v14.8h, v8.8h
         raddhn      v29.8b, v15.8h, v9.8h
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
         raddhn      v30.8b, v12.8h, v10.8h
         raddhn      v31.8b, v13.8h, v11.8h
         uqadd       v28.8b, v0.8b, v28.8b
@@ -937,22 +937,22 @@ generate_composite_function \
         uqadd       v31.8b, v3.8b, v31.8b
     ld4         {v0.8b, v1.8b, v2.8b, v3.8b}, [DST_R], #32
     mvn         v22.8b, v3.8b
-                                    PF lsl DUMMY, PF_X, #dst_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_DST, DUMMY]
+                                    PF lsl, DUMMY, PF_X, #dst_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_DST, DUMMY]
         st4         {v28.8b, v29.8b, v30.8b, v31.8b}, [DST_W], #32
-                                    PF blt 10f
-                                    PF sub PF_X, PF_X, ORIG_W
+                                    PF blt, 10f
+                                    PF sub, PF_X, PF_X, ORIG_W
 10:
     umull       v8.8h, v22.8b, v4.8b
-                                    PF blt 10f
-                                    PF subs PF_CTL, PF_CTL, #0x10
+                                    PF blt, 10f
+                                    PF subs, PF_CTL, PF_CTL, #0x10
 10:
     umull       v9.8h, v22.8b, v5.8b
     umull       v10.8h, v22.8b, v6.8b
-                                    PF blt 10f
-                                    PF lsl DUMMY, DST_STRIDE, #dst_bpp_shift
-                                    PF ldrsb DUMMY, [PF_DST, DUMMY]
-                                    PF add PF_DST, PF_DST, #1
+                                    PF blt, 10f
+                                    PF lsl, DUMMY, DST_STRIDE, #dst_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_DST, DUMMY]
+                                    PF add, PF_DST, PF_DST, #1
 10:
     umull       v11.8h, v22.8b, v7.8b
 .endm
@@ -1410,35 +1410,35 @@ generate_composite_function \
 
 .macro pixman_composite_src_n_8_8888_process_pixblock_tail_head
     fetch_mask_pixblock
-                                    PF add PF_X, PF_X, #8
+                                    PF add, PF_X, PF_X, #8
         rshrn       v28.8b, v8.8h, #8
-                                    PF tst PF_CTL, #0x0F
+                                    PF tst, PF_CTL, #0x0F
         rshrn       v29.8b, v9.8h, #8
-                                    PF beq 10f
-                                    PF add PF_X, PF_X, #8
+                                    PF beq, 10f
+                                    PF add, PF_X, PF_X, #8
 10:
         rshrn      v30.8b, v10.8h, #8
-                                    PF beq 10f
-                                    PF sub PF_CTL, PF_CTL, #1
+                                    PF beq, 10f
+                                    PF sub, PF_CTL, PF_CTL, #1
 10:
         rshrn      v31.8b, v11.8h, #8
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
     umull          v8.8h, v24.8b, v0.8b
-                                    PF lsl DUMMY, PF_X, #mask_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_MASK, DUMMY]
+                                    PF lsl, DUMMY, PF_X, #mask_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_MASK, DUMMY]
     umull          v9.8h, v24.8b, v1.8b
-                                    PF ble 10f
-                                    PF sub PF_X, PF_X, ORIG_W
+                                    PF ble, 10f
+                                    PF sub, PF_X, PF_X, ORIG_W
 10:
     umull          v10.8h, v24.8b, v2.8b
-                                    PF ble 10f
-                                    PF subs PF_CTL, PF_CTL, #0x10
+                                    PF ble, 10f
+                                    PF subs, PF_CTL, PF_CTL, #0x10
 10:
     umull          v11.8h, v24.8b, v3.8b
-                                    PF ble 10f
-                                    PF lsl DUMMY, MASK_STRIDE, #mask_bpp_shift
-                                    PF ldrsb DUMMY, [PF_MASK, DUMMY]
-                                    PF add PF_MASK, PF_MASK, #1
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, MASK_STRIDE, #mask_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_MASK, DUMMY]
+                                    PF add, PF_MASK, PF_MASK, #1
 10:
         st4        {v28.8b, v29.8b, v30.8b, v31.8b}, [DST_W], #32
     ursra       v8.8h, v8.8h, #8
@@ -1491,35 +1491,35 @@ generate_composite_function \
 
 .macro pixman_composite_src_n_8_8_process_pixblock_tail_head
     fetch_mask_pixblock
-                                    PF add PF_X, PF_X, #8
+                                    PF add, PF_X, PF_X, #8
         rshrn       v28.8b, v0.8h, #8
-                                    PF tst PF_CTL, #0x0F
+                                    PF tst, PF_CTL, #0x0F
         rshrn       v29.8b, v1.8h, #8
-                                    PF beq 10f
-                                    PF add PF_X, PF_X, #8
+                                    PF beq, 10f
+                                    PF add, PF_X, PF_X, #8
 10:
         rshrn       v30.8b, v2.8h, #8
-                                    PF beq 10f
-                                    PF sub PF_CTL, PF_CTL, #1
+                                    PF beq, 10f
+                                    PF sub, PF_CTL, PF_CTL, #1
 10:
         rshrn       v31.8b, v3.8h, #8
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
     umull       v0.8h,  v24.8b, v16.8b
-                                    PF lsl DUMMY, PF_X, mask_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_MASK, DUMMY]
+                                    PF lsl, DUMMY, PF_X, mask_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_MASK, DUMMY]
     umull       v1.8h,  v25.8b, v16.8b
-                                    PF ble 10f
-                                    PF sub PF_X, PF_X, ORIG_W
+                                    PF ble, 10f
+                                    PF sub, PF_X, PF_X, ORIG_W
 10:
     umull       v2.8h,  v26.8b, v16.8b
-                                    PF ble 10f
-                                    PF subs PF_CTL, PF_CTL, #0x10
+                                    PF ble, 10f
+                                    PF subs, PF_CTL, PF_CTL, #0x10
 10:
     umull       v3.8h,  v27.8b, v16.8b
-                                    PF ble 10f
-                                    PF lsl DUMMY, MASK_STRIDE, #mask_bpp_shift
-                                    PF ldrsb DUMMY, [PF_MASK, DUMMY]
-                                    PF add PF_MASK, PF_MASK, #1
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, MASK_STRIDE, #mask_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_MASK, DUMMY]
+                                    PF add, PF_MASK, PF_MASK, #1
 10:
         st1         {v28.8b, v29.8b, v30.8b, v31.8b}, [DST_W], #32
     ursra       v0.8h, v0.8h,  #8
@@ -1599,44 +1599,44 @@ generate_composite_function \
         urshr       v17.8h, v13.8h, #8
     fetch_mask_pixblock
         urshr       v18.8h, v14.8h, #8
-                                    PF add PF_X, PF_X, #8
+                                    PF add, PF_X, PF_X, #8
         urshr       v19.8h, v15.8h, #8
-                                    PF tst PF_CTL, #0x0F
+                                    PF tst, PF_CTL, #0x0F
         raddhn      v28.8b, v16.8h, v12.8h
-                                    PF beq 10f
-                                    PF add PF_X, PF_X, #8
+                                    PF beq, 10f
+                                    PF add, PF_X, PF_X, #8
 10:
         raddhn      v29.8b, v17.8h, v13.8h
-                                    PF beq 10f
-                                    PF sub PF_CTL, PF_CTL, #1
+                                    PF beq, 10f
+                                    PF sub, PF_CTL, PF_CTL, #1
 10:
         raddhn      v30.8b, v18.8h, v14.8h
-                                    PF cmp PF_X, ORIG_W
+                                    PF cmp, PF_X, ORIG_W
         raddhn      v31.8b, v19.8h, v15.8h
-                                    PF lsl DUMMY, PF_X, #dst_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_DST, DUMMY]
+                                    PF lsl, DUMMY, PF_X, #dst_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_DST, DUMMY]
     umull       v16.8h, v24.8b, v8.8b
-                                    PF lsl DUMMY, PF_X, #mask_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_MASK, DUMMY]
+                                    PF lsl, DUMMY, PF_X, #mask_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_MASK, DUMMY]
     umull       v17.8h, v24.8b, v9.8b
-                                    PF ble 10f
-                                    PF sub PF_X, PF_X, ORIG_W
+                                    PF ble, 10f
+                                    PF sub, PF_X, PF_X, ORIG_W
 10:
     umull       v18.8h, v24.8b, v10.8b
-                                    PF ble 10f
-                                    PF subs PF_CTL, PF_CTL, #0x10
+                                    PF ble, 10f
+                                    PF subs, PF_CTL, PF_CTL, #0x10
 10:
     umull       v19.8h, v24.8b, v11.8b
-                                    PF ble 10f
-                                    PF lsl DUMMY, DST_STRIDE, #dst_bpp_shift
-                                    PF ldrsb DUMMY, [PF_DST, DUMMY]
-                                    PF add PF_DST, PF_DST, #1
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, DST_STRIDE, #dst_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_DST, DUMMY]
+                                    PF add, PF_DST, PF_DST, #1
 10:
         uqadd       v28.8b, v0.8b, v28.8b
-                                    PF ble 10f
-                                    PF lsl DUMMY, MASK_STRIDE, #mask_bpp_shift
-                                    PF ldrsb DUMMY, [PF_MASK, DUMMY]
-                                    PF add PF_MASK, PF_MASK, #1
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, MASK_STRIDE, #mask_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_MASK, DUMMY]
+                                    PF add, PF_MASK, PF_MASK, #1
 10:
         uqadd        v29.8b, v1.8b, v29.8b
         uqadd        v30.8b, v2.8b, v30.8b
@@ -2412,7 +2412,7 @@ generate_composite_function_single_scanline \
     default_cleanup_need_all_regs, \
     pixman_composite_out_reverse_8888_n_8888_process_pixblock_head, \
     pixman_composite_out_reverse_8888_n_8888_process_pixblock_tail, \
-    pixman_composite_out_reverse_8888_8888_8888_process_pixblock_tail_head \
+    pixman_composite_out_reverse_8888_8888_8888_process_pixblock_tail_head, \
     28, /* dst_w_basereg */ \
     4,  /* dst_r_basereg */ \
     0,  /* src_basereg   */ \
@@ -2487,7 +2487,7 @@ generate_composite_function \
     default_cleanup_need_all_regs, \
     pixman_composite_over_8888_n_8888_process_pixblock_head, \
     pixman_composite_over_8888_n_8888_process_pixblock_tail, \
-    pixman_composite_over_8888_8888_8888_process_pixblock_tail_head \
+    pixman_composite_over_8888_8888_8888_process_pixblock_tail_head, \
     28, /* dst_w_basereg */ \
     4,  /* dst_r_basereg */ \
     0,  /* src_basereg   */ \
@@ -2501,7 +2501,7 @@ generate_composite_function_single_scanline \
     default_cleanup_need_all_regs, \
     pixman_composite_over_8888_n_8888_process_pixblock_head, \
     pixman_composite_over_8888_n_8888_process_pixblock_tail, \
-    pixman_composite_over_8888_8888_8888_process_pixblock_tail_head \
+    pixman_composite_over_8888_8888_8888_process_pixblock_tail_head, \
     28, /* dst_w_basereg */ \
     4,  /* dst_r_basereg */ \
     0,  /* src_basereg   */ \
@@ -2529,7 +2529,7 @@ generate_composite_function \
     default_cleanup_need_all_regs, \
     pixman_composite_over_8888_n_8888_process_pixblock_head, \
     pixman_composite_over_8888_n_8888_process_pixblock_tail, \
-    pixman_composite_over_8888_8_8888_process_pixblock_tail_head \
+    pixman_composite_over_8888_8_8888_process_pixblock_tail_head, \
     28, /* dst_w_basereg */ \
     4,  /* dst_r_basereg */ \
     0,  /* src_basereg   */ \
@@ -2680,11 +2680,11 @@ generate_composite_function \
         urshr       v13.8h, v10.8h, #8
     fetch_src_pixblock
         raddhn      v30.8b, v11.8h, v8.8h
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0xF
-                                    PF beq 10f
-                                    PF add PF_X, PF_X, #8
-                                    PF sub PF_CTL, PF_CTL, #1
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0xF
+                                    PF beq, 10f
+                                    PF add, PF_X, PF_X, #8
+                                    PF sub, PF_CTL, PF_CTL, #1
 10:
         raddhn      v29.8b, v12.8h, v9.8h
         raddhn      v28.8b, v13.8h, v10.8h
@@ -2692,16 +2692,16 @@ generate_composite_function \
     umull       v9.8h, v3.8b, v1.8b
     umull       v10.8h, v3.8b, v2.8b
          st4    {v28.8b, v29.8b, v30.8b, v31.8b}, [DST_W], #32
-                                    PF cmp PF_X, ORIG_W
-                                    PF lsl DUMMY, PF_X, src_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_SRC, DUMMY]
-                                    PF ble 10f
-                                    PF sub PF_X, PF_X, ORIG_W
-                                    PF subs PF_CTL, PF_CTL, #0x10
-                                    PF ble 10f
-                                    PF lsl DUMMY, SRC_STRIDE, #src_bpp_shift
-                                    PF ldrsb DUMMY, [PF_SRC, DUMMY]
-                                    PF add PF_SRC, PF_SRC, #1
+                                    PF cmp, PF_X, ORIG_W
+                                    PF lsl, DUMMY, PF_X, src_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_SRC, DUMMY]
+                                    PF ble, 10f
+                                    PF sub, PF_X, PF_X, ORIG_W
+                                    PF subs, PF_CTL, PF_CTL, #0x10
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, SRC_STRIDE, #src_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_SRC, DUMMY]
+                                    PF add, PF_SRC, PF_SRC, #1
 10:
 .endm
 
@@ -2749,11 +2749,11 @@ generate_composite_function \
         urshr       v13.8h, v10.8h, #8
     fetch_src_pixblock
         raddhn      v28.8b, v11.8h, v8.8h
-                                    PF add PF_X, PF_X, #8
-                                    PF tst PF_CTL, #0xF
-                                    PF beq 10f
-                                    PF add PF_X, PF_X, #8
-                                    PF sub PF_CTL, PF_CTL, #1
+                                    PF add, PF_X, PF_X, #8
+                                    PF tst, PF_CTL, #0xF
+                                    PF beq, 10f
+                                    PF add, PF_X, PF_X, #8
+                                    PF sub, PF_CTL, PF_CTL, #1
 10:
         raddhn      v29.8b, v12.8h, v9.8h
         raddhn      v30.8b, v13.8h, v10.8h
@@ -2761,16 +2761,16 @@ generate_composite_function \
     umull       v9.8h, v3.8b, v1.8b
     umull       v10.8h, v3.8b, v2.8b
          st4    {v28.8b, v29.8b, v30.8b, v31.8b}, [DST_W], #32
-                                    PF cmp PF_X, ORIG_W
-                                    PF lsl DUMMY, PF_X, src_bpp_shift
-                                    PF prfm PREFETCH_MODE, [PF_SRC, DUMMY]
-                                    PF ble 10f
-                                    PF sub PF_X, PF_X, ORIG_W
-                                    PF subs PF_CTL, PF_CTL, #0x10
-                                    PF ble 10f
-                                    PF lsl DUMMY, SRC_STRIDE, #src_bpp_shift
-                                    PF ldrsb DUMMY, [PF_SRC, DUMMY]
-                                    PF add PF_SRC, PF_SRC, #1
+                                    PF cmp, PF_X, ORIG_W
+                                    PF lsl, DUMMY, PF_X, src_bpp_shift
+                                    PF prfm, PREFETCH_MODE, [PF_SRC, DUMMY]
+                                    PF ble, 10f
+                                    PF sub, PF_X, PF_X, ORIG_W
+                                    PF subs, PF_CTL, PF_CTL, #0x10
+                                    PF ble, 10f
+                                    PF lsl, DUMMY, SRC_STRIDE, #src_bpp_shift
+                                    PF ldrsb, DUMMY, [PF_SRC, DUMMY]
+                                    PF add, PF_SRC, PF_SRC, #1
 10:
 .endm
 
@@ -3131,53 +3131,53 @@ generate_composite_function_nearest_scanline \
     asr       TMP1, X, #16
     add       X, X, UX
     add       TMP1, TOP, TMP1, lsl #2
-    ld1       {&reg1&.2s}, [TMP1], STRIDE
-    ld1       {&reg2&.2s}, [TMP1]
+    ld1       {\()\reg1\().2s}, [TMP1], STRIDE
+    ld1       {\()\reg2\().2s}, [TMP1]
 .endm
 
 .macro bilinear_load_0565 reg1, reg2, tmp
     asr       TMP1, X, #16
     add       X, X, UX
     add       TMP1, TOP, TMP1, lsl #1
-    ld1       {&reg2&.s}[0], [TMP1], STRIDE
-    ld1       {&reg2&.s}[1], [TMP1]
-    convert_four_0565_to_x888_packed reg2, reg1, reg2, tmp
+    ld1       {\()\reg2\().s}[0], [TMP1], STRIDE
+    ld1       {\()\reg2\().s}[1], [TMP1]
+    convert_four_0565_to_x888_packed \reg2, \reg1, \reg2, \tmp
 .endm
 
 .macro bilinear_load_and_vertical_interpolate_two_8888 \
                     acc1, acc2, reg1, reg2, reg3, reg4, tmp1, tmp2
 
-    bilinear_load_8888 reg1, reg2, tmp1
-    umull     &acc1&.8h, &reg1&.8b, v28.8b
-    umlal     &acc1&.8h, &reg2&.8b, v29.8b
-    bilinear_load_8888 reg3, reg4, tmp2
-    umull     &acc2&.8h, &reg3&.8b, v28.8b
-    umlal     &acc2&.8h, &reg4&.8b, v29.8b
+    bilinear_load_8888 \reg1, \reg2, \tmp1
+    umull     \()\acc1\().8h, \()\reg1\().8b, v28.8b
+    umlal     \()\acc1\().8h, \()\reg2\().8b, v29.8b
+    bilinear_load_8888 \reg3, \reg4, \tmp2
+    umull     \()\acc2\().8h, \()\reg3\().8b, v28.8b
+    umlal     \()\acc2\().8h, \()\reg4\().8b, v29.8b
 .endm
 
 .macro bilinear_load_and_vertical_interpolate_four_8888 \
-                xacc1, xacc2, xreg1, xreg2, xreg3, xreg4, xacc2lo, xacc2hi \
+                xacc1, xacc2, xreg1, xreg2, xreg3, xreg4, xacc2lo, xacc2hi, \
                 yacc1, yacc2, yreg1, yreg2, yreg3, yreg4, yacc2lo, yacc2hi
 
     bilinear_load_and_vertical_interpolate_two_8888 \
-                xacc1, xacc2, xreg1, xreg2, xreg3, xreg4, xacc2lo, xacc2hi
+                \xacc1, \xacc2, \xreg1, \xreg2, \xreg3, \xreg4, \xacc2lo, \xacc2hi
     bilinear_load_and_vertical_interpolate_two_8888 \
-                yacc1, yacc2, yreg1, yreg2, yreg3, yreg4, yacc2lo, yacc2hi
+                \yacc1, \yacc2, \yreg1, \yreg2, \yreg3, \yreg4, \yacc2lo, \yacc2hi
 .endm
 
 .macro vzip reg1, reg2
     umov      TMP4, v31.d[0]
-    zip1      v31.8b, reg1, reg2
-    zip2      reg2,   reg1, reg2
-    mov       reg1,   v31.8b
+    zip1      v31.8b, \reg1, \reg2
+    zip2      \reg2,  \reg1, \reg2
+    mov       \reg1,  v31.8b
     mov       v31.d[0], TMP4
 .endm
 
 .macro vuzp reg1, reg2
     umov      TMP4, v31.d[0]
-    uzp1      v31.8b, reg1, reg2
-    uzp2      reg2,   reg1, reg2
-    mov       reg1,   v31.8b
+    uzp1      v31.8b, \reg1, \reg2
+    uzp2      \reg2,  \reg1, \reg2
+    mov       \reg1,  v31.8b
     mov       v31.d[0], TMP4
 .endm
 
@@ -3189,23 +3189,23 @@ generate_composite_function_nearest_scanline \
     asr       TMP2, X, #16
     add       X, X, UX
     add       TMP2, TOP, TMP2, lsl #1
-    ld1       {&acc2&.s}[0], [TMP1], STRIDE
-    ld1       {&acc2&.s}[2], [TMP2], STRIDE
-    ld1       {&acc2&.s}[1], [TMP1]
-    ld1       {&acc2&.s}[3], [TMP2]
-    convert_0565_to_x888 acc2, reg3, reg2, reg1
-    vzip      &reg1&.8b, &reg3&.8b
-    vzip      &reg2&.8b, &reg4&.8b
-    vzip      &reg3&.8b, &reg4&.8b
-    vzip      &reg1&.8b, &reg2&.8b
-    umull     &acc1&.8h, &reg1&.8b, v28.8b
-    umlal     &acc1&.8h, &reg2&.8b, v29.8b
-    umull     &acc2&.8h, &reg3&.8b, v28.8b
-    umlal     &acc2&.8h, &reg4&.8b, v29.8b
+    ld1       {\()\acc2\().s}[0], [TMP1], STRIDE
+    ld1       {\()\acc2\().s}[2], [TMP2], STRIDE
+    ld1       {\()\acc2\().s}[1], [TMP1]
+    ld1       {\()\acc2\().s}[3], [TMP2]
+    convert_0565_to_x888 \acc2, \reg3, \reg2, \reg1
+    vzip      \()\reg1\().8b, \()\reg3\().8b
+    vzip      \()\reg2\().8b, \()\reg4\().8b
+    vzip      \()\reg3\().8b, \()\reg4\().8b
+    vzip      \()\reg1\().8b, \()\reg2\().8b
+    umull     \()\acc1\().8h, \()\reg1\().8b, v28.8b
+    umlal     \()\acc1\().8h, \()\reg2\().8b, v29.8b
+    umull     \()\acc2\().8h, \()\reg3\().8b, v28.8b
+    umlal     \()\acc2\().8h, \()\reg4\().8b, v29.8b
 .endm
 
 .macro bilinear_load_and_vertical_interpolate_four_0565 \
-                xacc1, xacc2, xreg1, xreg2, xreg3, xreg4, xacc2lo, xacc2hi \
+                xacc1, xacc2, xreg1, xreg2, xreg3, xreg4, xacc2lo, xacc2hi, \
                 yacc1, yacc2, yreg1, yreg2, yreg3, yreg4, yacc2lo, yacc2hi
     asr       TMP1, X, #16
     add       X, X, UX
@@ -3213,49 +3213,49 @@ generate_composite_function_nearest_scanline \
     asr       TMP2, X, #16
     add       X, X, UX
     add       TMP2, TOP, TMP2, lsl #1
-    ld1       {&xacc2&.s}[0], [TMP1], STRIDE
-    ld1       {&xacc2&.s}[2], [TMP2], STRIDE
-    ld1       {&xacc2&.s}[1], [TMP1]
-    ld1       {&xacc2&.s}[3], [TMP2]
-    convert_0565_to_x888 xacc2, xreg3, xreg2, xreg1
+    ld1       {\()\xacc2\().s}[0], [TMP1], STRIDE
+    ld1       {\()\xacc2\().s}[2], [TMP2], STRIDE
+    ld1       {\()\xacc2\().s}[1], [TMP1]
+    ld1       {\()\xacc2\().s}[3], [TMP2]
+    convert_0565_to_x888 \xacc2, \xreg3, \xreg2, \xreg1
     asr       TMP1, X, #16
     add       X, X, UX
     add       TMP1, TOP, TMP1, lsl #1
     asr       TMP2, X, #16
     add       X, X, UX
     add       TMP2, TOP, TMP2, lsl #1
-    ld1       {&yacc2&.s}[0], [TMP1], STRIDE
-    vzip      &xreg1&.8b, &xreg3&.8b
-    ld1       {&yacc2&.s}[2], [TMP2], STRIDE
-    vzip      &xreg2&.8b, &xreg4&.8b
-    ld1       {&yacc2&.s}[1], [TMP1]
-    vzip      &xreg3&.8b, &xreg4&.8b
-    ld1       {&yacc2&.s}[3], [TMP2]
-    vzip      &xreg1&.8b, &xreg2&.8b
-    convert_0565_to_x888 yacc2, yreg3, yreg2, yreg1
-    umull     &xacc1&.8h, &xreg1&.8b, v28.8b
-    vzip      &yreg1&.8b, &yreg3&.8b
-    umlal     &xacc1&.8h, &xreg2&.8b, v29.8b
-    vzip      &yreg2&.8b, &yreg4&.8b
-    umull     &xacc2&.8h, &xreg3&.8b, v28.8b
-    vzip      &yreg3&.8b, &yreg4&.8b
-    umlal     &xacc2&.8h, &xreg4&.8b, v29.8b
-    vzip      &yreg1&.8b, &yreg2&.8b
-    umull     &yacc1&.8h, &yreg1&.8b, v28.8b
-    umlal     &yacc1&.8h, &yreg2&.8b, v29.8b
-    umull     &yacc2&.8h, &yreg3&.8b, v28.8b
-    umlal     &yacc2&.8h, &yreg4&.8b, v29.8b
+    ld1       {\()\yacc2\().s}[0], [TMP1], STRIDE
+    vzip      \()\xreg1\().8b, \()\xreg3\().8b
+    ld1       {\()\yacc2\().s}[2], [TMP2], STRIDE
+    vzip      \()\xreg2\().8b, \()\xreg4\().8b
+    ld1       {\()\yacc2\().s}[1], [TMP1]
+    vzip      \()\xreg3\().8b, \()\xreg4\().8b
+    ld1       {\()\yacc2\().s}[3], [TMP2]
+    vzip      \()\xreg1\().8b, \()\xreg2\().8b
+    convert_0565_to_x888 \yacc2, \yreg3, \yreg2, \yreg1
+    umull     \()\xacc1\().8h, \()\xreg1\().8b, v28.8b
+    vzip      \()\yreg1\().8b, \()\yreg3\().8b
+    umlal     \()\xacc1\().8h, \()\xreg2\().8b, v29.8b
+    vzip      \()\yreg2\().8b, \()\yreg4\().8b
+    umull     \()\xacc2\().8h, \()\xreg3\().8b, v28.8b
+    vzip      \()\yreg3\().8b, \()\yreg4\().8b
+    umlal     \()\xacc2\().8h, \()\xreg4\().8b, v29.8b
+    vzip      \()\yreg1\().8b, \()\yreg2\().8b
+    umull     \()\yacc1\().8h, \()\yreg1\().8b, v28.8b
+    umlal     \()\yacc1\().8h, \()\yreg2\().8b, v29.8b
+    umull     \()\yacc2\().8h, \()\yreg3\().8b, v28.8b
+    umlal     \()\yacc2\().8h, \()\yreg4\().8b, v29.8b
 .endm
 
 .macro bilinear_store_8888 numpix, tmp1, tmp2
-.if numpix == 4
+.if \numpix == 4
     st1       {v0.2s, v1.2s}, [OUT], #16
-.elseif numpix == 2
+.elseif \numpix == 2
     st1       {v0.2s}, [OUT], #8
-.elseif numpix == 1
+.elseif \numpix == 1
     st1       {v0.s}[0], [OUT], #4
 .else
-    .error bilinear_store_8888 numpix is unsupported
+    .error bilinear_store_8888 \numpix is unsupported
 .endif
 .endm
 
@@ -3264,20 +3264,20 @@ generate_composite_function_nearest_scanline \
     vuzp      v2.8b, v3.8b
     vuzp      v1.8b, v3.8b
     vuzp      v0.8b, v2.8b
-    convert_8888_to_0565 v2, v1, v0, v1, tmp1, tmp2
-.if numpix == 4
+    convert_8888_to_0565 v2, v1, v0, v1, \tmp1, \tmp2
+.if \numpix == 4
     st1       {v1.4h}, [OUT], #8
-.elseif numpix == 2
+.elseif \numpix == 2
     st1       {v1.s}[0], [OUT], #4
-.elseif numpix == 1
+.elseif \numpix == 1
     st1       {v1.h}[0], [OUT], #2
 .else
-    .error bilinear_store_0565 numpix is unsupported
+    .error bilinear_store_0565 \numpix is unsupported
 .endif
 .endm
 
 .macro bilinear_interpolate_last_pixel src_fmt, dst_fmt
-    bilinear_load_&src_fmt v0, v1, v2
+    bilinear_load_\()\src_fmt v0, v1, v2
     umull     v2.8h, v0.8b, v28.8b
     umlal     v2.8h, v1.8b, v29.8b
     /* 5 cycles bubble */
@@ -3289,11 +3289,11 @@ generate_composite_function_nearest_scanline \
     /* 3 cycles bubble */
     xtn       v0.8b, v0.8h
     /* 1 cycle bubble */
-    bilinear_store_&dst_fmt 1, v3, v4
+    bilinear_store_\()\dst_fmt 1, v3, v4
 .endm
 
 .macro bilinear_interpolate_two_pixels src_fmt, dst_fmt
-    bilinear_load_and_vertical_interpolate_two_&src_fmt \
+    bilinear_load_and_vertical_interpolate_two_\()\src_fmt \
                 v1, v11, v2, v3, v20, v21, v22, v23
     ushll     v0.4s, v1.4h, #BILINEAR_INTERPOLATION_BITS
     umlsl     v0.4s, v1.4h, v15.h[0]
@@ -3306,12 +3306,12 @@ generate_composite_function_nearest_scanline \
     ushr      v15.8h, v12.8h, #(16 - BILINEAR_INTERPOLATION_BITS)
     add       v12.8h, v12.8h, v13.8h
     xtn       v0.8b, v0.8h
-    bilinear_store_&dst_fmt 2, v3, v4
+    bilinear_store_\()\dst_fmt 2, v3, v4
 .endm
 
 .macro bilinear_interpolate_four_pixels src_fmt, dst_fmt
-    bilinear_load_and_vertical_interpolate_four_&src_fmt \
-                v1, v11, v14, v20, v16, v17, v22, v23 \
+    bilinear_load_and_vertical_interpolate_four_\()\src_fmt \
+                v1, v11, v14, v20, v16, v17, v22, v23, \
                 v3, v9,  v24, v25, v26, v27, v18, v19
     prfm      PREFETCH_MODE, [TMP1, PF_OFFS]
     sub       TMP1, TMP1, STRIDE
@@ -3338,54 +3338,54 @@ generate_composite_function_nearest_scanline \
     xtn       v0.8b, v0.8h
     xtn       v1.8b, v2.8h
     add       v12.8h, v12.8h, v13.8h
-    bilinear_store_&dst_fmt 4, v3, v4
+    bilinear_store_\()\dst_fmt 4, v3, v4
 .endm
 
 .macro bilinear_interpolate_four_pixels_head src_fmt, dst_fmt
-.ifdef have_bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt
-    bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt&_head
+.ifdef have_bilinear_interpolate_four_pixels_\()\src_fmt\()_\()\dst_fmt
+    bilinear_interpolate_four_pixels_\()\src_fmt\()_\()\dst_fmt\()_head
 .else
-    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels \src_fmt, \dst_fmt
 .endif
 .endm
 
 .macro bilinear_interpolate_four_pixels_tail src_fmt, dst_fmt
-.ifdef have_bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt
-    bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt&_tail
+.ifdef have_bilinear_interpolate_four_pixels_\()\src_fmt\()_\()\dst_fmt
+    bilinear_interpolate_four_pixels_\()\src_fmt\()_\()\dst_fmt\()_tail
 .endif
 .endm
 
 .macro bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
-.ifdef have_bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt
-    bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt&_tail_head
+.ifdef have_bilinear_interpolate_four_pixels_\()\src_fmt\()_\()\dst_fmt
+    bilinear_interpolate_four_pixels_\()\src_fmt\()_\()\dst_fmt\()_tail_head
 .else
-    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels \src_fmt, \dst_fmt
 .endif
 .endm
 
 .macro bilinear_interpolate_eight_pixels_head src_fmt, dst_fmt
-.ifdef have_bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt
-    bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt&_head
+.ifdef have_bilinear_interpolate_eight_pixels_\()\src_fmt\()_\()\dst_fmt
+    bilinear_interpolate_eight_pixels_\()\src_fmt\()_\()\dst_fmt\()_head
 .else
-    bilinear_interpolate_four_pixels_head src_fmt, dst_fmt
-    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_head \src_fmt, \dst_fmt
+    bilinear_interpolate_four_pixels_tail_head \src_fmt, \dst_fmt
 .endif
 .endm
 
 .macro bilinear_interpolate_eight_pixels_tail src_fmt, dst_fmt
-.ifdef have_bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt
-    bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt&_tail
+.ifdef have_bilinear_interpolate_eight_pixels_\()\src_fmt\()_\()\dst_fmt
+    bilinear_interpolate_eight_pixels_\()\src_fmt\()_\()\dst_fmt\()_tail
 .else
-    bilinear_interpolate_four_pixels_tail src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_tail \src_fmt, \dst_fmt
 .endif
 .endm
 
 .macro bilinear_interpolate_eight_pixels_tail_head src_fmt, dst_fmt
-.ifdef have_bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt
-    bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt&_tail_head
+.ifdef have_bilinear_interpolate_eight_pixels_\()\src_fmt\()_\()\dst_fmt
+    bilinear_interpolate_eight_pixels_\()\src_fmt\()_\()\dst_fmt\()_tail_head
 .else
-    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
-    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_tail_head \src_fmt, \dst_fmt
+    bilinear_interpolate_four_pixels_tail_head \src_fmt, \dst_fmt
 .endif
 .endm
 
@@ -3410,7 +3410,7 @@ generate_composite_function_nearest_scanline \
                                        src_bpp_shift, dst_bpp_shift, \
                                        prefetch_distance, flags
 
-pixman_asm_function fname
+pixman_asm_function \fname
     OUT       .req      x0
     TOP       .req      x1
     BOTTOM    .req      x2
@@ -3442,7 +3442,7 @@ pixman_asm_function fname
     stp       x10, x11, [x29, -96]
     stp       x12, x13, [x29, -112]
 
-    mov       PF_OFFS, #prefetch_distance
+    mov       PF_OFFS, #\prefetch_distance
     mul       PF_OFFS, PF_OFFS, UX
 
     subs      STRIDE, BOTTOM, TOP
@@ -3463,11 +3463,11 @@ pixman_asm_function fname
     /* ensure good destination alignment  */
     cmp       WIDTH, #1
     blt       100f
-    tst       OUT, #(1 << dst_bpp_shift)
+    tst       OUT, #(1 << \dst_bpp_shift)
     beq       100f
     ushr      v15.8h, v12.8h, #(16 - BILINEAR_INTERPOLATION_BITS)
     add       v12.8h, v12.8h, v13.8h
-    bilinear_interpolate_last_pixel src_fmt, dst_fmt
+    bilinear_interpolate_last_pixel \src_fmt, \dst_fmt
     sub       WIDTH, WIDTH, #1
 100:
     add       v13.8h, v13.8h, v13.8h
@@ -3476,62 +3476,62 @@ pixman_asm_function fname
 
     cmp       WIDTH, #2
     blt       100f
-    tst       OUT, #(1 << (dst_bpp_shift + 1))
+    tst       OUT, #(1 << (\dst_bpp_shift + 1))
     beq       100f
-    bilinear_interpolate_two_pixels src_fmt, dst_fmt
+    bilinear_interpolate_two_pixels \src_fmt, \dst_fmt
     sub       WIDTH, WIDTH, #2
 100:
-.if ((flags) & BILINEAR_FLAG_UNROLL_8) != 0
+.if ((\flags) & BILINEAR_FLAG_UNROLL_8) != 0
 /*********** 8 pixels per iteration *****************/
     cmp       WIDTH, #4
     blt       100f
-    tst       OUT, #(1 << (dst_bpp_shift + 2))
+    tst       OUT, #(1 << (\dst_bpp_shift + 2))
     beq       100f
-    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels \src_fmt, \dst_fmt
     sub       WIDTH, WIDTH, #4
 100:
     subs      WIDTH, WIDTH, #8
     blt       100f
-    asr       PF_OFFS, PF_OFFS, #(16 - src_bpp_shift)
-    bilinear_interpolate_eight_pixels_head src_fmt, dst_fmt
+    asr       PF_OFFS, PF_OFFS, #(16 - \src_bpp_shift)
+    bilinear_interpolate_eight_pixels_head \src_fmt, \dst_fmt
     subs      WIDTH, WIDTH, #8
     blt       500f
 1000:
-    bilinear_interpolate_eight_pixels_tail_head src_fmt, dst_fmt
+    bilinear_interpolate_eight_pixels_tail_head \src_fmt, \dst_fmt
     subs      WIDTH, WIDTH, #8
     bge       1000b
 500:
-    bilinear_interpolate_eight_pixels_tail src_fmt, dst_fmt
+    bilinear_interpolate_eight_pixels_tail \src_fmt, \dst_fmt
 100:
     tst       WIDTH, #4
     beq       200f
-    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels \src_fmt, \dst_fmt
 200:
 .else
 /*********** 4 pixels per iteration *****************/
     subs      WIDTH, WIDTH, #4
     blt       100f
-    asr       PF_OFFS, PF_OFFS, #(16 - src_bpp_shift)
-    bilinear_interpolate_four_pixels_head src_fmt, dst_fmt
+    asr       PF_OFFS, PF_OFFS, #(16 - \src_bpp_shift)
+    bilinear_interpolate_four_pixels_head \src_fmt, \dst_fmt
     subs      WIDTH, WIDTH, #4
     blt       500f
 1000:
-    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_tail_head \src_fmt, \dst_fmt
     subs      WIDTH, WIDTH, #4
     bge       1000b
 500:
-    bilinear_interpolate_four_pixels_tail src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_tail \src_fmt, \dst_fmt
 100:
 /****************************************************/
 .endif
     /* handle the remaining trailing pixels */
     tst       WIDTH, #2
     beq       200f
-    bilinear_interpolate_two_pixels src_fmt, dst_fmt
+    bilinear_interpolate_two_pixels \src_fmt, \dst_fmt
 200:
     tst       WIDTH, #1
     beq       300f
-    bilinear_interpolate_last_pixel src_fmt, dst_fmt
+    bilinear_interpolate_last_pixel \src_fmt, \dst_fmt
 300:
     sub       x29, x29, 64
     ld1       {v8.8b, v9.8b, v10.8b, v11.8b}, [x29], #32
@@ -3556,7 +3556,7 @@ pixman_asm_function fname
     .unreq    TMP3
     .unreq    TMP4
     .unreq    STRIDE
-.endfunc
+pixman_end_asm_function
 
 .endm
 
