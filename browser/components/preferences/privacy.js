@@ -2272,6 +2272,7 @@ var gPrivacyPane = {
       allowVisible: false,
       prefilledHost: "",
       permissionType: "https-only-load-insecure",
+      forcedHTTP: true,
     };
     gSubDialog.open(
       "chrome://browser/content/preferences/dialogs/permissions.xhtml",
