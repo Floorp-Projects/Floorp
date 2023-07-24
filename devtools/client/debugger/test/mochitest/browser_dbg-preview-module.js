@@ -28,7 +28,7 @@ add_task(async function () {
     },
   ]);
 
-  await assertPreviewTooltip(dbg, 2, 7, { result: "3", expression: "func" });
+  await assertPreviewTextValue(dbg, 2, 7, { result: "3", expression: "func" });
 
   info("Resume and wait for full navigation of the tab");
   await resume(dbg);

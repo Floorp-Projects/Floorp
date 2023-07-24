@@ -23,7 +23,7 @@ add_task(async function () {
 
   info("2. Hover on a token with mapScopes enabled");
   await assertPreviewTextValue(dbg, 20, 16, {
-    text: '"a-default"',
+    result: '"a-default"',
     expression: "aDefault",
   });
   ok(getOriginalScope(dbg) != null, "Scopes are mapped");
@@ -31,14 +31,14 @@ add_task(async function () {
   info("3. Hover on a token with mapScopes disabled");
   clickElement(dbg, "mapScopesCheckbox");
   await assertPreviewTextValue(dbg, 21, 16, {
-    text: "undefined",
+    result: "undefined",
     expression: "anAliased",
   });
 
   info("4. StepOver with mapScopes disabled");
   await stepOver(dbg);
   await assertPreviewTextValue(dbg, 20, 16, {
-    text: "undefined",
+    result: "undefined",
     expression: "aDefault",
   });
   ok(getOriginalScope(dbg) == null, "Scopes are not mapped");
