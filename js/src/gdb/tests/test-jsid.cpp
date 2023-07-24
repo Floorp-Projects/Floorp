@@ -1,5 +1,6 @@
 #include "gdb-tests.h"
 
+#include "js/Id.h"  // jsid, JS::PropertyKey
 #include "js/String.h"
 #include "js/Symbol.h"
 
