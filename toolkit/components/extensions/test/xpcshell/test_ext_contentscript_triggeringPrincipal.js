@@ -21,6 +21,9 @@ Services.prefs.setIntPref(
   4096
 );
 
+// Do not limit the number of CSP reports.
+Services.prefs.setIntPref("security.csp.reporting.limit.count", 0);
+
 // Do not trunacate the blocked-uri in CSP reports for frame navigations.
 Services.prefs.setBoolPref(
   "security.csp.truncate_blocked_uri_for_frame_navigations",
