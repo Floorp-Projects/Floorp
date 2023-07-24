@@ -230,6 +230,10 @@ pixman-mingw32.patch: include xmmintrin.h on MINGW32 builds to avoid redefinitio
 
 pixman-rename.patch: include pixman-rename.h for renaming of external symbols
 
+pixman-arm32-clang.patch: don't use -no-integrated-as for arm32
+
+pixman-arm64-clang.patch: don't use -no-integrated-as for aarch64
+
 quartz-support-color-emoji-font.patch: support Apple Color Emoji font in cairo-quartz backend
 
 use-show-text-glyphs-if-glyph-path-fails.patch: fall back to show_text_glyphs even at huge sizes if scaled_font_glyph_path didn't work
