@@ -133,7 +133,7 @@ interface HTMLInputElement : HTMLElement {
   [Throws]
   undefined setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
 
-  [Throws, Pref="dom.input.showPicker"]
+  [Throws]
   undefined showPicker();
 
   // also has obsolete members
