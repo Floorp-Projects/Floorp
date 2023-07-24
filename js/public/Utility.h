@@ -307,8 +307,10 @@ namespace js {
 
 /* Disable OOM testing in sections which are not OOM safe. */
 struct MOZ_RAII JS_PUBLIC_DATA AutoEnterOOMUnsafeRegion {
-  MOZ_NORETURN MOZ_COLD void crash(const char* reason);
-  MOZ_NORETURN MOZ_COLD void crash(size_t size, const char* reason);
+  MOZ_NORETURN MOZ_COLD void crash(const char* reason) { crash_impl(reason); }
+  MOZ_NORETURN MOZ_COLD void crash(size_t size, const char* reason) {
+    crash_impl(reason);
+  }
 
   using AnnotateOOMAllocationSizeCallback = void (*)(size_t);
   static mozilla::Atomic<AnnotateOOMAllocationSizeCallback, mozilla::Relaxed>
@@ -340,6 +342,9 @@ struct MOZ_RAII JS_PUBLIC_DATA AutoEnterOOMUnsafeRegion {
 
   bool oomEnabled_;
 #  endif
+ private:
+  static MOZ_NORETURN MOZ_COLD void crash_impl(const char* reason);
+  static MOZ_NORETURN MOZ_COLD void crash_impl(size_t size, const char* reason);
 };
 
 } /* namespace js */
