@@ -224,7 +224,10 @@ class NetworkModule extends Module {
     }
 
     // No ongoing navigation for this browsing context, create a new one.
-    return lazy.notifyNavigationStarted({ context: browsingContext, url }).id;
+    return lazy.notifyNavigationStarted({
+      contextDetails: { context: browsingContext },
+      url,
+    }).id;
   }
 
   #onBeforeRequestSent = (name, data) => {

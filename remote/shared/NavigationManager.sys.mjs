@@ -21,6 +21,17 @@ ChromeUtils.defineESModuleGetters(lazy, {
 XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 /**
+ * @typedef {object} BrowsingContextDetails
+ * @property {string} browsingContextId - The browsing context id.
+ * @property {string} browserId - The id of the Browser owning the browsing
+ *     context.
+ * @property {BrowsingContext=} context - The BrowsingContext itself, if
+ *     available.
+ * @property {boolean} isTopBrowsingContext - Whether the browsing context is
+ *     top level.
+ */
+
+/**
  * @typedef {object} NavigationInfo
  * @property {boolean} finished - Whether the navigation is finished or not.
  * @property {string} id - The UUID for the navigation.
@@ -130,8 +141,9 @@ class NavigationRegistry extends EventEmitter {
    *     The navigation created for this same-document navigation.
    */
   notifyLocationChanged(data) {
-    const { context, url } = data;
+    const { contextDetails, url } = data;
 
+    const context = this.#getContextFromContextDetails(contextDetails);
     const navigable = lazy.TabManager.getNavigableForBrowsingContext(context);
     const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
 
@@ -157,16 +169,17 @@ class NavigationRegistry extends EventEmitter {
    * which are unnecessary since NavigationManager has to be a singleton.
    *
    * @param {object} data
-   * @param {BrowsingContext} data.context
-   *     The browsing context for which the navigation event was recorded.
+   * @param {BrowsingContextDetails} data.contextDetails
+   *     The details about the browsing context for this navigation.
    * @param {string} data.url
    *     The URL as string for the navigation.
    * @returns {NavigationInfo}
    *     The created navigation or the ongoing navigation, if applicable.
    */
   notifyNavigationStarted(data) {
-    const { context, url } = data;
+    const { contextDetails, url } = data;
 
+    const context = this.#getContextFromContextDetails(contextDetails);
     const navigable = lazy.TabManager.getNavigableForBrowsingContext(context);
     const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
 
@@ -199,16 +212,17 @@ class NavigationRegistry extends EventEmitter {
    * NavigationListener actors.
    *
    * @param {object} data
-   * @param {BrowsingContext} data.context
-   *     The browsing context for which the navigation event was recorded.
+   * @param {BrowsingContextDetails} data.contextDetails
+   *     The details about the browsing context for this navigation.
    * @param {string} data.url
    *     The URL as string for the navigation.
    * @returns {NavigationInfo}
    *     The stopped navigation if any, or null.
    */
   notifyNavigationStopped(data) {
-    const { context, url } = data;
+    const { contextDetails, url } = data;
 
+    const context = this.#getContextFromContextDetails(contextDetails);
     const navigable = lazy.TabManager.getNavigableForBrowsingContext(context);
     const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
 
@@ -240,6 +254,16 @@ class NavigationRegistry extends EventEmitter {
     });
 
     return navigation;
+  }
+
+  #getContextFromContextDetails(contextDetails) {
+    if (contextDetails.context) {
+      return contextDetails.context;
+    }
+
+    return contextDetails.isTopBrowsingContext
+      ? BrowsingContext.getCurrentTopByBrowserId(contextDetails.browserId)
+      : BrowsingContext.get(contextDetails.browsingContextId);
   }
 }
 

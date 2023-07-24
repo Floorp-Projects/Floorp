@@ -17,21 +17,21 @@ export class NavigationListenerParent extends JSWindowActorParent {
     switch (message.name) {
       case "NavigationListenerChild:locationChanged": {
         lazy.notifyLocationChanged({
-          context: message.data.context,
+          contextDetails: message.data.contextDetails,
           url: message.data.url,
         });
         break;
       }
       case "NavigationListenerChild:navigationStarted": {
         lazy.notifyNavigationStarted({
-          context: message.data.context,
+          contextDetails: message.data.contextDetails,
           url: message.data.url,
         });
         break;
       }
       case "NavigationListenerChild:navigationStopped": {
         lazy.notifyNavigationStopped({
-          context: message.data.context,
+          contextDetails: message.data.contextDetails,
           url: message.data.url,
         });
         break;
