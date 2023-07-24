@@ -48,7 +48,7 @@
     <string name="menu_add_to_home_screen">होम स्क्रीन में जोड़ि‍यै</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">नया की छै</string>
+    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">नया की छै</string>
     <string name="menu_settings">सेटिंग्स</string>
     <string name="menu_about">के संबंध में</string>
     <string name="menu_help">मदत</string>
@@ -107,10 +107,6 @@
     <string name="shortcut_erase_and_open_long_label">%1$s मेटैइयै आरू खोलियै</string>
 
 
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">निजी रूप सँ खोजि‍यै</string>
-
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">गोपनियता आरु सुरक्षा</string>
 
@@ -163,6 +159,10 @@
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">सर्वोच्च साइट्स खातिर</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">एड्रेस बार में 450 लोकप्रिय URLs पर %1$s स्वत: पूर्णता लेली सक्षम करू</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">साइटों ले आपने जोड़ि‍यै</string>
@@ -251,10 +251,6 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">ऐप अनलॉक करै ले फिंगरप्रिंट क प्रयोग करियै</string>
-    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
-        open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">यदि आपनो के URL पहलो स खुलि गेल छे त आपनो फिंगरप्रिंट %1$s अनलॉक कैर सकै छै. छुपि क चालू होय जैतै.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -314,10 +310,6 @@
 
     <!-- Action for dding an additional search engine to the list -->
     <string name="preference_search_add3">दोसरो सर्च इंजन जोड़ियै</string>
-
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string name="preference_homescreen_tips">होम स्क्रीन टिप्स दिखाइयै</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">सर्च ईंजन जोरियै</string>
@@ -444,9 +436,18 @@
 
 
 
-  <!-- Onboarding: Title -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">बंद करियै</string>
+
+    <!-- New Onboarding flow first screen title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">स्वागत छै %1$s!</string>
+    <string name="onboarding_first_screen_title">%1$s रो स्वागत छै</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">डिफ़ॉल्ट ब्राउज़र सेट करो</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">छोड़ियै</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">अपन गोपनीयता के बढ़ैइयै</string>
@@ -577,6 +578,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">विकसित करल गेल</string>
 
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">चालू</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">बंद</string>
+
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_site_is_not_supported_cancel_button">रद्द करियै</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">सेटिंग्स</string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">सेटिंग्स में जाहो</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">स्थान</string>
+
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">बेसी जानकारी</string>
 
@@ -588,17 +607,6 @@
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">USB/Wi-Fi के द्वारा रिमोट डीबगिंग</string>
-
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">अनलॉक %1$s</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">जारी रखै ल फिंगरप्रिंट सेंसर छुइयै.</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">नया सत्र</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -662,9 +670,6 @@
     <!-- Label for the button in the snackbar that switches to the newly opened tab -->
     <string name="open_new_tab_snackbar">बदलियै</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">सुरक्षित ब्राउजिंग</string>
-
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">अपवाद</string>
     <!-- Menu item to remove existing exceptions. -->
@@ -672,6 +677,9 @@
 
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">सब वेबसाईट हटैइयै</string>
+
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">कुकीज ब्लौक करियै</string>
 
     <!-- Label for button to close the tab-->
     <string name="tab_crash_report_close_tab_button_label">टैब बंद करियै</string>
@@ -693,6 +701,10 @@
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">नाम बदलियै</string>
 
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">सहेजलो गेल आरू शेयर कएल गेल छवि &lt;b&gt;हटाएलो नय जाएत&lt;/b&gt; जखन अहाँ %1$s इतिहास के मेटाएबै</string>
+
     <!-- Theme Preferences -->
     <!-- Preference category for changing default theme to dark or light mode -->
     <string name="preferences_theme">थीम</string>
@@ -701,11 +713,20 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">गहरा</string>
 
-    <!-- Sessions List -->
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">टैव बंद करियै</string>
 
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">रद्द करियै</string>
+
+    <!-- Promote SearchWidget Dialog -->
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_content_description">बंद करियै</string>
+
+    <!-- This is the title of promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_title">ब्राउज़िंग इतिहास मेटाल्य गेलै!</string>
 
     </resources>

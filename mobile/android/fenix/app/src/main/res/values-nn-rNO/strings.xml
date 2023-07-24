@@ -1213,8 +1213,10 @@
     <string name="share_button_content_description">Del</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Lagre som PDF</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">Klarte ikkje å generere PDF</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Ignorer</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">Klarte ikkje å skrive ut</string>
     <!-- Text for the print feature in the share and browser menu -->

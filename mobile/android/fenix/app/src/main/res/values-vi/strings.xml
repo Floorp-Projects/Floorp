@@ -300,51 +300,51 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Không phải bây giờ</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Đặt %s làm trình duyệt mặc định của bạn</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Đặt %s làm trình duyệt mặc định của bạn</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Đặt Firefox làm trình duyệt của bạn</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">%1$s đặt mọi người lên trên lợi nhuận và bảo vệ quyền riêng tư của bạn bằng cách chặn các trình theo dõi trên nhiều trang web.\n\nTìm hiểu thêm trong %2$s của chúng tôi.</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s đặt mọi người lên trên lợi nhuận và bảo vệ quyền riêng tư của bạn bằng cách chặn các trình theo dõi trên nhiều trang web.\n\nTìm hiểu thêm trong %2$s của chúng tôi.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox đặt mọi người lên trên lợi nhuận và bảo vệ quyền riêng tư của bạn bằng cách chặn các trình theo dõi trên nhiều trang web.\n\nTìm hiểu thêm trong thông báo về quyền riêng tư của chúng tôi.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">thông báo bảo mật</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">thông báo bảo mật</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Đặt làm trình duyệt mặc định</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Đặt làm trình duyệt mặc định</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Không phải bây giờ</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Không phải bây giờ</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Chuyển từ điện thoại sang máy tính xách tay và ngược lại</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Chuyển từ điện thoại sang máy tính xách tay và ngược lại</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Lấy các thẻ và mật khẩu từ các thiết bị khác của bạn để tiếp tục nơi bạn đã dừng lại.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Lấy các thẻ và mật khẩu từ các thiết bị khác của bạn để tiếp tục nơi bạn đã dừng lại.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Đăng nhập</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Đăng nhập</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Không phải bây giờ</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Không phải bây giờ</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Thông báo giúp bạn làm được nhiều việc hơn với %s</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Thông báo giúp bạn làm được nhiều việc hơn với %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Thông báo giúp bạn làm được nhiều việc hơn với Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Gửi các thẻ giữa các thiết bị, quản lý tải xuống và nhận các mẹo để tận dụng tối đa %s.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Gửi các thẻ giữa các thiết bị, quản lý tải xuống và nhận các mẹo để tận dụng tối đa %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Gửi các thẻ giữa các thiết bị, quản lý tải xuống và nhận các mẹo để tận dụng tối đa Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Bật thông báo</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Bật thông báo</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Không phải bây giờ</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Không phải bây giờ</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1198,8 +1198,10 @@
     <string name="share_button_content_description">Chia sẻ</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Lưu dưới dạng PDF</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">Không thể tạo PDF</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Bỏ qua</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">Không thể in</string>
     <!-- Text for the print feature in the share and browser menu -->
