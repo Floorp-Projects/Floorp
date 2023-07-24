@@ -1057,6 +1057,21 @@ class BrowserRobot {
             return HomeScreenRobot.Transition()
         }
 
+        fun goToHomescreenWithComposeTopSites(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTopSitesRobot.() -> Unit): ComposeTopSitesRobot.Transition {
+            clickPageObject(itemWithDescription("Home screen"))
+
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/homeLayout"))
+                .waitForExists(waitingTime) ||
+                mDevice.findObject(
+                    UiSelector().text(
+                        getStringResource(R.string.onboarding_home_screen_jump_back_contextual_hint_2),
+                    ),
+                ).waitForExists(waitingTime)
+
+            ComposeTopSitesRobot(composeTestRule).interact()
+            return ComposeTopSitesRobot.Transition(composeTestRule)
+        }
+
         fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             mDevice.pressBack()
 

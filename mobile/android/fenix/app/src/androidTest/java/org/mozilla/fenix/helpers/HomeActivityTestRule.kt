@@ -56,6 +56,7 @@ class HomeActivityTestRule(
         isOpenInAppBannerEnabled: Boolean = settings.shouldShowOpenInAppBanner,
         etpPolicy: ETPPolicy = getETPPolicy(settings),
         tabsTrayRewriteEnabled: Boolean = false,
+        composeTopSitesEnabled: Boolean = false,
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomeOnboardingDialogEnabled = isHomeOnboardingDialogEnabled
         this.isPocketEnabled = isPocketEnabled
@@ -70,6 +71,7 @@ class HomeActivityTestRule(
         this.isOpenInAppBannerEnabled = isOpenInAppBannerEnabled
         this.etpPolicy = etpPolicy
         this.tabsTrayRewriteEnabled = tabsTrayRewriteEnabled
+        this.composeTopSitesEnabled = composeTopSitesEnabled
     }
 
     /**
@@ -114,6 +116,7 @@ class HomeActivityTestRule(
             launchActivity: Boolean = true,
             skipOnboarding: Boolean = false,
             tabsTrayRewriteEnabled: Boolean = false,
+            composeTopSitesEnabled: Boolean = false,
         ) = HomeActivityTestRule(
             initialTouchMode = initialTouchMode,
             launchActivity = launchActivity,
@@ -125,6 +128,7 @@ class HomeActivityTestRule(
             isWallpaperOnboardingEnabled = false,
             isCookieBannerReductionDialogEnabled = false,
             isOpenInAppBannerEnabled = false,
+            composeTopSitesEnabled = composeTopSitesEnabled,
         )
     }
 }
@@ -164,6 +168,7 @@ class HomeActivityIntentTestRule internal constructor(
         isOpenInAppBannerEnabled: Boolean = settings.shouldShowOpenInAppBanner,
         etpPolicy: ETPPolicy = getETPPolicy(settings),
         tabsTrayRewriteEnabled: Boolean = false,
+        composeTopSitesEnabled: Boolean = false,
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomeOnboardingDialogEnabled = isHomeOnboardingDialogEnabled
         this.isPocketEnabled = isPocketEnabled
@@ -178,6 +183,7 @@ class HomeActivityIntentTestRule internal constructor(
         this.isOpenInAppBannerEnabled = isOpenInAppBannerEnabled
         this.etpPolicy = etpPolicy
         this.tabsTrayRewriteEnabled = tabsTrayRewriteEnabled
+        this.composeTopSitesEnabled = composeTopSitesEnabled
     }
 
     private val longTapUserPreference = getLongPressTimeout()
@@ -259,6 +265,7 @@ class HomeActivityIntentTestRule internal constructor(
             launchActivity: Boolean = true,
             skipOnboarding: Boolean = false,
             tabsTrayRewriteEnabled: Boolean = false,
+            composeTopSitesEnabled: Boolean = false,
         ) = HomeActivityIntentTestRule(
             initialTouchMode = initialTouchMode,
             launchActivity = launchActivity,
@@ -270,6 +277,7 @@ class HomeActivityIntentTestRule internal constructor(
             isWallpaperOnboardingEnabled = false,
             isCookieBannerReductionDialogEnabled = false,
             isOpenInAppBannerEnabled = false,
+            composeTopSitesEnabled = composeTopSitesEnabled,
         )
     }
 }

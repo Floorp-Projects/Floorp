@@ -34,6 +34,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
@@ -43,8 +44,11 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -87,9 +91,9 @@ private const val TOP_SITES_FAVICON_SIZE = 36
  * @param onSponsorPrivacyClicked Invoked when the user clicks on the "Our sponsors & your privacy"
  * menu item.
  */
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 fun TopSites(
     topSites: List<TopSite>,
     topSiteColors: TopSiteColors = TopSiteColors.colors(),
@@ -101,12 +105,19 @@ fun TopSites(
     onSettingsClicked: () -> Unit,
     onSponsorPrivacyClicked: () -> Unit,
 ) {
+    val pageCount = ceil((topSites.size.toDouble() / TOP_SITES_PER_PAGE)).toInt()
+
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics {
+                testTagsAsResourceId = true
+            }
+            .testTag(TopSitesTestTag.topSites),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val pagerState = rememberPagerState(
-            pageCount = { ceil((topSites.size.toDouble() / TOP_SITES_PER_PAGE)).toInt() },
+            pageCount = { pageCount },
         )
 
         Box(
@@ -230,8 +241,8 @@ data class TopSiteColors(
  * @param onTopSiteClick Invoked when the user clicks on a top site.
  * @param onTopSiteLongClick Invoked when the user long clicks on a top site.
  */
-@Suppress("LongParameterList")
-@OptIn(ExperimentalFoundationApi::class)
+@Suppress("LongParameterList", "LongMethod")
+@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun TopSiteItem(
     topSite: TopSite,
@@ -243,7 +254,13 @@ private fun TopSiteItem(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
-    Box {
+    Box(
+        modifier = Modifier
+            .semantics {
+                testTagsAsResourceId = true
+            }
+            .testTag(TopSitesTestTag.topSiteItemRoot),
+    ) {
         Column(
             modifier = Modifier
                 .combinedClickable(
@@ -282,6 +299,11 @@ private fun TopSiteItem(
                 }
 
                 Text(
+                    modifier = Modifier
+                        .semantics {
+                            testTagsAsResourceId = true
+                        }
+                        .testTag(TopSitesTestTag.topSiteTitle),
                     text = topSite.title ?: topSite.url,
                     color = topSiteColors.titleTextColor,
                     overflow = TextOverflow.Ellipsis,
@@ -304,6 +326,8 @@ private fun TopSiteItem(
         }
 
         ContextualMenu(
+            modifier = Modifier
+                .testTag(TopSitesTestTag.topSiteContextualMenu),
             menuItems = menuItems,
             showMenu = menuExpanded,
             onDismissRequest = { menuExpanded = false },
@@ -428,6 +452,7 @@ private fun getMenuItems(
     result.add(
         MenuItem(
             title = stringResource(id = R.string.bookmark_menu_open_in_private_tab_button),
+            testTag = TopSitesTestTag.openInPrivateTab,
             onClick = { onOpenInPrivateTabClicked(topSite) },
         ),
     )
@@ -436,6 +461,7 @@ private fun getMenuItems(
         result.add(
             MenuItem(
                 title = stringResource(id = R.string.rename_top_site),
+                testTag = TopSitesTestTag.rename,
                 onClick = { onRenameTopSiteClicked(topSite) },
             ),
         )
@@ -451,6 +477,7 @@ private fun getMenuItems(
                         R.string.delete_from_history
                     },
                 ),
+                testTag = TopSitesTestTag.remove,
                 onClick = { onRemoveTopSiteClicked(topSite) },
             ),
         )
@@ -460,6 +487,7 @@ private fun getMenuItems(
         result.add(
             MenuItem(
                 title = stringResource(id = R.string.delete_from_history),
+                testTag = TopSitesTestTag.remove,
                 onClick = { onRemoveTopSiteClicked(topSite) },
             ),
         )

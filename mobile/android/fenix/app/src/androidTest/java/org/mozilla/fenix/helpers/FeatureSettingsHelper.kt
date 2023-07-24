@@ -82,6 +82,11 @@ interface FeatureSettingsHelper {
      */
     var tabsTrayRewriteEnabled: Boolean
 
+    /**
+     * Enable or disable the Top Sites to Compose rewrite.
+     */
+    var composeTopSitesEnabled: Boolean
+
     fun applyFlagUpdates()
 
     fun resetAllFeatureFlags()
