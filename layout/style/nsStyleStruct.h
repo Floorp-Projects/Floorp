@@ -158,7 +158,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   // The value mSize would have had if scriptminsize had never been applied
   mozilla::NonNegativeLength mScriptUnconstrainedSize;
   mozilla::Length mScriptMinSize;
-  float mScriptSizeMultiplier;
   RefPtr<nsAtom> mLanguage;
 };
 

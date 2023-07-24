@@ -217,7 +217,6 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
       mXTextScale(aSrc.mXTextScale),
       mScriptUnconstrainedSize(aSrc.mScriptUnconstrainedSize),
       mScriptMinSize(aSrc.mScriptMinSize),
-      mScriptSizeMultiplier(aSrc.mScriptSizeMultiplier),
       mLanguage(aSrc.mLanguage) {
   MOZ_COUNT_CTOR(nsStyleFont);
 }
@@ -245,7 +244,6 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mScriptUnconstrainedSize(mSize),
       mScriptMinSize(Length::FromPixels(
           CSSPixel::FromPoints(kMathMLDefaultScriptMinSizePt))),
-      mScriptSizeMultiplier(kMathMLDefaultScriptSizeMultiplier),
       mLanguage(aDocument.GetLanguageForStyle()) {
   MOZ_COUNT_CTOR(nsStyleFont);
   MOZ_ASSERT(NS_IsMainThread());
@@ -288,8 +286,7 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aNewData) const {
   // XXX Should any of these cause a non-nsChangeHint_NeutralChange change?
   if (mMathDepth != aNewData.mMathDepth ||
       mScriptUnconstrainedSize != aNewData.mScriptUnconstrainedSize ||
-      mScriptMinSize != aNewData.mScriptMinSize ||
-      mScriptSizeMultiplier != aNewData.mScriptSizeMultiplier) {
+      mScriptMinSize != aNewData.mScriptMinSize) {
     return nsChangeHint_NeutralChange;
   }
 
