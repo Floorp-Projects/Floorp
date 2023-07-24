@@ -1041,8 +1041,8 @@ static void ReportJSONSyntaxError(FrontendContext* fc, ErrorMetadata&& metadata,
   va_list args;
   va_start(args, errorNumber);
 
-  js::ReportCompileErrorLatin1(fc, std::move(metadata), nullptr, errorNumber,
-                               &args);
+  js::ReportCompileErrorLatin1VA(fc, std::move(metadata), nullptr, errorNumber,
+                                 &args);
 
   va_end(args);
 }

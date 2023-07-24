@@ -91,15 +91,25 @@ extern void CallWarningReporter(JSContext* cx, JSErrorReport* report);
  * Report a compile error during script processing prior to execution of the
  * script.
  */
-extern void ReportCompileErrorLatin1(FrontendContext* fc,
+extern void ReportCompileErrorLatin1VA(FrontendContext* fc,
+                                       ErrorMetadata&& metadata,
+                                       UniquePtr<JSErrorNotes> notes,
+                                       unsigned errorNumber, va_list* args);
+
+extern void ReportCompileErrorUTF8VA(FrontendContext* fc,
                                      ErrorMetadata&& metadata,
                                      UniquePtr<JSErrorNotes> notes,
                                      unsigned errorNumber, va_list* args);
 
+extern void ReportCompileErrorLatin1(FrontendContext* fc,
+                                     ErrorMetadata&& metadata,
+                                     UniquePtr<JSErrorNotes> notes,
+                                     unsigned errorNumber, ...);
+
 extern void ReportCompileErrorUTF8(FrontendContext* fc,
                                    ErrorMetadata&& metadata,
                                    UniquePtr<JSErrorNotes> notes,
-                                   unsigned errorNumber, va_list* args);
+                                   unsigned errorNumber, ...);
 
 /**
  * Report a compile warning during script processing prior to execution of the

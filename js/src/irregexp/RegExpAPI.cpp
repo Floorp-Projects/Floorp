@@ -276,8 +276,8 @@ static void ReportSyntaxError(TokenStreamAnyChars& ts,
 
   va_list args;
   va_start(args, length);
-  ReportCompileErrorLatin1(ts.context(), std::move(err), nullptr, errorNumber,
-                           &args);
+  ReportCompileErrorLatin1VA(ts.context(), std::move(err), nullptr, errorNumber,
+                             &args);
   va_end(args);
 }
 

@@ -69,8 +69,8 @@ static void ReportSourceTooLongImpl(JS::FrontendContext* fc, ...) {
   metadata.tokenOffset = 0;
   metadata.isMuted = false;
 
-  js::ReportCompileErrorLatin1(fc, std::move(metadata), nullptr,
-                               JSMSG_SOURCE_TOO_LONG, &args);
+  js::ReportCompileErrorLatin1VA(fc, std::move(metadata), nullptr,
+                                 JSMSG_SOURCE_TOO_LONG, &args);
 
   va_end(args);
 }
