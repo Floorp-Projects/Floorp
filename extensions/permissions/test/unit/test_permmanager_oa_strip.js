@@ -8,7 +8,7 @@ const TEST_PERMISSION3 = "test/oastrip3";
 
 // List of permissions which are not isolated by private browsing or user context
 // as per array kStripOAPermissions in PermissionManager.cpp
-const STRIPPED_PERMS = ["cookie"];
+const STRIPPED_PERMS = ["cookie", "https-only-load-insecure"];
 
 let principal = Services.scriptSecurityManager.createContentPrincipal(
   TEST_URI,
@@ -204,10 +204,10 @@ function testOAIsolation(permIsolateUserContext, permIsolatePrivateBrowsing) {
         )
       );
     }
-  });
 
-  // Cleanup
-  pm.removeAll();
+    // Cleanup
+    pm.removeAll();
+  });
 }
 
 add_task(async function do_test() {
