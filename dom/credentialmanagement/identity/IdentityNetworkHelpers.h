@@ -93,11 +93,15 @@ RefPtr<TPromise> FetchJSONStructure(Request* aRequest) {
                   Promise::TryExtractNSResultFromRejectionValue(aValue),
                   __func__);
             });
+        jsonPromise->AppendNativeHandler(
+            new MozPromiseRejectOnDestruction(resultPromise));
       },
       [resultPromise](JSContext*, JS::Handle<JS::Value> aValue, ErrorResult&) {
         resultPromise->Reject(
             Promise::TryExtractNSResultFromRejectionValue(aValue), __func__);
       });
+  fetchPromise->AppendNativeHandler(
+      new MozPromiseRejectOnDestruction(resultPromise));
 
   return resultPromise;
 }
