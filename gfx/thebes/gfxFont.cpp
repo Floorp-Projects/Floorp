@@ -3098,6 +3098,14 @@ static char16_t IsBoundarySpace(char16_t aChar, char16_t aNextChar) {
   return 0;
 }
 
+// In 8-bit text, there cannot be any cluster-extenders.
+static uint8_t IsBoundarySpace(uint8_t aChar, uint8_t aNextChar) {
+  if (aChar == ' ' || aChar == 0x00A0) {
+    return aChar;
+  }
+  return 0;
+}
+
 #ifdef __GNUC__
 #  define GFX_MAYBE_UNUSED __attribute__((unused))
 #else
