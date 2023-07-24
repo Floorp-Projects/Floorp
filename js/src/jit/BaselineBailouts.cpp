@@ -1932,7 +1932,10 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::SpeculativePhi:
       // A value of an unexpected type flowed into a phi.
       MOZ_ASSERT(!outerScript->hadSpeculativePhiBailout());
-      outerScript->setHadSpeculativePhiBailout();
+      if (!outerScript->hasIonScript() ||
+          outerScript->ionScript()->numFixableBailouts() == 0) {
+        outerScript->setHadSpeculativePhiBailout();
+      }
       InvalidateAfterBailout(cx, outerScript, "phi specialization failure");
       break;
 
