@@ -13,15 +13,18 @@
  * - ensures that exceptions thrown on the worker thread are correctly serialized;
  * - provides some utilities for benchmarking various operations.
  *
- * Generally, you should use PromiseWorker.js along with its main thread-side
- * counterpart PromiseWorker.jsm.
+ * Generally, you should use PromiseWorker.js or PromiseWorker.mjs along with
+ * its main thread-side counterpart PromiseWorker.sys.mjs.
  */
 
+// #BEGIN_SCRIPT_ONLY
 "use strict";
+// #END_SCRIPT_ONLY
 
 if (typeof Components != "undefined") {
   throw new Error("This module is meant to be used from the worker thread");
 }
+// #BEGIN_SCRIPT_ONLY
 if (typeof require == "undefined" || typeof module == "undefined") {
   throw new Error(
     "this module is meant to be imported using the implementation of require() at resource://gre/modules/workers/require.js"
@@ -30,6 +33,7 @@ if (typeof require == "undefined" || typeof module == "undefined") {
 
 /* import-globals-from /toolkit/components/workerloader/require.js */
 importScripts("resource://gre/modules/workers/require.js");
+// #END_SCRIPT_ONLY
 
 /**
  * Built-in JavaScript exceptions that may be serialized without
@@ -64,7 +68,7 @@ function Meta(data, meta) {
   this.data = data;
   this.meta = meta;
 }
-exports.Meta = Meta;
+// #EXPORT Meta
 
 /**
  * Base class for a worker.
@@ -236,4 +240,4 @@ AbstractWorker.prototype = {
     }
   },
 };
-exports.AbstractWorker = AbstractWorker;
+// #EXPORT AbstractWorker
