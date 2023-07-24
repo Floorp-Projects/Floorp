@@ -3,16 +3,16 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
+edition = "2021"
 name = "smart-default"
-version = "0.6.0"
+version = "0.7.1"
 authors = ["IdanArye <idanarye@gmail.com>"]
 description = "Rust custom-derive macro for Default with more control on the fields"
 documentation = "https://idanarye.github.io/rust-smart-default/"
@@ -23,6 +23,7 @@ repository = "https://github.com/idanarye/rust-smart-default"
 
 [lib]
 proc-macro = true
+
 [dependencies.proc-macro2]
 version = "1"
 
@@ -30,5 +31,4 @@ version = "1"
 version = "1"
 
 [dependencies.syn]
-version = "1"
-features = ["full"]
+version = "2"

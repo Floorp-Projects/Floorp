@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## 0.7.1 - 2023-04-24
+### Fixed
+- Fixed bug where the macro fails on valid default expression that is also a
+  valid attribute meta because it was expecting the `_code` hack.
+
+## 0.7.0 - 2023-04-23
+### Changed
+- Update `syn` to version 2
+
 ## 0.6.0 - 2019-12-13
 ### Changed
 - Update `syn`, `quote` and `proc-macro2` versions to `1.*.*`.

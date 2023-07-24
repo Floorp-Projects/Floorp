@@ -87,6 +87,10 @@ audit-as-crates-io = false
 audit-as-crates-io = true
 notes = "This is a pinned version of the upstream code, presumably to get a fix that hadn't been released yet. We should consider switching to the latest official release."
 
+[policy."minidump-common:0.17.0@git:87a29fba5e19cfae5ebf73a57ba31504a3872545"]
+audit-as-crates-io = true
+notes = "Unreleased upstream."
+
 [policy.minidump-writer]
 audit-as-crates-io = true
 notes = "Unreleased upstream."

@@ -1,9 +1,3 @@
-extern crate proc_macro;
-extern crate proc_macro2;
-extern crate syn;
-
-extern crate quote;
-
 use syn::{parse_macro_input, DeriveInput};
 
 mod body_impl;
@@ -12,7 +6,7 @@ mod util;
 
 /// # Smart Default
 ///
-/// This crate provides a custom derive for `SmartDefault`. `SmartDefault` is not a real type -
+/// This crate provides a custom derive for `SmartDefault`. `SmartDefault` is not a real trait -
 /// deriving it will actually `impl Default`. The difference from regular `#[derive(Default)]` is
 /// that `#[derive(SmartDefault)]` allows you to use `#[default = "..."]` attributes to customize
 /// the `::default()` method and to support `struct`s that don't have `Default` for all their
@@ -21,8 +15,7 @@ mod util;
 /// # Examples
 ///
 /// ```
-/// #[macro_use]
-/// extern crate smart_default;
+/// use smart_default::SmartDefault;
 ///
 /// # fn main() {
 /// #[derive(SmartDefault)]
@@ -74,11 +67,7 @@ mod util;
 pub fn derive_smart_default(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match body_impl::impl_my_derive(&input) {
-        Ok(output) => {
-            output.into()
-        },
-        Err(error) =>{
-            error.to_compile_error().into()
-        }
+        Ok(output) => output.into(),
+        Err(error) => error.to_compile_error().into(),
     }
 }

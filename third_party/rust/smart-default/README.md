@@ -1,4 +1,4 @@
-[![Build Status](https://api.travis-ci.org/idanarye/rust-smart-default.svg?branch=master)](https://travis-ci.org/idanarye/rust-smart-default)
+[![Build Status](https://github.com/idanarye/rust-smart-default/workflows/CI/badge.svg)](https://github.com/idanarye/rust-smart-default/actions)
 [![Latest Version](https://img.shields.io/crates/v/smart-default.svg)](https://crates.io/crates/smart-default)
 [![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://idanarye.github.io/rust-smart-default/)
 
@@ -7,8 +7,7 @@
 Custom derive for automatically implementing the `Default` trait with customized default values:
 
 ```rust
-#[macro_use]
-extern crate smart_default;
+use smart_default::SmartDefault;
 
 #[derive(SmartDefault)]
 enum Foo {

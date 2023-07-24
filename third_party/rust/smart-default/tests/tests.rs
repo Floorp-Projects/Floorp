@@ -1,5 +1,4 @@
-#[macro_use]
-extern crate smart_default;
+use smart_default::SmartDefault;
 
 #[test]
 fn test_unit() {
@@ -12,11 +11,9 @@ fn test_unit() {
 #[test]
 fn test_tuple() {
     #[derive(PartialEq, SmartDefault)]
-    struct Foo (
-        #[default = 10]
-        i32,
-        #[default = 20]
-        i32,
+    struct Foo(
+        #[default = 10] i32,
+        #[default = 20] i32,
         // No default
         i32,
     );
@@ -74,9 +71,7 @@ fn test_enum_of_structs() {
     #[derive(PartialEq, SmartDefault)]
     pub enum Foo {
         #[allow(dead_code)]
-        Bar {
-            x: i32,
-        },
+        Bar { x: i32 },
         #[default]
         Baz {
             #[default = 10]
@@ -84,9 +79,7 @@ fn test_enum_of_structs() {
             z: i32,
         },
         #[allow(dead_code)]
-        Qux {
-            w: i32,
-        },
+        Qux { w: i32 },
     }
 
     assert!(Foo::default() == Foo::Baz { y: 10, z: 0 });
@@ -101,9 +94,7 @@ fn test_enum_mixed() {
         #[default]
         Baz(#[default = 10] i32),
         #[allow(dead_code)]
-        Qux {
-            w: i32,
-        },
+        Qux { w: i32 },
     }
 
     assert!(Foo::default() == Foo::Baz(10));
@@ -112,9 +103,12 @@ fn test_enum_mixed() {
 #[test]
 fn test_generics_type_parameters() {
     #[derive(PartialEq, SmartDefault)]
-    struct Foo<T> where T: Default {
+    struct Foo<T>
+    where
+        T: Default,
+    {
         #[default(Some(Default::default()))]
-        x: Option<T>
+        x: Option<T>,
     }
 
     assert!(Foo::default() == Foo { x: Some(0) });
@@ -131,7 +125,7 @@ fn test_generics_lifetime_parameters() {
         #[default]
         Bar(i32),
         #[allow(dead_code)]
-        Baz(&'a str)
+        Baz(&'a str),
     }
 
     assert!(Foo::default() == Foo::Bar(0));
@@ -151,12 +145,26 @@ fn test_code_hack() {
 #[test]
 fn test_string_conversion() {
     #[derive(PartialEq, SmartDefault)]
-    struct Foo(
-        #[default = "one"]
-        &'static str,
-        #[default("two")]
-        String,
-    );
+    struct Foo(#[default = "one"] &'static str, #[default("two")] String);
 
     assert!(Foo::default() == Foo("one", "two".to_owned()));
+}
+
+#[test]
+fn test_non_code_hack_valid_meta() {
+    #[derive(Debug, PartialEq, SmartDefault)]
+    struct Foo {
+        #[default(true)]
+        bar: bool,
+        #[default(Option::None)]
+        baz: Option<()>,
+    }
+
+    assert_eq!(
+        Foo::default(),
+        Foo {
+            bar: true,
+            baz: None
+        }
+    );
 }
