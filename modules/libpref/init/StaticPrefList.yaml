@@ -3873,7 +3873,7 @@
 
 - name: dom.serviceWorkers.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: dom.serviceWorkers.navigationPreload.enabled
