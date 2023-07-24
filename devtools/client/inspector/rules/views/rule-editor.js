@@ -147,28 +147,29 @@ RuleEditor.prototype = {
     if (this.rule.domRule.ancestorData.length) {
       const ancestorsFrag = this.doc.createDocumentFragment();
       this.rule.domRule.ancestorData.forEach((ancestorData, index) => {
-        const ancestorLi = this.doc.createElement("li");
-        ancestorsFrag.append(ancestorLi);
-        ancestorLi.setAttribute("data-ancestor-index", index);
-        ancestorLi.classList.add("ruleview-rule-ancestor");
+        const ancestorItem = this.doc.createElement("div");
+        ancestorItem.setAttribute("role", "listitem");
+        ancestorsFrag.append(ancestorItem);
+        ancestorItem.setAttribute("data-ancestor-index", index);
+        ancestorItem.classList.add("ruleview-rule-ancestor");
         if (ancestorData.type) {
-          ancestorLi.classList.add(ancestorData.type);
+          ancestorItem.classList.add(ancestorData.type);
         }
 
         // Indent each parent selector
         if (index) {
-          createChild(ancestorLi, "span", {
+          createChild(ancestorItem, "span", {
             class: "ruleview-rule-indent",
             textContent: INDENT_STR.repeat(index),
           });
         }
 
-        const selectorContainer = createChild(ancestorLi, "span", {
+        const selectorContainer = createChild(ancestorItem, "span", {
           class: "ruleview-rule-ancestor-selectorcontainer",
         });
 
         if (ancestorData.type == "container") {
-          ancestorLi.classList.add("container-query", "has-tooltip");
+          ancestorItem.classList.add("container-query", "has-tooltip");
 
           createChild(selectorContainer, "span", {
             class: "container-query-declaration",
@@ -177,8 +178,10 @@ RuleEditor.prototype = {
             }`,
           });
 
-          const jumpToNodeButton = createChild(selectorContainer, "button", {
+          // We can't use a button, otherwise a line break is added when copy/pasting the rule
+          const jumpToNodeButton = createChild(selectorContainer, "span", {
             class: "open-inspector",
+            role: "button",
             title: l10n("rule.containerQuery.selectContainerButton.tooltip"),
           });
 
@@ -206,7 +209,7 @@ RuleEditor.prototype = {
             );
           });
 
-          ancestorLi.addEventListener("mouseenter", async () => {
+          ancestorItem.addEventListener("mouseenter", async () => {
             const front = await getNodeFront();
             if (!front) {
               return;
@@ -217,7 +220,7 @@ RuleEditor.prototype = {
               front
             );
           });
-          ancestorLi.addEventListener("mouseleave", async () => {
+          ancestorItem.addEventListener("mouseleave", async () => {
             await this.ruleView.inspector.highlighters.hideHighlighterType(
               this.ruleView.inspector.highlighters.TYPES.BOXMODEL
             );
@@ -257,14 +260,17 @@ RuleEditor.prototype = {
           return;
         }
 
-        createChild(ancestorLi, "span", {
+        createChild(ancestorItem, "span", {
           class: "ruleview-ancestor-ruleopen",
           textContent: " {",
         });
       });
 
-      this.ancestorDataEl = createChild(this.element, "ol", {
+      // We can't use a proper "ol" as it will mess with selection copy text,
+      // adding spaces on list item instead of the one we craft (.ruleview-rule-indent)
+      this.ancestorDataEl = createChild(this.element, "div", {
         class: "ruleview-rule-ancestor-data theme-link",
+        role: "list",
       });
       this.ancestorDataEl.append(ancestorsFrag);
     }
@@ -277,7 +283,7 @@ RuleEditor.prototype = {
 
     createChild(header, "span", {
       class: "ruleview-rule-indent",
-      textContent: "  ".repeat(this.rule.domRule.ancestorData.length),
+      textContent: INDENT_STR.repeat(this.rule.domRule.ancestorData.length),
     });
 
     this.selectorText = createChild(header, "span", {
@@ -315,6 +321,8 @@ RuleEditor.prototype = {
         class:
           "ruleview-selectorhighlighter js-toggle-selector-highlighter" +
           (isHighlighted ? " highlighted" : ""),
+        role: "button",
+        "aria-pressed": isHighlighted,
         // This is used in rules.js for the selector highlighter
         "data-computed-selector": desugaredSelector,
         title: l10n("rule.selectorHighlighter.tooltip"),
@@ -326,8 +334,11 @@ RuleEditor.prototype = {
       textContent: " {",
     });
 
-    this.propertyList = createChild(code, "ul", {
+    // We can't use a proper "ol" as it will mess with selection copy text,
+    // adding spaces on list item instead of the one we craft (.ruleview-rule-indent)
+    this.propertyList = createChild(code, "div", {
       class: "ruleview-propertylist",
+      role: "list",
     });
 
     this.populate();
@@ -340,7 +351,7 @@ RuleEditor.prototype = {
     if (this.rule.domRule.ancestorData.length) {
       createChild(this.closeBrace, "span", {
         class: "ruleview-rule-indent",
-        textContent: "  ".repeat(this.rule.domRule.ancestorData.length),
+        textContent: INDENT_STR.repeat(this.rule.domRule.ancestorData.length),
       });
     }
     this.closeBrace.append(this.doc.createTextNode("}"));
@@ -701,8 +712,9 @@ RuleEditor.prototype = {
     // close brace for now.
     this.closeBrace.removeAttribute("tabindex");
 
-    this.newPropItem = createChild(this.propertyList, "li", {
+    this.newPropItem = createChild(this.propertyList, "div", {
       class: "ruleview-property ruleview-newproperty",
+      role: "listitem",
     });
 
     this.newPropSpan = createChild(this.newPropItem, "span", {

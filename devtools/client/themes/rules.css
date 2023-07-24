@@ -366,7 +366,7 @@
   color: var(--theme-comment);
 }
 
-.ruleview-rule-indent {
+.ruleview-rule-indent, .ruleview-ancestor-ruleclose {
   white-space: pre;
   /*
   * We do want to keep the underlying chars for the indent for user to copy/paste,
@@ -375,6 +375,17 @@
   * the text is selected.
   */
   letter-spacing: -0.5ch;
+}
+
+.ruleview-rule-indent.clipboard-only {
+  position: absolute;
+  left: -9999px;
+  overflow: hidden;
+  width: 0;
+  height: 0;
+  padding: 0;
+  border: 0;
+  margin: 0;
 }
 
 .ruleview-propertylist {
@@ -511,6 +522,7 @@
 
 .ruleview-overridden-items {
   margin-inline-start: -25px;
+  margin-block: 0;
   list-style: none;
   line-height: 1.5em;
 }
@@ -734,13 +746,13 @@
   margin: 0;
 }
 
-.ruleview-rule-ancestor-data li {
+.ruleview-rule-ancestor-data [role="listitem"] {
   /* When there's a search and this element is highlighted, this prevents the background
      color to be applied to the whole width of the parent ul block */
   max-width: max-content;
 }
 
-.ruleview-rule-ancestor-data li.has-tooltip:hover .container-query-declaration {
+.ruleview-rule-ancestor-data  [role="listitem"].has-tooltip:hover .container-query-declaration {
   text-decoration: underline;
   text-decoration-color: var(--theme-highlight-blue);
   text-decoration-style: dotted;
@@ -749,7 +761,7 @@
   text-underline-offset: 2px;
 }
 
-.ruleview-rule-ancestor-data li button.open-inspector {
+.ruleview-rule-ancestor-data  [role="listitem"] :is(button,[role="button"]).open-inspector {
   /* There's a space character after the button, so add a 1ch margin-inline-start to be consistent */
   margin-inline: 1ch 0;
 }

@@ -135,9 +135,9 @@ function getNodeInfo(node, elementStyle) {
     value = declaration.isUsed();
   } else if (node.closest(".container-query-declaration")) {
     type = VIEW_NODE_CSS_QUERY_CONTAINER;
-    const li = node.closest("li.container-query");
+    const containerQueryEl = node.closest(".container-query");
     value = {
-      ancestorIndex: li.getAttribute("data-ancestor-index"),
+      ancestorIndex: containerQueryEl.getAttribute("data-ancestor-index"),
       rule,
     };
   } else if (declaration && classList.contains("ruleview-shapeswatch")) {
