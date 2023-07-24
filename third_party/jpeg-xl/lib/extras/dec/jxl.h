@@ -41,6 +41,10 @@ struct JXLDecompressParams {
   // Whether truncated input should be treated as an error.
   bool allow_partial_input = false;
 
+  // Set to true if an ICC profile has to be synthesized for Enum color
+  // encodings
+  bool need_icc = false;
+
   // How many passes to decode at most. By default, decode everything.
   uint32_t max_passes = std::numeric_limits<uint32_t>::max();
 

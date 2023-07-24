@@ -1337,8 +1337,8 @@ TEST(EncodeTest, JXL_BOXES_TEST(BoxTest)) {
   }
 }
 
-#if JPEGXL_ENABLE_JPEG  // Loading .jpg files requires libjpeg support.
 TEST(EncodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGFrameTest)) {
+  TEST_LIBJPEG_SUPPORT();
   for (int skip_basic_info = 0; skip_basic_info < 2; skip_basic_info++) {
     for (int skip_color_encoding = 0; skip_color_encoding < 2;
          skip_color_encoding++) {
@@ -1402,4 +1402,3 @@ TEST(EncodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGFrameTest)) {
     }
   }
 }
-#endif  // JPEGXL_ENABLE_JPEG

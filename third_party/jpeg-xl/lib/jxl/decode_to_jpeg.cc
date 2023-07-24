@@ -12,7 +12,7 @@ namespace jxl {
 JxlDecoderStatus JxlToJpegDecoder::Process(const uint8_t** next_in,
                                            size_t* avail_in) {
   if (!inside_box_) {
-    JXL_ABORT(
+    JXL_UNREACHABLE(
         "processing of JPEG reconstruction data outside JPEG reconstruction "
         "box");
   }
@@ -38,7 +38,7 @@ JxlDecoderStatus JxlToJpegDecoder::Process(const uint8_t** next_in,
     to_decode = Span<const uint8_t>(buffer_.data(), buffer_.size());
   }
   if (!box_until_eof_ && to_decode.size() > box_size_) {
-    JXL_ABORT("JPEG reconstruction data to decode larger than expected");
+    JXL_UNREACHABLE("JPEG reconstruction data to decode larger than expected");
   }
   if (box_until_eof_ || to_decode.size() == box_size_) {
     // If undefined size, or the right size, try to decode.

@@ -182,23 +182,7 @@ void ConvolutionWithTranspose(const ImageF& in,
       break;
     }
     default:
-      printf("Warning: Unexpected kernel size! %" PRIuS "\n", len);
-      for (size_t y = 0; y < in.ysize(); ++y) {
-        const float* BUTTERAUGLI_RESTRICT row_in = in.Row(y);
-        for (size_t x = border1; x < border2; ++x) {
-          const int d = x - offset;
-          float* BUTTERAUGLI_RESTRICT row_out = out->Row(x);
-          float sum = 0.0f;
-          size_t j;
-          for (j = 0; j <= len / 2; ++j) {
-            sum += row_in[d + j] * scaled_kernel[j];
-          }
-          for (; j < len; ++j) {
-            sum += row_in[d + j] * scaled_kernel[len - 1 - j];
-          }
-          row_out[y] = sum;
-        }
-      }
+      JXL_UNREACHABLE("Kernel size %" PRIuS " not implemented", len);
   }
   // left border
   for (size_t x = 0; x < border1; ++x) {

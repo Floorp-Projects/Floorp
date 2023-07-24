@@ -14,9 +14,6 @@
 #include <functional>
 #include <string>
 
-#include "lib/jxl/image.h"
-#include "lib/jxl/jxl_inspection.h"
-
 namespace jxl {
 
 struct ColorEncoding;
@@ -82,27 +79,6 @@ struct AuxOut {
     return total;
   }
 
-  template <typename T>
-  void DumpImage(const char* label, const Image3<T>& image) const;
-
-  void DumpXybImage(const char* label, const Image3F& image) const;
-
-  template <typename T>
-  void DumpPlaneNormalized(const char* label, const Plane<T>& image) const;
-
-  void SetInspectorImage3F(const jxl::InspectorImage3F& inspector) {
-    inspector_image3f_ = inspector;
-  }
-
-  // Allows hooking intermediate data inspection into various places of the
-  // processing pipeline. Returns true iff processing should proceed.
-  bool InspectImage3F(const char* label, const Image3F& image) {
-    if (inspector_image3f_ != nullptr) {
-      return inspector_image3f_(label, image);
-    }
-    return true;
-  }
-
   std::array<LayerTotals, kNumImageLayers> layers;
   size_t num_blocks = 0;
 
@@ -119,45 +95,8 @@ struct AuxOut {
   size_t num_dct32x64_blocks = 0;
   size_t num_dct64_blocks = 0;
 
-  std::array<uint32_t, 8> dc_pred_usage = {{0}};
-  std::array<uint32_t, 8> dc_pred_usage_xb = {{0}};
-
   int num_butteraugli_iters = 0;
-
-  float max_quant_rescale = 1.0f;
-  float min_quant_rescale = 1.0f;
-  float min_bitrate_error = 0.0f;
-  float max_bitrate_error = 0.0f;
-
-  // If not empty, additional debugging information (e.g. debug images) is
-  // saved in files with this prefix.
-  std::string debug_prefix;
-
-  // By how much the decoded image was downsampled relative to the encoded
-  // image.
-  size_t downsampling = 1;
-
-  jxl::InspectorImage3F inspector_image3f_;
-
-  std::function<Status(Image3F&&, const ColorEncoding&, const std::string&)>
-      dump_image = nullptr;
 };
-
-extern template void AuxOut::DumpImage(const char* label,
-                                       const Image3<float>& image) const;
-extern template void AuxOut::DumpImage(const char* label,
-                                       const Image3<uint8_t>& image) const;
-extern template void AuxOut::DumpPlaneNormalized(
-    const char* label, const Plane<float>& image) const;
-extern template void AuxOut::DumpPlaneNormalized(
-    const char* label, const Plane<uint8_t>& image) const;
-
-// Used to skip image creation if they won't be written to debug directory.
-static inline bool WantDebugOutput(const AuxOut* aux_out) {
-  // Need valid pointer and filename.
-  return aux_out != nullptr && !aux_out->debug_prefix.empty();
-}
-
 }  // namespace jxl
 
 #endif  // LIB_JXL_AUX_OUT_H_

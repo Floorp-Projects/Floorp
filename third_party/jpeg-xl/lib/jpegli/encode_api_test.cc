@@ -134,25 +134,13 @@ TEST(EncodeAPITest, ReuseCinfoSameMemOutput) {
     EXPECT_TRUE(try_catch_block());
     jpegli_destroy_compress(&cinfo);
   }
-  std::vector<TestImage> all_outputs(all_configs.size());
-  {
-    jpeg_decompress_struct cinfo = {};
-    const auto try_catch_block = [&]() -> bool {
-      ERROR_HANDLER_SETUP(jpegli);
-      jpeg_create_decompress(&cinfo);
-      jpeg_mem_src(&cinfo, buffer, buffer_size);
-      for (size_t i = 0; i < all_configs.size(); ++i) {
-        DecodeWithLibjpeg(all_configs[i].jparams, DecompressParams(), &cinfo,
-                          &all_outputs[i]);
-      }
-      return true;
-    };
-    EXPECT_TRUE(try_catch_block());
-    jpeg_destroy_decompress(&cinfo);
-  }
+  size_t pos = 0;
   for (size_t i = 0; i < all_configs.size(); ++i) {
-    VerifyOutputImage(all_configs[i].input, all_outputs[i],
-                      all_configs[i].max_dist);
+    TestImage output;
+    pos +=
+        DecodeWithLibjpeg(all_configs[i].jparams, DecompressParams(), nullptr,
+                          0, buffer + pos, buffer_size - pos, &output);
+    VerifyOutputImage(all_configs[i].input, output, all_configs[i].max_dist);
   }
   if (buffer) free(buffer);
 }
@@ -175,28 +163,19 @@ TEST(EncodeAPITest, ReuseCinfoSameStdOutput) {
     EXPECT_TRUE(try_catch_block());
     jpegli_destroy_compress(&cinfo);
   }
+  size_t total_size = ftell(tmpf);
   rewind(tmpf);
-  std::vector<TestImage> all_outputs(all_configs.size());
-  {
-    jpeg_decompress_struct cinfo = {};
-    const auto try_catch_block = [&]() -> bool {
-      ERROR_HANDLER_SETUP(jpegli);
-      jpeg_create_decompress(&cinfo);
-      jpeg_stdio_src(&cinfo, tmpf);
-      for (size_t i = 0; i < all_configs.size(); ++i) {
-        DecodeWithLibjpeg(all_configs[i].jparams, DecompressParams(), &cinfo,
-                          &all_outputs[i]);
-      }
-      return true;
-    };
-    EXPECT_TRUE(try_catch_block());
-    jpeg_destroy_decompress(&cinfo);
-  }
-  for (size_t i = 0; i < all_configs.size(); ++i) {
-    VerifyOutputImage(all_configs[i].input, all_outputs[i],
-                      all_configs[i].max_dist);
-  }
+  std::vector<uint8_t> compressed(total_size);
+  JXL_CHECK(total_size == fread(&compressed[0], 1, total_size, tmpf));
   fclose(tmpf);
+  size_t pos = 0;
+  for (size_t i = 0; i < all_configs.size(); ++i) {
+    TestImage output;
+    pos += DecodeWithLibjpeg(all_configs[i].jparams, DecompressParams(),
+                             nullptr, 0, &compressed[pos],
+                             compressed.size() - pos, &output);
+    VerifyOutputImage(all_configs[i].input, output, all_configs[i].max_dist);
+  }
 }
 
 TEST(EncodeAPITest, ReuseCinfoChangeParams) {
@@ -298,32 +277,15 @@ TEST(EncodeAPITest, AbbreviatedStreams) {
     EXPECT_LT(data_stream_size, 50);
     jpegli_destroy_compress(&cinfo);
   }
-  {
-    jpeg_decompress_struct cinfo = {};
-    const auto try_catch_block = [&]() -> bool {
-      ERROR_HANDLER_SETUP(jpeg);
-      jpeg_create_decompress(&cinfo);
-      jpeg_mem_src(&cinfo, table_stream, table_stream_size);
-      jpeg_read_header(&cinfo, FALSE);
-      jpeg_mem_src(&cinfo, data_stream, data_stream_size);
-      jpeg_read_header(&cinfo, TRUE);
-      EXPECT_EQ(1, cinfo.image_width);
-      EXPECT_EQ(1, cinfo.image_height);
-      EXPECT_EQ(3, cinfo.num_components);
-      jpeg_start_decompress(&cinfo);
-      JSAMPLE image[3] = {0};
-      JSAMPROW row[] = {image};
-      jpeg_read_scanlines(&cinfo, row, 1);
-      jxl::msan::UnpoisonMemory(image, 3);
-      EXPECT_EQ(0, image[0]);
-      EXPECT_EQ(0, image[1]);
-      EXPECT_EQ(0, image[2]);
-      jpeg_finish_decompress(&cinfo);
-      return true;
-    };
-    EXPECT_TRUE(try_catch_block());
-    jpeg_destroy_decompress(&cinfo);
-  }
+  TestImage output;
+  DecodeWithLibjpeg(CompressParams(), DecompressParams(), table_stream,
+                    table_stream_size, data_stream, data_stream_size, &output);
+  EXPECT_EQ(1, output.xsize);
+  EXPECT_EQ(1, output.ysize);
+  EXPECT_EQ(3, output.components);
+  EXPECT_EQ(0, output.pixels[0]);
+  EXPECT_EQ(0, output.pixels[1]);
+  EXPECT_EQ(0, output.pixels[2]);
   if (table_stream) free(table_stream);
   if (data_stream) free(data_stream);
 }
@@ -398,8 +360,8 @@ std::vector<TestConfig> GenerateTests() {
           if (!progr) {
             config.jparams.optimize_coding = optimize;
           }
-          const float kMaxBpp[4] = {1.55, 1.45, 1.45, 1.32};
-          const float kMaxDist[4] = {1.95, 2.1, 2.1, 2.0};
+          const float kMaxBpp[4] = {1.55, 1.4, 1.4, 1.32};
+          const float kMaxDist[4] = {1.95, 2.2, 2.2, 2.0};
           const int idx = v_samp * 2 + h_samp - 3;
           config.max_bpp =
               kMaxBpp[idx] * (optimize ? 0.97 : 1.0) * (progr ? 0.97 : 1.0);
@@ -490,7 +452,7 @@ std::vector<TestConfig> GenerateTests() {
       all_tests.push_back(config);
     }
   }
-  for (int p = 0; p < 3 + kNumTestScripts; ++p) {
+  for (int p = 0; p < 3 + NumTestScanScripts(); ++p) {
     for (int samp : {1, 2}) {
       for (int quality : {100, 90, 1}) {
         for (int r : {0, 1024, 1}) {
@@ -508,11 +470,11 @@ std::vector<TestConfig> GenerateTests() {
             config.jparams.v_sampling = {samp, 1, 1};
             config.jparams.quality = quality;
             config.jparams.restart_interval = r;
-            config.max_bpp = quality == 100 ? 8.0 : 2.0;
+            config.max_bpp = quality == 100 ? 8.0 : 1.9;
             if (r == 1) {
               config.max_bpp += 10.0;
             }
-            config.max_dist = quality == 1 ? 20.0 : 2.0;
+            config.max_dist = quality == 1 ? 20.0 : 2.1;
             all_tests.push_back(config);
           }
         }

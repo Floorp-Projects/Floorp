@@ -24,7 +24,7 @@ struct SizeConstraints;
 
 namespace extras {
 
-// Codecs supported by CodecInOut::Encode.
+// Codecs supported by DecodeBytes.
 enum class Codec : uint32_t {
   kUnknown,  // for CodecFromPath
   kPNG,
@@ -36,7 +36,7 @@ enum class Codec : uint32_t {
   kJXL
 };
 
-std::vector<Codec> AvailableCodecs();
+bool CanDecode(Codec codec);
 
 // If and only if extension is ".pfm", *bits_per_sample is updated to 32 so
 // that Encode() would encode to PFM instead of PPM.

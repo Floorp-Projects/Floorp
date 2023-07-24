@@ -99,7 +99,7 @@ class UpsamplingStage : public RenderPipelineStage {
                     [x % 8 < 4 ? x % 4 : 3 - x % 4][y % 8 < 4 ? iy : 4 - iy]
                     [x % 8 < 4 ? ix : 4 - ix];
     }
-    JXL_ABORT("Invalid upsample");
+    JXL_UNREACHABLE("Invalid upsample");
   }
 
   template <ssize_t N>

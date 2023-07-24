@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "lib/extras/codec.h"
+#include "lib/extras/dec/decode.h"
 #include "lib/extras/enc/encode.h"
 #include "lib/extras/packed_image.h"
 #include "lib/jxl/alpha.h"
@@ -148,7 +149,7 @@ TEST(JxlTest, RoundtripResample2) {
   cparams.AddOption(JXL_ENC_FRAME_SETTING_EFFORT, 3);  // kFalcon
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 18772, 200);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 18500, 200);
   EXPECT_THAT(ComputeDistance2(t.ppf(), ppf_out), IsSlightlyBelow(90));
 }
 
@@ -165,7 +166,7 @@ TEST(JxlTest, RoundtripResample2Slow) {
   cparams.distance = 10.0;
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 4088, 200);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 3888, 200);
   EXPECT_THAT(ComputeDistance2(t.ppf(), ppf_out), IsSlightlyBelow(250));
 }
 
@@ -340,10 +341,10 @@ TEST(JxlTest, RoundtripRGBToGrayscale) {
   ASSERT_TRUE(io.frames[0].TransformTo(srgb_gamma, GetJxlCms()));
   io.metadata.m.color_encoding = io2.Main().c_current();
   io.Main().OverrideProfile(io2.Main().c_current());
-  EXPECT_THAT(
-      ButteraugliDistance(io.frames, io2.frames, cparams.ba_params, GetJxlCms(),
-                          /*distmap=*/nullptr, &pool),
-      IsSlightlyBelow(1.36));
+  EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
+                                  GetJxlCms(),
+                                  /*distmap=*/nullptr, &pool),
+              IsSlightlyBelow(1.36));
 }
 
 TEST(JxlTest, RoundtripLargeFast) {
@@ -644,7 +645,7 @@ TEST(JxlTest, RoundtripGrayscale) {
     EXPECT_TRUE(io2.Main().IsGray());
 
     EXPECT_LE(compressed.size(), 7000u);
-    EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, cparams.ba_params,
+    EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
                                     GetJxlCms(),
                                     /*distmap=*/nullptr),
                 IsSlightlyBelow(1.6));
@@ -664,7 +665,7 @@ TEST(JxlTest, RoundtripGrayscale) {
     EXPECT_TRUE(io2.Main().IsGray());
 
     EXPECT_LE(compressed.size(), 1300u);
-    EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, cparams.ba_params,
+    EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
                                     GetJxlCms(),
                                     /*distmap=*/nullptr),
                 IsSlightlyBelow(6.0));
@@ -686,7 +687,7 @@ TEST(JxlTest, RoundtripGrayscale) {
     EXPECT_FALSE(io2.Main().IsGray());
 
     EXPECT_LE(compressed.size(), 7000u);
-    EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, cparams.ba_params,
+    EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
                                     GetJxlCms(),
                                     /*distmap=*/nullptr),
                 IsSlightlyBelow(1.6));
@@ -727,8 +728,8 @@ TEST(JxlTest, RoundtripAlpha) {
       dparams.unpremultiply_alpha = unpremul_alpha;
       EXPECT_TRUE(
           test::DecodeFile(dparams, Span<const uint8_t>(compressed), &io2));
-      EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, cparams.ba_params,
-                                      GetJxlCms(),
+      EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames,
+                                      ButteraugliParams(), GetJxlCms(),
                                       /*distmap=*/nullptr),
                   IsSlightlyBelow(1.15));
     }
@@ -805,6 +806,7 @@ TEST(JxlTest, RoundtripAlphaPremultiplied) {
 
   CompressParams cparams;
   cparams.butteraugli_distance = 1.0;
+  cparams.SetCms(GetJxlCms());
 
   EXPECT_FALSE(io.Main().AlphaIsPremultiplied());
   EXPECT_TRUE(PremultiplyAlpha(io));
@@ -842,14 +844,14 @@ TEST(JxlTest, RoundtripAlphaPremultiplied) {
         EXPECT_EQ(unpremul_alpha, !io2.Main().AlphaIsPremultiplied());
         if (!unpremul_alpha) {
           EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames,
-                                          cparams.ba_params, GetJxlCms(),
+                                          ButteraugliParams(), GetJxlCms(),
                                           /*distmap=*/nullptr),
                       IsSlightlyBelow(1.2));
           EXPECT_TRUE(UnpremultiplyAlpha(io2));
           EXPECT_FALSE(io2.Main().AlphaIsPremultiplied());
         }
         EXPECT_THAT(ButteraugliDistance(io_nopremul.frames, io2.frames,
-                                        cparams.ba_params, GetJxlCms(),
+                                        ButteraugliParams(), GetJxlCms(),
                                         /*distmap=*/nullptr),
                     IsSlightlyBelow(1.47));
       }
@@ -965,7 +967,7 @@ TEST(JxlTest, JXL_SLOW_TEST(RoundtripLossless8)) {
   JXLCompressParams cparams = CompressParamsForLossless();
 
   PackedPixelFile ppf_out;
-  EXPECT_EQ(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 222167);
+  EXPECT_EQ(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 223058);
   EXPECT_EQ(ComputeDistance2(t.ppf(), ppf_out), 0.0);
 }
 
@@ -1032,7 +1034,7 @@ TEST(JxlTest, RoundtripLossless8Alpha) {
   dparams.accepted_formats.push_back(t.ppf().frames[0].color.format);
 
   PackedPixelFile ppf_out;
-  EXPECT_EQ(Roundtrip(t.ppf(), cparams, dparams, pool, &ppf_out), 248817);
+  EXPECT_EQ(Roundtrip(t.ppf(), cparams, dparams, pool, &ppf_out), 251470);
   EXPECT_EQ(ComputeDistance2(t.ppf(), ppf_out), 0.0);
   EXPECT_EQ(ppf_out.info.alpha_bits, 8);
   EXPECT_TRUE(test::SameAlpha(t.ppf(), ppf_out));
@@ -1067,7 +1069,7 @@ TEST(JxlTest, RoundtripLossless16Alpha) {
 
   PackedPixelFile ppf_out;
   // TODO(szabadka) Investigate big size difference on i686
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, dparams, pool, &ppf_out), 4849, 100);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, dparams, pool, &ppf_out), 4884, 100);
   EXPECT_EQ(ComputeDistance2(t.ppf(), ppf_out), 0.0);
   EXPECT_EQ(ppf_out.info.alpha_bits, 16);
   EXPECT_TRUE(test::SameAlpha(t.ppf(), ppf_out));
@@ -1103,7 +1105,7 @@ TEST(JxlTest, RoundtripLossless16AlphaNotMisdetectedAs8Bit) {
   dparams.accepted_formats.push_back(t.ppf().frames[0].color.format);
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, dparams, pool, &ppf_out), 543, 75);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, dparams, pool, &ppf_out), 591, 50);
   EXPECT_EQ(ComputeDistance2(t.ppf(), ppf_out), 0.0);
   EXPECT_EQ(ppf_out.info.bits_per_sample, 16);
   EXPECT_EQ(ppf_out.info.alpha_bits, 16);
@@ -1166,15 +1168,17 @@ TEST(JxlTest, RoundtripLossless8Gray) {
   dparams.accepted_formats.push_back(t.ppf().frames[0].color.format);
 
   PackedPixelFile ppf_out;
-  EXPECT_EQ(Roundtrip(t.ppf(), cparams, dparams, pool, &ppf_out), 92766);
+  EXPECT_EQ(Roundtrip(t.ppf(), cparams, dparams, pool, &ppf_out), 92185);
   EXPECT_EQ(ComputeDistance2(t.ppf(), ppf_out), 0.0);
   EXPECT_EQ(ppf_out.color_encoding.color_space, JXL_COLOR_SPACE_GRAY);
   EXPECT_EQ(ppf_out.info.bits_per_sample, 8);
 }
 
-#if JPEGXL_ENABLE_GIF
-
 TEST(JxlTest, RoundtripAnimation) {
+  if (!jxl::extras::CanDecode(jxl::extras::Codec::kGIF)) {
+    fprintf(stderr, "Skipping test because of missing GIF decoder.\n");
+    return;
+  }
   ThreadPool* pool = nullptr;
   const PaddedBytes orig = jxl::test::ReadTestData("jxl/traffic_light.gif");
   TestImage t;
@@ -1199,6 +1203,10 @@ TEST(JxlTest, RoundtripAnimation) {
 }
 
 TEST(JxlTest, RoundtripLosslessAnimation) {
+  if (!jxl::extras::CanDecode(jxl::extras::Codec::kGIF)) {
+    fprintf(stderr, "Skipping test because of missing GIF decoder.\n");
+    return;
+  }
   ThreadPool* pool = nullptr;
   const PaddedBytes orig = jxl::test::ReadTestData("jxl/traffic_light.gif");
   TestImage t;
@@ -1220,6 +1228,10 @@ TEST(JxlTest, RoundtripLosslessAnimation) {
 }
 
 TEST(JxlTest, RoundtripAnimationPatches) {
+  if (!jxl::extras::CanDecode(jxl::extras::Codec::kGIF)) {
+    fprintf(stderr, "Skipping test because of missing GIF decoder.\n");
+    return;
+  }
   ThreadPool* pool = nullptr;
   const PaddedBytes orig = jxl::test::ReadTestData("jxl/animation_patches.gif");
 
@@ -1241,8 +1253,6 @@ TEST(JxlTest, RoundtripAnimationPatches) {
   // >10 with broken patches
   EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(1.0999));
 }
-
-#endif  // JPEGXL_ENABLE_GIF
 
 size_t RoundtripJpeg(const PaddedBytes& jpeg_in, ThreadPool* pool) {
   std::vector<uint8_t> jpeg_bytes(jpeg_in.data(),
@@ -1293,9 +1303,8 @@ TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompression444)) {
   EXPECT_NEAR(RoundtripJpeg(orig, &pool), 568940u, 10);
 }
 
-#if JPEGXL_ENABLE_JPEG
-
 TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompressionToPixels)) {
+  TEST_LIBJPEG_SUPPORT();
   ThreadPoolForTests pool(8);
   const PaddedBytes orig =
       jxl::test::ReadTestData("jxl/flower/flower.png.im_q85_444.jpg");
@@ -1308,6 +1317,7 @@ TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompressionToPixels)) {
 }
 
 TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompressionToPixels420)) {
+  TEST_LIBJPEG_SUPPORT();
   ThreadPoolForTests pool(8);
   const PaddedBytes orig =
       jxl::test::ReadTestData("jxl/flower/flower.png.im_q85_420.jpg");
@@ -1321,6 +1331,7 @@ TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompressionToPixels420)) {
 
 TEST(JxlTest,
      JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompressionToPixels420EarlyFlush)) {
+  TEST_LIBJPEG_SUPPORT();
   ThreadPoolForTests pool(8);
   const PaddedBytes orig =
       jxl::test::ReadTestData("jxl/flower/flower.png.im_q85_420.jpg");
@@ -1337,6 +1348,7 @@ TEST(JxlTest,
 
 TEST(JxlTest,
      JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompressionToPixels420Mul16)) {
+  TEST_LIBJPEG_SUPPORT();
   ThreadPoolForTests pool(8);
   const PaddedBytes orig =
       jxl::test::ReadTestData("jxl/flower/flower_cropped.jpg");
@@ -1350,6 +1362,7 @@ TEST(JxlTest,
 
 TEST(JxlTest,
      JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompressionToPixels_asymmetric)) {
+  TEST_LIBJPEG_SUPPORT();
   ThreadPoolForTests pool(8);
   const PaddedBytes orig =
       jxl::test::ReadTestData("jxl/flower/flower.png.im_q85_asymmetric.jpg");
@@ -1360,8 +1373,6 @@ TEST(JxlTest,
   RoundtripJpegToPixels(orig, {}, &pool, &ppf_out);
   EXPECT_THAT(ComputeDistance2(t.ppf(), ppf_out), IsSlightlyBelow(10));
 }
-
-#endif
 
 TEST(JxlTest, JXL_TRANSCODE_JPEG_TEST(RoundtripJpegRecompressionGray)) {
   ThreadPoolForTests pool(8);

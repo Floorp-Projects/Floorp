@@ -90,7 +90,7 @@ TEST(ModularTest, RoundtripLosslessCustomWP_PermuteRCT) {
 
   size_t compressed_size;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
-  EXPECT_LE(compressed_size, 10150u);
+  EXPECT_LE(compressed_size, 10169u);
   JXL_EXPECT_OK(SamePixels(*io.Main().color(), *io_out.Main().color(), _));
 }
 
@@ -112,8 +112,7 @@ TEST(ModularTest, RoundtripLossyDeltaPalette) {
   size_t compressed_size;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
   EXPECT_LE(compressed_size, 6800u);
-  cparams.ba_params.intensity_target = 80.0f;
-  EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, cparams.ba_params,
+  EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
                                   GetJxlCms(),
                                   /*distmap=*/nullptr),
               IsSlightlyBelow(1.5));
@@ -136,8 +135,7 @@ TEST(ModularTest, RoundtripLossyDeltaPaletteWP) {
   size_t compressed_size;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
   EXPECT_LE(compressed_size, 7000u);
-  cparams.ba_params.intensity_target = 80.0f;
-  EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, cparams.ba_params,
+  EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
                                   GetJxlCms(),
                                   /*distmap=*/nullptr),
               IsSlightlyBelow(10.1));
@@ -149,6 +147,7 @@ TEST(ModularTest, RoundtripLossy) {
   CompressParams cparams;
   cparams.modular_mode = true;
   cparams.butteraugli_distance = 2.f;
+  cparams.SetCms(GetJxlCms());
 
   CodecInOut io_out;
 
@@ -158,8 +157,7 @@ TEST(ModularTest, RoundtripLossy) {
   size_t compressed_size;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
   EXPECT_LE(compressed_size, 30000u);
-  cparams.ba_params.intensity_target = 80.0f;
-  EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, cparams.ba_params,
+  EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
                                   GetJxlCms(),
                                   /*distmap=*/nullptr),
               IsSlightlyBelow(2.3));
@@ -184,8 +182,7 @@ TEST(ModularTest, RoundtripLossy16) {
   size_t compressed_size;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
   EXPECT_LE(compressed_size, 300u);
-  cparams.ba_params.intensity_target = 80.0f;
-  EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, cparams.ba_params,
+  EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
                                   GetJxlCms(),
                                   /*distmap=*/nullptr),
               IsSlightlyBelow(1.6));

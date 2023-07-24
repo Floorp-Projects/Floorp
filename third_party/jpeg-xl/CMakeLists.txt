@@ -171,6 +171,10 @@ set(JPEGXL_FORCE_NEON false CACHE BOOL
     "Set flags to enable NEON in arm if not enabled by your toolchain.")
 set(JPEGXL_TEST_TOOLS false CACHE BOOL
     "Run scripts that test the encoding / decoding tools.")
+set(JPEGXL_ENABLE_AVX512 false CACHE BOOL
+    "Build with AVX512 support (faster on CPUs that support it, but larger binary size).")
+set(JPEGXL_ENABLE_AVX512_ZEN4 false CACHE BOOL
+    "Build with Zen4-optimized AVX512 support (faster on CPUs that support it, but larger binary size).")
 
 # Force system dependencies.
 set(JPEGXL_FORCE_SYSTEM_BROTLI false CACHE BOOL
@@ -205,6 +209,20 @@ endif()
 
 message(STATUS
     "Compiled IDs C:${CMAKE_C_COMPILER_ID}, C++:${CMAKE_CXX_COMPILER_ID}")
+
+# Always disable SSSE3 since it is rare to have SSSE3 but not SSE4
+set(HWY_DISABLED_TARGETS "HWY_SSSE3")
+if (NOT JPEGXL_ENABLE_AVX512)
+  message(STATUS "Disabled AVX512 (set JPEGXL_ENABLE_AVX512 to enable it)")
+  set(HWY_DISABLED_TARGETS "${HWY_DISABLED_TARGETS}|HWY_AVX3")
+  add_definitions(-DFJXL_ENABLE_AVX512=0)
+endif()
+if (NOT JPEGXL_ENABLE_AVX512_ZEN4)
+  message(STATUS "Disabled AVX512_ZEN4 (set JPEGXL_ENABLE_AVX512_ZEN4 to enable it)")
+  set(HWY_DISABLED_TARGETS "${HWY_DISABLED_TARGETS}|HWY_AVX3_ZEN4")
+endif()
+
+
 
 # CMAKE_EXPORT_COMPILE_COMMANDS is used to generate the compilation database
 # used by clang-tidy.
@@ -300,9 +318,11 @@ else ()
   )
 
   # TODO(eustas): JXL currently compiles, but does not pass tests...
-  if (NOT JXL_HWY_DISABLED_TARGETS_FORCED AND NOT JPEGXL_ENABLE_SIZELESS_VECTORS)
-    add_definitions(-DHWY_DISABLED_TARGETS=\(HWY_SVE|HWY_SVE2|HWY_SVE_256|HWY_SVE2_128|HWY_RVV\))
-    message("Warning: HWY_SVE, HWY_SVE2, HWY_SVE_256, HWY_SVE2_128 and HWY_RVV CPU targets are disabled")
+  if (NOT JXL_HWY_DISABLED_TARGETS_FORCED)
+    if (NOT JPEGXL_ENABLE_SIZELESS_VECTORS)
+      set(HWY_DISABLED_TARGETS "${HWY_DISABLED_TARGETS}|HWY_SVE|HWY_SVE2|HWY_SVE_256|HWY_SVE2_128|HWY_RVV")
+    endif()
+    add_definitions(-DHWY_DISABLED_TARGETS=\(${HWY_DISABLED_TARGETS}\))
   endif()
 
   # In CMake before 3.12 it is problematic to pass repeated flags like -Xclang.

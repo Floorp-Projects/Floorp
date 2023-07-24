@@ -5,7 +5,9 @@
 
 #include "lib/extras/dec/gif.h"
 
+#if JPEGXL_ENABLE_GIF
 #include <gif_lib.h>
+#endif
 #include <jxl/codestream_header.h>
 #include <string.h>
 
@@ -20,6 +22,7 @@
 namespace jxl {
 namespace extras {
 
+#if JPEGXL_ENABLE_GIF
 namespace {
 
 struct ReadState {
@@ -53,12 +56,21 @@ void ensure_have_alpha(PackedFrame* frame) {
   std::fill_n(static_cast<uint8_t*>(frame->extra_channels[0].pixels()),
               frame->color.xsize * frame->color.ysize, 255u);
 }
-
 }  // namespace
+#endif
+
+bool CanDecodeGIF() {
+#if JPEGXL_ENABLE_GIF
+  return true;
+#else
+  return false;
+#endif
+}
 
 Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
                       PackedPixelFile* ppf,
                       const SizeConstraints* constraints) {
+#if JPEGXL_ENABLE_GIF
   int error = GIF_OK;
   ReadState state = {bytes};
   const auto ReadFromSpan = [](GifFileType* const gif, GifByteType* const bytes,
@@ -394,6 +406,9 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
     }
   }
   return true;
+#else
+  return false;
+#endif
 }
 
 }  // namespace extras

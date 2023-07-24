@@ -5,8 +5,10 @@
 
 #include "lib/extras/dec/jpg.h"
 
+#if JPEGXL_ENABLE_JPEG
 #include <jpeglib.h>
 #include <setjmp.h>
+#endif
 #include <stdint.h>
 
 #include <algorithm>
@@ -21,6 +23,7 @@
 namespace jxl {
 namespace extras {
 
+#if JPEGXL_ENABLE_JPEG
 namespace {
 
 constexpr unsigned char kICCSignature[12] = {
@@ -175,11 +178,21 @@ void UnmapColors(uint8_t* row, size_t xsize, int components,
 }
 
 }  // namespace
+#endif
+
+bool CanDecodeJPG() {
+#if JPEGXL_ENABLE_JPEG
+  return true;
+#else
+  return false;
+#endif
+}
 
 Status DecodeImageJPG(const Span<const uint8_t> bytes,
                       const ColorHints& color_hints, PackedPixelFile* ppf,
                       const SizeConstraints* constraints,
                       const JPGDecompressParams* dparams) {
+#if JPEGXL_ENABLE_JPEG
   // Don't do anything for non-JPEG files (no need to report an error)
   if (!IsJPG(bytes)) return false;
 
@@ -316,6 +329,9 @@ Status DecodeImageJPG(const Span<const uint8_t> bytes,
   };
 
   return try_catch_block();
+#else
+  return false;
+#endif
 }
 
 }  // namespace extras

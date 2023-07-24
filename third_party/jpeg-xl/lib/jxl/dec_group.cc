@@ -431,7 +431,7 @@ namespace jxl {
 namespace {
 // Decode quantized AC coefficients of DCT blocks.
 // LLF components in the output block will not be modified.
-template <ACType ac_type>
+template <ACType ac_type, bool uses_lz77>
 Status DecodeACVarBlock(size_t ctx_offset, size_t log2_covered_blocks,
                         int32_t* JXL_RESTRICT row_nzeros,
                         const int32_t* JXL_RESTRICT row_nzeros_top,
@@ -458,7 +458,8 @@ Status DecodeACVarBlock(size_t ctx_offset, size_t log2_covered_blocks,
   const int32_t nzero_ctx =
       block_ctx_map.NonZeroContext(predicted_nzeros, block_ctx) + ctx_offset;
 
-  size_t nzeros = decoder->ReadHybridUint(nzero_ctx, br, context_map);
+  size_t nzeros =
+      decoder->ReadHybridUintInlined<uses_lz77>(nzero_ctx, br, context_map);
   if (nzeros + covered_blocks > size) {
     return JXL_FAILURE("Invalid AC: nzeros too large");
   }
@@ -477,7 +478,8 @@ Status DecodeACVarBlock(size_t ctx_offset, size_t log2_covered_blocks,
     const size_t ctx =
         histo_offset + ZeroDensityContext(nzeros, k, covered_blocks,
                                           log2_covered_blocks, prev);
-    const size_t u_coeff = decoder->ReadHybridUint(ctx, br, context_map);
+    const size_t u_coeff =
+        decoder->ReadHybridUintInlined<uses_lz77>(ctx, br, context_map);
     // Hand-rolled version of UnpackSigned, shifting before the conversion to
     // signed integer to avoid undefined behavior of shifting negative numbers.
     const size_t magnitude = u_coeff >> 1;
@@ -525,9 +527,7 @@ struct GetBlockFromBitstream : public GetBlock {
   Status LoadBlock(size_t bx, size_t by, const AcStrategy& acs, size_t size,
                    size_t log2_covered_blocks, ACPtr block[3],
                    ACType ac_type) override {
-    auto decode_ac_varblock = ac_type == ACType::k16
-                                  ? DecodeACVarBlock<ACType::k16>
-                                  : DecodeACVarBlock<ACType::k32>;
+    ;
     for (size_t c : {1, 0, 2}) {
       size_t sbx = bx >> hshift[c];
       size_t sby = by >> vshift[c];
@@ -536,6 +536,12 @@ struct GetBlockFromBitstream : public GetBlock {
       }
 
       for (size_t pass = 0; JXL_UNLIKELY(pass < num_passes); pass++) {
+        auto decode_ac_varblock =
+            decoders[pass].UsesLZ77()
+                ? (ac_type == ACType::k16 ? DecodeACVarBlock<ACType::k16, 1>
+                                          : DecodeACVarBlock<ACType::k32, 1>)
+                : (ac_type == ACType::k16 ? DecodeACVarBlock<ACType::k16, 0>
+                                          : DecodeACVarBlock<ACType::k32, 0>);
         JXL_RETURN_IF_ERROR(decode_ac_varblock(
             ctx_offset[pass], log2_covered_blocks, row_nzeros[pass][c],
             row_nzeros_top[pass][c], nzeros_stride, c, sbx, sby, bx, acs,

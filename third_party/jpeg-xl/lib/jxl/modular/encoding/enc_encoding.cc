@@ -39,8 +39,8 @@ namespace jxl {
 
 namespace {
 // Plot tree (if enabled) and predictor usage map.
-constexpr bool kWantDebug = false;
-constexpr bool kPrintTree = false;
+constexpr bool kWantDebug = true;
+// constexpr bool kPrintTree = false;
 
 inline std::array<uint8_t, 3> PredictorColor(Predictor p) {
   switch (p) {
@@ -107,29 +107,62 @@ void GatherTreeData(const Image &image, pixel_type chan, size_t group_id,
   Channel references(properties.size() - kNumNonrefProperties, channel.w);
   weighted::State wp_state(wp_header, channel.w, channel.h);
   tree_samples.PrepareForSamples(pixel_fraction * channel.h * channel.w + 64);
+  const bool multiple_predictors = tree_samples.NumPredictors() != 1;
+  auto compute_sample = [&](const pixel_type *p, size_t x, size_t y) {
+    pixel_type_w pred[kNumModularPredictors];
+    if (multiple_predictors) {
+      PredictLearnAll(&properties, channel.w, p + x, onerow, x, y, references,
+                      &wp_state, pred);
+    } else {
+      pred[static_cast<int>(tree_samples.PredictorFromIndex(0))] =
+          PredictLearn(&properties, channel.w, p + x, onerow, x, y,
+                       tree_samples.PredictorFromIndex(0), references,
+                       &wp_state)
+              .guess;
+    }
+    (*total_pixels)++;
+    if (use_sample()) {
+      tree_samples.AddSample(p[x], properties, pred);
+    }
+    wp_state.UpdateErrors(p[x], x, y, channel.w);
+  };
+
   for (size_t y = 0; y < channel.h; y++) {
     const pixel_type *JXL_RESTRICT p = channel.Row(y);
     PrecomputeReferences(channel, y, image, chan, &references);
     InitPropsRow(&properties, static_props, y);
+
     // TODO(veluca): avoid computing WP if we don't use its property or
     // predictions.
-    for (size_t x = 0; x < channel.w; x++) {
-      pixel_type_w pred[kNumModularPredictors];
-      if (tree_samples.NumPredictors() != 1) {
-        PredictLearnAll(&properties, channel.w, p + x, onerow, x, y, references,
-                        &wp_state, pred);
-      } else {
-        pred[static_cast<int>(tree_samples.PredictorFromIndex(0))] =
-            PredictLearn(&properties, channel.w, p + x, onerow, x, y,
-                         tree_samples.PredictorFromIndex(0), references,
-                         &wp_state)
-                .guess;
+    if (y > 1 && channel.w > 8 && references.w == 0) {
+      for (size_t x = 0; x < 2; x++) {
+        compute_sample(p, x, y);
       }
-      (*total_pixels)++;
-      if (use_sample()) {
-        tree_samples.AddSample(p[x], properties, pred);
+      for (size_t x = 2; x < channel.w - 2; x++) {
+        pixel_type_w pred[kNumModularPredictors];
+        if (multiple_predictors) {
+          PredictLearnAllNEC(&properties, channel.w, p + x, onerow, x, y,
+                             references, &wp_state, pred);
+        } else {
+          pred[static_cast<int>(tree_samples.PredictorFromIndex(0))] =
+              PredictLearnNEC(&properties, channel.w, p + x, onerow, x, y,
+                              tree_samples.PredictorFromIndex(0), references,
+                              &wp_state)
+                  .guess;
+        }
+        (*total_pixels)++;
+        if (use_sample()) {
+          tree_samples.AddSample(p[x], properties, pred);
+        }
+        wp_state.UpdateErrors(p[x], x, y, channel.w);
       }
-      wp_state.UpdateErrors(p[x], x, y, channel.w);
+      for (size_t x = channel.w - 2; x < channel.w; x++) {
+        compute_sample(p, x, y);
+      }
+    } else {
+      for (size_t x = 0; x < channel.w; x++) {
+        compute_sample(p, x, y);
+      }
     }
   }
 }
@@ -333,7 +366,7 @@ Status EncodeModularChannelMAANS(const Image &image, pixel_type chan,
           }
         }
         pixel_type_w residual = p[x] - res.guess;
-        JXL_ASSERT(residual % res.multiplier == 0);
+        JXL_DASSERT(residual % res.multiplier == 0);
         *tokenp++ = Token(res.context, PackSigned(residual / res.multiplier));
       }
     }
@@ -361,17 +394,20 @@ Status EncodeModularChannelMAANS(const Image &image, pixel_type chan,
           }
         }
         pixel_type_w residual = p[x] - res.guess;
-        JXL_ASSERT(residual % res.multiplier == 0);
+        JXL_DASSERT(residual % res.multiplier == 0);
         *tokenp++ = Token(res.context, PackSigned(residual / res.multiplier));
         wp_state.UpdateErrors(p[x], x, y, channel.w);
       }
     }
   }
-  if (kWantDebug && WantDebugOutput(aux_out)) {
-    aux_out->DumpImage(
+  /* TODO(szabadka): Add cparams to the call stack here.
+  if (kWantDebug && WantDebugOutput(cparams)) {
+    DumpImage(
+        cparams,
         ("pred_" + ToString(group_id) + "_" + ToString(chan)).c_str(),
         predictor_img);
   }
+  */
   *tokenpp = tokenp;
   return true;
 }
@@ -467,9 +503,11 @@ Status ModularEncode(const Image &image, const ModularOptions &options,
     JXL_ASSERT(tree->size() == decoded_tree.size());
     tree_storage = std::move(decoded_tree);
 
+    /* TODO(szabadka) Add text output callback
     if (kWantDebug && kPrintTree && WantDebugOutput(aux_out)) {
       PrintTree(*tree, aux_out->debug_prefix + "/tree_" + ToString(group_id));
-    }
+    } */
+
     // Write tree
     BuildAndEncodeHistograms(HistogramParams(), kNumTreeContexts, tree_tokens,
                              &code, &context_map, writer, kLayerModularTree,

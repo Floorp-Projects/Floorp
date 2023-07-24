@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_fast_lossless.h"
 #include "lib/jxl/enc_frame.h"
 #include "lib/jxl/memory_manager_internal.h"
@@ -112,6 +113,7 @@ typedef struct JxlEncoderFrameSettingsValuesStruct {
   std::string frame_name;
   JxlBitDepth image_bit_depth;
   bool frame_index_box = false;
+  jxl::AuxOut* aux_out = nullptr;
 } JxlEncoderFrameSettingsValues;
 
 typedef std::array<uint8_t, 4> BoxType;
@@ -200,6 +202,7 @@ struct JxlEncoderStruct {
   jxl::MemoryManagerUniquePtr<jxl::ThreadPool> thread_pool{
       nullptr, jxl::MemoryManagerDeleteHelper(&memory_manager)};
   JxlCmsInterface cms;
+  bool cms_set;
   std::vector<jxl::MemoryManagerUniquePtr<JxlEncoderFrameSettings>>
       encoder_options;
 
@@ -270,6 +273,10 @@ struct JxlEncoderStruct {
 struct JxlEncoderFrameSettingsStruct {
   JxlEncoder* enc;
   jxl::JxlEncoderFrameSettingsValues values;
+};
+
+struct JxlEncoderStatsStruct {
+  jxl::AuxOut aux_out;
 };
 
 #endif  // LIB_JXL_ENCODE_INTERNAL_H_

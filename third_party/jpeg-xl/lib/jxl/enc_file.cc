@@ -41,8 +41,8 @@ Status PrepareCodecMetadataFromIO(const CompressParams& cparams,
   // Keep ICC profile in lossless modes because a reconstructed profile may be
   // slightly different (quantization).
   // Also keep ICC in JPEG reconstruction mode as we need byte-exact profiles.
-  if (!cparams.IsLossless() && !io->Main().IsJPEG()) {
-    metadata->m.color_encoding.DecideIfWantICC();
+  if (!cparams.IsLossless() && !io->Main().IsJPEG() && cparams.cms_set) {
+    metadata->m.color_encoding.DecideIfWantICC(cparams.cms);
   }
 
   metadata->m.xyb_encoded =

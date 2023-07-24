@@ -200,7 +200,7 @@ TEST_P(ColorManagementTest, VerifyAllProfiles) {
 
   // Can set an equivalent ColorEncoding from the generated ICC profile.
   ColorEncoding c3;
-  ASSERT_TRUE(c3.SetICC(PaddedBytes(c.ICC())));
+  ASSERT_TRUE(c3.SetICC(PaddedBytes(c.ICC()), &GetJxlCms()));
   EXPECT_THAT(c3, HasSameFieldsAs(c));
 
   VerifyPixelRoundTrip(c);
@@ -233,7 +233,7 @@ TEST_F(ColorManagementTest, D2700Chromaticity) {
   PaddedBytes icc =
       jxl::test::ReadTestData("jxl/color_management/sRGB-D2700.icc");
   ColorEncoding sRGB_D2700;
-  ASSERT_TRUE(sRGB_D2700.SetICC(std::move(icc)));
+  ASSERT_TRUE(sRGB_D2700.SetICC(std::move(icc), &GetJxlCms()));
 
   EXPECT_THAT(sRGB_D2700.GetWhitePoint(), CIExyIs(0.45986, 0.41060));
   // The illuminant-relative chromaticities of this profile's primaries are the
@@ -245,12 +245,13 @@ TEST_F(ColorManagementTest, D2700Chromaticity) {
 }
 
 TEST_F(ColorManagementTest, D2700ToSRGB) {
+  const JxlCmsInterface& cms = GetJxlCms();
   PaddedBytes icc =
       jxl::test::ReadTestData("jxl/color_management/sRGB-D2700.icc");
   ColorEncoding sRGB_D2700;
-  ASSERT_TRUE(sRGB_D2700.SetICC(std::move(icc)));
+  ASSERT_TRUE(sRGB_D2700.SetICC(std::move(icc), &cms));
 
-  ColorSpaceTransform transform(GetJxlCms());
+  ColorSpaceTransform transform(cms);
   ASSERT_TRUE(transform.Init(sRGB_D2700, ColorEncoding::SRGB(),
                              kDefaultIntensityTarget, 1, 1));
   const float sRGB_D2700_values[3] = {0.863, 0.737, 0.490};

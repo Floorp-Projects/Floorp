@@ -43,6 +43,7 @@ SOURCES += [
     "/third_party/jpeg-xl/lib/jxl/dec_patch_dictionary.cc",
     "/third_party/jpeg-xl/lib/jxl/dec_xyb.cc",
     "/third_party/jpeg-xl/lib/jxl/decode.cc",
+    "/third_party/jpeg-xl/lib/jxl/enc_debug_image.cc",
     "/third_party/jpeg-xl/lib/jxl/entropy_coder.cc",
     "/third_party/jpeg-xl/lib/jxl/epf.cc",
     "/third_party/jpeg-xl/lib/jxl/fast_dct.cc",

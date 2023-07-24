@@ -52,11 +52,14 @@
 #include "lib/jxl/base/scope_guard.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/sanitizers.h"
+#if JPEGXL_ENABLE_APNG
 #include "png.h" /* original (unpatched) libpng is ok */
+#endif
 
 namespace jxl {
 namespace extras {
 
+#if JPEGXL_ENABLE_APNG
 namespace {
 
 constexpr unsigned char kExifSignature[6] = {0x45, 0x78, 0x69,
@@ -558,10 +561,20 @@ int processing_finish(png_structp png_ptr, png_infop info_ptr,
 }
 
 }  // namespace
+#endif
+
+bool CanDecodeAPNG() {
+#if JPEGXL_ENABLE_APNG
+  return true;
+#else
+  return false;
+#endif
+}
 
 Status DecodeImageAPNG(const Span<const uint8_t> bytes,
                        const ColorHints& color_hints, PackedPixelFile* ppf,
                        const SizeConstraints* constraints) {
+#if JPEGXL_ENABLE_APNG
   Reader r;
   unsigned int id, j, w, h, w0, h0, x0, y0;
   unsigned int delay_num, delay_den, dop, bop, rowbytes, imagesize;
@@ -956,6 +969,9 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
   ppf->frames.back().frame_info.is_last = true;
 
   return true;
+#else
+  return false;
+#endif
 }
 
 }  // namespace extras

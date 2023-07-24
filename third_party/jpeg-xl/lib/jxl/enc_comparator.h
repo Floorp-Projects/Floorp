@@ -45,7 +45,8 @@ class Comparator {
 // alpha channel.
 float ComputeScore(const ImageBundle& rgb0, const ImageBundle& rgb1,
                    Comparator* comparator, const JxlCmsInterface& cms,
-                   ImageF* diffmap = nullptr, ThreadPool* pool = nullptr);
+                   ImageF* diffmap = nullptr, ThreadPool* pool = nullptr,
+                   bool ignore_alpha = false);
 
 }  // namespace jxl
 

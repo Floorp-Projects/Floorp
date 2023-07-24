@@ -5,8 +5,10 @@
 
 #include "lib/extras/enc/jpg.h"
 
+#if JPEGXL_ENABLE_JPEG
 #include <jpeglib.h>
 #include <setjmp.h>
+#endif
 #include <stdint.h>
 
 #include <algorithm>
@@ -31,6 +33,7 @@
 namespace jxl {
 namespace extras {
 
+#if JPEGXL_ENABLE_JPEG
 namespace {
 
 constexpr unsigned char kICCSignature[12] = {
@@ -313,13 +316,39 @@ Status EncodeWithLibJpeg(const PackedImage& image, const JxlBasicInfo& info,
   if (cinfo.input_components > 3 || cinfo.input_components < 0)
     return JXL_FAILURE("invalid numbers of components");
 
-  std::vector<uint8_t> raw_bytes(image.pixels_size);
-  memcpy(&raw_bytes[0], reinterpret_cast<const uint8_t*>(image.pixels()),
-         image.pixels_size);
-  for (size_t y = 0; y < info.ysize; ++y) {
-    JSAMPROW row[] = {raw_bytes.data() + y * image.stride};
-
-    jpeg_write_scanlines(&cinfo, row, 1);
+  std::vector<uint8_t> row_bytes(image.stride);
+  const uint8_t* pixels = reinterpret_cast<const uint8_t*>(image.pixels());
+  if (cinfo.num_components == (int)image.format.num_channels &&
+      image.format.data_type == JXL_TYPE_UINT8) {
+    for (size_t y = 0; y < info.ysize; ++y) {
+      memcpy(&row_bytes[0], pixels + y * image.stride, image.stride);
+      JSAMPROW row[] = {row_bytes.data()};
+      jpeg_write_scanlines(&cinfo, row, 1);
+    }
+  } else if (image.format.data_type == JXL_TYPE_UINT8) {
+    for (size_t y = 0; y < info.ysize; ++y) {
+      const uint8_t* image_row = pixels + y * image.stride;
+      for (size_t x = 0; x < info.xsize; ++x) {
+        const uint8_t* image_pixel = image_row + x * image.pixel_stride();
+        memcpy(&row_bytes[x * cinfo.num_components], image_pixel,
+               cinfo.num_components);
+      }
+      JSAMPROW row[] = {row_bytes.data()};
+      jpeg_write_scanlines(&cinfo, row, 1);
+    }
+  } else {
+    for (size_t y = 0; y < info.ysize; ++y) {
+      const uint8_t* image_row = pixels + y * image.stride;
+      for (size_t x = 0; x < info.xsize; ++x) {
+        const uint8_t* image_pixel = image_row + x * image.pixel_stride();
+        for (int c = 0; c < cinfo.num_components; ++c) {
+          uint32_t val16 = (image_pixel[2 * c] << 8) + image_pixel[2 * c + 1];
+          row_bytes[x * cinfo.num_components + c] = (val16 + 128) / 257;
+        }
+      }
+      JSAMPROW row[] = {row_bytes.data()};
+      jpeg_write_scanlines(&cinfo, row, 1);
+    }
   }
   jpeg_finish_compress(&cinfo);
   jpeg_destroy_compress(&cinfo);
@@ -412,6 +441,12 @@ Status EncodeWithSJpeg(const PackedImage& image, const JxlBasicInfo& info,
 #if !JPEGXL_ENABLE_SJPEG
   return JXL_FAILURE("JPEG XL was built without sjpeg support");
 #else
+  if (image.format.data_type != JXL_TYPE_UINT8) {
+    return JXL_FAILURE("Unsupported pixel data type");
+  }
+  if (info.alpha_bits > 0) {
+    return JXL_FAILURE("alpha is not supported");
+  }
   sjpeg::EncoderParam param(params.quality);
   if (!icc.empty()) {
     param.iccp.assign(icc.begin(), icc.end());
@@ -474,12 +509,6 @@ Status EncodeImageJPG(const PackedImage& image, const JxlBasicInfo& info,
                       std::vector<uint8_t> exif, JpegEncoder encoder,
                       const JpegParams& params, ThreadPool* pool,
                       std::vector<uint8_t>* bytes) {
-  if (image.format.data_type != JXL_TYPE_UINT8) {
-    return JXL_FAILURE("Unsupported pixel data type");
-  }
-  if (info.alpha_bits > 0) {
-    return JXL_FAILURE("alpha is not supported");
-  }
   if (params.quality > 100) {
     return JXL_FAILURE("please specify a 0-100 JPEG quality");
   }
@@ -503,13 +532,17 @@ Status EncodeImageJPG(const PackedImage& image, const JxlBasicInfo& info,
 class JPEGEncoder : public Encoder {
   std::vector<JxlPixelFormat> AcceptedFormats() const override {
     std::vector<JxlPixelFormat> formats;
-    for (const uint32_t num_channels : {1, 3}) {
+    for (const uint32_t num_channels : {1, 2, 3, 4}) {
       for (JxlEndianness endianness : {JXL_BIG_ENDIAN, JXL_LITTLE_ENDIAN}) {
         formats.push_back(JxlPixelFormat{/*num_channels=*/num_channels,
                                          /*data_type=*/JXL_TYPE_UINT8,
                                          /*endianness=*/endianness,
                                          /*align=*/0});
       }
+      formats.push_back(JxlPixelFormat{/*num_channels=*/num_channels,
+                                       /*data_type=*/JXL_TYPE_UINT16,
+                                       /*endianness=*/JXL_BIG_ENDIAN,
+                                       /*align=*/0});
     }
     return formats;
   }
@@ -583,9 +616,14 @@ class JPEGEncoder : public Encoder {
 };
 
 }  // namespace
+#endif
 
 std::unique_ptr<Encoder> GetJPEGEncoder() {
+#if JPEGXL_ENABLE_JPEG
   return jxl::make_unique<JPEGEncoder>();
+#else
+  return nullptr;
+#endif
 }
 
 }  // namespace extras

@@ -269,7 +269,8 @@ void TestAPINonBuffered(const CompressParams& jparams,
     cinfo->scale_denom = 2;
   }
   jpegli_calc_output_dimensions(cinfo);
-  SetDecompressParams(dparams, cinfo, /*is_jpegli=*/true);
+  SetDecompressParams(dparams, cinfo);
+  jpegli_set_output_format(cinfo, dparams.data_type, dparams.endianness);
   VerifyHeader(jparams, cinfo);
   jpegli_calc_output_dimensions(cinfo);
   EXPECT_LE(expected_output.xsize, cinfo->output_width);
@@ -294,7 +295,8 @@ void TestAPIBuffered(const CompressParams& jparams,
   EXPECT_EQ(JPEG_REACHED_SOS,
             jpegli_read_header(cinfo, /*require_image=*/TRUE));
   cinfo->buffered_image = TRUE;
-  SetDecompressParams(dparams, cinfo, /*is_jpegli=*/true);
+  SetDecompressParams(dparams, cinfo);
+  jpegli_set_output_format(cinfo, dparams.data_type, dparams.endianness);
   VerifyHeader(jparams, cinfo);
   EXPECT_TRUE(jpegli_start_decompress(cinfo));
   // start decompress should not read the whole input in buffered image mode
@@ -312,8 +314,7 @@ void TestAPIBuffered(const CompressParams& jparams,
       if (result == JPEG_REACHED_SOS) ++sos_marker_cnt;
       continue;
     }
-    SetScanDecompressParams(dparams, cinfo, cinfo->input_scan_number,
-                            /*is_jpegli=*/true);
+    SetScanDecompressParams(dparams, cinfo, cinfo->input_scan_number);
     EXPECT_TRUE(jpegli_start_output(cinfo, cinfo->input_scan_number));
     // start output sets output_scan_number, but does not change
     // input_scan_number
@@ -924,7 +925,7 @@ std::vector<TestConfig> GenerateTests(bool buffered) {
     }
   }
   // Tests for progressive levels.
-  for (int p = 0; p < 3 + kNumTestScripts; ++p) {
+  for (int p = 0; p < 3 + NumTestScanScripts(); ++p) {
     TestConfig config;
     config.jparams.progressive_mode = p;
     all_tests.push_back(config);
@@ -1245,7 +1246,7 @@ std::ostream& operator<<(std::ostream& os, const DecompressParams& dparams) {
   }
   os << IOMethodName(dparams.data_type, dparams.endianness);
   if (dparams.set_out_color_space) {
-    os << "OutColor" << ColorSpaceName(dparams.out_color_space);
+    os << "OutColor" << ColorSpaceName((J_COLOR_SPACE)dparams.out_color_space);
   }
   if (dparams.crop_output) {
     os << "Crop";
@@ -1265,7 +1266,7 @@ std::ostream& operator<<(std::ostream& os, const DecompressParams& dparams) {
       if (i > 0) os << "_";
       const auto& sparam = dparams.scan_params[i];
       os << QuantMode(sparam.color_quant_mode);
-      os << DitherMode(sparam.dither_mode) << "Dither";
+      os << DitherMode((J_DITHER_MODE)sparam.dither_mode) << "Dither";
     }
   }
   if (dparams.skip_scans) {

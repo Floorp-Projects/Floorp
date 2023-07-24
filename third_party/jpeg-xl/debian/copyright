@@ -5,6 +5,11 @@ Files: *
 Copyright: 2020 the JPEG XL Project
 License: BSD-3-clause
 
+Files: third_party/libjpeg-turbo/*
+Copyright (C)2009-2023 D. R. Commander. All Rights Reserved.
+Copyright (C)2015 Viktor Szathmáry. All Rights Reserved.
+License: BSD-3-clause
+
 Files: third_party/sjpeg/*
 Copyright: 2017 Google, Inc
 License: Apache-2.0

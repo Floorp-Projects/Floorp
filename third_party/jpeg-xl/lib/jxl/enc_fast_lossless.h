@@ -7,6 +7,16 @@
 #define LIB_JXL_ENC_FAST_LOSSLESS_H_
 #include <stdlib.h>
 
+// FJXL_STANDALONE=1 for a stand-alone jxl encoder
+// FJXL_STANDALONE=0 for use in libjxl to encode frames (but no image header)
+#ifndef FJXL_STANDALONE
+#ifdef JPEGXL_MAJOR_VERSION
+#define FJXL_STANDALONE 0
+#else
+#define FJXL_STANDALONE 1
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -18,12 +28,14 @@ extern "C" {
 typedef void(FJxlParallelRunner)(void* runner_opaque, void* opaque,
                                  void fun(void*, size_t), size_t count);
 
+#if FJXL_STANDALONE
 // You may pass `nullptr` as a runner: encoding will be sequential.
 size_t JxlFastLosslessEncode(const unsigned char* rgba, size_t width,
                              size_t row_stride, size_t height, size_t nb_chans,
                              size_t bitdepth, int big_endian, int effort,
                              unsigned char** output, void* runner_opaque,
                              FJxlParallelRunner runner);
+#endif
 
 // More complex API for cases in which you may want to allocate your own buffer
 // and other advanced use cases.
@@ -42,6 +54,7 @@ JxlFastLosslessFrameState* JxlFastLosslessPrepareFrame(
 // the output of multiple frames, of which the first one has add_image_header =
 // 1 and subsequent ones have add_image_header = 0, and all frames but the last
 // one have is_last = 0.
+// (when FJXL_STANDALONE=0, add_image_header has to be 0)
 void JxlFastLosslessPrepareHeader(JxlFastLosslessFrameState* frame,
                                   int add_image_header, int is_last);
 

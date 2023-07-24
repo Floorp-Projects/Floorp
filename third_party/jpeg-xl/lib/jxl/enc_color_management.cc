@@ -29,6 +29,7 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/printf_macros.h"
+#include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/field_encodings.h"
 #include "lib/jxl/matrix_ops.h"
@@ -376,7 +377,7 @@ Status DecodeProfile(const uint8_t* icc, size_t size,
   return true;
 }
 #else  // JPEGXL_ENABLE_SKCMS
-Status DecodeProfile(const cmsContext context, const PaddedBytes& icc,
+Status DecodeProfile(const cmsContext context, Span<const uint8_t> icc,
                      Profile* profile) {
   profile->reset(cmsOpenProfileFromMemTHR(context, icc.data(), icc.size()));
   if (profile->get() == nullptr) {
@@ -578,7 +579,8 @@ Status ProfileEquivalentToICC(const cmsContext context, const Profile& profile1,
   const uint32_t type_src = Type64(c);
 
   Profile profile2;
-  JXL_RETURN_IF_ERROR(DecodeProfile(context, icc, &profile2));
+  JXL_RETURN_IF_ERROR(
+      DecodeProfile(context, Span<const uint8_t>(icc), &profile2));
 
   Profile profile_xyz;
   JXL_RETURN_IF_ERROR(CreateProfileXYZ(context, &profile_xyz));
@@ -929,58 +931,68 @@ bool ApplyCICP(const uint8_t color_primaries,
   return true;
 }
 
-}  // namespace
+JXL_BOOL JxlCmsSetFieldsFromICC(void* user_data, const uint8_t* icc_data,
+                                size_t icc_size, JxlColorEncoding* c,
+                                JXL_BOOL* cmyk) {
+  if (c == nullptr) return JXL_FALSE;
+  if (cmyk == nullptr) return JXL_FALSE;
 
-Status ColorEncoding::SetFieldsFromICC() {
+  *cmyk = JXL_FALSE;
+
   // In case parsing fails, mark the ColorEncoding as invalid.
-  SetColorSpace(ColorSpace::kUnknown);
-  tf.SetTransferFunction(TransferFunction::kUnknown);
+  c->color_space = JXL_COLOR_SPACE_UNKNOWN;
+  c->transfer_function = JXL_TRANSFER_FUNCTION_UNKNOWN;
 
-  if (icc_.empty()) return JXL_FAILURE("Empty ICC profile");
+  if (icc_size == 0) return JXL_FAILURE("Empty ICC profile");
+
+  ColorEncoding c_enc;
 
 #if JPEGXL_ENABLE_SKCMS
-  if (icc_.size() < 128) {
+  if (icc_size < 128) {
     return JXL_FAILURE("ICC file too small");
   }
 
   skcms_ICCProfile profile;
-  JXL_RETURN_IF_ERROR(skcms_Parse(icc_.data(), icc_.size(), &profile));
+  JXL_RETURN_IF_ERROR(skcms_Parse(icc_data, icc_size, &profile));
 
   // skcms does not return the rendering intent, so get it from the file. It
   // is encoded as big-endian 32-bit integer in bytes 60..63.
-  uint32_t rendering_intent32 = icc_[67];
-  if (rendering_intent32 > 3 || icc_[64] != 0 || icc_[65] != 0 ||
-      icc_[66] != 0) {
+  uint32_t rendering_intent32 = icc_data[67];
+  if (rendering_intent32 > 3 || icc_data[64] != 0 || icc_data[65] != 0 ||
+      icc_data[66] != 0) {
     return JXL_FAILURE("Invalid rendering intent %u\n", rendering_intent32);
   }
   // ICC and RenderingIntent have the same values (0..3).
-  rendering_intent = static_cast<RenderingIntent>(rendering_intent32);
+  c_enc.rendering_intent = static_cast<RenderingIntent>(rendering_intent32);
 
-  if (profile.has_CICP && ApplyCICP(profile.CICP.color_primaries,
-                                    profile.CICP.transfer_characteristics,
-                                    profile.CICP.matrix_coefficients,
-                                    profile.CICP.video_full_range_flag, this)) {
+  if (profile.has_CICP &&
+      ApplyCICP(profile.CICP.color_primaries,
+                profile.CICP.transfer_characteristics,
+                profile.CICP.matrix_coefficients,
+                profile.CICP.video_full_range_flag, &c_enc)) {
+    ConvertInternalToExternalColorEncoding(c_enc, c);
     return true;
   }
 
-  SetColorSpace(ColorSpaceFromProfile(profile));
-  cmyk_ = (profile.data_color_space == skcms_Signature_CMYK);
+  c_enc.SetColorSpace(ColorSpaceFromProfile(profile));
+  *cmyk = (profile.data_color_space == skcms_Signature_CMYK);
 
   CIExy wp_unadapted;
   JXL_RETURN_IF_ERROR(UnadaptedWhitePoint(profile, &wp_unadapted));
-  JXL_RETURN_IF_ERROR(SetWhitePoint(wp_unadapted));
+  JXL_RETURN_IF_ERROR(c_enc.SetWhitePoint(wp_unadapted));
 
   // Relies on color_space.
-  JXL_RETURN_IF_ERROR(IdentifyPrimaries(profile, wp_unadapted, this));
+  JXL_RETURN_IF_ERROR(IdentifyPrimaries(profile, wp_unadapted, &c_enc));
 
   // Relies on color_space/white point/primaries being set already.
-  DetectTransferFunction(profile, this);
+  DetectTransferFunction(profile, &c_enc);
 #else  // JPEGXL_ENABLE_SKCMS
 
   const cmsContext context = GetContext();
 
   Profile profile;
-  JXL_RETURN_IF_ERROR(DecodeProfile(context, icc_, &profile));
+  JXL_RETURN_IF_ERROR(DecodeProfile(
+      context, Span<const uint8_t>(icc_data, icc_size), &profile));
 
   const cmsUInt32Number rendering_intent32 =
       cmsGetHeaderRenderingIntent(profile.get());
@@ -988,7 +1000,7 @@ Status ColorEncoding::SetFieldsFromICC() {
     return JXL_FAILURE("Invalid rendering intent %u\n", rendering_intent32);
   }
   // ICC and RenderingIntent have the same values (0..3).
-  rendering_intent = static_cast<RenderingIntent>(rendering_intent32);
+  c_enc.rendering_intent = static_cast<RenderingIntent>(rendering_intent32);
 
   static constexpr size_t kCICPSize = 12;
   static constexpr auto kCICPSignature =
@@ -997,46 +1009,35 @@ Status ColorEncoding::SetFieldsFromICC() {
   if (cmsReadRawTag(profile.get(), kCICPSignature, cicp_buffer, kCICPSize) ==
           kCICPSize &&
       ApplyCICP(cicp_buffer[8], cicp_buffer[9], cicp_buffer[10],
-                cicp_buffer[11], this)) {
+                cicp_buffer[11], &c_enc)) {
+    ConvertInternalToExternalColorEncoding(c_enc, c);
     return true;
   }
 
-  SetColorSpace(ColorSpaceFromProfile(profile));
+  c_enc.SetColorSpace(ColorSpaceFromProfile(profile));
   if (cmsGetColorSpace(profile.get()) == cmsSigCmykData) {
-    cmyk_ = true;
+    *cmyk = JXL_TRUE;
+    ConvertInternalToExternalColorEncoding(c_enc, c);
     return true;
   }
 
-  const cmsCIEXYZ wp_unadapted = UnadaptedWhitePoint(context, profile, *this);
-  JXL_RETURN_IF_ERROR(SetWhitePoint(CIExyFromXYZ(wp_unadapted)));
+  const cmsCIEXYZ wp_unadapted = UnadaptedWhitePoint(context, profile, c_enc);
+  JXL_RETURN_IF_ERROR(c_enc.SetWhitePoint(CIExyFromXYZ(wp_unadapted)));
 
   // Relies on color_space.
-  JXL_RETURN_IF_ERROR(IdentifyPrimaries(context, profile, wp_unadapted, this));
+  JXL_RETURN_IF_ERROR(
+      IdentifyPrimaries(context, profile, wp_unadapted, &c_enc));
 
   // Relies on color_space/white point/primaries being set already.
-  DetectTransferFunction(context, profile, this);
+  DetectTransferFunction(context, profile, &c_enc);
 
 #endif  // JPEGXL_ENABLE_SKCMS
 
+  ConvertInternalToExternalColorEncoding(c_enc, c);
   return true;
 }
 
-void ColorEncoding::DecideIfWantICC() {
-  PaddedBytes icc_new;
-#if JPEGXL_ENABLE_SKCMS
-  skcms_ICCProfile profile;
-  if (!DecodeProfile(ICC().data(), ICC().size(), &profile)) return;
-  if (!MaybeCreateProfile(*this, &icc_new)) return;
-#else   // JPEGXL_ENABLE_SKCMS
-  const cmsContext context = GetContext();
-  Profile profile;
-  if (!DecodeProfile(context, ICC(), &profile)) return;
-  if (cmsGetColorSpace(profile.get()) == cmsSigCmykData) return;
-  if (!MaybeCreateProfile(*this, &icc_new)) return;
-#endif  // JPEGXL_ENABLE_SKCMS
-
-  want_icc_ = false;
-}
+}  // namespace
 
 namespace {
 
@@ -1052,17 +1053,18 @@ void JxlCmsDestroy(void* cms_data) {
 void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
                  const JxlColorProfile* input, const JxlColorProfile* output,
                  float intensity_target) {
+  auto cms = static_cast<const JxlCmsInterface*>(init_data);
   auto t = jxl::make_unique<JxlCms>();
   PaddedBytes icc_src, icc_dst;
   icc_src.assign(input->icc.data, input->icc.data + input->icc.size);
   ColorEncoding c_src;
-  if (!c_src.SetICC(std::move(icc_src))) {
+  if (!c_src.SetICC(std::move(icc_src), cms)) {
     JXL_NOTIFY_ERROR("JxlCmsInit: failed to parse input ICC");
     return nullptr;
   }
   icc_dst.assign(output->icc.data, output->icc.data + output->icc.size);
   ColorEncoding c_dst;
-  if (!c_dst.SetICC(std::move(icc_dst))) {
+  if (!c_dst.SetICC(std::move(icc_dst), cms)) {
     JXL_NOTIFY_ERROR("JxlCmsInit: failed to parse output ICC");
     return nullptr;
   }
@@ -1082,11 +1084,11 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
 #else   // JPEGXL_ENABLE_SKCMS
   const cmsContext context = GetContext();
   Profile profile_src, profile_dst;
-  if (!DecodeProfile(context, c_src.ICC(), &profile_src)) {
+  if (!DecodeProfile(context, Span<const uint8_t>(c_src.ICC()), &profile_src)) {
     JXL_NOTIFY_ERROR("JxlCmsInit: lcms failed to parse input ICC");
     return nullptr;
   }
-  if (!DecodeProfile(context, c_dst.ICC(), &profile_dst)) {
+  if (!DecodeProfile(context, Span<const uint8_t>(c_dst.ICC()), &profile_dst)) {
     JXL_NOTIFY_ERROR("JxlCmsInit: lcms failed to parse output ICC");
     return nullptr;
   }
@@ -1132,7 +1134,7 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
 #if JPEGXL_ENABLE_SKCMS
         DecodeProfile(icc_src.data(), icc_src.size(), &new_src)) {
 #else   // JPEGXL_ENABLE_SKCMS
-        DecodeProfile(context, icc_src, &new_src)) {
+        DecodeProfile(context, Span<const uint8_t>(icc_src), &new_src)) {
 #endif  // JPEGXL_ENABLE_SKCMS
 #if JXL_CMS_VERBOSE
       printf("Special HLG/PQ/sRGB -> linear\n");
@@ -1173,7 +1175,7 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
 #if JPEGXL_ENABLE_SKCMS
         DecodeProfile(icc_dst.data(), icc_dst.size(), &new_dst)) {
 #else   // JPEGXL_ENABLE_SKCMS
-        DecodeProfile(context, icc_dst, &new_dst)) {
+        DecodeProfile(context, Span<const uint8_t>(icc_dst), &new_dst)) {
 #endif  // JPEGXL_ENABLE_SKCMS
 #if JXL_CMS_VERBOSE
       printf("Special linear -> HLG/PQ/sRGB\n");
@@ -1280,7 +1282,9 @@ float* JxlCmsGetDstBuf(void* cms_data, size_t thread) {
 
 const JxlCmsInterface& GetJxlCms() {
   static constexpr JxlCmsInterface kInterface = {
-      /*init_data=*/nullptr,
+      /*set_fields_data=*/nullptr,
+      /*set_fields_from_icc=*/&JxlCmsSetFieldsFromICC,
+      /*init_data=*/const_cast<void*>(static_cast<const void*>(&kInterface)),
       /*init=*/&JxlCmsInit,
       /*get_src_buf=*/&JxlCmsGetSrcBuf,
       /*get_dst_buf=*/&JxlCmsGetDstBuf,

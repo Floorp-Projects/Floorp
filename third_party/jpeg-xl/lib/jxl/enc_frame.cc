@@ -1142,52 +1142,6 @@ Status EncodeFrame(const CompressParams& cparams_orig,
     cparams = all_params[best_idx];
   }
 
-  if (cparams_orig.target_bitrate > 0.0f &&
-      frame_info.frame_type == FrameType::kRegularFrame) {
-    cparams.target_bitrate = 0.0f;
-    const float target_bitrate = cparams_orig.target_bitrate;
-    float bitrate = 0.0f;
-    float prev_bitrate = 0.0f;
-    float rescale = 1.0f;
-    size_t prev_bits = 0;
-    float error = 0.0f;
-    float best_error = 100.0f;
-    float best_rescale = 1.0f;
-    for (size_t i = 0; i < 10; ++i) {
-      std::unique_ptr<PassesEncoderState> state =
-          jxl::make_unique<PassesEncoderState>();
-      BitWriter bw;
-      JXL_CHECK(EncodeFrame(cparams, frame_info, metadata, ib, state.get(), cms,
-                            pool, &bw, nullptr));
-      bitrate = bw.BitsWritten() * 1.0 / (ib.xsize() * ib.ysize());
-      error = target_bitrate / bitrate - 1.0f;
-      if (std::abs(error) < std::abs(best_error)) {
-        best_error = error;
-        best_rescale = cparams.quant_ac_rescale;
-      }
-      if (bw.BitsWritten() == prev_bits || std::abs(error) < 0.0005f) {
-        break;
-      }
-      float lambda = 1.0f;
-      if (i > 0) {
-        lambda = (((bitrate / prev_bitrate) - 1.0f) / (rescale - 1.0f));
-      }
-      rescale = (1.0f + ((target_bitrate / bitrate) - 1.0f) / lambda);
-      if (rescale < 0.0f) {
-        break;
-      }
-      cparams.quant_ac_rescale *= rescale;
-      prev_bitrate = bitrate;
-      prev_bits = bw.BitsWritten();
-    }
-    if (aux_out) {
-      aux_out->max_quant_rescale = best_rescale;
-      aux_out->min_quant_rescale = best_rescale;
-      aux_out->min_bitrate_error = best_error;
-      aux_out->max_bitrate_error = best_error;
-    }
-    cparams.quant_ac_rescale = best_rescale;
-  }
   ib.VerifyMetadata();
 
   passes_enc_state->special_frames.clear();
@@ -1290,13 +1244,6 @@ Status EncodeFrame(const CompressParams& cparams_orig,
         aux_out->Assimilate(aux_outs[i]);
       }
       aux_outs.resize(num_threads);
-      // Each thread needs these INPUTS. Don't copy the entire AuxOut
-      // because it may contain stats which would be Assimilated multiple
-      // times below.
-      for (size_t i = old_size; i < aux_outs.size(); i++) {
-        aux_outs[i].dump_image = aux_out->dump_image;
-        aux_outs[i].debug_prefix = aux_out->debug_prefix;
-      }
     }
     return true;
   };
@@ -1353,10 +1300,6 @@ Status EncodeFrame(const CompressParams& cparams_orig,
         SimplifyInvisible(const_cast<Image3F*>(&ib_or_linear->color()),
                           ib.alpha(), lossless);
       }
-    }
-    if (aux_out != nullptr) {
-      JXL_RETURN_IF_ERROR(
-          aux_out->InspectImage3F("enc_frame:OpsinDynamicsImage", opsin));
     }
     if (frame_header->encoding == FrameEncoding::kVarDCT) {
       PadImageToBlockMultipleInPlace(&opsin);

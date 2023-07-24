@@ -63,11 +63,11 @@
 #endif
 
 #if JXL_COMPILER_MSVC
-#define JXL_UNREACHABLE __assume(false)
+#define JXL_UNREACHABLE_BUILTIN __assume(false)
 #elif JXL_COMPILER_CLANG || JXL_COMPILER_GCC >= 405
-#define JXL_UNREACHABLE __builtin_unreachable()
+#define JXL_UNREACHABLE_BUILTIN __builtin_unreachable()
 #else
-#define JXL_UNREACHABLE
+#define JXL_UNREACHABLE_BUILTIN
 #endif
 
 #if JXL_COMPILER_MSVC

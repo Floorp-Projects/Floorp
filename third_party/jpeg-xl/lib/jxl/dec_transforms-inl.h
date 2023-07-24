@@ -685,7 +685,7 @@ HWY_MAYBE_UNUSED void TransformToPixels(const AcStrategy::Type strategy,
       break;
     }
     case Type::kNumValidStrategies:
-      JXL_ABORT("Invalid strategy");
+      JXL_UNREACHABLE("Invalid strategy");
   }
 }
 
@@ -813,7 +813,7 @@ HWY_MAYBE_UNUSED void LowestFrequenciesFromDC(const AcStrategy::Type strategy,
       llf[0] = dc[0];
       break;
     case Type::kNumValidStrategies:
-      JXL_ABORT("Invalid strategy");
+      JXL_UNREACHABLE("Invalid strategy");
   };
 }
 

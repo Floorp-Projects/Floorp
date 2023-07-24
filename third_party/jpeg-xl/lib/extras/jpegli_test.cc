@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#if JPEGXL_ENABLE_JPEG && JPEGXL_ENABLE_JPEGLI
+#if JPEGXL_ENABLE_JPEGLI
 
 #include "lib/extras/dec/jpegli.h"
 
@@ -95,6 +95,7 @@ float BitsPerPixel(const PackedPixelFile& ppf,
 }
 
 TEST(JpegliTest, JpegliSRGBDecodeTest) {
+  TEST_LIBJPEG_SUPPORT();
   std::string testimage = "jxl/flower/flower_small.rgb.depth8.ppm";
   PackedPixelFile ppf0;
   ASSERT_TRUE(ReadTestImage(testimage, &ppf0));
@@ -113,6 +114,7 @@ TEST(JpegliTest, JpegliSRGBDecodeTest) {
 }
 
 TEST(JpegliTest, JpegliGrayscaleDecodeTest) {
+  TEST_LIBJPEG_SUPPORT();
   std::string testimage = "jxl/flower/flower_small.g.depth8.pgm";
   PackedPixelFile ppf0;
   ASSERT_TRUE(ReadTestImage(testimage, &ppf0));
@@ -131,6 +133,7 @@ TEST(JpegliTest, JpegliGrayscaleDecodeTest) {
 }
 
 TEST(JpegliTest, JpegliXYBEncodeTest) {
+  TEST_LIBJPEG_SUPPORT();
   std::string testimage = "jxl/flower/flower_small.rgb.depth8.ppm";
   PackedPixelFile ppf_in;
   ASSERT_TRUE(ReadTestImage(testimage, &ppf_in));
@@ -149,6 +152,7 @@ TEST(JpegliTest, JpegliXYBEncodeTest) {
 }
 
 TEST(JpegliTest, JpegliDecodeTestLargeSmoothArea) {
+  TEST_LIBJPEG_SUPPORT();
   TestImage t;
   const size_t xsize = 2070;
   const size_t ysize = 1063;
@@ -178,6 +182,7 @@ TEST(JpegliTest, JpegliDecodeTestLargeSmoothArea) {
 }
 
 TEST(JpegliTest, JpegliYUVEncodeTest) {
+  TEST_LIBJPEG_SUPPORT();
   std::string testimage = "jxl/flower/flower_small.rgb.depth8.ppm";
   PackedPixelFile ppf_in;
   ASSERT_TRUE(ReadTestImage(testimage, &ppf_in));
@@ -196,6 +201,7 @@ TEST(JpegliTest, JpegliYUVEncodeTest) {
 }
 
 TEST(JpegliTest, JpegliYUVChromaSubsamplingEncodeTest) {
+  TEST_LIBJPEG_SUPPORT();
   std::string testimage = "jxl/flower/flower_small.rgb.depth8.ppm";
   PackedPixelFile ppf_in;
   ASSERT_TRUE(ReadTestImage(testimage, &ppf_in));
@@ -217,6 +223,7 @@ TEST(JpegliTest, JpegliYUVChromaSubsamplingEncodeTest) {
 }
 
 TEST(JpegliTest, JpegliYUVEncodeTestNoAq) {
+  TEST_LIBJPEG_SUPPORT();
   std::string testimage = "jxl/flower/flower_small.rgb.depth8.ppm";
   PackedPixelFile ppf_in;
   ASSERT_TRUE(ReadTestImage(testimage, &ppf_in));
@@ -320,6 +327,7 @@ class JpegliColorQuantTestParam : public ::testing::TestWithParam<TestConfig> {
 };
 
 TEST_P(JpegliColorQuantTestParam, JpegliColorQuantizeTest) {
+  TEST_LIBJPEG_SUPPORT();
   TestConfig config = GetParam();
   std::string testimage = "jxl/flower/flower_small.rgb.depth8.ppm";
   PackedPixelFile ppf0;
@@ -402,4 +410,4 @@ JXL_GTEST_INSTANTIATE_TEST_SUITE_P(JpegliColorQuantTest,
 }  // namespace
 }  // namespace extras
 }  // namespace jxl
-#endif  // JPEGXL_ENABLE_JPEG
+#endif  // JPEGXL_ENABLE_JPEGLI

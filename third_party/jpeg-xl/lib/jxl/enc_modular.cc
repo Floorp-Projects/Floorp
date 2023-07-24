@@ -43,7 +43,7 @@
 namespace jxl {
 
 namespace {
-constexpr bool kPrintTree = false;
+// constexpr bool kPrintTree = false;
 
 // Squeeze default quantization factors
 // these quantization factors are for -Q 50  (other qualities simply scale the
@@ -178,7 +178,7 @@ Tree PredefinedTree(ModularOptions::TreeKind tree_kind, size_t total_pixels) {
     return MakeFixedTree(kGradientProp, cutoffs, Predictor::Gradient,
                          total_pixels);
   }
-  JXL_ABORT("Unreachable");
+  JXL_UNREACHABLE("Unreachable");
   return {};
 }
 
@@ -348,11 +348,9 @@ ModularFrameEncoder::ModularFrameEncoder(const FrameHeader& frame_header,
     }
   }
 
-  if (cparams_.speed_tier > SpeedTier::kWombat) {
-    cparams_.options.splitting_heuristics_node_threshold = 192;
-  } else {
-    cparams_.options.splitting_heuristics_node_threshold = 96;
-  }
+  cparams_.options.splitting_heuristics_node_threshold =
+      82 + 14 * static_cast<int>(cparams_.speed_tier);
+
   {
     // Set properties.
     std::vector<uint32_t> prop_order;
@@ -363,17 +361,31 @@ ModularFrameEncoder::ModularFrameEncoder(const FrameHeader& frame_header,
     } else {
       // Same, but for the non-Squeeze case.
       prop_order = {0, 1, 15, 9, 10, 11, 12, 13, 14, 2, 3, 4, 5, 6, 7, 8};
+      // if few groups, don't use group as a property
+      if (num_streams < 30 && cparams_.speed_tier > SpeedTier::kTortoise) {
+        prop_order.erase(prop_order.begin() + 1);
+      }
     }
     switch (cparams_.speed_tier) {
+      case SpeedTier::kHare:
+        cparams_.options.splitting_heuristics_properties.assign(
+            prop_order.begin(), prop_order.begin() + 4);
+        cparams_.options.max_property_values = 24;
+        break;
+      case SpeedTier::kWombat:
+        cparams_.options.splitting_heuristics_properties.assign(
+            prop_order.begin(), prop_order.begin() + 5);
+        cparams_.options.max_property_values = 32;
+        break;
       case SpeedTier::kSquirrel:
         cparams_.options.splitting_heuristics_properties.assign(
-            prop_order.begin(), prop_order.begin() + 8);
-        cparams_.options.max_property_values = 32;
+            prop_order.begin(), prop_order.begin() + 7);
+        cparams_.options.max_property_values = 48;
         break;
       case SpeedTier::kKitten:
         cparams_.options.splitting_heuristics_properties.assign(
             prop_order.begin(), prop_order.begin() + 10);
-        cparams_.options.max_property_values = 64;
+        cparams_.options.max_property_values = 96;
         break;
       case SpeedTier::kTortoise:
         cparams_.options.splitting_heuristics_properties = prop_order;
@@ -381,7 +393,7 @@ ModularFrameEncoder::ModularFrameEncoder(const FrameHeader& frame_header,
         break;
       default:
         cparams_.options.splitting_heuristics_properties.assign(
-            prop_order.begin(), prop_order.begin() + 6);
+            prop_order.begin(), prop_order.begin() + 3);
         cparams_.options.max_property_values = 16;
         break;
     }
@@ -1083,6 +1095,7 @@ Status ModularFrameEncoder::PrepareEncoding(const FrameHeader& frame_header,
   JXL_ASSERT(tree_.size() == decoded_tree.size());
   tree_ = std::move(decoded_tree);
 
+  /* TODO(szabadka) Add text output callback to cparams
   if (kPrintTree && WantDebugOutput(aux_out)) {
     if (frame_header.dc_level > 0) {
       PrintTree(tree_, aux_out->debug_prefix + "/dc_frame_level" +
@@ -1090,17 +1103,13 @@ Status ModularFrameEncoder::PrepareEncoding(const FrameHeader& frame_header,
     } else {
       PrintTree(tree_, aux_out->debug_prefix + "/global_tree");
     }
-  }
+  } */
 
   image_widths_.resize(num_streams);
   JXL_RETURN_IF_ERROR(RunOnPool(
       pool, 0, num_streams, ThreadPool::NoInit,
       [&](const uint32_t stream_id, size_t /* thread */) {
         AuxOut my_aux_out;
-        if (aux_out) {
-          my_aux_out.dump_image = aux_out->dump_image;
-          my_aux_out.debug_prefix = aux_out->debug_prefix;
-        }
         tokens_[stream_id].clear();
         JXL_CHECK(ModularGenericCompress(
             stream_images_[stream_id], stream_options_[stream_id],

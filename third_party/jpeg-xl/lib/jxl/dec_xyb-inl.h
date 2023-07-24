@@ -333,7 +333,7 @@ static inline HWY_MAYBE_UNUSED void FastXYBTosRGB8(const float* input[4],
   (void)output;
   (void)is_rgba;
   (void)xsize;
-  JXL_ABORT("Unreachable");
+  JXL_UNREACHABLE("Unreachable");
 #endif
 }
 

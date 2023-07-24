@@ -36,27 +36,13 @@ TEST(EncoderErrorHandlingTest, MinimalSuccess) {
     EXPECT_TRUE(try_catch_block());
     jpegli_destroy_compress(&cinfo);
   }
-  {
-    jpeg_decompress_struct cinfo = {};
-    const auto try_catch_block = [&]() -> bool {
-      ERROR_HANDLER_SETUP(jpeg);
-      jpeg_create_decompress(&cinfo);
-      jpeg_mem_src(&cinfo, buffer, buffer_size);
-      jpeg_read_header(&cinfo, TRUE);
-      EXPECT_EQ(1, cinfo.image_width);
-      EXPECT_EQ(1, cinfo.image_height);
-      jpeg_start_decompress(&cinfo);
-      JSAMPLE image[1];
-      JSAMPROW row[] = {image};
-      jpeg_read_scanlines(&cinfo, row, 1);
-      jxl::msan::UnpoisonMemory(image, 1);
-      EXPECT_EQ(0, image[0]);
-      jpeg_finish_decompress(&cinfo);
-      return true;
-    };
-    EXPECT_TRUE(try_catch_block());
-    jpeg_destroy_decompress(&cinfo);
-  }
+  TestImage output;
+  DecodeWithLibjpeg(CompressParams(), DecompressParams(), nullptr, 0, buffer,
+                    buffer_size, &output);
+  EXPECT_EQ(1, output.xsize);
+  EXPECT_EQ(1, output.ysize);
+  EXPECT_EQ(1, output.components);
+  EXPECT_EQ(0, output.pixels[0]);
   if (buffer) free(buffer);
 }
 

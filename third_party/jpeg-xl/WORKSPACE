@@ -150,7 +150,7 @@ SUBSTITUTIONS = {
 }
 YES_DEFINES = [
     "C_ARITH_CODING_SUPPORTED", "D_ARITH_CODING_SUPPORTED",
-    "HAVE_BUILTIN_CTZL"
+    "HAVE_BUILTIN_CTZL", "MEM_SRCDST_SUPPORTED"
 ]
 NO_DEFINES = [
     "WITH_SIMD", "RIGHT_SHIFT_IS_UNSIGNED", "HAVE_INTRIN_H"
@@ -167,6 +167,7 @@ SUBSTITUTIONS.update({
         template = src + ".in",
         out = src,
         substitutions = SUBSTITUTIONS,
+        visibility = ["//visibility:public"],
     ) for src in ["jconfig.h", "jconfigint.h", "jversion.h"]
 ]
 JPEG16_SOURCES = [
@@ -285,6 +286,10 @@ cc_library(
     includes = ["."],
     visibility = ["//visibility:public"],
 )
+exports_files([
+    "jmorecfg.h",
+    "jpeglib.h",
+])
     """,
     remote = "https://github.com/libjpeg-turbo/libjpeg-turbo.git",
     tag = "2.1.91",

@@ -46,7 +46,8 @@ class JxlButteraugliComparator : public Comparator {
 float ButteraugliDistance(const ImageBundle& rgb0, const ImageBundle& rgb1,
                           const ButteraugliParams& params,
                           const JxlCmsInterface& cms, ImageF* distmap = nullptr,
-                          ThreadPool* pool = nullptr);
+                          ThreadPool* pool = nullptr,
+                          bool ignore_alpha = false);
 
 float ButteraugliDistance(const std::vector<ImageBundle>& frames0,
                           const std::vector<ImageBundle>& frames1,

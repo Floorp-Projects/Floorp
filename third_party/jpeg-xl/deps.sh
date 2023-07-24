@@ -19,6 +19,7 @@ THIRD_PARTY_SKCMS="b25b07b4b07990811de121c0356155b2ba0f4318"
 THIRD_PARTY_SJPEG="e5ab13008bb214deb66d5f3e17ca2f8dbff150bf"
 THIRD_PARTY_ZLIB="cacf7f1d4e3d44d871b605da3b647f07d718623f"
 THIRD_PARTY_LIBPNG="a40189cf881e9f0db80511c382292a5604c3c3d1"
+THIRD_PARTY_LIBJPEG_TURBO="8ecba3647edb6dd940463fedf38ca33a8e2a73d1" # 2.1.5.1
 
 # Download the target revision from GitHub.
 download_github() {
@@ -26,7 +27,7 @@ download_github() {
   local project="$2"
 
   local varname=`echo "$path" | tr '[:lower:]' '[:upper:]'`
-  varname="${varname/\//_}"
+  varname="${varname/[\/-]/_}"
   local sha
   eval "sha=\${${varname}}"
 
@@ -85,6 +86,7 @@ EOF
     "https://skia.googlesource.com/skcms/+archive/"
   download_github third_party/zlib madler/zlib
   download_github third_party/libpng glennrp/libpng
+  download_github third_party/libjpeg-turbo libjpeg-turbo/libjpeg-turbo
   echo "Done."
 }
 

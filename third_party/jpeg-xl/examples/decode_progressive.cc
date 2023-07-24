@@ -154,11 +154,9 @@ bool DecodeJpegXlProgressive(const uint8_t* jxl, size_t size,
         return false;
       }
       pixels.resize(xsize * ysize * 4);
-      void* pixels_buffer = (void*)pixels.data();
-      size_t pixels_buffer_size = pixels.size() * sizeof(float);
       if (JXL_DEC_SUCCESS != JxlDecoderSetImageOutBuffer(dec.get(), &format,
-                                                         pixels_buffer,
-                                                         pixels_buffer_size)) {
+                                                         pixels.data(),
+                                                         pixels.size())) {
         fprintf(stderr, "JxlDecoderSetImageOutBuffer failed\n");
         return false;
       }

@@ -8,24 +8,16 @@
 #include <jxl/decode.h>
 #include <jxl/types.h>
 
-#include "lib/extras/packed_image.h"
-#include "lib/jxl/base/padded_bytes.h"
-#include "lib/jxl/base/status.h"
-
-#if JPEGXL_ENABLE_APNG
-#include "lib/extras/enc/apng.h"
-#endif
-#if JPEGXL_ENABLE_JPEG
-#include "lib/extras/enc/jpg.h"
-#endif
-#if JPEGXL_ENABLE_EXR
-#include "lib/extras/enc/exr.h"
-#endif
-
 #include "lib/extras/dec/decode.h"
+#include "lib/extras/enc/apng.h"
+#include "lib/extras/enc/exr.h"
+#include "lib/extras/enc/jpg.h"
 #include "lib/extras/enc/pgx.h"
 #include "lib/extras/enc/pnm.h"
+#include "lib/extras/packed_image.h"
 #include "lib/extras/packed_image_convert.h"
+#include "lib/jxl/base/padded_bytes.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/image_bundle.h"
 
 namespace jxl {
@@ -68,22 +60,22 @@ Status Encode(const CodecInOut& io, const extras::Codec codec,
   std::ostringstream os;
   switch (codec) {
     case extras::Codec::kPNG:
-#if JPEGXL_ENABLE_APNG
       encoder = extras::GetAPNGEncoder();
-      break;
-#else
-      return JXL_FAILURE("JPEG XL was built without (A)PNG support");
-#endif
+      if (encoder) {
+        break;
+      } else {
+        return JXL_FAILURE("JPEG XL was built without (A)PNG support");
+      }
     case extras::Codec::kJPG:
-#if JPEGXL_ENABLE_JPEG
       format.data_type = JXL_TYPE_UINT8;
       encoder = extras::GetJPEGEncoder();
-      os << io.jpeg_quality;
-      encoder->SetOption("q", os.str());
-      break;
-#else
-      return JXL_FAILURE("JPEG XL was built without JPEG support");
-#endif
+      if (encoder) {
+        os << io.jpeg_quality;
+        encoder->SetOption("q", os.str());
+        break;
+      } else {
+        return JXL_FAILURE("JPEG XL was built without JPEG support");
+      }
     case extras::Codec::kPNM:
       if (io.Main().HasAlpha()) {
         encoder = extras::GetPAMEncoder();
@@ -103,13 +95,13 @@ Status Encode(const CodecInOut& io, const extras::Codec codec,
     case extras::Codec::kGIF:
       return JXL_FAILURE("Encoding to GIF is not implemented");
     case extras::Codec::kEXR:
-#if JPEGXL_ENABLE_EXR
       format.data_type = JXL_TYPE_FLOAT;
       encoder = extras::GetEXREncoder();
-      break;
-#else
-      return JXL_FAILURE("JPEG XL was built without OpenEXR support");
-#endif
+      if (encoder) {
+        break;
+      } else {
+        return JXL_FAILURE("JPEG XL was built without OpenEXR support");
+      }
     case extras::Codec::kJXL:
       return JXL_FAILURE("TODO: encode using Codec::kJXL");
 

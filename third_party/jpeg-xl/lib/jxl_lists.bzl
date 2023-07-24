@@ -210,7 +210,6 @@ libjxl_dec_sources = [
     "jxl/image_metadata.h",
     "jxl/image_ops.h",
     "jxl/inverse_mtf-inl.h",
-    "jxl/jxl_inspection.h",
     "jxl/lehmer_code.h",
     "jxl/loop_filter.cc",
     "jxl/loop_filter.h",
@@ -328,6 +327,8 @@ libjxl_enc_sources = [
     "jxl/enc_comparator.h",
     "jxl/enc_context_map.cc",
     "jxl/enc_context_map.h",
+    "jxl/enc_debug_image.cc",
+    "jxl/enc_debug_image.h",
     "jxl/enc_detect_dots.cc",
     "jxl/enc_detect_dots.h",
     "jxl/enc_dot_dictionary.cc",
@@ -449,6 +450,13 @@ libjxl_gbench_sources = [
     "jxl/tf_gbench.cc",
 ]
 
+libjxl_jpegli_lib_version = 62
+
+libjxl_jpegli_libjpeg_helper_files = [
+    "jpegli/libjpeg_test_util.cc",
+    "jpegli/libjpeg_test_util.h",
+]
+
 libjxl_jpegli_sources = [
     "jpegli/adaptive_quantization.cc",
     "jpegli/adaptive_quantization.h",
@@ -502,11 +510,14 @@ libjxl_jpegli_sources = [
     "jpegli/simd.h",
     "jpegli/source_manager.cc",
     "jpegli/transpose-inl.h",
+    "jpegli/types.h",
     "jpegli/upsample.cc",
     "jpegli/upsample.h",
 ]
 
 libjxl_jpegli_testlib_files = [
+    "jpegli/test_params.h",
+    "jpegli/test_utils-inl.h",
     "jpegli/test_utils.cc",
     "jpegli/test_utils.h",
 ]
@@ -542,6 +553,7 @@ libjxl_public_headers = [
     "include/jxl/encode_cxx.h",
     "include/jxl/memory_manager.h",
     "include/jxl/parallel_runner.h",
+    "include/jxl/stats.h",
     "include/jxl/types.h",
 ]
 
