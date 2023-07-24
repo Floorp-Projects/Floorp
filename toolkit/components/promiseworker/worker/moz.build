@@ -5,5 +5,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES.workers = [
-    "PromiseWorker.js",
+    "!PromiseWorker.js",
+    "!PromiseWorker.mjs",
 ]
+
+GeneratedFile(
+    "PromiseWorker.js",
+    inputs=["PromiseWorker.template.worker.js"],
+    script="GeneratePromiseWorkerScript.py",
+    entry_point="generate_script",
+)
+
+GeneratedFile(
+    "PromiseWorker.mjs",
+    inputs=["PromiseWorker.template.worker.js"],
+    script="GeneratePromiseWorkerScript.py",
+    entry_point="generate_module",
+)

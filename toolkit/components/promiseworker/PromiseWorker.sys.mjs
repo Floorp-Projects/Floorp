@@ -118,13 +118,16 @@ const EXCEPTION_CONSTRUCTORS = {
  * @param {string} url The url containing the source code for this worker,
  * as in constructor ChromeWorker.
  *
+ * @param {WorkerOptions} options The option parameter for ChromeWorker.
+ *
  * @constructor
  */
-export var BasePromiseWorker = function (url) {
+export var BasePromiseWorker = function (url, options = {}) {
   if (typeof url != "string") {
     throw new TypeError("Expecting a string");
   }
   this._url = url;
+  this._options = options;
 
   /**
    * A set of methods, with the following
@@ -183,7 +186,7 @@ BasePromiseWorker.prototype = {
       return this.__worker;
     }
 
-    let worker = (this.__worker = new ChromeWorker(this._url));
+    let worker = (this.__worker = new ChromeWorker(this._url, this._options));
 
     // We assume that we call to _worker for the purpose of calling
     // postMessage().
