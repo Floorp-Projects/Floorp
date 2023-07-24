@@ -5,7 +5,7 @@ ac_add_options --disable-maintenance-service
 ac_add_options --enable-proxy-bypass-protection
 ac_add_options --enable-unverified-updates
 ac_add_options --enable-update-channel=release
-ac_add_options --enable-optimize="-O2"
+ac_add_options --enable-optimize="-O2 -march=armv8-a -mtune=cortex-a53"
 ac_add_options --disable-tests
 ac_add_options --enable-rust-simd
 ac_add_options --enable-release
