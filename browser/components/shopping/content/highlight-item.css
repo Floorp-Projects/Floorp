@@ -18,6 +18,7 @@
   grid-row-start: 1;
   grid-column-start: 1;
 }
+
 .highlight-label {
   font-weight: 590;
   grid-column-start: 2;
@@ -38,5 +39,7 @@
 }
 
 .highlight-details-list > li {
+  /* Render LTR since English review snippets are only supported at this time. */
+  direction: ltr;
   margin: 1em 0;
 }
