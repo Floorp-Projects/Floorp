@@ -46,9 +46,6 @@ avoid-blacklist-and-whitelist:
         - browser/base/content/test/protectionsUI/browser_protectionsUI_state.js
         - browser/base/content/test/protectionsUI/browser_protectionsUI_subview_shim.js
         - browser/base/content/test/siteIdentity/browser_no_mcb_for_loopback.js
-        - browser/base/content/test/static/browser_all_files_referenced.js
-        - browser/base/content/test/static/browser_parsable_css.js
-        - browser/base/content/test/static/browser_parsable_script.js
         - browser/base/content/test/tabMediaIndicator/browser_mute_webAudio.js
         - browser/base/content/test/tabs/browser_new_file_whitelisted_http_tab.js
         - browser/components/migration/ChromeMigrationUtils.sys.mjs
