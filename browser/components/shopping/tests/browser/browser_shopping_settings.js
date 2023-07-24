@@ -15,8 +15,13 @@ add_task(async function test_shopping_settings() {
     async browser => {
       const { document } = browser.contentWindow;
 
-      let shoppingSettings = document.querySelector("shopping-settings");
-      ok(shoppingSettings, "shopping-settings should be visible");
+      let shoppingContainer = document.querySelector("shopping-container");
+      shoppingContainer.data = MOCK_POPULATED_DATA;
+      await shoppingContainer.updateComplete;
+
+      let shoppingSettings = shoppingContainer.settingsEl;
+      await shoppingSettings.updateComplete;
+      ok(shoppingSettings, "Got the shopping-settings element");
 
       let toggle = shoppingSettings.recommendationsToggleEl;
       ok(toggle, "There should be a toggle");

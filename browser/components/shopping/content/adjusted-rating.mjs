@@ -24,6 +24,11 @@ class AdjustedRating extends MozLitElement {
   }
 
   render() {
+    if (!this.rating) {
+      this.hidden = true;
+      return null;
+    }
+
     return html`
       <shopping-card
         data-l10n-id="shopping-adjusted-rating-label"

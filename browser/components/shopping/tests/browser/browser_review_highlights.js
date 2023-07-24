@@ -3,19 +3,11 @@
 
 "use strict";
 
-const { ShoppingUtils } = ChromeUtils.importESModule(
-  "chrome://browser/content/shopping/ShoppingUtils.sys.mjs"
-);
-
 /**
  * Tests that the review highlights custom components are visible on the page
  * if there is valid data.
  */
 add_task(async function test_review_highlights() {
-  let sandbox = sinon.createSandbox();
-  const MOCK_OBJ = MOCK_POPULATED_OBJ;
-  sandbox.stub(ShoppingUtils, "getHighlights").returns(MOCK_OBJ);
-
   await BrowserTestUtils.withNewTab(
     {
       url: "chrome://browser/content/shopping/shopping.html",
@@ -25,16 +17,16 @@ add_task(async function test_review_highlights() {
       const { document } = browser.contentWindow;
       const EXPECTED_KEYS = ["price", "quality", "competitiveness"];
 
-      let reviewHighlights = document.querySelector("review-highlights");
-      ok(reviewHighlights, "review-highlights should be visible");
+      let shoppingContainer = document.querySelector("shopping-container");
+      shoppingContainer.data = MOCK_POPULATED_DATA;
+      await shoppingContainer.updateComplete;
+
+      let reviewHighlights = shoppingContainer.highlightsEl;
+      ok(reviewHighlights, "Got review-highlights");
+      await reviewHighlights.updateComplete;
 
       let highlightsList = reviewHighlights.reviewHighlightsListEl;
-
-      await BrowserTestUtils.waitForMutationCondition(
-        highlightsList,
-        { childList: true },
-        () => highlightsList.querySelector("highlight-item")
-      );
+      await highlightsList.updateComplete;
 
       is(
         highlightsList.children.length,
@@ -50,16 +42,15 @@ add_task(async function test_review_highlights() {
         let actualNumberOfReviews = highlightEl.shadowRoot.querySelector(
           ".highlight-details-list"
         ).children.length;
-        let expectedNumberOfReviews = Object.values(MOCK_OBJ[key]).flat()
-          .length;
+        let expectedNumberOfReviews = Object.values(
+          MOCK_POPULATED_DATA.highlights[key]
+        ).flat().length;
         is(
           actualNumberOfReviews,
           expectedNumberOfReviews,
           "There should be equal number of reviews displayed for " + key
         );
       }
-
-      sandbox.restore();
     }
   );
 });
@@ -68,10 +59,6 @@ add_task(async function test_review_highlights() {
  * Tests that entire highlights components is still hidden if we receive falsy data.
  */
 add_task(async function test_review_highlights_no_highlights() {
-  let sandbox = sinon.createSandbox();
-  const MOCK_OBJ = null;
-  sandbox.stub(ShoppingUtils, "getHighlights").returns(MOCK_OBJ);
-
   await BrowserTestUtils.withNewTab(
     {
       url: "chrome://browser/content/shopping/shopping.html",
@@ -79,47 +66,24 @@ add_task(async function test_review_highlights_no_highlights() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+      const noHighlightData = MOCK_POPULATED_DATA;
+      noHighlightData.highlights = null;
 
-      let reviewHighlights = document.querySelector("review-highlights");
+      let shoppingContainer = document.querySelector("shopping-container");
+      shoppingContainer.data = noHighlightData;
+      await shoppingContainer.updateComplete;
+
+      let reviewHighlights = shoppingContainer.highlightsEl;
+      ok(reviewHighlights, "Got review-highlights");
+      await reviewHighlights.updateComplete;
+
       ok(
         BrowserTestUtils.is_hidden(reviewHighlights),
         "review-highlights should not be visible"
       );
 
       let highlightsList = reviewHighlights?.reviewHighlightsListEl;
-
       ok(!highlightsList, "review-highlights-list should not be visible");
-      sandbox.restore();
-    }
-  );
-});
-
-/**
- * Tests that the entire highlights component is still hidden if an error occurs when fetching highlights.
- */
-add_task(async function test_review_highlights_error() {
-  let sandbox = sinon.createSandbox();
-  const MOCK_OBJ = MOCK_ERROR_OBJ;
-  sandbox.stub(ShoppingUtils, "getHighlights").returns(MOCK_OBJ);
-
-  await BrowserTestUtils.withNewTab(
-    {
-      url: "chrome://browser/content/shopping/shopping.html",
-      gBrowser,
-    },
-    async browser => {
-      const { document } = browser.contentWindow;
-
-      let reviewHighlights = document.querySelector("review-highlights");
-      ok(
-        BrowserTestUtils.is_hidden(reviewHighlights),
-        "review-highlights should not be visible"
-      );
-
-      let highlightsList = reviewHighlights?.reviewHighlightsListEl;
-
-      ok(!highlightsList, "review-highlights-list should not be visible");
-      sandbox.restore();
     }
   );
 });
@@ -128,11 +92,6 @@ add_task(async function test_review_highlights_error() {
  * Tests that we do not show an invalid highlight type and properly filter data.
  */
 add_task(async function test_review_highlights_invalid_type() {
-  let sandbox = sinon.createSandbox();
-  // This mock object only has invalid data, so we should expect an empty object after filtering.
-  const MOCK_OBJ = MOCK_INVALID_KEY_OBJ;
-  sandbox.stub(ShoppingUtils, "getHighlights").returns(MOCK_OBJ);
-
   await BrowserTestUtils.withNewTab(
     {
       url: "chrome://browser/content/shopping/shopping.html",
@@ -140,14 +99,21 @@ add_task(async function test_review_highlights_invalid_type() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+      const invalidHighlightData = MOCK_POPULATED_DATA;
+      invalidHighlightData.highlights = MOCK_INVALID_KEY_OBJ;
 
-      let reviewHighlights = document.querySelector("review-highlights");
+      let shoppingContainer = document.querySelector("shopping-container");
+      shoppingContainer.data = invalidHighlightData;
+      await shoppingContainer.updateComplete;
+
+      let reviewHighlights = shoppingContainer.highlightsEl;
+      ok(reviewHighlights, "Got review-highlights");
+      await reviewHighlights.updateComplete;
+
       ok(
         BrowserTestUtils.is_hidden(reviewHighlights),
         "review-highlights should not be visible"
       );
-
-      sandbox.restore();
     }
   );
 });

@@ -24,6 +24,11 @@ class ReviewReliability extends MozLitElement {
   }
 
   render() {
+    if (!this.letter) {
+      this.hidden = true;
+      return null;
+    }
+
     return html`
       <shopping-card
         data-l10n-id="shopping-review-reliability-label"
