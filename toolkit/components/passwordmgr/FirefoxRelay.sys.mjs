@@ -173,7 +173,7 @@ async function showErrorAsync(browser, messageId, messageArgs) {
     {
       autofocus: true,
       removeOnDismissal: true,
-      popupIconURL: "page-icon:https://relay.firefox.com",
+      popupIconURL: "chrome://browser/content/logos/relay.svg",
       learnMoreURL: gConfig.learnMoreURL,
     }
   );
@@ -407,7 +407,7 @@ class RelayOffered {
           "firefox-relay-opt-in-subtitle-1"
         );
         yield new ParentAutocompleteOption(
-          "page-icon:https://relay.firefox.com",
+          "chrome://browser/content/logos/relay.svg",
           title,
           subtitle,
           "PasswordManager:offerRelayIntegration",
@@ -578,7 +578,7 @@ class RelayEnabled {
     ) {
       const [title] = await formatMessages("firefox-relay-use-mask-title");
       yield new ParentAutocompleteOption(
-        "page-icon:https://relay.firefox.com",
+        "chrome://browser/content/logos/relay.svg",
         title,
         "", // when the user has opted-in, there is no subtitle content
         "PasswordManager:generateRelayUsername",
