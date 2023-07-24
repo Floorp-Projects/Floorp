@@ -50,7 +50,7 @@ const TRANSLATIONS_TESTER_NO_TAG =
  * This is the BCP 47 language tag for the MockedLanguageIdEngine to return as
  * the mocked detected language.
  *
- * @param {Array<{ fromLang: string, toLang: string, isBeta: boolean }>} options.languagePairs
+ * @param {Array<{ fromLang: string, toLang: string }>} options.languagePairs
  * The translation languages pairs to mock for the test.
  *
  * @param {Array<[string, string]>} options.prefs
@@ -351,8 +351,8 @@ async function setupActorTest({
  * Provide some default language pairs when none are provided.
  */
 const DEFAULT_LANGUAGE_PAIRS = [
-  { fromLang: "en", toLang: "es", isBeta: false },
-  { fromLang: "es", toLang: "en", isBeta: false },
+  { fromLang: "en", toLang: "es" },
+  { fromLang: "es", toLang: "en" },
 ];
 
 async function createAndMockRemoteSettings({
@@ -672,7 +672,7 @@ function createAttachmentMock(
  */
 const FILES_PER_LANGUAGE_PAIR = 3;
 
-function createRecordsForLanguagePair(fromLang, toLang, isBeta = false) {
+function createRecordsForLanguagePair(fromLang, toLang) {
   const records = [];
   const lang = fromLang + toLang;
   const models = [
@@ -692,7 +692,7 @@ function createRecordsForLanguagePair(fromLang, toLang, isBeta = false) {
       fromLang,
       toLang,
       fileType,
-      version: isBeta ? "0.1" : "1.0",
+      version: "1.0",
       last_modified: Date.now(),
       schema: Date.now(),
     });
@@ -718,8 +718,8 @@ async function createTranslationModelsRemoteClient(
   langPairs
 ) {
   const records = [];
-  for (const { fromLang, toLang, isBeta } of langPairs) {
-    records.push(...createRecordsForLanguagePair(fromLang, toLang, isBeta));
+  for (const { fromLang, toLang } of langPairs) {
+    records.push(...createRecordsForLanguagePair(fromLang, toLang));
   }
 
   const { RemoteSettings } = ChromeUtils.importESModule(

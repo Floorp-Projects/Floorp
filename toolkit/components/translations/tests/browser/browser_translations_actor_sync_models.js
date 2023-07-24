@@ -13,8 +13,8 @@ add_task(async function test_translations_actor_sync_update() {
   const { remoteClients, cleanup } = await setupActorTest({
     autoDownloadFromRemoteSettings: true,
     languagePairs: [
-      { fromLang: "en", toLang: "es", isBeta: false },
-      { fromLang: "es", toLang: "en", isBeta: false },
+      { fromLang: "en", toLang: "es" },
+      { fromLang: "es", toLang: "en" },
     ],
   });
 
@@ -78,8 +78,8 @@ add_task(async function test_translations_actor_sync_delete() {
   const { remoteClients, cleanup } = await setupActorTest({
     autoDownloadFromRemoteSettings: true,
     languagePairs: [
-      { fromLang: "en", toLang: "es", isBeta: false },
-      { fromLang: "es", toLang: "en", isBeta: false },
+      { fromLang: "en", toLang: "es" },
+      { fromLang: "es", toLang: "en" },
     ],
   });
 
@@ -133,8 +133,8 @@ add_task(async function test_translations_actor_sync_create() {
   const { remoteClients, cleanup } = await setupActorTest({
     autoDownloadFromRemoteSettings: true,
     languagePairs: [
-      { fromLang: "en", toLang: "es", isBeta: false },
-      { fromLang: "es", toLang: "en", isBeta: false },
+      { fromLang: "en", toLang: "es" },
+      { fromLang: "es", toLang: "en" },
     ],
   });
 

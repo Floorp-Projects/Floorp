@@ -7,8 +7,8 @@ add_task(async function test_about_translations_language_directions() {
   await openAboutTranslations({
     languagePairs: [
       // English (en) is LTR and Arabic (ar) is RTL.
-      { fromLang: "en", toLang: "ar", isBeta: true },
-      { fromLang: "ar", toLang: "en", isBeta: true },
+      { fromLang: "en", toLang: "ar" },
+      { fromLang: "ar", toLang: "en" },
     ],
     runInPage: async ({ selectors }) => {
       const { document, window } = content;

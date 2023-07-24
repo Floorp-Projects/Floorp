@@ -439,35 +439,19 @@ var TranslationsPanel = new (class {
       );
 
       for (const popup of fromPopups) {
-        for (const { langTag, isBeta, displayName } of fromLanguages) {
+        for (const { langTag, displayName } of fromLanguages) {
           const fromMenuItem = document.createXULElement("menuitem");
           fromMenuItem.setAttribute("value", langTag);
-          if (isBeta) {
-            document.l10n.setAttributes(
-              fromMenuItem,
-              "translations-panel-displayname-beta",
-              { language: displayName }
-            );
-          } else {
-            fromMenuItem.setAttribute("label", displayName);
-          }
+          fromMenuItem.setAttribute("label", displayName);
           popup.appendChild(fromMenuItem);
         }
       }
 
       for (const popup of toPopups) {
-        for (const { langTag, isBeta, displayName } of toLanguages) {
+        for (const { langTag, displayName } of toLanguages) {
           const toMenuItem = document.createXULElement("menuitem");
           toMenuItem.setAttribute("value", langTag);
-          if (isBeta) {
-            document.l10n.setAttributes(
-              toMenuItem,
-              "translations-panel-displayname-beta",
-              { language: displayName }
-            );
-          } else {
-            toMenuItem.setAttribute("label", displayName);
-          }
+          toMenuItem.setAttribute("label", displayName);
           popup.appendChild(toMenuItem);
         }
       }

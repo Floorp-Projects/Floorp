@@ -77,13 +77,6 @@ the latest [remote-settings-devtools] Firefox extension.
 
 Firefox Translations uses semantic versioning for all of its records via the **`version`** property.
 
-```{note}
-**Beta Versions**
-
-Versions that are below **`1.0`** are considered to be a beta version. For language translation models,
-this quality will be communicated to users via the UI.
-```
-
 #### Non-breaking Changes
 
 Firefox Translations code will always retrieve the maximum compatible version of each record from Remote Settings.

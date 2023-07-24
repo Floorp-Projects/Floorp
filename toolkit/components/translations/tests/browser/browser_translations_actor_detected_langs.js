@@ -10,12 +10,12 @@ add_task(async function test_detected_language() {
     autoDownloadFromRemoteSettings: true,
     languagePairs: [
       // Spanish
-      { fromLang: "es", toLang: "en", isBeta: false },
-      { fromLang: "en", toLang: "es", isBeta: false },
+      { fromLang: "es", toLang: "en" },
+      { fromLang: "en", toLang: "es" },
 
       // Norwegian Bokmål
-      { fromLang: "nb", toLang: "en", isBeta: false },
-      { fromLang: "en", toLang: "nb", isBeta: false },
+      { fromLang: "nb", toLang: "en" },
+      { fromLang: "en", toLang: "nb" },
     ],
   });
 

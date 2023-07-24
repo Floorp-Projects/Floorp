@@ -22,12 +22,6 @@ urlbar-translations-button-loading =
 translations-panel-settings-button =
   .aria-label = Manage translation settings
 
-# Text displayed on a language dropdown when the language is in beta
-# Variables:
-#   $language (string) - The localized display name of the detected language
-translations-panel-displayname-beta =
-  .label = { $language } BETA
-
 ## Options in the Firefox Translations settings.
 
 translations-panel-settings-manage-languages =

@@ -387,10 +387,10 @@ const SPANISH_PAGE_URL = TRANSLATIONS_TESTER_ES;
 const SPANISH_PAGE_URL_2 = TRANSLATIONS_TESTER_ES_2;
 const SPANISH_PAGE_URL_DOT_ORG = TRANSLATIONS_TESTER_ES_DOT_ORG;
 const LANGUAGE_PAIRS = [
-  { fromLang: "es", toLang: "en", isBeta: false },
-  { fromLang: "en", toLang: "es", isBeta: false },
-  { fromLang: "fr", toLang: "en", isBeta: false },
-  { fromLang: "en", toLang: "fr", isBeta: false },
-  { fromLang: "en", toLang: "uk", isBeta: true },
-  { fromLang: "uk", toLang: "en", isBeta: true },
+  { fromLang: "es", toLang: "en" },
+  { fromLang: "en", toLang: "es" },
+  { fromLang: "fr", toLang: "en" },
+  { fromLang: "en", toLang: "fr" },
+  { fromLang: "en", toLang: "uk" },
+  { fromLang: "uk", toLang: "en" },
 ];
