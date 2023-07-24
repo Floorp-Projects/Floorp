@@ -361,6 +361,22 @@
   padding-right: 20px;
 }
 
+.ruleview-ancestor-ruleopen,
+.ruleview-ancestor-ruleclose {
+  color: var(--theme-comment);
+}
+
+.ruleview-rule-indent {
+  white-space: pre;
+  /*
+  * We do want to keep the underlying chars for the indent for user to copy/paste,
+  * but we can reduce the inline space it takes.
+  * Tweaking letter-spacing instead of using font-size as the latter could be odd when
+  * the text is selected.
+  */
+  letter-spacing: -0.5ch;
+}
+
 .ruleview-propertylist {
   list-style: none;
   padding: 0;
@@ -695,7 +711,7 @@
 .ruleview-highlight > .ruleview-propertyvaluecontainer,
 .ruleview-highlight > .ruleview-rule-source-label,
 .ruleview-highlight > .ruleview-selector,
-.ruleview-rule-ancestor-data li.ruleview-highlight {
+.ruleview-rule-ancestor-data .ruleview-highlight {
   background-color: var(--rule-highlight-background-color);
 }
 

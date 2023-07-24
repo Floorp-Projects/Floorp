@@ -37,67 +37,67 @@ add_task(async function () {
     {
       selector: `h1, [test-hint="imported-conditional"]`,
       ancestorRulesData: [
-        "@import supports(display: flex) screen and (width > 10px)",
+        "@import supports(display: flex) screen and (width > 10px) {",
       ],
     },
     {
       selector: `h1, [test-hint="imported-conditional"]`,
-      ancestorRulesData: ["@import supports(display: flex)"],
+      ancestorRulesData: ["@import supports(display: flex) {"],
     },
     {
       selector: `h1, [test-hint="imported-conditional"]`,
-      ancestorRulesData: ["@import screen and (width > 10px)"],
+      ancestorRulesData: ["@import screen and (width > 10px) {"],
     },
     {
       selector: `h1, [test-hint="imported-named-layer--no-rule-layer"]`,
       ancestorRulesData: [
-        "@import supports(display: flex) screen and (width > 10px)",
-        "@layer importedLayerTwo",
-        "@media screen",
+        "@import supports(display: flex) screen and (width > 10px) {",
+        "  @layer importedLayerTwo {",
+        "    @media screen {",
       ],
     },
     {
       selector: `h1, [test-hint="imported-named-layer--named-layer"]`,
       ancestorRulesData: [
-        "@import supports(display: flex) screen and (width > 10px)",
-        "@layer importedLayerTwo",
-        "@media screen",
-        "@layer in-imported-stylesheet",
+        "@import supports(display: flex) screen and (width > 10px) {",
+        "  @layer importedLayerTwo {",
+        "    @media screen {",
+        "      @layer in-imported-stylesheet {",
       ],
     },
     {
       selector: `h1, [test-hint="imported-nested-named-layer--named-layer"]`,
       ancestorRulesData: [
-        "@import supports(display: flex) screen and (width > 10px)",
-        "@layer importedLayerTwo",
-        "@layer importedNestedLayer",
-        "@layer in-imported-nested-stylesheet",
+        "@import supports(display: flex) screen and (width > 10px) {",
+        "  @layer importedLayerTwo {",
+        "    @layer importedNestedLayer {",
+        "      @layer in-imported-nested-stylesheet {",
       ],
     },
     {
       selector: `h1, [test-hint="imported-named-layer--no-rule-layer"]`,
       ancestorRulesData: [
-        "@import (height > 42px)",
-        "@layer importedLayer",
-        "@media screen",
+        "@import (height > 42px) {",
+        "  @layer importedLayer {",
+        "    @media screen {",
       ],
     },
     {
       selector: `h1, [test-hint="imported-named-layer--named-layer"]`,
       ancestorRulesData: [
-        "@import (height > 42px)",
-        "@layer importedLayer",
-        "@media screen",
-        "@layer in-imported-stylesheet",
+        "@import (height > 42px) {",
+        "  @layer importedLayer {",
+        "    @media screen {",
+        "      @layer in-imported-stylesheet {",
       ],
     },
     {
       selector: `h1, [test-hint="imported-nested-named-layer--named-layer"]`,
       ancestorRulesData: [
-        "@import (height > 42px)",
-        "@layer importedLayer",
-        "@layer importedNestedLayer",
-        "@layer in-imported-nested-stylesheet",
+        "@import (height > 42px) {",
+        "  @layer importedLayer {",
+        "    @layer importedNestedLayer {",
+        "      @layer in-imported-nested-stylesheet {",
       ],
     },
   ];

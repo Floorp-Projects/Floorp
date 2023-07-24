@@ -43,11 +43,11 @@ add_task(async function () {
     {
       selector: `h1, [test-hint="nested"]`,
       ancestorRulesData: [
-        `@layer mylayer`,
-        `@supports (container-name: mycontainer)`,
-        `@container mycontainer (min-width: 1px)`,
-        `@media screen`,
-        `@container mycontainer (min-width: 2rem)`,
+        `@layer mylayer {`,
+        `  @supports (container-name: mycontainer) {`,
+        `    @container mycontainer (min-width: 1px) {`,
+        `      @media screen {`,
+        `        @container mycontainer (min-width: 2rem) {`,
       ],
     },
   ];

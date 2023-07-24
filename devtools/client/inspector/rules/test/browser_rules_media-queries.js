@@ -29,7 +29,7 @@ add_task(async function () {
 
   is(
     getRuleViewAncestorRulesDataTextByIndex(view, 2),
-    "@media screen and (min-width: 1px)",
+    "@media screen and (min-width: 1px) {",
     "Media queries information are displayed"
   );
 });

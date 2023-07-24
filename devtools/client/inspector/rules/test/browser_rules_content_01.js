@@ -61,7 +61,7 @@ add_task(async function () {
   const mediaText = getRuleViewAncestorRulesDataTextByIndex(view, 1);
   is(
     mediaText,
-    "@media screen and (min-width: 10px)",
+    "@media screen and (min-width: 10px) {",
     "media text at index 1 has expected content"
   );
 

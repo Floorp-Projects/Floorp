@@ -45,6 +45,9 @@ const STYLE_INSPECTOR_PROPERTIES =
 const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 
+const INDENT_SIZE = 2;
+const INDENT_STR = " ".repeat(INDENT_SIZE);
+
 /**
  * RuleEditor is responsible for the following:
  *   Owns a Rule object and creates a list of TextPropertyEditors
@@ -152,19 +155,29 @@ RuleEditor.prototype = {
           ancestorLi.classList.add(ancestorData.type);
         }
 
-        if (ancestorData.type == "container") {
-          ancestorLi.classList.add("container-query");
-
+        // Indent each parent selector
+        if (index) {
           createChild(ancestorLi, "span", {
+            class: "ruleview-rule-indent",
+            textContent: INDENT_STR.repeat(index),
+          });
+        }
+
+        const selectorContainer = createChild(ancestorLi, "span", {
+          class: "ruleview-rule-ancestor-selectorcontainer",
+        });
+
+        if (ancestorData.type == "container") {
+          ancestorLi.classList.add("container-query", "has-tooltip");
+
+          createChild(selectorContainer, "span", {
             class: "container-query-declaration",
             textContent: `@container${
               ancestorData.containerName ? " " + ancestorData.containerName : ""
             }`,
           });
 
-          ancestorLi.classList.add("has-tooltip");
-
-          const jumpToNodeButton = createChild(ancestorLi, "button", {
+          const jumpToNodeButton = createChild(selectorContainer, "button", {
             class: "open-inspector",
             title: l10n("rule.containerQuery.selectContainerButton.tooltip"),
           });
@@ -192,7 +205,6 @@ RuleEditor.prototype = {
               this.ruleView.inspector.highlighters.TYPES.BOXMODEL
             );
           });
-          ancestorLi.append(jumpToNodeButton);
 
           ancestorLi.addEventListener("mouseenter", async () => {
             const front = await getNodeFront();
@@ -211,51 +223,44 @@ RuleEditor.prototype = {
             );
           });
 
-          createChild(ancestorLi, "span", {
+          createChild(selectorContainer, "span", {
             // Add a space between the container name (or @container if there's no name)
             // and the query so the title, which is computed from the DOM, displays correctly.
             textContent: " " + ancestorData.containerQuery,
           });
-          return;
-        }
-
-        if (ancestorData.type == "layer") {
-          ancestorLi.append(
+        } else if (ancestorData.type == "layer") {
+          selectorContainer.append(
             this.doc.createTextNode(
               `@layer${ancestorData.value ? " " + ancestorData.value : ""}`
             )
           );
-          return;
-        }
-        if (ancestorData.type == "media") {
-          ancestorLi.append(
+        } else if (ancestorData.type == "media") {
+          selectorContainer.append(
             this.doc.createTextNode(`@media ${ancestorData.value}`)
           );
-          return;
-        }
-
-        if (ancestorData.type == "supports") {
-          ancestorLi.append(
+        } else if (ancestorData.type == "supports") {
+          selectorContainer.append(
             this.doc.createTextNode(`@supports ${ancestorData.conditionText}`)
           );
-          return;
-        }
-
-        if (ancestorData.type == "import") {
-          ancestorLi.append(
+        } else if (ancestorData.type == "import") {
+          selectorContainer.append(
             this.doc.createTextNode(`@import ${ancestorData.value}`)
           );
+        } else if (ancestorData.selectorText) {
+          selectorContainer.append(
+            this.doc.createTextNode(ancestorData.selectorText)
+          );
+        } else {
+          // We shouldn't get here as `type` should only match to what can be set in
+          // the StyleRuleActor form, but just in case, let's return an empty string.
+          console.warn("Unknown ancestor data type:", ancestorData.type);
           return;
         }
 
-        if (ancestorData.selectorText) {
-          ancestorLi.append(this.doc.createTextNode(ancestorData.selectorText));
-          return;
-        }
-
-        // We shouldn't get here as `type` should only match to what can be set in
-        // the StyleRuleActor form, but just in case, let's return an empty string.
-        console.warn("Unknown ancestor data type:", ancestorData.type);
+        createChild(ancestorLi, "span", {
+          class: "ruleview-ancestor-ruleopen",
+          textContent: " {",
+        });
       });
 
       this.ancestorDataEl = createChild(this.element, "ol", {
@@ -269,6 +274,11 @@ RuleEditor.prototype = {
     });
 
     const header = createChild(code, "div", {});
+
+    createChild(header, "span", {
+      class: "ruleview-rule-indent",
+      textContent: "  ".repeat(this.rule.domRule.ancestorData.length),
+    });
 
     this.selectorText = createChild(header, "span", {
       class: "ruleview-selectorcontainer",
@@ -325,8 +335,29 @@ RuleEditor.prototype = {
     this.closeBrace = createChild(code, "div", {
       class: "ruleview-ruleclose",
       tabindex: this.isEditable ? "0" : "-1",
-      textContent: "}",
     });
+
+    if (this.rule.domRule.ancestorData.length) {
+      createChild(this.closeBrace, "span", {
+        class: "ruleview-rule-indent",
+        textContent: "  ".repeat(this.rule.domRule.ancestorData.length),
+      });
+    }
+    this.closeBrace.append(this.doc.createTextNode("}"));
+
+    if (this.rule.domRule.ancestorData.length) {
+      let closingBracketsText = "";
+      for (let i = this.rule.domRule.ancestorData.length - 1; i >= 0; i--) {
+        if (i) {
+          closingBracketsText += INDENT_STR.repeat(i);
+        }
+        closingBracketsText += "}\n";
+      }
+      createChild(code, "div", {
+        class: "ruleview-ancestor-ruleclose",
+        textContent: closingBracketsText,
+      });
+    }
 
     if (this.isEditable) {
       // A newProperty editor should only be created when no editor was

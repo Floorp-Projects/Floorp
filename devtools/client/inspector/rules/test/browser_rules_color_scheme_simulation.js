@@ -63,7 +63,7 @@ add_task(async function () {
   await waitFor(() => divHasDarkSchemeStyling());
   is(
     getRuleViewAncestorRulesDataTextByIndex(view, 1),
-    "@media (prefers-color-scheme: dark)",
+    "@media (prefers-color-scheme: dark) {",
     "The rules view was updated with the rule from the dark scheme media query"
   );
 
@@ -76,7 +76,7 @@ add_task(async function () {
   );
   is(
     getRuleViewAncestorRulesDataTextByIndex(view, 1),
-    "@media (prefers-color-scheme: dark)",
+    "@media (prefers-color-scheme: dark) {",
     "The prefers-color-scheme media query is displayed"
   );
 
@@ -124,7 +124,7 @@ add_task(async function () {
   );
   is(
     getRuleViewAncestorRulesDataTextByIndex(view, 1),
-    "@media (prefers-color-scheme: dark)",
+    "@media (prefers-color-scheme: dark) {",
     "The prefers-color-scheme media query is displayed on the rule after reloading"
   );
 
@@ -133,7 +133,7 @@ add_task(async function () {
   ok(true, "simulation is still applied to the iframe after reloading");
   is(
     getRuleViewAncestorRulesDataTextByIndex(view, 1),
-    "@media (prefers-color-scheme: dark)",
+    "@media (prefers-color-scheme: dark) {",
     "The prefers-color-scheme media query is still displayed on the rule for the element in iframe after reloading"
   );
 
