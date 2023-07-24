@@ -36,7 +36,7 @@
 use std::fmt;
 
 use bitflags::bitflags;
-use enum_primitive_derive::Primitive;
+use num_derive::FromPrimitive;
 use scroll::{Endian, Pread, Pwrite, SizeWith};
 use smart_default::SmartDefault;
 
@@ -152,7 +152,7 @@ pub struct MINIDUMP_DIRECTORY {
 ///
 /// [msdn]: https://docs.microsoft.com/en-us/windows/win32/api/minidumpapiset/ne-minidumpapiset-minidump_stream_type
 #[repr(u32)]
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Primitive)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive)]
 pub enum MINIDUMP_STREAM_TYPE {
     /// An unused stream directory entry
     UnusedStream = 0,
@@ -311,6 +311,12 @@ pub enum MINIDUMP_STREAM_TYPE {
     ///
     /// See ['MINIDUMP_MAC_CRASH_INFO'].
     MozMacosCrashInfoStream = 0x4d7a0001,
+
+    /// The kernel boot args on the machine where the crashed process is
+    /// running. Only available on macOS. 0x4D7A = "Mz".
+    ///
+    /// See ['MINIDUMP_MAC_BOOTARGS']
+    MozMacosBootargsStream = 0x4d7a0002,
 }
 
 impl From<MINIDUMP_STREAM_TYPE> for u32 {
@@ -430,7 +436,7 @@ pub const VS_FFI_STRUCVERSION: u32 = 0x00010000;
 /// [sym]: http://web.archive.org/web/20070915060650/http://www.x86.org/ftp/manuals/tools/sym.pdf
 /// [win2k]: https://dl.acm.org/citation.cfm?id=375734
 #[repr(u32)]
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Primitive)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive)]
 pub enum CvSignature {
     /// PDB 2.0 CodeView data: 'NB10': [`CV_INFO_PDB20`]
     Pdb20 = 0x3031424e,
@@ -1465,7 +1471,7 @@ pub struct MINIDUMP_SYSTEM_INFO {
 /// Many of these are taken from definitions in WinNT.h, but several of them are
 /// Breakpad extensions.
 #[repr(u16)]
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Primitive)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive)]
 pub enum ProcessorArchitecture {
     PROCESSOR_ARCHITECTURE_INTEL = 0,
     PROCESSOR_ARCHITECTURE_MIPS = 1,
@@ -1497,7 +1503,7 @@ pub enum ProcessorArchitecture {
 /// The Windows values here are taken from defines in WinNT.h, but the rest are Breakpad
 /// extensions.
 #[repr(u32)]
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Primitive)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive)]
 pub enum PlatformId {
     /// Windows 3.1
     VER_PLATFORM_WIN32s = 1,
@@ -1949,7 +1955,7 @@ pub struct MINIDUMP_ASSERTION_INFO {
 ///
 /// [fmt]: https://chromium.googlesource.com/breakpad/breakpad/+/88d8114fda3e4a7292654bd6ac0c34d6c88a8121/src/google_breakpad/common/minidump_format.h#1011
 #[repr(u32)]
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Primitive)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive)]
 pub enum AssertionType {
     Unknown = 0,
     InvalidParameter = 1,
@@ -2402,6 +2408,13 @@ pub const MAC_CRASH_INFO_STRING_MAX_SIZE: usize = 8192;
 /// sections per process. But the __crash_info section is almost entirely
 /// undocumented, so just in case we set a large maximum.
 pub const MAC_CRASH_INFOS_MAX: usize = 20;
+
+/// MacOS kernel boot args
+#[derive(Debug, Clone, Pread, Pwrite, SizeWith)]
+pub struct MINIDUMP_MAC_BOOTARGS {
+    pub stream_type: u32,
+    pub bootargs: RVA64,
+}
 
 bitflags! {
     /// Possible values of [`ARMCpuInfo::elf_hwcaps`]
