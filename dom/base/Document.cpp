@@ -12469,6 +12469,10 @@ void Document::MaybePreLoadImage(nsIURI* aUri,
 }
 
 void Document::MaybePreconnect(nsIURI* aOrigURI, mozilla::CORSMode aCORSMode) {
+  if (!StaticPrefs::network_preconnect()) {
+    return;
+  }
+
   NS_MutateURI mutator(aOrigURI);
   if (NS_FAILED(mutator.GetStatus())) {
     return;

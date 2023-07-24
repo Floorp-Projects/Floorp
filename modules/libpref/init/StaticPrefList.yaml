@@ -11704,6 +11704,13 @@
   value: true
   mirror: always
 
+# Enables `<link rel="preconnect">` tag and `Link: rel=preconnect` response header
+# handling.
+- name: network.preconnect
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Enables `<link rel="modulepreload">` tag and `Link: rel=modulepreload`
 # response header handling.
 - name: network.modulepreload
