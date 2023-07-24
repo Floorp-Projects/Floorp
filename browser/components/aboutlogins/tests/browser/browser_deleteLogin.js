@@ -76,7 +76,9 @@ add_task(async function test_login_item() {
       let loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
       );
-      let editButton = loginItem.shadowRoot.querySelector(".edit-button");
+      let editButton = loginItem.shadowRoot
+        .querySelector(".edit-button")
+        .shadowRoot.querySelector("button");
       editButton.click();
     });
     await reauthObserved;
@@ -91,7 +93,9 @@ add_task(async function test_login_item() {
       usernameInput.value += "-undone";
       passwordInput.value += "-undone";
 
-      let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
+      let deleteButton = loginItem.shadowRoot
+        .querySelector(".delete-button")
+        .shadowRoot.querySelector("button");
       deleteButton.click();
 
       let confirmDeleteDialog = Cu.waiveXrays(
@@ -120,7 +124,9 @@ add_task(async function test_login_item() {
       }, "Waiting for login item to get populated");
       Assert.ok(loginItemPopulated, "The login item should get populated");
 
-      let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
+      let deleteButton = loginItem.shadowRoot
+        .querySelector(".delete-button")
+        .shadowRoot.querySelector("button");
       deleteButton.click();
 
       let confirmDeleteDialog = Cu.waiveXrays(

@@ -76,7 +76,9 @@ add_task(async function test() {
       !loginItem.dataset.editing,
       "Not in edit mode before clicking 'Edit'"
     );
-    let editButton = loginItem.shadowRoot.querySelector(".edit-button");
+    let editButton = loginItem.shadowRoot
+      .querySelector(".edit-button")
+      .shadowRoot.querySelector("button");
     editButton.click();
 
     await ContentTaskUtils.waitForCondition(
@@ -153,7 +155,9 @@ add_task(async function test() {
       !loginItem.dataset.editing,
       "Not in edit mode before clicking 'Edit'"
     );
-    let editButton = loginItem.shadowRoot.querySelector(".edit-button");
+    let editButton = loginItem.shadowRoot
+      .querySelector(".edit-button")
+      .shadowRoot.querySelector("button");
     editButton.click();
 
     await ContentTaskUtils.waitForCondition(
