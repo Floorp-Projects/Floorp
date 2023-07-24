@@ -140,10 +140,6 @@ bool MathMLElement::IsAttributeMapped(const nsAtom* aAttribute) const {
   static const MappedAttributeEntry* const globalMap[] = {sGlobalAttributes};
 
   return FindAttributeDependence(aAttribute, globalMap) ||
-         (!StaticPrefs::mathml_scriptminsize_attribute_disabled() &&
-          aAttribute == nsGkAtoms::scriptminsize_) ||
-         (!StaticPrefs::mathml_scriptsizemultiplier_attribute_disabled() &&
-          aAttribute == nsGkAtoms::scriptsizemultiplier_) ||
          ((!StaticPrefs::mathml_legacy_mathvariant_attribute_disabled() ||
            mNodeInfo->Equals(nsGkAtoms::mi_)) &&
           aAttribute == nsGkAtoms::mathvariant_) ||
@@ -397,7 +393,6 @@ void MathMLElement::MapMTableAttributesInto(
 }
 
 void MathMLElement::MapMiAttributesInto(MappedDeclarationsBuilder& aBuilder) {
-  MOZ_ASSERT(StaticPrefs::mathml_scriptminsize_attribute_disabled());
   // mathvariant
   // https://w3c.github.io/mathml-core/#dfn-mathvariant
   if (!aBuilder.PropertyIsSet(eCSSProperty_text_transform)) {
@@ -416,72 +411,6 @@ void MathMLElement::MapMiAttributesInto(MappedDeclarationsBuilder& aBuilder) {
 
 void MathMLElement::MapGlobalMathMLAttributesInto(
     MappedDeclarationsBuilder& aBuilder) {
-  // scriptsizemultiplier
-  //
-  // "Specifies the multiplier to be used to adjust font size due to changes
-  // in scriptlevel.
-  //
-  // values: number
-  // default: 0.71
-  //
-  if (!StaticPrefs::mathml_scriptsizemultiplier_attribute_disabled()) {
-    const nsAttrValue* value =
-        aBuilder.GetAttr(nsGkAtoms::scriptsizemultiplier_);
-    if (value && value->Type() == nsAttrValue::eString &&
-        !aBuilder.PropertyIsSet(eCSSProperty__moz_script_size_multiplier)) {
-      aBuilder.Document().WarnOnceAbout(
-          dom::DeprecatedOperations::
-              eMathML_DeprecatedScriptsizemultiplierAttribute);
-      auto str = value->GetStringValue();
-      str.CompressWhitespace();
-      // MathML numbers can't have leading '+'
-      if (str.Length() > 0 && str.CharAt(0) != '+') {
-        nsresult errorCode;
-        float floatValue = str.ToFloat(&errorCode);
-        // Negative scriptsizemultipliers are not parsed
-        if (NS_SUCCEEDED(errorCode) && floatValue >= 0.0f) {
-          aBuilder.SetNumberValue(eCSSProperty__moz_script_size_multiplier,
-                                  floatValue);
-        } else {
-          ReportParseErrorNoTag(str, nsGkAtoms::scriptsizemultiplier_,
-                                aBuilder.Document());
-        }
-      }
-    }
-  }
-
-  // scriptminsize
-  //
-  // "Specifies the minimum font size allowed due to changes in scriptlevel.
-  // Note that this does not limit the font size due to changes to mathsize."
-  //
-  // values: length
-  // default: 8pt
-  //
-  // We don't allow negative values.
-  // Unitless and percent values give a multiple of the default value.
-  //
-  if (!StaticPrefs::mathml_scriptminsize_attribute_disabled()) {
-    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::scriptminsize_);
-    if (value && value->Type() == nsAttrValue::eString &&
-        !aBuilder.PropertyIsSet(eCSSProperty__moz_script_min_size)) {
-      aBuilder.Document().WarnOnceAbout(
-          dom::DeprecatedOperations::eMathML_DeprecatedScriptminsizeAttribute);
-      nsCSSValue scriptMinSize;
-      ParseNumericValue(value->GetStringValue(), scriptMinSize, 0,
-                        &aBuilder.Document());
-
-      if (scriptMinSize.GetUnit() == eCSSUnit_Percent) {
-        scriptMinSize.SetFloatValue(8.0f * scriptMinSize.GetPercentValue(),
-                                    eCSSUnit_Point);
-      }
-      if (scriptMinSize.GetUnit() != eCSSUnit_Null) {
-        aBuilder.SetLengthValue(eCSSProperty__moz_script_min_size,
-                                scriptMinSize);
-      }
-    }
-  }
-
   // scriptlevel
   //
   // "Changes the scriptlevel in effect for the children. When the value is

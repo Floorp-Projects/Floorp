@@ -5402,7 +5402,6 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
     value: f32,
     unit: structs::nsCSSUnit,
 ) {
-    use style::properties::longhands::_moz_script_min_size::SpecifiedValue as MozScriptMinSize;
     use style::properties::PropertyDeclaration;
     use style::values::generics::length::{LengthPercentageOrAuto, Size};
     use style::values::generics::NonNegative;
@@ -5442,7 +5441,6 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
         Rx => LengthPercentageOrAuto::LengthPercentage(NonNegative(LengthPercentage::Length(nocalc))),
         Ry => LengthPercentageOrAuto::LengthPercentage(NonNegative(LengthPercentage::Length(nocalc))),
         FontSize => FontSize::Length(LengthPercentage::Length(nocalc)),
-        MozScriptMinSize => MozScriptMinSize(nocalc),
     };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal);
@@ -5468,25 +5466,6 @@ pub extern "C" fn Servo_DeclarationBlock_SetPathValue(
     let long = get_longhand_from_id!(property);
     let prop = match_wrap_declared! { long,
         D => if path.0.is_empty() { DProperty::None } else { DProperty::Path(path) },
-    };
-    write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
-        decls.push(prop, Importance::Normal);
-    })
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_DeclarationBlock_SetNumberValue(
-    declarations: &LockedDeclarationBlock,
-    property: nsCSSPropertyID,
-    value: f32,
-) {
-    use style::properties::longhands::_moz_script_size_multiplier::SpecifiedValue as MozScriptSizeMultiplier;
-    use style::properties::PropertyDeclaration;
-
-    let long = get_longhand_from_id!(property);
-
-    let prop = match_wrap_declared! { long,
-        MozScriptSizeMultiplier => MozScriptSizeMultiplier(value),
     };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal);

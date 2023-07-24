@@ -1099,9 +1099,7 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
     fn handle_mathml_scriptlevel_if_needed(&mut self) {
         use crate::values::generics::NonNegative;
 
-        if !self.seen.contains(LonghandId::MathDepth) &&
-            !self.seen.contains(LonghandId::MozScriptMinSize) &&
-            !self.seen.contains(LonghandId::MozScriptSizeMultiplier)
+        if !self.seen.contains(LonghandId::MathDepth)
         {
             return;
         }
@@ -1178,14 +1176,8 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
                 min = builder.device.zoom_text(min);
             }
 
-            // If the scriptsizemultiplier has been set to something other than
-            // the default scale, use MathML3's implementation for backward
-            // compatibility. Otherwise, follow MathML Core's algorithm.
-            let scale = if parent_font.mScriptSizeMultiplier !=
-                SCALE_FACTOR_WHEN_INCREMENTING_MATH_DEPTH_BY_ONE
-            {
-                (parent_font.mScriptSizeMultiplier as f32).powi(delta as i32)
-            } else {
+            // Calculate scale factor following MathML Core's algorithm.
+            let scale = {
                 // Script scale factors are independent of orientation.
                 let font_metrics = self.context.query_font_metrics(
                     FontBaseSize::InheritedStyle,

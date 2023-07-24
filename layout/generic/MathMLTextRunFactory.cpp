@@ -458,8 +458,9 @@ void MathMLTextRunFactory::RebuildTextRun(
       }
       if (mSSTYScriptLevel && !foundSSTY) {
         uint8_t sstyLevel = 0;
+        // FIXME: Use the same logic as scale_factor_for_math_depth_change?
         float scriptScaling =
-            pow(styles[0]->mScriptSizeMultiplier, mSSTYScriptLevel);
+            pow(kMathMLDefaultScriptSizeMultiplier, mSSTYScriptLevel);
         static_assert(kMathMLDefaultScriptSizeMultiplier < 1,
                       "Shouldn't it make things smaller?");
         /*

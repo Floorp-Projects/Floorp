@@ -266,18 +266,6 @@ ${helpers.predefined_type(
 )}
 
 ${helpers.predefined_type(
-    "-moz-script-size-multiplier",
-    "MozScriptSizeMultiplier",
-    engines="gecko",
-    initial_value="computed::MozScriptSizeMultiplier::get_initial_value()",
-    animation_value_type="none",
-    gecko_ffi_name="mScriptSizeMultiplier",
-    enabled_in="",
-    has_effect_on_gecko_scrollbars=False,
-    spec="Internal (not web-exposed)",
-)}
-
-${helpers.predefined_type(
     "math-depth",
     "MathDepth",
     "0",
@@ -316,18 +304,6 @@ ${helpers.single_keyword(
     enabled_in="",
     has_effect_on_gecko_scrollbars=False,
     needs_conversion=True,
-)}
-
-${helpers.predefined_type(
-    "-moz-script-min-size",
-    "MozScriptMinSize",
-    "specified::MozScriptMinSize::get_initial_value()",
-    engines="gecko",
-    animation_value_type="none",
-    enabled_in="",
-    has_effect_on_gecko_scrollbars=False,
-    gecko_ffi_name="mScriptMinSize",
-    spec="Internal (not web-exposed)",
 )}
 
 ${helpers.predefined_type(

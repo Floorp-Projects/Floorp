@@ -82,8 +82,6 @@ math[display="inline" i] {
    - fontstyle -> font-style                              (deprecated)
    - fontweight -> font-weight                            (deprecated)
    - mathvariant -> -moz-math-variant
-   - scriptsizemultiplier -> -moz-script-size-multiplier
-   - scriptminsize -> -moz-script-min-size
    - scriptlevel -> math-depth
    - mathsize -> font-size
    - mathcolor -> color
