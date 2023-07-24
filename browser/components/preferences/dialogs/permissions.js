@@ -38,7 +38,7 @@ const permissionExceptionsL10n = {
   },
   "https-only-load-insecure": {
     window: "permissions-exceptions-https-only-window2",
-    description: "permissions-exceptions-https-only-desc",
+    description: "permissions-exceptions-https-only-desc2",
   },
   install: {
     window: "permissions-exceptions-addons-window2",
