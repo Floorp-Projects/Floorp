@@ -1477,6 +1477,24 @@ const TEST_DATA = [
       },
     ],
   },
+
+  // Testing nesting without closing bracket
+  {
+    input: `
+      color: red;
+      & div {
+        background: blue;
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
 ];
 
 function run_test() {
