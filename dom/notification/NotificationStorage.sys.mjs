@@ -98,49 +98,6 @@ NotificationStorage.prototype = {
     this._fetchFromDB(origin, tag, callback);
   },
 
-  getByID(origin, id, callback) {
-    if (DEBUG) {
-      debug("GETBYID: " + origin + " " + id);
-    }
-    var GetByIDProxyCallback = function (id, originalCallback) {
-      this.searchID = id;
-      this.originalCallback = originalCallback;
-      var self = this;
-      this.handle = function (
-        id,
-        title,
-        dir,
-        lang,
-        body,
-        tag,
-        icon,
-        data,
-        behavior,
-        serviceWorkerRegistrationScope
-      ) {
-        if (id == this.searchID) {
-          self.originalCallback.handle(
-            id,
-            title,
-            dir,
-            lang,
-            body,
-            tag,
-            icon,
-            data,
-            behavior,
-            serviceWorkerRegistrationScope
-          );
-        }
-      };
-      this.done = function () {
-        self.originalCallback.done();
-      };
-    };
-
-    return this.get(origin, "", new GetByIDProxyCallback(id, callback));
-  },
-
   delete(origin, id) {
     if (DEBUG) {
       debug("DELETE: " + id);

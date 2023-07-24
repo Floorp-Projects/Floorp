@@ -91,20 +91,6 @@ interface nsINotificationStorage : nsISupports
            in nsINotificationStorageCallback aCallback);
 
   /**
-   * Retrieve a notification by ID.
-   *
-   * @param origin: the origin/app for which to fetch notifications.
-   * @param id: the id of the notification.
-   * @param callback: nsINotificationStorageCallback whose Handle method will
-   * be called *at most once* if the notification with that ID is found. Not
-   * called if that ID is not found. Done() will be called right after
-   * Handle().
-   */
-  void getByID(in AString origin,
-               in AString id,
-               in nsINotificationStorageCallback aCallback);
-
-  /**
    * Remove a notification from storage.
    *
    * @param origin: the origin/app to delete the notification from
