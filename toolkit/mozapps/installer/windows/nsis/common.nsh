@@ -3953,61 +3953,59 @@
       ; We call ApplicationID::UninstallPinnedItem once per shortcut here
       ; (and explicitly not in DeleteShortcutsFromLog). Calling it again later
       ; would remove the association of side by side installations.
-      ${If} ${AtLeastWin7}
-        ; Since shortcuts that are pinned can later be removed without removing
-        ; the pinned shortcut unpin the pinned shortcuts for the application's
-        ; main exe using the pinned shortcuts themselves.
-        StrCpy $R7 "$QUICKLAUNCH\User Pinned"
+      ; Since shortcuts that are pinned can later be removed without removing
+      ; the pinned shortcut unpin the pinned shortcuts for the application's
+      ; main exe using the pinned shortcuts themselves.
+      StrCpy $R7 "$QUICKLAUNCH\User Pinned"
 
-        ${If} ${FileExists} "$R7\TaskBar"
-          ; Delete TaskBar pinned shortcuts for the application's main exe
-          FindFirst $R6 $R8 "$R7\TaskBar\*.lnk"
-          ${Do}
-            ${If} ${FileExists} "$R7\TaskBar\$R8"
-              ShellLink::GetShortCutTarget "$R7\TaskBar\$R8"
+      ${If} ${FileExists} "$R7\TaskBar"
+        ; Delete TaskBar pinned shortcuts for the application's main exe
+        FindFirst $R6 $R8 "$R7\TaskBar\*.lnk"
+        ${Do}
+          ${If} ${FileExists} "$R7\TaskBar\$R8"
+            ShellLink::GetShortCutTarget "$R7\TaskBar\$R8"
+            Pop $R5
+            ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
+            ShellLink::GetShortCutWorkingDirectory "$SMPROGRAMS\$R8"
+            Pop $R4
+            ${If} "$R5" == "$INSTDIR\${FileMainEXE}"
+            ${OrIf} "$R4" == "$INSTDIR"
+              ApplicationID::UninstallPinnedItem "$R7\TaskBar\$R8"
               Pop $R5
-              ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
-              ShellLink::GetShortCutWorkingDirectory "$SMPROGRAMS\$R8"
-              Pop $R4
-              ${If} "$R5" == "$INSTDIR\${FileMainEXE}"
-              ${OrIf} "$R4" == "$INSTDIR"
-                ApplicationID::UninstallPinnedItem "$R7\TaskBar\$R8"
+            ${EndIf}
+          ${EndIf}
+          ClearErrors
+          FindNext $R6 $R8
+          ${If} ${Errors}
+            ${ExitDo}
+          ${EndIf}
+        ${Loop}
+        FindClose $R6
+      ${EndIf}
+
+      ${If} ${FileExists} "$R7\StartMenu"
+        ; Delete Start Menu pinned shortcuts for the application's main exe
+        FindFirst $R6 $R8 "$R7\StartMenu\*.lnk"
+        ${Do}
+          ${If} ${FileExists} "$R7\StartMenu\$R8"
+            ShellLink::GetShortCutTarget "$R7\StartMenu\$R8"
+            Pop $R5
+            ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
+            ShellLink::GetShortCutWorkingDirectory "$SMPROGRAMS\$R8"
+            Pop $R4
+            ${If} "$R5" == "$INSTDIR\${FileMainEXE}"
+            ${OrIf} "$R4" == "$INSTDIR"
+                ApplicationID::UninstallPinnedItem "$R7\StartMenu\$R8"
                 Pop $R5
-              ${EndIf}
             ${EndIf}
-            ClearErrors
-            FindNext $R6 $R8
-            ${If} ${Errors}
-              ${ExitDo}
-            ${EndIf}
-          ${Loop}
-          FindClose $R6
-        ${EndIf}
-
-        ${If} ${FileExists} "$R7\StartMenu"
-          ; Delete Start Menu pinned shortcuts for the application's main exe
-          FindFirst $R6 $R8 "$R7\StartMenu\*.lnk"
-          ${Do}
-            ${If} ${FileExists} "$R7\StartMenu\$R8"
-              ShellLink::GetShortCutTarget "$R7\StartMenu\$R8"
-              Pop $R5
-              ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
-              ShellLink::GetShortCutWorkingDirectory "$SMPROGRAMS\$R8"
-              Pop $R4
-              ${If} "$R5" == "$INSTDIR\${FileMainEXE}"
-              ${OrIf} "$R4" == "$INSTDIR"
-                  ApplicationID::UninstallPinnedItem "$R7\StartMenu\$R8"
-                  Pop $R5
-              ${EndIf}
-            ${EndIf}
-            ClearErrors
-            FindNext $R6 $R8
-            ${If} ${Errors}
-              ${ExitDo}
-            ${EndIf}
-          ${Loop}
-          FindClose $R6
-        ${EndIf}
+          ${EndIf}
+          ClearErrors
+          FindNext $R6 $R8
+          ${If} ${Errors}
+            ${ExitDo}
+          ${EndIf}
+        ${Loop}
+        FindClose $R6
       ${EndIf}
 
       ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR\uninstall\${SHORTCUTS_LOG}" $R9
@@ -5440,13 +5438,6 @@
               ${EndIf}
             ${EndIf}
 
-            ReadINIStr $R8 $R7 "Install" "QuickLaunchShortcut"
-            ${If} $R8 == "false"
-              StrCpy $AddQuickLaunchSC "0"
-            ${Else}
-              StrCpy $AddQuickLaunchSC "1"
-            ${EndIf}
-
             ReadINIStr $R8 $R7 "Install" "DesktopShortcut"
             ${If} $R8 == "false"
               StrCpy $AddDesktopSC "0"
@@ -5538,7 +5529,6 @@
           ${EndIf}
         ${EndIf}
 
-        ${InstallGetOption} $R8 "QuickLaunchShortcut" $AddQuickLaunchSC
         ${InstallGetOption} $R8 "DesktopShortcut" $AddDesktopSC
         ${InstallGetOption} $R8 "StartMenuShortcuts" $AddStartMenuSC
         ; We still accept the plural version for backwards compatibility,
@@ -6567,13 +6557,7 @@
       ${LogMsg} "App Version: $R8"
       ${LogMsg} "GRE Version: $R9"
 
-      ${If} ${IsWin7}
-        ${LogMsg} "OS Name    : Windows 7"
-      ${ElseIf} ${IsWin8}
-        ${LogMsg} "OS Name    : Windows 8"
-      ${ElseIf} ${IsWin8.1}
-        ${LogMsg} "OS Name    : Windows 8.1"
-      ${ElseIf} ${IsWin10}
+      ${If} ${IsWin10}
         ${LogMsg} "OS Name    : Windows 10"
       ${ElseIf} ${AtLeastWin10}
         ${LogMsg} "OS Name    : Above Windows 10"
@@ -7180,8 +7164,7 @@
 
       StrCpy $R5 "false"
 
-      ${If} ${AtLeastWin7}
-      ${AndIf} ${FileExists} "$QUICKLAUNCH\User Pinned\TaskBar"
+      ${If} ${FileExists} "$QUICKLAUNCH\User Pinned\TaskBar"
         FindFirst $R8 $R7 "$QUICKLAUNCH\User Pinned\TaskBar\*.lnk"
         ${Do}
           ${If} ${FileExists} "$QUICKLAUNCH\User Pinned\TaskBar\$R7"
@@ -7260,8 +7243,7 @@
 
       StrCpy $R5 "false"
 
-      ${If} ${AtLeastWin7}
-      ${AndIf} ${FileExists} "$QUICKLAUNCH\User Pinned\StartMenu"
+      ${If} ${FileExists} "$QUICKLAUNCH\User Pinned\StartMenu"
         FindFirst $R8 $R7 "$QUICKLAUNCH\User Pinned\StartMenu\*.lnk"
         ${Do}
           ${If} ${FileExists} "$QUICKLAUNCH\User Pinned\StartMenu\$R7"
@@ -7332,8 +7314,7 @@
 
       StrCpy $R9 0
 
-      ${If} ${AtLeastWin7}
-      ${AndIf} ${FileExists} "$QUICKLAUNCH\User Pinned\TaskBar"
+      ${If} ${FileExists} "$QUICKLAUNCH\User Pinned\TaskBar"
         FindFirst $R8 $R7 "$QUICKLAUNCH\User Pinned\TaskBar\*.lnk"
         ${Do}
           ${If} ${FileExists} "$QUICKLAUNCH\User Pinned\TaskBar\$R7"
@@ -7393,8 +7374,7 @@
 
       StrCpy $R9 0
 
-      ${If} ${AtLeastWin7}
-      ${AndIf} ${FileExists} "$QUICKLAUNCH\User Pinned\StartMenu"
+      ${If} ${FileExists} "$QUICKLAUNCH\User Pinned\StartMenu"
         FindFirst $R8 $R7 "$QUICKLAUNCH\User Pinned\StartMenu\*.lnk"
         ${Do}
           ${If} ${FileExists} "$QUICKLAUNCH\User Pinned\StartMenu\$R7"
@@ -7474,131 +7454,129 @@
 
       StrCpy $R3 "false"
 
-      ${If} ${AtLeastWin7}
-        ; installed shortcuts
-        ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR\uninstall\${SHORTCUTS_LOG}" $R6
-        ${If} ${FileExists} "$R6"
-          ; Update the Start Menu shortcuts' App ID for this application
-          StrCpy $R2 -1
-          ${Do}
-            IntOp $R2 $R2 + 1 ; Increment the counter
-            ClearErrors
-            ReadINIStr $R5 "$R6" "STARTMENU" "Shortcut$R2"
-            ${If} ${Errors}
-              ${ExitDo}
-            ${EndIf}
-
-            ${If} ${FileExists} "$SMPROGRAMS\$R5"
-              ShellLink::GetShortCutTarget "$SMPROGRAMS\$$R5"
-              Pop $R4
-              ${GetLongPath} "$R4" $R4
-              ${If} "$R4" == "$R9" ; link path == install path
-                ApplicationID::Set "$SMPROGRAMS\$R5" "$R8" "true"
-                Pop $R4
-              ${EndIf}
-            ${EndIf}
-          ${Loop}
-
-          ; Update the Quick Launch shortcuts' App ID for this application
-          StrCpy $R2 -1
-          ${Do}
-            IntOp $R2 $R2 + 1 ; Increment the counter
-            ClearErrors
-            ReadINIStr $R5 "$R6" "QUICKLAUNCH" "Shortcut$R2"
-            ${If} ${Errors}
-              ${ExitDo}
-            ${EndIf}
-
-            ${If} ${FileExists} "$QUICKLAUNCH\$R5"
-              ShellLink::GetShortCutTarget "$QUICKLAUNCH\$R5"
-              Pop $R4
-              ${GetLongPath} "$R4" $R4
-              ${If} "$R4" == "$R9" ; link path == install path
-                ApplicationID::Set "$QUICKLAUNCH\$R5" "$R8" "true"
-                Pop $R4
-              ${EndIf}
-            ${EndIf}
-          ${Loop}
-
-          ; Update the Start Menu Programs shortcuts' App ID for this application
+      ; installed shortcuts
+      ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR\uninstall\${SHORTCUTS_LOG}" $R6
+      ${If} ${FileExists} "$R6"
+        ; Update the Start Menu shortcuts' App ID for this application
+        StrCpy $R2 -1
+        ${Do}
+          IntOp $R2 $R2 + 1 ; Increment the counter
           ClearErrors
-          ReadINIStr $R7 "$R6" "SMPROGRAMS" "RelativePathToDir"
-          ${Unless} ${Errors}
-            ${${_MOZFUNC_UN}GetLongPath} "$SMPROGRAMS\$R7" $R7
-            ${Unless} "$R7" == ""
-              StrCpy $R2 -1
-              ${Do}
-                IntOp $R2 $R2 + 1 ; Increment the counter
-                ClearErrors
-                ReadINIStr $R5 "$R6" "SMPROGRAMS" "Shortcut$R2"
-                ${If} ${Errors}
-                  ${ExitDo}
-                ${EndIf}
+          ReadINIStr $R5 "$R6" "STARTMENU" "Shortcut$R2"
+          ${If} ${Errors}
+            ${ExitDo}
+          ${EndIf}
 
-                ${If} ${FileExists} "$R7\$R5"
-                  ShellLink::GetShortCutTarget "$R7\$R5"
+          ${If} ${FileExists} "$SMPROGRAMS\$R5"
+            ShellLink::GetShortCutTarget "$SMPROGRAMS\$$R5"
+            Pop $R4
+            ${GetLongPath} "$R4" $R4
+            ${If} "$R4" == "$R9" ; link path == install path
+              ApplicationID::Set "$SMPROGRAMS\$R5" "$R8" "true"
+              Pop $R4
+            ${EndIf}
+          ${EndIf}
+        ${Loop}
+
+        ; Update the Quick Launch shortcuts' App ID for this application
+        StrCpy $R2 -1
+        ${Do}
+          IntOp $R2 $R2 + 1 ; Increment the counter
+          ClearErrors
+          ReadINIStr $R5 "$R6" "QUICKLAUNCH" "Shortcut$R2"
+          ${If} ${Errors}
+            ${ExitDo}
+          ${EndIf}
+
+          ${If} ${FileExists} "$QUICKLAUNCH\$R5"
+            ShellLink::GetShortCutTarget "$QUICKLAUNCH\$R5"
+            Pop $R4
+            ${GetLongPath} "$R4" $R4
+            ${If} "$R4" == "$R9" ; link path == install path
+              ApplicationID::Set "$QUICKLAUNCH\$R5" "$R8" "true"
+              Pop $R4
+            ${EndIf}
+          ${EndIf}
+        ${Loop}
+
+        ; Update the Start Menu Programs shortcuts' App ID for this application
+        ClearErrors
+        ReadINIStr $R7 "$R6" "SMPROGRAMS" "RelativePathToDir"
+        ${Unless} ${Errors}
+          ${${_MOZFUNC_UN}GetLongPath} "$SMPROGRAMS\$R7" $R7
+          ${Unless} "$R7" == ""
+            StrCpy $R2 -1
+            ${Do}
+              IntOp $R2 $R2 + 1 ; Increment the counter
+              ClearErrors
+              ReadINIStr $R5 "$R6" "SMPROGRAMS" "Shortcut$R2"
+              ${If} ${Errors}
+                ${ExitDo}
+              ${EndIf}
+
+              ${If} ${FileExists} "$R7\$R5"
+                ShellLink::GetShortCutTarget "$R7\$R5"
+                Pop $R4
+                ${GetLongPath} "$R4" $R4
+                ${If} "$R4" == "$R9" ; link path == install path
+                  ApplicationID::Set "$R7\$R5" "$R8" "true"
                   Pop $R4
-                  ${GetLongPath} "$R4" $R4
-                  ${If} "$R4" == "$R9" ; link path == install path
-                    ApplicationID::Set "$R7\$R5" "$R8" "true"
-                    Pop $R4
-                  ${EndIf}
                 ${EndIf}
-              ${Loop}
-            ${EndUnless}
+              ${EndIf}
+            ${Loop}
           ${EndUnless}
-        ${EndIf}
-
-        StrCpy $R7 "$QUICKLAUNCH\User Pinned"
-        StrCpy $R3 "false"
-
-        ; $R9 = main application executable path
-        ; $R8 = appid
-        ; $R7 = user pinned path
-        ; $R6 = find handle
-        ; $R5 = found filename
-        ; $R4 = GetShortCutTarget result
-
-        ; TaskBar links
-        FindFirst $R6 $R5 "$R7\TaskBar\*.lnk"
-        ${Do}
-          ${If} ${FileExists} "$R7\TaskBar\$R5"
-            ShellLink::GetShortCutTarget "$R7\TaskBar\$R5"
-            Pop $R4
-            ${If} "$R4" == "$R9" ; link path == install path
-              ApplicationID::Set "$R7\TaskBar\$R5" "$R8" "true"
-              Pop $R4 ; pop Set result off the stack
-              StrCpy $R3 "true"
-            ${EndIf}
-          ${EndIf}
-          ClearErrors
-          FindNext $R6 $R5
-          ${If} ${Errors}
-            ${ExitDo}
-          ${EndIf}
-        ${Loop}
-        FindClose $R6
-
-        ; Start menu links
-        FindFirst $R6 $R5 "$R7\StartMenu\*.lnk"
-        ${Do}
-          ${If} ${FileExists} "$R7\StartMenu\$R5"
-            ShellLink::GetShortCutTarget "$R7\StartMenu\$R5"
-            Pop $R4
-            ${If} "$R4" == "$R9" ; link path == install path
-              ApplicationID::Set "$R7\StartMenu\$R5" "$R8" "true"
-              Pop $R4 ; pop Set result off the stack
-              StrCpy $R3 "true"
-            ${EndIf}
-          ${EndIf}
-          ClearErrors
-          FindNext $R6 $R5
-          ${If} ${Errors}
-            ${ExitDo}
-          ${EndIf}
-        ${Loop}
-        FindClose $R6
+        ${EndUnless}
       ${EndIf}
+
+      StrCpy $R7 "$QUICKLAUNCH\User Pinned"
+      StrCpy $R3 "false"
+
+      ; $R9 = main application executable path
+      ; $R8 = appid
+      ; $R7 = user pinned path
+      ; $R6 = find handle
+      ; $R5 = found filename
+      ; $R4 = GetShortCutTarget result
+
+      ; TaskBar links
+      FindFirst $R6 $R5 "$R7\TaskBar\*.lnk"
+      ${Do}
+        ${If} ${FileExists} "$R7\TaskBar\$R5"
+          ShellLink::GetShortCutTarget "$R7\TaskBar\$R5"
+          Pop $R4
+          ${If} "$R4" == "$R9" ; link path == install path
+            ApplicationID::Set "$R7\TaskBar\$R5" "$R8" "true"
+            Pop $R4 ; pop Set result off the stack
+            StrCpy $R3 "true"
+          ${EndIf}
+        ${EndIf}
+        ClearErrors
+        FindNext $R6 $R5
+        ${If} ${Errors}
+          ${ExitDo}
+        ${EndIf}
+      ${Loop}
+      FindClose $R6
+
+      ; Start menu links
+      FindFirst $R6 $R5 "$R7\StartMenu\*.lnk"
+      ${Do}
+        ${If} ${FileExists} "$R7\StartMenu\$R5"
+          ShellLink::GetShortCutTarget "$R7\StartMenu\$R5"
+          Pop $R4
+          ${If} "$R4" == "$R9" ; link path == install path
+            ApplicationID::Set "$R7\StartMenu\$R5" "$R8" "true"
+            Pop $R4 ; pop Set result off the stack
+            StrCpy $R3 "true"
+          ${EndIf}
+        ${EndIf}
+        ClearErrors
+        FindNext $R6 $R5
+        ${If} ${Errors}
+          ${ExitDo}
+        ${EndIf}
+      ${Loop}
+      FindClose $R6
 
       ClearErrors
 
@@ -7712,23 +7690,21 @@
       Exch $R8 ; stack: $R8, $R9   | $R8 = regpath
       Push $R7
 
-      ${If} ${AtLeastWin7}
-        ${${_MOZFUNC_UN}GetLongPath} "$R9" $R9
-        ; Always create a new AppUserModelID and overwrite the existing one
-        ; for the current installation path.
-        CityHash::GetCityHash64 "$R9"
-        Pop $AppUserModelID
-        ${If} $AppUserModelID == "error"
-          GoTo end
-        ${EndIf}
+      ${${_MOZFUNC_UN}GetLongPath} "$R9" $R9
+      ; Always create a new AppUserModelID and overwrite the existing one
+      ; for the current installation path.
+      CityHash::GetCityHash64 "$R9"
+      Pop $AppUserModelID
+      ${If} $AppUserModelID == "error"
+        GoTo end
+      ${EndIf}
+      ClearErrors
+      WriteRegStr HKLM "$R8" "$R9" "$AppUserModelID"
+      ${If} ${Errors}
         ClearErrors
-        WriteRegStr HKLM "$R8" "$R9" "$AppUserModelID"
+        WriteRegStr HKCU "$R8" "$R9" "$AppUserModelID"
         ${If} ${Errors}
-          ClearErrors
-          WriteRegStr HKCU "$R8" "$R9" "$AppUserModelID"
-          ${If} ${Errors}
-            StrCpy $AppUserModelID "error"
-          ${EndIf}
+          StrCpy $AppUserModelID "error"
         ${EndIf}
       ${EndIf}
 
@@ -7918,15 +7894,12 @@
       StrCpy $ITaskbarList3 0
       ; Don't create when running silently.
       ${Unless} ${Silent}
-        ; This is only supported on Win 7 and above.
-        ${If} ${AtLeastWin7}
-          System::Call "ole32::CoCreateInstance(g '${CLSID_ITaskbarList}', \
-                                                i 0, \
-                                                i ${CLSCTX_INPROC_SERVER}, \
-                                                g '${IID_ITaskbarList3}', \
-                                                *i .s)"
-          Pop $ITaskbarList3
-        ${EndIf}
+        System::Call "ole32::CoCreateInstance(g '${CLSID_ITaskbarList}', \
+                                              i 0, \
+                                              i ${CLSCTX_INPROC_SERVER}, \
+                                              g '${IID_ITaskbarList3}', \
+                                              *i .s)"
+        Pop $ITaskbarList3
       ${EndUnless}
     FunctionEnd
 
