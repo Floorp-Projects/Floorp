@@ -1039,7 +1039,10 @@ items from that key's value."
         )
         if not os.path.exists(stats_file):
             msg = "%s does not exist; not loading sccache stats" % stats_file
-            if os.environ.get("USE_SCCACHE") == "1":
+            if (
+                os.environ.get("USE_SCCACHE") == "1"
+                and not os.environ.get("SCCACHE_DISABLE") == "1"
+            ):
                 # We know we use sccache but we didn't find it.
                 # Fails to make sure the dev knows it
                 self.fatal(msg)
