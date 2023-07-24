@@ -218,9 +218,7 @@ add_task(async function test_create_login() {
       let loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
       );
-      let editButton = loginItem.shadowRoot
-        .querySelector(".edit-button")
-        .shadowRoot.querySelector("button");
+      let editButton = loginItem.shadowRoot.querySelector(".edit-button");
       info("clicking on edit button");
       editButton.click();
     });
@@ -326,8 +324,7 @@ add_task(async function test_cancel_create_login() {
 
     let createButton = content.document
       .querySelector("login-list")
-      .shadowRoot.querySelector(".create-login-button")
-      .shadowRoot.querySelector("button");
+      .shadowRoot.querySelector(".create-login-button");
     createButton.click();
 
     Assert.ok(

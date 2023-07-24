@@ -88,25 +88,20 @@ export default class LoginItem extends HTMLElement {
       this.handleCancelClick(e)
     );
 
-    // TODO: Using the addEventListener to listen for clicks and pass the event handler due to a CSP error.
-    // This will be fixed as login-item itself is converted into a lit component. We will then be able to use the onclick
-    // prop of login-command-button as seen in the example below (functionality works and passes tests).
-    // this._editButton.onClick = e => this.handleEditButtonClick(e);
-
-    this._editButton.addEventListener("click", e =>
-      this.handleEditButtonClick(e)
-    );
-
     this._copyPasswordButton.addEventListener("click", e =>
-      this.handleCopyPasswordClick(e)
+      this.handleCopyButtonClick(e)
     );
 
     this._copyUsernameButton.addEventListener("click", e =>
-      this.handleCopyUsernameClick(e)
+      this.handleCopyButtonClick(e)
     );
 
     this._deleteButton.addEventListener("click", e =>
       this.handleDeleteButtonClick(e)
+    );
+
+    this._editButton.addEventListener("click", e =>
+      this.handleEditButtonClick(e)
     );
 
     this._errorMessageLink.addEventListener("click", e =>
@@ -452,23 +447,23 @@ export default class LoginItem extends HTMLElement {
     }
   }
 
-  /*
-  Removed the functionality to disable copy button on click since it lead to a focus shift to "Sign in to Sync" every time
-  it was activated by keyboard navigation. This did not happen if the buttons were not disabled. This was done to avoid any 
-  accessibility concerns. These handleEvents for login-command-button will be extracted out in the follow up bug -> Bug 1844869.
-  */
-
-  async handleCopyPasswordClick({ currentTarget }) {
-    let primaryPasswordAuth = await promptForPrimaryPassword(
-      "about-logins-copy-password-os-auth-dialog-message"
-    );
-    if (!primaryPasswordAuth) {
-      return;
+  async handleCopyButtonClick({ currentTarget }) {
+    let otherCopyButton =
+      currentTarget == this._copyPasswordButton
+        ? this._copyUsernameButton
+        : this._copyPasswordButton;
+    if (currentTarget.dataset.copyLoginProperty == "password") {
+      let primaryPasswordAuth = await promptForPrimaryPassword(
+        "about-logins-copy-password-os-auth-dialog-message"
+      );
+      if (!primaryPasswordAuth) {
+        return;
+      }
     }
+
+    currentTarget.disabled = true;
     currentTarget.dataset.copied = true;
-    currentTarget.l10nId = "login-item-copied-password-button-text";
-    currentTarget.class = "copied-button-text";
-    let propertyToCopy = this._login.password;
+    let propertyToCopy = this._login[currentTarget.dataset.copyLoginProperty];
     document.dispatchEvent(
       new CustomEvent("AboutLoginsCopyLoginDetail", {
         bubbles: true,
@@ -478,54 +473,23 @@ export default class LoginItem extends HTMLElement {
     // If there is no username, this must be triggered by the password button,
     // don't enable otherCopyButton (username copy button) in this case.
     if (this._login.username) {
-      this._copyUsernameButton.l10nId = "login-item-copy-username-button-text";
-      this._copyUsernameButton.class = "copy-button copy-username-button";
-      delete this._copyUsernameButton.dataset.copied;
+      otherCopyButton.disabled = false;
+      delete otherCopyButton.dataset.copied;
     }
     clearTimeout(this._copyUsernameTimeoutId);
     clearTimeout(this._copyPasswordTimeoutId);
     let timeoutId = setTimeout(() => {
       currentTarget.disabled = false;
-      currentTarget.l10nId = "login-item-copy-password-button-text";
-      currentTarget.class = "copy-button copy-password-button";
       delete currentTarget.dataset.copied;
     }, LoginItem.COPY_BUTTON_RESET_TIMEOUT);
-    this._copyPasswordTimeoutId = timeoutId;
-    this._recordTelemetryEvent({
-      object: "password",
-      method: "copy",
-    });
-  }
+    if (currentTarget.dataset.copyLoginProperty == "password") {
+      this._copyPasswordTimeoutId = timeoutId;
+    } else {
+      this._copyUsernameTimeoutId = timeoutId;
+    }
 
-  async handleCopyUsernameClick({ currentTarget }) {
-    currentTarget.dataset.copied = true;
-    currentTarget.l10nId = "login-item-copied-username-button-text";
-    currentTarget.class = "copied-button-text";
-    let propertyToCopy = this._login.username;
-    document.dispatchEvent(
-      new CustomEvent("AboutLoginsCopyLoginDetail", {
-        bubbles: true,
-        detail: propertyToCopy,
-      })
-    );
-    // If there is no username, this must be triggered by the password button,
-    // don't enable otherCopyButton (username copy button) in this case.
-    if (this._login.username) {
-      this._copyPasswordButton.l10nId = "login-item-copy-password-button-text";
-      this._copyPasswordButton.class = "copy-button copy-password-button";
-      delete this._copyPasswordButton.dataset.copied;
-    }
-    clearTimeout(this._copyUsernameTimeoutId);
-    clearTimeout(this._copyPasswordTimeoutId);
-    let timeoutId = setTimeout(() => {
-      currentTarget.disabled = false;
-      currentTarget.l10nId = "login-item-copy-username-button-text";
-      currentTarget.class = "copy-button copy-username-button";
-      delete currentTarget.dataset.copied;
-    }, LoginItem.COPY_BUTTON_RESET_TIMEOUT);
-    this._copyUsernameTimeoutId = timeoutId;
     this._recordTelemetryEvent({
-      object: "username",
+      object: currentTarget.dataset.telemetryObject,
       method: "copy",
     });
   }
@@ -608,8 +572,6 @@ export default class LoginItem extends HTMLElement {
         object: "existing_login",
         method: "save",
       });
-      this._toggleEditing(false);
-      this.render();
     } else {
       document.dispatchEvent(
         new CustomEvent("AboutLoginsCreateLogin", {
@@ -783,10 +745,6 @@ export default class LoginItem extends HTMLElement {
       this._copyPasswordButton,
     ]) {
       currentTarget.disabled = false;
-      this._copyPasswordButton.l10nId = "login-item-copy-password-button-text";
-      this._copyPasswordButton.class = "copy-button copy-password-button";
-      this._copyUsernameButton.l10nId = "login-item-copy-username-button-text";
-      this._copyUsernameButton.class = "copy-button copy-username-button";
       delete currentTarget.dataset.copied;
     }
 
