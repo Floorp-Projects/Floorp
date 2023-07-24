@@ -49,11 +49,6 @@
   padding-block: 8px;
   padding-inline-start: 4px;
   border-radius: 4px;
-  min-width: 0;
-}
-
-.downloadContainer {
-  min-width: 0;
 }
 
 #downloadsListBox > richlistitem[state="1"][exists].hoveringMainArea:hover,
