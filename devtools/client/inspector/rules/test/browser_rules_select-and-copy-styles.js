@@ -18,6 +18,18 @@ const TEST_URI = `
     .nomatches {
       color: #ff0000;
     }
+
+    html {
+      body {
+        container-type: inline-size;
+        @container (1px < width) {
+          #nested {
+            background: tomato;
+            color: gold;
+          }
+        }
+      }
+    }
   </style>
   <div id="first" style="margin: 10em;
     font-size: 14pt; font-family: helvetica, sans-serif; color: #AAA">
@@ -33,6 +45,7 @@ const TEST_URI = `
     <p id="closing">more text</p>
     <p>even more text</p>
   </div>
+  <section id=nested>Nested</section>
 `;
 
 add_task(async function () {
@@ -42,6 +55,9 @@ add_task(async function () {
   await checkCopySelection(view);
   await checkSelectAll(view);
   await checkCopyEditorValue(view);
+
+  await selectNode("#nested", inspector);
+  await checkCopyNestedRule(view);
 });
 
 async function checkCopySelection(view) {
@@ -102,8 +118,9 @@ async function checkCopySelection(view) {
   const copyEvent = new win.Event("copy", { bubbles: true });
   await waitForClipboardPromise(
     () => declarationCheckbox.dispatchEvent(copyEvent),
-    () => checkClipboardData("^margin: 10em;$")
+    () => checkClipboardData("^  margin: 10em;$")
   );
+  win.getSelection().removeRange(range);
 }
 
 async function checkSelectAll(view) {
@@ -179,6 +196,34 @@ async function checkCopyEditorValue(view) {
   } catch (e) {
     failedClipboard(expectedPattern);
   }
+}
+
+async function checkCopyNestedRule(view) {
+  info("Select nested rule");
+  const doc = view.styleDocument;
+  const range = doc.createRange();
+  const nestedRule = doc.querySelector(".ruleview-rule:nth-of-type(2)");
+  range.selectNode(nestedRule);
+  const win = view.styleWindow;
+  win.getSelection().addRange(range);
+
+  const copyEvent = new win.Event("copy", { bubbles: true });
+  const expectedNested = `html {
+  body {
+    @container (1px < width) {
+      #nested {
+        background: tomato;
+        color: gold;
+      }
+    }
+  }
+}
+`;
+
+  await waitForClipboardPromise(
+    () => nestedRule.dispatchEvent(copyEvent),
+    expectedNested
+  );
 }
 
 function checkClipboardData(expectedPattern) {

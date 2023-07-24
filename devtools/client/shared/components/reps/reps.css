@@ -302,23 +302,23 @@
 /******************************************************************************/
 /* Open DOMNode in inspector or Accessible in accessibility inspector button */
 
-button.open-accessibility-inspector {
+:is(button, [role="button"]).open-accessibility-inspector {
   background: url("chrome://devtools/content/shared/components/reps/images/open-a11y.svg")
     no-repeat;
 }
 
-button.open-inspector {
+:is(button, [role="button"]).open-inspector {
   background: url("chrome://devtools/content/shared/components/reps/images/open-inspector.svg")
     no-repeat;
 }
 
-button.highlight-node {
+:is(button, [role="button"]).highlight-node {
   background: url("chrome://devtools/skin/images/highlight-selector.svg")
     no-repeat;
 }
 
 
-button:is(.open-accessibility-inspector, .open-inspector, .highlight-node) {
+:is(button, [role="button"]):is(.open-accessibility-inspector, .open-inspector, .highlight-node) {
   display: inline-block;
   vertical-align: top;
   height: 15px;
