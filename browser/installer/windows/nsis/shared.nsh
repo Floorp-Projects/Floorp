@@ -42,33 +42,17 @@
     ${EndIf}
   ${EndIf}
 
-  ; Adds a pinned Task Bar shortcut (see MigrateTaskBarShortcut for details).
-  ; When we enabled this feature for Windows 10 & 11 we decided _not_ to pin
-  ; during an update (even once) because we already offered to do when the
-  ; the user originally installed, and we don't want to go against their
-  ; explicit wishes.
-  ; For Windows 7 and 8, we've been doing this ~forever, and those users may
-  ; not have experienced the onboarding offer to pin to taskbar, so we're
-  ; leaving it enabled there.
-  ${If} ${AtMostWin2012R2}
-    ${MigrateTaskBarShortcut} "$AddTaskbarSC"
-  ${EndIf}
-
   ; Update the name/icon/AppModelID of our shortcuts as needed, then update the
   ; lastwritetime of the Start Menu shortcut to clear the tile icon cache.
   ; Do this for both shell contexts in case the user has shortcuts in multiple
   ; locations, then restore the previous context at the end.
   SetShellVarContext all
   ${UpdateShortcutsBranding}
-  ${If} ${AtLeastWin8}
-    ${TouchStartMenuShortcut}
-  ${EndIf}
+  ${TouchStartMenuShortcut}
   Call FixShortcutAppModelIDs
   SetShellVarContext current
   ${UpdateShortcutsBranding}
-  ${If} ${AtLeastWin8}
-    ${TouchStartMenuShortcut}
-  ${EndIf}
+  ${TouchStartMenuShortcut}
   Call FixShortcutAppModelIDs
   ${If} $TmpVal == "HKLM"
     SetShellVarContext all
@@ -119,15 +103,13 @@
   ; Record the Windows Error Reporting module
   WriteRegDWORD HKLM "SOFTWARE\Microsoft\Windows\Windows Error Reporting\RuntimeExceptionHelperModules" "$INSTDIR\mozwer.dll" 0
 
-  ${If} ${AtLeastWin10}
-    ; Apply LPAC permissions to install directory.
-    Push "Marker"
-    AccessControl::GrantOnFile \
-      "$INSTDIR" "(${LpacFirefoxInstallFilesSid})" "GenericRead + GenericExecute"
-    Pop $TmpVal ; get "Marker" or error msg
-    ${If} $TmpVal != "Marker"
-      Pop $TmpVal ; get "Marker"
-    ${EndIf}
+  ; Apply LPAC permissions to install directory.
+  Push "Marker"
+  AccessControl::GrantOnFile \
+    "$INSTDIR" "(${LpacFirefoxInstallFilesSid})" "GenericRead + GenericExecute"
+  Pop $TmpVal ; get "Marker" or error msg
+  ${If} $TmpVal != "Marker"
+    Pop $TmpVal ; get "Marker"
   ${EndIf}
 
 !ifdef MOZ_MAINTENANCE_SERVICE
@@ -179,9 +161,7 @@
   ${ResetLauncherProcessDefaults}
 !endif
 
-  ${If} ${AtLeastWin10}
-    ${WriteToastNotificationRegistration} $TmpVal
-  ${EndIf}
+  ${WriteToastNotificationRegistration} $TmpVal
 
 ; Make sure the scheduled task registration for the default browser agent gets
 ; updated, but only if we're not the instance of PostUpdate that was started
@@ -257,9 +237,7 @@ ${RemoveDefaultBrowserAgentShortcut}
     StrCpy $R1 "Software\Clients\StartMenuInternet\$0\InstallInfo"
   ${EndIf}
   WriteRegDWORD HKLM "$R1" "IconsVisible" 0
-  ${If} ${AtLeastWin8}
-    WriteRegDWORD HKCU "$R1" "IconsVisible" 0
-  ${EndIf}
+  WriteRegDWORD HKCU "$R1" "IconsVisible" 0
 
   SetShellVarContext all  ; Set $DESKTOP to All Users
   ${Unless} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
@@ -324,17 +302,14 @@ ${RemoveDefaultBrowserAgentShortcut}
     StrCpy $R1 "Software\Clients\StartMenuInternet\$0\InstallInfo"
   ${EndIf}
   WriteRegDWORD HKLM "$R1" "IconsVisible" 1
-  ${If} ${AtLeastWin8}
-    WriteRegDWORD HKCU "$R1" "IconsVisible" 1
-  ${EndIf}
+  WriteRegDWORD HKCU "$R1" "IconsVisible" 1
 
   SetShellVarContext all  ; Set $DESKTOP to All Users
   ${Unless} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
     CreateShortCut "$DESKTOP\${BrandShortName}.lnk" "$INSTDIR\${FileMainEXE}"
     ${If} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
       ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandShortName}.lnk" "$INSTDIR"
-      ${If} ${AtLeastWin7}
-      ${AndIf} "$AppUserModelID" != ""
+      ${If} "$AppUserModelID" != ""
         ApplicationID::Set "$DESKTOP\${BrandShortName}.lnk" "$AppUserModelID" "true"
       ${EndIf}
     ${Else}
@@ -344,8 +319,7 @@ ${RemoveDefaultBrowserAgentShortcut}
         ${If} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
           ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandShortName}.lnk" \
                                                  "$INSTDIR"
-          ${If} ${AtLeastWin7}
-          ${AndIf} "$AppUserModelID" != ""
+          ${If} "$AppUserModelID" != ""
             ApplicationID::Set "$DESKTOP\${BrandShortName}.lnk" "$AppUserModelID" "true"
           ${EndIf}
         ${EndIf}
@@ -359,8 +333,7 @@ ${RemoveDefaultBrowserAgentShortcut}
     ${If} ${FileExists} "$SMPROGRAMS\${BrandShortName}.lnk"
       ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandShortName}.lnk" \
                                              "$INSTDIR"
-      ${If} ${AtLeastWin7}
-      ${AndIf} "$AppUserModelID" != ""
+      ${If} "$AppUserModelID" != ""
         ApplicationID::Set "$SMPROGRAMS\${BrandShortName}.lnk" "$AppUserModelID" "true"
       ${EndIf}
     ${Else}
@@ -371,23 +344,11 @@ ${RemoveDefaultBrowserAgentShortcut}
         ${If} ${FileExists} "$SMPROGRAMS\${BrandShortName}.lnk"
           ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandShortName}.lnk" \
                                                  "$INSTDIR"
-          ${If} ${AtLeastWin7}
-          ${AndIf} "$AppUserModelID" != ""
+          ${If} "$AppUserModelID" != ""
             ApplicationID::Set "$SMPROGRAMS\${BrandShortName}.lnk" "$AppUserModelID" "true"
           ${EndIf}
         ${EndIf}
       ${EndUnless}
-    ${EndIf}
-  ${EndUnless}
-
-  ; Windows 7 doesn't use the QuickLaunch directory
-  ${Unless} ${AtLeastWin7}
-  ${AndUnless} ${FileExists} "$QUICKLAUNCH\${BrandShortName}.lnk"
-    CreateShortCut "$QUICKLAUNCH\${BrandShortName}.lnk" \
-                   "$INSTDIR\${FileMainEXE}"
-    ${If} ${FileExists} "$QUICKLAUNCH\${BrandShortName}.lnk"
-      ShellLink::SetShortCutWorkingDirectory "$QUICKLAUNCH\${BrandShortName}.lnk" \
-                                             "$INSTDIR"
     ${EndIf}
   ${EndUnless}
 !macroend
@@ -1294,10 +1255,8 @@ ${RemoveDefaultBrowserAgentShortcut}
       WriteRegDWORD HKCU \
         "Software\Mozilla\${AppName}\Installer\$AppUserModelID" \
         "WasPinnedToTaskbar" 1
-      ${If} ${AtLeastWin7}
-        ${If} "${SHOULD_PIN}" == "1"
-          ${PinToTaskBar}
-        ${EndIf}
+      ${If} "${SHOULD_PIN}" == "1"
+        ${PinToTaskBar}
       ${EndIf}
     ${EndIf}
   ${EndIf}
@@ -1312,90 +1271,84 @@ ${RemoveDefaultBrowserAgentShortcut}
 ; model ID removes a pinned pinned Start Menu shortcut this will also add a
 ; pinned Start Menu shortcut.
 !macro PinToTaskBar
-  ${If} ${AtLeastWin7}
-    StrCpy $8 "false" ; Whether a shortcut had to be created
-    ${IsPinnedToTaskBar} "$INSTDIR\${FileMainEXE}" $R9
-    ${If} "$R9" == "false"
-      ; Find an existing Start Menu shortcut or create one to use for pinning
-      ${GetShortcutsLogPath} $0
-      ${If} ${FileExists} "$0"
-        ClearErrors
-        ReadINIStr $1 "$0" "STARTMENU" "Shortcut0"
-        ${Unless} ${Errors}
-          SetShellVarContext all ; Set SHCTX to all users
+  StrCpy $8 "false" ; Whether a shortcut had to be created
+  ${IsPinnedToTaskBar} "$INSTDIR\${FileMainEXE}" $R9
+  ${If} "$R9" == "false"
+    ; Find an existing Start Menu shortcut or create one to use for pinning
+    ${GetShortcutsLogPath} $0
+    ${If} ${FileExists} "$0"
+      ClearErrors
+      ReadINIStr $1 "$0" "STARTMENU" "Shortcut0"
+      ${Unless} ${Errors}
+        SetShellVarContext all ; Set SHCTX to all users
+        ${Unless} ${FileExists} "$SMPROGRAMS\$1"
+          SetShellVarContext current ; Set SHCTX to the current user
           ${Unless} ${FileExists} "$SMPROGRAMS\$1"
-            SetShellVarContext current ; Set SHCTX to the current user
-            ${Unless} ${FileExists} "$SMPROGRAMS\$1"
-              StrCpy $8 "true"
-              CreateShortCut "$SMPROGRAMS\$1" "$INSTDIR\${FileMainEXE}"
-              ${If} ${FileExists} "$SMPROGRAMS\$1"
-                ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\$1" \
-                                                       "$INSTDIR"
-                ${If} "$AppUserModelID" != ""
-                  ApplicationID::Set "$SMPROGRAMS\$1" "$AppUserModelID" "true"
-                ${EndIf}
+            StrCpy $8 "true"
+            CreateShortCut "$SMPROGRAMS\$1" "$INSTDIR\${FileMainEXE}"
+            ${If} ${FileExists} "$SMPROGRAMS\$1"
+              ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\$1" \
+                                                     "$INSTDIR"
+              ${If} "$AppUserModelID" != ""
+                ApplicationID::Set "$SMPROGRAMS\$1" "$AppUserModelID" "true"
               ${EndIf}
-            ${EndUnless}
+            ${EndIf}
+          ${EndUnless}
+        ${EndUnless}
+
+        ${If} ${FileExists} "$SMPROGRAMS\$1"
+          ; Count of Start Menu pinned shortcuts before unpinning.
+          ${PinnedToStartMenuLnkCount} $R9
+
+          ; Having multiple shortcuts pointing to different installations with
+          ; the same AppUserModelID (e.g. side by side installations of the
+          ; same version) will make the TaskBar shortcut's lists into an bad
+          ; state where the lists are not shown. To prevent this first
+          ; uninstall the pinned item.
+          ApplicationID::UninstallPinnedItem "$SMPROGRAMS\$1"
+
+          ; Count of Start Menu pinned shortcuts after unpinning.
+          ${PinnedToStartMenuLnkCount} $R8
+
+          ; If there is a change in the number of Start Menu pinned shortcuts
+          ; assume that unpinning unpinned a side by side installation from
+          ; the Start Menu and pin this installation to the Start Menu.
+          ${Unless} $R8 == $R9
+            ; Pin the shortcut to the Start Menu. 5381 is the shell32.dll
+            ; resource id for the "Pin to Start Menu" string.
+            InvokeShellVerb::DoIt "$SMPROGRAMS" "$1" "5381"
           ${EndUnless}
 
-          ${If} ${FileExists} "$SMPROGRAMS\$1"
-            ; Count of Start Menu pinned shortcuts before unpinning.
-            ${PinnedToStartMenuLnkCount} $R9
-
-            ; Having multiple shortcuts pointing to different installations with
-            ; the same AppUserModelID (e.g. side by side installations of the
-            ; same version) will make the TaskBar shortcut's lists into an bad
-            ; state where the lists are not shown. To prevent this first
-            ; uninstall the pinned item.
-            ApplicationID::UninstallPinnedItem "$SMPROGRAMS\$1"
-
-            ; Count of Start Menu pinned shortcuts after unpinning.
-            ${PinnedToStartMenuLnkCount} $R8
-
-            ; If there is a change in the number of Start Menu pinned shortcuts
-            ; assume that unpinning unpinned a side by side installation from
-            ; the Start Menu and pin this installation to the Start Menu.
-            ${Unless} $R8 == $R9
-              ; Pin the shortcut to the Start Menu. 5381 is the shell32.dll
-              ; resource id for the "Pin to Start Menu" string.
-              InvokeShellVerb::DoIt "$SMPROGRAMS" "$1" "5381"
-            ${EndUnless}
-
-            ${If} ${AtMostWin2012R2}
-              ; Pin the shortcut to the TaskBar. 5386 is the shell32.dll
-              ; resource id for the "Pin to Taskbar" string.
-              InvokeShellVerb::DoIt "$SMPROGRAMS" "$1" "5386"
-            ${ElseIf} ${AtMostWaaS} 1809
-              ; In Windows 10 the "Pin to Taskbar" resource was removed, so we
-              ; can't access the verb that way anymore. We have a create a
-              ; command key using the GUID that's assigned to this action and
-              ; then invoke that as a verb. This works up until build 1809
-              ReadRegStr $R9 HKLM \
-                "Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\Windows.taskbarpin" \
-                "ExplorerCommandHandler"
-              WriteRegStr HKCU "Software\Classes\*\shell\${AppRegName}-$AppUserModelID" "ExplorerCommandHandler" $R9
-              InvokeShellVerb::DoIt "$SMPROGRAMS" "$1" "${AppRegName}-$AppUserModelID"
-              DeleteRegKey HKCU "Software\Classes\*\shell\${AppRegName}-$AppUserModelID"
-            ${Else}
-              ; In the Windows 10 1903 and up (and Windows 11) the above no
-              ; longer works. We have yet another method for these versions
-              ; which is detailed in the PinToTaskbar plugin code.
-              PinToTaskbar::Pin "$SMPROGRAMS\$1"
-            ${EndIf}
-
-            ; Delete the shortcut if it was created
-            ${If} "$8" == "true"
-              Delete "$SMPROGRAMS\$1"
-            ${EndIf}
-          ${EndIf}
-
-          ${If} $TmpVal == "HKCU"
-            SetShellVarContext current ; Set SHCTX to the current user
+          ${If} ${AtMostWaaS} 1809
+            ; In Windows 10 the "Pin to Taskbar" resource was removed, so we
+            ; can't access the verb that way anymore. We have to create a
+            ; command key using the GUID that's assigned to this action and
+            ; then invoke that as a verb. This works up until build 1809
+            ReadRegStr $R9 HKLM \
+              "Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\Windows.taskbarpin" \
+              "ExplorerCommandHandler"
+            WriteRegStr HKCU "Software\Classes\*\shell\${AppRegName}-$AppUserModelID" "ExplorerCommandHandler" $R9
+            InvokeShellVerb::DoIt "$SMPROGRAMS" "$1" "${AppRegName}-$AppUserModelID"
+            DeleteRegKey HKCU "Software\Classes\*\shell\${AppRegName}-$AppUserModelID"
           ${Else}
-            SetShellVarContext all ; Set SHCTX to all users
+            ; In the Windows 10 1903 and up (and Windows 11) the above no
+            ; longer works. We have yet another method for these versions
+            ; which is detailed in the PinToTaskbar plugin code.
+            PinToTaskbar::Pin "$SMPROGRAMS\$1"
           ${EndIf}
-        ${EndUnless}
-      ${EndIf}
+
+          ; Delete the shortcut if it was created
+          ${If} "$8" == "true"
+            Delete "$SMPROGRAMS\$1"
+          ${EndIf}
+        ${EndIf}
+
+        ${If} $TmpVal == "HKCU"
+          SetShellVarContext current ; Set SHCTX to the current user
+        ${Else}
+          SetShellVarContext all ; Set SHCTX to all users
+        ${EndIf}
+      ${EndUnless}
     ${EndIf}
   ${EndIf}
 !macroend
@@ -1562,7 +1515,6 @@ Function SetAsDefaultAppUserHKCU
   ClearErrors
   ReadRegStr $0 HKCU "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
   ${If} ${Errors}
-  ${OrIf} ${AtMostWin2008R2}
     ClearErrors
     ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
   ${EndIf}
@@ -1579,7 +1531,6 @@ Function SetAsDefaultAppUserHKCU
   ClearErrors
   ReadRegStr $0 HKCU "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
   ${If} ${Errors}
-  ${OrIf} ${AtMostWin2008R2}
     ClearErrors
     ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
   ${EndIf}
@@ -1589,16 +1540,12 @@ Function SetAsDefaultAppUserHKCU
     ${If} ${FileExists} "$0"
       ${GetLongPath} "$0" $0
       ${If} "$0" == "$INSTDIR"
-        ; On Windows >= 8, this function cannot do anything to actually set
-        ; the default browser, it can only set up the registry entries to
-        ; allow the user to do so. Getting here means that those entries already
-        ; exist for this installation, we just found them, so there is nothing
-        ; more to be done.
-        ${If} ${AtLeastWin8}
-          Return
-        ${Else}
-          WriteRegStr HKCU "Software\Clients\StartMenuInternet" "" "$R9"
-        ${EndIf}
+        ; This function cannot do anything to actually set the default browser,
+        ; it can only set up the registry entries to allow the user to do so.
+        ; Getting here means that those entries already exist for this
+        ; installation, we just found them, so there is nothing more to be
+        ; done.
+        Return
       ${EndIf}
     ${EndIf}
   ${EndUnless}
@@ -1608,11 +1555,9 @@ Function SetAsDefaultAppUserHKCU
   ; It's unlikely that we didn't find a StartMenuInternet key above, but it is
   ; possible; it likely would mean this copy of the application was extracted
   ; directly from a ZIP file and the installer was never run.
-  ${If} ${AtLeastWin8}
-    ${SetStartMenuInternet} "HKCU"
-    ${FixShellIconHandler} "HKCU"
-    ${FixClassKeys} ; Does not use SHCTX
-  ${EndIf}
+  ${SetStartMenuInternet} "HKCU"
+  ${FixShellIconHandler} "HKCU"
+  ${FixClassKeys} ; Does not use SHCTX
 
   ${SetHandlers}
 
@@ -1650,8 +1595,7 @@ FunctionEnd
 
 ; Helper for updating the shortcut application model IDs.
 Function FixShortcutAppModelIDs
-  ${If} ${AtLeastWin7}
-  ${AndIf} "$AppUserModelID" != ""
+  ${If} "$AppUserModelID" != ""
     ${UpdateShortcutAppModelIDs} "$INSTDIR\${FileMainEXE}" "$AppUserModelID" $0
   ${EndIf}
 FunctionEnd
@@ -1675,89 +1619,18 @@ Function SetAsDefaultAppUser
   ; MigrateTaskBarShortcut will not see the value of AddTaskbarSC, so we
   ; send it via a register instead.
   StrCpy $R0 $AddTaskbarSC
-  ; On Win8, we want to avoid having a UAC prompt since we'll already have
-  ; another action for control panel default browser selection popping up
-  ; to the user.  Win8 is the first OS where the start menu keys can be
-  ; added into HKCU.  The call to SetAsDefaultAppUserHKCU will have already
-  ; set the HKCU keys for SetStartMenuInternet.
-  ${If} ${AtLeastWin8}
-    ; Check if this is running in an elevated process
-    ClearErrors
-    ${GetParameters} $0
-    ${GetOptions} "$0" "/UAC:" $0
-    ${If} ${Errors} ; Not elevated
-      Call SetAsDefaultAppUserHKCU
-    ${Else} ; Elevated - execute the function in the unelevated process
-      GetFunctionAddress $0 SetAsDefaultAppUserHKCU
-      UAC::ExecCodeSegment $0
-    ${EndIf}
-    Return ; Nothing more needs to be done
-  ${EndIf}
-
-  ; Before Win8, it is only possible to set this installation of the application
-  ; as the StartMenuInternet handler if it was added to the HKLM
-  ; StartMenuInternet registry keys.
-  ; http://support.microsoft.com/kb/297878
-
-  ; Check if this install location registered as a StartMenuInternet client
-  ClearErrors
-  ReadRegStr $0 HKCU "Software\Clients\StartMenuInternet\${AppRegName}-$AppUserModelID\DefaultIcon" ""
-  ${If} ${Errors}
-  ${OrIf} ${AtMostWin2008R2}
-    ClearErrors
-    ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\${AppRegName}-$AppUserModelID\DefaultIcon" ""
-  ${EndIf}
-  ${If} ${Errors}
-    ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
-    ClearErrors
-    ReadRegStr $0 HKCU "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
-    ${If} ${Errors}
-    ${OrIf} ${AtMostWin2008R2}
-      ClearErrors
-      ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
-    ${EndIf}
-  ${EndIf}
-
-  ${Unless} ${Errors}
-    ${GetPathFromString} "$0" $0
-    ${GetParent} "$0" $0
-    ${If} ${FileExists} "$0"
-      ${GetLongPath} "$0" $0
-      ${If} "$0" == "$INSTDIR"
-        ; Check if this is running in an elevated process
-        ClearErrors
-        ${GetParameters} $0
-        ${GetOptions} "$0" "/UAC:" $0
-        ${If} ${Errors} ; Not elevated
-          Call SetAsDefaultAppUserHKCU
-        ${Else} ; Elevated - execute the function in the unelevated process
-          GetFunctionAddress $0 SetAsDefaultAppUserHKCU
-          UAC::ExecCodeSegment $0
-        ${EndIf}
-        Return ; Nothing more needs to be done
-      ${EndIf}
-    ${EndIf}
-  ${EndUnless}
-
-  ; The code after ElevateUAC won't be executed when the user:
-  ; a) is a member of the administrators group (e.g. elevation is required)
-  ; b) is not a member of the administrators group and chooses to elevate
-  ${ElevateUAC}
-
-  ${SetStartMenuInternet} "HKLM"
-
-  SetShellVarContext all  ; Set SHCTX to all users (e.g. HKLM)
-
-  ${FixClassKeys} ; Does not use SHCTX
-  ${FixShellIconHandler} "HKLM"
-  ${RemoveDeprecatedKeys} ; Does not use SHCTX
-
+  ; We want to avoid having a UAC prompt since we'll already have another
+  ; action for control panel default browser selection popping upto the user.
+  ; The start menu keys can be added into HKCU.  The call to
+  ; SetAsDefaultAppUserHKCU will have already set the HKCU keys for
+  ; SetStartMenuInternet.
+  ; Check if this is running in an elevated process
   ClearErrors
   ${GetParameters} $0
   ${GetOptions} "$0" "/UAC:" $0
-  ${If} ${Errors}
+  ${If} ${Errors} ; Not elevated
     Call SetAsDefaultAppUserHKCU
-  ${Else}
+  ${Else} ; Elevated - execute the function in the unelevated process
     GetFunctionAddress $0 SetAsDefaultAppUserHKCU
     UAC::ExecCodeSegment $0
   ${EndIf}
