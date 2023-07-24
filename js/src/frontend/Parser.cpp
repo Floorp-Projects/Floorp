@@ -275,13 +275,6 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
   SourceExtent extent;
   extent.toStringStart = toStringStart;
 
-  /*
-   * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
-   * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
-   * arenas containing the entries must be alive until we are done with
-   * scanning, parsing and code generation for the whole script or top-level
-   * function.
-   */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
       fc_, extent, compilationState_, inheritedDirectives, generatorKind,
       asyncKind, isInitialStencil, explicitName, flags, index);
@@ -310,13 +303,6 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     return nullptr;
   }
 
-  /*
-   * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
-   * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
-   * arenas containing the entries must be alive until we are done with
-   * scanning, parsing and code generation for the whole script or top-level
-   * function.
-   */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
       fc_, cachedScriptExtra.extent, compilationState_,
       Directives(/* strict = */ false), cachedScriptExtra.generatorKind(),
