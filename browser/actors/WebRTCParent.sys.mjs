@@ -804,9 +804,17 @@ function prompt(aActor, aBrowser, aRequest) {
         let defaultIndex = 0;
 
         for (let device of devices) {
-          addDeviceToList(list, device.name, device.deviceIndex);
-          if (device.id == aRequest.audioOutputId) {
-            defaultIndex = device.deviceIndex;
+          let item = addDeviceToList(list, device.name, device.deviceIndex);
+          if (IDPrefix == "webRTC-selectSpeaker") {
+            item.addEventListener("dblclick", event => {
+              // Allow the chosen speakers via
+              // .popup-notification-primary-button so that
+              // "security.notification_enable_delay" is checked.
+              event.target.closest("popupnotification").button.doCommand();
+            });
+            if (device.id == aRequest.audioOutputId) {
+              defaultIndex = device.deviceIndex;
+            }
           }
         }
         list.selectedIndex = defaultIndex;
