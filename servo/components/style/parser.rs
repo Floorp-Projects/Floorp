@@ -12,33 +12,6 @@ use cssparser::{Parser, SourceLocation, UnicodeRange};
 use std::borrow::Cow;
 use style_traits::{OneOrMoreSeparated, ParseError, ParsingMode, Separator};
 
-/// Asserts that all ParsingMode flags have a matching ParsingMode value in gecko.
-#[cfg(feature = "gecko")]
-#[inline]
-pub fn assert_parsing_mode_match() {
-    use crate::gecko_bindings::structs;
-
-    macro_rules! check_parsing_modes {
-        ( $( $a:ident => $b:path ),*, ) => {
-            if cfg!(debug_assertions) {
-                let mut modes = ParsingMode::all();
-                $(
-                    assert_eq!(structs::$a as usize, $b.bits() as usize, stringify!($b));
-                    modes.remove($b);
-                )*
-                assert_eq!(modes, ParsingMode::empty(), "all ParsingMode bits should have an assertion");
-            }
-        }
-    }
-
-    check_parsing_modes! {
-        ParsingMode_Default => ParsingMode::DEFAULT,
-        ParsingMode_AllowUnitlessLength => ParsingMode::ALLOW_UNITLESS_LENGTH,
-        ParsingMode_AllowAllNumericValues => ParsingMode::ALLOW_ALL_NUMERIC_VALUES,
-        ParsingMode_DisallowFontRelative => ParsingMode::DISALLOW_FONT_RELATIVE,
-    }
-}
-
 /// The data that the parser needs from outside in order to parse a stylesheet.
 pub struct ParserContext<'a> {
     /// The `Origin` of the stylesheet, whether it's a user, author or

@@ -2472,7 +2472,8 @@ static already_AddRefed<StyleLockedDeclarationBlock> CreateDeclarationForServo(
                                          aDocument->GetCompatibilityMode(),
                                          aDocument->CSSLoader()};
   RefPtr<StyleLockedDeclarationBlock> servoDeclarations =
-      ServoCSSParser::ParseProperty(aProperty, aPropertyValue, env);
+      ServoCSSParser::ParseProperty(aProperty, aPropertyValue, env,
+                                    StyleParsingMode::DEFAULT);
 
   if (!servoDeclarations) {
     // We got a syntax error.  The spec says this value must be ignored.
@@ -2485,8 +2486,8 @@ static already_AddRefed<StyleLockedDeclarationBlock> CreateDeclarationForServo(
     const nsCString normalString = "normal"_ns;
     Servo_DeclarationBlock_SetPropertyById(
         servoDeclarations, eCSSProperty_line_height, &normalString, false,
-        env.mUrlExtraData, ParsingMode::Default, env.mCompatMode, env.mLoader,
-        env.mRuleType, {});
+        env.mUrlExtraData, StyleParsingMode::DEFAULT, env.mCompatMode,
+        env.mLoader, env.mRuleType, {});
   }
 
   return servoDeclarations.forget();
@@ -2555,7 +2556,7 @@ static already_AddRefed<const ComputedStyle> GetFontStyleForServo(
     sc->GetComputedPropertyValue(eCSSProperty_font_size, computedFontSize);
     Servo_DeclarationBlock_SetPropertyById(
         declarations, eCSSProperty_font_size, &computedFontSize, false, nullptr,
-        ParsingMode::Default, eCompatibility_FullStandards, nullptr,
+        StyleParsingMode::DEFAULT, eCompatibility_FullStandards, nullptr,
         StyleCssRuleType::Style, {});
   }
 

@@ -284,8 +284,8 @@ nsresult nsDOMCSSDeclaration::ParsePropertyValue(
       [&](DeclarationBlock* decl, ParsingEnvironment& env) {
         return Servo_DeclarationBlock_SetPropertyById(
             decl->Raw(), aPropID, &aPropValue, aIsImportant, env.mUrlExtraData,
-            ParsingMode::Default, env.mCompatMode, env.mLoader, env.mRuleType,
-            closure);
+            StyleParsingMode::DEFAULT, env.mCompatMode, env.mLoader,
+            env.mRuleType, closure);
       });
 }
 
@@ -307,7 +307,7 @@ nsresult nsDOMCSSDeclaration::ParseCustomPropertyValue(
       [&](DeclarationBlock* decl, ParsingEnvironment& env) {
         return Servo_DeclarationBlock_SetProperty(
             decl->Raw(), &aPropertyName, &aPropValue, aIsImportant,
-            env.mUrlExtraData, ParsingMode::Default, env.mCompatMode,
+            env.mUrlExtraData, StyleParsingMode::DEFAULT, env.mCompatMode,
             env.mLoader, env.mRuleType, closure);
       });
 }

@@ -652,7 +652,8 @@ static Maybe<PropertyValuePair> MakePropertyValuePair(
   ServoCSSParser::ParsingEnvironment env =
       ServoCSSParser::GetParsingEnvironment(aDocument);
   RefPtr<StyleLockedDeclarationBlock> servoDeclarationBlock =
-      ServoCSSParser::ParseProperty(aProperty, aStringValue, env);
+      ServoCSSParser::ParseProperty(aProperty, aStringValue, env,
+                                    StyleParsingMode::DEFAULT);
 
   if (servoDeclarationBlock) {
     result.emplace(aProperty, std::move(servoDeclarationBlock));

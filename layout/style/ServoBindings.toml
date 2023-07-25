@@ -350,7 +350,6 @@ allowlist-types = [
     "mozilla::DefaultDelete",
     "mozilla::Side",
     "mozilla::binding_danger::AssertAndSuppressCleanupPolicy",
-    "mozilla::ParsingMode",
     "mozilla::InheritTarget",
     "mozilla::dom::MediaList",
     "mozilla::StyleRuleInclusion",

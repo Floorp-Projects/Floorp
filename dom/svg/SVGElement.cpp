@@ -1190,7 +1190,7 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
     auto* doc = mElement.OwnerDoc();
     changed = Servo_DeclarationBlock_SetPropertyById(
         &EnsureDeclarationBlock(), propertyID, &value, false,
-        &EnsureExtraData(), ParsingMode::AllowUnitlessLength,
+        &EnsureExtraData(), StyleParsingMode::ALLOW_UNITLESS_LENGTH,
         doc->GetCompatibilityMode(), doc->CSSLoader(), StyleCssRuleType::Style,
         {});
 

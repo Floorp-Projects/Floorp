@@ -66,7 +66,7 @@ static void ServoSetPropertyByIdBench(const nsACString& css) {
   for (int i = 0; i < SETPROPERTY_REPETITIONS; i++) {
     Servo_DeclarationBlock_SetPropertyById(
         block, eCSSProperty_width, &css,
-        /* is_important = */ false, data, ParsingMode::Default,
+        /* is_important = */ false, data, StyleParsingMode::DEFAULT,
         eCompatibility_FullStandards, nullptr, STYLE_RULE, {});
   }
 }
@@ -84,7 +84,7 @@ static void ServoGetPropertyValueById() {
   const nsACString& css = css_;
   Servo_DeclarationBlock_SetPropertyById(
       block, eCSSProperty_width, &css,
-      /* is_important = */ false, data, ParsingMode::Default,
+      /* is_important = */ false, data, StyleParsingMode::DEFAULT,
       eCompatibility_FullStandards, nullptr, STYLE_RULE, {});
 
   for (int i = 0; i < GETPROPERTY_REPETITIONS; i++) {
