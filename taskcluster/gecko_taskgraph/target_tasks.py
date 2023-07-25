@@ -1499,3 +1499,14 @@ def target_tasks_holly(full_task_graph, parameters, graph_config):
         return task.kind == "updatebot"
 
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
+
+
+@_target_task("snap_upstream_build")
+def target_tasks_snap_upstream_build(full_task_graph, parameters, graph_config):
+    """
+    Select tasks for building snap as upstream. Omit -try because it does not
+    really make sense on m-c
+    """
+    for name, task in full_task_graph.tasks.items():
+        if "snap-upstream-build" in name and not "-try" in name:
+            yield name
