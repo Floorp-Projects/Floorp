@@ -350,9 +350,7 @@ class DetermineCommandVenvAction(argparse.Action):
         if not command_dict:
             return
 
-        if potential_sub_command_name and not potential_sub_command_name.startswith(
-            "-"
-        ):
+        if potential_sub_command_name in module_dict:
             all_sub_commands_dict = command_dict.get("subcommands", {})
 
             if all_sub_commands_dict:
