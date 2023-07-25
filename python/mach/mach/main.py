@@ -16,7 +16,9 @@ import traceback
 import uuid
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
+
+from mach.site import CommandSiteManager
 
 from .base import (
     CommandContext,
@@ -226,7 +228,9 @@ To see more help for a specific command, run:
   %(prog)s help <command>
 """
 
-    def __init__(self, cwd: str):
+    def __init__(
+        self, cwd: str, command_site_manager: Optional[CommandSiteManager] = None
+    ):
         assert Path(cwd).is_dir()
 
         self.cwd = cwd
@@ -234,6 +238,7 @@ To see more help for a specific command, run:
         self.logger = logging.getLogger(__name__)
         self.settings = ConfigSettings()
         self.settings_paths = []
+        self.command_site_manager = command_site_manager
 
         if "MACHRC" in os.environ:
             self.settings_paths.append(os.environ["MACHRC"])
@@ -443,7 +448,7 @@ To see more help for a specific command, run:
         if self.populate_context_handler:
             context = ContextWrapper(context, self.populate_context_handler)
 
-        parser = self.get_argument_parser(context)
+        parser = get_argument_parser(context)
         context.global_parser = parser
 
         if not len(argv):
@@ -519,6 +524,7 @@ To see more help for a specific command, run:
             return Registrar._run_command_handler(
                 handler,
                 context,
+                self.command_site_manager,
                 debug_command=args.debug_command,
                 profile_command=args.profile_command,
                 **vars(args.command_args),
@@ -641,95 +647,99 @@ To see more help for a specific command, run:
 
         self.settings.load_files(list(files))
 
-    def get_argument_parser(self, context):
-        """Returns an argument parser for the command-line interface."""
 
-        parser = ArgumentParser(
-            add_help=False,
-            usage="%(prog)s [global arguments] " "command [command arguments]",
-        )
+def get_argument_parser(context=None, action=CommandAction):
+    """Returns an argument parser for the command-line interface."""
 
-        # WARNING!!! If you add a global argument here, also add it to the
-        # global argument handling in the top-level `mach` script.
-        # Order is important here as it dictates the order the auto-generated
-        # help messages are printed.
-        global_group = parser.add_argument_group("Global Arguments")
+    parser = ArgumentParser(
+        add_help=False,
+        usage="%(prog)s [global arguments] " "command [command arguments]",
+    )
 
-        global_group.add_argument(
-            "-v",
-            "--verbose",
-            dest="verbose",
-            action="store_true",
-            default=False,
-            help="Print verbose output.",
-        )
-        global_group.add_argument(
-            "-l",
-            "--log-file",
-            dest="logfile",
-            metavar="FILENAME",
-            type=argparse.FileType("a"),
-            help="Filename to write log data to.",
-        )
-        global_group.add_argument(
-            "--log-interval",
-            dest="log_interval",
-            action="store_true",
-            default=False,
-            help="Prefix log line with interval from last message rather "
-            "than relative time. Note that this is NOT execution time "
-            "if there are parallel operations.",
-        )
-        global_group.add_argument(
-            "--no-interactive",
-            dest="is_interactive",
-            action="store_false",
-            help="Automatically selects the default option on any "
-            "interactive prompts. If the output is not a terminal, "
-            "then --no-interactive is assumed.",
-        )
-        suppress_log_by_default = False
-        if "INSIDE_EMACS" in os.environ:
-            suppress_log_by_default = True
-        global_group.add_argument(
-            "--log-no-times",
-            dest="log_no_times",
-            action="store_true",
-            default=suppress_log_by_default,
-            help="Do not prefix log lines with times. By default, "
-            "mach will prefix each output line with the time since "
-            "command start.",
-        )
-        global_group.add_argument(
-            "-h",
-            "--help",
-            dest="help",
-            action="store_true",
-            default=False,
-            help="Show this help message.",
-        )
-        global_group.add_argument(
-            "--debug-command",
-            action="store_true",
-            help="Start a Python debugger when command is dispatched.",
-        )
-        global_group.add_argument(
-            "--profile-command",
-            action="store_true",
-            help="Capture a Python profile of the mach process as command is dispatched.",
-        )
-        global_group.add_argument(
-            "--settings",
-            dest="settings_file",
-            metavar="FILENAME",
-            default=None,
-            help="Path to settings file.",
-        )
+    # WARNING!!! If you add a global argument here, also add it to the
+    # global argument handling in the top-level `mach` script.
+    # Order is important here as it dictates the order the auto-generated
+    # help messages are printed.
+    global_group = parser.add_argument_group("Global Arguments")
 
+    global_group.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Print verbose output.",
+    )
+    global_group.add_argument(
+        "-l",
+        "--log-file",
+        dest="logfile",
+        metavar="FILENAME",
+        type=argparse.FileType("a"),
+        help="Filename to write log data to.",
+    )
+    global_group.add_argument(
+        "--log-interval",
+        dest="log_interval",
+        action="store_true",
+        default=False,
+        help="Prefix log line with interval from last message rather "
+        "than relative time. Note that this is NOT execution time "
+        "if there are parallel operations.",
+    )
+    global_group.add_argument(
+        "--no-interactive",
+        dest="is_interactive",
+        action="store_false",
+        help="Automatically selects the default option on any "
+        "interactive prompts. If the output is not a terminal, "
+        "then --no-interactive is assumed.",
+    )
+    suppress_log_by_default = False
+    if "INSIDE_EMACS" in os.environ:
+        suppress_log_by_default = True
+    global_group.add_argument(
+        "--log-no-times",
+        dest="log_no_times",
+        action="store_true",
+        default=suppress_log_by_default,
+        help="Do not prefix log lines with times. By default, "
+        "mach will prefix each output line with the time since "
+        "command start.",
+    )
+    global_group.add_argument(
+        "-h",
+        "--help",
+        dest="help",
+        action="store_true",
+        default=False,
+        help="Show this help message.",
+    )
+    global_group.add_argument(
+        "--debug-command",
+        action="store_true",
+        help="Start a Python debugger when command is dispatched.",
+    )
+    global_group.add_argument(
+        "--profile-command",
+        action="store_true",
+        help="Capture a Python profile of the mach process as command is dispatched.",
+    )
+    global_group.add_argument(
+        "--settings",
+        dest="settings_file",
+        metavar="FILENAME",
+        default=None,
+        help="Path to settings file.",
+    )
+
+    if context:
         # We need to be last because CommandAction swallows all remaining
         # arguments and argparse parses arguments in the order they were added.
         parser.add_argument(
             "command", action=CommandAction, registrar=Registrar, context=context
         )
+    else:
+        parser.add_argument("command", action=action)
 
-        return parser
+    return parser

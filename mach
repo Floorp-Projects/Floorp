@@ -13,17 +13,17 @@ MIN_PYTHON_VERSION = (3, 7)
 MAX_PYTHON_VERSION_TO_CONSIDER = (3, 11)
 
 
-def load_mach(dir_path, mach_path):
+def load_mach(dir_path, mach_path, args):
     # Defer import of "importlib.util" until after Python version check has happened
     # so that Python 2 usages fail gracefully.
     import importlib.util
     spec = importlib.util.spec_from_file_location('mach_initialize', mach_path)
     mach_initialize = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mach_initialize)
-    return mach_initialize.initialize(dir_path)
+    return mach_initialize.initialize(dir_path, args)
 
 
-def check_and_get_mach(dir_path):
+def check_and_get_mach(dir_path, args):
     initialize_paths = (
         # Run Thunderbird's mach_initialize.py if it exists
         'comm/build/mach_initialize.py',
@@ -34,7 +34,7 @@ def check_and_get_mach(dir_path):
     for initialize_path in initialize_paths:
         mach_path = os.path.join(dir_path, initialize_path)
         if os.path.isfile(mach_path):
-            return load_mach(dir_path, mach_path)
+            return load_mach(dir_path, mach_path, args)
     return None
 
 
@@ -114,7 +114,7 @@ def main(args):
     # https://github.com/python/cpython/pull/9516
     os.environ.pop("__PYVENV_LAUNCHER__", None)
 
-    mach = check_and_get_mach(os.path.dirname(os.path.realpath(__file__)))
+    mach = check_and_get_mach(os.path.dirname(os.path.realpath(__file__)), args)
     if not mach:
         print('Could not run mach: No mach source directory found.')
         sys.exit(1)

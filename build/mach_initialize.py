@@ -137,7 +137,7 @@ def check_for_spaces(topsrcdir):
         )
 
 
-def initialize(topsrcdir):
+def initialize(topsrcdir, args=()):
     # This directory was deleted in bug 1666345, but there may be some ignored
     # files here. We can safely just delete it for the user so they don't have
     # to clean the repo themselves.
@@ -157,7 +157,7 @@ def initialize(topsrcdir):
         )
     ]
 
-    from mach.util import get_state_dir, setenv
+    from mach.util import get_state_dir, get_virtualenv_base_dir, setenv
 
     state_dir = _create_state_dir()
 
@@ -171,7 +171,7 @@ def initialize(topsrcdir):
 
     import mach.base
     import mach.main
-    from mach.main import MachCommandReference
+    from mach.main import MachCommandReference, get_argument_parser
 
     # Centralized registry of available mach commands
     MACH_COMMANDS = {
@@ -407,6 +407,161 @@ def initialize(topsrcdir):
         "xpcshell-test": MachCommandReference("testing/xpcshell/mach_commands.py"),
     }
 
+    import argparse
+    import ast
+
+    class DecoratorVisitor(ast.NodeVisitor):
+        def __init__(self):
+            self.results = {}
+
+        def visit_FunctionDef(self, node):
+            # We only care about `Command` and `SubCommand` decorators, since
+            # they are the only ones that can specify virtualenv_name
+            decorators = [
+                decorator
+                for decorator in node.decorator_list
+                if isinstance(decorator, ast.Call)
+                and isinstance(decorator.func, ast.Name)
+                and decorator.func.id in ["SubCommand", "Command"]
+            ]
+
+            relevant_kwargs = ["command", "subcommand", "virtualenv_name"]
+
+            for decorator in decorators:
+                kwarg_dict = {}
+
+                for name, arg in zip(["command", "subcommand"], decorator.args):
+                    kwarg_dict[name] = arg.s
+
+                for keyword in decorator.keywords:
+                    if keyword.arg not in relevant_kwargs:
+                        # We only care about these 3 kwargs, so we can safely skip the rest
+                        continue
+
+                    kwarg_dict[keyword.arg] = getattr(keyword.value, "s", "")
+
+                command = kwarg_dict.pop("command")
+                self.results.setdefault(command, {})
+
+                sub_command = kwarg_dict.pop("subcommand", None)
+                virtualenv_name = kwarg_dict.pop("virtualenv_name", None)
+
+                if sub_command:
+                    self.results[command].setdefault("subcommands", {})
+                    sub_command_dict = self.results[command]["subcommands"].setdefault(
+                        sub_command, {}
+                    )
+
+                    if virtualenv_name:
+                        sub_command_dict["virtualenv_name"] = virtualenv_name
+                elif virtualenv_name:
+                    # If there is no `subcommand` we are in the `@Command`
+                    # decorator, and need to store the virtualenv_name for
+                    # the 'command'.
+                    self.results[command]["virtualenv_name"] = virtualenv_name
+
+            self.generic_visit(node)
+
+    def command_virtualenv_info_for_module(file_path):
+        command_module_path = Path(topsrcdir) / file_path
+        with command_module_path.open("r") as file:
+            content = file.read()
+
+        tree = ast.parse(content)
+        visitor = DecoratorVisitor()
+        visitor.visit(tree)
+
+        return visitor.results
+
+    class DetermineCommandVenvAction(argparse.Action):
+        def __init__(
+            self,
+            option_strings,
+            dest,
+            required=True,
+            default=None,
+        ):
+            # A proper API would have **kwargs here. However, since we are a little
+            # hacky, we intentionally omit it as a way of detecting potentially
+            # breaking changes with argparse's implementation.
+            #
+            # In a similar vein, default is passed in but is not needed, so we drop
+            # it.
+            argparse.Action.__init__(
+                self,
+                option_strings,
+                dest,
+                required=required,
+                help=argparse.SUPPRESS,
+                nargs=argparse.REMAINDER,
+            )
+
+        def __call__(self, parser, namespace, values, option_string=None):
+            if len(values) == 0:
+                return
+
+            command = values[0]
+            setattr(namespace, "command_name", command)
+
+            # the "help" command does not have a module file, it's handled
+            # a bit later and should be skipped here.
+            if command == "help":
+                return
+
+            site = "common"
+
+            if len(values) > 1:
+                potential_sub_command_name = values[1]
+            else:
+                potential_sub_command_name = None
+
+            module_path = MACH_COMMANDS.get(command).module
+
+            module_dict = command_virtualenv_info_for_module(module_path)
+            command_dict = module_dict.get(command, {})
+
+            if not command_dict:
+                return
+
+            if (
+                potential_sub_command_name
+                and not potential_sub_command_name.startswith("-")
+            ):
+                all_sub_commands_dict = command_dict.get("subcommands", {})
+
+                if all_sub_commands_dict:
+                    sub_command_dict = all_sub_commands_dict.get(
+                        potential_sub_command_name, {}
+                    )
+
+                    if sub_command_dict:
+                        site = sub_command_dict.get("virtualenv_name", "common")
+            else:
+                site = command_dict.get("virtualenv_name", "common")
+
+            setattr(namespace, "site_name", site)
+
+    parser = get_argument_parser(action=DetermineCommandVenvAction)
+    namespace = parser.parse_args()
+
+    command_name = getattr(namespace, "command_name", None)
+    site_name = getattr(namespace, "site_name", "common")
+    command_site_manager = None
+
+    # the 'clobber' command needs to run in the 'mach' venv, so we
+    # don't want to activate any other virtualenv for it.
+    if command_name != "clobber":
+        from mach.site import CommandSiteManager
+
+        command_site_manager = CommandSiteManager.from_environment(
+            topsrcdir,
+            lambda: os.path.normpath(get_state_dir(True, topsrcdir=topsrcdir)),
+            site_name,
+            get_virtualenv_base_dir(topsrcdir),
+        )
+
+        command_site_manager.activate()
+
     # Set a reasonable limit to the number of open files.
     #
     # Some linux systems set `ulimit -n` to a very high number, which works
@@ -530,7 +685,7 @@ def initialize(topsrcdir):
     if "MACH_MAIN_PID" not in os.environ:
         setenv("MACH_MAIN_PID", str(os.getpid()))
 
-    driver = mach.main.Mach(os.getcwd())
+    driver = mach.main.Mach(os.getcwd(), command_site_manager)
     driver.populate_context_handler = populate_context
 
     if not driver.settings_paths:

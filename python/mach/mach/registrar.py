@@ -86,7 +86,13 @@ class MachRegistrar(object):
         return fail_conditions
 
     def _run_command_handler(
-        self, handler, context, debug_command=False, profile_command=False, **kwargs
+        self,
+        handler,
+        context,
+        command_site_manager=None,
+        debug_command=False,
+        profile_command=False,
+        **kwargs,
     ):
         instance = MachRegistrar._instance(handler, context, **kwargs)
         fail_conditions = MachRegistrar._fail_conditions(handler, instance)
@@ -99,7 +105,10 @@ class MachRegistrar(object):
         self.command_depth += 1
         fn = handler.func
         if handler.virtualenv_name:
-            instance.activate_virtualenv()
+            if command_site_manager:
+                instance.virtualenv_manager = command_site_manager
+            else:
+                instance.activate_virtualenv()
 
         profile = None
         if profile_command:
