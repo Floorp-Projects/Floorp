@@ -2148,6 +2148,27 @@ downloads:
     record_in_processes:
       - 'main'
 
+sandbox:
+  no_job:
+    bug_numbers:
+      - 1392570
+    description: >
+      Indicates that we can't use a job object for sandboxed child processes.
+      Keyed by whether we are in a remote session or not from ::GetSystemMetrics(SM_REMOTESESSION).
+    expires: "62"
+    kind: boolean
+    keyed: true
+    notification_emails:
+      - bowen@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+    record_in_processes:
+      - main
+    operating_systems:
+      - "windows"
+
 findbar:
   shown:
     bug_numbers:

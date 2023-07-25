@@ -199,6 +199,7 @@ class MediaManager final : public nsIMediaManagerService,
   // to MainThread from MediaManager thread.
   static MediaManager* Get();
   static MediaManager* GetIfExists();
+  static void StartupInit();
   static void Dispatch(already_AddRefed<Runnable> task);
 
   /**

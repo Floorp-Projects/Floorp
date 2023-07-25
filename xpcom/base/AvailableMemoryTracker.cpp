@@ -7,6 +7,7 @@
 #include "mozilla/AvailableMemoryTracker.h"
 
 #if defined(XP_WIN)
+#  include "mozilla/WindowsVersion.h"
 #  include "nsIMemoryReporter.h"
 #endif
 
@@ -115,11 +116,15 @@ nsJemallocFreeDirtyPagesRunnable::Run() {
 
 #if defined(XP_WIN)
 void nsJemallocFreeDirtyPagesRunnable::OptimizeSystemHeap() {
-  HEAP_OPTIMIZE_RESOURCES_INFORMATION heapOptInfo = {
-      HEAP_OPTIMIZE_RESOURCES_CURRENT_VERSION};
+  // HeapSetInformation exists prior to Windows 8.1, but the
+  // HeapOptimizeResources information class does not.
+  if (IsWin8Point1OrLater()) {
+    HEAP_OPTIMIZE_RESOURCES_INFORMATION heapOptInfo = {
+        HEAP_OPTIMIZE_RESOURCES_CURRENT_VERSION};
 
-  ::HeapSetInformation(nullptr, HeapOptimizeResources, &heapOptInfo,
-                       sizeof(heapOptInfo));
+    ::HeapSetInformation(nullptr, HeapOptimizeResources, &heapOptInfo,
+                         sizeof(heapOptInfo));
+  }
 }
 #endif  // defined(XP_WIN)
 

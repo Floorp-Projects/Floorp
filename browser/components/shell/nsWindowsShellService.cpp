@@ -39,6 +39,7 @@
 #include "nsIXULAppInfo.h"
 #include "nsINIParser.h"
 #include "nsNativeAppSupportWin.h"
+#include "nsWindowsHelpers.h"
 
 #include <windows.h>
 #include <shellapi.h>
@@ -56,12 +57,14 @@ PSSTDAPI PropVariantToString(REFPROPVARIANT propvar, PWSTR psz, UINT cch);
 
 #include <comutil.h>
 #include <objbase.h>
+#include <shlobj.h>
 #include <knownfolders.h>
 #include "WinUtils.h"
 #include "mozilla/widget/WinTaskbar.h"
 
 #include <mbstring.h>
 
+#define PIN_TO_TASKBAR_SHELL_VERB 5386
 #define PRIVATE_BROWSING_BINARY L"private_browsing.exe"
 
 #undef ACCESS_READ
@@ -92,6 +95,7 @@ PSSTDAPI PropVariantToString(REFPROPVARIANT propvar, PWSTR psz, UINT cch);
     if (MOZ_UNLIKELY(FAILED(hres))) return ret
 #endif
 
+using mozilla::IsWin8OrLater;
 using namespace mozilla;
 using mozilla::intl::Localization;
 
@@ -363,6 +367,20 @@ nsresult nsWindowsShellService::InvokeHTTPOpenAsVerb() {
   return NS_OK;
 }
 
+nsresult nsWindowsShellService::LaunchHTTPHandlerPane() {
+  OPENASINFO info;
+  info.pcszFile = L"http";
+  info.pcszClass = nullptr;
+  info.oaifInFlags =
+      OAIF_FORCE_REGISTRATION | OAIF_URL_PROTOCOL | OAIF_REGISTER_EXT;
+
+  HRESULT hr = SHOpenWithDialog(nullptr, &info);
+  if (SUCCEEDED(hr) || (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED))) {
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP
 nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes,
                                          bool aForAllUsers) {
@@ -383,16 +401,31 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes,
     rv = LaunchHelper(appHelperPath);
   }
 
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && IsWin8OrLater()) {
     if (aClaimAllTypes) {
-      rv = LaunchModernSettingsDialogDefaultApps();
+      if (IsWin10OrLater()) {
+        rv = LaunchModernSettingsDialogDefaultApps();
+      } else {
+        rv = LaunchControlPanelDefaultsSelectionUI();
+      }
       // The above call should never really fail, but just in case
       // fall back to showing the HTTP association screen only.
       if (NS_FAILED(rv)) {
-        rv = InvokeHTTPOpenAsVerb();
+        if (IsWin10OrLater()) {
+          rv = InvokeHTTPOpenAsVerb();
+        } else {
+          rv = LaunchHTTPHandlerPane();
+        }
       }
     } else {
-      rv = LaunchModernSettingsDialogDefaultApps();
+      // Windows 10 blocks attempts to load the
+      // HTTP Handler association dialog.
+      if (IsWin10OrLater()) {
+        rv = LaunchModernSettingsDialogDefaultApps();
+      } else {
+        rv = LaunchHTTPHandlerPane();
+      }
+
       // The above call should never really fail, but just in case
       // fall back to showing control panel for all defaults
       if (NS_FAILED(rv)) {
@@ -1165,6 +1198,133 @@ NS_IMETHODIMP nsWindowsShellService::HasMatchingShortcut(
   return NS_OK;
 }
 
+static nsresult PinCurrentAppToTaskbarWin7(bool aCheckOnly,
+                                           nsAutoString aShortcutPath) {
+  nsModuleHandle shellInst(LoadLibraryW(L"shell32.dll"));
+
+  RefPtr<IShellWindows> shellWindows;
+  HRESULT hr =
+      ::CoCreateInstance(CLSID_ShellWindows, nullptr, CLSCTX_LOCAL_SERVER,
+                         IID_IShellWindows, getter_AddRefs(shellWindows));
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+
+  // 1. Find the shell view for the desktop.
+  _variant_t loc(int(CSIDL_DESKTOP));
+  _variant_t empty;
+  long hwnd;
+  RefPtr<IDispatch> dispDesktop;
+  hr = shellWindows->FindWindowSW(&loc, &empty, SWC_DESKTOP, &hwnd,
+                                  SWFO_NEEDDISPATCH,
+                                  getter_AddRefs(dispDesktop));
+  if (FAILED(hr) || hr == S_FALSE) return NS_ERROR_FAILURE;
+
+  RefPtr<IServiceProvider> servProv;
+  hr = dispDesktop->QueryInterface(IID_IServiceProvider,
+                                   getter_AddRefs(servProv));
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+
+  RefPtr<IShellBrowser> browser;
+  hr = servProv->QueryService(SID_STopLevelBrowser, IID_IShellBrowser,
+                              getter_AddRefs(browser));
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+
+  RefPtr<IShellView> activeShellView;
+  hr = browser->QueryActiveShellView(getter_AddRefs(activeShellView));
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+
+  // 2. Get the automation object for the desktop.
+  RefPtr<IDispatch> dispView;
+  hr = activeShellView->GetItemObject(SVGIO_BACKGROUND, IID_IDispatch,
+                                      getter_AddRefs(dispView));
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+
+  RefPtr<IShellFolderViewDual> folderView;
+  hr = dispView->QueryInterface(IID_IShellFolderViewDual,
+                                getter_AddRefs(folderView));
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+
+  // 3. Get the interface to IShellDispatch
+  RefPtr<IDispatch> dispShell;
+  hr = folderView->get_Application(getter_AddRefs(dispShell));
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+
+  RefPtr<IShellDispatch2> shellDisp;
+  hr =
+      dispShell->QueryInterface(IID_IShellDispatch2, getter_AddRefs(shellDisp));
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+
+  wchar_t shortcutDir[MAX_PATH + 1];
+  wcscpy_s(shortcutDir, MAX_PATH + 1, aShortcutPath.get());
+  if (!PathRemoveFileSpecW(shortcutDir)) return NS_ERROR_FAILURE;
+
+  VARIANT dir;
+  dir.vt = VT_BSTR;
+  BStrPtr bstrShortcutDir = BStrPtr(SysAllocString(shortcutDir));
+  if (bstrShortcutDir.get() == NULL) return NS_ERROR_FAILURE;
+  dir.bstrVal = bstrShortcutDir.get();
+
+  RefPtr<Folder> folder;
+  hr = shellDisp->NameSpace(dir, getter_AddRefs(folder));
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+
+  wchar_t linkName[MAX_PATH + 1];
+  wcscpy_s(linkName, MAX_PATH + 1, aShortcutPath.get());
+  PathStripPathW(linkName);
+  BStrPtr bstrLinkName = BStrPtr(SysAllocString(linkName));
+  if (bstrLinkName.get() == NULL) return NS_ERROR_FAILURE;
+
+  RefPtr<FolderItem> folderItem;
+  hr = folder->ParseName(bstrLinkName.get(), getter_AddRefs(folderItem));
+  if (FAILED(hr) || !folderItem) return NS_ERROR_FAILURE;
+
+  RefPtr<FolderItemVerbs> verbs;
+  hr = folderItem->Verbs(getter_AddRefs(verbs));
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+
+  long count;
+  hr = verbs->get_Count(&count);
+  if (FAILED(hr)) return NS_ERROR_FAILURE;
+
+  WCHAR verbName[100];
+  if (!LoadStringW(shellInst.get(), PIN_TO_TASKBAR_SHELL_VERB, verbName,
+                   ARRAYSIZE(verbName))) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  VARIANT v;
+  v.vt = VT_I4;
+  BStrPtr name;
+  for (long i = 0; i < count; ++i) {
+    RefPtr<FolderItemVerb> fiVerb;
+    v.lVal = i;
+    hr = verbs->Item(v, getter_AddRefs(fiVerb));
+    if (FAILED(hr)) {
+      continue;
+    }
+
+    BSTR tmpName;
+    hr = fiVerb->get_Name(&tmpName);
+    if (FAILED(hr)) {
+      continue;
+    }
+    name = BStrPtr(tmpName);
+    if (!wcscmp((WCHAR*)name.get(), verbName)) {
+      if (aCheckOnly) {
+        // we've done as much as we can without actually
+        // changing anything
+        return NS_OK;
+      }
+
+      hr = fiVerb->DoIt();
+      if (SUCCEEDED(hr)) {
+        return NS_OK;
+      }
+    }
+  }
+
+  // if we didn't return in the block above, something failed
+  return NS_ERROR_FAILURE;
+}
+
 static bool IsCurrentAppPinnedToTaskbarSync(const nsAString& aumid) {
   // There are two shortcut targets that we created. One always matches the
   // binary we're running as (eg: firefox.exe). The other is the wrapper
@@ -1427,7 +1587,12 @@ static nsresult PinCurrentAppToTaskbarImpl(
     }
   }
 
-  return PinCurrentAppToTaskbarWin10(aCheckOnly, aAppUserModelId, shortcutPath);
+  if (IsWin10OrLater()) {
+    return PinCurrentAppToTaskbarWin10(aCheckOnly, aAppUserModelId,
+                                       shortcutPath);
+  } else {
+    return PinCurrentAppToTaskbarWin7(aCheckOnly, shortcutPath);
+  }
 }
 
 static nsresult PinCurrentAppToTaskbarAsyncImpl(bool aCheckOnly,
@@ -1439,7 +1604,7 @@ static nsresult PinCurrentAppToTaskbarAsyncImpl(bool aCheckOnly,
   }
 
   // First available on 1809
-  if (!IsWin10Sep2018UpdateOrLater()) {
+  if (IsWin10OrLater() && !IsWin10Sep2018UpdateOrLater()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
