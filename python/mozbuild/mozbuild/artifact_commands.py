@@ -12,6 +12,10 @@ import os
 import shutil
 from collections import OrderedDict
 
+# As a result of the selective module loading changes, this import has to be
+# done here. It is not explicitly used, but it has an implicit side-effect
+# (bringing in TASKCLUSTER_ROOT_URL) which is necessary.
+import gecko_taskgraph.main  # noqa: F401
 import mozversioncontrol
 import six
 from mach.decorators import Command, CommandArgument, SubCommand

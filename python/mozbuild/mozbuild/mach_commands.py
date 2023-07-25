@@ -21,7 +21,6 @@ from os import path
 from pathlib import Path
 
 import mozpack.path as mozpath
-import yaml
 from mach.decorators import (
     Command,
     CommandArgument,
@@ -206,6 +205,7 @@ def cargo(
     continue_on_error=False,
     subcommand_args=[],
 ):
+    import yaml
 
     from mozbuild.controller.building import BuildDriver
 
