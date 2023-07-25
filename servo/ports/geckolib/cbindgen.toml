@@ -94,6 +94,7 @@ include = [
   "ComputedTimingFunction",
   "ComputedValueFlags",
   "CursorKind",
+  "Display",
   "DisplayOutside",
   "DisplayInside",
   "DisplayMode",
@@ -1008,4 +1009,18 @@ renaming_overrides_prefixing = true
 
 "GenericContainIntrinsicSize" = """
   bool HasAuto() const { return IsAutoLength() || IsAutoNone(); }
+"""
+
+"Display" = """
+  inline StyleDisplayOutside Outside() const;
+  inline StyleDisplayInside Inside() const;
+  inline bool IsListItem() const;
+  inline bool IsInlineFlow() const;
+  inline bool IsInlineInside() const;
+  inline bool IsInlineOutside() const;
+  inline bool IsBlockOutside() const;
+  inline bool IsRuby() const;
+  inline bool IsInternalRuby() const;
+  inline bool IsInternalTable() const;
+  inline bool IsInternalTableExceptCell() const;
 """
