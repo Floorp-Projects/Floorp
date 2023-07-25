@@ -1456,31 +1456,81 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     }
   }
 
+  static mozilla::StyleDisplayOutside DisplayOutside(
+      mozilla::StyleDisplay aDisplay) {
+    return mozilla::StyleDisplayOutside(
+        (uint16_t(aDisplay) >> mozilla::STYLE_DISPLAY_INSIDE_BITS) &
+        uint16_t(((1 << mozilla::STYLE_DISPLAY_OUTSIDE_BITS) - 1)));
+  }
   mozilla::StyleDisplayOutside DisplayOutside() const {
-    return mDisplay.Outside();
+    return DisplayOutside(mDisplay);
+  }
+
+  static mozilla::StyleDisplayInside DisplayInside(
+      mozilla::StyleDisplay aDisplay) {
+    return mozilla::StyleDisplayInside(
+        uint16_t(aDisplay) &
+        uint16_t(((1 << mozilla::STYLE_DISPLAY_INSIDE_BITS) - 1)));
   }
   mozilla::StyleDisplayInside DisplayInside() const {
-    return mDisplay.Inside();
+    return DisplayInside(mDisplay);
   }
-  bool IsListItem() const { return mDisplay.IsListItem(); }
-  bool IsInlineFlow() const { return mDisplay.IsInlineFlow(); }
 
-  bool IsInlineInsideStyle() const { return mDisplay.IsInlineInside(); }
+  static bool IsListItem(mozilla::StyleDisplay aDisplay) {
+    return !!(uint16_t(aDisplay) & mozilla::STYLE_DISPLAY_LIST_ITEM_BIT);
+  }
+  bool IsListItem() const { return IsListItem(mDisplay); }
+
+  // Whether display is `inline` or `inline list-item`.
+  static bool IsInlineFlow(mozilla::StyleDisplay aDisplay) {
+    return DisplayOutside(aDisplay) == mozilla::StyleDisplayOutside::Inline &&
+           DisplayInside(aDisplay) == mozilla::StyleDisplayInside::Flow;
+  }
+
+  bool IsInlineFlow() const { return IsInlineFlow(mDisplay); }
+
+  bool IsInlineInsideStyle() const {
+    auto inside = DisplayInside();
+    return IsInlineFlow() || inside == mozilla::StyleDisplayInside::Ruby ||
+           inside == mozilla::StyleDisplayInside::RubyBase ||
+           inside == mozilla::StyleDisplayInside::RubyBaseContainer ||
+           inside == mozilla::StyleDisplayInside::RubyText ||
+           inside == mozilla::StyleDisplayInside::RubyTextContainer;
+  }
 
   bool IsBlockOutsideStyle() const {
     return DisplayOutside() == mozilla::StyleDisplayOutside::Block;
   }
 
-  bool IsInlineOutsideStyle() const { return mDisplay.IsInlineOutside(); }
-
-  bool IsOriginalDisplayInlineOutside() const {
-    return mOriginalDisplay.IsInlineOutside();
+  static bool IsDisplayTypeInlineOutside(mozilla::StyleDisplay aDisplay) {
+    auto outside = DisplayOutside(aDisplay);
+    if (outside == mozilla::StyleDisplayOutside::Inline) {
+      return true;
+    }
+    // just an optimization for the common case:
+    if (outside == mozilla::StyleDisplayOutside::Block) {
+      return false;
+    }
+    return mozilla::StyleDisplay::RubyBase == aDisplay ||
+           mozilla::StyleDisplay::RubyBaseContainer == aDisplay ||
+           mozilla::StyleDisplay::RubyText == aDisplay ||
+           mozilla::StyleDisplay::RubyTextContainer == aDisplay;
   }
 
-  bool IsInnerTableStyle() const { return mDisplay.IsInternalTable(); }
+  bool IsInlineOutsideStyle() const {
+    return IsDisplayTypeInlineOutside(mDisplay);
+  }
+
+  bool IsOriginalDisplayInlineOutside() const {
+    return IsDisplayTypeInlineOutside(mOriginalDisplay);
+  }
+
+  bool IsInnerTableStyle() const {
+    return DisplayOutside() == mozilla::StyleDisplayOutside::InternalTable;
+  }
 
   bool IsInternalTableStyleExceptCell() const {
-    return mDisplay.IsInternalTableExceptCell();
+    return IsInnerTableStyle() && mozilla::StyleDisplay::TableCell != mDisplay;
   }
 
   bool IsFloatingStyle() const { return mozilla::StyleFloat::None != mFloat; }
@@ -1510,9 +1560,23 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
            mozilla::StylePositionProperty::Fixed == mPosition;
   }
 
-  bool IsRubyDisplayType() const { return mDisplay.IsRuby(); }
+  static bool IsRubyDisplayType(mozilla::StyleDisplay aDisplay) {
+    return DisplayInside(aDisplay) == mozilla::StyleDisplayInside::Ruby ||
+           IsInternalRubyDisplayType(aDisplay);
+  }
 
-  bool IsInternalRubyDisplayType() const { return mDisplay.IsInternalRuby(); }
+  static bool IsInternalRubyDisplayType(mozilla::StyleDisplay aDisplay) {
+    return mozilla::StyleDisplay::RubyBase == aDisplay ||
+           mozilla::StyleDisplay::RubyBaseContainer == aDisplay ||
+           mozilla::StyleDisplay::RubyText == aDisplay ||
+           mozilla::StyleDisplay::RubyTextContainer == aDisplay;
+  }
+
+  bool IsRubyDisplayType() const { return IsRubyDisplayType(mDisplay); }
+
+  bool IsInternalRubyDisplayType() const {
+    return IsInternalRubyDisplayType(mDisplay);
+  }
 
   bool IsOutOfFlowStyle() const {
     return (IsAbsolutelyPositionedStyle() || IsFloatingStyle());
