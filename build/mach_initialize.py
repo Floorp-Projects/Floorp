@@ -176,16 +176,22 @@ def initialize(topsrcdir):
     # Centralized registry of available mach commands
     MACH_COMMANDS = {
         "addtest": MachCommandReference("testing/mach_commands.py"),
+        "addwidget": MachCommandReference("toolkit/content/widgets/mach_commands.py"),
         "android": MachCommandReference("mobile/android/mach_commands.py"),
+        "android-emulator": MachCommandReference("mobile/android/mach_commands.py"),
         "artifact": MachCommandReference(
-            "python/mozbuild/mozbuild/artifact_commands.py"
+            "python/mozbuild/mozbuild/artifact_commands.py",
         ),
         "awsy-test": MachCommandReference("testing/awsy/mach_commands.py"),
-        "bootstrap": MachCommandReference("python/mozboot/mozboot/mach_commands.py"),
+        "bootstrap": MachCommandReference(
+            "python/mozboot/mozboot/mach_commands.py",
+        ),
         "browsertime": MachCommandReference("tools/browsertime/mach_commands.py"),
-        "build": MachCommandReference("python/mozbuild/mozbuild/build_commands.py"),
+        "build": MachCommandReference(
+            "python/mozbuild/mozbuild/build_commands.py",
+        ),
         "build-backend": MachCommandReference(
-            "python/mozbuild/mozbuild/build_commands.py"
+            "python/mozbuild/mozbuild/build_commands.py",
         ),
         "buildsymbols": MachCommandReference(
             "python/mozbuild/mozbuild/mach_commands.py"
@@ -220,6 +226,7 @@ def initialize(topsrcdir):
         "environment": MachCommandReference(
             "python/mozbuild/mozbuild/mach_commands.py"
         ),
+        "eslint": MachCommandReference("tools/lint/mach_commands.py"),
         "esmify": MachCommandReference("tools/esmify/mach_commands.py"),
         "fetch-condprofile": MachCommandReference(
             "testing/condprofile/mach_commands.py"
@@ -231,6 +238,7 @@ def initialize(topsrcdir):
             "testing/firefox-ui/mach_commands.py"
         ),
         "fluent-migration-test": MachCommandReference("testing/mach_commands.py"),
+        "format": MachCommandReference("tools/lint/mach_commands.py"),
         "geckodriver": MachCommandReference("testing/geckodriver/mach_commands.py"),
         "geckoview-junit": MachCommandReference("testing/mochitest/mach_commands.py"),
         "generate-test-certs": MachCommandReference(
@@ -256,6 +264,7 @@ def initialize(topsrcdir):
         "l10n-cross-channel": MachCommandReference(
             "tools/compare-locales/mach_commands.py"
         ),
+        "lint": MachCommandReference("tools/lint/mach_commands.py"),
         "logspam": MachCommandReference("tools/mach_commands.py"),
         "mach-commands": MachCommandReference(
             "python/mach/mach/commands/commandinfo.py"
@@ -268,8 +277,9 @@ def initialize(topsrcdir):
         ),
         "marionette-test": MachCommandReference("testing/marionette/mach_commands.py"),
         "mochitest": MachCommandReference("testing/mochitest/mach_commands.py"),
+        "mots": MachCommandReference("tools/mach_commands.py"),
         "mozbuild-reference": MachCommandReference(
-            "python/mozbuild/mozbuild/frontend/mach_commands.py"
+            "python/mozbuild/mozbuild/frontend/mach_commands.py",
         ),
         "mozharness": MachCommandReference("testing/mozharness/mach_commands.py"),
         "mozregression": MachCommandReference("tools/mach_commands.py"),
@@ -287,6 +297,9 @@ def initialize(topsrcdir):
             "python/mozperftest/mozperftest/mach_commands.py"
         ),
         "perftest-test": MachCommandReference(
+            "python/mozperftest/mozperftest/mach_commands.py",
+        ),
+        "perftest-tools": MachCommandReference(
             "python/mozperftest/mozperftest/mach_commands.py"
         ),
         "power": MachCommandReference("tools/power/mach_commands.py"),
@@ -306,7 +319,7 @@ def initialize(topsrcdir):
         "remote": MachCommandReference("remote/mach_commands.py"),
         "repackage": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
         "resource-usage": MachCommandReference(
-            "python/mozbuild/mozbuild/build_commands.py"
+            "python/mozbuild/mozbuild/build_commands.py",
         ),
         "run": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
         "run-condprofile": MachCommandReference("testing/condprofile/mach_commands.py"),
@@ -332,7 +345,7 @@ def initialize(topsrcdir):
         "test": MachCommandReference("testing/mach_commands.py"),
         "test-info": MachCommandReference("testing/mach_commands.py"),
         "test-interventions": MachCommandReference(
-            "testing/webcompat/mach_commands.py"
+            "testing/webcompat/mach_commands.py",
         ),
         "tps-build": MachCommandReference("testing/tps/mach_commands.py"),
         "try": MachCommandReference("tools/tryselect/mach_commands.py"),
@@ -346,9 +359,11 @@ def initialize(topsrcdir):
             "toolkit/components/glean/build_scripts/mach_commands.py"
         ),
         "valgrind-test": MachCommandReference("build/valgrind/mach_commands.py"),
-        "vcs-setup": MachCommandReference("python/mozboot/mozboot/mach_commands.py"),
+        "vcs-setup": MachCommandReference(
+            "python/mozboot/mozboot/mach_commands.py",
+        ),
         "vendor": MachCommandReference(
-            "python/mozbuild/mozbuild/vendor/mach_commands.py"
+            "python/mozbuild/mozbuild/vendor/mach_commands.py",
         ),
         "warnings-list": MachCommandReference(
             "python/mozbuild/mozbuild/mach_commands.py"
@@ -356,18 +371,23 @@ def initialize(topsrcdir):
         "warnings-summary": MachCommandReference(
             "python/mozbuild/mozbuild/mach_commands.py"
         ),
-        "watch": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
+        "watch": MachCommandReference(
+            "python/mozbuild/mozbuild/mach_commands.py",
+        ),
         "web-platform-tests": MachCommandReference(
-            "testing/web-platform/mach_commands.py"
+            "testing/web-platform/mach_commands.py",
         ),
         "web-platform-tests-update": MachCommandReference(
-            "testing/web-platform/mach_commands.py"
+            "testing/web-platform/mach_commands.py",
         ),
         "webidl-example": MachCommandReference("dom/bindings/mach_commands.py"),
         "webidl-parser-test": MachCommandReference("dom/bindings/mach_commands.py"),
-        "widgets": MachCommandReference("toolkit/content/widgets/mach_commands.py"),
         "wpt": MachCommandReference("testing/web-platform/mach_commands.py"),
+        "wpt-fetch-logs": MachCommandReference("testing/web-platform/mach_commands.py"),
         "wpt-fission-regressions": MachCommandReference(
+            "testing/web-platform/mach_commands.py"
+        ),
+        "wpt-interop-score": MachCommandReference(
             "testing/web-platform/mach_commands.py"
         ),
         "wpt-manifest-update": MachCommandReference(
