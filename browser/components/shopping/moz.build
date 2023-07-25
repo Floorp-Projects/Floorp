@@ -6,6 +6,11 @@
 
 JAR_MANIFESTS += ["jar.mn"]
 
+FINAL_TARGET_FILES.actors += [
+    "ShoppingSidebarChild.sys.mjs",
+    "ShoppingSidebarParent.sys.mjs",
+]
+
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
 with Files("**"):
