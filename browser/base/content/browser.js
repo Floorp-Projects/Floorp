@@ -9974,19 +9974,24 @@ var ShoppingSidebarManager = {
 
     let browserPanel = gBrowser.getPanel(aBrowser);
     let sidebar = browserPanel.querySelector("shopping-sidebar");
+    let actor;
+    if (sidebar) {
+      let global =
+        sidebar.querySelector("browser").browsingContext.currentWindowGlobal;
+      actor = global.getExistingActor("ShoppingSidebar");
+    }
     if (this._isProductPage(aLocationURI)) {
       if (!sidebar) {
         sidebar = document.createXULElement("shopping-sidebar");
         sidebar.setAttribute("style", "width: 320px");
-        sidebar.setAttribute("url", aLocationURI.asciiSpec);
         sidebar.hidden = false;
         browserPanel.appendChild(sidebar);
       } else {
-        sidebar.setAttribute("url", aLocationURI.asciiSpec);
+        actor?.updateProductURL(aLocationURI);
         sidebar.hidden = false;
       }
     } else if (sidebar && !sidebar.hidden) {
-      sidebar.setAttribute("url", null);
+      actor?.updateProductURL(null);
       sidebar.hidden = true;
     }
   },

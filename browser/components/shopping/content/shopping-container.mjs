@@ -18,6 +18,8 @@ import "chrome://browser/content/shopping/reliability.mjs";
 import "chrome://browser/content/shopping/analysis-explainer.mjs";
 
 export class ShoppingContainer extends MozLitElement {
+  #productURL;
+
   static properties = {
     data: { type: Object },
   };
@@ -33,20 +35,53 @@ export class ShoppingContainer extends MozLitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    if (!this.data) {
+    if (this.initialized) {
+      return;
+    }
+    this.initialized = true;
+
+    window.document.addEventListener("UpdateProductURL", this);
+
+    window.dispatchEvent(
+      new CustomEvent("ContentReady", {
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  set productURL(newURL) {
+    this.#productURL = newURL;
+    this.data = null;
+  }
+
+  get productURL() {
+    return this.#productURL;
+  }
+
+  init() {
+    if (!this.productURL) {
+      // TODO: cancel fetches? disconnect components?
+    } else if (!this.data) {
       this.fetchAnalysis();
     }
   }
 
-  async fetchAnalysis() {
-    let searchParams = new URLSearchParams(window.location.search);
-    let productPage = searchParams.get("url");
-    if (!productPage) {
-      // Nothing to do - we're navigating to a non-product page.
-      return;
+  handleEvent(event) {
+    switch (event.type) {
+      case "UpdateProductURL":
+        // Ignore duplicate events sometimes fired by product pages.
+        if (this.productURL === event.detail.url) {
+          return;
+        }
+        this.productURL = event.detail.url;
+        this.init();
+        break;
     }
-    let productURL = new URL(productPage);
-    let product = new ShoppingProduct(productURL);
+  }
+
+  async fetchAnalysis() {
+    let product = new ShoppingProduct(new URL(this.productURL));
     this.data = await product.requestAnalysis();
   }
 

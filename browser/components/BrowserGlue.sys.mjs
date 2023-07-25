@@ -729,6 +729,20 @@ let JSWINDOWACTORS = {
     matches: ["about:studies*"],
   },
 
+  ShoppingSidebar: {
+    parent: {
+      esModuleURI: "resource:///actors/ShoppingSidebarParent.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource:///actors/ShoppingSidebarChild.sys.mjs",
+      events: {
+        ContentReady: { wantUntrusted: true },
+      },
+    },
+    matches: ["chrome://browser/content/shopping/shopping.html"],
+    remoteTypes: ["privilegedabout"],
+  },
+
   SpeechDispatcher: {
     parent: {
       esModuleURI: "resource:///actors/SpeechDispatcherParent.sys.mjs",
