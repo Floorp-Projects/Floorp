@@ -273,7 +273,7 @@ _try_subset (const TableType *table,
              hb_vector_t<char>* buf,
              hb_subset_context_t* c /* OUT */)
 {
-  c->serializer->start_serialize<TableType> ();
+  c->serializer->start_serialize ();
   if (c->serializer->in_error ()) return false;
 
   bool needed = table->subset (c);

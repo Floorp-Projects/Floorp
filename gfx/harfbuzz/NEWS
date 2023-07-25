@@ -1,3 +1,14 @@
+Overview of changes leading to 8.0.1
+Wednesday, July 12, 2023
+====================================
+- Build fix on 32-bit arm.
+
+- More speed optimizations:
+  - 60% speedup in retaingids subsetting SourceHanSans-VF.
+  - 38% speed up in subsetting (beyond-64k) mega-merged Noto.
+  - 16% speed up in retain-gid (used for IFT) subsetting of NotoSansCJKkr.
+
+
 Overview of changes leading to 8.0.0
 Sunday, July 9, 2023
 ====================================

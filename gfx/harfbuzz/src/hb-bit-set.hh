@@ -553,6 +553,7 @@ struct hb_bit_set_t
 	count--;
 	page_map.arrayZ[count] = page_map.arrayZ[a];
 	page_at (count).v = op (page_at (a).v, other.page_at (b).v);
+	page_at (count).dirty ();
       }
       else if (page_map.arrayZ[a - 1].major > other.page_map.arrayZ[b - 1].major)
       {
@@ -571,7 +572,7 @@ struct hb_bit_set_t
 	  count--;
 	  page_map.arrayZ[count].major = other.page_map.arrayZ[b].major;
 	  page_map.arrayZ[count].index = next_page++;
-	  page_at (count).v = other.page_at (b).v;
+	  page_at (count) = other.page_at (b);
 	}
       }
     }
@@ -589,7 +590,7 @@ struct hb_bit_set_t
 	count--;
 	page_map.arrayZ[count].major = other.page_map.arrayZ[b].major;
 	page_map.arrayZ[count].index = next_page++;
-	page_at (count).v = other.page_at (b).v;
+	page_at (count) = other.page_at (b);
       }
     assert (!count);
     resize (newCount);
