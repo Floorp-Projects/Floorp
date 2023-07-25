@@ -122,7 +122,7 @@ jobs:
         echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
         
         rm -rf $RUNNER_USERDIR/.mozbuild/clang
-        wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/ItH7LNKUSzquYigrSE04ww/runs/0/artifacts/public%2Fbuild%2Fclang.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/.mozbuild
+        wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/XEpy8nJARx2eHe8RqyEqfg/runs/0/artifacts/public%2Fbuild%2Fclang.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/.mozbuild
         
         echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
 
@@ -305,7 +305,7 @@ jobs:
         echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
         
         rm -rf $RUNNER_USERDIR/.mozbuild/clang
-        wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/ItH7LNKUSzquYigrSE04ww/runs/0/artifacts/public%2Fbuild%2Fclang.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/.mozbuild
+        wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/XEpy8nJARx2eHe8RqyEqfg/runs/0/artifacts/public%2Fbuild%2Fclang.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/.mozbuild
         
         echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
 
