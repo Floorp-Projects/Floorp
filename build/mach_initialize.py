@@ -350,6 +350,10 @@ def initialize(topsrcdir, args=()):
         "mach-commands",
         "mach-completion",
         "mach-debug-commands",
+        "mochitest",
+        "geckoview-junit",
+        "xpcshell-test",
+        "gtest",
         "help",
     ]
 
