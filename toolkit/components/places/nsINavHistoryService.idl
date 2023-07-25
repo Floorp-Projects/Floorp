@@ -180,13 +180,6 @@ interface nsINavHistoryResultNode : nsISupports
   readonly attribute long long visitId;
 
   /**
-   * The unique ID associated with visit node which was the referrer of this
-   * history visit. For node types other than history visit nodes, or visits
-   * without any known referrer, this value is -1.
-   */
-  readonly attribute long long fromVisitId;
-
-  /**
    * The transition type associated with this visit. For node types other than
    * history visit nodes, this value is 0.
    */
