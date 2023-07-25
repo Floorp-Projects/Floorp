@@ -58,16 +58,12 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
 
     // We need to check if the decorator returned undefined, a callable value,
     // or any other value.
-    IfEmitter ie(bce_);
-    if (!ie.emitIf(mozilla::Nothing())) {
-      return false;
-    }
-
     if (!emitCheckIsUndefined()) {
       //          [stack] VAL RETVAL ISUNDEFINED
       return false;
     }
 
+    InternalIfEmitter ie(bce_);
     if (!ie.emitThenElse()) {
       //          [stack] VAL RETVAL
       return false;
@@ -192,16 +188,12 @@ bool DecoratorEmitter::emitApplyDecoratorsToFieldDefinition(
 
     // We need to check if the decorator returned undefined, a callable value,
     // or any other value.
-    IfEmitter ie(bce_);
-    if (!ie.emitIf(mozilla::Nothing())) {
-      return false;
-    }
-
     if (!emitCheckIsUndefined()) {
       //          [stack] ARRAY INDEX RETVAL ISUNDEFINED
       return false;
     }
 
+    InternalIfEmitter ie(bce_);
     if (!ie.emitThenElse()) {
       //          [stack] ARRAY INDEX RETVAL
       return false;
@@ -372,16 +364,12 @@ bool DecoratorEmitter::emitApplyDecoratorsToAccessorDefinition(
 
     // We need to check if the decorator returned undefined, a callable value,
     // or any other value.
-    IfEmitter ie(bce_);
-    if (!ie.emitIf(mozilla::Nothing())) {
-      return false;
-    }
-
     if (!emitCheckIsUndefined()) {
       //          [stack] GETTER SETTER ARRAY INDEX RETVAL ISUNDEFINED
       return false;
     }
 
+    InternalIfEmitter ie(bce_);
     if (!ie.emitThenElse()) {
       //          [stack] GETTER SETTER ARRAY INDEX RETVAL
       return false;
@@ -1187,17 +1175,13 @@ bool DecoratorEmitter::emitHandleNewValueField(TaggedParserAtomIndex atom,
     return false;
   }
 
-  IfEmitter ifCallable(bce_);
-  if (!ifCallable.emitIf(mozilla::Nothing())) {
-    return false;
-  }
-
   if (!emitCheckIsUndefined()) {
     //          [stack] GETTER SETTER ARRAY INDEX RETVAL
     //                  NEW_VALUE ISUNDEFINED
     return false;
   }
 
+  InternalIfEmitter ifCallable(bce_);
   if (!ifCallable.emitThenElse()) {
     //          [stack] GETTER SETTER ARRAY INDEX RETVAL
     //                  NEW_VALUE
