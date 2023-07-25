@@ -1314,7 +1314,7 @@ void nsGenericHTMLElement::MapCommonAttributesInto(
   MapCommonAttributesIntoExceptHidden(aBuilder);
   if (!aBuilder.PropertyIsSet(eCSSProperty_display)) {
     if (aBuilder.GetAttr(nsGkAtoms::hidden)) {
-      aBuilder.SetKeywordValue(eCSSProperty_display, StyleDisplay::None);
+      aBuilder.SetKeywordValue(eCSSProperty_display, StyleDisplay::None._0);
     }
   }
 }

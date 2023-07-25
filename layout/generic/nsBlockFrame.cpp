@@ -1217,8 +1217,7 @@ static bool IsLineClampRoot(const nsBlockFrame* aFrame) {
     }
     return aFrame->StyleDisplay()->mOriginalDisplay;
   }();
-  return nsStyleDisplay::DisplayInside(origDisplay) ==
-         StyleDisplayInside::WebkitBox;
+  return origDisplay.Inside() == StyleDisplayInside::WebkitBox;
 }
 
 bool nsBlockFrame::IsInLineClampContext() const {

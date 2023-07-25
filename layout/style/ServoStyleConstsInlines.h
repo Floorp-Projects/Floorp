@@ -1085,6 +1085,45 @@ inline StyleViewTimelineInset::StyleGenericViewTimelineInset()
     : start(LengthPercentageOrAuto::Auto()),
       end(LengthPercentageOrAuto::Auto()) {}
 
+inline StyleDisplayOutside StyleDisplay::Outside() const {
+  return StyleDisplayOutside((_0 & OUTSIDE_MASK) >> OUTSIDE_SHIFT);
+}
+
+inline StyleDisplayInside StyleDisplay::Inside() const {
+  return StyleDisplayInside(_0 & INSIDE_MASK);
+}
+
+inline bool StyleDisplay::IsListItem() const { return _0 & LIST_ITEM_MASK; }
+
+inline bool StyleDisplay::IsInternalTable() const {
+  return Outside() == StyleDisplayOutside::InternalTable;
+}
+
+inline bool StyleDisplay::IsInternalTableExceptCell() const {
+  return IsInternalTable() && *this != TableCell;
+}
+
+inline bool StyleDisplay::IsInternalRuby() const {
+  return Outside() == StyleDisplayOutside::InternalRuby;
+}
+
+inline bool StyleDisplay::IsRuby() const {
+  return Inside() == StyleDisplayInside::Ruby || IsInternalRuby();
+}
+
+inline bool StyleDisplay::IsInlineFlow() const {
+  return Outside() == StyleDisplayOutside::Inline &&
+         Inside() == StyleDisplayInside::Flow;
+}
+
+inline bool StyleDisplay::IsInlineInside() const {
+  return IsInlineFlow() || IsRuby();
+}
+
+inline bool StyleDisplay::IsInlineOutside() const {
+  return Outside() == StyleDisplayOutside::Inline || IsInternalRuby();
+}
+
 }  // namespace mozilla
 
 #endif
