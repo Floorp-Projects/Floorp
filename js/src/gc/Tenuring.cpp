@@ -754,8 +754,7 @@ JSString* js::gc::TenuringTracer::moveToTenured(JSString* src) {
 
   if (src->length() < MAX_DEDUPLICATABLE_STRING_LENGTH && src->isLinear() &&
       src->isDeduplicatable() && stringDeDupSet.isSome()) {
-    auto p = stringDeDupSet->lookupForAdd(src);
-    if (p) {
+    if (auto p = stringDeDupSet->lookup(src)) {
       // Deduplicate to the looked-up string!
       dst = *p;
       zone->stringStats.ref().noteDeduplicated(src->length(), src->allocSize());
@@ -766,11 +765,7 @@ JSString* js::gc::TenuringTracer::moveToTenured(JSString* src) {
 
     dst = allocTenuredString(src, zone, dstKind);
 
-    using DedupStringHasher = DeduplicationStringHasher<JSString*>;
-    MOZ_ASSERT(DedupStringHasher::hash(src) == DedupStringHasher::hash(dst),
-               "src and dst must have the same hash for lookupForAdd");
-
-    if (!stringDeDupSet->add(p, dst)) {
+    if (!stringDeDupSet->putNew(dst)) {
       // When there is oom caused by the stringDeDupSet, stop deduplicating
       // strings.
       stringDeDupSet.reset();
