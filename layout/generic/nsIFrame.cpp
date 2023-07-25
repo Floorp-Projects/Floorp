@@ -1079,6 +1079,12 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
     return;
   }
 
+#ifdef ACCESSIBILITY
+  if (nsAccessibilityService* accService = GetAccService()) {
+    accService->NotifyOfPossibleBoundsChange(PresShell(), mContent);
+  }
+#endif
+
   nsIFrame* rootFrame = PresShell()->GetRootFrame();
 
   if (rootFrame->IsFrameModified()) {
@@ -6780,12 +6786,6 @@ void nsIFrame::DidReflow(nsPresContext* aPresContext,
   }
 
   aPresContext->ReflowedFrame();
-
-#ifdef ACCESSIBILITY
-  if (nsAccessibilityService* accService = GetAccService()) {
-    accService->NotifyOfPossibleBoundsChange(PresShell(), mContent);
-  }
-#endif
 }
 
 void nsIFrame::FinishReflowWithAbsoluteFrames(nsPresContext* aPresContext,
@@ -7726,11 +7726,6 @@ void nsIFrame::SetPosition(const nsPoint& aPt) {
   }
   mRect.MoveTo(aPt);
   MarkNeedsDisplayItemRebuild();
-#ifdef ACCESSIBILITY
-  if (nsAccessibilityService* accService = GetAccService()) {
-    accService->NotifyOfPossibleBoundsChange(PresShell(), mContent);
-  }
-#endif
 }
 
 void nsIFrame::MovePositionBy(const nsPoint& aTranslation) {
