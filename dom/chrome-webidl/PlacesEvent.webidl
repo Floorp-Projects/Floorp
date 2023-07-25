@@ -118,6 +118,11 @@ interface PlacesVisit : PlacesEvent {
   readonly attribute ByteString pageGuid;
 
   /**
+   * The frecency of the this page.
+   */
+  readonly attribute long long frecency;
+
+  /**
    * Whether the visited page is marked as hidden.
    */
   readonly attribute boolean hidden;

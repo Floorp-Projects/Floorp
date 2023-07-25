@@ -536,10 +536,12 @@ class NotifyManyVisitsObservers : public Runnable {
     visitEvent->mReferringVisitId = aPlace.referrerVisitId;
     visitEvent->mTransitionType = aPlace.transitionType;
     visitEvent->mPageGuid.Assign(aPlace.guid);
+    visitEvent->mFrecency = aPlace.frecency;
     visitEvent->mHidden = aPlace.hidden;
     visitEvent->mVisitCount = aPlace.visitCount + 1;  // Add current visit
     visitEvent->mTypedCount = static_cast<uint32_t>(aPlace.typed);
     visitEvent->mLastKnownTitle.Assign(aPlace.title);
+
     bool success = !!aEvents.AppendElement(visitEvent.forget(), fallible);
     MOZ_RELEASE_ASSERT(success);
 

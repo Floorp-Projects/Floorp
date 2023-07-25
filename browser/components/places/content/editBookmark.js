@@ -353,7 +353,7 @@ var gEditItemOverlay = {
       }
 
       // Collapse the tag selector if the item does not accept tags.
-      if (showOrCollapse("tagsRow", isURI || bulkTagging, "tags")) {
+      if (showOrCollapse("tagsRow", isBookmark || bulkTagging, "tags")) {
         this._initTagsField();
       } else if (!this._element("tagsSelectorRow").hidden) {
         this.toggleTagsSelector().catch(console.error);

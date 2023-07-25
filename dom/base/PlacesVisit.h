@@ -35,6 +35,7 @@ class PlacesVisit final : public PlacesEvent {
   uint64_t ReferringVisitId() { return mReferringVisitId; }
   uint64_t TransitionType() { return mTransitionType; }
   void GetPageGuid(nsTString<char>& aPageGuid) { aPageGuid = mPageGuid; }
+  uint64_t Frecency() { return mFrecency; }
   bool Hidden() { return mHidden; }
   uint32_t VisitCount() { return mVisitCount; }
   uint32_t TypedCount() { return mTypedCount; }
@@ -51,6 +52,7 @@ class PlacesVisit final : public PlacesEvent {
   uint64_t mReferringVisitId;
   uint32_t mTransitionType;
   nsCString mPageGuid;
+  int64_t mFrecency;
   bool mHidden;
   uint32_t mVisitCount;
   uint32_t mTypedCount;

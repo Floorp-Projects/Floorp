@@ -2081,10 +2081,10 @@ static nsresult setHistoryDetailsCallback(nsNavHistoryResultNode* aNode,
  * common update operation and it is important that it be as efficient as
  * possible.
  */
-nsresult nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
-                                              PRTime aTime,
-                                              uint32_t aTransitionType,
-                                              bool aHidden, uint32_t* aAdded) {
+nsresult nsNavHistoryQueryResultNode::OnVisit(
+    nsIURI* aURI, int64_t aVisitId, PRTime aTime, uint32_t aTransitionType,
+    const nsACString& aGUID, bool aHidden, uint32_t aVisitCount,
+    const nsAString& aLastKnownTitle, int64_t aFrecency, uint32_t* aAdded) {
   if (aHidden && !mOptions->IncludeHidden()) return NS_OK;
   // Skip the notification if the query is filtered by specific transition types
   // and this visit has a different one.
@@ -2145,17 +2145,28 @@ nsresult nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
     }
 
     case QUERYUPDATE_SIMPLE: {
-      // The history service can tell us whether the new item should appear
-      // in the result.  We first have to construct a node for it to check.
-      RefPtr<nsNavHistoryResultNode> addition;
-      nsresult rv = history->VisitIdToResultNode(aVisitId, mOptions,
-                                                 getter_AddRefs(addition));
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (!addition) {
+      if (mOptions->ResultType() !=
+              nsNavHistoryQueryOptions::RESULTS_AS_VISIT &&
+          mOptions->ResultType() != nsNavHistoryQueryOptions::RESULTS_AS_URI) {
         // Certain result types manage the nodes by themselves.
         return NS_OK;
       }
+
+      nsAutoCString spec;
+      nsresult rv = aURI->GetSpec(spec);
+      NS_ENSURE_SUCCESS(rv, rv);
+      RefPtr<nsNavHistoryResultNode> addition = new nsNavHistoryResultNode(
+          spec, NS_ConvertUTF16toUTF8(aLastKnownTitle), aVisitCount, aTime);
+      addition->mPageGuid.Assign(aGUID);
+      addition->mFrecency = aFrecency;
+      addition->mHidden = aHidden;
       addition->mTransitionType = aTransitionType;
+
+      if (mOptions->ResultType() ==
+          nsNavHistoryQueryOptions::RESULTS_AS_VISIT) {
+        addition->mVisitId = aVisitId;
+      }
+
       if (!evaluateQueryForNode(mQuery, mOptions, addition))
         return NS_OK;  // don't need to include in our query
 
@@ -3365,7 +3376,8 @@ nsresult nsNavHistoryResultNode::OnVisitsRemoved() {
  */
 nsresult nsNavHistoryFolderResultNode::OnItemVisited(nsIURI* aURI,
                                                      int64_t aVisitId,
-                                                     PRTime aTime) {
+                                                     PRTime aTime,
+                                                     int64_t aFrecency) {
   if (mOptions->ExcludeItems())
     return NS_OK;  // don't update items when we aren't displaying them
 
@@ -3396,21 +3408,7 @@ nsresult nsNavHistoryFolderResultNode::OnItemVisited(nsIURI* aURI,
     PRTime nodeOldTime = node->mTime;
     node->mTime = aTime;
     ++node->mAccessCount;
-
-    // Update frecency for proper frecency ordering.
-    // TODO (bug 832617): we may avoid one query here, by providing the new
-    // frecency value in the notification.
-    nsNavHistory* history = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(history, NS_OK);
-    RefPtr<nsNavHistoryResultNode> visitNode;
-    rv = history->VisitIdToResultNode(aVisitId, mOptions,
-                                      getter_AddRefs(visitNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!visitNode) {
-      // Certain result types manage the nodes by themselves.
-      return NS_OK;
-    }
-    node->mFrecency = visitNode->mFrecency;
+    node->mFrecency = aFrecency;
 
     nsNavHistoryResult* result = GetResult();
     if (AreChildrenVisible() && !result->CanSkipHistoryDetailsNotifications()) {
@@ -4047,7 +4045,8 @@ nsresult nsNavHistoryResult::OnVisit(nsIURI* aURI, int64_t aVisitId,
                                      PRTime aTime, uint32_t aTransitionType,
                                      const nsACString& aGUID, bool aHidden,
                                      uint32_t aVisitCount,
-                                     const nsAString& aLastKnownTitle) {
+                                     const nsAString& aLastKnownTitle,
+                                     int64_t aFrecency) {
   NS_ENSURE_ARG(aURI);
 
   // Embed visits are never shown in our views.
@@ -4057,8 +4056,9 @@ nsresult nsNavHistoryResult::OnVisit(nsIURI* aURI, int64_t aVisitId,
 
   uint32_t added = 0;
 
-  ENUMERATE_HISTORY_OBSERVERS(
-      OnVisit(aURI, aVisitId, aTime, aTransitionType, aHidden, &added));
+  ENUMERATE_HISTORY_OBSERVERS(OnVisit(aURI, aVisitId, aTime, aTransitionType,
+                                      aGUID, aHidden, aVisitCount,
+                                      aLastKnownTitle, aFrecency, &added));
 
   // When we add visits, we don't bother telling the world that the title
   // 'changed' from nothing to the first title we ever see for a history entry.
@@ -4135,7 +4135,8 @@ nsresult nsNavHistoryResult::OnVisit(nsIURI* aURI, int64_t aVisitId,
       for (int32_t i = 0; i < nodes.Count(); ++i) {
         nsNavHistoryResultNode* node = nodes[i];
         ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(
-            node->mParent->mBookmarkGuid, OnItemVisited(aURI, aVisitId, aTime));
+            node->mParent->mBookmarkGuid,
+            OnItemVisited(aURI, aVisitId, aTime, aFrecency));
       }
     }
   }
@@ -4210,7 +4211,7 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
         }
         OnVisit(uri, visit->mVisitId, visit->mVisitTime * 1000,
                 visit->mTransitionType, visit->mPageGuid, visit->mHidden,
-                visit->mVisitCount, visit->mLastKnownTitle);
+                visit->mVisitCount, visit->mLastKnownTitle, visit->mFrecency);
         break;
       }
       case PlacesEventType::Bookmark_added: {
