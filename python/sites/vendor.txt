@@ -2,3 +2,5 @@ pypi:poetry==1.4
 # Pin poetry-core so that the same one is used between Python versions.
 # Otherwise, different versions of poetry-core output different "requirements.txt" contents
 pypi:poetry-core==1.5.1
+vendored:third_party/python/toml
+vendored:third_party/python/voluptuous
