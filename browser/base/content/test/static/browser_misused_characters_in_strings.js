@@ -210,64 +210,24 @@ add_task(async function checkAllTheDTDs() {
 
 add_task(async function checkAllTheFluents() {
   let uris = await getAllTheFiles(".ftl");
-  let { FluentParser, Visitor } = ChromeUtils.import(
-    "resource://testing-common/FluentSyntax.jsm"
-  );
 
-  class TextElementVisitor extends Visitor {
-    constructor() {
-      super();
-      let domParser = new DOMParser();
-      domParser.forceEnableDTD();
-
-      this.domParser = domParser;
-      this.uri = null;
-      this.id = null;
-      this.attr = null;
-    }
-
-    visitMessage(node) {
-      this.id = node.id.name;
-      this.attr = null;
-      this.genericVisit(node);
-    }
-
-    visitTerm(node) {
-      this.id = node.id.name;
-      this.attr = null;
-      this.genericVisit(node);
-    }
-
-    visitAttribute(node) {
-      this.attr = node.id.name;
-      this.genericVisit(node);
-    }
-
-    get key() {
-      if (this.attr) {
-        return `${this.id}.${this.attr}`;
-      }
-      return this.id;
-    }
-
-    visitTextElement(node) {
-      const stripped_val = this.domParser.parseFromString(
-        "<!DOCTYPE html>" + node.value,
-        "text/html"
-      ).documentElement.textContent;
-      testForErrors(this.uri, this.key, stripped_val);
-    }
-  }
-
-  const ftlParser = new FluentParser({ withSpans: false });
-  const visitor = new TextElementVisitor();
+  let domParser = new DOMParser();
+  domParser.forceEnableDTD();
 
   for (let uri of uris) {
     let rawContents = await fetchFile(uri.spec);
-    let ast = ftlParser.parse(rawContents);
+    const resource = new FluentResource(rawContents);
 
-    visitor.uri = uri.spec;
-    visitor.visit(ast);
+    for (const info of resource.textElements()) {
+      const key = info.attr ? `${info.id}.${info.attr}` : info.id;
+
+      const stripped_val = domParser.parseFromString(
+        "<!DOCTYPE html>" + info.text,
+        "text/html"
+      ).documentElement.textContent;
+
+      testForErrors(uri.spec, key, stripped_val);
+    }
   }
 });
 

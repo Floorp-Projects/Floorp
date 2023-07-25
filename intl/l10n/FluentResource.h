@@ -7,6 +7,7 @@
 #ifndef mozilla_intl_l10n_FluentResource_h
 #define mozilla_intl_l10n_FluentResource_h
 
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -14,6 +15,11 @@
 #include "mozilla/intl/FluentBindings.h"
 
 namespace mozilla {
+
+namespace dom {
+struct FluentTextElementItem;
+}  // namespace dom
+
 namespace intl {
 
 class FluentResource : public nsWrapperCache {
@@ -26,6 +32,9 @@ class FluentResource : public nsWrapperCache {
 
   static already_AddRefed<FluentResource> Constructor(
       const dom::GlobalObject& aGlobal, const nsACString& aSource);
+
+  void TextElements(nsTArray<dom::FluentTextElementItem>& aElements,
+                    ErrorResult& aRv);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
