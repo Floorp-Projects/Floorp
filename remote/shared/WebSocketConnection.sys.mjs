@@ -17,6 +17,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
+const MAX_LOG_LENGTH = 2500;
+
 export class WebSocketConnection {
   /**
    * @param {WebSocket} webSocket
@@ -45,11 +47,19 @@ export class WebSocketConnection {
         return value;
       }
 
-      const payload = JSON.stringify(
+      let payload = JSON.stringify(
         data,
         replacer,
         lazy.Log.verbose ? "\t" : null
       );
+
+      if (payload.length > MAX_LOG_LENGTH) {
+        // Even if we truncate individual values, the resulting message might be
+        // huge if we are serializing big objects with many properties or items.
+        // Truncate the overall message to avoid issues in logs.
+        const truncated = payload.substring(0, MAX_LOG_LENGTH);
+        payload = `${truncated} [... truncated after ${MAX_LOG_LENGTH} characters]`;
+      }
 
       lazy.logger.debug(
         `${this.constructor.name} ${this.id} ${direction} ${payload}`
