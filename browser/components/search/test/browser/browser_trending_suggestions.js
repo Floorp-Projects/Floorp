@@ -36,6 +36,7 @@ add_setup(async () => {
 
   SearchTestUtils.useMockIdleService();
   await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_DEFAULT);
+  Services.telemetry.clearScalars();
 
   registerCleanupFunction(async () => {
     let settingsWritten = SearchTestUtils.promiseSearchNotification(

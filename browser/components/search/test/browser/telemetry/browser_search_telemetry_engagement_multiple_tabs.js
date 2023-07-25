@@ -8,20 +8,17 @@
 
 "use strict";
 
-const { SearchSERPTelemetry, SearchSERPTelemetryUtils } =
-  ChromeUtils.importESModule("resource:///modules/SearchSERPTelemetry.sys.mjs");
-
 const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
     searchPageRegexp:
-      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_/,
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/searchTelemetryAd_/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
     adServerAttributes: ["mozAttr"],
     nonAdsLinkRegexps: [
-      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_nonAdsLink_redirect/,
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/searchTelemetryAd_nonAdsLink_redirect/,
     ],
     extraAdServersRegexps: [/^https:\/\/example\.com\/ad/],
     components: [
@@ -61,21 +58,6 @@ const TEST_PROVIDER_INFO = [
 // so that we don't have to create a ton of tabs to reuse a process.
 const MAX_IPC = 1;
 const TABS_TO_OPEN = 2;
-
-function getSERPUrl(page, term) {
-  let url =
-    getRootDirectory(gTestPath).replace(
-      "chrome://mochitests/content",
-      "https://example.org"
-    ) + page;
-  return `${url}?s=${term}`;
-}
-
-async function waitForIdle() {
-  for (let i = 0; i < 10; i++) {
-    await new Promise(resolve => Services.tm.idleDispatchToMainThread(resolve));
-  }
-}
 
 add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);

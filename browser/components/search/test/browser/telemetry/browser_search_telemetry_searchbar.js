@@ -388,9 +388,11 @@ add_task(async function test_suggestion_click() {
 add_task(async function test_suggestion_middle_click() {
   let openedTab;
   await checkSuggestionClick({ button: 1 }, () => {
-    return BrowserTestUtils.waitForNewTab(gBrowser, "http://example.com/").then(
-      tab => (openedTab = tab)
-    );
+    return BrowserTestUtils.waitForNewTab(
+      gBrowser,
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      "http://example.com/"
+    ).then(tab => (openedTab = tab));
   });
   BrowserTestUtils.removeTab(openedTab);
 });

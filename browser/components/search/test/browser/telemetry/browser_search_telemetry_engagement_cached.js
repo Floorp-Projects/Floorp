@@ -7,14 +7,11 @@
 
 "use strict";
 
-const { SearchSERPTelemetry, SearchSERPTelemetryUtils } =
-  ChromeUtils.importESModule("resource:///modules/SearchSERPTelemetry.sys.mjs");
-
 const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
     searchPageRegexp:
-      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_/,
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/searchTelemetryAd_/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -86,28 +83,6 @@ const TEST_PROVIDER_INFO = [
   },
 ];
 
-function getSERPUrl(page, organic = false) {
-  let url =
-    getRootDirectory(gTestPath).replace(
-      "chrome://mochitests/content",
-      "https://example.org"
-    ) + page;
-  return `${url}?s=test${organic ? "" : "&abc=ff"}`;
-}
-
-async function promiseImpressionReceived() {
-  return TestUtils.waitForCondition(() => {
-    let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];
-    return adImpressions.length;
-  }, "Should have received an ad impression.");
-}
-
-async function waitForIdle() {
-  for (let i = 0; i < 10; i++) {
-    await new Promise(resolve => Services.tm.idleDispatchToMainThread(resolve));
-  }
-}
-
 add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
@@ -131,7 +106,7 @@ add_setup(async function () {
 add_task(async function test_click_cached_page() {
   let url = getSERPUrl("searchTelemetryAd_components_text.html");
   let cacheableUrl =
-    "https://example.com/browser/browser/components/search/test/browser/cacheable.html";
+    "https://example.com/browser/browser/components/search/test/browser/telemetry/cacheable.html";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   await waitForPageWithAdImpressions();
 

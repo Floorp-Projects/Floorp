@@ -9,20 +9,17 @@
 
 "use strict";
 
-const { SearchSERPTelemetry, SearchSERPTelemetryUtils } =
-  ChromeUtils.importESModule("resource:///modules/SearchSERPTelemetry.sys.mjs");
-
 const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
     searchPageRegexp:
-      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_/,
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/searchTelemetryAd_/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
     adServerAttributes: ["mozAttr"],
     nonAdsLinkRegexps: [
-      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_nonAdsLink_redirect.html/,
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/searchTelemetryAd_nonAdsLink_redirect.html/,
     ],
     extraAdServersRegexps: [/^https:\/\/example\.com\/ad/],
     components: [
@@ -105,28 +102,6 @@ const TEST_PROVIDER_INFO_NO_NON_ADS_REGEXP = [
     nonAdsLinkRegexps: [],
   },
 ];
-
-function getSERPUrl(page, organic = false) {
-  let url =
-    getRootDirectory(gTestPath).replace(
-      "chrome://mochitests/content",
-      "https://example.org"
-    ) + page;
-  return `${url}?s=test${organic ? "" : "&abc=ff"}`;
-}
-
-async function promiseImpressionReceived() {
-  return TestUtils.waitForCondition(() => {
-    let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];
-    return adImpressions.length;
-  }, "Should have received an ad impression.");
-}
-
-async function waitForIdle() {
-  for (let i = 0; i < 10; i++) {
-    await new Promise(resolve => Services.tm.idleDispatchToMainThread(resolve));
-  }
-}
 
 add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
@@ -239,7 +214,7 @@ add_task(async function test_click_and_submit_incontent_searchbox() {
   await waitForPageWithAdImpressions();
 
   // Click on the searchbox.
-  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser, url);
+  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "form input",
     {},
@@ -299,7 +274,7 @@ add_task(async function test_click_autosuggest() {
   await waitForPageWithAdImpressions();
 
   // Click an autosuggested term.
-  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser, url);
+  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "#suggest",
     {},

@@ -4,9 +4,6 @@
 // Test to verify we can toggle the Glean SERP telemetry feature via a Nimbus
 // variable.
 
-const { SearchSERPTelemetry, SearchSERPTelemetryUtils } =
-  ChromeUtils.importESModule("resource:///modules/SearchSERPTelemetry.sys.mjs");
-
 const lazy = {};
 
 const TELEMETRY_PREF = "browser.search.serpEventTelemetry.enabled";
@@ -27,7 +24,7 @@ const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
     searchPageRegexp:
-      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/searchTelemetry(?:Ad)?.html/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -43,15 +40,6 @@ const TEST_PROVIDER_INFO = [
 ];
 
 async function verifyEventsRecorded() {
-  function getSERPUrl(page, organic = false) {
-    let url =
-      getRootDirectory(gTestPath).replace(
-        "chrome://mochitests/content",
-        "https://example.org"
-      ) + page;
-    return `${url}?s=test${organic ? "" : "&abc=ff"}`;
-  }
-
   resetTelemetry();
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -90,15 +78,6 @@ async function verifyEventsRecorded() {
       reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
     },
   });
-}
-
-// sharedData messages are only passed to the child on idle. Therefore
-// we wait for a few idles to try and ensure the messages have been able
-// to be passed across and handled.
-async function waitForIdle() {
-  for (let i = 0; i < 10; i++) {
-    await new Promise(resolve => Services.tm.idleDispatchToMainThread(resolve));
-  }
 }
 
 add_setup(async function () {

@@ -46,7 +46,7 @@
       </div>
       <div class="moz_ad">
         <h5 test-label>ad_link</h5>
-        <a id="ad_link_redirect" href="https://example.org/browser/browser/components/search/test/browser/redirect_ad.sjs">
+        <a id="ad_link_redirect" href="https://example.org/browser/browser/components/search/test/browser/telemetry/redirect_ad.sjs">
           <h2>Example Shop</h2>
         </a>
         <div class="factrow">
@@ -63,16 +63,16 @@
       </div>
       <div>
         <h5 test-label>non_ads_link</h5>
-        <a id="non_ads_link" href="https://example.com/browser/browser/components/search/test/browser/cacheable.html">
+        <a id="non_ads_link" href="https://example.com/browser/browser/components/search/test/browser/telemetry/cacheable.html">
           Example of a cached non ad
         </a><br />
-        <a id="non_ads_link_redirected" href="https://example.org/browser/browser/components/search/test/browser/searchTelemetryAd_nonAdsLink_redirect.html">
+        <a id="non_ads_link_redirected" href="https://example.org/browser/browser/components/search/test/browser/telemetry/searchTelemetryAd_nonAdsLink_redirect.html">
           Example of a redirected non ad link
         </a><br />
         <a id="non_ads_link_redirected_no_top_level" href="#">
           Example of a redirected non ad link that isn't initially top level loaded
         </a><br />
-        <a id="non_ads_link_multiple_redirects" href="https://example.com/browser/browser/components/search/test/browser/redirect_thrice.sjs">
+        <a id="non_ads_link_multiple_redirects" href="https://example.com/browser/browser/components/search/test/browser/telemetry/redirect_thrice.sjs">
           Example of a redirected non ad link that's redirected multiple times
         </a><br />
         <a id="non_ads_link_with_special_characters_in_path" href="https://example.com/path'?hello_world&foo=bar's">
@@ -105,7 +105,7 @@
       .addEventListener("click", (event) => {
         event.preventDefault();
         let iframe = document.querySelector("iframe");
-        iframe.src = "https://example.org/browser/browser/components/search/test/browser/searchTelemetryAd_nonAdsLink_redirect_nonTopLoaded.html";
+        iframe.src = "https://example.org/browser/browser/components/search/test/browser/telemetry/searchTelemetryAd_nonAdsLink_redirect_nonTopLoaded.html";
     });
   </script>
 </body>
