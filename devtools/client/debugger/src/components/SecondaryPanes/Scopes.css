@@ -29,19 +29,19 @@
   background: var(--theme-comment);
 }
 
-.scopes-content .object-node.default-property {
+.object-node.default-property {
   opacity: 0.6;
 }
 
-.scopes-content .object-node {
+.object-node {
   padding-inline-start: 20px;
 }
 
-html[dir="rtl"] .scopes-content .object-node {
+html[dir="rtl"] .object-node {
   padding-right: 4px;
 }
 
-.scopes-content .object-label {
+.object-label {
   color: var(--theme-highlight-blue);
 }
 

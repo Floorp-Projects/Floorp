@@ -59,9 +59,9 @@ class ExceptionPopup extends Component {
   }
 
   onTopWindowClick = e => {
-    // When the stacktrace is expanded the exception popup gets closed
+    // When the stactrace is expaned the exception popup gets closed
     // only by clicking ouside the popup.
-    if (!e.target.closest(POPUP_SELECTOR) && this.props.clearPreview) {
+    if (!e.target.closest(POPUP_SELECTOR)) {
       this.props.clearPreview();
     }
   };

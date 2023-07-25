@@ -13,7 +13,7 @@ add_task(async function () {
 
   info("Hovers over the inline exception mark text.");
   await assertPreviewTextValue(dbg, 85, 10, {
-    result: 'TypeError: "abc".push is not a function',
+    text: 'TypeError: "abc".push is not a function',
     expression: "push",
   });
 

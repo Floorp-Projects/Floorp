@@ -111,6 +111,7 @@ export function getPreview(target, tokenPos, codeMirror) {
         front: getFront(result),
       },
     };
+    const properties = await client.loadObjectProperties(root, thread);
 
     return {
       target,
@@ -119,6 +120,7 @@ export function getPreview(target, tokenPos, codeMirror) {
       expression,
       root,
       resultGrip,
+      properties,
     };
   };
 }
