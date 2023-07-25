@@ -79,6 +79,13 @@ gfxHarfBuzzShaper::~gfxHarfBuzzShaper() {
 
 hb_codepoint_t gfxHarfBuzzShaper::GetNominalGlyph(
     hb_codepoint_t unicode) const {
+  {
+    MutexAutoLock lock(mCacheLock);
+    if (auto cached = mCmapCache->Lookup(unicode)) {
+      return cached.Data().mGlyphId;
+    }
+  }
+
   hb_codepoint_t gid = 0;
 
   if (mUseFontGetGlyph) {
@@ -122,7 +129,7 @@ hb_codepoint_t gfxHarfBuzzShaper::GetNominalGlyph(
         gid = GetNominalGlyph(pua);
       }
       if (gid) {
-        return gid;
+        goto done;
       }
     }
     switch (unicode) {
@@ -138,6 +145,10 @@ hb_codepoint_t gfxHarfBuzzShaper::GetNominalGlyph(
         break;
     }
   }
+
+done:
+  MutexAutoLock lock(mCacheLock);
+  mCmapCache->Put(unicode, CmapCacheData{unicode, gid});
 
   return gid;
 }
@@ -1144,6 +1155,12 @@ bool gfxHarfBuzzShaper::Initialize() {
       return false;
     }
   }
+
+  // We don't need to take the cache lock here, as we're just initializing the
+  // shaper and no other thread can yet be using it.
+  MOZ_PUSH_IGNORE_THREAD_SAFETY
+  mCmapCache = MakeUnique<CmapCache>();
+  MOZ_POP_THREAD_SAFETY
 
   if (!mUseFontGlyphWidths) {
     // If font doesn't implement GetGlyphWidth, we will be reading
