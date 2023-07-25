@@ -95,6 +95,12 @@ function test() {
 
   testVal("<https://>mozilla.org<   >");
   testVal("mozilla.org<   >");
+  // RTL characters in domain change order of domain and suffix. Domain should
+  // be highlighted correctly.
+  testVal(
+    "<http://>اختبار.اختبار</www.mozilla.org/index.html>",
+    "اختبار.اختبار</www.mozilla.org/index.html>"
+  );
 
   testVal("<https://>mozilla.org</file.ext>");
   testVal("<https://>mozilla.org</sub/file.ext>");
