@@ -42,7 +42,7 @@ AVD_MANIFEST_ARM = Path(__file__).resolve().parent / "android-avds/arm.json"
 AVD_MANIFEST_ARM64 = Path(__file__).resolve().parent / "android-avds/arm64.json"
 
 JAVA_VERSION_MAJOR = "17"
-JAVA_VERSION_MINOR = "0.7"
+JAVA_VERSION_MINOR = "0.8"
 JAVA_VERSION_PATCH = "7"
 
 ANDROID_NDK_EXISTS = """
@@ -824,7 +824,7 @@ def ensure_java(os_name, os_arch):
 
     if not java_path.exists():
         # e.g. https://github.com/adoptium/temurin17-binaries/releases/
-        #      download/jdk-17.0.7%2B7/OpenJDK17U-jre_x64_linux_hotspot_17.0.7_7.tar.gz
+        #      download/jdk-17.0.8%2B7/OpenJDK17U-jre_x64_linux_hotspot_17.0.8_7.tar.gz
         java_url = (
             "https://github.com/adoptium/temurin{major}-binaries/releases/"
             "download/jdk-{major}.{minor}%2B{patch}/"
@@ -842,7 +842,7 @@ def ensure_java(os_name, os_arch):
 
 
 def java_bin_path(os_name, toolchain_path: Path):
-    # Like jdk-17.0.7+7
+    # Like jdk-17.0.8+7
     jdk_folder = "jdk-{major}.{minor}+{patch}".format(
         major=JAVA_VERSION_MAJOR, minor=JAVA_VERSION_MINOR, patch=JAVA_VERSION_PATCH
     )
