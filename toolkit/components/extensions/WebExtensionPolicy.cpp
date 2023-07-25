@@ -1007,8 +1007,13 @@ bool DocInfo::IsTopLevel() const {
 }
 
 bool WindowShouldMatchActiveTab(nsPIDOMWindowOuter* aWin) {
-  for (WindowContext* wc = aWin->GetCurrentInnerWindow()->GetWindowContext();
-       wc; wc = wc->GetParentWindowContext()) {
+  WindowContext* wc = aWin->GetCurrentInnerWindow()->GetWindowContext();
+  if (wc && wc->SameOriginWithTop()) {
+    // If the frame is same-origin to top, accept the match regardless of
+    // whether the frame was populated dynamically.
+    return true;
+  }
+  for (; wc; wc = wc->GetParentWindowContext()) {
     BrowsingContext* bc = wc->GetBrowsingContext();
     if (bc->IsTopContent()) {
       return true;
