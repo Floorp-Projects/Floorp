@@ -880,10 +880,6 @@ void WinWindowOcclusionTracker::WindowOcclusionCalculator::Initialize() {
   CALC_LOG(LogLevel::Info, "Initialize()");
 
 #ifndef __MINGW32__
-  if (!IsWin10OrLater()) {
-    return;
-  }
-
   RefPtr<IVirtualDesktopManager> desktopManager;
   HRESULT hr = ::CoCreateInstance(
       CLSID_VirtualDesktopManager, NULL, CLSCTX_INPROC_SERVER,
