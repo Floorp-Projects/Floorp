@@ -604,6 +604,13 @@ TabWindow.prototype = {
     }
   },
 
+  directRequestProtocols: new Set([
+    "file",
+    "chrome",
+    "resource",
+    "about",
+    "data",
+  ]),
   onLinkIconAvailable(aBrowser, aIconURL) {
     let tab = this.win.gBrowser.getTabForBrowser(aBrowser);
     this.updateFavicon(tab, aIconURL);
@@ -611,13 +618,17 @@ TabWindow.prototype = {
   updateFavicon(aTab, aIconURL) {
     let requestURL = null;
     if (aIconURL) {
+      let shouldRequestFaviconURL = true;
       try {
-        requestURL = PlacesUtils.favicons.getFaviconLinkForIcon(
-          Services.io.newURI(aIconURL)
-        ).spec;
-      } catch (ex) {
-        requestURL = aIconURL;
-      }
+        let urlObject = NetUtil.newURI(aIconURL);
+        shouldRequestFaviconURL = !this.directRequestProtocols.has(
+          urlObject.scheme
+        );
+      } catch (ex) {}
+
+      requestURL = shouldRequestFaviconURL
+        ? "moz-anno:favicon:" + aIconURL
+        : aIconURL;
     }
     let isDefaultFavicon = !requestURL;
     getFaviconAsImage(

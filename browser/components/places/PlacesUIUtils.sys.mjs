@@ -1843,24 +1843,13 @@ export var PlacesUIUtils = {
     }
   },
 
-  /**
-   * Generates a moz-anno:favicon: link for an icon URL, that will allow to
-   * fetch the icon from the local favicons cache, rather than from the network.
-   * If the icon URL is invalid, fallbacks to the default favicon URL.
-   *
-   * @param {string} icon The url of the icon to load from local cache.
-   * @returns {string} a "moz-anno:favicon:" prefixed URL, unless the original
-   *   URL protocol refers to a local resource, then it will just pass-through
-   *   unchanged.
-   */
   getImageURL(icon) {
+    let iconURL = icon;
     // don't initiate a connection just to fetch a favicon (see bug 467828)
-    try {
-      return lazy.PlacesUtils.favicons.getFaviconLinkForIcon(
-        Services.io.newURI(icon)
-      ).spec;
-    } catch (ex) {}
-    return lazy.PlacesUtils.favicons.defaultFavicon.spec;
+    if (/^https?:/.test(iconURL)) {
+      iconURL = "moz-anno:favicon:" + iconURL;
+    }
+    return iconURL;
   },
 
   /**

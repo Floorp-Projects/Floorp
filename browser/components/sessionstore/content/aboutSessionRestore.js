@@ -8,7 +8,6 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 ChromeUtils.defineESModuleGetters(this, {
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
 
@@ -108,11 +107,15 @@ async function initTreeView() {
       var entry = aTabData.entries[aTabData.index - 1] || {
         url: "about:blank",
       };
+      var iconURL = aTabData.image || null;
       // don't initiate a connection just to fetch a favicon (see bug 462863)
+      if (/^https?:/.test(iconURL)) {
+        iconURL = "moz-anno:favicon:" + iconURL;
+      }
       return {
         label: entry.title || entry.url,
         checked: true,
-        src: PlacesUIUtils.getImageURL(aTabData.image),
+        src: iconURL,
         parent: winState,
       };
     });
