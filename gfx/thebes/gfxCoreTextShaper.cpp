@@ -93,7 +93,7 @@ bool gfxCoreTextShaper::ShapeText(DrawTarget* aDrawTarget,
   // among them.
   const gfxFontStyle* style = mFont->GetStyle();
   gfxFontEntry* entry = mFont->GetFontEntry();
-  auto handleFeatureTag = [](const uint32_t& aTag, uint32_t& aValue,
+  auto handleFeatureTag = [](uint32_t aTag, uint32_t aValue,
                              void* aUserArg) -> void {
     if (aTag == HB_TAG('s', 'm', 'c', 'p') && aValue) {
       *static_cast<bool*>(aUserArg) = true;
