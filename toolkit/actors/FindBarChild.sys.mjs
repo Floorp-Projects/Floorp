@@ -17,23 +17,24 @@ export class FindBarChild extends JSWindowActorChild {
 
     this._findKey = null;
 
-    XPCOMUtils.defineLazyProxy(
-      this,
-      "FindBarContent",
-      () => {
-        const { FindBarContent } = ChromeUtils.importESModule(
-          "resource://gre/modules/FindBarContent.sys.mjs"
-        );
-        return new FindBarContent(this);
-      },
-      { inQuickFind: false, inPassThrough: false }
-    );
+    this.inQuickFind = false;
+    this.inPassThrough = false;
+
+    ChromeUtils.defineLazyGetter(this, "FindBarContent", () => {
+      const { FindBarContent } = ChromeUtils.importESModule(
+        "resource://gre/modules/FindBarContent.sys.mjs"
+      );
+      return new FindBarContent(this);
+    });
   }
 
   receiveMessage(msg) {
     if (msg.name == "Findbar:UpdateState") {
       let { FindBarContent } = this;
       FindBarContent.updateState(msg.data);
+
+      this.inQuickFind = FindBarContent.inQuickFind;
+      this.inPassThrough = FindBarContent.inPassThrough;
     }
   }
 
@@ -65,10 +66,8 @@ export class FindBarChild extends JSWindowActorChild {
   }
 
   onKeypress(event) {
-    let { FindBarContent } = this;
-
-    if (!FindBarContent.inPassThrough && this.eventMatchesFindShortcut(event)) {
-      return FindBarContent.start(event);
+    if (!this.inPassThrough && this.eventMatchesFindShortcut(event)) {
+      return this.FindBarContent.start(event);
     }
 
     // disable FAYT in about:blank to prevent FAYT opening unexpectedly.
@@ -88,17 +87,17 @@ export class FindBarChild extends JSWindowActorChild {
       return null;
     }
 
-    if (FindBarContent.inPassThrough || FindBarContent.inQuickFind) {
-      return FindBarContent.onKeypress(event);
+    if (this.inPassThrough || this.inQuickFind) {
+      return this.FindBarContent.onKeypress(event);
     }
 
     if (event.charCode && this.shouldFastFind(event.target)) {
       let key = String.fromCharCode(event.charCode);
       if ((key == "/" || key == "'") && FindBarChild.manualFAYT) {
-        return FindBarContent.startQuickFind(event);
+        return this.FindBarContent.startQuickFind(event);
       }
       if (key != " " && FindBarChild.findAsYouType) {
-        return FindBarContent.startQuickFind(event, true);
+        return this.FindBarContent.startQuickFind(event, true);
       }
     }
     return null;

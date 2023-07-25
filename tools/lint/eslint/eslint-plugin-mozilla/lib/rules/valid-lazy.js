@@ -30,7 +30,6 @@ const callExpressionDefinitions = [
   /^ChromeUtils\.defineLazyGetter\(lazy, "(\w+)"/,
   /^ChromeUtils\.defineModuleGetter\(lazy, "(\w+)"/,
   /^XPCOMUtils\.defineLazyPreferenceGetter\(lazy, "(\w+)"/,
-  /^XPCOMUtils\.defineLazyProxy\(lazy, "(\w+)"/,
   /^XPCOMUtils\.defineLazyScriptGetter\(lazy, "(\w+)"/,
   /^XPCOMUtils\.defineLazyServiceGetter\(lazy, "(\w+)"/,
   /^XPCOMUtils\.defineConstant\(lazy, "(\w+)"/,
