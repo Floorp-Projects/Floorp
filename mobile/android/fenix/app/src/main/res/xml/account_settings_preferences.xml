@@ -12,7 +12,7 @@
     <Preference
         android:key="@string/pref_key_sync_now"
         android:title="@string/preferences_sync_now"
-        app:icon="@drawable/mozac_ic_sync" />
+        app:icon="@drawable/mozac_ic_sync_24" />
 
     <EditTextPreference
         android:key="@string/pref_key_sync_device_name"

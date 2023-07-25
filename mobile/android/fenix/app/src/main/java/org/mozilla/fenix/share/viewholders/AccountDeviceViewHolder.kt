@@ -68,7 +68,7 @@ class AccountDeviceViewHolder(
             when (option) {
                 SyncShareOption.SignIn -> Triple(
                     context.getText(R.string.sync_sign_in),
-                    R.drawable.mozac_ic_sync,
+                    R.drawable.mozac_ic_sync_24,
                     R.color.default_share_background,
                 )
                 SyncShareOption.Reconnect -> Triple(
