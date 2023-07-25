@@ -1,0 +1,10 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg width="34" height="20" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" fill-rule="evenodd">
+    <path d="M4.48 13.88v-.86h2.4c.58 0 1.03-.11 1.33-.35.3-.23.45-.57.45-1.01v-.01c0-.3-.07-.55-.21-.75-.14-.2-.35-.35-.63-.45-.28-.1-.62-.15-1.03-.15h-2.3v-.83H6.5c.6 0 1.03-.1 1.33-.32.3-.2.44-.51.44-.92v-.01c0-.4-.13-.7-.4-.91a1.7 1.7 0 0 0-1.12-.33H4.48v-.86h2.48c.48 0 .89.08 1.23.24a1.78 1.78 0 0 1 1.07 1.7 1.78 1.78 0 0 1-.66 1.35c-.2.17-.43.27-.68.32v.08c.36.05.66.15.92.32s.46.39.6.66c.14.26.21.56.21.9v.02c0 .45-.1.84-.32 1.16-.2.32-.5.57-.9.75-.38.17-.85.26-1.4.26H4.47Zm-.48 0V6.12h.97v7.76H4ZM11.23 13.88V6.13h4.8V7H12.2v2.48h3.63v.86H12.2v2.67h3.83v.87zM19.8 13.88V7h-2.5v-.87h5.96V7h-2.5v6.88zM23.22 13.88l2.86-7.76h.74v1.26h-.3l-2.28 6.5h-1.02Zm1.3-2.22.3-.82h3.5l.3.82h-4.1Zm4.36 2.22-2.28-6.5V6.13h.44l2.85 7.75h-1.01Z"
+          fill="context-fill" fill-rule="nonzero"/>
+    <rect stroke="context-stroke" x=".5" y=".5" width="32.89" height="19" rx="3.5"/>
+  </g>
+</svg>
