@@ -834,6 +834,24 @@ var TranslationsPanel = new (class {
     PanelMultiView.hidePopup(this.elements.panel);
   }
 
+  /*
+   * Handler for clicking the learn more link from the gear menu.
+   */
+  onLearnMore() {
+    PanelMultiView.hidePopup(this.elements.panel);
+    const window =
+      gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
+    window.openTrustedLinkIn(
+      "https://support.mozilla.org/kb/website-translation",
+      "tab",
+      {
+        forceForeground: true,
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
+      }
+    );
+  }
+
   /**
    * When a language is not supported and the menu is manually invoked, an error message
    * is shown. This method switches the panel back to the language selection view.
