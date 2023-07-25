@@ -32,8 +32,14 @@ import {
 import {SchematicsOptions, TestingFramework} from './types.js';
 
 export interface FilesOptions {
-  projects: any;
-  options: SchematicsOptions;
+  projects: Record<string, any>;
+  options: {
+    testingFramework: TestingFramework;
+    port: number;
+    name?: string;
+    exportConfig?: boolean;
+    ext?: string;
+  };
   applyPath: string;
   relativeToWorkspacePath: string;
   movePath?: string;
@@ -65,7 +71,7 @@ export function addFiles(
         workspacePath
       );
 
-      const baseUrl = getProjectBaseUrl(project);
+      const baseUrl = getProjectBaseUrl(project, options.port);
 
       return mergeWith(
         apply(url(applyPath), [
@@ -90,13 +96,13 @@ export function addFiles(
   )(tree, context);
 }
 
-function getProjectBaseUrl(project: any): string {
-  let options = {protocol: 'http', port: 4200, host: 'localhost'};
+function getProjectBaseUrl(project: any, port: number): string {
+  let options = {protocol: 'http', port, host: 'localhost'};
 
   if (project.architect?.serve?.options) {
     const projectOptions = project.architect?.serve?.options;
-
-    options = {...options, ...projectOptions};
+    const projectPort = port !== 4200 ? port : projectOptions?.port ?? port;
+    options = {...options, ...projectOptions, port: projectPort};
     options.protocol = projectOptions.ssl ? 'https' : 'http';
   }
 
@@ -149,7 +155,7 @@ export function getScriptFromOptions(options: SchematicsOptions): string[][] {
     case TestingFramework.Node:
       return [
         [`tsc`, '-p', 'e2e/tsconfig.json'],
-        ['node', '--test', 'e2e/'],
+        ['node', '--test', '--test-reporter', 'spec', 'e2e/build/'],
       ];
   }
 }

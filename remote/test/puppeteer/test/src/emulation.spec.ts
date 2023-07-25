@@ -17,29 +17,24 @@
 import expect from 'expect';
 import {KnownDevices, PredefinedNetworkConditions} from 'puppeteer';
 
-import {
-  getTestState,
-  setupTestBrowserHooks,
-  setupTestPageAndContextHooks,
-} from './mocha-utils.js';
+import {getTestState, setupTestBrowserHooks} from './mocha-utils.js';
 
 const iPhone = KnownDevices['iPhone 6'];
 const iPhoneLandscape = KnownDevices['iPhone 6 landscape'];
 
 describe('Emulation', () => {
   setupTestBrowserHooks();
-  setupTestPageAndContextHooks();
 
   describe('Page.viewport', function () {
     it('should get the proper viewport size', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       expect(page.viewport()).toEqual({width: 800, height: 600});
       await page.setViewport({width: 123, height: 456});
       expect(page.viewport()).toEqual({width: 123, height: 456});
     });
     it('should support mobile emulation', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/mobile.html');
       expect(
@@ -61,7 +56,7 @@ describe('Emulation', () => {
       ).toBe(400);
     });
     it('should support touch emulation', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/mobile.html');
       expect(
@@ -99,7 +94,7 @@ describe('Emulation', () => {
       }
     });
     it('should be detectable by Modernizr', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/detect-touch.html');
       expect(
@@ -116,7 +111,7 @@ describe('Emulation', () => {
       ).toBe('YES');
     });
     it('should detect touch when applying viewport with touches', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.setViewport({width: 800, height: 600, hasTouch: true});
       await page.addScriptTag({url: server.PREFIX + '/modernizr.js'});
@@ -127,7 +122,7 @@ describe('Emulation', () => {
       ).toBe(true);
     });
     it('should support landscape emulation', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/mobile.html');
       expect(
@@ -152,7 +147,7 @@ describe('Emulation', () => {
 
   describe('Page.emulate', function () {
     it('should work', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/mobile.html');
       await page.emulate(iPhone);
@@ -168,7 +163,7 @@ describe('Emulation', () => {
       ).toContain('iPhone');
     });
     it('should support clicking', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.emulate(iPhone);
       await page.goto(server.PREFIX + '/input/button.html');
@@ -187,7 +182,7 @@ describe('Emulation', () => {
 
   describe('Page.emulateMediaType', function () {
     it('should work', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       expect(
         await page.evaluate(() => {
@@ -223,7 +218,7 @@ describe('Emulation', () => {
       ).toBe(false);
     });
     it('should throw in case of bad argument', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       let error!: Error;
       await page.emulateMediaType('bad').catch(error_ => {
@@ -235,7 +230,7 @@ describe('Emulation', () => {
 
   describe('Page.emulateMediaFeatures', function () {
     it('should work', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       await page.emulateMediaFeatures([
         {name: 'prefers-reduced-motion', value: 'reduce'},
@@ -352,7 +347,7 @@ describe('Emulation', () => {
       ).toBe(true);
     });
     it('should throw in case of bad argument', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       let error!: Error;
       await page
@@ -366,7 +361,7 @@ describe('Emulation', () => {
 
   describe('Page.emulateTimezone', function () {
     it('should work', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       await page.evaluate(() => {
         (globalThis as any).date = new Date(1479579154987);
@@ -405,7 +400,7 @@ describe('Emulation', () => {
     });
 
     it('should throw for invalid timezone IDs', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       let error!: Error;
       await page.emulateTimezone('Foo/Bar').catch(error_ => {
@@ -421,7 +416,7 @@ describe('Emulation', () => {
 
   describe('Page.emulateVisionDeficiency', function () {
     it('should work', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.setViewport({width: 500, height: 500});
       await page.goto(server.PREFIX + '/grid.html');
@@ -470,7 +465,7 @@ describe('Emulation', () => {
     });
 
     it('should throw for invalid vision deficiencies', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       let error!: Error;
       await page
@@ -485,7 +480,7 @@ describe('Emulation', () => {
 
   describe('Page.emulateNetworkConditions', function () {
     it('should change navigator.connection.effectiveType', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       const slow3G = PredefinedNetworkConditions['Slow 3G']!;
       const fast3G = PredefinedNetworkConditions['Fast 3G']!;
@@ -507,7 +502,7 @@ describe('Emulation', () => {
 
   describe('Page.emulateCPUThrottling', function () {
     it('should change the CPU throttling rate successfully', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       await page.emulateCPUThrottling(100);
       await page.emulateCPUThrottling(null);

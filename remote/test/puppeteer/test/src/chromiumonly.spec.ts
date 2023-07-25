@@ -16,133 +16,139 @@
 import {IncomingMessage} from 'http';
 
 import expect from 'expect';
+import {Deferred} from 'puppeteer-core/internal/util/Deferred.js';
 
-import {
-  getTestState,
-  setupTestBrowserHooks,
-  setupTestPageAndContextHooks,
-} from './mocha-utils.js';
+import {getTestState, setupTestBrowserHooks, launch} from './mocha-utils.js';
 import {waitEvent} from './utils.js';
-
+// TODO: rename this test suite to launch/connect test suite as it actually
+// works across browsers.
 describe('Chromium-Specific Launcher tests', function () {
   describe('Puppeteer.launch |browserURL| option', function () {
     it('should be able to connect using browserUrl, with and without trailing slash', async () => {
-      const {defaultBrowserOptions, puppeteer} = getTestState();
-
-      const originalBrowser = await puppeteer.launch(
-        Object.assign({}, defaultBrowserOptions, {
-          args: ['--remote-debugging-port=21222'],
-        })
-      );
-      const browserURL = 'http://127.0.0.1:21222';
-
-      const browser1 = await puppeteer.connect({browserURL});
-      const page1 = await browser1.newPage();
-      expect(
-        await page1.evaluate(() => {
-          return 7 * 8;
-        })
-      ).toBe(56);
-      browser1.disconnect();
-
-      const browser2 = await puppeteer.connect({
-        browserURL: browserURL + '/',
+      const {close, puppeteer} = await launch({
+        args: ['--remote-debugging-port=21222'],
       });
-      const page2 = await browser2.newPage();
-      expect(
-        await page2.evaluate(() => {
-          return 8 * 7;
-        })
-      ).toBe(56);
-      browser2.disconnect();
-      await originalBrowser.close();
+      try {
+        const browserURL = 'http://127.0.0.1:21222';
+
+        const browser1 = await puppeteer.connect({browserURL});
+        const page1 = await browser1.newPage();
+        expect(
+          await page1.evaluate(() => {
+            return 7 * 8;
+          })
+        ).toBe(56);
+        browser1.disconnect();
+
+        const browser2 = await puppeteer.connect({
+          browserURL: browserURL + '/',
+        });
+        const page2 = await browser2.newPage();
+        expect(
+          await page2.evaluate(() => {
+            return 8 * 7;
+          })
+        ).toBe(56);
+        browser2.disconnect();
+      } finally {
+        await close();
+      }
     });
     it('should throw when using both browserWSEndpoint and browserURL', async () => {
-      const {defaultBrowserOptions, puppeteer} = getTestState();
+      const {browser, close, puppeteer} = await launch({
+        args: ['--remote-debugging-port=21222'],
+      });
+      try {
+        const browserURL = 'http://127.0.0.1:21222';
 
-      const originalBrowser = await puppeteer.launch(
-        Object.assign({}, defaultBrowserOptions, {
-          args: ['--remote-debugging-port=21222'],
-        })
-      );
-      const browserURL = 'http://127.0.0.1:21222';
-
-      let error!: Error;
-      await puppeteer
-        .connect({
-          browserURL,
-          browserWSEndpoint: originalBrowser.wsEndpoint(),
-        })
-        .catch(error_ => {
-          return (error = error_);
-        });
-      expect(error.message).toContain(
-        'Exactly one of browserWSEndpoint, browserURL or transport'
-      );
-
-      await originalBrowser.close();
+        let error!: Error;
+        await puppeteer
+          .connect({
+            browserURL,
+            browserWSEndpoint: browser.wsEndpoint(),
+          })
+          .catch(error_ => {
+            return (error = error_);
+          });
+        expect(error.message).toContain(
+          'Exactly one of browserWSEndpoint, browserURL or transport'
+        );
+      } finally {
+        await close();
+      }
     });
     it('should throw when trying to connect to non-existing browser', async () => {
-      const {defaultBrowserOptions, puppeteer} = getTestState();
-
-      const originalBrowser = await puppeteer.launch(
-        Object.assign({}, defaultBrowserOptions, {
-          args: ['--remote-debugging-port=21222'],
-        })
-      );
-      const browserURL = 'http://127.0.0.1:32333';
-
-      let error!: Error;
-      await puppeteer.connect({browserURL}).catch(error_ => {
-        return (error = error_);
+      const {close, puppeteer} = await launch({
+        args: ['--remote-debugging-port=21222'],
       });
-      expect(error.message).toContain(
-        'Failed to fetch browser webSocket URL from'
-      );
-      await originalBrowser.close();
+      try {
+        const browserURL = 'http://127.0.0.1:32333';
+
+        let error!: Error;
+        await puppeteer.connect({browserURL}).catch(error_ => {
+          return (error = error_);
+        });
+        expect(error.message).toContain(
+          'Failed to fetch browser webSocket URL from'
+        );
+      } finally {
+        await close();
+      }
     });
   });
 
   describe('Puppeteer.launch |pipe| option', function () {
     it('should support the pipe option', async () => {
-      const {defaultBrowserOptions, puppeteer} = getTestState();
-      const options = Object.assign({pipe: true}, defaultBrowserOptions);
-      const browser = await puppeteer.launch(options);
-      expect(await browser.pages()).toHaveLength(1);
-      expect(browser.wsEndpoint()).toBe('');
-      const page = await browser.newPage();
-      expect(await page.evaluate('11 * 11')).toBe(121);
-      await page.close();
-      await browser.close();
+      const {browser, close} = await launch({pipe: true}, {createPage: false});
+      try {
+        expect(await browser.pages()).toHaveLength(1);
+        expect(browser.wsEndpoint()).toBe('');
+        const page = await browser.newPage();
+        expect(await page.evaluate('11 * 11')).toBe(121);
+        await page.close();
+      } finally {
+        await close();
+      }
     });
     it('should support the pipe argument', async () => {
-      const {defaultBrowserOptions, puppeteer} = getTestState();
+      const {defaultBrowserOptions} = await getTestState({skipLaunch: true});
       const options = Object.assign({}, defaultBrowserOptions);
       options.args = ['--remote-debugging-pipe'].concat(options.args || []);
-      const browser = await puppeteer.launch(options);
-      expect(browser.wsEndpoint()).toBe('');
-      const page = await browser.newPage();
-      expect(await page.evaluate('11 * 11')).toBe(121);
-      await page.close();
-      await browser.close();
+      const {browser, close} = await launch(options);
+      try {
+        expect(browser.wsEndpoint()).toBe('');
+        const page = await browser.newPage();
+        expect(await page.evaluate('11 * 11')).toBe(121);
+        await page.close();
+      } finally {
+        await close();
+      }
     });
-    it('should fire "disconnected" when closing with pipe', async () => {
-      const {defaultBrowserOptions, puppeteer} = getTestState();
-      const options = Object.assign({pipe: true}, defaultBrowserOptions);
-      const browser = await puppeteer.launch(options);
-      const disconnectedEventPromise = waitEvent(browser, 'disconnected');
-      // Emulate user exiting browser.
-      browser.process()!.kill();
-      await disconnectedEventPromise;
+    it('should fire "disconnected" when closing with pipe', async function () {
+      const {browser, close} = await launch({pipe: true});
+      try {
+        const disconnectedEventPromise = waitEvent(browser, 'disconnected');
+        // Emulate user exiting browser.
+        browser.process()!.kill();
+        await Deferred.race([
+          disconnectedEventPromise,
+          Deferred.create({
+            message: `Failed in after Hook`,
+            timeout: this.timeout() - 1000,
+          }),
+        ]);
+      } finally {
+        await close();
+      }
     });
   });
 });
 
 describe('Chromium-Specific Page Tests', function () {
   setupTestBrowserHooks();
-  setupTestPageAndContextHooks();
+
   it('Page.setRequestInterception should work with intervention headers', async () => {
-    const {server, page} = getTestState();
+    const {server, page} = await getTestState();
 
     server.setRoute('/intervention', (_req, res) => {
       return res.end(`

@@ -25,4 +25,25 @@ export interface SchematicsOptions {
   isDefaultTester: boolean;
   exportConfig: boolean;
   testingFramework: TestingFramework;
+  port: number;
+}
+
+export interface PuppeteerSchematicsConfig {
+  builder: string;
+  options: SchematicsOptions;
+}
+export interface AngularProject {
+  root: string;
+  architect: {
+    e2e?: PuppeteerSchematicsConfig;
+    puppeteer?: PuppeteerSchematicsConfig;
+  };
+}
+export interface AngularJson {
+  projects: Record<string, AngularProject>;
+}
+
+export interface SchematicsSpec {
+  name: string;
+  project?: string;
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Google Inc. All rights reserved.
+ * Copyright 2023 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,8 @@
  * limitations under the License.
  */
 
-// See https://github.com/conventional-changelog/commitlint/blob/master/docs/reference-rules.md
-module.exports = {
-  extends: ['@commitlint/config-conventional'],
-  rules: {
-    // Override. The subject may be the name of a class.
-    'subject-case': [0],
-    // Override. Most UIs wrap the body.
-    'body-max-line-length': [0],
-    // Override. Most UIs wrap the footer.
-    'footer-max-line-length': [0],
-  },
-};
+import puppeteer from 'puppeteer';
+
+(async () => {
+  await puppeteer.trimCache();
+})();

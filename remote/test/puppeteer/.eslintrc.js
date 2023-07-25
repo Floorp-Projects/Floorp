@@ -98,7 +98,7 @@ module.exports = {
     'no-restricted-imports': [
       'error',
       {
-        patterns: ['*Events'],
+        patterns: ['*Events', '*.test.js'],
         paths: [
           {
             name: 'mitt',
@@ -134,6 +134,7 @@ module.exports = {
       extends: [
         'plugin:@typescript-eslint/eslint-recommended',
         'plugin:@typescript-eslint/recommended',
+        'plugin:@typescript-eslint/stylistic',
       ],
       plugins: ['eslint-plugin-tsdoc', 'local'],
       rules: {
@@ -194,11 +195,24 @@ module.exports = {
             selector: "CallExpression[callee.name='require']",
             message: '`require` statements are not allowed. Use `import`.',
           },
+          {
+            // We need this as NodeJS will run until all the timers have resolved
+            message: 'Use method `Deferred.race()` instead.',
+            selector:
+              'MemberExpression[object.name="Promise"][property.name="race"]',
+          },
+          {
+            message:
+              'Deferred `valueOrThrow` should not be called in `Deferred.race()` pass deferred directly',
+            selector:
+              'CallExpression[callee.object.name="Deferred"][callee.property.name="race"] > ArrayExpression > CallExpression[callee.property.name="valueOrThrow"]',
+          },
         ],
         '@typescript-eslint/no-floating-promises': [
           'error',
           {ignoreVoid: true, ignoreIIFE: true},
         ],
+        '@typescript-eslint/prefer-ts-expect-error': 'error',
       },
     },
   ],

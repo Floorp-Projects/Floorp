@@ -1,6 +1,6 @@
 {
   "name": "@puppeteer/ng-schematics",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Puppeteer Angular schematics",
   "scripts": {
     "build": "wireit",
@@ -8,7 +8,8 @@
     "dev:test": "npm run test --watch",
     "dev": "npm run build --watch",
     "test": "wireit",
-    "sandbox": "node tools/sandbox.js"
+    "sandbox": "node tools/sandbox.js",
+    "sandbox:test": "node tools/sandbox.js --test"
   },
   "wireit": {
     "build": {
@@ -44,17 +45,18 @@
   "author": "The Chromium Authors",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=16.3.0"
   },
   "dependencies": {
-    "@angular-devkit/architect": "^0.1502.7",
-    "@angular-devkit/core": "^15.2.7",
-    "@angular-devkit/schematics": "^15.2.7"
+    "@angular-devkit/architect": "^0.1601.4",
+    "@angular-devkit/core": "^16.1.4",
+    "@angular-devkit/schematics": "^16.1.4"
   },
   "devDependencies": {
-    "@types/node": "^14.15.0",
-    "@schematics/angular": "^14.2.8",
-    "@angular/cli": "^15.2.2"
+    "@types/node": "^16.11.7",
+    "@schematics/angular": "^16.1.4",
+    "@angular/cli": "^16.1.4",
+    "rxjs": "7.8.1"
   },
   "files": [
     "lib",

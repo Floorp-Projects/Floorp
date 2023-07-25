@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  createDeferredPromise,
-  DeferredPromise,
-} from '../util/DeferredPromise.js';
-
-import type {Frame} from './Frame.js';
+import {Frame as BaseFrame} from '../api/Frame.js';
+import {Deferred} from '../util/Deferred.js';
 
 /**
  * Keeps track of the page frame tree and it's is managed by
@@ -28,14 +24,14 @@ import type {Frame} from './Frame.js';
  * structure is eventually consistent.
  * @internal
  */
-export class FrameTree {
+export class FrameTree<Frame extends BaseFrame> {
   #frames = new Map<string, Frame>();
   // frameID -> parentFrameID
   #parentIds = new Map<string, string>();
   // frameID -> childFrameIDs
   #childIds = new Map<string, Set<string>>();
   #mainFrame?: Frame;
-  #waitRequests = new Map<string, Set<DeferredPromise<Frame>>>();
+  #waitRequests = new Map<string, Set<Deferred<Frame>>>();
 
   getMainFrame(): Frame | undefined {
     return this.#mainFrame;
@@ -54,11 +50,11 @@ export class FrameTree {
     if (frame) {
       return Promise.resolve(frame);
     }
-    const deferred = createDeferredPromise<Frame>();
+    const deferred = Deferred.create<Frame>();
     const callbacks =
-      this.#waitRequests.get(frameId) || new Set<DeferredPromise<Frame>>();
+      this.#waitRequests.get(frameId) || new Set<Deferred<Frame>>();
     callbacks.add(deferred);
-    return deferred;
+    return deferred.valueOrThrow();
   }
 
   frames(): Frame[] {
@@ -73,7 +69,7 @@ export class FrameTree {
         this.#childIds.set(frame._parentId, new Set());
       }
       this.#childIds.get(frame._parentId)!.add(frame._id);
-    } else {
+    } else if (!this.#mainFrame) {
       this.#mainFrame = frame;
     }
     this.#waitRequests.get(frame._id)?.forEach(request => {

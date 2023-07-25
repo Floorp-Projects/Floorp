@@ -17,10 +17,9 @@
 import {createWriteStream} from 'fs';
 import * as http from 'http';
 import * as https from 'https';
-import {URL} from 'url';
+import {URL, urlToHttpOptions} from 'url';
 
-import createHttpsProxyAgent from 'https-proxy-agent';
-import {getProxyForUrl} from 'proxy-from-env';
+import {ProxyAgent} from 'proxy-agent';
 
 export function headHttpRequest(url: URL): Promise<boolean> {
   return new Promise(resolve => {
@@ -51,28 +50,9 @@ export function httpRequest(
     path: url.pathname + url.search,
     method,
     headers: keepAlive ? {Connection: 'keep-alive'} : undefined,
+    auth: urlToHttpOptions(url).auth,
+    agent: new ProxyAgent(),
   };
-
-  const proxyURL = getProxyForUrl(url.toString());
-  if (proxyURL) {
-    const proxy = new URL(proxyURL);
-    if (proxy.protocol === 'http:') {
-      options.path = url.href;
-      options.hostname = proxy.hostname;
-      options.protocol = proxy.protocol;
-      options.port = proxy.port;
-      options.headers ??= {};
-      options.headers['Host'] ||= url.host;
-    } else {
-      options.agent = createHttpsProxyAgent({
-        host: proxy.host,
-        path: proxy.pathname,
-        port: proxy.port,
-        secureProxy: proxy.protocol === 'https:',
-        headers: options.headers,
-      });
-    }
-  }
 
   const requestCallback = (res: http.IncomingMessage): void => {
     if (
@@ -136,6 +116,44 @@ export function downloadFile(
     });
     request.on('error', error => {
       return reject(error);
+    });
+  });
+}
+
+export async function getJSON(url: URL): Promise<unknown> {
+  const text = await getText(url);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error('Could not parse JSON from ' + url.toString());
+  }
+}
+
+export function getText(url: URL): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const request = httpRequest(
+      url,
+      'GET',
+      response => {
+        let data = '';
+        if (response.statusCode && response.statusCode >= 400) {
+          return reject(new Error(`Got status code ${response.statusCode}`));
+        }
+        response.on('data', chunk => {
+          data += chunk;
+        });
+        response.on('end', () => {
+          try {
+            return resolve(String(data));
+          } catch {
+            return reject(new Error('Chrome version not found'));
+          }
+        });
+      },
+      false
+    );
+    request.on('error', err => {
+      reject(err);
     });
   });
 }

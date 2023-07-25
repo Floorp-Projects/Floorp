@@ -2,6 +2,247 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 1.0.1 to 1.1.0
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 1.4.4 to 1.4.5
+
+## [20.9.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.8.3...puppeteer-core-v20.9.0) (2023-07-20)
+
+
+### Features
+
+* add autofill support ([#10565](https://github.com/puppeteer/puppeteer/issues/10565)) ([6c9306a](https://github.com/puppeteer/puppeteer/commit/6c9306a72e0f7195a4a6c300645f6089845c9abc))
+* roll to Chrome 115.0.5790.98 (r1148114) ([#10584](https://github.com/puppeteer/puppeteer/issues/10584)) ([830f926](https://github.com/puppeteer/puppeteer/commit/830f926d486675701720b5c147f597364f3e8f7b))
+
+
+### Bug Fixes
+
+* update the target to ES2022 ([#10574](https://github.com/puppeteer/puppeteer/issues/10574)) ([88439f9](https://github.com/puppeteer/puppeteer/commit/88439f913ed4159cdc8be573f2dbda0b1f615301))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 1.4.5 to 1.4.6
+
+## [20.8.3](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.8.2...puppeteer-core-v20.8.3) (2023-07-18)
+
+
+### Bug Fixes
+
+* **locators:** reject the race if there are only failures ([#10567](https://github.com/puppeteer/puppeteer/issues/10567)) ([e3dd596](https://github.com/puppeteer/puppeteer/commit/e3dd5968cae196b64d958c161fed3d1b39aed3f6))
+* prevent erroneous new main frame ([#10549](https://github.com/puppeteer/puppeteer/issues/10549)) ([cb46413](https://github.com/puppeteer/puppeteer/commit/cb46413d87f10970f4088b7d58e02a65c5ccd27e))
+
+## [20.8.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.8.0...puppeteer-core-v20.8.1) (2023-07-11)
+
+
+### Bug Fixes
+
+* remove test metadata files ([#10520](https://github.com/puppeteer/puppeteer/issues/10520)) ([cbf4f2a](https://github.com/puppeteer/puppeteer/commit/cbf4f2a66912f24849ae8c88fc1423851dcc4aa7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 1.4.3 to 1.4.4
+
+## [20.8.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.7.4...puppeteer-core-v20.8.0) (2023-07-06)
+
+
+### Features
+
+* **screenshot:** enable optimizeForSpeed ([#10492](https://github.com/puppeteer/puppeteer/issues/10492)) ([87aaed4](https://github.com/puppeteer/puppeteer/commit/87aaed4807e5240dec7b25273e44c1ce5e884336))
+
+
+### Bug Fixes
+
+* add an internal page.locatorRace ([#10512](https://github.com/puppeteer/puppeteer/issues/10512)) ([56a97dd](https://github.com/puppeteer/puppeteer/commit/56a97dd2fb1cbf36e4f3344f7d22afd6e7ef2380))
+
+## [20.7.4](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.7.3...puppeteer-core-v20.7.4) (2023-06-29)
+
+
+### Bug Fixes
+
+* fix escaping algo for P selectors ([#10474](https://github.com/puppeteer/puppeteer/issues/10474)) ([84a956f](https://github.com/puppeteer/puppeteer/commit/84a956f56ba9ce74e9dd0f95ff40fdd14be87b1d))
+* fix the util import in Connection.ts ([#10450](https://github.com/puppeteer/puppeteer/issues/10450)) ([61f4525](https://github.com/puppeteer/puppeteer/commit/61f4525ae306810404af9083d2e7440403c02722))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 1.4.2 to 1.4.3
+
+## [20.7.3](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.7.2...puppeteer-core-v20.7.3) (2023-06-20)
+
+
+### Bug Fixes
+
+* add parenthesis to JS values in interpolateFunction ([#10426](https://github.com/puppeteer/puppeteer/issues/10426)) ([fbdcc0d](https://github.com/puppeteer/puppeteer/commit/fbdcc0d6469abe7115723347a9f161628074d41e))
+* added clipboard permission that was not exposed ([#10119](https://github.com/puppeteer/puppeteer/issues/10119)) ([c06e15f](https://github.com/puppeteer/puppeteer/commit/c06e15fb5bd7ec21db2d883ccf63ef8fe98c7f4d))
+* include src into published package ([#10415](https://github.com/puppeteer/puppeteer/issues/10415)) ([d1ffad0](https://github.com/puppeteer/puppeteer/commit/d1ffad059ae66104842b92dc814d362c123b9646))
+* WaitForNetworkIdle and Deferred.race ([#10411](https://github.com/puppeteer/puppeteer/issues/10411)) ([138cc5c](https://github.com/puppeteer/puppeteer/commit/138cc5c961da698bf7ca635c9947058df4b2ec72))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 1.4.1 to 1.4.2
+
+## [20.7.2](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.7.1...puppeteer-core-v20.7.2) (2023-06-16)
+
+
+### Bug Fixes
+
+* roll to Chrome 114.0.5735.133 (r1135570) ([#10384](https://github.com/puppeteer/puppeteer/issues/10384)) ([9311558](https://github.com/puppeteer/puppeteer/commit/93115587c94278e0a5309429d3f23a52ed24e22d))
+
+## [20.7.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.7.0...puppeteer-core-v20.7.1) (2023-06-13)
+
+
+### Bug Fixes
+
+* avoid importing puppeteer-core.js ([#10376](https://github.com/puppeteer/puppeteer/issues/10376)) ([3171c12](https://github.com/puppeteer/puppeteer/commit/3171c12a0c16b283e6b65b1ed3d801b089a6e28b))
+
+## [20.7.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.6.0...puppeteer-core-v20.7.0) (2023-06-13)
+
+
+### Features
+
+* add `reset` to mouse ([#10340](https://github.com/puppeteer/puppeteer/issues/10340)) ([35aedc0](https://github.com/puppeteer/puppeteer/commit/35aedc0dbbd80818e6f83ff9f0777dc3ea2588f0))
+
+
+### Bug Fixes
+
+* Locator.scroll in race ([#10363](https://github.com/puppeteer/puppeteer/issues/10363)) ([ba28724](https://github.com/puppeteer/puppeteer/commit/ba28724952b41ea653830a75efc4c73b234ea354))
+* mark CDPSessionOnMessageObject as internal ([#10373](https://github.com/puppeteer/puppeteer/issues/10373)) ([7cb6059](https://github.com/puppeteer/puppeteer/commit/7cb6059bcc36f8dc3739a8df9119c658146ac100))
+* specify the context id when adding bindings ([#10366](https://github.com/puppeteer/puppeteer/issues/10366)) ([c2d3488](https://github.com/puppeteer/puppeteer/commit/c2d3488ad8c0453312557ba28e6ade9c32464f17))
+
+## [20.6.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.5.0...puppeteer-core-v20.6.0) (2023-06-09)
+
+
+### Features
+
+* add `page.removeExposedFunction` ([#10297](https://github.com/puppeteer/puppeteer/issues/10297)) ([4d0dbbc](https://github.com/puppeteer/puppeteer/commit/4d0dbbc517f388a3fe984ec569bc1bad28d91494))
+* **chrome:** roll to Chrome 114.0.5735.45 (r1135570) ([#10302](https://github.com/puppeteer/puppeteer/issues/10302)) ([021402d](https://github.com/puppeteer/puppeteer/commit/021402d1363accabc05f75ea1004451a90e1dfca))
+* implement Locator.race ([#10337](https://github.com/puppeteer/puppeteer/issues/10337)) ([9c35e9a](https://github.com/puppeteer/puppeteer/commit/9c35e9ab1f92e99aab8dabcd17f687befd6aad81))
+* implement Locators ([#10305](https://github.com/puppeteer/puppeteer/issues/10305)) ([1f978f5](https://github.com/puppeteer/puppeteer/commit/1f978f5fc5f0580859ad423e952595979f50d5a9))
+
+
+### Bug Fixes
+
+* content() not showing comments outside html tag ([#10293](https://github.com/puppeteer/puppeteer/issues/10293)) ([9abd48a](https://github.com/puppeteer/puppeteer/commit/9abd48a062a4a30fb93d0b555f2fa03d3dc410f3))
+* ensure stack trace contains one line ([#10317](https://github.com/puppeteer/puppeteer/issues/10317)) ([bc0b04b](https://github.com/puppeteer/puppeteer/commit/bc0b04beef3244280e6569a233173d512adaa9d8))
+* roll to Chrome 114.0.5735.90 (r1135570) ([#10329](https://github.com/puppeteer/puppeteer/issues/10329)) ([60acefc](https://github.com/puppeteer/puppeteer/commit/60acefc1d6d719ed6c5053d6b9ad734306d08c4a))
+* send capabilities property in session.new command ([#10311](https://github.com/puppeteer/puppeteer/issues/10311)) ([e8d044c](https://github.com/puppeteer/puppeteer/commit/e8d044cb8dcb689cc066ffa18a1e3c9366f57902))
+
+## [20.5.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.4.0...puppeteer-core-v20.5.0) (2023-05-31)
+
+
+### Features
+
+* Page.removeScriptToEvaluateOnNewDocument ([#10250](https://github.com/puppeteer/puppeteer/issues/10250)) ([b5a124f](https://github.com/puppeteer/puppeteer/commit/b5a124ff738a03fa7eb5755b441af5b773447449))
+
+
+### Bug Fixes
+
+* bind trimCache to the instance ([#10270](https://github.com/puppeteer/puppeteer/issues/10270)) ([50e72a4](https://github.com/puppeteer/puppeteer/commit/50e72a4d1164af7d53e31b8b83117f695ede7ae4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 1.4.0 to 1.4.1
+
+## [20.4.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.3.0...puppeteer-core-v20.4.0) (2023-05-24)
+
+
+### Features
+
+* Page.setBypassServiceWorker ([#10229](https://github.com/puppeteer/puppeteer/issues/10229)) ([81f73a5](https://github.com/puppeteer/puppeteer/commit/81f73a55f31892e55219ef9d37e235e988731fc1))
+
+
+### Bug Fixes
+
+* stacktraces should not throw errors ([#10231](https://github.com/puppeteer/puppeteer/issues/10231)) ([557ec24](https://github.com/puppeteer/puppeteer/commit/557ec24cfc084440197da67581bf9782f10eb346))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 1.3.0 to 1.4.0
+
+## [20.3.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.2.1...puppeteer-core-v20.3.0) (2023-05-22)
+
+
+### Features
+
+* add an ability to trim cache for Puppeteer ([#10199](https://github.com/puppeteer/puppeteer/issues/10199)) ([1ad32ec](https://github.com/puppeteer/puppeteer/commit/1ad32ec9948ca3e07e15548a562c8f3c633b3dc3))
+
+
+### Bug Fixes
+
+* ElementHandle dragAndDrop should fail when interception is disabled ([#10209](https://github.com/puppeteer/puppeteer/issues/10209)) ([bcf5fd8](https://github.com/puppeteer/puppeteer/commit/bcf5fd87aeeb822203c3388e8aa6dadaa0107690))
+
+## [20.2.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.2.0...puppeteer-core-v20.2.1) (2023-05-15)
+
+
+### Bug Fixes
+
+* use encode/decodeURIComponent ([#10183](https://github.com/puppeteer/puppeteer/issues/10183)) ([d0c68ff](https://github.com/puppeteer/puppeteer/commit/d0c68ff002df37907968d3b999a8273590ac7c97))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 1.2.0 to 1.3.0
+
+## [20.2.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.1.2...puppeteer-core-v20.2.0) (2023-05-11)
+
+
+### Features
+
+* implement detailed errors for evaluation ([#10114](https://github.com/puppeteer/puppeteer/issues/10114)) ([317fa73](https://github.com/puppeteer/puppeteer/commit/317fa732f920382f9b3f6dea4e31ed31b04e25da))
+
+
+### Bug Fixes
+
+* downloadPath should be used by the install script ([#10163](https://github.com/puppeteer/puppeteer/issues/10163)) ([4398f66](https://github.com/puppeteer/puppeteer/commit/4398f66f281f1ffe5be81b529fc4751edfaf761d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 1.1.0 to 1.2.0
+
+## [20.1.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.1.0...puppeteer-core-v20.1.1) (2023-05-05)
+
+
+### Bug Fixes
+
+* rename PUPPETEER_DOWNLOAD_HOST to PUPPETEER_DOWNLOAD_BASE_URL ([#10130](https://github.com/puppeteer/puppeteer/issues/10130)) ([9758cae](https://github.com/puppeteer/puppeteer/commit/9758cae029f90908c4b5340561d9c51c26aa2f21))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 1.0.0 to 1.0.1
+
 ## [20.1.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v20.0.0...puppeteer-core-v20.1.0) (2023-05-03)
 
 

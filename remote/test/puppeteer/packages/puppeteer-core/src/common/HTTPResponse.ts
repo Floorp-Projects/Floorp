@@ -15,15 +15,15 @@
  */
 import {Protocol} from 'devtools-protocol';
 
+import {Frame} from '../api/Frame.js';
 import {
   HTTPResponse as BaseHTTPResponse,
   RemoteAddress,
 } from '../api/HTTPResponse.js';
-import {createDeferredPromise} from '../util/DeferredPromise.js';
+import {Deferred} from '../util/Deferred.js';
 
 import {CDPSession} from './Connection.js';
 import {ProtocolError} from './Errors.js';
-import {Frame} from './Frame.js';
 import {HTTPRequest} from './HTTPRequest.js';
 import {SecurityDetails} from './SecurityDetails.js';
 
@@ -34,7 +34,7 @@ export class HTTPResponse extends BaseHTTPResponse {
   #client: CDPSession;
   #request: HTTPRequest;
   #contentPromise: Promise<Buffer> | null = null;
-  #bodyLoadedPromise = createDeferredPromise<Error | void>();
+  #bodyLoadedDeferred = Deferred.create<Error | void>();
   #remoteAddress: RemoteAddress;
   #status: number;
   #statusText: string;
@@ -101,9 +101,9 @@ export class HTTPResponse extends BaseHTTPResponse {
 
   override _resolveBody(err: Error | null): void {
     if (err) {
-      return this.#bodyLoadedPromise.resolve(err);
+      return this.#bodyLoadedDeferred.resolve(err);
     }
-    return this.#bodyLoadedPromise.resolve();
+    return this.#bodyLoadedDeferred.resolve();
   }
 
   override remoteAddress(): RemoteAddress {
@@ -112,11 +112,6 @@ export class HTTPResponse extends BaseHTTPResponse {
 
   override url(): string {
     return this.#url;
-  }
-
-  override ok(): boolean {
-    // TODO: document === 0 case?
-    return this.#status === 0 || (this.#status >= 200 && this.#status <= 299);
   }
 
   override status(): number {
@@ -141,31 +136,37 @@ export class HTTPResponse extends BaseHTTPResponse {
 
   override buffer(): Promise<Buffer> {
     if (!this.#contentPromise) {
-      this.#contentPromise = this.#bodyLoadedPromise.then(async error => {
-        if (error) {
-          throw error;
-        }
-        try {
-          const response = await this.#client.send('Network.getResponseBody', {
-            requestId: this.#request._requestId,
-          });
-          return Buffer.from(
-            response.body,
-            response.base64Encoded ? 'base64' : 'utf8'
-          );
-        } catch (error) {
-          if (
-            error instanceof ProtocolError &&
-            error.originalMessage === 'No resource with given identifier found'
-          ) {
-            throw new ProtocolError(
-              'Could not load body for this request. This might happen if the request is a preflight request.'
-            );
+      this.#contentPromise = this.#bodyLoadedDeferred
+        .valueOrThrow()
+        .then(async error => {
+          if (error) {
+            throw error;
           }
+          try {
+            const response = await this.#client.send(
+              'Network.getResponseBody',
+              {
+                requestId: this.#request._requestId,
+              }
+            );
+            return Buffer.from(
+              response.body,
+              response.base64Encoded ? 'base64' : 'utf8'
+            );
+          } catch (error) {
+            if (
+              error instanceof ProtocolError &&
+              error.originalMessage ===
+                'No resource with given identifier found'
+            ) {
+              throw new ProtocolError(
+                'Could not load body for this request. This might happen if the request is a preflight request.'
+              );
+            }
 
-          throw error;
-        }
-      });
+            throw error;
+          }
+        });
     }
     return this.#contentPromise;
   }

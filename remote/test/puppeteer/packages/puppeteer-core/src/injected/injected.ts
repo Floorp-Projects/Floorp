@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {createDeferredPromise} from '../util/DeferredPromise.js';
+import {Deferred} from '../util/Deferred.js';
 import {createFunction} from '../util/Function.js';
 
 import * as ARIAQuerySelector from './ARIAQuerySelector.js';
@@ -41,7 +41,7 @@ const PuppeteerUtil = Object.freeze({
   ...TextQuerySelector,
   ...util,
   ...XPathQuerySelector,
-  createDeferredPromise,
+  Deferred,
   createFunction,
   createTextContent,
   IntervalPoller,

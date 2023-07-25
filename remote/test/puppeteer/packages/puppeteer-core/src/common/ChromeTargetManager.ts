@@ -18,11 +18,11 @@ import {Protocol} from 'devtools-protocol';
 
 import {TargetFilterCallback} from '../api/Browser.js';
 import {assert} from '../util/assert.js';
-import {createDeferredPromise} from '../util/DeferredPromise.js';
+import {Deferred} from '../util/Deferred.js';
 
 import {CDPSession, Connection} from './Connection.js';
 import {EventEmitter} from './EventEmitter.js';
-import {Target} from './Target.js';
+import {InitializationStatus, Target} from './Target.js';
 import {
   TargetInterceptor,
   TargetFactory,
@@ -50,17 +50,16 @@ export class ChromeTargetManager extends EventEmitter implements TargetManager {
    *
    * `targetFilterCallback` has no effect on this map.
    */
-  #discoveredTargetsByTargetId: Map<string, Protocol.Target.TargetInfo> =
-    new Map();
+  #discoveredTargetsByTargetId = new Map<string, Protocol.Target.TargetInfo>();
   /**
    * A target is added to this map once ChromeTargetManager has created
    * a Target and attached at least once to it.
    */
-  #attachedTargetsByTargetId: Map<string, Target> = new Map();
+  #attachedTargetsByTargetId = new Map<string, Target>();
   /**
    * Tracks which sessions attach to which target.
    */
-  #attachedTargetsBySessionId: Map<string, Target> = new Map();
+  #attachedTargetsBySessionId = new Map<string, Target>();
   /**
    * If a target was filtered out by `targetFilterCallback`, we still receive
    * events about it from CDP, but we don't forward them to the rest of Puppeteer.
@@ -69,20 +68,22 @@ export class ChromeTargetManager extends EventEmitter implements TargetManager {
   #targetFilterCallback: TargetFilterCallback | undefined;
   #targetFactory: TargetFactory;
 
-  #targetInterceptors: WeakMap<CDPSession | Connection, TargetInterceptor[]> =
-    new WeakMap();
+  #targetInterceptors = new WeakMap<
+    CDPSession | Connection,
+    TargetInterceptor[]
+  >();
 
-  #attachedToTargetListenersBySession: WeakMap<
+  #attachedToTargetListenersBySession = new WeakMap<
     CDPSession | Connection,
     (event: Protocol.Target.AttachedToTargetEvent) => Promise<void>
-  > = new WeakMap();
-  #detachedFromTargetListenersBySession: WeakMap<
+  >();
+  #detachedFromTargetListenersBySession = new WeakMap<
     CDPSession | Connection,
     (event: Protocol.Target.DetachedFromTargetEvent) => void
-  > = new WeakMap();
+  >();
 
-  #initializePromise = createDeferredPromise<void>();
-  #targetsIdsForInit: Set<string> = new Set();
+  #initializeDeferred = Deferred.create<void>();
+  #targetsIdsForInit = new Set<string>();
 
   constructor(
     connection: Connection,
@@ -131,7 +132,7 @@ export class ChromeTargetManager extends EventEmitter implements TargetManager {
       autoAttach: true,
     });
     this.#finishInitializationIfReady();
-    await this.#initializePromise;
+    await this.#initializeDeferred.valueOrThrow();
   }
 
   dispose(): void {
@@ -263,10 +264,22 @@ export class ChromeTargetManager extends EventEmitter implements TargetManager {
     const target = this.#attachedTargetsByTargetId.get(
       event.targetInfo.targetId
     );
-    this.emit(TargetManagerEmittedEvents.TargetChanged, {
-      target: target!,
-      targetInfo: event.targetInfo,
-    });
+    if (!target) {
+      return;
+    }
+    const previousURL = target.url();
+    const wasInitialized =
+      target._initializedDeferred.value() === InitializationStatus.SUCCESS;
+
+    target._targetInfoChanged(event.targetInfo);
+
+    if (wasInitialized && previousURL !== target.url()) {
+      this.emit(TargetManagerEmittedEvents.TargetChanged, {
+        target: target,
+        wasInitialized,
+        previousURL,
+      });
+    }
   };
 
   #onAttachedToTarget = async (
@@ -379,7 +392,7 @@ export class ChromeTargetManager extends EventEmitter implements TargetManager {
   #finishInitializationIfReady(targetId?: string): void {
     targetId !== undefined && this.#targetsIdsForInit.delete(targetId);
     if (this.#targetsIdsForInit.size === 0) {
-      this.#initializePromise.resolve();
+      this.#initializeDeferred.resolve();
     }
   }
 

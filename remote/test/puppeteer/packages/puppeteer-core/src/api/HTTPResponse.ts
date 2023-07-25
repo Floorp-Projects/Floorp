@@ -16,9 +16,9 @@
 
 import Protocol from 'devtools-protocol';
 
-import {Frame} from '../common/Frame.js';
 import {SecurityDetails} from '../common/SecurityDetails.js';
 
+import {Frame} from './Frame.js';
 import {HTTPRequest} from './HTTPRequest.js';
 
 /**
@@ -67,7 +67,9 @@ export class HTTPResponse {
    * True if the response was successful (status in the range 200-299).
    */
   ok(): boolean {
-    throw new Error('Not implemented');
+    // TODO: document === 0 case?
+    const status = this.status();
+    return status === 0 || (status >= 200 && status <= 299);
   }
 
   /**

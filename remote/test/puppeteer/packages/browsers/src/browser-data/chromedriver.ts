@@ -13,29 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import path from 'path';
 
-import {httpRequest} from '../httpUtil.js';
+import {getLastKnownGoodReleaseForChannel} from './chrome.js';
+import {BrowserPlatform, ChromeReleaseChannel} from './types.js';
 
-import {BrowserPlatform} from './types.js';
-
-function archive(platform: BrowserPlatform): string {
+function folder(platform: BrowserPlatform): string {
   switch (platform) {
     case BrowserPlatform.LINUX:
-      return 'chromedriver_linux64';
+      return 'linux64';
     case BrowserPlatform.MAC_ARM:
-      return 'chromedriver_mac_arm64';
+      return 'mac-arm64';
     case BrowserPlatform.MAC:
-      return 'chromedriver_mac64';
+      return 'mac-x64';
     case BrowserPlatform.WIN32:
+      return 'win32';
     case BrowserPlatform.WIN64:
-      return 'chromedriver_win32';
+      return 'win64';
   }
 }
 
 export function resolveDownloadUrl(
   platform: BrowserPlatform,
   buildId: string,
-  baseUrl = 'https://chromedriver.storage.googleapis.com'
+  baseUrl = 'https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing'
 ): string {
   return `${baseUrl}/${resolveDownloadPath(platform, buildId).join('/')}`;
 }
@@ -44,7 +45,7 @@ export function resolveDownloadPath(
   platform: BrowserPlatform,
   buildId: string
 ): string[] {
-  return [buildId, `${archive(platform)}.zip`];
+  return [buildId, folder(platform), `chromedriver-${folder(platform)}.zip`];
 }
 
 export function relativeExecutablePath(
@@ -54,40 +55,16 @@ export function relativeExecutablePath(
   switch (platform) {
     case BrowserPlatform.MAC:
     case BrowserPlatform.MAC_ARM:
+      return path.join('chromedriver-' + folder(platform), 'chromedriver');
     case BrowserPlatform.LINUX:
-      return 'chromedriver';
+      return path.join('chromedriver-linux64', 'chromedriver');
     case BrowserPlatform.WIN32:
     case BrowserPlatform.WIN64:
-      return 'chromedriver.exe';
+      return path.join('chromedriver-' + folder(platform), 'chromedriver.exe');
   }
 }
 export async function resolveBuildId(
-  _channel: 'latest' = 'latest'
+  channel: ChromeReleaseChannel
 ): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const request = httpRequest(
-      new URL(`https://chromedriver.storage.googleapis.com/LATEST_RELEASE`),
-      'GET',
-      response => {
-        let data = '';
-        if (response.statusCode && response.statusCode >= 400) {
-          return reject(new Error(`Got status code ${response.statusCode}`));
-        }
-        response.on('data', chunk => {
-          data += chunk;
-        });
-        response.on('end', () => {
-          try {
-            return resolve(String(data));
-          } catch {
-            return reject(new Error('Chrome version not found'));
-          }
-        });
-      },
-      false
-    );
-    request.on('error', err => {
-      reject(err);
-    });
-  });
+  return (await getLastKnownGoodReleaseForChannel(channel)).version;
 }

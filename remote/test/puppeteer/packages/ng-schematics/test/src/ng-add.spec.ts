@@ -1,114 +1,24 @@
-import https from 'https';
-import {join} from 'path';
-
-import {JsonObject} from '@angular-devkit/core';
-import {
-  SchematicTestRunner,
-  UnitTestTree,
-} from '@angular-devkit/schematics/testing/schematic-test-runner';
 import expect from 'expect';
-import sinon from 'sinon';
 
-const WORKSPACE_OPTIONS = {
-  name: 'workspace',
-  newProjectRoot: 'projects',
-  version: '14.0.0',
-};
-
-const APPLICATION_OPTIONS = {
-  name: 'sandbox',
-};
-
-function getProjectFile(file: string): string {
-  return `/${WORKSPACE_OPTIONS.newProjectRoot}/${APPLICATION_OPTIONS.name}/${file}`;
-}
-
-function getAngularJsonScripts(
-  tree: UnitTestTree,
-  isDefault = true
-): {
-  builder: string;
-  configurations: Record<string, any>;
-  options: Record<string, any>;
-} {
-  const angularJson = tree.readJson('angular.json') as any;
-  const e2eScript = isDefault ? 'e2e' : 'puppeteer';
-  return angularJson['projects']?.[APPLICATION_OPTIONS.name]?.['architect'][
-    e2eScript
-  ];
-}
-
-function getPackageJson(tree: UnitTestTree): {
-  scripts: Record<string, string>;
-  devDependencies: string[];
-} {
-  const packageJson = tree.readJson('package.json') as JsonObject;
-  return {
-    scripts: packageJson['scripts'] as any,
-    devDependencies: Object.keys(
-      packageJson['devDependencies'] as Record<string, string>
-    ),
-  };
-}
-
-async function buildTestingTree(userOptions?: Record<string, any>) {
-  const runner = new SchematicTestRunner(
-    'schematics',
-    join(__dirname, '../../lib/schematics/collection.json')
-  );
-  const options = {
-    isDefaultTester: true,
-    exportConfig: false,
-    testingFramework: 'jasmine',
-    ...userOptions,
-  };
-  let workingTree: UnitTestTree;
-
-  // Build workspace
-  workingTree = await runner
-    .runExternalSchematicAsync(
-      '@schematics/angular',
-      'workspace',
-      WORKSPACE_OPTIONS
-    )
-    .toPromise();
-  // Build dummy application
-  workingTree = await runner
-    .runExternalSchematicAsync(
-      '@schematics/angular',
-      'application',
-      APPLICATION_OPTIONS,
-      workingTree
-    )
-    .toPromise();
-
-  return await runner
-    .runSchematicAsync('ng-add', options, workingTree)
-    .toPromise();
-}
+import {
+  buildTestingTree,
+  getAngularJsonScripts,
+  getPackageJson,
+  getProjectFile,
+  setupHttpHooks,
+} from './utils.js';
 
 describe('@puppeteer/ng-schematics: ng-add', () => {
-  // Stop outgoing Request for version fetching
-  before(() => {
-    const httpsGetStub = sinon.stub(https, 'get');
-    httpsGetStub.returns({
-      on: (_: any, callback: () => void) => {
-        callback();
-      },
-    } as any);
-  });
-
-  after(() => {
-    sinon.restore();
-  });
+  setupHttpHooks();
 
   it('should create base files and update to "package.json"', async () => {
-    const tree = await buildTestingTree();
+    const tree = await buildTestingTree('ng-add');
     const {devDependencies, scripts} = getPackageJson(tree);
     const {builder, configurations} = getAngularJsonScripts(tree);
 
     expect(tree.files).toContain(getProjectFile('e2e/tsconfig.json'));
     expect(tree.files).toContain(getProjectFile('e2e/tests/app.e2e.ts'));
+    expect(tree.files).toContain(getProjectFile('e2e/tests/utils.ts'));
     expect(devDependencies).toContain('puppeteer');
     expect(scripts['e2e']).toBe('ng e2e');
     expect(builder).toBe('@puppeteer/ng-schematics:puppeteer');
@@ -120,7 +30,7 @@ describe('@puppeteer/ng-schematics: ng-add', () => {
   });
 
   it('should update create proper "ng" command for non default tester', async () => {
-    const tree = await buildTestingTree({
+    const tree = await buildTestingTree('ng-add', {
       isDefaultTester: false,
     });
     const {scripts} = getPackageJson(tree);
@@ -131,7 +41,7 @@ describe('@puppeteer/ng-schematics: ng-add', () => {
   });
 
   it('should create Puppeteer config', async () => {
-    const {files} = await buildTestingTree({
+    const {files} = await buildTestingTree('ng-add', {
       exportConfig: true,
     });
 
@@ -139,7 +49,7 @@ describe('@puppeteer/ng-schematics: ng-add', () => {
   });
 
   it('should not create Puppeteer config', async () => {
-    const {files} = await buildTestingTree({
+    const {files} = await buildTestingTree('ng-add', {
       exportConfig: false,
     });
 
@@ -147,7 +57,7 @@ describe('@puppeteer/ng-schematics: ng-add', () => {
   });
 
   it('should create Jasmine files and update "package.json"', async () => {
-    const tree = await buildTestingTree({
+    const tree = await buildTestingTree('ng-add', {
       testingFramework: 'jasmine',
     });
     const {devDependencies} = getPackageJson(tree);
@@ -165,7 +75,7 @@ describe('@puppeteer/ng-schematics: ng-add', () => {
   });
 
   it('should create Jest files and update "package.json"', async () => {
-    const tree = await buildTestingTree({
+    const tree = await buildTestingTree('ng-add', {
       testingFramework: 'jest',
     });
     const {devDependencies} = getPackageJson(tree);
@@ -179,7 +89,7 @@ describe('@puppeteer/ng-schematics: ng-add', () => {
   });
 
   it('should create Mocha files and update "package.json"', async () => {
-    const tree = await buildTestingTree({
+    const tree = await buildTestingTree('ng-add', {
       testingFramework: 'mocha',
     });
     const {devDependencies} = getPackageJson(tree);
@@ -197,16 +107,34 @@ describe('@puppeteer/ng-schematics: ng-add', () => {
     ]);
   });
 
-  it('should create Node files"', async () => {
-    const tree = await buildTestingTree({
+  it('should create Node files', async () => {
+    const tree = await buildTestingTree('ng-add', {
       testingFramework: 'node',
     });
     const {options} = getAngularJsonScripts(tree);
 
     expect(tree.files).toContain(getProjectFile('e2e/.gitignore'));
+    expect(tree.files).not.toContain(getProjectFile('e2e/tests/app.e2e.ts'));
+    expect(tree.files).toContain(getProjectFile('e2e/tests/app.test.ts'));
     expect(options['commands']).toEqual([
       [`tsc`, '-p', 'e2e/tsconfig.json'],
-      ['node', '--test', 'e2e/'],
+      ['node', '--test', '--test-reporter', 'spec', 'e2e/build/'],
     ]);
+  });
+
+  it('should not create port option', async () => {
+    const tree = await buildTestingTree('ng-add');
+
+    const {options} = getAngularJsonScripts(tree);
+    expect(options['port']).toBeUndefined();
+  });
+  it('should create port option when specified', async () => {
+    const port = 8080;
+    const tree = await buildTestingTree('ng-add', {
+      port,
+    });
+
+    const {options} = getAngularJsonScripts(tree);
+    expect(options['port']).toBe(port);
   });
 });

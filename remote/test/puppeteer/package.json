@@ -11,7 +11,6 @@
     "check:pinned-deps": "tsx tools/ensure-pinned-deps",
     "check": "npm run check --workspaces --if-present && run-p check:*",
     "clean": "rimraf -g \"./**/.wireit\" && npm run clean --workspaces --if-present",
-    "commitlint": "commitlint --from=HEAD~1",
     "debug": "mocha --inspect-brk",
     "docs": "run-s build:docs generate:markdown",
     "format:eslint": "eslint --ext js --ext ts --fix .",
@@ -23,20 +22,21 @@
     "lint:prettier": "prettier --check .",
     "lint": "run-s lint:prettier lint:eslint",
     "postinstall": "npm run postinstall --workspaces --if-present",
-    "prepare": "husky install",
     "test-install": "npm run test --workspace @puppeteer-test/installation",
     "test-types": "tsd -t packages/puppeteer",
     "test:chrome:headful": "wireit",
     "test:chrome:new-headless": "wireit",
     "test:chrome:headless": "wireit",
     "test:chrome:bidi": "wireit",
+    "test:chrome:bidi-local": "wireit",
     "test:chrome": "wireit",
     "test:firefox:bidi": "wireit",
     "test:firefox:headful": "wireit",
     "test:firefox:headless": "wireit",
     "test:firefox": "wireit",
-    "test": "cross-env PUPPETEER_DEFERRED_PROMISE_DEBUG_TIMEOUT=20000 node tools/mochaRunner/lib/main.js",
-    "validate-licenses": "tsx tools/third_party/validate-licenses.ts"
+    "test": "wireit",
+    "validate-licenses": "tsx tools/third_party/validate-licenses.ts",
+    "unit": "npm run unit --workspaces --if-present"
   },
   "wireit": {
     "build": {
@@ -58,46 +58,28 @@
       ]
     },
     "test:chrome:headful": {
-      "command": "npm test -- --test-suite chrome-headful",
-      "dependencies": [
-        "./test:build"
-      ]
+      "command": "npm test -- --test-suite chrome-headful"
     },
     "test:chrome:headless": {
-      "command": "npm test -- --test-suite chrome-headless",
-      "dependencies": [
-        "./test:build"
-      ]
+      "command": "npm test -- --test-suite chrome-headless"
     },
     "test:chrome:new-headless": {
-      "command": "npm test -- --test-suite chrome-new-headless",
-      "dependencies": [
-        "./test:build"
-      ]
+      "command": "npm test -- --test-suite chrome-new-headless"
     },
     "test:chrome:bidi": {
-      "command": "npm test -- --test-suite chrome-bidi",
-      "dependencies": [
-        "./test:build"
-      ]
+      "command": "npm test -- --test-suite chrome-bidi"
+    },
+    "test:chrome:bidi-local": {
+      "command": "PUPPETEER_EXECUTABLE_PATH=$(node tools/download_chrome_bidi.mjs ~/.cache/puppeteer/chrome-canary --shell) npm test -- --test-suite chrome-bidi"
     },
     "test:firefox:headful": {
-      "command": "npm test -- --test-suite firefox-headful",
-      "dependencies": [
-        "./test:build"
-      ]
+      "command": "npm test -- --test-suite firefox-headful"
     },
     "test:firefox:headless": {
-      "command": "npm test -- --test-suite firefox-headless",
-      "dependencies": [
-        "./test:build"
-      ]
+      "command": "npm test -- --test-suite firefox-headless"
     },
     "test:firefox:bidi": {
-      "command": "npm test -- --test-suite firefox-bidi",
-      "dependencies": [
-        "./test:build"
-      ]
+      "command": "npm test -- --test-suite firefox-bidi"
     },
     "test:chrome": {
       "dependencies": [
@@ -113,54 +95,56 @@
         "test:firefox:headless",
         "test:firefox:bidi"
       ]
+    },
+    "test": {
+      "command": "cross-env PUPPETEER_DEFERRED_PROMISE_DEBUG_TIMEOUT=20000 node tools/mochaRunner/lib/main.js --min-tests 1003",
+      "dependencies": [
+        "./test:build"
+      ]
     }
   },
   "devDependencies": {
     "@actions/core": "1.10.0",
-    "@commitlint/cli": "17.6.1",
-    "@commitlint/config-conventional": "17.6.1",
-    "@microsoft/api-documenter": "7.21.7",
-    "@microsoft/api-extractor": "7.34.4",
-    "@microsoft/api-extractor-model": "7.26.4",
+    "@microsoft/api-documenter": "7.22.27",
+    "@microsoft/api-extractor": "7.36.2",
+    "@microsoft/api-extractor-model": "7.27.4",
     "@pptr/testserver": "file:packages/testserver",
-    "@rollup/plugin-commonjs": "24.0.1",
-    "@rollup/plugin-node-resolve": "15.0.1",
-    "@types/debug": "4.1.7",
-    "@types/diff": "5.0.2",
+    "@prettier/sync": "0.2.1",
+    "@rollup/plugin-commonjs": "25.0.2",
+    "@rollup/plugin-node-resolve": "15.1.0",
+    "@types/debug": "4.1.8",
+    "@types/diff": "5.0.3",
     "@types/mime": "3.0.1",
     "@types/mocha": "10.0.1",
-    "@types/node": "18.14.6",
+    "@types/node": "20.2.5",
     "@types/pixelmatch": "5.2.4",
     "@types/pngjs": "6.0.1",
     "@types/progress": "2.0.5",
-    "@types/proxy-from-env": "1.0.1",
-    "@types/semver": "7.3.13",
-    "@types/sinon": "10.0.13",
+    "@types/semver": "7.5.0",
+    "@types/sinon": "10.0.15",
     "@types/tar-fs": "2.0.1",
     "@types/unbzip2-stream": "1.4.0",
-    "@types/ws": "8.5.4",
-    "@typescript-eslint/eslint-plugin": "5.59.1",
-    "@typescript-eslint/parser": "5.59.1",
-    "c8": "7.13.0",
-    "commitlint": "17.6.1",
+    "@types/ws": "8.5.5",
+    "@typescript-eslint/eslint-plugin": "6.0.0",
+    "@typescript-eslint/parser": "6.0.0",
+    "c8": "8.0.0",
     "commonmark": "0.30.0",
     "cross-env": "7.0.3",
     "diff": "5.1.0",
-    "esbuild": "^0.17.11",
-    "eslint": "8.39.0",
+    "esbuild": "0.18.12",
+    "eslint": "8.44.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-formatter-codeframe": "7.32.1",
     "eslint-plugin-import": "2.27.5",
     "eslint-plugin-local": "1.0.0",
     "eslint-plugin-mocha": "10.1.0",
-    "eslint-plugin-prettier": "4.2.1",
+    "eslint-plugin-prettier": "5.0.0",
     "eslint-plugin-tsdoc": "0.2.17",
-    "eslint-plugin-unused-imports": "2.0.0",
+    "eslint-plugin-unused-imports": "3.0.0",
     "esprima": "4.0.1",
-    "expect": "29.4.3",
-    "glob": "8.1.0",
-    "gts": "4.0.0",
-    "husky": "8.0.3",
+    "expect": "29.6.1",
+    "glob": "10.3.3",
+    "gts": "4.0.1",
     "jpeg-js": "0.4.4",
     "license-checker": "25.0.1",
     "mime": "3.0.0",
@@ -170,20 +154,20 @@
     "npm-run-all": "4.1.5",
     "pixelmatch": "5.3.0",
     "pngjs": "7.0.0",
-    "prettier": "2.8.8",
+    "prettier": "3.0.0",
     "puppeteer": "file:packages/puppeteer",
-    "rimraf": "3.0.2",
-    "rollup": "3.18.0",
-    "semver": "7.3.8",
-    "sinon": "15.0.1",
+    "rimraf": "5.0.1",
+    "rollup": "3.26.2",
+    "semver": "7.5.4",
+    "sinon": "15.2.0",
     "source-map-support": "0.5.21",
     "spdx-satisfies": "5.0.1",
     "text-diff": "1.0.1",
-    "tsd": "0.26.0",
-    "tsx": "3.12.3",
-    "typescript": "4.9.5",
-    "wireit": "0.9.5",
-    "zod": "3.21.2"
+    "tsd": "0.28.1",
+    "tsx": "3.12.7",
+    "typescript": "5.1.6",
+    "wireit": "0.10.0",
+    "zod": "3.21.4"
   },
   "workspaces": [
     "packages/*",

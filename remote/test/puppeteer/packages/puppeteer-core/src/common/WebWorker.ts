@@ -15,7 +15,7 @@
  */
 import {Protocol} from 'devtools-protocol';
 
-import {createDeferredPromise} from '../util/DeferredPromise.js';
+import {Deferred} from '../util/Deferred.js';
 
 import {CDPSession} from './Connection.js';
 import {ConsoleMessageType} from './ConsoleMessage.js';
@@ -23,7 +23,7 @@ import {EventEmitter} from './EventEmitter.js';
 import {ExecutionContext} from './ExecutionContext.js';
 import {CDPJSHandle} from './JSHandle.js';
 import {EvaluateFunc, HandleFor} from './types.js';
-import {debugError} from './util.js';
+import {debugError, withSourcePuppeteerURLIfNone} from './util.js';
 
 /**
  * @internal
@@ -68,7 +68,7 @@ export type ExceptionThrownCallback = (
  * @public
  */
 export class WebWorker extends EventEmitter {
-  #executionContext = createDeferredPromise<ExecutionContext>();
+  #executionContext = Deferred.create<ExecutionContext>();
 
   #client: CDPSession;
   #url: string;
@@ -91,14 +91,18 @@ export class WebWorker extends EventEmitter {
       this.#executionContext.resolve(context);
     });
     this.#client.on('Runtime.consoleAPICalled', async event => {
-      const context = await this.#executionContext;
-      return consoleAPICalled(
-        event.type,
-        event.args.map((object: Protocol.Runtime.RemoteObject) => {
-          return new CDPJSHandle(context, object);
-        }),
-        event.stackTrace
-      );
+      try {
+        const context = await this.#executionContext.valueOrThrow();
+        return consoleAPICalled(
+          event.type,
+          event.args.map((object: Protocol.Runtime.RemoteObject) => {
+            return new CDPJSHandle(context, object);
+          }),
+          event.stackTrace
+        );
+      } catch (err) {
+        debugError(err);
+      }
     });
     this.#client.on('Runtime.exceptionThrown', exception => {
       return exceptionThrown(exception.exceptionDetails);
@@ -112,7 +116,7 @@ export class WebWorker extends EventEmitter {
    * @internal
    */
   async executionContext(): Promise<ExecutionContext> {
-    return this.#executionContext;
+    return this.#executionContext.valueOrThrow();
   }
 
   /**
@@ -145,12 +149,16 @@ export class WebWorker extends EventEmitter {
    */
   async evaluate<
     Params extends unknown[],
-    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>
+    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>,
   >(
     pageFunction: Func | string,
     ...args: Params
   ): Promise<Awaited<ReturnType<Func>>> {
-    const context = await this.#executionContext;
+    pageFunction = withSourcePuppeteerURLIfNone(
+      this.evaluate.name,
+      pageFunction
+    );
+    const context = await this.#executionContext.valueOrThrow();
     return context.evaluate(pageFunction, ...args);
   }
 
@@ -168,12 +176,16 @@ export class WebWorker extends EventEmitter {
    */
   async evaluateHandle<
     Params extends unknown[],
-    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>
+    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>,
   >(
     pageFunction: Func | string,
     ...args: Params
   ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
-    const context = await this.#executionContext;
+    pageFunction = withSourcePuppeteerURLIfNone(
+      this.evaluateHandle.name,
+      pageFunction
+    );
+    const context = await this.#executionContext.valueOrThrow();
     return context.evaluateHandle(pageFunction, ...args);
   }
 }

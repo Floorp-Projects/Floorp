@@ -22,12 +22,16 @@ import {Browser, BrowserPlatform} from './browser-data/browser-data.js';
 /**
  * @public
  */
-export type InstalledBrowser = {
+export interface InstalledBrowser {
+  /**
+   * Path to the root of the installation folder. Use
+   * {@link computeExecutablePath} to get the path to the executable binary.
+   */
   path: string;
   browser: Browser;
   buildId: string;
   platform: BrowserPlatform;
-};
+}
 
 /**
  * The cache used by Puppeteer relies on the following structure:
@@ -64,6 +68,19 @@ export class Cache {
 
   clear(): void {
     fs.rmSync(this.#rootDir, {
+      force: true,
+      recursive: true,
+      maxRetries: 10,
+      retryDelay: 500,
+    });
+  }
+
+  uninstall(
+    browser: Browser,
+    platform: BrowserPlatform,
+    buildId: string
+  ): void {
+    fs.rmSync(this.installationDir(browser, platform, buildId), {
       force: true,
       recursive: true,
       maxRetries: 10,

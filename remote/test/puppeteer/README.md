@@ -105,7 +105,7 @@ will not download Chrome when installed.
 
 You should use `puppeteer-core` if you are
 [connecting to a remote browser](https://pptr.dev/api/puppeteer.puppeteer.connect)
-or [managing browsers yourself](https://pptr.dev/api/puppeteer.browserfetcher).
+or [managing browsers yourself](https://pptr.dev/browsers-api/).
 If you are managing browsers yourself, you will need to call
 [`puppeteer.launch`](https://pptr.dev/api/puppeteer.puppeteernode.launch) with
 an an explicit
@@ -143,9 +143,11 @@ The following example searches [developer.chrome.com](https://developer.chrome.c
 import puppeteer from 'puppeteer';
 
 (async () => {
+  // Launch the browser and open a new blank page
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
+  // Navigate the page to a URL
   await page.goto('https://developer.chrome.com/');
 
   // Set screen size
@@ -163,7 +165,7 @@ import puppeteer from 'puppeteer';
   const textSelector = await page.waitForSelector(
     'text/Customize and automate'
   );
-  const fullTitle = await textSelector.evaluate(el => el.textContent);
+  const fullTitle = await textSelector?.evaluate(el => el.textContent);
 
   // Print the full title
   console.log('The title of this blog post is "%s".', fullTitle);
