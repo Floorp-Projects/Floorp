@@ -13,9 +13,8 @@ use crate::stylist::CascadeData;
 use dom::DocumentState;
 use selectors::matching::{
     IgnoreNthChildForInvalidation, MatchingContext, MatchingMode, NeedsSelectorFlags, QuirksMode,
-    VisitedHandlingMode,
+    SelectorCaches, VisitedHandlingMode,
 };
-use selectors::NthIndexCache;
 
 /// A struct holding the members necessary to invalidate document state
 /// selectors.
@@ -48,13 +47,13 @@ impl<'a, E: TElement, I> DocumentStateInvalidationProcessor<'a, E, I> {
     pub fn new(
         rules: I,
         document_states_changed: DocumentState,
-        nth_index_cache: &'a mut NthIndexCache,
+        selector_caches: &'a mut SelectorCaches,
         quirks_mode: QuirksMode,
     ) -> Self {
         let mut matching_context = MatchingContext::<'a, E::Impl>::new_for_visited(
             MatchingMode::Normal,
             None,
-            nth_index_cache,
+            selector_caches,
             VisitedHandlingMode::AllLinksVisitedAndUnvisited,
             quirks_mode,
             NeedsSelectorFlags::No,

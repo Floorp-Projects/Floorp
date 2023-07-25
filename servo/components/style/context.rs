@@ -30,7 +30,7 @@ use euclid::default::Size2D;
 use euclid::Scale;
 #[cfg(feature = "servo")]
 use fxhash::FxHashMap;
-use selectors::NthIndexCache;
+use selectors::context::SelectorCaches;
 #[cfg(feature = "gecko")]
 use servo_arc::Arc;
 #[cfg(feature = "servo")]
@@ -651,8 +651,8 @@ pub struct ThreadLocalStyleContext<E: TElement> {
     /// A checker used to ensure that parallel.rs does not recurse indefinitely
     /// even on arbitrarily deep trees.  See Gecko bug 1376883.
     pub stack_limit_checker: StackLimitChecker,
-    /// A cache for nth-index-like selectors.
-    pub nth_index_cache: NthIndexCache,
+    /// Collection of caches for speeding up expensive selector matches.
+    pub selector_caches: SelectorCaches,
 }
 
 impl<E: TElement> ThreadLocalStyleContext<E> {
@@ -667,7 +667,7 @@ impl<E: TElement> ThreadLocalStyleContext<E> {
             stack_limit_checker: StackLimitChecker::new(
                 (STYLE_THREAD_STACK_SIZE_KB - STACK_SAFETY_MARGIN_KB) * 1024,
             ),
-            nth_index_cache: NthIndexCache::default(),
+            selector_caches: SelectorCaches::default(),
         }
     }
 }

@@ -465,11 +465,11 @@ where
         let mut applicable_declarations = ApplicableDeclarationList::new();
 
         let bloom_filter = self.context.thread_local.bloom_filter.filter();
-        let nth_index_cache = &mut self.context.thread_local.nth_index_cache;
+        let selector_caches = &mut self.context.thread_local.selector_caches;
         let mut matching_context = MatchingContext::new_for_visited(
             MatchingMode::Normal,
             Some(bloom_filter),
-            nth_index_cache,
+            selector_caches,
             visited_handling,
             self.context.shared.quirks_mode(),
             NeedsSelectorFlags::Yes,
@@ -559,12 +559,12 @@ where
         }
 
         let bloom_filter = self.context.thread_local.bloom_filter.filter();
-        let nth_index_cache = &mut self.context.thread_local.nth_index_cache;
+        let selector_caches = &mut self.context.thread_local.selector_caches;
 
         let mut matching_context = MatchingContext::<'_, E::Impl>::new_for_visited(
             MatchingMode::ForStatelessPseudoElement,
             Some(bloom_filter),
-            nth_index_cache,
+            selector_caches,
             visited_handling,
             self.context.shared.quirks_mode(),
             NeedsSelectorFlags::Yes,

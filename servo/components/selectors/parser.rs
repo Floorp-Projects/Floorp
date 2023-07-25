@@ -358,6 +358,18 @@ pub struct SelectorList<Impl: SelectorImpl>(
     #[shmem(field_bound)] pub SmallVec<[Selector<Impl>; 1]>,
 );
 
+/// Uniquely identify a selector based on its components, which is behind ThinArc and
+/// is therefore stable.
+#[derive(Clone, Copy, Hash, Eq, PartialEq)]
+pub struct SelectorKey(usize);
+
+impl SelectorKey {
+    /// Create a new key based on the given selector.
+    pub fn new<Impl: SelectorImpl>(selector: &Selector<Impl>) -> Self {
+        Self(selector.0.slice().as_ptr() as usize)
+    }
+}
+
 /// Whether or not we're using forgiving parsing mode
 enum ForgivingParsing {
     /// Discard the entire selector list upon encountering any invalid selector.
@@ -1506,6 +1518,26 @@ pub enum RelativeSelectorMatchHint {
     InSibling,
     /// Across this element's subsequent siblings and their subtrees.
     InSiblingSubtree,
+}
+
+impl RelativeSelectorMatchHint {
+    /// Is the match traversal direction towards the descendant of this element (As opposed to siblings)?
+    pub fn is_descendant_direction(&self) -> bool {
+        matches!(*self, Self::InChild | Self::InSubtree)
+    }
+
+    /// Is the match traversal terminated at the next sibling?
+    pub fn is_next_sibling(&self) -> bool {
+        matches!(*self, Self::InNextSibling | Self::InNextSiblingSubtree)
+    }
+
+    /// Does the match involve matching the subtree?
+    pub fn is_subtree(&self) -> bool {
+        matches!(
+            *self,
+            Self::InSubtree | Self::InSiblingSubtree | Self::InNextSiblingSubtree
+        )
+    }
 }
 
 /// Storage for a relative selector.

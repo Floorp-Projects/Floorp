@@ -31,6 +31,7 @@ pub mod context;
 pub mod matching;
 mod nth_index_cache;
 pub mod parser;
+pub mod relative_selector;
 pub mod sink;
 mod tree;
 pub mod visitor;

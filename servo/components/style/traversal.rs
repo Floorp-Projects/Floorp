@@ -14,7 +14,7 @@ use crate::sharing::StyleSharingTarget;
 use crate::style_resolver::{PseudoElementResolution, StyleResolverForElement};
 use crate::stylist::RuleInclusion;
 use crate::traversal_flags::TraversalFlags;
-use selectors::NthIndexCache;
+use selectors::matching::SelectorCaches;
 use smallvec::SmallVec;
 use std::collections::HashMap;
 
@@ -172,7 +172,7 @@ pub trait DomTraversal<E: TElement>: Sync {
                     root,
                     shared_context,
                     None,
-                    &mut NthIndexCache::default(),
+                    &mut SelectorCaches::default(),
                 );
 
                 if invalidation_result.has_invalidated_siblings() {
@@ -783,7 +783,7 @@ fn note_children<E, D, F>(
                 child,
                 &context.shared,
                 Some(&context.thread_local.stack_limit_checker),
-                &mut context.thread_local.nth_index_cache,
+                &mut context.thread_local.selector_caches,
             );
         }
 

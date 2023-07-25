@@ -50,13 +50,14 @@ use malloc_size_of::MallocSizeOf;
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOfOps, MallocUnconditionalShallowSizeOf};
 use selectors::attr::{CaseSensitivity, NamespaceConstraint};
 use selectors::bloom::BloomFilter;
-use selectors::matching::{matches_selector, MatchingContext, MatchingMode, NeedsSelectorFlags};
+use selectors::matching::{
+    matches_selector, MatchingContext, MatchingMode, NeedsSelectorFlags, SelectorCaches,
+};
 use selectors::matching::{IgnoreNthChildForInvalidation, VisitedHandlingMode};
 use selectors::parser::{
     AncestorHashes, Combinator, Component, Selector, SelectorIter, SelectorList,
 };
 use selectors::visitor::{SelectorListKind, SelectorVisitor};
-use selectors::NthIndexCache;
 use servo_arc::{Arc, ArcBorrow};
 use smallbitvec::SmallBitVec;
 use smallvec::SmallVec;
@@ -1123,7 +1124,7 @@ impl Stylist {
     {
         debug_assert!(pseudo.is_lazy());
 
-        let mut nth_index_cache = Default::default();
+        let mut selector_caches = SelectorCaches::default();
         // No need to bother setting the selector flags when we're computing
         // default styles.
         let needs_selector_flags = if rule_inclusion == RuleInclusion::DefaultOnly {
@@ -1136,7 +1137,7 @@ impl Stylist {
         let mut matching_context = MatchingContext::<'_, E::Impl>::new(
             MatchingMode::ForStatelessPseudoElement,
             None,
-            &mut nth_index_cache,
+            &mut selector_caches,
             self.quirks_mode,
             needs_selector_flags,
             IgnoreNthChildForInvalidation::No,
@@ -1165,12 +1166,12 @@ impl Stylist {
         let mut visited_rules = None;
         if parent_style.visited_style().is_some() {
             let mut declarations = ApplicableDeclarationList::new();
-            let mut nth_index_cache = Default::default();
+            let mut selector_caches = SelectorCaches::default();
 
             let mut matching_context = MatchingContext::<'_, E::Impl>::new_for_visited(
                 MatchingMode::ForStatelessPseudoElement,
                 None,
-                &mut nth_index_cache,
+                &mut selector_caches,
                 VisitedHandlingMode::RelevantLinkVisited,
                 self.quirks_mode,
                 needs_selector_flags,
@@ -1379,7 +1380,7 @@ impl Stylist {
         &self,
         element: E,
         bloom: Option<&BloomFilter>,
-        nth_index_cache: &mut NthIndexCache,
+        selector_caches: &mut SelectorCaches,
         needs_selector_flags: NeedsSelectorFlags,
     ) -> SmallBitVec
     where
@@ -1390,7 +1391,7 @@ impl Stylist {
         let mut matching_context = MatchingContext::new(
             MatchingMode::Normal,
             bloom,
-            nth_index_cache,
+            selector_caches,
             self.quirks_mode,
             needs_selector_flags,
             IgnoreNthChildForInvalidation::No,
