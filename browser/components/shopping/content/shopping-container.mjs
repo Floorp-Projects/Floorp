@@ -16,6 +16,8 @@ import "chrome://browser/content/shopping/adjusted-rating.mjs";
 import "chrome://browser/content/shopping/reliability.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/shopping/analysis-explainer.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/shopping/shopping-message-bar.mjs";
 
 export class ShoppingContainer extends MozLitElement {
   #productURL;
@@ -114,6 +116,9 @@ export class ShoppingContainer extends MozLitElement {
           ></button>
         </div>
         <div id="content">
+          ${this.data.needs_analysis && this.data.product_id
+            ? html`<shopping-message-bar type="stale"></shopping-message-bar>`
+            : null}
           <review-reliability letter=${this.data.grade}></review-reliability>
           <adjusted-rating
             rating=${this.data.adjusted_rating}

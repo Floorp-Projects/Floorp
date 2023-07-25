@@ -30,6 +30,12 @@ shopping-letter-grade-description-df = Unreliable reviews
 shopping-letter-grade-tooltip =
   .title = { $letter } - { $description }
 
+## Strings for the shopping message-bar
+
+shopping-message-bar-warning-stale-analysis-title = Updates available
+shopping-message-bar-warning-stale-analysis-message = Re-analyze the reviews for this product, so you have the latest info.
+shopping-message-bar-warning-stale-analysis-link = Re-analyze reviews
+
 ## Strings for the product review snippets card
 
 shopping-highlights-label =
