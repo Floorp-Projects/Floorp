@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.navigation.NavController
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.support.base.feature.UserInteractionHandler
@@ -137,6 +138,8 @@ class BookmarkView(
     private val bookmarkAdapter = BookmarkAdapter(binding.bookmarksEmptyView, interactor)
 
     init {
+        bookmarkAdapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
+
         binding.bookmarkList.apply {
             adapter = bookmarkAdapter
         }
