@@ -1398,6 +1398,8 @@ jobs:
 
     - name: Run GitHub Actions for Release aarch64 Linux MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
+         echo "Preparing to run GitHub Actions for Release aarch64 Linux MAR, waiting for 30 seconds"
+         sleep 30
          curl -X POST \
            -H "Authorization: token ${{ secrets.PAT }}" \
            -H "Accept: application/vnd.github.v3+json" \
@@ -1413,6 +1415,8 @@ jobs:
 
     - name: Run GitHub Actions for Release x86_64 Darwin MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
+         echo "Preparing to run GitHub Actions for Release x86_64 Darwin MAR, waiting for 30 seconds"
+         sleep 30
          curl -X POST \
            -H "Authorization: token ${{ secrets.PAT }}" \
            -H "Accept: application/vnd.github.v3+json" \
@@ -1428,6 +1432,8 @@ jobs:
 
     - name: Run GitHub Actions for Release aarch64 Darwin MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
+         echo "Preparing to run GitHub Actions for Release aarch64 Darwin MAR, waiting for 30 seconds"
+         sleep 30
          curl -X POST \
            -H "Authorization: token ${{ secrets.PAT }}" \
            -H "Accept: application/vnd.github.v3+json" \
