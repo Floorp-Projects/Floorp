@@ -1058,18 +1058,24 @@ class ExternalPythonSite:
 
 @functools.lru_cache(maxsize=None)
 def resolve_requirements(topsrcdir, site_name):
-    manifest_path = os.path.join(topsrcdir, "python", "sites", f"{site_name}.txt")
-    if not os.path.exists(manifest_path):
+    thunderbird_dir = os.path.join(topsrcdir, "comm")
+    is_thunderbird = os.path.exists(thunderbird_dir) and bool(
+        os.listdir(thunderbird_dir)
+    )
+    prefixes = [topsrcdir]
+    if is_thunderbird:
+        prefixes[0:0] = [thunderbird_dir]
+    manifest_suffix = os.path.join("python", "sites", f"{site_name}.txt")
+    manifest_paths = (os.path.join(prefix, manifest_suffix) for prefix in prefixes)
+    manifest_path = next((f for f in manifest_paths if os.path.exists(f)), None)
+
+    if manifest_path is None:
         raise Exception(
             f'The current command is using the "{site_name}" '
             "site. However, that site is missing its associated "
             f'requirements definition file at "{manifest_path}".'
         )
 
-    thunderbird_dir = os.path.join(topsrcdir, "comm")
-    is_thunderbird = os.path.exists(thunderbird_dir) and bool(
-        os.listdir(thunderbird_dir)
-    )
     try:
         return MachEnvRequirements.from_requirements_definition(
             topsrcdir,
