@@ -7,16 +7,13 @@
 
 "use strict";
 
-const { SearchSERPTelemetry, SearchSERPTelemetryUtils } =
-  ChromeUtils.importESModule("resource:///modules/SearchSERPTelemetry.sys.mjs");
-
 // Note: example.org is used for the SERP page, and example.com is used to serve
 // the ads. This is done to simulate different domains like the real servers.
 const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
     searchPageRegexp:
-      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/searchTelemetry(?:Ad)?.html/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -32,7 +29,7 @@ const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example-data-attributes",
     searchPageRegexp:
-      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_dataAttributes(?:_none|_href)?.html/,
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/searchTelemetryAd_dataAttributes(?:_none|_href)?.html/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -48,7 +45,7 @@ const TEST_PROVIDER_INFO = [
   {
     telemetryId: "slow-page-load",
     searchPageRegexp:
-      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/slow_loading_page_with_ads(_on_load_event)?.html/,
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/slow_loading_page_with_ads(_on_load_event)?.html/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -63,26 +60,8 @@ const TEST_PROVIDER_INFO = [
   },
 ];
 
-function getPageUrl(useAdPage = false) {
-  let page = useAdPage ? "searchTelemetryAd.html" : "searchTelemetry.html";
-  return `https://example.org/browser/browser/components/search/test/browser/${page}`;
-}
-
-function getSERPUrl(page, organic = false) {
-  return `${page}?s=test${organic ? "" : "&abc=ff"}`;
-}
-
 function getSERPFollowOnUrl(page) {
   return page + "?s=test&abc=ff&a=foo";
-}
-
-// sharedData messages are only passed to the child on idle. Therefore
-// we wait for a few idles to try and ensure the messages have been able
-// to be passed across and handled.
-async function waitForIdle() {
-  for (let i = 0; i < 10; i++) {
-    await new Promise(resolve => Services.tm.idleDispatchToMainThread(resolve));
-  }
 }
 
 add_setup(async function () {
@@ -111,7 +90,7 @@ add_task(async function test_simple_search_page_visit() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url: getSERPUrl(getPageUrl()),
+      url: getSERPUrl("searchTelemetry.html"),
     },
     async () => {
       await assertSearchSourcesTelemetry(
@@ -144,7 +123,7 @@ add_task(async function test_simple_search_page_visit_telemetry() {
     {
       gBrowser,
       /* URL must not be in the cache */
-      url: getSERPUrl(getPageUrl()) + `&random=${Math.random()}`,
+      url: getSERPUrl("searchTelemetry.html") + `&random=${Math.random()}`,
     },
     async () => {
       let scalars = {};
@@ -223,7 +202,7 @@ add_task(async function test_track_ad() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    getSERPUrl(getPageUrl(true))
+    getSERPUrl("searchTelemetryAd.html")
   );
 
   await assertSearchSourcesTelemetry(
@@ -253,15 +232,9 @@ add_task(async function test_track_ad() {
 add_task(async function test_track_ad_on_data_attributes() {
   resetTelemetry();
 
-  let url =
-    getRootDirectory(gTestPath).replace(
-      "chrome://mochitests/content",
-      "https://example.org"
-    ) + "searchTelemetryAd_dataAttributes.html";
-
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    getSERPUrl(url)
+    getSERPUrl("searchTelemetryAd_dataAttributes.html")
   );
 
   await assertSearchSourcesTelemetry(
@@ -295,15 +268,9 @@ add_task(async function test_track_ad_on_data_attributes() {
 add_task(async function test_track_ad_on_data_attributes_and_hrefs() {
   resetTelemetry();
 
-  let url =
-    getRootDirectory(gTestPath).replace(
-      "chrome://mochitests/content",
-      "https://example.org"
-    ) + "searchTelemetryAd_dataAttributes_href.html";
-
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    getSERPUrl(url)
+    getSERPUrl("searchTelemetryAd_dataAttributes_href.html")
   );
 
   await assertSearchSourcesTelemetry(
@@ -337,15 +304,9 @@ add_task(async function test_track_ad_on_data_attributes_and_hrefs() {
 add_task(async function test_track_no_ad_on_data_attributes_and_hrefs() {
   resetTelemetry();
 
-  let url =
-    getRootDirectory(gTestPath).replace(
-      "chrome://mochitests/content",
-      "https://example.org"
-    ) + "searchTelemetryAd_dataAttributes_none.html";
-
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    getSERPUrl(url)
+    getSERPUrl("searchTelemetryAd_dataAttributes_none.html")
   );
 
   await assertSearchSourcesTelemetry(
@@ -376,12 +337,6 @@ add_task(async function test_track_no_ad_on_data_attributes_and_hrefs() {
 add_task(async function test_track_ad_on_DOMContentLoaded() {
   resetTelemetry();
 
-  let url =
-    getRootDirectory(gTestPath).replace(
-      "chrome://mochitests/content",
-      "https://example.org"
-    ) + "slow_loading_page_with_ads.html";
-
   let observeAdPreviouslyRecorded = TestUtils.consoleMessageObserved(msg => {
     return (
       typeof msg.wrappedJSObject.arguments?.[0] == "string" &&
@@ -393,7 +348,7 @@ add_task(async function test_track_ad_on_DOMContentLoaded() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    getSERPUrl(url)
+    getSERPUrl("slow_loading_page_with_ads.html")
   );
 
   // Observe ad was counted on DOMContentLoaded.
@@ -427,15 +382,9 @@ add_task(async function test_track_ad_on_DOMContentLoaded() {
 add_task(async function test_track_ad_on_load_event() {
   resetTelemetry();
 
-  let url =
-    getRootDirectory(gTestPath).replace(
-      "chrome://mochitests/content",
-      "https://example.org"
-    ) + "slow_loading_page_with_ads_on_load_event.html";
-
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    getSERPUrl(url)
+    getSERPUrl("slow_loading_page_with_ads_on_load_event.html")
   );
 
   await assertSearchSourcesTelemetry(
@@ -467,7 +416,7 @@ add_task(async function test_track_ad_organic() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    getSERPUrl(getPageUrl(true), true)
+    getSERPUrl("searchTelemetryAd.html", true)
   );
 
   await assertSearchSourcesTelemetry(
@@ -499,7 +448,7 @@ add_task(async function test_track_ad_new_window() {
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
-  let url = getSERPUrl(getPageUrl(true));
+  let url = getSERPUrl("searchTelemetryAd.html");
   BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, url);
   await BrowserTestUtils.browserLoaded(
     win.gBrowser.selectedBrowser,
@@ -540,13 +489,13 @@ add_task(async function test_track_ad_pages_without_ads() {
   tabs.push(
     await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      getSERPUrl(getPageUrl(false))
+      getSERPUrl("searchTelemetry.html")
     )
   );
   tabs.push(
     await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      getSERPUrl(getPageUrl(true))
+      getSERPUrl("searchTelemetryAd.html")
     )
   );
 
@@ -599,7 +548,7 @@ async function track_ad_click(testOrganic) {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    getSERPUrl(getPageUrl(true), testOrganic)
+    getSERPUrl("searchTelemetryAd.html", testOrganic)
   );
 
   await assertSearchSourcesTelemetry(
@@ -772,7 +721,7 @@ add_task(async function test_track_ad_click_organic() {
 
 add_task(async function test_track_ad_click_with_location_change_other_tab() {
   resetTelemetry();
-  const url = getSERPUrl(getPageUrl(true));
+  const url = getSERPUrl("searchTelemetryAd.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   await assertSearchSourcesTelemetry(

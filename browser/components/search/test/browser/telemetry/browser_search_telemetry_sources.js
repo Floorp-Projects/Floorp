@@ -11,14 +11,11 @@
 
 "use strict";
 
-const { SearchSERPTelemetry, SearchSERPTelemetryUtils } =
-  ChromeUtils.importESModule("resource:///modules/SearchSERPTelemetry.sys.mjs");
-
 const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
     searchPageRegexp:
-      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?/,
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/searchTelemetry(?:Ad)?/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -32,11 +29,6 @@ const TEST_PROVIDER_INFO = [
     ],
   },
 ];
-
-function getPageUrl(useAdPage = false) {
-  let page = useAdPage ? "searchTelemetryAd.html" : "searchTelemetry.html";
-  return `https://example.org/browser/browser/components/search/test/browser/${page}`;
-}
 
 /**
  * Returns the index of the first search suggestion in the urlbar results.
@@ -55,15 +47,6 @@ async function getFirstSuggestionIndex() {
     }
   }
   return -1;
-}
-
-// sharedData messages are only passed to the child on idle. Therefore
-// we wait for a few idles to try and ensure the messages have been able
-// to be passed across and handled.
-async function waitForIdle() {
-  for (let i = 0; i < 10; i++) {
-    await new Promise(resolve => Services.tm.idleDispatchToMainThread(resolve));
-  }
 }
 
 SearchTestUtils.init(this);

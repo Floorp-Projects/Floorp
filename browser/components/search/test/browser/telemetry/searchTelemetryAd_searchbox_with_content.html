@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="./serp.css" />
+</head>
+<body>
+  <section>
+    <form role="search">
+      <input type="text" value="test" />
+    </form>
+  </section>
+  <nav>
+    <a id="images" href="https://example.org/browser/browser/components/search/test/browser/telemetry/searchTelemetryAd_searchbox_with_content.html?s=test&page=images">Images</a>
+    <a id="shopping" href="https://example.org/browser/browser/components/search/test/browser/telemetry/searchTelemetryAd_searchbox_with_content.html?s=test&page=shopping">Shopping</a>
+    <a id="extra" href="https://example.org/browser/browser/components/search/test/browser/telemetry/searchTelemetryAd_searchbox.html?s=test">Extra Page</a>
+  </nav>
+  <section class="refined-search-buttons">
+    <a id="refined-search-button" href="https://example.org/browser/browser/components/search/test/browser/telemetry/searchTelemetryAd_searchbox_with_content.html?s=test's">Test's</a>
+    <a id="refined-search-button-with-partner-code" href="https://example.org/browser/browser/components/search/test/browser/telemetry/searchTelemetryAd_searchbox_with_content.html?s=test2&abc=ff">Test 2</a>
+  </section>
+  <section id="searchresults">
+    <div class="lhs">
+      <div>
+        <h2>Related Searches</h2>
+        <a id="related-new-tab" href="https://example.org/browser/browser/components/search/test/browser/telemetry/searchTelemetryAd_searchbox_with_content.html?s=test+one+two+three" target="_blank">test one two three</a>
+        <a id="related-redirect" href="https://example.org/browser/browser/components/search/test/browser/telemetry/searchTelemetryAd_searchbox_with_content_redirect.html" target="_blank">test one two three</a>
+        <a id="related-in-page" href="https://example.org/browser/browser/components/search/test/browser/telemetry/searchTelemetryAd_searchbox_with_content.html?s=test+one+two+three">test one two three</a>
+      </div>
+    </div>
+  </section>
+</body>
+<script type="text/javascript">
+  document.querySelector("form").addEventListener("submit", event => {
+    event.preventDefault();
+    window.location.href = "https://example.org/browser/browser/components/search/test/browser/telemetry/searchTelemetryAd_searchbox_with_content.html?s=test&abc=ff";
+  });
+</script>
+</html>
