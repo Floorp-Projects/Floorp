@@ -40,7 +40,7 @@ Navigator includes NavigatorStorageUtils;
 Navigator includes NavigatorConcurrentHardware;
 Navigator includes NavigatorStorage;
 Navigator includes NavigatorAutomationInformation;
-Navigator includes GPUProvider;
+Navigator includes NavigatorGPU;
 Navigator includes GlobalPrivacyControl;
 
 interface mixin NavigatorID {
