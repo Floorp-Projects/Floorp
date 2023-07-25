@@ -2,24 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.preview-popup {
+.popover .preview-popup {
+  background: var(--theme-body-background);
+  width: 350px;
   border: 1px solid var(--theme-splitter-color);
+  padding: 10px;
   height: auto;
   overflow: auto;
-  background: var(--theme-body-background);
-  box-shadow: 1px 1px 3px var(--popup-shadow-color);
-}
-
-.popover .preview-popup {
-  padding: 10px;
-  max-width: 450px;
-}
-
-.tooltip .preview-popup {
-  max-width: inherit;
-  padding: 5px;
-  min-height: inherit;
-  max-height: 200px;
+  box-shadow: 1px 2px 3px var(--popup-shadow-color);
 }
 
 .preview-popup .tree {
@@ -34,6 +24,38 @@
 
 .gap polygon {
   pointer-events: auto;
+}
+
+.theme-dark .popover .preview-popup {
+  box-shadow: 1px 2px 3px var(--popup-shadow-color);
+}
+
+.popover .preview-popup .header-container {
+  width: 100%;
+  line-height: 15px;
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 5px;
+}
+
+.popover .preview-popup .logo {
+  width: 20px;
+  margin-right: 5px;
+}
+
+.popover .preview-popup .header-container h3 {
+  margin: 0;
+  margin-bottom: 5px;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 20px;
+  margin-left: 4px;
+}
+
+.popover .preview-popup .header .link {
+  align-self: flex-end;
+  color: var(--theme-highlight-blue);
+  text-decoration: underline;
 }
 
 .popover .preview-popup .object-node {
@@ -59,6 +81,10 @@
   color: #e7ebee;
 }
 
+.popover .preview-popup .function-signature {
+  padding-top: 10px;
+}
+
 .theme-dark .popover .preview-popup {
   border-color: var(--theme-body-color);
 }
@@ -68,7 +94,17 @@
   z-index: 100;
 }
 
-
+.tooltip .preview-popup {
+  background: var(--theme-toolbar-background);
+  max-width: inherit;
+  border: 1px solid var(--theme-splitter-color);
+  box-shadow: 1px 2px 4px 1px var(--theme-toolbar-background-alt);
+  padding: 5px;
+  height: auto;
+  min-height: inherit;
+  max-height: 200px;
+  overflow: auto;
+}
 
 .theme-dark .tooltip .preview-popup {
   border-color: var(--theme-body-color);

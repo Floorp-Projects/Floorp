@@ -40,6 +40,6 @@ add_task(async function () {
 
 async function assertNoTooltip(dbg) {
   await wait(200);
-  const el = findElement(dbg, "previewPopup");
+  const el = findElement(dbg, "tooltip");
   is(el, null, "Tooltip should not exist");
 }

@@ -20,21 +20,12 @@ add_task(async function () {
   info("Hovers over 'this' token to display the preview.");
   const { tokenEl } = await tryHovering(dbg, 5, 8, "previewPopup");
 
-  info("Wait for top level node to expand");
-  await waitForElementWithSelector(
-    dbg,
-    ".preview-popup .tree-node:first-of-type .arrow.expanded"
-  );
-  await waitUntil(
-    () => dbg.win.document.querySelectorAll(".preview-popup .node").length > 1
-  );
-
   info("Invokes getter and waits for the element to be rendered");
   await clickElement(dbg, "previewPopupInvokeGetterButton");
   await waitForAllElements(dbg, "previewPopupObjectNumber", 2);
 
   await clickElement(dbg, "previewPopupInvokeGetterButton");
-  await waitForAllElements(dbg, "previewPopupObjectObject", 4);
+  await waitForAllElements(dbg, "previewPopupObjectObject", 3);
 
   const getterButtonEls = findAllElements(
     dbg,
@@ -57,7 +48,7 @@ add_task(async function () {
   );
   is(
     previewObjectObjectEls.length,
-    4,
+    3,
     "Getters were invoked and three object values are displayed as expected."
   );
 

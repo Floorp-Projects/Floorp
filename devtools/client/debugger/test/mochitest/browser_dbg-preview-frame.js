@@ -18,7 +18,7 @@ add_task(async function () {
   info("Preview a variable in the second frame");
   clickElement(dbg, "frame", 2);
   await waitForSelectedFrame(dbg, "firstCall");
-  await assertPreviewTextValue(dbg, 8, 4, {
+  await assertPreviewTooltip(dbg, 8, 4, {
     result: "secondCall()",
     expression: "secondCall",
   });
@@ -27,7 +27,7 @@ add_task(async function () {
   const frame = dbg.selectors.getVisibleSelectedFrame();
   const inScopeLines = dbg.selectors.getInScopeLines(frame.location);
   await selectSource(dbg, "script-switching-01.js");
-  await assertPreviewTextValue(dbg, 8, 4, {
+  await assertPreviewTooltip(dbg, 8, 4, {
     result: "secondCall()",
     expression: "secondCall",
   });

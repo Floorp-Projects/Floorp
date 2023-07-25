@@ -19,14 +19,10 @@ add_task(async function () {
     dbg.selectors.getSelectedScopeMappings(dbg.selectors.getCurrentThread())
   );
 
-  await assertPreviews(dbg, [
-    {
-      line: 10,
-      column: 22,
-      expression: "fields",
-      fields: [["size", "1"]],
-    },
-  ]);
+  await assertPreviewTextValue(dbg, 10, 22, {
+    text: "size: 1",
+    expression: "fields",
+  });
 
   info("Verify that the file is flagged as a React module");
   const sourceTab = findElementWithSelector(dbg, ".source-tab.active");
