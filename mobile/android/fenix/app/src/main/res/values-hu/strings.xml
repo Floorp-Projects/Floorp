@@ -303,51 +303,51 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Most nem</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Legyen a %s a szokásos böngészője</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Legyen a %s a szokásos böngészője</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Legyen a Firefox a szokásos böngészője</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">A(z) %1$s az embereket helyezi a profit elé, és a webhelyek közötti nyomkövetők blokkolásával védi az Ön adatait.\n\nTovábbi információk az %2$s.</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">A(z) %1$s az embereket helyezi a profit elé, és a webhelyek közötti nyomkövetők blokkolásával védi az Ön adatait.\n\nTovábbi információk az %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">A Firefox az embereket helyezi a profit elé, és a webhelyek közötti nyomkövetők blokkolásával védi az Ön adatait.\n\nTovábbi információk az adatvédelmi nyilatkozatban találhatók.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">adatvédelmi nyilatkozatban</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">adatvédelmi nyilatkozatban</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Beállítás alapértelmezett böngészőként</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Beállítás alapértelmezett böngészőként</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Most nem</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Most nem</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Váltson át a telefonról a laptopra és vissza</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Váltson át a telefonról a laptopra és vissza</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Vegye át a lapokat és a jelszavakat a többi eszközéről, hogy ott folytassa, ahol abbahagyta.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Vegye át a lapokat és a jelszavakat a többi eszközéről, hogy ott folytassa, ahol abbahagyta.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Bejelentkezés</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Bejelentkezés</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Most nem</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Most nem</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Az értesítések segítségével még többet tehet a %s alkalmazással</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Az értesítések segítségével még többet tehet a %s alkalmazással</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Az értesítések segítségével még többet tehet a Firefoxszal</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Küldjön lapokat az eszközök között, kezelje a letöltéseket, és kapjon tippeket arról, hogyan hozza ki a legtöbbet a %s böngészőből.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Küldjön lapokat az eszközök között, kezelje a letöltéseket, és kapjon tippeket arról, hogyan hozza ki a legtöbbet a %s böngészőből.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Küldjön lapokat az eszközök között, kezelje a letöltéseket, és kapjon tippeket arról, hogyan hozza ki a legtöbbet a Firefoxból.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Értesítések bekapcsolása</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Értesítések bekapcsolása</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Most nem</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Most nem</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1210,8 +1210,10 @@
     <string name="share_button_content_description">Megosztás</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Mentés PDF-ként</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">A PDF nem állítható elő</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Eltüntetés</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">Nem lehet kinyomtatni</string>
     <!-- Text for the print feature in the share and browser menu -->
