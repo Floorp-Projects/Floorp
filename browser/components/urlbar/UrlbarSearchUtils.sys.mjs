@@ -300,8 +300,9 @@ class SearchUtils {
    *   The uri to check.
    * @returns {string}
    *   The search terms used.
-   *   Will return an empty string if it's not a default SERP
-   *   or if the default engine hasn't been initialized.
+   *   Will return an empty string if it's not a default SERP, the string
+   *   exceeds the maximum characters, or the default engine hasn't been
+   *   initialized.
    */
   getSearchTermIfDefaultSerpUri(uri) {
     if (!Services.search.hasSuccessfullyInitialized || !uri) {
@@ -317,7 +318,32 @@ class SearchUtils {
       return "";
     }
 
-    return Services.search.defaultEngine.searchTermFromResult(uri);
+    let searchTerm = Services.search.defaultEngine.searchTermFromResult(uri);
+
+    if (!searchTerm || searchTerm.length > lazy.UrlbarUtils.MAX_TEXT_LENGTH) {
+      return "";
+    }
+
+    let searchTermWithSpacesRemoved = searchTerm.replaceAll(/\s/g, "");
+
+    if (
+      searchTermWithSpacesRemoved.startsWith("https://") ||
+      searchTermWithSpacesRemoved.startsWith("http://")
+    ) {
+      return "";
+    }
+
+    try {
+      let info = Services.uriFixup.getFixupURIInfo(
+        searchTermWithSpacesRemoved,
+        Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
+          Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
+      );
+      if (info.keywordAsSent) {
+        return searchTerm;
+      }
+    } catch (e) {}
+    return "";
   }
 
   /**
