@@ -39,6 +39,8 @@ import org.hamcrest.Matcher
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndDescriptionExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
@@ -48,6 +50,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
@@ -81,7 +84,9 @@ class TabDrawerRobot {
         assertPrivateBrowsingButtonIsSelected(isSelected)
 
     fun verifySyncedTabsButtonIsSelected(isSelected: Boolean) =
-        assertSyncedTabsButtonIsSelected(isSelected)
+        syncedTabsButton().check(matches(isSelected(isSelected)))
+
+    fun clickSyncedTabsButton() = syncedTabsButton().click()
 
     fun verifyExistingOpenTabs(vararg titles: String) = assertExistingOpenTabs(*titles)
     fun verifyNoExistingOpenTabs(vararg titles: String) = assertNoExistingOpenTabs(*titles)
@@ -272,6 +277,20 @@ class TabDrawerRobot {
             itemContainingText("$numOfTabs selected"),
         )
 
+    fun verifySyncedTabsListWhenUserIsNotSignedIn() {
+        assertItemWithResIdExists(itemWithResId("$packageName:id/tabsTray"))
+        assertItemContainingTextExists(
+            itemContainingText(getStringResource(R.string.synced_tabs_sign_in_message)),
+            itemContainingText(getStringResource(R.string.sync_sign_in)),
+        )
+        assertItemWithResIdAndDescriptionExists(
+            itemWithResIdAndDescription(
+                "$packageName:id/new_tab_button",
+                getStringResource(R.string.resync_button_content_description),
+            ),
+        )
+    }
+
     class Transition {
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): Transition {
             mDevice.waitForIdle(waitingTime)
@@ -312,6 +331,19 @@ class TabDrawerRobot {
         fun toggleToPrivateTabs(interact: TabDrawerRobot.() -> Unit): Transition {
             privateBrowsingButton().perform(click())
             TabDrawerRobot().interact()
+            return Transition()
+        }
+
+        fun toggleToSyncedTabs(interact: TabDrawerRobot.() -> Unit): Transition {
+            syncedTabsButton().perform(click())
+            TabDrawerRobot().interact()
+            return Transition()
+        }
+
+        fun clickSignInToSyncButton(interact: SyncSignInRobot.() -> Unit): Transition {
+            itemContainingText(getStringResource(R.string.sync_sign_in))
+                .clickAndWaitForNewWindow(waitingTimeShort)
+            SyncSignInRobot().interact()
             return Transition()
         }
 
@@ -591,10 +623,6 @@ private fun assertNormalBrowsingButtonIsSelected(isSelected: Boolean) {
 
 private fun assertPrivateBrowsingButtonIsSelected(isSelected: Boolean) {
     privateBrowsingButton().check(matches(isSelected(isSelected)))
-}
-
-private fun assertSyncedTabsButtonIsSelected(isSelected: Boolean) {
-    syncedTabsButton().check(matches(isSelected(isSelected)))
 }
 
 private val tabsList =

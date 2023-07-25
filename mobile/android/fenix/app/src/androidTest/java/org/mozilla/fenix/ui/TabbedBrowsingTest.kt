@@ -363,4 +363,18 @@ class TabbedBrowsingTest {
             verifyNavigationToolbar()
         }
     }
+
+    @Test
+    fun verifySyncedTabsWhenUserIsNotSignedInTest() {
+        navigationToolbar {
+        }.openTabTray {
+            verifySyncedTabsButtonIsSelected(isSelected = false)
+            clickSyncedTabsButton()
+        }.toggleToSyncedTabs {
+            verifySyncedTabsButtonIsSelected(isSelected = true)
+            verifySyncedTabsListWhenUserIsNotSignedIn()
+        }.clickSignInToSyncButton {
+            verifyTurnOnSyncMenu()
+        }
+    }
 }

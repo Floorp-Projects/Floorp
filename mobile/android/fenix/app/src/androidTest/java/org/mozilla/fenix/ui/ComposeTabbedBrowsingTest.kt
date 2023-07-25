@@ -375,4 +375,17 @@ class ComposeTabbedBrowsingTest {
             verifyNavigationToolbar()
         }
     }
+
+    @Test
+    fun verifySyncedTabsWhenUserIsNotSignedInTest() {
+        navigationToolbar {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifySyncedTabsButtonIsSelected(isSelected = false)
+        }.toggleToSyncedTabs {
+            verifySyncedTabsButtonIsSelected(isSelected = true)
+            verifySyncedTabsListWhenUserIsNotSignedIn()
+        }.clickSignInToSyncButton {
+            verifyTurnOnSyncMenu()
+        }
+    }
 }

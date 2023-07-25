@@ -25,7 +25,16 @@ import org.mozilla.fenix.helpers.click
 class SyncSignInRobot {
 
     fun verifyAccountSettingsMenuHeader() = assertAccountSettingsMenuHeader()
-    fun verifyTurnOnSyncMenu() = assertTurnOnSyncMenu()
+    fun verifyTurnOnSyncMenu() {
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/container")).waitForExists(waitingTime)
+        assertTrue(
+            mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/signInScanButton")
+                    .resourceId("$packageName:id/signInEmailButton"),
+            ).waitForExists(waitingTime),
+        )
+    }
 
     class Transition {
         fun goBack(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
@@ -45,15 +54,4 @@ private fun assertAccountSettingsMenuHeader() {
     // Sync tests in SettingsSyncTest are still TO-DO, so I'm not sure that we have a test for signing into Sync
     onView(withText(R.string.preferences_account_settings))
         .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
-}
-
-private fun assertTurnOnSyncMenu() {
-    mDevice.findObject(UiSelector().resourceId("$packageName:id/container")).waitForExists(waitingTime)
-    assertTrue(
-        mDevice.findObject(
-            UiSelector()
-                .resourceId("$packageName:id/signInScanButton")
-                .resourceId("$packageName:id/signInEmailButton"),
-        ).waitForExists(waitingTime),
-    )
 }
