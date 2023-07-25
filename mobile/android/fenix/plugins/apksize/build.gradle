@@ -17,3 +17,14 @@ repositories {
         mavenCentral()
     }
 }
+
+dependencies {
+    implementation "org.json:json:20210307"
+}
+
+gradlePlugin {
+    plugins.register("ApkSizePlugin") {
+        id = "ApkSizePlugin"
+        implementationClass = "ApkSizePlugin"
+    }
+}

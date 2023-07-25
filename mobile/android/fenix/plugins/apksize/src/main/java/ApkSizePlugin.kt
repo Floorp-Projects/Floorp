@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.gradle.tasks
-
 import org.gradle.api.DefaultTask
+import org.gradle.api.Plugin
+import org.gradle.api.initialization.Settings
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.json.JSONArray
@@ -13,6 +13,10 @@ import org.json.JSONObject
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
+
+class ApkSizePlugin : Plugin<Settings> {
+    override fun apply(settings: Settings) = Unit
+}
 
 /**
  * Gradle task for determining the size of APKs and logging them in a perfherder compatible format.

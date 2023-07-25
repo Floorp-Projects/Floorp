@@ -1,5 +1,4 @@
 import org.apache.tools.ant.util.StringUtils
-import org.mozilla.fenix.gradle.tasks.ApkSizeTask
 
 plugins {
     id "com.jetbrains.python.envs" version "$python_envs_plugin"
