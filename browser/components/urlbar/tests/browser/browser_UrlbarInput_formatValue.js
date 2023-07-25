@@ -75,6 +75,12 @@ add_task(async function () {
 
   await testVal("<https://>mozilla.org<   >");
   await testVal("mozilla.org<   >");
+  // RTL characters in domain change order of domain and suffix. Domain should
+  // be highlighted correctly.
+  await testVal(
+    "<http://>اختبار.اختبار</www.mozilla.org/index.html>",
+    "اختبار.اختبار</www.mozilla.org/index.html>"
+  );
 
   await testVal("<https://>mozilla.org</file.ext>");
   await testVal("<https://>mozilla.org</sub/file.ext>");
