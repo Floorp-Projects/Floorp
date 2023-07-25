@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<svg
+   width="672.54767"
+   height="59.16037"
+   viewBox="0 0 672.54767 59.16037"
+   fill="none"
+   version="1.1"
+   id="svg28"
+   sodipodi:docname="material.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs32" />
+  <sodipodi:namedview
+     id="namedview30"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="3.3546509"
+     inkscape:cx="489.32066"
+     inkscape:cy="28.46794"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg28" />
+  <rect
+     width="672.54767"
+     height="59.16037"
+     fill="#1c1b22"
+     id="rect2"
+     x="0"
+     y="0"
+     style="stroke-width:0.797496;fill:#1c1b22;fill-opacity:1" />
+  <path
+     id="rect4"
+     style="fill:#2b2a33;stroke-width:0.827985"
+     d="M 14.084871,3.8232139 H 183.34827 c 2.37398,0 4.28515,1.141655 4.28515,2.559765 V 28.088485 l 3.38009,3.892145 c 1.09322,1.258803 -5.29126,2.559765 -7.66524,2.559765 H 14.084871 c -2.373973,0 -8.504718,-1.585624 -7.423822,-2.848213 L 9.799721,28.025917 V 6.3829789 c 0,-1.41811 1.911177,-2.559765 4.28515,-2.559765 z"
+     sodipodi:nodetypes="ssscsssscss" />
+  <rect
+     x="41"
+     y="14.52133"
+     width="121"
+     height="5"
+     rx="2"
+     fill="#fbfbfe"
+     id="rect6" />
+  <rect
+     x="215.75909"
+     y="14.136581"
+     width="121"
+     height="5"
+     rx="2"
+     fill="#b8b7bb"
+     id="rect8" />
+  <rect
+     y="30.52133"
+     width="672.24957"
+     height="28.639038"
+     fill="#2b2a33"
+     id="rect10"
+     x="0"
+     style="stroke-width:0.768015" />
+  <circle
+     cx="24"
+     cy="44.521332"
+     r="6.25"
+     stroke="#fbfbfe"
+     stroke-width="1.5"
+     id="circle12" />
+  <circle
+     cx="47.864792"
+     cy="44.521332"
+     r="6.25"
+     stroke="#fbfbfe"
+     stroke-width="1.5"
+     id="circle14" />
+  <line
+     x1="657"
+     y1="50.271332"
+     x2="643"
+     y2="50.271332"
+     stroke="#fbfbfe"
+     stroke-width="1.5"
+     id="line16" />
+  <line
+     x1="657"
+     y1="44.271332"
+     x2="643"
+     y2="44.271332"
+     stroke="#fbfbfe"
+     stroke-width="1.5"
+     id="line18" />
+  <line
+     x1="657"
+     y1="38.271332"
+     x2="643"
+     y2="38.271332"
+     stroke="#fbfbfe"
+     stroke-width="1.5"
+     id="line20" />
+  <path
+     id="rect22"
+     style="fill:#323138;stroke-width:0.961438"
+     d="m 126.84481,32.295959 h 463.21185 c 6.86632,0 12.39408,5.527758 12.39408,12.394076 0,6.866318 -5.52776,12.394075 -12.39408,12.394075 H 126.84481 c -6.86632,0 -12.39407,-5.527757 -12.39407,-12.394075 0,-6.866318 5.52775,-12.394076 12.39407,-12.394076 z" />
+  <circle
+     cx="129.77463"
+     cy="44.239296"
+     r="6.25"
+     stroke="#ffffff"
+     stroke-width="1.5"
+     id="circle24" />
+  <rect
+     x="145.32388"
+     y="42.915405"
+     width="308"
+     height="4"
+     rx="2"
+     fill="#ffffff"
+     id="rect26" />
+</svg>

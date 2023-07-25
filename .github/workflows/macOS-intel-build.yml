@@ -1,0 +1,56 @@
+name: macOS x64 Intel build
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Create environment
+      run: |
+        git clone https://github.com/floorp-projects/l10n-central
+        ./mach bootstrap
+        echo 'ac_add_options --disable-tests' >> mozconfig
+        echo 'ac_add_options --disable-updater' >> mozconfig
+        echo 'ac_add_options --with-app-name=floorp' >> mozconfig
+        echo 'ac_add_options --with-app-basename=Floorp' >> mozconfig
+        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
+        echo 'ac_add_options --disable-crashreporter' >> mozconfig
+        echo 'ac_add_options --enable-proxy-bypass-protection' >> mozconfig
+        echo 'ac_add_options --disable-verify-mar' >> mozconfig
+        echo 'ac_add_options --enable-update-channel=release' >> mozconfig
+        echo 'ac_add_options --with-mozilla-api-keyfile=$PWD/floorp/apis/api-mozilla-key' >> mozconfig
+        echo 'ac_add_options --with-google-location-service-api-keyfile=$PWD/floorp/apis/api-google-location-service-key' >> mozconfig
+        echo 'ac_add_options --with-google-safebrowsing-api-keyfile=$PWD/floorp/apis/api-google-safe-browsing-key' >> mozconfig
+        echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
+        echo 'ac_add_options --enable-bootstrap' >> mozconfig
+        echo 'ac_add_options --target=x86_64-apple-darwin' >> mozconfig
+        echo 'ac_add_options --enable-optimize="-O2"' >> mozconfig
+        echo 'ac_add_options --enable-rust-simd' >> mozconfig
+        echo 'ac_add_options RUSTC_OPT_LEVEL=3' >> mozconfig
+        echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
+        echo 'MOZ_DATA_REPORTING=' >> mozconfig
+        echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
+        ./mach configure
+
+    - name: 🔨Build
+      run: |        
+        ./mach build
+
+    - name: Package
+      run: |       
+        export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
+        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
+        ./mach build
+        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
+        AB_CD=multi ./mach package
+        zip -r dist.zip obj-x86_64-apple-darwin/dist/
+
+    - name: Publish
+      uses: actions/upload-artifact@v1
+      with:
+        name: floorp-Intel-macOS-x64.zip
+        path: dist.zip

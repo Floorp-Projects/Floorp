@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedia (ia)"
+  },
+  "extensionDescription": {
+    "message": "Wikipedia, le encyclopedia libere"
+  },
+  "searchUrl": {
+    "message": "https://ia.wikipedia.org/wiki/Special:Recerca"
+  },
+  "searchForm": {
+    "message": "https://ia.wikipedia.org/wiki/Special:Recerca?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://ia.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

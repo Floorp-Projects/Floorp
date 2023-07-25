@@ -1,8 +1,16 @@
 from __future__ import absolute_import, unicode_literals
 
+import sys
 from collections import OrderedDict
 
-from backports.entry_points_selectable import entry_points
+if sys.version_info >= (3, 8):
+    from importlib.metadata import entry_points
+
+    importlib_metadata_version = ()
+else:
+    from importlib_metadata import entry_points, version
+
+    importlib_metadata_version = tuple(int(i) for i in version("importlib_metadata").split(".")[:2])
 
 
 class PluginLoader(object):
@@ -11,7 +19,10 @@ class PluginLoader(object):
 
     @classmethod
     def entry_points_for(cls, key):
-        return OrderedDict((e.name, e.load()) for e in cls.entry_points().select(group=key))
+        if sys.version_info >= (3, 10) or importlib_metadata_version >= (3, 6):
+            return OrderedDict((e.name, e.load()) for e in cls.entry_points().select(group=key))
+        else:
+            return OrderedDict((e.name, e.load()) for e in cls.entry_points().get(key, {}))
 
     @staticmethod
     def entry_points():

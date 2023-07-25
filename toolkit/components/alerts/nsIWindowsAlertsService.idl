@@ -1,0 +1,22 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIAlertsService.idl"
+#include "nsISupports.idl"
+#include "nsIObserver.idl"
+
+[scriptable, uuid(e01c8066-fb4b-4304-b9c9-ab6ed4a8322c)]
+interface nsIWindowsAlertsService : nsIAlertsService
+{
+  /**
+   * Get the Windows-specific XML generated for the given alert.
+   *
+   * @note This method is intended for testing purposes.
+   *
+   * @param {nsIAlertNotification} aAlert the alert
+   * @return {string} generated XML
+   */
+  AString getXmlStringForWindowsAlert(in nsIAlertNotification aAlert);
+};

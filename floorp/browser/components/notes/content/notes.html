@@ -1,0 +1,38 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+ <!DOCTYPE html>
+  <html lang="ja">
+   <head>
+     <link rel="icon" href="chrome://browser/skin/notes.png"> 
+     <script src="chrome://browser/content/notes/notes.js"></script>
+     <link rel="stylesheet" href="chrome://browser/content/notes/notes.css">
+     <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css">
+     <link rel="localization" href="browser/floorp.ftl"/>
+     <meta charset="UTF-8">
+     <title>Floorp Notes</title>
+   </head>
+   <body>
+     <div id="memo-lists-sidebar">
+      <div id="button-box">
+        <button id="memo-add" data-l10n-id="new-memo"></button>
+      </div>
+       <div id="memo-list"></div>
+     </div>
+     <div id="memo-contents">
+      <div id="title-box">
+        <h2 id="header">Floorp Notes</h2>
+        <div id="beta">BETA</div> 
+      </div>
+       <div id="memo-form">
+        <div id="titleAndDelete">
+         <input type="text" id="memo-title-input"/>
+         <button id="memo-delete" data-l10n-id="delete-memo"></button>
+        </div>
+         <textarea type="text"  id="memo-input"></textarea>
+         <button id="memo-save" data-l10n-id="save-memo"></button>
+       </div>
+     </div>
+   </body>
+   </html>

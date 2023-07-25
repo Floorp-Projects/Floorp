@@ -15,7 +15,9 @@ def from_bundle(distribution, version, for_py_version, search_dirs, app_data, do
     if version != Version.embed:
         # 2. check if we have upgraded embed
         if app_data.can_update:
-            wheel = periodic_update(distribution, for_py_version, wheel, search_dirs, app_data, do_periodic_update, env)
+            wheel = periodic_update(
+                distribution, of_version, for_py_version, wheel, search_dirs, app_data, do_periodic_update, env
+            )
 
         # 3. acquire from extra search dir
         found_wheel = from_dir(distribution, of_version, for_py_version, search_dirs)

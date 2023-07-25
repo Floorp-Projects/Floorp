@@ -35,7 +35,8 @@ struct URLExtraData {
     // equal to the sheet URI.
     nsCOMPtr<nsIURI> referrer = mReferrerInfo->GetOriginalReferrer();
     mChromeRulesEnabled = referrer && (referrer->SchemeIs("chrome") ||
-                                       referrer->SchemeIs("resource"));
+                                       referrer->SchemeIs("resource") ||
+                                       referrer->SchemeIs("moz-extension"));
   }
 
   URLExtraData(nsIURI* aBaseURI, nsIReferrerInfo* aReferrerInfo,

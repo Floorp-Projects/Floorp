@@ -8,7 +8,6 @@ from __future__ import absolute_import, unicode_literals
 
 import logging
 import os
-import pipes
 import sys
 from collections import OrderedDict
 
@@ -18,6 +17,11 @@ from virtualenv.info import PY2
 from virtualenv.util.path import Path
 from virtualenv.util.six import ensure_text
 from virtualenv.util.subprocess import Popen, subprocess
+
+if PY2:
+    from pipes import quote
+else:
+    from shlex import quote
 
 _CACHE = OrderedDict()
 _CACHE[Path(sys.executable)] = PythonInfo()
@@ -126,7 +130,7 @@ class LogCmd(object):
         def e(v):
             return v.decode("utf-8") if isinstance(v, bytes) else v
 
-        cmd_repr = e(" ").join(pipes.quote(e(c)) for c in self.cmd)
+        cmd_repr = e(" ").join(quote(e(c)) for c in self.cmd)
         if self.env is not None:
             cmd_repr += e(" env of {!r}").format(self.env)
         if PY2:

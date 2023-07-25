@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script type="module" src="./init.js"></script>
+    <link rel="stylesheet" type="text/css" href="options.css"/>
+    <link rel="stylesheet" type="text/css" href="/extlib/codemirror.css"/>
+    <link rel="stylesheet" type="text/css" href="/extlib/codemirror-colorpicker.css"/>
+  </head>
+  <body>
+    <p><a id="link-optionsPage-top" target="_blank">__MSG_config_openOptionsInTab_label__</a>
+       <label class="has-checkbox"
+             ><input id="showExpertOptions"
+                     type="checkbox">
+              __MSG_config_showExpertOptions_label__</label></p>
+    <section id="section-appearance">
+    <h1>__MSG_config_appearance_caption__</h1>
+
+    <p>__MSG_config_sidebarPosition_caption__
+       <label class="has-radio inline"
+             ><input type="radio"
+                     name="sidebarPosition"
+                     value="1">
+              __MSG_config_sidebarPosition_left__</label>
+       <label class="has-radio inline"
+                   ><input type="radio"
+                           name="sidebarPosition"
+                           value="2">
+              __MSG_config_sidebarPosition_right__</label>
+       <label class="has-radio inline"
+             ><input type="radio"
+                     name="sidebarPosition"
+                     value="0">
+              __MSG_config_sidebarPosition_auto__</label>
+    </p>
+    <p class="sub">__MSG_config_sidebarPosition_description__</p>
+    <fieldset>
+      <legend>__MSG_config_style_caption__</legend>
+      <ul id="style-radiogroup">
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="style"
+                          value="photon">
+              <img src="style-photon.png" alt=""/>
+              <span class="style-name">__MSG_config_style_photon__</span></label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="style"
+                          value="proton">
+              <img src="style-proton.png" alt=""/>
+              <span class="style-name">__MSG_config_style_proton__</span></label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="style"
+                          value="sidebar">
+              <img src="style-sidebar.png" alt=""/>
+              <span class="style-name">__MSG_config_style_sidebar__</span></label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="style"
+                          value="highcontrast">
+              <img src="style-highcontrast.png" alt=""/>
+              <span class="style-name">__MSG_config_style_highcontrast__</span></label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="style"
+                          value="none">
+              __MSG_config_style_none__
+              __MSG_config_style_none_info__</label></li>
+      </ul>
+    </fieldset>
+    <p><label class="has-checkbox"
+             ><input id="animation"
+                     type="checkbox">
+             __MSG_config_animation_label__</label></p>
+    <div class="expert">
+    <p class="sub"
+      ><label class="has-checkbox"
+             ><input id="animationForce"
+                     type="checkbox">
+             __MSG_config_animationForce_label__</label></p>
+    <p>__MSG_config_labelOverflowStyle_caption__
+       <label class="has-radio inline"
+             ><input type="radio"
+                     name="labelOverflowStyle"
+                     value="fade">
+         __MSG_config_labelOverflowStyle_fade__</label>
+       <label class="has-radio inline"
+             ><input type="radio"
+                     name="labelOverflowStyle"
+                     value="crop">
+         __MSG_config_labelOverflowStyle_crop__</label>
+    </p>
+    <p><label>__MSG_config_maxTreeLevel_before__
+              <input id="maxTreeLevel"
+                     type="number"
+                     size="3">
+             __MSG_config_maxTreeLevel_after__</label></p>
+    <p><label class="has-checkbox"
+             ><input id="faviconizePinnedTabs"
+                     type="checkbox">
+             __MSG_config_faviconizePinnedTabs_label__</label></p>
+    <p class="sub"><label>__MSG_config_maxFaviconizedPinnedTabsInOneRow_label_before__
+              <input id="maxFaviconizedPinnedTabsInOneRow"
+                     type="number"
+                     size="3">
+             __MSG_config_maxFaviconizedPinnedTabsInOneRow_label_after__</label></p>
+    <p class="sub"><label>__MSG_config_maxPinnedTabsRowsAreaPercentage_label_before__
+                   <input id="maxPinnedTabsRowsAreaPercentage"
+                          type="number"
+                          size="5"
+                          min="0"
+                          max="100">
+                   __MSG_config_maxPinnedTabsRowsAreaPercentage_label_after__</label></p>
+    <p><label class="has-checkbox"
+             ><input id="showCollapsedDescendantsByTooltip"
+                     type="checkbox">
+             __MSG_config_showCollapsedDescendantsByTooltip_label__</label></p>
+    <p><label>__MSG_config_shiftTabsForScrollbarDistance_label_before__
+       <input id="shiftTabsForScrollbarDistance"
+              size="8"
+              placeholder="__MSG_config_shiftTabsForScrollbarDistance_placeholder__">
+       __MSG_config_shiftTabsForScrollbarDistance_label_after__</label></p>
+    <p class="sub"><label class="has-checkbox"
+                         ><input id="shiftTabsForScrollbarOnlyOnHover"
+                                 type="checkbox">
+                         __MSG_config_shiftTabsForScrollbarOnlyOnHover_label__</label></p>
+    <fieldset>
+      <legend>__MSG_config_suppressGapFromShownOrHiddenToolbar_caption__</legend>
+      <p><label class="has-checkbox"
+               ><input id="suppressGapFromShownOrHiddenToolbarOnFullScreen"
+                       type="checkbox">
+               __MSG_config_suppressGapFromShownOrHiddenToolbarOnFullScreen_label__</label></p>
+      <p><label class="has-checkbox"
+               ><input id="suppressGapFromShownOrHiddenToolbarOnNewTab"
+                       type="checkbox">
+               __MSG_config_suppressGapFromShownOrHiddenToolbarOnNewTab_label__</label></p>
+      <hr>
+      <p><label class="has-checkbox"
+               ><input id="suppressGapFromShownOrHiddenToolbarOnlyOnMouseOperation"
+                       type="checkbox">
+               __MSG_config_suppressGapFromShownOrHiddenToolbarOnlyOnMouseOperation_label__</label></p>
+    </fieldset>
+    </div>
+    <p><label class="has-checkbox"
+             ><input id="showDialogInSidebar"
+                     type="checkbox">
+                     __MSG_config_showDialogInSidebar_label__</label></p>
+    <p>__MSG_config_iconColor_caption__
+       <label class="has-radio inline"
+             ><input type="radio"
+                     name="iconColor"
+                     value="auto">
+         __MSG_config_iconColor_auto__</label>
+       <label class="has-radio inline"
+             ><input type="radio"
+                     name="iconColor"
+                     value="bright">
+         __MSG_config_iconColor_bright__</label>
+       <label class="has-radio inline"
+             ><input type="radio"
+                     name="iconColor"
+                     value="dark">
+         __MSG_config_iconColor_dark__</label>
+    </p>
+
+    </section>
+
+    <section id="section-contextMenu">
+    <h1>__MSG_config_context_caption__</h1>
+    <fieldset class="contextConfigs">
+    <legend>__MSG_config_extraItems_tabs_caption__</legend>
+    <table>
+      <thead>
+        <tr>
+          <th>__MSG_config_extraItems_tabs_topLevel__</th>
+          <th>__MSG_config_extraItems_tabs_subMenu__</th>
+          <td></td>
+          <th>__MSG_config_extraItems_tabs_middleClick__</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><label><input id="context_topLevel_reloadTree"
+                            type="checkbox"></label></td>
+          <td><label><input id="context_reloadTree"
+                            type="checkbox"></label></td>
+          <th><label for="context_reloadTree">__MSG_context_reloadTree_label__</label></th>
+          <th><label for="context_reloadTree">__MSG_context_reloadDescendants_label__</label></th>
+        </tr>
+        <tr>
+          <td><label><input id="context_topLevel_reloadDescendants"
+                            type="checkbox"></label></td>
+          <td><label><input id="context_reloadDescendants"
+                            type="checkbox"></label></td>
+          <th><label for="context_reloadDescendants">__MSG_context_reloadDescendants_label__</label></th>
+          <th><label for="context_reloadDescendants">__MSG_context_reloadTree_label__</label></th>
+        </tr>
+        <tr>
+          <td><label><input id="context_topLevel_closeTree"
+                            type="checkbox"></label></td>
+          <td><label><input id="context_closeTree"
+                            type="checkbox"></label></td>
+          <th><label for="context_closeTree">__MSG_context_closeTree_label__</label></th>
+          <th><label for="context_closeTree">__MSG_context_closeDescendants_label__</label></th>
+        </tr>
+        <tr>
+          <td><label><input id="context_topLevel_closeDescendants"
+                            type="checkbox"></label></td>
+          <td><label><input id="context_closeDescendants"
+                            type="checkbox"></label></td>
+          <th><label for="context_closeDescendants">__MSG_context_closeDescendants_label__</label></th>
+          <th><label for="context_closeDescendants">__MSG_context_closeTree_label__</label></th>
+        </tr>
+        <tr>
+          <td><label><input id="context_topLevel_closeOthers"
+                            type="checkbox"></label></td>
+          <td><label><input id="context_closeOthers"
+                            type="checkbox"></label></td>
+          <th><label for="context_closeOthers">__MSG_context_closeOthers_label__</label></th>
+          <td></td>
+        </tr>
+        <tr>
+          <td><label><input id="context_topLevel_collapseTree"
+                            type="checkbox"></label></td>
+          <td><label><input id="context_collapseTree"
+                            type="checkbox"></label></td>
+          <th><label for="context_collapseTree">__MSG_context_collapseTree_label__</label></th>
+          <th><label for="context_collapseTree">__MSG_context_collapseTreeRecursively_label__</label></th>
+        </tr>
+        <tr>
+          <td><label><input id="context_topLevel_collapseTreeRecursively"
+                            type="checkbox"></label></td>
+          <td><label><input id="context_collapseTreeRecursively"
+                            type="checkbox"></label></td>
+          <th><label for="context_collapseTreeRecursively">__MSG_context_collapseTreeRecursively_label__</label></th>
+          <th><label for="context_collapseTreeRecursively">__MSG_context_collapseTree_label__</label></th>
+        </tr>
+        <tr>
+          <td><label><input id="context_topLevel_collapseAll"
+                            type="checkbox"></label></td>
+          <td><label><input id="context_collapseAll"
+                            type="checkbox"></label></td>
+          <th><label for="context_collapseAll">__MSG_context_collapseAll_label__</label></th>
+          <td></td>
+        </tr>
+        <tr>
+          <td><label><input id="context_topLevel_expandTree"
+                            type="checkbox"></label></td>
+          <td><label><input id="context_expandTree"
+                            type="checkbox"></label></td>
+          <th><label for="context_expandTree">__MSG_context_expandTree_label__</label></th>
+          <th><label for="context_expandTree">__MSG_context_expandTreeRecursively_label__</label></th>
+        </tr>
+        <tr>
+          <td><label><input id="context_topLevel_expandTreeRecursively"
+                            type="checkbox"></label></td>
+          <td><label><input id="context_expandTreeRecursively"
+                            type="checkbox"></label></td>
+          <th><label for="context_expandTreeRecursively">__MSG_context_expandTreeRecursively_label__</label></th>
+          <th><label for="context_expandTreeRecursively">__MSG_context_expandTree_label__</label></th>
+        </tr>
+        <tr>
+          <td><label><input id="context_topLevel_expandAll"
+                            type="checkbox"></label></td>
+          <td><label><input id="context_expandAll"
+                            type="checkbox"></label></td>
+          <th><label for="context_expandAll">__MSG_context_expandAll_label__</label></th>
+          <td></td>
+        </tr>
+        <tr>
+          <td><label><input id="context_topLevel_bookmarkTree"
+                            type="checkbox"></label></td>
+          <td><label><input id="context_bookmarkTree"
+                            type="checkbox"></label></td>
+          <th><label for="context_bookmarkTree">__MSG_context_bookmarkTree_label__</label></th>
+          <td></td>
+        </tr>
+        <tr>
+          <td><label><input id="context_topLevel_sendTreeToDevice"
+                            type="checkbox"></label></td>
+          <td><label><input id="context_sendTreeToDevice"
+                            type="checkbox"></label></td>
+          <th><label for="context_sendTreeToDevice">__MSG_context_sendTreeToDevice_label__</label></th>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    </fieldset>
+    <fieldset id="bookmarksPermissionSection">
+    <legend><label class="has-checkbox"
+                  ><input id="bookmarksPermissionGranted"
+                          type="checkbox">
+                          __MSG_config_requestPermissions_bookmarks__</label></legend>
+    <p class="with-bookmarks-permission"><label>__MSG_config_bookmarkTreeFolderName_before__
+                          <input id="bookmarkTreeFolderName"
+                                 type="text"
+                                 style="width: 100%">
+                          __MSG_config_bookmarkTreeFolderName_after__</label></p>
+    <p class="with-bookmarks-permission"><label for="bookmarkTreeFolderName">__MSG_config_bookmarkTreeFolderName_description__</label></p>
+    <p class="with-bookmarks-permission"><label>__MSG_config_defaultBookmarkParentId_label_before__
+                          <button id="defaultBookmarkParentChooser"></button>
+                          __MSG_config_defaultBookmarkParentId_label_after__</label></p>
+    </fieldset>
+    <fieldset id="syncTabsToDeviceOptions">
+      <legend>__MSG_config_sendTabsToDevice_caption__</legend>
+      <p>__MSG_config_syncRequirements_description__</p>
+      <p><label>__MSG_config_syncDeviceInfo_name_label__
+                <input id="syncDeviceInfoName"
+                       type="text"
+                       size="30"></label></p>
+      <p id="syncDeviceInfoIcon"
+         class="sub"
+        ><label><input type="radio" name="syncDeviceInfoIcon" value="device-desktop">
+                <img src="/resources/icons/device-desktop.svg" alt="device-desktop"></label>
+         <label><input type="radio" name="syncDeviceInfoIcon" value="device-mobile">
+                <img src="/resources/icons/device-mobile.svg" alt="device-mobile"></label>
+         <label><input type="radio" name="syncDeviceInfoIcon" value="device-tablet">
+                <img src="/resources/icons/device-tablet.svg" alt="device-tablet"></label>
+         <label><input type="radio" name="syncDeviceInfoIcon" value="device-vr">
+                <img src="/resources/icons/device-vr.svg" alt="device-vr"></label>
+         <label><input type="radio" name="syncDeviceInfoIcon" value="home">
+                <img src="/resources/icons/home.svg" alt="home"></label>
+         <label><input type="radio" name="syncDeviceInfoIcon" value="developer">
+                <img src="/resources/icons/developer.svg" alt="developer"></label>
+         <label><input type="radio" name="syncDeviceInfoIcon" value="customize">
+                <img src="/resources/icons/customize.svg" alt="customize"></label>
+         <label><input type="radio" name="syncDeviceInfoIcon" value="edit">
+                <img src="/resources/icons/edit.svg" alt="edit"></label>
+         <label><input type="radio" name="syncDeviceInfoIcon" value="experiments">
+                <img src="/resources/icons/experiments.svg" alt="experiments"></label>
+      </p>
+      <p class="sub">__MSG_config_syncDeviceInfo_name_description_before__<a href="__MSG_config_syncDeviceInfo_name_description_href__">__MSG_config_syncDeviceInfo_name_description_link__</a>__MSG_config_syncDeviceInfo_name_description_after__</p>
+      <fieldset id="syncTabsToDeviceOptions">
+        <legend>__MSG_config_otherDevices_caption__</legend>
+        <ul id="otherDevices"></ul>
+      </fieldset>
+      <div class="expert">
+        <p><label>__MSG_config_syncDeviceExpirationDays_label_before__
+                  <input id="syncDeviceExpirationDays"
+                         type="number"
+                         size="5">
+                  __MSG_config_syncDeviceExpirationDays_label_after__</label></p>
+        <p><label>__MSG_config_syncUnsendableUrlPattern_label__
+                  <input id="syncUnsendableUrlPattern"
+                         type="text"
+                         size="45"></label></p>
+      </div>
+    </fieldset>
+    <fieldset class="contextConfigs">
+      <legend>__MSG_config_extraItems_bookmarks_caption__</legend>
+      <p class="with-bookmarks-permission"
+        ><label class="has-checkbox"
+               ><input id="context_openAllBookmarksWithStructure"
+                       type="checkbox">
+                __MSG_context_openAllBookmarksWithStructure_label__</label></p>
+      <p class="with-bookmarks-permission"
+        ><label class="has-checkbox"
+               ><input id="context_openAllBookmarksWithStructureRecursively"
+                       type="checkbox">
+                __MSG_context_openAllBookmarksWithStructureRecursively_label__</label></p>
+      <hr>
+      <p class="with-bookmarks-permission"
+        ><label class="has-checkbox"
+               ><input id="openAllBookmarksWithStructureDiscarded"
+                       type="checkbox">
+                __MSG_config_openAllBookmarksWithStructureDiscarded_label__</label></p>
+    </fieldset>
+    </section>
+
+
+    <section id="section-newTabWithOwner">
+    <h1>__MSG_config_newTabWithOwner_caption__</h1>
+
+    <p class="expert"><label>__MSG_config_autoAttachOnOpenedWithOwner_before__
+              <select id="autoAttachOnOpenedWithOwner">
+                <option value="-1">__MSG_config_autoAttachOnOpenedWithOwner_noControl__</option>
+                <option value="0">__MSG_config_autoAttachOnOpenedWithOwner_independent__</option>
+                <option value="1">__MSG_config_autoAttachOnOpenedWithOwner_child__ __MSG_config_recommended_choice__</option>
+                <option value="2">__MSG_config_autoAttachOnOpenedWithOwner_sibling__</option>
+                <option value="3">__MSG_config_autoAttachOnOpenedWithOwner_nextSibling__</option>
+              </select>
+              __MSG_config_autoAttachOnOpenedWithOwner_after__
+              <span class="preview-image"></span></label></p>
+    <fieldset>
+      <legend>__MSG_config_insertNewTabFromPinnedTabAt_caption__</legend>
+      <ul>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewTabFromPinnedTabAt" value="-1">
+              __MSG_config_insertNewTabFromPinnedTabAt_noControl__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewTabFromPinnedTabAt" value="3">
+              __MSG_config_insertNewTabFromPinnedTabAt_nextToLastRelateTab__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewTabFromPinnedTabAt" value="0">
+              __MSG_config_insertNewTabFromPinnedTabAt_top__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewTabFromPinnedTabAt" value="1">
+              __MSG_config_insertNewTabFromPinnedTabAt_end__</label></li>
+      </ul>
+      <hr>
+      <p><label class="has-checkbox"
+               ><input id="autoGroupNewTabsFromPinned"
+                       type="checkbox">
+                __MSG_config_autoGroupNewTabsFromPinned_label__</p>
+      <p><label>__MSG_config_groupTabTemporaryStateForChildrenOfPinned_label__
+                <select id="groupTabTemporaryStateForChildrenOfPinned">
+                  <option value="0">__MSG_config_groupTabTemporaryState_option_default__</option>
+                  <option value="1">__MSG_config_groupTabTemporaryState_option_checked_before__
+                                    __MSG_groupTab_temporary_label__
+                                    __MSG_config_groupTabTemporaryState_option_checked_after__</option>
+                  <option value="2">__MSG_config_groupTabTemporaryState_option_checked_before__
+                                    __MSG_groupTab_temporaryAggressive_label__
+                                    __MSG_config_groupTabTemporaryState_option_checked_after__</option>
+                </select></label></p>
+    </fieldset>
+    </section>
+
+
+    <section id="section-newTab">
+    <h1>__MSG_config_newTab_caption__</h1>
+
+    <fieldset>
+      <legend>__MSG_config_newTabAction_caption__</legend>
+    <p><label>__MSG_config_autoAttachOnNewTabCommand_before__
+              <select id="autoAttachOnNewTabCommand">
+                <option value="-1">__MSG_config_autoAttachOnNewTabCommand_noControl__</option>
+                <option value="0">__MSG_config_autoAttachOnNewTabCommand_independent__</option>
+                <option value="1">__MSG_config_autoAttachOnNewTabCommand_child__</option>
+                <option value="2">__MSG_config_autoAttachOnNewTabCommand_sibling__</option>
+                <option value="3">__MSG_config_autoAttachOnNewTabCommand_nextSibling__</option>
+              </select>
+              __MSG_config_autoAttachOnNewTabCommand_after__
+              <span class="preview-image"></span></label></p>
+    <p class="sub"><label class="has-checkbox"
+                         ><input id="guessNewOrphanTabAsOpenedByNewTabCommand"
+                                 type="checkbox">
+                          __MSG_config_guessNewOrphanTabAsOpenedByNewTabCommandUrl_before__
+                          <input id="guessNewOrphanTabAsOpenedByNewTabCommandUrl"
+                                 size="20">
+                           __MSG_config_guessNewOrphanTabAsOpenedByNewTabCommandUrl_after__</label></p>
+    <p class="sub"
+      ><label>__MSG_config_inheritContextualIdentityToChildTabMode_label__
+              <select id="inheritContextualIdentityToChildTabMode">
+                <option value="0">__MSG_config_inheritContextualIdentityToChildTabMode_default__</option>
+                <option value="1">__MSG_config_inheritContextualIdentityToChildTabMode_parent__</option>
+                <option value="2">__MSG_config_inheritContextualIdentityToChildTabMode_lastActive__</option>
+              </select></label></p>
+    </fieldset>
+    <fieldset>
+      <legend>__MSG_config_newTabButton_caption__</legend>
+    <p><label>__MSG_config_autoAttachOnNewTabButtonMiddleClick_before__
+              <select id="autoAttachOnNewTabButtonMiddleClick">
+                <option value="-1">__MSG_config_autoAttachOnNewTabButtonMiddleClick_noControl__</option>
+                <option value="0">__MSG_config_autoAttachOnNewTabButtonMiddleClick_independent__</option>
+                <option value="1">__MSG_config_autoAttachOnNewTabButtonMiddleClick_child__</option>
+                <option value="2">__MSG_config_autoAttachOnNewTabButtonMiddleClick_sibling__</option>
+                <option value="3">__MSG_config_autoAttachOnNewTabButtonMiddleClick_nextSibling__</option>
+                <option value="4">__MSG_config_autoAttachOnNewTabButtonMiddleClick_nextSiblingWithInheritedContainer__</option>
+              </select>
+              __MSG_config_autoAttachOnNewTabButtonMiddleClick_after__
+              <span class="preview-image"></span></label></p>
+    <p class="expert"
+      ><label>__MSG_config_autoAttachOnNewTabButtonAccelClick_before__
+              <select id="autoAttachOnNewTabButtonAccelClick">
+                <option value="-1">__MSG_config_autoAttachOnNewTabButtonAccelClick_noControl__</option>
+                <option value="0">__MSG_config_autoAttachOnNewTabButtonAccelClick_independent__</option>
+                <option value="1">__MSG_config_autoAttachOnNewTabButtonAccelClick_child__</option>
+                <option value="2">__MSG_config_autoAttachOnNewTabButtonAccelClick_sibling__</option>
+                <option value="3">__MSG_config_autoAttachOnNewTabButtonAccelClick_nextSibling__</option>
+                <option value="4">__MSG_config_autoAttachOnNewTabButtonAccelClick_nextSiblingWithInheritedContainer__</option>
+              </select>
+              __MSG_config_autoAttachOnNewTabButtonAccelClick_after__
+              <span class="preview-image"></span></label></p>
+    <p><label>__MSG_config_longPressOnNewTabButton_before__
+              <select id="longPressOnNewTabButton">
+                <option value="newtab-action-selector">__MSG_config_longPressOnNewTabButton_newTabAction__</option>
+                <option value="contextual-identities-selector">__MSG_config_longPressOnNewTabButton_contextualIdentities__</option>
+                <option value="">__MSG_config_longPressOnNewTabButton_none__</option>
+              </select>
+              __MSG_config_longPressOnNewTabButton_after__</label></p>
+    <p><label class="has-checkbox"
+             ><input id="showNewTabActionSelector"
+                     type="checkbox">
+             __MSG_config_showNewTabActionSelector_label__</label></p>
+    <p><label class="has-checkbox"
+             ><input id="showContextualIdentitiesSelector"
+                     type="checkbox">
+             __MSG_config_showContextualIdentitiesSelector_label__</label></p>
+    </fieldset>
+    <fieldset>
+      <legend>__MSG_config_autoAttachWithURL_caption__</legend>
+      <p><label>__MSG_config_duplicateTabAction_caption__: __MSG_config_autoAttachOnDuplicated_before__
+                <select id="autoAttachOnDuplicated">
+                  <option value="-1">__MSG_config_autoAttachOnDuplicated_noControl__</option>
+                  <option value="0">__MSG_config_autoAttachOnDuplicated_independent__</option>
+                  <option value="1">__MSG_config_autoAttachOnDuplicated_child__</option>
+                  <option value="2">__MSG_config_autoAttachOnDuplicated_sibling__</option>
+                  <option value="3">__MSG_config_autoAttachOnDuplicated_nextSibling__</option>
+                </select>
+                __MSG_config_autoAttachOnDuplicated_after__
+              <span class="preview-image"></span></label></p>
+      <p><label>__MSG_config_sameSiteOrphan_caption__: __MSG_config_autoAttachSameSiteOrphan_before__
+                <select id="autoAttachSameSiteOrphan">
+                  <option value="-1">__MSG_config_autoAttachSameSiteOrphan_noControl__</option>
+                  <option value="0">__MSG_config_autoAttachSameSiteOrphan_independent__</option>
+                  <option value="1">__MSG_config_autoAttachSameSiteOrphan_child__</option>
+                  <option value="2">__MSG_config_autoAttachSameSiteOrphan_sibling__</option>
+                  <option value="3">__MSG_config_autoAttachSameSiteOrphan_nextSibling__</option>
+                </select>
+                __MSG_config_autoAttachSameSiteOrphan_after__
+              <span class="preview-image"></span></label></p>
+      <p class="sub"
+        ><label>__MSG_config_inheritContextualIdentityToSameSiteOrphanMode_label__
+                <select id="inheritContextualIdentityToSameSiteOrphanMode">
+                  <option value="0">__MSG_config_inheritContextualIdentityToSameSiteOrphanMode_default__</option>
+                  <option value="1">__MSG_config_inheritContextualIdentityToSameSiteOrphanMode_parent__</option>
+                  <option value="2">__MSG_config_inheritContextualIdentityToSameSiteOrphanMode_lastActive__</option>
+                </select></label></p>
+      <p><label>__MSG_config_fromExternal_caption__: __MSG_config_autoAttachOnOpenedFromExternal_before__
+                <select id="autoAttachOnOpenedFromExternal">
+                  <option value="-1">__MSG_config_autoAttachOnOpenedFromExternal_noControl__</option>
+                  <option value="0">__MSG_config_autoAttachOnOpenedFromExternal_independent__</option>
+                  <option value="1">__MSG_config_autoAttachOnOpenedFromExternal_child__</option>
+                  <option value="2">__MSG_config_autoAttachOnOpenedFromExternal_sibling__</option>
+                  <option value="3">__MSG_config_autoAttachOnOpenedFromExternal_nextSibling__</option>
+                </select>
+                __MSG_config_autoAttachOnOpenedFromExternal_after__
+              <span class="preview-image"></span></label></p>
+      <p class="sub"
+        ><label>__MSG_config_inheritContextualIdentityToTabsFromExternalMode_label__
+                <select id="inheritContextualIdentityToTabsFromExternalMode">
+                  <option value="0">__MSG_config_inheritContextualIdentityToTabsFromExternalMode_default__</option>
+                  <option value="1">__MSG_config_inheritContextualIdentityToTabsFromExternalMode_parent__</option>
+                  <option value="2">__MSG_config_inheritContextualIdentityToTabsFromExternalMode_lastActive__</option>
+                </select></label></p>
+      <div class="expert">
+        <hr>
+        <p><label>__MSG_config_anyOtherTrigger_caption__: __MSG_config_autoAttachOnAnyOtherTrigger_before__
+                  <select id="autoAttachOnAnyOtherTrigger">
+                    <option value="-1">__MSG_config_autoAttachOnAnyOtherTrigger_noControl__</option>
+                    <option value="0">__MSG_config_autoAttachOnAnyOtherTrigger_independent__</option>
+                    <option value="1">__MSG_config_autoAttachOnAnyOtherTrigger_child__</option>
+                    <option value="2">__MSG_config_autoAttachOnAnyOtherTrigger_sibling__</option>
+                    <option value="3">__MSG_config_autoAttachOnAnyOtherTrigger_nextSibling__</option>
+                  </select>
+                  __MSG_config_autoAttachOnAnyOtherTrigger_after__
+                <span class="preview-image"></span></label>
+                <strong>__MSG_config_autoAttachOnAnyOtherTrigger_caution__</strong></p>
+        <p class="sub autoAttachOnAnyOtherTrigger"
+          ><label>__MSG_config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_label__
+                  <select id="inheritContextualIdentityToTabsFromAnyOtherTriggerMode">
+                    <option value="0">__MSG_config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_default__</option>
+                    <option value="1">__MSG_config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_parent__</option>
+                    <option value="2">__MSG_config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_lastActive__</option>
+                  </select></label></p>
+      </div>
+    </fieldset>
+
+    <fieldset id="autoGroupNewTabsSection">
+      <legend>__MSG_config_groupTab_caption__</legend>
+      <p><label id="autoGroupNewTabsFromBookmarks_label"
+                class="has-checkbox"
+               ><input id="autoGroupNewTabsFromBookmarks"
+                       type="checkbox"
+                       class="require-bookmarks-permission"
+                       data-request-permission-message="__MSG_config_autoGroupNewTabsFromBookmarks_tooltiptext__">
+                <span>__MSG_config_autoGroupNewTabsFromBookmarks_before__</span>
+                <input id="tabBunchesDetectionTimeout"
+                       type="number"
+                       size="3"
+                       class="with-bookmarks-permission">
+                <span>__MSG_config_autoGroupNewTabsFromBookmarks_after__</span></label></p>
+      <div class="expert">
+        <p class="sub with-bookmarks-permission"
+          ><label>__MSG_config_tabsFromSameFolderMinThresholdPercentage_before__
+                  <input id="tabsFromSameFolderMinThresholdPercentage"
+                         type="number"
+                         size="3"
+                         max="100"
+                         min="0">
+                  __MSG_config_tabsFromSameFolderMinThresholdPercentage_after__</label></p>
+        <p><label class="has-checkbox"
+                 ><input id="autoGroupNewTabsFromOthers"
+                         type="checkbox">
+                  __MSG_config_autoGroupNewTabsFromOthers_label__</label></p>
+        <p class="sub"><label>__MSG_config_tabBunchesDetectionDelayOnNewWindow_before__
+                              <input id="tabBunchesDetectionDelayOnNewWindow"
+                                     type="number"
+                                     size="3">
+                              __MSG_config_tabBunchesDetectionDelayOnNewWindow_after__</label></p>
+        <p class="sub"><label class="has-checkbox"
+                             ><input id="warnOnAutoGroupNewTabs"
+                                     type="checkbox">
+                              __MSG_config_warnOnAutoGroupNewTabs_label__</label></p>
+        <div class="sub">
+          <p class="sub"><label class="has-checkbox"
+            ><input id="warnOnAutoGroupNewTabsWithListing"
+                    type="checkbox">
+             __MSG_config_warnOnAutoGroupNewTabsWithListing_label__</label></p>
+        </div>
+        <hr>
+        <p><label class="has-checkbox"
+                 ><input id="renderTreeInGroupTabs"
+                         type="checkbox">
+                  __MSG_config_renderTreeInGroupTabs_label__</p>
+      </div>
+    </fieldset>
+
+    <fieldset class="expert">
+      <legend>__MSG_config_groupTabTemporaryState_caption__</legend>
+      <p><label>__MSG_config_groupTabTemporaryStateForNewTabsFromBookmarks_label__
+                <select id="groupTabTemporaryStateForNewTabsFromBookmarks">
+                  <option value="0">__MSG_config_groupTabTemporaryState_option_default__</option>
+                  <option value="1">__MSG_config_groupTabTemporaryState_option_checked_before__
+                                    __MSG_groupTab_temporary_label__
+                                    __MSG_config_groupTabTemporaryState_option_checked_after__</option>
+                  <option value="2">__MSG_config_groupTabTemporaryState_option_checked_before__
+                                    __MSG_groupTab_temporaryAggressive_label__
+                                    __MSG_config_groupTabTemporaryState_option_checked_after__</option>
+                </select></label></p>
+      <p><label>__MSG_config_groupTabTemporaryStateForNewTabsFromOthers_label__
+                <select id="groupTabTemporaryStateForNewTabsFromOthers">
+                  <option value="0">__MSG_config_groupTabTemporaryState_option_default__</option>
+                  <option value="1">__MSG_config_groupTabTemporaryState_option_checked_before__
+                                    __MSG_groupTab_temporary_label__
+                                    __MSG_config_groupTabTemporaryState_option_checked_after__</option>
+                  <option value="2">__MSG_config_groupTabTemporaryState_option_checked_before__
+                                    __MSG_groupTab_temporaryAggressive_label__
+                                    __MSG_config_groupTabTemporaryState_option_checked_after__</option>
+                </select></label></p>
+      <p><label>__MSG_config_groupTabTemporaryStateForOrphanedTabs_label__
+                <select id="groupTabTemporaryStateForOrphanedTabs">
+                  <option value="0">__MSG_config_groupTabTemporaryState_option_default__</option>
+                  <option value="1">__MSG_config_groupTabTemporaryState_option_checked_before__
+                                    __MSG_groupTab_temporary_label__
+                                    __MSG_config_groupTabTemporaryState_option_checked_after__</option>
+                  <option value="2">__MSG_config_groupTabTemporaryState_option_checked_before__
+                                    __MSG_groupTab_temporaryAggressive_label__
+                                    __MSG_config_groupTabTemporaryState_option_checked_after__</option>
+                </select></label></p>
+    </fieldset>
+
+    </section>
+
+
+    <section id="section-treeBehavior">
+    <h1>__MSG_config_treeBehavior_caption__</h1>
+
+    <p><label class="has-checkbox"
+             ><input id="autoCollapseExpandSubtreeOnAttach"
+                     type="checkbox">
+             __MSG_config_autoCollapseExpandSubtreeOnAttach_label__</label></p>
+    <p><label class="has-checkbox"
+             ><input id="autoCollapseExpandSubtreeOnSelect"
+                     type="checkbox">
+             __MSG_config_autoCollapseExpandSubtreeOnSelect_label__</label></p>
+    <div class="expert">
+    <p class="sub">
+       <label class="has-checkbox"
+             ><input
+                     id="autoCollapseExpandSubtreeOnSelectExceptActiveTabRemove"
+                     type="checkbox">
+             __MSG_config_autoCollapseExpandSubtreeOnSelectExceptActiveTabRemove_label__</label></p>
+    <p><label class="has-checkbox"
+             ><input id="unfocusableCollapsedTab"
+                     type="checkbox">
+             __MSG_config_unfocusableCollapsedTab_label__</label></p>
+    <p><label class="has-checkbox"
+             ><input id="autoDiscardTabForUnexpectedFocus"
+                     type="checkbox">
+             __MSG_config_autoDiscardTabForUnexpectedFocus_label__</label></p>
+    </div>
+    <p><label class="has-checkbox"
+             ><input id="avoidDiscardedTabToBeActivatedIfPossible"
+                     type="checkbox">
+             __MSG_config_avoidDiscardedTabToBeActivatedIfPossible_label__</label></p>
+
+    <p><label class="has-checkbox"
+             ><input id="allUrlsPermissionGranted_ctrlTabTracking"
+                     type="checkbox">
+              __MSG_config_requestPermissions_allUrls_ctrlTabTracking__</label></p>
+    <div class="expert" id="ctrlTabSubItemsContainer">
+      <p class="sub"><label class="has-checkbox"
+                           ><input id="autoExpandOnTabSwitchingShortcuts"
+                                   type="checkbox">
+                            __MSG_config_autoExpandOnTabSwitchingShortcutsDelay_before__
+                            <input id="autoExpandOnTabSwitchingShortcutsDelay"
+                                   size="20">
+                             __MSG_config_autoExpandOnTabSwitchingShortcutsDelay_after__</label></p>
+      <p class="sub"><label>__MSG_config_accelKey_label__
+                            <select id="accelKey">
+                              <option value="">__MSG_config_accelKey_auto__</option>
+                              <option value="alt">__MSG_config_accelKey_alt__</option>
+                              <option value="control">__MSG_config_accelKey_control__</option>
+                              <option value="meta">__MSG_config_accelKey_meta__</option>
+                            </select></label></p>
+    </div>
+
+    <fieldset>
+      <legend>__MSG_config_treeDoubleClickBehavior_caption__</legend>
+      <ul>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="treeDoubleClickBehavior" value="1">
+              __MSG_config_treeDoubleClickBehavior_toggleCollapsed__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="treeDoubleClickBehavior" value="3">
+              __MSG_config_treeDoubleClickBehavior_close__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="treeDoubleClickBehavior" value="0">
+              __MSG_config_treeDoubleClickBehavior_none__</label></li>
+      </ul>
+    </fieldset>
+    <fieldset>
+      <legend>__MSG_config_successorTabControlLevel_caption__</legend>
+      <ul>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="successorTabControlLevel" value="2">
+              __MSG_config_successorTabControlLevel_inTree__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="successorTabControlLevel" value="1">
+              __MSG_config_successorTabControlLevel_simulateDefault__</label></li>
+        <li class="with-successor-tab-support"><label class="has-radio"
+                  ><input type="radio"
+                          name="successorTabControlLevel" value="0">
+              __MSG_config_successorTabControlLevel_never__</label></li>
+      </ul>
+      <p class="without-successor-tab-support">__MSG_config_successorTabControlLevel_legacyDescription__</p>
+      <p class="with-successor-tab-support">
+        <label class="has-checkbox"
+              ><input id="simulateSelectOwnerOnClose"
+                      type="checkbox">
+               __MSG_config_simulateSelectOwnerOnClose_label__</label></p>
+    </fieldset>
+    <fieldset id="parentTabOperationBehaviorModeGroup">
+      <legend>__MSG_config_parentTabOperationBehaviorMode_caption__</legend>
+      <p style="white-space: pre-wrap">__MSG_config_parentTabOperationBehaviorMode_noteForPermanentlyConsistentBehaviors__</p>
+      <hr>
+      <ul>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="parentTabOperationBehaviorMode" value="0">
+              <em>__MSG_config_parentTabOperationBehaviorMode_parallel__</em></label>
+          <div class="sub">
+            <p>__MSG_config_closeParentBehavior_insideSidebar__</p>
+            <ul>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="closeParentBehavior_insideSidebar_expanded"
+                                name="closeParentBehavior_insideSidebar_expanded0" value="5">
+                    __MSG_config_closeParentBehavior_replaceWithGroupTab__</label></li>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="closeParentBehavior_insideSidebar_expanded"
+                                name="closeParentBehavior_insideSidebar_expanded0" value="3">
+                    __MSG_config_closeParentBehavior_promoteFirst__</label></li>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="closeParentBehavior_insideSidebar_expanded"
+                                name="closeParentBehavior_insideSidebar_expanded0" value="0">
+                    __MSG_config_closeParentBehavior_promoteAll__</label></li>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="closeParentBehavior_insideSidebar_expanded"
+                                name="closeParentBehavior_insideSidebar_expanded0" value="6">
+                    __MSG_config_closeParentBehavior_promoteIntelligently__</label></li>
+            </ul>
+            <hr>
+            <p>__MSG_config_closeParentBehavior_outsideSidebar__</p>
+            <ul>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="closeParentBehavior_outsideSidebar_expanded"
+                                name="closeParentBehavior_outsideSidebar_expanded0" value="5">
+                    __MSG_config_closeParentBehavior_replaceWithGroupTab__</label></li>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="closeParentBehavior_outsideSidebar_expanded"
+                                name="ccloseParentBehavior_outsideSidebar_expanded0" value="3">
+                    __MSG_config_closeParentBehavior_promoteFirst__</label></li>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="closeParentBehavior_outsideSidebar_expanded"
+                                name="closeParentBehavior_outsideSidebar_expanded0" value="0">
+                    __MSG_config_closeParentBehavior_promoteAll__</label></li>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="closeParentBehavior_outsideSidebar_expanded"
+                                name="closeParentBehavior_outsideSidebar_expanded0" value="6">
+                    __MSG_config_closeParentBehavior_promoteIntelligently__</label></li>
+            </ul>
+            <hr>
+            <p>__MSG_config_moveParentBehavior_outsideSidebar__</p>
+            <ul>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="moveParentBehavior_outsideSidebar_expanded"
+                                name="moveParentBehavior_outsideSidebar_expanded0" value="2">
+                    __MSG_config_moveParentBehavior_entireTree__</label></li>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="moveParentBehavior_outsideSidebar_expanded"
+                                name="moveParentBehavior_outsideSidebar_expanded0" value="5">
+                    __MSG_config_moveParentBehavior_replaceWithGroupTab__</label></li>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="moveParentBehavior_outsideSidebar_expanded"
+                                name="cmoveParentBehavior_outsideSidebar_expanded0" value="3">
+                    __MSG_config_moveParentBehavior_promoteFirst__</label></li>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="moveParentBehavior_outsideSidebar_expanded"
+                                name="moveParentBehavior_outsideSidebar_expanded0" value="0">
+                    __MSG_config_moveParentBehavior_promoteAll__</label></li>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="moveParentBehavior_outsideSidebar_expanded"
+                                name="moveParentBehavior_outsideSidebar_expanded0" value="6">
+                    __MSG_config_moveParentBehavior_promoteIntelligently__</label></li>
+            </ul>
+          </div>
+        </li>
+        <li><label class="has-radio"
+                  ><input
+                    type="radio"
+                    name="parentTabOperationBehaviorMode" value="1">
+              <em>__MSG_config_parentTabOperationBehaviorMode_consistent__</em></label>
+          <div class="sub">
+            <p>__MSG_config_parentTabOperationBehaviorMode_consistent_caption__</p>
+            <ul>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="closeParentBehavior_insideSidebar_expanded"
+                                name="closeParentBehavior_insideSidebar_expanded1" value="5">
+                    __MSG_config_parentTabOperationBehavior_replaceWithGroupTab__</label></li>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="closeParentBehavior_insideSidebar_expanded"
+                                name="closeParentBehavior_insideSidebar_expanded1" value="3">
+                    __MSG_config_parentTabOperationBehavior_promoteFirst__</label></li>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="closeParentBehavior_insideSidebar_expanded"
+                                name="closeParentBehavior_insideSidebar_expanded1" value="0">
+                    __MSG_config_parentTabOperationBehavior_promoteAll__</label></li>
+              <li><label class="has-radio"
+                        ><input type="radio"
+                                data-config-key="closeParentBehavior_insideSidebar_expanded"
+                                name="closeParentBehavior_insideSidebar_expanded1" value="6">
+                    __MSG_config_parentTabOperationBehavior_promoteIntelligently__</label></li>
+            </ul>
+            <p>__MSG_config_parentTabOperationBehaviorMode_consistent_notes__</p>
+          </div>
+        </li>
+        <li><label class="has-radio"
+                  ><input
+                    type="radio"
+                    name="parentTabOperationBehaviorMode" value="-1">
+              <em>__MSG_config_parentTabOperationBehaviorMode_custom__</em></label>
+          <div class="sub">
+            <p>
+            <label>__MSG_config_closeParentBehavior_insideSidebar_expanded_caption__
+              <select id="closeParentBehavior_insideSidebar_expanded2" data-config-key="closeParentBehavior_insideSidebar_expanded">
+                <option value="2">__MSG_config_closeParentBehavior_entireTree__</option>
+                <option value="5">__MSG_config_closeParentBehavior_replaceWithGroupTab__</option>
+                <option value="3">__MSG_config_closeParentBehavior_promoteFirst__</option>
+                <option value="0">__MSG_config_closeParentBehavior_promoteAll__</option>
+                <option value="6">__MSG_config_closeParentBehavior_promoteIntelligently__</option>
+                <option value="1">__MSG_config_closeParentBehavior_detach__</option>
+              </select>
+            </label>
+            </p>
+            <hr>
+            <p>
+            <label>__MSG_config_closeParentBehavior_outsideSidebar_collapsed_caption__
+              <select id="closeParentBehavior_outsideSidebar_collapsed2" data-config-key="closeParentBehavior_outsideSidebar_collapsed">
+                <option value="2">__MSG_config_closeParentBehavior_entireTree__</option>
+                <option value="5">__MSG_config_closeParentBehavior_replaceWithGroupTab__</option>
+                <option value="3">__MSG_config_closeParentBehavior_promoteFirst__</option>
+                <option value="0">__MSG_config_closeParentBehavior_promoteAll__</option>
+                <option value="6">__MSG_config_closeParentBehavior_promoteIntelligently__</option>
+                <option value="1">__MSG_config_closeParentBehavior_detach__</option>
+              </select>
+            </label>
+            </p>
+            <p class="sub">
+            <label>__MSG_config_closeParentBehavior_noSidebar_collapsed_caption__
+              <select id="closeParentBehavior_noSidebar_collapsed2" data-config-key="closeParentBehavior_noSidebar_collapsed">
+                <option value="2">__MSG_config_closeParentBehavior_entireTree__</option>
+                <option value="5">__MSG_config_closeParentBehavior_replaceWithGroupTab__</option>
+                <option value="3">__MSG_config_closeParentBehavior_promoteFirst__</option>
+                <option value="0">__MSG_config_closeParentBehavior_promoteAll__</option>
+                <option value="6">__MSG_config_closeParentBehavior_promoteIntelligently__</option>
+                <option value="1">__MSG_config_closeParentBehavior_detach__</option>
+              </select>
+            </label>
+            </p>
+            <hr>
+            <p>
+            <label>__MSG_config_closeParentBehavior_outsideSidebar_expanded_caption__
+              <select id="closeParentBehavior_outsideSidebar_expanded2" data-config-key="closeParentBehavior_outsideSidebar_expanded">
+                <option value="2">__MSG_config_closeParentBehavior_entireTree__</option>
+                <option value="5">__MSG_config_closeParentBehavior_replaceWithGroupTab__</option>
+                <option value="3">__MSG_config_closeParentBehavior_promoteFirst__</option>
+                <option value="0">__MSG_config_closeParentBehavior_promoteAll__</option>
+                <option value="6">__MSG_config_closeParentBehavior_promoteIntelligently__</option>
+                <option value="1">__MSG_config_closeParentBehavior_detach__</option>
+              </select>
+            </label>
+            </p>
+            <p class="sub">
+            <label>__MSG_config_closeParentBehavior_noSidebar_expanded_caption__
+              <select id="closeParentBehavior_noSidebar_expanded2" data-config-key="closeParentBehavior_noSidebar_expanded">
+                <option value="2">__MSG_config_closeParentBehavior_entireTree__</option>
+                <option value="5">__MSG_config_closeParentBehavior_replaceWithGroupTab__</option>
+                <option value="3">__MSG_config_closeParentBehavior_promoteFirst__</option>
+                <option value="0">__MSG_config_closeParentBehavior_promoteAll__</option>
+                <option value="6">__MSG_config_closeParentBehavior_promoteIntelligently__</option>
+                <option value="1">__MSG_config_closeParentBehavior_detach__</option>
+              </select>
+            </label>
+            </p>
+            <hr>
+            <p>
+            <label>__MSG_config_moveParentBehavior_outsideSidebar_collapsed_caption__
+              <select id="moveParentBehavior_outsideSidebar_collapsed2" data-config-key="moveParentBehavior_outsideSidebar_collapsed">
+                <option value="2">__MSG_config_moveParentBehavior_entireTree__</option>
+                <option value="5">__MSG_config_moveParentBehavior_replaceWithGroupTab__</option>
+                <option value="3">__MSG_config_moveParentBehavior_promoteFirst__</option>
+                <option value="0">__MSG_config_moveParentBehavior_promoteAll__</option>
+                <option value="6">__MSG_config_moveParentBehavior_promoteIntelligently__</option>
+                <option value="1">__MSG_config_moveParentBehavior_detach__</option>
+              </select>
+            </label>
+            </p>
+            <p class="sub">
+            <label>__MSG_config_moveParentBehavior_noSidebar_collapsed_caption__
+              <select id="moveParentBehavior_noSidebar_collapsed2" data-config-key="moveParentBehavior_noSidebar_collapsed">
+                <option value="2">__MSG_config_moveParentBehavior_entireTree__</option>
+                <option value="5">__MSG_config_moveParentBehavior_replaceWithGroupTab__</option>
+                <option value="3">__MSG_config_moveParentBehavior_promoteFirst__</option>
+                <option value="0">__MSG_config_moveParentBehavior_promoteAll__</option>
+                <option value="6">__MSG_config_moveParentBehavior_promoteIntelligently__</option>
+                <option value="1">__MSG_config_moveParentBehavior_detach__</option>
+              </select>
+            </label>
+            </p>
+            <hr>
+            <p>
+            <label>__MSG_config_moveParentBehavior_outsideSidebar_expanded_caption__
+              <select id="moveParentBehavior_outsideSidebar_expanded2" data-config-key="moveParentBehavior_outsideSidebar_expanded">
+                <option value="2">__MSG_config_moveParentBehavior_entireTree__</option>
+                <option value="5">__MSG_config_moveParentBehavior_replaceWithGroupTab__</option>
+                <option value="3">__MSG_config_moveParentBehavior_promoteFirst__</option>
+                <option value="0">__MSG_config_moveParentBehavior_promoteAll__</option>
+                <option value="6">__MSG_config_moveParentBehavior_promoteIntelligently__</option>
+                <option value="1">__MSG_config_moveParentBehavior_detach__</option>
+              </select>
+            </label>
+            </p>
+            <p class="sub">
+            <label>__MSG_config_moveParentBehavior_noSidebar_expanded_caption__
+              <select id="moveParentBehavior_noSidebar_expanded2" data-config-key="moveParentBehavior_noSidebar_expanded">
+                <option value="2">__MSG_config_moveParentBehavior_entireTree__</option>
+                <option value="5">__MSG_config_moveParentBehavior_replaceWithGroupTab__</option>
+                <option value="3">__MSG_config_moveParentBehavior_promoteFirst__</option>
+                <option value="0">__MSG_config_moveParentBehavior_promoteAll__</option>
+                <option value="6">__MSG_config_moveParentBehavior_promoteIntelligently__</option>
+                <option value="1">__MSG_config_moveParentBehavior_detach__</option>
+              </select>
+            </label>
+            </p>
+          </div>
+        </li>
+      </ul>
+    </fieldset>
+    <fieldset>
+      <legend>__MSG_config_fixupTreeOnTabVisibilityChanged_caption__</legend>
+      <ul>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="fixupTreeOnTabVisibilityChanged" value="true">
+              __MSG_config_fixupTreeOnTabVisibilityChanged_fix__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="fixupTreeOnTabVisibilityChanged" value="false">
+              __MSG_config_fixupTreeOnTabVisibilityChanged_keep__</label></li>
+      </ul>
+    </fieldset>
+
+    <fieldset>
+      <legend>__MSG_config_insertNewChildAt_caption__</legend>
+      <ul>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewChildAt" value="-1">
+              __MSG_config_insertNewChildAt_noControl__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewChildAt" value="3">
+              __MSG_config_insertNewChildAt_nextToLastRelateTab__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewChildAt" value="0">
+              __MSG_config_insertNewChildAt_top__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertNewChildAt" value="1">
+              __MSG_config_insertNewChildAt_end__</label></li>
+      </ul>
+    </fieldset>
+    </section>
+
+
+    <section id="section-drag">
+    <h1>__MSG_config_drag_caption__</h1>
+    <fieldset class="tabDragBehaviorConfigs" id="tabDragBehaviorConfigsGroup">
+      <legend>__MSG_config_tabDragBehavior_caption__</legend>
+      <p>__MSG_config_tabDragBehavior_description__</p>
+      <table>
+        <thead>
+          <tr>
+            <th>__MSG_config_tabDragBehavior_label__</th>
+            <th>__MSG_config_tabDragBehaviorShift_label__</th>
+            <th>__MSG_config_tabDragBehavior_label_behaviorInsideSidebar__</th>
+            <th>__MSG_config_tabDragBehavior_label_behaviorOutsideSidebar__</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><label><input name="tabDragBehavior" id="tabDragBehavior_tearoff_tree"
+                              type="radio"
+                              value="13"></label></td>
+            <td><label><input name="tabDragBehaviorShift"
+                              type="radio"
+                              value="13"></label></td>
+            <th rowspan="3"><label for="tabDragBehavior_tearoff_tree">__MSG_config_tabDragBehavior_moveEntireTreeAlways__</label></th>
+            <th><label for="tabDragBehavior_tearoff_tree">__MSG_config_tabDragBehavior_detachEntireTreeAlways__</label></th>
+          </tr>
+          <tr>
+            <td><label><input name="tabDragBehavior" id="tabDragBehavior_bookmark_tree"
+                              type="radio"
+                              value="11"></label></td>
+            <td><label><input name="tabDragBehaviorShift"
+                              type="radio"
+                              value="11"></label></td>
+            <th><label for="tabDragBehavior_bookmark_tree">__MSG_config_tabDragBehavior_bookmarkEntireTreeAlways__</label></th>
+          </tr>
+          <tr>
+            <td><label><input name="tabDragBehavior" id="tabDragBehavior_none_tree"
+                              type="radio"
+                              value="9"></label></td>
+            <td><label><input name="tabDragBehaviorShift"
+                              type="radio"
+                              value="9"></label></td>
+            <th><label for="tabDragBehavior_none">__MSG_config_tabDragBehavior_doNothing__</label></th>
+          </tr>
+          <tr>
+            <td><label><input name="tabDragBehavior" id="tabDragBehavior_tearoff_tab"
+                              type="radio"
+                              value="12"></label></td>
+            <td><label><input name="tabDragBehaviorShift"
+                              type="radio"
+                              value="12"></label></td>
+            <th rowspan="3"><label for="tabDragBehavior_tearoff_tab">__MSG_config_tabDragBehavior_moveSoloTabIfExpanded__</label></th>
+            <th><label for="tabDragBehavior_tearoff_tab">__MSG_config_tabDragBehavior_detachSoloTabIfExpanded__</label></th>
+          </tr>
+          <tr>
+            <td><label><input name="tabDragBehavior" id="tabDragBehavior_bookmark_tab"
+                              type="radio"
+                              value="10"></label></td>
+            <td><label><input name="tabDragBehaviorShift"
+                              type="radio"
+                              value="10"></label></td>
+            <th><label for="tabDragBehavior_bookmark_tab">__MSG_config_tabDragBehavior_bookmarkSoloTabIfExpanded__</label></th>
+          </tr>
+          <tr>
+            <td><label><input name="tabDragBehavior" id="tabDragBehavior_none_tab"
+                              type="radio"
+                              value="8"></label></td>
+            <td><label><input name="tabDragBehaviorShift"
+                              type="radio"
+                              value="8"></label></td>
+            <th><label for="tabDragBehavior_none">__MSG_config_tabDragBehavior_doNothing__</label></th>
+          </tr>
+          <tr class="expert">
+            <td><label><input name="tabDragBehavior" id="tabDragBehavior_none_none"
+                              type="radio"
+                              value="0"></label></td>
+            <td><label><input name="tabDragBehaviorShift"
+                              type="radio"
+                              value="0"></label></td>
+            <th><label for="tabDragBehavior_none_none">__MSG_config_tabDragBehavior_doNothing__</label></th>
+            <th><label for="tabDragBehavior_none_none">__MSG_config_tabDragBehavior_doNothing__</label></th>
+          </tr>
+        </tbody>
+      </table>
+      <p><label class="has-checkbox"
+               ><input id="showTabDragBehaviorNotification"
+                       type="checkbox">
+               <img src="tab-drag-behavior-notification.png" alt=""/>
+               __MSG_config_showTabDragBehaviorNotification_label__</label></p>
+      <p>__MSG_config_tabDragBehavior_noteForDragstartOutsideSidebar__</p>
+    </fieldset>
+    <fieldset>
+      <legend>__MSG_config_dropLinksOnTabBehavior_caption__</legend>
+      <ul>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="dropLinksOnTabBehavior" value="0">
+              __MSG_config_dropLinksOnTabBehavior_ask__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="dropLinksOnTabBehavior" value="1">
+              __MSG_config_dropLinksOnTabBehavior_load__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="dropLinksOnTabBehavior" value="2">
+              __MSG_config_dropLinksOnTabBehavior_newtab__</label></li>
+      </ul>
+    </fieldset>
+    <div class="expert">
+    <fieldset>
+      <legend>__MSG_config_insertDroppedTabsAt_caption__</legend>
+      <ul>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertDroppedTabsAt" value="-2">
+              __MSG_config_insertDroppedTabsAt_inherit__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertDroppedTabsAt" value="0">
+              __MSG_config_insertDroppedTabsAt_first__</label></li>
+        <li><label class="has-radio"
+                  ><input type="radio"
+                          name="insertDroppedTabsAt" value="1">
+              __MSG_config_insertDroppedTabsAt_end__</label></li>
+      </ul>
+    </fieldset>
+    <p><label class="has-checkbox"
+             ><input id="autoExpandOnLongHover"
+                     type="checkbox">
+              __MSG_config_autoExpandOnLongHoverDelay_before__
+              <input id="autoExpandOnLongHoverDelay"
+                     size="20">
+               __MSG_config_autoExpandOnLongHoverDelay_after__</label></p>
+    <p class="sub"><label class="has-checkbox"
+                         ><input id="autoExpandOnLongHoverRestoreIniitalState"
+                                 type="checkbox">
+                          __MSG_config_autoExpandOnLongHoverRestoreIniitalState_label__</label></p>
+    <p class="sub"><label class="has-checkbox"
+                         ><input id="autoExpandIntelligently"
+                                 type="checkbox">
+                          __MSG_config_autoExpandIntelligently_label__</label></p>
+    <p><label class="has-checkbox"
+             ><input id="ignoreTabDropNearSidebarArea"
+                     type="checkbox">
+              __MSG_config_ignoreTabDropNearSidebarArea_label__</label></p>
+    </div>
+    </section>
+
+
+    <section id="section-advanced">
+    <h1>__MSG_config_advanced_caption__</h1>
+    <p><label class="has-checkbox"
+             ><input id="warnOnCloseTabs"
+                     type="checkbox">
+              __MSG_config_warnOnCloseTabs_label__</label></p>
+    <p class="sub"><label class="has-checkbox"
+             ><input id="warnOnCloseTabsByClosebox"
+                     type="checkbox">
+              __MSG_config_warnOnCloseTabsByClosebox_label__</label></p>
+    <p class="sub expert"><label class="has-checkbox"
+             ><input id="warnOnCloseTabsWithListing"
+                     type="checkbox">
+              __MSG_config_warnOnCloseTabsWithListing_label__</label></p>
+    <p><label class="has-checkbox"
+             ><input id="useCachedTree"
+                     type="checkbox">
+             __MSG_config_useCachedTree_label__</label></p>
+    <p class="sub">__MSG_config_useCachedTree_description__</p>
+    <div class="expert">
+    <p><label class="has-checkbox"
+             ><input id="supportTabsMultiselect"
+                     type="checkbox">
+              __MSG_config_supportTabsMultiselect_label__</label></p>
+    </div>
+    <p><label class="has-checkbox"
+             ><input id="undoMultipleTabsClose"
+                     type="checkbox">
+              __MSG_config_undoMultipleTabsClose_label__</label></p>
+    <p><label class="has-checkbox"
+             ><input id="bookmarksPermissionGranted_context"
+                     type="checkbox">
+                     __MSG_config_requestPermissions_bookmarks_context__</label></p>
+    <p class="expert"
+      ><label>__MSG_config_scrollLines_label_before__
+              <input id="scrollLines"
+                     type="number"
+                     size="5">
+             __MSG_config_scrollLines_label_after__</label></p>
+    <fieldset>
+      <legend>__MSG_config_userStyleRules_label__</legend>
+      <p>__MSG_config_userStyleRules_description_before__
+         <a href="__MSG_config_userStyleRules_description_link_uri__" target="_blank">__MSG_config_userStyleRules_description_link_label__</a>
+         __MSG_config_userStyleRules_description_after__</p>
+      <div id="browserThemeCustomRulesBlock">
+        <p>__MSG_config_userStyleRules_themeRules_description__</p>
+        <pre id="browserThemeCustomRules"></pre>
+        <p>__MSG_config_userStyleRules_themeRules_description_alphaVariations__</p>
+      </div>
+      <p id="tooLargeUserStyleRulesCaution">__MSG_config_tooLargeUserStyleRulesCaution__</p>
+      <div id="userStyleRulesField"
+           contenteditable="true"
+           style="height: 10em; width: 100%;"></div>
+      <div id="userStyleRules-footer-bar">
+        <button id="userStyleRules-export">__MSG_config_userStyleRules_export__</button>
+        <a id="userStyleRules-export-file"
+           type="text/css"
+           download="treestyletab.css"
+           style="display:none"></a>
+        <button id="userStyleRules-import">__MSG_config_userStyleRules_import__</button>
+        <input id="userStyleRules-import-file"
+               type="file"
+               accept="text/css,text/plain,image/*"
+               style="display:none">
+        <span class="spacer"></span>
+        <label>
+          __MSG_config_userStyleRulesTheme_label__
+          <select id="userStyleRulesFieldTheme">
+            <option value="auto">__MSG_config_userStyleRulesTheme_auto__</option>
+            <option disabled="true">__MSG_config_userStyleRulesTheme_separator__</option>
+            <option value="default">__MSG_config_userStyleRulesTheme_default__</option>
+          </select>
+        </label>
+      </div>
+    </fieldset>
+    </section>
+
+    <section id="section-addons">
+    <h1>__MSG_config_addons_caption__</h1>
+    <p>__MSG_config_addons_description_before__
+       <a href="__MSG_helper_addons_list_link_uri__" target="_blank">__MSG_config_addons_description_link_label__</a>
+       __MSG_config_addons_description_after__</p>
+    <fieldset id="externalAddonPermissionsGroup">
+      <legend>__MSG_config_externalAddonPermissions_label__</legend>
+      <p id="externalAddonPermissionsGroupDescription"></p>
+      <table>
+        <thead>
+          <tr>
+            <th>__MSG_config_externalAddonPermissions_header_name__</th>
+            <th>__MSG_config_externalAddonPermissions_header_incognito__</th>
+            <th>__MSG_config_externalAddonPermissions_header_permissions__</th>
+          </tr>
+        </thead>
+        <tbody id="externalAddonPermissions"></tbody>
+      </table>
+    </fieldset>
+
+    <fieldset>
+      <legend><a href="__MSG_addon_containerBookmarks_uri__"
+                 target="_blank">__MSG_addon_containerBookmarks_label__</a></legend>
+      <p><label>__MSG_config_containerRedirectKey_label__
+                <br/>
+                <input id="containerRedirectKey"
+                       type="text"
+                       style="width: 100%"></label></p>
+    </fieldset>
+    </section>
+
+    <hr/>
+
+    <section id="section-debug">
+    <h1>__MSG_config_debug_caption__</h1>
+    <ul>
+      <li><a id="link-optionsPage" target="_blank">__MSG_config_title__</a>
+      <li><a id="link-startupPage" target="_blank">__MSG_config_link_startupPage_label__</a></li>
+      <li><a id="link-groupPage" target="_blank">__MSG_config_link_groupPage_label__</a></li>
+      <li><a id="link-tabbarPage" target="_blank">__MSG_config_link_tabbarPage_label__</a>
+      <li><a id="link-runTests" target="_blank">__MSG_config_runTests_label__</a>
+      <li><a id="link-runBenchmark" target="_blank">__MSG_config_runBenchmark_label__</a>
+        <ul>
+          <li><label class="has-checkbox"
+                    ><input id="tabHidePermissionGranted"
+                            type="checkbox">
+                __MSG_config_requestPermissions_tabHide__</label></li>
+        </ul>
+      </li>
+    </ul>
+    <p>__MSG_config_colorScheme_caption__
+       <label class="has-radio"
+             ><input type="radio"
+                     name="colorScheme" value="photon">
+         __MSG_config_colorScheme_photon__</label>
+       <label class="has-radio"
+             ><input type="radio"
+                     name="colorScheme" value="system-color">
+         __MSG_config_colorScheme_systemColor__</label>
+    </p>
+    <p><label class="has-checkbox"
+             ><input id="enableLinuxBehaviors"
+                     type="checkbox">
+             __MSG_config_enableLinuxBehaviors_label__</label></p>
+    <p><label class="has-checkbox"
+             ><input id="enableMacOSBehaviors"
+                     type="checkbox">
+             __MSG_config_enableMacOSBehaviors_label__</label></p>
+    <p><label class="has-checkbox"
+             ><input id="enableWindowsBehaviors"
+                     type="checkbox">
+             __MSG_config_enableWindowsBehaviors_label__</label></p>
+    <div class="expert">
+    <p><label class="has-checkbox"
+             ><input id="simulateSVGContextFill"
+                     type="checkbox">
+             __MSG_config_simulateSVGContextFill_label__</label></p>
+    <p><label class="has-checkbox"
+             ><input id="acceleratedTabCreation"
+                     type="checkbox">
+             __MSG_config_acceleratedTabCreation_label__</label></p>
+    <p><label>__MSG_config_maximumAcceptableDelayForTabDuplication_before__
+              <input id="maximumAcceptableDelayForTabDuplication"
+                     type="number"
+                     size="6">
+             __MSG_config_maximumAcceptableDelayForTabDuplication_after__</label></p>
+    </div>
+    <p><label>__MSG_config_delayForDuplicatedTabDetection_label_before__
+              <input id="delayForDuplicatedTabDetection"
+                     type="number"
+                     size="6"
+                     min="0">
+             __MSG_config_delayForDuplicatedTabDetection_label_after__</label></p>
+    <p class="sub"
+      ><button id="delayForDuplicatedTabDetection_autoDetectButton">__MSG_config_delayForDuplicatedTabDetection_autoDetect__</button>
+       <button id="delayForDuplicatedTabDetection_testButton">__MSG_config_delayForDuplicatedTabDetection_test__</button>
+       <em id="delayForDuplicatedTabDetection_testResult"></em></p>
+    <p><label class="has-checkbox inline"
+             ><input id="loggingQueries"
+                     type="checkbox">
+              __MSG_config_loggingQueries_label__</label>
+       <label class="has-checkbox inline"
+             ><input id="loggingConnectionMessages"
+                     type="checkbox">
+              __MSG_config_loggingConnectionMessages_label__</label>
+       <button id="showLogsButton">__MSG_config_showLogsButton_label__</button></p>
+    <p><label class="has-checkbox"
+             ><input id="debug"
+                     type="checkbox">
+             __MSG_config_debug_label__</label></p>
+    <fieldset id="group-logFor" class="collapsible collapsed">
+      <legend>__MSG_config_log_caption__</legend>
+      <p><label class="has-checkbox"
+               ><input id="logTimestamp"
+                       type="checkbox">
+               __MSG_config_logTimestamp_label__</label></p>
+      <!-- <p>git grep configs.logFor | grep -v common.js | cut -d "'" -f 2 | sed -r -e 's;^(.+)$;            <p><label class="has-checkbox"><input
+                     id="logFor-\1" type="checkbox">\1</label></p>;' -->
+      <fieldset>
+        <legend><label class="has-checkbox"><input id="logFor-common" type="checkbox">__MSG_config_logFor_common__</label></legend>
+          <p><label class="has-checkbox"><input id="logFor-common/Tab" type="checkbox">common/Tab</label></p>
+          <p><label class="has-checkbox"><input id="logFor-common/Window" type="checkbox">common/Window</label></p>
+          <p><label class="has-checkbox"><input id="logFor-common/api-tabs" type="checkbox">common/api-tabs</label></p>
+          <p><label class="has-checkbox"><input id="logFor-common/bookmark" type="checkbox">common/bookmark</label></p>
+          <p><label class="has-checkbox"><input id="logFor-common/contextual-identities" type="checkbox">common/contextual-identities</label></p>
+          <p><label class="has-checkbox"><input id="logFor-common/dialog" type="checkbox">common/dialog</label></p>
+          <p><label class="has-checkbox"><input id="logFor-common/permissions" type="checkbox">common/permissions</label></p>
+          <p><label class="has-checkbox"><input id="logFor-common/sidebar-connection" type="checkbox">common/sidebar-connection</label></p>
+          <p><label class="has-checkbox"><input id="logFor-common/sync" type="checkbox">common/sync</label></p>
+          <p><label class="has-checkbox"><input id="logFor-common/tabs-internal-operation" type="checkbox">common/tabs-internal-operation</label></p>
+          <p><label class="has-checkbox"><input id="logFor-common/tabs-update" type="checkbox">common/tabs-update</label></p>
+          <p><label class="has-checkbox"><input id="logFor-common/tree-behavior" type="checkbox">common/tree-behavior</label></p>
+          <p><label class="has-checkbox"><input id="logFor-common/tst-api" type="checkbox">common/tst-api</label></p>
+          <p><label class="has-checkbox"><input id="logFor-common/unique-id" type="checkbox">common/unique-id</label></p>
+          <p><label class="has-checkbox"><input id="logFor-common/user-operation-blocker" type="checkbox">common/user-operation-blocker</label></p>
+      </fieldset>
+      <fieldset>
+        <legend><label class="has-checkbox"><input id="logFor-background" type="checkbox">__MSG_config_logFor_background__</label></legend>
+          <p><label class="has-checkbox"><input id="logFor-background/api-tabs-listener" type="checkbox">background/api-tabs-listener</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/background-cache" type="checkbox">background/background-cache</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/background" type="checkbox">background/background</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/browser-action-menu" type="checkbox">background/browser-action-menu</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/commands" type="checkbox">background/commands</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/context-menu" type="checkbox">background/context-menu</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/handle-tab-bunches" type="checkbox">background/handle-tab-bunches</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/handle-misc" type="checkbox">background/handle-misc</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/handle-moved-tabs" type="checkbox">background/handle-moved-tabs</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/handle-new-tabs" type="checkbox">background/handle-new-tabs</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/handle-removed-tabs" type="checkbox">background/handle-removed-tabs</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/handle-tab-focus" type="checkbox">background/handle-tab-focus</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/handle-tab-multiselect" type="checkbox">background/handle-tab-multiselect</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/handle-tree-changes" type="checkbox">background/handle-tree-changes</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/migration" type="checkbox">background/migration</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/successor-tab" type="checkbox">background/successor-tab</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/tab-context-menu" type="checkbox">background/tab-context-menu</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/tabs-group" type="checkbox">background/tabs-group</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/tabs-move" type="checkbox">background/tabs-move</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/tabs-open" type="checkbox">background/tabs-open</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/tree" type="checkbox">background/tree</label></p>
+          <p><label class="has-checkbox"><input id="logFor-background/tree-structure" type="checkbox">background/tree-structure</label></p>
+      </fieldset>
+      <fieldset>
+        <legend><label class="has-checkbox"><input id="logFor-sidebar" type="checkbox">__MSG_config_logFor_sidebar__</label></legend>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/background-connection" type="checkbox">sidebar/background-connection</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/collapse-expand" type="checkbox">sidebar/collapse-expand</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/drag-and-drop" type="checkbox">sidebar/drag-and-drop</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/event-utils" type="checkbox">sidebar/event-utils</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/gap-canceller" type="checkbox">sidebar/gap-canceller</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/indent" type="checkbox">sidebar/indent</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/mouse-event-listener" type="checkbox">sidebar/mouse-event-listener</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/pinned-tabs" type="checkbox">sidebar/pinned-tabs</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/scroll" type="checkbox">sidebar/scroll</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/sidebar-cache" type="checkbox">sidebar/sidebar-cache</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/sidebar-tabs" type="checkbox">sidebar/sidebar-tabs</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/sidebar" type="checkbox">sidebar/sidebar</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/size" type="checkbox">sidebar/size</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/subpanel" type="checkbox">sidebar/subpanel</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/tab-context-menu" type="checkbox">sidebar/tab-context-menu</label></p>
+          <p><label class="has-checkbox"><input id="logFor-sidebar/tst-api-frontend" type="checkbox">sidebar/tst-api-frontend</label></p>
+      </fieldset>
+    </fieldset>
+    <fieldset id="group-allConfigs" class="collapsible collapsed">
+      <legend>__MSG_config_all_caption__</legend>
+    </fieldset>
+    </section>
+  </body>
+</html>

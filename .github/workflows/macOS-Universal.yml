@@ -1,0 +1,183 @@
+name: macOS Universal build
+
+on: workflow_dispatch
+
+jobs:
+  get-buildid:
+    runs-on: ubuntu-latest
+
+    outputs:
+      buildids: ${{ steps.get.outputs.bid }}
+
+    steps:
+    - id: get
+      shell: bash -xe {0}
+      run: |
+        bdat=`date +"%Y%m%d%I%M%S"`
+        echo "bid=${bdat}" >> $GITHUB_OUTPUT
+
+  build-m1:
+    runs-on: macos-latest
+
+    needs: get-buildid
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10' 
+
+    - name: Create environment 🌲
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+        git clone https://github.com/floorp-projects/l10n-central
+        ./mach bootstrap
+        rustup target add aarch64-apple-darwin
+        echo 'ac_add_options --disable-tests' >> mozconfig
+        echo 'ac_add_options --disable-updater' >> mozconfig
+        echo 'ac_add_options --with-app-name=floorp' >> mozconfig
+        echo 'ac_add_options --with-app-basename=Floorp' >> mozconfig
+        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
+        echo 'ac_add_options --disable-crashreporter' >> mozconfig
+        echo 'ac_add_options --enable-proxy-bypass-protection' >> mozconfig
+        echo 'ac_add_options --disable-verify-mar' >> mozconfig
+        echo 'ac_add_options --enable-update-channel=release' >> mozconfig
+        echo 'ac_add_options --with-mozilla-api-keyfile=$PWD/floorp/apis/api-mozilla-key' >> mozconfig
+        echo 'ac_add_options --with-google-location-service-api-keyfile=$PWD/floorp/apis/api-google-location-service-key' >> mozconfig
+        echo 'ac_add_options --with-google-safebrowsing-api-keyfile=$PWD/floorp/apis/api-google-safe-browsing-key' >> mozconfig
+        echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
+        echo 'ac_add_options --enable-bootstrap' >> mozconfig
+        echo 'ac_add_options --target=aarch64-apple-darwin' >> mozconfig
+        echo 'ac_add_options --enable-optimize="-O2"' >> mozconfig
+        echo 'ac_add_options --enable-rust-simd' >> mozconfig
+        echo 'ac_add_options RUSTC_OPT_LEVEL=3' >> mozconfig
+        echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
+        echo 'MOZ_DATA_REPORTING=' >> mozconfig
+        echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
+        ./mach configure
+
+    - name: Build 🔨
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+        ./mach build
+
+    - name: Package 📦
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+        ./mach package
+        ./mach package-multi-locale --locales ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW
+        tar -Jcf obj-aarch64-apple-darwin.tar.xz obj-aarch64-apple-darwin/dist/
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@v3
+      with:
+        name: obj-aarch64-apple-darwin
+        path: obj-aarch64-apple-darwin.tar.xz
+
+  build-intel:
+    runs-on: macos-latest
+
+    needs: get-buildid
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10' 
+
+    - name: Create environment 🌲
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+        git clone https://github.com/floorp-projects/l10n-central
+        ./mach bootstrap
+        echo 'ac_add_options --disable-tests' >> mozconfig
+        echo 'ac_add_options --disable-updater' >> mozconfig
+        echo 'ac_add_options --with-app-name=floorp' >> mozconfig
+        echo 'ac_add_options --with-app-basename=Floorp' >> mozconfig
+        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
+        echo 'ac_add_options --disable-crashreporter' >> mozconfig
+        echo 'ac_add_options --enable-proxy-bypass-protection' >> mozconfig
+        echo 'ac_add_options --disable-verify-mar' >> mozconfig
+        echo 'ac_add_options --enable-update-channel=release' >> mozconfig
+        echo 'ac_add_options --with-mozilla-api-keyfile=$PWD/floorp/apis/api-mozilla-key' >> mozconfig
+        echo 'ac_add_options --with-google-location-service-api-keyfile=$PWD/floorp/apis/api-google-location-service-key' >> mozconfig
+        echo 'ac_add_options --with-google-safebrowsing-api-keyfile=$PWD/floorp/apis/api-google-safe-browsing-key' >> mozconfig
+        echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
+        echo 'ac_add_options --enable-bootstrap' >> mozconfig
+        echo 'ac_add_options --target=x86_64-apple-darwin' >> mozconfig
+        echo 'ac_add_options --enable-optimize="-O2"' >> mozconfig
+        echo 'ac_add_options --enable-rust-simd' >> mozconfig
+        echo 'ac_add_options RUSTC_OPT_LEVEL=3' >> mozconfig
+        echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
+        echo 'MOZ_DATA_REPORTING=' >> mozconfig
+        echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
+        ./mach configure
+
+    - name: Build 🔨
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+        ./mach build
+
+    - name: Package 📦
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+        ./mach package
+        ./mach package-multi-locale --locales ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW
+        tar -Jcf obj-x86_64-apple-darwin.tar.xz obj-x86_64-apple-darwin/dist/
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@v3
+      with:
+        name: obj-x86_64-apple-darwin
+        path: obj-x86_64-apple-darwin.tar.xz
+
+  integration:
+    needs: [build-m1, build-intel]
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/download-artifact@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10' 
+
+    - name: Create environment 🌲
+      shell: bash
+      run: |
+        ./mach bootstrap
+        echo -e "ac_add_options --enable-bootstrap" >> mozconfig
+        brew install gnu-tar
+        export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH
+        tar -xf ./obj-x86_64-apple-darwin/obj-x86_64-apple-darwin.tar.xz -C ./
+        tar -xf ./obj-aarch64-apple-darwin/obj-aarch64-apple-darwin.tar.xz -C ./
+        ls -a
+
+    - name: Integration 🗃 & Package 📦 
+      run: |       
+        ./mach python ./toolkit/mozapps/installer/unify.py ./obj-x86_64-apple-darwin/dist/Floorp/Floorp.app ./obj-aarch64-apple-darwin/dist/Floorp/Floorp.app
+        ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/Floorp floorp-macOS-universal-temp.dmg
+        unzip ./.github/base.zip
+        hdiutil attach ./floorp-macOS-universal-temp.dmg
+        hdiutil attach ./base.dmg
+        cp -r /Volumes/Floorp/Floorp.app /Volumes/Floorp\ Installer/
+        hdiutil detach /Volumes/Floorp\ Installer/
+        hdiutil convert ./base.dmg -format UDZO -imagekey zlib-level=9 -o floorp-macOS-universal.dmg
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@v3
+      with:
+        name: Universal-Artifact
+        path: floorp-macOS-universal.dmg
+
+  cleanup:
+    needs: integration
+    runs-on: ubuntu-latest
+    steps:
+    - uses: geekyeggo/delete-artifact@v2
+      with:
+        name: |
+         obj-x86_64-apple-darwin
+         obj-aarch64-apple-darwin

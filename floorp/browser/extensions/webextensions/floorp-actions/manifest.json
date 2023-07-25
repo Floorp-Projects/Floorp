@@ -1,0 +1,35 @@
+{
+  "manifest_version": 2,
+  "name": "Floorp Actions",
+  "description": "Controls Floorp future from Gesturefy",
+  "version": "1.0",
+  "homepage_url": "https://floorp.app",
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "experiment_apis": {
+    "aboutConfigPrefs": {
+        "schema": "API/aboutConfigPrefs.json",
+        "parent": {
+            "scopes": ["addon_parent"],
+            "script": "API/aboutConfigPrefs.js",
+            "paths": [["aboutConfigPrefs"]]
+        }
+    },
+    "floorpActions": {
+      "schema": "API/floorpActions.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "API/floorpActions.js",
+        "paths": [["floorpActions"]]
+      }
+    }
+  },
+   "applications": {
+     "gecko": {
+      "id": "floorp-actions@floorp.ablaze.one"
+    }
+  }
+}

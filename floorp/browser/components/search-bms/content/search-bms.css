@@ -1,0 +1,88 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root{
+  --in-content-page-background: #ffffff !important;
+  --search-bms-box-bg-color: #f5f5f5;
+  --search-bms-box-shadow-color-share: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+@media (prefers-color-scheme: dark) {
+  :root{
+    --in-content-page-background: #171717 !important;
+    --search-bms-box-bg-color: #2b2b2b;
+    --search-bms-box-shadow-color-share: 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden;
+  display: inline-block !important;
+  background-color: var(--in-content-page-background);
+}
+
+#searchBox {
+   width: -moz-available;
+   margin: 15px;
+   margin-bottom: 30px;
+   margin-bottom: 10px;
+   box-shadow: var(--search-bms-box-shadow-color-share);
+   background-color: var(--search-bms-box-bg-color);
+}
+
+#searchHistoryListContainer {
+  margin: 20px;
+  margin-bottom: 0px;
+}
+
+#searchBmsGroupbox{
+  width: 100%;
+  height: 100%;
+}
+
+#BSMSearchToolbar {
+  border-bottom: gray 1px solid;
+  display: flex;
+}
+
+#title {
+  width: auto;
+  font-size: 15px;
+  margin: auto;
+  color: inherit;
+}
+
+#searchHistoryHeader {
+  margin-top: 0px;
+}
+
+#searchBmsBrowser {
+  width: -moz-available;
+  height: -moz-available;
+  background-color: var(--search-bms-box-bg-color);
+  box-shadow: var(--search-bms-box-shadow-color-share);
+  border-radius: 4px !important;
+  border: 0 !important;
+  margin: 10px;
+}
+
+.toolbar-icon-box {
+  color: inherit !important;
+}
+
+.icons {
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  color: inherit;
+  padding: 5px;
+  margin: 5px;
+}
+
+#homeButton {
+  list-style-image: url("chrome://browser/skin/home.svg");
+}

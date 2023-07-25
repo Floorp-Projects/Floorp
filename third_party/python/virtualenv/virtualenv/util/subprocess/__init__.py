@@ -27,8 +27,11 @@ def run_cmd(cmd):
         )
         out, err = process.communicate()  # input disabled
         code = process.returncode
-    except OSError as os_error:
-        code, out, err = os_error.errno, "", os_error.strerror
+    except OSError as error:
+        code, out, err = error.errno, "", error.strerror
+        if code == 2 and "file" in err:
+            # FileNotFoundError in Python >= 3.3
+            err = str(error)
     return code, out, err
 
 

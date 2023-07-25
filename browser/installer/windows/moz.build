@@ -4,11 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEFINES["APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
+DEFINES["APP_VERSION"] = CONFIG["MOZ_APP_VERSION_DISPLAY"]
 
 DEFINES["MOZ_APP_NAME"] = CONFIG["MOZ_APP_NAME"]
 DEFINES["MOZ_APP_DISPLAYNAME"] = CONFIG["MOZ_APP_DISPLAYNAME"]
 DEFINES["MOZILLA_VERSION"] = CONFIG["MOZILLA_VERSION"]
+
+# Turn `firefox` into `Firefox`.
+DEFINES["MOZ_TOAST_APP_NAME"] = "%s" % CONFIG["MOZ_APP_NAME"].title()
 
 DEFINES["MOZ_HANDLER_CLSID"] = "{%s}" % CONFIG["MOZ_HANDLER_CLSID"]
 

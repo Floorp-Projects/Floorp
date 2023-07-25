@@ -5,6 +5,7 @@ import os
 import re
 import zipfile
 from abc import ABCMeta, abstractmethod
+from itertools import chain
 from tempfile import mkdtemp
 
 from distlib.scripts import ScriptMaker, enquote_executable
@@ -31,14 +32,10 @@ class PipInstall(object):
 
     def install(self, version_info):
         self._extracted = True
+        self._uninstall_previous_version()
         # sync image
         for filename in self._image_dir.iterdir():
             into = self._creator.purelib / filename.name
-            if into.exists():
-                if into.is_dir() and not into.is_symlink():
-                    safe_delete(into)
-                else:
-                    into.unlink()
             self._sync(filename, into)
         # generate console executables
         consoles = set()
@@ -149,6 +146,36 @@ class PipInstall(object):
         new_files = maker.make(specification)
         result.extend(Path(i) for i in new_files)
         return result
+
+    def _uninstall_previous_version(self):
+        dist_name = self._dist_info.stem.split("-")[0]
+        in_folders = chain.from_iterable([i.iterdir() for i in {self._creator.purelib, self._creator.platlib}])
+        paths = (p for p in in_folders if p.stem.split("-")[0] == dist_name and p.suffix == ".dist-info" and p.is_dir())
+        existing_dist = next(paths, None)
+        if existing_dist is not None:
+            self._uninstall_dist(existing_dist)
+
+    @staticmethod
+    def _uninstall_dist(dist):
+        dist_base = dist.parent
+        logging.debug("uninstall existing distribution %s from %s", dist.stem, dist_base)
+
+        top_txt = dist / "top_level.txt"  # add top level packages at folder level
+        paths = {dist.parent / i.strip() for i in top_txt.read_text().splitlines()} if top_txt.exists() else set()
+        paths.add(dist)  # add the dist-info folder itself
+
+        base_dirs, record = paths.copy(), dist / "RECORD"  # collect entries in record that we did not register yet
+        for name in (i.split(",")[0] for i in record.read_text().splitlines()) if record.exists() else ():
+            path = dist_base / name
+            if not any(p in base_dirs for p in path.parents):  # only add if not already added as a base dir
+                paths.add(path)
+
+        for path in sorted(paths):  # actually remove stuff in a stable order
+            if path.exists():
+                if path.is_dir() and not path.is_symlink():
+                    safe_delete(path)
+                else:
+                    path.unlink()
 
     def clear(self):
         if self._image_dir.exists():
