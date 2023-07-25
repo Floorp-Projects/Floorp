@@ -43,13 +43,13 @@ async function simulateAudioOutputRequest(options) {
     gBrowser.selectedBrowser,
     [options],
     function simPrompt({ deviceCount, deviceId }) {
+      const nsIMediaDeviceQI = ChromeUtils.generateQI([Ci.nsIMediaDevice]);
       const devices = [...Array(deviceCount).keys()].map(i => ({
         type: "audiooutput",
         rawName: `name ${i}`,
-        deviceIndex: i,
         rawId: `rawId ${i}`,
         id: `id ${i}`,
-        QueryInterface: ChromeUtils.generateQI([Ci.nsIMediaDevice]),
+        QueryInterface: nsIMediaDeviceQI,
       }));
       const req = {
         type: "selectaudiooutput",
@@ -208,7 +208,30 @@ var gTests = [
         promisePopupNotificationShown("webRTC-shareDevices"),
         simulateAudioOutputRequest({ deviceCount, deviceId: "id 1" }),
       ]);
-      await escapePrompt();
+      is(selectorList.selectedIndex, 1, "pre-selected index");
+      info("Expect allow from double click");
+      const targetIndex = 2;
+      const target = selectorList.getItemAtIndex(targetIndex);
+      EventUtils.synthesizeMouseAtCenter(target, { clickCount: 1 });
+      is(selectorList.selectedIndex, targetIndex, "selected index after click");
+      const messagePromise = promiseMessage();
+      const observerPromise = BrowserTestUtils.contentTopicObserved(
+        gBrowser.selectedBrowser.browsingContext,
+        "getUserMedia:response:allow",
+        1,
+        (aSubject, aTopic, aData) => {
+          const device = aSubject
+            .QueryInterface(Ci.nsIArrayExtensions)
+            .GetElementAt(0).wrappedJSObject;
+          // `this` is the BrowserTestUtilsChild.
+          this.contentWindow.wrappedJSObject.message(device.id);
+          return true;
+        }
+      );
+      EventUtils.synthesizeMouseAtCenter(target, { clickCount: 2 });
+      await observerPromise;
+      const id = await messagePromise;
+      is(id, `id ${targetIndex}`, "selected device");
 
       await revokePermission("speaker", true);
     },
