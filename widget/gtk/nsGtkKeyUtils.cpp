@@ -1803,8 +1803,8 @@ guint KeymapWrapper::GetModifierState(GdkEventKey* aGdkKeyEvent,
   } else {
     state &= ~mask;
   }
-  return state;
 #endif
+  return state;
 }
 
 /* static */
