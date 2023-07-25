@@ -152,7 +152,7 @@ add_task(async function test_no_activeTab_scripting_mv3_autoActiveTab() {
 });
 
 // Test helper to verify that dynamically created iframes do not get the
-// activeTab permission.
+// activeTab permission, unless same-origin with the top page.
 const verifyDynamicFrames = async ({ useScriptingAPI, manifest_version, host_permissions }) => {
   let extension = makeExtension({
     async background() {
@@ -172,6 +172,7 @@ const verifyDynamicFrames = async ({ useScriptingAPI, manifest_version, host_per
           }
         }
 
+        // about:blank
         let frame = document.createElement("iframe");
         frame.addEventListener("load", frameLoaded, {once: true});
         document.body.appendChild(frame);
@@ -183,6 +184,7 @@ const verifyDynamicFrames = async ({ useScriptingAPI, manifest_version, host_per
         framelist[0].addEventListener("load", frameLoaded, {once: true});
         document.body.appendChild(div);
 
+        // about:srcdoc containing cross-origin frame.
         let div2 = document.createElement("div");
         div2.innerHTML = "<iframe srcdoc=\"<iframe src='https://test2.example.com/'&gt;</iframe&gt;\"></iframe>";
         framelist = div2.getElementsByTagName("iframe");
@@ -190,6 +192,7 @@ const verifyDynamicFrames = async ({ useScriptingAPI, manifest_version, host_per
         framelist[0].addEventListener("load", frameLoaded, {once: true});
         document.body.appendChild(div2);
 
+        // Note: URL's host is BASE_HOST (same as top).
         const URL = "https://www.example.com/tests/toolkit/components/extensions/test/mochitest/file_contentscript_iframe.html";
 
         let xhr = new XMLHttpRequest();
@@ -206,7 +209,11 @@ const verifyDynamicFrames = async ({ useScriptingAPI, manifest_version, host_per
           }
 
           let frame = xhr.response.getElementById("frame");
-          browser.test.assertTrue(frame, "Found frame in response document");
+          browser.test.assertEq(
+            "https://test2.example.com/",
+            frame?.src,
+            "Found frame in response document with cross-origin URL"
+          );
           frame.addEventListener("load", frameLoaded, {once: true});
           document.body.appendChild(frame);
         }, {once: true});
@@ -251,19 +258,11 @@ const verifyDynamicFrames = async ({ useScriptingAPI, manifest_version, host_per
 
         let result = await gatherFrameSources(tab.id);
 
-        if (manifest_version < 3) {
-          browser.test.assertEq(
-            String([BASE_HOST]),
-            result,
-            "Script is not injected into dynamically created frames"
-          );
-        } else {
-          browser.test.assertEq(
-            String(["about:blank", "about:srcdoc", BASE_HOST]),
-            result,
-            `Script injected only into (same origin) about:blank-ish dynamically created frames`
-          );
-        }
+        browser.test.assertEq(
+          String(["about:blank", "about:srcdoc", BASE_HOST]),
+          result,
+          `Script injected only into (same origin) about:blank-ish dynamically created frames`
+        );
 
         await browser.tabs.remove(tab.id);
 
@@ -397,7 +396,8 @@ add_task(async function test_srcdoc_scripting_mv3_autoActiveTab() {
 });
 
 // Test helper to verify that navigating frames by setting the src attribute
-// from the parent page revokes the activeTab permission.
+// from the parent page does not grant the activeTab permission to the frame,
+// unless the frame is same-origin to the top page.
 const verifyNavigateBySrc = async ({ useScriptingAPI, manifest_version, host_permissions }) => {
   let extension = makeExtension({
     async background() {
@@ -455,13 +455,13 @@ const verifyNavigateBySrc = async ({ useScriptingAPI, manifest_version, host_per
           browser.test.assertEq(
             String([PAGE_SOURCE, FRAME_SOURCE]),
             result,
-            "Script is not injected into initially empty frame after navigation"
+            "Script is not injected into initially empty frame after cross-origin navigation"
           );
         } else {
           browser.test.assertEq(
             String([PAGE_SOURCE]),
             result,
-            "Script is not injected into initially empty frame after navigation"
+            "Script is not injected into initially empty frame after cross-origin navigation"
           );
         }
 
@@ -484,19 +484,11 @@ const verifyNavigateBySrc = async ({ useScriptingAPI, manifest_version, host_per
 
         result = await gatherFrameSources(tab.id);
 
-        if (manifest_version < 3) {
-          browser.test.assertEq(
-            String([PAGE_SOURCE]),
-            result,
-            "Script is not injected into regular frame after navigation"
-          );
-        } else {
-          browser.test.assertEq(
-            String([PAGE_SOURCE, PAGE_SOURCE]),
-            result,
-            "Script injected into frame after navigating to same-origin"
-          );
-        }
+        browser.test.assertEq(
+          String([PAGE_SOURCE, PAGE_SOURCE]),
+          result,
+          "Script injected into frame after navigating to same-origin"
+        );
 
         await browser.tabs.remove(tab.id);
         browser.test.notifyPass("test-scripts");
