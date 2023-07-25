@@ -52,10 +52,6 @@ lazy_static! {
         // Start with a blank page (about:blank)
         ("browser.startup.page", Pref::new(0)),
 
-        // Disable page translations, causing timeouts for wdspec tests in early
-        // beta. See Bug 1836093.
-        ("browser.translations.enable", Pref::new(false)),
-
         // Disable the UI tour
         ("browser.uitour.enabled", Pref::new(false)),
 
