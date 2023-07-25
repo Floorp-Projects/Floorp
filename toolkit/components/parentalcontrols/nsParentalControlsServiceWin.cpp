@@ -17,7 +17,6 @@
 #include "nsWindowsHelpers.h"
 #include "nsIWindowsRegKey.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/WindowsVersion.h"
 
 #include <sddl.h>
 
@@ -63,63 +62,33 @@ nsParentalControlsService::nsParentalControlsService()
     : mEnabled(false), mProvider(0), mPC(nullptr) {
   // On at least some builds of Windows 10, the old parental controls API no
   // longer exists, so we have to pull the info we need out of the registry.
-  if (IsWin10OrLater()) {
-    nsAutoString regKeyName;
-    regKeyName.AppendLiteral(
-        "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Parental Controls\\"
-        "Users\\");
-    regKeyName.Append(GetUserSid());
-    regKeyName.AppendLiteral("\\Web");
+  nsAutoString regKeyName;
+  regKeyName.AppendLiteral(
+      "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Parental Controls\\"
+      "Users\\");
+  regKeyName.Append(GetUserSid());
+  regKeyName.AppendLiteral("\\Web");
 
-    nsresult rv;
-    nsCOMPtr<nsIWindowsRegKey> regKey =
-        do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-
-    rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, regKeyName,
-                      nsIWindowsRegKey::ACCESS_READ);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-
-    uint32_t filterOn = 0;
-    rv = regKey->ReadIntValue(u"Filter On"_ns, &filterOn);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-
-    mEnabled = filterOn != 0;
+  nsresult rv;
+  nsCOMPtr<nsIWindowsRegKey> regKey =
+      do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
+  if (NS_FAILED(rv)) {
     return;
   }
 
-  HRESULT hr;
-  CoInitialize(nullptr);
-  hr = CoCreateInstance(__uuidof(WindowsParentalControls), nullptr,
-                        CLSCTX_INPROC, IID_PPV_ARGS(&mPC));
-  if (FAILED(hr)) return;
-
-  RefPtr<IWPCSettings> wpcs;
-  if (FAILED(mPC->GetUserSettings(nullptr, getter_AddRefs(wpcs)))) {
-    // Not available on this os or not enabled for this user account or we're
-    // running as admin
-    mPC->Release();
-    mPC = nullptr;
+  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, regKeyName,
+                    nsIWindowsRegKey::ACCESS_READ);
+  if (NS_FAILED(rv)) {
     return;
   }
 
-  DWORD settings = 0;
-  wpcs->GetRestrictions(&settings);
-
-  // If we can't determine specifically whether Web Filtering is on/off (i.e.
-  // we're on Windows < 8), then assume it's on unless no restrictions are set.
-  bool enable = IsWin8OrLater() ? settings & WPCFLAG_WEB_FILTERED
-                                : settings != WPCFLAG_NO_RESTRICTION;
-
-  if (enable) {
-    mEnabled = true;
+  uint32_t filterOn = 0;
+  rv = regKey->ReadIntValue(u"Filter On"_ns, &filterOn);
+  if (NS_FAILED(rv)) {
+    return;
   }
+
+  mEnabled = filterOn != 0;
 }
 
 nsParentalControlsService::~nsParentalControlsService() {
