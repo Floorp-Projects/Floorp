@@ -30,7 +30,9 @@ class TestDispatcher(unittest.TestCase):
             mach.settings.load_fps([config])
 
         context = CommandContext(cwd="", settings=mach.settings)
-        return mach.get_argument_parser(context)
+        from mach.main import get_argument_parser
+
+        return get_argument_parser(context)
 
     def test_command_aliases(self):
         config = """
