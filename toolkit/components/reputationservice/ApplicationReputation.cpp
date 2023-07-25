@@ -180,7 +180,7 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     //".app", exec  // Executable application
     ".applescript",
     //".application", exec // MS ClickOnce
-    ".appref-ms",  // MS ClickOnce
+    //".appref-ms", exec // MS ClickOnce
     //".arc",
     //".arj",
     ".as",  // Mac archive

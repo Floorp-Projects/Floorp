@@ -11,6 +11,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -251,7 +252,11 @@ void DoDrawImageSecurityCheck(dom::HTMLCanvasElement* aCanvasElement,
   // No need to do a security check if the image used CORS for the load
   if (CORSUsed) return;
 
-  MOZ_ASSERT(aPrincipal, "Must have a principal here");
+  if (NS_WARN_IF(!aPrincipal)) {
+    MOZ_ASSERT_UNREACHABLE("Must have a principal here");
+    aCanvasElement->SetWriteOnly();
+    return;
+  }
 
   if (aCanvasElement->NodePrincipal()->Subsumes(aPrincipal)) {
     // This canvas has access to that image anyway
@@ -278,6 +283,71 @@ void DoDrawImageSecurityCheck(dom::HTMLCanvasElement* aCanvasElement,
   }
 
   aCanvasElement->SetWriteOnly();
+}
+
+/**
+ * This security check utility might be called from an source that never taints
+ * others. For example, while painting a CanvasPattern, which is created from an
+ * ImageBitmap, onto a canvas. In this case, the caller could set the aCORSUsed
+ * true in order to pass this check and leave the aPrincipal to be a nullptr
+ * since the aPrincipal is not going to be used.
+ */
+void DoDrawImageSecurityCheck(dom::OffscreenCanvas* aOffscreenCanvas,
+                              nsIPrincipal* aPrincipal, bool aForceWriteOnly,
+                              bool aCORSUsed) {
+  // Callers should ensure that mCanvasElement is non-null before calling this
+  if (NS_WARN_IF(!aOffscreenCanvas)) {
+    return;
+  }
+
+  nsIPrincipal* expandedReader = aOffscreenCanvas->GetExpandedReader();
+  if (aOffscreenCanvas->IsWriteOnly() && !expandedReader) {
+    return;
+  }
+
+  // If we explicitly set WriteOnly just do it and get out
+  if (aForceWriteOnly) {
+    aOffscreenCanvas->SetWriteOnly();
+    return;
+  }
+
+  // No need to do a security check if the image used CORS for the load
+  if (aCORSUsed || dom::GetCurrentThreadWorkerPrivate()) {
+    return;
+  }
+
+  // If we are on a worker thread, we might not have any principals at all.
+  nsIGlobalObject* global = aOffscreenCanvas->GetOwnerGlobal();
+  nsIPrincipal* canvasPrincipal = global ? global->PrincipalOrNull() : nullptr;
+  if (!aPrincipal || !canvasPrincipal) {
+    aOffscreenCanvas->SetWriteOnly();
+    return;
+  }
+
+  if (canvasPrincipal->Subsumes(aPrincipal)) {
+    // This canvas has access to that image anyway
+    return;
+  }
+
+  if (BasePrincipal::Cast(aPrincipal)->AddonPolicy()) {
+    // This is a resource from an extension content script principal.
+
+    if (expandedReader && expandedReader->Subsumes(aPrincipal)) {
+      // This canvas already allows reading from this principal.
+      return;
+    }
+
+    if (!expandedReader) {
+      // Allow future reads from this same princial only.
+      aOffscreenCanvas->SetWriteOnly(aPrincipal);
+      return;
+    }
+
+    // If we got here, this must be the *second* extension tainting
+    // the canvas.  Fall through to mark it WriteOnly for everyone.
+  }
+
+  aOffscreenCanvas->SetWriteOnly();
 }
 
 bool CoerceDouble(const JS::Value& v, double* d) {
