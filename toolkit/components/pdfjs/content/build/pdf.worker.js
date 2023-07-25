@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.9.130';
+    const workerVersion = '3.9.146';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -705,7 +705,9 @@ const AnnotationEditorParamsType = {
   FREETEXT_OPACITY: 3,
   INK_COLOR: 11,
   INK_THICKNESS: 12,
-  INK_OPACITY: 13
+  INK_OPACITY: 13,
+  INK_DIMS: 14,
+  STAMP_DIMS: 21
 };
 exports.AnnotationEditorParamsType = AnnotationEditorParamsType;
 const PermissionFlag = {
@@ -28422,6 +28424,8 @@ const getGlyphsUnicode = (0, _core_utils.getLookupTableFactory)(function (t) {
   t.pikatakana = 0x30d4;
   t.pisymbolgreek = 0x03d6;
   t.piwrarmenian = 0x0583;
+  t.planckover2pi = 0x210f;
+  t.planckover2pi1 = 0x210f;
   t.plus = 0x002b;
   t.plusbelowcmb = 0x031f;
   t.pluscircle = 0x2295;
@@ -57986,8 +57990,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.9.130';
-const pdfjsBuild = '71f113bf8';
+const pdfjsVersion = '3.9.146';
+const pdfjsBuild = '48cc67f17';
 })();
 
 /******/ 	return __webpack_exports__;

@@ -113,7 +113,9 @@ const AnnotationEditorParamsType = {
   FREETEXT_OPACITY: 3,
   INK_COLOR: 11,
   INK_THICKNESS: 12,
-  INK_OPACITY: 13
+  INK_OPACITY: 13,
+  INK_DIMS: 14,
+  STAMP_DIMS: 21
 };
 exports.AnnotationEditorParamsType = AnnotationEditorParamsType;
 const PermissionFlag = {
@@ -939,7 +941,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.9.130',
+    apiVersion: '3.9.146',
     data,
     password,
     disableAutoFetch,
@@ -2595,9 +2597,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.9.130';
+const version = '3.9.146';
 exports.version = version;
-const build = '71f113bf8';
+const build = '48cc67f17';
 exports.build = build;
 
 /***/ }),
@@ -2776,9 +2778,10 @@ Object.defineProperty(exports, "__esModule", ({
 exports.AnnotationEditor = void 0;
 var _tools = __w_pdfjs_require__(5);
 var _util = __w_pdfjs_require__(1);
-const RESIZER_SIZE = 16;
 class AnnotationEditor {
   #keepAspectRatio = false;
+  #resizersDiv = null;
+  #resizePosition = null;
   #boundFocusin = this.focusin.bind(this);
   #boundFocusout = this.focusout.bind(this);
   #hasBeenSelected = false;
@@ -2800,6 +2803,7 @@ class AnnotationEditor {
     this.div = null;
     this._uiManager = parameters.uiManager;
     this.annotationElementId = null;
+    this._willKeepAspectRatio = false;
     const {
       rotation,
       rawDims: {
@@ -3016,6 +3020,210 @@ class AnnotationEditor {
   getInitialTranslation() {
     return [0, 0];
   }
+  #createResizers() {
+    if (this.#resizersDiv) {
+      return;
+    }
+    this.#resizersDiv = document.createElement("div");
+    this.#resizersDiv.classList.add("resizers");
+    const classes = ["topLeft", "topRight", "bottomRight", "bottomLeft"];
+    if (!this._willKeepAspectRatio) {
+      classes.push("topMiddle", "middleRight", "bottomMiddle", "middleLeft");
+    }
+    for (const name of classes) {
+      const div = document.createElement("div");
+      this.#resizersDiv.append(div);
+      div.classList.add("resizer", name);
+      div.addEventListener("pointerdown", this.#resizerPointerdown.bind(this, name));
+    }
+    this.div.prepend(this.#resizersDiv);
+  }
+  #resizerPointerdown(name, event) {
+    event.preventDefault();
+    this.#resizePosition = [event.clientX, event.clientY];
+    const boundResizerPointermove = this.#resizerPointermove.bind(this, name);
+    const savedDraggable = this.div.draggable;
+    this.div.draggable = false;
+    const resizingClassName = `resizing${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+    this.parent.div.classList.add(resizingClassName);
+    const pointerMoveOptions = {
+      passive: true,
+      capture: true
+    };
+    window.addEventListener("pointermove", boundResizerPointermove, pointerMoveOptions);
+    const pointerUpCallback = () => {
+      this._uiManager.stopUndoAccumulation();
+      this.div.draggable = savedDraggable;
+      this.parent.div.classList.remove(resizingClassName);
+      window.removeEventListener("pointermove", boundResizerPointermove, pointerMoveOptions);
+    };
+    window.addEventListener("pointerup", pointerUpCallback, {
+      once: true
+    });
+  }
+  #resizerPointermove(name, event) {
+    const {
+      clientX,
+      clientY
+    } = event;
+    const deltaX = clientX - this.#resizePosition[0];
+    const deltaY = clientY - this.#resizePosition[1];
+    this.#resizePosition[0] = clientX;
+    this.#resizePosition[1] = clientY;
+    const [parentWidth, parentHeight] = this.parentDimensions;
+    const savedX = this.x;
+    const savedY = this.y;
+    const savedWidth = this.width;
+    const savedHeight = this.height;
+    const minWidth = AnnotationEditor.MIN_SIZE / parentWidth;
+    const minHeight = AnnotationEditor.MIN_SIZE / parentHeight;
+    let cmd;
+    const round = x => Math.round(x * 10000) / 10000;
+    const updatePosition = (width, height) => {
+      const [pWidth, pHeight] = this.parentDimensions;
+      this.setDims(pWidth * width, pHeight * height);
+      this.fixAndSetPosition();
+    };
+    const undo = () => {
+      this.width = savedWidth;
+      this.height = savedHeight;
+      this.x = savedX;
+      this.y = savedY;
+      updatePosition(savedWidth, savedHeight);
+    };
+    switch (name) {
+      case "topLeft":
+        {
+          if (Math.sign(deltaX) * Math.sign(deltaY) < 0) {
+            return;
+          }
+          const dist = Math.hypot(deltaX, deltaY);
+          const oldDiag = Math.hypot(savedWidth * parentWidth, savedHeight * parentHeight);
+          const brX = round(savedX + savedWidth);
+          const brY = round(savedY + savedHeight);
+          const ratio = Math.max(Math.min(1 - Math.sign(deltaX) * (dist / oldDiag), 1 / savedWidth, 1 / savedHeight), minWidth / savedWidth, minHeight / savedHeight);
+          const newWidth = round(savedWidth * ratio);
+          const newHeight = round(savedHeight * ratio);
+          const newX = brX - newWidth;
+          const newY = brY - newHeight;
+          cmd = () => {
+            this.width = newWidth;
+            this.height = newHeight;
+            this.x = newX;
+            this.y = newY;
+            updatePosition(newWidth, newHeight);
+          };
+          break;
+        }
+      case "topMiddle":
+        {
+          const bmY = round(this.y + savedHeight);
+          const newHeight = round(Math.max(minHeight, Math.min(1, savedHeight - deltaY / parentHeight)));
+          const newY = bmY - newHeight;
+          cmd = () => {
+            this.height = newHeight;
+            this.y = newY;
+            updatePosition(savedWidth, newHeight);
+          };
+          break;
+        }
+      case "topRight":
+        {
+          if (Math.sign(deltaX) * Math.sign(deltaY) > 0) {
+            return;
+          }
+          const dist = Math.hypot(deltaX, deltaY);
+          const oldDiag = Math.hypot(this.width * parentWidth, this.height * parentHeight);
+          const blY = round(savedY + this.height);
+          const ratio = Math.max(Math.min(1 + Math.sign(deltaX) * (dist / oldDiag), 1 / savedWidth, 1 / savedHeight), minWidth / savedWidth, minHeight / savedHeight);
+          const newWidth = round(savedWidth * ratio);
+          const newHeight = round(savedHeight * ratio);
+          const newY = blY - newHeight;
+          cmd = () => {
+            this.width = newWidth;
+            this.height = newHeight;
+            this.y = newY;
+            updatePosition(newWidth, newHeight);
+          };
+          break;
+        }
+      case "middleRight":
+        {
+          const newWidth = round(Math.max(minWidth, Math.min(1, savedWidth + deltaX / parentWidth)));
+          cmd = () => {
+            this.width = newWidth;
+            updatePosition(newWidth, savedHeight);
+          };
+          break;
+        }
+      case "bottomRight":
+        {
+          if (Math.sign(deltaX) * Math.sign(deltaY) < 0) {
+            return;
+          }
+          const dist = Math.hypot(deltaX, deltaY);
+          const oldDiag = Math.hypot(this.width * parentWidth, this.height * parentHeight);
+          const ratio = Math.max(Math.min(1 + Math.sign(deltaX) * (dist / oldDiag), 1 / savedWidth, 1 / savedHeight), minWidth / savedWidth, minHeight / savedHeight);
+          const newWidth = round(savedWidth * ratio);
+          const newHeight = round(savedHeight * ratio);
+          cmd = () => {
+            this.width = newWidth;
+            this.height = newHeight;
+            updatePosition(newWidth, newHeight);
+          };
+          break;
+        }
+      case "bottomMiddle":
+        {
+          const newHeight = round(Math.max(minHeight, Math.min(1, savedHeight + deltaY / parentHeight)));
+          cmd = () => {
+            this.height = newHeight;
+            updatePosition(savedWidth, newHeight);
+          };
+          break;
+        }
+      case "bottomLeft":
+        {
+          if (Math.sign(deltaX) * Math.sign(deltaY) > 0) {
+            return;
+          }
+          const dist = Math.hypot(deltaX, deltaY);
+          const oldDiag = Math.hypot(this.width * parentWidth, this.height * parentHeight);
+          const trX = round(savedX + this.width);
+          const ratio = Math.max(Math.min(1 - Math.sign(deltaX) * (dist / oldDiag), 1 / savedWidth, 1 / savedHeight), minWidth / savedWidth, minHeight / savedHeight);
+          const newWidth = round(savedWidth * ratio);
+          const newHeight = round(savedHeight * ratio);
+          const newX = trX - newWidth;
+          cmd = () => {
+            this.width = newWidth;
+            this.height = newHeight;
+            this.x = newX;
+            updatePosition(newWidth, newHeight);
+          };
+          break;
+        }
+      case "middleLeft":
+        {
+          const mrX = round(savedX + savedWidth);
+          const newWidth = round(Math.max(minWidth, Math.min(1, savedWidth - deltaX / parentWidth)));
+          const newX = mrX - newWidth;
+          cmd = () => {
+            this.width = newWidth;
+            this.x = newX;
+            updatePosition(newWidth, savedHeight);
+          };
+          break;
+        }
+    }
+    this.addCommands({
+      cmd,
+      undo,
+      mustExec: true,
+      type: this.resizeType,
+      overwriteIfSameType: true,
+      keepUndo: true
+    });
+  }
   render() {
     this.div = document.createElement("div");
     this.div.setAttribute("data-editor-rotation", (360 - this.rotation) % 360);
@@ -3143,10 +3351,24 @@ class AnnotationEditor {
       this._uiManager.removeEditor(this);
     }
   }
+  get resizeType() {
+    return -1;
+  }
+  get isResizable() {
+    return false;
+  }
+  makeResizable() {
+    if (this.isResizable) {
+      this.#createResizers();
+      this.#resizersDiv.classList.remove("hidden");
+    }
+  }
   select() {
+    this.makeResizable();
     this.div?.classList.add("selectedEditor");
   }
   unselect() {
+    this.#resizersDiv?.classList.add("hidden");
     this.div?.classList.remove("selectedEditor");
   }
   updateParams(type, value) {}
@@ -3179,16 +3401,9 @@ class AnnotationEditor {
     } = this.div;
     style.aspectRatio = aspectRatio;
     style.height = "auto";
-    if (aspectRatio >= 1) {
-      style.minHeight = `${RESIZER_SIZE}px`;
-      style.minWidth = `${Math.round(aspectRatio * RESIZER_SIZE)}px`;
-    } else {
-      style.minWidth = `${RESIZER_SIZE}px`;
-      style.minHeight = `${Math.round(RESIZER_SIZE / aspectRatio)}px`;
-    }
   }
   static get MIN_SIZE() {
-    return RESIZER_SIZE;
+    return 16;
   }
 }
 exports.AnnotationEditor = AnnotationEditor;
@@ -3399,6 +3614,11 @@ class CommandManager {
       }
     }
     this.#commands.push(save);
+  }
+  stopUndoAccumulation() {
+    if (this.#position !== -1) {
+      this.#commands[this.#position].type = NaN;
+    }
   }
   undo() {
     if (this.#position === -1) {
@@ -3626,10 +3846,14 @@ class AnnotationEditorUIManager {
     }
   }
   #addKeyboardManager() {
-    this.#container.addEventListener("keydown", this.#boundKeydown);
+    window.addEventListener("keydown", this.#boundKeydown, {
+      capture: true
+    });
   }
   #removeKeyboardManager() {
-    this.#container.removeEventListener("keydown", this.#boundKeydown);
+    window.removeEventListener("keydown", this.#boundKeydown, {
+      capture: true
+    });
   }
   #addCopyPasteListeners() {
     document.addEventListener("copy", this.#boundCopy);
@@ -3936,6 +4160,9 @@ class AnnotationEditorUIManager {
   }
   get hasSelection() {
     return this.#selectedEditors.size !== 0;
+  }
+  stopUndoAccumulation() {
+    this.#commandManager.stopUndoAccumulation();
   }
   undo() {
     this.#commandManager.undo();
@@ -9681,6 +9908,10 @@ class AnnotationEditorLayer {
     this.#createAndAddNewEditor(event);
   }
   pointerdown(event) {
+    if (this.#hadPointerDown) {
+      this.#hadPointerDown = false;
+      return;
+    }
     const {
       isMac
     } = _util.FeatureTest.platform;
@@ -12889,6 +13120,7 @@ class InkEditor extends _editor.AnnotationEditor {
     this.translationX = this.translationY = 0;
     this.x = 0;
     this.y = 0;
+    this._willKeepAspectRatio = true;
   }
   static initialize(l10n) {
     this._l10nPromise = new Map(["editor_ink_canvas_aria_label", "editor_ink2_aria_label"].map(str => [str, l10n.get(str)]));
@@ -12924,6 +13156,9 @@ class InkEditor extends _editor.AnnotationEditor {
   }
   get propertiesToUpdate() {
     return [[_util.AnnotationEditorParamsType.INK_THICKNESS, this.thickness || InkEditor._defaultThickness], [_util.AnnotationEditorParamsType.INK_COLOR, this.color || InkEditor._defaultColor || _editor.AnnotationEditor._defaultLineColor], [_util.AnnotationEditorParamsType.INK_OPACITY, Math.round(100 * (this.opacity ?? InkEditor._defaultOpacity))]];
+  }
+  get resizeType() {
+    return _util.AnnotationEditorParamsType.INK_DIMS;
   }
   #updateThickness(thickness) {
     const savedThickness = this.thickness;
@@ -13256,6 +13491,7 @@ class InkEditor extends _editor.AnnotationEditor {
     this.#disableEditing = true;
     this.div.classList.add("disabled");
     this.#fitToContent(true);
+    this.makeResizable();
     this.parent.addInkEditorIfNeeded(true);
     this.parent.moveEditorInDOM(this);
     this.div.focus({
@@ -13319,6 +13555,9 @@ class InkEditor extends _editor.AnnotationEditor {
       }
     });
     this.#observer.observe(this.div);
+  }
+  get isResizable() {
+    return !this.isEmpty() && this.#disableEditing;
   }
   render() {
     if (this.div) {
@@ -13633,8 +13872,8 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.StampEditor = void 0;
-var _editor = __w_pdfjs_require__(4);
 var _util = __w_pdfjs_require__(1);
+var _editor = __w_pdfjs_require__(4);
 var _display_utils = __w_pdfjs_require__(6);
 var _annotation_layer = __w_pdfjs_require__(23);
 class StampEditor extends _editor.AnnotationEditor {
@@ -13715,6 +13954,9 @@ class StampEditor extends _editor.AnnotationEditor {
     });
     input.click();
   }
+  get resizeType() {
+    return _util.AnnotationEditorParamsType.STAMP_DIMS;
+  }
   remove() {
     if (this.#bitmapId) {
       this.#bitmap = null;
@@ -13746,6 +13988,9 @@ class StampEditor extends _editor.AnnotationEditor {
   isEmpty() {
     return this.#bitmapPromise === null && this.#bitmap === null && this.#bitmapUrl === null;
   }
+  get isResizable() {
+    return true;
+  }
   render() {
     if (this.div) {
       return this.div;
@@ -13764,7 +14009,6 @@ class StampEditor extends _editor.AnnotationEditor {
     }
     if (this.width) {
       const [parentWidth, parentHeight] = this.parentDimensions;
-      this.setAspectRatio(this.width * parentWidth, this.height * parentHeight);
       this.setAt(baseX * parentWidth, baseY * parentHeight, this.width * parentWidth, this.height * parentHeight);
     }
     return this.div;
@@ -13789,7 +14033,6 @@ class StampEditor extends _editor.AnnotationEditor {
     }
     const [parentWidth, parentHeight] = this.parentDimensions;
     this.setDims(width * parentWidth / pageWidth, height * parentHeight / pageHeight);
-    this.setAspectRatio(width, height);
     const canvas = this.#canvas = document.createElement("canvas");
     div.append(canvas);
     this.#drawBitmap(width, height);
@@ -14244,8 +14487,8 @@ var _tools = __w_pdfjs_require__(5);
 var _annotation_layer = __w_pdfjs_require__(23);
 var _worker_options = __w_pdfjs_require__(14);
 var _xfa_layer = __w_pdfjs_require__(25);
-const pdfjsVersion = '3.9.130';
-const pdfjsBuild = '71f113bf8';
+const pdfjsVersion = '3.9.146';
+const pdfjsBuild = '48cc67f17';
 })();
 
 /******/ 	return __webpack_exports__;
