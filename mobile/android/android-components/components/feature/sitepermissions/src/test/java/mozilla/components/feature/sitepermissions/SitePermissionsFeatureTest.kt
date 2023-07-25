@@ -1095,7 +1095,7 @@ class SitePermissionsFeatureTest {
             ),
             dialog.title,
         )
-        assertEquals(iconsR.drawable.mozac_ic_cookies, dialog.icon)
+        assertEquals(iconsR.drawable.mozac_ic_cookies_24, dialog.icon)
         assertEquals(permissionRequest.id, dialog.permissionRequestId)
         assertEquals(sitePermissionFeature, dialog.feature)
         assertEquals(false, dialog.shouldShowDoNotAskAgainCheckBox)

@@ -64,6 +64,7 @@ permalink: /changelog/
     * Rename mozac_ic_arrowhead_down to mozac_ic_chevron_down_24
     * Rename mozac_ic_close to mozac_ic_cross_24
     * Rename mozac_ic_add_to_homescreen to mozac_ic_add_to_homescreen_24
+    * Rename mozac_ic_cookies to mozac_ic_cookies_24
 
 # 116.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v115..releases_v116)

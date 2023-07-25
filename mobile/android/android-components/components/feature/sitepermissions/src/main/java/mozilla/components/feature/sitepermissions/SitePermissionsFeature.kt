@@ -890,7 +890,7 @@ class SitePermissionsFeature(
         return SitePermissionsDialogFragment.newInstance(
             sessionId = currentSession.id,
             title = title,
-            titleIcon = iconsR.drawable.mozac_ic_cookies,
+            titleIcon = iconsR.drawable.mozac_ic_cookies_24,
             message = message,
             negativeButtonText = negativeButtonText,
             permissionRequestId = permissionRequest.id,
