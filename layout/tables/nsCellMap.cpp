@@ -2162,14 +2162,14 @@ void nsCellMap::Dump(bool aIsBorderCollapse) const {
   printf("\n  ***** START GROUP CELL MAP DUMP ***** %p\n", (void*)this);
   nsTableRowGroupFrame* rg = GetRowGroup();
   const nsStyleDisplay* display = rg->StyleDisplay();
-  switch (display->mDisplay) {
-    case StyleDisplay::TableHeaderGroup:
+  switch (display->DisplayInside()) {
+    case StyleDisplayInside::TableHeaderGroup:
       printf("  thead ");
       break;
-    case StyleDisplay::TableFooterGroup:
+    case StyleDisplayInside::TableFooterGroup:
       printf("  tfoot ");
       break;
-    case StyleDisplay::TableRowGroup:
+    case StyleDisplayInside::TableRowGroup:
       printf("  tbody ");
       break;
     default:
