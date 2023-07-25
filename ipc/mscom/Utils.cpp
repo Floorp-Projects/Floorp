@@ -14,10 +14,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/WindowsVersion.h"
 
 #include <objidl.h>
-#include <shlwapi.h>
 #include <winnt.h>
 
 #include <utility>
@@ -190,60 +188,20 @@ long CreateStream(const uint8_t* aInitBuf, const uint32_t aInitBufSize,
   HRESULT hr;
   RefPtr<IStream> stream;
 
-  if (IsWin8OrLater()) {
-    // SHCreateMemStream is not safe for us to use until Windows 8. On older
-    // versions of Windows it is not thread-safe and it creates IStreams that do
-    // not support the full IStream API.
+  // If aInitBuf is null then initSize must be 0.
+  UINT initSize = aInitBuf ? aInitBufSize : 0;
+  stream = already_AddRefed<IStream>(::SHCreateMemStream(aInitBuf, initSize));
+  if (!stream) {
+    return E_OUTOFMEMORY;
+  }
 
-    // If aInitBuf is null then initSize must be 0.
-    UINT initSize = aInitBuf ? aInitBufSize : 0;
-    stream = already_AddRefed<IStream>(::SHCreateMemStream(aInitBuf, initSize));
-    if (!stream) {
-      return E_OUTOFMEMORY;
-    }
-
-    if (!aInitBuf) {
-      // Now we'll set the required size
-      ULARGE_INTEGER newSize;
-      newSize.QuadPart = aInitBufSize;
-      hr = stream->SetSize(newSize);
-      if (FAILED(hr)) {
-        return hr;
-      }
-    }
-  } else {
-    HGLOBAL hglobal = ::GlobalAlloc(GMEM_MOVEABLE, aInitBufSize);
-    if (!hglobal) {
-      return HRESULT_FROM_WIN32(::GetLastError());
-    }
-
-    // stream takes ownership of hglobal if this call is successful
-    hr = ::CreateStreamOnHGlobal(hglobal, TRUE, getter_AddRefs(stream));
-    if (FAILED(hr)) {
-      ::GlobalFree(hglobal);
-      return hr;
-    }
-
-    // The default stream size is derived from ::GlobalSize(hglobal), which due
-    // to rounding may be larger than aInitBufSize. We forcibly set the correct
-    // stream size here.
-    ULARGE_INTEGER streamSize;
-    streamSize.QuadPart = aInitBufSize;
-    hr = stream->SetSize(streamSize);
+  if (!aInitBuf) {
+    // Now we'll set the required size
+    ULARGE_INTEGER newSize;
+    newSize.QuadPart = aInitBufSize;
+    hr = stream->SetSize(newSize);
     if (FAILED(hr)) {
       return hr;
-    }
-
-    if (aInitBuf) {
-      ULONG bytesWritten;
-      hr = stream->Write(aInitBuf, aInitBufSize, &bytesWritten);
-      if (FAILED(hr)) {
-        return hr;
-      }
-
-      if (bytesWritten != aInitBufSize) {
-        return E_UNEXPECTED;
-      }
     }
   }
 
