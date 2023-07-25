@@ -6,6 +6,7 @@ mod builtins;
 mod bundle;
 mod ffi;
 mod resource;
+mod text_elements;
 
 pub use bundle::*;
 pub use resource::*;

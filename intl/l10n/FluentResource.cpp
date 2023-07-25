@@ -36,6 +36,32 @@ already_AddRefed<FluentResource> FluentResource::Constructor(
   return res.forget();
 }
 
+void FluentResource::TextElements(
+    nsTArray<dom::FluentTextElementItem>& aElements, ErrorResult& aRv) {
+  if (mHasErrors) {
+    aRv.ThrowInvalidStateError("textElements don't exist due to parse error");
+    return;
+  }
+
+  nsTArray<ffi::TextElementInfo> elements;
+  ffi::fluent_resource_get_text_elements(mRaw, &elements);
+
+  auto maybeAssign = [](dom::Optional<nsCString>& aDest, nsCString&& aSrc) {
+    if (!aSrc.IsEmpty()) {
+      aDest.Construct() = std::move(aSrc);
+    }
+  };
+
+  for (auto& info : elements) {
+    dom::FluentTextElementItem item;
+    maybeAssign(item.mId, std::move(info.id));
+    maybeAssign(item.mAttr, std::move(info.attr));
+    maybeAssign(item.mText, std::move(info.text));
+
+    aElements.AppendElement(item);
+  }
+}
+
 JSObject* FluentResource::WrapObject(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
   return FluentResource_Binding::Wrap(aCx, this, aGivenProto);

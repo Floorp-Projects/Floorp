@@ -1693,6 +1693,7 @@ dependencies = [
  "cstr",
  "fluent",
  "fluent-pseudo",
+ "fluent-syntax",
  "intl-memoizer",
  "nsstring",
  "thin-vec",
