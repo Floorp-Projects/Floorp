@@ -160,7 +160,10 @@ class SyncedTabsInView extends ViewPage {
       header: "firefoxview-syncedtabs-adddevice-header",
       description: "firefoxview-syncedtabs-adddevice-description",
       buttonLabel: "firefoxview-syncedtabs-adddevice-primarybutton",
-      link: "https://support.mozilla.org/kb/how-do-i-set-sync-my-computer#w_connect-additional-devices-to-sync",
+      descriptionLink: {
+        name: "url",
+        url: "https://support.mozilla.org/kb/how-do-i-set-sync-my-computer#w_connect-additional-devices-to-sync",
+      },
     },
     "sync-tabs-disabled": {
       header: "firefoxview-syncedtabs-synctabs-header",
@@ -201,7 +204,7 @@ class SyncedTabsInView extends ViewPage {
       description = this.actionMappings[action].description;
       buttonLabel = this.actionMappings[action].buttonLabel;
       checkboxLabel = this.actionMappings[action].checkboxLabel;
-      descriptionLink = this.actionMappings[action];
+      descriptionLink = this.actionMappings[action].descriptionLink;
       mainImageUrl =
         "chrome://browser/content/firefoxview/synced-tabs-error.svg";
       descriptionArray = [description];
