@@ -19,15 +19,17 @@ async function testLastClosedActionsEntries() {
   await BrowserTestUtils.browserLoaded(win2.gBrowser.selectedBrowser);
   await openAndCloseTab(win2, "https://example.org/");
 
-  Assert.ok(
-    SessionStore.lastClosedActions.length == 1,
+  Assert.equal(
+    SessionStore.lastClosedActions.length,
+    1,
     `1 closed action has been recorded`
   );
 
   await BrowserTestUtils.closeWindow(win2);
 
-  Assert.ok(
-    SessionStore.lastClosedActions.length == 2,
+  Assert.equal(
+    SessionStore.lastClosedActions.length,
+    2,
     `2 closed actions have been recorded`
   );
 }
@@ -91,14 +93,15 @@ add_task(async function test_undo_last_action() {
   let sessionRestored = promiseSessionStoreLoads(3 /* total restored tabs */);
   restoreLastClosedTabOrWindowOrSession();
   await sessionRestored;
-  Assert.ok(
-    window.gBrowser.tabs.length == 3,
+  Assert.equal(
+    window.gBrowser.tabs.length,
+    3,
     "Window has three tabs after session is restored"
   );
 
   // open and close a window, then reopen it
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
-  Assert.ok(win2.gBrowser.tabs.length == 1, "Second window has one open tab");
+  Assert.equal(win2.gBrowser.tabs.length, 1, "Second window has one open tab");
   BrowserTestUtils.loadURIString(
     win2.gBrowser.selectedBrowser,
     "https://example.com/"
@@ -110,8 +113,9 @@ add_task(async function test_undo_last_action() {
   });
   restoreLastClosedTabOrWindowOrSession();
   let restoredWin = await restoredWinPromise;
-  Assert.ok(
-    restoredWin.gBrowser.tabs.length == 1,
+  Assert.equal(
+    restoredWin.gBrowser.tabs.length,
+    1,
     "First tab in the second window has been reopened"
   );
   await BrowserTestUtils.closeWindow(restoredWin);
@@ -120,9 +124,13 @@ add_task(async function test_undo_last_action() {
 
   // close one tab and reopen it
   BrowserTestUtils.removeTab(window.gBrowser.tabs[2]);
-  Assert.ok(window.gBrowser.tabs.length == 2, "Window has two open tabs");
+  Assert.equal(window.gBrowser.tabs.length, 2, "Window has two open tabs");
   restoreLastClosedTabOrWindowOrSession();
-  Assert.ok(window.gBrowser.tabs.length == 3, "Window now has three open tabs");
+  Assert.equal(
+    window.gBrowser.tabs.length,
+    3,
+    "Window now has three open tabs"
+  );
 
   // select 2 tabs and close both via the 'close 2 tabs' context menu option
   let tab2 = window.gBrowser.tabs[1];
@@ -140,24 +148,30 @@ add_task(async function test_undo_last_action() {
   await tab3Closing;
   Assert.equal(window.gBrowser.tabs[0].selected, true);
   await TestUtils.waitForCondition(() => window.gBrowser.tabs.length == 1);
-  Assert.ok(
-    window.gBrowser.tabs.length == 1,
+  Assert.equal(
+    window.gBrowser.tabs.length,
+    1,
     "Window now has one open tab after closing two multi-selected tabs"
   );
 
   // ensure both tabs are reopened with a single click
   restoreLastClosedTabOrWindowOrSession();
-  Assert.ok(
-    window.gBrowser.tabs.length == 3,
+  Assert.equal(
+    window.gBrowser.tabs.length,
+    3,
     "Window now has three open tabs after reopening closed tabs"
   );
 
   // close one tab and forget it - it should not be reopened
   BrowserTestUtils.removeTab(window.gBrowser.tabs[2]);
-  Assert.ok(window.gBrowser.tabs.length == 2, "Window has two open tabs");
+  Assert.equal(window.gBrowser.tabs.length, 2, "Window has two open tabs");
   SessionStore.forgetClosedTab(window, 0);
   restoreLastClosedTabOrWindowOrSession();
-  Assert.ok(window.gBrowser.tabs.length == 2, "Window still has two open tabs");
+  Assert.equal(
+    window.gBrowser.tabs.length,
+    2,
+    "Window still has two open tabs"
+  );
 
   gBrowser.removeAllTabsBut(gBrowser.tabs[0]);
 });
@@ -266,5 +280,96 @@ add_task(async function test_reopen_last_session_if_no_closed_actions() {
   restoreLastClosedTabOrWindowOrSession();
   await sessionRestored;
   Assert.equal(gBrowser.tabs.length, 4, "Got the expected number of tabs");
+  gBrowser.removeAllTabsBut(gBrowser.tabs[0]);
+});
+
+/**
+ * Tests that the _lastClosedAction list is truncated correctly
+ * by removing oldest actions in SessionStore._addClosedAction
+ */
+add_task(async function test_undo_last_action_correct_order() {
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.sessionstore.max_tabs_undo", 3],
+      ["browser.sessionstore.max_windows_undo", 1],
+    ],
+  });
+
+  gBrowser.removeAllTabsBut(gBrowser.tabs[0]);
+  await TabStateFlusher.flushWindow(window);
+
+  forgetClosedTabs(window);
+
+  const state = {
+    windows: [
+      {
+        tabs: [
+          {
+            entries: [
+              {
+                title: "example.org",
+                url: "https://example.org/",
+                triggeringPrincipal_base64,
+              },
+            ],
+          },
+          {
+            entries: [
+              {
+                title: "example.com",
+                url: "https://example.com/",
+                triggeringPrincipal_base64,
+              },
+            ],
+          },
+          {
+            entries: [
+              {
+                title: "mozilla",
+                url: "https://www.mozilla.org/",
+                triggeringPrincipal_base64,
+              },
+            ],
+          },
+        ],
+        selected: 3,
+      },
+    ],
+  };
+
+  _LastSession.setState(state);
+  SessionStore.resetLastClosedActions();
+
+  let sessionRestored = promiseSessionStoreLoads(3 /* total restored tabs */);
+  restoreLastClosedTabOrWindowOrSession();
+  await sessionRestored;
+
+  Assert.equal(
+    window.gBrowser.tabs.length,
+    4,
+    `Window has 4 tabs open from the previous test`
+  );
+
+  BrowserTestUtils.removeTab(window.gBrowser.tabs[3]);
+  BrowserTestUtils.removeTab(window.gBrowser.tabs[2]);
+  Assert.equal(window.gBrowser.tabs.length, 2, "Window has one open tab");
+
+  // open and close a window
+  let win2 = await BrowserTestUtils.openNewBrowserWindow();
+  Assert.equal(win2.gBrowser.tabs.length, 1, "Second window has one open tab");
+  BrowserTestUtils.loadURIString(
+    win2.gBrowser.selectedBrowser,
+    "https://example.com/"
+  );
+  await BrowserTestUtils.browserLoaded(win2.gBrowser.selectedBrowser);
+  await BrowserTestUtils.closeWindow(win2);
+
+  // close one tab and reopen it
+  BrowserTestUtils.removeTab(window.gBrowser.tabs[1]);
+  Assert.equal(window.gBrowser.tabs.length, 1, "Window has one open tabs");
+  restoreLastClosedTabOrWindowOrSession();
+  Assert.equal(window.gBrowser.tabs.length, 2, "Window now has two open tabs");
+
+  await SpecialPowers.popPrefEnv();
   gBrowser.removeAllTabsBut(gBrowser.tabs[0]);
 });
