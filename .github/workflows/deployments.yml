@@ -12,7 +12,7 @@ on: workflow_dispatch
 
 jobs:
   get-display-version:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-16vcpu-ubuntu-2204
 
     outputs:
       display-version: ${{ steps.get.outputs.display-version }}
@@ -32,7 +32,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ["ubuntu-latest"]
+        runs-on: ["buildjet-16vcpu-ubuntu-2204"]
 
     steps:
     - name: Init
@@ -202,7 +202,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ["ubuntu-latest"]
+        runs-on: ["buildjet-16vcpu-ubuntu-2204"]
 
     steps:
     - name: Init
@@ -346,7 +346,7 @@ jobs:
 ######################################################## ↑ Windows x86_64 ########################################################
 
   build-linux-x86_64-with-PGO:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-16vcpu-ubuntu-2204
     needs: get-display-version
     steps:
       - uses: actions/checkout@v3
@@ -355,49 +355,6 @@ jobs:
         run: |
          sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
          sudo apt update
-
-    
-      - name: Setup Disk & Swap Space 💿
-        if: runner.name != 'buildjet-16vcpu-ubuntu-2204'
-        run: |
-         echo Before:
-         free -h
-         df -h
-         echo
-         echo
-         sudo swapoff /mnt/swapfile
-         sudo rm /mnt/swapfile
-         sudo fallocate -l 10G /mnt/swapfile
-         sudo chmod 600 /mnt/swapfile
-         sudo mkswap /mnt/swapfile
-         sudo swapon /mnt/swapfile
-         sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-         sudo apt autoremove -y
-         sudo apt clean
-         sudo rm -rf /usr/share/dotnet
-         sudo rm -rf /usr/local/lib/android
-         sudo rm -rf /usr/local/graalvm
-         sudo rm -rf /usr/local/share/powershell
-         sudo rm -rf /usr/local/share/chromium
-         sudo rm -rf /usr/local/lib/node_modules
-         sudo rm -rf /opt/ghc
-         sudo rm -rf /usr/local/share/boost
-         sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-         sudo rm -rf /etc/apache2
-         sudo rm -rf /etc/nginx
-         sudo rm -rf /usr/local/share/chrome_driver
-         sudo rm -rf /usr/local/share/edge_driver
-         sudo rm -rf /usr/local/share/gecko_driver
-         sudo rm -rf /usr/share/java
-         sudo fallocate -l 10G /home/runner/swapfile2
-         sudo chmod 600 /home/runner/swapfile2
-         sudo mkswap /home/runner/swapfile2
-         sudo swapon /home/runner/swapfile2
-         echo
-         echo
-         echo After:
-         free -h
-         df -h
 
       - name: Create environment 🌲
         run: |
@@ -462,7 +419,7 @@ jobs:
 
 
   build-linux-aarch64:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-16vcpu-ubuntu-2204
     needs: get-display-version
 
     steps:
@@ -473,48 +430,6 @@ jobs:
           sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
           sudo apt update
 
-      - name: Setup Disk & Swap Space 💿
-        if: runner.name != 'buildjet-16vcpu-ubuntu-2204'
-        run: |
-          echo Before:
-          free -h
-          df -h
-          echo
-          echo
-          sudo swapoff /mnt/swapfile
-          sudo rm /mnt/swapfile
-          sudo fallocate -l 10G /mnt/swapfile
-          sudo chmod 600 /mnt/swapfile
-          sudo mkswap /mnt/swapfile
-          sudo swapon /mnt/swapfile
-          sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-          sudo apt autoremove -y
-          sudo apt clean
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /usr/local/graalvm
-          sudo rm -rf /usr/local/share/powershell
-          sudo rm -rf /usr/local/share/chromium
-          sudo rm -rf /usr/local/lib/node_modules
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/local/share/boost
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          sudo rm -rf /etc/apache2
-          sudo rm -rf /etc/nginx
-          sudo rm -rf /usr/local/share/chrome_driver
-          sudo rm -rf /usr/local/share/edge_driver
-          sudo rm -rf /usr/local/share/gecko_driver
-          sudo rm -rf /usr/share/java
-          sudo fallocate -l 10G /home/runner/swapfile2
-          sudo chmod 600 /home/runner/swapfile2
-          sudo mkswap /home/runner/swapfile2
-          sudo swapon /home/runner/swapfile2
-          echo
-          echo
-          echo After:
-          free -h
-          df -h
-  
       - name: Prepare cross compiler ⚒
         run: |
           sudo apt update
@@ -594,7 +509,7 @@ jobs:
 ################################################ ↑ Linux AArch64 Build ################################################
 
   get-buildid:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-16vcpu-ubuntu-2204
 
     outputs:
       buildids: ${{ steps.get.outputs.bid }}
@@ -764,7 +679,7 @@ jobs:
 
   cleanup:
     needs: integration
-    runs-on: ubuntu-latest
+    runs-on: buildjet-16vcpu-ubuntu-2204
     steps:
     - uses: geekyeggo/delete-artifact@v2
       with:
@@ -774,7 +689,7 @@ jobs:
 
   Deployments:
     needs: [build-linux-x86_64-with-PGO, build-linux-aarch64, cleanup, build-with-profdata-and-jarlog, get-display-version]
-    runs-on: ubuntu-latest
+    runs-on: buildjet-16vcpu-ubuntu-2204
     environment: 
       name: Deploy-to-stable-release
     steps:
