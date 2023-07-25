@@ -142,7 +142,7 @@ static bool CreateMFTDecoderOnMTA(const WMFStreamType& aType) {
     case WMFStreamType::VP8:
     case WMFStreamType::VP9: {
       static const uint32_t VPX_USABLE_BUILD = 16287;
-      if (IsWindowsBuildOrLater(VPX_USABLE_BUILD)) {
+      if (IsWindows10BuildOrLater(VPX_USABLE_BUILD)) {
         result = SUCCEEDED(decoder->Create(CLSID_CMSVPXDecMFT));
       }
       break;
