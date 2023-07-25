@@ -76,6 +76,14 @@ interface GPUAdapterInfo {
     [ChromeOnly] readonly attribute DOMString wgpuBackend;
 };
 
+interface mixin NavigatorGPU {
+    [SameObject, Replaceable, Pref="dom.webgpu.enabled", Exposed=(Window /* ,DedicatedWorker */), SecureContext] readonly attribute GPU gpu;
+};
+// NOTE: see `dom/webidl/Navigator.webidl`
+// Navigator includes NavigatorGPU;
+// NOTE: see `dom/webidl/WorkerNavigator.webidl`
+// WorkerNavigator includes NavigatorGPU;
+
 [
     Pref="dom.webgpu.enabled",
     Exposed=(Window /* ,DedicatedWorker */), SecureContext
@@ -85,11 +93,6 @@ interface GPU {
     [NewObject]
     Promise<GPUAdapter?> requestAdapter(optional GPURequestAdapterOptions options = {});
     GPUTextureFormat getPreferredCanvasFormat();
-};
-
-// Add a "webgpu" member to Navigator/Worker that contains the global instance of a "WebGPU"
-interface mixin GPUProvider {
-    [SameObject, Replaceable, Pref="dom.webgpu.enabled", Exposed=(Window /* ,DedicatedWorker */), SecureContext] readonly attribute GPU gpu;
 };
 
 dictionary GPURequestAdapterOptions {
