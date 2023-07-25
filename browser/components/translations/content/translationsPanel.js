@@ -926,11 +926,7 @@ var TranslationsPanel = new (class {
         ? [button, false]
         : [this.elements.appMenuButton, true];
 
-    panel.addEventListener(
-      "ViewShown",
-      () => TranslationsParent.telemetry().panel().onOpen(openedFromAppMenu),
-      { once: true }
-    );
+    TranslationsParent.telemetry().panel().onOpen(openedFromAppMenu);
 
     PanelMultiView.openPopup(panel, targetButton, {
       position: "bottomright topright",
