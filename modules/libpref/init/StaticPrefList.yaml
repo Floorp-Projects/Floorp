@@ -13924,17 +13924,6 @@
   value: false
   mirror: once
 
-# On Windows 8.1, if the following preference is 2, we will attempt to detect
-# whether the Family Safety TLS interception feature has been enabled.
-# If so, we will behave as if the enterprise roots feature has been enabled
-# (i.e. import and trust third party root certificates from the OS).
-# With any other value of the pref or on any other platform, this does nothing.
-# This preference takes precedence over "security.enterprise_roots.enabled".
-- name: security.family_safety.mode
-  type: RelaxedAtomicUint32
-  value: 2
-  mirror: always
-
 # Whether or not to import and trust third party root certificates from the OS.
 - name: security.enterprise_roots.enabled
   type: RelaxedAtomicBool
