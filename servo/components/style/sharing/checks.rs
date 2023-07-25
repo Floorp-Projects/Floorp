@@ -10,7 +10,7 @@ use crate::bloom::StyleBloom;
 use crate::context::SharedStyleContext;
 use crate::dom::TElement;
 use crate::sharing::{StyleSharingCandidate, StyleSharingTarget};
-use selectors::NthIndexCache;
+use selectors::matching::SelectorCaches;
 
 /// Determines whether a target and a candidate have compatible parents for
 /// sharing.
@@ -128,16 +128,16 @@ pub fn revalidate<E>(
     candidate: &mut StyleSharingCandidate<E>,
     shared_context: &SharedStyleContext,
     bloom: &StyleBloom<E>,
-    nth_index_cache: &mut NthIndexCache,
+    selector_caches: &mut SelectorCaches,
 ) -> bool
 where
     E: TElement,
 {
     let stylist = &shared_context.stylist;
 
-    let for_element = target.revalidation_match_results(stylist, bloom, nth_index_cache);
+    let for_element = target.revalidation_match_results(stylist, bloom, selector_caches);
 
-    let for_candidate = candidate.revalidation_match_results(stylist, bloom, nth_index_cache);
+    let for_candidate = candidate.revalidation_match_results(stylist, bloom, selector_caches);
 
     // This assert "ensures", to some extent, that the two candidates have
     // matched the same rulehash buckets, and as such, that the bits we're

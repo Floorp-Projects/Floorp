@@ -13,6 +13,7 @@ use crate::parser::{
 use crate::parser::{
     NonTSPseudoClass, RelativeSelector, Selector, SelectorImpl, SelectorIter, SelectorList,
 };
+use crate::relative_selector::cache::RelativeSelectorCachedMatch;
 use crate::tree::Element;
 use smallvec::SmallVec;
 use std::borrow::Borrow;
@@ -365,6 +366,69 @@ fn matches_complex_selector_list<E: Element>(
     false
 }
 
+fn matches_relative_selector<E: Element>(
+    relative_selector: &RelativeSelector<E::Impl>,
+    element: &E,
+    context: &mut MatchingContext<E::Impl>,
+    rightmost: Rightmost,
+) -> bool {
+    if relative_selector.match_hint.is_descendant_direction() {
+        let mut next_element = element.first_element_child();
+        while let Some(el) = next_element {
+            let mut matched = matches_complex_selector(
+                relative_selector.selector.iter(),
+                &el,
+                context,
+                rightmost,
+            );
+            if !matched && relative_selector.match_hint.is_subtree() {
+                matched = matches_relative_selector_subtree(
+                    &relative_selector.selector,
+                    &el,
+                    context,
+                    rightmost,
+                );
+            }
+            if matched {
+                return true;
+            }
+            next_element = el.next_sibling_element();
+        }
+    } else {
+        debug_assert!(
+            matches!(
+                relative_selector.match_hint,
+                RelativeSelectorMatchHint::InNextSibling |
+                    RelativeSelectorMatchHint::InNextSiblingSubtree |
+                    RelativeSelectorMatchHint::InSibling |
+                    RelativeSelectorMatchHint::InSiblingSubtree
+            ),
+            "Not descendant direction, but also not sibling direction?"
+        );
+        let mut next_element = element.next_sibling_element();
+        while let Some(el) = next_element {
+            let matched = if relative_selector.match_hint.is_subtree() {
+                matches_relative_selector_subtree(
+                    &relative_selector.selector,
+                    &el,
+                    context,
+                    rightmost,
+                )
+            } else {
+                matches_complex_selector(relative_selector.selector.iter(), &el, context, rightmost)
+            };
+            if matched {
+                return true;
+            }
+            if relative_selector.match_hint.is_next_sibling() {
+                break;
+            }
+            next_element = el.next_sibling_element();
+        }
+    }
+    return false;
+}
+
 /// Matches a relative selector in a list of relative selectors.
 fn matches_relative_selectors<E: Element>(
     selectors: &[RelativeSelector<E::Impl>],
@@ -381,38 +445,32 @@ fn matches_relative_selectors<E: Element>(
         context.considered_relative_selector.considered();
     }
 
-    for RelativeSelector {
-        match_hint,
-        selector,
-    } in selectors.iter()
-    {
-        let (traverse_subtree, traverse_siblings, mut next_element) = match match_hint {
-            RelativeSelectorMatchHint::InChild => (false, true, element.first_element_child()),
-            RelativeSelectorMatchHint::InSubtree => (true, true, element.first_element_child()),
-            RelativeSelectorMatchHint::InSibling => (false, true, element.next_sibling_element()),
-            RelativeSelectorMatchHint::InSiblingSubtree => {
-                (true, true, element.next_sibling_element())
-            },
-            RelativeSelectorMatchHint::InNextSibling => {
-                (false, false, element.next_sibling_element())
-            },
-            RelativeSelectorMatchHint::InNextSiblingSubtree => {
-                (true, false, element.next_sibling_element())
-            },
-        };
-        while let Some(el) = next_element {
-            // TODO(dshin): `:has()` matching can get expensive when determining style changes.
-            // We'll need caching/filtering here, which is tracked in bug 1822177.
-            if matches_complex_selector(selector.iter(), &el, context, rightmost) {
+    for relative_selector in selectors.iter() {
+        // See if we can return a cached result.
+        if let Some(cached) = context
+            .selector_caches
+            .relative_selector
+            .lookup(element.opaque(), &relative_selector)
+        {
+            if cached.matched() {
                 return true;
             }
-            if traverse_subtree && matches_relative_selector_subtree(selector, &el, context, rightmost) {
-                return true;
-            }
-            if !traverse_siblings {
-                break;
-            }
-            next_element = el.next_sibling_element();
+            // Did not match, continue on.
+            continue;
+        }
+
+        let matched = matches_relative_selector(relative_selector, element, context, rightmost);
+        context.selector_caches.relative_selector.add(
+            element.opaque(),
+            relative_selector,
+            if matched {
+                RelativeSelectorCachedMatch::Matched
+            } else {
+                RelativeSelectorCachedMatch::NotMatched
+            },
+        );
+        if matched {
+            return true;
         }
     }
 

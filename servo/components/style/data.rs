@@ -14,7 +14,7 @@ use crate::selector_parser::{PseudoElement, RestyleDamage, EAGER_PSEUDO_COUNT};
 use crate::style_resolver::{PrimaryStyle, ResolvedElementStyles, ResolvedStyle};
 #[cfg(feature = "gecko")]
 use malloc_size_of::MallocSizeOfOps;
-use selectors::NthIndexCache;
+use selectors::matching::SelectorCaches;
 use servo_arc::Arc;
 use std::fmt;
 use std::mem;
@@ -288,7 +288,7 @@ impl ElementData {
         element: E,
         shared_context: &SharedStyleContext,
         stack_limit_checker: Option<&StackLimitChecker>,
-        nth_index_cache: &mut NthIndexCache,
+        selector_caches: &'a mut SelectorCaches,
     ) -> InvalidationResult {
         // In animation-only restyle we shouldn't touch snapshot at all.
         if shared_context.traversal_flags.for_animation_only() {
@@ -313,7 +313,7 @@ impl ElementData {
         }
 
         let mut processor =
-            StateAndAttrInvalidationProcessor::new(shared_context, element, self, nth_index_cache);
+            StateAndAttrInvalidationProcessor::new(shared_context, element, self, selector_caches);
 
         let invalidator = TreeStyleInvalidator::new(element, stack_limit_checker, &mut processor);
 

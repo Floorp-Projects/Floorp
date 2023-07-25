@@ -10,8 +10,7 @@ use cssparser::{Parser, ParserInput, SourceLocation, UnicodeRange};
 use dom::{DocumentState, ElementState};
 use malloc_size_of::MallocSizeOfOps;
 use nsstring::{nsCString, nsString};
-use selectors::matching::IgnoreNthChildForInvalidation;
-use selectors::NthIndexCache;
+use selectors::matching::{IgnoreNthChildForInvalidation, SelectorCaches};
 use servo_arc::{Arc, ArcBorrow};
 use smallvec::SmallVec;
 use style::values::generics::color::ColorMixFlags;
@@ -2494,7 +2493,7 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
     let element = GeckoElement(element);
     let host = host.map(GeckoElement);
     let quirks_mode = element.as_node().owner_doc().quirks_mode();
-    let mut nth_index_cache = Default::default();
+    let mut selector_caches = SelectorCaches::default();
     let visited_mode = if relevant_link_visited {
         VisitedHandlingMode::RelevantLinkVisited
     } else {
@@ -2503,7 +2502,7 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
     let mut ctx = MatchingContext::new_for_visited(
         matching_mode,
         /* bloom_filter = */ None,
-        &mut nth_index_cache,
+        &mut selector_caches,
         visited_mode,
         quirks_mode,
         NeedsSelectorFlags::No,
@@ -6939,6 +6938,7 @@ pub extern "C" fn Servo_ProcessInvalidations(
     );
     let mut data = data.as_mut().map(|d| &mut **d);
 
+    let mut selector_caches = SelectorCaches::default();
     if let Some(ref mut data) = data {
         // FIXME(emilio): Ideally we could share the nth-index-cache across all
         // the elements?
@@ -6946,7 +6946,7 @@ pub extern "C" fn Servo_ProcessInvalidations(
             element,
             &shared_style_context,
             None,
-            &mut NthIndexCache::default(),
+            &mut selector_caches,
         );
 
         if result.has_invalidated_siblings() {
@@ -7443,12 +7443,12 @@ pub unsafe extern "C" fn Servo_InvalidateStyleForDocStateChanges(
                 .map(|author_styles| &*author_styles.data),
         );
 
-    let mut nth_index_cache = Default::default();
+    let mut selector_caches = SelectorCaches::default();
     let root = GeckoElement(root);
     let mut processor = DocumentStateInvalidationProcessor::new(
         iter,
         DocumentState::from_bits_retain(states_changed),
-        &mut nth_index_cache,
+        &mut selector_caches,
         root.as_node().owner_doc().quirks_mode(),
     );
 
