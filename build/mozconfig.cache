@@ -87,4 +87,7 @@ if test -n "$bucket"; then
     # Workaround for https://github.com/mozilla/sccache/issues/459#issuecomment-618756635
     mk_add_options "export SCCACHE_MAX_FRAME_LENGTH=50000000"
     mk_add_options MOZBUILD_MANAGE_SCCACHE_DAEMON=${MOZ_FETCHES_DIR}/sccache/sccache
+elif test -n "$USE_SCCACHE"; then
+    echo "SetupError: sccache is enabled but there is no shared storage set up for it?" >&2
+    exit 1
 fi
