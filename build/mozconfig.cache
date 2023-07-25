@@ -8,6 +8,11 @@
 aws_prefix=${aws_prefix:-taskcluster}
 gcp_prefix=${gcp_prefix:-sccache}
 
+if test -n "$SCCACHE_DISABLE" -a -n "$USE_SCCACHE"; then
+    echo "SetupError: SCCACHE_DISABLE and USE_SCCACHE should not be set at the same time" >&2
+    exit 1
+fi
+
 # builds where buildprops didn't have the data (eg: taskcluster) and without sccache disabled:
 if test -z "$bucket" -a -z "$SCCACHE_DISABLE"; then
 
