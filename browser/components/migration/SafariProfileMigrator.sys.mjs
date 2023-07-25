@@ -588,7 +588,8 @@ export class SafariProfileMigrator extends MigratorBase {
     if (this._hasPermissions) {
       return true;
     }
-    // Check if we have access to both bookmarks and favicons:
+    // Check if we have access to some key files, but only if they exist.
+    let historyTarget = FileUtils.getDir("ULibDir", ["Safari", "History.db"]);
     let bookmarkTarget = FileUtils.getDir("ULibDir", [
       "Safari",
       "Bookmarks.plist",
@@ -599,10 +600,21 @@ export class SafariProfileMigrator extends MigratorBase {
       "favicons.db",
     ]);
     try {
-      // 'stat' is always allowed, but reading is somehow not, if the user hasn't
-      // allowed it:
-      await IOUtils.read(bookmarkTarget.path, { maxBytes: 1 });
-      await IOUtils.read(faviconTarget.path, { maxBytes: 1 });
+      let historyExists = await IOUtils.exists(historyTarget.path);
+      let bookmarksExists = await IOUtils.exists(bookmarkTarget.path);
+      let faviconsExists = await IOUtils.exists(faviconTarget.path);
+      // We now know which files exist, which is always allowed.
+      // To determine if we have read permissions, try to read a single byte
+      // from each file that exists, which will throw if we need permissions.
+      if (historyExists) {
+        await IOUtils.read(historyTarget.path, { maxBytes: 1 });
+      }
+      if (bookmarksExists) {
+        await IOUtils.read(bookmarkTarget.path, { maxBytes: 1 });
+      }
+      if (faviconsExists) {
+        await IOUtils.read(faviconTarget.path, { maxBytes: 1 });
+      }
       this._hasPermissions = true;
       return true;
     } catch (ex) {
