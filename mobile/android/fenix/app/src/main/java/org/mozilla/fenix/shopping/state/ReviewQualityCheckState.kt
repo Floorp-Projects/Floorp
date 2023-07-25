@@ -28,7 +28,7 @@ sealed interface ReviewQualityCheckState : State {
      * recommendations. True if product recommendations should be shown.
      */
     data class OptedIn(
-        val productReviewState: ProductReviewState = ProductReviewState.Loading,
+        val productReviewState: ProductReviewState = fakeAnalysis,
         val productRecommendationsPreference: Boolean,
     ) : ReviewQualityCheckState {
 
@@ -56,7 +56,7 @@ sealed interface ReviewQualityCheckState : State {
             ) : ProductReviewState
 
             /**
-             * Denotes the state where analysis of the product is fetched and available.
+             * Denotes the state where analysis of the product is fetched and present.
              *
              * @property productId The id of the product, e.g ASIN, SKU.
              * @property reviewGrade The review grade of the product.
@@ -67,7 +67,7 @@ sealed interface ReviewQualityCheckState : State {
              * @property highlights Optional highlights based on recent reviews of the product.
              * @property recommendedProductState The state of the recommended product.
              */
-            data class ProductAnalysis(
+            data class AnalysisPresent(
                 val productId: String,
                 val reviewGrade: Grade,
                 val needsAnalysis: Boolean,
@@ -136,3 +136,15 @@ sealed interface ReviewQualityCheckState : State {
         ) : RecommendedProductState
     }
 }
+
+/**
+ * Fake analysis for showing the UI. To be deleted once the API is integrated.
+ */
+private val fakeAnalysis = ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent(
+    productId = "123",
+    reviewGrade = ReviewQualityCheckState.Grade.B,
+    needsAnalysis = false,
+    adjustedRating = 3.6f,
+    productUrl = "123",
+    highlights = null,
+)

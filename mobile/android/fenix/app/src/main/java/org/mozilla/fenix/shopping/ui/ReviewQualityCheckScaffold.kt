@@ -6,17 +6,18 @@ package org.mozilla.fenix.shopping.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,23 +28,24 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.BottomSheetHandle
-import org.mozilla.fenix.compose.annotation.LightDarkPreview
-import org.mozilla.fenix.shopping.state.ReviewQualityCheckState
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val bottomSheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
 private const val BOTTOM_SHEET_HANDLE_WIDTH_PERCENT = 0.1f
 
 /**
- * Top-level UI for the Review Quality Check feature.
+ * A scaffold for review quality check UI that implements the basic layout structure with
+ * [BottomSheetHandle], [Header] and [content].
  *
- * @param onRequestDismiss Invoked when a user actions requests dismissal of the bottom sheet.
+ * @param onRequestDismiss Invoked when a user action requests dismissal of the bottom sheet.
  * @param modifier The modifier to be applied to the Composable.
+ * @param content The content of the bottom sheet.
  */
 @Composable
-fun ReviewQualityCheckContent(
+fun ReviewQualityCheckScaffold(
     onRequestDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -51,7 +53,11 @@ fun ReviewQualityCheckContent(
                 color = FirefoxTheme.colors.layer1,
                 shape = bottomSheetShape,
             )
-            .padding(16.dp),
+            .verticalScroll(rememberScrollState())
+            .padding(
+                vertical = 8.dp,
+                horizontal = 16.dp,
+            ),
     ) {
         BottomSheetHandle(
             onRequestDismiss = onRequestDismiss,
@@ -67,10 +73,7 @@ fun ReviewQualityCheckContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ReviewGradeCard(
-            modifier = Modifier.fillMaxWidth(),
-            reviewGrade = ReviewQualityCheckState.Grade.B,
-        )
+        content()
 
         Spacer(modifier = Modifier.height(16.dp))
     }
@@ -95,39 +98,5 @@ private fun Header() {
             color = FirefoxTheme.colors.textPrimary,
             style = FirefoxTheme.typography.headline6,
         )
-    }
-}
-
-@Composable
-private fun ReviewGradeCard(
-    reviewGrade: ReviewQualityCheckState.Grade,
-    modifier: Modifier = Modifier,
-) {
-    ReviewQualityCheckCard(modifier = modifier.semantics(mergeDescendants = true) {}) {
-        Text(
-            text = stringResource(R.string.review_quality_check_grade_title),
-            color = FirefoxTheme.colors.textPrimary,
-            style = FirefoxTheme.typography.headline8,
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        ReviewGradeExpanded(grade = reviewGrade)
-    }
-}
-
-@Composable
-@LightDarkPreview
-private fun ReviewQualityCheckContentPreview() {
-    FirefoxTheme {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.BottomCenter,
-        ) {
-            ReviewQualityCheckContent(
-                onRequestDismiss = {},
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
     }
 }

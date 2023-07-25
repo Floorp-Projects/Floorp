@@ -118,6 +118,14 @@
     <string name="review_quality_check_grade_a_b_description" translatable="false">Reliable reviews</string>
     <string name="review_quality_check_grade_c_description" translatable="false">Only some reliable reviews</string>
     <string name="review_quality_check_grade_d_f_description" translatable="false">Unreliable reviews</string>
-    <string name="review_quality_check_star_rating_content_description">%1$s out of 5 stars</string>
-    <string name="review_quality_check_grade_title">How reliable are the reviews?</string>
+    <string name="review_quality_check_star_rating_content_description" translatable="false">%1$s out of 5 stars</string>
+    <string name="review_quality_check_grade_title" translatable="false">How reliable are the reviews?</string>
+    <string name="review_quality_check_contextual_onboarding_title" translatable="false">Shop based on real reviews</string>
+    <string name="review_quality_check_contextual_onboarding_description" translatable="false">Review quality check is a new feature from Firefox. It helps you understand how reliable the reviews are for a product, when you shop on Amazon, Best Buy, and Walmart. \n\nAnd, it’s all powered by AI technology from Fakespot, a popular browser extension that’s now built in.</string>
+    <string name="review_quality_check_contextual_onboarding_primary_button_text" translatable="false">Yes, check review quality</string>
+    <string name="review_quality_check_contextual_onboarding_secondary_button_text" translatable="false">Not now</string>
+    <string name="review_quality_check_contextual_onboarding_caption" translatable="false">Analysis powered by Fakespot.com. Learn more.</string>
+    <string name="review_quality_check_settings_title" translatable="false">Settings</string>
+    <string name="review_quality_check_settings_recommended_products" translatable="false">Show products recommended by Firefox</string>
+    <string name="review_quality_check_settings_turn_off" translatable="false">Turn off review quality check</string>
 </resources>

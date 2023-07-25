@@ -13,9 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import org.mozilla.fenix.shopping.ui.ReviewQualityCheckContent
+import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.shopping.state.ReviewQualityCheckPreferencesImpl
+import org.mozilla.fenix.shopping.state.ReviewQualityCheckStore
+import org.mozilla.fenix.shopping.ui.ReviewQualityCheckBottomSheet
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -24,6 +28,14 @@ import org.mozilla.fenix.theme.FirefoxTheme
 class ReviewQualityCheckFragment : BottomSheetDialogFragment() {
 
     private var behavior: BottomSheetBehavior<View>? = null
+    private val store by lazy {
+        ReviewQualityCheckStore(
+            reviewQualityCheckPreferences = ReviewQualityCheckPreferencesImpl(
+                requireComponents.settings,
+            ),
+            scope = lifecycleScope,
+        )
+    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
         super.onCreateDialog(savedInstanceState).apply {
@@ -42,7 +54,8 @@ class ReviewQualityCheckFragment : BottomSheetDialogFragment() {
     ): View = ComposeView(requireContext()).apply {
         setContent {
             FirefoxTheme {
-                ReviewQualityCheckContent(
+                ReviewQualityCheckBottomSheet(
+                    store = store,
                     onRequestDismiss = {
                         behavior?.state = BottomSheetBehavior.STATE_HIDDEN
                     },
