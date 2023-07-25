@@ -120,7 +120,6 @@
 #  include "mozilla/WindowsBCryptInitialization.h"
 #  include "mozilla/WindowsDllBlocklist.h"
 #  include "mozilla/WindowsProcessMitigations.h"
-#  include "mozilla/WindowsVersion.h"
 #  include "mozilla/WinHeaderOnlyUtils.h"
 #  include "mozilla/mscom/ProcessRuntime.h"
 #  include "mozilla/mscom/ProfilerMarkers.h"

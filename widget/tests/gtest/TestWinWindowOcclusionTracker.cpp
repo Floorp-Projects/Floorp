@@ -11,6 +11,7 @@
 
 #include "MockWinWidget.h"
 #include "mozilla/widget/WinWindowOcclusionTracker.h"
+#include "mozilla/WindowsVersion.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -153,6 +154,10 @@ TEST_F(WinWindowOcclusionTrackerTest, PopupWindow) {
 }
 
 TEST_F(WinWindowOcclusionTrackerTest, CloakedWindow) {
+  // Cloaking is only supported in Windows 8 and above.
+  if (!IsWin8OrLater()) {
+    return;
+  }
   HWND hwnd = CreateNativeWindow(/* aStyle = */ 0, /* aExStyle = */ 0);
   LayoutDeviceIntRect winRect;
   BOOL cloak = TRUE;

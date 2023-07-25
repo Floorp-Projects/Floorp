@@ -18,6 +18,7 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/ToString.h"
+#include "mozilla/WindowsVersion.h"
 
 #ifndef IME_PROP_ACCEPT_WIDE_VKEY
 #  define IME_PROP_ACCEPT_WIDE_VKEY 0x20
@@ -223,7 +224,8 @@ bool IMMHandler::IsActiveIMEInBlockList() {
   // ATOK 2008 and ATOK 2009 crash when user just opens their open state.
   // ATOK 2010 isn't installable newly on Win 7 or later, but we have a lot of
   // crash reports.
-  if ((IsATOK2006Active() || IsATOK2007Active() || IsATOK2008Active() ||
+  if (IsWin8OrLater() &&
+      (IsATOK2006Active() || IsATOK2007Active() || IsATOK2008Active() ||
        IsATOK2009Active() || IsATOK2010Active())) {
     return true;
   }

@@ -15,6 +15,7 @@
 #include "WindowsUIUtils.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/WindowsVersion.h"
 #include "gfxFontConstants.h"
 #include "gfxWindowsPlatform.h"
 
@@ -38,6 +39,11 @@ static int32_t GetSystemParam(long flag, int32_t def) {
 }
 
 static nsresult SystemWantsDarkTheme(int32_t& darkThemeEnabled) {
+  if (!IsWin10OrLater()) {
+    darkThemeEnabled = 0;
+    return NS_OK;
+  }
+
   nsresult rv = NS_OK;
   nsCOMPtr<nsIWindowsRegKey> personalizeKey =
       do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);

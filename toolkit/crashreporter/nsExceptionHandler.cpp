@@ -56,6 +56,7 @@
 
 #  include "nsWindowsDllInterceptor.h"
 #  include "mozilla/WindowsDllBlocklist.h"
+#  include "mozilla/WindowsVersion.h"
 #  include "psapi.h"  // For PERFORMANCE_INFORMATION and K32GetPerformanceInfo()
 #elif defined(XP_MACOSX)
 #  include "breakpad-client/mac/crash_generation/client_info.h"
@@ -1795,14 +1796,20 @@ static MINIDUMP_TYPE GetMinidumpType() {
       MiniDumpWithFullMemoryInfo | MiniDumpWithUnloadedModules);
 
 #  ifdef NIGHTLY_BUILD
-  minidump_type = static_cast<MINIDUMP_TYPE>(
-      minidump_type |
-      // This is Nightly only because this doubles the size of minidumps based
-      // on the experimental data.
-      MiniDumpWithProcessThreadData |
-      // This allows us to examine heap objects referenced from stack objects
-      // at the cost of further doubling the size of minidumps.
-      MiniDumpWithIndirectlyReferencedMemory);
+  // This is Nightly only because this doubles the size of minidumps based
+  // on the experimental data.
+  minidump_type =
+      static_cast<MINIDUMP_TYPE>(minidump_type | MiniDumpWithProcessThreadData);
+
+  // dbghelp.dll on Win7 can't handle overlapping memory regions so we only
+  // enable this feature on Win8 or later.
+  if (IsWin8OrLater()) {
+    minidump_type = static_cast<MINIDUMP_TYPE>(
+        minidump_type |
+        // This allows us to examine heap objects referenced from stack objects
+        // at the cost of further doubling the size of minidumps.
+        MiniDumpWithIndirectlyReferencedMemory);
+  }
 #  endif
 
   const char* e = PR_GetEnv("MOZ_CRASHREPORTER_FULLDUMP");

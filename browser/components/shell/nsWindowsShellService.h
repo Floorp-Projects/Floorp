@@ -32,6 +32,7 @@ class nsWindowsShellService : public nsIShellService,
   nsresult LaunchControlPanelDefaultPrograms();
   nsresult LaunchModernSettingsDialogDefaultApps();
   nsresult InvokeHTTPOpenAsVerb();
+  nsresult LaunchHTTPHandlerPane();
 };
 
 #endif  // nswindowsshellservice_h____

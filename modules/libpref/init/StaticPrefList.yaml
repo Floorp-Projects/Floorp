@@ -13924,6 +13924,17 @@
   value: false
   mirror: once
 
+# On Windows 8.1, if the following preference is 2, we will attempt to detect
+# whether the Family Safety TLS interception feature has been enabled.
+# If so, we will behave as if the enterprise roots feature has been enabled
+# (i.e. import and trust third party root certificates from the OS).
+# With any other value of the pref or on any other platform, this does nothing.
+# This preference takes precedence over "security.enterprise_roots.enabled".
+- name: security.family_safety.mode
+  type: RelaxedAtomicUint32
+  value: 2
+  mirror: always
+
 # Whether or not to import and trust third party root certificates from the OS.
 - name: security.enterprise_roots.enabled
   type: RelaxedAtomicBool
@@ -15563,6 +15574,19 @@
 - name: widget.windows.alternate_fullscreen_heuristics
   type: RelaxedAtomicBool
   value: true
+  mirror: always
+
+# Whether to apply a workaround intended to prevent Windows from treating
+# non-foreground-marked fullscreen windows as fullscreen on Windows 7 and
+# earlier. (See bug 1732517.)
+#
+# Valid values:
+#  * -1: the workaround is never used.
+#  *  1: the workaround is always used.
+#  *  0: the workaround is used if we think it should be. (Default.)
+- name: widget.windows.fullscreen_marking_workaround
+  type: RelaxedAtomicInt32
+  value: 0
   mirror: always
 
 # The number of messages of each type to keep for display in

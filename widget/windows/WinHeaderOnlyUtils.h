@@ -23,6 +23,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WindowsVersion.h"
 #include "nsWindowsHelpers.h"
 
 #if defined(MOZILLA_INTERNAL_API)
@@ -521,13 +522,15 @@ class FileUniqueId final {
  private:
   void GetId(const nsAutoHandle& aFile) {
     FILE_ID_INFO fileIdInfo = {};
-    if (::GetFileInformationByHandleEx(aFile.get(), FileIdInfo, &fileIdInfo,
-                                       sizeof(fileIdInfo))) {
-      mId = fileIdInfo;
-      return;
+    if (IsWin8OrLater()) {
+      if (::GetFileInformationByHandleEx(aFile.get(), FileIdInfo, &fileIdInfo,
+                                         sizeof(fileIdInfo))) {
+        mId = fileIdInfo;
+        return;
+      }
+      // Only NTFS and ReFS support FileIdInfo. So we have to fallback if
+      // GetFileInformationByHandleEx failed.
     }
-    // Only NTFS and ReFS support FileIdInfo. So we have to fallback if
-    // GetFileInformationByHandleEx failed.
 
     BY_HANDLE_FILE_INFORMATION info = {};
     if (!::GetFileInformationByHandle(aFile.get(), &info)) {
@@ -748,6 +751,10 @@ inline LauncherResult<TOKEN_ELEVATION_TYPE> GetElevationType(
 }
 
 inline bool HasPackageIdentity() {
+  if (!IsWin8OrLater()) {
+    return false;
+  }
+
   HMODULE kernel32Dll = ::GetModuleHandleW(L"kernel32");
   if (!kernel32Dll) {
     return false;
