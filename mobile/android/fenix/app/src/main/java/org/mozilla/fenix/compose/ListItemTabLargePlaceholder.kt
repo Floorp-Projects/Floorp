@@ -15,6 +15,7 @@ import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,11 +38,13 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * ```
  *
  * @param text The only [String] that this will display.
+ * @param backgroundColor The background [Color] of the list item placeholder.
  * @param onClick Optional callback to be invoked when this composable is clicked.
  */
 @Composable
 fun ListItemTabLargePlaceholder(
     text: String,
+    backgroundColor: Color,
     onClick: () -> Unit = { },
 ) {
     Card(
@@ -49,7 +52,7 @@ fun ListItemTabLargePlaceholder(
             .size(ITEM_WIDTH.dp, ITEM_HEIGHT.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = FirefoxTheme.colors.layer2,
+        backgroundColor = backgroundColor,
         elevation = 6.dp,
     ) {
         Column(
@@ -74,6 +77,9 @@ fun ListItemTabLargePlaceholder(
 @Preview
 private fun ListItemTabLargePlaceholderPreview() {
     FirefoxTheme {
-        ListItemTabLargePlaceholder(text = "Item placeholder")
+        ListItemTabLargePlaceholder(
+            text = "Item placeholder",
+            backgroundColor = FirefoxTheme.colors.layer2,
+        )
     }
 }
