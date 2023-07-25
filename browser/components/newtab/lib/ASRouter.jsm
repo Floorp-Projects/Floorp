@@ -122,12 +122,19 @@ const MESSAGING_EXPERIMENTS_DEFAULT_FEATURES = [
   "moments-page",
   "pbNewtab",
   "spotlight",
+  "featureCallout",
 ];
 
 // Experiment groups that need to report the reach event in Messaging-Experiments.
 // If you're adding new groups to it, make sure they're also added in the
 // `messaging_experiments.reach.objects` defined in "toolkit/components/telemetry/Events.yaml"
-const REACH_EVENT_GROUPS = ["cfr", "moments-page", "infobar", "spotlight"];
+const REACH_EVENT_GROUPS = [
+  "cfr",
+  "moments-page",
+  "infobar",
+  "spotlight",
+  "featureCallout",
+];
 const REACH_EVENT_CATEGORY = "messaging_experiments";
 const REACH_EVENT_METHOD = "reach";
 
