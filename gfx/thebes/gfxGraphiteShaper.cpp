@@ -98,7 +98,7 @@ struct GrFontFeatures {
   rlbox_sandbox_gr* mSandbox;
 };
 
-static void AddFeature(const uint32_t& aTag, uint32_t& aValue, void* aUserArg) {
+static void AddFeature(uint32_t aTag, uint32_t aValue, void* aUserArg) {
   GrFontFeatures* f = static_cast<GrFontFeatures*>(aUserArg);
 
   tainted_gr<const gr_feature_ref*> fref =
