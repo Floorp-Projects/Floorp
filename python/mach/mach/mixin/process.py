@@ -164,10 +164,13 @@ class ProcessExecutionMixin(LoggingMixin):
             p.processOutput()
             status = None
             sig = None
-            while status is None:
+            # XXX: p.wait() sometimes fails to detect the process exit and never returns a status code.
+            # Time out and check if the pid still exists.
+            # See bug 1845125 for example.
+            while status is None and p.pid_exists(p.pid):
                 try:
                     if sig is None:
-                        status = p.wait()
+                        status = p.wait(5)
                     else:
                         status = p.kill(sig=sig)
                 except KeyboardInterrupt:
