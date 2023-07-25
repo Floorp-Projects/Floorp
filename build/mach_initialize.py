@@ -706,7 +706,25 @@ def initialize(topsrcdir, args=()):
         ) or os.path.exists(os.path.join(topsrcdir, "INSTALL"))
     else:
         missing_ok = ()
-    driver.load_commands_from_spec(MACH_COMMANDS, topsrcdir, missing_ok=missing_ok)
+
+    commands_that_need_all_modules_loaded = [
+        "mach-commands",
+        "mach-completion",
+        "mach-debug-commands",
+        "help",
+    ]
+
+    if (
+        command_name not in MACH_COMMANDS
+        or command_name in commands_that_need_all_modules_loaded
+    ):
+        command_modules_to_load = MACH_COMMANDS
+    else:
+        command_modules_to_load = {command_name: MACH_COMMANDS[command_name]}
+
+    driver.load_commands_from_spec(
+        command_modules_to_load, topsrcdir, missing_ok=missing_ok
+    )
     return driver
 
 
