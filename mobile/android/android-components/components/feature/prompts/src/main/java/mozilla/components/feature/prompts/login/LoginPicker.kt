@@ -10,6 +10,9 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.storage.Login
 import mozilla.components.feature.prompts.concept.SelectablePromptView
 import mozilla.components.feature.prompts.consumePromptFrom
+import mozilla.components.feature.prompts.facts.emitLoginAutofillDismissedFact
+import mozilla.components.feature.prompts.facts.emitLoginAutofillPerformedFact
+import mozilla.components.feature.prompts.facts.emitLoginAutofillShownFact
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -36,6 +39,7 @@ internal class LoginPicker(
     }
 
     internal fun handleSelectLoginRequest(request: PromptRequest.SelectLoginPrompt) {
+        emitLoginAutofillShownFact()
         loginSelectBar.showPrompt(request.logins)
     }
 
@@ -43,7 +47,7 @@ internal class LoginPicker(
         store.consumePromptFrom<PromptRequest.SelectLoginPrompt>(sessionId) {
             it.onConfirm(option)
         }
-
+        emitLoginAutofillPerformedFact()
         loginSelectBar.hidePrompt()
     }
 
@@ -70,6 +74,7 @@ internal class LoginPicker(
         } catch (e: RuntimeException) {
             Logger.error("Can't dismiss this login select prompt", e)
         }
+        emitLoginAutofillDismissedFact()
         loginSelectBar.hidePrompt()
     }
 }

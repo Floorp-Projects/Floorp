@@ -332,9 +332,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 null
             }
             resources.getString(R.string.pref_key_passwords) -> {
+                SettingsMetrics.passwords.record()
                 SettingsFragmentDirections.actionSettingsFragmentToSavedLoginsAuthFragment()
             }
             resources.getString(R.string.pref_key_credit_cards) -> {
+                SettingsMetrics.autofill.record()
                 SettingsFragmentDirections.actionSettingsFragmentToAutofillSettingFragment()
             }
             resources.getString(R.string.pref_key_about) -> {

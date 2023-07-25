@@ -20,6 +20,7 @@ import mozilla.components.feature.media.facts.MediaFacts
 import mozilla.components.feature.prompts.dialog.LoginDialogFacts
 import mozilla.components.feature.prompts.facts.AddressAutofillDialogFacts
 import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
+import mozilla.components.feature.prompts.facts.LoginAutofillDialogFacts
 import mozilla.components.feature.pwa.ProgressiveWebAppFacts
 import mozilla.components.feature.search.telemetry.ads.AdsTelemetry
 import mozilla.components.feature.search.telemetry.incontent.InContentTelemetry
@@ -46,6 +47,7 @@ import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.LoginDialog
+import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.MediaState
 import org.mozilla.fenix.GleanMetrics.PerfAwesomebar
@@ -196,6 +198,13 @@ internal class ReleaseMetricController(
             Addresses.autofillPromptExpanded.record(NoExtras())
         Component.FEATURE_PROMPTS to AddressAutofillDialogFacts.Items.AUTOFILL_ADDRESS_PROMPT_DISMISSED ->
             Addresses.autofillPromptDismissed.record(NoExtras())
+
+        Component.FEATURE_PROMPTS to LoginAutofillDialogFacts.Items.AUTOFILL_LOGIN_PERFORMED ->
+            Logins.autofilled.record(NoExtras())
+        Component.FEATURE_PROMPTS to LoginAutofillDialogFacts.Items.AUTOFILL_LOGIN_PROMPT_SHOWN ->
+            Logins.autofillPromptShown.record(NoExtras())
+        Component.FEATURE_PROMPTS to LoginAutofillDialogFacts.Items.AUTOFILL_LOGIN_PROMPT_DISMISSED ->
+            Logins.autofillPromptDismissed.record(NoExtras())
 
         Component.FEATURE_AUTOFILL to AutofillFacts.Items.AUTOFILL_REQUEST -> {
             val hasMatchingLogins =

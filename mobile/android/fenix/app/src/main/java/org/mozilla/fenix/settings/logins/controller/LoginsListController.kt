@@ -36,6 +36,7 @@ class LoginsListController(
 ) {
 
     fun handleItemClicked(item: SavedLogin) {
+        Logins.managementLoginsTapped.record(NoExtras())
         loginsFragmentStore.dispatch(LoginsAction.LoginSelected(item))
         Logins.openIndividualLogin.record(NoExtras())
         navController.navigate(
@@ -44,6 +45,7 @@ class LoginsListController(
     }
 
     fun handleAddLoginClicked() {
+        Logins.managementAddTapped.record(NoExtras())
         navController.navigate(
             SavedLoginsFragmentDirections.actionSavedLoginsFragmentToAddLoginFragment(),
         )
