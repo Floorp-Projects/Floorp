@@ -60,18 +60,21 @@ struct DeltaSetIndexMapFormat01
 
     entryFormat = ((width-1)<<4)|(inner_bit_count-1);
     mapCount = output_map.length;
-    HBUINT8 *p = c->allocate_size<HBUINT8> (width * output_map.length, false);
+    HBUINT8 *p = c->allocate_size<HBUINT8> (width * output_map.length);
     if (unlikely (!p)) return_trace (false);
     for (unsigned int i = 0; i < output_map.length; i++)
     {
-      unsigned int v = output_map[i];
-      unsigned int outer = v >> 16;
-      unsigned int inner = v & 0xFFFF;
-      unsigned int u = (outer << inner_bit_count) | inner;
-      for (unsigned int w = width; w > 0;)
+      unsigned int v = output_map.arrayZ[i];
+      if (v)
       {
-        p[--w] = u;
-        u >>= 8;
+	unsigned int outer = v >> 16;
+	unsigned int inner = v & 0xFFFF;
+	unsigned int u = (outer << inner_bit_count) | inner;
+	for (unsigned int w = width; w > 0;)
+	{
+	  p[--w] = u;
+	  u >>= 8;
+	}
       }
       p += width;
     }
@@ -755,14 +758,14 @@ struct tuple_delta_t
 
     while (run_length >= 64)
     {
-      *it++ = (DELTAS_ARE_ZERO | 63);
+      *it++ = char (DELTAS_ARE_ZERO | 63);
       run_length -= 64;
       encoded_len++;
     }
 
     if (run_length)
     {
-      *it++ = (DELTAS_ARE_ZERO | (run_length - 1));
+      *it++ = char (DELTAS_ARE_ZERO | (run_length - 1));
       encoded_len++;
     }
     return encoded_len;
