@@ -836,13 +836,13 @@
   {
     "testIdPattern": "[launcher.spec] Launcher specs Puppeteer Puppeteer.executablePath returns executablePath for channel",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["webDriverBiDi"],
+    "parameters": ["chrome", "webDriverBiDi"],
     "expectations": ["PASS"]
   },
   {
     "testIdPattern": "[launcher.spec] Launcher specs Puppeteer Puppeteer.executablePath should work",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["webDriverBiDi"],
+    "parameters": ["chrome", "webDriverBiDi"],
     "expectations": ["PASS"]
   },
   {
@@ -860,7 +860,7 @@
   {
     "testIdPattern": "[launcher.spec] Launcher specs Puppeteer Puppeteer.launch should be able to launch Chrome",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["webDriverBiDi"],
+    "parameters": ["chrome", "webDriverBiDi"],
     "expectations": ["FAIL"]
   },
   {
@@ -2348,19 +2348,19 @@
   {
     "testIdPattern": "[launcher.spec] Launcher specs Puppeteer Puppeteer.executablePath returns executablePath for channel",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["cdp", "firefox"],
+    "parameters": ["firefox"],
     "expectations": ["SKIP"]
   },
   {
     "testIdPattern": "[launcher.spec] Launcher specs Puppeteer Puppeteer.executablePath should work",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["cdp", "firefox"],
+    "parameters": ["firefox"],
     "expectations": ["SKIP"]
   },
   {
     "testIdPattern": "[launcher.spec] Launcher specs Puppeteer Puppeteer.launch should be able to launch Chrome",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["cdp", "firefox"],
+    "parameters": ["firefox"],
     "expectations": ["SKIP"]
   },
   {
