@@ -97,6 +97,7 @@ jobs:
         cp ./.github/mozconfig_win_pgo_base mozconfig
         echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
         echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
+        echo 'ac_add_options --without-wasm-sandboxed-libraries' >> mozconfig
         sudo apt update
         sudo apt install zstd p7zip-full
         python3 ./.github/setup-buildtool-windows-pgo.py
@@ -121,7 +122,7 @@ jobs:
         echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
         
         rm -rf $RUNNER_USERDIR/.mozbuild/clang
-        wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.linux64-clang-15.latest/artifacts/public%2Fbuild%2Fclang.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/.mozbuild
+        wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/ItH7LNKUSzquYigrSE04ww/runs/0/artifacts/public%2Fbuild%2Fclang.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/.mozbuild
         
         echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
 
@@ -277,6 +278,7 @@ jobs:
         echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
         echo 'ac_add_options --with-l10n-base=$RUNNER_USERDIR/l10n-central/l10n-central' >> mozconfig
         echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
+        echo 'ac_add_options --without-wasm-sandboxed-libraries' >> mozconfig
         echo 'ac_add_options --with-pgo-profile-path=$RUNNER_USERDIR/artifact/merged.profdata' >> mozconfig
         echo 'ac_add_options --with-pgo-jarlog=$RUNNER_USERDIR/artifact/en-US.log' >> mozconfig
         sudo apt update
@@ -303,7 +305,7 @@ jobs:
         echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
         
         rm -rf $RUNNER_USERDIR/.mozbuild/clang
-        wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.linux64-clang-15.latest/artifacts/public%2Fbuild%2Fclang.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/.mozbuild
+        wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/ItH7LNKUSzquYigrSE04ww/runs/0/artifacts/public%2Fbuild%2Fclang.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/.mozbuild
         
         echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
 
