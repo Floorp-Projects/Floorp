@@ -118,6 +118,23 @@ class AppLinksInterceptorTest {
     }
 
     @Test
+    fun `request is not intercepted when launchInApp preference is updated to false`() {
+        appLinksInterceptor = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = true,
+            launchInApp = { false },
+            useCases = mockUseCases,
+        )
+
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, true, false, false, false, false)
+        assertEquals(null, response)
+
+        appLinksInterceptor.updateLaunchInApp { true }
+        val response2 = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, true, false, false, false, false)
+        assert(response2 is RequestInterceptor.InterceptionResponse.AppIntent)
+    }
+
+    @Test
     fun `request is not intercepted when not user clicking on a link`() {
         val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, false, false, false, false, false)
         assertEquals(null, response)

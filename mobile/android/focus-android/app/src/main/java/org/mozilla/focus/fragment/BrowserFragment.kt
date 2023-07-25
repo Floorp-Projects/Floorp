@@ -782,6 +782,13 @@ class BrowserFragment :
         if (tab.isCustomTab()) {
             view?.isVisible = true
         }
+
+        context?.settings?.openLinksInExternalApp?.let { openLinksInExternalApp ->
+            val isCustomTab = tab.isCustomTab()
+            components?.appLinksInterceptor?.updateLaunchInApp {
+                openLinksInExternalApp || isCustomTab
+            }
+        }
     }
 
     private fun updateEngineColorScheme() {

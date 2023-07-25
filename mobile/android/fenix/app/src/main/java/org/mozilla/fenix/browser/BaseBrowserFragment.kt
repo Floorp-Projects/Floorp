@@ -1224,6 +1224,13 @@ abstract class BaseBrowserFragment :
             components.useCases.sessionUseCases.reload()
         }
         hideToolbar()
+
+        context?.settings()?.shouldOpenLinksInApp(customTabSessionId != null)
+            ?.let { openLinksInExternalApp ->
+                components.services.appLinksInterceptor.updateLaunchInApp {
+                    openLinksInExternalApp
+                }
+            }
     }
 
     @CallSuper

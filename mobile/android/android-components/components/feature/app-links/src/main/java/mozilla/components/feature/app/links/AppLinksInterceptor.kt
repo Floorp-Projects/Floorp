@@ -55,14 +55,24 @@ class AppLinksInterceptor(
     private val engineSupportedSchemes: Set<String> = ENGINE_SUPPORTED_SCHEMES,
     private val alwaysAllowedSchemes: Set<String> = ALWAYS_ALLOW_SCHEMES,
     private val alwaysDeniedSchemes: Set<String> = ALWAYS_DENY_SCHEMES,
-    private val launchInApp: () -> Boolean = { false },
+    private var launchInApp: () -> Boolean = { false },
     private val useCases: AppLinksUseCases = AppLinksUseCases(
         context,
-        launchInApp,
+        // passing launchInApp() in the lambda to make sure it will always get the updated value
+        { launchInApp() },
         alwaysDeniedSchemes = alwaysDeniedSchemes,
     ),
     private val launchFromInterceptor: Boolean = false,
 ) : RequestInterceptor {
+
+    /**
+     * Update launchInApp for this instance of AppLinksInterceptor
+     * @param launchInApp the new value of launchInApp
+     */
+    fun updateLaunchInApp(launchInApp: () -> Boolean) {
+        this.launchInApp = launchInApp
+    }
+
     @Suppress("ComplexMethod")
     override fun onLoadRequest(
         engineSession: EngineSession,
