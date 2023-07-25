@@ -882,6 +882,20 @@ spotlight:
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 
+# Before 117, this feature only included one variable, pdfJsTourProgress. So,
+# the minimum version for messaging experiments using this feature ID is 117.
+featureCallout:
+  description: "A Firefox Messaging System message for the Feature Callout message channel"
+  owner: omc@mozilla.com
+  hasExposure: true
+  exposureDescription: >-
+    "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
+  isEarlyStartup: false
+  schema:
+    uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
+  variables: {}
+
 # fxms-message-* placeholder feature ids
 #
 # https://docs.google.com/spreadsheets/d/119YbeKStLL0Fg2QkK-yN93mrtD1rlneGZGTl_jAwtyw/edit#gid=1903378504
@@ -1131,16 +1145,6 @@ majorRelease2022:
       fallbackPref: "browser.majorrelease.onboarding"
       description: "Whether or not to use the MR2022 onboarding settings."
 
-featureCallout:
-  description: "Prefs that control users' progress through Feature Callout tours"
-  owner: omc@mozilla.com
-  hasExposure: false
-  isEarlyStartup: false
-  variables:
-    pdfJsTourProgress:
-      description: A JSON String representing the intitial state of the pref that holds the progress of the PDF.js feature tour.
-      type: string
-      setPref: "browser.pdfjs.feature-tour"
 browserLowMemoryPrefs:
   description: Prefs which control the browser's behaviour under low memory.
   owner: haftandilian@mozilla.com
