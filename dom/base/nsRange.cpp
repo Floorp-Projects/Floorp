@@ -3185,13 +3185,13 @@ void nsRange::GetInnerTextNoFlush(DOMString& aValue, ErrorResult& aError,
       if (currentNode->IsHTMLElement(nsGkAtoms::br)) {
         result.Append('\n');
       }
-      switch (f->StyleDisplay()->DisplayInside()) {
-        case StyleDisplayInside::TableCell:
+      switch (f->StyleDisplay()->mDisplay) {
+        case StyleDisplay::TableCell:
           if (!IsLastCellOfRow(f)) {
             result.Append('\t');
           }
           break;
-        case StyleDisplayInside::TableRow:
+        case StyleDisplay::TableRow:
           if (!IsLastRowOfRowGroup(f) ||
               !IsLastNonemptyRowGroupOfTable(f->GetParent())) {
             result.Append('\n');
