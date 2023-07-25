@@ -723,7 +723,7 @@ quick_suggest:
       - najiang@mozilla.com
     expires: never
     send_in_pings:
-      - top-sites
+      - quick-suggest
 
   context_id:
     type: uuid
