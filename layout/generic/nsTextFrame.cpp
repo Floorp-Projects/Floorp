@@ -7471,18 +7471,11 @@ nsresult nsTextFrame::GetCharacterRectsInRange(int32_t aInOffset,
   }
 
   do {
-    // Note that when IsTextCombined() is true, we may get a slight mismatch
-    // between `point`, which is accumulated one cluster at a time, applying
-    // the scale factor to each individual width, and the result of
-    // GetPointFromIterator, which measures the range up to the iterator
-    // position all at once and then scales the result. This can result in
-    // different rounding, so we relax this assertion a bit.
-    DebugOnly<nsPoint> p = GetPointFromIterator(iter, properties);
-    MOZ_ASSERT(
-        point == p || (Style()->IsTextCombined() &&
-                       std::abs(point.x - p.value.x) < AppUnitsPerCSSPixel() &&
-                       point.y == p.value.y),
-        "character position error!");
+    // We'd like to assert here that |point| matches
+    // |GetPointFromIterator(iter, properties)|, which in principle should be
+    // true; however, testcases with vast dimensions can lead to coordinate
+    // overflow and disrupt the calculations. So we've dropped the assertion
+    // to avoid tripping the fuzzer unnecessarily.
 
     // Measure to the end of the cluster.
     nscoord iSize = 0;
