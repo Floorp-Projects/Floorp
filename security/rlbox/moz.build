@@ -25,6 +25,9 @@ SOURCES += [
 
 # Configuration for the wasm2c runtime used by RLBox
 
+# Enable SIMD autovectorization
+WASM_CXXFLAGS += ["-msimd128"]
+
 # Use a mmap style allocation
 DEFINES["WASM_RT_USE_MMAP"] = 1
 
