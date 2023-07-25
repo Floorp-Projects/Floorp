@@ -23,6 +23,7 @@
 #include "nsTHashtable.h"
 #include "nsToolkitCompsCID.h"
 #include "nsURIHashKey.h"
+#include "prtime.h"
 
 // The target dimension in pixels for favicons we store, in reverse order.
 // When adding/removing sizes from here, make sure to update the vector size.
@@ -33,13 +34,12 @@ class mozIStorageStatementCallback;
 
 class UnassociatedIconHashKey : public nsURIHashKey {
  public:
-  explicit UnassociatedIconHashKey(const nsIURI* aURI) : nsURIHashKey(aURI) {}
-  UnassociatedIconHashKey(UnassociatedIconHashKey&& aOther)
+  explicit UnassociatedIconHashKey(const nsIURI* aURI)
+      : nsURIHashKey(aURI), created(PR_Now()) {}
+  UnassociatedIconHashKey(UnassociatedIconHashKey&& aOther) noexcept
       : nsURIHashKey(std::move(aOther)),
         iconData(std::move(aOther.iconData)),
-        created(std::move(aOther.created)) {
-    MOZ_ASSERT_UNREACHABLE("Do not call me!");
-  }
+        created(std::move(aOther.created)) {}
   mozilla::places::IconData iconData;
   PRTime created;
 };
@@ -75,7 +75,7 @@ class nsFaviconService final : public nsIFaviconService,
   }
 
   // addition to API for strings to prevent excessive parsing of URIs
-  nsresult GetFaviconLinkForIconString(const nsCString& aIcon,
+  nsresult GetFaviconLinkForIconString(const nsCString& aSpec,
                                        nsIURI** aOutput);
 
   nsresult OptimizeIconSizes(mozilla::places::IconData& aIcon);

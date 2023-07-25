@@ -105,11 +105,9 @@ export class AboutReaderParent extends JSWindowActorParent {
               uri,
               iconUri => {
                 if (iconUri) {
-                  iconUri =
-                    lazy.PlacesUtils.favicons.getFaviconLinkForIcon(iconUri);
                   resolve({
                     url: message.data.url,
-                    faviconUrl: iconUri.pathQueryRef.replace(/^favicon:/, ""),
+                    faviconUrl: iconUri.spec,
                   });
                 } else {
                   resolve(null);
