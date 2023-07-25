@@ -394,3 +394,13 @@ jobs:
           - mozilla-central
       when:
           - {hour: 0, minute: 00}
+
+    - name: snap-upstream
+      job:
+          type: decision-task
+          treeherder-symbol: snap-upstream
+          target-tasks-method: snap_upstream_build
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {hour: 0, minute: 0}
