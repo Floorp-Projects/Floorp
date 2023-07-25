@@ -22,8 +22,11 @@ import {waitEvent} from './utils.js';
 
 describe('BrowserContext', function () {
   setupTestBrowserHooks();
+
   it('should have default context', async () => {
-    const {browser} = getTestState();
+    const {browser} = await getTestState({
+      skipContextCreation: true,
+    });
     expect(browser.browserContexts()).toHaveLength(1);
     const defaultContext = browser.browserContexts()[0]!;
     expect(defaultContext!.isIncognito()).toBe(false);
@@ -35,7 +38,9 @@ describe('BrowserContext', function () {
     expect(error.message).toContain('cannot be closed');
   });
   it('should create new incognito context', async () => {
-    const {browser} = getTestState();
+    const {browser} = await getTestState({
+      skipContextCreation: true,
+    });
 
     expect(browser.browserContexts()).toHaveLength(1);
     const context = await browser.createIncognitoBrowserContext();
@@ -46,7 +51,9 @@ describe('BrowserContext', function () {
     expect(browser.browserContexts()).toHaveLength(1);
   });
   it('should close all belonging targets once closing context', async () => {
-    const {browser} = getTestState();
+    const {browser} = await getTestState({
+      skipContextCreation: true,
+    });
 
     expect(await browser.pages()).toHaveLength(1);
 
@@ -59,10 +66,8 @@ describe('BrowserContext', function () {
     expect(await browser.pages()).toHaveLength(1);
   });
   it('window.open should use parent tab context', async () => {
-    const {browser, server} = getTestState();
+    const {browser, server, page, context} = await getTestState();
 
-    const context = await browser.createIncognitoBrowserContext();
-    const page = await context.newPage();
     await page.goto(server.EMPTY_PAGE);
     const [popupTarget] = await Promise.all([
       waitEvent(browser, 'targetcreated'),
@@ -71,12 +76,10 @@ describe('BrowserContext', function () {
       }, server.EMPTY_PAGE),
     ]);
     expect(popupTarget.browserContext()).toBe(context);
-    await context.close();
   });
   it('should fire target events', async () => {
-    const {browser, server} = getTestState();
+    const {server, context} = await getTestState();
 
-    const context = await browser.createIncognitoBrowserContext();
     const events: any[] = [];
     context.on('targetcreated', target => {
       return events.push('CREATED: ' + target.url());
@@ -95,12 +98,10 @@ describe('BrowserContext', function () {
       `CHANGED: ${server.EMPTY_PAGE}`,
       `DESTROYED: ${server.EMPTY_PAGE}`,
     ]);
-    await context.close();
   });
   it('should wait for a target', async () => {
-    const {browser, server} = getTestState();
+    const {server, context} = await getTestState();
 
-    const context = await browser.createIncognitoBrowserContext();
     let resolved = false;
 
     const targetPromise = context.waitForTarget(target => {
@@ -131,11 +132,10 @@ describe('BrowserContext', function () {
         throw error;
       }
     }
-    await context.close();
   });
 
   it('should timeout waiting for a non-existent target', async () => {
-    const {browser, server} = getTestState();
+    const {browser, server} = await getTestState();
 
     const context = await browser.createIncognitoBrowserContext();
     const error = await context
@@ -155,7 +155,9 @@ describe('BrowserContext', function () {
   });
 
   it('should isolate localStorage and cookies', async () => {
-    const {browser, server} = getTestState();
+    const {browser, server} = await getTestState({
+      skipContextCreation: true,
+    });
 
     // Create two incognito contexts.
     const context1 = await browser.createIncognitoBrowserContext();
@@ -215,7 +217,9 @@ describe('BrowserContext', function () {
   });
 
   it('should work across sessions', async () => {
-    const {browser, puppeteer} = getTestState();
+    const {browser, puppeteer} = await getTestState({
+      skipContextCreation: true,
+    });
 
     expect(browser.browserContexts()).toHaveLength(1);
     const context = await browser.createIncognitoBrowserContext();
@@ -230,7 +234,9 @@ describe('BrowserContext', function () {
   });
 
   it('should provide a context id', async () => {
-    const {browser} = getTestState();
+    const {browser} = await getTestState({
+      skipContextCreation: true,
+    });
 
     expect(browser.browserContexts()).toHaveLength(1);
     expect(browser.browserContexts()[0]!.id).toBeUndefined();

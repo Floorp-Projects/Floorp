@@ -10,4 +10,24 @@ module.exports = {
       },
     ],
   },
+  overrides: [
+    {
+      files: ['*.spec.ts'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': [
+          'error',
+          {argsIgnorePattern: '^_', varsIgnorePattern: '^_'},
+        ],
+        'no-restricted-syntax': [
+          'error',
+          {
+            message:
+              'Use helper command `launch` to make sure the browsers get cleaned',
+            selector:
+              'MemberExpression[object.name="puppeteer"][property.name="launch"]',
+          },
+        ],
+      },
+    },
+  ],
 };

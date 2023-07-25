@@ -1,3 +1,19 @@
+/**
+ * Copyright 2023 Google Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import {homedir} from 'os';
 import {join} from 'path';
 
@@ -23,6 +39,12 @@ function isSupportedProduct(product: unknown): product is Product {
 export const getConfiguration = (): Configuration => {
   const result = cosmiconfigSync('puppeteer').search();
   const configuration: Configuration = result ? result.config : {};
+
+  configuration.logLevel = (process.env['PUPPETEER_LOGLEVEL'] ??
+    process.env['npm_config_LOGLEVEL'] ??
+    process.env['npm_package_config_LOGLEVEL'] ??
+    configuration.logLevel ??
+    'warn') as 'silent' | 'error' | 'warn';
 
   // Merging environment variables.
   configuration.defaultProduct = (process.env['PUPPETEER_PRODUCT'] ??
@@ -57,11 +79,25 @@ export const getConfiguration = (): Configuration => {
       process.env['npm_config_puppeteer_browser_revision'] ??
       process.env['npm_package_config_puppeteer_browser_revision'] ??
       configuration.browserRevision;
-    configuration.downloadHost =
+
+    const downloadHost =
       process.env['PUPPETEER_DOWNLOAD_HOST'] ??
       process.env['npm_config_puppeteer_download_host'] ??
-      process.env['npm_package_config_puppeteer_download_host'] ??
-      configuration.downloadHost;
+      process.env['npm_package_config_puppeteer_download_host'];
+
+    if (downloadHost && configuration.logLevel === 'warn') {
+      console.warn(
+        `PUPPETEER_DOWNLOAD_HOST is deprecated. Use PUPPETEER_DOWNLOAD_BASE_URL instead.`
+      );
+    }
+
+    configuration.downloadBaseUrl =
+      process.env['PUPPETEER_DOWNLOAD_BASE_URL'] ??
+      process.env['npm_config_puppeteer_download_base_url'] ??
+      process.env['npm_package_config_puppeteer_download_base_url'] ??
+      configuration.downloadBaseUrl ??
+      downloadHost;
+
     configuration.downloadPath =
       process.env['PUPPETEER_DOWNLOAD_PATH'] ??
       process.env['npm_config_puppeteer_download_path'] ??
@@ -82,11 +118,6 @@ export const getConfiguration = (): Configuration => {
     configuration.temporaryDirectory;
 
   configuration.experiments ??= {};
-
-  configuration.logLevel = (process.env['PUPPETEER_LOGLEVEL'] ??
-    process.env['npm_config_LOGLEVEL'] ??
-    process.env['npm_package_config_LOGLEVEL'] ??
-    configuration.logLevel) as 'silent' | 'error' | 'warn';
 
   // Validate configuration.
   if (!isSupportedProduct(configuration.defaultProduct)) {

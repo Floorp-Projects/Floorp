@@ -1,5 +1,88 @@
 # Changelog
 
+## [1.4.6](https://github.com/puppeteer/puppeteer/compare/browsers-v1.4.5...browsers-v1.4.6) (2023-07-20)
+
+
+### Bug Fixes
+
+* restore proxy-agent ([#10569](https://github.com/puppeteer/puppeteer/issues/10569)) ([bf6304e](https://github.com/puppeteer/puppeteer/commit/bf6304e064eb52d39d7f993f1ea868da06f7f006))
+
+## [1.4.5](https://github.com/puppeteer/puppeteer/compare/browsers-v1.4.4...browsers-v1.4.5) (2023-07-13)
+
+
+### Bug Fixes
+
+* stop relying on vm2 (via proxy agent) ([#10548](https://github.com/puppeteer/puppeteer/issues/10548)) ([4070cd6](https://github.com/puppeteer/puppeteer/commit/4070cd68b6d01fb9a1643da2662ce0b6f53cf37d))
+
+## [1.4.4](https://github.com/puppeteer/puppeteer/compare/browsers-v1.4.3...browsers-v1.4.4) (2023-07-11)
+
+
+### Bug Fixes
+
+* correctly parse the default buildId ([#10535](https://github.com/puppeteer/puppeteer/issues/10535)) ([c308266](https://github.com/puppeteer/puppeteer/commit/c3082661113b4b55534f25da86e3b261d3952953))
+* remove Chromium channels ([#10536](https://github.com/puppeteer/puppeteer/issues/10536)) ([c0dc8ad](https://github.com/puppeteer/puppeteer/commit/c0dc8ad8a82446752e29f98d8eee617b9a67c942))
+
+## [1.4.3](https://github.com/puppeteer/puppeteer/compare/browsers-v1.4.2...browsers-v1.4.3) (2023-06-29)
+
+
+### Bug Fixes
+
+* negative timeout doesn't break launch ([#10480](https://github.com/puppeteer/puppeteer/issues/10480)) ([6a89a2a](https://github.com/puppeteer/puppeteer/commit/6a89a2aadcaf683fe57f1e0e13886f1fa937e194))
+
+## [1.4.2](https://github.com/puppeteer/puppeteer/compare/browsers-v1.4.1...browsers-v1.4.2) (2023-06-20)
+
+
+### Bug Fixes
+
+* include src into published package ([#10415](https://github.com/puppeteer/puppeteer/issues/10415)) ([d1ffad0](https://github.com/puppeteer/puppeteer/commit/d1ffad059ae66104842b92dc814d362c123b9646))
+
+## [1.4.1](https://github.com/puppeteer/puppeteer/compare/browsers-v1.4.0...browsers-v1.4.1) (2023-05-31)
+
+
+### Bug Fixes
+
+* pass on the auth from the download URL ([#10271](https://github.com/puppeteer/puppeteer/issues/10271)) ([3a1f4f0](https://github.com/puppeteer/puppeteer/commit/3a1f4f0f8f5fe4e20c4ed69f5485a827a841cf54))
+
+## [1.4.0](https://github.com/puppeteer/puppeteer/compare/browsers-v1.3.0...browsers-v1.4.0) (2023-05-24)
+
+
+### Features
+
+* use proxy-agent to support various proxies ([#10227](https://github.com/puppeteer/puppeteer/issues/10227)) ([2c0bd54](https://github.com/puppeteer/puppeteer/commit/2c0bd54d2e3b778818b9b4b32f436778f571b918))
+
+## [1.3.0](https://github.com/puppeteer/puppeteer/compare/browsers-v1.2.0...browsers-v1.3.0) (2023-05-15)
+
+
+### Features
+
+* add ability to uninstall a browser ([#10179](https://github.com/puppeteer/puppeteer/issues/10179)) ([d388a6e](https://github.com/puppeteer/puppeteer/commit/d388a6edfd164548b008cb0d8e9cb5c0d03cdcda))
+
+
+### Bug Fixes
+
+* update the command name ([#10178](https://github.com/puppeteer/puppeteer/issues/10178)) ([ccbb82d](https://github.com/puppeteer/puppeteer/commit/ccbb82d9cd5b77f8262c143a5663fc1f9938a8c4))
+
+## [1.2.0](https://github.com/puppeteer/puppeteer/compare/browsers-v1.1.0...browsers-v1.2.0) (2023-05-11)
+
+
+### Features
+
+* support Chrome channels for ChromeDriver ([#10158](https://github.com/puppeteer/puppeteer/issues/10158)) ([e313b05](https://github.com/puppeteer/puppeteer/commit/e313b054e658887e2c062ea55d8ee99f3f4f3789))
+
+## [1.1.0](https://github.com/puppeteer/puppeteer/compare/browsers-v1.0.1...browsers-v1.1.0) (2023-05-08)
+
+
+### Features
+
+* support stable/dev/beta/canary keywords for chrome and chromium ([#10140](https://github.com/puppeteer/puppeteer/issues/10140)) ([90ed263](https://github.com/puppeteer/puppeteer/commit/90ed263eafb0ca0420ea1918d7c1f326eaa58e20))
+
+## [1.0.1](https://github.com/puppeteer/puppeteer/compare/browsers-v1.0.0...browsers-v1.0.1) (2023-05-05)
+
+
+### Bug Fixes
+
+* rename PUPPETEER_DOWNLOAD_HOST to PUPPETEER_DOWNLOAD_BASE_URL ([#10130](https://github.com/puppeteer/puppeteer/issues/10130)) ([9758cae](https://github.com/puppeteer/puppeteer/commit/9758cae029f90908c4b5340561d9c51c26aa2f21))
+
 ## [1.0.0](https://github.com/puppeteer/puppeteer/compare/browsers-v0.5.0...browsers-v1.0.0) (2023-05-02)
 
 

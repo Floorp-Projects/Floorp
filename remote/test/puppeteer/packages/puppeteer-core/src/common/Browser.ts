@@ -33,13 +33,19 @@ import {
 import {BrowserContext} from '../api/BrowserContext.js';
 import {Page} from '../api/Page.js';
 import {assert} from '../util/assert.js';
-import {createDeferredPromise} from '../util/DeferredPromise.js';
+import {Deferred} from '../util/Deferred.js';
 
 import {ChromeTargetManager} from './ChromeTargetManager.js';
 import {CDPSession, Connection, ConnectionEmittedEvents} from './Connection.js';
 import {FirefoxTargetManager} from './FirefoxTargetManager.js';
 import {Viewport} from './PuppeteerViewport.js';
-import {Target} from './Target.js';
+import {
+  InitializationStatus,
+  OtherTarget,
+  PageTarget,
+  Target,
+  WorkerTarget,
+} from './Target.js';
 import {TargetManager, TargetManagerEmittedEvents} from './TargetManager.js';
 import {TaskQueue} from './TaskQueue.js';
 import {waitWithTimeout} from './util.js';
@@ -84,7 +90,7 @@ export class CDPBrowser extends BrowserBase {
   #targetFilterCallback: TargetFilterCallback;
   #isPageTargetCallback!: IsPageTargetCallback;
   #defaultContext: CDPBrowserContext;
-  #contexts: Map<string, CDPBrowserContext>;
+  #contexts = new Map<string, CDPBrowserContext>();
   #screenshotTaskQueue: TaskQueue;
   #targetManager: TargetManager;
 
@@ -137,7 +143,6 @@ export class CDPBrowser extends BrowserBase {
       );
     }
     this.#defaultContext = new CDPBrowserContext(this.#connection, this);
-    this.#contexts = new Map();
     for (const contextId of contextIds) {
       this.#contexts.set(
         contextId,
@@ -318,26 +323,47 @@ export class CDPBrowser extends BrowserBase {
       throw new Error('Missing browser context');
     }
 
-    return new Target(
+    const createSession = (isAutoAttachEmulated: boolean) => {
+      return this.#connection._createSession(targetInfo, isAutoAttachEmulated);
+    };
+    if (this.#isPageTargetCallback(targetInfo)) {
+      return new PageTarget(
+        targetInfo,
+        session,
+        context,
+        this.#targetManager,
+        createSession,
+        this.#ignoreHTTPSErrors,
+        this.#defaultViewport ?? null,
+        this.#screenshotTaskQueue
+      );
+    }
+    if (
+      targetInfo.type === 'service_worker' ||
+      targetInfo.type === 'shared_worker'
+    ) {
+      return new WorkerTarget(
+        targetInfo,
+        session,
+        context,
+        this.#targetManager,
+        createSession
+      );
+    }
+    return new OtherTarget(
       targetInfo,
       session,
       context,
       this.#targetManager,
-      (isAutoAttachEmulated: boolean) => {
-        return this.#connection._createSession(
-          targetInfo,
-          isAutoAttachEmulated
-        );
-      },
-      this.#ignoreHTTPSErrors,
-      this.#defaultViewport ?? null,
-      this.#screenshotTaskQueue,
-      this.#isPageTargetCallback
+      createSession
     );
   };
 
   #onAttachedToTarget = async (target: Target) => {
-    if (await target._initializedPromise) {
+    if (
+      (await target._initializedDeferred.valueOrThrow()) ===
+      InitializationStatus.SUCCESS
+    ) {
       this.emit(BrowserEmittedEvents.TargetCreated, target);
       target
         .browserContext()
@@ -346,9 +372,12 @@ export class CDPBrowser extends BrowserBase {
   };
 
   #onDetachedFromTarget = async (target: Target): Promise<void> => {
-    target._initializedCallback(false);
-    target._closedCallback();
-    if (await target._initializedPromise) {
+    target._initializedDeferred.resolve(InitializationStatus.ABORTED);
+    target._isClosedDeferred.resolve();
+    if (
+      (await target._initializedDeferred.valueOrThrow()) ===
+      InitializationStatus.SUCCESS
+    ) {
       this.emit(BrowserEmittedEvents.TargetDestroyed, target);
       target
         .browserContext()
@@ -356,22 +385,11 @@ export class CDPBrowser extends BrowserBase {
     }
   };
 
-  #onTargetChanged = ({
-    target,
-    targetInfo,
-  }: {
-    target: Target;
-    targetInfo: Protocol.Target.TargetInfo;
-  }): void => {
-    const previousURL = target.url();
-    const wasInitialized = target._isInitialized;
-    target._targetInfoChanged(targetInfo);
-    if (wasInitialized && previousURL !== target.url()) {
-      this.emit(BrowserEmittedEvents.TargetChanged, target);
-      target
-        .browserContext()
-        .emit(BrowserContextEmittedEvents.TargetChanged, target);
-    }
+  #onTargetChanged = ({target}: {target: Target}): void => {
+    this.emit(BrowserEmittedEvents.TargetChanged, target);
+    target
+      .browserContext()
+      .emit(BrowserContextEmittedEvents.TargetChanged, target);
   };
 
   #onTargetDiscovered = (targetInfo: Protocol.Target.TargetInfo): void => {
@@ -419,7 +437,9 @@ export class CDPBrowser extends BrowserBase {
     if (!target) {
       throw new Error(`Missing target for page (id = ${targetId})`);
     }
-    const initialized = await target._initializedPromise;
+    const initialized =
+      (await target._initializedDeferred.valueOrThrow()) ===
+      InitializationStatus.SUCCESS;
     if (!initialized) {
       throw new Error(`Failed to create target for page (id = ${targetId})`);
     }
@@ -440,7 +460,9 @@ export class CDPBrowser extends BrowserBase {
     return Array.from(
       this.#targetManager.getAvailableTargets().values()
     ).filter(target => {
-      return target._isInitialized;
+      return (
+        target._initializedDeferred.value() === InitializationStatus.SUCCESS
+      );
     });
   }
 
@@ -479,47 +501,30 @@ export class CDPBrowser extends BrowserBase {
     options: WaitForTargetOptions = {}
   ): Promise<Target> {
     const {timeout = 30000} = options;
-    const targetPromise = createDeferredPromise<Target | PromiseLike<Target>>();
+    const targetDeferred = Deferred.create<Target | PromiseLike<Target>>();
 
     this.on(BrowserEmittedEvents.TargetCreated, check);
     this.on(BrowserEmittedEvents.TargetChanged, check);
     try {
       this.targets().forEach(check);
       if (!timeout) {
-        return await targetPromise;
+        return await targetDeferred.valueOrThrow();
       }
-      return await waitWithTimeout(targetPromise, 'target', timeout);
+      return await waitWithTimeout(
+        targetDeferred.valueOrThrow(),
+        'target',
+        timeout
+      );
     } finally {
       this.off(BrowserEmittedEvents.TargetCreated, check);
       this.off(BrowserEmittedEvents.TargetChanged, check);
     }
 
     async function check(target: Target): Promise<void> {
-      if ((await predicate(target)) && !targetPromise.resolved()) {
-        targetPromise.resolve(target);
+      if ((await predicate(target)) && !targetDeferred.resolved()) {
+        targetDeferred.resolve(target);
       }
     }
-  }
-
-  /**
-   * An array of all open pages inside the Browser.
-   *
-   * @remarks
-   *
-   * In case of multiple browser contexts, returns an array with all the pages in all
-   * browser contexts. Non-visible pages, such as `"background_page"`, will not be listed
-   * here. You can find them using {@link Target.page}.
-   */
-  override async pages(): Promise<Page[]> {
-    const contextPages = await Promise.all(
-      this.browserContexts().map(context => {
-        return context.pages();
-      })
-    );
-    // Flatten array.
-    return contextPages.reduce((acc, x) => {
-      return acc.concat(x);
-    }, []);
   }
 
   override async version(): Promise<string> {

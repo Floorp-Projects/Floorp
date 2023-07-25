@@ -16,9 +16,10 @@
 
 import * as Bidi from 'chromium-bidi/lib/cjs/protocol/protocol.js';
 
+import {LazyArg} from '../LazyArg.js';
 import {debugError, isDate, isPlainObject, isRegExp} from '../util.js';
 
-import {Context} from './Context.js';
+import {BrowsingContext} from './BrowsingContext.js';
 import {ElementHandle} from './ElementHandle.js';
 import {JSHandle} from './JSHandle.js';
 
@@ -31,7 +32,7 @@ class UnserializableError extends Error {}
  * @internal
  */
 export class BidiSerializer {
-  static serializeNumber(arg: number): Bidi.CommonDataTypes.LocalOrRemoteValue {
+  static serializeNumber(arg: number): Bidi.CommonDataTypes.LocalValue {
     let value: Bidi.CommonDataTypes.SpecialNumber | number;
     if (Object.is(arg, -0)) {
       value = '-0';
@@ -50,9 +51,7 @@ export class BidiSerializer {
     };
   }
 
-  static serializeObject(
-    arg: object | null
-  ): Bidi.CommonDataTypes.LocalOrRemoteValue {
+  static serializeObject(arg: object | null): Bidi.CommonDataTypes.LocalValue {
     if (arg === null) {
       return {
         type: 'null',
@@ -111,9 +110,7 @@ export class BidiSerializer {
     );
   }
 
-  static serializeRemoveValue(
-    arg: unknown
-  ): Bidi.CommonDataTypes.LocalOrRemoteValue {
+  static serializeRemoveValue(arg: unknown): Bidi.CommonDataTypes.LocalValue {
     switch (typeof arg) {
       case 'symbol':
       case 'function':
@@ -145,17 +142,24 @@ export class BidiSerializer {
     }
   }
 
-  static serialize(
+  static async serialize(
     arg: unknown,
-    context: Context
-  ): Bidi.CommonDataTypes.LocalOrRemoteValue {
-    // TODO: See use case of LazyArgs
+    context: BrowsingContext
+  ): Promise<
+    Bidi.CommonDataTypes.LocalValue | Bidi.CommonDataTypes.RemoteValue
+  > {
+    if (arg instanceof LazyArg) {
+      arg = await arg.get(context);
+    }
     const objectHandle =
       arg && (arg instanceof JSHandle || arg instanceof ElementHandle)
         ? arg
         : null;
     if (objectHandle) {
-      if (objectHandle.context() !== context) {
+      if (
+        objectHandle.context() !== context &&
+        !('sharedId' in objectHandle.remoteValue())
+      ) {
         throw new Error(
           'JSHandles can be evaluated only in the context they were created!'
         );
@@ -178,7 +182,6 @@ export class BidiSerializer {
       case 'NaN':
         return NaN;
       case 'Infinity':
-      case '+Infinity':
         return Infinity;
       case '-Infinity':
         return -Infinity;
@@ -210,6 +213,7 @@ export class BidiSerializer {
           }, {});
         }
         break;
+
       case 'map':
         return result.value.reduce((acc: Map<unknown, unknown>, tuple) => {
           const {key, value} = BidiSerializer.deserializeTuple(tuple);
@@ -243,7 +247,7 @@ export class BidiSerializer {
 
   static deserializeTuple([serializedKey, serializedValue]: [
     Bidi.CommonDataTypes.RemoteValue | string,
-    Bidi.CommonDataTypes.RemoteValue
+    Bidi.CommonDataTypes.RemoteValue,
   ]): {key: unknown; value: unknown} {
     const key =
       typeof serializedKey === 'string'

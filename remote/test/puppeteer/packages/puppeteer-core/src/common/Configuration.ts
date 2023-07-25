@@ -56,23 +56,22 @@ export interface Configuration {
   /**
    * Specifies the URL prefix that is used to download the browser.
    *
-   * Can be overridden by `PUPPETEER_DOWNLOAD_HOST`.
+   * Can be overridden by `PUPPETEER_DOWNLOAD_BASE_URL`.
    *
    * @remarks
    * This must include the protocol and may even need a path prefix.
    *
-   * @defaultValue Either https://storage.googleapis.com or
+   * @defaultValue Either https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing or
    * https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central,
    * depending on the product.
    */
-  downloadHost?: string;
+  downloadBaseUrl?: string;
   /**
    * Specifies the path for the downloads folder.
    *
    * Can be overridden by `PUPPETEER_DOWNLOAD_PATH`.
    *
-   * @defaultValue `<cache>/<product>` where `<cache>` is Puppeteer's cache
-   * directory and `<product>` is the name of the browser.
+   * @defaultValue `<cacheDirectory>`
    */
   downloadPath?: string;
   /**
@@ -109,9 +108,7 @@ export interface Configuration {
   /**
    * Tells Puppeteer to log at the given level.
    *
-   * At the moment, any option silences logging.
-   *
-   * @defaultValue `undefined`
+   * @defaultValue `warn`
    */
   logLevel?: 'silent' | 'error' | 'warn';
   /**

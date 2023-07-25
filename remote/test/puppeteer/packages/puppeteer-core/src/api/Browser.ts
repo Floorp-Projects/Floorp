@@ -24,7 +24,7 @@ import {EventEmitter} from '../common/EventEmitter.js';
 import type {Target} from '../common/Target.js'; // TODO: move to ./api
 
 import type {BrowserContext} from './BrowserContext.js';
-import type {Page} from './Page.js'; // TODO: move to ./api
+import type {Page} from './Page.js';
 
 /**
  * BrowserContext options.
@@ -84,6 +84,7 @@ export const WEB_PERMISSION_TO_PROTOCOL_PERMISSION = new Map<
   ['accessibility-events', 'accessibilityEvents'],
   ['clipboard-read', 'clipboardReadWrite'],
   ['clipboard-write', 'clipboardReadWrite'],
+  ['clipboard-sanitized-write', 'clipboardSanitizedWrite'],
   ['payment-handler', 'paymentHandler'],
   ['persistent-storage', 'durableStorage'],
   ['idle-detection', 'idleDetection'],
@@ -108,6 +109,7 @@ export type Permission =
   | 'accessibility-events'
   | 'clipboard-read'
   | 'clipboard-write'
+  | 'clipboard-sanitized-write'
   | 'payment-handler'
   | 'persistent-storage'
   | 'idle-detection'
@@ -395,8 +397,16 @@ export class Browser extends EventEmitter {
    * browser contexts. Non-visible pages, such as `"background_page"`, will not be listed
    * here. You can find them using {@link Target.page}.
    */
-  pages(): Promise<Page[]> {
-    throw new Error('Not implemented');
+  async pages(): Promise<Page[]> {
+    const contextPages = await Promise.all(
+      this.browserContexts().map(context => {
+        return context.pages();
+      })
+    );
+    // Flatten array.
+    return contextPages.reduce((acc, x) => {
+      return acc.concat(x);
+    }, []);
   }
 
   /**
@@ -405,9 +415,11 @@ export class Browser extends EventEmitter {
    * @remarks
    *
    * For headless browser, this is similar to `HeadlessChrome/61.0.3153.0`. For
-   * non-headless, this is similar to `Chrome/61.0.3153.0`.
+   * non-headless or new-headless, this is similar to `Chrome/61.0.3153.0`. For
+   * Firefox, it is similar to `Firefox/116.0a1`.
    *
-   * The format of browser.version() might change with future releases of browsers.
+   * The format of browser.version() might change with future releases of
+   * browsers.
    */
   version(): Promise<string> {
     throw new Error('Not implemented');

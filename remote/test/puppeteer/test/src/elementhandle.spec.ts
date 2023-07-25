@@ -22,18 +22,16 @@ import sinon from 'sinon';
 import {
   getTestState,
   setupTestBrowserHooks,
-  setupTestPageAndContextHooks,
   shortWaitForArrayToHaveAtLeastNElements,
 } from './mocha-utils.js';
 import {attachFrame} from './utils.js';
 
 describe('ElementHandle specs', function () {
   setupTestBrowserHooks();
-  setupTestPageAndContextHooks();
 
   describe('ElementHandle.boundingBox', function () {
     it('should work', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.setViewport({width: 500, height: 500});
       await page.goto(server.PREFIX + '/grid.html');
@@ -42,7 +40,7 @@ describe('ElementHandle specs', function () {
       expect(box).toEqual({x: 100, y: 50, width: 50, height: 50});
     });
     it('should handle nested frames', async () => {
-      const {page, server, isChrome} = getTestState();
+      const {page, server, isChrome} = await getTestState();
 
       await page.setViewport({width: 500, height: 500});
       await page.goto(server.PREFIX + '/frames/nested-frames.html');
@@ -56,14 +54,14 @@ describe('ElementHandle specs', function () {
       }
     });
     it('should return null for invisible elements', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       await page.setContent('<div style="display:none">hi</div>');
       const element = (await page.$('div'))!;
       expect(await element.boundingBox()).toBe(null);
     });
     it('should force a layout', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       await page.setViewport({width: 500, height: 500});
       await page.setContent(
@@ -77,7 +75,7 @@ describe('ElementHandle specs', function () {
       expect(box).toEqual({x: 8, y: 8, width: 100, height: 200});
     });
     it('should work with SVG nodes', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       await page.setContent(`
         <svg xmlns="http://www.w3.org/2000/svg" width="500" height="500">
@@ -98,7 +96,7 @@ describe('ElementHandle specs', function () {
 
   describe('ElementHandle.boxModel', function () {
     it('should work', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/resetcss.html');
 
@@ -153,7 +151,7 @@ describe('ElementHandle specs', function () {
     });
 
     it('should return null for invisible elements', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       await page.setContent('<div style="display:none">hi</div>');
       const element = (await page.$('div'))!;
@@ -163,7 +161,7 @@ describe('ElementHandle specs', function () {
 
   describe('ElementHandle.contentFrame', function () {
     it('should work', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.EMPTY_PAGE);
       await attachFrame(page, 'frame1', server.EMPTY_PAGE);
@@ -175,7 +173,7 @@ describe('ElementHandle specs', function () {
 
   describe('ElementHandle.isVisible and ElementHandle.isHidden', function () {
     it('should work', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
       await page.setContent('<div style="display: none">text</div>');
       const element = (await page.waitForSelector('div'))!;
       await expect(element.isVisible()).resolves.toBeFalsy();
@@ -190,7 +188,7 @@ describe('ElementHandle specs', function () {
 
   describe('ElementHandle.click', function () {
     it('should work', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/input/button.html');
       const button = (await page.$('button'))!;
@@ -202,7 +200,7 @@ describe('ElementHandle specs', function () {
       ).toBe('Clicked');
     });
     it('should return Point data', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       const clicks: Array<[x: number, y: number]> = [];
 
@@ -236,7 +234,7 @@ describe('ElementHandle specs', function () {
       ]);
     });
     it('should work for Shadow DOM v1', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/shadow.html');
       const buttonHandle = await page.evaluateHandle(() => {
@@ -252,7 +250,7 @@ describe('ElementHandle specs', function () {
       ).toBe(true);
     });
     it('should not work for TextNodes', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/input/button.html');
       const buttonTextNode = await page.evaluateHandle(() => {
@@ -262,10 +260,13 @@ describe('ElementHandle specs', function () {
       await buttonTextNode.click().catch(error_ => {
         return (error = error_);
       });
-      expect(error.message).toBe('Node is not of type HTMLElement');
+      expect(error.message).atLeastOneToContain([
+        'Node is not of type HTMLElement',
+        'no such node',
+      ]);
     });
     it('should throw for detached nodes', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/input/button.html');
       const button = (await page.$('button'))!;
@@ -276,10 +277,13 @@ describe('ElementHandle specs', function () {
       await button.click().catch(error_ => {
         return (error = error_);
       });
-      expect(error.message).toBe('Node is detached from document');
+      expect(error.message).atLeastOneToContain([
+        'Node is detached from document',
+        'no such node',
+      ]);
     });
     it('should throw for hidden nodes', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/input/button.html');
       const button = (await page.$('button'))!;
@@ -289,12 +293,13 @@ describe('ElementHandle specs', function () {
       const error = await button.click().catch(error_ => {
         return error_;
       });
-      expect(error.message).toBe(
-        'Node is either not clickable or not an HTMLElement'
-      );
+      expect(error.message).atLeastOneToContain([
+        'Node is either not clickable or not an HTMLElement',
+        'no such node',
+      ]);
     });
     it('should throw for recursively hidden nodes', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/input/button.html');
       const button = (await page.$('button'))!;
@@ -304,27 +309,29 @@ describe('ElementHandle specs', function () {
       const error = await button.click().catch(error_ => {
         return error_;
       });
-      expect(error.message).toBe(
-        'Node is either not clickable or not an HTMLElement'
-      );
+      expect(error.message).atLeastOneToContain([
+        'Node is either not clickable or not an HTMLElement',
+        'no such node',
+      ]);
     });
     it('should throw for <br> elements', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       await page.setContent('hello<br>goodbye');
       const br = (await page.$('br'))!;
       const error = await br.click().catch(error_ => {
         return error_;
       });
-      expect(error.message).toBe(
-        'Node is either not clickable or not an HTMLElement'
-      );
+      expect(error.message).atLeastOneToContain([
+        'Node is either not clickable or not an HTMLElement',
+        'no such node',
+      ]);
     });
   });
 
   describe('ElementHandle.clickablePoint', function () {
     it('should work', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
 
       await page.evaluate(() => {
         document.body.style.padding = '0';
@@ -355,7 +362,7 @@ describe('ElementHandle specs', function () {
     });
 
     it('should work for iframes', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
       await page.evaluate(() => {
         document.body.style.padding = '10px';
         document.body.style.margin = '10px';
@@ -388,24 +395,30 @@ describe('ElementHandle specs', function () {
 
   describe('Element.waitForSelector', () => {
     it('should wait correctly with waitForSelector on an element', async () => {
-      const {page} = getTestState();
-      const waitFor = page.waitForSelector('.foo') as Promise<
-        ElementHandle<HTMLDivElement>
-      >;
+      const {page} = await getTestState();
+      const waitFor = page.waitForSelector('.foo').catch(err => {
+        return err;
+      }) as Promise<ElementHandle<HTMLDivElement>>;
       // Set the page content after the waitFor has been started.
       await page.setContent(
         '<div id="not-foo"></div><div class="bar">bar2</div><div class="foo">Foo1</div>'
       );
       let element = (await waitFor)!;
+      if (element instanceof Error) {
+        throw element;
+      }
       expect(element).toBeDefined();
 
-      const innerWaitFor = element.waitForSelector('.bar') as Promise<
-        ElementHandle<HTMLDivElement>
-      >;
+      const innerWaitFor = element.waitForSelector('.bar').catch(err => {
+        return err;
+      }) as Promise<ElementHandle<HTMLDivElement>>;
       await element.evaluate(el => {
         el.innerHTML = '<div class="bar">bar1</div>';
       });
       element = (await innerWaitFor)!;
+      if (element instanceof Error) {
+        throw element;
+      }
       expect(element).toBeDefined();
       expect(
         await element.evaluate(el => {
@@ -417,7 +430,7 @@ describe('ElementHandle specs', function () {
 
   describe('Element.waitForXPath', () => {
     it('should wait correctly with waitForXPath on an element', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
       // Set the page content after the waitFor has been started.
       await page.setContent(
         `<div id=el1>
@@ -450,7 +463,7 @@ describe('ElementHandle specs', function () {
 
   describe('ElementHandle.hover', function () {
     it('should work', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/input/scrollable.html');
       const button = (await page.$('#button-6'))!;
@@ -465,18 +478,29 @@ describe('ElementHandle specs', function () {
 
   describe('ElementHandle.isIntersectingViewport', function () {
     it('should work', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
+
+      async function getVisibilityForButton(selector: string) {
+        const button = (await page.$(selector))!;
+        return await button.isIntersectingViewport();
+      }
 
       await page.goto(server.PREFIX + '/offscreenbuttons.html');
+      const buttonsPromises = [];
+      // Firefox seems slow when using `isIntersectingViewport`
+      // so we do all the tasks asynchronously
       for (let i = 0; i < 11; ++i) {
-        const button = (await page.$('#btn' + i))!;
+        buttonsPromises.push(getVisibilityForButton('#btn' + i));
+      }
+      const buttonVisibility = await Promise.all(buttonsPromises);
+      for (let i = 0; i < 11; ++i) {
         // All but last button are visible.
         const visible = i < 10;
-        expect(await button.isIntersectingViewport()).toBe(visible);
+        expect(buttonVisibility[i]).toBe(visible);
       }
     });
     it('should work with threshold', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/offscreenbuttons.html');
       // a button almost cannot be seen
@@ -489,7 +513,7 @@ describe('ElementHandle specs', function () {
       ).toBe(false);
     });
     it('should work with threshold of 1', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/offscreenbuttons.html');
       // a button almost cannot be seen
@@ -502,54 +526,72 @@ describe('ElementHandle specs', function () {
       ).toBe(true);
     });
     it('should work with svg elements', async () => {
-      const {page, server} = getTestState();
+      const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/inline-svg.html');
-      const visibleCircle = await page.$('circle');
-      const visibleSvg = await page.$('svg');
-      expect(
-        await visibleCircle!.isIntersectingViewport({
-          threshold: 1,
-        })
-      ).toBe(true);
-      expect(
-        await visibleCircle!.isIntersectingViewport({
-          threshold: 0,
-        })
-      ).toBe(true);
-      expect(
-        await visibleSvg!.isIntersectingViewport({
-          threshold: 1,
-        })
-      ).toBe(true);
-      expect(
-        await visibleSvg!.isIntersectingViewport({
-          threshold: 0,
-        })
-      ).toBe(true);
+      const [visibleCircle, visibleSvg] = await Promise.all([
+        page.$('circle'),
+        page.$('svg'),
+      ]);
 
-      const invisibleCircle = await page.$('div circle');
-      const invisibleSvg = await page.$('div svg');
-      expect(
-        await invisibleCircle!.isIntersectingViewport({
+      // Firefox seems slow when using `isIntersectingViewport`
+      // so we do all the tasks asynchronously
+      const [
+        circleThresholdOne,
+        circleThresholdZero,
+        svgThresholdOne,
+        svgThresholdZero,
+      ] = await Promise.all([
+        visibleCircle!.isIntersectingViewport({
           threshold: 1,
-        })
-      ).toBe(false);
-      expect(
-        await invisibleCircle!.isIntersectingViewport({
+        }),
+        visibleCircle!.isIntersectingViewport({
           threshold: 0,
-        })
-      ).toBe(false);
-      expect(
-        await invisibleSvg!.isIntersectingViewport({
+        }),
+        visibleSvg!.isIntersectingViewport({
           threshold: 1,
-        })
-      ).toBe(false);
-      expect(
-        await invisibleSvg!.isIntersectingViewport({
+        }),
+        visibleSvg!.isIntersectingViewport({
           threshold: 0,
-        })
-      ).toBe(false);
+        }),
+      ]);
+
+      expect(circleThresholdOne).toBe(true);
+      expect(circleThresholdZero).toBe(true);
+      expect(svgThresholdOne).toBe(true);
+      expect(svgThresholdZero).toBe(true);
+
+      const [invisibleCircle, invisibleSvg] = await Promise.all([
+        page.$('div circle'),
+        await page.$('div svg'),
+      ]);
+
+      // Firefox seems slow when using `isIntersectingViewport`
+      // so we do all the tasks asynchronously
+      const [
+        invisibleCircleThresholdOne,
+        invisibleCircleThresholdZero,
+        invisibleSvgThresholdOne,
+        invisibleSvgThresholdZero,
+      ] = await Promise.all([
+        invisibleCircle!.isIntersectingViewport({
+          threshold: 1,
+        }),
+        invisibleCircle!.isIntersectingViewport({
+          threshold: 0,
+        }),
+        invisibleSvg!.isIntersectingViewport({
+          threshold: 1,
+        }),
+        invisibleSvg!.isIntersectingViewport({
+          threshold: 0,
+        }),
+      ]);
+
+      expect(invisibleCircleThresholdOne).toBe(false);
+      expect(invisibleCircleThresholdZero).toBe(false);
+      expect(invisibleSvgThresholdOne).toBe(false);
+      expect(invisibleSvgThresholdZero).toBe(false);
     });
   });
 
@@ -558,7 +600,7 @@ describe('ElementHandle specs', function () {
       Puppeteer.clearCustomQueryHandlers();
     });
     it('should register and unregister', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
       await page.setContent('<div id="not-foo"></div><div id="foo"></div>');
 
       // Register.
@@ -609,7 +651,7 @@ describe('ElementHandle specs', function () {
       }
     });
     it('should work for multiple elements', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
       await page.setContent(
         '<div id="not-foo"></div><div class="foo">Foo1</div><div class="foo baz">Foo2</div>'
       );
@@ -632,7 +674,7 @@ describe('ElementHandle specs', function () {
       expect(classNames).toStrictEqual(['foo', 'foo baz']);
     });
     it('should eval correctly', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
       await page.setContent(
         '<div id="not-foo"></div><div class="foo">Foo1</div><div class="foo baz">Foo2</div>'
       );
@@ -648,13 +690,15 @@ describe('ElementHandle specs', function () {
       expect(elements).toBe(2);
     });
     it('should wait correctly with waitForSelector', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
       Puppeteer.registerCustomQueryHandler('getByClass', {
         queryOne: (element, selector) => {
           return (element as Element).querySelector(`.${selector}`);
         },
       });
-      const waitFor = page.waitForSelector('getByClass/foo');
+      const waitFor = page.waitForSelector('getByClass/foo').catch(err => {
+        return err;
+      });
 
       // Set the page content after the waitFor has been started.
       await page.setContent(
@@ -662,36 +706,48 @@ describe('ElementHandle specs', function () {
       );
       const element = await waitFor;
 
+      if (element instanceof Error) {
+        throw element;
+      }
+
       expect(element).toBeDefined();
     });
 
     it('should wait correctly with waitForSelector on an element', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
       Puppeteer.registerCustomQueryHandler('getByClass', {
         queryOne: (element, selector) => {
           return (element as Element).querySelector(`.${selector}`);
         },
       });
-      const waitFor = page.waitForSelector('getByClass/foo') as Promise<
-        ElementHandle<HTMLElement>
-      >;
+      const waitFor = page.waitForSelector('getByClass/foo').catch(err => {
+        return err;
+      }) as Promise<ElementHandle<HTMLElement>>;
 
       // Set the page content after the waitFor has been started.
       await page.setContent(
         '<div id="not-foo"></div><div class="bar">bar2</div><div class="foo">Foo1</div>'
       );
       let element = (await waitFor)!;
+      if (element instanceof Error) {
+        throw element;
+      }
       expect(element).toBeDefined();
 
-      const innerWaitFor = element.waitForSelector('getByClass/bar') as Promise<
-        ElementHandle<HTMLElement>
-      >;
+      const innerWaitFor = element
+        .waitForSelector('getByClass/bar')
+        .catch(err => {
+          return err;
+        }) as Promise<ElementHandle<HTMLElement>>;
 
       await element.evaluate(el => {
         el.innerHTML = '<div class="bar">bar1</div>';
       });
 
       element = (await innerWaitFor)!;
+      if (element instanceof Error) {
+        throw element;
+      }
       expect(element).toBeDefined();
       expect(
         await element.evaluate(el => {
@@ -703,13 +759,15 @@ describe('ElementHandle specs', function () {
     it('should wait correctly with waitFor', async () => {
       /* page.waitFor is deprecated so we silence the warning to avoid test noise */
       sinon.stub(console, 'warn').callsFake(() => {});
-      const {page} = getTestState();
+      const {page} = await getTestState();
       Puppeteer.registerCustomQueryHandler('getByClass', {
         queryOne: (element, selector) => {
           return (element as Element).querySelector(`.${selector}`);
         },
       });
-      const waitFor = page.waitForSelector('getByClass/foo');
+      const waitFor = page.waitForSelector('getByClass/foo').catch(err => {
+        return err;
+      });
 
       // Set the page content after the waitFor has been started.
       await page.setContent(
@@ -717,10 +775,14 @@ describe('ElementHandle specs', function () {
       );
       const element = await waitFor;
 
+      if (element instanceof Error) {
+        throw element;
+      }
+
       expect(element).toBeDefined();
     });
     it('should work when both queryOne and queryAll are registered', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
       await page.setContent(
         '<div id="not-foo"></div><div class="foo"><div id="nested-foo" class="foo"/></div><div class="foo baz">Foo2</div>'
       );
@@ -740,7 +802,7 @@ describe('ElementHandle specs', function () {
       expect(elements).toHaveLength(3);
     });
     it('should eval when both queryOne and queryAll are registered', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
       await page.setContent(
         '<div id="not-foo"></div><div class="foo">text</div><div class="foo baz">content</div>'
       );
@@ -769,7 +831,7 @@ describe('ElementHandle specs', function () {
     });
 
     it('should work with function shorthands', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
       await page.setContent('<div id="not-foo"></div><div id="foo"></div>');
 
       Puppeteer.registerCustomQueryHandler('getById', {
@@ -792,7 +854,7 @@ describe('ElementHandle specs', function () {
 
   describe('Element.toElement', () => {
     it('should work', async () => {
-      const {page} = getTestState();
+      const {page} = await getTestState();
       await page.setContent('<div class="foo">Foo1</div>');
       const element = await page.$('.foo');
       const div = await element?.toElement('div');

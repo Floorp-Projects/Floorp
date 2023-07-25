@@ -21,10 +21,33 @@ import {ConnectionTransport} from '../ConnectionTransport.js';
 import {debug} from '../Debug.js';
 import {EventEmitter} from '../EventEmitter.js';
 
-import {Context} from './Context.js';
+import {BrowsingContext} from './BrowsingContext.js';
 
 const debugProtocolSend = debug('puppeteer:webDriverBiDi:SEND ►');
 const debugProtocolReceive = debug('puppeteer:webDriverBiDi:RECV ◀');
+
+interface Capability {
+  // session.CapabilityRequest = {
+  //   ? acceptInsecureCerts: bool,
+  //   ? browserName: text,
+  //   ? browserVersion: text,
+  //   ? platformName: text,
+  //   ? proxy: {
+  //     ? proxyType: "pac" / "direct" / "autodetect" / "system" / "manual",
+  //     ? proxyAutoconfigUrl: text,
+  //     ? ftpProxy: text,
+  //     ? httpProxy: text,
+  //     ? noProxy: [*text],
+  //     ? sslProxy: text,
+  //     ? socksProxy: text,
+  //     ? socksVersion: 0..255,
+  //   },
+  //   Extensible
+  // };
+  acceptInsecureCerts?: boolean;
+  browserName?: string;
+  browserVersion?: string;
+}
 
 /**
  * @internal
@@ -42,6 +65,10 @@ interface Commands {
     params: Bidi.Script.DisownParameters;
     returnType: Bidi.Script.DisownResult;
   };
+  'script.addPreloadScript': {
+    params: Bidi.Script.AddPreloadScriptParameters;
+    returnType: Bidi.Script.AddPreloadScriptResult;
+  };
 
   'browsingContext.create': {
     params: Bidi.BrowsingContext.CreateParameters;
@@ -49,11 +76,19 @@ interface Commands {
   };
   'browsingContext.close': {
     params: Bidi.BrowsingContext.CloseParameters;
-    returnType: Bidi.BrowsingContext.CloseResult;
+    returnType: Bidi.Message.EmptyResult;
+  };
+  'browsingContext.getTree': {
+    params: Bidi.BrowsingContext.GetTreeParameters;
+    returnType: Bidi.BrowsingContext.GetTreeResult;
   };
   'browsingContext.navigate': {
     params: Bidi.BrowsingContext.NavigateParameters;
     returnType: Bidi.BrowsingContext.NavigateResult;
+  };
+  'browsingContext.reload': {
+    params: Bidi.BrowsingContext.ReloadParameters;
+    returnType: Bidi.Message.EmptyResult;
   };
   'browsingContext.print': {
     params: Bidi.BrowsingContext.PrintParameters;
@@ -64,29 +99,49 @@ interface Commands {
     returnType: Bidi.BrowsingContext.CaptureScreenshotResult;
   };
 
+  'input.performActions': {
+    params: Bidi.Input.PerformActionsParameters;
+    returnType: Bidi.Message.EmptyResult;
+  };
+  'input.releaseActions': {
+    params: Bidi.Input.ReleaseActionsParameters;
+    returnType: Bidi.Message.EmptyResult;
+  };
+
   'session.new': {
-    params: {capabilities?: Record<any, unknown>}; // TODO: Update Types in chromium bidi
-    returnType: {sessionId: string};
+    params: {
+      // capabilities: session.CapabilitiesRequest
+      capabilities?: {
+        // session.CapabilitiesRequest = {
+        //   ? alwaysMatch: session.CapabilityRequest,
+        //   ? firstMatch: [*session.CapabilityRequest]
+        // }
+        alwaysMatch?: Capability;
+      };
+    }; // TODO: Update Types in chromium bidi
+    returnType: {
+      result: {sessionId: string; capabilities: Capability};
+    };
   };
   'session.status': {
     params: object;
     returnType: Bidi.Session.StatusResult;
   };
   'session.subscribe': {
-    params: Bidi.Session.SubscribeParameters;
-    returnType: Bidi.Session.SubscribeResult;
+    params: Bidi.Session.SubscriptionRequest;
+    returnType: Bidi.Message.EmptyResult;
   };
   'session.unsubscribe': {
-    params: Bidi.Session.SubscribeParameters;
-    returnType: Bidi.Session.UnsubscribeResult;
+    params: Bidi.Session.SubscriptionRequest;
+    returnType: Bidi.Message.EmptyResult;
   };
   'cdp.sendCommand': {
-    params: Bidi.CDP.SendCommandParams;
-    returnType: Bidi.CDP.SendCommandResult;
+    params: Bidi.Cdp.SendCommandParams;
+    returnType: Bidi.Cdp.SendCommandResult;
   };
   'cdp.getSession': {
-    params: Bidi.CDP.GetSessionParams;
-    returnType: Bidi.CDP.GetSessionResult;
+    params: Bidi.Cdp.GetSessionParams;
+    returnType: Bidi.Cdp.GetSessionResult;
   };
 }
 
@@ -94,15 +149,22 @@ interface Commands {
  * @internal
  */
 export class Connection extends EventEmitter {
+  #url: string;
   #transport: ConnectionTransport;
   #delay: number;
   #timeout? = 0;
   #closed = false;
   #callbacks = new CallbackRegistry();
-  #contexts: Map<string, Context> = new Map();
+  #browsingContexts = new Map<string, BrowsingContext>();
 
-  constructor(transport: ConnectionTransport, delay = 0, timeout?: number) {
+  constructor(
+    url: string,
+    transport: ConnectionTransport,
+    delay = 0,
+    timeout?: number
+  ) {
     super();
+    this.#url = url;
     this.#delay = delay;
     this.#timeout = timeout ?? 180_000;
 
@@ -115,8 +177,8 @@ export class Connection extends EventEmitter {
     return this.#closed;
   }
 
-  context(contextId: string): Context | null {
-    return this.#contexts.get(contextId) || null;
+  get url(): string {
+    return this.#url;
   }
 
   send<T extends keyof Commands>(
@@ -159,32 +221,39 @@ export class Connection extends EventEmitter {
         this.#callbacks.resolve(object.id, object);
       }
     } else {
-      this.#handleSpecialEvents(object);
       this.#maybeEmitOnContext(object);
       this.emit(object.method, object.params);
     }
   }
 
   #maybeEmitOnContext(event: Bidi.Message.EventMessage) {
-    let context: Context | undefined;
+    let context: BrowsingContext | undefined;
     // Context specific events
     if ('context' in event.params && event.params.context) {
-      context = this.#contexts.get(event.params.context);
+      context = this.#browsingContexts.get(event.params.context);
       // `log.entryAdded` specific context
     } else if ('source' in event.params && event.params.source.context) {
-      context = this.#contexts.get(event.params.source.context);
+      context = this.#browsingContexts.get(event.params.source.context);
+    } else if (isCDPEvent(event)) {
+      // TODO: this is not a good solution and we need to find a better one.
+      // Perhaps we need to have a dedicated CDP event emitter or emulate
+      // the CDPSession interface with BiDi?.
+      const cdpSessionId = event.params.session;
+      for (const context of this.#browsingContexts.values()) {
+        if (context.cdpSession?.id() === cdpSessionId) {
+          context.cdpSession!.emit(event.params.event, event.params.params);
+        }
+      }
     }
     context?.emit(event.method, event.params);
   }
 
-  #handleSpecialEvents(event: Bidi.Message.EventMessage) {
-    switch (event.method) {
-      case 'browsingContext.contextCreated':
-        this.#contexts.set(
-          event.params.context,
-          new Context(this, event.params)
-        );
-    }
+  registerBrowsingContexts(context: BrowsingContext): void {
+    this.#browsingContexts.set(context.id, context);
+  }
+
+  unregisterBrowsingContexts(id: string): void {
+    this.#browsingContexts.delete(id);
   }
 
   #onClose(): void {
@@ -212,4 +281,10 @@ function createProtocolError(object: Bidi.Message.ErrorResult): string {
     message += ` ${object.stacktrace}`;
   }
   return message;
+}
+
+function isCDPEvent(
+  event: Bidi.Message.EventMessage
+): event is Bidi.Cdp.EventReceivedEvent {
+  return event.method.startsWith('cdp.');
 }

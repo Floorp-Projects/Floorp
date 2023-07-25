@@ -23,19 +23,17 @@ import {CDPSession} from './Connection.js';
 import type {CDPElementHandle} from './ElementHandle.js';
 import {ExecutionContext} from './ExecutionContext.js';
 import {EvaluateFuncWith, HandleFor, HandleOr} from './types.js';
-import {createJSHandle, releaseObject, valueFromRemoteObject} from './util.js';
-
-declare const __JSHandleSymbol: unique symbol;
+import {
+  createJSHandle,
+  releaseObject,
+  valueFromRemoteObject,
+  withSourcePuppeteerURLIfNone,
+} from './util.js';
 
 /**
  * @internal
  */
 export class CDPJSHandle<T = unknown> extends JSHandle<T> {
-  /**
-   * Used for nominally typing {@link JSHandle}.
-   */
-  [__JSHandleSymbol]?: T;
-
   #disposed = false;
   #context: ExecutionContext;
   #remoteObject: Protocol.Runtime.RemoteObject;
@@ -66,11 +64,15 @@ export class CDPJSHandle<T = unknown> extends JSHandle<T> {
    */
   override async evaluate<
     Params extends unknown[],
-    Func extends EvaluateFuncWith<T, Params> = EvaluateFuncWith<T, Params>
+    Func extends EvaluateFuncWith<T, Params> = EvaluateFuncWith<T, Params>,
   >(
     pageFunction: Func | string,
     ...args: Params
   ): Promise<Awaited<ReturnType<Func>>> {
+    pageFunction = withSourcePuppeteerURLIfNone(
+      this.evaluate.name,
+      pageFunction
+    );
     return await this.executionContext().evaluate(pageFunction, this, ...args);
   }
 
@@ -79,11 +81,15 @@ export class CDPJSHandle<T = unknown> extends JSHandle<T> {
    */
   override async evaluateHandle<
     Params extends unknown[],
-    Func extends EvaluateFuncWith<T, Params> = EvaluateFuncWith<T, Params>
+    Func extends EvaluateFuncWith<T, Params> = EvaluateFuncWith<T, Params>,
   >(
     pageFunction: Func | string,
     ...args: Params
   ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
+    pageFunction = withSourcePuppeteerURLIfNone(
+      this.evaluateHandle.name,
+      pageFunction
+    );
     return await this.executionContext().evaluateHandle(
       pageFunction,
       this,

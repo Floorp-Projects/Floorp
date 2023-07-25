@@ -12,8 +12,9 @@ import {JsonObject} from '@angular-devkit/core';
 import {PuppeteerBuilderOptions} from './types.js';
 
 const terminalStyles = {
-  blue: '\u001b[34m',
+  cyan: '\u001b[36;1m',
   green: '\u001b[32m',
+  red: '\u001b[31m',
   bold: '\u001b[1m',
   reverse: '\u001b[7m',
   clear: '\u001b[0m',
@@ -21,8 +22,6 @@ const terminalStyles = {
 
 function getError(executable: string, args: string[]) {
   return (
-    `Puppeteer E2E tests failed!` +
-    '\n' +
     `Error running '${executable}' with arguments '${args.join(' ')}'.` +
     `\n` +
     'Please look at the output above to determine the issue!'
@@ -76,11 +75,22 @@ async function executeCommand(context: BuilderContext, command: string[]) {
 function message(
   message: string,
   context: BuilderContext,
-  type: 'info' | 'success' = 'info'
+  type: 'info' | 'success' | 'error' = 'info'
 ): void {
-  const color = type === 'info' ? terminalStyles.blue : terminalStyles.green;
+  let style: string;
+  switch (type) {
+    case 'info':
+      style = terminalStyles.reverse + terminalStyles.cyan;
+      break;
+    case 'success':
+      style = terminalStyles.reverse + terminalStyles.green;
+      break;
+    case 'error':
+      style = terminalStyles.red;
+      break;
+  }
   context.logger.info(
-    `${terminalStyles.bold}${terminalStyles.reverse}${color}${message}${terminalStyles.clear}`
+    `${terminalStyles.bold}${style}${message}${terminalStyles.clear}`
   );
 }
 
@@ -95,10 +105,10 @@ async function startServer(
   const overrides = {
     watch: false,
     host: defaultServerOptions['host'],
-    port: defaultServerOptions['port'],
+    port: options.port ?? defaultServerOptions['port'],
   } as JsonObject;
 
-  message('Spawning test server...\n', context);
+  message(' Spawning test server ⚙️ ... \n', context);
   const server = await context.scheduleTarget(target, overrides);
   const result = await server.result;
   if (!result.success) {
@@ -116,18 +126,19 @@ async function executeE2ETest(
   try {
     server = await startServer(options, context);
 
-    message('\nRunning tests...\n', context);
+    message('\n Running tests 🧪 ... \n', context);
     for (const command of options.commands) {
       await executeCommand(context, command);
     }
 
-    message('\nTest ran successfully!', context, 'success');
+    message('\n 🚀 Test ran successfully! 🚀 ', context, 'success');
     return {success: true};
   } catch (error) {
+    message('\n 🛑 Test failed! 🛑 ', context, 'error');
     if (error instanceof Error) {
       return {success: false, error: error.message};
     }
-    return {success: false, error: error as any};
+    return {success: false, error: error as string};
   } finally {
     if (server) {
       await server.stop();
@@ -135,4 +146,4 @@ async function executeE2ETest(
   }
 }
 
-export default createBuilder<PuppeteerBuilderOptions>(executeE2ETest) as any;
+export default createBuilder<PuppeteerBuilderOptions>(executeE2ETest);

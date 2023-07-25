@@ -16,30 +16,43 @@
 
 import * as Bidi from 'chromium-bidi/lib/cjs/protocol/protocol.js';
 
-import {ElementHandle as BaseElementHandle} from '../../api/ElementHandle.js';
+import {
+  AutofillData,
+  ElementHandle as BaseElementHandle,
+  ClickOptions,
+} from '../../api/ElementHandle.js';
+import {KeyPressOptions, KeyboardTypeOptions} from '../../api/Input.js';
+import {assert} from '../../util/assert.js';
+import {KeyInput} from '../USKeyboardLayout.js';
 
-import {Connection} from './Connection.js';
-import {Context} from './Context.js';
+import {Frame} from './Frame.js';
 import {JSHandle} from './JSHandle.js';
+import {Realm} from './Realm.js';
 
 /**
  * @internal
  */
 export class ElementHandle<
-  ElementType extends Node = Element
+  ElementType extends Node = Element,
 > extends BaseElementHandle<ElementType> {
   declare handle: JSHandle<ElementType>;
+  #frame: Frame;
 
-  constructor(context: Context, remoteValue: Bidi.CommonDataTypes.RemoteValue) {
-    super(new JSHandle(context, remoteValue));
+  constructor(
+    realm: Realm,
+    remoteValue: Bidi.CommonDataTypes.RemoteValue,
+    frame: Frame
+  ) {
+    super(new JSHandle(realm, remoteValue));
+    this.#frame = frame;
   }
 
-  context(): Context {
+  override get frame(): Frame {
+    return this.#frame;
+  }
+
+  context(): Realm {
     return this.handle.context();
-  }
-
-  get connection(): Connection {
-    return this.handle.connection;
   }
 
   get isPrimitiveValue(): boolean {
@@ -48,5 +61,119 @@ export class ElementHandle<
 
   remoteValue(): Bidi.CommonDataTypes.RemoteValue {
     return this.handle.remoteValue();
+  }
+
+  /**
+   * @internal
+   */
+  override assertElementHasWorld(): asserts this {
+    // TODO: Should assert element has a Sandbox
+    return;
+  }
+
+  override async autofill(data: AutofillData): Promise<void> {
+    const client = this.#frame.context().cdpSession;
+    const nodeInfo = await client.send('DOM.describeNode', {
+      objectId: this.handle.id,
+    });
+    const fieldId = nodeInfo.node.backendNodeId;
+    const frameId = this.#frame._id;
+    await client.send('Autofill.trigger', {
+      fieldId,
+      frameId,
+      card: data.creditCard,
+    });
+  }
+
+  // ///////////////////
+  // // Input methods //
+  // ///////////////////
+  override async click(
+    this: ElementHandle<Element>,
+    options?: Readonly<ClickOptions>
+  ): Promise<void> {
+    await this.scrollIntoViewIfNeeded();
+    const {x = 0, y = 0} = options?.offset ?? {};
+    const remoteValue = this.remoteValue();
+    assert('sharedId' in remoteValue);
+    return this.#frame.page().mouse.click(
+      x,
+      y,
+      Object.assign({}, options, {
+        origin: {
+          type: 'element' as const,
+          element: remoteValue as Bidi.CommonDataTypes.SharedReference,
+        },
+      })
+    );
+  }
+
+  override async hover(this: ElementHandle<Element>): Promise<void> {
+    await this.scrollIntoViewIfNeeded();
+    const remoteValue = this.remoteValue();
+    assert('sharedId' in remoteValue);
+    return this.#frame.page().mouse.move(0, 0, {
+      origin: {
+        type: 'element' as const,
+        element: remoteValue as Bidi.CommonDataTypes.SharedReference,
+      },
+    });
+  }
+
+  override async tap(this: ElementHandle<Element>): Promise<void> {
+    await this.scrollIntoViewIfNeeded();
+    const remoteValue = this.remoteValue();
+    assert('sharedId' in remoteValue);
+    return this.#frame.page().touchscreen.tap(0, 0, {
+      origin: {
+        type: 'element' as const,
+        element: remoteValue as Bidi.CommonDataTypes.SharedReference,
+      },
+    });
+  }
+
+  override async touchStart(this: ElementHandle<Element>): Promise<void> {
+    await this.scrollIntoViewIfNeeded();
+    const remoteValue = this.remoteValue();
+    assert('sharedId' in remoteValue);
+    return this.#frame.page().touchscreen.touchStart(0, 0, {
+      origin: {
+        type: 'element' as const,
+        element: remoteValue as Bidi.CommonDataTypes.SharedReference,
+      },
+    });
+  }
+
+  override async touchMove(this: ElementHandle<Element>): Promise<void> {
+    await this.scrollIntoViewIfNeeded();
+    const remoteValue = this.remoteValue();
+    assert('sharedId' in remoteValue);
+    return this.#frame.page().touchscreen.touchMove(0, 0, {
+      origin: {
+        type: 'element' as const,
+        element: remoteValue as Bidi.CommonDataTypes.SharedReference,
+      },
+    });
+  }
+
+  override async touchEnd(this: ElementHandle<Element>): Promise<void> {
+    await this.scrollIntoViewIfNeeded();
+    await this.#frame.page().touchscreen.touchEnd();
+  }
+
+  override async type(
+    text: string,
+    options?: Readonly<KeyboardTypeOptions>
+  ): Promise<void> {
+    await this.focus();
+    await this.#frame.page().keyboard.type(text, options);
+  }
+
+  override async press(
+    key: KeyInput,
+    options?: Readonly<KeyPressOptions>
+  ): Promise<void> {
+    await this.focus();
+    await this.#frame.page().keyboard.press(key, options);
   }
 }

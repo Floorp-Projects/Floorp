@@ -76,14 +76,16 @@ export function printSuggestions(
         return item.expectation;
       })
     );
-    console.log(
-      'The recommendations are based on the following applied expectaions:'
-    );
-    prettyPrintJSON(
-      toPrint.map(item => {
-        return item.basedOn;
-      })
-    );
+    if (action !== 'remove') {
+      console.log(
+        'The recommendations are based on the following applied expectations:'
+      );
+      prettyPrintJSON(
+        toPrint.map(item => {
+          return item.basedOn;
+        })
+      );
+    }
   }
 }
 
@@ -112,11 +114,11 @@ export function findEffectiveExpectationForTest(
   });
 }
 
-export type RecommendedExpectation = {
+export interface RecommendedExpectation {
   expectation: TestExpectation;
   action: 'remove' | 'add' | 'update';
   basedOn?: TestExpectation;
-};
+}
 
 export function isWildCardPattern(testIdPattern: string): boolean {
   return testIdPattern.includes('*');
@@ -130,15 +132,14 @@ export function getExpectationUpdates(
     parameters: string[];
   }
 ): RecommendedExpectation[] {
-  const output: Map<string, RecommendedExpectation> = new Map();
+  const output = new Map<string, RecommendedExpectation>();
+
+  const passesByKey = results.passes.reduce((acc, pass) => {
+    acc.add(getTestId(pass.file, pass.fullTitle));
+    return acc;
+  }, new Set());
 
   for (const pass of results.passes) {
-    // If an error occurs during a hook
-    // the error not have a file associated with it
-    if (!pass.file) {
-      continue;
-    }
-
     const expectationEntry = findEffectiveExpectationForTest(
       expectations,
       pass
@@ -166,9 +167,21 @@ export function getExpectationUpdates(
   }
 
   for (const failure of results.failures) {
+    if (passesByKey.has(getTestId(failure.file, failure.fullTitle))) {
+      continue;
+    }
     // If an error occurs during a hook
     // the error not have a file associated with it
     if (!failure.file) {
+      addEntry({
+        expectation: {
+          testIdPattern: 'Hook failed!',
+          platforms: context.platforms,
+          parameters: context.parameters,
+          expectations: [],
+        },
+        action: 'add',
+      });
       continue;
     }
 

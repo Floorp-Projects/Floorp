@@ -19,29 +19,25 @@ import * as Bidi from 'chromium-bidi/lib/cjs/protocol/protocol.js';
 import {ElementHandle} from '../../api/ElementHandle.js';
 import {JSHandle as BaseJSHandle} from '../../api/JSHandle.js';
 import {EvaluateFuncWith, HandleFor, HandleOr} from '../../common/types.js';
+import {withSourcePuppeteerURLIfNone} from '../util.js';
 
-import {Connection} from './Connection.js';
-import {Context} from './Context.js';
+import {Realm} from './Realm.js';
 import {BidiSerializer} from './Serializer.js';
 import {releaseReference} from './utils.js';
 
 export class JSHandle<T = unknown> extends BaseJSHandle<T> {
   #disposed = false;
-  #context;
+  #realm: Realm;
   #remoteValue;
 
-  constructor(context: Context, remoteValue: Bidi.CommonDataTypes.RemoteValue) {
+  constructor(realm: Realm, remoteValue: Bidi.CommonDataTypes.RemoteValue) {
     super();
-    this.#context = context;
+    this.#realm = realm;
     this.#remoteValue = remoteValue;
   }
 
-  context(): Context {
-    return this.#context;
-  }
-
-  get connection(): Connection {
-    return this.#context.connection;
+  context(): Realm {
+    return this.#realm;
   }
 
   override get disposed(): boolean {
@@ -50,22 +46,30 @@ export class JSHandle<T = unknown> extends BaseJSHandle<T> {
 
   override async evaluate<
     Params extends unknown[],
-    Func extends EvaluateFuncWith<T, Params> = EvaluateFuncWith<T, Params>
+    Func extends EvaluateFuncWith<T, Params> = EvaluateFuncWith<T, Params>,
   >(
     pageFunction: Func | string,
     ...args: Params
   ): Promise<Awaited<ReturnType<Func>>> {
+    pageFunction = withSourcePuppeteerURLIfNone(
+      this.evaluate.name,
+      pageFunction
+    );
     return await this.context().evaluate(pageFunction, this, ...args);
   }
 
   override async evaluateHandle<
     Params extends unknown[],
-    Func extends EvaluateFuncWith<T, Params> = EvaluateFuncWith<T, Params>
+    Func extends EvaluateFuncWith<T, Params> = EvaluateFuncWith<T, Params>,
   >(
     pageFunction: Func | string,
     ...args: Params
   ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
-    return await this.context().evaluateHandle(pageFunction, this, ...args);
+    pageFunction = withSourcePuppeteerURLIfNone(
+      this.evaluateHandle.name,
+      pageFunction
+    );
+    return this.context().evaluateHandle(pageFunction, this, ...args);
   }
 
   override async getProperty<K extends keyof T>(
@@ -84,9 +88,16 @@ export class JSHandle<T = unknown> extends BaseJSHandle<T> {
     // TODO(lightning00blade): Either include return of depth Handles in RemoteValue
     // or new BiDi command that returns array of remote value
     const keys = await this.evaluate(object => {
-      return Object.getOwnPropertyNames(object);
+      const enumerableKeys = [];
+      const descriptors = Object.getOwnPropertyDescriptors(object);
+      for (const key in descriptors) {
+        if (descriptors[key]?.enumerable) {
+          enumerableKeys.push(key);
+        }
+      }
+      return enumerableKeys;
     });
-    const map: Map<string, BaseJSHandle> = new Map();
+    const map = new Map<string, BaseJSHandle>();
     const results = await Promise.all(
       keys.map(key => {
         return this.getProperty(key);
@@ -122,7 +133,7 @@ export class JSHandle<T = unknown> extends BaseJSHandle<T> {
     }
     this.#disposed = true;
     if ('handle' in this.#remoteValue) {
-      await releaseReference(this.#context, this.#remoteValue);
+      await releaseReference(this.#realm, this.#remoteValue);
     }
   }
 

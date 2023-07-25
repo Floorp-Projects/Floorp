@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+import {
+  Browser as SupportedBrowser,
+  resolveBuildId,
+  detectBrowserPlatform,
+  getInstalledBrowsers,
+  uninstall,
+} from '@puppeteer/browsers';
+
 import {Browser} from '../api/Browser.js';
 import {BrowserConnectOptions} from '../common/BrowserConnector.js';
 import {Configuration} from '../common/Configuration.js';
@@ -121,6 +129,7 @@ export class PuppeteerNode extends Puppeteer {
     this.launch = this.launch.bind(this);
     this.executablePath = this.executablePath.bind(this);
     this.defaultArgs = this.defaultArgs.bind(this);
+    this.trimCache = this.trimCache.bind(this);
   }
 
   /**
@@ -263,5 +272,96 @@ export class PuppeteerNode extends Puppeteer {
    */
   defaultArgs(options: BrowserLaunchArgumentOptions = {}): string[] {
     return this.#launcher.defaultArgs(options);
+  }
+
+  /**
+   * Removes all non-current Firefox and Chrome binaries in the cache directory
+   * identified by the provided Puppeteer configuration. The current browser
+   * version is determined by resolving PUPPETEER_REVISIONS from Puppeteer
+   * unless `configuration.browserRevision` is provided.
+   *
+   * @remarks
+   *
+   * Note that the method does not check if any other Puppeteer versions
+   * installed on the host that use the same cache directory require the
+   * non-current binaries.
+   *
+   * @public
+   */
+  async trimCache(): Promise<void> {
+    const platform = detectBrowserPlatform();
+    if (!platform) {
+      throw new Error('The current platform is not supported.');
+    }
+
+    const cacheDir =
+      this.configuration.downloadPath ?? this.configuration.cacheDirectory!;
+    const installedBrowsers = await getInstalledBrowsers({
+      cacheDir,
+    });
+
+    const product = this.configuration.defaultProduct!;
+
+    const puppeteerBrowsers: Array<{
+      product: Product;
+      browser: SupportedBrowser;
+      currentBuildId: string;
+    }> = [
+      {
+        product: 'chrome',
+        browser: SupportedBrowser.CHROME,
+        currentBuildId: '',
+      },
+      {
+        product: 'firefox',
+        browser: SupportedBrowser.FIREFOX,
+        currentBuildId: '',
+      },
+    ];
+
+    // Resolve current buildIds.
+    for (const item of puppeteerBrowsers) {
+      item.currentBuildId = await resolveBuildId(
+        item.browser,
+        platform,
+        (product === item.product
+          ? this.configuration.browserRevision
+          : null) || PUPPETEER_REVISIONS[item.product]
+      );
+    }
+
+    const currentBrowserBuilds = new Set(
+      puppeteerBrowsers.map(browser => {
+        return `${browser.browser}_${browser.currentBuildId}`;
+      })
+    );
+
+    const currentBrowsers = new Set(
+      puppeteerBrowsers.map(browser => {
+        return browser.browser;
+      })
+    );
+
+    for (const installedBrowser of installedBrowsers) {
+      // Don't uninstall browsers that are not managed by Puppeteer yet.
+      if (!currentBrowsers.has(installedBrowser.browser)) {
+        continue;
+      }
+      // Keep the browser build used by the current Puppeteer installation.
+      if (
+        currentBrowserBuilds.has(
+          `${installedBrowser.browser}_${installedBrowser.buildId}`
+        )
+      ) {
+        continue;
+      }
+
+      await uninstall({
+        browser: SupportedBrowser.CHROME,
+        platform,
+        cacheDir,
+        buildId: installedBrowser.buildId,
+      });
+    }
   }
 }

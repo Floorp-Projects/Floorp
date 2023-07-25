@@ -46,12 +46,12 @@ import {PuppeteerNode} from './PuppeteerNode.js';
 /**
  * @internal
  */
-export type ResolvedLaunchArgs = {
+export interface ResolvedLaunchArgs {
   isTempUserDataDir: boolean;
   userDataDir: string;
   executablePath: string;
   args: string[];
-};
+}
 
 /**
  * Describes a launcher - a class that is able to create and launch a browser instance.
@@ -143,6 +143,7 @@ export class ProductLauncher {
             protocolTimeout,
             slowMo,
             defaultViewport,
+            ignoreHTTPSErrors,
           }
         );
       } else {
@@ -169,6 +170,7 @@ export class ProductLauncher {
               protocolTimeout,
               slowMo,
               defaultViewport,
+              ignoreHTTPSErrors,
             }
           );
         } else {
@@ -329,6 +331,7 @@ export class ProductLauncher {
       protocolTimeout: number | undefined;
       slowMo: number;
       defaultViewport: Viewport | null;
+      ignoreHTTPSErrors?: boolean;
     }
   ): Promise<Browser> {
     // TODO: use other options too.
@@ -341,6 +344,7 @@ export class ProductLauncher {
       closeCallback,
       process: browserProcess.nodeProcess,
       defaultViewport: opts.defaultViewport,
+      ignoreHTTPSErrors: opts.ignoreHTTPSErrors,
     });
   }
 
@@ -355,6 +359,7 @@ export class ProductLauncher {
       protocolTimeout: number | undefined;
       slowMo: number;
       defaultViewport: Viewport | null;
+      ignoreHTTPSErrors?: boolean;
     }
   ): Promise<Browser> {
     const browserWSEndpoint =
@@ -367,6 +372,7 @@ export class ProductLauncher {
       /* webpackIgnore: true */ '../common/bidi/bidi.js'
     );
     const bidiConnection = new BiDi.Connection(
+      browserWSEndpoint,
       transport,
       opts.slowMo,
       opts.protocolTimeout
@@ -377,6 +383,7 @@ export class ProductLauncher {
       closeCallback,
       process: browserProcess.nodeProcess,
       defaultViewport: opts.defaultViewport,
+      ignoreHTTPSErrors: opts.ignoreHTTPSErrors,
     });
   }
 

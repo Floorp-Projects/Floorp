@@ -21,6 +21,7 @@ const {cwd} = require('process');
 
 const isInit = process.argv.indexOf('--init') !== -1;
 const isBuild = process.argv.indexOf('--build') !== -1;
+const isTest = process.argv.indexOf('--test') !== -1;
 const commands = {
   build: ['npm run build'],
   createSandbox: ['npx ng new sandbox --defaults'],
@@ -32,13 +33,26 @@ const commands = {
       },
     },
   ],
+  runSchematicsTest: [
+    {
+      command: 'npm run schematics:test',
+      options: {
+        cwd: join(cwd(), '/sandbox/'),
+      },
+    },
+  ],
 };
 const scripts = {
+  // Builds the ng-schematics before running them
+  'build:schematics': 'npm run --prefix ../ build',
   // Deletes all files created by Puppeteer Ng-Schematics to avoid errors
   'delete:file':
     'rm -f .puppeteerrc.cjs && rm -f tsconfig.e2e.json && rm -R -f e2e/',
   // Runs the Puppeteer Ng-Schematics against the sandbox
-  schematics: 'npm run delete:file && schematics ../:ng-add --dry-run=false',
+  schematics:
+    'npm run delete:file && npm run build:schematics && schematics ../:ng-add --dry-run=false',
+  'schematics:spec':
+    'npm run build:schematics && schematics ../:test --dry-run=false',
 };
 /**
  *
@@ -95,10 +109,13 @@ async function main() {
     if (isBuild) {
       await executeCommand(commands.build);
     }
-    await executeCommand(commands.runSchematics);
+    await executeCommand(
+      isTest ? commands.runSchematicsTest : commands.runSchematics
+    );
   }
 }
 
-main().catch(() => {
-  console.log('\n');
+main().catch(error => {
+  console.log('Something went wrong');
+  console.error(error);
 });

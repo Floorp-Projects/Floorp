@@ -1,6 +1,6 @@
 {
   "name": "puppeteer",
-  "version": "20.1.0",
+  "version": "20.9.0",
   "description": "A high-level API to control headless Chrome over the DevTools Protocol",
   "keywords": [
     "puppeteer",
@@ -29,6 +29,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/puppeteer/puppeteer/tree/main/packages/puppeteer"
+  },
+  "engines": {
+    "node": ">=16.3.0"
   },
   "scripts": {
     "build:docs": "wireit",
@@ -110,17 +113,19 @@
   },
   "files": [
     "lib",
+    "src",
     "install.js",
+    "!*.test.js",
+    "!*.test.d.ts",
+    "!*.test.js.map",
+    "!*.test.d.ts.map",
     "!*.tsbuildinfo"
   ],
   "author": "The Chromium Authors",
   "license": "Apache-2.0",
   "dependencies": {
-    "cosmiconfig": "8.1.3",
-    "https-proxy-agent": "5.0.1",
-    "progress": "2.0.3",
-    "proxy-from-env": "1.1.0",
-    "puppeteer-core": "20.1.0",
-    "@puppeteer/browsers": "1.0.0"
+    "cosmiconfig": "8.2.0",
+    "puppeteer-core": "20.9.0",
+    "@puppeteer/browsers": "1.4.6"
   }
 }

@@ -64,22 +64,65 @@ export async function resolveBuildId(
       switch (tag as BrowserTag) {
         case BrowserTag.LATEST:
           return await firefox.resolveBuildId('FIREFOX_NIGHTLY');
+        case BrowserTag.BETA:
+        case BrowserTag.CANARY:
+        case BrowserTag.DEV:
+        case BrowserTag.STABLE:
+          throw new Error(
+            `${tag} is not supported for ${browser}. Use 'latest' instead.`
+          );
       }
     case Browser.CHROME:
       switch (tag as BrowserTag) {
         case BrowserTag.LATEST:
-          // In CfT beta is the latest version.
-          return await chrome.resolveBuildId(platform, 'beta');
+          return await chrome.resolveBuildId(
+            platform,
+            ChromeReleaseChannel.CANARY
+          );
+        case BrowserTag.BETA:
+          return await chrome.resolveBuildId(
+            platform,
+            ChromeReleaseChannel.BETA
+          );
+        case BrowserTag.CANARY:
+          return await chrome.resolveBuildId(
+            platform,
+            ChromeReleaseChannel.CANARY
+          );
+        case BrowserTag.DEV:
+          return await chrome.resolveBuildId(
+            platform,
+            ChromeReleaseChannel.DEV
+          );
+        case BrowserTag.STABLE:
+          return await chrome.resolveBuildId(
+            platform,
+            ChromeReleaseChannel.STABLE
+          );
       }
     case Browser.CHROMEDRIVER:
       switch (tag as BrowserTag) {
         case BrowserTag.LATEST:
-          return await chromedriver.resolveBuildId('latest');
+        case BrowserTag.CANARY:
+          return await chromedriver.resolveBuildId(ChromeReleaseChannel.CANARY);
+        case BrowserTag.BETA:
+          return await chromedriver.resolveBuildId(ChromeReleaseChannel.BETA);
+        case BrowserTag.DEV:
+          return await chromedriver.resolveBuildId(ChromeReleaseChannel.DEV);
+        case BrowserTag.STABLE:
+          return await chromedriver.resolveBuildId(ChromeReleaseChannel.STABLE);
       }
     case Browser.CHROMIUM:
       switch (tag as BrowserTag) {
         case BrowserTag.LATEST:
-          return await chromium.resolveBuildId(platform, 'latest');
+          return await chromium.resolveBuildId(platform);
+        case BrowserTag.BETA:
+        case BrowserTag.CANARY:
+        case BrowserTag.DEV:
+        case BrowserTag.STABLE:
+          throw new Error(
+            `${tag} is not supported for ${browser}. Use 'latest' instead.`
+          );
       }
   }
   // We assume the tag is the buildId if it didn't match any keywords.
@@ -113,12 +156,11 @@ export function resolveSystemExecutablePath(
   switch (browser) {
     case Browser.CHROMEDRIVER:
     case Browser.FIREFOX:
+    case Browser.CHROMIUM:
       throw new Error(
         `System browser detection is not supported for ${browser} yet.`
       );
     case Browser.CHROME:
-      return chromium.resolveSystemExecutablePath(platform, channel);
-    case Browser.CHROMIUM:
       return chrome.resolveSystemExecutablePath(platform, channel);
   }
 }

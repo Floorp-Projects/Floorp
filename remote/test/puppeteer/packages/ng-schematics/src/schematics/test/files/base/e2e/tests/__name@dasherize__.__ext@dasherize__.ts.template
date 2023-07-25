@@ -1,0 +1,14 @@
+<% if(testingFramework == 'node') { %>
+import * as assert from 'assert';
+import {describe, it} from 'node:test';
+<% } %><% if(testingFramework == 'mocha') { %>
+import * as assert from 'assert';
+<% } %>
+import {setupBrowserHooks, getBrowserState} from './utils';
+
+describe('<%= classify(name) %>', function () {
+  setupBrowserHooks();
+  it('', async function () {
+    const {page} = getBrowserState();
+  });
+});

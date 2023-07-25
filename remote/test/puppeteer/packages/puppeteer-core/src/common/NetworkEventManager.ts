@@ -21,11 +21,11 @@ import {HTTPRequest} from './HTTPRequest.js';
 /**
  * @internal
  */
-export type QueuedEventGroup = {
+export interface QueuedEventGroup {
   responseReceivedEvent: Protocol.Network.ResponseReceivedEvent;
   loadingFinishedEvent?: Protocol.Network.LoadingFinishedEvent;
   loadingFailedEvent?: Protocol.Network.LoadingFailedEvent;
-};
+}
 
 /**
  * @internal
@@ -35,10 +35,10 @@ export type FetchRequestId = string;
 /**
  * @internal
  */
-export type RedirectInfo = {
+export interface RedirectInfo {
   event: Protocol.Network.RequestWillBeSentEvent;
   fetchRequestId?: FetchRequestId;
-};
+}
 type RedirectInfoList = RedirectInfo[];
 
 /**
@@ -149,10 +149,14 @@ export class NetworkEventManager {
     return this.queuedRedirectInfo(fetchRequestId).shift();
   }
 
-  numRequestsInProgress(): number {
-    return [...this.#httpRequestsMap].filter(([, request]) => {
-      return !request.response();
-    }).length;
+  inFlightRequestsCount(): number {
+    let inFlightRequestCounter = 0;
+    for (const request of this.#httpRequestsMap.values()) {
+      if (!request.response()) {
+        inFlightRequestCounter++;
+      }
+    }
+    return inFlightRequestCounter;
   }
 
   storeRequestWillBeSent(
