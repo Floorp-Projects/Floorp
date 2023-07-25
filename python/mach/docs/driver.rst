@@ -25,8 +25,8 @@ providers. e.g.:
 See http://pythonhosted.org/setuptools/setuptools.html#dynamic-discovery-of-services-and-plugins
 for more information on creating an entry point. To search for entry
 point plugins, you can call
-:py:meth:`mach.main.Mach.load_commands_from_entry_point`. e.g.:
+:py:meth:`mach.command_util.load_commands_from_entry_point`. e.g.:
 
 .. code-block:: python
 
-   mach.load_commands_from_entry_point("mach.external.providers")
+   load_commands_from_entry_point("mach.external.providers")

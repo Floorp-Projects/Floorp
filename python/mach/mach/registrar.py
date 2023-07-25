@@ -164,7 +164,17 @@ class MachRegistrar(object):
 
         Commands can use this to call other commands.
         """
-        handler = self.command_handlers[name]
+        from mach.command_util import load_command_module_from_command_name
+
+        handler = self.command_handlers.get(name)
+
+        if not handler:
+            load_command_module_from_command_name(name, context.topdir)
+            handler = self.command_handlers.get(name)
+            if not handler:
+                raise MachError(
+                    f"Mach was not able to load the module for the '{name}' command."
+                )
 
         if subcommand:
             handler = handler.subcommand_handlers[subcommand]

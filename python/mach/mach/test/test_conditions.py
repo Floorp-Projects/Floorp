@@ -8,6 +8,7 @@ from buildconfig import topsrcdir
 from mozunit import main
 
 from mach.base import MachError
+from mach.command_util import load_commands_from_file
 from mach.main import Mach
 from mach.registrar import Registrar
 from mach.test.conftest import PROVIDER_DIR, TestBase
@@ -81,7 +82,7 @@ class TestConditions(TestBase):
         m.define_category("testing", "Mach unittest", "Testing for mach core", 10)
         self.assertRaises(
             MachError,
-            m.load_commands_from_file,
+            load_commands_from_file,
             PROVIDER_DIR / "conditions_invalid.py",
         )
 

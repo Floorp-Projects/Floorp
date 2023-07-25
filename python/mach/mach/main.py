@@ -7,16 +7,12 @@
 
 import argparse
 import codecs
-import errno
-import imp
 import logging
 import os
 import sys
 import traceback
-import uuid
-from collections.abc import Iterable
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import List, Optional
 
 from mach.site import CommandSiteManager
 
@@ -24,7 +20,6 @@ from .base import (
     CommandContext,
     FailedCommandError,
     MachError,
-    MissingFileError,
     NoCommandError,
     UnknownCommandError,
     UnrecognizedArgumentError,
@@ -103,17 +98,6 @@ It looks like you passed an unrecognized argument into mach.
 The %s command does not accept the arguments: %s
 """.lstrip()
 
-INVALID_ENTRY_POINT = r"""
-Entry points should return a list of command providers or directories
-containing command providers. The following entry point is invalid:
-
-    %s
-
-You are seeing this because there is an error in an external module attempting
-to implement a mach command. Please fix the error, or uninstall the module from
-your system.
-""".lstrip()
-
 
 class ArgumentParser(argparse.ArgumentParser):
     """Custom implementation argument parser to make things look pretty."""
@@ -172,18 +156,6 @@ class ContextWrapper(object):
 
     def __setattr__(self, key, value):
         setattr(object.__getattribute__(self, "_context"), key, value)
-
-
-class MachCommandReference:
-    """A reference to a mach command.
-
-    Holds the metadata for a mach command.
-    """
-
-    module: Path
-
-    def __init__(self, module: Union[str, Path]):
-        self.module = Path(module)
 
 
 class Mach(object):
@@ -245,93 +217,6 @@ To see more help for a specific command, run:
 
         self.log_manager.register_structured_logger(self.logger)
         self.populate_context_handler = None
-
-    def load_commands_from_directory(self, path: Path):
-        """Scan for mach commands from modules in a directory.
-
-        This takes a path to a directory, loads the .py files in it, and
-        registers and found mach command providers with this mach instance.
-        """
-        for f in sorted(path.iterdir()):
-            if not f.suffix == ".py" or f.name == "__init__.py":
-                continue
-
-            full_path = path / f
-            module_name = f"mach.commands.{str(f)[0:-3]}"
-
-            self.load_commands_from_file(full_path, module_name=module_name)
-
-    def load_commands_from_file(self, path: Union[str, Path], module_name=None):
-        """Scan for mach commands from a file.
-
-        This takes a path to a file and loads it as a Python module under the
-        module name specified. If no name is specified, a random one will be
-        chosen.
-        """
-        if module_name is None:
-            # Ensure parent module is present otherwise we'll (likely) get
-            # an error due to unknown parent.
-            if "mach.commands" not in sys.modules:
-                mod = imp.new_module("mach.commands")
-                sys.modules["mach.commands"] = mod
-
-            module_name = f"mach.commands.{uuid.uuid4().hex}"
-
-        try:
-            imp.load_source(module_name, str(path))
-        except IOError as e:
-            if e.errno != errno.ENOENT:
-                raise
-
-            raise MissingFileError(f"{path} does not exist")
-
-    def load_commands_from_spec(
-        self, spec: Dict[str, MachCommandReference], topsrcdir: str, missing_ok=False
-    ):
-        """Load mach commands based on the given spec.
-
-        Takes a dictionary mapping command names to their metadata.
-        """
-        modules = set(spec[command].module for command in spec)
-
-        for path in modules:
-            try:
-                self.load_commands_from_file(topsrcdir / path)
-            except MissingFileError:
-                if not missing_ok:
-                    raise
-
-    def load_commands_from_entry_point(self, group="mach.providers"):
-        """Scan installed packages for mach command provider entry points. An
-        entry point is a function that returns a list of paths to files or
-        directories containing command providers.
-
-        This takes an optional group argument which specifies the entry point
-        group to use. If not specified, it defaults to 'mach.providers'.
-        """
-        try:
-            import pkg_resources
-        except ImportError:
-            print(
-                "Could not find setuptools, ignoring command entry points",
-                file=sys.stderr,
-            )
-            return
-
-        for entry in pkg_resources.iter_entry_points(group=group, name=None):
-            paths = entry.load()()
-            if not isinstance(paths, Iterable):
-                print(INVALID_ENTRY_POINT % entry)
-                sys.exit(1)
-
-            for path in paths:
-                path = Path(path)
-                if path.is_file():
-                    self.load_commands_from_file(path)
-                elif path.is_dir():
-                    self.load_commands_from_directory(path)
-                else:
-                    print(f"command provider '{path}' does not exist")
 
     def define_category(self, name, title, description, priority=50):
         """Provide a description for a named command category."""
@@ -648,7 +533,7 @@ To see more help for a specific command, run:
         self.settings.load_files(list(files))
 
 
-def get_argument_parser(context=None, action=CommandAction):
+def get_argument_parser(context=None, action=CommandAction, topsrcdir=None):
     """Returns an argument parser for the command-line interface."""
 
     parser = ArgumentParser(
@@ -740,6 +625,6 @@ def get_argument_parser(context=None, action=CommandAction):
             "command", action=CommandAction, registrar=Registrar, context=context
         )
     else:
-        parser.add_argument("command", action=action)
+        parser.add_argument("command", topsrcdir=topsrcdir, action=action)
 
     return parser

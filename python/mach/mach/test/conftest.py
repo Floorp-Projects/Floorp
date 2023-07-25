@@ -17,6 +17,7 @@ except ImportError:
     # TODO io.StringIO causes failures with Python 2 (needs to be sorted out)
     from io import StringIO
 
+from mach.command_util import load_commands_from_entry_point, load_commands_from_file
 from mach.main import Mach
 
 PROVIDER_DIR = Path(__file__).resolve().parent / "providers"
@@ -43,10 +44,10 @@ def get_mach(request):
                 provider_files = [provider_files]
 
             for path in provider_files:
-                m.load_commands_from_file(PROVIDER_DIR / path)
+                load_commands_from_file(PROVIDER_DIR / path)
 
         if entry_point:
-            m.load_commands_from_entry_point(entry_point)
+            load_commands_from_entry_point(entry_point)
 
         return m
 
