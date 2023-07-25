@@ -1017,15 +1017,26 @@ var basicShapeUnbalancedValues = [
   "inset(1px 2px 3px 4px round 5px / 6px",
 ];
 
-var basicShapeXywhValues = [];
+var basicShapeXywhRectValues = [];
 if (IsCSSPropertyPrefEnabled("layout.css.basic-shape-xywh.enabled")) {
-  basicShapeXywhValues = [
+  basicShapeXywhRectValues.push(
     "xywh(1px 2% 3px 4em)",
     "xywh(1px 2% 3px 4em round 0px)",
     "xywh(1px 2% 3px 4em round 0px 1%)",
     "xywh(1px 2% 3px 4em round 0px 1% 2px)",
-    "xywh(1px 2% 3px 4em round 0px 1% 2px 3em)",
-  ];
+    "xywh(1px 2% 3px 4em round 0px 1% 2px 3em)"
+  );
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.basic-shape-rect.enabled")) {
+  basicShapeXywhRectValues.push(
+    "rect(auto auto auto auto)",
+    "rect(1px 2% auto 4em)",
+    "rect(1px 2% auto 4em round 0px)",
+    "rect(1px 2% auto 4em round 0px 1%)",
+    "rect(1px 2% auto 4em round 0px 1% 2px)",
+    "rect(1px 2% auto 4em round 0px 1% 2px 3em)"
+  );
 }
 
 if (/* mozGradientsEnabled */ true) {
@@ -8727,7 +8738,7 @@ var gCSSProperties = {
       .concat(basicShapeSVGBoxValues)
       .concat(basicShapeOtherValues)
       .concat(basicShapeOtherValuesWithFillRule)
-      .concat(basicShapeXywhValues),
+      .concat(basicShapeXywhRectValues),
     invalid_values: [
       "path(nonzero)",
       "path(abs, 'M 10 10 L 10 10 z')",
@@ -13520,7 +13531,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
   if (IsCSSPropertyPrefEnabled("layout.css.motion-path-basic-shapes.enabled")) {
     gCSSProperties["offset-path"]["other_values"].push(
       ...basicShapeOtherValues,
-      ...basicShapeXywhValues
+      ...basicShapeXywhRectValues
     );
   }
 

@@ -15,6 +15,7 @@ use crate::values::generics::basic_shape::{Path, PolygonCoord};
 use crate::values::generics::rect::Rect;
 use crate::values::specified::border::BorderRadius;
 use crate::values::specified::image::Image;
+use crate::values::specified::length::LengthPercentageOrAuto;
 use crate::values::specified::position::{Position, PositionOrAuto};
 use crate::values::specified::url::SpecifiedUrl;
 use crate::values::specified::{LengthPercentage, NonNegativeLengthPercentage, SVGPathData};
@@ -79,6 +80,26 @@ pub struct Xywh {
     pub round: BorderRadius,
 }
 
+/// Defines a rectangle via insets from the top and left edges of the reference box.
+///
+/// https://drafts.csswg.org/css-shapes-1/#funcdef-basic-shape-rect
+#[derive(Clone, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToShmem)]
+#[repr(C)]
+pub struct ShapeRectFunction {
+    /// The four <length-percentage>s define the position of the top, right, bottom, and left edges
+    /// of a rectangle, respectively, as insets from the top edge of the reference box (for the
+    /// first and third values) or the left edge of the reference box (for the second and fourth
+    /// values).
+    ///
+    /// An auto value makes the edge of the box coincide with the corresponding edge of the
+    /// reference box: it’s equivalent to 0% as the first (top) or fourth (left) value, and
+    /// equivalent to 100% as the second (right) or third (bottom) value.
+    pub rect: Rect<LengthPercentageOrAuto>,
+    /// The optional <border-radius> argument(s) define rounded corners for the inset rectangle
+    /// using the border-radius shorthand syntax.
+    pub round: BorderRadius,
+}
+
 /// The specified value of <basic-shape-rect>.
 /// <basic-shape-rect> = <inset()> | <rect()> | <xywh()>
 ///
@@ -90,7 +111,9 @@ pub enum BasicShapeRect {
     /// Defines a xywh function.
     #[css(function)]
     Xywh(Xywh),
-    // TODO: Bug 1786161. Add rect().
+    /// Defines a rect function.
+    #[css(function)]
+    Rect(ShapeRectFunction),
 }
 
 /// For filled shapes, we use fill-rule, and store it for path() and polygon().
@@ -149,8 +172,8 @@ bitflags! {
         const INSET = 1 << 0;
         /// xywh().
         const XYWH = 1 << 1;
-        // TODO: Bug 1786161. Add rect().
-        // const RECT = 1 << 2;
+        /// rect().
+        const RECT = 1 << 2;
         /// circle().
         const CIRCLE = 1 << 3;
         /// ellipse().
@@ -166,6 +189,7 @@ bitflags! {
         const ALL =
             Self::INSET.bits |
             Self::XYWH.bits |
+            Self::RECT.bits |
             Self::CIRCLE.bits |
             Self::ELLIPSE.bits |
             Self::POLYGON.bits |
@@ -299,6 +323,22 @@ impl BasicShape {
                         .map(BasicShapeRect::Inset)
                         .map(BasicShape::Rect)
                 },
+                "xywh"
+                    if flags.contains(AllowedBasicShapes::XYWH)
+                        && static_prefs::pref!("layout.css.basic-shape-xywh.enabled") =>
+                {
+                    Xywh::parse_function_arguments(context, i)
+                        .map(BasicShapeRect::Xywh)
+                        .map(BasicShape::Rect)
+                },
+                "rect"
+                    if flags.contains(AllowedBasicShapes::RECT)
+                        && static_prefs::pref!("layout.css.basic-shape-rect.enabled") =>
+                {
+                    ShapeRectFunction::parse_function_arguments(context, i)
+                        .map(BasicShapeRect::Rect)
+                        .map(BasicShape::Rect)
+                },
                 "circle" if flags.contains(AllowedBasicShapes::CIRCLE) => {
                     Circle::parse_function_arguments(context, i, default_position)
                         .map(BasicShape::Circle)
@@ -313,14 +353,6 @@ impl BasicShape {
                 },
                 "path" if flags.contains(AllowedBasicShapes::PATH) => {
                     Path::parse_function_arguments(i, shape_type).map(BasicShape::Path)
-                },
-                "xywh"
-                    if flags.contains(AllowedBasicShapes::XYWH)
-                        && static_prefs::pref!("layout.css.basic-shape-xywh.enabled") =>
-                {
-                    Xywh::parse_function_arguments(context, i)
-                        .map(BasicShapeRect::Xywh)
-                        .map(BasicShape::Rect)
                 },
                 _ => Err(location
                     .new_custom_error(StyleParseErrorKind::UnexpectedFunction(function.clone()))),
@@ -339,6 +371,20 @@ impl Parse for InsetRect {
     }
 }
 
+fn parse_round<'i, 't>(
+    context: &ParserContext,
+    input: &mut Parser<'i, 't>,
+) -> Result<BorderRadius, ParseError<'i>> {
+    if input
+        .try_parse(|i| i.expect_ident_matching("round"))
+        .is_ok()
+    {
+        return BorderRadius::parse(context, input);
+    }
+
+    Ok(BorderRadius::zero())
+}
+
 impl InsetRect {
     /// Parse the inner function arguments of `inset()`
     fn parse_function_arguments<'i, 't>(
@@ -346,14 +392,7 @@ impl InsetRect {
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
         let rect = Rect::parse_with(context, input, LengthPercentage::parse)?;
-        let round = if input
-            .try_parse(|i| i.expect_ident_matching("round"))
-            .is_ok()
-        {
-            BorderRadius::parse(context, input)?
-        } else {
-            BorderRadius::zero()
-        };
+        let round = parse_round(context, input)?;
         Ok(generic::InsetRect { rect, round })
     }
 }
@@ -509,6 +548,17 @@ impl Path {
     }
 }
 
+fn round_to_css<W>(round: &BorderRadius, dest: &mut CssWriter<W>) -> fmt::Result
+where
+    W: Write,
+{
+    if !round.is_zero() {
+        dest.write_str(" round ")?;
+        round.to_css(dest)?;
+    }
+    Ok(())
+}
+
 impl ToCss for Xywh {
     fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
     where
@@ -521,16 +571,12 @@ impl ToCss for Xywh {
         self.width.to_css(dest)?;
         dest.write_char(' ')?;
         self.height.to_css(dest)?;
-        if !self.round.is_zero() {
-            dest.write_str(" round ")?;
-            self.round.to_css(dest)?;
-        }
-        Ok(())
+        round_to_css(&self.round, dest)
     }
 }
 
 impl Xywh {
-    /// Parse the inner function arguments of `xywh()`
+    /// Parse the inner function arguments of `xywh()`.
     fn parse_function_arguments<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
@@ -539,15 +585,7 @@ impl Xywh {
         let y = LengthPercentage::parse(context, input)?;
         let width = NonNegativeLengthPercentage::parse(context, input)?;
         let height = NonNegativeLengthPercentage::parse(context, input)?;
-        let round = if input
-            .try_parse(|i| i.expect_ident_matching("round"))
-            .is_ok()
-        {
-            BorderRadius::parse(context, input)?
-        } else {
-            BorderRadius::zero()
-        };
-
+        let round = parse_round(context, input)?;
         Ok(Xywh {
             x,
             y,
@@ -558,12 +596,41 @@ impl Xywh {
     }
 }
 
+impl ToCss for ShapeRectFunction {
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: Write,
+    {
+        self.rect.0.to_css(dest)?;
+        dest.write_char(' ')?;
+        self.rect.1.to_css(dest)?;
+        dest.write_char(' ')?;
+        self.rect.2.to_css(dest)?;
+        dest.write_char(' ')?;
+        self.rect.3.to_css(dest)?;
+        round_to_css(&self.round, dest)
+    }
+}
+
+impl ShapeRectFunction {
+    /// Parse the inner function arguments of `rect()`.
+    fn parse_function_arguments<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        let rect = Rect::parse_all_components_with(context, input, LengthPercentageOrAuto::parse)?;
+        let round = parse_round(context, input)?;
+        Ok(ShapeRectFunction { rect, round })
+    }
+}
+
 impl ToComputedValue for BasicShapeRect {
     type ComputedValue = ComputedInsetRect;
 
     #[inline]
     fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
         use crate::values::computed::LengthPercentage;
+        use crate::values::computed::LengthPercentageOrAuto;
         use style_traits::values::specified::AllowedNumericType;
 
         match self {
@@ -593,6 +660,42 @@ impl ToComputedValue for BasicShapeRect {
                     rect: Rect::new(y, right, bottom, x),
                     round: xywh.round.to_computed_value(context),
                 }
+            },
+            Self::Rect(ref rect) => {
+                // Given `rect(t r b l)`, the equivalent function is
+                // `inset(t calc(100% - r) calc(100% - b) l)`.
+                //
+                // https://drafts.csswg.org/css-shapes-1/#basic-shape-computed-values
+                fn compute_top_or_left(v: LengthPercentageOrAuto) -> LengthPercentage {
+                    match v {
+                        // it’s equivalent to 0% as the first (top) or fourth (left) value.
+                        // https://drafts.csswg.org/css-shapes-1/#funcdef-basic-shape-rect
+                        LengthPercentageOrAuto::Auto => LengthPercentage::zero_percent(),
+                        LengthPercentageOrAuto::LengthPercentage(lp) => lp,
+                    }
+                }
+                fn compute_bottom_or_right(v: LengthPercentageOrAuto) -> LengthPercentage {
+                    match v {
+                        // It's equivalent to 100% as the second (right) or third (bottom) value.
+                        // So calc(100% - 100%) = 0%.
+                        // https://drafts.csswg.org/css-shapes-1/#funcdef-basic-shape-rect
+                        LengthPercentageOrAuto::Auto => LengthPercentage::zero_percent(),
+                        LengthPercentageOrAuto::LengthPercentage(lp) => {
+                            LengthPercentage::hundred_percent_minus(lp, AllowedNumericType::All)
+                        },
+                    }
+                }
+
+                let round = rect.round.to_computed_value(context);
+                let rect = rect.rect.to_computed_value(context);
+                let rect = Rect::new(
+                    compute_top_or_left(rect.0),
+                    compute_bottom_or_right(rect.1),
+                    compute_bottom_or_right(rect.2),
+                    compute_top_or_left(rect.3),
+                );
+
+                ComputedInsetRect { rect, round }
             },
         }
     }
