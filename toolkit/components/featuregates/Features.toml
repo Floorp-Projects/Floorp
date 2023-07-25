@@ -52,16 +52,6 @@ bug-numbers = [1618610, 1617609]
 is-public = true
 default-value = {default = false, early_beta_or_earlier = true}
 
-[abouthome-startup-cache]
-title = "experimental-features-abouthome-startup-cache"
-description = "experimental-features-abouthome-startup-cache-description"
-restart-required = true
-preference = "browser.startup.homepage.abouthome_cache.enabled"
-type = "boolean"
-bug-numbers = [1614351]
-is-public = true
-default-value = true
-
 [devtools-serviceworker-debugger-support]
 title = "experimental-features-devtools-serviceworker-debugger-support"
 description = "experimental-features-devtools-serviceworker-debugger-support-description"

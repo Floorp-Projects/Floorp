@@ -30,12 +30,6 @@ experimental-features-cookie-samesite-none-requires-secure2 =
     .label = Cookies: SameSite=None requires secure attribute
 experimental-features-cookie-samesite-none-requires-secure2-description = Cookies with “SameSite=None” attribute require the secure attribute. This feature requires “Cookies: SameSite=Lax by default”.
 
-# about:home should be kept in English, as it refers to the the URI for
-# the internal default home page.
-experimental-features-abouthome-startup-cache =
-    .label = about:home startup cache
-experimental-features-abouthome-startup-cache-description = A cache for the initial about:home document that is loaded by default at startup. The purpose of the cache is to improve startup performance.
-
 # "Service Worker" is an API name and is usually not translated.
 experimental-features-devtools-serviceworker-debugger-support =
     .label = Developer Tools: Service Worker debugging
