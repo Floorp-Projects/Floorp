@@ -1055,13 +1055,12 @@ var TranslationsPanel = new (class {
     const { panel, appMenuButton } = this.elements;
     const openedFromAppMenu = target.id === appMenuButton.id;
 
-    panel.addEventListener("ViewShown", () => {
-      TranslationsParent.telemetry().panel().onOpen({
-        maintainFlow,
-        openedFromAppMenu,
-        isFirstUserInteraction,
-      });
+    TranslationsParent.telemetry().panel().onOpen({
+      maintainFlow,
+      openedFromAppMenu,
+      isFirstUserInteraction,
     });
+
     PanelMultiView.openPopup(panel, target, {
       position: "bottomright topright",
       triggerEvent: event,
