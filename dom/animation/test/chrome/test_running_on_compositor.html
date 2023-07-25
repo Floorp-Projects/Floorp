@@ -1262,6 +1262,19 @@ promise_test(async t => {
 
 promise_test(async t => {
   const div = addDiv(t);
+  const animation = div.animate({ offsetPath: ['rect(0% 0% 10px 10px)',
+                                               'rect(10% 10% 20px 20px)'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'offset-path:rect() animation should be running on the compositor');
+}, 'offset-path:rect() animation runs on the compositor');
+
+promise_test(async t => {
+  const div = addDiv(t);
   const animation = div.animate({ offsetDistance: ['0%', '100%'] },
                                 100 * MS_PER_SEC);
 
