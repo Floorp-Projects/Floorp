@@ -208,7 +208,8 @@ AnimationValue AnimationValue::FromString(nsCSSPropertyID aProperty,
 
   RefPtr<StyleLockedDeclarationBlock> declarations =
       ServoCSSParser::ParseProperty(aProperty, aValue,
-                                    ServoCSSParser::GetParsingEnvironment(doc));
+                                    ServoCSSParser::GetParsingEnvironment(doc),
+                                    StyleParsingMode::DEFAULT);
 
   if (!declarations) {
     return result;

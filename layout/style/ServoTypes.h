@@ -80,29 +80,6 @@ enum class UpdateAnimationsTasks : uint8_t {
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(UpdateAnimationsTasks)
 
-// The mode to use when parsing values.
-//
-// TODO(zrhoffman, bug 1844295): Generate ParsingMode using cbindgen
-enum class ParsingMode : uint8_t {
-  // In CSS, lengths must have units, except for zero values, where the unit can
-  // be omitted.
-  // https://www.w3.org/TR/css3-values/#lengths
-  Default = 0,
-  // In SVG, a coordinate or length value without a unit identifier (e.g., "25")
-  // is assumed to be in user units (px).
-  // https://www.w3.org/TR/SVG/coords.html#Units
-  AllowUnitlessLength = 1 << 0,
-  // In SVG, out-of-range values are not treated as an error in parsing.
-  // https://www.w3.org/TR/SVG/implnote.html#RangeClamping
-  AllowAllNumericValues = 1 << 1,
-  // In CSS Properties and Values, the initial value must be computationally
-  // independent.
-  // <https://drafts.css-houdini.org/css-properties-values-api-1/#ref-for-computationally-independent%E2%91%A0>
-  DisallowFontRelative = 1 << 2,
-};
-
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ParsingMode)
-
 // The kind of style we're generating when requesting Servo to give us an
 // inherited style.
 enum class InheritTarget {

@@ -301,7 +301,6 @@ renaming_overrides_prefixing = true
 "AnimationPropertySegment" = "AnimationPropertySegment"
 "RawServoAnimationValueTable" = "RawServoAnimationValueTable"
 "nsCSSUnit" = "nsCSSUnit"
-"ParsingMode" = "ParsingMode"
 "InheritTarget" = "InheritTarget"
 "PseudoStyleType" = "PseudoStyleType"
 "DeclarationBlockMutationClosure" = "DeclarationBlockMutationClosure"

@@ -97,7 +97,7 @@ use style::global_style_data::{
 use style::invalidation::element::restyle_hints::RestyleHint;
 use style::invalidation::stylesheets::RuleChangeKind;
 use style::media_queries::MediaList;
-use style::parser::{self, Parse, ParserContext};
+use style::parser::{Parse, ParserContext};
 use style::properties::animated_properties::{AnimationValue, AnimationValueMap};
 use style::properties::{parse_one_declaration_into, parse_style_attribute};
 use style::properties::{ComputedValues, CountedUnknownProperty, Importance, NonCustomPropertyId};
@@ -189,7 +189,6 @@ pub unsafe extern "C" fn Servo_Initialize(
 
     // Perform some debug-only runtime assertions.
     origin_flags::assert_flags_match();
-    parser::assert_parsing_mode_match();
     traversal_flags::assert_traversal_flags_match();
     specified::font::assert_variant_east_asian_matches();
     specified::font::assert_variant_ligatures_matches();
@@ -4401,13 +4400,12 @@ fn parse_property_into(
     value: &nsACString,
     origin: Origin,
     url_data: &UrlExtraData,
-    parsing_mode: structs::ParsingMode,
+    parsing_mode: ParsingMode,
     quirks_mode: QuirksMode,
     rule_type: CssRuleType,
     reporter: Option<&dyn ParseErrorReporter>,
 ) -> Result<(), ()> {
     let value = unsafe { value.as_str_unchecked() };
-    let parsing_mode = ParsingMode::from_bits_retain(parsing_mode);
 
     if let Some(non_custom) = property_id.non_custom_id() {
         if !non_custom.allowed_in_rule(rule_type.into()) {
@@ -4433,7 +4431,7 @@ pub unsafe extern "C" fn Servo_ParseProperty(
     property: nsCSSPropertyID,
     value: &nsACString,
     data: *mut URLExtraData,
-    parsing_mode: structs::ParsingMode,
+    parsing_mode: ParsingMode,
     quirks_mode: nsCompatibility,
     loader: *mut Loader,
     rule_type: CssRuleType,
@@ -4802,7 +4800,7 @@ fn set_property(
     value: &nsACString,
     is_important: bool,
     data: &UrlExtraData,
-    parsing_mode: structs::ParsingMode,
+    parsing_mode: ParsingMode,
     quirks_mode: QuirksMode,
     loader: *mut Loader,
     rule_type: CssRuleType,
@@ -4849,7 +4847,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetProperty(
     value: &nsACString,
     is_important: bool,
     data: *mut URLExtraData,
-    parsing_mode: structs::ParsingMode,
+    parsing_mode: ParsingMode,
     quirks_mode: nsCompatibility,
     loader: *mut Loader,
     rule_type: CssRuleType,
@@ -4894,7 +4892,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetPropertyById(
     value: &nsACString,
     is_important: bool,
     data: *mut URLExtraData,
-    parsing_mode: structs::ParsingMode,
+    parsing_mode: ParsingMode,
     quirks_mode: nsCompatibility,
     loader: *mut Loader,
     rule_type: CssRuleType,
@@ -5689,7 +5687,7 @@ pub extern "C" fn Servo_CSSSupports2(property: &nsACString, value: &nsACString) 
         value,
         Origin::Author,
         unsafe { dummy_url_data() },
-        structs::ParsingMode_Default,
+        ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
         CssRuleType::Style,
         None,
