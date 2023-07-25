@@ -278,9 +278,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)
   NS_IMETHOD GetVisitId(int64_t* aVisitId) override {                         \
     return nsNavHistoryResultNode::GetVisitId(aVisitId);                      \
   }                                                                           \
-  NS_IMETHOD GetFromVisitId(int64_t* aFromVisitId) override {                 \
-    return nsNavHistoryResultNode::GetFromVisitId(aFromVisitId);              \
-  }                                                                           \
   NS_IMETHOD GetVisitType(uint32_t* aVisitType) override {                    \
     return nsNavHistoryResultNode::GetVisitType(aVisitType);                  \
   }
@@ -311,7 +308,6 @@ class nsNavHistoryResultNode : public nsINavHistoryResultNode {
   NS_IMETHOD GetPageGuid(nsACString& aPageGuid) override;
   NS_IMETHOD GetBookmarkGuid(nsACString& aBookmarkGuid) override;
   NS_IMETHOD GetVisitId(int64_t* aVisitId) override;
-  NS_IMETHOD GetFromVisitId(int64_t* aFromVisitId) override;
   NS_IMETHOD GetVisitType(uint32_t* aVisitType) override;
 
   virtual void OnRemoving();
@@ -401,7 +397,6 @@ class nsNavHistoryResultNode : public nsINavHistoryResultNode {
   int32_t mBookmarkIndex;
   int64_t mItemId;
   int64_t mVisitId;
-  int64_t mFromVisitId;
   PRTime mDateAdded;
   PRTime mLastModified;
 

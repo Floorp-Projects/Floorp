@@ -306,7 +306,6 @@ nsNavHistoryResultNode::nsNavHistoryResultNode(const nsACString& aURI,
       mBookmarkIndex(-1),
       mItemId(-1),
       mVisitId(-1),
-      mFromVisitId(-1),
       mDateAdded(0),
       mLastModified(0),
       mIndentLevel(-1),
@@ -439,12 +438,6 @@ nsNavHistoryResultNode::GetBookmarkGuid(nsACString& aBookmarkGuid) {
 NS_IMETHODIMP
 nsNavHistoryResultNode::GetVisitId(int64_t* aVisitId) {
   *aVisitId = mVisitId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavHistoryResultNode::GetFromVisitId(int64_t* aFromVisitId) {
-  *aFromVisitId = mFromVisitId;
   return NS_OK;
 }
 

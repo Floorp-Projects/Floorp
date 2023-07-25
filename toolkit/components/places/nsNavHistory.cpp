@@ -2608,14 +2608,6 @@ nsresult nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
     rv = aRow->GetInt64(kGetInfoIndex_VisitId, &resultNode->mVisitId);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    int64_t fromVisitId;
-    rv = aRow->GetInt64(kGetInfoIndex_FromVisitId, &fromVisitId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (fromVisitId > 0) {
-      resultNode->mFromVisitId = fromVisitId;
-    }
-
     resultNode->mTransitionType = aRow->AsInt32(kGetInfoIndex_VisitType);
 
     resultNode.forget(aResult);

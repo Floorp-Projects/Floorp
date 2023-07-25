@@ -31,7 +31,6 @@ add_task(async function test_addVisitCheckFields() {
     "Visit type should be TRANSITION_LINK"
   );
   equal(child.visitId, 1, "Visit ID should be 1");
-  equal(child.fromVisitId, -1, "Should have no referrer visit ID");
 
   child = root.getChild(1);
   equal(
@@ -40,7 +39,6 @@ add_task(async function test_addVisitCheckFields() {
     "Visit type should be TRANSITION_LINK"
   );
   equal(child.visitId, 2, "Visit ID should be 2");
-  equal(child.fromVisitId, 1, "First visit should be the referring visit");
 
   child = root.getChild(2);
   equal(
@@ -49,7 +47,6 @@ add_task(async function test_addVisitCheckFields() {
     "Visit type should be TRANSITION_TYPED"
   );
   equal(child.visitId, 3, "Visit ID should be 3");
-  equal(child.fromVisitId, -1, "Should have no referrer visit ID");
 
   root.containerOpen = false;
 
@@ -64,7 +61,6 @@ add_task(async function test_addVisitCheckFields() {
   child = root.getChild(0);
   equal(child.visitType, 0, "Visit type should be 0");
   equal(child.visitId, -1, "Visit ID should be -1");
-  equal(child.fromVisitId, -1, "Referrer visit id should be -1");
 
   root.containerOpen = false;
 
@@ -93,12 +89,10 @@ add_task(async function test_bookmarkFields() {
 
   equal(root.visitType, 0, "Visit type should be 0");
   equal(root.visitId, -1, "Visit ID should be -1");
-  equal(root.fromVisitId, -1, "Referrer visit id should be -1");
 
   let child = root.getChild(0);
   equal(child.visitType, 0, "Visit type should be 0");
   equal(child.visitId, -1, "Visit ID should be -1");
-  equal(child.fromVisitId, -1, "Referrer visit id should be -1");
 
   root.containerOpen = false;
 
