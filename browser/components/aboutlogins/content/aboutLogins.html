@@ -179,10 +179,11 @@
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list.css">
+      <script type="module" src="chrome://browser/content/aboutlogins/components/login-command-button.mjs"></script>
       <div class="listHeader">
         <login-filter></login-filter>
         <div class="create-login-button-container">
-          <button class="create-login-button" data-l10n-id="create-new-login-button"></button>
+          <login-command-button class="create-login-button" l10nId="create-new-login-button" icon="chrome://global/skin/icons/plus.svg" tooltip="" ></login-command-button>
         </div>
       </div>
       <div class="meta">
@@ -259,6 +260,7 @@
 
     <template id="login-item-template">
       <script type="module" src="chrome://browser/content/aboutlogins/components/login-timeline.mjs"></script>
+      <script type="module" src="chrome://browser/content/aboutlogins/components/login-command-button.mjs"></script>
       <script type="module" src="chrome://browser/content/aboutlogins/components/login-alert.mjs"></script>
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
@@ -277,8 +279,8 @@
               <span class="login-item-title"></span>
               <span class="new-login-title" data-l10n-id="login-item-new-login-title"></span>
             </h2>
-            <button class="edit-button ghost-button" data-l10n-id="login-item-edit-button"></button>
-            <button class="delete-button ghost-button" data-l10n-id="about-logins-login-item-remove-button"></button>
+            <login-command-button class="edit-button" l10nId="login-item-edit-button" variant="ghost-button" icon="chrome://global/skin/icons/edit.svg" ></login-command-button>
+            <login-command-button class="delete-button" l10nId="about-logins-login-item-remove-button" variant="ghost-button" icon="chrome://global/skin/icons/delete.svg" ></login-command-button>
           </div>
           <login-breach-alert></login-breach-alert>
           <login-vulnerable-password-alert></login-vulnerable-password-alert>
@@ -313,10 +315,8 @@
                          dir="ltr"
                          readonly/>
                 </label>
-                <button class="copy-button copy-username-button" data-copy-login-property="username" data-telemetry-object="username" type="button">
-                  <span class="copied-button-text" data-l10n-id="login-item-copied-username-button-text"></span>
-                  <span class="copy-button-text" data-l10n-id="login-item-copy-username-button-text"></span>
-                </button>
+                <login-command-button class="copy-button copy-username-button" l10nId="login-item-copy-username-button-text">
+                </login-command-button>
               </div>
               <div class="detail-row">
                 <label class="detail-cell">
@@ -338,10 +338,8 @@
                            data-l10n-id="login-item-password-reveal-checkbox"/>
                   </div>
                 </label>
-                <button class="copy-button copy-password-button" data-copy-login-property="password" data-telemetry-object="password" type="button">
-                  <span class="copied-button-text" data-l10n-id="login-item-copied-password-button-text"></span>
-                  <span class="copy-button-text" data-l10n-id="login-item-copy-password-button-text"></span>
-                </button>
+                <login-command-button class="copy-button copy-password-button" l10nId="login-item-copy-password-button-text" >
+                </login-command-button>
               </div>
             </div>
             <moz-button-group class="form-actions-row">

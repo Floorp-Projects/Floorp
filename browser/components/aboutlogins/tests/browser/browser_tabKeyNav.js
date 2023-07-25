@@ -44,15 +44,15 @@ add_task(async function test_tab_key_nav() {
     // in the order we expect them to be navigated.
     const expectedElementsInOrder = [
       ["login-list", "login-filter", "input"],
-      ["login-list", "button.create-login-button"],
+      ["login-list", "login-command-button.create-login-button", "button"],
       ["login-list", "select#login-sort"],
       ["login-list", "ol"],
-      ["login-item", "button.edit-button"],
-      ["login-item", "button.delete-button"],
+      ["login-item", "login-command-button.edit-button", "button"],
+      ["login-item", "login-command-button.delete-button", "button"],
       ["login-item", "a.origin-input"],
-      ["login-item", "button.copy-username-button"],
+      ["login-item", "login-command-button.copy-username-button", "button"],
       ["login-item", "input.reveal-password-checkbox"],
-      ["login-item", "button.copy-password-button"],
+      ["login-item", "login-command-button.copy-password-button", "button"],
     ];
 
     const firstElement = selectWithShadowRootIfNeeded(
@@ -252,7 +252,7 @@ add_task(async function test_tab_to_edit_button() {
             (guidToSelect == testLoginBreachedGuid)
         );
 
-        createButton.focus();
+        createButton.shadowRoot.querySelector("button").focus();
         Assert.equal(
           getFocusedElement(),
           createButton,

@@ -8,8 +8,6 @@
   --reveal-checkbox-opacity: .8;
   --reveal-checkbox-opacity-hover: .6;
   --reveal-checkbox-opacity-active: 1;
-  --success-color: #2AC3A2;
-  --edit-delete-button-color: #4a4a4f;
 }
 
 /* Only overwrite the deemphasized text color in non-dark mode. */
@@ -24,8 +22,6 @@
     --reveal-checkbox-opacity: .8;
     --reveal-checkbox-opacity-hover: 1;
     --reveal-checkbox-opacity-active: .6;
-    --success-color: #54FFBD;
-    --edit-delete-button-color: #cfcfd1;
   }
 }
 
@@ -113,33 +109,6 @@ input[type="url"]:read-only {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.delete-button,
-.edit-button {
-  color: var(--edit-delete-button-color);
-  background-repeat: no-repeat;
-  background-position: 8px;
-  -moz-context-properties: fill;
-  fill: currentColor;
-  min-width: auto;
-  /* See bug 1627164: In CJK locales, line break could happen in any letter of the button. The fix here is to explicitly specify flex property so that the button couldn't grow or shrink. */
-  flex: 0 0 auto;
-}
-
-.delete-button:dir(rtl),
-.edit-button:dir(rtl) {
-  background-position-x: right 8px;
-}
-
-.delete-button {
-  background-image: url("chrome://global/skin/icons/delete.svg");
-  padding-inline-start: 30px; /* 8px on each side, and 14px for icon width */
-}
-
-.edit-button {
-  background-image: url("chrome://global/skin/icons/edit.svg");
-  padding-inline-start: 32px; /* 8px on each side, and 16px for icon width */
 }
 
 input[type="url"]:read-only {
@@ -282,23 +251,9 @@ moz-button-group,
   display: none;
 }
 
-.copy-button[data-copied] {
-  color: var(--success-color) !important; /* override common.css */
-  background-color: transparent;
-  opacity: 1; /* override common.css fading out disabled buttons */
-}
-
 .copy-button[data-copied]:-moz-focusring {
   outline-width: 0;
   box-shadow: none;
-}
-
-.copied-button-text {
-  background-image: url(chrome://global/skin/icons/check.svg);
-  background-repeat: no-repeat;
-  -moz-context-properties: fill;
-  fill: currentColor;
-  padding-inline-start: 22px;
 }
 
 .copied-button-text:dir(rtl) {
@@ -349,6 +304,10 @@ input[name="password"] {
 login-breach-alert,
 login-vulnerable-password-alert {
   margin-block-end: 40px;
+}
+
+login-command-button {
+  margin-block-start: 4px; /* Focus did not display entirely on edit and remove with margin:0 */
 }
 
 .alert-title {

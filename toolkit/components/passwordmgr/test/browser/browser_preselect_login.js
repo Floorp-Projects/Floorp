@@ -193,7 +193,7 @@ add_task(async function test_new_login_url_has_correct_hash() {
         const loginList =
           content.document.querySelector("login-list").shadowRoot;
         const createLoginButton = loginList.querySelector(
-          "button.create-login-button"
+          "login-command-button.create-login-button"
         );
 
         createLoginButton.click();

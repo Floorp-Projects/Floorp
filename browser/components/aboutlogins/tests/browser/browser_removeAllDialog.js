@@ -41,7 +41,10 @@ async function activateLoginItemEdit(browser) {
   );
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = content.document.querySelector("login-item");
-    loginItem.shadowRoot.querySelector(".edit-button").click();
+    loginItem.shadowRoot
+      .querySelector(".edit-button")
+      .shadowRoot.querySelector("button")
+      .click();
     await ContentTaskUtils.waitForCondition(
       () => loginItem.dataset.editing,
       "Waiting for login-item to enter edit mode"
