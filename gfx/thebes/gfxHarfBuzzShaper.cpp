@@ -308,8 +308,25 @@ struct GlyphMetrics {
 };
 
 hb_position_t gfxHarfBuzzShaper::GetGlyphHAdvance(hb_codepoint_t glyph) const {
-  // font did not implement GetGlyphWidth, so get an unhinted value
-  // directly from the font tables
+  if (mUseFontGlyphWidths) {
+    {
+      MutexAutoLock lock(mCacheLock);
+      if (auto cached = mWidthCache->Lookup(glyph)) {
+        return cached.Data().mAdvance;
+      }
+    }
+
+    hb_position_t advance = GetFont()->GetGlyphWidth(glyph);
+
+    MutexAutoLock lock(mCacheLock);
+    mWidthCache->Put(glyph, WidthCacheData{glyph, advance});
+
+    return advance;
+  }
+
+  // Font did not implement GetGlyphWidth, so get an unhinted value
+  // directly from the font tables. This lookup is cheap enough that we
+  // don't create an MruCache for it.
 
   NS_ASSERTION((mNumLongHMetrics > 0) && mHmtxTable != nullptr,
                "font is lacking metrics, we shouldn't be here");
@@ -360,11 +377,7 @@ hb_position_t gfxHarfBuzzShaper::HBGetGlyphHAdvance(hb_font_t* font,
                                                     void* user_data) {
   const gfxHarfBuzzShaper::FontCallbackData* fcd =
       static_cast<const gfxHarfBuzzShaper::FontCallbackData*>(font_data);
-  const gfxHarfBuzzShaper* shaper = fcd->mShaper;
-  if (shaper->mUseFontGlyphWidths) {
-    return shaper->GetFont()->GetGlyphWidth(glyph);
-  }
-  return shaper->GetGlyphHAdvance(glyph);
+  return fcd->mShaper->GetGlyphHAdvance(glyph);
 }
 
 /* static */
@@ -418,8 +431,7 @@ hb_bool_t gfxHarfBuzzShaper::HBGetGlyphVOrigin(hb_font_t* font, void* font_data,
 void gfxHarfBuzzShaper::GetGlyphVOrigin(hb_codepoint_t aGlyph,
                                         hb_position_t* aX,
                                         hb_position_t* aY) const {
-  *aX = 0.5 * (mUseFontGlyphWidths ? mFont->GetGlyphWidth(aGlyph)
-                                   : GetGlyphHAdvance(aGlyph));
+  *aX = 0.5 * GetGlyphHAdvance(aGlyph);
 
   if (mVORGTable) {
     // We checked in Initialize() that the VORG table is safely readable,
@@ -1160,15 +1172,17 @@ bool gfxHarfBuzzShaper::Initialize() {
   // shaper and no other thread can yet be using it.
   MOZ_PUSH_IGNORE_THREAD_SAFETY
   mCmapCache = MakeUnique<CmapCache>();
-  MOZ_POP_THREAD_SAFETY
 
-  if (!mUseFontGlyphWidths) {
+  if (mUseFontGlyphWidths) {
+    mWidthCache = MakeUnique<WidthCache>();
+  } else {
     // If font doesn't implement GetGlyphWidth, we will be reading
     // the metrics table directly, so make sure we can load it.
     if (!LoadHmtxTable()) {
       return false;
     }
   }
+  MOZ_POP_THREAD_SAFETY
 
   mBuffer = hb_buffer_create();
   hb_buffer_set_unicode_funcs(mBuffer, sHBUnicodeFuncs);
