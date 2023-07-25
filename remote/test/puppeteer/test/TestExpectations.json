@@ -680,25 +680,25 @@
   {
     "testIdPattern": "[headful.spec] headful tests HEADFUL headless should be able to read cookies written by headful",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["webDriverBiDi"],
+    "parameters": ["webDriverBiDi", "headful"],
     "expectations": ["PASS"]
   },
   {
     "testIdPattern": "[headful.spec] headful tests HEADFUL should close browser with beforeunload page",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["webDriverBiDi"],
+    "parameters": ["webDriverBiDi", "headful"],
     "expectations": ["PASS"]
   },
   {
     "testIdPattern": "[headful.spec] headful tests HEADFUL should have default url when launching browser",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["webDriverBiDi"],
+    "parameters": ["webDriverBiDi", "headful"],
     "expectations": ["PASS"]
   },
   {
     "testIdPattern": "[headful.spec] headful tests HEADFUL target.page() should return a DevTools page if custom isPageTarget is provided",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["webDriverBiDi"],
+    "parameters": ["chrome", "webDriverBiDi"],
     "expectations": ["PASS"]
   },
   {
@@ -2132,7 +2132,7 @@
   {
     "testIdPattern": "[headful.spec] headful tests HEADFUL target.page() should return a DevTools page if custom isPageTarget is provided",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["firefox", "webDriverBiDi"],
+    "parameters": ["firefox", "webDriverBiDi", "headful"],
     "expectations": ["FAIL"]
   },
   {
