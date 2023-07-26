@@ -703,8 +703,7 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(
     case DeclarationKind::SloppyLexicalFunction: {
       // Functions in block have complex allowances in sloppy mode for being
       // labelled that other lexical declarations do not have. Those checks
-      // are more complex than calling checkLexicalDeclarationDirectlyWithin-
-      // Block and are done in checkFunctionDefinition.
+      // are done in functionStmt.
 
       ParseContext::Scope* scope = pc_->innermostScope();
       if (AddDeclaredNamePtr p = scope->lookupDeclaredNameForAdd(name)) {
