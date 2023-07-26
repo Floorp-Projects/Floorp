@@ -204,7 +204,7 @@ void nsColumnSetFrame::CreateBorderRenderers(
   // the column rule as the left border. PaintBorder() does all the rendering
   // for us, so we not only save an enormous amount of code but we'll support
   // all the line styles that we support on borders!
-  nsStyleBorder border(*pc->Document());
+  nsStyleBorder border;
   Sides skipSides;
   if (isVertical) {
     border.SetBorderWidth(eSideTop, ruleWidth, pc->AppUnitsPerDevPixel());

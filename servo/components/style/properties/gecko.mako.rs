@@ -516,17 +516,30 @@ impl ops::DerefMut for ${style_struct.gecko_struct_name} {
 impl ${style_struct.gecko_struct_name} {
     #[allow(dead_code, unused_variables)]
     pub fn default(document: &structs::Document) -> Arc<Self> {
+% if style_struct.document_dependent:
         unsafe {
             let mut result = UniqueArc::<Self>::new_uninit();
-            // FIXME(bug 1595895): Zero the memory to keep valgrind happy, but
-            // these looks like Valgrind false-positives at a quick glance.
-            ptr::write_bytes::<Self>(result.as_mut_ptr(), 0, 1);
             Gecko_Construct_Default_${style_struct.gecko_ffi_name}(
                 result.as_mut_ptr() as *mut _,
                 document,
             );
             UniqueArc::assume_init(result).shareable()
         }
+% else:
+        lazy_static! {
+            static ref DEFAULT: Arc<${style_struct.gecko_struct_name}> = unsafe {
+                let mut result = UniqueArc::<${style_struct.gecko_struct_name}>::new_uninit();
+                Gecko_Construct_Default_${style_struct.gecko_ffi_name}(
+                    result.as_mut_ptr() as *mut _,
+                    std::ptr::null(),
+                );
+                let arc = UniqueArc::assume_init(result).shareable();
+                arc.mark_as_intentionally_leaked();
+                arc
+            };
+        };
+        DEFAULT.clone()
+% endif
     }
 }
 
