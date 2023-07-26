@@ -338,3 +338,38 @@ addAccessibleTask(
   },
   { chrome: false, iframe: true, remoteIframe: true }
 );
+
+/**
+ * Verify that hit testing correctly ignores
+ * elements with pointer-events: none;
+ */
+addAccessibleTask(
+  `<div id="container" style="position:relative;"><button id="obscured">click me</button><div id="overlay" style="pointer-events:none; top:0; bottom:0; left:0; right:0; position: absolute;"></div></div><button id="clickable">I am clickable</button>`,
+  async function (browser, docAcc) {
+    const container = findAccessibleChildByID(docAcc, "container");
+    const obscured = findAccessibleChildByID(docAcc, "obscured");
+    const clickable = findAccessibleChildByID(docAcc, "clickable");
+    const dpr = await getContentDPR(browser);
+    let [targetX, targetY, targetW, targetH] = Layout.getBounds(obscured, dpr);
+    const [x, y] = Layout.getBounds(docAcc, dpr);
+    await testChildAtPoint(
+      dpr,
+      targetX - x + targetW / 2,
+      targetY - y + targetH / 2,
+      docAcc,
+      container, // Direct Child
+      obscured // Deepest Child
+    );
+
+    [targetX, targetY, targetW, targetH] = Layout.getBounds(clickable, dpr);
+    await testChildAtPoint(
+      dpr,
+      targetX - x + targetW / 2,
+      targetY - y + targetH / 2,
+      docAcc,
+      clickable, // Direct Child
+      clickable // Deepest Child
+    );
+  },
+  { chrome: false, iframe: true, remoteIframe: true }
+);
