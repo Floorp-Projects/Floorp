@@ -2102,6 +2102,13 @@ void MediaFormatReader::HandleDemuxedSamples(
   decoder.mMeanRate.Update(sample->mDuration);
 
   if (!decoder.mDecoder) {
+    // In Clear Lead situation, the `mInfo` could change from unencrypted to
+    // encrypted so we need to ensure the CDM proxy is ready before creating a
+    // decoder.
+    if (decoder.IsEncrypted() &&
+        (IsWaitingOnCDMResource() || !ResolveSetCDMPromiseIfDone(aTrack))) {
+      return;
+    }
     mDecoderFactory->CreateDecoder(aTrack);
     return;
   }

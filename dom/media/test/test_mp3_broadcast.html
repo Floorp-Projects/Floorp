@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Test playback of broadcast-like streams</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="manifest.js"></script>
+</head>
+
+<body>
+    <audio controls id=a style="width: 100%;"></audio>
+    <script type="module">
+        SimpleTest.waitForExplicitFinish();
+        const streams = [
+            // An mp3 bytestream consisting of a complete mp3 file with a XING
+            // header, that has duration information, but served without a
+            // `Content-Length`. It is followed by a second mp3 bytestream that
+            // also has a XING header. While some software are able to play the
+            // entire file, Web browser don't.
+            { src: "two-xing-header-no-content-length.mp3", duration: 1 },
+            // An mp3 bytestream consisting of a complete mp3 file with a XING
+            // header, that has duration information, but served without a
+            // `Content-Length` header. It is followed by a second mp3 bytestream that
+            // doesn't have a XING header.
+            // This scenario is typical in radio broadcast scenario, when the
+            // live-stream has a pre-recorded prelude. The reported duration,
+            // after "ended" has been received, is the duration of playback.
+            { src: "single-xing-header-no-content-length.mp3", duration: 11.050839},
+        ];
+        var audio = window.a;
+        // Prevent ESLint error about top-level await
+        (async function () {
+            for (let i of streams) {
+                audio.src = i.src;
+                audio.load();
+                audio.play();
+                audio.onerror = (e) => {
+                    ok(false, `${i}: error: ${e.message}}`);
+                };
+                await once(audio, "ended");
+                ok(true, `${i}: playback through the end`);
+                is(audio.duration, i.duration, "Duration at end is correct");
+                is(audio.currentTime, i.duration, "Current time at end is correct");
+            }
+            SimpleTest.finish();
+        })()
+    </script>
+</body>
+
+</html>
+

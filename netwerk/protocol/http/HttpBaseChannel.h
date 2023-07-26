@@ -331,8 +331,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD GetNavigationStartTimeStamp(TimeStamp* aTimeStamp) override;
   NS_IMETHOD SetNavigationStartTimeStamp(TimeStamp aTimeStamp) override;
   NS_IMETHOD CancelByURLClassifier(nsresult aErrorCode) override;
-  virtual void SetIPv4Disabled(void) override;
-  virtual void SetIPv6Disabled(void) override;
+  NS_IMETHOD SetIPv4Disabled(void) override;
+  NS_IMETHOD SetIPv6Disabled(void) override;
   NS_IMETHOD GetCrossOriginOpenerPolicy(
       nsILoadInfo::CrossOriginOpenerPolicy* aCrossOriginOpenerPolicy) override;
   NS_IMETHOD ComputeCrossOriginOpenerPolicy(

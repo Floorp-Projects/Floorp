@@ -24,7 +24,6 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/BindingCallContext.h"
 #include "mozilla/dom/ByteStreamHelpers.h"
-#include "mozilla/dom/BodyStream.h"
 #include "mozilla/dom/QueueWithSizes.h"
 #include "mozilla/dom/QueuingStrategyBinding.h"
 #include "mozilla/dom/ReadRequest.h"
@@ -1040,11 +1039,15 @@ already_AddRefed<ReadableStream> ReadableStream::CreateByteAbstract(
 // https://streams.spec.whatwg.org/#readablestream-set-up
 // (except this instead creates a new ReadableStream rather than accepting an
 // existing instance)
-already_AddRefed<ReadableStream> ReadableStream::CreateNative(
-    JSContext* aCx, nsIGlobalObject* aGlobal,
-    UnderlyingSourceAlgorithmsWrapper& aAlgorithms,
-    mozilla::Maybe<double> aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
-    ErrorResult& aRv) {
+// _BOUNDARY because `aAlgorithms->StartCallback` (called by
+// SetUpReadableStreamDefaultController below) should not be able to run script
+// in this case.
+MOZ_CAN_RUN_SCRIPT_BOUNDARY already_AddRefed<ReadableStream>
+ReadableStream::CreateNative(JSContext* aCx, nsIGlobalObject* aGlobal,
+                             UnderlyingSourceAlgorithmsWrapper& aAlgorithms,
+                             mozilla::Maybe<double> aHighWaterMark,
+                             QueuingStrategySize* aSizeAlgorithm,
+                             ErrorResult& aRv) {
   // an optional number highWaterMark (default 1)
   double highWaterMark = aHighWaterMark.valueOr(1);
   // and if given, highWaterMark must be a non-negative, non-NaN number.
@@ -1078,7 +1081,10 @@ already_AddRefed<ReadableStream> ReadableStream::CreateNative(
 }
 
 // https://streams.spec.whatwg.org/#readablestream-set-up-with-byte-reading-support
-void ReadableStream::SetUpByteNative(
+// _BOUNDARY because `aAlgorithms->StartCallback` (called by
+// SetUpReadableByteStreamController below) should not be able to run script in
+// this case.
+MOZ_CAN_RUN_SCRIPT_BOUNDARY void ReadableStream::SetUpByteNative(
     JSContext* aCx, UnderlyingSourceAlgorithmsWrapper& aAlgorithms,
     mozilla::Maybe<double> aHighWaterMark, ErrorResult& aRv) {
   // an optional number highWaterMark (default 0)

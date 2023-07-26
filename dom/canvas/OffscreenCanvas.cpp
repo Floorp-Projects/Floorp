@@ -27,6 +27,7 @@
 #include "ImageBitmap.h"
 #include "ImageBitmapRenderingContext.h"
 #include "nsContentUtils.h"
+#include "nsProxyRelease.h"
 #include "WebGLChild.h"
 
 namespace mozilla::dom {
@@ -34,32 +35,40 @@ namespace mozilla::dom {
 OffscreenCanvasCloneData::OffscreenCanvasCloneData(
     OffscreenCanvasDisplayHelper* aDisplay, uint32_t aWidth, uint32_t aHeight,
     layers::LayersBackend aCompositorBackend, layers::TextureType aTextureType,
-    bool aNeutered, bool aIsWriteOnly)
+    bool aNeutered, bool aIsWriteOnly, nsIPrincipal* aExpandedReader)
     : mDisplay(aDisplay),
       mWidth(aWidth),
       mHeight(aHeight),
       mCompositorBackendType(aCompositorBackend),
       mTextureType(aTextureType),
       mNeutered(aNeutered),
-      mIsWriteOnly(aIsWriteOnly) {}
+      mIsWriteOnly(aIsWriteOnly),
+      mExpandedReader(aExpandedReader) {}
 
-OffscreenCanvasCloneData::~OffscreenCanvasCloneData() = default;
+OffscreenCanvasCloneData::~OffscreenCanvasCloneData() {
+  NS_ReleaseOnMainThread("OffscreenCanvasCloneData::mExpandedReader",
+                         mExpandedReader.forget());
+}
 
 OffscreenCanvas::OffscreenCanvas(nsIGlobalObject* aGlobal, uint32_t aWidth,
-                                 uint32_t aHeight,
-                                 layers::LayersBackend aCompositorBackend,
-                                 layers::TextureType aTextureType,
-                                 OffscreenCanvasDisplayHelper* aDisplay)
+                                 uint32_t aHeight)
+    : DOMEventTargetHelper(aGlobal), mWidth(aWidth), mHeight(aHeight) {}
+
+OffscreenCanvas::OffscreenCanvas(
+    nsIGlobalObject* aGlobal, uint32_t aWidth, uint32_t aHeight,
+    layers::LayersBackend aCompositorBackend, layers::TextureType aTextureType,
+    already_AddRefed<OffscreenCanvasDisplayHelper> aDisplay)
     : DOMEventTargetHelper(aGlobal),
-      mNeutered(false),
-      mIsWriteOnly(false),
       mWidth(aWidth),
       mHeight(aHeight),
       mCompositorBackendType(aCompositorBackend),
       mTextureType(aTextureType),
       mDisplay(aDisplay) {}
 
-OffscreenCanvas::~OffscreenCanvas() = default;
+OffscreenCanvas::~OffscreenCanvas() {
+  NS_ReleaseOnMainThread("OffscreenCanvas::mExpandedReader",
+                         mExpandedReader.forget());
+}
 
 JSObject* OffscreenCanvas::WrapObject(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
@@ -88,9 +97,8 @@ already_AddRefed<OffscreenCanvas> OffscreenCanvas::Constructor(
   }
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<OffscreenCanvas> offscreenCanvas = new OffscreenCanvas(
-      global, aWidth, aHeight, layers::LayersBackend::LAYERS_NONE,
-      layers::TextureType::Unknown, nullptr);
+  RefPtr<OffscreenCanvas> offscreenCanvas =
+      new OffscreenCanvas(global, aWidth, aHeight);
   return offscreenCanvas.forget();
 }
 
@@ -275,7 +283,7 @@ void OffscreenCanvas::CommitFrameToCompositor() {
 OffscreenCanvasCloneData* OffscreenCanvas::ToCloneData() {
   return new OffscreenCanvasCloneData(mDisplay, mWidth, mHeight,
                                       mCompositorBackendType, mTextureType,
-                                      mNeutered, mIsWriteOnly);
+                                      mNeutered, mIsWriteOnly, mExpandedReader);
 }
 
 already_AddRefed<ImageBitmap> OffscreenCanvas::TransferToImageBitmap(
@@ -463,6 +471,33 @@ already_AddRefed<gfx::SourceSurface> OffscreenCanvas::GetSurfaceSnapshot(
   return mCurrentContext->GetSurfaceSnapshot(aOutAlphaType);
 }
 
+void OffscreenCanvas::SetWriteOnly(RefPtr<nsIPrincipal>&& aExpandedReader) {
+  NS_ReleaseOnMainThread("OffscreenCanvas::mExpandedReader",
+                         mExpandedReader.forget());
+  mExpandedReader = std::move(aExpandedReader);
+  mIsWriteOnly = true;
+}
+
+bool OffscreenCanvas::CallerCanRead(nsIPrincipal* aPrincipal) const {
+  if (!mIsWriteOnly) {
+    return true;
+  }
+
+  if (!aPrincipal) {
+    return false;
+  }
+
+  // If mExpandedReader is set, this canvas was tainted only by
+  // mExpandedReader's resources. So allow reading if the subject
+  // principal subsumes mExpandedReader.
+  if (mExpandedReader && aPrincipal->Subsumes(mExpandedReader)) {
+    return true;
+  }
+
+  return nsContentUtils::PrincipalHasPermission(*aPrincipal,
+                                                nsGkAtoms::all_urlsPermission);
+}
+
 bool OffscreenCanvas::ShouldResistFingerprinting(RFPTarget aTarget) const {
   return nsContentUtils::ShouldResistFingerprinting(GetOwnerGlobal(), aTarget);
 }
@@ -473,9 +508,12 @@ already_AddRefed<OffscreenCanvas> OffscreenCanvas::CreateFromCloneData(
   MOZ_ASSERT(aData);
   RefPtr<OffscreenCanvas> wc = new OffscreenCanvas(
       aGlobal, aData->mWidth, aData->mHeight, aData->mCompositorBackendType,
-      aData->mTextureType, aData->mDisplay);
+      aData->mTextureType, aData->mDisplay.forget());
   if (aData->mNeutered) {
     wc->SetNeutered();
+  }
+  if (aData->mIsWriteOnly) {
+    wc->SetWriteOnly(std::move(aData->mExpandedReader));
   }
   return wc.forget();
 }

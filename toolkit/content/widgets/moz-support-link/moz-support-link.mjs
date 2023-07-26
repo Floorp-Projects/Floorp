@@ -51,7 +51,11 @@ export default class MozSupportLink extends HTMLAnchorElement {
     this.#setHref();
     this.setAttribute("target", "_blank");
     this.addEventListener("click", this);
-    if (!this.getAttribute("data-l10n-id")) {
+    if (
+      !this.getAttribute("data-l10n-id") &&
+      !this.getAttribute("data-l10n-name") &&
+      !this.childElementCount
+    ) {
       document.l10n.setAttributes(this, "moz-support-link-text");
     }
     document.l10n.translateFragment(this);

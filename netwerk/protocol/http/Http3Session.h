@@ -370,6 +370,8 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   nsTArray<RefPtr<Http3StreamBase>> mWebTransportStreams;
 
   bool mHasWebTransportSession = false;
+  // When true, we don't add this connection info into the Http/3 excluded list.
+  bool mDontExclude = false;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Http3Session, NS_HTTP3SESSION_IID);

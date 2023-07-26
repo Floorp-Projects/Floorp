@@ -105,10 +105,11 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
     mStoredError = aStoredError;
   }
 
-  BodyStreamHolder* GetBodyStreamHolder() {
+  nsIInputStream* MaybeGetInputStreamIfUnread() {
+    MOZ_ASSERT(!Disturbed());
     if (UnderlyingSourceAlgorithmsBase* algorithms =
             Controller()->GetAlgorithms()) {
-      return algorithms->GetBodyStreamHolder();
+      return algorithms->MaybeGetInputStreamIfUnread();
     }
     return nullptr;
   }
@@ -129,7 +130,7 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
   // https://streams.spec.whatwg.org/#other-specs-rs
 
   // https://streams.spec.whatwg.org/#readablestream-set-up
-  MOZ_CAN_RUN_SCRIPT static already_AddRefed<ReadableStream> CreateNative(
+  static already_AddRefed<ReadableStream> CreateNative(
       JSContext* aCx, nsIGlobalObject* aGlobal,
       UnderlyingSourceAlgorithmsWrapper& aAlgorithms,
       mozilla::Maybe<double> aHighWaterMark,
@@ -140,14 +141,14 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
  protected:
   // Sets up the ReadableStream with byte reading support. Intended for
   // subclasses.
-  MOZ_CAN_RUN_SCRIPT void SetUpByteNative(
-      JSContext* aCx, UnderlyingSourceAlgorithmsWrapper& aAlgorithms,
-      mozilla::Maybe<double> aHighWaterMark, ErrorResult& aRv);
+  void SetUpByteNative(JSContext* aCx,
+                       UnderlyingSourceAlgorithmsWrapper& aAlgorithms,
+                       mozilla::Maybe<double> aHighWaterMark, ErrorResult& aRv);
 
  public:
   // Creates and sets up a ReadableStream with byte reading support. Use
   // SetUpByteNative for this purpose in subclasses.
-  MOZ_CAN_RUN_SCRIPT static already_AddRefed<ReadableStream> CreateByteNative(
+  static already_AddRefed<ReadableStream> CreateByteNative(
       JSContext* aCx, nsIGlobalObject* aGlobal,
       UnderlyingSourceAlgorithmsWrapper& aAlgorithms,
       mozilla::Maybe<double> aHighWaterMark, ErrorResult& aRv);

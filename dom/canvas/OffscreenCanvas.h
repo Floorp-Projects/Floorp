@@ -48,7 +48,7 @@ struct OffscreenCanvasCloneData final {
                            uint32_t aWidth, uint32_t aHeight,
                            layers::LayersBackend aCompositorBackend,
                            layers::TextureType aTextureType, bool aNeutered,
-                           bool aIsWriteOnly);
+                           bool aIsWriteOnly, nsIPrincipal* aExpandedReader);
   ~OffscreenCanvasCloneData();
 
   RefPtr<OffscreenCanvasDisplayHelper> mDisplay;
@@ -58,6 +58,7 @@ struct OffscreenCanvasCloneData final {
   layers::TextureType mTextureType;
   bool mNeutered;
   bool mIsWriteOnly;
+  RefPtr<nsIPrincipal> mExpandedReader;
 };
 
 class OffscreenCanvas final : public DOMEventTargetHelper,
@@ -70,10 +71,12 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
   IMPL_EVENT_HANDLER(contextlost);
   IMPL_EVENT_HANDLER(contextrestored);
 
+  OffscreenCanvas(nsIGlobalObject* aGlobal, uint32_t aWidth, uint32_t aHeight);
+
   OffscreenCanvas(nsIGlobalObject* aGlobal, uint32_t aWidth, uint32_t aHeight,
                   layers::LayersBackend aCompositorBackend,
                   layers::TextureType aTextureType,
-                  OffscreenCanvasDisplayHelper* aDisplay);
+                  already_AddRefed<OffscreenCanvasDisplayHelper> aDisplay);
 
   nsIGlobalObject* GetParentObject() const { return GetOwnerGlobal(); }
 
@@ -146,9 +149,19 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
 
   bool MayNeuter() const { return !mNeutered && !mCurrentContext; }
 
-  void SetWriteOnly() { mIsWriteOnly = true; }
+  nsIPrincipal* GetExpandedReader() const { return mExpandedReader; }
+
+  void SetWriteOnly(RefPtr<nsIPrincipal>&& aExpandedReader);
+
+  void SetWriteOnly(nsIPrincipal* aExpandedReader = nullptr) {
+    RefPtr<nsIPrincipal> expandedReader(aExpandedReader);
+    SetWriteOnly(std::move(expandedReader));
+  }
 
   bool IsWriteOnly() const { return mIsWriteOnly; }
+
+  // Determines if the caller should be able to read the content.
+  bool CallerCanRead(nsIPrincipal* aPrincipal) const;
 
   layers::LayersBackend GetCompositorBackendType() const {
     return mCompositorBackendType;
@@ -169,17 +182,19 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
     UpdateContext(nullptr, JS::NullHandleValue, dummy);
   }
 
-  bool mNeutered;
-  bool mIsWriteOnly;
+  bool mNeutered = false;
+  bool mIsWriteOnly = false;
 
-  uint32_t mWidth;
-  uint32_t mHeight;
+  uint32_t mWidth = 0;
+  uint32_t mHeight = 0;
 
-  layers::LayersBackend mCompositorBackendType;
-  layers::TextureType mTextureType;
+  layers::LayersBackend mCompositorBackendType =
+      layers::LayersBackend::LAYERS_NONE;
+  layers::TextureType mTextureType = layers::TextureType::Unknown;
 
   RefPtr<OffscreenCanvasDisplayHelper> mDisplay;
   RefPtr<CancelableRunnable> mPendingCommit;
+  RefPtr<nsIPrincipal> mExpandedReader;
   Maybe<OffscreenCanvasDisplayData> mPendingUpdate;
 };
 

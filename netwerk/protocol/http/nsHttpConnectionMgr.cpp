@@ -3818,4 +3818,24 @@ void nsHttpConnectionMgr::CheckTransInPendingQueue(nsHttpTransaction* aTrans) {
 #endif
 }
 
+bool nsHttpConnectionMgr::AllowToRetryDifferentIPFamilyForHttp3(
+    nsHttpConnectionInfo* ci, nsresult aError) {
+  ConnectionEntry* ent = mCT.GetWeak(ci->HashKey());
+  if (!ent) {
+    return false;
+  }
+
+  return ent->AllowToRetryDifferentIPFamilyForHttp3(aError);
+}
+
+void nsHttpConnectionMgr::SetRetryDifferentIPFamilyForHttp3(
+    nsHttpConnectionInfo* ci, uint16_t aIPFamily) {
+  ConnectionEntry* ent = mCT.GetWeak(ci->HashKey());
+  if (!ent) {
+    return;
+  }
+
+  ent->SetRetryDifferentIPFamilyForHttp3(aIPFamily);
+}
+
 }  // namespace mozilla::net

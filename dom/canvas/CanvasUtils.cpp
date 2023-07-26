@@ -375,7 +375,8 @@ void DoDrawImageSecurityCheck(dom::OffscreenCanvas* aOffscreenCanvas,
     return;
   }
 
-  if (aOffscreenCanvas->IsWriteOnly()) {
+  nsIPrincipal* expandedReader = aOffscreenCanvas->GetExpandedReader();
+  if (aOffscreenCanvas->IsWriteOnly() && !expandedReader) {
     return;
   }
 
@@ -401,6 +402,24 @@ void DoDrawImageSecurityCheck(dom::OffscreenCanvas* aOffscreenCanvas,
   if (canvasPrincipal->Subsumes(aPrincipal)) {
     // This canvas has access to that image anyway
     return;
+  }
+
+  if (BasePrincipal::Cast(aPrincipal)->AddonPolicy()) {
+    // This is a resource from an extension content script principal.
+
+    if (expandedReader && expandedReader->Subsumes(aPrincipal)) {
+      // This canvas already allows reading from this principal.
+      return;
+    }
+
+    if (!expandedReader) {
+      // Allow future reads from this same princial only.
+      aOffscreenCanvas->SetWriteOnly(aPrincipal);
+      return;
+    }
+
+    // If we got here, this must be the *second* extension tainting
+    // the canvas.  Fall through to mark it WriteOnly for everyone.
   }
 
   aOffscreenCanvas->SetWriteOnly();

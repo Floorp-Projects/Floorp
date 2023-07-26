@@ -25,10 +25,9 @@ class WebTransportSendStream final : public WritableStream {
 
   WebTransportSendStream(nsIGlobalObject* aGlobal, WebTransport* aTransport);
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY static already_AddRefed<WebTransportSendStream>
-  Create(WebTransport* aWebTransport, nsIGlobalObject* aGlobal,
-         uint64_t aStreamId, mozilla::ipc::DataPipeSender* sender,
-         ErrorResult& aRv);
+  static already_AddRefed<WebTransportSendStream> Create(
+      WebTransport* aWebTransport, nsIGlobalObject* aGlobal, uint64_t aStreamId,
+      mozilla::ipc::DataPipeSender* sender, ErrorResult& aRv);
 
   // WebIDL Boilerplate
   JSObject* WrapObject(JSContext* aCx,

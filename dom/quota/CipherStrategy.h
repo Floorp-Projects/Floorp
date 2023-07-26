@@ -35,7 +35,7 @@ enum class CipherMode { Encrypt, Decrypt };
 //
 //   Span<const uint8_t> SerializeKey(const KeyType& aKey);
 //
-//   KeyType DeserializeKey(const Span<const uint8_t>& aSerializedKey);
+//   Maybe<KeyType> DeserializeKey(const Span<const uint8_t>& aSerializedKey);
 
 }  // namespace mozilla::dom::quota
 

@@ -13,7 +13,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HoldDropJSObjects.h"
-#include "mozilla/dom/BodyStream.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/FetchBinding.h"
 #include "mozilla/dom/ResponseBinding.h"
@@ -292,14 +291,9 @@ already_AddRefed<Response> Response::Redirect(const GlobalObject& aGlobal,
 
       // If this is a DOM generated ReadableStream, we can extract the
       // inputStream directly.
-      if (BodyStreamHolder* underlyingSource =
-              readableStream.GetBodyStreamHolder()) {
-        aRv = BodyStream::RetrieveInputStream(underlyingSource,
-                                              getter_AddRefs(bodyStream));
-
-        if (NS_WARN_IF(aRv.Failed())) {
-          return nullptr;
-        }
+      if (nsIInputStream* underlyingSource =
+              readableStream.MaybeGetInputStreamIfUnread()) {
+        bodyStream = underlyingSource;
       } else {
         // If this is a JS-created ReadableStream, let's create a
         // FetchStreamReader.

@@ -165,6 +165,7 @@ UniquePtr<TrackInfo> MP3TrackDemuxer::GetInfo() const { return mInfo->Clone(); }
 
 RefPtr<MP3TrackDemuxer::SeekPromise> MP3TrackDemuxer::Seek(
     const TimeUnit& aTime) {
+  mRemainingEncoderPadding = AssertedCast<int32_t>(mEncoderPadding);
   // Efficiently seek to the position.
   FastSeek(aTime);
   // Correct seek position by scanning the next frames.
@@ -665,6 +666,8 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
                mParser.VBRInfo().EncoderDelay());
         mEncoderDelay = mParser.VBRInfo().EncoderDelay();
         mEncoderPadding = mParser.VBRInfo().EncoderPadding();
+        // Padding is encoded as a 12-bit unsigned number so this is fine.
+        mRemainingEncoderPadding = AssertedCast<int32_t>(mEncoderPadding);
         if (mEncoderDelay == 0) {
           // Skip the VBR frame + the decoder delay, that is always 529 frames
           // in practice for the decoder we're using.
@@ -707,7 +710,7 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
   // packets that aren't the last one.
   // For most files, the padding is less than a packet, it's simply substracted.
   if (mParser.VBRInfo().Type() == FrameParser::VBRHeader::XING &&
-      Padding().IsPositive() &&
+      mRemainingEncoderPadding > 0 &&
       frame->GetEndTime() > Duration().valueOr(TimeUnit::FromInfinity())) {
     TimeUnit duration = Duration().value();
     TimeUnit inPaddingZone = frame->GetEndTime() - duration;
@@ -719,14 +722,21 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
     if (frame->mDuration.IsNegative()) {
       frame->mDuration = TimeUnit::Zero(mSamplesPerSecond);
     }
-    MP3LOG(
-        "Found padding spanning multiple packets -- trimming [%s, %s] to "
-        "[%s,%s] (stream duration: %s)",
-        originalPts.ToString().get(), originalEnd.ToString().get(),
-        frame->mTime.ToString().get(), frame->GetEndTime().ToString().get(),
-        duration.ToString().get());
-  } else if (frame->mEOS && Padding() <= frame->mDuration) {
-    frame->mDuration -= Padding();
+    int32_t paddingFrames =
+        AssertedCast<int32_t>(inPaddingZone.ToTicksAtRate(mSamplesPerSecond));
+    if (mRemainingEncoderPadding >= paddingFrames) {
+      mRemainingEncoderPadding -= paddingFrames;
+    } else {
+      mRemainingEncoderPadding = 0;
+    }
+    MP3LOG("Trimming [%s, %s] to [%s,%s] (padding) (stream duration: %s)",
+           originalPts.ToString().get(), originalEnd.ToString().get(),
+           frame->mTime.ToString().get(), frame->GetEndTime().ToString().get(),
+           duration.ToString().get());
+  } else if (frame->mEOS &&
+             mRemainingEncoderPadding <=
+                 frame->mDuration.ToTicksAtRate(mSamplesPerSecond)) {
+    frame->mDuration -= TimeUnit(mRemainingEncoderPadding, mSamplesPerSecond);
     MOZ_ASSERT(frame->mDuration.IsPositiveOrZero());
     MP3LOG("Trimming last packet %s to [%s,%s]", Padding().ToString().get(),
            frame->mTime.ToString().get(), frame->GetEndTime().ToString().get());

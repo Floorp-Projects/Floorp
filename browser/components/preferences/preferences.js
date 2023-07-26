@@ -273,12 +273,6 @@ function init_all() {
   });
 
   gotoPref().then(() => {
-    let helpButton = document.getElementById("helpButton");
-    let helpUrl =
-      Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "preferences";
-    helpButton.setAttribute("href", helpUrl);
-
     document.getElementById("addonsButton").addEventListener("click", e => {
       e.preventDefault();
       if (e.button >= 2) {

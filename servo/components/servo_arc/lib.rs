@@ -45,7 +45,6 @@ use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
 use std::process;
 use std::ptr;
-use std::slice;
 use std::sync::atomic;
 use std::sync::atomic::Ordering::{Acquire, Relaxed, Release};
 use std::{isize, usize};
@@ -351,6 +350,11 @@ impl<T: ?Sized> Arc<T> {
     fn ptr(&self) -> *mut ArcInner<T> {
         self.p.as_ptr()
     }
+
+    /// Returns a raw ptr to the underlying allocation.
+    pub fn raw_ptr(&self) -> *const c_void {
+        self.p.as_ptr() as *const _
+    }
 }
 
 #[cfg(feature = "gecko_refcount_logging")]
@@ -643,14 +647,68 @@ impl<T: Serialize> Serialize for Arc<T> {
 
 /// Structure to allow Arc-managing some fixed-sized data and a variably-sized
 /// slice in a single allocation.
-#[derive(Debug, Eq, PartialEq, PartialOrd)]
+///
+/// cbindgen:derive-eq=false
+/// cbindgen:derive-neq=false
+#[derive(Debug, Eq)]
 #[repr(C)]
-pub struct HeaderSlice<H, T: ?Sized> {
+pub struct HeaderSlice<H, T> {
     /// The fixed-sized data.
     pub header: H,
 
+    /// The length of the slice at our end.
+    len: usize,
+
     /// The dynamically-sized data.
-    pub slice: T,
+    data: [T; 0],
+}
+
+impl<H: PartialEq, T: PartialEq> PartialEq for HeaderSlice<H, T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.header == other.header && self.slice() == other.slice()
+    }
+}
+
+impl<H, T> Drop for HeaderSlice<H, T> {
+    fn drop(&mut self) {
+        unsafe {
+            let mut ptr = self.data_mut();
+            for _ in 0..self.len {
+                std::ptr::drop_in_place(ptr);
+                ptr = ptr.offset(1);
+            }
+        }
+    }
+}
+
+impl<H, T> HeaderSlice<H, T> {
+    /// Returns the dynamically sized slice in this HeaderSlice.
+    #[inline(always)]
+    pub fn slice(&self) -> &[T] {
+        unsafe { std::slice::from_raw_parts(self.data(), self.len) }
+    }
+
+    #[inline(always)]
+    fn data(&self) -> *const T {
+        std::ptr::addr_of!(self.data) as *const _
+    }
+
+    #[inline(always)]
+    fn data_mut(&mut self) -> *mut T {
+        std::ptr::addr_of_mut!(self.data) as *mut _
+    }
+
+    /// Returns the dynamically sized slice in this HeaderSlice.
+    #[inline(always)]
+    pub fn slice_mut(&mut self) -> &mut [T] {
+        unsafe { std::slice::from_raw_parts_mut(self.data_mut(), self.len) }
+    }
+
+    /// Returns the len of the slice.
+    #[inline(always)]
+    pub fn len(&self) -> usize {
+        self.len
+    }
 }
 
 #[inline(always)]
@@ -658,7 +716,7 @@ fn divide_rounding_up(dividend: usize, divisor: usize) -> usize {
     (dividend + divisor - 1) / divisor
 }
 
-impl<H, T> Arc<HeaderSlice<H, [T]>> {
+impl<H, T> Arc<HeaderSlice<H, T>> {
     /// Creates an Arc for a HeaderSlice using the given header struct and
     /// iterator to generate the slice.
     ///
@@ -671,7 +729,7 @@ impl<H, T> Arc<HeaderSlice<H, [T]>> {
     /// then `alloc` must return an allocation that can be dellocated
     /// by calling Box::from_raw::<ArcInner<HeaderSlice<H, T>>> on it.
     #[inline]
-    fn from_header_and_iter_alloc<F, I>(
+    pub fn from_header_and_iter_alloc<F, I>(
         alloc: F,
         header: H,
         mut items: I,
@@ -684,31 +742,11 @@ impl<H, T> Arc<HeaderSlice<H, [T]>> {
     {
         assert_ne!(size_of::<T>(), 0, "Need to think about ZST");
 
-        let inner_align = align_of::<ArcInner<HeaderSlice<H, [T; 0]>>>();
+        let size = size_of::<ArcInner<HeaderSlice<H, T>>>() + size_of::<T>() * num_items;
+        let inner_align = align_of::<ArcInner<HeaderSlice<H, T>>>();
         debug_assert!(inner_align >= align_of::<T>());
 
-        // Compute the required size for the allocation.
-        let size = {
-            // Next, synthesize a totally garbage (but properly aligned) pointer
-            // to a sequence of T.
-            let fake_slice_ptr = inner_align as *const T;
-
-            // Convert that sequence to a fat pointer. The address component of
-            // the fat pointer will be garbage, but the length will be correct.
-            let fake_slice = unsafe { slice::from_raw_parts(fake_slice_ptr, num_items) };
-
-            // Pretend the garbage address points to our allocation target (with
-            // a trailing sequence of T), rather than just a sequence of T.
-            let fake_ptr = fake_slice as *const [T] as *const ArcInner<HeaderSlice<H, [T]>>;
-            let fake_ref: &ArcInner<HeaderSlice<H, [T]>> = unsafe { &*fake_ptr };
-
-            // Use size_of_val, which will combine static information about the
-            // type with the length from the fat pointer. The garbage address
-            // will not be used.
-            mem::size_of_val(fake_ref)
-        };
-
-        let ptr: *mut ArcInner<HeaderSlice<H, [T]>>;
+        let ptr: *mut ArcInner<HeaderSlice<H, T>>;
         unsafe {
             // Allocate the buffer.
             let layout = if inner_align <= align_of::<usize>() {
@@ -723,15 +761,7 @@ impl<H, T> Arc<HeaderSlice<H, [T]>> {
             };
 
             let buffer = alloc(layout);
-
-            // Synthesize the fat pointer. We do this by claiming we have a direct
-            // pointer to a [T], and then changing the type of the borrow. The key
-            // point here is that the length portion of the fat pointer applies
-            // only to the number of elements in the dynamically-sized portion of
-            // the type, so the value will be the same whether it points to a [T]
-            // or something else with a [T] as its last member.
-            let fake_slice: &mut [T] = slice::from_raw_parts_mut(buffer as *mut T, num_items);
-            ptr = fake_slice as *mut [T] as *mut ArcInner<HeaderSlice<H, [T]>>;
+            ptr = buffer as *mut ArcInner<HeaderSlice<H, T>>;
 
             // Write the data.
             //
@@ -744,8 +774,9 @@ impl<H, T> Arc<HeaderSlice<H, [T]>> {
             };
             ptr::write(&mut ((*ptr).count), count);
             ptr::write(&mut ((*ptr).data.header), header);
+            ptr::write(&mut ((*ptr).data.len), num_items);
             if num_items != 0 {
-                let mut current: *mut T = &mut (*ptr).data.slice[0];
+                let mut current = std::ptr::addr_of_mut!((*ptr).data.data) as *mut T;
                 for _ in 0..num_items {
                     ptr::write(
                         current,
@@ -778,8 +809,8 @@ impl<H, T> Arc<HeaderSlice<H, [T]>> {
         // Return the fat Arc.
         assert_eq!(
             size_of::<Self>(),
-            size_of::<usize>() * 2,
-            "The Arc will be fat"
+            size_of::<usize>(),
+            "The Arc should be thin"
         );
         unsafe {
             Arc {
@@ -839,208 +870,18 @@ impl<H, T> Arc<HeaderSlice<H, [T]>> {
     }
 }
 
-/// Header data with an inline length. Consumers that use HeaderWithLength as the
-/// Header type in HeaderSlice can take advantage of ThinArc.
-#[derive(Debug, Eq, PartialEq, PartialOrd)]
-#[repr(C)]
-pub struct HeaderWithLength<H> {
-    /// The fixed-sized data.
-    pub header: H,
-
-    /// The slice length.
-    length: usize,
-}
-
-impl<H> HeaderWithLength<H> {
-    /// Creates a new HeaderWithLength.
-    pub fn new(header: H, length: usize) -> Self {
-        HeaderWithLength { header, length }
-    }
-}
-
-type HeaderSliceWithLength<H, T> = HeaderSlice<HeaderWithLength<H>, T>;
-
-/// A "thin" `Arc` containing dynamically sized data
-///
 /// This is functionally equivalent to Arc<(H, [T])>
 ///
-/// When you create an `Arc` containing a dynamically sized type
-/// like `HeaderSlice<H, [T]>`, the `Arc` is represented on the stack
-/// as a "fat pointer", where the length of the slice is stored
-/// alongside the `Arc`'s pointer. In some situations you may wish to
-/// have a thin pointer instead, perhaps for FFI compatibility
-/// or space efficiency.
-///
-/// Note that we use `[T; 0]` in order to have the right alignment for `T`.
-///
-/// `ThinArc` solves this by storing the length in the allocation itself,
-/// via `HeaderSliceWithLength`.
-#[repr(C)]
-pub struct ThinArc<H, T> {
-    ptr: ptr::NonNull<ArcInner<HeaderSliceWithLength<H, [T; 0]>>>,
-    phantom: PhantomData<(H, T)>,
-}
+/// When you create an `Arc` containing a dynamically sized type like a slice, the `Arc` is
+/// represented on the stack as a "fat pointer", where the length of the slice is stored alongside
+/// the `Arc`'s pointer. In some situations you may wish to have a thin pointer instead, perhaps
+/// for FFI compatibility or space efficiency. `ThinArc` solves this by storing the length in the
+/// allocation itself, via `HeaderSlice`.
+pub type ThinArc<H, T> = Arc<HeaderSlice<H, T>>;
 
-impl<H: fmt::Debug, T: fmt::Debug> fmt::Debug for ThinArc<H, T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Debug::fmt(self.deref(), f)
-    }
-}
-
-unsafe impl<H: Sync + Send, T: Sync + Send> Send for ThinArc<H, T> {}
-unsafe impl<H: Sync + Send, T: Sync + Send> Sync for ThinArc<H, T> {}
-
-// Synthesize a fat pointer from a thin pointer.
-//
-// See the comment around the analogous operation in from_header_and_iter.
-fn thin_to_thick<H, T>(
-    thin: *mut ArcInner<HeaderSliceWithLength<H, [T; 0]>>,
-) -> *mut ArcInner<HeaderSliceWithLength<H, [T]>> {
-    let len = unsafe { (*thin).data.header.length };
-    let fake_slice: *mut [T] = unsafe { slice::from_raw_parts_mut(thin as *mut T, len) };
-
-    fake_slice as *mut ArcInner<HeaderSliceWithLength<H, [T]>>
-}
-
-impl<H, T> ThinArc<H, T> {
-    /// Temporarily converts |self| into a bonafide Arc and exposes it to the
-    /// provided callback. The refcount is not modified.
+impl<H, T> UniqueArc<HeaderSlice<H, T>> {
     #[inline]
-    pub fn with_arc<F, U>(&self, f: F) -> U
-    where
-        F: FnOnce(&Arc<HeaderSliceWithLength<H, [T]>>) -> U,
-    {
-        // Synthesize transient Arc, which never touches the refcount of the ArcInner.
-        let transient = unsafe {
-            mem::ManuallyDrop::new(Arc {
-                p: ptr::NonNull::new_unchecked(thin_to_thick(self.ptr.as_ptr())),
-                phantom: PhantomData,
-            })
-        };
-
-        // Expose the transient Arc to the callback, which may clone it if it wants.
-        let result = f(&transient);
-
-        // Forward the result.
-        result
-    }
-
-    /// Creates a `ThinArc` for a HeaderSlice using the given header struct and
-    /// iterator to generate the slice.
     pub fn from_header_and_iter<I>(header: H, items: I) -> Self
-    where
-        I: Iterator<Item = T> + ExactSizeIterator,
-    {
-        let header = HeaderWithLength::new(header, items.len());
-        Arc::into_thin(Arc::from_header_and_iter(header, items))
-    }
-
-    /// Create a static `ThinArc` for a HeaderSlice using the given header
-    /// struct and iterator to generate the slice, placing it in the allocation
-    /// provided by the specified `alloc` function.
-    ///
-    /// `alloc` must return a pointer into a static allocation suitable for
-    /// storing data with the `Layout` passed into it. The pointer returned by
-    /// `alloc` will not be freed.
-    pub unsafe fn static_from_header_and_iter<F, I>(alloc: F, header: H, items: I) -> Self
-    where
-        F: FnOnce(Layout) -> *mut u8,
-        I: Iterator<Item = T> + ExactSizeIterator,
-    {
-        let len = items.len();
-        let header = HeaderWithLength::new(header, len);
-        Arc::into_thin(Arc::from_header_and_iter_alloc(
-            alloc, header, items, len, /* is_static = */ true,
-        ))
-    }
-
-    /// Returns the address on the heap of the ThinArc itself -- not the T
-    /// within it -- for memory reporting, and bindings.
-    #[inline]
-    pub fn ptr(&self) -> *const c_void {
-        self.ptr.as_ptr() as *const ArcInner<T> as *const c_void
-    }
-
-    /// If this is a static ThinArc, this returns null.
-    #[inline]
-    pub fn heap_ptr(&self) -> *const c_void {
-        let is_static =
-            ThinArc::with_arc(self, |a| a.inner().count.load(Relaxed) == STATIC_REFCOUNT);
-        if is_static {
-            ptr::null()
-        } else {
-            self.ptr()
-        }
-    }
-}
-
-impl<H, T> Deref for ThinArc<H, T> {
-    type Target = HeaderSliceWithLength<H, [T]>;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        unsafe { &(*thin_to_thick(self.ptr.as_ptr())).data }
-    }
-}
-
-impl<H, T> Clone for ThinArc<H, T> {
-    #[inline]
-    fn clone(&self) -> Self {
-        ThinArc::with_arc(self, |a| Arc::into_thin(a.clone()))
-    }
-}
-
-impl<H, T> Drop for ThinArc<H, T> {
-    #[inline]
-    fn drop(&mut self) {
-        let _ = Arc::from_thin(ThinArc {
-            ptr: self.ptr,
-            phantom: PhantomData,
-        });
-    }
-}
-
-impl<H, T> Arc<HeaderSliceWithLength<H, [T]>> {
-    /// Converts an `Arc` into a `ThinArc`. This consumes the `Arc`, so the refcount
-    /// is not modified.
-    #[inline]
-    pub fn into_thin(a: Self) -> ThinArc<H, T> {
-        assert_eq!(
-            a.header.length,
-            a.slice.len(),
-            "Length needs to be correct for ThinArc to work"
-        );
-        let fat_ptr: *mut ArcInner<HeaderSliceWithLength<H, [T]>> = a.ptr();
-        mem::forget(a);
-        let thin_ptr = fat_ptr as *mut [usize] as *mut usize;
-        ThinArc {
-            ptr: unsafe {
-                ptr::NonNull::new_unchecked(
-                    thin_ptr as *mut ArcInner<HeaderSliceWithLength<H, [T; 0]>>,
-                )
-            },
-            phantom: PhantomData,
-        }
-    }
-
-    /// Converts a `ThinArc` into an `Arc`. This consumes the `ThinArc`, so the refcount
-    /// is not modified.
-    #[inline]
-    pub fn from_thin(a: ThinArc<H, T>) -> Self {
-        let ptr = thin_to_thick(a.ptr.as_ptr());
-        mem::forget(a);
-        unsafe {
-            Arc {
-                p: ptr::NonNull::new_unchecked(ptr),
-                phantom: PhantomData,
-            }
-        }
-    }
-}
-
-impl<H, T> UniqueArc<HeaderSliceWithLength<H, [T]>> {
-    #[inline]
-    pub fn from_header_and_iter<I>(header: HeaderWithLength<H>, items: I) -> Self
     where
         I: Iterator<Item = T> + ExactSizeIterator,
     {
@@ -1049,7 +890,7 @@ impl<H, T> UniqueArc<HeaderSliceWithLength<H, [T]>> {
 
     #[inline]
     pub fn from_header_and_iter_with_size<I>(
-        header: HeaderWithLength<H>,
+        header: H,
         items: I,
         num_items: usize,
     ) -> Self
@@ -1064,28 +905,15 @@ impl<H, T> UniqueArc<HeaderSliceWithLength<H, [T]>> {
     /// Returns a mutable reference to the header.
     pub fn header_mut(&mut self) -> &mut H {
         // We know this to be uniquely owned
-        unsafe { &mut (*self.0.ptr()).data.header.header }
+        unsafe { &mut (*self.0.ptr()).data.header }
     }
 
     /// Returns a mutable reference to the slice.
     pub fn data_mut(&mut self) -> &mut [T] {
         // We know this to be uniquely owned
-        unsafe { &mut (*self.0.ptr()).data.slice }
-    }
-
-    pub fn shareable_thin(self) -> ThinArc<H, T> {
-        Arc::into_thin(self.0)
+        unsafe { (*self.0.ptr()).data.slice_mut() }
     }
 }
-
-impl<H: PartialEq, T: PartialEq> PartialEq for ThinArc<H, T> {
-    #[inline]
-    fn eq(&self, other: &ThinArc<H, T>) -> bool {
-        ThinArc::with_arc(self, |a| ThinArc::with_arc(other, |b| *a == *b))
-    }
-}
-
-impl<H: Eq, T: Eq> Eq for ThinArc<H, T> {}
 
 /// A "borrowed `Arc`". This is a pointer to
 /// a T that is known to have been allocated within an
@@ -1307,7 +1135,7 @@ impl<A: fmt::Debug, B: fmt::Debug> fmt::Debug for ArcUnion<A, B> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Arc, HeaderWithLength, ThinArc};
+    use super::{Arc, ThinArc};
     use std::clone::Clone;
     use std::ops::Drop;
     use std::sync::atomic;
@@ -1326,13 +1154,9 @@ mod tests {
 
     #[test]
     fn empty_thin() {
-        let header = HeaderWithLength::new(100u32, 0);
-        let x = Arc::from_header_and_iter(header, std::iter::empty::<i32>());
-        let y = Arc::into_thin(x.clone());
-        assert_eq!(y.header.header, 100);
-        assert!(y.slice.is_empty());
-        assert_eq!(x.header.header, 100);
-        assert!(x.slice.is_empty());
+        let x = Arc::from_header_and_iter(100u32, std::iter::empty::<i32>());
+        assert_eq!(x.header, 100);
+        assert!(x.slice().is_empty());
     }
 
     #[test]
@@ -1344,12 +1168,11 @@ mod tests {
         }
 
         // The header will have more alignment than `Padded`
-        let header = HeaderWithLength::new(0i32, 2);
         let items = vec![Padded { i: 0xdead }, Padded { i: 0xbeef }];
-        let a = ThinArc::from_header_and_iter(header, items.into_iter());
-        assert_eq!(a.slice.len(), 2);
-        assert_eq!(a.slice[0].i, 0xdead);
-        assert_eq!(a.slice[1].i, 0xbeef);
+        let a = ThinArc::from_header_and_iter(0i32, items.into_iter());
+        assert_eq!(a.len(), 2);
+        assert_eq!(a.slice()[0].i, 0xdead);
+        assert_eq!(a.slice()[1].i, 0xbeef);
     }
 
     #[test]
@@ -1357,13 +1180,10 @@ mod tests {
         let mut canary = atomic::AtomicUsize::new(0);
         let c = Canary(&mut canary as *mut atomic::AtomicUsize);
         let v = vec![5, 6];
-        let header = HeaderWithLength::new(c, v.len());
         {
-            let x = Arc::into_thin(Arc::from_header_and_iter(header, v.into_iter()));
-            let y = ThinArc::with_arc(&x, |q| q.clone());
-            let _ = y.clone();
+            let x = Arc::from_header_and_iter(c, v.into_iter());
+            let _ = x.clone();
             let _ = x == x;
-            Arc::from_thin(x.clone());
         }
         assert_eq!(canary.load(Acquire), 1);
     }

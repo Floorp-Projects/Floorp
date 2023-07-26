@@ -33,9 +33,9 @@ class nsWifiAccessPoint;
 #define WIFI_SCAN_INTERVAL_MS_PREF "network.wifi.scanning_period"
 
 #ifdef XP_MACOSX
-// Use a larger stack size for the monitor thread on macOS 13+
-// to accommodate Core WLAN making large stack allocations.
-#  define kMacOS13MonitorStackSize (512 * 1024)
+// Use a larger stack size for the wifi monitor thread of macOS, to
+// accommodate Core WLAN making large stack allocations.
+#  define kMacOSWifiMonitorStackSize (512 * 1024)
 #endif
 
 struct WifiListenerHolder {
