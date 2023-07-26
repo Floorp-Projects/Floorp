@@ -45,8 +45,8 @@ enum class BidiDirection : uint8_t {
  */
 class BidiEmbeddingLevel {
  public:
-  explicit BidiEmbeddingLevel(uint8_t aValue) : mValue(aValue) {}
-  explicit BidiEmbeddingLevel(int aValue)
+  constexpr explicit BidiEmbeddingLevel(uint8_t aValue) : mValue(aValue) {}
+  constexpr explicit BidiEmbeddingLevel(int aValue)
       : mValue(static_cast<uint8_t>(aValue)) {}
 
   BidiEmbeddingLevel() = default;
