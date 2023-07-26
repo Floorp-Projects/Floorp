@@ -13,7 +13,7 @@ jobs:
           stale-issue-message: "This issue is stale because it has been open for 14 days with no activity. Remove stale label or comment to re-open."
           close-issue-message: "This issue was closed because it has been inactive for 14 days since being marked as stale."
           stale-issue-label: "stale"
-          exempt-issue-labels: 'bug,enhancement'
+          exempt-issue-labels: "bug"
           days-before-issue-stale: 14
           days-before-issue-close: 14
           days-before-pr-stale: -1
