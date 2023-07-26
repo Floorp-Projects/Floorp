@@ -24,15 +24,16 @@ add_task(async function test_overlay() {
 
       await helper.dragOverlay(10, 10, 500, 500);
 
-      let dimensions = await helper.getSelectionLayerDimensions();
+      let { scrollWidth, scrollHeight } =
+        await helper.getScreenshotsOverlayDimensions();
       Assert.equal(
-        dimensions.scrollWidth,
+        scrollWidth,
         contentInfo.clientWidth,
         "The overlay spans the width of the window"
       );
 
       Assert.equal(
-        dimensions.scrollHeight,
+        scrollHeight,
         contentInfo.clientHeight,
         "The overlay spans the height of the window"
       );
@@ -76,7 +77,7 @@ add_task(async function test_window_resize() {
       await helper.waitForOverlay();
       await helper.dragOverlay(10, 10, 100, 100);
 
-      let dimensions = await helper.getSelectionLayerDimensions();
+      let dimensions = await helper.getScreenshotsOverlayDimensions();
       let oldWidth = dimensions.scrollWidth;
       let oldHeight = dimensions.scrollHeight;
 
@@ -90,7 +91,7 @@ add_task(async function test_window_resize() {
       await helper.waitForSelectionLayerDimensionChange(oldWidth, oldHeight);
 
       contentInfo = await helper.getContentDimensions();
-      dimensions = await helper.getSelectionLayerDimensions();
+      dimensions = await helper.getScreenshotsOverlayDimensions();
       Assert.equal(
         dimensions.scrollWidth,
         contentInfo.clientWidth,
@@ -115,7 +116,7 @@ add_task(async function test_window_resize() {
       await helper.waitForSelectionLayerDimensionChange(oldWidth, oldHeight);
 
       contentInfo = await helper.getContentDimensions();
-      dimensions = await helper.getSelectionLayerDimensions();
+      dimensions = await helper.getScreenshotsOverlayDimensions();
       Assert.equal(
         dimensions.scrollWidth,
         contentInfo.clientWidth,
