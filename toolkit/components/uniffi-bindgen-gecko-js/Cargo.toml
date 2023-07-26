@@ -10,12 +10,12 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow = "1"
-askama = { version = "0.11", default-features = false, features = ["config"] }
+askama = { version = "0.12", default-features = false, features = ["config"] }
 clap = { version = "4", default-features = false, features = ["std", "derive", "cargo"] }
 extend = "1.1"
 heck = "0.4"
 uniffi = { workspace = true }
-uniffi_bindgen = "0.23"
+uniffi_bindgen = "0.24"
 serde = "1"
 toml = "0.5"
 camino = "1.0.8"

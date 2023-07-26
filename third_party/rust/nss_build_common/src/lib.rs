@@ -89,6 +89,19 @@ fn link_nss_libs(kind: LinkingKind) {
     } else {
         println!("cargo:rustc-link-lib=c++");
     }
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
+    if target_arch == "x86_64" && target_os == "android" {
+        let android_home = env::var("ANDROID_HOME").expect("ANDROID_HOME not set");
+        const ANDROID_NDK_VERSION: &str = "25.2.9519653";
+        // One of these will exist, depending on the host platform.
+        const DARWIN_X86_64_LIB_DIR: &str =
+            "/toolchains/llvm/prebuilt/darwin-x86_64/lib64/clang/14.0.7/lib/linux/";
+        println!("cargo:rustc-link-search={android_home}/ndk/{ANDROID_NDK_VERSION}/{DARWIN_X86_64_LIB_DIR}");
+        const LINUX_X86_64_LIB_DIR: &str =
+            "/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.7/lib/linux/";
+        println!("cargo:rustc-link-search={android_home}/ndk/{ANDROID_NDK_VERSION}/{LINUX_X86_64_LIB_DIR}");
+        println!("cargo:rustc-link-lib=static=clang_rt.builtins-x86_64-android");
+    }
 }
 
 fn get_nss_libs(kind: LinkingKind) -> Vec<&'static str> {

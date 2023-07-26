@@ -55,19 +55,24 @@
 {%- when Type::Map with (key_type, value_type) %}
 {%- include "Map.sys.mjs" %}
 
-{%- when Type::Error with (name) %}
-{%- include "Error.sys.mjs" %}
-
 {%- when Type::Enum with (name) %}
+{%- let e = ci.get_enum_definition(name).unwrap() %}
+{# For enums, there are either an error *or* an enum, they can't be both. #}
+{%- if ci.is_name_used_as_error(name) %}
+{%- let error = e %}
+{%- include "Error.sys.mjs" %}
+{%- else %}
+{%- let enum_ = e %}
 {%- include "Enum.sys.mjs" %}
+{% endif %}
 
-{%- when Type::Object with (name) %}
+{%- when Type::Object with { name, imp } %}
 {%- include "Object.sys.mjs" %}
 
 {%- when Type::Custom with { name, builtin } %}
 {%- include "CustomType.sys.mjs" %}
 
-{%- when Type::External with { name, crate_name } %}
+{%- when Type::External with { name, crate_name, kind } %}
 {%- include "ExternalType.sys.mjs" %}
 
 {%- when Type::CallbackInterface with (name) %}

@@ -2,6 +2,10 @@
 package_name = "mozilla.appservices.remotetabs"
 cdylib_name = "megazord"
 
+[bindings.kotlin.external_packages]
+# Map from [External={crate-name}] into Kotlin package names
+sync15 = "mozilla.appservices.sync15"
+
 [bindings.swift]
 ffi_module_name = "MozillaRustComponents"
 ffi_module_filename = "tabsFFI"

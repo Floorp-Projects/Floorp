@@ -2,168 +2,55 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::error::TabsApiError;
-use crate::sync::engine::TabsSyncImpl;
+use crate::sync::engine::TabsEngine;
 use crate::TabsStore;
 use anyhow::Result;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use sync15::bso::{IncomingBso, OutgoingBso};
-use sync15::engine::{ApplyResults, BridgedEngine, CollSyncIds, EngineSyncAssociation};
-use sync15::{ClientData, ServerTimestamp};
+use sync15::engine::{BridgedEngine, BridgedEngineAdaptor};
+use sync15::ServerTimestamp;
 use sync_guid::Guid as SyncGuid;
 
 impl TabsStore {
     // Returns a bridged sync engine for Desktop for this store.
     pub fn bridged_engine(self: Arc<Self>) -> Arc<TabsBridgedEngine> {
-        let bridge_impl = crate::sync::bridge::BridgedEngineImpl::new(&self);
-        // This is a concrete struct exposed via uniffi.
-        let concrete = TabsBridgedEngine::new(bridge_impl);
-        Arc::new(concrete)
+        let engine = TabsEngine::new(self);
+        let bridged_engine = TabsBridgedEngineAdaptor { engine };
+        Arc::new(TabsBridgedEngine::new(Box::new(bridged_engine)))
     }
 }
 
 /// A bridged engine implements all the methods needed to make the
 /// `storage.sync` store work with Desktop's Sync implementation.
-/// Conceptually it's very similar to our SyncEngine, and once we have SyncEngine
-/// and BridgedEngine using the same types we can probably combine them (or at least
-/// implement this bridged engine purely in terms of SyncEngine)
-/// See also #2841 and #5139
-pub struct BridgedEngineImpl {
-    sync_impl: Mutex<TabsSyncImpl>,
-    incoming: Mutex<Vec<IncomingBso>>,
+/// Conceptually it's very similar to our SyncEngine and there's a BridgedEngineAdaptor
+/// trait we can implement to get a `BridgedEngine` from a `SyncEngine`, so that's
+/// what we do. See also #2841, which will finally unify them completely.
+struct TabsBridgedEngineAdaptor {
+    engine: TabsEngine,
 }
 
-impl BridgedEngineImpl {
-    /// Creates a bridged engine for syncing.
-    pub fn new(store: &Arc<TabsStore>) -> Self {
-        Self {
-            sync_impl: Mutex::new(TabsSyncImpl::new(store.clone())),
-            incoming: Mutex::default(),
-        }
-    }
-}
-
-impl BridgedEngine for BridgedEngineImpl {
+impl BridgedEngineAdaptor for TabsBridgedEngineAdaptor {
     fn last_sync(&self) -> Result<i64> {
-        Ok(self
-            .sync_impl
-            .lock()
-            .unwrap()
-            .get_last_sync()?
-            .unwrap_or_default()
-            .as_millis())
+        Ok(self.engine.get_last_sync()?.unwrap_or_default().as_millis())
     }
 
     fn set_last_sync(&self, last_sync_millis: i64) -> Result<()> {
-        self.sync_impl
-            .lock()
-            .unwrap()
-            .set_last_sync(ServerTimestamp::from_millis(last_sync_millis))?;
-        Ok(())
+        self.engine
+            .set_last_sync(ServerTimestamp::from_millis(last_sync_millis))
     }
 
-    fn sync_id(&self) -> Result<Option<String>> {
-        Ok(match self.sync_impl.lock().unwrap().get_sync_assoc()? {
-            EngineSyncAssociation::Connected(id) => Some(id.coll.to_string()),
-            EngineSyncAssociation::Disconnected => None,
-        })
-    }
-
-    fn reset_sync_id(&self) -> Result<String> {
-        let new_id = SyncGuid::random().to_string();
-        let new_coll_ids = CollSyncIds {
-            global: SyncGuid::empty(),
-            coll: new_id.clone().into(),
-        };
-        self.sync_impl
-            .lock()
-            .unwrap()
-            .reset(&EngineSyncAssociation::Connected(new_coll_ids))?;
-        Ok(new_id)
-    }
-
-    fn ensure_current_sync_id(&self, sync_id: &str) -> Result<String> {
-        let mut sync_impl = self.sync_impl.lock().unwrap();
-        let assoc = sync_impl.get_sync_assoc()?;
-        if matches!(assoc, EngineSyncAssociation::Connected(c) if c.coll == sync_id) {
-            log::debug!("ensure_current_sync_id is current");
-        } else {
-            let new_coll_ids = CollSyncIds {
-                global: SyncGuid::empty(),
-                coll: sync_id.into(),
-            };
-            sync_impl.reset(&EngineSyncAssociation::Connected(new_coll_ids))?;
-        }
-        Ok(sync_id.to_string())
-    }
-
-    fn prepare_for_sync(&self, client_data: &str) -> Result<()> {
-        let data: ClientData = serde_json::from_str(client_data)?;
-        Ok(self.sync_impl.lock().unwrap().prepare_for_sync(data)?)
-    }
-
-    fn sync_started(&self) -> Result<()> {
-        // This is a no-op for the Tabs Engine
-        Ok(())
-    }
-
-    fn store_incoming(&self, incoming: Vec<IncomingBso>) -> Result<()> {
-        // Store the incoming payload in memory so we can use it in apply
-        *(self.incoming.lock().unwrap()) = incoming;
-        Ok(())
-    }
-
-    fn apply(&self) -> Result<ApplyResults> {
-        let mut incoming = self.incoming.lock().unwrap();
-        // We've a reference to a Vec<> but it's owned by the mutex - swap the mutex owned
-        // value for an empty vec so we can consume the original.
-        let mut records = Vec::new();
-        std::mem::swap(&mut records, &mut *incoming);
-        let mut telem = sync15::telemetry::Engine::new("tabs");
-
-        let mut sync_impl = self.sync_impl.lock().unwrap();
-        let outgoing = sync_impl.apply_incoming(records, &mut telem)?;
-
-        Ok(ApplyResults {
-            records: outgoing,
-            num_reconciled: Some(0),
-        })
-    }
-
-    fn set_uploaded(&self, server_modified_millis: i64, ids: &[SyncGuid]) -> Result<()> {
-        Ok(self
-            .sync_impl
-            .lock()
-            .unwrap()
-            .sync_finished(ServerTimestamp::from_millis(server_modified_millis), ids)?)
-    }
-
-    fn sync_finished(&self) -> Result<()> {
-        *(self.incoming.lock().unwrap()) = Vec::default();
-        Ok(())
-    }
-
-    fn reset(&self) -> Result<()> {
-        self.sync_impl
-            .lock()
-            .unwrap()
-            .reset(&EngineSyncAssociation::Disconnected)?;
-        Ok(())
-    }
-
-    fn wipe(&self) -> Result<()> {
-        self.sync_impl.lock().unwrap().wipe()?;
-        Ok(())
+    fn engine(&self) -> &dyn sync15::engine::SyncEngine {
+        &self.engine
     }
 }
 
 // This is for uniffi to expose, and does nothing than delegate back to the trait.
 pub struct TabsBridgedEngine {
-    bridge_impl: BridgedEngineImpl,
+    bridge_impl: Box<dyn BridgedEngine>,
 }
 
 impl TabsBridgedEngine {
-    pub fn new(bridge_impl: BridgedEngineImpl) -> Self {
+    pub fn new(bridge_impl: Box<dyn BridgedEngine>) -> Self {
         Self { bridge_impl }
     }
 
@@ -238,14 +125,6 @@ impl TabsBridgedEngine {
 
     pub fn wipe(&self) -> Result<()> {
         self.bridge_impl.wipe()
-    }
-}
-
-impl From<anyhow::Error> for TabsApiError {
-    fn from(value: anyhow::Error) -> Self {
-        TabsApiError::UnexpectedTabsError {
-            reason: value.to_string(),
-        }
     }
 }
 

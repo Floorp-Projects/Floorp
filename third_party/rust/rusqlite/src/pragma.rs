@@ -37,7 +37,7 @@ impl Sql {
         } else {
             Err(Error::SqliteFailure(
                 ffi::Error::new(ffi::SQLITE_MISUSE),
-                Some(format!("Invalid keyword \"{}\"", keyword)),
+                Some(format!("Invalid keyword \"{keyword}\"")),
             ))
         }
     }
@@ -67,14 +67,14 @@ impl Sql {
             ToSqlOutput::ZeroBlob(_) => {
                 return Err(Error::SqliteFailure(
                     ffi::Error::new(ffi::SQLITE_MISUSE),
-                    Some(format!("Unsupported value \"{:?}\"", value)),
+                    Some(format!("Unsupported value \"{value:?}\"")),
                 ));
             }
             #[cfg(feature = "array")]
             ToSqlOutput::Array(_) => {
                 return Err(Error::SqliteFailure(
                     ffi::Error::new(ffi::SQLITE_MISUSE),
-                    Some(format!("Unsupported value \"{:?}\"", value)),
+                    Some(format!("Unsupported value \"{value:?}\"")),
                 ));
             }
         };
@@ -92,7 +92,7 @@ impl Sql {
             _ => {
                 return Err(Error::SqliteFailure(
                     ffi::Error::new(ffi::SQLITE_MISUSE),
-                    Some(format!("Unsupported value \"{:?}\"", value)),
+                    Some(format!("Unsupported value \"{value:?}\"")),
                 ));
             }
         };
@@ -211,7 +211,7 @@ impl Connection {
     /// (e.g. `integrity_check`).
     ///
     /// Prefer [PRAGMA function](https://sqlite.org/pragma.html#pragfunc) introduced in SQLite 3.20:
-    /// `SELECT * FROM pragma_table_info(?);`
+    /// `SELECT * FROM pragma_table_info(?1);`
     pub fn pragma<F, V>(
         &self,
         schema_name: Option<DatabaseName<'_>>,
@@ -303,15 +303,15 @@ fn is_identifier(s: &str) -> bool {
 }
 
 fn is_identifier_start(c: char) -> bool {
-    ('A'..='Z').contains(&c) || c == '_' || ('a'..='z').contains(&c) || c > '\x7F'
+    c.is_ascii_uppercase() || c == '_' || c.is_ascii_lowercase() || c > '\x7F'
 }
 
 fn is_identifier_continue(c: char) -> bool {
     c == '$'
-        || ('0'..='9').contains(&c)
-        || ('A'..='Z').contains(&c)
+        || c.is_ascii_digit()
+        || c.is_ascii_uppercase()
         || c == '_'
-        || ('a'..='z').contains(&c)
+        || c.is_ascii_lowercase()
         || c > '\x7F'
 }
 
@@ -333,10 +333,7 @@ mod test {
     #[cfg(feature = "modern_sqlite")]
     fn pragma_func_query_value() -> Result<()> {
         let db = Connection::open_in_memory()?;
-        let user_version: i32 =
-            db.query_row("SELECT user_version FROM pragma_user_version", [], |row| {
-                row.get(0)
-            })?;
+        let user_version: i32 = db.one_column("SELECT user_version FROM pragma_user_version")?;
         assert_eq!(0, user_version);
         Ok(())
     }
@@ -369,7 +366,7 @@ mod test {
     fn pragma() -> Result<()> {
         let db = Connection::open_in_memory()?;
         let mut columns = Vec::new();
-        db.pragma(None, "table_info", &"sqlite_master", |row| {
+        db.pragma(None, "table_info", "sqlite_master", |row| {
             let column: String = row.get(1)?;
             columns.push(column);
             Ok(())
@@ -382,7 +379,7 @@ mod test {
     #[cfg(feature = "modern_sqlite")]
     fn pragma_func() -> Result<()> {
         let db = Connection::open_in_memory()?;
-        let mut table_info = db.prepare("SELECT * FROM pragma_table_info(?)")?;
+        let mut table_info = db.prepare("SELECT * FROM pragma_table_info(?1)")?;
         let mut columns = Vec::new();
         let mut rows = table_info.query(["sqlite_master"])?;
 
@@ -412,8 +409,8 @@ mod test {
             journal_mode,
         );
         // Sanity checks to ensure the move to a generic `ToSql` wasn't breaking
-        let mode = db
-            .pragma_update_and_check(None, "journal_mode", &"OFF", |row| row.get::<_, String>(0))?;
+        let mode =
+            db.pragma_update_and_check(None, "journal_mode", "OFF", |row| row.get::<_, String>(0))?;
         assert!(mode == "off" || mode == "memory", "mode: {:?}", mode);
 
         let param: &dyn crate::ToSql = &"OFF";
@@ -448,7 +445,7 @@ mod test {
     #[test]
     fn locking_mode() -> Result<()> {
         let db = Connection::open_in_memory()?;
-        let r = db.pragma_update(None, "locking_mode", &"exclusive");
+        let r = db.pragma_update(None, "locking_mode", "exclusive");
         if cfg!(feature = "extra_check") {
             r.unwrap_err();
         } else {

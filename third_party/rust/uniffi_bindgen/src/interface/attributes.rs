@@ -14,8 +14,11 @@
 //! all handled by a single abstraction. This might need to be refactored in future
 //! if we grow significantly more complicated attribute handling.
 
+use crate::interface::types::ExternalKind;
 use anyhow::{bail, Result};
 use uniffi_meta::Checksum;
+
+use super::types::ObjectImpl;
 
 /// Represents an attribute parsed from UDL, like `[ByRef]` or `[Throws]`.
 ///
@@ -29,12 +32,17 @@ pub(super) enum Attribute {
     Error,
     Name(String),
     SelfType(SelfType),
-    Threadsafe, // N.B. the `[Threadsafe]` attribute is deprecated and will be removed
     Throws(String),
+    Traits(Vec<String>),
     // `[External="crate_name"]` - We can `use crate_name::...` for the type.
-    External(String),
+    External {
+        crate_name: String,
+        kind: ExternalKind,
+    },
     // Custom type on the scaffolding side
     Custom,
+    // The interface described is implemented as a trait.
+    Trait,
 }
 
 impl Attribute {
@@ -59,8 +67,8 @@ impl TryFrom<&weedle::attribute::ExtendedAttribute<'_>> for Attribute {
                 "ByRef" => Ok(Attribute::ByRef),
                 "Enum" => Ok(Attribute::Enum),
                 "Error" => Ok(Attribute::Error),
-                "Threadsafe" => Ok(Attribute::Threadsafe),
                 "Custom" => Ok(Attribute::Custom),
+                "Trait" => Ok(Attribute::Trait),
                 _ => anyhow::bail!("ExtendedAttributeNoArgs not supported: {:?}", (attr.0).0),
             },
             // Matches assignment-style attributes like ["Throws=Error"]
@@ -69,10 +77,34 @@ impl TryFrom<&weedle::attribute::ExtendedAttribute<'_>> for Attribute {
                     "Name" => Ok(Attribute::Name(name_from_id_or_string(&identity.rhs))),
                     "Throws" => Ok(Attribute::Throws(name_from_id_or_string(&identity.rhs))),
                     "Self" => Ok(Attribute::SelfType(SelfType::try_from(&identity.rhs)?)),
-                    "External" => Ok(Attribute::External(name_from_id_or_string(&identity.rhs))),
+                    "External" => Ok(Attribute::External {
+                        crate_name: name_from_id_or_string(&identity.rhs),
+                        kind: ExternalKind::DataClass,
+                    }),
+                    "ExternalInterface" => Ok(Attribute::External {
+                        crate_name: name_from_id_or_string(&identity.rhs),
+                        kind: ExternalKind::Interface,
+                    }),
                     _ => anyhow::bail!(
                         "Attribute identity Identifier not supported: {:?}",
                         identity.lhs_identifier.0
+                    ),
+                }
+            }
+            weedle::attribute::ExtendedAttribute::IdentList(attr_list) => {
+                match attr_list.identifier.0 {
+                    "Traits" => Ok(Attribute::Traits(
+                        attr_list
+                            .list
+                            .body
+                            .list
+                            .iter()
+                            .map(|i| i.0.to_string())
+                            .collect(),
+                    )),
+                    _ => anyhow::bail!(
+                        "Attribute identity list not supported: {:?}",
+                        attr_list.identifier.0
                     ),
                 }
             }
@@ -252,10 +284,21 @@ impl InterfaceAttributes {
         self.0.iter().any(|attr| attr.is_error())
     }
 
-    pub fn threadsafe(&self) -> bool {
+    pub fn object_impl(&self) -> ObjectImpl {
+        if self.0.iter().any(|attr| matches!(attr, Attribute::Trait)) {
+            ObjectImpl::Trait
+        } else {
+            ObjectImpl::Struct
+        }
+    }
+    pub fn get_traits(&self) -> Vec<String> {
         self.0
             .iter()
-            .any(|attr| matches!(attr, Attribute::Threadsafe))
+            .find_map(|attr| match attr {
+                Attribute::Traits(inner) => Some(inner.clone()),
+                _ => None,
+            })
+            .unwrap_or_default()
     }
 }
 
@@ -267,11 +310,12 @@ impl TryFrom<&weedle::attribute::ExtendedAttributeList<'_>> for InterfaceAttribu
         let attrs = parse_attributes(weedle_attributes, |attr| match attr {
             Attribute::Enum => Ok(()),
             Attribute::Error => Ok(()),
-            Attribute::Threadsafe => Ok(()),
+            Attribute::Trait => Ok(()),
+            Attribute::Traits(_) => Ok(()),
             _ => bail!(format!("{attr:?} not supported for interface definition")),
         })?;
-        // Can't be both `[Threadsafe]` and an `[Enum]`.
-        if attrs.len() > 1 {
+        if attrs.iter().any(|a| matches!(a, Attribute::Enum)) && attrs.len() != 1 {
+            // If `[Enum]` is specified it must be the only attribute.
             bail!("conflicting attributes on interface definition");
         }
         Ok(Self(attrs))
@@ -296,6 +340,12 @@ impl<T: TryInto<InterfaceAttributes, Error = anyhow::Error>> TryFrom<Option<T>>
 /// an error, and the `[Name=MethodName]` for non-default constructors.
 #[derive(Debug, Clone, Checksum, Default)]
 pub(super) struct ConstructorAttributes(Vec<Attribute>);
+
+impl FromIterator<Attribute> for ConstructorAttributes {
+    fn from_iter<T: IntoIterator<Item = Attribute>>(iter: T) -> Self {
+        Self(Vec::from_iter(iter))
+    }
+}
 
 impl ConstructorAttributes {
     pub(super) fn get_throws_err(&self) -> Option<&str> {
@@ -419,7 +469,7 @@ impl TypedefAttributes {
         self.0
             .iter()
             .find_map(|attr| match attr {
-                Attribute::External(crate_name) => Some(crate_name.clone()),
+                Attribute::External { crate_name, .. } => Some(crate_name.clone()),
                 _ => None,
             })
             .expect("must have a crate name")
@@ -429,6 +479,13 @@ impl TypedefAttributes {
         self.0
             .iter()
             .any(|attr| matches!(attr, Attribute::Custom { .. }))
+    }
+
+    pub(super) fn external_kind(&self) -> Option<ExternalKind> {
+        self.0.iter().find_map(|attr| match attr {
+            Attribute::External { kind, .. } => Some(*kind),
+            _ => None,
+        })
     }
 }
 
@@ -516,10 +573,10 @@ mod test {
     }
 
     #[test]
-    fn test_threadsafe() -> Result<()> {
-        let (_, node) = weedle::attribute::ExtendedAttribute::parse("Threadsafe").unwrap();
+    fn test_trait() -> Result<()> {
+        let (_, node) = weedle::attribute::ExtendedAttribute::parse("Trait").unwrap();
         let attr = Attribute::try_from(&node)?;
-        assert!(matches!(attr, Attribute::Threadsafe));
+        assert!(matches!(attr, Attribute::Trait));
         Ok(())
     }
 
@@ -676,14 +733,14 @@ mod test {
     }
 
     #[test]
-    fn test_threadsafe_attribute() {
-        let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[Threadsafe]").unwrap();
+    fn test_trait_attribute() {
+        let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[Trait]").unwrap();
         let attrs = InterfaceAttributes::try_from(&node).unwrap();
-        assert!(matches!(attrs.threadsafe(), true));
+        assert_eq!(attrs.object_impl(), ObjectImpl::Trait);
 
         let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[]").unwrap();
         let attrs = InterfaceAttributes::try_from(&node).unwrap();
-        assert!(matches!(attrs.threadsafe(), false));
+        assert_eq!(attrs.object_impl(), ObjectImpl::Struct);
     }
 
     #[test]
@@ -696,12 +753,11 @@ mod test {
         let attrs = InterfaceAttributes::try_from(&node).unwrap();
         assert!(matches!(attrs.contains_enum_attr(), false));
 
-        let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[Threadsafe]").unwrap();
+        let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[Trait]").unwrap();
         let attrs = InterfaceAttributes::try_from(&node).unwrap();
         assert!(matches!(attrs.contains_enum_attr(), false));
 
-        let (_, node) =
-            weedle::attribute::ExtendedAttributeList::parse("[Threadsafe, Enum]").unwrap();
+        let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[Trait, Enum]").unwrap();
         let err = InterfaceAttributes::try_from(&node).unwrap_err();
         assert_eq!(
             err.to_string(),
@@ -711,8 +767,7 @@ mod test {
 
     #[test]
     fn test_other_attributes_not_supported_for_interfaces() {
-        let (_, node) =
-            weedle::attribute::ExtendedAttributeList::parse("[Threadsafe, ByRef]").unwrap();
+        let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[Trait, ByRef]").unwrap();
         let err = InterfaceAttributes::try_from(&node).unwrap_err();
         assert_eq!(
             err.to_string(),
@@ -728,6 +783,13 @@ mod test {
 
         let (_, node) =
             weedle::attribute::ExtendedAttributeList::parse("[External=crate_name]").unwrap();
+        let attrs = TypedefAttributes::try_from(&node).unwrap();
+        assert!(!attrs.is_custom());
+        assert_eq!(attrs.get_crate_name(), "crate_name");
+
+        let (_, node) =
+            weedle::attribute::ExtendedAttributeList::parse("[ExternalInterface=crate_name ]")
+                .unwrap();
         let attrs = TypedefAttributes::try_from(&node).unwrap();
         assert!(!attrs.is_custom());
         assert_eq!(attrs.get_crate_name(), "crate_name");

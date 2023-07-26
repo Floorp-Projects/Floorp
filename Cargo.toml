@@ -52,7 +52,7 @@ resolver = "2"
 
 [workspace.dependencies]
 # Shared across multiple UniFFI consumers.
-uniffi = "0.23"
+uniffi = "0.24.2"
 
 # Explicitly specify what our profiles use.  The opt-level setting here is
 # a total fiction; see the setup of MOZ_RUST_DEFAULT_FLAGS for what the
@@ -193,12 +193,12 @@ minidump-common = { git = "https://github.com/rust-minidump/rust-minidump", rev 
 warp = { git = "https://github.com/glandium/warp", rev = "4af45fae95bc98b0eba1ef0db17e1dac471bb23d" }
 
 # application-services overrides to make updating them all simpler.
-interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "86c84c217036c12283d19368867323a66bf35883" }
-sql-support = { git = "https://github.com/mozilla/application-services", rev = "86c84c217036c12283d19368867323a66bf35883" }
-sync15 = { git = "https://github.com/mozilla/application-services", rev = "86c84c217036c12283d19368867323a66bf35883" }
-tabs = { git = "https://github.com/mozilla/application-services", rev = "86c84c217036c12283d19368867323a66bf35883" }
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "86c84c217036c12283d19368867323a66bf35883" }
-webext-storage = { git = "https://github.com/mozilla/application-services", rev = "86c84c217036c12283d19368867323a66bf35883" }
+interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "14fae5c7f01bb2645a3f09e91c64033ed796a862" }
+sql-support = { git = "https://github.com/mozilla/application-services", rev = "14fae5c7f01bb2645a3f09e91c64033ed796a862" }
+sync15 = { git = "https://github.com/mozilla/application-services", rev = "14fae5c7f01bb2645a3f09e91c64033ed796a862" }
+tabs = { git = "https://github.com/mozilla/application-services", rev = "14fae5c7f01bb2645a3f09e91c64033ed796a862" }
+viaduct = { git = "https://github.com/mozilla/application-services", rev = "14fae5c7f01bb2645a3f09e91c64033ed796a862" }
+webext-storage = { git = "https://github.com/mozilla/application-services", rev = "14fae5c7f01bb2645a3f09e91c64033ed796a862" }
 
 # Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.
@@ -206,8 +206,8 @@ webext-storage = { git = "https://github.com/mozilla/application-services", rev 
 path = "third_party/rust/mio-0.6.23"
 
 [patch."https://github.com/mozilla/uniffi-rs.git"]
-uniffi = "=0.23.0"
-uniffi_bindgen = "=0.23.0"
-uniffi_build = "=0.23.0"
-uniffi_macros = "=0.23.0"
+uniffi = "=0.24.2"
+uniffi_bindgen = "=0.24.2"
+uniffi_build = "=0.24.2"
+uniffi_macros = "=0.24.2"
 weedle2 = "=4.0.0"

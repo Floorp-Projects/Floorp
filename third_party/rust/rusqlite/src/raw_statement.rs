@@ -1,7 +1,6 @@
 use super::ffi;
 use super::StatementStatus;
 use crate::util::ParamIndexCache;
-#[cfg(feature = "modern_sqlite")]
 use crate::util::SqliteMallocString;
 use std::ffi::CStr;
 use std::os::raw::c_int;
@@ -170,8 +169,10 @@ impl RawStatement {
     }
 
     #[inline]
-    pub fn clear_bindings(&self) -> c_int {
-        unsafe { ffi::sqlite3_clear_bindings(self.ptr) }
+    pub fn clear_bindings(&self) {
+        unsafe {
+            ffi::sqlite3_clear_bindings(self.ptr);
+        } // rc is always SQLITE_OK
     }
 
     #[inline]
@@ -197,13 +198,11 @@ impl RawStatement {
 
     // does not work for PRAGMA
     #[inline]
-    #[cfg(all(feature = "extra_check", feature = "modern_sqlite"))] // 3.7.4
     pub fn readonly(&self) -> bool {
         unsafe { ffi::sqlite3_stmt_readonly(self.ptr) != 0 }
     }
 
     #[inline]
-    #[cfg(feature = "modern_sqlite")] // 3.14.0
     pub(crate) fn expanded_sql(&self) -> Option<SqliteMallocString> {
         unsafe { SqliteMallocString::from_raw(ffi::sqlite3_expanded_sql(self.ptr)) }
     }

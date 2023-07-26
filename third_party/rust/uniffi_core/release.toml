@@ -11,6 +11,5 @@ tag = false
 pre-release-replacements = [
   {file="../CHANGELOG.md", search="\\[\\[UnreleasedBackendVersion\\]\\]", replace="v{{version}}", exactly=1},
   {file="../CHANGELOG.md", search="\\[\\[ReleaseDate\\]\\]", replace="{{date}}", exactly=1},
-  {file="../CHANGELOG.md", search="\\.\\.\\.HEAD\\)", replace="...{{tag_name}})", exactly=1},
-  {file="../CHANGELOG.md", search="<!-- next-header -->", replace="<!-- next-header -->\n\n## [[UnreleasedUniFFIVersion]] (backend crates: [[UnreleasedBackendVersion]]) - (_[[ReleaseDate]]_)\n\n[All changes in [[UnreleasedVersion]]](https://github.com/mozilla/uniffi-rs/compare/v{{version}}...HEAD).", exactly=1},
+  {file="../CHANGELOG.md", search="<!-- next-header -->", replace="<!-- next-header -->\n\n## [[NextUnreleasedUniFFIVersion]] (backend crates: [[UnreleasedBackendVersion]]) - (_[[ReleaseDate]]_)\n\n[All changes in [[NextUnreleasedUniFFIVersion]]](https://github.com/mozilla/uniffi-rs/compare/v{{version}}...NEXT_HEAD).", exactly=1},
 ]

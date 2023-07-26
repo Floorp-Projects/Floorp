@@ -3,5 +3,5 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 fn main() {
-    uniffi::generate_scaffolding("./src/geometry.udl").unwrap();
+    uniffi::generate_scaffolding("src/geometry.udl").unwrap();
 }

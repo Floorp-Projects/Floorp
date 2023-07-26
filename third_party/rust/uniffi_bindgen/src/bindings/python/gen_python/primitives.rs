@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::backend::{CodeOracle, CodeType, Literal};
+use crate::backend::{CodeType, Literal};
 use crate::interface::Radix;
 use paste::paste;
 
-fn render_literal(_oracle: &dyn CodeOracle, literal: &Literal) -> String {
+fn render_literal(literal: &Literal) -> String {
     match literal {
         Literal::Boolean(v) => {
             if *v {
@@ -34,36 +34,37 @@ fn render_literal(_oracle: &dyn CodeOracle, literal: &Literal) -> String {
 }
 
 macro_rules! impl_code_type_for_primitive {
-    ($T:ty, $class_name:literal, $coerce_code:expr) => {
+    ($T:ty, $python_name:literal, $canonical_name:literal) => {
         paste! {
+            #[derive(Debug)]
             pub struct $T;
-
             impl CodeType for $T  {
-                fn type_label(&self, _oracle: &dyn CodeOracle) -> String {
-                    $class_name.into()
+                fn type_label(&self) -> String {
+                    $python_name.into()
                 }
 
-                fn literal(&self, oracle: &dyn CodeOracle, literal: &Literal) -> String {
-                    render_literal(oracle, &literal)
+                fn canonical_name(&self) -> String {
+                    $canonical_name.into()
                 }
 
-                fn coerce(&self, _oracle: &dyn CodeOracle, nm: &str) -> String {
-                    format!($coerce_code, nm)
+                fn literal(&self, literal: &Literal) -> String {
+                    render_literal(&literal)
                 }
             }
         }
     };
 }
 
-impl_code_type_for_primitive!(BooleanCodeType, "Bool", "bool({})");
-impl_code_type_for_primitive!(StringCodeType, "String", "{}");
-impl_code_type_for_primitive!(Int8CodeType, "Int8", "int({})");
-impl_code_type_for_primitive!(Int16CodeType, "Int16", "int({})");
-impl_code_type_for_primitive!(Int32CodeType, "Int32", "int({})");
-impl_code_type_for_primitive!(Int64CodeType, "Int64", "int({})");
-impl_code_type_for_primitive!(UInt8CodeType, "UInt8", "int({})");
-impl_code_type_for_primitive!(UInt16CodeType, "UInt16", "int({})");
-impl_code_type_for_primitive!(UInt32CodeType, "UInt32", "int({})");
-impl_code_type_for_primitive!(UInt64CodeType, "UInt64", "int({})");
-impl_code_type_for_primitive!(Float32CodeType, "Float", "float({})");
-impl_code_type_for_primitive!(Float64CodeType, "Double", "float({})");
+impl_code_type_for_primitive!(BooleanCodeType, "bool", "Bool");
+impl_code_type_for_primitive!(StringCodeType, "str", "String");
+impl_code_type_for_primitive!(BytesCodeType, "bytes", "Bytes");
+impl_code_type_for_primitive!(Int8CodeType, "int", "Int8");
+impl_code_type_for_primitive!(Int16CodeType, "int", "Int16");
+impl_code_type_for_primitive!(Int32CodeType, "int", "Int32");
+impl_code_type_for_primitive!(Int64CodeType, "int", "Int64");
+impl_code_type_for_primitive!(UInt8CodeType, "int", "UInt8");
+impl_code_type_for_primitive!(UInt16CodeType, "int", "UInt16");
+impl_code_type_for_primitive!(UInt32CodeType, "int", "UInt32");
+impl_code_type_for_primitive!(UInt64CodeType, "int", "UInt64");
+impl_code_type_for_primitive!(Float32CodeType, "float", "Float");
+impl_code_type_for_primitive!(Float64CodeType, "float", "Double");

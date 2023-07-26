@@ -75,13 +75,92 @@
 //! assert_eq!(e.variants()[1].fields()[0].name(), "first");
 //! # Ok::<(), anyhow::Error>(())
 //! ```
+//!
+//! # Enums are also used to represent error definitions for a `ComponentInterface`.
+//!
+//! ```
+//! # let ci = uniffi_bindgen::interface::ComponentInterface::from_webidl(r##"
+//! # namespace example {};
+//! [Error]
+//! enum Example {
+//!   "one",
+//!   "two"
+//! };
+//! # "##)?;
+//! # Ok::<(), anyhow::Error>(())
+//! ```
+//!
+//! Will result in an [`Enum`] member with fieldless variants being added to the resulting [`ComponentInterface`]:
+//!
+//! ```
+//! # let ci = uniffi_bindgen::interface::ComponentInterface::from_webidl(r##"
+//! # namespace example {};
+//! # [Error]
+//! # enum Example {
+//! #   "one",
+//! #   "two"
+//! # };
+//! # "##)?;
+//! let err = ci.get_enum_definition("Example").unwrap();
+//! assert_eq!(err.name(), "Example");
+//! assert_eq!(err.variants().len(), 2);
+//! assert_eq!(err.variants()[0].name(), "one");
+//! assert_eq!(err.variants()[1].name(), "two");
+//! assert_eq!(err.is_flat(), true);
+//! assert!(ci.is_name_used_as_error(&err.name()));
+//! # Ok::<(), anyhow::Error>(())
+//! ```
+//!
+//! A declaration in the UDL like this:
+//!
+//! ```
+//! # let ci = uniffi_bindgen::interface::ComponentInterface::from_webidl(r##"
+//! # namespace example {};
+//! [Error]
+//! interface Example {
+//!   one(i16 code);
+//!   two(string reason);
+//!   three(i32 x, i32 y);
+//! };
+//! # "##)?;
+//! # Ok::<(), anyhow::Error>(())
+//! ```
+//!
+//! Will result in an [`Enum`] member with variants that have fields being added to the resulting [`ComponentInterface`]:
+//!
+//! ```
+//! # let ci = uniffi_bindgen::interface::ComponentInterface::from_webidl(r##"
+//! # namespace example {};
+//! # [Error]
+//! # interface Example {
+//! #   one();
+//! #   two(string reason);
+//! #   three(i32 x, i32 y);
+//! # };
+//! # "##)?;
+//! let err = ci.get_enum_definition("Example").unwrap();
+//! assert_eq!(err.name(), "Example");
+//! assert_eq!(err.variants().len(), 3);
+//! assert_eq!(err.variants()[0].name(), "one");
+//! assert_eq!(err.variants()[1].name(), "two");
+//! assert_eq!(err.variants()[2].name(), "three");
+//! assert_eq!(err.variants()[0].fields().len(), 0);
+//! assert_eq!(err.variants()[1].fields().len(), 1);
+//! assert_eq!(err.variants()[1].fields()[0].name(), "reason");
+//! assert_eq!(err.variants()[2].fields().len(), 2);
+//! assert_eq!(err.variants()[2].fields()[0].name(), "x");
+//! assert_eq!(err.variants()[2].fields()[1].name(), "y");
+//! assert_eq!(err.is_flat(), false);
+//! assert!(ci.is_name_used_as_error(err.name()));
+//! # Ok::<(), anyhow::Error>(())
+//! ```
 
 use anyhow::{bail, Result};
 use uniffi_meta::Checksum;
 
 use super::record::Field;
 use super::types::{Type, TypeIterator};
-use super::{APIConverter, ComponentInterface};
+use super::{APIConverter, AsType, ComponentInterface};
 
 /// Represents an enum with named variants, each of which may have named
 /// and typed fields.
@@ -92,19 +171,29 @@ use super::{APIConverter, ComponentInterface};
 pub struct Enum {
     pub(super) name: String,
     pub(super) variants: Vec<Variant>,
-    // "Flat" enums do not have variants with associated data.
+    // NOTE: `flat` is a misleading name and to make matters worse, has 2 different
+    // meanings depending on the context :(
+    // * When used as part of Rust scaffolding generation, it means "is this enum
+    //   used with an Error, and that error should we lowered to foreign bindings
+    //   by converting each variant to a string and lowering the variant with that
+    //   string?". In that context, it should probably be called `lowered_as_string` or
+    //   similar.
+    // * When used as part of bindings generation, it means "does this enum have only
+    //   variants with no associated data"? The foreign binding generators are likely
+    //   to generate significantly different versions of the enum based on that value.
+    //
+    // The reason it is described as "has 2 different meanings" by way of example:
+    // * For an Enum described as being a flat error, but the enum itself has variants with data,
+    //   `flat` will be `true` for the Enum when generating scaffolding and `false` when
+    //   generating bindings.
+    // * For an Enum not used as an error but which has no variants with data, `flat` will be
+    //   false when generating the scaffolding but `true` when generating bindings.
     pub(super) flat: bool,
 }
 
 impl Enum {
     pub fn name(&self) -> &str {
         &self.name
-    }
-
-    pub fn type_(&self) -> Type {
-        // *sigh* at the clone here, the relationship between a ComponentInterface
-        // and its contained types could use a bit of a cleanup.
-        Type::Enum(self.name.clone())
     }
 
     pub fn variants(&self) -> &[Variant] {
@@ -118,16 +207,29 @@ impl Enum {
     pub fn iter_types(&self) -> TypeIterator<'_> {
         Box::new(self.variants.iter().flat_map(Variant::iter_types))
     }
+
+    // Sadly can't use TryFrom due to the 'is_flat' complication.
+    pub fn try_from_meta(meta: uniffi_meta::EnumMetadata, flat: bool) -> Result<Self> {
+        // This is messy - error enums are considered "flat" if the user
+        // opted in via a special attribute, regardless of whether the enum
+        // is actually flat.
+        // Real enums are considered flat iff they are actually flat.
+        // We don't have that context here, so this is handled by our caller.
+        Ok(Self {
+            name: meta.name,
+            variants: meta
+                .variants
+                .into_iter()
+                .map(TryInto::try_into)
+                .collect::<Result<_>>()?,
+            flat,
+        })
+    }
 }
 
-impl From<uniffi_meta::EnumMetadata> for Enum {
-    fn from(meta: uniffi_meta::EnumMetadata) -> Self {
-        let flat = meta.variants.iter().all(|v| v.fields.is_empty());
-        Self {
-            name: meta.name,
-            variants: meta.variants.into_iter().map(Into::into).collect(),
-            flat,
-        }
+impl AsType for Enum {
+    fn as_type(&self) -> Type {
+        Type::Enum(self.name.clone())
     }
 }
 
@@ -150,7 +252,9 @@ impl APIConverter<Enum> for weedle::EnumDefinition<'_> {
                     })
                 })
                 .collect::<Result<Vec<_>>>()?,
-            // Enums declared using the `enum` syntax can never have variants with fields.
+            // Enums declared using the `enum` syntax can never have variants with fields described in the UDL.
+            // So regardless of whether this enum has variants with fields or not, we lower it with
+            // a string representation of itself.
             flat: true,
         })
     }
@@ -210,12 +314,18 @@ impl Variant {
     }
 }
 
-impl From<uniffi_meta::VariantMetadata> for Variant {
-    fn from(meta: uniffi_meta::VariantMetadata) -> Self {
-        Self {
+impl TryFrom<uniffi_meta::VariantMetadata> for Variant {
+    type Error = anyhow::Error;
+
+    fn try_from(meta: uniffi_meta::VariantMetadata) -> Result<Self> {
+        Ok(Self {
             name: meta.name,
-            fields: meta.fields.into_iter().map(Into::into).collect(),
-        }
+            fields: meta
+                .fields
+                .into_iter()
+                .map(TryInto::try_into)
+                .collect::<Result<_>>()?,
+        })
     }
 }
 
@@ -268,7 +378,7 @@ impl APIConverter<Field> for weedle::argument::Argument<'_> {
 impl APIConverter<Field> for weedle::argument::SingleArgument<'_> {
     fn convert(&self, ci: &mut ComponentInterface) -> Result<Field> {
         let type_ = ci.resolve_type_expression(&self.type_)?;
-        if let Type::Object(_) = type_ {
+        if let Type::Object { .. } = type_ {
             bail!("Objects cannot currently be used in enum variant data");
         }
         if self.default.is_some() {
@@ -369,9 +479,9 @@ mod test {
             ed.variants()[1]
                 .fields()
                 .iter()
-                .map(|f| f.type_())
+                .map(|f| f.as_type())
                 .collect::<Vec<_>>(),
-            vec![&Type::UInt32]
+            vec![Type::UInt32]
         );
         assert_eq!(
             ed.variants()[2]
@@ -385,9 +495,9 @@ mod test {
             ed.variants()[2]
                 .fields()
                 .iter()
-                .map(|f| f.type_())
+                .map(|f| f.as_type())
                 .collect::<Vec<_>>(),
-            vec![&Type::UInt32, &Type::String]
+            vec![Type::UInt32, Type::String]
         );
 
         // The enum declared via interface, but with no associated data.
@@ -405,13 +515,15 @@ mod test {
         // (It might be nice to optimize these to pass as plain integers, but that's
         // difficult atop the current factoring of `ComponentInterface` and friends).
         let farg = ci.get_function_definition("takes_an_enum").unwrap();
-        assert_eq!(*farg.arguments()[0].type_(), Type::Enum("TestEnum".into()));
+        assert_eq!(farg.arguments()[0].as_type(), Type::Enum("TestEnum".into()));
         assert_eq!(
             farg.ffi_func().arguments()[0].type_(),
             FfiType::RustBuffer(None)
         );
         let fret = ci.get_function_definition("returns_an_enum").unwrap();
-        assert!(matches!(fret.return_type(), Some(Type::Enum(nm)) if nm == "TestEnum"));
+        assert!(
+            matches!(fret.return_type(), Some(Type::Enum(name)) if name == "TestEnum" && !ci.is_name_used_as_error(name))
+        );
         assert!(matches!(
             fret.ffi_func().return_type(),
             Some(FfiType::RustBuffer(None))
@@ -422,7 +534,7 @@ mod test {
             .get_function_definition("takes_an_enum_with_data")
             .unwrap();
         assert_eq!(
-            *farg.arguments()[0].type_(),
+            farg.arguments()[0].as_type(),
             Type::Enum("TestEnumWithData".into())
         );
         assert_eq!(
@@ -432,10 +544,78 @@ mod test {
         let fret = ci
             .get_function_definition("returns_an_enum_with_data")
             .unwrap();
-        assert!(matches!(fret.return_type(), Some(Type::Enum(nm)) if nm == "TestEnumWithData"));
+        assert!(
+            matches!(fret.return_type(), Some(Type::Enum(name)) if name == "TestEnumWithData" && !ci.is_name_used_as_error(name))
+        );
         assert!(matches!(
             fret.ffi_func().return_type(),
             Some(FfiType::RustBuffer(None))
         ));
+    }
+
+    // Tests for [Error], which are represented as `Enum`
+    #[test]
+    fn test_variants() {
+        const UDL: &str = r#"
+            namespace test{};
+            [Error]
+            enum Testing { "one", "two", "three" };
+        "#;
+        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        assert_eq!(ci.enum_definitions().count(), 1);
+        let error = ci.get_enum_definition("Testing").unwrap();
+        assert_eq!(
+            error
+                .variants()
+                .iter()
+                .map(|v| v.name())
+                .collect::<Vec<&str>>(),
+            vec!("one", "two", "three")
+        );
+        assert!(error.is_flat());
+        assert!(ci.is_name_used_as_error(&error.name));
+    }
+
+    #[test]
+    fn test_duplicate_error_variants() {
+        const UDL: &str = r#"
+            namespace test{};
+            // Weird, but currently allowed!
+            // We should probably disallow this...
+            [Error]
+            enum Testing { "one", "two", "one" };
+        "#;
+        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        assert_eq!(ci.enum_definitions().count(), 1);
+        assert_eq!(
+            ci.get_enum_definition("Testing").unwrap().variants().len(),
+            3
+        );
+    }
+
+    #[test]
+    fn test_variant_data() {
+        const UDL: &str = r#"
+            namespace test{};
+
+            [Error]
+            interface Testing {
+                One(string reason);
+                Two(u8 code);
+            };
+        "#;
+        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        assert_eq!(ci.enum_definitions().count(), 1);
+        let error: &Enum = ci.get_enum_definition("Testing").unwrap();
+        assert_eq!(
+            error
+                .variants()
+                .iter()
+                .map(|v| v.name())
+                .collect::<Vec<&str>>(),
+            vec!("One", "Two")
+        );
+        assert!(!error.is_flat());
+        assert!(ci.is_name_used_as_error(&error.name));
     }
 }

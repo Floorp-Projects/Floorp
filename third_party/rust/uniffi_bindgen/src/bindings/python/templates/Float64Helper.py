@@ -1,8 +1,8 @@
-class FfiConverterDouble(FfiConverterPrimitive):
+class FfiConverterDouble(FfiConverterPrimitiveFloat):
     @staticmethod
     def read(buf):
         return buf.readDouble()
 
     @staticmethod
-    def write(value, buf):
+    def writeUnchecked(value, buf):
         buf.writeDouble(value)

@@ -150,6 +150,12 @@ pub impl FfiType {
             FfiType::RustArcPtr(_) => "void *",
             FfiType::ForeignCallback => "ForeignCallback",
             FfiType::ForeignBytes => unimplemented!("ForeignBytes not supported"),
+            FfiType::ForeignExecutorHandle => unimplemented!("ForeignExecutorHandle not supported"),
+            FfiType::ForeignExecutorCallback => {
+                unimplemented!("ForeignExecutorCallback not supported")
+            }
+            FfiType::FutureCallback { .. } => unimplemented!("FutureCallback not supported"),
+            FfiType::FutureCallbackData => unimplemented!("FutureCallbackData not supported"),
         }
         .to_owned()
     }

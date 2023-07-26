@@ -4,6 +4,7 @@
 
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
+use uniffi_bindgen::bindings::TargetLanguage;
 
 // Structs to help our cmdline parsing. Note that docstrings below form part
 // of the "help" output.
@@ -23,8 +24,8 @@ enum Commands {
     /// Generate foreign language bindings
     Generate {
         /// Foreign language(s) for which to build bindings.
-        #[clap(long, short, possible_values = &["kotlin", "python", "swift", "ruby"])]
-        language: Vec<String>,
+        #[clap(long, short, value_enum)]
+        language: Vec<TargetLanguage>,
 
         /// Directory in which to write generated files. Default is same folder as .udl file.
         #[clap(long, short)]
@@ -42,8 +43,16 @@ enum Commands {
         #[clap(long)]
         lib_file: Option<Utf8PathBuf>,
 
-        /// Path to the UDL file.
-        udl_file: Utf8PathBuf,
+        /// Pass in a cdylib path rather than a UDL file
+        #[clap(long = "library")]
+        library_mode: bool,
+
+        /// When `--library` is passed, only generate bindings for one crate
+        #[clap(long = "crate")]
+        crate_name: Option<String>,
+
+        /// Path to the UDL file, or cdylib if `library-mode` is specified
+        source: Utf8PathBuf,
     },
 
     /// Generate Rust scaffolding code
@@ -51,10 +60,6 @@ enum Commands {
         /// Directory in which to write generated files. Default is same folder as .udl file.
         #[clap(long, short)]
         out_dir: Option<Utf8PathBuf>,
-
-        /// Path to the optional uniffi config file. If not provided, uniffi-bindgen will try to guess it from the UDL's file location.
-        #[clap(long, short)]
-        config: Option<Utf8PathBuf>,
 
         /// Do not try to format the generated bindings.
         #[clap(long, short)]
@@ -73,34 +78,59 @@ enum Commands {
 
 pub fn run_main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-    match &cli.command {
+    match cli.command {
         Commands::Generate {
             language,
             out_dir,
             no_format,
             config,
             lib_file,
-            udl_file,
-        } => uniffi_bindgen::generate_bindings(
-            udl_file,
-            config.as_deref(),
-            language.iter().map(String::as_str).collect(),
-            out_dir.as_deref(),
-            lib_file.as_deref(),
-            !no_format,
-        ),
+            source,
+            crate_name,
+            library_mode,
+        } => {
+            if library_mode {
+                if lib_file.is_some() {
+                    panic!("--lib-file is not compatible with --library.")
+                }
+                if config.is_some() {
+                    panic!("--config is not compatible with --library.  The config file(s) will be found automatically.")
+                }
+                let out_dir = out_dir.expect("--out-dir is required when using --library");
+                if language.is_empty() {
+                    panic!("please specify at least one language with --language")
+                }
+                uniffi_bindgen::library_mode::generate_bindings(
+                    &source, crate_name, &language, &out_dir, !no_format,
+                )?;
+            } else {
+                if crate_name.is_some() {
+                    panic!("--crate requires --library.")
+                }
+                uniffi_bindgen::generate_bindings(
+                    &source,
+                    config.as_deref(),
+                    language,
+                    out_dir.as_deref(),
+                    lib_file.as_deref(),
+                    !no_format,
+                )?;
+            }
+        }
         Commands::Scaffolding {
             out_dir,
-            config,
             no_format,
             udl_file,
-        } => uniffi_bindgen::generate_component_scaffolding(
-            udl_file,
-            config.as_deref(),
-            out_dir.as_deref(),
-            !no_format,
-        ),
-        Commands::PrintJson { path } => uniffi_bindgen::print_json(path),
-    }?;
+        } => {
+            uniffi_bindgen::generate_component_scaffolding(
+                &udl_file,
+                out_dir.as_deref(),
+                !no_format,
+            )?;
+        }
+        Commands::PrintJson { path } => {
+            uniffi_bindgen::print_json(&path)?;
+        }
+    };
     Ok(())
 }

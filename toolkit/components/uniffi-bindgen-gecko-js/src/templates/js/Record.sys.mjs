@@ -19,7 +19,7 @@ export class {{ record.nm() }} {
     equals(other) {
         return (
             {%- for field in record.fields() %}
-            {{ field.type_().equals("this.{}"|format(field.nm()), "other.{}"|format(field.nm())) }}{% if !loop.last %} &&{% endif %}
+            {{ field.as_type().equals("this.{}"|format(field.nm()), "other.{}"|format(field.nm())) }}{% if !loop.last %} &&{% endif %}
             {%- endfor %}
         )
     }

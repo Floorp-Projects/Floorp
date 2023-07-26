@@ -35,13 +35,12 @@ path = "../support/error"
 path = "../support/interrupt"
 
 [dependencies.rusqlite]
-version = "0.28.0"
+version = "0.29.0"
 features = [
     "functions",
     "bundled",
     "serde_json",
     "unlock_notify",
-    "column_decltype",
 ]
 
 [dependencies.sql-support]
@@ -63,13 +62,15 @@ version = "2.1"
 features = ["serde"]
 
 [dev-dependencies]
-libsqlite3-sys = "0.25.2"
-prettytable-rs = "0.8"
+libsqlite3-sys = "0.26.0"
 tempfile = "3"
 
 [dev-dependencies.env_logger]
 version = "0.7"
 default-features = false
+
+[dev-dependencies.sql-support]
+path = "../support/sql"
 
 [build-dependencies.nss_build_common]
 path = "../support/rc_crypto/nss/nss_build_common"

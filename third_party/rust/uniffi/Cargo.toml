@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "uniffi"
-version = "0.23.0"
+version = "0.24.2"
 authors = ["Firefox Sync Team <sync-team@mozilla.com>"]
 description = "a multi-language bindings generator for rust"
 homepage = "https://mozilla.github.io/uniffi-rs"
@@ -32,7 +32,7 @@ version = "1.0.8"
 optional = true
 
 [dependencies.clap]
-version = "3.1"
+version = "4"
 features = [
     "cargo",
     "std",
@@ -41,28 +41,31 @@ features = [
 optional = true
 
 [dependencies.uniffi_bindgen]
-version = "=0.23.0"
+version = "=0.24.2"
 optional = true
 
 [dependencies.uniffi_build]
-version = "=0.23.0"
+version = "=0.24.2"
 optional = true
 
 [dependencies.uniffi_core]
-version = "=0.23.0"
+version = "=0.24.2"
 
 [dependencies.uniffi_macros]
-version = "=0.23.0"
+version = "=0.24.2"
 
 [dev-dependencies.trybuild]
 version = "1"
 
 [features]
+bindgen = ["dep:uniffi_bindgen"]
 bindgen-tests = ["dep:uniffi_bindgen"]
 build = ["dep:uniffi_build"]
 cli = [
-    "dep:uniffi_bindgen",
+    "bindgen",
+    "uniffi_bindgen?/clap",
     "dep:clap",
     "dep:camino",
 ]
 default = []
+tokio = ["uniffi_core/tokio"]

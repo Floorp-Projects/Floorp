@@ -96,7 +96,7 @@ impl Field {
         match self.label {
             Label::Optional => quote! {
                 ::prost::encoding::message::merge(wire_type,
-                                                 #ident.get_or_insert_with(Default::default),
+                                                 #ident.get_or_insert_with(::core::default::Default::default),
                                                  buf,
                                                  ctx)
             },

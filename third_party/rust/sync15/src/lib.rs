@@ -46,3 +46,5 @@ pub type CollectionName = std::borrow::Cow<'static, str>;
 fn skip_if_default<T: PartialEq + Default>(v: &T) -> bool {
     *v == T::default()
 }
+
+uniffi::include_scaffolding!("sync15");

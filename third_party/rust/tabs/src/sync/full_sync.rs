@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::{sync::engine::TabsSyncImpl, ApiResult, TabsEngine, TabsStore};
+use crate::{ApiResult, TabsEngine, TabsStore};
 use error_support::handle_error;
 use interrupt_support::NeverInterrupts;
 use std::sync::Arc;
@@ -11,10 +11,10 @@ use sync15::engine::EngineSyncAssociation;
 use sync15::KeyBundle;
 
 impl TabsStore {
-    #[handle_error(crate::Error)]
     pub fn reset(self: Arc<Self>) -> ApiResult<()> {
-        let mut sync_impl = TabsSyncImpl::new(Arc::clone(&self));
-        sync_impl.reset(&EngineSyncAssociation::Disconnected)?;
+        use sync15::engine::SyncEngine;
+        let engine = TabsEngine::new(Arc::clone(&self));
+        engine.reset(&EngineSyncAssociation::Disconnected)?;
         Ok(())
     }
 
@@ -36,7 +36,7 @@ impl TabsStore {
         // consequence `TabsStore::prepare_for_sync` is never called
         // which means our `local_id` will never be set.
         // Do it here.
-        engine.sync_impl.lock().unwrap().local_id = local_id;
+        *engine.local_id.write().unwrap() = local_id;
 
         let storage_init = &Sync15StorageClientInit {
             key_id,

@@ -5,7 +5,7 @@
 use std::fmt;
 
 /// Helper type for printing repeated strings more efficiently. You should use
-/// [`repeat_display`](sql_support::repeat_display), or one of the `repeat_sql_*` helpers to
+/// [`repeat_display`] or one of the `repeat_sql_*` helpers to
 /// construct it.
 #[derive(Debug, Clone)]
 pub struct RepeatDisplay<'a, F> {

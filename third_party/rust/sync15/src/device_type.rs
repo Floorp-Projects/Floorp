@@ -32,7 +32,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 ///   upload records with *this* device's type, not the type of other devices, and it's reasonable
 ///   to assume that this module knows about all valid device types for the device type it is
 ///   deployed on.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub enum DeviceType {
     Desktop,
     Mobile,
@@ -40,13 +40,8 @@ pub enum DeviceType {
     VR,
     TV,
     // See docstrings above re how Unknown is serialized and deserialized.
+    #[default]
     Unknown,
-}
-
-impl Default for DeviceType {
-    fn default() -> Self {
-        DeviceType::Unknown
-    }
 }
 
 impl<'de> Deserialize<'de> for DeviceType {

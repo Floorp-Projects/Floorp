@@ -338,6 +338,15 @@ impl EngineIncoming {
         self.reconciled += n;
     }
 
+    /// Accumulate values from another EngineIncoming - useful when dealing with
+    /// incoming batches.
+    fn accum(&mut self, other: &EngineIncoming) {
+        self.applied += other.applied;
+        self.failed += other.failed;
+        self.new_failed += other.new_failed;
+        self.reconciled += other.reconciled;
+    }
+
     /// Get the value of `applied`. Mostly useful for testing.
     #[inline]
     pub fn get_applied(&self) -> u32 {
@@ -363,7 +372,7 @@ impl EngineIncoming {
     }
 }
 
-/// Outgoing record for an engine's sync
+/// Outgoing record for an engine's sync.
 #[derive(Debug, Default, Serialize)]
 pub struct EngineOutgoing {
     #[serde(skip_serializing_if = "crate::skip_if_default")]
@@ -426,8 +435,15 @@ impl Engine {
     }
 
     pub fn incoming(&mut self, inc: EngineIncoming) {
-        assert!(self.incoming.is_none());
-        self.incoming = Some(inc);
+        match &mut self.incoming {
+            None => self.incoming = Some(inc),
+            Some(ref mut existing) => existing.accum(&inc),
+        };
+    }
+
+    // A bit hacky as we need this to report telemetry for desktop via the bridged engine.
+    pub fn get_incoming(&self) -> &Option<EngineIncoming> {
+        &self.incoming
     }
 
     pub fn outgoing(&mut self, out: EngineOutgoing) {
@@ -522,6 +538,25 @@ mod engine_tests {
         assert_json(
             &e,
             serde_json::json!({"name": "TestEngine", "when": 0.0, "incoming": {"applied": 1, "failed": 2}}),
+        );
+    }
+
+    #[test]
+    fn test_incoming_accum() {
+        let mut e = Engine::new("TestEngine");
+        let mut i1 = EngineIncoming::new();
+        i1.applied(1);
+        i1.failed(2);
+        e.incoming(i1);
+        let mut i2 = EngineIncoming::new();
+        i2.applied(1);
+        i2.failed(1);
+        i2.reconciled(4);
+        e.incoming(i2);
+        e.finished();
+        assert_json(
+            &e,
+            serde_json::json!({"name": "TestEngine", "when": 0.0, "incoming": {"applied": 2, "failed": 3, "reconciled": 4}}),
         );
     }
 

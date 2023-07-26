@@ -147,4 +147,4 @@ impl TodoList {
     }
 }
 
-include!(concat!(env!("OUT_DIR"), "/todolist.uniffi.rs"));
+uniffi::include_scaffolding!("todolist");

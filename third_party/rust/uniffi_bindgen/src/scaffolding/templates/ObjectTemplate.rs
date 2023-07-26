@@ -10,35 +10,35 @@
 // in the UDL, then the rust compiler will complain with a (hopefully at least somewhat helpful!)
 // error message when processing this generated code.
 
-{% if obj.uses_deprecated_threadsafe_attribute() %}
-// We want to mark this as `deprecated` - long story short, the only way to
-// sanely do this using `#[deprecated(..)]` is to generate a function with that
-// attribute, then generate call to that function in the object constructors.
-#[deprecated(
-    since = "0.11.0",
-    note = "The `[Threadsafe]` attribute on interfaces is now the default and its use is deprecated - you should upgrade \
-            `{{ obj.name() }}` to remove the `[ThreadSafe]` attribute. \
-            See https://github.com/mozilla/uniffi-rs/#thread-safety for more details"
-)]
-#[allow(non_snake_case)]
-fn uniffi_note_threadsafe_deprecation_{{ obj.name() }}() {}
-{% endif %}
-
+{%- match obj.imp() -%}
+{%- when ObjectImpl::Trait %}
+::uniffi::ffi_converter_trait_decl!({{ obj.rust_name() }}, "{{ obj.name() }}", crate::UniFfiTag);
+{% else %}
+#[::uniffi::ffi_converter_interface(tag = crate::UniFfiTag)]
+struct {{ obj.rust_name() }} { }
+{% endmatch %}
 
 // All Object structs must be `Sync + Send`. The generated scaffolding will fail to compile
 // if they are not, but unfortunately it fails with an unactionably obscure error message.
 // By asserting the requirement explicitly, we help Rust produce a more scrutable error message
 // and thus help the user debug why the requirement isn't being met.
-uniffi::deps::static_assertions::assert_impl_all!(r#{{ obj.name() }}: Sync, Send);
+uniffi::deps::static_assertions::assert_impl_all!({{ obj.rust_name() }}: Sync, Send);
 
 {% let ffi_free = obj.ffi_object_free() -%}
 #[doc(hidden)]
 #[no_mangle]
 pub extern "C" fn {{ ffi_free.name() }}(ptr: *const std::os::raw::c_void, call_status: &mut uniffi::RustCallStatus) {
-    uniffi::call_with_output(call_status, || {
+    uniffi::rust_call(call_status, || {
         assert!(!ptr.is_null());
+        {%- match obj.imp() -%}
+        {%- when ObjectImpl::Trait %}
+        {#- turn it into a Box<Arc<T> and explicitly drop it. #}
+        drop(unsafe { Box::from_raw(ptr as *mut std::sync::Arc<{{ obj.rust_name() }}>) });
+        {%- when ObjectImpl::Struct %}
         {#- turn it into an Arc and explicitly drop it. #}
-        drop(unsafe { std::sync::Arc::from_raw(ptr as *const r#{{ obj.name() }}) })
+        drop(unsafe { ::std::sync::Arc::from_raw(ptr as *const {{ obj.rust_name() }}) });
+        {% endmatch %}
+        Ok(())
     })
 }
 
@@ -46,28 +46,88 @@ pub extern "C" fn {{ ffi_free.name() }}(ptr: *const std::os::raw::c_void, call_s
     #[doc(hidden)]
     #[no_mangle]
     pub extern "C" fn r#{{ cons.ffi_func().name() }}(
-        {%- call rs::arg_list_ffi_decl(cons.ffi_func()) %}) -> *const std::os::raw::c_void /* *const {{ obj.name() }} */ {
+        {%- call rs::arg_list_ffi_decl(cons.ffi_func()) %}
+    ) -> *const std::os::raw::c_void /* *const {{ obj.name() }} */ {
         uniffi::deps::log::debug!("{{ cons.ffi_func().name() }}");
-        {% if obj.uses_deprecated_threadsafe_attribute() %}
-        uniffi_note_threadsafe_deprecation_{{ obj.name() }}();
-        {% endif %}
 
         // If the constructor does not have the same signature as declared in the UDL, then
         // this attempt to call it will fail with a (somewhat) helpful compiler error.
-        {% call rs::to_rs_constructor_call(obj, cons) %}
+        uniffi::rust_call(call_status, || {
+            {{ cons|return_ffi_converter }}::lower_return(
+                {%- if cons.throws() %}
+                {{ obj.rust_name() }}::{% call rs::to_rs_call(cons) %}.map(::std::sync::Arc::new).map_err(Into::into)
+                {%- else %}
+                ::std::sync::Arc::new({{ obj.rust_name() }}::{% call rs::to_rs_call(cons) %})
+                {%- endif %}
+            )
+        })
     }
 {%- endfor %}
 
 {%- for meth in obj.methods() %}
-    #[doc(hidden)]
-    #[no_mangle]
-    #[allow(clippy::let_unit_value)] // Sometimes we generate code that binds `_retval` to `()`.
-    pub extern "C" fn r#{{ meth.ffi_func().name() }}(
-        {%- call rs::arg_list_ffi_decl(meth.ffi_func()) %}
-    ) {% call rs::return_signature(meth) %} {
-        uniffi::deps::log::debug!("{{ meth.ffi_func().name() }}");
-        // If the method does not have the same signature as declared in the UDL, then
-        // this attempt to call it will fail with a (somewhat) helpful compiler error.
-        {% call rs::to_rs_method_call(obj, meth) %}
-    }
+    {% call rs::method_decl_prelude(meth) %}
+            <{{ obj.rust_name() }}>::{% call rs::to_rs_call(meth) %}
+    {% call rs::method_decl_postscript(meth) %}
+{% endfor %}
+
+{%- for tm in obj.uniffi_traits() %}
+{#      All magic methods get an explicit shim #}
+{%      match tm %}
+{%          when UniffiTrait::Debug { fmt }%}
+    {% call rs::method_decl_prelude(fmt) %}
+        {
+            uniffi::deps::static_assertions::assert_impl_all!({{ obj.rust_name() }}: std::fmt::Debug); // This object has a trait method which requires `Debug` be implemented.
+            format!(
+                "{:?}",
+                match<std::sync::Arc<{{ obj.rust_name() }}> as ::uniffi::FfiConverter<crate::UniFfiTag>>::try_lift(r#ptr) {
+                    Ok(ref val) => val,
+                    Err(err) => panic!("Failed to convert arg '{}': {}", "ptr", err),
+                }
+            )
+        }
+    {% call rs::method_decl_postscript(fmt) %}
+{%          when UniffiTrait::Display { fmt }%}
+    {% call rs::method_decl_prelude(fmt) %}
+        {
+            uniffi::deps::static_assertions::assert_impl_all!({{ obj.rust_name() }}: std::fmt::Display); // This object has a trait method which requires `Display` be implemented.
+            format!(
+                "{}",
+                match<std::sync::Arc<{{ obj.rust_name() }}> as ::uniffi::FfiConverter<crate::UniFfiTag>>::try_lift(r#ptr) {
+                    Ok(ref val) => val,
+                    Err(err) => panic!("Failed to convert arg '{}': {}", "ptr", err),
+                }
+            )
+        }
+    {% call rs::method_decl_postscript(fmt) %}
+{%          when UniffiTrait::Hash { hash }%}
+    {% call rs::method_decl_prelude(hash) %}
+            {
+                use ::std::hash::{Hash, Hasher};
+                uniffi::deps::static_assertions::assert_impl_all!({{ obj.rust_name() }}: Hash); // This object has a trait method which requires `Hash` be implemented.
+                let mut s = ::std::collections::hash_map::DefaultHasher::new();
+                Hash::hash(match<std::sync::Arc<{{ obj.rust_name() }}> as ::uniffi::FfiConverter<crate::UniFfiTag>>::try_lift(r#ptr) {
+                    Ok(ref val) => val,
+                    Err(err) => panic!("Failed to convert arg '{}': {}", "ptr", err),
+                }, &mut s);
+                s.finish()
+            }
+    {% call rs::method_decl_postscript(hash) %}
+{%          when UniffiTrait::Eq { eq, ne }%}
+        {# PartialEq::Eq #}
+        {% call rs::method_decl_prelude(eq) %}
+            {
+                use ::std::cmp::PartialEq;
+                uniffi::deps::static_assertions::assert_impl_all!({{ obj.rust_name() }}: PartialEq); // This object has a trait method which requires `PartialEq` be implemented.
+                PartialEq::eq({% call rs::_arg_list_rs_call(eq) -%})
+            }
+        {% call rs::method_decl_postscript(eq) %}
+        {# PartialEq::Ne #}
+        {% call rs::method_decl_prelude(ne) %}
+            {
+                use ::std::cmp::PartialEq;
+                uniffi::deps::static_assertions::assert_impl_all!({{ obj.rust_name() }}: PartialEq); // This object has a trait method which requires `PartialEq` be implemented.
+                PartialEq::ne({% call rs::_arg_list_rs_call(ne) -%})
+            }
+        {% call rs::method_decl_postscript(ne) %}
+{%      endmatch %}
 {% endfor %}

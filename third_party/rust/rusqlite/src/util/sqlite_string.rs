@@ -1,10 +1,7 @@
 // This is used when either vtab or modern-sqlite is on. Different methods are
 // used in each feature. Avoid having to track this for each function. We will
 // still warn for anything that's not used by either, though.
-#![cfg_attr(
-    not(all(feature = "vtab", feature = "modern-sqlite")),
-    allow(dead_code)
-)]
+#![cfg_attr(not(feature = "vtab"), allow(dead_code))]
 use crate::ffi;
 use std::marker::PhantomData;
 use std::os::raw::{c_char, c_int};
@@ -134,7 +131,8 @@ impl SqliteMallocString {
                     //   (everything is aligned to 1)
                     // - `size` is also never zero, although this function doesn't actually require
                     //   it now.
-                    let layout = Layout::from_size_align_unchecked(s.len().saturating_add(1), 1);
+                    let len = s.len().saturating_add(1).min(isize::MAX as usize);
+                    let layout = Layout::from_size_align_unchecked(len, 1);
                     // Note: This call does not return.
                     handle_alloc_error(layout);
                 });
@@ -214,7 +212,7 @@ mod test {
         let mut v = vec![];
         for i in 0..1000 {
             v.push(SqliteMallocString::from_str(&i.to_string()).into_raw());
-            v.push(SqliteMallocString::from_str(&format!("abc {} 😀", i)).into_raw());
+            v.push(SqliteMallocString::from_str(&format!("abc {i} 😀")).into_raw());
         }
         unsafe {
             for (i, s) in v.chunks_mut(2).enumerate() {
@@ -226,7 +224,7 @@ mod test {
                 );
                 assert_eq!(
                     std::ffi::CStr::from_ptr(s1).to_str().unwrap(),
-                    &format!("abc {} 😀", i)
+                    &format!("abc {i} 😀")
                 );
                 let _ = SqliteMallocString::from_raw(s0).unwrap();
                 let _ = SqliteMallocString::from_raw(s1).unwrap();

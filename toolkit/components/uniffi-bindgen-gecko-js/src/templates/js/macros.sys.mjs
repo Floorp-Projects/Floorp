@@ -1,5 +1,5 @@
 {%- macro call_scaffolding_function(func) %}
-{%- call _call_scaffolding_function(func, func.return_type(), "", func.is_async(config)) -%}
+{%- call _call_scaffolding_function(func, func.return_type(), "", func.is_js_async(config)) -%}
 {%- endmacro %}
 
 {%- macro call_constructor(cons, object_type, is_async) %}

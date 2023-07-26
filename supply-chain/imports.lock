@@ -191,15 +191,15 @@ user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
 [[publisher.glean]]
-version = "53.0.0"
-when = "2023-06-07"
+version = "53.1.0"
+when = "2023-06-28"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.glean-core]]
-version = "53.0.0"
-when = "2023-06-07"
+version = "53.1.0"
+when = "2023-06-28"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -517,6 +517,62 @@ when = "2022-09-15"
 user-id = 1139
 user-login = "Manishearth"
 user-name = "Manish Goregaokar"
+
+[[publisher.uniffi]]
+version = "0.24.2"
+when = "2023-07-25"
+user-id = 48
+user-login = "badboy"
+user-name = "Jan-Erik Rediger"
+
+[[publisher.uniffi_bindgen]]
+version = "0.24.2"
+when = "2023-07-25"
+user-id = 48
+user-login = "badboy"
+user-name = "Jan-Erik Rediger"
+
+[[publisher.uniffi_build]]
+version = "0.24.2"
+when = "2023-07-25"
+user-id = 48
+user-login = "badboy"
+user-name = "Jan-Erik Rediger"
+
+[[publisher.uniffi_checksum_derive]]
+version = "0.24.2"
+when = "2023-07-25"
+user-id = 48
+user-login = "badboy"
+user-name = "Jan-Erik Rediger"
+
+[[publisher.uniffi_core]]
+version = "0.24.2"
+when = "2023-07-25"
+user-id = 48
+user-login = "badboy"
+user-name = "Jan-Erik Rediger"
+
+[[publisher.uniffi_macros]]
+version = "0.24.2"
+when = "2023-07-25"
+user-id = 48
+user-login = "badboy"
+user-name = "Jan-Erik Rediger"
+
+[[publisher.uniffi_meta]]
+version = "0.24.2"
+when = "2023-07-25"
+user-id = 48
+user-login = "badboy"
+user-name = "Jan-Erik Rediger"
+
+[[publisher.uniffi_testing]]
+version = "0.24.2"
+when = "2023-07-25"
+user-id = 48
+user-login = "badboy"
+user-name = "Jan-Erik Rediger"
 
 [[publisher.walkdir]]
 version = "2.3.2"
@@ -1094,6 +1150,16 @@ who = "David Cook <dcook@divviup.org>"
 criteria = "safe-to-deploy"
 version = "0.1.2"
 
+[[audits.isrg.audits.once_cell]]
+who = "Brandon Pitman <bran@bran.land>"
+criteria = "safe-to-deploy"
+delta = "1.17.1 -> 1.17.2"
+
+[[audits.isrg.audits.once_cell]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.17.2 -> 1.18.0"
+
 [[audits.isrg.audits.rayon-core]]
 who = "Brandon Pitman <bran@bran.land>"
 criteria = "safe-to-deploy"
@@ -1111,6 +1177,27 @@ user-id = 48 # Jan-Erik Rediger (badboy)
 start = "2021-03-03"
 end = "2024-05-10"
 notes = "Maintained by me"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.askama]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.11.1 -> 0.12.0"
+notes = "No new unsafe usage, mostly dependency updates and smaller API changes"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.askama_derive]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.11.2 -> 0.12.1"
+notes = "Dependency updates, a new toml dependency and some API changes. No unsafe use."
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.basic-toml]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.1.2"
+notes = "TOML parser, forked from toml 0.5"
 aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.either]]

@@ -278,7 +278,7 @@ mod test {
         let _a: &[&dyn ToSql] = crate::params![a];
         let r = ToSql::to_sql(&a);
 
-        assert!(r.is_ok());
+        r.unwrap();
     }
 
     #[test]
@@ -287,10 +287,10 @@ mod test {
         let s = "str";
         let cow: Cow<str> = Cow::Borrowed(s);
         let r = cow.to_sql();
-        assert!(r.is_ok());
+        r.unwrap();
         let cow: Cow<str> = Cow::Owned::<str>(String::from(s));
         let r = cow.to_sql();
-        assert!(r.is_ok());
+        r.unwrap();
         // Ensure this compiles.
         let _p: &[&dyn ToSql] = crate::params![cow];
     }
@@ -301,7 +301,7 @@ mod test {
         let _s: &[&dyn ToSql] = crate::params![s];
         let r = ToSql::to_sql(&s);
 
-        assert!(r.is_ok());
+        r.unwrap();
     }
 
     #[test]
@@ -310,7 +310,7 @@ mod test {
         let _s: &[&dyn ToSql] = crate::params![s];
         let r = s.to_sql();
 
-        assert!(r.is_ok());
+        r.unwrap();
     }
 
     #[test]
@@ -319,7 +319,7 @@ mod test {
         let _s: &[&dyn ToSql] = crate::params![s];
         let r = ToSql::to_sql(&s);
 
-        assert!(r.is_ok());
+        r.unwrap();
     }
 
     #[test]
@@ -331,32 +331,32 @@ mod test {
         let s: Rc<Box<str>> = Rc::new(source_str.clone());
         let _s: &[&dyn ToSql] = crate::params![s];
         let r = s.to_sql();
-        assert!(r.is_ok());
+        r.unwrap();
 
         let s: Arc<Box<str>> = Arc::new(source_str.clone());
         let _s: &[&dyn ToSql] = crate::params![s];
         let r = s.to_sql();
-        assert!(r.is_ok());
+        r.unwrap();
 
         let s: Arc<str> = Arc::from(&*source_str);
         let _s: &[&dyn ToSql] = crate::params![s];
         let r = s.to_sql();
-        assert!(r.is_ok());
+        r.unwrap();
 
         let s: Arc<dyn ToSql> = Arc::new(source_str.clone());
         let _s: &[&dyn ToSql] = crate::params![s];
         let r = s.to_sql();
-        assert!(r.is_ok());
+        r.unwrap();
 
         let s: Rc<str> = Rc::from(&*source_str);
         let _s: &[&dyn ToSql] = crate::params![s];
         let r = s.to_sql();
-        assert!(r.is_ok());
+        r.unwrap();
 
         let s: Rc<dyn ToSql> = Rc::new(source_str);
         let _s: &[&dyn ToSql] = crate::params![s];
         let r = s.to_sql();
-        assert!(r.is_ok());
+        r.unwrap();
     }
 
     #[cfg(feature = "i128_blob")]
@@ -368,10 +368,10 @@ mod test {
         db.execute(
             "
             INSERT INTO foo(i128, desc) VALUES
-                (?, 'zero'),
-                (?, 'neg one'), (?, 'neg two'),
-                (?, 'pos one'), (?, 'pos two'),
-                (?, 'min'), (?, 'max')",
+                (?1, 'zero'),
+                (?2, 'neg one'), (?3, 'neg two'),
+                (?4, 'pos one'), (?5, 'pos two'),
+                (?6, 'min'), (?7, 'max')",
             [0i128, -1i128, -2i128, 1i128, 2i128, i128::MIN, i128::MAX],
         )?;
 
@@ -410,11 +410,11 @@ mod test {
         let id = Uuid::new_v4();
 
         db.execute(
-            "INSERT INTO foo (id, label) VALUES (?, ?)",
+            "INSERT INTO foo (id, label) VALUES (?1, ?2)",
             params![id, "target"],
         )?;
 
-        let mut stmt = db.prepare("SELECT id, label FROM foo WHERE id = ?")?;
+        let mut stmt = db.prepare("SELECT id, label FROM foo WHERE id = ?1")?;
 
         let mut rows = stmt.query(params![id])?;
         let row = rows.next()?.unwrap();

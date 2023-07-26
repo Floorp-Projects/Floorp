@@ -10,5 +10,7 @@ tag = true
 # This is how we manage the sections in CHANGELOG.md
 pre-release-replacements = [
   {file="../CHANGELOG.md", search="\\[\\[UnreleasedUniFFIVersion\\]\\]", replace="v{{version}}", exactly=2},
-  {file="../CHANGELOG.md", search="\\[\\[NextUnreleasedUniFFIVersion\\]\\]", replace="[[UnreleasedUniFFIVersion]]", exactly=1},
+  {file="../CHANGELOG.md", search="\\.\\.\\.HEAD\\)", replace="...{{tag_name}})", exactly=1},
+  {file="../CHANGELOG.md", search="\\[\\[NextUnreleasedUniFFIVersion\\]\\]", replace="[[UnreleasedUniFFIVersion]]", exactly=2},
+  {file="../CHANGELOG.md", search="\\.\\.\\.NEXT_HEAD\\)", replace="...HEAD)", exactly=1},
 ]

@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::interface::{ComponentInterface, Enum, Error, Record, Type};
-use anyhow::anyhow;
-use uniffi_meta::Metadata;
+use crate::interface::{CallbackInterface, ComponentInterface, Enum, Record, Type};
+use anyhow::{bail, Context};
+use uniffi_meta::{group_metadata, EnumMetadata, ErrorMetadata, Metadata, MetadataGroup};
 
 /// Add Metadata items to the ComponentInterface
 ///
@@ -18,83 +18,99 @@ pub fn add_to_ci(
     iface: &mut ComponentInterface,
     metadata_items: Vec<Metadata>,
 ) -> anyhow::Result<()> {
-    for item in metadata_items {
-        let (item_desc, crate_name) = match &item {
-            Metadata::Func(meta) => (
-                format!("function `{}`", meta.name),
-                meta.module_path.first().unwrap(),
-            ),
-            Metadata::Method(meta) => (
-                format!("method `{}.{}`", meta.self_name, meta.name),
-                meta.module_path.first().unwrap(),
-            ),
-            Metadata::Record(meta) => (
-                format!("record `{}`", meta.name),
-                meta.module_path.first().unwrap(),
-            ),
-            Metadata::Enum(meta) => (
-                format!("enum `{}`", meta.name),
-                meta.module_path.first().unwrap(),
-            ),
-            Metadata::Object(meta) => (
-                format!("object `{}`", meta.name),
-                meta.module_path.first().unwrap(),
-            ),
-            Metadata::Error(meta) => (
-                format!("error `{}`", meta.name),
-                meta.module_path.first().unwrap(),
-            ),
-        };
-
-        let ns = iface.namespace();
-        if crate_name != ns {
-            return Err(anyhow!("Found {item_desc} from crate `{crate_name}`.")
-                .context(format!(
-                    "Main crate is expected to be named `{ns}` based on the UDL namespace."
-                ))
-                .context("Mixing symbols from multiple crates is not supported yet."));
+    for group in group_metadata(metadata_items)? {
+        if group.items.is_empty() {
+            continue;
         }
-
-        match item {
-            Metadata::Func(meta) => {
-                iface.add_fn_meta(meta)?;
-            }
-            Metadata::Method(meta) => {
-                iface.add_method_meta(meta);
-            }
-            Metadata::Record(meta) => {
-                let ty = Type::Record(meta.name.clone());
-                iface.types.add_known_type(&ty)?;
-                iface.types.add_type_definition(&meta.name, ty)?;
-
-                let record: Record = meta.into();
-                iface.add_record_definition(record)?;
-            }
-            Metadata::Enum(meta) => {
-                let ty = Type::Enum(meta.name.clone());
-                iface.types.add_known_type(&ty)?;
-                iface.types.add_type_definition(&meta.name, ty)?;
-
-                let enum_: Enum = meta.into();
-                iface.add_enum_definition(enum_)?;
-            }
-            Metadata::Object(meta) => {
-                iface.add_object_free_fn(meta);
-            }
-            Metadata::Error(meta) => {
-                let ty = Type::Error(meta.name.clone());
-                iface.types.add_known_type(&ty)?;
-                iface.types.add_type_definition(&meta.name, ty)?;
-
-                let error: Error = meta.into();
-                iface.add_error_definition(error)?;
-            }
+        if group.namespace.name != iface.namespace() {
+            let crate_name = group.namespace.crate_name;
+            bail!("Found metadata items from crate `{crate_name}`.  Use the `--crate` to generate bindings for multiple crates")
         }
+        add_group_to_ci(iface, group)?;
     }
 
-    iface.resolve_types()?;
-    iface.derive_ffi_funcs()?;
-    iface.check_consistency()?;
+    Ok(())
+}
 
+/// Add items from a MetadataGroup to a component interface
+pub fn add_group_to_ci(iface: &mut ComponentInterface, group: MetadataGroup) -> anyhow::Result<()> {
+    if group.namespace.name != iface.namespace() {
+        bail!(
+            "Namespace mismatch: {} - {}",
+            group.namespace.name,
+            iface.namespace()
+        );
+    }
+
+    for item in group.items {
+        add_item_to_ci(iface, item)?
+    }
+
+    iface
+        .derive_ffi_funcs()
+        .context("Failed to derive FFI functions")?;
+    iface
+        .check_consistency()
+        .context("ComponentInterface consistency error")?;
+    Ok(())
+}
+
+fn add_enum_to_ci(
+    iface: &mut ComponentInterface,
+    meta: EnumMetadata,
+    is_flat: bool,
+) -> anyhow::Result<()> {
+    let ty = Type::Enum(meta.name.clone());
+    iface.types.add_known_type(&ty);
+    iface.types.add_type_definition(&meta.name, ty)?;
+
+    let enum_ = Enum::try_from_meta(meta, is_flat)?;
+    iface.add_enum_definition(enum_)?;
+    Ok(())
+}
+
+fn add_item_to_ci(iface: &mut ComponentInterface, item: Metadata) -> anyhow::Result<()> {
+    match item {
+        Metadata::Namespace(_) => unreachable!(),
+        Metadata::UdlFile(_) => (),
+        Metadata::Func(meta) => {
+            iface.add_function_definition(meta.into())?;
+        }
+        Metadata::Constructor(meta) => {
+            iface.add_constructor_meta(meta)?;
+        }
+        Metadata::Method(meta) => {
+            iface.add_method_meta(meta)?;
+        }
+        Metadata::Record(meta) => {
+            let ty = Type::Record(meta.name.clone());
+            iface.types.add_known_type(&ty);
+            iface.types.add_type_definition(&meta.name, ty)?;
+
+            let record: Record = meta.try_into()?;
+            iface.add_record_definition(record)?;
+        }
+        Metadata::Enum(meta) => {
+            let flat = meta.variants.iter().all(|v| v.fields.is_empty());
+            add_enum_to_ci(iface, meta, flat)?;
+        }
+        Metadata::Object(meta) => {
+            iface.add_object_meta(meta);
+        }
+        Metadata::CallbackInterface(meta) => {
+            iface.add_callback_interface_definition(CallbackInterface::new(meta.name));
+        }
+        Metadata::TraitMethod(meta) => {
+            iface.add_trait_method_meta(meta)?;
+        }
+        Metadata::Error(meta) => {
+            iface.note_name_used_as_error(meta.name());
+            match meta {
+                ErrorMetadata::Enum { enum_, is_flat } => {
+                    add_enum_to_ci(iface, enum_, is_flat)?;
+                }
+            };
+        }
+    }
     Ok(())
 }

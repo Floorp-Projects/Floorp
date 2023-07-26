@@ -4,7 +4,9 @@ use std::fmt;
 use anyhow::{anyhow, bail, Error};
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens, TokenStreamExt};
-use syn::{parse_str, Ident, Lit, LitByteStr, Meta, MetaList, MetaNameValue, NestedMeta, Path};
+use syn::{
+    parse_str, Ident, Index, Lit, LitByteStr, Meta, MetaList, MetaNameValue, NestedMeta, Path,
+};
 
 use crate::field::{bool_attr, set_option, tag_attr, Label};
 
@@ -151,7 +153,7 @@ impl Field {
             },
             Kind::Optional(..) => quote! {
                 #merge_fn(wire_type,
-                          #ident.get_or_insert_with(Default::default),
+                          #ident.get_or_insert_with(::core::default::Default::default),
                           buf,
                           ctx)
             },
@@ -267,11 +269,20 @@ impl Field {
     }
 
     /// Returns methods to embed in the message.
-    pub fn methods(&self, ident: &Ident) -> Option<TokenStream> {
+    pub fn methods(&self, ident: &TokenStream) -> Option<TokenStream> {
         let mut ident_str = ident.to_string();
         if ident_str.starts_with("r#") {
             ident_str = ident_str[2..].to_owned();
         }
+
+        // Prepend `get_` for getter methods of tuple structs.
+        let get = match syn::parse_str::<Index>(&ident_str) {
+            Ok(index) => {
+                let get = Ident::new(&format!("get_{}", index.index), Span::call_site());
+                quote!(#get)
+            }
+            Err(_) => quote!(#ident),
+        };
 
         if let Ty::Enumeration(ref ty) = self.ty {
             let set = Ident::new(&format!("set_{}", ident_str), Span::call_site());
@@ -285,7 +296,7 @@ impl Field {
                     );
                     quote! {
                         #[doc=#get_doc]
-                        pub fn #ident(&self) -> #ty {
+                        pub fn #get(&self) -> #ty {
                             #ty::from_i32(self.#ident).unwrap_or(#default)
                         }
 
@@ -303,7 +314,7 @@ impl Field {
                     );
                     quote! {
                         #[doc=#get_doc]
-                        pub fn #ident(&self) -> #ty {
+                        pub fn #get(&self) -> #ty {
                             self.#ident.and_then(#ty::from_i32).unwrap_or(#default)
                         }
 
@@ -322,7 +333,7 @@ impl Field {
                     let push_doc = format!("Appends the provided enum value to `{}`.", ident_str);
                     quote! {
                         #[doc=#iter_doc]
-                        pub fn #ident(&self) -> ::core::iter::FilterMap<
+                        pub fn #get(&self) -> ::core::iter::FilterMap<
                             ::core::iter::Cloned<::core::slice::Iter<i32>>,
                             fn(i32) -> ::core::option::Option<#ty>,
                         > {
@@ -351,7 +362,7 @@ impl Field {
 
             Some(quote! {
                 #[doc=#get_doc]
-                pub fn #ident(&self) -> #ty {
+                pub fn #get(&self) -> #ty {
                     match self.#ident {
                         #match_some
                         ::core::option::Option::None => #default,
@@ -734,7 +745,7 @@ impl DefaultValue {
                         _ => (),
                     }
                 }
-                match syn::parse_str::<Lit>(&value) {
+                match syn::parse_str::<Lit>(value) {
                     Ok(Lit::Str(_)) => (),
                     Ok(lit) => return DefaultValue::from_lit(ty, lit),
                     _ => (),
@@ -769,7 +780,9 @@ impl DefaultValue {
                 quote!(::prost::alloc::string::String::new())
             }
             DefaultValue::String(ref value) => quote!(#value.into()),
-            DefaultValue::Bytes(ref value) if value.is_empty() => quote!(Default::default()),
+            DefaultValue::Bytes(ref value) if value.is_empty() => {
+                quote!(::core::default::Default::default())
+            }
             DefaultValue::Bytes(ref value) => {
                 let lit = LitByteStr::new(value, Span::call_site());
                 quote!(#lit.as_ref().into())

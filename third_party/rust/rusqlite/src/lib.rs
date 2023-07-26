@@ -62,7 +62,7 @@ use std::ffi::{CStr, CString};
 use std::fmt;
 use std::os::raw::{c_char, c_int};
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::result;
 use std::str;
 use std::sync::atomic::Ordering;
@@ -140,13 +140,6 @@ pub(crate) use util::SmallCString;
 
 // Number of cached prepared statements we'll hold on to.
 const STATEMENT_CACHE_DEFAULT_CAPACITY: usize = 16;
-/// To be used when your statement has no [parameter][sqlite-varparam].
-///
-/// [sqlite-varparam]: https://sqlite.org/lang_expr.html#varparam
-///
-/// This is deprecated in favor of using an empty array literal.
-#[deprecated = "Use an empty array instead; `stmt.execute(NO_PARAMS)` => `stmt.execute([])`"]
-pub const NO_PARAMS: &[&dyn ToSql] = &[];
 
 /// A macro making it more convenient to longer lists of
 /// parameters as a `&[&dyn ToSql]`.
@@ -314,12 +307,6 @@ pub const TEMP_DB: DatabaseName<'static> = DatabaseName::Temp;
 
 // Currently DatabaseName is only used by the backup and blob mods, so hide
 // this (private) impl to avoid dead code warnings.
-#[cfg(any(
-    feature = "backup",
-    feature = "blob",
-    feature = "session",
-    feature = "modern_sqlite"
-))]
 impl DatabaseName<'_> {
     #[inline]
     fn as_cstring(&self) -> Result<SmallCString> {
@@ -336,7 +323,6 @@ impl DatabaseName<'_> {
 pub struct Connection {
     db: RefCell<InnerConnection>,
     cache: StatementCache,
-    path: Option<PathBuf>,
 }
 
 unsafe impl Send for Connection {}
@@ -433,7 +419,6 @@ impl Connection {
         InnerConnection::open_with_flags(&c_path, flags, None).map(|db| Connection {
             db: RefCell::new(db),
             cache: StatementCache::with_capacity(STATEMENT_CACHE_DEFAULT_CAPACITY),
-            path: Some(path.as_ref().to_path_buf()),
         })
     }
 
@@ -458,7 +443,6 @@ impl Connection {
         InnerConnection::open_with_flags(&c_path, flags, Some(&c_vfs)).map(|db| Connection {
             db: RefCell::new(db),
             cache: StatementCache::with_capacity(STATEMENT_CACHE_DEFAULT_CAPACITY),
-            path: Some(path.as_ref().to_path_buf()),
         })
     }
 
@@ -540,7 +524,7 @@ impl Connection {
     /// ```rust,no_run
     /// # use rusqlite::{Connection};
     /// fn update_rows(conn: &Connection) {
-    ///     match conn.execute("UPDATE foo SET bar = 'baz' WHERE qux = ?", [1i32]) {
+    ///     match conn.execute("UPDATE foo SET bar = 'baz' WHERE qux = ?1", [1i32]) {
     ///         Ok(updated) => println!("{} rows were updated", updated),
     ///         Err(err) => println!("update failed: {}", err),
     ///     }
@@ -586,12 +570,23 @@ impl Connection {
 
     /// Returns the path to the database file, if one exists and is known.
     ///
+    /// Returns `Some("")` for a temporary or in-memory database.
+    ///
     /// Note that in some cases [PRAGMA
     /// database_list](https://sqlite.org/pragma.html#pragma_database_list) is
     /// likely to be more robust.
     #[inline]
-    pub fn path(&self) -> Option<&Path> {
-        self.path.as_deref()
+    pub fn path(&self) -> Option<&str> {
+        unsafe {
+            let db = self.handle();
+            let db_name = DatabaseName::Main.as_cstring().unwrap();
+            let db_filename = ffi::sqlite3_db_filename(db, db_name.as_ptr());
+            if db_filename.is_null() {
+                None
+            } else {
+                CStr::from_ptr(db_filename).to_str().ok()
+            }
+        }
     }
 
     /// Attempts to free as much heap memory as possible from the database
@@ -602,26 +597,6 @@ impl Connection {
     #[cfg(feature = "release_memory")]
     pub fn release_memory(&self) -> Result<()> {
         self.db.borrow_mut().release_memory()
-    }
-
-    /// Convenience method to prepare and execute a single SQL statement with
-    /// named parameter(s).
-    ///
-    /// On success, returns the number of rows that were changed or inserted or
-    /// deleted (via `sqlite3_changes`).
-    ///
-    /// # Failure
-    ///
-    /// Will return `Err` if `sql` cannot be converted to a C-compatible string
-    /// or if the underlying SQLite call fails.
-    #[deprecated = "You can use `execute` with named params now."]
-    pub fn execute_named(&self, sql: &str, params: &[(&str, &dyn ToSql)]) -> Result<usize> {
-        // This function itself is deprecated, so it's fine
-        #![allow(deprecated)]
-        self.prepare(sql).and_then(|mut stmt| {
-            stmt.check_no_tail()
-                .and_then(|_| stmt.execute_named(params))
-        })
     }
 
     /// Get the SQLite rowid of the most recent successful INSERT.
@@ -671,26 +646,10 @@ impl Connection {
         stmt.query_row(params, f)
     }
 
-    /// Convenience method to execute a query with named parameter(s) that is
-    /// expected to return a single row.
-    ///
-    /// If the query returns more than one row, all rows except the first are
-    /// ignored.
-    ///
-    /// Returns `Err(QueryReturnedNoRows)` if no results are returned. If the
-    /// query truly is optional, you can call `.optional()` on the result of
-    /// this to get a `Result<Option<T>>`.
-    ///
-    /// # Failure
-    ///
-    /// Will return `Err` if `sql` cannot be converted to a C-compatible string
-    /// or if the underlying SQLite call fails.
-    #[deprecated = "You can use `query_row` with named params now."]
-    pub fn query_row_named<T, F>(&self, sql: &str, params: &[(&str, &dyn ToSql)], f: F) -> Result<T>
-    where
-        F: FnOnce(&Row<'_>) -> Result<T>,
-    {
-        self.query_row(sql, params, f)
+    // https://sqlite.org/tclsqlite.html#onecolumn
+    #[cfg(test)]
+    pub(crate) fn one_column<T: crate::types::FromSql>(&self, sql: &str) -> Result<T> {
+        self.query_row(sql, [], |r| r.get(0))
     }
 
     /// Convenience method to execute a query that is expected to return a
@@ -739,7 +698,7 @@ impl Connection {
     /// ```rust,no_run
     /// # use rusqlite::{Connection, Result};
     /// fn insert_new_people(conn: &Connection) -> Result<()> {
-    ///     let mut stmt = conn.prepare("INSERT INTO People (name) VALUES (?)")?;
+    ///     let mut stmt = conn.prepare("INSERT INTO People (name) VALUES (?1)")?;
     ///     stmt.execute(["Joe Smith"])?;
     ///     stmt.execute(["Bob Jones"])?;
     ///     Ok(())
@@ -921,12 +880,30 @@ impl Connection {
     /// This function is unsafe because improper use may impact the Connection.
     #[inline]
     pub unsafe fn from_handle(db: *mut ffi::sqlite3) -> Result<Connection> {
-        let db_path = db_filename(db);
         let db = InnerConnection::new(db, false);
         Ok(Connection {
             db: RefCell::new(db),
             cache: StatementCache::with_capacity(STATEMENT_CACHE_DEFAULT_CAPACITY),
-            path: db_path,
+        })
+    }
+
+    /// Create a `Connection` from a raw owned handle.
+    ///
+    /// The returned connection will attempt to close the inner connection
+    /// when dropped/closed. This function should only be called on connections
+    /// owned by the caller.
+    ///
+    /// # Safety
+    ///
+    /// This function is unsafe because improper use may impact the Connection.
+    /// In particular, it should only be called on connections created
+    /// and owned by the caller, e.g. as a result of calling ffi::sqlite3_open().
+    #[inline]
+    pub unsafe fn from_handle_owned(db: *mut ffi::sqlite3) -> Result<Connection> {
+        let db = InnerConnection::new(db, true);
+        Ok(Connection {
+            db: RefCell::new(db),
+            cache: StatementCache::with_capacity(STATEMENT_CACHE_DEFAULT_CAPACITY),
         })
     }
 
@@ -961,22 +938,16 @@ impl Connection {
 
     /// Determine if all associated prepared statements have been reset.
     #[inline]
-    #[cfg(feature = "modern_sqlite")] // 3.8.6
-    #[cfg_attr(docsrs, doc(cfg(feature = "modern_sqlite")))]
     pub fn is_busy(&self) -> bool {
         self.db.borrow().is_busy()
     }
 
     /// Flush caches to disk mid-transaction
-    #[cfg(feature = "modern_sqlite")] // 3.10.0
-    #[cfg_attr(docsrs, doc(cfg(feature = "modern_sqlite")))]
     pub fn cache_flush(&self) -> Result<()> {
         self.db.borrow_mut().cache_flush()
     }
 
     /// Determine if a database is read-only
-    #[cfg(feature = "modern_sqlite")] // 3.7.11
-    #[cfg_attr(docsrs, doc(cfg(feature = "modern_sqlite")))]
     pub fn is_readonly(&self, db_name: DatabaseName<'_>) -> Result<bool> {
         self.db.borrow().db_readonly(db_name)
     }
@@ -985,7 +956,7 @@ impl Connection {
 impl fmt::Debug for Connection {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Connection")
-            .field("path", &self.path)
+            .field("path", &self.path())
             .finish()
     }
 }
@@ -1058,6 +1029,7 @@ bitflags::bitflags! {
     /// The default open flags are `SQLITE_OPEN_READ_WRITE | SQLITE_OPEN_CREATE
     /// | SQLITE_OPEN_URI | SQLITE_OPEN_NO_MUTEX`. See [`Connection::open`] for
     /// some discussion about these flags.
+    #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
     #[repr(C)]
     pub struct OpenFlags: ::std::os::raw::c_int {
         /// The database is opened in read-only mode.
@@ -1070,9 +1042,9 @@ bitflags::bitflags! {
         /// The database is created if it does not already exist
         const SQLITE_OPEN_CREATE = ffi::SQLITE_OPEN_CREATE;
         /// The filename can be interpreted as a URI if this flag is set.
-        const SQLITE_OPEN_URI = 0x0000_0040;
+        const SQLITE_OPEN_URI = ffi::SQLITE_OPEN_URI;
         /// The database will be opened as an in-memory database.
-        const SQLITE_OPEN_MEMORY = 0x0000_0080;
+        const SQLITE_OPEN_MEMORY = ffi::SQLITE_OPEN_MEMORY;
         /// The new database connection will not use a per-connection mutex (the
         /// connection will use the "multi-thread" threading mode, in SQLite
         /// parlance).
@@ -1176,21 +1148,6 @@ impl InterruptHandle {
     }
 }
 
-#[cfg(feature = "modern_sqlite")] // 3.7.10
-unsafe fn db_filename(db: *mut ffi::sqlite3) -> Option<PathBuf> {
-    let db_name = DatabaseName::Main.as_cstring().unwrap();
-    let db_filename = ffi::sqlite3_db_filename(db, db_name.as_ptr());
-    if db_filename.is_null() {
-        None
-    } else {
-        CStr::from_ptr(db_filename).to_str().ok().map(PathBuf::from)
-    }
-}
-#[cfg(not(feature = "modern_sqlite"))]
-unsafe fn db_filename(_: *mut ffi::sqlite3) -> Option<PathBuf> {
-    None
-}
-
 #[cfg(doctest)]
 doc_comment::doctest!("../README.md");
 
@@ -1277,26 +1234,40 @@ mod test {
         }
 
         let path_string = path.to_str().unwrap();
-        let db = Connection::open(&path_string)?;
-        let the_answer: Result<i64> = db.query_row("SELECT x FROM foo", [], |r| r.get(0));
+        let db = Connection::open(path_string)?;
+        let the_answer: i64 = db.one_column("SELECT x FROM foo")?;
 
-        assert_eq!(42i64, the_answer?);
+        assert_eq!(42i64, the_answer);
         Ok(())
     }
 
     #[test]
     fn test_open() {
-        assert!(Connection::open_in_memory().is_ok());
+        Connection::open_in_memory().unwrap();
 
         let db = checked_memory_handle();
-        assert!(db.close().is_ok());
+        db.close().unwrap();
+    }
+
+    #[test]
+    fn test_path() -> Result<()> {
+        let tmp = tempfile::tempdir().unwrap();
+        let db = Connection::open("")?;
+        assert_eq!(Some(""), db.path());
+        let db = Connection::open_in_memory()?;
+        assert_eq!(Some(""), db.path());
+        let db = Connection::open("file:dummy.db?mode=memory&cache=shared")?;
+        assert_eq!(Some(""), db.path());
+        let path = tmp.path().join("file.db");
+        let db = Connection::open(path)?;
+        assert!(db.path().map(|p| p.ends_with("file.db")).unwrap_or(false));
+        Ok(())
     }
 
     #[test]
     fn test_open_failure() {
         let filename = "no_such_file.db";
         let result = Connection::open_with_flags(filename, OpenFlags::SQLITE_OPEN_READ_ONLY);
-        assert!(result.is_err());
         let err = result.unwrap_err();
         if let Error::SqliteFailure(e, Some(msg)) = err {
             assert_eq!(ErrorCode::CannotOpen, e.code);
@@ -1336,9 +1307,9 @@ mod test {
         }
 
         let db = Connection::open(&db_path)?;
-        let the_answer: Result<i64> = db.query_row("SELECT x FROM foo", [], |r| r.get(0));
+        let the_answer: i64 = db.one_column("SELECT x FROM foo")?;
 
-        assert_eq!(42i64, the_answer?);
+        assert_eq!(42i64, the_answer);
         Ok(())
     }
 
@@ -1391,7 +1362,7 @@ mod test {
             OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_READ_WRITE,
             OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_CREATE,
         ] {
-            assert!(Connection::open_in_memory_with_flags(*bad_flags).is_err());
+            Connection::open_in_memory_with_flags(*bad_flags).unwrap_err();
         }
     }
 
@@ -1409,7 +1380,7 @@ mod test {
 
         db.execute_batch("UPDATE foo SET x = 3 WHERE x < 3")?;
 
-        assert!(db.execute_batch("INVALID SQL").is_err());
+        db.execute_batch("INVALID SQL").unwrap_err();
         Ok(())
     }
 
@@ -1418,13 +1389,10 @@ mod test {
         let db = Connection::open_in_memory()?;
         db.execute_batch("CREATE TABLE foo(x INTEGER)")?;
 
-        assert_eq!(1, db.execute("INSERT INTO foo(x) VALUES (?)", [1i32])?);
-        assert_eq!(1, db.execute("INSERT INTO foo(x) VALUES (?)", [2i32])?);
+        assert_eq!(1, db.execute("INSERT INTO foo(x) VALUES (?1)", [1i32])?);
+        assert_eq!(1, db.execute("INSERT INTO foo(x) VALUES (?1)", [2i32])?);
 
-        assert_eq!(
-            3i32,
-            db.query_row::<i32, _, _>("SELECT SUM(x) FROM foo", [], |r| r.get(0))?
-        );
+        assert_eq!(3i32, db.one_column::<i32>("SELECT SUM(x) FROM foo")?);
         Ok(())
     }
 
@@ -1432,7 +1400,7 @@ mod test {
     #[cfg(feature = "extra_check")]
     fn test_execute_select() {
         let db = checked_memory_handle();
-        let err = db.execute("SELECT 1 WHERE 1 < ?", [1i32]).unwrap_err();
+        let err = db.execute("SELECT 1 WHERE 1 < ?1", [1i32]).unwrap_err();
         assert_eq!(
             err,
             Error::ExecuteReturnedResults,
@@ -1477,7 +1445,7 @@ mod test {
         let db = Connection::open_in_memory()?;
         db.execute_batch("CREATE TABLE foo(x INTEGER);")?;
 
-        let mut insert_stmt = db.prepare("INSERT INTO foo(x) VALUES(?)")?;
+        let mut insert_stmt = db.prepare("INSERT INTO foo(x) VALUES(?1)")?;
         assert_eq!(insert_stmt.execute([1i32])?, 1);
         assert_eq!(insert_stmt.execute([2i32])?, 1);
         assert_eq!(insert_stmt.execute([3i32])?, 1);
@@ -1486,7 +1454,7 @@ mod test {
         assert_eq!(insert_stmt.execute(["goodbye"])?, 1);
         assert_eq!(insert_stmt.execute([types::Null])?, 1);
 
-        let mut update_stmt = db.prepare("UPDATE foo SET x=? WHERE x<?")?;
+        let mut update_stmt = db.prepare("UPDATE foo SET x=?1 WHERE x<?2")?;
         assert_eq!(update_stmt.execute([3i32, 3i32])?, 2);
         assert_eq!(update_stmt.execute([3i32, 3i32])?, 0);
         assert_eq!(update_stmt.execute([8i32, 8i32])?, 3);
@@ -1498,12 +1466,12 @@ mod test {
         let db = Connection::open_in_memory()?;
         db.execute_batch("CREATE TABLE foo(x INTEGER);")?;
 
-        let mut insert_stmt = db.prepare("INSERT INTO foo(x) VALUES(?)")?;
+        let mut insert_stmt = db.prepare("INSERT INTO foo(x) VALUES(?1)")?;
         assert_eq!(insert_stmt.execute([1i32])?, 1);
         assert_eq!(insert_stmt.execute([2i32])?, 1);
         assert_eq!(insert_stmt.execute([3i32])?, 1);
 
-        let mut query = db.prepare("SELECT x FROM foo WHERE x < ? ORDER BY x DESC")?;
+        let mut query = db.prepare("SELECT x FROM foo WHERE x < ?1 ORDER BY x DESC")?;
         {
             let mut rows = query.query([4i32])?;
             let mut v = Vec::<i32>::new();
@@ -1559,12 +1527,9 @@ mod test {
                    END;";
         db.execute_batch(sql)?;
 
-        assert_eq!(
-            10i64,
-            db.query_row::<i64, _, _>("SELECT SUM(x) FROM foo", [], |r| r.get(0))?
-        );
+        assert_eq!(10i64, db.one_column::<i64>("SELECT SUM(x) FROM foo")?);
 
-        let result: Result<i64> = db.query_row("SELECT x FROM foo WHERE x > 5", [], |r| r.get(0));
+        let result: Result<i64> = db.one_column("SELECT x FROM foo WHERE x > 5");
         match result.unwrap_err() {
             Error::QueryReturnedNoRows => (),
             err => panic!("Unexpected error {}", err),
@@ -1572,7 +1537,7 @@ mod test {
 
         let bad_query_result = db.query_row("NOT A PROPER QUERY; test123", [], |_| Ok(()));
 
-        assert!(bad_query_result.is_err());
+        bad_query_result.unwrap_err();
         Ok(())
     }
 
@@ -1580,34 +1545,31 @@ mod test {
     fn test_optional() -> Result<()> {
         let db = Connection::open_in_memory()?;
 
-        let result: Result<i64> = db.query_row("SELECT 1 WHERE 0 <> 0", [], |r| r.get(0));
+        let result: Result<i64> = db.one_column("SELECT 1 WHERE 0 <> 0");
         let result = result.optional();
         match result? {
             None => (),
             _ => panic!("Unexpected result"),
         }
 
-        let result: Result<i64> = db.query_row("SELECT 1 WHERE 0 == 0", [], |r| r.get(0));
+        let result: Result<i64> = db.one_column("SELECT 1 WHERE 0 == 0");
         let result = result.optional();
         match result? {
             Some(1) => (),
             _ => panic!("Unexpected result"),
         }
 
-        let bad_query_result: Result<i64> = db.query_row("NOT A PROPER QUERY", [], |r| r.get(0));
+        let bad_query_result: Result<i64> = db.one_column("NOT A PROPER QUERY");
         let bad_query_result = bad_query_result.optional();
-        assert!(bad_query_result.is_err());
+        bad_query_result.unwrap_err();
         Ok(())
     }
 
     #[test]
     fn test_pragma_query_row() -> Result<()> {
         let db = Connection::open_in_memory()?;
-        assert_eq!(
-            "memory",
-            db.query_row::<String, _, _>("PRAGMA journal_mode", [], |r| r.get(0))?
-        );
-        let mode = db.query_row::<String, _, _>("PRAGMA journal_mode=off", [], |r| r.get(0))?;
+        assert_eq!("memory", db.one_column::<String>("PRAGMA journal_mode")?);
+        let mode = db.one_column::<String>("PRAGMA journal_mode=off")?;
         if cfg!(features = "bundled") {
             assert_eq!(mode, "off");
         } else {
@@ -1634,7 +1596,7 @@ mod test {
         db.execute_batch("CREATE TABLE foo(x INTEGER);")?;
 
         let err = db.prepare("SELECT * FROM does_not_exist").unwrap_err();
-        assert!(format!("{}", err).contains("does_not_exist"));
+        assert!(format!("{err}").contains("does_not_exist"));
         Ok(())
     }
 
@@ -1665,7 +1627,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature = "modern_sqlite")]
     fn test_is_busy() -> Result<()> {
         let db = Connection::open_in_memory()?;
         assert!(!db.is_busy());
@@ -1688,7 +1649,7 @@ mod test {
         let query = "SELECT 12345";
         let stmt = db.prepare(query)?;
 
-        assert!(format!("{:?}", stmt).contains(query));
+        assert!(format!("{stmt:?}").contains(query));
         Ok(())
     }
 
@@ -1696,18 +1657,14 @@ mod test {
     fn test_notnull_constraint_error() -> Result<()> {
         // extended error codes for constraints were added in SQLite 3.7.16; if we're
         // running on our bundled version, we know the extended error code exists.
-        #[cfg(feature = "modern_sqlite")]
         fn check_extended_code(extended_code: c_int) {
             assert_eq!(extended_code, ffi::SQLITE_CONSTRAINT_NOTNULL);
         }
-        #[cfg(not(feature = "modern_sqlite"))]
-        fn check_extended_code(_extended_code: c_int) {}
 
         let db = Connection::open_in_memory()?;
         db.execute_batch("CREATE TABLE foo(x NOT NULL)")?;
 
         let result = db.execute("INSERT INTO foo (x) VALUES (NULL)", []);
-        assert!(result.is_err());
 
         match result.unwrap_err() {
             Error::SqliteFailure(err, _) => {
@@ -1726,7 +1683,7 @@ mod test {
         let minor = (n % 1_000_000) / 1_000;
         let patch = n % 1_000;
 
-        assert!(version().contains(&format!("{}.{}.{}", major, minor, patch)));
+        assert!(version().contains(&format!("{major}.{minor}.{patch}")));
     }
 
     #[test]
@@ -1779,7 +1736,7 @@ mod test {
         let db = Connection::open_in_memory()?;
         db.execute_batch("CREATE TABLE foo(i, x);")?;
         let vals = ["foobar", "1234", "qwerty"];
-        let mut insert_stmt = db.prepare("INSERT INTO foo(i, x) VALUES(?, ?)")?;
+        let mut insert_stmt = db.prepare("INSERT INTO foo(i, x) VALUES(?1, ?2)")?;
         for (i, v) in vals.iter().enumerate() {
             let i_to_insert = i as i64;
             assert_eq!(insert_stmt.execute(params![i_to_insert, v])?, 1);
@@ -1819,6 +1776,16 @@ mod test {
         Ok(())
     }
 
+    #[test]
+    fn test_from_handle_owned() -> Result<()> {
+        let mut handle: *mut ffi::sqlite3 = std::ptr::null_mut();
+        let r = unsafe { ffi::sqlite3_open(":memory:\0".as_ptr() as *const i8, &mut handle) };
+        assert_eq!(r, ffi::SQLITE_OK);
+        let db = unsafe { Connection::from_handle_owned(handle) }?;
+        db.execute_batch("PRAGMA VACUUM")?;
+        Ok(())
+    }
+
     mod query_and_then_tests {
 
         use super::*;
@@ -1833,7 +1800,7 @@ mod test {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
                 match *self {
                     CustomError::SomeError => write!(f, "my custom error"),
-                    CustomError::Sqlite(ref se) => write!(f, "my custom error: {}", se),
+                    CustomError::Sqlite(ref se) => write!(f, "my custom error: {se}"),
                 }
             }
         }
@@ -2045,7 +2012,7 @@ mod test {
         let db = Connection::open_in_memory()?;
         db.execute_batch("CREATE TABLE foo(x INTEGER);")?;
         let b: Box<dyn ToSql> = Box::new(5);
-        db.execute("INSERT INTO foo VALUES(?)", [b])?;
+        db.execute("INSERT INTO foo VALUES(?1)", [b])?;
         db.query_row("SELECT x FROM foo", [], |r| {
             assert_eq!(5, r.get_unwrap::<_, i32>(0));
             Ok(())
@@ -2057,10 +2024,10 @@ mod test {
         let db = Connection::open_in_memory()?;
         db.query_row(
             "SELECT
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-            ?, ?, ?, ?;",
+            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10,
+            ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20,
+            ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28, ?29, ?30,
+            ?31, ?32, ?33, ?34;",
             params![
                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                 1, 1, 1, 1, 1, 1,
@@ -2102,23 +2069,18 @@ mod test {
     fn test_returning() -> Result<()> {
         let db = Connection::open_in_memory()?;
         db.execute_batch("CREATE TABLE foo(x INTEGER PRIMARY KEY)")?;
-        let row_id =
-            db.query_row::<i64, _, _>("INSERT INTO foo DEFAULT VALUES RETURNING ROWID", [], |r| {
-                r.get(0)
-            })?;
+        let row_id = db.one_column::<i64>("INSERT INTO foo DEFAULT VALUES RETURNING ROWID")?;
         assert_eq!(row_id, 1);
         Ok(())
     }
 
     #[test]
-    #[cfg(feature = "modern_sqlite")]
     fn test_cache_flush() -> Result<()> {
         let db = Connection::open_in_memory()?;
         db.cache_flush()
     }
 
     #[test]
-    #[cfg(feature = "modern_sqlite")]
     pub fn db_readonly() -> Result<()> {
         let db = Connection::open_in_memory()?;
         assert!(!db.is_readonly(MAIN_DB)?);

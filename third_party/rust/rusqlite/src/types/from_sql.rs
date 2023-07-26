@@ -52,7 +52,7 @@ impl fmt::Display for FromSqlError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             FromSqlError::InvalidType => write!(f, "Invalid type"),
-            FromSqlError::OutOfRange(i) => write!(f, "Value {} out of range", i),
+            FromSqlError::OutOfRange(i) => write!(f, "Value {i} out of range"),
             FromSqlError::InvalidBlobSize {
                 expected_size,
                 blob_size,
@@ -244,7 +244,7 @@ mod test {
         {
             for n in out_of_range {
                 let err = db
-                    .query_row("SELECT ?", &[n], |r| r.get::<_, T>(0))
+                    .query_row("SELECT ?1", [n], |r| r.get::<_, T>(0))
                     .unwrap_err();
                 match err {
                     Error::IntegralValueOutOfRange(_, value) => assert_eq!(*n, value),
@@ -254,7 +254,7 @@ mod test {
             for n in in_range {
                 assert_eq!(
                     *n,
-                    db.query_row("SELECT ?", &[n], |r| r.get::<_, T>(0))
+                    db.query_row("SELECT ?1", [n], |r| r.get::<_, T>(0))
                         .unwrap()
                         .into()
                 );

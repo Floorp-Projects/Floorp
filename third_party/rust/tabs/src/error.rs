@@ -88,3 +88,11 @@ impl GetErrorHandling for Error {
         }
     }
 }
+
+impl From<anyhow::Error> for TabsApiError {
+    fn from(value: anyhow::Error) -> Self {
+        TabsApiError::UnexpectedTabsError {
+            reason: value.to_string(),
+        }
+    }
+}

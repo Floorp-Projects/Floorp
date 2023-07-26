@@ -11,20 +11,22 @@ use askama::Template;
 use heck::{ToLowerCamelCase, ToShoutySnakeCase, ToUpperCamelCase};
 use serde::{Deserialize, Serialize};
 
-use crate::backend::{CodeOracle, CodeType, TemplateExpression, TypeIdentifier};
+use crate::backend::{CodeType, TemplateExpression};
 use crate::interface::*;
-use crate::MergeWith;
+use crate::BindingsConfig;
 
 mod callback_interface;
 mod compounds;
 mod custom;
 mod enum_;
 mod error;
+mod executor;
 mod external;
 mod miscellany;
 mod object;
 mod primitives;
 mod record;
+mod variant;
 
 // config options to customize the generated Kotlin.
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -63,24 +65,27 @@ impl Config {
     }
 }
 
-impl From<&ComponentInterface> for Config {
-    fn from(ci: &ComponentInterface) -> Self {
-        Config {
-            package_name: Some(format!("uniffi.{}", ci.namespace())),
-            cdylib_name: Some(format!("uniffi_{}", ci.namespace())),
-            custom_types: HashMap::new(),
-            external_packages: HashMap::new(),
-        }
-    }
-}
+impl BindingsConfig for Config {
+    const TOML_KEY: &'static str = "kotlin";
 
-impl MergeWith for Config {
-    fn merge_with(&self, other: &Self) -> Self {
-        Config {
-            package_name: self.package_name.merge_with(&other.package_name),
-            cdylib_name: self.cdylib_name.merge_with(&other.cdylib_name),
-            custom_types: self.custom_types.merge_with(&other.custom_types),
-            external_packages: self.external_packages.merge_with(&other.external_packages),
+    fn update_from_ci(&mut self, ci: &ComponentInterface) {
+        self.package_name
+            .get_or_insert_with(|| format!("uniffi.{}", ci.namespace()));
+        self.cdylib_name
+            .get_or_insert_with(|| format!("uniffi_{}", ci.namespace()));
+    }
+
+    fn update_from_cdylib_name(&mut self, cdylib_name: &str) {
+        self.cdylib_name
+            .get_or_insert_with(|| cdylib_name.to_string());
+    }
+
+    fn update_from_dependency_configs(&mut self, config_map: HashMap<&str, &Self>) {
+        for (crate_name, config) in config_map {
+            if !self.external_packages.contains_key(crate_name) {
+                self.external_packages
+                    .insert(crate_name.to_string(), config.package_name());
+            }
         }
     }
 }
@@ -208,7 +213,8 @@ impl<'a> KotlinWrapper<'a> {
     pub fn initialization_fns(&self) -> Vec<String> {
         self.ci
             .iter_types()
-            .filter_map(|t| t.initialization_fn(&KotlinCodeOracle))
+            .map(|t| KotlinCodeOracle.find(t))
+            .filter_map(|ct| ct.initialization_fn())
             .collect()
     }
 
@@ -221,53 +227,16 @@ impl<'a> KotlinWrapper<'a> {
 pub struct KotlinCodeOracle;
 
 impl KotlinCodeOracle {
-    // Map `Type` instances to a `Box<dyn CodeType>` for that type.
-    //
-    // There is a companion match in `templates/Types.kt` which performs a similar function for the
-    // template code.
-    //
-    //   - When adding additional types here, make sure to also add a match arm to the `Types.kt` template.
-    //   - To keep things manageable, let's try to limit ourselves to these 2 mega-matches
-    fn create_code_type(&self, type_: TypeIdentifier) -> Box<dyn CodeType> {
-        match type_ {
-            Type::UInt8 => Box::new(primitives::UInt8CodeType),
-            Type::Int8 => Box::new(primitives::Int8CodeType),
-            Type::UInt16 => Box::new(primitives::UInt16CodeType),
-            Type::Int16 => Box::new(primitives::Int16CodeType),
-            Type::UInt32 => Box::new(primitives::UInt32CodeType),
-            Type::Int32 => Box::new(primitives::Int32CodeType),
-            Type::UInt64 => Box::new(primitives::UInt64CodeType),
-            Type::Int64 => Box::new(primitives::Int64CodeType),
-            Type::Float32 => Box::new(primitives::Float32CodeType),
-            Type::Float64 => Box::new(primitives::Float64CodeType),
-            Type::Boolean => Box::new(primitives::BooleanCodeType),
-            Type::String => Box::new(primitives::StringCodeType),
-
-            Type::Timestamp => Box::new(miscellany::TimestampCodeType),
-            Type::Duration => Box::new(miscellany::DurationCodeType),
-
-            Type::Enum(id) => Box::new(enum_::EnumCodeType::new(id)),
-            Type::Object(id) => Box::new(object::ObjectCodeType::new(id)),
-            Type::Record(id) => Box::new(record::RecordCodeType::new(id)),
-            Type::Error(id) => Box::new(error::ErrorCodeType::new(id)),
-            Type::CallbackInterface(id) => {
-                Box::new(callback_interface::CallbackInterfaceCodeType::new(id))
-            }
-            Type::Optional(inner) => Box::new(compounds::OptionalCodeType::new(*inner)),
-            Type::Sequence(inner) => Box::new(compounds::SequenceCodeType::new(*inner)),
-            Type::Map(key, value) => Box::new(compounds::MapCodeType::new(*key, *value)),
-            Type::External { name, .. } => Box::new(external::ExternalCodeType::new(name)),
-            Type::Custom { name, .. } => Box::new(custom::CustomCodeType::new(name)),
-            Type::Unresolved { name } => {
-                unreachable!("Type `{name}` must be resolved before calling create_code_type")
-            }
-        }
+    fn find(&self, type_: &Type) -> Box<dyn CodeType> {
+        type_.clone().as_type().as_codetype()
     }
-}
 
-impl CodeOracle for KotlinCodeOracle {
-    fn find(&self, type_: &TypeIdentifier) -> Box<dyn CodeType> {
-        self.create_code_type(type_.clone())
+    fn find_as_error(&self, type_: &Type) -> Box<dyn CodeType> {
+        match type_ {
+            Type::Enum(id) => Box::new(error::ErrorCodeType::new(id.clone())),
+            // XXX - not sure how we are supposed to return askama::Error?
+            _ => panic!("unsupported type for error: {type_:?}"),
+        }
     }
 
     /// Get the idiomatic Kotlin rendering of a class name (for enums, records, errors, etc).
@@ -304,7 +273,14 @@ impl CodeOracle for KotlinCodeOracle {
         }
     }
 
-    fn ffi_type_label(&self, ffi_type: &FfiType) -> String {
+    fn ffi_type_label_by_value(ffi_type: &FfiType) -> String {
+        match ffi_type {
+            FfiType::RustBuffer(_) => format!("{}.ByValue", Self::ffi_type_label(ffi_type)),
+            _ => Self::ffi_type_label(ffi_type),
+        }
+    }
+
+    fn ffi_type_label(ffi_type: &FfiType) -> String {
         match ffi_type {
             // Note that unsigned integers in Kotlin are currently experimental, but java.nio.ByteBuffer does not
             // support them yet. Thus, we use the signed variants to represent both signed and unsigned
@@ -316,94 +292,217 @@ impl CodeOracle for KotlinCodeOracle {
             FfiType::Float32 => "Float".to_string(),
             FfiType::Float64 => "Double".to_string(),
             FfiType::RustArcPtr(_) => "Pointer".to_string(),
-            FfiType::RustBuffer(maybe_suffix) => match maybe_suffix {
-                Some(suffix) => format!("RustBuffer{}.ByValue", suffix),
-                None => "RustBuffer.ByValue".to_string(),
-            },
+            FfiType::RustBuffer(maybe_suffix) => {
+                format!("RustBuffer{}", maybe_suffix.as_deref().unwrap_or_default())
+            }
             FfiType::ForeignBytes => "ForeignBytes.ByValue".to_string(),
             FfiType::ForeignCallback => "ForeignCallback".to_string(),
+            FfiType::ForeignExecutorHandle => "USize".to_string(),
+            FfiType::ForeignExecutorCallback => "UniFfiForeignExecutorCallback".to_string(),
+            FfiType::FutureCallback { return_type } => {
+                format!("UniFfiFutureCallback{}", Self::ffi_type_label(return_type))
+            }
+            FfiType::FutureCallbackData => "USize".to_string(),
+        }
+    }
+}
+
+pub trait AsCodeType {
+    fn as_codetype(&self) -> Box<dyn CodeType>;
+}
+
+impl<T: AsType> AsCodeType for T {
+    fn as_codetype(&self) -> Box<dyn CodeType> {
+        // Map `Type` instances to a `Box<dyn CodeType>` for that type.
+        //
+        // There is a companion match in `templates/Types.kt` which performs a similar function for the
+        // template code.
+        //
+        //   - When adding additional types here, make sure to also add a match arm to the `Types.kt` template.
+        //   - To keep things manageable, let's try to limit ourselves to these 2 mega-matches
+        match self.as_type() {
+            Type::UInt8 => Box::new(primitives::UInt8CodeType),
+            Type::Int8 => Box::new(primitives::Int8CodeType),
+            Type::UInt16 => Box::new(primitives::UInt16CodeType),
+            Type::Int16 => Box::new(primitives::Int16CodeType),
+            Type::UInt32 => Box::new(primitives::UInt32CodeType),
+            Type::Int32 => Box::new(primitives::Int32CodeType),
+            Type::UInt64 => Box::new(primitives::UInt64CodeType),
+            Type::Int64 => Box::new(primitives::Int64CodeType),
+            Type::Float32 => Box::new(primitives::Float32CodeType),
+            Type::Float64 => Box::new(primitives::Float64CodeType),
+            Type::Boolean => Box::new(primitives::BooleanCodeType),
+            Type::String => Box::new(primitives::StringCodeType),
+            Type::Bytes => Box::new(primitives::BytesCodeType),
+
+            Type::Timestamp => Box::new(miscellany::TimestampCodeType),
+            Type::Duration => Box::new(miscellany::DurationCodeType),
+
+            Type::Enum(id) => Box::new(enum_::EnumCodeType::new(id)),
+            Type::Object { name, .. } => Box::new(object::ObjectCodeType::new(name)),
+            Type::Record(id) => Box::new(record::RecordCodeType::new(id)),
+            Type::CallbackInterface(id) => {
+                Box::new(callback_interface::CallbackInterfaceCodeType::new(id))
+            }
+            Type::ForeignExecutor => Box::new(executor::ForeignExecutorCodeType),
+            Type::Optional(inner) => Box::new(compounds::OptionalCodeType::new(*inner)),
+            Type::Sequence(inner) => Box::new(compounds::SequenceCodeType::new(*inner)),
+            Type::Map(key, value) => Box::new(compounds::MapCodeType::new(*key, *value)),
+            Type::External { name, .. } => Box::new(external::ExternalCodeType::new(name)),
+            Type::Custom { name, .. } => Box::new(custom::CustomCodeType::new(name)),
         }
     }
 }
 
 pub mod filters {
     use super::*;
+    pub use crate::backend::filters::*;
 
-    fn oracle() -> &'static KotlinCodeOracle {
-        &KotlinCodeOracle
+    pub fn type_name(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+        Ok(as_ct.as_codetype().type_label())
     }
 
-    pub fn type_name(codetype: &impl CodeType) -> Result<String, askama::Error> {
-        Ok(codetype.type_label(oracle()))
+    pub fn canonical_name(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+        Ok(as_ct.as_codetype().canonical_name())
     }
 
-    pub fn canonical_name(codetype: &impl CodeType) -> Result<String, askama::Error> {
-        Ok(codetype.canonical_name(oracle()))
+    pub fn ffi_converter_name(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+        Ok(as_ct.as_codetype().ffi_converter_name())
     }
 
-    pub fn ffi_converter_name(codetype: &impl CodeType) -> Result<String, askama::Error> {
-        Ok(codetype.ffi_converter_name(oracle()))
-    }
-
-    pub fn lower_fn(codetype: &impl CodeType) -> Result<String, askama::Error> {
-        Ok(format!("{}.lower", codetype.ffi_converter_name(oracle())))
-    }
-
-    pub fn allocation_size_fn(codetype: &impl CodeType) -> Result<String, askama::Error> {
+    pub fn lower_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
         Ok(format!(
-            "{}.allocationSize",
-            codetype.ffi_converter_name(oracle())
+            "{}.lower",
+            as_ct.as_codetype().ffi_converter_name()
         ))
     }
 
-    pub fn write_fn(codetype: &impl CodeType) -> Result<String, askama::Error> {
-        Ok(format!("{}.write", codetype.ffi_converter_name(oracle())))
+    pub fn allocation_size_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+        Ok(format!(
+            "{}.allocationSize",
+            as_ct.as_codetype().ffi_converter_name()
+        ))
     }
 
-    pub fn lift_fn(codetype: &impl CodeType) -> Result<String, askama::Error> {
-        Ok(format!("{}.lift", codetype.ffi_converter_name(oracle())))
+    pub fn write_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+        Ok(format!(
+            "{}.write",
+            as_ct.as_codetype().ffi_converter_name()
+        ))
     }
 
-    pub fn read_fn(codetype: &impl CodeType) -> Result<String, askama::Error> {
-        Ok(format!("{}.read", codetype.ffi_converter_name(oracle())))
+    pub fn lift_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+        Ok(format!("{}.lift", as_ct.as_codetype().ffi_converter_name()))
+    }
+
+    pub fn read_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+        Ok(format!("{}.read", as_ct.as_codetype().ffi_converter_name()))
+    }
+
+    pub fn error_handler(result_type: &ResultType) -> Result<String, askama::Error> {
+        match &result_type.throws_type {
+            Some(error_type) => Ok(KotlinCodeOracle.error_name(&type_name(error_type)?)),
+            None => Ok("NullCallStatusErrorHandler".into()),
+        }
+    }
+
+    pub fn future_callback_handler(result_type: &ResultType) -> Result<String, askama::Error> {
+        let return_component = match &result_type.return_type {
+            Some(return_type) => KotlinCodeOracle.find(return_type).canonical_name(),
+            None => "Void".into(),
+        };
+        let throws_component = match &result_type.throws_type {
+            Some(throws_type) => {
+                format!("_{}", KotlinCodeOracle.find(throws_type).canonical_name())
+            }
+            None => "".into(),
+        };
+        Ok(format!(
+            "UniFfiFutureCallbackHandler{return_component}{throws_component}"
+        ))
+    }
+
+    pub fn future_continuation_type(result_type: &ResultType) -> Result<String, askama::Error> {
+        let return_type_name = match &result_type.return_type {
+            Some(t) => type_name(t)?,
+            None => "Unit".into(),
+        };
+        Ok(format!("Continuation<{return_type_name}>"))
     }
 
     pub fn render_literal(
         literal: &Literal,
-        codetype: &impl CodeType,
+        as_ct: &impl AsCodeType,
     ) -> Result<String, askama::Error> {
-        Ok(codetype.literal(oracle(), literal))
+        Ok(as_ct.as_codetype().literal(literal))
     }
 
     /// Get the Kotlin syntax for representing a given low-level `FfiType`.
     pub fn ffi_type_name(type_: &FfiType) -> Result<String, askama::Error> {
-        Ok(oracle().ffi_type_label(type_))
+        Ok(KotlinCodeOracle::ffi_type_label(type_))
     }
 
-    /// Get the idiomatic Kotlin rendering of a class name (for enums, records, errors, etc).
-    pub fn class_name(nm: &str) -> Result<String, askama::Error> {
-        Ok(oracle().class_name(nm))
+    pub fn ffi_type_name_by_value(type_: &FfiType) -> Result<String, askama::Error> {
+        Ok(KotlinCodeOracle::ffi_type_label_by_value(type_))
+    }
+
+    // Some FfiTypes have the same ffi_type_label - this makes a vec of them unique.
+    pub fn unique_ffi_types(
+        types: impl Iterator<Item = FfiType>,
+    ) -> Result<impl Iterator<Item = FfiType>, askama::Error> {
+        let mut seen = HashSet::new();
+        let mut result = Vec::new();
+        for t in types {
+            if seen.insert(KotlinCodeOracle::ffi_type_label(&t)) {
+                result.push(t)
+            }
+        }
+        Ok(result.into_iter())
     }
 
     /// Get the idiomatic Kotlin rendering of a function name.
     pub fn fn_name(nm: &str) -> Result<String, askama::Error> {
-        Ok(oracle().fn_name(nm))
+        Ok(KotlinCodeOracle.fn_name(nm))
     }
 
     /// Get the idiomatic Kotlin rendering of a variable name.
     pub fn var_name(nm: &str) -> Result<String, askama::Error> {
-        Ok(oracle().var_name(nm))
+        Ok(KotlinCodeOracle.var_name(nm))
     }
 
-    /// Get the idiomatic Kotlin rendering of an individual enum variant.
-    pub fn enum_variant(nm: &str) -> Result<String, askama::Error> {
-        Ok(oracle().enum_variant_name(nm))
+    pub fn variant_name(v: &Variant) -> Result<String, askama::Error> {
+        Ok(KotlinCodeOracle.enum_variant_name(v.name()))
     }
 
-    /// Get the idiomatic Kotlin rendering of an exception name, replacing
-    /// `Error` with `Exception`.
-    pub fn exception_name(nm: &str) -> Result<String, askama::Error> {
-        Ok(oracle().error_name(nm))
+    /// Get a codetype for idiomatic Kotlin rendering of an individual enum variant.
+    pub fn enum_variant(v: &Variant) -> Result<impl AsCodeType, askama::Error> {
+        Ok(v.clone())
+    }
+
+    /// Get a codetype for idiomatic Kotlin rendering of an individual enum variant
+    /// when used in an error.
+    pub fn error_variant(v: &Variant) -> Result<impl AsCodeType, askama::Error> {
+        Ok(variant::ErrorVariantCodeTypeProvider { v: v.clone() })
+    }
+
+    /// Some of the above filters have different versions to help when the type
+    /// is used as an error.
+    pub fn error_type_name(as_type: &impl AsType) -> Result<String, askama::Error> {
+        Ok(KotlinCodeOracle
+            .find_as_error(&as_type.as_type())
+            .type_label())
+    }
+
+    pub fn error_canonical_name(as_type: &impl AsType) -> Result<String, askama::Error> {
+        Ok(KotlinCodeOracle
+            .find_as_error(&as_type.as_type())
+            .canonical_name())
+    }
+
+    pub fn error_ffi_converter_name(as_type: &impl AsType) -> Result<String, askama::Error> {
+        Ok(KotlinCodeOracle
+            .find_as_error(&as_type.as_type())
+            .ffi_converter_name())
     }
 
     /// Remove the "`" chars we put around function/variable names

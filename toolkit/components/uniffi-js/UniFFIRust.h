@@ -19,11 +19,11 @@ constexpr int8_t RUST_CALL_ERROR = 1;
 constexpr int8_t RUST_CALL_INTERNAL_ERROR = 2;
 
 // Return values for callback interfaces (See
-// https://github.com/mozilla/uniffi-rs/blob/main/uniffi/src/ffi/foreigncallbacks.rs
+// https://github.com/mozilla/uniffi-rs/blob/main/uniffi_core/src/ffi/foreigncallbacks.rs
 // for details)
-constexpr int8_t CALLBACK_INTERFACE_SUCCESS = 1;
-constexpr int8_t CALLBACK_INTERFACE_INTERNAL_ERROR = -1;
-constexpr int8_t CALLBACK_INTERFACE_ERROR = -2;
+constexpr int8_t CALLBACK_INTERFACE_SUCCESS = 0;
+constexpr int8_t CALLBACK_INTERFACE_ERROR = 1;
+constexpr int8_t CALLBACK_INTERFACE_UNEXPECTED_ERROR = 2;
 
 // structs/functions from UniFFI
 extern "C" {
@@ -39,7 +39,8 @@ struct RustCallStatus {
 };
 
 typedef int (*ForeignCallback)(uint64_t handle, uint32_t method,
-                               RustBuffer args, RustBuffer* buf_ptr);
+                               const uint8_t* argsData, int32_t argsLen,
+                               RustBuffer* buf_ptr);
 
 RustBuffer uniffi_rustbuffer_alloc(int32_t size, RustCallStatus* call_status);
 void uniffi_rustbuffer_free(RustBuffer buf, RustCallStatus* call_status);

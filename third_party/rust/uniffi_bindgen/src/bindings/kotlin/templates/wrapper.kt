@@ -18,12 +18,15 @@ package {{ config.package_name() }};
 // helpers directly inline like we're doing here.
 
 import com.sun.jna.Library
+import com.sun.jna.IntegerType
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
-import com.sun.jna.ptr.ByReference
+import com.sun.jna.Callback
+import com.sun.jna.ptr.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.concurrent.ConcurrentHashMap
 
 {%- for req in self.imports() %}
 {{ req.render() }}
@@ -43,6 +46,5 @@ import java.nio.ByteOrder
 {%- for func in ci.function_definitions() %}
 {%- include "TopLevelFunctionTemplate.kt" %}
 {%- endfor %}
-
 
 {% import "macros.kt" as kt %}

@@ -10,46 +10,117 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.58"
 name = "askama"
-version = "0.11.1"
+version = "0.12.0"
 description = "Type-safe, compiled Jinja-like templates for Rust"
 homepage = "https://github.com/djc/askama"
 documentation = "https://docs.rs/askama"
-readme = "../README.md"
-keywords = ["markup", "template", "jinja2", "html"]
+readme = "README.md"
+keywords = [
+    "markup",
+    "template",
+    "jinja2",
+    "html",
+]
 categories = ["template-engine"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/djc/askama"
+resolver = "1"
+
 [package.metadata.docs.rs]
-features = ["config", "humansize", "num-traits", "serde-json", "serde-yaml"]
+features = [
+    "config",
+    "humansize",
+    "num-traits",
+    "serde-json",
+    "serde-yaml",
+]
+
 [dependencies.askama_derive]
-version = "0.11.2"
+version = "0.12.0"
 
 [dependencies.askama_escape]
-version = "0.10"
+version = "0.10.3"
 
-[dependencies.askama_shared]
-version = "0.12.1"
+[dependencies.comrak]
+version = "0.16"
+optional = true
 default-features = false
 
+[dependencies.dep_humansize]
+version = "2"
+optional = true
+package = "humansize"
+
+[dependencies.dep_num_traits]
+version = "0.2.6"
+optional = true
+package = "num-traits"
+
+[dependencies.percent-encoding]
+version = "2.1.0"
+optional = true
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+optional = true
+
+[dependencies.serde_json]
+version = "1.0"
+optional = true
+
+[dependencies.serde_yaml]
+version = "0.9"
+optional = true
+
 [features]
-config = ["askama_derive/config", "askama_shared/config"]
-default = ["config", "humansize", "num-traits", "urlencode"]
-humansize = ["askama_shared/humansize"]
-markdown = ["askama_shared/markdown"]
+config = ["askama_derive/config"]
+default = [
+    "config",
+    "humansize",
+    "num-traits",
+    "urlencode",
+]
+humansize = [
+    "askama_derive/humansize",
+    "dep_humansize",
+]
+markdown = [
+    "askama_derive/markdown",
+    "comrak",
+]
 mime = []
 mime_guess = []
-num-traits = ["askama_shared/num-traits"]
-serde-json = ["askama_derive/json", "askama_shared/json"]
-serde-yaml = ["askama_derive/yaml", "askama_shared/yaml"]
-urlencode = ["askama_shared/percent-encoding"]
-with-actix-web = ["askama_derive/actix-web"]
-with-axum = ["askama_derive/axum"]
-with-gotham = ["askama_derive/gotham"]
-with-mendes = ["askama_derive/mendes"]
-with-rocket = ["askama_derive/rocket"]
-with-tide = ["askama_derive/tide"]
-with-warp = ["askama_derive/warp"]
+num-traits = [
+    "askama_derive/num-traits",
+    "dep_num_traits",
+]
+serde-json = [
+    "askama_derive/serde-json",
+    "askama_escape/json",
+    "serde",
+    "serde_json",
+]
+serde-yaml = [
+    "askama_derive/serde-yaml",
+    "serde",
+    "serde_yaml",
+]
+urlencode = [
+    "askama_derive/urlencode",
+    "percent-encoding",
+]
+with-actix-web = ["askama_derive/with-actix-web"]
+with-axum = ["askama_derive/with-axum"]
+with-gotham = ["askama_derive/with-gotham"]
+with-hyper = ["askama_derive/with-hyper"]
+with-mendes = ["askama_derive/with-mendes"]
+with-rocket = ["askama_derive/with-rocket"]
+with-tide = ["askama_derive/with-tide"]
+with-warp = ["askama_derive/with-warp"]
+
 [badges.maintenance]
 status = "actively-developed"

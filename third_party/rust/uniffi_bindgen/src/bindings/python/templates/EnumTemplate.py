@@ -4,7 +4,6 @@
 # when none of the variants have associated data, or a generic nested-class
 # construct when they do.
 #}
-{%- let e = ci.get_enum_definition(name).unwrap() %}
 {% if e.is_flat() %}
 
 class {{ type_name }}(enum.Enum):
@@ -19,7 +18,7 @@ class {{ type_name }}:
 
     # Each enum variant is a nested class of the enum itself.
     {% for variant in e.variants() -%}
-    class {{ variant.name()|enum_variant_py }}(object):
+    class {{ variant.name()|enum_variant_py }}:
         def __init__(self,{% for field in variant.fields() %}{{ field.name()|var_name }}{% if loop.last %}{% else %}, {% endif %}{% endfor %}):
             {% if variant.has_fields() %}
             {%- for field in variant.fields() %}
@@ -45,7 +44,7 @@ class {{ type_name }}:
     # For each variant, we have an `is_NAME` method for easily checking
     # whether an instance is that variant.
     {% for variant in e.variants() -%}
-    def is_{{ variant.name()|var_name }}(self):
+    def is_{{ variant.name()|var_name }}(self) -> bool:
         return isinstance(self, {{ type_name }}.{{ variant.name()|enum_variant_py }})
     {% endfor %}
 
@@ -53,7 +52,7 @@ class {{ type_name }}:
 # enum class, so that method calls and instance checks etc will work intuitively.
 # We might be able to do this a little more neatly with a metaclass, but this'll do.
 {% for variant in e.variants() -%}
-{{ type_name }}.{{ variant.name()|enum_variant_py }} = type("{{ type_name }}.{{ variant.name()|enum_variant_py }}", ({{ type_name }}.{{variant.name()|enum_variant_py}}, {{ type_name }},), {})
+{{ type_name }}.{{ variant.name()|enum_variant_py }} = type("{{ type_name }}.{{ variant.name()|enum_variant_py }}", ({{ type_name }}.{{variant.name()|enum_variant_py}}, {{ type_name }},), {})  # type: ignore
 {% endfor %}
 
 {% endif %}

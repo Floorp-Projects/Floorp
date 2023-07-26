@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 // The following structs are used to implement the lowest level
@@ -28,7 +29,19 @@ typedef struct RustBuffer
     uint8_t *_Nullable data;
 } RustBuffer;
 
-typedef int32_t (*ForeignCallback)(uint64_t, int32_t, RustBuffer, RustBuffer *_Nonnull);
+typedef int32_t (*ForeignCallback)(uint64_t, int32_t, const uint8_t *_Nonnull, int32_t, RustBuffer *_Nonnull);
+
+// Task defined in Rust that Swift executes
+typedef void (*UniFfiRustTaskCallback)(const void * _Nullable);
+
+// Callback to execute Rust tasks using a Swift Task
+//
+// Args:
+//   executor: ForeignExecutor lowered into a size_t value
+//   delay: Delay in MS
+//   task: UniFfiRustTaskCallback to call
+//   task_data: data to pass the task callback
+typedef void (*UniFfiForeignExecutorCallback)(size_t, uint32_t, UniFfiRustTaskCallback _Nullable, const void * _Nullable);
 
 typedef struct ForeignBytes
 {
@@ -46,10 +59,23 @@ typedef struct RustCallStatus {
 // ⚠️ increment the version suffix in all instances of UNIFFI_SHARED_HEADER_V4 in this file.           ⚠️
 #endif // def UNIFFI_SHARED_H
 
-{% for func in ci.iter_ffi_function_definitions() -%}
-    {%- match func.return_type() -%}{%- when Some with (type_) %}{{ type_|ffi_type_name }}{% when None %}void{% endmatch %} {{ func.name() }}(
-      {% call swift::arg_list_ffi_decl(func) %}
-    );
-{% endfor -%}
+// Callbacks for UniFFI Futures
+{%- for ffi_type in ci.iter_future_callback_params() %}
+typedef void (*UniFfiFutureCallback{{ ffi_type|ffi_canonical_name }})(const void * _Nonnull, {{ ffi_type|header_ffi_type_name }}, RustCallStatus);
+{%- endfor %}
+
+// Scaffolding functions
+{%- for func in ci.iter_ffi_function_definitions() %}
+{% match func.return_type() -%}{%- when Some with (type_) %}{{ type_|header_ffi_type_name }}{% when None %}void{% endmatch %} {{ func.name() }}(
+    {%- if func.arguments().len() > 0 %}
+        {%- for arg in func.arguments() %}
+            {{- arg.type_().borrow()|header_ffi_type_name }} {{ arg.name() -}}{% if !loop.last || func.has_rust_call_status_arg() %}, {% endif %}
+        {%- endfor %}
+        {%- if func.has_rust_call_status_arg() %}RustCallStatus *_Nonnull out_status{% endif %}
+    {%- else %}
+        {%- if func.has_rust_call_status_arg() %}RustCallStatus *_Nonnull out_status{%- else %}void{% endif %}
+    {% endif %}
+);
+{%- endfor %}
 
 {% import "macros.swift" as swift %}

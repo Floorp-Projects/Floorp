@@ -69,13 +69,13 @@ impl InnerConnection {
 
         // Replicate the check for sane open flags from SQLite, because the check in
         // SQLite itself wasn't added until version 3.7.3.
-        debug_assert_eq!(1 << OpenFlags::SQLITE_OPEN_READ_ONLY.bits, 0x02);
-        debug_assert_eq!(1 << OpenFlags::SQLITE_OPEN_READ_WRITE.bits, 0x04);
+        debug_assert_eq!(1 << OpenFlags::SQLITE_OPEN_READ_ONLY.bits(), 0x02);
+        debug_assert_eq!(1 << OpenFlags::SQLITE_OPEN_READ_WRITE.bits(), 0x04);
         debug_assert_eq!(
-            1 << (OpenFlags::SQLITE_OPEN_READ_WRITE | OpenFlags::SQLITE_OPEN_CREATE).bits,
+            1 << (OpenFlags::SQLITE_OPEN_READ_WRITE | OpenFlags::SQLITE_OPEN_CREATE).bits(),
             0x40
         );
-        if (1 << (flags.bits & 0x7)) & 0x46 == 0 {
+        if (1 << (flags.bits() & 0x7)) & 0x46 == 0 {
             return Err(Error::SqliteFailure(
                 ffi::Error::new(ffi::SQLITE_MISUSE),
                 None,
@@ -105,7 +105,7 @@ impl InnerConnection {
                     {
                         e = Error::SqliteFailure(
                             ffi::Error::new(r),
-                            Some(format!("{}: {}", msg, c_path.to_string_lossy())),
+                            Some(format!("{msg}: {}", c_path.to_string_lossy())),
                         );
                     }
                     ffi::sqlite3_close(db);
@@ -295,7 +295,6 @@ impl InnerConnection {
         unsafe { ffi::sqlite3_get_autocommit(self.db()) != 0 }
     }
 
-    #[cfg(feature = "modern_sqlite")] // 3.8.6
     pub fn is_busy(&self) -> bool {
         let db = self.db();
         unsafe {
@@ -310,7 +309,6 @@ impl InnerConnection {
         false
     }
 
-    #[cfg(feature = "modern_sqlite")] // 3.10.0
     pub fn cache_flush(&mut self) -> Result<()> {
         crate::error::check(unsafe { ffi::sqlite3_db_cacheflush(self.db()) })
     }
@@ -319,7 +317,6 @@ impl InnerConnection {
     #[inline]
     fn remove_hooks(&mut self) {}
 
-    #[cfg(feature = "modern_sqlite")] // 3.7.11
     pub fn db_readonly(&self, db_name: super::DatabaseName<'_>) -> Result<bool> {
         let name = db_name.as_cstring()?;
         let r = unsafe { ffi::sqlite3_db_readonly(self.db, name.as_ptr()) };
@@ -328,7 +325,7 @@ impl InnerConnection {
             1 => Ok(true),
             -1 => Err(Error::SqliteFailure(
                 ffi::Error::new(ffi::SQLITE_MISUSE),
-                Some(format!("{:?} is not the name of a database", db_name)),
+                Some(format!("{db_name:?} is not the name of a database")),
             )),
             _ => Err(error_from_sqlite_code(
                 r,
@@ -354,7 +351,7 @@ impl InnerConnection {
             2 => Ok(super::transaction::TransactionState::Write),
             -1 => Err(Error::SqliteFailure(
                 ffi::Error::new(ffi::SQLITE_MISUSE),
-                Some(format!("{:?} is not the name of a valid schema", db_name)),
+                Some(format!("{db_name:?} is not the name of a valid schema")),
             )),
             _ => Err(error_from_sqlite_code(
                 r,
@@ -374,15 +371,7 @@ impl Drop for InnerConnection {
     #[allow(unused_must_use)]
     #[inline]
     fn drop(&mut self) {
-        use std::thread::panicking;
-
-        if let Err(e) = self.close() {
-            if panicking() {
-                eprintln!("Error while closing SQLite connection: {:?}", e);
-            } else {
-                panic!("Error while closing SQLite connection: {:?}", e);
-            }
-        }
+        self.close();
     }
 }
 

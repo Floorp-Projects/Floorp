@@ -5,7 +5,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_quote, spanned::Spanned};
 
-mod argument;
+const ERR_MSG: &str = "Expected #[handle_error(path::to::Error)]";
 
 /// A procedural macro that exposes internal errors to external errors the
 /// consuming applications should handle. It requires that the internal error
@@ -61,20 +61,31 @@ mod argument;
 /// ```
 #[proc_macro_attribute]
 pub fn handle_error(args: TokenStream, input: TokenStream) -> TokenStream {
-    let args = syn::parse_macro_input!(args as syn::AttributeArgs);
-    let parsed = syn::parse_macro_input!(input as syn::Item);
-    TokenStream::from(match impl_handle_error(&parsed, &args) {
-        Ok(res) => res,
-        Err(e) => e.to_compile_error(),
-    })
+    let mut err_path = None;
+    let parser = syn::meta::parser(|meta| {
+        if meta.input.is_empty() && err_path.replace(meta.path).is_none() {
+            Ok(())
+        } else {
+            Err(syn::Error::new(meta.input.span(), ERR_MSG))
+        }
+    });
+    TokenStream::from(
+        match syn::parse::Parser::parse(parser, args)
+            .map_err(|e| syn::Error::new(e.span(), ERR_MSG))
+            .and_then(|()| syn::parse::<syn::Item>(input))
+            .and_then(|parsed| impl_handle_error(&parsed, err_path.unwrap()))
+        {
+            Ok(res) => res,
+            Err(e) => e.to_compile_error(),
+        },
+    )
 }
 
 fn impl_handle_error(
     input: &syn::Item,
-    arguments: &syn::AttributeArgs,
+    err_path: syn::Path,
 ) -> syn::Result<proc_macro2::TokenStream> {
     if let syn::Item::Fn(item_fn) = input {
-        let err_path = argument::validate(arguments)?;
         let original_body = &item_fn.block;
 
         let mut new_fn = item_fn.clone();
