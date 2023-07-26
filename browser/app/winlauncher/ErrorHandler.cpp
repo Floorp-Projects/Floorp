@@ -15,7 +15,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WinTokenUtils.h"
-#include "mozilla/WindowsVersion.h"
 #include "mozilla/XREAppData.h"
 #include "mozilla/glue/WindowsDllServices.h"
 #include "mozilla/mscom/ProcessRuntime.h"
@@ -291,12 +290,6 @@ static const ProviderKey gProvKeys[] = {
     {WSC_SECURITY_PROVIDER_FIREWALL, "firewall"}};
 
 static bool AddWscInfo(mozilla::JSONWriter& aJson) {
-  if (!mozilla::IsWin8OrLater()) {
-    // We haven't written anything yet, so we can return true here and continue
-    // capturing data.
-    return true;
-  }
-
   // We need COM for this. Using ProcessRuntime so that process-global COM
   // configuration is done correctly
   mozilla::mscom::ProcessRuntime mscom(
