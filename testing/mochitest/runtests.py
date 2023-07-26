@@ -165,7 +165,8 @@ class MessageLogger(object):
     # package prefixes.
     TEST_PATH_PREFIXES = [
         r"^/tests/",
-        r"^\w+://[\w\.]+(:\d+)?(/\w+)?/(tests?|a11y|chrome|browser)/",
+        r"^\w+://[\w\.]+(:\d+)?(/\w+)?/(tests?|a11y|chrome)/",
+        r"^\w+://[\w\.]+(:\d+)?(/\w+)?/(tests?|browser)/",
     ]
 
     def __init__(self, logger, buffering=True, structured=True):
