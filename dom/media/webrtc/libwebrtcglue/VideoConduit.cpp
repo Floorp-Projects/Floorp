@@ -1535,6 +1535,32 @@ void WebrtcVideoConduit::OnRtpReceived(webrtc::RtpPacketReceived&& aPacket,
                 aPacket.SequenceNumber(), aPacket.size(), aPacket.Ssrc(),
                 aPacket.Ssrc());
 
+  // Libwebrtc commit cde4b67d9d now expect calls to
+  // SourceTracker::GetSources() to happen on the call thread.  We'll
+  // grab the value now while on the call thread, and dispatch to main
+  // to store the cached value if we have new source information.
+  // See Bug 1845621.
+  std::vector<webrtc::RtpSource> sources;
+  if (mRecvStream) {
+    sources = mRecvStream->GetSources();
+  }
+
+  bool needsCacheUpdate = false;
+  {
+    MutexAutoLock lock(mMutex);
+    needsCacheUpdate = sources != mRtpSources;
+  }
+
+  // only dispatch to main if we have new data
+  if (needsCacheUpdate) {
+    GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+        __func__, [this, rtpSources = std::move(sources),
+                   self = RefPtr<WebrtcVideoConduit>(this)]() {
+          MutexAutoLock lock(mMutex);
+          mRtpSources = rtpSources;
+        }));
+  }
+
   mRtpPacketEvent.Notify();
   if (mCall->Call()) {
     mCall->Call()->Receiver()->DeliverRtpPacket(
@@ -1928,14 +1954,7 @@ void WebrtcVideoConduit::SetTransportActive(bool aActive) {
 std::vector<webrtc::RtpSource> WebrtcVideoConduit::GetUpstreamRtpSources()
     const {
   MOZ_ASSERT(NS_IsMainThread());
-  std::vector<webrtc::RtpSource> sources;
-  {
-    MutexAutoLock lock(mMutex);
-    if (mRecvStream) {
-      sources = mRecvStream->GetSources();
-    }
-  }
-  return sources;
+  return mRtpSources;
 }
 
 void WebrtcVideoConduit::RequestKeyFrame(FrameTransformerProxy* aProxy) {
