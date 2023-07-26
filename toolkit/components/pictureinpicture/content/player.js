@@ -674,7 +674,7 @@ let Player = {
 
       case "closed-caption": {
         let options = {};
-        if (event.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
+        if (event.inputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
           options.isKeyboard = true;
         }
         this.toggleSubtitlesSettingsPanel(options);

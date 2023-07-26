@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml" xmlns:h="http://www.w3.org/1999/xhtml">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <toolbarbutton oncommand="++countera;" id="a">A</toolbarbutton>
   <toolbarbutton oncommand="++counterb;" id="b">B</toolbarbutton>
-  <script type="text/javascript">
-  <![CDATA[
+  <script>
+  //<![CDATA[
     let aEl = document.getElementById('a');
     let bEl = document.getElementById('b');
     let countera = 0;
@@ -16,7 +16,7 @@
       let cmdEvent = document.createEvent("xulcommandevent");
       cmdEvent.initCommandEvent("command", true, true, window, 0,
                                 aEvent.ctrlKey, aEvent.altKey, aEvent.shiftKey,
-                                aEvent.metaKey, 0, null, aEvent.mozInputSource);
+                                aEvent.metaKey, 0, null, aEvent.inputSource);
       aEvent.currentTarget.dispatchEvent(cmdEvent);
     });
 
@@ -24,7 +24,7 @@
       let cmdEvent = document.createEvent("xulcommandevent");
       cmdEvent.initCommandEvent("command", true, true, window, 0,
                                 aEvent.ctrlKey, aEvent.altKey, aEvent.shiftKey,
-                                aEvent.metaKey, 0, null, aEvent.mozInputSource);
+                                aEvent.metaKey, 0, null, aEvent.inputSource);
       aEvent.currentTarget.dispatchEvent(cmdEvent);
     });
 
@@ -33,6 +33,6 @@
 
     is(countera, 1, "Counter should be one as event fires once");
     is(counterb, 2, "Counter should be two as event fires twice");
-  ]]>
+  //]]>
   </script>
 </window>

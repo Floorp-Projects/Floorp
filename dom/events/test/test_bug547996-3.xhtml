@@ -15,15 +15,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=547996
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <pre id="test">
-<script type="application/javascript"><![CDATA[
+<script>//<![CDATA[
 
 /** Test for Bug 547996 **/
-/* mouseEvent.mozInputSource attribute */
+/* mouseEvent.inputSource attribute */
 
 var expectedInputSource = null;
 
 function check(event) {
-  is(event.mozInputSource, expectedInputSource, ".mozInputSource");
+  is(event.inputSource, expectedInputSource, ".inputSource");
 }
 
 function doTest() {
@@ -58,7 +58,8 @@ function cleanup() {
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(doTest, window);
 
-]]></script>
+//]]>
+</script>
 </pre>
 <xul:button id="xulButtonTarget" accesskey="t">XUL Button</xul:button>
 </body>

@@ -421,7 +421,7 @@ nsresult HTMLSelectEventListener::MouseDown(dom::Event* aMouseEvent) {
   }
 
   if (mIsCombobox) {
-    uint16_t inputSource = mouseEvent->MozInputSource();
+    uint16_t inputSource = mouseEvent->InputSource();
     if (mElement->OpenInParentProcess()) {
       nsCOMPtr<nsIContent> target = do_QueryInterface(aMouseEvent->GetTarget());
       if (target && target->IsHTMLElement(nsGkAtoms::option)) {

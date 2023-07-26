@@ -878,7 +878,7 @@ const gClickAndHoldListenersOnElement = {
         aEvent.metaKey,
         0,
         null,
-        aEvent.mozInputSource
+        aEvent.inputSource
       );
       aEvent.currentTarget.dispatchEvent(cmdEvent);
 
@@ -8524,7 +8524,7 @@ var MenuTouchModeObserver = {
 
   handleEvent(event) {
     let target = event.originalTarget;
-    if (event.mozInputSource == MouseEvent.MOZ_SOURCE_TOUCH) {
+    if (event.inputSource == MouseEvent.MOZ_SOURCE_TOUCH) {
       target.setAttribute("touchmode", "true");
     } else {
       target.removeAttribute("touchmode");

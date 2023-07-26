@@ -377,7 +377,7 @@ var gGestureSupport = {
           aEvent.metaKey,
           0,
           aEvent,
-          aEvent.mozInputSource
+          aEvent.inputSource
         );
         node.dispatchEvent(cmdEvent);
       }

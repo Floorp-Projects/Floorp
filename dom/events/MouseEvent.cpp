@@ -304,7 +304,7 @@ float MouseEvent::MozPressure() const {
   return mEvent->AsMouseEventBase()->mPressure;
 }
 
-uint16_t MouseEvent::MozInputSource() const {
+uint16_t MouseEvent::InputSource() const {
   return mEvent->AsMouseEventBase()->mInputSource;
 }
 

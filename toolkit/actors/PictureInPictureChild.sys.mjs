@@ -1531,7 +1531,7 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
       this.sendAsyncMessage("PictureInPicture:OpenToggleContextMenu", {
         screenXDevPx: event.screenX * devicePixelRatio,
         screenYDevPx: event.screenY * devicePixelRatio,
-        mozInputSource: event.mozInputSource,
+        inputSource: event.inputSource,
       });
       event.stopImmediatePropagation();
       event.preventDefault();

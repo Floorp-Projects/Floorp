@@ -175,7 +175,7 @@ class TouchSimulator {
     // (especially ignore mouse event being dispatched from a touch event)
     if (
       evt.button ||
-      evt.mozInputSource != evt.MOZ_SOURCE_MOUSE ||
+      evt.inputSource != evt.MOZ_SOURCE_MOUSE ||
       evt.isSynthesized
     ) {
       return;

@@ -29,7 +29,7 @@ panel-list-settings = Settings
 function openMenu(event) {
   if (
     event.type == "mousedown" ||
-    event.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD ||
+    event.inputSource == MouseEvent.MOZ_SOURCE_KEYBOARD ||
     !event.detail
   ) {
     event.target.getRootNode().querySelector("panel-list").toggle(event);
