@@ -51,7 +51,8 @@ interface MouseEvent : UIEvent {
   readonly attribute long           movementY;
 
   // Deprecated in DOM Level 3:
-undefined initMouseEvent(DOMString typeArg,
+  [Deprecated="InitMouseEvent"]
+  undefined initMouseEvent(DOMString typeArg,
                          optional boolean canBubbleArg = false,
                          optional boolean cancelableArg = false,
                          optional Window? viewArg = null,
@@ -92,6 +93,7 @@ partial interface MouseEvent
 {
   // Finger or touch pressure event value
   // ranges between 0.0 and 1.0
+  // TODO: Remove mozPressure. (bug 1534199)
   [Deprecated="MouseEvent_MozPressure"]
   readonly attribute float mozPressure;
 
@@ -106,9 +108,11 @@ partial interface MouseEvent
   [ChromeOnly]
   readonly attribute unsigned short inputSource;
 
-  [BinaryName="inputSource"]
+  [Deprecated="MozInputSource", BinaryName="inputSource"]
   readonly attribute unsigned short mozInputSource;
 
+  // TODO: Remove initNSMouseEvent. (bug 1165213)
+  [Deprecated="InitNSMouseEvent"]
   undefined initNSMouseEvent(DOMString typeArg,
                              optional boolean canBubbleArg = false,
                              optional boolean cancelableArg = false,

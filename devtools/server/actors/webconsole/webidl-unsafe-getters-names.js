@@ -9,6 +9,7 @@
 module.exports = [
   "InstallTrigger",
   "farthestViewportElement",
+  "mozInputSource",
   "mozPressure",
   "nearestViewportElement",
   "onmouseenter",
