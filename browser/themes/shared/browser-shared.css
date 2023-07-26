@@ -504,7 +504,7 @@ menupopup::part(drop-indicator) {
   background-color: transparent;
   flex-direction: row-reverse;
   /* Override proton-doorhanger default styles that increase the size of the button */
-  margin: 0;
+  margin: 4px;
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-primary-button {
@@ -512,7 +512,6 @@ menupopup::part(drop-indicator) {
   color: white;
   border: none;
   border-radius: 2px;
-  margin: 4px;
   padding: 3px 12px;
   flex: 1;
 }
