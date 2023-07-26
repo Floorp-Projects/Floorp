@@ -19,6 +19,14 @@
   }
 }
 
+/* When rich suggestions are enabled the urlbar identity icon is given extra padding to
+ * align the results and urlbar text */
+@supports -moz-bool-pref("browser.urlbar.richSuggestions.featureGate") {
+  #urlbar:not(.searchButton) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] {
+    --urlbar-icon-padding: 12px;
+  }
+}
+
 #urlbar-container,
 #search-container {
   padding-block: 4px;
