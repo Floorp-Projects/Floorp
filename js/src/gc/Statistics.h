@@ -278,6 +278,7 @@ struct Statistics {
   using SliceDataVector = Vector<SliceData, 8, SystemAllocPolicy>;
 
   const SliceDataVector& slices() const { return slices_; }
+  const SliceData& sliceAt(size_t index) const { return slices_[index]; }
 
   const SliceData* lastSlice() const {
     if (slices_.length() == 0) {
