@@ -41,7 +41,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
@@ -166,8 +165,7 @@ fun TabListItem(
                 Text(
                     text = tab.toDisplayTitle().take(MAX_URI_LENGTH),
                     color = FirefoxTheme.colors.textPrimary,
-                    fontSize = 16.sp,
-                    letterSpacing = 0.0.sp,
+                    style = FirefoxTheme.typography.body1,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 2,
                 )
@@ -175,8 +173,7 @@ fun TabListItem(
                 Text(
                     text = tab.content.url.toShortUrl(),
                     color = FirefoxTheme.colors.textSecondary,
-                    fontSize = 14.sp,
-                    letterSpacing = 0.0.sp,
+                    style = FirefoxTheme.typography.body2,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                 )
