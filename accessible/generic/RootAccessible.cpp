@@ -18,7 +18,7 @@
 #include "nsCoreUtils.h"
 #include "nsEventShell.h"
 #include "Relation.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "States.h"
 #include "XULTreeAccessible.h"
 

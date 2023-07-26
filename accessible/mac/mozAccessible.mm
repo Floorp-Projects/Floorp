@@ -20,7 +20,7 @@
 #include "nsAccUtils.h"
 #include "DocAccessibleParent.h"
 #include "Relation.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "RootAccessible.h"
 #include "mozilla/a11y/PDocAccessible.h"
 #include "mozilla/dom/BrowserParent.h"

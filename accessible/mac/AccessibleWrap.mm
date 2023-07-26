@@ -12,7 +12,7 @@
 
 #include "LocalAccessible-inl.h"
 #include "nsAccUtils.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "TextRange.h"
 #include "gfxPlatform.h"
 

@@ -7,7 +7,7 @@
 
 #include "ARIAMap.h"
 #include "EventTree.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 
 #include "nsCoreUtils.h"
 #include "nsIFrame.h"

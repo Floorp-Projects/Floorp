@@ -7,7 +7,7 @@
 
 #include "nsISupportsImpl.h"
 #include "mozilla/MemoryReporting.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 
 namespace mozilla {
 namespace a11y {

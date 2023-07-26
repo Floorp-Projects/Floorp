@@ -14,7 +14,7 @@
 #include "nsWinUtils.h"
 #include "Statistics.h"
 #include "sdnDocAccessible.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "ISimpleDOM.h"
 
 using namespace mozilla;

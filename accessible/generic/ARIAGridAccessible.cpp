@@ -13,7 +13,7 @@
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsGkAtoms.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "States.h"
 
 using namespace mozilla;

@@ -17,7 +17,7 @@
 #include "nsIIOService.h"
 #include "nsLayoutUtils.h"
 #include "nsTextEquivUtils.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "TreeWalker.h"
 #include "xpcAccessibleDocument.h"
 

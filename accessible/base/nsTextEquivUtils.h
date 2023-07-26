@@ -9,7 +9,7 @@
 #define _nsTextEquivUtils_H_
 
 #include "mozilla/a11y/Accessible.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 
 class nsIContent;
 

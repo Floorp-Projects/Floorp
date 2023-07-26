@@ -12,7 +12,7 @@
 #include "nsEventShell.h"
 #include "nsTextEquivUtils.h"
 #include "Relation.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "States.h"
 
 #include "nsContentList.h"

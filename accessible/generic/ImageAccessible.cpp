@@ -8,7 +8,7 @@
 #include "DocAccessible-inl.h"
 #include "LocalAccessible-inl.h"
 #include "nsAccUtils.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "AccAttributes.h"
 #include "AccIterator.h"
 #include "CacheConstants.h"
