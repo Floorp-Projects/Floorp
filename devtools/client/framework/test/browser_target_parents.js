@@ -109,7 +109,7 @@ add_task(async function () {
       // related to a previous test which is being destroyed.
       if (
         e.message.includes("nsIWorkerDebugger.initialize") ||
-        targetFront.isDestroyed() ||
+        workerDescriptorFront.isDestroyed() ||
         !workerDescriptorFront.name
       ) {
         info("Failed to connect to " + workerDescriptorFront.url);
