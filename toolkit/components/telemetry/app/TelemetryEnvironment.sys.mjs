@@ -229,6 +229,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["browser.migrate.interactions.history", { what: RECORD_PREF_VALUE }],
   ["browser.migrate.interactions.passwords", { what: RECORD_PREF_VALUE }],
   ["browser.newtabpage.enabled", { what: RECORD_PREF_VALUE }],
+  ["browser.privatebrowsing.autostart", { what: RECORD_PREF_VALUE }],
   ["browser.shell.checkDefaultBrowser", { what: RECORD_PREF_VALUE }],
   ["browser.search.region", { what: RECORD_PREF_VALUE }],
   ["browser.search.suggest.enabled", { what: RECORD_PREF_VALUE }],
