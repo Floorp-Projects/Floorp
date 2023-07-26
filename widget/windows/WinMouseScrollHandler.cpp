@@ -803,32 +803,6 @@ bool MouseScrollHandler::LastEventInfo::InitWheelEvent(
     // If the scroll delta mode isn't per line scroll, we shouldn't allow to
     // override the system scroll speed setting.
     aWheelEvent.mAllowToOverrideSystemScrollSpeed = false;
-#ifndef EARLY_BETA_OR_EARLIER
-  } else if (!MouseScrollHandler::sInstance->mSystemSettings
-                  .IsOverridingSystemScrollSpeedAllowed()) {
-    // If the system settings are customized by either the user or
-    // the mouse utility, we shouldn't allow to override the system scroll
-    // speed setting.
-    aWheelEvent.mAllowToOverrideSystemScrollSpeed = false;
-  } else {
-    // For suppressing too fast scroll, we should ensure that the maximum
-    // overridden delta value should be less than overridden scroll speed
-    // with default scroll amount.
-    double defaultScrollAmount = mIsVertical
-                                     ? SystemSettings::DefaultScrollLines()
-                                     : SystemSettings::DefaultScrollChars();
-    double maxDelta = WidgetWheelEvent::ComputeOverriddenDelta(
-        defaultScrollAmount, mIsVertical);
-    if (maxDelta != defaultScrollAmount) {
-      double overriddenDelta =
-          WidgetWheelEvent::ComputeOverriddenDelta(Abs(delta), mIsVertical);
-      if (overriddenDelta > maxDelta) {
-        // Suppress to fast scroll since overriding system scroll speed with
-        // current delta value causes too big delta value.
-        aWheelEvent.mAllowToOverrideSystemScrollSpeed = false;
-      }
-    }
-#endif
   }
 
   MOZ_LOG(
@@ -1003,14 +977,6 @@ void MouseScrollHandler::SystemSettings::TrustedScrollSettingsDriver() {
 
   // XXX We're not sure about other touchpad drivers...
 }
-
-#ifndef EARLY_BETA_OR_EARLIER
-bool MouseScrollHandler::SystemSettings::
-    IsOverridingSystemScrollSpeedAllowed() {
-  return mScrollLines == DefaultScrollLines() &&
-         mScrollChars == DefaultScrollChars();
-}
-#endif
 
 /******************************************************************************
  *
