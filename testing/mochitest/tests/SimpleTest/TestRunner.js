@@ -796,6 +796,14 @@ TestRunner.testFinished = function (tests) {
       );
       var runtime = new Date().valueOf() - TestRunner._currentTestStartTime;
 
+      TestRunner.structuredLogger.testEnd(
+        TestRunner.currentTestURL,
+        result,
+        "OK",
+        "Finished in " + runtime + "ms",
+        { runtime }
+      );
+
       if (
         TestRunner.slowestTestTime < runtime &&
         TestRunner._timeoutFactor >= 1
@@ -808,7 +816,7 @@ TestRunner.testFinished = function (tests) {
 
       // Don't show the interstitial if we just run one test with no repeats:
       if (TestRunner._urls.length == 1 && TestRunner.repeat <= 1) {
-        TestRunner.testUnloaded(result, runtime);
+        TestRunner.testUnloaded();
         return;
       }
 
@@ -817,17 +825,9 @@ TestRunner.testFinished = function (tests) {
         !testInXOriginFrame() &&
         $("testframe").contentWindow.location.protocol == "chrome:"
       ) {
-        interstitialURL =
-          "tests/SimpleTest/iframe-between-tests.html?result=" +
-          result +
-          "&runtime=" +
-          runtime;
+        interstitialURL = "tests/SimpleTest/iframe-between-tests.html";
       } else {
-        interstitialURL =
-          "/tests/SimpleTest/iframe-between-tests.html?result=" +
-          result +
-          "&runtime=" +
-          runtime;
+        interstitialURL = "/tests/SimpleTest/iframe-between-tests.html";
       }
       // check if there were test run after SimpleTest.finish, which should never happen
       if (!testInXOriginFrame()) {
@@ -885,7 +885,7 @@ TestRunner.addAssertionCount = function (count) {
   }
 };
 
-TestRunner.testUnloaded = function (result, runtime) {
+TestRunner.testUnloaded = function () {
   // If we're in a debug build, check assertion counts.  This code is
   // similar to the code in Tester_nextTest in browser-test.js used
   // for browser-chrome mochitests.
@@ -908,41 +908,13 @@ TestRunner.testUnloaded = function (result, runtime) {
       min += additionalAsserts;
       max += additionalAsserts;
     }
-
-    if (numAsserts < min || numAsserts > max) {
-      result = "ERROR";
-
-      var direction = "more";
-      var target = max;
-      if (numAsserts < min) {
-        direction = "less";
-        target = min;
-      }
-      TestRunner.structuredLogger.testStatus(
-        TestRunner.currentTestURL,
-        "Assertion Count",
-        "ERROR",
-        "PASS",
-        numAsserts +
-          " is " +
-          direction +
-          " than expected " +
-          target +
-          " assertions"
-      );
-
-      // reset result so we don't print a second error on test-end
-      result = "OK";
-    }
+    TestRunner.structuredLogger.assertionCount(
+      TestRunner.currentTestURL,
+      numAsserts,
+      min,
+      max
+    );
   }
-
-  TestRunner.structuredLogger.testEnd(
-    TestRunner.currentTestURL,
-    result,
-    "OK",
-    "Finished in " + runtime + "ms",
-    { runtime }
-  );
 
   // Always do this, so we can "reset" preferences between tests
   SpecialPowers.comparePrefsToBaseline(
