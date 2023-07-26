@@ -791,7 +791,8 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(
     case DeclarationKind::VarForAnnexBLexicalFunction:
       MOZ_CRASH(
           "Synthesized Annex B vars should go through "
-          "tryDeclareVarForAnnexBLexicalFunction");
+          "addPossibleAnnexBFunctionBox, and "
+          "propagateAndMarkAnnexBFunctionBoxes");
       break;
   }
 
