@@ -63,7 +63,6 @@ class nsUXThemeData {
   static const wchar_t* GetClassName(nsUXThemeClass);
 
  public:
-  static bool sIsDefaultWindowsTheme;
   static bool sIsHighContrastOn;
 
   static void Invalidate();
@@ -71,7 +70,6 @@ class nsUXThemeData {
   static HMODULE GetThemeDLL();
 
   static void UpdateNativeThemeInfo();
-  static bool IsDefaultWindowTheme();
-  static bool IsHighContrastOn();
+  static bool IsHighContrastOn() { return sIsHighContrastOn; }
 };
 #endif  // __UXThemeData_h__

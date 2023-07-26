@@ -97,22 +97,14 @@ const wchar_t* nsUXThemeData::GetClassName(nsUXThemeClass cls) {
       return L"";
   }
 }
-bool nsUXThemeData::sIsDefaultWindowsTheme = false;
+
 bool nsUXThemeData::sIsHighContrastOn = false;
-
-// static
-bool nsUXThemeData::IsDefaultWindowTheme() { return sIsDefaultWindowsTheme; }
-
-bool nsUXThemeData::IsHighContrastOn() { return sIsHighContrastOn; }
 
 // static
 void nsUXThemeData::UpdateNativeThemeInfo() {
   HIGHCONTRAST highContrastInfo;
   highContrastInfo.cbSize = sizeof(HIGHCONTRAST);
-  if (SystemParametersInfo(SPI_GETHIGHCONTRAST, 0, &highContrastInfo, 0)) {
-    sIsHighContrastOn = highContrastInfo.dwFlags & HCF_HIGHCONTRASTON;
-  } else {
-    sIsHighContrastOn = false;
-  }
-  sIsDefaultWindowsTheme = !sIsHighContrastOn;
+  sIsHighContrastOn =
+      SystemParametersInfo(SPI_GETHIGHCONTRAST, 0, &highContrastInfo, 0) &&
+      highContrastInfo.dwFlags & HCF_HIGHCONTRASTON;
 }

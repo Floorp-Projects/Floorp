@@ -35,7 +35,7 @@ treechildren::-moz-tree-row(multicol, odd) {
   background-color: -moz-oddtreerow;
 }
 
-@media (-moz-windows-default-theme) {
+@media not (prefers-contrast) {
   treechildren::-moz-tree-row(hover) {
     background-color: hsla(0,0%,50%,.15);
   }

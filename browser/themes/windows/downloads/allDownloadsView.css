@@ -6,7 +6,7 @@
 
 /*** List items ***/
 
-@media (-moz-windows-default-theme) {
+@media not (prefers-contrast) {
   .downloadProgress::-moz-progress-bar {
     background-color: #3c9af8;
   }
@@ -14,11 +14,9 @@
   .downloadProgress[paused]::-moz-progress-bar {
     background-color: #a6a6a6;
   }
-}
 
-/*** Highlighted list items ***/
+  /*** Highlighted list items ***/
 
-@media (-moz-windows-default-theme) {
   /*
   -moz-default-appearance: menuitem is almost right, but the hover effect is not
   transparent and is lighter than desired.

@@ -408,7 +408,9 @@ tooltip:not([position]) {
     border: 1px solid;
   }
 
-  @media (-moz-windows-default-theme) {
+  /* TODO(emilio): Probably make InfoText/InfoBackground do the right thing and
+   * remove this? */
+  @media not (prefers-contrast) {
     tooltip {
       background-color: #f9f9fb;
       color: black;

@@ -149,8 +149,6 @@ static const char sIntPrefs[][45] = {
     "accessibility.tabfocus",  // Weird one...
     "ui.chosenMenuItemsShouldBlink",
     "ui.windowsAccentColorInTitlebar",
-    "ui.windowsDefaultTheme",
-    "ui.macGraphiteTheme",
     "ui.macBigSurTheme",
     "ui.macRTL",
     "ui.alertNotificationOrigin",

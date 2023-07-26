@@ -14,7 +14,7 @@ xul|richlistitem[originaltype="autofill-clear-button"][selected="true"] > .autof
   background-color: color-mix(in srgb, Field 90%, FieldText);
 }
 
-@media (-moz-windows-default-theme: 0) {
+@media (prefers-contrast) {
   xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .autofill-item-box {
     background-color: SelectedItem;
   }

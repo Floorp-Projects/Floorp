@@ -13,7 +13,7 @@
   --chrome-content-separator-color: ThreeDShadow;
 }
 
-@media (-moz-windows-default-theme) {
+@media not (prefers-contrast) {
   :root {
     --toolbar-non-lwt-bgcolor: -moz-dialog;
   }
@@ -38,7 +38,7 @@
   color: -moz-menuhovertext;
 }
 
-@media (-moz-windows-default-theme) {
+@media not (prefers-contrast) {
   #main-menubar > menu[_moz-menuactive="true"] {
     color: inherit;
   }
@@ -50,12 +50,30 @@
   #toolbar-menubar[brighttext] > #menubar-items > #main-menubar > menu[_moz-menuactive="true"] {
     background-color: hsla(0,0%,100%,.22);
   }
-}
 
-/* Use a different color in inactive windows. */
-@media (-moz-windows-default-theme) {
+  /* Use a different color in inactive windows. */
   #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive {
     color: ThreeDShadow;
+  }
+
+  @media (-moz-windows-accent-color-in-titlebar) {
+    :root[sizemode=normal][tabsintitlebar] #navigator-toolbox {
+      border-top: .5px solid ActiveBorder;
+    }
+  }
+
+  :root[sizemode=normal][tabsintitlebar]:-moz-window-inactive #navigator-toolbox {
+    border-top-color: InactiveBorder;
+  }
+
+  :root[tabsintitlebar] .tab-label:-moz-window-inactive {
+    /* Calculated to match the opacity change of Windows Explorer
+       titlebar text change for inactive windows. */
+    opacity: .6;
+  }
+
+  :root[tabsintitlebar] .tab-secondary-label:-moz-window-inactive {
+    opacity: .6;
   }
 }
 
@@ -79,16 +97,20 @@
   color: var(--toolbar-color);
 }
 
-@media not (-moz-windows-default-theme) {
-  /* Please keep the menu text colors in this media block in sync with
-   * light-dark-overrides.css, minus the :not(:-moz-lwtheme) condition - see Bug 1165718.
-   */
+/* See bug 1715990 about why we do this ourselves on HCM */
+@media (prefers-contrast) {
   :root[tabsintitlebar]:not(:-moz-lwtheme) {
+    background-color: ActiveCaption;
     color: CaptionText;
   }
 
   :root[tabsintitlebar]:not(:-moz-lwtheme):-moz-window-inactive {
+    background-color: InactiveCaption;
     color: InactiveCaptionText;
+  }
+
+  #appcontent:not(:-moz-lwtheme) {
+    background-color: -moz-dialog;
   }
 }
 
@@ -97,7 +119,7 @@
   position: relative;
 }
 
-@media not (-moz-windows-default-theme) {
+@media (prefers-contrast) {
   #nav-bar:not(:-moz-lwtheme) {
     box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 ThreeDShadow;
   }
@@ -139,7 +161,6 @@
   -moz-context-properties: stroke;
   stroke: currentColor;
 }
-
 
 .titlebar-min {
   /* Even though we use appearance: none, -moz-default-appearance is necessary
@@ -193,7 +214,7 @@
   list-style-image: url(chrome://browser/skin/window-controls/close-themes.svg);
 }
 
-@media (-moz-windows-default-theme) {
+@media not (prefers-contrast) {
   .titlebar-button:hover {
     background-color: hsla(0,0%,0%,.12);
   }
@@ -221,7 +242,7 @@
   }
 }
 
-@media not (-moz-windows-default-theme) {
+@media (prefers-contrast) {
   .titlebar-button {
     background-color: -moz-field;
     stroke: ButtonText;
@@ -336,7 +357,7 @@ menuitem.bookmark-item {
   }
 }
 
-@media not (-moz-windows-default-theme) {
+@media (prefers-contrast) {
   /* Windows HCM conventions use these colors for chiclets. We can't use them on
      other platforms because AccentColor can be shown atop SelectedItem,
      which has zero contrast. */
@@ -351,11 +372,8 @@ menuitem.bookmark-item {
   .findbar-textbox:not(:-moz-lwtheme, :focus) {
     border-color: ThreeDShadow;
   }
-}
 
-/* Address bar results view */
-
-@media not (-moz-windows-default-theme) {
+  /* Address bar results view */
   :root:not(:-moz-lwtheme) {
     --urlbar-popup-action-color: -moz-nativehyperlinktext;
   }
@@ -380,8 +398,8 @@ menuitem.bookmark-item {
   padding: 0;
 }
 
-@media not (-moz-windows-default-theme) {
-  /* For high contrast themes. */
+@media (prefers-contrast) {
+  /* For high contrast themes. XXX is this needed anymore? */
   #tabbrowser-tabpanels,
   :root[privatebrowsingmode=temporary] #tabbrowser-tabpanels {
     background-color: -moz-default-background-color;
@@ -421,7 +439,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   text-shadow: none;
 }
 
-@media (-moz-windows-default-theme) {
+@media not (prefers-contrast) {
   #statuspanel-label {
     background-color: #f9f9fa;
     color: #444;
