@@ -3,6 +3,12 @@ Firefox Source Tree Documentation
 =================================
 
 .. toctree::
+   :caption: Overview
+   :maxdepth: 2
+
+   {overview_doc}
+
+.. toctree::
    :caption: Getting Started
    :maxdepth: 1
 

@@ -197,6 +197,10 @@ SPHINX_TREES["writing-rust-code"] = "docs/writing-rust-code"
 
 SPHINX_TREES["bug-mgmt"] = "docs/bug-mgmt"
 
+SPHINX_TREES["glossary"] = "docs/glossary"
+
+SPHINX_TREES["overview"] = "docs/overview"
+
 SPHINX_TREES["setup"] = "docs/setup"
 
 SPHINX_TREES["crash-reporting"] = "docs/crash-reporting"

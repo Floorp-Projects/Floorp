@@ -34,6 +34,8 @@ Understanding Rules and Errors
   * `eslint-plugin-mozilla`_
   * `eslint-plugin-spidermonkey-js`_
 
+.. _eslint_common_issues:
+
 Common Issues and How To Solve Them
 -----------------------------------
 

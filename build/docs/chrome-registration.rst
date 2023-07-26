@@ -205,6 +205,8 @@ do what you want or expect it to do). Also, the path inside overridden
 files is relative to the overridden path, not the original one (this can
 be annoying and/or useful in CSS files, for example).
 
+.. _chrome_manifest_resource:
+
 resource
 ~~~~~~~~
 
