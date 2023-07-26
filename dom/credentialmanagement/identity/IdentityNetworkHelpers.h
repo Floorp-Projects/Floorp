@@ -40,10 +40,13 @@ RefPtr<TPromise> FetchJSONStructure(Request* aRequest) {
     return resultPromise;
   }
 
+  RefPtr<PromiseNativeHandler> reject =
+      new MozPromiseRejectOnDestruction(resultPromise, __func__);
+
   // Handle the response
   fetchPromise->AddCallbacksWithCycleCollectedArgs(
-      [resultPromise](JSContext* aCx, JS::Handle<JS::Value> aValue,
-                      ErrorResult&) {
+      [resultPromise, reject](JSContext* aCx, JS::Handle<JS::Value> aValue,
+                              ErrorResult&) {
         // Get the Response object from the argument to the callback
         if (NS_WARN_IF(!aValue.isObject())) {
           resultPromise->Reject(NS_ERROR_FAILURE, __func__);
@@ -93,11 +96,13 @@ RefPtr<TPromise> FetchJSONStructure(Request* aRequest) {
                   Promise::TryExtractNSResultFromRejectionValue(aValue),
                   __func__);
             });
+        jsonPromise->AppendNativeHandler(reject);
       },
       [resultPromise](JSContext*, JS::Handle<JS::Value> aValue, ErrorResult&) {
         resultPromise->Reject(
             Promise::TryExtractNSResultFromRejectionValue(aValue), __func__);
       });
+  fetchPromise->AppendNativeHandler(reject);
 
   return resultPromise;
 }
