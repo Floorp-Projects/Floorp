@@ -4,35 +4,42 @@
 
 /**
  * The Screenshots overlay is inserted into the document's
- * anonymous content container (see dom/webidl/Document.webidl).
+ * canvasFrame anonymous content container (see dom/webidl/Document.webidl).
  *
  * This container gets cleared automatically when the document navigates.
+ *
+ * Since the overlay markup is inserted in the canvasFrame using
+ * insertAnonymousContent, this means that it can be modified using the API
+ * described in AnonymousContent.webidl.
+ *
+ * Any mutation of this content must be via the AnonymousContent API.
+ * This is similar in design to [devtools' highlighters](https://firefox-source-docs.mozilla.org/devtools/tools/highlighters.html#inserting-content-in-the-page),
+ * though as Screenshots doesnt need to work on XUL documents, or allow multiple kinds of
+ * highlight/overlay our case is a little simpler.
  *
  * To retrieve the AnonymousContent instance, use the `content` getter.
  */
 
-/*
- * Below are the states of the screenshots overlay
- * States:
- *  "crosshairs":
- *    Nothing has happened, and the crosshairs will follow the movement of the mouse
- *  "draggingReady":
- *    The user has pressed the mouse button, but hasn't moved enough to create a selection
- *  "dragging":
- *    The user has pressed down a mouse button, and is dragging out an area far enough to show a selection
- *  "selected":
- *    The user has selected an area
- *  "resizing":
- *    The user is resizing the selection
- */
 
-import {
-  setMaxDetectHeight,
-  setMaxDetectWidth,
-  getBestRectForElement,
-  Region,
-  WindowDimensions,
-} from "chrome://browser/content/screenshots/overlayHelpers.mjs";
+/* States:
+
+  "crosshairs":
+    Nothing has happened, and the crosshairs will follow the movement of the mouse
+  "draggingReady":
+    The user has pressed the mouse button, but hasn't moved enough to create a selection
+  "dragging":
+    The user has pressed down a mouse button, and is dragging out an area far enough to show a selection
+  "selected":
+    The user has selected an area
+  "resizing":
+    The user is resizing the selection
+
+  A pointerdown goes from crosshairs to dragging.
+  A pointerup goes from dragging to selected
+  A click outside of the selection goes from selected to crosshairs
+  A pointerdown on one of the draggers goes from selected to resizing
+
+  */
 
 const lazy = {};
 
