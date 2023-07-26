@@ -24,16 +24,11 @@ enum CanvasFontVariantCaps { "normal", "small-caps", "all-small-caps", "petite-c
 enum CanvasTextRendering { "auto", "optimizeSpeed", "optimizeLegibility", "geometricPrecision" };
 
 [GenerateInit]
-dictionary CanvasRenderingContext2DSettings {
-  // signal if the canvas contains an alpha channel
-  boolean alpha = true;
-
-  boolean desynchronized = false;
-
-  PredefinedColorSpace colorSpace = "srgb";
-
+dictionary ContextAttributes2D {
   // whether or not we're planning to do a lot of readback operations
   boolean willReadFrequently = false;
+  // signal if the canvas contains an alpha channel
+  boolean alpha = true;
 };
 
 dictionary HitRegionOptions {
@@ -58,8 +53,6 @@ interface CanvasRenderingContext2D {
   // back-reference to the canvas.  Might be null if we're not
   // associated with a canvas.
   readonly attribute HTMLCanvasElement? canvas;
-
-  CanvasRenderingContext2DSettings getContextAttributes();
 
   // Show the caret if appropriate when drawing
   [Func="CanvasUtils::HasDrawWindowPrivilege"]
