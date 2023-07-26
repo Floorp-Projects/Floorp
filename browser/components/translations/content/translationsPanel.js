@@ -294,6 +294,7 @@ var TranslationsPanel = new (class {
       getter("errorMessageHint", "translations-panel-error-message-hint");
       getter("errorHintAction", "translations-panel-translate-hint-action");
       getter("fromMenuList", "translations-panel-from");
+      getter("fromLabel", "translations-panel-from-label");
       getter("header", "translations-panel-header");
       getter("intro", "translations-panel-intro");
       getter("langSelection", "translations-panel-lang-selection");
@@ -301,6 +302,7 @@ var TranslationsPanel = new (class {
       getter("cancelButton", "translations-panel-cancel");
       getter("restoreButton", "translations-panel-restore-button");
       getter("toMenuList", "translations-panel-to");
+      getter("toLabel", "translations-panel-to-label");
       getter("unsupportedHint", "translations-panel-error-unsupported-hint");
 
       // Getters by class
@@ -482,14 +484,8 @@ var TranslationsPanel = new (class {
   #updateViewFromTranslationStatus(
     languageState = this.#getTranslationsActor().languageState
   ) {
-    const {
-      defaultTranslate,
-      toMenuList,
-      fromMenuList,
-      header,
-      cancelButton,
-      restoreButton,
-    } = this.elements;
+    const { defaultTranslate, toMenuList, fromMenuList, header, cancelButton } =
+      this.elements;
     const { requestedTranslationPair, isEngineReady } = languageState;
 
     if (
@@ -505,7 +501,7 @@ var TranslationsPanel = new (class {
       );
       defaultTranslate.disabled = true;
       cancelButton.hidden = false;
-      restoreButton.hidden = true;
+      this.updateUIForReTranslation(false /* isReTranslation */);
     } else {
       document.l10n.setAttributes(
         defaultTranslate,
@@ -530,7 +526,7 @@ var TranslationsPanel = new (class {
         type: "language",
       });
       cancelButton.hidden = true;
-      restoreButton.hidden = false;
+      this.updateUIForReTranslation(true /* isReTranslation */);
 
       document.l10n.setAttributes(header, "translations-panel-revisit-header", {
         fromLanguage: displayNames.of(fromLanguage),
@@ -538,6 +534,25 @@ var TranslationsPanel = new (class {
       });
     } else {
       document.l10n.setAttributes(header, "translations-panel-header");
+    }
+  }
+
+  /**
+   * @param {boolean} isReTranslation
+   */
+  updateUIForReTranslation(isReTranslation) {
+    const { restoreButton, fromLabel, fromMenuList, toLabel } = this.elements;
+    restoreButton.hidden = !isReTranslation;
+    // When offering to re-translate a page, hide the "from" language so users don't
+    // get confused.
+    fromLabel.hidden = isReTranslation;
+    fromMenuList.hidden = isReTranslation;
+    if (isReTranslation) {
+      fromLabel.style.marginBlockStart = "";
+      toLabel.style.marginBlockStart = 0;
+    } else {
+      fromLabel.style.marginBlockStart = 0;
+      toLabel.style.marginBlockStart = "";
     }
   }
 
@@ -567,7 +582,7 @@ var TranslationsPanel = new (class {
     if (this.#langListsPhase === "error") {
       // There was an error, display it in the view rather than the language
       // dropdowns.
-      const { restoreButton, cancelButton, errorHintAction } = this.elements;
+      const { cancelButton, errorHintAction } = this.elements;
 
       this.#showError({
         message: "translations-panel-error-load-languages",
@@ -577,7 +592,7 @@ var TranslationsPanel = new (class {
       });
 
       defaultTranslate.disabled = true;
-      restoreButton.hidden = true;
+      this.updateUIForReTranslation(false /* isReTranslation */);
       cancelButton.hidden = false;
       langSelection.hidden = true;
       errorHintAction.disabled = false;
@@ -593,7 +608,7 @@ var TranslationsPanel = new (class {
     const langTags = await this.#fetchDetectedLanguages();
     if (langTags?.isDocLangTagSupported || force) {
       // Show the default view with the language selection
-      const { restoreButton, cancelButton } = this.elements;
+      const { cancelButton } = this.elements;
 
       if (langTags?.isDocLangTagSupported) {
         fromMenuList.value = langTags?.docLangTag ?? "";
@@ -604,7 +619,7 @@ var TranslationsPanel = new (class {
 
       this.onChangeLanguages();
 
-      restoreButton.hidden = true;
+      this.updateUIForReTranslation(false /* isReTranslation */);
       cancelButton.hidden = false;
       multiview.setAttribute("mainViewId", "translations-panel-view-default");
 
