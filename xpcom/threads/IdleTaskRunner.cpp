@@ -31,7 +31,7 @@ already_AddRefed<IdleTaskRunner> IdleTaskRunner::Create(
 class IdleTaskRunnerTask : public Task {
  public:
   explicit IdleTaskRunnerTask(IdleTaskRunner* aRunner)
-      : Task(Kind::MainThreadOnly, EventQueuePriority::Idle),
+      : Task(true, EventQueuePriority::Idle),
         mRunner(aRunner),
         mRequestInterrupt(aRunner->mRequestInterrupt) {
     SetManager(TaskController::Get()->GetIdleTaskManager());

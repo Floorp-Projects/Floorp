@@ -331,8 +331,7 @@ void TaskController::RunPoolThread() {
           task = nextTask;
         }
 
-        if (task->GetKind() == Task::Kind::MainThreadOnly ||
-            task->mInProgress) {
+        if (task->IsMainThreadOnly() || task->mInProgress) {
           continue;
         }
 
@@ -417,7 +416,7 @@ void TaskController::RunPoolThread() {
 void TaskController::AddTask(already_AddRefed<Task>&& aTask) {
   RefPtr<Task> task(aTask);
 
-  if (task->GetKind() == Task::Kind::OffMainThreadOnly) {
+  if (!task->IsMainThreadOnly()) {
     MutexAutoLock lock(mPoolInitializationMutex);
     if (!mThreadPoolInitialized) {
       InitializeThreadPool();
@@ -454,13 +453,10 @@ void TaskController::AddTask(already_AddRefed<Task>&& aTask) {
 
   std::pair<std::set<RefPtr<Task>, Task::PriorityCompare>::iterator, bool>
       insertion;
-  switch (task->GetKind()) {
-    case Task::Kind::MainThreadOnly:
-      insertion = mMainThreadTasks.insert(std::move(task));
-      break;
-    case Task::Kind::OffMainThreadOnly:
-      insertion = mThreadableTasks.insert(std::move(task));
-      break;
+  if (task->IsMainThreadOnly()) {
+    insertion = mMainThreadTasks.insert(std::move(task));
+  } else {
+    insertion = mThreadableTasks.insert(std::move(task));
   }
   (*insertion.first)->mIterator = insertion.first;
   MOZ_ASSERT(insertion.second);
@@ -531,7 +527,7 @@ void TaskController::ProcessPendingMTTask(bool aMayWait) {
 void TaskController::ReprioritizeTask(Task* aTask, uint32_t aPriority) {
   MutexAutoLock lock(mGraphMutex);
   std::set<RefPtr<Task>, Task::PriorityCompare>* queue = &mMainThreadTasks;
-  if (aTask->GetKind() == Task::Kind::OffMainThreadOnly) {
+  if (!aTask->IsMainThreadOnly()) {
     queue = &mThreadableTasks;
   }
 
@@ -552,8 +548,8 @@ void TaskController::ReprioritizeTask(Task* aTask, uint32_t aPriority) {
 class RunnableTask : public Task {
  public:
   RunnableTask(already_AddRefed<nsIRunnable>&& aRunnable, int32_t aPriority,
-               Kind aKind)
-      : Task(aKind, aPriority), mRunnable(aRunnable) {}
+               bool aMainThread = true)
+      : Task(aMainThread, aPriority), mRunnable(aRunnable) {}
 
   virtual bool Run() override {
     mRunnable->Run();
@@ -591,8 +587,7 @@ class RunnableTask : public Task {
 void TaskController::DispatchRunnable(already_AddRefed<nsIRunnable>&& aRunnable,
                                       uint32_t aPriority,
                                       TaskManager* aManager) {
-  RefPtr<RunnableTask> task = new RunnableTask(std::move(aRunnable), aPriority,
-                                               Task::Kind::MainThreadOnly);
+  RefPtr<RunnableTask> task = new RunnableTask(std::move(aRunnable), aPriority);
 
   task->SetManager(aManager);
   TaskController::Get()->AddTask(task.forget());
@@ -817,8 +812,7 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
 
       task = GetFinalDependency(task);
 
-      if (task->GetKind() == Task::Kind::OffMainThreadOnly ||
-          task->mInProgress ||
+      if (!task->IsMainThreadOnly() || task->mInProgress ||
           (task->mTaskManager && task->mTaskManager->mCurrentSuspended)) {
         continue;
       }
@@ -964,7 +958,7 @@ void TaskController::MaybeInterruptTask(Task* aTask) {
     Task* firstDependency = aTask->mDependencies.begin()->get();
     if (aTask->GetPriority() <= firstDependency->GetPriority() &&
         !firstDependency->mCompleted &&
-        aTask->GetKind() == firstDependency->GetKind()) {
+        aTask->IsMainThreadOnly() == firstDependency->IsMainThreadOnly()) {
       // This task has the same or a higher priority as one of its dependencies,
       // never any need to interrupt.
       return;
@@ -978,7 +972,7 @@ void TaskController::MaybeInterruptTask(Task* aTask) {
     return;
   }
 
-  if (aTask->GetKind() == Task::Kind::MainThreadOnly) {
+  if (aTask->IsMainThreadOnly()) {
     mMayHaveMainThreadTask = true;
 
     EnsureMainThreadTasksScheduled();
@@ -989,7 +983,7 @@ void TaskController::MaybeInterruptTask(Task* aTask) {
 
     // We could go through the steps above here and interrupt an off main
     // thread task in case it has a lower priority.
-    if (finalDependency->GetKind() == Task::Kind::OffMainThreadOnly) {
+    if (!finalDependency->IsMainThreadOnly()) {
       return;
     }
 
