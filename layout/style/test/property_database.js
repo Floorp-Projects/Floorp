@@ -13667,13 +13667,14 @@ if (IsCSSPropertyPrefEnabled("layout.css.math-depth.enabled")) {
     type: CSS_TYPE_LONGHAND,
     initial_values: ["0"],
     other_values: [
-      "auto-add",
+      // auto-add cannot be tested here because it has no effect when the
+      // inherited math-style is equal to the default (normal).
       "123",
       "-123",
       "add(123)",
       "add(-123)",
       "calc(1 + 2*3)",
-      "add(calc(1 - 2/3))",
+      "add(calc(4 - 2/3))",
     ],
     invalid_values: ["auto", "1,23", "1.23", "add(1,23)", "add(1.23)"],
   };

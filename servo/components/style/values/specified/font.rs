@@ -448,6 +448,16 @@ impl ToComputedValue for FontStretch {
     }
 }
 
+#[cfg(feature = "gecko")]
+fn math_depth_enabled(_context: &ParserContext) -> bool {
+    static_prefs::pref!("layout.css.math-depth.enabled")
+}
+
+#[cfg(feature = "servo")]
+fn math_depth_enabled(_context: &ParserContext) -> bool {
+    false
+}
+
 /// CSS font keywords
 #[derive(
     Animate,
@@ -482,6 +492,10 @@ pub enum FontSizeKeyword {
     XXLarge,
     #[css(keyword = "xxx-large")]
     XXXLarge,
+    /// Indicate whether to apply font-size: math is specified so that extra
+    /// scaling due to math-depth changes is applied during the cascade.
+    #[parse(condition = "math_depth_enabled")]
+    Math,
     #[css(skip)]
     None,
 }
@@ -552,6 +566,7 @@ impl KeywordInfo {
     /// text-zoom.
     fn to_computed_value(&self, context: &Context) -> CSSPixelLength {
         debug_assert_ne!(self.kw, FontSizeKeyword::None);
+        debug_assert_ne!(self.kw, FontSizeKeyword::Math);
         let base = context.maybe_zoom_text(self.kw.to_length(context).0);
         base * self.factor + context.maybe_zoom_text(self.offset)
     }
@@ -740,7 +755,7 @@ impl FontSizeKeyword {
             FontSizeKeyword::XLarge => medium * 3.0 / 2.0,
             FontSizeKeyword::XXLarge => medium * 2.0,
             FontSizeKeyword::XXXLarge => medium * 3.0,
-            FontSizeKeyword::None => unreachable!(),
+            FontSizeKeyword::Math | FontSizeKeyword::None => unreachable!(),
         })
     }
 
@@ -768,6 +783,7 @@ impl FontSizeKeyword {
         quirks_mode: QuirksMode,
         base_size: Length,
     ) -> NonNegativeLength {
+        debug_assert_ne!(*self, FontSizeKeyword::Math);
         // The tables in this function are originally from
         // nsRuleNode::CalcFontPointSize in Gecko:
         //
@@ -886,9 +902,16 @@ impl FontSize {
                 calc.resolve(base_size.resolve(context).computed_size())
             },
             FontSize::Keyword(i) => {
-                // As a specified keyword, this is keyword derived
-                info = i;
-                i.to_computed_value(context).clamp_to_non_negative()
+                if i.kw == FontSizeKeyword::Math {
+                    // Scaling is done in recompute_math_font_size_if_needed().
+                    info = compose_keyword(1.);
+                    info.kw = FontSizeKeyword::Math;
+                    FontRelativeLength::Em(1.).to_computed_value(context, base_size)
+                } else {
+                    // As a specified keyword, this is keyword derived
+                    info = i;
+                    i.to_computed_value(context).clamp_to_non_negative()
+                }
             },
             FontSize::Smaller => {
                 info = compose_keyword(1. / LARGER_FONT_SIZE_RATIO);
@@ -961,7 +984,7 @@ impl FontSize {
             return Ok(FontSize::Length(lp));
         }
 
-        if let Ok(kw) = input.try_parse(FontSizeKeyword::parse) {
+        if let Ok(kw) = input.try_parse(|i| FontSizeKeyword::parse(context, i)) {
             return Ok(FontSize::Keyword(KeywordInfo::new(kw)));
         }
 
