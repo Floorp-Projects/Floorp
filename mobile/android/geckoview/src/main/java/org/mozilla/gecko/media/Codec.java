@@ -468,8 +468,15 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     final int height =
         format.containsKey(MediaFormat.KEY_HEIGHT) ? format.getInteger(MediaFormat.KEY_HEIGHT) : 0;
 
-    final int numCodecs = MediaCodecList.getCodecCount();
+    int numCodecs = 0;
     final List<String> found = new ArrayList<>();
+    try {
+      numCodecs = MediaCodecList.getCodecCount();
+    } catch (final RuntimeException e) {
+      Log.e(LOGTAG, "Failed retrieving codec count finding matching codec names", e);
+      return found;
+    }
+
     for (int i = 0; i < numCodecs; i++) {
       final MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
       if (info.isEncoder() == !isEncoder) {
