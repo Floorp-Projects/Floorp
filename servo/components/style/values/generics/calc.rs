@@ -1463,7 +1463,8 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
             },
             Self::Abs(ref mut child) => {
                 if let CalcNode::Leaf(leaf) = child.as_mut() {
-                    leaf.map(|v| if v.is_zero() { v } else { v.abs() })
+                    leaf.map(|v| if v.is_zero() { v } else { v.abs() });
+                    replace_self_with!(&mut **child);
                 }
             },
             Self::Sign(ref mut child) => {
