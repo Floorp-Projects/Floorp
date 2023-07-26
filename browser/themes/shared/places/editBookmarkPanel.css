@@ -99,6 +99,10 @@
   opacity: 0.7;
 }
 
+#editBookmarkPanelBottomButtons > button {
+  margin-top: 0;
+}
+
 #editBookmarkPanel .expander-up > .button-box > .button-text,
 #editBookmarkPanel .expander-down > .button-box > .button-text {
   display: none;
