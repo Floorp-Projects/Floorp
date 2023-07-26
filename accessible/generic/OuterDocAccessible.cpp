@@ -11,7 +11,7 @@
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/BrowserParent.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 
 #ifdef A11Y_LOG
 #  include "Logging.h"

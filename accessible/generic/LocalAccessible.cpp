@@ -25,7 +25,7 @@
 #include "OuterDocAccessible.h"
 #include "Pivot.h"
 #include "Relation.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "RootAccessible.h"
 #include "States.h"
 #include "TextLeafRange.h"

@@ -12,7 +12,7 @@
 #include "HTMLListAccessible.h"
 #include "LocalAccessible-inl.h"
 #include "Relation.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "States.h"
 #include "TextAttrs.h"
 #include "TextRange.h"

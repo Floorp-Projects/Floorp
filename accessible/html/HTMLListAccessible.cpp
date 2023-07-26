@@ -8,7 +8,7 @@
 
 #include "AccAttributes.h"
 #include "nsAccessibilityService.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "States.h"
 
 #include "nsLayoutUtils.h"

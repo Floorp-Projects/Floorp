@@ -14,7 +14,7 @@
 #include "DocAccessible.h"
 #include "nsEventShell.h"
 #include "Relation.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "States.h"
 #include "nsQueryObject.h"
 #include "nsTreeColumns.h"

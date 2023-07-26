@@ -7,7 +7,7 @@
 #define mozilla_a11y_Pivot_h_
 
 #include <stdint.h>
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "mozilla/dom/ChildIterator.h"
 
 namespace mozilla {

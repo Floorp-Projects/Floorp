@@ -8,7 +8,7 @@
 #include "ARIAMap.h"
 #include "nsAccUtils.h"
 #include "Relation.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "States.h"
 
 // NOTE: alphabetically ordered

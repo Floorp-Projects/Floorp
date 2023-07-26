@@ -13,7 +13,7 @@
 #include "DocAccessibleParent.h"
 #include "HyperTextAccessible.h"
 #include "nsIAccessibleTypes.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "States.h"
 #include "TextLeafAccessible.h"
 

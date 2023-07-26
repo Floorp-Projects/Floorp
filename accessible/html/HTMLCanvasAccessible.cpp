@@ -5,7 +5,7 @@
 
 #include "HTMLCanvasAccessible.h"
 
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 
 using namespace mozilla::a11y;
 

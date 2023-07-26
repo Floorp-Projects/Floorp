@@ -9,7 +9,7 @@
 #include "nsAccessibilityService.h"
 #include "DocAccessible.h"
 #include "nsCoreUtils.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "States.h"
 
 #include "mozilla/dom/Element.h"

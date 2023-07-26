@@ -9,7 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/a11y/Accessible.h"
 
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "HTMLListAccessible.h"
 #include "SessionAccessibility.h"
 #include "nsAccUtils.h"

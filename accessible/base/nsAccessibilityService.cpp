@@ -32,7 +32,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsTextFormatter.h"
 #include "OuterDocAccessible.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #ifdef MOZ_ACCESSIBILITY_ATK
 #  include "RootAccessibleWrap.h"
 #endif

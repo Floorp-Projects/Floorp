@@ -10,7 +10,7 @@
 #include "LocalAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "Relation.h"
-#include "Role.h"
+#include "mozilla/a11y/Role.h"
 #include "States.h"
 
 #include "nsServiceManagerUtils.h"
