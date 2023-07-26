@@ -1,0 +1,27 @@
+{
+  "name": "Cốc Cốc",
+  "description": "Use Cốc Cốc to search on coccoc.com",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "coccoc@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Cốc Cốc",
+      "search_url": "https://coccoc.com/search",
+      "search_url_get_params": "query={searchTerms}&s=ff&utm_source=firefox",
+      "suggest_url": "https://coccoc.com/composer/autocomplete",
+      "suggest_url_get_params": "of=b&q={searchTerms}&s=ff"
+    }
+  }
+}

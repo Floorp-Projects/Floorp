@@ -517,15 +517,29 @@
       // positioned relative to the corner of the new window created upon
       // dragend such that the mouse appears to have the same position
       // relative to the corner of the dragged tab.
-      function clientX(ele) {
-        return ele.getBoundingClientRect().left;
+
+      const VertitalEnabled = Services.prefs.getIntPref("floorp.tabbar.style") == 2;
+      //replace clientX/Y with screenX/Y to fix dragging tabs between windows
+      function getClientElementPosition(ele) {
+        if(!VertitalEnabled) {
+          return ele.getBoundingClientRect().left;
+        } 
+        return ele.getBoundingClientRect().top;
       }
-      let tabOffsetX = clientX(tab) - clientX(this);
+
+      const tabOffsetX = getClientElementPosition(tab) - getClientElementPosition(this);
+      const tabOffsetY = getClientElementPosition(tab) - getClientElementPosition(this);
+
       tab._dragData = {
         offsetX: event.screenX - window.screenX - tabOffsetX,
-        offsetY: event.screenY - window.screenY,
         scrollX: this.arrowScrollbox.scrollbox.scrollLeft,
         screenX: event.screenX,
+
+        // vertical
+        scrollY: this.arrowScrollbox.scrollbox.scrollTop,
+        screenY: event.screenY,
+        offsetY: event.screenY - window.screenY - tabOffsetY,
+        
         movingTabs: (tab.multiselected ? gBrowser.selectedTabs : [tab]).filter(
           t => t.pinned == tab.pinned
         ),
@@ -633,16 +647,17 @@
       } else {
         let newIndex = this._getDropIndex(event);
         let children = this.allTabs;
+        const VertitalEnabled = Services.prefs.getIntPref("floorp.tabbar.style") == 2;
         if (newIndex == children.length) {
           let tabRect = this._getVisibleTabs().at(-1).getBoundingClientRect();
-          if (RTL_UI) {
+          if (RTL_UI && !VertitalEnabled) {
             newMargin = rect.right - tabRect.left;
           } else {
             newMargin = tabRect.right - rect.left;
           }
         } else {
           let tabRect = children[newIndex].getBoundingClientRect();
-          if (RTL_UI) {
+          if (RTL_UI && !VertitalEnabled) {
             newMargin = rect.right - tabRect.right;
           } else {
             newMargin = tabRect.left - rect.left;
@@ -714,8 +729,7 @@
           dropIndex--;
           incrementDropIndex = false;
         }
-
-        if (oldTranslateX && oldTranslateX != newTranslateX && !gReduceMotion) {
+        if (oldTranslateX && oldTranslateX != newTranslateX && !(gReduceMotion) && !Services.prefs.getIntPref("floorp.tabbar.style") == 2) {
           for (let tab of movingTabs) {
             tab.setAttribute("tabdrop-samewindow", "true");
             tab.style.transform = "translateX(" + newTranslateX + "px)";
@@ -1415,6 +1429,7 @@
       let tabs = this._getVisibleTabs();
       let numPinned = gBrowser._numPinnedTabs;
       let doPosition =
+        !Services.prefs.getIntPref("floorp.tabbar.style") == 2 &&
         this.getAttribute("overflow") == "true" &&
         tabs.length > numPinned &&
         numPinned > 0;
@@ -1485,20 +1500,26 @@
         }
       }
 
-      if (!("animLastScreenX" in draggedTab._dragData)) {
-        draggedTab._dragData.animLastScreenX = draggedTab._dragData.screenX;
+      const VertitalEnabled = Services.prefs.getIntPref("floorp.tabbar.style") == 2;
+
+      // horizontal tabs & vertical tabs have different animation properties
+      const animLastScreen = VertitalEnabled ? "animLastScreenY" : "animLastScreenX";
+      const screen = VertitalEnabled ? "screenY" : "screenX";
+      const screenOrientation = VertitalEnabled ? "height" : "width";
+      const translate = VertitalEnabled ? "translateY" : "translateX";
+
+      if (!(animLastScreen in draggedTab._dragData)) {
+        draggedTab._dragData[animLastScreen] = draggedTab._dragData[screen];
       }
 
-      let screenX = event.screenX;
-      if (screenX == draggedTab._dragData.animLastScreenX) {
+      let screenX = event[screen];
+      if (screenX == draggedTab._dragData[animLastScreen]) {
         return;
       }
 
       // Direction of the mouse movement.
-      let ltrMove = screenX > draggedTab._dragData.animLastScreenX;
-
-      draggedTab._dragData.animLastScreenX = screenX;
-
+      let ltrMove = screenX > draggedTab._dragData[animLastScreen];
+      draggedTab._dragData[animLastScreen] = screenX;
       let pinned = draggedTab.pinned;
       let numPinned = gBrowser._numPinnedTabs;
       let tabs = this._getVisibleTabs().slice(
@@ -1506,36 +1527,37 @@
         pinned ? numPinned : undefined
       );
 
-      if (RTL_UI) {
+      if (RTL_UI && !VertitalEnabled) {
         tabs.reverse();
         // Copy moving tabs array to avoid infinite reversing.
         movingTabs = [...movingTabs].reverse();
       }
-      let tabWidth = draggedTab.getBoundingClientRect().width;
+      let tabWidth = draggedTab.getBoundingClientRect()[screenOrientation];
       let shiftWidth = tabWidth * movingTabs.length;
       draggedTab._dragData.tabWidth = tabWidth;
+      draggedTab._dragData.tabHeight = tabWidth;
 
       // Move the dragged tab based on the mouse position.
 
       let leftTab = tabs[0];
       let rightTab = tabs[tabs.length - 1];
-      let rightMovingTabScreenX = movingTabs[movingTabs.length - 1].screenX;
-      let leftMovingTabScreenX = movingTabs[0].screenX;
-      let translateX = screenX - draggedTab._dragData.screenX;
+      let rightMovingTabScreenX = movingTabs[movingTabs.length - 1][screen];
+      let leftMovingTabScreenX = movingTabs[0][screen];
+      let translateX = screenX - draggedTab._dragData[screen];
       if (!pinned) {
         translateX +=
           this.arrowScrollbox.scrollbox.scrollLeft -
           draggedTab._dragData.scrollX;
       }
-      let leftBound = leftTab.screenX - leftMovingTabScreenX;
+      let leftBound = leftTab[screen] - leftMovingTabScreenX;
       let rightBound =
-        rightTab.screenX +
-        rightTab.getBoundingClientRect().width -
+        rightTab[screen] +
+        rightTab.getBoundingClientRect()[screenOrientation] -
         (rightMovingTabScreenX + tabWidth);
       translateX = Math.min(Math.max(translateX, leftBound), rightBound);
 
       for (let tab of movingTabs) {
-        tab.style.transform = "translateX(" + translateX + "px)";
+        tab.style.transform = translate + "(" + translateX + "px)";
       }
 
       draggedTab._dragData.translateX = translateX;
@@ -1568,11 +1590,11 @@
         if (tabs[mid] == draggedTab && ++mid > high) {
           break;
         }
-        screenX = tabs[mid].screenX + getTabShift(tabs[mid], oldIndex);
+        screenX = tabs[mid][screen] + getTabShift(tabs[mid], oldIndex);
         if (screenX > tabCenter) {
           high = mid - 1;
         } else if (
-          screenX + tabs[mid].getBoundingClientRect().width <
+          screenX + tabs[mid].getBoundingClientRect()[screenOrientation] <
           tabCenter
         ) {
           low = mid + 1;
@@ -1595,7 +1617,8 @@
       for (let tab of tabs) {
         if (tab != draggedTab) {
           let shift = getTabShift(tab, newIndex);
-          tab.style.transform = shift ? "translateX(" + shift + "px)" : "";
+          // X,Y
+          tab.style.transform = shift ? translate + "(" + shift + "px)" : "";
         }
       }
 

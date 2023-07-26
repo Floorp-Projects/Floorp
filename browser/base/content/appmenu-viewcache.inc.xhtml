@@ -81,6 +81,11 @@
                      key="key_openAddons"
                      command="Tools:Addons"
                      />
+      <toolbarbutton id="openprofiledir"
+                     class="subviewbutton"
+                     data-l10n-id="open-profile-dir"
+                     oncommand="OpenChromeDirectory();"
+                     />
       <toolbarseparator/>
       <toolbarbutton id="appMenu-print-button2"
                      class="subviewbutton"
@@ -153,6 +158,10 @@
                      oncommand="PanelUI.showSubView('PanelUI-helpView', this)"/>
 #ifndef XP_MACOSX
       <toolbarseparator/>
+      <toolbarbutton id="rebootappmenu"
+                     class="subviewbutton"
+                     data-l10n-id="appmenuitem-reboot"
+                     oncommand="restartbrowser();"/>
       <toolbarbutton id="appMenu-quit-button2"
                      class="subviewbutton"
                      data-l10n-id="appmenuitem-exit2"

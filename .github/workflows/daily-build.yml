@@ -1,0 +1,498 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+name: Daily Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  windows-x86-64-build-with-enable-profile-generate:
+    if: (github.event_name == 'schedule' && github.repository_owner == 'Floorp-Projects') || (github.event_name != 'schedule')
+
+    name: Windows x86_64 Build with --enable-profile-generate
+
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        runs-on: ['ubuntu-22.04']
+
+    steps:
+    - name: Init
+      run: |
+        export RUNNER_USERDIR=`echo ~`
+        echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
+
+    - name: Clean up (Self-hosted only)
+      if: contains(matrix.runs-on, 'self-hosted')
+      run: |
+        rm -rf $RUNNER_USERDIR/output
+        rm -rf $RUNNER_USERDIR/win-crosstool
+        rm -rf $RUNNER_USERDIR/.mozbuild
+        rm -rf $RUNNER_USERDIR/.cargo
+        rm -rf $RUNNER_USERDIR/l10n-central
+        rm -rf $GITHUB_WORKSPACE
+        mkdir $GITHUB_WORKSPACE
+
+    - name: Change PPA mirror servers
+      run: |
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
+
+    - name: Setup Disk & Swap Space 💿
+      if: matrix.runs-on == 'ubuntu-22.04'
+      run: |
+        echo Before:
+        free -h
+        df -h
+
+        echo
+        echo
+
+        sudo swapoff /mnt/swapfile
+        sudo rm /mnt/swapfile
+        sudo fallocate -l 10G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+
+        sudo fallocate -l 10G /home/runner/swapfile2
+        sudo chmod 600 /home/runner/swapfile2
+        sudo mkswap /home/runner/swapfile2
+        sudo swapon /home/runner/swapfile2
+
+        echo
+        echo
+
+        echo After:
+        free -h
+        df -h
+
+    - uses: actions/checkout@v3
+      name: Clone 🧬
+
+    - name: Setup 🪛
+      run: |
+        mkdir -p $RUNNER_USERDIR/win-cross
+
+        cp ./.github/mozconfig_win_x86_64_pgo_base mozconfig
+        echo 'ac_add_options --with-branding=browser/branding/beta' >> mozconfig
+        echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
+        sudo apt update
+        sudo apt install zstd p7zip-full
+
+        echo Setup wine
+        aria2c "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-1.toolchains.v3.linux64-wine.latest/artifacts/public%2Fbuild%2Fwine.tar.zst" -o wine.tar.zst
+        tar --zstd -xvf wine.tar.zst -C $RUNNER_USERDIR/win-cross
+        rm wine.tar.zst
+
+        echo Replace rustc
+        aria2c "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.linux64-rust-windows-1.68.latest/artifacts/public%2Fbuild%2Frustc.tar.zst" -o rustc.tar.zst
+        tar --zstd -xvf rustc.tar.zst -C $RUNNER_USERDIR/win-cross
+        echo 'export RUSTC="$RUNNER_USERDIR/win-cross/rustc/bin/rustc"' >> mozconfig
+        
+        echo Setup Visual Studio
+        sudo apt install -y msitools python3-pip
+        ./mach python --virtualenv build taskcluster/scripts/misc/get_vs.py build/vs/vs2019.yaml $RUNNER_USERDIR/win-cross/vs2019
+        chmod -R +x "$RUNNER_USERDIR/win-cross/vs2019"
+
+        ./mach --no-interactive bootstrap --application-choice browser
+        echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
+        $RUNNER_USERDIR/.cargo/bin/rustup target add x86_64-pc-windows-msvc
+
+        export DISPLAY_VERSION=`cat browser/config/version_display.txt`
+        export UPDATE_CHANNEL="release"
+        echo "DISPLAY_VERSION=$DISPLAY_VERSION" >> $GITHUB_ENV
+        echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
+
+    - name: Set Display Version
+      run: |
+        echo ${{ github.sha }} > browser/config/version_display.txt
+
+    - name: Change update url
+      run: |
+        sed -i 's/^URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/%DISPLAY_VERSION%/URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/beta/' ./build/application.ini.in
+
+    - name: Build 🔨
+      run: |
+        ./mach build
+
+    - name: Package 📦
+      run: |
+        ./mach package
+
+    - name: Copy 📂
+      run: |
+        mkdir $RUNNER_USERDIR/output
+        cp -r obj-x86_64-pc-mingw32/dist/floorp $RUNNER_USERDIR/output/
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@master
+      with:
+        name: floorp-windows-x86_64-devel-build-with-enable-profile-generate
+        path: ${{ env.RUNNER_USERDIR }}/output
+
+    - name: Clean up (Self-hosted only)
+      if: contains(matrix.runs-on, 'self-hosted')
+      run: |
+        rm -rf $RUNNER_USERDIR/output
+        rm -rf $RUNNER_USERDIR/win-crosstool
+        rm -rf $RUNNER_USERDIR/.mozbuild
+        rm -rf $RUNNER_USERDIR/.cargo
+        rm -rf $RUNNER_USERDIR/l10n-central
+        rm -rf $GITHUB_WORKSPACE
+        mkdir $GITHUB_WORKSPACE
+
+  windows-x86-64-generate-profdata-and-jarlog:
+    if: (github.event_name == 'schedule' && github.repository_owner == 'Floorp-Projects') || (github.event_name != 'schedule')
+
+    name: Windows x86_64 Generate profdata and jarlog
+
+    needs: windows-x86-64-build-with-enable-profile-generate
+    runs-on: windows-2022
+    
+    steps:
+    - uses: actions/download-artifact@v3
+      name: Download artifact 📥
+      with:
+        name: floorp-windows-x86_64-devel-build-with-enable-profile-generate
+        path: C:\artifact
+    
+    - uses: actions/checkout@v3
+      name: Clone 🧬
+
+    - name: Setup 🪛
+      run: |
+        (New-Object System.Net.WebClient).DownloadFile("https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe","C:\MozillaBuildSetup-Latest.exe")
+        C:\MozillaBuildSetup-Latest.exe /S | out-null
+    
+    - name: Generate 🔄
+      run: |
+        $workspace_dir = [regex]::replace($env:GITHUB_WORKSPACE, "^([A-Z]):", { "/" + $args.value.Substring(0, 1).toLower() }) -replace "\\","/"
+
+        echo "cd $workspace_dir" '' >> mozilla-build-run.sh
+        echo 'export PATH=/c/mozilla-build/msys2/usr/bin:$PATH' '' >> mozilla-build-run.sh
+        echo './mach --no-interactive bootstrap --application-choice browser' '' >> mozilla-build-run.sh
+        echo 'LLVM_PROFDATA=/c/Users/runneradmin/.mozbuild/clang/bin/llvm-profdata.exe JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary /c/artifact/floorp/floorp.exe' '' >> mozilla-build-run.sh
+        C:\mozilla-build\start-shell.bat $workspace_dir\mozilla-build-run.sh
+        
+    - name: Publish 🎁
+      uses: actions/upload-artifact@master
+      with:
+        name: floorp-windows-x86_64-devel-profdata-and-jarlog
+        path: |
+          merged.profdata
+          en-US.log
+
+  windows-x86-64-build-with-profdata-and-jarlog:
+    if: (github.event_name == 'schedule' && github.repository_owner == 'Floorp-Projects') || (github.event_name != 'schedule')
+
+    name: Windows x86_64 Build with profdata and jarlog
+
+    needs: windows-x86-64-generate-profdata-and-jarlog
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        runs-on: ['ubuntu-22.04']
+
+    steps:
+    - name: Init
+      run: |
+        export RUNNER_USERDIR=`echo ~`
+        echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
+
+    - name: Clean up (Self-hosted only)
+      if: contains(matrix.runs-on, 'self-hosted')
+      run: |
+        rm -rf $RUNNER_USERDIR/output
+        rm -rf $RUNNER_USERDIR/win-crosstool
+        rm -rf $RUNNER_USERDIR/.mozbuild
+        rm -rf $RUNNER_USERDIR/.cargo
+        rm -rf $RUNNER_USERDIR/l10n-central
+        rm -rf $GITHUB_WORKSPACE
+        mkdir $GITHUB_WORKSPACE
+
+    - name: Change PPA mirror servers
+      run: |
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
+
+    - name: Setup Disk & Swap Space 💿
+      if: matrix.runs-on == 'ubuntu-22.04'
+      run: |
+        echo Before:
+        free -h
+        df -h
+
+        echo
+        echo
+
+        sudo swapoff /mnt/swapfile
+        sudo rm /mnt/swapfile
+        sudo fallocate -l 10G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+
+        sudo fallocate -l 10G /home/runner/swapfile2
+        sudo chmod 600 /home/runner/swapfile2
+        sudo mkswap /home/runner/swapfile2
+        sudo swapon /home/runner/swapfile2
+
+        echo
+        echo
+
+        echo After:
+        free -h
+        df -h
+
+    - uses: actions/download-artifact@v3
+      name: Download artifact 📥
+      with:
+        name: floorp-windows-x86_64-devel-profdata-and-jarlog
+        path: ${{ env.RUNNER_USERDIR }}/artifact
+
+    - uses: actions/checkout@v3
+      name: Clone 🧬
+
+    - name: Clone l10n-central 🧬
+      run: |
+        git clone --depth 1 -b 11.0.0 https://github.com/Floorp-Projects/l10n-central.git $RUNNER_USERDIR/l10n-central
+
+    - name: Setup 🪛
+      run: |
+        mkdir -p $RUNNER_USERDIR/win-cross
+
+        cp ./.github/mozconfig_win_x86_64_pgo_base mozconfig
+        echo 'ac_add_options --with-branding=browser/branding/beta' >> mozconfig
+        echo 'ac_add_options --with-l10n-base=$RUNNER_USERDIR/l10n-central/l10n-central' >> mozconfig
+        echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
+        echo 'ac_add_options --with-pgo-profile-path=$RUNNER_USERDIR/artifact/merged.profdata' >> mozconfig
+        echo 'ac_add_options --with-pgo-jarlog=$RUNNER_USERDIR/artifact/en-US.log' >> mozconfig
+        sudo apt update
+        sudo apt install zstd p7zip-full
+
+        echo Setup wine
+        aria2c "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-1.toolchains.v3.linux64-wine.latest/artifacts/public%2Fbuild%2Fwine.tar.zst" -o wine.tar.zst
+        tar --zstd -xvf wine.tar.zst -C $RUNNER_USERDIR/win-cross
+        rm wine.tar.zst
+
+        echo Replace rustc
+        aria2c "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.linux64-rust-windows-1.68.latest/artifacts/public%2Fbuild%2Frustc.tar.zst" -o rustc.tar.zst
+        tar --zstd -xvf rustc.tar.zst -C $RUNNER_USERDIR/win-cross
+        echo 'export RUSTC="$RUNNER_USERDIR/win-cross/rustc/bin/rustc"' >> mozconfig
+
+        echo Setup Visual Studio
+        sudo apt install -y msitools python3-pip
+        ./mach python --virtualenv build taskcluster/scripts/misc/get_vs.py build/vs/vs2019.yaml $RUNNER_USERDIR/win-cross/vs2019
+        chmod -R +x "$RUNNER_USERDIR/win-cross/vs2019"
+
+        ./mach --no-interactive bootstrap --application-choice browser
+        echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
+        $RUNNER_USERDIR/.cargo/bin/rustup target add x86_64-pc-windows-msvc
+
+        export DISPLAY_VERSION=`cat browser/config/version_display.txt`
+        export UPDATE_CHANNEL="release"
+        echo "DISPLAY_VERSION=$DISPLAY_VERSION" >> $GITHUB_ENV
+        echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
+
+    - name: Set Display Version
+      run: |
+        echo ${{ github.sha }} > browser/config/version_display.txt
+
+    - name: Change update url
+      run: |
+        sed -i 's/^URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/%DISPLAY_VERSION%/URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/beta/' ./build/application.ini.in
+
+    - name: Copy l10n files
+      run: |
+        for dir in $(ls -l $RUNNER_USERDIR/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+          mkdir -p $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta
+          cp ./browser/branding/beta/locales/en-US/brand.dtd $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.dtd
+          cp ./browser/branding/beta/locales/en-US/brand.ftl $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
+          cp ./browser/branding/beta/locales/en-US/brand.properties $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
+        done
+
+    - name: Build 🔨
+      run: |
+        ./mach build
+
+    - name: Package 📦
+      run: |
+        ./mach package
+        ./mach package-multi-locale --locales ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW
+
+    - name: Copy 📂
+      run: |
+        mkdir $RUNNER_USERDIR/output
+        cp obj-x86_64-pc-mingw32/dist/install/sea/floorp-*.en-US.win64.installer.exe $RUNNER_USERDIR/output/
+        cp obj-x86_64-pc-mingw32/dist/floorp-*.en-US.win64.zip $RUNNER_USERDIR/output/
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@master
+      with:
+        name: floorp-windows-x86_64-devel-package-build-with-profdata-and-jarlog
+        path: ${{ env.RUNNER_USERDIR }}/output
+
+    - name: Clean up (Self-hosted only)
+      if: contains(matrix.runs-on, 'self-hosted')
+      run: |
+        rm -rf $RUNNER_USERDIR/output
+        rm -rf $RUNNER_USERDIR/win-crosstool
+        rm -rf $RUNNER_USERDIR/.mozbuild
+        rm -rf $RUNNER_USERDIR/.cargo
+        rm -rf $RUNNER_USERDIR/l10n-central
+        rm -rf $GITHUB_WORKSPACE
+        mkdir $GITHUB_WORKSPACE
+
+  linux-x86-64-build:
+    if: (github.event_name == 'schedule' && github.repository_owner == 'Floorp-Projects') || (github.event_name != 'schedule')
+    name: Linux x86_64 Build
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Init
+      run: |
+        export RUNNER_USERDIR=`echo ~`
+        echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
+
+    - name: Change PPA mirror servers
+      run: |
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
+
+    - name: Setup Disk & Swap Space 💿
+      run: |
+        echo Before:
+        free -h
+        df -h
+
+        echo
+        echo
+
+        sudo swapoff /mnt/swapfile
+        sudo rm /mnt/swapfile
+        sudo fallocate -l 10G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+
+        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+        sudo apt autoremove -y
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+
+        sudo fallocate -l 10G /home/runner/swapfile2
+        sudo chmod 600 /home/runner/swapfile2
+        sudo mkswap /home/runner/swapfile2
+        sudo swapon /home/runner/swapfile2
+
+        echo
+        echo
+
+        echo After:
+        free -h
+        df -h
+
+    - uses: actions/checkout@v3
+      name: Clone 🧬
+
+    - name: Clone l10n-central 🧬
+      run: |
+        git clone --depth 1 https://github.com/Floorp-Projects/l10n-central.git $RUNNER_USERDIR/l10n-central
+
+    - name: Setup 🪛
+      run: |
+        sudo apt update
+        sudo apt install xvfb
+        mozconfig_file=(
+        'ac_add_options --with-app-name=floorp'
+        'ac_add_options --with-app-basename=Floorp'
+        'ac_add_options --with-branding=browser/branding/beta'
+        'ac_add_options --disable-crashreporter'
+        'ac_add_options --disable-updater'
+        'ac_add_options --enable-proxy-bypass-protection'
+        'ac_add_options --enable-unverified-updates'
+        'ac_add_options --enable-optimize="-O2"'
+        'ac_add_options --disable-tests'
+        'ac_add_options --enable-rust-simd'
+        'ac_add_options --enable-release'
+        'ac_add_options RUSTC_OPT_LEVEL=3'
+        'ac_add_options --enable-lto'
+        'ac_add_options MOZ_PGO=1'
+        'MOZ_REQUIRE_SIGNING='
+        'MOZ_DATA_REPORTING='
+        'MOZ_TELEMETRY_REPORTING='
+        'ac_add_options --enable-bootstrap'
+        'ac_add_options --with-l10n-base=$RUNNER_USERDIR/l10n-central/l10n-central'
+        'ac_add_options --with-mozilla-api-keyfile=$PWD/floorp/apis/api-mozilla-key'
+        'ac_add_options --with-google-location-service-api-keyfile=$PWD/floorp/apis/api-google-location-service-key'
+        'ac_add_options --with-google-safebrowsing-api-keyfile=$PWD/floorp/apis/api-google-safe-browsing-key'
+        )
+        for line in "${mozconfig_file[@]}" ; do echo $line >> mozconfig ; done
+        ./mach --no-interactive bootstrap --application-choice browser
+        export DISPLAY_VERSION=`cat browser/config/version_display.txt`
+
+    - name: Set Display Version
+      run: |
+        echo ${{ github.sha }} > browser/config/version_display.txt
+
+    - name: Change update url
+      run: |
+        sed -i 's/^URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/%DISPLAY_VERSION%/URL=https:\/\/@MOZ_APPUPDATE_HOST@\/browser\/beta/' ./build/application.ini.in
+
+    - name: Copy l10n files
+      run: |
+        for dir in $(ls -l $RUNNER_USERDIR/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+          mkdir -p $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta
+          cp ./browser/branding/beta/locales/en-US/brand.dtd $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.dtd
+          cp ./browser/branding/beta/locales/en-US/brand.ftl $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
+          cp ./browser/branding/beta/locales/en-US/brand.properties $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
+        done
+
+    - name: Build 🔨
+      run: |
+        Xvfb :2 -screen 0 1024x768x24 &
+        export DISPLAY=:2
+        ./mach build
+
+    - name: Package 📦
+      run: |
+        ./mach package
+        ./mach package-multi-locale --locales ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW
+
+    - name: Copy 📂
+      run: |
+        mkdir $RUNNER_USERDIR/output
+        cp obj-x86_64-pc-linux-gnu/dist/*.tar.bz2 $RUNNER_USERDIR/output/
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@master
+      with:
+        name: floorp-linux-x86_64-devel
+        path: ${{ env.RUNNER_USERDIR }}/output
+
+  cleanup:
+    if: (github.event_name == 'schedule' && github.repository_owner == 'Floorp-Projects') || (github.event_name != 'schedule')
+    name: Clean Up
+    needs: [windows-x86-64-build-with-profdata-and-jarlog, linux-x86-64-build]
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: GeekyEggo/delete-artifact@v2.0.0
+      name: Delete unwanted artifacts
+      with:
+        name: |
+          floorp-windows-x86_64-devel-build-with-enable-profile-generate
+          floorp-windows-x86_64-devel-profdata-and-jarlog

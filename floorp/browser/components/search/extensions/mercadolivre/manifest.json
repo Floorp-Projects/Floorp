@@ -1,0 +1,26 @@
+{
+  "name": "MercadoLivre",
+  "description": "Onde comprar e vender de Tudo.",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "mercadolivre@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "MercadoLivre",
+      "search_url": "https://www.mercadolivre.com.br/jm/search",
+      "search_form": "https://www.mercadolivre.com.br/",
+      "search_url_get_params": "as_word={searchTerms}"
+    }
+  }
+}

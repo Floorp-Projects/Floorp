@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Вікіпедія (uk)"
+  },
+  "extensionDescription": {
+    "message": "Вікіпедія, вільна енциклопедія"
+  },
+  "searchUrl": {
+    "message": "https://uk.wikipedia.org/wiki/Спеціальна:Пошук"
+  },
+  "searchForm": {
+    "message": "https://uk.wikipedia.org/wiki/Спеціальна:Пошук?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://uk.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

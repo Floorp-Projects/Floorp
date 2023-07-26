@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedia (hy)"
+  },
+  "extensionDescription": {
+    "message": "Վիքիփեդիա՝ ազատ հանրագիտարան"
+  },
+  "searchUrl": {
+    "message": "https://hy.wikipedia.org/wiki/Սպասարկող:Որոնել"
+  },
+  "searchForm": {
+    "message": "https://hy.wikipedia.org/wiki/Սպասարկող:Որոնել?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://hy.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedia (af)"
+  },
+  "extensionDescription": {
+    "message": "Wikipedia, die vrye ensiklopedie"
+  },
+  "searchUrl": {
+    "message": "https://af.wikipedia.org/wiki/Spesiaal:Soek"
+  },
+  "searchForm": {
+    "message": "https://af.wikipedia.org/wiki/Spesiaal:Soek?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://af.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}
