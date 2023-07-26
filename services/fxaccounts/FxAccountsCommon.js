@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { Log } = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"
 );
@@ -24,36 +21,26 @@ const PREF_LOG_SENSITIVE_DETAILS = "identity.fxaccounts.log.sensitive";
 
 var exports = Object.create(null);
 
-XPCOMUtils.defineLazyGetter(exports, "log", function () {
-  let log = Log.repository.getLogger("FirefoxAccounts");
-  log.manageLevelFromPref(PREF_LOG_LEVEL);
-  return log;
-});
+exports.log = Log.repository.getLogger("FirefoxAccounts");
+exports.log.manageLevelFromPref(PREF_LOG_LEVEL);
 
-XPCOMUtils.defineLazyGetter(exports, "logManager", function () {
-  let logs = [
-    "Sync",
-    "Services.Common",
-    "FirefoxAccounts",
-    "Hawk",
-    "browserwindow.syncui",
-    "BookmarkSyncUtils",
-    "addons.xpi",
-  ];
+let logs = [
+  "Sync",
+  "Services.Common",
+  "FirefoxAccounts",
+  "Hawk",
+  "browserwindow.syncui",
+  "BookmarkSyncUtils",
+  "addons.xpi",
+];
 
-  // for legacy reasons, the log manager still thinks it's part of sync
-  return new LogManager("services.sync.", logs, "sync");
-});
+// For legacy reasons, the log manager still thinks it's part of sync.
+exports.logManager = new LogManager("services.sync.", logs, "sync");
 
 // A boolean to indicate if personally identifiable information (or anything
 // else sensitive, such as credentials) should be logged.
-XPCOMUtils.defineLazyGetter(exports, "logPII", function () {
-  try {
-    return Services.prefs.getBoolPref(PREF_LOG_SENSITIVE_DETAILS);
-  } catch (_) {
-    return false;
-  }
-});
+exports.logPII = () =>
+  Services.prefs.getBoolPref(PREF_LOG_SENSITIVE_DETAILS, false);
 
 exports.FXACCOUNTS_PERMISSION = "firefox-accounts";
 

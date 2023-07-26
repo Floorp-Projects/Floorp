@@ -972,7 +972,7 @@ FxAccountsInternal.prototype = {
       "updateUserAccountData called with fields",
       Object.keys(credentials)
     );
-    if (logPII) {
+    if (logPII()) {
       log.debug("updateUserAccountData called with data", credentials);
     }
     let currentAccountState = this.currentAccountState;
@@ -1135,7 +1135,7 @@ FxAccountsInternal.prototype = {
 
   startVerifiedCheck(data) {
     log.debug("startVerifiedCheck", data && data.verified);
-    if (logPII) {
+    if (logPII()) {
       log.debug("startVerifiedCheck with user data", data);
     }
 
