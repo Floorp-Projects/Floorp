@@ -57,10 +57,6 @@ h1.translations-panel-header-wrapper {
   gap: var(--arrowpanel-padding);
 }
 
-#translations-panel-lang-selection > label:first-child {
-  margin-block-start: 0;
-}
-
 #translations-panel-lang-selection > label {
   margin-block: var(--arrowpanel-padding) 6px;
 }
