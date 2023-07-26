@@ -15,7 +15,6 @@
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-#include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 #include "nsWindowsHelpers.h"
 #include "readstrings.h"
@@ -589,12 +588,6 @@ NotificationActivities MaybeShowNotification(
   NotificationActivities activitiesPerformed = {NotificationType::Initial,
                                                 NotificationShown::NotShown,
                                                 NotificationAction::NoAction};
-
-  if (!mozilla::IsWin10OrLater()) {
-    // Notifications aren't shown in versions prior to Windows 10 because the
-    // notification API we want isn't available.
-    return activitiesPerformed;
-  }
 
   // Reset notification state machine, user setting default browser to Firefox
   // is a strong signal that they intend to have it as the default browser.
