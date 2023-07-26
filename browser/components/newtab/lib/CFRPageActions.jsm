@@ -366,7 +366,7 @@ class PageAction {
       "cfr-notification-footer-users"
     );
 
-    const { rating } = content.addon;
+    const rating = content.addon?.rating;
     if (rating) {
       const MAX_RATING = 5;
       const STARS_WIDTH = 16 * MAX_RATING;
@@ -395,7 +395,7 @@ class PageAction {
       footerEmptyStars.removeAttribute("tooltiptext");
     }
 
-    const { users } = content.addon;
+    const users = content.addon?.users;
     if (users) {
       footerUsers.setAttribute("value", users);
       footerUsers.hidden = false;
@@ -578,14 +578,17 @@ class PageAction {
       .getElementById("contextual-feature-recommendation-notification")
       .setAttribute("data-notification-bucket", content.bucket_id);
 
+    const author = this.window.document.getElementById(
+      "cfr-notification-author"
+    );
+    if (author.firstChild) {
+      author.firstChild.remove();
+    }
+
     switch (content.layout) {
       case "icon_and_message":
-        const author = this.window.document.getElementById(
-          "cfr-notification-author"
-        );
-        if (author.firstChild) {
-          author.firstChild.remove();
-        }
+        //Clearing content and styles that may have been set by a prior addon_recommendation CFR
+        this._setAddonRating(this.window.document, content);
         author.appendChild(
           lazy.RemoteL10n.createElement(this.window.document, "span", {
             content: content.text,
