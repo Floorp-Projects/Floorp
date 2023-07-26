@@ -46,13 +46,13 @@ const static mozilla::uniffi::UniFFIPointerType {{ pointer_type }} {
 {%- for (ci, config) in components %}
 {%- for cbi in ci.callback_interface_definitions() %}
 MOZ_CAN_RUN_SCRIPT
-extern "C" int {{ cbi.c_handler(prefix) }}(uint64_t aHandle, uint32_t aMethod, RustBuffer aArgs, RustBuffer* aOutBuffer) {
+extern "C" int {{ cbi.c_handler(prefix) }}(uint64_t aHandle, uint32_t aMethod, const uint8_t* aArgsData, int32_t aArgsLen, RustBuffer* aOutBuffer) {
     // Currently, we only support "fire-and-forget" async callbacks.  These are
     // callbacks that run asynchronously without returning anything.  The main
     // use case for callbacks is logging, which fits very well with this model.
     //
     // So, here we simple queue the callback and return immediately.
-    mozilla::uniffi::QueueCallback({{ callback_ids.get(ci, cbi) }}, aHandle, aMethod, aArgs);
+    mozilla::uniffi::QueueCallback({{ callback_ids.get(ci, cbi) }}, aHandle, aMethod, argsData, argsLen);
     return CALLBACK_INTERFACE_SUCCESS;
 }
 static StaticRefPtr<dom::UniFFICallbackHandler> {{ cbi.js_handler() }};

@@ -41,8 +41,31 @@ def rust_call_with_error(error_ffi_converter, fn, *args):
 
     args_with_error = args + (ctypes.byref(call_status),)
     result = fn(*args_with_error)
+    uniffi_check_call_status(error_ffi_converter, call_status)
+    return result
+
+def rust_call_async(scaffolding_fn, callback_fn, *args):
+    # Call the scaffolding function, passing it a callback handler for `AsyncTypes.py` and a pointer
+    # to a python Future object.  The async function then awaits the Future.
+    uniffi_eventloop = asyncio.get_running_loop()
+    uniffi_py_future = uniffi_eventloop.create_future()
+    uniffi_call_status = RustCallStatus(code=RustCallStatus.CALL_SUCCESS, error_buf=RustBuffer(0, 0, None))
+    scaffolding_fn(*args,
+       FfiConverterForeignExecutor._pointer_manager.new_pointer(uniffi_eventloop),
+       callback_fn,
+       # Note: It's tempting to skip the pointer manager and just use a `py_object` pointing to a
+       # local variable like we do in Swift.  However, Python doesn't use cooperative cancellation
+       # -- asyncio can cancel a task at anytime.  This means if we use a local variable, the Rust
+       # callback could fire with a dangling pointer.
+       UniFfiPyFuturePointerManager.new_pointer(uniffi_py_future),
+       ctypes.byref(uniffi_call_status),
+    )
+    uniffi_check_call_status(None, uniffi_call_status)
+    return uniffi_py_future
+
+def uniffi_check_call_status(error_ffi_converter, call_status):
     if call_status.code == RustCallStatus.CALL_SUCCESS:
-        return result
+        pass
     elif call_status.code == RustCallStatus.CALL_ERROR:
         if error_ffi_converter is None:
             call_status.error_buf.free()
@@ -64,4 +87,4 @@ def rust_call_with_error(error_ffi_converter, fn, *args):
 
 # A function pointer for a callback as defined by UniFFI.
 # Rust definition `fn(handle: u64, method: u32, args: RustBuffer, buf_ptr: *mut RustBuffer) -> int`
-FOREIGN_CALLBACK_T = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong, ctypes.c_ulong, RustBuffer, ctypes.POINTER(RustBuffer))
+FOREIGN_CALLBACK_T = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_ulonglong, ctypes.c_ulong, ctypes.POINTER(ctypes.c_char), ctypes.c_int, ctypes.POINTER(RustBuffer))

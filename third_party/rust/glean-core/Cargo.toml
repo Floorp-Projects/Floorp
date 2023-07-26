@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.62"
 name = "glean-core"
-version = "53.0.0"
+version = "53.1.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -60,7 +60,7 @@ version = "1.0.19"
 version = "0.4.8"
 
 [dependencies.once_cell]
-version = "1.4.1"
+version = "1.18.0"
 
 [dependencies.rkv]
 version = "0.18.4"
@@ -81,7 +81,7 @@ version = "1.0.4"
 version = "0.1.40"
 
 [dependencies.uniffi]
-version = "0.23.0"
+version = "0.24.1"
 default-features = false
 
 [dependencies.uuid]
@@ -92,7 +92,7 @@ features = ["v4"]
 version = "0.1.0"
 
 [dev-dependencies.ctor]
-version = "0.1.12"
+version = "0.2.2"
 
 [dev-dependencies.env_logger]
 version = "0.10.0"
@@ -109,7 +109,7 @@ version = "0.4"
 version = "3.1.0"
 
 [build-dependencies.uniffi]
-version = "0.23.0"
+version = "0.24.1"
 features = ["build"]
 default-features = false
 

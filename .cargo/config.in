@@ -70,9 +70,9 @@ git = "https://github.com/mozilla-spidermonkey/jsparagus"
 rev = "64ba08e24749616de2344112f226d1ef4ba893ae"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/mozilla/application-services?rev=86c84c217036c12283d19368867323a66bf35883"]
+[source."git+https://github.com/mozilla/application-services?rev=14fae5c7f01bb2645a3f09e91c64033ed796a862"]
 git = "https://github.com/mozilla/application-services"
-rev = "86c84c217036c12283d19368867323a66bf35883"
+rev = "14fae5c7f01bb2645a3f09e91c64033ed796a862"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/mozilla/audioipc?rev=0b51291d2483a17dce3e300c7784b369e02bee73"]
@@ -105,9 +105,9 @@ git = "https://github.com/mozilla/neqo"
 tag = "v0.6.4"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/mozilla/uniffi-rs.git?rev=bc7ff8977bf38d0fdd1a458810b14f434d4dc4de"]
+[source."git+https://github.com/mozilla/uniffi-rs.git?rev=c0e64b839018728d8153ce1758d391b7782e2e21"]
 git = "https://github.com/mozilla/uniffi-rs.git"
-rev = "bc7ff8977bf38d0fdd1a458810b14f434d4dc4de"
+rev = "c0e64b839018728d8153ce1758d391b7782e2e21"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/rust-minidump/minidump-writer.git?rev=a15bd5cab6a3de251c0c23264be14b977c0af09c"]

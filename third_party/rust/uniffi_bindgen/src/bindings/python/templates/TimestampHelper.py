@@ -1,4 +1,6 @@
 # The Timestamp type.
+Timestamp = datetime.datetime
+
 # There is a loss of precision when converting from Rust timestamps,
 # which are accurate to the nanosecond,
 # to Python datetimes, which have a variable precision due to the use of float as representation.

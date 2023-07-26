@@ -241,10 +241,6 @@ criteria = "safe-to-deploy"
 version = "0.10.3"
 criteria = "safe-to-deploy"
 
-[[exemptions.askama_shared]]
-version = "0.12.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.async-task]]
 version = "4.0.3"
 criteria = "safe-to-deploy"
@@ -549,10 +545,6 @@ criteria = "safe-to-deploy"
 version = "0.6.5"
 criteria = "safe-to-deploy"
 
-[[exemptions.metal]]
-version = "0.23.1"
-criteria = "safe-to-deploy"
-
 [[exemptions.midir]]
 version = "0.7.0"
 criteria = "safe-to-deploy"
@@ -687,10 +679,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.rand_core]]
 version = "0.6.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.redox_syscall]]
-version = "0.2.13"
 criteria = "safe-to-deploy"
 
 [[exemptions.remove_dir_all]]

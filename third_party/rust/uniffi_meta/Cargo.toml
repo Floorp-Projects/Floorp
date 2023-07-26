@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "uniffi_meta"
-version = "0.23.0"
+version = "0.24.2"
 description = "uniffi_meta"
 homepage = "https://mozilla.github.io/uniffi-rs"
 keywords = [
@@ -22,6 +22,12 @@ keywords = [
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/uniffi-rs"
 
+[dependencies.anyhow]
+version = "1"
+
+[dependencies.bytes]
+version = "1.3"
+
 [dependencies.serde]
 version = "1.0.136"
 features = ["derive"]
@@ -30,4 +36,4 @@ features = ["derive"]
 version = "0.3"
 
 [dependencies.uniffi_checksum_derive]
-version = "0.23.0"
+version = "0.24.2"

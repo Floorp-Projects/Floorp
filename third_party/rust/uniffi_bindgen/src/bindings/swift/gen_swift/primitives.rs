@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::backend::{CodeOracle, CodeType, Literal};
+use crate::backend::{CodeType, Literal};
 use crate::interface::{types::Type, Radix};
 use paste::paste;
 
-fn render_literal(oracle: &dyn CodeOracle, literal: &Literal) -> String {
-    fn typed_number(oracle: &dyn CodeOracle, type_: &Type, num_str: String) -> String {
+fn render_literal(literal: &Literal) -> String {
+    fn typed_number(type_: &Type, num_str: String) -> String {
         match type_ {
             // special case Int32.
             Type::Int32 => num_str,
@@ -23,7 +23,10 @@ fn render_literal(oracle: &dyn CodeOracle, literal: &Literal) -> String {
             | Type::Float64 =>
             // XXX we should pass in the codetype itself.
             {
-                format!("{}({num_str})", oracle.find(type_).type_label(oracle))
+                format!(
+                    "{}({num_str})",
+                    super::SwiftCodeOracle.find(type_).type_label()
+                )
             }
             _ => panic!("Unexpected literal: {num_str} is not a number"),
         }
@@ -33,7 +36,6 @@ fn render_literal(oracle: &dyn CodeOracle, literal: &Literal) -> String {
         Literal::Boolean(v) => format!("{v}"),
         Literal::String(s) => format!("\"{s}\""),
         Literal::Int(i, radix, type_) => typed_number(
-            oracle,
             type_,
             match radix {
                 Radix::Octal => format!("0o{i:o}"),
@@ -42,7 +44,6 @@ fn render_literal(oracle: &dyn CodeOracle, literal: &Literal) -> String {
             },
         ),
         Literal::UInt(i, radix, type_) => typed_number(
-            oracle,
             type_,
             match radix {
                 Radix::Octal => format!("0o{i:o}"),
@@ -50,7 +51,7 @@ fn render_literal(oracle: &dyn CodeOracle, literal: &Literal) -> String {
                 Radix::Hexadecimal => format!("{i:#x}"),
             },
         ),
-        Literal::Float(string, type_) => typed_number(oracle, type_, string.clone()),
+        Literal::Float(string, type_) => typed_number(type_, string.clone()),
         _ => unreachable!("Literal"),
     }
 }
@@ -58,15 +59,16 @@ fn render_literal(oracle: &dyn CodeOracle, literal: &Literal) -> String {
 macro_rules! impl_code_type_for_primitive {
     ($T:ty, $class_name:literal) => {
         paste! {
+            #[derive(Debug)]
             pub struct $T;
 
             impl CodeType for $T  {
-                fn type_label(&self, _oracle: &dyn CodeOracle) -> String {
+                fn type_label(&self) -> String {
                     $class_name.into()
                 }
 
-                fn literal(&self, oracle: &dyn CodeOracle, literal: &Literal) -> String {
-                    render_literal(oracle, &literal)
+                fn literal(&self, literal: &Literal) -> String {
+                    render_literal(&literal)
                 }
             }
         }
@@ -75,6 +77,7 @@ macro_rules! impl_code_type_for_primitive {
 
 impl_code_type_for_primitive!(BooleanCodeType, "Bool");
 impl_code_type_for_primitive!(StringCodeType, "String");
+impl_code_type_for_primitive!(BytesCodeType, "Data");
 impl_code_type_for_primitive!(Int8CodeType, "Int8");
 impl_code_type_for_primitive!(Int16CodeType, "Int16");
 impl_code_type_for_primitive!(Int32CodeType, "Int32");

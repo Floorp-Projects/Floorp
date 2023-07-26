@@ -134,9 +134,16 @@ pub fn extract_from_archive(
 
     let mut items = vec![];
     for member_name in members_to_check {
-        items.append(&mut extract_from_bytes(
-            archive.extract(member_name, file_data)?,
-        )?);
+        items.append(
+            &mut extract_from_bytes(
+                archive
+                    .extract(member_name, file_data)
+                    .with_context(|| format!("Failed to extract archive member `{member_name}`"))?,
+            )
+            .with_context(|| {
+                format!("Failed to extract data from archive member `{member_name}`")
+            })?,
+        );
     }
     Ok(items)
 }
@@ -165,10 +172,10 @@ impl ExtractedItems {
         // always know the end position, because goblin reports the symbol size as 0 for PE and
         // MachO files.
         //
-        // This works fine, because bincode knows when the serialized data is terminated and will
-        // just ignore the trailing data.
+        // This works fine, because `MetadataReader` knows when the serialized data is terminated
+        // and will just ignore the trailing data.
         let data = &file_data[offset..];
-        self.items.push(bincode::deserialize::<Metadata>(data)?);
+        self.items.push(Metadata::read(data)?);
         self.names.insert(name.to_string());
         Ok(())
     }

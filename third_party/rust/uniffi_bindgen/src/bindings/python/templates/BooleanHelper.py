@@ -1,16 +1,16 @@
-class FfiConverterBool:
+class FfiConverterBool(FfiConverterPrimitive):
+    @classmethod
+    def check(cls, value):
+        return not not value
+
     @classmethod
     def read(cls, buf):
         return cls.lift(buf.readU8())
 
     @classmethod
-    def write(cls, value, buf):
-        buf.writeU8(cls.lower(value))
+    def writeUnchecked(cls, value, buf):
+        buf.writeU8(value)
 
     @staticmethod
     def lift(value):
-        return int(value) != 0
-
-    @staticmethod
-    def lower(value):
-        return 1 if value else 0
+        return value != 0

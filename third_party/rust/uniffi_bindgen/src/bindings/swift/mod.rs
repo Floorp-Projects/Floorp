@@ -29,18 +29,18 @@
 //!  * How to read from and write into a byte buffer.
 //!
 
-use std::{io::Write, process::Command};
+use std::process::Command;
 
 use anyhow::Result;
 use camino::Utf8Path;
-use fs_err::File;
+use fs_err as fs;
 
 pub mod gen_swift;
 pub use gen_swift::{generate_bindings, Config};
 mod test;
 
 use super::super::interface::ComponentInterface;
-pub use test::run_test;
+pub use test::{run_script, run_test};
 
 /// The Swift bindings generated from a [`ComponentInterface`].
 ///
@@ -71,15 +71,14 @@ pub fn write_bindings(
     } = generate_bindings(config, ci)?;
 
     let source_file = out_dir.join(format!("{}.swift", config.module_name()));
-    let mut l = File::create(&source_file)?;
-    write!(l, "{library}")?;
+    fs::write(&source_file, library)?;
 
-    let mut h = File::create(out_dir.join(config.header_filename()))?;
-    write!(h, "{header}")?;
+    let header_file = out_dir.join(config.header_filename());
+    fs::write(header_file, header)?;
 
     if let Some(modulemap) = modulemap {
-        let mut m = File::create(out_dir.join(config.modulemap_filename()))?;
-        write!(m, "{modulemap}")?;
+        let modulemap_file = out_dir.join(config.modulemap_filename());
+        fs::write(modulemap_file, modulemap)?;
     }
 
     if try_format_code {
@@ -88,10 +87,9 @@ pub fn write_bindings(
             .output()
         {
             println!(
-                "Warning: Unable to auto-format {} using swiftformat: {:?}",
+                "Warning: Unable to auto-format {} using swiftformat: {e:?}",
                 source_file.file_name().unwrap(),
-                e
-            )
+            );
         }
     }
 

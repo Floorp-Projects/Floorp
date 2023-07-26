@@ -1,12 +1,12 @@
-#![doc(html_root_url = "https://docs.rs/prost/0.8.0")]
+#![doc(html_root_url = "https://docs.rs/prost/0.11.9")]
 #![cfg_attr(not(feature = "std"), no_std)]
+#![doc = include_str!("../README.md")]
 
 // Re-export the alloc crate for use within derived code.
 #[doc(hidden)]
 pub extern crate alloc;
 
 // Re-export the bytes crate for use within derived code.
-#[doc(hidden)]
 pub use bytes;
 
 mod error;

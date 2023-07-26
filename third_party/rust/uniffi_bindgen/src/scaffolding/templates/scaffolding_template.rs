@@ -2,6 +2,25 @@
 // Trust me, you don't want to mess with it!
 {% import "macros.rs" as rs %}
 
+// Unit struct to parameterize the FfiConverter trait.
+//
+// We use FfiConverter<UniFfiTag> to handle lowering/lifting/serializing types for this crate.  See
+// https://mozilla.github.io/uniffi-rs/internals/lifting_and_lowering.html#code-generation-and-the-fficonverter-trait
+// for details.
+//
+// This is pub, since we need to access it to support external types
+#[doc(hidden)]
+pub struct UniFfiTag;
+
+#[allow(clippy::missing_safety_doc, missing_docs)]
+#[doc(hidden)]
+#[no_mangle]
+pub extern "C" fn {{ ci.ffi_uniffi_contract_version().name() }}() -> u32 {
+    {{ ci.uniffi_contract_version() }}
+}
+
+{%- include "namespace_metadata.rs" %}
+
 // Check for compatibility between `uniffi` and `uniffi_bindgen` versions.
 // Note that we have an error message on the same line as the assertion.
 // This is important, because if the assertion fails, the compiler only
@@ -19,14 +38,14 @@ uniffi::deps::static_assertions::assert_impl_all!({{ k|type_rs }}: ::std::cmp::E
 
 {% include "RustBuffer.rs" %}
 
-// Error definitions, corresponding to `error` in the UDL.
-{% for e in ci.error_definitions() %}
-{% include "ErrorTemplate.rs" %}
-{% endfor %}
-
-// Enum definitions, corresponding to `enum` in UDL.
 {% for e in ci.enum_definitions() %}
+{% if ci.is_name_used_as_error(e.name()) %}
+// Error definitions, corresponding to `error` in the UDL.
+{% include "ErrorTemplate.rs" %}
+{% else %}
+// Enum definitions, corresponding to `enum` in UDL.
 {% include "EnumTemplate.rs" %}
+{% endif %}
 {% endfor %}
 
 // Record definitions, implemented as method-less structs, corresponding to `dictionary` objects.
@@ -51,6 +70,9 @@ uniffi::deps::static_assertions::assert_impl_all!({{ k|type_rs }}: ::std::cmp::E
 
 // External and Wrapped types
 {% include "ExternalTypesTemplate.rs" %}
+
+// Export scaffolding checksums
+{% include "Checksums.rs" %}
 
 // The `reexport_uniffi_scaffolding` macro
 {% include "ReexportUniFFIScaffolding.rs" %}

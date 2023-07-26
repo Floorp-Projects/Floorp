@@ -474,6 +474,10 @@ fn initialize_inner(
             });
 
             // Signal Dispatcher that init is complete
+            // bug 1839433: It is important that this happens after any init tasks
+            // that shutdown() depends on. At time of writing that's only setting up
+            // the global Glean, but it is probably best to flush the preinit queue
+            // as late as possible in the glean.init thread.
             match dispatcher::flush_init() {
                 Ok(task_count) if task_count > 0 => {
                     core::with_glean(|glean| {
@@ -563,19 +567,45 @@ fn uploader_shutdown() {
 
 /// Shuts down Glean in an orderly fashion.
 pub fn shutdown() {
-    // Either init was never called or Glean was not fully initialized
-    // (e.g. due to an error).
-    // There's the potential that Glean is not initialized _yet_,
-    // but in progress. That's fine, we shutdown either way before doing any work.
-    if !was_initialize_called() || core::global_glean().is_none() {
+    // Shutdown might have been called
+    // 1) Before init was called
+    //    * (data loss, oh well. Not enough time to do squat)
+    // 2) After init was called, but before it completed
+    //    * (we're willing to wait a little bit for init to complete)
+    // 3) After init completed
+    //    * (we can shut down immediately)
+
+    // Case 1: "Before init was called"
+    if !was_initialize_called() {
         log::warn!("Shutdown called before Glean is initialized");
         if let Err(e) = dispatcher::kill() {
             log::error!("Can't kill dispatcher thread: {:?}", e);
         }
-
         return;
     }
 
+    // Case 2: "After init was called, but before it completed"
+    if core::global_glean().is_none() {
+        log::warn!("Shutdown called before Glean is initialized. Waiting.");
+        // We can't join on the `glean.init` thread because there's no (easy) way
+        // to do that with a timeout. Instead, we wait for the preinit queue to
+        // empty, which is the last meaningful thing we do on that thread.
+
+        // TODO: Make the timeout configurable?
+        // We don't need the return value, as we're less interested in whether
+        // this times out than we are in whether there's a Global Glean at the end.
+        let _ = dispatcher::block_on_queue_timeout(Duration::from_secs(10));
+    }
+    // We can't shut down Glean if there's no Glean to shut down.
+    if core::global_glean().is_none() {
+        log::warn!("Waiting for Glean initialization timed out. Exiting.");
+        if let Err(e) = dispatcher::kill() {
+            log::error!("Can't kill dispatcher thread: {:?}", e);
+        }
+        return;
+    }
+
+    // Case 3: "After init completed"
     crate::launch_with_glean_mut(|glean| {
         glean.cancel_metrics_ping_scheduler();
         glean.set_dirty_flag(false);
@@ -593,12 +623,9 @@ pub fn shutdown() {
             .shutdown_dispatcher_wait
             .start_sync()
     });
-    if dispatcher::block_on_queue_timeout(Duration::from_secs(10)).is_err() {
-        log::error!(
-            "Timeout while blocking on the dispatcher. No further shutdown cleanup will happen."
-        );
-        return;
-    }
+    let blocked = dispatcher::block_on_queue_timeout(Duration::from_secs(10));
+
+    // Always record the dispatcher wait, regardless of the timeout.
     let stop_time = time::precise_time_ns();
     core::with_glean(|glean| {
         glean
@@ -606,6 +633,12 @@ pub fn shutdown() {
             .shutdown_dispatcher_wait
             .set_stop_and_accumulate(glean, timer_id, stop_time);
     });
+    if blocked.is_err() {
+        log::error!(
+            "Timeout while blocking on the dispatcher. No further shutdown cleanup will happen."
+        );
+        return;
+    }
 
     if let Err(e) = dispatcher::shutdown() {
         log::error!("Can't shutdown dispatcher thread: {:?}", e);

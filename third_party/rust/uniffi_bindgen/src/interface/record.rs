@@ -47,12 +47,9 @@
 use anyhow::{bail, Result};
 use uniffi_meta::Checksum;
 
+use super::literal::{convert_default_value, Literal};
 use super::types::{Type, TypeIterator};
-use super::{
-    convert_type,
-    literal::{convert_default_value, Literal},
-};
-use super::{APIConverter, ComponentInterface};
+use super::{APIConverter, AsType, ComponentInterface};
 
 /// Represents a "data class" style object, for passing around complex values.
 ///
@@ -70,12 +67,6 @@ impl Record {
         &self.name
     }
 
-    pub fn type_(&self) -> Type {
-        // *sigh* at the clone here, the relationship between a ComponentInterface
-        // and its contained types could use a bit of a cleanup.
-        Type::Record(self.name.clone())
-    }
-
     pub fn fields(&self) -> &[Field] {
         &self.fields
     }
@@ -85,12 +76,24 @@ impl Record {
     }
 }
 
-impl From<uniffi_meta::RecordMetadata> for Record {
-    fn from(meta: uniffi_meta::RecordMetadata) -> Self {
-        Self {
+impl AsType for Record {
+    fn as_type(&self) -> Type {
+        Type::Record(self.name.clone())
+    }
+}
+
+impl TryFrom<uniffi_meta::RecordMetadata> for Record {
+    type Error = anyhow::Error;
+
+    fn try_from(meta: uniffi_meta::RecordMetadata) -> Result<Self> {
+        Ok(Self {
             name: meta.name,
-            fields: meta.fields.into_iter().map(Into::into).collect(),
-        }
+            fields: meta
+                .fields
+                .into_iter()
+                .map(TryInto::try_into)
+                .collect::<Result<_>>()?,
+        })
     }
 }
 
@@ -122,10 +125,6 @@ impl Field {
         &self.name
     }
 
-    pub fn type_(&self) -> &Type {
-        &self.type_
-    }
-
     pub fn default_value(&self) -> Option<&Literal> {
         self.default.as_ref()
     }
@@ -135,13 +134,27 @@ impl Field {
     }
 }
 
-impl From<uniffi_meta::FieldMetadata> for Field {
-    fn from(meta: uniffi_meta::FieldMetadata) -> Self {
-        Self {
-            name: meta.name,
-            type_: convert_type(&meta.ty),
-            default: None,
-        }
+impl AsType for Field {
+    fn as_type(&self) -> Type {
+        self.type_.clone()
+    }
+}
+
+impl TryFrom<uniffi_meta::FieldMetadata> for Field {
+    type Error = anyhow::Error;
+
+    fn try_from(meta: uniffi_meta::FieldMetadata) -> Result<Self> {
+        let name = meta.name;
+        let type_ = meta.ty.into();
+        let default = meta
+            .default
+            .map(|d| Literal::from_metadata(&name, &type_, d))
+            .transpose()?;
+        Ok(Self {
+            name,
+            type_,
+            default,
+        })
     }
 }
 
@@ -193,7 +206,7 @@ mod test {
         assert_eq!(record.name(), "Simple");
         assert_eq!(record.fields().len(), 1);
         assert_eq!(record.fields()[0].name(), "field");
-        assert_eq!(record.fields()[0].type_().canonical_name(), "u32");
+        assert_eq!(record.fields()[0].as_type().canonical_name(), "u32");
         assert!(record.fields()[0].default_value().is_none());
 
         let record = ci.get_record_definition("Complex").unwrap();
@@ -201,18 +214,18 @@ mod test {
         assert_eq!(record.fields().len(), 3);
         assert_eq!(record.fields()[0].name(), "key");
         assert_eq!(
-            record.fields()[0].type_().canonical_name(),
+            record.fields()[0].as_type().canonical_name(),
             "Optionalstring"
         );
         assert!(record.fields()[0].default_value().is_none());
         assert_eq!(record.fields()[1].name(), "value");
-        assert_eq!(record.fields()[1].type_().canonical_name(), "u32");
+        assert_eq!(record.fields()[1].as_type().canonical_name(), "u32");
         assert!(matches!(
             record.fields()[1].default_value(),
             Some(Literal::UInt(0, Radix::Decimal, Type::UInt32))
         ));
         assert_eq!(record.fields()[2].name(), "spin");
-        assert_eq!(record.fields()[2].type_().canonical_name(), "bool");
+        assert_eq!(record.fields()[2].as_type().canonical_name(), "bool");
         assert!(record.fields()[2].default_value().is_none());
     }
 

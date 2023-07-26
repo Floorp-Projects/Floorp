@@ -10,35 +10,63 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.58"
 name = "askama_derive"
-version = "0.11.2"
+version = "0.12.1"
 description = "Procedural macro package for Askama"
 homepage = "https://github.com/djc/askama"
 readme = "README.md"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/djc/askama"
+resolver = "1"
 
 [lib]
 proc-macro = true
-[dependencies.askama_shared]
-version = "0.12.1"
-default-features = false
+
+[dependencies.basic-toml]
+version = "0.1.1"
+optional = true
+
+[dependencies.mime]
+version = "0.3"
+
+[dependencies.mime_guess]
+version = "2"
+
+[dependencies.nom]
+version = "7"
 
 [dependencies.proc-macro2]
 version = "1"
 
-[dependencies.syn]
+[dependencies.quote]
 version = "1"
 
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+optional = true
+
+[dependencies.syn]
+version = "2"
+
 [features]
-actix-web = []
-axum = []
-config = ["askama_shared/config"]
-gotham = []
-json = ["askama_shared/json"]
-mendes = []
-rocket = []
-tide = []
-warp = []
-yaml = ["askama_shared/yaml"]
+config = [
+    "serde",
+    "basic-toml",
+]
+humansize = []
+markdown = []
+num-traits = []
+serde-json = []
+serde-yaml = []
+urlencode = []
+with-actix-web = []
+with-axum = []
+with-gotham = []
+with-hyper = []
+with-mendes = []
+with-rocket = []
+with-tide = []
+with-warp = []

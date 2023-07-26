@@ -333,6 +333,70 @@ start = "2019-07-25"
 end = "2024-05-03"
 notes = "All code written or reviewed by Manish"
 
+[[wildcard-audits.uniffi]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 48 # Jan-Erik Rediger (badboy)
+start = "2022-05-05"
+end = "2024-06-21"
+notes = "Maintained by the Glean and Application Services teams"
+
+[[wildcard-audits.uniffi_bindgen]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 48 # Jan-Erik Rediger (badboy)
+start = "2022-05-05"
+end = "2024-06-21"
+notes = "Maintained by the Glean and Application Services teams"
+
+[[wildcard-audits.uniffi_build]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 48 # Jan-Erik Rediger (badboy)
+start = "2022-05-05"
+end = "2024-06-21"
+notes = "Maintained by the Glean and Application Services teams"
+
+[[wildcard-audits.uniffi_checksum_derive]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 48 # Jan-Erik Rediger (badboy)
+start = "2022-12-16"
+end = "2024-06-21"
+notes = "Maintained by the Glean and Application Services teams"
+
+[[wildcard-audits.uniffi_core]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 48 # Jan-Erik Rediger (badboy)
+start = "2023-06-21"
+end = "2024-06-21"
+notes = "Maintained by the Glean and Application Services teams"
+
+[[wildcard-audits.uniffi_macros]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 48 # Jan-Erik Rediger (badboy)
+start = "2022-05-05"
+end = "2024-06-21"
+notes = "Maintained by the Glean and Application Services teams"
+
+[[wildcard-audits.uniffi_meta]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 48 # Jan-Erik Rediger (badboy)
+start = "2022-08-31"
+end = "2024-06-21"
+notes = "Maintained by the Glean and Application Services teams"
+
+[[wildcard-audits.uniffi_testing]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 48 # Jan-Erik Rediger (badboy)
+start = "2022-12-16"
+end = "2024-06-21"
+notes = "Maintained by the Glean and Application Services teams"
+
 [[wildcard-audits.webdriver]]
 who = "Henrik Skupin <mail@hskupin.info>"
 criteria = "safe-to-deploy"
@@ -1821,6 +1885,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.7.3 -> 0.7.4"
 
+[[audits.libsqlite3-sys]]
+who = "Ben Dean-Kawamura <bdk@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.25.2 -> 0.26.0"
+
 [[audits.linked-hash-map]]
 who = "Aria Beingessner <a.beingessner@gmail.com>"
 criteria = "safe-to-deploy"
@@ -2415,6 +2484,18 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.6 -> 1.0.7"
 
+[[audits.prost]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.8.0 -> 0.11.9"
+notes = "Mostly internal refactorings. Minimal new unsafe code, but with the invariants explicitly checked in code"
+
+[[audits.prost-derive]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.8.0 -> 0.11.9"
+notes = "Documentation and internal refactoring changes only"
+
 [[audits.qcms]]
 who = "Jeff Muizelaar <jmuizelaar@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -2594,6 +2675,11 @@ panic occurs in the Rust code.
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.27.0 -> 0.28.0"
+
+[[audits.rusqlite]]
+who = "Ben Dean-Kawamura <bdk@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.28.0 -> 0.29.0"
 
 [[audits.rust_cascade]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -2802,6 +2888,11 @@ delta = "1.0.85 -> 1.0.91"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.91 -> 1.0.93"
+
+[[audits.serde_path_to_error]]
+who = "Ben Dean-Kawamura <bdk@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.1.11"
 
 [[audits.serde_repr]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

@@ -1,31 +1,35 @@
-error[E0271]: type mismatch resolving `<Arc<child::Foo> as child::_::_::{closure#0}::TypeEq>::This == Arc<Foo>`
-  --> tests/ui/proc_macro_arc.rs:18:22
+error[E0277]: the trait bound `Foo: Interface<UniFfiTag>` is not satisfied
+  --> tests/ui/proc_macro_arc.rs:10:1
    |
-18 |     fn take_foo(foo: Arc<Foo>) {
-   |                      ^^^^^^^^ type mismatch resolving `<Arc<child::Foo> as child::_::_::{closure#0}::TypeEq>::This == Arc<Foo>`
+10 | #[uniffi::export]
+   | ^^^^^^^^^^^^^^^^^ the trait `Interface<UniFfiTag>` is not implemented for `Foo`
    |
-note: expected this to be `Arc<Foo>`
-  --> tests/ui/proc_macro_arc.rs:18:22
+   = help: the trait `FfiConverter<UT>` is implemented for `Arc<T>`
+   = note: required for `Arc<Foo>` to implement `FfiConverter<UniFfiTag>`
+   = note: this error originates in the attribute macro `uniffi::export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+note: erroneous constant used
+  --> tests/ui/proc_macro_arc.rs:10:1
    |
-18 |     fn take_foo(foo: Arc<Foo>) {
-   |                      ^^^
-   = note: enum `child::Foo` and struct `Foo` have similar names, but are actually distinct types
-note: enum `child::Foo` is defined in module `crate::child` of the current crate
-  --> tests/ui/proc_macro_arc.rs:15:5
+10 | #[uniffi::export]
+   | ^^^^^^^^^^^^^^^^^
    |
-15 |     enum Foo {}
-   |     ^^^^^^^^
-note: struct `Foo` is defined in module `crate` of the current crate
-  --> tests/ui/proc_macro_arc.rs:5:1
+   = note: this note originates in the attribute macro `uniffi::export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `child::Foo: Interface<UniFfiTag>` is not satisfied
+  --> tests/ui/proc_macro_arc.rs:20:5
    |
-5  | pub struct Foo;
-   | ^^^^^^^^^^^^^^
-note: required by a bound in `child::_::_::{closure#0}::assert_type_eq_all`
-  --> tests/ui/proc_macro_arc.rs:18:22
+20 |     #[uniffi::export]
+   |     ^^^^^^^^^^^^^^^^^ the trait `Interface<UniFfiTag>` is not implemented for `child::Foo`
    |
-18 |     fn take_foo(foo: Arc<Foo>) {
-   |                      ^^^
-   |                      |
-   |                      required by a bound in this
-   |                      required by this bound in `child::_::_::{closure#0}::assert_type_eq_all`
-   = note: this error originates in the macro `::uniffi::deps::static_assertions::assert_type_eq_all` (in Nightly builds, run with -Z macro-backtrace for more info)
+   = help: the trait `FfiConverter<UT>` is implemented for `Arc<T>`
+   = note: required for `Arc<child::Foo>` to implement `FfiConverter<UniFfiTag>`
+   = note: this error originates in the attribute macro `uniffi::export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+note: erroneous constant used
+  --> tests/ui/proc_macro_arc.rs:20:5
+   |
+20 |     #[uniffi::export]
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: this note originates in the attribute macro `uniffi::export` (in Nightly builds, run with -Z macro-backtrace for more info)

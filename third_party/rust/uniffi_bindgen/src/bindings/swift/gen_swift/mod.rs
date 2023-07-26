@@ -12,15 +12,15 @@ use heck::{ToLowerCamelCase, ToUpperCamelCase};
 use serde::{Deserialize, Serialize};
 
 use super::Bindings;
-use crate::backend::{CodeOracle, CodeType, TemplateExpression, TypeIdentifier};
+use crate::backend::{CodeType, TemplateExpression};
 use crate::interface::*;
-use crate::MergeWith;
+use crate::BindingsConfig;
 
 mod callback_interface;
 mod compounds;
 mod custom;
 mod enum_;
-mod error;
+mod executor;
 mod external;
 mod miscellany;
 mod object;
@@ -106,34 +106,22 @@ impl Config {
     }
 }
 
-impl From<&ComponentInterface> for Config {
-    fn from(ci: &ComponentInterface) -> Self {
-        Config {
-            module_name: Some(ci.namespace().into()),
-            cdylib_name: Some(format!("uniffi_{}", ci.namespace())),
-            ..Default::default()
-        }
-    }
-}
+impl BindingsConfig for Config {
+    const TOML_KEY: &'static str = "swift";
 
-impl MergeWith for Config {
-    fn merge_with(&self, other: &Self) -> Self {
-        Config {
-            module_name: self.module_name.merge_with(&other.module_name),
-            ffi_module_name: self.ffi_module_name.merge_with(&other.ffi_module_name),
-            cdylib_name: self.cdylib_name.merge_with(&other.cdylib_name),
-            ffi_module_filename: self
-                .ffi_module_filename
-                .merge_with(&other.ffi_module_filename),
-            generate_module_map: self
-                .generate_module_map
-                .merge_with(&other.generate_module_map),
-            omit_argument_labels: self
-                .omit_argument_labels
-                .merge_with(&other.omit_argument_labels),
-            custom_types: self.custom_types.merge_with(&other.custom_types),
-        }
+    fn update_from_ci(&mut self, ci: &ComponentInterface) {
+        self.module_name
+            .get_or_insert_with(|| ci.namespace().into());
+        self.cdylib_name
+            .get_or_insert_with(|| format!("uniffi_{}", ci.namespace()));
     }
+
+    fn update_from_cdylib_name(&mut self, cdylib_name: &str) {
+        self.cdylib_name
+            .get_or_insert_with(|| cdylib_name.to_string());
+    }
+
+    fn update_from_dependency_configs(&mut self, _config_map: HashMap<&str, &Self>) {}
 }
 
 /// Generate UniFFI component bindings for Swift, as strings in memory.
@@ -166,7 +154,7 @@ pub fn generate_bindings(config: &Config, ci: &ComponentInterface) -> Result<Bin
 /// This template is a bit different than others in that it stores internal state from the render
 /// process.  Make sure to only call `render()` once.
 #[derive(Template)]
-#[template(syntax = "kt", escape = "none", path = "Types.swift")]
+#[template(syntax = "swift", escape = "none", path = "Types.swift")]
 pub struct TypeRenderer<'a> {
     config: &'a Config,
     ci: &'a ComponentInterface,
@@ -186,7 +174,7 @@ impl<'a> TypeRenderer<'a> {
         }
     }
 
-    // The following methods are used by the `Types.kt` macros.
+    // The following methods are used by the `Types.swift` macros.
 
     // Helper for the including a template, but only once.
     //
@@ -278,8 +266,8 @@ impl<'a> SwiftWrapper<'a> {
     pub fn initialization_fns(&self) -> Vec<String> {
         self.ci
             .iter_types()
-            .into_iter()
-            .filter_map(|t| t.initialization_fn(&SwiftCodeOracle))
+            .map(|t| SwiftCodeOracle.find(t))
+            .filter_map(|ct| ct.initialization_fn())
             .collect()
     }
 }
@@ -295,7 +283,7 @@ impl SwiftCodeOracle {
     //
     //   - When adding additional types here, make sure to also add a match arm to the `Types.swift` template.
     //   - To keep things manageable, let's try to limit ourselves to these 2 mega-matches
-    fn create_code_type(&self, type_: TypeIdentifier) -> Box<dyn CodeType> {
+    fn create_code_type(&self, type_: Type) -> Box<dyn CodeType> {
         match type_ {
             Type::UInt8 => Box::new(primitives::UInt8CodeType),
             Type::Int8 => Box::new(primitives::Int8CodeType),
@@ -309,32 +297,27 @@ impl SwiftCodeOracle {
             Type::Float64 => Box::new(primitives::Float64CodeType),
             Type::Boolean => Box::new(primitives::BooleanCodeType),
             Type::String => Box::new(primitives::StringCodeType),
+            Type::Bytes => Box::new(primitives::BytesCodeType),
 
             Type::Timestamp => Box::new(miscellany::TimestampCodeType),
             Type::Duration => Box::new(miscellany::DurationCodeType),
 
             Type::Enum(id) => Box::new(enum_::EnumCodeType::new(id)),
-            Type::Object(id) => Box::new(object::ObjectCodeType::new(id)),
+            Type::Object { name, .. } => Box::new(object::ObjectCodeType::new(name)),
             Type::Record(id) => Box::new(record::RecordCodeType::new(id)),
-            Type::Error(id) => Box::new(error::ErrorCodeType::new(id)),
             Type::CallbackInterface(id) => {
                 Box::new(callback_interface::CallbackInterfaceCodeType::new(id))
             }
-
+            Type::ForeignExecutor => Box::new(executor::ForeignExecutorCodeType),
             Type::Optional(inner) => Box::new(compounds::OptionalCodeType::new(*inner)),
             Type::Sequence(inner) => Box::new(compounds::SequenceCodeType::new(*inner)),
             Type::Map(key, value) => Box::new(compounds::MapCodeType::new(*key, *value)),
             Type::External { name, .. } => Box::new(external::ExternalCodeType::new(name)),
             Type::Custom { name, .. } => Box::new(custom::CustomCodeType::new(name)),
-            Type::Unresolved { name } => {
-                unreachable!("Type `{name}` must be resolved before calling create_code_type")
-            }
         }
     }
-}
 
-impl CodeOracle for SwiftCodeOracle {
-    fn find(&self, type_: &TypeIdentifier) -> Box<dyn CodeType> {
+    fn find(&self, type_: &Type) -> Box<dyn CodeType> {
         self.create_code_type(type_.clone())
     }
 
@@ -358,13 +341,103 @@ impl CodeOracle for SwiftCodeOracle {
         format!("`{}`", nm.to_string().to_lower_camel_case())
     }
 
-    /// Get the idiomatic Swift rendering of an exception name.
-    fn error_name(&self, nm: &str) -> String {
-        format!("`{}`", self.class_name(nm))
+    fn ffi_type_label_raw(&self, ffi_type: &FfiType) -> String {
+        match ffi_type {
+            FfiType::Int8 => "Int8".into(),
+            FfiType::UInt8 => "UInt8".into(),
+            FfiType::Int16 => "Int16".into(),
+            FfiType::UInt16 => "UInt16".into(),
+            FfiType::Int32 => "Int32".into(),
+            FfiType::UInt32 => "UInt32".into(),
+            FfiType::Int64 => "Int64".into(),
+            FfiType::UInt64 => "UInt64".into(),
+            FfiType::Float32 => "Float".into(),
+            FfiType::Float64 => "Double".into(),
+            FfiType::RustArcPtr(_) => "UnsafeMutableRawPointer".into(),
+            FfiType::RustBuffer(_) => "RustBuffer".into(),
+            FfiType::ForeignBytes => "ForeignBytes".into(),
+            FfiType::ForeignCallback => "ForeignCallback".into(),
+            FfiType::ForeignExecutorHandle => "Int".into(),
+            FfiType::ForeignExecutorCallback => "ForeignExecutorCallback".into(),
+            FfiType::FutureCallback { return_type } => {
+                format!("UniFfiFutureCallback{}", self.ffi_type_label(return_type))
+            }
+            FfiType::FutureCallbackData => "UnsafeMutableRawPointer".into(),
+        }
     }
 
     fn ffi_type_label(&self, ffi_type: &FfiType) -> String {
         match ffi_type {
+            FfiType::ForeignCallback
+            | FfiType::ForeignExecutorCallback
+            | FfiType::FutureCallback { .. } => {
+                format!("{} _Nonnull", self.ffi_type_label_raw(ffi_type))
+            }
+            _ => self.ffi_type_label_raw(ffi_type),
+        }
+    }
+
+    fn ffi_canonical_name(&self, ffi_type: &FfiType) -> String {
+        self.ffi_type_label_raw(ffi_type)
+    }
+}
+
+pub mod filters {
+    use super::*;
+    pub use crate::backend::filters::*;
+
+    fn oracle() -> &'static SwiftCodeOracle {
+        &SwiftCodeOracle
+    }
+
+    pub fn type_name(as_type: &impl AsType) -> Result<String, askama::Error> {
+        Ok(oracle().find(&as_type.as_type()).type_label())
+    }
+
+    pub fn canonical_name(as_type: &impl AsType) -> Result<String, askama::Error> {
+        Ok(oracle().find(&as_type.as_type()).canonical_name())
+    }
+
+    pub fn ffi_converter_name(as_type: &impl AsType) -> Result<String, askama::Error> {
+        Ok(oracle().find(&as_type.as_type()).ffi_converter_name())
+    }
+
+    pub fn lower_fn(as_type: &impl AsType) -> Result<String, askama::Error> {
+        Ok(oracle().find(&as_type.as_type()).lower())
+    }
+
+    pub fn write_fn(as_type: &impl AsType) -> Result<String, askama::Error> {
+        Ok(oracle().find(&as_type.as_type()).write())
+    }
+
+    pub fn lift_fn(as_type: &impl AsType) -> Result<String, askama::Error> {
+        Ok(oracle().find(&as_type.as_type()).lift())
+    }
+
+    pub fn read_fn(as_type: &impl AsType) -> Result<String, askama::Error> {
+        Ok(oracle().find(&as_type.as_type()).read())
+    }
+
+    pub fn literal_swift(
+        literal: &Literal,
+        as_type: &impl AsType,
+    ) -> Result<String, askama::Error> {
+        Ok(oracle().find(&as_type.as_type()).literal(literal))
+    }
+
+    /// Get the Swift type for an FFIType
+    pub fn ffi_type_name(ffi_type: &FfiType) -> Result<String, askama::Error> {
+        Ok(oracle().ffi_type_label(ffi_type))
+    }
+
+    pub fn ffi_canonical_name(ffi_type: &FfiType) -> Result<String, askama::Error> {
+        Ok(oracle().ffi_canonical_name(ffi_type))
+    }
+
+    /// Like `ffi_type_name`, but used in `BridgingHeaderTemplate.h` which uses a slightly different
+    /// names.
+    pub fn header_ffi_type_name(ffi_type: &FfiType) -> Result<String, askama::Error> {
+        Ok(match ffi_type {
             FfiType::Int8 => "int8_t".into(),
             FfiType::UInt8 => "uint8_t".into(),
             FfiType::Int16 => "int16_t".into(),
@@ -378,79 +451,14 @@ impl CodeOracle for SwiftCodeOracle {
             FfiType::RustArcPtr(_) => "void*_Nonnull".into(),
             FfiType::RustBuffer(_) => "RustBuffer".into(),
             FfiType::ForeignBytes => "ForeignBytes".into(),
-            FfiType::ForeignCallback => "ForeignCallback  _Nonnull".to_string(),
-        }
-    }
-}
-
-pub mod filters {
-    use super::*;
-
-    fn oracle() -> &'static SwiftCodeOracle {
-        &SwiftCodeOracle
-    }
-
-    pub fn type_name(codetype: &impl CodeType) -> Result<String, askama::Error> {
-        let oracle = oracle();
-        Ok(codetype.type_label(oracle))
-    }
-
-    pub fn canonical_name(codetype: &impl CodeType) -> Result<String, askama::Error> {
-        let oracle = oracle();
-        Ok(codetype.canonical_name(oracle))
-    }
-
-    pub fn ffi_converter_name(codetype: &impl CodeType) -> Result<String, askama::Error> {
-        Ok(codetype.ffi_converter_name(oracle()))
-    }
-
-    pub fn lower_fn(codetype: &impl CodeType) -> Result<String, askama::Error> {
-        Ok(codetype.lower(oracle()))
-    }
-
-    pub fn write_fn(codetype: &impl CodeType) -> Result<String, askama::Error> {
-        Ok(codetype.write(oracle()))
-    }
-
-    pub fn lift_fn(codetype: &impl CodeType) -> Result<String, askama::Error> {
-        Ok(codetype.lift(oracle()))
-    }
-
-    pub fn read_fn(codetype: &impl CodeType) -> Result<String, askama::Error> {
-        Ok(codetype.read(oracle()))
-    }
-
-    pub fn literal_swift(
-        literal: &Literal,
-        codetype: &impl CodeType,
-    ) -> Result<String, askama::Error> {
-        let oracle = oracle();
-        Ok(codetype.literal(oracle, literal))
-    }
-
-    /// Get the Swift syntax for representing a given low-level `FfiType`.
-    pub fn ffi_type_name(type_: &FfiType) -> Result<String, askama::Error> {
-        Ok(oracle().ffi_type_label(type_))
-    }
-
-    /// Get the type that a type is lowered into.  This is subtly different than `type_ffi`, see
-    /// #1106 for details
-    pub fn type_ffi_lowered(ffi_type: &FfiType) -> Result<String, askama::Error> {
-        Ok(match ffi_type {
-            FfiType::Int8 => "Int8".into(),
-            FfiType::UInt8 => "UInt8".into(),
-            FfiType::Int16 => "Int16".into(),
-            FfiType::UInt16 => "UInt16".into(),
-            FfiType::Int32 => "Int32".into(),
-            FfiType::UInt32 => "UInt32".into(),
-            FfiType::Int64 => "Int64".into(),
-            FfiType::UInt64 => "UInt64".into(),
-            FfiType::Float32 => "float".into(),
-            FfiType::Float64 => "double".into(),
-            FfiType::RustArcPtr(_) => "void*_Nonnull".into(),
-            FfiType::RustBuffer(_) => "RustBuffer".into(),
-            FfiType::ForeignBytes => "ForeignBytes".into(),
-            FfiType::ForeignCallback => "ForeignCallback  _Nonnull".to_string(),
+            FfiType::ForeignCallback => "ForeignCallback _Nonnull".into(),
+            FfiType::ForeignExecutorCallback => "UniFfiForeignExecutorCallback _Nonnull".into(),
+            FfiType::ForeignExecutorHandle => "size_t".into(),
+            FfiType::FutureCallback { return_type } => format!(
+                "UniFfiFutureCallback{} _Nonnull",
+                SwiftCodeOracle.ffi_type_label_raw(return_type)
+            ),
+            FfiType::FutureCallbackData => "void* _Nonnull".into(),
         })
     }
 
@@ -472,5 +480,37 @@ pub mod filters {
     /// Get the idiomatic Swift rendering of an individual enum variant.
     pub fn enum_variant_swift(nm: &str) -> Result<String, askama::Error> {
         Ok(oracle().enum_variant_name(nm))
+    }
+
+    pub fn error_handler(result: &ResultType) -> Result<String, askama::Error> {
+        Ok(match &result.throws_type {
+            Some(t) => format!("{}.lift", ffi_converter_name(t)?),
+            None => "nil".into(),
+        })
+    }
+
+    /// Name of the callback function to handle an async result
+    pub fn future_callback(result: &ResultType) -> Result<String, askama::Error> {
+        Ok(format!(
+            "uniffiFutureCallbackHandler{}{}",
+            match &result.return_type {
+                Some(t) => SwiftCodeOracle.find(t).canonical_name(),
+                None => "Void".into(),
+            },
+            match &result.throws_type {
+                Some(t) => SwiftCodeOracle.find(t).canonical_name(),
+                None => "".into(),
+            }
+        ))
+    }
+
+    pub fn future_continuation_type(result: &ResultType) -> Result<String, askama::Error> {
+        Ok(format!(
+            "CheckedContinuation<{}, Error>",
+            match &result.return_type {
+                Some(return_type) => type_name(return_type)?,
+                None => "()".into(),
+            }
+        ))
     }
 }

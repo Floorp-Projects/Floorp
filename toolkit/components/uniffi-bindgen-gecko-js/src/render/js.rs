@@ -8,7 +8,7 @@ use askama::Template;
 use extend::ext;
 use heck::{ToLowerCamelCase, ToShoutySnakeCase, ToUpperCamelCase};
 use uniffi_bindgen::interface::{
-    Argument, CallbackInterface, ComponentInterface, Constructor, Enum, Error, Field, Function,
+    Argument, AsType, CallbackInterface, ComponentInterface, Constructor, Enum, Field, Function,
     Literal, Method, Object, Radix, Record, Type,
 };
 
@@ -150,27 +150,27 @@ pub impl Field {
     }
 
     fn lower_fn(&self) -> String {
-        self.type_().lower_fn()
+        self.as_type().lower_fn()
     }
 
     fn lift_fn(&self) -> String {
-        self.type_().lift_fn()
+        self.as_type().lift_fn()
     }
 
     fn write_datastream_fn(&self) -> String {
-        self.type_().write_datastream_fn()
+        self.as_type().write_datastream_fn()
     }
 
     fn read_datastream_fn(&self) -> String {
-        self.type_().read_datastream_fn()
+        self.as_type().read_datastream_fn()
     }
 
     fn compute_size_fn(&self) -> String {
-        self.type_().compute_size_fn()
+        self.as_type().compute_size_fn()
     }
 
     fn ffi_converter(&self) -> String {
-        self.type_().ffi_converter()
+        self.as_type().ffi_converter()
     }
 }
 
@@ -181,27 +181,27 @@ pub impl Argument {
     }
 
     fn lower_fn(&self) -> String {
-        self.type_().lower_fn()
+        self.as_type().lower_fn()
     }
 
     fn lift_fn(&self) -> String {
-        self.type_().lift_fn()
+        self.as_type().lift_fn()
     }
 
     fn write_datastream_fn(&self) -> String {
-        self.type_().write_datastream_fn()
+        self.as_type().write_datastream_fn()
     }
 
     fn read_datastream_fn(&self) -> String {
-        self.type_().read_datastream_fn()
+        self.as_type().read_datastream_fn()
     }
 
     fn compute_size_fn(&self) -> String {
-        self.type_().compute_size_fn()
+        self.as_type().compute_size_fn()
     }
 
     fn ffi_converter(&self) -> String {
-        self.type_().ffi_converter()
+        self.as_type().ffi_converter()
     }
 }
 
@@ -258,13 +258,6 @@ pub impl Function {
 
     fn nm(&self) -> String {
         self.name().to_lower_camel_case()
-    }
-}
-
-#[ext(name=ErrorJSExt)]
-pub impl Error {
-    fn nm(&self) -> String {
-        self.name().to_upper_camel_case()
     }
 }
 

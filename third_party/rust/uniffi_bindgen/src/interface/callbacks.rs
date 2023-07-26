@@ -38,8 +38,8 @@ use uniffi_meta::Checksum;
 
 use super::ffi::{FfiArgument, FfiFunction, FfiType};
 use super::object::Method;
-use super::types::{Type, TypeIterator};
-use super::{APIConverter, ComponentInterface};
+use super::types::{ObjectImpl, Type, TypeIterator};
+use super::{APIConverter, AsType, ComponentInterface};
 
 #[derive(Debug, Clone, Checksum)]
 pub struct CallbackInterface {
@@ -56,7 +56,7 @@ pub struct CallbackInterface {
 }
 
 impl CallbackInterface {
-    fn new(name: String) -> CallbackInterface {
+    pub fn new(name: String) -> CallbackInterface {
         CallbackInterface {
             name,
             methods: Default::default(),
@@ -68,10 +68,6 @@ impl CallbackInterface {
         &self.name
     }
 
-    pub fn type_(&self) -> Type {
-        Type::CallbackInterface(self.name.clone())
-    }
-
     pub fn methods(&self) -> Vec<&Method> {
         self.methods.iter().collect()
     }
@@ -80,8 +76,9 @@ impl CallbackInterface {
         &self.ffi_init_callback
     }
 
-    pub(super) fn derive_ffi_funcs(&mut self, ci_prefix: &str) {
-        self.ffi_init_callback.name = format!("ffi_{ci_prefix}_{}_init_callback", self.name);
+    pub(super) fn derive_ffi_funcs(&mut self, ci_namespace: &str) {
+        self.ffi_init_callback.name =
+            uniffi_meta::init_callback_fn_symbol_name(ci_namespace, &self.name);
         self.ffi_init_callback.arguments = vec![FfiArgument {
             name: "callback_stub".to_string(),
             type_: FfiType::ForeignCallback,
@@ -91,6 +88,12 @@ impl CallbackInterface {
 
     pub fn iter_types(&self) -> TypeIterator<'_> {
         Box::new(self.methods.iter().flat_map(Method::iter_types))
+    }
+}
+
+impl AsType for CallbackInterface {
+    fn as_type(&self) -> Type {
+        Type::CallbackInterface(self.name.clone())
     }
 }
 
@@ -107,7 +110,15 @@ impl APIConverter<CallbackInterface> for weedle::CallbackInterfaceDefinition<'_>
             match member {
                 weedle::interface::InterfaceMember::Operation(t) => {
                     let mut method: Method = t.convert(ci)?;
+                    // A CallbackInterface is described in Rust as a trait, but uniffi
+                    // generates a struct implementing the trait and passes the concrete version
+                    // of that.
+                    // This really just reflects the fact that CallbackInterface and Object
+                    // should be merged; we'd still need a way to ask for a struct delegating to
+                    // foreign implementations be done.
+                    // But currently they are passed as a concrete type with no associated types.
                     method.object_name = object.name.clone();
+                    method.object_impl = ObjectImpl::Struct;
                     object.methods.push(method);
                 }
                 _ => bail!(
