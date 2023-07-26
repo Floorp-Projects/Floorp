@@ -3,8 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export class ShoppingSidebarParent extends JSWindowActorParent {
-  updateProductURL() {
-    this.sendAsyncMessage("ShoppingSidebar:UpdateProductURL");
+  updateProductURL(aURI) {
+    let url = aURI?.spec || null;
+    this.sendAsyncMessage("ShoppingSidebar:UpdateProductURL", {
+      url,
+    });
   }
 
   async receiveMessage(message) {
