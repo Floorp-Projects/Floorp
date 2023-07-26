@@ -126,6 +126,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Tab pribadi baru</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Pintasan kata sandi</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Lompat Kembali</string>
@@ -252,7 +255,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s akan membagikan segala yang Anda ketik pada bilah alamat dengan mesin pencari baku Anda.</string>
 
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">Cari %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Cari langsung dari bilah alamat</string>
@@ -262,6 +265,9 @@
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Kali ini, cari di:</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">%s mesin pencari</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -299,33 +305,42 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Jangan sekarang</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Jadikan %s sebagai peramban pilihan Anda</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Jadikan %s sebagai peramban pilihan Anda</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Jadikan Firefox sebagai peramban pilihan Anda</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s mengutamakan masyarakat daripada laba dan membela privasi Anda dengan memblokir pelacak lintas situs.\n\n\nPelajari lebih lanjut dalam %2$s.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox mengutamakan masyarakat daripada laba dan membela privasi Anda dengan memblokir pelacak lintas situs.\n\n\nPelajari lebih lanjut dalam kebijakan privasi kami.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">kebijakan privasi</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">kebijakan privasi</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Setel sebagai peramban baku</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Setel sebagai peramban baku</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Jangan sekarang</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Jangan sekarang</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Masuk</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Masuk</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Jangan sekarang</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Jangan sekarang</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Notifikasi membantu Anda lakukan lebih banyak hal dengan %s</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Notifikasi membantu Anda lakukan lebih banyak hal dengan %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Notifikasi membantu Anda lakukan lebih banyak hal dengan Firefox</string>
 
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Aktifkan notifikasi</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Jangan sekarang</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Jangan sekarang</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -345,6 +360,10 @@
     <string name="preferences_category_general">Umum</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Tentang</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine">Pilih satu</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts">Kelola pintasan pencarian</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Mesin pencari baku</string>
     <!-- Preference for settings related to Search -->
@@ -394,10 +413,8 @@
     <string name="reduce_cookie_banner_off_for_site">Nonaktif untuk situs ini</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Batal</string>
-    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Pengurangan Spanduk Kuki</string>
-    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">Permintaan bantuan situs telah diajukan.</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button" moz:RemovedIn="115" tools:ignore="UnusedResources">Minta dukungan</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text_2">Permintaan terkirim</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -418,6 +435,9 @@
     <string name="reduce_cookie_banner_dialog_not_now_button">Jangan sekarang</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Anda akan melihat lebih sedikit permintaan kuki</string>
+
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Izinkan</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Secara otomatis mencoba terhubung ke situs menggunakan protokol enkripsi HTTPS untuk meningkatkan keamanan.</string>
@@ -497,8 +517,11 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Buka tautan di aplikasi</string>
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Selalu</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Pengelola unduhan eksternal</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Pengaya</string>
 
@@ -581,7 +604,6 @@
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">Pengaya telah didukung</string>
 
-    <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sinkronkan sekarang</string>
     <!-- Preference category for sync -->
@@ -1155,8 +1177,14 @@
     <string name="share_button_content_description">Bagikan</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Simpan sebagai PDF</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">Gagal membuat PDF</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Tutup</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">Gagal mencetak</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">Cetak</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Kirim ke peranti</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1214,6 +1242,18 @@
     <!-- Text shown in the notification that pops up to re-engage the user.
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">Menjelajah tanpa kuki atau riwayat tersimpan di %1$s</string>
+
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Mulai pencarian pertama Anda</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text">Bantu kami membuat Firefox lebih baik dengan melakukan survei singkat.</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey">Ikuti Survei</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey">Tidak, Terima kasih</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1308,7 +1348,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Rentang waktu untuk menghapus</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">Menghapus riwayat (termasuk riwayat yang disinkronkan dari perangkat lain), kuki, dan data penjelajahan lainnya.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Menghapus riwayat (termasuk riwayat yang disinkronkan dari perangkat lain), kuki, dan data penjelajahan lainnya.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Menghapus riwayat (termasuk riwayat yang disinkronkan dari perangkat lain)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Jam terakhir</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
@@ -1429,22 +1471,16 @@
     <string name="etp_settings">Pengaturan Perlindungan</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Perlindungan Pelacakan Dipertingkat</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Menjelajah tanpa diikuti</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Simpan data Anda untuk diri sendiri. %s melindungi Anda dari banyak pelacak umum yang mengikuti apa yang Anda lakukan daring.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Pelajari lebih lanjut</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standar (baku)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Seimbang untuk privasi dan kinerja. Halaman dimuat secara normal.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Apa yang diblokir oleh perlindungan pelacakan standar</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Ketat</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Blokir lebih banyak pelacak sehingga laman dimuat lebih cepat, tetapi beberapa fungsionalitas pada laman mungkin rusak.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Perlindungan pelacakan yang lebih kuat dan kinerja yang lebih cepat, tetapi beberapa situs mungkin tidak berfungsi dengan baik.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Apa yang diblokir oleh perlindungan pelacakan ketat</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1804,15 +1840,26 @@
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Lainnya</string>
+    <!-- Label for the TextField in which user enters custom search engine name -->
+    <string name="search_add_custom_engine_name_label">Nama</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Nama</string>
+    <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
+    <string name="search_add_custom_engine_name_hint_2">Nama mesin pencari</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label">URL string pencarian</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">String pencarian untuk digunakan</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2">URL yang digunakan untuk pencarian</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Ganti kueir dengan “%s”. Contoh:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Rincian mesin pencari kustom</string>
+
+    <!-- The text for the "Save" button for saving a custom search engine -->
+    <string name="search_custom_engine_save_button">Simpan</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Masukkan nama mesin pencari</string>

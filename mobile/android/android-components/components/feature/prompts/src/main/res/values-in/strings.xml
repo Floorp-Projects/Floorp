@@ -133,4 +133,6 @@
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Pilih penyedia log masuk</string>
     <!-- Title of an account picker dialog for identity credentials. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account">Pilih akun</string>
+    <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Pilih %1$s sebagai penyedia info masuk</string>
     </resources>

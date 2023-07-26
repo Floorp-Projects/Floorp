@@ -60,10 +60,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">高级…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        <label> <b>%1$s</b> 启用了被称为 HTTP 严格传输安全（HSTS）的安全策略，<b>%2$s</b> 只能与其建立安全连接。您无法为此网站添加例外，以访问此网站。
-    ]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label> <b>%1$s</b> 启用了被称为 HTTP 严格传输安全（HSTS）的安全策略，<b>%2$s</b> 只能与其建立安全连接。您无法为此网站添加例外，以访问此网站。</label>
     ]]></string>
@@ -89,7 +85,7 @@
       <ul>
         <li>该网站可能目前访问人数过多？请稍后重试。</li>
         <li>您是否也无法浏览其他网站？请检查您网络连接。</li>
-        <li>电脑有开防火墙或代理服务器？请确定这些设置是否正确。</li>
+        <li>设备或网络是否受防火墙或代理保护？请确定这些设置是否正确。</li>
         <li>仍然不行？请联系您的网络管理员或者电信运营商以寻求协助。</li>
       </ul>
     
