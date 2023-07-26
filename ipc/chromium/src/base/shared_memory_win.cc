@@ -11,7 +11,6 @@
 #include "base/string_util.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/RandomNum.h"
-#include "mozilla/WindowsVersion.h"
 #include "nsDebug.h"
 #include "nsString.h"
 #ifdef MOZ_MEMORY
@@ -161,7 +160,6 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
   SECURITY_ATTRIBUTES sa, *psa = nullptr;
   SECURITY_DESCRIPTOR sd;
   ACL dacl;
-  nsAutoStringN<sizeof("MozSharedMem_") + 16 * 4> name;
 
   if (freezeable) {
     psa = &sa;
@@ -175,24 +173,10 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
         NS_WARN_IF(!SetSecurityDescriptorDacl(&sd, TRUE, &dacl, FALSE))) {
       return false;
     }
-
-    // Older versions of Windows will silently ignore the security
-    // attributes unless the object has a name.
-    if (!mozilla::IsWin8Point1OrLater()) {
-      name.AssignLiteral("MozSharedMem_");
-      for (size_t i = 0; i < 4; ++i) {
-        mozilla::Maybe<uint64_t> randomNum = mozilla::RandomUint64();
-        if (NS_WARN_IF(randomNum.isNothing())) {
-          return false;
-        }
-        name.AppendPrintf("%016llx", *randomNum);
-      }
-    }
   }
 
-  mapped_file_.reset(
-      MozCreateFileMappingW(psa, PAGE_READWRITE, 0, static_cast<DWORD>(size),
-                            name.IsEmpty() ? nullptr : name.get()));
+  mapped_file_.reset(MozCreateFileMappingW(psa, PAGE_READWRITE, 0,
+                                           static_cast<DWORD>(size), nullptr));
   if (!mapped_file_) return false;
 
   max_size_ = size;

@@ -15,7 +15,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 #include "mozilla/WindowsProcessMitigations.h"
-#include "mozilla/WindowsVersion.h"
 
 #if defined(MOZILLA_INTERNAL_API)
 #  include "mozilla/mscom/EnsureMTA.h"
@@ -378,10 +377,8 @@ ProcessRuntime::InitializeSecurity(const ProcessCategory aProcessCategory) {
     return HRESULT_FROM_WIN32(::GetLastError());
   }
 
-  const bool appContainersSupported = IsWin8OrLater();
   const bool allowAllNonRestrictedAppContainers =
-      aProcessCategory == ProcessCategory::GeckoBrowserParent &&
-      appContainersSupported;
+      aProcessCategory == ProcessCategory::GeckoBrowserParent;
 
   BYTE appContainersSid[SECURITY_MAX_SID_SIZE];
   DWORD appContainersSidSize = sizeof(appContainersSid);
@@ -393,17 +390,15 @@ ProcessRuntime::InitializeSecurity(const ProcessCategory aProcessCategory) {
   }
 
   UniquePtr<BYTE[]> tokenAppContainerInfBuf;
-  if (appContainersSupported) {
-    len = 0;
-    ::GetTokenInformation(token, TokenAppContainerSid, nullptr, len, &len);
-    if (len) {
-      tokenAppContainerInfBuf = MakeUnique<BYTE[]>(len);
-      ok = ::GetTokenInformation(token, TokenAppContainerSid,
-                                 tokenAppContainerInfBuf.get(), len, &len);
-      if (!ok) {
-        // Don't fail if we get an error retrieving an app container SID.
-        tokenAppContainerInfBuf = nullptr;
-      }
+  len = 0;
+  ::GetTokenInformation(token, TokenAppContainerSid, nullptr, len, &len);
+  if (len) {
+    tokenAppContainerInfBuf = MakeUnique<BYTE[]>(len);
+    ok = ::GetTokenInformation(token, TokenAppContainerSid,
+                               tokenAppContainerInfBuf.get(), len, &len);
+    if (!ok) {
+      // Don't fail if we get an error retrieving an app container SID.
+      tokenAppContainerInfBuf = nullptr;
     }
   }
 
