@@ -526,11 +526,17 @@ function testParseShape(doc, parser) {
       definition: "inset()",
       spanCount: 0,
     },
+    {
+      desc: "offset-path property with inset shape value",
+      property: "offset-path",
+      definition: "inset(200px)",
+      spanCount: 1,
+    },
   ];
 
-  for (const { desc, definition, spanCount } of tests) {
+  for (const { desc, definition, property = "clip-path", spanCount } of tests) {
     info(desc);
-    const frag = parser.parseCssProperty("clip-path", definition, {
+    const frag = parser.parseCssProperty(property, definition, {
       shapeClass: "ruleview-shape",
     });
     const spans = frag.querySelectorAll(".ruleview-shape-point");
