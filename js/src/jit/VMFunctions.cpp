@@ -2244,20 +2244,6 @@ void AllocateAndInitTypedArrayBuffer(JSContext* cx, TypedArrayObject* obj,
   }
 }
 
-void* CreateMatchResultFallbackFunc(JSContext* cx, gc::AllocKind kind,
-                                    size_t nDynamicSlots) {
-  MOZ_ASSERT(nDynamicSlots);
-
-  AutoUnsafeCallWithABI unsafe;
-  ArrayObject* array = cx->newCell<ArrayObject, NoGC>(kind, gc::Heap::Default,
-                                                      &ArrayObject::class_);
-  if (!array || !array->allocateInitialSlots(cx, nDynamicSlots)) {
-    return nullptr;
-  }
-
-  return array;
-}
-
 #ifdef JS_GC_PROBES
 void TraceCreateObject(JSObject* obj) {
   AutoUnsafeCallWithABI unsafe;

@@ -577,8 +577,6 @@ void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC);
 void AllocateAndInitTypedArrayBuffer(JSContext* cx, TypedArrayObject* obj,
                                      int32_t count);
 
-void* CreateMatchResultFallbackFunc(JSContext* cx, gc::AllocKind kind,
-                                    size_t nDynamicSlots);
 #ifdef JS_GC_PROBES
 void TraceCreateObject(JSObject* obj);
 #endif

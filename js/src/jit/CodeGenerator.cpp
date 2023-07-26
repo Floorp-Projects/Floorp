@@ -2402,42 +2402,6 @@ void CreateDependentString::generateFallback(MacroAssembler& masm) {
   }
 }
 
-static void CreateMatchResultFallback(MacroAssembler& masm, Register object,
-                                      Register temp1, Register temp2,
-                                      const TemplateObject& templateObject,
-                                      Label* fail) {
-  JitSpew(JitSpew_Codegen, "# Emitting CreateMatchResult fallback");
-
-  MOZ_ASSERT(templateObject.isArrayObject());
-
-  LiveRegisterSet regsToSave(RegisterSet::Volatile());
-  regsToSave.takeUnchecked(object);
-  regsToSave.takeUnchecked(temp1);
-  regsToSave.takeUnchecked(temp2);
-
-  masm.PushRegsInMask(regsToSave);
-
-  using Fn = void* (*)(JSContext* cx, gc::AllocKind kind, size_t nDynamicSlots);
-  masm.setupUnalignedABICall(object);
-
-  masm.loadJSContext(object);
-  masm.passABIArg(object);
-  masm.move32(Imm32(int32_t(templateObject.getAllocKind())), temp1);
-  masm.passABIArg(temp1);
-  masm.move32(
-      Imm32(int32_t(templateObject.asTemplateNativeObject().numDynamicSlots())),
-      temp2);
-  masm.passABIArg(temp2);
-  masm.callWithABI<Fn, CreateMatchResultFallbackFunc>();
-  masm.storeCallPointerResult(object);
-
-  masm.PopRegsInMask(regsToSave);
-
-  masm.branchPtr(Assembler::Equal, object, ImmWord(0), fail);
-
-  masm.initGCThing(object, temp1, templateObject);
-}
-
 // Generate the RegExpMatcher and RegExpExecMatch stubs. These are very similar,
 // but RegExpExecMatch also has to load and update .lastIndex for global/sticky
 // regular expressions.
@@ -2537,9 +2501,8 @@ static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
 
   // Construct the result.
   Register object = temp1;
-  Label matchResultFallback, matchResultJoin;
-  masm.createGCObject(object, temp2, templateObj, gc::Heap::Default,
-                      &matchResultFallback);
+  Label matchResultJoin;
+  masm.createGCObject(object, temp2, templateObj, gc::Heap::Default, &oolEntry);
   masm.bind(&matchResultJoin);
 
   MOZ_ASSERT(nativeTemplateObj.numFixedSlots() == 0);
@@ -2771,11 +2734,6 @@ static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
   for (auto& depStr : depStrs) {
     depStr.generateFallback(masm);
   }
-
-  // Fallback path for createGCObject.
-  masm.bind(&matchResultFallback);
-  CreateMatchResultFallback(masm, object, temp2, temp3, templateObj, &oolEntry);
-  masm.jump(&matchResultJoin);
 
   // Fall-through to the ool entry after restoring the registers.
   masm.bind(&restoreRegExpAndLastIndex);
