@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const ANALYSIS_API =
-  "https://staging-trustwerty.fakespot.io/api/v1/fx/analysis";
+const ANALYSIS_API = "https://staging.trustwerty.com/api/v1/fx/analysis";
 const ANALYSIS_RESPONSE_SCHEMA =
   "chrome://global/content/shopping/analysis_response.schema.json";
 const ANALYSIS_REQUEST_SCHEMA =
