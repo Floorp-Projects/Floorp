@@ -1595,7 +1595,9 @@ export class SearchService {
 
     lazy.logConsole.debug("#loadEngines: done");
 
-    let newCurrentEngineId = this._getEngineDefault(false)?.id;
+    let newCurrentEngine = this._getEngineDefault(false);
+    let newCurrentEngineId = newCurrentEngine?.id;
+
     this._settings.setMetaDataAttribute(
       "appDefaultEngineId",
       this.appDefaultEngine?.id
@@ -1610,9 +1612,16 @@ export class SearchService {
         prevAppDefaultEngineId
       )
     ) {
+      let newCurrentEngineName = newCurrentEngine?.name;
+
+      let [prevCurrentEngineName, prevAppDefaultEngineName] = [
+        settings.engines.find(e => e.id == prevCurrentEngineId)?._name,
+        settings.engines.find(e => e.id == prevAppDefaultEngineId)?._name,
+      ];
+
       this._showRemovalOfSearchEngineNotificationBox(
-        prevCurrentEngineId || prevAppDefaultEngineId,
-        newCurrentEngineId
+        prevCurrentEngineName || prevAppDefaultEngineName,
+        newCurrentEngineName
       );
     }
   }
@@ -3509,20 +3518,20 @@ export class SearchService {
    * This method is prefixed with _ rather than # because it is
    * called in a test.
    *
-   * @param {string} prevCurrentEngine
-   *   The engine that was previously the default engine and is to be replaced.
-   * @param {string} newCurrentEngine
-   *   The engine that will be the new the default engine.
+   * @param {string} prevCurrentEngineName
+   *   The name of the previous default engine that will be replaced.
+   * @param {string} newCurrentEngineName
+   *   The name of the engine that will be the new default engine.
    *
    */
   _showRemovalOfSearchEngineNotificationBox(
-    prevCurrentEngine,
-    newCurrentEngine
+    prevCurrentEngineName,
+    newCurrentEngineName
   ) {
     let win = Services.wm.getMostRecentBrowserWindow();
     win.BrowserSearch.removalOfSearchEngineNotificationBox(
-      prevCurrentEngine,
-      newCurrentEngine
+      prevCurrentEngineName,
+      newCurrentEngineName
     );
   }
 
