@@ -673,6 +673,7 @@ class StyleStruct(object):
         self.gecko_name = gecko_name or name
         self.gecko_ffi_name = "nsStyle" + self.gecko_name
         self.additional_methods = additional_methods or []
+        self.document_dependent = self.gecko_name in ["Font", "Visibility", "Text"]
 
 
 class PropertiesData(object):

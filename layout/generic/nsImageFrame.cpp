@@ -1807,9 +1807,8 @@ void nsImageFrame::DisplayAltText(nsPresContext* aPresContext,
 }
 
 struct nsRecessedBorder : public nsStyleBorder {
-  nsRecessedBorder(nscoord aBorderWidth, nsPresContext* aPresContext)
-      : nsStyleBorder(*aPresContext->Document()) {
-    for (const auto side : mozilla::AllPhysicalSides()) {
+  explicit nsRecessedBorder(nscoord aBorderWidth) {
+    for (const auto side : AllPhysicalSides()) {
       BorderColorFor(side) = StyleColor::Black();
       mBorder.Side(side) = aBorderWidth;
       // Note: use SetBorderStyle here because we want to affect
@@ -1891,7 +1890,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
 
   // Paint the border
   if (!isLoading) {
-    nsRecessedBorder recessedBorder(borderEdgeWidth, PresContext());
+    nsRecessedBorder recessedBorder(borderEdgeWidth);
 
     // Assert that we're not drawing a border-image here; if we were, we
     // couldn't ignore the ImgDrawResult that PaintBorderWithStyleBorder
@@ -2067,7 +2066,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
 
   // Paint the border
   if (!isLoading) {
-    nsRecessedBorder recessedBorder(borderEdgeWidth, PresContext());
+    nsRecessedBorder recessedBorder(borderEdgeWidth);
     // Assert that we're not drawing a border-image here; if we were, we
     // couldn't ignore the ImgDrawResult that PaintBorderWithStyleBorder
     // returns.

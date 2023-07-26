@@ -1498,22 +1498,6 @@ void Gecko_AddPropertyToSet(nsCSSPropertyIDSet* aPropertySet,
   aPropertySet->AddProperty(aProperty);
 }
 
-#define STYLE_STRUCT(name)                                             \
-                                                                       \
-  void Gecko_Construct_Default_nsStyle##name(nsStyle##name* ptr,       \
-                                             const Document* doc) {    \
-    new (ptr) nsStyle##name(*doc);                                     \
-  }                                                                    \
-                                                                       \
-  void Gecko_CopyConstruct_nsStyle##name(nsStyle##name* ptr,           \
-                                         const nsStyle##name* other) { \
-    new (ptr) nsStyle##name(*other);                                   \
-  }                                                                    \
-                                                                       \
-  void Gecko_Destroy_nsStyle##name(nsStyle##name* ptr) {               \
-    ptr->~nsStyle##name();                                             \
-  }
-
 bool Gecko_DocumentRule_UseForPresentation(
     const Document* aDocument, const nsACString* aPattern,
     DocumentMatchingFunction aMatchingFunction) {
@@ -1536,6 +1520,33 @@ void Gecko_SetJemallocThreadLocalArena(bool enabled) {
   jemalloc_thread_local_arena(enabled);
 #endif
 }
+
+template <typename T>
+void Construct(T* aPtr, const Document* aDoc) {
+  if constexpr (std::is_constructible_v<T, const Document&>) {
+    MOZ_ASSERT(aDoc);
+    new (KnownNotNull, aPtr) T(*aDoc);
+  } else {
+    MOZ_ASSERT(!aDoc);
+    new (KnownNotNull, aPtr) T();
+    // These instance are intentionally global, and we don't want leakcheckers
+    // to report them.
+    aPtr->MarkLeaked();
+  }
+}
+
+#define STYLE_STRUCT(name)                                             \
+  void Gecko_Construct_Default_nsStyle##name(nsStyle##name* ptr,       \
+                                             const Document* doc) {    \
+    Construct(ptr, doc);                                               \
+  }                                                                    \
+  void Gecko_CopyConstruct_nsStyle##name(nsStyle##name* ptr,           \
+                                         const nsStyle##name* other) { \
+    new (ptr) nsStyle##name(*other);                                   \
+  }                                                                    \
+  void Gecko_Destroy_nsStyle##name(nsStyle##name* ptr) {               \
+    ptr->~nsStyle##name();                                             \
+  }
 
 #include "nsStyleStructList.h"
 

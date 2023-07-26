@@ -24,10 +24,19 @@
 namespace mozilla {
 
 namespace detail {
+
+template <typename T, typename Enable = void>
+struct HasTriggerImageLoads : public std::false_type {};
+
+template <typename T>
+struct HasTriggerImageLoads<T, decltype(std::declval<T&>().TriggerImageLoads(
+                                   std::declval<dom::Document&>(), nullptr))>
+    : public std::true_type {};
+
 template <typename T, const T* (ComputedStyle::*Method)() const>
 void TriggerImageLoads(dom::Document& aDocument, const ComputedStyle* aOldStyle,
                        ComputedStyle* aStyle) {
-  if constexpr (T::kHasTriggerImageLoads) {
+  if constexpr (HasTriggerImageLoads<T>::value) {
     auto* old = aOldStyle ? (aOldStyle->*Method)() : nullptr;
     auto* current = const_cast<T*>((aStyle->*Method)());
     current->TriggerImageLoads(aDocument, old);
@@ -36,6 +45,7 @@ void TriggerImageLoads(dom::Document& aDocument, const ComputedStyle* aOldStyle,
     Unused << aStyle;
   }
 }
+
 }  // namespace detail
 
 void ComputedStyle::StartImageLoads(dom::Document& aDocument,
@@ -56,7 +66,7 @@ StylePointerEvents ComputedStyle::PointerEvents() const {
     // work.
     return StylePointerEvents::Auto;
   }
-  auto& ui = *StyleUI();
+  const auto& ui = *StyleUI();
   if (ui.IsInert()) {
     return StylePointerEvents::None;
   }
