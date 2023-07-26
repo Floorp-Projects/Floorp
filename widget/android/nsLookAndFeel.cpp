@@ -234,9 +234,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
     case ColorID::MozColheaderhovertext:
       aColor = NS_RGB(0x10, 0x10, 0x10);
       break;
-    case ColorID::MozDragtargetzone:
-      aColor = mSystemColors.textColorHighlight;
-      break;
     case ColorID::MozButtonhoverface:
     case ColorID::MozButtonactiveface:
       aColor = NS_RGB(0xf3, 0xf0, 0xed);
