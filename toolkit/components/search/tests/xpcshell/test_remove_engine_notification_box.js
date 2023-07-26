@@ -241,7 +241,7 @@ add_task(async function test_default_engine_changed_and_metadata_unchanged() {
   await Services.search.wrappedJSObject._fetchEngineSelectorEngines();
   userSettings.metaData = {
     ...Services.search.wrappedJSObject._settings.getSettingsMetaData(),
-    appDefaultEngine: "Test search engine",
+    appDefaultEngineId: "engine@search.mozilla.orgdefault",
   };
 
   // Update config by removing the app default engine
@@ -251,6 +251,14 @@ add_task(async function test_default_engine_changed_and_metadata_unchanged() {
   Assert.ok(
     stub.calledOnce,
     "_reloadEngines should show the notification box."
+  );
+
+  Assert.deepEqual(
+    stub.firstCall.args,
+    ["Test search engine", "engine-pref"],
+    "_showRemovalOfSearchEngineNotificationBox should display " +
+      "'Test search engine' as the engine removed and 'engine-pref' as the new " +
+      "default engine."
   );
 
   const newDefault = await defaultEngineChanged;
@@ -266,6 +274,14 @@ add_task(async function test_default_engine_changed_and_metadata_unchanged() {
 
   await loadEngines(settings);
   Assert.ok(stub.calledTwice, "_loadEngines should show the notification box.");
+
+  Assert.deepEqual(
+    stub.secondCall.args,
+    ["Test search engine", "engine-pref"],
+    "_showRemovalOfSearchEngineNotificationBox should display " +
+      "'Test search engine' as the engine removed and 'engine-pref' as the new " +
+      "default engine."
+  );
 });
 
 add_task(async function test_app_default_engine_changed_on_start_up() {
@@ -284,6 +300,7 @@ add_task(async function test_app_default_engine_changed_on_start_up() {
     "_loadEngines should show the notification box."
   );
 });
+
 add_task(async function test_app_default_engine_change_start_up_still_exists() {
   stub.resetHistory();
   let settings = structuredClone(userSettings);
