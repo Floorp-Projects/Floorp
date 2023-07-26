@@ -3,6 +3,9 @@
 # The order of the main categories are defined in index.rst
 # Sub categories orders are preserved
 categories:
+    overview_doc:
+        - glossary
+        - overview
     setup_doc:
         - setup
     contributing_doc:
