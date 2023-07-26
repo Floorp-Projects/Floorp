@@ -4645,7 +4645,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
                      borderPadding, axisTracker, flr, fragmentData);
 
   bool mayNeedNextInFlow = false;
-  if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
+  if (aReflowInput.IsInFragmentedContext()) {
     // maxBlockEndEdgeOfChildren is relative to border-box, so we need to
     // subtract block-start border and padding to make it relative to our
     // content-box. Note that if there is a packing space in between the last
@@ -5352,11 +5352,6 @@ nsFlexContainerFrame::FlexLayoutResult nsFlexContainerFrame::DoFlexLayout(
 //
 // Note: "First" in the struct name means "BStart-most", not the order in the
 // flex line array or flex item array.
-//
-// TODO: Currently, we assume (for proper fragmentation) that the main-axis (or
-// cross-axis) is in the same direction as the corresponding writing-mode
-// inline-axis (or block-axis). Bug 1812485 will support pushing tall flex items
-// for flex containers with a "reversed" main-axis (or cross-axis).
 struct FirstLineOrFirstItemBAxisMetrics final {
   // This value stores the block-end edge shift for 1) the BStart-most line in
   // the current fragment of a row-oriented flex container, or 2) the
@@ -5394,9 +5389,6 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
   const LogicalPoint containerContentBoxOrigin(
       flexWM, aBorderPadding.IStart(flexWM), aBorderPadding.BStart(flexWM));
 
-  const FlexItem* firstItem =
-      aFlr.mLines[0].IsEmpty() ? nullptr : &aFlr.mLines[0].FirstItem();
-
   // The block-end of children is relative to the flex container's border-box.
   nscoord maxBlockEndEdgeOfChildren = containerContentBoxOrigin.B(flexWM);
 
@@ -5410,18 +5402,39 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
 
   // FINAL REFLOW: Give each child frame another chance to reflow, now that
   // we know its final size and position.
-  for (const FlexLine& line : aFlr.mLines) {
-    const bool isInFirstLine = &line == &aFlr.mLines[0];
+  const FlexLine& startmostLine = StartmostLine(aFlr.mLines, aAxisTracker);
+  const FlexItem* startmostItem =
+      startmostLine.IsEmpty() ? nullptr
+                              : &startmostLine.StartmostItem(aAxisTracker);
 
-    for (const FlexItem& item : line.Items()) {
+  const size_t numLines = aFlr.mLines.Length();
+  for (size_t lineIdx = 0; lineIdx < numLines; ++lineIdx) {
+    // Iterate flex lines from the startmost to endmost (relative to flex
+    // container's writing-mode).
+    const auto& line =
+        aFlr.mLines[aAxisTracker.IsCrossAxisReversed() ? numLines - lineIdx - 1
+                                                       : lineIdx];
+    MOZ_ASSERT(lineIdx != 0 || &line == &startmostLine,
+               "Logic for finding startmost line should be consistent!");
+
+    const size_t numItems = line.Items().Length();
+    for (size_t itemIdx = 0; itemIdx < numItems; ++itemIdx) {
+      // Iterate flex items from the startmost to endmost (relative to flex
+      // container's writing-mode).
+      const FlexItem& item = line.Items()[aAxisTracker.IsMainAxisReversed()
+                                              ? numItems - itemIdx - 1
+                                              : itemIdx];
+      MOZ_ASSERT(lineIdx != 0 || itemIdx != 0 || &item == startmostItem,
+                 "Logic for finding startmost item should be consistent!");
+
       LogicalPoint framePos = aAxisTracker.LogicalPointFromFlexRelativePoint(
           item.MainPosition(), item.CrossPosition(), aFlr.mContentBoxMainSize,
           aFlr.mContentBoxCrossSize);
       // This variable records the item's block-end edge before we give it a
-      // per-item-position-shift, if the item is a first-in-flow in the first
-      // line of a row-oriented flex container fragment. It is used to determine
-      // the block-end edge shift for the first line at the end of the outer
-      // loop.
+      // per-item-position-shift, if the item is a first-in-flow in the
+      // startmost line of a row-oriented flex container fragment. It is used to
+      // determine the block-end edge shift for the startmost line at the end of
+      // the outer loop.
       Maybe<nscoord> frameBPosBeforePerItemShift;
 
       if (item.Frame()->GetPrevInFlow()) {
@@ -5463,19 +5476,19 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
         };
 
         if (aAxisTracker.IsRowOriented()) {
-          if (isInFirstLine) {
+          if (&line == &startmostLine) {
             frameBPosBeforePerItemShift.emplace(framePos.B(flexWM));
             framePos.B(flexWM) += GetPerItemPositionShiftToBEnd();
           } else {
-            // We've computed how far the block-end edge of the first line had
-            // to shift at the end of outer loop. Here, we just shift all items
-            // in rest of the lines by the same amount.
+            // We've computed how far the block-end edge of the startmost line
+            // had to shift at the end of outer loop. Here, we just shift all
+            // items in rest of the lines by the same amount.
             framePos.B(flexWM) += bAxisMetrics.mBEndEdgeShift;
           }
         } else {
           MOZ_ASSERT(aAxisTracker.IsColumnOriented());
           if (isSingleLine) {
-            if (&item == firstItem) {
+            if (&item == startmostItem) {
               bAxisMetrics.mBEndEdgeShift = GetPerItemPositionShiftToBEnd();
             }
             framePos.B(flexWM) += bAxisMetrics.mBEndEdgeShift;
@@ -5614,11 +5627,11 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
       }
     }
 
-    // Now we've finished processing all the items in the first line. Determine
-    // the amount by which the first line's block-end edge has shifted, so we
-    // can apply the same shift for the remaining lines.
-    if (GetPrevInFlow() && aAxisTracker.IsRowOriented() && isInFirstLine &&
-        bAxisMetrics.mMaxBEndEdge) {
+    // Now we've finished processing all the items in the startmost line.
+    // Determine the amount by which the startmost line's block-end edge has
+    // shifted, so we can apply the same shift for the remaining lines.
+    if (GetPrevInFlow() && aAxisTracker.IsRowOriented() &&
+        &line == &startmostLine && bAxisMetrics.mMaxBEndEdge) {
       auto& [before, after] = *bAxisMetrics.mMaxBEndEdge;
       bAxisMetrics.mBEndEdgeShift = after - before;
     }
