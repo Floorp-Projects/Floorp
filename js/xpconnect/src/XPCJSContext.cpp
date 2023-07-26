@@ -1184,7 +1184,8 @@ class HelperThreadTaskHandler : public Task {
     JS::RunHelperThreadTask();
     return true;
   }
-  explicit HelperThreadTaskHandler() : Task(false, EventQueuePriority::Normal) {
+  explicit HelperThreadTaskHandler()
+      : Task(Kind::OffMainThreadOnly, EventQueuePriority::Normal) {
     // Bug 1703185: Currently all tasks are run at the same priority.
   }
 
