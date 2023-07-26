@@ -10,6 +10,9 @@ export class ShoppingSidebarParent extends JSWindowActorParent {
   async receiveMessage(message) {
     let win = this.browsingContext.top.embedderElement.ownerGlobal;
     switch (message.name) {
+      case "DisableShopping":
+        Services.prefs.setIntPref("browser.shopping.experience2023.optedIn", 2);
+        break;
       case "GetProductURL":
         let url = win.gBrowser.selectedBrowser.currentURI.spec;
         return url;

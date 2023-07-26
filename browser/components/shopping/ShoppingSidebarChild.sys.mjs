@@ -30,6 +30,9 @@ export class ShoppingSidebarChild extends JSWindowActorChild {
       case "ContentReady":
         this.updateContent();
         break;
+      case "DisableShopping":
+        this.sendAsyncMessage("DisableShopping");
+        break;
     }
   }
 
