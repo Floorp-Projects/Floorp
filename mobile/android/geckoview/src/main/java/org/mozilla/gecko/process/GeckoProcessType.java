@@ -34,7 +34,7 @@ public enum GeckoProcessType {
   }
 
   @WrapForJNI
-  private static final GeckoProcessType fromInt(final int type) {
+  private static GeckoProcessType fromInt(final int type) {
     return values()[type];
   }
 }
