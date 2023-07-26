@@ -36,7 +36,7 @@ add_task(async function test_about_preferences_manage_languages() {
 
   is(
     downloadAllLabel.getAttribute("data-l10n-id"),
-    "translations-manage-all-language",
+    "translations-manage-install-description",
     "The first row is all of the languages."
   );
   is(frenchLabel.textContent, "French", "There is a French row.");
@@ -158,7 +158,7 @@ add_task(async function test_about_preferences_download_reject() {
   click(frenchDownload, "Downloading French");
 
   is(
-    maybeGetByL10nId("translations-manage-error-download", document),
+    maybeGetByL10nId("translations-manage-error-install", document),
     null,
     "No error messages are present."
   );
@@ -180,13 +180,13 @@ add_task(async function test_about_preferences_download_reject() {
   }
 
   await waitForCondition(
-    () => maybeGetByL10nId("translations-manage-error-download", document),
+    () => maybeGetByL10nId("translations-manage-error-install", document),
     "The error message is now visible."
   );
 
   click(frenchDownload, "Attempting to download French again", document);
   is(
-    maybeGetByL10nId("translations-manage-error-download", document),
+    maybeGetByL10nId("translations-manage-error-install", document),
     null,
     "The error message is hidden again."
   );
