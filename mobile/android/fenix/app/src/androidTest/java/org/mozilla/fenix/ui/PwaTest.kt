@@ -35,7 +35,6 @@ class PwaTest {
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
 
-    @SmokeTest
     @Test
     fun externalLinkPWATest() {
         val externalLinkURL = "https://mozilla-mobile.github.io/testapp/downloads"
@@ -57,7 +56,6 @@ class PwaTest {
     }
 
     @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1807275")
-    @SmokeTest
     @Test
     fun emailLinkPWATest() {
         navigationToolbar {
@@ -74,7 +72,6 @@ class PwaTest {
         }
     }
 
-    @SmokeTest
     @Test
     fun telephoneLinkPWATest() {
         navigationToolbar {
@@ -111,7 +108,6 @@ class PwaTest {
     }
 
     @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807273")
-    @SmokeTest
     @Test
     fun saveLoginsInPWATest() {
         val pwaPage = "https://mozilla-mobile.github.io/testapp/loginForm"
