@@ -2,25 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 export class ShoppingSidebarChild extends JSWindowActorChild {
-  constructor() {
-    super();
-
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "optedIn",
-      "browser.shopping.experience2023.optedIn",
-      null,
-      () => this.updateContent()
-    );
+  async initContent() {
+    let url = await this.sendQuery("GetProductURL");
+    this.updateProductURL(url);
   }
 
   receiveMessage(message) {
     switch (message.name) {
       case "ShoppingSidebar:UpdateProductURL":
-        this.updateContent();
+        this.updateProductURL(message.data.url);
         break;
     }
   }
@@ -28,15 +19,13 @@ export class ShoppingSidebarChild extends JSWindowActorChild {
   handleEvent(event) {
     switch (event.type) {
       case "ContentReady":
-        this.updateContent();
+        this.initContent();
         break;
     }
   }
 
-  async updateContent() {
-    let url = await this.sendQuery("GetProductURL");
-    this.sendToContent("Update", {
-      optedIn: this.optedIn,
+  updateProductURL(url) {
+    this.sendToContent("UpdateProductURL", {
       url,
     });
   }
