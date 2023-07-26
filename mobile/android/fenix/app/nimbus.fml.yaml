@@ -11,6 +11,7 @@ channels:
   - developer
 includes:
   - onboarding.fml.yaml
+  - pbm.fml.yaml
 import:
   - path: ../../android-components/components/service/nimbus/messaging.fml.yaml
     channel: release

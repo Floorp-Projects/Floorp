@@ -139,6 +139,14 @@ print:
     share-print-enabled:
       type: boolean
       description: "If true, a print button from the share menu is available."
+private-browsing:
+  description: Private Browsing Mode
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    felt-privacy-enabled:
+      type: boolean
+      description: "if true, enable felt privacy related UI"
 re-engagement-notification:
   description: A feature that shows the re-engagement notification if the user is inactive.
   hasExposure: true

@@ -1676,6 +1676,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         }
     }
 
+    val feltPrivateBrowsingEnabled: Boolean
+        get() {
+            FxNimbus.features.privateBrowsing.recordExposure()
+            return FxNimbus.features.privateBrowsing.value().feltPrivacyEnabled
+        }
+
     /**
      * Indicates if the review quality check feature is enabled by the user.
      */

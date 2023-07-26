@@ -1,0 +1,19 @@
+---
+features:
+
+  private-browsing:
+    description: Private Browsing Mode
+
+    variables:
+      felt-privacy-enabled:
+        description: if true, enable felt privacy related UI
+        type: Boolean
+        default: false
+
+    defaults:
+      - channel: developer
+        value:
+          felt-privacy-enabled: true
+      - channel: nightly
+        value:
+          felt-privacy-enabled: false
