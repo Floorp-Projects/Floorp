@@ -371,10 +371,11 @@
   /*
   * We do want to keep the underlying chars for the indent for user to copy/paste,
   * but we can reduce the inline space it takes.
-  * Tweaking letter-spacing instead of using font-size as the latter could be odd when
+  * Tweaking word-spacing instead of using font-size as the latter could be odd when
   * the text is selected.
+  * Avoid using letter-spacing as this can cause visual glitches on low-dpi screen (see Bug 1845517).
   */
-  letter-spacing: -0.5ch;
+  word-spacing: -0.5ch;
 }
 
 .ruleview-rule-indent.clipboard-only {
