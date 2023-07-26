@@ -277,21 +277,8 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
     case ColorID::MozDragtargetzone:
       color = GetColorFromNSColor(NSColor.selectedControlColor);
       break;
-    case ColorID::MozMacChromeActive: {
-      int grey = NativeGreyColorAsInt(toolbarFillGrey, true);
-      color = NS_RGB(grey, grey, grey);
-      break;
-    }
-    case ColorID::MozMacChromeInactive: {
-      int grey = NativeGreyColorAsInt(toolbarFillGrey, false);
-      color = NS_RGB(grey, grey, grey);
-      break;
-    }
     case ColorID::MozMacFocusring:
       color = GetColorFromNSColorWithCustomAlpha(NSColor.keyboardFocusIndicatorColor, 0.48);
-      break;
-    case ColorID::MozMacMenushadow:
-      color = NS_RGB(0xA3, 0xA3, 0xA3);
       break;
     case ColorID::MozMacMenutextdisable:
       color = NS_RGB(0x98, 0x98, 0x98);
@@ -303,11 +290,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
     case ColorID::Graytext:
       color = GetColorFromNSColor(NSColor.disabledControlTextColor);
       break;
-    case ColorID::MozMacMenuselect:
-      color = GetColorFromNSColor(NSColor.alternateSelectedControlColor);
-      break;
     case ColorID::MozCellhighlight:
-    case ColorID::MozMacSecondaryhighlight:
       // For inactive list selection
       color = GetColorFromNSColor(NSColor.secondarySelectedControlColor);
       break;

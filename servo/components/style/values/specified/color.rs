@@ -257,27 +257,16 @@ pub enum SystemColor {
     /// Used for button background when disabled.
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozButtondisabledface,
-
-    /// Background color of chrome toolbars in active windows.
-    MozMacChromeActive,
-    /// Background color of chrome toolbars in inactive windows.
-    MozMacChromeInactive,
     /// Foreground color of default buttons.
     MozMacDefaultbuttontext,
     /// Ring color around text fields and lists.
     MozMacFocusring,
-    /// Color used when mouse is over a menu item.
-    MozMacMenuselect,
-    /// Color used to do shadows on menu items.
-    MozMacMenushadow,
     /// Color used to display text for disabled menu items.
     MozMacMenutextdisable,
     /// Color used to display text while mouse is over a menu item.
     MozMacMenutextselect,
     /// Text color of disabled text on toolbars.
     MozMacDisabledtoolbartext,
-    /// Inactive light hightlight
-    MozMacSecondaryhighlight,
 
     MozMacMenupopup,
     MozMacMenuitem,

@@ -270,16 +270,11 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-buttonactivetext",
     "ui.-moz-buttonactiveface",
     "ui.-moz-buttondisabledface",
-    "ui.-moz_mac_chrome_active",
-    "ui.-moz_mac_chrome_inactive",
     "ui.-moz-mac-defaultbuttontext",
     "ui.-moz-mac-focusring",
-    "ui.-moz-mac-menuselect",
-    "ui.-moz-mac-menushadow",
     "ui.-moz-mac-menutextdisable",
     "ui.-moz-mac-menutextselect",
     "ui.-moz_mac_disabledtoolbartext",
-    "ui.-moz-mac-secondaryhighlight",
     "ui.-moz-mac-menupopup",
     "ui.-moz-mac-menuitem",
     "ui.-moz-mac-active-menuitem",
@@ -697,15 +692,10 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       COLOR(MozMenuhoverdisabled, 0xF0, 0xF0, 0xF0)
       COLOR(MozEventreerow, 0xFF, 0xFF, 0xFF)
       COLOR(MozOddtreerow, 0xFF, 0xFF, 0xFF)
-      COLOR(MozMacChromeActive, 0xB2, 0xB2, 0xB2)
-      COLOR(MozMacChromeInactive, 0xE1, 0xE1, 0xE1)
       COLOR(MozMacFocusring, 0x60, 0x9D, 0xD7)
-      COLOR(MozMacMenuselect, 0x38, 0x75, 0xD7)
-      COLOR(MozMacMenushadow, 0xA3, 0xA3, 0xA3)
       COLOR(MozMacMenutextdisable, 0x88, 0x88, 0x88)
       COLOR(MozMacMenutextselect, 0xFF, 0xFF, 0xFF)
       COLOR(MozMacDisabledtoolbartext, 0x3F, 0x3F, 0x3F)
-      COLOR(MozMacSecondaryhighlight, 0xD4, 0xD4, 0xD4)
       COLOR(MozMacMenupopup, 0xe6, 0xe6, 0xe6)
       COLOR(MozMacMenuitem, 0xe6, 0xe6, 0xe6)
       COLOR(MozMacActiveMenuitem, 0x0a, 0x64, 0xdc)

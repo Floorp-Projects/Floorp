@@ -31,7 +31,7 @@ richlistbox.theme-listbox > richlistitem {
 }
 
 richlistbox.theme-listbox:not(:focus) > richlistitem[selected="true"] {
-  background-color: -moz-mac-secondaryhighlight;
+  background-color: -moz-cellhighlight;
 }
 
 richlistbox.theme-listbox > richlistitem > label {
