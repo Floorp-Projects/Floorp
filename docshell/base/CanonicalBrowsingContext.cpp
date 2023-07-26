@@ -1433,6 +1433,11 @@ uint32_t CanonicalBrowsingContext::CountSiteOrigins(
   return uniqueSiteOrigins.Count();
 }
 
+/* static */
+bool CanonicalBrowsingContext::IsPrivateBrowsingActive() {
+  return gNumberOfPrivateContexts > 0;
+}
+
 void CanonicalBrowsingContext::UpdateMediaControlAction(
     const MediaControlAction& aAction) {
   if (IsDiscarded()) {
