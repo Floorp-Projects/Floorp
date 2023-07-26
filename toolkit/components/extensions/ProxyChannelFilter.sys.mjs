@@ -20,13 +20,17 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIProtocolProxyService"
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "tabTracker", () => {
+ChromeUtils.defineLazyGetter(lazy, "tabTracker", () => {
   return lazy.ExtensionParent.apiManager.global.tabTracker;
 });
-XPCOMUtils.defineLazyGetter(lazy, "getCookieStoreIdForOriginAttributes", () => {
-  return lazy.ExtensionParent.apiManager.global
-    .getCookieStoreIdForOriginAttributes;
-});
+ChromeUtils.defineLazyGetter(
+  lazy,
+  "getCookieStoreIdForOriginAttributes",
+  () => {
+    return lazy.ExtensionParent.apiManager.global
+      .getCookieStoreIdForOriginAttributes;
+  }
+);
 
 // DNS is resolved on the SOCKS proxy server.
 const { TRANSPARENT_PROXY_RESOLVES_HOST } = Ci.nsIProxyInfo;

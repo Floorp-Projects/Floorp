@@ -39,7 +39,7 @@ const log = (() => {
   });
 })();
 
-XPCOMUtils.defineLazyGetter(lazy, "isRunningTests", () => {
+ChromeUtils.defineLazyGetter(lazy, "isRunningTests", () => {
   if (Services.env.get("MOZ_DISABLE_NONLOCAL_CONNECTIONS") === "1") {
     // Allow to override the server URL if non-local connections are disabled,
     // usually true when running tests.
@@ -50,7 +50,7 @@ XPCOMUtils.defineLazyGetter(lazy, "isRunningTests", () => {
 
 // Overriding the server URL is normally disabled on Beta and Release channels,
 // except under some conditions.
-XPCOMUtils.defineLazyGetter(lazy, "allowServerURLOverride", () => {
+ChromeUtils.defineLazyGetter(lazy, "allowServerURLOverride", () => {
   if (!AppConstants.RELEASE_OR_BETA) {
     // Always allow to override the server URL on Nightly/DevEdition.
     return true;

@@ -17,7 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 // The current platform as specified in the AMO API:
 // http://addons-server.readthedocs.io/en/latest/topics/api/addons.html#addon-detail-platform
-XPCOMUtils.defineLazyGetter(lazy, "PLATFORM", () => {
+ChromeUtils.defineLazyGetter(lazy, "PLATFORM", () => {
   let platform = Services.appinfo.OS;
   switch (platform) {
     case "Darwin":

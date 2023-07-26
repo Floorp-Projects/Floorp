@@ -7,8 +7,6 @@
  * helper functions that are useful to all components of the urlbar.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -1472,11 +1470,11 @@ export var UrlbarUtils = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(UrlbarUtils.ICON, "DEFAULT", () => {
+ChromeUtils.defineLazyGetter(UrlbarUtils.ICON, "DEFAULT", () => {
   return lazy.PlacesUtils.favicons.defaultFavicon.spec;
 });
 
-XPCOMUtils.defineLazyGetter(UrlbarUtils, "strings", () => {
+ChromeUtils.defineLazyGetter(UrlbarUtils, "strings", () => {
   return Services.strings.createBundle(
     "chrome://global/locale/autocomplete.properties"
   );
@@ -2151,7 +2149,7 @@ export class UrlbarMuxer {
  */
 export class UrlbarProvider {
   constructor() {
-    XPCOMUtils.defineLazyGetter(this, "logger", () =>
+    ChromeUtils.defineLazyGetter(this, "logger", () =>
       UrlbarUtils.getLogger({ prefix: `Provider.${this.name}` })
     );
   }

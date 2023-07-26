@@ -8,7 +8,6 @@
 
 import { DownloadPaths } from "resource://gre/modules/DownloadPaths.sys.mjs";
 import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import { Assert } from "resource://testing-common/Assert.sys.mjs";
 
@@ -85,7 +84,7 @@ export var FileTestUtils = {
  * Returns a reference to a global temporary directory that will be deleted
  * when all tests terminate.
  */
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   FileTestUtils,
   "_globalTemporaryDirectory",
   function () {

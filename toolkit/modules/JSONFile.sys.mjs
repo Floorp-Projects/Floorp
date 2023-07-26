@@ -28,8 +28,6 @@
 
 // Globals
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -38,7 +36,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gTextDecoder", function () {
+ChromeUtils.defineLazyGetter(lazy, "gTextDecoder", function () {
   return new TextDecoder();
 });
 

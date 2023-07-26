@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { GeckoViewModule } from "resource://gre/modules/GeckoViewModule.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -13,7 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "ReferrerInfo", () =>
+ChromeUtils.defineLazyGetter(lazy, "ReferrerInfo", () =>
   Components.Constructor(
     "@mozilla.org/referrer-info;1",
     "nsIReferrerInfo",

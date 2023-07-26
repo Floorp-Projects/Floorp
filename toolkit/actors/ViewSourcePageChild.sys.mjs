@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const BUNDLE_URL = "chrome://global/locale/viewSource.properties";
 
 // These are markers used to delimit the selection during processing. They
@@ -30,7 +28,7 @@ export class ViewSourcePageChild extends JSWindowActorChild {
   constructor() {
     super();
 
-    XPCOMUtils.defineLazyGetter(this, "bundle", function () {
+    ChromeUtils.defineLazyGetter(this, "bundle", function () {
       return Services.strings.createBundle(BUNDLE_URL);
     });
   }

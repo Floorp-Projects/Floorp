@@ -4,7 +4,6 @@
 
 import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
 import * as Loader from "resource://devtools/shared/loader/Loader.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -59,7 +58,7 @@ export class DevToolsFrameChild extends JSWindowActorChild {
     // If the page we navigate from supports being stored in bfcache,
     // the navigation will use a new BrowsingContext. And so force spawning
     // a new top-level target.
-    XPCOMUtils.defineLazyGetter(
+    ChromeUtils.defineLazyGetter(
       this,
       "isBfcacheInParentEnabled",
       () =>

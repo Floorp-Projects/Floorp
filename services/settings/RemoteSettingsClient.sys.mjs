@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 import { Downloader } from "resource://services-settings/Attachments.sys.mjs";
@@ -25,7 +24,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const TELEMETRY_COMPONENT = "remotesettings";
 
-XPCOMUtils.defineLazyGetter(lazy, "console", () => lazy.Utils.log);
+ChromeUtils.defineLazyGetter(lazy, "console", () => lazy.Utils.log);
 
 /**
  * cacheProxy returns an object Proxy that will memoize properties of the target.
@@ -340,13 +339,13 @@ export class RemoteSettingsClient extends EventEmitter {
     // or when pulling data from a dev server.
     this.verifySignature = AppConstants.REMOTE_SETTINGS_VERIFY_SIGNATURE;
 
-    XPCOMUtils.defineLazyGetter(
+    ChromeUtils.defineLazyGetter(
       this,
       "db",
       () => new lazy.Database(this.identifier)
     );
 
-    XPCOMUtils.defineLazyGetter(
+    ChromeUtils.defineLazyGetter(
       this,
       "attachments",
       () => new AttachmentDownloader(this)

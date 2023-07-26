@@ -6,7 +6,6 @@
 
 /* eslint "valid-jsdoc": [2, {requireReturn: false}] */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
@@ -66,7 +65,7 @@ const kRegExpRemovalRegExp = /^\/\^\(\(?|\\|\)\)?\$\/$/g;
 // may be additional requirements such as requiring the add-on to be signed.
 // See the uses of kXPIAddonTypes before introducing new addon types or
 // providers that differ from the existing types.
-XPCOMUtils.defineLazyGetter(lazy, "kXPIAddonTypes", () => {
+ChromeUtils.defineLazyGetter(lazy, "kXPIAddonTypes", () => {
   // In practice, this result is equivalent to ALL_XPI_TYPES in XPIProvider.jsm.
   // "plugin" (from GMPProvider.sys.mjs) is intentionally omitted, as we decided to
   // not support blocklisting of GMP plugins in bug 1086668.
@@ -1328,7 +1327,7 @@ var gBlocklistLevel = DEFAULT_LEVEL;
 // It is not possible to use the one in Services since it will not successfully
 // QueryInterface nsIXULAppInfo in xpcshell tests due to other code calling
 // Services.appinfo before the nsIXULAppInfo is created by the tests.
-XPCOMUtils.defineLazyGetter(lazy, "gApp", function () {
+ChromeUtils.defineLazyGetter(lazy, "gApp", function () {
   // eslint-disable-next-line mozilla/use-services
   let appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
   try {
@@ -1345,10 +1344,10 @@ XPCOMUtils.defineLazyGetter(lazy, "gApp", function () {
   return appinfo;
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gAppID", function () {
+ChromeUtils.defineLazyGetter(lazy, "gAppID", function () {
   return lazy.gApp.ID;
 });
-XPCOMUtils.defineLazyGetter(lazy, "gAppOS", function () {
+ChromeUtils.defineLazyGetter(lazy, "gAppOS", function () {
   return lazy.gApp.OS;
 });
 

@@ -4,8 +4,6 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { MigrationUtils } from "resource:///modules/MigrationUtils.sys.mjs";
 import { MigratorBase } from "resource:///modules/MigratorBase.sys.mjs";
 import { MSMigrationUtils } from "resource:///modules/MSMigrationUtils.sys.mjs";
@@ -25,7 +23,7 @@ const kEdgeRegistryRoot =
   "microsoft.microsoftedge_8wekyb3d8bbwe\\MicrosoftEdge";
 const kEdgeDatabasePath = "AC\\MicrosoftEdge\\User\\Default\\DataStore\\Data\\";
 
-XPCOMUtils.defineLazyGetter(lazy, "gEdgeDatabase", function () {
+ChromeUtils.defineLazyGetter(lazy, "gEdgeDatabase", function () {
   let edgeDir = MSMigrationUtils.getEdgeLocalDataFolder();
   if (!edgeDir) {
     return null;

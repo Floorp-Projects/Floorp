@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -11,7 +9,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "tpFlagsMask", () => {
+ChromeUtils.defineLazyGetter(lazy, "tpFlagsMask", () => {
   const trackingProtectionLevel2Enabled = Services.prefs
     .getStringPref("urlclassifier.trackingTable")
     .includes("content-track-digest256");

@@ -10,8 +10,6 @@
 
 const Cm = Components.manager;
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -28,17 +26,17 @@ const autocompleteController = Cc[
   "@mozilla.org/autocomplete/controller;1"
 ].getService(Ci.nsIAutoCompleteController);
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "ADDRESSES_COLLECTION_NAME",
   () => lazy.FormAutofillUtils.ADDRESSES_COLLECTION_NAME
 );
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "CREDITCARDS_COLLECTION_NAME",
   () => lazy.FormAutofillUtils.CREDITCARDS_COLLECTION_NAME
 );
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "FIELD_STATES",
   () => lazy.FormAutofillUtils.FIELD_STATES

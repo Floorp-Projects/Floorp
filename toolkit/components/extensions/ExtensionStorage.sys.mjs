@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 const { DefaultWeakMap, ExtensionError } = ExtensionUtils;
@@ -478,7 +477,7 @@ export var ExtensionStorage = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(ExtensionStorage, "extensionDir", () =>
+ChromeUtils.defineLazyGetter(ExtensionStorage, "extensionDir", () =>
   PathUtils.join(PathUtils.profileDir, "browser-extension-data")
 );
 

@@ -28,11 +28,11 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
   WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gSystemPrincipal", () =>
+ChromeUtils.defineLazyGetter(lazy, "gSystemPrincipal", () =>
   Services.scriptSecurityManager.getSystemPrincipal()
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "gWindowsAlertsService", () => {
+ChromeUtils.defineLazyGetter(lazy, "gWindowsAlertsService", () => {
   // We might not have the Windows alerts service: e.g., on Windows 7 and Windows 8.
   if (!("nsIWindowsAlertsService" in Ci)) {
     return null;

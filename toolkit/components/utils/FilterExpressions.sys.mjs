@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -34,7 +32,7 @@ function getPrefValue(prefKey, defaultValue) {
   }
 }
 
-XPCOMUtils.defineLazyGetter(lazy, "jexl", () => {
+ChromeUtils.defineLazyGetter(lazy, "jexl", () => {
   const jexl = new lazy.mozjexl.Jexl();
   jexl.addTransforms({
     date: dateString => new Date(dateString),

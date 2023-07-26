@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
 import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 
@@ -34,7 +33,7 @@ export class FormAutofillSection {
     this.handler = handler;
     this.filledRecordGUID = null;
 
-    XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
+    ChromeUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
       const brandShortName =
         FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
       // The string name for Mac is changed because the value needed updating.
@@ -45,7 +44,7 @@ export class FormAutofillSection {
       );
     });
 
-    XPCOMUtils.defineLazyGetter(this, "log", () =>
+    ChromeUtils.defineLazyGetter(this, "log", () =>
       FormAutofill.defineLogGetter(this, "FormAutofillHandler")
     );
 

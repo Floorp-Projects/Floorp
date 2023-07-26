@@ -2,24 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "require", () => {
+ChromeUtils.defineLazyGetter(lazy, "require", () => {
   const { require } = ChromeUtils.importESModule(
     "resource://devtools/shared/loader/Loader.sys.mjs"
   );
   return require;
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "DevToolsServer", () => {
+ChromeUtils.defineLazyGetter(lazy, "DevToolsServer", () => {
   const { DevToolsServer } = lazy.require("devtools/server/devtools-server");
   return DevToolsServer;
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "SocketListener", () => {
+ChromeUtils.defineLazyGetter(lazy, "SocketListener", () => {
   const { SocketListener } = lazy.require("devtools/shared/security/socket");
   return SocketListener;
 });

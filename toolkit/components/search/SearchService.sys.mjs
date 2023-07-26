@@ -26,7 +26,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UserSearchEngine: "resource://gre/modules/UserSearchEngine.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
+ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "SearchService",
     maxLogLevel: lazy.SearchUtils.loggingEnabled ? "Debug" : "Warn",

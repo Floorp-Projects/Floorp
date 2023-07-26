@@ -1851,7 +1851,7 @@ class SchemaAPIManager extends EventEmitter {
       global,
     });
 
-    XPCOMUtils.defineLazyGetter(global, "console", getConsole);
+    ChromeUtils.defineLazyGetter(global, "console", getConsole);
     // eslint-disable-next-line mozilla/lazy-getter-object-name
     ChromeUtils.defineESModuleGetters(global, {
       ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",

@@ -18,13 +18,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
   KeyValueService: "resource://gre/modules/kvstore.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "StartupCache",
   () => lazy.ExtensionParent.StartupCache
 );
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "Management",
   () => lazy.ExtensionParent.apiManager

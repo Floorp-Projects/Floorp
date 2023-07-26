@@ -2,15 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   StreamUtils: "chrome://remote/content/marionette/stream-utils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "unicodeConverter", () => {
+ChromeUtils.defineLazyGetter(lazy, "unicodeConverter", () => {
   const unicodeConverter = Cc[
     "@mozilla.org/intl/scriptableunicodeconverter"
   ].createInstance(Ci.nsIScriptableUnicodeConverter);

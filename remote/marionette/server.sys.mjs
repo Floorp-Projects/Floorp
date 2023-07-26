@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -19,10 +17,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Response: "chrome://remote/content/marionette/message.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+ChromeUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
-XPCOMUtils.defineLazyGetter(lazy, "ServerSocket", () => {
+ChromeUtils.defineLazyGetter(lazy, "ServerSocket", () => {
   return Components.Constructor(
     "@mozilla.org/network/server-socket;1",
     "nsIServerSocket",

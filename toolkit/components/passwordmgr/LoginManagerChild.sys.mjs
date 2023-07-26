@@ -67,7 +67,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIFormFillController"
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+ChromeUtils.defineLazyGetter(lazy, "log", () => {
   let logger = lazy.LoginHelper.createLogger("LoginManagerChild");
   return logger.log.bind(logger);
 });

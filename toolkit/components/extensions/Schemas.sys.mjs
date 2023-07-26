@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIAddonContentPolicy"
 );
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "StartupCache",
   () => lazy.ExtensionParent.StartupCache

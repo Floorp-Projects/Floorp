@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -26,7 +25,7 @@ export class SharedDataMap extends EventEmitter {
 
     if (this.isParent) {
       // Lazy-load JSON file that backs Storage instances.
-      XPCOMUtils.defineLazyGetter(this, "_store", () => {
+      ChromeUtils.defineLazyGetter(this, "_store", () => {
         let path = options.path;
         let store = null;
         if (!path) {

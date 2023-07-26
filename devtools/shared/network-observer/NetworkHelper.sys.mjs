@@ -60,8 +60,6 @@
  *  Mihai Sucan (Mozilla Corp.)
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -73,7 +71,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 // It would make sense to put this in the above
 // ChromeUtils.defineESModuleGetters, but that doesn't seem to work.
-XPCOMUtils.defineLazyGetter(lazy, "certDecoder", () => {
+ChromeUtils.defineLazyGetter(lazy, "certDecoder", () => {
   const { parse, pemToDER } = ChromeUtils.importESModule(
     "chrome://global/content/certviewer/certDecoder.mjs"
   );

@@ -10,7 +10,7 @@ const TRACKERS_BLOCKED_COUNT = "contentblocking.trackers_blocked_count";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "DB_PATH", function () {
+ChromeUtils.defineLazyGetter(lazy, "DB_PATH", function () {
   return PathUtils.join(PathUtils.profileDir, "protections.sqlite");
 });
 

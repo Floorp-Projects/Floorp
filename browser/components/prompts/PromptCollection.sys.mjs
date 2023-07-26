@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 /**
  * Implements nsIPromptCollection
  * @class PromptCollection
@@ -176,7 +174,7 @@ const BUNDLES = {
 PromptCollection.prototype.stringBundles = {};
 
 for (const [bundleName, bundleUrl] of Object.entries(BUNDLES)) {
-  XPCOMUtils.defineLazyGetter(
+  ChromeUtils.defineLazyGetter(
     PromptCollection.prototype.stringBundles,
     bundleName,
     function () {

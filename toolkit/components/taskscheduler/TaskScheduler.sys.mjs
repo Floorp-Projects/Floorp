@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -13,7 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   MacOSImpl: "resource://gre/modules/TaskSchedulerMacOSImpl.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gImpl", () => {
+ChromeUtils.defineLazyGetter(lazy, "gImpl", () => {
   if (AppConstants.platform == "win") {
     return lazy.WinImpl;
   }

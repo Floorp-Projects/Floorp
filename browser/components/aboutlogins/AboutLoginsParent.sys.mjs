@@ -21,7 +21,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UIState: "resource://services-sync/UIState.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+ChromeUtils.defineLazyGetter(lazy, "log", () => {
   return lazy.LoginHelper.createLogger("AboutLoginsParent");
 });
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -48,7 +48,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "signon.management.page.vulnerable-passwords.enabled",
   false
 );
-XPCOMUtils.defineLazyGetter(lazy, "AboutLoginsL10n", () => {
+ChromeUtils.defineLazyGetter(lazy, "AboutLoginsL10n", () => {
   return new Localization(["branding/brand.ftl", "browser/aboutLogins.ftl"]);
 });
 

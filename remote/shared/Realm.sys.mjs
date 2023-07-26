@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   addDebuggerToGlobal: "resource://gre/modules/jsdebugger.sys.mjs",
@@ -11,7 +9,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "dbg", () => {
+ChromeUtils.defineLazyGetter(lazy, "dbg", () => {
   // eslint-disable-next-line mozilla/reject-globalThis-modification
   lazy.addDebuggerToGlobal(globalThis);
   return new Debugger();

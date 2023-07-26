@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", function () {
+ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
   return console.createInstance({
     prefix: "InteractionsBlocklist",
     maxLogLevel: Services.prefs.getBoolPref(

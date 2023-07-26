@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+ChromeUtils.defineLazyGetter(lazy, "log", () => {
   const { Logger } = ChromeUtils.importESModule(
     "resource://messaging-system/lib/Logger.sys.mjs"
   );
@@ -87,7 +87,7 @@ export class _RemoteSettingsExperimentLoader {
     // Make it possible to override for testing
     this.manager = lazy.ExperimentManager;
 
-    XPCOMUtils.defineLazyGetter(this, "remoteSettingsClient", () => {
+    ChromeUtils.defineLazyGetter(this, "remoteSettingsClient", () => {
       return lazy.RemoteSettings(lazy.COLLECTION_ID);
     });
 

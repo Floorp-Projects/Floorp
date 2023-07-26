@@ -9,15 +9,13 @@ import {
   SearchEngine,
 } from "resource://gre/modules/SearchEngine.sys.mjs";
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
+ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "OpenSearchEngine",
     maxLogLevel: lazy.SearchUtils.loggingEnabled ? "Debug" : "Warn",

@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -12,7 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "LoginInfo", () =>
+ChromeUtils.defineLazyGetter(lazy, "LoginInfo", () =>
   Components.Constructor(
     "@mozilla.org/login-manager/loginInfo;1",
     "nsILoginInfo",

@@ -13,8 +13,6 @@
  *   http[s]://%SERVICE%.mozilla.[com|org]/%LOCALE%/
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const PREF_APP_DISTRIBUTION = "distribution.id";
@@ -28,7 +26,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 export function nsURLFormatterService() {
-  XPCOMUtils.defineLazyGetter(this, "ABI", function UFS_ABI() {
+  ChromeUtils.defineLazyGetter(this, "ABI", function UFS_ABI() {
     let ABI = "default";
     try {
       ABI = Services.appinfo.XPCOMABI;
@@ -37,7 +35,7 @@ export function nsURLFormatterService() {
     return ABI;
   });
 
-  XPCOMUtils.defineLazyGetter(this, "OSVersion", function UFS_OSVersion() {
+  ChromeUtils.defineLazyGetter(this, "OSVersion", function UFS_OSVersion() {
     let OSVersion = "default";
     let { sysinfo } = Services;
     try {
@@ -49,7 +47,7 @@ export function nsURLFormatterService() {
     return encodeURIComponent(OSVersion);
   });
 
-  XPCOMUtils.defineLazyGetter(
+  ChromeUtils.defineLazyGetter(
     this,
     "distribution",
     function UFS_distribution() {

@@ -15,7 +15,7 @@ var isParent =
 const lazy = {};
 
 // The default Push service implementation.
-XPCOMUtils.defineLazyGetter(lazy, "PushService", function () {
+ChromeUtils.defineLazyGetter(lazy, "PushService", function () {
   if (Services.prefs.getBoolPref("dom.push.enabled")) {
     const { PushService } = ChromeUtils.importESModule(
       "resource://gre/modules/PushService.sys.mjs"

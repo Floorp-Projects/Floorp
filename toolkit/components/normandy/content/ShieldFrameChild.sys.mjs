@@ -9,21 +9,19 @@
  * to the parent process and handle it there.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutPages: "resource://normandy-content/AboutPages.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gBrandBundle", function () {
+ChromeUtils.defineLazyGetter(lazy, "gBrandBundle", function () {
   return Services.strings.createBundle(
     "chrome://branding/locale/brand.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gStringBundle", function () {
+ChromeUtils.defineLazyGetter(lazy, "gStringBundle", function () {
   return Services.strings.createBundle(
     "chrome://global/locale/aboutStudies.properties"
   );

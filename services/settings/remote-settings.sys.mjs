@@ -42,12 +42,12 @@ const BROADCAST_ID = "remote-settings/monitor_changes";
 // Signer to be used when not specified (see Ci.nsIContentSignatureVerifier).
 const DEFAULT_SIGNER = "remote-settings.content-signature.mozilla.org";
 
-XPCOMUtils.defineLazyGetter(lazy, "gPrefs", () => {
+ChromeUtils.defineLazyGetter(lazy, "gPrefs", () => {
   return Services.prefs.getBranch(PREF_SETTINGS_BRANCH);
 });
-XPCOMUtils.defineLazyGetter(lazy, "console", () => lazy.Utils.log);
+ChromeUtils.defineLazyGetter(lazy, "console", () => lazy.Utils.log);
 
-XPCOMUtils.defineLazyGetter(lazy, "gSyncHistory", () => {
+ChromeUtils.defineLazyGetter(lazy, "gSyncHistory", () => {
   const prefSize = lazy.gPrefs.getIntPref(PREF_SETTINGS_SYNC_HISTORY_SIZE, 100);
   const size = Math.min(Math.max(prefSize, 1000), 10);
   return new lazy.SyncHistory(TELEMETRY_SOURCE_SYNC, { size });

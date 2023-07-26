@@ -4,7 +4,6 @@
 
 import { ExperimentStore } from "resource://nimbus/lib/ExperimentStore.sys.mjs";
 import { FileTestUtils } from "resource://testing-common/FileTestUtils.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -41,7 +40,7 @@ function fetchSchemaSync(uri) {
   return JSON.parse(json);
 }
 
-XPCOMUtils.defineLazyGetter(lazy, "enrollmentSchema", () => {
+ChromeUtils.defineLazyGetter(lazy, "enrollmentSchema", () => {
   return fetchSchemaSync(
     "resource://nimbus/schemas/NimbusEnrollment.schema.json"
   );

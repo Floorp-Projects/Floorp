@@ -24,15 +24,13 @@
  * way is to configure that with extensions or through a company firewall.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const LIST_LENGTH_LIMIT = 1000;
 
 const PREF_LOGLEVEL = "browser.policies.loglevel";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+ChromeUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
     "resource://gre/modules/Console.sys.mjs"
   );

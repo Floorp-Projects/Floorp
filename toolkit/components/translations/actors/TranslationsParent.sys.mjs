@@ -36,7 +36,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://global/content/translations/TranslationsTelemetry.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "console", () => {
+ChromeUtils.defineLazyGetter(lazy, "console", () => {
   return console.createInstance({
     maxLogLevelPref: "browser.translations.logLevel",
     prefix: "Translations",

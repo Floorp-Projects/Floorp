@@ -162,8 +162,6 @@ const TRANSACTIONS_QUEUE_TIMEOUT_MS = 240000; // 4 Mins.
 
 import { PlacesUtils } from "resource://gre/modules/PlacesUtils.sys.mjs";
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 function setTimeout(callback, ms) {
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback(callback, ms, timer.TYPE_ONE_SHOT);
@@ -291,7 +289,7 @@ class TransactionsHistoryArray extends Array {
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "TransactionsHistory",
   () => new TransactionsHistoryArray()

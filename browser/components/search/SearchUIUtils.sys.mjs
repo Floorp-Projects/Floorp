@@ -6,11 +6,9 @@
  * Various utilities for search related UI.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "SearchUIUtilsL10n", () => {
+ChromeUtils.defineLazyGetter(lazy, "SearchUIUtilsL10n", () => {
   return new Localization(["browser/search.ftl", "branding/brand.ftl"]);
 });
 

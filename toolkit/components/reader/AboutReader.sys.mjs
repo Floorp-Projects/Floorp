@@ -5,7 +5,6 @@
 import { ReaderMode } from "resource://gre/modules/ReaderMode.sys.mjs";
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -14,12 +13,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NarrateControls: "resource://gre/modules/narrate/NarrateControls.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "numberFormat",
   () => new Services.intl.NumberFormat(undefined)
 );
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "pluralRules",
   () => new Services.intl.PluralRules(undefined)

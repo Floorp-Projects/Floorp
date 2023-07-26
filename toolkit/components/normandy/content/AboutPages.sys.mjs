@@ -77,7 +77,7 @@ let BrowsingContexts = new WeakSet();
  * @type {AboutPage}
  * @implements {nsIMessageListener}
  */
-XPCOMUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
+ChromeUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
   const aboutStudies = new AboutPage({
     chromeUrl: "resource://normandy-content/about-studies/about-studies.html",
     aboutHost: "studies",

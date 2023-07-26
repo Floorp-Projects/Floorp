@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { SharedDataMap } from "resource://nimbus/lib/SharedDataMap.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -26,7 +25,7 @@ let tryJSONParse = data => {
 
   return null;
 };
-XPCOMUtils.defineLazyGetter(lazy, "syncDataStore", () => {
+ChromeUtils.defineLazyGetter(lazy, "syncDataStore", () => {
   let experimentsPrefBranch = Services.prefs.getBranch(SYNC_DATA_PREF_BRANCH);
   let defaultsPrefBranch = Services.prefs.getBranch(SYNC_DEFAULTS_PREF_BRANCH);
   return {

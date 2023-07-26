@@ -50,7 +50,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
+ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "CookieBannerChild",
     maxLogLevelPref: "cookiebanners.bannerClicking.logLevel",

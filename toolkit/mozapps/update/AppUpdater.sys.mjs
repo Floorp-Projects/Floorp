@@ -16,13 +16,13 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
-XPCOMUtils.defineLazyGetter(lazy, "gLogEnabled", function aus_gLogEnabled() {
+ChromeUtils.defineLazyGetter(lazy, "gLogEnabled", function aus_gLogEnabled() {
   return (
     Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false) ||
     Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false)
   );
 });
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "gLogfileEnabled",
   function aus_gLogfileEnabled() {

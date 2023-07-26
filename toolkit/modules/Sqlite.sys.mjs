@@ -174,7 +174,7 @@ function convertStorageErrorResult(result) {
  * Barriers used to ensure that Sqlite.sys.mjs is shutdown after all
  * its clients.
  */
-XPCOMUtils.defineLazyGetter(lazy, "Barriers", () => {
+ChromeUtils.defineLazyGetter(lazy, "Barriers", () => {
   let Barriers = {
     /**
      * Public barrier that clients may use to add blockers to the

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -16,7 +14,7 @@ const PREF_STRIP_LIST_NAME = "privacy.query_stripping.strip_list";
 const PREF_ALLOW_LIST_NAME = "privacy.query_stripping.allow_list";
 const PREF_TESTING_ENABLED = "privacy.query_stripping.testing";
 
-XPCOMUtils.defineLazyGetter(lazy, "logger", () => {
+ChromeUtils.defineLazyGetter(lazy, "logger", () => {
   return console.createInstance({
     prefix: "URLQueryStrippingListService",
     maxLogLevelPref: "privacy.query_stripping.listService.logLevel",
@@ -24,7 +22,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () => {
 });
 
 // Lazy getter for the strip-on-share strip list.
-XPCOMUtils.defineLazyGetter(lazy, "StripOnShareList", async () => {
+ChromeUtils.defineLazyGetter(lazy, "StripOnShareList", async () => {
   let response = await fetch(
     "chrome://global/content/antitracking/StripOnShare.json"
   );

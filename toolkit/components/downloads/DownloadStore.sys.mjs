@@ -30,19 +30,17 @@
 // get removed (5 minutes).
 const MAX_INSECURE_DOWNLOAD_AGE_MS = 5 * 60 * 1000;
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gTextDecoder", function () {
+ChromeUtils.defineLazyGetter(lazy, "gTextDecoder", function () {
   return new TextDecoder();
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gTextEncoder", function () {
+ChromeUtils.defineLazyGetter(lazy, "gTextEncoder", function () {
   return new TextEncoder();
 });
 

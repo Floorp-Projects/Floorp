@@ -48,7 +48,7 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
   gMIMEService: ["@mozilla.org/mime;1", "nsIMIMEService"],
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "DownloadsLogger", () => {
+ChromeUtils.defineLazyGetter(lazy, "DownloadsLogger", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
     "resource://gre/modules/Console.sys.mjs"
   );
@@ -115,7 +115,7 @@ var PrefObserver = {
     kPrefBranch.addObserver("", this, true);
     for (let key in prefs) {
       let name = key;
-      XPCOMUtils.defineLazyGetter(this, name, function () {
+      ChromeUtils.defineLazyGetter(this, name, function () {
         return PrefObserver.getPref(name);
       });
     }
@@ -744,10 +744,10 @@ export var DownloadsCommon = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(DownloadsCommon, "log", () => {
+ChromeUtils.defineLazyGetter(DownloadsCommon, "log", () => {
   return lazy.DownloadsLogger.log.bind(lazy.DownloadsLogger);
 });
-XPCOMUtils.defineLazyGetter(DownloadsCommon, "error", () => {
+ChromeUtils.defineLazyGetter(DownloadsCommon, "error", () => {
   return lazy.DownloadsLogger.error.bind(lazy.DownloadsLogger);
 });
 
@@ -999,18 +999,18 @@ DownloadsDataCtor.prototype = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(lazy, "HistoryDownloadsData", function () {
+ChromeUtils.defineLazyGetter(lazy, "HistoryDownloadsData", function () {
   return new DownloadsDataCtor({ isHistory: true });
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "LimitedHistoryDownloadsData", function () {
+ChromeUtils.defineLazyGetter(lazy, "LimitedHistoryDownloadsData", function () {
   return new DownloadsDataCtor({
     isHistory: true,
     maxHistoryResults: kMaxHistoryResultsForLimitedView,
   });
 });
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "LimitedPrivateHistoryDownloadData",
   function () {
@@ -1022,11 +1022,11 @@ XPCOMUtils.defineLazyGetter(
   }
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "PrivateDownloadsData", function () {
+ChromeUtils.defineLazyGetter(lazy, "PrivateDownloadsData", function () {
   return new DownloadsDataCtor({ isPrivate: true });
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "DownloadsData", function () {
+ChromeUtils.defineLazyGetter(lazy, "DownloadsData", function () {
   return new DownloadsDataCtor();
 });
 
@@ -1459,11 +1459,15 @@ Object.setPrototypeOf(
   DownloadsViewPrototype
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "PrivateDownloadsIndicatorData", function () {
-  return new DownloadsIndicatorDataCtor(true);
-});
+ChromeUtils.defineLazyGetter(
+  lazy,
+  "PrivateDownloadsIndicatorData",
+  function () {
+    return new DownloadsIndicatorDataCtor(true);
+  }
+);
 
-XPCOMUtils.defineLazyGetter(lazy, "DownloadsIndicatorData", function () {
+ChromeUtils.defineLazyGetter(lazy, "DownloadsIndicatorData", function () {
   return new DownloadsIndicatorDataCtor(false);
 });
 

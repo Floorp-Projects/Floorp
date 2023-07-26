@@ -64,7 +64,7 @@ const {
 
 const { BrowserExtensionContent, ChildAPIManager, Messenger } = ExtensionChild;
 
-XPCOMUtils.defineLazyGetter(lazy, "isContentScriptProcess", () => {
+ChromeUtils.defineLazyGetter(lazy, "isContentScriptProcess", () => {
   return (
     Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT ||
     !WebExtensionPolicy.useRemoteWebExtensions ||

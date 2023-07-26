@@ -2,8 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
@@ -23,7 +21,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
+ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.importESModule(
     "resource://gre/modules/FxAccounts.sys.mjs"
   ).getFxAccountsSingleton();
@@ -48,7 +46,7 @@ const BACKGROUND_PAGE_ACTIONS_ALLOWED = new Set([
 const MAX_BUTTONS = 4;
 
 // Array of which colorway/theme ids can be activated.
-XPCOMUtils.defineLazyGetter(lazy, "COLORWAY_IDS", () =>
+ChromeUtils.defineLazyGetter(lazy, "COLORWAY_IDS", () =>
   [...lazy.BuiltInThemes.builtInThemeMap.keys()].filter(
     id =>
       id.endsWith("-colorway@mozilla.org") &&
@@ -60,7 +58,7 @@ XPCOMUtils.defineLazyGetter(lazy, "COLORWAY_IDS", () =>
 const TARGET_SEARCHENGINE_PREFIX = "searchEngine-";
 
 // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+ChromeUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
     "resource://gre/modules/Console.sys.mjs"
   );
@@ -210,7 +208,7 @@ export var UITour = {
     // Lazy getter is initialized here so it can be replicated any time
     // in a test.
     delete this.url;
-    XPCOMUtils.defineLazyGetter(this, "url", function () {
+    ChromeUtils.defineLazyGetter(this, "url", function () {
       return Services.urlFormatter.formatURLPref("browser.uitour.url");
     });
 

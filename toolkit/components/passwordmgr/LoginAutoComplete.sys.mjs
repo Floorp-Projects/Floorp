@@ -24,15 +24,15 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/satchel/form-fill-controller;1",
   Ci.nsIFormFillController
 );
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+ChromeUtils.defineLazyGetter(lazy, "log", () => {
   return lazy.LoginHelper.createLogger("LoginAutoComplete");
 });
-XPCOMUtils.defineLazyGetter(lazy, "passwordMgrBundle", () => {
+ChromeUtils.defineLazyGetter(lazy, "passwordMgrBundle", () => {
   return Services.strings.createBundle(
     "chrome://passwordmgr/locale/passwordmgr.properties"
   );
 });
-XPCOMUtils.defineLazyGetter(lazy, "dateAndTimeFormatter", () => {
+ChromeUtils.defineLazyGetter(lazy, "dateAndTimeFormatter", () => {
   return new Services.intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
   });

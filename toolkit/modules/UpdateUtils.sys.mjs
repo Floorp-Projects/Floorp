@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
@@ -962,7 +960,7 @@ function getMemoryMB() {
 /**
  * Gets the supported CPU instruction set.
  */
-XPCOMUtils.defineLazyGetter(lazy, "gInstructionSet", function aus_gIS() {
+ChromeUtils.defineLazyGetter(lazy, "gInstructionSet", function aus_gIS() {
   const CPU_EXTENSIONS = [
     "hasSSE4_2",
     "hasSSE4_1",
@@ -986,7 +984,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gInstructionSet", function aus_gIS() {
 });
 
 /* Windows only getter that returns the processor architecture. */
-XPCOMUtils.defineLazyGetter(lazy, "gWinCPUArch", function aus_gWinCPUArch() {
+ChromeUtils.defineLazyGetter(lazy, "gWinCPUArch", function aus_gWinCPUArch() {
   // Get processor architecture
   let arch = "unknown";
 
@@ -1053,7 +1051,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gWinCPUArch", function aus_gWinCPUArch() {
   return arch;
 });
 
-XPCOMUtils.defineLazyGetter(UpdateUtils, "ABI", function () {
+ChromeUtils.defineLazyGetter(UpdateUtils, "ABI", function () {
   let abi = null;
   try {
     abi = Services.appinfo.XPCOMABI;
@@ -1074,7 +1072,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "ABI", function () {
   return abi;
 });
 
-XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function () {
+ChromeUtils.defineLazyGetter(UpdateUtils, "OSVersion", function () {
   let osVersion;
   try {
     osVersion =

@@ -10,7 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "CryptoHash", () => {
+ChromeUtils.defineLazyGetter(lazy, "CryptoHash", () => {
   return Components.Constructor(
     "@mozilla.org/security/hash;1",
     "nsICryptoHash",

@@ -39,7 +39,7 @@ import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "PREFS_GUID", () =>
+ChromeUtils.defineLazyGetter(lazy, "PREFS_GUID", () =>
   CommonUtils.encodeBase64URL(Services.appinfo.ID)
 );
 
@@ -67,7 +67,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // continue to be synced. SUMO have told us that this URL will remain "stable".
 const PREFS_DOC_URL_TEMPLATE =
   "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/sync-custom-preferences";
-XPCOMUtils.defineLazyGetter(lazy, "PREFS_DOC_URL", () =>
+ChromeUtils.defineLazyGetter(lazy, "PREFS_DOC_URL", () =>
   Services.urlFormatter.formatURL(PREFS_DOC_URL_TEMPLATE)
 );
 

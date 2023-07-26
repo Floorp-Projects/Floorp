@@ -33,7 +33,6 @@ const INSTALLER_PREFS_BRANCH = "installer.";
 const INSTALLER_PREFS_LIST = ["installer.taskbarpin.win10.enabled"];
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 // This constructor can take a list of prefs to override the default one,
 // but this is really only intended for tests to use. Normal usage should be
@@ -44,7 +43,7 @@ export function InstallerPrefs(prefsList) {
   // Each pref to be reflected will get a value created under this key, in HKCU.
   // The path will look something like:
   // "Software\Mozilla\Firefox\Installer\71AE18FE3142402B\".
-  XPCOMUtils.defineLazyGetter(this, "_registryKeyPath", function () {
+  ChromeUtils.defineLazyGetter(this, "_registryKeyPath", function () {
     const app = AppConstants.MOZ_APP_NAME;
     const vendor = Services.appinfo.vendor || "Mozilla";
     const xreDirProvider = Cc[

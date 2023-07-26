@@ -2256,7 +2256,7 @@ ExtensionParent._resetStartupPromises = () => {
 };
 ExtensionParent._resetStartupPromises();
 
-XPCOMUtils.defineLazyGetter(ExtensionParent, "PlatformInfo", () => {
+ChromeUtils.defineLazyGetter(ExtensionParent, "PlatformInfo", () => {
   return Object.freeze({
     os: (function () {
       let os = AppConstants.platform;
@@ -2283,7 +2283,7 @@ XPCOMUtils.defineLazyGetter(ExtensionParent, "PlatformInfo", () => {
  *
  * @returns {Array<string>} an array of stylesheets needed for the current platform.
  */
-XPCOMUtils.defineLazyGetter(ExtensionParent, "extensionStylesheets", () => {
+ChromeUtils.defineLazyGetter(ExtensionParent, "extensionStylesheets", () => {
   let stylesheets = ["chrome://browser/content/extension.css"];
 
   if (AppConstants.platform === "macosx") {

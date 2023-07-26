@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import {
   clearTimeout,
   setTimeoutWithTarget,
@@ -518,7 +517,7 @@ export class ContentSessionStore {
       new SessionHistoryListener(this),
     ];
 
-    XPCOMUtils.defineLazyGetter(this, "contentRestore", () => {
+    ChromeUtils.defineLazyGetter(this, "contentRestore", () => {
       this.contentRestoreInitialized = true;
       return new lazy.ContentRestore(mm);
     });

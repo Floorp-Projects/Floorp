@@ -299,7 +299,7 @@ export const ExperimentAPI = {
 export const NimbusFeatures = {};
 
 for (let feature in lazy.FeatureManifest) {
-  XPCOMUtils.defineLazyGetter(NimbusFeatures, feature, () => {
+  ChromeUtils.defineLazyGetter(NimbusFeatures, feature, () => {
     return new _ExperimentFeature(feature);
   });
 }
@@ -646,17 +646,17 @@ export class _ExperimentFeature {
   }
 }
 
-XPCOMUtils.defineLazyGetter(ExperimentAPI, "_manager", function () {
+ChromeUtils.defineLazyGetter(ExperimentAPI, "_manager", function () {
   return lazy.ExperimentManager;
 });
 
-XPCOMUtils.defineLazyGetter(ExperimentAPI, "_store", function () {
+ChromeUtils.defineLazyGetter(ExperimentAPI, "_store", function () {
   return IS_MAIN_PROCESS
     ? lazy.ExperimentManager.store
     : new lazy.ExperimentStore();
 });
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   ExperimentAPI,
   "_remoteSettingsClient",
   function () {

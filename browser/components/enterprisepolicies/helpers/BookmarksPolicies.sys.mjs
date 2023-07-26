@@ -37,8 +37,6 @@
  * The schema for this object is defined in policies-schema.json.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -47,7 +45,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const PREF_LOGLEVEL = "browser.policies.loglevel";
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+ChromeUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
     "resource://gre/modules/Console.sys.mjs"
   );
@@ -250,7 +248,7 @@ function setFaviconForBookmark(bookmark) {
 // function. The name consists in the parentGuid (which should always
 // be the menuGuid or the toolbarGuid) + the folder title. This is to
 // support having the same folder name in both the toolbar and menu.
-XPCOMUtils.defineLazyGetter(lazy, "gFoldersMapPromise", () => {
+ChromeUtils.defineLazyGetter(lazy, "gFoldersMapPromise", () => {
   return new Promise(resolve => {
     let foldersMap = new Map();
     return lazy.PlacesUtils.bookmarks

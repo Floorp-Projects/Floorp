@@ -9,7 +9,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "gNavigatorBundle", function () {
+ChromeUtils.defineLazyGetter(lazy, "gNavigatorBundle", function () {
   return Services.strings.createBundle(
     "chrome://browser/locale/browser.properties"
   );

@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // This xpcom service implements a "bridge" from the JS world to the Rust world.
 // It sets up the database and implements a callback-based version of the
 // browser.storage API.
-XPCOMUtils.defineLazyGetter(lazy, "storageSvc", () =>
+ChromeUtils.defineLazyGetter(lazy, "storageSvc", () =>
   Cc["@mozilla.org/extensions/storage/sync;1"]
     .getService(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.mozIExtensionStorageArea)

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const CRYPT_ALGO = "AES-CBC";
 const CRYPT_ALGO_LENGTH = 256;
 const CRYPT_ALGO_USAGES = ["encrypt", "decrypt"];
@@ -42,12 +40,12 @@ WeaveCrypto.prototype = {
     this.prefBranch.addObserver("cryptoDebug", this.observer);
     this.observer._self = this;
     this.debug = this.prefBranch.getBoolPref("cryptoDebug", false);
-    XPCOMUtils.defineLazyGetter(
+    ChromeUtils.defineLazyGetter(
       this,
       "encoder",
       () => new TextEncoder(UTF_LABEL)
     );
-    XPCOMUtils.defineLazyGetter(
+    ChromeUtils.defineLazyGetter(
       this,
       "decoder",
       () => new TextDecoder(UTF_LABEL, { fatal: true })

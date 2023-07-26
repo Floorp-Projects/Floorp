@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import {
   UrlbarProvider,
   UrlbarUtils,
@@ -23,7 +21,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "appUpdater", () => new lazy.AppUpdater());
+ChromeUtils.defineLazyGetter(lazy, "appUpdater", () => new lazy.AppUpdater());
 
 // The possible tips to show.  These names (except NONE) are used in the names
 // of keys in the `urlbar.tips` keyed scalar telemetry (see telemetry.rst).
@@ -443,7 +441,7 @@ class ProviderInterventions extends UrlbarProvider {
     this.tipsShownInCurrentEngagement = new Set();
 
     // This object is used to match the user's queries to tips.
-    XPCOMUtils.defineLazyGetter(this, "queryScorer", () => {
+    ChromeUtils.defineLazyGetter(this, "queryScorer", () => {
       let queryScorer = new QueryScorer({
         variations: new Map([
           // Recognize "fire fox", "fox fire", and "foxfire" as "firefox".

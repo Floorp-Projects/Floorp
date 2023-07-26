@@ -3,24 +3,23 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { GeckoViewModule } from "resource://gre/modules/GeckoViewModule.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "MOBILE_USER_AGENT", function () {
+ChromeUtils.defineLazyGetter(lazy, "MOBILE_USER_AGENT", function () {
   return Cc["@mozilla.org/network/protocol;1?name=http"].getService(
     Ci.nsIHttpProtocolHandler
   ).userAgent;
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "DESKTOP_USER_AGENT", function () {
+ChromeUtils.defineLazyGetter(lazy, "DESKTOP_USER_AGENT", function () {
   return lazy.MOBILE_USER_AGENT.replace(
     /Android \d.+?; [a-zA-Z]+/,
     "X11; Linux x86_64"
   ).replace(/Gecko\/[0-9\.]+/, "Gecko/20100101");
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "VR_USER_AGENT", function () {
+ChromeUtils.defineLazyGetter(lazy, "VR_USER_AGENT", function () {
   return lazy.MOBILE_USER_AGENT.replace(/Mobile/, "Mobile VR");
 });
 

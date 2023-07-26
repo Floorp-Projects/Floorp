@@ -21,11 +21,11 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIStorageActivityService"
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "gClassifierFeature", () => {
+ChromeUtils.defineLazyGetter(lazy, "gClassifierFeature", () => {
   return lazy.gClassifier.getFeatureByName("tracking-annotation");
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "logger", () => {
+ChromeUtils.defineLazyGetter(lazy, "logger", () => {
   return console.createInstance({
     prefix: "*** PurgeTrackerService:",
     maxLogLevelPref: "privacy.purge_trackers.logging.level",

@@ -206,11 +206,11 @@ export class UrlbarInput {
     this._searchModeLabel = this.querySelector("#urlbar-label-search-mode");
     this._toolbar = this.textbox.closest("toolbar");
 
-    XPCOMUtils.defineLazyGetter(this, "valueFormatter", () => {
+    ChromeUtils.defineLazyGetter(this, "valueFormatter", () => {
       return new lazy.UrlbarValueFormatter(this);
     });
 
-    XPCOMUtils.defineLazyGetter(this, "addSearchEngineHelper", () => {
+    ChromeUtils.defineLazyGetter(this, "addSearchEngineHelper", () => {
       return new AddSearchEngineHelper(this);
     });
 
