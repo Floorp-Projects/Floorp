@@ -9,6 +9,7 @@
 #include "ipc/EnumSerializer.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ProfilerMarkerTypes.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 
