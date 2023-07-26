@@ -775,7 +775,8 @@ class TestInfoReport(TestInfo):
                             if show_testruns:
                                 total_runs = 0
                                 for m in test_info["manifest"]:
-                                    total_runs += sum([x[3] for x in runcount[m]])
+                                    if m in runcount:
+                                        total_runs += sum([x[3] for x in runcount[m]])
                                 if total_runs > 0:
                                     test_info["total_runs"] = total_runs
 
