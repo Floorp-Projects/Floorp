@@ -716,9 +716,12 @@ pref("browser.search.serpEventTelemetry.enabled", false);
 // rolled out. There will be separate controls for user opt-in/opt-out.
 pref("browser.shopping.experience2023.enabled", false);
 
-// True if the user opted into the new experimental shopping feature.
-// By default, users are opted out.
-pref("browser.shopping.experience2023.optedIn", false);
+// Ternary int-valued pref indicating if the user has opted into the new
+// experimental shopping feature.
+// 0 means the user has not opted in or out.
+// 1 means the user has opted in.
+// 2 means the user has opted out.
+pref("browser.shopping.experience2023.optedIn", 0);
 
 // Enables the display of the Mozilla VPN banner in private browsing windows
 pref("browser.privatebrowsing.vpnpromourl", "https://vpn.mozilla.org/?utm_source=firefox-browser&utm_medium=firefox-%CHANNEL%-browser&utm_campaign=private-browsing-vpn-link");
