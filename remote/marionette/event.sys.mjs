@@ -4,8 +4,6 @@
 
 /* eslint-disable no-restricted-globals */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -15,7 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 /** Provides functionality for creating and sending DOM events. */
 export const event = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "dblclickTimer", () => {
+ChromeUtils.defineLazyGetter(lazy, "dblclickTimer", () => {
   return Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 });
 

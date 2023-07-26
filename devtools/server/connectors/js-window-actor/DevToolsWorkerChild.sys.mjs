@@ -15,11 +15,11 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIWorkerDebuggerManager"
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "Loader", () =>
+ChromeUtils.defineLazyGetter(lazy, "Loader", () =>
   ChromeUtils.importESModule("resource://devtools/shared/loader/Loader.sys.mjs")
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "DevToolsUtils", () =>
+ChromeUtils.defineLazyGetter(lazy, "DevToolsUtils", () =>
   lazy.Loader.require("resource://devtools/shared/DevToolsUtils.js")
 );
 XPCOMUtils.defineLazyModuleGetters(lazy, {

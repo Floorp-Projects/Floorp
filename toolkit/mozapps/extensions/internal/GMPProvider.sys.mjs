@@ -60,12 +60,12 @@ const GMP_PLUGINS = [
   },
 ];
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "pluginsBundle",
   () => new Localization(["toolkit/about/aboutPlugins.ftl"], true)
 );
-XPCOMUtils.defineLazyGetter(lazy, "gmpService", () =>
+ChromeUtils.defineLazyGetter(lazy, "gmpService", () =>
   Cc["@mozilla.org/gecko-media-plugin-service;1"].getService(
     Ci.mozIGeckoMediaPluginChromeService
   )

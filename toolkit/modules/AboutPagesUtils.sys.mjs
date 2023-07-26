@@ -4,11 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 export const AboutPagesUtils = {};
 
-XPCOMUtils.defineLazyGetter(AboutPagesUtils, "visibleAboutUrls", () => {
+ChromeUtils.defineLazyGetter(AboutPagesUtils, "visibleAboutUrls", () => {
   const urls = [];
   const rx = /@mozilla.org\/network\/protocol\/about;1\?what\=(.*)$/;
   for (const cid in Cc) {

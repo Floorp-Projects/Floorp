@@ -10,7 +10,6 @@
 import { ChromeMigrationUtils } from "resource:///modules/ChromeMigrationUtils.sys.mjs";
 
 import { OSCrypto } from "resource://gre/modules/OSCrypto_win.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 /**
  * These constants should match those from Chromium.
@@ -42,7 +41,7 @@ export class ChromeWindowsLoginCrypto {
 
     // Lazily decrypt the key from "Chrome"s local state using OSCrypto and save
     // it as the master key to decrypt or encrypt passwords.
-    XPCOMUtils.defineLazyGetter(this, "_keyPromise", async () => {
+    ChromeUtils.defineLazyGetter(this, "_keyPromise", async () => {
       let keyData;
       try {
         // NB: For testing, allow directory service to be faked before getting.

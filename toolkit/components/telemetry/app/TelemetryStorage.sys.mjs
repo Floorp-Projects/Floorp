@@ -5,7 +5,6 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 
 const LOGGER_NAME = "Toolkit.Telemetry";
@@ -22,13 +21,13 @@ const SESSION_STATE_FILE_NAME = "session-state.json";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "gDataReportingDir", function () {
+ChromeUtils.defineLazyGetter(lazy, "gDataReportingDir", function () {
   return PathUtils.join(PathUtils.profileDir, DATAREPORTING_DIR);
 });
-XPCOMUtils.defineLazyGetter(lazy, "gPingsArchivePath", function () {
+ChromeUtils.defineLazyGetter(lazy, "gPingsArchivePath", function () {
   return PathUtils.join(lazy.gDataReportingDir, PINGS_ARCHIVE_DIR);
 });
-XPCOMUtils.defineLazyGetter(lazy, "gAbortedSessionFilePath", function () {
+ChromeUtils.defineLazyGetter(lazy, "gAbortedSessionFilePath", function () {
   return PathUtils.join(lazy.gDataReportingDir, ABORTED_SESSION_FILE_NAME);
 });
 ChromeUtils.defineESModuleGetters(lazy, {

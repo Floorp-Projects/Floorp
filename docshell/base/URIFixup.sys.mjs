@@ -102,20 +102,20 @@ const COMMON_PROTOCOLS = ["http", "https", "file"];
 // Regex used to identify user:password tokens in url strings.
 // This is not a strict valid characters check, because we try to fixup this
 // part of the url too.
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "userPasswordRegex",
   () => /^([a-z+.-]+:\/{0,3})*([^\/@]+@).+/i
 );
 
 // Regex used to identify the string that starts with port expression.
-XPCOMUtils.defineLazyGetter(lazy, "portRegex", () => /^:\d{1,5}([?#/]|$)/);
+ChromeUtils.defineLazyGetter(lazy, "portRegex", () => /^:\d{1,5}([?#/]|$)/);
 
 // Regex used to identify numbers.
-XPCOMUtils.defineLazyGetter(lazy, "numberRegex", () => /^[0-9]+(\.[0-9]+)?$/);
+ChromeUtils.defineLazyGetter(lazy, "numberRegex", () => /^[0-9]+(\.[0-9]+)?$/);
 
 // Regex used to identify tab separated content (having at least 2 tabs).
-XPCOMUtils.defineLazyGetter(lazy, "maxOneTabRegex", () => /^[^\t]*\t?[^\t]*$/);
+ChromeUtils.defineLazyGetter(lazy, "maxOneTabRegex", () => /^[^\t]*\t?[^\t]*$/);
 
 // Regex used to test if a string with a protocol might instead be a url
 // without a protocol but with a port:
@@ -134,20 +134,20 @@ XPCOMUtils.defineLazyGetter(lazy, "maxOneTabRegex", () => /^[^\t]*\t?[^\t]*$/);
 //
 // Note: Parser could be a lot tighter, tossing out silly hostnames
 //       such as those containing consecutive dots and so on.
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "possiblyHostPortRegex",
   () => /^[a-z0-9-]+(\.[a-z0-9-]+)*:[0-9]{1,5}([/?#]|$)/i
 );
 
 // Regex used to strip newlines.
-XPCOMUtils.defineLazyGetter(lazy, "newLinesRegex", () => /[\r\n]/g);
+ChromeUtils.defineLazyGetter(lazy, "newLinesRegex", () => /[\r\n]/g);
 
 // Regex used to match a possible protocol.
 // This resembles the logic in Services.io.extractScheme, thus \t is admitted
 // and stripped later. We don't use Services.io.extractScheme because of
 // performance bottleneck caused by crossing XPConnect.
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "possibleProtocolRegex",
   () => /^([a-z][a-z0-9.+\t-]*)(:|;)?(\/\/)?/i
@@ -156,12 +156,12 @@ XPCOMUtils.defineLazyGetter(
 // Regex used to match IPs. Note that these are not made to validate IPs, but
 // just to detect strings that look like an IP. They also skip protocol.
 // For IPv4 this also accepts a shorthand format with just 2 dots.
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "IPv4LikeRegex",
   () => /^(?:[a-z+.-]+:\/*(?!\/))?(?:\d{1,3}\.){2,3}\d{1,3}(?::\d+|\/)?/i
 );
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "IPv6LikeRegex",
   () =>
@@ -169,7 +169,7 @@ XPCOMUtils.defineLazyGetter(
 );
 
 // Cache of known domains.
-XPCOMUtils.defineLazyGetter(lazy, "knownDomains", () => {
+ChromeUtils.defineLazyGetter(lazy, "knownDomains", () => {
   const branch = "browser.fixup.domainwhitelist.";
   let domains = new Set(
     Services.prefs
@@ -206,7 +206,7 @@ XPCOMUtils.defineLazyGetter(lazy, "knownDomains", () => {
 // When searching we can restrict the linear scan based on the last part.
 // The ideal structure for this would be a Directed Acyclic Word Graph, but
 // since we expect this list to be small it's not worth the complication.
-XPCOMUtils.defineLazyGetter(lazy, "knownSuffixes", () => {
+ChromeUtils.defineLazyGetter(lazy, "knownSuffixes", () => {
   const branch = "browser.fixup.domainsuffixwhitelist.";
   let suffixes = new Map();
   let prefs = Services.prefs

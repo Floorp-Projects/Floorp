@@ -13,15 +13,13 @@
  * content retrieved.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "domParser", () => {
+ChromeUtils.defineLazyGetter(lazy, "domParser", () => {
   const parser = new DOMParser();
   parser.forceEnableDTD();
   return parser;

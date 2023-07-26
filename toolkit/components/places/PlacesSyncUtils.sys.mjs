@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -27,7 +25,7 @@ const MOBILE_BOOKMARKS_PREF = "browser.bookmarks.showMobileBookmarks";
 
 // These are defined as lazy getters to defer initializing the bookmarks
 // service until it's needed.
-XPCOMUtils.defineLazyGetter(lazy, "ROOT_RECORD_ID_TO_GUID", () => ({
+ChromeUtils.defineLazyGetter(lazy, "ROOT_RECORD_ID_TO_GUID", () => ({
   menu: lazy.PlacesUtils.bookmarks.menuGuid,
   places: lazy.PlacesUtils.bookmarks.rootGuid,
   tags: lazy.PlacesUtils.bookmarks.tagsGuid,
@@ -36,7 +34,7 @@ XPCOMUtils.defineLazyGetter(lazy, "ROOT_RECORD_ID_TO_GUID", () => ({
   mobile: lazy.PlacesUtils.bookmarks.mobileGuid,
 }));
 
-XPCOMUtils.defineLazyGetter(lazy, "ROOT_GUID_TO_RECORD_ID", () => ({
+ChromeUtils.defineLazyGetter(lazy, "ROOT_GUID_TO_RECORD_ID", () => ({
   [lazy.PlacesUtils.bookmarks.menuGuid]: "menu",
   [lazy.PlacesUtils.bookmarks.rootGuid]: "places",
   [lazy.PlacesUtils.bookmarks.tagsGuid]: "tags",
@@ -45,14 +43,14 @@ XPCOMUtils.defineLazyGetter(lazy, "ROOT_GUID_TO_RECORD_ID", () => ({
   [lazy.PlacesUtils.bookmarks.mobileGuid]: "mobile",
 }));
 
-XPCOMUtils.defineLazyGetter(lazy, "ROOTS", () =>
+ChromeUtils.defineLazyGetter(lazy, "ROOTS", () =>
   Object.keys(lazy.ROOT_RECORD_ID_TO_GUID)
 );
 
 // Gets the history transition values we ignore and do not sync, as a
 // string, which is a comma-separated set of values - ie, something which can
 // be used with sqlite's IN operator. Does *not* includes the parens.
-XPCOMUtils.defineLazyGetter(lazy, "IGNORED_TRANSITIONS_AS_SQL_LIST", () =>
+ChromeUtils.defineLazyGetter(lazy, "IGNORED_TRANSITIONS_AS_SQL_LIST", () =>
   // * We don't sync `TRANSITION_FRAMED_LINK` visits - these are excluded when
   //   rendering the history menu, so we use the same constraints for Sync.
   // * We don't sync `TRANSITION_DOWNLOAD` because it makes no sense to see
@@ -1296,11 +1294,11 @@ PlacesSyncUtils.test.bookmarks = Object.freeze({
   },
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "HistorySyncLog", () => {
+ChromeUtils.defineLazyGetter(lazy, "HistorySyncLog", () => {
   return lazy.Log.repository.getLogger("Sync.Engine.History.HistorySyncUtils");
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "BookmarkSyncLog", () => {
+ChromeUtils.defineLazyGetter(lazy, "BookmarkSyncLog", () => {
   // Use a sub-log of the bookmarks engine, so setting the level for that
   // engine also adjust the level of this log.
   return lazy.Log.repository.getLogger(

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -14,7 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TwitterPageData: "resource:///modules/pagedata/TwitterPageData.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", function () {
+ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
   return console.createInstance({
     prefix: "PageData",
     maxLogLevel: Services.prefs.getBoolPref("browser.pagedata.log", false)
@@ -35,7 +33,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", function () {
  * The data returned need not be valid, collectors should return whatever they
  * can and then we drop anything that is invalid once all data is joined.
  */
-XPCOMUtils.defineLazyGetter(lazy, "DATA_COLLECTORS", function () {
+ChromeUtils.defineLazyGetter(lazy, "DATA_COLLECTORS", function () {
   return [lazy.SchemaOrgPageData, lazy.OpenGraphPageData, lazy.TwitterPageData];
 });
 

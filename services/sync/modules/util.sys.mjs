@@ -757,7 +757,7 @@ export class SerializableSet extends Set {
   }
 }
 
-XPCOMUtils.defineLazyGetter(Utils, "_utf8Converter", function () {
+ChromeUtils.defineLazyGetter(Utils, "_utf8Converter", function () {
   let converter = Cc[
     "@mozilla.org/intl/scriptableunicodeconverter"
   ].createInstance(Ci.nsIScriptableUnicodeConverter);
@@ -765,7 +765,7 @@ XPCOMUtils.defineLazyGetter(Utils, "_utf8Converter", function () {
   return converter;
 });
 
-XPCOMUtils.defineLazyGetter(Utils, "utf8Encoder", () => new TextEncoder());
+ChromeUtils.defineLazyGetter(Utils, "utf8Encoder", () => new TextEncoder());
 
 /*
  * Commonly-used services

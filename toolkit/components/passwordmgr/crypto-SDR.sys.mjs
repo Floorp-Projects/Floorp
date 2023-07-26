@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -303,7 +301,7 @@ LoginManagerCrypto_SDR.prototype = {
   },
 }; // end of nsLoginManagerCrypto_SDR implementation
 
-XPCOMUtils.defineLazyGetter(LoginManagerCrypto_SDR.prototype, "log", () => {
+ChromeUtils.defineLazyGetter(LoginManagerCrypto_SDR.prototype, "log", () => {
   let logger = lazy.LoginHelper.createLogger("Login crypto");
   return logger.log.bind(logger);
 });

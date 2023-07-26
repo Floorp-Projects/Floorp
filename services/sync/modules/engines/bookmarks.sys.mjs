@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { Async } from "resource://services-common/async.sys.mjs";
 
 import { SCORE_INCREMENT_XLARGE } from "resource://services-sync/constants.sys.mjs";
@@ -46,7 +44,7 @@ const FORBIDDEN_INCOMING_PARENT_IDS = ["pinned", "readinglist"];
 // The tracker ignores changes made by import and restore, to avoid bumping the
 // score and triggering syncs during the process, as well as changes made by
 // Sync.
-XPCOMUtils.defineLazyGetter(lazy, "IGNORED_SOURCES", () => [
+ChromeUtils.defineLazyGetter(lazy, "IGNORED_SOURCES", () => [
   lazy.PlacesUtils.bookmarks.SOURCES.SYNC,
   lazy.PlacesUtils.bookmarks.SOURCES.IMPORT,
   lazy.PlacesUtils.bookmarks.SOURCES.RESTORE,

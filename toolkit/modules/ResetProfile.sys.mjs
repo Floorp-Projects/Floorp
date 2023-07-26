@@ -3,11 +3,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "MigrationUtils", () => {
+ChromeUtils.defineLazyGetter(lazy, "MigrationUtils", () => {
   // MigrationUtils is currently only available in browser builds.
   if (AppConstants.MOZ_BUILD_APP != "browser") {
     return undefined;

@@ -259,7 +259,7 @@ LoginManagerAuthPromptFactory.prototype = {
   },
 }; // end of LoginManagerAuthPromptFactory implementation
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   LoginManagerAuthPromptFactory.prototype,
   "log",
   () => {
@@ -1101,7 +1101,7 @@ LoginManagerAuthPrompter.prototype = {
   },
 }; // end of LoginManagerAuthPrompter implementation
 
-XPCOMUtils.defineLazyGetter(LoginManagerAuthPrompter.prototype, "log", () => {
+ChromeUtils.defineLazyGetter(LoginManagerAuthPrompter.prototype, "log", () => {
   let logger = lazy.LoginHelper.createLogger("LoginManagerAuthPrompter");
   return logger.log.bind(logger);
 });

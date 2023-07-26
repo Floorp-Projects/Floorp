@@ -342,14 +342,14 @@ class SelfContainedPromise {
 // `nsIApplicationUpdateService.stateTransition`.
 var gStateTransitionPromise = new SelfContainedPromise();
 
-XPCOMUtils.defineLazyGetter(lazy, "gLogEnabled", function aus_gLogEnabled() {
+ChromeUtils.defineLazyGetter(lazy, "gLogEnabled", function aus_gLogEnabled() {
   return (
     Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false) ||
     Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false)
   );
 });
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "gLogfileEnabled",
   function aus_gLogfileEnabled() {
@@ -357,7 +357,7 @@ XPCOMUtils.defineLazyGetter(
   }
 );
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "gUpdateBundle",
   function aus_gUpdateBundle() {
@@ -369,7 +369,7 @@ XPCOMUtils.defineLazyGetter(
  * gIsBackgroundTaskMode will be true if Firefox is currently running as a
  * background task. Otherwise it will be false.
  */
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "gIsBackgroundTaskMode",
   function aus_gCurrentlyRunningAsBackgroundTask() {
@@ -878,7 +878,7 @@ function getCanApplyUpdates() {
  *
  * @return true if updates can be staged for this session.
  */
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "gCanStageUpdatesSession",
   function aus_gCSUS() {

@@ -5,7 +5,6 @@
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -1571,7 +1570,7 @@ CrashRecord.prototype = Object.freeze({
   },
 });
 
-XPCOMUtils.defineLazyGetter(CrashManager, "_log", () =>
+ChromeUtils.defineLazyGetter(CrashManager, "_log", () =>
   lazy.Log.repository.getLogger("Crashes.CrashManager")
 );
 
@@ -1581,7 +1580,7 @@ XPCOMUtils.defineLazyGetter(CrashManager, "_log", () =>
  * CrashManager is likely only ever instantiated once per application lifetime.
  * The main reason it's implemented as a reusable type is to facilitate testing.
  */
-XPCOMUtils.defineLazyGetter(CrashManager, "Singleton", function () {
+ChromeUtils.defineLazyGetter(CrashManager, "Singleton", function () {
   if (gCrashManager) {
     return gCrashManager;
   }

@@ -10,8 +10,6 @@
 
 // Globals
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -19,7 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gWinTaskbar", function () {
+ChromeUtils.defineLazyGetter(lazy, "gWinTaskbar", function () {
   if (!("@mozilla.org/windows-taskbar;1" in Cc)) {
     return null;
   }
@@ -29,14 +27,14 @@ XPCOMUtils.defineLazyGetter(lazy, "gWinTaskbar", function () {
   return winTaskbar.available && winTaskbar;
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gMacTaskbarProgress", function () {
+ChromeUtils.defineLazyGetter(lazy, "gMacTaskbarProgress", function () {
   return (
     "@mozilla.org/widget/macdocksupport;1" in Cc &&
     Cc["@mozilla.org/widget/macdocksupport;1"].getService(Ci.nsITaskbarProgress)
   );
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gGtkTaskbarProgress", function () {
+ChromeUtils.defineLazyGetter(lazy, "gGtkTaskbarProgress", function () {
   return (
     "@mozilla.org/widget/taskbarprogress/gtk;1" in Cc &&
     Cc["@mozilla.org/widget/taskbarprogress/gtk;1"].getService(

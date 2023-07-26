@@ -7,8 +7,6 @@
  * listed symbols will exposed on import, and only when and where imported.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 
@@ -55,12 +53,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "fileProtocolHandler", () => {
+ChromeUtils.defineLazyGetter(lazy, "fileProtocolHandler", () => {
   let fileHandler = Services.io.getProtocolHandler("file");
   return fileHandler.QueryInterface(Ci.nsIFileProtocolHandler);
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gTextDecoder", () => {
+ChromeUtils.defineLazyGetter(lazy, "gTextDecoder", () => {
   return new TextDecoder();
 });
 

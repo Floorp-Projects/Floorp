@@ -7,8 +7,6 @@
 // It used to have a test before it was moved:
 // https://searchfox.org/mozilla-central/rev/b1a5802e0f73bfd6d2096e5fefc2b47831a50b2d/services/sync/tests/unit/test_bookmark_validator.js
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 import { Utils } from "resource://services-sync/util.sys.mjs";
 
@@ -220,7 +218,7 @@ export class BookmarkProblemData {
 }
 
 // Defined lazily to avoid initializing PlacesUtils.bookmarks too soon.
-XPCOMUtils.defineLazyGetter(lazy, "SYNCED_ROOTS", () => [
+ChromeUtils.defineLazyGetter(lazy, "SYNCED_ROOTS", () => [
   lazy.PlacesUtils.bookmarks.menuGuid,
   lazy.PlacesUtils.bookmarks.toolbarGuid,
   lazy.PlacesUtils.bookmarks.unfiledGuid,
@@ -231,7 +229,7 @@ XPCOMUtils.defineLazyGetter(lazy, "SYNCED_ROOTS", () => [
 // toolkit/components/places/nsNavHistoryQuery.cpp. We follow queries that
 // reference existing folders in the client tree, and detect cycles where a
 // query references its containing folder.
-XPCOMUtils.defineLazyGetter(lazy, "ROOT_GUID_TO_QUERY_FOLDER_NAME", () => ({
+ChromeUtils.defineLazyGetter(lazy, "ROOT_GUID_TO_QUERY_FOLDER_NAME", () => ({
   [lazy.PlacesUtils.bookmarks.rootGuid]: "PLACES_ROOT",
   [lazy.PlacesUtils.bookmarks.menuGuid]: "BOOKMARKS_MENU",
 

@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyServiceGetter(
 
 const CC = Components.Constructor;
 
-XPCOMUtils.defineLazyGetter(lazy, "BinaryInputStream", () => {
+ChromeUtils.defineLazyGetter(lazy, "BinaryInputStream", () => {
   return CC(
     "@mozilla.org/binaryinputstream;1",
     "nsIBinaryInputStream",
@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyGetter(lazy, "BinaryInputStream", () => {
   );
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "BinaryOutputStream", () => {
+ChromeUtils.defineLazyGetter(lazy, "BinaryOutputStream", () => {
   return CC(
     "@mozilla.org/binaryoutputstream;1",
     "nsIBinaryOutputStream",
@@ -40,7 +40,7 @@ XPCOMUtils.defineLazyGetter(lazy, "BinaryOutputStream", () => {
   );
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "StorageStream", () => {
+ChromeUtils.defineLazyGetter(lazy, "StorageStream", () => {
   return CC("@mozilla.org/storagestream;1", "nsIStorageStream", "init");
 });
 

@@ -1024,7 +1024,7 @@ export class LoginManagerStorage_json {
   }
 }
 
-XPCOMUtils.defineLazyGetter(LoginManagerStorage_json.prototype, "log", () => {
+ChromeUtils.defineLazyGetter(LoginManagerStorage_json.prototype, "log", () => {
   let logger = lazy.LoginHelper.createLogger("Login storage");
   return logger.log.bind(logger);
 });

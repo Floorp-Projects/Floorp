@@ -86,11 +86,11 @@ var gWeakIntersectingVideosForTesting = new WeakSet();
 // content process, so we set this as a lazy process global.
 // See PictureInPictureToggleChild.getSiteOverrides for a
 // sense of what the return types are.
-XPCOMUtils.defineLazyGetter(lazy, "gSiteOverrides", () => {
+ChromeUtils.defineLazyGetter(lazy, "gSiteOverrides", () => {
   return PictureInPictureToggleChild.getSiteOverrides();
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
+ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "PictureInPictureChild",
     maxLogLevel: Services.prefs.getBoolPref(

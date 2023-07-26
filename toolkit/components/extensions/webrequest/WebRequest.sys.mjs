@@ -21,13 +21,17 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 
 // WebRequest.jsm's only consumer is ext-webRequest.js, so we can depend on
 // the apiManager.global being initialized.
-XPCOMUtils.defineLazyGetter(lazy, "tabTracker", () => {
+ChromeUtils.defineLazyGetter(lazy, "tabTracker", () => {
   return lazy.ExtensionParent.apiManager.global.tabTracker;
 });
-XPCOMUtils.defineLazyGetter(lazy, "getCookieStoreIdForOriginAttributes", () => {
-  return lazy.ExtensionParent.apiManager.global
-    .getCookieStoreIdForOriginAttributes;
-});
+ChromeUtils.defineLazyGetter(
+  lazy,
+  "getCookieStoreIdForOriginAttributes",
+  () => {
+    return lazy.ExtensionParent.apiManager.global
+      .getCookieStoreIdForOriginAttributes;
+  }
+);
 
 // URI schemes that service workers are allowed to load scripts from (any other
 // scheme is not allowed by the specs and it is not expected by the service workers

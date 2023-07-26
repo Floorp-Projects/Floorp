@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 // Android tests don't import these properly, so guard against that
 let shortURL = {};
 let searchShortcuts = {};
@@ -39,7 +37,7 @@ try {
   // so it's safe to do nothing with this here.
 }
 
-XPCOMUtils.defineLazyGetter(lazy, "gCryptoHash", function () {
+ChromeUtils.defineLazyGetter(lazy, "gCryptoHash", function () {
   return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 });
 
@@ -89,7 +87,7 @@ function toHash(aValue) {
 /**
  * Singleton that provides storage functionality.
  */
-XPCOMUtils.defineLazyGetter(lazy, "Storage", function () {
+ChromeUtils.defineLazyGetter(lazy, "Storage", function () {
   return new LinksStorage();
 });
 

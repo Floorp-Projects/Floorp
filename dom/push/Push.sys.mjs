@@ -8,7 +8,7 @@ import { DOMRequestIpcHelper } from "resource://gre/modules/DOMRequestHelper.sys
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "console", () => {
+ChromeUtils.defineLazyGetter(lazy, "console", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
     "resource://gre/modules/Console.sys.mjs"
   );

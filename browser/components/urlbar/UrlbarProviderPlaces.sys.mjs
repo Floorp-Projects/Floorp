@@ -103,8 +103,6 @@ const SQL_SWITCHTAB_QUERY = `SELECT :query_type, t.url, t.url, NULL, NULL, NULL,
 
 // Getters
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import {
   UrlbarProvider,
   UrlbarUtils,
@@ -133,7 +131,7 @@ function setTimeout(callback, ms) {
 }
 
 // Maps restriction character types to textual behaviors.
-XPCOMUtils.defineLazyGetter(lazy, "typeToBehaviorMap", () => {
+ChromeUtils.defineLazyGetter(lazy, "typeToBehaviorMap", () => {
   return new Map([
     [lazy.UrlbarTokenizer.TYPE.RESTRICT_HISTORY, "history"],
     [lazy.UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK, "bookmark"],
@@ -145,7 +143,7 @@ XPCOMUtils.defineLazyGetter(lazy, "typeToBehaviorMap", () => {
   ]);
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "sourceToBehaviorMap", () => {
+ChromeUtils.defineLazyGetter(lazy, "sourceToBehaviorMap", () => {
   return new Map([
     [UrlbarUtils.RESULT_SOURCE.HISTORY, "history"],
     [UrlbarUtils.RESULT_SOURCE.BOOKMARKS, "bookmark"],

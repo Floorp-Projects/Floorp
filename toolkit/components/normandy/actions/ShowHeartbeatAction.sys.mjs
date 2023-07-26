@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { BaseAction } from "resource://normandy/actions/BaseAction.sys.mjs";
 
 const lazy = {};
@@ -18,7 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gAllRecipeStorage", function () {
+ChromeUtils.defineLazyGetter(lazy, "gAllRecipeStorage", function () {
   return new lazy.Storage("normandy-heartbeat");
 });
 

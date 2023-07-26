@@ -957,7 +957,7 @@ export var E10SUtils = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   E10SUtils,
   "SERIALIZED_SYSTEMPRINCIPAL",
   function () {

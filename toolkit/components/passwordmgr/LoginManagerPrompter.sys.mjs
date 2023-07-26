@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIAutoCompleteSimpleSearch"
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "strBundle", () => {
+ChromeUtils.defineLazyGetter(lazy, "strBundle", () => {
   return Services.strings.createBundle(
     "chrome://passwordmgr/locale/passwordmgr.properties"
   );
@@ -1122,6 +1122,6 @@ export class LoginManagerPrompter {
 // Add this observer once for the process.
 Services.obs.addObserver(observer, "autocomplete-did-enter-text");
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+ChromeUtils.defineLazyGetter(lazy, "log", () => {
   return lazy.LoginHelper.createLogger("LoginManagerPrompter");
 });

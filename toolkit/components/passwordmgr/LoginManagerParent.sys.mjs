@@ -13,14 +13,14 @@ const LoginInfo = new Components.Constructor(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "LoginRelatedRealmsParent", () => {
+ChromeUtils.defineLazyGetter(lazy, "LoginRelatedRealmsParent", () => {
   const { LoginRelatedRealmsParent } = ChromeUtils.importESModule(
     "resource://gre/modules/LoginRelatedRealms.sys.mjs"
   );
   return new LoginRelatedRealmsParent();
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "PasswordRulesManager", () => {
+ChromeUtils.defineLazyGetter(lazy, "PasswordRulesManager", () => {
   const { PasswordRulesManagerParent } = ChromeUtils.importESModule(
     "resource://gre/modules/PasswordRulesManager.sys.mjs"
   );
@@ -44,11 +44,11 @@ XPCOMUtils.defineLazyServiceGetter(
   Ci.nsILoginManagerPrompter
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+ChromeUtils.defineLazyGetter(lazy, "log", () => {
   let logger = lazy.LoginHelper.createLogger("LoginManagerParent");
   return logger.log.bind(logger);
 });
-XPCOMUtils.defineLazyGetter(lazy, "debug", () => {
+ChromeUtils.defineLazyGetter(lazy, "debug", () => {
   let logger = lazy.LoginHelper.createLogger("LoginManagerParent");
   return logger.debug.bind(logger);
 });
@@ -287,7 +287,7 @@ export class LoginManagerParent extends JSWindowActorParent {
       );
     }
     let context = {};
-    XPCOMUtils.defineLazyGetter(context, "origin", () => {
+    ChromeUtils.defineLazyGetter(context, "origin", () => {
       // We still need getLoginOrigin to remove the path for file: URIs until we fix bug 1625391.
       let origin = lazy.LoginHelper.getLoginOrigin(
         this.manager.documentPrincipal?.originNoSuffix

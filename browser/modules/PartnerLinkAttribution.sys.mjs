@@ -21,13 +21,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
 const NAMESPACE_CONTEXUAL_SERVICES = "contextual-services";
 
 // PingCentre client to send custom pings
-XPCOMUtils.defineLazyGetter(lazy, "pingcentre", () => {
+ChromeUtils.defineLazyGetter(lazy, "pingcentre", () => {
   return new lazy.PingCentre({ topic: "contextual-services" });
 });
 
 // `contextId` is a unique identifier used by Contextual Services
 const CONTEXT_ID_PREF = "browser.contextual-services.contextId";
-XPCOMUtils.defineLazyGetter(lazy, "contextId", () => {
+ChromeUtils.defineLazyGetter(lazy, "contextId", () => {
   let _contextId = Services.prefs.getStringPref(CONTEXT_ID_PREF, null);
   if (!_contextId) {
     _contextId = String(Services.uuid.generateUUID());

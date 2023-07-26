@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -14,9 +12,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
   WebDriverBiDi: "chrome://remote/content/webdriver-bidi/WebDriverBiDi.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
+ChromeUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
-XPCOMUtils.defineLazyGetter(lazy, "activeProtocols", () => {
+ChromeUtils.defineLazyGetter(lazy, "activeProtocols", () => {
   const protocols = Services.prefs.getIntPref("remote.active-protocols");
   if (protocols < 1 || protocols > 3) {
     throw Error(`Invalid remote protocol identifier: ${protocols}`);

@@ -9,7 +9,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
+ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "SearchUtils",
     maxLogLevel: SearchUtils.loggingEnabled ? "Debug" : "Warn",
@@ -383,6 +383,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 // Can't use defineLazyPreferenceGetter because we want the value
 // from the default branch
-XPCOMUtils.defineLazyGetter(SearchUtils, "distroID", () => {
+ChromeUtils.defineLazyGetter(SearchUtils, "distroID", () => {
   return Services.prefs.getDefaultBranch("distribution.").getCharPref("id", "");
 });

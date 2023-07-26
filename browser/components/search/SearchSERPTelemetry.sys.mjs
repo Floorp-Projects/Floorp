@@ -24,7 +24,7 @@ export const TELEMETRY_SETTINGS_KEY = "search-telemetry-v2";
 
 const impressionIdsWithoutEngagementsSet = new Set();
 
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
+ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "SearchTelemetry",
     maxLogLevel: lazy.SearchUtils.loggingEnabled ? "Debug" : "Warn",

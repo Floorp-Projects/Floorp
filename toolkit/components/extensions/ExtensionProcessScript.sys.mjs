@@ -9,8 +9,6 @@
  * after startup, in *every* browser process live outside of this file.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
@@ -37,11 +35,11 @@ function getData(extension, key = "") {
 // We need to avoid touching Services.appinfo here in order to prevent
 // the wrong version from being cached during xpcshell test startup.
 // eslint-disable-next-line mozilla/use-services
-XPCOMUtils.defineLazyGetter(lazy, "isContentProcess", () => {
+ChromeUtils.defineLazyGetter(lazy, "isContentProcess", () => {
   return Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "isContentScriptProcess", () => {
+ChromeUtils.defineLazyGetter(lazy, "isContentScriptProcess", () => {
   return (
     lazy.isContentProcess ||
     !WebExtensionPolicy.useRemoteWebExtensions ||

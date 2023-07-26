@@ -30,7 +30,7 @@ let _cache = null;
 // are found.
 const RECENT_REMOTE_TAB_THRESHOLD_MS = 72 * 60 * 60 * 1000; // 72 hours.
 
-XPCOMUtils.defineLazyGetter(lazy, "weaveXPCService", function () {
+ChromeUtils.defineLazyGetter(lazy, "weaveXPCService", function () {
   try {
     return Cc["@mozilla.org/weave/service;1"].getService(
       Ci.nsISupports

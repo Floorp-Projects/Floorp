@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
@@ -11,7 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://featuregates/FeatureGateImplementation.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gFeatureDefinitionsPromise", async () => {
+ChromeUtils.defineLazyGetter(lazy, "gFeatureDefinitionsPromise", async () => {
   const url = "resource://featuregates/feature_definitions.json";
   return fetchFeatureDefinitions(url);
 });

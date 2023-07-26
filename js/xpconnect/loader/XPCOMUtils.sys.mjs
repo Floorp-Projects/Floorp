@@ -383,7 +383,7 @@ export var XPCOMUtils = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(XPCOMUtils, "_scriptloader", () => {
+ChromeUtils.defineLazyGetter(XPCOMUtils, "_scriptloader", () => {
   return Services.scriptloader;
 });
 

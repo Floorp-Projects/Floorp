@@ -11,12 +11,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   SitePermissions: "resource:///modules/SitePermissions.sys.mjs",
 });
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "syncL10n",
   () => new Localization(["browser/webrtcIndicator.ftl"], true)
 );
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "listFormat",
   () => new Services.intl.ListFormat(undefined)

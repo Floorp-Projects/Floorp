@@ -4,8 +4,6 @@
 
 // This file is an XPCOM service-ified copy of ../devtools/server/socket/websocket-server.js.
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const CC = Components.Constructor;
 
 const lazy = {};
@@ -16,13 +14,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
+ChromeUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
-XPCOMUtils.defineLazyGetter(lazy, "CryptoHash", () => {
+ChromeUtils.defineLazyGetter(lazy, "CryptoHash", () => {
   return CC("@mozilla.org/security/hash;1", "nsICryptoHash", "initWithString");
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "threadManager", () => {
+ChromeUtils.defineLazyGetter(lazy, "threadManager", () => {
   return Cc["@mozilla.org/thread-manager;1"].getService();
 });
 
@@ -32,11 +30,11 @@ XPCOMUtils.defineLazyGetter(lazy, "threadManager", () => {
  * be converted to a URI. Call sites interested in checking for null should use
  * `allowedOrigins`, those interested in URIs should use `allowedOriginURIs`.
  */
-XPCOMUtils.defineLazyGetter(lazy, "allowedOrigins", () =>
+ChromeUtils.defineLazyGetter(lazy, "allowedOrigins", () =>
   lazy.RemoteAgent.allowOrigins !== null ? lazy.RemoteAgent.allowOrigins : []
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "allowedOriginURIs", () => {
+ChromeUtils.defineLazyGetter(lazy, "allowedOriginURIs", () => {
   return lazy.allowedOrigins
     .map(origin => {
       try {

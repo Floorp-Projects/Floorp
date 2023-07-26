@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { Log as StdLog } from "resource://gre/modules/Log.sys.mjs";
 
 const PREF_REMOTE_LOG_LEVEL = "remote.log.level";
@@ -13,7 +11,7 @@ const lazy = {};
 // Lazy getter which returns a cached value of the remote log level. Should be
 // used for static getters used to guard hot paths for logging, eg
 // isTraceLevelOrMore.
-XPCOMUtils.defineLazyGetter(lazy, "logLevel", () =>
+ChromeUtils.defineLazyGetter(lazy, "logLevel", () =>
   Services.prefs.getCharPref(PREF_REMOTE_LOG_LEVEL, StdLog.Level.Fatal)
 );
 

@@ -27,7 +27,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "updateManager", () => {
+ChromeUtils.defineLazyGetter(lazy, "updateManager", () => {
   return (
     Cc["@mozilla.org/updates/update-manager;1"] &&
     Cc["@mozilla.org/updates/update-manager;1"].getService(Ci.nsIUpdateManager)

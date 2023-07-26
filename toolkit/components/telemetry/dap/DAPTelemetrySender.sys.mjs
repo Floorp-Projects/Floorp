@@ -6,7 +6,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 let lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", function () {
+ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
   return console.createInstance({
     prefix: "DAPTelemetrySender",
     maxLogLevelPref: "toolkit.telemetry.dap.logLevel",

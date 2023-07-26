@@ -26,7 +26,6 @@
  *    The user is resizing the selection
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import {
   setMaxDetectHeight,
   setMaxDetectWidth,
@@ -37,7 +36,7 @@ import {
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "overlayLocalization", () => {
+ChromeUtils.defineLazyGetter(lazy, "overlayLocalization", () => {
   return new Localization(["browser/screenshotsOverlay.ftl"], true);
 });
 

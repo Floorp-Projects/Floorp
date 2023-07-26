@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
@@ -17,7 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   CommonUtils: "resource://services-common/utils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "CryptoHash", () => {
+ChromeUtils.defineLazyGetter(lazy, "CryptoHash", () => {
   return Components.Constructor(
     "@mozilla.org/security/hash;1",
     "nsICryptoHash",
@@ -25,14 +24,14 @@ XPCOMUtils.defineLazyGetter(lazy, "CryptoHash", () => {
   );
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gDatareportingPath", () => {
+ChromeUtils.defineLazyGetter(lazy, "gDatareportingPath", () => {
   return PathUtils.join(
     Services.dirsvc.get("ProfD", Ci.nsIFile).path,
     "datareporting"
   );
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gStateFilePath", () => {
+ChromeUtils.defineLazyGetter(lazy, "gStateFilePath", () => {
   return PathUtils.join(lazy.gDatareportingPath, "state.json");
 });
 

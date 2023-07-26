@@ -46,7 +46,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Weave: "resource://services-sync/main.sys.mjs",
   WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
 });
-XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
+ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.importESModule(
     "resource://gre/modules/FxAccounts.sys.mjs"
   ).getFxAccountsSingleton();
@@ -136,7 +136,7 @@ export function FxAccountsWebChannel(options) {
   this._webChannelId = options.channel_id;
 
   // options.helpers is only specified by tests.
-  XPCOMUtils.defineLazyGetter(this, "_helpers", () => {
+  ChromeUtils.defineLazyGetter(this, "_helpers", () => {
     return options.helpers || new FxAccountsWebChannelHelpers(options);
   });
 

@@ -54,7 +54,7 @@ const TIMER_LAST_UPDATE_PREF = `app.update.lastUpdateTime.${TIMER_NAME}`;
 
 const PREFS_TO_WATCH = [RUN_INTERVAL_PREF, SHIELD_ENABLED_PREF, API_URL_PREF];
 
-XPCOMUtils.defineLazyGetter(lazy, "gRemoteSettingsClient", () => {
+ChromeUtils.defineLazyGetter(lazy, "gRemoteSettingsClient", () => {
   return lazy.RemoteSettings(REMOTE_SETTINGS_COLLECTION);
 });
 

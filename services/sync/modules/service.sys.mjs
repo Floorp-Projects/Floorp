@@ -5,7 +5,6 @@
 const CRYPTO_COLLECTION = "crypto";
 const KEYS_WBO = "keys";
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
@@ -104,7 +103,7 @@ const lazy = {};
 // A unique identifier for this browser session. Used for logging so
 // we can easily see whether 2 logs are in the same browser session or
 // after the browser restarted.
-XPCOMUtils.defineLazyGetter(lazy, "browserSessionID", Utils.makeGUID);
+ChromeUtils.defineLazyGetter(lazy, "browserSessionID", Utils.makeGUID);
 
 function Sync11Service() {
   this._notify = Utils.notify("weave:service:");

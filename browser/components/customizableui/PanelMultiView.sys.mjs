@@ -97,14 +97,12 @@
  *       └───┴───┴── Open views
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gBundle", function () {
+ChromeUtils.defineLazyGetter(lazy, "gBundle", function () {
   return Services.strings.createBundle(
     "chrome://browser/locale/browser.properties"
   );

@@ -47,8 +47,6 @@
  *   issues.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -58,7 +56,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "MirrorLog", () =>
+ChromeUtils.defineLazyGetter(lazy, "MirrorLog", () =>
   lazy.Log.repository.getLogger("Sync.Engine.Bookmarks.Mirror")
 );
 
@@ -77,7 +75,7 @@ const DB_TITLE_LENGTH_MAX = 4096;
 const MIRROR_SCHEMA_VERSION = 9;
 
 // Use a shared jankYielder in these functions
-XPCOMUtils.defineLazyGetter(lazy, "yieldState", () => lazy.Async.yieldState());
+ChromeUtils.defineLazyGetter(lazy, "yieldState", () => lazy.Async.yieldState());
 
 /** Adapts a `Log.sys.mjs` logger to a `mozIServicesLogSink`. */
 class LogAdapter {

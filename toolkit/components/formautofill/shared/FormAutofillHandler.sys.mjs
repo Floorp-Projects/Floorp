@@ -4,7 +4,6 @@
 
 import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -98,7 +97,7 @@ export class FormAutofillHandler {
 
     this.onAutofillCallback = onAutofillCallback;
 
-    XPCOMUtils.defineLazyGetter(this, "log", () =>
+    ChromeUtils.defineLazyGetter(this, "log", () =>
       FormAutofill.defineLogGetter(this, "FormAutofillHandler")
     );
   }

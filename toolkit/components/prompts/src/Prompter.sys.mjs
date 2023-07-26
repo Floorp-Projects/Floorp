@@ -904,7 +904,7 @@ var InternalPromptUtils = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(InternalPromptUtils, "strBundle", function () {
+ChromeUtils.defineLazyGetter(InternalPromptUtils, "strBundle", function () {
   let bundle = Services.strings.createBundle(
     "chrome://global/locale/commonDialogs.properties"
   );
@@ -914,7 +914,7 @@ XPCOMUtils.defineLazyGetter(InternalPromptUtils, "strBundle", function () {
   return bundle;
 });
 
-XPCOMUtils.defineLazyGetter(InternalPromptUtils, "brandBundle", function () {
+ChromeUtils.defineLazyGetter(InternalPromptUtils, "brandBundle", function () {
   let bundle = Services.strings.createBundle(
     "chrome://branding/locale/brand.properties"
   );
@@ -924,7 +924,7 @@ XPCOMUtils.defineLazyGetter(InternalPromptUtils, "brandBundle", function () {
   return bundle;
 });
 
-XPCOMUtils.defineLazyGetter(InternalPromptUtils, "ellipsis", function () {
+ChromeUtils.defineLazyGetter(InternalPromptUtils, "ellipsis", function () {
   let ellipsis = "\u2026";
   try {
     ellipsis = Services.prefs.getComplexValue(

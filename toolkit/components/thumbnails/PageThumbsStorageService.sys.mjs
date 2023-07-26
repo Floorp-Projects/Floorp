@@ -4,15 +4,13 @@
 
 const THUMBNAIL_DIRECTORY = "thumbnails";
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "gCryptoHash", function () {
+ChromeUtils.defineLazyGetter(lazy, "gCryptoHash", function () {
   return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gUnicodeConverter", function () {
+ChromeUtils.defineLazyGetter(lazy, "gUnicodeConverter", function () {
   let converter = Cc[
     "@mozilla.org/intl/scriptableunicodeconverter"
   ].createInstance(Ci.nsIScriptableUnicodeConverter);

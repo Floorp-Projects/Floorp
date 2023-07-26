@@ -5,11 +5,10 @@
 import { Observers } from "resource://services-common/observers.sys.mjs";
 
 import { CommonUtils } from "resource://services-common/utils.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "textEncoder", function () {
+ChromeUtils.defineLazyGetter(lazy, "textEncoder", function () {
   return new TextEncoder();
 });
 
@@ -529,7 +528,7 @@ export var CryptoUtils = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(CryptoUtils, "_utf8Converter", function () {
+ChromeUtils.defineLazyGetter(CryptoUtils, "_utf8Converter", function () {
   let converter = Cc[
     "@mozilla.org/intl/scriptableunicodeconverter"
   ].createInstance(Ci.nsIScriptableUnicodeConverter);

@@ -29,7 +29,7 @@ XPCOMUtils.defineLazyPreferenceGetter(lazy, "testRulesPref", PREF_TEST_RULES);
 // Name of the RemoteSettings collection containing the rules.
 const COLLECTION_NAME = "cookie-banner-rules-list";
 
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
+ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "CookieBannerListService",
     maxLogLevelPref: "cookiebanners.listService.logLevel",
@@ -38,7 +38,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
 
 // Lazy getter for the JSON schema of cookie banner rules. It is used for
 // validation of rules defined by pref.
-XPCOMUtils.defineLazyGetter(lazy, "CookieBannerRuleSchema", async () => {
+ChromeUtils.defineLazyGetter(lazy, "CookieBannerRuleSchema", async () => {
   let response = await fetch(
     "chrome://global/content/cookiebanners/CookieBannerRule.schema.json"
   );

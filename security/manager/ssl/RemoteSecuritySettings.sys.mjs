@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { RemoteSettings } from "resource://services-settings/remote-settings.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import { X509 } from "resource://gre/modules/psm/X509.sys.mjs";
 
@@ -23,9 +22,9 @@ const CRLITE_FILTERS_ENABLED_PREF =
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "gTextDecoder", () => new TextDecoder());
+ChromeUtils.defineLazyGetter(lazy, "gTextDecoder", () => new TextDecoder());
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+ChromeUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
     "resource://gre/modules/Console.sys.mjs"
   );

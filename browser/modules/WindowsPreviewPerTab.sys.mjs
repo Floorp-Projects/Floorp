@@ -156,7 +156,7 @@ function PreviewController(win, tab) {
 
   this.tab.addEventListener("TabAttrModified", this);
 
-  XPCOMUtils.defineLazyGetter(this, "canvasPreview", function () {
+  ChromeUtils.defineLazyGetter(this, "canvasPreview", function () {
     let canvas = lazy.PageThumbs.createCanvas(this.win.win);
     canvas.mozOpaque = true;
     return canvas;
@@ -884,7 +884,7 @@ export var AeroPeek = {
   ]),
 };
 
-XPCOMUtils.defineLazyGetter(AeroPeek, "cacheTimer", () =>
+ChromeUtils.defineLazyGetter(AeroPeek, "cacheTimer", () =>
   Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer)
 );
 

@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+ChromeUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
     "resource://gre/modules/Console.sys.mjs"
   );
@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return new ConsoleAPI(consoleOptions);
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "localization", () => {
+ChromeUtils.defineLazyGetter(lazy, "localization", () => {
   return new Localization(
     ["branding/brand.ftl", "toolkit/updates/backgroundupdate.ftl"],
     true

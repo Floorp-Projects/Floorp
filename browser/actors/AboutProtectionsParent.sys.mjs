@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   FXA_PWDMGR_REALM: "resource://gre/modules/FxAccountsCommon.js",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
+ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.importESModule(
     "resource://gre/modules/FxAccounts.sys.mjs"
   ).getFxAccountsSingleton();

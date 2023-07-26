@@ -29,7 +29,6 @@
 // constructor via a backstage pass.
 import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -42,7 +41,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () =>
+ChromeUtils.defineLazyGetter(lazy, "log", () =>
   FormAutofill.defineLogGetter(lazy, "FormAutofillParent")
 );
 
@@ -262,7 +261,7 @@ export let FormAutofillStatus = {
 
 // Lazily load the storage JSM to avoid disk I/O until absolutely needed.
 // Once storage is loaded we need to update saved field names and inform content processes.
-XPCOMUtils.defineLazyGetter(lazy, "gFormAutofillStorage", () => {
+ChromeUtils.defineLazyGetter(lazy, "gFormAutofillStorage", () => {
   let { formAutofillStorage } = ChromeUtils.importESModule(
     "resource://autofill/FormAutofillStorage.sys.mjs"
   );

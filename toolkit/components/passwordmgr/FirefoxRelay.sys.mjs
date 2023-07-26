@@ -8,7 +8,6 @@ import {
   OptInFeature,
   ParentAutocompleteOption,
 } from "resource://gre/modules/LoginHelper.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 
 const lazy = {};
@@ -44,15 +43,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () =>
+ChromeUtils.defineLazyGetter(lazy, "log", () =>
   LoginHelper.createLogger("FirefoxRelay")
 );
-XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () =>
+ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () =>
   ChromeUtils.importESModule(
     "resource://gre/modules/FxAccounts.sys.mjs"
   ).getFxAccountsSingleton()
 );
-XPCOMUtils.defineLazyGetter(lazy, "strings", function () {
+ChromeUtils.defineLazyGetter(lazy, "strings", function () {
   return new Localization([
     "branding/brand.ftl",
     "browser/firefoxRelay.ftl",

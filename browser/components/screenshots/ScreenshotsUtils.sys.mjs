@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
   AlertsService: ["@mozilla.org/alerts-service;1", "nsIAlertsService"],
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "screenshotsLocalization", () => {
+ChromeUtils.defineLazyGetter(lazy, "screenshotsLocalization", () => {
   return new Localization(["browser/screenshots.ftl"], true);
 });
 

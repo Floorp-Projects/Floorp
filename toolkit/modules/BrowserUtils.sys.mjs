@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   }
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "gLocalization", () => {
+ChromeUtils.defineLazyGetter(lazy, "gLocalization", () => {
   return new Localization(["toolkit/global/browser-utils.ftl"], true);
 });
 

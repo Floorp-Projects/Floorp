@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
 export var CommonUtils = {
@@ -680,7 +678,7 @@ export var CommonUtils = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(CommonUtils, "_utf8Converter", function () {
+ChromeUtils.defineLazyGetter(CommonUtils, "_utf8Converter", function () {
   let converter = Cc[
     "@mozilla.org/intl/scriptableunicodeconverter"
   ].createInstance(Ci.nsIScriptableUnicodeConverter);
@@ -688,7 +686,7 @@ XPCOMUtils.defineLazyGetter(CommonUtils, "_utf8Converter", function () {
   return converter;
 });
 
-XPCOMUtils.defineLazyGetter(CommonUtils, "_converterService", function () {
+ChromeUtils.defineLazyGetter(CommonUtils, "_converterService", function () {
   return Cc["@mozilla.org/streamConverters;1"].getService(
     Ci.nsIStreamConverterService
   );

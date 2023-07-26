@@ -356,7 +356,7 @@ export function Store(name, engine) {
 
   this._log = Log.repository.getLogger(`Sync.Engine.${name}.Store`);
 
-  XPCOMUtils.defineLazyGetter(this, "_timer", function () {
+  ChromeUtils.defineLazyGetter(this, "_timer", function () {
     return Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   });
 }

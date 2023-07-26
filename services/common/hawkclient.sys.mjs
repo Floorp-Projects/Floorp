@@ -26,7 +26,6 @@ import { HAWKAuthenticatedRESTRequest } from "resource://services-common/hawkreq
 
 import { Observers } from "resource://services-common/observers.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 // log.appender.dump should be one of "Fatal", "Error", "Warn", "Info", "Config",
 // "Debug", "Trace" or "All". If none is specified, "Error" will be used by
@@ -42,7 +41,7 @@ const PREF_LOG_SENSITIVE_DETAILS = "services.common.hawk.log.sensitive";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "log", function () {
+ChromeUtils.defineLazyGetter(lazy, "log", function () {
   let log = Log.repository.getLogger("Hawk");
   // We set the log itself to "debug" and set the level from the preference to
   // the appender.  This allows other things to send the logs to different
@@ -66,7 +65,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", function () {
 
 // A boolean to indicate if personally identifiable information (or anything
 // else sensitive, such as credentials) should be logged.
-XPCOMUtils.defineLazyGetter(lazy, "logPII", function () {
+ChromeUtils.defineLazyGetter(lazy, "logPII", function () {
   try {
     return Services.prefs.getBoolPref(PREF_LOG_SENSITIVE_DETAILS);
   } catch (_) {
