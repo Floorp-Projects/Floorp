@@ -490,9 +490,9 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
   MOZ_LOG(sWASLog, LogLevel::Debug,
           ("launchArg: '%s'", NS_ConvertUTF16toUTF8(launchArg).get()));
 
-  // On modern Windows (10+), use newer toast layout, which makes images larger,
-  // for system (chrome-privileged) toasts.
-  if (IsWin10OrLater() && mIsSystemPrincipal) {
+  // Use newer toast layout, which makes images larger, for system
+  // (chrome-privileged) toasts.
+  if (mIsSystemPrincipal) {
     ComPtr<IXmlNodeList> bindingElements;
     hr = toastXml->GetElementsByTagName(HStringReference(L"binding").Get(),
                                         &bindingElements);
@@ -769,19 +769,16 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
       &mFailedToken);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
-  // `IToastNotification2` not supported on versions older than Windows 10.
-  if (IsWin10OrLater()) {
-    ComPtr<IToastNotification2> notification2;
-    hr = mNotification.As(&notification2);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+  ComPtr<IToastNotification2> notification2;
+  hr = mNotification.As(&notification2);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
-    HString hTag;
-    hr = hTag.Set(mWindowsTag.get());
-    NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+  HString hTag;
+  hr = hTag.Set(mWindowsTag.get());
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
-    hr = notification2->put_Tag(hTag.Get());
-    NS_ENSURE_TRUE(SUCCEEDED(hr), false);
-  }
+  hr = notification2->put_Tag(hTag.Get());
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   ComPtr<IToastNotificationManagerStatics> toastNotificationManagerStatics =
       GetToastNotificationManagerStatics();
@@ -958,24 +955,20 @@ HRESULT
 ToastNotificationHandler::OnDismiss(
     const ComPtr<IToastNotification>& notification,
     const ComPtr<IToastDismissedEventArgs>& aArgs) {
-  // Multiple dismiss events only occur on Windows 10 and later, prior versions
-  // of Windows didn't include `IToastNotification2`.
-  if (IsWin10OrLater()) {
-    ComPtr<IToastNotification2> notification2;
-    HRESULT hr = notification.As(&notification2);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), E_FAIL);
+  ComPtr<IToastNotification2> notification2;
+  HRESULT hr = notification.As(&notification2);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), E_FAIL);
 
-    HString tagHString;
-    hr = notification2->get_Tag(tagHString.GetAddressOf());
-    NS_ENSURE_TRUE(SUCCEEDED(hr), E_FAIL);
+  HString tagHString;
+  hr = notification2->get_Tag(tagHString.GetAddressOf());
+  NS_ENSURE_TRUE(SUCCEEDED(hr), E_FAIL);
 
-    unsigned int len;
-    const wchar_t* tagPtr = tagHString.GetRawBuffer(&len);
-    nsAutoString tag(tagPtr, len);
+  unsigned int len;
+  const wchar_t* tagPtr = tagHString.GetRawBuffer(&len);
+  nsAutoString tag(tagPtr, len);
 
-    if (FindNotificationByTag(tag, mAumid)) {
-      return S_OK;
-    }
+  if (FindNotificationByTag(tag, mAumid)) {
+    return S_OK;
   }
 
   SendFinished();

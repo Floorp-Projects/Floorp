@@ -20,7 +20,6 @@
 #  include "mozilla/Logging.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/WidgetUtils.h"
-#  include "mozilla/WindowsVersion.h"
 #  include "mozilla/ScopeExit.h"
 #  include "mozilla/dom/MediaControlUtils.h"
 #  include "mozilla/media/MediaUtils.h"
@@ -137,11 +136,6 @@ bool WindowsSMTCProvider::IsOpened() const { return mInitialized; }
 bool WindowsSMTCProvider::Open() {
   LOG("Opening Source");
   MOZ_ASSERT(!mInitialized);
-
-  if (!IsWin8Point1OrLater()) {
-    LOG("Windows 8.1 or later is required for Media Key Support");
-    return false;
-  }
 
   if (!InitDisplayAndControls()) {
     LOG("Failed to initialize the SMTC and its display");
