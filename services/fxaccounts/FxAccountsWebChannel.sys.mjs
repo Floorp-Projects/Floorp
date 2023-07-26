@@ -361,7 +361,7 @@ FxAccountsWebChannel.prototype = {
     let listener = (webChannelId, message, sendingContext) => {
       if (message) {
         log.debug("FxAccountsWebChannel message received", message.command);
-        if (logPII) {
+        if (logPII()) {
           log.debug("FxAccountsWebChannel message details", message);
         }
         try {

@@ -302,7 +302,7 @@ export class FxAccountsKeys {
     sessionToken,
     keyFetchToken
   ) {
-    if (logPII) {
+    if (logPII()) {
       log.debug(
         `fetchAndUnwrapKeys: sessionToken: ${sessionToken}, keyFetchToken: ${keyFetchToken}`
       );
@@ -342,7 +342,7 @@ export class FxAccountsKeys {
       wrapKB
     );
 
-    if (logPII) {
+    if (logPII()) {
       log.debug("kBbytes: " + kBbytes);
     }
 
@@ -352,7 +352,7 @@ export class FxAccountsKeys {
       unwrapBKey: null,
     };
 
-    if (logPII) {
+    if (logPII()) {
       log.debug(`Keys Obtained: ${updateData.scopedKeys}`);
     } else {
       log.debug(
@@ -379,7 +379,7 @@ export class FxAccountsKeys {
     log.debug(
       `Fetching keys with token ${!!keyFetchToken} from ${client.host}`
     );
-    if (logPII) {
+    if (logPII()) {
       log.debug("fetchKeys - the token is " + keyFetchToken);
     }
     return client.accountKeys(keyFetchToken);
