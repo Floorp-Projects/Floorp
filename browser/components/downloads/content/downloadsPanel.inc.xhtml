@@ -179,16 +179,19 @@
         <description id="downloadsPanel-blockedSubview-details1"/>
         <description id="downloadsPanel-blockedSubview-details2"/>
       </vbox>
-      <html:moz-button-group id="downloadsPanel-blockedSubview-buttons"
-            class="panel-footer">
+      <hbox id="downloadsPanel-blockedSubview-buttons"
+            class="panel-footer"
+            align="stretch">
         <button id="downloadsPanel-blockedSubview-unblockButton"
-                class="panel-footer-button"
-                command="downloadsCmd_unblockAndOpen"/>
+                class="downloadsPanelFooterButton"
+                command="downloadsCmd_unblockAndOpen"
+                flex="1"/>
         <button id="downloadsPanel-blockedSubview-deleteButton"
-                class="panel-footer-button"
+                class="downloadsPanelFooterButton"
                 oncommand="DownloadsBlockedSubview.confirmBlock();"
-                default="true"/>
-      </html:moz-button-group>
+                default="true"
+                flex="1"/>
+      </hbox>
     </panelview>
   </panelmultiview>
 

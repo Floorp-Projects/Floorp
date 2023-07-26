@@ -79,24 +79,24 @@
         </vbox>
       </vbox>
 
-      <html:moz-button-group class="panel-footer translations-panel-footer">
+      <hbox class="panel-footer translations-panel-footer">
         <button id="translations-panel-restore-button"
-                class="panel-footer-button"
+                class="subviewbutton panel-subview-footer-button"
                 oncommand="TranslationsPanel.onRestore(event);"
                 data-l10n-id="translations-panel-restore-button">
         </button>
         <button id="translations-panel-cancel"
-                class="panel-footer-button"
+                class="subviewbutton panel-subview-footer-button"
                 oncommand="TranslationsPanel.onCancel(event);"
                 data-l10n-id="translations-panel-translate-cancel">
         </button>
         <button id="translations-panel-translate"
-                class="panel-footer-button"
+                class="subviewbutton panel-subview-footer-button"
                 oncommand="TranslationsPanel.onTranslate(event);"
                 data-l10n-id="translations-panel-translate-button"
                 default="true">
         </button>
-      </html:moz-button-group>
+      </hbox>
     </panelview>
 
     <panelview id="translations-panel-view-unsupported-language"
@@ -120,17 +120,17 @@
         </html:div>
       </vbox>
 
-      <html:moz-button-group class="panel-footer translations-panel-footer">
-        <button class="panel-footer-button"
+      <hbox class="panel-footer translations-panel-footer">
+        <button class="subviewbutton panel-subview-footer-button"
                 oncommand="TranslationsPanel.onChangeSourceLanguage(event);"
                 data-l10n-id="translations-panel-error-change-button">
         </button>
-        <button class="panel-footer-button"
+        <button class="subviewbutton panel-subview-footer-button"
                 oncommand="TranslationsPanel.onCancel(event);"
                 data-l10n-id="translations-panel-error-dismiss-button"
                 default="true">
         </button>
-      </html:moz-button-group>
+      </hbox>
     </panelview>
   </panelmultiview>
 </panel>

@@ -187,19 +187,30 @@
                     data-l10n-id="bookmark-panel-show-editor-checkbox"
                     oncommand="StarUI.onShowForNewBookmarksCheckboxCommand();"/>
         </vbox>
-        <html:moz-button-group
+        <hbox id="editBookmarkPanelBottomButtons"
               class="panel-footer"
               data-l10n-id="bookmark-panel"
               data-l10n-attrs="style">
+#ifndef XP_UNIX
           <button id="editBookmarkPanelDoneButton"
-                  class="panel-footer-button"
+                  class="editBookmarkPanelBottomButton"
                   data-l10n-id="bookmark-panel-save-button"
                   default="true"
                   oncommand="StarUI.panel.hidePopup();"/>
           <button id="editBookmarkPanelRemoveButton"
-                  class="panel-footer-button"
+                  class="editBookmarkPanelBottomButton"
                   oncommand="StarUI.removeBookmarkButtonCommand();"/>
-        </html:moz-button-group>
+#else
+          <button id="editBookmarkPanelRemoveButton"
+                  class="editBookmarkPanelBottomButton"
+                  oncommand="StarUI.removeBookmarkButtonCommand();"/>
+          <button id="editBookmarkPanelDoneButton"
+                  class="editBookmarkPanelBottomButton"
+                  data-l10n-id="bookmark-panel-save-button"
+                  default="true"
+                  oncommand="StarUI.panel.hidePopup();"/>
+#endif
+        </hbox>
       </vbox>
     </panel>
   </html:template>
