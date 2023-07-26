@@ -6,7 +6,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/mozalloc.h"
-#include "mozilla/WindowsVersion.h"
 
 #include <windows.h>
 
@@ -37,11 +36,6 @@ bool VolatileBuffer::Init(size_t aSize, size_t aAlignment) {
 
   mSize = aSize;
   if (aSize < MIN_VOLATILE_ALLOC_SIZE) {
-    goto heap_alloc;
-  }
-
-  static bool sUndoSupported = IsWin8OrLater();
-  if (!sUndoSupported) {
     goto heap_alloc;
   }
 
