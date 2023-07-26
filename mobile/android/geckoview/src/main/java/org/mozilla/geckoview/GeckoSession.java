@@ -600,15 +600,21 @@ public class GeckoSession {
                     message.getBoolean("skipConfirmation"),
                     message.getBoolean("requestExternalApp"));
             if (result == null) {
-              callback.sendError("Failed to create response");
+              if (callback != null) {
+                callback.sendError("Failed to create response");
+              }
               return;
             }
             result.accept(
                 response ->
                     ThreadUtils.runOnUiThread(
                         () -> delegate.onExternalResponse(GeckoSession.this, response)),
-                exception -> callback.sendError("Failed to create response"));
-          } else if ("GeckoView:GetNimbusFeature".equals(event)) {
+                exception -> {
+                  if (callback != null) {
+                    callback.sendError("Failed to create response");
+                  }
+                });
+          } else if ("GeckoView:GetNimbusFeature".equals(event) && callback != null) {
             final String featureId = message.getString("featureId");
             final JSONObject res = delegate.onGetNimbusFeature(GeckoSession.this, featureId);
             if (res == null) {
