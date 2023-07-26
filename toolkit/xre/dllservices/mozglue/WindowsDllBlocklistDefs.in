@@ -201,10 +201,6 @@ ALL_PROCESSES += [
     DllBlocklistEntry("nahimic2osd.dll", (2, 5, 19, 0xffff)),
     DllBlocklistEntry("nahimicmsidevprops.dll", UNVERSIONED),
 
-    # Bug 1268470 - crashes with Kaspersky Lab on Windows 8
-    DllBlocklistEntry("klsihk64.dll", (14, 0, 456, 0xffff),
-                      BLOCK_WIN8_AND_OLDER),
-
     # Bug 1579758, crashes with OpenSC nightly version 0.19.0.448 and lower
     DllBlocklistEntry("onepin-opensc-pkcs11.dll", (0, 19, 0, 448)),
 
@@ -243,10 +239,6 @@ ALL_PROCESSES += [
     # Old version of COMODO Firewall, bug 1407712 and bug 1624336
     DllBlocklistEntry("guard64.dll", (8, 4, 0, 65535)),
 
-    # Old version of Panda Security, bug 1637984 and bug 1705125
-    DllBlocklistEntry("PavLspHook64.dll", (9, 2, 2, 1), BLOCK_WIN7_AND_OLDER),
-    DllBlocklistEntry("PavSHook64.dll", (9, 2, 2, 1), BLOCK_WIN7_AND_OLDER),
-
     # Webroot SecureAnywhere causes crashes, bug 1700281
     DllBlocklistEntry("WRDll.x64.dll", (1, 1, 0, 227)),
     DllBlocklistEntry("WRDll.x86.dll", (1, 1, 0, 227)),
@@ -264,9 +256,6 @@ ALL_PROCESSES += [
 
     # Cylance, bug 1756190 and bug 1799562
     DllBlocklistEntry("CylanceMemDef64.dll", ALL_VERSIONS),
-
-    # ESET security (bug 1833793)
-    DllBlocklistEntry("eoppbrowser.dll", (1, 0, 88, 0), BLOCK_WIN7_AND_OLDER),
 ]
 
 ALL_PROCESSES_TESTS += [
@@ -406,9 +395,6 @@ UTILITY_PROCESSES += [
     DllBlocklistEntry("ipseng32.dll", ALL_VERSIONS),
     DllBlocklistEntry("ks3rdhmpg.dll", ALL_VERSIONS),
     DllBlocklistEntry("kwsui64.dll", ALL_VERSIONS),
-
-    # Messes with user32 and breaks Utility on Win7 x86
-    DllBlocklistEntry("aswhook.dll", ALL_VERSIONS, BLOCK_WIN7_AND_OLDER),
 ]
 
 UTILITY_PROCESSES_TESTS += [

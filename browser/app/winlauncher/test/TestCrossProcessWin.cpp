@@ -51,8 +51,7 @@ using namespace mozilla::freestanding;
 // clang-format off
 const DllBlockInfo kDllBlocklistShort[] = {
   // The entries do not have to be sorted.
-  DLL_BLOCKLIST_ENTRY("X Y Z_Test", MAKE_VERSION(1, 2, 65535, 65535),
-                      DllBlockInfoFlags::BLOCK_WIN8_AND_OLDER)
+  DLL_BLOCKLIST_ENTRY("X Y Z_Test", MAKE_VERSION(1, 2, 65535, 65535))
   DLL_BLOCKLIST_ENTRY("\u30E9\u30FC\u30E1\u30F3_Test")
   DLL_BLOCKLIST_ENTRY("Avmvirtualsource_Test.ax", MAKE_VERSION(1, 0, 0, 3),
                       DllBlockInfoFlags::BROWSER_PROCESS_ONLY)
