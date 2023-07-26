@@ -1467,6 +1467,19 @@ jobs:
              "ref": "ESR115"
            }'
 
+    - name: Run GitHub Actions for Release Windows x86_64 Portable version Build 🚀
+      run: |
+         curl -X POST \
+           -H "Authorization: token ${{ secrets.PAT }}" \
+           -H "Accept: application/vnd.github.v3+json" \
+           "https://api.github.com/repos/Floorp-Projects/Floorp-Portable/actions/workflows/build.yml/dispatches" \
+           -d '{
+             "ref": "ESR115",
+              "inputs": {
+                "options": "Release"
+              }
+           }'
+
   Update-latest-json:
     needs: [build-linux-x86_64-with-PGO, build-linux-aarch64, cleanup-uselss-artifacts, Windows-x86_64-build-with-profdata-and-jarlog, get-display-version, Deploy-to-installer, Deploy-to-updater]
     runs-on: ubuntu-latest
