@@ -25,8 +25,12 @@ class ShoppingSettings extends MozLitElement {
     this.#isRecommendationsEnabled = this.recommendationsToggleEl.pressed;
   }
 
-  onDisableShopping(e) {
-    // TODO: we will need to opt out the user here via a pref
+  onDisableShopping() {
+    let event = new CustomEvent("DisableShopping", {
+      bubbles: true,
+      composed: true,
+    });
+    this.dispatchEvent(event);
   }
 
   render() {

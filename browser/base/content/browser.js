@@ -9936,19 +9936,29 @@ var FirefoxViewHandler = {
 
 var ShoppingSidebarManager = {
   init() {
-    this._updateEnabledState = this._updateEnabledState.bind(this);
-    NimbusFeatures.shopping2023.onUpdate(this._updateEnabledState);
-    this._updateEnabledState();
+    this._updateVisibility = this._updateVisibility.bind(this);
+    NimbusFeatures.shopping2023.onUpdate(this._updateVisibility);
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "optedInPref",
+      "browser.shopping.experience2023.optedIn",
+      null,
+      this._updateVisibility
+    );
+
+    this._updateVisibility();
   },
 
   uninit() {
-    NimbusFeatures.shopping2023.offUpdate(this._updateEnabledState);
+    NimbusFeatures.shopping2023.offUpdate(this._updateVisibility);
   },
 
-  _updateEnabledState() {
+  _updateVisibility() {
+    let optedOut = this.optedInPref === 2;
+    let isPBM = PrivateBrowsingUtils.isWindowPrivate(window);
+
     this._enabled =
-      NimbusFeatures.shopping2023.getVariable("enabled") &&
-      !PrivateBrowsingUtils.isWindowPrivate(window);
+      NimbusFeatures.shopping2023.getVariable("enabled") && !isPBM && !optedOut;
 
     if (!this._enabled) {
       document.querySelectorAll("shopping-sidebar").forEach(sidebar => {
