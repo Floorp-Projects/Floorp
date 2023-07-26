@@ -1415,7 +1415,7 @@ void XMLHttpRequestMainThread::Open(const nsACString& aMethod,
   if (!aAsync && !DontWarnAboutSyncXHR() && GetOwner() &&
       GetOwner()->GetExtantDoc()) {
     GetOwner()->GetExtantDoc()->WarnOnceAbout(
-        DeprecatedOperations::eSyncXMLHttpRequest);
+        DeprecatedOperations::eSyncXMLHttpRequestDeprecated);
   }
 
   Telemetry::Accumulate(Telemetry::XMLHTTPREQUEST_ASYNC_OR_SYNC,
