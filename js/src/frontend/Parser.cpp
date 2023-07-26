@@ -8291,7 +8291,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
           0) {
         // We declare `.privateBrand` as ClosedOver because the constructor
         // always uses it, even a default constructor. We could equivalently
-        // `noteNameUsed` when parsing the constructor, except that at that
+        // `noteUsedName` when parsing the constructor, except that at that
         // time, we don't necessarily know if the class has a private brand.
         if (!noteDeclaredName(
                 TaggedParserAtomIndex::WellKnown::dotPrivateBrand(),
