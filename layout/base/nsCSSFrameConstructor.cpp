@@ -5277,7 +5277,7 @@ nsCSSFrameConstructor::FindElementData(const Element& aElement,
     bool isRootElement = false;
     uint16_t rawDisplayValue =
         Servo_ComputedValues_BlockifiedDisplay(&aStyle, isRootElement);
-    display.mDisplay = StyleDisplay{rawDisplayValue};
+    display.mDisplay = StyleDisplay(rawDisplayValue);
     return FindDisplayData(display, aElement);
   }
 
@@ -8808,7 +8808,8 @@ void nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
 /* static */ nsCSSFrameConstructor::RubyWhitespaceType
 nsCSSFrameConstructor::ComputeRubyWhitespaceType(StyleDisplay aPrevDisplay,
                                                  StyleDisplay aNextDisplay) {
-  MOZ_ASSERT(aPrevDisplay.IsRuby() && aNextDisplay.IsRuby());
+  MOZ_ASSERT(nsStyleDisplay::IsRubyDisplayType(aPrevDisplay) &&
+             nsStyleDisplay::IsRubyDisplayType(aNextDisplay));
   if (aPrevDisplay == aNextDisplay &&
       (aPrevDisplay == StyleDisplay::RubyBase ||
        aPrevDisplay == StyleDisplay::RubyText)) {
@@ -9253,9 +9254,10 @@ void nsCSSFrameConstructor::WrapItemsInPseudoParent(
             pseudoType);
   }
 
-  // Use the content of our parent frame
-  auto* newItem = new (this) FrameConstructionItem(
-      &pseudoData.mFCData, aParentContent, wrapperStyle.forget(), true);
+  FrameConstructionItem* newItem = new (this)
+      FrameConstructionItem(&pseudoData.mFCData,
+                            // Use the content of our parent frame
+                            aParentContent, wrapperStyle.forget(), true);
 
   const nsStyleDisplay* disp = newItem->mComputedStyle->StyleDisplay();
   // Here we're cheating a tad... technically, table-internal items should be
