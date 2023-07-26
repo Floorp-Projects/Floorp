@@ -210,7 +210,7 @@ class Core(
     }
 
     val sessionStorage: SessionStorage by lazyMonitored {
-        SessionStorage(context, engine = engine)
+        SessionStorage(context, engine, crashReporter)
     }
 
     private val locationService: LocationService by lazyMonitored {
