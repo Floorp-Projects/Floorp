@@ -2919,41 +2919,29 @@ UpdateService.prototype = {
       return false;
     };
     if (channelChanged(updates)) {
+      let channel = lazy.UM.readyUpdate
+        ? lazy.UM.readyUpdate.channel
+        : lazy.UM.downloadingUpdate.channel;
       LOG(
-        "UpdateService:_postUpdateProcessing - channel has changed, " +
-          "reloading default preferences to workaround bug 802022"
+        "UpdateService:_postUpdateProcessing - update channel is " +
+          "different than application's channel, removing update. update " +
+          "channel: " +
+          channel +
+          ", expected channel: " +
+          lazy.UpdateUtils.UpdateChannel
       );
-      // Workaround to get the distribution preferences loaded (Bug 774618).
-      // This can be removed after bug 802022 is fixed. Now that this code runs
-      // later during startup this code may no longer be necessary but it
-      // shouldn't be removed until after bug 802022 is fixed.
-      let prefSvc = Services.prefs.QueryInterface(Ci.nsIObserver);
-      prefSvc.observe(null, "reload-default-prefs", null);
-      if (channelChanged(updates)) {
-        let channel = lazy.UM.readyUpdate
-          ? lazy.UM.readyUpdate.channel
-          : lazy.UM.downloadingUpdate.channel;
-        LOG(
-          "UpdateService:_postUpdateProcessing - update channel is " +
-            "different than application's channel, removing update. update " +
-            "channel: " +
-            channel +
-            ", expected channel: " +
-            lazy.UpdateUtils.UpdateChannel
-        );
-        // User switched channels, clear out the old active updates and remove
-        // partial downloads
-        for (let update of updates) {
-          update.state = STATE_FAILED;
-          update.errorCode = ERR_CHANNEL_CHANGE;
-          update.statusText =
-            lazy.gUpdateBundle.GetStringFromName("statusFailed");
-        }
-        let newStatus = STATE_FAILED + ": " + ERR_CHANNEL_CHANGE;
-        pingStateAndStatusCodes(updates[0], true, newStatus);
-        cleanupActiveUpdates();
-        return;
+      // User switched channels, clear out the old active updates and remove
+      // partial downloads
+      for (let update of updates) {
+        update.state = STATE_FAILED;
+        update.errorCode = ERR_CHANNEL_CHANGE;
+        update.statusText =
+          lazy.gUpdateBundle.GetStringFromName("statusFailed");
       }
+      let newStatus = STATE_FAILED + ": " + ERR_CHANNEL_CHANGE;
+      pingStateAndStatusCodes(updates[0], true, newStatus);
+      cleanupActiveUpdates();
+      return;
     }
 
     // Handle the case when the update is the same or older than the current
