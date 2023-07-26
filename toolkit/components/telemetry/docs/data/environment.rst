@@ -393,6 +393,8 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``browser.migrate.interactions.passwords``: True if the user has imported passwords from another browser before. This preference gets transferred during profile resets.
 
+- ``browser.privatebrowsing.autostart``: True if the user has enabled the permanent private browsing mode. Defaults to false.
+
 - ``browser.search.suggest.enabled``: The "master switch" for search suggestions everywhere in Firefox (search bar, urlbar, etc.). Defaults to true.
 
 - ``browser.urlbar.autoFill``: The global preference for whether autofill in the urlbar is enabled. When false, all types of autofill are disabled.
