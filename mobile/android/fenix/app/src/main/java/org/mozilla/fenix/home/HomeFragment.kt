@@ -560,10 +560,7 @@ class HomeFragment : Fragment() {
         toolbarView?.build()
 
         PrivateBrowsingButtonView(binding.privateBrowsingButton, browsingModeManager) { newMode ->
-            sessionControlInteractor.onPrivateModeButtonClicked(
-                newMode,
-                userHasBeenOnboarded = true,
-            )
+            sessionControlInteractor.onPrivateModeButtonClicked(newMode)
             Homepage.privateModeIconTapped.record(mozilla.telemetry.glean.private.NoExtras())
         }
 

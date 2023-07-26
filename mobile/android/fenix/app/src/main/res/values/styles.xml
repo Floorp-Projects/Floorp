@@ -108,10 +108,6 @@
         <item name="fillLinkFromClipboard">@color/fill_link_from_clipboard_normal_theme</item>
         <item name="syncDisconnected">@color/sync_disconnected_icon_fill_normal_theme</item>
         <item name="syncDisconnectedBackground">@color/sync_disconnected_background_normal_theme</item>
-        <item name="onboardingDarkGradientStartBackground">@color/photonViolet70</item>
-        <item name="onboardingDarkGradientEndBackground">@color/photonViolet40</item>
-        <item name="onboardingSelected">@color/onboarding_illustration_selected_normal_theme</item>
-        <item name="onboardingDeselected">@color/onboarding_illustration_deselected_normal_theme</item>
         <item name="addOnPrivateBrowsingExteriorCircleBackground">@color/add_on_private_browsing_exterior_circle_background_normal_theme</item>
         <item name="mozacPromptLoginEditTextCursorColor">@color/prompt_login_edit_text_cursor_color_normal_theme</item>
         <item name="awesomeBarIndicatorColor">@color/search_suggestion_indicator_icon_color_normal_theme</item>
@@ -189,11 +185,6 @@
     <style name="SelectPromptHeaderTextStyle" parent="Header16TextStyle">
         <item name="android:textColor">?selectPromptHeaderTextColor</item>
         <item name="drawableTint">?accentHighContrast</item>
-    </style>
-
-    <style name="Checkable.Colored" parent="Theme.AppCompat">
-        <item name="colorControlActivated">?attr/onboardingSelected</item>
-        <item name="colorControlNormal">?attr/onboardingDeselected</item>
     </style>
 
     <style name="DialogStyleDark" parent="BaseDialogStyle">
@@ -310,10 +301,6 @@
         <item name="fillLinkFromClipboard">@color/accent_high_contrast_private_theme</item>
         <item name="syncDisconnected">@color/sync_disconnected_icon_fill_private_theme</item>
         <item name="syncDisconnectedBackground">@color/sync_disconnected_background_private_theme</item>
-        <item name="onboardingDarkGradientStartBackground">@color/photonViolet60</item>
-        <item name="onboardingDarkGradientEndBackground">@color/photonPurple50</item>
-        <item name="onboardingSelected">@color/accent_private_theme</item>
-        <item name="onboardingDeselected">@color/onboarding_illustration_deselected_private_theme</item>
         <item name="addOnPrivateBrowsingExteriorCircleBackground">@color/accent_private_theme</item>
         <item name="mozacPromptLoginEditTextCursorColor">@color/prompt_login_edit_text_cursor_color_private_theme</item>
         <item name="awesomeBarIndicatorColor">@color/photonGreen60</item>
@@ -388,13 +375,6 @@
         <item name="android:letterSpacing">0</item>
         <item name="android:textFontWeight" tools:ignore="NewApi">@integer/font_weight_medium</item>
         <item name="android:fontWeight" tools:ignore="NewApi">@integer/font_weight_medium</item>
-    </style>
-
-    <!-- Ideally we should consolidate this with NeutralButton in the future -->
-    <style name="NeutralOnboardingButton" parent="NeutralButton">
-        <item name="android:background">@drawable/onboarding_padded_background</item>
-        <item name="backgroundTint">?neutralFaded</item>
-        <item name="android:textColor">?attr/textPrimary</item>
     </style>
 
     <style name="DestructiveButton" parent="NeutralButton">
@@ -562,21 +542,6 @@
         <item name="android:gravity">end|center_vertical</item>
         <item name="android:background">?android:attr/selectableItemBackground</item>
         <item name="android:textColor">?accentUsedOnDarkBackground</item>
-    </style>
-
-    <style name="OnboardingCardLight">
-        <item name="android:background">@drawable/onboarding_card_background_light</item>
-        <item name="android:layout_marginBottom">16dp</item>
-        <item name="android:elevation">5dp</item>
-    </style>
-
-    <style name="OnboardingCardLightWithPadding" parent="OnboardingCardLight">
-        <item name="android:padding">16dp</item>
-    </style>
-
-    <style name="OnboardingCardDark" parent="OnboardingCardLightWithPadding" tools:ignore="UnusedResources">
-        <item name="android:background">@drawable/onboarding_card_background_dark</item>
-        <item name="android:elevation">0dp</item>
     </style>
 
     <style name="SearchClipboardStyle">

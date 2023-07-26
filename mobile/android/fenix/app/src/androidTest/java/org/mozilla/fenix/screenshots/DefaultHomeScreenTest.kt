@@ -43,7 +43,7 @@ class DefaultHomeScreenTest : ScreenshotTest() {
     @Test
     fun showDefaultHomeScreen() {
         homeScreen {
-            verifyAccountsSignInButton()
+            verifyHomeScreen()
             Screengrab.screenshot("HomeScreenRobot_home-screen-scroll")
             TestAssetHelper.waitingTime
         }

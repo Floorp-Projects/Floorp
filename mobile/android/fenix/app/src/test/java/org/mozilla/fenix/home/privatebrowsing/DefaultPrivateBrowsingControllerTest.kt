@@ -82,9 +82,8 @@ class DefaultPrivateBrowsingControllerTest {
         every { settings.incrementNumTimesPrivateModeOpened() } just Runs
 
         val newMode = BrowsingMode.Private
-        val hasBeenOnboarded = true
 
-        controller.handlePrivateModeButtonClicked(newMode, hasBeenOnboarded)
+        controller.handlePrivateModeButtonClicked(newMode)
 
         verify {
             settings.incrementNumTimesPrivateModeOpened()
@@ -110,9 +109,8 @@ class DefaultPrivateBrowsingControllerTest {
         store.dispatch(TabListAction.AddTabAction(tab, select = true)).joinBlocking()
 
         val newMode = BrowsingMode.Private
-        val hasBeenOnboarded = true
 
-        controller.handlePrivateModeButtonClicked(newMode, hasBeenOnboarded)
+        controller.handlePrivateModeButtonClicked(newMode)
 
         verify {
             settings.incrementNumTimesPrivateModeOpened()
@@ -141,9 +139,8 @@ class DefaultPrivateBrowsingControllerTest {
         store.dispatch(TabListAction.AddTabAction(tab, select = true)).joinBlocking()
 
         val newMode = BrowsingMode.Normal
-        val hasBeenOnboarded = true
 
-        controller.handlePrivateModeButtonClicked(newMode, hasBeenOnboarded)
+        controller.handlePrivateModeButtonClicked(newMode)
 
         verify(exactly = 0) {
             settings.incrementNumTimesPrivateModeOpened()

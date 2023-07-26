@@ -271,7 +271,6 @@
     <color name="neutral_faded_private_theme">#1FFBFBFE</color>
     <color name="sync_disconnected_icon_fill_private_theme">@color/photonYellow70</color>
     <color name="sync_disconnected_background_private_theme">#5B5846</color>
-    <color name="onboarding_illustration_deselected_private_theme">#99FBFBFE</color>
     <color name="prompt_login_edit_text_cursor_color_private_theme">@color/photonViolet50</color>
 
     <!-- Normal theme colors for light mode -->
@@ -282,8 +281,6 @@
     <color name="fill_link_from_clipboard_normal_theme">@color/photonInk20</color>
     <color name="sync_disconnected_icon_fill_normal_theme">@color/photonYellow70</color>
     <color name="sync_disconnected_background_normal_theme">#FFFDE2</color>
-    <color name="onboarding_illustration_selected_normal_theme">@color/photonViolet70</color>
-    <color name="onboarding_illustration_deselected_normal_theme">@color/photonDarkGrey90A60</color>
     <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/photonViolet70</color>
     <color name="prompt_login_edit_text_cursor_color_normal_theme">@color/photonInk20</color>
     <color name="search_suggestion_indicator_icon_color_normal_theme">@color/photonGreen70</color>

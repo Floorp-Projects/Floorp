@@ -204,10 +204,9 @@ class SessionControlInteractorTest {
     @Test
     fun `WHEN private mode button is clicked THEN the click is handled`() {
         val newMode = BrowsingMode.Private
-        val hasBeenOnboarded = true
 
-        interactor.onPrivateModeButtonClicked(newMode, hasBeenOnboarded)
-        verify { privateBrowsingController.handlePrivateModeButtonClicked(newMode, hasBeenOnboarded) }
+        interactor.onPrivateModeButtonClicked(newMode)
+        verify { privateBrowsingController.handlePrivateModeButtonClicked(newMode) }
     }
 
     @Test

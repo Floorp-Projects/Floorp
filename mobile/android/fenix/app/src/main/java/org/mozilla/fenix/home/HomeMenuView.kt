@@ -43,7 +43,6 @@ import org.mozilla.fenix.GleanMetrics.HomeMenu as HomeMenuMetrics
  * @property navController [NavController] used for navigation.
  * @property menuButton The [MenuButton] that will be used to create a menu when the button is
  * clicked.
- * @property hideOnboardingIfNeeded Lambda invoked to dismiss onboarding.
  */
 @Suppress("LongParameterList")
 class HomeMenuView(
@@ -53,7 +52,6 @@ class HomeMenuView(
     private val homeActivity: HomeActivity,
     private val navController: NavController,
     private val menuButton: WeakReference<MenuButton>,
-    private val hideOnboardingIfNeeded: () -> Unit = {},
     private val fxaEntrypoint: FxAEntryPoint = FenixFxAEntryPoint.HomeMenu,
 ) {
 
@@ -90,10 +88,6 @@ class HomeMenuView(
     @Suppress("LongMethod", "ComplexMethod")
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun onItemTapped(item: HomeMenu.Item) {
-        if (item !is HomeMenu.Item.DesktopMode) {
-            hideOnboardingIfNeeded()
-        }
-
         when (item) {
             HomeMenu.Item.Settings -> {
                 HomeMenuMetrics.settingsItemClicked.record(NoExtras())

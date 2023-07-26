@@ -60,13 +60,10 @@
     <dimen name="tracking_protection_item_margin_end">16dp</dimen>
     <dimen name="tracking_protection_item_margin_bottom">18dp</dimen>
 
-    <dimen name="onboarding_header_icon_height_width">32dp</dimen>
-
     <!-- Bottom Sheet Fragment card -->
     <dimen name="bottom_sheet_corner_radius">8dp</dimen>
     <dimen name="bottom_sheet_handle_height">3dp</dimen>
     <dimen name="bottom_sheet_handle_top_margin">8dp</dimen>
-
 
     <!-- Browser Toolbar -->
     <dimen name="browser_toolbar_height">56dp</dimen>
@@ -136,10 +133,6 @@
     <dimen name="share_all_apps_list_margin">8dp</dimen>
     <dimen name="share_header_text_size">12sp</dimen>
     <dimen name="share_progress_bar_margin">16dp</dimen>
-
-    <!--  Onboarding  -->
-    <dimen name="onboarding_dual_pane_radio_button_translation_x">-7dp</dimen>
-    <dimen name="onboarding_dual_pane_radio_button_translation_y">-8dp</dimen>
 
     <!-- Addon Details Fragment -->
     <dimen name="addon_details_rating_view_margin_start">6dp</dimen>

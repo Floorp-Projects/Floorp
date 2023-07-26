@@ -29,7 +29,7 @@ interface PrivateBrowsingController {
     /**
      * @see [PrivateBrowsingInteractor.onPrivateModeButtonClicked]
      */
-    fun handlePrivateModeButtonClicked(newMode: BrowsingMode, userHasBeenOnboarded: Boolean)
+    fun handlePrivateModeButtonClicked(newMode: BrowsingMode)
 }
 
 /**
@@ -49,26 +49,21 @@ class DefaultPrivateBrowsingController(
         )
     }
 
-    override fun handlePrivateModeButtonClicked(
-        newMode: BrowsingMode,
-        userHasBeenOnboarded: Boolean,
-    ) {
+    override fun handlePrivateModeButtonClicked(newMode: BrowsingMode) {
         if (newMode == BrowsingMode.Private) {
             activity.settings().incrementNumTimesPrivateModeOpened()
         }
 
-        if (userHasBeenOnboarded) {
-            appStore.dispatch(
-                AppAction.ModeChange(Mode.fromBrowsingMode(newMode)),
-            )
+        appStore.dispatch(
+            AppAction.ModeChange(Mode.fromBrowsingMode(newMode)),
+        )
 
-            if (navController.currentDestination?.id == R.id.searchDialogFragment) {
-                navController.navigate(
-                    BrowserFragmentDirections.actionGlobalSearchDialog(
-                        sessionId = null,
-                    ),
-                )
-            }
+        if (navController.currentDestination?.id == R.id.searchDialogFragment) {
+            navController.navigate(
+                BrowserFragmentDirections.actionGlobalSearchDialog(
+                    sessionId = null,
+                ),
+            )
         }
     }
 }

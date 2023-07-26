@@ -77,10 +77,6 @@
     <attr name="fillLinkFromClipboard" format="reference"/>
     <attr name="syncDisconnected" format="reference" />
     <attr name="syncDisconnectedBackground" format="reference" />
-    <attr name="onboardingDarkGradientStartBackground" format="reference" />
-    <attr name="onboardingDarkGradientEndBackground" format="reference" />
-    <attr name="onboardingSelected" format="reference"/>
-    <attr name="onboardingDeselected" format="reference"/>
     <attr name="addOnPrivateBrowsingExteriorCircleBackground" format="reference"/>
     <attr name="awesomeBarIndicatorColor" format="reference|color"/>
     <attr name="awesomeBarIndicatorBookmarkColor" format="reference|color"/>
@@ -103,12 +99,6 @@
         <attr name="deleteBrowsingDataItemTitle" format="reference" />
         <attr name="deleteBrowsingDataItemSubtitle" format="reference" />
         <attr name="deleteBrowsingDataItemIcon" format="reference" />
-    </declare-styleable>
-
-    <declare-styleable name="OnboardingRadioButton">
-        <attr name="onboardingKey" format="reference" />
-        <attr name="onboardingKeyTitle" format="reference" />
-        <attr name="onboardingKeyDescription" format="reference" />
     </declare-styleable>
 
     <attr name="selectPromptHeaderTextColor" format="reference"/>

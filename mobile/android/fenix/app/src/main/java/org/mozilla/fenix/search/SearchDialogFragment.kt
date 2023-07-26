@@ -233,8 +233,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         )
 
         val fromHomeFragment =
-            getPreviousDestination()?.destination?.id == R.id.homeFragment ||
-                getPreviousDestination()?.destination?.id == R.id.onboardingFragment
+            getPreviousDestination()?.destination?.id == R.id.homeFragment
 
         toolbarView = ToolbarView(
             requireContext(),
@@ -362,12 +361,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 binding.searchWrapper.setOnTouchListener { _, _ ->
                     binding.searchWrapper.hideKeyboard()
                     false
-                }
-            }
-            R.id.onboardingFragment -> {
-                binding.searchWrapper.setOnTouchListener { _, _ ->
-                    dismissAllowingStateLoss()
-                    true
                 }
             }
             R.id.historyFragment, R.id.bookmarkFragment -> {

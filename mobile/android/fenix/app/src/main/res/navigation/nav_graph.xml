@@ -16,12 +16,6 @@
         app:popUpToInclusive="true" />
 
     <action
-        android:id="@+id/action_startup_onboarding"
-        app:destination="@id/onboardingFragment"
-        app:popUpTo="@id/startupFragment"
-        app:popUpToInclusive="true" />
-
-    <action
         android:id="@+id/action_global_home"
         app:destination="@id/homeFragment"
         app:popUpTo="@id/homeFragment"
@@ -221,17 +215,6 @@
             android:name="scrollToCollection"
             android:defaultValue="false"
             app:argType="boolean" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/onboardingFragment"
-        android:name="org.mozilla.fenix.onboarding.OnboardingFragment"
-        tools:layout="@layout/fragment_home">
-        <action
-            android:id="@+id/action_home"
-            app:destination="@id/homeFragment"
-            app:popUpTo="@id/onboardingFragment"
-            app:popUpToInclusive="true" />
     </fragment>
 
     <dialog

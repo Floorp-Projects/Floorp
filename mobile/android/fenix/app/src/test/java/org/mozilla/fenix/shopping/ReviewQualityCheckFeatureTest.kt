@@ -10,31 +10,24 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
-import mozilla.components.support.test.whenever
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
 
 class ReviewQualityCheckFeatureTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
 
-    private val shoppingExperienceFeature = mock<ShoppingExperienceFeature>()
-
     @Test
     fun `WHEN feature is not enabled THEN callback returns false`() {
-        whenever(shoppingExperienceFeature.isEnabled).thenReturn(false)
-
         var availability: Boolean? = null
         val tested = ReviewQualityCheckFeature(
             browserStore = BrowserStore(),
-            shoppingExperienceFeature = shoppingExperienceFeature,
+            shoppingExperienceFeature = FakeShoppingExperienceFeature(enabled = false),
             onAvailabilityChange = {
                 availability = it
             },
@@ -48,8 +41,6 @@ class ReviewQualityCheckFeatureTest {
     @Test
     fun `WHEN feature is enabled and selected tab is not a product page THEN callback returns false`() =
         runTest {
-            whenever(shoppingExperienceFeature.isEnabled).thenReturn(true)
-
             var availability: Boolean? = null
             val tab = createTab(
                 url = "https://www.mozilla.org",
@@ -64,7 +55,7 @@ class ReviewQualityCheckFeatureTest {
                 browserStore = BrowserStore(
                     initialState = browserState,
                 ),
-                shoppingExperienceFeature = shoppingExperienceFeature,
+                shoppingExperienceFeature = FakeShoppingExperienceFeature(),
                 onAvailabilityChange = {
                     availability = it
                 },
@@ -78,8 +69,6 @@ class ReviewQualityCheckFeatureTest {
     @Test
     fun `WHEN feature is enabled and selected tab is a product page THEN callback returns true`() =
         runTest {
-            whenever(shoppingExperienceFeature.isEnabled).thenReturn(true)
-
             var availability: Boolean? = null
             val tab = createTab(
                 url = "https://www.mozilla.org",
@@ -94,7 +83,7 @@ class ReviewQualityCheckFeatureTest {
                 browserStore = BrowserStore(
                     initialState = browserState,
                 ),
-                shoppingExperienceFeature = shoppingExperienceFeature,
+                shoppingExperienceFeature = FakeShoppingExperienceFeature(),
                 onAvailabilityChange = {
                     availability = it
                 },
@@ -108,8 +97,6 @@ class ReviewQualityCheckFeatureTest {
     @Test
     fun `WHEN feature is enabled and selected tab is switched to a product page THEN callback returns true`() =
         runTest {
-            whenever(shoppingExperienceFeature.isEnabled).thenReturn(true)
-
             var availability: Boolean? = null
             val tab1 = createTab(
                 url = "https://www.mozilla.org",
@@ -129,7 +116,7 @@ class ReviewQualityCheckFeatureTest {
             )
             val tested = ReviewQualityCheckFeature(
                 browserStore = browserStore,
-                shoppingExperienceFeature = shoppingExperienceFeature,
+                shoppingExperienceFeature = FakeShoppingExperienceFeature(),
                 onAvailabilityChange = {
                     availability = it
                 },
@@ -146,8 +133,6 @@ class ReviewQualityCheckFeatureTest {
     @Test
     fun `WHEN feature is enabled and selected tab is switched to not a product page THEN callback returns false`() =
         runTest {
-            whenever(shoppingExperienceFeature.isEnabled).thenReturn(true)
-
             var availability: Boolean? = null
             val tab1 = createTab(
                 url = "https://www.shopping.org",
@@ -167,7 +152,7 @@ class ReviewQualityCheckFeatureTest {
             )
             val tested = ReviewQualityCheckFeature(
                 browserStore = browserStore,
-                shoppingExperienceFeature = shoppingExperienceFeature,
+                shoppingExperienceFeature = FakeShoppingExperienceFeature(),
                 onAvailabilityChange = {
                     availability = it
                 },
@@ -184,9 +169,8 @@ class ReviewQualityCheckFeatureTest {
     @Test
     fun `WHEN feature is enabled and selected tab is switched to a product page after stop is called THEN callback is only called once with false`() =
         runTest {
-            whenever(shoppingExperienceFeature.isEnabled).thenReturn(true)
-
-            val onAvailabilityChange = mock<(isAvailable: Boolean) -> Unit>()
+            var availability: Boolean? = null
+            var availabilityCount = 0
             val tab1 = createTab(
                 url = "https://www.mozilla.org",
                 id = "tab1",
@@ -206,8 +190,11 @@ class ReviewQualityCheckFeatureTest {
 
             val tested = ReviewQualityCheckFeature(
                 browserStore = browserStore,
-                shoppingExperienceFeature = shoppingExperienceFeature,
-                onAvailabilityChange = onAvailabilityChange,
+                shoppingExperienceFeature = FakeShoppingExperienceFeature(),
+                onAvailabilityChange = {
+                    availability = it
+                    availabilityCount++
+                },
             )
 
             tested.start()
@@ -215,6 +202,15 @@ class ReviewQualityCheckFeatureTest {
             tested.stop()
             browserStore.dispatch(TabListAction.SelectTabAction(tab2.id)).joinBlocking()
 
-            verify(onAvailabilityChange, times(1)).invoke(false)
+            assertEquals(1, availabilityCount)
+            assertFalse(availability!!)
         }
+}
+
+class FakeShoppingExperienceFeature(
+    private val enabled: Boolean = true,
+) : ShoppingExperienceFeature {
+
+    override val isEnabled: Boolean
+        get() = enabled
 }

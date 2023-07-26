@@ -1119,11 +1119,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     }
 
     open fun navigateToHome() {
-        if (components.fenixOnboarding.userHasBeenOnboarded()) {
-            navHost.navController.navigate(NavGraphDirections.actionStartupHome())
-        } else {
-            navHost.navController.navigate(NavGraphDirections.actionStartupOnboarding())
-        }
+        navHost.navController.navigate(NavGraphDirections.actionStartupHome())
     }
 
     override fun attachBaseContext(base: Context) {

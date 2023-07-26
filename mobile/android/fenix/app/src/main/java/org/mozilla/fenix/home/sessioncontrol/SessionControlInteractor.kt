@@ -321,8 +321,8 @@ class SessionControlInteractor(
         privateBrowsingController.handleLearnMoreClicked()
     }
 
-    override fun onPrivateModeButtonClicked(newMode: BrowsingMode, userHasBeenOnboarded: Boolean) {
-        privateBrowsingController.handlePrivateModeButtonClicked(newMode, userHasBeenOnboarded)
+    override fun onPrivateModeButtonClicked(newMode: BrowsingMode) {
+        privateBrowsingController.handlePrivateModeButtonClicked(newMode)
     }
 
     override fun onPasteAndGo(clipboardText: String) {

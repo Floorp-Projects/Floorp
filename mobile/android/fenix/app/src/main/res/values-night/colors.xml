@@ -138,8 +138,6 @@
     <color name="fill_link_from_clipboard_normal_theme">@color/photonViolet40</color>
     <color name="sync_disconnected_icon_fill_normal_theme">#FFF36E</color>
     <color name="sync_disconnected_background_normal_theme">#5B5846</color>
-    <color name="onboarding_illustration_selected_normal_theme">@color/accent_normal_theme</color>
-    <color name="onboarding_illustration_deselected_normal_theme">#99FBFBFE</color>
     <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/accent_normal_theme</color>
     <color name="prompt_login_edit_text_cursor_color_normal_theme">@color/photonViolet50</color>
     <color name="search_suggestion_indicator_icon_color_normal_theme">@color/photonGreen60</color>
