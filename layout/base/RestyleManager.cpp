@@ -1728,6 +1728,14 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
          nsChangeHint_ChildrenOnlyTransform | nsChangeHint_SchedulePaint)) {
       ApplyRenderingChangeToTree(presContext->PresShell(), frame, hint);
     }
+
+    if (hint & (nsChangeHint_UpdateTransformLayer |
+                nsChangeHint_AddOrRemoveTransform)) {
+      // We need to trigger re-snapping to this content if we snapped to the
+      // content on the last scroll operation.
+      ScrollSnapUtils::PostPendingResnapIfNeededFor(frame);
+    }
+
     if ((hint & nsChangeHint_RecomputePosition) && !didReflowThisFrame) {
       // It is possible for this to fall back to a reflow
       if (!RecomputePosition(frame)) {
