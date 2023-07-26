@@ -47,11 +47,15 @@ function recordEvent(e) {
       event.preventDefault();
       return true;
     });
+    const touchendPromise = promiseOneEvent(window, "touchend", () => {
+      return true;
+    });
 
     await synthesizeNativeTouch(document.getElementById("b"), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
       dump("Finished synthesizing touch-end to clear state; finishing test...\n");
     });
 
+    await touchendPromise;
     if (getPlatform() == "windows") {
       await contextmenuPromise;
     }
