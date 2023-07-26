@@ -1051,7 +1051,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
 
   renderSecondarySection(content) {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-      className: "section-secondary",
+      className: `section-secondary ${content.hide_secondary_section ? "with-secondary-section-hidden" : ""}`,
       style: content.background ? {
         background: content.background,
         "--mr-secondary-background-position-y": content.split_narrow_bkg_position
@@ -1112,6 +1112,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       }
     }, isCenterPosition ? null : this.renderSecondarySection(content), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: `section-main ${isEmbeddedMigration ? "embedded-migration" : ""}`,
+      "hide-secondary-section": content.hide_secondary_section ? String(content.hide_secondary_section) : null,
       role: "document"
     }, content.secondary_button_top ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_7__.SecondaryCTA, {
       content: content,

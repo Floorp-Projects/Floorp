@@ -464,6 +464,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         background:
           "url('chrome://activity-stream/content/data/content/assets/mr-import.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
         progress_bar: true,
+        hide_secondary_section: "responsive",
         migrate_start: {
           action: {},
         },

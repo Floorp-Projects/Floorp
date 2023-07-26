@@ -344,7 +344,9 @@ export class ProtonScreen extends React.PureComponent {
   renderSecondarySection(content) {
     return (
       <div
-        className="section-secondary"
+        className={`section-secondary ${
+          content.hide_secondary_section ? "with-secondary-section-hidden" : ""
+        }`}
         style={
           content.background
             ? {
@@ -430,6 +432,11 @@ export class ProtonScreen extends React.PureComponent {
           className={`section-main ${
             isEmbeddedMigration ? "embedded-migration" : ""
           }`}
+          hide-secondary-section={
+            content.hide_secondary_section
+              ? String(content.hide_secondary_section)
+              : null
+          }
           role="document"
         >
           {content.secondary_button_top ? (
