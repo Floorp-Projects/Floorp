@@ -8608,14 +8608,14 @@
 # Is support for math-style enabled?
 - name: layout.css.math-style.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
 # Is support for math-depth enabled?
 - name: layout.css.math-depth.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
