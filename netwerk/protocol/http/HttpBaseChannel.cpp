@@ -2396,7 +2396,23 @@ void HttpBaseChannel::NotifySetCookie(const nsACString& aCookie) {
 }
 
 bool HttpBaseChannel::IsBrowsingContextDiscarded() const {
-  return mLoadGroup && mLoadGroup->GetIsBrowsingContextDiscarded();
+  // If there is no loadGroup attached to the current channel, we check the
+  // global private browsing state for the private channel instead. For
+  // non-private channel, we will always return false here.
+  //
+  // Note that we can only access the global private browsing state in the
+  // parent process. So, we will fallback to just return false in the content
+  // process.
+  if (!mLoadGroup) {
+    if (!XRE_IsParentProcess()) {
+      return false;
+    }
+
+    return mLoadInfo->GetOriginAttributes().mPrivateBrowsingId != 0 &&
+           !dom::CanonicalBrowsingContext::IsPrivateBrowsingActive();
+  }
+
+  return mLoadGroup->GetIsBrowsingContextDiscarded();
 }
 
 // https://mikewest.github.io/corpp/#process-navigation-response

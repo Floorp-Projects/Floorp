@@ -20,6 +20,7 @@
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/InputStreamLengthHelper.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/UniquePtr.h"
@@ -2108,6 +2109,17 @@ void HttpChannelParent::SetCookie(nsCString&& aCookie) {
   LOG(("HttpChannelParent::SetCookie [this=%p]", this));
   MOZ_ASSERT(!mAfterOnStartRequestBegun);
   MOZ_ASSERT(mCookie.IsEmpty());
+
+  // The loadGroup of the channel in the parent process could be null in the
+  // XPCShell content process test, see test_cookiejars_wrap.js. In this case,
+  // we cannot explicitly set the loadGroup for the parent channel because it's
+  // created from the content process. To workaround this, we add a testing pref
+  // to skip this check.
+  if (!Preferences::GetBool(
+          "network.cookie.skip_browsing_context_check_in_parent_for_testing") &&
+      mChannel->IsBrowsingContextDiscarded()) {
+    return;
+  }
   mCookie = std::move(aCookie);
 }
 
