@@ -2624,22 +2624,22 @@ void nsTableFrame::OrderRowGroups(RowGroupArray& aChildren,
     nsTableRowGroupFrame* rowGroup =
         static_cast<nsTableRowGroupFrame*>(kidFrame);
 
-    switch (kidDisplay->DisplayInside()) {
-      case StyleDisplayInside::TableHeaderGroup:
+    switch (kidDisplay->mDisplay) {
+      case mozilla::StyleDisplay::TableHeaderGroup:
         if (head) {  // treat additional thead like tbody
           aChildren.AppendElement(rowGroup);
         } else {
           head = rowGroup;
         }
         break;
-      case StyleDisplayInside::TableFooterGroup:
+      case mozilla::StyleDisplay::TableFooterGroup:
         if (foot) {  // treat additional tfoot like tbody
           aChildren.AppendElement(rowGroup);
         } else {
           foot = rowGroup;
         }
         break;
-      case StyleDisplayInside::TableRowGroup:
+      case mozilla::StyleDisplay::TableRowGroup:
         aChildren.AppendElement(rowGroup);
         break;
       default:
