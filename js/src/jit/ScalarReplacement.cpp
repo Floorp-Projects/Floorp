@@ -2507,6 +2507,10 @@ void ArgumentsReplacer::visitArgumentsSlice(MArgumentsSlice* ins) {
     replacement =
         MInlineArgumentsSlice::New(alloc(), beginMin, count, actualArgs,
                                    ins->templateObj(), ins->initialHeap());
+    if (!replacement) {
+      oom_ = true;
+      return;
+    }
   } else {
     replacement = MFrameArgumentsSlice::New(
         alloc(), beginMin, count, ins->templateObj(), ins->initialHeap());

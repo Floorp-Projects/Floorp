@@ -966,6 +966,9 @@ bool WarpBuilder::build_GetActualArg(BytecodeLocation) {
   MInstruction* arg;
   if (inlineCallInfo()) {
     arg = MGetInlinedArgument::New(alloc(), index, *inlineCallInfo());
+    if (!arg) {
+      return false;
+    }
   } else {
     arg = MGetFrameArgument::New(alloc(), index);
   }
