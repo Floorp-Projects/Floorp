@@ -188,7 +188,7 @@ HRESULT WMFDecoderModule::CreateMFTDecoder(const WMFStreamType& aType,
       return aDecoder->Create(CLSID_CMSH264DecoderMFT);
     case WMFStreamType::VP8:
       static const uint32_t VP8_USABLE_BUILD = 16287;
-      if (!IsWindowsBuildOrLater(VP8_USABLE_BUILD)) {
+      if (!IsWindows10BuildOrLater(VP8_USABLE_BUILD)) {
         WmfDecoderModuleMarkerAndLog("CreateMFTDecoder, VP8 Failure",
                                      "VP8 MFT requires Windows build %" PRId32
                                      " or later",
