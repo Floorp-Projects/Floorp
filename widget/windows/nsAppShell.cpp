@@ -30,7 +30,6 @@
 #include "mozilla/widget/ScreenManager.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/WindowsProcessMitigations.h"
-#include "mozilla/WindowsVersion.h"
 
 #ifdef MOZ_BACKGROUNDTASKS
 #  include "mozilla/BackgroundTasks.h"
@@ -212,66 +211,13 @@ class WinWakeLockListener final : public nsIDOMMozWakeLockListener {
   HANDLE mNonDisplayHandle = nullptr;
 };
 NS_IMPL_ISUPPORTS(WinWakeLockListener, nsIDOMMozWakeLockListener)
-
-// This wakelock is used for the version older than Windows7.
-class LegacyWinWakeLockListener final : public nsIDOMMozWakeLockListener {
- public:
-  NS_DECL_ISUPPORTS
-  LegacyWinWakeLockListener() { MOZ_ASSERT(XRE_IsParentProcess()); }
-
- private:
-  ~LegacyWinWakeLockListener() {}
-
-  NS_IMETHOD Callback(const nsAString& aTopic,
-                      const nsAString& aState) override {
-    WAKE_LOCK_LOG("WinWakeLock: topic=%s, state=%s",
-                  NS_ConvertUTF16toUTF8(aTopic).get(),
-                  NS_ConvertUTF16toUTF8(aState).get());
-    if (!aTopic.EqualsASCII("screen") && !aTopic.EqualsASCII("audio-playing") &&
-        !aTopic.EqualsASCII("video-playing")) {
-      return NS_OK;
-    }
-
-    // Check what kind of lock we will require, if both display lock and non
-    // display lock are needed, we would require display lock because it has
-    // higher priority.
-    if (aTopic.EqualsASCII("audio-playing")) {
-      mRequireForNonDisplayLock = aState.EqualsASCII("locked-foreground") ||
-                                  aState.EqualsASCII("locked-background");
-    } else if (aTopic.EqualsASCII("screen") ||
-               aTopic.EqualsASCII("video-playing")) {
-      mRequireForDisplayLock = aState.EqualsASCII("locked-foreground");
-    }
-
-    if (mRequireForDisplayLock) {
-      WAKE_LOCK_LOG("WinWakeLock: Request display lock");
-      SetThreadExecutionState(ES_DISPLAY_REQUIRED | ES_CONTINUOUS);
-    } else if (mRequireForNonDisplayLock) {
-      WAKE_LOCK_LOG("WinWakeLock: Request non-display lock");
-      SetThreadExecutionState(ES_SYSTEM_REQUIRED | ES_CONTINUOUS);
-    } else {
-      WAKE_LOCK_LOG("WinWakeLock: reset lock");
-      SetThreadExecutionState(ES_CONTINUOUS);
-    }
-    return NS_OK;
-  }
-
-  bool mRequireForDisplayLock = false;
-  bool mRequireForNonDisplayLock = false;
-};
-
-NS_IMPL_ISUPPORTS(LegacyWinWakeLockListener, nsIDOMMozWakeLockListener)
 StaticRefPtr<nsIDOMMozWakeLockListener> sWakeLockListener;
 
 static void AddScreenWakeLockListener() {
   nsCOMPtr<nsIPowerManagerService> sPowerManagerService =
       do_GetService(POWERMANAGERSERVICE_CONTRACTID);
   if (sPowerManagerService) {
-    if (IsWin7SP1OrLater()) {
-      sWakeLockListener = new WinWakeLockListener();
-    } else {
-      sWakeLockListener = new LegacyWinWakeLockListener();
-    }
+    sWakeLockListener = new WinWakeLockListener();
     sPowerManagerService->AddWakeLockListener(sWakeLockListener);
   } else {
     NS_WARNING(

@@ -698,7 +698,7 @@ bool IMEHandler::IsOnScreenKeyboardSupported() {
     return true;
   }
 #endif  // NIGHTLY_BUILD
-  if (!IsWin8OrLater() || !Preferences::GetBool(kOskEnabled, true) ||
+  if (!Preferences::GetBool(kOskEnabled, true) ||
       !IMEHandler::NeedOnScreenKeyboard()) {
     return false;
   }
@@ -706,7 +706,7 @@ bool IMEHandler::IsOnScreenKeyboardSupported() {
   // On Windows 10 we require tablet mode, unless the user has set the relevant
   // Windows setting to enable the on-screen keyboard in desktop mode.
   // We might be disabled specifically on Win8(.1), so we check that afterwards.
-  if (IsWin10OrLater() && !IsWin11OrLater()) {
+  if (!IsWin11OrLater()) {
     if (!IsInTabletMode() && !AutoInvokeOnScreenKeyboardInDesktopMode()) {
       return false;
     }
@@ -738,10 +738,6 @@ void IMEHandler::MaybeDismissOnScreenKeyboard(nsWindow* aWindow, Sync aSync) {
     OSKVRManager::DismissOnScreenKeyboard();
   }
 #endif  // NIGHTLY_BUILD
-  if (!IsWin8OrLater()) {
-    return;
-  }
-
   if (aSync == Sync::Yes) {
     DismissOnScreenKeyboard(aWindow);
     return;
@@ -780,12 +776,6 @@ bool IMEHandler::WStringStartsWithCaseInsensitive(const std::wstring& aHaystack,
 // an on-screen keyboard for text input.
 // static
 bool IMEHandler::NeedOnScreenKeyboard() {
-  // This function is only supported for Windows 8 and up.
-  if (!IsWin8OrLater()) {
-    Preferences::SetString(kOskDebugReason, L"IKPOS: Requires Win8+.");
-    return false;
-  }
-
   if (!Preferences::GetBool(kOskDetectPhysicalKeyboard, true)) {
     Preferences::SetString(kOskDebugReason, L"IKPOS: Detection disabled.");
     return true;

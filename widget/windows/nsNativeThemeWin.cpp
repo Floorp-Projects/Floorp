@@ -19,7 +19,6 @@
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_widget.h"
-#include "mozilla/WindowsVersion.h"
 #include "mozilla/dom/XULButtonElement.h"
 #include "nsColor.h"
 #include "nsComboboxControlFrame.h"
@@ -981,8 +980,8 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
 
 static bool AssumeThemePartAndStateAreTransparent(int32_t aPart,
                                                   int32_t aState) {
-  if (!(IsWin8Point1OrLater() && nsUXThemeData::IsHighContrastOn()) &&
-      aPart == MENU_POPUPITEM && aState == MBI_NORMAL) {
+  if (!nsUXThemeData::IsHighContrastOn() && aPart == MENU_POPUPITEM &&
+      aState == MBI_NORMAL) {
     return true;
   }
   return false;

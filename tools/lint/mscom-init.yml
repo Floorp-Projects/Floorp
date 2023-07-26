@@ -36,7 +36,6 @@ forbid-mscom-init:
         - toolkit/crashreporter/google-breakpad/src/common/windows/pdb_source_line_writer.cc
         - toolkit/mozapps/defaultagent/main.cpp
         - uriloader/exthandler/win/nsOSHelperAppService.cpp
-        - widget/windows/InkCollector.cpp
         - widget/windows/TaskbarPreview.cpp
         - widget/windows/WinTaskbar.cpp
         - widget/windows/nsAppShell.cpp
