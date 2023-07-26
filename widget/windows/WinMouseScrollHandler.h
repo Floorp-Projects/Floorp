@@ -260,14 +260,6 @@ class MouseScrollHandler {
     // handling if we meet known device whose utility may hook the API.
     void TrustedScrollSettingsDriver();
 
-#ifndef EARLY_BETA_OR_EARLIER
-    // Returns true if the system scroll may be overridden for faster scroll.
-    // Otherwise, false.  For example, if the user maybe uses an expensive
-    // mouse which supports acceleration of scroll speed, faster scroll makes
-    // the user inconvenient.
-    bool IsOverridingSystemScrollSpeedAllowed();
-#endif
-
     int32_t GetScrollAmount(bool aForVertical) const {
       MOZ_ASSERT(mInitialized, "SystemSettings must be initialized");
       return aForVertical ? mScrollLines : mScrollChars;
@@ -282,9 +274,6 @@ class MouseScrollHandler {
     // The default vertical and horizontal scrolling speed is 3, this is defined
     // on the document of SystemParametersInfo in MSDN.
     static int32_t DefaultScrollLines() { return 3; }
-#ifndef EARLY_BETA_OR_EARLIER
-    static int32_t DefaultScrollChars() { return 3; }
-#endif
 
    private:
     bool mInitialized;
