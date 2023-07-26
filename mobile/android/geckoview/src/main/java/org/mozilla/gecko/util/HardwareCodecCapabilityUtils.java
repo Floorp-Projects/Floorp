@@ -100,11 +100,16 @@ public final class HardwareCodecCapabilityUtils {
   // Return list of all codecs (decode + encode).
   private static MediaCodecInfo[] getCodecList() {
     final MediaCodecInfo[] codecList;
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-      codecList = getCodecListWithOldAPI();
-    } else {
-      final MediaCodecList list = new MediaCodecList(MediaCodecList.REGULAR_CODECS);
-      codecList = list.getCodecInfos();
+    try {
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+        codecList = getCodecListWithOldAPI();
+      } else {
+        final MediaCodecList list = new MediaCodecList(MediaCodecList.REGULAR_CODECS);
+        codecList = list.getCodecInfos();
+      }
+    } catch (final RuntimeException e) {
+      Log.e(LOGTAG, "Failed to retrieve media codec support list", e);
+      return new MediaCodecInfo[0];
     }
     return codecList;
   }
@@ -218,8 +223,7 @@ public final class HardwareCodecCapabilityUtils {
   // Check if a given MIME Type has HW decode or encode support.
   public static boolean getHWCodecCapability(final String aMimeType, final boolean aIsEncoder) {
     if (Build.VERSION.SDK_INT >= 20) {
-      for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
-        final MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
+      for (final MediaCodecInfo info : getCodecList()) {
         if (info.isEncoder() != aIsEncoder) {
           continue;
         }
