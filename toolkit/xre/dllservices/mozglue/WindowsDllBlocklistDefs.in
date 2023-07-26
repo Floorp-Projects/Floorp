@@ -339,6 +339,9 @@ BROWSER_PROCESS += [
 
     # Kingsoft internet security (bug 1837246)
     DllBlocklistEntry("dghmpg64.dll", ALL_VERSIONS),
+
+    # ZoneAlarm Anti-Keylogger (bug 1777960)
+    DllBlocklistEntry("icsak.dll", (1, 5, 393, 2181)),
 ]
 
 CHILD_PROCESSES += [
