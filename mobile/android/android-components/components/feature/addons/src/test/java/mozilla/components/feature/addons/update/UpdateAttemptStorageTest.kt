@@ -65,7 +65,7 @@ class UpdateAttemptStorageTest {
 
     private fun mockDatabase(dao: UpdateAttemptDao) = object : UpdateAttemptsDatabase() {
         override fun updateAttemptDao() = dao
-        override fun createOpenHelper(config: DatabaseConfiguration?): SupportSQLiteOpenHelper = mock()
+        override fun createOpenHelper(config: DatabaseConfiguration): SupportSQLiteOpenHelper = mock()
         override fun createInvalidationTracker(): InvalidationTracker = mock()
         override fun clearAllTables() = Unit
     }

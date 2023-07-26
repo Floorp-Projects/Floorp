@@ -75,7 +75,7 @@ object Versions {
         const val test_ext = "1.1.5"
         const val test_runner = "1.5.2"
         const val espresso = "3.5.1"
-        const val room = "2.4.3"
+        const val room = "2.5.2"
         const val savedstate = "1.2.1"
         const val paging = "2.1.2"
         const val palette = "1.0.0"
