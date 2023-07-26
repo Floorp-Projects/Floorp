@@ -571,7 +571,7 @@
   display: inline;
 }
 
-@media (-moz-platform: windows) and (-moz-windows-default-theme: 0) {
+@media (-moz-platform: windows) and (prefers-contrast) {
   .controlsSpacer,
   .clickToPlay {
     background-color: transparent;

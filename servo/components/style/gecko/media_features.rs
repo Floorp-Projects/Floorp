@@ -684,7 +684,7 @@ macro_rules! bool_pref_feature {
 /// to support new types in these entries and (2) ensuring that either
 /// nsPresContext::MediaFeatureValuesChanged is called when the value that
 /// would be returned by the evaluator function could change.
-pub static MEDIA_FEATURES: [QueryFeatureDescription; 64] = [
+pub static MEDIA_FEATURES: [QueryFeatureDescription; 62] = [
     feature!(
         atom!("width"),
         AllowsRanges::Yes,
@@ -975,8 +975,6 @@ pub static MEDIA_FEATURES: [QueryFeatureDescription; 64] = [
         get_scrollbar_end_forward
     ),
     lnf_int_feature!(atom!("-moz-menubar-drag"), MenuBarDrag),
-    lnf_int_feature!(atom!("-moz-windows-default-theme"), WindowsDefaultTheme),
-    lnf_int_feature!(atom!("-moz-mac-graphite-theme"), MacGraphiteTheme),
     lnf_int_feature!(atom!("-moz-mac-big-sur-theme"), MacBigSurTheme),
     lnf_int_feature!(atom!("-moz-mac-rtl"), MacRTL),
     lnf_int_feature!(

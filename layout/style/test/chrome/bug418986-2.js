@@ -49,14 +49,11 @@ var expected_values = [
 // These media queries return value 0 or 1 when the pref is off.
 // When the pref is on, they should not match.
 var suppressed_toggles = [
-  "-moz-mac-graphite-theme",
   // Not available on most OSs.
-  //  "-moz-maemo-classic",
   "-moz-scrollbar-end-backward",
   "-moz-scrollbar-end-forward",
   "-moz-scrollbar-start-backward",
   "-moz-scrollbar-start-forward",
-  "-moz-windows-default-theme",
   "-moz-gtk-csd-available",
   "-moz-gtk-csd-minimize-button",
   "-moz-gtk-csd-maximize-button",

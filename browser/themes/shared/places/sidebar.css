@@ -113,7 +113,7 @@
     cursor: default;
   }
 
-  @media (-moz-windows-default-theme) {
+  @media not (prefers-contrast) {
     .sidebar-placesTreechildren::-moz-tree-cell-text(leaf, hover) {
       text-decoration: none;
     }

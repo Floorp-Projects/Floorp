@@ -58,7 +58,7 @@ richlistbox.theme-listbox > richlistitem > label {
   white-space: nowrap;
 }
 
-@media (-moz-windows-default-theme) {
+@media not (prefers-contrast) {
   richlistbox.theme-listbox > richlistitem {
     --listitem-selectedTextColor: rgb(0,0,0);
     --listitem-selectedColor: rgb(217,217,217);
