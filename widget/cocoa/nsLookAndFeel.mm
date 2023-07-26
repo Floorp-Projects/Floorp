@@ -274,9 +274,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
     case ColorID::MozColheaderhovertext:
       color = GetColorFromNSColor(NSColor.controlTextColor);
       break;
-    case ColorID::MozDragtargetzone:
-      color = GetColorFromNSColor(NSColor.selectedControlColor);
-      break;
     case ColorID::MozMacFocusring:
       color = GetColorFromNSColorWithCustomAlpha(NSColor.keyboardFocusIndicatorColor, 0.48);
       break;

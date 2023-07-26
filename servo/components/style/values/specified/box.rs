@@ -1644,14 +1644,6 @@ pub enum Appearance {
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Dialog,
 
-    /// Vista Rebars.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    MozWinCommunicationsToolbox,
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    MozWinMediaToolbox,
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    MozWinBrowsertabbarToolbox,
-
     /// Mac help button.
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozMacHelpButton,

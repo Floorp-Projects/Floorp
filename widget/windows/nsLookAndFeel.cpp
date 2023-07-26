@@ -160,7 +160,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
         return aScheme != ColorScheme::Dark || mDarkHighlightText;
       case ColorID::IMESelectedRawTextForeground:
       case ColorID::IMESelectedConvertedTextForeground:
-      case ColorID::MozDragtargetzone:
         return true;
       default:
         return false;
@@ -360,22 +359,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::Accentcolortext:
       aColor = mColorAccentText;
       return NS_OK;
-    case ColorID::MozWinMediatext:
-      if (mColorMediaText) {
-        aColor = *mColorMediaText;
-        return NS_OK;
-      }
-      // if we've gotten here just return -moz-dialogtext instead
-      idx = COLOR_WINDOWTEXT;
-      break;
-    case ColorID::MozWinCommunicationstext:
-      if (mColorCommunicationsText) {
-        aColor = *mColorCommunicationsText;
-        return NS_OK;
-      }
-      // if we've gotten here just return -moz-dialogtext instead
-      idx = COLOR_WINDOWTEXT;
-      break;
     case ColorID::MozDialogtext:
     case ColorID::MozColheadertext:
     case ColorID::MozColheaderhovertext:
@@ -885,10 +868,6 @@ void nsLookAndFeel::EnsureInit() {
 
   mColorMenuHoverText =
       ::GetColorFromTheme(eUXMenu, MENU_POPUPITEM, MPI_HOT, TMT_TEXTCOLOR);
-  mColorMediaText =
-      ::GetColorFromTheme(eUXMediaToolbar, TP_BUTTON, TS_NORMAL, TMT_TEXTCOLOR);
-  mColorCommunicationsText = ::GetColorFromTheme(
-      eUXCommunicationsToolbar, TP_BUTTON, TS_NORMAL, TMT_TEXTCOLOR);
 
   // Fill out the sys color table.
   for (int i = SYS_COLOR_MIN; i <= SYS_COLOR_MAX; ++i) {
