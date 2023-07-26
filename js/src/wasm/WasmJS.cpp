@@ -3719,6 +3719,10 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     if (done) {
       UniqueChars expected(JS_smprintf("%zu", params.length()));
       UniqueChars got(JS_smprintf("%zu", i));
+      if (!expected || !got) {
+        ReportOutOfMemory(cx);
+        return false;
+      }
 
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_WASM_BAD_EXN_PAYLOAD_LEN, expected.get(),
@@ -3751,6 +3755,7 @@ WasmExceptionObject* WasmExceptionObject::create(JSContext* cx,
   // does not result in a partially constructed object.
   uint8_t* data = (uint8_t*)js_calloc(tagType->size_);
   if (!data) {
+    ReportOutOfMemory(cx);
     return nullptr;
   }
 

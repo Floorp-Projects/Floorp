@@ -155,6 +155,10 @@ static bool UnpackResults(JSContext* cx, const ValTypeVector& resultTypes,
   if (resultTypes.length() != array->length()) {
     UniqueChars expected(JS_smprintf("%zu", resultTypes.length()));
     UniqueChars got(JS_smprintf("%u", array->length()));
+    if (!expected || !got) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
 
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_WRONG_NUMBER_OF_VALUES, expected.get(),
