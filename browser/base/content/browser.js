@@ -9957,10 +9957,6 @@ var ShoppingSidebarManager = {
     }
   },
 
-  _isProductPage(locationURI) {
-    return isProductURL(locationURI);
-  },
-
   /**
    * Called by TabsProgressListener whenever any browser navigates from one
    * URL to another.
@@ -9980,7 +9976,7 @@ var ShoppingSidebarManager = {
         sidebar.querySelector("browser").browsingContext.currentWindowGlobal;
       actor = global.getExistingActor("ShoppingSidebar");
     }
-    if (this._isProductPage(aLocationURI)) {
+    if (isProductURL(aLocationURI)) {
       if (!sidebar) {
         sidebar = document.createXULElement("shopping-sidebar");
         sidebar.setAttribute("style", "width: 320px");

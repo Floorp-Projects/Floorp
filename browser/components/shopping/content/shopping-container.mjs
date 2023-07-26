@@ -20,10 +20,12 @@ import "chrome://browser/content/shopping/analysis-explainer.mjs";
 import "chrome://browser/content/shopping/shopping-message-bar.mjs";
 
 export class ShoppingContainer extends MozLitElement {
-  #productURL;
+  #optedIn;
+  #product;
 
   static properties = {
     data: { type: Object },
+    showOnboarding: { type: Boolean },
   };
 
   static get queries() {
@@ -42,7 +44,7 @@ export class ShoppingContainer extends MozLitElement {
     }
     this.initialized = true;
 
-    window.document.addEventListener("UpdateProductURL", this);
+    window.document.addEventListener("Update", this);
 
     window.dispatchEvent(
       new CustomEvent("ContentReady", {
@@ -52,46 +54,44 @@ export class ShoppingContainer extends MozLitElement {
     );
   }
 
-  set productURL(newURL) {
-    this.#productURL = newURL;
-    this.data = null;
-  }
+  async _update({ url, optedIn }) {
+    this.#product?.uninit();
+    this.#optedIn = optedIn;
 
-  get productURL() {
-    return this.#productURL;
-  }
-
-  init() {
-    if (!this.productURL) {
-      // TODO: cancel fetches? disconnect components?
-    } else if (!this.data) {
-      this.fetchAnalysis();
+    if (this.#optedIn !== 1) {
+      this.showOnboarding = true;
+      // In case the user just opted out, clear out any product data too.
+      this.data = null;
+      return;
     }
+    this.showOnboarding = false;
+
+    // `url` is null for non-product pages; clear out any sidebar content while
+    // the chrome code closes the sidebar.
+    if (!url) {
+      this.data = null;
+      return;
+    }
+
+    let product = (this.#product = new ShoppingProduct(new URL(url)));
+    let data = await product.requestAnalysis();
+    // Double-check that we haven't opted out or re-entered this function
+    // while we were `await`-ing.
+    if (this.#optedIn !== 1 || product !== this.#product) {
+      return;
+    }
+    this.data = data;
   }
 
   handleEvent(event) {
     switch (event.type) {
-      case "UpdateProductURL":
-        // Ignore duplicate events sometimes fired by product pages.
-        if (this.productURL === event.detail.url) {
-          return;
-        }
-        this.productURL = event.detail.url;
-        this.init();
+      case "Update":
+        this._update(event.detail);
         break;
     }
   }
 
-  async fetchAnalysis() {
-    let product = new ShoppingProduct(new URL(this.productURL));
-    this.data = await product.requestAnalysis();
-  }
-
-  render() {
-    if (!this.data) {
-      return html`<p>loading...</p>`;
-    }
-
+  renderContainer(sidebarContent) {
     return html`<link
         rel="stylesheet"
         href="chrome://browser/content/shopping/shopping-container.css"
@@ -115,21 +115,34 @@ export class ShoppingContainer extends MozLitElement {
             data-l10n-id="shopping-close-button"
           ></button>
         </div>
-        <div id="content">
-          ${this.data.needs_analysis && this.data.product_id
-            ? html`<shopping-message-bar type="stale"></shopping-message-bar>`
-            : null}
-          <review-reliability letter=${this.data.grade}></review-reliability>
-          <adjusted-rating
-            rating=${this.data.adjusted_rating}
-          ></adjusted-rating>
-          <review-highlights
-            .highlights=${this.data.highlights}
-          ></review-highlights>
-          <analysis-explainer></analysis-explainer>
-          <shopping-settings></shopping-settings>
-        </div>
+        <div id="content">${sidebarContent}</div>
       </div>`;
+  }
+
+  render() {
+    let content;
+    if (this.showOnboarding) {
+      // For the onboarding case, leave content area blank, so the OMC onboarding
+      // card has room to draw itself via react (bug 1839764).
+      content = html`<p>Onboarding UI goes here</p>`;
+    } else if (!this.data) {
+      // TODO: Replace with loading UI component (bug 1840161).
+      content = html`<p>Loading UI goes here</p>`;
+    } else {
+      content = html`
+        ${this.data.needs_analysis && this.data.product_id
+          ? html`<shopping-message-bar type="stale"></shopping-message-bar>`
+          : null}
+        <review-reliability letter=${this.data.grade}></review-reliability>
+        <adjusted-rating rating=${this.data.adjusted_rating}></adjusted-rating>
+        <review-highlights
+          .highlights=${this.data.highlights}
+        ></review-highlights>
+        <analysis-explainer></analysis-explainer>
+        <shopping-settings></shopping-settings>
+      `;
+    }
+    return this.renderContainer(content);
   }
 }
 
