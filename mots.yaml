@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-07-13T01:11:45.977075'
+updated_at: '2023-07-26T14:25:26.671914'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1018,8 +1018,9 @@ people:
     name: Tomislav Jovanovic
     nick: zombie
 modules:
-  - name: mozilla-toplevel
-    description: The top level directory for the mozilla tree. Owned by the TLMC
+  - name: firefox-toplevel
+    description: The top level directory for the Firefox/Gecko tree. Owned by the
+      TLMC
     includes:
       - README.txt
     meta:
@@ -1033,7 +1034,7 @@ modules:
       - *nalexander
       - *nika
     peers: []
-    machine_name: _mozillatoplevel
+    machine_name: _firefoxtoplevel
 
   - machine_name: code_coverage
     name: Code Coverage
@@ -4124,5 +4125,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: afee30625bff7ffdbd2e82b55e7735c32f57ebfd
-  export: a9d656f67b43a0beb5488c9b28abca55f8109106
+  config: 8e97f856fca203cb264e9899c687cefcf34da101
+  export: fbf81449f9e1885ce0f01cf58da1ea7171b84507
