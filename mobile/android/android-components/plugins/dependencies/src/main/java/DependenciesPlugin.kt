@@ -14,9 +14,9 @@ class DependenciesPlugin : Plugin<Settings> {
 
 // Synchronized version numbers for dependencies used by (some) modules
 object Versions {
-    const val kotlin = "1.8.22"
-    const val coroutines = "1.7.2"
-    const val serialization = "1.5.1"
+    const val kotlin = "1.9.22"
+    const val coroutines = "1.7.3"
+    const val serialization = "1.6.0"
     const val python_envs_plugin = "0.0.31"
 
     const val junit = "4.13.2"
@@ -47,13 +47,13 @@ object Versions {
     const val mozilla_glean = "56.1.0"
 
     const val material = "1.9.0"
-    const val ksp = "1.0.11"
+    const val ksp = "1.0.17"
     val ksp_plugin = "$kotlin-$ksp"
 
     // see https://android-developers.googleblog.com/2022/06/independent-versioning-of-Jetpack-Compose-libraries.html
     // for Jetpack Compose libraries versioning
     const val compose_version = "1.5.4"
-    const val compose_compiler = "1.4.8"
+    const val compose_compiler = "1.5.8"
 
     object AndroidX {
         const val activityCompose = "1.7.2"
