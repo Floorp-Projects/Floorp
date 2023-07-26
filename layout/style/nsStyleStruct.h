@@ -198,9 +198,9 @@ struct nsStyleImageLayers {
   };
 
   struct Layer {
-    typedef mozilla::StyleGeometryBox StyleGeometryBox;
-    typedef mozilla::StyleImageLayerAttachment StyleImageLayerAttachment;
-    typedef mozilla::StyleBackgroundSize StyleBackgroundSize;
+    using StyleGeometryBox = mozilla::StyleGeometryBox;
+    using StyleImageLayerAttachment = mozilla::StyleImageLayerAttachment;
+    using StyleBackgroundSize = mozilla::StyleBackgroundSize;
 
     mozilla::StyleImage mImage;
     mozilla::Position mPosition;
@@ -312,7 +312,7 @@ struct nsStyleImageLayers {
   static const nsCSSPropertyID kMaskLayerTable[];
 
 #define NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(var_, layers_) \
-  for (uint32_t var_ = (layers_).mImageCount; var_-- != 0;)
+  for (uint32_t var_ = (layers_).mImageCount; (var_)-- != 0;)
 #define NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT_WITH_RANGE(var_, layers_,  \
                                                              start_, count_) \
   NS_ASSERTION(                                                              \
@@ -321,7 +321,7 @@ struct nsStyleImageLayers {
   NS_ASSERTION((count_) > 0 && (count_) <= (start_) + 1,                     \
                "Invalid layer range!");                                      \
   for (uint32_t var_ = (start_) + 1;                                         \
-       var_-- != (uint32_t)((start_) + 1 - (count_));)
+       (var_)-- != (uint32_t)((start_) + 1 - (count_));)
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
@@ -563,6 +563,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder {
     return nullptr;
   }
 
+  nsStyleBorder& operator=(const nsStyleBorder&) = delete;
+
  protected:
   // mComputedBorder holds the CSS2.1 computed border-width values.
   // In particular, these widths take into account the border-style
@@ -584,9 +586,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder {
   // all lengths converted to twips.  But it's not quite the computed
   // value either. The values are rounded to the nearest device pixel.
   nsMargin mBorder;
-
- private:
-  nsStyleBorder& operator=(const nsStyleBorder& aOther) = delete;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline {
@@ -628,6 +627,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline {
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
   STYLE_STRUCT(nsStyleList)
   nsStyleList();
+
   void TriggerImageLoads(mozilla::dom::Document&, const nsStyleList*);
 
   nsStyleList& operator=(const nsStyleList& aOther) = delete;
@@ -838,7 +838,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTextReset {
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   STYLE_STRUCT(nsStyleText)
-
   explicit nsStyleText(const mozilla::dom::Document&);
 
   mozilla::StyleAbsoluteColor mColor;
@@ -1622,8 +1621,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTableBorder {
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleContent {
   STYLE_STRUCT(nsStyleContent)
   nsStyleContent();
-
   void TriggerImageLoads(mozilla::dom::Document&, const nsStyleContent*);
+
   using CounterPair = mozilla::StyleGenericCounterPair<int32_t>;
 
   size_t ContentCount() const {
@@ -1964,7 +1963,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleEffects {
   bool HasBackdropFilters() const { return !mBackdropFilters.IsEmpty(); }
 
   bool HasBoxShadowWithInset(bool aInset) const {
-    for (auto& shadow : mBoxShadow.AsSpan()) {
+    for (const auto& shadow : mBoxShadow.AsSpan()) {
       if (shadow.inset == aInset) {
         return true;
       }
