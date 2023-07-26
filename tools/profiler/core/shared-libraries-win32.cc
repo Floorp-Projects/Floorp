@@ -10,30 +10,9 @@
 #include "mozilla/NativeNt.h"
 #include "mozilla/WindowsEnumProcessModules.h"
 #include "mozilla/WindowsProcessMitigations.h"
-#include "mozilla/WindowsVersion.h"
 #include "nsPrintfCString.h"
 
 static bool IsModuleUnsafeToLoad(const nsAString& aModuleName) {
-#if defined(_M_AMD64) || defined(_M_IX86)
-  // Hackaround for Bug 1607574.  Nvidia's shim driver nvd3d9wrap[x].dll detours
-  // LoadLibraryExW and it causes AV when the following conditions are met.
-  //   1. LoadLibraryExW was called for "detoured.dll"
-  //   2. nvinit[x].dll was unloaded
-  //   3. OS version is older than 6.2
-#  if defined(_M_AMD64)
-  LPCWSTR kNvidiaShimDriver = L"nvd3d9wrapx.dll";
-  LPCWSTR kNvidiaInitDriver = L"nvinitx.dll";
-#  elif defined(_M_IX86)
-  LPCWSTR kNvidiaShimDriver = L"nvd3d9wrap.dll";
-  LPCWSTR kNvidiaInitDriver = L"nvinit.dll";
-#  endif
-  if (aModuleName.LowerCaseEqualsLiteral("detoured.dll") &&
-      !mozilla::IsWin8OrLater() && ::GetModuleHandleW(kNvidiaShimDriver) &&
-      !::GetModuleHandleW(kNvidiaInitDriver)) {
-    return true;
-  }
-#endif  // defined(_M_AMD64) || defined(_M_IX86)
-
   // Hackaround for Bug 1723868.  There is no safe way to prevent the module
   // Microsoft's VP9 Video Decoder from being unloaded because mfplat.dll may
   // have posted more than one task to unload the module in the work queue
