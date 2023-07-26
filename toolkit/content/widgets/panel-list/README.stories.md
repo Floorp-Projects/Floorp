@@ -137,7 +137,7 @@ The `toggle(event)` method will use `event.target` as the anchor for the menu.
 
 To achieve the expected behaviour, the menu should open on `mousedown` for mouse
 events, and `click` for keyboard events. This can be accomplished by checking
-the `event.mozInputSource` property in chrome contexts or `event.detail` in
+the `event.inputSource` property in chrome contexts or `event.detail` in
 non-chrome contexts (`event.detail` will be the click count which is `0` when a
 click is from the keyboard).
 
@@ -145,7 +145,7 @@ click is from the keyboard).
 function openMenu(event) {
   if (
     event.type == "mousedown" ||
-    event.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD ||
+    event.inputSource == MouseEvent.MOZ_SOURCE_KEYBOARD ||
     !event.detail
   ) {
     document.querySelector("panel-list").toggle(event);

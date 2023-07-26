@@ -1413,7 +1413,7 @@ export var PictureInPicture = {
       0,
       null,
       0,
-      data.mozInputSource
+      data.inputSource
     );
     popup.openPopupAtScreen(newEvent.screenX, newEvent.screenY, true, newEvent);
   },

@@ -95,8 +95,8 @@
       this.lastAnchorNode = this.getTargetForEvent(this.triggeringEvent);
       this.wasOpenedByKeyboard =
         triggeringEvent &&
-        (triggeringEvent.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD ||
-          triggeringEvent.mozInputSource == MouseEvent.MOZ_SOURCE_UNKNOWN);
+        (triggeringEvent.inputSource == MouseEvent.MOZ_SOURCE_KEYBOARD ||
+          triggeringEvent.inputSource == MouseEvent.MOZ_SOURCE_UNKNOWN);
       this.open = true;
 
       if (this.parentIsXULPanel()) {

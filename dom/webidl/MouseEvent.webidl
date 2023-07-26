@@ -103,6 +103,10 @@ partial interface MouseEvent
   const unsigned short    MOZ_SOURCE_TOUCH      = 5;
   const unsigned short    MOZ_SOURCE_KEYBOARD   = 6;
 
+  [ChromeOnly]
+  readonly attribute unsigned short inputSource;
+
+  [BinaryName="inputSource"]
   readonly attribute unsigned short mozInputSource;
 
   undefined initNSMouseEvent(DOMString typeArg,

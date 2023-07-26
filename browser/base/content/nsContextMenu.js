@@ -101,7 +101,7 @@ function openContextMenu(aMessage, aBrowser, aActor) {
     2,
     null,
     0,
-    context.mozInputSource
+    context.inputSource
   );
   popup.openPopupAtScreen(newEvent.screenX, newEvent.screenY, true, newEvent);
 }

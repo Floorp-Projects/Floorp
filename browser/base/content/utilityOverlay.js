@@ -162,7 +162,7 @@ function checkForMiddleClick(node, event) {
       event.metaKey,
       0,
       event,
-      event.mozInputSource
+      event.inputSource
     );
     node.dispatchEvent(cmdEvent);
 

@@ -605,7 +605,7 @@ ChromeUtils.defineESModuleGetters(this, {
               card.setAttribute("expanded", "true");
               setLabel("collapse");
               // If this as a keyboard event then focus the next input.
-              if (event.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
+              if (event.inputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
                 firstHiddenInput.focus();
               }
             }

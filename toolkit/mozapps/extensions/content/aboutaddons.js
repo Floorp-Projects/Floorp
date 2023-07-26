@@ -882,7 +882,7 @@ class AddonPageHeader extends HTMLElement {
           window.history.back();
           break;
         case pageOptionsMenuButton:
-          if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
+          if (e.inputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
             this.pageOptionsMenu.toggle(e);
           }
           break;
@@ -2566,7 +2566,7 @@ class AddonCard extends HTMLElement {
           break;
         case "more-options":
           // Open panel on click from the keyboard.
-          if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
+          if (e.inputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
             this.panel.toggle(e);
           }
           break;
