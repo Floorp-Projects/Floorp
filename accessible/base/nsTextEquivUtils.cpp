@@ -265,6 +265,11 @@ nsresult nsTextEquivUtils::AppendFromDOMNode(nsIContent* aContent,
 
   if (rv != NS_OK_NO_NAME_CLAUSE_HANDLED) return NS_OK;
 
+  if (aContent->IsAnyOfHTMLElements(nsGkAtoms::script, nsGkAtoms::style)) {
+    // The text within these elements is never meant for users.
+    return NS_OK;
+  }
+
   if (aContent->IsXULElement()) {
     nsAutoString textEquivalent;
     if (aContent->NodeInfo()->Equals(nsGkAtoms::label, kNameSpaceID_XUL)) {
