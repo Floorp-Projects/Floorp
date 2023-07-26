@@ -80,15 +80,16 @@ To enable a pre-push git hook, run the following command:
 
 .. parsed-literal::
 
-    $ ln -s /path/to/gecko/tools/lint/hooks.py .git/hooks/pre-push
+    $ ln -s ../../tools/lint/hooks.py .git/hooks/pre-push
 
 
 To enable a pre-commit git hook, run the following command:
 
 .. parsed-literal::
 
-    $ ln -s /path/to/gecko/tools/lint/hooks.py .git/hooks/pre-commit
+    $ ln -s ../../tools/lint/hooks.py .git/hooks/pre-commit
 
+Note that the symlink will be interpreted as ``.git/hooks/../../tools/lint/hooks.py``.
 
 Fixing Lint Errors
 ==================
