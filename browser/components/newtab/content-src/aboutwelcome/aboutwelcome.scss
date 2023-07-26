@@ -533,6 +533,12 @@ html {
           margin: auto 0 auto auto;
         }
 
+        &.embedded-migration {
+          .main-content {
+            padding-block: 76px 0;
+          }
+        }
+
         .main-content {
           border-radius: 0 8px 8px 0;
           overflow: hidden;
@@ -806,11 +812,6 @@ html {
           width: $split-section-width;
         }
 
-        migration-wizard::part(buttons) {
-          min-width: 240px;
-          flex-direction: column;
-        }
-
         .section-secondary,
         .section-main {
           width: $split-section-width;
@@ -844,11 +845,37 @@ html {
             margin: auto auto 0;
             border-radius: 8px 8px 0 0;
           }
+
+          &.with-secondary-section-hidden {
+            display: none;
+          }
+        }
+
+        migration-wizard {
+          &::part(deck){
+            min-width: 330px;
+            margin-inline: 36px;
+          }
         }
 
         .section-main {
           margin: 0 auto auto;
           height: $small-main-section-height;
+
+          migration-wizard::part(buttons) {
+            flex-direction: column;
+            margin-inline: 46px;
+          }
+
+          &[hide-secondary-section='responsive'] {
+            height: $split-screen-height;
+            margin: auto;
+
+            .main-content {
+              padding: 50px 0 0;
+              border-radius: 8px;
+            }
+          }
 
           .main-content {
             border-radius: 0 0 8px 8px;
@@ -1837,7 +1864,7 @@ html {
     transition: var(--transition);
 
     &::part(buttons) {
-      margin-top: 32px;
+      margin-top: 24px;
       justify-content: flex-start;
     }
 

@@ -725,6 +725,9 @@ html {
 .onboardingContainer .screen[pos=split] .section-main:dir(rtl) {
   margin: auto 0 auto auto;
 }
+.onboardingContainer .screen[pos=split] .section-main.embedded-migration .main-content {
+  padding-block: 76px 0;
+}
 .onboardingContainer .screen[pos=split] .section-main .main-content {
   border-radius: 0 8px 8px 0;
   overflow: hidden;
@@ -982,10 +985,6 @@ html {
   .onboardingContainer .screen[pos=split]::before {
     width: 400px;
   }
-  .onboardingContainer .screen[pos=split] migration-wizard::part(buttons) {
-    min-width: 240px;
-    flex-direction: column;
-  }
   .onboardingContainer .screen[pos=split] .section-secondary,
 .onboardingContainer .screen[pos=split] .section-main {
     width: 400px;
@@ -1014,9 +1013,28 @@ html {
     margin: auto auto 0;
     border-radius: 8px 8px 0 0;
   }
+  .onboardingContainer .screen[pos=split] .section-secondary.with-secondary-section-hidden {
+    display: none;
+  }
+  .onboardingContainer .screen[pos=split] migration-wizard::part(deck) {
+    min-width: 330px;
+    margin-inline: 36px;
+  }
   .onboardingContainer .screen[pos=split] .section-main {
     margin: 0 auto auto;
     height: 450px;
+  }
+  .onboardingContainer .screen[pos=split] .section-main migration-wizard::part(buttons) {
+    flex-direction: column;
+    margin-inline: 46px;
+  }
+  .onboardingContainer .screen[pos=split] .section-main[hide-secondary-section=responsive] {
+    height: 550px;
+    margin: auto;
+  }
+  .onboardingContainer .screen[pos=split] .section-main[hide-secondary-section=responsive] .main-content {
+    padding: 50px 0 0;
+    border-radius: 8px;
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content {
     border-radius: 0 0 8px 8px;
@@ -1812,7 +1830,7 @@ html {
   transition: var(--transition);
 }
 .onboardingContainer migration-wizard::part(buttons) {
-  margin-top: 32px;
+  margin-top: 24px;
   justify-content: flex-start;
 }
 .onboardingContainer migration-wizard::part(deck) {
