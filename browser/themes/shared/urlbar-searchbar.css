@@ -646,10 +646,9 @@
     font-weight: bold;
   }
 
-  #translations-button[translationsactive]:hover > #translations-button-icon {
+  #translations-button[translationsactive]:is(:hover, [open]) > #translations-button-icon {
     fill: currentColor;
   }
-
 
   #translations-button:is(:hover, [open]) > #translations-button-locale {
     background-color: var(--toolbar-field-background-color);
