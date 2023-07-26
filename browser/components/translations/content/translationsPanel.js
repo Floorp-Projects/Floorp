@@ -928,6 +928,8 @@ var TranslationsPanel = new (class {
 
     TranslationsParent.telemetry().panel().onOpen(openedFromAppMenu);
 
+    await window.ensureCustomElements("moz-button-group");
+
     PanelMultiView.openPopup(panel, targetButton, {
       position: "bottomright topright",
       triggerEvent: event,
