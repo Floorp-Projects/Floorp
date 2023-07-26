@@ -6998,6 +6998,7 @@ exports.CSS_PROPERTIES = {
       "large",
       "larger",
       "lighter",
+      "math",
       "medium",
       "menu",
       "message-box",
@@ -7127,6 +7128,7 @@ exports.CSS_PROPERTIES = {
       "initial",
       "large",
       "larger",
+      "math",
       "medium",
       "revert",
       "revert-layer",
@@ -9091,6 +9093,22 @@ exports.CSS_PROPERTIES = {
       "next",
       "ordered",
       "pack",
+      "revert",
+      "revert-layer",
+      "unset"
+    ]
+  },
+  "math-depth": {
+    "isInherited": true,
+    "subproperties": [
+      "math-depth"
+    ],
+    "supports": [],
+    "values": [
+      "add",
+      "auto-add",
+      "inherit",
+      "initial",
       "revert",
       "revert-layer",
       "unset"

@@ -7348,11 +7348,16 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
                     Err(..) => return false,
                 }
             },
-            // Map absolute-size keywords to sizes.
             specified::FontSize::Keyword(info) => {
+                let keyword = if info.kw != specified::FontSizeKeyword::Math {
+                  info.kw
+                } else {
+                  specified::FontSizeKeyword::Medium
+                };
+                // Map absolute-size keywords to sizes.
                 // TODO: Maybe get a meaningful quirks / base size from the caller?
                 let quirks_mode = QuirksMode::NoQuirks;
-                info.kw
+                keyword
                     .to_length_without_context(
                         quirks_mode,
                         computed::Length::new(specified::FONT_MEDIUM_PX),
