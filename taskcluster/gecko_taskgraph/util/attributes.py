@@ -26,6 +26,7 @@ RELEASE_PROJECTS = {
 RELEASE_PROMOTION_PROJECTS = {
     "jamun",
     "maple",
+    "pine",
     "try",
     "try-comm-central",
 } | RELEASE_PROJECTS

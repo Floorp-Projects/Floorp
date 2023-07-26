@@ -101,7 +101,8 @@ PER_PROJECT_PARAMETERS = {
         "release_type": "esr115",
     },
     "pine": {
-        "target_tasks_method": "pine_tasks",
+        "target_tasks_method": "default",
+        "release_type": "nightly-pine",
     },
     "kaios": {
         "target_tasks_method": "kaios_tasks",
