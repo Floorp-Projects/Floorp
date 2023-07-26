@@ -177,7 +177,7 @@ bool LaunchModernSettingsDialogDefaultApps() {
     return LaunchMsSettingsProtocol();
   }
 
-  if (!mozilla::IsWindowsBuildOrLater(14965) && !IsWindowsLogonConnected() &&
+  if (!mozilla::IsWindows10BuildOrLater(14965) && !IsWindowsLogonConnected() &&
       SettingsAppBelievesConnected()) {
     // Use the classic Control Panel to work around a bug of older
     // builds of Windows 10.
