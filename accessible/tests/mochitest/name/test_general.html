@@ -267,6 +267,9 @@
       const shadowButtonHiddenText = shadowRoot.getElementById("shadowButtonHiddenText");
       testName(shadowButtonHiddenText, "shadowButtonHiddenText");
 
+      // Label from a hidden element containing script and style elements.
+      testName("buttonScriptStyle", "content");
+
       SimpleTest.finish();
     }
 
@@ -751,5 +754,13 @@
     const shadowRoot = shadowHost.attachShadow({ mode: "open" });
     shadowRoot.append(document.getElementById("shadowTemplate").content.cloneNode(true));
   </script>
+
+  <!-- aria-labelledby referring to a hidden container with script/style -->
+  <button id="buttonScriptStyle" aria-labelledby="hiddenScriptStyle"></button>
+  <div id="hiddenScriptStyle" hidden>
+    <script> 42; </script>
+    <style> .noOp {} </style>
+    <span>content</span>
+  </div>
 </body>
 </html>
