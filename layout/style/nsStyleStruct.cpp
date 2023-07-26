@@ -89,17 +89,18 @@ bool StyleCssUrlData::operator==(const StyleCssUrlData& aOther) const {
 
 StyleLoadData::~StyleLoadData() { Gecko_LoadData_Drop(this); }
 
-already_AddRefed<nsIURI> StyleComputedUrl::ResolveLocalRef(nsIURI* aURI) const {
+already_AddRefed<nsIURI> StyleComputedUrl::ResolveLocalRef(
+    nsIURI* aBase) const {
   nsCOMPtr<nsIURI> result = GetURI();
   if (result && IsLocalRef()) {
     nsCString ref;
     result->GetRef(ref);
 
-    nsresult rv = NS_MutateURI(aURI).SetRef(ref).Finalize(result);
+    nsresult rv = NS_MutateURI(aBase).SetRef(ref).Finalize(result);
 
     if (NS_FAILED(rv)) {
       // If setting the ref failed, just return the original URI.
-      result = aURI;
+      result = aBase;
     }
   }
   return result.forget();
@@ -1382,16 +1383,15 @@ nsChangeHint nsStyleTableBorder::CalcDifference(
     return nsChangeHint_ReconstructFrame;
   }
 
-  if ((mCaptionSide == aNewData.mCaptionSide) &&
-      (mBorderSpacingCol == aNewData.mBorderSpacingCol) &&
-      (mBorderSpacingRow == aNewData.mBorderSpacingRow)) {
+  if (mCaptionSide == aNewData.mCaptionSide &&
+      mBorderSpacingCol == aNewData.mBorderSpacingCol &&
+      mBorderSpacingRow == aNewData.mBorderSpacingRow) {
     if (mEmptyCells == aNewData.mEmptyCells) {
       return nsChangeHint(0);
     }
     return NS_STYLE_HINT_VISUAL;
-  } else {
-    return NS_STYLE_HINT_REFLOW;
   }
+  return NS_STYLE_HINT_REFLOW;
 }
 
 template <typename T>
@@ -1462,7 +1462,7 @@ Maybe<StyleImage::ActualCropRect> StyleImage::ComputeActualCropRect() const {
     return Nothing();
   }
 
-  auto& rect = AsRect();
+  const auto& rect = AsRect();
 
   int32_t left = ConvertToPixelCoord(rect->left, imageSize.width);
   int32_t top = ConvertToPixelCoord(rect->top, imageSize.height);
@@ -1583,8 +1583,8 @@ void StyleImage::ResolveImage(Document& aDoc, const StyleImage* aOld) {
   if (IsResolved()) {
     return;
   }
-  auto* old = aOld ? aOld->GetImageRequestURLValue() : nullptr;
-  auto* url = GetImageRequestURLValue();
+  const auto* old = aOld ? aOld->GetImageRequestURLValue() : nullptr;
+  const auto* url = GetImageRequestURLValue();
   // We could avoid this const_cast generating more code but it's not really
   // worth it.
   const_cast<StyleComputedImageUrl*>(url)->ResolveImage(aDoc, old);
@@ -1846,7 +1846,7 @@ static bool SizeDependsOnPositioningAreaSize(const StyleBackgroundSize& aSize,
   }
 
   MOZ_ASSERT(aSize.IsExplicitSize());
-  auto& size = aSize.explicit_size;
+  const auto& size = aSize.AsExplicitSize();
 
   // If either dimension contains a non-zero percentage, rendering for that
   // dimension straightforwardly depends on frame size.
@@ -2006,8 +2006,8 @@ void nsStyleImageLayers::FillAllLayers(uint32_t aMaxItemCount) {
 
 static bool UrlValuesEqual(const StyleImage& aImage,
                            const StyleImage& aOtherImage) {
-  auto* url = aImage.GetImageRequestURLValue();
-  auto* other = aOtherImage.GetImageRequestURLValue();
+  const auto* url = aImage.GetImageRequestURLValue();
+  const auto* other = aOtherImage.GetImageRequestURLValue();
   return url == other || (url && other && *url == *other);
 }
 
@@ -2262,9 +2262,9 @@ void nsStyleDisplay::TriggerImageLoads(Document& aDocument,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mShapeOutside.IsImage()) {
-    auto* old = aOldStyle && aOldStyle->mShapeOutside.IsImage()
-                    ? &aOldStyle->mShapeOutside.AsImage()
-                    : nullptr;
+    const auto* old = aOldStyle && aOldStyle->mShapeOutside.IsImage()
+                          ? &aOldStyle->mShapeOutside.AsImage()
+                          : nullptr;
     // Const-cast is ugly but legit, we could avoid it by generating mut-casts
     // with cbindgen.
     const_cast<StyleImage&>(mShapeOutside.AsImage())
@@ -2794,14 +2794,14 @@ void nsStyleContent::TriggerImageLoads(Document& aDoc,
   auto items = mContent.AsItems().AsSpan();
 
   for (size_t i = 0; i < items.Length(); ++i) {
-    auto& item = items[i];
+    const auto& item = items[i];
     if (!item.IsImage()) {
       continue;
     }
-    auto& image = item.AsImage();
-    auto* oldImage = i < oldItems.Length() && oldItems[i].IsImage()
-                         ? &oldItems[i].AsImage()
-                         : nullptr;
+    const auto& image = item.AsImage();
+    const auto* oldImage = i < oldItems.Length() && oldItems[i].IsImage()
+                               ? &oldItems[i].AsImage()
+                               : nullptr;
     const_cast<StyleImage&>(image).ResolveImage(aDoc, oldImage);
   }
 }
@@ -3093,7 +3093,7 @@ void nsStyleUI::TriggerImageLoads(Document& aDocument,
   auto oldCursorImages = aOldStyle ? aOldStyle->mCursor.images.AsSpan()
                                    : Span<const StyleCursorImage>();
   for (size_t i = 0; i < cursorImages.Length(); ++i) {
-    auto& cursor = cursorImages[i];
+    const auto& cursor = cursorImages[i];
     const auto* oldCursorImage =
         oldCursorImages.Length() > i ? &oldCursorImages[i].image : nullptr;
     const_cast<StyleCursorImage&>(cursor).image.ResolveImage(aDocument,
@@ -3337,8 +3337,8 @@ static bool AnyAutonessChanged(const StyleClipRectOrAuto& aOld,
   if (aOld.IsAuto()) {
     return false;
   }
-  auto& oldRect = aOld.AsRect();
-  auto& newRect = aNew.AsRect();
+  const auto& oldRect = aOld.AsRect();
+  const auto& newRect = aNew.AsRect();
   return oldRect.top.IsAuto() != newRect.top.IsAuto() ||
          oldRect.right.IsAuto() != newRect.right.IsAuto() ||
          oldRect.bottom.IsAuto() != newRect.bottom.IsAuto() ||
@@ -3418,20 +3418,20 @@ static bool TransformOperationHasPercent(const StyleTransformOperation& aOp) {
     case StyleTransformOperation::Tag::TranslateZ:
       return false;
     case StyleTransformOperation::Tag::Translate3D: {
-      auto& translate = aOp.AsTranslate3D();
+      const auto& translate = aOp.AsTranslate3D();
       // NOTE(emilio): z translation is a `<length>`, so can't have percentages.
       return translate._0.HasPercent() || translate._1.HasPercent();
     }
     case StyleTransformOperation::Tag::Translate: {
-      auto& translate = aOp.AsTranslate();
+      const auto& translate = aOp.AsTranslate();
       return translate._0.HasPercent() || translate._1.HasPercent();
     }
     case StyleTransformOperation::Tag::AccumulateMatrix: {
-      auto& accum = aOp.AsAccumulateMatrix();
+      const auto& accum = aOp.AsAccumulateMatrix();
       return accum.from_list.HasPercent() || accum.to_list.HasPercent();
     }
     case StyleTransformOperation::Tag::InterpolateMatrix: {
-      auto& interpolate = aOp.AsInterpolateMatrix();
+      const auto& interpolate = aOp.AsInterpolateMatrix();
       return interpolate.from_list.HasPercent() ||
              interpolate.to_list.HasPercent();
     }
@@ -3478,7 +3478,7 @@ void StyleCalcNode::ScaleLengthsBy(float aScale) {
 
   switch (tag) {
     case Tag::Leaf: {
-      auto& leaf = AsLeaf();
+      const auto& leaf = AsLeaf();
       if (leaf.IsLength()) {
         // This const_cast could be removed by generating more mut-casts, if
         // needed.
@@ -3487,7 +3487,7 @@ void StyleCalcNode::ScaleLengthsBy(float aScale) {
       break;
     }
     case Tag::Clamp: {
-      auto& clamp = AsClamp();
+      const auto& clamp = AsClamp();
       ScaleNode(*clamp.min);
       ScaleNode(*clamp.center);
       ScaleNode(*clamp.max);
@@ -3506,13 +3506,13 @@ void StyleCalcNode::ScaleLengthsBy(float aScale) {
       break;
     }
     case Tag::MinMax: {
-      for (auto& child : AsMinMax()._0.AsSpan()) {
+      for (const auto& child : AsMinMax()._0.AsSpan()) {
         ScaleNode(child);
       }
       break;
     }
     case Tag::Sum: {
-      for (auto& child : AsSum().AsSpan()) {
+      for (const auto& child : AsSum().AsSpan()) {
         ScaleNode(child);
       }
       break;
