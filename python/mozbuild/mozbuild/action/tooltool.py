@@ -1179,7 +1179,7 @@ def fetch_files(
                     log.warning(
                         "Impossible to add file %s to cache folder %s"
                         % (localfile.filename, cache_folder),
-                        exc_info=True,
+                        exc_info=False,
                     )
         else:
             failed_files.append(localfile.filename)
