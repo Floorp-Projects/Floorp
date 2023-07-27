@@ -333,7 +333,7 @@ where
             Component::Where(ref list) |
             Component::Negation(ref list) |
             Component::Is(ref list) => {
-                let sf = selector_list_specificity_and_flags(list.iter());
+                let sf = selector_list_specificity_and_flags(list.slice().iter());
                 if !matches!(*simple_selector, Component::Where(..)) {
                     *specificity += Specificity::from(sf.specificity);
                 }
