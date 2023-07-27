@@ -9395,13 +9395,6 @@
   mirror: always
   rust: true
 
-# Whether to disable the lquote/rquote attributes of the <ms> element.
-- name: mathml.ms_lquote_rquote_attributes.disabled
-  type: bool
-  value: true
-  mirror: always
-  rust: true
-
 # Whether to disable legacy names "thickmathspace", "mediummathspace",
 # "thickmathspace" etc for length attributes.
 - name: mathml.mathspace_names.disabled
