@@ -1489,6 +1489,9 @@ export class FeatureCallout {
     "button-background-active",
     "button-color-active",
     "button-border-active",
+    "link-color",
+    "link-color-hover",
+    "link-color-active",
   ];
 
   /** @type {Object<String, FeatureCalloutTheme>} */
@@ -1514,6 +1517,10 @@ export class FeatureCallout {
         "button-color-active":
           "var(--newtab-text-primary-color, var(--in-content-page-color))",
         "button-border-active": "transparent",
+        "link-color": "LinkText",
+        "link-color-hover": "LinkText",
+        "link-color-active": "ActiveText",
+        "link-color-visited": "VisitedText",
       },
       dark: {
         border:
@@ -1554,6 +1561,10 @@ export class FeatureCallout {
         "button-background-active": "rgb(221, 222, 223)",
         "button-color-active": "rgb(12, 12, 13)",
         "button-border-active": "transparent",
+        "link-color": "LinkText",
+        "link-color-hover": "LinkText",
+        "link-color-active": "ActiveText",
+        "link-color-visited": "VisitedText",
       },
       dark: {
         background: "#1C1B22",
@@ -1588,7 +1599,7 @@ export class FeatureCallout {
         color: "var(--newtab-text-primary-color, WindowText)",
         border:
           "color-mix(in srgb, var(--newtab-background-color-secondary, #FFF) 80%, #000)",
-        "accent-color": "SelectedItem",
+        "accent-color": "#0061e0",
         "button-background": "color-mix(in srgb, transparent 93%, #000)",
         "button-color": "var(--newtab-text-primary-color, WindowText)",
         "button-border": "transparent",
@@ -1598,20 +1609,29 @@ export class FeatureCallout {
         "button-background-active": "color-mix(in srgb, transparent 80%, #000)",
         "button-color-active": "var(--newtab-text-primary-color, WindowText)",
         "button-border-active": "transparent",
+        "link-color": "rgb(0, 97, 224)",
+        "link-color-hover": "rgb(0, 97, 224)",
+        "link-color-active": "color-mix(in srgb, rgb(0, 97, 224) 80%, #000)",
+        "link-color-visited": "rgb(0, 97, 224)",
       },
       dark: {
+        "accent-color": "rgb(0, 221, 255)",
         background: "var(--newtab-background-color-secondary, #42414D)",
         border:
           "color-mix(in srgb, var(--newtab-background-color-secondary, #42414D) 80%, #FFF)",
         "button-background": "color-mix(in srgb, transparent 80%, #000)",
         "button-background-hover": "color-mix(in srgb, transparent 65%, #000)",
         "button-background-active": "color-mix(in srgb, transparent 55%, #000)",
+        "link-color": "rgb(0, 221, 255)",
+        "link-color-hover": "rgb(0,221,255)",
+        "link-color-active": "color-mix(in srgb, rgb(0, 221, 255) 60%, #FFF)",
+        "link-color-visited": "rgb(0, 221, 255)",
       },
       hcm: {
         background: "-moz-dialog",
         color: "-moz-dialogtext",
         border: "-moz-dialogtext",
-        "accent-color": "LinkText",
+        "accent-color": "SelectedItem",
         "button-background": "ButtonFace",
         "button-color": "ButtonText",
         "button-border": "ButtonText",
@@ -1621,6 +1641,10 @@ export class FeatureCallout {
         "button-background-active": "ButtonText",
         "button-color-active": "ButtonFace",
         "button-border-active": "ButtonText",
+        "link-color": "LinkText",
+        "link-color-hover": "LinkText",
+        "link-color-active": "ActiveText",
+        "link-color-visited": "VisitedText",
       },
     },
     // These colors are intended to inherit the user's theme properties from the
@@ -1642,6 +1666,10 @@ export class FeatureCallout {
         "button-background-active": "var(--button-active-bgcolor)",
         "button-color-active": "var(--arrowpanel-color)",
         "button-border-active": "transparent",
+        "link-color": "LinkText",
+        "link-color-hover": "LinkText",
+        "link-color-active": "ActiveText",
+        "link-color-visited": "VisitedText",
       },
     },
   };

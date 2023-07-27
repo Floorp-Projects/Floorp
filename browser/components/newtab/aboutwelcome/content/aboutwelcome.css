@@ -16,11 +16,16 @@
   --fc-button-color-active: var(--fc-button-color-active-light, #15141A);
   --fc-button-border-active: var(--fc-button-border-active-light, transparent);
   --fc-step-color: color-mix(in srgb, currentColor 50%, transparent);
+  --fc-link-color: var(--fc-link-color-light, #0061E0);
+  --fc-link-color-hover: var(--fc-link-color-hover-light, #0250BB);
+  --fc-link-color-active: var(--fc-link-color-active-light, #053E94);
+  color-scheme: light;
   position: absolute;
   transition: opacity 0.5s ease;
   z-index: 2147483645;
   outline: none;
   color: var(--fc-color);
+  accent-color: var(--fc-accent-color);
 }
 @media (prefers-color-scheme: dark) {
   .onboardingContainer.featureCallout {
@@ -37,6 +42,9 @@
     --fc-button-background-active: var(--fc-button-background-active-dark, #5B5B66);
     --fc-button-color-active: var(--fc-button-color-active-dark, #FBFBFE);
     --fc-button-border-active: var(--fc-button-border-active-dark, transparent);
+    --fc-link-color: var(--fc-link-color-dark, #00DDFF);
+    --fc-link-color-hover: var(--fc-link-color-hover-dark, #80EBFF);
+    --fc-link-color-active: var(--fc-link-color-hover-active, #AAF2FF);
   }
 }
 @media (prefers-contrast) {
@@ -55,6 +63,9 @@
     --fc-button-color-active: var(--fc-button-color-active-hcm, ButtonFace);
     --fc-button-border-active: var(--fc-button-border-active-hcm, ButtonText);
     --fc-step-color: var(--fc-accent-color-hcm, LinkText);
+    --fc-link-color: var(--fc-link-color-hcm, LinkText);
+    --fc-link-color-hover: var(--fc-link-color-hover-hcm, LinkText);
+    --fc-link-color-active: var(--fc-link-color-active-hcm, ActiveText);
   }
 }
 @media (-moz-content-prefers-color-scheme: light) {
@@ -73,6 +84,10 @@
     --fc-button-color-active: var(--fc-button-color-active-light, #15141A);
     --fc-button-border-active: var(--fc-button-border-active-light, transparent);
     --fc-step-color: color-mix(in srgb, currentColor 50%, transparent);
+    --fc-link-color: var(--fc-link-color-light, #0061E0);
+    --fc-link-color-hover: var(--fc-link-color-hover-light, #0250BB);
+    --fc-link-color-active: var(--fc-link-color-active-light, #053E94);
+    color-scheme: light;
   }
 }
 @media (-moz-content-prefers-color-scheme: dark) {
@@ -90,6 +105,10 @@
     --fc-button-background-active: var(--fc-button-background-active-dark, #5B5B66);
     --fc-button-color-active: var(--fc-button-color-active-dark, #FBFBFE);
     --fc-button-border-active: var(--fc-button-border-active-dark, transparent);
+    --fc-link-color: var(--fc-link-color-dark, #00DDFF);
+    --fc-link-color-hover: var(--fc-link-color-hover-dark, #80EBFF);
+    --fc-link-color-active: var(--fc-link-color-hover-active, #AAF2FF);
+    color-scheme: dark;
   }
 }
 @media (prefers-contrast) {
@@ -108,6 +127,9 @@
     --fc-button-color-active: var(--fc-button-color-active-hcm, ButtonFace);
     --fc-button-border-active: var(--fc-button-border-active-hcm, ButtonText);
     --fc-step-color: var(--fc-accent-color-hcm, LinkText);
+    --fc-link-color: var(--fc-link-color-hcm, LinkText);
+    --fc-link-color-hover: var(--fc-link-color-hover-hcm, LinkText);
+    --fc-link-color-active: var(--fc-link-color-active-hcm, ActiveText);
   }
 }
 .onboardingContainer.featureCallout.hidden {
@@ -152,6 +174,33 @@
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .welcome-text h2 {
   margin-block: 10px;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .multi-select-container {
+  margin-inline: 30px;
+  padding: 1em 0 0;
+  font-size: 0.8em;
+  color: inherit;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .multi-select-container input[type=radio] {
+  margin-inline-end: 0.5em;
+  min-width: auto;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .cta-link {
+  background: none;
+  text-decoration: underline;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  color: var(--fc-link-color);
+  float: inline-start;
+  margin-inline: 30px 10px;
+  margin-block: 8px;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .cta-link:hover {
+  color: var(--fc-link-color-hover);
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .cta-link:active {
+  color: var(--fc-link-color-active);
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .section-secondary {
   display: none;
