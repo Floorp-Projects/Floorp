@@ -1,4 +1,4 @@
-diff --git a/src/cubeb_aaudio.cpp b/src/cubeb_aaudio.cpp
+diff --git a/src/cubeb_aaudio.cpp b/media/libcubeb/src/cubeb_aaudio.cpp
 --- a/src/cubeb_aaudio.cpp
 +++ b/src/cubeb_aaudio.cpp
 @@ -6,16 +6,17 @@
@@ -19,11 +19,11 @@ diff --git a/src/cubeb_aaudio.cpp b/src/cubeb_aaudio.cpp
  #include <cstring>
  #include <dlfcn.h>
  #include <inttypes.h>
-@@ -1600,16 +1601,19 @@ const static struct cubeb_ops aaudio_ops
-     /*.stream_get_current_device =*/NULL,
-     /*.stream_device_destroy =*/NULL,
-     /*.stream_register_device_changed_callback =*/NULL,
-     /*.register_device_collection_changed =*/NULL};
+@@ -1700,16 +1701,19 @@ const static struct cubeb_ops aaudio_ops
+     /*.stream_get_current_device =*/nullptr,
+     /*.stream_device_destroy =*/nullptr,
+     /*.stream_register_device_changed_callback =*/nullptr,
+     /*.register_device_collection_changed =*/nullptr};
  
  extern "C" /*static*/ int
  aaudio_init(cubeb ** context, char const * /* context_name */)
@@ -32,7 +32,7 @@ diff --git a/src/cubeb_aaudio.cpp b/src/cubeb_aaudio.cpp
 +    return CUBEB_ERROR;
 +  }
    // load api
-   void * libaaudio = NULL;
+   void * libaaudio = nullptr;
  #ifndef DISABLE_LIBAAUDIO_DLOPEN
    libaaudio = dlopen("libaaudio.so", RTLD_NOW);
    if (!libaaudio) {
