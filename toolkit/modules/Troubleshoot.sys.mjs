@@ -1098,15 +1098,11 @@ if (AppConstants.MOZ_SANDBOX) {
       );
       data.effectiveContentSandboxLevel =
         sandboxSettings.effectiveContentSandboxLevel;
-
-      if (AppConstants.platform == "win") {
-        data.contentWin32kLockdownState =
-          sandboxSettings.contentWin32kLockdownStateString;
-
-        data.supportSandboxGpuLevel = Services.prefs.getIntPref(
-          "security.sandbox.gpu.level"
-        );
-      }
+      data.contentWin32kLockdownState =
+        sandboxSettings.contentWin32kLockdownStateString;
+      data.supportSandboxGpuLevel = Services.prefs.getIntPref(
+        "security.sandbox.gpu.level"
+      );
     }
 
     done(data);
