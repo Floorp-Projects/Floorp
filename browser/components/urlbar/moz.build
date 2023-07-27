@@ -61,6 +61,7 @@ EXTRA_JS_MODULES["urlbar/private"] += [
     "private/BaseFeature.sys.mjs",
     "private/BlockedSuggestions.sys.mjs",
     "private/ImpressionCaps.sys.mjs",
+    "private/MDNSuggestions.sys.mjs",
     "private/PocketSuggestions.sys.mjs",
     "private/QuickSuggestRemoteSettings.sys.mjs",
     "private/Weather.sys.mjs",
