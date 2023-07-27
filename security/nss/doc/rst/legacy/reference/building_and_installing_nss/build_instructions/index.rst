@@ -47,7 +47,7 @@ Build instructions
    set to "0".
 
    For Windows, install
-   the `MozillaBuild <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Windows_Prerequisites#mozillabuild>`__ environment
+   the `MozillaBuild <https://firefox-source-docs.mozilla.org/setup/windows_build.html#install-mozillabuild>`__ environment
    and Microsoft Visual Studio 2010. (The free edition works, and other versions like Visual Studio
    2008 and Visual Studio 2012 may also work.) Use start-shell-msvc2010.bat from MozillaBuild to get
    a bash shell with the PATH already configured, and execute these instructions from within that

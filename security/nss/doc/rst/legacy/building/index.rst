@@ -19,12 +19,12 @@ Building NSS
 
 .. container::
 
-   NSS needs a C and C++ compiler.  It has minimal dependencies, including only standard C and C++
+   NSS needs a C and C++ compiler. It has minimal dependencies, including only standard C and C++
    libraries, plus `zlib <https://www.zlib.net/>`__.
 
-   For building, you also need `make <https://www.gnu.org/software/make/>`__.  Ideally, also install
+   For building, you also need `make <https://www.gnu.org/software/make/>`__. Ideally, also install
    `gyp <https://gyp.gsrc.io/>`__ and `ninja <https://ninja-build.org/>`__ and put them on your
-   path.  This is recommended, as the build is faster and more reliable.
+   path. This is recommended, as the build is faster and more reliable.
 
 `Windows <#windows>`__
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -33,7 +33,7 @@ Building NSS
 
    NSS compilation on Windows uses the same shared build system as Mozilla Firefox. You must first
    install the `Windows
-   Prerequisites <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Windows_Prerequisites>`__,
+   Prerequisites <https://firefox-source-docs.mozilla.org/setup/windows_build.html>`__,
    including **MozillaBuild**.
 
    You can also build NSS on the Windows Subsystem for Linux, but the resulting binaries aren't
@@ -78,7 +78,7 @@ Building NSS
 .. container::
 
    Alternatively, there is a ``make`` target called "nss_build_all", which produces a similar
-   result.  This supports some alternative options, but can be a lot slower.
+   result. This supports some alternative options, but can be a lot slower.
 
    .. code::
 
@@ -113,7 +113,7 @@ Building NSS
 
 .. container::
 
-   NSS contains extensive unit tests.  Scripts to run these are found in the ``tests`` directory. 
+   NSS contains extensive unit tests. Scripts to run these are found in the ``tests`` directory.
    Run the standard suite by:
 
    .. code::
@@ -152,7 +152,7 @@ Building NSS
 
    Running all tests can take a considerable amount of time.
 
-   Test output is stored in ``tests_results/security/$HOST.$NUMBER/``.  The file ``results.html``
+   Test output is stored in ``tests_results/security/$HOST.$NUMBER/``. The file ``results.html``
    summarizes the results, ``output.log`` captures all the test output.
 
    Other subdirectories of ``nss/tests`` contain scripts that run a subset of the full suite. Those

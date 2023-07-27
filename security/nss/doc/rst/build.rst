@@ -79,7 +79,7 @@ Building NSS
 
       NSS compilation on Windows uses the same shared build system as Mozilla
       Firefox. You must first install the `Windows Prerequisites
-      <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Windows_Prerequisites>`__,
+      <https://firefox-source-docs.mozilla.org/setup/windows_build.html>`__,
       including **MozillaBuild**.
 
       You can also build NSS on the Windows Subsystem for Linux, but the resulting binaries aren't

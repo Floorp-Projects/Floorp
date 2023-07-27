@@ -8,6 +8,7 @@ Releases
    :glob:
    :hidden:
 
+   nss_3_92.rst
    nss_3_91_0.rst
    nss_3_90_0.rst
    nss_3_89_1.rst
@@ -55,7 +56,7 @@ Releases
 
 .. note::
 
-   **NSS 3.91.0** is the latest version of NSS.
+   **NSS 3.92.0** is the latest version of NSS.
    Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_91_0_release_notes`
 
    **NSS 3.90.0 (ESR)** is the latest version of NSS.
@@ -63,19 +64,15 @@ Releases
 
 .. container::
 
-   Changes in 3.91 included in this release:
+   Changes in 3.92 included in this release:
 
- - Bug 1837431 - Implementation of the HW support check for ADX instruction
- - Bug 1836925 - Removing the support of Curve25519
- - Bug 1839795 - Fix comment about the addition of ticketSupportsEarlyData.
- - Bug 1839327 - Adding args to enable-legacy-db build
- - Bug 1835357 dbtests.sh failure in "certutil dump keys with explicit default trust flags"
- - Bug 1837617: Initialize flags in slot structures
- - Bug 1835425: Improve the length check of RSA input to avoid heap overflow
- - Bug 1829112 - Followup Fixes
- - Bug 1784253: avoid processing unexpected inputs by checking for m_exptmod base sign
- - Bug 1826652: add a limit check on order_k to avoid infinite loop
- - Bug 1834851 - Update HACL* to commit 5f6051d2.
- - Bug 1753026 - add SHA3 to cryptohi and softoken.
- - Bug 1753026: HACL SHA3
- - Bug 1836781 - Disabling ASM C25519 for A but X86_64
+   - Bug 1822935 - Set nssckbi version number to 2.62.
+   - Bug 1833270 - Add 4 Atos TrustedRoot Root CA certificates to NSS.
+   - Bug 1839992 - Add 4 SSL.com Root CA certificates.
+   - Bug 1840429 - Add Sectigo E46 and R46 Root CA certificates.
+   - Bug 1840437 - Add LAWtrust Root CA2 (4096).
+   - Bug 1822936 - Remove E-Tugra Certification Authority root. 
+   - Bug 1827224 - Remove Camerfirma Chambers of Commerce Root.
+   - Bug 1840505 - Remove Hongkong Post Root CA 1.
+   - Bug 1842928 - Remove E-Tugra Global Root CA ECC v3 and RSA v3.
+   - Bug 1842937 - Avoid redefining BYTE_ORDER on hppa Linux.
