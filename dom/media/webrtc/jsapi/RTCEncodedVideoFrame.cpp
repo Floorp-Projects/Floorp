@@ -49,28 +49,28 @@ RTCEncodedVideoFrame::RTCEncodedVideoFrame(
   mType = videoFrame.IsKeyFrame() ? RTCEncodedVideoFrameType::Key
                                   : RTCEncodedVideoFrameType::Delta;
 
-  if (videoFrame.GetMetadata().GetFrameId().has_value()) {
-    mMetadata.mFrameId.Construct(*videoFrame.GetMetadata().GetFrameId());
+  if (videoFrame.Metadata().GetFrameId().has_value()) {
+    mMetadata.mFrameId.Construct(*videoFrame.Metadata().GetFrameId());
   }
   mMetadata.mDependencies.Construct();
-  for (const auto dep : videoFrame.GetMetadata().GetFrameDependencies()) {
+  for (const auto dep : videoFrame.Metadata().GetFrameDependencies()) {
     Unused << mMetadata.mDependencies.Value().AppendElement(
         static_cast<unsigned long long>(dep), fallible);
   }
-  mMetadata.mWidth.Construct(videoFrame.GetMetadata().GetWidth());
-  mMetadata.mHeight.Construct(videoFrame.GetMetadata().GetHeight());
-  if (videoFrame.GetMetadata().GetSpatialIndex() >= 0) {
+  mMetadata.mWidth.Construct(videoFrame.Metadata().GetWidth());
+  mMetadata.mHeight.Construct(videoFrame.Metadata().GetHeight());
+  if (videoFrame.Metadata().GetSpatialIndex() >= 0) {
     mMetadata.mSpatialIndex.Construct(
-        videoFrame.GetMetadata().GetSpatialIndex());
+        videoFrame.Metadata().GetSpatialIndex());
   }
-  if (videoFrame.GetMetadata().GetTemporalIndex() >= 0) {
+  if (videoFrame.Metadata().GetTemporalIndex() >= 0) {
     mMetadata.mTemporalIndex.Construct(
-        videoFrame.GetMetadata().GetTemporalIndex());
+        videoFrame.Metadata().GetTemporalIndex());
   }
   mMetadata.mSynchronizationSource.Construct(videoFrame.GetSsrc());
   mMetadata.mPayloadType.Construct(videoFrame.GetPayloadType());
   mMetadata.mContributingSources.Construct();
-  for (const auto csrc : videoFrame.GetMetadata().GetCsrcs()) {
+  for (const auto csrc : videoFrame.Metadata().GetCsrcs()) {
     Unused << mMetadata.mContributingSources.Value().AppendElement(csrc,
                                                                    fallible);
   }
