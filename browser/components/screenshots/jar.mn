@@ -18,6 +18,7 @@ browser.jar:
         content/browser/screenshots/screenshots.css                    (content/screenshots.css)
         content/browser/screenshots/screenshots.html                   (content/screenshots.html)
         content/browser/screenshots/overlay/                           (overlay/**)
+        content/browser/screenshots/overlayHelpers.mjs
 
 
 % content screenshots-overlay %overlay/

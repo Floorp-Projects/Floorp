@@ -692,6 +692,14 @@ let JSWINDOWACTORS = {
     },
     child: {
       esModuleURI: "resource:///actors/ScreenshotsComponentChild.sys.mjs",
+      events: {
+        "Screenshots:Close": { wantUntrusted: true },
+        "Screenshots:Copy": { wantUntrusted: true },
+        "Screenshots:Download": { wantUntrusted: true },
+        "Screenshots:HidePanel": { wantUntrusted: true },
+        "Screenshots:ShowPanel": { wantUntrusted: true },
+        "Screenshots:RecordEvent": { wantUntrusted: true },
+      },
     },
     enablePreference: "screenshots.browser.component.enabled",
   },

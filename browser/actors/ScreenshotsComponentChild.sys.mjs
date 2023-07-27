@@ -7,11 +7,18 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
-  ScreenshotsOverlayChild:
-    "resource:///modules/ScreenshotsOverlayChild.sys.mjs",
+  ScreenshotsOverlay: "resource:///modules/ScreenshotsOverlayChild.sys.mjs",
 });
 
 export class ScreenshotsComponentChild extends JSWindowActorChild {
+  #resizeTask;
+  #scrollTask;
+  #overlay;
+
+  get overlay() {
+    return this.#overlay;
+  }
+
   receiveMessage(message) {
     switch (message.name) {
       case "Screenshots:ShowOverlay":
@@ -19,13 +26,13 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
       case "Screenshots:HideOverlay":
         return this.endScreenshotsOverlay();
       case "Screenshots:isOverlayShowing":
-        return this._overlay?._initialized;
+        return this.overlay?.initialized;
       case "Screenshots:getFullPageBounds":
         return this.getFullPageBounds();
       case "Screenshots:getVisibleBounds":
         return this.getVisibleBounds();
       case "Screenshots:getDocumentTitle":
-        return this.getTitle();
+        return this.getDocumentTitle();
     }
     return null;
   }
@@ -41,28 +48,47 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
         this.requestCancelScreenshot("navigation");
         break;
       case "resize":
-        if (!this._resizeTask && this._overlay?._initialized) {
-          this._resizeTask = new lazy.DeferredTask(() => {
-            this._overlay.updateScreenshotsSize("resize");
+        if (!this.#resizeTask && this.overlay?.initialized) {
+          this.#resizeTask = new lazy.DeferredTask(() => {
+            this.overlay.updateScreenshotsOverlayDimensions("resize");
           }, 16);
         }
-        this._resizeTask.arm();
+        this.#resizeTask.arm();
         break;
       case "scroll":
-        if (!this._scrollTask && this._overlay?._initialized) {
-          this._scrollTask = new lazy.DeferredTask(() => {
-            this._overlay.updateScreenshotsSize("scroll");
+        if (!this.#scrollTask && this.overlay?.initialized) {
+          this.#scrollTask = new lazy.DeferredTask(() => {
+            this.overlay.updateScreenshotsOverlayDimensions("scroll");
           }, 16);
         }
-        this._scrollTask.arm();
+        this.#scrollTask.arm();
         break;
       case "visibilitychange":
         if (
           event.target.visibilityState === "hidden" &&
-          this._overlay?.stateHandler.getState() === "crosshairs"
+          this.overlay?.state === "crosshairs"
         ) {
           this.requestCancelScreenshot("navigation");
         }
+        break;
+      case "Screenshots:Close":
+        this.requestCancelScreenshot(event.detail.reason);
+        break;
+      case "Screenshots:Copy":
+        this.requestCopyScreenshot(event.detail.region);
+        break;
+      case "Screenshots:Download":
+        this.requestDownloadScreenshot(event.detail.region);
+        break;
+      case "Screenshots:RecordEvent":
+        let { eventName, reason, args } = event.detail;
+        this.recordTelemetryEvent(eventName, reason, args);
+        break;
+      case "Screenshots:ShowPanel":
+        this.showPanel();
+        break;
+      case "Screenshots:HidePanel":
+        this.hidePanel();
         break;
     }
   }
@@ -78,17 +104,25 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     this.endScreenshotsOverlay();
   }
 
-  requestCopyScreenshot(box) {
-    box.devicePixelRatio = this.contentWindow.devicePixelRatio;
-    this.sendAsyncMessage("Screenshots:CopyScreenshot", box);
+  /**
+   * Send a request to copy the screenshots
+   * @param {Object} region The region dimensions of the screenshot to be copied
+   */
+  requestCopyScreenshot(region) {
+    region.devicePixelRatio = this.contentWindow.devicePixelRatio;
+    this.sendAsyncMessage("Screenshots:CopyScreenshot", { region });
     this.endScreenshotsOverlay();
   }
 
-  requestDownloadScreenshot(box) {
-    box.devicePixelRatio = this.contentWindow.devicePixelRatio;
+  /**
+   * Send a request to download the screenshots
+   * @param {Object} region The region dimensions of the screenshot to be downloaded
+   */
+  requestDownloadScreenshot(region) {
+    region.devicePixelRatio = this.contentWindow.devicePixelRatio;
     this.sendAsyncMessage("Screenshots:DownloadScreenshot", {
-      title: this.getTitle(),
-      downloadBox: box,
+      title: this.getDocumentTitle(),
+      region,
     });
     this.endScreenshotsOverlay();
   }
@@ -101,13 +135,8 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     this.sendAsyncMessage("Screenshots:HidePanel");
   }
 
-  getTitle() {
+  getDocumentTitle() {
     return this.document.title;
-  }
-
-  scrollWindow(x, y) {
-    this.contentWindow.scrollBy(x, y);
-    this._overlay.updateScreenshotsSize("scroll");
   }
 
   /**
@@ -161,11 +190,8 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     }
     await this.documentIsReady();
     let overlay =
-      this._overlay ||
-      (this._overlay = new lazy.ScreenshotsOverlayChild.AnonymousContentOverlay(
-        this.document,
-        this
-      ));
+      this.overlay ||
+      (this.#overlay = new lazy.ScreenshotsOverlay(this.document));
     this.document.addEventListener("keydown", this);
     this.document.ownerGlobal.addEventListener("beforeunload", this);
     this.contentWindow.addEventListener("resize", this);
@@ -176,10 +202,7 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
   }
 
   /**
-   * Remove the screenshots overlay.
-   *
-   * @returns {Boolean}
-   *   true when the overlay has been removed otherwise false
+   * Removes event listeners and the screenshots overlay.
    */
   endScreenshotsOverlay() {
     this.document.removeEventListener("keydown", this);
@@ -187,15 +210,14 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     this.contentWindow.removeEventListener("resize", this);
     this.contentWindow.removeEventListener("scroll", this);
     this.contentWindow.removeEventListener("visibilitychange", this);
-    this._overlay?.tearDown();
-    this._resizeTask?.disarm();
-    this._scrollTask?.disarm();
-    return true;
+    this.overlay?.tearDown();
+    this.#resizeTask?.disarm();
+    this.#scrollTask?.disarm();
   }
 
   didDestroy() {
-    this._resizeTask?.disarm();
-    this._scrollTask?.disarm();
+    this.#resizeTask?.disarm();
+    this.#scrollTask?.disarm();
   }
 
   /**
@@ -221,12 +243,13 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
    *        The scroll height of the content window.
    */
   getFullPageBounds() {
-    let doc = this.document.documentElement;
+    let { scrollMinX, scrollMinY, scrollWidth, scrollHeight } =
+      this.#overlay.windowDimensions.dimensions;
     let rect = {
-      x1: doc.clientLeft,
-      y1: doc.clientTop,
-      width: doc.scrollWidth,
-      height: doc.scrollHeight,
+      left: scrollMinX,
+      top: scrollMinY,
+      width: scrollWidth,
+      height: scrollHeight,
       devicePixelRatio: this.contentWindow.devicePixelRatio,
     };
     return rect;
@@ -256,18 +279,19 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
    *        The height of the content window.
    */
   getVisibleBounds() {
-    let doc = this.document.documentElement;
+    let { scrollX, scrollY, clientWidth, clientHeight } =
+      this.#overlay.windowDimensions.dimensions;
     let rect = {
-      x1: doc.scrollLeft,
-      y1: doc.scrollTop,
-      width: doc.clientWidth,
-      height: doc.clientHeight,
+      left: scrollX,
+      top: scrollY,
+      width: clientWidth,
+      height: clientHeight,
       devicePixelRatio: this.contentWindow.devicePixelRatio,
     };
     return rect;
   }
 
-  recordTelemetryEvent(type, object, args) {
+  recordTelemetryEvent(type, object, args = {}) {
     Services.telemetry.recordEvent("screenshots", type, object, null, args);
   }
 }
