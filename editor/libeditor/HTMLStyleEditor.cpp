@@ -2043,6 +2043,11 @@ HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges(
         return Err(NS_ERROR_FAILURE);
       }
       range.SetStart(std::move(startOfRange));
+    } else if (MOZ_UNLIKELY(!range.IsPositioned())) {
+      NS_WARNING(
+          "HTMLEditor::SplitAncestorStyledInlineElementsAt() caused unexpected "
+          "DOM tree");
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
     return result;
   }();
@@ -2063,7 +2068,7 @@ HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges(
       return result;
     }
     tracker.FlushAndStopTracking();
-    if (result.inspect().Handled()) {
+    if (NS_WARN_IF(result.inspect().Handled())) {
       auto endOfRange = result.inspect().AtSplitPoint<EditorDOMPoint>();
       if (!endOfRange.IsSet()) {
         result.inspect().IgnoreCaretPointSuggestion();
@@ -2073,6 +2078,11 @@ HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges(
         return Err(NS_ERROR_FAILURE);
       }
       range.SetEnd(std::move(endOfRange));
+    } else if (MOZ_UNLIKELY(!range.IsPositioned())) {
+      NS_WARNING(
+          "HTMLEditor::SplitAncestorStyledInlineElementsAt() caused unexpected "
+          "DOM tree");
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
     return result;
   }();
