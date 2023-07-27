@@ -3509,34 +3509,43 @@ void SVGTextFrame::SelectSubString(nsIContent* aContent, uint32_t charnum,
 }
 
 /**
- * Implements the SVG DOM GetSubStringLength method for the specified
- * text content element.
+ * For some content we cannot (or currently cannot) compute the length
+ * without reflowing.  In those cases we need to fall back to using
+ * GetSubStringLengthSlowFallback.
+ *
+ * We fall back for textPath since we need glyph positioning in order to
+ * tell if any characters should be ignored due to having fallen off the
+ * end of the textPath.
+ *
+ * We fall back for bidi because GetTrimmedOffsets does not produce the
+ * correct results for bidi continuations when passed aPostReflow = false.
+ * XXX It may be possible to determine which continuations to trim from (and
+ * which sides), but currently we don't do that.  It would require us to
+ * identify the visual (rather than logical) start and end of the line, to
+ * avoid trimming at line-internal frame boundaries.  Maybe nsBidiPresUtils
+ * methods like GetFrameToRightOf and GetFrameToLeftOf would help?
+ *
  */
-float SVGTextFrame::GetSubStringLength(nsIContent* aContent, uint32_t charnum,
-                                       uint32_t nchars, ErrorResult& aRv) {
-  // For some content we cannot (or currently cannot) compute the length
-  // without reflowing.  In those cases we need to fall back to using
-  // GetSubStringLengthSlowFallback.
-  //
-  // We fall back for textPath since we need glyph positioning in order to
-  // tell if any characters should be ignored due to having fallen off the
-  // end of the textPath.
-  //
-  // We fall back for bidi because GetTrimmedOffsets does not produce the
-  // correct results for bidi continuations when passed aPostReflow = false.
-  // XXX It may be possible to determine which continuations to trim from (and
-  // which sides), but currently we don't do that.  It would require us to
-  // identify the visual (rather than logical) start and end of the line, to
-  // avoid trimming at line-internal frame boundaries.  Maybe nsBidiPresUtils
-  // methods like GetFrameToRightOf and GetFrameToLeftOf would help?
-  //
+bool SVGTextFrame::RequiresSlowFallbackForSubStringLength() {
   TextFrameIterator frameIter(this);
   for (nsTextFrame* frame = frameIter.Current(); frame;
        frame = frameIter.Next()) {
     if (frameIter.TextPathFrame() || frame->GetNextContinuation()) {
-      return GetSubStringLengthSlowFallback(aContent, charnum, nchars, aRv);
+      return true;
     }
   }
+  return false;
+}
+
+/**
+ * Implements the SVG DOM GetSubStringLength method for the specified
+ * text content element.
+ */
+float SVGTextFrame::GetSubStringLengthFastPath(nsIContent* aContent,
+                                               uint32_t charnum,
+                                               uint32_t nchars,
+                                               ErrorResult& aRv) {
+  MOZ_ASSERT(!RequiresSlowFallbackForSubStringLength());
 
   // We only need our text correspondence to be up to date (no need to call
   // UpdateGlyphPositioning).
@@ -3630,15 +3639,6 @@ float SVGTextFrame::GetSubStringLengthSlowFallback(nsIContent* aContent,
                                                    uint32_t charnum,
                                                    uint32_t nchars,
                                                    ErrorResult& aRv) {
-  // We need to make sure that we've been reflowed before updating the glyph
-  // positioning.
-  // XXX perf: It may be possible to limit reflow to just calling ReflowSVG,
-  // but we would still need to resort to full reflow for percentage
-  // positioning attributes.  For now we just do a full reflow regardless since
-  // the cases that would cause us to be called are relatively uncommon.
-  RefPtr<mozilla::PresShell> presShell = PresShell();
-  presShell->FlushPendingNotifications(FlushType::Layout);
-
   UpdateGlyphPositioning();
 
   // Convert charnum/nchars from addressable characters relative to
