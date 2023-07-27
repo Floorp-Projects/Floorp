@@ -115,7 +115,7 @@ internal class TimePickerDialogFragment :
             it.setButton(BUTTON_NEUTRAL, context.getString(R.string.mozac_feature_prompts_clear), this)
         }
 
-        return dialog.withCenterAlignedButtons()
+        return dialog
     }
 
     /**
@@ -124,6 +124,17 @@ internal class TimePickerDialogFragment :
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
         onClick(dialog, BUTTON_NEGATIVE)
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        val alertDialog = dialog
+        if (alertDialog is AlertDialog) {
+            // We want to call the extension function after the show() call on the dialog,
+            // and the DialogFragment does that call during onStart().
+            alertDialog.withCenterAlignedButtons()
+        }
     }
 
     // Create the appropriate time picker dialog for the given step value.
@@ -137,7 +148,7 @@ internal class TimePickerDialogFragment :
                     cal.hour,
                     cal.minute,
                     DateFormat.is24HourFormat(context),
-                ).withCenterAlignedButtons()
+                )
             }
         }
 
@@ -170,7 +181,6 @@ internal class TimePickerDialogFragment :
                         this,
                     )
                 }
-                .withCenterAlignedButtons()
         }
 
         return if (!shouldShowSecondsPicker(stepSize?.toFloat())) {
