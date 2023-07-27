@@ -808,8 +808,6 @@ IdentityCredential::PromptUserToSelectProvider(
         resultPromise->Reject(
             Promise::TryExtractNSResultFromRejectionValue(aValue), __func__);
       });
-  showPromptPromise->AppendNativeHandler(
-      new MozPromiseRejectOnDestruction(resultPromise, __func__));
 
   return resultPromise;
 }
@@ -888,8 +886,6 @@ IdentityCredential::PromptUserToSelectAccount(
         resultPromise->Reject(
             Promise::TryExtractNSResultFromRejectionValue(aValue), __func__);
       });
-  showPromptPromise->AppendNativeHandler(
-      new MozPromiseRejectOnDestruction(resultPromise, __func__));
 
   return resultPromise;
 }
@@ -1011,8 +1007,6 @@ IdentityCredential::PromptUserWithPolicy(
                       Promise::TryExtractNSResultFromRejectionValue(aValue),
                       __func__);
                 });
-            showPromptPromise->AppendNativeHandler(
-                new MozPromiseRejectOnDestruction(resultPromise, __func__));
             return resultPromise;
           },
           [](nsresult error) {
