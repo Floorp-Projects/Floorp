@@ -10,6 +10,7 @@ import androidx.lifecycle.LifecycleRegistry
 import androidx.navigation.NavController
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
@@ -55,12 +56,14 @@ class PwaOnboardingObserverTest {
         settings = mockk(relaxed = true)
         webAppUseCases = mockk(relaxed = true)
 
-        pwaOnboardingObserver = PwaOnboardingObserver(
-            store = store,
-            lifecycleOwner = lifecycleOwner,
-            navController = navigationController,
-            settings = settings,
-            webAppUseCases = webAppUseCases,
+        pwaOnboardingObserver = spyk(
+            PwaOnboardingObserver(
+                store = store,
+                lifecycleOwner = lifecycleOwner,
+                navController = navigationController,
+                settings = settings,
+                webAppUseCases = webAppUseCases,
+            ),
         )
         every { pwaOnboardingObserver.navigateToPwaOnboarding() } returns Unit
     }
