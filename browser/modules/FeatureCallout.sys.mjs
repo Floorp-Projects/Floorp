@@ -129,7 +129,7 @@ export class FeatureCallout {
    */
   get _loadPageEventManager() {
     if (!this._pageEventManager) {
-      this._pageEventManager = new lazy.PageEventManager(this.doc);
+      this._pageEventManager = new lazy.PageEventManager(this.win);
     }
     return this._pageEventManager;
   }
@@ -201,6 +201,10 @@ export class FeatureCallout {
       }
       this.ready = false;
       this._container?.classList.add("hidden");
+      this._pageEventManager?.emit({
+        type: "touradvance",
+        target: this._container,
+      });
       this._pageEventManager?.clear();
       // wait for fade out transition
       this.win.setTimeout(async () => {
@@ -223,6 +227,7 @@ export class FeatureCallout {
           }
         }
         this._container?.remove();
+        this.renderObserver?.disconnect();
         this._removePositionListeners();
         this.doc.querySelector(`[src="${BUNDLE_SRC}"]`)?.remove();
         if (nextMessage) {
@@ -1056,6 +1061,10 @@ export class FeatureCallout {
       passive: true,
     });
     this.win.removeEventListener("keypress", this, { capture: true });
+    this._pageEventManager?.emit({
+      type: "tourend",
+      target: this._container,
+    });
     this._pageEventManager?.clear();
 
     // Delete almost everything to get this ready to show a different message.
@@ -1234,21 +1243,24 @@ export class FeatureCallout {
 
   /**
    * For each member of the screen's page_event_listeners array, add a listener.
-   * @param {Array<PageEventListener>} listeners An array of listeners to set up
+   * @param {Array<PageEventListenerConfig>} listeners
    *
-   * @typedef {Object} PageEventListener
+   * @typedef {Object} PageEventListenerConfig
    * @property {PageEventListenerParams} params Event listener parameters
    * @property {PageEventListenerAction} action Sent when the event fires
    *
    * @typedef {Object} PageEventListenerParams See PageEventManager.sys.mjs
    * @property {String} type Event type string e.g. `click`
-   * @property {String} selectors Target selector, e.g. `tag.class, #id[attr]`
+   * @property {String} [selectors] Target selector, e.g. `tag.class, #id[attr]`
    * @property {PageEventListenerOptions} [options] addEventListener options
    *
    * @typedef {Object} PageEventListenerOptions
    * @property {Boolean} [capture] Use event capturing phase?
    * @property {Boolean} [once] Remove listener after first event?
    * @property {Boolean} [preventDefault] Prevent default action?
+   * @property {Number} [interval] Used only for `timeout` and `interval` event
+   *   types. These don't set up real event listeners, but instead invoke the
+   *   action on a timer.
    *
    * @typedef {Object} PageEventListenerAction Action sent to AboutWelcomeParent
    * @property {String} [type] Action type, e.g. `OPEN_URL`
@@ -1278,7 +1290,10 @@ export class FeatureCallout {
   _handlePageEventAction(action, event) {
     const page = this.location;
     const message_id = this.config?.id.toUpperCase();
-    const source = this._getUniqueElementIdentifier(event.target);
+    const source =
+      typeof event.target === "string"
+        ? event.target
+        : this._getUniqueElementIdentifier(event.target);
     if (action.type) {
       this.win.AWSendEventTelemetry?.({
         event: "PAGE_EVENT",
@@ -1351,34 +1366,37 @@ export class FeatureCallout {
       return !!this.currentScreen;
     }
 
-    this.renderObserver = new this.win.MutationObserver(() => {
-      // Check if the Feature Callout screen has loaded for the first time
-      if (!this.ready && this._container.querySelector(".screen")) {
-        // Once the screen element is added to the DOM, wait for the
-        // animation frame after next to ensure that _positionCallout
-        // has access to the rendered screen with the correct height
-        this.win.requestAnimationFrame(() => {
+    if (!this.renderObserver) {
+      this.renderObserver = new this.win.MutationObserver(() => {
+        // Check if the Feature Callout screen has loaded for the first time
+        if (!this.ready && this._container.querySelector(".screen")) {
+          // Once the screen element is added to the DOM, wait for the
+          // animation frame after next to ensure that _positionCallout
+          // has access to the rendered screen with the correct height
           this.win.requestAnimationFrame(() => {
-            this.ready = true;
-            this._attachPageEventListeners(
-              this.currentScreen?.content?.page_event_listeners
-            );
-            this.win.addEventListener("keypress", this, { capture: true });
-            this._positionCallout();
-            let button = this._container.querySelector(".primary");
-            button.focus();
-            this.win.addEventListener("focus", this, {
-              capture: true, // get the event before retargeting
-              passive: true,
+            this.win.requestAnimationFrame(() => {
+              this.ready = true;
+              this._attachPageEventListeners(
+                this.currentScreen?.content?.page_event_listeners
+              );
+              this.win.addEventListener("keypress", this, { capture: true });
+              this._positionCallout();
+              let button = this._container.querySelector(".primary");
+              button.focus();
+              this.win.addEventListener("focus", this, {
+                capture: true, // get the event before retargeting
+                passive: true,
+              });
             });
           });
-        });
-      }
-    });
+        }
+      });
+    }
 
     this._pageEventManager?.clear();
     this.ready = false;
     this._container?.remove();
+    this.renderObserver?.disconnect();
 
     if (!this.cfrFeaturesUserPref) {
       this.endTour();
