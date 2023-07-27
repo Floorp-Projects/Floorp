@@ -614,10 +614,6 @@ pref("browser.urlbar.addons.featureGate", false);
 // addons suggestions are turned on.
 pref("browser.urlbar.suggest.addons", true);
 
-// If `browser.urlbar.mdn.featureGate` is true, this controls whether
-// mdn suggestions are turned on.
-pref("browser.urlbar.suggest.mdn", true);
-
 // The minimum prefix length of addons keyword the user must type to trigger
 // the suggestion. 0 means the min length should be taken from Nimbus.
 pref("browser.urlbar.addons.minKeywordLength", 0);
