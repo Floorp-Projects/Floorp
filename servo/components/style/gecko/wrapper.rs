@@ -15,7 +15,6 @@
 //! the separation between the style system implementation and everything else.
 
 use crate::applicable_declarations::ApplicableDeclarationBlock;
-use crate::bloom::each_relevant_element_hash;
 use crate::context::{PostAnimationTasks, QuirksMode, SharedStyleContext, UpdateAnimationsTasks};
 use crate::data::ElementData;
 use crate::dom::{LayoutIterator, NodeInfo, OpaqueNode, TDocument, TElement, TNode, TShadowRoot};
@@ -70,7 +69,6 @@ use dom::{DocumentState, ElementState};
 use euclid::default::Size2D;
 use fxhash::FxHashMap;
 use selectors::attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint};
-use selectors::bloom::{BloomFilter, BLOOM_HASH_MASK};
 use selectors::matching::VisitedHandlingMode;
 use selectors::matching::{ElementSelectorFlags, MatchingContext};
 use selectors::sink::Push;
@@ -2091,10 +2089,5 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
     #[inline]
     fn ignores_nth_child_selectors(&self) -> bool {
         self.is_root_of_native_anonymous_subtree()
-    }
-
-    fn add_element_unique_hashes(&self, filter: &mut BloomFilter) -> bool {
-        each_relevant_element_hash(*self, |hash| filter.insert_hash(hash & BLOOM_HASH_MASK));
-        true
     }
 }
