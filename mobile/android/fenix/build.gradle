@@ -78,7 +78,7 @@ buildscript {
         classpath ComponentsDependencies.tools_androidgradle
         classpath ComponentsDependencies.tools_kotlingradle
         classpath FenixDependencies.tools_benchmarkgradle
-        classpath FenixDependencies.androidx_safeargs
+        classpath ComponentsDependencies.androidx_safeargs
         classpath FenixDependencies.osslicenses_plugin
         classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
         classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"

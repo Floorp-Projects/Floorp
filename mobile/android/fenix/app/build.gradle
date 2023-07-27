@@ -640,8 +640,8 @@ dependencies {
     implementation ComponentsDependencies.androidx_paging
     implementation ComponentsDependencies.androidx_preferences
     implementation ComponentsDependencies.androidx_fragment
-    implementation FenixDependencies.androidx_navigation_fragment
-    implementation FenixDependencies.androidx_navigation_ui
+    implementation ComponentsDependencies.androidx_navigation_fragment
+    implementation ComponentsDependencies.androidx_navigation_ui
     implementation ComponentsDependencies.androidx_compose_navigation
     implementation ComponentsDependencies.androidx_recyclerview
 
