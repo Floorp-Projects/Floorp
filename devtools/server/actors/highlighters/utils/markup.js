@@ -312,6 +312,14 @@ CanvasFrameAnonymousContentHelper.prototype = {
     return this.content?.root.getElementById(id);
   },
 
+  getBoundingClientRect(id) {
+    const node = this._getNodeById(id);
+    if (!node) {
+      return null;
+    }
+    return node.getBoundingClientRect();
+  },
+
   getComputedStylePropertyValue(id, property) {
     const node = this._getNodeById(id);
     if (!node) {
