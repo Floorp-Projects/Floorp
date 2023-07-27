@@ -41,7 +41,7 @@ if "SHELL" not in os.environ:
     os.environ["SHELL"] = "/bin/bash"
 
 
-def _activate_mach_virtualenv():
+def _activate_virtualenvs():
     """Adds all available dependencies in the path.
 
     This is done so the runner can be used with no prior
@@ -61,11 +61,13 @@ def _activate_mach_virtualenv():
     ]
 
     from mach.site import (
+        CommandSiteManager,
         ExternalPythonSite,
         MachSiteManager,
         SitePackagesSource,
         resolve_requirements,
     )
+    from mach.util import get_state_dir, get_virtualenv_base_dir
 
     mach_site = MachSiteManager(
         str(SRC_ROOT),
@@ -75,6 +77,15 @@ def _activate_mach_virtualenv():
         SitePackagesSource.NONE,
     )
     mach_site.activate()
+
+    command_site_manager = CommandSiteManager.from_environment(
+        str(SRC_ROOT),
+        lambda: os.path.normpath(get_state_dir(True, topsrcdir=str(SRC_ROOT))),
+        "common",
+        get_virtualenv_base_dir(str(SRC_ROOT)),
+    )
+
+    command_site_manager.activate()
 
     if TASKCLUSTER:
         # In CI, the directory structure is different: xpcshell code is in
@@ -221,7 +232,7 @@ def run_tools(mach_cmd, kwargs):
 
 def main(argv=sys.argv[1:]):
     """Used when the runner is directly called from the shell"""
-    _activate_mach_virtualenv()
+    _activate_virtualenvs()
 
     from mach.logging import LoggingManager
     from mach.util import get_state_dir
