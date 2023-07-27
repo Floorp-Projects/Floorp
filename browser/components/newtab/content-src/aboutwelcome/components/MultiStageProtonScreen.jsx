@@ -67,7 +67,7 @@ export const MultiStageProtonScreen = props => {
 };
 
 export const ProtonScreenActionButtons = props => {
-  const { content, addonName } = props;
+  const { content, addonName, activeMultiSelect } = props;
   const defaultValue = content.checkbox?.defaultValue;
 
   const [isChecked, setIsChecked] = useState(defaultValue || false);
@@ -79,6 +79,13 @@ export const ProtonScreenActionButtons = props => {
   ) {
     return null;
   }
+
+  // If we have a multi-select screen, we want to disable the primary button
+  // until the user has selected at least one item.
+  const isPrimaryDisabled = primaryDisabledValue =>
+    primaryDisabledValue === "hasActiveMultiSelect"
+      ? !(activeMultiSelect?.length > 0)
+      : primaryDisabledValue;
 
   return (
     <div
@@ -95,7 +102,7 @@ export const ProtonScreenActionButtons = props => {
           // this.handleAction() where in the content tree it should take
           // the action to execute from.
           value={isChecked ? "checkbox" : "primary_button"}
-          disabled={content.primary_button?.disabled === true}
+          disabled={isPrimaryDisabled(content.primary_button?.disabled)}
           onClick={props.handleAction}
           data-l10n-args={
             addonName
@@ -512,6 +519,7 @@ export class ProtonScreen extends React.PureComponent {
                 content={content}
                 addonName={this.props.addonName}
                 handleAction={this.props.handleAction}
+                activeMultiSelect={this.props.activeMultiSelect}
               />
             </div>
             {!hideStepsIndicator ? this.renderStepsIndicator() : null}
