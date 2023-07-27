@@ -7,8 +7,6 @@ import { html, ifDefined } from "lit.all.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "browser/components/shopping/content/shopping-card.mjs";
 
-// window.MozXULElement.insertFTLIfNeeded("preview/shopping.ftl");
-
 export default {
   title: "Domain-specific UI Widgets/Shopping/Shopping Card",
   component: "shopping-card",
