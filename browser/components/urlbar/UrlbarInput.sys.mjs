@@ -2584,9 +2584,14 @@ export class UrlbarInput {
    *   The trimmed string
    */
   _trimValue(val) {
-    return lazy.UrlbarPrefs.get("trimURLs")
+    let trimmedValue = lazy.UrlbarPrefs.get("trimURLs")
       ? lazy.BrowserUIUtils.trimURL(val)
       : val;
+    // Only trim value if the directionality doesn't change to RTL.
+    return this.window.windowUtils.getDirectionFromText(trimmedValue) ==
+      this.window.windowUtils.DIRECTION_RTL
+      ? val
+      : trimmedValue;
   }
 
   /**
