@@ -302,6 +302,9 @@ class BrowsingContextModule extends Module {
    * Create a new browsing context using the provided type "tab" or "window".
    *
    * @param {object=} options
+   * @param {boolean=} options.background
+   *     Whether the tab/window should be open in the background. Defaults to false,
+   *     which means that the tab/window will be open in the foreground.
    * @param {string=} options.referenceContext
    *     Id of the top-level browsing context to use as reference.
    *     If options.type is "tab", the new tab will open in the same window as
@@ -316,17 +319,28 @@ class BrowsingContextModule extends Module {
    *     If the browsing context cannot be found.
    */
   async create(options = {}) {
-    const { referenceContext: referenceContextId = null, type } = options;
+    const {
+      background = false,
+      referenceContext: referenceContextId = null,
+      type,
+    } = options;
     if (type !== CreateType.tab && type !== CreateType.window) {
       throw new lazy.error.InvalidArgumentError(
         `Expected "type" to be one of ${Object.values(CreateType)}, got ${type}`
       );
     }
 
+    lazy.assert.boolean(
+      background,
+      lazy.pprint`Expected "background" to be a boolean, got ${background}`
+    );
+
     let browser;
     switch (type) {
       case "window":
-        let newWindow = await lazy.windowManager.openBrowserWindow();
+        const newWindow = await lazy.windowManager.openBrowserWindow({
+          focus: !background,
+        });
         browser = lazy.TabManager.getTabBrowser(newWindow).selectedBrowser;
         break;
 
@@ -364,7 +378,7 @@ class BrowsingContextModule extends Module {
         }
 
         const tab = await lazy.TabManager.addTab({
-          focus: false,
+          focus: !background,
           referenceTab,
         });
         browser = lazy.TabManager.getBrowserForTab(tab);
