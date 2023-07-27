@@ -205,3 +205,25 @@ div.fold-trigger {
   border: 1px solid var(--in-content-border-color);
   margin-inline: 1px;
 }
+
+.copy-button-base {
+  padding-inline-end: 0.25em;
+}
+
+.copy-button {
+  visibility: hidden;
+}
+
+.pref:hover > .copy-button {
+  visibility: visible;
+}
+
+.copy-button-fade-out {
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+.copy-button-fade-in {
+  opacity: 1;
+  transition: opacity 0.5s;
+}

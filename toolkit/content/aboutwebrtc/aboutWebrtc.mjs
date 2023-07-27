@@ -462,7 +462,7 @@ class ShowTab extends Control {
     // Replace previous info
     peerConnections.replaceWith(pcDiv);
     connectionLog.replaceWith(logDiv);
-    userPrefs.replaceWith((userPrefs = renderUserPrefs()));
+    userPrefs.replaceWith((userPrefs = renderUserPrefs(rndr)));
 
     peerConnections = pcDiv;
     connectionLog = logDiv;
@@ -1570,18 +1570,7 @@ function candidateToString({
   return `${address}:${port}/${protocol}(${candidateType})${proxied}`;
 }
 
-function renderUserPrefs() {
-  const getPref = key => {
-    switch (Services.prefs.getPrefType(key)) {
-      case Services.prefs.PREF_BOOL:
-        return Services.prefs.getBoolPref(key);
-      case Services.prefs.PREF_INT:
-        return Services.prefs.getIntPref(key);
-      case Services.prefs.PREF_STRING:
-        return Services.prefs.getStringPref(key);
-    }
-    return "";
-  };
+function renderUserPrefs(rndr) {
   const prefs = [
     "media.aboutwebrtc",
     "media.peerconnection",
@@ -1590,12 +1579,12 @@ function renderUserPrefs() {
     "media.gmp-gmpopenh264.enabled",
   ];
   const hidden_prefs = ["media.aboutwebrtc.auto_refresh"];
-  const renderPref = p => renderText("p", `${p}: ${getPref(p)}`);
+  const renderPrefLine = pref => renderPref(rndr, pref);
   const display = prefs
     .flatMap(Services.prefs.getChildList)
     .filter(Services.prefs.prefHasUserValue)
     .filter(p => !hidden_prefs.includes(p))
-    .map(renderPref);
+    .map(renderPrefLine);
   return renderElements(
     "div",
     {
@@ -1698,28 +1687,118 @@ class FoldEffect {
   }
 }
 
+function renderPref(rndr, path) {
+  const copyPrefButton = () => {
+    const button = rndr.text_span(String.fromCodePoint(0x1f4cb), {
+      className: "copy-button-base",
+    });
+    button.classList.add("copy-button");
+    button.onclick = () => {
+      if (!button.classList.contains("copy-button")) {
+        return;
+      }
+
+      const handleAnimation = async () => {
+        const switchFadeDirection = () => {
+          if (button.classList.contains("copy-button-fade-out")) {
+            // We just faded out so let's fade in
+            button.classList.toggle("copy-button-fade-out");
+            button.classList.toggle("copy-button-fade-in");
+          } else {
+            // We just faded in so let's fade out
+            button.classList.toggle("copy-button-fade-out");
+            button.classList.toggle("copy-button-fade-in");
+          }
+        };
+
+        // Fade out clipboard icon
+        // Fade out the clipboard character
+        button.classList.toggle("copy-button-fade-out");
+        // Wait for CSS transition to end
+        await new Promise(r => (button.ontransitionend = r));
+
+        // Fade in checkmark icon
+        // This is the start of fade in.
+        // Switch to the checkmark character
+        button.textContent = String.fromCodePoint(0x2705);
+        // Trigger CSS fade in transition
+        switchFadeDirection();
+        // Wait for CSS transition to end
+        await new Promise(r => (button.ontransitionend = r));
+
+        // Fade out clipboard icon
+        // Trigger CSS fade out transition
+        switchFadeDirection();
+        // Wait for CSS transition to end
+        await new Promise(r => (button.ontransitionend = r));
+
+        // Fade in clipboard icon
+        // This is the start of fade in.
+        // Switch to the clipboard character
+        button.textContent = String.fromCodePoint(0x1f4cb);
+        // Trigger CSS fade in transition
+        switchFadeDirection();
+        // Wait for CSS transition to end
+        await new Promise(r => (button.ontransitionend = r));
+
+        // Remove fade
+        button.classList.toggle("copy-button-fade-in");
+        // Re-enable clicks and hidding when parent div has lost :hover
+        button.classList.add("copy-button");
+      };
+
+      // Note the fade effect is handled in the CSS, we just need to swap
+      // between the different CSS classes. This returns a promise that waits
+      // for the current fade to end, starts the next fade, then resolves.
+
+      navigator.clipboard.writeText(path);
+      // Prevent animation from disappearing when parent div losses :hover,
+      // and prevent additional clicks until the animation finishes.
+      button.classList.remove("copy-button");
+      handleAnimation(); // runs unawaited
+    };
+    return button;
+  };
+
+  const getPref = () => {
+    switch (Services.prefs.getPrefType(path)) {
+      case Services.prefs.PREF_BOOL:
+        return Services.prefs.getBoolPref(path);
+      case Services.prefs.PREF_INT:
+        return Services.prefs.getIntPref(path);
+      case Services.prefs.PREF_STRING:
+        return Services.prefs.getStringPref(path);
+    }
+    return "";
+  };
+
+  return rndr.elems_p({ className: "pref" }, [
+    copyPrefButton(path),
+    rndr.text_span(`${path}: ${getPref(path)}`),
+  ]);
+}
+
 async function renderMediaCtx(rndr) {
   const ctx = WGI.getMediaContext();
-  const boolPref = p => rndr.text_p(`${p}: ${Services.prefs.getBoolPref(p)}`);
-  const intPref = p => rndr.text_p(`${p}: ${Services.prefs.getIntPref(p)}`);
   const prefs = [
-    boolPref("media.peerconnection.video.vp9_enabled"),
-    boolPref("media.peerconnection.video.vp9_preferred"),
-    intPref("media.navigator.video.h264.level"),
-    intPref("media.navigator.video.h264.max_mbps"),
-    intPref("media.navigator.video.h264.max_mbps"),
-    intPref("media.navigator.video.max_fs"),
-    intPref("media.navigator.video.max_fr"),
-    boolPref("media.navigator.video.use_tmmbr"),
-    boolPref("media.navigator.video.use_remb"),
-    boolPref("media.navigator.video.use_transport_cc"),
-    boolPref("media.navigator.audio.use_fec"),
-    boolPref("media.navigator.video.red_ulpfec_enabled"),
+    "media.peerconnection.video.vp9_enabled",
+    "media.peerconnection.video.vp9_preferred",
+    "media.navigator.video.h264.level",
+    "media.navigator.video.h264.max_mbps",
+    "media.navigator.video.h264.max_mbps",
+    "media.navigator.video.max_fs",
+    "media.navigator.video.max_fr",
+    "media.navigator.video.use_tmmbr",
+    "media.navigator.video.use_remb",
+    "media.navigator.video.use_transport_cc",
+    "media.navigator.audio.use_fec",
+    "media.navigator.video.red_ulpfec_enabled",
   ];
 
   const inner = rndr.elems_div({}, [
     rndr.text_p(`hasH264Hardware: ${ctx.hasH264Hardware}`),
-    ...prefs,
+    rndr.elem_hr(),
+    ...prefs.map(pref => renderPref(rndr, pref)),
   ]);
   const outer = document.createElement("div");
   outer.append(rndr.elem_h3({}, "about-webrtc-media-context-heading"));
