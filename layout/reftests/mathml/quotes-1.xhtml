@@ -1,0 +1,39 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<style type="text/css">
+body { font-family:sans-serif; }
+p { height:2em; }
+</style>
+</head>
+<body>
+<p>:<ms xmlns="http://www.w3.org/1998/Math/MathML" lquote="L" rquote="R">_</ms></p>
+<p>:<ms id="m1" xmlns="http://www.w3.org/1998/Math/MathML">_</ms></p>
+<p>:<ms id="m2" xmlns="http://www.w3.org/1998/Math/MathML">_</ms></p>
+<p>:<ms id="m3" xmlns="http://www.w3.org/1998/Math/MathML" lquote="_">_</ms></p>
+<p>:<ms id="m4" xmlns="http://www.w3.org/1998/Math/MathML" rquote="_">_</ms></p>
+<p>:<ms id="m5" xmlns="http://www.w3.org/1998/Math/MathML" lquote="_" rquote="_">_</ms></p>
+<p>:<ms id="m6" xmlns="http://www.w3.org/1998/Math/MathML" lquote="_">_</ms></p>
+<p>:<ms id="m7" xmlns="http://www.w3.org/1998/Math/MathML" rquote="_">_</ms></p>
+<script>
+function doTest() {
+  var m1 = document.getElementById("m1");
+  m1.setAttribute("lquote", "L");
+  var m2 = document.getElementById("m2");
+  m2.setAttribute("rquote", "R");
+  var m3 = document.getElementById("m3");
+  m3.setAttribute("lquote", "L");
+  var m4 = document.getElementById("m4");
+  m4.setAttribute("rquote", "R");
+  var m5 = document.getElementById("m5");
+  m5.removeAttribute("lquote");
+  m5.removeAttribute("rquote");
+  var m6 = document.getElementById("m6");
+  m6.removeAttribute("lquote");
+  var m7 = document.getElementById("m7");
+  m7.removeAttribute("rquote");
+  document.documentElement.removeAttribute('class');
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>
