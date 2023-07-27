@@ -181,12 +181,7 @@ stun_getaddrs_filtered(nr_local_addr addrs[], int maxaddrs, int *count)
           } else {
             addrs[n].interface.type = NR_INTERFACE_TYPE_UNKNOWN;
           }
-#if (_WIN32_WINNT >= 0x0600)
-          /* Note: only >= Vista provide link speed information */
           addrs[n].interface.estimated_speed = tmpAddress->TransmitLinkSpeed / 1000;
-#else
-          addrs[n].interface.estimated_speed = 0;
-#endif
           if (stun_win32_address_temp_v6(u)) {
             addrs[n].flags |= NR_ADDR_FLAG_TEMPORARY;
           }

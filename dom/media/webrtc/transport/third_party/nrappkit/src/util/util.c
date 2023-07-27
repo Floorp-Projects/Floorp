@@ -503,7 +503,7 @@ strlcat(dst, src, siz)
 
 #endif  /* LINUX or WIN32 */
 
-#if defined(USE_OWN_INET_NTOP) || (defined(WIN32) && WINVER < 0x0600)
+#if defined(USE_OWN_INET_NTOP)
 #include <errno.h>
 #ifdef WIN32
 #include <Ws2ipdef.h>
