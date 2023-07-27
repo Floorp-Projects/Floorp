@@ -199,6 +199,12 @@ urlbar:
       type: boolean
       description: >-
         Whether the experiment (or rollout) is related to best match. If true, then the Nimbus exposure event will be recorded when the user first triggers a best match (or would have triggered a best match, for users in the control group). Deprecated, please use `experimentType: "best-match"` instead.
+    mdnFeatureGate:
+      type: boolean
+      setPref: browser.urlbar.mdn.featureGate
+      description: >-
+        Feature gate that controls whether all aspects of the mdn suggestion
+        feature are exposed to the user.
     merinoClientVariants:
       type: string
       fallbackPref: browser.urlbar.merino.clientVariants
