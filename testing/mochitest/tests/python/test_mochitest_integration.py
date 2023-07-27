@@ -229,10 +229,9 @@ def test_output_assertion(flavor, runFailures, runtests, test_name):
     assert tbpl_status == results["tbpl_status"]
     assert log_level == results["log_level"]
 
+    # assertion failure prints error, but still emits test-ok
     test_end = filter_action("test_end", lines)
     assert len(test_end) == results["lines"]
-    # TODO: this should be ASSERT, but moving the assertion check before
-    # the test_end action caused a bunch of failures.
     assert test_end[0]["status"] == "OK"
 
     assertions = filter_action("assertion_count", lines)
