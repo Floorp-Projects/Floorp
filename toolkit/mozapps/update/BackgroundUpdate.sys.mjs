@@ -214,7 +214,7 @@ export var BackgroundUpdate = {
         // The nimbus experiment allows users with unelevated installations
         // to update in the background.
         let allowUnelevated = lazy.NimbusFeatures.backgroundUpdate.getVariable(
-          "allowUpdatesForUnelevatedInstallions"
+          "allowUpdatesForUnelevatedInstallations"
         );
 
         if (!allowUnelevated) {

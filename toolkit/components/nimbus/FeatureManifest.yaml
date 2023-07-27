@@ -1689,7 +1689,7 @@ backgroundUpdate:
     the feature can impact Firefox behaviour and the user experience.
   isEarlyStartup: false
   variables:
-    allowUpdatesForUnelevatedInstallions:
+    allowUpdatesForUnelevatedInstallations:
       description: >-
         Allow the background update process to download and apply updates when
         the Mozilla Maintenance Service is unavailable but the installation
