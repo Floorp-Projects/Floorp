@@ -29,6 +29,7 @@ pref(mathml.legacy_mathvariant_attribute.disabled,false) == mi-mathvariant-2.xht
 != mi-mathvariant-3.html mi-mathvariant-3-ref.html
 != non-spacing-accent-1.xhtml non-spacing-accent-1-ref.xhtml
 == overbar-width-1.xhtml overbar-width-1-ref.xhtml
+pref(mathml.ms_lquote_rquote_attributes.disabled,false) == quotes-1.xhtml quotes-1-ref.xhtml
 != stretchy-underbar-1.xhtml stretchy-underbar-1-ref.xhtml
 != stretchy-munderover-1a.html stretchy-munderover-1-ref.html
 == stretchy-munderover-1b.html stretchy-munderover-1-ref.html
