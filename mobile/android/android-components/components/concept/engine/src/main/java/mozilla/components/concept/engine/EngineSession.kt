@@ -66,6 +66,11 @@ abstract class EngineSession(
         fun onNavigateBack() = Unit
 
         /**
+         * Event to indicate a product URL is currently open.
+         */
+        fun onProductUrlChange(isProductUrl: Boolean) = Unit
+
+        /**
          * Event to indicate that a url was loaded to this session.
          */
         fun onLoadUrl() = Unit

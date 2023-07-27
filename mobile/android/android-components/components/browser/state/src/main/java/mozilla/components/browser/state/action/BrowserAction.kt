@@ -861,6 +861,18 @@ sealed class CookieBannerAction : BrowserAction() {
 }
 
 /**
+ * [BrowserAction] implementations related to updating the [SessionState.ShoppingProduct]
+ * of a single [SessionState] inside [BrowserState]
+ */
+sealed class ShoppingProductAction : BrowserAction() {
+    /**
+     * Updates the [SessionState.ShoppingProduct] state or a a single [SessionState].
+     */
+    data class UpdateProductUrlStatusAction(val tabId: String, val isProductUrl: Boolean) :
+        ShoppingProductAction()
+}
+
+/**
  * [BrowserAction] implementations related to updating [BrowserState.extensions] and
  * [TabSessionState.extensionState].
  */

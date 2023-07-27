@@ -294,6 +294,7 @@ class GeckoEngineSessionTest {
         var observedCanGoBack = false
         var observedCanGoForward = false
         var cookieBanner = CookieBannerHandlingStatus.HANDLED
+        var displaysProduct = false
         engineSession.register(
             object : EngineSession.Observer {
                 override fun onLocationChange(url: String) { observedUrl = url }
@@ -304,6 +305,9 @@ class GeckoEngineSessionTest {
                 override fun onCookieBannerChange(status: CookieBannerHandlingStatus) {
                     cookieBanner = status
                 }
+                override fun onProductUrlChange(isProductUrl: Boolean) {
+                    displaysProduct = isProductUrl
+                }
             },
         )
 
@@ -312,6 +316,8 @@ class GeckoEngineSessionTest {
         navigationDelegate.value.onLocationChange(mock(), "http://mozilla.org", emptyList())
         assertEquals("http://mozilla.org", observedUrl)
         assertEquals(CookieBannerHandlingStatus.NO_DETECTED, cookieBanner)
+        // TO DO: add a positive test case after a test endpoint is implemented in desktop (Bug 1846341)
+        assertEquals(false, displaysProduct)
 
         navigationDelegate.value.onCanGoBack(mock(), true)
         assertEquals(true, observedCanGoBack)

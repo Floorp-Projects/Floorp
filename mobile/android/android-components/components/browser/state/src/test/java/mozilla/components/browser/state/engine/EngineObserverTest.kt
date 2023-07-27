@@ -55,6 +55,7 @@ import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class EngineObserverTest {
+    // TO DO: add tests for product URL after a test endpoint is implemented in desktop (Bug 1846341)
     @Test
     fun engineSessionObserver() {
         val engineSession = object : EngineSession() {

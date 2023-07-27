@@ -707,6 +707,8 @@ class GeckoEngineSession(
             notifyObservers {
                 onCookieBannerChange(CookieBannerHandlingStatus.NO_DETECTED)
             }
+            // Reset the status of current page being product or not when user navigates away.
+            notifyObservers { onProductUrlChange(false) }
             notifyObservers { onLocationChange(url) }
         }
 
@@ -1031,6 +1033,10 @@ class GeckoEngineSession(
 
         override fun onCookieBannerHandled(session: GeckoSession) {
             notifyObservers { onCookieBannerChange(CookieBannerHandlingStatus.HANDLED) }
+        }
+
+        override fun onProductUrl(session: GeckoSession) {
+            notifyObservers { onProductUrlChange(true) }
         }
 
         override fun onFirstComposite(session: GeckoSession) = Unit

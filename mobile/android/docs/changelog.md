@@ -73,6 +73,11 @@ permalink: /changelog/
     * Rename mozac_ic_cookies to mozac_ic_cookies_24
     * Rename mozac_ic_sync to mozac_ic_sync_24
 
+# 117.0
+
+* **concept-engine**
+  * 🌟️️ Add `ProductUrlStatus` to `SessionState` instance to indicate whether or not a product page of a given session state is being displayed. See more on [bug #1842638](https://bugzilla.mozilla.org/show_bug.cgi?id=1842638).
+
 # 116.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v115..releases_v116)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v116/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
