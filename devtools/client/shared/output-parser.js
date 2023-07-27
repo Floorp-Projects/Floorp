@@ -139,7 +139,10 @@ class OutputParser {
     options.expectFilter =
       name === "filter" ||
       (BACKDROP_FILTER_ENABLED && name === "backdrop-filter");
-    options.expectShape = name === "clip-path" || name === "shape-outside";
+    options.expectShape =
+      name === "clip-path" ||
+      name === "shape-outside" ||
+      name === "offset-path";
     options.expectFont = name === "font-family";
     options.supportsColor =
       this.#cssProperties.supportsType(name, "color") ||

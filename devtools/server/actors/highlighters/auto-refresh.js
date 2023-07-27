@@ -130,6 +130,14 @@ class AutoRefreshHighlighter extends EventEmitter {
 
     this._stopRefreshLoop();
     this.currentNode = node;
+
+    // For offset-path, the highlighter needs to be computed from the containing block
+    // of the node, not the node itself.
+    this.useContainingBlock = this.options.mode === "cssOffsetPath";
+    this.drawingNode = this.useContainingBlock
+      ? InspectorUtils.containingBlockOf(this.currentNode)
+      : this.currentNode;
+
     this._updateAdjustedQuads();
     this._startRefreshLoop();
 
@@ -198,10 +206,19 @@ class AutoRefreshHighlighter extends EventEmitter {
   _updateAdjustedQuads() {
     this.currentQuads = {};
 
+    // If we need to use the containing block, and if it is the <html> element,
+    // we need to use the viewport quads.
+    const useViewport =
+      this.useContainingBlock &&
+      this.drawingNode === this.currentNode.ownerDocument.documentElement;
+    const node = useViewport
+      ? this.drawingNode.ownerDocument
+      : this.drawingNode;
+
     for (const region of BOX_MODEL_REGIONS) {
       this.currentQuads[region] = getAdjustedQuads(
         this.contentWindow,
-        this.currentNode,
+        node,
         region,
         { ignoreScroll: this._ignoreScroll, ignoreZoom: this._ignoreZoom }
       );

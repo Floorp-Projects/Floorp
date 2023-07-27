@@ -99,6 +99,15 @@ var highlighterTestSpec = protocol.generateActorSpec({
         value: RetVal("string"),
       },
     },
+    getHighlighterBoundingClientRect: {
+      request: {
+        nodeID: Arg(0, "string"),
+        actorID: Arg(1, "string"),
+      },
+      response: {
+        value: RetVal("json"),
+      },
+    },
     getHighlighterComputedStyle: {
       request: {
         nodeID: Arg(0, "string"),
@@ -273,6 +282,23 @@ class HighlighterTestActor extends protocol.Actor {
     }
 
     return helper.getAttributeForElement(nodeID, name);
+  }
+
+  /**
+   * Get the bounding client rect for an highlighter element, given its ID.
+   *
+   * @param {String} nodeID The full ID of the element to get the DOMRect for
+   * @param {String} actorID The highlighter actor ID
+   * @return {DOMRect} The value, if found, null otherwise
+   */
+  getHighlighterBoundingClientRect(nodeID, actorID) {
+    const helper = getHighlighterCanvasFrameHelper(this.conn, actorID);
+
+    if (!helper) {
+      throw new Error(`Highlighter not found`);
+    }
+
+    return helper.getBoundingClientRect(nodeID);
   }
 
   /**

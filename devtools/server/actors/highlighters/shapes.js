@@ -382,8 +382,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     // and "stroke-box" is not specified. stroke only applies to SVG elements, so use
     // getBBox, which only exists for SVG, to check if currentNode is an SVG element.
     if (
-      this.currentNode.getBBox &&
-      getComputedStyle(this.currentNode).stroke !== "none" &&
+      this.drawingNode.getBBox &&
+      getComputedStyle(this.drawingNode).stroke !== "none" &&
       !this.useStrokeBox
     ) {
       dims = getObjectBoundingBox(
@@ -391,7 +391,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         dims.left,
         dims.width,
         dims.height,
-        this.currentNode
+        this.drawingNode
       );
     }
 
@@ -407,11 +407,11 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     // In an iframe, we get the node's quads relative to the frame, instead of the parent
     // document.
     let dims =
-      this.highlighterEnv.window.document === this.currentNode.ownerDocument
+      this.highlighterEnv.window.document === this.drawingNode.ownerDocument
         ? this.currentQuads[this.referenceBox][0].bounds
         : getAdjustedQuads(
-            this.currentNode.ownerGlobal,
-            this.currentNode,
+            this.drawingNode.ownerGlobal,
+            this.drawingNode,
             this.referenceBox
           )[0].bounds;
     const zoom = getCurrentZoom(this.win);
@@ -422,8 +422,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     // and "stroke-box" is not specified. stroke only applies to SVG elements, so use
     // getBBox, which only exists for SVG, to check if currentNode is an SVG element.
     if (
-      this.currentNode.getBBox &&
-      getComputedStyle(this.currentNode).stroke !== "none" &&
+      this.drawingNode.getBBox &&
+      getComputedStyle(this.drawingNode).stroke !== "none" &&
       !this.useStrokeBox
     ) {
       dims = getObjectBoundingBox(
@@ -431,7 +431,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         dims.left,
         dims.width,
         dims.height,
-        this.currentNode
+        this.drawingNode
       );
     }
 
@@ -2046,9 +2046,14 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       },
     ];
     const geometryTypes = ["margin", "border", "padding", "content"];
+    // default to border for clip-path and offset-path, and margin for shape-outside
+    const defaultGeometryTypesByProperty = new Map([
+      ["clip-path", "border"],
+      ["offset-path", "border"],
+      ["shape-outside", "margin"],
+    ]);
 
-    // default to border for clip-path, and margin for shape-outside
-    let referenceBox = this.property === "clip-path" ? "border" : "margin";
+    let referenceBox = defaultGeometryTypesByProperty.get(this.property);
     for (const geometry of geometryTypes) {
       if (definition.includes(geometry)) {
         referenceBox = geometry;
