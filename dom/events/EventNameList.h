@@ -435,30 +435,23 @@ NON_IDL_EVENT(systemstatusbarclick, eXULSystemStatusBarClick, EventNameType_XUL,
 NON_IDL_EVENT(SVGLoad, eSVGLoad, EventNameType_None, eBasicEventClass)
 NON_IDL_EVENT(SVGScroll, eSVGScroll, EventNameType_None, eBasicEventClass)
 
-// The three SMIL animation events. We mark these as NON_IDL_EVENT even though
-// there exist IDL properties for them, because the IDL properties have
-// different names (onbegin/onend/onrepeat rather than
-// onbeginEvent/onendEvent/onrepeatEvent).
-// And we use EventNameType_None because we don't want IsEventAttributeName to
-// return true for onbeginEvent etc.
+// Only map the ID to the real event name when MESSAGE_TO_EVENT is defined.
+#ifndef MESSAGE_TO_EVENT
+EVENT(begin, eSMILBeginEvent, EventNameType_SMIL, eBasicEventClass)
+#endif
 NON_IDL_EVENT(beginEvent, eSMILBeginEvent, EventNameType_None,
               eSMILTimeEventClass)
+// Only map the ID to the real event name when MESSAGE_TO_EVENT is defined.
+#ifndef MESSAGE_TO_EVENT
+EVENT(end, eSMILEndEvent, EventNameType_SMIL, eBasicEventClass)
+#endif
 NON_IDL_EVENT(endEvent, eSMILEndEvent, EventNameType_None, eSMILTimeEventClass)
+// Only map the ID to the real event name when MESSAGE_TO_EVENT is defined.
+#ifndef MESSAGE_TO_EVENT
+EVENT(repeat, eSMILRepeatEvent, EventNameType_SMIL, eBasicEventClass)
+#endif
 NON_IDL_EVENT(repeatEvent, eSMILRepeatEvent, EventNameType_None,
               eSMILTimeEventClass)
-
-#ifndef MESSAGE_TO_EVENT
-// Repeat the SMIL animation events once more without the Event suffix,
-// so that IsEventAttributeName() will return the right thing for these events.
-// We use eUnidentifiedEvent here so that we don't accidentally treat these
-// as alternate event names for the actual events.
-// See bug 1845422 for cleaning this up.
-NON_IDL_EVENT(begin, eUnidentifiedEvent, EventNameType_SMIL,
-              eSMILTimeEventClass)
-NON_IDL_EVENT(end, eUnidentifiedEvent, EventNameType_SMIL, eSMILTimeEventClass)
-NON_IDL_EVENT(repeat, eUnidentifiedEvent, EventNameType_SMIL,
-              eSMILTimeEventClass)
-#endif
 
 NON_IDL_EVENT(MozAfterPaint, eAfterPaint, EventNameType_None, eBasicEventClass)
 
@@ -537,7 +530,7 @@ EVENT(webkitTransitionEnd, eWebkitTransitionEnd, EventNameType_All,
 // These are only here so that IsEventAttributeName() will return the right
 // thing for these events.  We could probably remove them if we used
 // Element::GetEventNameForAttr on the input to IsEventAttributeName before
-// looking it up in the hashtable... see bug 1845422.
+// looking it up in the hashtable...
 EVENT(webkitanimationend, eUnidentifiedEvent, EventNameType_All,
       eAnimationEventClass)
 EVENT(webkitanimationiteration, eUnidentifiedEvent, EventNameType_All,
