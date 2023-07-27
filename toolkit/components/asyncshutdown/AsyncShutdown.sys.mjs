@@ -553,21 +553,19 @@ Spinner.prototype = {
 
     // Setup the promise that will signal our phase's end.
     let isPhaseEnd = false;
-    let promise;
     try {
-      promise = this._barrier
+      this._barrier
         .wait({
           warnAfterMS: DELAY_WARNING_MS,
           crashAfterMS: DELAY_CRASH_MS,
         })
-        .catch
-        // Additional precaution to be entirely sure that we cannot reject.
-        ();
+        .finally(() => {
+          isPhaseEnd = true;
+        });
     } catch (ex) {
       debug("Error waiting for notification");
       throw ex;
     }
-    promise.then(() => (isPhaseEnd = true)); // This promise cannot reject
 
     // Now, spin the event loop. In case of a hang we will just crash without
     // ever leaving this loop.
@@ -783,10 +781,9 @@ function Barrier(name) {
           // still causes tests to fail.
           Promise.reject(error);
         })
-        .catch
         // Added as a last line of defense, in case `warn`, `this._name` or
         // `safeGetState` somehow throws an error.
-        ();
+        .catch(() => {});
 
       let topFrame = null;
       if (filename == null || lineNumber == null || stack == null) {
