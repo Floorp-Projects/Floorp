@@ -8,7 +8,10 @@
 <script>
 window.addEventListener("load", function() {
   var runner = (parent.TestRunner || parent.wrappedJSObject.TestRunner);
-  runner.testUnloaded();
+  const urlParams = new URLSearchParams(window.location.search);
+  var result = urlParams.get("result", "ERROR");
+  var runtime = urlParams.get("runtime", "-1");
+  runner.testUnloaded(result, runtime);
 
   if (SpecialPowers) {
     SpecialPowers.DOMWindowUtils.runNextCollectorTimer();
