@@ -589,6 +589,11 @@ RefPtr<MediaDataDecoder::InitPromise> FFmpegVideoDecoder<LIBAV_VER>::Init() {
   return InitPromise::CreateAndReject(rv, __func__);
 }
 
+static gfx::ColorRange GetColorRange(enum AVColorRange& aColorRange) {
+  return aColorRange == AVCOL_RANGE_JPEG ? gfx::ColorRange::FULL
+                                         : gfx::ColorRange::LIMITED;
+}
+
 static gfx::ColorDepth GetColorDepth(const AVPixelFormat& aFormat) {
   switch (aFormat) {
     case AV_PIX_FMT_YUV420P:
@@ -747,9 +752,7 @@ FFmpegVideoDecoder<LIBAV_VER>::AllocateTextureClientForImage(
                               : DefaultColorSpace(data.mPictureRect.Size());
   }
   data.mColorDepth = GetColorDepth(aCodecContext->pix_fmt);
-  data.mColorRange = aCodecContext->color_range == AVCOL_RANGE_JPEG
-                         ? gfx::ColorRange::FULL
-                         : gfx::ColorRange::LIMITED;
+  data.mColorRange = GetColorRange(aCodecContext->color_range);
 
   FFMPEG_LOGV(
       "Created plane data, YSize=(%d, %d), CbCrSize=(%d, %d), "
@@ -1330,8 +1333,7 @@ gfx::ColorRange FFmpegVideoDecoder<LIBAV_VER>::GetFrameColorRange() const {
     range = (AVColorRange)mLib->av_frame_get_color_range(mFrame);
   }
 #endif
-  return range == AVCOL_RANGE_JPEG ? gfx::ColorRange::FULL
-                                   : gfx::ColorRange::LIMITED;
+  return GetColorRange(range);
 }
 
 MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
