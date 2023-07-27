@@ -11,7 +11,9 @@
     constructor() {
       super();
       const shadowRoot = this.attachShadow({ mode: "open" });
-      MozXULElement.insertFTLIfNeeded("toolkit/global/notification.ftl");
+      window.MozXULElement?.insertFTLIfNeeded(
+        "toolkit/global/notification.ftl"
+      );
       document.l10n.connectRoot(this.shadowRoot);
       const content = this.constructor.template.content.cloneNode(true);
       shadowRoot.append(content);
