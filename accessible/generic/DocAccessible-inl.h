@@ -8,6 +8,7 @@
 #define mozilla_a11y_DocAccessible_inl_h_
 
 #include "DocAccessible.h"
+#include "LocalAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "NotificationController.h"
 #include "States.h"
