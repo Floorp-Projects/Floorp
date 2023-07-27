@@ -26,10 +26,6 @@ class MockTransformableVideoFrame
   MOCK_METHOD(uint32_t, GetTimestamp, (), (const, override));
   MOCK_METHOD(uint32_t, GetSsrc, (), (const, override));
   MOCK_METHOD(bool, IsKeyFrame, (), (const, override));
-  MOCK_METHOD(const webrtc::VideoFrameMetadata&,
-              GetMetadata,
-              (),
-              (const, override));
   MOCK_METHOD(void,
               SetMetadata,
               (const webrtc::VideoFrameMetadata&),
