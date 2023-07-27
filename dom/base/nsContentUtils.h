@@ -242,6 +242,9 @@ struct EventNameMapping {
   int32_t mType;
   mozilla::EventMessage mMessage;
   mozilla::EventClassID mEventClassID;
+  // True if mAtom is possibly used by special SVG/SMIL events, but
+  // mMessage is eUnidentifiedEvent. See EventNameList.h
+  bool mMaybeSpecialSVGorSMILEvent;
 };
 
 namespace mozilla {

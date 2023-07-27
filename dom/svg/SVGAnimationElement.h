@@ -71,33 +71,6 @@ class SVGAnimationElement : public SVGAnimationElementBase, public SVGTests {
   void EndElement(ErrorResult& rv) { EndElementAt(0.f, rv); }
   void EndElementAt(float offset, ErrorResult& rv);
 
-  // Manually implement onbegin/onrepeat/onend IDL property getters/setters.
-  // We don't autogenerate these methods because the property name differs
-  // from the event type atom - the event type atom has an extra 'Event' tacked
-  // on at the end. (i.e. 'onbegin' corresponds to an event whose name is
-  // literally 'beginEvent' rather than 'begin')
-
-  EventHandlerNonNull* GetOnbegin() {
-    return GetEventHandler(nsGkAtoms::onbeginEvent);
-  }
-  void SetOnbegin(EventHandlerNonNull* handler) {
-    EventTarget::SetEventHandler(nsGkAtoms::onbeginEvent, handler);
-  }
-
-  EventHandlerNonNull* GetOnrepeat() {
-    return GetEventHandler(nsGkAtoms::onrepeatEvent);
-  }
-  void SetOnrepeat(EventHandlerNonNull* handler) {
-    EventTarget::SetEventHandler(nsGkAtoms::onrepeatEvent, handler);
-  }
-
-  EventHandlerNonNull* GetOnend() {
-    return GetEventHandler(nsGkAtoms::onendEvent);
-  }
-  void SetOnend(EventHandlerNonNull* handler) {
-    EventTarget::SetEventHandler(nsGkAtoms::onendEvent, handler);
-  }
-
   // SVGTests
   SVGElement* AsSVGElement() final { return this; }
 

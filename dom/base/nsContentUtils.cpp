@@ -976,13 +976,20 @@ static nsAtom* GetEventTypeFromMessage(EventMessage aEventMessage) {
   }
 }
 
+// Because of SVG/SMIL we have several atoms mapped to the same
+// id, but we can rely on MESSAGE_TO_EVENT to map id to only one atom.
+static bool ShouldAddEventToStringEventTable(const EventNameMapping& aMapping) {
+  MOZ_ASSERT(aMapping.mAtom);
+  return GetEventTypeFromMessage(aMapping.mMessage) == aMapping.mAtom;
+}
+
 bool nsContentUtils::InitializeEventTable() {
   NS_ASSERTION(!sAtomEventTable, "EventTable already initialized!");
   NS_ASSERTION(!sStringEventTable, "EventTable already initialized!");
 
   static const EventNameMapping eventArray[] = {
 #define EVENT(name_, _message, _type, _class) \
-  {nsGkAtoms::on##name_, _type, _message, _class},
+  {nsGkAtoms::on##name_, _type, _message, _class, false},
 #define WINDOW_ONLY_EVENT EVENT
 #define DOCUMENT_ONLY_EVENT EVENT
 #define NON_IDL_EVENT EVENT
@@ -1003,9 +1010,11 @@ bool nsContentUtils::InitializeEventTable() {
     MOZ_ASSERT(!sAtomEventTable->Contains(eventArray[i].mAtom),
                "Double-defining event name; fix your EventNameList.h");
     sAtomEventTable->InsertOrUpdate(eventArray[i].mAtom, eventArray[i]);
-    sStringEventTable->InsertOrUpdate(
-        Substring(nsDependentAtomString(eventArray[i].mAtom), 2),
-        eventArray[i]);
+    if (ShouldAddEventToStringEventTable(eventArray[i])) {
+      sStringEventTable->InsertOrUpdate(
+          Substring(nsDependentAtomString(eventArray[i].mAtom), 2),
+          eventArray[i]);
+    }
   }
 
   return true;
@@ -4556,6 +4565,13 @@ nsAtom* nsContentUtils::GetEventMessageAndAtom(
   mapping.mMessage = eUnidentifiedEvent;
   mapping.mType = EventNameType_None;
   mapping.mEventClassID = eBasicEventClass;
+  // This is a slow hashtable call, but at least we cache the result for the
+  // following calls. Because GetEventMessageAndAtomForListener utilizes
+  // sStringEventTable, it needs to know in which cases sStringEventTable
+  // doesn't contain the information it needs so that it can use
+  // sAtomEventTable instead.
+  mapping.mMaybeSpecialSVGorSMILEvent =
+      GetEventMessage(atom) != eUnidentifiedEvent;
   sStringEventTable->InsertOrUpdate(aName, mapping);
   return mapping.mAtom;
 }
@@ -4565,22 +4581,33 @@ EventMessage nsContentUtils::GetEventMessageAndAtomForListener(
     const nsAString& aName, nsAtom** aOnName) {
   MOZ_ASSERT(NS_IsMainThread(), "Our hashtables are not threadsafe");
 
-  // Check sStringEventTable for a matching entry. This will only fail for
-  // user-defined event types.
+  // Because of SVG/SMIL sStringEventTable contains a subset of the event names
+  // comparing to the sAtomEventTable. However, usually sStringEventTable
+  // contains the information we need, so in order to reduce hashtable
+  // lookups, start from it.
   EventNameMapping mapping;
+  EventMessage msg = eUnidentifiedEvent;
+  RefPtr<nsAtom> atom;
   if (sStringEventTable->Get(aName, &mapping)) {
-    RefPtr<nsAtom> atom = mapping.mAtom;
+    if (mapping.mMaybeSpecialSVGorSMILEvent) {
+      // Try the atom version so that we should get the right message for
+      // SVG/SMIL.
+      atom = NS_AtomizeMainThread(u"on"_ns + aName);
+      msg = GetEventMessage(atom);
+    } else {
+      atom = mapping.mAtom;
+      msg = mapping.mMessage;
+    }
     atom.forget(aOnName);
-    return mapping.mMessage;
+    return msg;
   }
 
-  // sStringEventTable did not contain an entry for this event type string.
-  // Call GetEventMessageAndAtom, which will create an event type atom and
-  // cache it in sStringEventTable for future calls.
-  EventMessage msg = eUnidentifiedEvent;
-  RefPtr<nsAtom> atom = GetEventMessageAndAtom(aName, eBasicEventClass, &msg);
-  atom.forget(aOnName);
-  return msg;
+  // GetEventMessageAndAtom will cache the event type for the future usage...
+  GetEventMessageAndAtom(aName, eBasicEventClass, &msg);
+
+  // ...and then call this method recursively to get the message and atom from
+  // now updated sStringEventTable.
+  return GetEventMessageAndAtomForListener(aName, aOnName);
 }
 
 static nsresult GetEventAndTarget(Document* aDoc, nsISupports* aTarget,
