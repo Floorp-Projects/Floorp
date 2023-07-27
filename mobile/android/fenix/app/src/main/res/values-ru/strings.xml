@@ -542,7 +542,7 @@
     <string name="preferences_account_settings">Настройки аккаунта</string>
 
     <!-- Preference for enabling url autocomplete-->
-    <string name="preferences_enable_autocomplete_urls">Автозаполнение сетевых адресов</string>
+    <string name="preferences_enable_autocomplete_urls">Автозаполнение URL</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Открывать ссылки в приложениях</string>
 
