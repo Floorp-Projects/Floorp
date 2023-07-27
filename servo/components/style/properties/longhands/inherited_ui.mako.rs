@@ -111,13 +111,3 @@ ${helpers.predefined_type(
     boxed=True,
     ignored_when_colors_disabled=True,
 )}
-
-${helpers.predefined_type(
-    "-moz-theme",
-    "ui::MozTheme",
-    "specified::ui::MozTheme::Auto",
-    engines="gecko",
-    enabled_in="chrome",
-    animation_value_type="discrete",
-    spec="Internal",
-)}
