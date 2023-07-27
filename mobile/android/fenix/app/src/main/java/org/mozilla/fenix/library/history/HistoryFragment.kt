@@ -60,8 +60,10 @@ import org.mozilla.fenix.ext.setTextColor
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.library.history.state.HistoryNavigationMiddleware
+import org.mozilla.fenix.library.history.state.HistoryStorageMiddleware
 import org.mozilla.fenix.library.history.state.HistorySyncMiddleware
 import org.mozilla.fenix.library.history.state.HistoryTelemetryMiddleware
+import org.mozilla.fenix.library.history.state.bindings.PendingDeletionBinding
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.GleanMetrics.History as GleanHistory
@@ -89,6 +91,10 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
     private var _binding: FragmentHistoryBinding? = null
     private val binding get() = _binding!!
 
+    private val pendingDeletionBinding by lazy {
+        PendingDeletionBinding(requireContext().components.appStore, historyView)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -112,6 +118,14 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                             accountManager = requireContext().components.backgroundServices.accountManager,
                             refreshView = { historyView.historyAdapter.refresh() },
                             scope = lifecycleScope,
+                        ),
+                        HistoryStorageMiddleware(
+                            appStore = requireContext().components.appStore,
+                            browserStore = requireContext().components.core.store,
+                            historyProvider = historyProvider,
+                            historyStorage = requireContext().components.core.historyStorage,
+                            undoDeleteSnackbar = ::showDeleteSnackbar,
+                            onTimeFrameDeleted = ::onTimeFrameDeleted,
                         ),
                     )
                 } else {
@@ -191,9 +205,23 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
             getMultiSelectSnackBarMessage(items),
             getString(R.string.snackbar_deleted_undo),
             {
-                undo.invoke(items)
+                undo(items)
             },
             delete(items),
+        )
+    }
+
+    private fun showDeleteSnackbar(
+        items: Set<History>,
+        undo: suspend (Set<History>) -> Unit,
+        delete: suspend (Set<History>) -> Unit,
+    ) {
+        CoroutineScope(IO).allowUndo(
+            view = requireActivity().getRootView()!!,
+            message = getMultiSelectSnackBarMessage(items),
+            undoActionTitle = getString(R.string.snackbar_deleted_undo),
+            onCancel = { undo.invoke(items) },
+            operation = { delete(items) },
         )
     }
 
@@ -229,6 +257,16 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                 historyView.historyAdapter.submitData(it)
             }
         }
+
+        startStateBindings()
+    }
+
+    private fun startStateBindings() {
+        pendingDeletionBinding.start()
+    }
+
+    private fun stopStateBindings() {
+        pendingDeletionBinding.stop()
     }
 
     private fun updateDeleteMenuItemView(isEnabled: Boolean) {
@@ -262,6 +300,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         }
     }
 
+    @Suppress("LongMethod")
     override fun onMenuItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.share_history_multi_select -> {
             val selectedHistory = historyStore.state.mode.selectedItems
@@ -290,8 +329,15 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
             true
         }
         R.id.delete_history_multi_select -> {
-            historyInteractor.onDeleteSome(historyStore.state.mode.selectedItems)
-            historyStore.dispatch(HistoryFragmentAction.ExitEditMode)
+            if (FeatureFlags.historyFragmentLibStateRefactor) {
+                with(historyStore) {
+                    dispatch(HistoryFragmentAction.DeleteItems(state.mode.selectedItems))
+                    dispatch(HistoryFragmentAction.ExitEditMode)
+                }
+            } else {
+                historyInteractor.onDeleteSome(historyStore.state.mode.selectedItems)
+                historyStore.dispatch(HistoryFragmentAction.ExitEditMode)
+            }
             true
         }
         R.id.open_history_in_new_tabs_multi_select -> {
@@ -324,7 +370,14 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
             true
         }
         R.id.history_delete -> {
-            historyInteractor.onDeleteTimeRange()
+            if (FeatureFlags.historyFragmentLibStateRefactor) {
+                DeleteConfirmationDialogFragment(
+                    store = historyStore,
+                    historyInteractor = historyInteractor,
+                ).show(childFragmentManager, null)
+            } else {
+                historyInteractor.onDeleteTimeRange()
+            }
             true
         }
         // other options are not handled by this menu provider
@@ -367,6 +420,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
 
     override fun onDestroyView() {
         super.onDestroyView()
+        stopStateBindings()
         _historyView = null
         _binding = null
     }
@@ -389,6 +443,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
 
     private fun displayDeleteTimeRange() {
         DeleteConfirmationDialogFragment(
+            store = historyStore,
             historyInteractor = historyInteractor,
         ).show(childFragmentManager, null)
     }
@@ -420,6 +475,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
     }
 
     internal class DeleteConfirmationDialogFragment(
+        private val store: HistoryFragmentStore,
         private val historyInteractor: HistoryInteractor,
     ) : DialogFragment() {
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
@@ -441,7 +497,11 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                         R.id.everything_button -> null
                         else -> throw IllegalStateException("Unexpected radioButtonId")
                     }
-                    historyInteractor.onDeleteTimeRangeConfirmed(selectedTimeFrame)
+                    if (FeatureFlags.historyFragmentLibStateRefactor) {
+                        store.dispatch(HistoryFragmentAction.DeleteTimeRange(selectedTimeFrame))
+                    } else {
+                        historyInteractor.onDeleteTimeRangeConfirmed(selectedTimeFrame)
+                    }
                     dialog.dismiss()
                 }
 

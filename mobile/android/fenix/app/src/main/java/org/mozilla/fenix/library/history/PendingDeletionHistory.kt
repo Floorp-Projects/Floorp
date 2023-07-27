@@ -56,3 +56,9 @@ fun History.toPendingDeletionHistory(): PendingDeletionHistory {
         is History.Metadata -> PendingDeletionHistory.MetaData(visitedAt, historyMetadataKey)
     }
 }
+
+/**
+ * Maps a set of History items to a set of the relevant [PendingDeletionHistory].
+ */
+fun Set<History>.toPendingDeletionHistory(): Set<PendingDeletionHistory> =
+    map { it.toPendingDeletionHistory() }.toSet()
