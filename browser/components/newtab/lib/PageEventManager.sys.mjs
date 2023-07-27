@@ -11,26 +11,39 @@ export class PageEventManager {
    * A set of parameters defining a page event listener.
    * @typedef {Object} PageEventListenerParams
    * @property {String} type Event type string e.g. `click`
-   * @property {String} selectors Target selector, e.g. `tag.class, #id[attr]`
+   * @property {String} [selectors] Target selector, e.g. `tag.class, #id[attr]`
    * @property {PageEventListenerOptions} [options] addEventListener options
    *
    * @typedef {Object} PageEventListenerOptions
    * @property {Boolean} [capture] Use event capturing phase?
    * @property {Boolean} [once] Remove listener after first event?
    * @property {Boolean} [preventDefault] Inverted value for `passive` option
+   * @property {Number} [interval] Used only for `timeout` and `interval` event
+   *   types. These don't set up real event listeners, but instead invoke the
+   *   action on a timer.
+   *
+   * @typedef {Object} PageEventListener
+   * @property {Function} callback Function to call when event is triggered
+   * @property {AbortController} controller Handle for aborting the listener
+   *
+   * @typedef {Object} PageEvent
+   * @property {String} type Event type string e.g. `click`
+   * @property {Element} [target] Event target
    */
 
   /**
-   * Maps event listener params to their abort controllers.
-   * @type {Map<PageEventListenerParams, AbortController>}
+   * Maps event listener params to their PageEventListeners, so they can be
+   * called and cancelled.
+   * @type {Map<PageEventListenerParams, PageEventListener>}
    */
   _listeners = new Map();
 
   /**
-   * @param {Document} doc The document to look for event targets in
+   * @param {Window} win Window containing the document to listen to
    */
-  constructor(doc) {
-    this.doc = doc;
+  constructor(win) {
+    this.win = win;
+    this.doc = win.document;
   }
 
   /**
@@ -43,17 +56,33 @@ export class PageEventManager {
       return;
     }
     const { type, selectors, options = {} } = params;
-    const controller = new AbortController();
-    const opt = {
-      capture: !!options.capture,
-      passive: !options.preventDefault,
-      signal: controller.signal,
-    };
-    const targets = this.doc.querySelectorAll(selectors);
-    for (const target of targets) {
-      target.addEventListener(type, callback, opt);
+    const listener = { callback };
+    if (selectors) {
+      const controller = new AbortController();
+      const opt = {
+        capture: !!options.capture,
+        passive: !options.preventDefault,
+        signal: controller.signal,
+      };
+      const targets = this.doc.querySelectorAll(selectors);
+      for (const target of targets) {
+        target.addEventListener(type, callback, opt);
+      }
+      listener.controller = controller;
+    } else if (["timeout", "interval"].includes(type) && options.interval) {
+      let interval;
+      const abort = () => this.win.clearInterval(interval);
+      const onInterval = () => {
+        callback({ type, target: type });
+        if (type === "timeout") {
+          abort();
+        }
+      };
+      interval = this.win.setInterval(onInterval, options.interval);
+      listener.callback = onInterval;
+      listener.controller = { abort };
     }
-    this._listeners.set(params, controller);
+    this._listeners.set(params, listener);
   }
 
   /**
@@ -61,11 +90,11 @@ export class PageEventManager {
    * @param {PageEventListenerParams} params
    */
   off(params) {
-    const controller = this._listeners.get(params);
-    if (!controller) {
+    const listener = this._listeners.get(params);
+    if (!listener) {
       return;
     }
-    controller.abort();
+    listener.controller?.abort();
     this._listeners.delete(params);
   }
 
@@ -86,9 +115,21 @@ export class PageEventManager {
    * Removes all page event listeners.
    */
   clear() {
-    for (const controller of this._listeners.values()) {
-      controller.abort();
+    for (const listener of this._listeners.values()) {
+      listener.controller?.abort();
     }
     this._listeners.clear();
+  }
+
+  /**
+   * Calls matching page event listeners. A way to dispatch a "fake" event.
+   * @param {PageEvent} event
+   */
+  emit(event) {
+    for (const [params, listener] of this._listeners) {
+      if (params.type === event.type) {
+        listener.callback(event);
+      }
+    }
   }
 }
