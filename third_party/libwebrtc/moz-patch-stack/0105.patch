@@ -1,71 +1,32 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Fri, 9 Jun 2023 19:59:00 +0000
-Subject: Bug 1837667 - avoid calling GetDpiForMonitor on Win32 or
- Win<8.1;r=mjf,webrtc-reviewers,pehrsons
+From: Jan-Ivar Bruaroey <jib@mozilla.com>
+Date: Wed, 28 Jun 2023 20:45:00 -0400
+Subject: Bug 1839451 - (fix-0f43da2248) Keep mozilla's
+ RTCPReceiver::RemoteRTCPSenderInfo function working.
 
-Differential Revision: https://phabricator.services.mozilla.com/D180763
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/efb1631077da0ef473b1fe37d64cd6f652c34f37
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/154c9cdb386d0f50c5e1549270e1af6ab4969602
 ---
- .../win/screen_capture_utils.cc               | 28 ++++++++++++++++++-
- 1 file changed, 27 insertions(+), 1 deletion(-)
+ modules/rtp_rtcp/source/rtcp_receiver.cc | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/modules/desktop_capture/win/screen_capture_utils.cc b/modules/desktop_capture/win/screen_capture_utils.cc
-index 5409417a88..0a210dc48e 100644
---- a/modules/desktop_capture/win/screen_capture_utils.cc
-+++ b/modules/desktop_capture/win/screen_capture_utils.cc
-@@ -10,8 +10,10 @@
+diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
+index da653cd68a..8e178da67d 100644
+--- a/modules/rtp_rtcp/source/rtcp_receiver.cc
++++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
+@@ -399,10 +399,10 @@ void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
+                                         int64_t* ntp_timestamp_ms,
+                                         int64_t* remote_ntp_timestamp_ms) const {
+   MutexLock lock(&rtcp_receiver_lock_);
+-  *packet_count = remote_sender_packet_count_;
+-  *octet_count = remote_sender_octet_count_;
+-  *ntp_timestamp_ms = last_received_sr_ntp_.ToMs();
+-  *remote_ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
++  *packet_count = remote_sender_.packets_sent;
++  *octet_count = remote_sender_.bytes_sent;
++  *ntp_timestamp_ms = remote_sender_.last_arrival_timestamp.ToMs();
++  *remote_ntp_timestamp_ms = remote_sender_.last_remote_timestamp.ToMs();
+ }
  
- #include "modules/desktop_capture/win/screen_capture_utils.h"
- 
-+#include <libloaderapi.h>
- #include <shellscalingapi.h>
- #include <windows.h>
-+#include <winnt.h>
- 
- #include <string>
- #include <vector>
-@@ -23,8 +25,32 @@
- #include "rtc_base/string_utils.h"
- #include "rtc_base/win32.h"
- 
-+#include "mozilla/WindowsVersion.h" // See Bug 1837647
-+
- namespace webrtc {
- 
-+// See Bug 1837647 - upstream commit 60795e8c7a added a method using
-+// ::GetDpiForMonitor which is not available on Win7 machines.  For Win7,
-+// fail as to provoke it to get the system DPI.
-+HRESULT TryGetDpiForMonitor(HMONITOR hmonitor, MONITOR_DPI_TYPE dpiType, UINT *dpiX, UINT *dpiY) {
-+  static HRESULT (*plat_fn)(HMONITOR, MONITOR_DPI_TYPE, UINT*, UINT*);
-+#ifdef _WIN64
-+  // Grab a pointer to ::GetDpiForMonitor if that has been loaded.
-+  // It is available in Windows 8.1 and up. Can we drop the version check? It would make upstreaming easier.
-+  if (!plat_fn) {
-+      if(auto *module = ::GetModuleHandle(L"Shcore.dll"); module) {
-+        plat_fn = reinterpret_cast<decltype(plat_fn)>(
-+            ::GetProcAddress(module, "GetDpiForMonitor"));
-+      }
-+  }
-+#endif
-+  // Call the function we got or return a failure value in the case that
-+  // we didn't manage to get a pointer to ::GetDpiForMonitor
-+  return plat_fn
-+          ? ((*plat_fn)(hmonitor, dpiType, dpiX, dpiY))
-+          : -1;
-+}
-+
- bool HasActiveDisplay() {
-   DesktopCapturer::SourceList screens;
- 
-@@ -149,7 +175,7 @@ DesktopRect GetFullscreenRect() {
- DesktopVector GetDpiForMonitor(HMONITOR monitor) {
-   UINT dpi_x, dpi_y;
-   // MDT_EFFECTIVE_DPI includes the scale factor as well as the system DPI.
--  HRESULT hr = ::GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpi_x, &dpi_y);
-+  HRESULT hr = TryGetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpi_x, &dpi_y);
-   if (SUCCEEDED(hr)) {
-     return {static_cast<INT>(dpi_x), static_cast<INT>(dpi_y)};
-   }
+ std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
 -- 
 2.34.1
 

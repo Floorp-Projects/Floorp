@@ -1,43 +1,40 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Tue, 16 May 2023 06:37:00 +0000
-Subject: Bug 1832770 - Cherry-pick upstream libwebrtc commit 7b0d7f48fb.
- r=grulja,webrtc-reviewers,mjf
+Date: Tue, 16 May 2023 06:38:00 +0000
+Subject: Bug 1832804 - Revert changeset b0339fd77c82. r=webrtc-reviewers,mjf
 
-Upstream commit:
-    PipeWire capturer: fix fcntl call when duplicating a file descriptor
+This bit is now restored to original libwebrtc M111 code.
 
-    The fcntl() call has variable arguments, therefore we need to pass 0 to
-    specify there are no other arguments for this call, otherwise we might
-    end up with an argument that is random garbage.
-
-    Bug: webrtc:15174
-    Change-Id: I34f16a942d80913b667d8ade7eed557b0233be01
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/305120
-    Reviewed-by: Alexander Cooper <alcooper@chromium.org>
-    Commit-Queue: Jan Grulich <grulja@gmail.com>
-    Cr-Commit-Position: refs/heads/main@{#40060}
-
-Differential Revision: https://phabricator.services.mozilla.com/D178009
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/47978aa145282f737fc77fcdcadc995e80e2a743
+Differential Revision: https://phabricator.services.mozilla.com/D178006
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/47b1b27c8f75293c0861ca6197d438076ca9e693
 ---
- .../desktop_capture/linux/wayland/shared_screencast_stream.cc | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ modules/rtp_rtcp/source/packet_sequencer.cc | 14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
 
-diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 1eea8bfbf5..17c895088a 100644
---- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-+++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -449,8 +449,8 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
-     PipeWireThreadLoopLock thread_loop_lock(pw_main_loop_);
+diff --git a/modules/rtp_rtcp/source/packet_sequencer.cc b/modules/rtp_rtcp/source/packet_sequencer.cc
+index acc2e87aa3..55edd768a8 100644
+--- a/modules/rtp_rtcp/source/packet_sequencer.cc
++++ b/modules/rtp_rtcp/source/packet_sequencer.cc
+@@ -118,18 +118,8 @@ void PacketSequencer::PopulatePaddingFields(RtpPacketToSend& packet) {
+     return;
+   }
  
-     if (fd >= 0) {
--      pw_core_ = pw_context_connect_fd(pw_context_, fcntl(fd, F_DUPFD_CLOEXEC),
--                                       nullptr, 0);
-+      pw_core_ = pw_context_connect_fd(
-+          pw_context_, fcntl(fd, F_DUPFD_CLOEXEC, 0), nullptr, 0);
-     } else {
-       pw_core_ = pw_context_connect(pw_context_, nullptr, 0);
-     }
+-  if (last_timestamp_time_ms_ > 0) {
+-    RTC_DCHECK_GT(last_rtp_timestamp_, 0);
+-    RTC_DCHECK_GT(last_capture_time_ms_, 0);
+-    packet.SetTimestamp(last_rtp_timestamp_);
+-    packet.set_capture_time(Timestamp::Millis(last_capture_time_ms_));
+-  } else {
+-    // No media packet has been sent yet so timestamps are not known. Set them
+-    // now as they will be needed when serializing the packet later on.
+-    auto now = clock_->CurrentTime();
+-    packet.SetTimestamp(now.ms() * kTimestampTicksPerMs);
+-    packet.set_capture_time(now);
+-  }
++  packet.SetTimestamp(last_rtp_timestamp_);
++  packet.set_capture_time(Timestamp::Millis(last_capture_time_ms_));
+ 
+   // Only change the timestamp of padding packets sent over RTX.
+   // Padding only packets over RTP has to be sent as part of a media
 -- 
 2.34.1
 
