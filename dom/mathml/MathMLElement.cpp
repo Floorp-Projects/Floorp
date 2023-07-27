@@ -519,20 +519,6 @@ void MathMLElement::MapGlobalMathMLAttributesInto(
           StyleMathVariant::Stretched};
       for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
         if (str.LowerCaseEqualsASCII(sizes[i])) {
-          if (values[i] != StyleMathVariant::Normal) {
-            // Warn about deprecated mathvariant attribute values. Strictly
-            // speaking, we should also warn about mathvariant="normal" if the
-            // element is not an <mi>. However this would require exposing the
-            // tag name via aBuilder. Moreover, this use case is actually to
-            // revert the effect of a non-normal mathvariant value on an
-            // ancestor element, which should consequently have already
-            // triggered a warning.
-            AutoTArray<nsString, 1> params;
-            params.AppendElement(str);
-            aBuilder.Document().WarnOnceAbout(
-                dom::DeprecatedOperations::eMathML_DeprecatedMathVariant, false,
-                params);
-          }
           aBuilder.SetKeywordValue(eCSSProperty__moz_math_variant, values[i]);
           break;
         }
