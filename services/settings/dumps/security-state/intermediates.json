@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "schema": 1690296478698,
+      "derHash": "oRXsDXPC6KuxiDE0+i3w2YXnQYgWBKQIKQfXBeJAfHI=",
+      "subject": "CN=e-Szigno Qualified TLS CA 2023,O=Microsec Ltd.,L=Budapest,C=HU",
+      "subjectDN": "MHoxCzAJBgNVBAYTAkhVMREwDwYDVQQHDAhCdWRhcGVzdDEWMBQGA1UECgwNTWljcm9zZWMgTHRkLjEXMBUGA1UEYQwOVkFUSFUtMjM1ODQ0OTcxJzAlBgNVBAMMHmUtU3ppZ25vIFF1YWxpZmllZCBUTFMgQ0EgMjAyMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e5582687d546ac85a09c343f23ce9764cbc06e78844654f61940dde5034b145f",
+        "size": 1439,
+        "filename": "FfstIBJRQL_OSddFhkXVXxYXvlwpeV4N5QyzQSOMer4=.pem",
+        "location": "security-state-staging/intermediates/c3eaa351-c45f-4c58-b312-1a214832f8b5.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "FfstIBJRQL/OSddFhkXVXxYXvlwpeV4N5QyzQSOMer4=",
+      "crlite_enrolled": false,
+      "id": "da49e20c-b2f2-4d31-b07b-1064e96e3b70",
+      "last_modified": 1690297023211
+    },
+    {
+      "schema": 1690296478406,
+      "derHash": "wEww5A3X6WmC+GBuvvNVSOXG9PeSpSpReM8koOn9c5Y=",
+      "subject": "CN=e-Szigno DV TLS CA 2023,O=Microsec Ltd.,L=Budapest,C=HU",
+      "subjectDN": "MHMxCzAJBgNVBAYTAkhVMREwDwYDVQQHDAhCdWRhcGVzdDEWMBQGA1UECgwNTWljcm9zZWMgTHRkLjEXMBUGA1UEYQwOVkFUSFUtMjM1ODQ0OTcxIDAeBgNVBAMMF2UtU3ppZ25vIERWIFRMUyBDQSAyMDIz",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e024d6f71f79e22a937ce5712dfbf1c17be250937f7a1a1b7aaa69d96607e27b",
+        "size": 1431,
+        "filename": "XxwXFeAhoV94cB2wpw1cfCsPS8BPvJevCyCobm4QKxg=.pem",
+        "location": "security-state-staging/intermediates/6e6e1fde-6155-4773-b392-6ee7800fcbdc.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "XxwXFeAhoV94cB2wpw1cfCsPS8BPvJevCyCobm4QKxg=",
+      "crlite_enrolled": false,
+      "id": "0d228708-baa8-45e3-a4ea-0bce48f43f86",
+      "last_modified": 1690297023208
+    },
+    {
+      "schema": 1690296478088,
+      "derHash": "EtRTenVH/2PDaSNiKiga/+lIESDbeBd2qvmBofm2aNg=",
+      "subject": "CN=e-Szigno OV TLS CA 2023,O=Microsec Ltd.,L=Budapest,C=HU",
+      "subjectDN": "MHMxCzAJBgNVBAYTAkhVMREwDwYDVQQHDAhCdWRhcGVzdDEWMBQGA1UECgwNTWljcm9zZWMgTHRkLjEXMBUGA1UEYQwOVkFUSFUtMjM1ODQ0OTcxIDAeBgNVBAMMF2UtU3ppZ25vIE9WIFRMUyBDQSAyMDIz",
+      "whitelist": false,
+      "attachment": {
+        "hash": "ab5bf3cb8d3a60923137ac8e379030e9e4208f811155f11e65307099425c5d04",
+        "size": 1431,
+        "filename": "CBpKKUYnWuYNjyn6A4C6-fbIOhB5kbX1rkHpBJ-7g0Y=.pem",
+        "location": "security-state-staging/intermediates/0052bd62-f25b-4c75-b5e2-123cf02b80fe.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "CBpKKUYnWuYNjyn6A4C6+fbIOhB5kbX1rkHpBJ+7g0Y=",
+      "crlite_enrolled": false,
+      "id": "a206224b-c943-44b0-b74e-3c4bfb484c15",
+      "last_modified": 1690297023205
+    },
+    {
       "schema": 1689929284314,
       "derHash": "4O5LQh2QWSJPDNOte8kFCx3teHGKStJtjeP7QCEPH6E=",
       "subject": "CN=GlobalSign Atlas R3 DV ACME CA 2023 Q4,O=GlobalSign nv-sa,C=BE",
@@ -6893,24 +6947,6 @@
       "crlite_enrolled": false,
       "id": "0ae7a24d-a084-4832-94f5-f7b373e4faf0",
       "last_modified": 1666727872001
-    },
-    {
-      "schema": 1666727421344,
-      "derHash": "e+x4J+BdGTHdgmia9rLxmj9eTHVu+hYr1wjJJ50ank4=",
-      "subject": "CN=Hellenic Academic and Research Institutions AdminCA R5,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
-      "subjectDN": "MIGUMQswCQYDVQQGEwJHUjFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxPzA9BgNVBAMTNkhlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgQWRtaW5DQSBSNQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "72e6466e10325f7b1f2063c8f34fae81275869638a1c732b7190ef3be43c0571",
-        "size": 2938,
-        "filename": "AreUX-bchtedTom4SB7dY0hDFUCi6QqZHbrsRYdMV5w=.pem",
-        "location": "security-state-staging/intermediates/55fab318-ccea-48b4-9320-583acfaeaaee.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "AreUX+bchtedTom4SB7dY0hDFUCi6QqZHbrsRYdMV5w=",
-      "crlite_enrolled": false,
-      "id": "e2c853a7-e5fb-466e-aaf2-0d079598db87",
-      "last_modified": 1666727871974
     },
     {
       "schema": 1666727431023,
@@ -27919,5 +27955,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1689929823491
+  "timestamp": 1690383423591
 }
