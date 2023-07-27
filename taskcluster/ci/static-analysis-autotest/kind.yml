@@ -85,12 +85,11 @@ jobs:
                 - builds/taskcluster_sub_win64/debug.py
             extra-config:
                 mozconfig_variant: debug
-        use-sccache: true
+        use-sccache: false
         fetches:
             toolchain:
                 - win64-clang
                 - win64-rust
-                - win64-sccache
                 - win64-cbindgen
                 - win64-clang-tidy
                 - win64-nasm
