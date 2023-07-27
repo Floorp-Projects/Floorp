@@ -13,6 +13,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.WebExtension
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_BLOCKLISTED
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED
 
 @RunWith(AndroidJUnit4::class)
@@ -35,5 +36,15 @@ class GeckoWebExtensionExceptionTest {
             GeckoWebExtensionException.createWebExtensionException(geckoException)
 
         assertTrue(webExtensionException is GeckoWebExtensionException)
+    }
+
+    @Test
+    fun `Handles a blocklisted exception`() {
+        val geckoException = mock<WebExtension.InstallException>()
+        ReflectionUtils.setField(geckoException, "code", ERROR_BLOCKLISTED)
+        val webExtensionException =
+            GeckoWebExtensionException.createWebExtensionException(geckoException)
+
+        assertTrue(webExtensionException is WebExtensionInstallException.Blocklisted)
     }
 }
