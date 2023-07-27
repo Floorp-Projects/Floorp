@@ -651,7 +651,7 @@ pub struct ThreadLocalStyleContext<E: TElement> {
     /// A checker used to ensure that parallel.rs does not recurse indefinitely
     /// even on arbitrarily deep trees.  See Gecko bug 1376883.
     pub stack_limit_checker: StackLimitChecker,
-    /// Collection of caches for speeding up expensive selector matches.
+    /// Collection of caches (And cache-likes) for speeding up expensive selector matches.
     pub selector_caches: SelectorCaches,
 }
 

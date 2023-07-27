@@ -7,6 +7,7 @@ use crate::bloom::BloomFilter;
 use crate::nth_index_cache::{NthIndexCache, NthIndexCacheInner};
 use crate::parser::{Selector, SelectorImpl};
 use crate::relative_selector::cache::RelativeSelectorCache;
+use crate::relative_selector::filter::RelativeSelectorFilterMap;
 use crate::tree::{Element, OpaqueElement};
 
 /// What kind of selector matching mode we should use.
@@ -142,13 +143,15 @@ impl RelativeSelectorMatchingState {
     }
 }
 
-/// Set of caches that speed up expensive selector matches.
+/// Set of caches (And cache-likes) that speed up expensive selector matches.
 #[derive(Default)]
 pub struct SelectorCaches {
     /// A cache to speed up nth-index-like selectors.
     pub nth_index: NthIndexCache,
     /// A cache to speed up relative selector matches. See module documentation.
     pub relative_selector: RelativeSelectorCache,
+    /// A map of bloom filters to fast-reject relative selector matches.
+    pub relative_selector_filter_map: RelativeSelectorFilterMap,
 }
 
 /// Data associated with the matching process for a element.  This context is

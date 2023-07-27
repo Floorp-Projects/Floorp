@@ -458,6 +458,25 @@ fn matches_relative_selectors<E: Element>(
             // Did not match, continue on.
             continue;
         }
+        // See if we can fast-reject.
+        if context
+            .selector_caches
+            .relative_selector_filter_map
+            .fast_reject(
+                element,
+                relative_selector,
+                context.quirks_mode(),
+            )
+        {
+            // Alright, add as unmatched to cache.
+            context.selector_caches.relative_selector.add(
+                element.opaque(),
+                relative_selector,
+                RelativeSelectorCachedMatch::NotMatched,
+            );
+            // Then continue on.
+            continue;
+        }
 
         let matched = matches_relative_selector(relative_selector, element, context, rightmost);
         context.selector_caches.relative_selector.add(
