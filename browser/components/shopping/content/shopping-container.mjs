@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { ShoppingProduct } from "chrome://global/content/shopping/ShoppingProduct.mjs";
+/* eslint-env mozilla/remote-page */
+
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 
@@ -20,9 +21,6 @@ import "chrome://browser/content/shopping/analysis-explainer.mjs";
 import "chrome://browser/content/shopping/shopping-message-bar.mjs";
 
 export class ShoppingContainer extends MozLitElement {
-  #optedIn;
-  #product;
-
   static properties = {
     data: { type: Object },
     showOnboarding: { type: Boolean },
@@ -54,33 +52,12 @@ export class ShoppingContainer extends MozLitElement {
     );
   }
 
-  async _update({ url, optedIn }) {
-    this.#product?.uninit();
-    this.#optedIn = optedIn;
-
-    if (this.#optedIn !== 1) {
-      this.showOnboarding = true;
-      // In case the user just opted out, clear out any product data too.
-      this.data = null;
-      return;
-    }
-    this.showOnboarding = false;
-
-    // `url` is null for non-product pages; clear out any sidebar content while
-    // the chrome code closes the sidebar.
-    if (!url) {
-      this.data = null;
-      return;
-    }
-
-    let product = (this.#product = new ShoppingProduct(new URL(url)));
-    let data = await product.requestAnalysis();
-    // Double-check that we haven't opted out or re-entered this function
-    // while we were `await`-ing.
-    if (this.#optedIn !== 1 || product !== this.#product) {
-      return;
-    }
+  async _update({ data, showOnboarding }) {
+    // If we're not opted in or there's no shopping URL in the main browser,
+    // the actor will pass `null`, which means this will clear out any existing
+    // content in the sidebar.
     this.data = data;
+    this.showOnboarding = showOnboarding;
   }
 
   handleEvent(event) {

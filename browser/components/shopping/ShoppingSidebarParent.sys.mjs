@@ -3,19 +3,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export class ShoppingSidebarParent extends JSWindowActorParent {
-  updateProductURL() {
-    this.sendAsyncMessage("ShoppingSidebar:UpdateProductURL");
+  updateProductURL(uri) {
+    this.sendAsyncMessage("ShoppingSidebar:UpdateProductURL", {
+      url: uri?.spec ?? null,
+    });
   }
 
   async receiveMessage(message) {
-    let win = this.browsingContext.top.embedderElement.ownerGlobal;
     switch (message.name) {
-      case "DisableShopping":
-        Services.prefs.setIntPref("browser.shopping.experience2023.optedIn", 2);
-        break;
       case "GetProductURL":
-        let url = win.gBrowser.selectedBrowser.currentURI.spec;
-        return url;
+        let sidebarBrowser = this.browsingContext.top.embedderElement;
+        let panel = sidebarBrowser.closest(".browserSidebarContainer");
+        let associatedTabbedBrowser = panel.querySelector(
+          "browser[messagemanagergroup=browsers]"
+        );
+        return associatedTabbedBrowser.currentURI?.spec ?? null;
     }
     return null;
   }

@@ -6,8 +6,6 @@
 import { html, ifDefined } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
-window.MozXULElement.insertFTLIfNeeded("preview/shopping.ftl");
-
 /**
  * A card container to be used in the shopping sidebar. There are three card types.
  * The default type where no type attribute is required and the card will have no extra functionality.

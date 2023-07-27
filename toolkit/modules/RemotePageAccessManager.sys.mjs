@@ -236,6 +236,10 @@ export let RemotePageAccessManager = {
       ],
       RPMRecordTelemetryEvent: ["*"],
     },
+    "about:shoppingsidebar": {
+      RPMSetPref: ["browser.shopping.experience2023.optedIn"],
+      RPMGetFormatURLPref: ["app.support.baseURL"],
+    },
     "about:tabcrashed": {
       RPMSendAsyncMessage: ["Load", "closeTab", "restoreTab", "restoreAll"],
       RPMAddMessageListener: ["*"],

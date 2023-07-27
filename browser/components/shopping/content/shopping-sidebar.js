@@ -21,9 +21,9 @@
           flex="1"
           message="true"
           remoteType="privilegedabout"
+          maychangeremoteness="true"
           remote="true"
-          selectmenulist="contentselectdropdown"
-          src="chrome://browser/content/shopping/shopping.html"
+          src="about:shoppingsidebar"
           type="content"
           />
       `;
