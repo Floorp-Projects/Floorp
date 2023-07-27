@@ -6,6 +6,7 @@ Transform mac notarization tasks
 """
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.dependencies import get_primary_dependency
 from taskgraph.util.schema import resolve_keyed_by
 
 transforms = TransformSequence()
@@ -19,7 +20,10 @@ def repackage_set_upstream_mac_kind(config, tasks):
     Exception for debug builds, which will use signed build on level 3
     """
     for task in tasks:
-        if "macosx64" not in task["primary-dependency"].attributes["build_platform"]:
+        primary_dep = get_primary_dependency(config, task)
+        assert primary_dep
+
+        if "macosx64" not in primary_dep.attributes["build_platform"]:
             task.pop("upstream-mac-kind")
             yield task
             continue
@@ -28,12 +32,12 @@ def repackage_set_upstream_mac_kind(config, tasks):
             "upstream-mac-kind",
             item_name=config.kind,
             **{
-                "build-type": task["primary-dependency"].attributes["build_type"],
+                "build-type": primary_dep.attributes["build_type"],
                 "project": config.params.get("project"),
             }
         )
         upstream_mac_kind = task.pop("upstream-mac-kind")
 
-        if task["primary-dependency"].kind != upstream_mac_kind:
+        if primary_dep.kind != upstream_mac_kind:
             continue
         yield task

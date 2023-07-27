@@ -6,23 +6,25 @@ Transform the repackage task into an actual task description.
 """
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
+from taskgraph.util.dependencies import get_primary_dependency
+from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.taskcluster import get_artifact_prefix
 from voluptuous import Extra, Optional, Required
 
-from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.job import job_description_schema
 from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
 from gecko_taskgraph.util.copy_task import copy_task
 from gecko_taskgraph.util.platforms import architecture, archive_format
 from gecko_taskgraph.util.workertypes import worker_type_implementation
 
-packaging_description_schema = schema.extend(
+packaging_description_schema = Schema(
     {
         # unique label to describe this repackaging task
         Optional("label"): str,
         Optional("worker-type"): str,
         Optional("worker"): object,
+        Optional("attributes"): job_description_schema["attributes"],
+        Optional("dependencies"): job_description_schema["dependencies"],
         # treeherder is allowed here to override any defaults we use for repackaging.  See
         # taskcluster/gecko_taskgraph/transforms/task.py for the schema details, and the
         # below transforms for defaults of various values.
@@ -90,6 +92,7 @@ packaging_description_schema = schema.extend(
             Optional("run-as-root"): bool,
             Optional("use-caches"): bool,
         },
+        Optional("job-from"): job_description_schema["job-from"],
     }
 )
 
@@ -280,6 +283,16 @@ MOZHARNESS_EXPANSIONS = [
 ]
 
 transforms = TransformSequence()
+
+
+@transforms.add
+def remove_name(config, jobs):
+    for job in jobs:
+        if "name" in job:
+            del job["name"]
+        yield job
+
+
 transforms.add_validate(packaging_description_schema)
 
 
@@ -287,7 +300,9 @@ transforms.add_validate(packaging_description_schema)
 def copy_in_useful_magic(config, jobs):
     """Copy attributes from upstream task to be used for keyed configuration."""
     for job in jobs:
-        dep = job["primary-dependency"]
+        dep = get_primary_dependency(config, job)
+        assert dep
+
         job["build-platform"] = dep.attributes.get("build_platform")
         job["shipping-product"] = dep.attributes.get("shipping_product")
         yield job
@@ -321,7 +336,8 @@ def handle_keyed_by(config, jobs):
 @transforms.add
 def make_repackage_description(config, jobs):
     for job in jobs:
-        dep_job = job["primary-dependency"]
+        dep_job = get_primary_dependency(config, job)
+        assert dep_job
 
         label = job.get("label", dep_job.label.replace("signing-", "repackage-"))
         job["label"] = label
@@ -332,7 +348,9 @@ def make_repackage_description(config, jobs):
 @transforms.add
 def make_job_description(config, jobs):
     for job in jobs:
-        dep_job = job["primary-dependency"]
+        dep_job = get_primary_dependency(config, job)
+        assert dep_job
+
         dependencies = {dep_job.kind: dep_job.label}
 
         attributes = copy_attributes_from_dependent_job(dep_job)

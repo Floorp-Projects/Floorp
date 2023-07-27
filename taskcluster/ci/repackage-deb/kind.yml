@@ -2,14 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.name_sanity:transforms
-    - gecko_taskgraph.transforms.repackage:transforms
-    - gecko_taskgraph.transforms.repackage_routes:transforms
-    - gecko_taskgraph.transforms.job:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.repackage
+    - gecko_taskgraph.transforms.repackage_routes
+    - gecko_taskgraph.transforms.job
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
     - build-signing
@@ -25,25 +26,27 @@ only-for-attributes:
     - nightly
     - shippable
 
-job-template:
-    shipping-phase: promote
-    worker-type: b-linux-gcp
-    worker:
-        docker-image:
-            in-tree: debian11-repackage
-    mozharness:
-        run-as-root: true
-        use-caches: false
-        config:
+jobs:
+    repackage-deb:
+        from-deps: {}
+        shipping-phase: promote
+        worker-type: b-linux-gcp
+        worker:
+            docker-image:
+                in-tree: debian11-repackage
+        mozharness:
+            run-as-root: true
+            use-caches: false
+            config:
+                by-build-platform:
+                    linux\b.*:
+                        - repackage/base.py
+                        - repackage/linux32_signed.py
+                    linux64\b.*:
+                        - repackage/base.py
+                        - repackage/linux64_signed.py
+        treeherder:
+            symbol: Rpk-deb
+        package-formats:
             by-build-platform:
-                linux\b.*:
-                    - repackage/base.py
-                    - repackage/linux32_signed.py
-                linux64\b.*:
-                    - repackage/base.py
-                    - repackage/linux64_signed.py
-    treeherder:
-        symbol: Rpk-deb
-    package-formats:
-        by-build-platform:
-            linux.*: [deb]
+                linux.*: [deb]

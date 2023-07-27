@@ -2,20 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.name_sanity:transforms
-    - gecko_taskgraph.transforms.repackage:transforms
-    - gecko_taskgraph.transforms.job:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.repackage
+    - gecko_taskgraph.transforms.job
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
     # We're going to generate tasks based on this.  We `depend` on and fetch the package from this.
     - build-signing
     - toolchain
-
-group-by: platform
 
 only-for-build-platforms:
     - win32/opt
@@ -26,79 +25,82 @@ only-for-build-platforms:
     - win32-devedition/opt
     - win64-devedition/opt
 
-job-template:
-    worker-type: b-linux-gcp
-    worker:
-        max-run-time: 2700
-    # This is for fast try iteration; `repackage-shippable-l10n-msix` is the "real one".
-    run-on-projects: []
-    mozharness:
-        config:
-            by-build-platform:
-                win32\b.*:
-                    - repackage/base.py
-                    - repackage/win32_sfx_stub.py
-                    - repackage/win32_signed.py
-                win64(?!-aarch64)\b.*:
-                    - repackage/base.py
-                    - repackage/win32_sfx_stub.py
-                    - repackage/win64_signed.py
-                win64-aarch64\b.*:
-                    - repackage/base.py
-                    - repackage/win64-aarch64_sfx_stub.py
-                    - repackage/win64_signed.py
-    package-formats: [msix, msix-store]
-    fetches:
-        toolchain:
-            - linux64-msix-packaging
-    msix:
-        channel:
-            by-shipping-product:
-                devedition: aurora
-                default:
-                    by-release-type:
-                        beta.*: beta
-                        release.*: official
-                        esr.*: official
-                        default: nightly
-        identity-name:
-            by-shipping-product:
-                devedition:
-                    by-package-format:
-                        msix: MozillaFirefoxDevedition
-                        msix-store: FirefoxDevedition
-                default:
-                    by-package-format:
-                        msix:
-                            by-release-type:
-                                beta.*: MozillaFirefoxBeta
-                                release.*: MozillaFirefox
-                                esr.*: MozillaFirefox
-                                default: MozillaFirefoxNightly
-                        msix-store:
-                            by-release-type:
-                                beta.*: FirefoxBeta
-                                release.*: Firefox
-                                esr.*: Firefox
-                                default: FirefoxNightly
-        publisher:
-            by-package-format:
-                msix-store: "CN=082E9164-EE6C-4EC8-B62C-441FAE7BEFA1"
-                msix:
-                    by-level:
-                        "1": "CN=Mozilla Fake SPC"
-                        "2": "CN=Mozilla Fake SPC"
-                        default:
-                            # This value needs to line up with the signing certificate
-                            # we're going to sign with. We only sign potential release
-                            # or nightly builds with proper certificates, so even on
-                            # level 3 repositories, some build types are expected to
-                            # be signed with our fake certificate.
-                            by-build-platform:
-                                .*-shippable: "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
-                                .*-devedition: "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
-                                default: "CN=Mozilla Fake SPC"
-        publisher-display-name:
-            by-package-format:
-                msix: "Mozilla Corporation"
-                msix-store: "Mozilla"
+jobs:
+    repackage-msix:
+        from-deps:
+            group-by: platform
+        worker-type: b-linux-gcp
+        worker:
+            max-run-time: 2700
+        # This is for fast try iteration; `repackage-shippable-l10n-msix` is the "real one".
+        run-on-projects: []
+        mozharness:
+            config:
+                by-build-platform:
+                    win32\b.*:
+                        - repackage/base.py
+                        - repackage/win32_sfx_stub.py
+                        - repackage/win32_signed.py
+                    win64(?!-aarch64)\b.*:
+                        - repackage/base.py
+                        - repackage/win32_sfx_stub.py
+                        - repackage/win64_signed.py
+                    win64-aarch64\b.*:
+                        - repackage/base.py
+                        - repackage/win64-aarch64_sfx_stub.py
+                        - repackage/win64_signed.py
+        package-formats: [msix, msix-store]
+        fetches:
+            toolchain:
+                - linux64-msix-packaging
+        msix:
+            channel:
+                by-shipping-product:
+                    devedition: aurora
+                    default:
+                        by-release-type:
+                            beta.*: beta
+                            release.*: official
+                            esr.*: official
+                            default: nightly
+            identity-name:
+                by-shipping-product:
+                    devedition:
+                        by-package-format:
+                            msix: MozillaFirefoxDevedition
+                            msix-store: FirefoxDevedition
+                    default:
+                        by-package-format:
+                            msix:
+                                by-release-type:
+                                    beta.*: MozillaFirefoxBeta
+                                    release.*: MozillaFirefox
+                                    esr.*: MozillaFirefox
+                                    default: MozillaFirefoxNightly
+                            msix-store:
+                                by-release-type:
+                                    beta.*: FirefoxBeta
+                                    release.*: Firefox
+                                    esr.*: Firefox
+                                    default: FirefoxNightly
+            publisher:
+                by-package-format:
+                    msix-store: "CN=082E9164-EE6C-4EC8-B62C-441FAE7BEFA1"
+                    msix:
+                        by-level:
+                            "1": "CN=Mozilla Fake SPC"
+                            "2": "CN=Mozilla Fake SPC"
+                            default:
+                                # This value needs to line up with the signing certificate
+                                # we're going to sign with. We only sign potential release
+                                # or nightly builds with proper certificates, so even on
+                                # level 3 repositories, some build types are expected to
+                                # be signed with our fake certificate.
+                                by-build-platform:
+                                    .*-shippable: "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
+                                    .*-devedition: "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
+                                    default: "CN=Mozilla Fake SPC"
+            publisher-display-name:
+                by-package-format:
+                    msix: "Mozilla Corporation"
+                    msix-store: "Mozilla"
