@@ -68,7 +68,8 @@ auto nsNativeThemeWin::IsWidgetNonNative(nsIFrame* aFrame,
                                          StyleAppearance aAppearance)
     -> NonNative {
   if (IsWidgetScrollbarPart(aAppearance) ||
-      aAppearance == StyleAppearance::FocusOutline) {
+      aAppearance == StyleAppearance::FocusOutline ||
+      aFrame->StyleUI()->mMozTheme == StyleMozTheme::NonNative) {
     return NonNative::Always;
   }
 
