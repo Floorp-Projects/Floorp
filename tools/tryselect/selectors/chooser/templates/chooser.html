@@ -46,7 +46,7 @@
               {{ label }}
               <input class="filter" type="checkbox" id={{ label }} name="{{ section.kind }}" value='{{ meta.attrs|tojson|safe }}' onchange="console.log('checkbox onchange triggered');apply();">
               {% if meta.max_chunk > 1 %}
-              <input class="filter" type="text" pattern="^[0-9][0-9,-]*$" placeholder="1-{{ meta.max_chunk }}" name='{{ meta.attrs|tojson|safe }}' oninput="applyChunks();">
+              <input class="filter" type="text" pattern="[0-9][0-9,\-]*" placeholder="1-{{ meta.max_chunk }}" name='{{ meta.attrs|tojson|safe }}' oninput="applyChunks();">
               {% endif %}
             </span>
           </label>
