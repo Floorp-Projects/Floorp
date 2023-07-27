@@ -696,6 +696,12 @@ bool Gecko_IsDocumentBody(const Element* aElement) {
   return doc && doc->GetBodyElement() == aElement;
 }
 
+bool Gecko_IsDarkColorScheme(const Document* aDoc,
+                             const StyleColorScheme* aStyle) {
+  return LookAndFeel::ColorSchemeForStyle(*aDoc, aStyle->bits) ==
+         ColorScheme::Dark;
+}
+
 nscolor Gecko_ComputeSystemColor(StyleSystemColor aColor, const Document* aDoc,
                                  const StyleColorScheme* aStyle) {
   auto colorScheme = LookAndFeel::ColorSchemeForStyle(*aDoc, aStyle->bits);
