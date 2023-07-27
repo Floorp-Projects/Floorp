@@ -54,7 +54,7 @@ public:
   char const * get() { return storage; }
 
 private:
-  char storage[CUBEB_LOG_MESSAGE_MAX_SIZE];
+  char storage[CUBEB_LOG_MESSAGE_MAX_SIZE]{};
 };
 
 /** Lock-free asynchronous logger, made so that logging from a
@@ -70,7 +70,7 @@ public:
   void push(char const str[CUBEB_LOG_MESSAGE_MAX_SIZE])
   {
     cubeb_log_message msg(str);
-    auto owned_queue = msg_queue.load();
+    auto * owned_queue = msg_queue.load();
     // Check if the queue is being deallocated. If not, grab ownership. If yes,
     // return, the message won't be logged.
     if (!owned_queue ||
@@ -123,7 +123,7 @@ public:
     if (logging_thread.get_id() != std::thread::id()) {
       logging_thread.join();
       logging_thread = std::thread();
-      auto owned_queue = msg_queue.load();
+      auto * owned_queue = msg_queue.load();
       // Check if the queue is being used. If not, grab ownership. If yes,
       // try again shortly. At this point, the logging thread has been joined,
       // so nothing is going to dequeue.
