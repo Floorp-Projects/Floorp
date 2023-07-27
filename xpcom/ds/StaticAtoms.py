@@ -2395,8 +2395,6 @@ STATIC_ATOMS = [
     Atom("onsupportedkeyschange", "onsupportedkeyschange"),
     # media query for MathML Core's implementation of maction/semantics
     Atom("_moz_mathml_core_maction_and_semantics", "-moz-mathml-core-maction-and-semantics"),
-    # media query for MathML Core's implementation of ms
-    Atom("_moz_mathml_core_ms", "-moz-mathml-core-ms"),
     Atom("_moz_popover_enabled", "-moz-popover-enabled"),
     # media query for MathML Core's implementation of mi
     Atom("_moz_mathml_core_mi", "-moz-mathml-core-mi"),
