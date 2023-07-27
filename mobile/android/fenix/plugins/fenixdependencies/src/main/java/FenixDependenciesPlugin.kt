@@ -24,7 +24,6 @@ object FenixVersions {
     const val androidx_legacy = "1.0.0"
     const val androidx_lifecycle = "2.6.1"
     const val androidx_splash_screen = "1.0.1"
-    const val androidx_paging = "3.1.1"
     const val androidx_transition = "1.4.1"
     const val androidx_datastore = "1.0.0"
     const val google_accompanist = "0.30.1"
@@ -59,7 +58,6 @@ object FenixDependencies {
     const val androidx_activity_ktx = "androidx.activity:activity-ktx:${FenixVersions.androidx_activity}"
     const val androidx_legacy = "androidx.legacy:legacy-support-v4:${FenixVersions.androidx_legacy}"
     const val androidx_lifecycle_common = "androidx.lifecycle:lifecycle-common:${FenixVersions.androidx_lifecycle}"
-    const val androidx_paging = "androidx.paging:paging-runtime-ktx:${FenixVersions.androidx_paging}"
     const val androidx_transition = "androidx.transition:transition:${FenixVersions.androidx_transition}"
     const val androidx_datastore = "androidx.datastore:datastore:${FenixVersions.androidx_datastore}"
 
