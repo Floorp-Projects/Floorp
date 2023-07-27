@@ -15,9 +15,10 @@ async def test_params_context_invalid_type(bidi_session, value):
         await bidi_session.browsing_context.capture_screenshot(context=value)
 
 
-async def test_invalid_frame(bidi_session, top_context, inline):
+@pytest.mark.parametrize("value", ["", "somestring"])
+async def test_invalid_frame(bidi_session, value):
     with pytest.raises(error.NoSuchFrameException):
-        await bidi_session.browsing_context.capture_screenshot(context="_invalid_")
+        await bidi_session.browsing_context.capture_screenshot(context=value)
 
 
 async def test_closed_frame(bidi_session, top_context, inline, add_and_remove_iframe):
