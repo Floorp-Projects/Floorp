@@ -33,6 +33,7 @@ const MAX_CAPTURE_AREA = 124925329;
 export class ScreenshotsComponentParent extends JSWindowActorParent {
   async receiveMessage(message) {
     let browser = message.target.browsingContext.topFrameElement;
+    let region, title;
     switch (message.name) {
       case "Screenshots:CancelScreenshot":
         await ScreenshotsUtils.closePanel(browser);
@@ -41,17 +42,13 @@ export class ScreenshotsComponentParent extends JSWindowActorParent {
         break;
       case "Screenshots:CopyScreenshot":
         await ScreenshotsUtils.closePanel(browser);
-        let copyBox = message.data;
-        ScreenshotsUtils.copyScreenshotFromRegion(copyBox, browser);
+        ({ region } = message.data);
+        ScreenshotsUtils.copyScreenshotFromRegion(region, browser);
         break;
       case "Screenshots:DownloadScreenshot":
         await ScreenshotsUtils.closePanel(browser);
-        let { title, downloadBox } = message.data;
-        ScreenshotsUtils.downloadScreenshotFromRegion(
-          title,
-          downloadBox,
-          browser
-        );
+        ({ title, region } = message.data);
+        ScreenshotsUtils.downloadScreenshotFromRegion(title, region, browser);
         break;
       case "Screenshots:ShowPanel":
         ScreenshotsUtils.openPanel(browser);
@@ -73,6 +70,7 @@ export class ScreenshotsComponentParent extends JSWindowActorParent {
 
 export var ScreenshotsUtils = {
   initialized: false,
+
   initialize() {
     if (!this.initialized) {
       if (
@@ -92,6 +90,7 @@ export var ScreenshotsUtils = {
       }
     }
   },
+
   uninitialize() {
     if (this.initialized) {
       Services.obs.removeObserver(this, "menuitem-screenshot");
@@ -99,6 +98,7 @@ export var ScreenshotsUtils = {
       this.initialized = false;
     }
   },
+
   handleEvent(event) {
     // We need to add back Escape to hide behavior as we have set noautohide="true"
     if (event.type === "keydown" && event.key === "Escape") {
@@ -106,6 +106,7 @@ export var ScreenshotsUtils = {
       this.recordTelemetryEvent("canceled", "escape", {});
     }
   },
+
   observe(subj, topic, data) {
     let { gBrowser } = subj;
     let browser = gBrowser.selectedBrowser;
@@ -140,6 +141,7 @@ export var ScreenshotsUtils = {
     }
     return null;
   },
+
   /**
    * Notify screenshots when screenshot command is used.
    * @param window The current window the screenshot command was used.
@@ -156,8 +158,9 @@ export var ScreenshotsUtils = {
       Services.obs.notifyObservers(null, "menuitem-screenshot-extension", type);
     }
   },
+
   /**
-   * Creates and returns a Screenshots actor.
+   * Creates/gets and returns a Screenshots actor.
    * @param browser The current browser.
    * @returns JSWindowActor The screenshot actor.
    */
@@ -167,13 +170,38 @@ export var ScreenshotsUtils = {
     );
     return actor;
   },
+
   /**
-   * Open the panel buttons
+   * Returns the buttons panel. If the panel doesn't exist, create the panel.
+   * @param browser The current browser
+   * @returns The buttons panel
+   */
+  panelForBrowser(browser) {
+    let doc = browser.ownerDocument;
+    let buttonsPanel = doc.getElementById("screenshotsPagePanel");
+    if (!buttonsPanel) {
+      let template = doc.getElementById("screenshotsPagePanelTemplate");
+      let clone = template.content.cloneNode(true);
+      template.replaceWith(clone);
+      buttonsPanel = this.panelForBrowser(browser);
+    }
+    return buttonsPanel;
+  },
+
+  /**
+   * Open the buttons panel.
    * @param browser The current browser
    */
   async openPanel(browser) {
-    this.createOrDisplayButtons(browser);
     let buttonsPanel = this.panelForBrowser(browser);
+    if (buttonsPanel.state !== "closed") {
+      return;
+    }
+
+    buttonsPanel.ownerDocument.addEventListener("keydown", this);
+    let anchor = browser.ownerDocument.getElementById("navigator-toolbox");
+    buttonsPanel.openPopup(anchor, PanelPosition, PanelOffsetX, PanelOffsetY);
+
     if (buttonsPanel.state !== "open") {
       await new Promise(resolve => {
         buttonsPanel.addEventListener("popupshown", resolve, { once: true });
@@ -183,6 +211,7 @@ export var ScreenshotsUtils = {
       .querySelector("screenshots-buttons")
       .focusFirst({ focusVisible: true });
   },
+
   /**
    * Close the panel and call child actor to close the overlay
    * @param browser The current browser
@@ -195,12 +224,14 @@ export var ScreenshotsUtils = {
     if (buttonsPanel && buttonsPanel.state !== "closed") {
       buttonsPanel.hidePopup();
     }
-    buttonsPanel?.ownerDocument.removeEventListener("keydown", this);
+    buttonsPanel.ownerDocument.removeEventListener("keydown", this);
+
     if (closeOverlay) {
       let actor = this.getActor(browser);
       await actor.sendQuery("Screenshots:HideOverlay");
     }
   },
+
   /**
    * If the buttons panel exists and is open we will hide both the panel
    * and the overlay. If the overlay is showing, we will hide the overlay.
@@ -219,10 +250,11 @@ export var ScreenshotsUtils = {
       return this.closePanel(browser, true);
     }
     let actor = this.getActor(browser);
-    actor.sendQuery("Screenshots:ShowOverlay");
+    actor.sendAsyncMessage("Screenshots:ShowOverlay");
     this.recordTelemetryEvent("started", data, {});
     return this.openPanel(browser);
   },
+
   /**
    * Gets the screenshots dialog box
    * @param browser The selected browser
@@ -250,6 +282,7 @@ export var ScreenshotsUtils = {
     }
     return null;
   },
+
   /**
    * Closes the dialog box it it exists
    * @param browser The selected browser
@@ -262,9 +295,7 @@ export var ScreenshotsUtils = {
     }
     return false;
   },
-  panelForBrowser(browser) {
-    return browser.ownerDocument.querySelector("#screenshotsPagePanel");
-  },
+
   /**
    * Gets the screenshots button if it is visible, otherwise it will get the
    * element that the screenshots button is nested under. If the screenshots
@@ -284,6 +315,7 @@ export var ScreenshotsUtils = {
     }
     return anchor;
   },
+
   /**
    * Indicate that the screenshot has been copied via ConfirmationHint.
    * @param browser The selected browser
@@ -296,31 +328,7 @@ export var ScreenshotsUtils = {
       "confirmation-hint-screenshot-copied"
     );
   },
-  /**
-   * If the buttons panel does not exist then we will replace the buttons
-   * panel template with the buttons panel then open the buttons panel and
-   * show the screenshots overaly.
-   * @param browser The current browser.
-   */
-  createOrDisplayButtons(browser) {
-    let doc = browser.ownerDocument;
-    let buttonsPanel = this.panelForBrowser(browser);
 
-    if (!buttonsPanel) {
-      let template = doc.querySelector("#screenshotsPagePanelTemplate");
-      let clone = template.content.cloneNode(true);
-      template.replaceWith(clone);
-      buttonsPanel = doc.querySelector("#screenshotsPagePanel");
-    } else if (buttonsPanel.state !== "closed") {
-      // early return if the panel is already open
-      return;
-    }
-
-    buttonsPanel.ownerDocument.addEventListener("keydown", this);
-
-    let anchor = doc.querySelector("#navigator-toolbox");
-    buttonsPanel.openPopup(anchor, PanelPosition, PanelOffsetX, PanelOffsetY);
-  },
   /**
    * Gets the full page bounds from the screenshots child actor.
    * @param browser The current browser.
@@ -331,6 +339,7 @@ export var ScreenshotsUtils = {
     let actor = this.getActor(browser);
     return actor.sendQuery("Screenshots:getFullPageBounds");
   },
+
   /**
    * Gets the visible bounds from the screenshots child actor.
    * @param browser The current browser.
@@ -341,9 +350,11 @@ export var ScreenshotsUtils = {
     let actor = this.getActor(browser);
     return actor.sendQuery("Screenshots:getVisibleBounds");
   },
+
   showAlertMessage(title, message) {
     lazy.AlertsService.showAlertNotification(null, title, message);
   },
+
   /**
    * The max one dimesion for a canvas is 32767 and the max canvas area is
    * 124925329. If the width or height is greater than 32767 we will crop the
@@ -383,6 +394,7 @@ export var ScreenshotsUtils = {
       this.recordTelemetryEvent("failed", "screenshot_too_large", null);
     }
   },
+
   /**
    * Add screenshot-ui to the dialog box and then take the screenshot
    * @param browser The current browser.
@@ -405,6 +417,7 @@ export var ScreenshotsUtils = {
     this.recordTelemetryEvent("selected", type, {});
     return this.takeScreenshot(browser, dialog, rect);
   },
+
   /**
    * Take the screenshot and add the image to the dialog box
    * @param browser The current browser.
@@ -430,17 +443,23 @@ export var ScreenshotsUtils = {
 
     snapshot.close();
   },
+
   /**
    * Creates a canvas and draws a snapshot of the screenshot on the canvas
-   * @param box The bounds of screenshots
+   * @param region The bounds of screenshots
    * @param browser The current browser
    * @returns The canvas and snapshot in an object
    */
-  async createCanvas(box, browser) {
-    this.cropScreenshotRectIfNeeded(box);
+  async createCanvas(region, browser) {
+    this.cropScreenshotRectIfNeeded(region);
 
-    let rect = new DOMRect(box.x1, box.y1, box.width, box.height);
-    let { devicePixelRatio } = box;
+    let rect = new DOMRect(
+      region.left,
+      region.top,
+      region.width,
+      region.height
+    );
+    let { devicePixelRatio } = region;
 
     let browsingContext = BrowsingContext.get(browser.browsingContext.id);
 
@@ -463,6 +482,7 @@ export var ScreenshotsUtils = {
 
     return { canvas, snapshot };
   },
+
   /**
    * Copy the screenshot
    * @param region The bounds of the screenshots
@@ -479,6 +499,7 @@ export var ScreenshotsUtils = {
 
     this.recordTelemetryEvent("copy", "overlay_copy", {});
   },
+
   /**
    * Copy the image to the clipboard
    * @param dataUrl The image data
@@ -518,14 +539,15 @@ export var ScreenshotsUtils = {
 
     this.showCopiedConfirmationHint(browser);
   },
+
   /**
    * Download the screenshot
    * @param title The title of the current page
-   * @param box The bounds of the screenshot
+   * @param region The bounds of the screenshot
    * @param browser The current browser
    */
-  async downloadScreenshotFromRegion(title, box, browser) {
-    let { canvas, snapshot } = await this.createCanvas(box, browser);
+  async downloadScreenshotFromRegion(title, region, browser) {
+    let { canvas, snapshot } = await this.createCanvas(region, browser);
 
     let dataUrl = canvas.toDataURL();
 
@@ -535,6 +557,7 @@ export var ScreenshotsUtils = {
 
     this.recordTelemetryEvent("download", "overlay_download", {});
   },
+
   /**
    * Download the screenshot
    * @param title The title of the current page or null and getFilename will get the title
