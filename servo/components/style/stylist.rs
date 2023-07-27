@@ -53,7 +53,7 @@ use selectors::bloom::BloomFilter;
 use selectors::matching::{
     matches_selector, MatchingContext, MatchingMode, NeedsSelectorFlags, SelectorCaches,
 };
-use selectors::matching::{MatchingForInvalidation, VisitedHandlingMode};
+use selectors::matching::{IgnoreNthChildForInvalidation, VisitedHandlingMode};
 use selectors::parser::{
     AncestorHashes, Combinator, Component, Selector, SelectorIter, SelectorList,
 };
@@ -1140,7 +1140,7 @@ impl Stylist {
             &mut selector_caches,
             self.quirks_mode,
             needs_selector_flags,
-            MatchingForInvalidation::No,
+            IgnoreNthChildForInvalidation::No,
         );
 
         matching_context.pseudo_element_matching_fn = matching_fn;
@@ -1175,7 +1175,7 @@ impl Stylist {
                 VisitedHandlingMode::RelevantLinkVisited,
                 self.quirks_mode,
                 needs_selector_flags,
-                MatchingForInvalidation::No,
+                IgnoreNthChildForInvalidation::No,
             );
             matching_context.pseudo_element_matching_fn = matching_fn;
             matching_context.extra_data.originating_element_style = Some(originating_element_style);
@@ -1394,7 +1394,7 @@ impl Stylist {
             selector_caches,
             self.quirks_mode,
             needs_selector_flags,
-            MatchingForInvalidation::No,
+            IgnoreNthChildForInvalidation::No,
         );
 
         // Note that, by the time we're revalidating, we're guaranteed that the

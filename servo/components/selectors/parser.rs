@@ -203,9 +203,9 @@ macro_rules! with_all_bounds {
         pub trait SelectorImpl: Clone + Debug + Sized + 'static {
             type ExtraMatchingData<'a>: Sized + Default;
             type AttrValue: $($InSelector)*;
-            type Identifier: $($InSelector)* + PrecomputedHash;
-            type LocalName: $($InSelector)* + Borrow<Self::BorrowedLocalName> + PrecomputedHash;
-            type NamespaceUrl: $($CommonBounds)* + Default + Borrow<Self::BorrowedNamespaceUrl> + PrecomputedHash;
+            type Identifier: $($InSelector)*;
+            type LocalName: $($InSelector)* + Borrow<Self::BorrowedLocalName>;
+            type NamespaceUrl: $($CommonBounds)* + Default + Borrow<Self::BorrowedNamespaceUrl>;
             type NamespacePrefix: $($InSelector)* + Default;
             type BorrowedNamespaceUrl: ?Sized + Eq;
             type BorrowedLocalName: ?Sized + Eq;
@@ -512,17 +512,18 @@ pub struct AncestorHashes {
     pub packed_hashes: [u32; 3],
 }
 
-pub(crate) fn collect_selector_hashes<'a, Impl: SelectorImpl, Iter>(
-    iter: Iter,
+fn collect_ancestor_hashes<Impl: SelectorImpl>(
+    iter: SelectorIter<Impl>,
     quirks_mode: QuirksMode,
     hashes: &mut [u32; 4],
     len: &mut usize,
-    create_inner_iterator: fn(&'a Selector<Impl>) -> Iter,
 ) -> bool
 where
-    Iter: Iterator<Item = &'a Component<Impl>>,
+    Impl::Identifier: PrecomputedHash,
+    Impl::LocalName: PrecomputedHash,
+    Impl::NamespaceUrl: PrecomputedHash,
 {
-    for component in iter {
+    for component in AncestorIter::new(iter) {
         let hash = match *component {
             Component::LocalName(LocalName {
                 ref name,
@@ -578,13 +579,7 @@ where
                 // in the filter if there's more than one selector, as that'd
                 // exclude elements that may match one of the other selectors.
                 if list.len() == 1 &&
-                    !collect_selector_hashes(
-                        create_inner_iterator(&list[0]),
-                        quirks_mode,
-                        hashes,
-                        len,
-                        create_inner_iterator,
-                    )
+                    !collect_ancestor_hashes(list[0].iter(), quirks_mode, hashes, len)
                 {
                     return false;
                 }
@@ -602,17 +597,12 @@ where
     true
 }
 
-fn collect_ancestor_hashes<Impl: SelectorImpl>(
-    iter: SelectorIter<Impl>,
-    quirks_mode: QuirksMode,
-    hashes: &mut [u32; 4],
-    len: &mut usize,
-) {
-    collect_selector_hashes(AncestorIter::new(iter), quirks_mode, hashes, len, |s| AncestorIter(s.iter()));
-}
-
 impl AncestorHashes {
     pub fn new<Impl: SelectorImpl>(selector: &Selector<Impl>, quirks_mode: QuirksMode) -> Self
+    where
+        Impl::Identifier: PrecomputedHash,
+        Impl::LocalName: PrecomputedHash,
+        Impl::NamespaceUrl: PrecomputedHash,
     {
         // Compute ancestor hashes for the bloom filter.
         let mut hashes = [0u32; 4];
@@ -834,17 +824,6 @@ impl<Impl: SelectorImpl> Selector<Impl> {
     #[inline]
     pub fn iter_from(&self, offset: usize) -> SelectorIter<Impl> {
         let iter = self.0.slice()[offset..].iter();
-        SelectorIter {
-            iter,
-            next_combinator: None,
-        }
-    }
-
-    /// Returns an iterator over this selector in matching order (right-to-left),
-    /// skipping the leftmost |offset| Components.
-    #[inline]
-    pub fn iter_until(&self, offset: usize) -> SelectorIter<Impl> {
-        let iter = self.0.slice()[..self.len() - offset].iter();
         SelectorIter {
             iter,
             next_combinator: None,
