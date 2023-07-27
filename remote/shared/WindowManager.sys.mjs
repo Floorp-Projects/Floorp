@@ -218,9 +218,13 @@ class WindowManager {
 
         await Promise.all([activated, focused, startup]);
 
-        // The new window shouldn't get focused. As such set the
-        // focus back to the opening window.
-        if (!focus) {
+        if (focus) {
+          // Focus the currently selected tab.
+          const browser = lazy.TabManager.getTabBrowser(win).selectedBrowser;
+          browser.focus();
+        } else {
+          // If the new window shouldn't get focused, set the
+          // focus back to the opening window.
           await this.focusWindow(openerWindow);
         }
 
