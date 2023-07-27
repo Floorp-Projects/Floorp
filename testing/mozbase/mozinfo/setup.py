@@ -4,7 +4,7 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = "1.2.2"
+PACKAGE_VERSION = "1.2.3"
 
 # dependencies
 deps = [
