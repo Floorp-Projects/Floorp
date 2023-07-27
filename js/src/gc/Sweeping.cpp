@@ -34,6 +34,7 @@
 #include "gc/TraceKind.h"
 #include "gc/WeakMap.h"
 #include "gc/Zone.h"
+#include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitZone.h"
 #include "proxy/DeadObjectProxy.h"
@@ -1386,6 +1387,9 @@ void GCRuntime::sweepJitDataOnMainThread(JS::GCContext* gcx) {
         jitZone->traceWeak(&trc, zone);
       }
     }
+
+    JSContext* cx = rt->mainContextFromOwnThread();
+    jit::TraceWeakJitActivationsInSweepingZones(cx, &trc);
   }
 }
 

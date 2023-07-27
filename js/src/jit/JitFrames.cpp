@@ -1112,6 +1112,19 @@ static void TraceBaselineStubFrame(JSTracer* trc, const JSJitFrameIter& frame) {
   }
 }
 
+static void TraceWeakBaselineStubFrame(JSTracer* trc,
+                                       const JSJitFrameIter& frame) {
+  MOZ_ASSERT(frame.type() == FrameType::BaselineStub);
+  BaselineStubFrameLayout* layout = (BaselineStubFrameLayout*)frame.fp();
+
+  if (ICStub* stub = layout->maybeStubPtr()) {
+    if (!stub->isFallback()) {
+      MOZ_ASSERT(stub->toCacheIRStub()->makesGCCalls());
+      stub->toCacheIRStub()->traceWeak(trc);
+    }
+  }
+}
+
 static void TraceIonICCallFrame(JSTracer* trc, const JSJitFrameIter& frame) {
   MOZ_ASSERT(frame.type() == FrameType::IonICCall);
   IonICCallFrameLayout* layout = (IonICCallFrameLayout*)frame.fp();
@@ -1410,6 +1423,21 @@ void TraceJitActivations(JSContext* cx, JSTracer* trc) {
   for (JitActivationIterator activations(cx); !activations.done();
        ++activations) {
     TraceJitActivation(trc, activations->asJit());
+  }
+}
+
+void TraceWeakJitActivationsInSweepingZones(JSContext* cx, JSTracer* trc) {
+  for (JitActivationIterator activation(cx); !activation.done(); ++activation) {
+    if (activation->compartment()->zone()->isGCSweeping()) {
+      for (JitFrameIter frame(activation->asJit()); !frame.done(); ++frame) {
+        if (frame.isJSJit()) {
+          const JSJitFrameIter& jitFrame = frame.asJSJit();
+          if (jitFrame.type() == FrameType::BaselineStub) {
+            TraceWeakBaselineStubFrame(trc, jitFrame);
+          }
+        }
+      }
+    }
   }
 }
 
