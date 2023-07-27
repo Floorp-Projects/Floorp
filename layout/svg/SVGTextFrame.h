@@ -241,9 +241,20 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
                                                    uint32_t charnum,
                                                    uint32_t nchars,
                                                    ErrorResult& aRv);
-  MOZ_CAN_RUN_SCRIPT
-  float GetSubStringLength(nsIContent* aContent, uint32_t charnum,
-                           uint32_t nchars, ErrorResult& aRv);
+  bool RequiresSlowFallbackForSubStringLength();
+  float GetSubStringLengthFastPath(nsIContent* aContent, uint32_t charnum,
+                                   uint32_t nchars, ErrorResult& aRv);
+  /**
+   * This fallback version of GetSubStringLength takes
+   * into account glyph positioning and requires us to have flushed layout
+   * before calling it. As per the SVG 2 spec, typically glyph
+   * positioning does not affect the results of getSubStringLength, but one
+   * exception is text in a textPath where we need to ignore characters that
+   * fall off the end of the textPath path.
+   */
+  float GetSubStringLengthSlowFallback(nsIContent* aContent, uint32_t charnum,
+                                       uint32_t nchars, ErrorResult& aRv);
+
   int32_t GetCharNumAtPosition(nsIContent* aContent,
                                const dom::DOMPointInit& aPoint);
 
@@ -404,17 +415,6 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
    * within the <text>.
    */
   void DoGlyphPositioning();
-
-  /**
-   * This fallback version of GetSubStringLength that flushes layout and takes
-   * into account glyph positioning.  As per the SVG 2 spec, typically glyph
-   * positioning does not affect the results of getSubStringLength, but one
-   * exception is text in a textPath where we need to ignore characters that
-   * fall off the end of the textPath path.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  float GetSubStringLengthSlowFallback(nsIContent* aContent, uint32_t charnum,
-                                       uint32_t nchars, ErrorResult& aRv);
 
   /**
    * Converts the specified index into mPositions to an addressable
