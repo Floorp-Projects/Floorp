@@ -27,6 +27,10 @@ internal interface LoginExceptionDao {
     @Query("SELECT * FROM logins_exceptions")
     fun getLoginExceptions(): Flow<List<LoginExceptionEntity>>
 
+    @Transaction
+    @Query("SELECT * FROM logins_exceptions")
+    fun getLoginExceptionsList(): List<LoginExceptionEntity>
+
     @Query("DELETE FROM logins_exceptions")
     fun deleteAllLoginExceptions()
 

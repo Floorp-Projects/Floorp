@@ -6,7 +6,6 @@ package mozilla.components.feature.logins.exceptions.db
 
 import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import org.junit.After
@@ -49,15 +48,10 @@ class LoginExceptionDaoTest {
             it.id = loginExceptionDao.insertLoginException(it)
         }
 
-        val dataSource = loginExceptionDao.getLoginExceptionsPaged().create()
+        val loginExceptionsList = loginExceptionDao.getLoginExceptionsList()
 
-        val pagedList = PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
-
-        assertEquals(1, pagedList.size)
-        assertEquals(exception, pagedList[0]!!)
+        assertEquals(1, loginExceptionsList.size)
+        assertEquals(exception, loginExceptionsList[0])
     }
 
     @Test
@@ -76,14 +70,9 @@ class LoginExceptionDaoTest {
 
         loginExceptionDao.deleteLoginException(exception1)
 
-        val dataSource = loginExceptionDao.getLoginExceptionsPaged().create()
+        val loginExceptionsList = loginExceptionDao.getLoginExceptionsList()
 
-        val pagedList = PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
-
-        assertEquals(1, pagedList.size)
-        assertEquals(exception2, pagedList[0])
+        assertEquals(1, loginExceptionsList.size)
+        assertEquals(exception2, loginExceptionsList[0])
     }
 }

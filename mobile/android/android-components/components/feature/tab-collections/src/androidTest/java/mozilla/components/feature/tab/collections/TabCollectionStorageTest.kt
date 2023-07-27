@@ -6,7 +6,6 @@ package mozilla.components.feature.tab.collections
 
 import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -435,15 +434,12 @@ class TabCollectionStorageTest {
     }
 
     private fun getAllCollections(): List<TabCollection> {
-        val dataSource = storage.getCollectionsPaged()
-            .create()
+        val pagedList = mutableListOf<TabCollection>()
+        storage.getCollectionsPaged().create().map {
+            pagedList.add(it)
+        }
 
-        val pagedList = PagedList.Builder(dataSource, 100)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
-
-        return pagedList.toList()
+        return pagedList
     }
 }
 

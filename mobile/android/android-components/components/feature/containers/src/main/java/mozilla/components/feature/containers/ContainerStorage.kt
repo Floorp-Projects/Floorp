@@ -24,7 +24,7 @@ internal class ContainerStorage(context: Context) : ContainerMiddleware.Storage 
     @VisibleForTesting
     internal var database: Lazy<ContainerDatabase> =
         lazy { ContainerDatabase.get(context) }
-    private val containerDao by lazy { database.value.containerDao() }
+    val containerDao by lazy { database.value.containerDao() }
 
     /**
      * Adds a new [Container].

@@ -5,8 +5,6 @@
 package mozilla.components.feature.containers
 
 import android.content.Context
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,39 +14,24 @@ import mozilla.components.browser.state.state.Container
 import mozilla.components.browser.state.state.ContainerState.Color
 import mozilla.components.browser.state.state.ContainerState.Icon
 import mozilla.components.feature.containers.db.ContainerDatabase
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 @ExperimentalCoroutinesApi
 @Suppress("LargeClass")
 class ContainerStorageTest {
     private lateinit var context: Context
     private lateinit var storage: ContainerStorage
-    private lateinit var executor: ExecutorService
-
-    @get:Rule
-    var instantTaskExecutorRule = InstantTaskExecutorRule()
 
     @Before
     fun setUp() {
-        executor = Executors.newSingleThreadExecutor()
-
         context = ApplicationProvider.getApplicationContext()
         val database = Room.inMemoryDatabaseBuilder(context, ContainerDatabase::class.java).build()
 
         storage = ContainerStorage(context)
         storage.database = lazy { database }
-    }
-
-    @After
-    fun tearDown() {
-        executor.shutdown()
     }
 
     @Test
@@ -116,14 +99,9 @@ class ContainerStorageTest {
         }
     }
 
-    private fun getAllContainers(): List<Container> {
-        val dataSource = storage.getContainersPaged().create()
-
-        val pagedList = PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
-
-        return pagedList.toList()
+    private suspend fun getAllContainers(): List<Container> {
+        return storage.containerDao.getContainersList().map { containerEntity ->
+            containerEntity.toContainer()
+        }
     }
 }

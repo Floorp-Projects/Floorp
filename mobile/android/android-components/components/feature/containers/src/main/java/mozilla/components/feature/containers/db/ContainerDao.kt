@@ -27,6 +27,9 @@ internal interface ContainerDao {
     @Query("SELECT * FROM containers")
     fun getContainers(): Flow<List<ContainerEntity>>
 
+    @Query("SELECT * FROM containers")
+    suspend fun getContainersList(): List<ContainerEntity>
+
     @Transaction
     @Query("SELECT * FROM containers")
     fun getContainersPaged(): DataSource.Factory<Int, ContainerEntity>

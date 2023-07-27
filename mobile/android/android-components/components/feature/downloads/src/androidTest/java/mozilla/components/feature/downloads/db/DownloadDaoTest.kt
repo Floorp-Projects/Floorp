@@ -5,8 +5,6 @@
 package mozilla.components.feature.downloads.db
 
 import android.content.Context
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.test.runTest
@@ -16,10 +14,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 class DownloadDaoTest {
     private val context: Context
@@ -27,22 +22,16 @@ class DownloadDaoTest {
 
     private lateinit var database: DownloadsDatabase
     private lateinit var dao: DownloadDao
-    private lateinit var executor: ExecutorService
-
-    @get:Rule
-    var instantTaskExecutorRule = InstantTaskExecutorRule()
 
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(context, DownloadsDatabase::class.java).build()
         dao = database.downloadDao()
-        executor = Executors.newSingleThreadExecutor()
     }
 
     @After
     fun tearDown() {
         database.close()
-        executor.shutdown()
     }
 
     @Test
@@ -51,7 +40,7 @@ class DownloadDaoTest {
         val pagedList = getDownloadsPagedList()
 
         assertEquals(1, pagedList.size)
-        assertTrue(DownloadStorage.isSameDownload(download, pagedList[0]!!.toDownloadState()))
+        assertTrue(DownloadStorage.isSameDownload(download, pagedList[0].toDownloadState()))
     }
 
     @Test
@@ -107,12 +96,8 @@ class DownloadDaoTest {
         assertEquals("new_url", pagedList.first().url)
     }
 
-    private fun getDownloadsPagedList(): PagedList<DownloadEntity> {
-        val dataSource = dao.getDownloadsPaged().create()
-        return PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
+    private suspend fun getDownloadsPagedList(): List<DownloadEntity> {
+        return dao.getDownloadsList()
     }
 
     private suspend fun insertMockDownload(id: String, url: String): DownloadState {

@@ -6,7 +6,6 @@ package mozilla.components.feature.containers.db
 
 import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -58,15 +57,10 @@ class ContainerDaoTest {
             )
         containerDao.insertContainer(container)
 
-        val dataSource = containerDao.getContainersPaged().create()
-
-        val pagedList = PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
+        val pagedList = containerDao.getContainersList()
 
         assertEquals(1, pagedList.size)
-        assertEquals(container, pagedList[0]!!)
+        assertEquals(container, pagedList[0])
     }
 
     @Test
@@ -90,12 +84,7 @@ class ContainerDaoTest {
         containerDao.insertContainer(container2)
         containerDao.deleteContainer(container1)
 
-        val dataSource = containerDao.getContainersPaged().create()
-
-        val pagedList = PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
+        val pagedList = containerDao.getContainersList()
 
         assertEquals(1, pagedList.size)
         assertEquals(container2, pagedList[0])

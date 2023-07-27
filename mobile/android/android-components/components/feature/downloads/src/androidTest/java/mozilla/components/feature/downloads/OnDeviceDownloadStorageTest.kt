@@ -5,8 +5,6 @@
 package mozilla.components.feature.downloads
 
 import android.content.Context
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
@@ -24,8 +22,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 private const val MIGRATION_TEST_DB = "migration-test"
 
@@ -33,7 +29,6 @@ private const val MIGRATION_TEST_DB = "migration-test"
 class OnDeviceDownloadStorageTest {
     private lateinit var context: Context
     private lateinit var storage: DownloadStorage
-    private lateinit var executor: ExecutorService
     private lateinit var database: DownloadsDatabase
 
     @get:Rule
@@ -44,13 +39,8 @@ class OnDeviceDownloadStorageTest {
         FrameworkSQLiteOpenHelperFactory(),
     )
 
-    @get:Rule
-    var instantTaskExecutorRule = InstantTaskExecutorRule()
-
     @Before
     fun setUp() {
-        executor = Executors.newSingleThreadExecutor()
-
         context = ApplicationProvider.getApplicationContext()
         database = Room.inMemoryDatabaseBuilder(context, DownloadsDatabase::class.java).build()
 
@@ -60,7 +50,6 @@ class OnDeviceDownloadStorageTest {
 
     @After
     fun tearDown() {
-        executor.shutdown()
         database.close()
     }
 
@@ -178,8 +167,8 @@ class OnDeviceDownloadStorageTest {
         assertEquals(3, downloads.size)
 
         assertTrue(DownloadStorage.isSameDownload(download1, downloads.first()))
-        assertTrue(DownloadStorage.isSameDownload(download2, downloads[1]!!))
-        assertTrue(DownloadStorage.isSameDownload(download3, downloads[2]!!))
+        assertTrue(DownloadStorage.isSameDownload(download2, downloads[1]))
+        assertTrue(DownloadStorage.isSameDownload(download3, downloads[2]))
     }
 
     @Test
@@ -195,7 +184,7 @@ class OnDeviceDownloadStorageTest {
         assertEquals(2, downloads.size)
 
         assertTrue(DownloadStorage.isSameDownload(download1.copy(url = ""), downloads.first()))
-        assertTrue(DownloadStorage.isSameDownload(download2, downloads[1]!!))
+        assertTrue(DownloadStorage.isSameDownload(download2, downloads[1]))
     }
 
     @Test
@@ -211,7 +200,7 @@ class OnDeviceDownloadStorageTest {
         assertEquals(2, downloads.size)
 
         assertTrue(DownloadStorage.isSameDownload(download1, downloads.first()))
-        assertTrue(DownloadStorage.isSameDownload(download2, downloads[1]!!))
+        assertTrue(DownloadStorage.isSameDownload(download2, downloads[1]))
 
         val updatedDownload1 = createMockDownload("1", "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ==")
         val updatedDownload2 = createMockDownload("2", "updated_url2")
@@ -222,7 +211,7 @@ class OnDeviceDownloadStorageTest {
         downloads = getDownloadsPagedList()
 
         assertTrue(DownloadStorage.isSameDownload(updatedDownload1.copy(url = ""), downloads.first()))
-        assertTrue(DownloadStorage.isSameDownload(updatedDownload2, downloads[1]!!))
+        assertTrue(DownloadStorage.isSameDownload(updatedDownload2, downloads[1]))
     }
 
     @Test
@@ -257,7 +246,7 @@ class OnDeviceDownloadStorageTest {
         assertEquals(2, downloads.size)
 
         assertTrue(DownloadStorage.isSameDownload(download1, downloads.first()))
-        assertTrue(DownloadStorage.isSameDownload(download2, downloads[1]!!))
+        assertTrue(DownloadStorage.isSameDownload(download2, downloads[1]))
     }
 
     @Test
@@ -270,8 +259,8 @@ class OnDeviceDownloadStorageTest {
 
         assertEquals(2, pagedList.size)
 
-        pagedList.forEach {
-            storage.remove(it)
+        pagedList.forEach { download ->
+            storage.remove(download)
         }
 
         pagedList = getDownloadsPagedList()
@@ -289,11 +278,7 @@ class OnDeviceDownloadStorageTest {
         )
     }
 
-    private fun getDownloadsPagedList(): PagedList<DownloadState> {
-        val dataSource = storage.getDownloadsPaged().create()
-        return PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
+    private suspend fun getDownloadsPagedList(): List<DownloadState> {
+        return storage.getDownloadsList()
     }
 }

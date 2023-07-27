@@ -6,7 +6,6 @@ package mozilla.components.feature.tab.collections.db
 
 import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.flow.first
@@ -51,18 +50,15 @@ class TabCollectionDaoTest {
         tabCollectionDao.insertTabCollection(collection1)
         tabCollectionDao.insertTabCollection(collection2)
 
-        val dataSource = tabCollectionDao.getTabCollectionsPaged()
-            .create()
-
-        val pagedList = PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
+        val pagedList = mutableListOf<TabCollectionWithTabs>()
+        tabCollectionDao.getTabCollectionsPaged().create().map {
+            pagedList.add(it)
+        }
 
         assertEquals(2, pagedList.size)
 
-        assertEquals("Collection Two", pagedList[1]!!.collection.title)
-        assertEquals("Collection One", pagedList[0]!!.collection.title)
+        assertEquals("Collection Two", pagedList[1].collection.title)
+        assertEquals("Collection One", pagedList[0].collection.title)
     }
 
     @Test
@@ -78,18 +74,15 @@ class TabCollectionDaoTest {
 
         tabCollectionDao.updateTabCollection(collection1)
 
-        val dataSource = tabCollectionDao.getTabCollectionsPaged()
-            .create()
-
-        val pagedList = PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
+        val pagedList = mutableListOf<TabCollectionWithTabs>()
+        tabCollectionDao.getTabCollectionsPaged().create().map {
+            pagedList.add(it)
+        }
 
         assertEquals(2, pagedList.size)
 
-        assertEquals("Updated collection", pagedList[0]!!.collection.title)
-        assertEquals("Collection Two", pagedList[1]!!.collection.title)
+        assertEquals("Updated collection", pagedList[0].collection.title)
+        assertEquals("Collection Two", pagedList[1].collection.title)
     }
 
     @Test
@@ -104,18 +97,15 @@ class TabCollectionDaoTest {
 
         tabCollectionDao.deleteTabCollection(collection2)
 
-        val dataSource = tabCollectionDao.getTabCollectionsPaged()
-            .create()
-
-        val pagedList = PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
+        val pagedList = mutableListOf<TabCollectionWithTabs>()
+        tabCollectionDao.getTabCollectionsPaged().create().map {
+            pagedList.add(it)
+        }
 
         assertEquals(2, pagedList.size)
 
-        assertEquals("Collection Three", pagedList[1]!!.collection.title)
-        assertEquals("Collection One", pagedList[0]!!.collection.title)
+        assertEquals("Collection Three", pagedList[1].collection.title)
+        assertEquals("Collection One", pagedList[0].collection.title)
     }
 
     @Test

@@ -6,7 +6,6 @@ package mozilla.components.feature.logins
 
 import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
@@ -16,6 +15,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import mozilla.components.feature.logins.exceptions.LoginException
 import mozilla.components.feature.logins.exceptions.LoginExceptionStorage
+import mozilla.components.feature.logins.exceptions.adapter.LoginExceptionAdapter
 import mozilla.components.feature.logins.exceptions.db.LoginExceptionDatabase
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -134,13 +134,9 @@ class LoginExceptionStorageTest {
     }
 
     private fun getAllExceptions(): List<LoginException> {
-        val dataSource = storage.getLoginExceptionsPaged().create()
-
-        val pagedList = PagedList.Builder(dataSource, 10)
-            .setNotifyExecutor(executor)
-            .setFetchExecutor(executor)
-            .build()
-
-        return pagedList.toList()
+        return storage.database.value.loginExceptionDao().getLoginExceptionsList()
+            .map { loginExceptionEntity ->
+                LoginExceptionAdapter(loginExceptionEntity)
+            }
     }
 }
