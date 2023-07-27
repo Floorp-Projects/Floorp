@@ -2426,7 +2426,7 @@ fn desugared_selector_list(rules: &ThinVec<&LockedStyleRule>) -> SelectorList {
     let mut selectors: Option<SelectorList> = None;
     for rule in rules.iter().rev() {
         selectors = Some(read_locked_arc(rule, |rule| match selectors {
-            Some(s) => rule.selectors.replace_parent_selector(&s.0),
+            Some(s) => rule.selectors.replace_parent_selector(&s.to_shared()),
             None => rule.selectors.clone(),
         }));
     }
