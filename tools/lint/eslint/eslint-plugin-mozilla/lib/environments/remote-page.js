@@ -18,7 +18,7 @@ module.exports = {
     RPMGetIntPref: false,
     RPMGetStringPref: false,
     RPMGetBoolPref: false,
-    RPMSetBoolPref: false,
+    RPMSetPref: false,
     RPMGetFormatURLPref: false,
     RPMIsTRROnlyFailure: false,
     RPMIsFirefox: false,
