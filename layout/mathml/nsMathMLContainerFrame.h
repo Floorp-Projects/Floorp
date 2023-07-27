@@ -205,13 +205,16 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
 
  public:
   /*
-   * Helper to render the frame as a default mrow-like container when an error
-   * (typically invalid markup) was encountered during reflow. Parameters are
-   * the same as Place().
+   * Helper to render the frame as a default mrow-like container or as a visual
+   * feedback to the user when an error (typically invalid markup) was
+   * encountered during reflow. Parameters are the same as Place().
    */
-  nsresult PlaceAsMrow(DrawTarget* aDrawTarget, bool aPlaceOrigin,
-                       ReflowOutput& aDesiredSize);
+  nsresult PlaceForError(DrawTarget* aDrawTarget, bool aPlaceOrigin,
+                         ReflowOutput& aDesiredSize);
 
+  // error handlers to provide a visual feedback to the user when an error
+  // (typically invalid markup) was encountered during reflow.
+  nsresult ReflowError(DrawTarget* aDrawTarget, ReflowOutput& aDesiredSize);
   /*
    * Helper to call ReportErrorToConsole for parse errors involving
    * attribute/value pairs.
