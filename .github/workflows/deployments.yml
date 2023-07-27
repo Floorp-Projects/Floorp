@@ -1343,6 +1343,19 @@ jobs:
         name: Universal-Artifact
         path: ~/downloads/artifacts/macOS-universal
 
+    - name: download Windows x86_64 build artifact 📥
+      uses: actions/download-artifact@v3
+      with:
+        name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
+        path: ~/downloads/artifacts/windows-x64
+
+    - name: Compress Windows x86_64 artifacts to .zip 📦
+      run: |
+        sudo apt update
+        sudo apt-get install zip
+        cd ~/downloads/artifacts/windows-x64
+        zip -r WINDOWS-x86_64-${{ needs.get-display-version.outputs.display-version }}.zip ./
+
     - name: check file structure 🗃
       run: |
         cd ~/downloads/artifacts
@@ -1362,6 +1375,7 @@ jobs:
           /home/runner/downloads/artifacts/linux-x64/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-x86_64.tar.bz2
           /home/runner/downloads/artifacts/linux-aarch64/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-aarch64.tar.bz2
           /home/runner/downloads/artifacts/macOS-universal/floorp-macOS-universal.dmg
+          /home/runner/downloads/artifacts/windows-x64/WINDOWS-x86_64-${{ needs.get-display-version.outputs.display-version }}.zip
         tag_name: "v${{ needs.get-display-version.outputs.display-version }}"
         name: "v${{ needs.get-display-version.outputs.display-version }}"
         draft: false
