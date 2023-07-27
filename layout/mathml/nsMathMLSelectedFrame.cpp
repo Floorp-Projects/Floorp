@@ -102,6 +102,36 @@ nsIFrame::SizeComputationResult nsMathMLSelectedFrame::ComputeSize(
   return {LogicalSize(aWM), AspectRatioUsage::None};
 }
 
+nsresult nsMathMLSelectedFrame::ReflowError(DrawTarget* aDrawTarget,
+                                            ReflowOutput& aDesiredSize) {
+  // clear all other flags and record that there is an error with this frame
+  mEmbellishData.flags = 0;
+  mPresentationData.flags = NS_MATHML_ERROR;
+
+  ///////////////
+  // Set font
+  RefPtr<nsFontMetrics> fm =
+      nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
+
+  // bounding metrics
+  nsAutoString errorMsg;
+  errorMsg.AssignLiteral("invalid-markup");
+  mBoundingMetrics = nsLayoutUtils::AppUnitBoundsOfString(
+      errorMsg.get(), errorMsg.Length(), *fm, aDrawTarget);
+
+  // reflow metrics
+  WritingMode wm = aDesiredSize.GetWritingMode();
+  aDesiredSize.SetBlockStartAscent(fm->MaxAscent());
+  nscoord descent = fm->MaxDescent();
+  aDesiredSize.BSize(wm) = aDesiredSize.BlockStartAscent() + descent;
+  aDesiredSize.ISize(wm) = mBoundingMetrics.width;
+
+  // Also return our bounding metrics
+  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
+
+  return NS_OK;
+}
+
 // Only reflow the selected child ...
 void nsMathMLSelectedFrame::Reflow(nsPresContext* aPresContext,
                                    ReflowOutput& aDesiredSize,
@@ -138,11 +168,11 @@ nsresult nsMathMLSelectedFrame::Place(DrawTarget* aDrawTarget,
   nsIFrame* childFrame = GetSelectedFrame();
 
   if (mInvalidMarkup) {
-    // Calling PlaceForError when mathml.error_message_layout_for_invalid_markup
-    // is disabled causes assertion failures because nsMathMLSelectedFrame only
-    // performs layout of the selected child. However, this code is only reached
-    // when mathml.legacy_maction_and_semantics_implementations is enabled, so
-    // it is out the scope of the mrow fallback described in MathML Core and
+    // Calling PlaceAsMrow causes assertion failures because
+    // nsMathMLSelectedFrame only performs layout of the selected child.
+    // However, this code is only reached when
+    // mathml.legacy_maction_and_semantics_implementations is enabled, so it is
+    // out the scope of the mrow fallback described in MathML Core and
     // nsMathMLSelectedFrame will go away in the future. So for now let's
     // continue to always layout this case as an 'invalid-markup' message.
     return ReflowError(aDrawTarget, aDesiredSize);
