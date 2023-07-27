@@ -12,6 +12,7 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import mozilla.components.support.base.feature.UserInteractionHandler
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.ComponentHistoryBinding
 import org.mozilla.fenix.ext.components
@@ -69,7 +70,11 @@ class HistoryView(
         val primaryTextColor = ThemeManager.resolveAttribute(R.attr.textPrimary, context)
         binding.swipeRefresh.setColorSchemeColors(primaryTextColor)
         binding.swipeRefresh.setOnRefreshListener {
-            interactor.onRequestSync()
+            if (FeatureFlags.historyFragmentLibStateRefactor) {
+                store.dispatch(HistoryFragmentAction.StartSync)
+            } else {
+                interactor.onRequestSync()
+            }
         }
     }
 
