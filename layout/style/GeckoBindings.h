@@ -527,6 +527,8 @@ void Gecko_StyleSheet_AddRef(const mozilla::StyleSheet* aSheet);
 void Gecko_StyleSheet_Release(const mozilla::StyleSheet* aSheet);
 bool Gecko_IsDocumentBody(const mozilla::dom::Element* element);
 
+bool Gecko_IsDarkColorScheme(const mozilla::dom::Document*,
+                             const mozilla::StyleColorScheme*);
 nscolor Gecko_ComputeSystemColor(mozilla::StyleSystemColor,
                                  const mozilla::dom::Document*,
                                  const mozilla::StyleColorScheme*);

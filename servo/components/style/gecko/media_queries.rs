@@ -487,6 +487,11 @@ impl Device {
         unsafe { bindings::Gecko_ComputeSystemColor(system_color, self.document(), color_scheme) }
     }
 
+    /// Returns whether the used color-scheme for `color-scheme` should be dark.
+    pub(crate) fn is_dark_color_scheme(&self, color_scheme: &ColorScheme) -> bool {
+        unsafe { bindings::Gecko_IsDarkColorScheme(self.document(), color_scheme) }
+    }
+
     /// Returns the default background color.
     ///
     /// This is only for forced-colors/high-contrast, so looking at light colors

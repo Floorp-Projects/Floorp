@@ -8375,6 +8375,13 @@
   mirror: always
   rust: true
 
+# Is support for light-dark() on content enabled?
+- name: layout.css.light-dark.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is support for color-mix with non-SRGB color spaces on content enabled?
 - name: layout.css.color-mix.color-spaces.enabled
   type: RelaxedAtomicBool
