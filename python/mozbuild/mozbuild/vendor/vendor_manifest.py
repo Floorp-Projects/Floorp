@@ -248,7 +248,6 @@ class VendorManifest(MozbuildObject):
             )
 
     def process_regular(self, new_revision, timestamp, ignore_modified, add_to_exports):
-
         if self.should_perform_step("fetch"):
             self.fetch_and_unpack(new_revision)
         else:
@@ -439,7 +438,6 @@ class VendorManifest(MozbuildObject):
 
                 self.logInfo({"vd": vendor_dir}, "Unpacking upstream files for {vd}.")
                 with tarfile.open(tmptarfile.name) as tar:
-
                     safe_extract(tar, tmpextractdir.name)
 
                     def get_first_dir(p):
@@ -479,7 +477,52 @@ class VendorManifest(MozbuildObject):
                     self.logInfo({}, "Skipping removing excluded files.")
                     to_exclude = []
 
-                to_exclude = list(set(to_exclude) - set(to_include))
+                # If we have files that match both patterns, figure out the _longer_
+                # pattern that it matches. (We hope this will be the more precise/stricter one)
+                conflicts = list(set(to_exclude).intersection(set(to_include)))
+                if conflicts:
+                    remove_from_include = []
+                    remove_from_exclude = []
+
+                    for c in conflicts:
+                        longest_exclude = ""
+                        longest_include = ""
+
+                        for pattern in (
+                            self.manifest["vendoring"].get("exclude", [])
+                            + DEFAULT_EXCLUDE_FILES
+                        ):
+                            if c in self.convert_patterns_to_paths(
+                                tmpextractdir.name,
+                                [pattern],
+                            ):
+                                if len(pattern) > len(longest_exclude):
+                                    longest_exclude = pattern
+
+                        for pattern in (
+                            self.manifest["vendoring"].get("include", [])
+                            + DEFAULT_INCLUDE_FILES
+                        ):
+                            if c in self.convert_patterns_to_paths(
+                                tmpextractdir.name,
+                                [pattern],
+                            ):
+                                if len(pattern) > len(longest_include):
+                                    longest_include = pattern
+
+                        if len(longest_include) == len(longest_exclude):
+                            # If it's a tie, give 'include' precedence'
+                            remove_from_exclude.append(c)
+                        elif len(longest_include) == 0 or len(longest_exclude) == 0:
+                            raise Exception("Pattern didn't match both.")
+                        elif len(longest_include) > len(longest_exclude):
+                            remove_from_exclude.append(c)
+                        else:
+                            remove_from_include.append(c)
+
+                    to_exclude = list(set(to_exclude) - set(remove_from_exclude))
+                    to_include = list(set(to_include) - set(remove_from_include))
+
                 if to_exclude:
                     self.logInfo(
                         {"files": list_of_paths_to_readable_string(to_exclude)},
