@@ -209,7 +209,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/26eee332d844bd3f9
  .../linux/x11/window_capturer_x11.h           |   4 +
  .../desktop_capture/linux/x11/x_error_trap.cc |  68 +++---
  .../desktop_capture/linux/x11/x_error_trap.h  |  29 ++-
- .../mouse_cursor_monitor_win.cc               |   7 +-
+ .../mouse_cursor_monitor_win.cc               |   4 +
  .../win/screen_capture_utils.cc               |   3 +-
  .../win/screen_capturer_win_gdi.cc            |   1 +
  .../win/screen_capturer_win_magnifier.cc      |  16 +-
@@ -236,7 +236,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/26eee332d844bd3f9
  modules/video_coding/generic_decoder.cc       |   5 +-
  test/fuzzers/rtp_packet_fuzzer.cc             |   5 +
  test/vcm_capturer.cc                          |   2 +-
- 45 files changed, 651 insertions(+), 133 deletions(-)
+ 45 files changed, 649 insertions(+), 132 deletions(-)
 
 diff --git a/api/rtp_headers.cc b/api/rtp_headers.cc
 index 0573e54684..40d4690397 100644
@@ -903,7 +903,7 @@ index 1f21ab969c..df7e86bf03 100644
  
  }  // namespace webrtc
 diff --git a/modules/desktop_capture/mouse_cursor_monitor_win.cc b/modules/desktop_capture/mouse_cursor_monitor_win.cc
-index c892d59955..18ef43eeb4 100644
+index c892d59955..aa2347423c 100644
 --- a/modules/desktop_capture/mouse_cursor_monitor_win.cc
 +++ b/modules/desktop_capture/mouse_cursor_monitor_win.cc
 @@ -88,6 +88,7 @@ MouseCursorMonitorWin::~MouseCursorMonitorWin() {
@@ -923,17 +923,7 @@ index c892d59955..18ef43eeb4 100644
    RTC_DCHECK(callback_);
  
    CURSORINFO cursor_info;
-@@ -107,7 +110,8 @@ void MouseCursorMonitorWin::Capture() {
-   }
- 
-   if (!IsSameCursorShape(cursor_info, last_cursor_)) {
--    if (cursor_info.flags == CURSOR_SUPPRESSED) {
-+    // Mozilla - CURSOR_SUPPRESSED is win8 and above; so we seem not to be able to see the symbol
-+    if (cursor_info.flags != CURSOR_SHOWING) {
-       // The cursor is intentionally hidden now, send an empty bitmap.
-       last_cursor_ = cursor_info;
-       callback_->OnMouseCursor(new MouseCursor(
-@@ -168,6 +172,7 @@ void MouseCursorMonitorWin::Capture() {
+@@ -168,6 +171,7 @@ void MouseCursorMonitorWin::Capture() {
  }
  
  DesktopRect MouseCursorMonitorWin::GetScreenRect() {
