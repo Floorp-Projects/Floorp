@@ -213,7 +213,12 @@ where
         selector.iter_from(offset),
         element,
         context,
-        if offset == 0 { Rightmost::Yes } else { Rightmost::No })
+        if offset == 0 {
+            Rightmost::Yes
+        } else {
+            Rightmost::No
+        },
+    )
 }
 
 /// Whether a compound selector matched, and whether it was the rightmost
@@ -788,7 +793,8 @@ where
         return false;
     }
     selector.map_or(true, |selector| {
-        context.nest(|context| matches_complex_selector(selector.iter(), element, context, rightmost))
+        context
+            .nest(|context| matches_complex_selector(selector.iter(), element, context, rightmost))
     })
 }
 
@@ -906,7 +912,9 @@ where
             matches_rare_attribute_selector(element, attr_sel)
         },
         Component::Part(ref parts) => matches_part(element, parts, &mut context.shared),
-        Component::Slotted(ref selector) => matches_slotted(element, selector, &mut context.shared, rightmost),
+        Component::Slotted(ref selector) => {
+            matches_slotted(element, selector, &mut context.shared, rightmost)
+        },
         Component::PseudoElement(ref pseudo) => {
             element.match_pseudo_element(pseudo, context.shared)
         },
@@ -939,8 +947,7 @@ where
         Component::Host(ref selector) => {
             matches_host(element, selector.as_ref(), &mut context.shared, rightmost)
         },
-        Component::ParentSelector |
-        Component::Scope => match context.shared.scope_element {
+        Component::ParentSelector | Component::Scope => match context.shared.scope_element {
             Some(ref scope_element) => element.opaque() == *scope_element,
             None => element.is_root(),
         },
@@ -956,19 +963,17 @@ where
                 rightmost,
             )
         }),
-        Component::Is(ref list) | Component::Where(ref list) => context
-            .shared
-            .nest(|context| matches_complex_selector_list(list, element, context, rightmost)),
-        Component::Negation(ref list) => context
-            .shared
-            .nest_for_negation(|context| !matches_complex_selector_list(list, element, context, rightmost)),
-        Component::Has(ref relative_selectors) => {
-            context
+        Component::Is(ref list) | Component::Where(ref list) => context.shared.nest(|context| {
+            matches_complex_selector_list(list.slice(), element, context, rightmost)
+        }),
+        Component::Negation(ref list) => context.shared.nest_for_negation(|context| {
+            !matches_complex_selector_list(list.slice(), element, context, rightmost)
+        }),
+        Component::Has(ref relative_selectors) => context
             .shared
             .nest_for_relative_selector(element.opaque(), |context| {
                 matches_relative_selectors(relative_selectors, element, context, rightmost)
-            })
-        },
+            }),
         Component::Combinator(_) => unsafe {
             debug_unreachable!("Shouldn't try to selector-match combinators")
         },
