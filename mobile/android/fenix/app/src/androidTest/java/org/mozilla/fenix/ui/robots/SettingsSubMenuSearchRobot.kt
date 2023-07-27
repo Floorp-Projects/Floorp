@@ -6,10 +6,22 @@
 
 package org.mozilla.fenix.ui.robots
 
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnySibling
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.recyclerview.widget.RecyclerView
+import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.ViewInteraction
+import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers
@@ -21,20 +33,20 @@ import androidx.test.espresso.matcher.ViewMatchers.withClassName
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers
-import org.hamcrest.CoreMatchers.not
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.endsWith
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
+import org.mozilla.fenix.helpers.TestHelper.getAvailableSearchEngines
+import org.mozilla.fenix.helpers.TestHelper.getRegionSearchEnginesList
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.hasCousin
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -47,12 +59,12 @@ import org.mozilla.fenix.helpers.isEnabled
  * Implementation of Robot Pattern for the settings search sub menu.
  */
 class SettingsSubMenuSearchRobot {
-    fun verifySearchSettingsToolbar() {
+    fun verifyToolbarText(title: String) {
         onView(
             allOf(
                 withId(R.id.navigationToolbar),
                 hasDescendant(withContentDescription(R.string.action_bar_up_description)),
-                hasDescendant(withText(R.string.preferences_search)),
+                hasDescendant(withText(title)),
             ),
         ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     }
@@ -79,23 +91,55 @@ class SettingsSubMenuSearchRobot {
             .check(matches(hasSibling(withText("Edit engines visible in the search menu"))))
     }
 
+    fun verifyEnginesShortcutsListHeader() {
+        assertTrue(itemWithText("Engines visible on the search menu").exists())
+    }
+
     fun verifyAddressBarSectionHeader() {
         onView(withText("Address bar")).check(matches(isDisplayed()))
     }
 
-    fun verifySearchEngineList() {
-        onView(withText("Google"))
-            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        onView(withText("Amazon.com"))
-            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        onView(withText("Bing"))
-            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        onView(withText("DuckDuckGo"))
-            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        onView(withText("Wikipedia"))
-            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        onView(withText("Add search engine"))
-            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    fun verifyDefaultSearchEngineList() {
+        defaultSearchEngineOption("Google")
+            .check(matches(hasSibling(withId(R.id.engine_icon))))
+            .check(matches(isDisplayed()))
+        defaultSearchEngineOption("Bing")
+            .check(matches(hasSibling(withId(R.id.engine_icon))))
+            .check(matches(isDisplayed()))
+        defaultSearchEngineOption("DuckDuckGo")
+            .check(matches(hasSibling(withId(R.id.engine_icon))))
+            .check(matches(isDisplayed()))
+        assertTrue(addSearchEngineButton.exists())
+    }
+
+    fun verifyManageShortcutsList(testRule: ComposeTestRule) {
+        val availableShortcutsEngines = getRegionSearchEnginesList() + getAvailableSearchEngines()
+
+        availableShortcutsEngines.forEach {
+            testRule.onNodeWithText(it.name)
+                .assert(hasAnySibling(hasContentDescription("${it.name} search engine")))
+                .assertIsDisplayed()
+        }
+
+        assertTrue(addSearchEngineButton.exists())
+    }
+
+    /**
+     * Method that verifies the selected engines inside the Manage search shortcuts list.
+     */
+    fun verifySearchShortcutChecked(vararg engineShortcut: EngineShortcut) {
+        engineShortcut.forEach {
+            val shortcutIsChecked = mDevice.findObject(UiSelector().text(it.name))
+                .getFromParent(
+                    UiSelector().index(it.checkboxIndex),
+                ).isChecked
+
+            if (it.isChecked) {
+                assertTrue(shortcutIsChecked)
+            } else {
+                assertFalse(shortcutIsChecked)
+            }
+        }
     }
 
     fun verifyAutocompleteURlsIsEnabled(enabled: Boolean) {
@@ -168,16 +212,15 @@ class SettingsSubMenuSearchRobot {
             .perform(click())
     }
 
+    fun selectSearchShortcut(shortcut: EngineShortcut) {
+        mDevice.findObject(UiSelector().text(shortcut.name))
+            .getFromParent(UiSelector().index(shortcut.checkboxIndex))
+            .click()
+    }
+
     fun toggleAutocomplete() = autocompleteSwitchButton().click()
 
     fun toggleShowSearchSuggestions() = showSearchSuggestionSwitchButton().click()
-
-    fun toggleShowSearchShortcuts() =
-        itemContainingText(getStringResource(R.string.preferences_show_search_engines))
-            .also {
-                it.waitForExists(waitingTimeShort)
-                it.click()
-            }
 
     fun toggleVoiceSearch() {
         voiceSearchSwitchButton().perform(click())
@@ -191,31 +234,21 @@ class SettingsSubMenuSearchRobot {
 
     fun switchSearchBookmarksToggle() = searchBookmarksSwitchButton().click()
 
-    fun switchShowSuggestionsInPrivateSessionsToggle() = showSuggestionsInPrivateModeSwitch().click()
+    fun switchShowSuggestionsInPrivateSessionsToggle() =
+        showSuggestionsInPrivateModeSwitch().click()
 
-    fun openAddSearchEngineMenu() = addSearchEngineButton().click()
+    fun openAddSearchEngineMenu() = addSearchEngineButton.click()
 
-    fun verifyEngineListContains(searchEngineName: String) {
-        assertTrue(itemWithText(searchEngineName).waitForExists(waitingTimeShort))
-    }
-
-    fun verifyEngineListDoesNotContain(searchEngineName: String) = assertEngineListDoesNotContain(searchEngineName)
-
-    fun verifyDefaultSearchEngine(searchEngineName: String) {
-        onView(
-            allOf(
-                withId(R.id.radio_button),
-                withParent(withChild(withText(searchEngineName))),
-            ),
-        ).check(matches(isChecked(true)))
-    }
-
-    fun verifyThreeDotButtonIsNotDisplayed(searchEngineName: String) = assertThreeDotButtonIsNotDisplayed(searchEngineName)
-
-    fun verifyAddSearchEngineListContains(vararg searchEngines: String) {
-        for (searchEngine in searchEngines) {
-            onView(withId(R.id.search_engine_group)).check(matches(hasDescendant(withText(searchEngine))))
+    fun verifyEngineListContains(searchEngineName: String, shouldExist: Boolean) {
+        if (shouldExist) {
+            assertTrue(itemWithText(searchEngineName).waitForExists(waitingTimeShort))
+        } else {
+            assertFalse(itemWithText(searchEngineName).waitForExists(waitingTimeShort))
         }
+    }
+
+    fun verifyDefaultSearchEngineSelected(searchEngineName: String) {
+        defaultSearchEngineOption(searchEngineName).check(matches(isChecked(true)))
     }
 
     fun verifySaveSearchEngineButtonEnabled(enabled: Boolean) {
@@ -223,12 +256,8 @@ class SettingsSubMenuSearchRobot {
     }
 
     fun saveNewSearchEngine() {
+        closeSoftKeyboard()
         addSearchEngineSaveButton().click()
-        assertTrue(
-            mDevice.findObject(
-                UiSelector().textContains("Default search engine"),
-            ).waitForExists(waitingTime),
-        )
     }
 
     fun typeCustomEngineDetails(engineName: String, engineURL: String) {
@@ -254,10 +283,6 @@ class SettingsSubMenuSearchRobot {
             )
         } catch (e: AssertionError) {
             println("The name or the search string were not set properly")
-//
-//            // Lets again set both name and search string
-//            goBackButton().click()
-//            openAddSearchEngineMenu()
 
             mDevice.findObject(By.res("$packageName:id/edit_engine_name")).clear()
             mDevice.findObject(By.res("$packageName:id/edit_engine_name")).setText(engineName)
@@ -281,26 +306,35 @@ class SettingsSubMenuSearchRobot {
         }
     }
 
+    fun typeSearchEngineSuggestionString(searchSuggestionString: String) {
+        onView(withId(R.id.edit_suggest_string))
+            .click()
+            .perform(clearText())
+            .perform(typeText(searchSuggestionString))
+    }
+
+    // Used in the non-Compose Default search engines menu
     fun openEngineOverflowMenu(searchEngineName: String) {
-        mDevice.findObject(
-            UiSelector().resourceId("org.mozilla.fenix.debug:id/overflow_menu"),
-        ).waitForExists(waitingTime)
+        threeDotMenu(searchEngineName).waitForExists(waitingTimeShort)
         threeDotMenu(searchEngineName).click()
     }
 
-    fun deleteMultipleSearchEngines(vararg searchEngines: String) {
-        for (searchEngine in searchEngines) {
-            openEngineOverflowMenu(searchEngine)
-            clickDeleteSearchEngine()
-        }
+    // Used in the composable Manage shortcuts menu, otherwise the overflow menu is not visible
+    fun openCustomShortcutOverflowMenu(testRule: ComposeTestRule, searchEngineName: String) {
+        testRule.onNode(overflowMenuWithSiblingText(searchEngineName)).performClick()
     }
 
     fun clickEdit() = onView(withText("Edit")).click()
 
+    // Used in the Default search engine menu
     fun clickDeleteSearchEngine() =
         mDevice.findObject(
             UiSelector().textContains(getStringResource(R.string.search_engine_delete)),
         ).click()
+
+    // Used in the composable Manage search shortcuts menu, otherwise the overflow menu is not visible
+    fun clickDeleteSearchEngine(testRule: ComposeTestRule) =
+        testRule.onNodeWithText("Delete").performClick()
 
     fun clickUndoSnackBarButton() =
         mDevice.findObject(
@@ -317,7 +351,17 @@ class SettingsSubMenuSearchRobot {
         )
     }
 
-    fun verifyShowSearchEnginesToggleState(enabled: Boolean) = assertShowSearchEnginesToggle(enabled)
+    fun verifyInvalidTemplateSearchStringFormatError() {
+        closeSoftKeyboard()
+        onView(withText(getStringResource(R.string.search_add_custom_engine_error_missing_template)))
+            .check(matches(isDisplayed()))
+    }
+
+    fun verifyErrorConnectingToSearchString(searchEngineName: String) {
+        closeSoftKeyboard()
+        onView(withText(getStringResource(R.string.search_add_custom_engine_error_cannot_reach, searchEngineName)))
+            .check(matches(isDisplayed()))
+    }
 
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
@@ -327,16 +371,36 @@ class SettingsSubMenuSearchRobot {
             SettingsRobot().interact()
             return SettingsRobot.Transition()
         }
+
+        fun clickCustomSearchStringLearnMoreLink(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            onView(withId(R.id.custom_search_engines_learn_more)).click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun clickCustomSearchSuggestionsLearnMoreLink(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            onView(withId(R.id.custom_search_suggestions_learn_more)).click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
     }
 }
 
-fun searchSettingsScreen(interact: SettingsSubMenuSearchRobot.() -> Unit): SettingsSubMenuSearchRobot.Transition {
-    SettingsSubMenuSearchRobot().interact()
-    return SettingsSubMenuSearchRobot.Transition()
-}
+/**
+ * Matches search shortcut items inside the 'Manage search shortcuts' menu
+ * @param name, of type String, should be the name of the search engine.
+ * @param checkboxIndex, of type Int, is the checkbox' index afferent to the search engine.
+ * @param isChecked, of type Boolean, should show if the checkbox is expected to be checked.
+ */
+class EngineShortcut(
+    val name: String,
+    val checkboxIndex: Int,
+    val isChecked: Boolean = true,
+)
 
-private val defaultSearchEngineHeader =
-    onView(withText("Default search engine"))
+private val defaultSearchEngineHeader = onView(withText("Default search engine"))
 
 private val manageSearchShortcutsHeader = onView(withText("Manage search shortcuts"))
 
@@ -417,48 +481,21 @@ private fun showSuggestionsInPrivateModeSwitch(): ViewInteraction {
 private fun goBackButton() =
     onView(CoreMatchers.allOf(withContentDescription("Navigate up")))
 
-private fun addSearchEngineButton() = onView(withText("Add search engine"))
+private val addSearchEngineButton = mDevice.findObject(UiSelector().text("Add search engine"))
 
 private fun addSearchEngineSaveButton() = onView(withId(R.id.save_button))
 
-private fun assertEngineListDoesNotContain(searchEngineName: String) {
-    onView(withId(R.id.search_engine_group)).check(matches(not(hasDescendant(withText(searchEngineName)))))
-}
-
-private fun assertThreeDotButtonIsNotDisplayed(searchEngineName: String) =
-    threeDotMenu(searchEngineName).check(matches(not(isDisplayed())))
-
-private fun assertShowSearchEnginesToggle(enabled: Boolean) =
-    if (enabled) {
-        onView(withText(R.string.preferences_show_search_engines))
-            .check(
-                matches(
-                    hasCousin(
-                        allOf(
-                            withClassName(endsWith("Switch")),
-                            ViewMatchers.isChecked(),
-                        ),
-                    ),
-                ),
-            )
-    } else {
-        onView(withText(R.string.preferences_show_search_engines))
-            .check(
-                matches(
-                    hasCousin(
-                        allOf(
-                            withClassName(endsWith("Switch")),
-                            ViewMatchers.isNotChecked(),
-                        ),
-                    ),
-                ),
-            )
-    }
-
 private fun threeDotMenu(searchEngineName: String) =
+    mDevice.findObject(UiSelector().text(searchEngineName))
+        .getFromParent(UiSelector().description("More options"))
+
+private fun defaultSearchEngineOption(searchEngineName: String) =
     onView(
         allOf(
-            withId(R.id.overflow_menu),
-            withParent(withChild(withText(searchEngineName))),
+            withId(R.id.radio_button),
+            hasSibling(withText(searchEngineName)),
         ),
     )
+
+private fun overflowMenuWithSiblingText(text: String): SemanticsMatcher =
+    hasAnySibling(hasText(text)) and hasContentDescription("More options")

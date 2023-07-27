@@ -10,9 +10,6 @@ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.Espresso.pressBack
-import mozilla.components.browser.icons.IconRequest
-import mozilla.components.browser.icons.generator.DefaultIconGenerator
-import mozilla.components.feature.search.ext.createSearchEngine
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assume.assumeTrue
@@ -26,6 +23,7 @@ import org.mozilla.fenix.helpers.Constants.searchEngineCodes
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
+import org.mozilla.fenix.helpers.MockBrowserDataHelper.setCustomSearchEngine
 import org.mozilla.fenix.helpers.SearchDispatcher
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.appContext
@@ -36,7 +34,6 @@ import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.grantSystemPermission
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.mDevice
-import org.mozilla.fenix.helpers.TestHelper.setCustomSearchEngine
 import org.mozilla.fenix.helpers.TestHelper.verifyKeyboardVisibility
 import org.mozilla.fenix.ui.robots.clickContextMenuItem
 import org.mozilla.fenix.ui.robots.clickPageObject
@@ -58,7 +55,7 @@ import org.mozilla.fenix.ui.robots.searchScreen
 
 class SearchTest {
     lateinit var searchMockServer: MockWebServer
-    lateinit var queryString: String
+    private var queryString = "firefox"
     private val generalEnginesList = listOf("DuckDuckGo", "Google", "Bing")
     private val topicEnginesList = listOf("Amazon.com", "Wikipedia", "eBay")
 
@@ -239,12 +236,10 @@ class SearchTest {
 
     @Test
     fun accessSearchSettingFromSearchSelectorMenuTest() {
-        queryString = "firefox"
-
         searchScreen {
             clickSearchSelectorButton()
         }.clickSearchEngineSettings {
-            verifySearchSettingsToolbar()
+            verifyToolbarText("Search")
             openDefaultSearchEngineMenu()
             changeDefaultSearchEngine("DuckDuckGo")
             exitMenu()
@@ -252,14 +247,12 @@ class SearchTest {
         homeScreen {
         }.openSearch {
         }.submitQuery(queryString) {
-            verifyUrl("firefox")
+            verifyUrl(queryString)
         }
     }
 
     @Test
     fun clearSearchTest() {
-        queryString = "test"
-
         homeScreen {
         }.openSearch {
             typeSearch(queryString)
@@ -272,16 +265,9 @@ class SearchTest {
     @SmokeTest
     @Test
     fun searchGroupShowsInRecentlyVisitedTest() {
-        queryString = "test search"
         // setting our custom mockWebServer search URL
-        val searchString =
-            "http://localhost:${searchMockServer.port}/pages/searchResults.html?search={searchTerms}"
-        val customSearchEngine = createSearchEngine(
-            name = "TestSearchEngine",
-            url = searchString,
-            icon = DefaultIconGenerator().generate(appContext, IconRequest(searchString)).bitmap,
-        )
-        setCustomSearchEngine(customSearchEngine)
+        val searchEngineName = "TestSearchEngine"
+        setCustomSearchEngine(searchMockServer, searchEngineName)
 
         // Performs a search and opens 2 dummy search results links to create a search group
         homeScreen {
@@ -310,16 +296,9 @@ class SearchTest {
         val secondPageUrl = getGenericAsset(searchMockServer, 2).url
         val originPageUrl =
             "http://localhost:${searchMockServer.port}/pages/searchResults.html?search=test%20search".toUri()
-        queryString = "test search"
         // setting our custom mockWebServer search URL
-        val searchString =
-            "http://localhost:${searchMockServer.port}/pages/searchResults.html?search={searchTerms}"
-        val customSearchEngine = createSearchEngine(
-            name = "TestSearchEngine",
-            url = searchString,
-            icon = DefaultIconGenerator().generate(appContext, IconRequest(searchString)).bitmap,
-        )
-        setCustomSearchEngine(customSearchEngine)
+        val searchEngineName = "TestSearchEngine"
+        setCustomSearchEngine(searchMockServer, searchEngineName)
 
         // Performs a search and opens 2 dummy search results links to create a search group
         homeScreen {
@@ -358,16 +337,9 @@ class SearchTest {
     @Ignore("Failing due to known bug, see https://github.com/mozilla-mobile/fenix/issues/23818")
     @Test
     fun searchGroupGeneratedInTheSameTabTest() {
-        queryString = "test search"
         // setting our custom mockWebServer search URL
-        val searchString =
-            "http://localhost:${searchMockServer.port}/pages/searchResults.html?search={searchTerms}"
-        val customSearchEngine = createSearchEngine(
-            name = "TestSearchEngine",
-            url = searchString,
-            icon = DefaultIconGenerator().generate(appContext, IconRequest(searchString)).bitmap,
-        )
-        setCustomSearchEngine(customSearchEngine)
+        val searchEngineName = "TestSearchEngine"
+        setCustomSearchEngine(searchMockServer, searchEngineName)
 
         // Performs a search and opens 2 dummy search results links to create a search group
         homeScreen {
@@ -388,16 +360,9 @@ class SearchTest {
     @SmokeTest
     @Test
     fun noSearchGroupFromPrivateBrowsingTest() {
-        queryString = "test search"
         // setting our custom mockWebServer search URL
-        val searchString =
-            "http://localhost:${searchMockServer.port}/pages/searchResults.html?search={searchTerms}"
-        val customSearchEngine = createSearchEngine(
-            name = "TestSearchEngine",
-            url = searchString,
-            icon = DefaultIconGenerator().generate(appContext, IconRequest(searchString)).bitmap,
-        )
-        setCustomSearchEngine(customSearchEngine)
+        val searchEngineName = "TestSearchEngine"
+        setCustomSearchEngine(searchMockServer, searchEngineName)
 
         // Performs a search and opens 2 dummy search results links to create a search group
         homeScreen {
@@ -427,18 +392,11 @@ class SearchTest {
     @SmokeTest
     @Test
     fun deleteItemsFromSearchGroupHistoryTest() {
-        queryString = "test search"
         val firstPageUrl = getGenericAsset(searchMockServer, 1).url
         val secondPageUrl = getGenericAsset(searchMockServer, 2).url
         // setting our custom mockWebServer search URL
-        val searchString =
-            "http://localhost:${searchMockServer.port}/pages/searchResults.html?search={searchTerms}"
-        val customSearchEngine = createSearchEngine(
-            name = "TestSearchEngine",
-            url = searchString,
-            icon = DefaultIconGenerator().generate(appContext, IconRequest(searchString)).bitmap,
-        )
-        setCustomSearchEngine(customSearchEngine)
+        val searchEngineName = "TestSearchEngine"
+        setCustomSearchEngine(searchMockServer, searchEngineName)
 
         // Performs a search and opens 2 dummy search results links to create a search group
         homeScreen {
@@ -475,17 +433,10 @@ class SearchTest {
     @Ignore("Test run timing out: https://github.com/mozilla-mobile/fenix/issues/27704")
     @Test
     fun deleteSearchGroupFromHistoryTest() {
-        queryString = "test search"
         val firstPageUrl = getGenericAsset(searchMockServer, 1).url
         // setting our custom mockWebServer search URL
-        val searchString =
-            "http://localhost:${searchMockServer.port}/pages/searchResults.html?search={searchTerms}"
-        val customSearchEngine = createSearchEngine(
-            name = "TestSearchEngine",
-            url = searchString,
-            icon = DefaultIconGenerator().generate(appContext, IconRequest(searchString)).bitmap,
-        )
-        setCustomSearchEngine(customSearchEngine)
+        val searchEngineName = "TestSearchEngine"
+        setCustomSearchEngine(searchMockServer, searchEngineName)
 
         // Performs a search and opens 2 dummy search results links to create a search group
         homeScreen {
@@ -524,16 +475,9 @@ class SearchTest {
     fun reopenTabsFromSearchGroupTest() {
         val firstPageUrl = getGenericAsset(searchMockServer, 1).url
         val secondPageUrl = getGenericAsset(searchMockServer, 2).url
-        queryString = "test search"
         // setting our custom mockWebServer search URL
-        val searchString =
-            "http://localhost:${searchMockServer.port}/pages/searchResults.html?search={searchTerms}"
-        val customSearchEngine = createSearchEngine(
-            name = "TestSearchEngine",
-            url = searchString,
-            icon = DefaultIconGenerator().generate(appContext, IconRequest(searchString)).bitmap,
-        )
-        setCustomSearchEngine(customSearchEngine)
+        val searchEngineName = "TestSearchEngine"
+        setCustomSearchEngine(searchMockServer, searchEngineName)
 
         // Performs a search and opens 2 dummy search results links to create a search group
         homeScreen {
@@ -577,16 +521,9 @@ class SearchTest {
     @Test
     fun sharePageFromASearchGroupTest() {
         val firstPageUrl = getGenericAsset(searchMockServer, 1).url
-        queryString = "test search"
         // setting our custom mockWebServer search URL
-        val searchString =
-            "http://localhost:${searchMockServer.port}/pages/searchResults.html?search={searchTerms}"
-        val customSearchEngine = createSearchEngine(
-            name = "TestSearchEngine",
-            url = searchString,
-            icon = DefaultIconGenerator().generate(appContext, IconRequest(searchString)).bitmap,
-        )
-        setCustomSearchEngine(customSearchEngine)
+        val searchEngineName = "TestSearchEngine"
+        setCustomSearchEngine(searchMockServer, searchEngineName)
 
         // Performs a search and opens 2 dummy search results links to create a search group
         homeScreen {
@@ -621,8 +558,6 @@ class SearchTest {
     // Default search code for Google-US
     @Test
     fun defaultSearchCodeGoogleUS() {
-        queryString = "firefox"
-
         homeScreen {
         }.openSearch {
         }.submitQuery(queryString) {
@@ -637,8 +572,6 @@ class SearchTest {
     // Default search code for Bing-US
     @Test
     fun defaultSearchCodeBingUS() {
-        queryString = "firefox"
-
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -662,8 +595,6 @@ class SearchTest {
     // Default search code for DuckDuckGo-US
     @Test
     fun defaultSearchCodeDuckDuckGoUS() {
-        queryString = "firefox"
-
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {

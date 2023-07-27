@@ -204,12 +204,19 @@ class SearchRobot {
         )
     }
 
-    fun verifySearchShortcutListContains(vararg searchEngineName: String) {
+    fun verifySearchShortcutListContains(vararg searchEngineName: String, shouldExist: Boolean = true) {
         searchEngineName.forEach {
-            assertTrue(
-                searchShortcutList.getChild(UiSelector().text(it))
-                    .waitForExists(waitingTimeShort),
-            )
+            if (shouldExist) {
+                assertTrue(
+                    searchShortcutList.getChild(UiSelector().text(it))
+                        .waitForExists(waitingTimeShort),
+                )
+            } else {
+                assertTrue(
+                    searchShortcutList.getChild(UiSelector().text(it))
+                        .waitUntilGone(waitingTimeShort),
+                )
+            }
         }
     }
 

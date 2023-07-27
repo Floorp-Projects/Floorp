@@ -42,7 +42,6 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.Until.findObject
-import mozilla.components.browser.state.state.searchEngines
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.instanceOf
@@ -51,7 +50,6 @@ import org.junit.Assert
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
@@ -69,7 +67,6 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
-import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -949,12 +946,6 @@ private fun assertHomeComponent() =
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun threeDotButton() = onView(allOf(withId(R.id.menuButton)))
-
-private fun getSearchEngine(searchEngineName: String) =
-    appContext.components.core.store.state.search.searchEngines.find { it.name == searchEngineName }
-
-private fun collectionTitle(title: String, rule: ComposeTestRule) =
-    rule.onNode(hasText(title))
 
 private fun assertExistingTopSitesList() =
     onView(allOf(withId(R.id.top_sites_list)))
