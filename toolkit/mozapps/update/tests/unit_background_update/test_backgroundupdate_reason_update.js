@@ -252,7 +252,7 @@ add_task(
     Assert.equal(
       false,
       lazy.NimbusFeatures.backgroundUpdate.getVariable(
-        "allowUpdatesForUnelevatedInstallions"
+        "allowUpdatesForUnelevatedInstallations"
       ),
       "default is disabled"
     );
