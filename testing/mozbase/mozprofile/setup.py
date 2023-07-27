@@ -5,7 +5,7 @@
 from setuptools import setup
 
 PACKAGE_NAME = "mozprofile"
-PACKAGE_VERSION = "2.5.0"
+PACKAGE_VERSION = "2.6.0"
 
 deps = [
     "mozfile>=1.2",
