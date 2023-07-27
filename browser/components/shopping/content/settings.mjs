@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env mozilla/remote-page */
+
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
@@ -26,11 +28,7 @@ class ShoppingSettings extends MozLitElement {
   }
 
   onDisableShopping() {
-    let event = new CustomEvent("DisableShopping", {
-      bubbles: true,
-      composed: true,
-    });
-    this.dispatchEvent(event);
+    RPMSetPref("browser.shopping.experience2023.optedIn", 2);
   }
 
   render() {
