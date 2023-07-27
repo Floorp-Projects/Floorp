@@ -504,6 +504,24 @@ const workspaceFunctions = {
     saveWorkspaceState() {
       let tabs = gBrowser.tabs;
       let tabStateObject = [];
+
+      // delete unmatched tabs
+      const allWorkspaces = Services.prefs.getStringPref(WORKSPACE_ALL_PREF);
+      const allWorkspacesArray = allWorkspaces.split(",");
+
+      //get all workspace tabs Workspace
+      for (let i = 0; i < tabs.length; i++) {
+        let tab = tabs[i];
+        let tabWorkspace = tab.getAttribute("floorp-workspace");
+        if (!allWorkspacesArray.includes(tabWorkspace)) {
+          tab.setAttribute(
+            "floorp-workspace",
+            Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
+          );
+          console.log("delete unmatched tabs");
+        }
+      } 
+
       for (let i = 0; i < tabs.length; i++) {
         let tab = tabs[i];
         let tabState = {
