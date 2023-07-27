@@ -429,6 +429,46 @@ fn matches_relative_selector<E: Element>(
     return false;
 }
 
+fn relative_selector_match_early<E: Element>(
+    selector: &RelativeSelector<E::Impl>,
+    element: &E,
+    context: &mut MatchingContext<E::Impl>,
+) -> Option<bool> {
+    if context.matching_for_invalidation() {
+        // In the context of invalidation, we can't use caching/filtering due to
+        // now/then matches. DOM structure also may have changed, so just pretend
+        // that we always match.
+        return Some(!context.in_negation());
+    }
+    // See if we can return a cached result.
+    if let Some(cached) = context
+        .selector_caches
+        .relative_selector
+        .lookup(element.opaque(), selector)
+    {
+        return Some(cached.matched());
+    }
+    // See if we can fast-reject.
+    if context
+        .selector_caches
+        .relative_selector_filter_map
+        .fast_reject(
+            element,
+            selector,
+            context.quirks_mode(),
+        )
+    {
+        // Alright, add as unmatched to cache.
+        context.selector_caches.relative_selector.add(
+            element.opaque(),
+            selector,
+            RelativeSelectorCachedMatch::NotMatched,
+        );
+        return Some(false);
+    }
+    None
+}
+
 /// Matches a relative selector in a list of relative selectors.
 fn matches_relative_selectors<E: Element>(
     selectors: &[RelativeSelector<E::Impl>],
@@ -446,35 +486,11 @@ fn matches_relative_selectors<E: Element>(
     }
 
     for relative_selector in selectors.iter() {
-        // See if we can return a cached result.
-        if let Some(cached) = context
-            .selector_caches
-            .relative_selector
-            .lookup(element.opaque(), &relative_selector)
-        {
-            if cached.matched() {
+        if let Some(result) = relative_selector_match_early(relative_selector, element, context) {
+            if result {
                 return true;
             }
-            // Did not match, continue on.
-            continue;
-        }
-        // See if we can fast-reject.
-        if context
-            .selector_caches
-            .relative_selector_filter_map
-            .fast_reject(
-                element,
-                relative_selector,
-                context.quirks_mode(),
-            )
-        {
-            // Alright, add as unmatched to cache.
-            context.selector_caches.relative_selector.add(
-                element.opaque(),
-                relative_selector,
-                RelativeSelectorCachedMatch::NotMatched,
-            );
-            // Then continue on.
+            // Early return indicates no match, continue to next selector.
             continue;
         }
 
@@ -1051,7 +1067,8 @@ where
     let has_selectors = !selectors.is_empty();
     let selectors_match =
         !has_selectors || matches_complex_selector_list(selectors, element, context, rightmost);
-    if context.ignores_nth_child_selectors_for_invalidation() {
+    if context.matching_for_invalidation() {
+        // Skip expensive indexing math in invalidation.
         return selectors_match && !context.in_negation();
     }
 
