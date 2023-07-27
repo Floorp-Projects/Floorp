@@ -65,11 +65,6 @@
 namespace blink {
 
 namespace DecimalPrivate {
-constexpr int ExponentMax = 1023;
-constexpr int ExponentMin = -1023;
-constexpr int Precision = 18;
-
-static const uint64_t MaxCoefficient = UINT64_C(0xDE0B6B3A763FFFF);  // 999999999999999999 == 18 9's
 class SpecialValueHandler;
 }
 
@@ -93,32 +88,7 @@ public:
         friend class Decimal;
         friend class DecimalPrivate::SpecialValueHandler;
     public:
-     constexpr EncodedData(Sign sign, int exponent, uint64_t coefficient)
-         : m_coefficient(0),
-           m_exponent(0),
-           m_formatClass(coefficient ? ClassNormal : ClassZero),
-           m_sign(sign) {
-       if (exponent >= DecimalPrivate::ExponentMin &&
-           exponent <= DecimalPrivate::ExponentMax) {
-         while (coefficient > DecimalPrivate::MaxCoefficient) {
-           coefficient /= 10;
-           ++exponent;
-         }
-       }
-
-       if (exponent > DecimalPrivate::ExponentMax) {
-         m_formatClass = ClassInfinity;
-         return;
-       }
-
-       if (exponent < DecimalPrivate::ExponentMin) {
-         m_formatClass = ClassZero;
-         return;
-       }
-
-       m_coefficient = coefficient;
-       m_exponent = static_cast<int16_t>(exponent);
-     }
+        EncodedData(Sign, int exponent, uint64_t coefficient);
 
         bool operator==(const EncodedData&) const;
         bool operator!=(const EncodedData& another) const { return !operator==(another); }
@@ -142,12 +112,7 @@ public:
             ClassZero,
         };
 
-        constexpr EncodedData(Sign sign, FormatClass formatClass)
-            : m_coefficient(0),
-              m_exponent(0),
-              m_formatClass(formatClass),
-              m_sign(sign) {}
-
+        EncodedData(Sign, FormatClass);
         FormatClass formatClass() const { return m_formatClass; }
 
         uint64_t m_coefficient;
@@ -156,12 +121,8 @@ public:
         Sign m_sign;
     };
 
-    MFBT_API constexpr explicit Decimal(int32_t i32 = 0)
-        : m_data(i32 < 0 ? Negative : Positive, 0,
-                 i32 < 0 ? static_cast<uint64_t>(-static_cast<int64_t>(i32))
-                         : static_cast<uint64_t>(i32)) {}
-    MFBT_API constexpr Decimal(Sign sign, int exponent, uint64_t coefficient)
-        : m_data(sign, coefficient ? exponent : 0, coefficient) {}
+    MFBT_API explicit Decimal(int32_t = 0);
+    MFBT_API Decimal(Sign, int exponent, uint64_t coefficient);
     MFBT_API Decimal(const Decimal&);
 
     MFBT_API Decimal& operator=(const Decimal&);
