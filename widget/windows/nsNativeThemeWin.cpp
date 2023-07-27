@@ -67,8 +67,7 @@ nsNativeThemeWin::~nsNativeThemeWin() { nsUXThemeData::Invalidate(); }
 auto nsNativeThemeWin::IsWidgetNonNative(nsIFrame* aFrame,
                                          StyleAppearance aAppearance)
     -> NonNative {
-  if (IsWidgetScrollbarPart(aAppearance) ||
-      aAppearance == StyleAppearance::FocusOutline) {
+  if (IsWidgetAlwaysNonNative(aFrame, aAppearance)) {
     return NonNative::Always;
   }
 
@@ -1397,7 +1396,7 @@ bool nsNativeThemeWin::GetWidgetOverflow(nsDeviceContext* aContext,
 LayoutDeviceIntSize nsNativeThemeWin::GetMinimumWidgetSize(
     nsPresContext* aPresContext, nsIFrame* aFrame,
     StyleAppearance aAppearance) {
-  if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
+  if (IsWidgetAlwaysNonNative(aFrame, aAppearance)) {
     return Theme::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance);
   }
 
@@ -1551,7 +1550,7 @@ bool nsNativeThemeWin::ThemeSupportsWidget(nsPresContext* aPresContext,
   // XXXdwh We can go even further and call the API to ask if support exists for
   // specific widgets.
 
-  if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
+  if (IsWidgetAlwaysNonNative(aFrame, aAppearance)) {
     return Theme::ThemeSupportsWidget(aPresContext, aFrame, aAppearance);
   }
 

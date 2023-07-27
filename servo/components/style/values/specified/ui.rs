@@ -230,3 +230,28 @@ pub enum CursorKind {
     ZoomOut,
     Auto,
 }
+
+/// The keywords allowed in the -moz-theme property.
+#[allow(missing_docs)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    FromPrimitive,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(u8)]
+pub enum MozTheme {
+    /// Choose the default (maybe native) rendering.
+    Auto,
+    /// Choose the non-native rendering.
+    NonNative,
+}
