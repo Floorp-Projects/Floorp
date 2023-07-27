@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.name_sanity:transforms
-    - gecko_taskgraph.transforms.repackage:transforms
-    - gecko_taskgraph.transforms.job:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.repackage
+    - gecko_taskgraph.transforms.job
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
     - repackage-signing
@@ -21,25 +22,27 @@ only-for-build-platforms:
     - win32-devedition/opt
     - win64-devedition/opt
 
-job-template:
-    worker-type: 'b-win2022'
-    mozharness:
-        use-magic-mh-args: false
-        config:
-            by-build-platform:
-                win32\b.*:
-                    - repackage/base.py
-                    - repackage/win32_sfx_stub.py
-                    - repackage/win32_signed.py
-                win64(?!-aarch64)\b.*:
-                    - repackage/base.py
-                    - repackage/win32_sfx_stub.py
-                    - repackage/win64_signed.py
-                win64-aarch64\b.*:
-                    - repackage/base.py
-                    - repackage/win64-aarch64_sfx_stub.py
-                    - repackage/win64_signed.py
-    package-formats: [msi]
-    fetches:
-        fetch:
-            - wix-3.14.0
+jobs:
+    repackage-msi:
+        worker-type: 'b-win2022'
+        from-deps: {}
+        mozharness:
+            use-magic-mh-args: false
+            config:
+                by-build-platform:
+                    win32\b.*:
+                        - repackage/base.py
+                        - repackage/win32_sfx_stub.py
+                        - repackage/win32_signed.py
+                    win64(?!-aarch64)\b.*:
+                        - repackage/base.py
+                        - repackage/win32_sfx_stub.py
+                        - repackage/win64_signed.py
+                    win64-aarch64\b.*:
+                        - repackage/base.py
+                        - repackage/win64-aarch64_sfx_stub.py
+                        - repackage/win64_signed.py
+        package-formats: [msi]
+        fetches:
+            fetch:
+                - wix-3.14.0

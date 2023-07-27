@@ -2,15 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.repackage_set_upstream_mac_kind:transforms
-    - gecko_taskgraph.transforms.name_sanity:transforms
-    - gecko_taskgraph.transforms.repackage:transforms
-    - gecko_taskgraph.transforms.repackage_routes:transforms
-    - gecko_taskgraph.transforms.job:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.repackage_set_upstream_mac_kind
+    - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.repackage
+    - gecko_taskgraph.transforms.repackage_routes
+    - gecko_taskgraph.transforms.job
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
     - build-signing
@@ -40,51 +41,53 @@ only-for-build-platforms:
     - win64/opt
     - win64-asan-reporter-shippable/opt
 
-job-template:
-    upstream-mac-kind:
-        by-build-type:
-            debug: build-mac-signing
-            default:
-                by-project:
-                    mozilla-(central|beta|release|esr.*): build-mac-notarization
-                    default: build-mac-signing
-    worker-type: b-linux-gcp
-    worker:
-        max-run-time:
+jobs:
+    repackage:
+        from-deps: {}
+        upstream-mac-kind:
+            by-build-type:
+                debug: build-mac-signing
+                default:
+                    by-project:
+                        mozilla-(central|beta|release|esr.*): build-mac-notarization
+                        default: build-mac-signing
+        worker-type: b-linux-gcp
+        worker:
+            max-run-time:
+                by-build-platform:
+                    .*asan.*: 2700
+                    default: 900
+        mozharness:
+            config:
+                by-build-platform:
+                    linux\b.*:
+                        - repackage/base.py
+                        - repackage/linux32_signed.py
+                    linux64\b.*:
+                        - repackage/base.py
+                        - repackage/linux64_signed.py
+                    macosx64\b.*:
+                        - repackage/base.py
+                        - repackage/osx_signed.py
+                    win32\b.*:
+                        - repackage/base.py
+                        - repackage/win32_sfx_stub.py
+                        - repackage/win32_signed.py
+                    win64(?!-aarch64)\b.*:
+                        - repackage/base.py
+                        - repackage/win32_sfx_stub.py
+                        - repackage/win64_signed.py
+                    win64-aarch64\b.*:
+                        - repackage/base.py
+                        - repackage/win64-aarch64_sfx_stub.py
+                        - repackage/win64_signed.py
+        package-formats:
             by-build-platform:
-                .*asan.*: 2700
-                default: 900
-    mozharness:
-        config:
-            by-build-platform:
-                linux\b.*:
-                    - repackage/base.py
-                    - repackage/linux32_signed.py
-                linux64\b.*:
-                    - repackage/base.py
-                    - repackage/linux64_signed.py
-                macosx64\b.*:
-                    - repackage/base.py
-                    - repackage/osx_signed.py
-                win32\b.*:
-                    - repackage/base.py
-                    - repackage/win32_sfx_stub.py
-                    - repackage/win32_signed.py
-                win64(?!-aarch64)\b.*:
-                    - repackage/base.py
-                    - repackage/win32_sfx_stub.py
-                    - repackage/win64_signed.py
-                win64-aarch64\b.*:
-                    - repackage/base.py
-                    - repackage/win64-aarch64_sfx_stub.py
-                    - repackage/win64_signed.py
-    package-formats:
-        by-build-platform:
-            linux.*: [mar]
-            macosx64\b.*: [mar, dmg, pkg]
-            win32\b.*: [mar, installer]
-            win64\b.*: [mar, installer]
-    fetches:
-        toolchain:
-            - linux64-mar-tools
-            - linux64-upx
+                linux.*: [mar]
+                macosx64\b.*: [mar, dmg, pkg]
+                win32\b.*: [mar, installer]
+                win64\b.*: [mar, installer]
+        fetches:
+            toolchain:
+                - linux64-mar-tools
+                - linux64-upx
