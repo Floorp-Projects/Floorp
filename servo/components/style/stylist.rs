@@ -55,7 +55,7 @@ use selectors::matching::{
 };
 use selectors::matching::{IgnoreNthChildForInvalidation, VisitedHandlingMode};
 use selectors::parser::{
-    ArcSelectorList, AncestorHashes, Combinator, Component, Selector, SelectorIter, SelectorList,
+    AncestorHashes, Combinator, Component, Selector, SelectorIter, SelectorList,
 };
 use selectors::visitor::{SelectorListKind, SelectorVisitor};
 use servo_arc::{Arc, ArcBorrow};
@@ -570,23 +570,7 @@ impl From<StyleRuleInclusion> for RuleInclusion {
     }
 }
 
-enum AncestorSelectorList<'a> {
-    Borrowed(&'a SelectorList<SelectorImpl>),
-    Shared(ArcSelectorList<SelectorImpl>),
-}
-
-impl<'a> AncestorSelectorList<'a> {
-    fn into_shared(&mut self) -> &ArcSelectorList<SelectorImpl> {
-        if let Self::Borrowed(ref b) = *self {
-            let shared = b.to_shared();
-            *self = Self::Shared(shared);
-        }
-        match *self {
-            Self::Shared(ref shared) => return shared,
-            Self::Borrowed(..) => unsafe { debug_unreachable!() },
-        }
-    }
-}
+type AncestorSelectorList<'a> = Cow<'a, SelectorList<SelectorImpl>>;
 
 /// A struct containing state from ancestor rules like @layer / @import /
 /// @container / nesting.
@@ -2693,7 +2677,7 @@ impl CascadeData {
                     self.num_declarations += style_rule.block.read_with(&guard).len();
 
                     let has_nested_rules = style_rule.rules.is_some();
-                    let mut ancestor_selectors = containing_rule_state.ancestor_selector_lists.last_mut();
+                    let ancestor_selectors = containing_rule_state.ancestor_selector_lists.last();
                     if has_nested_rules {
                         selectors_for_nested_rules = Some(if ancestor_selectors.is_some() {
                             Cow::Owned(SelectorList(Default::default()))
@@ -2733,7 +2717,7 @@ impl CascadeData {
                         }
 
                         let selector = match ancestor_selectors {
-                            Some(ref mut s) => selector.replace_parent_selector(&s.into_shared()),
+                            Some(s) => selector.replace_parent_selector(&s.0),
                             None => selector.clone(),
                         };
 
@@ -3012,11 +2996,8 @@ impl CascadeData {
                     }
                 },
                 CssRule::Style(..) => {
-                    if let Some(ref mut s) = selectors_for_nested_rules {
-                        containing_rule_state.ancestor_selector_lists.push(match s {
-                            Cow::Owned(ref mut list) => AncestorSelectorList::Shared(list.into_shared()),
-                            Cow::Borrowed(ref b) => AncestorSelectorList::Borrowed(b),
-                        });
+                    if let Some(s) = selectors_for_nested_rules {
+                        containing_rule_state.ancestor_selector_lists.push(s);
                     }
                 },
                 CssRule::Container(ref rule) => {

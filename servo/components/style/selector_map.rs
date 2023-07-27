@@ -753,9 +753,9 @@ fn specific_bucket_for<'a>(
         },
         Component::Is(ref list) | Component::Where(ref list) => {
             if list.len() == 1 {
-                find_bucket(list.slice()[0].iter(), disjoint_buckets, bucket_attributes)
+                find_bucket(list[0].iter(), disjoint_buckets, bucket_attributes)
             } else {
-                for selector in list.slice() {
+                for selector in &**list {
                     let bucket = find_bucket(selector.iter(), disjoint_buckets, bucket_attributes);
                     disjoint_buckets.push(bucket);
                 }
