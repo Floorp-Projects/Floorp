@@ -11,11 +11,13 @@ $max-z-index: 2147483647;
   // FeatureCallout.sys.mjs for the color values
   @include light-theme;
 
+  color-scheme: light;
   position: absolute;
   transition: opacity 0.5s ease;
   z-index: $max-z-index - 2;
   outline: none;
   color: var(--fc-color);
+  accent-color: var(--fc-accent-color);
 
   @media (prefers-color-scheme: dark) {
     @include dark-theme;
@@ -31,10 +33,14 @@ $max-z-index: 2147483647;
   &.simulateContent {
     @media (-moz-content-prefers-color-scheme: light) {
       @include light-theme;
+
+      color-scheme: light;
     }
 
     @media (-moz-content-prefers-color-scheme: dark) {
       @include dark-theme;
+
+      color-scheme: dark;
     }
 
     @media (prefers-contrast) {
@@ -98,6 +104,38 @@ $max-z-index: 2147483647;
 
         h2 {
           margin-block: 10px;
+        }
+      }
+
+      .multi-select-container {
+        margin-inline: 30px;
+        padding: 1em 0 0;
+        font-size: 0.8em;
+        color: inherit;
+
+        input[type='radio'] {
+          margin-inline-end: 0.5em;
+          min-width: auto;
+        }
+      }
+
+      .cta-link {
+        background: none;
+        text-decoration: underline;
+        cursor: pointer;
+        border: none;
+        padding: 0;
+        color: var(--fc-link-color);
+        float: inline-start;
+        margin-inline: 30px 10px;
+        margin-block: 8px;
+
+        &:hover {
+          color: var(--fc-link-color-hover);
+        }
+
+        &:active {
+          color: var(--fc-link-color-active);
         }
       }
 
