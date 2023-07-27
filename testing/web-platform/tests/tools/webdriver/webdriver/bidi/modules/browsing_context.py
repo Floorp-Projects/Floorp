@@ -29,8 +29,7 @@ ClipOptions = Union[ElementOptions, ViewportOptions]
 
 class BrowsingContext(BidiModule):
     @command
-    def activate(self,
-                 context: str) -> Mapping[str, Any]:
+    def activate(self, context: str) -> Mapping[str, Any]:
         return {"context": context}
 
     @command
