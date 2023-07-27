@@ -60,16 +60,12 @@ For example, the [login-timeline widget](https://searchfox.org/mozilla-central/s
 
 While we do have the `./mach addwidget` command, as noted in the [adding new design system components document](#adding-new-design-system-components), this command does not currently support the domain-specific widget case.
 [See Bug 1828181 for more details on supporting this case](https://bugzilla.mozilla.org/show_bug.cgi?id=1828181).
-Instead, you will need to do two things to have your new story appear in Storybook:
-1. Create `<your-team-or-project>/<your-widget>.stories.mjs` in `browser/components/storybook/stories`
-2. In this newly created story file, add the following default export:
-  ```js
-    export default {
-      title: "Domain-specific UI Widgets/<your-team-or-project>/<your-widget>"
-      component: "<your-widget>"
-    };
-  ```
-The next time you run `./mach storybook`, a blank story entry for your widget should appear in your local Storybook.
+Instead, you will need to use `./mach addstory your-widget "your-project-or-team-name"` to create a new story in `browser/components/storybook/stories`.
+You can also use `./mach addstory your-widget "your-project-or-team-name" --path <your-widget-path>/<widget-source>` so that your widget's source is imported correctly.
+
+If you specified a path and have Storybook running, a blank story entry for your widget will appear under the Domain-Specific UI Widgets/your-project section.
+Otherwise, if you have not added a path, Storybook will throw an error saying that it "Can't resolve 'None'" in the newly added story.
+This is expected and serves as a reminder that you need to update the newly created story with the widget source import.
 
 Since Storybook is unaware of how the actual code is added or built, we won't go into detail about adding your new widget to the codebase.
 It's recommended to have a `.html` test for your new widget since this lets you unit test the component directly rather than using integration tests with the domain.

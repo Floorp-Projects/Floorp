@@ -95,9 +95,8 @@ components, also known as UI widgets.
 As long as you used `./mach addwidget` correctly, there is no additional setup needed to view your newly created story in Storybook.
 
 Stories in `browser/components/storybook/stories` are used for non-design system components, also called domain-specific UI widgets.
-The easiest way to use Storybook for non-design system elements is
-to add a new `.stories.mjs` file to `browser/components/storybook/stories`.
-You will also need to set the title of your widget to be: `Domain-specific UI Widgets/<team-or-project-name>/<widget-name>` in the default exported object.
+The easiest way to use Storybook for non-design system element is to use `./mach addstory new-component "Your Project"`.
+You can also use `./mach addstory new-component "Your Project" --path browser/components/new-component.mjs` where `--path` is the path to your new components' source.
 [See the Credential Management/Timeline widget for an example.](https://searchfox.org/mozilla-central/rev/2c11f18f89056a806c299a9d06bfa808718c2e84/browser/components/storybook/stories/credential-management.stories.mjs#11)
 
 If you want to colocate your story with the code it is documenting you will need
