@@ -35,8 +35,6 @@ label {
 /* Label box */
 
 #label-box[native] {
-  appearance: auto;
-  -moz-default-appearance: menulist-text;
   align-items: center;
   justify-content: center;
   color: inherit;

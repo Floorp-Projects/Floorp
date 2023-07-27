@@ -1485,18 +1485,11 @@ pub enum Appearance {
     /// A dual toolbar button (e.g., a Back button with a dropdown)
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Dualbutton,
-    /// A groupbox.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    Groupbox,
     /// <menu> and <menuitem> appearances
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Menuitem,
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Checkmenuitem,
-    /// For text on non-iconic menuitems only
-    /// The text part of a dropdown list, to left of button.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    MenulistText,
     /// Menu Popup background.
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     Menupopup,
