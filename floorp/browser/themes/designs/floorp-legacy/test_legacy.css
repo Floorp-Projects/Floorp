@@ -1606,7 +1606,7 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
 }
 
 #tabbrowser-tabs tab:not(#browser *):last-of-type{
-  margin-right: 8px !important;
+  margin-right: 12px !important;
 }
 #tabbrowser-tabs [floorp-lastVisibleTab]:not(#browser *){
   margin-right: 8px !important;
@@ -1648,7 +1648,6 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
 
 @supports not -moz-bool-pref("uc.tweak.floating-tabs") {
   :root:not([lwtheme-brighttext="true"]) .tabbrowser-tab:hover>.tab-stack>.tab-background:not([selected="true"], [multiselected]) {
-    background-color: color-mix(in srgb, white 30%, transparent) !important;
     --uc-tab-corner-bg: color-mix(in srgb, white 30%, transparent) !important;
   }
 }
@@ -2170,6 +2169,7 @@ menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [type="che
 #tabbrowser-tabs #tabs-newtab-button:not(#browser *) {
   margin-inline-start: 6px !important;
   margin-left: -8px !important;
+  width:32px;
 }
 
 #tabbrowser-tabs[overflow] .tabbrowser-arrowscrollbox {
