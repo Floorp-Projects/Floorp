@@ -65,6 +65,8 @@ vendored:third_party/python/click
 vendored:third_party/python/colorama
 vendored:third_party/python/distro
 vendored:third_party/python/idna
+vendored:third_party/python/importlib_metadata
+vendored:third_party/python/importlib_resources
 vendored:third_party/python/jinxed
 vendored:third_party/python/jsmin
 vendored:third_party/python/looseversion
@@ -78,10 +80,13 @@ vendored:third_party/python/requests
 vendored:third_party/python/sentry_sdk
 vendored:third_party/python/setuptools
 vendored:third_party/python/six
+vendored:third_party/python/tomlkit
 vendored:third_party/python/tqdm
+vendored:third_party/python/typing_extensions
 vendored:third_party/python/urllib3
 vendored:third_party/python/wcwidth
 vendored:third_party/python/wheel
+vendored:third_party/python/zipp
 # glean-sdk may not be installable if a wheel isn't available
 # and it has to be built from source.
 pypi-optional:glean-sdk==53.1.0:telemetry will not be collected

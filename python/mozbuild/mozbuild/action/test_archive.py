@@ -315,6 +315,16 @@ ARCHIVE_FILES = {
         },
         {
             "source": buildconfig.topsrcdir,
+            "base": "testing/mozbase/mozlog",
+            "pattern": "mozlog/**",
+        },
+        {
+            "source": buildconfig.topsrcdir,
+            "base": "python/mozterm",
+            "pattern": "mozterm/**",
+        },
+        {
+            "source": buildconfig.topsrcdir,
             "base": "testing/mozbase/mozprocess",
             "pattern": "mozprocess/**",
         },
@@ -322,6 +332,11 @@ ARCHIVE_FILES = {
             "source": buildconfig.topsrcdir,
             "base": "third_party/python/six",
             "pattern": "six.py",
+        },
+        {
+            "source": buildconfig.topsrcdir,
+            "base": "third_party/python/tomlkit",
+            "pattern": "**",
         },
         {
             "source": buildconfig.topsrcdir,

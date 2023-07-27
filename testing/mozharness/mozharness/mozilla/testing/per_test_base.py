@@ -13,7 +13,6 @@ import posixpath
 import sys
 
 import mozinfo
-from manifestparser import TestManifest
 
 
 class SingleTestMixin(object):
@@ -69,6 +68,9 @@ class SingleTestMixin(object):
         is_fission = "fission.autostart=true" in self.config.get("extra_prefs", [])
         tests_by_path = {}
         all_disabled = []
+        #  HACK: import here so we don't need import for rest of class
+        from manifestparser import TestManifest
+
         for (path, suite) in manifests:
             if os.path.exists(path):
                 man = TestManifest([path], strict=False)

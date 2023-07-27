@@ -8,8 +8,6 @@ from unittest import TestCase
 
 import mozunit
 from manifestparser.filters import chunk_by_dir, chunk_by_runtime, chunk_by_slice
-from six import iteritems
-from six.moves import range
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -84,7 +82,7 @@ class ChunkByDir(TestCase):
                         { <dir>: <num tests> }
         """
         i = 0
-        for d, num in iteritems(dirs):
+        for d, num in dirs.items():
             for _ in range(num):
                 i += 1
                 name = "test%i" % i
@@ -99,8 +97,8 @@ class ChunkByDir(TestCase):
 
             def num_groups(tests):
                 unique = set()
-                for p in [t["relpath"] for t in tests]:
-                    p = p.split(os.sep)
+                for rp in [t["relpath"] for t in tests]:
+                    p = rp.split(os.sep)
                     p = p[: min(depth, len(p) - 1)]
                     unique.add(os.sep.join(p))
                 return len(unique)
@@ -174,7 +172,7 @@ class ChunkByRuntime(TestCase):
                      { <dir>: <num tests> }
         """
         i = 0
-        for d, num in iteritems(dirs):
+        for d, num in dirs.items():
             for _ in range(num):
                 i += 1
                 name = "test%i" % i
@@ -195,7 +193,7 @@ class ChunkByRuntime(TestCase):
 
     def chunk_by_round_robin(self, tests, total, runtimes):
         tests_by_manifest = []
-        for manifest, runtime in iteritems(runtimes):
+        for manifest, runtime in runtimes.items():
             mtests = [t for t in tests if t["manifest_relpath"] == manifest]
             tests_by_manifest.append((runtime, mtests))
         tests_by_manifest.sort(key=lambda x: x[0], reverse=False)

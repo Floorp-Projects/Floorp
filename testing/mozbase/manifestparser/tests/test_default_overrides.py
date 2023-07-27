@@ -36,6 +36,35 @@ class TestDefaultSkipif(unittest.TestCase):
             elif test["name"] == "test6":
                 self.assertEqual(test["skip-if"], "os == 'win' && debug\ndebug")
 
+    def test_defaults_toml(self):
+
+        default = os.path.join(here, "default-skipif.ini")
+        parser = ManifestParser(manifests=(default,), use_toml=True)
+        for test in parser.tests:
+            if test["name"] == "test1":
+                self.assertEqual(
+                    test["skip-if"].strip(), "os == 'win' && debug \n  debug"
+                )
+            elif test["name"] == "test2":
+                self.assertEqual(
+                    test["skip-if"].strip(), "os == 'win' && debug \n  os == 'linux'"
+                )
+            elif test["name"] == "test3":
+                self.assertEqual(
+                    test["skip-if"].strip(), "os == 'win' && debug \n  os == 'win'"
+                )
+            elif test["name"] == "test4":
+                self.assertEqual(
+                    test["skip-if"].strip(),
+                    "os == 'win' && debug \n  os == 'win' && debug",
+                )
+            elif test["name"] == "test5":
+                self.assertEqual(test["skip-if"].strip(), "os == 'win' && debug")
+            elif test["name"] == "test6":
+                self.assertEqual(
+                    test["skip-if"].strip(), "os == 'win' && debug \n  debug"
+                )
+
 
 class TestDefaultSupportFiles(unittest.TestCase):
     """Tests combining support-files field in [DEFAULT] with the value for a test"""
@@ -44,6 +73,19 @@ class TestDefaultSupportFiles(unittest.TestCase):
 
         default = os.path.join(here, "default-suppfiles.ini")
         parser = ManifestParser(manifests=(default,))
+        expected_supp_files = {
+            "test7": "foo.js",
+            "test8": "foo.js bar.js",
+            "test9": "foo.js",
+        }
+        for test in parser.tests:
+            expected = expected_supp_files[test["name"]]
+            self.assertEqual(test["support-files"], expected)
+
+    def test_defaults_toml(self):
+
+        default = os.path.join(here, "default-suppfiles.ini")
+        parser = ManifestParser(manifests=(default,), use_toml=True)
         expected_supp_files = {
             "test7": "foo.js",
             "test8": "foo.js bar.js",
@@ -99,6 +141,50 @@ class TestOmitDefaults(unittest.TestCase):
                 self.assertIn(key, actual_defaults)
                 self.assertEqual(value, actual_defaults[key])
 
+    def test_defaults_toml(self):
+        manifests = (
+            os.path.join(here, "default-suppfiles.toml"),
+            os.path.join(here, "default-skipif.toml"),
+        )
+        parser = ManifestParser(
+            manifests=manifests, handle_defaults=False, use_toml=True
+        )
+        expected_supp_files = {
+            "test8": "bar.js",
+        }
+        expected_skip_ifs = {
+            "test1": "debug",
+            "test2": "os == 'linux'",
+            "test3": "os == 'win'",
+            "test4": "os == 'win' && debug",
+            "test6": "debug",
+        }
+        for test in parser.tests:
+            for field, expectations in (
+                ("support-files", expected_supp_files),
+                ("skip-if", expected_skip_ifs),
+            ):
+                expected = expectations.get(test["name"])
+                if not expected:
+                    self.assertNotIn(field, test)
+                else:
+                    self.assertEqual(test[field].strip(), expected)
+
+        expected_defaults = {
+            os.path.join(here, "default-suppfiles.toml"): {
+                "support-files": "foo.js",
+            },
+            os.path.join(here, "default-skipif.toml"): {
+                "skip-if": "os == 'win' && debug",
+            },
+        }
+        for path, defaults in expected_defaults.items():
+            self.assertIn(path, parser.manifest_defaults)
+            actual_defaults = parser.manifest_defaults[path]
+            for key, value in defaults.items():
+                self.assertIn(key, actual_defaults)
+                self.assertEqual(value, actual_defaults[key].strip())
+
 
 class TestSubsuiteDefaults(unittest.TestCase):
     """Test that subsuites are handled correctly when managing defaults
@@ -107,6 +193,20 @@ class TestSubsuiteDefaults(unittest.TestCase):
     def test_subsuite_defaults(self):
         manifest = os.path.join(here, "default-subsuite.ini")
         parser = ManifestParser(manifests=(manifest,), handle_defaults=False)
+        expected_subsuites = {
+            "test1": "baz",
+            "test2": "foo",
+        }
+        defaults = parser.manifest_defaults[manifest]
+        for test in parser.tests:
+            value = combine_fields(defaults, test)
+            self.assertEqual(expected_subsuites[value["name"]], value["subsuite"])
+
+    def test_subsuite_defaults_toml(self):
+        manifest = os.path.join(here, "default-subsuite.toml")
+        parser = ManifestParser(
+            manifests=(manifest,), handle_defaults=False, use_toml=True
+        )
         expected_subsuites = {
             "test1": "baz",
             "test2": "foo",

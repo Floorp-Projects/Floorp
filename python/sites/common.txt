@@ -28,8 +28,6 @@ vendored:third_party/python/fluent.syntax
 vendored:third_party/python/giturlparse
 vendored:third_party/python/glean_parser
 vendored:third_party/python/gyp/pylib
-vendored:third_party/python/importlib_metadata
-vendored:third_party/python/importlib_resources
 vendored:third_party/python/jinja2_time
 vendored:third_party/python/json-e
 vendored:third_party/python/jsonschema
@@ -56,8 +54,6 @@ vendored:third_party/python/taskcluster_taskgraph
 vendored:third_party/python/taskcluster_urls
 vendored:third_party/python/text_unidecode
 vendored:third_party/python/toml
-vendored:third_party/python/typing_extensions
 vendored:third_party/python/voluptuous
 vendored:third_party/python/yamllint
 vendored:third_party/python/yarl
-vendored:third_party/python/zipp

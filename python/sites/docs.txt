@@ -58,8 +58,6 @@ vendored:third_party/python/chardet
 vendored:third_party/python/cookiecutter
 vendored:third_party/python/fluent.syntax
 vendored:third_party/python/giturlparse
-vendored:third_party/python/importlib_metadata
-vendored:third_party/python/importlib_resources
 vendored:third_party/python/jinja2_time
 vendored:third_party/python/json-e
 vendored:third_party/python/jsonschema
@@ -84,4 +82,3 @@ vendored:third_party/python/text_unidecode
 vendored:third_party/python/toml
 vendored:third_party/python/urllib3
 vendored:third_party/python/voluptuous
-vendored:third_party/python/zipp

@@ -1,0 +1,13 @@
+[test1]
+subsuite='bar,foo=="bar"' # this has a comment
+
+[test2]
+subsuite='bar,foo=="bar"'
+
+[test3]
+subsuite='baz'
+
+[test4]
+[test5]
+[test6]
+subsuite='bar,foo=="szy" || foo=="bar"'
