@@ -105,7 +105,7 @@ class GeckoSitePermissionsStorage(
 
         return onDiskStorage.getSitePermissionsPaged().map { onDiskPermission ->
             val geckoPermissions = geckoPermissionsByHost[onDiskPermission.origin].groupByType()
-            mergePermissions(onDiskPermission, geckoPermissions)
+            mergePermissions(onDiskPermission, geckoPermissions) ?: onDiskPermission
         }
     }
 
