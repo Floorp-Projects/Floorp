@@ -10,61 +10,74 @@
 <video id="v" controls></video>
 <script type="application/javascript">
 
-SimpleTest.waitForFocus(startTests, window);
-SimpleTest.requestFlakyTimeout("untriaged");
+SimpleTest.waitForFocus(runTests, window);
 
-function is()
-{
-  window.opener.is.apply(window.opener, arguments);
+function ok() {
+  window.opener.ok.apply(window.opener, arguments);
 }
 
-function isnot()
-{
-  window.opener.isnot.apply(window.opener, arguments);
+function info() {
+  window.opener.info.apply(window.opener, arguments);
 }
 
-function hitEventLoop(aFunc, aTimes)
-{
-  if (--aTimes) {
-    setTimeout(hitEventLoop, 0, aFunc, aTimes);
-  } else {
-    setTimeout(aFunc, 20);
+async function waitForCondition(aFunc) {
+  for (let i = 0; i < 30; i++) {
+    await (new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    if (aFunc(SpecialPowers.getFullZoom(window))) {
+      return true;
+    }
   }
+  return false;
 }
 
-function startTests() {
-  SpecialPowers.pushPrefEnv(
-    {"set": [["mousewheel.with_control.action", 3],
-             ["test.events.async.enabled", true]]},
-  runTests);
-}
+async function runTests() {
+  await SpecialPowers.pushPrefEnv(
+    {
+      "set": [
+        ["mousewheel.with_control.action", 3],
+        ["test.events.async.enabled", true],
+      ]
+    }
+  );
 
-function runTests()
-{
-  synthesizeKey("0", { accelKey: true });
+  const video = document.getElementById("v");
 
-  var video = document.getElementById("v");
-  hitEventLoop(function () {
-    is(SpecialPowers.getFullZoom(window), 1.0,
-       "failed to reset zoom");
+  for (let i = 0; i < 3; i++) {
     synthesizeWheel(video, 10, 10,
       { deltaMode: WheelEvent.DOM_DELTA_LINE, ctrlKey: true,
         deltaX: 0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 });
-    hitEventLoop(function () {
-      isnot(SpecialPowers.getFullZoom(window), 1.0,
-             "failed to zoom by ctrl+wheel");
+    if (await waitForCondition(aZoomLevel => aZoomLevel < 1.0)) {
+      break;
+    }
+    info("Retrying zoom out...");
+  }
+  let zoomLevel = SpecialPowers.getFullZoom(window);
+  ok(
+    zoomLevel < 1.0,
+    `Failed to zoom out with turning wheel to bottom, got: ${zoomLevel}`
+  );
 
-      synthesizeWheel(video, 10, 10,
-        { deltaMode: WheelEvent.DOM_DELTA_LINE, ctrlKey: true,
-          deltaX: 0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 });
-      hitEventLoop(function () {
-        is(SpecialPowers.getFullZoom(window), 1.0,
-           "failed to reset zoom");
+  for (let i = 0; i < 4; i++) {
+    synthesizeWheel(video, 10, 10,
+      { deltaMode: WheelEvent.DOM_DELTA_LINE, ctrlKey: true,
+        deltaX: 0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 });
+    if (await waitForCondition(aZoomLevel => aZoomLevel > 1.0)) {
+      break;
+    }
+    info("Retrying zoom in...");
+  }
+  zoomLevel = SpecialPowers.getFullZoom(window);
+  ok(
+    zoomLevel > 1.0,
+    `Failed to zoom in with turning wheel to top, got: ${zoomLevel}`
+  );
 
-        hitEventLoop(window.opener.finish, 20);
-      }, 20);
-    }, 20);
-  }, 20);
+  synthesizeKey("0", { accelKey: true });
+  ok(
+    await waitForCondition(aZoomLevel => aZoomLevel == 1.0),
+    "Failed to reset zoom at finish the test"
+  );
+  opener.finish();
 }
 
 </script>
