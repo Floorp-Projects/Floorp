@@ -59,11 +59,6 @@ class TransformableVideoFrameInterface : public TransformableFrameInterface {
   virtual bool IsKeyFrame() const = 0;
   virtual const std::string& GetRid() const = 0;
 
-  // The returned const ref may become invalid due to later SetMetadata calls,
-  // or other modifications. Use Metadata() instead.
-  [[deprecated("Use Metadata() instead")]] virtual const VideoFrameMetadata&
-  GetMetadata() const = 0;
-
   virtual VideoFrameMetadata Metadata() const = 0;
 
   // TODO(https://crbug.com/webrtc/14709): Make pure virtual when Chromium MOCK

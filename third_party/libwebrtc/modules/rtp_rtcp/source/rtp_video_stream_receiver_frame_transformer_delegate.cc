@@ -56,8 +56,6 @@ class TransformableVideoReceiverFrame
     return empty;
   }
 
-  const VideoFrameMetadata& GetMetadata() const override { return metadata_; }
-
   VideoFrameMetadata Metadata() const override { return metadata_; }
 
   void SetMetadata(const VideoFrameMetadata&) override {
