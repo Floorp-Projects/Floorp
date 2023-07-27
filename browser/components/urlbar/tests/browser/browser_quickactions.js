@@ -259,7 +259,7 @@ async function isScreenshotInitialized() {
     let screenshotsChild = content.windowGlobalChild.getActor(
       "ScreenshotsComponent"
     );
-    return screenshotsChild?._overlay?._initialized;
+    return screenshotsChild?.overlay?.initialized;
   });
 }
 
