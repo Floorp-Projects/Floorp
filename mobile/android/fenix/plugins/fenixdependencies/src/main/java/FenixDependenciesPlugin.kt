@@ -23,7 +23,6 @@ object FenixVersions {
     const val androidx_profileinstaller = "1.3.1"
     const val androidx_legacy = "1.0.0"
     const val androidx_lifecycle = "2.6.1"
-    const val androidx_navigation = "2.5.3"
     const val androidx_splash_screen = "1.0.1"
     const val androidx_paging = "3.1.1"
     const val androidx_transition = "1.4.1"
@@ -61,9 +60,6 @@ object FenixDependencies {
     const val androidx_legacy = "androidx.legacy:legacy-support-v4:${FenixVersions.androidx_legacy}"
     const val androidx_lifecycle_common = "androidx.lifecycle:lifecycle-common:${FenixVersions.androidx_lifecycle}"
     const val androidx_paging = "androidx.paging:paging-runtime-ktx:${FenixVersions.androidx_paging}"
-    const val androidx_safeargs = "androidx.navigation:navigation-safe-args-gradle-plugin:${FenixVersions.androidx_navigation}"
-    const val androidx_navigation_fragment = "androidx.navigation:navigation-fragment-ktx:${FenixVersions.androidx_navigation}"
-    const val androidx_navigation_ui = "androidx.navigation:navigation-ui:${FenixVersions.androidx_navigation}"
     const val androidx_transition = "androidx.transition:transition:${FenixVersions.androidx_transition}"
     const val androidx_datastore = "androidx.datastore:datastore:${FenixVersions.androidx_datastore}"
 
