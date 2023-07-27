@@ -33,7 +33,7 @@ function setVerticalTabs() {
 
     function checkBrowserIsStartup () {
       let list = Services.wm.getEnumerator("navigator:browser");
-      while (list.hasMoreElements()) { if (list.getNext() != window) return; }
+      while (list.hasMoreElements()) { if (list.getNext() != window) {return;} }
 
       SessionStore.promiseInitialized.then(() => {
         window.setTimeout(setWorkspaceLabel, 1500); 
@@ -45,6 +45,12 @@ function setVerticalTabs() {
       //move workspace button
       let workspaceButton = document.getElementById("workspace-button");
       let customizeTarget = document.getElementById("nav-bar-customization-target");
+
+      if (workspaceButton == null) {
+        console.error("Workspace button not found");
+        return;
+      }
+
       customizeTarget.before(workspaceButton);
     }
 
@@ -55,7 +61,7 @@ function setVerticalTabs() {
     document.head.appendChild(Tag);
 
     if(document.getElementById("floorp-vthover") == null && Services.prefs.getBoolPref("floorp.verticaltab.hover.enabled")){
-      var Tag = document.createElement("style");
+     Tag = document.createElement("style");
      Tag.innerText = `@import url(chrome://browser/skin/options/native-verticaltab-hover.css)`;
      Tag.setAttribute("id", "floorp-vthover");
      document.head.appendChild(Tag);
@@ -81,7 +87,7 @@ function setVerticalTabs() {
       tabsToolBar.removeAttribute("positionpinnedtabs")
       
       window.setTimeout(() => {
-        if(tabBrowserArrowScrollBox.getAttribute("overflowing") != "true") tabsBase.removeAttribute("overflow")
+        if(tabBrowserArrowScrollBox.getAttribute("overflowing") != "true") {tabsBase.removeAttribute("overflow")}
         tabsToolBar.removeAttribute("positionpinnedtabs")
         for(let elem of document.querySelectorAll(`#tabbrowser-arrowscrollbox > tab[style*="margin-inline-start"]`)){
           elem.style.removeProperty("margin-inline-start")
@@ -92,8 +98,15 @@ function setVerticalTabs() {
       //sidebarBox.style.removeProperty("overflow-y")
 
       //move workspace button
-      let workspaceButton = document.getElementById("workspace-button");
-      document.querySelector(".toolbar-items").before(workspaceButton);
+      function moveToDefaultSpace() {
+        let workspaceButton = document.getElementById("workspace-button");
+        if (workspaceButton == null) {
+          console.error("Workspace button not found");
+          return;
+        }
+        document.querySelector(".toolbar-items").before(workspaceButton);
+      }
+      moveToDefaultSpace();
 
       document.getElementById("floorp-vthover")?.remove();
 
