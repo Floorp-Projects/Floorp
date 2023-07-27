@@ -1,0 +1,11 @@
+[DEFAULT]
+foo = "bar"
+
+["include:include/bar.toml"]
+
+[fleem]
+
+["include:include/foo.toml"]
+red = "roses"
+blue = "violets"
+yellow = "daffodils"

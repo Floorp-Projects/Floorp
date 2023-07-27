@@ -13,24 +13,8 @@ import os
 from collections import defaultdict
 from collections.abc import MutableSequence
 
-import six
-from six import string_types
-
 from .expression import ParseError, parse
 from .util import normsep
-
-logger = None
-
-
-def log(msg, level="info"):
-    from mozlog import get_default_logger
-
-    global logger
-    if not logger:
-        logger = get_default_logger(component="manifestparser")
-    if logger:
-        getattr(logger, level)(msg)
-
 
 # built-in filters
 
@@ -118,7 +102,7 @@ class InstanceFilter(object):
         self.fmt_args = ", ".join(
             itertools.chain(
                 [str(a) for a in args],
-                ["{}={}".format(k, v) for k, v in six.iteritems(kwargs)],
+                ["{}={}".format(k, v) for k, v in kwargs.items()],
             )
         )
 
@@ -170,9 +154,8 @@ class subsuite(InstanceFilter):
             if self.name is None:
                 if not test.get("subsuite"):
                     yield test
-            else:
-                if test.get("subsuite", "") == self.name:
-                    yield test
+            elif test.get("subsuite", "") == self.name:
+                yield test
 
 
 class chunk_by_slice(InstanceFilter):
@@ -279,7 +262,7 @@ class chunk_by_dir(InstanceFilter):
         # simplicity.
         if self.this_chunk == 1:
             disabled_dirs = [
-                v for k, v in six.iteritems(tests_by_dir) if k not in ordered_dirs
+                v for k, v in tests_by_dir.items() if k not in ordered_dirs
             ]
             for disabled_test in itertools.chain(*disabled_dirs):
                 yield disabled_test
@@ -341,6 +324,12 @@ class chunk_by_runtime(InstanceFilter):
         self.this_chunk = this_chunk
         self.total_chunks = total_chunks
         self.runtimes = {normsep(m): r for m, r in runtimes.items()}
+        component = "filters"
+        import mozlog
+
+        self.logger = mozlog.get_default_logger(component)
+        if self.logger is None:
+            self.logger = mozlog.unstructured.getLogger(component)
 
     @classmethod
     def get_manifest(cls, test):
@@ -364,7 +353,7 @@ class chunk_by_runtime(InstanceFilter):
         # pylint: disable=W1633
         avg = round(sum(times) / len(times), 2) if times else 0
         missing = sorted([m for m in manifests if m not in self.runtimes])
-        log(
+        self.logger.info(
             "Applying average runtime of {}s to the following missing manifests:\n{}".format(
                 avg, "  " + "\n  ".join(missing)
             )
@@ -394,7 +383,7 @@ class chunk_by_runtime(InstanceFilter):
         runtime, this_manifests = chunks[self.this_chunk - 1]
         # pylint --py3k W1619
         # pylint: disable=W1633
-        log(
+        self.logger.info(
             "Cumulative test runtime is around {} minutes (average is {} minutes)".format(
                 round(runtime / 60),
                 round(sum([c[0] for c in chunks]) / (60 * len(chunks))),
@@ -423,7 +412,7 @@ class tags(InstanceFilter):
 
     def __init__(self, tags):
         InstanceFilter.__init__(self, tags)
-        if isinstance(tags, string_types):
+        if isinstance(tags, str):
             tags = [tags]
         self.tags = tags
 
@@ -477,7 +466,7 @@ class pathprefix(InstanceFilter):
 
     def __init__(self, paths):
         InstanceFilter.__init__(self, paths)
-        if isinstance(paths, string_types):
+        if isinstance(paths, str):
             paths = [paths]
         self.paths = paths
         self.missing = set()
@@ -485,8 +474,8 @@ class pathprefix(InstanceFilter):
     def __call__(self, tests, values):
         seen = set()
         for test in tests:
-            for tp in self.paths:
-                tp = os.path.normpath(tp)
+            for testpath in self.paths:
+                tp = os.path.normpath(testpath)
 
                 if tp.endswith(".ini"):
                     mpaths = [test["manifest_relpath"]]

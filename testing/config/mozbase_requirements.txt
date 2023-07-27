@@ -1,5 +1,5 @@
-../tools/mozterm
 ../tools/geckoprocesstypes_generator
+../tools/mozterm
 
 ../mozbase/manifestparser
 ../mozbase/mozcrash
@@ -29,3 +29,4 @@ https://pypi.pub.build.mozilla.org/pub/arsenic-19.1-py3-none-any.whl; sys_platfo
 requests==2.22.0; sys_platform != 'darwin'
 pyyaml==5.1.2; sys_platform != 'darwin'
 structlog==15.2.0; sys_platform != 'darwin'
+tomlkit==0.11.8

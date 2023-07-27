@@ -10,12 +10,12 @@ import os
 import shutil
 import sys
 import types
-
-from six import StringIO, string_types
+from io import StringIO
 
 from .filters import DEFAULT_FILTERS, enabled, filterlist
 from .filters import exists as _exists
 from .ini import read_ini
+from .toml import read_toml
 
 __all__ = ["ManifestParser", "TestManifest", "convert"]
 
@@ -53,6 +53,7 @@ class ManifestParser(object):
         rootdir=None,
         finder=None,
         handle_defaults=True,
+        use_toml=False,
     ):
         """Creates a ManifestParser from the given manifest files.
 
@@ -77,6 +78,7 @@ class ManifestParser(object):
                                 test objects. Callers are expected to manage per-manifest
                                 defaults themselves via the manifest_defaults member
                                 variable in this case.
+        :param use_toml: If True *.toml configration files will be used iff present in the same location as *.ini files (applies to included files as well). If False only *.ini files will be considered. (defaults to True)
         """
         self._defaults = defaults or {}
         self.tests = []
@@ -87,6 +89,13 @@ class ManifestParser(object):
         self._root = None
         self.finder = finder
         self._handle_defaults = handle_defaults
+        self.use_toml = use_toml
+        component = "manifestparser"
+        import mozlog
+
+        self.logger = mozlog.get_default_logger(component)
+        if self.logger is None:
+            self.logger = mozlog.unstructured.getLogger(component)
         if manifests:
             self.read(*manifests)
 
@@ -124,6 +133,27 @@ class ManifestParser(object):
             return relpath(path, self.root)
 
     # methods for reading manifests
+    def _get_fp_filename(self, filename):
+        # get directory of this file if not file-like object
+        if isinstance(filename, str):
+            # If we're using mercurial as our filesystem via a finder
+            # during manifest reading, the getcwd() calls that happen
+            # with abspath calls will not be meaningful, so absolute
+            # paths are required.
+            if self.finder:
+                assert os.path.isabs(filename)
+            filename = os.path.abspath(filename)
+            if self.finder:
+                fp = codecs.getreader("utf-8")(self.finder.get(filename).open())
+            else:
+                fp = io.open(filename, encoding="utf-8")
+        else:
+            fp = filename
+            if hasattr(fp, "name"):
+                filename = os.path.abspath(fp.name)
+            else:
+                filename = None
+        return fp, filename
 
     def _read(self, root, filename, defaults, parentmanifest=None):
         """
@@ -140,6 +170,20 @@ class ManifestParser(object):
             include_file = normalize_path(include_file)
             if not os.path.isabs(include_file):
                 include_file = os.path.join(here, include_file)
+            file_base, file_ext = os.path.splitext(include_file)
+            if file_ext == ".ini":
+                toml_name = file_base + ".toml"
+                if self.path_exists(toml_name):
+                    if self.use_toml:
+                        include_file = toml_name
+                    else:
+                        self.logger.debug(
+                            f"NOTE TOML include file present, but not used: {toml_name}"
+                        )
+            elif file_ext != ".toml":
+                raise IOError(
+                    f"manfestparser file extension not supported: {include_file}"
+                )
             if not self.path_exists(include_file):
                 message = "Included file '%s' does not exist" % include_file
                 if self.strict:
@@ -149,30 +193,41 @@ class ManifestParser(object):
                     return
             return include_file
 
-        # get directory of this file if not file-like object
-        if isinstance(filename, string_types):
-            # If we're using mercurial as our filesystem via a finder
-            # during manifest reading, the getcwd() calls that happen
-            # with abspath calls will not be meaningful, so absolute
-            # paths are required.
-            if self.finder:
-                assert os.path.isabs(filename)
-            filename = os.path.abspath(filename)
-            filename_rel = self.relative_to_root(filename)
-            self.source_files.add(filename)
-            if self.finder:
-                fp = codecs.getreader("utf-8")(self.finder.get(filename).open())
-            else:
-                fp = io.open(filename, encoding="utf-8")
-            here = os.path.dirname(filename)
-        else:
-            fp = filename
-            filename = here = None
+        # assume we are reading an INI file
+        read_fn = read_ini
+        fp, filename = self._get_fp_filename(filename)
+        if filename is None:
             filename_rel = None
+            here = root
+            file_base = file_ext = None
+        else:
+            self.source_files.add(filename)
+            filename_rel = self.relative_to_root(filename)
+            here = os.path.dirname(filename)
+            file_base, file_ext = os.path.splitext(filename)
+            if file_ext == ".ini":
+                toml_name = file_base + ".toml"
+                if self.path_exists(toml_name):
+                    if self.use_toml:
+                        fp, filename = self._get_fp_filename(toml_name)
+                        read_fn = read_toml
+                        self.logger.debug(f"Reading TOML: {filename}")
+                    else:
+                        self.logger.debug(
+                            f"NOTE TOML present, but not used: {toml_name}"
+                        )
+                        self.logger.debug(f"Reading INI: {filename}")
+                else:
+                    self.logger.debug(f"Reading INI: {filename}")
+            elif file_ext == ".toml":
+                read_fn = read_toml
+                self.logger.debug(f"Reading TOML: {filename}")
+            else:
+                raise IOError(f"manfestparser file extension not supported: {filename}")
         defaults["here"] = here
 
         # read the configuration
-        sections, defaults = read_ini(
+        sections, defaults = read_fn(
             fp=fp,
             defaults=defaults,
             strict=self.strict,
@@ -199,6 +254,7 @@ class ManifestParser(object):
             # TODO: keep track of included file structure:
             # self.manifests = {'manifest.ini': 'relative/path.ini'}
             if section.startswith("include:"):
+                self.logger.debug(f"ManifestParser, INCLUDE: {section}")
                 include_file = read_file("include:")
                 if include_file:
                     include_defaults = data.copy()
@@ -260,7 +316,7 @@ class ManifestParser(object):
         missing = [
             filename
             for filename in filenames
-            if isinstance(filename, string_types) and not self.path_exists(filename)
+            if isinstance(filename, str) and not self.path_exists(filename)
         ]
         if missing:
             raise IOError("Missing files: %s" % ", ".join(missing))
@@ -274,8 +330,11 @@ class ManifestParser(object):
             # set the per file defaults
             defaults = _defaults.copy()
             here = None
-            if isinstance(filename, string_types):
+            if isinstance(filename, str):
                 here = os.path.dirname(os.path.abspath(filename))
+            elif hasattr(filename, "name"):
+                here = os.path.dirname(os.path.abspath(filename.name))
+            if here:
                 defaults["here"] = here  # directory of master .ini file
 
             if self.rootdir is None:
@@ -359,9 +418,11 @@ class ManifestParser(object):
         if tests is None:
             manifests = []
             # Make sure to return all the manifests, even ones without tests.
-            for manifest in list(self.manifest_defaults.keys()):
-                if isinstance(manifest, tuple):
-                    parentmanifest, manifest = manifest
+            for m in list(self.manifest_defaults.keys()):
+                if isinstance(m, tuple):
+                    _parentmanifest, manifest = m
+                else:
+                    manifest = m
                 if manifest not in manifests:
                     manifests.append(manifest)
             return manifests
@@ -414,13 +475,13 @@ class ManifestParser(object):
         """
 
         files = set([])
-        if isinstance(directories, string_types):
+        if isinstance(directories, str):
             directories = [directories]
 
         # get files in directories
         for directory in directories:
-            for dirpath, dirnames, filenames in os.walk(directory, topdown=True):
-
+            for dirpath, _dirnames, fnames in os.walk(directory, topdown=True):
+                filenames = fnames
                 # only add files that match a pattern
                 if pattern:
                     filenames = fnmatch.filter(filenames, pattern)
@@ -462,7 +523,7 @@ class ManifestParser(object):
 
         # open file if `fp` given as string
         close = False
-        if isinstance(fp, string_types):
+        if isinstance(fp, str):
             fp = open(fp, "w")
             close = True
 
@@ -496,8 +557,8 @@ class ManifestParser(object):
                 print("%s = %s" % (key, value), file=fp)
             print(file=fp)
 
-        for test in tests:
-            test = test.copy()  # don't overwrite
+        for t in tests:
+            test = t.copy()  # don't overwrite
 
             path = test["name"]
             if not os.path.isabs(path):
@@ -626,7 +687,7 @@ class ManifestParser(object):
         internal function to import directories
         """
 
-        if isinstance(pattern, string_types):
+        if isinstance(pattern, str):
             patterns = [pattern]
         else:
             patterns = pattern
@@ -763,7 +824,7 @@ class ManifestParser(object):
         # determine output
         opened_manifest_file = None  # name of opened manifest file
         absolute = not relative_to  # whether to output absolute path names as names
-        if isinstance(write, string_types):
+        if isinstance(write, str):
             opened_manifest_file = write
             write = open(write, "w")
         if write is None:

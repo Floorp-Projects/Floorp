@@ -29,7 +29,6 @@ vendored:third_party/python/taskcluster_taskgraph
 vendored:third_party/python/taskcluster_urls
 vendored:third_party/python/text_unidecode
 vendored:third_party/python/toml
-vendored:third_party/python/typing_extensions
 vendored:third_party/python/voluptuous
 vendored:third_party/python/yamllint
 vendored:third_party/python/yarl

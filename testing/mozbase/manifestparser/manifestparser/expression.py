@@ -6,8 +6,6 @@ import re
 import sys
 import traceback
 
-import six
-
 __all__ = ["parse", "ParseError", "ExpressionParser"]
 
 # expr.py
@@ -276,7 +274,7 @@ class ExpressionParser(object):
         """
         if not isinstance(self.token, expected):
             raise Exception("Unexpected token!")
-        self.token = six.next(self.iter)
+        self.token = next(self.iter)
 
     def expression(self, rbp=0):
         """
@@ -284,11 +282,11 @@ class ExpressionParser(object):
         right binding power greater than rbp is encountered.
         """
         t = self.token
-        self.token = six.next(self.iter)
+        self.token = next(self.iter)
         left = t.nud(self)
         while rbp < self.token.lbp:
             t = self.token
-            self.token = six.next(self.iter)
+            self.token = next(self.iter)
             left = t.led(self, left)
         return left
 
@@ -300,19 +298,16 @@ class ExpressionParser(object):
         """
         try:
             self.iter = self._tokenize()
-            self.token = six.next(self.iter)
+            self.token = next(self.iter)
             return self.expression()
         except Exception:
             extype, ex, tb = sys.exc_info()
             formatted = "".join(traceback.format_exception_only(extype, ex))
-            six.reraise(
-                ParseError,
-                ParseError(
-                    "could not parse: %s\nexception: %svariables: %s"
-                    % (self.text, formatted, self.valuemapping)
-                ),
-                tb,
+            pe = ParseError(
+                "could not parse: %s\nexception: %svariables: %s"
+                % (self.text, formatted, self.valuemapping)
             )
+            raise pe.with_traceback(tb)
 
     __call__ = parse
 

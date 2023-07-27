@@ -1,0 +1,6 @@
+["parent:../level_2.ini"]
+
+[DEFAULT]
+x = "level_3"
+
+[test_3]
