@@ -187,16 +187,16 @@ static const nsAttrValue::EnumTable kCaptureTable[] = {
 
 static const nsAttrValue::EnumTable* kCaptureDefault = &kCaptureTable[2];
 
-const Decimal HTMLInputElement::kStepScaleFactorDate = Decimal(86400000);
-const Decimal HTMLInputElement::kStepScaleFactorNumberRange = Decimal(1);
-const Decimal HTMLInputElement::kStepScaleFactorTime = Decimal(1000);
-const Decimal HTMLInputElement::kStepScaleFactorMonth = Decimal(1);
-const Decimal HTMLInputElement::kStepScaleFactorWeek = Decimal(7 * 86400000);
-const Decimal HTMLInputElement::kDefaultStepBase = Decimal(0);
-const Decimal HTMLInputElement::kDefaultStepBaseWeek = Decimal(-259200000);
-const Decimal HTMLInputElement::kDefaultStep = Decimal(1);
-const Decimal HTMLInputElement::kDefaultStepTime = Decimal(60);
-const Decimal HTMLInputElement::kStepAny = Decimal(0);
+constexpr Decimal HTMLInputElement::kStepScaleFactorDate(86400000);
+constexpr Decimal HTMLInputElement::kStepScaleFactorNumberRange(1);
+constexpr Decimal HTMLInputElement::kStepScaleFactorTime(1000);
+constexpr Decimal HTMLInputElement::kStepScaleFactorMonth(1);
+constexpr Decimal HTMLInputElement::kStepScaleFactorWeek(7 * 86400000);
+constexpr Decimal HTMLInputElement::kDefaultStepBase(0);
+constexpr Decimal HTMLInputElement::kDefaultStepBaseWeek(-259200000);
+constexpr Decimal HTMLInputElement::kDefaultStep(1);
+constexpr Decimal HTMLInputElement::kDefaultStepTime(60);
+constexpr Decimal HTMLInputElement::kStepAny(0);
 
 const double HTMLInputElement::kMinimumYear = 1;
 const double HTMLInputElement::kMaximumYear = 275760;
