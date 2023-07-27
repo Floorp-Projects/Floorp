@@ -390,7 +390,7 @@ document.addEventListener("DOMContentLoaded", e => {
   let exitIcon = document.querySelector("#mobile-hanger .exit-icon");
   // hide the mobile promotion and keep hidden with a pref.
   exitIcon.addEventListener("click", () => {
-    RPMSetBoolPref("browser.contentblocking.report.show_mobile_app", false);
+    RPMSetPref("browser.contentblocking.report.show_mobile_app", false);
     document.getElementById("mobile-hanger").classList.add("hidden");
   });
 

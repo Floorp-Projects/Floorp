@@ -634,7 +634,7 @@ function showNativeFallbackWarning() {
     "nativeFallbackIgnoreButton"
   );
   nativeFallbackIgnoreButton.addEventListener("click", () => {
-    RPMSetBoolPref("network.trr.display_fallback_warning", false);
+    RPMSetPref("network.trr.display_fallback_warning", false);
     retryThis(nativeFallbackIgnoreButton);
   });
 
@@ -876,7 +876,7 @@ function setupBlockingReportingUI() {
   checkbox.checked = !!reportingAutomatic;
 
   checkbox.addEventListener("change", function ({ target: { checked } }) {
-    RPMSetBoolPref("security.xfocsp.errorReporting.automatic", checked);
+    RPMSetPref("security.xfocsp.errorReporting.automatic", checked);
 
     // If we're enabling reports, send a report for this failure.
     if (checked) {

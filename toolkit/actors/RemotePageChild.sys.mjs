@@ -33,7 +33,7 @@ export class RemotePageChild extends JSWindowActorChild {
       "RPMGetIntPref",
       "RPMGetStringPref",
       "RPMGetBoolPref",
-      "RPMSetBoolPref",
+      "RPMSetPref",
       "RPMGetFormatURLPref",
       "RPMIsWindowPrivate",
     ];
@@ -205,7 +205,7 @@ export class RemotePageChild extends JSWindowActorChild {
     return Services.prefs.getBoolPref(aPref);
   }
 
-  RPMSetBoolPref(aPref, aVal) {
+  RPMSetPref(aPref, aVal) {
     return this.wrapPromise(lazy.AsyncPrefs.set(aPref, aVal));
   }
 
