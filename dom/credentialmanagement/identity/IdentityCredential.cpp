@@ -808,6 +808,9 @@ IdentityCredential::PromptUserToSelectProvider(
         resultPromise->Reject(
             Promise::TryExtractNSResultFromRejectionValue(aValue), __func__);
       });
+  // Working around https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85883
+  showPromptPromise->AppendNativeHandler(
+      new MozPromiseRejectOnDestruction{resultPromise, __func__});
 
   return resultPromise;
 }
@@ -886,6 +889,9 @@ IdentityCredential::PromptUserToSelectAccount(
         resultPromise->Reject(
             Promise::TryExtractNSResultFromRejectionValue(aValue), __func__);
       });
+  // Working around https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85883
+  showPromptPromise->AppendNativeHandler(
+      new MozPromiseRejectOnDestruction{resultPromise, __func__});
 
   return resultPromise;
 }
@@ -1007,6 +1013,9 @@ IdentityCredential::PromptUserWithPolicy(
                       Promise::TryExtractNSResultFromRejectionValue(aValue),
                       __func__);
                 });
+            // Working around https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85883
+            showPromptPromise->AppendNativeHandler(
+                new MozPromiseRejectOnDestruction{resultPromise, __func__});
             return resultPromise;
           },
           [](nsresult error) {
