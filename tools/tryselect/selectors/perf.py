@@ -990,7 +990,28 @@ class PerfParser(CompareParser):
         with cache_file.open(mode="w") as f:
             json.dump(cache_data, f, indent=4)
 
-    def setup_try_config(try_config, extra_args, base_revision_treeherder=None):
+    def found_android_tasks(selected_tasks):
+        """
+        Check if any of the selected tasks are android.
+
+        :param selected_tasks list: List of tasks selected.
+        :return bool: True if android tasks were found, False otherwise.
+        """
+        return any("android" in task for task in selected_tasks)
+
+    def setup_try_config(
+        try_config, extra_args, selected_tasks, base_revision_treeherder=None
+    ):
+        """
+        Setup the try config for a push.
+
+        :param try_config dict: The current try config to be modified.
+        :param extra_args list: A list of extra options to add to the tasks being run.
+        :param selected_tasks list: List of tasks selected. Used for determining if android
+            tasks are selected to disable artifact mode.
+        :param base_revision_treeherder str: The base revision of treeherder to save
+        :return: None
+        """
         if try_config is None:
             try_config = {}
         if extra_args:
@@ -1002,6 +1023,12 @@ class PerfParser(CompareParser):
             try_config.setdefault("env", {})[
                 "PERF_BASE_REVISION"
             ] = base_revision_treeherder
+        if PerfParser.found_android_tasks(selected_tasks) and try_config.get(
+            "use-artifact-builds", False
+        ):
+            # XXX: Fix artifact mode on android (no bug)
+            try_config["use-artifact-builds"] = False
+            print("Disabling artifact mode due to android task selection")
 
     def perf_push_to_try(
         selected_tasks,
@@ -1067,7 +1094,9 @@ class PerfParser(CompareParser):
                 base_extra_args = list(extra_args)
                 base_try_config = copy.deepcopy(try_config)
                 comparator_obj.setup_base_revision(base_extra_args)
-                PerfParser.setup_try_config(base_try_config, base_extra_args)
+                PerfParser.setup_try_config(
+                    base_try_config, base_extra_args, selected_tasks
+                )
 
                 with redirect_stdout(log_processor):
                     # XXX Figure out if we can use the `again` selector in some way
@@ -1098,6 +1127,7 @@ class PerfParser(CompareParser):
             PerfParser.setup_try_config(
                 try_config,
                 new_extra_args,
+                selected_tasks,
                 base_revision_treeherder=base_revision_treeherder,
             )
 

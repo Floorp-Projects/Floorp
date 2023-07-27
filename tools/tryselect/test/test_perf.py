@@ -1248,5 +1248,37 @@ def test_max_perf_tasks(
         assert perf_print.call_args_list[-1][0][0] == expected_log_message
 
 
+@pytest.mark.parametrize(
+    "try_config, selected_tasks, expected_try_config",
+    [
+        (
+            {"use-artifact-builds": True},
+            ["some-android-task"],
+            {"use-artifact-builds": False},
+        ),
+        (
+            {"use-artifact-builds": True},
+            ["some-desktop-task"],
+            {"use-artifact-builds": True},
+        ),
+        (
+            {"use-artifact-builds": False},
+            ["some-android-task"],
+            {"use-artifact-builds": False},
+        ),
+        (
+            {"use-artifact-builds": True},
+            ["some-desktop-task", "some-android-task"],
+            {"use-artifact-builds": False},
+        ),
+    ],
+)
+def test_artifact_mode_autodisable(try_config, selected_tasks, expected_try_config):
+    PerfParser.setup_try_config(try_config, [], selected_tasks)
+    assert (
+        try_config["use-artifact-builds"] == expected_try_config["use-artifact-builds"]
+    )
+
+
 if __name__ == "__main__":
     mozunit.main()
