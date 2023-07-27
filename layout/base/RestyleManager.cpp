@@ -1620,6 +1620,22 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
         // transformed by other means. It's OK to have the bit even if it's
         // not needed.
       }
+      // When dropping a running transform animation we will first add an
+      // nsChangeHint_UpdateTransformLayer hint as part of the animation-only
+      // restyle. During the subsequent regular restyle, if the animation was
+      // the only reason the element had any transform applied, we will add
+      // nsChangeHint_AddOrRemoveTransform as part of the regular restyle.
+      //
+      // With the Gecko backend, these two change hints are processed
+      // after each restyle but when using the Servo backend they accumulate
+      // and are processed together after we have already removed the
+      // transform as part of the regular restyle. Since we don't actually
+      // need the nsChangeHint_UpdateTransformLayer hint if we already have
+      // a nsChangeHint_AddOrRemoveTransform hint, and since we
+      // will fail an assertion in ApplyRenderingChangeToTree if we try
+      // specify nsChangeHint_UpdateTransformLayer but don't have any
+      // transform style, we just drop the unneeded hint here.
+      hint &= ~nsChangeHint_UpdateTransformLayer;
     }
 
     if (!frame->FrameMaintainsOverflow()) {
@@ -1639,25 +1655,6 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
       // nsChangeHint_UpdateTransformLayerhint.
       hint &= ~(nsChangeHint_UpdatePostTransformOverflow |
                 nsChangeHint_UpdateTransformLayer);
-    }
-
-    if (hint & nsChangeHint_AddOrRemoveTransform) {
-      // When dropping a running transform animation we will first add an
-      // nsChangeHint_UpdateTransformLayer hint as part of the animation-only
-      // restyle. During the subsequent regular restyle, if the animation was
-      // the only reason the element had any transform applied, we will add
-      // nsChangeHint_AddOrRemoveTransform as part of the regular restyle.
-      //
-      // With the Gecko backend, these two change hints are processed
-      // after each restyle but when using the Servo backend they accumulate
-      // and are processed together after we have already removed the
-      // transform as part of the regular restyle. Since we don't actually
-      // need the nsChangeHint_UpdateTransformLayer hint if we already have
-      // a nsChangeHint_AddOrRemoveTransform hint, and since we
-      // will fail an assertion in ApplyRenderingChangeToTree if we try
-      // specify nsChangeHint_UpdateTransformLayer but don't have any
-      // transform style, we just drop the unneeded hint here.
-      hint &= ~nsChangeHint_UpdateTransformLayer;
     }
 
     if ((hint & nsChangeHint_UpdateEffects) &&
