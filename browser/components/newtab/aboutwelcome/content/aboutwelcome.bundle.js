@@ -846,14 +846,19 @@ const ProtonScreenActionButtons = props => {
 
   const {
     content,
-    addonName
+    addonName,
+    activeMultiSelect
   } = props;
   const defaultValue = (_content$checkbox = content.checkbox) === null || _content$checkbox === void 0 ? void 0 : _content$checkbox.defaultValue;
   const [isChecked, setIsChecked] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(defaultValue || false);
 
   if (!content.primary_button && !content.secondary_button && !content.additional_button) {
     return null;
-  }
+  } // If we have a multi-select screen, we want to disable the primary button
+  // until the user has selected at least one item.
+
+
+  const isPrimaryDisabled = primaryDisabledValue => primaryDisabledValue === "hasActiveMultiSelect" ? !((activeMultiSelect === null || activeMultiSelect === void 0 ? void 0 : activeMultiSelect.length) > 0) : primaryDisabledValue;
 
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: `action-buttons ${content.additional_button ? "additional-cta-container" : ""}`,
@@ -867,7 +872,7 @@ const ProtonScreenActionButtons = props => {
     // the action to execute from.
     ,
     value: isChecked ? "checkbox" : "primary_button",
-    disabled: ((_content$primary_butt2 = content.primary_button) === null || _content$primary_butt2 === void 0 ? void 0 : _content$primary_butt2.disabled) === true,
+    disabled: isPrimaryDisabled((_content$primary_butt2 = content.primary_button) === null || _content$primary_butt2 === void 0 ? void 0 : _content$primary_butt2.disabled),
     onClick: props.handleAction,
     "data-l10n-args": addonName ? JSON.stringify({
       "addon-name": addonName
@@ -1156,7 +1161,8 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     }) : null, this.renderContentTiles(), this.renderLanguageSwitcher(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(ProtonScreenActionButtons, {
       content: content,
       addonName: this.props.addonName,
-      handleAction: this.props.handleAction
+      handleAction: this.props.handleAction,
+      activeMultiSelect: this.props.activeMultiSelect
     })), !hideStepsIndicator ? this.renderStepsIndicator() : null), content.dismiss_button ? this.renderDismissButton() : null));
   }
 
