@@ -28,7 +28,6 @@ needs-focus == listbox-nonnative-when-styled.html listbox-nonnative-when-styled-
 != 427122-1.html 427122-1-ref.html
 
 == chrome://reftest/content/native-theme/470711-1.xhtml chrome://reftest/content/native-theme/470711-1-ref.xhtml
-
 == chrome://reftest/content/native-theme/482955-1.xhtml chrome://reftest/content/native-theme/482955-1-ref.xhtml
 
 == 492155-1.html about:blank

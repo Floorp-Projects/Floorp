@@ -1756,6 +1756,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUI {
   void TriggerImageLoads(mozilla::dom::Document&, const nsStyleUI*);
 
   mozilla::StyleInert mInert;
+  mozilla::StyleMozTheme mMozTheme;
 
  private:
   mozilla::StyleUserInput mUserInput;
