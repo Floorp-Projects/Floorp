@@ -100,7 +100,7 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
     "Second tab's Feature Callout shows the tour screen saved in the user pref"
   );
 
-  await clickPrimaryButton(tab2Doc);
+  await clickCTA(tab2Doc);
   await waitForCalloutScreen(tab2Doc, "FEATURE_CALLOUT_2");
 
   gBrowser.selectedTab = tab1;
@@ -111,7 +111,7 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
     "First tab's Feature Callout advances to the next screen when the tour is advanced in second tab"
   );
 
-  await clickPrimaryButton(tab1Doc);
+  await clickCTA(tab1Doc);
   gBrowser.selectedTab = tab1;
   await waitForCalloutRemoved(tab1Doc);
 
@@ -350,7 +350,7 @@ add_task(
 
         info("Clicking primary button");
         let calloutRemoved = waitForCalloutRemoved(document);
-        await clickPrimaryButton(document);
+        await clickCTA(document);
         let openedTab = await tabOpened;
         ok(openedTab, "FxA sign in page opened");
         // The callout should be removed when primary CTA is clicked
@@ -588,7 +588,7 @@ add_task(async function test_firefox_view_spotlight_promo() {
         "Feature Callout element exists"
       );
       info("Feature tour started");
-      await clickPrimaryButton(document);
+      await clickCTA(document);
     }
   );
 

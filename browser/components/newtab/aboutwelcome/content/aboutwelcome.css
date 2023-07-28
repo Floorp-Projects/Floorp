@@ -2,19 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 .onboardingContainer.featureCallout {
-  --fc-background: var(--fc-background-light, #FFF);
-  --fc-color: var(--fc-color-light, #15141A);
+  --fc-background: var(--fc-background-light, #fff);
+  --fc-color: var(--fc-color-light, rgb(21, 20, 26));
   --fc-border: var(--fc-border-light, #CFCFD8);
-  --fc-accent-color: var(--fc-accent-color-light, #0061E0);
+  --fc-accent-color: var(--fc-accent-color-light, rgb(0, 97, 224));
   --fc-button-background: var(--fc-button-background-light, #F0F0F4);
-  --fc-button-color: var(--fc-button-color-light, #15141A);
+  --fc-button-color: var(--fc-button-color-light, rgb(21, 20, 26));
   --fc-button-border: var(--fc-button-border-light, transparent);
   --fc-button-background-hover: var(--fc-button-background-hover-light, #E0E0E6);
-  --fc-button-color-hover: var(--fc-button-color-hover-light, #15141A);
+  --fc-button-color-hover: var(--fc-button-color-hover-light, rgb(21, 20, 26));
   --fc-button-border-hover: var(--fc-button-border-hover-light, transparent);
   --fc-button-background-active: var(--fc-button-background-active-light, #CFCFD8);
-  --fc-button-color-active: var(--fc-button-color-active-light, #15141A);
+  --fc-button-color-active: var(--fc-button-color-active-light, rgb(21, 20, 26));
   --fc-button-border-active: var(--fc-button-border-active-light, transparent);
+  --fc-primary-button-background: var(--fc-primary-button-background-light, #0061e0);
+  --fc-primary-button-color: var(--fc-primary-button-color-light, rgb(251,251,254));
+  --fc-primary-button-border: var(--fc-primary-button-border-light, transparent);
+  --fc-primary-button-background-hover: var(--fc-primary-button-background-hover-light, #0250bb);
+  --fc-primary-button-color-hover: var(--fc-primary-button-color-hover-light, rgb(251,251,254));
+  --fc-primary-button-border-hover: var(--fc-primary-button-border-hover-light, transparent);
+  --fc-primary-button-background-active: var(--fc-primary-button-background-active-light, #053e94);
+  --fc-primary-button-color-active: var(--fc-primary-button-color-active-light, rgb(251,251,254));
+  --fc-primary-button-border-active: var(--fc-primary-button-border-active-light, transparent);
   --fc-step-color: color-mix(in srgb, currentColor 50%, transparent);
   --fc-link-color: var(--fc-link-color-light, #0061E0);
   --fc-link-color-hover: var(--fc-link-color-hover-light, #0250BB);
@@ -22,26 +31,35 @@
   color-scheme: light;
   position: absolute;
   transition: opacity 0.5s ease;
-  z-index: 2147483645;
+  z-index: 2147483647;
   outline: none;
   color: var(--fc-color);
   accent-color: var(--fc-accent-color);
 }
 @media (prefers-color-scheme: dark) {
   .onboardingContainer.featureCallout {
-    --fc-background: var(--fc-background-dark, #42414D);
-    --fc-color: var(--fc-color-dark, #FBFBFE);
+    --fc-background: var(--fc-background-dark, rgb(43, 42, 51));
+    --fc-color: var(--fc-color-dark, rgb(251, 251, 254));
     --fc-border: var(--fc-border-dark, #3A3944);
-    --fc-accent-color: var(--fc-accent-color-dark, #00DDFF);
+    --fc-accent-color: var(--fc-accent-color-dark, rgb(0, 221, 255));
     --fc-button-background: var(--fc-button-background-dark, #2B2A33);
-    --fc-button-color: var(--fc-button-color-dark, #FBFBFE);
+    --fc-button-color: var(--fc-button-color-dark, rgb(251, 251, 254));
     --fc-button-border: var(--fc-button-border-dark, transparent);
     --fc-button-background-hover: var(--fc-button-background-hover-dark, #52525E);
-    --fc-button-color-hover: var(--fc-button-color-hover-dark, #FBFBFE);
+    --fc-button-color-hover: var(--fc-button-color-hover-dark, rgb(251, 251, 254));
     --fc-button-border-hover: var(--fc-button-border-hover-dark, transparent);
     --fc-button-background-active: var(--fc-button-background-active-dark, #5B5B66);
-    --fc-button-color-active: var(--fc-button-color-active-dark, #FBFBFE);
+    --fc-button-color-active: var(--fc-button-color-active-dark, rgb(251, 251, 254));
     --fc-button-border-active: var(--fc-button-border-active-dark, transparent);
+    --fc-primary-button-background: var(--fc-primary-button-background-dark, rgb(0,221,255));
+    --fc-primary-button-color: var(--fc-primary-button-color-dark, rgb(43,42,51));
+    --fc-primary-button-border: var(--fc-primary-button-border-dark, transparent);
+    --fc-primary-button-background-hover: var(--fc-primary-button-background-hover-dark, rgb(128,235,255));
+    --fc-primary-button-color-hover: var(--fc-primary-button-color-hover-dark, rgb(43,42,51));
+    --fc-primary-button-border-hover: var(--fc-primary-button-border-hover-dark, transparent);
+    --fc-primary-button-background-active: var(--fc-primary-button-background-active-dark, rgb(170,242,255));
+    --fc-primary-button-color-active: var(--fc-primary-button-color-active-dark, rgb(43,42,51));
+    --fc-primary-button-border-active: var(--fc-primary-button-border-active-dark, transparent);
     --fc-link-color: var(--fc-link-color-dark, #00DDFF);
     --fc-link-color-hover: var(--fc-link-color-hover-dark, #80EBFF);
     --fc-link-color-active: var(--fc-link-color-hover-active, #AAF2FF);
@@ -62,6 +80,15 @@
     --fc-button-background-active: var(--fc-button-background-active-hcm, ButtonText);
     --fc-button-color-active: var(--fc-button-color-active-hcm, ButtonFace);
     --fc-button-border-active: var(--fc-button-border-active-hcm, ButtonText);
+    --fc-primary-button-background: var(--fc-primary-button-background-hcm, ButtonText);
+    --fc-primary-button-color: var(--fc-primary-button-color-hcm, ButtonFace);
+    --fc-primary-button-border: var(--fc-primary-button-border-hcm, ButtonFace);
+    --fc-primary-button-background-hover: var(--fc-primary-button-background-hover-hcm, SelectedItem);
+    --fc-primary-button-color-hover: var(--fc-primary-button-color-hover-hcm, SelectedItemText);
+    --fc-primary-button-border-hover: var(--fc-primary-button-border-hover-hcm, SelectedItemText);
+    --fc-primary-button-background-active: var(--fc-primary-button-background-active-hcm, SelectedItemText);
+    --fc-primary-button-color-active: var(--fc-primary-button-color-active-hcm, SelectedItem);
+    --fc-primary-button-border-active: var(--fc-primary-button-border-active-hcm, SelectedItem);
     --fc-step-color: var(--fc-accent-color-hcm, LinkText);
     --fc-link-color: var(--fc-link-color-hcm, LinkText);
     --fc-link-color-hover: var(--fc-link-color-hover-hcm, LinkText);
@@ -70,19 +97,28 @@
 }
 @media (-moz-content-prefers-color-scheme: light) {
   .onboardingContainer.featureCallout.simulateContent {
-    --fc-background: var(--fc-background-light, #FFF);
-    --fc-color: var(--fc-color-light, #15141A);
+    --fc-background: var(--fc-background-light, #fff);
+    --fc-color: var(--fc-color-light, rgb(21, 20, 26));
     --fc-border: var(--fc-border-light, #CFCFD8);
-    --fc-accent-color: var(--fc-accent-color-light, #0061E0);
+    --fc-accent-color: var(--fc-accent-color-light, rgb(0, 97, 224));
     --fc-button-background: var(--fc-button-background-light, #F0F0F4);
-    --fc-button-color: var(--fc-button-color-light, #15141A);
+    --fc-button-color: var(--fc-button-color-light, rgb(21, 20, 26));
     --fc-button-border: var(--fc-button-border-light, transparent);
     --fc-button-background-hover: var(--fc-button-background-hover-light, #E0E0E6);
-    --fc-button-color-hover: var(--fc-button-color-hover-light, #15141A);
+    --fc-button-color-hover: var(--fc-button-color-hover-light, rgb(21, 20, 26));
     --fc-button-border-hover: var(--fc-button-border-hover-light, transparent);
     --fc-button-background-active: var(--fc-button-background-active-light, #CFCFD8);
-    --fc-button-color-active: var(--fc-button-color-active-light, #15141A);
+    --fc-button-color-active: var(--fc-button-color-active-light, rgb(21, 20, 26));
     --fc-button-border-active: var(--fc-button-border-active-light, transparent);
+    --fc-primary-button-background: var(--fc-primary-button-background-light, #0061e0);
+    --fc-primary-button-color: var(--fc-primary-button-color-light, rgb(251,251,254));
+    --fc-primary-button-border: var(--fc-primary-button-border-light, transparent);
+    --fc-primary-button-background-hover: var(--fc-primary-button-background-hover-light, #0250bb);
+    --fc-primary-button-color-hover: var(--fc-primary-button-color-hover-light, rgb(251,251,254));
+    --fc-primary-button-border-hover: var(--fc-primary-button-border-hover-light, transparent);
+    --fc-primary-button-background-active: var(--fc-primary-button-background-active-light, #053e94);
+    --fc-primary-button-color-active: var(--fc-primary-button-color-active-light, rgb(251,251,254));
+    --fc-primary-button-border-active: var(--fc-primary-button-border-active-light, transparent);
     --fc-step-color: color-mix(in srgb, currentColor 50%, transparent);
     --fc-link-color: var(--fc-link-color-light, #0061E0);
     --fc-link-color-hover: var(--fc-link-color-hover-light, #0250BB);
@@ -92,19 +128,28 @@
 }
 @media (-moz-content-prefers-color-scheme: dark) {
   .onboardingContainer.featureCallout.simulateContent {
-    --fc-background: var(--fc-background-dark, #42414D);
-    --fc-color: var(--fc-color-dark, #FBFBFE);
+    --fc-background: var(--fc-background-dark, rgb(43, 42, 51));
+    --fc-color: var(--fc-color-dark, rgb(251, 251, 254));
     --fc-border: var(--fc-border-dark, #3A3944);
-    --fc-accent-color: var(--fc-accent-color-dark, #00DDFF);
+    --fc-accent-color: var(--fc-accent-color-dark, rgb(0, 221, 255));
     --fc-button-background: var(--fc-button-background-dark, #2B2A33);
-    --fc-button-color: var(--fc-button-color-dark, #FBFBFE);
+    --fc-button-color: var(--fc-button-color-dark, rgb(251, 251, 254));
     --fc-button-border: var(--fc-button-border-dark, transparent);
     --fc-button-background-hover: var(--fc-button-background-hover-dark, #52525E);
-    --fc-button-color-hover: var(--fc-button-color-hover-dark, #FBFBFE);
+    --fc-button-color-hover: var(--fc-button-color-hover-dark, rgb(251, 251, 254));
     --fc-button-border-hover: var(--fc-button-border-hover-dark, transparent);
     --fc-button-background-active: var(--fc-button-background-active-dark, #5B5B66);
-    --fc-button-color-active: var(--fc-button-color-active-dark, #FBFBFE);
+    --fc-button-color-active: var(--fc-button-color-active-dark, rgb(251, 251, 254));
     --fc-button-border-active: var(--fc-button-border-active-dark, transparent);
+    --fc-primary-button-background: var(--fc-primary-button-background-dark, rgb(0,221,255));
+    --fc-primary-button-color: var(--fc-primary-button-color-dark, rgb(43,42,51));
+    --fc-primary-button-border: var(--fc-primary-button-border-dark, transparent);
+    --fc-primary-button-background-hover: var(--fc-primary-button-background-hover-dark, rgb(128,235,255));
+    --fc-primary-button-color-hover: var(--fc-primary-button-color-hover-dark, rgb(43,42,51));
+    --fc-primary-button-border-hover: var(--fc-primary-button-border-hover-dark, transparent);
+    --fc-primary-button-background-active: var(--fc-primary-button-background-active-dark, rgb(170,242,255));
+    --fc-primary-button-color-active: var(--fc-primary-button-color-active-dark, rgb(43,42,51));
+    --fc-primary-button-border-active: var(--fc-primary-button-border-active-dark, transparent);
     --fc-link-color: var(--fc-link-color-dark, #00DDFF);
     --fc-link-color-hover: var(--fc-link-color-hover-dark, #80EBFF);
     --fc-link-color-active: var(--fc-link-color-hover-active, #AAF2FF);
@@ -126,6 +171,15 @@
     --fc-button-background-active: var(--fc-button-background-active-hcm, ButtonText);
     --fc-button-color-active: var(--fc-button-color-active-hcm, ButtonFace);
     --fc-button-border-active: var(--fc-button-border-active-hcm, ButtonText);
+    --fc-primary-button-background: var(--fc-primary-button-background-hcm, ButtonText);
+    --fc-primary-button-color: var(--fc-primary-button-color-hcm, ButtonFace);
+    --fc-primary-button-border: var(--fc-primary-button-border-hcm, ButtonFace);
+    --fc-primary-button-background-hover: var(--fc-primary-button-background-hover-hcm, SelectedItem);
+    --fc-primary-button-color-hover: var(--fc-primary-button-color-hover-hcm, SelectedItemText);
+    --fc-primary-button-border-hover: var(--fc-primary-button-border-hover-hcm, SelectedItemText);
+    --fc-primary-button-background-active: var(--fc-primary-button-background-active-hcm, SelectedItemText);
+    --fc-primary-button-color-active: var(--fc-primary-button-color-active-hcm, SelectedItem);
+    --fc-primary-button-border-active: var(--fc-primary-button-border-active-hcm, SelectedItem);
     --fc-step-color: var(--fc-accent-color-hcm, LinkText);
     --fc-link-color: var(--fc-link-color-hcm, LinkText);
     --fc-link-color-hover: var(--fc-link-color-hover-hcm, LinkText);
@@ -138,6 +192,14 @@
 }
 .onboardingContainer.featureCallout, .onboardingContainer.featureCallout .outer-wrapper {
   height: auto;
+}
+.onboardingContainer.featureCallout:dir(rtl) {
+  transform: none;
+  direction: ltr;
+}
+.onboardingContainer.featureCallout .outer-wrapper:dir(rtl) {
+  transform: none;
+  direction: rtl;
 }
 .onboardingContainer.featureCallout .screen:dir(rtl) {
   transform: none;
@@ -170,7 +232,7 @@
   color: inherit;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .welcome-text h1 {
-  font-weight: bold;
+  font-weight: 600;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .welcome-text h2 {
   margin-block: 10px;
@@ -216,7 +278,7 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   border-radius: 4px;
   padding-top: 0;
-  padding-bottom: 26px;
+  padding-bottom: 30px;
   width: 25em;
   background-color: var(--fc-background);
 }
@@ -239,58 +301,83 @@
 .onboardingContainer.featureCallout .screen[pos=callout] .section-main .dismiss-button {
   font-size: 1em;
   top: 0;
-  margin-block: 15px 0;
-  margin-inline: 0 15px;
-  z-index: 2147483647;
+  margin-block: 10px 0;
+  margin-inline: 0 10px;
   background-color: var(--fc-background);
 }
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: stretch;
+  justify-content: end;
+  gap: 10px;
+  margin-inline: 30px;
+}
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
-.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta .secondary {
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary {
   padding: 4px 16px;
+  margin: 0;
   font-size: 0.8em;
-  height: 2em;
+  font-weight: 600;
+  line-height: 16px;
+  min-height: 32px;
+  text-decoration: none;
+  cursor: default;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary {
   background-color: var(--fc-button-background);
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary {
-  font-weight: bold;
-  float: inline-end;
-  margin-inline: 10px 30px;
-  padding: 4px 16px;
-  font-size: 0.8em;
-  line-height: 16px;
-  min-height: 32px;
-}
-.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta {
-  float: inline-end;
+  background-color: var(--fc-primary-button-background);
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
-.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta .secondary,
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary,
 .onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button {
   border-radius: 4px;
-  border: 1px solid var(--fc-button-border);
-  cursor: pointer;
-  color: var(--fc-button-color);
-}
-.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover,
-.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta .secondary:hover,
-.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:hover {
-  background-color: var(--fc-button-background-hover);
-  color: var(--fc-button-color-hover);
-  border: 1px solid var(--fc-button-border-hover);
-}
-.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover:active,
-.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta .secondary:hover:active,
-.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:hover:active {
-  background-color: var(--fc-button-background-active);
-  color: var(--fc-button-color-active);
-  border: 1px solid var(--fc-button-border-active);
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:focus-visible,
-.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta .secondary:focus-visible,
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary:focus-visible,
 .onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:focus-visible {
   box-shadow: none;
   outline: 2px solid var(--fc-accent-color);
   outline-offset: 2px;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:disabled,
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary:disabled,
+.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:disabled {
+  opacity: 0.4;
+  cursor: auto;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary,
+.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button {
+  border: 1px solid var(--fc-button-border);
+  color: var(--fc-button-color);
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary:hover:not(:disabled),
+.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:hover:not(:disabled) {
+  background-color: var(--fc-button-background-hover);
+  color: var(--fc-button-color-hover);
+  border: 1px solid var(--fc-button-border-hover);
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary:hover:not(:disabled):active,
+.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:hover:not(:disabled):active {
+  background-color: var(--fc-button-background-active);
+  color: var(--fc-button-color-active);
+  border: 1px solid var(--fc-button-border-active);
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary {
+  border: 1px solid var(--fc-primary-button-border);
+  color: var(--fc-primary-button-color);
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover:not(:disabled) {
+  background-color: var(--fc-primary-button-background-hover);
+  color: var(--fc-primary-button-color-hover);
+  border: 1px solid var(--fc-primary-button-border-hover);
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover:not(:disabled):active {
+  background-color: var(--fc-primary-button-background-active);
+  color: var(--fc-primary-button-color-active);
+  border: 1px solid var(--fc-primary-button-border-active);
 }
 .onboardingContainer.featureCallout.callout-arrow::before, .onboardingContainer.featureCallout.callout-arrow::after {
   content: "";
@@ -301,14 +388,15 @@
   transform-style: preserve-3d;
 }
 .onboardingContainer.featureCallout.callout-arrow::before {
-  z-index: 2147483647;
-  background-color: var(--fc-background);
-}
-.onboardingContainer.featureCallout.callout-arrow::after {
   background: transparent;
   outline: 1px solid var(--fc-border);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   z-index: -1;
+}
+.onboardingContainer.featureCallout.callout-arrow::after {
+  background-color: var(--fc-background);
+  clip-path: polygon(100% 0, 100% 2%, 2% 100%, 0 100%, 0 0);
+  z-index: 1;
 }
 .onboardingContainer.featureCallout.arrow-top::before, .onboardingContainer.featureCallout.arrow-top::after {
   top: -11px;
@@ -346,7 +434,7 @@
     border-color: var(--fc-background);
   }
 }
-.onboardingContainer.featureCallout:focus-visible.callout-arrow::after {
+.onboardingContainer.featureCallout:focus-visible.callout-arrow::before {
   outline: 2px solid var(--fc-accent-color);
 }
 

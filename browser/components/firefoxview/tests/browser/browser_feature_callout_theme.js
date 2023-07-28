@@ -15,17 +15,24 @@ async function testCallout(config) {
   testMessage.message.content.screens = [screen];
   featureCallout.showFeatureCallout(testMessage.message);
   await waitForCalloutScreen(config.win.document, screen.id);
-  testStyles(config.win);
+  testStyles(config);
   return { featureCallout };
 }
 
-function testStyles(win) {
+function testStyles({ win, theme }) {
   const calloutEl = win.document.querySelector(calloutSelector);
   const calloutStyle = win.getComputedStyle(calloutEl);
   for (const type of ["light", "dark", "hcm"]) {
+    const appliedTheme = Object.assign(
+      {},
+      FeatureCallout.themePresets[theme.preset],
+      theme
+    );
+    const scheme = appliedTheme[type];
     for (const name of FeatureCallout.themePropNames) {
       ok(
-        calloutStyle.getPropertyValue(`--fc-${name}-${type}`),
+        !!calloutStyle.getPropertyValue(`--fc-${name}-${type}`) ==
+          !!(scheme?.[name] || appliedTheme.all?.[name]),
         `Theme property --fc-${name}-${type} is set`
       );
     }

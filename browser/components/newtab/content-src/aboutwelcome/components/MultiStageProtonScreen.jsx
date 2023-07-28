@@ -96,7 +96,9 @@ export const ProtonScreenActionButtons = props => {
     >
       <Localized text={content.primary_button?.label}>
         <button
-          className="primary"
+          className={`${content.primary_button?.style ?? "primary"}${
+            content.primary_button?.has_arrow_icon ? " arrow-icon" : ""
+          }`}
           // Whether or not the checkbox is checked determines which action
           // should be handled. By setting value here, we indicate to
           // this.handleAction() where in the content tree it should take

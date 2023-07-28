@@ -261,7 +261,7 @@ export const SecondaryCTA = props => {
     ? `secondary arrow-icon`
     : `secondary`;
   const isTextLink =
-    props.content.position !== "split" &&
+    !["split", "callout"].includes(props.content.position) &&
     props.content.tiles?.type !== "addons-picker";
   const isPrimary = props.content.secondary_button?.style === "primary";
 

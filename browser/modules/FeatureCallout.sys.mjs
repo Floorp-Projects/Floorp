@@ -1381,8 +1381,14 @@ export class FeatureCallout {
               );
               this.win.addEventListener("keypress", this, { capture: true });
               this._positionCallout();
-              let button = this._container.querySelector(".primary");
-              button.focus();
+              let initialFocus =
+                this._container.querySelector(".primary") ||
+                this._container.querySelector(".secondary") ||
+                this._container.querySelector(
+                  "button:not(:disabled, [hidden])"
+                ) ||
+                this._container;
+              initialFocus?.focus();
               this.win.addEventListener("focus", this, {
                 capture: true, // get the event before retargeting
                 passive: true,
@@ -1507,6 +1513,15 @@ export class FeatureCallout {
     "button-background-active",
     "button-color-active",
     "button-border-active",
+    "primary-button-background",
+    "primary-button-color",
+    "primary-button-border",
+    "primary-button-background-hover",
+    "primary-button-color-hover",
+    "primary-button-border-hover",
+    "primary-button-background-active",
+    "primary-button-color-active",
+    "primary-button-border-active",
     "link-color",
     "link-color-hover",
     "link-color-active",
@@ -1535,6 +1550,23 @@ export class FeatureCallout {
         "button-color-active":
           "var(--newtab-text-primary-color, var(--in-content-page-color))",
         "button-border-active": "transparent",
+        "primary-button-background":
+          "var(--in-content-primary-button-background)",
+        "primary-button-color": "var(--in-content-primary-button-text-color)",
+        "primary-button-border":
+          "var(--in-content-primary-button-border-color)",
+        "primary-button-background-hover":
+          "var(--in-content-primary-button-background-hover)",
+        "primary-button-color-hover":
+          "var(--in-content-primary-button-text-color-hover)",
+        "primary-button-border-hover":
+          "var(--in-content-primary-button-border-hover)",
+        "primary-button-background-active":
+          "var(--in-content-primary-button-background-active)",
+        "primary-button-color-active":
+          "var(--in-content-primary-button-text-color-active)",
+        "primary-button-border-active":
+          "var(--in-content-primary-button-border-active)",
         "link-color": "LinkText",
         "link-color-hover": "LinkText",
         "link-color-active": "ActiveText",
@@ -1579,6 +1611,7 @@ export class FeatureCallout {
         "button-background-active": "rgb(221, 222, 223)",
         "button-color-active": "rgb(12, 12, 13)",
         "button-border-active": "transparent",
+        // use default primary button colors in _feature-callout-theme.scss
         "link-color": "LinkText",
         "link-color-hover": "LinkText",
         "link-color-active": "ActiveText",
@@ -1627,6 +1660,7 @@ export class FeatureCallout {
         "button-background-active": "color-mix(in srgb, transparent 80%, #000)",
         "button-color-active": "var(--newtab-text-primary-color, WindowText)",
         "button-border-active": "transparent",
+        // use default primary button colors in _feature-callout-theme.scss
         "link-color": "rgb(0, 97, 224)",
         "link-color-hover": "rgb(0, 97, 224)",
         "link-color-active": "color-mix(in srgb, rgb(0, 97, 224) 80%, #000)",
@@ -1676,14 +1710,25 @@ export class FeatureCallout {
         border: "var(--arrowpanel-border-color)",
         "accent-color": "var(--focus-outline-color)",
         "button-background": "var(--button-bgcolor)",
-        "button-color": "var(--arrowpanel-color)",
+        "button-color": "var(--button-color)",
         "button-border": "transparent",
         "button-background-hover": "var(--button-hover-bgcolor)",
-        "button-color-hover": "var(--arrowpanel-color)",
+        "button-color-hover": "var(--button-color)",
         "button-border-hover": "transparent",
         "button-background-active": "var(--button-active-bgcolor)",
-        "button-color-active": "var(--arrowpanel-color)",
+        "button-color-active": "var(--button-color)",
         "button-border-active": "transparent",
+        "primary-button-background": "var(--button-primary-bgcolor)",
+        "primary-button-color": "var(--button-primary-color)",
+        "primary-button-border": "transparent",
+        "primary-button-background-hover":
+          "var(--button-primary-hover-bgcolor)",
+        "primary-button-color-hover": "var(--button-primary-color)",
+        "primary-button-border-hover": "transparent",
+        "primary-button-background-active":
+          "var(--button-primary-active-bgcolor)",
+        "primary-button-color-active": "var(--button-primary-color)",
+        "primary-button-border-active": "transparent",
         "link-color": "LinkText",
         "link-color-hover": "LinkText",
         "link-color-active": "ActiveText",
