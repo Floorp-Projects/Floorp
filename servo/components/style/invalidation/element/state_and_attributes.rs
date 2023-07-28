@@ -20,7 +20,7 @@ use crate::{Atom, WeakAtom};
 use dom::ElementState;
 use selectors::attr::CaseSensitivity;
 use selectors::matching::{
-    matches_selector, IgnoreNthChildForInvalidation, MatchingContext, MatchingMode,
+    matches_selector, MatchingForInvalidation, MatchingContext, MatchingMode,
     NeedsSelectorFlags, SelectorCaches, VisitedHandlingMode,
 };
 use smallvec::SmallVec;
@@ -69,7 +69,7 @@ impl<'a, 'b: 'a, E: TElement + 'b> StateAndAttrInvalidationProcessor<'a, 'b, E> 
             VisitedHandlingMode::AllLinksVisitedAndUnvisited,
             shared_context.quirks_mode(),
             NeedsSelectorFlags::No,
-            IgnoreNthChildForInvalidation::Yes,
+            MatchingForInvalidation::Yes,
         );
 
         Self {

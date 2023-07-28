@@ -78,10 +78,9 @@ pub enum NeedsSelectorFlags {
     Yes,
 }
 
-/// Whether we need to ignore nth child selectors for this match request (only expected during
-/// invalidation).
+/// Whether we're matching in the contect of invalidation.
 #[derive(PartialEq)]
-pub enum IgnoreNthChildForInvalidation {
+pub enum MatchingForInvalidation {
     No,
     Yes,
 }
@@ -204,9 +203,8 @@ where
     quirks_mode: QuirksMode,
     needs_selector_flags: NeedsSelectorFlags,
 
-    /// Whether this match request should ignore nth child selectors (only expected during
-    /// invalidation).
-    ignores_nth_child_selectors_for_invalidation: IgnoreNthChildForInvalidation,
+    /// Whether we're matching in the contect of invalidation.
+    matching_for_invalidation: MatchingForInvalidation,
 
     /// Caches to speed up expensive selector matches.
     pub selector_caches: &'a mut SelectorCaches,
@@ -226,7 +224,7 @@ where
         selector_caches: &'a mut SelectorCaches,
         quirks_mode: QuirksMode,
         needs_selector_flags: NeedsSelectorFlags,
-        ignores_nth_child_selectors_for_invalidation: IgnoreNthChildForInvalidation,
+        matching_for_invalidation: MatchingForInvalidation,
     ) -> Self {
         Self::new_for_visited(
             matching_mode,
@@ -235,7 +233,7 @@ where
             VisitedHandlingMode::AllLinksUnvisited,
             quirks_mode,
             needs_selector_flags,
-            ignores_nth_child_selectors_for_invalidation,
+            matching_for_invalidation,
         )
     }
 
@@ -247,7 +245,7 @@ where
         visited_handling: VisitedHandlingMode,
         quirks_mode: QuirksMode,
         needs_selector_flags: NeedsSelectorFlags,
-        ignores_nth_child_selectors_for_invalidation: IgnoreNthChildForInvalidation,
+        matching_for_invalidation: MatchingForInvalidation,
     ) -> Self {
         Self {
             matching_mode,
@@ -256,7 +254,7 @@ where
             quirks_mode,
             classes_and_ids_case_sensitivity: quirks_mode.classes_and_ids_case_sensitivity(),
             needs_selector_flags,
-            ignores_nth_child_selectors_for_invalidation,
+            matching_for_invalidation,
             scope_element: None,
             current_host: None,
             nesting_level: 0,
@@ -313,10 +311,10 @@ where
         self.needs_selector_flags == NeedsSelectorFlags::Yes
     }
 
-    /// Whether we need to ignore nth child selectors (only expected during invalidation).
+    /// Whether or not we're matching to invalidate.
     #[inline]
-    pub fn ignores_nth_child_selectors_for_invalidation(&self) -> bool {
-        self.ignores_nth_child_selectors_for_invalidation == IgnoreNthChildForInvalidation::Yes
+    pub fn matching_for_invalidation(&self) -> bool {
+        self.matching_for_invalidation == MatchingForInvalidation::Yes
     }
 
     /// The case-sensitivity for class and ID selectors
