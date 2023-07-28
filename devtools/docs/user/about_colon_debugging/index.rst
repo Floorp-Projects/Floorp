@@ -136,7 +136,7 @@ Extensions
 Loading a temporary extension
 -----------------------------
 
-With the **Load Temporary Add-on** button you can temporarily load a web extension from a directory on disk. Click the button, navigate to the directory containing the add-on and select its manifest file. The temporary extension is then displayed under the **Temporary Extensions** header.
+With the **Load Temporary Add-on** button you can temporarily load a WebExtension from a directory on disk. Click the button, navigate to the directory containing the add-on and select its manifest file. The temporary extension is then displayed under the **Temporary Extensions** header.
 
 You don't have to package or sign the extension before loading it, and it stays installed until you restart Firefox.
 
@@ -211,7 +211,7 @@ Just as it does with temporarily loaded extensions, the link next to **Manifest 
   It's recommended that you use the Browser Toolbox, not the Add-on Debugger, for debugging WebExtensions. See `Debugging WebExtensions <https://extensionworkshop.com/documentation/develop/debugging/>`_ for all the details.
 
 
-The Add-ons section in about:debugging lists all web extensions that are currently installed. Next to each entry is a button labeled **Inspect**.
+The Add-ons section in about:debugging lists all WebExtensions that are currently installed. Next to each entry is a button labeled **Inspect**.
 
 .. note::
 

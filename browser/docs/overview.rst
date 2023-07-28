@@ -86,13 +86,6 @@ The Firefox Profiler is the way to measure the performance of your code. Go to
 performance profile. These profiles can be uploaded and shared. It can identify slow parts of the
 code, and reveal the underlying behavior of how code runs.
 
-Web Extensions
---------------
-
-The Web Extensions APIs allow extensions to interact with the rest of the browser.
-
-:ref:`Read more <WebExtensions API Development>`
-
 Installer
 ---------
 

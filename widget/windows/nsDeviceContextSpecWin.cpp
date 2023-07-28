@@ -570,10 +570,17 @@ nsTArray<nsPrinterListBase::PrinterInfo> nsPrinterListWin::Printers() const {
     }
   }
 
-  if (!count) {
+  if (list.IsEmpty()) {
     PR_PL(("[No usable printers found]\n"));
     return {};
   }
+
+  list.Sort([](const PrinterInfo& a, const PrinterInfo& b) {
+    size_t len = std::min(a.mName.Length(), b.mName.Length());
+    int result = CaseInsensitiveCompare(a.mName.BeginReading(),
+                                        b.mName.BeginReading(), len);
+    return result ? result : int(a.mName.Length()) - int(b.mName.Length());
+  });
 
   return list;
 }
