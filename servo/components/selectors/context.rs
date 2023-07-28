@@ -7,7 +7,6 @@ use crate::bloom::BloomFilter;
 use crate::nth_index_cache::{NthIndexCache, NthIndexCacheInner};
 use crate::parser::{Selector, SelectorImpl};
 use crate::relative_selector::cache::RelativeSelectorCache;
-use crate::relative_selector::filter::RelativeSelectorFilterMap;
 use crate::tree::{Element, OpaqueElement};
 
 /// What kind of selector matching mode we should use.
@@ -78,9 +77,10 @@ pub enum NeedsSelectorFlags {
     Yes,
 }
 
-/// Whether we're matching in the contect of invalidation.
+/// Whether we need to ignore nth child selectors for this match request (only expected during
+/// invalidation).
 #[derive(PartialEq)]
-pub enum MatchingForInvalidation {
+pub enum IgnoreNthChildForInvalidation {
     No,
     Yes,
 }
@@ -142,15 +142,13 @@ impl RelativeSelectorMatchingState {
     }
 }
 
-/// Set of caches (And cache-likes) that speed up expensive selector matches.
+/// Set of caches that speed up expensive selector matches.
 #[derive(Default)]
 pub struct SelectorCaches {
     /// A cache to speed up nth-index-like selectors.
     pub nth_index: NthIndexCache,
     /// A cache to speed up relative selector matches. See module documentation.
     pub relative_selector: RelativeSelectorCache,
-    /// A map of bloom filters to fast-reject relative selector matches.
-    pub relative_selector_filter_map: RelativeSelectorFilterMap,
 }
 
 /// Data associated with the matching process for a element.  This context is
@@ -203,8 +201,9 @@ where
     quirks_mode: QuirksMode,
     needs_selector_flags: NeedsSelectorFlags,
 
-    /// Whether we're matching in the contect of invalidation.
-    matching_for_invalidation: MatchingForInvalidation,
+    /// Whether this match request should ignore nth child selectors (only expected during
+    /// invalidation).
+    ignores_nth_child_selectors_for_invalidation: IgnoreNthChildForInvalidation,
 
     /// Caches to speed up expensive selector matches.
     pub selector_caches: &'a mut SelectorCaches,
@@ -224,7 +223,7 @@ where
         selector_caches: &'a mut SelectorCaches,
         quirks_mode: QuirksMode,
         needs_selector_flags: NeedsSelectorFlags,
-        matching_for_invalidation: MatchingForInvalidation,
+        ignores_nth_child_selectors_for_invalidation: IgnoreNthChildForInvalidation,
     ) -> Self {
         Self::new_for_visited(
             matching_mode,
@@ -233,7 +232,7 @@ where
             VisitedHandlingMode::AllLinksUnvisited,
             quirks_mode,
             needs_selector_flags,
-            matching_for_invalidation,
+            ignores_nth_child_selectors_for_invalidation,
         )
     }
 
@@ -245,7 +244,7 @@ where
         visited_handling: VisitedHandlingMode,
         quirks_mode: QuirksMode,
         needs_selector_flags: NeedsSelectorFlags,
-        matching_for_invalidation: MatchingForInvalidation,
+        ignores_nth_child_selectors_for_invalidation: IgnoreNthChildForInvalidation,
     ) -> Self {
         Self {
             matching_mode,
@@ -254,7 +253,7 @@ where
             quirks_mode,
             classes_and_ids_case_sensitivity: quirks_mode.classes_and_ids_case_sensitivity(),
             needs_selector_flags,
-            matching_for_invalidation,
+            ignores_nth_child_selectors_for_invalidation,
             scope_element: None,
             current_host: None,
             nesting_level: 0,
@@ -311,10 +310,10 @@ where
         self.needs_selector_flags == NeedsSelectorFlags::Yes
     }
 
-    /// Whether or not we're matching to invalidate.
+    /// Whether we need to ignore nth child selectors (only expected during invalidation).
     #[inline]
-    pub fn matching_for_invalidation(&self) -> bool {
-        self.matching_for_invalidation == MatchingForInvalidation::Yes
+    pub fn ignores_nth_child_selectors_for_invalidation(&self) -> bool {
+        self.ignores_nth_child_selectors_for_invalidation == IgnoreNthChildForInvalidation::Yes
     }
 
     /// The case-sensitivity for class and ID selectors
