@@ -10563,11 +10563,11 @@ bool BytecodeEmitter::emitInitializeStaticFields(ListNode* classMembers) {
     return false;
   }
 
-  InternalWhileEmitter wh(this);
+  WhileEmitter wh(this);
   // At this point, we have no context to determine offsets in the
   // code for this while statement. Ideally, it would correspond to
   // the field we're initializing.
-  if (!wh.emitCond()) {
+  if (!wh.emitCond(0, 0, 0)) {
     //          [stack] CTOR ARRAY LENGTH INDEX
     return false;
   }
