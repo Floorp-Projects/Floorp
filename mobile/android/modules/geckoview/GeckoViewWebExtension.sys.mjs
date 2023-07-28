@@ -405,6 +405,7 @@ class ExtensionInstallListener {
   }
 
   onDownloadCancelled(aInstall) {
+    debug`onDownloadCancelled state=${aInstall.state}`;
     // Do not resolve we were told to CancelInstall,
     // to prevent racing with that handler.
     if (!this.cancelling) {
@@ -414,6 +415,7 @@ class ExtensionInstallListener {
   }
 
   onDownloadFailed(aInstall) {
+    debug`onDownloadFailed state=${aInstall.state}`;
     const { error: installError, state } = aInstall;
     this.resolve({ installError, state });
   }
@@ -422,26 +424,32 @@ class ExtensionInstallListener {
     // Nothing to do
   }
 
-  onInstallCancelled(aInstall) {
+  onInstallCancelled(aInstall, aCancelledByUser) {
+    debug`onInstallCancelled state=${aInstall.state} cancelledByUser=${aCancelledByUser}`;
     // Do not resolve we were told to CancelInstall,
     // to prevent racing with that handler.
     if (!this.cancelling) {
       const { error: installError, state } = aInstall;
-      this.resolve({ installError, state });
+      // An install can be cancelled by the user OR something else, e.g. when
+      // the blocklist prevents the install of a blocked add-on.
+      this.resolve({ installError, state, cancelledByUser: aCancelledByUser });
     }
   }
 
   onInstallFailed(aInstall) {
+    debug`onInstallFailed state=${aInstall.state}`;
     const { error: installError, state } = aInstall;
     this.resolve({ installError, state });
   }
 
   onInstallPostponed(aInstall) {
+    debug`onInstallPostponed state=${aInstall.state}`;
     const { error: installError, state } = aInstall;
     this.resolve({ installError, state });
   }
 
   async onInstallEnded(aInstall, aAddon) {
+    debug`onInstallEnded addonId=${aAddon.id}`;
     const addonId = aAddon.id;
     const { sourceURI } = aInstall;
 
