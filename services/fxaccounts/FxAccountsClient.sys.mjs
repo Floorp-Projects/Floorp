@@ -8,7 +8,7 @@ import { HawkClient } from "resource://services-common/hawkclient.sys.mjs";
 import { deriveHawkCredentials } from "resource://services-common/hawkrequest.sys.mjs";
 import { CryptoUtils } from "resource://services-crypto/utils.sys.mjs";
 
-const {
+import {
   ERRNO_ACCOUNT_DOES_NOT_EXIST,
   ERRNO_INCORRECT_EMAIL_CASE,
   ERRNO_INCORRECT_PASSWORD,
@@ -16,7 +16,8 @@ const {
   ERRNO_INVALID_AUTH_TIMESTAMP,
   ERRNO_INVALID_AUTH_TOKEN,
   log,
-} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+} from "resource://gre/modules/FxAccountsCommon.sys.mjs";
+
 import { Credentials } from "resource://gre/modules/Credentials.sys.mjs";
 
 const HOST_PREF = "identity.fxaccounts.auth.uri";

@@ -12,8 +12,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
-const { SCOPE_OLD_SYNC } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsCommon.js"
+const { SCOPE_OLD_SYNC } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccountsCommon.sys.mjs"
 );
 
 // Some mock key data, in both scoped-key and legacy field formats.

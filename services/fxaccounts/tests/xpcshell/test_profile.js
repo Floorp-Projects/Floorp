@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { ON_PROFILE_CHANGE_NOTIFICATION, log } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsCommon.js"
+const { ON_PROFILE_CHANGE_NOTIFICATION, log } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccountsCommon.sys.mjs"
 );
 const { FxAccountsProfileClient } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccountsProfileClient.sys.mjs"
