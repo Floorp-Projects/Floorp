@@ -85,6 +85,7 @@
   skin/classic/global/icons/link.svg                       (../../shared/icons/link.svg)
   skin/classic/global/icons/loading.png                    (../../shared/icons/loading.png)
   skin/classic/global/icons/loading@2x.png                 (../../shared/icons/loading@2x.png)
+  skin/classic/global/icons/mdn.svg                        (../../shared/icons/mdn.svg)
   skin/classic/global/icons/more.svg                       (../../shared/icons/more.svg)
   skin/classic/global/icons/open-in-new.svg                (../../shared/icons/open-in-new.svg)
   skin/classic/global/icons/page-portrait.svg              (../../shared/icons/page-portrait.svg)
@@ -144,4 +145,3 @@
   skin/classic/global/reader/RM-Content-Width-Plus-44x16.svg           (../../shared/reader/RM-Content-Width-Plus-44x16.svg)
   skin/classic/global/reader/RM-Line-Height-Minus-38x14.svg            (../../shared/reader/RM-Line-Height-Minus-38x14.svg)
   skin/classic/global/reader/RM-Line-Height-Plus-38x24.svg             (../../shared/reader/RM-Line-Height-Plus-38x24.svg)
-
