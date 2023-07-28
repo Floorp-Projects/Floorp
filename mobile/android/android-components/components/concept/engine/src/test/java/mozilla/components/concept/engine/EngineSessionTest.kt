@@ -12,6 +12,7 @@ import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.permission.PermissionRequest
+import mozilla.components.concept.engine.shopping.ProductAnalysis
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -995,6 +996,12 @@ open class DummyEngineSession : EngineSession() {
 
     override fun checkForPdfViewer(
         onResult: (Boolean) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {}
+
+    override fun requestProductAnalysis(
+        url: String,
+        onResult: (ProductAnalysis) -> Unit,
         onException: (Throwable) -> Unit,
     ) {}
 

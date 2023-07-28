@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.shopping.ProductAnalysis
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.fetch.Response
 import mozilla.components.support.base.observer.Observable
@@ -842,6 +843,18 @@ abstract class EngineSession(
      * @param onError callback invoked if there was an error getting the response.
      */
     abstract fun checkForPdfViewer(onResult: (Boolean) -> Unit, onException: (Throwable) -> Unit)
+
+    /**
+     * Requests the analysis results for a given product page URL.
+     *
+     * @param onSuccess callback invoked if the engine API returns a valid response.
+     * @param onError callback invoked if there was an error getting the response.
+     */
+    abstract fun requestProductAnalysis(
+        url: String,
+        onResult: (ProductAnalysis) -> Unit,
+        onException: (Throwable) -> Unit,
+    )
 
     /**
      * Finds and highlights all occurrences of the provided String and highlights them asynchronously.

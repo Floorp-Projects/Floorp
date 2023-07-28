@@ -20,6 +20,8 @@ import mozilla.components.browser.engine.gecko.media.GeckoMediaDelegate
 import mozilla.components.browser.engine.gecko.mediasession.GeckoMediaSessionDelegate
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
 import mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegate
+import mozilla.components.browser.engine.gecko.shopping.GeckoProductAnalysis
+import mozilla.components.browser.engine.gecko.shopping.Highlight
 import mozilla.components.browser.engine.gecko.window.GeckoWindowRequest
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
@@ -36,6 +38,7 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
+import mozilla.components.concept.engine.shopping.ProductAnalysis
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_DISPOSITION
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_LENGTH
@@ -645,6 +648,70 @@ class GeckoEngineSession(
                 GeckoResult()
             },
         )
+    }
+
+    /**
+     * See [EngineSession.requestProductAnalysis]
+     */
+    @Suppress("ComplexCondition")
+    override fun requestProductAnalysis(
+        url: String,
+        onResult: (ProductAnalysis) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        geckoSession.requestAnalysis(url).then({
+                response ->
+            if (response == null) {
+                logger.error(
+                    "Invalid value: unable to get analysis result from Gecko Engine.",
+                )
+                onException(
+                    java.lang.IllegalStateException(
+                        "Invalid value: unable to get analysis result from Gecko Engine.",
+                    ),
+                )
+                return@then GeckoResult()
+            }
+
+            val highlights: Highlight?
+            if (
+                response.highlights?.quality == null &&
+                response.highlights?.price == null &&
+                response.highlights?.shipping == null &&
+                response.highlights?.appearance == null &&
+                response.highlights?.competitiveness == null
+            ) {
+                highlights = null
+            } else {
+                highlights = Highlight(
+                    response.highlights?.quality?.toList(),
+                    response.highlights?.price?.toList(),
+                    response.highlights?.shipping?.toList(),
+                    response.highlights?.appearance?.toList(),
+                    response.highlights?.competitiveness?.toList(),
+                )
+            }
+
+            val analysisResult = GeckoProductAnalysis(
+                response.productId,
+                response.analysisURL,
+                response.grade,
+                response.adjustedRating,
+                response.needsAnalysis,
+                response.lastAnalysisTime,
+                response.deletedProductReported,
+                response.deletedProduct,
+                highlights,
+            )
+
+            onResult(analysisResult)
+            GeckoResult<ProductAnalysis>()
+        }, {
+                throwable ->
+            logger.error("Requesting product analysis failed.", throwable)
+            onException(throwable)
+            GeckoResult()
+        })
     }
 
     /**
