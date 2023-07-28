@@ -168,7 +168,7 @@ There are two different species of Talos tests:
 In addition we have some variations on existing tests:
 
 -  Heavy_: Run tests with the heavy user profile instead of a blank one
--  `Web extension`_: Run tests with a web extension to see the perf impact extension have
+-  WebExtension_: Run tests with a WebExtension to see the perf impact extension have
 -  `Real-world WebExtensions`_: Run tests with a set of 5 popular real-world WebExtensions installed and enabled.
 
 Some tests measure different things:
@@ -251,14 +251,14 @@ Currently we have issues with this on windows (takes too long to unpack
 the files from the profile), so we have turned this off there. Our goal
 is to run this on basic pageload and startup tests.
 
-Web extension
+WebExtension
 =============
 
-Web Extensions are what Firefox has switched to and there are different
+WebExtensions are what Firefox has switched to and there are different
 code paths and APIs used vs addons. Historically we don't test with
 addons (other than our test addons) and are missing out on common
 slowdowns. In 2017 we started running some startup and basic pageload
-tests with a web extension in the profile (`bug
+tests with a WebExtension in the profile (`bug
 1398974 <https://bugzilla.mozilla.org/show_bug.cgi?id=1398974>`__). We
 have updated the Extension to be more real world and will continue to do
 that.

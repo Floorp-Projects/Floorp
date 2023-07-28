@@ -125,7 +125,7 @@ More details about the :doc:`Web Audio Editor <../web_audio_editor/index>`
 Alternatives
 ------------
 
-Alternatives include `AudioN <https://github.com/google/audion>`_ and https://github.com/spite/WebAudioExtension web extensions.
+Alternatives include the `AudioN <https://github.com/google/audion>`_ and https://github.com/spite/WebAudioExtension WebExtensions.
 
 
 Shader editor

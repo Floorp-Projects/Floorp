@@ -34,7 +34,7 @@ The source list pane lists all the JavaScript source files loaded into the page 
 
 You can :ref:`search for a file <debugger-how-to-search-searching-for-files>` using :kbd:`Ctrl` + :kbd:`P` (:kbd:`Cmd` + :kbd:`P` on a Mac).
 
-Web Extensions are listed in the Source List pane using the extension's name.
+WebExtensions are listed in the Source List pane using the extension's name.
 
 .. image:: source_list_pane.png
   :class: border
