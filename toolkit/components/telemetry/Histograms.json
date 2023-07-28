@@ -12710,7 +12710,7 @@
     "record_in_processes": ["main"],
     "products": ["firefox"],
     "operating_systems": ["windows"],
-    "expires_in_version": "120",
+    "expires_in_version": "126",
     "kind": "categorical",
     "labels": [
       "Success",
@@ -12734,7 +12734,7 @@
     "record_in_processes": ["main"],
     "products": ["firefox"],
     "operating_systems": ["windows"],
-    "expires_in_version": "118",
+    "expires_in_version": "126",
     "kind": "categorical",
     "labels": [
       "Success",
