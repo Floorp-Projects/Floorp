@@ -323,8 +323,8 @@ jobs:
     - name: Copy 📂
       run: |
         mkdir $RUNNER_USERDIR/output
-        cp obj-x86_64-pc-mingw32/dist/install/sea/floorp-*.en-US.win64.installer-stub.exe $RUNNER_USERDIR/output/floorp-stub.installer.exe
-        cp obj-x86_64-pc-mingw32/dist/install/sea/floorp-*.en-US.win64.installer.exe $RUNNER_USERDIR/output/floorp-win64.installer.exe
+        cp obj-x86_64-pc-mingw32/dist/install/sea/floorp-*.en-US.win64.installer-stub.exe $RUNNER_USERDIR/output/
+        cp obj-x86_64-pc-mingw32/dist/install/sea/floorp-*.en-US.win64.installer.exe $RUNNER_USERDIR/output/
         cp obj-x86_64-pc-mingw32/dist/floorp-*.en-US.win64.zip $RUNNER_USERDIR/output/
 
     - name: Publish 🎁
@@ -332,58 +332,6 @@ jobs:
       with:
         name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
         path: ${{ env.RUNNER_USERDIR }}/output
-
-######################################################## Add Certificates for Windows ####################################
-
-  Apply-Certification-for-Windows:
-   environment: 
-      name: add-certificates-for-windows
-   runs-on: self-hosted-Windows64
-   needs: [Windows-x86_64-build-with-profdata-and-jarlog, get-display-version]
-   steps:
-    - name: Setup & Create Enviromnet 🌳
-      shell: cmd
-      run: |
-        cd C:\Floorp-Repackage
-        rmdir /s /q "C:\Floorp-Repackage\Floorp-work"
-        rmdir /s /q "C:\Floorp-Repackage\windows-x64"
-        rmdir /s /q "C:\Floorp-Repackage\output"
-        del /f /q "C:\Floorp-Repackage\floorp.win64.installer.exe"
-        mkdir "C:\Floorp-Repackage\windows-x64"
-        mkdir "C:\Floorp-Repackage\Floorp-work"
-
-    - name: download Windows x86_64 build artifact 📥
-      uses: actions/download-artifact@v3
-      with:
-        name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
-        path: C:\Floorp-Repackage\windows-x64
-
-    - name: Extract Windows x86_64 build artifact & Add Codesign 📦
-      shell: cmd
-      run: |
-        cd C:\Floorp-Repackage\Floorp-work
-        cp C:\Floorp-Repackage\windows-x64\floorp-win64.installer.exe C:\Floorp-Repackage\Floorp-work\floorp-win64.installer.exe
-        "C:\Program Files\7-Zip\7z.exe" x "floorp-win64.installer.exe"
-        cd core
-
-        signtool.exe sign /n "Open Source Developer, Ryosuke Asano" /tr http://time.certum.pl/ /td SHA256 /fd sha256 /v AccessibleMarshal.dll api-ms-win-core-file-l1-2-0.dll api-ms-win-core-file-l2-1-0.dll api-ms-win-core-localization-l1-2-0.dll api-ms-win-core-processthreads-l1-1-1.dll api-ms-win-core-synch-l1-2-0.dll api-ms-win-core-timezone-l1-1-0.dll api-ms-win-crt-conio-l1-1-0.dll api-ms-win-crt-convert-l1-1-0.dll api-ms-win-crt-environment-l1-1-0.dll api-ms-win-crt-filesystem-l1-1-0.dll api-ms-win-crt-heap-l1-1-0.dll api-ms-win-crt-locale-l1-1-0.dll api-ms-win-crt-math-l1-1-0.dll api-ms-win-crt-multibyte-l1-1-0.dll api-ms-win-crt-private-l1-1-0.dll api-ms-win-crt-process-l1-1-0.dll api-ms-win-crt-runtime-l1-1-0.dll api-ms-win-crt-stdio-l1-1-0.dll api-ms-win-crt-string-l1-1-0.dll api-ms-win-crt-time-l1-1-0.dll api-ms-win-crt-utility-l1-1-0.dll application.ini browser d3dcompiler_47.dll default-browser-agent.exe defaultagent.ini defaultagent_localized.ini defaults dependentlibs.list floorp.exe floorp.VisualElementsManifest.xml fonts freebl3.dll gmp-clearkey ipcclientcerts.dll lgpllibs.dll libEGL.dll libGLESv2.dll locale.ini mozavcodec.dll mozavutil.dll mozglue.dll msvcp140.dll notificationserver.dll nss3.dll nssckbi.dll omni.ja osclientcerts.dll pingsender.exe platform.ini plugin-container.exe precomplete private_browsing.exe private_browsing.VisualElementsManifest.xml qipcap64.dll removed-files softokn3.dll ucrtbase.dll uninstall update-settings.ini updater.exe updater.ini vcruntime140.dll vcruntime140_1.dll uninstall\helper.exe  ..\setup.exe
-
-        cd ..\
-
-        copy /B 7zSD.sfx+ "app.tag" + "Floorp-work\app.7z" "floorp-win64.installer.exe"
-        signtool.exe sign /n "Open Source Developer, Ryosuke Asano" /tr http://time.certum.pl/ /td SHA256 /fd sha256 /v floorp-win64.installer.exe
-
-        cp floorp-win64.installer.exe C:\Floorp-Repackage\output\floorp-win64.installer.exe
-
-    - name: Create MAR ✴
-      run: |
-        MAR="bin/mar.exe" MOZ_PRODUCT_VERSION=${{ needs.get-display-version.outputs.display-version }} MAR_CHANNEL_ID=release tools/update-packaging/make_full_update.sh ./output/WINNT-x86_64.mar "Floorp-work/core"
-
-    - name: Upload Artifacts 📤
-      uses: actions/upload-artifact@v2
-      with:
-        name: floorp-windows-x86_64-signed-artifact
-        path: .\output
 
 ######################################################## ↑ Windows x86_64 ########################################################
 
@@ -752,7 +700,7 @@ jobs:
     name: Generate profdata and jarlog for AArch64
     needs: [build-macOS-AArch64-with-profile-generate, get-buildid]
 
-    runs-on: self-hosted-M1-mac
+    runs-on: self-hosted
     # GitHub doesn't support M1 macs yet, so we need to use a self-hosted runner.
 
     steps:
@@ -1434,12 +1382,8 @@ jobs:
     - name: download Windows x86_64 build artifact 📥
       uses: actions/download-artifact@v3
       with:
-        name: floorp-windows-x86_64-signed-artifact
+        name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
         path: ~/downloads/artifacts/windows-x64
-
-    - name: Download stub-installer 📥
-      run: |
-        wget -P ~/downloads/artifacts/windows-x64 https://github.com/Floorp-Projects/Floorp/releases/download/v10.16.0/floorp-stub.installer.exe
 
     - name: Compress Windows x86_64 artifacts to .zip 📦
       run: |
@@ -1467,9 +1411,7 @@ jobs:
           /home/runner/downloads/artifacts/linux-x64/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-x86_64.tar.bz2
           /home/runner/downloads/artifacts/linux-aarch64/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-aarch64.tar.bz2
           /home/runner/downloads/artifacts/macOS-universal/floorp-macOS-universal.dmg
-          /home/runner/downloads/artifacts/windows-x64/floorp-win64.installer.exe
-          /home/runner/downloads/artifacts/windows-x64/floorp-stub.installer.exe
-          /home/runner/downloads/artifacts/windows-x64/WINNT-x86_64.mar
+          /home/runner/downloads/artifacts/windows-x64/WINDOWS-x86_64-${{ needs.get-display-version.outputs.display-version }}.zip
         tag_name: "v${{ needs.get-display-version.outputs.display-version }}"
         name: "v${{ needs.get-display-version.outputs.display-version }}"
         draft: false
