@@ -72,6 +72,11 @@ var UAHelpers = {
       .replace(`Firefox/${ver[1]}`, "Firefox/99.0")
       .replace(`rv:${ver[1]}`, "rv:99.0");
   },
+  getWindowsUA(originalUA) {
+    const rv = originalUA.match("rv:[0-9]+.[0-9]+")[0];
+    const ver = originalUA.match("Firefox/[0-9]+.[0-9]+")[0];
+    return `Mozilla/5.0 (Windows NT 10.0; Win64; x64; ${rv}) Gecko/20100101 ${ver}`;
+  },
 };
 
 if (typeof module !== "undefined") {
