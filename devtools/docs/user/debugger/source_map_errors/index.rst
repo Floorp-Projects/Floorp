@@ -69,7 +69,7 @@ In this case, the error will also be displayed in the source tab in the debugger
 NetworkError when attempting to fetch resource
 **********************************************
 
-A bug in Firefox prevents it from loading source maps for web extensions.
+A bug in Firefox prevents it from loading source maps for WebExtensions.
 
 See `Bug 1437937: WebExtensions Doesn't Find Source Maps <https://bugzilla.mozilla.org/show_bug.cgi?id=1437937>`_ for details.
 
