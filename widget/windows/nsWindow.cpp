@@ -9098,8 +9098,7 @@ void nsWindow::FrameState::EnsureSizeMode(nsSizeMode aMode,
     return;
   }
 
-  if (::IsWin10OrLater() &&
-      StaticPrefs::widget_windows_fullscreen_remind_taskbar()) {
+  if (StaticPrefs::widget_windows_fullscreen_remind_taskbar()) {
     // If we're unminimizing a window, asynchronously notify the taskbar after
     // the message has been processed. This redundant notification works around
     // a race condition in explorer.exe. (See bug 1835851, or comments in
