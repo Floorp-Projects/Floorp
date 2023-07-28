@@ -34,7 +34,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ["ubuntu-latest"]
+        runs-on: ['buildjet-16vcpu-ubuntu-2204']
 
     steps:
     - name: Init
@@ -204,7 +204,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ["ubuntu-latest"]
+        runs-on: ['buildjet-16vcpu-ubuntu-2204']
 
     steps:
     - name: Init
@@ -339,7 +339,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ["ubuntu-latest"]
+        runs-on: ['buildjet-16vcpu-ubuntu-2204']
     needs: get-display-version
     steps:
       - uses: actions/checkout@v3
@@ -453,7 +453,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ["ubuntu-latest"]
+        runs-on: ['buildjet-16vcpu-ubuntu-2204']
     needs: get-display-version
 
     steps:
@@ -585,7 +585,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ["ubuntu-latest"]
+        runs-on: ['buildjet-16vcpu-ubuntu-2204']
 
     needs: [get-buildid]
 
@@ -765,7 +765,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ["ubuntu-latest"]
+        runs-on: ['buildjet-16vcpu-ubuntu-2204']
 
     needs: [generate-profdata-and-jarlog-AArch64, get-buildid]
 
@@ -904,7 +904,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ["ubuntu-latest"]
+        runs-on: ['buildjet-16vcpu-ubuntu-2204']
 
     needs: get-buildid
 
@@ -921,7 +921,7 @@ jobs:
         sudo apt update
 
     - name: Setup Disk & Swap Space 💿
-      if: ${{ runner.name }} != 'buildjet-16vcpu-ubuntu-2204'
+      if: matrix.runs-on != 'buildjet-16vcpu-ubuntu-2204'
       run: |
        echo Before:
        free -h
@@ -1073,7 +1073,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ["ubuntu-latest"]
+        runs-on: ['buildjet-16vcpu-ubuntu-2204']
 
     needs: [generate-profdata-and-jarlog-x86_64, get-buildid]
 
@@ -1090,7 +1090,7 @@ jobs:
          sudo apt upgrade -y
          
     - name: Setup Disk & Swap Space 💿
-      if: ${{ runner.name }} != 'buildjet-16vcpu-ubuntu-2204'
+      if: matrix.runs-on != 'buildjet-16vcpu-ubuntu-2204'
       run: |
        echo Before:
        free -h
