@@ -51,6 +51,9 @@ SIGNING_SCOPE_ALIAS_TO_PROJECT = [
         {
             "mozilla-central",
             "comm-central",
+            # bug 1845368: pine is a permanent project branch used for testing
+            # nightly updates
+            "pine",
         },
     ],
     [
@@ -97,6 +100,8 @@ BEETMOVER_SCOPE_ALIAS_TO_PROJECT = [
         {
             "mozilla-central",
             "comm-central",
+            # bug 1845368: pine is a permanent project branch used for testing
+            # nightly updates
             "pine",
         },
     ],
@@ -135,6 +140,8 @@ BEETMOVER_APT_REPO_SCOPES = {
 """
 BEETMOVER_ACTION_SCOPES = {
     "nightly": "beetmover:action:push-to-nightly",
+    # bug 1845368: pine is a permanent project branch used for testing
+    # nightly updates
     "nightly-pine": "beetmover:action:push-to-nightly",
     "default": "beetmover:action:push-to-candidates",
 }
@@ -165,6 +172,8 @@ BALROG_SCOPE_ALIAS_TO_PROJECT = [
         {
             "mozilla-central",
             "comm-central",
+            # bug 1845368: pine is a permanent project branch used for testing
+            # nightly updates
             "pine",
         },
     ],
