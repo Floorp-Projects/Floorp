@@ -350,7 +350,11 @@ class DetermineCommandVenvAction(argparse.Action):
         if not command_dict:
             return
 
-        if potential_sub_command_name in module_dict:
+        site = command_dict.get("virtualenv_name", "common")
+
+        if potential_sub_command_name and not potential_sub_command_name.startswith(
+            "-"
+        ):
             all_sub_commands_dict = command_dict.get("subcommands", {})
 
             if all_sub_commands_dict:
@@ -360,8 +364,6 @@ class DetermineCommandVenvAction(argparse.Action):
 
                 if sub_command_dict:
                     site = sub_command_dict.get("virtualenv_name", "common")
-        else:
-            site = command_dict.get("virtualenv_name", "common")
 
         setattr(namespace, "site_name", site)
 
