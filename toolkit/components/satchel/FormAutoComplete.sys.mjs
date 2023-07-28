@@ -3,6 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { GenericAutocompleteItem } from "resource://gre/modules/FillHelpers.sys.mjs";
+
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
+  SignUpFormRuleset: "resource://gre/modules/SignUpFormRuleset.sys.mjs",
+});
+
+const formFillController = Cc[
+  "@mozilla.org/satchel/form-fill-controller;1"
+].getService(Ci.nsIFormFillController);
+
 function isAutocompleteDisabled(aField) {
   if (!aField) {
     return false;
@@ -71,11 +85,13 @@ export class FormHistoryClient {
    * @param {object} params
    *        An Object with search properties. See
    *        FormHistory.getAutoCompleteResults.
+   * @param {string} scenarioName
+   *        Optional autocompletion scenario name.
    * @param {Function} callback
    *        A callback function that will take a single
    *        argument (the found entries).
    */
-  requestAutoCompleteResults(searchString, params, callback) {
+  requestAutoCompleteResults(searchString, params, scenarioName, callback) {
     this.cancelled = false;
 
     // Use the actor if possible, otherwise for the searchbar,
@@ -87,6 +103,7 @@ export class FormHistoryClient {
         .sendQuery("FormHistory:AutoCompleteSearchAsync", {
           searchString,
           params,
+          scenarioName,
         })
         .then(
           results => this.handleAutoCompleteResults(results, callback),
@@ -102,6 +119,7 @@ export class FormHistoryClient {
         id: this.id,
         searchString,
         params,
+        scenarioName,
       });
     }
   }
@@ -166,10 +184,12 @@ export class FormHistoryClient {
 }
 
 /**
- * This autocomplete result combines 2 arrays of entries and fixedEntries.
+ * This autocomplete result combines 3 arrays of entries, fixedEntries and
+ * externalEntries.
  * Entries are Form History entries, they can be removed.
  * Fixed entries are "appended" to entries, they are used for datalist items,
  * search suggestions and extra items from integrations.
+ * External entries are meant for integrations, like Firefox Relay.
  * Internally entries and fixed entries are kept separated so we can
  * reuse and filter them.
  *
@@ -193,6 +213,7 @@ export class FormAutoCompleteResult {
   entries = null;
   fieldName = null;
   #fixedEntries = [];
+  externalEntries = [];
 
   set fixedEntries(value) {
     this.#fixedEntries = value;
@@ -275,15 +296,15 @@ export class FormAutoCompleteResult {
   }
 
   getAt(index) {
-    if (index >= 0) {
-      if (index < this.entries.length) {
-        return this.entries[index];
+    for (const group of [
+      this.entries,
+      this.#fixedEntries,
+      this.externalEntries,
+    ]) {
+      if (index < group.length) {
+        return group[index];
       }
-
-      index -= this.entries.length;
-      if (index < this.#fixedEntries.length) {
-        return this.#fixedEntries[index];
-      }
+      index -= group.length;
     }
 
     throw Components.Exception(
@@ -313,7 +334,11 @@ export class FormAutoCompleteResult {
   }
 
   get matchCount() {
-    return this.entries.length + this.#fixedEntries.length;
+    return (
+      this.entries.length +
+      this.#fixedEntries.length +
+      this.externalEntries.length
+    );
   }
 
   getValueAt(index) {
@@ -331,6 +356,11 @@ export class FormAutoCompleteResult {
   }
 
   getStyleAt(index) {
+    const itemStyle = this.getAt(index).style;
+    if (itemStyle) {
+      return itemStyle;
+    }
+
     if (index >= 0) {
       if (index < this.entries.length) {
         return "fromhistory";
@@ -376,6 +406,7 @@ export class FormAutoComplete {
 
     this._debug = this._prefBranch.getBoolPref("debug");
     this._enabled = this._prefBranch.getBoolPref("enable");
+    Services.obs.addObserver(this, "autocomplete-will-enter-text");
   }
 
   classID = Components.ID("{c11c21b2-71c9-4f87-a0f8-5e13f50495fd}");
@@ -390,6 +421,8 @@ export class FormAutoComplete {
   // finishes, is cancelled, or an error occurs. If a new query occurs while
   // one is already pending, the existing one is cancelled.
   #pendingClient = null;
+
+  fillRequestId = 0;
 
   observer = {
     _self: null,
@@ -515,19 +548,59 @@ export class FormAutoComplete {
       reportSearchResult(prevResult);
     } else {
       this.log("Creating new autocomplete search result.");
-      this.getAutoCompleteValues(client, aInputName, searchString, aEntries => {
-        if (aField?.maxLength > -1) {
-          result.entries = aEntries.filter(
-            el => el.text.length <= aField.maxLength
-          );
-        } else {
-          result.entries = aEntries;
-        }
+      this.getAutoCompleteValues(
+        client,
+        aInputName,
+        searchString,
+        this.getScenarioName(aField),
+        ({ formHistoryEntries, externalEntries }) => {
+          formHistoryEntries ??= [];
+          externalEntries ??= [];
 
-        result.removeDuplicateHistoryEntries();
-        reportSearchResult(result);
-      });
+          if (aField?.maxLength > -1) {
+            result.entries = formHistoryEntries.filter(
+              el => el.text.length <= aField.maxLength
+            );
+          } else {
+            result.entries = formHistoryEntries;
+          }
+
+          result.externalEntries.push(
+            ...externalEntries.map(
+              entry =>
+                new GenericAutocompleteItem(
+                  entry.icon,
+                  entry.title,
+                  entry.subtitle,
+                  entry.fillMessageName,
+                  entry.fillMessageData
+                )
+            )
+          );
+
+          result.removeDuplicateHistoryEntries();
+          reportSearchResult(result);
+        }
+      );
     }
+  }
+
+  getScenarioName(input) {
+    if (!input) {
+      return "";
+    }
+
+    const formRoot = lazy.FormLikeFactory.findRootForField(input);
+
+    if (!HTMLFormElement.isInstance(formRoot)) {
+      return "";
+    }
+
+    const threshold = lazy.LoginHelper.signupDetectionConfidenceThreshold;
+    const { rules, type } = lazy.SignUpFormRuleset;
+    const results = rules.against(formRoot);
+    const score = results.get(formRoot).scoreFor(type);
+    return score > threshold ? "SignUpFormScenario" : "";
   }
 
   getDataListSuggestions(aField) {
@@ -568,16 +641,72 @@ export class FormAutoComplete {
    *  client - a FormHistoryClient instance to perform the search with
    *  fieldname - fieldname field within form history (the form input name)
    *  searchString - string to search for
+   *  scenarioName - Optional autocompletion scenario name.
    *  callback - called when the values are available. Passed an array of objects,
    *             containing properties for each result. The callback is only called
    *             when successful.
    */
-  getAutoCompleteValues(client, fieldname, searchString, callback) {
+  getAutoCompleteValues(
+    client,
+    fieldname,
+    searchString,
+    scenarioName,
+    callback
+  ) {
     this.stopAutoCompleteSearch();
-    client.requestAutoCompleteResults(searchString, { fieldname }, entries => {
-      this.#pendingClient = null;
-      callback(entries);
-    });
+    client.requestAutoCompleteResults(
+      searchString,
+      { fieldname },
+      scenarioName,
+      entries => {
+        this.#pendingClient = null;
+        callback(entries);
+      }
+    );
     this.#pendingClient = client;
+  }
+
+  async observe(subject, topic, data) {
+    switch (topic) {
+      case "autocomplete-will-enter-text": {
+        await this.sendFillRequestToFormHistoryParent(subject, data);
+        break;
+      }
+    }
+  }
+
+  async sendFillRequestToFormHistoryParent(input, comment) {
+    if (!comment) {
+      return;
+    }
+
+    if (!input || input != formFillController.controller?.input) {
+      return;
+    }
+
+    const { fillMessageName, fillMessageData } = JSON.parse(comment ?? "{}");
+    if (!fillMessageName) {
+      return;
+    }
+
+    this.fillRequestId++;
+    const fillRequestId = this.fillRequestId;
+    const actor =
+      input.focusedInput.ownerGlobal.windowGlobalChild.getActor("FormHistory");
+    const value = await actor.sendQuery(fillMessageName, fillMessageData ?? {});
+
+    // skip fill if another fill operation started during await
+    if (fillRequestId != this.fillRequestId) {
+      return;
+    }
+
+    if (typeof value !== "string") {
+      return;
+    }
+
+    // If FormHistoryParent returned a string to fill, we must do it here because
+    // nsAutoCompleteController.cpp already finished it's work before we finished await.
+    input.textValue = value;
+    input.selectTextRange(value.length, value.length);
   }
 }
