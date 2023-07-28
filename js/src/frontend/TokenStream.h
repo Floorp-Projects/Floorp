@@ -438,14 +438,13 @@ class SourceCoords {
   [[nodiscard]] bool add(uint32_t lineNum, uint32_t lineStartOffset);
   [[nodiscard]] bool fill(const SourceCoords& other);
 
-  bool isOnThisLine(uint32_t offset, uint32_t lineNum, bool* onThisLine) const {
+  std::optional<bool> isOnThisLine(uint32_t offset, uint32_t lineNum) const {
     uint32_t index = indexFromLineNumber(lineNum);
     if (index + 1 >= lineStartOffsets_.length()) {  // +1 due to sentinel
-      return false;
+      return std::nullopt;
     }
-    *onThisLine = lineStartOffsets_[index] <= offset &&
-                  offset < lineStartOffsets_[index + 1];
-    return true;
+    return (lineStartOffsets_[index] <= offset &&
+            offset < lineStartOffsets_[index + 1]);
   }
 
   /**
@@ -2526,9 +2525,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
  public:
   // Implement ErrorReporter.
 
-  bool isOnThisLine(size_t offset, uint32_t lineNum,
-                    bool* onThisLine) const final {
-    return anyCharsAccess().srcCoords.isOnThisLine(offset, lineNum, onThisLine);
+  std::optional<bool> isOnThisLine(size_t offset,
+                                   uint32_t lineNum) const final {
+    return anyCharsAccess().srcCoords.isOnThisLine(offset, lineNum);
   }
 
   uint32_t lineAt(size_t offset) const final {
@@ -2720,13 +2719,14 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     // stronger condition than what we are looking for, and we don't need
     // to return Eol.
     if (anyChars.lookahead != 0) {
-      bool onThisLine;
-      if (!anyChars.srcCoords.isOnThisLine(curr.pos.end, anyChars.lineno,
-                                           &onThisLine)) {
+      std::optional<bool> onThisLineStatus =
+          anyChars.srcCoords.isOnThisLine(curr.pos.end, anyChars.lineno);
+      if (!onThisLineStatus.has_value()) {
         error(JSMSG_OUT_OF_MEMORY);
         return false;
       }
 
+      bool onThisLine = *onThisLineStatus;
       if (onThisLine) {
         MOZ_ASSERT(!anyChars.flags.hadError);
         verifyConsistentModifier(modifier, anyChars.nextToken());
