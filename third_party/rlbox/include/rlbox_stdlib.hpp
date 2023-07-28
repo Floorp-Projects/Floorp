@@ -138,7 +138,7 @@ template<typename T>
 static constexpr bool can_type_be_memcopied =
   std::is_same_v<char, std::remove_cv_t<T>> || std::is_same_v<wchar_t, std::remove_cv_t<T>> ||
   std::is_same_v<float, std::remove_cv_t<T>> || std::is_same_v<double, std::remove_cv_t<T>> ||
-  std::is_same_v<char16_t, std::remove_cv_t<T>>;
+  std::is_same_v<char16_t, std::remove_cv_t<T>> || std::is_same_v<short, std::remove_cv_t<T>>;
 
 /**
  * @brief Copy to sandbox memory area. Note that memcpy is meant to be called on
