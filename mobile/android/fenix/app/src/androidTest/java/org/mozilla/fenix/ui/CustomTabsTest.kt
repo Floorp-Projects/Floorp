@@ -21,10 +21,12 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
+import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.openAppFromExternalLink
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.customTabScreen
+import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.longClickPageObject
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -320,6 +322,46 @@ class CustomTabsTest {
         }
         homeScreen {
             verifyHomeScreenAppBarItems()
+        }
+    }
+
+    @Test
+    fun verifyETPSheetAndToggleTest() {
+        val customTabPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        intentReceiverActivityTestRule.launchActivity(
+            createCustomTabIntent(
+                pageUrl = customTabPage.url.toString(),
+                customActionButtonDescription = customTabActionButton,
+            ),
+        )
+
+        enhancedTrackingProtection {
+        }.openEnhancedTrackingProtectionSheet {
+            verifyEnhancedTrackingProtectionSheetStatus(status = "ON", state = true)
+        }.toggleEnhancedTrackingProtectionFromSheet {
+            verifyEnhancedTrackingProtectionSheetStatus(status = "OFF", state = false)
+        }
+
+        openAppFromExternalLink(customTabPage.url.toString())
+
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openEnhancedTrackingProtectionSubMenu {
+            switchEnhancedTrackingProtectionToggle()
+            verifyEnhancedTrackingProtectionOptionsEnabled(enabled = false)
+        }
+
+        exitMenu()
+
+        browserScreen {
+        }.goBack {
+            // Actually exiting to the previously opened custom tab
+        }
+
+        enhancedTrackingProtection {
+            verifyETPSectionIsDisplayedInQuickSettingsSheet(isDisplayed = false)
         }
     }
 }
