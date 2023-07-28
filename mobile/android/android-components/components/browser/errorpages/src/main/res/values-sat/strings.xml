@@ -57,10 +57,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">ᱞᱟᱦᱟᱱᱛᱤ…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        <label> <b>%1$s</b> ᱴᱷᱮᱱ ᱫᱚ ᱢᱤᱫ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱱᱤᱛᱤ ᱱᱤᱭᱚᱢ ᱢᱮᱱᱟᱜᱼᱟ ᱡᱟᱦᱟᱸ ᱫᱚ HTTP ᱥᱴᱨᱤᱠᱴ ᱴᱨᱟᱱᱥᱯᱚᱴ ᱥᱮᱠᱭᱚᱨᱤᱴᱤ (HSTS) ᱢᱮᱱᱛᱮ ᱠᱚ ᱢᱮᱱᱟ, ᱡᱟᱦᱟᱸ ᱢᱮᱱ ᱫᱚ <b>%2$s</b> ᱜᱟᱱ ᱜᱮ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱥᱟᱹᱦᱤᱡ ᱠᱚ ᱡᱩᱲᱟᱹᱣ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾ ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱨᱮ ᱪᱟᱞᱟᱣ ᱞᱟᱹᱛᱤᱫ ᱪᱷᱟᱰ ᱵᱟᱝ ᱥᱮᱞᱮᱫ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ ᱾
-    ]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label> <b>%1$s</b> ᱴᱷᱚᱱ ᱢᱤᱫ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱱᱤᱛᱤ ᱡᱟᱦᱟᱸ ᱫᱚ HTTP ᱥᱴᱨᱤᱠᱴ ᱴᱨᱟᱱᱥᱯᱚᱴ ᱠᱚ ᱥᱮᱠᱭᱚᱨᱤᱴᱤ (HSTS) ᱠᱚ ᱢᱮᱛᱮᱜ ᱠᱟᱱᱟ, ᱡᱟᱦᱟᱸ ᱢᱮᱱᱮᱛ ᱫᱚ <b>%2$s</b> ᱫᱚ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱦᱤᱥᱟᱹᱵ ᱛᱮ ᱡᱩᱲᱟᱹᱣᱜᱼᱟ ᱾ ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱛᱮ ᱪᱟᱞᱟᱜ ᱞᱟᱹᱜᱤᱫ ᱪᱮᱫ ᱱᱤᱥᱮᱫᱷ ᱞᱟᱹᱠᱛᱤ ᱵᱟᱝ ᱠᱟᱱᱟ ᱾ </label>
     ]]></string>
@@ -80,7 +76,7 @@
     <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
       <p>ᱱᱮᱦᱚᱨ ᱟᱠᱟᱱ ᱥᱟᱭᱤᱴ ᱫᱚ ᱡᱩᱲᱟᱹᱣ ᱵᱟᱭ ᱟᱸᱡᱚᱢ ᱮᱫᱟᱭ ᱟᱨ ᱵᱷᱮᱡᱟ ᱨᱩᱣᱟᱹᱲ ᱮ ᱵᱚᱸᱫᱚ ᱠᱮᱜᱼᱟᱭ ᱾</p>
       <ul>
-        <li>ᱥᱟᱹᱨᱣᱟᱹᱨ ᱦᱟᱤ ᱰᱤᱢᱟᱸᱰ ᱟᱨ ᱵᱟᱝ ᱵᱟᱛᱷᱟᱱᱤᱛ ᱟᱩᱴᱨᱮᱡ ᱞᱟᱹᱤᱫ ᱦᱩᱭ ᱠᱚᱜᱼᱟ? ᱛᱟᱭᱚᱢ ᱛᱮ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</li>
+        <li>ᱥᱟᱹᱨᱣᱟᱹᱨ ᱦᱟᱤ ᱰᱤᱢᱟᱸᱰ ᱟᱨ ᱵᱟᱝ ᱵᱟᱛᱷᱟᱱᱤᱛ ᱟᱣᱴᱨᱮᱡ ᱞᱟᱹᱤᱫ ᱦᱩᱭ ᱠᱚᱜᱼᱟ? ᱛᱟᱭᱚᱢ ᱛᱮ ᱪᱮᱥᱴᱟᱭ ᱢᱮ ᱾</li>
         <li>ᱟᱢ ᱪᱮᱫ ᱚᱞᱜᱟ ᱥᱟᱭᱤ ᱵᱟᱧ ᱵᱟᱨᱩᱡ ᱫᱟᱲᱟᱭᱟᱜ ᱠᱟᱱᱟᱢ? ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱱᱮᱴᱣᱟᱨᱠ ᱡᱩᱲᱟᱹᱣ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱾</li>
         <li>ᱪᱮᱫ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱫᱚ ᱯᱷᱟᱭᱟᱨᱣᱟᱞᱞ ᱟᱨ ᱵᱟᱝ ᱯᱨᱳᱠᱥᱭ ᱱᱮᱣᱴᱣᱟᱨᱠ ᱯᱨᱚᱴᱮᱠᱴᱮᱰ ᱜᱮᱭᱟ? ᱵᱷᱩᱞ ᱥᱟᱡᱟᱣ ᱠᱚ ᱠᱟᱹᱜᱤᱫ ᱣᱮᱵ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱨᱮ ᱵᱟᱫᱷᱟ ᱮᱢ ᱫᱟᱲᱮᱜᱼᱟᱭ ᱾</li>
         <li>ᱱᱤᱛ ᱦᱟᱹᱵᱤᱡ ᱥᱸᱝᱠᱚᱴ ᱨᱮ?ᱜᱚᱲᱚ ᱞᱟᱹᱜᱤᱫ ᱟᱢᱤᱡ ᱱᱮᱴᱣᱟᱨᱠ ᱟᱰᱢᱤᱱᱤᱥᱴᱨᱮᱴᱚᱨ ᱟᱨ ᱵᱟᱝ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱯᱨᱚᱣᱟᱭᱰᱟᱹᱨ ᱥᱟᱞᱟᱜ ᱡᱩᱜᱟᱡᱩᱜ ᱢᱮ</li>
@@ -227,7 +223,7 @@
       <p>ᱴᱷᱤᱠᱬᱟᱹ ᱫᱚ ᱯᱨᱚᱴᱚᱠᱚᱞ ᱮ ᱫᱮᱠᱷᱟᱣᱮᱫᱟᱭ (ᱡᱮᱢᱚᱱ, <q>wxyz://</q>) ᱵᱨᱟᱣᱡᱟᱹᱨ ᱵᱟᱝ ᱪᱤᱱᱦᱟᱹᱣ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ, ᱵᱟᱨᱣᱡᱟᱹᱨ ᱥᱟᱭᱤᱴ ᱨᱮ ᱵᱟᱝ ᱡᱩᱲᱟᱣᱼ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ ᱾</p>
       <ul>
         <li>ᱟᱢ ᱪᱮᱫ ᱢᱟᱹᱞᱴᱤᱢᱤᱰᱤᱭᱟ ᱟᱨ ᱵᱟᱝ ᱵᱟᱝᱼᱚᱞ ᱥᱟᱹᱨᱣᱤᱥ ᱫᱚᱨᱠᱟᱨ ᱥᱮ? ᱡᱟᱹᱥᱛᱤ ᱡᱤᱱᱤᱥ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱭᱤᱴ ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ ᱢᱮ ᱾</li>
-        <li>ᱠᱤᱪᱷᱤ ᱯᱚᱨᱴᱟᱞ ᱫᱚ ᱛᱷᱟᱰ ᱯᱟᱨᱴᱭ ᱥᱚᱯᱷᱴᱣᱮᱨ ᱟᱨ ᱵᱟᱝ ᱯᱞᱟᱹᱜᱤᱱᱥ ᱫᱚᱨᱠᱟᱨ ᱚᱠᱟ ᱫᱚ ᱵᱽᱨᱟᱣᱩᱡᱟᱹᱨ ᱪᱤᱷᱟᱣ ᱨᱮ ᱜᱚᱲᱚᱟᱭ ᱾</li>
+        <li>ᱠᱤᱪᱷᱤ ᱯᱚᱨᱴᱟᱞ ᱫᱚ ᱛᱷᱟᱰ ᱯᱟᱨᱴᱭ ᱥᱚᱯᱷᱴᱣᱮᱨ ᱟᱨ ᱵᱟᱝ ᱯᱞᱟᱹᱜᱤᱱᱥ ᱫᱚᱨᱠᱟᱨ ᱚᱠᱟ ᱫᱚ ᱵᱽᱨᱟᱣᱩᱡᱟᱹᱨ ᱪᱤᱷᱟᱣ ᱨᱮ ᱜᱚᱲᱚᱣᱟᱭ ᱾</li>
       </ul>
     ]]></string>
 

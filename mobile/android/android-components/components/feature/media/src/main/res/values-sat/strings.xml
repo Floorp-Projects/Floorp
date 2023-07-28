@@ -17,5 +17,5 @@
     <string name="mozac_feature_media_notification_action_pause">ᱛᱷᱩᱠᱩᱢ ᱢᱮ</string>
 
     <!-- Neutral title of the media notification for when a website that is open in private mode. -->
-    <string name="mozac_feature_media_notification_private_mode">ᱢᱤᱫᱴᱟᱹᱝ ᱥᱟᱭᱤᱴ ᱢᱤᱰᱤᱭᱟ ᱮᱱᱮᱡ ᱫᱟᱭ</string>
+    <string name="mozac_feature_media_notification_private_mode">ᱢᱤᱫᱴᱟᱝ ᱥᱟᱭᱤᱴ ᱢᱤᱰᱤᱭᱟ ᱮᱱᱮᱡ ᱫᱟᱭ</string>
 </resources>

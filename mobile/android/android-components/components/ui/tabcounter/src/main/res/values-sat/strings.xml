@@ -13,5 +13,5 @@
     <!-- Menu option to duplicate the current tab -->
     <string name="mozac_ui_tabcounter_duplicate_tab">ᱰᱩᱯᱞᱤᱠᱮᱴ ᱴᱮᱵᱽ</string>
     <!-- Content description of the tab counter toolbar button -->
-    <string name="mozac_tab_counter_content_description">ᱴᱮᱵᱽ ᱠᱟᱩᱱᱴᱟᱹᱨ ᱴᱩᱞᱵᱟᱨ ᱵᱩᱛᱟᱹᱢ ᱾</string>
+    <string name="mozac_tab_counter_content_description">ᱴᱮᱵᱽ ᱠᱟᱣᱱᱴᱟᱹᱨ ᱴᱩᱞᱵᱟᱨ ᱵᱩᱛᱟᱹᱢ ᱾</string>
 </resources>

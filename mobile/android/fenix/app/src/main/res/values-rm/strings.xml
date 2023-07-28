@@ -296,51 +296,51 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Betg ussa</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Tscherna %s sco navigatur preferì</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Tscherna %s sco navigatur preferì</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Fa da Firefox tes navigatur preferì</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">%1$s dat la prioritad a las persunas, betg al profit e defenda tia sfera privata cun bloccar fastizaders interpaginals.\n\nUlteriuras infurmaziuns en nossa %2$s.</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s dat la prioritad a las persunas, betg al profit e defenda tia sfera privata cun bloccar fastizaders interpaginals.\n\nUlteriuras infurmaziuns en nossa %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox dat la prioritad a las persunas, betg al profit e defenda tia sfera privata cun bloccar fastizaders interpaginals.\n\nUlteriuras infurmaziuns èn da chattar en nossas infurmaziuns davart la protecziun da datas.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">infurmaziuns davart la protecziun da datas</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">infurmaziuns davart la protecziun da datas</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Definir sco navigatur da standard</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Definir sco navigatur da standard</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Betg ussa</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Betg ussa</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Mida dal telefonin al laptop ed enavos</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Mida dal telefonin al laptop ed enavos</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Va per tabs e pleds-clav da tes auters apparats per cuntinuar là nua che ti has chalà.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Va per tabs e pleds-clav da tes auters apparats per cuntinuar là nua che ti has chalà.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">S\'annunziar</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">S\'annunziar</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Betg ussa</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Betg ussa</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Communicaziuns ta gidan da far dapli cun %s</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Communicaziuns ta gidan da far dapli cun %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Communicaziuns ta gidan da far dapli cun Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Trametta tabs dad in apparat a l\'auter, administrescha telechargiadas e ve a savair co profitar maximalmain da %s.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Trametta tabs dad in apparat a l\'auter, administrescha telechargiadas e ve a savair co profitar maximalmain da %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Trametta tabs dad in apparat a l\'auter, administrescha telechargiadas e ve a savair co profitar il meglier pussaivel da Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Activar las communicaziuns</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Activar las communicaziuns</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Betg ussa</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Betg ussa</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1190,8 +1190,10 @@
     <string name="share_button_content_description">Cundivider</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Memorisar sco PDF</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">Impussibel da generar il PDF</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Serrar</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">Impussibel da stampar</string>
     <!-- Text for the print feature in the share and browser menu -->

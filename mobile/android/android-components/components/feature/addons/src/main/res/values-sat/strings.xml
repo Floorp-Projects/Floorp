@@ -43,9 +43,9 @@
     <!-- Description for declarativeNetRequestFeedback permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱦᱤᱛᱟᱹᱞ ᱯᱟᱲᱦᱟᱣ ᱢᱮ</string>
     <!-- Description for downloads permission. -->
-    <string name="mozac_feature_addons_permissions_downloads_description">ᱨᱮᱫ ᱰᱟᱩᱱᱞᱚᱰ ᱢᱮ ᱟᱨ ᱯᱟᱲᱦᱟᱣ ᱢᱮ ᱟᱨ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱰᱟᱩᱱᱞᱚᱰ ᱦᱤᱛᱟᱹᱞ ᱵᱚᱫᱚᱞ ᱢᱮ</string>
+    <string name="mozac_feature_addons_permissions_downloads_description">ᱨᱮᱫ ᱰᱟᱣᱱᱞᱚᱰ ᱢᱮ ᱟᱨ ᱯᱟᱲᱦᱟᱣ ᱢᱮ ᱟᱨ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱰᱟᱣᱱᱞᱚᱰ ᱦᱤᱛᱟᱹᱞ ᱵᱚᱫᱚᱞ ᱢᱮ</string>
     <!-- Description for downloads_open permission. -->
-    <string name="mozac_feature_addons_permissions_downloads_open_description">ᱨᱮᱫ ᱠᱚ ᱡᱷᱤᱡᱽ ᱢᱮ ᱡᱟᱦᱟᱸ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱰᱟᱩᱱᱞᱚᱰ ᱦᱚᱭ ᱠᱟᱱᱟ</string>
+    <string name="mozac_feature_addons_permissions_downloads_open_description">ᱨᱮᱫ ᱠᱚ ᱡᱷᱤᱡᱽ ᱢᱮ ᱡᱟᱦᱟᱸ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱰᱟᱣᱱᱞᱚᱰ ᱦᱚᱭ ᱠᱟᱱᱟ</string>
     <!-- Description for find permission. -->
     <string name="mozac_feature_addons_permissions_find_description">ᱥᱟᱱᱟᱢ ᱡᱷᱤᱡᱽ ᱴᱮᱵᱽ ᱠᱚᱣᱟᱜ ᱚᱱᱚᱞ ᱯᱟᱲᱦᱟᱣ ᱢᱮ</string>
     <!-- Description for geolocation permission. -->
@@ -161,7 +161,7 @@
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption2">ᱟᱞᱮ ᱫᱚ ᱱᱤᱛᱚᱜ ᱮᱛᱦᱚᱵ ᱫᱚᱭᱚᱱ ᱠᱚ ᱨᱮᱭᱟᱜ ᱢᱮᱚᱠ ᱯᱟᱥᱱᱟᱣ ᱠᱚ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱹᱯᱯᱚᱴ ᱞᱮ ᱛᱚᱭᱟᱨ ᱮᱜᱼᱟ ᱾</string>
     <!-- This is the caption for the add-on installation progress overlay -->
-    <string name="mozac_add_on_install_progress_caption">ᱮᱰ-ᱚᱱ ᱰᱟᱩᱱᱞᱚᱰ ᱟᱨ ᱧᱮᱞ ᱢᱮᱲᱟᱣ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ …</string>
+    <string name="mozac_add_on_install_progress_caption">ᱮᱰ-ᱚᱱ ᱰᱟᱣᱱᱞᱚᱰ ᱟᱨ ᱧᱮᱞ ᱢᱮᱲᱟᱣ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ …</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
     <string name="mozac_feature_addons_failed_to_query_add_ons">ᱮᱰ-ᱚᱱ ᱠᱚ ᱠᱩᱠᱞᱟᱹᱭ ᱰᱤᱜᱟᱹᱣᱮᱱᱟ!</string>
     <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->

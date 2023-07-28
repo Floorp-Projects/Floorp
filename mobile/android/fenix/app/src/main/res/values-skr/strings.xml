@@ -1203,8 +1203,10 @@
 
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">پی ڈی ایف محفوظ کرو</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">پی ڈی ایف بݨاوݨ توں قاصر</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">فارغ کرو</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">پرنٹ کرݨ دے قابل کائنی</string>
     <!-- Text for the print feature in the share and browser menu -->

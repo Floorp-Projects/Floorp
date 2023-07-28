@@ -37,7 +37,7 @@
     <string name="mozac_feature_sitepermissions_media_key_system_access_title">%1$s DRM-ᱠᱚᱵᱽᱡᱟ ᱡᱤᱱᱤᱥ ᱠᱚ ᱯᱞᱮ ᱪᱷᱚ ᱞᱟᱹᱜᱤᱫ ᱚᱱᱩᱢᱚᱛᱤ ᱮᱢᱟᱭᱟ ᱥᱮ? </string>
     <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
      %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
-    <string name="mozac_feature_sitepermissions_storage_access_title">%1$s ᱫᱚ %2$s ᱨᱮ ᱠᱩᱠᱤᱡᱽ ᱵᱮᱵᱷᱟᱨ ᱪᱷᱚᱟᱭᱟᱢ ᱥᱮ ?</string>
+    <string name="mozac_feature_sitepermissions_storage_access_title">%1$s ᱫᱚ %2$s ᱨᱮ ᱠᱩᱠᱤᱡᱽ ᱵᱮᱵᱷᱟᱨ ᱪᱷᱚᱣᱟᱭᱟᱢ ᱥᱮ ?</string>
     <!-- Message of a dialog offering more context about the cross origin storage permission.
     %s is the name of the site URL (www.site1.example) trying to track the user's activity. -->
     <string name="mozac_feature_sitepermissions_storage_access_message">ᱟᱢ ᱫᱚ ᱱᱚᱶᱟ ᱵᱞᱚᱠ ᱥᱮᱱᱟᱢ ᱠᱟᱱᱟ\ᱡᱩᱫᱤ ᱟᱢ ᱵᱟᱝ ᱵᱟᱲᱟᱭᱟᱢ %s ᱰᱟᱴᱟ ᱪᱮᱫᱟᱜ ᱫᱚᱨᱠᱟᱨ ᱠᱟᱱᱟ ᱾</string>

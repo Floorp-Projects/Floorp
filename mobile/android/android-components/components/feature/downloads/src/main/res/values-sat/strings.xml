@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_downloads_notification_channel">ᱰᱟᱩᱱᱞᱚᱰ ᱠᱚ</string>
+    <string name="mozac_feature_downloads_notification_channel">ᱰᱟᱣᱱᱞᱚᱰ ᱠᱚ</string>
 
     <!-- Text shown on the second row of a paused download notification. -->
-    <string name="mozac_feature_downloads_paused_notification_text">ᱰᱟᱩᱱᱞᱚᱰ ᱛᱷᱩᱠᱩᱢ ᱟᱠᱟᱱᱟ</string>
+    <string name="mozac_feature_downloads_paused_notification_text">ᱰᱟᱣᱱᱞᱚᱰ ᱛᱷᱩᱠᱩᱢ ᱟᱠᱟᱱᱟ</string>
     <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
-    <string name="mozac_feature_downloads_completed_notification_text2">ᱰᱟᱩᱱᱞᱚᱰ ᱯᱩᱨᱟᱹᱣᱮᱱᱟ</string>
+    <string name="mozac_feature_downloads_completed_notification_text2">ᱰᱟᱣᱱᱞᱚᱰ ᱯᱩᱨᱟᱹᱣᱮᱱᱟ</string>
 
     <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
-    <string name="mozac_feature_downloads_failed_notification_text2">ᱰᱟᱩᱱᱞᱚᱰ ᱰᱤᱜᱟᱹᱣᱮᱱᱟ</string>
+    <string name="mozac_feature_downloads_failed_notification_text2">ᱰᱟᱣᱱᱞᱚᱰ ᱰᱤᱜᱟᱹᱣᱮᱱᱟ</string>
 
     <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
-    <string name="mozac_feature_downloads_dialog_title2">ᱰᱟᱩᱱᱞᱚᱰ (%1$s)</string>
+    <string name="mozac_feature_downloads_dialog_title2">ᱰᱟᱣᱱᱞᱚᱰ (%1$s)</string>
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
-    <string name="mozac_feature_downloads_dialog_download">ᱰᱟᱩᱱᱞᱚᱰ</string>
+    <string name="mozac_feature_downloads_dialog_download">ᱰᱟᱣᱱᱞᱚᱰ</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
 
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
-    <string name="mozac_feature_downloads_file_not_supported2">%1$s ᱱᱚᱶᱟ ᱞᱮᱠᱟᱱᱟ ᱨᱮᱫ ᱵᱟᱭ ᱰᱟᱩᱱᱞᱚᱰ ᱫᱟᱲᱮᱜ ᱠᱟᱱᱟᱭ</string>
+    <string name="mozac_feature_downloads_file_not_supported2">%1$s ᱱᱚᱶᱟ ᱞᱮᱠᱟᱱᱟ ᱨᱮᱫ ᱵᱟᱭ ᱰᱟᱣᱱᱞᱚᱰ ᱫᱟᱲᱮᱜ ᱠᱟᱱᱟᱭ</string>
 
     <!-- Message that appears when the downloaded file could not be opened-->
     <string name="mozac_feature_downloads_could_not_open_file">ᱨᱮᱫ ᱵᱟᱝ ᱠᱷᱩᱞᱟᱹ ᱫᱟᱲᱮᱞᱟᱱᱟ</string>
@@ -45,14 +45,14 @@
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">%1$s ᱵᱟᱝ ᱠᱷᱩᱞᱟᱹ ᱫᱟᱲᱮᱞᱟᱱᱟ</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
-    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">ᱨᱮᱫ ᱰᱟᱩᱱᱞᱚᱰ ᱞᱟᱹᱜᱤᱫ ᱨᱮᱫ ᱟᱨ ᱢᱮᱰᱤᱭᱟ ᱯᱟᱹᱨᱢᱤᱥᱚᱱ ᱟᱫᱮᱨ ᱫᱚᱨᱠᱟᱨ ᱾ ᱮᱱᱰᱨᱚᱭᱮᱰ ᱥᱟᱡᱟᱣ ᱛᱮ ᱪᱟᱞᱟᱜ ᱢᱮ, ᱯᱟᱹᱨᱢᱤᱥᱚᱱ ᱨᱮ ᱴᱤᱯᱟᱹᱣ ᱢᱮ, ᱟᱨ ᱮᱢ ᱪᱷᱚ ᱨᱮ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">ᱨᱮᱫ ᱰᱟᱣᱱᱞᱚᱰ ᱞᱟᱹᱜᱤᱫ ᱨᱮᱫ ᱟᱨ ᱢᱮᱰᱤᱭᱟ ᱯᱟᱹᱨᱢᱤᱥᱚᱱ ᱟᱫᱮᱨ ᱫᱚᱨᱠᱟᱨ ᱾ ᱮᱱᱰᱨᱚᱭᱮᱰ ᱥᱟᱡᱟᱣ ᱛᱮ ᱪᱟᱞᱟᱜ ᱢᱮ, ᱯᱟᱹᱨᱢᱤᱥᱚᱱ ᱨᱮ ᱴᱤᱯᱟᱹᱣ ᱢᱮ, ᱟᱨ ᱮᱢ ᱪᱷᱚ ᱨᱮ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
 
     <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
-    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">ᱱᱤᱡᱚᱨᱟᱜ ᱰᱟᱩᱱᱞᱚᱰ ᱠᱚ ᱵᱟᱹᱰᱨᱟᱹᱭᱟᱢ ᱥᱮ?</string>
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">ᱱᱤᱡᱚᱨᱟᱜ ᱰᱟᱣᱱᱞᱚᱰ ᱠᱚ ᱵᱟᱹᱰᱨᱟᱹᱭᱟᱢ ᱥᱮ?</string>
     <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
-    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">ᱡᱤᱫᱤ ᱟᱢ ᱱᱤᱛ ᱨᱮ ᱡᱷᱚᱛᱚ ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫᱚᱭᱟᱢ, %1$s ᱰᱟᱩᱱᱞᱚᱰ ᱠᱚ ᱵᱟᱹᱛᱤᱞᱚᱜᱼᱟ ᱾ ᱟᱢ ᱪᱮᱫ ᱡᱷᱚᱛᱚ ᱞᱮᱠᱷᱟᱛᱮ ᱯᱨᱟᱭᱣᱮᱴ ᱵᱽᱨᱟᱣᱡᱤᱝ ᱟᱲᱟᱜ ᱥᱮᱱᱟᱢ ᱠᱟᱱᱟ ᱥᱮ?</string>
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">ᱡᱤᱫᱤ ᱟᱢ ᱱᱤᱛ ᱨᱮ ᱡᱷᱚᱛᱚ ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫᱚᱭᱟᱢ, %1$s ᱰᱟᱣᱱᱞᱚᱰ ᱠᱚ ᱵᱟᱹᱛᱤᱞᱚᱜᱼᱟ ᱾ ᱟᱢ ᱪᱮᱫ ᱡᱷᱚᱛᱚ ᱞᱮᱠᱷᱟᱛᱮ ᱯᱨᱟᱭᱣᱮᱴ ᱵᱽᱨᱟᱣᱡᱤᱝ ᱟᱲᱟᱜ ᱥᱮᱱᱟᱢ ᱠᱟᱱᱟ ᱥᱮ?</string>
     <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
-    <string name="mozac_feature_downloads_cancel_active_downloads_accept">ᱰᱟᱩᱱᱞᱚᱰ ᱠᱚ ᱵᱟᱹᱰᱨᱟᱹᱭ ᱢᱮ</string>
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">ᱰᱟᱣᱱᱞᱚᱰ ᱠᱚ ᱵᱟᱹᱰᱨᱟᱹᱭ ᱢᱮ</string>
     <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
-    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">ᱯᱨᱟᱭᱣᱮᱴ ᱵᱽᱨᱟᱩᱡᱤᱝ ᱨᱮ ᱛᱟᱦᱮᱸᱱ ᱢᱮ</string>
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">ᱯᱨᱟᱭᱣᱮᱴ ᱵᱽᱨᱟᱣᱡᱤᱝ ᱨᱮ ᱛᱟᱦᱮᱸᱱ ᱢᱮ</string>
 </resources>
