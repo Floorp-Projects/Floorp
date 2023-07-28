@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <script>
+      ok(
+        SpecialPowers.getBoolPref("dom.webgpu.enabled"),
+        "Pref should be enabled."
+      );
+      const originalNavigatorGpu = navigator.gpu;
+
+      const BAD_GPU_VAL = "ohcrapthisisbad";
+      ok(
+        navigator.gpu !== BAD_GPU_VAL,
+        "`navigator.gpu` should never equal `BAD_GPU_VAL` (before replacement attempt)"
+      );
+      navigator.gpu = BAD_GPU_VAL;
+      ok(
+        navigator.gpu !== BAD_GPU_VAL,
+        "`navigator.gpu` should never equal `BAD_GPU_VAL` (after replacement attempt)"
+      );
+      ok(
+        navigator.gpu === originalNavigatorGpu,
+        "`navigator.gpu` should equal originally observed value after attempted replacement"
+      );
+    </script>
+  </body>
+</html>
