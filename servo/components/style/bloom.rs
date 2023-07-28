@@ -111,7 +111,8 @@ pub fn is_attr_name_excluded_from_filter(atom: &crate::Atom) -> bool {
     *atom == atom!("class") || *atom == atom!("id") || *atom == atom!("style")
 }
 
-fn each_relevant_element_hash<E, F>(element: E, mut f: F)
+/// Gather all relevant hash for fast-reject filters from an element.
+pub fn each_relevant_element_hash<E, F>(element: E, mut f: F)
 where
     E: TElement,
     F: FnMut(u32),
