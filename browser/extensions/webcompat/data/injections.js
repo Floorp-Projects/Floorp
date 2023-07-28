@@ -255,7 +255,10 @@ const AVAILABLE_INJECTIONS = [
     domain: "datastudio.google.com",
     bug: "1631811",
     contentScripts: {
-      matches: ["https://datastudio.google.com/embed/reporting/*"],
+      matches: [
+        "https://datastudio.google.com/embed/reporting/*",
+        "https://lookerstudio.google.com/embed/reporting/*",
+      ],
       js: [
         {
           file: "injections/js/bug1631811-datastudio.google.com-indexedDB.js",
@@ -350,22 +353,6 @@ const AVAILABLE_INJECTIONS = [
         },
       ],
       allFrames: true,
-    },
-  },
-  {
-    id: "bug1724764",
-    platform: "android",
-    domain: "Issues related to missing window.print",
-    bug: "1724764",
-    contentScripts: {
-      matches: [
-        "*://*.edupage.org/*", // 1804477 and 1800118
-      ],
-      js: [
-        {
-          file: "injections/js/bug1724764-window-print.js",
-        },
-      ],
     },
   },
   {
@@ -1022,6 +1009,20 @@ const AVAILABLE_INJECTIONS = [
       js: [
         {
           file: "injections/js/bug1842437-www.youtube.com-performance-now-precision.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1841991",
+    platform: "all",
+    domain: "wilton.com",
+    bug: "1841991",
+    contentScripts: {
+      matches: ["*://*.wilton.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1841991-wilton.com-flexbox-painting-order.css",
         },
       ],
     },
