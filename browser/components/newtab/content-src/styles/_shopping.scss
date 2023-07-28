@@ -1,0 +1,30 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+.onboardingContainer.shopping .screen[pos='split'] {
+  height: auto;
+
+  .section-main {
+    width: auto;
+
+    .main-content {
+      border-radius: 0;
+
+      .welcome-text h1 {
+        width: auto;
+      }
+
+      .action-buttons {
+        .primary,
+        .secondary {
+          min-width: auto;
+        }
+      }
+    }
+  }
+
+  .section-secondary {
+    display: none;
+  }
+}

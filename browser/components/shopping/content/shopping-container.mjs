@@ -99,9 +99,7 @@ export class ShoppingContainer extends MozLitElement {
   render() {
     let content;
     if (this.showOnboarding) {
-      // For the onboarding case, leave content area blank, so the OMC onboarding
-      // card has room to draw itself via react (bug 1839764).
-      content = html`<p>Onboarding UI goes here</p>`;
+      content = html`<slot name="multi-stage-message-slot"></slot>`;
     } else if (!this.data) {
       // TODO: Replace with loading UI component (bug 1840161).
       content = html`<p>Loading UI goes here</p>`;

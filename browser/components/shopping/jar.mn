@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
+    content/browser/shopping/onboarding.mjs (content/onboarding.mjs)
     content/browser/shopping/shopping.html (content/shopping.html)
     content/browser/shopping/shopping-container.css (content/shopping-container.css)
     content/browser/shopping/shopping-sidebar.js (content/shopping-sidebar.js)

@@ -22,11 +22,21 @@
     <script src="chrome://global/content/elements/message-bar.js"></script>
     <script
       type="module"
+      src="chrome://browser/content/shopping/onboarding.mjs"
+    ></script>
+    <script
+      type="module"
       src="chrome://browser/content/shopping/shopping-container.mjs"
     ></script>
     <title data-l10n-id="shopping-page-title"></title>
   </head>
   <body>
-    <shopping-container></shopping-container>
+    <shopping-container>
+      <div
+        id="multi-stage-message-root"
+        class="onboardingContainer shopping"
+        slot="multi-stage-message-slot"
+      ></div>
+    </shopping-container>
   </body>
 </html>

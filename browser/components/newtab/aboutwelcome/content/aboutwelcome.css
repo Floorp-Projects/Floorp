@@ -350,6 +350,26 @@
   outline: 2px solid var(--fc-accent-color);
 }
 
+.onboardingContainer.shopping .screen[pos=split] {
+  height: auto;
+}
+.onboardingContainer.shopping .screen[pos=split] .section-main {
+  width: auto;
+}
+.onboardingContainer.shopping .screen[pos=split] .section-main .main-content {
+  border-radius: 0;
+}
+.onboardingContainer.shopping .screen[pos=split] .section-main .main-content .welcome-text h1 {
+  width: auto;
+}
+.onboardingContainer.shopping .screen[pos=split] .section-main .main-content .action-buttons .primary,
+.onboardingContainer.shopping .screen[pos=split] .section-main .main-content .action-buttons .secondary {
+  min-width: auto;
+}
+.onboardingContainer.shopping .screen[pos=split] .section-secondary {
+  display: none;
+}
+
 html {
   height: 100%;
 }

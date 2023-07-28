@@ -196,6 +196,7 @@ export const SpecialMessageActions = {
       "browser.migrate.content-modal.enabled",
       "browser.migrate.content-modal.import-all.enabled",
       "browser.migrate.preferences-entrypoint.enabled",
+      "browser.shopping.experience2023.optedIn",
       "browser.startup.homepage",
       "browser.privateWindowSeparation.enabled",
       "browser.firefox-view.feature-tour",
