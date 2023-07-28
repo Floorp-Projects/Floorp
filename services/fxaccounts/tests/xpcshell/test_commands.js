@@ -11,8 +11,8 @@ const { FxAccountsClient } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccountsClient.sys.mjs"
 );
 
-const { COMMAND_SENDTAB, COMMAND_SENDTAB_TAIL } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsCommon.js"
+const { COMMAND_SENDTAB, COMMAND_SENDTAB_TAIL } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccountsCommon.sys.mjs"
 );
 
 class TelemetryMock {

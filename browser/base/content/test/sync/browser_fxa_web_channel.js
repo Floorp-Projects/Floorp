@@ -2,12 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function () {
-  return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-});
-
 ChromeUtils.defineESModuleGetters(this, {
   WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
+  FxAccountsCommon: "resource://gre/modules/FxAccountsCommon.sys.mjs",
 });
 
 var { FxAccountsWebChannel } = ChromeUtils.importESModule(

@@ -41,13 +41,12 @@
 // Globals
 
 import { JSONFile } from "resource://gre/modules/JSONFile.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  FXA_PWDMGR_HOST: "resource://gre/modules/FxAccountsCommon.js",
-  FXA_PWDMGR_REALM: "resource://gre/modules/FxAccountsCommon.js",
+ChromeUtils.defineESModuleGetters(lazy, {
+  FXA_PWDMGR_HOST: "resource://gre/modules/FxAccountsCommon.sys.mjs",
+  FXA_PWDMGR_REALM: "resource://gre/modules/FxAccountsCommon.sys.mjs",
 });
 
 /**
