@@ -1,4 +1,4 @@
-// |reftest| skip -- decorators is not supported
+// |reftest| skip-if(!getBuildConfiguration()['decorators']) -- decorators is not enabled unconditionally
 // This file was procedurally generated from the following sources:
 // - src/class-elements/grammar-field-accessor.case
 // - src/class-elements/syntax/valid/cls-decl-elements-valid-syntax.template
