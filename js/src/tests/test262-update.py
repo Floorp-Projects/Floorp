@@ -26,7 +26,6 @@ UNSUPPORTED_FEATURES = set(
         "legacy-regexp",  # Bug 1306461
         "json-modules",  # Bug 1670176
         "resizable-arraybuffer",  # Bug 1670026
-        "decorators",  # Bug 1435869
         "regexp-duplicate-named-groups",  # Bug 1773135
         "symbols-as-weakmap-keys",  # Bug 1710433
         "json-parse-with-source",  # Bug 1658310
@@ -40,6 +39,7 @@ FEATURE_CHECK_NEEDED = {
     "WeakRef": "!this.hasOwnProperty('WeakRef')",
     "array-grouping": "!Object.groupBy",  # Bug 1792650
     "change-array-by-copy": "!Array.prototype.with",  # Bug 1811054
+    "decorators": "!getBuildConfiguration()['decorators']",  # Bug 1435869
     "Array.fromAsync": "!Array.fromAsync",  # Bug 1746209
     "String.prototype.isWellFormed": "!String.prototype.isWellFormed",
     "String.prototype.toWellFormed": "!String.prototype.toWellFormed",
