@@ -41,10 +41,9 @@ class ReviewHighlights extends MozLitElement {
     };
   }
 
-  connectedCallback() {
-    super.connectedCallback();
-
+  updateHighlightsMap() {
     let availableKeys;
+    this.#highlightsMap = null;
 
     try {
       if (!this.highlights) {
@@ -70,7 +69,6 @@ class ReviewHighlights extends MozLitElement {
       return;
     }
 
-    this.hidden = false;
     this.#highlightsMap = new Map();
 
     for (let key of availableKeys) {
@@ -82,7 +80,7 @@ class ReviewHighlights extends MozLitElement {
 
   createHighlightElement(type, reviews) {
     let highlightEl = document.createElement("highlight-item");
-    // We already verify highlight type and its l10n id in connectedCallback.
+    // We already verify highlight type and its l10n id in updateHighlightsMap.
     let l10nId = VALID_HIGHLIGHT_L10N_IDs.get(type);
     highlightEl.id = type;
     highlightEl.l10nId = l10nId;
@@ -94,10 +92,14 @@ class ReviewHighlights extends MozLitElement {
   }
 
   render() {
+    this.updateHighlightsMap();
+
     if (!this.#highlightsMap) {
       this.hidden = true;
       return null;
     }
+
+    this.hidden = false;
 
     let highlightsTemplate = [];
     for (let [key, value] of this.#highlightsMap) {
