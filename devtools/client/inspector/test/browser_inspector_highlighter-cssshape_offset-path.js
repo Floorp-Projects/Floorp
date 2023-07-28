@@ -38,6 +38,7 @@ const TEST_URL = `data:text/html,<meta charset=utf8>${encodeURIComponent(`
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 
 add_task(async function () {
+  await pushPref("layout.css.motion-path-basic-shapes.enabled", true);
   const env = await openInspectorForURL(TEST_URL);
   const { highlighterTestFront, inspector } = env;
   const view = selectRuleView(inspector);
