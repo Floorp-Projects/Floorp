@@ -18,7 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const calloutId = "multi-stage-message-root";
 const calloutSelector = `#${calloutId}.featureCallout`;
-const primaryButtonSelector = `#${calloutId} .primary`;
+const CTASelector = `#${calloutId} :is(.primary, .secondary)`;
 const PDF_TEST_URL =
   "https://example.com/browser/browser/components/newtab/test/browser/file_pdf.PDF";
 
@@ -412,7 +412,7 @@ add_task(async function triggered_feature_tour_with_custom_pref() {
   );
 
   // Test that the callout advances screen and sets the tour pref
-  win1.document.querySelector(primaryButtonSelector).click();
+  win1.document.querySelector(CTASelector).click();
   await BrowserTestUtils.waitForCondition(
     () =>
       Services.prefs.prefHasUserValue(TEST_MESSAGES[0].content.tour_pref_name),
@@ -438,7 +438,7 @@ add_task(async function triggered_feature_tour_with_custom_pref() {
   );
 
   // Test that the callout is dismissed and cleans up the tour pref
-  win1.document.querySelector(primaryButtonSelector).click();
+  win1.document.querySelector(CTASelector).click();
   await waitForRemoved(win1.document);
   ok(
     !win1.document.querySelector(calloutSelector),
@@ -465,7 +465,7 @@ add_task(async function triggered_feature_tour_with_custom_pref() {
     win1.document.querySelector(calloutSelector),
     "A different Feature Callout is rendered"
   );
-  win1.document.querySelector(primaryButtonSelector).click();
+  win1.document.querySelector(CTASelector).click();
   await waitForRemoved(win1.document);
   ok(
     !lazy.FeatureCalloutBroker.isCalloutShowing,
@@ -499,8 +499,8 @@ add_task(async function feature_callout_renders_in_browser_chrome_for_pdf() {
     "Feature Callout is rendered in the browser chrome with a new window when a message is available"
   );
 
-  // click primary button to close
-  doc.querySelector(primaryButtonSelector).click();
+  // click CTA to close
+  doc.querySelector(CTASelector).click();
   await waitForRemoved(doc);
   ok(
     true,
@@ -1050,7 +1050,7 @@ add_task(async function first_anchor_selected_is_valid() {
     "The first anchor is selected"
   );
 
-  win.document.querySelector(primaryButtonSelector).click();
+  win.document.querySelector(CTASelector).click();
   await waitForRemoved(win.document);
   await BrowserTestUtils.closeWindow(win);
   sandbox.restore();
@@ -1096,7 +1096,7 @@ add_task(async function first_anchor_selected_is_invalid() {
     "The first valid anchor (anchor 5) is selected"
   );
 
-  win.document.querySelector(primaryButtonSelector).click();
+  win.document.querySelector(CTASelector).click();
   await waitForRemoved(win.document);
   CustomizableUI.reset();
   await BrowserTestUtils.closeWindow(win);

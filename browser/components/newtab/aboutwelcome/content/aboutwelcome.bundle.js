@@ -409,7 +409,7 @@ const SecondaryCTA = props => {
 
   const targetElement = props.position ? `secondary_button_${props.position}` : `secondary_button`;
   let buttonStyling = (_props$content$second = props.content.secondary_button) !== null && _props$content$second !== void 0 && _props$content$second.has_arrow_icon ? `secondary arrow-icon` : `secondary`;
-  const isTextLink = props.content.position !== "split" && ((_props$content$tiles = props.content.tiles) === null || _props$content$tiles === void 0 ? void 0 : _props$content$tiles.type) !== "addons-picker";
+  const isTextLink = !["split", "callout"].includes(props.content.position) && ((_props$content$tiles = props.content.tiles) === null || _props$content$tiles === void 0 ? void 0 : _props$content$tiles.type) !== "addons-picker";
   const isPrimary = ((_props$content$second2 = props.content.secondary_button) === null || _props$content$second2 === void 0 ? void 0 : _props$content$second2.style) === "primary";
 
   if (isTextLink) {
@@ -842,7 +842,7 @@ const MultiStageProtonScreen = props => {
   });
 };
 const ProtonScreenActionButtons = props => {
-  var _content$checkbox, _content$additional_b, _content$primary_butt, _content$primary_butt2;
+  var _content$checkbox, _content$additional_b, _content$primary_butt, _content$primary_butt2, _content$primary_butt3, _content$primary_butt4;
 
   const {
     content,
@@ -866,13 +866,13 @@ const ProtonScreenActionButtons = props => {
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: (_content$primary_butt = content.primary_button) === null || _content$primary_butt === void 0 ? void 0 : _content$primary_butt.label
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-    className: "primary" // Whether or not the checkbox is checked determines which action
+    className: `${((_content$primary_butt2 = content.primary_button) === null || _content$primary_butt2 === void 0 ? void 0 : _content$primary_butt2.style) ?? "primary"}${(_content$primary_butt3 = content.primary_button) !== null && _content$primary_butt3 !== void 0 && _content$primary_butt3.has_arrow_icon ? " arrow-icon" : ""}` // Whether or not the checkbox is checked determines which action
     // should be handled. By setting value here, we indicate to
     // this.handleAction() where in the content tree it should take
     // the action to execute from.
     ,
     value: isChecked ? "checkbox" : "primary_button",
-    disabled: isPrimaryDisabled((_content$primary_butt2 = content.primary_button) === null || _content$primary_butt2 === void 0 ? void 0 : _content$primary_butt2.disabled),
+    disabled: isPrimaryDisabled((_content$primary_butt4 = content.primary_button) === null || _content$primary_butt4 === void 0 ? void 0 : _content$primary_butt4.disabled),
     onClick: props.handleAction,
     "data-l10n-args": addonName ? JSON.stringify({
       "addon-name": addonName

@@ -4,8 +4,6 @@
 
 @import 'feature-callout-theme';
 
-$max-z-index: 2147483647;
-
 .onboardingContainer.featureCallout {
   // See _feature-callout-theme.scss for the theme mixins and
   // FeatureCallout.sys.mjs for the color values
@@ -14,7 +12,7 @@ $max-z-index: 2147483647;
   color-scheme: light;
   position: absolute;
   transition: opacity 0.5s ease;
-  z-index: $max-z-index - 2;
+  z-index: 2147483647;
   outline: none;
   color: var(--fc-color);
   accent-color: var(--fc-accent-color);
@@ -59,6 +57,18 @@ $max-z-index: 2147483647;
     height: auto;
   }
 
+  // use a different approach to flipping to avoid the fuzzy aliasing that
+  // transform causes.
+  &:dir(rtl) {
+    transform: none;
+    direction: ltr;
+  }
+
+  & .outer-wrapper:dir(rtl) {
+    transform: none;
+    direction: rtl;
+  }
+
   .screen {
     // override transform in about:welcome
     &:dir(rtl) {
@@ -99,7 +109,7 @@ $max-z-index: 2147483647;
         }
 
         h1 {
-          font-weight: bold;
+          font-weight: 600;
         }
 
         h2 {
@@ -155,8 +165,7 @@ $max-z-index: 2147483647;
           box-shadow: 0 2px 6px rgba(0, 0, 0, 15%);
           border-radius: 4px;
           padding-top: 0;
-          // Subtract 4px, the block margin of buttons
-          padding-bottom: 30px - 4px;
+          padding-bottom: 30px;
           width: 25em;
           background-color: var(--fc-background);
 
@@ -189,46 +198,64 @@ $max-z-index: 2147483647;
         .dismiss-button {
           font-size: 1em;
           top: 0;
-          margin-block: 15px 0;
-          margin-inline: 0 15px;
-          z-index: $max-z-index;
+          margin-block: 10px 0;
+          margin-inline: 0 10px;
           background-color: var(--fc-background);
         }
       }
 
       .action-buttons {
+        display: flex;
+        flex-flow: row nowrap;
+        align-items: stretch;
+        justify-content: end;
+        gap: 10px;
+        margin-inline: 30px;
+
         .primary,
-        .secondary-cta .secondary {
+        .secondary {
           padding: 4px 16px;
+          margin: 0;
           font-size: 0.8em;
-          height: 2em;
+          font-weight: 600;
+          line-height: 16px;
+          min-height: 32px;
+          text-decoration: none;
+          cursor: default;
+        }
+
+        .secondary {
           background-color: var(--fc-button-background);
         }
 
         .primary {
-          font-weight: bold;
-          float: inline-end;
-          margin-inline: 10px 30px;
-          padding: 4px 16px;
-          font-size: 0.8em;
-          line-height: 16px;
-          min-height: 32px;
-        }
-
-        .secondary-cta {
-          float: inline-end;
+          background-color: var(--fc-primary-button-background);
         }
       }
 
       .action-buttons .primary,
-      .action-buttons .secondary-cta .secondary,
+      .action-buttons .secondary,
       .dismiss-button {
         border-radius: 4px;
+
+        &:focus-visible {
+          box-shadow: none;
+          outline: 2px solid var(--fc-accent-color);
+          outline-offset: 2px;
+        }
+
+        &:disabled {
+          opacity: 0.4;
+          cursor: auto;
+        }
+      }
+
+      .action-buttons .secondary,
+      .dismiss-button {
         border: 1px solid var(--fc-button-border);
-        cursor: pointer;
         color: var(--fc-button-color);
 
-        &:hover {
+        &:hover:not(:disabled) {
           background-color: var(--fc-button-background-hover);
           color: var(--fc-button-color-hover);
           border: 1px solid var(--fc-button-border-hover);
@@ -239,11 +266,22 @@ $max-z-index: 2147483647;
             border: 1px solid var(--fc-button-border-active);
           }
         }
+      }
 
-        &:focus-visible {
-          box-shadow: none;
-          outline: 2px solid var(--fc-accent-color);
-          outline-offset: 2px;
+      .action-buttons .primary {
+        border: 1px solid var(--fc-primary-button-border);
+        color: var(--fc-primary-button-color);
+
+        &:hover:not(:disabled) {
+          background-color: var(--fc-primary-button-background-hover);
+          color: var(--fc-primary-button-color-hover);
+          border: 1px solid var(--fc-primary-button-border-hover);
+
+          &:active {
+            background-color: var(--fc-primary-button-background-active);
+            color: var(--fc-primary-button-color-active);
+            border: 1px solid var(--fc-primary-button-border-active);
+          }
         }
       }
     }
@@ -269,18 +307,28 @@ $max-z-index: 2147483647;
     transform-style: preserve-3d;
   }
 
-  // color for all arrow foreground
+  // the part of the arrow that appears "behind" the callout
   &.callout-arrow::before {
-    z-index: $max-z-index;
-    background-color: var(--fc-background);
-  }
-
-  // styles for all arrow backgrounds
-  &.callout-arrow::after {
     background: transparent;
     outline: 1px solid var(--fc-border);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 15%);
     z-index: -1;
+  }
+
+  // the part of the arrow that appears "in front" of the callout
+  &.callout-arrow::after {
+    background-color: var(--fc-background);
+    // the callout arrow is actually a diamond (a rotated square), with the
+    // lower half invisible. the part that appears in front of the callout has
+    // only a background, so that where it overlaps the callout's border, the
+    // border is not visible. the part that appears behind the callout has only
+    // a border/shadow, so that it can't be seen overlapping the callout. but
+    // because the background is the same color as the callout, that half of the
+    // diamond would visibly overlap any callout content that happens to be in
+    // the same place. so we clip it to a triangle, with a 2% extension on the
+    // bottom to account for any subpixel rounding differences.
+    clip-path: polygon(100% 0, 100% 2%, 2% 100%, 0 100%, 0 0);
+    z-index: 1;
   }
 
   // up arrow positioning
@@ -345,7 +393,7 @@ $max-z-index: 2147483647;
       }
     }
 
-    &.callout-arrow::after {
+    &.callout-arrow::before {
       outline: 2px solid var(--fc-accent-color);
     }
   }

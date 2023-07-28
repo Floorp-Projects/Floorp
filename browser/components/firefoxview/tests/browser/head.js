@@ -48,7 +48,7 @@ const TAB_PICKUP_STATE_PREF =
 
 const calloutId = "multi-stage-message-root";
 const calloutSelector = `#${calloutId}.featureCallout`;
-const primaryButtonSelector = `#${calloutId} .primary`;
+const CTASelector = `#${calloutId} :is(.primary, .secondary)`;
 
 /**
  * URLs used for browser_recently_closed_tabs_keyboard and
@@ -415,8 +415,8 @@ const waitForCalloutRemoved = async doc => {
  *
  * @param {document} doc Firefox View document
  */
-const clickPrimaryButton = async doc => {
-  doc.querySelector(primaryButtonSelector).click();
+const clickCTA = async doc => {
+  doc.querySelector(CTASelector).click();
 };
 
 /**

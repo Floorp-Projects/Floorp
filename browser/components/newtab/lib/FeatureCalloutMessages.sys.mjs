@@ -202,6 +202,7 @@ const MESSAGES = () => {
                 label: {
                   string_id: "callout-primary-advance-button-label",
                 },
+                style: "secondary",
                 action: {
                   type: "SET_PREF",
                   data: {
@@ -260,6 +261,7 @@ const MESSAGES = () => {
                 label: {
                   string_id: "callout-primary-complete-button-label",
                 },
+                style: "secondary",
                 action: {
                   type: "SET_PREF",
                   data: {
@@ -345,6 +347,7 @@ const MESSAGES = () => {
                 label: {
                   string_id: "mr1-onboarding-get-started-primary-button-label",
                 },
+                style: "secondary",
                 action: {
                   type: "CLICK_ELEMENT",
                   navigate: true,
@@ -412,6 +415,7 @@ const MESSAGES = () => {
                 label: {
                   string_id: "callout-pdfjs-edit-button",
                 },
+                style: "secondary",
                 action: {
                   type: "SET_PREF",
                   data: {
@@ -462,6 +466,7 @@ const MESSAGES = () => {
                 label: {
                   string_id: "callout-pdfjs-draw-button",
                 },
+                style: "secondary",
                 action: {
                   type: "SET_PREF",
                   data: {
@@ -532,6 +537,7 @@ const MESSAGES = () => {
                 label: {
                   string_id: "callout-pdfjs-edit-button",
                 },
+                style: "secondary",
                 action: {
                   type: "SET_PREF",
                   data: {
@@ -582,6 +588,7 @@ const MESSAGES = () => {
                 label: {
                   string_id: "callout-pdfjs-draw-button",
                 },
+                style: "secondary",
                 action: {
                   type: "SET_PREF",
                   data: {

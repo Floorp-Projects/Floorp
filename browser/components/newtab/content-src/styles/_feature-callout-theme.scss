@@ -2,23 +2,32 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// stylelint-disable color-hex-length -- we want to preserve these values
-// exactly, since they're drawn from other parts of the browser.
+// stylelint-disable color-hex-length, color-hex-case -- we want to preserve
+// these values exactly, since they're drawn from other parts of the browser.
 
 @mixin light-theme {
-  --fc-background: var(--fc-background-light, #FFF);
-  --fc-color: var(--fc-color-light, #15141A);
+  --fc-background: var(--fc-background-light, #fff);
+  --fc-color: var(--fc-color-light, rgb(21, 20, 26));
   --fc-border: var(--fc-border-light, #CFCFD8);
-  --fc-accent-color: var(--fc-accent-color-light, #0061E0);
+  --fc-accent-color: var(--fc-accent-color-light, rgb(0, 97, 224));
   --fc-button-background: var(--fc-button-background-light, #F0F0F4);
-  --fc-button-color: var(--fc-button-color-light, #15141A);
+  --fc-button-color: var(--fc-button-color-light, rgb(21, 20, 26));
   --fc-button-border: var(--fc-button-border-light, transparent);
   --fc-button-background-hover: var(--fc-button-background-hover-light, #E0E0E6);
-  --fc-button-color-hover: var(--fc-button-color-hover-light, #15141A);
+  --fc-button-color-hover: var(--fc-button-color-hover-light, rgb(21, 20, 26));
   --fc-button-border-hover: var(--fc-button-border-hover-light, transparent);
   --fc-button-background-active: var(--fc-button-background-active-light, #CFCFD8);
-  --fc-button-color-active: var(--fc-button-color-active-light, #15141A);
+  --fc-button-color-active: var(--fc-button-color-active-light, rgb(21, 20, 26));
   --fc-button-border-active: var(--fc-button-border-active-light, transparent);
+  --fc-primary-button-background: var(--fc-primary-button-background-light, #0061e0);
+  --fc-primary-button-color: var(--fc-primary-button-color-light, rgb(251,251,254));
+  --fc-primary-button-border: var(--fc-primary-button-border-light, transparent);
+  --fc-primary-button-background-hover: var(--fc-primary-button-background-hover-light, #0250bb);
+  --fc-primary-button-color-hover: var(--fc-primary-button-color-hover-light, rgb(251,251,254));
+  --fc-primary-button-border-hover: var(--fc-primary-button-border-hover-light, transparent);
+  --fc-primary-button-background-active: var(--fc-primary-button-background-active-light, #053e94);
+  --fc-primary-button-color-active: var(--fc-primary-button-color-active-light, rgb(251,251,254));
+  --fc-primary-button-border-active: var(--fc-primary-button-border-active-light, transparent);
   --fc-step-color: color-mix(in srgb, currentColor 50%, transparent);
   --fc-link-color: var(--fc-link-color-light, #0061E0);
   --fc-link-color-hover: var(--fc-link-color-hover-light, #0250BB);
@@ -26,19 +35,28 @@
 }
 
 @mixin dark-theme {
-  --fc-background: var(--fc-background-dark, #42414D);
-  --fc-color: var(--fc-color-dark, #FBFBFE);
+  --fc-background: var(--fc-background-dark, rgb(43, 42, 51));
+  --fc-color: var(--fc-color-dark, rgb(251, 251, 254));
   --fc-border: var(--fc-border-dark, #3A3944);
-  --fc-accent-color: var(--fc-accent-color-dark, #00DDFF);
+  --fc-accent-color: var(--fc-accent-color-dark, rgb(0, 221, 255));
   --fc-button-background: var(--fc-button-background-dark, #2B2A33);
-  --fc-button-color: var(--fc-button-color-dark, #FBFBFE);
+  --fc-button-color: var(--fc-button-color-dark, rgb(251, 251, 254));
   --fc-button-border: var(--fc-button-border-dark, transparent);
   --fc-button-background-hover: var(--fc-button-background-hover-dark, #52525E);
-  --fc-button-color-hover: var(--fc-button-color-hover-dark, #FBFBFE);
+  --fc-button-color-hover: var(--fc-button-color-hover-dark, rgb(251, 251, 254));
   --fc-button-border-hover: var(--fc-button-border-hover-dark, transparent);
   --fc-button-background-active: var(--fc-button-background-active-dark, #5B5B66);
-  --fc-button-color-active: var(--fc-button-color-active-dark, #FBFBFE);
+  --fc-button-color-active: var(--fc-button-color-active-dark, rgb(251, 251, 254));
   --fc-button-border-active: var(--fc-button-border-active-dark, transparent);
+  --fc-primary-button-background: var(--fc-primary-button-background-dark, rgb(0,221,255));
+  --fc-primary-button-color: var(--fc-primary-button-color-dark, rgb(43,42,51));
+  --fc-primary-button-border: var(--fc-primary-button-border-dark, transparent);
+  --fc-primary-button-background-hover: var(--fc-primary-button-background-hover-dark, rgb(128,235,255));
+  --fc-primary-button-color-hover: var(--fc-primary-button-color-hover-dark, rgb(43,42,51));
+  --fc-primary-button-border-hover: var(--fc-primary-button-border-hover-dark, transparent);
+  --fc-primary-button-background-active: var(--fc-primary-button-background-active-dark, rgb(170,242,255));
+  --fc-primary-button-color-active: var(--fc-primary-button-color-active-dark, rgb(43,42,51));
+  --fc-primary-button-border-active: var(--fc-primary-button-border-active-dark, transparent);
   --fc-link-color: var(--fc-link-color-dark, #00DDFF);
   --fc-link-color-hover: var(--fc-link-color-hover-dark, #80EBFF);
   --fc-link-color-active: var(--fc-link-color-hover-active, #AAF2FF);
@@ -58,6 +76,15 @@
   --fc-button-background-active: var(--fc-button-background-active-hcm, ButtonText);
   --fc-button-color-active: var(--fc-button-color-active-hcm, ButtonFace);
   --fc-button-border-active: var(--fc-button-border-active-hcm, ButtonText);
+  --fc-primary-button-background: var(--fc-primary-button-background-hcm, ButtonText);
+  --fc-primary-button-color: var(--fc-primary-button-color-hcm, ButtonFace);
+  --fc-primary-button-border: var(--fc-primary-button-border-hcm, ButtonFace);
+  --fc-primary-button-background-hover: var(--fc-primary-button-background-hover-hcm, SelectedItem);
+  --fc-primary-button-color-hover: var(--fc-primary-button-color-hover-hcm, SelectedItemText);
+  --fc-primary-button-border-hover: var(--fc-primary-button-border-hover-hcm, SelectedItemText);
+  --fc-primary-button-background-active: var(--fc-primary-button-background-active-hcm, SelectedItemText);
+  --fc-primary-button-color-active: var(--fc-primary-button-color-active-hcm, SelectedItem);
+  --fc-primary-button-border-active: var(--fc-primary-button-border-active-hcm, SelectedItem);
   --fc-step-color: var(--fc-accent-color-hcm, LinkText);
   --fc-link-color: var(--fc-link-color-hcm, LinkText);
   --fc-link-color-hover: var(--fc-link-color-hover-hcm, LinkText);
