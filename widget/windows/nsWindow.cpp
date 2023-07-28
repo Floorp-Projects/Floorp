@@ -77,6 +77,7 @@
 #include <algorithm>
 #include <limits>
 
+#include "mozilla/widget/WinMessages.h"
 #include "nsWindow.h"
 #include "nsWindowTaskbarConcealer.h"
 #include "nsAppRunner.h"
@@ -5921,6 +5922,12 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
       result = true;
     } break;
 
+    // Workaround for race condition in explorer.exe.
+    case MOZ_WM_FULLSCREEN_STATE_UPDATE: {
+      TaskbarConcealer::OnAsyncStateUpdateRequest(mWnd);
+      result = true;
+    } break;
+
     case WM_GETMINMAXINFO: {
       MINMAXINFO* mmi = (MINMAXINFO*)lParam;
       // Set the constraints. The minimum size should also be constrained to the
@@ -9089,6 +9096,21 @@ void nsWindow::FrameState::EnsureSizeMode(nsSizeMode aMode,
                                           DoShowWindow aDoShowWindow) {
   if (mSizeMode == aMode) {
     return;
+  }
+
+  if (::IsWin10OrLater() &&
+      StaticPrefs::widget_windows_fullscreen_remind_taskbar()) {
+    // If we're unminimizing a window, asynchronously notify the taskbar after
+    // the message has been processed. This redundant notification works around
+    // a race condition in explorer.exe. (See bug 1835851, or comments in
+    // TaskbarConcealer.)
+    //
+    // Note that we notify regardless of `aMode`: unminimizing a non-fullscreen
+    // window can also affect the correct taskbar state, yet fail to affect the
+    // current taskbar state.
+    if (mSizeMode == nsSizeMode_Minimized) {
+      ::PostMessage(mWindow->mWnd, MOZ_WM_FULLSCREEN_STATE_UPDATE, 0, 0);
+    }
   }
 
   if (aMode == nsSizeMode_Fullscreen) {

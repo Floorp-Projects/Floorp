@@ -15564,6 +15564,13 @@
   value: true
   mirror: always
 
+# Whether to give explorer.exe a delated nudge to recalculate the fullscreenness
+# of a window after maximizing it.
+- name: widget.windows.fullscreen_remind_taskbar
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # The number of messages of each type to keep for display in
 # about:windows-messages
 - name: widget.windows.messages_to_log

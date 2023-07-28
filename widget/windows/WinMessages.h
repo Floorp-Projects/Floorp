@@ -33,9 +33,12 @@
 #define MOZ_WM_NOTIY_TSF_OF_LAYOUT_CHANGE (WM_APP + 0x0315)
 // Internal message used in correcting backwards clock skew
 #define MOZ_WM_SKEWFIX (WM_APP + 0x0316)
-
 // Internal message used for rolling up popups for dmanip events
 #define MOZ_WM_DMANIP (WM_APP + 0x0317)
+
+// Internal message used to work around race condition in explorer.exe's
+// fullscreen window-state update handler in Windows 10+. (See bug 1835851.)
+#define MOZ_WM_FULLSCREEN_STATE_UPDATE (WM_APP + 0x0318)
 
 // XXX Should rename them to MOZ_WM_* and use safer values!
 // Messages for fullscreen transition window
