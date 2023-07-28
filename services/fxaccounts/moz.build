@@ -18,7 +18,7 @@ EXTRA_JS_MODULES += [
     "FxAccounts.sys.mjs",
     "FxAccountsClient.sys.mjs",
     "FxAccountsCommands.sys.mjs",
-    "FxAccountsCommon.js",
+    "FxAccountsCommon.sys.mjs",
     "FxAccountsConfig.sys.mjs",
     "FxAccountsDevice.sys.mjs",
     "FxAccountsKeys.sys.mjs",
