@@ -71,7 +71,7 @@ export class FormHistoryStartup {
     // sendQuery for other form fields.
 
     const instance = (this._queryInstance = {});
-    const results = await lazy.FormHistory.getAutoCompleteResults(
+    const formHistoryEntries = await lazy.FormHistory.getAutoCompleteResults(
       searchString,
       params,
       () => this._queryInstance != instance
@@ -80,7 +80,10 @@ export class FormHistoryStartup {
     if (this._queryInstance == instance) {
       target.sendAsyncMessage("FormHistory:AutoCompleteSearchResults", {
         id,
-        results,
+        results: {
+          formHistoryEntries,
+          externalEntries: [],
+        },
       });
     }
   }
