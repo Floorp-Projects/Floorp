@@ -393,7 +393,11 @@ let JSWINDOWACTORS = {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["about:welcome"],
+    matches: [
+      "about:welcome",
+      // TBD: Move shopping window functions setup to child actor. See Bug 1843461
+      "about:shoppingsidebar",
+    ],
     remoteTypes: ["privilegedabout"],
 
     // See Bug 1618306
