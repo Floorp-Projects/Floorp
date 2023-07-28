@@ -17,6 +17,7 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
 RUN apt-get install build-essential \
                     libexpat1-dev \
                     libffi-dev \
+                    liblzma-dev \
                     libncursesw5-dev \
                     libsqlite3-dev \
                     libssl-dev \
