@@ -237,6 +237,23 @@
 .onboardingContainer.featureCallout .screen[pos=callout] .welcome-text h2 {
   margin-block: 10px;
 }
+.onboardingContainer.featureCallout .screen[pos=callout] .welcome-text .inline-icon-container {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .welcome-text .inline-icon-container .logo-container {
+  height: 16px;
+  width: 16px;
+  margin-inline-end: 6px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .welcome-text .inline-icon-container .logo-container img {
+  height: 16px;
+  width: 16px;
+  margin: 0;
+}
 .onboardingContainer.featureCallout .screen[pos=callout] .multi-select-container {
   margin-inline: 30px;
   padding: 1em 0 0;

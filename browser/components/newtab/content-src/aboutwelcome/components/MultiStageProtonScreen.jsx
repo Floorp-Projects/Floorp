@@ -167,6 +167,21 @@ export class ProtonScreen extends React.PureComponent {
     } ${includeNoodles ? `with-noodles` : ``} ${screenClass}`;
   }
 
+  renderTitle({ title, title_logo }) {
+    return title_logo ? (
+      <div className="inline-icon-container">
+        {this.renderLogo(title_logo)}
+        <Localized text={title}>
+          <h1 id="mainContentHeader" />
+        </Localized>
+      </div>
+    ) : (
+      <Localized text={title}>
+        <h1 id="mainContentHeader" />
+      </Localized>
+    );
+  }
+
   renderLogo({
     imageURL = "chrome://branding/content/about-logo.svg",
     darkModeImageURL,
@@ -482,11 +497,8 @@ export class ProtonScreen extends React.PureComponent {
 
             <div className="main-content-inner">
               <div className={`welcome-text ${content.title_style || ""}`}>
-                {content.title ? (
-                  <Localized text={content.title}>
-                    <h1 id="mainContentHeader" />
-                  </Localized>
-                ) : null}
+                {content.title ? this.renderTitle(content) : null}
+
                 {content.subtitle ? (
                   <Localized text={content.subtitle}>
                     <h2
