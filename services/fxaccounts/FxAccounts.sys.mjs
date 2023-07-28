@@ -10,7 +10,7 @@ import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 import { FxAccountsStorageManager } from "resource://gre/modules/FxAccountsStorage.sys.mjs";
 
-import {
+const {
   ERRNO_INVALID_AUTH_TOKEN,
   ERROR_AUTH_ERROR,
   ERROR_INVALID_PARAMETER,
@@ -35,7 +35,7 @@ import {
   log,
   logPII,
   logManager,
-} from "resource://gre/modules/FxAccountsCommon.sys.mjs";
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
 const lazy = {};
 

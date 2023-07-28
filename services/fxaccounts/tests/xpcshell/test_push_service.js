@@ -19,9 +19,7 @@ const {
   ON_PROFILE_UPDATED_NOTIFICATION,
   ON_VERIFY_LOGIN_NOTIFICATION,
   log,
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsCommon.sys.mjs"
-);
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
 const { FxAccountsPushService } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccountsPush.sys.mjs"

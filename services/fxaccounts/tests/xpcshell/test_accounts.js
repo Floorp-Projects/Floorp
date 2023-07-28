@@ -21,9 +21,7 @@ const {
   ONVERIFIED_NOTIFICATION,
   DEPRECATED_SCOPE_ECOSYSTEM_TELEMETRY,
   PREF_LAST_FXA_USER,
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsCommon.sys.mjs"
-);
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 const { PromiseUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PromiseUtils.sys.mjs"
 );

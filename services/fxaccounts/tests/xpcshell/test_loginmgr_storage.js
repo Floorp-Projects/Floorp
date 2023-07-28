@@ -11,8 +11,8 @@ Services.prefs.setCharPref("identity.fxaccounts.loglevel", "Trace");
 const { FxAccounts } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccounts.sys.mjs"
 );
-const { FXA_PWDMGR_HOST, FXA_PWDMGR_REALM } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsCommon.sys.mjs"
+const { FXA_PWDMGR_HOST, FXA_PWDMGR_REALM } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
 );
 
 // Use a backstage pass to get at our LoginManagerStorage object, so we can

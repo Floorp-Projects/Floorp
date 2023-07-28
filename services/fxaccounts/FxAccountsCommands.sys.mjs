@@ -2,13 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  COMMAND_SENDTAB,
-  COMMAND_SENDTAB_TAIL,
-  SCOPE_OLD_SYNC,
-  log,
-} from "resource://gre/modules/FxAccountsCommon.sys.mjs";
-
+const { COMMAND_SENDTAB, COMMAND_SENDTAB_TAIL, SCOPE_OLD_SYNC, log } =
+  ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,

@@ -9,7 +9,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
-  FxAccountsCommon: "resource://gre/modules/FxAccountsCommon.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
   Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
   Utils: "resource://services-sync/util.sys.mjs",
@@ -20,6 +19,10 @@ ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.importESModule(
     "resource://gre/modules/FxAccounts.sys.mjs"
   ).getFxAccountsSingleton();
+});
+
+ChromeUtils.defineLazyGetter(lazy, "FxAccountsCommon", function () {
+  return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 });
 
 export const SyncDisconnectInternal = {

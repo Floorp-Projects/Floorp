@@ -10,11 +10,9 @@
  * the user's profile in open browser tabs, and cacheing/invalidating profile data.
  */
 
-import {
-  ON_PROFILE_CHANGE_NOTIFICATION,
-  log,
-} from "resource://gre/modules/FxAccountsCommon.sys.mjs";
-
+const { ON_PROFILE_CHANGE_NOTIFICATION, log } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
+);
 import { getFxAccountsSingleton } from "resource://gre/modules/FxAccounts.sys.mjs";
 
 const fxAccounts = getFxAccountsSingleton();

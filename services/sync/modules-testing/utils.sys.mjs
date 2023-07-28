@@ -20,7 +20,9 @@ import {
 } from "resource://gre/modules/FxAccounts.sys.mjs";
 import { FxAccountsClient } from "resource://gre/modules/FxAccountsClient.sys.mjs";
 
-import { SCOPE_OLD_SYNC } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
+const { SCOPE_OLD_SYNC } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
+);
 
 // A mock "storage manager" for FxAccounts that doesn't actually write anywhere.
 export function MockFxaStorageManager() {}

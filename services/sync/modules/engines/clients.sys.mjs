@@ -46,7 +46,9 @@ ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   ).getFxAccountsSingleton();
 });
 
-import { PREF_ACCOUNT_ROOT } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
+const { PREF_ACCOUNT_ROOT } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
+);
 
 const CLIENTS_TTL = 15552000; // 180 days
 const CLIENTS_TTL_REFRESH = 604800; // 7 days

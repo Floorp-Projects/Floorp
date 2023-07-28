@@ -2,9 +2,9 @@
  * Test that logins backup is deleted as expected when logins are deleted.
  */
 
-ChromeUtils.defineESModuleGetters(this, {
-  FXA_PWDMGR_HOST: "resource://gre/modules/FxAccountsCommon.sys.mjs",
-  FXA_PWDMGR_REALM: "resource://gre/modules/FxAccountsCommon.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  FXA_PWDMGR_HOST: "resource://gre/modules/FxAccountsCommon.js",
+  FXA_PWDMGR_REALM: "resource://gre/modules/FxAccountsCommon.js",
 });
 
 const nsLoginInfo = new Components.Constructor(

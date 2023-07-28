@@ -8,8 +8,8 @@
 const { FxAccountsStorageManager } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccountsStorage.sys.mjs"
 );
-const { DATA_FORMAT_VERSION, log } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsCommon.sys.mjs"
+const { DATA_FORMAT_VERSION, log } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
 );
 
 initTestLogging("Trace");

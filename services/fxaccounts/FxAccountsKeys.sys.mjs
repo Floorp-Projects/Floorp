@@ -8,13 +8,13 @@ import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 
 import { CryptoUtils } from "resource://services-crypto/utils.sys.mjs";
 
-import {
+const {
   SCOPE_OLD_SYNC,
   DEPRECATED_SCOPE_ECOSYSTEM_TELEMETRY,
   FX_OAUTH_CLIENT_ID,
   log,
   logPII,
-} from "resource://gre/modules/FxAccountsCommon.sys.mjs";
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
 // The following top-level fields have since been deprecated and exist here purely
 // to be removed from the account state when seen. After a reasonable period of time

@@ -46,7 +46,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 // FxAccountsCommon.js doesn't use a "namespace", so create one here.
-import * as fxAccountsCommon from "resource://gre/modules/FxAccountsCommon.sys.mjs";
+var fxAccountsCommon = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
+);
 
 const SCOPE_OLD_SYNC = fxAccountsCommon.SCOPE_OLD_SYNC;
 

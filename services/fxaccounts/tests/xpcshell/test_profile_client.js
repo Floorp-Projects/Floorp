@@ -12,9 +12,7 @@ const {
   ERROR_NETWORK,
   ERROR_PARSE,
   ERROR_UNKNOWN,
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsCommon.sys.mjs"
-);
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 const { FxAccountsProfileClient, FxAccountsProfileClientError } =
   ChromeUtils.importESModule(
     "resource://gre/modules/FxAccountsProfileClient.sys.mjs"
