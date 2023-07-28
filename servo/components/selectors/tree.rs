@@ -6,7 +6,6 @@
 //! between layout and style.
 
 use crate::attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint};
-use crate::bloom::BloomFilter;
 use crate::matching::{ElementSelectorFlags, MatchingContext};
 use crate::parser::SelectorImpl;
 use std::fmt::Debug;
@@ -161,8 +160,4 @@ pub trait Element: Sized + Clone + Debug {
     fn ignores_nth_child_selectors(&self) -> bool {
         false
     }
-
-    /// Add hashes unique to this element to the given filter, returning true
-    /// if any got added.
-    fn add_element_unique_hashes(&self, filter: &mut BloomFilter) -> bool;
 }

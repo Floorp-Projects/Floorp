@@ -17,7 +17,7 @@ use crate::selector_parser::{PseudoElement, SelectorImpl};
 use crate::stylist::RuleInclusion;
 use log::Level::Trace;
 use selectors::matching::{
-    MatchingForInvalidation, MatchingContext, MatchingMode, NeedsSelectorFlags,
+    IgnoreNthChildForInvalidation, MatchingContext, MatchingMode, NeedsSelectorFlags,
     RelativeSelectorMatchingState, VisitedHandlingMode,
 };
 use servo_arc::Arc;
@@ -473,7 +473,7 @@ where
             visited_handling,
             self.context.shared.quirks_mode(),
             NeedsSelectorFlags::Yes,
-            MatchingForInvalidation::No,
+            IgnoreNthChildForInvalidation::No,
         );
 
         let stylist = &self.context.shared.stylist;
@@ -568,7 +568,7 @@ where
             visited_handling,
             self.context.shared.quirks_mode(),
             NeedsSelectorFlags::Yes,
-            MatchingForInvalidation::No,
+            IgnoreNthChildForInvalidation::No,
         );
         matching_context.extra_data.originating_element_style = Some(originating_element_style);
 
