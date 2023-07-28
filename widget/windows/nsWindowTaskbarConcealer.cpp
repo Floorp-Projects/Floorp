@@ -363,18 +363,16 @@ void nsWindow::TaskbarConcealer::OnAsyncStateUpdateRequest(HWND hwnd) {
   //
   // [0] https://github.com/dechamps/RudeWindowFixer#a-race-condition-activating-a-minimized-window
   //
-  if (::IsWin10OrLater()) {
-    static UINT const shellHookMsg = ::RegisterWindowMessageW(L"SHELLHOOK");
-    if (shellHookMsg != 0) {
-      // Identifying the particular thread of the particular instance of the
-      // shell associated with our current desktop is probably possible, but
-      // also probably not worth the effort. Just broadcast the message
-      // globally.
-      DWORD info = BSM_APPLICATIONS;
-      ::BroadcastSystemMessage(BSF_POSTMESSAGE | BSF_IGNORECURRENTTASK, &info,
-                               shellHookMsg, HSHELL_WINDOWACTIVATED,
-                               (LPARAM)hwnd);
-    }
+  static UINT const shellHookMsg = ::RegisterWindowMessageW(L"SHELLHOOK");
+  if (shellHookMsg != 0) {
+    // Identifying the particular thread of the particular instance of the
+    // shell associated with our current desktop is probably possible, but
+    // also probably not worth the effort. Just broadcast the message
+    // globally.
+    DWORD info = BSM_APPLICATIONS;
+    ::BroadcastSystemMessage(BSF_POSTMESSAGE | BSF_IGNORECURRENTTASK, &info,
+                             shellHookMsg, HSHELL_WINDOWACTIVATED,
+                             (LPARAM)hwnd);
   }
 }
 
