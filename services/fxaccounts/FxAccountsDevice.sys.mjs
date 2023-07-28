@@ -4,7 +4,7 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-import {
+const {
   log,
   ERRNO_DEVICE_SESSION_CONFLICT,
   ERRNO_UNKNOWN_DEVICE,
@@ -14,7 +14,7 @@ import {
   ON_DEVICE_DISCONNECTED_NOTIFICATION,
   ONVERIFIED_NOTIFICATION,
   PREF_ACCOUNT_ROOT,
-} from "resource://gre/modules/FxAccountsCommon.sys.mjs";
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
 import { DEVICE_TYPE_DESKTOP } from "resource://services-sync/constants.sys.mjs";
 

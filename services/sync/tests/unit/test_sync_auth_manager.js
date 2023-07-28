@@ -24,9 +24,7 @@ const {
   ERRNO_INVALID_AUTH_TOKEN,
   ONLOGIN_NOTIFICATION,
   ONVERIFIED_NOTIFICATION,
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsCommon.sys.mjs"
-);
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );

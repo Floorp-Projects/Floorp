@@ -19,9 +19,7 @@ const {
   ON_DEVICE_CONNECTED_NOTIFICATION,
   ON_DEVICE_DISCONNECTED_NOTIFICATION,
   ON_DEVICELIST_UPDATED,
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsCommon.sys.mjs"
-);
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 var { AccountState } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccounts.sys.mjs"
 );

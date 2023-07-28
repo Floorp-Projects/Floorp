@@ -7,7 +7,7 @@
  */
 "use strict;";
 
-import {
+const {
   ERRNO_NETWORK,
   ERRNO_PARSE,
   ERRNO_UNKNOWN_ERROR,
@@ -19,8 +19,7 @@ import {
   log,
   SCOPE_PROFILE,
   SCOPE_PROFILE_WRITE,
-} from "resource://gre/modules/FxAccountsCommon.sys.mjs";
-
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 import { getFxAccountsSingleton } from "resource://gre/modules/FxAccounts.sys.mjs";
 
 const fxAccounts = getFxAccountsSingleton();

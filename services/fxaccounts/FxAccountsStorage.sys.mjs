@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
+const {
   DATA_FORMAT_VERSION,
   DEFAULT_STORAGE_FILENAME,
   FXA_PWDMGR_HOST,
@@ -10,7 +10,7 @@ import {
   FXA_PWDMGR_REALM,
   FXA_PWDMGR_SECURE_FIELDS,
   log,
-} from "resource://gre/modules/FxAccountsCommon.sys.mjs";
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
 // A helper function so code can check what fields are able to be stored by
 // the storage manager without having a reference to a manager instance.
