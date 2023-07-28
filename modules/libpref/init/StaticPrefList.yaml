@@ -15557,13 +15557,6 @@
   value: false
   mirror: always
 
-# Whether to apply logic intended to improve taskbar behavior involving
-# non-foreground fullscreen windows. (See bug 1732517.)
-- name: widget.windows.alternate_fullscreen_heuristics
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Whether to give explorer.exe a delated nudge to recalculate the fullscreenness
 # of a window after maximizing it.
 - name: widget.windows.fullscreen_remind_taskbar

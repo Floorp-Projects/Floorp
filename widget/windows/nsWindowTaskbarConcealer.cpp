@@ -84,17 +84,6 @@ static mozilla::LazyLogModule sTaskbarConcealerLog("TaskbarConcealer");
 /* static */
 nsTHashMap<HWND, HMONITOR> nsWindow::TaskbarConcealer::sKnownWindows;
 
-// Preference for changes associated with bug 1732517. When false, revert to the
-// previous simple behavior of "Firefox fullscreen == Windows fullscreen".
-//
-// For simplicity-of-implementation's sake, changes to this pref require a
-// restart of Firefox to take effect.
-static bool UseAlternateFullscreenHeuristics() {
-  static const bool val =
-      StaticPrefs::widget_windows_alternate_fullscreen_heuristics();
-  return val;
-}
-
 // Returns Nothing if the window in question is irrelevant (for any reason),
 // or Some(the window's current state) otherwise.
 /* static */
@@ -295,10 +284,6 @@ void TaskbarConcealerImpl::MarkAsHidingTaskbar(HWND aWnd, bool aMark) {
  **************************************************************/
 
 void nsWindow::TaskbarConcealer::OnWindowDestroyed(HWND aWnd) {
-  if (!UseAlternateFullscreenHeuristics()) {
-    return;
-  }
-
   MOZ_LOG(sTaskbarConcealerLog, LogLevel::Info,
           ("==> OnWindowDestroyed() for HWND %p", aWnd));
 
@@ -306,10 +291,6 @@ void nsWindow::TaskbarConcealer::OnWindowDestroyed(HWND aWnd) {
 }
 
 void nsWindow::TaskbarConcealer::OnFocusAcquired(nsWindow* aWin) {
-  if (!UseAlternateFullscreenHeuristics()) {
-    return;
-  }
-
   // Update state unconditionally.
   //
   // This is partially because focus-acquisition only updates the z-order, which
@@ -326,11 +307,6 @@ void nsWindow::TaskbarConcealer::OnFocusAcquired(nsWindow* aWin) {
 
 void nsWindow::TaskbarConcealer::OnFullscreenChanged(nsWindow* aWin,
                                                      bool enteredFullscreen) {
-  if (!UseAlternateFullscreenHeuristics()) {
-    TaskbarConcealerImpl().MarkAsHidingTaskbar(aWin->mWnd, enteredFullscreen);
-    return;
-  }
-
   MOZ_LOG(sTaskbarConcealerLog, LogLevel::Info,
           ("==> OnFullscreenChanged() for HWND %p on HMONITOR %p", aWin->mWnd,
            ::MonitorFromWindow(aWin->mWnd, MONITOR_DEFAULTTONULL)));
@@ -339,10 +315,6 @@ void nsWindow::TaskbarConcealer::OnFullscreenChanged(nsWindow* aWin,
 }
 
 void nsWindow::TaskbarConcealer::OnWindowPosChanged(nsWindow* aWin) {
-  if (!UseAlternateFullscreenHeuristics()) {
-    return;
-  }
-
   // Optimization: don't bother updating the state if the window hasn't moved
   // (including appearances and disappearances).
   const HWND myHwnd = aWin->mWnd;
@@ -407,10 +379,6 @@ void nsWindow::TaskbarConcealer::OnAsyncStateUpdateRequest(HWND hwnd) {
 }
 
 void nsWindow::TaskbarConcealer::OnCloakChanged() {
-  if (!UseAlternateFullscreenHeuristics()) {
-    return;
-  }
-
   MOZ_LOG(sTaskbarConcealerLog, LogLevel::Info, ("==> OnCloakChanged()"));
 
   UpdateAllState();
