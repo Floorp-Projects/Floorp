@@ -551,11 +551,14 @@ bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
   }
 
   const ErrorReporter& er = errorReporter();
-  bool onThisLine;
-  if (!er.isOnThisLine(offset, bytecodeSection().currentLine(), &onThisLine)) {
+  std::optional<bool> onThisLineStatus =
+      er.isOnThisLine(offset, bytecodeSection().currentLine());
+  if (!onThisLineStatus.has_value()) {
     er.errorNoOffset(JSMSG_OUT_OF_MEMORY);
     return false;
   }
+
+  bool onThisLine = *onThisLineStatus;
 
   if (!onThisLine) {
     unsigned line = er.lineAt(offset);
