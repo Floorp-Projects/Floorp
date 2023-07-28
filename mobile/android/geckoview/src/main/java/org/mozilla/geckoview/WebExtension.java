@@ -1589,7 +1589,9 @@ public class WebExtension {
         final GeckoBundle bundle = (GeckoBundle) response;
         int errorCode = bundle.getInt("installError");
         final int installState = bundle.getInt("state");
-        if (errorCode == 0 && installState == StateCodes.STATE_CANCELED) {
+        if (errorCode == 0
+            && installState == StateCodes.STATE_CANCELED
+            && bundle.getBoolean("cancelledByUser")) {
           errorCode = ErrorCodes.ERROR_USER_CANCELED;
         } else if (errorCode == 0 && installState == StateCodes.STATE_POSTPONED) {
           errorCode = ErrorCodes.ERROR_POSTPONED;

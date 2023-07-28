@@ -1426,7 +1426,10 @@ class AddonInstall {
         logger.debug(`Cancelling postponed install of ${this.addon.id}`);
         this.state = AddonManager.STATE_CANCELLED;
         this._cleanup();
-        this._callInstallListeners("onInstallCancelled");
+        this._callInstallListeners(
+          "onInstallCancelled",
+          /* aCancelledByUser */ false
+        );
         this.removeTemporaryFile();
 
         let stagingDir = this.location.installer.getStagingDir();
@@ -1703,7 +1706,10 @@ class AddonInstall {
             logger.info(`Install of ${this.addon.id} cancelled by user`);
             this.state = AddonManager.STATE_CANCELLED;
             this._cleanup();
-            this._callInstallListeners("onInstallCancelled");
+            this._callInstallListeners(
+              "onInstallCancelled",
+              /* aCancelledByUser */ true
+            );
           }
           return;
         }
@@ -1746,7 +1752,10 @@ class AddonInstall {
       this.state = AddonManager.STATE_DOWNLOADED;
       this.removeTemporaryFile();
       this._cleanup();
-      this._callInstallListeners("onInstallCancelled");
+      this._callInstallListeners(
+        "onInstallCancelled",
+        /* aCancelledByUser */ false
+      );
       return;
     }
 

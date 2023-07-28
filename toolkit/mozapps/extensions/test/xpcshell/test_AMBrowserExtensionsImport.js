@@ -48,7 +48,10 @@ const cancelInstalls = async importedAddonIDs => {
   const cancelledPromises = importedAddonIDs.map(id =>
     AddonTestUtils.promiseInstallEvent(
       "onInstallCancelled",
-      install => install.addon.id == id
+      (install, cancelledByUser) => {
+        Assert.equal(cancelledByUser, false, "Not user-cancelled");
+        return install.addon.id == id;
+      }
     )
   );
   await AMBrowserExtensionsImport.cancelInstalls();
