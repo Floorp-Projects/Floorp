@@ -63,4 +63,28 @@ class StoreProviderTest {
         StoreProvider.get(fragment, createStore)
         assertFalse(createCalled)
     }
+
+    @Test
+    fun `WHEN store is created lazily THEN createStore is only invoked on access`() {
+        val fragment = createAddedTestFragment { Fragment() }
+
+        var createCalled = false
+        val createStore = {
+            createCalled = true
+            basicStore
+        }
+
+        val store by fragment.lazyStore(createStore)
+        // The store is not created yet.
+        assertFalse(createCalled)
+
+        assertEquals(basicStore, store)
+        // The store is only created when it's used.
+        assertTrue(createCalled)
+
+        // The store is not created again.
+        createCalled = false
+        fragment.lazyStore(createStore).value
+        assertFalse(createCalled)
+    }
 }
