@@ -1,4 +1,4 @@
-// |reftest| skip-if(!getBuildConfiguration()['decorators']) -- decorators is not enabled unconditionally
+// |reftest| skip -- decorators is not supported
 // This file was procedurally generated from the following sources:
 // - src/decorator/decorator-member-expr-private-identifier.case
 // - src/decorator/syntax/class-valid/cls-decl-decorators-valid-syntax.template
