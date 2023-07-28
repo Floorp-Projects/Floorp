@@ -820,7 +820,10 @@ export var AddonTestUtils = {
     // Ensure some startup observers in XPIProvider are released.
     Services.obs.notifyObservers(null, "test-load-xpi-database");
 
-    Services.obs.notifyObservers(null, "quit-application-granted");
+    // Note: the code here used to trigger observer notifications such as
+    // "quit-application-granted". That was removed because of unwanted side
+    // effects in other components. The MockAsyncShutdown triggers here are very
+    // specific and only affect the AddonManager/XPIProvider internals.
     await MockAsyncShutdown.quitApplicationGranted.trigger();
 
     // If XPIDatabase.asyncLoadDB() has been called before, then _dbPromise is
