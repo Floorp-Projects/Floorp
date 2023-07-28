@@ -151,7 +151,7 @@ pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) == mact
 == mo-invisibleoperators.html mo-invisibleoperators-ref.html
 == mo-invisibleoperators-2.html mo-invisibleoperators-2-ref.html
 random-if(gtkWidget) == mo-glyph-size.html mo-glyph-size-ref.html # bug 1309426
-pref(mathml.error_message_layout_for_invalid_markup.disabled,false) pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) == maction-dynamic-3.html maction-dynamic-3-ref.html # bug 773482
+pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) == maction-dynamic-3.html maction-dynamic-3-ref.html # bug 773482
 == whitespace-trim-1.html whitespace-trim-1-ref.html
 == whitespace-trim-2.html whitespace-trim-2-ref.html
 == whitespace-trim-3.html whitespace-trim-3-ref.html
@@ -246,8 +246,8 @@ pref(mathml.legacy_mathvariant_attribute.disabled,false) fails-if(Android&&emula
 pref(mathml.legacy_mathvariant_attribute.disabled,false) == mathvariant-4.html mathvariant-4-ref.html
 pref(mathml.legacy_mathvariant_attribute.disabled,false) == mathvariant-5.html mathvariant-5-ref.html
 == dtls-1.html dtls-1-ref.html
-pref(mathml.error_message_layout_for_invalid_markup.disabled,false) == dtls-2.html dtls-2-ref.html
-pref(mathml.legacy_mathvariant_attribute.disabled,false) pref(mathml.error_message_layout_for_invalid_markup.disabled,false) == dtls-3.html dtls-3-ref.html
+== dtls-2.html dtls-2-ref.html
+pref(mathml.legacy_mathvariant_attribute.disabled,false) == dtls-3.html dtls-3-ref.html
 == ssty-1.html ssty-1-ref.html
 == ssty-2.html ssty-2-ref.html
 == mathscript-1.html mathscript-1-ref.html

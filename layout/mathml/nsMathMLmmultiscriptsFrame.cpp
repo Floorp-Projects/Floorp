@@ -139,7 +139,7 @@ nsresult nsMathMLmmultiscriptsFrame::PlaceMultiScript(
       aFrame->ReportErrorToConsole("NoBase");
     else
       aFrame->ReportChildCountError();
-    return aFrame->PlaceForError(aDrawTarget, aPlaceOrigin, aDesiredSize);
+    return aFrame->PlaceAsMrow(aDrawTarget, aPlaceOrigin, aDesiredSize);
   }
 
   // get x-height (an ex)
@@ -293,7 +293,7 @@ nsresult nsMathMLmmultiscriptsFrame::PlaceMultiScript(
         if (aPlaceOrigin) {
           aFrame->ReportInvalidChildError(nsGkAtoms::mprescripts_);
         }
-        return aFrame->PlaceForError(aDrawTarget, aPlaceOrigin, aDesiredSize);
+        return aFrame->PlaceAsMrow(aDrawTarget, aPlaceOrigin, aDesiredSize);
       }
       if (prescriptsFrame) {
         // duplicate <mprescripts/> found
@@ -301,13 +301,13 @@ nsresult nsMathMLmmultiscriptsFrame::PlaceMultiScript(
         if (aPlaceOrigin) {
           aFrame->ReportErrorToConsole("DuplicateMprescripts");
         }
-        return aFrame->PlaceForError(aDrawTarget, aPlaceOrigin, aDesiredSize);
+        return aFrame->PlaceAsMrow(aDrawTarget, aPlaceOrigin, aDesiredSize);
       }
       if (!isSubScript) {
         if (aPlaceOrigin) {
           aFrame->ReportErrorToConsole("SubSupMismatch");
         }
-        return aFrame->PlaceForError(aDrawTarget, aPlaceOrigin, aDesiredSize);
+        return aFrame->PlaceAsMrow(aDrawTarget, aPlaceOrigin, aDesiredSize);
       }
 
       prescriptsFrame = childFrame;
@@ -492,7 +492,7 @@ nsresult nsMathMLmmultiscriptsFrame::PlaceMultiScript(
         aFrame->ReportErrorToConsole("SubSupMismatch");
       }
     }
-    return aFrame->PlaceForError(aDrawTarget, aPlaceOrigin, aDesiredSize);
+    return aFrame->PlaceAsMrow(aDrawTarget, aPlaceOrigin, aDesiredSize);
   }
 
   // we left out the width of prescripts, so ...
