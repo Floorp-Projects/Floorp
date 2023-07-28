@@ -35,6 +35,9 @@ class nsWindow::TaskbarConcealer {
   // all windows' internal cloaking-state mirror variables are up-to-date.)
   static void OnCloakChanged();
 
+  // To be called upon receipt of MOZ_WM_FULLSCREEN_STATE_UPDATE.
+  static void OnAsyncStateUpdateRequest(HWND);
+
  private:
   static void UpdateAllState(HWND destroyedHwnd = nullptr);
 
