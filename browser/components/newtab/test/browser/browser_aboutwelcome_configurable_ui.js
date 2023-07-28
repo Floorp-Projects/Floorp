@@ -195,6 +195,29 @@ add_task(async function test_aboutwelcome_with_empty_logo_spacing() {
 });
 
 /**
+ * Test rendering a screen with a "Title Logo"
+ */
+add_task(async function test_title_logo() {
+  const TEST_TITLE_LOGO_URL = "chrome://branding/content/icon64.png";
+  const TEST_CONTENT = makeTestContent("TITLE_LOGO", {
+    title_logo: {
+      imageURL: TEST_TITLE_LOGO_URL,
+    },
+  });
+  const TEST_JSON = JSON.stringify([TEST_CONTENT]);
+  let browser = await openAboutWelcome(TEST_JSON);
+
+  await test_screen_content(
+    browser,
+    "renders screen with title_logo",
+    // Expected selectors:
+    [".inline-icon-container"]
+  );
+
+  browser.closeBrowser();
+});
+
+/**
  * Test rendering a screen with a title with custom styles.
  */
 add_task(async function test_aboutwelcome_with_title_styles() {

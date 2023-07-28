@@ -115,6 +115,27 @@
         h2 {
           margin-block: 10px;
         }
+
+        .inline-icon-container {
+          display: flex;
+          flex-flow: row wrap;
+          align-items: center;
+
+          .logo-container {
+            height: 16px;
+            width: 16px;
+            margin-inline-end: 6px;
+            -moz-context-properties: fill;
+            fill: currentColor;
+
+            img {
+              height: 16px;
+              width: 16px;
+              margin: 0;
+            }
+          }
+        }
+
       }
 
       .multi-select-container {
