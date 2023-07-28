@@ -48,6 +48,7 @@ class RecentTabViewHolder(
 
         RecentTabs(
             recentTabs = recentTabs.value ?: emptyList(),
+            storage = components.core.thumbnailStorage,
             backgroundColor = wallpaperState.wallpaperCardColor,
             onRecentTabClick = { recentTabInteractor.onRecentTabClicked(it) },
             menuItems = listOf(

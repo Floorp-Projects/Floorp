@@ -240,6 +240,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                         appStore = requireComponents.appStore,
                         browserStore = requireComponents.core.store,
                         tabsTrayStore = tabsTrayStore,
+                        storage = requireComponents.core.thumbnailStorage,
                         displayTabsInGrid = requireContext().settings().gridTabView,
                         isInDebugMode = Config.channel.isDebug ||
                             requireComponents.settings.showSecretDebugMenuThisSession,

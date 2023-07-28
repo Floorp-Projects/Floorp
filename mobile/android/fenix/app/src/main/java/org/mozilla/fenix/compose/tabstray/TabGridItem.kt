@@ -41,7 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
@@ -57,6 +57,7 @@ import androidx.compose.ui.zIndex
 import androidx.core.text.BidiFormatter
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.support.ktx.kotlin.MAX_URI_LENGTH
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.R
@@ -74,6 +75,8 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * long clicks, multiple selection, and media controls.
  *
  * @param tab The given tab to be render as view a grid item.
+ * @param storage [ThumbnailStorage] to obtain tab thumbnail bitmaps from.
+ * @param thumbnailSize Size of tab's thumbnail.
  * @param isSelected Indicates if the item should be render as selected.
  * @param multiSelectionEnabled Indicates if the item should be render with multi selection options,
  * enabled.
@@ -89,6 +92,8 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Suppress("MagicNumber", "LongParameterList", "LongMethod")
 fun TabGridItem(
     tab: TabSessionState,
+    storage: ThumbnailStorage,
+    thumbnailSize: Int,
     isSelected: Boolean = false,
     multiSelectionEnabled: Boolean = false,
     multiSelectionSelected: Boolean = false,
@@ -226,6 +231,8 @@ fun TabGridItem(
 
                     Thumbnail(
                         tab = tab,
+                        size = thumbnailSize,
+                        storage = storage,
                         multiSelectionSelected = multiSelectionSelected,
                     )
                 }
@@ -253,6 +260,8 @@ fun TabGridItem(
 @Composable
 private fun Thumbnail(
     tab: TabSessionState,
+    size: Int,
+    storage: ThumbnailStorage,
     multiSelectionSelected: Boolean,
 ) {
     Box(
@@ -265,7 +274,8 @@ private fun Thumbnail(
     ) {
         TabThumbnail(
             tab = tab,
-            size = LocalConfiguration.current.screenWidthDp.dp,
+            size = size,
+            storage = storage,
             modifier = Modifier.fillMaxSize(),
         )
 
@@ -305,6 +315,8 @@ private fun TabGridItemPreview() {
                 url = "www.mozilla.com",
                 title = "Mozilla Domain",
             ),
+            thumbnailSize = 108,
+            storage = ThumbnailStorage(LocalContext.current),
             onCloseClick = {},
             onMediaClick = {},
             onClick = {},
@@ -319,6 +331,8 @@ private fun TabGridItemSelectedPreview() {
     FirefoxTheme {
         TabGridItem(
             tab = createTab(url = "www.mozilla.com", title = "Mozilla"),
+            thumbnailSize = 108,
+            storage = ThumbnailStorage(LocalContext.current),
             isSelected = true,
             onCloseClick = {},
             onMediaClick = {},
@@ -334,6 +348,8 @@ private fun TabGridItemMultiSelectedPreview() {
     FirefoxTheme {
         TabGridItem(
             tab = createTab(url = "www.mozilla.com", title = "Mozilla"),
+            thumbnailSize = 108,
+            storage = ThumbnailStorage(LocalContext.current),
             multiSelectionEnabled = true,
             multiSelectionSelected = true,
             onCloseClick = {},

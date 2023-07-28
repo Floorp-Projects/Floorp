@@ -21,25 +21,30 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.tabstray.TabGridItem
 import org.mozilla.fenix.compose.tabstray.TabListItem
 import org.mozilla.fenix.tabstray.ext.MIN_COLUMN_WIDTH_DP
 import org.mozilla.fenix.theme.FirefoxTheme
+import kotlin.math.max
 
 /**
  * Top-level UI for displaying a list of tabs.
  *
  * @param tabs The list of [TabSessionState] to display.
+ * @param storage [ThumbnailStorage] to obtain tab thumbnail bitmaps from.
  * @param displayTabsInGrid Whether the tabs should be displayed in a grid.
  * @param selectedTabId The ID of the currently selected tab.
  * @param selectionMode [TabsTrayState.Mode] indicating whether the Tabs Tray is in single selection
  * or multi-selection and contains the set of selected tabs.
+ * @param modifier
  * @param onTabClose Invoked when the user clicks to close a tab.
  * @param onTabMediaClick Invoked when the user interacts with a tab's media controls.
  * @param onTabClick Invoked when the user clicks on a tab.
@@ -50,6 +55,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Composable
 fun TabLayout(
     tabs: List<TabSessionState>,
+    storage: ThumbnailStorage,
     displayTabsInGrid: Boolean,
     selectedTabId: String?,
     selectionMode: TabsTrayState.Mode,
@@ -72,6 +78,7 @@ fun TabLayout(
     if (displayTabsInGrid) {
         TabGrid(
             tabs = tabs,
+            storage = storage,
             selectedTabId = selectedTabId,
             selectedTabIndex = selectedTabIndex,
             selectionMode = selectionMode,
@@ -85,6 +92,7 @@ fun TabLayout(
     } else {
         TabList(
             tabs = tabs,
+            storage = storage,
             selectedTabId = selectedTabId,
             selectedTabIndex = selectedTabIndex,
             selectionMode = selectionMode,
@@ -102,6 +110,7 @@ fun TabLayout(
 @Composable
 private fun TabGrid(
     tabs: List<TabSessionState>,
+    storage: ThumbnailStorage,
     selectedTabId: String?,
     selectedTabIndex: Int,
     selectionMode: TabsTrayState.Mode,
@@ -114,6 +123,10 @@ private fun TabGrid(
 ) {
     val state = rememberLazyGridState(initialFirstVisibleItemIndex = selectedTabIndex)
     val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
+    val tabThumbnailSize = max(
+        LocalContext.current.resources.getDimensionPixelSize(R.dimen.tab_tray_grid_item_thumbnail_height),
+        LocalContext.current.resources.getDimensionPixelSize(R.dimen.tab_tray_grid_item_thumbnail_width),
+    )
     val isInMultiSelectMode = selectionMode is TabsTrayState.Mode.Select
 
     LazyVerticalGrid(
@@ -133,6 +146,8 @@ private fun TabGrid(
         ) { tab ->
             TabGridItem(
                 tab = tab,
+                thumbnailSize = tabThumbnailSize,
+                storage = storage,
                 isSelected = tab.id == selectedTabId,
                 multiSelectionEnabled = isInMultiSelectMode,
                 multiSelectionSelected = selectionMode.selectedTabs.contains(tab),
@@ -153,6 +168,7 @@ private fun TabGrid(
 @Composable
 private fun TabList(
     tabs: List<TabSessionState>,
+    storage: ThumbnailStorage,
     selectedTabId: String?,
     selectedTabIndex: Int,
     selectionMode: TabsTrayState.Mode,
@@ -165,6 +181,10 @@ private fun TabList(
 ) {
     val state = rememberLazyListState(initialFirstVisibleItemIndex = selectedTabIndex)
     val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
+    val tabThumbnailSize = max(
+        LocalContext.current.resources.getDimensionPixelSize(R.dimen.tab_tray_list_item_thumbnail_height),
+        LocalContext.current.resources.getDimensionPixelSize(R.dimen.tab_tray_list_item_thumbnail_width),
+    )
     val isInMultiSelectMode = selectionMode is TabsTrayState.Mode.Select
 
     LazyColumn(
@@ -183,6 +203,8 @@ private fun TabList(
         ) { tab ->
             TabListItem(
                 tab = tab,
+                thumbnailSize = tabThumbnailSize,
+                storage = storage,
                 isSelected = tab.id == selectedTabId,
                 multiSelectionEnabled = isInMultiSelectMode,
                 multiSelectionSelected = selectionMode.selectedTabs.contains(tab),
@@ -212,6 +234,7 @@ private fun TabListPreview() {
         ) {
             TabLayout(
                 tabs = tabs,
+                storage = ThumbnailStorage(LocalContext.current),
                 selectedTabId = tabs[1].id,
                 selectionMode = TabsTrayState.Mode.Normal,
                 displayTabsInGrid = false,
@@ -237,6 +260,7 @@ private fun TabGridPreview() {
         ) {
             TabLayout(
                 tabs = tabs,
+                storage = ThumbnailStorage(LocalContext.current),
                 selectedTabId = tabs[0].id,
                 selectionMode = TabsTrayState.Mode.Normal,
                 displayTabsInGrid = true,
@@ -264,6 +288,7 @@ private fun TabGridMultiSelectPreview() {
         ) {
             TabLayout(
                 tabs = tabs,
+                storage = ThumbnailStorage(LocalContext.current),
                 selectedTabId = tabs[0].id,
                 selectionMode = TabsTrayState.Mode.Select(selectedTabs.toSet()),
                 displayTabsInGrid = false,

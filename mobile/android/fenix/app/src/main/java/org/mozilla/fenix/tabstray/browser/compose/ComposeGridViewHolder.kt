@@ -15,6 +15,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.browser.tabstray.TabsTrayStyling
 import mozilla.components.lib.state.ext.observeAsComposableState
+import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.tabstray.TabGridItem
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayState
@@ -82,6 +83,8 @@ class ComposeGridViewHolder(
 
         TabGridItem(
             tab = tab,
+            thumbnailSize = 108,
+            storage = components.core.thumbnailStorage,
             isSelected = isSelectedTab,
             multiSelectionEnabled = multiSelectionEnabled,
             multiSelectionSelected = isMultiSelectionSelected,

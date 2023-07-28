@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -36,6 +37,7 @@ import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.TabEntry
+import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
@@ -55,6 +57,7 @@ import mozilla.components.browser.storage.sync.Tab as SyncTab
  * @param appStore [AppStore] used to listen for changes to [AppState].
  * @param browserStore [BrowserStore] used to listen for changes to [BrowserState].
  * @param tabsTrayStore [TabsTrayStore] used to listen for changes to [TabsTrayState].
+ * @param storage [ThumbnailStorage] to obtain tab thumbnail bitmaps from.
  * @param displayTabsInGrid Whether the normal and private tabs should be displayed in a grid.
  * @param isInDebugMode True for debug variant or if secret menu is enabled for this session.
  * @param shouldShowTabAutoCloseBanner Whether the tab auto closer banner should be displayed.
@@ -98,6 +101,7 @@ fun TabsTray(
     appStore: AppStore,
     browserStore: BrowserStore,
     tabsTrayStore: TabsTrayStore,
+    storage: ThumbnailStorage,
     displayTabsInGrid: Boolean,
     isInDebugMode: Boolean,
     shouldShowTabAutoCloseBanner: Boolean,
@@ -193,6 +197,7 @@ fun TabsTray(
                             appStore = appStore,
                             browserStore = browserStore,
                             tabsTrayStore = tabsTrayStore,
+                            storage = storage,
                             displayTabsInGrid = displayTabsInGrid,
                             onTabClose = onTabClose,
                             onTabMediaClick = onTabMediaClick,
@@ -213,6 +218,7 @@ fun TabsTray(
                         PrivateTabsPage(
                             browserStore = browserStore,
                             tabsTrayStore = tabsTrayStore,
+                            storage = storage,
                             displayTabsInGrid = displayTabsInGrid,
                             onTabClose = onTabClose,
                             onTabMediaClick = onTabMediaClick,
@@ -239,6 +245,7 @@ private fun NormalTabsPage(
     appStore: AppStore,
     browserStore: BrowserStore,
     tabsTrayStore: TabsTrayStore,
+    storage: ThumbnailStorage,
     displayTabsInGrid: Boolean,
     onTabClose: (TabSessionState) -> Unit,
     onTabMediaClick: (TabSessionState) -> Unit,
@@ -299,6 +306,7 @@ private fun NormalTabsPage(
 
         TabLayout(
             tabs = normalTabs,
+            storage = storage,
             displayTabsInGrid = displayTabsInGrid,
             selectedTabId = selectedTabId,
             selectionMode = selectionMode,
@@ -319,6 +327,7 @@ private fun NormalTabsPage(
 private fun PrivateTabsPage(
     browserStore: BrowserStore,
     tabsTrayStore: TabsTrayStore,
+    storage: ThumbnailStorage,
     displayTabsInGrid: Boolean,
     onTabClose: (TabSessionState) -> Unit,
     onTabMediaClick: (TabSessionState) -> Unit,
@@ -335,6 +344,7 @@ private fun PrivateTabsPage(
     if (privateTabs.isNotEmpty()) {
         TabLayout(
             tabs = privateTabs,
+            storage = storage,
             displayTabsInGrid = displayTabsInGrid,
             selectedTabId = selectedTabId,
             selectionMode = selectionMode,
@@ -508,6 +518,7 @@ private fun TabsTrayPreviewRoot(
             appStore = appStore,
             browserStore = browserStore,
             tabsTrayStore = tabsTrayStore,
+            storage = ThumbnailStorage(LocalContext.current),
             displayTabsInGrid = displayTabsInGrid,
             isInDebugMode = false,
             shouldShowInactiveTabsAutoCloseDialog = { true },

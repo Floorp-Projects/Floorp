@@ -33,12 +33,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
+import mozilla.components.concept.base.images.ImageLoadRequest
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.support.ktx.kotlin.trimmed
 import org.mozilla.fenix.R
@@ -50,10 +54,13 @@ import org.mozilla.fenix.compose.button.SecondaryButton
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.theme.FirefoxTheme
 
+private const val THUMBNAIL_SIZE = 108
+
 /**
  * A recent synced tab card.
  *
  * @param tab The [RecentSyncedTab] to display.
+ * @param storage [ThumbnailStorage] to obtain tab thumbnail bitmaps from.
  * @param backgroundColor The background [Color] of the item.
  * @param buttonBackgroundColor The background [Color] of the item's button.
  * @param buttonTextColor The [Color] of the button's text.
@@ -66,6 +73,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Composable
 fun RecentSyncedTab(
     tab: RecentSyncedTab?,
+    storage: ThumbnailStorage,
     backgroundColor: Color = FirefoxTheme.colors.layer2,
     buttonBackgroundColor: Color = FirefoxTheme.colors.actionSecondary,
     buttonTextColor: Color = FirefoxTheme.colors.textActionSecondary,
@@ -109,7 +117,11 @@ fun RecentSyncedTab(
                     } else {
                         ThumbnailCard(
                             url = tab.url,
-                            key = tab.url.hashCode().toString(),
+                            request = ImageLoadRequest(
+                                id = tab.url.hashCode().toString(),
+                                size = LocalDensity.current.run { THUMBNAIL_SIZE.dp.toPx().toInt() },
+                            ),
+                            storage = storage,
                             modifier = imageModifier,
                         )
                     }
@@ -246,6 +258,7 @@ private fun LoadedRecentSyncedTab() {
     FirefoxTheme {
         RecentSyncedTab(
             tab = tab,
+            storage = ThumbnailStorage(LocalContext.current),
             onRecentSyncedTabClick = {},
             onSeeAllSyncedTabsButtonClick = {},
             onRemoveSyncedTab = {},
@@ -259,6 +272,7 @@ private fun LoadingRecentSyncedTab() {
     FirefoxTheme {
         RecentSyncedTab(
             tab = null,
+            storage = ThumbnailStorage(LocalContext.current),
             buttonBackgroundColor = FirefoxTheme.colors.layer3,
             onRecentSyncedTabClick = {},
             onSeeAllSyncedTabsButtonClick = {},

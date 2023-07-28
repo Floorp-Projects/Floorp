@@ -20,29 +20,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.concept.base.images.ImageLoadRequest
-import org.mozilla.fenix.components.components
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * Thumbnail belonging to a [key]. Asynchronously fetches the bitmap from storage.
+ * Thumbnail belonging to a [ImageLoadRequest]. Asynchronously fetches the bitmap from storage.
  *
- * @param key Key used to remember the thumbnail for future compositions.
- * @param size [Dp] size of the thumbnail.
+ * @param request [ImageLoadRequest] used to fetch the thumbnail bitmap.
+ * @param storage [ThumbnailStorage] to obtain tab thumbnail bitmaps from.
  * @param modifier [Modifier] used to draw the image content.
  * @param contentScale [ContentScale] used to draw image content.
  * @param alignment [Alignment] used to draw the image content.
+ * @param fallbackContent The content to display with a thumbnail is unable to be loaded.
  */
 @Composable
 @Suppress("LongParameterList")
 fun ThumbnailImage(
-    key: String,
-    size: Dp,
+    request: ImageLoadRequest,
+    storage: ThumbnailStorage,
     modifier: Modifier,
     contentScale: ContentScale,
     alignment: Alignment,
@@ -51,9 +50,6 @@ fun ThumbnailImage(
     if (inComposePreview) {
         Box(modifier = Modifier.background(color = FirefoxTheme.colors.layer3))
     } else {
-        val thumbnailSize = LocalDensity.current.run { size.toPx().toInt() }
-        val request = ImageLoadRequest(key, thumbnailSize)
-        val storage = components.core.thumbnailStorage
         var state by remember { mutableStateOf(ThumbnailImageState(null, false)) }
         val scope = rememberCoroutineScope()
 
@@ -113,8 +109,8 @@ private data class ThumbnailImageState(
 private fun ThumbnailImagePreview() {
     FirefoxTheme {
         ThumbnailImage(
-            key = "",
-            size = 1.dp,
+            request = ImageLoadRequest("1", 1),
+            storage = ThumbnailStorage(LocalContext.current),
             modifier = Modifier,
             contentScale = ContentScale.Crop,
             alignment = Alignment.Center,

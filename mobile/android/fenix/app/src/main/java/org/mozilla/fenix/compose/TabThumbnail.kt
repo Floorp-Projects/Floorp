@@ -16,14 +16,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
+import mozilla.components.concept.base.images.ImageLoadRequest
 import org.mozilla.fenix.theme.FirefoxTheme
 
-private const val THUMBNAIL_SIZE = 108
 private const val FALLBACK_ICON_SIZE = 36
 
 /**
@@ -31,9 +32,10 @@ private const val FALLBACK_ICON_SIZE = 36
  * will be displayed until the thumbnail is loaded.
  *
  * @param tab The given [TabSessionState] to render a thumbnail for.
- * @param size [Dp] size of the thumbnail.
- * @param backgroundColor [Color] used for the background of the favicon.
+ * @param storage [ThumbnailStorage] to obtain tab thumbnail bitmaps from.
+ * @param size Size of the thumbnail.
  * @param modifier [Modifier] used to draw the image content.
+ * @param backgroundColor [Color] used for the background of the favicon.
  * @param contentDescription Text used by accessibility services
  * to describe what this image represents.
  * @param contentScale [ContentScale] used to draw image content.
@@ -43,8 +45,9 @@ private const val FALLBACK_ICON_SIZE = 36
 @Suppress("LongParameterList")
 fun TabThumbnail(
     tab: TabSessionState,
+    storage: ThumbnailStorage,
+    size: Int,
     modifier: Modifier = Modifier,
-    size: Dp = THUMBNAIL_SIZE.dp,
     backgroundColor: Color = FirefoxTheme.colors.layer2,
     contentDescription: String? = null,
     contentScale: ContentScale = ContentScale.FillWidth,
@@ -55,8 +58,11 @@ fun TabThumbnail(
         backgroundColor = backgroundColor,
     ) {
         ThumbnailImage(
-            key = tab.id,
-            size = size,
+            request = ImageLoadRequest(
+                id = tab.id,
+                size = size,
+            ),
+            storage = storage,
             modifier = modifier,
             contentScale = contentScale,
             alignment = alignment,
@@ -93,8 +99,10 @@ private fun ThumbnailCardPreview() {
     FirefoxTheme {
         TabThumbnail(
             tab = createTab(url = "www.mozilla.com", title = "Mozilla"),
+            size = 108,
+            storage = ThumbnailStorage(LocalContext.current),
             modifier = Modifier
-                .size(THUMBNAIL_SIZE.dp, 80.dp)
+                .size(108.dp, 80.dp)
                 .clip(RoundedCornerShape(8.dp)),
         )
     }
