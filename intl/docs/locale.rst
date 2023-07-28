@@ -323,7 +323,7 @@ Available Locales
 =================
 
 In Gecko, available locales come from the `Packaged Locales` and the installed
-`language packs`. Language packs are a variant of web extensions providing just
+`language packs`. Language packs are a variant of WebExtensions providing just
 localized resources for one or more languages.
 
 The primary notion of which locales are available is based on which locales Gecko has

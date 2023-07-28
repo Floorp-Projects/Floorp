@@ -285,3 +285,10 @@ Details about :ref:`automated tests may be found here <Automated Testing>`. The 
 tests are :ref:`XPCShell <XPCShell tests>` for testing backend components,
 :ref:`Browser Chrome Tests <Browser chrome mochitests>` for testing the frontend UI and
 :ref:`Web Platform Tests <web-platform-tests>` for testing web APIs.
+
+WebExtensions
+--------------
+
+The WebExtensions APIs allow extensions to interact with the rest of the browser.
+
+:ref:`Read more <WebExtensions API Development>`

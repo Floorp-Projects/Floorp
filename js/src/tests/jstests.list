@@ -1495,3 +1495,7 @@ skip script test262/staging/Intl402/Temporal/old/monthday-toLocaleString.js
 skip script test262/staging/Intl402/Temporal/old/non-iso-calendars.js
 skip script test262/staging/Intl402/Temporal/old/indian-calendar.js
 skip script test262/staging/Intl402/Temporal/old/instant-toLocaleString.js
+
+# See Bug 1799525, we don't currently support private identifiers in decorators
+skip script test262/language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js
+skip script test262/language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js
