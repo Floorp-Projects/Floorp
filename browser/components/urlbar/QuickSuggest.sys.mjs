@@ -20,6 +20,7 @@ const FEATURES = {
   BlockedSuggestions:
     "resource:///modules/urlbar/private/BlockedSuggestions.sys.mjs",
   ImpressionCaps: "resource:///modules/urlbar/private/ImpressionCaps.sys.mjs",
+  MDNSuggestions: "resource:///modules/urlbar/private/MDNSuggestions.sys.mjs",
   PocketSuggestions:
     "resource:///modules/urlbar/private/PocketSuggestions.sys.mjs",
   Weather: "resource:///modules/urlbar/private/Weather.sys.mjs",
