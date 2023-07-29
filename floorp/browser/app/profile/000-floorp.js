@@ -132,6 +132,7 @@ pref("floorp.browser.workspace.tabs.state", "[]");
 pref("floorp.browser.workspace.current", "");
 pref("floorp.browser.workspace.all", "");
 pref("floorp.browser.workspace.tab.enabled",true);
+pref("floorp.browser.workspace.closePopupAfterClick", true);
 
 //タブバーの背景色
 pref("floorp.titlebar.favicon.color", false);

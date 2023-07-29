@@ -8,6 +8,7 @@ const WORKSPACE_TAB_ENABLED_PREF = "floorp.browser.workspace.tab.enabled";
 const WORKSPACE_CURRENT_PREF = "floorp.browser.workspace.current";
 const WORKSPACE_ALL_PREF = "floorp.browser.workspace.all";
 const WORKSPACE_TABS_PREF = "floorp.browser.workspace.tabs.state";
+const WORKSPACE_CLOSE_POPUP_AFTER_CLICK_PREF = "floorp.browser.workspace.closePopupAfterClick";
 const l10n = new Localization(["browser/floorp.ftl"], true);
 const defaultWorkspaceName = Services.prefs
   .getStringPref(WORKSPACE_ALL_PREF)
@@ -627,6 +628,13 @@ const workspaceFunctions = {
       }
       workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
       workspaceFunctions.manageWorkspaceFunctions.saveWorkspaceState();
+
+      const closeWorkspacePopupAfterClick = Services.prefs.getBoolPref(
+        WORKSPACE_CLOSE_POPUP_AFTER_CLICK_PREF
+      );
+      if (closeWorkspacePopupAfterClick) {
+        document.getElementById("workspace-button").click();
+      }
     },
 
     checkWorkspaceTabLength(name) {
