@@ -322,9 +322,6 @@ const workspaceFunctions = {
 
     renameWorkspace(label) {
       label = label.replace(/\s+/g, "-");
-      if (label == defaultWorkspaceName) {
-        return;
-      }
       let prompts = Services.prompt;
       let l10n = new Localization(["browser/floorp.ftl"], true);
       let check = { value: false };
@@ -800,7 +797,7 @@ const workspaceFunctions = {
           .before(workspaceItemElem);
       }
 
-      if (label !== defaultWorkspaceName) {
+      if (Services.prefs.getStringPref(WORKSPACE_ALL_PREF).split(",")[0] !== label) {
         let deleteButtonElem = window.MozXULElement.parseXULToFragment(`
             <toolbarbutton id="workspace-delete" class="workspace-item-delete toolbarbutton-1"
                            oncommand="workspaceFunctions.manageWorkspaceFunctions.deleteworkspace('${label}')"/>
@@ -824,13 +821,9 @@ const workspaceFunctions = {
       )}')"/>
       `);
 
-      if (
-        e.explicitOriginalTarget.getAttribute("label") !== defaultWorkspaceName
-      ) {
-        document
-          .getElementById("workspace-item-context")
-          .appendChild(menuitemElem);
-      }
+      document
+        .getElementById("workspace-item-context")
+        .appendChild(menuitemElem);
     },
 
     setMenuItemCheckCSS() {
