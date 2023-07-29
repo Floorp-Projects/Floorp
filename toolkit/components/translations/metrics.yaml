@@ -144,3 +144,88 @@ translations.panel:
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
     expires: 122
+
+  cancel_button:
+    type: event
+    description: >
+      Triggers when the cancel button is invoked in the translations panel.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
+  change_source_language_button:
+    type: event
+    description: >
+      Triggers when the change-source-language button is invoked in the translations panel.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
+  dismiss_error_button:
+    type: event
+    description: >
+      Triggers when the dismiss-error button is invoked in the translations panel.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
+  restore_page_button:
+    type: event
+    description: >
+      Triggers when the restore-page button is invoked in the translations panel.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
+  translate_button:
+    type: event
+    description: >
+      Triggers when the translate button is invoked in the translations panel.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122

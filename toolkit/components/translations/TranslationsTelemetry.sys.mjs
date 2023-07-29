@@ -132,4 +132,39 @@ class Panel {
       opened_from: openedFromAppMenu ? "appMenu" : "translationsButton",
     });
   }
+
+  static onCancelButton() {
+    Glean.translationsPanel.cancelButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
+
+  static onChangeSourceLanguageButton() {
+    Glean.translationsPanel.changeSourceLanguageButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
+
+  static onDismissErrorButton() {
+    Glean.translationsPanel.dismissErrorButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
+
+  static onRestorePageButton() {
+    Glean.translationsPanel.restorePageButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
+
+  static onTranslateButton() {
+    Glean.translationsPanel.translateButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
 }

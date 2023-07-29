@@ -288,7 +288,12 @@ var TranslationsPanel = new (class {
       getter("button", "translations-button");
       getter("buttonLocale", "translations-button-locale");
       getter("buttonCircleArrows", "translations-button-circle-arrows");
+      getter(
+        "changeSourceLanguageButton",
+        "translations-panel-change-source-language"
+      );
       getter("defaultTranslate", "translations-panel-translate");
+      getter("dismissErrorButton", "translations-panel-dismiss-error");
       getter("error", "translations-panel-error");
       getter("errorMessage", "translations-panel-error-message");
       getter("errorMessageHint", "translations-panel-error-message-hint");
@@ -303,6 +308,7 @@ var TranslationsPanel = new (class {
       getter("restoreButton", "translations-panel-restore-button");
       getter("toMenuList", "translations-panel-to");
       getter("toLabel", "translations-panel-to-label");
+      getter("translateButton", "translations-panel-translate");
       getter("unsupportedHint", "translations-panel-error-unsupported-hint");
 
       // Getters by class
@@ -891,6 +897,43 @@ var TranslationsPanel = new (class {
       await this.#showDefaultView();
     } catch (error) {
       this.elements.errorHintAction.disabled = false;
+    }
+  }
+
+  /**
+   * Handle telemetry events when buttons are invoked in the panel.
+   *
+   * @param {Event} event
+   */
+  handlePanelButtonEvent(event) {
+    const {
+      cancelButton,
+      changeSourceLanguageButton,
+      dismissErrorButton,
+      restoreButton,
+      translateButton,
+    } = this.elements;
+    switch (event.target.id) {
+      case cancelButton.id: {
+        TranslationsParent.telemetry().panel().onCancelButton();
+        break;
+      }
+      case changeSourceLanguageButton.id: {
+        TranslationsParent.telemetry().panel().onChangeSourceLanguageButton();
+        break;
+      }
+      case dismissErrorButton.id: {
+        TranslationsParent.telemetry().panel().onDismissErrorButton();
+        break;
+      }
+      case restoreButton.id: {
+        TranslationsParent.telemetry().panel().onRestorePageButton();
+        break;
+      }
+      case translateButton.id: {
+        TranslationsParent.telemetry().panel().onTranslateButton();
+        break;
+      }
     }
   }
 
