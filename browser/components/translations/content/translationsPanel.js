@@ -938,6 +938,54 @@ var TranslationsPanel = new (class {
   }
 
   /**
+   * Handle telemetry events when popups are shown in the panel.
+   *
+   * @param {Event} event
+   */
+  handlePanelPopupShownEvent(event) {
+    const { panel, fromMenuList, toMenuList } = this.elements;
+    switch (event.target.id) {
+      case panel.id: {
+        // This telemetry event is invoked externally because it requires
+        // extra logic about from where the panel was opened and whether
+        // or not the flow should be maintained or started anew.
+        break;
+      }
+      case fromMenuList.firstChild.id: {
+        TranslationsParent.telemetry().panel().onOpenFromLanguageMenu();
+        break;
+      }
+      case toMenuList.firstChild.id: {
+        TranslationsParent.telemetry().panel().onOpenToLanguageMenu();
+        break;
+      }
+    }
+  }
+
+  /**
+   * Handle telemetry events when popups are hidden in the panel.
+   *
+   * @param {Event} event
+   */
+  handlePanelPopupHiddenEvent(event) {
+    const { panel, fromMenuList, toMenuList } = this.elements;
+    switch (event.target.id) {
+      case panel.id: {
+        TranslationsParent.telemetry().panel().onClose();
+        break;
+      }
+      case fromMenuList.firstChild.id: {
+        TranslationsParent.telemetry().panel().onCloseFromLanguageMenu();
+        break;
+      }
+      case toMenuList.firstChild.id: {
+        TranslationsParent.telemetry().panel().onCloseToLanguageMenu();
+        break;
+      }
+    }
+  }
+
+  /**
    * Opens the Translations panel popup at the given target.
    *
    * @param {object} target - The target element at which to open the popup.

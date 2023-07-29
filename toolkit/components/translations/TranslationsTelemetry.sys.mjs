@@ -133,6 +133,41 @@ class Panel {
     });
   }
 
+  static onClose() {
+    Glean.translationsPanel.close.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
+
+  static onOpenFromLanguageMenu() {
+    Glean.translationsPanel.openFromLanguageMenu.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
+
+  static onCloseFromLanguageMenu() {
+    Glean.translationsPanel.closeFromLanguageMenu.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
+
+  static onOpenToLanguageMenu() {
+    Glean.translationsPanel.openToLanguageMenu.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
+
+  static onCloseToLanguageMenu() {
+    Glean.translationsPanel.closeToLanguageMenu.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
+
   static onCancelButton() {
     Glean.translationsPanel.cancelButton.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
