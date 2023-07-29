@@ -986,6 +986,20 @@ var TranslationsPanel = new (class {
   }
 
   /**
+   * Handle telemetry events when the settings menu is shown.
+   */
+  handleSettingsPopupShownEvent() {
+    TranslationsParent.telemetry().panel().onOpenSettingsMenu();
+  }
+
+  /**
+   * Handle telemetry events when the settings menu is hidden.
+   */
+  handleSettingsPopupHiddenEvent() {
+    TranslationsParent.telemetry().panel().onCloseSettingsMenu();
+  }
+
+  /**
    * Opens the Translations panel popup at the given target.
    *
    * @param {object} target - The target element at which to open the popup.
