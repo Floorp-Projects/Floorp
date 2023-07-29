@@ -1555,7 +1555,7 @@ jobs:
              "ref": "ESR115"
            }'
 
-    - name: Run GitHub Actions for Release Windows x86_64 Portable version Build 🚀
+    - name: Run GitHub Actions for Release Portable version Build 🚀
       run: |
          curl -X POST \
            -H "Authorization: token ${{ secrets.PAT }}" \
@@ -1564,7 +1564,8 @@ jobs:
            -d '{
              "ref": "ESR115",
               "inputs": {
-                "options": "Release"
+                "options": "Release",
+                "version": "${{ needs.get-display-version.outputs.display-version }}"
               }
            }'
 
