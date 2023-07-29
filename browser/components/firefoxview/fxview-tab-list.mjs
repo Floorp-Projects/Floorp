@@ -26,7 +26,6 @@ if (!window.IS_STORYBOOK) {
 
   ChromeUtils.defineESModuleGetters(lazy, {
     BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
-    PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   });
 }
 
@@ -377,9 +376,14 @@ export class FxviewTabRow extends MozLitElement {
 
   getImageUrl(icon, targetURI) {
     if (!window.IS_STORYBOOK) {
-      return icon
-        ? lazy.PlacesUIUtils.getImageURL(icon)
-        : `page-icon:${targetURI}`;
+      // If the icon is not for website (doesn't begin with http), we
+      // display it directly. Otherwise we go through the page-icon
+      // protocol to try to get a cached version. We don't load
+      // favicons directly.
+      if (icon?.startsWith("http")) {
+        return `page-icon:${targetURI}`;
+      }
+      return icon;
     }
     return `chrome://global/skin/icons/defaultFavicon.svg`;
   }
