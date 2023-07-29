@@ -9,7 +9,8 @@
        role="alertdialog"
        noautofocus="true"
        aria-labelledby="translations-panel-header"
-       orient="vertical">
+       orient="vertical"
+       onclick="TranslationsPanel.handlePanelButtonEvent(event)">
   <panelmultiview id="translations-panel-multiview"
                   mainViewId="translations-panel-view-default">
     <panelview id="translations-panel-view-default"
@@ -121,11 +122,13 @@
       </vbox>
 
       <hbox class="panel-footer translations-panel-footer">
-        <button class="subviewbutton panel-subview-footer-button"
+        <button id="translations-panel-change-source-language"
+                class="subviewbutton panel-subview-footer-button"
                 oncommand="TranslationsPanel.onChangeSourceLanguage(event);"
                 data-l10n-id="translations-panel-error-change-button">
         </button>
-        <button class="subviewbutton panel-subview-footer-button"
+        <button id="translations-panel-dismiss-error"
+                class="subviewbutton panel-subview-footer-button"
                 oncommand="TranslationsPanel.onCancel(event);"
                 data-l10n-id="translations-panel-error-dismiss-button"
                 default="true">
