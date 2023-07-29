@@ -390,3 +390,91 @@ translations.panel:
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
     expires: 122
+
+  always_translate_language:
+    type: event
+    description: >
+      Triggers when the always-translate-language menuitem is invoked in the translations panel settings.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+      language:
+        type: string
+        description: >
+          - The BCP47 language tag.
+      toggled_on:
+        type: boolean
+        description: >
+          - Whether the setting was toggled on or off for this language.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
+  never_translate_language:
+    type: event
+    description: >
+      Triggers when the never-translate-language menuitem is invoked in the translations panel settings.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+      language:
+        type: string
+        description: >
+          - The BCP47 language tag.
+      toggled_on:
+        type: boolean
+        description: >
+          - Whether the setting was toggled on or off for this language.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
+  never_translate_site:
+    type: event
+    description: >
+      Triggers when the never-translate-site menuitem is invoked in the translations panel settings.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+      toggled_on:
+        type: boolean
+        description: >
+          - Whether the setting was toggled on or off for this site.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
+  manage_languages:
+    type: event
+    description: >
+      Triggers when the manage-languages menuitem is invoked in the translations panel settings.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122

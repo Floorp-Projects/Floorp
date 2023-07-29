@@ -232,4 +232,37 @@ class Panel {
       first_interaction: Panel.isFirstUserInteraction(),
     });
   }
+
+  static onAlwaysTranslateLanguage(langTag, toggledOn) {
+    Glean.translationsPanel.alwaysTranslateLanguage.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+      language: langTag,
+      toggled_on: toggledOn,
+    });
+  }
+
+  static onNeverTranslateLanguage(langTag, toggledOn) {
+    Glean.translationsPanel.neverTranslateLanguage.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+      language: langTag,
+      toggled_on: toggledOn,
+    });
+  }
+
+  static onNeverTranslateSite(toggledOn) {
+    Glean.translationsPanel.neverTranslateSite.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+      toggled_on: toggledOn,
+    });
+  }
+
+  static onManageLanguages() {
+    Glean.translationsPanel.manageLanguages.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
 }
