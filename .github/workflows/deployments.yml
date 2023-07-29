@@ -1439,7 +1439,7 @@ jobs:
            "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
            -d '{
              "ref": "main",
-             "inputs": {{
+             "inputs": {
                "mar-url": "${{ fromJSON(needs.Deploy-to-installer.outputs.upload-url)[0].browser_download_url }}",
                "os": "Linux",
                "arch": "x86_64"
