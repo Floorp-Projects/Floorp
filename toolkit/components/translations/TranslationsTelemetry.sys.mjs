@@ -53,6 +53,7 @@ export class TranslationsTelemetry {
     Glean.translations.errorRate.addToNumerator(1);
     Glean.translations.error.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
       reason: errorMessage,
     });
   }
@@ -69,6 +70,7 @@ export class TranslationsTelemetry {
     Glean.translations.requestsCount.add(1);
     Glean.translations.translationRequest.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
       from_language: data.fromLanguage,
       to_language: data.toLanguage,
       auto_translate: data.autoTranslate,
@@ -81,13 +83,36 @@ export class TranslationsTelemetry {
  */
 class Panel {
   /**
+   * A value to retain whether this is the user's first time
+   * interacting with the translations panel. It is propagated
+   * to all events.
+   *
+   * This value is set only through the onOpen() function.
+   */
+  static #isFirstUserInteraction = false;
+
+  /**
+   * True if this is the user's first time interacting with the
+   * Translations panel, otherwise false.
+   *
+   * @returns {boolean}
+   */
+  static isFirstUserInteraction() {
+    return Panel.#isFirstUserInteraction;
+  }
+
+  /**
    * Records a telemetry event when the translations panel is opened.
    *
-   * @param {boolean} openedFromAppMenu
+   * @param {object} data
+   * @param {boolean} data.openedFromAppMenu
+   * @param {boolean} data.isFirstUserInteraction
    */
-  static onOpen(openedFromAppMenu) {
+  static onOpen({ openedFromAppMenu = false, isFirstUserInteraction = false }) {
+    Panel.#isFirstUserInteraction = isFirstUserInteraction;
     Glean.translationsPanel.open.record({
       flow_id: TranslationsTelemetry.createFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
       opened_from: openedFromAppMenu ? "appMenu" : "translationsButton",
     });
   }

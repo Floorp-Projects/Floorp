@@ -48,15 +48,22 @@ translations:
       flow_id: &flow_id
         type: string
         description: A uuid to relate events associated with the current panel session.
+      first_interaction: &first_interaction
+        type: boolean
+        description: >
+          True if this event occurred in the user's first interaction with translations,
+          otherwise false.
       reason:
         type: string
         description: The reason for the error.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436#c4
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366#c11
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
     data_sensitivity:
       - technical
     notification_emails:
@@ -69,6 +76,7 @@ translations:
       Triggers when a full-page translation request is sent.
     extra_keys:
       flow_id: *flow_id
+      first_interaction: *first_interaction
       from_language:
         type: string
         description: The language being translated from.
@@ -84,9 +92,11 @@ translations:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836381
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836381#c4
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366#c11
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
     data_sensitivity:
       - interaction
     notification_emails:
@@ -100,15 +110,18 @@ translations.panel:
       Triggers when the translations panel is opened.
     extra_keys:
       flow_id: *flow_id
+      first_interaction: *first_interaction
       opened_from:
         type: string
         description: The method by which the translations panel was opened.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1835502
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1835502#c7
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366#c11
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
     data_sensitivity:
       - interaction
     notification_emails:
