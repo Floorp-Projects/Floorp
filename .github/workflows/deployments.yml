@@ -1441,7 +1441,7 @@ jobs:
            -d '{
              "ref": "main",
              "inputs": {
-               "mar-url": "${{ fromJSON(needs.Deploy-to-installer.outputs.upload-url)[0].browser_download_url }}",
+               "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-x86_64-${{ needs.get-display-version.outputs.display-version }}.mar",
                "os": "Linux",
                "arch": "x86_64"
              }
@@ -1458,7 +1458,7 @@ jobs:
            -d '{
              "ref": "main",
              "inputs": {
-               "mar-url": "${{ fromJSON(needs.Deploy-to-installer.outputs.upload-url)[1].browser_download_url }}",
+               "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-aarch64-${{ needs.get-display-version.outputs.display-version }}.mar",
                "os": "Linux",
                "arch": "aarch64"
              }
@@ -1475,7 +1475,7 @@ jobs:
            -d '{
              "ref": "main",
              "inputs": {
-               "mar-url": "${{ fromJSON(needs.Deploy-to-installer.outputs.upload-url)[2].browser_download_url }}",
+               "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal-${{ needs.get-display-version.outputs.display-version }}.mar",
                "os": "Darwin",
                "arch": "x86_64"
              }
@@ -1492,11 +1492,28 @@ jobs:
            -d '{
              "ref": "main",
              "inputs": {
-               "mar-url": "${{ fromJSON(needs.Deploy-to-installer.outputs.upload-url)[2].browser_download_url }}",
+               "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal-${{ needs.get-display-version.outputs.display-version }}.mar",
                "os": "Darwin",
                "arch": "aarch64"
              }
            }'
+
+    -  name: Run GitHub Actions for Release x86_64 Windows MAR "Floorp-Projects/Floorp-Update" 🚀
+       run: |
+         echo "Preparing to run GitHub Actions for Release x86_64 Windows MAR, waiting for 30 seconds"
+         sleep 30
+         curl -X POST \
+           -H "Authorization: token ${{ secrets.PAT }}" \
+           -H "Accept: application/vnd.github.v3+json" \
+           "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+           -d '{
+             "ref": "main",
+             "inputs": {
+               "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86_64.mar",
+                "os": "WINNT",
+                "arch": "x86_64"
+              }
+            }'
 
     - name: Run GitHub Actions for Release x86_64 Debian PPA Build 🚀
       run: |
