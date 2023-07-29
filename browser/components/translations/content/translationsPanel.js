@@ -842,6 +842,32 @@ var TranslationsPanel = new (class {
   }
 
   /**
+   * Handle logic and telemetry for changing the selected from-language option.
+   *
+   * @param {Event} event
+   */
+  onChangeFromLanguage(event) {
+    const { target } = event;
+    if (target?.value) {
+      TranslationsParent.telemetry().panel().onChangeFromLanguage(target.value);
+    }
+    this.onChangeLanguages();
+  }
+
+  /**
+   * Handle logic and telemetry for changing the selected to-language option.
+   *
+   * @param {Event} event
+   */
+  onChangeToLanguage(event) {
+    const { target } = event;
+    if (target?.value) {
+      TranslationsParent.telemetry().panel().onChangeToLanguage(target.value);
+    }
+    this.onChangeLanguages();
+  }
+
+  /**
    * When changing the language selection, the translate button will need updating.
    */
   onChangeLanguages() {
