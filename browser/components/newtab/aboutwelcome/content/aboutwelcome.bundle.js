@@ -1126,6 +1126,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       className: `screen ${this.props.id || ""}
           ${screenClassName} ${textColorClass}`,
       role: "alertdialog",
+      layout: content.layout,
       pos: content.position || "center",
       tabIndex: "-1",
       "aria-labelledby": "mainContentHeader",

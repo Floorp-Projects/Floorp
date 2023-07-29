@@ -209,6 +209,26 @@
   min-height: unset;
   overflow: visible;
 }
+.onboardingContainer.featureCallout .screen[pos=callout][layout=inline] .section-main .main-content,
+.onboardingContainer.featureCallout .screen[pos=callout][layout=inline] .section-main .main-content.no-steps {
+  width: 18em;
+  padding-inline: 16px;
+  padding-block: 0;
+}
+.onboardingContainer.featureCallout .screen[pos=callout][layout=inline] .section-main .main-content .welcome-text,
+.onboardingContainer.featureCallout .screen[pos=callout][layout=inline] .section-main .main-content.no-steps .welcome-text {
+  margin-block: 12px 14px;
+  margin-inline: 0;
+  padding: 0;
+}
+.onboardingContainer.featureCallout .screen[pos=callout][layout=inline] .section-main .dismiss-button {
+  height: 24px;
+  width: 24px;
+  min-height: 24px;
+  min-width: 24px;
+  margin-block: 11px 0;
+  margin-inline: 0 12px;
+}
 .onboardingContainer.featureCallout .screen[pos=callout] .logo-container {
   display: flex;
   justify-content: center;

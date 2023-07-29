@@ -444,6 +444,7 @@ export class ProtonScreen extends React.PureComponent {
         className={`screen ${this.props.id || ""}
           ${screenClassName} ${textColorClass}`}
         role="alertdialog"
+        layout={content.layout}
         pos={content.position || "center"}
         tabIndex="-1"
         aria-labelledby="mainContentHeader"
