@@ -76,6 +76,13 @@ export class TranslationsTelemetry {
       auto_translate: data.autoTranslate,
     });
   }
+
+  static onRestorePage() {
+    Glean.translations.restorePage.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
 }
 
 /**

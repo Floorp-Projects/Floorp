@@ -103,6 +103,23 @@ translations:
       - translations-telemetry-alerts@mozilla.com
     expires: 122
 
+  restore_page:
+    type: event
+    description: >
+      Triggers when the a restore-page event is triggered.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
 translations.panel:
   open:
     type: event

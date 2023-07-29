@@ -1780,6 +1780,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * @param {string} fromLanguage A BCP-47 language tag
    */
   restorePage(fromLanguage) {
+    TranslationsParent.telemetry().onRestorePage();
     if (
       lazy.autoTranslatePagePref ||
       TranslationsParent.shouldAlwaysTranslateLanguage(fromLanguage)
