@@ -147,6 +147,14 @@ class Panel {
     });
   }
 
+  static onChangeFromLanguage(langTag) {
+    Glean.translationsPanel.changeFromLanguage.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+      language: langTag,
+    });
+  }
+
   static onCloseFromLanguageMenu() {
     Glean.translationsPanel.closeFromLanguageMenu.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
@@ -158,6 +166,14 @@ class Panel {
     Glean.translationsPanel.openToLanguageMenu.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
+
+  static onChangeToLanguage(langTag) {
+    Glean.translationsPanel.changeToLanguage.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+      language: langTag,
     });
   }
 
