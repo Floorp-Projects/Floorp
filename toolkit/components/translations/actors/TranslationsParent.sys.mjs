@@ -2116,17 +2116,21 @@ export class TranslationsParent extends JSWindowActorParent {
    * to the pref list if it is not present, or removing it if it is present.
    *
    * @param {string} langTag - A BCP-47 language tag
+   * @returns {boolean}
+   *  True if always-translate was enabled for this language.
+   *  False if always-translate was disabled for this language.
    */
   static toggleAlwaysTranslateLanguagePref(langTag) {
     if (TranslationsParent.shouldAlwaysTranslateLanguage(langTag)) {
       // The pref was toggled off for this langTag
       this.#removeLangTagFromPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
-      return;
+      return false;
     }
 
     // The pref was toggled on for this langTag
     this.#addLangTagToPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
     this.#removeLangTagFromPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
+    return true;
   }
 
   /**
@@ -2134,35 +2138,46 @@ export class TranslationsParent extends JSWindowActorParent {
    * to the pref list if it is not present, or removing it if it is present.
    *
    * @param {string} langTag - A BCP-47 language tag
+   * @returns {boolean} Whether the pref was toggled on or off for this langTag.
+   *  True if never-translate was enabled for this language.
+   *  False if never-translate was disabled for this language.
    */
   static toggleNeverTranslateLanguagePref(langTag) {
     if (TranslationsParent.shouldNeverTranslateLanguage(langTag)) {
       // The pref was toggled off for this langTag
       this.#removeLangTagFromPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
-      return;
+      return false;
     }
 
     // The pref was toggled on for this langTag
     this.#addLangTagToPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
     this.#removeLangTagFromPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
+    return true;
   }
 
   /**
    * Toggles the never-translate site permissions by adding DENY_ACTION to
    * the site principal if it is not present, or removing it if it is present.
+   *
+   * @returns {boolean}
+   *  True if never-translate was enabled for this site.
+   *  False if never-translate was disabled for this site.
    */
   toggleNeverTranslateSitePermissions() {
     const perms = Services.perms;
     const { documentPrincipal } = this.browsingContext.currentWindowGlobal;
+
     if (this.shouldNeverTranslateSite()) {
       perms.removeFromPrincipal(documentPrincipal, TRANSLATIONS_PERMISSION);
-    } else {
-      perms.addFromPrincipal(
-        documentPrincipal,
-        TRANSLATIONS_PERMISSION,
-        perms.DENY_ACTION
-      );
+      return false;
     }
+
+    perms.addFromPrincipal(
+      documentPrincipal,
+      TRANSLATIONS_PERMISSION,
+      perms.DENY_ACTION
+    );
+    return true;
   }
 
   didDestroy() {

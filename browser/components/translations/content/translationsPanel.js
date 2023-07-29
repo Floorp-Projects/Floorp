@@ -316,6 +316,7 @@ var TranslationsPanel = new (class {
         "alwaysTranslateLanguageMenuItem",
         ".always-translate-language-menuitem"
       );
+      getter("manageLanguagesMenuItem", ".manage-languages-menuitem");
       getter(
         "neverTranslateLanguageMenuItem",
         ".never-translate-language-menuitem"
@@ -1193,6 +1194,7 @@ var TranslationsPanel = new (class {
    * Redirect the user to about:preferences
    */
   openManageLanguages() {
+    TranslationsParent.telemetry().panel().onManageLanguages();
     const window =
       gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
     window.openTrustedLinkIn("about:preferences#general-translations", "tab");
@@ -1231,7 +1233,11 @@ var TranslationsPanel = new (class {
     }
     const pageAction =
       this.getCheckboxPageActionFor().alwaysTranslateLanguage();
-    TranslationsParent.toggleAlwaysTranslateLanguagePref(docLangTag);
+    const toggledOn =
+      TranslationsParent.toggleAlwaysTranslateLanguagePref(docLangTag);
+    TranslationsParent.telemetry()
+      .panel()
+      .onAlwaysTranslateLanguage(docLangTag, toggledOn);
     this.#updateSettingsMenuLanguageCheckboxStates();
     await this.#doPageAction(pageAction);
   }
@@ -1247,7 +1253,11 @@ var TranslationsPanel = new (class {
       throw new Error("Expected to have a document language tag.");
     }
     const pageAction = this.getCheckboxPageActionFor().neverTranslateLanguage();
-    TranslationsParent.toggleNeverTranslateLanguagePref(docLangTag);
+    const toggledOn =
+      TranslationsParent.toggleNeverTranslateLanguagePref(docLangTag);
+    TranslationsParent.telemetry()
+      .panel()
+      .onNeverTranslateLanguage(docLangTag, toggledOn);
     this.#updateSettingsMenuLanguageCheckboxStates();
     await this.#doPageAction(pageAction);
   }
@@ -1259,7 +1269,9 @@ var TranslationsPanel = new (class {
    */
   async onNeverTranslateSite() {
     const pageAction = this.getCheckboxPageActionFor().neverTranslateSite();
-    await this.#getTranslationsActor().toggleNeverTranslateSitePermissions();
+    const toggledOn =
+      await this.#getTranslationsActor().toggleNeverTranslateSitePermissions();
+    TranslationsParent.telemetry().panel().onNeverTranslateSite(toggledOn);
     this.#updateSettingsMenuSiteCheckboxStates();
     await this.#doPageAction(pageAction);
   }
