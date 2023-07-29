@@ -163,10 +163,20 @@ const workspaceFunctions = {
         let tabsStates = JSON.parse(
           Services.prefs.getStringPref(WORKSPACE_TABS_PREF)
         );
+
         for (let i = 0; i < tabs.length; i++) {
           let tab = tabs[i];
-          let state = tabsStates[i][i].workspace;
-          tab.setAttribute("floorp-workspace", state);
+          let state =
+            tabsStates[i] && tabsStates[i][i] && tabsStates[i][i].workspace;
+
+          if (state !== undefined && state !== null && state !== "") {
+            tab.setAttribute("floorp-workspace", state);
+          } else {
+            tab.setAttribute(
+              "floorp-workspace",
+              Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
+            );
+          }
         }
       }
 
@@ -520,7 +530,7 @@ const workspaceFunctions = {
           );
           console.log("delete unmatched tabs");
         }
-      } 
+      }
 
       for (let i = 0; i < tabs.length; i++) {
         let tab = tabs[i];
@@ -874,7 +884,7 @@ const workspaceFunctions = {
 
       // Path tools
       const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
-      const path = PathUtils.join(PROFILE_DIR, "floorp-workspace-backup.json")
+      const path = PathUtils.join(PROFILE_DIR, "floorp-workspace-backup.json");
 
       const encoder = new TextEncoder("UTF-8");
       const decoder = new TextDecoder("UTF-8");
@@ -891,7 +901,7 @@ const workspaceFunctions = {
           const doc = inputStream + backupDataString;
           const data = encoder.encode(doc);
           await IOUtils.write(path, data);
-        } 
+        }
 
         //ファイルの内容を取得し、backupDataString を追記し、ファイルを上書き保存する
         backupDataString = "\r" + backupDataString;
@@ -1013,7 +1023,10 @@ startWorkspace = function () {
   }
 
   //use from about:prerferences
-  Services.obs.addObserver(workspaceFunctions.Backup.restoreWorkspace, "backupWorkspace");
+  Services.obs.addObserver(
+    workspaceFunctions.Backup.restoreWorkspace,
+    "backupWorkspace"
+  );
 
   // run code
   SessionStore.promiseInitialized.then(() => {
@@ -1022,14 +1035,14 @@ startWorkspace = function () {
       return;
     }
     window.setTimeout(() => {
-     Promise.all([
-       workspaceFunctions.Backup.backupWorkspace(),
-       workspaceFunctions.manageWorkspaceFunctions.initWorkspace(),
-       workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace()
-     ]).then(() => {
-       setEvenyListeners();
-     });
-    } , 500);
+      Promise.all([
+        workspaceFunctions.Backup.backupWorkspace(),
+        workspaceFunctions.manageWorkspaceFunctions.initWorkspace(),
+        workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace(),
+      ]).then(() => {
+        setEvenyListeners();
+      });
+    }, 500);
   });
 };
 
