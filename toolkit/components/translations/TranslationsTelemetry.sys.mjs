@@ -2,6 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Switch this to true to help with local debugging.
+// Not intended for use in production.
+const LOG_TELEMETRY_EVENTS_FOR_DEBUGGING = false;
+
+const lazy = {};
+
+ChromeUtils.defineLazyGetter(lazy, "console", () => {
+  return console.createInstance({
+    maxLogLevelPref: "browser.translations.logLevel",
+    prefix: "TranslationsTelemetry",
+  });
+});
+
 /**
  * Telemetry functions for Translations actors
  */
@@ -10,6 +23,21 @@ export class TranslationsTelemetry {
    * A cached value to hold the current flowId.
    */
   static #flowId = null;
+
+  /**
+   * Logs the telemetry event to the console if enabled by
+   * the LOG_TELEMETRY_EVENTS constant.
+   */
+  static logEventToConsole(eventInfo) {
+    if (!LOG_TELEMETRY_EVENTS_FOR_DEBUGGING) {
+      return;
+    }
+    lazy.console.debug(
+      `${
+        Panel.isFirstUserInteraction() ? "[FIRST OPEN] " : ""
+      }flowId(${TranslationsTelemetry.getOrCreateFlowId()}): ${eventInfo}`
+    );
+  }
 
   /**
    * Telemetry functions for the Translations panel.
@@ -56,6 +84,7 @@ export class TranslationsTelemetry {
       first_interaction: Panel.isFirstUserInteraction(),
       reason: errorMessage,
     });
+    TranslationsTelemetry.logEventToConsole("onError");
   }
 
   /**
@@ -75,6 +104,7 @@ export class TranslationsTelemetry {
       to_language: data.toLanguage,
       auto_translate: data.autoTranslate,
     });
+    TranslationsTelemetry.logEventToConsole("onTranslate");
   }
 
   static onRestorePage() {
@@ -82,6 +112,7 @@ export class TranslationsTelemetry {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onRestorePage");
   }
 }
 
@@ -131,6 +162,7 @@ class Panel {
       first_interaction: Panel.isFirstUserInteraction(),
       opened_from: openedFromAppMenu ? "appMenu" : "translationsButton",
     });
+    TranslationsTelemetry.logEventToConsole("onOpen");
   }
 
   static onClose() {
@@ -138,6 +170,7 @@ class Panel {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onClose");
   }
 
   static onOpenFromLanguageMenu() {
@@ -145,6 +178,7 @@ class Panel {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onOpenFromLanguageMenu");
   }
 
   static onChangeFromLanguage(langTag) {
@@ -153,6 +187,7 @@ class Panel {
       first_interaction: Panel.isFirstUserInteraction(),
       language: langTag,
     });
+    TranslationsTelemetry.logEventToConsole(`onChangeFromLanguage(${langTag})`);
   }
 
   static onCloseFromLanguageMenu() {
@@ -160,6 +195,7 @@ class Panel {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onCloseFromLanguageMenu");
   }
 
   static onOpenToLanguageMenu() {
@@ -167,6 +203,7 @@ class Panel {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onOpenToLanguageMenu");
   }
 
   static onChangeToLanguage(langTag) {
@@ -175,6 +212,7 @@ class Panel {
       first_interaction: Panel.isFirstUserInteraction(),
       language: langTag,
     });
+    TranslationsTelemetry.logEventToConsole(`onChangeToLanguage(${langTag})`);
   }
 
   static onCloseToLanguageMenu() {
@@ -182,6 +220,7 @@ class Panel {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onCloseToLanguageMenu");
   }
 
   static onOpenSettingsMenu() {
@@ -189,6 +228,7 @@ class Panel {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onOpenSettingsMenu");
   }
 
   static onCloseSettingsMenu() {
@@ -196,6 +236,7 @@ class Panel {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onCloseSettingsMenu");
   }
 
   static onCancelButton() {
@@ -203,6 +244,7 @@ class Panel {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onCancelButton");
   }
 
   static onChangeSourceLanguageButton() {
@@ -210,6 +252,7 @@ class Panel {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onChangeSourceLanguageButton");
   }
 
   static onDismissErrorButton() {
@@ -217,6 +260,7 @@ class Panel {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onDismissErrorButton");
   }
 
   static onRestorePageButton() {
@@ -224,6 +268,7 @@ class Panel {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onRestorePageButton");
   }
 
   static onTranslateButton() {
@@ -231,6 +276,7 @@ class Panel {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onTranslateButton");
   }
 
   static onAlwaysTranslateLanguage(langTag, toggledOn) {
@@ -240,6 +286,9 @@ class Panel {
       language: langTag,
       toggled_on: toggledOn,
     });
+    TranslationsTelemetry.logEventToConsole(
+      `[${toggledOn ? "✔" : "x"}] onAlwaysTranslateLanguage(${langTag})`
+    );
   }
 
   static onNeverTranslateLanguage(langTag, toggledOn) {
@@ -249,6 +298,9 @@ class Panel {
       language: langTag,
       toggled_on: toggledOn,
     });
+    TranslationsTelemetry.logEventToConsole(
+      `[${toggledOn ? "✔" : "x"}] onNeverTranslateLanguage(${langTag})`
+    );
   }
 
   static onNeverTranslateSite(toggledOn) {
@@ -257,6 +309,9 @@ class Panel {
       first_interaction: Panel.isFirstUserInteraction(),
       toggled_on: toggledOn,
     });
+    TranslationsTelemetry.logEventToConsole(
+      `[${toggledOn ? "✔" : "x"}] onNeverTranslateSite`
+    );
   }
 
   static onManageLanguages() {
@@ -264,6 +319,7 @@ class Panel {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onManageLanguages");
   }
 
   static onAboutTranslations() {
@@ -271,6 +327,7 @@ class Panel {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onAboutTranslations");
   }
 
   static onLearnMoreLink() {
@@ -278,5 +335,6 @@ class Panel {
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
     });
+    TranslationsTelemetry.logEventToConsole("onLearnMoreLink");
   }
 }
