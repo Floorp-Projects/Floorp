@@ -10,7 +10,9 @@
        noautofocus="true"
        aria-labelledby="translations-panel-header"
        orient="vertical"
-       onclick="TranslationsPanel.handlePanelButtonEvent(event)">
+       onclick="TranslationsPanel.handlePanelButtonEvent(event)"
+       onpopupshown="TranslationsPanel.handlePanelPopupShownEvent(event)"
+       onpopuphidden="TranslationsPanel.handlePanelPopupHiddenEvent(event)">
   <panelmultiview id="translations-panel-multiview"
                   mainViewId="translations-panel-view-default">
     <panelview id="translations-panel-view-default"

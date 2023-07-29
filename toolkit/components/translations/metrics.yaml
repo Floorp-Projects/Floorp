@@ -145,6 +145,91 @@ translations.panel:
       - translations-telemetry-alerts@mozilla.com
     expires: 122
 
+  close:
+    type: event
+    description: >
+      Triggers when translations panel is closed.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
+  open_from_language_menu:
+    type: event
+    description: >
+      Triggers when the from-language dropdown is opened in the translations panel.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
+  close_from_language_menu:
+    type: event
+    description: >
+      Triggers when the from-language dropdown is closed in the translations panel.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
+  open_to_language_menu:
+    type: event
+    description: >
+      Triggers when the from-language dropdown is opened in the translations panel.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
+  close_to_language_menu:
+    type: event
+    description: >
+      Triggers when the from-language dropdown is closed in the translations panel.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
   cancel_button:
     type: event
     description: >
