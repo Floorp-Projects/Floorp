@@ -4,12 +4,14 @@
 "use strict";
 
 /**
- * Tests the telemetry event for opening the translations panel.
+ * Tests that events in the first panel session are marked as first-interaction events
+ * and that events in the subsequent panel session are not marked as first-interaction events.
  */
-add_task(async function test_translations_telemetry_open_panel() {
+add_task(async function test_translations_telemetry_firstrun_basics() {
   const { cleanup } = await loadTestPage({
     page: SPANISH_PAGE_URL,
     languagePairs: LANGUAGE_PAIRS,
+    prefs: [["browser.translations.panelShown", false]],
   });
 
   await TestTranslationsTelemetry.assertEvent(
@@ -42,6 +44,7 @@ add_task(async function test_translations_telemetry_open_panel() {
     {
       expectedEventCount: 1,
       expectNewFlowId: true,
+      expectFirstInteraction: true,
       finalValuePredicates: [
         value => value.extra.opened_from === "translationsButton",
       ],
@@ -54,6 +57,7 @@ add_task(async function test_translations_telemetry_open_panel() {
     {
       expectedEventCount: 1,
       expectNewFlowId: false,
+      expectFirstInteraction: true,
     }
   );
 
@@ -63,6 +67,7 @@ add_task(async function test_translations_telemetry_open_panel() {
     {
       expectedEventCount: 1,
       expectNewFlowId: false,
+      expectFirstInteraction: true,
     }
   );
 
@@ -83,6 +88,7 @@ add_task(async function test_translations_telemetry_open_panel() {
     {
       expectedEventCount: 2,
       expectNewFlowId: true,
+      expectFirstInteraction: false,
       allValuePredicates: [
         value => value.extra.opened_from === "translationsButton",
       ],
@@ -95,6 +101,7 @@ add_task(async function test_translations_telemetry_open_panel() {
     {
       expectedEventCount: 2,
       expectNewFlowId: false,
+      expectFirstInteraction: false,
     }
   );
 
@@ -104,6 +111,7 @@ add_task(async function test_translations_telemetry_open_panel() {
     {
       expectedEventCount: 2,
       expectNewFlowId: false,
+      expectFirstInteraction: false,
     }
   );
 
