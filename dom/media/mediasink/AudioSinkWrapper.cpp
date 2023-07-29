@@ -329,6 +329,8 @@ bool AudioSinkWrapper::NeedAudioSink() {
 
 void AudioSinkWrapper::StartAudioSink(UniquePtr<AudioSink> aAudioSink,
                                       const TimeUnit& aStartTime) {
+  AssertOwnerThread();
+  MOZ_ASSERT(!mAudioSink);
   mAudioSink = std::move(aAudioSink);
   mAudioSink->Start(aStartTime)
       ->Then(mOwnerThread.get(), __func__, this,
@@ -337,6 +339,7 @@ void AudioSinkWrapper::StartAudioSink(UniquePtr<AudioSink> aAudioSink,
 }
 
 void AudioSinkWrapper::ShutDownAudioSink() {
+  AssertOwnerThread();
   mAudioSinkEndedRequest.DisconnectIfExists();
   if (IsPlaying()) {
     mPositionAtClockStart = mAudioSink->GetPosition();
@@ -349,6 +352,7 @@ void AudioSinkWrapper::ShutDownAudioSink() {
 
 RefPtr<GenericPromise> AudioSinkWrapper::MaybeAsyncCreateAudioSink(
     RefPtr<AudioDeviceInfo> aDevice) {
+  AssertOwnerThread();
   UniquePtr<AudioSink> audioSink;
   if (NeedAudioSink() && (!mAudioSink || aDevice != mAudioDevice)) {
     LOG("%p: AudioSinkWrapper::MaybeAsyncCreateAudioSink: AudioSink needed",
@@ -452,6 +456,7 @@ RefPtr<GenericPromise> AudioSinkWrapper::MaybeAsyncCreateAudioSink(
 }
 
 nsresult AudioSinkWrapper::SyncCreateAudioSink(const TimeUnit& aStartTime) {
+  AssertOwnerThread();
   MOZ_ASSERT(!mAudioSink);
   MOZ_ASSERT(!mAudioSinkEndedRequest.Exists());
 
