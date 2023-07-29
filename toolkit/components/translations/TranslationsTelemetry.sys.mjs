@@ -168,6 +168,20 @@ class Panel {
     });
   }
 
+  static onOpenSettingsMenu() {
+    Glean.translationsPanel.openSettingsMenu.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
+
+  static onCloseSettingsMenu() {
+    Glean.translationsPanel.closeSettingsMenu.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
+
   static onCancelButton() {
     Glean.translationsPanel.cancelButton.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),

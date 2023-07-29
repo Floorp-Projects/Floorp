@@ -637,7 +637,9 @@
               oncommand="gUnifiedExtensions.reportExtension(this.parentElement)" />
   </menupopup>
 
-  <menupopup id="translations-panel-settings-menupopup">
+  <menupopup id="translations-panel-settings-menupopup"
+             onpopupshown="TranslationsPanel.handleSettingsPopupShownEvent()"
+             onpopuphidden="TranslationsPanel.handleSettingsPopupHiddenEvent()">
     <menuitem class="always-translate-language-menuitem"
               data-l10n-id="translations-panel-settings-always-translate-unknown-language"
               type="checkbox"
