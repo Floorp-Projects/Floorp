@@ -266,6 +266,18 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.ok(wrapper.exists());
       assert.equal(wrapper.find(".steps.progress-bar").exists(), true);
     });
+
+    it("should render confirmation-screen if layout property is set to inline", () => {
+      const SCREEN_PROPS = {
+        content: {
+          title: "test title",
+          layout: "inline",
+        },
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      assert.equal(wrapper.find("[layout='inline']").exists(), true);
+    });
   });
 
   describe("AboutWelcomeDefaults for proton", () => {
