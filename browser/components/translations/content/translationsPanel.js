@@ -875,15 +875,14 @@ var TranslationsPanel = new (class {
    */
   async onChangeSourceLanguage(event) {
     const { panel } = this.elements;
-    panel.addEventListener("popuphidden", async () => {}, { once: true });
     PanelMultiView.hidePopup(panel);
 
     await this.#showDefaultView(true /* force this view to be shown */);
 
-    PanelMultiView.openPopup(panel, this.elements.appMenuButton, {
-      position: "bottomright topright",
-      triggeringEvent: event,
-    }).catch(error => this.console.error(error));
+    this.#openPanelPopup(this.elements.appMenuButton, {
+      event,
+      maintainFlow: true,
+    });
   }
 
   async #reloadLangList() {
@@ -893,6 +892,37 @@ var TranslationsPanel = new (class {
     } catch (error) {
       this.elements.errorHintAction.disabled = false;
     }
+  }
+
+  /**
+   * Opens the Translations panel popup at the given target.
+   *
+   * @param {object} target - The target element at which to open the popup.
+   * @param {object} data
+   * @param {string} data.event
+   *   The trigger event for opening the popup.
+   * @param {boolean} data.maintainFlow
+   *   Whether or not to maintain the flow of telemetry.
+   * @param {boolean} data.isFirstUserInteraction
+   *   Whether or not this is the first user interaction with the panel.
+   */
+  #openPanelPopup(
+    target,
+    { event = null, maintainFlow = false, isFirstUserInteraction = null }
+  ) {
+    const { panel, appMenuButton } = this.elements;
+    const openedFromAppMenu = target.id === appMenuButton.id;
+
+    TranslationsParent.telemetry().panel().onOpen({
+      maintainFlow,
+      openedFromAppMenu,
+      isFirstUserInteraction,
+    });
+
+    PanelMultiView.openPopup(panel, target, {
+      position: "bottomright topright",
+      triggerEvent: event,
+    }).catch(error => this.console.error(error));
   }
 
   /**
@@ -916,7 +946,7 @@ var TranslationsPanel = new (class {
       gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
     window.ensureCustomElements("moz-support-link");
 
-    const { panel, button } = this.elements;
+    const { button } = this.elements;
 
     await this.#ensureLangListsBuilt();
 
@@ -938,19 +968,13 @@ var TranslationsPanel = new (class {
 
     this.#populateSettingsMenuItems();
 
-    const [targetButton, openedFromAppMenu] =
+    const targetButton =
       button.contains(event.target) ||
       event.type === "TranslationsParent:OfferTranslation"
-        ? [button, false]
-        : [this.elements.appMenuButton, true];
-    TranslationsParent.telemetry()
-      .panel()
-      .onOpen({ openedFromAppMenu, isFirstUserInteraction });
+        ? button
+        : this.elements.appMenuButton;
 
-    PanelMultiView.openPopup(panel, targetButton, {
-      position: "bottomright topright",
-      triggerEvent: event,
-    }).catch(error => this.console.error(error));
+    this.#openPanelPopup(targetButton, { event, isFirstUserInteraction });
   }
 
   /**
@@ -1148,8 +1172,7 @@ var TranslationsPanel = new (class {
           isEngineReady,
         } = event.detail;
 
-        const { panel, button, buttonLocale, buttonCircleArrows } =
-          this.elements;
+        const { button, buttonLocale, buttonCircleArrows } = this.elements;
 
         const hasSupportedLanguage =
           detectedLanguages?.docLangTag &&
@@ -1262,10 +1285,7 @@ var TranslationsPanel = new (class {
               : button;
 
             // Re-open the menu on an error.
-            PanelMultiView.openPopup(panel, targetButton, {
-              position: "bottomright topright",
-            }).catch(panelError => this.console.error(panelError));
-
+            this.#openPanelPopup(targetButton, { maintainFlow: true });
             break;
           default:
             console.error("Unknown translation error", error);
