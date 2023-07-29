@@ -105,13 +105,22 @@ class Panel {
    * Records a telemetry event when the translations panel is opened.
    *
    * @param {object} data
+   * @param {boolean} data.maintainFlow
    * @param {boolean} data.openedFromAppMenu
    * @param {boolean} data.isFirstUserInteraction
    */
-  static onOpen({ openedFromAppMenu = false, isFirstUserInteraction = false }) {
-    Panel.#isFirstUserInteraction = isFirstUserInteraction;
+  static onOpen({
+    maintainFlow = false,
+    openedFromAppMenu = false,
+    isFirstUserInteraction = null,
+  }) {
+    if (isFirstUserInteraction !== null || !maintainFlow) {
+      Panel.#isFirstUserInteraction = isFirstUserInteraction ?? false;
+    }
     Glean.translationsPanel.open.record({
-      flow_id: TranslationsTelemetry.createFlowId(),
+      flow_id: maintainFlow
+        ? TranslationsTelemetry.getOrCreateFlowId()
+        : TranslationsTelemetry.createFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
       opened_from: openedFromAppMenu ? "appMenu" : "translationsButton",
     });

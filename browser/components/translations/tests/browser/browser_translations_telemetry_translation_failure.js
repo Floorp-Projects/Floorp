@@ -60,6 +60,18 @@ add_task(
       click(button, "Opening the popup");
     });
 
+    await TestTranslationsTelemetry.assertEvent(
+      "OpenPanel",
+      Glean.translationsPanel.open,
+      {
+        expectedEventCount: 1,
+        expectNewFlowId: true,
+        finalValuePredicates: [
+          value => value.extra.opened_from === "translationsButton",
+        ],
+      }
+    );
+
     await waitForTranslationsPopupEvent("popuphidden", () => {
       click(
         getByL10nId("translations-panel-translate-button"),
@@ -83,6 +95,17 @@ add_task(
       );
     });
 
+    await TestTranslationsTelemetry.assertEvent(
+      "OpenPanel",
+      Glean.translationsPanel.open,
+      {
+        expectedEventCount: 2,
+        expectNewFlowId: false,
+        finalValuePredicates: [
+          value => value.extra.opened_from === "translationsButton",
+        ],
+      }
+    );
     await TestTranslationsTelemetry.assertCounter(
       "RequestCount",
       Glean.translations.requestsCount,
@@ -94,17 +117,6 @@ add_task(
       {
         expectedNumerator: 1,
         expectedDenominator: 1,
-      }
-    );
-    await TestTranslationsTelemetry.assertEvent(
-      "OpenPanel",
-      Glean.translationsPanel.open,
-      {
-        expectedEventCount: 1,
-        expectNewFlowId: true,
-        finalValuePredicates: [
-          value => value.extra.opened_from === "translationsButton",
-        ],
       }
     );
     await TestTranslationsTelemetry.assertEvent(
