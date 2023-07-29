@@ -26,6 +26,21 @@ jobs:
       id: get
       run: |
        echo "display-version=$(cat browser/config/version_display.txt)" >> $GITHUB_OUTPUT
+
+  get-inside-version:
+    runs-on: ubuntu-latest
+
+    outputs:
+      inside-version: ${{ steps.get.outputs.inside-version }}
+
+    steps:
+     - uses: actions/checkout@v2 
+       with:
+        ref: ESR115
+     - name: Get Inside Version
+       id: get
+       run: |
+        echo "inside-version=$(cat browser/config/version.txt)" >> $GITHUB_OUTPUT
       
   Windows-x86_64-build-with-enable-profile-generate:
     name: Windows x86_64 Build with --enable-profile-generate
@@ -1426,7 +1441,7 @@ jobs:
        echo "upload_url=${{ steps.create_release.outputs.assets }}" >> $GITHUB_OUTPUT
 
   Deploy-to-updater:
-    needs: [build-linux-x86_64-with-PGO, build-linux-aarch64, cleanup-uselss-artifacts, Windows-x86_64-build-with-profdata-and-jarlog, get-display-version, Deploy-to-installer]
+    needs: [build-linux-x86_64-with-PGO, build-linux-aarch64, cleanup-uselss-artifacts, Windows-x86_64-build-with-profdata-and-jarlog, get-display-version, Deploy-to-installer, get-buildid, get-inside-version]
     runs-on: ubuntu-latest
     environment: 
       name: Deploy-to-updater-release
@@ -1450,7 +1465,7 @@ jobs:
     - name: Run GitHub Actions for Release aarch64 Linux MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
          echo "Preparing to run GitHub Actions for Release aarch64 Linux MAR, waiting for 30 seconds"
-         sleep 30
+         sleep 60
          curl -X POST \
            -H "Authorization: token ${{ secrets.PAT }}" \
            -H "Accept: application/vnd.github.v3+json" \
@@ -1467,7 +1482,7 @@ jobs:
     - name: Run GitHub Actions for Release x86_64 Darwin MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
          echo "Preparing to run GitHub Actions for Release x86_64 Darwin MAR, waiting for 30 seconds"
-         sleep 30
+         sleep 60
          curl -X POST \
            -H "Authorization: token ${{ secrets.PAT }}" \
            -H "Accept: application/vnd.github.v3+json" \
@@ -1477,14 +1492,16 @@ jobs:
              "inputs": {
                "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal-${{ needs.get-display-version.outputs.display-version }}.mar",
                "os": "Darwin",
-               "arch": "x86_64"
+               "arch": "x86_64",
+               "display-version": "${{ needs.get-display-version.outputs.display-version }}",
+               "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}"
              }
            }'
 
     - name: Run GitHub Actions for Release aarch64 Darwin MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
          echo "Preparing to run GitHub Actions for Release aarch64 Darwin MAR, waiting for 30 seconds"
-         sleep 30
+         sleep 60
          curl -X POST \
            -H "Authorization: token ${{ secrets.PAT }}" \
            -H "Accept: application/vnd.github.v3+json" \
@@ -1494,14 +1511,17 @@ jobs:
              "inputs": {
                "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal-${{ needs.get-display-version.outputs.display-version }}.mar",
                "os": "Darwin",
-               "arch": "aarch64"
+               "arch": "aarch64",
+               "buildid": "${{ needs.get-buildid.outputs.buildids }}",
+               "display-version": "${{ needs.get-display-version.outputs.display-version }}",
+               "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}"
              }
            }'
 
     -  name: Run GitHub Actions for Release x86_64 Windows MAR "Floorp-Projects/Floorp-Update" 🚀
        run: |
          echo "Preparing to run GitHub Actions for Release x86_64 Windows MAR, waiting for 30 seconds"
-         sleep 30
+         sleep 60
          curl -X POST \
            -H "Authorization: token ${{ secrets.PAT }}" \
            -H "Accept: application/vnd.github.v3+json" \
@@ -1560,7 +1580,7 @@ jobs:
          curl -X POST \
            -H "Authorization: token ${{ secrets.PAT }}" \
            -H "Accept: application/vnd.github.v3+json" \
-           "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/linux-build-aarch64-deb.yml/dispatches" \
+           "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/update-latest-json.yml/dispatches" \
            -d '{
             "ref": "main",
             "inputs": {
