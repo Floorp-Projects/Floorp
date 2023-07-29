@@ -920,6 +920,9 @@ var TranslationsPanel = new (class {
 
     await this.#ensureLangListsBuilt();
 
+    // Store this value because it gets modified when #showDefaultView is called below.
+    const isFirstUserInteraction = !this._hasShownPanel;
+
     const { requestedTranslationPair } =
       this.#getTranslationsActor().languageState;
 
@@ -940,8 +943,9 @@ var TranslationsPanel = new (class {
       event.type === "TranslationsParent:OfferTranslation"
         ? [button, false]
         : [this.elements.appMenuButton, true];
-
-    TranslationsParent.telemetry().panel().onOpen(openedFromAppMenu);
+    TranslationsParent.telemetry()
+      .panel()
+      .onOpen({ openedFromAppMenu, isFirstUserInteraction });
 
     PanelMultiView.openPopup(panel, targetButton, {
       position: "bottomright topright",
