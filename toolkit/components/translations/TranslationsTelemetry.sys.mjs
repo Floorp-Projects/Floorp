@@ -265,4 +265,18 @@ class Panel {
       first_interaction: Panel.isFirstUserInteraction(),
     });
   }
+
+  static onAboutTranslations() {
+    Glean.translationsPanel.aboutTranslations.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
+
+  static onLearnMoreLink() {
+    Glean.translationsPanel.learnMore.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+    });
+  }
 }
