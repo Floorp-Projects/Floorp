@@ -135,4 +135,6 @@
     <string name="mozac_feature_prompts_identity_credentials_choose_account">Izberite račun</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Uporabi %1$s kot ponudnika prijave</string>
-    </resources>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[Pri prijavi v %1$s z računom %2$s veljajo njihovi <a href="%4$s">pogoji uporabe</a> in <a href="%3$s">pravilnik o zasebnosti</a>]]></string>
+</resources>

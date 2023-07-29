@@ -135,4 +135,6 @@
     <string name="mozac_feature_prompts_identity_credentials_choose_account">Fren amiḍan</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Seqdec %1$s am usaǧǧaw n tuqqna</string>
-    </resources>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[Tuqqna ɣer %1$s s umiḍan %2$s ad yili ddaw <a href="%3$s">Tsertit tabaḍnit</a> d <a href="%4$s">Tewtilin n useqdec</a>]]></string>
+</resources>

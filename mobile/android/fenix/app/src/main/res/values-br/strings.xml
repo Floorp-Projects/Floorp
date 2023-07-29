@@ -295,51 +295,51 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Ket bremañ</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Lakait %s da vezañ ho merdeer dre ziouer</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Lakait %s da vezañ ho merdeer dre ziouer</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Lakait Firefox da vezañ ho merdeer dre ziouer</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">%1$s a lak an dud a-raok an arc’hant ha difenn a ra ho puhez prevez en ur stankañ an heulierien etre al lec’hiennoù. \n\nDeskit hiroc’h en hor %2$s.</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s a lak an dud a-raok an arc’hant ha difenn a ra ho puhez prevez en ur stankañ an heulierien etre al lec’hiennoù. \n\nDeskit hiroc’h en hor %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox a lak an dud a-raok an arc’hant ha difenn a ra ho puhez prevez en ur stankañ an heulierien etre al lec’hiennoù. \n\nDeskit hiroc’h en hor evezhiadennoù a-fet buhez prevez.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">evezhiadennoù a-fet buhez prevez</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">evezhiadennoù a-fet buhez prevez</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Lakaat da verdeer dre ziouer</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Lakaat da verdeer dre ziouer</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Ket bremañ</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ket bremañ</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Tremenit deus ar pellgomz d’an urzhiataer hezoug hag ar c’hontrol</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Tremenit deus ar pellgomz d’an urzhiataer hezoug hag ar c’hontrol</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Adtapit ivinelloù ha gerioù-tremen diouzh ho trevnadoù all evit distreiñ e-lec’h ma oac’h.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Adtapit ivinelloù ha gerioù-tremen diouzh ho trevnadoù all evit distreiñ e-lec’h ma oac’h.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Kennaskañ</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Kennaskañ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Ket bremañ</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Ket bremañ</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Gant ar rebuzadurioù e c’hallit ober muioc’h a draoù gant %s</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Gant ar rebuzadurioù e c’hallit ober muioc’h a draoù gant %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Gant ar rebuzadurioù e c’hallit ober muioc’h a draoù gant Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Kasit ivinelloù etre ho trevnadoù, merit pellgargadurioù, lennit alioù evit tapout seizh gwellañ gwarez buhez prevez %s.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Kasit ivinelloù etre ho trevnadoù, merit pellgargadurioù, lennit alioù evit tapout seizh gwellañ gwarez buhez prevez %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Kasit ivinelloù etre ho trevnadoù, merit pellgargadurioù, lennit alioù evit tapout seizh gwellañ gwarez buhez prevez Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Gweredekaat ar rebuzadurioù</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Gweredekaat ar rebuzadurioù</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Ket bremañ</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Ket bremañ</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1193,8 +1193,10 @@
     <string name="share_button_content_description">Rannañ</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Enrollañ evel PDF</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">N’haller ket sevel ar PDF</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Argas</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">N’haller ket moullañ</string>
     <!-- Text for the print feature in the share and browser menu -->
@@ -1892,6 +1894,12 @@
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Munudoù al lusker klask personelaet</string>
 
+    <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
+    <string name="search_add_custom_engine_suggest_url_label">API alioù klask (diret)</string>
+    <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
+    <string name="search_add_custom_engine_suggest_string_hint">URL API an alioù klask</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Erlec’hiañ ar c’hlask gant “%s”. Skouer:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Enrollañ</string>
 

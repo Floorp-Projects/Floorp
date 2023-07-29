@@ -366,6 +366,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_category_select_default_search_engine">Fren yiwen</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts">Sefrek inegzumen n unadi</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary">Ffer imseddayen i d-ibanen deg wumuɣ n unadi</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu">Imseddayen i d-ibanen deg wumuɣ n unadi</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Amsedday n unadi amezwer</string>
     <!-- Preference for settings related to Search -->
@@ -536,6 +540,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_open_links_in_apps_never">Weṛǧin</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Amsefrak n usader azɣaray</string>
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Rmed iɣmisen n Gecko</string>
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">Amdal n usnas i usnes n yibeddilen…</string>
 

@@ -543,6 +543,8 @@
     <string name="preferences_open_links_in_apps_never">Nikoli</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Zunanji upravitelj prenosov</string>
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Omogoči dnevnike izrisovalnika Gecko</string>
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">Zapiranje aplikacije za uveljavitev sprememb …</string>
 
@@ -1210,8 +1212,10 @@
     <string name="share_button_content_description">Deli</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Shrani kot PDF</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">Datoteke PDF ni mogoče ustvariti</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Zapri</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">Tiskanje ni mogoče</string>
     <!-- Text for the print feature in the share and browser menu -->
@@ -1919,6 +1923,12 @@
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Podrobnosti iskalnika po meri</string>
 
+    <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
+    <string name="search_add_custom_engine_suggest_url_label">API za predloge iskanja (neobvezno)</string>
+    <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
+    <string name="search_add_custom_engine_suggest_string_hint">URL API-ja za predloge iskanja</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Iskano poizvedbo zamenjajte s &quot;%s&quot;. Primer:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Shrani</string>
 
