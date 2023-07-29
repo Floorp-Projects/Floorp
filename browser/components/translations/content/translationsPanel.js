@@ -288,6 +288,7 @@ var TranslationsPanel = new (class {
       getter("button", "translations-button");
       getter("buttonLocale", "translations-button-locale");
       getter("buttonCircleArrows", "translations-button-circle-arrows");
+      getter("cancelButton", "translations-panel-cancel");
       getter(
         "changeSourceLanguageButton",
         "translations-panel-change-source-language"
@@ -304,10 +305,9 @@ var TranslationsPanel = new (class {
       getter("intro", "translations-panel-intro");
       getter("langSelection", "translations-panel-lang-selection");
       getter("multiview", "translations-panel-multiview");
-      getter("cancelButton", "translations-panel-cancel");
       getter("restoreButton", "translations-panel-restore-button");
-      getter("toMenuList", "translations-panel-to");
       getter("toLabel", "translations-panel-to-label");
+      getter("toMenuList", "translations-panel-to");
       getter("translateButton", "translations-panel-translate");
       getter("unsupportedHint", "translations-panel-error-unsupported-hint");
 
@@ -1155,6 +1155,9 @@ var TranslationsPanel = new (class {
     );
   }
 
+  /**
+   * Handle the cancel button being clicked.
+   */
   onCancel() {
     PanelMultiView.hidePopup(this.elements.panel);
   }
