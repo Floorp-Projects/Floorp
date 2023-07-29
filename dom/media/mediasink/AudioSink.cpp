@@ -288,8 +288,6 @@ void AudioSink::ShutDown() {
   mAudioQueueFinishListener.DisconnectIfExists();
   mProcessedQueueListener.DisconnectIfExists();
 
-  Maybe<MozPromiseHolder<MediaSink::EndedPromise>> rv;
-
   if (mAudioStream) {
     mAudioStream->ShutDown();
     mAudioStream = nullptr;
