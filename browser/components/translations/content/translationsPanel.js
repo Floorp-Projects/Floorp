@@ -883,9 +883,19 @@ var TranslationsPanel = new (class {
   }
 
   /*
+   * Handler for clicking the learn more link from linked text
+   * within the translations panel.
+   */
+  onLearnMoreLink() {
+    TranslationsParent.telemetry().panel().onLearnMoreLink();
+    TranslationsPanel.close();
+  }
+
+  /*
    * Handler for clicking the learn more link from the gear menu.
    */
-  onLearnMore() {
+  onAboutTranslations() {
+    TranslationsParent.telemetry().panel().onAboutTranslations();
     PanelMultiView.hidePopup(this.elements.panel);
     const window =
       gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
