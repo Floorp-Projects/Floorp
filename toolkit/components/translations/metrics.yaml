@@ -53,8 +53,10 @@ translations:
         description: The reason for the error.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436#c4
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366#c11
     data_sensitivity:
       - technical
     notification_emails:
@@ -81,8 +83,10 @@ translations:
           False if this translation was triggered manually.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836381
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836381
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836381#c4
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366#c11
     data_sensitivity:
       - interaction
     notification_emails:
@@ -101,8 +105,10 @@ translations.panel:
         description: The method by which the translations panel was opened.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1835502
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1835502#c7
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366#c11
     data_sensitivity:
       - interaction
     notification_emails:
