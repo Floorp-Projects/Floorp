@@ -108,7 +108,7 @@ jobs:
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
         export WORKDIR=`pwd`
-        export DISPVER=`cat browser/config/version_display.txt`
+        export DISPVER=`cat browser/config/version.txt`
         export DEBWORK=$WORKDIR/floorp-$DISPVER
         mkdir -p $DEBWORK/usr/lib/
         cd $DEBWORK/usr/lib/

@@ -11,7 +11,7 @@ on: workflow_dispatch
 
 jobs:
   build:
-    runs-on: ${{ github.repository_owner == 'Floorp-Projects' && 'buildjet-16vcpu-ubuntu-2204' || 'ubuntu-20.04' }}
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
@@ -102,7 +102,7 @@ jobs:
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
         export WORKDIR=`pwd`
-        export DISPVER=`cat browser/config/version_display.txt`
+        export DISPVER=`cat browser/config/version.txt`
         export DEBWORK=$WORKDIR/floorp-$DISPVER
         mkdir -p $DEBWORK/usr/lib/
         cd $DEBWORK/usr/lib/
