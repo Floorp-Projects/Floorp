@@ -303,52 +303,52 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Micca subitu</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Impiegate %s cum’è navigatore predefinitu</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Impiegate %s cum’è navigatore predefinitu</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Impiegate Firefox cum’è navigatore predefinitu</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">%1$s fà passà a ghjente nanzu à i prufiti è prutege a vostra vita privata blucchendu l’elementi intersiti di spiunagiu.\n\nSapene di più in a nostra %2$s.</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s fà passà a ghjente nanzu à i prufiti è prutege a vostra vita privata blucchendu l’elementi intersiti di spiunagiu.\n\nSapene di più in a nostra %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox fà passà a ghjente nanzu à i prufiti è prutege a vostra vita privata blucchendu l’elementi intersiti di spiunagiu.\n\nSapene di più in a nostra dichjarazione di cunfidenzialità.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">dichjarazione di cunfidenzialità</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">dichjarazione di cunfidenzialità</string>
 
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Sceglie cum’è navigatore predefinitu</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Sceglie cum’è navigatore predefinitu</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Micca subitu</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Micca subitu</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Passate da u telefonu à l’urdinatore purtavule è vice versa</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Passate da u telefonu à l’urdinatore purtavule è vice versa</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Ricuperate l’unghjette è e parolle d’intesa da i vostri altri apparechji per rivene induve vo l’avete lasciatu.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Ricuperate l’unghjette è e parolle d’intesa da i vostri altri apparechji per rivene induve vo l’avete lasciatu.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Cunnettesi</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Cunnettesi</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Micca subitu</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Micca subitu</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">E nutificazioni vi aiutanu à fane di più cù %s</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">E nutificazioni vi aiutanu à fane di più cù %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">E nutificazioni vi aiutanu à fane di più cù Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Mandate l’unghjette trà i vostri apparechji, urganizate i scaricamenti è ricivete cunsiglii per sapè cumu ottene u più bonu di %s.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Mandate l’unghjette trà i vostri apparechji, urganizate i scaricamenti è ricivete cunsiglii per sapè cumu ottene u più bonu di %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Mandate l’unghjette trà i vostri apparechji, urganizate i scaricamenti è ricivete cunsiglii per sapè cumu ottene u più bonu di Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Attivà e nutificazioni</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Attivà e nutificazioni</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Micca subitu</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Micca subitu</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1218,8 +1218,10 @@
     <string name="share_button_content_description">Sparte</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Arregistrà cum’è PDF</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">Impussibule d’ingenerà un PDF</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Chjode</string>
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error">Impussibule di stampà</string>
     <!-- Text for the print feature in the share and browser menu -->
@@ -1345,7 +1347,7 @@
     <!-- Sample text for accessibility font size -->
     <string name="accessibility_text_size_sample_text_1">Quessu hè un esempiu di testu. Vi permette di vede cumu u testu serà scrittu quandu voi aummenterete o diminuiscerete a so dimensione cù stu parametru.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
-    <string name="preference_accessibility_text_size_summary">Aummentà o reduce a dimensione di u testu di i siti web</string>
+    <string name="preference_accessibility_text_size_summary">Aummentà o riduce a dimensione di u testu di i siti web</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Dimensione di grafia</string>
 
@@ -1918,6 +1920,12 @@
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Detaglii di u mutore di ricerca persunalizatu</string>
 
+    <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
+    <string name="search_add_custom_engine_suggest_url_label">API per e sugestioni di ricerca (ozzionale)</string>
+    <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
+    <string name="search_add_custom_engine_suggest_string_hint">Indirizzu web di l’API per e sugestioni di ricerca</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Rimpiazzà a richiesta da « %s». Esempiu :\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Arregistrà</string>
 
