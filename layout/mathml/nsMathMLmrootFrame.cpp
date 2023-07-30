@@ -7,6 +7,7 @@
 #include "nsMathMLmrootFrame.h"
 
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_mathml.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include <algorithm>
@@ -47,6 +48,9 @@ void nsMathMLmrootFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 
 bool nsMathMLmrootFrame::ShouldUseRowFallback() {
+  if (!StaticPrefs::mathml_error_message_layout_for_invalid_markup_disabled()) {
+    return false;
+  }
   nsIFrame* baseFrame = mFrames.FirstChild();
   if (!baseFrame) {
     return true;
@@ -205,6 +209,16 @@ void nsMathMLmrootFrame::Reflow(nsPresContext* aPresContext,
     count++;
     childFrame = childFrame->GetNextSibling();
   }
+  // FIXME: Bug 1788223: Remove this code when the preference
+  // mathml.error_message_layout_for_invalid_markup.disabled no longer needed.
+  if (2 != count) {
+    // report an error, encourage people to get their markups in order
+    ReportChildCountError();
+    ReflowError(drawTarget, aDesiredSize);
+    // Call DidReflow() for the child frames we successfully did reflow.
+    DidReflowChildren(mFrames.FirstChild(), childFrame);
+    return;
+  }
 
   ////////////
   // Prepare the radical symbol and the overline bar
@@ -350,12 +364,13 @@ void nsMathMLmrootFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext,
     return;
   }
 
-  // ShouldUseRowFallback() returned false so there are exactly two children.
   nsIFrame* baseFrame = mFrames.FirstChild();
-  MOZ_ASSERT(baseFrame);
-  nsIFrame* indexFrame = baseFrame->GetNextSibling();
-  MOZ_ASSERT(indexFrame);
-  MOZ_ASSERT(!indexFrame->GetNextSibling());
+  nsIFrame* indexFrame = nullptr;
+  if (baseFrame) indexFrame = baseFrame->GetNextSibling();
+  if (!indexFrame || indexFrame->GetNextSibling()) {
+    ReflowError(aRenderingContext->GetDrawTarget(), aDesiredSize);
+    return;
+  }
 
   float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
   nscoord baseWidth = nsLayoutUtils::IntrinsicForContainer(

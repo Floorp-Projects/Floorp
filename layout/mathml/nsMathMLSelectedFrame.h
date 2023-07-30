@@ -47,10 +47,6 @@ class nsMathMLSelectedFrame : public nsMathMLContainerFrame {
         mInvalidMarkup(false) {}
   virtual ~nsMathMLSelectedFrame();
 
-  // error handlers to provide a visual feedback to the user when an error
-  // (typically invalid markup) was encountered during reflow.
-  nsresult ReflowError(DrawTarget* aDrawTarget, ReflowOutput& aDesiredSize);
-
   virtual nsIFrame* GetSelectedFrame() = 0;
   nsIFrame* mSelectedFrame;
 
