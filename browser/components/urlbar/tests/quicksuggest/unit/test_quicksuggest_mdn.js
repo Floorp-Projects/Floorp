@@ -208,7 +208,7 @@ function makeExpectedResult({
       url: suggestion.url,
       displayUrl: suggestion.url.replace(/^https:\/\//, ""),
       description: isTopPick ? suggestion.description : "",
-      icon: "chrome://devtools/skin/images/mdn.svg",
+      icon: "chrome://global/skin/icons/mdn.svg",
       shouldShowUrl: true,
     },
   };

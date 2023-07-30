@@ -90,7 +90,7 @@ export class MDNSuggestions extends BaseFeature {
     }
 
     const payload = {
-      icon: "chrome://devtools/skin/images/mdn.svg",
+      icon: "chrome://global/skin/icons/mdn.svg",
       url: suggestion.url,
       title: [suggestion.title, lazy.UrlbarUtils.HIGHLIGHT.TYPED],
       description: suggestion.description,
