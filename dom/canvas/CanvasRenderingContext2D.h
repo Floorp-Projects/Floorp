@@ -352,6 +352,13 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     }
   }
 
+  void EnsureActivePath() {
+    if (mPathPruned && !mPathBuilder->IsActive()) {
+      mPathBuilder->MoveTo(mPathBuilder->CurrentPoint());
+      mPathPruned = false;
+    }
+  }
+
   void ClosePath() {
     EnsureWritablePath();
 
@@ -390,6 +397,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
       mPathPruned = true;
       return;
     }
+    EnsureActivePath();
     mPathBuilder->QuadraticBezierTo(cp1, cp2);
     mPathPruned = false;
   }
@@ -530,6 +538,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
       mPathPruned = true;
       return;
     }
+    EnsureActivePath();
     mPathBuilder->LineTo(aPoint);
     mPathPruned = false;
   }
@@ -545,6 +554,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
       mPathPruned = true;
       return;
     }
+    EnsureActivePath();
     mPathBuilder->BezierTo(aCP1, aCP2, aCP3);
     mPathPruned = false;
   }

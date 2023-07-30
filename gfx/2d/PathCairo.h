@@ -34,6 +34,8 @@ class PathBuilderCairo : public PathBuilder {
 
   BackendType GetBackendType() const override { return BackendType::CAIRO; }
 
+  bool IsActive() const override { return !mPathData.empty(); }
+
   static already_AddRefed<PathBuilder> Create(FillRule aFillRule);
 
  private:  // data
@@ -79,6 +81,8 @@ class PathCairo : public Path {
 
   void AppendPathToBuilder(PathBuilderCairo* aBuilder,
                            const Matrix* aTransform = nullptr) const;
+
+  bool IsEmpty() const override;
 
  private:
   void EnsureContainingContext(const Matrix& aTransform) const;

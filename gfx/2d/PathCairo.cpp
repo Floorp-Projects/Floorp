@@ -239,6 +239,20 @@ void PathCairo::StreamToSink(PathSink* aSink) const {
   }
 }
 
+bool PathCairo::IsEmpty() const {
+  for (size_t i = 0; i < mPathData.size(); i++) {
+    switch (mPathData[i].header.type) {
+      case CAIRO_PATH_MOVE_TO:
+        break;
+      case CAIRO_PATH_CLOSE_PATH:
+        break;
+      default:
+        return false;
+    }
+  }
+  return true;
+}
+
 void PathCairo::EnsureContainingContext(const Matrix& aTransform) const {
   if (mContainingContext) {
     if (mContainingTransform.ExactlyEquals(aTransform)) {

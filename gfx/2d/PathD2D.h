@@ -45,6 +45,8 @@ class PathBuilderD2D : public PathBuilder {
 
   bool IsFigureActive() const { return mFigureActive; }
 
+  virtual bool IsActive() const { return IsFigureActive(); }
+
   static already_AddRefed<PathBuilder> Create(FillRule aFillRule);
 
  private:

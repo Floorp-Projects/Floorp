@@ -1007,7 +1007,7 @@ class Path : public external::AtomicRefCounted<Path> {
 
   virtual Point ComputePointAtLength(Float aLength, Point* aTangent = nullptr);
 
-  virtual bool IsEmpty() const { return false; }
+  virtual bool IsEmpty() const = 0;
 
  protected:
   Path();
@@ -1028,6 +1028,8 @@ class PathBuilder : public PathSink {
   virtual already_AddRefed<Path> Finish() = 0;
 
   virtual BackendType GetBackendType() const = 0;
+
+  virtual bool IsActive() const = 0;
 };
 
 struct Glyph {

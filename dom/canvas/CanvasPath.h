@@ -88,6 +88,7 @@ class CanvasPath final : public nsWrapperCache {
 
   void EnsurePathBuilder() const;
   void EnsureCapped() const;
+  void EnsureActive() const;
 };
 
 }  // namespace dom
