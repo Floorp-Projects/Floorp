@@ -4,13 +4,17 @@ URL = "https://cov19ent.kdca.go.kr/"
 HEADER_CSS = "header.mouseOn"
 
 
+# This site can be very slow, and prone to not finishing loading
+
+
 async def get_header_position(client):
-    await client.navigate(URL)
+    await client.navigate(URL, wait="complete")
+    header = client.await_css(HEADER_CSS, timeout=60)
     return client.execute_script(
-        f"""
-        const r = document.querySelector("{HEADER_CSS}");
-        return window.getComputedStyle(r).position;
-    """
+        """
+        return window.getComputedStyle(arguments[0]).position;
+    """,
+        header,
     )
 
 

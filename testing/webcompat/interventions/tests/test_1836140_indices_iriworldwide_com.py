@@ -15,4 +15,4 @@ async def test_enabled(client):
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):
-    await client.navigate(URL, await_console_message=BAD_MSG)
+    await client.navigate(URL, wait=None, await_console_message=BAD_MSG)

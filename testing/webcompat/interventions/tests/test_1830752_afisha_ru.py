@@ -25,7 +25,7 @@ async def slider_is_clickable(client):
 
     try:
         slider = client.await_css(SLIDER_CSS, is_displayed=True)
-        time.sleep(0.5)
+        time.sleep(2)
         slider.click()
     except ElementClickInterceptedException:
         return False

@@ -13,7 +13,7 @@ ACCEPT_COOKIES_CSS = "#lbganalyticsCookies [title*='Accept cookies']"
 
 
 async def get_radio_position(client):
-    await client.navigate(URL)
+    await client.navigate(URL, wait="load")
     accept = client.await_css(ACCEPT_COOKIES_CSS, timeout=2)
     if accept:
         accept.click()

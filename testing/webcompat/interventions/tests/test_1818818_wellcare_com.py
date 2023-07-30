@@ -6,7 +6,7 @@ SELECT_CSS = "select#userSelect"
 
 
 async def is_fastclick_active(client):
-    await client.navigate(URL)
+    await client.navigate(URL, wait="load")
     menu = client.await_css(MENU_CSS)
     client.soft_click(menu)
     return client.test_for_fastclick(client.await_css(SELECT_CSS))

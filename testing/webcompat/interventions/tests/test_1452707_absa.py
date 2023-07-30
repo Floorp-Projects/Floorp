@@ -1,6 +1,7 @@
 import pytest
 
 URL = "https://ib.absa.co.za/absa-online/login.jsp"
+UNSUPPORTED_ALERT = "Browser unsupported"
 
 
 @pytest.mark.asyncio
@@ -13,7 +14,7 @@ async def test_enabled(client):
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):
+    alert = await client.await_alert(UNSUPPORTED_ALERT)
     await client.navigate(URL)
-    assert client.alert.text == "Browser unsupported"
-    client.alert.dismiss()
+    await alert
     assert client.find_css("html.unknown")

@@ -4,21 +4,20 @@ URL = "https://atracker.pro/"
 LOGIN_CSS = "a[onclick='openWebVersionWindow()']"
 
 
-def get_login_popup_url(client):
-    client.execute_script("window.open = url => window.openUrl = url;")
+async def get_login_popup_url(client, popup_url):
+    popup = await client.await_popup(popup_url)
+    await client.navigate(URL, wait="load")
     client.soft_click(client.await_css(LOGIN_CSS))
-    return client.execute_script("return window.openUrl;")
+    return await popup
 
 
 @pytest.mark.asyncio
 @pytest.mark.with_interventions
 async def test_enabled(client):
-    await client.navigate(URL)
-    assert get_login_popup_url(client).find("index.html") > 0
+    assert await get_login_popup_url(client, "index.html")
 
 
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):
-    await client.navigate(URL)
-    assert get_login_popup_url(client).find("BrowserCheck") > 0
+    assert await get_login_popup_url(client, "BrowserCheck")

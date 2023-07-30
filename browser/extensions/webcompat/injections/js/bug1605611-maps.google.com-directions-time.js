@@ -14,7 +14,7 @@
  */
 
 const selector =
-  ".ml-directions-searchbox-parent [aria-haspopup=dialog][disabled=true]";
+  ".ml-directions-searchbox-parent [aria-haspopup=dialog][disabled]";
 
 document.addEventListener("DOMContentLoaded", () => {
   // In case the element appeared before the MutationObserver was activated.
