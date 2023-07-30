@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c" width="50" height="50"></canvas>
+
+<script>
+const c = document.getElementById("c");
+const ctx = c.getContext("2d");
+
+ctx.translate(20, 20);
+
+ctx.beginPath();
+ctx.lineTo(0, 0);
+ctx.lineTo(0, 20);
+ctx.stroke();
+
+</script>
+
+</body>
+</html>
+
+

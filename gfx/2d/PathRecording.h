@@ -71,6 +71,10 @@ class PathOps {
 
   Maybe<Circle> AsCircle() const;
 
+  bool IsActive() const { return !mPathData.empty(); }
+
+  bool IsEmpty() const;
+
  private:
   enum class OpType : uint32_t {
     OP_MOVETO = 0,
@@ -167,6 +171,8 @@ class PathBuilderRecording final : public PathBuilder {
 
   BackendType GetBackendType() const final { return BackendType::RECORDING; }
 
+  bool IsActive() const final { return mPathOps.IsActive(); }
+
  private:
   BackendType mBackendType;
   FillRule mFillRule;
@@ -221,6 +227,8 @@ class PathRecording final : public Path {
   }
 
   FillRule GetFillRule() const final { return mFillRule; }
+
+  bool IsEmpty() const final { return mPathOps.IsEmpty(); }
 
  private:
   friend class DrawTargetWrapAndRecord;

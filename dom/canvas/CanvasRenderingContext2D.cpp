@@ -3385,6 +3385,8 @@ void CanvasRenderingContext2D::Arc(double aX, double aY, double aR,
 
   EnsureWritablePath();
 
+  EnsureActivePath();
+
   mPathBuilder->Arc(Point(aX, aY), aR, aStartAngle, aEndAngle, aAnticlockwise);
   mPathPruned = false;
 }
@@ -6369,6 +6371,16 @@ inline void CanvasPath::EnsureCapped() const {
   }
 }
 
+inline void CanvasPath::EnsureActive() const {
+  // If the path is not active, then adding an op to the path may cause the path
+  // to add the first point of the op as the initial point instead of the actual
+  // current point.
+  if (mPruned && !mPathBuilder->IsActive()) {
+    mPathBuilder->MoveTo(mPathBuilder->CurrentPoint());
+    mPruned = false;
+  }
+}
+
 void CanvasPath::MoveTo(double aX, double aY) {
   EnsurePathBuilder();
 
@@ -6398,6 +6410,8 @@ void CanvasPath::QuadraticCurveTo(double aCpx, double aCpy, double aX,
     mPruned = true;
     return;
   }
+
+  EnsureActive();
 
   mPathBuilder->QuadraticBezierTo(cp1, cp2);
   mPruned = false;
@@ -6518,6 +6532,8 @@ void CanvasPath::Arc(double aX, double aY, double aRadius, double aStartAngle,
 
   EnsurePathBuilder();
 
+  EnsureActive();
+
   mPathBuilder->Arc(Point(aX, aY), aRadius, aStartAngle, aEndAngle,
                     aAnticlockwise);
   mPruned = false;
@@ -6552,6 +6568,8 @@ void CanvasPath::LineTo(const gfx::Point& aPoint) {
     return;
   }
 
+  EnsureActive();
+
   mPathBuilder->LineTo(aPoint);
   mPruned = false;
 }
@@ -6567,6 +6585,8 @@ void CanvasPath::BezierTo(const gfx::Point& aCP1, const gfx::Point& aCP2,
     mPruned = true;
     return;
   }
+
+  EnsureActive();
 
   mPathBuilder->BezierTo(aCP1, aCP2, aCP3);
   mPruned = false;

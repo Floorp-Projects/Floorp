@@ -179,6 +179,25 @@ size_t PathOps::NumberOfOps() const {
   return size;
 }
 
+bool PathOps::IsEmpty() const {
+  const uint8_t* nextByte = mPathData.data();
+  const uint8_t* end = nextByte + mPathData.size();
+  while (nextByte < end) {
+    const OpType opType = *reinterpret_cast<const OpType*>(nextByte);
+    nextByte += sizeof(OpType);
+    switch (opType) {
+      case OpType::OP_MOVETO:
+        nextByte += sizeof(Point);
+        break;
+      case OpType::OP_CLOSE:
+        break;
+      default:
+        return false;
+    }
+  }
+  return true;
+}
+
 void PathBuilderRecording::MoveTo(const Point& aPoint) {
   mPathOps.MoveTo(aPoint);
   mBeginPoint = aPoint;

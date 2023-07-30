@@ -119,3 +119,5 @@ fuzzy-if(winWidget,0-94,0-1575) fuzzy-if(cocoaWidget,0-1,0-34) == 1304353-text-g
 
 == 1817455-1.html 1817455-1-ref.html
 != 1817873-1.html 1817873-1-ref.html
+
+!= 1846079-1.html 1846079-1-ref.html

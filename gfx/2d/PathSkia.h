@@ -37,6 +37,8 @@ class PathBuilderSkia : public PathBuilder {
 
   BackendType GetBackendType() const override { return BackendType::SKIA; }
 
+  bool IsActive() const override { return mPath.countPoints() > 0; }
+
   static already_AddRefed<PathBuilder> Create(FillRule aFillRule);
 
  private:
