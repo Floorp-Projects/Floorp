@@ -496,7 +496,21 @@ workspaces-backup-discription = Backup & Restore your Workspaces
 
 workspaces-restore-service-title = Floorp Workspace Backup Service
 workspaces-restore-warning = Warning! Running this operation will cause the browser to freeze temporarily and restart automatically.
-floorp-workspace-settings-button = Backup Settings...
+floorp-workspace-settings-button = Open Workspace Settings...
+
+change-to-close-workspace-popup-option = 
+ .label = Change workspace to close Workspace Popup
+pinned-tabs-exclude-workspace-option = 
+ .label = Pinned tabs are excluded from the workspace
+
+workspaces-reset-title = Reset Workspaces
+workspaces-reset-label =
+    .label = Reset Workspaces
+workspaces-reset-description = If the backup does not work and the workspace does not start, reset the workspace.
+workspaces-reset-button = Reset Workspaces
+
+workspaces-reset-service-title = Floorp Workspaces
+workspaces-reset-warning = Warning! Running this operation will delete all your workspaces and restart the browser.
 
 ## Mouse Gesture
 mouse-gesture = Mouse Gesture

@@ -16,11 +16,35 @@ XPCOMUtils.defineLazyGetter(this, "L10n", () => {
   return new Localization(["branding/brand.ftl", "browser/floorp", ]);
 });
 
+Preferences.addAll([
+  { id: "floorp.browser.workspace.closePopupAfterClick", type: "bool" },
+  { id: "floorp.browser.workspace.excludePinnedTabs", type: "bool" },
+])
+
 function coventToDateAndTime(timestamp) {
   let date = new Date(timestamp);
   let dateStr = date.toLocaleDateString();
   let timeStr = date.toLocaleTimeString();
   return dateStr + " " + timeStr;
+}
+
+async function resetWorkspaces () {
+  let l10n = new Localization(["browser/floorp.ftl"], true);
+  const prompts = Services.prompt;
+  const check = {
+    value: false
+  };
+  const flags = prompts.BUTTON_POS_0 * prompts.BUTTON_TITLE_OK + prompts.BUTTON_POS_1 * prompts.BUTTON_TITLE_CANCEL;
+  let result = prompts.confirmEx(null, l10n.formatValueSync("workspaces-reset-service-title"), l10n.formatValueSync("workspaces-reset-warning"), flags, "", null, "", null, check);
+  if (result == 0) {
+    Promise.all([
+      Services.prefs.clearUserPref("floorp.browser.workspace.all"),
+      Services.prefs.clearUserPref("floorp.browser.workspace.current"),
+      Services.prefs.clearUserPref("floorp.browser.workspace.tabs.state")
+    ]).then(() => {
+      Services.obs.notifyObservers([], "floorp-restart-browser");
+    });
+  }
 }
 
 const gWorkspacesPane = {
@@ -30,6 +54,9 @@ const gWorkspacesPane = {
     document.getElementById("backtogeneral-workspaces").addEventListener("command", function () {
       gotoPref("general")
     });
+
+    const resetButton = document.getElementById("reset-workspaces-button");
+    resetButton.addEventListener("command", resetWorkspaces);
 
     // get workspace backups.
     const file = FileUtils.getFile("ProfD", ["floorp-workspace-backup.json"]);

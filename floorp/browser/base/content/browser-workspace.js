@@ -9,6 +9,7 @@ const WORKSPACE_CURRENT_PREF = "floorp.browser.workspace.current";
 const WORKSPACE_ALL_PREF = "floorp.browser.workspace.all";
 const WORKSPACE_TABS_PREF = "floorp.browser.workspace.tabs.state";
 const WORKSPACE_CLOSE_POPUP_AFTER_CLICK_PREF = "floorp.browser.workspace.closePopupAfterClick";
+const WORKSPACE_EXCLUDED_PINNED_TABS_PREF = "floorp.browser.workspace.excludePinnedTabs";
 const l10n = new Localization(["browser/floorp.ftl"], true);
 const defaultWorkspaceName = Services.prefs
   .getStringPref(WORKSPACE_ALL_PREF)
@@ -475,6 +476,9 @@ const workspaceFunctions = {
         ?.removeAttribute("floorp-firstVisibleTab");
       let lastTab = null;
       let firstTab = null;
+      const excludePinnedTabs = Services.prefs.getBoolPref(
+        WORKSPACE_EXCLUDED_PINNED_TABS_PREF
+      );
       for (let i = 0; i < tabs.length; i++) {
         let tab = tabs[i];
         let workspace = tab.getAttribute("floorp-workspace");
@@ -483,6 +487,7 @@ const workspaceFunctions = {
           !Services.prefs.getBoolPref(WORKSPACE_TAB_ENABLED_PREF)
         ) {
           gBrowser.showTab(tab);
+          tab.removeAttribute("hidden");
           lastTab = tab;
           if (firstTab == null) {
             tab.setAttribute("floorp-firstVisibleTab", "true");
@@ -490,6 +495,10 @@ const workspaceFunctions = {
           }
         } else {
           gBrowser.hideTab(tab);
+
+          if (excludePinnedTabs){
+            tab.setAttribute("hidden", "true");
+          }
         }
 
         if (currentWorkspace != l10n.formatValueSync("workspace-default")) {
