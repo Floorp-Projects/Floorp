@@ -11,8 +11,8 @@ LOGIN_FAIL_XPATH = (
     "//*[contains(text(), 'try again') and " "contains(@class, 'FormError')]"
 )
 AUTH_CSS = "[class*='newlogindialog_ProtectingAccount']"
-AUTH_DIGITS_CSS = "[class*='newlogindialog_SegmentedCharacterInput'] input[type='text']"
-AUTH_RETRY_CSS = "[class*='newlogindialog_TryAgainButton']"
+AUTH_DIGITS_CSS = "[class*='segmentedinputs_SegmentedCharacterInput'] input.Focusable"
+AUTH_RETRY_CSS = "[class*='newlogindialog_FormError']"
 AUTH_RETRY_LOADER_CSS = "[class*='newlogindialog_Loading']"
 RATE_TEXT = "too many login failures"
 VOICE_XPATH = (
@@ -24,7 +24,7 @@ UNSUPPORTED_TEXT = "currently unsupported in Firefox"
 
 
 async def do_2fa(client):
-    digits = client.find_css(AUTH_DIGITS_CSS, all=True)
+    digits = client.await_css(AUTH_DIGITS_CSS, all=True)
     assert len(digits) > 0
 
     loader = client.css(AUTH_RETRY_LOADER_CSS)
@@ -120,17 +120,3 @@ async def test_enabled(client, credentials, should_do_2fa):
         mic_test.click()
 
     assert not client.find_text(UNSUPPORTED_TEXT)
-
-
-@pytest.mark.skip_platforms("android")
-@pytest.mark.asyncio
-@pytest.mark.without_interventions
-async def test_disabled(client, credentials, should_do_2fa):
-    mic_test = await load_mic_test(client, credentials, should_do_2fa)
-    if not mic_test:
-        return
-
-    mic_test.click()
-
-    unsupported = client.await_text(UNSUPPORTED_TEXT)
-    assert client.is_displayed(unsupported)

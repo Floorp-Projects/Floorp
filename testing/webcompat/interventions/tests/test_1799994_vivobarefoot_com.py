@@ -2,7 +2,7 @@ import pytest
 from webdriver.error import NoSuchElementException
 
 URL = "https://www.vivobarefoot.com/eu/mens"
-FILTER_CSS = "#narrow-by-list .filter-wrapper:last-of-type"
+FILTER_CSS = "#narrow-by-list .filter-wrapper:last-of-type dt"
 SUBMENU_CSS = "#narrow-by-list .filter-wrapper:last-of-type dd"
 POPUP1_CSS = "#globalePopupWrapper"
 POPUP2_CSS = "#globale_overlay"
@@ -23,6 +23,24 @@ async def check_filter_opens(client):
         client.remove_element(popup)
 
     filter = client.await_css(FILTER_CSS)
+
+    # we need to wait for the page to add the click listener
+    client.execute_async_script(
+        """
+        const filter = arguments[0];
+        const resolve = arguments[1];
+        const ETP = EventTarget.prototype;
+        const AEL = ETP.addEventListener;
+        ETP.addEventListener = function(type) {
+          if (this === filter && type === "click") {
+            resolve();
+          }
+          return AEL.apply(this, arguments);
+        };
+    """,
+        filter,
+    )
+
     client.mouse.click(element=filter).perform()
     try:
         client.await_css(SUBMENU_CSS, is_displayed=True, timeout=3)

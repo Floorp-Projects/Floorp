@@ -82,10 +82,11 @@ class FirefoxWebDriver(WebDriver):
         if "use_strict_etp" in test_config:
             prefs[STRICT_ETP_PREF] = test_config["use_strict_etp"]
 
-        if "without_tcp" in test_config:
-            cookieBehavior = 4 if test_config["without_tcp"] else 5
-            prefs[CB_PREF] = cookieBehavior
-            prefs[CB_PBM_PREF] = cookieBehavior
+        # remote/cdp/CDP.sys.mjs sets cookieBehavior to 0,
+        # which we definitely do not want, so set it back to 5.
+        cookieBehavior = 4 if test_config.get("without_tcp") else 5
+        prefs[CB_PREF] = cookieBehavior
+        prefs[CB_PBM_PREF] = cookieBehavior
 
         fx_options = {"prefs": prefs}
 

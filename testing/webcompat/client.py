@@ -8,6 +8,7 @@ import time
 from urllib.parse import quote
 
 import webdriver
+from webdriver.bidi.modules.script import ContextTarget
 
 
 class Client:
@@ -98,36 +99,388 @@ class Client:
     def inline(self, doc):
         return "data:text/html;charset=utf-8,{}".format(quote(doc))
 
-    async def navigate(self, url, timeout=None, await_console_message=None):
-        if timeout is not None:
-            old_timeout = self.session.timeouts.page_load
-            self.session.timeouts.page_load = timeout
+    async def top_context(self):
+        contexts = await self.session.bidi_session.browsing_context.get_tree()
+        return contexts[0]
+
+    async def navigate(self, url, timeout=None, **kwargs):
+        return await asyncio.wait_for(
+            asyncio.ensure_future(self._navigate(url, **kwargs)), timeout=timeout
+        )
+
+    async def _navigate(self, url, wait="complete", await_console_message=None):
         if self.session.test_config.get("use_pbm") or self.session.test_config.get(
             "use_strict_etp"
         ):
             print("waiting for content blocker...")
             self.wait_for_content_blocker()
         if await_console_message is not None:
-            console_message = self.monitor_for_console_message(await_console_message)
-        await self.session.bidi_session.session.subscribe(events=["log.entryAdded"])
+            console_message = await self.promise_console_message_listener(
+                await_console_message
+            )
+        if wait == "load":
+            page_load = await self.promise_readystate_listener("load", url=url)
         try:
-            self.session.url = url
-        except webdriver.error.TimeoutException as e:
-            if timeout is None:
-                raise e
+            await self.session.bidi_session.browsing_context.navigate(
+                context=(await self.top_context())["context"],
+                url=url,
+                wait=wait if wait != "load" else None,
+            )
+        except webdriver.bidi.error.UnknownErrorException as u:
+            m = str(u)
+            if (
+                "NS_BINDING_ABORTED" not in m
+                and "NS_ERROR_ABORT" not in m
+                and "NS_ERROR_WONT_HANDLE_CONTENT" not in m
+            ):
+                raise u
+        if wait == "load":
+            await page_load
         if await_console_message is not None:
             await console_message
-            await self.session.bidi_session.session.unsubscribe(
-                events=["log.entryAdded"]
-            )
-        if timeout is not None:
-            self.session.timeouts.page_load = old_timeout
 
-    async def promise_console_message(self, message, timeout=20):
-        promise = self.monitor_for_console_message(message, timeout)
-        await self.session.bidi_session.session.subscribe(events=["log.entryAdded"])
-        await promise
-        await self.session.bidi_session.session.unsubscribe(events=["log.entryAdded"])
+    async def promise_event_listener(self, events, check_fn=None, timeout=20):
+        if type(events) is not list:
+            events = [events]
+
+        await self.session.bidi_session.session.subscribe(events=events)
+
+        future = self.event_loop.create_future()
+
+        listener_removers = []
+
+        def remove_listeners():
+            for listener_remover in listener_removers:
+                try:
+                    listener_remover()
+                except Exception:
+                    pass
+
+        async def on_event(method, data):
+            print("on_event", method, data)
+            val = None
+            if check_fn is not None:
+                val = check_fn(method, data)
+                if val is None:
+                    return
+            future.set_result(val)
+
+        for event in events:
+            r = self.session.bidi_session.add_event_listener(event, on_event)
+            listener_removers.append(r)
+
+        async def task():
+            try:
+                return await asyncio.wait_for(future, timeout=timeout)
+            finally:
+                remove_listeners()
+                try:
+                    await asyncio.wait_for(
+                        self.session.bidi_session.session.unsubscribe(events=events),
+                        timeout=4,
+                    )
+                except asyncio.exceptions.TimeoutError:
+                    print("Unexpectedly timed out unsubscribing", events)
+                    pass
+
+        return asyncio.create_task(task())
+
+    async def promise_console_message_listener(self, msg, **kwargs):
+        def check(method, data):
+            if "text" in data:
+                if msg in data["text"]:
+                    return data
+            if "args" in data and len(data["args"]):
+                for arg in data["args"]:
+                    if "value" in arg and msg in arg["value"]:
+                        return data
+
+        return await self.promise_event_listener("log.entryAdded", check, **kwargs)
+
+    async def is_console_message(self, message):
+        try:
+            await (await self.promise_console_message_listener(message, timeout=2))
+            return True
+        except asyncio.exceptions.TimeoutError:
+            return False
+
+    async def promise_readystate_listener(self, state, url=None, **kwargs):
+        event = f"browsingContext.{state}"
+
+        def check(method, data):
+            if url is None or url in data["url"]:
+                return data
+
+        return await self.promise_event_listener(event, check, **kwargs)
+
+    async def promise_frame_listener(self, url, state="domContentLoaded", **kwargs):
+        event = f"browsingContext.{state}"
+
+        def check(method, data):
+            if url is None or url in data["url"]:
+                return Client.Context(self, data["context"])
+
+        return await self.promise_event_listener(event, check, **kwargs)
+
+    async def find_frame_context_by_url(self, url):
+        def find_in(arr, url):
+            for context in arr:
+                if url in context["url"]:
+                    return context
+            for context in arr:
+                found = find_in(context["children"], url)
+                if found:
+                    return found
+
+        return find_in([await self.top_context()], url)
+
+    class Context:
+        def __init__(self, client, id):
+            self.client = client
+            self.target = ContextTarget(id)
+
+        async def find_css(self, selector, all=False):
+            all = "All" if all else ""
+            return await self.client.session.bidi_session.script.evaluate(
+                expression=f"document.querySelector{all}('{selector}')",
+                target=self.target,
+                await_promise=False,
+            )
+
+        def timed_js(self, timeout, poll, fn, is_displayed=False):
+            return f"""() => new Promise((_good, _bad) => {{
+                        {self.is_displayed_js()}
+                        var _poll = {poll} * 1000;
+                        var _time = {timeout} * 1000;
+                        var _done = false;
+                        var resolve = val => {{
+                            if ({is_displayed}) {{
+                                if (val.length) {{
+                                    val = val.filter(v = is_displayed(v));
+                                }} else {{
+                                    val = is_displayed(val) && val;
+                                }}
+                                if (!val.length && !val.matches) {{
+                                    return;
+                                }}
+                            }}
+                            _done = true;
+                            clearInterval(_int);
+                            _good(val);
+                        }};
+                        var reject = str => {{
+                            _done = true;
+                            clearInterval(_int);
+                            _bad(val);
+                        }};
+                        var _int = setInterval(() => {{
+                            {fn};
+                            if (!_done) {{
+                                _time -= _poll;
+                                if (_time <= 0) {{
+                                    reject();
+                                }}
+                            }}
+                        }}, poll);
+                    }})"""
+
+        def is_displayed_js(self):
+            return """
+                function is_displayed(e) {
+                    const s = window.getComputedStyle(e),
+                          v = s.visibility === "visible",
+                          o = Math.abs(parseFloat(s.opacity));
+                    return e.getClientRects().length > 0 && v && (isNaN(o) || o === 1.0);
+                }
+                """
+
+        async def await_css(
+            self, selector, all=False, timeout=10, poll=0.25, is_displayed=False
+        ):
+            all = "All" if all else ""
+            return await self.client.session.bidi_session.script.evaluate(
+                expression=self.timed_js(
+                    timeout,
+                    poll,
+                    f"""
+                    var ele = document.querySelector{all}('{selector}')";
+                    if (ele && (!"length" in ele || ele.length > 0) {{
+                        resolve(ele);
+                    }}
+                    """,
+                ),
+                target=self.target,
+                await_promise=True,
+            )
+
+        async def await_text(self, text, **kwargs):
+            xpath = f"//*[contains(text(),'{text}')]"
+            return await self.await_xpath(self, xpath, **kwargs)
+
+        async def await_xpath(
+            self, xpath, all=False, timeout=10, poll=0.25, is_displayed=False
+        ):
+            all = "true" if all else "false"
+            return await self.client.session.bidi_session.script.evaluate(
+                expression=self.timed_js(
+                    timeout,
+                    poll,
+                    """
+                    var ret = [];
+                    var r, res = document.evaluate(`{xpath}`, document, null, 4);
+                    while (r = res.iterateNext()) {
+                        ret.push(r);
+                    }
+                    resolve({all} ? ret : ret[0]);
+                    """,
+                ),
+                target=self.target,
+                await_promise=True,
+            )
+
+    def wrap_script_args(self, args):
+        if args is None:
+            return args
+        out = []
+        for arg in args:
+            if arg is None:
+                out.append({"type": "undefined"})
+                continue
+            t = type(arg)
+            if t == int or t == float:
+                out.append({"type": "number", "value": arg})
+            elif t == bool:
+                out.append({"type": "boolean", "value": arg})
+            elif t == str:
+                out.append({"type": "string", "value": arg})
+            else:
+                if "type" in arg:
+                    out.push(arg)
+                    continue
+                raise ValueError(f"Unhandled argument type: {t}")
+        return out
+
+    class PreloadScript:
+        def __init__(self, client, script, target):
+            self.client = client
+            self.script = script
+            if type(target) == list:
+                self.target = target[0]
+            else:
+                self.target = target
+
+        def stop(self):
+            return self.client.session.bidi_session.script.remove_preload_script(
+                script=self.script
+            )
+
+        async def run(self, fn, *args, await_promise=False):
+            val = await self.client.session.bidi_session.script.call_function(
+                arguments=self.client.wrap_script_args(args),
+                await_promise=await_promise,
+                function_declaration=fn,
+                target=self.target,
+            )
+            if val and "value" in val:
+                return val["value"]
+            return val
+
+    async def make_preload_script(self, text, sandbox, args=None, context=None):
+        if not context:
+            context = (await self.top_context())["context"]
+        target = ContextTarget(context, sandbox)
+        if args is None:
+            text = f"() => {{ {text} }}"
+        script = await self.session.bidi_session.script.add_preload_script(
+            function_declaration=text,
+            arguments=self.wrap_script_args(args),
+            sandbox=sandbox,
+        )
+        return Client.PreloadScript(self, script, target)
+
+    async def await_alert(self, text):
+        if not hasattr(self, "alert_preload_script"):
+            self.alert_preload_script = await self.make_preload_script(
+                """
+                    window.__alerts = [];
+                    window.wrappedJSObject.alert = function(text) {
+                        window.__alerts.push(text);
+                    }
+                """,
+                "alert_detector",
+            )
+        return self.alert_preload_script.run(
+            """(msg) => new Promise(done => {
+                    const to = setInterval(() => {
+                        if (window.__alerts.includes(msg)) {
+                            clearInterval(to);
+                            done();
+                        }
+                    }, 200);
+               })
+            """,
+            text,
+            await_promise=True,
+        )
+
+    async def await_popup(self, url=None):
+        if not hasattr(self, "popup_preload_script"):
+            self.popup_preload_script = await self.make_preload_script(
+                """
+                    window.__popups = [];
+                    window.wrappedJSObject.open = function(url) {
+                        window.__popups.push(url);
+                    }
+                """,
+                "popup_detector",
+            )
+        return self.popup_preload_script.run(
+            """(url) => new Promise(done => {
+                    const to = setInterval(() => {
+                        if (url === undefined && window.__popups.length) {
+                            clearInterval(to);
+                            return done(window.__popups[0]);
+                        }
+                        const found = window.__popups.find(u => u.includes(url));
+                        if (found !== undefined) {
+                            clearInterval(to);
+                            done(found);
+                        }
+                    }, 1000);
+               })
+            """,
+            url,
+            await_promise=True,
+        )
+
+    async def track_listener(self, type, selector):
+        if not hasattr(self, "listener_preload_script"):
+            self.listener_preload_script = await self.make_preload_script(
+                """
+                window.__listeners = {};
+                var proto = EventTarget.wrappedJSObject.prototype;
+                var def = Object.getOwnPropertyDescriptor(proto, "addEventListener");
+                var old = def.value;
+                def.value = function(type, fn, opts) {
+                    if ("matches" in this) {
+                        if (!window.__listeners[type]) {
+                            window.__listeners[type] = new Set();
+                        }
+                        window.__listeners[type].add(this);
+                    }
+                    return old.call(this, type, fn, opts)
+                };
+                Object.defineProperty(proto, "addEventListener", def);
+            """,
+                "listener_detector",
+            )
+        return Client.ListenerTracker(self.listener_preload_script, type, selector)
+
+    @contextlib.asynccontextmanager
+    async def preload_script(self, text, *args):
+        script = await self.make_preload_script(text, "preload", args=args)
+        yield script
+        await script.stop()
 
     def back(self):
         self.session.back()
@@ -154,34 +507,6 @@ class Client:
             loads -= 1
         self.switch_frame(frame)
         return frame
-
-    def promise_bidi_event(self, event_name: str, check_fn=None, timeout=5):
-        future = self.event_loop.create_future()
-
-        async def on_event(method, data):
-            print("on_event", method, data)
-            if check_fn is not None and not check_fn(method, data):
-                return
-            remove_listener()
-            future.set_result(data)
-
-        remove_listener = self.session.bidi_session.add_event_listener(
-            event_name, on_event
-        )
-        return asyncio.wait_for(future, timeout=timeout)
-
-    def monitor_for_console_message(self, msg, timeout=20):
-        def check_messages(method, data):
-            if "text" in data:
-                if msg in data["text"]:
-                    return True
-            if "args" in data and len(data["args"]) and "value" in data["args"][0]:
-                if msg in data["args"][0]["value"]:
-                    return True
-
-        return self.promise_bidi_event(
-            "log.entryAdded", check_messages, timeout=timeout
-        )
 
     def execute_script(self, script, *args):
         return self.session.execute_script(script, args=args)
