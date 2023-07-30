@@ -2655,9 +2655,7 @@ spacer[part="overflow-end-indicator"] {
   margin: 0 !important;
   padding: 0 !important;
   width: 8px !important;
-  order: 3 !important;
-  order: 2;
-  margin-right: 16px !important;
+  margin-right: 24px !important;
 }
 
 #tracking-protection-icon-box {
