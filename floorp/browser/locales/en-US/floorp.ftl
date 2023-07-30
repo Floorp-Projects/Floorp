@@ -816,6 +816,9 @@ move-tab-another-workspace =
 workspace-rename = 
   .label = Change workspace name
 
+workspace-delete = 
+  .label = Delete workspace
+
 ######################################################################### menubar item ###############################################################
 
 sharemode-menuitem =

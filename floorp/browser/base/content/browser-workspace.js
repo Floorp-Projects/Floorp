@@ -8,12 +8,31 @@ const WORKSPACE_TAB_ENABLED_PREF = "floorp.browser.workspace.tab.enabled";
 const WORKSPACE_CURRENT_PREF = "floorp.browser.workspace.current";
 const WORKSPACE_ALL_PREF = "floorp.browser.workspace.all";
 const WORKSPACE_TABS_PREF = "floorp.browser.workspace.tabs.state";
-const WORKSPACE_CLOSE_POPUP_AFTER_CLICK_PREF = "floorp.browser.workspace.closePopupAfterClick";
-const WORKSPACE_EXCLUDED_PINNED_TABS_PREF = "floorp.browser.workspace.excludePinnedTabs";
+const WORKSPACE_CLOSE_POPUP_AFTER_CLICK_PREF =
+  "floorp.browser.workspace.closePopupAfterClick";
+const WORKSPACE_EXCLUDED_PINNED_TABS_PREF =
+  "floorp.browser.workspace.excludePinnedTabs";
+const WORKSPACE_INFO_PREF = "floorp.browser.workspace.info";
 const l10n = new Localization(["browser/floorp.ftl"], true);
 const defaultWorkspaceName = Services.prefs
   .getStringPref(WORKSPACE_ALL_PREF)
   .split(",")[0];
+
+const CONTAINER_ICONS = new Set([
+  "briefcase",
+  "cart",
+  "circle",
+  "dollar",
+  "fence",
+  "fingerprint",
+  "gift",
+  "vacation",
+  "food",
+  "fruit",
+  "pet",
+  "tree",
+  "chill",
+]);
 
 const workspaceFunctions = {
   eventListeners: {
@@ -496,7 +515,7 @@ const workspaceFunctions = {
         } else {
           gBrowser.hideTab(tab);
 
-          if (excludePinnedTabs){
+          if (excludePinnedTabs) {
             tab.setAttribute("hidden", "true");
           }
         }
@@ -662,6 +681,99 @@ const workspaceFunctions = {
       }
       return count;
     },
+
+    checkWorkspaceInfoExist(name) {
+      const data = JSON.parse(
+        Services.prefs.getStringPref(WORKSPACE_INFO_PREF)
+      );
+      for (let i = 0; i < data.length; i++) {
+        const obj = data[i];
+        const keys = Object.keys(obj);
+        const workspaceValue = keys[0];
+
+        if (workspaceValue == name) {
+          // return workspaceValue;
+          return i;
+        }
+      }
+      return false;
+    },
+
+    addIconToWorkspace(workspaceName, iconName) {
+      let settings = JSON.parse(
+        Services.prefs.getStringPref(WORKSPACE_INFO_PREF)
+      );
+
+      const targetWorkspaceNumber =
+        workspaceFunctions.manageWorkspaceFunctions.checkWorkspaceInfoExist(
+          workspaceName
+        );
+
+      let iconURL = "";
+
+      if (
+        iconName.startsWith("resource://") ||
+        iconName.startsWith("chrome://") ||
+        iconName.startsWith("file://") ||
+        iconName.startsWith("data:") ||
+        iconName.startsWith("http://") ||
+        iconName.startsWith("https://")
+      ) {
+        iconURL = iconName;
+      } else {
+        iconURL = workspaceFunctions.iconFunctions.getIcon(iconName);
+      }
+
+      if (targetWorkspaceNumber === false) {
+        settingObject = {
+          [workspaceName]: {
+            icon: iconURL,
+          },
+        };
+        settings.push(settingObject);
+      } else {
+        settings[targetWorkspaceNumber][workspaceName].icon = iconURL;
+      }
+
+      Services.prefs.setStringPref(
+        WORKSPACE_INFO_PREF,
+        JSON.stringify(settings)
+      );
+    },
+  },
+
+  iconFunctions: {
+    getIcon(iconName) {
+      if (!CONTAINER_ICONS.has(iconName)) {
+        throw console.error(`Invalid icon ${iconName} for workspace`);
+      }
+      return `resource://usercontext-content/${iconName}.svg`;
+    },
+
+    getWorkspaceIcon(workspaceName) {
+      const settings = JSON.parse(
+        Services.prefs.getStringPref(WORKSPACE_INFO_PREF)
+      );
+      const targetWorkspaceNumber =
+        workspaceFunctions.manageWorkspaceFunctions.checkWorkspaceInfoExist(
+          workspaceName
+        );
+      if (targetWorkspaceNumber === false) {
+        return workspaceFunctions.iconFunctions.getIcon("fingerprint");
+      }
+      return settings[targetWorkspaceNumber][workspaceName].icon;
+    },
+
+    setWorkspaceFromPrompt() {
+      let workspaceName = prompt("workspace name");
+      if (workspaceName == "") {
+        return;
+      }
+      workspaceFunctions.manageWorkspaceFunctions.addWorkspace(workspaceName);
+      workspaceFunctions.manageWorkspaceFunctions.changeWorkspace(
+        workspaceName
+      );
+    },
   },
 
   tabFunctions: {
@@ -801,6 +913,9 @@ const workspaceFunctions = {
          <toolbarbutton id="workspace-label" label="${labelDisplay}"
                    class="toolbarbutton-1 workspace-item" workspace="${label}"
                    context="workspace-item-context" oncommand="workspaceFunctions.manageWorkspaceFunctions.changeWorkspace('${label}')"/>
+         <toolbarbutton workspace="${labelDisplay}" context="workspace-icon-context" id="workspace-icon" class="workspace-item-icon toolbarbutton-1" oncommand="workspaceFunctions.manageWorkspaceFunctions.changeWorkspace('${label}')" style="list-style-image: url(${workspaceFunctions.iconFunctions.getWorkspaceIcon(
+        label
+      )})"/>
        </hbox>
        <menuseparator class="workspace-item-separator"/>
       </vbox>
@@ -814,7 +929,9 @@ const workspaceFunctions = {
           .before(workspaceItemElem);
       }
 
-      if (Services.prefs.getStringPref(WORKSPACE_ALL_PREF).split(",")[0] !== label) {
+      if (
+        Services.prefs.getStringPref(WORKSPACE_ALL_PREF).split(",")[0] !== label
+      ) {
         let deleteButtonElem = window.MozXULElement.parseXULToFragment(`
             <toolbarbutton id="workspace-delete" class="workspace-item-delete toolbarbutton-1"
                            oncommand="workspaceFunctions.manageWorkspaceFunctions.deleteworkspace('${label}')"/>
@@ -833,13 +950,43 @@ const workspaceFunctions = {
       }
 
       let menuitemElem = window.MozXULElement.parseXULToFragment(`
-      <menuitem class="workspace-item-contexts" id="workspace-item-context-rename" data-l10n-id="workspace-rename" oncommand="workspaceFunctions.manageWorkspaceFunctions.renameWorkspace('${e.explicitOriginalTarget.getAttribute(
-        "label"
-      )}')"/>
+        <menuitem class="workspace-item-contexts" id="workspace-item-context-rename" data-l10n-id="workspace-rename" oncommand="workspaceFunctions.manageWorkspaceFunctions.renameWorkspace('${e.explicitOriginalTarget.getAttribute(
+          "label"
+        )}')"/>
       `);
 
       document
         .getElementById("workspace-item-context")
+        .appendChild(menuitemElem);
+    },
+
+    createWorkspaceIconContext(e) {
+      let oldMenuItems = document.querySelectorAll(".workspace-icon-context");
+
+      for (let i = 0; i < oldMenuItems.length; i++) {
+        oldMenuItems[i].remove();
+      }
+
+      let menuitemElem = window.MozXULElement.parseXULToFragment(`
+      <menuitem class="workspace-icon-context" id="workspace-item-context-icon-delete" data-l10n-id="workspace-delete" 
+                oncommand="workspaceFunctions.manageWorkspaceFunctions.deleteworkspace('${e.explicitOriginalTarget.getAttribute(
+                  "workspace"
+                )}');"/>
+      <menuitem class="workspace-icon-context" id="workspace-item-context-icon" data-l10n-id="workspace-rename" 
+                oncommand="workspaceFunctions.manageWorkspaceFunctions.renameWorkspace('${e.explicitOriginalTarget.getAttribute(
+                  "workspace"
+                )}')"/>
+      `);
+
+      if (
+        e.explicitOriginalTarget.getAttribute("workspace") ==
+        defaultWorkspaceName
+      ) {
+        menuitemElem.firstChild.remove();
+      }
+
+      document
+        .getElementById("workspace-icon-context")
         .appendChild(menuitemElem);
     },
 
