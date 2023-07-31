@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <title>Dynamic tests involving adding and removing elements</title>
+    <meta charset="utf-8"/>
+    <link rel="match" href="tablespacing-4-ref.html"/>
+  </head>
+  <body>
+  <math>
+    <mtable columnspacing="5em 7em" id="mtable0a">
+      <mtr id="mtr0">
+        <mtd>
+          <mn>x</mn>
+        </mtd>
+        <mtd>
+          <mn>y</mn>
+        </mtd>
+      </mtr>
+    </mtable>
+  </math>
+  <p>
+  <math>
+    <mtable  columnspacing="5em 7em">
+      <mtr id="mtr0a">
+        <mtd>
+          <mn>x</mn>
+        </mtd>
+        <mtd id="mtd0">
+          <mn>y</mn>
+        </mtd>
+        <mtd>
+          <mn>z</mn>
+        </mtd>
+      </mtr>
+    </mtable>
+  </math>
+  <p>
+  <math>
+    <mtable rowspacing="2ex 4ex" id="mtable0">
+      <mtr>
+        <mtd>
+          <mn>x</mn>
+        </mtd>
+      </mtr>
+      <mtr>
+        <mtd>
+          <mn>y</mn>
+        </mtd>
+      </mtr>
+    </mtable>
+  </math>
+  <p>
+  <math>
+    <mtable  rowspacing="2ex 4ex" id="mtable1">
+      <mtr>
+        <mtd>
+          <mn>x</mn>
+        </mtd>
+      </mtr>
+      <mtr id="mtr1">
+        <mtd>
+          <mn>y</mn>
+        </mtd>
+      </mtr>
+      <mtr>
+        <mtd>
+          <mn>z</mn>
+        </mtd>
+      </mtr>
+    </mtable>
+  </math>
+  <p>
+  <math>
+    <mtable  rowspacing="2ex 4ex" columnspacing="4em">
+      <mtr id="mtr2">
+        <mtd>
+          <mn>x</mn>
+        </mtd>
+      </mtr>
+      <mtr>
+        <mtd>
+          <mn>y</mn>
+        </mtd>
+      </mtr>
+      <mtr>
+        <mtd>
+          <mn>z</mn>
+        </mtd>
+      </mtr>
+    </mtable>
+  </math>
+  <script>
+    function doTest() {
+      // Add a table cell
+      var mn0 = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mn");
+      mn0.innerHTML = 'z';
+      var mtd0 = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mtd");
+      mtd0.appendChild(mn0);
+      document.getElementById("mtr0").appendChild(mtd0);
+      // Remove a table cell
+      document.getElementById("mtr0a").removeChild(document.getElementById("mtd0"));
+      // Add a table row
+      var mn1 = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mn");
+      mn1.innerHTML = 'z';
+      var mtd1 = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mtd");
+      mtd1.appendChild(mn1);
+      var mtr1 = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mtr");
+      mtr1.appendChild(mtd1);
+      document.getElementById("mtable0").appendChild(mtr1);
+      // Remove a table row
+      document.getElementById("mtable1").removeChild(document.getElementById("mtr1"));
+      // Add a table cell to a table containing several rows
+      var mn2 = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mn");
+      mn2.innerHTML = 'w';
+      var mtd2 = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mtd");
+      mtd2.appendChild(mn2);
+      document.getElementById("mtr2").appendChild(mtd2);
+
+      document.documentElement.removeAttribute("class");
+    }
+    document.documentElement.addEventListener("TestRendered", doTest);
+  </script>
+  </body>
+</html>
