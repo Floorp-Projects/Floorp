@@ -1324,8 +1324,8 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
       c = ' ';
     }
 
-    // Spaces, ASCII control characters, and commas are simply ignored.
-    if (c <= ' ' || c == ',') {
+    // Spaces, ASCII control characters, periods, and commas are simply ignored.
+    if (c <= ' ' || c == '.' || c == ',') {
       continue;
     }
 
