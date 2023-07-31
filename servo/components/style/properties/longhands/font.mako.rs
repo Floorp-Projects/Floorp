@@ -445,7 +445,7 @@ ${helpers.single_keyword(
 ${helpers.predefined_type(
     "-moz-font-smoothing-background-color",
     "color::MozFontSmoothingBackgroundColor",
-    "computed::color::MozFontSmoothingBackgroundColor::transparent()",
+    "computed::color::MozFontSmoothingBackgroundColor::TRANSPARENT",
     engines="gecko",
     animation_value_type="none",
     gecko_ffi_name="mFont.fontSmoothingBackgroundColor",
