@@ -9,7 +9,7 @@
 ${helpers.predefined_type(
     "color",
     "ColorPropertyValue",
-    "crate::color::AbsoluteColor::BLACK",
+    "crate::color::AbsoluteColor::black()",
     engines="gecko servo-2013 servo-2020",
     animation_value_type="AbsoluteColor",
     ignored_when_colors_disabled="True",

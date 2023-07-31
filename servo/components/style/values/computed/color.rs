@@ -42,15 +42,6 @@ impl ToCss for Color {
 }
 
 impl Color {
-    /// A fully transparent color.
-    pub const TRANSPARENT: Self = Self::Absolute(AbsoluteColor::TRANSPARENT);
-
-    /// An opaque black color.
-    pub const BLACK: Self = Self::Absolute(AbsoluteColor::BLACK);
-
-    /// An opaque white color.
-    pub const WHITE: Self = Self::Absolute(AbsoluteColor::WHITE);
-
     /// Create a new computed [`Color`] from a given color-mix, simplifying it to an absolute color
     /// if possible.
     pub fn from_color_mix(color_mix: ColorMix) -> Self {
@@ -59,6 +50,21 @@ impl Color {
         } else {
             Self::ColorMix(Box::new(color_mix))
         }
+    }
+
+    /// Returns a complex color value representing transparent.
+    pub fn transparent() -> Color {
+        Color::Absolute(AbsoluteColor::transparent())
+    }
+
+    /// Returns opaque black.
+    pub fn black() -> Color {
+        Color::Absolute(AbsoluteColor::black())
+    }
+
+    /// Returns opaque white.
+    pub fn white() -> Color {
+        Color::Absolute(AbsoluteColor::white())
     }
 
     /// Combine this complex color with the given foreground color into an
@@ -87,7 +93,7 @@ impl Color {
 
 impl ToAnimatedZero for AbsoluteColor {
     fn to_animated_zero(&self) -> Result<Self, ()> {
-        Ok(Self::TRANSPARENT)
+        Ok(Self::transparent())
     }
 }
 

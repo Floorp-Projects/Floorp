@@ -20,10 +20,12 @@ pub type SVGPaintKind = generic::GenericSVGPaintKind<Color, ComputedUrl>;
 
 impl SVGPaint {
     /// Opaque black color
-    pub const BLACK: Self = Self {
-        kind: generic::SVGPaintKind::Color(Color::BLACK),
-        fallback: generic::SVGPaintFallback::Unset,
-    };
+    pub fn black() -> Self {
+        SVGPaint {
+            kind: generic::SVGPaintKind::Color(Color::black()),
+            fallback: generic::SVGPaintFallback::Unset,
+        }
+    }
 }
 
 /// <length> | <percentage> | <number> | context-value
