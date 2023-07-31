@@ -3109,6 +3109,14 @@ void CodeGenerator::visitRegExpSearcher(LRegExpSearcher* lir) {
   masm.freeStack(RegExpReservedStack);
 }
 
+void CodeGenerator::visitRegExpSearcherLastLimit(
+    LRegExpSearcherLastLimit* lir) {
+  Register result = ToRegister(lir->output());
+  Register scratch = ToRegister(lir->temp0());
+
+  masm.loadAndClearRegExpSearcherLastLimit(result, scratch);
+}
+
 JitCode* JitRealm::generateRegExpExecTestStub(JSContext* cx) {
   JitSpew(JitSpew_Codegen, "# Emitting RegExpExecTest stub");
 

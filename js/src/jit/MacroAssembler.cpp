@@ -4319,6 +4319,25 @@ void MacroAssembler::loadRegExpLastIndex(Register regexp, Register string,
   bind(&loadedLastIndex);
 }
 
+void MacroAssembler::loadAndClearRegExpSearcherLastLimit(Register result,
+                                                         Register scratch) {
+  MOZ_ASSERT(result != scratch);
+
+  loadJSContext(scratch);
+
+  Address limitField(scratch, JSContext::offsetOfRegExpSearcherLastLimit());
+  load32(limitField, result);
+
+#ifdef DEBUG
+  Label ok;
+  branch32(Assembler::NotEqual, result, Imm32(RegExpSearcherLastLimitSentinel),
+           &ok);
+  assumeUnreachable("Unexpected sentinel for regExpSearcherLastLimit");
+  bind(&ok);
+  store32(Imm32(RegExpSearcherLastLimitSentinel), limitField);
+#endif
+}
+
 // ===============================================================
 // Branch functions
 

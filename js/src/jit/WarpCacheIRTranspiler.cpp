@@ -3510,6 +3510,14 @@ bool WarpCacheIRTranspiler::emitCallRegExpSearcherResult(
   return resumeAfter(searcher);
 }
 
+bool WarpCacheIRTranspiler::emitRegExpSearcherLastLimitResult() {
+  auto* limit = MRegExpSearcherLastLimit::New(alloc());
+  addEffectful(limit);
+  pushResult(limit);
+
+  return resumeAfter(limit);
+}
+
 bool WarpCacheIRTranspiler::emitRegExpBuiltinExecMatchResult(
     ObjOperandId regexpId, StringOperandId inputId, uint32_t stubOffset) {
   MDefinition* regexp = getOperand(regexpId);
