@@ -7477,12 +7477,6 @@
     mirror: always
 #endif  // NIGHTLY_BUILD
 
-  # Experimental support for change-array-by-copy methods
-- name: javascript.options.experimental.enable_change_array_by_copy
-  type: bool
-  value: true
-  mirror: always
-
 # Support Array.fromAsync
 - name: javascript.options.experimental.enable_array_from_async
   type: bool

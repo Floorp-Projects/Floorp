@@ -1,4 +1,4 @@
-// |jit-test| --enable-change-array-by-copy
+// |jit-test| 
 
 load(libdir + "asserts.js");
 

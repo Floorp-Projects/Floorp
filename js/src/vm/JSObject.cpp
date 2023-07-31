@@ -2222,23 +2222,6 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
     return true;
   }
 
-  if (key == JSProto_Array &&
-      !cx->realm()->creationOptions().getChangeArrayByCopyEnabled() &&
-      (id == NameToId(cx->names().with) ||
-       id == NameToId(cx->names().toReversed) ||
-       id == NameToId(cx->names().toSorted) ||
-       id == NameToId(cx->names().toSpliced))) {
-    return true;
-  }
-
-  if (key == JSProto_TypedArray &&
-      !cx->realm()->creationOptions().getChangeArrayByCopyEnabled() &&
-      (id == NameToId(cx->names().with) ||
-       id == NameToId(cx->names().toReversed) ||
-       id == NameToId(cx->names().toSorted))) {
-    return true;
-  }
-
 #ifdef ENABLE_NEW_SET_METHODS
   if (key == JSProto_Set &&
       !cx->realm()->creationOptions().getNewSetMethodsEnabled() &&

@@ -133,7 +133,6 @@ extern bool enableWellFormedUnicodeStrings;
 extern bool enableArrayBufferTransfer;
 extern bool enablePrivateClassFields;
 extern bool enablePrivateClassMethods;
-extern bool enableChangeArrayByCopy;
 #ifdef ENABLE_NEW_SET_METHODS
 extern bool enableNewSetMethods;
 #endif

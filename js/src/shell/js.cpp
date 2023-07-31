@@ -629,7 +629,6 @@ bool shell::enableWellFormedUnicodeStrings = false;
 // Pref for ArrayBuffer.prototype.transfer{,ToFixedLength}() methods.
 bool shell::enableArrayBufferTransfer = false;
 #endif
-bool shell::enableChangeArrayByCopy = false;
 #ifdef ENABLE_NEW_SET_METHODS
 bool shell::enableNewSetMethods = true;
 #endif
@@ -4019,7 +4018,6 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setWellFormedUnicodeStringsEnabled(enableWellFormedUnicodeStrings)
       .setArrayBufferTransferEnabled(enableArrayBufferTransfer)
 #endif
-      .setChangeArrayByCopyEnabled(enableChangeArrayByCopy)
 #ifdef ENABLE_NEW_SET_METHODS
       .setNewSetMethodsEnabled(enableNewSetMethods)
 #endif
@@ -11542,10 +11540,6 @@ bool InitOptionParser(OptionParser& op) {
                         "(Well-Formed Unicode Strings)") ||
       !op.addBoolOption('\0', "enable-arraybuffer-transfer",
                         "Enable ArrayBuffer.prototype.transfer() methods") ||
-      !op.addBoolOption('\0', "enable-change-array-by-copy",
-                        "Enable change-array-by-copy methods") ||
-      !op.addBoolOption('\0', "disable-change-array-by-copy",
-                        "Disable change-array-by-copy methods") ||
 #ifdef ENABLE_NEW_SET_METHODS
       !op.addBoolOption('\0', "enable-new-set-methods",
                         "Enable New Set methods") ||
@@ -12067,7 +12061,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       op.getBoolOption("enable-well-formed-unicode-strings");
   enableArrayBufferTransfer = op.getBoolOption("enable-arraybuffer-transfer");
 #endif
-  enableChangeArrayByCopy = !op.getBoolOption("disable-change-array-by-copy");
 #ifdef ENABLE_NEW_SET_METHODS
   enableNewSetMethods = op.getBoolOption("enable-new-set-methods");
 #endif

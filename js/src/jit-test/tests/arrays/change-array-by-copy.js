@@ -1,4 +1,4 @@
-// |jit-test| --enable-change-array-by-copy
+// |jit-test|
 
 load(libdir + 'array-compare.js');
 load(libdir + "asserts.js");

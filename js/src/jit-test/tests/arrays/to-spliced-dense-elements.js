@@ -1,4 +1,4 @@
-// |jit-test| --enable-change-array-by-copy
+// |jit-test|
 
 for (let i = 0; i < 1000; ++i) {
   let arr = [0];
