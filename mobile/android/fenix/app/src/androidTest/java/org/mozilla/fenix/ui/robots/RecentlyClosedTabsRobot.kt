@@ -18,7 +18,10 @@ import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
@@ -54,8 +57,9 @@ class RecentlyClosedTabsRobot {
     }
 
     fun verifyRecentlyClosedTabsPageTitle(title: String) =
-        recentlyClosedTabsPageTitle(title)
-            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        assertItemWithResIdAndTextExists(
+            recentlyClosedTabsPageTitle(title),
+        )
 
     fun verifyRecentlyClosedTabsUrl(expectedUrl: Uri) {
         onView(
@@ -72,7 +76,10 @@ class RecentlyClosedTabsRobot {
 
     class Transition {
         fun clickRecentlyClosedItem(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            recentlyClosedTabsPageTitle(title).click()
+            recentlyClosedTabsPageTitle(title).also {
+                it.waitForExists(waitingTimeShort)
+                it.click()
+            }
             mDevice.waitForIdle()
 
             BrowserRobot().interact()
@@ -109,12 +116,11 @@ class RecentlyClosedTabsRobot {
     }
 }
 
-private fun recentlyClosedTabsPageTitle(title: String) = onView(
-    allOf(
-        withId(R.id.title),
-        withText(title),
-    ),
-)
+private fun recentlyClosedTabsPageTitle(title: String) =
+    itemWithResIdContainingText(
+        resourceId = "$packageName:id/title",
+        text = title,
+    )
 
 private fun recentlyClosedTabDeleteButton() =
     onView(
