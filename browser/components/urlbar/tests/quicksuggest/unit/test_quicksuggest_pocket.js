@@ -17,8 +17,8 @@ const REMOTE_SETTINGS_DATA = [
         url: "https://example.com/pocket-0",
         title: "Pocket Suggestion 0",
         description: "Pocket description 0",
-        lowConfidenceKeywords: [LOW_KEYWORD],
-        highConfidenceKeywords: [HIGH_KEYWORD],
+        lowConfidenceKeywords: [LOW_KEYWORD, "how to low"],
+        highConfidenceKeywords: [HIGH_KEYWORD, "how to high"],
       },
       {
         url: "https://example.com/pocket-1",
@@ -230,6 +230,36 @@ add_task(async function lowPrefixes() {
   }
 });
 
+// Low-confidence keywords that start with "how to" should do prefix matching
+// starting at "how to" instead of the first word.
+add_task(async function lowPrefixes_howTo() {
+  // search string -> should match
+  let tests = {
+    h: false,
+    ho: false,
+    how: false,
+    "how ": false,
+    "how t": false,
+    "how to": true,
+    "how to ": true,
+    "how to l": true,
+    "how to lo": true,
+    "how to low": true,
+  };
+  for (let [searchString, shouldMatch] of Object.entries(tests)) {
+    info("Doing search: " + JSON.stringify({ searchString, shouldMatch }));
+    await check_results({
+      context: createContext(searchString, {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      }),
+      matches: shouldMatch
+        ? [makeExpectedResult({ searchString, fullKeyword: "how to low" })]
+        : [],
+    });
+  }
+});
+
 // High-confidence keywords should not do prefix matching at all.
 add_task(async function highPrefixes() {
   // search string -> should match
@@ -262,6 +292,59 @@ add_task(async function highPrefixes() {
             }),
           ]
         : [],
+    });
+  }
+});
+
+// High-confidence keywords starting with "how to" should also not do prefix
+// matching at all.
+add_task(async function highPrefixes_howTo() {
+  // search string -> [should match low, should match high]
+  let tests = {
+    h: [false, false],
+    ho: [false, false],
+    how: [false, false],
+    "how ": [false, false],
+    "how t": [false, false],
+    "how to": [true, false],
+    "how to ": [true, false],
+    "how to h": [false, false],
+    "how to hi": [false, false],
+    "how to hig": [false, false],
+    "how to high": [false, true],
+  };
+  for (let [searchString, [shouldMatchLow, shouldMatchHigh]] of Object.entries(
+    tests
+  )) {
+    info(
+      "Doing search: " +
+        JSON.stringify({ searchString, shouldMatchLow, shouldMatchHigh })
+    );
+    let matches = [];
+    if (shouldMatchLow) {
+      matches.push(
+        makeExpectedResult({
+          searchString,
+          fullKeyword: "how to low",
+          isTopPick: false,
+        })
+      );
+    }
+    if (shouldMatchHigh) {
+      matches.push(
+        makeExpectedResult({
+          searchString,
+          fullKeyword: "how to high",
+          isTopPick: true,
+        })
+      );
+    }
+    await check_results({
+      matches,
+      context: createContext(searchString, {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      }),
     });
   }
 });
