@@ -64,10 +64,22 @@ def record_cherry_picks(dir_in_gecko, merge_base_origin):
     )
 
     mb_info = run_checked(
-        "git", "log", "{}~1..{}".format(merge_base, merge_base), stdout=subprocess.PIPE
+        "git",
+        "log",
+        "--format=medium",
+        "--no-decorate",
+        "--no-abbrev-commit",
+        "{}~1..{}".format(merge_base, merge_base),
+        stdout=subprocess.PIPE,
     ).stdout
     cherries = run_checked(
-        "git", "log", merge_base + "..", stdout=subprocess.PIPE
+        "git",
+        "log",
+        "--format=medium",
+        "--no-decorate",
+        "--no-abbrev-commit",
+        merge_base + "..",
+        stdout=subprocess.PIPE,
     ).stdout
 
     with open(log_path, "wb") as f:
