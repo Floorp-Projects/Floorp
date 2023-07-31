@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-07-27T20:35:51.531194'
+updated_at: '2023-07-31T11:44:03.490227'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3198,6 +3198,10 @@ modules:
             - Asaf Romano
             - David Dahl
             - Shawn Wilsher
+          components:
+            - Firefox::Bookmarks & History
+            - Toolkit::Places
+          review_group: places-reviewers
         owners:
           - *mak
         peers:
@@ -4130,5 +4134,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 52559b927657750e1cdbe61145f13aa7ac91c095
-  export: fbf81449f9e1885ce0f01cf58da1ea7171b84507
+  config: 3065db57c505f3626a5f196b97e9807bbce4734c
+  export: 68264b6973c70966dc381cf7f6ca7fbec3957b28
