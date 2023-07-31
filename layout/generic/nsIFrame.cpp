@@ -2417,13 +2417,13 @@ already_AddRefed<ComputedStyle> nsIFrame::ComputeSelectionStyle(
 }
 
 already_AddRefed<ComputedStyle> nsIFrame::ComputeHighlightSelectionStyle(
-    const nsAtom* aHighlightName) {
+    nsAtom* aHighlightName) {
   Element* element = FindElementAncestorForMozSelection(GetContent());
   if (!element) {
     return nullptr;
   }
-  return PresContext()->StyleSet()->ProbeHighlightPseudoElementStyle(
-      *element, aHighlightName, Style());
+  return PresContext()->StyleSet()->ProbePseudoElementStyle(
+      *element, PseudoStyleType::highlight, aHighlightName, Style());
 }
 
 template <typename SizeOrMaxSize>

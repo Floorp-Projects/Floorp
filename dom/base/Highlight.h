@@ -36,7 +36,7 @@ class Selection;
  * to the `nsFrameSelection` and layout code.
  */
 struct HighlightSelectionData {
-  RefPtr<const nsAtom> mHighlightName;
+  RefPtr<nsAtom> mHighlightName;
   RefPtr<Highlight> mHighlight;
 };
 
@@ -92,7 +92,7 @@ class Highlight final : public nsISupports, public nsWrapperCache {
    * @brief Creates a Highlight Selection using the given ranges.
    */
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Selection> CreateHighlightSelection(
-      const nsAtom* aHighlightName, nsFrameSelection* aFrameSelection);
+      nsAtom* aHighlightName, nsFrameSelection* aFrameSelection);
 
   // WebIDL interface
   nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
