@@ -281,6 +281,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                     aAttributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
                 nsHtml5String crossOrigin = aAttributes->getValue(
                     nsHtml5AttributeName::ATTR_CROSSORIGIN);
+                nsHtml5String nonce =
+                    aAttributes->getValue(nsHtml5AttributeName::ATTR_NONCE);
                 nsHtml5String integrity =
                     aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
                 nsHtml5String referrerPolicy = aAttributes->getValue(
@@ -288,8 +290,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 nsHtml5String media =
                     aAttributes->getValue(nsHtml5AttributeName::ATTR_MEDIA);
                 mSpeculativeLoadQueue.AppendElement()->InitStyle(
-                    url, charset, crossOrigin, media, referrerPolicy, integrity,
-                    false);
+                    url, charset, crossOrigin, media, referrerPolicy, nonce,
+                    integrity, false);
               }
             } else if (rel.LowerCaseEqualsASCII("preconnect")) {
               nsHtml5String url =
@@ -336,7 +338,7 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 } else if (as.LowerCaseEqualsASCII("style")) {
                   mSpeculativeLoadQueue.AppendElement()->InitStyle(
                       url, charset, crossOrigin, media, referrerPolicy,
-                      integrity, true);
+                      /* aNonce */ nullptr, integrity, true);
                 } else if (as.LowerCaseEqualsASCII("image")) {
                   nsHtml5String srcset = aAttributes->getValue(
                       nsHtml5AttributeName::ATTR_IMAGESRCSET);

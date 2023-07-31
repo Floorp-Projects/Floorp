@@ -176,7 +176,7 @@ PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
   } else if (aAs.LowerCaseEqualsASCII("style")) {
     auto status = mDocument->PreloadStyle(
         aURI, Encoding::ForLabel(aCharset), aCORS,
-        PreloadReferrerPolicy(aReferrerPolicy), aIntegrity,
+        PreloadReferrerPolicy(aReferrerPolicy), /* aNonce */ u""_ns, aIntegrity,
         aFromHeader ? css::StylePreloadKind::FromLinkRelPreloadHeader
                     : css::StylePreloadKind::FromLinkRelPreloadElement,
         aEarlyHintPreloaderId);
