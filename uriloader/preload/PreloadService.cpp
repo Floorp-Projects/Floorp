@@ -114,8 +114,9 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
 
 void PreloadService::PreloadLinkHeader(
     nsIURI* aURI, const nsAString& aURL, nsContentPolicyType aPolicyType,
-    const nsAString& aAs, const nsAString& aType, const nsAString& aIntegrity,
-    const nsAString& aSrcset, const nsAString& aSizes, const nsAString& aCORS,
+    const nsAString& aAs, const nsAString& aType, const nsAString& aNonce,
+    const nsAString& aIntegrity, const nsAString& aSrcset,
+    const nsAString& aSizes, const nsAString& aCORS,
     const nsAString& aReferrerPolicy, uint64_t aEarlyHintPreloaderId) {
   if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
     MOZ_ASSERT_UNREACHABLE("Caller should check");
@@ -127,8 +128,7 @@ void PreloadService::PreloadLinkHeader(
   }
 
   PreloadOrCoalesce(aURI, aURL, aPolicyType, aAs, aType, u""_ns, aSrcset,
-                    aSizes, /* aNonce = */ u""_ns, aIntegrity, aCORS,
-                    aReferrerPolicy,
+                    aSizes, aNonce, aIntegrity, aCORS, aReferrerPolicy,
                     /* aFromHeader = */ true, aEarlyHintPreloaderId);
 }
 

@@ -3503,6 +3503,7 @@ void LinkHeader::Reset() {
   mHref.Truncate();
   mRel.Truncate();
   mTitle.Truncate();
+  mNonce.Truncate();
   mIntegrity.Truncate();
   mSrcset.Truncate();
   mSizes.Truncate();
@@ -3532,9 +3533,10 @@ nsresult LinkHeader::NewResolveHref(nsIURI** aOutURI, nsIURI* aBaseURI) const {
 
 bool LinkHeader::operator==(const LinkHeader& rhs) const {
   return mHref == rhs.mHref && mRel == rhs.mRel && mTitle == rhs.mTitle &&
-         mIntegrity == rhs.mIntegrity && mSrcset == rhs.mSrcset &&
-         mSizes == rhs.mSizes && mType == rhs.mType && mMedia == rhs.mMedia &&
-         mAnchor == rhs.mAnchor && mCrossOrigin == rhs.mCrossOrigin &&
+         mNonce == rhs.mNonce && mIntegrity == rhs.mIntegrity &&
+         mSrcset == rhs.mSrcset && mSizes == rhs.mSizes && mType == rhs.mType &&
+         mMedia == rhs.mMedia && mAnchor == rhs.mAnchor &&
+         mCrossOrigin == rhs.mCrossOrigin &&
          mReferrerPolicy == rhs.mReferrerPolicy && mAs == rhs.mAs;
 }
 
@@ -3740,6 +3742,11 @@ nsTArray<LinkHeader> ParseLinkHeader(const nsAString& aLinkData) {
           // later, which will handle parsing it as an enumerated attribute.
           if (header.mReferrerPolicy.IsEmpty()) {
             header.mReferrerPolicy = value;
+          }
+
+        } else if (attr.LowerCaseEqualsLiteral("nonce")) {
+          if (header.mNonce.IsEmpty()) {
+            header.mNonce = value;
           }
         } else if (attr.LowerCaseEqualsLiteral("integrity")) {
           if (header.mIntegrity.IsEmpty()) {
