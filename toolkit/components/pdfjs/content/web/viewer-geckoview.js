@@ -6058,7 +6058,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.9.169';
+    const viewerVersion = '3.9.146';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9471,172 +9471,6 @@ class BasePreferences {
 }
 exports.BasePreferences = BasePreferences;
 
-/***/ }),
-/* 30 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.FirefoxPrintService = void 0;
-var _pdfjsLib = __webpack_require__(5);
-var _print_utils = __webpack_require__(31);
-var _app = __webpack_require__(3);
-function composePage(pdfDocument, pageNumber, size, printContainer, printResolution, optionalContentConfigPromise, printAnnotationStoragePromise) {
-  const canvas = document.createElement("canvas");
-  const PRINT_UNITS = printResolution / _pdfjsLib.PixelsPerInch.PDF;
-  canvas.width = Math.floor(size.width * PRINT_UNITS);
-  canvas.height = Math.floor(size.height * PRINT_UNITS);
-  const canvasWrapper = document.createElement("div");
-  canvasWrapper.className = "printedPage";
-  canvasWrapper.append(canvas);
-  printContainer.append(canvasWrapper);
-  let currentRenderTask = null;
-  canvas.mozPrintCallback = function (obj) {
-    const ctx = obj.context;
-    ctx.save();
-    ctx.fillStyle = "rgb(255, 255, 255)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.restore();
-    let thisRenderTask = null;
-    Promise.all([pdfDocument.getPage(pageNumber), printAnnotationStoragePromise]).then(function ([pdfPage, printAnnotationStorage]) {
-      if (currentRenderTask) {
-        currentRenderTask.cancel();
-        currentRenderTask = null;
-      }
-      const renderContext = {
-        canvasContext: ctx,
-        transform: [PRINT_UNITS, 0, 0, PRINT_UNITS, 0, 0],
-        viewport: pdfPage.getViewport({
-          scale: 1,
-          rotation: size.rotation
-        }),
-        intent: "print",
-        annotationMode: _pdfjsLib.AnnotationMode.ENABLE_STORAGE,
-        optionalContentConfigPromise,
-        printAnnotationStorage
-      };
-      currentRenderTask = thisRenderTask = pdfPage.render(renderContext);
-      return thisRenderTask.promise;
-    }).then(function () {
-      if (currentRenderTask === thisRenderTask) {
-        currentRenderTask = null;
-      }
-      obj.done();
-    }, function (reason) {
-      if (!(reason instanceof _pdfjsLib.RenderingCancelledException)) {
-        console.error(reason);
-      }
-      if (currentRenderTask === thisRenderTask) {
-        currentRenderTask.cancel();
-        currentRenderTask = null;
-      }
-      if ("abort" in obj) {
-        obj.abort();
-      } else {
-        obj.done();
-      }
-    });
-  };
-}
-class FirefoxPrintService {
-  constructor(pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise = null, printAnnotationStoragePromise = null) {
-    this.pdfDocument = pdfDocument;
-    this.pagesOverview = pagesOverview;
-    this.printContainer = printContainer;
-    this._printResolution = printResolution || 150;
-    this._optionalContentConfigPromise = optionalContentConfigPromise || pdfDocument.getOptionalContentConfig();
-    this._printAnnotationStoragePromise = printAnnotationStoragePromise || Promise.resolve();
-  }
-  layout() {
-    const {
-      pdfDocument,
-      pagesOverview,
-      printContainer,
-      _printResolution,
-      _optionalContentConfigPromise,
-      _printAnnotationStoragePromise
-    } = this;
-    const body = document.querySelector("body");
-    body.setAttribute("data-pdfjsprinting", true);
-    const {
-      width,
-      height
-    } = this.pagesOverview[0];
-    const hasEqualPageSizes = this.pagesOverview.every(size => size.width === width && size.height === height);
-    if (!hasEqualPageSizes) {
-      console.warn("Not all pages have the same size. The printed result may be incorrect!");
-    }
-    this.pageStyleSheet = document.createElement("style");
-    this.pageStyleSheet.textContent = `@page { size: ${width}pt ${height}pt;}`;
-    body.append(this.pageStyleSheet);
-    if (pdfDocument.isPureXfa) {
-      (0, _print_utils.getXfaHtmlForPrinting)(printContainer, pdfDocument);
-      return;
-    }
-    for (let i = 0, ii = pagesOverview.length; i < ii; ++i) {
-      composePage(pdfDocument, i + 1, pagesOverview[i], printContainer, _printResolution, _optionalContentConfigPromise, _printAnnotationStoragePromise);
-    }
-  }
-  destroy() {
-    this.printContainer.textContent = "";
-    const body = document.querySelector("body");
-    body.removeAttribute("data-pdfjsprinting");
-    if (this.pageStyleSheet) {
-      this.pageStyleSheet.remove();
-      this.pageStyleSheet = null;
-    }
-  }
-}
-exports.FirefoxPrintService = FirefoxPrintService;
-_app.PDFPrintServiceFactory.instance = {
-  get supportsPrinting() {
-    const canvas = document.createElement("canvas");
-    const value = ("mozPrintCallback" in canvas);
-    return (0, _pdfjsLib.shadow)(this, "supportsPrinting", value);
-  },
-  createPrintService(pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise, printAnnotationStoragePromise) {
-    return new FirefoxPrintService(pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise, printAnnotationStoragePromise);
-  }
-};
-
-/***/ }),
-/* 31 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.getXfaHtmlForPrinting = getXfaHtmlForPrinting;
-var _pdfjsLib = __webpack_require__(5);
-var _pdf_link_service = __webpack_require__(8);
-var _xfa_layer_builder = __webpack_require__(26);
-function getXfaHtmlForPrinting(printContainer, pdfDocument) {
-  const xfaHtml = pdfDocument.allXfaHtml;
-  const linkService = new _pdf_link_service.SimpleLinkService();
-  const scale = Math.round(_pdfjsLib.PixelsPerInch.PDF_TO_CSS_UNITS * 100) / 100;
-  for (const xfaPage of xfaHtml.children) {
-    const page = document.createElement("div");
-    page.className = "xfaPrintedPage";
-    printContainer.append(page);
-    const builder = new _xfa_layer_builder.XfaLayerBuilder({
-      pageDiv: page,
-      pdfPage: null,
-      annotationStorage: pdfDocument.annotationStorage,
-      linkService,
-      xfaHtml: xfaPage
-    });
-    const viewport = (0, _pdfjsLib.getXfaPageViewport)(xfaPage, {
-      scale
-    });
-    builder.render(viewport, "print");
-  }
-}
-
 /***/ })
 /******/ 	]);
 /************************************************************************/
@@ -9688,13 +9522,12 @@ Object.defineProperty(exports, "PDFViewerApplicationOptions", ({
   }
 }));
 __webpack_require__(1);
-__webpack_require__(30);
 var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.9.169';
-const pdfjsBuild = 'cfd179f23';
+const pdfjsVersion = '3.9.146';
+const pdfjsBuild = '48cc67f17';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
@@ -9719,7 +9552,6 @@ function getViewerConfiguration() {
       submitButton: document.getElementById("passwordSubmit"),
       cancelButton: document.getElementById("passwordCancel")
     },
-    printContainer: document.getElementById("printContainer"),
     openFileInput: null
   };
 }
