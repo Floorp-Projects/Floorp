@@ -63,6 +63,7 @@ typealias GECKO_AUTH_LEVEL = PromptDelegate.AuthPrompt.AuthOptions.Level
 typealias GECKO_PROMPT_FILE_TYPE = PromptDelegate.FilePrompt.Type
 typealias GECKO_PROMPT_PROVIDER_SELECTOR = ProviderSelectorPrompt.Provider
 typealias GECKO_PROMPT_ACCOUNT_SELECTOR = AccountSelectorPrompt.Account
+typealias GECKO_PROMPT_ACCOUNT_SELECTOR_PROVIDER = AccountSelectorPrompt.Provider
 typealias GECKO_PROMPT_CHOICE_TYPE = PromptDelegate.ChoicePrompt.Type
 typealias GECKO_PROMPT_FILE_CAPTURE = PromptDelegate.FilePrompt.Capture
 typealias GECKO_PROMPT_SHARE_RESULT = PromptDelegate.SharePrompt.Result
@@ -132,6 +133,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             onPromptRequest(
                 PromptRequest.IdentityCredential.SelectAccount(
                     accounts = prompt.accounts.map { it.toAccount() },
+                    provider = prompt.provider.let { it.toProvider() },
                     onConfirm = onConfirm,
                     onDismiss = onDismiss,
                 ),
@@ -912,10 +914,15 @@ internal fun PromptDelegate.BasePrompt.dismissSafely(geckoResult: GeckoResult<Pr
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal fun GECKO_PROMPT_PROVIDER_SELECTOR.toProvider(): Provider {
-    return Provider(id, icon, name)
+    return Provider(id, icon, name, domain)
 }
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal fun GECKO_PROMPT_ACCOUNT_SELECTOR.toAccount(): Account {
     return Account(id, email, name, icon)
+}
+
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+internal fun GECKO_PROMPT_ACCOUNT_SELECTOR_PROVIDER.toProvider(): Provider {
+    return Provider(0, icon, name, domain)
 }

@@ -20,4 +20,5 @@ data class Provider(
     val id: Int,
     val icon: String?,
     val name: String,
+    val domain: String,
 ) : Parcelable

@@ -22,6 +22,14 @@ android {
         }
     }
 
+    composeOptions {
+        kotlinCompilerExtensionVersion = Versions.compose_compiler
+    }
+
+    buildFeatures {
+        compose true
+    }
+
     namespace 'mozilla.components.feature.prompts'
 }
 
@@ -39,10 +47,19 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':ui-icons')
     implementation project(':ui-widgets')
+    implementation project(':ui-colors')
 
     implementation ComponentsDependencies.androidx_constraintlayout
     implementation ComponentsDependencies.androidx_core_ktx
     implementation ComponentsDependencies.google_material
+
+    implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.androidx_compose_ui
+    implementation ComponentsDependencies.androidx_compose_ui_tooling_preview
+    implementation ComponentsDependencies.androidx_compose_foundation
+    implementation ComponentsDependencies.androidx_compose_material
+
+    debugImplementation ComponentsDependencies.androidx_compose_ui_tooling
 
     testImplementation ComponentsDependencies.androidx_test_core
     testImplementation ComponentsDependencies.androidx_test_junit

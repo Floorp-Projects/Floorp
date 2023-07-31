@@ -8,14 +8,11 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import androidx.compose.ui.platform.ComposeView
 import mozilla.components.concept.identitycredential.Provider
-import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.dialog.KEY_PROMPT_UID
 import mozilla.components.feature.prompts.dialog.KEY_SESSION_ID
 import mozilla.components.feature.prompts.dialog.KEY_SHOULD_DISMISS_ON_LOAD
@@ -29,16 +26,14 @@ private const val KEY_PROVIDERS = "KEY_PROVIDERS"
  */
 internal class SelectProviderDialogFragment : PromptDialogFragment() {
 
-    private lateinit var listAdapter: BasicProviderAdapter
-
-    internal val providers: List<Provider> by lazy {
-        safeArguments.getParcelableArrayListCompat(KEY_PROVIDERS, Provider::class.java) ?: emptyList()
+    private val providers: List<Provider> by lazy {
+        safeArguments.getParcelableArrayListCompat(KEY_PROVIDERS, Provider::class.java)
+            ?: emptyList()
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
         AlertDialog.Builder(requireContext())
             .setCancelable(true)
-            .setTitle(R.string.mozac_feature_prompts_identity_credentials_choose_provider)
             .setView(createDialogContentView())
             .create()
 
@@ -49,21 +44,14 @@ internal class SelectProviderDialogFragment : PromptDialogFragment() {
 
     @SuppressLint("InflateParams")
     internal fun createDialogContentView(): View {
-        val view = LayoutInflater
-            .from(requireContext())
-            .inflate(R.layout.mozac_feature_prompts_choose_identity_provider_dialogs, null)
-
-        setupRecyclerView(view)
-        return view
-    }
-
-    private fun setupRecyclerView(view: View) {
-        listAdapter = BasicProviderAdapter(this::onProviderChange)
-        view.findViewById<RecyclerView>(R.id.recyclerView).apply {
-            layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-            adapter = listAdapter
+        return ComposeView(requireContext()).apply {
+            setContent {
+                SelectProviderDialog(
+                    providers = providers,
+                    onProviderClick = ::onProviderChange,
+                )
+            }
         }
-        listAdapter.submitList(providers)
     }
 
     /**
@@ -76,6 +64,14 @@ internal class SelectProviderDialogFragment : PromptDialogFragment() {
     }
 
     companion object {
+
+        /**
+         * A builder method for creating a [SelectAccountDialogFragment]
+         * @param sessionId The id of the session for which this dialog will be created.
+         * @param promptRequestUID Identifier of the [PromptRequest] for which this dialog is shown.
+         * @param providers The list of available providers.
+         * @param shouldDismissOnLoad Whether or not the dialog should automatically be dismissed when a new page is loaded.
+         */
         fun newInstance(
             sessionId: String,
             promptRequestUID: String,

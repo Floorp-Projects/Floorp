@@ -921,6 +921,7 @@ class PromptFeature private constructor(
                     promptRequestUID = promptRequest.uid,
                     shouldDismissOnLoad = true,
                     accounts = promptRequest.accounts,
+                    provider = promptRequest.provider,
                 )
             }
 
