@@ -42,18 +42,13 @@ namespace mozilla::dom {
 Location::Location(nsPIDOMWindowInner* aWindow,
                    BrowsingContext* aBrowsingContext)
     : mInnerWindow(aWindow) {
-  // aBrowsingContext can be null if it gets called after nsDocShell::Destroy().
+  // aBrowsingContext can be null if it gets called after nsDocShell::Destory().
   if (aBrowsingContext) {
     mBrowsingContextId = aBrowsingContext->Id();
-    aBrowsingContext->LocationCreated(this);
   }
 }
 
-Location::~Location() {
-  if (isInList()) {
-    remove();
-  }
-}
+Location::~Location() = default;
 
 // QueryInterface implementation for Location
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Location)
@@ -649,10 +644,6 @@ bool Location::CallerSubsumes(nsIPrincipal* aSubjectPrincipal) {
 JSObject* Location::WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) {
   return Location_Binding::Wrap(aCx, this, aGivenProto);
-}
-
-void Location::ClearCachedValues() {
-  Location_Binding::ClearCachedHashValue(this);
 }
 
 }  // namespace mozilla::dom

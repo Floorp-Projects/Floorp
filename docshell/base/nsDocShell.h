@@ -1160,10 +1160,7 @@ class nsDocShell final : public nsDocLoader,
                                const nsAString& aTitle, bool aReplace,
                                nsIURI* aCurrentURI, bool aEqualURIs);
 
- private:
-  void SetCurrentURIInternal(nsIURI* aURI);
-
-  // data members
+ private:  // data members
   nsString mTitle;
   nsCString mOriginalUriString;
   nsTObserverArray<nsWeakPtr> mPrivacyObservers;
@@ -1208,7 +1205,6 @@ class nsDocShell final : public nsDocLoader,
   mozilla::UniquePtr<mozilla::ObservedDocShell> mObserved;
 
   // mCurrentURI should be marked immutable on set if possible.
-  // Change mCurrentURI only through SetCurrentURIInternal method.
   nsCOMPtr<nsIURI> mCurrentURI;
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
 

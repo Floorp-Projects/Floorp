@@ -1550,7 +1550,7 @@ bool nsDocShell::SetCurrentURI(nsIURI* aURI, nsIRequest* aRequest,
     mTitleValidForCurrentURI = false;
   }
 
-  SetCurrentURIInternal(aURI);
+  mCurrentURI = aURI;
 
 #ifdef DEBUG
   mLastOpenedURI = aURI;
@@ -1574,13 +1574,6 @@ bool nsDocShell::SetCurrentURI(nsIURI* aURI, nsIRequest* aRequest,
     FireOnLocationChange(this, aRequest, aURI, aLocationFlags);
   }
   return !aFireOnLocationChange;
-}
-
-void nsDocShell::SetCurrentURIInternal(nsIURI* aURI) {
-  mCurrentURI = aURI;
-  if (mBrowsingContext) {
-    mBrowsingContext->ClearCachedValuesOfLocations();
-  }
 }
 
 NS_IMETHODIMP
@@ -4574,7 +4567,7 @@ nsDocShell::Destroy() {
   nsDocLoader::Destroy();
 
   mParentWidget = nullptr;
-  SetCurrentURIInternal(nullptr);
+  mCurrentURI = nullptr;
 
   if (mScriptGlobal) {
     mScriptGlobal->DetachFromDocShell(!mWillChangeProcess);
@@ -8189,7 +8182,7 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer,
     viewer->Close(nullptr);
     viewer->Destroy();
     mContentViewer = nullptr;
-    SetCurrentURIInternal(nullptr);
+    mCurrentURI = nullptr;
     NS_WARNING("ContentViewer Initialization failed");
     return NS_ERROR_FAILURE;
   }

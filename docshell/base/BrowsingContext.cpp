@@ -616,7 +616,6 @@ void BrowsingContext::SetDocShell(nsIDocShell* aDocShell) {
   }
 
   RecomputeCanExecuteScripts();
-  ClearCachedValuesOfLocations();
 }
 
 // This class implements a callback that will return the remote window proxy for
@@ -1048,8 +1047,6 @@ void BrowsingContext::PrepareForProcessChange() {
   mIsInProcess = false;
   mUserGestureStart = TimeStamp();
 
-  ClearCachedValuesOfLocations();
-
   // NOTE: For now, clear our nsDocShell reference, as we're primarily in a
   // different process now. This may need to change in the future with
   // Cross-Process BFCache.
@@ -1416,9 +1413,6 @@ BrowsingContext::~BrowsingContext() {
     sBrowsingContexts->Remove(Id());
   }
   UnregisterBrowserId(this);
-
-  ClearCachedValuesOfLocations();
-  mLocations.clear();
 }
 
 /* static */
@@ -3757,17 +3751,6 @@ void BrowsingContext::ResetLocationChangeRateLimit() {
   // Resetting the timestamp object will cause the check function to
   // init again and reset the rate limit.
   mLocationChangeRateLimitSpanStart = TimeStamp();
-}
-
-void BrowsingContext::LocationCreated(dom::Location* aLocation) {
-  MOZ_ASSERT(!aLocation->isInList());
-  mLocations.insertBack(aLocation);
-}
-
-void BrowsingContext::ClearCachedValuesOfLocations() {
-  for (dom::Location* loc = mLocations.getFirst(); loc; loc = loc->getNext()) {
-    loc->ClearCachedValues();
-  }
 }
 
 }  // namespace dom
