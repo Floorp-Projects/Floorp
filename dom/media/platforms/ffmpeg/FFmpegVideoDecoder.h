@@ -140,6 +140,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
                                MediaDataDecoder::DecodedData& aResults);
   MediaResult CreateImageV4L2(int64_t aOffset, int64_t aPts, int64_t aDuration,
                               MediaDataDecoder::DecodedData& aResults);
+  void AdjustHWDecodeLogging();
 #endif
 
 #ifdef MOZ_WAYLAND_USE_HWDECODE

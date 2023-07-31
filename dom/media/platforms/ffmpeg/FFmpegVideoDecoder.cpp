@@ -269,6 +269,17 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
   return true;
 }
 
+void FFmpegVideoDecoder<LIBAV_VER>::AdjustHWDecodeLogging() {
+  if (MOZ_LOG_TEST(sPDMLog, LogLevel::Debug)) {
+    mLib->av_log_set_level(AV_LOG_DEBUG);
+    setenv("LIBVA_MESSAGING_LEVEL", "1", false);
+  } else if (MOZ_LOG_TEST(sPDMLog, LogLevel::Info)) {
+    setenv("LIBVA_MESSAGING_LEVEL", "2", false);
+  } else {
+    setenv("LIBVA_MESSAGING_LEVEL", "0", false);
+  }
+}
+
 MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
   FFMPEG_LOG("Initialising VA-API FFmpeg decoder");
 
@@ -345,9 +356,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
     }
   }
 
-  if (MOZ_LOG_TEST(sPDMLog, LogLevel::Debug)) {
-    mLib->av_log_set_level(AV_LOG_DEBUG);
-  }
+  AdjustHWDecodeLogging();
 
   FFMPEG_LOG("  VA-API FFmpeg init successful");
   releaseVAAPIdecoder.release();
@@ -425,9 +434,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitV4L2Decoder() {
     mAcceleratedFormats.AppendElement(mCodecID);
   }
 
-  if (MOZ_LOG_TEST(sPDMLog, LogLevel::Debug)) {
-    mLib->av_log_set_level(AV_LOG_DEBUG);
-  }
+  AdjustHWDecodeLogging();
 
   FFMPEG_LOG("  V4L2 FFmpeg init successful");
   mUsingV4L2 = true;
