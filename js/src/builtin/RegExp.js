@@ -233,17 +233,17 @@ function RegExpGlobalMatchOpt(rx, S, fullUnicode) {
   // Step 6.e.
   while (true) {
     // Step 6.e.i.
-    var result = RegExpMatcher(rx, S, lastIndex);
+    var position = RegExpSearcher(rx, S, lastIndex);
 
     // Step 6.e.ii.
-    if (result === null) {
+    if (position === -1) {
       return n === 0 ? null : A;
     }
 
-    lastIndex = result.index + result[0].length;
+    lastIndex = RegExpSearcherLastLimit(S);
 
     // Step 6.e.iii.1.
-    var matchStr = result[0];
+    var matchStr = SubstringKernel(S, position, lastIndex - position);
 
     // Step 6.e.iii.2.
     DefineDataProperty(A, n, matchStr);
@@ -1073,17 +1073,15 @@ function RegExpSplit(string, limit) {
 
   // Step 17.
   if (size === 0) {
-    // Step 17.a.
-    var z;
+    // Step 17.a-b.
     if (optimizable) {
-      z = RegExpMatcher(splitter, S, 0);
+      if (RegExpSearcher(splitter, S, 0) !== -1) {
+        return A;
+      }
     } else {
-      z = RegExpExec(splitter, S);
-    }
-
-    // Step 17.b.
-    if (z !== null) {
-      return A;
+      if (RegExpExec(splitter, S) !== null) {
+        return A;
+      }
     }
 
     // Step 17.d.
@@ -1098,7 +1096,7 @@ function RegExpSplit(string, limit) {
 
   // Step 19.
   while (q < size) {
-    var e;
+    var e, z;
     if (optimizable) {
       // Step 19.a (skipped).
       // splitter.lastIndex is not used.
