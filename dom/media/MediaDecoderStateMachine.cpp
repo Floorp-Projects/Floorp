@@ -1303,14 +1303,17 @@ class MediaDecoderStateMachine::LoopingDecodingState
   bool ShouldRequestData(MediaData::Type aType) const {
     MOZ_DIAGNOSTIC_ASSERT(aType == MediaData::Type::AUDIO_DATA ||
                           aType == MediaData::Type::VIDEO_DATA);
+
     if (aType == MediaData::Type::AUDIO_DATA &&
         (mAudioSeekRequest.Exists() || mAudioDataRequest.Exists() ||
-         IsDataWaitingForTimestampAdjustment(MediaData::Type::AUDIO_DATA))) {
+         IsDataWaitingForTimestampAdjustment(MediaData::Type::AUDIO_DATA) ||
+         mMaster->IsWaitingAudioData())) {
       return false;
     }
     if (aType == MediaData::Type::VIDEO_DATA &&
         (mVideoSeekRequest.Exists() || mVideoDataRequest.Exists() ||
-         IsDataWaitingForTimestampAdjustment(MediaData::Type::VIDEO_DATA))) {
+         IsDataWaitingForTimestampAdjustment(MediaData::Type::VIDEO_DATA) ||
+         mMaster->IsWaitingVideoData())) {
       return false;
     }
     return true;
