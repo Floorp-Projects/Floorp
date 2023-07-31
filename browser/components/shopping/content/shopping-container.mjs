@@ -5,7 +5,7 @@
 /* eslint-env mozilla/remote-page */
 
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
-import { html } from "chrome://global/content/vendor/lit.all.mjs";
+import { html, ifDefined } from "chrome://global/content/vendor/lit.all.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/shopping/highlights.mjs";
@@ -19,11 +19,14 @@ import "chrome://browser/content/shopping/reliability.mjs";
 import "chrome://browser/content/shopping/analysis-explainer.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/shopping/shopping-message-bar.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/shopping/unanalyzed.mjs";
 
 export class ShoppingContainer extends MozLitElement {
   static properties = {
     data: { type: Object },
     showOnboarding: { type: Boolean },
+    productUrl: { type: String },
   };
 
   static get queries() {
@@ -32,6 +35,9 @@ export class ShoppingContainer extends MozLitElement {
       adjustedRatingEl: "adjusted-rating",
       highlightsEl: "review-highlights",
       settingsEl: "shopping-settings",
+      analysisExplainerEl: "analysis-explainer",
+      unanalyzedProductEl: "unanalyzed-product-card",
+      shoppingMessageBarEl: "shopping-message-bar",
     };
   }
 
@@ -52,12 +58,13 @@ export class ShoppingContainer extends MozLitElement {
     );
   }
 
-  async _update({ data, showOnboarding }) {
+  async _update({ data, showOnboarding, productUrl }) {
     // If we're not opted in or there's no shopping URL in the main browser,
     // the actor will pass `null`, which means this will clear out any existing
     // content in the sidebar.
     this.data = data;
     this.showOnboarding = showOnboarding;
+    this.productUrl = productUrl;
   }
 
   handleEvent(event) {
@@ -66,6 +73,33 @@ export class ShoppingContainer extends MozLitElement {
         this._update(event.detail);
         break;
     }
+  }
+
+  getAnalysisDetailsTemplate() {
+    return html`
+      <review-reliability letter=${this.data.grade}></review-reliability>
+      <adjusted-rating rating=${this.data.adjusted_rating}></adjusted-rating>
+      <review-highlights
+        .highlights=${this.data.highlights}
+      ></review-highlights>
+      <analysis-explainer></analysis-explainer>
+    `;
+  }
+
+  getContentTemplate() {
+    if (this.data.needs_analysis) {
+      if (!this.data.product_id) {
+        return html`<unanalyzed-product-card
+          productUrl=${ifDefined(this.productUrl)}
+        ></unanalyzed-product-card>`;
+      }
+      return html`
+        <shopping-message-bar type="stale"></shopping-message-bar>
+        ${this.getAnalysisDetailsTemplate()}
+      `;
+    }
+
+    return this.getAnalysisDetailsTemplate();
   }
 
   renderContainer(sidebarContent) {
@@ -105,15 +139,7 @@ export class ShoppingContainer extends MozLitElement {
       content = html`<p>Loading UI goes here</p>`;
     } else {
       content = html`
-        ${this.data.needs_analysis && this.data.product_id
-          ? html`<shopping-message-bar type="stale"></shopping-message-bar>`
-          : null}
-        <review-reliability letter=${this.data.grade}></review-reliability>
-        <adjusted-rating rating=${this.data.adjusted_rating}></adjusted-rating>
-        <review-highlights
-          .highlights=${this.data.highlights}
-        ></review-highlights>
-        <analysis-explainer></analysis-explainer>
+        ${this.getContentTemplate()}
         <shopping-settings></shopping-settings>
       `;
     }

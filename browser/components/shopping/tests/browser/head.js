@@ -5,6 +5,12 @@ const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
 
+const MOCK_UNPOPULATED_DATA = {
+  adjusted_rating: null,
+  grade: null,
+  highlights: null,
+};
+
 const MOCK_POPULATED_DATA = {
   adjusted_rating: 5,
   grade: "B",
@@ -62,3 +68,65 @@ const MOCK_INVALID_KEY_OBJ = {
     neutral: [],
   },
 };
+
+const MOCK_UNANALYZED_PRODUCT_RESPONSE = {
+  ...MOCK_UNPOPULATED_DATA,
+  product_id: null,
+  needs_analysis: true,
+};
+
+const MOCK_STALE_PRODUCT_RESPONSE = {
+  ...MOCK_POPULATED_DATA,
+  product_id: "ABCD123",
+  needs_analysis: true,
+};
+
+const MOCK_ANALYZED_PRODUCT_RESPONSE = {
+  ...MOCK_POPULATED_DATA,
+  product_id: "ABCD123",
+  needs_analysis: false,
+};
+
+function verifyAnalysisDetailsVisible(shoppingContainer) {
+  ok(
+    shoppingContainer.reviewReliabilityEl &&
+      !shoppingContainer.reviewReliabilityEl.hidden,
+    "review-reliability should be visible"
+  );
+  ok(
+    shoppingContainer.adjustedRatingEl &&
+      !shoppingContainer.adjustedRatingEl.hidden,
+    "adjusted-rating should be visible"
+  );
+  ok(
+    shoppingContainer.highlightsEl && !shoppingContainer.highlightsEl.hidden,
+    "review-highlights should be visible"
+  );
+  ok(
+    shoppingContainer.analysisExplainerEl &&
+      !shoppingContainer.analysisExplainerEl.hidden,
+    "analysis-explainer should be visible"
+  );
+}
+
+function verifyAnalysisDetailsHidden(shoppingContainer) {
+  ok(
+    !shoppingContainer.reviewReliabilityEl ||
+      shoppingContainer.reviewReliabilityEl.hidden,
+    "review-reliability should not be visible"
+  );
+  ok(
+    !shoppingContainer.adjustedRatingEl ||
+      shoppingContainer.adjustedRatingEl.hidden,
+    "adjusted-rating should not be visible"
+  );
+  ok(
+    !shoppingContainer.highlightsEl || shoppingContainer.highlightsEl.hidden,
+    "review-highlights should not be visible"
+  );
+  ok(
+    !shoppingContainer.analysisExplainerEl ||
+      shoppingContainer.analysisExplainerEl.hidden,
+    "analysis-explainer should not be visible"
+  );
+}
