@@ -150,7 +150,7 @@ xul|label[disabled="true"] {
 
 .text-link,
 a {
-  color: -moz-nativehyperlinktext;
+  color: var(--link-color);
   cursor: pointer;
   text-decoration: underline;
 }
@@ -161,10 +161,7 @@ a {
 
 :is(a, .text-link):focus-visible {
   outline: var(--focus-outline);
-  /* Not using --focus-outline-offset here because that's intended for elements
-     with a background, and we only want a slight offset here while not
-     overlapping adjacent text. */
-  outline-offset: 1px;
+  outline-offset: var(--link-focus-outline-offset);
   border-radius: 1px;
 }
 
