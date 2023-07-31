@@ -388,8 +388,8 @@ SOCKET_PROCESSES += [
     DllBlocklistEntry("ipseng64.dll", (17, 2, 6, 25)),
     DllBlocklistEntry("ipseng32.dll", (17, 2, 6, 25)),
 
-    # Causes crashes in the socket process, bug 1807038
-    DllBlocklistEntry("kwsui64.dll", (2022, 2, 8, 125)),
+    # Causes crashes in the socket process, bug 1807038 and bug 1845111
+    DllBlocklistEntry("kwsui64.dll", ALL_VERSIONS),
 ]
 
 SOCKET_PROCESSES_TESTS += [
