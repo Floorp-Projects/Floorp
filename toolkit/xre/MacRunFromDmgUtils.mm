@@ -254,21 +254,13 @@ static void ShowInstallFailedDialog() {
  * Helper to launch macOS tasks via NSTask.
  */
 static void LaunchTask(NSString* aPath, NSArray* aArguments) {
-  if (@available(macOS 10.13, *)) {
-    NSTask* task = [[NSTask alloc] init];
-    [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
-    if (aArguments) {
-      [task setArguments:aArguments];
-    }
-    [task launchAndReturnError:nil];
-    [task release];
-  } else {
-    NSArray* arguments = aArguments;
-    if (!arguments) {
-      arguments = @[];
-    }
-    [NSTask launchedTaskWithLaunchPath:aPath arguments:arguments];
+  NSTask* task = [[NSTask alloc] init];
+  [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
+  if (aArguments) {
+    [task setArguments:aArguments];
   }
+  [task launchAndReturnError:nil];
+  [task release];
 }
 
 static void LaunchInstalledApp(NSString* aBundlePath) {
@@ -289,27 +281,16 @@ static void StripQuarantineBit(NSString* aBundlePath) {
 
 #ifdef MOZ_UPDATER
 bool LaunchElevatedDmgInstall(NSString* aBundlePath, NSArray* aArguments) {
-  NSTask* task;
-  if (@available(macOS 10.13, *)) {
-    task = [[NSTask alloc] init];
-    [task setExecutableURL:[NSURL fileURLWithPath:aBundlePath]];
-    if (aArguments) {
-      [task setArguments:aArguments];
-    }
-    [task launchAndReturnError:nil];
-  } else {
-    NSArray* arguments = aArguments;
-    if (!arguments) {
-      arguments = @[];
-    }
-    task = [NSTask launchedTaskWithLaunchPath:aBundlePath arguments:arguments];
+  NSTask* task = [[NSTask alloc] init];
+  [task setExecutableURL:[NSURL fileURLWithPath:aBundlePath]];
+  if (aArguments) {
+    [task setArguments:aArguments];
   }
+  [task launchAndReturnError:nil];
 
   bool didSucceed = InstallPrivilegedHelper();
   [task waitUntilExit];
-  if (@available(macOS 10.13, *)) {
-    [task release];
-  }
+  [task release];
   if (!didSucceed) {
     AbortElevatedUpdate();
   }
