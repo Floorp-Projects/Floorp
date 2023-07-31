@@ -363,10 +363,7 @@ function RegExpReplace(string, replaceValue) {
           firstDollarIndex
         );
       }
-      if (lengthS < 0x7fff) {
-        return RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags);
-      }
-      return RegExpGlobalReplaceOpt(rx, S, lengthS, replaceValue, flags);
+      return RegExpGlobalReplaceOptSimple(rx, S, lengthS, replaceValue, flags);
     }
 
     if (functionalReplace) {
@@ -381,10 +378,7 @@ function RegExpReplace(string, replaceValue) {
         firstDollarIndex
       );
     }
-    if (lengthS < 0x7fff) {
-      return RegExpLocalReplaceOptShort(rx, S, lengthS, replaceValue);
-    }
-    return RegExpLocalReplaceOpt(rx, S, lengthS, replaceValue);
+    return RegExpLocalReplaceOptSimple(rx, S, lengthS, replaceValue);
   }
 
   // Steps 7-17.
@@ -774,9 +768,8 @@ function RegExpGetFunctionalReplacement(result, S, position, replaceValue) {
 // Steps 9.b-17.
 // Optimized path for @@replace with the following conditions:
 //   * global flag is true
-//   * S is a short string (lengthS < 0x7fff)
 //   * replaceValue is a string without "$"
-function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
+function RegExpGlobalReplaceOptSimple(rx, S, lengthS, replaceValue, flags) {
   // Step 9.a.
   var fullUnicode = !!(flags & REGEXP_UNICODE_FLAG);
 
@@ -793,15 +786,14 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
   // Step 12.
   while (true) {
     // Step 12.a.
-    var result = RegExpSearcher(rx, S, lastIndex);
+    var position = RegExpSearcher(rx, S, lastIndex);
 
     // Step 12.b.
-    if (result === -1) {
+    if (position === -1) {
       break;
     }
 
-    var position = result & 0x7fff;
-    lastIndex = (result >> 15) & 0x7fff;
+    lastIndex = RegExpSearcherLastLimit(S);
 
     // Step 15.m.ii.
     accumulatedResult +=
@@ -841,14 +833,6 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
 
 // Conditions:
 //   * global flag is true
-//   * replaceValue is a string without "$"
-#define FUNC_NAME RegExpGlobalReplaceOpt
-#include "RegExpGlobalReplaceOpt.h.js"
-#undef FUNC_NAME
-/* global RegExpGlobalReplaceOpt */
-
-// Conditions:
-//   * global flag is true
 //   * replaceValue is a function
 #define FUNC_NAME RegExpGlobalReplaceOptFunc
 #define FUNCTIONAL
@@ -880,21 +864,12 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
 // Conditions:
 //   * global flag is false
 //   * replaceValue is a string without "$"
-#define FUNC_NAME RegExpLocalReplaceOpt
+#define FUNC_NAME RegExpLocalReplaceOptSimple
+#define SIMPLE
 #include "RegExpLocalReplaceOpt.h.js"
+#undef SIMPLE
 #undef FUNC_NAME
-/* global RegExpLocalReplaceOpt */
-
-// Conditions:
-//   * global flag is false
-//   * S is a short string (lengthS < 0x7fff)
-//   * replaceValue is a string without "$"
-#define FUNC_NAME RegExpLocalReplaceOptShort
-#define SHORT_STRING
-#include "RegExpLocalReplaceOpt.h.js"
-#undef SHORT_STRING
-#undef FUNC_NAME
-/* global RegExpLocalReplaceOptShort */
+/* global RegExpLocalReplaceOptSimple */
 
 // Conditions:
 //   * global flag is false
@@ -965,13 +940,8 @@ function RegExpSearch(string) {
       }
     }
 
-    // Step 9.
-    if (result === -1) {
-      return -1;
-    }
-
-    // Step 10.
-    return result & 0x7fff;
+    // Steps 9-10.
+    return result;
   }
 
   return RegExpSearchSlowPath(rx, S, previousLastIndex);

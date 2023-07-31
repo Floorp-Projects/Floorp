@@ -1447,28 +1447,6 @@ bool RRegExpMatcher::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
-bool MRegExpSearcher::writeRecoverData(CompactBufferWriter& writer) const {
-  MOZ_ASSERT(canRecoverOnBailout());
-  writer.writeUnsigned(uint32_t(RInstruction::Recover_RegExpSearcher));
-  return true;
-}
-
-RRegExpSearcher::RRegExpSearcher(CompactBufferReader& reader) {}
-
-bool RRegExpSearcher::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedObject regexp(cx, &iter.read().toObject());
-  RootedString input(cx, iter.read().toString());
-  int32_t lastIndex = iter.read().toInt32();
-
-  int32_t result;
-  if (!RegExpSearcherRaw(cx, regexp, input, lastIndex, nullptr, &result)) {
-    return false;
-  }
-
-  iter.storeInstructionResult(Int32Value(result));
-  return true;
-}
-
 bool MTypeOf::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_TypeOf));

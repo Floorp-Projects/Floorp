@@ -277,13 +277,20 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
   return true;
 }
 
-static int32_t CreateRegExpSearchResult(const MatchPairs& matches) {
-  /* Fit the start and limit of match into a int32_t. */
-  uint32_t position = matches[0].start;
-  uint32_t lastIndex = matches[0].limit;
-  MOZ_ASSERT(position < 0x8000);
-  MOZ_ASSERT(lastIndex < 0x8000);
-  return position | (lastIndex << 15);
+static int32_t CreateRegExpSearchResult(JSContext* cx,
+                                        const MatchPairs& matches) {
+  MOZ_ASSERT(matches[0].start >= 0);
+  MOZ_ASSERT(matches[0].limit >= 0);
+
+  MOZ_ASSERT(cx->regExpSearcherLastLimit == RegExpSearcherLastLimitSentinel);
+
+#ifdef DEBUG
+  static_assert(JSString::MAX_LENGTH < RegExpSearcherLastLimitSentinel);
+  MOZ_ASSERT(uint32_t(matches[0].limit) < RegExpSearcherLastLimitSentinel);
+#endif
+
+  cx->regExpSearcherLastLimit = matches[0].limit;
+  return matches[0].start;
 }
 
 /*
@@ -1235,6 +1242,12 @@ static bool RegExpSearcherImpl(JSContext* cx, HandleObject regexp,
   /* Execute regular expression and gather matches. */
   VectorMatchPairs matches;
 
+#ifdef DEBUG
+  // Ensure we assert if RegExpSearcherLastLimit is called when there's no
+  // match.
+  cx->regExpSearcherLastLimit = RegExpSearcherLastLimitSentinel;
+#endif
+
   /* Steps 3, 9-14, except 12.a.i, 12.c.i.1. */
   RegExpRunStatus status =
       ExecuteRegExp(cx, regexp, string, lastIndex, &matches);
@@ -1249,7 +1262,7 @@ static bool RegExpSearcherImpl(JSContext* cx, HandleObject regexp,
   }
 
   /* Steps 16-25 */
-  *result = CreateRegExpSearchResult(matches);
+  *result = CreateRegExpSearchResult(cx, matches);
   return true;
 }
 
@@ -1292,10 +1305,29 @@ bool js::RegExpSearcherRaw(JSContext* cx, HandleObject regexp,
   // RegExp execution was successful only if the pairs have actually been
   // filled in. Note that IC code always passes a nullptr maybeMatches.
   if (maybeMatches && maybeMatches->pairsRaw()[0] > MatchPair::NoMatch) {
-    *result = CreateRegExpSearchResult(*maybeMatches);
+    *result = CreateRegExpSearchResult(cx, *maybeMatches);
     return true;
   }
   return RegExpSearcherImpl(cx, regexp, input, lastIndex, result);
+}
+
+bool js::RegExpSearcherLastLimit(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  MOZ_ASSERT(args[0].isString());
+
+  // Assert the limit is not the sentinel value and is valid for this string.
+  MOZ_ASSERT(cx->regExpSearcherLastLimit != RegExpSearcherLastLimitSentinel);
+  MOZ_ASSERT(cx->regExpSearcherLastLimit <= args[0].toString()->length());
+
+  args.rval().setInt32(cx->regExpSearcherLastLimit);
+
+#ifdef DEBUG
+  // Ensure we assert if this function is called again without a new call to
+  // RegExpSearcher.
+  cx->regExpSearcherLastLimit = RegExpSearcherLastLimitSentinel;
+#endif
+  return true;
 }
 
 template <bool CalledFromJit>

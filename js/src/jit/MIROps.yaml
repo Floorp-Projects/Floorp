@@ -1075,6 +1075,7 @@
   possibly_calls: true
   can_recover: true
 
+# Note: this instruction writes to cx->regExpSearcherLastLimit.
 - name: RegExpSearcher
   operands:
     regexp: Object
@@ -1082,7 +1083,7 @@
     lastIndex: Int32
   result_type: Int32
   possibly_calls: true
-  can_recover: true
+  can_recover: false
 
 - name: RegExpExecMatch
   operands:
