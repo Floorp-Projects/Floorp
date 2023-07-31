@@ -501,15 +501,6 @@ impl NestedParseResult {
 }
 
 impl<'a, 'i> NestedRuleParser<'a, 'i> {
-    /// When nesting is disabled, we prevent parsing at rules and qualified rules inside style
-    /// rules.
-    fn allow_at_and_qualified_rules(&self) -> bool {
-        if !self.in_style_rule() {
-            return true;
-        }
-        static_prefs::pref!("layout.css.nesting.enabled")
-    }
-
     #[inline]
     fn in_style_rule(&self) -> bool {
         self.context.rule_types.contains(CssRuleType::Style)
@@ -622,9 +613,6 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'i> {
         name: CowRcStr<'i>,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self::Prelude, ParseError<'i>> {
-        if self.in_style_rule() && !static_prefs::pref!("layout.css.nesting.enabled") {
-            return Err(input.new_error(BasicParseErrorKind::AtRuleInvalid(name)));
-        }
         Ok(match_ignore_ascii_case! { &*name,
             "media" => {
                 let media_queries = MediaList::parse(&self.context, input);
@@ -934,9 +922,7 @@ impl<'a, 'i> DeclarationParser<'i> for NestedRuleParser<'a, 'i> {
 }
 
 impl<'a, 'i> RuleBodyItemParser<'i, (), StyleParseErrorKind<'i>> for NestedRuleParser<'a, 'i> {
-    fn parse_qualified(&self) -> bool {
-        self.allow_at_and_qualified_rules()
-    }
+    fn parse_qualified(&self) -> bool { true }
 
     /// If nesting is disabled, we can't get there for a non-style-rule. If it's enabled, we parse
     /// raw declarations there.

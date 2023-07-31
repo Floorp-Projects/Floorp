@@ -43,7 +43,6 @@ const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>
 add_task(async function () {
   // Enable CSS Warnings
   await pushPref("devtools.webconsole.filter.css", true);
-  await pushPref("layout.css.nesting.enabled", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = hud.toolbox;

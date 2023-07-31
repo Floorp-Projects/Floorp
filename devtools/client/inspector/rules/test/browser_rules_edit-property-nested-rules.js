@@ -46,7 +46,6 @@ add_task(async function test_constructed_sheet() {
 });
 
 async function runTest(uri) {
-  await pushPref("layout.css.nesting.enabled", true);
   await addTab(`data:text/html,<meta charset=utf8>${encodeURIComponent(uri)}`);
   const { inspector, view } = await openRuleView();
 
