@@ -80,64 +80,67 @@ void DocAccessibleParent::SetBrowsingContext(
 }
 
 mozilla::ipc::IPCResult DocAccessibleParent::RecvShowEvent(
-    const ShowEventData& aData, const bool& aFromUser) {
+    nsTArray<AccessibleData>&& aNewTree, const bool& aEventSuppressed,
+    const bool& aFromUser) {
   ACQUIRE_ANDROID_LOCK
   if (mShutdown) return IPC_OK();
 
   MOZ_ASSERT(CheckDocTree());
 
-  if (aData.NewTree().IsEmpty()) {
+  if (aNewTree.IsEmpty()) {
     return IPC_FAIL(this, "No children being added");
   }
 
-  RemoteAccessible* parent = GetAccessible(aData.ID());
-
-  // XXX This should really never happen, but sometimes we fail to fire the
-  // required show events.
-  if (!parent) {
-    NS_ERROR("adding child to unknown accessible");
+  RemoteAccessible* root = nullptr;
+  RemoteAccessible* rootParent = nullptr;
+  RemoteAccessible* lastParent = this;
+  uint64_t lastParentID = 0;
+  for (const auto& accData : aNewTree) {
+    RemoteAccessible* parent = accData.ParentID() == lastParentID
+                                   ? lastParent
+                                   : GetAccessible(accData.ParentID());
+    // XXX This should really never happen, but sometimes we fail to fire the
+    // required show events.
+    if (!parent) {
+      NS_ERROR("adding child to unknown accessible");
 #ifdef DEBUG
-    return IPC_FAIL(this, "unknown parent accessible");
+      return IPC_FAIL(this, "unknown parent accessible");
 #else
-    return IPC_OK();
+      return IPC_OK();
 #endif
-  }
+    }
 
-  uint32_t newChildIdx = aData.Idx();
-  if (newChildIdx > parent->ChildCount()) {
-    NS_ERROR("invalid index to add child at");
+    uint32_t childIdx = accData.IndexInParent();
+    if (childIdx > parent->ChildCount()) {
+      NS_ERROR("invalid index to add child at");
 #ifdef DEBUG
-    return IPC_FAIL(this, "invalid index");
+      return IPC_FAIL(this, "invalid index");
 #else
-    return IPC_OK();
+      return IPC_OK();
 #endif
-  }
+    }
 
-  uint32_t consumed = AddSubtree(parent, aData.NewTree(), 0, newChildIdx);
-  MOZ_ASSERT(consumed == aData.NewTree().Length());
-
-  // XXX This shouldn't happen, but if we failed to add children then the below
-  // is pointless and can crash.
-  if (!consumed) {
-    return IPC_FAIL(this, "failed to add children");
+    RemoteAccessible* child = CreateAcc(accData);
+    if (!child) {
+      // This shouldn't happen.
+      return IPC_FAIL(this, "failed to add children");
+    }
+    if (!root) {
+      // This is the first Accessible, which is the root of the shown subtree.
+      root = child;
+      rootParent = parent;
+    }
+    AttachChild(parent, childIdx, child);
   }
-
-#ifdef DEBUG
-  for (uint32_t i = 0; i < consumed; i++) {
-    uint64_t id = aData.NewTree()[i].ID();
-    MOZ_ASSERT(mAccessibles.GetEntry(id));
-  }
-#endif
 
   MOZ_ASSERT(CheckDocTree());
 
   // Just update, no events.
-  if (aData.EventSuppressed()) {
+  if (aEventSuppressed) {
     return IPC_OK();
   }
 
-  RemoteAccessible* target = parent->RemoteChildAt(newChildIdx);
-  PlatformShowHideEvent(target, parent, true, aFromUser);
+  PlatformShowHideEvent(root, rootParent, true, aFromUser);
 
   if (nsCOMPtr<nsIObserverService> obsService =
           services::GetObserverService()) {
@@ -149,7 +152,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvShowEvent(
   }
 
   uint32_t type = nsIAccessibleEvent::EVENT_SHOW;
-  xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(target);
+  xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(root);
   xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
   nsINode* node = nullptr;
   RefPtr<xpcAccEvent> event =
@@ -159,71 +162,54 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvShowEvent(
   return IPC_OK();
 }
 
-uint32_t DocAccessibleParent::AddSubtree(
-    RemoteAccessible* aParent, const nsTArray<a11y::AccessibleData>& aNewTree,
-    uint32_t aIdx, uint32_t aIdxInParent) {
-  if (aNewTree.Length() <= aIdx) {
-    NS_ERROR("bad index in serialized tree!");
-    return 0;
-  }
-
-  const AccessibleData& newChild = aNewTree[aIdx];
-
+RemoteAccessible* DocAccessibleParent::CreateAcc(
+    const AccessibleData& aAccData) {
   RemoteAccessible* newProxy;
-  if ((newProxy = GetAccessible(newChild.ID()))) {
+  if ((newProxy = GetAccessible(aAccData.ID()))) {
     // This is a move. Reuse the Accessible; don't destroy it.
     MOZ_ASSERT(!newProxy->RemoteParent());
-    aParent->AddChildAt(aIdxInParent, newProxy);
-    newProxy->SetParent(aParent);
-  } else {
-    if (!aria::IsRoleMapIndexValid(newChild.RoleMapEntryIndex())) {
-      MOZ_ASSERT_UNREACHABLE("Invalid role map entry index");
-      return 0;
+    return newProxy;
+  }
+
+  if (!aria::IsRoleMapIndexValid(aAccData.RoleMapEntryIndex())) {
+    MOZ_ASSERT_UNREACHABLE("Invalid role map entry index");
+    return nullptr;
+  }
+
+  newProxy = new RemoteAccessible(aAccData.ID(), this, aAccData.Role(),
+                                  aAccData.Type(), aAccData.GenericTypes(),
+                                  aAccData.RoleMapEntryIndex());
+  mAccessibles.PutEntry(aAccData.ID())->mProxy = newProxy;
+  ProxyCreated(newProxy);
+
+  if (RefPtr<AccAttributes> fields = aAccData.CacheFields()) {
+    newProxy->ApplyCache(CacheUpdateType::Initial, fields);
+  }
+
+  mPendingOOPChildDocs.RemoveIf([&](dom::BrowserBridgeParent* bridge) {
+    MOZ_ASSERT(bridge->GetBrowserParent(),
+               "Pending BrowserBridgeParent should be alive");
+    if (bridge->GetEmbedderAccessibleId() != aAccData.ID()) {
+      return false;
     }
-    newProxy = new RemoteAccessible(
-        newChild.ID(), aParent, this, newChild.Role(), newChild.Type(),
-        newChild.GenericTypes(), newChild.RoleMapEntryIndex());
-
-    aParent->AddChildAt(aIdxInParent, newProxy);
-    mAccessibles.PutEntry(newChild.ID())->mProxy = newProxy;
-    ProxyCreated(newProxy);
-
-    if (RefPtr<AccAttributes> fields = newChild.CacheFields()) {
-      newProxy->ApplyCache(CacheUpdateType::Initial, fields);
+    MOZ_ASSERT(bridge->GetEmbedderAccessibleDoc() == this);
+    if (DocAccessibleParent* childDoc = bridge->GetDocAccessibleParent()) {
+      AddChildDoc(childDoc, aAccData.ID(), false);
     }
+    return true;
+  });
 
-    mPendingOOPChildDocs.RemoveIf([&](dom::BrowserBridgeParent* bridge) {
-      MOZ_ASSERT(bridge->GetBrowserParent(),
-                 "Pending BrowserBridgeParent should be alive");
-      if (bridge->GetEmbedderAccessibleId() != newChild.ID()) {
-        return false;
-      }
-      MOZ_ASSERT(bridge->GetEmbedderAccessibleDoc() == this);
-      if (DocAccessibleParent* childDoc = bridge->GetDocAccessibleParent()) {
-        AddChildDoc(childDoc, newChild.ID(), false);
-      }
-      return true;
-    });
+  return newProxy;
+}
+
+void DocAccessibleParent::AttachChild(RemoteAccessible* aParent,
+                                      uint32_t aIndex,
+                                      RemoteAccessible* aChild) {
+  aParent->AddChildAt(aIndex, aChild);
+  aChild->SetParent(aParent);
+  if (aChild->IsTableCell()) {
+    CachedTableAccessible::Invalidate(aChild);
   }
-
-  if (newProxy->IsTableCell()) {
-    CachedTableAccessible::Invalidate(newProxy);
-  }
-
-  DebugOnly<bool> isOuterDoc = newProxy->ChildCount() == 1;
-
-  uint32_t accessibles = 1;
-  uint32_t kids = newChild.ChildrenCount();
-  for (uint32_t i = 0; i < kids; i++) {
-    uint32_t consumed = AddSubtree(newProxy, aNewTree, aIdx + accessibles, i);
-    if (!consumed) return 0;
-
-    accessibles += consumed;
-  }
-
-  MOZ_ASSERT((isOuterDoc && kids == 0) || newProxy->ChildCount() == kids);
-
-  return accessibles;
 }
 
 void DocAccessibleParent::ShutdownOrPrepareForMove(RemoteAccessible* aAcc) {

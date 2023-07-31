@@ -27,19 +27,12 @@ struct AccessibleData
 {
   uint64_t ID;
   role Role;
-  uint32_t ChildrenCount;
+  uint64_t ParentID;
+  uint32_t IndexInParent;
   AccType Type;
   AccGenericType GenericTypes;
   uint8_t RoleMapEntryIndex;
   nullable AccAttributes CacheFields;
-};
-
-struct ShowEventData
-{
-  uint64_t ID;
-  uint32_t Idx;
-  AccessibleData[] NewTree;
-  bool EventSuppressed;
 };
 
 struct TextRangeData
@@ -63,7 +56,8 @@ parent:
    * event.
    */
   async Event(uint64_t aID, uint32_t type);
-  async ShowEvent(ShowEventData data, bool aFromuser);
+  async ShowEvent(AccessibleData[] aNewTree, bool aEventSuppressed,
+                  bool aFromuser);
   async HideEvent(uint64_t aRootID, bool aFromUser);
   async StateChangeEvent(uint64_t aID, uint64_t aState, bool aEnabled);
   async CaretMoveEvent(uint64_t aID,
