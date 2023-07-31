@@ -16,6 +16,7 @@ const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";
 const responsiveModeToggleClass = ".media-responsive-mode-toggle";
 
 add_task(async function () {
+  await pushPref("layout.css.nesting.enabled", true);
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   const editor = ui.editors[1];

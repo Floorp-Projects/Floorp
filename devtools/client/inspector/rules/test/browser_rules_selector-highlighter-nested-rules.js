@@ -38,6 +38,7 @@ const TEST_URI = `
   </main>`;
 
 add_task(async function () {
+  await pushPref("layout.css.nesting.enabled", true);
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
 
