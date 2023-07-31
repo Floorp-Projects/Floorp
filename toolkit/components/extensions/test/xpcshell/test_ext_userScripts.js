@@ -20,22 +20,13 @@ add_task(async function setup_test_environment() {
     Services.prefs.setIntPref(PROCESS_COUNT_PREF, 1);
   }
 
-  // Grant the optional permissions requested.
-  function permissionObserver(subject, topic, data) {
-    if (topic == "webextension-optional-permission-prompt") {
-      let { resolve } = subject.wrappedJSObject;
-      resolve(true);
-    }
-  }
-  Services.obs.addObserver(
-    permissionObserver,
-    "webextension-optional-permission-prompt"
+  // Grant the optional permissions requested, without prompting.
+  Services.prefs.setBoolPref(
+    "extensions.webextOptionalPermissionPrompts",
+    false
   );
   registerCleanupFunction(() => {
-    Services.obs.removeObserver(
-      permissionObserver,
-      "webextension-optional-permission-prompt"
-    );
+    Services.prefs.clearUserPref("extensions.webextOptionalPermissionPrompts");
   });
 });
 
