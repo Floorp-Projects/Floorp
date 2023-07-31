@@ -302,52 +302,52 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Nie teraz</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Używaj przeglądarki %s za każdym razem</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Używaj przeglądarki %s za każdym razem</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Używaj przeglądarki Firefox za każdym razem</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">%1$s stawia ludzi ponad zyski i chroni Twoją prywatność, blokując elementy śledzące między witrynami.\n\nWięcej informacji znajdziesz w naszych %2$s.</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s stawia ludzi ponad zyski i chroni Twoją prywatność, blokując elementy śledzące między witrynami.\n\nWięcej informacji znajdziesz w naszych %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox stawia ludzi ponad zyski i chroni Twoją prywatność, blokując elementy śledzące między witrynami.\n\nWięcej informacji znajdziesz w naszych zasadach ochrony prywatności.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">zasadach ochrony prywatności</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">zasadach ochrony prywatności</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Ustaw jako domyślną przeglądarkę</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Ustaw jako domyślną przeglądarkę</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Nie teraz</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Nie teraz</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Przełączaj się z telefonu na laptopa i z powrotem</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Przełączaj się z telefonu na laptopa i z powrotem</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Otwieraj karty i pobierz hasła z innych urządzeń, aby kontynuować w tym samym miejscu.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Otwieraj karty i pobierz hasła z innych urządzeń, aby kontynuować w tym samym miejscu.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Zaloguj się</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Zaloguj się</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Nie teraz</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Nie teraz</string>
 
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Dzięki powiadomieniom lepiej wykorzystasz przeglądarkę %s</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Dzięki powiadomieniom lepiej wykorzystasz przeglądarkę %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Dzięki powiadomieniom lepiej wykorzystasz przeglądarkę Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Przesyłaj karty między urządzeniami, zarządzaj pobieranymi plikami i otrzymuj wskazówki, jak najlepiej wykorzystać przeglądarkę %s.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Przesyłaj karty między urządzeniami, zarządzaj pobieranymi plikami i otrzymuj wskazówki, jak najlepiej wykorzystać przeglądarkę %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Przesyłaj karty między urządzeniami, zarządzaj pobieranymi plikami i otrzymuj wskazówki, jak najlepiej wykorzystać przeglądarkę Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Włącz powiadomienia</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Włącz powiadomienia</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Nie teraz</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Nie teraz</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -427,17 +427,11 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Wyślij prośbę</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Ograniczanie informacji o ciasteczkach</string>
-    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Poprosić o dodanie obsługi tej witryny?</string>
-    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">Przesłano prośbę o dodanie obsługi witryny.</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text_2">Wysłano prośbę</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Włączone na tej witrynie</string>
-    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Przesłano prośbę o dodanie obsługi witryny</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Wysłano prośbę o dodanie obsługi</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -447,8 +441,6 @@
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Wyłączyć ograniczanie informacji o ciasteczkach na witrynie %1$s?</string>
 
-    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Ta witryna nie jest obecnie obsługiwana przez funkcję ograniczania informacji o ciasteczkach. Czy chcesz, aby nasz zespół sprawdził tę witrynę i dodał jej obsługę w przyszłości?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s nie może automatycznie odrzucać próśb o akceptację ciasteczek na tej witrynie. Można wysłać prośbę o dodanie obsługi tej witryny w przyszłości.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -554,6 +546,11 @@
     <string name="preferences_open_links_in_apps_never">Nigdy</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Zewnętrzny menedżer pobierania</string>
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Dzienniki Gecko</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">Wyłączanie aplikacji, aby zastosować zmiany…</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Dodatki</string>
 
@@ -1211,8 +1208,14 @@
     <string name="share_button_content_description">Udostępnij</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Zapisz jako PDF</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">Utworzenie pliku PDF się nie powiodło</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Zamknij</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">Nie można wydrukować</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">Drukuj</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Wyślij na urządzenie</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1507,12 +1510,8 @@
     <string name="etp_settings">Ustawienia ochrony</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Wzmocniona ochrona przed śledzeniem</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Przeglądaj bez wścibskich oczu</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
     <string name="preference_enhanced_tracking_protection_summary">Teraz zawiera całkowitą ochronę ciasteczek, naszą najsilniejszą jak dotąd barierę przed elementami śledzącymi między witrynami.</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Zachowaj prywatność swoich danych. %s chroni Cię przed wieloma najpopularniejszymi elementami śledzącymi, które monitorują, co robisz w Internecie.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">%s chroni Cię przed wieloma najpopularniejszymi elementami śledzącymi, które monitorują, co robisz w Internecie.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1520,15 +1519,11 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standardowa (domyślna)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Równowaga między prywatnością a szybkością wczytywania stron. Strony działają bez problemów.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_5">Strony będą działać bez problemów, ale blokowane będzie mniej elementów śledzących.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Co jest blokowane przez standardową ochronę przed śledzeniem</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Ścisła</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Blokuje więcej elementów śledzących, dzięki czemu strony wczytują się szybciej, ale część ich funkcji może nie działać.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_4">Silniejsza ochrona przed śledzeniem i większa wydajność, ale niektóre strony mogą nie działać poprawnie.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
@@ -1918,6 +1913,12 @@
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Informacje o dodanej wyszukiwarce</string>
 
+    <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
+    <string name="search_add_custom_engine_suggest_url_label">API podpowiedzi wyszukiwania (opcjonalnie)</string>
+    <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
+    <string name="search_add_custom_engine_suggest_string_hint">Adres API podpowiedzi wyszukiwania</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Wyszukiwany tekst zastąp „%s”. Przykład:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Zachowaj</string>
 

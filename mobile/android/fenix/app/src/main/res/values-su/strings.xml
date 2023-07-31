@@ -1531,6 +1531,8 @@
     <string name="preference_enhanced_tracking_protection_standard_info_button">Naon anu dipeungpeuk ku perlindungan pelacakan baku</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Pereketkeun</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Kilungan palacakan anu leuwih wedel sarta kinerja anu leuwih hadé, ngan sababaraha loka bisa jadi teu jalan sakumaha biasa.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Naon anu dipeungpeuk ku perlindungan palacak rékép</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1621,6 +1623,10 @@
     <string name="preference_etp_smartblock_description">Sababaraha palacak anu ditandaan di handap sawaréh geus teu dipeungpeuk di ieu kaca kusabab geus aya interaksi jeung anjeun *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Lenyepan</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">Ikon préperénsi pangiwalan kilungan palacakan</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Pangrojong</string>
@@ -1918,6 +1924,12 @@
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Wincikan mesin pamaluruh sakahayang</string>
 
+    <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
+    <string name="search_add_custom_engine_suggest_url_label">API kamandang maluruh (opsional)</string>
+    <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
+    <string name="search_add_custom_engine_suggest_string_hint">URL API kamandang maluruh</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Ganti kueri ku “%s”. Conto:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Teundeun</string>
 

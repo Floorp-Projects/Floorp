@@ -135,4 +135,6 @@
     <string name="mozac_feature_prompts_identity_credentials_choose_account">Pilih akun</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Pilih %1$s sebagai penyedia info masuk</string>
-    </resources>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[Masuk ke %1$s dengan akun %2$s tunduk pada <a href="%3$s">Kebijakan Privasi</a> dan <a href="%4$s">Ketentuan Layanan</a>]]></string>
+</resources>
