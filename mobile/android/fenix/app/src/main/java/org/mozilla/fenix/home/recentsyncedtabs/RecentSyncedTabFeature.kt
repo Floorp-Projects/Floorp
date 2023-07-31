@@ -154,7 +154,7 @@ class RecentSyncedTabFeature(
                 AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None),
             )
         } else {
-            recordMetrics(syncedTabs.first(), lastSyncedTabs?.first(), syncStartId)
+            recordMetrics(syncedTabs.first(), lastSyncedTabs?.first())
             appStore.dispatch(
                 AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(syncedTabs)),
             )
@@ -171,10 +171,12 @@ class RecentSyncedTabFeature(
     private fun recordMetrics(
         tab: RecentSyncedTab,
         lastSyncedTab: RecentSyncedTab?,
-        syncStartId: GleanTimerId?,
     ) {
         RecentSyncedTabs.recentSyncedTabShown[tab.deviceType.name.lowercase()].add()
-        syncStartId?.let { RecentSyncedTabs.recentSyncedTabTimeToLoad.stopAndAccumulate(it) }
+        syncStartId?.let {
+            RecentSyncedTabs.recentSyncedTabTimeToLoad.stopAndAccumulate(it)
+            syncStartId = null
+        }
         if (tab == lastSyncedTab) {
             RecentSyncedTabs.latestSyncedTabIsStale.add()
         }
