@@ -7285,26 +7285,11 @@ public class GeckoSession {
   private @NonNull GeckoResult<InputStream> saveAsPdfByBrowsingContext(
       final @Nullable Long browsingContextId) {
     final GeckoResult<InputStream> geckoResult = new GeckoResult<>();
-    final GeckoSession self = this;
-    this.isPdfJs()
-        .then(
-            new GeckoResult.OnValueListener<Boolean, Void>() {
-              @Override
-              public GeckoResult<Void> onValue(final Boolean isPdfJs) {
-                if (!isPdfJs) {
-                  if (browsingContextId == null) {
-                    self.mWindow.printToPdf(geckoResult);
-                  } else {
-                    self.mWindow.printToPdf(geckoResult, browsingContextId);
-                  }
-                } else {
-                  geckoResult.completeFrom(
-                      self.getPdfFileSaver().save().map(result -> result.body));
-                }
-                return null;
-              }
-            });
-
+    if (browsingContextId == null) {
+      this.mWindow.printToPdf(geckoResult);
+    } else {
+      this.mWindow.printToPdf(geckoResult, browsingContextId);
+    }
     return geckoResult;
   }
 
