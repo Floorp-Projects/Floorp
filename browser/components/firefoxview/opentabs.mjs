@@ -269,7 +269,7 @@ class OpenTabsInViewCard extends MozLitElement {
             .maxTabsLength=${ifDefined(
               this.classList.contains("height-limited") && !this.showMore
                 ? OpenTabsInViewCard.MAX_TABS_FOR_COMPACT_HEIGHT
-                : null
+                : -1
             )}
             .tabItems=${ifDefined(getTabListItems(this.tabs))}
           ></fxview-tab-list>
