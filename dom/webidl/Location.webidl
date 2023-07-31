@@ -11,6 +11,9 @@
  * and create derivative works of this document.
  */
 
+// Consider to cache more attributes, if the getters show up badly in
+// the performance profiles.
+
 [LegacyUnforgeable,
  Exposed=Window]
 interface Location {
@@ -30,7 +33,7 @@ interface Location {
            attribute USVString pathname;
   [Throws, NeedsSubjectPrincipal]
            attribute USVString search;
-  [Throws, NeedsSubjectPrincipal]
+  [Throws, NeedsSubjectPrincipal, Cached, Pure]
            attribute USVString hash;
 
   [Throws, NeedsSubjectPrincipal]
