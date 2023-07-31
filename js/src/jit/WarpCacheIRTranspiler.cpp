@@ -3542,6 +3542,18 @@ bool WarpCacheIRTranspiler::emitRegExpBuiltinExecTestResult(
   return resumeAfter(ins);
 }
 
+bool WarpCacheIRTranspiler::emitRegExpHasCaptureGroupsResult(
+    ObjOperandId regexpId, StringOperandId inputId) {
+  MDefinition* regexp = getOperand(regexpId);
+  MDefinition* input = getOperand(inputId);
+
+  auto* result = MRegExpHasCaptureGroups::New(alloc(), regexp, input);
+  addEffectful(result);
+  pushResult(result);
+
+  return resumeAfter(result);
+}
+
 MInstruction* WarpCacheIRTranspiler::convertToBoolean(MDefinition* input) {
   // Convert to bool with the '!!' idiom.
   //

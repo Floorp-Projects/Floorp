@@ -4194,3 +4194,52 @@ bool BaselineCacheIRCompiler::emitRegExpBuiltinExecTestResult(
   stubFrame.leave(masm);
   return true;
 }
+
+bool BaselineCacheIRCompiler::emitRegExpHasCaptureGroupsResult(
+    ObjOperandId regexpId, StringOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register regexp = allocator.useRegister(masm, regexpId);
+  Register input = allocator.useRegister(masm, inputId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  allocator.discardStack(masm);
+
+  // Load RegExpShared in |scratch|.
+  Label vmCall;
+  masm.loadParsedRegExpShared(regexp, scratch, &vmCall);
+
+  // Return true iff pairCount > 1.
+  Label returnTrue, done;
+  masm.branch32(Assembler::Above,
+                Address(scratch, RegExpShared::offsetOfPairCount()), Imm32(1),
+                &returnTrue);
+  masm.moveValue(BooleanValue(false), output.valueReg());
+  masm.jump(&done);
+
+  masm.bind(&returnTrue);
+  masm.moveValue(BooleanValue(true), output.valueReg());
+  masm.jump(&done);
+
+  {
+    masm.bind(&vmCall);
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, scratch);
+
+    masm.Push(input);
+    masm.Push(regexp);
+
+    using Fn =
+        bool (*)(JSContext*, Handle<RegExpObject*>, Handle<JSString*>, bool*);
+    callVM<Fn, RegExpHasCaptureGroups>(masm);
+
+    stubFrame.leave(masm);
+    masm.storeCallBoolResult(scratch);
+    masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
+  }
+
+  masm.bind(&done);
+  return true;
+}

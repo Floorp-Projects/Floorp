@@ -615,6 +615,7 @@ class MOZ_RAII InlinableNativeIRGenerator {
                                    bool isPossiblyWrapped);
   AttachDecision tryAttachRegExpMatcherSearcher(InlinableNative native);
   AttachDecision tryAttachRegExpSearcherLastLimit();
+  AttachDecision tryAttachRegExpHasCaptureGroups();
   AttachDecision tryAttachRegExpPrototypeOptimizable();
   AttachDecision tryAttachRegExpInstanceOptimizable();
   AttachDecision tryAttachIntrinsicRegExpBuiltinExec(InlinableNative native);

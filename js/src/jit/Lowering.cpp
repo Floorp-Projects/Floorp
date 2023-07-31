@@ -3206,6 +3206,17 @@ void LIRGenerator::visitRegExpExecTest(MRegExpExecTest* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitRegExpHasCaptureGroups(MRegExpHasCaptureGroups* ins) {
+  MOZ_ASSERT(ins->regexp()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->input()->type() == MIRType::String);
+  MOZ_ASSERT(ins->type() == MIRType::Boolean);
+
+  auto* lir = new (alloc()) LRegExpHasCaptureGroups(useRegister(ins->regexp()),
+                                                    useRegister(ins->input()));
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitRegExpPrototypeOptimizable(
     MRegExpPrototypeOptimizable* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);

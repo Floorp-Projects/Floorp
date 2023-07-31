@@ -4338,6 +4338,17 @@ void MacroAssembler::loadAndClearRegExpSearcherLastLimit(Register result,
 #endif
 }
 
+void MacroAssembler::loadParsedRegExpShared(Register regexp, Register result,
+                                            Label* unparsed) {
+  Address sharedSlot(regexp, RegExpObject::offsetOfShared());
+  branchTestUndefined(Assembler::Equal, sharedSlot, unparsed);
+  unboxNonDouble(sharedSlot, result, JSVAL_TYPE_PRIVATE_GCTHING);
+
+  static_assert(sizeof(RegExpShared::Kind) == sizeof(uint32_t));
+  branch32(Assembler::Equal, Address(result, RegExpShared::offsetOfKind()),
+           Imm32(int32_t(RegExpShared::Kind::Unparsed)), unparsed);
+}
+
 // ===============================================================
 // Branch functions
 

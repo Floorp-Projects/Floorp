@@ -1109,6 +1109,13 @@
   possibly_calls: true
   can_recover: false
 
+- name: RegExpHasCaptureGroups
+  operands:
+    regexp: Object
+    input: String
+  result_type: Boolean
+  possibly_calls: true
+
 - name: RegExpPrototypeOptimizable
   operands:
     object: Object
