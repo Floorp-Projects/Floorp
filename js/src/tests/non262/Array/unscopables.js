@@ -34,10 +34,10 @@ let expectedKeys = ["at",
 		    "flatMap",
 		    "includes",
 		    "keys",
-		    "values",
-                    "toReversed",
-                    "toSorted",
-                    "toSpliced"];
+            "toReversed",
+            "toSorted",
+            "toSpliced",
+		    "values"];
 
 assertDeepEq(keys, expectedKeys);
 

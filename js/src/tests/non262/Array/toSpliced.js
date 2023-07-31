@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-change-array-by-copy) skip-if(!Array.prototype.toSpliced)
+// |reftest| 
 
 Object.defineProperty(Array.prototype, 0, {
   set() {

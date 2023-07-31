@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-change-array-by-copy) skip-if(!Array.prototype.with)
+// |reftest|
 
 function test(otherGlobal) {
     let arrays = [

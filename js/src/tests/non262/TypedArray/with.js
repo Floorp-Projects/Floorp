@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-change-array-by-copy) skip-if(!Int32Array.prototype.with)
+// |reftest|
 
 class Err {}
 

@@ -5146,21 +5146,11 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
       !DefineDataProperty(cx, unscopables, cx->names().flatMap, value) ||
       !DefineDataProperty(cx, unscopables, cx->names().includes, value) ||
       !DefineDataProperty(cx, unscopables, cx->names().keys, value) ||
+      !DefineDataProperty(cx, unscopables, cx->names().toReversed, value) ||
+      !DefineDataProperty(cx, unscopables, cx->names().toSorted, value) ||
+      !DefineDataProperty(cx, unscopables, cx->names().toSpliced, value) ||
       !DefineDataProperty(cx, unscopables, cx->names().values, value)) {
     return false;
-  }
-
-  // FIXME: Once bug 1826643 is fixed, the names should be moved into the first
-  // "or" clause in this method so that they will be alphabetized.
-  if (cx->realm()->creationOptions().getChangeArrayByCopyEnabled()) {
-    /* The reason that "with" is not included in the unscopableList is
-     * because it is already a reserved word.
-     */
-    if (!DefineDataProperty(cx, unscopables, cx->names().toReversed, value) ||
-        !DefineDataProperty(cx, unscopables, cx->names().toSorted, value) ||
-        !DefineDataProperty(cx, unscopables, cx->names().toSpliced, value)) {
-      return false;
-    }
   }
 
   RootedId id(cx, PropertyKey::Symbol(cx->wellKnownSymbols().unscopables));

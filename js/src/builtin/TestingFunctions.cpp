@@ -206,13 +206,6 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   }
 #endif
 
-  bool changeArrayByCopy =
-      cx->realm()->creationOptions().getChangeArrayByCopyEnabled();
-  if (!JS_SetProperty(cx, info, "enableChangeArrayByCopy",
-                      changeArrayByCopy ? TrueHandleValue : FalseHandleValue)) {
-    return false;
-  }
-
 #ifdef ENABLE_NEW_SET_METHODS
   bool newSetMethods = cx->realm()->creationOptions().getNewSetMethodsEnabled();
   if (!JS_SetProperty(cx, info, "enableNewSetMethods",
