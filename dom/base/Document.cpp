@@ -7598,6 +7598,7 @@ void Document::SetScopeObject(nsIGlobalObject* aGlobal) {
     // Same origin data documents should have the same docGroup as their scope
     // window.
     if (mLoadedAsData && window->GetExtantDoc() &&
+        window->GetExtantDoc() != this &&
         window->GetExtantDoc()->NodePrincipal() == NodePrincipal()) {
       DocGroup* docGroup = window->GetExtantDoc()->GetDocGroup();
 
