@@ -104,6 +104,9 @@ Review groups
    * - #permissions or #permissions-reviewers
      - `Permissions </mots/index.html#core-permissions>`__
      - `Member list <https://phabricator.services.mozilla.com/project/members/158/>`__
+   * - #places-reviewers
+     - `Bookmarks & History (Places) </mots/index.html#bookmarks-history>`__
+     - `Member list <https://phabricator.services.mozilla.com/project/members/186/>`__
    * - #platform-i18n-reviewers
      - Platform Internationalization
      - `Member list <https://phabricator.services.mozilla.com/project/members/150/>`__
