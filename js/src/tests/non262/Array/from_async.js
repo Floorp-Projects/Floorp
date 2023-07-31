@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-array-from-async) skip-if(!xulRuntime.shell||!Array.fromAsync) -- needs drainJobQueue
+// |reftest| skip-if(!xulRuntime.shell) -- needs drainJobQueue
 
 // Basic Smoke Test
 async function* asyncGen(n) {

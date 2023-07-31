@@ -92,8 +92,5 @@
 # Shadow Realms
 --enable-shadow-realms
 
-# Array.fromAsync
---enable-array-from-async
-
 # Well-Formed Unicode Strings
 --enable-well-formed-unicode-strings

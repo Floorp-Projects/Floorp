@@ -128,7 +128,6 @@ extern bool enablePropertyErrorMessageFix;
 extern bool enableIteratorHelpers;
 extern bool enableShadowRealms;
 extern bool enableArrayGrouping;
-extern bool enableArrayFromAsync;
 extern bool enableWellFormedUnicodeStrings;
 extern bool enableArrayBufferTransfer;
 #ifdef ENABLE_NEW_SET_METHODS
