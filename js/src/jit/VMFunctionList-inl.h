@@ -275,6 +275,7 @@ namespace jit {
   _(RecreateLexicalEnv, js::jit::RecreateLexicalEnv)                           \
   _(RegExpBuiltinExecMatchFromJit, js::RegExpBuiltinExecMatchFromJit)          \
   _(RegExpBuiltinExecTestFromJit, js::RegExpBuiltinExecTestFromJit)            \
+  _(RegExpHasCaptureGroups, js::RegExpHasCaptureGroups)                        \
   _(RegExpMatcherRaw, js::RegExpMatcherRaw)                                    \
   _(RegExpSearcherRaw, js::RegExpSearcherRaw)                                  \
   _(SameValue, js::SameValue)                                                  \

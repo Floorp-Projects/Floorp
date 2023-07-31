@@ -3282,6 +3282,34 @@ void CodeGenerator::visitRegExpExecTest(LRegExpExecTest* lir) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitRegExpHasCaptureGroups(LRegExpHasCaptureGroups* ins) {
+  Register regexp = ToRegister(ins->regexp());
+  Register input = ToRegister(ins->input());
+  Register output = ToRegister(ins->output());
+
+  using Fn =
+      bool (*)(JSContext*, Handle<RegExpObject*>, Handle<JSString*>, bool*);
+  auto* ool = oolCallVM<Fn, js::RegExpHasCaptureGroups>(
+      ins, ArgList(regexp, input), StoreRegisterTo(output));
+
+  // Load RegExpShared in |output|.
+  Label vmCall;
+  masm.loadParsedRegExpShared(regexp, output, ool->entry());
+
+  // Return true iff pairCount > 1.
+  Label returnTrue;
+  masm.branch32(Assembler::Above,
+                Address(output, RegExpShared::offsetOfPairCount()), Imm32(1),
+                &returnTrue);
+  masm.move32(Imm32(0), output);
+  masm.jump(ool->rejoin());
+
+  masm.bind(&returnTrue);
+  masm.move32(Imm32(1), output);
+
+  masm.bind(ool->rejoin());
+}
+
 class OutOfLineRegExpPrototypeOptimizable
     : public OutOfLineCodeBase<CodeGenerator> {
   LRegExpPrototypeOptimizable* ins_;

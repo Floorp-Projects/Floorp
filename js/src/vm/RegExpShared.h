@@ -73,7 +73,7 @@ class RegExpShared
   friend class js::gc::CellAllocator;
 
  public:
-  enum class Kind { Unparsed, Atom, RegExp };
+  enum class Kind : uint32_t { Unparsed, Atom, RegExp };
   enum class CodeKind { Bytecode, Jitcode, Any };
 
   using ByteCode = js::irregexp::ByteArrayData;
@@ -240,6 +240,8 @@ class RegExpShared
   static size_t offsetOfPairCount() {
     return offsetof(RegExpShared, pairCount_);
   }
+
+  static size_t offsetOfKind() { return offsetof(RegExpShared, kind_); }
 
   static size_t offsetOfJitCode(bool latin1) {
     return offsetof(RegExpShared, compilationArray) +

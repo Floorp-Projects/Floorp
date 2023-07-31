@@ -163,6 +163,7 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::RegExpMatcher:
     case InlinableNative::RegExpSearcher:
     case InlinableNative::RegExpSearcherLastLimit:
+    case InlinableNative::RegExpHasCaptureGroups:
     case InlinableNative::RegExpPrototypeOptimizable:
     case InlinableNative::RegExpInstanceOptimizable:
     case InlinableNative::GetFirstDollarIndex:

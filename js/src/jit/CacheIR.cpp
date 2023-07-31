@@ -6825,6 +6825,30 @@ AttachDecision InlinableNativeIRGenerator::tryAttachRegExpSearcherLastLimit() {
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachRegExpHasCaptureGroups() {
+  // Self-hosted code calls this with object and string arguments.
+  MOZ_ASSERT(argc_ == 2);
+  MOZ_ASSERT(args_[0].toObject().is<RegExpObject>());
+  MOZ_ASSERT(args_[1].isString());
+
+  // Initialize the input operand.
+  initializeInputOperand();
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objId = writer.guardToObject(arg0Id);
+
+  ValOperandId arg1Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  StringOperandId inputId = writer.guardToString(arg1Id);
+
+  writer.regExpHasCaptureGroupsResult(objId, inputId);
+  writer.returnFromIC();
+
+  trackAttached("RegExpHasCaptureGroups");
+  return AttachDecision::Attach;
+}
+
 AttachDecision
 InlinableNativeIRGenerator::tryAttachRegExpPrototypeOptimizable() {
   // Self-hosted code calls this with a single object argument.
@@ -10677,6 +10701,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachRegExpMatcherSearcher(native);
     case InlinableNative::RegExpSearcherLastLimit:
       return tryAttachRegExpSearcherLastLimit();
+    case InlinableNative::RegExpHasCaptureGroups:
+      return tryAttachRegExpHasCaptureGroups();
     case InlinableNative::RegExpPrototypeOptimizable:
       return tryAttachRegExpPrototypeOptimizable();
     case InlinableNative::RegExpInstanceOptimizable:

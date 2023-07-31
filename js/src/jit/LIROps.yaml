@@ -1517,6 +1517,13 @@
   num_temps: 0
   mir_op: true
 
+- name: RegExpHasCaptureGroups
+  result_type: WordSized
+  operands:
+    regexp: WordSized
+    input: WordSized
+  mir_op: true
+
 - name: RegExpPrototypeOptimizable
   result_type: WordSized
   operands:
