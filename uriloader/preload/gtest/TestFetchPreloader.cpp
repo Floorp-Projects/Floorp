@@ -283,7 +283,7 @@ TEST(TestFetchPreloader, CacheNoneBeforeConsume)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
@@ -321,7 +321,7 @@ TEST(TestFetchPreloader, CacheStartBeforeConsume)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
@@ -361,7 +361,7 @@ TEST(TestFetchPreloader, CachePartOfDataBeforeConsume)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
@@ -401,7 +401,7 @@ TEST(TestFetchPreloader, CacheAllDataBeforeConsume)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
@@ -441,7 +441,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsume)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
@@ -480,7 +480,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelError)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
@@ -519,7 +519,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelCancel)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
@@ -562,7 +562,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStartRequest)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
@@ -602,7 +602,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnDataAvailable)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
@@ -642,7 +642,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStopRequest)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
@@ -684,7 +684,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnStartRequest)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
@@ -727,7 +727,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnDataAvailable)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
@@ -771,7 +771,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailable)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
@@ -812,7 +812,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnStartRequestAndRace)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
@@ -861,7 +861,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailableAndRace)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
@@ -910,7 +910,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeThrowFromOnStartRequestAndRace)
   RefPtr<FakeChannel> channel = new FakeChannel();
   RefPtr<FakePreloader> preloader = new FakePreloader(channel);
   RefPtr<mozilla::dom::Document> doc;
-  NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
   EXPECT_TRUE(NS_SUCCEEDED(
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,

@@ -42,7 +42,8 @@ class nsHTMLDocument : public mozilla::dom::Document {
   using Document::SetDocumentURI;
 
   nsHTMLDocument();
-  virtual nsresult Init() override;
+  virtual nsresult Init(nsIPrincipal* aPrincipal,
+                        nsIPrincipal* aPartitionedPrincipal) override;
 
   // Document
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) override;

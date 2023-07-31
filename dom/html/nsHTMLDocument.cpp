@@ -102,10 +102,13 @@ static bool IsAsciiCompatible(const Encoding* aEncoding) {
   return aEncoding->IsAsciiCompatible() || aEncoding == ISO_2022_JP_ENCODING;
 }
 
-nsresult NS_NewHTMLDocument(Document** aInstancePtrResult, bool aLoadedAsData) {
+nsresult NS_NewHTMLDocument(Document** aInstancePtrResult,
+                            nsIPrincipal* aPrincipal,
+                            nsIPrincipal* aPartitionedPrincipal,
+                            bool aLoadedAsData) {
   RefPtr<nsHTMLDocument> doc = new nsHTMLDocument();
 
-  nsresult rv = doc->Init();
+  nsresult rv = doc->Init(aPrincipal, aPartitionedPrincipal);
 
   if (NS_FAILED(rv)) {
     *aInstancePtrResult = nullptr;
@@ -138,8 +141,9 @@ JSObject* nsHTMLDocument::WrapNode(JSContext* aCx,
   return HTMLDocument_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsresult nsHTMLDocument::Init() {
-  nsresult rv = Document::Init();
+nsresult nsHTMLDocument::Init(nsIPrincipal* aPrincipal,
+                              nsIPrincipal* aPartitionedPrincipal) {
+  nsresult rv = Document::Init(aPrincipal, aPartitionedPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Now reset the compatibility mode of the CSSLoader

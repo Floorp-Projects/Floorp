@@ -35,7 +35,8 @@ class nsNodeInfoManager final {
   ~nsNodeInfoManager();
 
  public:
-  explicit nsNodeInfoManager(mozilla::dom::Document* aDocument);
+  explicit nsNodeInfoManager(mozilla::dom::Document* aDocument,
+                             nsIPrincipal* aPrincipal);
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_NATIVE_CLASS(nsNodeInfoManager)
 

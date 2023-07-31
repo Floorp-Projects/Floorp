@@ -698,12 +698,14 @@ nsresult txMozillaXMLOutput::createResultDocument(const nsAString& aName,
 
   // Create the document
   if (mOutputFormat.mMethod == eHTMLOutput) {
-    rv = NS_NewHTMLDocument(getter_AddRefs(mDocument), aLoadedAsData);
+    rv = NS_NewHTMLDocument(getter_AddRefs(mDocument), nullptr, nullptr,
+                            aLoadedAsData);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // We should check the root name/namespace here and create the
     // appropriate document
-    rv = NS_NewXMLDocument(getter_AddRefs(mDocument), aLoadedAsData);
+    rv = NS_NewXMLDocument(getter_AddRefs(mDocument), nullptr, nullptr,
+                           aLoadedAsData);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   // This should really be handled by Document::BeginLoad
