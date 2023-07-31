@@ -100,7 +100,7 @@ class DocAccessibleParent : public RemoteAccessible,
 
   virtual mozilla::ipc::IPCResult RecvShowEvent(
       nsTArray<AccessibleData>&& aNewTree, const bool& aEventSuppressed,
-      const bool& aFromUser) override;
+      const bool& aComplete, const bool& aFromUser) override;
   virtual mozilla::ipc::IPCResult RecvHideEvent(const uint64_t& aRootID,
                                                 const bool& aFromUser) override;
   mozilla::ipc::IPCResult RecvStateChangeEvent(const uint64_t& aID,
@@ -373,6 +373,9 @@ class DocAccessibleParent : public RemoteAccessible,
    * proxy object so we can't use a real map.
    */
   nsTHashtable<ProxyEntry> mAccessibles;
+  uint64_t mPendingShowChild = 0;
+  uint64_t mPendingShowParent = 0;
+  uint32_t mPendingShowIndex = 0;
   nsTHashSet<uint64_t> mMovingIDs;
   uint64_t mActorID;
   bool mTopLevel;

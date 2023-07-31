@@ -81,7 +81,7 @@ void DocAccessibleParent::SetBrowsingContext(
 
 mozilla::ipc::IPCResult DocAccessibleParent::RecvShowEvent(
     nsTArray<AccessibleData>&& aNewTree, const bool& aEventSuppressed,
-    const bool& aFromUser) {
+    const bool& aComplete, const bool& aFromUser) {
   ACQUIRE_ANDROID_LOCK
   if (mShutdown) return IPC_OK();
 
@@ -125,15 +125,50 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvShowEvent(
       // This shouldn't happen.
       return IPC_FAIL(this, "failed to add children");
     }
-    if (!root) {
+    if (!root && !mPendingShowChild) {
       // This is the first Accessible, which is the root of the shown subtree.
       root = child;
       rootParent = parent;
     }
-    AttachChild(parent, childIdx, child);
+    // If this show event has been split across multiple messages and this is
+    // not the last message, don't attach the shown root to the tree yet.
+    // Otherwise, clients might crawl the incomplete subtree and they won't get
+    // mutation events for the remaining pieces.
+    if (aComplete || root != child) {
+      AttachChild(parent, childIdx, child);
+    }
   }
 
   MOZ_ASSERT(CheckDocTree());
+
+  if (!aComplete && !mPendingShowChild) {
+    // This is the first message for a show event split across multiple
+    // messages. Save the show target for subsequent messages and return.
+    const auto& accData = aNewTree[0];
+    mPendingShowChild = accData.ID();
+    mPendingShowParent = accData.ParentID();
+    mPendingShowIndex = accData.IndexInParent();
+    return IPC_OK();
+  }
+  if (!aComplete) {
+    // This show event has been split into multiple messages, but this is
+    // neither the first nor the last message. There's nothing more to do here.
+    return IPC_OK();
+  }
+  MOZ_ASSERT(aComplete);
+  if (mPendingShowChild) {
+    // This is the last message for a show event split across multiple
+    // messages. Retrieve the saved show target, attach it to the tree and fire
+    // an event if appropriate.
+    rootParent = GetAccessible(mPendingShowParent);
+    MOZ_ASSERT(rootParent);
+    root = GetAccessible(mPendingShowChild);
+    MOZ_ASSERT(root);
+    AttachChild(rootParent, mPendingShowIndex, root);
+    mPendingShowChild = 0;
+    mPendingShowParent = 0;
+    mPendingShowIndex = 0;
+  }
 
   // Just update, no events.
   if (aEventSuppressed) {
