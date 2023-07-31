@@ -161,9 +161,11 @@ You can download the latest version of Floorp Browser from the official website:
 
 - We want to support as many languages as possible. If you want to translate Floorp Browser, please clone [l10n-central](https://github.com/Floorp-Projects/l10n-Central) repository.
 
-- Floorp's language file is located in [`browser/browser/floorp.ftl`](./floorp/browser/locales/en-US/floorp.ftl).
+- Floorp's language file is located in: `browser/browser/floorp.ftl`
 
 - English is the main language. If you want to translate Floorp Browser, please translate from English (en-US)
+
+- Floorp's English file is located in here: [floorp.ftl](./floorp/browser/locales/en-US/floorp.ftl)
 
 ### 🐛 Reporting Bugs
 
