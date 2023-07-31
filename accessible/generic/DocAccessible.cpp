@@ -1629,7 +1629,7 @@ void DocAccessible::DoInitialUpdate() {
       SendCache(CacheDomain::All, CacheUpdateType::Initial);
 
       for (auto idx = 0U; idx < mChildren.Length(); idx++) {
-        ipcDoc->InsertIntoIpcTree(this, mChildren.ElementAt(idx), idx, true);
+        ipcDoc->InsertIntoIpcTree(mChildren.ElementAt(idx), true);
       }
     }
   }
