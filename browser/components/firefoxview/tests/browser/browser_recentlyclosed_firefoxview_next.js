@@ -28,7 +28,7 @@ async function openFirefoxView(win) {
   );
 }
 
-async function dismiss_tab(tab, content, document) {
+async function dismiss_tab(itemElem, document) {
   // Make sure the firefoxview-next tab still has focus
   is(
     document.location.href,
@@ -37,15 +37,16 @@ async function dismiss_tab(tab, content, document) {
   );
 
   // Scroll to the tab element to ensure dismiss button is visible
-  tab.scrollIntoView();
-  is(isElInViewport(tab), true, "Tab is visible in viewport");
+  itemElem.scrollIntoView();
+  is(isElInViewport(itemElem), true, "Tab is visible in viewport");
 
-  info(`Dismissing tab ${tab.url}`);
-  const closedObjectsChanged = () =>
-    TestUtils.topicObserved("sessionstore-closed-objects-changed");
-  let dismissButton = tab.buttonEl;
-  EventUtils.synthesizeMouseAtCenter(dismissButton, {}, content);
-  await closedObjectsChanged();
+  info(`Dismissing tab ${itemElem.url}`);
+  const closedObjectsChangePromise = TestUtils.topicObserved(
+    "sessionstore-closed-objects-changed"
+  );
+  let dismissButton = itemElem.buttonEl;
+  EventUtils.synthesizeMouseAtCenter(dismissButton, {}, document.ownerGlobal);
+  await closedObjectsChangePromise;
 }
 
 function navigateToRecentlyClosed(document) {
@@ -59,6 +60,18 @@ function navigateToRecentlyClosed(document) {
   recentlyClosedNavButton.buttonEl.click();
 }
 
+async function prepareClosedTabs() {
+  const newWin = await BrowserTestUtils.openNewBrowserWindow();
+  await open_then_close(URLs[0]);
+  await open_then_close(URLs[1]);
+  await open_then_close(URLs[2], newWin);
+  await SimpleTest.promiseFocus(window);
+  return async () => {
+    info("Cleaning up after prepareClosedTabs");
+    await promiseAllButPrimaryWindowClosed();
+  };
+}
+
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_NEXT_ENABLED_PREF, true]] });
   registerCleanupFunction(async () => {
@@ -70,14 +83,12 @@ add_setup(async () => {
 add_task(async function test_list_ordering() {
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   is(
-    SessionStore.getClosedTabCountForWindow(window),
+    SessionStore.getClosedTabCount(window),
     0,
     "Closed tab count after purging session history"
   );
 
-  await open_then_close(URLs[0]);
-  await open_then_close(URLs[1]);
-  await open_then_close(URLs[2]);
+  let cleanup = await prepareClosedTabs();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview-next");
@@ -123,19 +134,18 @@ add_task(async function test_list_ordering() {
 
     gBrowser.removeTab(gBrowser.selectedTab);
   });
+  await cleanup();
 });
 
 add_task(async function test_list_updates() {
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   is(
-    SessionStore.getClosedTabCountForWindow(window),
+    SessionStore.getClosedTabCount(window),
     0,
     "Closed tab count after purging session history"
   );
 
-  await open_then_close(URLs[0]);
-  await open_then_close(URLs[1]);
-  await open_then_close(URLs[2]);
+  let cleanup = await prepareClosedTabs();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview-next");
@@ -163,18 +173,20 @@ add_task(async function test_list_updates() {
     let tabList = cardMainSlotNode.rowEls;
 
     is(tabList.length, 3, "Three tabs are shown in the list.");
-    const closedObjectsChanged = () =>
-      TestUtils.topicObserved("sessionstore-closed-objects-changed");
+    let promiseClosedObjectsChanged = TestUtils.topicObserved(
+      "sessionstore-closed-objects-changed"
+    );
     SessionStore.undoCloseById(tabList[0].closedId);
-    await closedObjectsChanged();
+    await promiseClosedObjectsChanged;
     await openFirefoxView(window);
     tabList = cardMainSlotNode.rowEls;
     is(tabList.length, 2, "Two tabs are shown in the list.");
 
-    const closedObjectsChangedAgain = () =>
-      TestUtils.topicObserved("sessionstore-closed-objects-changed");
+    promiseClosedObjectsChanged = TestUtils.topicObserved(
+      "sessionstore-closed-objects-changed"
+    );
     SessionStore.forgetClosedTab(window, 0);
-    await closedObjectsChangedAgain();
+    await promiseClosedObjectsChanged;
     await openFirefoxView(window);
     tabList = cardMainSlotNode.rowEls;
     is(tabList.length, 1, "One tab is shown in the list.");
@@ -184,6 +196,7 @@ add_task(async function test_list_updates() {
       BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
     }
   });
+  await cleanup();
 });
 
 /**
@@ -198,9 +211,7 @@ add_task(async function test_dismiss_tab() {
     "Closed tab count after purging session history"
   );
 
-  await open_then_close(URLs[0]);
-  await open_then_close(URLs[1]);
-  await open_then_close(URLs[2]);
+  let cleanup = await prepareClosedTabs();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
@@ -220,8 +231,11 @@ add_task(async function test_dismiss_tab() {
     )[0];
     let tabList = cardMainSlotNode.rowEls;
 
-    await dismiss_tab(tabList[0], content, document);
+    info("calling dismiss_tab");
+    await dismiss_tab(tabList[0], document);
+    info("waiting for list re-render");
     await recentlyClosedComponent.getUpdateComplete();
+    info("check results");
     Assert.equal(SessionStore.getClosedTabCountForWindow(window), 2);
     tabList = cardMainSlotNode.rowEls;
 
@@ -241,6 +255,7 @@ add_task(async function test_dismiss_tab() {
       BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
     }
   });
+  await cleanup();
 });
 
 add_task(async function test_emoty_states() {

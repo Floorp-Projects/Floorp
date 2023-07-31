@@ -118,13 +118,15 @@ class RecentlyClosedTabsInView extends ViewPage {
   }
 
   updateRecentlyClosedTabs() {
-    let recentlyClosedTabsData = lazy.SessionStore.getClosedTabDataForWindow(
+    let recentlyClosedTabsData = lazy.SessionStore.getClosedTabData(
       getWindow()
     );
     this.recentlyClosedTabs = recentlyClosedTabsData.slice(
       0,
       this.maxTabsLength
     );
+    // sort the aggregated list to most-recently-closed first
+    this.recentlyClosedTabs.sort((a, b) => a.closedAt < b.closedAt);
     this.normalizeRecentlyClosedData();
     this.requestUpdate();
   }
@@ -154,17 +156,8 @@ class RecentlyClosedTabsInView extends ViewPage {
   }
 
   onDismissTab(e) {
-    let recentlyClosedList = lazy.SessionStore.getClosedTabDataForWindow(
-      getWindow()
-    );
-    let closedTabIndex = recentlyClosedList.findIndex(closedTab => {
-      return closedTab.closedId === parseInt(e.originalTarget.closedId, 10);
-    });
-    if (closedTabIndex < 0) {
-      // Tab not found in recently closed list
-      return;
-    }
-    lazy.SessionStore.forgetClosedTab(getWindow(), closedTabIndex);
+    const closedId = parseInt(e.originalTarget.closedId, 10);
+    lazy.SessionStore.forgetClosedTabById(closedId);
   }
 
   willUpdate() {
