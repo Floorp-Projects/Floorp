@@ -590,7 +590,7 @@ void nsAccessibilityService::NotifyOfResolutionChange(
   if (document && document->IPCDoc()) {
     AutoTArray<mozilla::a11y::CacheData, 1> data;
     RefPtr<AccAttributes> fields = new AccAttributes();
-    fields->SetAttribute(nsGkAtoms::resolution, aResolution);
+    fields->SetAttribute(CacheKey::Resolution, aResolution);
     data.AppendElement(mozilla::a11y::CacheData(0, fields));
     document->IPCDoc()->SendCache(CacheUpdateType::Update, data);
   }
@@ -602,8 +602,7 @@ void nsAccessibilityService::NotifyOfDevPixelRatioChange(
   if (document && document->IPCDoc()) {
     AutoTArray<mozilla::a11y::CacheData, 1> data;
     RefPtr<AccAttributes> fields = new AccAttributes();
-    fields->SetAttribute(nsGkAtoms::_moz_device_pixel_ratio,
-                         aAppUnitsPerDevPixel);
+    fields->SetAttribute(CacheKey::AppUnitsPerDevPixel, aAppUnitsPerDevPixel);
     data.AppendElement(mozilla::a11y::CacheData(0, fields));
     document->IPCDoc()->SendCache(CacheUpdateType::Update, data);
   }

@@ -297,7 +297,7 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
     uint64_t state = 0;
     if (mCachedFields) {
       if (auto oldState =
-              mCachedFields->GetAttribute<uint64_t>(nsGkAtoms::state)) {
+              mCachedFields->GetAttribute<uint64_t>(CacheKey::State)) {
         state = *oldState;
       }
     } else {
@@ -308,7 +308,7 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
     } else {
       state &= ~aState;
     }
-    mCachedFields->SetAttribute(nsGkAtoms::state, state);
+    mCachedFields->SetAttribute(CacheKey::State, state);
   }
 
   void InvalidateGroupInfo();
@@ -390,7 +390,7 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
    */
   void InvalidateCachedHyperTextOffsets() {
     if (mCachedFields) {
-      mCachedFields->Remove(nsGkAtoms::offset);
+      mCachedFields->Remove(CacheKey::HyperTextOffsets);
     }
   }
 

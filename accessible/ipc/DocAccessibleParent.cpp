@@ -1176,7 +1176,7 @@ void DocAccessibleParent::URL(nsAString& aURL) const {
 
 void DocAccessibleParent::MimeType(nsAString& aMime) const {
   if (mCachedFields) {
-    mCachedFields->GetAttribute(nsGkAtoms::headerContentType, aMime);
+    mCachedFields->GetAttribute(CacheKey::MimeType, aMime);
   }
 }
 

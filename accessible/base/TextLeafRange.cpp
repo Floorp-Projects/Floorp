@@ -1320,8 +1320,8 @@ bool TextLeafPoint::IsInSpellingError() const {
   if (!acc->mCachedFields) {
     return false;
   }
-  auto spellingErrors =
-      acc->mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::spelling);
+  auto spellingErrors = acc->mCachedFields->GetAttribute<nsTArray<int32_t>>(
+      CacheKey::SpellingErrors);
   if (!spellingErrors) {
     return false;
   }
@@ -1411,8 +1411,8 @@ TextLeafPoint TextLeafPoint::FindSpellingErrorSameAcc(
   if (!acc->mCachedFields) {
     return TextLeafPoint();
   }
-  auto spellingErrors =
-      acc->mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::spelling);
+  auto spellingErrors = acc->mCachedFields->GetAttribute<nsTArray<int32_t>>(
+      CacheKey::SpellingErrors);
   if (!spellingErrors) {
     return TextLeafPoint();
   }
