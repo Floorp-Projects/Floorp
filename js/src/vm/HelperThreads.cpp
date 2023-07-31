@@ -535,11 +535,6 @@ size_t ParseTask::sizeOfExcludingThis(
 void ParseTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
   runTask(locked);
 
-  // Schedule DelazifyTask if needed. NOTE: This should be done before adding
-  // this task to the finished list, as we temporarily release the lock to make
-  // a few large allocations.
-  scheduleDelazifyTask(locked);
-
   // The callback is invoked while we are still off thread.
   callback(this, callbackData);
 
@@ -556,34 +551,6 @@ void ParseTask::runTask(AutoLockHelperThreadState& lock) {
   parse(&fc_);
 
   fc_.nameCollectionPool().purge();
-}
-
-void ParseTask::scheduleDelazifyTask(AutoLockHelperThreadState& lock) {
-  if (!stencil_) {
-    return;
-  }
-
-  // Skip delazify tasks if we parese everything on-demand or ahead.
-  auto strategy = options.eagerDelazificationStrategy();
-  if (strategy == JS::DelazificationOption::OnDemandOnly ||
-      strategy == JS::DelazificationOption::ParseEverythingEagerly) {
-    return;
-  }
-
-  UniquePtr<DelazifyTask> task;
-  {
-    AutoUnlockHelperThreadState unlock(lock);
-
-    task = DelazifyTask::Create(runtime, options, *stencil_);
-    if (!task) {
-      return;
-    }
-  }
-
-  // Schedule delazification task if there is any function to delazify.
-  if (!task->done()) {
-    HelperThreadState().submitTask(task.release(), lock);
-  }
 }
 
 template <typename Unit>
@@ -699,7 +666,7 @@ void DecodeStencilTask::parse(FrontendContext* fc) {
 }
 
 void js::StartOffThreadDelazification(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JSContext* maybeCx, const ReadOnlyCompileOptions& options,
     const frontend::CompilationStencil& stencil) {
   // Skip delazify tasks if we parse everything on-demand or ahead.
   auto strategy = options.eagerDelazificationStrategy();
@@ -709,7 +676,7 @@ void js::StartOffThreadDelazification(
   }
 
   // Skip delazify task if code coverage is enabled.
-  if (cx->realm()->collectCoverageForDebug()) {
+  if (maybeCx && maybeCx->realm()->collectCoverageForDebug()) {
     return;
   }
 
@@ -717,11 +684,9 @@ void js::StartOffThreadDelazification(
     return;
   }
 
-  AutoAssertNoPendingException aanpe(cx);
-
-  JSRuntime* runtime = cx->runtime();
+  JSRuntime* maybeRuntime = maybeCx ? maybeCx->runtime() : nullptr;
   UniquePtr<DelazifyTask> task;
-  task = DelazifyTask::Create(runtime, options, stencil);
+  task = DelazifyTask::Create(maybeRuntime, options, stencil);
   if (!task) {
     return;
   }
@@ -734,10 +699,10 @@ void js::StartOffThreadDelazification(
 }
 
 UniquePtr<DelazifyTask> DelazifyTask::Create(
-    JSRuntime* runtime, const JS::ReadOnlyCompileOptions& options,
+    JSRuntime* maybeRuntime, const JS::ReadOnlyCompileOptions& options,
     const frontend::CompilationStencil& stencil) {
   UniquePtr<DelazifyTask> task;
-  task.reset(js_new<DelazifyTask>(runtime, options.prefableOptions()));
+  task.reset(js_new<DelazifyTask>(maybeRuntime, options.prefableOptions()));
   if (!task) {
     return nullptr;
   }
@@ -751,9 +716,9 @@ UniquePtr<DelazifyTask> DelazifyTask::Create(
 }
 
 DelazifyTask::DelazifyTask(
-    JSRuntime* runtime,
+    JSRuntime* maybeRuntime,
     const JS::PrefableCompileOptions& initialPrefableOptions)
-    : runtime(runtime),
+    : maybeRuntime(maybeRuntime),
       delazificationCx(initialPrefableOptions, HelperThreadState().stackQuota) {
 }
 
@@ -897,7 +862,7 @@ static void CancelPendingDelazifyTask(JSRuntime* rt,
   for (auto iter = delazifyList.begin(); iter != end;) {
     DelazifyTask* task = *iter;
     ++iter;
-    if (task->runtimeMatches(rt)) {
+    if (task->runtimeMatchesOrNoRuntime(rt)) {
       task->removeFrom(delazifyList);
       js_delete(task);
     }
@@ -920,7 +885,7 @@ static void WaitUntilCancelledDelazifyTasks(JSRuntime* rt,
     bool inProgress = false;
     for (auto* helper : HelperThreadState().helperTasks(lock)) {
       if (helper->is<DelazifyTask>() &&
-          helper->as<DelazifyTask>()->runtimeMatches(rt)) {
+          helper->as<DelazifyTask>()->runtimeMatchesOrNoRuntime(rt)) {
         inProgress = true;
         break;
       }
@@ -934,11 +899,11 @@ static void WaitUntilCancelledDelazifyTasks(JSRuntime* rt,
 
 #ifdef DEBUG
   for (DelazifyTask* task : HelperThreadState().delazifyWorklist(lock)) {
-    MOZ_ASSERT(!task->runtimeMatches(rt));
+    MOZ_ASSERT(!task->runtimeMatchesOrNoRuntime(rt));
   }
   for (auto* helper : HelperThreadState().helperTasks(lock)) {
     MOZ_ASSERT_IF(helper->is<DelazifyTask>(),
-                  !helper->as<DelazifyTask>()->runtimeMatches(rt));
+                  !helper->as<DelazifyTask>()->runtimeMatchesOrNoRuntime(rt));
   }
 #endif
 }
@@ -989,14 +954,14 @@ void js::CancelOffThreadDelazify(JSRuntime* runtime) {
 static bool HasAnyDelazifyTask(JSRuntime* rt, AutoLockHelperThreadState& lock) {
   auto& delazifyList = HelperThreadState().delazifyWorklist(lock);
   for (auto task : delazifyList) {
-    if (task->runtimeMatches(rt)) {
+    if (task->runtimeMatchesOrNoRuntime(rt)) {
       return true;
     }
   }
 
   for (auto* helper : HelperThreadState().helperTasks(lock)) {
     if (helper->is<DelazifyTask>() &&
-        helper->as<DelazifyTask>()->runtimeMatches(rt)) {
+        helper->as<DelazifyTask>()->runtimeMatchesOrNoRuntime(rt)) {
       return true;
     }
   }

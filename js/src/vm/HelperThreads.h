@@ -240,7 +240,7 @@ JS::OffThreadToken* StartOffThreadDecodeStencil(
 
 // Start off-thread delazification task, to race the delazification of inner
 // functions.
-void StartOffThreadDelazification(JSContext* cx,
+void StartOffThreadDelazification(JSContext* maybeCx,
                                   const JS::ReadOnlyCompileOptions& options,
                                   const frontend::CompilationStencil& stencil);
 
