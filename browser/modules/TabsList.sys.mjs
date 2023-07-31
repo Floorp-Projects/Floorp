@@ -358,11 +358,13 @@ export class TabsPanel extends TabsListBase {
   _setRowAttributes(row, tab) {
     setAttributes(row, { selected: tab.selected });
 
+    let tooltiptext = this.gBrowser.getTabTooltip(tab);
     let busy = tab.getAttribute("busy");
     let button = row.firstElementChild;
     setAttributes(button, {
       busy,
       label: tab.label,
+      tooltiptext,
       image: !busy && tab.getAttribute("image"),
       iconloadingprincipal: tab.getAttribute("iconloadingprincipal"),
     });
