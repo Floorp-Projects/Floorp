@@ -19,18 +19,23 @@ import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.bookmarkStorage
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MockBrowserDataHelper.createBookmarkItem
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
+import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
+import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.ui.robots.bookmarksMenu
 import org.mozilla.fenix.ui.robots.browserScreen
+import org.mozilla.fenix.ui.robots.clearTextFieldItem
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -790,17 +795,10 @@ class BookmarksTest {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getHTMLControlsFormAsset(mockWebServer)
 
+        createBookmarkItem(firstWebPage.url.toString(), firstWebPage.title, 1u)
+        createBookmarkItem(secondWebPage.url.toString(), secondWebPage.title, 2u)
+
         homeScreen {
-        }.openThreeDotMenu {
-        }.openBookmarks {
-            createFolder(bookmarksFolderName)
-        }
-
-        exitMenu()
-
-        browserScreen {
-            createBookmark(firstWebPage.url, bookmarksFolderName)
-            createBookmark(secondWebPage.url)
         }.openThreeDotMenu {
         }.openBookmarks {
         }.clickSearchButton {
@@ -808,10 +806,16 @@ class BookmarksTest {
             typeSearch(firstWebPage.title)
             verifySearchEngineSuggestionResults(activityTestRule, firstWebPage.url.toString())
             verifyNoSuggestionsAreDisplayed(activityTestRule, secondWebPage.url.toString())
+        }.dismissSearchBar {}
+        bookmarksMenu {
+        }.clickSearchButton {
             // Search for invalid term
             typeSearch("Android")
-            verifyNoSuggestionsAreDisplayed(activityTestRule, firstWebPage.url.toString())
-            verifyNoSuggestionsAreDisplayed(activityTestRule, secondWebPage.url.toString())
+            verifyNoSuggestionsAreDisplayed(
+                activityTestRule,
+                firstWebPage.url.toString(),
+                secondWebPage.url.toString()
+            )
         }
     }
 

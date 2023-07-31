@@ -23,6 +23,7 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MockBrowserDataHelper
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
@@ -396,23 +397,27 @@ class HistoryTest {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getHTMLControlsFormAsset(mockWebServer)
 
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(secondWebPage.url) {
+        MockBrowserDataHelper.createHistoryItem(firstWebPage.url.toString())
+        MockBrowserDataHelper.createHistoryItem(secondWebPage.url.toString())
+
+        homeScreen {
         }.openThreeDotMenu {
         }.openHistory {
         }.clickSearchButton {
             // Search for a valid term
-            typeSearch(firstWebPage.title)
+            typeSearch("generic")
             verifySearchEngineSuggestionResults(activityTestRule, firstWebPage.url.toString())
             verifyNoSuggestionsAreDisplayed(activityTestRule, secondWebPage.url.toString())
-            clickClearButton()
+        }.dismissSearchBar {}
+        historyMenu {
+        }.clickSearchButton {
             // Search for invalid term
             typeSearch("Android")
-            verifyNoSuggestionsAreDisplayed(activityTestRule, firstWebPage.url.toString())
-            verifyNoSuggestionsAreDisplayed(activityTestRule, secondWebPage.url.toString())
+            verifyNoSuggestionsAreDisplayed(
+                activityTestRule,
+                firstWebPage.url.toString(),
+                secondWebPage.url.toString(),
+            )
         }
     }
 
