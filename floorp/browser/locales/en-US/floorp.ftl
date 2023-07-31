@@ -534,115 +534,116 @@ Facebook-Container = Facebook Container
 about-Facebook-Container = Facebook'un sizi web'de izlemesini önleyin. Facebook Container uzantısı kontrolü ele almanıza ve web aktivitelerinizi Facebook'tan izole etmenize yardımcı olur.
 
 ## Fingerprint
-fingerprint-header = Resist Fingerprinting & IP address leak
-block-fingerprint = Fingerprinting is a tracking mechanism that relies on the unique features of your browser and operating system. This section contains settings to further enhance this protection beyond the default blocking.
-enable-firefox-fingerprint-protections = Enable strong protection against fingerprinting
-about-firefox-fingerprint-protection = Enabling protection by Firefox includes forced light mode, disabling some APIs, etc. Some sites may be broken.
+fingerprint-header = Parmak izi ve IP adresi sızıntısına karşı koy
+block-fingerprint = Parmak izi, tarayıcınızın ve işletim sisteminizin benzersiz özelliklerine dayanan bir izleme mekanizmasıdır. Bu bölüm, korumayı varsayılandan daha fazla geliştirebileceğiniz ayarlar içerir.
+
+enable-firefox-fingerprint-protections = Parmak izine karşı güçlü korumayı etkinleştir
+about-firefox-fingerprint-protection = Korumayı etkinleştirmek, zorunlu aydınlık modunu, bazı API'leri devre dışı bırakmayı vb. içerir. Bu bazı sitelerin açılmamasına veya bozulmasına neden olabilir.
 fingerprint-Protection =
- .label =  Anti-fingerprinting protections
+ .label =  Parmak İzine Karşı Koruma
 html5-canvas-prompt-settings =
- .label =  Automatically approve access confirmation prompts for HTML5 image data
-canvas-prompt = Automatically reject the canvas-reading prompt
+ .label =  HTML5 görüntü verileri için erişim onayı istemlerini otomatik olarak onayla
+canvas-prompt = Tuval okuma istemini otomatik olarak reddet
 disable-webgl =
- .label =  Disable WebGL
-about-webgl = WebGL is a Javascript API used to render graphics, which can be used to identify GPU.
+ .label =  WebGL'i devre dışı bırak
+about-webgl =WebGL, grafikleri işlemek için ve GPU'yu tanımlamak için kullanılabilen bir Javascript API'sidir.
 Canvas-Blocker = Canvas Blocker
-about-CB = This add-on spoofs data used by fingerprinting techniques.
-WebRTC-connection = WebRTC is a standard that provides real-time calling. If you disable this setting, you will not be able to use Discord, etc.
+about-CB = Bu eklenti parmak izi teknikleri tarafından kullanılan verileri taklit eder.
+WebRTC-connection =  WebRTC gerçek zamanlı arama sağlayan bir standarttır. Bu ayarı devre dışı bırakırsanız, Discord vb. kullanamazsınız.
 WebRTC = 
- .label = Enable WebRTC Connection
+ .label = WebRTC Bağlantısını Etkinleştir
 
 ################################################################### browser ###############################################################
 
-rest-mode = Taking a break...
-rest-mode-description = Browser is stopped. Press ENTER or OK to continue.
+rest-mode = Mola veriliyor.
+rest-mode-description = Tarayıcı durduruldu. Devam etmek için ENTER veya OK tuşuna basın.
 
 Sidebar2 =
-  .label = Browser Manager Sidebar
-  .tooltiptext = Change Sidebar Visibility
+  .label = Tarayıcı Kenar Çubuğu
+  .tooltiptext = Kenar Çubuğu Görünürlüğünü Değiştir
 
 sidebar2-mute-and-unmute =
-  .label = Mute/Unmute this panel
+  .label = Bu panelin sesini kapat/aç
 
 sidebar2-unload-panel =
-  .label = Unload this panel
+  .label = Bu paneli boşalt
 
 sidebar2-change-ua-panel =
-  .label = Switch User agent to Mobile/Desktop version at this panel
+  .label = Bu panelde Kullanıcı aracısını Mobil/Masaüstü sürümüne geçir
 
 sidebar2-delete-panel =
-  .label = Delete this panel
+  .label = Bu paneli sil
 
 sidebar2-close-button =
-  .tooltiptext = Close sidebar
+  .tooltiptext = Kenar çubuğunu kapat
 
 sidebar-back-button =
-  .tooltiptext = Back
+  .tooltiptext = Geri
 
 sidebar-forward-button =
-  .tooltiptext = Forward
+  .tooltiptext = İleri
 
 sidebar-reload-button = 
-  .tooltiptext = Reload
+  .tooltiptext = Yeniden Yükle
 
 sidebar-go-index-button =
-  .tooltiptext = Go Home
+  .tooltiptext = Ana Sayfaya git
 
 sidebar-muteAndUnmute-button =
-  .tooltiptext = Mute/Unmute sidebar
+  .tooltiptext = Kenar çubuğunun sesini kapat/aç
 
-sidebar2-browser-manager-sidebar = Browser Manager
+sidebar2-browser-manager-sidebar = Tarayıcı Yöneticisi
 
 show-browser-manager-sidebar =
-  .tooltiptext = Show { sidebar2-browser-manager-sidebar } Sidebar
+  .tooltiptext = { sidebar2-browser-manager-sidebar } kenar çubuğunu göster
 
-sidebar2-bookmark-sidebar = Bookmarks
+sidebar2-bookmark-sidebar = Yer İmleri
 
 show-bookmark-sidebar =
-  .tooltiptext = Show { sidebar2-bookmark-sidebar } Sidebar
+  .tooltiptext = { sidebar2-bookmark-sidebar } kenar çubuğunu göster
 
-sidebar2-history-sidebar = History
+sidebar2-history-sidebar = Geçmiş
 
 show-history-sidebar =
-  .tooltiptext = Show { sidebar2-history-sidebar } Sidebar
+  .tooltiptext = { sidebar2-history-sidebar } kenar çubuğunu göster
 
-sidebar2-download-sidebar = Download
+sidebar2-download-sidebar = İndirme
 
 show-download-sidebar =
   .tooltiptext = Show { sidebar2-download-sidebar } Sidebar
 
-sidebar2-notes-sidebar = Notes
+sidebar2-notes-sidebar = Notlar
 
 show-notes-sidebar =
-  .tooltiptext = Show { sidebar2-notes-sidebar } Sidebar
+  .tooltiptext = { sidebar2-notes-sidebar } kenar çubuğunu göster
 
 sidebar-add-button =
   .tooltiptext = { bsb-add }
 
 sidebar-addons-button =
-  .tooltiptext = Open Addon manager
+  .tooltiptext = Eklenti yöneticisini aç
 
 sidebar-passwords-button =
-  .tooltiptext = Open Password manager
+  .tooltiptext = Parola yöneticisini aç
 
 sidebar-preferences-button =
-  .tooltiptext = Open Preferences
+  .tooltiptext = Tercihleri aç
 
 sidebar-keepWidth-button =
-  .tooltiptext = Keep This Panel Width
+  .tooltiptext = Bu Panel Genişliğini Koru
 
 sidebar2-keep-width-for-global =
-  .label = Set the current panel size for all web panels that do not have a unique size
+  .label = Özel bir boyuta sahip olmayan tüm web panelleri için geçerli panel boyutunu ayarla
 
 bsb-context-add = 
-  .label = Add This Page on Webpanel
+  .label = Bu Sayfayı Webpanel'e Ekle
 
 bsb-context-link-add = 
-  .label = Add Link on Webpanel
+  .label = Webpanel'e Bağlantı Ekle
 #################################################################### menu panel ############################################################
 
 open-profile-dir = 
-    .label = Open Profile Directory
+    .label = Profil Dizinini Aç
 
 ####################################################################### menu ###############################################################
 
@@ -655,201 +656,200 @@ css-menubar =
     .accesskey = C
 
 rebuild-css =
-    .label = Rebuild browser CSS files
+    .label = Tarayıcı CSS dosyalarını yeniden oluştur
     .accesskey = R
 
 make-browsercss-file =
-    .label = Create browser CSS file
+    .label = Tarayıcı CSS dosyası oluştur
     .accesskey = M
 
 open-css-folder =
-    .label = Open CSS folder
+    .label = CSS dosyasını aç
     .accesskey = O
 
 edit-userChromeCss-editor =
-    .label = Edit userChrome.css file
+    .label = userChrome.css dosyasını düzenle
 
 edit-userContentCss-editor =
-    .label = Edit userContent.css file
+    .label = userContent.css dosyasını düzenle
 
-not-found-editor-path = Could not find the editor path.
-set-pref-description = Set the path to the editor you want to use.
-rebuild-complete = Rebuild has been completed.
-please-enter-filename = Please enter a file name.
+not-found-editor-path = Düzenleyici yolu (PATH) bulunamadı.
+set-pref-description = Kullanmak istediğiniz düzenleyicinin yolunu ayarlayın.
+rebuild-complete = Yeniden yapılandırma tamamlandı.
+please-enter-filename = Lğtfen bir dosya ismi girin
 
 ################################################################### Undo-Closed-Tab ###############################################################
 
-undo-closed-tab = Undo close Tab
+undo-closed-tab = Sekme kapatmayı geri al
 
 ################################################################### about:addons ###############################################################
 
 # DualTheme
-dual-theme-enable-addon-button = Enable as a sub theme
-dual-theme-disable-addon-button = Disable as a sub theme
-dual-theme-enabled-heading = Enabled as a sub theme
+dual-theme-enable-addon-button = Alt tema olarak etkinleştir
+dual-theme-disable-addon-button = Alt tema olarak devre dışı bırak
+dual-theme-enabled-heading = Alt tema olarak etkinleştirildi
 
 ##################################################################### toolbar ###############################################################
 
 status-bar =
-    .label = Status Bar
+    .label = Durum Çubuğu
      .accesskey = S
 
 ##################################################################### Gesturefy ###############################################################
 
-gf-floorp-open-tree-style-tab-name = [Floorp] Open Tree Style Tab Panel
-gf-floorp-open-tree-style-tab-description = Open Tree Style Tab Panel of Sidebar
+gf-floorp-open-tree-style-tab-name = [Floorp] Ağaç Stili Sekme Panelini Aç
+gf-floorp-open-tree-style-tab-description = Kenar Çubuğunun Ağaç Stili Sekme Panelini Aç
 
-gf-floorp-open-bookmarks-sidebar-name = [Floorp] Open Bookmarks Panel of Sidebar
+gf-floorp-open-bookmarks-sidebar-name = [Floorp] Kenar Çubuğunun Yer İmleri Panelini Aç
 gf-floorp-open-bookmarks-sidebar-description = Open Bookmarks Panel of Sidebar
 
-gf-floorp-open-history-sidebar-name = [Floorp] Open History Panel of Sidebar
-gf-floorp-open-history-sidebar-description = Open History Panel of Sidebar
+gf-floorp-open-history-sidebar-name = [Floorp] Kenar Çubuğunun Geçmiş Panelini Aç
+gf-floorp-open-history-sidebar-description = Kenar Çubuğunun Geçmiş Panelini Aç
 
-gf-floorp-open-synctabs-sidebar-name = [Floorp] Open Synced Tabs Panel of Sidebar
-gf-floorp-open-synctabs-sidebar-description = Open Synced Tabs Panel of Sidebar
+gf-floorp-open-synctabs-sidebar-name = [Floorp] Kenar Çubuğunun Senkronize Sekmeler Panelini Aç
+gf-floorp-open-synctabs-sidebar-description = Kenar Çubuğunun Senkronize Sekmeler Panelini Aç
 
-gf-floorp-close-sidebar-name = [Floorp] Close Sidebar
-gf-floorp-close-sidebar-description = Close Sidebar
+gf-floorp-close-sidebar-name = [Floorp] Kenar Çubuğunu Kapat
+gf-floorp-close-sidebar-description = Kenar Çubuğunu Kapat
 
 
-gf-floorp-open-browser-manager-sidebar-name = [Floorp] Open BMS
-gf-floorp-open-browser-manager-sidebar-description =  Open Browser Manager Sidebar, if webpanel of Browser Manager Sidebar was loaded
+gf-floorp-open-browser-manager-sidebar-name = [Floorp] BMS'yi Açın
+gf-floorp-open-browser-manager-sidebar-description =  Tarayıcı Kenar Çubuğu web paneli yüklüyse, Tarayıcı Kenar Çubuğunu açın
 
 gf-floorp-close-browser-manager-sidebar-name = [Floorp] Close BMS
-gf-floorp-close-browser-manager-sidebar-description = Close Browser Manager Sidebar
+gf-floorp-close-browser-manager-sidebar-description = Tarayıcı Kenar Çubuğunu Kapat
 
 gf-floorp-toggle-browser-manager-sidebar-name = [Floorp] Toggle BMS
-gf-floorp-toggle-browser-manager-sidebar-description = Toggle Browser Manager Sidebar
+gf-floorp-toggle-browser-manager-sidebar-description = Tarayıcı Kenar Çubuğunu Değiştir
 
-gf-floorp-show-statusbar-name = [Floorp] Show Status Bar
-gf-floorp-show-statusbar-description = Show Status Bar
+gf-floorp-show-statusbar-name = [Floorp] Durum Çubuğunu Göster
+gf-floorp-show-statusbar-description = Durum Çubuğunu Göster
 
-gf-floorp-hide-statusbar-name = [Floorp] Hide Status Bar
-gf-floorp-hide-statusbar-description = Hide Status Bar
+gf-floorp-hide-statusbar-name = [Floorp] Durum Çubuğunu Gizle
+gf-floorp-hide-statusbar-description = Durum Çubuğunu Gizle
 
-gf-floorp-toggle-statusbar-name = [Floorp] Toggle Status Bar
-gf-floorp-toggle-statusbar-description = Show or Hide Status Bar
+gf-floorp-toggle-statusbar-name = [Floorp] Durum Çubuğunu Değiştir
+gf-floorp-toggle-statusbar-description = Durum Çubuğunu Göster veya Gizle
 
-gf-floorp-open-extension-sidebar-name = [Floorp] Open selected add-on of Sidebar
-gf-floorp-open-extension-sidebar-description = Open selected add-on of Sidebar
-gf-floorp-open-extension-sidebar-settings-addons-id = Add-on of Sidebar
+gf-floorp-open-extension-sidebar-name = [Floorp] Kenar Çubuğu'nun seçili eklentisini aç
+gf-floorp-open-extension-sidebar-description = Kenar Çubuğu'nun seçili eklentisini aç
+gf-floorp-open-extension-sidebar-settings-addons-id = Kenar Çubuğu Eklentisi
 gf-floorp-open-extension-sidebar-settings-addons-id-description = The extension of the add-on open of sidebar
-gf-floorp-open-extension-sidebar-settings-list-default = Please select add-on
-gf-floorp-open-extension-sidebar-settings-list-unknwon = Unknown add-on
+gf-floorp-open-extension-sidebar-settings-list-default = Lütfen eklenti seçin
+gf-floorp-open-extension-sidebar-settings-list-unknwon = Bilinmeyen eklenti
 ##################################################################### Floorp System Update Portable Version ###############################################################
 
-update-portable-notification-found-title = Updates found!
-update-portable-notification-found-message = Downloading updates...
-update-portable-notification-ready-title = Ready to update!
-update-portable-notification-ready-message = The next time the browser is launched, the update will begin.
-update-portable-notification-success-title = Update succeeded!
-update-portable-notification-success-message = Update succeeded! Hope you enjoy the new version of Floorp!
-update-portable-notification-failed-title = Update failed.
-update-portable-notification-failed-redirector-message = Update failed. Restarting your browser may solve the problem.
-update-portable-notification-failed-prepare-message = Failed to prepare update.
+update-portable-notification-found-title = Güncellemeler bulundu!
+update-portable-notification-found-message = Güncellemeler indiriliyor...
+update-portable-notification-ready-title = Güncellemeye hazır!
+update-portable-notification-ready-message = Tarayıcıyı bir sonraki başlatılışında güncelleme başlayacak.
+update-portable-notification-success-title = Güncelleme başarılı!
+update-portable-notification-success-message = Güncelleme başarılı! Umarım Floorp'un yeni sürümünü beğenirsiniz!
+update-portable-notification-failed-title = Güncelleme başarısız oldu.
+update-portable-notification-failed-redirector-message = Güncelleme başarısız oldu. Tarayıcıyı yeniden başlatmak sorunu çözebilir.
+update-portable-notification-failed-prepare-message = Güncelleme hazırlanamadı.
 
 ##################################################################### Open link in external ###############################################################
-openInExternal-title = Open in External Browser
+openInExternal-title = Harici bir Tarayıcıda Aç
 open-link-in-external-enabled-option =
- .label = Enable "Open in external browser" feature
-open-link-in-external-select-browser-option = Choose the browser you want to open in "Open in external browser"
+ .label = "Harici tarayıcıda aç" özelliğini etkinleştir
+open-link-in-external-select-browser-option = "Harici tarayıcıda aç" bölümünden açmak istediğiniz tarayıcıyı seçin
 open-link-in-external-select-browser-option-default =
- .label = Default browser
-open-link-in-external-tab-context-menu = Open in external browser
-open-link-in-external-tab-dialog-title-error = Error
-open-link-in-external-tab-dialog-message-default-browser-not-found = Default browser is not found or is not configured.
-open-link-in-external-tab-dialog-message-selected-browser-not-found = The selected browser does not exist.
-
+ .label = Varsayılan tarayıcı
+open-link-in-external-tab-context-menu = Harici tarayıcıda aç
+open-link-in-external-tab-dialog-title-error = Hata
+open-link-in-external-tab-dialog-message-default-browser-not-found = Varsayılan tarayıcı bulunamadı veya yapılandırılmadı.
+open-link-in-external-tab-dialog-message-selected-browser-not-found = Seçili tarayıcı yüklü değil.
 
 ######################################################################### Floorp Notes ###############################################################
 
-new-memo = New
-memo-title-input-placeholder = Write a title here
-memo-input-placeholder = Write or paste a memo here
-delete-memo = Delete
-save-memo = Save
-memo-welcome-title = Welcome!
-memo-first-tip = Welcome to Floorp Notes! Here are some instructions on how to use it!
-memo-second-tip = Floorp Notes is a notepad that lets you store multiple notes that sync across devices. To enable synchronization, you need to sign in to Floorp with your Firefox account.
-memo-third-tip = Floorp Notes will be saved in your Floorp settings and synchronized across devices using Firefox Sync. Firefox Sync encrypts the contents of the sync with your Firefox account password, so no one but you knows it's contents.
-memo-import-data-tip = Firefox Sync is not a backup service. We recommend you to create backups.
-memo-new-title = New Note
-chage-view-mode = Toggle View/Edit Mode
-readonly-mode = Offline (Read-only)
+new-memo = Yeni
+memo-title-input-placeholder = Buraya bir başlık yaz
+memo-input-placeholder = Buraya bir not yaz veya yapıştır
+delete-memo = Sil
+save-memo = Kaydet
+memo-welcome-title = Hoşgeldin!
+memo-first-tip = Floorp Notes'a hoş geldiniz! İşte nasıl kullanılacağına dair bazı yönergeler!
+memo-second-tip =  Floorp Notes, cihazlar arasında senkronize olan ve çoklu not saklayabileceğiniz bir not defteridir. Senkronizasyonu etkinleştirmek için Firefox hesabınızla Floorp'ta oturum açmanız gerekir.
+memo-third-tip = Floorp Notları, Floorp ayarlarınıza kaydedilecek ve Firefox Sync kullanılarak cihazlar arasında senkronize edilecektir. Firefox Sync, senkronizasyonun içeriğini Firefox hesap parolanızla şifreler, böylece sizden başka kimse içeriğini bilmez.
+memo-import-data-tip = Firefox Sync bir yedekleme hizmeti değildir. Yedekleme oluşturmanızı öneririz.
+memo-new-title = Yeni Not
+chage-view-mode = Görünüm/Düzenleme Modunu Değiştir
+readonly-mode = Çevrimdışı (Salt okunur)
 
 ######################################################################### Default bookmarks ###############################################################
-default-bookmark-ablaze-support = Ablaze Support
+default-bookmark-ablaze-support = Ablaze Destek
 default-bookmark-notes = Floorp Notes
 
 ######################################################################### Like Chrome Download mgr ###############################################################
 
 floorp-delete-all-downloads = 
-  .label = Hide all downloads
+  .label = Tüm indirilenleri gizle
   .accesskey = D
-  .tooltiptext = Hide all downloads
+  .tooltiptext = Tüm indirilenleri gizle
 
 floorp-show-all-downloads =
-  .label = Show all downloads
+  .label = Tüm indirmeleri göster
   .accesskey = S
-  .tooltiptext = Show all downloads
+  .tooltiptext = Tüm indirmeleri göster
 
 ######################################################################### workspace ###############################################################
 
-workspace-prompt-title = Floorp Workspace
-please-enter-workspace-name = Please enter new workspace name.
-please-enter-workspace-name-2 = Please enter characters other than symbols except spaces.
-workspace-error = ERROR!
-workspace-error-discription = Workspace name is invalid or already exists.
+workspace-prompt-title = Floorp Çalışma Alanu
+please-enter-workspace-name = Lütfen yeni çalışma alanı adı girin.
+please-enter-workspace-name-2 = Lütfen boşluk harici sembol kullanmayın
+workspace-error = HATA!
+workspace-error-discription = Çalışma alanı adı geçersiz ya da zaten var.
 
-workspace-button = Workspace
-  .label = Workspace
-  .tooltiptext = Workspace
+workspace-button = Çalışma Alanı
+  .label = Çalışma Alanı
+  .tooltiptext = Çalışma Alanı
 
-workspace-default = Default
+workspace-default = Varsayılan
 workspace-add = 
- .label= Add New Workspace
+ .label= Yeni Çalışma Alanı Ekle
 
 workspace-context-menu-selected-tab =
- .label = Selected tab cannot be moved
+ .label = Seçilen sekme taşınamıyor
 move-tab-another-workspace =
- .label = Move to another workspace
+ .label = Başka bir çalışma alanına geç
 workspace-rename = 
-  .label = Change workspace name
+  .label = Çalışma alanı adını değiştir
 
 ######################################################################### menubar item ###############################################################
 
 sharemode-menuitem =
-  .label = Share Mode
+  .label = Paylaşım Modu
   .accesskey = S
 
 
 ############################################################################## Welcome page ###############################################################
 
-welcome-login-to-firefox-account = Login to Firefox Account
-welcome-to-floorp = Welcome to { -brand-short-name } !
-welcome-discribe-floorp = { -brand-short-name } is a feature-rich flexible browser that supports various environments and is based on Firefox.
-welcome-start-setup = Ready to jump in?
-welcome-skip-to-start-browsing = Skip to Start Browsing
-welcome-select-preferences-template = Select a template
-welcome-minimum-template = Basic
-welcome-enable-basic-features = Enable basic features & settings for a simple experience.
-welcome-medium-template = Default
+welcome-login-to-firefox-account = Firefox Hesabına Giriş Yap
+welcome-to-floorp = { -brand-short-name }'a hoşgeldin!
+welcome-discribe-floorp = { -brand-short-name } Firefox tabanlı, zengin özelliklere sahip, çeşitli ortamları destekleyen esnek bir tarayıcıdır.
+welcome-start-setup = Katılmaya hazır mısın?
+welcome-skip-to-start-browsing = Taramaya Başlamak için Atla
+welcome-select-preferences-template = Bir şablon seç
+welcome-minimum-template = Temel
+welcome-enable-basic-features = Basit bir deneyim için temel özellikleri ve ayarları etkinleştirin.
+welcome-medium-template = Varsayılan
 welcome-enable-some-features = Enable additional features & settings for a better experience.
-welcome-maximum-template = Advanced
-welcome-enable-most-of-features = Enable advanced features & settings. Recommended for experienced users.
-welcome-go-next-setup = Go to Next Setup
-welcome-select-browser-design = Select a Browser Design
-welcome-discribe-browser-design = You can choose one of the wonderful third-party { -brand-short-name } designs. OS specific designs are also available at Preferences.
-welcome-design-lepton-name = Lepton Original Design
-welcome-design-photon-name = Lepton Photon Design
-welcome-design-ProtonFix-name = Lepton ProtonFix Design
-welcome-design-floorp-fluerial-name = Floorp Fluerial Design
-welcome-design-firefox-proton-name = Firefox Proton Design
-welcome-import-data = Import Your Browser Data
-welcome-import-data-description = Fast setup! Import your bookmarks, passwords, and more from your old browser. Firefox user can import data from Firefox Sync.
-welcome-import-data-button = Import Data...
-welcome-import-data-skip = Skip Import
-welcome-select-button = Select
-welcome-finish-setup = Setup Complete!
-welcome-finish-setup-description = You're all set! Other settings like Vertical tab & Addons can be found from about:preferences. Enjoy { -brand-short-name } !
-welcomet-finish-setup = Start Browsing the Web
+welcome-maximum-template = Gelişmiş
+welcome-enable-most-of-features = Gelişmiş özellikleri ve ayarları etkinleştir. Deneyimli kullanıcılar için önerilir.
+welcome-go-next-setup = Sonraki Kuruluma Git
+welcome-select-browser-design = Tarayıcı Tasarımı Seç
+welcome-discribe-browser-design = Harika üçüncü taraf { -brand-short-name } tasarımlarından birini seçebilirsin. İşletim sistemine özel tasarımlar da Tercihler'de mevcuttur.
+welcome-design-lepton-name = Lepton Özgün Tasarımı
+welcome-design-photon-name = Lepton Photon Tasarımı
+welcome-design-ProtonFix-name = Lepton ProtonFix Tasarımı
+welcome-design-floorp-fluerial-name = Floorp Fluerial Tasarımı
+welcome-design-firefox-proton-name = Firefox Proton Tasarımı
+welcome-import-data = Tarayıcı Verilerini İçe Aktar
+welcome-import-data-description = Hızlı kurulum! Yer imlerinizi, parolalarınızı ve daha fazlasını eski tarayıcınızdan içe aktarın. Firefox kullanıcısıysan Firefox Sync'ten veri aktarabilirsin.
+welcome-import-data-button = Veri İçe Aktar...
+welcome-import-data-skip = İçe Aktarmayı Atla
+welcome-select-button = Seç
+welcome-finish-setup = Kurulum Tamamlandı!
+welcome-finish-setup-description = Her şey hazır! Dikey sekme ve Eklentiler gibi diğer ayarları about:preferences sayfasından bulabilirsin. { -brand-short-name }'un tadını çıkar!
+welcomet-finish-setup = Web'de Gezinmeye Başla
