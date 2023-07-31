@@ -1,53 +1,3 @@
-== layers-001.html layers-001-ref.html
-== layers-002.html layers-002-ref.html
-== layers-003.html layers-003-ref.html
-== layers-004.html layers-004-ref.html
-== page-name-abspos-001.html page-name-abspos-001-ref.html
-== page-name-abspos-002.html page-name-abspos-002-ref.html
-== page-name-abspos-003.html page-name-abspos-003-ref.html
-== page-name-canvas-001.html page-name-canvas-001-ref.html
-== page-name-canvas-002.html page-name-canvas-002-ref.html
-== page-name-canvas-003.html page-name-canvas-003-ref.html
-== page-name-canvas-004.html page-name-canvas-004-ref.html
-== page-name-display-none-child.html page-name-display-none-child-ref.html
-== page-name-fixed-pos-001.html page-name-fixed-pos-001-ref.html
-== page-name-flex-001.html page-name-flex-001-ref.html
-== page-name-flex-002.html page-name-flex-002-ref.html
-== page-name-flex-003.html page-name-flex-003-ref.html
-# This is affected by https://bugzilla.mozilla.org/1663079, however we can
-# still expect this to behave the same with break-after and page name breaks.
-== page-name-flex-004.html page-name-flex-004-ref.html
-== page-name-float-001.html page-name-float-001-ref.html
-== page-name-float-002.html page-name-float-002-ref.html
-== page-name-img-001.html page-name-img-001-ref.html
-== page-name-img-002.html page-name-img-002-ref.html
-== page-name-img-003.html page-name-img-003-ref.html
-== page-name-img-004.html page-name-img-004-ref.html
-== page-name-inline-block-001.html page-name-inline-block-001-ref.html
-== page-name-inline-block-002.html page-name-inline-block-002-ref.html
-== page-name-inline-block-003.html page-name-inline-block-003-ref.html
-== page-name-margin-001.html page-name-margin-001-ref.html
-== page-name-margin-002.html page-name-margin-002-ref.html
-== page-name-orthogonal-writing-001.html page-name-orthogonal-writing-001-ref.html
-== page-name-orthogonal-writing-002.html page-name-orthogonal-writing-002-ref.html
-== page-name-orthogonal-writing-003.html page-name-orthogonal-writing-003-ref.html
-== page-name-orthogonal-writing-004.html page-name-orthogonal-writing-004-ref.html
-== page-name-propagated-001.html page-name-propagated-001-ref.html
-== page-name-propagated-002.html page-name-propagated-002-ref.html
-# This is affected by https://bugzilla.mozilla.org/1818596, though that bug
-# affects both the ref and the test case in the same way.
-== page-name-propagated-003.html page-name-propagated-003-ref.html
-== page-name-propagated-004.html page-name-propagated-004-ref.html
-== page-name-propagated-005.html page-name-propagated-005-ref.html
-== page-name-propagated-006.html page-name-propagated-006-ref.html
-== page-name-propagated-007.html page-name-propagated-007-ref.html
-== page-name-propagated-008.html page-name-propagated-008-ref.html
-== page-name-propagated-009.html page-name-propagated-009-ref.html
-== page-name-siblings-001.html page-name-siblings-ref.html
-== page-name-siblings-002.html page-name-siblings-ref.html
-== page-name-siblings-003.html page-name-siblings-ref.html
-== page-name-siblings-004.html page-name-siblings-ref.html
-== page-name-siblings-005.html page-name-siblings-ref.html
 # Auto-generated test cases
 == page-name-two-page-001.html page-name-two-page-ref.html
 == page-name-two-page-002.html page-name-two-page-ref.html
@@ -84,7 +34,3 @@
 == page-name-two-page-033.html page-name-two-page-ref.html
 == page-name-two-page-034.html page-name-two-page-ref.html
 == page-name-two-page-035.html page-name-two-page-ref.html
-== page-name-zero-height-001.html page-name-zero-height-001-ref.html
-== pseudo-first-margin-001.html pseudo-first-margin-ref.html
-== pseudo-first-margin-002.html pseudo-first-margin-ref.html
-== pseudo-first-margin-003.html pseudo-first-margin-ref.html
