@@ -1693,6 +1693,11 @@ class nsContentUtils {
   static EventMessage GetEventMessage(nsAtom* aName);
 
   /**
+   * Return the event type atom for a given event message.
+   */
+  static nsAtom* GetEventTypeFromMessage(EventMessage aEventMessage);
+
+  /**
    * Returns the EventMessage and nsAtom to be used for event listener
    * registration.
    */
