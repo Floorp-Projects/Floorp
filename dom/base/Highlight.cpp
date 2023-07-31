@@ -81,7 +81,7 @@ void Highlight::RemoveFromHighlightRegistry(
 }
 
 already_AddRefed<Selection> Highlight::CreateHighlightSelection(
-    const nsAtom* aHighlightName, nsFrameSelection* aFrameSelection) {
+    nsAtom* aHighlightName, nsFrameSelection* aFrameSelection) {
   MOZ_ASSERT(aFrameSelection);
   MOZ_ASSERT(aFrameSelection->GetPresShell());
   RefPtr<Selection> selection =

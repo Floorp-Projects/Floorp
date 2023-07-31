@@ -495,20 +495,6 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolvePseudoElementStyle(
   return style.forget();
 }
 
-already_AddRefed<ComputedStyle> ServoStyleSet::ProbeHighlightPseudoElementStyle(
-    const dom::Element& aOriginatingElement, const nsAtom* aHighlightName,
-    ComputedStyle* aParentStyle) {
-  MOZ_ASSERT(!StylistNeedsUpdate());
-  MOZ_ASSERT(aHighlightName);
-
-  RefPtr<ComputedStyle> style =
-      Servo_ComputedValues_ResolveHighlightPseudoStyle(
-          &aOriginatingElement, aHighlightName, mRawData.get())
-          .Consume();
-
-  return style ? style.forget() : nullptr;
-}
-
 already_AddRefed<ComputedStyle>
 ServoStyleSet::ResolveInheritingAnonymousBoxStyle(PseudoStyleType aType,
                                                   ComputedStyle* aParentStyle) {
