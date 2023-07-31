@@ -40,7 +40,7 @@ tab-sleep-settings-dialog-title =
  .title = Uyku Sekmeleri Ayarları
 tab-sleep-settings-dialog-excludehosts-label = Şu hostları hariç tut
 tab-sleep-settings-dialog-excludehosts-label-2 = Satır başına bir host girin
-tab-sleep-tab-context-menu-excludetab = Bu sekmeyi uykuya koyma
+tab-sleep-tab-context-menu-excludetab = Bu sekmeyi uykuya alma
 enable-floorp-workspace =
  .label = Çalışma Alanı'nı etkinleştir
 enable-tab-scroll-change =
@@ -74,7 +74,7 @@ tabbar-on-bottom =
  .label = Sekme çubuğunu pencerenin altında göster
 
 tabbar-favicon-color =
- .label = Sekme çubuğu arka plan rengi için site ikonu rengini kullan
+ .label = Sekme çubuğu arka plan rengi için site simgesi rengini kullan
 
 tabbar-style-preference = Sekme Çubuğu Stili
 
@@ -279,7 +279,7 @@ sidebar2-pref-setting =
 
 sidebar2-global-width = Global webpanel genişliği
 
-use-icon-provider-option = Simge Sağlayıcıyı Kullan
+use-icon-provider-option = İkon Sağlayıcıyı Kullan
 
 use-icon-provider-option-google =
  .label = Google
@@ -387,7 +387,7 @@ floorp-lepton-enable-toolbar-overlap-allow-layout-shift-autohide =
 hide-preference = Ekran öğelerini yönet
 
 floorp-lepton-enable-tab_icon-hide =
-    .label = Sekme ikonlarını gizle
+    .label = Sekme simgelerini gizle
 floorp-lepton-enable-tabbar-hide =
     .label = Sekme Çubuğunu gizle
 floorp-lepton-enable-navbar-hide =
@@ -395,143 +395,143 @@ floorp-lepton-enable-navbar-hide =
 floorp-lepton-enable-sidebar_header-hide =
     .label = Kenar Çubuğu Başlığını Gizle
 floorp-lepton-enable-urlbar_iconbox-hide =
-    .label = URL çubuğu ikonlarını gizle
+    .label = URL çubuğu simgelerini gizle
 floorp-lepton-enable-bookmarkbar_icon-hide =
-    .label = Yer işaretleri çubuğu ikonlarını gizle
+    .label = Yer işaretleri çubuğu simgelerini gizle
 floorp-lepton-enable-bookmarkbar_label-hide =
     .label = Yer imleri çubuğu etiketlerini gizle
 floorp-lepton-enable-disabled_menu-hide =
     .label = Devre dışı bırakılmış içerik menüsünü gizle
 
 floorp-lepton-disable-userChrome-icon =
-    .label = İçerik menüsü ve panel menüsü ikonlarını devre dışı bırak
+    .label = İçerik menüsü ve panel menüsü simgelerini devre dışı bırak
 
-positon-preferences = Position adjustment
+positon-preferences = Konum ayarı
 
 floorp-lepton-enable-centered-tab =
-    .label = Centered Tab label
+    .label = Ortalanmış Sekme etiketi
 floorp-lepton-enable-centered-urlbar =
-    .label = Centered URLBar
+    .label = Ortalanmış URL Çubuğu
 floorp-lepton-enable-centered-bookmarkbar =
-    .label = Centered Bookmark Bar
+    .label = Ortalanmış Yer İşareti Çubuğu
 
-urlbar-preferences = URLbar
+urlbar-preferences = URL Çubuğu
 
 floorp-lepton-enable-urlbar-icon-move-to-left =
-    .label = Move urlbar icons to the left side
+    .label = URL çubuğu simgelerini sol tarafa taşı
 floorp-lepton-enable-urlname-go_button_when_typing =
     .label = When typing, reduce the urlbar space and show a Go Button
 floorp-lepton-enable-always-show-page_action =
     .label = Reduce the urlbar space and always show the add-on action button
 
-tabbar-preferences = Tabbar
+tabbar-preferences = Sekme Çubuğu
 
 floorp-lepton-enable-tabbar-positon-as-titlebar =
-    .label = Tabbar in the titlebar
+    .label = Sekme Çubuğunu Başlık Çubuğunun içine koy
 floorp-lepton-enable-tabbar-as-urlbar =
-    .label = Tabbar in the urlbar
+    .label = Sekme Çubuğunu URL Çubuğunun içine koy
 
-lepton-sidebar-preferences = Sidebar
+lepton-sidebar-preferences = Kenar Çubuğu
 floorp-lepton-enable-overlap-sidebar =
-    .label = Show Sidebar Overlap main Viewer
+    .label = Kenar Çubuğunun Ana Görüntüleyiciyle çakışmasını göster
 
 floorp-home-mode-choice-default =
-    .label = Floorp Home (Default)
-floorp-home-prefs-content-header = Floorp Home Content
-floorp-home-prefs-content-description = Choose the content you want to see on the Floorp Home Page.
+    .label = Floorp Ana Sayfa (Varsayılan)
+floorp-home-prefs-content-header = Floorp Ana Sayfa İçeriği
+floorp-home-prefs-content-description = Floorp Ana Sayfasında görmek istediğiniz içeriği seçin.
 
 ## Notes
-floorp-notes = { -brand-short-name } Notes
-restore-from-backup = Restore Notes from Backup
+floorp-notes = { -brand-short-name } Notlar
+restore-from-backup = Notları Yedekten Geri Yükle
 enable-notes-sync = 
  .label = Enable { -brand-short-name } Notes Sync
-about-notes-backup-tips = Floorp Notes uses Firefox Sync to sync your notes with other devices. If you lose your notes, you can restore them from a backup. A backup is created when you start { -brand-short-name }.
+about-notes-backup-tips = Floorp Notes, notlarınızı diğer cihazlarla senkronize etmek için Firefox Sync'i kullanır. Notlarınızı kaybederseniz, onları bir yedekten geri yükleyebilirsiniz. Bir yedekleme { -brand-short-name }'u başlattığınızda oluşturulur.
 notes-sync-description = This can solve the problem of losing content due to overwriting notes during synchronization.
-backuped-time = Time of backup
-notes-backup-option = Backup Options
-backup-option-button = Open Backup Options...
+backuped-time = Yedekleme zamanı
+notes-backup-option = Yedekleme Seçenekleri
+backup-option-button = Yedekleme Seçeneklerini Aç
 
-restore-from-backup-prompt-title = Floorp Notes Restore Service
-restore-from-this-backup = Restore Notes to the state of this backup ?
+restore-from-backup-prompt-title = Floorp Notları Geri Yükleme Hizmeti
+restore-from-this-backup = Notları bu yedeklemenin durumuna geri yükle?
 
-restore-button = Restore
+restore-button = Geri Yükle
 
 ## user.js
 header-userjs = user.js
-userjs-customize = Customize { -brand-short-name } with user.js
-about-userjs-customize = user.js is a configuration file that allows you to customize { -brand-short-name }. user.js will download from the Internet and overwrite the original user.js file. Please back up the original user.js file before using it. Сonfig will be applied after restarting { -brand-short-name }.
+userjs-customize = { -brand-short-name } tarayıcısını user.js ile özelleştir
+about-userjs-customize = user.js, { -brand-short-name } tarayıcısını özelleştirmenizi sağlayan bir yapılandırma dosyasıdır. user.js internetten indirilecek ve orijinal user.js dosyasının üzerine yazılacaktır. Lütfen kullanmadan önce orijinal user.js dosyasını yedekleyin. Yapılandırma, { -brand-short-name } yeniden başlatıldıktan sonra uygulanacaktır.
 
-userjs-label = user.js list
+userjs-label = user.js listesi
 userjs-prompt = Floorp user.js
-apply-userjs-attention = This will overwrite the original user.js file.
-apply-userjs-attention2 = Please back up the original user.js file before using it.
+apply-userjs-attention = Bu, orijinal user.js dosyasının üzerine yazacaktır.
+apply-userjs-attention2 = Lütfen kullanmadan önce orijinal user.js dosyasını yedekleyin.
 
-userjs-button = Open user.js options...
-userjs-select-option = Select user.js
+userjs-button = user.js seçeneklerini a
+userjs-select-option = user.js seç
 
-apply-userjs-button = Apply
-## userjs Options
+apply-userjs-button = Uygula
+## userjs Seçenekler
 
-default-userjs-label = Floorp Default
-about-default-userjs = Telemetry disabled. Well balanced { -brand-short-name } with various customizations enabled.
+default-userjs-label = Floorp Varsayılanı
+about-default-userjs = Telemetry devre dışı. Çeşitli özelleştirmelerin etkin olduğu, iyi dengelenmiş { -brand-short-name }
 
 Securefox-label = Yokoffing Securefox
-about-Securefox = HTTPS-by-Default. Total Cookie Protection with site isolation. Enhanced state and network partitioning. Various other enhancements.
+about-Securefox = Varsayılan olarak HTTPS. Site izolasyonu ile Tam Çerez Koruması. Geliştirilmiş durum ve ağ bölümleme. Ayrıca farklı diğer iyileştirmeler
 
 default-label = Yokoffing Default
-about-default = All the essentials. None of the breakage. This is your user.js.
+about-default = Tüm temel ihtiyaçlar. Bozulma yok. Bu sizin user.js'niz.
 
 Fastfox-label = Yokoffing Fastfox
-about-Fastfox = Immensely increase Firefox's browsing speed. Give Chrome a run for its money!
+about-Fastfox = Firefox'un tarama hızını büyük ölçüde artırın ve Chrome kadar hızlı yapın!
 
 Peskyfox-label = Yokoffing Peskyfox
-about-Peskyfox = Unclutter the new tab page. Remove Pocket. Restore compact mode as an option. Stop webpage notifications, pop-ups, and other annoyances.
-
+about-Peskyfox = Yeni sekme sayfasının dağınıklığını giderin. Pocket'ı kaldırın. Kompakt modu bir seçenek olarak geri yükleyin. Web sayfası bildirimlerini, açılır pencereleri ve diğer rahatsız edici bileşenleri kaldırın.
 Smoothfox-label = Yokoffing Smoothfox
-about-Smoothfox = Get Edge-like smooth scrolling on your favorite browser — or choose something more your style. 
+about-Smoothfox = Favori tarayıcınızda tıpkı Microsoft Edge'de olduğu gibi akıcı kaydırmaya sahip olun — ya da kendi tarzınıza daha uygun bir şey seçin. 
 
 ## Workspaces
-floorp-workspaces-title = { -brand-short-name } Workspaces
-workspaces-backup-discription = Backup & Restore your Workspaces
+floorp-workspaces-title = { -brand-short-name } Çalışma Alanları
+workspaces-backup-discription = Çalışma Alanlarınızı Yedekle & Geri Yükle
 
-workspaces-restore-service-title = Floorp Workspace Backup Service
-workspaces-restore-warning = Warning! Running this operation will cause the browser to freeze temporarily and restart automatically.
-floorp-workspace-settings-button = Open Workspace Settings...
+workspaces-restore-service-title = Floorp Çalışma Alanı Yedekleme Hizmeti
+workspaces-restore-warning = Uyarı! Bu işlemi çalıştırmak tarayıcının geçici olarak donmasına ve otomatik olarak yeniden başlamasına neden olacaktır.
+floorp-workspace-settings-button = Çalışma Alanı Ayarlarını Açın...
 
 change-to-close-workspace-popup-option = 
- .label = Change workspace to close Workspace Popup
+ .label = Çalışma Alanı Açılır Penceresini kapatmak için çalışma alanını değiştir
 pinned-tabs-exclude-workspace-option = 
- .label = Pinned tabs are excluded from the workspace
+ .label = Sabitlenmiş sekmeler çalışma alanından hariç tutulur
 
-workspaces-reset-title = Reset Workspaces
+workspaces-reset-title = Çalışma Alanlarını Sıfırla
 workspaces-reset-label =
-    .label = Reset Workspaces
+    .label = Çalışma Alanlarını Sıfırla
 workspaces-reset-description = If the backup does not work and the workspace does not start, reset the workspace.
-workspaces-reset-button = Reset Workspaces
+workspaces-reset-button = Çalışma Alanlarını Sıfırla
 
-workspaces-reset-service-title = Floorp Workspaces
-workspaces-reset-warning = Warning! Running this operation will delete all your workspaces and restart the browser.
+workspaces-reset-service-title = Floorp Çalışma Alanları
+workspaces-reset-warning = Uyarı! Bu işlem tüm çalışma alanlarınızı silecek ve tarayıcıyı yeniden başlatacaktır.
 
 ## Mouse Gesture
-mouse-gesture = Mouse Gesture
-mouse-gesture-description = Gesturefy must be installed to use mouse gestures with { -brand-short-name }.
+mouse-gesture = Fare Hareketleri
+mouse-gesture-description = { -brand-short-name } ile fare hareketlerini kullanmak için Gesturefy yüklü olmalıdır.
 Gesturefy = Gesturefy
-about-Gesturefy = Gesturefy is an extension that adds mouse gestures to your browser. If { -brand-short-name } detects the installation of this add-on, it will add gesture commands to Gesturefy that are only available in { -brand-short-name }. Also, this add-on can work with new tabs!
+about-Gesturefy = Gesturefy, tarayıcınıza fare hareketleri ekleyen bir uzantıdır. Eğer { -brand-short-name } bu eklentinin yüklendiğini algılarsa, Gesturefy'ye sadece { -brand-short-name } tarayıcısında bulunan hareket komutlarını ekleyecektir. Ayrıca, bu eklenti yeni sekmelerle de çalışabilir!
 
 # Translate
-TWS = Translate Web Page
-about-TWS = Translate your page in real time using Google or Yandex. You can also translate selected text or the entire page.
+TWS = Web Sayfasını Çevir
+about-TWS = Google veya Yandex kullanarak sayfaları gerçek zamanlı olarak çevirin. Seçili metni veya sayfanın tamamını da çevirebilirsiniz.
+
 
 # Privacy Hub
 ## BlockMoreTracker
-privacy-hub-header = Privacy Hub
-block-more-tracker = Block more Ads and Trackers
-block-tracker = This section contains a set of extensions designed to block ads and trackers
-view-at-AMO = View this addon in addons.mozilla.org
+privacy-hub-header = Gizlilik Merkezi
+block-more-tracker = Daha fazla Reklam ve İzleyiciyi Engelle
+block-tracker = Bu bölüm, reklamları ve izleyicileri engellemek için tasarlanmış bir dizi uzantı içerir
+view-at-AMO = Bu eklentiyi addons.mozilla.org adresinde görüntüleyin
 uBlock-Origin = uBlock Origin
-about-uboori = uBlock Origin blocks ads, extensive trackers, and additional dangerous sites.
+about-uboori = uBlock Origin reklamları, izleyicileri ve diğer tehlikeli siteleri engeller.
 Facebook-Container = Facebook Container
-about-Facebook-Container = Prevent Facebook from tracking you around the web. Facebook Container extension helps you take control and isolate your web activity from Facebook.
+about-Facebook-Container = Facebook'un sizi web'de izlemesini önleyin. Facebook Container uzantısı kontrolü ele almanıza ve web aktivitelerinizi Facebook'tan izole etmenize yardımcı olur.
 
 ## Fingerprint
 fingerprint-header = Resist Fingerprinting & IP address leak
