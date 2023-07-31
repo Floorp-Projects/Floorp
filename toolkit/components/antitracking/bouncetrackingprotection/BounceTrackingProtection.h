@@ -5,10 +5,14 @@
 #define mozilla_BounceTrackingProtection_h__
 
 #include "mozilla/Logging.h"
+#include "mozilla/MozPromise.h"
 #include "nsIBounceTrackingProtection.h"
+#include "nsIClearDataService.h"
 #include "nsTHashMap.h"
 
 class nsIPrincipal;
+class nsITimer;
+
 namespace mozilla {
 
 class BounceTrackingState;
@@ -33,7 +37,7 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection {
   nsresult RecordUserActivation(nsIPrincipal* aPrincipal);
 
  private:
-  BounceTrackingProtection() = default;
+  BounceTrackingProtection();
   ~BounceTrackingProtection() = default;
 
   // Map of site hosts to moments. The moments represent the most recent wall
@@ -46,6 +50,34 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection {
   // on the given site host performed an action that could indicate stateful
   // bounce tracking took place.
   nsTHashMap<nsCStringHashKey, PRTime> mBounceTrackers{};
+
+  // Timer which periodically runs PurgeBounceTrackers.
+  nsCOMPtr<nsITimer> mBounceTrackingPurgeTimer;
+
+  // Clear state for classified bounce trackers. To be called on an interval.
+  using PurgeBounceTrackersMozPromise = MozPromise<nsresult, nsresult, true>;
+  RefPtr<PurgeBounceTrackersMozPromise> PurgeBounceTrackers();
+
+  // Pending clear operations are stored as ClearDataMozPromise, one per host.
+  using ClearDataMozPromise = MozPromise<nsresult, uint32_t, true>;
+  nsTArray<RefPtr<ClearDataMozPromise>> mClearPromises;
+
+  // Wraps nsIClearDataCallback in MozPromise.
+  class ClearDataCallback final : public nsIClearDataCallback {
+   public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICLEARDATACALLBACK
+
+    explicit ClearDataCallback(ClearDataMozPromise::Private* aPromise,
+                               const nsACString& aHost)
+        : mHost(aHost), mPromise(aPromise){};
+
+   private:
+    virtual ~ClearDataCallback() { mPromise->Reject(0, __func__); }
+
+    nsCString mHost;
+    RefPtr<ClearDataMozPromise::Private> mPromise;
+  };
 };
 
 }  // namespace mozilla

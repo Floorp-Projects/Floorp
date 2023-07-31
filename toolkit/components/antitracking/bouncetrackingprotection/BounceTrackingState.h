@@ -66,6 +66,14 @@ class BounceTrackingState : public nsIWebProgressListener,
   static bool ShouldCreateBounceTrackingStateForBC(
       dom::CanonicalBrowsingContext* aBrowsingContext);
 
+  // Check if there is a BounceTrackingState which current browsing context is
+  // associated with aSiteHost.
+  // This is an approximation for checking if a given site is currently loaded
+  // in the top level context, e.g. in a tab. See Bug 1842047 for adding a more
+  // accurate check that calls into the browser implementations.
+  static nsresult HasBounceTrackingStateForSite(const nsACString& aSiteHost,
+                                                bool& aResult);
+
   // Get the currently associated BrowsingContext. Returns nullptr if it has not
   // been attached yet.
   already_AddRefed<dom::BrowsingContext> CurrentBrowsingContext();

@@ -13419,6 +13419,26 @@
   value: 10000
   mirror: always
 
+# How long user activations will protect a site host from storage deletion.
+- name: privacy.bounceTrackingProtection.bounceTrackingActivationLifetimeSec
+  type: uint32_t
+  value: 3888000
+  mirror: always
+
+# How long to wait for interaction after a possible bounce tracking event before
+# deleting a site host's storage.
+- name: privacy.bounceTrackingProtection.bounceTrackingGracePeriodSec
+  type: uint32_t
+  value: 3600
+  mirror: always
+
+# How often to run the bounce tracking timer algorithm  which purges bounce
+# tracker state periodically. Set to 0 to disable purging.
+- name: privacy.bounceTrackingProtection.bounceTrackingPurgeTimerPeriodSec
+  type: uint32_t
+  value: 3600
+  mirror: always
+
 # Whether only bounces that access storage should be considered trackers.
 - name: privacy.bounceTrackingProtection.requireStatefulBounces
   type: bool

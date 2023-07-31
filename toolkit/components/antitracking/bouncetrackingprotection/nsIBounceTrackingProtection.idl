@@ -13,4 +13,11 @@ interface nsIBounceTrackingProtection : nsISupports {
     // Reset the global bounce tracking state, including the maps for tracking
     // bounce tracker candidates and user activation.
     void reset();
+
+    // Trigger the bounce tracking timer algorithm that clears state for
+    // classified bounce trackers.
+    [implicit_jscontext]
+    Promise testRunPurgeBounceTrackers();
+
+    void testAddBounceTrackerCandidate(in ACString aHost, in PRTime bounceTime);
 };
