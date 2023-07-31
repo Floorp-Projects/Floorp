@@ -489,9 +489,6 @@ class tabswitch(PageloaderTest):
         "addon.test.tabswitch.urlfile": os.path.join("${talos}", "tests", "tp5o.html"),
         "addon.test.tabswitch.webserver": "${webserver}",
         "addon.test.tabswitch.maxurls": -1,
-        # Avoid the bookmarks toolbar interfering with our measurements.
-        # See bug 1674053 and bug 1675809 for context.
-        "browser.toolbars.bookmarks.visibility": "never",
     }
     unit = "ms"
 

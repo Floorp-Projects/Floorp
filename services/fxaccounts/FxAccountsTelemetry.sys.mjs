@@ -19,9 +19,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Observers: "resource://services-common/observers.sys.mjs",
 });
 
-const { PREF_ACCOUNT_ROOT, log } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsCommon.js"
-);
+import {
+  PREF_ACCOUNT_ROOT,
+  log,
+} from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 
 const PREF_SANITIZED_UID = PREF_ACCOUNT_ROOT + "telemetry.sanitized_uid";
 XPCOMUtils.defineLazyPreferenceGetter(

@@ -2040,6 +2040,11 @@ BrowserGlue.prototype = {
           lazy.UpdateListener.reset();
         }
       },
+      () => {
+        // bug 1839426 - The FOG service needs to be instantiated reliably so it
+        // can perform at-shutdown tasks later in shutdown.
+        Services.fog;
+      },
     ];
 
     for (let task of tasks) {

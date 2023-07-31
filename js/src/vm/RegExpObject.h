@@ -128,6 +128,10 @@ class RegExpObject : public NativeObject {
     return getFixedSlotOffset(flagsSlot());
   }
 
+  static constexpr size_t offsetOfShared() {
+    return getFixedSlotOffset(SHARED_SLOT);
+  }
+
   JS::RegExpFlags getFlags() const {
     return JS::RegExpFlags(getFixedSlot(FLAGS_SLOT).toInt32());
   }

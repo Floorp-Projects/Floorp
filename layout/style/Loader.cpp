@@ -275,7 +275,8 @@ SheetLoadData::SheetLoadData(
     StyleSheet* aSheet, SyncLoad aSyncLoad, nsINode* aOwningNode,
     IsAlternate aIsAlternate, MediaMatched aMediaMatches,
     StylePreloadKind aPreloadKind, nsICSSLoaderObserver* aObserver,
-    nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo)
+    nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo,
+    const nsAString& aNonce)
     : mLoader(aLoader),
       mTitle(aTitle),
       mEncoding(nullptr),
@@ -302,6 +303,7 @@ SheetLoadData::SheetLoadData(
       mObserver(aObserver),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mReferrerInfo(aReferrerInfo),
+      mNonce(aNonce),
       mGuessedEncoding(GetFallbackEncoding(*aLoader, aOwningNode, nullptr)),
       mCompatMode(aLoader->CompatMode(aPreloadKind)) {
   MOZ_ASSERT(!mOwningNodeBeforeLoadEvent ||
@@ -341,6 +343,7 @@ SheetLoadData::SheetLoadData(css::Loader* aLoader, nsIURI* aURI,
       mObserver(aObserver),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mReferrerInfo(aReferrerInfo),
+      mNonce(u""_ns),
       mGuessedEncoding(GetFallbackEncoding(
           *aLoader, nullptr, aParentData ? aParentData->mEncoding : nullptr)),
       mCompatMode(aLoader->CompatMode(mPreloadKind)) {
@@ -355,7 +358,8 @@ SheetLoadData::SheetLoadData(
     css::Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet, SyncLoad aSyncLoad,
     UseSystemPrincipal aUseSystemPrincipal, StylePreloadKind aPreloadKind,
     const Encoding* aPreloadEncoding, nsICSSLoaderObserver* aObserver,
-    nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo)
+    nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo,
+    const nsAString& aNonce)
     : mLoader(aLoader),
       mEncoding(nullptr),
       mURI(aURI),
@@ -380,6 +384,7 @@ SheetLoadData::SheetLoadData(
       mObserver(aObserver),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mReferrerInfo(aReferrerInfo),
+      mNonce(aNonce),
       mGuessedEncoding(
           GetFallbackEncoding(*aLoader, nullptr, aPreloadEncoding)),
       mCompatMode(aLoader->CompatMode(aPreloadKind)) {
@@ -872,12 +877,7 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
   nsCOMPtr<nsILoadInfo> secCheckLoadInfo = new net::LoadInfo(
       aLoadingPrincipal, aTriggeringPrincipal, aRequestingNode,
       nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK, contentPolicyType);
-
-  // snapshot the nonce at load start time for performing CSP checks
-  if (contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET) {
-    secCheckLoadInfo->SetCspNonce(aNonce);
-    MOZ_ASSERT_IF(aPreloadKind != StylePreloadKind::None, aNonce.IsEmpty());
-  }
+  secCheckLoadInfo->SetCspNonce(aNonce);
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   nsresult rv = NS_CheckContentLoadPolicy(aTargetURI, secCheckLoadInfo,
@@ -1252,18 +1252,8 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
       return rv;
     }
 
-    // snapshot the nonce at load start time for performing CSP checks
-    if (contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET) {
-      if (requestingNode) {
-        // TODO(bug 1607009) move to SheetLoadData
-        nsString* cspNonce = static_cast<nsString*>(
-            requestingNode->GetProperty(nsGkAtoms::nonce));
-        if (cspNonce) {
-          nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-          loadInfo->SetCspNonce(*cspNonce);
-        }
-      }
-    }
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+    loadInfo->SetCspNonce(aLoadData.Nonce());
 
     nsCOMPtr<nsIInputStream> stream;
     rv = channel->Open(getter_AddRefs(stream));
@@ -1391,18 +1381,8 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
     return rv;
   }
 
-  // snapshot the nonce at load start time for performing CSP checks
-  if (contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET) {
-    if (requestingNode) {
-      // TODO(bug 1607009) move to SheetLoadData
-      nsString* cspNonce =
-          static_cast<nsString*>(requestingNode->GetProperty(nsGkAtoms::nonce));
-      if (cspNonce) {
-        nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-        loadInfo->SetCspNonce(*cspNonce);
-      }
-    }
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+  loadInfo->SetCspNonce(aLoadData.Nonce());
 
   if (!aLoadData.ShouldDefer()) {
     if (nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(channel)) {
@@ -1770,7 +1750,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
   auto data = MakeRefPtr<SheetLoadData>(
       this, aInfo.mTitle, /* aURI = */ nullptr, sheet, SyncLoad::No,
       aInfo.mContent, isAlternate, matched, StylePreloadKind::None, aObserver,
-      principal, aInfo.mReferrerInfo);
+      principal, aInfo.mReferrerInfo, aInfo.mNonce);
   MOZ_ASSERT(data->GetRequestingNode() == aInfo.mContent);
   data->mLineNumber = aLineNumber;
 
@@ -1890,7 +1870,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
   auto data = MakeRefPtr<SheetLoadData>(
       this, aInfo.mTitle, aInfo.mURI, sheet, SyncLoad(syncLoad), aInfo.mContent,
       isAlternate, matched, StylePreloadKind::None, aObserver, principal,
-      aInfo.mReferrerInfo);
+      aInfo.mReferrerInfo, aInfo.mNonce);
 
   MOZ_ASSERT(data->GetRequestingNode() == requestingNode);
 
@@ -1976,7 +1956,7 @@ nsresult Loader::LoadChildSheet(StyleSheet& aParentSheet,
   nsIPrincipal* principal = aParentSheet.Principal();
   nsresult rv =
       CheckContentPolicy(LoaderPrincipal(), principal, aURL, requestingNode,
-                         u""_ns, StylePreloadKind::None);
+                         /* aNonce = */ u""_ns, StylePreloadKind::None);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     if (aParentData) {
       MarkLoadTreeFailed(*aParentData);
@@ -2060,7 +2040,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheetSync(
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
   return InternalLoadNonDocumentSheet(
       aURL, StylePreloadKind::None, aParsingMode, aUseSystemPrincipal, nullptr,
-      referrerInfo, nullptr, CORS_NONE, u""_ns, 0);
+      referrerInfo, nullptr, CORS_NONE, u""_ns, u""_ns, 0);
 }
 
 Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
@@ -2069,26 +2049,26 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
   return InternalLoadNonDocumentSheet(
       aURI, StylePreloadKind::None, aParsingMode, aUseSystemPrincipal, nullptr,
-      referrerInfo, aObserver, CORS_NONE, u""_ns, 0);
+      referrerInfo, aObserver, CORS_NONE, u""_ns, u""_ns, 0);
 }
 
 Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
     nsIURI* aURL, StylePreloadKind aPreloadKind,
     const Encoding* aPreloadEncoding, nsIReferrerInfo* aReferrerInfo,
     nsICSSLoaderObserver* aObserver, uint64_t aEarlyHintPreloaderId,
-    CORSMode aCORSMode, const nsAString& aIntegrity) {
+    CORSMode aCORSMode, const nsAString& aNonce, const nsAString& aIntegrity) {
   LOG(("css::Loader::LoadSheet(aURL, aObserver) api call"));
-  return InternalLoadNonDocumentSheet(aURL, aPreloadKind, eAuthorSheetFeatures,
-                                      UseSystemPrincipal::No, aPreloadEncoding,
-                                      aReferrerInfo, aObserver, aCORSMode,
-                                      aIntegrity, aEarlyHintPreloaderId);
+  return InternalLoadNonDocumentSheet(
+      aURL, aPreloadKind, eAuthorSheetFeatures, UseSystemPrincipal::No,
+      aPreloadEncoding, aReferrerInfo, aObserver, aCORSMode, aNonce, aIntegrity,
+      aEarlyHintPreloaderId);
 }
 
 Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
     nsIURI* aURL, StylePreloadKind aPreloadKind, SheetParsingMode aParsingMode,
     UseSystemPrincipal aUseSystemPrincipal, const Encoding* aPreloadEncoding,
     nsIReferrerInfo* aReferrerInfo, nsICSSLoaderObserver* aObserver,
-    CORSMode aCORSMode, const nsAString& aIntegrity,
+    CORSMode aCORSMode, const nsAString& aNonce, const nsAString& aIntegrity,
     uint64_t aEarlyHintPreloaderId) {
   MOZ_ASSERT(aURL, "Must have a URI to load");
   MOZ_ASSERT(aUseSystemPrincipal == UseSystemPrincipal::No || !aObserver,
@@ -2105,7 +2085,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
   nsIPrincipal* loadingPrincipal = LoaderPrincipal();
   nsIPrincipal* triggeringPrincipal = loadingPrincipal;
   nsresult rv = CheckContentPolicy(loadingPrincipal, triggeringPrincipal, aURL,
-                                   mDocument, u""_ns, aPreloadKind);
+                                   mDocument, aNonce, aPreloadKind);
   if (NS_FAILED(rv)) {
     return Err(rv);
   }
@@ -2120,7 +2100,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
 
   auto data = MakeRefPtr<SheetLoadData>(
       this, aURL, sheet, SyncLoad(syncLoad), aUseSystemPrincipal, aPreloadKind,
-      aPreloadEncoding, aObserver, triggeringPrincipal, aReferrerInfo);
+      aPreloadEncoding, aObserver, triggeringPrincipal, aReferrerInfo, aNonce);
   MOZ_ASSERT(data->GetRequestingNode() == mDocument);
   if (state == SheetState::Complete) {
     LOG(("  Sheet already complete"));

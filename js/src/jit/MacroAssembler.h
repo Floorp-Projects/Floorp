@@ -1304,6 +1304,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void loadRegExpLastIndex(Register regexp, Register string, Register lastIndex,
                            Label* notFoundZeroLastIndex);
 
+  void loadAndClearRegExpSearcherLastLimit(Register result, Register scratch);
+
+  void loadParsedRegExpShared(Register regexp, Register result,
+                              Label* unparsed);
+
   // ===============================================================
   // Shift functions
 

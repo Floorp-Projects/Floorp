@@ -19,9 +19,7 @@ import {
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
-const FxAccountsCommon = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsCommon.js"
-);
+import * as FxAccountsCommon from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,

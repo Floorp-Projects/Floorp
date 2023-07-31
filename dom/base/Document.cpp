@@ -12617,8 +12617,9 @@ NS_IMPL_ISUPPORTS(StubCSSLoaderObserver, nsICSSLoaderObserver)
 
 SheetPreloadStatus Document::PreloadStyle(
     nsIURI* uri, const Encoding* aEncoding, const nsAString& aCrossOriginAttr,
-    const enum ReferrerPolicy aReferrerPolicy, const nsAString& aIntegrity,
-    css::StylePreloadKind aKind, uint64_t aEarlyHintPreloaderId) {
+    const enum ReferrerPolicy aReferrerPolicy, const nsAString& aNonce,
+    const nsAString& aIntegrity, css::StylePreloadKind aKind,
+    uint64_t aEarlyHintPreloaderId) {
   MOZ_ASSERT(aKind != css::StylePreloadKind::None);
 
   // The CSSLoader will retain this object after we return.
@@ -12630,7 +12631,7 @@ SheetPreloadStatus Document::PreloadStyle(
   // Charset names are always ASCII.
   auto result = CSSLoader()->LoadSheet(
       uri, aKind, aEncoding, referrerInfo, obs, aEarlyHintPreloaderId,
-      Element::StringToCORSMode(aCrossOriginAttr), aIntegrity);
+      Element::StringToCORSMode(aCrossOriginAttr), aNonce, aIntegrity);
   if (result.isErr()) {
     return SheetPreloadStatus::Errored;
   }

@@ -8,12 +8,10 @@
 [scriptable, uuid(98d0e975-9cad-4ce3-ae2f-f878b8be6307)]
 interface nsIFOG : nsISupports
 {
-
   /**
    * Initialize FOG.
    *
-   * To be scheduled at some opportune time after the bulk of Firefox startup
-   * has completed.
+   * Call it eventually. Metric data recorded beforehand will be buffered.
    *
    * @param aDataPathOverride - The path of a custom Glean data path to use
    *        instead of the profile dir.

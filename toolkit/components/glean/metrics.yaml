@@ -46,6 +46,23 @@ fog:
       - glean-team@mozilla.com
     expires: never
 
+  inits_during_shutdown:
+    type: counter
+    lifetime: ping
+    description: |
+      Counts the number of times init had to be called during shutdown.
+      Should never have a value for any session long enough to grow idle.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1839433
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1839433
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: never
+
 fog.ipc:
   replay_failures:
     type: counter

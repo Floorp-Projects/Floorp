@@ -4,7 +4,7 @@
 
 import { Async } from "resource://services-common/async.sys.mjs";
 
-const {
+import {
   FXA_PUSH_SCOPE_ACCOUNT_UPDATE,
   ONLOGOUT_NOTIFICATION,
   ON_ACCOUNT_DESTROYED_NOTIFICATION,
@@ -18,7 +18,7 @@ const {
   ON_PROFILE_UPDATED_NOTIFICATION,
   ON_VERIFY_LOGIN_NOTIFICATION,
   log,
-} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+} from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 
 /**
  * FxAccountsPushService manages Push notifications for Firefox Accounts in the browser

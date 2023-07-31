@@ -281,6 +281,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                     aAttributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
                 nsHtml5String crossOrigin = aAttributes->getValue(
                     nsHtml5AttributeName::ATTR_CROSSORIGIN);
+                nsHtml5String nonce =
+                    aAttributes->getValue(nsHtml5AttributeName::ATTR_NONCE);
                 nsHtml5String integrity =
                     aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
                 nsHtml5String referrerPolicy = aAttributes->getValue(
@@ -288,8 +290,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 nsHtml5String media =
                     aAttributes->getValue(nsHtml5AttributeName::ATTR_MEDIA);
                 mSpeculativeLoadQueue.AppendElement()->InitStyle(
-                    url, charset, crossOrigin, media, referrerPolicy, integrity,
-                    false);
+                    url, charset, crossOrigin, media, referrerPolicy, nonce,
+                    integrity, false);
               }
             } else if (rel.LowerCaseEqualsASCII("preconnect")) {
               nsHtml5String url =
@@ -311,6 +313,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                     aAttributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
                 nsHtml5String crossOrigin = aAttributes->getValue(
                     nsHtml5AttributeName::ATTR_CROSSORIGIN);
+                nsHtml5String nonce =
+                    aAttributes->getValue(nsHtml5AttributeName::ATTR_NONCE);
                 nsHtml5String integrity =
                     aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
                 nsHtml5String referrerPolicy = aAttributes->getValue(
@@ -329,13 +333,12 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                   nsHtml5String type =
                       aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
                   mSpeculativeLoadQueue.AppendElement()->InitScript(
-                      url, charset, type, crossOrigin, media,
-                      /* aNonce */ nullptr, integrity, referrerPolicy,
-                      mode == nsHtml5TreeBuilder::IN_HEAD, false, false, false,
-                      true);
+                      url, charset, type, crossOrigin, media, nonce, integrity,
+                      referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
+                      false, false, false, true);
                 } else if (as.LowerCaseEqualsASCII("style")) {
                   mSpeculativeLoadQueue.AppendElement()->InitStyle(
-                      url, charset, crossOrigin, media, referrerPolicy,
+                      url, charset, crossOrigin, media, referrerPolicy, nonce,
                       integrity, true);
                 } else if (as.LowerCaseEqualsASCII("image")) {
                   nsHtml5String srcset = aAttributes->getValue(
@@ -374,15 +377,16 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                       nsHtml5AttributeName::ATTR_CROSSORIGIN);
                   nsHtml5String media =
                       aAttributes->getValue(nsHtml5AttributeName::ATTR_MEDIA);
+                  nsHtml5String nonce =
+                      aAttributes->getValue(nsHtml5AttributeName::ATTR_NONCE);
                   nsHtml5String integrity = aAttributes->getValue(
                       nsHtml5AttributeName::ATTR_INTEGRITY);
                   nsHtml5String referrerPolicy = aAttributes->getValue(
                       nsHtml5AttributeName::ATTR_REFERRERPOLICY);
                   mSpeculativeLoadQueue.AppendElement()->InitScript(
-                      url, charset, type, crossOrigin, media,
-                      /* aNonce */ nullptr, integrity, referrerPolicy,
-                      mode == nsHtml5TreeBuilder::IN_HEAD, false, false, false,
-                      true);
+                      url, charset, type, crossOrigin, media, nonce, integrity,
+                      referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
+                      false, false, false, true);
                 }
               }
             }

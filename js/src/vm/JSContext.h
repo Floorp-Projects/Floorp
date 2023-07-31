@@ -496,6 +496,13 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // with AutoDisableCompactingGC which uses this counter.
   js::ContextData<unsigned> compactingDisabledCount;
 
+  // Match limit result for the most recent call to RegExpSearcher.
+  js::ContextData<uint32_t> regExpSearcherLastLimit;
+
+  static constexpr size_t offsetOfRegExpSearcherLastLimit() {
+    return offsetof(JSContext, regExpSearcherLastLimit);
+  }
+
  private:
   // Pools used for recycling name maps and vectors when parsing and
   // emitting bytecode. Purged on GC when there are no active script

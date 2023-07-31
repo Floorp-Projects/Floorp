@@ -77,7 +77,7 @@ void HighlightRegistry::MaybeAddRangeToHighlightSelection(
       continue;
     }
 
-    const RefPtr<const nsAtom> highlightName = iter.first();
+    const RefPtr<nsAtom> highlightName = iter.first();
     frameSelection->AddHighlightSelectionRange(highlightName, aHighlight,
                                                aRange);
   }
@@ -96,7 +96,7 @@ void HighlightRegistry::MaybeRemoveRangeFromHighlightSelection(
       continue;
     }
 
-    const RefPtr<const nsAtom> highlightName = iter.first();
+    const RefPtr<nsAtom> highlightName = iter.first();
     frameSelection->RemoveHighlightSelectionRange(highlightName, aRange);
   }
 }
@@ -111,7 +111,7 @@ void HighlightRegistry::RemoveHighlightSelection(Highlight& aHighlight) {
       continue;
     }
 
-    const RefPtr<const nsAtom> highlightName = iter.first();
+    const RefPtr<nsAtom> highlightName = iter.first();
     frameSelection->RemoveHighlightSelection(highlightName);
   }
 }
@@ -125,7 +125,7 @@ void HighlightRegistry::AddHighlightSelectionsToFrameSelection() {
     return;
   }
   for (auto const& iter : mHighlightsOrdered) {
-    RefPtr<const nsAtom> highlightName = iter.first();
+    RefPtr<nsAtom> highlightName = iter.first();
     RefPtr<Highlight> highlight = iter.second();
     frameSelection->AddHighlightSelection(highlightName, *highlight);
   }
@@ -152,8 +152,8 @@ void HighlightRegistry::Set(const nsAString& aKey, Highlight& aValue,
     foundIter->second() = &aValue;
   } else {
     mHighlightsOrdered.AppendElement(
-        CompactPair<RefPtr<const nsAtom>, RefPtr<Highlight>>(highlightNameAtom,
-                                                             &aValue));
+        CompactPair<RefPtr<nsAtom>, RefPtr<Highlight>>(highlightNameAtom,
+                                                       &aValue));
   }
   aValue.AddToHighlightRegistry(*this, *highlightNameAtom);
   if (frameSelection) {
@@ -170,7 +170,7 @@ void HighlightRegistry::Clear(ErrorResult& aRv) {
   AutoFrameSelectionBatcher batcher(__FUNCTION__);
   batcher.AddFrameSelection(frameSelection);
   for (auto const& iter : mHighlightsOrdered) {
-    const RefPtr<const nsAtom>& highlightName = iter.first();
+    const RefPtr<nsAtom>& highlightName = iter.first();
     const RefPtr<Highlight>& highlight = iter.second();
     highlight->RemoveFromHighlightRegistry(*this, *highlightName);
     if (frameSelection) {

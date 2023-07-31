@@ -10,7 +10,7 @@ use cssparser::{Parser, ParserInput, SourceLocation, UnicodeRange};
 use dom::{DocumentState, ElementState};
 use malloc_size_of::MallocSizeOfOps;
 use nsstring::{nsCString, nsString};
-use selectors::matching::{IgnoreNthChildForInvalidation, SelectorCaches};
+use selectors::matching::{MatchingForInvalidation, SelectorCaches};
 use servo_arc::{Arc, ArcBorrow};
 use smallvec::SmallVec;
 use style::values::generics::color::ColorMixFlags;
@@ -2470,7 +2470,7 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
     let selectors = desugared_selector_list(rules);
     let Some(selector) = selectors.0.get(index as usize) else { return false };
     let mut matching_mode = MatchingMode::Normal;
-    match PseudoElement::from_pseudo_type(pseudo_type) {
+    match PseudoElement::from_pseudo_type(pseudo_type, None) {
         Some(pseudo) => {
             // We need to make sure that the requested pseudo element type
             // matches the selector pseudo element type before proceeding.
@@ -2506,7 +2506,7 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
         visited_mode,
         quirks_mode,
         NeedsSelectorFlags::No,
-        IgnoreNthChildForInvalidation::No,
+        MatchingForInvalidation::No,
     );
     ctx.with_shadow_host(host, |ctx| {
         matches_selector(selector, 0, None, &element, ctx)
@@ -3903,7 +3903,7 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
     pseudo: PseudoStyleType,
     raw_data: &PerDocumentStyleData,
 ) -> Strong<ComputedValues> {
-    let pseudo = PseudoElement::from_pseudo_type(pseudo).unwrap();
+    let pseudo = PseudoElement::from_pseudo_type(pseudo, None).unwrap();
     debug_assert!(pseudo.is_anon_box());
     debug_assert_ne!(pseudo, PseudoElement::PageContent);
     let global_style_data = &*GLOBAL_STYLE_DATA;
@@ -3924,10 +3924,23 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
         .into()
 }
 
+fn get_functional_pseudo_parameter_atom(
+    functional_pseudo_parameter: *mut nsAtom,
+) -> Option<AtomIdent> {
+    if functional_pseudo_parameter.is_null() {
+        None
+    } else {
+        Some(AtomIdent::new(unsafe {
+            Atom::from_raw(functional_pseudo_parameter)
+        }))
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn Servo_ResolvePseudoStyle(
     element: &RawGeckoElement,
     pseudo_type: PseudoStyleType,
+    functional_pseudo_parameter: *mut nsAtom,
     is_probe: bool,
     inherited_style: Option<&ComputedValues>,
     raw_data: &PerDocumentStyleData,
@@ -3938,7 +3951,10 @@ pub extern "C" fn Servo_ResolvePseudoStyle(
     debug!(
         "Servo_ResolvePseudoStyle: {:?} {:?}, is_probe: {}",
         element,
-        PseudoElement::from_pseudo_type(pseudo_type),
+        PseudoElement::from_pseudo_type(
+            pseudo_type,
+            get_functional_pseudo_parameter_atom(functional_pseudo_parameter)
+        ),
         is_probe
     );
 
@@ -3963,21 +3979,26 @@ pub extern "C" fn Servo_ResolvePseudoStyle(
         },
     };
 
-    let pseudo = PseudoElement::from_pseudo_type(pseudo_type)
-        .expect("ResolvePseudoStyle with a non-pseudo?");
+    let pseudo_element = PseudoElement::from_pseudo_type(
+        pseudo_type,
+        get_functional_pseudo_parameter_atom(functional_pseudo_parameter),
+    )
+    .expect("ResolvePseudoStyle with a non-pseudo?");
+
+    let matching_fn = |pseudo: &PseudoElement| *pseudo == pseudo_element;
 
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     let style = get_pseudo_style(
         &guard,
         element,
-        &pseudo,
+        &pseudo_element,
         RuleInclusion::All,
         &data.styles,
         inherited_style,
         &doc_data.stylist,
         is_probe,
-        /* matching_func = */ None,
+        /* matching_func = */ if pseudo_element.is_highlight() {Some(&matching_fn)} else {None},
     );
 
     match style {
@@ -4001,45 +4022,6 @@ fn debug_atom_array(atoms: &nsTArray<structs::RefPtr<nsAtom>>) -> String {
     }
     result.push(']');
     result
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_ComputedValues_ResolveHighlightPseudoStyle(
-    element: &RawGeckoElement,
-    highlight_name: *const nsAtom,
-    raw_data: &PerDocumentStyleData,
-) -> Strong<ComputedValues> {
-    let element = GeckoElement(element);
-    let data = element
-        .borrow_data()
-        .expect("Calling ResolveHighlightPseudoStyle on unstyled element?");
-    let pseudo_element = unsafe {
-        AtomIdent::with(highlight_name, |atom| {
-            PseudoElement::Highlight(atom.to_owned())
-        })
-    };
-
-    let doc_data = raw_data.borrow();
-
-    let matching_fn = |pseudo: &PseudoElement| *pseudo == pseudo_element;
-
-    let global_style_data = &*GLOBAL_STYLE_DATA;
-    let guard = global_style_data.shared_lock.read();
-    let style = get_pseudo_style(
-        &guard,
-        element,
-        &pseudo_element,
-        RuleInclusion::All,
-        &data.styles,
-        None,
-        &doc_data.stylist,
-        /* is_probe = */ true,
-        Some(&matching_fn),
-    );
-    match style {
-        Some(s) => s.into(),
-        None => Strong::null(),
-    }
 }
 
 #[no_mangle]
@@ -4211,7 +4193,7 @@ pub unsafe extern "C" fn Servo_ComputedValues_Inherit(
     let data = raw_data.borrow();
 
     let for_text = target == structs::InheritTarget::Text;
-    let pseudo = PseudoElement::from_pseudo_type(pseudo).unwrap();
+    let pseudo = PseudoElement::from_pseudo_type(pseudo, None).unwrap();
     debug_assert!(pseudo.is_anon_box());
 
     let mut style =
@@ -5823,6 +5805,7 @@ pub extern "C" fn Servo_ResolveStyle(element: &RawGeckoElement) -> Strong<Comput
 pub extern "C" fn Servo_ResolveStyleLazily(
     element: &RawGeckoElement,
     pseudo_type: PseudoStyleType,
+    functional_pseudo_parameter: *mut nsAtom,
     rule_inclusion: StyleRuleInclusion,
     snapshots: *const ServoElementSnapshotTable,
     cache_generation: u64,
@@ -5837,7 +5820,15 @@ pub extern "C" fn Servo_ResolveStyleLazily(
     let mut data = raw_data.borrow_mut();
     let data = &mut *data;
     let rule_inclusion = RuleInclusion::from(rule_inclusion);
-    let pseudo = PseudoElement::from_pseudo_type(pseudo_type);
+    let pseudo_element = PseudoElement::from_pseudo_type(
+        pseudo_type,
+        get_functional_pseudo_parameter_atom(functional_pseudo_parameter),
+    );
+
+    let matching_fn = |pseudo: &PseudoElement| match pseudo_element {
+        Some(ref p) => *pseudo == *p,
+        _ => false,
+    };
 
     if cache_generation != data.undisplayed_style_cache_generation {
         data.undisplayed_style_cache.clear();
@@ -5846,7 +5837,7 @@ pub extern "C" fn Servo_ResolveStyleLazily(
 
     let stylist = &data.stylist;
     let finish = |styles: &ElementStyles, is_probe: bool| -> Option<Arc<ComputedValues>> {
-        match pseudo {
+        match pseudo_element {
             Some(ref pseudo) => {
                 get_pseudo_style(
                     &guard,
@@ -5857,14 +5848,20 @@ pub extern "C" fn Servo_ResolveStyleLazily(
                     /* inherited_styles = */ None,
                     &stylist,
                     is_probe,
-                    /* matching_func = */ None,
+                    if pseudo.is_highlight() {
+                        Some(&matching_fn)
+                    } else {
+                        None
+                    },
                 )
             },
             None => Some(styles.primary().clone()),
         }
     };
 
-    let is_before_or_after = pseudo.as_ref().map_or(false, |p| p.is_before_or_after());
+    let is_before_or_after = pseudo_element
+        .as_ref()
+        .map_or(false, |p| p.is_before_or_after());
 
     // In the common case we already have the style. Check that before setting
     // up all the computation machinery.
@@ -5883,7 +5880,7 @@ pub extern "C" fn Servo_ResolveStyleLazily(
         if let Some(result) = styles {
             return result.into();
         }
-        if pseudo.is_none() && can_use_cache {
+        if pseudo_element.is_none() && can_use_cache {
             if let Some(style) = data.undisplayed_style_cache.get(&element.opaque()) {
                 return style.clone().into();
             }
@@ -5908,7 +5905,7 @@ pub extern "C" fn Servo_ResolveStyleLazily(
         &mut context,
         element,
         rule_inclusion,
-        pseudo.as_ref(),
+        pseudo_element.as_ref(),
         if can_use_cache {
             Some(&mut data.undisplayed_style_cache)
         } else {
@@ -6052,7 +6049,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
 ) {
     let data = raw_data.borrow();
     let element = GeckoElement(element);
-    let pseudo = PseudoElement::from_pseudo_type(pseudo_type);
+    let pseudo = PseudoElement::from_pseudo_type(pseudo_type, None);
     let parent_element = if pseudo.is_none() {
         element.inheritance_parent()
     } else {

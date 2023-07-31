@@ -56,7 +56,8 @@ namespace mozilla {
 namespace dom {
 
 static already_AddRefed<const ComputedStyle> GetCleanComputedStyleForElement(
-    dom::Element* aElement, PseudoStyleType aPseudo) {
+    dom::Element* aElement, PseudoStyleType aPseudo,
+    nsAtom* aFunctionalPseudoParameter) {
   MOZ_ASSERT(aElement);
 
   Document* doc = aElement->GetComposedDoc();
@@ -76,7 +77,8 @@ static already_AddRefed<const ComputedStyle> GetCleanComputedStyleForElement(
 
   presContext->EnsureSafeToHandOutCSSRules();
 
-  return nsComputedDOMStyle::GetComputedStyle(aElement, aPseudo);
+  return nsComputedDOMStyle::GetComputedStyle(aElement, aPseudo,
+                                              aFunctionalPseudoParameter);
 }
 
 /* static */
@@ -227,14 +229,15 @@ void InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
                                       const nsAString& aPseudo,
                                       bool aIncludeVisitedStyle,
                                       nsTArray<RefPtr<CSSStyleRule>>& aResult) {
-  Maybe<PseudoStyleType> type = nsCSSPseudoElements::GetPseudoType(
-      aPseudo, CSSEnabledState::ForAllContent);
+  auto [type, functionalPseudoParameter] =
+      nsCSSPseudoElements::ParsePseudoElement(aPseudo,
+                                              CSSEnabledState::ForAllContent);
   if (!type) {
     return;
   }
 
-  RefPtr<const ComputedStyle> computedStyle =
-      GetCleanComputedStyleForElement(&aElement, *type);
+  RefPtr<const ComputedStyle> computedStyle = GetCleanComputedStyleForElement(
+      &aElement, *type, functionalPseudoParameter);
   if (!computedStyle) {
     // This can fail for elements that are not in the document or
     // if the document they're in doesn't have a presshell.  Bail out.

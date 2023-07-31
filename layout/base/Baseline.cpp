@@ -45,13 +45,21 @@ nscoord Baseline::SynthesizeBOffsetFromBorderBox(const nsIFrame* aFrame,
           ? aFrame->ISize(aWM)
           : aFrame->BSize(aWM);
   if (aGroup == BaselineSharingGroup::First) {
-    return MOZ_LIKELY(aWM.IsAlphabeticalBaseline()) ? borderBoxSize
-                                                    : borderBoxSize / 2;
+    if (MOZ_LIKELY(aWM.IsAlphabeticalBaseline())) {
+      // First baseline for inverted-line content is the block-start border-box
+      // edge, as the frame is in effect "flipped" for alignment purposes.
+      return MOZ_UNLIKELY(aWM.IsLineInverted()) ? 0 : borderBoxSize;
+    }
+    return borderBoxSize / 2;
   }
   MOZ_ASSERT(aGroup == BaselineSharingGroup::Last);
+  if (MOZ_LIKELY(aWM.IsAlphabeticalBaseline())) {
+    // Last baseline for inverted-line content is the block-start border-box
+    // edge, as the frame is in effect "flipped" for alignment purposes.
+    return MOZ_UNLIKELY(aWM.IsLineInverted()) ? borderBoxSize : 0;
+  }
   // Round up for central baseline offset, to be consistent with ::First.
-  auto borderBoxCenter = (borderBoxSize / 2) + (borderBoxSize % 2);
-  return MOZ_LIKELY(aWM.IsAlphabeticalBaseline()) ? 0 : borderBoxCenter;
+  return (borderBoxSize / 2) + (borderBoxSize % 2);
 }
 
 nscoord Baseline::SynthesizeBOffsetFromContentBox(const nsIFrame* aFrame,

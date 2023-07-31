@@ -233,17 +233,17 @@ function RegExpGlobalMatchOpt(rx, S, fullUnicode) {
   // Step 6.e.
   while (true) {
     // Step 6.e.i.
-    var result = RegExpMatcher(rx, S, lastIndex);
+    var position = RegExpSearcher(rx, S, lastIndex);
 
     // Step 6.e.ii.
-    if (result === null) {
+    if (position === -1) {
       return n === 0 ? null : A;
     }
 
-    lastIndex = result.index + result[0].length;
+    lastIndex = RegExpSearcherLastLimit(S);
 
     // Step 6.e.iii.1.
-    var matchStr = result[0];
+    var matchStr = SubstringKernel(S, position, lastIndex - position);
 
     // Step 6.e.iii.2.
     DefineDataProperty(A, n, matchStr);
@@ -363,10 +363,7 @@ function RegExpReplace(string, replaceValue) {
           firstDollarIndex
         );
       }
-      if (lengthS < 0x7fff) {
-        return RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags);
-      }
-      return RegExpGlobalReplaceOpt(rx, S, lengthS, replaceValue, flags);
+      return RegExpGlobalReplaceOptSimple(rx, S, lengthS, replaceValue, flags);
     }
 
     if (functionalReplace) {
@@ -381,10 +378,7 @@ function RegExpReplace(string, replaceValue) {
         firstDollarIndex
       );
     }
-    if (lengthS < 0x7fff) {
-      return RegExpLocalReplaceOptShort(rx, S, lengthS, replaceValue);
-    }
-    return RegExpLocalReplaceOpt(rx, S, lengthS, replaceValue);
+    return RegExpLocalReplaceOptSimple(rx, S, lengthS, replaceValue);
   }
 
   // Steps 7-17.
@@ -774,9 +768,8 @@ function RegExpGetFunctionalReplacement(result, S, position, replaceValue) {
 // Steps 9.b-17.
 // Optimized path for @@replace with the following conditions:
 //   * global flag is true
-//   * S is a short string (lengthS < 0x7fff)
 //   * replaceValue is a string without "$"
-function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
+function RegExpGlobalReplaceOptSimple(rx, S, lengthS, replaceValue, flags) {
   // Step 9.a.
   var fullUnicode = !!(flags & REGEXP_UNICODE_FLAG);
 
@@ -793,15 +786,14 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
   // Step 12.
   while (true) {
     // Step 12.a.
-    var result = RegExpSearcher(rx, S, lastIndex);
+    var position = RegExpSearcher(rx, S, lastIndex);
 
     // Step 12.b.
-    if (result === -1) {
+    if (position === -1) {
       break;
     }
 
-    var position = result & 0x7fff;
-    lastIndex = (result >> 15) & 0x7fff;
+    lastIndex = RegExpSearcherLastLimit(S);
 
     // Step 15.m.ii.
     accumulatedResult +=
@@ -841,14 +833,6 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
 
 // Conditions:
 //   * global flag is true
-//   * replaceValue is a string without "$"
-#define FUNC_NAME RegExpGlobalReplaceOpt
-#include "RegExpGlobalReplaceOpt.h.js"
-#undef FUNC_NAME
-/* global RegExpGlobalReplaceOpt */
-
-// Conditions:
-//   * global flag is true
 //   * replaceValue is a function
 #define FUNC_NAME RegExpGlobalReplaceOptFunc
 #define FUNCTIONAL
@@ -880,21 +864,12 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
 // Conditions:
 //   * global flag is false
 //   * replaceValue is a string without "$"
-#define FUNC_NAME RegExpLocalReplaceOpt
+#define FUNC_NAME RegExpLocalReplaceOptSimple
+#define SIMPLE
 #include "RegExpLocalReplaceOpt.h.js"
+#undef SIMPLE
 #undef FUNC_NAME
-/* global RegExpLocalReplaceOpt */
-
-// Conditions:
-//   * global flag is false
-//   * S is a short string (lengthS < 0x7fff)
-//   * replaceValue is a string without "$"
-#define FUNC_NAME RegExpLocalReplaceOptShort
-#define SHORT_STRING
-#include "RegExpLocalReplaceOpt.h.js"
-#undef SHORT_STRING
-#undef FUNC_NAME
-/* global RegExpLocalReplaceOptShort */
+/* global RegExpLocalReplaceOptSimple */
 
 // Conditions:
 //   * global flag is false
@@ -965,13 +940,8 @@ function RegExpSearch(string) {
       }
     }
 
-    // Step 9.
-    if (result === -1) {
-      return -1;
-    }
-
-    // Step 10.
-    return result & 0x7fff;
+    // Steps 9-10.
+    return result;
   }
 
   return RegExpSearchSlowPath(rx, S, previousLastIndex);
@@ -1103,17 +1073,15 @@ function RegExpSplit(string, limit) {
 
   // Step 17.
   if (size === 0) {
-    // Step 17.a.
-    var z;
+    // Step 17.a-b.
     if (optimizable) {
-      z = RegExpMatcher(splitter, S, 0);
+      if (RegExpSearcher(splitter, S, 0) !== -1) {
+        return A;
+      }
     } else {
-      z = RegExpExec(splitter, S);
-    }
-
-    // Step 17.b.
-    if (z !== null) {
-      return A;
+      if (RegExpExec(splitter, S) !== null) {
+        return A;
+      }
     }
 
     // Step 17.d.
@@ -1126,10 +1094,29 @@ function RegExpSplit(string, limit) {
   // Step 18.
   var q = p;
 
+  var optimizableNoCaptures = optimizable && !RegExpHasCaptureGroups(splitter, S);
+
   // Step 19.
   while (q < size) {
-    var e;
-    if (optimizable) {
+    var e, z;
+    if (optimizableNoCaptures) {
+      // If there are no capturing groups, avoid allocating the match result
+      // object |z| (we set it to null). This is the only difference between
+      // this branch and the |if (optimizable)| case below.
+
+      // Step 19.a (skipped).
+      // splitter.lastIndex is not used.
+
+      // Steps 19.b-c.
+      q = RegExpSearcher(splitter, S, q);
+      if (q === -1 || q >= size) {
+        break;
+      }
+
+      // Step 19.d.i.
+      e = RegExpSearcherLastLimit(S);
+      z = null;
+    } else if (optimizable) {
       // Step 19.a (skipped).
       // splitter.lastIndex is not used.
 
@@ -1186,26 +1173,28 @@ function RegExpSplit(string, limit) {
     // Step 19.d.iv.6.
     p = e;
 
-    // Steps 19.d.iv.7-8.
-    var numberOfCaptures = std_Math_max(ToLength(z.length) - 1, 0);
+    if (z !== null) {
+      // Steps 19.d.iv.7-8.
+      var numberOfCaptures = std_Math_max(ToLength(z.length) - 1, 0);
 
-    // Step 19.d.iv.9.
-    var i = 1;
+      // Step 19.d.iv.9.
+      var i = 1;
 
-    // Step 19.d.iv.10.
-    while (i <= numberOfCaptures) {
-      // Steps 19.d.iv.10.a-b.
-      DefineDataProperty(A, lengthA, z[i]);
+      // Step 19.d.iv.10.
+      while (i <= numberOfCaptures) {
+        // Steps 19.d.iv.10.a-b.
+        DefineDataProperty(A, lengthA, z[i]);
 
-      // Step 19.d.iv.10.c.
-      i++;
+        // Step 19.d.iv.10.c.
+        i++;
 
-      // Step 19.d.iv.10.d.
-      lengthA++;
+        // Step 19.d.iv.10.d.
+        lengthA++;
 
-      // Step 19.d.iv.10.e.
-      if (lengthA === lim) {
-        return A;
+        // Step 19.d.iv.10.e.
+        if (lengthA === lim) {
+          return A;
+        }
       }
     }
 

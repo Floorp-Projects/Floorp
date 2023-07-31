@@ -435,12 +435,11 @@ class nsFrameSelection final {
    * @brief Adds a highlight selection for `aHighlight`.
    */
   MOZ_CAN_RUN_SCRIPT void AddHighlightSelection(
-      const nsAtom* aHighlightName, mozilla::dom::Highlight& aHighlight);
+      nsAtom* aHighlightName, mozilla::dom::Highlight& aHighlight);
   /**
    * @brief Removes the Highlight selection identified by `aHighlightName`.
    */
-  MOZ_CAN_RUN_SCRIPT void RemoveHighlightSelection(
-      const nsAtom* aHighlightName);
+  MOZ_CAN_RUN_SCRIPT void RemoveHighlightSelection(nsAtom* aHighlightName);
 
   /**
    * @brief Adds a new range to the highlight selection.
@@ -449,14 +448,14 @@ class nsFrameSelection final {
    * created using |AddHighlightSelection|.
    */
   MOZ_CAN_RUN_SCRIPT void AddHighlightSelectionRange(
-      const nsAtom* aHighlightName, mozilla::dom::Highlight& aHighlight,
+      nsAtom* aHighlightName, mozilla::dom::Highlight& aHighlight,
       mozilla::dom::AbstractRange& aRange);
 
   /**
    * @brief Removes a range from a highlight selection.
    */
   MOZ_CAN_RUN_SCRIPT void RemoveHighlightSelectionRange(
-      const nsAtom* aHighlightName, mozilla::dom::AbstractRange& aRange);
+      nsAtom* aHighlightName, mozilla::dom::AbstractRange& aRange);
   /**
    * ScrollSelectionIntoView scrolls a region of the selection,
    * so that it is visible in the scrolled view.
@@ -985,8 +984,8 @@ class nsFrameSelection final {
       mDomSelections[sizeof(mozilla::kPresentSelectionTypes) /
                      sizeof(mozilla::SelectionType)];
 
-  nsTArray<mozilla::CompactPair<RefPtr<const nsAtom>,
-                                RefPtr<mozilla::dom::Selection>>>
+  nsTArray<
+      mozilla::CompactPair<RefPtr<nsAtom>, RefPtr<mozilla::dom::Selection>>>
       mHighlightSelections;
 
   struct TableSelection {

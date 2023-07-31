@@ -2948,6 +2948,14 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
   masm.push(FramePointer);
   masm.moveStackPtrTo(FramePointer);
 
+#ifdef DEBUG
+  // Store sentinel value to cx->regExpSearcherLastLimit.
+  // See comment in RegExpSearcherImpl.
+  masm.loadJSContext(temp1);
+  masm.store32(Imm32(RegExpSearcherLastLimitSentinel),
+               Address(temp1, JSContext::offsetOfRegExpSearcherLastLimit()));
+#endif
+
   // The InputOutputData is placed above the frame pointer and return address on
   // the stack.
   int32_t inputOutputDataStartOffset = 2 * sizeof(void*);
@@ -3000,10 +3008,12 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
   Address matchPairLimit(FramePointer,
                          pairsVectorStartOffset + MatchPair::offsetOfLimit());
 
+  // Store match limit to cx->regExpSearcherLastLimit and return the index.
+  masm.load32(matchPairLimit, result);
+  masm.loadJSContext(input);
+  masm.store32(result,
+               Address(input, JSContext::offsetOfRegExpSearcherLastLimit()));
   masm.load32(matchPairStart, result);
-  masm.load32(matchPairLimit, input);
-  masm.lshiftPtr(Imm32(15), input);
-  masm.or32(input, result);
   masm.pop(FramePointer);
   masm.ret();
 
@@ -3097,6 +3107,14 @@ void CodeGenerator::visitRegExpSearcher(LRegExpSearcher* lir) {
   masm.bind(ool->rejoin());
 
   masm.freeStack(RegExpReservedStack);
+}
+
+void CodeGenerator::visitRegExpSearcherLastLimit(
+    LRegExpSearcherLastLimit* lir) {
+  Register result = ToRegister(lir->output());
+  Register scratch = ToRegister(lir->temp0());
+
+  masm.loadAndClearRegExpSearcherLastLimit(result, scratch);
 }
 
 JitCode* JitRealm::generateRegExpExecTestStub(JSContext* cx) {
@@ -3260,6 +3278,34 @@ void CodeGenerator::visitRegExpExecTest(LRegExpExecTest* lir) {
 
   masm.branch32(Assembler::Equal, ReturnReg, Imm32(RegExpExecTestResultFailed),
                 ool->entry());
+
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitRegExpHasCaptureGroups(LRegExpHasCaptureGroups* ins) {
+  Register regexp = ToRegister(ins->regexp());
+  Register input = ToRegister(ins->input());
+  Register output = ToRegister(ins->output());
+
+  using Fn =
+      bool (*)(JSContext*, Handle<RegExpObject*>, Handle<JSString*>, bool*);
+  auto* ool = oolCallVM<Fn, js::RegExpHasCaptureGroups>(
+      ins, ArgList(regexp, input), StoreRegisterTo(output));
+
+  // Load RegExpShared in |output|.
+  Label vmCall;
+  masm.loadParsedRegExpShared(regexp, output, ool->entry());
+
+  // Return true iff pairCount > 1.
+  Label returnTrue;
+  masm.branch32(Assembler::Above,
+                Address(output, RegExpShared::offsetOfPairCount()), Imm32(1),
+                &returnTrue);
+  masm.move32(Imm32(0), output);
+  masm.jump(ool->rejoin());
+
+  masm.bind(&returnTrue);
+  masm.move32(Imm32(1), output);
 
   masm.bind(ool->rejoin());
 }

@@ -317,6 +317,20 @@
     lastIndex: Int32Id
     stub: JitCodeField
 
+- name: RegExpSearcherLastLimitResult
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+
+- name: RegExpHasCaptureGroupsResult
+  shared: false
+  transpile: true
+  cost_estimate: 1
+  args:
+    regexp: ObjId
+    input: StringId
+
 - name: RegExpBuiltinExecMatchResult
   shared: false
   transpile: true
