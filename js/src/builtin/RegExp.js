@@ -1094,10 +1094,29 @@ function RegExpSplit(string, limit) {
   // Step 18.
   var q = p;
 
+  var optimizableNoCaptures = optimizable && !RegExpHasCaptureGroups(splitter, S);
+
   // Step 19.
   while (q < size) {
     var e, z;
-    if (optimizable) {
+    if (optimizableNoCaptures) {
+      // If there are no capturing groups, avoid allocating the match result
+      // object |z| (we set it to null). This is the only difference between
+      // this branch and the |if (optimizable)| case below.
+
+      // Step 19.a (skipped).
+      // splitter.lastIndex is not used.
+
+      // Steps 19.b-c.
+      q = RegExpSearcher(splitter, S, q);
+      if (q === -1 || q >= size) {
+        break;
+      }
+
+      // Step 19.d.i.
+      e = RegExpSearcherLastLimit(S);
+      z = null;
+    } else if (optimizable) {
       // Step 19.a (skipped).
       // splitter.lastIndex is not used.
 
@@ -1154,26 +1173,28 @@ function RegExpSplit(string, limit) {
     // Step 19.d.iv.6.
     p = e;
 
-    // Steps 19.d.iv.7-8.
-    var numberOfCaptures = std_Math_max(ToLength(z.length) - 1, 0);
+    if (z !== null) {
+      // Steps 19.d.iv.7-8.
+      var numberOfCaptures = std_Math_max(ToLength(z.length) - 1, 0);
 
-    // Step 19.d.iv.9.
-    var i = 1;
+      // Step 19.d.iv.9.
+      var i = 1;
 
-    // Step 19.d.iv.10.
-    while (i <= numberOfCaptures) {
-      // Steps 19.d.iv.10.a-b.
-      DefineDataProperty(A, lengthA, z[i]);
+      // Step 19.d.iv.10.
+      while (i <= numberOfCaptures) {
+        // Steps 19.d.iv.10.a-b.
+        DefineDataProperty(A, lengthA, z[i]);
 
-      // Step 19.d.iv.10.c.
-      i++;
+        // Step 19.d.iv.10.c.
+        i++;
 
-      // Step 19.d.iv.10.d.
-      lengthA++;
+        // Step 19.d.iv.10.d.
+        lengthA++;
 
-      // Step 19.d.iv.10.e.
-      if (lengthA === lim) {
-        return A;
+        // Step 19.d.iv.10.e.
+        if (lengthA === lim) {
+          return A;
+        }
       }
     }
 

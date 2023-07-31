@@ -145,6 +145,11 @@ JSObject* InitRegExpClass(JSContext* cx, HandleObject obj);
     Handle<JSLinearString*> replacement, size_t firstDollarIndex,
     HandleValue namedCaptures, MutableHandleValue rval);
 
+[[nodiscard]] extern bool RegExpHasCaptureGroups(JSContext* cx,
+                                                 Handle<RegExpObject*> obj,
+                                                 Handle<JSString*> input,
+                                                 bool* result);
+
 [[nodiscard]] extern bool GetFirstDollarIndex(JSContext* cx, unsigned argc,
                                               Value* vp);
 

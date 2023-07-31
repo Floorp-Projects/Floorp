@@ -1378,6 +1378,25 @@ static bool intrinsic_RegExpGetSubstitution(JSContext* cx, unsigned argc,
                                namedCaptures, args.rval());
 }
 
+static bool intrinsic_RegExpHasCaptureGroups(JSContext* cx, unsigned argc,
+                                             Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 2);
+  MOZ_ASSERT(args[0].isObject());
+  MOZ_ASSERT(args[1].isString());
+
+  Rooted<RegExpObject*> obj(cx, &args[0].toObject().as<RegExpObject>());
+  Rooted<JSString*> string(cx, args[1].toString());
+
+  bool result;
+  if (!RegExpHasCaptureGroups(cx, obj, string, &result)) {
+    return false;
+  }
+
+  args.rval().setBoolean(result);
+  return true;
+}
+
 static bool intrinsic_StringReplaceString(JSContext* cx, unsigned argc,
                                           Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2064,6 +2083,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("RegExpExecForTest", intrinsic_RegExpExec<true>, 2, 0,
                     IntrinsicRegExpExecForTest),
     JS_FN("RegExpGetSubstitution", intrinsic_RegExpGetSubstitution, 5, 0),
+    JS_FN("RegExpHasCaptureGroups", intrinsic_RegExpHasCaptureGroups, 2, 0),
     JS_INLINABLE_FN("RegExpInstanceOptimizable", RegExpInstanceOptimizable, 1,
                     0, RegExpInstanceOptimizable),
     JS_INLINABLE_FN("RegExpMatcher", RegExpMatcher, 3, 0, RegExpMatcher),
