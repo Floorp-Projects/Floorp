@@ -9,10 +9,12 @@
 #include "BounceTrackingRecord.h"
 
 #include "ErrorList.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/BrowsingContextWebProgress.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
+#include "nsIBrowser.h"
 #include "nsIChannel.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIRedirectHistoryEntry.h"
@@ -22,6 +24,8 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "nsTHashMap.h"
+#include "mozilla/dom/Element.h"
 
 namespace mozilla {
 
@@ -138,6 +142,62 @@ bool BounceTrackingState::ShouldCreateBounceTrackingStateForWebProgress(
   }
 
   return true;
+}
+
+// static
+nsresult BounceTrackingState::HasBounceTrackingStateForSite(
+    const nsACString& aSiteHost, bool& aResult) {
+  aResult = false;
+  NS_ENSURE_TRUE(aSiteHost.Length(), NS_ERROR_FAILURE);
+
+  if (!sBounceTrackingStates) {
+    return NS_OK;
+  }
+
+  // Iterate over all browsing contexts which have a bounce tracking state. Use
+  // the content principal base domain field to determine whether a BC has an
+  // active site that matches aSiteHost.
+  for (const RefPtr<BounceTrackingState>& state :
+       sBounceTrackingStates->Values()) {
+    RefPtr<dom::BrowsingContext> browsingContext =
+        state->CurrentBrowsingContext();
+
+    if (!browsingContext || browsingContext->IsDiscarded() ||
+        browsingContext->IsInBFCache()) {
+      continue;
+    }
+
+    RefPtr<dom::Element> embedderElement =
+        browsingContext->GetEmbedderElement();
+    if (!embedderElement) {
+      continue;
+    }
+
+    nsCOMPtr<nsIBrowser> browser = embedderElement->AsBrowser();
+    if (!browser) {
+      continue;
+    }
+
+    nsCOMPtr<nsIPrincipal> contentPrincipal;
+    nsresult rv =
+        browser->GetContentPrincipal(getter_AddRefs(contentPrincipal));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+
+    nsAutoCString baseDomain;
+    rv = contentPrincipal->GetBaseDomain(baseDomain);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+
+    if (aSiteHost.Equals(baseDomain)) {
+      aResult = true;
+      return NS_OK;
+    }
+  }
+
+  return NS_OK;
 }
 
 already_AddRefed<dom::BrowsingContext>
