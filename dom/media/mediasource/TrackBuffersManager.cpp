@@ -1987,7 +1987,8 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
       if (appendMode == SourceBufferAppendMode::Sequence) {
         // mSourceBufferAttributes->GetTimestampOffset() was modified during
         // CheckSequenceDiscontinuity. We need to update our variables.
-        timestampOffset = mSourceBufferAttributes->GetTimestampOffset();
+        timestampOffset =
+            mSourceBufferAttributes->GetTimestampOffset().ToBase(sample->mTime);
         sampleInterval =
             mSourceBufferAttributes->mGenerateTimestamps
                 ? TimeInterval(timestampOffset,
