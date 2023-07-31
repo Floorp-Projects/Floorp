@@ -2034,6 +2034,8 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
         //    coded frames that span appendWindowStart, implementations MAY thus
         //    support gapless audio splicing.
         TimeInterval intersection = mAppendWindow.Intersection(sampleInterval);
+        intersection.mStart = intersection.mStart.ToBase(sample->mTime);
+        intersection.mEnd = intersection.mEnd.ToBase(sample->mTime);
         sample->mOriginalPresentationWindow = Some(sampleInterval);
         MSE_DEBUGV("will truncate frame from [%" PRId64 "%s,%" PRId64
                    "%s] to [%" PRId64 "%s,%" PRId64 "%s]",
