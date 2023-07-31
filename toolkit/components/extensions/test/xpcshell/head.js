@@ -82,6 +82,67 @@ if (AppConstants.platform === "android") {
   Services.io.offline = true;
 }
 
+// Some tests load non-moz-extension:-URLs in their extension document. When
+// extensions run in-process (extensions.webextensions.remote set to false),
+// that fails.
+// For details, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1724099
+// To avoid skip-if on the whole file, use this:
+//
+//   add_task(async function test_description_here() {
+//     // Comment explaining why.
+//     allow_unsafe_parent_loads_when_extensions_not_remote();
+//     ...
+//     revert_allow_unsafe_parent_loads_when_extensions_not_remote();
+//   });
+var private_upl_cleanup_handlers = [];
+function allow_unsafe_parent_loads_when_extensions_not_remote() {
+  if (WebExtensionPolicy.useRemoteWebExtensions) {
+    // We should only allow remote iframes in the main process.
+    return;
+  }
+  if (!Cu.isInAutomation) {
+    // isInAutomation is false by default in xpcshell (bug 1598804). Flip pref.
+    Services.prefs.setBoolPref(
+      "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
+      true
+    );
+    private_upl_cleanup_handlers.push(() => {
+      Services.prefs.setBoolPref(
+        "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
+        false
+      );
+    });
+    // Sanity check: Fail immediately if setting the above pref does somehow
+    // not flip the isInAutomation flag.
+    if (!Cu.isInAutomation) {
+      // This condition is unexpected, because it is enforced at:
+      // https://searchfox.org/mozilla-central/rev/ea65de7c/js/xpconnect/src/xpcpublic.h#753-759
+      throw new Error("Failed to set isInAutomation to true");
+    }
+  }
+  // Note: The following pref requires the isInAutomation flag to be set.
+  // When unset, the pref is ignored, and tests would encounter bug 1724099.
+  if (!Services.prefs.getBoolPref("security.allow_unsafe_parent_loads")) {
+    info("Setting pref security.allow_unsafe_parent_loads to true");
+    Services.prefs.setBoolPref("security.allow_unsafe_parent_loads", true);
+    private_upl_cleanup_handlers.push(() => {
+      info("Reverting pref security.allow_unsafe_parent_loads to false");
+      Services.prefs.setBoolPref("security.allow_unsafe_parent_loads", false);
+    });
+  }
+
+  registerCleanupFunction(
+    // eslint-disable-next-line no-use-before-define
+    revert_allow_unsafe_parent_loads_when_extensions_not_remote
+  );
+}
+
+function revert_allow_unsafe_parent_loads_when_extensions_not_remote() {
+  for (let revert of private_upl_cleanup_handlers.splice(0)) {
+    revert();
+  }
+}
+
 /**
  * Clears the HTTP and content image caches.
  */

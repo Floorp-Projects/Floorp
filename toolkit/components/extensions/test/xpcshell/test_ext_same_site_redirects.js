@@ -107,6 +107,9 @@ function promiseFinalResponse() {
 
 // Load the page as a child frame of an extension, for the given permissions.
 async function getCookiesForLoadInExtension({ permissions }) {
+  // embedder.html loads http:-frame.
+  allow_unsafe_parent_loads_when_extensions_not_remote();
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions,
@@ -124,6 +127,9 @@ async function getCookiesForLoadInExtension({ permissions }) {
   let cookies = await cookiesPromise;
   await contentPage.close();
   await extension.unload();
+
+  revert_allow_unsafe_parent_loads_when_extensions_not_remote();
+
   return cookies;
 }
 

@@ -10,6 +10,9 @@ server.registerPathHandler("/dummyFrame", (request, response) => {
 });
 
 add_task(async function content_script_in_background_frame() {
+  // Test loads http: frame in background page.
+  allow_unsafe_parent_loads_when_extensions_not_remote();
+
   async function background() {
     const FRAME_URL = "http://example.com:8888/dummyFrame";
     await browser.contentScripts.register({
@@ -40,4 +43,6 @@ add_task(async function content_script_in_background_frame() {
   await extension.startup();
   await extension.awaitMessage("done_in_content_script");
   await extension.unload();
+
+  revert_allow_unsafe_parent_loads_when_extensions_not_remote();
 });
