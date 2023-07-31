@@ -21,6 +21,7 @@ import mozilla.components.browser.engine.gecko.mediasession.GeckoMediaSessionDel
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
 import mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegate
 import mozilla.components.browser.engine.gecko.shopping.GeckoProductAnalysis
+import mozilla.components.browser.engine.gecko.shopping.GeckoProductRecommendation
 import mozilla.components.browser.engine.gecko.shopping.Highlight
 import mozilla.components.browser.engine.gecko.window.GeckoWindowRequest
 import mozilla.components.browser.errorpages.ErrorType
@@ -39,6 +40,7 @@ import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.concept.engine.shopping.ProductAnalysis
+import mozilla.components.concept.engine.shopping.ProductRecommendation
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_DISPOSITION
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_LENGTH
@@ -70,6 +72,7 @@ import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission
+import org.mozilla.geckoview.GeckoSession.Recommendation
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebResponse
@@ -651,6 +654,50 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.requestProductRecommendations]
+     */
+    override fun requestProductRecommendations(
+        url: String,
+        onResult: (List<ProductRecommendation>) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        geckoSession.requestRecommendations(url).then({
+                response: List<Recommendation>? ->
+            if (response == null) {
+                logger.error("Invalid value: unable to get analysis result from Gecko Engine.")
+                onException(
+                    java.lang.IllegalStateException(
+                        "Invalid value: unable to get analysis result from Gecko Engine.",
+                    ),
+                )
+                return@then GeckoResult()
+            }
+
+            val productRecommendations = response.map { it: Recommendation ->
+                GeckoProductRecommendation(
+                    it.url,
+                    it.analysisUrl,
+                    it.adjustedRating,
+                    it.sponsored,
+                    it.imageUrl,
+                    it.aid,
+                    it.name,
+                    it.grade,
+                    it.price,
+                    it.currency,
+                )
+            }
+            onResult(productRecommendations)
+            GeckoResult<GeckoProductRecommendation>()
+        }, {
+                throwable: Throwable ->
+            logger.error("Requesting product analysis failed.", throwable)
+            onException(throwable)
+            GeckoResult()
+        })
+    }
+
+    /**
      * See [EngineSession.requestProductAnalysis]
      */
     @Suppress("ComplexCondition")
@@ -673,17 +720,16 @@ class GeckoEngineSession(
                 return@then GeckoResult()
             }
 
-            val highlights: Highlight?
-            if (
+            val highlights = if (
                 response.highlights?.quality == null &&
                 response.highlights?.price == null &&
                 response.highlights?.shipping == null &&
                 response.highlights?.appearance == null &&
                 response.highlights?.competitiveness == null
             ) {
-                highlights = null
+                null
             } else {
-                highlights = Highlight(
+                Highlight(
                     response.highlights?.quality?.toList(),
                     response.highlights?.price?.toList(),
                     response.highlights?.shipping?.toList(),

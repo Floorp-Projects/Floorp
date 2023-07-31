@@ -25,6 +25,7 @@ import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.shopping.ProductAnalysis
+import mozilla.components.concept.engine.shopping.ProductRecommendation
 import kotlin.reflect.KProperty
 
 internal val xRequestHeader = mapOf(
@@ -419,6 +420,19 @@ class SystemEngineSession(
         onException: (Throwable) -> Unit,
     ) {
         throw UnsupportedOperationException("Checking for PDF viewer is not available in this engine")
+    }
+
+    /**
+     * /**
+     * See [EngineSession.requestProductRecommendations]
+     */
+     */
+    override fun requestProductRecommendations(
+        url: String,
+        onResult: (List<ProductRecommendation>) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        throw UnsupportedOperationException("Analysis of product reviews for shopping is not available in this engine")
     }
 
     /**

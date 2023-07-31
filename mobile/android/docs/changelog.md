@@ -13,6 +13,7 @@ permalink: /changelog/
 * **concept-engine**
   * 🌟️️ Add `ProductUrlStatus` to `SessionState` instance to indicate whether or not a product page of a given session state is being displayed. See more on [bug #1842638](https://bugzilla.mozilla.org/show_bug.cgi?id=1842638).
   * 🌟️️ Add `requestProductAnalysis` API to `EngineSession` to allow request product analysis result from the engine. See more on [bug #1840692](https://bugzilla.mozilla.org/show_bug.cgi?id=1840692).
+  * 🌟️️ Add `requestProductRecommendations` API to `EngineSession` to allow request product recommendations from the engine. See more on [bug #1840693](https://bugzilla.mozilla.org/show_bug.cgi?id=1840693).
 
 * **feature-addons**
   * ⚠️ **This is a breaking change**: the method `getAvailableAddons()` in `AddonsProvider` has been renamed to `getFeaturedAddons()`.
