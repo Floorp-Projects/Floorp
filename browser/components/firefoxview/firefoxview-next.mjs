@@ -10,41 +10,32 @@ function onHashChange() {
 
 function changePage(page) {
   let navigation = document.querySelector("fxview-category-navigation");
-  let currentCategoryButton;
-  if (pageList.includes(page)) {
-    document.querySelector("named-deck").selectedViewName = page;
-    navigation.currentCategory = page;
-    // Move focus if activeElement is a category button when changing page
-    if (navigation.categoryButtons.includes(document.activeElement)) {
-      currentCategoryButton = navigation.categoryButtons.filter(
-        categoryButton => categoryButton.name === page
-      );
-      currentCategoryButton[0]?.focus();
-    }
-  } else {
-    // Select first category if page not found in pageList
-    document.location.hash = pageList[0];
-    navigation.currentCategory = pageList[0];
-    // Move focus if activeElement is a category button when changing page
-    if (navigation.categoryButtons.includes(document.activeElement)) {
-      currentCategoryButton = navigation.categoryButtons[0];
-      currentCategoryButton?.focus();
-    }
+  if (page && !pageList.includes(page)) {
+    page = "overview";
+    document.location.hash = "overview";
+  }
+  document.querySelector("named-deck").selectedViewName = page || pageList[0];
+  navigation.currentCategory = page || pageList[0];
+  if (navigation.categoryButtons.includes(document.activeElement)) {
+    let currentCategoryButton = navigation.categoryButtons.find(
+      categoryButton => categoryButton.name === page
+    );
+    (currentCategoryButton || navigation.categoryButtons[0]).focus();
   }
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
-  if (document.location.hash) {
-    changePage(document.location.hash.substring(1));
-  }
-  window.addEventListener("hashchange", onHashChange);
   let navigation = document.querySelector("fxview-category-navigation");
   for (const item of navigation.categoryButtons) {
     pageList.push(item.getAttribute("name"));
   }
+  window.addEventListener("hashchange", onHashChange);
   window.addEventListener("change-category", function (event) {
     location.hash = event.target.getAttribute("name");
   });
+  if (document.location.hash) {
+    changePage(document.location.hash.substring(1));
+  }
 });
 
 document
