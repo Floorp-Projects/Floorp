@@ -43,7 +43,16 @@ function promiseLoadedCookies() {
     server.registerPathHandler("/fetch", (request, response) => {
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "text/html; charset=utf-8", false);
-      response.write("<html><script>fetch('/checkCookies');</script></html>");
+      // /checkCookies ultimately redirects to /ready, which resolves the
+      // promise returned by promiseLoadedCookies(). At that point, the test
+      // can choose to close the ContentPage that hosts us, and abort the
+      // pending fetch(). When extensions.webextensions.remote is false, the
+      // PromiseTestUtils.assertNoUncaughtRejections() check may detect this
+      // and cause the test to fail unexpectedly. To avoid this issue, we catch
+      // the error unconditionally.
+      response.write(`<html><script>
+        fetch("/checkCookies").catch(e => console.log("fetch() error: " + e));
+      </script></html>`);
     });
 
     server.registerPathHandler("/nestedfetch", (request, response) => {
@@ -93,6 +102,9 @@ add_task(async function setup() {
 });
 
 add_task(async function test_cookies_firstParty() {
+  // Loads a http:-URL in moz-extension://[uuid]/page.html
+  allow_unsafe_parent_loads_when_extensions_not_remote();
+
   async function pageScript() {
     const ifr = document.createElement("iframe");
     ifr.src = "http://example.org/" + location.search.slice(1);
@@ -167,6 +179,8 @@ add_task(async function test_cookies_firstParty() {
   await contentPage.close();
 
   await extension.unload();
+
+  revert_allow_unsafe_parent_loads_when_extensions_not_remote();
 });
 
 add_task(async function test_cookies_iframes() {
