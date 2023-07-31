@@ -12,6 +12,7 @@ use crate::values::AtomIdent;
 use crate::{CaseSensitivityExt, LocalName, Namespace, WeakAtom};
 use dom::ElementState;
 use selectors::attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint};
+use selectors::bloom::BloomFilter;
 use selectors::matching::{ElementSelectorFlags, MatchingContext};
 use selectors::{Element, OpaqueElement};
 use std::cell::Cell;
@@ -387,5 +388,10 @@ where
         self.element
             .assigned_slot()
             .map(|e| ElementWrapper::new(e, self.snapshot_map))
+    }
+
+    fn add_element_unique_hashes(&self, _filter: &mut BloomFilter) -> bool {
+        // Should not be relevant in the context of checking past elements in invalidation.
+        false
     }
 }
