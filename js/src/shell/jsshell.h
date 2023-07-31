@@ -131,12 +131,9 @@ extern bool enableArrayGrouping;
 extern bool enableArrayFromAsync;
 extern bool enableWellFormedUnicodeStrings;
 extern bool enableArrayBufferTransfer;
-extern bool enablePrivateClassFields;
-extern bool enablePrivateClassMethods;
 #ifdef ENABLE_NEW_SET_METHODS
 extern bool enableNewSetMethods;
 #endif
-extern bool enableClassStaticBlocks;
 extern bool enableImportAssertions;
 #ifdef JS_GC_ZEAL
 extern uint32_t gZealBits;
