@@ -543,9 +543,17 @@ class EventListenerManager final : public EventListenerManagerBase {
                            dom::EventTarget* aCurrentTarget,
                            nsEventStatus* aEventStatus, bool aItemInShadowTree);
 
+  /**
+   * Call the listener.
+   *
+   * Returns true if we should proceed iterating over the remaining listeners,
+   * or false if iteration should be stopped.
+   */
   MOZ_CAN_RUN_SCRIPT
-  nsresult HandleEventSubType(Listener* aListener, dom::Event* aDOMEvent,
-                              dom::EventTarget* aCurrentTarget);
+  bool HandleEventSingleListener(Listener* aListener, WidgetEvent* aEvent,
+                                 dom::Event* aDOMEvent,
+                                 dom::EventTarget* aCurrentTarget,
+                                 bool aItemInShadowTree);
 
   /**
    * If the given EventMessage has a legacy version that we support, then this
