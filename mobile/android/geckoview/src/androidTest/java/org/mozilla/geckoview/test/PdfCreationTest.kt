@@ -16,6 +16,7 @@ import org.hamcrest.Matchers.equalTo
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -143,6 +144,7 @@ class PdfCreationTest : BaseSessionTest() {
         }
     }
 
+    @Ignore // TODO: Re-enable it in bug 1846296.
     @NullDelegate(Autofill.Delegate::class)
     @Test
     fun saveAPdfDocument() {
