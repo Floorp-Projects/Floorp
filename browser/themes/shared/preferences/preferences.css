@@ -781,10 +781,6 @@ html|dialog,
   cursor: pointer;
 }
 
-.openLink:visited {
-  color: var(--in-content-link-color);
-}
-
 #fxaDisplayName {
   margin-inline-end: 10px !important;
 }
