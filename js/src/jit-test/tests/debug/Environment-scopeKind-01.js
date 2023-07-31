@@ -2,7 +2,7 @@
 
 load(libdir + 'eqArrayHelper.js');
 
-var g = newGlobal({newCompartment: true});
+var g = newGlobal({ newCompartment: true });
 var dbg = Debugger(g);
 
 function getScopeKinds(text) {
@@ -19,8 +19,8 @@ function getScopeKinds(text) {
 }
 
 assertEqArray(getScopeKinds("function f(x) { debugger; }; f()"),
-              ["function", null, null]);
+  ["function", "global", null]);
 assertEqArray(getScopeKinds("function f(x) { let y = 0; debugger; }; f()"),
-              ["function lexical", "function", null, null]);
+  ["function lexical", "function", "global", null]);
 assertEqArray(getScopeKinds("function f(x) { let y = 0; with(x) { debugger; } } f({})"),
-              [null, "function lexical", "function", null, null]);
+  [null, "function lexical", "function", "global", null]);
