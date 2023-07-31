@@ -111,20 +111,6 @@ input[type="url"]:read-only {
   white-space: nowrap;
 }
 
-input[type="url"]:read-only {
-  color: var(--in-content-link-color) !important;
-  cursor: pointer;
-}
-
-input[type="url"]:read-only:hover {
-  color: var(--in-content-link-color-hover) !important;
-  text-decoration: underline;
-}
-
-input[type="url"]:read-only:hover:active {
-  color: var(--in-content-link-color-active) !important;
-}
-
 input[type = "url"]:focus:not(:-moz-ui-invalid):invalid ~ .tooltip-container {
   display: block;
 }
