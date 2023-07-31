@@ -81,6 +81,14 @@ class nsCSSPseudoElements {
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 
+  // Returns an empty tuple for a syntactically invalid pseudo-element, and
+  // NotPseudo for the empty / null string.
+  // The second element of the tuple (functional pseudo parameter) is currently
+  // only used for `::highlight()` pseudos and is `nullptr` otherwise.
+  static std::tuple<mozilla::Maybe<Type>, RefPtr<nsAtom>> ParsePseudoElement(
+      const nsAString& aPseudoElement,
+      EnabledState = EnabledState::ForAllContent);
+
   // Returns Nothing() for a syntactically invalid pseudo-element, and NotPseudo
   // for the empty / null string.
   static mozilla::Maybe<Type> GetPseudoType(

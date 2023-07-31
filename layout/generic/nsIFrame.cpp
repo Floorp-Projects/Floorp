@@ -2399,7 +2399,7 @@ already_AddRefed<ComputedStyle> nsIFrame::ComputeSelectionStyle(
   }
   RefPtr<ComputedStyle> pseudoStyle =
       PresContext()->StyleSet()->ProbePseudoElementStyle(
-          *element, PseudoStyleType::selection, Style());
+          *element, PseudoStyleType::selection, nullptr, Style());
   if (!pseudoStyle) {
     return nullptr;
   }

@@ -451,13 +451,17 @@ static inline bool LazyPseudoIsCacheable(PseudoStyleType aType,
 
 already_AddRefed<ComputedStyle> ServoStyleSet::ResolvePseudoElementStyle(
     const Element& aOriginatingElement, PseudoStyleType aType,
-    ComputedStyle* aParentStyle, IsProbe aIsProbe) {
+    nsAtom* aFunctionalPseudoParameter, ComputedStyle* aParentStyle,
+    IsProbe aIsProbe) {
   // Runs from frame construction, this should have clean styles already, except
   // with non-lazy FC...
   UpdateStylistIfNeeded();
   MOZ_ASSERT(PseudoStyle::IsPseudoElement(aType));
 
+  // caching is done using `aType` only, therefore results would be wrong for
+  // pseudos with functional parameters (e.g. `::highlight(foo)`).
   const bool cacheable =
+      !aFunctionalPseudoParameter &&
       LazyPseudoIsCacheable(aType, aOriginatingElement, aParentStyle);
   RefPtr<ComputedStyle> style =
       cacheable ? aParentStyle->GetCachedLazyPseudoStyle(aType) : nullptr;
@@ -469,9 +473,9 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolvePseudoElementStyle(
     //
     // There are callers which do pass the wrong parent style and it would
     // assert (like ComputeSelectionStyle()). That's messy!
-    style = Servo_ResolvePseudoStyle(&aOriginatingElement, aType, isProbe,
-                                     isProbe ? nullptr : aParentStyle,
-                                     mRawData.get())
+    style = Servo_ResolvePseudoStyle(
+                &aOriginatingElement, aType, aFunctionalPseudoParameter,
+                isProbe, isProbe ? nullptr : aParentStyle, mRawData.get())
                 .Consume();
     if (!style) {
       MOZ_ASSERT(isProbe);
@@ -1213,7 +1217,7 @@ void ServoStyleSet::ClearNonInheritingComputedStyles() {
 
 already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazily(
     const Element& aElement, PseudoStyleType aPseudoType,
-    StyleRuleInclusion aRuleInclusion) {
+    nsAtom* aFunctionalPseudoParameter, StyleRuleInclusion aRuleInclusion) {
   PreTraverseSync();
   MOZ_ASSERT(!StylistNeedsUpdate());
 
@@ -1257,7 +1261,8 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazily(
                            pc->PresShell()->DidInitialize();
   return Servo_ResolveStyleLazily(
              elementForStyleResolution, pseudoTypeForStyleResolution,
-             aRuleInclusion, &restyleManager->Snapshots(),
+             aFunctionalPseudoParameter, aRuleInclusion,
+             &restyleManager->Snapshots(),
              restyleManager->GetUndisplayedRestyleGeneration(), canUseCache,
              mRawData.get())
       .Consume();

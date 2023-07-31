@@ -1078,7 +1078,7 @@ void nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
 
   RefPtr<ComputedStyle> style =
       mPresShell->StyleSet()->ResolvePseudoElementStyle(
-          *aContent->AsElement(), PseudoStyleType::backdrop,
+          *aContent->AsElement(), PseudoStyleType::backdrop, nullptr,
           /* aParentStyle */ nullptr);
   MOZ_ASSERT(style->StyleDisplay()->mTopLayer == StyleTopLayer::Top);
   nsContainerFrame* parentFrame =
@@ -1848,7 +1848,7 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
   // |ProbePseudoElementStyle| checks the relevant properties for the pseudo.
   // It only returns a non-null value if the pseudo should exist.
   RefPtr<ComputedStyle> pseudoStyle = styleSet->ProbePseudoElementStyle(
-      aOriginatingElement, aPseudoElement, &aStyle);
+      aOriginatingElement, aPseudoElement, nullptr, &aStyle);
   if (!pseudoStyle) {
     return;
   }
@@ -8568,7 +8568,8 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::GetFirstLetterStyle(
     nsIContent* aContent, ComputedStyle* aComputedStyle) {
   if (aContent) {
     return mPresShell->StyleSet()->ResolvePseudoElementStyle(
-        *aContent->AsElement(), PseudoStyleType::firstLetter, aComputedStyle);
+        *aContent->AsElement(), PseudoStyleType::firstLetter, nullptr,
+        aComputedStyle);
   }
   return nullptr;
 }
@@ -8577,7 +8578,8 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::GetFirstLineStyle(
     nsIContent* aContent, ComputedStyle* aComputedStyle) {
   if (aContent) {
     return mPresShell->StyleSet()->ResolvePseudoElementStyle(
-        *aContent->AsElement(), PseudoStyleType::firstLine, aComputedStyle);
+        *aContent->AsElement(), PseudoStyleType::firstLine, nullptr,
+        aComputedStyle);
   }
   return nullptr;
 }

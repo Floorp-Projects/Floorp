@@ -130,15 +130,22 @@ impl PseudoElement {
 
     /// Construct a pseudo-element from a `PseudoStyleType`.
     #[inline]
-    pub fn from_pseudo_type(type_: PseudoStyleType) -> Option<Self> {
+    pub fn from_pseudo_type(type_: PseudoStyleType, functional_pseudo_parameter: Option<AtomIdent>) -> Option<Self> {
         match type_ {
             % for pseudo in PSEUDOS:
             % if pseudo.is_simple_pseudo_element():
                 PseudoStyleType::${pseudo.pseudo_ident} => {
+                    debug_assert!(functional_pseudo_parameter.is_none());
                     Some(${pseudo_element_variant(pseudo)})
                 },
             % endif
             % endfor
+            PseudoStyleType::highlight => {
+                match functional_pseudo_parameter {
+                    Some(p) => Some(PseudoElement::Highlight(p)),
+                    None => None
+                }
+            }
             _ => None,
         }
     }
