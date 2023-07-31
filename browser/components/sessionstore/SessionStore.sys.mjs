@@ -454,8 +454,49 @@ export var SessionStore = {
     return SessionStoreInternal.undoCloseTab(aWindow, aIndex, aTargetWindow);
   },
 
+  /**
+   * Forget a closed tab associated with a given window
+   * Removes the record at the given index so it cannot be un-closed or appear
+   * in a list of recently-closed tabs
+   *
+   * @param {Window} aWindow
+   * @param {Integer} [aIndex = 0]
+   *        The index into the window's list of closed tabs
+   * @throws {InvalidArgumentError} if the window is not tracked by SessionStore, or index is out of bounds
+   */
   forgetClosedTab: function ss_forgetClosedTab(aWindow, aIndex) {
     return SessionStoreInternal.forgetClosedTab(aWindow, aIndex);
+  },
+
+  /**
+   * Forget a closed tab
+   * Removes the record with this closedId so it cannot be un-closed or appear
+   * in a list of recently-closed tabs
+   *
+   * @param {integer} aClosedId
+   *        The closedId of the tab
+   * @param {boolean} [aIncludePrivate = true]
+   *        Whether to search for the closedId in private tabs or windows. Defaults to true
+   * @throws {InvalidArgumentError} if the closedId doesnt match a closed tab in any window
+   */
+  forgetClosedTabById: function ss_forgetClosedTabById(
+    aClosedId,
+    aIncludePrivate
+  ) {
+    SessionStoreInternal.forgetClosedTabById(aClosedId, aIncludePrivate);
+  },
+
+  /**
+   * Forget a closed window.
+   * Removes the record with this closedId so it cannot be un-closed or appear
+   * in a list of recently-closed windows
+   *
+   * @param {integer} aClosedId
+   *        The closedId of the window
+   * @throws {InvalidArgumentError} if the closedId doesnt match a closed window
+   */
+  forgetClosedWindowById: function ss_forgetClosedWindowById(aClosedId) {
+    SessionStoreInternal.forgetClosedWindowById(aClosedId);
   },
 
   /**
@@ -3774,6 +3815,46 @@ var SessionStoreInternal = {
 
     // Notify of changes to closed objects.
     this._notifyOfClosedObjectsChange();
+  },
+
+  forgetClosedWindowById(aClosedId) {
+    // We don't keep any record for closed private windows so privateness is not relevant here
+    let closedIndex = this._closedWindows.findIndex(
+      windowState => windowState.closedId == aClosedId
+    );
+    if (closedIndex < 0) {
+      throw Components.Exception(
+        "Invalid closedId: not in the closed windows",
+        Cr.NS_ERROR_INVALID_ARG
+      );
+    }
+    this.forgetClosedWindow(closedIndex);
+  },
+
+  forgetClosedTabById(aClosedId, aIncludePrivate = true) {
+    // Get the windows we'll look for the closed tab in, filtering out private
+    // windows if necessary
+    let browserWindows = Array.from(this._browserWindows);
+    if (!aIncludePrivate) {
+      browserWindows = browserWindows.filter(win => {
+        return !PrivateBrowsingUtils.isBrowserPrivate(win);
+      });
+    }
+
+    // See if the aCloseId matches a closed tab in an open window
+    for (let sourceWindow of browserWindows) {
+      let closedIndex = this._windows[sourceWindow.__SSi]._closedTabs.findIndex(
+        tabData => tabData.closedId == aClosedId
+      );
+      if (closedIndex >= 0) {
+        this.forgetClosedTab(sourceWindow, closedIndex);
+        return;
+      }
+    }
+    throw Components.Exception(
+      "Invalid closedId: not found in the closed tabs of any window",
+      Cr.NS_ERROR_INVALID_ARG
+    );
   },
 
   getClosedWindowCount: function ssi_getClosedWindowCount() {
