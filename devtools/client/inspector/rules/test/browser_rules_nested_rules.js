@@ -47,6 +47,8 @@ const TEST_URI = `
 `;
 
 add_task(async function () {
+  await pushPref("layout.css.nesting.enabled", true);
+
   await addTab(
     "https://example.com/document-builder.sjs?html=" +
       encodeURIComponent(TEST_URI)

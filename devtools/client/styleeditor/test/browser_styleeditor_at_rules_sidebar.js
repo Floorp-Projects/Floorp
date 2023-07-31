@@ -39,6 +39,7 @@ waitForExplicitFinish();
 
 add_task(async function () {
   await pushPref("layout.css.container-queries.enabled", true);
+  await pushPref("layout.css.nesting.enabled", true);
 
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 

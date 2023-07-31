@@ -8176,6 +8176,13 @@
   mirror: always
   rust: true
 
+# Whether CSS nesting is enabled.
+- name: layout.css.nesting.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+  rust: true
+
 # Should we look for counter ancestor scopes first?
 - name: layout.css.counter-ancestor-scope.enabled
   type: bool

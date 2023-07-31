@@ -25,6 +25,7 @@ httpServer.registerPathHandler(`/test_css_messages.html`, (req, res) => {
 const TEST_URI = `http://localhost:${httpServer.identity.primaryPort}/test_css_messages.html`;
 
 add_task(async function () {
+  await pushPref("layout.css.nesting.enabled", true);
   await testWatchingCssMessages();
   await testWatchingCachedCssMessages();
 });
