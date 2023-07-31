@@ -45,9 +45,12 @@ add_task(async function test_startup_request_handler() {
   let policy = WebExtensionPolicy.getByID(ID);
   let url = policy.getURL("meh.txt");
 
-  let resp = ExtensionTestUtils.fetch(url, url);
-  resp.then(() => {
+  let contentPage;
+  let pagePromise = ExtensionTestUtils.loadContentPage(url, { extension });
+  let resp = pagePromise.then(page => {
+    contentPage = page;
     ok(ready, "Shouldn't get response before extension is ready");
+    return page.fetch(url);
   });
 
   await delay(2000);
@@ -57,6 +60,8 @@ add_task(async function test_startup_request_handler() {
 
   let body = await resp;
   equal(body, "Meh.", "Got the correct response");
+
+  await contentPage.close();
 
   await extension.unload();
 
