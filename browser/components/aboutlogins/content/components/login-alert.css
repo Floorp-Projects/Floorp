@@ -63,7 +63,7 @@
 }
 
 :host(login-vulnerable-password-alert) div[slot="content"] > a {
-  color: var(--in-content-link-color-visited);
+  color: var(--link-color);
 }
 
 :host(login-vulnerable-password-alert) a[slot="action"] {
