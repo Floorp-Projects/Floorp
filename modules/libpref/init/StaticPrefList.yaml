@@ -14064,6 +14064,13 @@
   value: 100
   mirror: always
 
+# Whether to apply GREASE settings to HTTP3/QUIC connections
+- name: security.tls.grease_http3_enable
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 - name: security.tls.hello_downgrade_check
   type: RelaxedAtomicBool
   value: true
