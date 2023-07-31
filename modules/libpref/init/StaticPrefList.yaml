@@ -7477,12 +7477,6 @@
     mirror: always
 #endif  // NIGHTLY_BUILD
 
-# Support Array.fromAsync
-- name: javascript.options.experimental.enable_array_from_async
-  type: bool
-  value: true
-  mirror: always
-
 #if defined(ENABLE_NEW_SET_METHODS)
   # Experimental support for New Set methods
 - name: javascript.options.experimental.enable_new_set_methods

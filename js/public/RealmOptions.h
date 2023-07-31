@@ -226,12 +226,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   }
 #endif
 
-  bool getArrayFromAsyncEnabled() const { return arrayFromAsync_; }
-  RealmCreationOptions& setArrayFromAsyncEnabled(bool flag) {
-    arrayFromAsync_ = flag;
-    return *this;
-  }
-
 #ifdef ENABLE_NEW_SET_METHODS
   bool getNewSetMethodsEnabled() const { return newSetMethods_; }
   RealmCreationOptions& setNewSetMethodsEnabled(bool flag) {
@@ -307,7 +301,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   // Pref for ArrayBuffer.prototype.transfer{,ToFixedLength}() methods.
   bool arrayBufferTransfer_ = false;
 #endif
-  bool arrayFromAsync_ = true;
 #ifdef ENABLE_NEW_SET_METHODS
   bool newSetMethods_ = false;
 #endif
