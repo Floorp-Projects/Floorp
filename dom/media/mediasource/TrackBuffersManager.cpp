@@ -42,9 +42,6 @@ mozilla::LogModule* GetMediaSourceSamplesLog() {
 #define SAMPLE_DEBUG(arg, ...)                                    \
   DDMOZ_LOG(GetMediaSourceSamplesLog(), mozilla::LogLevel::Debug, \
             "::%s: " arg, __func__, ##__VA_ARGS__)
-#define SAMPLE_DEBUGV(arg, ...)                                     \
-  DDMOZ_LOG(GetMediaSourceSamplesLog(), mozilla::LogLevel::Verbose, \
-            "::%s: " arg, __func__, ##__VA_ARGS__)
 
 namespace mozilla {
 
@@ -1851,14 +1848,7 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
     aSample->mTime = aInterval.mStart;
     aSample->mDuration = aInterval.Length();
     aSample->mTrackInfo = trackBuffer.mLastInfo;
-    SAMPLE_DEBUGV(
-        "Add sample [%" PRId64 "%s,%" PRId64 "%s] by interval %s",
-        aSample->mTime.ToMicroseconds(), aSample->mTime.ToString().get(),
-        aSample->GetEndTime().ToMicroseconds(),
-        aSample->GetEndTime().ToString().get(), aInterval.ToString().get());
     MOZ_DIAGNOSTIC_ASSERT(aSample->HasValidTime());
-    MOZ_DIAGNOSTIC_ASSERT(TimeInterval(aSample->mTime, aSample->GetEndTime()) ==
-                          aInterval);
     samplesRange += aInterval;
     sizeNewSamples += aSample->ComputedSizeOfIncludingThis();
     samples.AppendElement(aSample);
@@ -1927,15 +1917,12 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
                                    : timestampOffset + sampleTimecode;
 
     SAMPLE_DEBUG(
-        "Processing %s frame [%" PRId64 "%s,%" PRId64 "%s] (adjusted:[%" PRId64
-        "%s,%" PRId64 "%s]), dts:%" PRId64 ", duration:%" PRId64 ", kf:%d)",
+        "Processing %s frame [%" PRId64 ",%" PRId64 "] (adjusted:[%" PRId64
+        ",%" PRId64 "]), dts:%" PRId64 ", duration:%" PRId64 ", kf:%d)",
         aTrackData.mInfo->mMimeType.get(), sample->mTime.ToMicroseconds(),
-        sample->mTime.ToString().get(), sample->GetEndTime().ToMicroseconds(),
-        sample->GetEndTime().ToString().get(),
+        sample->GetEndTime().ToMicroseconds(),
         sampleInterval.mStart.ToMicroseconds(),
-        sampleInterval.mStart.ToString().get(),
         sampleInterval.mEnd.ToMicroseconds(),
-        sampleInterval.mEnd.ToString().get(),
         sample->mTimecode.ToMicroseconds(), sample->mDuration.ToMicroseconds(),
         sample->mKeyframe);
 
@@ -1987,8 +1974,7 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
       if (appendMode == SourceBufferAppendMode::Sequence) {
         // mSourceBufferAttributes->GetTimestampOffset() was modified during
         // CheckSequenceDiscontinuity. We need to update our variables.
-        timestampOffset =
-            mSourceBufferAttributes->GetTimestampOffset().ToBase(sample->mTime);
+        timestampOffset = mSourceBufferAttributes->GetTimestampOffset();
         sampleInterval =
             mSourceBufferAttributes->mGenerateTimestamps
                 ? TimeInterval(timestampOffset,
@@ -2034,35 +2020,24 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
         //    coded frames that span appendWindowStart, implementations MAY thus
         //    support gapless audio splicing.
         TimeInterval intersection = mAppendWindow.Intersection(sampleInterval);
-        intersection.mStart = intersection.mStart.ToBase(sample->mTime);
-        intersection.mEnd = intersection.mEnd.ToBase(sample->mTime);
         sample->mOriginalPresentationWindow = Some(sampleInterval);
-        MSE_DEBUGV("will truncate frame from [%" PRId64 "%s,%" PRId64
-                   "%s] to [%" PRId64 "%s,%" PRId64 "%s]",
+        MSE_DEBUGV("will truncate frame from [%" PRId64 ",%" PRId64
+                   "] to [%" PRId64 ",%" PRId64 "]",
                    sampleInterval.mStart.ToMicroseconds(),
-                   sampleInterval.mStart.ToString().get(),
                    sampleInterval.mEnd.ToMicroseconds(),
-                   sampleInterval.mEnd.ToString().get(),
                    intersection.mStart.ToMicroseconds(),
-                   intersection.mStart.ToString().get(),
-                   intersection.mEnd.ToMicroseconds(),
-                   intersection.mEnd.ToString().get());
+                   intersection.mEnd.ToMicroseconds());
         sampleInterval = intersection;
       } else {
         sample->mOriginalPresentationWindow = Some(sampleInterval);
         sample->mTimecode = decodeTimestamp;
         previouslyDroppedSample = sample;
-        MSE_DEBUGV("frame [%" PRId64 "%s,%" PRId64
-                   "%s] outside appendWindow [%" PRId64 "%s,%" PRId64
-                   "%s] dropping",
+        MSE_DEBUGV("frame [%" PRId64 ",%" PRId64
+                   "] outside appendWindow [%" PRId64 ",%" PRId64 "] dropping",
                    sampleInterval.mStart.ToMicroseconds(),
-                   sampleInterval.mStart.ToString().get(),
                    sampleInterval.mEnd.ToMicroseconds(),
-                   sampleInterval.mEnd.ToString().get(),
                    mAppendWindow.mStart.ToMicroseconds(),
-                   mAppendWindow.mStart.ToString().get(),
-                   mAppendWindow.mEnd.ToMicroseconds(),
-                   mAppendWindow.mEnd.ToString().get());
+                   mAppendWindow.mEnd.ToMicroseconds());
         if (samples.Length()) {
           // We are creating a discontinuity in the samples.
           // Insert the samples processed so far.
@@ -2082,10 +2057,12 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
       MSE_DEBUGV("Adding silent frame");
       // This "silent" sample will be added so that it starts exactly before the
       // first usable one. The duration of the actual sample will be adjusted so
-      // that the total duration stay the same. This sample will be dropped
-      // after decoding by the AudioTrimmer (if audio).
+      // that the total duration staty the same.
+      // Setting a dummy presentation window of 1us will cause this sample to be
+      // dropped after decoding by the AudioTrimmer (if audio).
       TimeInterval previouslyDroppedSampleInterval =
-          TimeInterval(sampleInterval.mStart, sampleInterval.mStart);
+          TimeInterval(sampleInterval.mStart,
+                       sampleInterval.mStart + TimeUnit::FromMicroseconds(1));
       addToSamples(previouslyDroppedSample, previouslyDroppedSampleInterval);
       previouslyDroppedSample = nullptr;
       sampleInterval.mStart += previouslyDroppedSampleInterval.Length();
@@ -2409,15 +2386,18 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   }
   aTrackData.mSizeBuffer -= sizeRemoved;
 
-  nsPrintfCString msg("Removing frames from:%u for %s (frames:%u) ([%f, %f))",
-                      firstRemovedIndex.ref(),
-                      aTrackData.mInfo->mMimeType.get(),
-                      lastRemovedIndex - firstRemovedIndex.ref() + 1,
-                      removedIntervals.GetStart().ToSeconds(),
-                      removedIntervals.GetEnd().ToSeconds());
-  MSE_DEBUG("%s", msg.get());
+  MSE_DEBUG("Removing frames from:%u (frames:%u) ([%f, %f))",
+            firstRemovedIndex.ref(),
+            lastRemovedIndex - firstRemovedIndex.ref() + 1,
+            removedIntervals.GetStart().ToSeconds(),
+            removedIntervals.GetEnd().ToSeconds());
   if (profiler_thread_is_being_profiled_for_markers()) {
-    PROFILER_MARKER_TEXT("RemoveFrames", MEDIA_PLAYBACK, {}, msg);
+    nsPrintfCString markerString(
+        "Removing frames from:%u (frames:%u) ([%f, %f))",
+        firstRemovedIndex.ref(), lastRemovedIndex - firstRemovedIndex.ref() + 1,
+        removedIntervals.GetStart().ToSeconds(),
+        removedIntervals.GetEnd().ToSeconds());
+    PROFILER_MARKER_TEXT("RemoveFrames", MEDIA_PLAYBACK, {}, markerString);
   }
 
   if (aTrackData.mNextGetSampleIndex.isSome()) {
@@ -2455,9 +2435,6 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   }
 
   // Update our buffered range to exclude the range just removed.
-  MSE_DEBUG("Removing %s from bufferedRange %s",
-            DumpTimeRanges(removedIntervals).get(),
-            DumpTimeRanges(aTrackData.mBufferedRanges).get());
   aTrackData.mBufferedRanges -= removedIntervals;
 
   // Recalculate sanitized buffered ranges.
@@ -2480,20 +2457,6 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
     MutexAutoLock mut(mMutex);
     aTrackData.mHighestStartTimestamp = highestStartTime;
   }
-
-  MSE_DEBUG(
-      "After removing frames, %s data sz=%zu, highestStartTimestamp=% " PRId64
-      ", bufferedRange=%s, sanitizedBufferedRanges=%s",
-      aTrackData.mInfo->mMimeType.get(), data.Length(),
-      aTrackData.mHighestStartTimestamp.ToMicroseconds(),
-      DumpTimeRanges(aTrackData.mBufferedRanges).get(),
-      DumpTimeRanges(aTrackData.mSanitizedBufferedRanges).get());
-
-  // If all frames are removed, both buffer and buffered range should be empty.
-  MOZ_DIAGNOSTIC_ASSERT_IF(data.IsEmpty(),
-                           aTrackData.mBufferedRanges.IsEmpty());
-  MOZ_DIAGNOSTIC_ASSERT_IF(aTrackData.mBufferedRanges.IsEmpty(),
-                           data.IsEmpty());
 
   return firstRemovedIndex.ref();
 }
@@ -2659,8 +2622,6 @@ TimeUnit TrackBuffersManager::Seek(TrackInfo::TrackType aTrack,
   AUTO_PROFILER_LABEL("TrackBuffersManager::Seek", MEDIA_PLAYBACK);
   auto& trackBuffer = GetTracksData(aTrack);
   const TrackBuffersManager::TrackBuffer& track = GetTrackBuffer(aTrack);
-  MSE_DEBUG("Seek, track=%s, target=%" PRId64, TrackTypeToStr(aTrack),
-            aTime.ToMicroseconds());
 
   if (!track.Length()) {
     // This a reset. It will be followed by another valid seek.
@@ -3133,4 +3094,3 @@ void TrackBuffersManager::AddSizeOfResources(
 #undef MSE_DEBUG
 #undef MSE_DEBUGV
 #undef SAMPLE_DEBUG
-#undef SAMPLE_DEBUGV
