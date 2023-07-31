@@ -637,18 +637,18 @@ panel-item[action="report"]::part(button) {
   background: none !important;
   padding: 0;
   margin: 0;
-  color: var(--in-content-link-color) !important;
+  color: var(--link-color) !important;
   cursor: pointer;
   border: none;
 }
 
 .button-link:hover {
-  color: var(--in-content-link-color-hover) !important;
+  color: var(--link-color-hover) !important;
   text-decoration: underline;
 }
 
 .button-link:active {
-  color: var(--in-content-link-color-active) !important;
+  color: var(--link-color-active) !important;
   text-decoration: none;
 }
 
