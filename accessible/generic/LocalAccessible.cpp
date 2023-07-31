@@ -3204,23 +3204,23 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     nsString name;
     int32_t nameFlag = Name(name);
     if (nameFlag != eNameOK) {
-      fields->SetAttribute(nsGkAtoms::explicit_name, nameFlag);
+      fields->SetAttribute(CacheKey::NameValueFlag, nameFlag);
     } else if (aUpdateType == CacheUpdateType::Update) {
-      fields->SetAttribute(nsGkAtoms::explicit_name, DeleteEntry());
+      fields->SetAttribute(CacheKey::NameValueFlag, DeleteEntry());
     }
 
     if (!name.IsEmpty()) {
-      fields->SetAttribute(nsGkAtoms::name, std::move(name));
+      fields->SetAttribute(CacheKey::Name, std::move(name));
     } else if (aUpdateType == CacheUpdateType::Update) {
-      fields->SetAttribute(nsGkAtoms::name, DeleteEntry());
+      fields->SetAttribute(CacheKey::Name, DeleteEntry());
     }
 
     nsString description;
     Description(description);
     if (!description.IsEmpty()) {
-      fields->SetAttribute(nsGkAtoms::description, std::move(description));
+      fields->SetAttribute(CacheKey::Description, std::move(description));
     } else if (aUpdateType == CacheUpdateType::Update) {
-      fields->SetAttribute(nsGkAtoms::description, DeleteEntry());
+      fields->SetAttribute(CacheKey::Description, DeleteEntry());
     }
   }
 
@@ -3233,10 +3233,10 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     // ... for all other cases we divine the value remotely.
     bool cacheValueText = false;
     if (HasNumericValue()) {
-      fields->SetAttribute(nsGkAtoms::value, CurValue());
-      fields->SetAttribute(nsGkAtoms::max, MaxValue());
-      fields->SetAttribute(nsGkAtoms::min, MinValue());
-      fields->SetAttribute(nsGkAtoms::step, Step());
+      fields->SetAttribute(CacheKey::NumericValue, CurValue());
+      fields->SetAttribute(CacheKey::MaxValue, MaxValue());
+      fields->SetAttribute(CacheKey::MinValue, MinValue());
+      fields->SetAttribute(CacheKey::Step, Step());
       cacheValueText = NativeHasNumericValue() ||
                        (mContent->IsElement() &&
                         nsAccUtils::HasARIAAttr(mContent->AsElement(),
@@ -3249,9 +3249,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       nsString value;
       Value(value);
       if (!value.IsEmpty()) {
-        fields->SetAttribute(nsGkAtoms::aria_valuetext, std::move(value));
+        fields->SetAttribute(CacheKey::TextValue, std::move(value));
       } else if (aUpdateType == CacheUpdateType::Update) {
-        fields->SetAttribute(nsGkAtoms::aria_valuetext, DeleteEntry());
+        fields->SetAttribute(CacheKey::TextValue, DeleteEntry());
       }
     }
 
@@ -3262,9 +3262,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       nsString src;
       mContent->AsElement()->GetAttr(nsGkAtoms::src, src);
       if (!src.IsEmpty()) {
-        fields->SetAttribute(nsGkAtoms::src, std::move(src));
+        fields->SetAttribute(CacheKey::SrcURL, std::move(src));
       } else if (aUpdateType == CacheUpdateType::Update) {
-        fields->SetAttribute(nsGkAtoms::src, DeleteEntry());
+        fields->SetAttribute(CacheKey::SrcURL, DeleteEntry());
       }
     }
   }
@@ -3375,7 +3375,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       }
 
       if (viewportCache.Length()) {
-        fields->SetAttribute(nsGkAtoms::viewport, std::move(viewportCache));
+        fields->SetAttribute(CacheKey::Viewport, std::move(viewportCache));
       }
     }
   }
@@ -3412,7 +3412,8 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
           nsTArray<int32_t> offsetArray(2);
           offsetArray.AppendElement(newOffset.Side(eSideLeft));  // X offset
           offsetArray.AppendElement(newOffset.Side(eSideTop));   // Y offset
-          fields->SetAttribute(nsGkAtoms::crossorigin, std::move(offsetArray));
+          fields->SetAttribute(CacheKey::CrossDocOffset,
+                               std::move(offsetArray));
         }
       }
     }
@@ -3429,13 +3430,14 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       boundsArray.AppendElement(newBoundsRect.width);
       boundsArray.AppendElement(newBoundsRect.height);
 
-      fields->SetAttribute(nsGkAtoms::relativeBounds, std::move(boundsArray));
+      fields->SetAttribute(CacheKey::ParentRelativeBounds,
+                           std::move(boundsArray));
     }
 
     if (frame && frame->ScrollableOverflowRect().IsEmpty()) {
-      fields->SetAttribute(nsGkAtoms::clip_rule, true);
+      fields->SetAttribute(CacheKey::IsClipped, true);
     } else if (aUpdateType != CacheUpdateType::Initial) {
-      fields->SetAttribute(nsGkAtoms::clip_rule, DeleteEntry());
+      fields->SetAttribute(CacheKey::IsClipped, DeleteEntry());
     }
   }
 
@@ -3446,16 +3448,16 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       if (IsText()) {
         nsString text;
         AppendTextTo(text);
-        fields->SetAttribute(nsGkAtoms::text, std::move(text));
+        fields->SetAttribute(CacheKey::Text, std::move(text));
         TextLeafPoint point(this, 0);
         RefPtr<AccAttributes> attrs = point.GetTextAttributesLocalAcc(
             /* aIncludeDefaults */ false);
-        fields->SetAttribute(nsGkAtoms::style, std::move(attrs));
+        fields->SetAttribute(CacheKey::TextAttributes, std::move(attrs));
       }
     }
     if (HyperTextAccessible* ht = AsHyperText()) {
       RefPtr<AccAttributes> attrs = ht->DefaultTextAttributes();
-      fields->SetAttribute(nsGkAtoms::style, std::move(attrs));
+      fields->SetAttribute(CacheKey::TextAttributes, std::move(attrs));
     }
   }
 
@@ -3464,9 +3466,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       IsTextLeaf()) {
     auto spellingErrors = TextLeafPoint::GetSpellingErrorOffsets(this);
     if (!spellingErrors.IsEmpty()) {
-      fields->SetAttribute(nsGkAtoms::spelling, std::move(spellingErrors));
+      fields->SetAttribute(CacheKey::SpellingErrors, std::move(spellingErrors));
     } else if (aUpdateType == CacheUpdateType::Update) {
-      fields->SetAttribute(nsGkAtoms::spelling, DeleteEntry());
+      fields->SetAttribute(CacheKey::SpellingErrors, DeleteEntry());
     }
   }
 
@@ -3501,9 +3503,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         lineStarts.AppendElement(lineStart.mOffset);
       }
       if (!lineStarts.IsEmpty()) {
-        fields->SetAttribute(nsGkAtoms::line, std::move(lineStarts));
+        fields->SetAttribute(CacheKey::TextLineStarts, std::move(lineStarts));
       } else if (aUpdateType == CacheUpdateType::Update) {
-        fields->SetAttribute(nsGkAtoms::line, DeleteEntry());
+        fields->SetAttribute(CacheKey::TextLineStarts, DeleteEntry());
       }
 
       if (frame && frame->IsTextFrame()) {
@@ -3543,7 +3545,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
             currTextFrame = currTextFrame->GetNextContinuation();
           }
           if (charData.Length()) {
-            fields->SetAttribute(nsGkAtoms::characterData, std::move(charData));
+            fields->SetAttribute(CacheKey::TextBounds, std::move(charData));
           }
         }
       }
@@ -3568,7 +3570,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       transformed = !mtx.IsIdentity();
       if (transformed) {
         UniquePtr<gfx::Matrix4x4> ptr = MakeUnique<gfx::Matrix4x4>(mtx);
-        fields->SetAttribute(nsGkAtoms::transform, std::move(ptr));
+        fields->SetAttribute(CacheKey::TransformMatrix, std::move(ptr));
       }
     }
     if (!transformed && aUpdateType == CacheUpdateType::Update) {
@@ -3576,7 +3578,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       // frame isn't transformed (or doesn't exist), we need
       // to send a DeleteEntry() to remove any
       // transform that was previously cached for this frame.
-      fields->SetAttribute(nsGkAtoms::transform, DeleteEntry());
+      fields->SetAttribute(CacheKey::TransformMatrix, DeleteEntry());
     }
   }
 
@@ -3595,26 +3597,26 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       nsTArray<int32_t> positionArr(2);
       positionArr.AppendElement(scrollPosition.x);
       positionArr.AppendElement(scrollPosition.y);
-      fields->SetAttribute(nsGkAtoms::scrollPosition, std::move(positionArr));
+      fields->SetAttribute(CacheKey::ScrollPosition, std::move(positionArr));
     } else if (aUpdateType == CacheUpdateType::Update) {
-      fields->SetAttribute(nsGkAtoms::scrollPosition, DeleteEntry());
+      fields->SetAttribute(CacheKey::ScrollPosition, DeleteEntry());
     }
   }
 
   if (aCacheDomain & CacheDomain::DOMNodeIDAndClass && mContent) {
     nsAtom* id = mContent->GetID();
     if (id) {
-      fields->SetAttribute(nsGkAtoms::id, id);
+      fields->SetAttribute(CacheKey::DOMNodeID, id);
     } else if (aUpdateType == CacheUpdateType::Update) {
-      fields->SetAttribute(nsGkAtoms::id, DeleteEntry());
+      fields->SetAttribute(CacheKey::DOMNodeID, DeleteEntry());
     }
     if (auto* el = dom::Element::FromNodeOrNull(mContent)) {
       nsAutoString className;
       el->GetClassName(className);
       if (!className.IsEmpty()) {
-        fields->SetAttribute(nsGkAtoms::_class, std::move(className));
+        fields->SetAttribute(CacheKey::DOMNodeClass, std::move(className));
       } else if (aUpdateType == CacheUpdateType::Update) {
-        fields->SetAttribute(nsGkAtoms::_class, DeleteEntry());
+        fields->SetAttribute(CacheKey::DOMNodeClass, DeleteEntry());
       }
     }
   }
@@ -3628,16 +3630,16 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       uint64_t state = State();
       // Exclude states which must be calculated by RemoteAccessible.
       state &= ~kRemoteCalculatedStates;
-      fields->SetAttribute(nsGkAtoms::state, state);
+      fields->SetAttribute(CacheKey::State, state);
     }
     // If aria-selected isn't specified, there may be no SELECTED state.
     // However, aria-selected can be implicit in some cases when an item is
     // focused. We don't want to do this if aria-selected is explicitly
     // set to "false", so we need to differentiate between false and unset.
     if (auto ariaSelected = ARIASelected()) {
-      fields->SetAttribute(nsGkAtoms::aria_selected, *ariaSelected);
+      fields->SetAttribute(CacheKey::ARIASelected, *ariaSelected);
     } else if (aUpdateType == CacheUpdateType::Update) {
-      fields->SetAttribute(nsGkAtoms::aria_selected, DeleteEntry());  // Unset.
+      fields->SetAttribute(CacheKey::ARIASelected, DeleteEntry());  // Unset.
     }
   }
 
@@ -3659,46 +3661,46 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       nsAutoString actionName;
       ActionNameAt(0, actionName);
       RefPtr<nsAtom> actionAtom = NS_Atomize(actionName);
-      fields->SetAttribute(nsGkAtoms::action, actionAtom);
+      fields->SetAttribute(CacheKey::PrimaryAction, actionAtom);
     } else if (aUpdateType == CacheUpdateType::Update) {
-      fields->SetAttribute(nsGkAtoms::action, DeleteEntry());
+      fields->SetAttribute(CacheKey::PrimaryAction, DeleteEntry());
     }
 
     if (ImageAccessible* imgAcc = AsImage()) {
       // Here we cache the showlongdesc action.
       if (imgAcc->HasLongDesc()) {
-        fields->SetAttribute(nsGkAtoms::longdesc, true);
+        fields->SetAttribute(CacheKey::HasLongdesc, true);
       } else if (aUpdateType == CacheUpdateType::Update) {
-        fields->SetAttribute(nsGkAtoms::longdesc, DeleteEntry());
+        fields->SetAttribute(CacheKey::HasLongdesc, DeleteEntry());
       }
     }
 
     KeyBinding accessKey = AccessKey();
     if (!accessKey.IsEmpty()) {
-      fields->SetAttribute(nsGkAtoms::accesskey, accessKey.Serialize());
+      fields->SetAttribute(CacheKey::AccessKey, accessKey.Serialize());
     } else if (aUpdateType == CacheUpdateType::Update) {
-      fields->SetAttribute(nsGkAtoms::accesskey, DeleteEntry());
+      fields->SetAttribute(CacheKey::AccessKey, DeleteEntry());
     }
   }
 
   if (aCacheDomain & CacheDomain::Style) {
     if (RefPtr<nsAtom> display = DisplayStyle()) {
-      fields->SetAttribute(nsGkAtoms::display, display);
+      fields->SetAttribute(CacheKey::CSSDisplay, display);
     }
 
     float opacity = Opacity();
     if (opacity != 1.0f) {
-      fields->SetAttribute(nsGkAtoms::opacity, opacity);
+      fields->SetAttribute(CacheKey::Opacity, opacity);
     } else if (aUpdateType == CacheUpdateType::Update) {
-      fields->SetAttribute(nsGkAtoms::opacity, DeleteEntry());
+      fields->SetAttribute(CacheKey::Opacity, DeleteEntry());
     }
 
     if (frame &&
         frame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
         nsLayoutUtils::IsReallyFixedPos(frame)) {
-      fields->SetAttribute(nsGkAtoms::position, nsGkAtoms::fixed);
+      fields->SetAttribute(CacheKey::CssPosition, nsGkAtoms::fixed);
     } else if (aUpdateType != CacheUpdateType::Initial) {
-      fields->SetAttribute(nsGkAtoms::position, DeleteEntry());
+      fields->SetAttribute(CacheKey::CssPosition, DeleteEntry());
     }
 
     if (frame) {
@@ -3706,9 +3708,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       frame->Style()->GetComputedPropertyValue(eCSSProperty_overflow, overflow);
       RefPtr<nsAtom> overflowAtom = NS_Atomize(overflow);
       if (overflowAtom == nsGkAtoms::hidden) {
-        fields->SetAttribute(nsGkAtoms::overflow, nsGkAtoms::hidden);
+        fields->SetAttribute(CacheKey::CSSOverflow, nsGkAtoms::hidden);
       } else if (aUpdateType != CacheUpdateType::Initial) {
-        fields->SetAttribute(nsGkAtoms::overflow, DeleteEntry());
+        fields->SetAttribute(CacheKey::CSSOverflow, DeleteEntry());
       }
     }
   }
@@ -3716,9 +3718,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   if (aCacheDomain & CacheDomain::Table) {
     if (auto* table = HTMLTableAccessible::GetFrom(this)) {
       if (table->IsProbablyLayoutTable()) {
-        fields->SetAttribute(nsGkAtoms::layout_guess, true);
+        fields->SetAttribute(CacheKey::TableLayoutGuess, true);
       } else if (aUpdateType == CacheUpdateType::Update) {
-        fields->SetAttribute(nsGkAtoms::layout_guess, DeleteEntry());
+        fields->SetAttribute(CacheKey::TableLayoutGuess, DeleteEntry());
       }
     } else if (auto* cell = HTMLTableCellAccessible::GetFrom(this)) {
       // For HTML table cells, we must use the HTMLTableCellAccessible
@@ -3728,16 +3730,16 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       int32_t value = static_cast<int32_t>(cell->RowExtent());
       MOZ_ASSERT(value > 0);
       if (value > 1) {
-        fields->SetAttribute(nsGkAtoms::rowspan, value);
+        fields->SetAttribute(CacheKey::RowSpan, value);
       } else if (aUpdateType == CacheUpdateType::Update) {
-        fields->SetAttribute(nsGkAtoms::rowspan, DeleteEntry());
+        fields->SetAttribute(CacheKey::RowSpan, DeleteEntry());
       }
       value = static_cast<int32_t>(cell->ColExtent());
       MOZ_ASSERT(value > 0);
       if (value > 1) {
-        fields->SetAttribute(nsGkAtoms::colspan, value);
+        fields->SetAttribute(CacheKey::ColSpan, value);
       } else if (aUpdateType == CacheUpdateType::Update) {
-        fields->SetAttribute(nsGkAtoms::colspan, DeleteEntry());
+        fields->SetAttribute(CacheKey::ColSpan, DeleteEntry());
       }
       if (mContent->AsElement()->HasAttr(nsGkAtoms::headers)) {
         nsTArray<uint64_t> headers;
@@ -3747,9 +3749,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
             headers.AppendElement(cell->ID());
           }
         }
-        fields->SetAttribute(nsGkAtoms::headers, std::move(headers));
+        fields->SetAttribute(CacheKey::CellHeaders, std::move(headers));
       } else if (aUpdateType == CacheUpdateType::Update) {
-        fields->SetAttribute(nsGkAtoms::headers, DeleteEntry());
+        fields->SetAttribute(CacheKey::CellHeaders, DeleteEntry());
       }
     }
   }
@@ -3767,9 +3769,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       attrIt.ExposeAttr(ariaAttrs);
     }
     if (ariaAttrs) {
-      fields->SetAttribute(nsGkAtoms::aria, std::move(ariaAttrs));
+      fields->SetAttribute(CacheKey::ARIAAttributes, std::move(ariaAttrs));
     } else if (aUpdateType == CacheUpdateType::Update) {
-      fields->SetAttribute(nsGkAtoms::aria, DeleteEntry());
+      fields->SetAttribute(CacheKey::ARIAAttributes, DeleteEntry());
     }
   }
 
@@ -3784,11 +3786,11 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       nsString name;
       mContent->AsElement()->GetAttr(nsGkAtoms::name, name);
       if (!name.IsEmpty()) {
-        fields->SetAttribute(nsGkAtoms::attributeName, std::move(name));
+        fields->SetAttribute(CacheKey::DOMName, std::move(name));
       } else if (aUpdateType != CacheUpdateType::Initial) {
         // It's possible we used to have a name and it's since been
         // removed. Send a delete entry.
-        fields->SetAttribute(nsGkAtoms::attributeName, DeleteEntry());
+        fields->SetAttribute(CacheKey::DOMName, DeleteEntry());
       }
     }
 
@@ -3830,7 +3832,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       mContent->IsMathMLElement(nsGkAtoms::math)) {
     nsString innerHTML;
     mContent->AsElement()->GetInnerHTML(innerHTML, IgnoreErrors());
-    fields->SetAttribute(nsGkAtoms::html, std::move(innerHTML));
+    fields->SetAttribute(CacheKey::InnerHTML, std::move(innerHTML));
   }
 #endif  // defined(XP_WIN)
 
@@ -3838,7 +3840,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     // Add fields which never change and thus only need to be included in the
     // initial cache push.
     if (mContent && mContent->IsElement()) {
-      fields->SetAttribute(nsGkAtoms::tag, mContent->NodeInfo()->NameAtom());
+      fields->SetAttribute(CacheKey::TagName, mContent->NodeInfo()->NameAtom());
 
       dom::Element* el = mContent->AsElement();
       if (IsTextField() || IsDateTimeField()) {
@@ -3847,7 +3849,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         if (const nsAttrValue* attr = el->GetParsedAttr(nsGkAtoms::type)) {
           RefPtr<nsAtom> inputType = attr->GetAsAtom();
           if (inputType) {
-            fields->SetAttribute(nsGkAtoms::textInputType, inputType);
+            fields->SetAttribute(CacheKey::InputType, inputType);
           }
         }
       }
@@ -3863,7 +3865,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
           // string.
           nsAutoString role;
           nsAccUtils::GetARIAAttr(el, nsGkAtoms::role, role);
-          fields->SetAttribute(nsGkAtoms::role, std::move(role));
+          fields->SetAttribute(CacheKey::ARIARole, std::move(role));
         }
       }
     }
@@ -3884,16 +3886,16 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         // Send the initial resolution of the document. When this changes, we
         // will ne notified via nsAS::NotifyOfResolutionChange
         float resolution = presShell->GetResolution();
-        fields->SetAttribute(nsGkAtoms::resolution, resolution);
+        fields->SetAttribute(CacheKey::Resolution, resolution);
         int32_t appUnitsPerDevPixel =
             presShell->GetPresContext()->AppUnitsPerDevPixel();
-        fields->SetAttribute(nsGkAtoms::_moz_device_pixel_ratio,
+        fields->SetAttribute(CacheKey::AppUnitsPerDevPixel,
                              appUnitsPerDevPixel);
       }
 
       nsString mimeType;
       AsDoc()->MimeType(mimeType);
-      fields->SetAttribute(nsGkAtoms::headerContentType, std::move(mimeType));
+      fields->SetAttribute(CacheKey::MimeType, std::move(mimeType));
     }
   }
 

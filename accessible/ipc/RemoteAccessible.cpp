@@ -185,7 +185,7 @@ void RemoteAccessible::ApplyCache(CacheUpdateType aUpdateType,
                                   AccAttributes* aFields) {
   const nsTArray<bool> relUpdatesNeeded = PreProcessRelations(aFields);
   if (auto maybeViewportCache =
-          aFields->GetAttribute<nsTArray<uint64_t>>(nsGkAtoms::viewport)) {
+          aFields->GetAttribute<nsTArray<uint64_t>>(CacheKey::Viewport)) {
     // Updating the viewport cache means the offscreen state of this
     // document's accessibles has changed. Update the HashSet we use for
     // checking offscreen state here.
@@ -224,15 +224,15 @@ ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
   ENameValueFlag nameFlag = eNameOK;
   if (mCachedFields) {
     if (IsText()) {
-      mCachedFields->GetAttribute(nsGkAtoms::text, aName);
+      mCachedFields->GetAttribute(CacheKey::Text, aName);
       return eNameOK;
     }
     auto cachedNameFlag =
-        mCachedFields->GetAttribute<int32_t>(nsGkAtoms::explicit_name);
+        mCachedFields->GetAttribute<int32_t>(CacheKey::NameValueFlag);
     if (cachedNameFlag) {
       nameFlag = static_cast<ENameValueFlag>(*cachedNameFlag);
     }
-    if (mCachedFields->GetAttribute(nsGkAtoms::name, aName)) {
+    if (mCachedFields->GetAttribute(CacheKey::Name, aName)) {
       VERIFY_CACHE(CacheDomain::NameAndDescription);
       return nameFlag;
     }
@@ -245,15 +245,15 @@ ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
 
 void RemoteAccessible::Description(nsString& aDescription) const {
   if (mCachedFields) {
-    mCachedFields->GetAttribute(nsGkAtoms::description, aDescription);
+    mCachedFields->GetAttribute(CacheKey::Description, aDescription);
     VERIFY_CACHE(CacheDomain::NameAndDescription);
   }
 }
 
 void RemoteAccessible::Value(nsString& aValue) const {
   if (mCachedFields) {
-    if (mCachedFields->HasAttribute(nsGkAtoms::aria_valuetext)) {
-      mCachedFields->GetAttribute(nsGkAtoms::aria_valuetext, aValue);
+    if (mCachedFields->HasAttribute(CacheKey::TextValue)) {
+      mCachedFields->GetAttribute(CacheKey::TextValue, aValue);
       VERIFY_CACHE(CacheDomain::Value);
       return;
     }
@@ -300,7 +300,8 @@ void RemoteAccessible::Value(nsString& aValue) const {
 
 double RemoteAccessible::CurValue() const {
   if (mCachedFields) {
-    if (auto value = mCachedFields->GetAttribute<double>(nsGkAtoms::value)) {
+    if (auto value =
+            mCachedFields->GetAttribute<double>(CacheKey::NumericValue)) {
       VERIFY_CACHE(CacheDomain::Value);
       return *value;
     }
@@ -311,7 +312,7 @@ double RemoteAccessible::CurValue() const {
 
 double RemoteAccessible::MinValue() const {
   if (mCachedFields) {
-    if (auto min = mCachedFields->GetAttribute<double>(nsGkAtoms::min)) {
+    if (auto min = mCachedFields->GetAttribute<double>(CacheKey::MinValue)) {
       VERIFY_CACHE(CacheDomain::Value);
       return *min;
     }
@@ -322,7 +323,7 @@ double RemoteAccessible::MinValue() const {
 
 double RemoteAccessible::MaxValue() const {
   if (mCachedFields) {
-    if (auto max = mCachedFields->GetAttribute<double>(nsGkAtoms::max)) {
+    if (auto max = mCachedFields->GetAttribute<double>(CacheKey::MaxValue)) {
       VERIFY_CACHE(CacheDomain::Value);
       return *max;
     }
@@ -333,7 +334,7 @@ double RemoteAccessible::MaxValue() const {
 
 double RemoteAccessible::Step() const {
   if (mCachedFields) {
-    if (auto step = mCachedFields->GetAttribute<double>(nsGkAtoms::step)) {
+    if (auto step = mCachedFields->GetAttribute<double>(CacheKey::Step)) {
       VERIFY_CACHE(CacheDomain::Value);
       return *step;
     }
@@ -505,7 +506,7 @@ Accessible* RemoteAccessible::ChildAtPoint(
     }
     if (auto maybeViewportCache =
             doc->mCachedFields->GetAttribute<nsTArray<uint64_t>>(
-                nsGkAtoms::viewport)) {
+                CacheKey::Viewport)) {
       // The retrieved viewport cache contains acc IDs in hittesting order.
       // That is, items earlier in the list have z-indexes that are larger than
       // those later in the list. If you were to build a tree by z-index, where
@@ -612,7 +613,8 @@ Maybe<nsRect> RemoteAccessible::RetrieveCachedBounds() const {
   }
 
   Maybe<const nsTArray<int32_t>&> maybeArray =
-      mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::relativeBounds);
+      mCachedFields->GetAttribute<nsTArray<int32_t>>(
+          CacheKey::ParentRelativeBounds);
   if (maybeArray) {
     const nsTArray<int32_t>& relativeBoundsArr = *maybeArray;
     MOZ_ASSERT(relativeBoundsArr.Length() == 4,
@@ -639,7 +641,7 @@ void RemoteAccessible::ApplyCrossDocOffset(nsRect& aBounds) const {
 
   Maybe<const nsTArray<int32_t>&> maybeOffset =
       parentAcc->mCachedFields->GetAttribute<nsTArray<int32_t>>(
-          nsGkAtoms::crossorigin);
+          CacheKey::CrossDocOffset);
   if (!maybeOffset) {
     return;
   }
@@ -655,7 +657,7 @@ bool RemoteAccessible::ApplyTransform(nsRect& aCumulativeBounds) const {
   // First, attempt to retrieve the transform from the cache.
   Maybe<const UniquePtr<gfx::Matrix4x4>&> maybeTransform =
       mCachedFields->GetAttribute<UniquePtr<gfx::Matrix4x4>>(
-          nsGkAtoms::transform);
+          CacheKey::TransformMatrix);
   if (!maybeTransform) {
     return false;
   }
@@ -674,7 +676,7 @@ bool RemoteAccessible::ApplyTransform(nsRect& aCumulativeBounds) const {
 
 bool RemoteAccessible::ApplyScrollOffset(nsRect& aBounds) const {
   Maybe<const nsTArray<int32_t>&> maybeScrollPosition =
-      mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::scrollPosition);
+      mCachedFields->GetAttribute<nsTArray<int32_t>>(CacheKey::ScrollPosition);
 
   if (!maybeScrollPosition || maybeScrollPosition->Length() != 2) {
     return false;
@@ -702,7 +704,7 @@ nsRect RemoteAccessible::BoundsInAppUnits() const {
       DocAccessibleParent* topDoc = bp->GetTopLevelDocAccessible();
       if (topDoc && topDoc->mCachedFields) {
         auto appUnitsPerDevPixel = topDoc->mCachedFields->GetAttribute<int32_t>(
-            nsGkAtoms::_moz_device_pixel_ratio);
+            CacheKey::AppUnitsPerDevPixel);
         MOZ_ASSERT(appUnitsPerDevPixel);
         return LayoutDeviceIntRect::ToAppUnits(Bounds(), *appUnitsPerDevPixel);
       }
@@ -714,7 +716,7 @@ nsRect RemoteAccessible::BoundsInAppUnits() const {
 bool RemoteAccessible::IsFixedPos() const {
   MOZ_ASSERT(mCachedFields);
   if (auto maybePosition =
-          mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::position)) {
+          mCachedFields->GetAttribute<RefPtr<nsAtom>>(CacheKey::CssPosition)) {
     return *maybePosition == nsGkAtoms::fixed;
   }
 
@@ -724,7 +726,7 @@ bool RemoteAccessible::IsFixedPos() const {
 bool RemoteAccessible::IsOverflowHidden() const {
   MOZ_ASSERT(mCachedFields);
   if (auto maybeOverflow =
-          mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::overflow)) {
+          mCachedFields->GetAttribute<RefPtr<nsAtom>>(CacheKey::CSSOverflow)) {
     return *maybeOverflow == nsGkAtoms::hidden;
   }
 
@@ -733,7 +735,7 @@ bool RemoteAccessible::IsOverflowHidden() const {
 
 bool RemoteAccessible::IsClipped() const {
   MOZ_ASSERT(mCachedFields);
-  if (mCachedFields->GetAttribute<bool>(nsGkAtoms::clip_rule)) {
+  if (mCachedFields->GetAttribute<bool>(CacheKey::IsClipped)) {
     return true;
   }
 
@@ -790,7 +792,7 @@ LayoutDeviceIntRect RemoteAccessible::BoundsWithOffset(
           // of their containing document (if any).
           Maybe<float> res =
               remoteAcc->AsDoc()->mCachedFields->GetAttribute<float>(
-                  nsGkAtoms::resolution);
+                  CacheKey::Resolution);
           MOZ_ASSERT(res, "No cached document resolution found.");
           bounds.ScaleRoundOut(res.valueOr(1.0f));
 
@@ -858,7 +860,7 @@ LayoutDeviceIntRect RemoteAccessible::BoundsWithOffset(
       // that isn't likely since we only offer zoom controls for the top
       // document and all subdocuments inherit from it.
       auto appUnitsPerDevPixel = topDoc->mCachedFields->GetAttribute<int32_t>(
-          nsGkAtoms::_moz_device_pixel_ratio);
+          CacheKey::AppUnitsPerDevPixel);
       MOZ_ASSERT(appUnitsPerDevPixel);
       if (appUnitsPerDevPixel) {
         // Convert our existing `bounds` rect from app units to dev pixels
@@ -1093,7 +1095,7 @@ void RemoteAccessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
                                     uint32_t aLength) {
   if (IsText()) {
     if (mCachedFields) {
-      if (auto text = mCachedFields->GetAttribute<nsString>(nsGkAtoms::text)) {
+      if (auto text = mCachedFields->GetAttribute<nsString>(CacheKey::Text)) {
         aText.Append(Substring(*text, aStartOffset, aLength));
       }
       VERIFY_CACHE(CacheDomain::Text);
@@ -1128,7 +1130,7 @@ nsTArray<bool> RemoteAccessible::PreProcessRelations(AccAttributes* aFields) {
         // TagName() returns null on an initial cache push -- check aFields
         // for a tag name instead.
         if (auto maybeTag =
-                aFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::tag)) {
+                aFields->GetAttribute<RefPtr<nsAtom>>(CacheKey::TagName)) {
           tag = *maybeTag;
         }
       }
@@ -1253,7 +1255,7 @@ uint32_t RemoteAccessible::GetCachedTextLength() {
     return 0;
   }
   VERIFY_CACHE(CacheDomain::Text);
-  auto text = mCachedFields->GetAttribute<nsString>(nsGkAtoms::text);
+  auto text = mCachedFields->GetAttribute<nsString>(CacheKey::Text);
   if (!text) {
     return 0;
   }
@@ -1266,7 +1268,8 @@ Maybe<const nsTArray<int32_t>&> RemoteAccessible::GetCachedTextLines() {
     return Nothing();
   }
   VERIFY_CACHE(CacheDomain::Text);
-  return mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::line);
+  return mCachedFields->GetAttribute<nsTArray<int32_t>>(
+      CacheKey::TextLineStarts);
 }
 
 nsRect RemoteAccessible::GetCachedCharRect(int32_t aOffset) {
@@ -1277,7 +1280,7 @@ nsRect RemoteAccessible::GetCachedCharRect(int32_t aOffset) {
 
   if (Maybe<const nsTArray<int32_t>&> maybeCharData =
           mCachedFields->GetAttribute<nsTArray<int32_t>>(
-              nsGkAtoms::characterData)) {
+              CacheKey::TextBounds)) {
     const nsTArray<int32_t>& charData = *maybeCharData;
     const int32_t index = aOffset * kNumbersInRect;
     if (index < static_cast<int32_t>(charData.Length())) {
@@ -1294,7 +1297,7 @@ nsRect RemoteAccessible::GetCachedCharRect(int32_t aOffset) {
 
 void RemoteAccessible::DOMNodeID(nsString& aID) const {
   if (mCachedFields) {
-    mCachedFields->GetAttribute(nsGkAtoms::id, aID);
+    mCachedFields->GetAttribute(CacheKey::DOMNodeID, aID);
     VERIFY_CACHE(CacheDomain::DOMNodeIDAndClass);
   }
 }
@@ -1322,8 +1325,8 @@ void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
 RefPtr<const AccAttributes> RemoteAccessible::GetCachedTextAttributes() {
   MOZ_ASSERT(IsText() || IsHyperText());
   if (mCachedFields) {
-    auto attrs =
-        mCachedFields->GetAttributeRefPtr<AccAttributes>(nsGkAtoms::style);
+    auto attrs = mCachedFields->GetAttributeRefPtr<AccAttributes>(
+        CacheKey::TextAttributes);
     VERIFY_CACHE(CacheDomain::Text);
     return attrs;
   }
@@ -1341,8 +1344,8 @@ already_AddRefed<AccAttributes> RemoteAccessible::DefaultTextAttributes() {
 
 RefPtr<const AccAttributes> RemoteAccessible::GetCachedARIAAttributes() const {
   if (mCachedFields) {
-    auto attrs =
-        mCachedFields->GetAttributeRefPtr<AccAttributes>(nsGkAtoms::aria);
+    auto attrs = mCachedFields->GetAttributeRefPtr<AccAttributes>(
+        CacheKey::ARIAAttributes);
     VERIFY_CACHE(CacheDomain::ARIA);
     return attrs;
   }
@@ -1352,7 +1355,7 @@ RefPtr<const AccAttributes> RemoteAccessible::GetCachedARIAAttributes() const {
 nsString RemoteAccessible::GetCachedHTMLNameAttribute() const {
   if (mCachedFields) {
     if (auto maybeName =
-            mCachedFields->GetAttribute<nsString>(nsGkAtoms::attributeName)) {
+            mCachedFields->GetAttribute<nsString>(CacheKey::DOMName)) {
       return *maybeName;
     }
   }
@@ -1363,7 +1366,7 @@ uint64_t RemoteAccessible::State() {
   uint64_t state = 0;
   if (mCachedFields) {
     if (auto rawState =
-            mCachedFields->GetAttribute<uint64_t>(nsGkAtoms::state)) {
+            mCachedFields->GetAttribute<uint64_t>(CacheKey::State)) {
       VERIFY_CACHE(CacheDomain::State);
       state = *rawState;
       // Handle states that are derived from other states.
@@ -1441,7 +1444,7 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
     // We use GetAttribute instead of GetAttributeRefPtr because we need
     // nsAtom, not const nsAtom.
     if (auto tag =
-            mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::tag)) {
+            mCachedFields->GetAttribute<RefPtr<nsAtom>>(CacheKey::TagName)) {
       attributes->SetAttribute(nsGkAtoms::tag, *tag);
     }
 
@@ -1460,8 +1463,8 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
       attributes->SetAttribute(nsGkAtoms::tree, true);
     }
 
-    if (auto inputType = mCachedFields->GetAttribute<RefPtr<nsAtom>>(
-            nsGkAtoms::textInputType)) {
+    if (auto inputType =
+            mCachedFields->GetAttribute<RefPtr<nsAtom>>(CacheKey::InputType)) {
       attributes->SetAttribute(nsGkAtoms::textInputType, *inputType);
     }
 
@@ -1487,7 +1490,7 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
 
     const nsRoleMapEntry* roleMap = ARIARoleMap();
     nsAutoString role;
-    mCachedFields->GetAttribute(nsGkAtoms::role, role);
+    mCachedFields->GetAttribute(CacheKey::ARIARole, role);
     if (role.IsEmpty()) {
       if (roleMap && roleMap->roleAtom != nsGkAtoms::_empty) {
         // Single, known role.
@@ -1521,14 +1524,14 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
     }
 
     nsString className;
-    mCachedFields->GetAttribute(nsGkAtoms::_class, className);
+    mCachedFields->GetAttribute(CacheKey::DOMNodeClass, className);
     if (!className.IsEmpty()) {
       attributes->SetAttribute(nsGkAtoms::_class, std::move(className));
     }
 
     if (IsImage()) {
       nsString src;
-      mCachedFields->GetAttribute(nsGkAtoms::src, src);
+      mCachedFields->GetAttribute(CacheKey::SrcURL, src);
       if (!src.IsEmpty()) {
         attributes->SetAttribute(nsGkAtoms::src, std::move(src));
       }
@@ -1558,7 +1561,7 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
 nsAtom* RemoteAccessible::TagName() const {
   if (mCachedFields) {
     if (auto tag =
-            mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::tag)) {
+            mCachedFields->GetAttribute<RefPtr<nsAtom>>(CacheKey::TagName)) {
       return *tag;
     }
   }
@@ -1568,8 +1571,8 @@ nsAtom* RemoteAccessible::TagName() const {
 
 already_AddRefed<nsAtom> RemoteAccessible::InputType() const {
   if (mCachedFields) {
-    if (auto inputType = mCachedFields->GetAttribute<RefPtr<nsAtom>>(
-            nsGkAtoms::textInputType)) {
+    if (auto inputType =
+            mCachedFields->GetAttribute<RefPtr<nsAtom>>(CacheKey::InputType)) {
       RefPtr<nsAtom> result = *inputType;
       return result.forget();
     }
@@ -1581,7 +1584,7 @@ already_AddRefed<nsAtom> RemoteAccessible::InputType() const {
 already_AddRefed<nsAtom> RemoteAccessible::DisplayStyle() const {
   if (mCachedFields) {
     if (auto display =
-            mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::display)) {
+            mCachedFields->GetAttribute<RefPtr<nsAtom>>(CacheKey::CSSDisplay)) {
       RefPtr<nsAtom> result = *display;
       return result.forget();
     }
@@ -1591,7 +1594,7 @@ already_AddRefed<nsAtom> RemoteAccessible::DisplayStyle() const {
 
 float RemoteAccessible::Opacity() const {
   if (mCachedFields) {
-    if (auto opacity = mCachedFields->GetAttribute<float>(nsGkAtoms::opacity)) {
+    if (auto opacity = mCachedFields->GetAttribute<float>(CacheKey::Opacity)) {
       return *opacity;
     }
   }
@@ -1629,15 +1632,15 @@ void RemoteAccessible::LiveRegionAttributes(nsAString* aLive,
 
 Maybe<bool> RemoteAccessible::ARIASelected() const {
   if (mCachedFields) {
-    return mCachedFields->GetAttribute<bool>(nsGkAtoms::aria_selected);
+    return mCachedFields->GetAttribute<bool>(CacheKey::ARIASelected);
   }
   return Nothing();
 }
 
 nsAtom* RemoteAccessible::GetPrimaryAction() const {
   if (mCachedFields) {
-    if (auto action =
-            mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::action)) {
+    if (auto action = mCachedFields->GetAttribute<RefPtr<nsAtom>>(
+            CacheKey::PrimaryAction)) {
       return *action;
     }
   }
@@ -1652,7 +1655,7 @@ uint8_t RemoteAccessible::ActionCount() const {
       actionCount++;
     }
 
-    if (mCachedFields->HasAttribute(nsGkAtoms::longdesc)) {
+    if (mCachedFields->HasAttribute(CacheKey::HasLongdesc)) {
       actionCount++;
     }
     VERIFY_CACHE(CacheDomain::Actions);
@@ -1673,13 +1676,13 @@ void RemoteAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
           action->ToString(aName);
         } else if (hasActionAncestor) {
           aName.AssignLiteral("click ancestor");
-        } else if (mCachedFields->HasAttribute(nsGkAtoms::longdesc)) {
+        } else if (mCachedFields->HasAttribute(CacheKey::HasLongdesc)) {
           aName.AssignLiteral("showlongdesc");
         }
         break;
       case 1:
         if ((action || hasActionAncestor) &&
-            mCachedFields->HasAttribute(nsGkAtoms::longdesc)) {
+            mCachedFields->HasAttribute(CacheKey::HasLongdesc)) {
           aName.AssignLiteral("showlongdesc");
         }
         break;
@@ -1702,7 +1705,7 @@ bool RemoteAccessible::DoAction(uint8_t aIndex) const {
 KeyBinding RemoteAccessible::AccessKey() const {
   if (mCachedFields) {
     if (auto value =
-            mCachedFields->GetAttribute<uint64_t>(nsGkAtoms::accesskey)) {
+            mCachedFields->GetAttribute<uint64_t>(CacheKey::AccessKey)) {
       return KeyBinding(*value);
     }
   }
@@ -1756,7 +1759,7 @@ AccGroupInfo* RemoteAccessible::GetGroupInfo() const {
   }
 
   if (auto groupInfo = mCachedFields->GetAttribute<UniquePtr<AccGroupInfo>>(
-          nsGkAtoms::group)) {
+          CacheKey::GroupInfo)) {
     return groupInfo->get();
   }
 
@@ -1775,7 +1778,7 @@ AccGroupInfo* RemoteAccessible::GetOrCreateGroupInfo() {
       mCachedFields = new AccAttributes();
     }
 
-    mCachedFields->SetAttribute(nsGkAtoms::group, groupInfo);
+    mCachedFields->SetAttribute(CacheKey::GroupInfo, groupInfo);
   }
 
   return groupInfo;
@@ -1783,7 +1786,7 @@ AccGroupInfo* RemoteAccessible::GetOrCreateGroupInfo() {
 
 void RemoteAccessible::InvalidateGroupInfo() {
   if (mCachedFields) {
-    mCachedFields->Remove(nsGkAtoms::group);
+    mCachedFields->Remove(CacheKey::GroupInfo);
   }
 }
 
@@ -1805,7 +1808,7 @@ void RemoteAccessible::GetPositionAndSetSize(int32_t* aPosInSet,
 }
 
 bool RemoteAccessible::HasPrimaryAction() const {
-  return mCachedFields && mCachedFields->HasAttribute(nsGkAtoms::action);
+  return mCachedFields && mCachedFields->HasAttribute(CacheKey::PrimaryAction);
 }
 
 void RemoteAccessible::TakeFocus() const { Unused << mDoc->SendTakeFocus(mID); }
@@ -1953,7 +1956,7 @@ TableCellAccessible* RemoteAccessible::AsTableCell() {
 bool RemoteAccessible::TableIsProbablyForLayout() {
   if (mCachedFields) {
     if (auto layoutGuess =
-            mCachedFields->GetAttribute<bool>(nsGkAtoms::layout_guess)) {
+            mCachedFields->GetAttribute<bool>(CacheKey::TableLayoutGuess)) {
       return *layoutGuess;
     }
   }
@@ -1963,7 +1966,7 @@ bool RemoteAccessible::TableIsProbablyForLayout() {
 nsTArray<int32_t>& RemoteAccessible::GetCachedHyperTextOffsets() {
   if (mCachedFields) {
     if (auto offsets = mCachedFields->GetMutableAttribute<nsTArray<int32_t>>(
-            nsGkAtoms::offset)) {
+            CacheKey::HyperTextOffsets)) {
       return *offsets;
     }
   }
@@ -1971,9 +1974,10 @@ nsTArray<int32_t>& RemoteAccessible::GetCachedHyperTextOffsets() {
   if (!mCachedFields) {
     mCachedFields = new AccAttributes();
   }
-  mCachedFields->SetAttribute(nsGkAtoms::offset, std::move(newOffsets));
+  mCachedFields->SetAttribute(CacheKey::HyperTextOffsets,
+                              std::move(newOffsets));
   return *mCachedFields->GetMutableAttribute<nsTArray<int32_t>>(
-      nsGkAtoms::offset);
+      CacheKey::HyperTextOffsets);
 }
 
 void RemoteAccessible::SetCaretOffset(int32_t aOffset) {

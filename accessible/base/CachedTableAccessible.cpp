@@ -260,7 +260,7 @@ uint32_t CachedTableCellAccessible::ColExtent() const {
   if (RemoteAccessible* remoteAcc = mAcc->AsRemote()) {
     if (remoteAcc->mCachedFields) {
       if (auto colSpan = remoteAcc->mCachedFields->GetAttribute<int32_t>(
-              nsGkAtoms::colspan)) {
+              CacheKey::ColSpan)) {
         MOZ_ASSERT(*colSpan > 0);
         return *colSpan;
       }
@@ -283,7 +283,7 @@ uint32_t CachedTableCellAccessible::RowExtent() const {
   if (RemoteAccessible* remoteAcc = mAcc->AsRemote()) {
     if (remoteAcc->mCachedFields) {
       if (auto rowSpan = remoteAcc->mCachedFields->GetAttribute<int32_t>(
-              nsGkAtoms::rowspan)) {
+              CacheKey::RowSpan)) {
         MOZ_ASSERT(*rowSpan > 0);
         return *rowSpan;
       }
@@ -307,7 +307,7 @@ UniquePtr<AccIterable> CachedTableCellAccessible::GetExplicitHeadersIterator() {
     if (remoteAcc->mCachedFields) {
       if (auto headers =
               remoteAcc->mCachedFields->GetAttribute<nsTArray<uint64_t>>(
-                  nsGkAtoms::headers)) {
+                  CacheKey::CellHeaders)) {
         return MakeUnique<RemoteAccIterator>(*headers, remoteAcc->Document());
       }
     }

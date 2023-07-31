@@ -465,7 +465,7 @@ sdnAccessible::get_innerHTML(BSTR __RPC_FAR* aInnerHTML) {
     if (!remoteAcc->mCachedFields) {
       return S_FALSE;
     }
-    remoteAcc->mCachedFields->GetAttribute(nsGkAtoms::html, innerHTML);
+    remoteAcc->mCachedFields->GetAttribute(CacheKey::InnerHTML, innerHTML);
   } else {
     if (!mNode->IsElement()) {
       return S_FALSE;
