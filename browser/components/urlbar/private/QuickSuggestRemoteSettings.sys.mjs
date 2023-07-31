@@ -21,6 +21,12 @@ const SUGGESTIONS_MAP_CHUNK_SIZE = 1000;
 
 const TELEMETRY_LATENCY = "FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS";
 
+// See `SuggestionsMap.MAP_KEYWORD_PREFIXES_STARTING_AT_FIRST_WORD`. When a full
+// keyword starts with one of the prefixes in this list, the user must type the
+// entire prefix to start triggering matches based on that full keyword, instead
+// of only the first word.
+const KEYWORD_PREFIXES_TO_TREAT_AS_SINGLE_WORDS = ["how to"];
+
 /**
  * Manages quick suggest remote settings data.
  */
@@ -397,12 +403,20 @@ export class SuggestionsMap {
   /**
    * @returns {Function}
    *   A `mapKeyword` function that maps a keyword to an array containing the
-   *   keyword's first word plus every subsequent prefix of the keyword.
+   *   keyword's first word plus every subsequent prefix of the keyword. The
+   *   strings in `KEYWORD_PREFIXES_TO_TREAT_AS_SINGLE_WORDS` will modify this
+   *   behavior: When a full keyword starts with one of the prefixes in that
+   *   list, the generated prefixes will start at that prefix instead of the
+   *   first word.
    */
   static get MAP_KEYWORD_PREFIXES_STARTING_AT_FIRST_WORD() {
     return fullKeyword => {
+      let prefix = KEYWORD_PREFIXES_TO_TREAT_AS_SINGLE_WORDS.find(p =>
+        fullKeyword.startsWith(p + " ")
+      );
+      let spaceIndex = prefix ? prefix.length : fullKeyword.indexOf(" ");
+
       let keywords = [fullKeyword];
-      let spaceIndex = fullKeyword.search(/\s/);
       if (spaceIndex >= 0) {
         for (let i = spaceIndex; i < fullKeyword.length; i++) {
           keywords.push(fullKeyword.substring(0, i));
