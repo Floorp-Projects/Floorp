@@ -4,8 +4,8 @@
 
 ###################################################################### about:Dialog #################################################################################
 
-about-floorp = <label data-l10n-name="floorp-browser-link">{ -brand-product-name }</label> is one of the domestic browsers developed in Japan. It is based on Firefox and continues to operate under <label data-l10n-name="ablaze-Link">{ -vendor-short-name }</label>, to improve the web. Want to help? <label data-l10n-name="helpus-donateLink">Make a donation</label>
-icon-creator = İkonu tasarlayanlar <label data-l10n-name="browser-logo-twitter">@CutterKnife_</label> ve <label data-l10n-name="brand-logo-twitter">@mwxdxx.</label>
+about-floorp = <label data-l10n-name="floorp-browser-link">{ -brand-product-name }</label> Japonya'da geliştirilen yerli bir tarayıcıdır. Firefox tabanlıdır ve daha iyi bir internet için <label data-l10n-name="ablaze-Link">{ -vendor-short-name }</label>, altında çalışmaya devam eder. Eğer yardım etmek isterseniz <label data-l10n-name="helpus-donateLink">Bağış yapabilirsiniz</label>
+icon-creator = İkonu tasarlayan <label data-l10n-name="browser-logo-twitter">@CutterKnife_</label> ve <label data-l10n-name="brand-logo-twitter">@mwxdxx.</label>
 contributors = <label data-l10n-name="about-contributor">Katkıda bulunanların ve geliştiricilerin listesi</label>
 
 #################################################################### about:preferences ####################################################################
@@ -131,8 +131,8 @@ floorp-update-latest =
 
 ## system theme color
 
-system-color-settings = Both light and dark modes are available for this theme, and the design can be specified.
-preferences-theme-appearance-header = Setting the system theme
+system-color-settings = Bu tema için hem açık hem de koyu mod mevcuttur ve istediğinizi belirleyebilirsiniz.
+preferences-theme-appearance-header = Sistem temasını ayarlama
 
 system-theme-dark =
  .label = Karanlık modu uygula
@@ -222,9 +222,9 @@ view-sidebar2-right =
 enable-sidebar2 =
  .label = Tarayıcı Kenar Çubuğunu etkinleştir
 visible-bms = 
- .label = Görünür Tarayıcı Yöneticisi Kenar Çubuğu
+ .label = Tarayıcı Kenar Çubuğunu görünür yap
 
-custom-URL-option = Webpanel URL'lerini ayarlama
+custom-URL-option = Webpanel URL'lerini ayarla
 set-custom-URL-button =
     .label = Özel URL Ayarla...
     .accesskey = S
@@ -239,7 +239,7 @@ category-downloads =
 bsb-header = Tarayıcı Kenar Çubuğu
 bsb-context = Konteyner Sekmeleri Seç
 bsb-userAgent-label = 
-  .label = Bu panel için Mobil Kullanıcı Aracısı kullanın
+  .label = Bu panel için Mobil Kullanıcı Aracısı kullan
 bsb-width = Genişlik (0 olarak ayarlanırsa, global değerleri kullan)
 bsb-page = Açılacak Sayfa
 
@@ -279,7 +279,7 @@ sidebar2-pref-setting =
 
 sidebar2-global-width = Global webpanel genişliği
 
-use-icon-provider-option = İkon Sağlayıcıyı Kullan
+use-icon-provider-option = Simge Sağlayıcıyı Kullan
 
 use-icon-provider-option-google =
  .label = Google
@@ -293,19 +293,19 @@ use-icon-provider-option-yandex =
 use-icon-provider-option-hatena =
  .label = Hatena (Çin'de mevcut)
 
-memory-and-performance = Hafıza Performans Ayarları
+memory-and-performance = Bellek Performans Ayarları
 
 min-memory = 
-    .label = Minimum Hafıza Kullanımı (düşük performans)
+    .label = Minimum Bellek Kullanımı (düşük performans)
 
 balance-memory = 
-    .label = Hafıza Kullanımını ve Performansı Dengele
+    .label = Bellek Kullanımını ve Performansı Dengele
 
 max-memory = 
-    .label = En İyi Hız ve Performans (yüksek hafıza kullanımı)
+    .label = En İyi Hız ve Performans (yüksek bellek kullanımı)
 
 delete-border-and-roundup-option =
-  .label = { -brand-short-name } tarayıcısının köşelerini yuvarla
+  .label = { -brand-short-name }'un köşelerini köşelerini yuvarla
 
 ## DualTheme
 dualtheme-enable =
@@ -336,16 +336,16 @@ newtab-background-folder-default =
 newtab-background-folder-open = 
   .label = Klasörü Aç
 
-newtab-background-folder-choose = Görsel Klasörünü Seçin
+newtab-background-folder-choose = Görsel Klasörünü Seç
 
 newtab-background-extensions = Görsellerin Uzantıları ("," ile ayrılmış)
 
 disable-blur-on-newtab = 
-  .label = Bulanıklaştırma efektini { -brand-short-name } Ana Ekranında devre dışı bırakın
+  .label = Bulanıklaştırma efektini { -brand-short-name } Ana Sayfada devre dışı bırak
 
 ## lepton preferences
 
-about-lepton = { -brand-short-name }'u Lepton ile özelleştirin
+about-lepton = { -brand-short-name }'u Lepton ile özelleştir
 
 lepton-preference-button =
     .label = Lepton Tercihleri...
@@ -397,7 +397,7 @@ floorp-lepton-enable-sidebar_header-hide =
 floorp-lepton-enable-urlbar_iconbox-hide =
     .label = URL çubuğu simgelerini gizle
 floorp-lepton-enable-bookmarkbar_icon-hide =
-    .label = Yer işaretleri çubuğu simgelerini gizle
+    .label = Yer imleri çubuğu simgelerini gizle
 floorp-lepton-enable-bookmarkbar_label-hide =
     .label = Yer imleri çubuğu etiketlerini gizle
 floorp-lepton-enable-disabled_menu-hide =
@@ -420,9 +420,9 @@ urlbar-preferences = URL Çubuğu
 floorp-lepton-enable-urlbar-icon-move-to-left =
     .label = URL çubuğu simgelerini sol tarafa taşı
 floorp-lepton-enable-urlname-go_button_when_typing =
-    .label = When typing, reduce the urlbar space and show a Go Button
+    .label = Yazarken url çubuğu alanını azalt ve bir "Git" Düğmesi göster
 floorp-lepton-enable-always-show-page_action =
-    .label = Reduce the urlbar space and always show the add-on action button
+    .label = URL çubuğu alanını azalt ve her zaman eklenti eylem düğmesini göster
 
 tabbar-preferences = Sekme Çubuğu
 
@@ -441,12 +441,12 @@ floorp-home-prefs-content-header = Floorp Ana Sayfa İçeriği
 floorp-home-prefs-content-description = Floorp Ana Sayfasında görmek istediğiniz içeriği seçin.
 
 ## Notes
-floorp-notes = { -brand-short-name } Notlar
+floorp-notes = { -brand-short-name } Notes
 restore-from-backup = Notları Yedekten Geri Yükle
 enable-notes-sync = 
- .label = Enable { -brand-short-name } Notes Sync
-about-notes-backup-tips = Floorp Notes, notlarınızı diğer cihazlarla senkronize etmek için Firefox Sync'i kullanır. Notlarınızı kaybederseniz, onları bir yedekten geri yükleyebilirsiniz. Bir yedekleme { -brand-short-name }'u başlattığınızda oluşturulur.
-notes-sync-description = This can solve the problem of losing content due to overwriting notes during synchronization.
+ .label = { -brand-short-name } Notes senkronizasyonunu etkinleştir
+about-notes-backup-tips = Floorp Notes, notlarınızı diğer cihazlarla senkronize etmek için Firefox Sync'i kullanır. Notlarınızı kaybederseniz, onları bir yedekten geri yükleyebilirsiniz. { -brand-short-name }'u başlattığınızda bir yedekleme oluşturulur.
+notes-sync-description = Bu, senkronizasyon sırasında notların üzerine yazılması nedeniyle içerik kaybı sorununu çözebilir.
 backuped-time = Yedekleme zamanı
 notes-backup-option = Yedekleme Seçenekleri
 backup-option-button = Yedekleme Seçeneklerini Aç
@@ -458,15 +458,15 @@ restore-button = Geri Yükle
 
 ## user.js
 header-userjs = user.js
-userjs-customize = { -brand-short-name } tarayıcısını user.js ile özelleştir
-about-userjs-customize = user.js, { -brand-short-name } tarayıcısını özelleştirmenizi sağlayan bir yapılandırma dosyasıdır. user.js internetten indirilecek ve orijinal user.js dosyasının üzerine yazılacaktır. Lütfen kullanmadan önce orijinal user.js dosyasını yedekleyin. Yapılandırma, { -brand-short-name } yeniden başlatıldıktan sonra uygulanacaktır.
+userjs-customize = { -brand-short-name }'u user.js ile özelleştir
+about-userjs-customize = user.js, { -brand-short-name }'u özelleştirmenizi sağlayan bir yapılandırma dosyasıdır. user.js internetten indirilecek ve orijinal user.js dosyasının üzerine yazılacaktır. Lütfen kullanmadan önce orijinal user.js dosyasını yedekleyin. Yapılandırma, { -brand-short-name } yeniden başlatıldıktan sonra uygulanacaktır.
 
 userjs-label = user.js listesi
 userjs-prompt = Floorp user.js
 apply-userjs-attention = Bu, orijinal user.js dosyasının üzerine yazacaktır.
 apply-userjs-attention2 = Lütfen kullanmadan önce orijinal user.js dosyasını yedekleyin.
 
-userjs-button = user.js seçeneklerini a
+userjs-button = user.js seçeneklerini aç
 userjs-select-option = user.js seç
 
 apply-userjs-button = Uygula
@@ -505,7 +505,7 @@ pinned-tabs-exclude-workspace-option =
 workspaces-reset-title = Çalışma Alanlarını Sıfırla
 workspaces-reset-label =
     .label = Çalışma Alanlarını Sıfırla
-workspaces-reset-description = If the backup does not work and the workspace does not start, reset the workspace.
+workspaces-reset-description = Yedekleme çalışmazsa ve çalışma alanı başlamazsa, çalışma alanını sıfırlayın.
 workspaces-reset-button = Çalışma Alanlarını Sıfırla
 
 workspaces-reset-service-title = Floorp Çalışma Alanları
@@ -515,7 +515,7 @@ workspaces-reset-warning = Uyarı! Bu işlem tüm çalışma alanlarınızı sil
 mouse-gesture = Fare Hareketleri
 mouse-gesture-description = { -brand-short-name } ile fare hareketlerini kullanmak için Gesturefy yüklü olmalıdır.
 Gesturefy = Gesturefy
-about-Gesturefy = Gesturefy, tarayıcınıza fare hareketleri ekleyen bir uzantıdır. Eğer { -brand-short-name } bu eklentinin yüklendiğini algılarsa, Gesturefy'ye sadece { -brand-short-name } tarayıcısında bulunan hareket komutlarını ekleyecektir. Ayrıca, bu eklenti yeni sekmelerle de çalışabilir!
+about-Gesturefy = Gesturefy, tarayıcınıza fare hareketleri ekleyen bir uzantıdır. Eğer { -brand-short-name } bu eklentinin yüklendiğini algılarsa, Gesturefy'ye sadece { -brand-short-name }'da bulunan hareket komutlarını ekleyecektir. Ayrıca, bu eklenti yeni sekmelerle de çalışabilir!
 
 # Translate
 TWS = Web Sayfasını Çevir
@@ -538,7 +538,7 @@ fingerprint-header = Parmak izi ve IP adresi sızıntısına karşı koy
 block-fingerprint = Parmak izi, tarayıcınızın ve işletim sisteminizin benzersiz özelliklerine dayanan bir izleme mekanizmasıdır. Bu bölüm, korumayı varsayılandan daha fazla geliştirebileceğiniz ayarlar içerir.
 
 enable-firefox-fingerprint-protections = Parmak izine karşı güçlü korumayı etkinleştir
-about-firefox-fingerprint-protection = Korumayı etkinleştirmek, zorunlu aydınlık modunu, bazı API'leri devre dışı bırakmayı vb. içerir. Bu bazı sitelerin açılmamasına veya bozulmasına neden olabilir.
+about-firefox-fingerprint-protection = Korumayı etkinleştirmek, zorunlu aydınlık modunu, bazı API'leri devre dışı bırakmayı vb. içerir. Bu bazı sitelerin bozulmasına neden olabilir.
 fingerprint-Protection =
  .label =  Parmak İzine Karşı Koruma
 html5-canvas-prompt-settings =
@@ -547,7 +547,7 @@ canvas-prompt = Tuval okuma istemini otomatik olarak reddet
 disable-webgl =
  .label =  WebGL'i devre dışı bırak
 about-webgl =WebGL, grafikleri işlemek için ve GPU'yu tanımlamak için kullanılabilen bir Javascript API'sidir.
-Canvas-Blocker = Canvas Blocker
+Canvas-Blocker = Tuval Engelleyici
 about-CB = Bu eklenti parmak izi teknikleri tarafından kullanılan verileri taklit eder.
 WebRTC-connection =  WebRTC gerçek zamanlı arama sağlayan bir standarttır. Bu ayarı devre dışı bırakırsanız, Discord vb. kullanamazsınız.
 WebRTC = 
@@ -610,7 +610,7 @@ show-history-sidebar =
 sidebar2-download-sidebar = İndirme
 
 show-download-sidebar =
-  .tooltiptext = Show { sidebar2-download-sidebar } Sidebar
+  .tooltiptext = { sidebar2-download-sidebar } kenar çubuğunu göster
 
 sidebar2-notes-sidebar = Notlar
 
@@ -676,7 +676,7 @@ edit-userContentCss-editor =
 not-found-editor-path = Düzenleyici yolu (PATH) bulunamadı.
 set-pref-description = Kullanmak istediğiniz düzenleyicinin yolunu ayarlayın.
 rebuild-complete = Yeniden yapılandırma tamamlandı.
-please-enter-filename = Lğtfen bir dosya ismi girin
+please-enter-filename = Lütfen bir dosya ismi girin
 
 ################################################################### Undo-Closed-Tab ###############################################################
 
@@ -701,7 +701,7 @@ gf-floorp-open-tree-style-tab-name = [Floorp] Ağaç Stili Sekme Panelini Aç
 gf-floorp-open-tree-style-tab-description = Kenar Çubuğunun Ağaç Stili Sekme Panelini Aç
 
 gf-floorp-open-bookmarks-sidebar-name = [Floorp] Kenar Çubuğunun Yer İmleri Panelini Aç
-gf-floorp-open-bookmarks-sidebar-description = Open Bookmarks Panel of Sidebar
+gf-floorp-open-bookmarks-sidebar-description = Kenar Çubuğunun Yer İmleri Panelini Aç
 
 gf-floorp-open-history-sidebar-name = [Floorp] Kenar Çubuğunun Geçmiş Panelini Aç
 gf-floorp-open-history-sidebar-description = Kenar Çubuğunun Geçmiş Panelini Aç
@@ -769,8 +769,8 @@ memo-input-placeholder = Buraya bir not yaz veya yapıştır
 delete-memo = Sil
 save-memo = Kaydet
 memo-welcome-title = Hoşgeldin!
-memo-first-tip = Floorp Notes'a hoş geldiniz! İşte nasıl kullanılacağına dair bazı yönergeler!
-memo-second-tip =  Floorp Notes, cihazlar arasında senkronize olan ve çoklu not saklayabileceğiniz bir not defteridir. Senkronizasyonu etkinleştirmek için Firefox hesabınızla Floorp'ta oturum açmanız gerekir.
+memo-first-tip = Floorp Notes'a hoş geldin! İşte nasıl kullanılacağına dair bazı yönergeler!
+memo-second-tip =  Floorp Notes, cihazlar arasında senkronize olan ve çoklu not saklayabileceğin bir not defteridir. Senkronizasyonu etkinleştirmek için Firefox hesabınızla Floorp'ta oturum açman gerekir.
 memo-third-tip = Floorp Notları, Floorp ayarlarınıza kaydedilecek ve Firefox Sync kullanılarak cihazlar arasında senkronize edilecektir. Firefox Sync, senkronizasyonun içeriğini Firefox hesap parolanızla şifreler, böylece sizden başka kimse içeriğini bilmez.
 memo-import-data-tip = Firefox Sync bir yedekleme hizmeti değildir. Yedekleme oluşturmanızı öneririz.
 memo-new-title = Yeni Not
@@ -829,12 +829,12 @@ welcome-login-to-firefox-account = Firefox Hesabına Giriş Yap
 welcome-to-floorp = { -brand-short-name }'a hoşgeldin!
 welcome-discribe-floorp = { -brand-short-name } Firefox tabanlı, zengin özelliklere sahip, çeşitli ortamları destekleyen esnek bir tarayıcıdır.
 welcome-start-setup = Katılmaya hazır mısın?
-welcome-skip-to-start-browsing = Taramaya Başlamak için Atla
+welcome-skip-to-start-browsing = Atla ve kullanmaya başla
 welcome-select-preferences-template = Bir şablon seç
 welcome-minimum-template = Temel
-welcome-enable-basic-features = Basit bir deneyim için temel özellikleri ve ayarları etkinleştirin.
+welcome-enable-basic-features = Basit bir deneyim için temel özellikleri ve ayarları etkinleştir.
 welcome-medium-template = Varsayılan
-welcome-enable-some-features = Enable additional features & settings for a better experience.
+welcome-enable-some-features = Daha iyi bir deneyim için ek özellikleri ve ayarları etkinleştir.
 welcome-maximum-template = Gelişmiş
 welcome-enable-most-of-features = Gelişmiş özellikleri ve ayarları etkinleştir. Deneyimli kullanıcılar için önerilir.
 welcome-go-next-setup = Sonraki Kuruluma Git
