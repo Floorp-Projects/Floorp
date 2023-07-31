@@ -6,6 +6,7 @@ import {
   html,
   ifDefined,
   styleMap,
+  classMap,
   when,
 } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
@@ -213,35 +214,42 @@ export default class FxviewTabList extends MozLitElement {
         role="list"
         @keydown=${this.handleFocusElementInRow}
       >
-        ${tabItems.map(
-          (tabItem, i) =>
-            html`
-              <fxview-tab-row
-                exportparts="secondary-button"
-                ?active=${i == activeIndex}
-                ?compact=${this.compactRows}
-                .hasPopup=${hasPopup}
-                .currentActiveElementId=${currentActiveElementId}
-                .dateTimeFormat=${dateTimeFormat}
-                .favicon=${tabItem.icon}
-                .primaryL10nId=${tabItem.primaryL10nId}
-                .primaryL10nArgs=${ifDefined(tabItem.primaryL10nArgs)}
-                role="listitem"
-                .secondaryL10nId=${tabItem.secondaryL10nId}
-                .secondaryL10nArgs=${ifDefined(tabItem.secondaryL10nArgs)}
-                .closedId=${ifDefined(tabItem.closedId || tabItem.closedId)}
-                .tabElement=${ifDefined(tabItem.tabElement)}
-                .time=${(tabItem.time || tabItem.closedAt).toString().length ===
-                16
-                  ? (tabItem.time || tabItem.closedAt) / 1000
-                  : tabItem.time || tabItem.closedAt}
-                .timeMsPref=${ifDefined(this.timeMsPref)}
-                .title=${tabItem.title}
-                .url=${tabItem.url}
-              >
-              </fxview-tab-row>
-            `
-        )}
+        ${tabItems.map((tabItem, i) => {
+          let time;
+          if (tabItem.time || tabItem.closedAt) {
+            let stringTime = (tabItem.time || tabItem.closedAt).toString();
+            // Different APIs return time in different units, so we use
+            // the length to decide if it's milliseconds or nanoseconds.
+            if (stringTime.length === 16) {
+              time = (tabItem.time || tabItem.closedAt) / 1000;
+            } else {
+              time = tabItem.time || tabItem.closedAt;
+            }
+          }
+          return html`
+            <fxview-tab-row
+              exportparts="secondary-button"
+              ?active=${i == activeIndex}
+              ?compact=${this.compactRows}
+              .hasPopup=${hasPopup}
+              .currentActiveElementId=${currentActiveElementId}
+              .dateTimeFormat=${dateTimeFormat}
+              .favicon=${tabItem.icon}
+              .primaryL10nId=${ifDefined(tabItem.primaryL10nId)}
+              .primaryL10nArgs=${ifDefined(tabItem.primaryL10nArgs)}
+              role="listitem"
+              .secondaryL10nId=${ifDefined(tabItem.secondaryL10nId)}
+              .secondaryL10nArgs=${ifDefined(tabItem.secondaryL10nArgs)}
+              .closedId=${ifDefined(tabItem.closedId || tabItem.closedId)}
+              .tabElement=${ifDefined(tabItem.tabElement)}
+              .time=${ifDefined(time)}
+              .timeMsPref=${ifDefined(this.timeMsPref)}
+              .title=${tabItem.title}
+              .url=${ifDefined(tabItem.url)}
+            >
+            </fxview-tab-row>
+          `;
+        })}
       </div>
       <slot name="menu"></slot>
     `;
@@ -447,15 +455,18 @@ export class FxviewTabRow extends MozLitElement {
       />
       <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
       <a
-        href=${this.url}
-        class="fxview-tab-row-main"
+        .href=${ifDefined(this.url)}
+        class=${classMap({
+          "fxview-tab-row-main": true,
+          "fxview-tab-row-header": !this.url,
+        })}
         id="fxview-tab-row-main"
         tabindex=${this.active &&
         this.currentActiveElementId === "fxview-tab-row-main"
           ? "0"
           : "-1"}
-        data-l10n-id=${this.primaryL10nId}
-        data-l10n-args=${ifDefined(this.primaryL10nArgs)}
+        .data-l10n-id=${ifDefined(this.primaryL10nId)}
+        .data-l10n-args=${ifDefined(this.primaryL10nArgs)}
         @click=${this.primaryActionHandler}
         @keydown=${this.primaryActionHandler}
       >
@@ -483,8 +494,8 @@ export class FxviewTabRow extends MozLitElement {
         >
           <span
             ?hidden=${relativeString || !dateString}
-            data-l10n-id=${ifDefined(dateString)}
-            data-l10n-args=${ifDefined(dateArgs)}
+            .data-l10n-id=${ifDefined(dateString)}
+            .data-l10n-args=${ifDefined(dateArgs)}
           ></span>
           <span ?hidden=${!relativeString}>${relativeString}</span>
         </span>
@@ -493,8 +504,8 @@ export class FxviewTabRow extends MozLitElement {
           id="fxview-tab-row-time"
           ?hidden=${this.compact || !timeString}
           data-timestamp=${this.time}
-          data-l10n-id=${ifDefined(timeString)}
-          data-l10n-args=${timeArgs}
+          .data-l10n-id=${ifDefined(timeString)}
+          .data-l10n-args=${timeArgs}
         >
         </span>
       </a>
@@ -504,8 +515,8 @@ export class FxviewTabRow extends MozLitElement {
           class="fxview-tab-row-button ghost-button icon-button semi-transparent"
           id="fxview-tab-row-secondary-button"
           part="secondary-button"
-          data-l10n-id=${this.secondaryL10nId}
-          data-l10n-args=${ifDefined(this.secondaryL10nArgs)}
+          .data-l10n-id=${this.secondaryL10nId}
+          .data-l10n-args=${ifDefined(this.secondaryL10nArgs)}
           aria-haspopup=${ifDefined(this.hasPopup)}
           @click=${this.secondaryActionHandler}
           tabindex="${this.active &&
