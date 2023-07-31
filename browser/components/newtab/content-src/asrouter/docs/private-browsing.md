@@ -21,7 +21,7 @@ Messages shown inside `about:privatebrowsing` (incognito) content page. This mes
 7. To reset the chosen PrivateBrowsing window and choose another, click `Reset Message State` at the top of the screen
 
 ### Via Experiments:
-You can test any `privatebrowsing` custom message UI by creating an experiment. [Messaging Journey](https://experimenter.info/messaging/messaging-journey) captures creating experiments via Nimbus.
+You can test any `privatebrowsing` custom message UI by creating an experiment. [Messaging Journey](https://experimenter.info/messaging/desktop-messaging-journey) captures creating experiments via Nimbus.
 
 ### Example of messaging in privatebrowsing window
 ```

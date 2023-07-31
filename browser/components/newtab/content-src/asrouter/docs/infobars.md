@@ -18,7 +18,7 @@ Infobars are shown at the top of the browser content area, these can be per tab 
 - **Note:** Modifying the `label` property will change the text within the buttons, eg: `"label": "Disable"`
 
 ### Via Experiments:
-You can test Infobar messaging surface by creating an experiment or landing message in tree. [Messaging Journey](https://experimenter.info/messaging/messaging-journey) captures creating and testing experiments via Nimbus.
+You can test Infobar messaging surface by creating an experiment or landing message in tree. [Messaging Journey](https://experimenter.info/messaging/desktop-messaging-journey) captures creating and testing experiments via Nimbus.
 
 ### Example JSON for Infobar
 ```
