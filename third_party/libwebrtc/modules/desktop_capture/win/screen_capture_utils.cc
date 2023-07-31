@@ -10,10 +10,8 @@
 
 #include "modules/desktop_capture/win/screen_capture_utils.h"
 
-#include <libloaderapi.h>
 #include <shellscalingapi.h>
 #include <windows.h>
-#include <winnt.h>
 
 #include <string>
 #include <vector>
@@ -25,31 +23,7 @@
 #include "rtc_base/string_utils.h"
 #include "rtc_base/win32.h"
 
-#include "mozilla/WindowsVersion.h" // See Bug 1837647
-
 namespace webrtc {
-
-// See Bug 1837647 - upstream commit 60795e8c7a added a method using
-// ::GetDpiForMonitor which is not available on Win7 machines.  For Win7,
-// fail as to provoke it to get the system DPI.
-HRESULT TryGetDpiForMonitor(HMONITOR hmonitor, MONITOR_DPI_TYPE dpiType, UINT *dpiX, UINT *dpiY) {
-  static HRESULT (*plat_fn)(HMONITOR, MONITOR_DPI_TYPE, UINT*, UINT*);
-#ifdef _WIN64
-  // Grab a pointer to ::GetDpiForMonitor if that has been loaded.
-  // It is available in Windows 8.1 and up. Can we drop the version check? It would make upstreaming easier.
-  if (!plat_fn) {
-      if(auto *module = ::GetModuleHandle(L"Shcore.dll"); module) {
-        plat_fn = reinterpret_cast<decltype(plat_fn)>(
-            ::GetProcAddress(module, "GetDpiForMonitor"));
-      }
-  }
-#endif
-  // Call the function we got or return a failure value in the case that
-  // we didn't manage to get a pointer to ::GetDpiForMonitor
-  return plat_fn
-          ? ((*plat_fn)(hmonitor, dpiType, dpiX, dpiY))
-          : -1;
-}
 
 bool HasActiveDisplay() {
   DesktopCapturer::SourceList screens;
@@ -175,7 +149,7 @@ DesktopRect GetFullscreenRect() {
 DesktopVector GetDpiForMonitor(HMONITOR monitor) {
   UINT dpi_x, dpi_y;
   // MDT_EFFECTIVE_DPI includes the scale factor as well as the system DPI.
-  HRESULT hr = TryGetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpi_x, &dpi_y);
+  HRESULT hr = ::GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpi_x, &dpi_y);
   if (SUCCEEDED(hr)) {
     return {static_cast<INT>(dpi_x), static_cast<INT>(dpi_y)};
   }
