@@ -185,30 +185,6 @@ macro_rules! color_components_as {
 }
 
 impl AbsoluteColor {
-    /// A fully transparent color in the legacy syntax.
-    pub const TRANSPARENT: Self = Self {
-        components: ColorComponents(0.0, 0.0, 0.0),
-        alpha: 0.0,
-        color_space: ColorSpace::Srgb,
-        flags: ColorFlags { bits: 0 }, // cbindgen does not like ColorFlags::empty().
-    };
-
-    /// An opaque black color in the legacy syntax.
-    pub const BLACK: Self = Self {
-        components: ColorComponents(0.0, 0.0, 0.0),
-        alpha: 1.0,
-        color_space: ColorSpace::Srgb,
-        flags: ColorFlags { bits: 0 }, // cbindgen does not like ColorFlags::empty().
-    };
-
-    /// An opaque white color in the legacy syntax.
-    pub const WHITE: Self = Self {
-        components: ColorComponents(1.0, 1.0, 1.0),
-        alpha: 1.0,
-        color_space: ColorSpace::Srgb,
-        flags: ColorFlags { bits: 0 }, // cbindgen does not like ColorFlags::empty().
-    };
-
     /// Create a new [`AbsoluteColor`] with the given [`ColorSpace`] and
     /// components.
     pub fn new(color_space: ColorSpace, components: ColorComponents, alpha: f32) -> Self {
@@ -245,6 +221,21 @@ impl AbsoluteColor {
     /// Create a new [`AbsoluteColor`] from rgba values in the sRGB color space.
     pub fn srgb(red: f32, green: f32, blue: f32, alpha: f32) -> Self {
         Self::new(ColorSpace::Srgb, ColorComponents(red, green, blue), alpha)
+    }
+
+    /// Create a new transparent color.
+    pub fn transparent() -> Self {
+        Self::srgb(0.0, 0.0, 0.0, 0.0)
+    }
+
+    /// Create a new opaque black color.
+    pub fn black() -> Self {
+        Self::srgb(0.0, 0.0, 0.0, 1.0)
+    }
+
+    /// Create a new opaque white color.
+    pub fn white() -> Self {
+        Self::srgb(1.0, 1.0, 1.0, 1.0)
     }
 
     /// Return all the components of the color in an array.  (Includes alpha)

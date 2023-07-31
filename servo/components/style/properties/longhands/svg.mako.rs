@@ -20,7 +20,7 @@ ${helpers.single_keyword(
 ${helpers.predefined_type(
     "stop-color",
     "Color",
-    "computed::Color::BLACK",
+    "computed::Color::black()",
     engines="gecko",
     animation_value_type="AnimatedRGBA",
     spec="https://www.w3.org/TR/SVGTiny12/painting.html#StopColorProperty",
@@ -40,7 +40,7 @@ ${helpers.predefined_type(
 ${helpers.predefined_type(
     "flood-color",
     "Color",
-    "computed::Color::BLACK",
+    "computed::Color::black()",
     engines="gecko",
     animation_value_type="AnimatedColor",
     spec="https://www.w3.org/TR/SVG/filters.html#FloodColorProperty",
@@ -58,7 +58,7 @@ ${helpers.predefined_type(
 ${helpers.predefined_type(
     "lighting-color",
     "Color",
-    "computed::Color::WHITE",
+    "computed::Color::white()",
     engines="gecko",
     animation_value_type="AnimatedColor",
     spec="https://www.w3.org/TR/SVG/filters.html#LightingColorProperty",
