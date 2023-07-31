@@ -285,7 +285,6 @@ void EventListenerManager::AddEventListenerInternal(
   mNoListenerForEventAtom = nullptr;
 
   Listener* listener = listeners->AppendElement();
-  listener->mEventMessage = aEventMessage;
   listener->mFlags = aFlags;
   listener->mListenerIsHandler = aHandler;
   listener->mHandlerIsString = false;
@@ -411,7 +410,7 @@ void EventListenerManager::AddEventListenerInternal(
 #if defined(MOZ_WIDGET_ANDROID)
       case eOrientationChange:
 #endif  // #if defined(MOZ_WIDGET_ANDROID)
-        EnableDevice(resolvedEventMessage);
+        EnableDevice(aTypeAtom);
         break;
       case eTouchStart:
       case eTouchEnd:
@@ -687,111 +686,121 @@ void EventListenerManager::ProcessApzAwareEventListenerAdd() {
   }
 }
 
-bool EventListenerManager::IsDeviceType(EventMessage aEventMessage) {
-  switch (aEventMessage) {
-    case eDeviceOrientation:
-    case eDeviceOrientationAbsolute:
-    case eDeviceMotion:
-    case eDeviceLight:
-    case eUserProximity:
+bool EventListenerManager::IsDeviceType(nsAtom* aTypeAtom) {
+  return aTypeAtom == nsGkAtoms::ondeviceorientation ||
+         aTypeAtom == nsGkAtoms::ondeviceorientationabsolute ||
+         aTypeAtom == nsGkAtoms::ondevicemotion ||
+         aTypeAtom == nsGkAtoms::ondevicelight
 #if defined(MOZ_WIDGET_ANDROID)
-    case eOrientationChange:
+         || aTypeAtom == nsGkAtoms::onorientationchange
 #endif
-      return true;
-    default:
-      break;
-  }
-  return false;
+         || aTypeAtom == nsGkAtoms::onuserproximity;
 }
 
-void EventListenerManager::EnableDevice(EventMessage aEventMessage) {
+void EventListenerManager::EnableDevice(nsAtom* aTypeAtom) {
   nsCOMPtr<nsPIDOMWindowInner> window = GetTargetAsInnerWindow();
   if (!window) {
     return;
   }
 
-  switch (aEventMessage) {
-    case eDeviceOrientation:
+  if (aTypeAtom == nsGkAtoms::ondeviceorientation) {
 #ifdef MOZ_WIDGET_ANDROID
-      // Falls back to SENSOR_ROTATION_VECTOR and SENSOR_ORIENTATION if
-      // unavailable on device.
-      window->EnableDeviceSensor(SENSOR_GAME_ROTATION_VECTOR);
-      window->EnableDeviceSensor(SENSOR_ROTATION_VECTOR);
+    // Falls back to SENSOR_ROTATION_VECTOR and SENSOR_ORIENTATION if
+    // unavailable on device.
+    window->EnableDeviceSensor(SENSOR_GAME_ROTATION_VECTOR);
+    window->EnableDeviceSensor(SENSOR_ROTATION_VECTOR);
 #else
-      window->EnableDeviceSensor(SENSOR_ORIENTATION);
+    window->EnableDeviceSensor(SENSOR_ORIENTATION);
 #endif
-      break;
-    case eDeviceOrientationAbsolute:
-#ifdef MOZ_WIDGET_ANDROID
-      // Falls back to SENSOR_ORIENTATION if unavailable on device.
-      window->EnableDeviceSensor(SENSOR_ROTATION_VECTOR);
-#else
-      window->EnableDeviceSensor(SENSOR_ORIENTATION);
-#endif
-      break;
-    case eUserProximity:
-      window->EnableDeviceSensor(SENSOR_PROXIMITY);
-      break;
-    case eDeviceLight:
-      window->EnableDeviceSensor(SENSOR_LIGHT);
-      break;
-    case eDeviceMotion:
-      window->EnableDeviceSensor(SENSOR_ACCELERATION);
-      window->EnableDeviceSensor(SENSOR_LINEAR_ACCELERATION);
-      window->EnableDeviceSensor(SENSOR_GYROSCOPE);
-      break;
-#if defined(MOZ_WIDGET_ANDROID)
-    case eOrientationChange:
-      window->EnableOrientationChangeListener();
-      break;
-#endif
-    default:
-      NS_WARNING("Enabling an unknown device sensor.");
-      break;
+    return;
   }
+
+  if (aTypeAtom == nsGkAtoms::ondeviceorientationabsolute) {
+#ifdef MOZ_WIDGET_ANDROID
+    // Falls back to SENSOR_ORIENTATION if unavailable on device.
+    window->EnableDeviceSensor(SENSOR_ROTATION_VECTOR);
+#else
+    window->EnableDeviceSensor(SENSOR_ORIENTATION);
+#endif
+    return;
+  }
+
+  if (aTypeAtom == nsGkAtoms::onuserproximity) {
+    window->EnableDeviceSensor(SENSOR_PROXIMITY);
+    return;
+  }
+
+  if (aTypeAtom == nsGkAtoms::ondevicelight) {
+    window->EnableDeviceSensor(SENSOR_LIGHT);
+    return;
+  }
+
+  if (aTypeAtom == nsGkAtoms::ondevicemotion) {
+    window->EnableDeviceSensor(SENSOR_ACCELERATION);
+    window->EnableDeviceSensor(SENSOR_LINEAR_ACCELERATION);
+    window->EnableDeviceSensor(SENSOR_GYROSCOPE);
+    return;
+  }
+
+#if defined(MOZ_WIDGET_ANDROID)
+  if (aTypeAtom == nsGkAtoms::onorientationchange) {
+    window->EnableOrientationChangeListener();
+    return;
+  }
+#endif
+
+  NS_WARNING("Enabling an unknown device sensor.");
 }
 
-void EventListenerManager::DisableDevice(EventMessage aEventMessage) {
+void EventListenerManager::DisableDevice(nsAtom* aTypeAtom) {
   nsCOMPtr<nsPIDOMWindowInner> window = GetTargetAsInnerWindow();
   if (!window) {
     return;
   }
 
-  switch (aEventMessage) {
-    case eDeviceOrientation:
+  if (aTypeAtom == nsGkAtoms::ondeviceorientation) {
 #ifdef MOZ_WIDGET_ANDROID
-      // Disable all potential fallback sensors.
-      window->DisableDeviceSensor(SENSOR_GAME_ROTATION_VECTOR);
-      window->DisableDeviceSensor(SENSOR_ROTATION_VECTOR);
+    // Disable all potential fallback sensors.
+    window->DisableDeviceSensor(SENSOR_GAME_ROTATION_VECTOR);
+    window->DisableDeviceSensor(SENSOR_ROTATION_VECTOR);
 #endif
-      window->DisableDeviceSensor(SENSOR_ORIENTATION);
-      break;
-    case eDeviceOrientationAbsolute:
-#ifdef MOZ_WIDGET_ANDROID
-      window->DisableDeviceSensor(SENSOR_ROTATION_VECTOR);
-#endif
-      window->DisableDeviceSensor(SENSOR_ORIENTATION);
-      break;
-    case eDeviceMotion:
-      window->DisableDeviceSensor(SENSOR_ACCELERATION);
-      window->DisableDeviceSensor(SENSOR_LINEAR_ACCELERATION);
-      window->DisableDeviceSensor(SENSOR_GYROSCOPE);
-      break;
-    case eUserProximity:
-      window->DisableDeviceSensor(SENSOR_PROXIMITY);
-      break;
-    case eDeviceLight:
-      window->DisableDeviceSensor(SENSOR_LIGHT);
-      break;
-#if defined(MOZ_WIDGET_ANDROID)
-    case eOrientationChange:
-      window->DisableOrientationChangeListener();
-      break;
-#endif
-    default:
-      NS_WARNING("Disabling an unknown device sensor.");
-      break;
+    window->DisableDeviceSensor(SENSOR_ORIENTATION);
+    return;
   }
+
+  if (aTypeAtom == nsGkAtoms::ondeviceorientationabsolute) {
+#ifdef MOZ_WIDGET_ANDROID
+    window->DisableDeviceSensor(SENSOR_ROTATION_VECTOR);
+#endif
+    window->DisableDeviceSensor(SENSOR_ORIENTATION);
+    return;
+  }
+
+  if (aTypeAtom == nsGkAtoms::ondevicemotion) {
+    window->DisableDeviceSensor(SENSOR_ACCELERATION);
+    window->DisableDeviceSensor(SENSOR_LINEAR_ACCELERATION);
+    window->DisableDeviceSensor(SENSOR_GYROSCOPE);
+    return;
+  }
+
+  if (aTypeAtom == nsGkAtoms::onuserproximity) {
+    window->DisableDeviceSensor(SENSOR_PROXIMITY);
+    return;
+  }
+
+  if (aTypeAtom == nsGkAtoms::ondevicelight) {
+    window->DisableDeviceSensor(SENSOR_LIGHT);
+    return;
+  }
+
+#if defined(MOZ_WIDGET_ANDROID)
+  if (aTypeAtom == nsGkAtoms::onorientationchange) {
+    window->DisableOrientationChangeListener();
+    return;
+  }
+#endif
+
+  NS_WARNING("Disabling an unknown device sensor.");
 }
 
 void EventListenerManager::NotifyEventListenerRemoved(nsAtom* aUserType) {
@@ -809,9 +818,9 @@ void EventListenerManager::NotifyEventListenerRemoved(nsAtom* aUserType) {
 }
 
 void EventListenerManager::RemoveEventListenerInternal(
-    EventListenerHolder aListenerHolder, EventMessage aEventMessage,
-    nsAtom* aUserType, const EventListenerFlags& aFlags, bool aAllEvents) {
-  if (!aListenerHolder || !aEventMessage || mClearingListeners) {
+    EventListenerHolder aListenerHolder, nsAtom* aUserType,
+    const EventListenerFlags& aFlags, bool aAllEvents) {
+  if (!aListenerHolder || (!aUserType && !aAllEvents) || mClearingListeners) {
     return;
   }
 
@@ -846,9 +855,11 @@ void EventListenerManager::RemoveEventListenerInternal(
   }
 
   RefPtr<EventListenerManager> kungFuDeathGrip(this);
-  NotifyEventListenerRemoved(aUserType);
-  if (!aAllEvents && IsDeviceType(aEventMessage)) {
-    DisableDevice(aEventMessage);
+  if (!aAllEvents) {
+    NotifyEventListenerRemoved(aUserType);
+    if (IsDeviceType(aUserType)) {
+      DisableDevice(aUserType);
+    }
   }
 }
 
@@ -915,10 +926,8 @@ void EventListenerManager::RemoveEventListenerByType(
     EventListenerHolder aListenerHolder, const nsAString& aType,
     const EventListenerFlags& aFlags) {
   RefPtr<nsAtom> atom;
-  EventMessage message =
-      GetEventMessageAndAtomForListener(aType, getter_AddRefs(atom));
-  RemoveEventListenerInternal(std::move(aListenerHolder), message, atom,
-                              aFlags);
+  (void)GetEventMessageAndAtomForListener(aType, getter_AddRefs(atom));
+  RemoveEventListenerInternal(std::move(aListenerHolder), atom, aFlags);
 }
 
 EventListenerManager::Listener* EventListenerManager::FindEventHandler(
@@ -1102,9 +1111,8 @@ void EventListenerManager::RemoveEventHandler(nsAtom* aName) {
 
   RefPtr<EventListenerManager> kungFuDeathGrip(this);
   NotifyEventListenerRemoved(aName);
-  EventMessage eventMessage = GetEventMessage(aName);
-  if (IsDeviceType(eventMessage)) {
-    DisableDevice(eventMessage);
+  if (IsDeviceType(aName)) {
+    DisableDevice(aName);
   }
 }
 
@@ -1299,7 +1307,7 @@ bool EventListenerManager::HandleEventSingleListener(
   aEvent->mFlags.mInPassiveListener = aListener->mFlags.mPassive;
 
   nsCOMPtr<nsPIDOMWindowInner> innerWindow =
-      WindowFromListener(aListener, aItemInShadowTree);
+      WindowFromListener(aListener, aTypeAtom, aItemInShadowTree);
   mozilla::dom::Event* oldWindowEvent = nullptr;
   if (innerWindow) {
     oldWindowEvent = innerWindow->SetEvent(aDOMEvent);
@@ -1397,7 +1405,7 @@ EventMessage EventListenerManager::GetEventMessageAndAtomForListener(
 }
 
 already_AddRefed<nsPIDOMWindowInner> EventListenerManager::WindowFromListener(
-    Listener* aListener, bool aItemInShadowTree) {
+    Listener* aListener, nsAtom* aTypeAtom, bool aItemInShadowTree) {
   nsCOMPtr<nsPIDOMWindowInner> innerWindow;
   if (!aItemInShadowTree) {
     if (aListener->mListener.HasWebIDLCallback()) {
@@ -1412,7 +1420,7 @@ already_AddRefed<nsPIDOMWindowInner> EventListenerManager::WindowFromListener(
     } else {
       // This ensures `window.event` can be set properly for
       // nsWindowRoot to handle KeyPress event.
-      if (aListener && aListener->mEventMessage == eKeyPress && mTarget &&
+      if (aListener && aTypeAtom == nsGkAtoms::onkeypress && mTarget &&
           mTarget->IsRootWindow()) {
         nsPIWindowRoot* root = mTarget->AsWindowRoot();
         if (nsPIDOMWindowOuter* outerWindow = root->GetWindow()) {
@@ -1679,10 +1687,10 @@ bool EventListenerManager::HandleEventWithListenerArray(
       for (size_t i = 0; i < removedCount; i++) {
         NotifyEventListenerRemoved(aTypeAtom);
       }
-      if (IsDeviceType(aEventMessage)) {
+      if (IsDeviceType(aTypeAtom)) {
         // Call DisableDevice once for every removed listener.
         for (size_t i = 0; i < removedCount; i++) {
-          DisableDevice(aEventMessage);
+          DisableDevice(aTypeAtom);
         }
       }
     }
@@ -1773,8 +1781,8 @@ void EventListenerManager::RemoveListenerForAllEvents(
   EventListenerFlags flags;
   flags.mCapture = aUseCapture;
   flags.mInSystemGroup = aSystemEventGroup;
-  RemoveEventListenerInternal(EventListenerHolder(aDOMListener), eAllEvents,
-                              nullptr, flags, true);
+  RemoveEventListenerInternal(EventListenerHolder(aDOMListener), nullptr, flags,
+                              true);
 }
 
 bool EventListenerManager::HasMutationListeners() {
@@ -2245,11 +2253,10 @@ void EventListenerManager::RemoveAllListeners() {
     ListenerArray& listeners = *entry.mListeners;
     while (!listeners.IsEmpty()) {
       size_t idx = listeners.Length() - 1;
-      EventMessage message = listeners.ElementAt(idx).mEventMessage;
       listeners.RemoveElementAt(idx);
       NotifyEventListenerRemoved(type);
-      if (IsDeviceType(message)) {
-        DisableDevice(message);
+      if (IsDeviceType(type)) {
+        DisableDevice(type);
       }
     }
   }
@@ -2288,7 +2295,6 @@ EventListenerManager::ListenerSignalFollower::ListenerSignalFollower(
       mListenerManager(aListenerManager),
       mListener(aListener->mListener.Clone()),
       mTypeAtom(aTypeAtom),
-      mEventMessage(aListener->mEventMessage),
       mAllEvents(aListener->mAllEvents),
       mFlags(aListener->mFlags){};
 
@@ -2317,8 +2323,8 @@ void EventListenerManager::ListenerSignalFollower::RunAbortAlgorithm() {
   if (mListenerManager) {
     RefPtr<EventListenerManager> elm = mListenerManager;
     mListenerManager = nullptr;
-    elm->RemoveEventListenerInternal(std::move(mListener), mEventMessage,
-                                     mTypeAtom, mFlags, mAllEvents);
+    elm->RemoveEventListenerInternal(std::move(mListener), mTypeAtom, mFlags,
+                                     mAllEvents);
   }
 }
 
