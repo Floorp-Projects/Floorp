@@ -129,7 +129,8 @@ impl NeqoHttp3Conn {
             .versions(quic_version, version_list)
             .cc_algorithm(CongestionControlAlgorithm::Cubic)
             .max_data(max_data)
-            .max_stream_data(StreamType::BiDi, false, max_stream_data);
+            .max_stream_data(StreamType::BiDi, false, max_stream_data)
+            .grease(static_prefs::pref!("security.tls.grease_http3_enable"));
 
         // Set a short timeout when fuzzing.
         #[cfg(feature = "fuzzing")]
