@@ -25,6 +25,11 @@ Where to Start
 For the high-level, non-technical summary of how History and Bookmarks works, read :doc:`nontechnical-overview`.
 For more specific, technical details of implementation, read :doc:`architecture-overview`.
 
+Governance
+----------
+
+See `Bookmarks & History (Places) </mots/index.html#bookmarks-history>`__
+
 Table of Contents
 -----------------
 

@@ -62,7 +62,8 @@ class SheetLoadData final
   SheetLoadData(css::Loader*, const nsAString& aTitle, nsIURI*, StyleSheet*,
                 SyncLoad, nsINode* aOwningNode, IsAlternate, MediaMatched,
                 StylePreloadKind, nsICSSLoaderObserver* aObserver,
-                nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo*);
+                nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo*,
+                const nsAString& aNonce);
 
   // Data for loading a sheet linked from an @import rule
   SheetLoadData(css::Loader*, nsIURI*, StyleSheet*, SheetLoadData* aParentData,
@@ -74,9 +75,12 @@ class SheetLoadData final
                 UseSystemPrincipal, StylePreloadKind,
                 const Encoding* aPreloadEncoding,
                 nsICSSLoaderObserver* aObserver,
-                nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo*);
+                nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo*,
+                const nsAString& aNonce);
 
   nsIReferrerInfo* ReferrerInfo() const { return mReferrerInfo; }
+
+  const nsString& Nonce() const { return mNonce; }
 
   already_AddRefed<AsyncEventDispatcher> PrepareLoadEventIfNeeded();
 
@@ -220,6 +224,9 @@ class SheetLoadData final
 
   // Referrer info of the load.
   const nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
+
+  // The cryptographic nonce of the load used for CSP checks.
+  const nsString mNonce;
 
   // The encoding guessed from attributes and the document character set.
   const NotNull<const Encoding*> mGuessedEncoding;

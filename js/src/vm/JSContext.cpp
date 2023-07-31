@@ -30,6 +30,7 @@
 #include "jsexn.h"
 #include "jstypes.h"
 
+#include "builtin/RegExp.h"  // js::RegExpSearcherLastLimitSentinel
 #include "frontend/FrontendContext.h"
 #include "gc/GC.h"
 #include "irregexp/RegExpAPI.h"
@@ -983,6 +984,11 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       inUnsafeRegion(this, 0),
       generationalDisabled(this, 0),
       compactingDisabledCount(this, 0),
+#ifdef DEBUG
+      regExpSearcherLastLimit(this, RegExpSearcherLastLimitSentinel),
+#else
+      regExpSearcherLastLimit(this, 0),
+#endif
       frontendCollectionPool_(this),
       suppressProfilerSampling(false),
       tempLifoAlloc_(this, (size_t)TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),

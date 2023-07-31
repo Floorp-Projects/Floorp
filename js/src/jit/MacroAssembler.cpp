@@ -4319,6 +4319,36 @@ void MacroAssembler::loadRegExpLastIndex(Register regexp, Register string,
   bind(&loadedLastIndex);
 }
 
+void MacroAssembler::loadAndClearRegExpSearcherLastLimit(Register result,
+                                                         Register scratch) {
+  MOZ_ASSERT(result != scratch);
+
+  loadJSContext(scratch);
+
+  Address limitField(scratch, JSContext::offsetOfRegExpSearcherLastLimit());
+  load32(limitField, result);
+
+#ifdef DEBUG
+  Label ok;
+  branch32(Assembler::NotEqual, result, Imm32(RegExpSearcherLastLimitSentinel),
+           &ok);
+  assumeUnreachable("Unexpected sentinel for regExpSearcherLastLimit");
+  bind(&ok);
+  store32(Imm32(RegExpSearcherLastLimitSentinel), limitField);
+#endif
+}
+
+void MacroAssembler::loadParsedRegExpShared(Register regexp, Register result,
+                                            Label* unparsed) {
+  Address sharedSlot(regexp, RegExpObject::offsetOfShared());
+  branchTestUndefined(Assembler::Equal, sharedSlot, unparsed);
+  unboxNonDouble(sharedSlot, result, JSVAL_TYPE_PRIVATE_GCTHING);
+
+  static_assert(sizeof(RegExpShared::Kind) == sizeof(uint32_t));
+  branch32(Assembler::Equal, Address(result, RegExpShared::offsetOfKind()),
+           Imm32(int32_t(RegExpShared::Kind::Unparsed)), unparsed);
+}
+
 // ===============================================================
 // Branch functions
 

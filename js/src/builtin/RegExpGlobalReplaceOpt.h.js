@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Function template for the following functions:
-//   * RegExpGlobalReplaceOpt
 //   * RegExpGlobalReplaceOptFunc
 //   * RegExpGlobalReplaceOptSubst
 //   * RegExpGlobalReplaceOptElemBase
@@ -11,12 +10,11 @@
 //   * FUNC_NAME     -- function name (required)
 //       e.g.
 //         #define FUNC_NAME RegExpGlobalReplaceOpt
-// Define the following macro (without value) to switch the code:
+// Define one of the following macros (without value) to switch the code:
 //   * SUBSTITUTION     -- replaceValue is a string with "$"
 //   * FUNCTIONAL       -- replaceValue is a function
 //   * ELEMBASE         -- replaceValue is a function that returns an element
 //                         of an object
-//   * none of above    -- replaceValue is a string without "$"
 
 // ES2023 draft rev 2c78e6f6b5bc6bfbf79dd8a12a9593e5b57afcd2
 // 22.2.5.11 RegExp.prototype [ @@replace ] ( string, replaceValue )
@@ -126,7 +124,7 @@ function FUNC_NAME(
       );
     }
 #else
-    replacement = replaceValue;
+#error "Unexpected case"
 #endif
 
     // Step 15.m.ii.

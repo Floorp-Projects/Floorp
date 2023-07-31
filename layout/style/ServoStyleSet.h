@@ -216,26 +216,16 @@ class ServoStyleSet {
   // If IsProbe is No, then the style is guaranteed to be non-null.
   already_AddRefed<ComputedStyle> ResolvePseudoElementStyle(
       const dom::Element& aOriginatingElement, PseudoStyleType,
-      ComputedStyle* aParentStyle, IsProbe = IsProbe::No);
+      nsAtom* aFunctionalPseudoParameter, ComputedStyle* aParentStyle,
+      IsProbe = IsProbe::No);
 
   already_AddRefed<ComputedStyle> ProbePseudoElementStyle(
       const dom::Element& aOriginatingElement, PseudoStyleType aType,
-      ComputedStyle* aParentStyle) {
-    return ResolvePseudoElementStyle(aOriginatingElement, aType, aParentStyle,
+      nsAtom* aFunctionalPseudoParameter, ComputedStyle* aParentStyle) {
+    return ResolvePseudoElementStyle(aOriginatingElement, aType,
+                                     aFunctionalPseudoParameter, aParentStyle,
                                      IsProbe::Yes);
   }
-
-  /**
-   * @brief Get a style for a highlight pseudo element.
-   *
-   * The highlight is identified by its name `aHighlightName`.
-   *
-   * Returns null if there are no rules matching for the highlight pseudo
-   * element.
-   */
-  already_AddRefed<ComputedStyle> ProbeHighlightPseudoElementStyle(
-      const dom::Element& aOriginatingElement, const nsAtom* aHighlightName,
-      ComputedStyle* aParentStyle);
 
   // Resolves style for a (possibly-pseudo) Element without assuming that the
   // style has been resolved. If the element was unstyled and a new style
@@ -243,6 +233,7 @@ class ServoStyleSet {
   // unstyled.)
   already_AddRefed<ComputedStyle> ResolveStyleLazily(
       const dom::Element&, PseudoStyleType = PseudoStyleType::NotPseudo,
+      nsAtom* aFunctionalPseudoParameter = nullptr,
       StyleRuleInclusion = StyleRuleInclusion::All);
 
   // Get a ComputedStyle for an anonymous box. The pseudo type must be an

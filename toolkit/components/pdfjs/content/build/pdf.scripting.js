@@ -1296,11 +1296,7 @@ class AForm {
     } catch {}
     if (!date) {
       date = Date.parse(cDate);
-      if (isNaN(date)) {
-        date = this._tryToGuessDate(cFormat, cDate);
-      } else {
-        date = new Date(date);
-      }
+      date = isNaN(date) ? this._tryToGuessDate(cFormat, cDate) : new Date(date);
     }
     return date;
   }
@@ -1438,11 +1434,7 @@ class AForm {
     }
     const formatStr = `%,${sepStyle}.${nDec}f`;
     value = this._util.printf(formatStr, value * 100);
-    if (percentPrepend) {
-      event.value = `%${value}`;
-    } else {
-      event.value = `${value}%`;
-    }
+    event.value = percentPrepend ? `%${value}` : `${value}%`;
   }
   AFPercent_Keystroke(nDec, sepStyle) {
     this.AFNumber_Keystroke(nDec, sepStyle, 0, 0, "", true);
@@ -1596,11 +1588,7 @@ class AForm {
         formatStr = "99999-9999";
         break;
       case 2:
-        if (this._util.printx("9999999999", event.value).length >= 10) {
-          formatStr = "(999) 999-9999";
-        } else {
-          formatStr = "999-9999";
-        }
+        formatStr = this._util.printx("9999999999", event.value).length >= 10 ? "(999) 999-9999" : "999-9999";
         break;
       case 3:
         formatStr = "999-99-9999";
@@ -1676,11 +1664,7 @@ class AForm {
         break;
       case 2:
         const value = this.AFMergeChange(event);
-        if (value.length > 8 || value.startsWith("(")) {
-          formatStr = "(999) 999-9999";
-        } else {
-          formatStr = "999-9999";
-        }
+        formatStr = value.length > 8 || value.startsWith("(") ? "(999) 999-9999" : "999-9999";
         break;
       case 3:
         formatStr = "999-99-9999";
@@ -3384,16 +3368,8 @@ class Doc extends _pdf_object.PDFObject {
       nStart = printParams.firstPage;
       nEnd = printParams.lastPage;
     }
-    if (typeof nStart === "number") {
-      nStart = Math.max(0, Math.trunc(nStart));
-    } else {
-      nStart = 0;
-    }
-    if (typeof nEnd === "number") {
-      nEnd = Math.max(0, Math.trunc(nEnd));
-    } else {
-      nEnd = -1;
-    }
+    nStart = typeof nStart === "number" ? Math.max(0, Math.trunc(nStart)) : 0;
+    nEnd = typeof nEnd === "number" ? Math.max(0, Math.trunc(nEnd)) : -1;
     this._send({
       command: "print",
       start: nStart,
@@ -3820,11 +3796,7 @@ class Util extends _pdf_object.PDFObject {
       const [thousandSep, decimalSep] = separators[nDecSep];
       let decPart = "";
       if (cConvChar === "f") {
-        if (nPrecision !== undefined) {
-          decPart = Math.abs(arg - intPart).toFixed(nPrecision);
-        } else {
-          decPart = Math.abs(arg - intPart).toString();
-        }
+        decPart = nPrecision !== undefined ? Math.abs(arg - intPart).toFixed(nPrecision) : Math.abs(arg - intPart).toString();
         if (decPart.length > 2) {
           decPart = `${decimalSep}${decPart.substring(2)}`;
         } else {
@@ -4248,8 +4220,8 @@ Object.defineProperty(exports, "initSandbox", ({
   }
 }));
 var _initialization = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.9.146';
-const pdfjsBuild = '48cc67f17';
+const pdfjsVersion = '3.9.169';
+const pdfjsBuild = 'cfd179f23';
 })();
 
 /******/ 	return __webpack_exports__;

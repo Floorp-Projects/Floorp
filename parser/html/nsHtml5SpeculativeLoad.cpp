@@ -94,7 +94,7 @@ void nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor) {
     case eSpeculativeLoadStyle:
       aExecutor->PreloadStyle(
           mUrlOrSizes, mCharsetOrSrcset, mCrossOrigin, mMedia,
-          mReferrerPolicyOrIntegrity,
+          mReferrerPolicyOrIntegrity, mNonce,
           mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
           mIsLinkPreload);
       break;

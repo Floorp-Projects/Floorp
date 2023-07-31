@@ -118,7 +118,7 @@ impl ComputedValues {
         if !self.is_pseudo_style() {
             return None;
         }
-        PseudoElement::from_pseudo_type(self.0.mPseudoType)
+        PseudoElement::from_pseudo_type(self.0.mPseudoType, None)
     }
 
     #[inline]

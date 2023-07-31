@@ -5786,7 +5786,7 @@ For the sample commands found below, note that the capitalization used is import
       49;people.com.cn/people.com.cn/index.html;96.49;103.64;115.12;66.05;117.84
 
    * extensions: ['${talos}/tests/tabswitch', '${talos}/pageloader']
-   * preferences: {'addon.test.tabswitch.urlfile': '${talos}/tests/tp5o.html', 'addon.test.tabswitch.webserver': '${webserver}', 'addon.test.tabswitch.maxurls': -1, 'browser.toolbars.bookmarks.visibility': 'never'}
+   * preferences: {'addon.test.tabswitch.urlfile': '${talos}/tests/tp5o.html', 'addon.test.tabswitch.webserver': '${webserver}', 'addon.test.tabswitch.maxurls': -1}
    * timeout: 900
    * tploadnocache: True
    * tpmanifest: ${talos}/tests/tabswitch/tabswitch.manifest

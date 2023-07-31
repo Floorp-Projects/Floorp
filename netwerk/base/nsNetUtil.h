@@ -1002,6 +1002,7 @@ struct LinkHeader {
   nsString mHref;
   nsString mRel;
   nsString mTitle;
+  nsString mNonce;
   nsString mIntegrity;
   nsString mSrcset;
   nsString mSizes;

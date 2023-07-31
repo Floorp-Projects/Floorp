@@ -3510,6 +3510,14 @@ bool WarpCacheIRTranspiler::emitCallRegExpSearcherResult(
   return resumeAfter(searcher);
 }
 
+bool WarpCacheIRTranspiler::emitRegExpSearcherLastLimitResult() {
+  auto* limit = MRegExpSearcherLastLimit::New(alloc());
+  addEffectful(limit);
+  pushResult(limit);
+
+  return resumeAfter(limit);
+}
+
 bool WarpCacheIRTranspiler::emitRegExpBuiltinExecMatchResult(
     ObjOperandId regexpId, StringOperandId inputId, uint32_t stubOffset) {
   MDefinition* regexp = getOperand(regexpId);
@@ -3532,6 +3540,18 @@ bool WarpCacheIRTranspiler::emitRegExpBuiltinExecTestResult(
   pushResult(ins);
 
   return resumeAfter(ins);
+}
+
+bool WarpCacheIRTranspiler::emitRegExpHasCaptureGroupsResult(
+    ObjOperandId regexpId, StringOperandId inputId) {
+  MDefinition* regexp = getOperand(regexpId);
+  MDefinition* input = getOperand(inputId);
+
+  auto* result = MRegExpHasCaptureGroups::New(alloc(), regexp, input);
+  addEffectful(result);
+  pushResult(result);
+
+  return resumeAfter(result);
 }
 
 MInstruction* WarpCacheIRTranspiler::convertToBoolean(MDefinition* input) {

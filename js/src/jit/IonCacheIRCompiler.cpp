@@ -2138,3 +2138,8 @@ bool IonCacheIRCompiler::emitRegExpBuiltinExecTestResult(
     ObjOperandId regexpId, StringOperandId inputId, uint32_t stubOffset) {
   MOZ_CRASH("Call ICs not used in ion");
 }
+
+bool IonCacheIRCompiler::emitRegExpHasCaptureGroupsResult(
+    ObjOperandId regexpId, StringOperandId inputId) {
+  MOZ_CRASH("Call ICs not used in ion");
+}

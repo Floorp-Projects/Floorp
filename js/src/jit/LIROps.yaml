@@ -1494,6 +1494,11 @@
   call_instruction: true
   mir_op: true
 
+- name: RegExpSearcherLastLimit
+  result_type: WordSized
+  operands:
+  num_temps: 1
+
 - name: RegExpExecMatch
   result_type: BoxedValue
   operands:
@@ -1510,6 +1515,13 @@
     string: WordSized
   call_instruction: true
   num_temps: 0
+  mir_op: true
+
+- name: RegExpHasCaptureGroups
+  result_type: WordSized
+  operands:
+    regexp: WordSized
+    input: WordSized
   mir_op: true
 
 - name: RegExpPrototypeOptimizable

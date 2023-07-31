@@ -719,7 +719,8 @@ already_AddRefed<dom::Promise> StyleSheet::Replace(const nsACString& aText,
       loader, /* aURI = */ nullptr, this, css::SyncLoad::No,
       css::Loader::UseSystemPrincipal::No, css::StylePreloadKind::None,
       /* aPreloadEncoding */ nullptr, /* aObserver */ nullptr,
-      mConstructorDocument->NodePrincipal(), GetReferrerInfo());
+      mConstructorDocument->NodePrincipal(), GetReferrerInfo(),
+      /* aNonce */ u""_ns);
 
   // In parallel
   // 5.1 Parse aText into rules.

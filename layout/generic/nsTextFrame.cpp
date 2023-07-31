@@ -5478,7 +5478,7 @@ void nsTextFrame::DrawSelectionDecorations(
 
 /* static */
 bool nsTextFrame::GetSelectionTextColors(SelectionType aSelectionType,
-                                         const nsAtom* aHighlightName,
+                                         nsAtom* aHighlightName,
                                          nsTextPaintStyle& aTextPaintStyle,
                                          const TextRangeStyle& aRangeStyle,
                                          nscolor* aForeground,
@@ -5582,7 +5582,7 @@ class MOZ_STACK_CLASS SelectionRangeIterator {
   bool GetNextSegment(gfxFloat* aXOffset, gfxTextRun::Range* aRange,
                       gfxFloat* aHyphenWidth,
                       nsTArray<SelectionType>& aSelectionType,
-                      nsTArray<RefPtr<const nsAtom>>& aHighlightName,
+                      nsTArray<RefPtr<nsAtom>>& aHighlightName,
                       nsTArray<TextRangeStyle>& aStyle);
 
   void UpdateWithAdvance(gfxFloat aAdvance) {
@@ -5617,7 +5617,7 @@ SelectionRangeIterator::SelectionRangeIterator(
 bool SelectionRangeIterator::GetNextSegment(
     gfxFloat* aXOffset, gfxTextRun::Range* aRange, gfxFloat* aHyphenWidth,
     nsTArray<SelectionType>& aSelectionType,
-    nsTArray<RefPtr<const nsAtom>>& aHighlightName,
+    nsTArray<RefPtr<nsAtom>>& aHighlightName,
     nsTArray<TextRangeStyle>& aStyle) {
   if (mIterator.GetOriginalOffset() >= int32_t(mOriginalRange.end)) {
     return false;
@@ -6001,7 +6001,7 @@ bool nsTextFrame::PaintTextWithSelectionColors(
     SelectionRangeIterator iterator(selectionRanges, contentRange,
                                     *aParams.provider, mTextRun, startIOffset);
     AutoTArray<SelectionType, 1> selectionTypes;
-    AutoTArray<RefPtr<const nsAtom>, 1> highlightNames;
+    AutoTArray<RefPtr<nsAtom>, 1> highlightNames;
     AutoTArray<TextRangeStyle, 1> rangeStyles;
     while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
                                    selectionTypes, highlightNames,
@@ -6083,7 +6083,7 @@ bool nsTextFrame::PaintTextWithSelectionColors(
   SelectionRangeIterator iterator(selectionRanges, contentRange,
                                   *aParams.provider, mTextRun, startIOffset);
   AutoTArray<SelectionType, 1> selectionTypes;
-  AutoTArray<RefPtr<const nsAtom>, 1> highlightNames;
+  AutoTArray<RefPtr<nsAtom>, 1> highlightNames;
   AutoTArray<TextRangeStyle, 1> rangeStyles;
   while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth, selectionTypes,
                                  highlightNames, rangeStyles)) {
@@ -6190,7 +6190,7 @@ void nsTextFrame::PaintTextSelectionDecorations(
     pt.y = (aParams.textBaselinePt.y - mAscent) / app;
   }
   AutoTArray<SelectionType, 1> nextSelectionTypes;
-  AutoTArray<RefPtr<const nsAtom>, 1> highlightNames;
+  AutoTArray<RefPtr<nsAtom>, 1> highlightNames;
   AutoTArray<TextRangeStyle, 1> selectedStyles;
 
   while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,

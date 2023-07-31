@@ -8,6 +8,11 @@
   padding-top: 1em;
 }
 
+#profilesContainer {
+  flex: 1;
+  min-width: 0;
+}
+
 #profiles {
   height: 12em;
 }

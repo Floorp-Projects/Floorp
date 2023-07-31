@@ -14,6 +14,7 @@
 #include "nsDOMString.h"
 #include "nsGkAtomConsts.h"
 #include "nsStaticAtomUtils.h"
+#include "nsStringFwd.h"
 
 using namespace mozilla;
 
@@ -38,20 +39,20 @@ nsAtom* nsCSSPseudoElements::GetPseudoAtom(Type aType) {
 }
 
 /* static */
-Maybe<PseudoStyleType> nsCSSPseudoElements::GetPseudoType(
-    const nsAString& aPseudoElement, CSSEnabledState aEnabledState) {
+std::tuple<mozilla::Maybe<PseudoStyleType>, RefPtr<nsAtom>>
+nsCSSPseudoElements::ParsePseudoElement(const nsAString& aPseudoElement,
+                                        CSSEnabledState aEnabledState) {
   if (DOMStringIsNull(aPseudoElement) || aPseudoElement.IsEmpty()) {
-    return Some(PseudoStyleType::NotPseudo);
+    return {Some(PseudoStyleType::NotPseudo), nullptr};
   }
 
   if (aPseudoElement.First() != char16_t(':')) {
-    return Nothing();
+    return {};
   }
 
   // deal with two-colon forms of aPseudoElt
-  nsAString::const_iterator start, end;
-  aPseudoElement.BeginReading(start);
-  aPseudoElement.EndReading(end);
+  const char16_t* start = aPseudoElement.BeginReading();
+  const char16_t* end = aPseudoElement.EndReading();
   NS_ASSERTION(start != end, "aPseudoElement is not empty!");
   ++start;
   bool haveTwoColons = true;
@@ -59,20 +60,56 @@ Maybe<PseudoStyleType> nsCSSPseudoElements::GetPseudoType(
     --start;
     haveTwoColons = false;
   }
+
+  // XXX jjaschke: this parsing algorithm should be replaced by the css parser
+  // for correct handling of all edge cases. See Bug 1845712.
+  const int32_t parameterPosition = aPseudoElement.FindChar('(');
+  const bool hasParameter = parameterPosition != kNotFound;
+  if (hasParameter) {
+    end = start + parameterPosition - 1;
+  }
   RefPtr<nsAtom> pseudo = NS_Atomize(Substring(start, end));
   MOZ_ASSERT(pseudo);
 
   Maybe<uint32_t> index = nsStaticAtomUtils::Lookup(pseudo, GetAtomBase(),
                                                     kAtomCount_PseudoElements);
   if (index.isNothing()) {
-    return Nothing();
+    return {};
   }
   auto type = static_cast<Type>(*index);
+  RefPtr<nsAtom> functionalPseudoParameter;
+  if (hasParameter) {
+    if (type != PseudoStyleType::highlight) {
+      return {};
+    }
+    functionalPseudoParameter =
+        [&aPseudoElement, parameterPosition]() -> already_AddRefed<nsAtom> {
+      const char16_t* start = aPseudoElement.BeginReading();
+      const char16_t* end = aPseudoElement.EndReading();
+      start += parameterPosition + 1;
+      --end;
+      if (*end != ')') {
+        return nullptr;
+      }
+      return NS_Atomize(Substring(start, end));
+    }();
+  }
+
   if (!haveTwoColons &&
       !PseudoElementHasFlags(type, CSS_PSEUDO_ELEMENT_IS_CSS2)) {
-    return Nothing();
+    return {};
   }
-  return IsEnabled(type, aEnabledState) ? Some(type) : Nothing();
+  if (IsEnabled(type, aEnabledState)) {
+    return {Some(type), functionalPseudoParameter};
+  }
+  return {};
+}
+
+/* static */
+mozilla::Maybe<PseudoStyleType> nsCSSPseudoElements::GetPseudoType(
+    const nsAString& aPseudoElement, CSSEnabledState aEnabledState) {
+  auto [pseudoType, _] = ParsePseudoElement(aPseudoElement, aEnabledState);
+  return pseudoType;
 }
 
 /* static */

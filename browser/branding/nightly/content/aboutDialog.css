@@ -8,33 +8,6 @@
   color-scheme: dark;
 }
 
-#clientBox {
-  padding: 10px 0 15px;
-}
-
-#leftBox {
-  background-image: url("chrome://branding/content/about-logo.png");
-  background-repeat: no-repeat;
-  background-size: 192px auto;
-  background-position: center 20%;
-  /* min-width and min-height create room for the logo */
-  min-width: 210px;
-  min-height: 210px;
-  margin-top: 20px;
-  margin-inline-start: 30px;
-}
-
-@media (min-resolution: 2dppx) {
-  #leftBox {
-    background-image: url("chrome://branding/content/about-logo@2x.png");
-  }
-}
-
-.text-link {
-  color: #fff !important;
-  text-decoration: underline;
-}
-
 #rightBox {
   margin-inline: 30px;
   padding-top: 64px;

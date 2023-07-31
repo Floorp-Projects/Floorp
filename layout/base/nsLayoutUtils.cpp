@@ -1608,7 +1608,7 @@ bool nsLayoutUtils::HasPseudoStyle(nsIContent* aContent,
   RefPtr<ComputedStyle> pseudoContext;
   if (aContent) {
     pseudoContext = aPresContext->StyleSet()->ProbePseudoElementStyle(
-        *aContent->AsElement(), aPseudoElement, aComputedStyle);
+        *aContent->AsElement(), aPseudoElement, nullptr, aComputedStyle);
   }
   return pseudoContext != nullptr;
 }

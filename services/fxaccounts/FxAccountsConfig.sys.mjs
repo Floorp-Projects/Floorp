@@ -4,9 +4,7 @@
 
 import { RESTRequest } from "resource://services-common/rest.sys.mjs";
 
-const { log } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsCommon.js"
-);
+import { log } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};

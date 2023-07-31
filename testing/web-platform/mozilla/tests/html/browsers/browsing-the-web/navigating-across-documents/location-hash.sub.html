@@ -1,0 +1,66 @@
+<!doctype html>
+<meta charset=utf-8>
+<title></title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+
+setup({ single_test: true });
+
+let CROSS_ORIGIN_HOST = "{{hosts[alt][]}}";
+let sameOriginLocation1;
+let crossOriginLocation;
+let sameOriginLocation2;
+
+// Load first a same origin page to an iframe and store its location, then
+// do the same for a cross origin page and then again for a same origin page.
+// Check whether accessing .hash works and what the value is.
+// Then remove the iframe and check .hash accesses again.
+
+function runTest() {
+  let ifr = document.createElement("iframe");
+  ifr.src = "resources/blank.html";
+  ifr.onload = function() {
+    sameOriginLocation1 = ifr.contentWindow.location;
+    let initialHref = sameOriginLocation1.href;
+    assert_equals(sameOriginLocation1.hash, "");
+    sameOriginLocation1.hash = "1";
+    assert_equals(sameOriginLocation1.hash, "#1");
+    let exceptionConstructor = ifr.contentWindow.DOMException;
+    ifr.onload = function() {
+      crossOriginLocation = ifr.contentWindow.location;
+      assert_throws_dom("SecurityError", () => crossOriginLocation.hash,
+                        "Accessing cross origin location.hash should throw");
+      assert_throws_dom("SecurityError", exceptionConstructor, () => sameOriginLocation1.hash,
+                        "Accessing cross origin location.hash should throw");
+
+      crossOriginLocation.href = initialHref;
+      ifr.onload = function() {
+        sameOriginLocation2 = ifr.contentWindow.location;
+        assert_not_equals(sameOriginLocation1, sameOriginLocation2);
+        assert_equals(sameOriginLocation1.hash, "");
+        assert_equals(sameOriginLocation2.hash, "");
+        assert_throws_dom("SecurityError", () => crossOriginLocation.hash,
+                          "Accessing cross origin location.hash should throw");
+        sameOriginLocation2.hash = "2";
+        assert_equals(sameOriginLocation2.hash, "#2");
+        assert_equals(sameOriginLocation1.hash, "#2");
+
+        ifr.remove();
+        assert_throws_dom("SecurityError", () => crossOriginLocation.hash,
+                  "Accessing cross origin location.hash should throw");
+        assert_equals(sameOriginLocation2.hash, "");
+        assert_equals(sameOriginLocation1.hash, "");
+        done();
+      }
+    }
+    sameOriginLocation1.host = CROSS_ORIGIN_HOST;
+  }
+  document.body.appendChild(ifr);
+}
+
+window.onload = function() {
+  setTimeout(runTest);
+}
+
+</script>
