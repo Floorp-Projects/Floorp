@@ -23,8 +23,11 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
+import org.mozilla.fenix.ext.settings
 
-abstract class ThemeManager {
+abstract class ThemeManager(
+    private val privacyStyleRes: Int,
+) {
 
     abstract var currentTheme: BrowsingMode
 
@@ -34,7 +37,7 @@ abstract class ThemeManager {
     @get:StyleRes
     val currentThemeResource get() = when (currentTheme) {
         BrowsingMode.Normal -> R.style.NormalTheme
-        BrowsingMode.Private -> R.style.PrivateTheme
+        BrowsingMode.Private -> privacyStyleRes
     }
 
     /**
@@ -118,7 +121,7 @@ abstract class ThemeManager {
 class DefaultThemeManager(
     currentTheme: BrowsingMode,
     private val activity: Activity,
-) : ThemeManager() {
+) : ThemeManager(privacyStyleRes = activity.getStyleRes()) {
     override var currentTheme: BrowsingMode = currentTheme
         set(value) {
             if (currentTheme != value) {
@@ -135,4 +138,10 @@ class DefaultThemeManager(
                 activity.recreate()
             }
         }
+}
+
+private fun Activity.getStyleRes(): Int = if (settings().feltPrivateBrowsingEnabled) {
+    R.style.FeltPrivateTheme
+} else {
+    R.style.PrivateTheme
 }
