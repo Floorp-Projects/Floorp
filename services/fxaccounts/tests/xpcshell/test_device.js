@@ -8,8 +8,8 @@ const { getFxAccountsSingleton } = ChromeUtils.importESModule(
 );
 const fxAccounts = getFxAccountsSingleton();
 
-const { ON_NEW_DEVICE_ID, PREF_ACCOUNT_ROOT } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsCommon.js"
+const { ON_NEW_DEVICE_ID, PREF_ACCOUNT_ROOT } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccountsCommon.sys.mjs"
 );
 
 function promiseObserved(topic) {

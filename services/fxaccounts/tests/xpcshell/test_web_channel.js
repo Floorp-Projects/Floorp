@@ -4,7 +4,7 @@
 "use strict";
 
 const { ON_PROFILE_CHANGE_NOTIFICATION, WEBCHANNEL_ID, log } =
-  ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+  ChromeUtils.importESModule("resource://gre/modules/FxAccountsCommon.sys.mjs");
 const { CryptoUtils } = ChromeUtils.importESModule(
   "resource://services-crypto/utils.sys.mjs"
 );

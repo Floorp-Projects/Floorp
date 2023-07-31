@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-const {
+import {
   log,
   PREF_REMOTE_PAIRING_URI,
   COMMAND_PAIR_SUPP_METADATA,
@@ -10,7 +10,8 @@ const {
   COMMAND_PAIR_DECLINE,
   COMMAND_PAIR_HEARTBEAT,
   COMMAND_PAIR_COMPLETE,
-} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+} from "resource://gre/modules/FxAccountsCommon.sys.mjs";
+
 import {
   getFxAccountsSingleton,
   FxAccounts,
