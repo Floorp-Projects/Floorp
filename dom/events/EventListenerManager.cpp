@@ -174,8 +174,26 @@ inline void ImplCycleCollectionTraverse(
     nsCycleCollectionTraversalCallback& aCallback,
     EventListenerManager::EventListenerMap& aField, const char* aName,
     uint32_t aFlags = 0) {
-  for (const auto& entry : aField.mEntries) {
-    ImplCycleCollectionTraverse(aCallback, *entry.mListeners, aName);
+  if (MOZ_UNLIKELY(aCallback.WantDebugInfo())) {
+    nsAutoCString name;
+    name.AppendASCII(aName);
+    name.AppendLiteral(" mEntries[i] event=");
+    size_t entryPrefixLen = name.Length();
+    for (const auto& entry : aField.mEntries) {
+      if (entry.mTypeAtom) {
+        name.Replace(entryPrefixLen, name.Length() - entryPrefixLen,
+                     nsAtomCString(entry.mTypeAtom));
+      } else {
+        name.Replace(entryPrefixLen, name.Length() - entryPrefixLen,
+                     "(all)"_ns);
+      }
+      ImplCycleCollectionTraverse(aCallback, *entry.mListeners, name.get());
+    }
+  } else {
+    for (const auto& entry : aField.mEntries) {
+      ImplCycleCollectionTraverse(aCallback, *entry.mListeners,
+                                  ".mEntries[i].mListeners");
+    }
   }
 }
 
@@ -186,13 +204,9 @@ inline void ImplCycleCollectionTraverse(
   if (MOZ_UNLIKELY(aCallback.WantDebugInfo())) {
     nsAutoCString name;
     name.AppendASCII(aName);
-    if (aField.mTypeAtom) {
-      name.AppendLiteral(" event=");
-      name.Append(nsAtomCString(aField.mTypeAtom));
-      name.AppendLiteral(" listenerType=");
-      name.AppendInt(aField.mListenerType);
-      name.AppendLiteral(" ");
-    }
+    name.AppendLiteral(" listenerType=");
+    name.AppendInt(aField.mListenerType);
+    name.AppendLiteral(" ");
     CycleCollectionNoteChild(aCallback, aField.mListener.GetISupports(),
                              name.get(), aFlags);
   } else {
@@ -272,7 +286,6 @@ void EventListenerManager::AddEventListenerInternal(
 
   Listener* listener = listeners->AppendElement();
   listener->mEventMessage = aEventMessage;
-  listener->mTypeAtom = aTypeAtom;
   listener->mFlags = aFlags;
   listener->mListenerIsHandler = aHandler;
   listener->mHandlerIsString = false;
@@ -294,7 +307,8 @@ void EventListenerManager::AddEventListenerInternal(
   listener->mListener = std::move(aListenerHolder);
 
   if (aSignal) {
-    listener->mSignalFollower = new ListenerSignalFollower(this, listener);
+    listener->mSignalFollower =
+        new ListenerSignalFollower(this, listener, aTypeAtom);
     listener->mSignalFollower->Follow(aSignal);
   }
 
@@ -625,7 +639,7 @@ void EventListenerManager::AddEventListenerInternal(
     }
   }
 
-  if (IsApzAwareListener(listener)) {
+  if (mIsMainThreadELM && !aFlags.mPassive && IsApzAwareEvent(aTypeAtom)) {
     ProcessApzAwareEventListenerAdd();
   }
 
@@ -1048,7 +1062,7 @@ nsresult EventListenerManager::SetEventHandler(nsAtom* aName,
                                                aPermitUntrustedEvents);
 
   if (!aDeferCompilation) {
-    return CompileEventHandlerInternal(listener, &aBody, aElement);
+    return CompileEventHandlerInternal(listener, aName, &aBody, aElement);
   }
 
   return NS_OK;
@@ -1095,7 +1109,8 @@ void EventListenerManager::RemoveEventHandler(nsAtom* aName) {
 }
 
 nsresult EventListenerManager::CompileEventHandlerInternal(
-    Listener* aListener, const nsAString* aBody, Element* aElement) {
+    Listener* aListener, nsAtom* aTypeAtom, const nsAString* aBody,
+    Element* aElement) {
   MOZ_ASSERT(aListener->GetJSEventHandler());
   MOZ_ASSERT(aListener->mHandlerIsString,
              "Why are we compiling a non-string JS listener?");
@@ -1117,8 +1132,7 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   }
   JSContext* cx = jsapi.cx();
 
-  RefPtr<nsAtom> typeAtom = aListener->mTypeAtom;
-  nsAtom* attrName = typeAtom;
+  nsAtom* attrName = aTypeAtom;
 
   // Flag us as not a string so we don't keep trying to compile strings which
   // can't be compiled.
@@ -1136,23 +1150,23 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   nsAutoString handlerBody;
   const nsAString* body = aBody;
   if (!aBody) {
-    if (aListener->mTypeAtom == nsGkAtoms::onSVGLoad) {
+    if (aTypeAtom == nsGkAtoms::onSVGLoad) {
       attrName = nsGkAtoms::onload;
-    } else if (aListener->mTypeAtom == nsGkAtoms::onSVGScroll) {
+    } else if (aTypeAtom == nsGkAtoms::onSVGScroll) {
       attrName = nsGkAtoms::onscroll;
-    } else if (aListener->mTypeAtom == nsGkAtoms::onbeginEvent) {
+    } else if (aTypeAtom == nsGkAtoms::onbeginEvent) {
       attrName = nsGkAtoms::onbegin;
-    } else if (aListener->mTypeAtom == nsGkAtoms::onrepeatEvent) {
+    } else if (aTypeAtom == nsGkAtoms::onrepeatEvent) {
       attrName = nsGkAtoms::onrepeat;
-    } else if (aListener->mTypeAtom == nsGkAtoms::onendEvent) {
+    } else if (aTypeAtom == nsGkAtoms::onendEvent) {
       attrName = nsGkAtoms::onend;
-    } else if (aListener->mTypeAtom == nsGkAtoms::onwebkitAnimationEnd) {
+    } else if (aTypeAtom == nsGkAtoms::onwebkitAnimationEnd) {
       attrName = nsGkAtoms::onwebkitanimationend;
-    } else if (aListener->mTypeAtom == nsGkAtoms::onwebkitAnimationIteration) {
+    } else if (aTypeAtom == nsGkAtoms::onwebkitAnimationIteration) {
       attrName = nsGkAtoms::onwebkitanimationiteration;
-    } else if (aListener->mTypeAtom == nsGkAtoms::onwebkitAnimationStart) {
+    } else if (aTypeAtom == nsGkAtoms::onwebkitAnimationStart) {
       attrName = nsGkAtoms::onwebkitanimationstart;
-    } else if (aListener->mTypeAtom == nsGkAtoms::onwebkitTransitionEnd) {
+    } else if (aTypeAtom == nsGkAtoms::onwebkitTransitionEnd) {
       attrName = nsGkAtoms::onwebkittransitionend;
     }
 
@@ -1174,7 +1188,7 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
       nsPIDOMWindowInner::FromEventTargetOrNull(mTarget);
   uint32_t argCount;
   const char** argNames;
-  nsContentUtils::GetEventArgNames(aElement->GetNameSpaceID(), typeAtom, win,
+  nsContentUtils::GetEventArgNames(aElement->GetNameSpaceID(), aTypeAtom, win,
                                    &argCount, &argNames);
 
   // Wrap the event target, so that we can use it as the scope for the event
@@ -1237,7 +1251,7 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
 
   JS::Rooted<JSObject*> handler(cx);
   result = nsJSUtils::CompileFunction(jsapi, scopeChain, options,
-                                      nsAtomCString(typeAtom), argCount,
+                                      nsAtomCString(aTypeAtom), argCount,
                                       argNames, *body, handler.address());
   NS_ENSURE_SUCCESS(result, result);
   NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
@@ -1273,8 +1287,8 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
 }
 
 bool EventListenerManager::HandleEventSingleListener(
-    Listener* aListener, WidgetEvent* aEvent, Event* aDOMEvent,
-    EventTarget* aCurrentTarget, bool aItemInShadowTree) {
+    Listener* aListener, nsAtom* aTypeAtom, WidgetEvent* aEvent,
+    Event* aDOMEvent, EventTarget* aCurrentTarget, bool aItemInShadowTree) {
   if (!aEvent->mCurrentTarget) {
     aEvent->mCurrentTarget = aCurrentTarget->GetTargetForDOMEvent();
     if (!aEvent->mCurrentTarget) {
@@ -1300,7 +1314,8 @@ bool EventListenerManager::HandleEventSingleListener(
   // compiled the event handler itself
   if ((aListener->mListenerType == Listener::eJSEventListener) &&
       aListener->mHandlerIsString) {
-    result = CompileEventHandlerInternal(aListener, nullptr, nullptr);
+    result =
+        CompileEventHandlerInternal(aListener, aTypeAtom, nullptr, nullptr);
     aListener = nullptr;
   }
 
@@ -1635,7 +1650,7 @@ bool EventListenerManager::HandleEventWithListenerArray(
         // destructs).
         eventMessageAutoOverride.emplace(*aDOMEvent, aEventMessage);
       }
-      if (!HandleEventSingleListener(listener, aEvent, *aDOMEvent,
+      if (!HandleEventSingleListener(listener, aTypeAtom, aEvent, *aDOMEvent,
                                      aCurrentTarget, aItemInShadowTree)) {
         break;
       }
@@ -1852,8 +1867,8 @@ nsresult EventListenerManager::GetListenerInfo(
       // compiled the event handler itself go ahead and compile it
       if (listener.mListenerType == Listener::eJSEventListener &&
           listener.mHandlerIsString) {
-        CompileEventHandlerInternal(const_cast<Listener*>(&listener), nullptr,
-                                    nullptr);
+        CompileEventHandlerInternal(const_cast<Listener*>(&listener),
+                                    entry.mTypeAtom, nullptr, nullptr);
       }
       nsAutoString eventType;
       if (listener.mAllEvents) {
@@ -2042,7 +2057,7 @@ const TypedEventHandler* EventListenerManager::GetTypedEventHandler(
   JSEventHandler* jsEventHandler = listener->GetJSEventHandler();
 
   if (listener->mHandlerIsString) {
-    CompileEventHandlerInternal(listener, nullptr, nullptr);
+    CompileEventHandlerInternal(listener, aEventName, nullptr, nullptr);
   }
 
   const TypedEventHandler& typedHandler =
@@ -2183,11 +2198,6 @@ bool EventListenerManager::HasApzAwareListeners() {
   return false;
 }
 
-bool EventListenerManager::IsApzAwareListener(Listener* aListener) {
-  return !aListener->mFlags.mPassive && mIsMainThreadELM &&
-         IsApzAwareEvent(aListener->mTypeAtom);
-}
-
 static bool IsWheelEventType(nsAtom* aEvent) {
   if (aEvent == nsGkAtoms::onwheel || aEvent == nsGkAtoms::onDOMMouseScroll ||
       aEvent == nsGkAtoms::onmousewheel ||
@@ -2273,11 +2283,11 @@ EventListenerManager::GetScriptGlobalAndDocument(Document** aDoc) {
 
 EventListenerManager::ListenerSignalFollower::ListenerSignalFollower(
     EventListenerManager* aListenerManager,
-    EventListenerManager::Listener* aListener)
+    EventListenerManager::Listener* aListener, nsAtom* aTypeAtom)
     : dom::AbortFollower(),
       mListenerManager(aListenerManager),
       mListener(aListener->mListener.Clone()),
-      mTypeAtom(aListener->mTypeAtom),
+      mTypeAtom(aTypeAtom),
       mEventMessage(aListener->mEventMessage),
       mAllEvents(aListener->mAllEvents),
       mFlags(aListener->mFlags){};
