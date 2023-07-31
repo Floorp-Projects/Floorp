@@ -95,4 +95,10 @@ shopping-analysis-explainer-review-grading-scale-reliable = We believe the revie
 shopping-analysis-explainer-review-grading-scale-mixed = We believe there’s a mix of reliable and unreliable reviews
 shopping-analysis-explainer-review-grading-scale-unreliable = We believe the reviews are unreliable
 
+## Strings for the unanalyzed product card.
+
+shopping-unanalyzed-product-header = No analysis for these reviews yet
+shopping-unanalyzed-product-message = You’re about 60 seconds away from knowing whether you can trust the reviews for this product.
+shopping-unanalyzed-product-analyze-link = Analyze reviews
+
 ##

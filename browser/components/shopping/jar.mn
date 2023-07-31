@@ -23,3 +23,5 @@ browser.jar:
     content/browser/shopping/reliability.mjs (content/reliability.mjs)
     content/browser/shopping/analysis-explainer.css (content/analysis-explainer.css)
     content/browser/shopping/analysis-explainer.mjs (content/analysis-explainer.mjs)
+    content/browser/shopping/unanalyzed.css (content/unanalyzed.css)
+    content/browser/shopping/unanalyzed.mjs (content/unanalyzed.mjs)

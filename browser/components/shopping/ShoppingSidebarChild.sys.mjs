@@ -109,6 +109,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
       this.sendToContent("Update", {
         showOnboarding: false,
         data,
+        productUrl: this.#productURI.spec,
       });
     }
   }
