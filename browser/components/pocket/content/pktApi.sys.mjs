@@ -475,30 +475,6 @@ export var pktApi = (function () {
   }
 
   /**
-   * Gets a list of related recommendations for the item
-   * @param  {string} itemId Item id of item
-   * @param {Object | undefined} options Can provide a string-based title, a
-   *                                     `success` callback and an `error` callback.
-   * @return {Boolean} Returns Boolean whether the api call started sucessfully
-   */
-  function getRecsForItem(itemId, options) {
-    return apiRequest({
-      path: "/discover/recIt",
-      data: {
-        item_id: itemId,
-        module: "ff_plugin",
-        count: 3,
-      },
-      success(data) {
-        if (options.success) {
-          options.success.apply(options, Array.apply(null, arguments));
-        }
-      },
-      error: options.error,
-    });
-  }
-
-  /**
    * Get a preview for saved URL
    * @param {string} url     URL of the link
    * @param {Object | undefined} options Can provide a `success` callback and an `error` callback.
@@ -907,7 +883,6 @@ export var pktApi = (function () {
     isUserLoggedIn,
     clearUserData,
     addLink,
-    getRecsForItem,
     deleteItem,
     archiveItem,
     addTagsToItem,
