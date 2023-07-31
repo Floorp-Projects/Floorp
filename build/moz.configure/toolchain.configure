@@ -53,13 +53,13 @@ with only_when(target_is_osx):
         env="MACOSX_DEPLOYMENT_TARGET",
         nargs=1,
         default=depends(target, developer_options)
-        # We continue to target 10.12 on Intel, but can target 11.0 for
+        # We continue to target 10.15 on Intel, but can target 11.0 for
         # aarch64 since the earliest hardware was released alongside 11.0.
-        # For local builds, we want to target 10.12 regardless of the
+        # For local builds, we want to target 10.15 regardless of the
         # underlying platform to catch any errors or warnings that wouldn't
         # show up when targeting 11.0, since these would later show up on
         # CI for Intel builds.
-        (lambda t, d: "11.0" if (t.cpu == "aarch64" and not d) else "10.12"),
+        (lambda t, d: "11.0" if (t.cpu == "aarch64" and not d) else "10.15"),
         help="Set the minimum MacOS version needed at runtime{|}",
     )
 
