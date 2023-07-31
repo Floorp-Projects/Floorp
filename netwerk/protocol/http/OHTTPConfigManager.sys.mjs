@@ -6,6 +6,19 @@ let knownConfigs = new Map();
 
 export class OHTTPConfigManager {
   static async get(aURL, aOptions = {}) {
+    // If we're in a child, forward to the parent.
+    let { remoteType } = Services.appinfo;
+    if (remoteType) {
+      if (remoteType != "privilegedabout") {
+        // The remoteTypes definition in the actor definition will enforce
+        // that calling getActor fails, this is a more readable error:
+        throw new Error(
+          "OHTTPConfigManager cannot be used outside of the privilegedabout process."
+        );
+      }
+      let actor = ChromeUtils.domProcessChild.getActor("OHTTPConfigManager");
+      return actor.sendQuery("getconfig", { url: aURL, options: aOptions });
+    }
     try {
       let config = await this.#getInternal(aURL, aOptions);
       return new Uint8Array(config);
@@ -24,10 +37,10 @@ export class OHTTPConfigManager {
     ) {
       return knownConfig.config;
     }
-    return this.fetchAndStore(aURL, aOptions);
+    return this.#fetchAndStore(aURL, aOptions);
   }
 
-  static async fetchAndStore(aURL, aOptions = {}) {
+  static async #fetchAndStore(aURL, aOptions = {}) {
     let fetchDate = Date.now();
     let resp = await fetch(aURL);
     if (!resp?.ok) {
@@ -38,5 +51,14 @@ export class OHTTPConfigManager {
     let config = await resp.blob().then(b => b.arrayBuffer());
     knownConfigs.set(aURL, { config, fetchDate });
     return config;
+  }
+}
+
+export class OHTTPConfigManagerParent extends JSProcessActorParent {
+  receiveMessage(msg) {
+    if (msg.name == "getconfig") {
+      return OHTTPConfigManager.get(msg.data.url, msg.data.options);
+    }
+    return null;
   }
 }

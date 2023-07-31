@@ -43,6 +43,13 @@ let JSPROCESSACTORS = {
     includeParent: true,
   },
 
+  OHTTPConfigManager: {
+    remoteTypes: ["privilegedabout"],
+    parent: {
+      esModuleURI: "resource://gre/modules/OHTTPConfigManager.sys.mjs",
+    },
+  },
+
   ProcessConduits: {
     parent: {
       esModuleURI: "resource://gre/modules/ConduitsParent.sys.mjs",
