@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <title>Dynamic tests involving changes to row/column/framespacing</title>
+    <meta charset="utf-8"/>
+    <link rel="match" href="tablespacing-6-ref.html"/>
+  </head>
+  <body>
+  <math>
+    <mtable id="mtable0" rowspacing="2ex 3ex">
+      <mtr>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+      </mtr>
+      <mtr>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+      </mtr>
+      <mtr>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+      </mtr>
+    </mtable>
+  </math>
+  <p>
+  <math>
+    <mtable id="mtable1" columnspacing="2em 3em">
+      <mtr>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+      </mtr>
+      <mtr>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+      </mtr>
+      <mtr>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+      </mtr>
+    </mtable>
+  </math>
+  <p>
+  <math>
+    <mtable id="mtable2" framespacing="2em 2ex" frame="solid">
+      <mtr>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+      </mtr>
+      <mtr>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+      </mtr>
+      <mtr>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+        <mtd>
+          <mn>X</mn>
+        </mtd>
+      </mtr>
+    </mtable>
+  </math>
+  <p>
+  <script>
+    function doTest() {
+
+      // modify existing spacing attributes
+      document.getElementById("mtable0").setAttribute("rowspacing", "3ex 7ex");
+      document.getElementById("mtable1").setAttribute("columnspacing", "3em 7em");
+      document.getElementById("mtable2").setAttribute("framespacing", "3em 7ex");
+
+      document.documentElement.removeAttribute("class");
+    }
+    document.documentElement.addEventListener("TestRendered", doTest);
+  </script>
+  </body>
+</html>

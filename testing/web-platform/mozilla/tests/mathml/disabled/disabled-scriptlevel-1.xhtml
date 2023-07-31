@@ -1,0 +1,134 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>scriptlevel</title>
+    <meta charset="utf-8"/>
+    <link rel="match" href="disabled-scriptlevel-1-ref.xhtml"/>
+    <style>
+      h2 {
+        text-align:center;
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- Test scriptlevel on mstyle -->
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <mstyle scriptsizemultiplier="2">
+        <mtext>O</mtext>
+        <mstyle scriptlevel="1"><mtext>O</mtext></mstyle>
+      </mstyle>
+    </math>
+
+    <!-- The mfrac element sets displaystyle to "false", or if it was already
+         false increments scriptlevel by 1, within numerator and denominator.
+      -->
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <mstyle scriptsizemultiplier="2">
+        <mstyle displaystyle="false">
+          <mfrac>
+            <mtext>O</mtext>
+            <mtext>O</mtext>
+          </mfrac>
+        </mstyle>
+        <mstyle displaystyle="true">
+          <mfrac>
+            <mtext>O</mtext>
+            <mtext>O</mtext>
+          </mfrac>
+        </mstyle>
+      </mstyle>
+    </math>
+
+    <!--    The mroot element increments scriptlevel by 2, and sets
+            displaystyle to "false", within index, but leaves both attributes
+            unchanged within base.
+            The msqrt element leaves both attributes unchanged within its
+            argument. -->
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <mstyle scriptsizemultiplier="2">
+        <mroot>
+          <mtext>O</mtext>
+          <mtext>O</mtext>
+        </mroot>
+        <msqrt>
+          <mtext>O</mtext>
+        </msqrt>
+      </mstyle>
+    </math>
+
+<!--
+    The msub element [...] increments scriptlevel by 1, and sets displaystyle to
+   "false", within subscript, but leaves both attributes unchanged within base.
+
+   The msup element [...] increments scriptlevel by 1, and sets displaystyle to
+   "false", within superscript, but leaves both attributes unchanged within
+   base.
+
+   The msubsup element [...] increments scriptlevel by 1, and sets displaystyle
+   to "false", within subscript and superscript, but leaves both attributes
+   unchanged within base.
+
+   The mmultiscripts element increments scriptlevel by 1, and sets displaystyle
+   to "false", within each of its arguments except base, but leaves both
+   attributes unchanged within base.
+   -->
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <mstyle scriptsizemultiplier="2">
+        <msub>
+          <mtext>O</mtext>
+          <mtext>O</mtext>
+        </msub>
+        <msup>
+          <mtext>O</mtext>
+          <mtext>O</mtext>
+        </msup>
+        <msubsup>
+          <mtext>O</mtext>
+          <mtext>O</mtext>
+          <mtext>O</mtext>
+        </msubsup>
+        <mmultiscripts>
+          <mtext>O</mtext>
+          <mtext>O</mtext>
+          <mtext>O</mtext>
+          <mprescripts/>
+          <mtext>O</mtext>
+          <mtext>O</mtext>
+        </mmultiscripts>
+      </mstyle>
+    </math>
+
+<!--
+   The munder element [...] always sets displaystyle to "false" within the
+   underscript, but increments scriptlevel by 1 only when accentunder is
+   "false". Within base, it always leaves both attributes unchanged.
+
+   The mover element [...] always sets displaystyle to "false" within
+   overscript, but increments scriptlevel by 1 only when accent is "false".
+   Within base, it always leaves both attributes unchanged.
+
+   The munderover [..] always sets displaystyle to "false" within underscript
+   and overscript, but increments scriptlevel by 1 only when accentunder or
+   accent, respectively, are "false". Within base, it always leaves both
+   attributes unchanged.
+-->
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <mstyle scriptsizemultiplier="2">
+        <munder>
+          <mtext>O</mtext>
+          <mtext>O</mtext>
+        </munder>
+        <mover>
+          <mtext>O</mtext>
+          <mtext>O</mtext>
+        </mover>
+        <munderover>
+          <mtext>O</mtext>
+          <mtext>O</mtext>
+          <mtext>O</mtext>
+        </munderover>
+      </mstyle>
+    </math>
+
+  </body>
+</html>
