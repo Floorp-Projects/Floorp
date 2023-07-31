@@ -88,7 +88,8 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   // In some cases, for legacy reasons, we forcefully return an empty style.
   enum class AlwaysReturnEmptyStyle : bool { No, Yes };
 
-  nsComputedDOMStyle(Element*, PseudoStyleType, Document*, StyleType,
+  nsComputedDOMStyle(Element*, PseudoStyleType,
+                     nsAtom* aFunctionalPseudoParameter, Document*, StyleType,
                      AlwaysReturnEmptyStyle = AlwaysReturnEmptyStyle::No);
 
   nsINode* GetAssociatedNode() const override { return mElement; }
@@ -96,20 +97,22 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   static already_AddRefed<const ComputedStyle> GetComputedStyle(
       Element* aElement, PseudoStyleType = PseudoStyleType::NotPseudo,
-      StyleType = StyleType::All);
+      nsAtom* aFunctionalPseudoParameter = nullptr, StyleType = StyleType::All);
 
   static already_AddRefed<const ComputedStyle> GetComputedStyleNoFlush(
       const Element* aElement,
       PseudoStyleType aPseudo = PseudoStyleType::NotPseudo,
+      nsAtom* aFunctionalPseudoParameter = nullptr,
       StyleType aStyleType = StyleType::All) {
     return DoGetComputedStyleNoFlush(
-        aElement, aPseudo, nsContentUtils::GetPresShellForContent(aElement),
-        aStyleType);
+        aElement, aPseudo, aFunctionalPseudoParameter,
+        nsContentUtils::GetPresShellForContent(aElement), aStyleType);
   }
 
   static already_AddRefed<const ComputedStyle>
   GetUnanimatedComputedStyleNoFlush(
-      Element*, PseudoStyleType = PseudoStyleType::NotPseudo);
+      Element*, PseudoStyleType = PseudoStyleType::NotPseudo,
+      nsAtom* aFunctionalPseudoParameter = nullptr);
 
   // Helper for nsDOMWindowUtils::GetVisitedDependentComputedStyle
   void SetExposeVisitedStyle(bool aExpose) {
@@ -168,7 +171,8 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   void SetFrameComputedStyle(ComputedStyle* aStyle, uint64_t aGeneration);
 
   static already_AddRefed<const ComputedStyle> DoGetComputedStyleNoFlush(
-      const Element*, PseudoStyleType, mozilla::PresShell*, StyleType);
+      const Element*, PseudoStyleType, nsAtom* aFunctionalPseudoParameter,
+      mozilla::PresShell*, StyleType);
 
 #define STYLE_STRUCT(name_)                \
   const nsStyle##name_* Style##name_() {   \
@@ -355,6 +359,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   mozilla::PresShell* mPresShell;
 
   PseudoStyleType mPseudo;
+  RefPtr<nsAtom> mFunctionalPseudoParameter;
 
   /* The kind of styles we should be returning. */
   StyleType mStyleType;

@@ -2531,7 +2531,7 @@ static void UpdateBackdropIfNeeded(nsIFrame* aFrame, ServoStyleSet& aStyleSet,
              PseudoStyleType::backdrop);
 
   RefPtr<ComputedStyle> newStyle = aStyleSet.ResolvePseudoElementStyle(
-      *aFrame->GetContent()->AsElement(), PseudoStyleType::backdrop,
+      *aFrame->GetContent()->AsElement(), PseudoStyleType::backdrop, nullptr,
       aFrame->Style());
 
   // NOTE(emilio): We can't use the changes handled for the owner of the
@@ -2578,7 +2578,8 @@ static void UpdateOneAdditionalComputedStyle(nsIFrame* aFrame, uint32_t aIndex,
 
   RefPtr<ComputedStyle> newStyle =
       aRestyleState.StyleSet().ResolvePseudoElementStyle(
-          *aFrame->GetContent()->AsElement(), pseudoType, aFrame->Style());
+          *aFrame->GetContent()->AsElement(), pseudoType, nullptr,
+          aFrame->Style());
 
   uint32_t equalStructs;  // Not used, actually.
   nsChangeHint childHint =
@@ -2786,7 +2787,8 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
         !nsLayoutUtils::GetMarkerPseudo(aElement)) {
       RefPtr<ComputedStyle> pseudoStyle =
           aRestyleState.StyleSet().ProbePseudoElementStyle(
-              *aElement, PseudoStyleType::marker, upToDateStyleIfRestyled);
+              *aElement, PseudoStyleType::marker, nullptr,
+              upToDateStyleIfRestyled);
       if (pseudoStyle) {
         changeHint |= nsChangeHint_ReconstructFrame;
       }
