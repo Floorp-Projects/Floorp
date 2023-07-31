@@ -3179,6 +3179,11 @@ void LIRGenerator::visitRegExpSearcher(MRegExpSearcher* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitRegExpSearcherLastLimit(MRegExpSearcherLastLimit* ins) {
+  auto* lir = new (alloc()) LRegExpSearcherLastLimit(temp());
+  define(lir, ins);
+}
+
 void LIRGenerator::visitRegExpExecMatch(MRegExpExecMatch* ins) {
   MOZ_ASSERT(ins->regexp()->type() == MIRType::Object);
   MOZ_ASSERT(ins->string()->type() == MIRType::String);

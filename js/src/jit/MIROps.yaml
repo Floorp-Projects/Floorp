@@ -1076,6 +1076,7 @@
   can_recover: true
 
 # Note: this instruction writes to cx->regExpSearcherLastLimit.
+# See also MRegExpSearcherLastLimit.
 - name: RegExpSearcher
   operands:
     regexp: Object
@@ -1084,6 +1085,13 @@
   result_type: Int32
   possibly_calls: true
   can_recover: false
+
+# This instruction loads cx->regExpSearcherLastLimit. We don't have a
+# specialized alias set for this so just use the default alias set similar to
+# the MRegExpSearcher instruction that precedes it.
+- name: RegExpSearcherLastLimit
+  operands:
+  result_type: Int32
 
 - name: RegExpExecMatch
   operands:

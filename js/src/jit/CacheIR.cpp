@@ -6807,6 +6807,24 @@ AttachDecision InlinableNativeIRGenerator::tryAttachRegExpMatcherSearcher(
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachRegExpSearcherLastLimit() {
+  // Self-hosted code calls this with a string argument that's only used for an
+  // assertion.
+  MOZ_ASSERT(argc_ == 1);
+  MOZ_ASSERT(args_[0].isString());
+
+  // Initialize the input operand.
+  initializeInputOperand();
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  writer.regExpSearcherLastLimitResult();
+  writer.returnFromIC();
+
+  trackAttached("RegExpSearcherLastLimit");
+  return AttachDecision::Attach;
+}
+
 AttachDecision
 InlinableNativeIRGenerator::tryAttachRegExpPrototypeOptimizable() {
   // Self-hosted code calls this with a single object argument.
@@ -10657,6 +10675,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
     case InlinableNative::RegExpMatcher:
     case InlinableNative::RegExpSearcher:
       return tryAttachRegExpMatcherSearcher(native);
+    case InlinableNative::RegExpSearcherLastLimit:
+      return tryAttachRegExpSearcherLastLimit();
     case InlinableNative::RegExpPrototypeOptimizable:
       return tryAttachRegExpPrototypeOptimizable();
     case InlinableNative::RegExpInstanceOptimizable:

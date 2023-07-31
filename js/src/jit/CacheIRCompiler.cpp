@@ -8188,6 +8188,19 @@ bool CacheIRCompiler::emitCallGetSparseElementResult(ObjOperandId objId,
   return true;
 }
 
+bool CacheIRCompiler::emitRegExpSearcherLastLimitResult() {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  masm.loadAndClearRegExpSearcherLastLimit(scratch1, scratch2);
+
+  masm.tagValue(JSVAL_TYPE_INT32, scratch1, output.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitRegExpFlagResult(ObjOperandId regexpId,
                                            int32_t flagsMask) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

@@ -118,6 +118,7 @@
                                                    \
   _(RegExpMatcher)                                 \
   _(RegExpSearcher)                                \
+  _(RegExpSearcherLastLimit)                       \
   _(IsRegExpObject)                                \
   _(IsPossiblyWrappedRegExpObject)                 \
   _(RegExpPrototypeOptimizable)                    \
