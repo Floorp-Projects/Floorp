@@ -14,7 +14,7 @@ use crate::selector_parser::SelectorImpl;
 use crate::values::AtomIdent;
 use selectors::attr::CaseSensitivity;
 use selectors::matching::{
-    self, IgnoreNthChildForInvalidation, MatchingContext, MatchingMode, NeedsSelectorFlags,
+    self, MatchingForInvalidation, MatchingContext, MatchingMode, NeedsSelectorFlags,
     SelectorCaches,
 };
 use selectors::attr::{AttrSelectorOperation, NamespaceConstraint};
@@ -39,7 +39,7 @@ where
         &mut selector_caches,
         quirks_mode,
         NeedsSelectorFlags::No,
-        IgnoreNthChildForInvalidation::No,
+        MatchingForInvalidation::No,
     );
     context.scope_element = Some(element.opaque());
     context.current_host = element.containing_shadow_host().map(|e| e.opaque());
@@ -63,7 +63,7 @@ where
         &mut selector_caches,
         quirks_mode,
         NeedsSelectorFlags::No,
-        IgnoreNthChildForInvalidation::No,
+        MatchingForInvalidation::No,
     );
     context.scope_element = Some(element.opaque());
     context.current_host = element.containing_shadow_host().map(|e| e.opaque());
@@ -746,7 +746,7 @@ pub fn query_selector<E, Q>(
         &mut selector_caches,
         quirks_mode,
         NeedsSelectorFlags::No,
-        IgnoreNthChildForInvalidation::No,
+        MatchingForInvalidation::No,
     );
     let root_element = root.as_element();
     matching_context.scope_element = root_element.map(|e| e.opaque());
