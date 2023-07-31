@@ -9,8 +9,9 @@ html.private {
   --in-content-page-color: white;
   --in-content-text-color: white;
   --in-content-page-background: #25003e;
-  --in-content-link-color-hover: white;
-  --in-content-link-color-active: white;
+  --link-color: white;
+  --link-color-hover: white;
+  --link-color-active: white;
   --in-content-banner-background: #f9f9fe;
   --in-content-banner-text-color: #0c0c0d;
   --in-content-button-background-hover: rgba(12,12,13,.1);
@@ -494,7 +495,4 @@ p {
 
 .promo-link {
   margin: 0;
-  cursor: pointer;
-  color: var(--in-content-link-color-active);
-  text-decoration: underline;
 }

@@ -699,6 +699,7 @@ xul|search-textbox[disabled="true"] {
 
 html|a,
 .text-link {
+  cursor: pointer;
   color: var(--link-color);
 }
 
