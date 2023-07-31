@@ -122,6 +122,7 @@ impl RecvStreams {
 pub struct RxStreamOrderer {
     data_ranges: BTreeMap<u64, Vec<u8>>, // (start_offset, data)
     retired: u64,                        // Number of bytes the application has read
+    received: u64,                       // The number of bytes has stored in `data_ranges`
 }
 
 impl RxStreamOrderer {
@@ -231,6 +232,7 @@ impl RxStreamOrderer {
         }
 
         if !to_add.is_empty() {
+            self.received += u64::try_from(to_add.len()).unwrap();
             if extend {
                 let (_, buf) = self
                     .data_ranges
@@ -278,6 +280,10 @@ impl RxStreamOrderer {
     /// Bytes read by the application.
     fn retired(&self) -> u64 {
         self.retired
+    }
+
+    fn received(&self) -> u64 {
+        self.received
     }
 
     /// Data bytes buffered. Could be more than bytes_readable if there are
@@ -359,19 +365,29 @@ enum RecvStreamState {
         session_fc: Rc<RefCell<ReceiverFlowControl<()>>>,
         recv_buf: RxStreamOrderer,
     },
-    DataRead,
+    DataRead {
+        final_received: u64,
+        final_read: u64,
+    },
     AbortReading {
         fc: ReceiverFlowControl<StreamId>,
         session_fc: Rc<RefCell<ReceiverFlowControl<()>>>,
         final_size_reached: bool,
         frame_needed: bool,
         err: AppError,
+        final_received: u64,
+        final_read: u64,
     },
     WaitForReset {
         fc: ReceiverFlowControl<StreamId>,
         session_fc: Rc<RefCell<ReceiverFlowControl<()>>>,
+        final_received: u64,
+        final_read: u64,
     },
-    ResetRecvd,
+    ResetRecvd {
+        final_received: u64,
+        final_read: u64,
+    },
     // Defined by spec but we don't use it: ResetRead
 }
 
@@ -393,10 +409,10 @@ impl RecvStreamState {
             Self::Recv { .. } => "Recv",
             Self::SizeKnown { .. } => "SizeKnown",
             Self::DataRecvd { .. } => "DataRecvd",
-            Self::DataRead => "DataRead",
+            Self::DataRead { .. } => "DataRead",
             Self::AbortReading { .. } => "AbortReading",
             Self::WaitForReset { .. } => "WaitForReset",
-            Self::ResetRecvd => "ResetRecvd",
+            Self::ResetRecvd { .. } => "ResetRecvd",
         }
     }
 
@@ -405,10 +421,10 @@ impl RecvStreamState {
             Self::Recv { recv_buf, .. }
             | Self::SizeKnown { recv_buf, .. }
             | Self::DataRecvd { recv_buf, .. } => Some(recv_buf),
-            Self::DataRead
+            Self::DataRead { .. }
             | Self::AbortReading { .. }
             | Self::WaitForReset { .. }
-            | Self::ResetRecvd => None,
+            | Self::ResetRecvd { .. } => None,
         }
     }
 
@@ -429,7 +445,7 @@ impl RecvStreamState {
                 *final_size_reached |= fin;
                 (fc, session_fc, old_final_size_reached, true)
             }
-            Self::DataRead | Self::ResetRecvd => {
+            Self::DataRead { .. } | Self::ResetRecvd { .. } => {
                 return Ok(());
             }
         };
@@ -453,6 +469,40 @@ impl RecvStreamState {
             RecvStream::flow_control_retire_data(fc.consumed() - fc.retired(), fc, session_fc);
         }
         Ok(())
+    }
+}
+
+// See https://www.w3.org/TR/webtransport/#receive-stream-stats
+#[derive(Debug, Clone, Copy)]
+pub struct RecvStreamStats {
+    // An indicator of progress on how many of the server application’s bytes
+    // intended for this stream have been received so far.
+    // Only sequential bytes up to, but not including, the first missing byte,
+    // are counted. This number can only increase.
+    pub bytes_received: u64,
+    // The total number of bytes the application has successfully read from this
+    // stream. This number can only increase, and is always less than or equal
+    // to bytes_received.
+    pub bytes_read: u64,
+}
+
+impl RecvStreamStats {
+    #[must_use]
+    pub fn new(bytes_received: u64, bytes_read: u64) -> Self {
+        Self {
+            bytes_received,
+            bytes_read,
+        }
+    }
+
+    #[must_use]
+    pub fn bytes_received(&self) -> u64 {
+        self.bytes_received
+    }
+
+    #[must_use]
+    pub fn bytes_read(&self) -> u64 {
+        self.bytes_read
     }
 }
 
@@ -497,17 +547,51 @@ impl RecvStream {
             // is cause to stop keep-alives.
             RecvStreamState::DataRecvd { .. }
             | RecvStreamState::AbortReading { .. }
-            | RecvStreamState::ResetRecvd => {
+            | RecvStreamState::ResetRecvd { .. } => {
                 self.keep_alive = None;
             }
             // Once all the data is read, generate an event.
-            RecvStreamState::DataRead => {
+            RecvStreamState::DataRead { .. } => {
                 self.conn_events.recv_stream_complete(self.stream_id);
             }
             _ => {}
         }
 
         self.state = new_state;
+    }
+
+    pub fn stats(&self) -> RecvStreamStats {
+        match &self.state {
+            RecvStreamState::Recv { recv_buf, .. }
+            | RecvStreamState::SizeKnown { recv_buf, .. }
+            | RecvStreamState::DataRecvd { recv_buf, .. } => {
+                let received = recv_buf.received();
+                let read = recv_buf.retired();
+                RecvStreamStats::new(received, read)
+            }
+            RecvStreamState::AbortReading {
+                final_received,
+                final_read,
+                ..
+            }
+            | RecvStreamState::WaitForReset {
+                final_received,
+                final_read,
+                ..
+            }
+            | RecvStreamState::DataRead {
+                final_received,
+                final_read,
+            }
+            | RecvStreamState::ResetRecvd {
+                final_received,
+                final_read,
+            } => {
+                let received = *final_received;
+                let read = *final_read;
+                RecvStreamStats::new(received, read)
+            }
+        }
     }
 
     pub fn inbound_stream_frame(&mut self, fin: bool, offset: u64, data: &[u8]) -> Res<()> {
@@ -564,10 +648,10 @@ impl RecvStream {
                 }
             }
             RecvStreamState::DataRecvd { .. }
-            | RecvStreamState::DataRead
+            | RecvStreamState::DataRead { .. }
             | RecvStreamState::AbortReading { .. }
             | RecvStreamState::WaitForReset { .. }
-            | RecvStreamState::ResetRecvd => {
+            | RecvStreamState::ResetRecvd { .. } => {
                 qtrace!("data received when we are in state {}", self.state.name())
             }
         }
@@ -582,15 +666,50 @@ impl RecvStream {
     pub fn reset(&mut self, application_error_code: AppError, final_size: u64) -> Res<()> {
         self.state.flow_control_consume_data(final_size, true)?;
         match &mut self.state {
-            RecvStreamState::Recv { fc, session_fc, .. }
-            | RecvStreamState::SizeKnown { fc, session_fc, .. }
-            | RecvStreamState::AbortReading { fc, session_fc, .. }
-            | RecvStreamState::WaitForReset { fc, session_fc } => {
+            RecvStreamState::Recv {
+                fc,
+                session_fc,
+                recv_buf,
+            }
+            | RecvStreamState::SizeKnown {
+                fc,
+                session_fc,
+                recv_buf,
+            } => {
                 // make flow control consumes new data that not really exist.
                 Self::flow_control_retire_data(final_size - fc.retired(), fc, session_fc);
                 self.conn_events
                     .recv_stream_reset(self.stream_id, application_error_code);
-                self.set_state(RecvStreamState::ResetRecvd);
+                let received = recv_buf.received();
+                let read = recv_buf.retired();
+                self.set_state(RecvStreamState::ResetRecvd {
+                    final_received: received,
+                    final_read: read,
+                });
+            }
+            RecvStreamState::AbortReading {
+                fc,
+                session_fc,
+                final_received,
+                final_read,
+                ..
+            }
+            | RecvStreamState::WaitForReset {
+                fc,
+                session_fc,
+                final_received,
+                final_read,
+            } => {
+                // make flow control consumes new data that not really exist.
+                Self::flow_control_retire_data(final_size - fc.retired(), fc, session_fc);
+                self.conn_events
+                    .recv_stream_reset(self.stream_id, application_error_code);
+                let received = *final_received;
+                let read = *final_read;
+                self.set_state(RecvStreamState::ResetRecvd {
+                    final_received: received,
+                    final_read: read,
+                });
             }
             _ => {
                 // Ignore reset if in DataRecvd, DataRead, or ResetRecvd
@@ -629,7 +748,7 @@ impl RecvStream {
     pub fn is_terminal(&self) -> bool {
         matches!(
             self.state,
-            RecvStreamState::ResetRecvd | RecvStreamState::DataRead
+            RecvStreamState::ResetRecvd { .. } | RecvStreamState::DataRead { .. }
         )
     }
 
@@ -669,7 +788,12 @@ impl RecvStream {
                 Self::flow_control_retire_data(u64::try_from(bytes_read).unwrap(), fc, session_fc);
                 let fin_read = if data_recvd_state {
                     if recv_buf.buffered() == 0 {
-                        self.set_state(RecvStreamState::DataRead);
+                        let received = recv_buf.received();
+                        let read = recv_buf.retired();
+                        self.set_state(RecvStreamState::DataRead {
+                            final_received: received,
+                            final_read: read,
+                        });
                         true
                     } else {
                         false
@@ -679,38 +803,59 @@ impl RecvStream {
                 };
                 Ok((bytes_read, fin_read))
             }
-            RecvStreamState::DataRead
+            RecvStreamState::DataRead { .. }
             | RecvStreamState::AbortReading { .. }
             | RecvStreamState::WaitForReset { .. }
-            | RecvStreamState::ResetRecvd => Err(Error::NoMoreData),
+            | RecvStreamState::ResetRecvd { .. } => Err(Error::NoMoreData),
         }
     }
 
     pub fn stop_sending(&mut self, err: AppError) {
         qtrace!("stop_sending called when in state {}", self.state.name());
         match &mut self.state {
-            RecvStreamState::Recv { fc, session_fc, .. }
-            | RecvStreamState::SizeKnown { fc, session_fc, .. } => {
+            RecvStreamState::Recv {
+                fc,
+                session_fc,
+                recv_buf,
+            }
+            | RecvStreamState::SizeKnown {
+                fc,
+                session_fc,
+                recv_buf,
+            } => {
                 // Retire data
                 Self::flow_control_retire_data(fc.consumed() - fc.retired(), fc, session_fc);
                 let fc_copy = mem::take(fc);
                 let session_fc_copy = mem::take(session_fc);
+                let received = recv_buf.received();
+                let read = recv_buf.retired();
                 self.set_state(RecvStreamState::AbortReading {
                     fc: fc_copy,
                     session_fc: session_fc_copy,
                     final_size_reached: matches!(self.state, RecvStreamState::SizeKnown { .. }),
                     frame_needed: true,
                     err,
+                    final_received: received,
+                    final_read: read,
                 })
             }
-            RecvStreamState::DataRecvd { fc, session_fc, .. } => {
+            RecvStreamState::DataRecvd {
+                fc,
+                session_fc,
+                recv_buf,
+            } => {
                 Self::flow_control_retire_data(fc.consumed() - fc.retired(), fc, session_fc);
-                self.set_state(RecvStreamState::DataRead);
+                let received = recv_buf.received();
+                let read = recv_buf.retired();
+                self.set_state(RecvStreamState::DataRead {
+                    final_received: received,
+                    final_read: read,
+                });
             }
-            RecvStreamState::DataRead
+            RecvStreamState::DataRead { .. }
             | RecvStreamState::AbortReading { .. }
             | RecvStreamState::WaitForReset { .. }
-            | RecvStreamState::ResetRecvd => {
+            | RecvStreamState::ResetRecvd { .. } => {
                 // Already in terminal state
             }
         }
@@ -765,19 +910,28 @@ impl RecvStream {
             fc,
             session_fc,
             final_size_reached,
+            final_received,
+            final_read,
             ..
         } = &mut self.state
         {
+            let received = *final_received;
+            let read = *final_read;
             if *final_size_reached {
                 // We already know the final_size of the stream therefore we
                 // do not need to wait for RESET.
-                self.set_state(RecvStreamState::ResetRecvd);
+                self.set_state(RecvStreamState::ResetRecvd {
+                    final_received: received,
+                    final_read: read,
+                });
             } else {
                 let fc_copy = mem::take(fc);
                 let session_fc_copy = mem::take(session_fc);
                 self.set_state(RecvStreamState::WaitForReset {
                     fc: fc_copy,
                     session_fc: session_fc_copy,
+                    final_received: received,
+                    final_read: read,
                 });
             }
         }
@@ -1050,6 +1204,12 @@ mod tests {
         assert_eq!(0, s.read(&mut buf[..]));
     }
 
+    fn check_stats(stream: &RecvStream, expected_received: u64, expected_read: u64) {
+        let stream_stats = stream.stats();
+        assert_eq!(expected_received, stream_stats.bytes_received());
+        assert_eq!(expected_read, stream_stats.bytes_read());
+    }
+
     #[test]
     fn stream_rx() {
         let conn_events = ConnectionEvents::default();
@@ -1064,10 +1224,14 @@ mod tests {
         // test receiving a contig frame and reading it works
         s.inbound_stream_frame(false, 0, &[1; 10]).unwrap();
         assert!(s.data_ready());
+        check_stats(&s, 10, 0);
+
         let mut buf = vec![0u8; 100];
         assert_eq!(s.read(&mut buf).unwrap(), (10, false));
         assert_eq!(s.state.recv_buf().unwrap().retired(), 10);
         assert_eq!(s.state.recv_buf().unwrap().buffered(), 0);
+
+        check_stats(&s, 10, 10);
 
         // test receiving a noncontig frame
         s.inbound_stream_frame(false, 12, &[2; 12]).unwrap();
@@ -1076,11 +1240,15 @@ mod tests {
         assert_eq!(s.state.recv_buf().unwrap().retired(), 10);
         assert_eq!(s.state.recv_buf().unwrap().buffered(), 12);
 
+        check_stats(&s, 22, 10);
+
         // another frame that overlaps the first
         s.inbound_stream_frame(false, 14, &[3; 8]).unwrap();
         assert!(!s.data_ready());
         assert_eq!(s.state.recv_buf().unwrap().retired(), 10);
         assert_eq!(s.state.recv_buf().unwrap().buffered(), 12);
+
+        check_stats(&s, 22, 10);
 
         // fill in the gap, but with a FIN
         s.inbound_stream_frame(true, 10, &[4; 6]).unwrap_err();
@@ -1089,11 +1257,15 @@ mod tests {
         assert_eq!(s.state.recv_buf().unwrap().retired(), 10);
         assert_eq!(s.state.recv_buf().unwrap().buffered(), 12);
 
+        check_stats(&s, 22, 10);
+
         // fill in the gap
         s.inbound_stream_frame(false, 10, &[5; 10]).unwrap();
         assert!(s.data_ready());
         assert_eq!(s.state.recv_buf().unwrap().retired(), 10);
         assert_eq!(s.state.recv_buf().unwrap().buffered(), 14);
+
+        check_stats(&s, 24, 10);
 
         // a legit FIN
         s.inbound_stream_frame(true, 24, &[6; 18]).unwrap();
@@ -1101,6 +1273,8 @@ mod tests {
         assert_eq!(s.state.recv_buf().unwrap().buffered(), 32);
         assert!(s.data_ready());
         assert_eq!(s.read(&mut buf).unwrap(), (32, true));
+
+        check_stats(&s, 42, 42);
 
         // Stream now no longer readable (is in DataRead state)
         s.read(&mut buf).unwrap_err();

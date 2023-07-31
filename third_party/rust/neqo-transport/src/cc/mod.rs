@@ -7,26 +7,26 @@
 // Congestion control
 #![deny(clippy::pedantic)]
 
-use crate::path::PATH_MTU_V6;
-use crate::tracking::SentPacket;
-use crate::Error;
+use crate::{path::PATH_MTU_V6, tracking::SentPacket, Error};
 use neqo_common::qlog::NeqoQlog;
 
-use std::fmt::{Debug, Display};
-use std::str::FromStr;
-use std::time::{Duration, Instant};
+use std::{
+    fmt::{Debug, Display},
+    str::FromStr,
+    time::{Duration, Instant},
+};
 
 mod classic_cc;
 mod cubic;
 mod new_reno;
 
-pub use classic_cc::ClassicCongestionControl;
-pub use classic_cc::{CWND_INITIAL, CWND_INITIAL_PKTS, CWND_MIN};
+pub use classic_cc::{ClassicCongestionControl, CWND_INITIAL, CWND_INITIAL_PKTS, CWND_MIN};
 pub use cubic::Cubic;
 pub use new_reno::NewReno;
 
 pub const MAX_DATAGRAM_SIZE: usize = PATH_MTU_V6;
-pub const MAX_DATAGRAM_SIZE_F64: f64 = 1337.0;
+#[allow(clippy::cast_precision_loss)]
+pub const MAX_DATAGRAM_SIZE_F64: f64 = MAX_DATAGRAM_SIZE as f64;
 
 pub trait CongestionControl: Display + Debug {
     fn set_qlog(&mut self, qlog: NeqoQlog);

@@ -152,6 +152,10 @@ fn build_nss(dir: PathBuf) {
         build_nss.push(String::from("-j"));
         build_nss.push(d);
     }
+    let target = env::var("TARGET").unwrap();
+    if target.strip_prefix("aarch64-").is_some() {
+        build_nss.push(String::from("--target=arm64"));
+    }
     let status = Command::new(get_bash())
         .args(build_nss)
         .current_dir(dir)
@@ -176,7 +180,7 @@ fn dynamic_link_both(extra_libs: &[&str]) {
         &["plds4", "plc4", "nspr4"]
     };
     for lib in nspr_libs.iter().chain(extra_libs) {
-        println!("cargo:rustc-link-lib=dylib={}", lib);
+        println!("cargo:rustc-link-lib=dylib={lib}");
     }
 }
 
@@ -202,7 +206,7 @@ fn static_link() {
         static_libs.push("sqlite");
     }
     for lib in static_libs {
-        println!("cargo:rustc-link-lib=static={}", lib);
+        println!("cargo:rustc-link-lib=static={lib}");
     }
 
     // Dynamic libs that aren't transitively included by NSS libs.
@@ -232,7 +236,7 @@ fn build_bindings(base: &str, bindings: &Bindings, flags: &[String], gecko: bool
     let header = header_path.to_str().unwrap();
     let out = PathBuf::from(env::var("OUT_DIR").unwrap()).join(String::from(base) + ".rs");
 
-    println!("cargo:rerun-if-changed={}", header);
+    println!("cargo:rerun-if-changed={header}");
 
     let mut builder = Builder::default().header(header);
     builder = builder.generate_comments(false);

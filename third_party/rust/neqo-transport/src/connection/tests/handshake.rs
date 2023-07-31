@@ -743,7 +743,7 @@ fn connect_one_version() {
     }
 
     for v in Version::all() {
-        println!("Connecting with {:?}", v);
+        println!("Connecting with {v:?}");
         connect_v(v);
     }
 }
@@ -927,10 +927,7 @@ fn ech_retry() {
         Some(&ConnectionError::Transport(Error::PeerError(0x100 + 121)))
     );
 
-    let updated_config =
-        if let Some(ConnectionError::Transport(Error::EchRetry(c))) = client.state().error() {
-            c
-        } else {
+    let Some(ConnectionError::Transport(Error::EchRetry(updated_config))) = client.state().error() else {
             panic!(
                 "Client state should be failed with EchRetry, is {:?}",
                 client.state()

@@ -71,7 +71,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "037f3e1da32ddba7770530e69258b742c15ad67bdf90e5f6b35f4b6db9a60eb7"
 dependencies = [
  "android_log-sys",
- "env_logger 0.10.0",
+ "env_logger",
  "log",
  "once_cell",
 ]
@@ -1468,13 +1468,6 @@ dependencies = [
 
 [[package]]
 name = "env_logger"
-version = "0.9.999"
-dependencies = [
- "env_logger 0.10.0",
-]
-
-[[package]]
-name = "env_logger"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85cdab6a89accf66733ad5a1693a4dcced6aeff64602b634530dd73c1f3ee9f0"
@@ -1961,7 +1954,7 @@ name = "gecko_logger"
 version = "0.1.0"
 dependencies = [
  "app_services_logger",
- "env_logger 0.10.0",
+ "env_logger",
  "lazy_static",
  "log",
 ]
@@ -3443,7 +3436,7 @@ dependencies = [
  "bindgen 0.66.1",
  "bytes",
  "chrono",
- "env_logger 0.10.0",
+ "env_logger",
  "flate2",
  "futures-channel",
  "futures-core",
@@ -3586,23 +3579,23 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.6.4"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.4#80db3a01f3273c7e742ba560fa99246fc8b30c4f"
+version = "0.6.5"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.5#23ae8e8b75b412c1c10fa44fc3f68e5422342b86"
 dependencies = [
- "chrono",
- "env_logger 0.9.999",
+ "env_logger",
  "lazy_static",
  "log",
  "qlog",
+ "time 0.3.17",
  "winapi",
 ]
 
 [[package]]
 name = "neqo-crypto"
-version = "0.6.4"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.4#80db3a01f3273c7e742ba560fa99246fc8b30c4f"
+version = "0.6.5"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.5#23ae8e8b75b412c1c10fa44fc3f68e5422342b86"
 dependencies = [
- "bindgen 0.63.999",
+ "bindgen 0.64.999",
  "log",
  "mozbuild",
  "neqo-common",
@@ -3613,8 +3606,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.6.4"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.4#80db3a01f3273c7e742ba560fa99246fc8b30c4f"
+version = "0.6.5"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.5#23ae8e8b75b412c1c10fa44fc3f68e5422342b86"
 dependencies = [
  "enumset",
  "lazy_static",
@@ -3631,8 +3624,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.6.4"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.4#80db3a01f3273c7e742ba560fa99246fc8b30c4f"
+version = "0.6.5"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.5#23ae8e8b75b412c1c10fa44fc3f68e5422342b86"
 dependencies = [
  "lazy_static",
  "log",
@@ -3645,8 +3638,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.6.4"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.4#80db3a01f3273c7e742ba560fa99246fc8b30c4f"
+version = "0.6.5"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.5#23ae8e8b75b412c1c10fa44fc3f68e5422342b86"
 dependencies = [
  "indexmap 1.9.3",
  "lazy_static",
@@ -3926,7 +3919,7 @@ version = "0.1.4"
 dependencies = [
  "byteorder",
  "core-foundation",
- "env_logger 0.10.0",
+ "env_logger",
  "lazy_static",
  "libloading",
  "log",
@@ -4897,7 +4890,7 @@ name = "smoosh"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
- "env_logger 0.10.0",
+ "env_logger",
  "jsparagus",
  "log",
 ]

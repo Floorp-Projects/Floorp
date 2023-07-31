@@ -12,17 +12,9 @@
 #![allow(clippy::unseparated_literal_suffix)]
 #![allow(clippy::used_underscore_binding)]
 
-#[macro_use]
-mod exp;
-#[macro_use]
-mod p11;
-
-#[cfg(not(feature = "fuzzing"))]
 mod aead;
-
 #[cfg(feature = "fuzzing")]
 mod aead_fuzzing;
-
 pub mod agent;
 mod agentio;
 mod auth;
@@ -30,10 +22,14 @@ mod cert;
 pub mod constants;
 mod ech;
 mod err;
+#[macro_use]
+mod exp;
 pub mod ext;
 pub mod hkdf;
 pub mod hp;
 mod once;
+#[macro_use]
+mod p11;
 mod prio;
 mod replay;
 mod secrets;
@@ -42,36 +38,41 @@ mod ssl;
 mod time;
 
 #[cfg(not(feature = "fuzzing"))]
-pub use self::aead::Aead;
+pub use self::aead::RealAead as Aead;
 
 #[cfg(feature = "fuzzing")]
-pub use self::aead_fuzzing::Aead;
+pub use self::aead_fuzzing::FuzzingAead as Aead;
 
 #[cfg(feature = "fuzzing")]
-pub use self::aead_fuzzing::FIXED_TAG_FUZZING;
+pub use self::aead::RealAead;
 
-pub use self::agent::{
-    Agent, AllowZeroRtt, Client, HandshakeState, Record, RecordList, ResumptionToken, SecretAgent,
-    SecretAgentInfo, SecretAgentPreInfo, Server, ZeroRttCheckResult, ZeroRttChecker,
+pub use self::{
+    agent::{
+        Agent, AllowZeroRtt, Client, HandshakeState, Record, RecordList, ResumptionToken,
+        SecretAgent, SecretAgentInfo, SecretAgentPreInfo, Server, ZeroRttCheckResult,
+        ZeroRttChecker,
+    },
+    auth::AuthenticationStatus,
+    constants::*,
+    ech::{
+        encode_config as encode_ech_config, generate_keys as generate_ech_keys, AeadId, KdfId,
+        KemId, SymmetricSuite,
+    },
+    err::{Error, PRErrorCode, Res},
+    ext::{ExtensionHandler, ExtensionHandlerResult, ExtensionWriterResult},
+    p11::{random, PrivateKey, PublicKey, SymKey},
+    replay::AntiReplay,
+    secrets::SecretDirection,
+    ssl::Opt,
 };
-pub use self::auth::AuthenticationStatus;
-pub use self::constants::*;
-pub use self::ech::{
-    encode_config as encode_ech_config, generate_keys as generate_ech_keys, AeadId, KdfId, KemId,
-    SymmetricSuite,
-};
-pub use self::err::{Error, PRErrorCode, Res};
-pub use self::ext::{ExtensionHandler, ExtensionHandlerResult, ExtensionWriterResult};
-pub use self::p11::{random, PrivateKey, PublicKey, SymKey};
-pub use self::replay::AntiReplay;
-pub use self::secrets::SecretDirection;
-pub use self::ssl::Opt;
 
 use self::once::OnceResult;
 
-use std::ffi::CString;
-use std::path::{Path, PathBuf};
-use std::ptr::null;
+use std::{
+    ffi::CString,
+    path::{Path, PathBuf},
+    ptr::null,
+};
 
 const MINIMUM_NSS_VERSION: &str = "3.74";
 
@@ -114,8 +115,7 @@ fn version_check() {
     assert_ne!(
         unsafe { nss::NSS_VersionCheck(min_ver.as_ptr()) },
         0,
-        "Minimum NSS version of {} not supported",
-        MINIMUM_NSS_VERSION,
+        "Minimum NSS version of {MINIMUM_NSS_VERSION} not supported",
     );
 }
 

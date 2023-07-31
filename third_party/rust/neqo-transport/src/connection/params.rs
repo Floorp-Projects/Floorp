@@ -73,6 +73,8 @@ pub struct ConnectionParameters {
     outgoing_datagram_queue: usize,
     incoming_datagram_queue: usize,
     fast_pto: u8,
+    fuzzing: bool,
+    grease: bool,
 }
 
 impl Default for ConnectionParameters {
@@ -93,6 +95,8 @@ impl Default for ConnectionParameters {
             outgoing_datagram_queue: MAX_QUEUED_DATAGRAMS_DEFAULT,
             incoming_datagram_queue: MAX_QUEUED_DATAGRAMS_DEFAULT,
             fast_pto: FAST_PTO_SCALE,
+            fuzzing: false,
+            grease: true,
         }
     }
 }
@@ -279,6 +283,24 @@ impl ConnectionParameters {
     pub fn fast_pto(mut self, scale: u8) -> Self {
         assert_ne!(scale, 0);
         self.fast_pto = scale;
+        self
+    }
+
+    pub fn is_fuzzing(&self) -> bool {
+        self.fuzzing
+    }
+
+    pub fn fuzzing(mut self, enable: bool) -> Self {
+        self.fuzzing = enable;
+        self
+    }
+
+    pub fn is_greasing(&self) -> bool {
+        self.grease
+    }
+
+    pub fn grease(mut self, grease: bool) -> Self {
+        self.grease = grease;
         self
     }
 

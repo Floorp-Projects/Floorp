@@ -151,10 +151,7 @@ impl<T> Timer<T> {
             return None;
         }
         let bucket = self.time_bucket(time);
-        let start_index = match self.items[bucket].binary_search_by_key(&time, TimerItem::time) {
-            Ok(idx) => idx,
-            Err(_) => return None,
-        };
+        let Ok(start_index) = self.items[bucket].binary_search_by_key(&time, TimerItem::time) else { return None };
         // start_index is just one of potentially many items with the same time.
         // Search backwards for a match, ...
         for i in (0..=start_index).rev() {

@@ -134,7 +134,7 @@ impl HFrame {
                 update_frame.encode_varint(*element_id);
 
                 let mut priority_enc: Vec<u8> = Vec::new();
-                write!(priority_enc, "{}", priority).unwrap();
+                write!(priority_enc, "{priority}").unwrap();
 
                 update_frame.encode(&priority_enc);
                 enc.encode_varint(update_frame.len() as u64);

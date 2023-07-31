@@ -7,7 +7,6 @@
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![warn(clippy::pedantic)]
 
-#[macro_use]
 mod sim;
 
 use neqo_transport::{ConnectionError, ConnectionParameters, Error, State};

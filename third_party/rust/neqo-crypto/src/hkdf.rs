@@ -4,19 +4,23 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::constants::{
-    Cipher, Version, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256,
-    TLS_VERSION_1_3,
-};
-use crate::err::{Error, Res};
-use crate::p11::{
-    random, Item, PK11Origin, PK11SymKey, PK11_ImportDataKey, Slot, SymKey, CKA_DERIVE,
-    CKM_HKDF_DERIVE, CK_ATTRIBUTE_TYPE, CK_MECHANISM_TYPE,
+use crate::{
+    constants::{
+        Cipher, Version, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384,
+        TLS_CHACHA20_POLY1305_SHA256, TLS_VERSION_1_3,
+    },
+    err::{Error, Res},
+    p11::{
+        random, Item, PK11Origin, PK11SymKey, PK11_ImportDataKey, Slot, SymKey, CKA_DERIVE,
+        CKM_HKDF_DERIVE, CK_ATTRIBUTE_TYPE, CK_MECHANISM_TYPE,
+    },
 };
 
-use std::convert::TryFrom;
-use std::os::raw::{c_char, c_uint};
-use std::ptr::null_mut;
+use std::{
+    convert::TryFrom,
+    os::raw::{c_char, c_uint},
+    ptr::null_mut,
+};
 
 experimental_api!(SSL_HkdfExtract(
     version: Version,

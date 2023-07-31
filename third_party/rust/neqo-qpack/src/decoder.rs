@@ -4,14 +4,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::decoder_instructions::DecoderInstruction;
-use crate::encoder_instructions::{DecodedEncoderInstruction, EncoderInstructionReader};
-use crate::header_block::{HeaderDecoder, HeaderDecoderResult};
-use crate::qpack_send_buf::QpackData;
-use crate::reader::ReceiverConnWrapper;
-use crate::stats::Stats;
-use crate::table::HeaderTable;
-use crate::{Error, QpackSettings, Res};
+use crate::{
+    decoder_instructions::DecoderInstruction,
+    encoder_instructions::{DecodedEncoderInstruction, EncoderInstructionReader},
+    header_block::{HeaderDecoder, HeaderDecoderResult},
+    qpack_send_buf::QpackData,
+    reader::ReceiverConnWrapper,
+    stats::Stats,
+    table::HeaderTable,
+    Error, QpackSettings, Res,
+};
 use neqo_common::{qdebug, Header};
 use neqo_transport::{Connection, StreamId};
 use std::convert::TryFrom;
@@ -274,8 +276,7 @@ mod tests {
     use crate::QpackSettings;
     use neqo_common::Header;
     use neqo_transport::{StreamId, StreamType};
-    use std::convert::TryFrom;
-    use std::mem;
+    use std::{convert::TryFrom, mem};
     use test_fixture::now;
 
     const STREAM_0: StreamId = StreamId::new(0);
@@ -313,7 +314,7 @@ mod tests {
     }
 
     fn recv_instruction(decoder: &mut TestDecoder, encoder_instruction: &[u8], res: &Res<()>) {
-        let _ = decoder
+        _ = decoder
             .peer_conn
             .stream_send(decoder.recv_stream_id, encoder_instruction)
             .unwrap();

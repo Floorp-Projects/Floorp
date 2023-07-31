@@ -4,21 +4,25 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::super::{Connection, ConnectionParameters, IdleTimeout, Output, State};
 use super::{
+    super::{Connection, ConnectionParameters, IdleTimeout, Output, State},
     connect, connect_force_idle, connect_rtt_idle, connect_with_rtt, default_client,
     default_server, maybe_authenticate, new_client, new_server, send_and_receive, send_something,
     AT_LEAST_PTO, DEFAULT_STREAM_DATA,
 };
-use crate::packet::PacketBuilder;
-use crate::stats::FrameStats;
-use crate::stream_id::{StreamId, StreamType};
-use crate::tparams::{self, TransportParameter};
-use crate::tracking::PacketNumberSpace;
+use crate::{
+    packet::PacketBuilder,
+    stats::FrameStats,
+    stream_id::{StreamId, StreamType},
+    tparams::{self, TransportParameter},
+    tracking::PacketNumberSpace,
+};
 
 use neqo_common::{qtrace, Encoder};
-use std::mem;
-use std::time::{Duration, Instant};
+use std::{
+    mem,
+    time::{Duration, Instant},
+};
 use test_fixture::{self, now, split_datagram};
 
 fn default_timeout() -> Duration {
@@ -367,15 +371,15 @@ fn create_stream_idle_rtt(
 
     // Exchange a message each way on a stream.
     let stream = initiator.stream_create(StreamType::BiDi).unwrap();
-    let _ = initiator.stream_send(stream, DEFAULT_STREAM_DATA).unwrap();
+    _ = initiator.stream_send(stream, DEFAULT_STREAM_DATA).unwrap();
     let req = initiator.process_output(now).dgram();
     now += rtt / 2;
     responder.process_input(req.unwrap(), now);
 
     // Reordering two packets from the responder forces the initiator to be idle.
-    let _ = responder.stream_send(stream, DEFAULT_STREAM_DATA).unwrap();
+    _ = responder.stream_send(stream, DEFAULT_STREAM_DATA).unwrap();
     let resp1 = responder.process_output(now).dgram();
-    let _ = responder.stream_send(stream, DEFAULT_STREAM_DATA).unwrap();
+    _ = responder.stream_send(stream, DEFAULT_STREAM_DATA).unwrap();
     let resp2 = responder.process_output(now).dgram();
 
     now += rtt / 2;
@@ -654,7 +658,7 @@ fn keep_alive_uni() {
 
     let stream = client.stream_create(StreamType::UniDi).unwrap();
     client.stream_keep_alive(stream, true).unwrap_err();
-    let _ = client.stream_send(stream, DEFAULT_STREAM_DATA).unwrap();
+    _ = client.stream_send(stream, DEFAULT_STREAM_DATA).unwrap();
     let dgram = client.process_output(now()).dgram();
 
     server.process_input(dgram.unwrap(), now());
@@ -690,7 +694,7 @@ fn keep_alive_with_ack_eliciting_packet_lost() {
     assert_idle(&mut client, now, IDLE_TIMEOUT / 2);
 
     // Send data on the stream that will be lost.
-    let _ = client.stream_send(stream, DEFAULT_STREAM_DATA).unwrap();
+    _ = client.stream_send(stream, DEFAULT_STREAM_DATA).unwrap();
     let _lost_packet = client.process_output(now).dgram();
 
     let pto = client.process_output(now).callback();

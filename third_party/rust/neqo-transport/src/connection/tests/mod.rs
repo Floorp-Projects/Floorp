@@ -7,24 +7,26 @@
 #![deny(clippy::pedantic)]
 
 use super::{Connection, ConnectionError, ConnectionId, Output, State};
-use crate::addr_valid::{AddressValidation, ValidateAddress};
-use crate::cc::{CWND_INITIAL_PKTS, CWND_MIN};
-use crate::cid::ConnectionIdRef;
-use crate::events::ConnectionEvent;
-use crate::path::PATH_MTU_V6;
-use crate::recovery::ACK_ONLY_SIZE_LIMIT;
-use crate::stats::{FrameStats, Stats, MAX_PTO_COUNTS};
 use crate::{
+    addr_valid::{AddressValidation, ValidateAddress},
+    cc::{CWND_INITIAL_PKTS, CWND_MIN},
+    cid::ConnectionIdRef,
+    events::ConnectionEvent,
+    path::PATH_MTU_V6,
+    recovery::ACK_ONLY_SIZE_LIMIT,
+    stats::{FrameStats, Stats, MAX_PTO_COUNTS},
     ConnectionIdDecoder, ConnectionIdGenerator, ConnectionParameters, Error, StreamId, StreamType,
     Version,
 };
 
-use std::cell::RefCell;
-use std::cmp::min;
-use std::convert::TryFrom;
-use std::mem;
-use std::rc::Rc;
-use std::time::{Duration, Instant};
+use std::{
+    cell::RefCell,
+    cmp::min,
+    convert::TryFrom,
+    mem,
+    rc::Rc,
+    time::{Duration, Instant},
+};
 
 use neqo_common::{event::Provider, qdebug, qtrace, Datagram, Decoder, Role};
 use neqo_crypto::{random, AllowZeroRtt, AuthenticationStatus, ResumptionToken};
@@ -164,7 +166,7 @@ fn handshake(
     };
 
     while !is_done(a) {
-        let _ = maybe_authenticate(a);
+        _ = maybe_authenticate(a);
         let had_input = input.is_some();
         let output = a.process(input, now).dgram();
         assert!(had_input || output.is_some());
@@ -218,7 +220,7 @@ fn connect(client: &mut Connection, server: &mut Connection) {
 fn assert_error(c: &Connection, expected: &ConnectionError) {
     match c.state() {
         State::Closing { error, .. } | State::Draining { error, .. } | State::Closed(error) => {
-            assert_eq!(*error, *expected, "{} error mismatch", c);
+            assert_eq!(*error, *expected, "{c} error mismatch");
         }
         _ => panic!("bad state {:?}", c.state()),
     }
@@ -283,8 +285,8 @@ fn connect_rtt_idle(client: &mut Connection, server: &mut Connection, rtt: Durat
     let now = connect_with_rtt(client, server, now(), rtt);
     let now = force_idle(client, server, rtt, now);
     // Drain events from both as well.
-    let _ = client.events().count();
-    let _ = server.events().count();
+    _ = client.events().count();
+    _ = server.events().count();
     qtrace!("----- connected and idle with RTT {:?}", rtt);
     now
 }

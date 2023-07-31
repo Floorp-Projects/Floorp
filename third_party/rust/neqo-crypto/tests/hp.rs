@@ -1,12 +1,14 @@
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![warn(clippy::pedantic)]
 
-use neqo_crypto::constants::{
-    Cipher, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256,
-    TLS_VERSION_1_3,
+use neqo_crypto::{
+    constants::{
+        Cipher, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256,
+        TLS_VERSION_1_3,
+    },
+    hkdf,
+    hp::HpKey,
 };
-use neqo_crypto::hkdf;
-use neqo_crypto::hp::HpKey;
 use std::mem;
 use test_fixture::fixture_init;
 
@@ -22,6 +24,7 @@ fn hp_test(cipher: Cipher, expected: &[u8]) {
     let mask = hp.mask(&[0; 16]).expect("should produce a mask");
     assert_eq!(mask, expected, "first invocation should be correct");
 
+    #[allow(clippy::redundant_clone)] // This is deliberate.
     let hp2 = hp.clone();
     let mask = hp2.mask(&[0; 16]).expect("clone produces mask");
     assert_eq!(mask, expected, "clone should produce the same mask");

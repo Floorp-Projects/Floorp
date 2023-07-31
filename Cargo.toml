@@ -125,9 +125,6 @@ redox_users = { path = "build/rust/redox_users" }
 redox_syscall_0_2 = { package = "redox_syscall", path = "build/rust/redox_syscall_0_2" }
 redox_syscall = { path = "build/rust/redox_syscall" }
 
-# Patch env_logger 0.9 to 0.10
-env_logger = { path = "build/rust/env_logger" }
-
 # Override tinyvec with smallvec
 tinyvec = { path = "build/rust/tinyvec" }
 

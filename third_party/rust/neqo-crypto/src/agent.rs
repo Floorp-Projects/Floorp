@@ -4,35 +4,40 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-pub use crate::agentio::{as_c_void, Record, RecordList};
-use crate::agentio::{AgentIo, METHODS};
-use crate::assert_initialized;
-use crate::auth::AuthenticationStatus;
-pub use crate::cert::CertificateInfo;
-use crate::constants::{
-    Alert, Cipher, Epoch, Extension, Group, SignatureScheme, Version, TLS_VERSION_1_3,
+pub use crate::{
+    agentio::{as_c_void, Record, RecordList},
+    cert::CertificateInfo,
 };
-use crate::ech;
-use crate::err::{is_blocked, secstatus_to_res, Error, PRErrorCode, Res};
-use crate::ext::{ExtensionHandler, ExtensionTracker};
-use crate::p11::{self, PrivateKey, PublicKey};
-use crate::prio;
-use crate::replay::AntiReplay;
-use crate::secrets::SecretHolder;
-use crate::ssl::{self, PRBool};
-use crate::time::{Time, TimeHolder};
-
+use crate::{
+    agentio::{AgentIo, METHODS},
+    assert_initialized,
+    auth::AuthenticationStatus,
+    constants::{
+        Alert, Cipher, Epoch, Extension, Group, SignatureScheme, Version, TLS_VERSION_1_3,
+    },
+    ech,
+    err::{is_blocked, secstatus_to_res, Error, PRErrorCode, Res},
+    ext::{ExtensionHandler, ExtensionTracker},
+    p11::{self, PrivateKey, PublicKey},
+    prio,
+    replay::AntiReplay,
+    secrets::SecretHolder,
+    ssl::{self, PRBool},
+    time::{Time, TimeHolder},
+};
 use neqo_common::{hex_snip_middle, hex_with_len, qdebug, qinfo, qtrace, qwarn};
-use std::cell::RefCell;
-use std::convert::TryFrom;
-use std::ffi::{CStr, CString};
-use std::mem::{self, MaybeUninit};
-use std::ops::{Deref, DerefMut};
-use std::os::raw::{c_uint, c_void};
-use std::pin::Pin;
-use std::ptr::{null, null_mut};
-use std::rc::Rc;
-use std::time::Instant;
+use std::{
+    cell::RefCell,
+    convert::TryFrom,
+    ffi::{CStr, CString},
+    mem::{self, MaybeUninit},
+    ops::{Deref, DerefMut},
+    os::raw::{c_uint, c_void},
+    pin::Pin,
+    ptr::{null, null_mut},
+    rc::Rc,
+    time::Instant,
+};
 
 /// The maximum number of tickets to remember for a given connection.
 const MAX_TICKETS: usize = 4;
@@ -100,7 +105,7 @@ fn get_alpn(fd: *mut ssl::PRFileDesc, pre: bool) -> Res<Option<String>> {
         }
         _ => None,
     };
-    qtrace!([format!("{:p}", fd)], "got ALPN {:?}", alpn);
+    qtrace!([format!("{fd:p}")], "got ALPN {:?}", alpn);
     Ok(alpn)
 }
 
@@ -359,17 +364,13 @@ impl SecretAgent {
             if st.is_none() {
                 *st = Some(alert.description);
             } else {
-                qwarn!(
-                    [format!("{:p}", fd)],
-                    "duplicate alert {}",
-                    alert.description
-                );
+                qwarn!([format!("{fd:p}")], "duplicate alert {}", alert.description);
             }
         }
     }
 
     // Ready this for connecting.
-    fn ready(&mut self, is_server: bool) -> Res<()> {
+    fn ready(&mut self, is_server: bool, grease: bool) -> Res<()> {
         secstatus_to_res(unsafe {
             ssl::SSL_AuthCertificateHook(
                 self.fd,
@@ -387,7 +388,7 @@ impl SecretAgent {
         })?;
 
         self.now.bind(self.fd)?;
-        self.configure()?;
+        self.configure(grease)?;
         secstatus_to_res(unsafe { ssl::SSL_ResetHandshake(self.fd, ssl::PRBool::from(is_server)) })
     }
 
@@ -395,11 +396,15 @@ impl SecretAgent {
     ///
     /// # Errors
     /// If `set_version_range` fails.
-    fn configure(&mut self) -> Res<()> {
+    fn configure(&mut self, grease: bool) -> Res<()> {
         self.set_version_range(TLS_VERSION_1_3, TLS_VERSION_1_3)?;
         self.set_option(ssl::Opt::Locking, false)?;
         self.set_option(ssl::Opt::Tickets, false)?;
         self.set_option(ssl::Opt::OcspStapling, true)?;
+        if let Err(e) = self.set_option(ssl::Opt::Grease, grease) {
+            // Until NSS supports greasing, it's OK to fail here.
+            qinfo!([self], "Failed to enable greasing {:?}", e);
+        }
         Ok(())
     }
 
@@ -816,12 +821,12 @@ impl Client {
     ///
     /// # Errors
     /// Errors returned if the socket can't be created or configured.
-    pub fn new(server_name: impl Into<String>) -> Res<Self> {
+    pub fn new(server_name: impl Into<String>, grease: bool) -> Res<Self> {
         let server_name = server_name.into();
         let mut agent = SecretAgent::new()?;
         let url = CString::new(server_name.as_bytes())?;
         secstatus_to_res(unsafe { ssl::SSL_SetURL(agent.fd, url.as_ptr()) })?;
-        agent.ready(false)?;
+        agent.ready(false, grease)?;
         let mut client = Self {
             agent,
             server_name,
@@ -859,7 +864,7 @@ impl Client {
         let mut v = Vec::with_capacity(len);
         v.extend_from_slice(std::slice::from_raw_parts(token, len));
         qinfo!(
-            [format!("{:p}", fd)],
+            [format!("{fd:p}")],
             "Got resumption token {}",
             hex_snip_middle(&v)
         );
@@ -1027,15 +1032,11 @@ impl Server {
         for n in certificates {
             let c = CString::new(n.as_ref())?;
             let cert_ptr = unsafe { p11::PK11_FindCertFromNickname(c.as_ptr(), null_mut()) };
-            let cert = if let Ok(c) = p11::Certificate::from_ptr(cert_ptr) {
-                c
-            } else {
+            let Ok(cert) = p11::Certificate::from_ptr(cert_ptr) else {
                 return Err(Error::CertificateLoading);
             };
             let key_ptr = unsafe { p11::PK11_FindKeyByAnyCert(*cert.deref(), null_mut()) };
-            let key = if let Ok(k) = p11::PrivateKey::from_ptr(key_ptr) {
-                k
-            } else {
+            let Ok(key) = p11::PrivateKey::from_ptr(key_ptr) else {
                 return Err(Error::CertificateLoading);
             };
             secstatus_to_res(unsafe {
@@ -1043,7 +1044,7 @@ impl Server {
             })?;
         }
 
-        agent.ready(true)?;
+        agent.ready(true, true)?;
         Ok(Self {
             agent,
             zero_rtt_check: None,

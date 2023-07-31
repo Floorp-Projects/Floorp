@@ -7,22 +7,25 @@
 // Tracks possibly-redundant flow control signals from other code and converts
 // into flow control frames needing to be sent to the remote.
 
-use crate::frame::{
-    FRAME_TYPE_DATA_BLOCKED, FRAME_TYPE_MAX_DATA, FRAME_TYPE_MAX_STREAMS_BIDI,
-    FRAME_TYPE_MAX_STREAMS_UNIDI, FRAME_TYPE_MAX_STREAM_DATA, FRAME_TYPE_STREAMS_BLOCKED_BIDI,
-    FRAME_TYPE_STREAMS_BLOCKED_UNIDI, FRAME_TYPE_STREAM_DATA_BLOCKED,
+use crate::{
+    frame::{
+        FRAME_TYPE_DATA_BLOCKED, FRAME_TYPE_MAX_DATA, FRAME_TYPE_MAX_STREAMS_BIDI,
+        FRAME_TYPE_MAX_STREAMS_UNIDI, FRAME_TYPE_MAX_STREAM_DATA, FRAME_TYPE_STREAMS_BLOCKED_BIDI,
+        FRAME_TYPE_STREAMS_BLOCKED_UNIDI, FRAME_TYPE_STREAM_DATA_BLOCKED,
+    },
+    packet::PacketBuilder,
+    recovery::{RecoveryToken, StreamRecoveryToken},
+    stats::FrameStats,
+    stream_id::{StreamId, StreamType},
+    Error, Res,
 };
-use crate::packet::PacketBuilder;
-use crate::recovery::{RecoveryToken, StreamRecoveryToken};
-use crate::stats::FrameStats;
-use crate::stream_id::{StreamId, StreamType};
-use crate::{Error, Res};
 use neqo_common::{qtrace, Role};
 
-use std::convert::TryFrom;
-use std::fmt::Debug;
-use std::ops::{Deref, DerefMut};
-use std::ops::{Index, IndexMut};
+use std::{
+    convert::TryFrom,
+    fmt::Debug,
+    ops::{Deref, DerefMut, Index, IndexMut},
+};
 
 #[derive(Debug)]
 pub struct SenderFlowControl<T>
@@ -573,10 +576,12 @@ impl IndexMut<StreamType> for LocalStreamLimits {
 #[cfg(test)]
 mod test {
     use super::{LocalStreamLimits, ReceiverFlowControl, RemoteStreamLimits, SenderFlowControl};
-    use crate::packet::PacketBuilder;
-    use crate::stats::FrameStats;
-    use crate::stream_id::{StreamId, StreamType};
-    use crate::Error;
+    use crate::{
+        packet::PacketBuilder,
+        stats::FrameStats,
+        stream_id::{StreamId, StreamType},
+        Error,
+    };
     use neqo_common::{Encoder, Role};
 
     #[test]
@@ -859,7 +864,7 @@ mod test {
         let mut fc = RemoteStreamLimits::new(2, 1, Role::Client);
         assert_eq!(fc[StreamType::BiDi].take_stream_id(), StreamId::from(1));
         assert_eq!(fc[StreamType::BiDi].take_stream_id(), StreamId::from(5));
-        let _ = fc[StreamType::BiDi].take_stream_id();
+        _ = fc[StreamType::BiDi].take_stream_id();
     }
 
     fn local_stream_limits(role: Role, bidi: u64, unidi: u64) {

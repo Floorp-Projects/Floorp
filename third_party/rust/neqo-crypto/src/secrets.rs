@@ -4,15 +4,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::agentio::as_c_void;
-use crate::constants::Epoch;
-use crate::err::Res;
-use crate::p11::{PK11SymKey, PK11_ReferenceSymKey, SymKey};
-use crate::ssl::{PRFileDesc, SSLSecretCallback, SSLSecretDirection};
-
+use crate::{
+    agentio::as_c_void,
+    constants::Epoch,
+    err::Res,
+    p11::{PK11SymKey, PK11_ReferenceSymKey, SymKey},
+    ssl::{PRFileDesc, SSLSecretCallback, SSLSecretDirection},
+};
 use neqo_common::qdebug;
-use std::os::raw::c_void;
-use std::pin::Pin;
+use std::{os::raw::c_void, pin::Pin};
 
 experimental_api!(SSL_SecretCallback(
     fd: *mut PRFileDesc,

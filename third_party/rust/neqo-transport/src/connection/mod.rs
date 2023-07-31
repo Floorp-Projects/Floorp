@@ -6,18 +6,41 @@
 
 // The class implementing a QUIC connection.
 
-use std::cell::RefCell;
-use std::cmp::{max, min};
-use std::convert::TryFrom;
-use std::fmt::{self, Debug};
-use std::mem;
-use std::net::{IpAddr, SocketAddr};
-use std::ops::RangeInclusive;
-use std::rc::{Rc, Weak};
-use std::time::{Duration, Instant};
+use crate::{
+    addr_valid::{AddressValidation, NewTokenState},
+    cid::{
+        ConnectionId, ConnectionIdEntry, ConnectionIdGenerator, ConnectionIdManager,
+        ConnectionIdRef, ConnectionIdStore, LOCAL_ACTIVE_CID_LIMIT,
+    },
+};
 
-use smallvec::SmallVec;
-
+use crate::recv_stream::RecvStreamStats;
+pub use crate::send_stream::{RetransmissionPriority, SendStreamStats, TransmissionPriority};
+use crate::{
+    crypto::{Crypto, CryptoDxState, CryptoSpace},
+    dump::*,
+    events::{ConnectionEvent, ConnectionEvents, OutgoingDatagramOutcome},
+    frame::{
+        CloseError, Frame, FrameType, FRAME_TYPE_CONNECTION_CLOSE_APPLICATION,
+        FRAME_TYPE_CONNECTION_CLOSE_TRANSPORT,
+    },
+    packet::{DecryptedPacket, PacketBuilder, PacketNumber, PacketType, PublicPacket},
+    path::{Path, PathRef, Paths},
+    qlog,
+    quic_datagrams::{DatagramTracking, QuicDatagrams},
+    recovery::{LossRecovery, RecoveryToken, SendProfile},
+    rtt::GRANULARITY,
+    stats::{Stats, StatsCell},
+    stream_id::StreamType,
+    streams::{SendOrder, Streams},
+    tparams::{
+        self, TransportParameter, TransportParameterId, TransportParameters,
+        TransportParametersHandler,
+    },
+    tracking::{AckTracker, PacketNumberSpace, SentPacket},
+    version::{Version, WireVersion},
+    AppError, ConnectionError, Error, Res, StreamId,
+};
 use neqo_common::{
     event::Provider as EventProvider, hex, hex_snip_middle, hrtime, qdebug, qerror, qinfo,
     qlog::NeqoQlog, qtrace, qwarn, Datagram, Decoder, Encoder, Role,
@@ -27,35 +50,18 @@ use neqo_crypto::{
     HandshakeState, PrivateKey, PublicKey, ResumptionToken, SecretAgentInfo, SecretAgentPreInfo,
     Server, ZeroRttChecker,
 };
-
-use crate::addr_valid::{AddressValidation, NewTokenState};
-use crate::cid::{
-    ConnectionId, ConnectionIdEntry, ConnectionIdGenerator, ConnectionIdManager, ConnectionIdRef,
-    ConnectionIdStore, LOCAL_ACTIVE_CID_LIMIT,
+use smallvec::SmallVec;
+use std::{
+    cell::RefCell,
+    cmp::{max, min},
+    convert::TryFrom,
+    fmt::{self, Debug},
+    mem,
+    net::{IpAddr, SocketAddr},
+    ops::RangeInclusive,
+    rc::{Rc, Weak},
+    time::{Duration, Instant},
 };
-
-use crate::crypto::{Crypto, CryptoDxState, CryptoSpace};
-use crate::dump::*;
-use crate::events::{ConnectionEvent, ConnectionEvents, OutgoingDatagramOutcome};
-use crate::frame::{
-    CloseError, Frame, FrameType, FRAME_TYPE_CONNECTION_CLOSE_APPLICATION,
-    FRAME_TYPE_CONNECTION_CLOSE_TRANSPORT,
-};
-use crate::packet::{DecryptedPacket, PacketBuilder, PacketNumber, PacketType, PublicPacket};
-use crate::path::{Path, PathRef, Paths};
-use crate::quic_datagrams::{DatagramTracking, QuicDatagrams};
-use crate::recovery::{LossRecovery, RecoveryToken, SendProfile};
-use crate::rtt::GRANULARITY;
-pub use crate::send_stream::{RetransmissionPriority, TransmissionPriority};
-use crate::stats::{Stats, StatsCell};
-use crate::stream_id::StreamType;
-use crate::streams::Streams;
-use crate::tparams::{
-    self, TransportParameter, TransportParameterId, TransportParameters, TransportParametersHandler,
-};
-use crate::tracking::{AckTracker, PacketNumberSpace, SentPacket};
-use crate::version::{Version, WireVersion};
-use crate::{qlog, AppError, ConnectionError, Error, Res, StreamId};
 
 mod idle;
 pub mod params;
@@ -64,12 +70,13 @@ mod state;
 #[cfg(test)]
 pub mod test_internal;
 
+pub use params::{ConnectionParameters, ACK_RATIO_SCALE};
+pub use state::{ClosingFrame, State};
+
 use idle::IdleTimeout;
 use params::PreferredAddressConfig;
-pub use params::{ConnectionParameters, ACK_RATIO_SCALE};
 use saved::SavedDatagrams;
 use state::StateSignaling;
-pub use state::{ClosingFrame, State};
 
 #[derive(Debug, Default)]
 struct Packet(Vec<u8>);
@@ -307,7 +314,7 @@ impl Connection {
         let dcid = ConnectionId::generate_initial();
         let mut c = Self::new(
             Role::Client,
-            Agent::from(Client::new(server_name.into())?),
+            Agent::from(Client::new(server_name.into(), conn_params.is_greasing())?),
             cid_generator,
             protocols,
             conn_params,
@@ -371,6 +378,7 @@ impl Connection {
             agent,
             protocols.iter().map(P::as_ref).map(String::from).collect(),
             Rc::clone(&tphandler),
+            conn_params.is_fuzzing(),
         )?;
 
         let stats = StatsCell::default();
@@ -1856,7 +1864,7 @@ impl Connection {
                 version,
                 grease_quic_bit,
             );
-            let _ = Self::add_packet_number(
+            _ = Self::add_packet_number(
                 &mut builder,
                 tx,
                 self.loss_recovery.largest_acknowledged_pn(*space),
@@ -1895,67 +1903,79 @@ impl Connection {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
     ) -> Res<()> {
+        let stats = &mut self.stats.borrow_mut();
+        let frame_stats = &mut stats.frame_tx;
         if self.role == Role::Server {
             if let Some(t) = self.state_signaling.write_done(builder)? {
                 tokens.push(t);
-                self.stats.borrow_mut().frame_tx.handshake_done += 1;
+                frame_stats.handshake_done += 1;
             }
         }
 
-        // Check if there is a Datagram to be written
-        self.quic_datagrams
-            .write_frames(builder, tokens, &mut self.stats.borrow_mut());
-
-        let stats = &mut self.stats.borrow_mut().frame_tx;
-
         self.streams
-            .write_frames(TransmissionPriority::Critical, builder, tokens, stats);
+            .write_frames(TransmissionPriority::Critical, builder, tokens, frame_stats);
         if builder.is_full() {
             return Ok(());
         }
 
-        self.streams
-            .write_frames(TransmissionPriority::Important, builder, tokens, stats);
+        self.streams.write_frames(
+            TransmissionPriority::Important,
+            builder,
+            tokens,
+            frame_stats,
+        );
         if builder.is_full() {
             return Ok(());
         }
 
         // NEW_CONNECTION_ID, RETIRE_CONNECTION_ID, and ACK_FREQUENCY.
-        self.cid_manager.write_frames(builder, tokens, stats)?;
+        self.cid_manager
+            .write_frames(builder, tokens, frame_stats)?;
         if builder.is_full() {
             return Ok(());
         }
-        self.paths.write_frames(builder, tokens, stats)?;
-        if builder.is_full() {
-            return Ok(());
-        }
-
-        self.streams
-            .write_frames(TransmissionPriority::High, builder, tokens, stats);
+        self.paths.write_frames(builder, tokens, frame_stats)?;
         if builder.is_full() {
             return Ok(());
         }
 
         self.streams
-            .write_frames(TransmissionPriority::Normal, builder, tokens, stats);
+            .write_frames(TransmissionPriority::High, builder, tokens, frame_stats);
         if builder.is_full() {
             return Ok(());
         }
 
+        self.streams
+            .write_frames(TransmissionPriority::Normal, builder, tokens, frame_stats);
+        if builder.is_full() {
+            return Ok(());
+        }
+
+        // Datagrams are best-effort and unreliable.  Let streams starve them for now.
+        self.quic_datagrams.write_frames(builder, tokens, stats);
+        if builder.is_full() {
+            return Ok(());
+        }
+
+        let frame_stats = &mut stats.frame_tx;
         // CRYPTO here only includes NewSessionTicket, plus NEW_TOKEN.
         // Both of these are only used for resumption and so can be relatively low priority.
-        self.crypto
-            .write_frame(PacketNumberSpace::ApplicationData, builder, tokens, stats)?;
+        self.crypto.write_frame(
+            PacketNumberSpace::ApplicationData,
+            builder,
+            tokens,
+            frame_stats,
+        )?;
         if builder.is_full() {
             return Ok(());
         }
-        self.new_token.write_frames(builder, tokens, stats)?;
+        self.new_token.write_frames(builder, tokens, frame_stats)?;
         if builder.is_full() {
             return Ok(());
         }
 
         self.streams
-            .write_frames(TransmissionPriority::Low, builder, tokens, stats);
+            .write_frames(TransmissionPriority::Low, builder, tokens, frame_stats);
 
         #[cfg(test)]
         {
@@ -2932,6 +2952,34 @@ impl Connection {
         Ok(())
     }
 
+    /// Set the SendOrder of a stream.  Re-enqueues to keep the ordering correct
+    /// # Errors
+    /// Returns InvalidStreamId if the stream id doesn't exist
+    pub fn stream_sendorder(
+        &mut self,
+        stream_id: StreamId,
+        sendorder: Option<SendOrder>,
+    ) -> Res<()> {
+        self.streams.set_sendorder(stream_id, sendorder)
+    }
+
+    /// Set the Fairness of a stream
+    /// # Errors
+    /// Returns InvalidStreamId if the stream id doesn't exist
+    pub fn stream_fairness(&mut self, stream_id: StreamId, fairness: bool) -> Res<()> {
+        self.streams.set_fairness(stream_id, fairness)
+    }
+
+    pub fn send_stream_stats(&self, stream_id: StreamId) -> Res<SendStreamStats> {
+        self.streams.get_send_stream(stream_id).map(|s| s.stats())
+    }
+
+    pub fn recv_stream_stats(&mut self, stream_id: StreamId) -> Res<RecvStreamStats> {
+        let stream = self.streams.get_recv_stream_mut(stream_id)?;
+
+        Ok(stream.stats())
+    }
+
     /// Send data on a stream.
     /// Returns how many bytes were successfully sent. Could be less
     /// than total, based on receiver credit space available, etc.
@@ -3064,7 +3112,7 @@ impl Connection {
             version,
             false,
         );
-        let _ = Self::add_packet_number(
+        _ = Self::add_packet_number(
             &mut builder,
             tx,
             self.loss_recovery

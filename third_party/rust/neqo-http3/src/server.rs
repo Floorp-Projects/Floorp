@@ -6,24 +6,29 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use crate::connection::Http3State;
-use crate::connection_server::Http3ServerHandler;
-use crate::server_connection_events::Http3ServerConnEvent;
-use crate::server_events::{
-    Http3OrWebTransportStream, Http3ServerEvent, Http3ServerEvents, WebTransportRequest,
+use crate::{
+    connection::Http3State,
+    connection_server::Http3ServerHandler,
+    server_connection_events::Http3ServerConnEvent,
+    server_events::{
+        Http3OrWebTransportStream, Http3ServerEvent, Http3ServerEvents, WebTransportRequest,
+    },
+    settings::HttpZeroRttChecker,
+    Http3Parameters, Http3StreamInfo, Res,
 };
-use crate::settings::HttpZeroRttChecker;
-use crate::{Http3Parameters, Http3StreamInfo, Res};
 use neqo_common::{qtrace, Datagram};
 use neqo_crypto::{AntiReplay, Cipher, PrivateKey, PublicKey, ZeroRttChecker};
-use neqo_transport::server::{ActiveConnectionRef, Server, ValidateAddress};
-use neqo_transport::{ConnectionIdGenerator, Output};
-use std::cell::RefCell;
-use std::cell::RefMut;
-use std::collections::HashMap;
-use std::path::PathBuf;
-use std::rc::Rc;
-use std::time::Instant;
+use neqo_transport::{
+    server::{ActiveConnectionRef, Server, ValidateAddress},
+    ConnectionIdGenerator, Output,
+};
+use std::{
+    cell::{RefCell, RefMut},
+    collections::HashMap,
+    path::PathBuf,
+    rc::Rc,
+    time::Instant,
+};
 
 type HandlerRef = Rc<RefCell<Http3ServerHandler>>;
 
@@ -306,16 +311,17 @@ fn prepare_data(
 mod tests {
     use super::{Http3Server, Http3ServerEvent, Http3State, Rc, RefCell};
     use crate::{Error, HFrame, Header, Http3Parameters, Priority};
-    use neqo_common::event::Provider;
-    use neqo_common::Encoder;
+    use neqo_common::{event::Provider, Encoder};
     use neqo_crypto::{AuthenticationStatus, ZeroRttCheckResult, ZeroRttChecker};
     use neqo_qpack::{encoder::QPackEncoder, QpackSettings};
     use neqo_transport::{
         Connection, ConnectionError, ConnectionEvent, State, StreamId, StreamType, ZeroRttState,
     };
-    use std::collections::HashMap;
-    use std::mem;
-    use std::ops::{Deref, DerefMut};
+    use std::{
+        collections::HashMap,
+        mem,
+        ops::{Deref, DerefMut},
+    };
     use test_fixture::{
         anti_replay, default_client, fixture_init, now, CountingConnectionIdGenerator,
         DEFAULT_ALPN, DEFAULT_KEYS,
@@ -697,7 +703,7 @@ mod tests {
 
         // create a stream with unknown type.
         let new_stream_id = peer_conn.stream_create(StreamType::UniDi).unwrap();
-        let _ = peer_conn
+        _ = peer_conn
             .stream_send(new_stream_id, &[0x41, 0x19, 0x4, 0x4, 0x6, 0x0, 0x8, 0x0])
             .unwrap();
         let out = peer_conn.process(None, now());
@@ -730,7 +736,7 @@ mod tests {
 
         // create a push stream.
         let push_stream_id = peer_conn.stream_create(StreamType::UniDi).unwrap();
-        let _ = peer_conn.stream_send(push_stream_id, &[0x1]).unwrap();
+        _ = peer_conn.stream_send(push_stream_id, &[0x1]).unwrap();
         let out = peer_conn.process(None, now());
         let out = hconn.process(out.dgram(), now());
         mem::drop(peer_conn.conn.process(out.dgram(), now()));

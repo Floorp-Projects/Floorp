@@ -130,7 +130,7 @@ fn zero_rtt_setup(
 pub fn resumption_setup(mode: Resumption) -> (Option<AntiReplay>, ResumptionToken) {
     fixture_init();
 
-    let mut client = Client::new("server.example").expect("should create client");
+    let mut client = Client::new("server.example", true).expect("should create client");
     let mut server = Server::new(&["key"]).expect("should create server");
     let anti_replay = zero_rtt_setup(mode, &mut client, &mut server);
 
