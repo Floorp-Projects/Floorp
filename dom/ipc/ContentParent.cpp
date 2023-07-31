@@ -2064,6 +2064,10 @@ void ContentParent::ProcessingError(Result aCode, const char* aReason) {
 }
 
 void ContentParent::ActorDestroy(ActorDestroyReason why) {
+#ifdef FUZZING_SNAPSHOT
+  MOZ_FUZZING_IPC_DROP_PEER("ContentParent::ActorDestroy");
+#endif
+
   if (mSendShutdownTimer) {
     mSendShutdownTimer->Cancel();
     mSendShutdownTimer = nullptr;
