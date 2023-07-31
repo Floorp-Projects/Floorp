@@ -290,7 +290,7 @@ ViaductRequest::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
     rv = httpChannel->VisitResponseHeaders(visitor);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mResponse.set_body(mBodyBuffer.BeginReading());
+    mResponse.set_body(mBodyBuffer.BeginReading(), mBodyBuffer.Length());
   }
 
   return NS_OK;
