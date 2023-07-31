@@ -63,6 +63,7 @@ module.exports = {
     "prefer-boolean-length-check": require("../lib/rules/prefer-boolean-length-check"),
     "prefer-formatValues": require("../lib/rules/prefer-formatValues"),
     "reject-addtask-only": require("../lib/rules/reject-addtask-only"),
+    "reject-chromeutils-import": require("../lib/rules/reject-chromeutils-import"),
     "reject-chromeutils-import-params": require("../lib/rules/reject-chromeutils-import-params"),
     "reject-eager-module-in-lazy-getter": require("../lib/rules/reject-eager-module-in-lazy-getter"),
     "reject-global-this": require("../lib/rules/reject-global-this"),
