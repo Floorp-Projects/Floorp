@@ -112,8 +112,9 @@ MediaDocument::MediaDocument()
 }
 MediaDocument::~MediaDocument() = default;
 
-nsresult MediaDocument::Init() {
-  nsresult rv = nsHTMLDocument::Init();
+nsresult MediaDocument::Init(nsIPrincipal* aPrincipal,
+                             nsIPrincipal* aPartitionedPrincipal) {
+  nsresult rv = nsHTMLDocument::Init(aPrincipal, aPartitionedPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mIsSyntheticDocument = true;

@@ -29,7 +29,8 @@ class MediaDocument : public nsHTMLDocument {
   // Subclasses need to override this.
   enum MediaDocumentKind MediaDocumentKind() const override = 0;
 
-  virtual nsresult Init() override;
+  virtual nsresult Init(nsIPrincipal* aPrincipal,
+                        nsIPrincipal* aPartitionedPrincipal) override;
 
   virtual nsresult StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                      nsILoadGroup* aLoadGroup,

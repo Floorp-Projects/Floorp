@@ -972,7 +972,7 @@ void txMozillaXSLTProcessor::reportError(nsresult aResult,
 void txMozillaXSLTProcessor::notifyError() {
   nsCOMPtr<Document> document;
   {
-    nsresult rv = NS_NewXMLDocument(getter_AddRefs(document));
+    nsresult rv = NS_NewXMLDocument(getter_AddRefs(document), nullptr, nullptr);
     NS_ENSURE_SUCCESS_VOID(rv);
   }
 

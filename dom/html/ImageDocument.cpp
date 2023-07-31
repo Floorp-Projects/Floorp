@@ -145,8 +145,9 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(ImageDocument, MediaDocument,
                                              imgINotificationObserver,
                                              nsIDOMEventListener)
 
-nsresult ImageDocument::Init() {
-  nsresult rv = MediaDocument::Init();
+nsresult ImageDocument::Init(nsIPrincipal* aPrincipal,
+                             nsIPrincipal* aPartitionedPrincipal) {
+  nsresult rv = MediaDocument::Init(aPrincipal, aPartitionedPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mShouldResize = StaticPrefs::browser_enable_automatic_image_resizing();
@@ -796,11 +797,13 @@ void ImageDocument::MaybeSendResultToEmbedder(nsresult aResult) {
 }
 }  // namespace mozilla::dom
 
-nsresult NS_NewImageDocument(mozilla::dom::Document** aResult) {
+nsresult NS_NewImageDocument(mozilla::dom::Document** aResult,
+                             nsIPrincipal* aPrincipal,
+                             nsIPrincipal* aPartitionedPrincipal) {
   auto* doc = new mozilla::dom::ImageDocument();
   NS_ADDREF(doc);
 
-  nsresult rv = doc->Init();
+  nsresult rv = doc->Init(aPrincipal, aPartitionedPrincipal);
   if (NS_FAILED(rv)) {
     NS_RELEASE(doc);
   }

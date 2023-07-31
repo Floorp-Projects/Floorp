@@ -126,7 +126,8 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
         aCommand, aChannel, aLoadGroup, aContainer,
         []() -> already_AddRefed<Document> {
           RefPtr<Document> doc;
-          nsresult rv = NS_NewHTMLDocument(getter_AddRefs(doc));
+          nsresult rv =
+              NS_NewHTMLDocument(getter_AddRefs(doc), nullptr, nullptr);
           NS_ENSURE_SUCCESS(rv, nullptr);
           return doc.forget();
         },
@@ -137,7 +138,8 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
         aCommand, aChannel, aLoadGroup, aContainer,
         []() -> already_AddRefed<Document> {
           RefPtr<Document> doc;
-          nsresult rv = NS_NewXMLDocument(getter_AddRefs(doc));
+          nsresult rv =
+              NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
           NS_ENSURE_SUCCESS(rv, nullptr);
           return doc.forget();
         },
@@ -148,7 +150,8 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
         aCommand, aChannel, aLoadGroup, aContainer,
         []() -> already_AddRefed<Document> {
           RefPtr<Document> doc;
-          nsresult rv = NS_NewSVGDocument(getter_AddRefs(doc));
+          nsresult rv =
+              NS_NewSVGDocument(getter_AddRefs(doc), nullptr, nullptr);
           NS_ENSURE_SUCCESS(rv, nullptr);
           return doc.forget();
         },
@@ -160,7 +163,8 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
         aCommand, aChannel, aLoadGroup, aContainer,
         []() -> already_AddRefed<Document> {
           RefPtr<Document> doc;
-          nsresult rv = NS_NewVideoDocument(getter_AddRefs(doc));
+          nsresult rv =
+              NS_NewVideoDocument(getter_AddRefs(doc), nullptr, nullptr);
           NS_ENSURE_SUCCESS(rv, nullptr);
           return doc.forget();
         },
@@ -172,7 +176,8 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
         aCommand, aChannel, aLoadGroup, aContainer,
         []() -> already_AddRefed<Document> {
           RefPtr<Document> doc;
-          nsresult rv = NS_NewImageDocument(getter_AddRefs(doc));
+          nsresult rv =
+              NS_NewImageDocument(getter_AddRefs(doc), nullptr, nullptr);
           NS_ENSURE_SUCCESS(rv, nullptr);
           return doc.forget();
         },
@@ -212,7 +217,8 @@ already_AddRefed<Document> nsContentDLF::CreateBlankDocument(
     nsIPrincipal* aPartitionedPrincipal, nsDocShell* aContainer) {
   // create a new blank HTML document
   RefPtr<Document> blankDoc;
-  mozilla::Unused << NS_NewHTMLDocument(getter_AddRefs(blankDoc));
+  mozilla::Unused << NS_NewHTMLDocument(getter_AddRefs(blankDoc), nullptr,
+                                        nullptr);
 
   if (!blankDoc) {
     return nullptr;

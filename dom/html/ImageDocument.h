@@ -31,7 +31,8 @@ class ImageDocument final : public MediaDocument,
     return MediaDocumentKind::Image;
   }
 
-  nsresult Init() override;
+  nsresult Init(nsIPrincipal* aPrincipal,
+                nsIPrincipal* aPartitionedPrincipal) override;
 
   nsresult StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                              nsILoadGroup* aLoadGroup, nsISupports* aContainer,

@@ -67,14 +67,15 @@ nsresult NS_NewDOMDocument(Document** aInstancePtrResult,
   bool isHTML = false;
   bool isXHTML = false;
   if (aFlavor == DocumentFlavorSVG) {
-    rv = NS_NewSVGDocument(getter_AddRefs(d));
+    rv = NS_NewSVGDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
   } else if (aFlavor == DocumentFlavorHTML) {
-    rv = NS_NewHTMLDocument(getter_AddRefs(d));
+    rv = NS_NewHTMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
     isHTML = true;
   } else if (aFlavor == DocumentFlavorXML) {
-    rv = NS_NewXMLDocument(getter_AddRefs(d));
+    rv = NS_NewXMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
   } else if (aFlavor == DocumentFlavorPlain) {
-    rv = NS_NewXMLDocument(getter_AddRefs(d), aLoadedAsData, true);
+    rv = NS_NewXMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal,
+                           aLoadedAsData, true);
   } else if (aDoctype) {
     MOZ_ASSERT(aFlavor == DocumentFlavorLegacyGuess);
     nsAutoString publicId, name;
@@ -89,25 +90,25 @@ nsresult NS_NewDOMDocument(Document** aInstancePtrResult,
         publicId.EqualsLiteral("-//W3C//DTD HTML 4.0//EN") ||
         publicId.EqualsLiteral("-//W3C//DTD HTML 4.0 Frameset//EN") ||
         publicId.EqualsLiteral("-//W3C//DTD HTML 4.0 Transitional//EN")) {
-      rv = NS_NewHTMLDocument(getter_AddRefs(d));
+      rv = NS_NewHTMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
       isHTML = true;
     } else if (publicId.EqualsLiteral("-//W3C//DTD XHTML 1.0 Strict//EN") ||
                publicId.EqualsLiteral(
                    "-//W3C//DTD XHTML 1.0 Transitional//EN") ||
                publicId.EqualsLiteral("-//W3C//DTD XHTML 1.0 Frameset//EN")) {
-      rv = NS_NewHTMLDocument(getter_AddRefs(d));
+      rv = NS_NewHTMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
       isHTML = true;
       isXHTML = true;
     } else if (publicId.EqualsLiteral("-//W3C//DTD SVG 1.1//EN")) {
-      rv = NS_NewSVGDocument(getter_AddRefs(d));
+      rv = NS_NewSVGDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
     }
     // XXX Add support for XUL documents.
     else {
-      rv = NS_NewXMLDocument(getter_AddRefs(d));
+      rv = NS_NewXMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
     }
   } else {
     MOZ_ASSERT(aFlavor == DocumentFlavorLegacyGuess);
-    rv = NS_NewXMLDocument(getter_AddRefs(d));
+    rv = NS_NewXMLDocument(getter_AddRefs(d), aPrincipal, aPrincipal);
   }
 
   if (NS_FAILED(rv)) {
@@ -120,8 +121,6 @@ nsresult NS_NewDOMDocument(Document** aInstancePtrResult,
   }
   d->SetLoadedAsData(aLoadedAsData, /* aConsiderForMemoryReporting */ true);
   d->SetDocumentURI(aDocumentURI);
-  // Must set the principal first, since SetBaseURI checks it.
-  d->SetPrincipals(aPrincipal, aPrincipal);
   d->SetBaseURI(aBaseURI);
 
   // We need to set the script handling object after we set the principal such
@@ -174,11 +173,13 @@ nsresult NS_NewDOMDocument(Document** aInstancePtrResult,
   return NS_OK;
 }
 
-nsresult NS_NewXMLDocument(Document** aInstancePtrResult, bool aLoadedAsData,
-                           bool aIsPlainDocument) {
+nsresult NS_NewXMLDocument(Document** aInstancePtrResult,
+                           nsIPrincipal* aPrincipal,
+                           nsIPrincipal* aPartitionedPrincipal,
+                           bool aLoadedAsData, bool aIsPlainDocument) {
   RefPtr<XMLDocument> doc = new XMLDocument();
 
-  nsresult rv = doc->Init();
+  nsresult rv = doc->Init(aPrincipal, aPartitionedPrincipal);
 
   if (NS_FAILED(rv)) {
     *aInstancePtrResult = nullptr;
@@ -203,8 +204,9 @@ XMLDocument::XMLDocument(const char* aContentType)
   mType = eGenericXML;
 }
 
-nsresult XMLDocument::Init() {
-  nsresult rv = Document::Init();
+nsresult XMLDocument::Init(nsIPrincipal* aPrincipal,
+                           nsIPrincipal* aPartitionedPrincipal) {
+  nsresult rv = Document::Init(aPrincipal, aPartitionedPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;

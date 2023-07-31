@@ -40,18 +40,24 @@ using mozilla::dom::NodeInfo;
 static LazyLogModule gNodeInfoManagerLeakPRLog("NodeInfoManagerLeak");
 static const uint32_t kInitialNodeInfoHashSize = 32;
 
-nsNodeInfoManager::nsNodeInfoManager(mozilla::dom::Document* aDocument)
+nsNodeInfoManager::nsNodeInfoManager(mozilla::dom::Document* aDocument,
+                                     nsIPrincipal* aPrincipal)
     : mNodeInfoHash(kInitialNodeInfoHashSize),
       mDocument(aDocument),
       mNonDocumentNodeInfos(0),
-      mPrincipal(NullPrincipal::CreateWithoutOriginAttributes()),
-      mDefaultPrincipal(mPrincipal),
       mTextNodeInfo(nullptr),
       mCommentNodeInfo(nullptr),
       mDocumentNodeInfo(nullptr),
       mRecentlyUsedNodeInfos(),
       mArena(nullptr) {
   nsLayoutStatics::AddRef();
+
+  if (aPrincipal) {
+    mPrincipal = aPrincipal;
+  } else {
+    mPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
+  }
+  mDefaultPrincipal = mPrincipal;
 
   if (gNodeInfoManagerLeakPRLog) {
     MOZ_LOG(gNodeInfoManagerLeakPRLog, LogLevel::Debug,
