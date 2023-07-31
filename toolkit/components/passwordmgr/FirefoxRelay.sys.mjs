@@ -77,7 +77,6 @@ async function hasFirefoxAccountAsync() {
   if (!lazy.fxAccounts.constructor.config.isProductionConfig()) {
     return false;
   }
-
   return lazy.fxAccounts.hasLocalSession();
 }
 
@@ -563,7 +562,7 @@ class RelayOffered {
         },
       }
     );
-
+    getRelayTokenAsync();
     return fillUsernamePromise;
   }
 }
