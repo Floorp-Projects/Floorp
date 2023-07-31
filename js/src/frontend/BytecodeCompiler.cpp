@@ -305,7 +305,8 @@ template <typename Unit>
     return false;
   }
 
-  if (input.options.populateDelazificationCache() && maybeCx) {
+  if (input.options.populateDelazificationCache()) {
+    // NOTE: Delazification can be triggered from off-thread compilation.
     BorrowingCompilationStencil borrowingStencil(compiler.stencil());
     StartOffThreadDelazification(maybeCx, input.options, borrowingStencil);
 
@@ -313,7 +314,10 @@ template <typename Unit>
     // generate the same stencil as concurrent delazification, we want to
     // parse everything eagerly off-thread ahead of re-parsing everything on
     // demand, to compare the outcome.
-    if (input.options.waitForDelazificationCache()) {
+    //
+    // This option works only from main-thread compilation, to avoid
+    // dead-lock.
+    if (input.options.waitForDelazificationCache() && maybeCx) {
       WaitForAllDelazifyTasks(maybeCx->runtime());
     }
   }

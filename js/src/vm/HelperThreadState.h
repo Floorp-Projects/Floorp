@@ -555,7 +555,7 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
                       public HelperThreadTask {
   // HelperThreads are shared between all runtimes in the process so explicitly
   // track which one we are associated with.
-  JSRuntime* runtime = nullptr;
+  JSRuntime* maybeRuntime = nullptr;
 
   DelazificationContext delazificationCx;
 
@@ -565,17 +565,19 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
   // optimization and the VM should remain working even without this
   // optimization in place.
   static UniquePtr<DelazifyTask> Create(
-      JSRuntime* runtime, const JS::ReadOnlyCompileOptions& options,
+      JSRuntime* maybeRuntime, const JS::ReadOnlyCompileOptions& options,
       const frontend::CompilationStencil& stencil);
 
-  DelazifyTask(JSRuntime* runtime,
+  DelazifyTask(JSRuntime* maybeRuntime,
                const JS::PrefableCompileOptions& initialPrefableOptions);
   ~DelazifyTask();
 
   [[nodiscard]] bool init(const JS::ReadOnlyCompileOptions& options,
                           const frontend::CompilationStencil& stencil);
 
-  bool runtimeMatches(JSRuntime* rt) { return runtime == rt; }
+  bool runtimeMatchesOrNoRuntime(JSRuntime* rt) {
+    return !maybeRuntime || maybeRuntime == rt;
+  }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
