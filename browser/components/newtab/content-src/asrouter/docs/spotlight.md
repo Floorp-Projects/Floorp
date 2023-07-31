@@ -2,7 +2,7 @@
 This is a window or tab level modal, the user is given a primary and a secondary button to interact with the modal.
 Spotlights by default are `“window modal”` preventing access to the rest of the browser including opening and switching tabs. `“Tab modal”` grays out page content and allows interacting with tabs and the rest of the browser.
 
-[More examples of templates supported in Spotlight](https://experimenter.info/messaging/messaging-surfaces/#multistage-spotlight)
+[More examples of templates supported in Spotlight](https://experimenter.info/messaging/desktop-messaging-surfaces/#multistage-spotlight)
 
 ## Example of Spotlight page
 
@@ -19,7 +19,7 @@ Spotlights by default are `“window modal”` preventing access to the rest of 
 - **Note:** Spotlight can be either window or tab level, with the `"modal": "tab"` or `"modal": "window"` property in the recipe
 
 ### Via the Experiments:
-You can test the spotlight by creating an experiment or landing a message in tree. [Messaging Journey](https://experimenter.info/messaging/messaging-journey) captures creating and testing experiments via Nimbus and landing messages in Firefox.
+You can test the spotlight by creating an experiment or landing a message in tree. [Messaging Journey](https://experimenter.info/messaging/desktop-messaging-journey) captures creating and testing experiments via Nimbus and landing messages in Firefox.
 
 ### Example JSON recipe for Spotlight
 

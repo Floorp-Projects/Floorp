@@ -4,7 +4,7 @@
 The most commonly used CFR as a Messaging Surface is the doorhanger, which anchors to one of the UI elements such as the application menu, the identity panel and so on.
 CFRs like any other messaging screen has specific triggers. You can learn more about triggers [here](https://firefox-source-docs.mozilla.org/toolkit/components/messaging-system/docs/TriggerActionSchemas/index.html),
 
-[More examples of templates supported with CFR ](https://experimenter.info/messaging/messaging-surfaces/#doorhanger)
+[More examples of templates supported with CFR ](https://experimenter.info/messaging/desktop-messaging-surfaces/#doorhanger)
 
 ### Example of Doorhanger
 ![Doorhanger](./cfr-doorhanger.png)
@@ -24,7 +24,7 @@ CFRs like any other messaging screen has specific triggers. You can learn more a
 - **Note:** The `"anchor_id"` prop is the ID of the element the CFR will attach to (example below: `tracking-protection-icon-box`). Setting prop skip_address_bar_notifier to true will show the doorhanger straight away skipping url bar notifier (See [Bug 1831198](https://bugzilla.mozilla.org/show_bug.cgi?id=1831198)).
 
 ### Via Experiments:
-You can test CFR messaging surface by creating an experiment or landing message in tree. [Messaging Journey](https://experimenter.info/messaging/messaging-journey) captures creating and testing experiments via Nimbus.
+You can test CFR messaging surface by creating an experiment or landing message in tree. [Messaging Journey](https://experimenter.info/messaging/desktop-messaging-journey) captures creating and testing experiments via Nimbus.
 
 ### Example JSON for CFR
 ```

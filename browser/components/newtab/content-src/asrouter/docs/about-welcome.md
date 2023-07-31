@@ -19,7 +19,7 @@ Spotlight messaging surface shows `about:welcome` screens content with the appea
 **Note:** If you are enrolled in a nimbus experiment, about.welcome.screens will not show up
 
 ### Via Experiments
-You can test custom `about:welcome` UI by creating an experiment. [Messaging Journey](https://experimenter.info/messaging/messaging-journey) captures creating and testing experiments via Nimbus.
+You can test custom `about:welcome` UI by creating an experiment. [Messaging Journey](https://experimenter.info/messaging/desktop-messaging-journey) captures creating and testing experiments via Nimbus.
 
 ### Example JSON screens property
 ```

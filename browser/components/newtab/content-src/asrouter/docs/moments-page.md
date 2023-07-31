@@ -37,7 +37,7 @@ When the message is shown at startup:
 7. Restart firefox and your moments page should pop up on re-run
 
 ### Via Experiments:
-You can test the moments page by creating an experiment. [Messaging Journey](https://experimenter.info/messaging/messaging-journey) captures creating experiments via Nimbus.
+You can test the moments page by creating an experiment. [Messaging Journey](https://experimenter.info/messaging/desktop-messaging-journey) captures creating experiments via Nimbus.
 
 ### Example JSON for Moments page
 ```
