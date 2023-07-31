@@ -271,9 +271,6 @@ class EventListenerManager final : public EventListenerManagerBase {
       }
     }
 
-    MOZ_ALWAYS_INLINE bool MatchesEventMessage(
-        const WidgetEvent* aEvent, EventMessage aEventMessage) const;
-
     MOZ_ALWAYS_INLINE bool MatchesEventGroup(const WidgetEvent* aEvent) const {
       return mFlags.mInSystemGroup == aEvent->mFlags.mInSystemGroup;
     }
@@ -289,6 +286,66 @@ class EventListenerManager final : public EventListenerManagerBase {
         const WidgetEvent* aEvent) const {
       return aEvent->IsTrusted() || mFlags.mAllowUntrustedEvents;
     }
+  };
+
+  /**
+   * A reference counted subclass of a listener observer array.
+   */
+  struct ListenerArray final : public nsAutoTObserverArray<Listener, 1> {
+    NS_INLINE_DECL_REFCOUNTING(EventListenerManager::ListenerArray);
+    size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
+
+   protected:
+    ~ListenerArray() = default;
+  };
+
+  /**
+   * An entry in the event listener map for a certain event type, carrying the
+   * array of listeners for that type.
+   */
+  struct EventListenerMapEntry {
+    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
+
+    // The event type. Null if this entry is for "all events" listeners.
+    RefPtr<nsAtom> mTypeAtom;
+    // The array of listeners. New listeners are always added at the end.
+    // This is a RefPtr rather than an inline member for two reasons:
+    //  - It needs to be a separate heap allocation so that, if the array of
+    //    entries is mutated during iteration, the ListenerArray remains in a
+    //    stable place.
+    //  - It's a RefPtr rather than a UniquePtr so that iteration can share
+    //    ownership of it and make sure that the listener array remains alive
+    //    even if the entry is removed during iteration.
+    RefPtr<ListenerArray> mListeners;
+  };
+
+  /**
+   * The map of event listeners, keyed by event type atom.
+   */
+  struct EventListenerMap {
+    bool IsEmpty() const { return mEntries.IsEmpty(); }
+    void Clear() { mEntries.Clear(); }
+
+    Maybe<size_t> EntryIndexForType(nsAtom* aTypeAtom) const;
+    Maybe<size_t> EntryIndexForAllEvents() const;
+
+    // Returns null if no entry is present for the given type.
+    RefPtr<ListenerArray> GetListenersForType(nsAtom* aTypeAtom) const;
+    RefPtr<ListenerArray> GetListenersForAllEvents() const;
+
+    // Never returns null, creates a new empty entry if needed.
+    RefPtr<ListenerArray> GetOrCreateListenersForType(nsAtom* aTypeAtom);
+    RefPtr<ListenerArray> GetOrCreateListenersForAllEvents();
+
+    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
+
+    // The array of entries, ordered by event type atom (specifically by the
+    // nsAtom* address). If mEntries contains an entry for "all events"
+    // listeners, that entry will be the first entry, because its atom will be
+    // null so it will be ordered to the front.
+    // All entries have non-empty listener arrays. If a non-empty listener
+    // entry becomes empty, it is removed immediately.
+    AutoTArray<EventListenerMapEntry, 2> mEntries;
   };
 
   explicit EventListenerManager(dom::EventTarget* aTarget);
@@ -405,7 +462,7 @@ class EventListenerManager final : public EventListenerManagerBase {
       return;
     }
 
-    if (mListeners.IsEmpty() || aEvent->PropagationStopped()) {
+    if (mListenerMap.IsEmpty() || aEvent->PropagationStopped()) {
       return;
     }
 
@@ -513,7 +570,7 @@ class EventListenerManager final : public EventListenerManagerBase {
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
-  uint32_t ListenerCount() const { return mListeners.Length(); }
+  uint32_t ListenerCount() const;
 
   void MarkForCC();
 
@@ -542,6 +599,17 @@ class EventListenerManager final : public EventListenerManagerBase {
                            dom::Event** aDOMEvent,
                            dom::EventTarget* aCurrentTarget,
                            nsEventStatus* aEventStatus, bool aItemInShadowTree);
+
+  /**
+   * Iterate the listener array and calls the matching listeners.
+   *
+   * Returns true if any listener matching the event group was found.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  bool HandleEventWithListenerArray(
+      ListenerArray* aListeners, nsAtom* aTypeAtom, EventMessage aEventMessage,
+      nsPresContext* aPresContext, WidgetEvent* aEvent, dom::Event** aDOMEvent,
+      dom::EventTarget* aCurrentTarget, bool aItemInShadowTree);
 
   /**
    * Call the listener.
@@ -588,7 +656,7 @@ class EventListenerManager final : public EventListenerManagerBase {
   /**
    * Find the Listener for the "inline" event listener for aTypeAtom.
    */
-  Listener* FindEventHandler(EventMessage aEventMessage, nsAtom* aTypeAtom);
+  Listener* FindEventHandler(nsAtom* aTypeAtom);
 
   /**
    * Set the "inline" event listener for aName to aHandler.  aHandler may be
@@ -691,7 +759,7 @@ class EventListenerManager final : public EventListenerManagerBase {
 
   // BE AWARE, a lot of instances of EventListenerManager will be created.
   // Therefor, we need to keep this class compact.  When you add integer
-  // members, please add them to EventListemerManagerBase and check the size
+  // members, please add them to EventListenerManagerBase and check the size
   // at build time.
 
   already_AddRefed<nsIScriptGlobalObject> GetScriptGlobalAndDocument(
@@ -699,7 +767,7 @@ class EventListenerManager final : public EventListenerManagerBase {
 
   void MaybeMarkPassive(EventMessage aMessage, EventListenerFlags& aFlags);
 
-  nsAutoTObserverArray<Listener, 2> mListeners;
+  EventListenerMap mListenerMap;
   dom::EventTarget* MOZ_NON_OWNING_REF mTarget;
   RefPtr<nsAtom> mNoListenerForEventAtom;
 
