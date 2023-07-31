@@ -1245,12 +1245,6 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
     return nullptr;
   }
 
-  // Check the image width and height.
-  if (!aSVGImageElement.HasValidDimensions()) {
-    aRv.ThrowInvalidStateError("The SVG does not have valid dimensions");
-    return nullptr;
-  }
-
   // If the origin of SVGImageElement's image data is not same origin with the
   // entry settings object's origin, then throw a SecurityError DOMException.
   SurfaceFromElementResult res = nsLayoutUtils::SurfaceFromElement(
