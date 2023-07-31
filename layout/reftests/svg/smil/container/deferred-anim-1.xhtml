@@ -25,7 +25,7 @@
           // In the pass case, we'll get an end event almost immediately.
           // In the failure case, wait 30s before giving up.
           timeoutID = window.setTimeout(giveUp, 30000);
-          anim.addEventListener('end', finish, true);
+          anim.addEventListener('endEvent', finish, true);
         }
 
         function giveUp() {
