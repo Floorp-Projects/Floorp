@@ -5,129 +5,129 @@
 ###################################################################### about:Dialog #################################################################################
 
 about-floorp = <label data-l10n-name="floorp-browser-link">{ -brand-product-name }</label> is one of the domestic browsers developed in Japan. It is based on Firefox and continues to operate under <label data-l10n-name="ablaze-Link">{ -vendor-short-name }</label>, to improve the web. Want to help? <label data-l10n-name="helpus-donateLink">Make a donation</label>
-icon-creator = Icon creator <label data-l10n-name="browser-logo-twitter">@CutterKnife_</label> and <label data-l10n-name="brand-logo-twitter">@mwxdxx.</label>
-contributors = A list of <label data-l10n-name="about-contributor">contributors and Developers</label>
+icon-creator = İkonu tasarlayanlar <label data-l10n-name="browser-logo-twitter">@CutterKnife_</label> ve <label data-l10n-name="brand-logo-twitter">@mwxdxx.</label>
+contributors = <label data-l10n-name="about-contributor">Katkıda bulunanların ve geliştiricilerin listesi</label>
 
 #################################################################### about:preferences ####################################################################
 
-pane-design-title = Design
+pane-design-title = Tasarım
 category-design =
     .tooltiptext = { pane-design-title }
-design-header = Design
+design-header = Tasarım
 
-feature-requires-restart = A reboot is required to change the settings
+feature-requires-restart = Ayarların değişmesi için tarayıcıyı yeniden başlatmalısınız
 
-tab-width = Minimum width of tabs
-preferences-tabs-newtab-position = New Tab Position
+tab-width = Minimum sekme genişliği
+preferences-tabs-newtab-position = Yeni Sekme Konumu
 open-new-tab-use-default =
- .label = Open new tabs at default position
+ .label = Yeni sekmeleri varsayılan konumda aç
 open-new-tab-at-the-end =
- .label = Open new tabs at the end of the tab bar
+ .label = Yeni sekmeleri sekme çubuğunun sonunda aç
 open-new-tab-next-to-current =
- .label = Open new tabs right of the current tab
+ .label = Yeni sekmeleri mevcut sekmenin sağında aç
 enable-multitab = 
- .label = Enable multi-row tabs
+ .label = Çok dizili sekmeleri etkinleştir
 multirow-tabs-limit = 
- .label = Enable row limit for multi-row tabs.
+ .label = Çok dizili sekmeler için dizi sınırını etkinleştir
 multirow-tabs-newtab = 
- .label = Always place the Open New Tab button within the column of multi-row tabs
-multirow-tabs-value = Number of rows when multi-row tabs are enabled
+ .label = Yeni Sekme Aç düğmesini her zaman çok dizili sekmeler sütununun içine yerleştirin
+multirow-tabs-value = Çok dizili sekmeler etkinleştirildiğinde dizi sayısı
 enable-tab-sleep = 
- .label = Enable Tab Sleep
-tab-sleep-timeout-minutes-value = Time to put tabs to sleep (minutes)
-tab-sleep-settings-button = Settings...
+ .label = Uyku sekmelerini etkinleştir
+tab-sleep-timeout-minutes-value = Sekmeler şu kadar süre sonra uykuya alınsın (dakika)
+tab-sleep-settings-button = Ayarlar...
 tab-sleep-settings-dialog-title =
- .title = Tab Sleep Settings
-tab-sleep-settings-dialog-excludehosts-label = Exclude hosts
-tab-sleep-settings-dialog-excludehosts-label-2 = Enter one host per line.
-tab-sleep-tab-context-menu-excludetab = Do not put this tab to sleep
+ .title = Uyku Sekmeleri Ayarları
+tab-sleep-settings-dialog-excludehosts-label = Şu hostları hariç tut
+tab-sleep-settings-dialog-excludehosts-label-2 = Satır başına bir host girin
+tab-sleep-tab-context-menu-excludetab = Bu sekmeyi uykuya koyma
 enable-floorp-workspace =
- .label = Enable WorkSpace
+ .label = Çalışma Alanı'nı etkinleştir
 enable-tab-scroll-change =
- .label = Switch Tabs by Scrolling
+ .label = Sekmeleri fare tekerleği ile değiştir
 enable-tab-scroll-reverse =
- .label = Reverse direction of scrolling tabs
+ .label = Fare tekerleği ile değiştirmenin yönünü tersine çevir
 enable-tab-scroll-wrap =
- .label = Wrap scrolling tabs at the edge
+ .label = En sona veya en başa geldiğinde bile yine tekerlekle sekme değişmeye devam et
 enable-double-click-block =
- .label = Double-click to Close the Tab
+ .label = Çift tıklama ile sekmeyi kapat
 enable-show-pinned-tabs-title =
- .label = Show the title of pinned tabs
+ .label = Sabitlenmiş sekmelerin başlığını göster
 Mouse-side-button =
-  .label = Optimise browser for mouse with side buttons
+  .label = Yan düğmeli fareler için tarayıcı optimize edin
 
-tabbar-preference = Tabbar (Mac not supported)
+tabbar-preference = Sekme Çubuğu (Mac desteklenmemektedir)
 
 None-mode = 
- .label= Normal mode
+ .label= Normal mod
 
 hide-horizontality-tabs =
- .label= Hide horizontal tabbar
+ .label= Yatay sekme çubuğunu gizle
 
 verticalTab-setting =
- .label = Optimise browser for vertical tabs 
+ .label = Tarayıcıyı dikey sekmeler için optimize edin 
 
 move-tabbar-position =
- .label = Show tabbar at the bottom of the toolbar
+ .label = Sekme çubuğunu araç çubuğunun altında göster
 
 tabbar-on-bottom =
- .label = Display tabbar at the bottom of the window
+ .label = Sekme çubuğunu pencerenin altında göster
 
 tabbar-favicon-color =
- .label = Use favicon color for tabbar background color
+ .label = Sekme çubuğu arka plan rengi için site ikonu rengini kullan
 
-tabbar-style-preference = Tabbar Style
+tabbar-style-preference = Sekme Çubuğu Stili
 
 horizontal-tabbar =
- .label = Horizontal Tabbar
+ .label = Yatay Sekme Çubuğu
 
 multirow-tabbar =
- .label = Multi-Row Tabbar
+ .label = Çok Dizili Sekme Çubuğu
 vertical-tabbar =
- .label = Vertical Tabbar (experimental)
-native-tabbar-tip = This feature uses default Firefox sidebar, so you can't use it with other sidebar add-ons & default sidebar panels.
+ .label = Dikey Sekme Çubuğu (deneysel)
+native-tabbar-tip = Bu özellik varsayılan Firefox kenar çubuğunu kullanır, bu nedenle diğer kenar çubuğu eklentileri ve varsayılan kenar çubuğu panelleri ile beraber kullanamazsınız.
 
 hover-vertical-tab =
- .label = Expand vertical tabs when hovering the mouse cursor
+ .label = Fare imlecini üzerine getirdiğinde dikey sekmeleri genişlet
 
-sidebar-reverse-position-toolbar = Reverse Sidebar Position
+sidebar-reverse-position-toolbar = Ters Kenar Çubuğu Konumu
 
-bookmarks-bar-settings = Bookmark Bar Settings (Can`t be used in parallel)
+bookmarks-bar-settings = Yer İşareti Çubuğu Ayarları (Paralel olarak kullanılamaz)
 bookmarks-focus-mode =
- .label = Show the bookmark bar when the mouse is focused on the toolbar
+ .label = Fare araç çubuğuna odaklandığında yer imi çubuğunu göster
 bookmarks-bottom-mode =
- .label = Bookmark bar at the bottom of the browser
+ .label = Yer imi çubuğunu tarayıcının altında göster
 
-nav-bar-settings = Navigation Bar Settings
+nav-bar-settings = Gezinme Çubuğu Ayarları
 show-nav-bar-bottom =
- .label = Show the navigation bar at the bottom of { -brand-short-name } (experimental)
+ .label = Gezinme çubuğunu { -brand-short-name }'un altında göster (deneysel)
 
 material-effect =
- .label = Allow Mica for Everyone to modify the browser design
+ .label = Mica for Everyone'ın tarayıcı tasarımını değiştirmesine izin ver
 disable-extension-check-compatibility-option =
- .label = Do not check for compatibility with add-ons
-other-preference = Other Preferences
+ .label = Eklenti uyumluluğunu kontrol etme
+other-preference = Diğer Tercihler
 
 enable-userscript =
- .label = Enable legacy components
-about-legacy-components = Enabling this feature may cause unexpected bugs or fatal errors
+ .label = Eski bileşenleri etkinleştir
+about-legacy-components = Bu özelliğin etkinleştirilmesi beklenmedik ve kritik hatalara sebep olabilir
 
 Search-positon-top =
- .label = Display the search bar at the top of the page
+ .label = Arama çubuğunu sayfanın üst kısmında göster
 allow-auto-restart =
- .label = Automatic restart when settings that require a restart are changed
+ .label = Yeniden başlatma gerektiren ayarlar değiştirildiğinde tarayıcı otomatik yeniden başlat
 
 browser-rest-mode =
- .label = Enable Rest-mode shortcut (F9)
+ .label = Dinlenme modu kısayolunu etkinleştir (F9)
 
 disable-fullscreen-notification =
- .label = Disable video fullscreen notification
+ .label = Video tam ekran bildirimini devre dışı bırak
 
-floorp-updater = { -brand-short-name } Updater Settings
+floorp-updater = { -brand-short-name } Güncelleyici Ayarları
 enable-floorp-updater =
- .label = Check for { -brand-short-name } updates at startup
+ .label = Bilgisayar başladığında { -brand-short-name } güncellemelerini kontrol edin
 floorp-update-latest =
- .label = Notification that { -brand-short-name } is up-to-date during automatic update checks
+ .label = Otomatik güncelleme kontrolleri sırasında { -brand-short-name }'un güncel olduğuna dair bildirim
 
 ## system theme color
 
@@ -135,98 +135,98 @@ system-color-settings = Both light and dark modes are available for this theme, 
 preferences-theme-appearance-header = Setting the system theme
 
 system-theme-dark =
- .label = Enforce dark mode
+ .label = Karanlık modu uygula
 
 system-theme-light =
- .label = Enforce light mode
+ .label = Aydınlık modu uygula
 
 system-theme-auto =
- .label = Default mode
+ .label = Varsayılan mod
 
 ## user interface prefernces
 
-ui-preference = Browser appearance
-preferences-browser-appearance-description = You can choose one of the wonderful third-party Floorp designs. Some designs may not be compatible with your configuration.
+ui-preference = Tarayıcı görünümü
+preferences-browser-appearance-description = Harika üçüncü taraf Floorp tasarımlarından birini seçebilirsiniz. Bazı tasarımlar yapılandırmanızla uyumlu olmayabilir.
 
 firefox-proton =
- .label = Firefox modern Proton UI
+ .label = Firefox modern Proton kullanıcı arayüzü
 
 firefox-proton-fix =
- .label = Firefox Proton FIX UI
+ .label = Firefox Proton Fix Kullanıcı Arayüzü
 
 firefox-photon-lepton =
- .label = Firefox Photon・Lepton UI
+ .label = Firefox Photon ・ Lepton Kullanıcı Arayüzü
  
 floorp-legacy =
- .label = Floorp Legacy UI・Unsupported
+ .label = Floorp Eski Kullanıcı Arayüzü ・ Desteklenmiyor
 
 floorp-fluentUI =
- .label = Microsoft Fluent UI
+ .label = Microsoft Fluent Kullanıcı Arayüzü
  
 floorp-fluerialUI =
- .label = Floorp Fluerial UI
+ .label = Floorp Fluerial Kullanıcı Arayüzü
 
 floorp-gnomeUI =
- .label = Gnome Theme
+ .label = Gnome Teması
 
 ## download mgr
-download-notification-preferences = Download Notification
+download-notification-preferences = İndirme Bildirimi
 start-always-notify =
- .label = Notify only at start
+ .label = Sadece başlangıçta bildir
 finish-always-notify =
- .label = Notify only when finished
+ .label = Sadece bittiğinde bildir
 always-notify =
- .label = Notify both at start and end
+ .label = Hem başlangıçta hem de bitişte bildir
 do-not-notify =
- .label = Do not enable notifications
+ .label = Bildirimleri etkinleştirme
 
-floorp-translater = Translation Function Settings
+floorp-translater = Çeviri İşlevi Ayarları
 click-to-option =
-    .label = Open Settings...
+    .label = Ayarları Aç...
     .accesskey = O
 
 ## sidebar
-profiles-button-label = Manage profiles
-floorp-help-button-label = { -brand-short-name } Support
+profiles-button-label = Profilleri Yönet
+floorp-help-button-label = { -brand-short-name } Destek
 
 appmenuitem-reboot =
- .label = Reboot
+ .label = Yeniden başlat
 
 ## useagent
 
-UserAgent-preference = User Agent
+UserAgent-preference = Kullanıcı Aracısı
 default-useragent-mode =
- .label = Use Firefox User Agent (Default)
+ .label = Firefox Kullanıcı Aracısını Kullan (Varsayılan)
 windows-chrome-useragent-mode =
- .label = Spoof Chrome on Windows
+ .label = Windows'ta Chrome'u taklit et
 macOS-chrome-useragent-mode =
- .label = Spoof Chrome on macOS
+ .label = MacOS'te Chrome'u taklit et
 linux-chrome-useragent-mode =
- .label = Spoof Chrome on Linux
+ .label = Linux'ta Chrome'u taklit et
 mobile-chrome-useragent-mode =
- .label = Spoof Chrome on iOS
+ .label = iOS'ta Chrome'u taklit et
 use-custom-useragent-mode =
- .label = Use Custom User Agent
+ .label = Özel Kullanıcı Aracısı Kullan
 
 ## DMR UI
 download-mgr-UI =
- .label = Use a Simple UI download manager
+ .label = Basit Kullanıcı Arayüzlü İndirme Yöneticisi kullan
 downloading-red-color =
- .label = Highlight the Download Manager icon in red during download
+ .label = İndirme sırasında İndirme Yöneticisi simgesini kırmızı ile vurgulayın
 
-sidebar-preferences = Sidebar
+sidebar-preferences = Kenar Çubuğu
 
-bsb-preferences = Browser Manager Sidebar Setting
+bsb-preferences = Tarayıcı Kenar Çubuğu Ayarları
 view-sidebar2-right = 
- .label = Display Browser Manager Sidebar on the Right
+ .label = Tarayıcı Kenar Çubuğunu sağda göster
 enable-sidebar2 =
- .label = Enable Browser Manager Sidebar
+ .label = Tarayıcı Kenar Çubuğunu etkinleştir
 visible-bms = 
- .label = Visible Browser Manager Sidebar
+ .label = Görünür Tarayıcı Yöneticisi Kenar Çubuğu
 
-custom-URL-option = Set Webpanel URLs
+custom-URL-option = Webpanel URL'lerini ayarlama
 set-custom-URL-button =
-    .label = Set Custom URLs...
+    .label = Özel URL Ayarla...
     .accesskey = S
 
 pane-BSB-title = { bsb-header }
@@ -236,16 +236,16 @@ category-BSB =
 category-downloads = 
     .tooltiptext = { files-and-applications-title }
 
-bsb-header = Browser Manager Sidebar
-bsb-context = Select Container Tabs
+bsb-header = Tarayıcı Kenar Çubuğu
+bsb-context = Konteyner Sekmeleri Seç
 bsb-userAgent-label = 
-  .label = Use Mobile UserAgent for this panel
-bsb-width = Width (If set to 0, use global values)
-bsb-page = Page to open
+  .label = Bu panel için Mobil Kullanıcı Aracısı kullanın
+bsb-width = Genişlik (0 olarak ayarlanırsa, global değerleri kullan)
+bsb-page = Açılacak Sayfa
 
-bsb-add = Add webpanel on Browser Manager Sidebar
+bsb-add = Webpanel'i Tarayıcı Kenar Çubuğuna ekle
 
-bsb-setting = Webpanel Setting
+bsb-setting = Webpanel Ayarları
 
 bsb-add-title =
  .title = { bsb-add }
@@ -269,17 +269,17 @@ bsb-notes-sidebar =
   .label = { sidebar2-notes-sidebar }
 
 bsb-website = 
-  .label = Website
+  .label = Web sitesi
 
 sidebar2-pref-delete =
- .label = Delete
+ .label = Sil
 
 sidebar2-pref-setting =
- .label = Setting
+ .label = Ayarlar
 
-sidebar2-global-width = Global webpanel width
+sidebar2-global-width = Global webpanel genişliği
 
-use-icon-provider-option = Use Icon Provider
+use-icon-provider-option = Simge Sağlayıcıyı Kullan
 
 use-icon-provider-option-google =
  .label = Google
@@ -288,123 +288,123 @@ use-icon-provider-option-duckduckgo =
  .label = DuckDuckGo
 
 use-icon-provider-option-yandex =
- .label = Yandex (Available in China)
+ .label = Yandex (Çin'de mevcut)
 
 use-icon-provider-option-hatena =
- .label = Hatena (Available in China)
+ .label = Hatena (Çin'de mevcut)
 
-memory-and-performance = Memory Performance Settings
+memory-and-performance = Hafıza Performans Ayarları
 
 min-memory = 
-    .label = Minimum Memory Usage (low performance)
+    .label = Minimum Hafıza Kullanımı (düşük performans)
 
 balance-memory = 
-    .label = Balance Memory Usage and Performance
+    .label = Hafıza Kullanımını ve Performansı Dengele
 
 max-memory = 
-    .label = Best Speed and Performance (high memory usage)
+    .label = En İyi Hız ve Performans (yüksek hafıza kullanımı)
 
 delete-border-and-roundup-option =
-  .label = Round up { -brand-short-name }'s corners
+  .label = { -brand-short-name } tarayıcısının köşelerini yuvarla
 
 ## DualTheme
 dualtheme-enable =
- .label = Enable Dual Theme
+ .label = Çift Temayı Etkinleştir
 
-newtab-background = { -brand-short-name } Home Background
+newtab-background = { -brand-short-name } Ana Sayfa Arka Planı
 
 newtab-background-random-image =
-    .label = Random Images from Unsplash
+    .label = Unsplash'ten Rastgele Görseller
 
 newtab-background-gradation =
-    .label = Gradation
+    .label = Geçişli Renkler
 
 newtab-background-not-background =
-    .label = Disable Background
+    .label = Arka Planı Devre Dışı Bırak
 
 newtab-background-selected-image =
-    .label = Use Images from a Selected Folder
+    .label = Seçili Klasördeki Görselleri Kullan
 
-newtab-background-folder = Selected Folder
+newtab-background-folder = Seçili Klasör
 
 newtab-background-folder-reload = 
-  .label = Reload Images
+  .label = Görselleri Yeniden Yükle
 
 newtab-background-folder-default = 
-  .label = Restore Default
+  .label = Varsayılana Sıfırla
 
 newtab-background-folder-open = 
-  .label = Open Folder
+  .label = Klasörü Aç
 
-newtab-background-folder-choose = Choose Images Folder
+newtab-background-folder-choose = Görsel Klasörünü Seçin
 
-newtab-background-extensions = Images' Extensions (Separated by ",")
+newtab-background-extensions = Görsellerin Uzantıları ("," ile ayrılmış)
 
 disable-blur-on-newtab = 
-  .label = Disable blur effect on { -brand-short-name } Home
+  .label = Bulanıklaştırma efektini { -brand-short-name } Ana Ekranında devre dışı bırakın
 
 ## lepton preferences
 
-about-lepton = Customize { -brand-short-name } with Lepton
+about-lepton = { -brand-short-name }'u Lepton ile özelleştirin
 
 lepton-preference-button =
-    .label = Lepton Preferences...
+    .label = Lepton Tercihleri...
     .accesskey = L
 
-lepton-header = Lepton Preferences
+lepton-header = Lepton Tercihleri
 
-lepton-preference = Lepton UI Settings
+lepton-preference = Lepton Kullanıcı Arayüzü Tercihleri
 photon-mode =
-    .label = Photon Mode
+    .label = Photon Modu
 
 lepton-mode = 
-    .label = Lepton Mode
+    .label = Lepton Modu
 
 protonfix-mode =
-    .label = Protonfix Mode
+    .label = Protonfix Modu
 
-autohide-preference = Auto hide elements
+autohide-preference = Öğeleri otomatik gizle
 
 floorp-lepton-enable-tab-autohide =
-    .label = Auto hide tabbar
+    .label = Sekme çubuğunu otomatik gizle
 floorp-lepton-enable-navbar-autohide =
-    .label = Auto hide navbar
+    .label = Gezinme çubuğunu otomatik gizle
 floorp-lepton-enable-sidebar-autohide =
-    .label = Auto hide sidebar
+    .label = Kenar çubuğunu otomatik gizle
 floorp-lepton-enable-urlbar-autohide =
-    .label = Auto hide URLBar
+    .label = URL Çubuğunu otomatik gizle
 floorp-lepton-enable-back-button-autohide =
-    .label = Auto hide back button
+    .label = Geri düğmesini otomatik gizle
 floorp-lepton-enable-forward-button-autohide =
-    .label = Auto hide forward button
+    .label = İleri düğmesini otomatik gizle
 floorp-lepton-enable-page-action-button-autohide =
-    .label = Auto hide action button on addressbar
+    .label = Adres çubuğundaki eylem düğmesini otomatik gizle
 floorp-lepton-enable-toolbar-overlap =
-    .label = Enable Toolbar overlay
+    .label = Araç Çubuğu katmanını etkinleştir
 floorp-lepton-enable-toolbar-overlap-allow-layout-shift-autohide =
-    .label = Auto-hide toolbar when displaying "ltr" content
+    .label = "ltr" içeriği görüntülenirken araç çubuğunu otomatik gizle
 
-hide-preference = Manage display elements
+hide-preference = Ekran öğelerini yönet
 
 floorp-lepton-enable-tab_icon-hide =
-    .label = Hide Tab icons
+    .label = Sekme ikonlarını gizle
 floorp-lepton-enable-tabbar-hide =
-    .label = Hide Tabbar
+    .label = Sekme Çubuğunu gizle
 floorp-lepton-enable-navbar-hide =
-    .label = Hide Navbar
+    .label = Gezinme Çubuğunu gizle
 floorp-lepton-enable-sidebar_header-hide =
-    .label = Hide Sidebar Header
+    .label = Kenar Çubuğu Başlığını Gizle
 floorp-lepton-enable-urlbar_iconbox-hide =
-    .label = Hide URLBar icons
+    .label = URL çubuğu ikonlarını gizle
 floorp-lepton-enable-bookmarkbar_icon-hide =
-    .label = Hide bookmarks-bar icons
+    .label = Yer işaretleri çubuğu ikonlarını gizle
 floorp-lepton-enable-bookmarkbar_label-hide =
-    .label = Hide bookmarks-bar labels
+    .label = Yer imleri çubuğu etiketlerini gizle
 floorp-lepton-enable-disabled_menu-hide =
-    .label = Hide disabled context menu
+    .label = Devre dışı bırakılmış içerik menüsünü gizle
 
 floorp-lepton-disable-userChrome-icon =
-    .label = Disable context menu & panel menu icons
+    .label = İçerik menüsü ve panel menüsü ikonlarını devre dışı bırak
 
 positon-preferences = Position adjustment
 
