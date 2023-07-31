@@ -2948,6 +2948,14 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
   masm.push(FramePointer);
   masm.moveStackPtrTo(FramePointer);
 
+#ifdef DEBUG
+  // Store sentinel value to cx->regExpSearcherLastLimit.
+  // See comment in RegExpSearcherImpl.
+  masm.loadJSContext(temp1);
+  masm.store32(Imm32(RegExpSearcherLastLimitSentinel),
+               Address(temp1, JSContext::offsetOfRegExpSearcherLastLimit()));
+#endif
+
   // The InputOutputData is placed above the frame pointer and return address on
   // the stack.
   int32_t inputOutputDataStartOffset = 2 * sizeof(void*);
@@ -3000,10 +3008,12 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
   Address matchPairLimit(FramePointer,
                          pairsVectorStartOffset + MatchPair::offsetOfLimit());
 
+  // Store match limit to cx->regExpSearcherLastLimit and return the index.
+  masm.load32(matchPairLimit, result);
+  masm.loadJSContext(input);
+  masm.store32(result,
+               Address(input, JSContext::offsetOfRegExpSearcherLastLimit()));
   masm.load32(matchPairStart, result);
-  masm.load32(matchPairLimit, input);
-  masm.lshiftPtr(Imm32(15), input);
-  masm.or32(input, result);
   masm.pop(FramePointer);
   masm.ret();
 

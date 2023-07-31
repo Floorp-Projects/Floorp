@@ -109,7 +109,6 @@ namespace jit {
   _(StringSplit)                  \
   _(NaNToZero)                    \
   _(RegExpMatcher)                \
-  _(RegExpSearcher)               \
   _(StringReplace)                \
   _(Substr)                       \
   _(TypeOf)                       \
@@ -680,14 +679,6 @@ class RNaNToZero final : public RInstruction {
 class RRegExpMatcher final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(RegExpMatcher, 3)
-
-  [[nodiscard]] bool recover(JSContext* cx,
-                             SnapshotIterator& iter) const override;
-};
-
-class RRegExpSearcher final : public RInstruction {
- public:
-  RINSTRUCTION_HEADER_NUM_OP_(RegExpSearcher, 3)
 
   [[nodiscard]] bool recover(JSContext* cx,
                              SnapshotIterator& iter) const override;
