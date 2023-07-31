@@ -83,6 +83,7 @@ import org.mozilla.geckoview.CompositorController;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.ContentBlockingController;
 import org.mozilla.geckoview.CrashHandler;
+import org.mozilla.geckoview.ExperimentDelegate;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
@@ -650,6 +651,24 @@ package org.mozilla.geckoview {
     element public int version();
   }
 
+  public interface ExperimentDelegate {
+    method @AnyThread @NonNull default public GeckoResult<JSONObject> onGetExperimentFeature(@NonNull String);
+    method @AnyThread @NonNull default public GeckoResult<Void> onRecordExperimentExposureEvent(@NonNull String, @NonNull String);
+    method @AnyThread @NonNull default public GeckoResult<Void> onRecordExposureEvent(@NonNull String);
+    method @AnyThread @NonNull default public GeckoResult<Void> onRecordMalformedConfigurationEvent(@NonNull String, @NonNull String);
+  }
+
+  public static class ExperimentDelegate.ExperimentException extends Exception {
+    ctor public ExperimentException(int);
+    field public static final int ERROR_EXPERIMENT_SLUG_NOT_FOUND = -3;
+    field public static final int ERROR_FEATURE_NOT_FOUND = -2;
+    field public static final int ERROR_UNKNOWN = -1;
+    field public final int code;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface ExperimentDelegate.ExperimentException.Codes {
+  }
+
   public class GeckoDisplay {
     ctor protected GeckoDisplay(GeckoSession);
     method @NonNull @UiThread public GeckoResult<Bitmap> capturePixels();
@@ -812,6 +831,7 @@ package org.mozilla.geckoview {
     method @Nullable public Integer getDisplayDpiOverride();
     method public boolean getDoubleTapZoomingEnabled();
     method public boolean getEnterpriseRootsEnabled();
+    method @AnyThread @Nullable public ExperimentDelegate getExperimentDelegate();
     method @NonNull public Bundle getExtras();
     method public boolean getFontInflationEnabled();
     method public float getFontSizeFactor();
@@ -874,6 +894,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder displayDpiOverride(int);
     method @NonNull public GeckoRuntimeSettings.Builder doubleTapZoomingEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder enterpriseRootsEnabled(boolean);
+    method @AnyThread @NonNull public GeckoRuntimeSettings.Builder experimentDelegate(@Nullable ExperimentDelegate);
     method @NonNull public GeckoRuntimeSettings.Builder extras(@NonNull Bundle);
     method @NonNull public GeckoRuntimeSettings.Builder fontInflation(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder fontSizeFactor(float);

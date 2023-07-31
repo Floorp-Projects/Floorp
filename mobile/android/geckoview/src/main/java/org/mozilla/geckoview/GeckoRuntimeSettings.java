@@ -406,6 +406,19 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
 
     /**
+     * Set the {@link ExperimentDelegate} instance on this runtime, if any. This delegate is used to
+     * send and receive experiment information from Nimbus.
+     *
+     * @param delegate The {@link ExperimentDelegate} sending and retrieving experiment information.
+     * @return The builder instance.
+     */
+    @AnyThread
+    public @NonNull Builder experimentDelegate(final @Nullable ExperimentDelegate delegate) {
+      getSettings().mExperimentDelegate = delegate;
+      return this;
+    }
+
+    /**
      * Enables GeckoView and Gecko Logging. Logging is on by default. Does not control all logging
      * in Gecko. Logging done in Java code must be stripped out at build time.
      *
@@ -515,6 +528,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
   /* package */ Class<? extends Service> mCrashHandler;
   /* package */ String[] mRequestedLocales;
   /* package */ RuntimeTelemetry.Proxy mTelemetryProxy;
+  /* package */ ExperimentDelegate mExperimentDelegate;
 
   /**
    * Attach and commit the settings to the given runtime.
@@ -570,6 +584,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     mRequestedLocales = settings.mRequestedLocales;
     mConfigFilePath = settings.mConfigFilePath;
     mTelemetryProxy = settings.mTelemetryProxy;
+    mExperimentDelegate = settings.mExperimentDelegate;
   }
 
   /* package */ void commit() {
@@ -1120,6 +1135,16 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
   @SuppressWarnings("checkstyle:javadocmethod")
   public @Nullable RuntimeTelemetry.Delegate getTelemetryDelegate() {
     return mTelemetryProxy.getDelegate();
+  }
+
+  /**
+   * Get the {@link ExperimentDelegate} instance set on this runtime, if any,
+   *
+   * @return The {@link ExperimentDelegate} set on this runtime.
+   */
+  @AnyThread
+  public @Nullable ExperimentDelegate getExperimentDelegate() {
+    return mExperimentDelegate;
   }
 
   /**

@@ -12,7 +12,10 @@ import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.test.platform.app.InstrumentationRegistry;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.json.JSONObject;
 import org.mozilla.geckoview.ContentBlocking;
+import org.mozilla.geckoview.ExperimentDelegate;
+import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.RuntimeTelemetry;
@@ -65,9 +68,53 @@ public class RuntimeCreator {
     }
   }
 
+  /**
+   * The ExperimentDelegate can only be set when starting the RuntimeCreator, so for testing we are
+   * setting up a proxy here
+   */
+  public static class RuntimeExperimentDelegate implements ExperimentDelegate {
+    public ExperimentDelegate delegate = null;
+
+    @Override
+    public GeckoResult<JSONObject> onGetExperimentFeature(@NonNull String feature) {
+      if (delegate != null) {
+        return delegate.onGetExperimentFeature(feature);
+      }
+      return null;
+    }
+
+    @Override
+    public GeckoResult<Void> onRecordExposureEvent(@NonNull String feature) {
+      if (delegate != null) {
+        return delegate.onRecordExposureEvent(feature);
+      }
+      return null;
+    }
+
+    @Override
+    public GeckoResult<Void> onRecordExperimentExposureEvent(
+        @NonNull String feature, @NonNull String slug) {
+      if (delegate != null) {
+        return delegate.onRecordExperimentExposureEvent(feature, slug);
+      }
+      return null;
+    }
+
+    @Override
+    public GeckoResult<Void> onRecordMalformedConfigurationEvent(
+        @NonNull String feature, @NonNull String part) {
+      if (delegate != null) {
+        return delegate.onRecordMalformedConfigurationEvent(feature, part);
+      }
+      return null;
+    }
+  }
+
   public static final RuntimeTelemetryDelegate sRuntimeTelemetryProxy =
       new RuntimeTelemetryDelegate();
 
+  public static RuntimeExperimentDelegate sRuntimeExperimentDelegateProxy =
+      new RuntimeExperimentDelegate();
   private static WebExtension.Port sBackgroundPort;
 
   private static WebExtension.PortDelegate sPortDelegate;
@@ -126,6 +173,16 @@ public class RuntimeCreator {
     sRuntimeTelemetryProxy.delegate = delegate;
   }
 
+  /**
+   * Set the {@link ExperimentDelegate} instance for this test. Application code can only register
+   * this delegate when the {@link GeckoRuntime} is created, so we need to proxy it for test code.
+   *
+   * @param delegate the {@link ExperimentDelegate} for this test to use.
+   */
+  public static void setExperimentDelegate(final ExperimentDelegate delegate) {
+    sRuntimeExperimentDelegateProxy.delegate = delegate;
+  }
+
   public static void setPortDelegate(final WebExtension.PortDelegate portDelegate) {
     sPortDelegate = portDelegate;
   }
@@ -160,6 +217,7 @@ public class RuntimeCreator {
             .consoleOutput(true)
             .crashHandler(TestCrashHandler.class)
             .telemetryDelegate(sRuntimeTelemetryProxy)
+            .experimentDelegate(sRuntimeExperimentDelegateProxy)
             .build();
 
     sRuntime =
