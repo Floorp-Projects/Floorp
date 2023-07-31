@@ -15,10 +15,10 @@ category-design =
     .tooltiptext = { pane-design-title }
 design-header = Design
 
-feature-requires-restart = A reboot is required to change the settings
+feature-requires-restart = A restart is required to apply changes
 
 tab-width = Minimum width of tabs
-preferences-tabs-newtab-position = New Tab Position
+preferences-tabs-newtab-position = New Tab position
 open-new-tab-use-default =
  .label = Open new tabs at default position
 open-new-tab-at-the-end =
@@ -28,13 +28,13 @@ open-new-tab-next-to-current =
 enable-multitab = 
  .label = Enable multi-row tabs
 multirow-tabs-limit = 
- .label = Enable row limit for multi-row tabs.
+ .label = Enable row limit for multi-row tabs
 multirow-tabs-newtab = 
- .label = Always place the Open New Tab button within the column of multi-row tabs
+ .label = Display the "Open a new tab" button inside of the lowest column of multi-row tabs
 multirow-tabs-value = Number of rows when multi-row tabs are enabled
 enable-tab-sleep = 
  .label = Enable Tab Sleep
-tab-sleep-timeout-minutes-value = Time to put tabs to sleep (minutes)
+tab-sleep-timeout-minutes-value = Put inactive tabs to sleep after the following period of time (minutes)
 tab-sleep-settings-button = Settings...
 tab-sleep-settings-dialog-title =
  .title = Tab Sleep Settings
@@ -42,65 +42,65 @@ tab-sleep-settings-dialog-excludehosts-label = Exclude hosts
 tab-sleep-settings-dialog-excludehosts-label-2 = Enter one host per line.
 tab-sleep-tab-context-menu-excludetab = Do not put this tab to sleep
 enable-floorp-workspace =
- .label = Enable WorkSpace
+ .label = Enable Workspaces
 enable-tab-scroll-change =
- .label = Switch Tabs by Scrolling
+ .label = Switch tabs by scrolling
 enable-tab-scroll-reverse =
  .label = Reverse direction of scrolling tabs
 enable-tab-scroll-wrap =
  .label = Wrap scrolling tabs at the edge
 enable-double-click-block =
- .label = Double-click to Close the Tab
+ .label = Close tabs when double-clicking them
 enable-show-pinned-tabs-title =
  .label = Show the title of pinned tabs
 Mouse-side-button =
   .label = Optimise browser for mouse with side buttons
 
-tabbar-preference = Tabbar (Mac not supported)
+tabbar-preference = Tab Bar (not supported in macOS)
 
 None-mode = 
  .label= Normal mode
 
 hide-horizontality-tabs =
- .label= Hide horizontal tabbar
+ .label= Hide tabs on horizontal Tab Bar
 
 verticalTab-setting =
- .label = Optimise browser for vertical tabs 
+ .label = Optimise browser for vertical Tab Bar
 
 move-tabbar-position =
- .label = Show tabbar at the bottom of the toolbar
+ .label = Display Tab Bar underneath the toolbar
 
 tabbar-on-bottom =
- .label = Display tabbar at the bottom of the window
+ .label = Display Tab Bar at the bottom of the window
 
 tabbar-favicon-color =
- .label = Use favicon color for tabbar background color
+ .label = Use favicon color for Tab Bar background color
 
-tabbar-style-preference = Tabbar Style
+tabbar-style-preference = Tab Bar Style
 
 horizontal-tabbar =
- .label = Horizontal Tabbar
+ .label = Horizontal Tab Bar
 
 multirow-tabbar =
- .label = Multi-Row Tabbar
+ .label = Multi-Row Tab Bar
 vertical-tabbar =
- .label = Vertical Tabbar (experimental)
-native-tabbar-tip = This feature uses default Firefox sidebar, so you can't use it with other sidebar add-ons & default sidebar panels.
+ .label = Vertical Tab Bar (experimental)
+native-tabbar-tip = Sidebar add-ons and in-built sidebars cannot be used at the same time as vertical tabs as this leverages the Firefox sidebar.
 
 hover-vertical-tab =
- .label = Expand vertical tabs when hovering the mouse cursor
+ .label = Collapse vertical Tab Bar
 
-sidebar-reverse-position-toolbar = Reverse Sidebar Position
+sidebar-reverse-position-toolbar = Show Sidebars on the other side
 
-bookmarks-bar-settings = Bookmark Bar Settings (Can`t be used in parallel)
+bookmarks-bar-settings = Bookmarks Toolbar (only one option can be used at a time)
 bookmarks-focus-mode =
- .label = Show the bookmark bar when the mouse is focused on the toolbar
+ .label = Hide the bookmarks toolbar unless hovering over the navigation bar
 bookmarks-bottom-mode =
- .label = Bookmark bar at the bottom of the browser
+ .label = Show the bookmarks toolbar at the bottom of { -brand-short-name }
 
-nav-bar-settings = Navigation Bar Settings
+nav-bar-settings = Toolbar
 show-nav-bar-bottom =
- .label = Show the navigation bar at the bottom of { -brand-short-name } (experimental)
+ .label = Show the toolbar at the bottom of { -brand-short-name } (experimental)
 
 material-effect =
  .label = Allow Mica for Everyone to modify the browser design
@@ -115,44 +115,44 @@ about-legacy-components = Enabling this feature may cause unexpected bugs or fat
 Search-positon-top =
  .label = Display the search bar at the top of the page
 allow-auto-restart =
- .label = Automatic restart when settings that require a restart are changed
+ .label = Restart automatically when settings that require a restart are changed
 
 browser-rest-mode =
- .label = Enable Rest-mode shortcut (F9)
+ .label = Enable Rest Mode shortcut (F9)
 
 disable-fullscreen-notification =
- .label = Disable video fullscreen notification
+ .label = Do not show a notification when entering full screen
 
-floorp-updater = { -brand-short-name } Updater Settings
+floorp-updater = { -brand-short-name } Updates
 enable-floorp-updater =
- .label = Check for { -brand-short-name } updates at startup
+ .label = Check for { -brand-short-name } updates on startup
 floorp-update-latest =
- .label = Notification that { -brand-short-name } is up-to-date during automatic update checks
+ .label = Notify me if { -brand-short-name } is up-to-date during automatic update checks
 
 ## system theme color
 
-system-color-settings = Both light and dark modes are available for this theme, and the design can be specified.
-preferences-theme-appearance-header = Setting the system theme
+system-color-settings = This theme supports both light and dark mode - choose what mode you'd like the theme to use.
+preferences-theme-appearance-header = Theme Mode
 
 system-theme-dark =
- .label = Enforce dark mode
+ .label = Dark
 
 system-theme-light =
- .label = Enforce light mode
+ .label = Light
 
 system-theme-auto =
- .label = Default mode
+ .label = Follow my global preference
 
 ## user interface prefernces
 
 ui-preference = Browser appearance
-preferences-browser-appearance-description = You can choose one of the wonderful third-party Floorp designs. Some designs may not be compatible with your configuration.
+preferences-browser-appearance-description = Choose a built-in third-party design to use in { -brand-short-name }. Some designs may not be compatible with your configuration.
 
 firefox-proton =
- .label = Firefox modern Proton UI
+ .label = Firefox Proton UI
 
 firefox-proton-fix =
- .label = Firefox Proton FIX UI
+ .label = Firefox Proton Fix UI
 
 firefox-photon-lepton =
  .label = Firefox Photon・Lepton UI
@@ -170,27 +170,27 @@ floorp-gnomeUI =
  .label = Gnome Theme
 
 ## download mgr
-download-notification-preferences = Download Notification
+download-notification-preferences = Download Notifications
 start-always-notify =
- .label = Notify only at start
+ .label = Notify only when starting downloads
 finish-always-notify =
- .label = Notify only when finished
+ .label = Notify only when a download finishes
 always-notify =
- .label = Notify both at start and end
+ .label = Notify when starting downloads and when a download finishes
 do-not-notify =
- .label = Do not enable notifications
+ .label = Disable download notifications
 
-floorp-translater = Translation Function Settings
+floorp-translater = Translator Settings
 click-to-option =
     .label = Open Settings...
     .accesskey = O
 
 ## sidebar
-profiles-button-label = Manage profiles
+profiles-button-label = Manage Profiles
 floorp-help-button-label = { -brand-short-name } Support
 
 appmenuitem-reboot =
- .label = Reboot
+ .label = Restart
 
 ## useagent
 
@@ -210,21 +210,21 @@ use-custom-useragent-mode =
 
 ## DMR UI
 download-mgr-UI =
- .label = Use a Simple UI download manager
+ .label = Enable a simple downloads management interface
 downloading-red-color =
- .label = Highlight the Download Manager icon in red during download
+ .label = Use red downloads icon when downloading
 
 sidebar-preferences = Sidebar
 
-bsb-preferences = Browser Manager Sidebar Setting
+bsb-preferences = Browser Manager Sidebar Settings
 view-sidebar2-right = 
- .label = Display Browser Manager Sidebar on the Right
+ .label = Display the Browser Manager Sidebar on the right
 enable-sidebar2 =
- .label = Enable Browser Manager Sidebar
+ .label = Enable the Browser Manager Sidebar
 visible-bms = 
- .label = Visible Browser Manager Sidebar
+ .label = Show the Browser Manager Sidebar
 
-custom-URL-option = Set Webpanel URLs
+custom-URL-option = Set Web Panel URLs
 set-custom-URL-button =
     .label = Set Custom URLs...
     .accesskey = S
@@ -237,15 +237,15 @@ category-downloads =
     .tooltiptext = { files-and-applications-title }
 
 bsb-header = Browser Manager Sidebar
-bsb-context = Select Container Tabs
+bsb-context = Use the following Container Tab
 bsb-userAgent-label = 
-  .label = Use Mobile UserAgent for this panel
+  .label = Use Mobile UserAgent in this panel
 bsb-width = Width (If set to 0, use global values)
 bsb-page = Page to open
 
-bsb-add = Add webpanel on Browser Manager Sidebar
+bsb-add = Add Web Panel on Browser Manager Sidebar
 
-bsb-setting = Webpanel Setting
+bsb-setting = Web Panel Settings
 
 bsb-add-title =
  .title = { bsb-add }
@@ -275,9 +275,9 @@ sidebar2-pref-delete =
  .label = Delete
 
 sidebar2-pref-setting =
- .label = Setting
+ .label = Settings
 
-sidebar2-global-width = Global webpanel width
+sidebar2-global-width = Global Web Panels width
 
 use-icon-provider-option = Use Icon Provider
 
@@ -288,12 +288,12 @@ use-icon-provider-option-duckduckgo =
  .label = DuckDuckGo
 
 use-icon-provider-option-yandex =
- .label = Yandex (Available in China)
+ .label = Yandex (available in China)
 
 use-icon-provider-option-hatena =
- .label = Hatena (Available in China)
+ .label = Hatena (available in China)
 
-memory-and-performance = Memory Performance Settings
+memory-and-performance = Memory and Performance Settings
 
 min-memory = 
     .label = Minimum Memory Usage (low performance)
@@ -317,7 +317,7 @@ newtab-background-random-image =
     .label = Random Images from Unsplash
 
 newtab-background-gradation =
-    .label = Gradation
+    .label = Gradient
 
 newtab-background-not-background =
     .label = Disable Background
@@ -492,25 +492,25 @@ about-Smoothfox = Get Edge-like smooth scrolling on your favorite browser — or
 
 ## Workspaces
 floorp-workspaces-title = { -brand-short-name } Workspaces
-workspaces-backup-discription = Backup & Restore your Workspaces
+workspaces-backup-discription = Backup and restore your Workspaces
 
-workspaces-restore-service-title = Floorp Workspace Backup Service
+workspaces-restore-service-title = Floorp Workspaces Backup Service
 workspaces-restore-warning = Warning! Running this operation will cause the browser to freeze temporarily and restart automatically.
 floorp-workspace-settings-button = Open Workspace Settings...
 
 change-to-close-workspace-popup-option = 
- .label = Change workspace to close Workspace Popup
-pinned-tabs-exclude-workspace-option = 
- .label = Pinned tabs are excluded from the workspace
+ .label = Close workspaces popup when selecting a Workspace
+pinned-tabs-exclude--option = 
+ .label = Exclude pinned tabs from Workspaces
 
 workspaces-reset-title = Reset Workspaces
 workspaces-reset-label =
     .label = Reset Workspaces
-workspaces-reset-description = If the backup does not work and the workspace does not start, reset the workspace.
+workspaces-reset-description = If a backup does not work and the Workspace does not start, reset the Workspace.
 workspaces-reset-button = Reset Workspaces
 
 workspaces-reset-service-title = Floorp Workspaces
-workspaces-reset-warning = Warning! Running this operation will delete all your workspaces and restart the browser.
+workspaces-reset-warning = Warning! Running this operation will delete all your Workspaces and restart the browser.
 
 ## Mouse Gesture
 mouse-gesture = Mouse Gesture
@@ -796,25 +796,25 @@ floorp-show-all-downloads =
 ######################################################################### workspace ###############################################################
 
 workspace-prompt-title = Floorp Workspace
-please-enter-workspace-name = Please enter new workspace name.
-please-enter-workspace-name-2 = Please enter characters other than symbols except spaces.
-workspace-error = ERROR!
-workspace-error-discription = Workspace name is invalid or already exists.
+please-enter-workspace-name = Please enter the Workspace's new name.
+please-enter-workspace-name-2 = The Workspace's name cannot contain symbols and spaces.
+workspace-error = An error occurred
+workspace-error-discription = Either a Workspace with this name exists or the name is invalid.
 
-workspace-button = Workspace
-  .label = Workspace
-  .tooltiptext = Workspace
+workspace-button = Workspaces
+  .label = Workspaces
+  .tooltiptext = Select a Workspace...
 
 workspace-default = Default
 workspace-add = 
- .label= Add New Workspace
+ .label= New Workspace...
 
 workspace-context-menu-selected-tab =
  .label = Selected tab cannot be moved
 move-tab-another-workspace =
- .label = Move to another workspace
+ .label = Move to another Workspace
 workspace-rename = 
-  .label = Change workspace name
+  .label = Rename this Workspace...
 
 ######################################################################### menubar item ###############################################################
 
