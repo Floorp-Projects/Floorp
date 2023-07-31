@@ -13,8 +13,8 @@ if [[ -z "${MOZ_AUTOMATION}" ]]; then
 fi
 
 if [ "$#" -ne 1 ]; then
-    echo "Usage: auto-update-angle.sh upstream-tag"
-    exit 1
+	echo "Usage: auto-update-angle.sh upstream-tag"
+	exit 1
 fi
 
 export DEPOT_TOOLS_WIN_TOOLCHAIN=0
