@@ -28,7 +28,7 @@ add_task(async function () {
   ]);
 
   await testPreviews(dbg, "objects", [
-    { line: 27, column: 10, expression: "empty", result: "No properties" },
+    { line: 27, column: 10, expression: "empty", result: "{}" },
     { line: 28, column: 22, expression: "foo", result: 1 },
   ]);
 
@@ -84,10 +84,15 @@ add_task(async function () {
   ]);
 
   info("Display the popup again and try to expand a property");
-  const { element: popupEl, tokenEl } = await tryHovering(dbg, 60, 7, "popup");
+  const { element: popupEl, tokenEl } = await tryHovering(
+    dbg,
+    60,
+    7,
+    "previewPopup"
+  );
   const nodes = popupEl.querySelectorAll(".preview-popup .node");
   const initialNodesLength = nodes.length;
-  nodes[0].querySelector(".arrow").click();
+  nodes[1].querySelector(".arrow").click();
   await waitFor(
     () =>
       popupEl.querySelectorAll(".preview-popup .node").length >
@@ -111,7 +116,21 @@ async function testPreviews(dbg, fnName, previews) {
 async function testBucketedArray(dbg) {
   invokeInTab("largeArray");
   await waitForPaused(dbg);
-  const { element: popupEl, tokenEl } = await tryHovering(dbg, 34, 10, "popup");
+  const { element: popupEl, tokenEl } = await tryHovering(
+    dbg,
+    34,
+    10,
+    "previewPopup"
+  );
+
+  info("Wait for top level node to expand and child nodes to load");
+  await waitForElementWithSelector(
+    dbg,
+    ".preview-popup .node:first-of-type .arrow.expanded"
+  );
+  await waitUntil(
+    () => popupEl.querySelectorAll(".preview-popup .node").length > 1
+  );
 
   const oiNodes = Array.from(popupEl.querySelectorAll(".preview-popup .node"));
 
@@ -119,6 +138,7 @@ async function testBucketedArray(dbg) {
     oiNode => oiNode.querySelector(".object-label")?.textContent
   );
   Assert.deepEqual(displayedPropertyNames, [
+    null, // No property name is displayed for the root node
     "[0…99]",
     "[100…100]",
     "length",
