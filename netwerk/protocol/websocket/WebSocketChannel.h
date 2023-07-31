@@ -20,6 +20,7 @@
 #include "nsIChannelEventSink.h"
 #include "nsIHttpChannelInternal.h"
 #include "mozilla/net/WebSocketConnectionListener.h"
+#include "mozilla/Mutex.h"
 #include "BaseWebSocketChannel.h"
 
 #include "nsCOMPtr.h"
@@ -343,10 +344,12 @@ class WebSocketChannel : public BaseWebSocketChannel,
   uint8_t* mHdrOut;
   uint8_t mOutHeader[kCopyBreak + 16]{0};
 
-  // Set on MainThread in OnStartRequest (before mDataStarted), used on IO
-  // Thread (after mDataStarted), cleared in DoStopSession on IOThread or
-  // on MainThread (if mDataStarted == false)
-  UniquePtr<PMCECompression> mPMCECompressor;
+  // Set on MainThread in OnStartRequest (before mDataStarted), or in
+  // HandleExtensions() or OnTransportAvailableInternal(),used on IO Thread
+  // (after mDataStarted), cleared in DoStopSession on IOThread or on
+  // MainThread (if mDataStarted == false).
+  Mutex mCompressorMutex;
+  UniquePtr<PMCECompression> mPMCECompressor MOZ_GUARDED_BY(mCompressorMutex);
 
   // Used by EnsureHdrOut, which isn't called anywhere
   uint32_t mDynamicOutputSize;
