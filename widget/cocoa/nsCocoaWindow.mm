@@ -615,11 +615,9 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, BorderStyle aBor
   [[WindowDataMap sharedWindowDataMap] ensureDataForWindow:mWindow];
   mWindowMadeHere = true;
 
-  if (@available(macOS 10.14, *)) {
-    // Make the window respect the global appearance, which follows the browser.theme.toolbar-theme
-    // pref.
-    mWindow.appearanceSource = MOZGlobalAppearance.sharedInstance;
-  }
+  // Make the window respect the global appearance, which follows the browser.theme.toolbar-theme
+  // pref.
+  mWindow.appearanceSource = MOZGlobalAppearance.sharedInstance;
 
   return NS_OK;
 

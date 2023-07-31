@@ -7,20 +7,20 @@ using macOS APIs in Firefox requires some extra care.
 ## Availability of APIs, and runtime checks
 
 First of all, if you use an API that is supported by all versions of macOS that Firefox runs on,
-i.e. 10.9 and above, then you don't need to worry about anything:
+i.e. 10.15 and above, then you don't need to worry about anything:
 The API declaration will be present in any of the supported SDKs, and you don't need any runtime checks.
 
-If you want to use a macOS API that was added after 10.9, then you have to have a runtime check.
+If you want to use a macOS API that was added after 10.15, then you have to have a runtime check.
 This requirement is completely independent of what SDK is being used for building.
 
-The runtime check [should have the following form](https://developer.apple.com/documentation/macos_release_notes/macos_mojave_10_14_release_notes/appkit_release_notes_for_macos_10_14?language=objc#3014609)
-(replace `10.14` with the appropriate version):
+The runtime check [should have the following form](https://developer.apple.com/documentation/macos-release-notes/appkit-release-notes-for-macos-11?language=objc)
+(replace `11.0` with the appropriate version):
 
 ```objc++
-if (@available(macOS 10.14, *)) {
-    // Code for macOS 10.14 or later
+if (@available(macOS 11.0, *)) {
+    // Code for macOS 11.0 or later
 } else {
-    // Code for versions earlier than 10.14.
+    // Code for versions earlier than 11.0.
 }
 ```
 

@@ -767,23 +767,7 @@ NativeLayerCA::NativeLayerCA(bool aIsOpaque)
 
 CGColorRef CGColorCreateForDeviceColor(gfx::DeviceColor aColor) {
   if (StaticPrefs::gfx_color_management_native_srgb()) {
-    // Use CGColorCreateSRGB if it's available, otherwise use older macOS API methods,
-    // which unfortunately allocate additional memory for the colorSpace object.
-    if (@available(macOS 10.15, iOS 13.0, *)) {
-      // Even if it is available, we have to address the function dynamically, to keep
-      // compiler happy when building with earlier versions of the SDK.
-      static auto CGColorCreateSRGBPtr = (CGColorRef(*)(CGFloat, CGFloat, CGFloat, CGFloat))dlsym(
-          RTLD_DEFAULT, "CGColorCreateSRGB");
-      if (CGColorCreateSRGBPtr) {
-        return CGColorCreateSRGBPtr(aColor.r, aColor.g, aColor.b, aColor.a);
-      }
-    }
-
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
-    CGFloat components[] = {aColor.r, aColor.g, aColor.b, aColor.a};
-    CGColorRef color = CGColorCreate(colorSpace, components);
-    CFRelease(colorSpace);
-    return color;
+    return CGColorCreateSRGB(aColor.r, aColor.g, aColor.b, aColor.a);
   }
 
   return CGColorCreateGenericRGB(aColor.r, aColor.g, aColor.b, aColor.a);
@@ -886,10 +870,8 @@ bool NativeLayerCA::ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock) {
 
   // DRM video is supported in macOS 10.15 and beyond, and such video must use
   // a specialized video layer.
-  if (@available(macOS 10.15, iOS 13.0, *)) {
-    if (mTextureHost->IsFromDRMSource()) {
-      return true;
-    }
+  if (mTextureHost->IsFromDRMSource()) {
+    return true;
   }
 
   // Beyond this point, we need to know about the format of the video.
@@ -1700,10 +1682,8 @@ bool NativeLayerCA::Representation::ApplyChanges(
     }
   }
 
-  if (@available(macOS 10.15, iOS 13.0, *)) {
-    if (aSpecializeVideo && mMutatedIsDRM) {
-      ((AVSampleBufferDisplayLayer*)mContentCALayer).preventsCapture = aIsDRM;
-    }
+  if (aSpecializeVideo && mMutatedIsDRM) {
+    ((AVSampleBufferDisplayLayer*)mContentCALayer).preventsCapture = aIsDRM;
   }
 
   bool shouldTintOpaqueness = StaticPrefs::gfx_core_animation_tint_opaque();

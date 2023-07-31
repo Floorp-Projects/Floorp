@@ -455,21 +455,13 @@ void SetGroupOwnershipAndPermissions(const char* aAppBundle) {
  * Helper to launch macOS tasks via NSTask.
  */
 static void LaunchTask(NSString* aPath, NSArray* aArguments) {
-  if (@available(macOS 10.13, *)) {
-    NSTask* task = [[NSTask alloc] init];
-    [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
-    if (aArguments) {
-      [task setArguments:aArguments];
-    }
-    [task launchAndReturnError:nil];
-    [task release];
-  } else {
-    NSArray* arguments = aArguments;
-    if (!arguments) {
-      arguments = @[];
-    }
-    [NSTask launchedTaskWithLaunchPath:aPath arguments:arguments];
+  NSTask* task = [[NSTask alloc] init];
+  [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
+  if (aArguments) {
+    [task setArguments:aArguments];
   }
+  [task launchAndReturnError:nil];
+  [task release];
 }
 
 static void RegisterAppWithLaunchServices(NSString* aBundlePath) {

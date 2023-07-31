@@ -25,8 +25,7 @@
 
 extern "C" {
 // N.B. the syscalls are available back to 10.5, but the C wrappers
-// only in 10.12.  Fortunately, 10.12 is our current baseline.
-int pthread_chdir_np(const char* dir) API_AVAILABLE(macosx(10.12));
+// only in 10.12.  Fortunately, 10.15 is our current baseline.
 int pthread_fchdir_np(int fd) API_AVAILABLE(macosx(10.12));
 
 int responsibility_spawnattrs_setdisclaim(posix_spawnattr_t attrs, int disclaim)
@@ -85,40 +84,13 @@ Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
     }
   }
 
-  // macOS 10.15 allows adding a chdir operation to the file actions;
-  // this ought to be part of the standard but sadly is not.  On older
-  // versions, we can use a different nonstandard extension:
-  // pthread_{f,}chdir_np, so we can temporarily change the calling
-  // thread's cwd (which is then inherited by the child) without
-  // disturbing other threads, and then restore it afterwards.
-  int old_cwd_fd = -1;
   if (!options.workdir.empty()) {
-    if (@available(macOS 10.15, *)) {
-      int rv = posix_spawn_file_actions_addchdir_np(&file_actions, options.workdir.c_str());
-      if (rv != 0) {
-        DLOG(WARNING) << "posix_spawn_file_actions_addchdir_np failed";
-        return Err(LaunchError("posix_spawn_file_actions_addchdir", rv));
-      }
-    } else {
-      old_cwd_fd = open(".", O_RDONLY | O_CLOEXEC | O_DIRECTORY);
-      if (old_cwd_fd < 0) {
-        DLOG(WARNING) << "open(\".\") failed";
-        return Err(LaunchError("open", errno));
-      }
-      if (pthread_chdir_np(options.workdir.c_str()) != 0) {
-        DLOG(WARNING) << "pthread_chdir_np failed";
-        return Err(LaunchError("pthread_chdir_np", errno));
-      }
+    int rv = posix_spawn_file_actions_addchdir_np(&file_actions, options.workdir.c_str());
+    if (rv != 0) {
+      DLOG(WARNING) << "posix_spawn_file_actions_addchdir_np failed";
+      return Err(LaunchError("posix_spawn_file_actions_addchdir", rv));
     }
   }
-  auto thread_cwd_guard = mozilla::MakeScopeExit([old_cwd_fd] {
-    if (old_cwd_fd >= 0) {
-      if (pthread_fchdir_np(old_cwd_fd) != 0) {
-        DLOG(ERROR) << "pthread_fchdir_np failed; thread is in the wrong directory!";
-      }
-      close(old_cwd_fd);
-    }
-  });
 
   // Initialize spawn attributes.
   posix_spawnattr_t spawnattr;
@@ -144,12 +116,10 @@ Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
 #endif
 
   if (options.disclaim) {
-    if (@available(macOS 10.14, *)) {
-      int err = responsibility_spawnattrs_setdisclaim(&spawnattr, 1);
-      if (err != 0) {
-        DLOG(WARNING) << "responsibility_spawnattrs_setdisclaim failed";
-        return Err(LaunchError("responsibility_spawnattrs_setdisclaim", err));
-      }
+    int err = responsibility_spawnattrs_setdisclaim(&spawnattr, 1);
+    if (err != 0) {
+      DLOG(WARNING) << "responsibility_spawnattrs_setdisclaim failed";
+      return Err(LaunchError("responsibility_spawnattrs_setdisclaim", err));
     }
   }
 

@@ -64,10 +64,7 @@ static NSPasteboard* GetPasteboard(int32_t aWhichClipboard) {
     case nsIClipboard::kGlobalClipboard:
       return [NSPasteboard generalPasteboard];
     case nsIClipboard::kFindClipboard:
-      if (@available(macOS 10.13, *)) {
-        return [NSPasteboard pasteboardWithName:NSPasteboardNameFind];
-      }
-      return [NSPasteboard pasteboardWithName:NSFindPboard];
+      return [NSPasteboard pasteboardWithName:NSPasteboardNameFind];
     default:
       return nil;
   }

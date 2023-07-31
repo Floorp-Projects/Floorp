@@ -54,7 +54,7 @@ NS_IMPL_ISUPPORTS(nsMacDockSupport, nsIMacDockSupport, nsITaskbarProgress)
   progressFillRect.size.width *= mFractionValue;
   [NSGraphicsContext saveGraphicsState];
   [NSBezierPath clipRect:progressFillRect];
-  [ControlAccentColor() setFill];
+  [[NSColor controlAccentColor] setFill];
   [path fill];
   [NSGraphicsContext restoreGraphicsState];
 
