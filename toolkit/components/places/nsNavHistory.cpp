@@ -2696,49 +2696,6 @@ nsresult nsNavHistory::QueryRowToResult(int64_t itemId,
   return NS_OK;
 }
 
-nsresult nsNavHistory::URIToResultNode(nsIURI* aURI,
-                                       nsNavHistoryQueryOptions* aOptions,
-                                       nsNavHistoryResultNode** aResult) {
-  MOZ_ASSERT(aURI, "The passed-in URI must be not-null");
-  nsAutoCString tagsFragment;
-  GetTagsSqlFragment(GetTagsFolder(), "h.id"_ns, true, tagsFragment);
-  // Should match kGetInfoIndex_*
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      nsLiteralCString("SELECT h.id, :page_url, COALESCE(b.title, h.title), "
-                       "h.rev_host, h.visit_count, h.last_visit_date, null, "
-                       "b.id, b.dateAdded, b.lastModified, b.parent, ") +
-      tagsFragment +
-      nsLiteralCString(
-          ", h.frecency, h.hidden, h.guid, "
-          "null, null, null, b.guid, b.position, b.type, b.fk "
-          "FROM moz_places h "
-          "LEFT JOIN moz_bookmarks b ON b.fk = h.id "
-          "WHERE h.url_hash = hash(:page_url) AND h.url = :page_url "));
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-
-  nsresult rv = URIBinder::Bind(stmt, "page_url"_ns, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool hasMore = false;
-  rv = stmt->ExecuteStep(&hasMore);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!hasMore) {
-    // Oops, we were passed an URL that doesn't exist! It is indeed possible
-    // that between the insertion and the notification time, another enqueued
-    // task removed it. Since this can happen, we'll just issue a warning.
-    NS_WARNING(
-        "Cannot build a result node for a non existing page id, was it "
-        "removed?");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsCOMPtr<mozIStorageValueArray> row = do_QueryInterface(stmt, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return RowToResult(row, aOptions, aResult);
-}
-
 void nsNavHistory::GetAgeInDaysString(int32_t aInt, const char* aName,
                                       nsACString& aResult) {
   nsIStringBundle* bundle = GetBundle();
