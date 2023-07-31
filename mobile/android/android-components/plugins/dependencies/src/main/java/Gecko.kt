@@ -9,7 +9,7 @@ object Gecko {
     /**
      * GeckoView Version.
      */
-    const val version = "117.0.20230730210800"
+    const val version = "117.0.20230731092716"
 
     /**
      * GeckoView channel
