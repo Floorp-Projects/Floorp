@@ -29,13 +29,11 @@ import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
-import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.ui.robots.bookmarksMenu
 import org.mozilla.fenix.ui.robots.browserScreen
-import org.mozilla.fenix.ui.robots.clearTextFieldItem
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -754,8 +752,8 @@ class BookmarksTest {
     fun verifySearchBookmarksViewTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
-        browserScreen {
-            createBookmark(defaultWebPage.url)
+        createBookmarkItem(defaultWebPage.url.toString(), defaultWebPage.title, 1u)
+        homeScreen {
         }.openThreeDotMenu {
         }.openBookmarks {
         }.clickSearchButton {
@@ -768,17 +766,14 @@ class BookmarksTest {
             tapOutsideToDismissSearchBar()
             verifySearchToolbar(false)
         }
-        bookmarksMenu {
-        }.goBackToBrowserScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openCustomizeSubMenu {
-            clickTopToolbarToggle()
+
+        runBlocking {
+            // Switching to top toolbar position
+            appContext.settings().shouldUseBottomToolbar = false
+            restartApp(activityTestRule.activityRule)
         }
 
-        exitMenu()
-
-        browserScreen {
+        homeScreen {
         }.openThreeDotMenu {
         }.openBookmarks {
         }.clickSearchButton {
@@ -814,7 +809,7 @@ class BookmarksTest {
             verifyNoSuggestionsAreDisplayed(
                 activityTestRule,
                 firstWebPage.url.toString(),
-                secondWebPage.url.toString()
+                secondWebPage.url.toString(),
             )
         }
     }
