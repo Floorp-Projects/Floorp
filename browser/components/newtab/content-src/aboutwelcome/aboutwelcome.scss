@@ -221,14 +221,14 @@ html {
     background: none;
     text-decoration: underline;
     cursor: pointer;
-    color: var(--in-content-link-color);
+    color: var(--link-color);
 
     &:hover {
-      color: var(--in-content-link-color-hover);
+      color: var(--link-color-hover);
     }
 
     &:active {
-      color: var(--in-content-link-color-active);
+      color: var(--link-color-active);
     }
   }
 
@@ -240,10 +240,10 @@ html {
     min-height: 500px;
     overflow: hidden;
 
-    --in-content-link-color: var(--in-content-primary-button-background);
-    --in-content-link-color-hover: var(--in-content-primary-button-background-hover);
-    --in-content-link-color-active: var(--in-content-primary-button-background-active);
-    --in-content-link-color-visited: var(--in-content-link-color);
+    --link-color: var(--in-content-primary-button-background);
+    --link-color-hover: var(--in-content-primary-button-background-hover);
+    --link-color-active: var(--in-content-primary-button-background-active);
+    --link-color-visited: var(--link-color);
 
     &.light-text {
       --in-content-page-color: rgb(251, 251, 254);
