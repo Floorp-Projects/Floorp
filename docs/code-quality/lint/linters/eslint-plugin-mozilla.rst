@@ -50,6 +50,7 @@ The plugin implements the following rules:
    eslint-plugin-mozilla/prefer-boolean-length-check
    eslint-plugin-mozilla/prefer-formatValues
    eslint-plugin-mozilla/reject-addtask-only
+   eslint-plugin-mozilla/reject-chromeutils-import
    eslint-plugin-mozilla/reject-chromeutils-import-params
    eslint-plugin-mozilla/reject-eager-module-in-lazy-getter
    eslint-plugin-mozilla/reject-global-this
