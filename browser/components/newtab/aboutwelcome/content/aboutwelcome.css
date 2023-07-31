@@ -625,10 +625,10 @@ html {
   height: 100%;
   min-height: 500px;
   overflow: hidden;
-  --in-content-link-color: var(--in-content-primary-button-background);
-  --in-content-link-color-hover: var(--in-content-primary-button-background-hover);
-  --in-content-link-color-active: var(--in-content-primary-button-background-active);
-  --in-content-link-color-visited: var(--in-content-link-color);
+  --link-color: var(--in-content-primary-button-background);
+  --link-color-hover: var(--in-content-primary-button-background-hover);
+  --link-color-active: var(--in-content-primary-button-background-active);
+  --link-color-visited: var(--link-color);
 }
 .onboardingContainer .screen.light-text {
   --in-content-page-color: rgb(251, 251, 254);
@@ -779,13 +779,13 @@ html {
   background: none;
   text-decoration: underline;
   cursor: pointer;
-  color: var(--in-content-link-color);
+  color: var(--link-color);
 }
 .onboardingContainer .screen[pos=center].addons-picker .main-content .additional-cta.cta-link:hover {
-  color: var(--in-content-link-color-hover);
+  color: var(--link-color-hover);
 }
 .onboardingContainer .screen[pos=center].addons-picker .main-content .additional-cta.cta-link:active {
-  color: var(--in-content-link-color-active);
+  color: var(--link-color-active);
 }
 .onboardingContainer .screen[pos=center].addons-picker .main-content .additional-cta.secondary:hover {
   background-color: var(--in-content-button-background-hover);
@@ -855,16 +855,16 @@ html {
   background: none;
   text-decoration: underline;
   cursor: pointer;
-  color: var(--in-content-link-color);
+  color: var(--link-color);
   font-size: 14px;
   font-weight: normal;
   line-height: 20px;
 }
 .onboardingContainer .screen:not([pos=split]) .secondary-cta .secondary:hover {
-  color: var(--in-content-link-color-hover);
+  color: var(--link-color-hover);
 }
 .onboardingContainer .screen:not([pos=split]) .secondary-cta .secondary:active {
-  color: var(--in-content-link-color-active);
+  color: var(--link-color-active);
 }
 .onboardingContainer .screen:not([pos=split]) .secondary-cta.top button {
   color: #FFF;
@@ -976,15 +976,15 @@ html {
   background: none;
   text-decoration: underline;
   cursor: pointer;
-  color: var(--in-content-link-color);
+  color: var(--link-color);
   padding: 0;
   font-weight: normal;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link:hover {
-  color: var(--in-content-link-color-hover);
+  color: var(--link-color-hover);
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link:active {
-  color: var(--in-content-link-color-active);
+  color: var(--link-color-active);
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.secondary:hover {
   background-color: var(--in-content-button-background-hover);
@@ -1347,13 +1347,13 @@ html {
   background: none;
   text-decoration: underline;
   cursor: pointer;
-  color: var(--in-content-link-color);
+  color: var(--link-color);
 }
 .onboardingContainer .text-link:hover {
-  color: var(--in-content-link-color-hover);
+  color: var(--link-color-hover);
 }
 .onboardingContainer .text-link:active {
-  color: var(--in-content-link-color-active);
+  color: var(--link-color-active);
 }
 .onboardingContainer .welcome-text {
   display: flex;
@@ -1621,15 +1621,15 @@ html {
   background: none;
   text-decoration: underline;
   cursor: pointer;
-  color: var(--in-content-link-color);
+  color: var(--link-color);
   font-size: 16px;
   font-weight: 400;
 }
 .onboardingContainer .mobile-downloads .email-link:hover {
-  color: var(--in-content-link-color-hover);
+  color: var(--link-color-hover);
 }
 .onboardingContainer .mobile-downloads .email-link:active {
-  color: var(--in-content-link-color-active);
+  color: var(--link-color-active);
 }
 .onboardingContainer .mobile-downloads .email-link:hover {
   background: none;
