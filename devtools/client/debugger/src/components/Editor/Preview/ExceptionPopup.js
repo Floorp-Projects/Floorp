@@ -14,11 +14,7 @@ const {
 import actions from "../../../actions";
 
 import AccessibleImage from "../../shared/AccessibleImage";
-
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const classnames = require("devtools/client/shared/classnames.js");
-
-const POPUP_SELECTOR = ".preview-popup.exception-popup";
 const ANONYMOUS_FN_NAME = "<anonymous>";
 
 // The exception popup works in two modes:
@@ -30,46 +26,20 @@ class ExceptionPopup extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      isStacktraceExpanded: false,
+      isStacktraceExpanded: true,
     };
   }
 
   static get propTypes() {
     return {
-      clearPreview: PropTypes.func.isRequired,
       mouseout: PropTypes.func.isRequired,
       selectSourceURL: PropTypes.func.isRequired,
       exception: PropTypes.object.isRequired,
     };
   }
 
-  updateTopWindow() {
-    // The ChromeWindow is used when the stacktrace is expanded to capture all clicks
-    // outside the popup so the popup can be closed only by clicking outside of it.
-    if (this.topWindow) {
-      this.topWindow.removeEventListener(
-        "mousedown",
-        this.onTopWindowClick,
-        true
-      );
-      this.topWindow = null;
-    }
-    this.topWindow = DevToolsUtils.getTopWindow(window.parent);
-    this.topWindow.addEventListener("mousedown", this.onTopWindowClick, true);
-  }
-
-  onTopWindowClick = e => {
-    // When the stactrace is expaned the exception popup gets closed
-    // only by clicking ouside the popup.
-    if (!e.target.closest(POPUP_SELECTOR)) {
-      this.props.clearPreview();
-    }
-  };
-
   onExceptionMessageClick() {
     const isStacktraceExpanded = this.state.isStacktraceExpanded;
-
-    this.updateTopWindow();
     this.setState({ isStacktraceExpanded: !isStacktraceExpanded });
   }
 

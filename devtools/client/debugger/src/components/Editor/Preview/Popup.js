@@ -8,7 +8,7 @@ import { connect } from "../../../utils/connect";
 
 import Reps from "devtools/client/shared/components/reps/index";
 const {
-  REPS: { Rep },
+  REPS: { Grip },
   MODE,
   objectInspector,
 } = Reps;
@@ -16,14 +16,13 @@ const {
 const { ObjectInspector, utils } = objectInspector;
 
 const {
-  node: { nodeIsPrimitive, nodeIsFunction, nodeIsObject },
+  node: { nodeIsPrimitive },
 } = utils;
 
 import ExceptionPopup from "./ExceptionPopup";
 
 import actions from "../../../actions";
 import Popover from "../../shared/Popover";
-import PreviewFunction from "../../shared/PreviewFunction";
 
 import "./Popup.css";
 
@@ -88,54 +87,26 @@ export class Popup extends Component {
     return document.createElement(element);
   }
 
-  renderFunctionPreview() {
-    const {
-      selectSourceURL,
-      preview: { resultGrip },
-    } = this.props;
-
-    if (!resultGrip) {
-      return null;
-    }
-
-    const { location } = resultGrip;
-
+  renderExceptionPreview(exception) {
     return (
-      <div
-        className="preview-popup"
-        onClick={() =>
-          location &&
-          selectSourceURL(location.url, {
-            line: location.line,
-          })
-        }
-      >
-        <PreviewFunction func={resultGrip} />
-      </div>
+      <ExceptionPopup
+        exception={exception}
+        mouseout={this.props.clearPreview}
+      />
     );
   }
 
-  renderObjectPreview() {
+  renderPreview() {
     const {
-      preview: { root, properties },
-      openLink,
-      openElementInInspector,
-      highlightDomElement,
-      unHighlightDomElement,
+      preview: { root, exception, resultGrip },
     } = this.props;
 
     const usesCustomFormatter =
       root?.contents?.value?.useCustomFormatter ?? false;
 
-    if (!properties.length) {
-      return (
-        <div className="preview-popup">
-          <span className="label">{L10N.getStr("preview.noProperties")}</span>
-        </div>
-      );
+    if (exception) {
+      return this.renderExceptionPreview(exception);
     }
-
-    const roots = usesCustomFormatter ? [root] : properties;
 
     return (
       <div
@@ -143,110 +114,42 @@ export class Popup extends Component {
         style={{ maxHeight: this.calculateMaxHeight() }}
       >
         <ObjectInspector
-          roots={roots}
-          autoExpandDepth={0}
+          roots={[root]}
+          autoExpandDepth={1}
           autoReleaseObjectActors={false}
           mode={usesCustomFormatter ? MODE.LONG : null}
           disableWrap={true}
           focusable={false}
-          openLink={openLink}
+          openLink={this.props.openLink}
+          defaultRep={Grip}
           createElement={this.createElement}
-          onDOMNodeClick={grip => openElementInInspector(grip)}
-          onInspectIconClick={grip => openElementInInspector(grip)}
-          onDOMNodeMouseOver={grip => highlightDomElement(grip)}
-          onDOMNodeMouseOut={grip => unHighlightDomElement(grip)}
+          onDOMNodeClick={grip => this.props.openElementInInspector(grip)}
+          onInspectIconClick={grip => this.props.openElementInInspector(grip)}
+          onDOMNodeMouseOver={grip => this.props.highlightDomElement(grip)}
+          onDOMNodeMouseOut={grip => this.props.unHighlightDomElement(grip)}
           mayUseCustomFormatter={true}
+          onViewSourceInDebugger={() =>
+            resultGrip.location &&
+            this.props.selectSourceURL(resultGrip.location.url, {
+              line: resultGrip.location.line,
+              column: resultGrip.location.column,
+            })
+          }
         />
       </div>
     );
   }
 
-  renderSimplePreview() {
-    const {
-      openLink,
-      preview: { resultGrip },
-    } = this.props;
-    return (
-      <div className="preview-popup">
-        {Rep({
-          object: resultGrip,
-          mode: MODE.LONG,
-          openLink,
-        })}
-      </div>
-    );
-  }
-
-  renderExceptionPreview(exception) {
-    return (
-      <ExceptionPopup
-        exception={exception}
-        mouseout={this.onMouseOutException}
-        clearPreview={this.props.clearPreview}
-      />
-    );
-  }
-
-  renderPreview() {
-    // We don't have to check and
-    // return on `false`, `""`, `0`, `undefined` etc,
-    // these falsy simple typed value because we want to
-    // do `renderSimplePreview` on these values below.
+  getPreviewType() {
     const {
       preview: { root, exception },
     } = this.props;
-
-    if (nodeIsFunction(root)) {
-      return this.renderFunctionPreview();
-    }
-
-    if (nodeIsObject(root)) {
-      return <div>{this.renderObjectPreview()}</div>;
-    }
-
-    if (exception) {
-      return this.renderExceptionPreview(exception);
-    }
-
-    return this.renderSimplePreview();
-  }
-
-  getPreviewType() {
-    const {
-      preview: { root, properties, exception },
-    } = this.props;
-    if (
-      exception ||
-      nodeIsPrimitive(root) ||
-      nodeIsFunction(root) ||
-      !Array.isArray(properties) ||
-      properties.length === 0
-    ) {
+    if (exception || nodeIsPrimitive(root)) {
       return "tooltip";
     }
 
     return "popover";
   }
-
-  onMouseOut = () => {
-    this.props.clearPreview();
-  };
-
-  onMouseOutException = (shouldClearOnMouseout, isExceptionStactraceOpen) => {
-    // onMouseOutException can be called:
-    // a. when the mouse leaves Popover element
-    // b. when the mouse leaves ExceptionPopup element
-    // We want to prevent closing the popup when the stacktrace
-    // is expanded and the mouse leaves either the Popover element
-    // or the ExceptionPopup element.
-    if (shouldClearOnMouseout) {
-      this.isExceptionStactraceOpen = isExceptionStactraceOpen;
-    }
-
-    if (!this.isExceptionStactraceOpen) {
-      this.props.clearPreview();
-    }
-  };
 
   render() {
     const {
@@ -268,7 +171,7 @@ export class Popup extends Component {
         type={type}
         editorRef={editorRef}
         target={this.props.preview.target}
-        mouseout={exception ? this.onMouseOutException : this.onMouseOut}
+        mouseout={this.props.clearPreview}
       >
         {this.renderPreview()}
       </Popover>
@@ -349,22 +252,13 @@ export function removeHighlightForTargetSiblings(target) {
   }
 }
 
-const {
-  addExpression,
-  selectSourceURL,
-  openLink,
-  openElementInInspectorCommand,
-  highlightDomElement,
-  unHighlightDomElement,
-} = actions;
-
 const mapDispatchToProps = {
-  addExpression,
-  selectSourceURL,
-  openLink,
-  openElementInInspector: openElementInInspectorCommand,
-  highlightDomElement,
-  unHighlightDomElement,
+  addExpression: actions.addExpression,
+  selectSourceURL: actions.selectSourceURL,
+  openLink: actions.openLink,
+  openElementInInspector: actions.openElementInInspectorCommand,
+  highlightDomElement: actions.highlightDomElement,
+  unHighlightDomElement: actions.unHighlightDomElement,
 };
 
 export default connect(null, mapDispatchToProps)(Popup);

@@ -12,8 +12,18 @@ add_task(async function () {
   await selectSource(dbg, "exceptions.js");
 
   info("Hovers over the inline exception mark text.");
-  await assertPreviewTextValue(dbg, 85, 10, {
-    text: 'TypeError: "abc".push is not a function',
+  await assertInlineExceptionPreview(dbg, 85, 10, {
+    fields: [
+      [
+        "inlineExc",
+        "https://example.com/browser/devtools/client/debugger/test/mochitest/examples/exceptions.js:85",
+      ],
+      [
+        "<anonymous>",
+        "https://example.com/browser/devtools/client/debugger/test/mochitest/examples/exceptions.js:88",
+      ],
+    ],
+    result: 'TypeError: "abc".push is not a function',
     expression: "push",
   });
 

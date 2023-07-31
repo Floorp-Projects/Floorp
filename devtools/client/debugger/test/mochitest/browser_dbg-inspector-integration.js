@@ -119,7 +119,13 @@ add_task(async function () {
   // Hover over the token to launch preview popup
   await tryHovering(dbg, 5, 8, "popup");
 
-  // Click the first inspector buttom to view node in inspector
+  info("Wait for top level node to expand and child nodes to load");
+  await waitForElementWithSelector(
+    dbg,
+    ".preview-popup .node:first-of-type .arrow.expanded"
+  );
+
+  // Click the first inspector button to view node in inspector
   await waitForElement(dbg, "openInspector");
 
   // Loading the inspector panel at first, to make it possible to listen for
