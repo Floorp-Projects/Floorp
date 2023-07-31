@@ -2,6 +2,107 @@
   "data": [
     {
       "click": {
+        "optIn": "#footer_tc_privacy_button",
+        "optOut": "#footer_tc_privacy_button_2",
+        "presence": ".tc-privacy-wrapper.tc-privacy-override.tc-privacy-wrapper"
+      },
+      "schema": 1690070404721,
+      "domains": [
+        "arte.tv"
+      ],
+      "id": "cc818b41-7b46-46d3-9b17-cf924cbe87d1",
+      "last_modified": 1690359097318
+    },
+    {
+      "schema": 1690070404721,
+      "cookies": {
+        "optIn": [
+          {
+            "name": "cb",
+            "value": "1_2055_07_11_"
+          }
+        ],
+        "optOut": [
+          {
+            "name": "cb",
+            "value": "1_2055_07_11_2-3"
+          }
+        ]
+      },
+      "domains": [
+        "threads.net"
+      ],
+      "id": "C232EAB8-F55A-436A-8033-478746D05D98",
+      "last_modified": 1690359097314
+    },
+    {
+      "click": {
+        "optIn": "#didomi-notice-agree-button",
+        "presence": "#didomi-popup"
+      },
+      "schema": 1690070404721,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "euconsent-v2",
+            "value": "CRolnUARolnUAAHABBENDHCgAAAAAAAAAAAAAAAAAAAA.YAAAAAAAAAAA"
+          }
+        ]
+      },
+      "domains": [
+        "reverso.net"
+      ],
+      "id": "05157ed1-12c2-4f84-9dff-718fae5bc096",
+      "last_modified": 1690359097310
+    },
+    {
+      "click": {
+        "optIn": "button#didomi-notice-agree-button",
+        "presence": "div#didomi-host"
+      },
+      "schema": 1690070404721,
+      "cookies": {},
+      "domains": [
+        "echo24.cz",
+        "jeuxvideo.com",
+        "24sata.hr",
+        "nova.cz",
+        "lidovky.cz",
+        "jutarnji.hr",
+        "vecernji.hr",
+        "sport.es",
+        "elespanol.com",
+        "in-pocasi.cz",
+        "20minutes.fr",
+        "actu.fr",
+        "hbvl.be",
+        "naszemiasto.pl",
+        "leboncoin.fr",
+        "rtbf.be",
+        "20minutos.es",
+        "sudinfo.be",
+        "elpais.com",
+        "sinoptik.bg",
+        "lequipe.fr",
+        "abc.es",
+        "gva.be",
+        "eltiempo.es",
+        "eldiario.es",
+        "larazon.es",
+        "extra.cz",
+        "ladepeche.fr",
+        "marmiton.org",
+        "poslovni.hr",
+        "softonic.com",
+        "sydsvenskan.se",
+        "telecinco.es",
+        "giphy.com"
+      ],
+      "id": "af4c5b38-d210-472b-9a07-21cbe53c85ab",
+      "last_modified": 1690359097306
+    },
+    {
+      "click": {
         "optIn": "#acceptAllButton",
         "optOut": "#rejectAllButton",
         "presence": "#cookiePrefPopup"
@@ -890,53 +991,6 @@
       ],
       "id": "690aa076-4a8b-48ec-b52c-1443d44ff008",
       "last_modified": 1678276263235
-    },
-    {
-      "click": {
-        "optIn": "button#didomi-notice-agree-button",
-        "presence": "div#didomi-host"
-      },
-      "schema": 1678092903414,
-      "cookies": {},
-      "domains": [
-        "echo24.cz",
-        "jeuxvideo.com",
-        "24sata.hr",
-        "nova.cz",
-        "lidovky.cz",
-        "jutarnji.hr",
-        "vecernji.hr",
-        "sport.es",
-        "elespanol.com",
-        "in-pocasi.cz",
-        "20minutes.fr",
-        "actu.fr",
-        "hbvl.be",
-        "naszemiasto.pl",
-        "leboncoin.fr",
-        "rtbf.be",
-        "20minutos.es",
-        "sudinfo.be",
-        "elpais.com",
-        "sinoptik.bg",
-        "lequipe.fr",
-        "abc.es",
-        "gva.be",
-        "eltiempo.es",
-        "eldiario.es",
-        "larazon.es",
-        "extra.cz",
-        "ladepeche.fr",
-        "marmiton.org",
-        "poslovni.hr",
-        "reverso.net",
-        "softonic.com",
-        "sydsvenskan.se",
-        "telecinco.es",
-        "giphy.com"
-      ],
-      "id": "af4c5b38-d210-472b-9a07-21cbe53c85ab",
-      "last_modified": 1678276263230
     },
     {
       "click": {
@@ -7774,5 +7828,5 @@
       "last_modified": 1670498155641
     }
   ],
-  "timestamp": 1686654909145
+  "timestamp": 1690359097318
 }
