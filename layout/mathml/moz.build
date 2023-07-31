@@ -19,7 +19,6 @@ UNIFIED_SOURCES += [
     "nsMathMLChar.cpp",
     "nsMathMLContainerFrame.cpp",
     "nsMathMLFrame.cpp",
-    "nsMathMLmactionFrame.cpp",
     "nsMathMLmencloseFrame.cpp",
     "nsMathMLmfracFrame.cpp",
     "nsMathMLmmultiscriptsFrame.cpp",
@@ -32,8 +31,6 @@ UNIFIED_SOURCES += [
     "nsMathMLmtableFrame.cpp",
     "nsMathMLmunderoverFrame.cpp",
     "nsMathMLOperators.cpp",
-    "nsMathMLSelectedFrame.cpp",
-    "nsMathMLsemanticsFrame.cpp",
     "nsMathMLTokenFrame.cpp",
 ]
 

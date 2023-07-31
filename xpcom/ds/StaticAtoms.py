@@ -2393,8 +2393,6 @@ STATIC_ATOMS = [
     Atom("onplaybackstatechange", "onplaybackstatechange"),
     Atom("onpositionstatechange", "onpositionstatechange"),
     Atom("onsupportedkeyschange", "onsupportedkeyschange"),
-    # media query for MathML Core's implementation of maction/semantics
-    Atom("_moz_mathml_core_maction_and_semantics", "-moz-mathml-core-maction-and-semantics"),
     Atom("_moz_popover_enabled", "-moz-popover-enabled"),
     # media query for MathML Core's implementation of mi
     Atom("_moz_mathml_core_mi", "-moz-mathml-core-mi"),
