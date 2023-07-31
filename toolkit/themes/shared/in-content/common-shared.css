@@ -29,10 +29,10 @@
   --in-content-error-text-color: #c50042;
   --in-content-warning-icon-color: #ffa436;
   --in-content-success-icon-color: #2ac3a2;
-  --in-content-link-color: var(--in-content-primary-button-background);
-  --in-content-link-color-hover: var(--in-content-primary-button-background-hover);
-  --in-content-link-color-active: var(--in-content-primary-button-background-active);
-  --in-content-link-color-visited: var(--in-content-link-color);
+  --in-content-link-color: var(--link-color);
+  --in-content-link-color-hover: var(--link-color-hover);
+  --in-content-link-color-active: var(--link-color-active);
+  --in-content-link-color-visited: var(--link-color-visited);
   --in-content-button-text-color: var(--in-content-text-color);
   --in-content-button-text-color-hover: var(--in-content-text-color);
   --in-content-button-text-color-active: var(--in-content-button-text-color-hover);
@@ -207,11 +207,6 @@
      * change... */
     --in-content-border-invalid: ThreeDShadow;
     --in-content-border-color: ThreeDShadow;
-
-    --in-content-link-color: -moz-nativehyperlinktext;
-    --in-content-link-color-hover: -moz-nativehyperlinktext;
-    --in-content-link-color-active: -moz-nativehyperlinktext;
-    --in-content-link-color-visited: -moz-nativehyperlinktext;
 
     --in-content-button-text-color: ButtonText;
     --in-content-button-text-color-hover: SelectedItemText;
@@ -704,30 +699,30 @@ xul|search-textbox[disabled="true"] {
 
 html|a,
 .text-link {
-  color: var(--in-content-link-color);
+  color: var(--link-color);
 }
 
 html|a:visited {
-  color: var(--in-content-link-color-visited);
+  color: var(--link-color-visited);
 }
 
 html|a:hover,
 .text-link:hover,
 button.text-link:is(:not([disabled="true"]), :enabled):hover {
-  color: var(--in-content-link-color-hover);
+  color: var(--link-color-hover);
 }
 
 html|a:hover:active,
 .text-link:hover:active,
 button.text-link:is(:not([disabled="true"]), :enabled):hover:active {
-  color: var(--in-content-link-color-active);
+  color: var(--link-color-active);
   text-decoration: none;
 }
 
 html|a:focus-visible,
 .text-link:focus-visible {
-  outline: var(--in-content-focus-outline);
-  outline-offset: 1px;
+  outline: var(--focus-outline);
+  outline-offset: var(--link-focus-outline-offset);
   border-radius: 4px;
 }
 

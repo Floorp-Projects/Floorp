@@ -22,6 +22,12 @@
     --button-background-color-hover: color-mix(in srgb, currentColor 14%, transparent);
     --button-background-color-active: color-mix(in srgb, currentColor 21%, transparent);
 
+    /** Link **/
+    --link-color: var(--brand-color-accent);
+    --link-color-hover: var(--brand-color-accent-hover);
+    --link-color-active: var(--brand-color-accent-active);
+    --link-color-visited: var(--link-color);
+
     /* Color */
     --color-accent-primary: var(--brand-color-accent);
     --color-accent-primary-hover: var(--brand-color-accent-hover);

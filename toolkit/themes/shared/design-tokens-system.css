@@ -14,6 +14,12 @@
     --button-background-color-hover: var(--button-hover-bgcolor);
     --button-background-color-active: var(--button-active-bgcolor);
 
+    /** Link **/
+    --link-color: -moz-nativehyperlinktext;
+    --link-color-hover: -moz-nativehyperlinktext;
+    --link-color-active: -moz-nativehyperlinktext;
+    --link-color-visited: var(--link-color);
+
     /* Color */
     --color-accent-primary: var(--system-color-accent);
     --color-accent-primary-hover: var(--system-color-accent-hover);

@@ -28,6 +28,12 @@
   --button-background-color-hover: unset;
   --button-background-color-active: unset;
 
+  /** Link **/
+  /* Not using --focus-outline-offset for links because that's intended for
+     elements with a background, and we only want a slight offset here while not
+     overlapping adjacent text. */
+  --link-focus-outline-offset: 1px;
+
   /** Color **/
   --color-accent-primary: unset;
   --color-accent-primary-hover: unset;
@@ -58,6 +64,12 @@
     --button-background-color-hover: ButtonFace;
     --button-background-color-active: ButtonFace;
     --button-background-color-disabled: GrayText;
+
+    /** Link **/
+    --link-color: -moz-nativehyperlinktext;
+    --link-color-hover: -moz-nativehyperlinktext;
+    --link-color-active: -moz-nativehyperlinktext;
+    --link-color-visited: var(--link-color);
 
     /* Color */
     --color-canvas: Canvas;
