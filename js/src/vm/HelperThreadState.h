@@ -24,14 +24,13 @@
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint32_t, uint64_t
-#include <utility>   // std::move, std::pair
+#include <utility>   // std::move
 
-#include "ds/Fifo.h"                      // Fifo
-#include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationStencilMerger, ScriptStencilRef}
-#include "frontend/FrontendContext.h"     // FrontendContext
-#include "frontend/ScriptIndex.h"         // frontend::ScriptIndex
-#include "gc/GCRuntime.h"                 // gc::GCRuntime
-#include "js/AllocPolicy.h"               // SystemAllocPolicy
+#include "ds/Fifo.h"  // Fifo
+#include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil}
+#include "frontend/FrontendContext.h"  // FrontendContext
+#include "gc/GCRuntime.h"              // gc::GCRuntime
+#include "js/AllocPolicy.h"            // SystemAllocPolicy
 #include "js/CompileOptions.h"  // JS::OwningCompileOptions, JS::ReadOnlyCompileOptions
 #include "js/experimental/CompileScript.h"  // JS::CompilationStorage
 #include "js/experimental/JSStencil.h"      // JS::InstantiationStorage
@@ -43,6 +42,7 @@
 #include "js/Utility.h"                   // ThreadType
 #include "threading/ConditionVariable.h"  // ConditionVariable
 #include "threading/ProtectedData.h"      // WriteOnceData
+#include "vm/ConcurrentDelazification.h"  // DelazificationContext
 #include "vm/HelperThreads.h"  // AutoLockHelperThreadState, AutoUnlockHelperThreadState
 #include "vm/HelperThreadTask.h"             // HelperThreadTask
 #include "vm/JSContext.h"                    // JSContext
@@ -540,83 +540,6 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   ThreadType threadType() override { return ThreadType::THREAD_TYPE_PARSE; }
 };
 
-// Base class for implementing the various strategies to iterate over the
-// functions to be delazified, or to decide when to stop doing any
-// delazification.
-//
-// When created, the `add` function should be called with the top-level
-// ScriptIndex.
-struct DelazifyStrategy {
-  using ScriptIndex = frontend::ScriptIndex;
-  virtual ~DelazifyStrategy() = default;
-
-  // Returns true if no more functions should be delazified. Note, this does not
-  // imply that every function got delazified.
-  virtual bool done() const = 0;
-
-  // Return a function identifier which represent the next function to be
-  // delazified. If no more function should be delazified, then return 0.
-  virtual ScriptIndex next() = 0;
-
-  // Empty the list of functions to be processed next. done() should return true
-  // after this call.
-  virtual void clear() = 0;
-
-  // Insert an index in the container of the delazification strategy. A strategy
-  // can choose to ignore the insertion of an index in its queue of function to
-  // delazify. Return false only in case of errors while inserting, and true
-  // otherwise.
-  [[nodiscard]] virtual bool insert(ScriptIndex index,
-                                    frontend::ScriptStencilRef& ref) = 0;
-
-  // Add the inner functions of a delazified function. This function should only
-  // be called with a function which has some bytecode associated with it, and
-  // register functions which parent are already delazified.
-  //
-  // This function is called with the script index of:
-  //  - top-level script, when starting the off-thread delazification.
-  //  - functions added by `add` and delazified by `DelazifyTask`.
-  [[nodiscard]] bool add(FrontendContext* fc,
-                         const frontend::CompilationStencil& stencil,
-                         ScriptIndex index);
-};
-
-// Delazify all functions using a Depth First traversal of the function-tree
-// ordered, where each functions is visited in source-order.
-//
-// When `add` is called with the top-level ScriptIndex. This will push all inner
-// functions to a stack such that they are popped in source order. Each
-// function, once delazified, would be used to schedule their inner functions
-// the same way.
-//
-// Hypothesis: This strategy parses all functions in source order, with the
-// expectation that calls will follow the same order, and that helper thread
-// would always be ahead of the execution.
-struct DepthFirstDelazification final : public DelazifyStrategy {
-  Vector<ScriptIndex, 0, SystemAllocPolicy> stack;
-
-  bool done() const override { return stack.empty(); }
-  ScriptIndex next() override { return stack.popCopy(); }
-  void clear() override { return stack.clear(); }
-  bool insert(ScriptIndex index, frontend::ScriptStencilRef&) override {
-    return stack.append(index);
-  }
-};
-
-// Delazify all functions using a traversal which select the largest function
-// first. The intent being that if the main thread races with the helper thread,
-// then the main thread should only have to parse small functions instead of the
-// large ones which would be prioritized by this delazification strategy.
-struct LargeFirstDelazification final : public DelazifyStrategy {
-  using SourceSize = uint32_t;
-  Vector<std::pair<SourceSize, ScriptIndex>, 0, SystemAllocPolicy> heap;
-
-  bool done() const override { return heap.empty(); }
-  ScriptIndex next() override;
-  void clear() override { return heap.clear(); }
-  bool insert(ScriptIndex, frontend::ScriptStencilRef&) override;
-};
-
 // Eagerly delazify functions, and send the result back to the runtime which
 // requested the stencil to be parsed, by filling the stencil cache.
 //
@@ -634,17 +557,7 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
   // track which one we are associated with.
   JSRuntime* runtime = nullptr;
 
-  const JS::PrefableCompileOptions initialPrefableOptions;
-
-  // Queue of functions to be processed while delazifying.
-  UniquePtr<DelazifyStrategy> strategy;
-
-  // Every delazified function is merged back to provide context for delazifying
-  // even more functions.
-  frontend::CompilationStencilMerger merger;
-
-  // Record any errors happening while parsing or generating bytecode.
-  FrontendContext fc_;
+  DelazificationContext delazificationCx;
 
   // Create a new DelazifyTask and initialize it.
   //
@@ -659,20 +572,8 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
                const JS::PrefableCompileOptions& initialPrefableOptions);
   ~DelazifyTask();
 
-  [[nodiscard]] bool init(
-      const JS::ReadOnlyCompileOptions& options,
-      UniquePtr<frontend::ExtensibleCompilationStencil>&& initial);
-
-  // This function is called by delazify task thread to know whether the task
-  // should be interrupted.
-  //
-  // A delazify task holds on a thread until all functions iterated over by the
-  // strategy. However, as a delazify task iterates over multiple functions, it
-  // can easily be interrupted at function boundaries.
-  //
-  // TODO: (Bug 1773683) Plug this with the mozilla::Task::RequestInterrupt
-  // function which is wrapping HelperThreads tasks within Mozilla.
-  bool isInterrupted() { return false; }
+  [[nodiscard]] bool init(const JS::ReadOnlyCompileOptions& options,
+                          const frontend::CompilationStencil& stencil);
 
   bool runtimeMatches(JSRuntime* rt) { return runtime == rt; }
 
@@ -684,6 +585,8 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
   void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
   [[nodiscard]] bool runTask();
   ThreadType threadType() override { return ThreadType::THREAD_TYPE_DELAZIFY; }
+
+  bool done() const;
 };
 
 // The FreeDelazifyTask exists as this is a bad practice to `js_delete(this)`,
