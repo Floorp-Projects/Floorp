@@ -12630,7 +12630,8 @@ SheetPreloadStatus Document::PreloadStyle(
   // Charset names are always ASCII.
   auto result = CSSLoader()->LoadSheet(
       uri, aKind, aEncoding, referrerInfo, obs, aEarlyHintPreloaderId,
-      Element::StringToCORSMode(aCrossOriginAttr), aIntegrity);
+      Element::StringToCORSMode(aCrossOriginAttr), /* aNonce */ u""_ns,
+      aIntegrity);
   if (result.isErr()) {
     return SheetPreloadStatus::Errored;
   }
