@@ -759,6 +759,7 @@ struct ParamTraits<mozilla::net::LinkHeader> {
     WriteParam(aWriter, aParam.mHref);
     WriteParam(aWriter, aParam.mRel);
     WriteParam(aWriter, aParam.mTitle);
+    WriteParam(aWriter, aParam.mNonce);
     WriteParam(aWriter, aParam.mIntegrity);
     WriteParam(aWriter, aParam.mSrcset);
     WriteParam(aWriter, aParam.mSizes);
@@ -776,6 +777,9 @@ struct ParamTraits<mozilla::net::LinkHeader> {
       return false;
     }
     if (!ReadParam(aReader, &aResult->mTitle)) {
+      return false;
+    }
+    if (!ReadParam(aReader, &aResult->mNonce)) {
       return false;
     }
     if (!ReadParam(aReader, &aResult->mIntegrity)) {

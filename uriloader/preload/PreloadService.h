@@ -72,9 +72,9 @@ class PreloadService {
   // AsyncOpen.
   void PreloadLinkHeader(nsIURI* aURI, const nsAString& aURL,
                          nsContentPolicyType aPolicyType, const nsAString& aAs,
-                         const nsAString& aType, const nsAString& aIntegrity,
-                         const nsAString& aSrcset, const nsAString& aSizes,
-                         const nsAString& aCORS,
+                         const nsAString& aType, const nsAString& aNonce,
+                         const nsAString& aIntegrity, const nsAString& aSrcset,
+                         const nsAString& aSizes, const nsAString& aCORS,
                          const nsAString& aReferrerPolicy,
                          uint64_t aEarlyHintPreloaderId);
 
