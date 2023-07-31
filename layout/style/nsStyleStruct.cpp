@@ -752,7 +752,7 @@ using SVGPaintFallback = StyleGenericSVGPaintFallback<StyleColor>;
 // nsStyleSVG
 //
 nsStyleSVG::nsStyleSVG()
-    : mFill{StyleSVGPaintKind::Color(StyleColor::Black()),
+    : mFill{StyleSVGPaintKind::Color(StyleColor::BLACK),
             SVGPaintFallback::Unset()},
       mStroke{StyleSVGPaintKind::None(), SVGPaintFallback::Unset()},
       mMarkerEnd(StyleUrlOrNone::None()),
@@ -899,9 +899,9 @@ nsStyleSVGReset::nsStyleSVGReset()
       mR(NonNegativeLengthPercentage::Zero()),
       mMask(nsStyleImageLayers::LayerType::Mask),
       mClipPath(StyleClipPath::None()),
-      mStopColor(StyleColor::Black()),
-      mFloodColor(StyleColor::Black()),
-      mLightingColor(StyleColor::White()),
+      mStopColor(StyleColor::BLACK),
+      mFloodColor(StyleColor::BLACK),
+      mLightingColor(StyleColor::WHITE),
       mStopOpacity(1.0f),
       mFloodOpacity(1.0f),
       mVectorEffect(StyleVectorEffect::None),
@@ -2037,7 +2037,7 @@ nsChangeHint nsStyleImageLayers::Layer::CalcDifference(
 
 nsStyleBackground::nsStyleBackground()
     : mImage(nsStyleImageLayers::LayerType::Background),
-      mBackgroundColor(StyleColor::Transparent()) {
+      mBackgroundColor(StyleColor::TRANSPARENT) {
   MOZ_COUNT_CTOR(nsStyleBackground);
 }
 
