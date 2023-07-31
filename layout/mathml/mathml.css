@@ -300,14 +300,12 @@ mphantom {
     visibility: hidden;
 }
 
-@media (-moz-mathml-core-maction-and-semantics) {
-  /* Implement MathML Core's semantics/maction support
-     https://w3c.github.io/mathml-core/#dfn-semantics
-     https://w3c.github.io/mathml-core/#dfn-maction */
-  maction > :not(:first-child),
-  semantics > :not(:first-child) {
-    display: none;
-  }
+/* Implement MathML Core's semantics/maction support
+   https://w3c.github.io/mathml-core/#dfn-semantics
+   https://w3c.github.io/mathml-core/#dfn-maction */
+maction > :not(:first-child),
+semantics > :not(:first-child) {
+  display: none;
 }
 
 @media (-moz-mathml-core-mi) {

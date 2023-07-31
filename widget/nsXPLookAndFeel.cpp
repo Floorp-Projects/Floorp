@@ -504,7 +504,6 @@ static constexpr struct {
     // need to re-layout.
     {"browser.theme.toolbar-theme"_ns, widget::ThemeChangeKind::AllBits},
     {"browser.theme.content-theme"_ns},
-    {"mathml.legacy_maction_and_semantics_implementations.disabled"_ns},
     {"dom.element.popover.enabled"_ns},
     {"mathml.legacy_mathvariant_attribute.disabled"_ns},
 };
