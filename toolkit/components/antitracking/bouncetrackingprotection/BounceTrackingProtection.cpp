@@ -273,7 +273,10 @@ BounceTrackingProtection::TestRunPurgeBounceTrackers(
   // required for XPCOM.
   PurgeBounceTrackers()->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [promise] { promise->MaybeResolveWithUndefined(); },
+      [promise](const PurgeBounceTrackersMozPromise::ResolveValueType&
+                    purgedSiteHosts) {
+        promise->MaybeResolve(purgedSiteHosts);
+      },
       [promise] { promise->MaybeRejectWithUndefined(); });
 
   promise.forget(aPromise);
@@ -282,8 +285,19 @@ BounceTrackingProtection::TestRunPurgeBounceTrackers(
 
 NS_IMETHODIMP
 BounceTrackingProtection::TestAddBounceTrackerCandidate(
-    const nsACString& aHost, const PRTime bounceTime) {
-  mBounceTrackers.InsertOrUpdate(aHost, bounceTime);
+    const nsACString& aHost, const PRTime aBounceTime) {
+  // Can not have a host in both maps.
+  mUserActivation.Remove(aHost);
+  mBounceTrackers.InsertOrUpdate(aHost, aBounceTime);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BounceTrackingProtection::TestAddUserActivation(const nsACString& aHost,
+                                                const PRTime aActivationTime) {
+  // Can not have a host in both maps.
+  mBounceTrackers.Remove(aHost);
+  mUserActivation.InsertOrUpdate(aHost, aActivationTime);
   return NS_OK;
 }
 
@@ -341,6 +355,7 @@ BounceTrackingProtection::PurgeBounceTrackers() {
   }
 
   mClearPromises.Clear();
+  nsTArray<nsCString> purgedSiteHosts;
 
   for (auto hostIter = mBounceTrackers.Iter(); !hostIter.Done();
        hostIter.Next()) {
@@ -418,6 +433,8 @@ BounceTrackingProtection::PurgeBounceTrackers() {
             MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Info,
                     ("%s: Done. Cleared %zu hosts.", __FUNCTION__,
                      aResults.ResolveValue().Length()));
+
+            nsTArray<nsCString> purgedSiteHosts;
             // If any clear call failed reject.
             for (auto& result : aResults.ResolveValue()) {
               if (result.IsReject()) {
@@ -425,12 +442,13 @@ BounceTrackingProtection::PurgeBounceTrackers() {
                 return PurgeBounceTrackersMozPromise::CreateAndReject(
                     NS_ERROR_FAILURE, __func__);
               }
+              purgedSiteHosts.AppendElement(result.ResolveValue());
             }
 
             // No clearing errors, resolve.
             mClearPromises.Clear();
-            return PurgeBounceTrackersMozPromise::CreateAndResolve(NS_OK,
-                                                                   __func__);
+            return PurgeBounceTrackersMozPromise::CreateAndResolve(
+                std::move(purgedSiteHosts), __func__);
           });
 }
 
@@ -447,7 +465,7 @@ NS_IMETHODIMP BounceTrackingProtection::ClearDataCallback::OnDataDeleted(
   } else {
     MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Info,
             ("%s: Cleared %s", __FUNCTION__, mHost.get()));
-    mPromise->Resolve(NS_OK, __func__);
+    mPromise->Resolve(std::move(mHost), __func__);
   }
   return NS_OK;
 }
