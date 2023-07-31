@@ -11,12 +11,6 @@ const { HttpServer } = ChromeUtils.importESModule(
   "resource://testing-common/httpd.sys.mjs"
 );
 
-const { XPCShellContentUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/XPCShellContentUtils.sys.mjs"
-);
-
-XPCShellContentUtils.ensureInitialized(this);
-
 let gHttpServer;
 let gValidRequestCount = 0;
 let gFickleIsWorking = true;
@@ -114,56 +108,5 @@ add_task(async function test_maxAge_handling_of_invalid_requests() {
     await OHTTPConfigManager.get(getLocalURL("fickle")),
     new TextEncoder().encode("1234"),
     "Should still have the cached config if no max age is passed."
-  );
-});
-
-add_task(async function test_out_of_process_use() {
-  let page = await XPCShellContentUtils.loadContentPage("about:certificate", {
-    remote: true,
-  });
-
-  let fetchURL = getLocalURL("valid");
-  let contentFetch = await page.spawn([fetchURL], url => {
-    // eslint-disable-next-line no-shadow
-    let { OHTTPConfigManager } = ChromeUtils.importESModule(
-      "resource://gre/modules/OHTTPConfigManager.sys.mjs"
-    );
-
-    return OHTTPConfigManager.get(url);
-  });
-  Assert.deepEqual(contentFetch, new TextEncoder().encode("1234"));
-  Assert.ok(
-    page.browsingContext.currentWindowGlobal.domProcess.getActor(
-      "OHTTPConfigManager"
-    ),
-    "Should be able to get a parent actor for this browsingContext"
-  );
-
-  let randomPage = await XPCShellContentUtils.loadContentPage(
-    "data:text/html,2",
-    {
-      remote: true,
-    }
-  );
-
-  await Assert.rejects(
-    randomPage.spawn([fetchURL], async url => {
-      // eslint-disable-next-line no-shadow
-      let { OHTTPConfigManager } = ChromeUtils.importESModule(
-        "resource://gre/modules/OHTTPConfigManager.sys.mjs"
-      );
-
-      return OHTTPConfigManager.get(url);
-    }),
-    /cannot be used/,
-    "Shouldn't be able to use OHTTPConfigManager from random content processes."
-  );
-  Assert.throws(
-    () =>
-      randomPage.browsingContext.currentWindowGlobal.domProcess.getActor(
-        "OHTTPConfigManager"
-      ),
-    /Process protocol .*support remote type/,
-    "Should not be able to get a parent actor for a non-privilegedabout browsingContext"
   );
 });
