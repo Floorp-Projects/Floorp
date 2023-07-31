@@ -8,7 +8,7 @@
   cursor: pointer;
   /* Override button background-color and color from common.css */
   background-color: transparent;
-  color: var(--in-content-link-color);
+  color: var(--link-color);
   -moz-context-properties: fill;
   fill: currentColor;
   border: none;
