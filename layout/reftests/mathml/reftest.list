@@ -66,7 +66,6 @@ fails == stretchy-mover-2a.html stretchy-mover-2-ref.html
 == mathml-type-supported.xhtml mathml-type-supported-ref.xml
 == mtable-align-negative-rownumber.html mtable-align-negative-rownumber-ref.html
 == mtable-align-negative-rownumber-2.html mtable-align-negative-rownumber-2-ref.html
-pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) != embellished-op-1-1.html embellished-op-1-1-ref.html
 != embellished-op-1-2.html embellished-op-1-2-ref.html
 != embellished-op-1-3.html embellished-op-1-3-ref.html
 != embellished-op-1-4.html embellished-op-1-4-ref.html
@@ -75,20 +74,20 @@ pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) != embe
 != embellished-op-2-2.html embellished-op-2-2-ref.html
 != embellished-op-2-3.html embellished-op-2-3-ref.html
 != embellished-op-2-4.html embellished-op-2-4-ref.html
-pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) != embellished-op-3-1.html embellished-op-3-1-ref.html
-pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) != embellished-op-3-2.html embellished-op-3-2-ref.html
-pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) != embellished-op-3-3.html embellished-op-3-3-ref.html
-pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) != embellished-op-3-4.html embellished-op-3-4-ref.html
-pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) != embellished-op-3-5.html embellished-op-3-5-ref.html
+!= embellished-op-3-2.html embellished-op-3-2-ref.html
+!= embellished-op-3-3.html embellished-op-3-3-ref.html
+!= embellished-op-3-4.html embellished-op-3-4-ref.html
+!= embellished-op-3-5.html embellished-op-3-5-ref.html
 == embellished-op-4-1.html embellished-op-4-1-ref.html
 == embellished-op-4-2.html embellished-op-4-2-ref.html
 == embellished-op-4-3.html embellished-op-4-3-ref.html
 == embellished-op-5-1.html embellished-op-5-ref.html
 == embellished-op-5-2.html embellished-op-5-ref.html
-pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) pref(mathml.stixgeneral_operator_stretching.disabled,false) == semantics-1.xhtml semantics-1-ref.xhtml # bug 1309429; bug 1648335
-pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) == semantics-2.html semantics-2-ref.html
-pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) == semantics-3.html semantics-3-ref.html
-pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) == semantics-4.html semantics-4-ref.html
+== semantics-1.xhtml semantics-1-ref.xhtml
+== semantics-2.html semantics-2-ref.html
+== semantics-3.html semantics-3-ref.html
+== semantics-4.html semantics-4-ref.html
+pref(mathml.stixgeneral_operator_stretching.disabled,false) == semantics-5.html semantics-5-ref.html # bug 1309429; bug 1648335
 == mstyle-1.xhtml mstyle-1-ref.xhtml
 == mstyle-2.xhtml mstyle-2-ref.xhtml
 fuzzy-if(OSX,0-16,0-8) == mstyle-3.xhtml mstyle-3-ref.xhtml
@@ -144,14 +143,9 @@ pref(mathml.mathspace_names.disabled,false) == positive-namedspace.html positive
 == mtable-columnalign-multi-mtr-dynamic.html mtable-columnalign-multi-ref.html
 == mtable-columnalign-multi-mtable.html mtable-columnalign-multi-ref.html
 == mtable-columnalign-multi-mtable-dynamic.html mtable-columnalign-multi-ref.html
-pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) == maction-selection.html maction-selection-ref.html
-pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) == maction-dynamic-embellished-op.html maction-dynamic-embellished-op-ref.html
-pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482
-pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) == maction-dynamic-2.html maction-dynamic-2-ref.html
 == mo-invisibleoperators.html mo-invisibleoperators-ref.html
 == mo-invisibleoperators-2.html mo-invisibleoperators-2-ref.html
 random-if(gtkWidget) == mo-glyph-size.html mo-glyph-size-ref.html # bug 1309426
-pref(mathml.error_message_layout_for_invalid_markup.disabled,false) pref(mathml.legacy_maction_and_semantics_implementations.disabled,false) == maction-dynamic-3.html maction-dynamic-3-ref.html # bug 773482
 == whitespace-trim-1.html whitespace-trim-1-ref.html
 == whitespace-trim-2.html whitespace-trim-2-ref.html
 == whitespace-trim-3.html whitespace-trim-3-ref.html
@@ -246,8 +240,8 @@ pref(mathml.legacy_mathvariant_attribute.disabled,false) fails-if(Android&&emula
 pref(mathml.legacy_mathvariant_attribute.disabled,false) == mathvariant-4.html mathvariant-4-ref.html
 pref(mathml.legacy_mathvariant_attribute.disabled,false) == mathvariant-5.html mathvariant-5-ref.html
 == dtls-1.html dtls-1-ref.html
-pref(mathml.error_message_layout_for_invalid_markup.disabled,false) == dtls-2.html dtls-2-ref.html
-pref(mathml.legacy_mathvariant_attribute.disabled,false) pref(mathml.error_message_layout_for_invalid_markup.disabled,false) == dtls-3.html dtls-3-ref.html
+== dtls-2.html dtls-2-ref.html
+pref(mathml.legacy_mathvariant_attribute.disabled,false) == dtls-3.html dtls-3-ref.html
 == ssty-1.html ssty-1-ref.html
 == ssty-2.html ssty-2-ref.html
 == mathscript-1.html mathscript-1-ref.html

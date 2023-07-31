@@ -4729,19 +4729,6 @@ nsCSSFrameConstructor::FindMathMLData(const Element& aElement,
     return &sInlineMathData;
   }
 
-  if (!StaticPrefs::
-          mathml_legacy_maction_and_semantics_implementations_disabled()) {
-    static constexpr FrameConstructionDataByTag sMactionAndSemanticsData[] = {
-        SIMPLE_MATHML_CREATE(maction_, NS_NewMathMLmactionFrame),
-        SIMPLE_MATHML_CREATE(semantics_, NS_NewMathMLsemanticsFrame)};
-    const FrameConstructionData* data =
-        FindDataByTag(aElement, aStyle, sMactionAndSemanticsData,
-                      ArrayLength(sMactionAndSemanticsData));
-    if (data) {
-      return data;
-    }
-  }
-
   static constexpr FrameConstructionDataByTag sMathMLData[] = {
       SIMPLE_MATHML_CREATE(annotation_, NS_NewMathMLTokenFrame),
       SIMPLE_MATHML_CREATE(annotation_xml_, NS_NewMathMLmrowFrame),

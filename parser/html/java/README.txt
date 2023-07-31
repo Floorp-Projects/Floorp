@@ -43,7 +43,7 @@ make sync
 # now you have a clone of https://github.com/validator/htmlparser/tree/master in parser/html/java/htmlparser/
 cd htmlparser/src/
 $EDITOR nu/validator/htmlparser/impl/AttributeName.java
-# Search for the word "uncomment" and uncomment stuff according to the comments that talk about uncommenting
+# Perform case-insensitive searches for "uncomment" and uncomment stuff according to the comments that talk about uncommenting
 # Duplicate the declaration a normal attribute (nothings special in SVG mode, etc.). Let's use "alt", since it's the first one.
 # In the duplicate, replace ALT with the new name in all caps and "alt" with the new name in quotes in lower case.
 # Search for "ALT,", duplicate that line and change the duplicate to say the new name in all caps followed by comma.
@@ -67,7 +67,7 @@ make sync
 # now you have a clone of https://github.com/validator/htmlparser/tree/master in parser/html/java/htmlparser/
 cd htmlparser/src/
 $EDITOR nu/validator/htmlparser/impl/ElementName.java
-# Search for the word "uncomment" and uncomment stuff according to the comments that talk about uncommenting
+# Perform case-insensitive searches for "uncomment and uncomment stuff according to the comments that talk about uncommenting
 # Duplicate the declaration a normal element. Let's use "bdo", since it's the first normal one.
 # In the duplicate, replace BDO with the new name in all caps and "bdo" with the new name in quotes in lower case (twice).
 # Search for "BDO,", duplicate that line and change the duplicate to say the new name in all caps followed by comma.
