@@ -359,6 +359,7 @@ UNIFIED_SOURCES += [
     "vm/Compartment.cpp",
     "vm/CompilationAndEvaluation.cpp",
     "vm/Compression.cpp",
+    "vm/ConcurrentDelazification.cpp",
     "vm/DateTime.cpp",
     "vm/EnvironmentObject.cpp",
     "vm/EqualityOperations.cpp",

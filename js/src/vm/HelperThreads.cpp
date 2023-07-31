@@ -13,10 +13,8 @@
 
 #include <algorithm>
 
-#include "frontend/BytecodeCompiler.h"  // frontend::DelazifyCanonicalScriptedFunction, frontend::DelazifyFailureReason
-#include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationInput, BorrowingCompilationStencil, ScriptStencilRef}
+#include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationInput}
 #include "frontend/FrontendContext.h"
-#include "frontend/ScopeBindingCache.h"  // frontend::ScopeBindingCache
 #include "gc/GC.h"
 #include "jit/IonCompileTask.h"
 #include "jit/JitRuntime.h"
@@ -37,7 +35,6 @@
 #include "vm/HelperThreadState.h"
 #include "vm/InternalThreadPool.h"
 #include "vm/MutexIDs.h"
-#include "vm/StencilCache.h"  // DelazificationCache
 #include "wasm/WasmGenerator.h"
 
 using namespace js;
@@ -584,7 +581,7 @@ void ParseTask::scheduleDelazifyTask(AutoLockHelperThreadState& lock) {
   }
 
   // Schedule delazification task if there is any function to delazify.
-  if (!task->strategy->done()) {
+  if (!task->done()) {
     HelperThreadState().submitTask(task.release(), lock);
   }
 }
@@ -730,125 +727,10 @@ void js::StartOffThreadDelazification(
   }
 
   // Schedule delazification task if there is any function to delazify.
-  if (!task->strategy->done()) {
+  if (!task->done()) {
     AutoLockHelperThreadState lock;
     HelperThreadState().submitTask(task.release(), lock);
   }
-}
-
-bool DelazifyStrategy::add(FrontendContext* fc,
-                           const frontend::CompilationStencil& stencil,
-                           ScriptIndex index) {
-  using namespace js::frontend;
-  ScriptStencilRef scriptRef{stencil, index};
-
-  // Only functions with bytecode are allowed to be added.
-  MOZ_ASSERT(!scriptRef.scriptData().isGhost());
-  MOZ_ASSERT(scriptRef.scriptData().hasSharedData());
-
-  // Lookup the gc-things range which are referenced by this script.
-  size_t offset = scriptRef.scriptData().gcThingsOffset.index;
-  size_t length = scriptRef.scriptData().gcThingsLength;
-  auto gcThingData = stencil.gcThingData.Subspan(offset, length);
-
-  // Iterate over gc-things of the script and queue inner functions.
-  for (TaggedScriptThingIndex index : mozilla::Reversed(gcThingData)) {
-    if (!index.isFunction()) {
-      continue;
-    }
-
-    ScriptIndex innerScriptIndex = index.toFunction();
-    ScriptStencilRef innerScriptRef{stencil, innerScriptIndex};
-    if (innerScriptRef.scriptData().isGhost() ||
-        !innerScriptRef.scriptData().functionFlags.isInterpreted()) {
-      continue;
-    }
-    if (innerScriptRef.scriptData().hasSharedData()) {
-      // The top-level parse decided to eagerly parse this function, thus we
-      // should visit its inner function the same way.
-      if (!add(fc, stencil, innerScriptIndex)) {
-        return false;
-      }
-      continue;
-    }
-
-    // Maybe insert the new script index in the queue of functions to delazify.
-    if (!insert(innerScriptIndex, innerScriptRef)) {
-      ReportOutOfMemory(fc);
-      return false;
-    }
-  }
-
-  return true;
-}
-
-DelazifyStrategy::ScriptIndex LargeFirstDelazification::next() {
-  std::swap(heap.back(), heap[0]);
-  ScriptIndex result = heap.popCopy().second;
-
-  // NOTE: These are a heap indexes offseted by 1, such that we can manipulate
-  // the tree of heap-sorted values which bubble up the largest values towards
-  // the root of the tree.
-  size_t len = heap.length();
-  size_t i = 1;
-  while (true) {
-    // NOTE: We write (n + 1) - 1, instead of n, to explicit that the
-    // manipualted indexes are all offseted by 1.
-    size_t n = 2 * i;
-    size_t largest;
-    if (n + 1 <= len && heap[(n + 1) - 1].first > heap[n - 1].first) {
-      largest = n + 1;
-    } else if (n <= len) {
-      // The condition is n <= len in case n + 1 is out of the heap vector, but
-      // not n, in which case we still want to check if the last element of the
-      // heap vector should be swapped. Otherwise heap[n - 1] represents a
-      // larger function than heap[(n + 1) - 1].
-      largest = n;
-    } else {
-      // n is out-side the heap vector, thus our element is already in a leaf
-      // position and would not be moved any more.
-      break;
-    }
-
-    if (heap[i - 1].first < heap[largest - 1].first) {
-      // We found a function which has a larger body as a child of the current
-      // element. we swap it with the current element, such that the largest
-      // element is closer to the root of the tree.
-      std::swap(heap[i - 1], heap[largest - 1]);
-      i = largest;
-    } else {
-      // The largest function found as a child of the current node is smaller
-      // than the current node's function size. The heap tree is now organized
-      // as expected.
-      break;
-    }
-  }
-
-  return result;
-}
-
-bool LargeFirstDelazification::insert(ScriptIndex index,
-                                      frontend::ScriptStencilRef& ref) {
-  const frontend::ScriptStencilExtra& extra = ref.scriptExtra();
-  SourceSize size = extra.extent.sourceEnd - extra.extent.sourceStart;
-  if (!heap.append(std::pair(size, index))) {
-    return false;
-  }
-
-  // NOTE: These are a heap indexes offseted by 1, such that we can manipulate
-  // the tree of heap-sorted values which bubble up the largest values towards
-  // the root of the tree.
-  size_t i = heap.length();
-  while (i > 1) {
-    if (heap[i - 1].first <= heap[(i / 2) - 1].first) {
-      return true;
-    }
-
-    std::swap(heap[i - 1], heap[(i / 2) - 1]);
-    i /= 2;
-  }
-
-  return true;
 }
 
 UniquePtr<DelazifyTask> DelazifyTask::Create(
@@ -860,22 +742,7 @@ UniquePtr<DelazifyTask> DelazifyTask::Create(
     return nullptr;
   }
 
-  RefPtr<ScriptSource> source(stencil.source);
-  DelazificationCache& cache = DelazificationCache::getSingleton();
-  if (!cache.startCaching(std::move(source))) {
-    return nullptr;
-  }
-
-  // Clone the extensible stencil to be used for eager delazification.
-  auto initial = task->fc_.getAllocator()
-                     ->make_unique<frontend::ExtensibleCompilationStencil>(
-                         options, stencil.source);
-  if (!initial || !initial->cloneFrom(&task->fc_, stencil)) {
-    // In case of errors, skip this and delazify on-demand.
-    return nullptr;
-  }
-
-  if (!task->init(options, std::move(initial))) {
+  if (!task->init(options, stencil)) {
     // In case of errors, skip this and delazify on-demand.
     return nullptr;
   }
@@ -887,8 +754,8 @@ DelazifyTask::DelazifyTask(
     JSRuntime* runtime,
     const JS::PrefableCompileOptions& initialPrefableOptions)
     : runtime(runtime),
-      initialPrefableOptions(initialPrefableOptions),
-      merger() {}
+      delazificationCx(initialPrefableOptions, HelperThreadState().stackQuota) {
+}
 
 DelazifyTask::~DelazifyTask() {
   // The LinkedListElement destructor will remove us from any list we are part
@@ -896,76 +763,30 @@ DelazifyTask::~DelazifyTask() {
   MOZ_DIAGNOSTIC_ASSERT(!isInList());
 }
 
-bool DelazifyTask::init(
-    const JS::ReadOnlyCompileOptions& options,
-    UniquePtr<frontend::ExtensibleCompilationStencil>&& initial) {
-  using namespace js::frontend;
-
-  if (!fc_.allocateOwnedPool()) {
-    return false;
-  }
-
-  if (!merger.setInitial(&fc_, std::move(initial))) {
-    return false;
-  }
-
-  switch (options.eagerDelazificationStrategy()) {
-    case JS::DelazificationOption::OnDemandOnly:
-      // OnDemandOnly will parse function as they are require to continue the
-      // execution on the main thread.
-      MOZ_CRASH("OnDemandOnly should not create a DelazifyTask.");
-      break;
-    case JS::DelazificationOption::CheckConcurrentWithOnDemand:
-    case JS::DelazificationOption::ConcurrentDepthFirst:
-      // ConcurrentDepthFirst visit all functions to be delazified, visiting the
-      // inner functions before the siblings functions.
-      strategy = fc_.getAllocator()->make_unique<DepthFirstDelazification>();
-      break;
-    case JS::DelazificationOption::ConcurrentLargeFirst:
-      // ConcurrentLargeFirst visit all functions to be delazified, visiting the
-      // largest function first.
-      strategy = fc_.getAllocator()->make_unique<LargeFirstDelazification>();
-      break;
-    case JS::DelazificationOption::ParseEverythingEagerly:
-      // ParseEverythingEagerly parse all functions eagerly, thus leaving no
-      // functions to be parsed on demand.
-      MOZ_CRASH("ParseEverythingEagerly should not create a DelazifyTask");
-      break;
-  }
-
-  if (!strategy) {
-    return false;
-  }
-
-  // Queue functions from the top-level to be delazify.
-  BorrowingCompilationStencil borrow(merger.getResult());
-  ScriptIndex topLevel{0};
-  return strategy->add(&fc_, borrow, topLevel);
+bool DelazifyTask::init(const JS::ReadOnlyCompileOptions& options,
+                        const frontend::CompilationStencil& stencil) {
+  return delazificationCx.init(options, stencil);
 }
 
 size_t DelazifyTask::sizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
-  size_t mergerSize = merger.getResult().sizeOfIncludingThis(mallocSizeOf);
-  return mergerSize;
+  return delazificationCx.sizeOfExcludingThis(mallocSizeOf);
 }
 
 void DelazifyTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
   {
     AutoUnlockHelperThreadState unlock(lock);
-    if (!runTask()) {
-      // NOTE: We do not report errors beyond this scope, as there is no where
-      // to report these errors to. In the mean time, prevent the eager
-      // delazification from running after any kind of errors.
-      strategy->clear();
-    }
-    fc_.nameCollectionPool().purge();
+    // NOTE: We do not report errors beyond this scope, as there is no where
+    // to report these errors to. In the mean time, prevent the eager
+    // delazification from running after any kind of errors.
+    (void)runTask();
   }
 
   // If we should continue to delazify even more functions, then re-add this
   // task to the vector of delazification tasks. This might happen when the
   // DelazifyTask is interrupted by a higher priority task. (see
   // mozilla::TaskController & mozilla::Task)
-  if (!strategy->done()) {
+  if (!delazificationCx.done()) {
     HelperThreadState().submitTask(this, lock);
   } else {
     UniquePtr<FreeDelazifyTask> freeTask(js_new<FreeDelazifyTask>(this));
@@ -975,83 +796,9 @@ void DelazifyTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
   }
 }
 
-bool DelazifyTask::runTask() {
-  fc_.setStackQuota(HelperThreadState().stackQuota);
+bool DelazifyTask::runTask() { return delazificationCx.delazify(); }
 
-  using namespace js::frontend;
-
-  // Create a scope-binding cache dedicated to this Delazification task. The
-  // memory would be reclaimed if the task is interrupted or if all
-  // delazification are completed.
-  //
-  // We do not use the one from the JSContext/Runtime, as it is not thread safe
-  // to use it, as it could be purged by a GC in the mean time.
-  StencilScopeBindingCache scopeCache(merger);
-
-  LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-
-  while (!strategy->done() || isInterrupted()) {
-    RefPtr<CompilationStencil> innerStencil;
-    ScriptIndex scriptIndex = strategy->next();
-    {
-      BorrowingCompilationStencil borrow(merger.getResult());
-
-      // Take the next inner function to be delazified.
-      ScriptStencilRef scriptRef{borrow, scriptIndex};
-      MOZ_ASSERT(!scriptRef.scriptData().isGhost());
-      MOZ_ASSERT(!scriptRef.scriptData().hasSharedData());
-
-      // Parse and generate bytecode for the inner function.
-      DelazifyFailureReason failureReason;
-      innerStencil = DelazifyCanonicalScriptedFunction(
-          &fc_, tempLifoAlloc, initialPrefableOptions, &scopeCache, borrow,
-          scriptIndex, &failureReason);
-      if (!innerStencil) {
-        if (failureReason == DelazifyFailureReason::Compressed) {
-          // The script source is already compressed, and delazification cannot
-          // be performed without decompressing.
-          // There is no reason to keep our eager delazification going.
-          strategy->clear();
-          return true;
-        }
-
-        return false;
-      }
-
-      // Add the generated stencil to the cache, to be consumed by the main
-      // thread.
-      DelazificationCache& cache = DelazificationCache::getSingleton();
-      StencilContext key(borrow.source, scriptRef.scriptExtra().extent);
-      if (auto guard = cache.isSourceCached(borrow.source)) {
-        if (!cache.putNew(guard, key, innerStencil.get())) {
-          ReportOutOfMemory(&fc_);
-          return false;
-        }
-      } else {
-        // Stencils for this source are no longer accepted in the cache, thus
-        // there is no reason to keep our eager delazification going.
-        strategy->clear();
-        return true;
-      }
-    }
-
-    // We are merging the delazification now, while this could be post-poned
-    // until we have to look at inner functions, this is simpler to do it now
-    // than querying the cache for every enclosing script.
-    if (!merger.addDelazification(&this->fc_, *innerStencil)) {
-      return false;
-    }
-
-    {
-      BorrowingCompilationStencil borrow(merger.getResult());
-      if (!strategy->add(&fc_, borrow, scriptIndex)) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
+bool DelazifyTask::done() const { return delazificationCx.done(); }
 
 void FreeDelazifyTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
   {
