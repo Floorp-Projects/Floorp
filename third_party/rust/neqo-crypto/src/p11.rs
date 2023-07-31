@@ -10,14 +10,14 @@
 #![allow(non_snake_case)]
 
 use crate::err::{secstatus_to_res, Error, Res};
-
 use neqo_common::hex_with_len;
-
-use std::convert::TryFrom;
-use std::mem;
-use std::ops::{Deref, DerefMut};
-use std::os::raw::{c_int, c_uint};
-use std::ptr::null_mut;
+use std::{
+    convert::TryFrom,
+    mem,
+    ops::{Deref, DerefMut},
+    os::raw::{c_int, c_uint},
+    ptr::null_mut,
+};
 
 #[allow(clippy::upper_case_acronyms)]
 #[allow(clippy::unreadable_literal)]
@@ -28,6 +28,7 @@ mod nss_p11 {
 
 pub use nss_p11::*;
 
+#[macro_export]
 macro_rules! scoped_ptr {
     ($scoped:ident, $target:ty, $dtor:path) => {
         pub struct $scoped {
@@ -39,9 +40,9 @@ macro_rules! scoped_ptr {
             ///
             /// # Errors
             /// When passed a null pointer generates an error.
-            pub fn from_ptr(ptr: *mut $target) -> Result<Self, crate::err::Error> {
+            pub fn from_ptr(ptr: *mut $target) -> Result<Self, $crate::err::Error> {
                 if ptr.is_null() {
-                    Err(crate::err::Error::last_nss_error())
+                    Err($crate::err::Error::last_nss_error())
                 } else {
                     Ok(Self { ptr })
                 }

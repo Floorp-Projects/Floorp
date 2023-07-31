@@ -11,9 +11,9 @@
 
 [package]
 edition = "2018"
-rust-version = "1.57.0"
+rust-version = "1.65.0"
 name = "neqo-transport"
-version = "0.6.4"
+version = "0.6.5"
 authors = [
     "EKR <ekr@rtfm.com>",
     "Andy Grover <agrover@mozilla.com>",

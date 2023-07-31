@@ -152,7 +152,14 @@ pub fn initial_aead_and_hp(dcid: &[u8], role: Role) -> (Aead, HpKey) {
     )
     .unwrap();
     (
-        Aead::new(TLS_VERSION_1_3, TLS_AES_128_GCM_SHA256, &secret, "quic ").unwrap(),
+        Aead::new(
+            false,
+            TLS_VERSION_1_3,
+            TLS_AES_128_GCM_SHA256,
+            &secret,
+            "quic ",
+        )
+        .unwrap(),
         HpKey::extract(TLS_VERSION_1_3, TLS_AES_128_GCM_SHA256, &secret, "quic hp").unwrap(),
     )
 }

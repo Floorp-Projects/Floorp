@@ -48,6 +48,7 @@ pub enum Opt {
     Tls13CompatMode,
     HelloDowngradeCheck,
     SuppressEndOfEarlyData,
+    Grease,
 }
 
 impl Opt {
@@ -66,6 +67,7 @@ impl Opt {
             Self::Tls13CompatMode => SSLOption::SSL_ENABLE_TLS13_COMPAT_MODE,
             Self::HelloDowngradeCheck => SSLOption::SSL_ENABLE_HELLO_DOWNGRADE_CHECK,
             Self::SuppressEndOfEarlyData => SSLOption::SSL_SUPPRESS_END_OF_EARLY_DATA,
+            Self::Grease => SSLOption::SSL_ENABLE_GREASE,
         };
         i as PRInt32
     }

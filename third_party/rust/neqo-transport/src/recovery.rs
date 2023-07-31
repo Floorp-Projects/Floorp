@@ -668,10 +668,7 @@ impl LossRecovery {
             largest_acked
         );
 
-        let space = self.spaces.get_mut(pn_space);
-        let space = if let Some(sp) = space {
-            sp
-        } else {
+        let Some(space) = self.spaces.get_mut(pn_space) else {
             qinfo!("ACK on discarded space");
             return (Vec::new(), Vec::new());
         };

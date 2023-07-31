@@ -4,15 +4,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::super::{ConnectionParameters, ACK_RATIO_SCALE};
 use super::{
+    super::{ConnectionParameters, ACK_RATIO_SCALE},
     ack_bytes, connect_rtt_idle, default_client, default_server, fill_cwnd, increase_cwnd,
     induce_persistent_congestion, new_client, new_server, send_something, DEFAULT_RTT,
 };
 use crate::stream_id::StreamType;
 
-use std::mem;
-use std::time::Duration;
+use std::{mem, time::Duration};
 use test_fixture::{addr_v4, assertions};
 
 /// With the default RTT here (100ms) and default ratio (4), endpoints won't send
@@ -21,7 +20,7 @@ use test_fixture::{addr_v4, assertions};
 fn ack_rate_default() {
     let mut client = default_client();
     let mut server = default_server();
-    let _ = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
+    _ = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
 
     assert_eq!(client.stats().frame_tx.ack_frequency, 0);
     assert_eq!(server.stats().frame_tx.ack_frequency, 0);
@@ -38,7 +37,7 @@ fn ack_rate_slow_start() {
     let stream = client.stream_create(StreamType::UniDi).unwrap();
     let now = increase_cwnd(&mut client, &mut server, stream, now);
     let now = increase_cwnd(&mut client, &mut server, stream, now);
-    let _ = increase_cwnd(&mut client, &mut server, stream, now);
+    _ = increase_cwnd(&mut client, &mut server, stream, now);
 
     // The client should not have sent an ACK_FREQUENCY frame, even
     // though the value would have updated.

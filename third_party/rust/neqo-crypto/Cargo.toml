@@ -11,9 +11,9 @@
 
 [package]
 edition = "2018"
-rust-version = "1.57.0"
+rust-version = "1.65.0"
 name = "neqo-crypto"
-version = "0.6.4"
+version = "0.6.5"
 authors = ["Martin Thomson <mt@lowentropy.net>"]
 build = "build.rs"
 license = "MIT/Apache-2.0"
@@ -34,7 +34,7 @@ serde_derive = "1.0"
 toml = "0.5"
 
 [build-dependencies.bindgen]
-version = "0.63"
+version = "0.64"
 features = ["runtime"]
 default-features = false
 

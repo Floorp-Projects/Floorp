@@ -5,21 +5,54 @@
 // except according to those terms.
 
 // Stream management for a connection.
-
-use crate::fc::{LocalStreamLimits, ReceiverFlowControl, RemoteStreamLimits, SenderFlowControl};
-use crate::frame::Frame;
-use crate::packet::PacketBuilder;
-use crate::recovery::{RecoveryToken, StreamRecoveryToken};
-use crate::recv_stream::{RecvStream, RecvStreams};
-use crate::send_stream::{SendStream, SendStreams, TransmissionPriority};
-use crate::stats::FrameStats;
-use crate::stream_id::{StreamId, StreamType};
-use crate::tparams::{self, TransportParametersHandler};
-use crate::ConnectionEvents;
-use crate::{Error, Res};
+use crate::{
+    fc::{LocalStreamLimits, ReceiverFlowControl, RemoteStreamLimits, SenderFlowControl},
+    frame::Frame,
+    packet::PacketBuilder,
+    recovery::{RecoveryToken, StreamRecoveryToken},
+    recv_stream::{RecvStream, RecvStreams},
+    send_stream::{SendStream, SendStreams, TransmissionPriority},
+    stats::FrameStats,
+    stream_id::{StreamId, StreamType},
+    tparams::{self, TransportParametersHandler},
+    ConnectionEvents, Error, Res,
+};
 use neqo_common::{qtrace, qwarn, Role};
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::cmp::Ordering;
+use std::{cell::RefCell, rc::Rc};
+
+pub type SendOrder = i64;
+
+#[derive(Copy, Clone)]
+pub struct StreamOrder {
+    pub sendorder: Option<SendOrder>,
+}
+
+// We want highest to lowest, with None being higher than any value
+impl Ord for StreamOrder {
+    fn cmp(&self, other: &Self) -> Ordering {
+        if self.sendorder.is_some() && other.sendorder.is_some() {
+            // We want reverse order (high to low) when both values are specified.
+            other.sendorder.cmp(&self.sendorder)
+        } else {
+            self.sendorder.cmp(&other.sendorder)
+        }
+    }
+}
+
+impl PartialOrd for StreamOrder {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for StreamOrder {
+    fn eq(&self, other: &Self) -> bool {
+        self.sendorder == other.sendorder
+    }
+}
+
+impl Eq for StreamOrder {}
 
 pub struct Streams {
     role: Role,
@@ -66,8 +99,7 @@ impl Streams {
     }
 
     pub fn zero_rtt_rejected(&mut self) {
-        self.send.clear();
-        self.recv.clear();
+        self.clear_streams();
         debug_assert_eq!(
             self.remote_stream_limits[StreamType::BiDi].max_active(),
             self.tps
@@ -295,7 +327,9 @@ impl Streams {
     }
 
     pub fn cleanup_closed_streams(&mut self) {
-        self.send.clear_terminal();
+        // filter the list, removing closed streams
+        self.send.remove_terminal();
+
         let send = &self.send;
         let (removed_bidi, removed_uni) = self.recv.clear_terminal(send, self.role);
 
@@ -377,6 +411,14 @@ impl Streams {
         ))
     }
 
+    pub fn set_sendorder(&mut self, stream_id: StreamId, sendorder: Option<SendOrder>) -> Res<()> {
+        self.send.set_sendorder(stream_id, sendorder)
+    }
+
+    pub fn set_fairness(&mut self, stream_id: StreamId, fairness: bool) -> Res<()> {
+        self.send.set_fairness(stream_id, fairness)
+    }
+
     pub fn stream_create(&mut self, st: StreamType) -> Res<StreamId> {
         match self.local_stream_limits.take_stream_id(st) {
             None => Err(Error::StreamLimitError),
@@ -386,15 +428,14 @@ impl Streams {
                     StreamType::BiDi => tparams::INITIAL_MAX_STREAM_DATA_BIDI_REMOTE,
                 };
                 let send_limit = self.tps.borrow().remote().get_integer(send_limit_tp);
-                self.send.insert(
+                let stream = SendStream::new(
                     new_id,
-                    SendStream::new(
-                        new_id,
-                        send_limit,
-                        Rc::clone(&self.sender_fc),
-                        self.events.clone(),
-                    ),
+                    send_limit,
+                    Rc::clone(&self.sender_fc),
+                    self.events.clone(),
                 );
+                self.send.insert(new_id, stream);
+
                 if st == StreamType::BiDi {
                     // From the local perspective, this is a local- originated BiDi stream. From the
                     // remote perspective, this is a remote-originated BiDi stream. Therefore, look at
@@ -441,13 +482,13 @@ impl Streams {
     }
 
     pub fn set_initial_limits(&mut self) {
-        let _ = self.local_stream_limits[StreamType::BiDi].update(
+        _ = self.local_stream_limits[StreamType::BiDi].update(
             self.tps
                 .borrow()
                 .remote()
                 .get_integer(tparams::INITIAL_MAX_STREAMS_BIDI),
         );
-        let _ = self.local_stream_limits[StreamType::UniDi].update(
+        _ = self.local_stream_limits[StreamType::UniDi].update(
             self.tps
                 .borrow()
                 .remote()

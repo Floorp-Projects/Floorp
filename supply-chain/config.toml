@@ -777,14 +777,6 @@ criteria = "safe-to-deploy"
 version = "0.1.44"
 criteria = "safe-to-deploy"
 
-[[exemptions.time]]
-version = "0.3.9"
-criteria = "safe-to-run"
-
-[[exemptions.time-macros]]
-version = "0.2.4"
-criteria = "safe-to-run"
-
 [[exemptions.tokio]]
 version = "1.17.0"
 criteria = "safe-to-run"

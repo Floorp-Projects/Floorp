@@ -39,7 +39,7 @@ impl Priority {
                 urgency: 3,
                 incremental: false,
             } => None,
-            other => Some(Header::new("priority", format!("{}", other))),
+            other => Some(Header::new("priority", format!("{other}"))),
         }
     }
 
@@ -85,11 +85,11 @@ impl fmt::Display for Priority {
             Priority {
                 urgency,
                 incremental: false,
-            } => write!(f, "u={}", urgency),
+            } => write!(f, "u={urgency}"),
             Priority {
                 urgency,
                 incremental: true,
-            } => write!(f, "u={},i", urgency),
+            } => write!(f, "u={urgency},i"),
         }
     }
 }

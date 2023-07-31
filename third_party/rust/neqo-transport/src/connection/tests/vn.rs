@@ -479,7 +479,7 @@ fn compatible_upgrade_0rtt_rejected() {
     assert!(matches!(server.state(), State::Confirmed));
 
     assert!(client.events().any(|e| {
-        println!(" client event: {:?}", e);
+        println!(" client event: {e:?}");
         matches!(e, ConnectionEvent::ZeroRttRejected)
     }));
     assert_eq!(client.zero_rtt_state(), ZeroRttState::Rejected);

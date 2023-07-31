@@ -4,10 +4,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::cell::RefCell;
-use std::convert::TryFrom;
-use std::rc::{Rc, Weak};
-use std::time::Duration;
+use std::{
+    cell::RefCell,
+    convert::TryFrom,
+    rc::{Rc, Weak},
+    time::Duration,
+};
 
 #[cfg(windows)]
 use winapi::shared::minwindef::UINT;
@@ -80,8 +82,7 @@ impl PeriodSet {
 #[cfg(target_os = "macos")]
 #[allow(non_camel_case_types)]
 mod mac {
-    use std::mem::size_of;
-    use std::ptr::addr_of_mut;
+    use std::{mem::size_of, ptr::addr_of_mut};
 
     // These are manually extracted from the many bindings generated
     // by bindgen when provided with the simple header:
@@ -158,7 +159,7 @@ mod mac {
 
     /// Set a thread time policy.
     pub fn set_thread_policy(mut policy: thread_time_constraint_policy) {
-        let _ = unsafe {
+        _ = unsafe {
             thread_policy_set(
                 pthread_mach_thread_np(pthread_self()),
                 THREAD_TIME_CONSTRAINT_POLICY,
@@ -193,7 +194,7 @@ mod mac {
         let mut policy = thread_time_constraint_policy::default();
         let mut count = THREAD_TIME_CONSTRAINT_POLICY_COUNT;
         let mut get_default = 0;
-        let _ = unsafe {
+        _ = unsafe {
             thread_policy_get(
                 pthread_mach_thread_np(pthread_self()),
                 THREAD_TIME_CONSTRAINT_POLICY,
@@ -372,8 +373,10 @@ impl Drop for Time {
 #[cfg(test)]
 mod test {
     use super::Time;
-    use std::thread::{sleep, spawn};
-    use std::time::{Duration, Instant};
+    use std::{
+        thread::{sleep, spawn},
+        time::{Duration, Instant},
+    };
 
     const ONE: Duration = Duration::from_millis(1);
     const ONE_AND_A_BIT: Duration = Duration::from_micros(1500);
@@ -390,7 +393,7 @@ mod test {
             let e = Instant::now();
             let actual = e - s;
             let lag = actual - d;
-            println!("sleep({:?}) \u{2192} {:?} \u{394}{:?}", d, actual, lag);
+            println!("sleep({d:?}) \u{2192} {actual:?} \u{394}{lag:?}");
             if lag > max_lag {
                 return Err(());
             }

@@ -8,9 +8,7 @@ use std::cell::RefCell;
 use std::fmt;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use std::time::SystemTime;
 
-use chrono::{DateTime, Utc};
 use qlog::{
     self, CommonFields, Configuration, QlogStreamer, TimeUnits, Trace, VantagePoint,
     VantagePointType,
@@ -104,14 +102,14 @@ impl Drop for NeqoQlogShared {
 pub fn new_trace(role: Role) -> qlog::Trace {
     Trace {
         vantage_point: VantagePoint {
-            name: Some(format!("neqo-{}", role)),
+            name: Some(format!("neqo-{role}")),
             ty: match role {
                 Role::Client => VantagePointType::Client,
                 Role::Server => VantagePointType::Server,
             },
             flow: None,
         },
-        title: Some(format!("neqo-{} trace", role)),
+        title: Some(format!("neqo-{role} trace")),
         description: Some("Example qlog trace description".to_string()),
         configuration: Some(Configuration {
             time_offset: Some("0".into()),
@@ -121,11 +119,12 @@ pub fn new_trace(role: Role) -> qlog::Trace {
         common_fields: Some(CommonFields {
             group_id: None,
             protocol_type: None,
-            reference_time: Some({
-                let system_time = SystemTime::now();
-                let datetime: DateTime<Utc> = system_time.into();
-                datetime.to_rfc3339()
-            }),
+            reference_time: {
+                let datetime = time::OffsetDateTime::now_utc();
+                datetime
+                    .format(&time::format_description::well_known::Rfc3339)
+                    .ok() // This is expected to never fail.
+            },
         }),
         event_fields: vec![
             "relative_time".to_string(),

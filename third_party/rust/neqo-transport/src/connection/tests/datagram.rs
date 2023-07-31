@@ -12,11 +12,12 @@ use crate::events::{ConnectionEvent, OutgoingDatagramOutcome};
 use crate::frame::FRAME_TYPE_DATAGRAM;
 use crate::packet::PacketBuilder;
 use crate::quic_datagrams::MAX_QUIC_DATAGRAM;
-use crate::{Connection, ConnectionError, ConnectionParameters, Error};
+use crate::{
+    send_stream::{RetransmissionPriority, TransmissionPriority},
+    Connection, ConnectionError, ConnectionParameters, Error, StreamType,
+};
 use neqo_common::event::Provider;
-use std::cell::RefCell;
-use std::convert::TryFrom;
-use std::rc::Rc;
+use std::{cell::RefCell, convert::TryFrom, rc::Rc};
 use test_fixture::now;
 
 const DATAGRAM_LEN_MTU: u64 = 1310;
@@ -222,6 +223,89 @@ fn datagram_acked() {
         client.next_event().unwrap(),
         ConnectionEvent::OutgoingDatagramOutcome { id, outcome } if id == 1 && outcome == OutgoingDatagramOutcome::Acked
     ));
+}
+
+fn send_packet_and_get_server_event(
+    client: &mut Connection,
+    server: &mut Connection,
+) -> ConnectionEvent {
+    let out = client.process_output(now()).dgram();
+    server.process_input(out.unwrap(), now());
+    let mut events: Vec<_> = server
+        .events()
+        .filter_map(|evt| match evt {
+            ConnectionEvent::RecvStreamReadable { .. } | ConnectionEvent::Datagram { .. } => {
+                Some(evt)
+            }
+            _ => None,
+        })
+        .collect();
+    // We should only get one event - either RecvStreamReadable or Datagram.
+    assert_eq!(events.len(), 1);
+    events.remove(0)
+}
+
+/// Write a datagram that is big enough to fill a packet, but then see that
+/// normal priority stream data is sent first.
+#[test]
+fn datagram_after_stream_data() {
+    let (mut client, mut server) = connect_datagram();
+
+    // Write a datagram first.
+    let dgram_sent = client.stats().frame_tx.datagram;
+    assert_eq!(client.send_datagram(DATA_MTU, Some(1)), Ok(()));
+
+    // Create a stream with normal priority and send some data.
+    let stream_id = client.stream_create(StreamType::BiDi).unwrap();
+    client.stream_send(stream_id, &[6; 1200]).unwrap();
+
+    assert!(
+        matches!(send_packet_and_get_server_event(&mut client, &mut server), ConnectionEvent::RecvStreamReadable { stream_id: s } if s == stream_id)
+    );
+    assert_eq!(client.stats().frame_tx.datagram, dgram_sent);
+
+    if let ConnectionEvent::Datagram(data) =
+        &send_packet_and_get_server_event(&mut client, &mut server)
+    {
+        assert_eq!(data, DATA_MTU);
+    } else {
+        panic!();
+    }
+    assert_eq!(client.stats().frame_tx.datagram, dgram_sent + 1);
+}
+
+#[test]
+fn datagram_before_stream_data() {
+    let (mut client, mut server) = connect_datagram();
+
+    // Create a stream with low priority and send some data before datagram.
+    let stream_id = client.stream_create(StreamType::BiDi).unwrap();
+    client
+        .stream_priority(
+            stream_id,
+            TransmissionPriority::Low,
+            RetransmissionPriority::default(),
+        )
+        .unwrap();
+    client.stream_send(stream_id, &[6; 1200]).unwrap();
+
+    // Write a datagram.
+    let dgram_sent = client.stats().frame_tx.datagram;
+    assert_eq!(client.send_datagram(DATA_MTU, Some(1)), Ok(()));
+
+    if let ConnectionEvent::Datagram(data) =
+        &send_packet_and_get_server_event(&mut client, &mut server)
+    {
+        assert_eq!(data, DATA_MTU);
+    } else {
+        panic!();
+    }
+    assert_eq!(client.stats().frame_tx.datagram, dgram_sent + 1);
+
+    assert!(
+        matches!(send_packet_and_get_server_event(&mut client, &mut server), ConnectionEvent::RecvStreamReadable { stream_id: s } if s == stream_id)
+    );
+    assert_eq!(client.stats().frame_tx.datagram, dgram_sent + 1);
 }
 
 #[test]

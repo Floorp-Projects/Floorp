@@ -13,13 +13,14 @@ use neqo_common::event::Provider;
 use crate::{
     features::extended_connect::SessionCloseReason, Error, Header, Http3Client, Http3ClientEvent,
     Http3OrWebTransportStream, Http3Parameters, Http3Server, Http3ServerEvent, Http3State,
-    WebTransportEvent, WebTransportRequest, WebTransportServerEvent,
-    WebTransportSessionAcceptAction,
+    RecvStreamStats, SendStreamStats, WebTransportEvent, WebTransportRequest,
+    WebTransportServerEvent, WebTransportSessionAcceptAction,
 };
 use neqo_crypto::AuthenticationStatus;
 use neqo_transport::{ConnectionParameters, StreamId, StreamType};
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::time::Duration;
 
 use test_fixture::{
     addr, anti_replay, fixture_init, now, CountingConnectionIdGenerator, DEFAULT_ALPN_H3,
@@ -97,7 +98,8 @@ fn connect_with(client: &mut Http3Client, server: &mut Http3Server) {
     let out = client.process(out.dgram(), now());
     let out = server.process(out.dgram(), now());
     let out = client.process(out.dgram(), now());
-    std::mem::drop(server.process(out.dgram(), now()));
+    let out = server.process(out.dgram(), now());
+    std::mem::drop(client.process(out.dgram(), now()));
 }
 
 fn connect(
@@ -194,11 +196,16 @@ impl WtTest {
     }
 
     fn exchange_packets(&mut self) {
+        const RTT: Duration = Duration::from_millis(10);
         let mut out = None;
+        let mut now = now();
         loop {
-            out = self.client.process(out, now()).dgram();
-            out = self.server.process(out, now()).dgram();
-            if out.is_none() {
+            now += RTT / 2;
+            out = self.client.process(out, now).dgram();
+            let client_none = out.is_none();
+            now += RTT / 2;
+            out = self.server.process(out, now).dgram();
+            if client_none && out.is_none() {
                 break;
             }
         }
@@ -302,6 +309,14 @@ impl WtTest {
             data.len()
         );
         self.exchange_packets();
+    }
+
+    fn send_stream_stats(&mut self, wt_stream_id: StreamId) -> Result<SendStreamStats, Error> {
+        self.client.webtransport_send_stream_stats(wt_stream_id)
+    }
+
+    fn recv_stream_stats(&mut self, wt_stream_id: StreamId) -> Result<RecvStreamStats, Error> {
+        self.client.webtransport_recv_stream_stats(wt_stream_id)
     }
 
     fn receive_data_client(

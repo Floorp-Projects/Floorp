@@ -4,8 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::cmp::min;
-use std::mem;
+use std::{cmp::min, mem};
 
 use crate::codec::Decoder;
 
@@ -124,7 +123,7 @@ impl IncrementalDecoderIgnore {
 
     pub fn consume(&mut self, dv: &mut Decoder) -> bool {
         let amount = min(self.remaining, dv.remaining());
-        let _ = dv.decode(amount);
+        _ = dv.decode(amount);
         self.remaining -= amount;
         self.remaining == 0
     }
@@ -179,7 +178,7 @@ mod tests {
             for tail in 1..db.len() {
                 let split = db.len() - tail;
                 let mut dv = Decoder::from(&db.as_ref()[0..split]);
-                eprintln!("  split at {}: {:?}", split, dv);
+                eprintln!("  split at {split}: {dv:?}");
 
                 // Clone the basic decoder for each iteration of the loop.
                 let mut dec = decoder.clone();
@@ -193,7 +192,7 @@ mod tests {
                     assert_eq!(res, None);
                     assert!(dec.min_remaining() > 0);
                     let mut dv = Decoder::from(&db.as_ref()[split..]);
-                    eprintln!("  split remainder {}: {:?}", split, dv);
+                    eprintln!("  split remainder {split}: {dv:?}");
                     res = dec.consume(&mut dv);
                     assert_eq!(dv.remaining(), 1);
                 }
@@ -245,7 +244,7 @@ mod tests {
         for tail in 1..db.len() {
             let split = db.len() - tail;
             let mut dv = Decoder::from(&db.as_ref()[0..split]);
-            eprintln!("  split at {}: {:?}", split, dv);
+            eprintln!("  split at {split}: {dv:?}");
 
             // Clone the basic decoder for each iteration of the loop.
             let mut dec = decoder.clone();
@@ -257,7 +256,7 @@ mod tests {
                 assert!(!res);
                 assert!(dec.min_remaining() > 0);
                 let mut dv = Decoder::from(&db.as_ref()[split..]);
-                eprintln!("  split remainder {}: {:?}", split, dv);
+                eprintln!("  split remainder {split}: {dv:?}");
                 res = dec.consume(&mut dv);
                 assert_eq!(dv.remaining(), 1);
             }

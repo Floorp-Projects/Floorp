@@ -51,7 +51,7 @@ fn connect_with(client: &mut Http3Client, server: &mut Http3Server) {
     let out = client.process(out.dgram(), now());
     let out = server.process(out.dgram(), now());
     let out = client.process(out.dgram(), now());
-    let _ = server.process(out.dgram(), now());
+    _ = server.process(out.dgram(), now());
 }
 
 fn connect() -> (Http3Client, Http3Server) {

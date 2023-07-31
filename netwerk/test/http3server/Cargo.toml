@@ -6,10 +6,10 @@ edition = "2018"
 license = "MPL-2.0"
 
 [dependencies]
-neqo-transport = { tag = "v0.6.4", git = "https://github.com/mozilla/neqo" }
-neqo-common = { tag = "v0.6.4", git = "https://github.com/mozilla/neqo" }
-neqo-http3 = { tag = "v0.6.4", git = "https://github.com/mozilla/neqo" }
-neqo-qpack = { tag = "v0.6.4", git = "https://github.com/mozilla/neqo" }
+neqo-transport = { tag = "v0.6.5", git = "https://github.com/mozilla/neqo" }
+neqo-common = { tag = "v0.6.5", git = "https://github.com/mozilla/neqo" }
+neqo-http3 = { tag = "v0.6.5", git = "https://github.com/mozilla/neqo" }
+neqo-qpack = { tag = "v0.6.5", git = "https://github.com/mozilla/neqo" }
 mio = "0.6.17"
 mio-extras = "2.0.5"
 log = "0.4.0"
@@ -21,7 +21,7 @@ tokio = { version = "1", features = ["rt-multi-thread"] }
 mozilla-central-workspace-hack = { version = "0.1", features = ["http3server"], optional = true }
 
 [dependencies.neqo-crypto]
-tag = "v0.6.4"
+tag = "v0.6.5"
 git = "https://github.com/mozilla/neqo"
 default-features = false
 features = ["gecko"]

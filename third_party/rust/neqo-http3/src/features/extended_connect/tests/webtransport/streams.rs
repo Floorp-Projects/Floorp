@@ -16,8 +16,28 @@ fn wt_client_stream_uni() {
     let mut wt = WtTest::new();
     let wt_session = wt.create_wt_session();
     let wt_stream = wt.create_wt_stream_client(wt_session.stream_id(), StreamType::UniDi);
+    let send_stats = wt.send_stream_stats(wt_stream).unwrap();
+    assert_eq!(send_stats.bytes_written(), 0);
+    assert_eq!(send_stats.bytes_sent(), 0);
+    assert_eq!(send_stats.bytes_acked(), 0);
+
     wt.send_data_client(wt_stream, BUF_CLIENT);
     wt.receive_data_server(wt_stream, true, BUF_CLIENT, false);
+    let send_stats = wt.send_stream_stats(wt_stream).unwrap();
+    assert_eq!(send_stats.bytes_written(), BUF_CLIENT.len() as u64);
+    assert_eq!(send_stats.bytes_sent(), BUF_CLIENT.len() as u64);
+    assert_eq!(send_stats.bytes_acked(), BUF_CLIENT.len() as u64);
+
+    // Send data again to test if the stats has the expected values.
+    wt.send_data_client(wt_stream, BUF_CLIENT);
+    wt.receive_data_server(wt_stream, false, BUF_CLIENT, false);
+    let send_stats = wt.send_stream_stats(wt_stream).unwrap();
+    assert_eq!(send_stats.bytes_written(), (BUF_CLIENT.len() * 2) as u64);
+    assert_eq!(send_stats.bytes_sent(), (BUF_CLIENT.len() * 2) as u64);
+    assert_eq!(send_stats.bytes_acked(), (BUF_CLIENT.len() * 2) as u64);
+
+    let recv_stats = wt.recv_stream_stats(wt_stream);
+    assert_eq!(recv_stats.unwrap_err(), Error::InvalidStreamId);
 }
 
 #[test]
@@ -32,6 +52,14 @@ fn wt_client_stream_bidi() {
     let mut wt_server_stream = wt.receive_data_server(wt_client_stream, true, BUF_CLIENT, false);
     wt.send_data_server(&mut wt_server_stream, BUF_SERVER);
     wt.receive_data_client(wt_client_stream, false, BUF_SERVER, false);
+    let send_stats = wt.send_stream_stats(wt_client_stream).unwrap();
+    assert_eq!(send_stats.bytes_written(), BUF_CLIENT.len() as u64);
+    assert_eq!(send_stats.bytes_sent(), BUF_CLIENT.len() as u64);
+    assert_eq!(send_stats.bytes_acked(), BUF_CLIENT.len() as u64);
+
+    let recv_stats = wt.recv_stream_stats(wt_client_stream).unwrap();
+    assert_eq!(recv_stats.bytes_received(), BUF_SERVER.len() as u64);
+    assert_eq!(recv_stats.bytes_read(), BUF_SERVER.len() as u64);
 }
 
 #[test]
@@ -43,6 +71,12 @@ fn wt_server_stream_uni() {
     let mut wt_server_stream = WtTest::create_wt_stream_server(&mut wt_session, StreamType::UniDi);
     wt.send_data_server(&mut wt_server_stream, BUF_SERVER);
     wt.receive_data_client(wt_server_stream.stream_id(), true, BUF_SERVER, false);
+    let send_stats = wt.send_stream_stats(wt_server_stream.stream_id());
+    assert_eq!(send_stats.unwrap_err(), Error::InvalidStreamId);
+
+    let recv_stats = wt.recv_stream_stats(wt_server_stream.stream_id()).unwrap();
+    assert_eq!(recv_stats.bytes_received(), BUF_SERVER.len() as u64);
+    assert_eq!(recv_stats.bytes_read(), BUF_SERVER.len() as u64);
 }
 
 #[test]
@@ -57,6 +91,14 @@ fn wt_server_stream_bidi() {
     wt.receive_data_client(wt_server_stream.stream_id(), true, BUF_SERVER, false);
     wt.send_data_client(wt_server_stream.stream_id(), BUF_CLIENT);
     mem::drop(wt.receive_data_server(wt_server_stream.stream_id(), false, BUF_CLIENT, false));
+    let stats = wt.send_stream_stats(wt_server_stream.stream_id()).unwrap();
+    assert_eq!(stats.bytes_written(), BUF_CLIENT.len() as u64);
+    assert_eq!(stats.bytes_sent(), BUF_CLIENT.len() as u64);
+    assert_eq!(stats.bytes_acked(), BUF_CLIENT.len() as u64);
+
+    let recv_stats = wt.recv_stream_stats(wt_server_stream.stream_id()).unwrap();
+    assert_eq!(recv_stats.bytes_received(), BUF_SERVER.len() as u64);
+    assert_eq!(recv_stats.bytes_read(), BUF_SERVER.len() as u64);
 }
 
 #[test]

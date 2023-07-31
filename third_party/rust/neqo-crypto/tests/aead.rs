@@ -34,6 +34,7 @@ fn make_aead(cipher: Cipher) -> Aead {
     )
     .expect("make a secret");
     Aead::new(
+        false,
         TLS_VERSION_1_3,
         cipher,
         &secret,

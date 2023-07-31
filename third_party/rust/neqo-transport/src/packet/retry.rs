@@ -21,6 +21,7 @@ fn make_aead(version: Version) -> Aead {
 
     let secret = hkdf::import_key(TLS_VERSION_1_3, version.retry_secret()).unwrap();
     Aead::new(
+        false,
         TLS_VERSION_1_3,
         TLS_AES_128_GCM_SHA256,
         &secret,

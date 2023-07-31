@@ -24,16 +24,13 @@ pub use self::incrdecoder::{
     IncrementalDecoderBuffer, IncrementalDecoderIgnore, IncrementalDecoderUint,
 };
 
-#[macro_use]
-extern crate lazy_static;
-
 use std::fmt::Write;
 
 #[must_use]
 pub fn hex(buf: impl AsRef<[u8]>) -> String {
     let mut ret = String::with_capacity(buf.as_ref().len() * 2);
     for b in buf.as_ref() {
-        write!(&mut ret, "{:02x}", b).unwrap();
+        write!(&mut ret, "{b:02x}").unwrap();
     }
     ret
 }
@@ -48,11 +45,11 @@ pub fn hex_snip_middle(buf: impl AsRef<[u8]>) -> String {
         let mut ret = String::with_capacity(SHOW_LEN * 2 + 16);
         write!(&mut ret, "[{}]: ", buf.len()).unwrap();
         for b in &buf[..SHOW_LEN] {
-            write!(&mut ret, "{:02x}", b).unwrap();
+            write!(&mut ret, "{b:02x}").unwrap();
         }
         ret.push_str("..");
         for b in &buf[buf.len() - SHOW_LEN..] {
-            write!(&mut ret, "{:02x}", b).unwrap();
+            write!(&mut ret, "{b:02x}").unwrap();
         }
         ret
     }
@@ -64,7 +61,7 @@ pub fn hex_with_len(buf: impl AsRef<[u8]>) -> String {
     let mut ret = String::with_capacity(10 + buf.len() * 2);
     write!(&mut ret, "[{}]: ", buf.len()).unwrap();
     for b in buf {
-        write!(&mut ret, "{:02x}", b).unwrap();
+        write!(&mut ret, "{b:02x}").unwrap();
     }
     ret
 }
@@ -97,7 +94,7 @@ impl Role {
 
 impl ::std::fmt::Display for Role {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 

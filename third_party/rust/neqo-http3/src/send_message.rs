@@ -13,12 +13,11 @@ use crate::{
 
 use neqo_common::{qdebug, qinfo, qtrace, Encoder, Header, MessageType};
 use neqo_qpack::encoder::QPackEncoder;
-use neqo_transport::{Connection, StreamId};
+use neqo_transport::{streams::SendOrder, Connection, StreamId};
 use std::any::Any;
 use std::cell::RefCell;
 use std::cmp::min;
 use std::fmt::Debug;
-use std::mem;
 use std::rc::Rc;
 
 const MAX_DATA_HEADER_SIZE_2: usize = (1 << 6) - 1; // Maximal amount of data with DATA frame header size 2
@@ -271,6 +270,16 @@ impl SendStream for SendMessage {
         self.stream.has_buffered_data()
     }
 
+    fn set_sendorder(&mut self, _conn: &mut Connection, _sendorder: Option<SendOrder>) -> Res<()> {
+        // Not relevant for SendMessage
+        Ok(())
+    }
+
+    fn set_fairness(&mut self, _conn: &mut Connection, _fairness: bool) -> Res<()> {
+        // Not relevant for SendMessage
+        Ok(())
+    }
+
     fn close(&mut self, conn: &mut Connection) -> Res<()> {
         self.state.fin()?;
         if !self.stream.has_buffered_data() {
@@ -293,7 +302,6 @@ impl SendStream for SendMessage {
         Some(self)
     }
 
-    #[allow(clippy::drop_copy)]
     fn send_data_atomic(&mut self, conn: &mut Connection, buf: &[u8]) -> Res<()> {
         let data_frame = HFrame::Data {
             len: buf.len() as u64,
@@ -302,7 +310,7 @@ impl SendStream for SendMessage {
         data_frame.encode(&mut enc);
         self.stream.buffer(enc.as_ref());
         self.stream.buffer(buf);
-        mem::drop(self.stream.send_buffer(conn)?);
+        let _ = self.stream.send_buffer(conn)?;
         Ok(())
     }
 }

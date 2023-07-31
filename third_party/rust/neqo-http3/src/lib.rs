@@ -161,8 +161,10 @@ mod settings;
 mod stream_type_reader;
 
 use neqo_qpack::Error as QpackError;
-use neqo_transport::{AppError, Connection, Error as TransportError};
-pub use neqo_transport::{Output, StreamId};
+pub use neqo_transport::{streams::SendOrder, Output, StreamId};
+use neqo_transport::{
+    AppError, Connection, Error as TransportError, RecvStreamStats, SendStreamStats,
+};
 use std::fmt::Debug;
 
 use crate::priority::PriorityHandler;
@@ -408,7 +410,7 @@ impl ::std::error::Error for Error {
 
 impl ::std::fmt::Display for Error {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        write!(f, "HTTP/3 error: {:?}", self)
+        write!(f, "HTTP/3 error: {self:?}")
     }
 }
 
@@ -469,6 +471,11 @@ trait RecvStream: Stream {
 
     fn webtransport(&self) -> Option<Rc<RefCell<WebTransportSession>>> {
         None
+    }
+
+    /// This function is only implemented by `WebTransportRecvStream`.
+    fn stats(&mut self, _conn: &mut Connection) -> Res<RecvStreamStats> {
+        Err(Error::Unavailable)
     }
 }
 
@@ -545,13 +552,15 @@ trait HttpRecvStreamEvents: RecvStreamEvents {
 
 trait SendStream: Stream {
     /// # Errors
-    /// Error my occure during sending data, e.g. protocol error, etc.
+    /// Error my occur during sending data, e.g. protocol error, etc.
     fn send(&mut self, conn: &mut Connection) -> Res<()>;
     fn has_data_to_send(&self) -> bool;
     fn stream_writable(&self);
     fn done(&self) -> bool;
+    fn set_sendorder(&mut self, conn: &mut Connection, sendorder: Option<SendOrder>) -> Res<()>;
+    fn set_fairness(&mut self, conn: &mut Connection, fairness: bool) -> Res<()>;
     /// # Errors
-    /// Error my occure during sending data, e.g. protocol error, etc.
+    /// Error my occur during sending data, e.g. protocol error, etc.
     fn send_data(&mut self, _conn: &mut Connection, _buf: &[u8]) -> Res<usize>;
 
     /// # Errors
@@ -578,6 +587,11 @@ trait SendStream: Stream {
     /// It may happen that the transport stream is already close. This is unlikely.
     fn send_data_atomic(&mut self, _conn: &mut Connection, _buf: &[u8]) -> Res<()> {
         Err(Error::InvalidStreamId)
+    }
+
+    /// This function is only implemented by `WebTransportSendStream`.
+    fn stats(&mut self, _conn: &mut Connection) -> Res<SendStreamStats> {
+        Err(Error::Unavailable)
     }
 }
 

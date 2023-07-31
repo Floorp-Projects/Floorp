@@ -3100,14 +3100,29 @@ criteria = "safe-to-deploy"
 delta = "0.1.44 -> 0.1.45"
 
 [[audits.time]]
+who = "Kershaw Chang <kershaw@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.1.45 -> 0.3.17"
+
+[[audits.time]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "0.3.9 -> 0.3.17"
 
 [[audits.time-core]]
+who = "Kershaw Chang <kershaw@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.1.0"
+
+[[audits.time-core]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 version = "0.1.0"
+
+[[audits.time-macros]]
+who = "Kershaw Chang <kershaw@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.2.6"
 
 [[audits.time-macros]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

@@ -126,9 +126,7 @@ impl NewStreamHeadReader {
     pub fn get_type(&mut self, conn: &mut Connection) -> Res<Option<NewStreamType>> {
         loop {
             let (output, fin) = self.read(conn)?;
-            let output = if let Some(o) = output {
-                o
-            } else {
+            let Some(output) = output else {
                 if fin {
                     *self = NewStreamHeadReader::Done;
                     return Err(Error::HttpStreamCreation);

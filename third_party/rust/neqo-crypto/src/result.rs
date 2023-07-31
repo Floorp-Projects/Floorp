@@ -4,15 +4,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::err::{
-    nspr, Error, PR_ErrorToName, PR_ErrorToString, PR_GetError, Res, PR_LANGUAGE_I_DEFAULT,
+use crate::{
+    err::{nspr, Error, PR_ErrorToName, PR_ErrorToString, PR_GetError, Res, PR_LANGUAGE_I_DEFAULT},
+    ssl,
 };
-use crate::ssl;
 
 use std::ffi::CStr;
 
 pub fn result(rv: ssl::SECStatus) -> Res<()> {
-    let _ = result_helper(rv, false)?;
+    _ = result_helper(rv, false)?;
     Ok(())
 }
 
@@ -54,8 +54,10 @@ fn result_helper(rv: ssl::SECStatus, allow_blocked: bool) -> Res<bool> {
 #[cfg(test)]
 mod tests {
     use super::{result, result_or_blocked};
-    use crate::err::{self, nspr, Error, PRErrorCode, PR_SetError};
-    use crate::ssl;
+    use crate::{
+        err::{self, nspr, Error, PRErrorCode, PR_SetError},
+        ssl,
+    };
     use test_fixture::fixture_init;
 
     fn set_error_code(code: PRErrorCode) {
@@ -90,7 +92,7 @@ mod tests {
 
     #[test]
     fn is_err_zero_code() {
-    // This code doesn't work without initializing NSS first.
+        // This code doesn't work without initializing NSS first.
         fixture_init();
 
         set_error_code(0);
