@@ -55,11 +55,12 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection {
   nsCOMPtr<nsITimer> mBounceTrackingPurgeTimer;
 
   // Clear state for classified bounce trackers. To be called on an interval.
-  using PurgeBounceTrackersMozPromise = MozPromise<nsresult, nsresult, true>;
+  using PurgeBounceTrackersMozPromise =
+      MozPromise<nsTArray<nsCString>, nsresult, true>;
   RefPtr<PurgeBounceTrackersMozPromise> PurgeBounceTrackers();
 
   // Pending clear operations are stored as ClearDataMozPromise, one per host.
-  using ClearDataMozPromise = MozPromise<nsresult, uint32_t, true>;
+  using ClearDataMozPromise = MozPromise<nsCString, uint32_t, true>;
   nsTArray<RefPtr<ClearDataMozPromise>> mClearPromises;
 
   // Wraps nsIClearDataCallback in MozPromise.

@@ -19,5 +19,7 @@ interface nsIBounceTrackingProtection : nsISupports {
     [implicit_jscontext]
     Promise testRunPurgeBounceTrackers();
 
-    void testAddBounceTrackerCandidate(in ACString aHost, in PRTime bounceTime);
+    void testAddBounceTrackerCandidate(in ACString aHost, in PRTime aBounceTime);
+
+    void testAddUserActivation(in ACString aHost, in PRTime aActivationTime);
 };
