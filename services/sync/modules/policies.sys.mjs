@@ -37,9 +37,7 @@ import {
 
 import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 
-const { logManager } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsCommon.js"
-);
+import { logManager } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 import { Async } from "resource://services-common/async.sys.mjs";
 import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 

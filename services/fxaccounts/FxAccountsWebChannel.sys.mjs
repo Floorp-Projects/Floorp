@@ -11,7 +11,7 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const {
+import {
   COMMAND_PROFILE_CHANGE,
   COMMAND_LOGIN,
   COMMAND_LOGOUT,
@@ -33,7 +33,7 @@ const {
   WEBCHANNEL_ID,
   log,
   logPII,
-} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+} from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 
 const lazy = {};
 
