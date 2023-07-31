@@ -9,7 +9,6 @@
 
 #include "js/TypeDecls.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/LinkedList.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/LocationBase.h"
 #include "nsCycleCollectionParticipant.h"
@@ -29,8 +28,7 @@ namespace mozilla::dom {
 
 class Location final : public nsISupports,
                        public LocationBase,
-                       public nsWrapperCache,
-                       public LinkedListElement<Location> {
+                       public nsWrapperCache {
  public:
   typedef BrowsingContext::LocationProxy RemoteProxy;
 
@@ -111,8 +109,6 @@ class Location final : public nsISupports,
   nsresult GetHref(nsAString& aHref);
 
   nsresult ToString(nsAString& aString) { return GetHref(aString); }
-
-  void ClearCachedValues();
 
  protected:
   virtual ~Location();
