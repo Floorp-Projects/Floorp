@@ -45,7 +45,7 @@
 ## ⚡ Get Started
 
 
-### 💻 Supoorted Operating Systems & Requirements
+### 💻 Supported Operating Systems & Requirements
 
 Floorp Browser is available for Windows, macOS and Linux. You can install it by running the installer or by extracting the archive.
 
@@ -53,7 +53,7 @@ Floorp Browser is available for Windows, macOS and Linux. You can install it by 
 
 - Windows 10 or later. (Windows 7 and 8 are not supported)
 
-- x86_64 CPU architecture. AArch64 are not supported.
+- x86_64 CPU architecture. AArch64 is not supported.
 
 - Floorp provides "exe" installer & "Winget" install.
 
@@ -63,7 +63,7 @@ winget install Ablaze.Floorp
 ```
 Winget repository provided by [@Hibi_10000](https://github.com/Hibi-10000)
 
-**Floorp get Certum Open Source Code Signing Certificate. Official Floorp installer is signed by "Open Source Developer, Ryosuke Asano". Daylight build installer doesn't signed.**
+**Floorp get Certum Open Source Code Signing Certificate. Official Floorp installer is signed by "Open Source Developer, Ryosuke Asano". Daylight build installer is not signed.**
 
 #### macOS
 
@@ -71,7 +71,7 @@ Winget repository provided by [@Hibi_10000](https://github.com/Hibi-10000)
 
 - x86_64 CPU & ARM64 CPU architecture. Floorp provides a Universal build for both architectures.
 
-**After Floorp 11.0.0, Floorp gets Apple Notarization & Certification. You can install Floorp without warning & Has auto-update feature.**
+**After Floorp 11.0.0, Floorp gets Apple Notarization & Certification. You can install Floorp without warning. It also has an auto-update system included**
 
 #### Linux
 
@@ -79,9 +79,9 @@ Winget repository provided by [@Hibi_10000](https://github.com/Hibi-10000)
 
 - x86_64 & AAarch64 CPU architecture.
 
-- Floorp needs package or library see: ["Firefox Linux Requirements"](https://www.mozilla.org/en-US/firefox/115.0beta/system-requirements/#gnulinux)
+- Floorp Browser Requirements: ["Firefox Linux Requirements"](https://www.mozilla.org/en-US/firefox/115.0beta/system-requirements/#gnulinux)
 
-- List of Package manager are supported
+- List of supported package managers:
 
 ```md
 1. PPA (Ubuntu, Linux Mint, etc.)       "https://ppa.ablaze.one"
@@ -95,10 +95,7 @@ Winget repository provided by [@Hibi_10000](https://github.com/Hibi-10000)
 
 ### 📥 Download & 📦 Install
 
-You can download the latest version of Floorp Browser from the official website: [Floorp.app](https://floorp.app/download)
-...or from the [GitHub Releases](https://github.com/Floorp-Projects/Floorp/releases) page.
-
-If you are using Linux, please show the [Linux](#linux) section.
+You can download the latest version of Floorp Browser from the official website: [Floorp.app](https://floorp.app/download) or from the [GitHub Releases](https://github.com/Floorp-Projects/Floorp/releases) page.
 
 ---
 
@@ -112,7 +109,7 @@ If you are using Linux, please show the [Linux](#linux) section.
 
 - Floorp Browser is based on Mozilla Firefox. Floorp Browser is not affiliated with Mozilla & Mozilla Firefox.
 
-- Floorp uses Mozilla Firefox's source code & other open source projects. See [Floorp License Notices](#📄-Floorp-License-Notices-📄)
+- Floorp uses Mozilla Firefox's source code & other open-source projects. See [Floorp License Notices](#📄-Floorp-License-Notices-📄)
 
 ### 📧 Contact
 
@@ -162,19 +159,17 @@ If you are using Linux, please show the [Linux](#linux) section.
 
 ### 📝 Translating
 
-- We want to support as many languages as possible. If you want to translate Floorp Browser, please clone this repository.
+- We want to support as many languages as possible. If you want to translate Floorp Browser, please clone [l10n-central](https://github.com/Floorp-Projects/l10n-Central) repository.
 
-- [Floorp l10n-Central](https://github.com/Floorp-Projects/l10n-Central)
+- Floorp's language file is located in: `browser/browser/floorp.ftl`
 
-- Floorp's language files is located in the `browser/browser/floorp.ftl` only.
+- English is the main language. If you want to translate Floorp Browser, please translate from English (en-US)
 
-- English is the source language. If you want to translate Floorp Browser, please translate from English (en-US)
-
-- Floorp's English file is here: [floorp.ftl](./floorp/browser/locales/en-US/floorp.ftl)
+- Floorp's English file is located in here: [floorp.ftl](./floorp/browser/locales/en-US/floorp.ftl)
 
 ### 🐛 Reporting Bugs
 
-- If you find a bug, please report it to the [Issues](https://github.com/Floorp-Projects/Floorp/issues) page. or... you can report it to the [Official Support Site](https://support.ablaze.one/contact).
+- If you find a bug, please report it to the [Issues](https://github.com/Floorp-Projects/Floorp/issues) page or using [Official Support Site](https://support.ablaze.one/contact).
 
 ---
 
@@ -223,7 +218,7 @@ $ ./mach run
 
 ## 📄 Floorp License Notices 📄
 
-Floorp uses some open source projects. Below is a list of open source projects used in Floorp.
+Floorp uses some open source projects. Below is the list of open-source projects used in Floorp.
 
 Some of the listed software is not included in Floorp itself, but is downloaded from the Internet. Also listed are add-ons that Floorp recommends installing.
 
