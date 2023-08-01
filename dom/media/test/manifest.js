@@ -929,19 +929,15 @@ var gErrorTests = [
   { name: "448636.ogv", type: "video/ogg" },
   { name: "bug504843.ogv", type: "video/ogg" },
   { name: "bug501279.ogg", type: "audio/ogg" },
-  { name: "bug603918.webm", type: "video/webm" },
   { name: "bug604067.webm", type: "video/webm" },
   { name: "bug1535980.webm", type: "video/webm" },
   { name: "bug1799787.webm", type: "video/webm" },
   { name: "bogus.duh", type: "bogus/duh" },
 ];
 
-// These files would get error after receiving "loadedmetadata", we would like
-// to check duration in "onerror" and make sure the duration is still available.
-var gDurationTests = [
-  { name: "bug603918.webm", duration: 6.076 },
-  { name: "bug604067.webm", duration: 6.076 },
-];
+// Playing this file errors out after receiving "loadedmetadata", we still want
+// to check the duration in "onerror" and make sure it is still available.
+var gDurationTests = [{ name: "bug604067.webm", duration: 6.076 }];
 
 // These are files that have nontrivial duration and are useful for seeking within.
 var gSeekTests = [
