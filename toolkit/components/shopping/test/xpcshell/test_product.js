@@ -427,8 +427,8 @@ add_task(function test_product_fromUrl() {
   );
 
   Assert.deepEqual(
-    ShoppingProduct.fromURL(new URL("https://www.example.com/")),
-    { host: "example.com", valid: false },
+    ShoppingProduct.fromURL(new URL("https://www.mozilla.org")),
+    { host: "mozilla.org", valid: false },
     "Invalid Url returns a full result object"
   );
 

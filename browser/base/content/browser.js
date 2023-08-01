@@ -71,6 +71,7 @@ ChromeUtils.defineESModuleGetters(this, {
   SearchUIUtils: "resource:///modules/SearchUIUtils.sys.mjs",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
+  ShoppingSidebarParent: "resource:///actors/ShoppingSidebarParent.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
   SiteDataManager: "resource:///modules/SiteDataManager.sys.mjs",
   SitePermissions: "resource:///modules/SitePermissions.sys.mjs",
@@ -9945,12 +9946,21 @@ var ShoppingSidebarManager = {
       null,
       this._updateVisibility
     );
-
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "isActive",
+      ShoppingSidebarParent.SHOPPING_ACTIVE_PREF,
+      true,
+      this._updateVisibility
+    );
     this._updateVisibility();
+
+    gBrowser.tabContainer.addEventListener("TabSelect", this);
   },
 
   uninit() {
     NimbusFeatures.shopping2023.offUpdate(this._updateVisibility);
+    gBrowser.tabContainer.removeEventListener("TabSelect", this);
   },
 
   _updateVisibility() {
@@ -9964,7 +9974,11 @@ var ShoppingSidebarManager = {
       document.querySelectorAll("shopping-sidebar").forEach(sidebar => {
         sidebar.remove();
       });
+      return;
     }
+
+    let { selectedBrowser, currentURI } = gBrowser;
+    this.onLocationChange(selectedBrowser, currentURI);
   },
 
   /**
@@ -9986,7 +10000,9 @@ var ShoppingSidebarManager = {
         sidebar.querySelector("browser").browsingContext.currentWindowGlobal;
       actor = global.getExistingActor("ShoppingSidebar");
     }
-    if (isProductURL(aLocationURI)) {
+    let button = document.getElementById("shopping-sidebar-button");
+    let isProduct = isProductURL(aLocationURI);
+    if (isProduct && this.isActive) {
       if (!sidebar) {
         sidebar = document.createXULElement("shopping-sidebar");
         sidebar.setAttribute("style", "width: 320px");
@@ -9999,6 +10015,25 @@ var ShoppingSidebarManager = {
     } else if (sidebar && !sidebar.hidden) {
       actor?.updateProductURL(null);
       sidebar.hidden = true;
+    }
+
+    button.hidden = !isProduct;
+    button.setAttribute("shoppingsidebaropen", !!this.isActive);
+    document.l10n.setAttributes(
+      button,
+      `shopping-sidebar-${this.isActive ? "close" : "open"}-button`
+    );
+  },
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "TabSelect": {
+        if (!this._enabled) {
+          return;
+        }
+        this._updateVisibility();
+        break;
+      }
     }
   },
 };
