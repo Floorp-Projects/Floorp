@@ -4038,6 +4038,8 @@ export var AddonManager = {
     ["ERROR_INVALID_DOMAIN", -8],
     // Updates only: The downloaded add-on had a different version than expected.
     ["ERROR_UNEXPECTED_ADDON_VERSION", -9],
+    // The add-on is blocklisted.
+    ["ERROR_BLOCKLISTED", -10],
   ]),
   // The update check timed out
   ERROR_TIMEOUT: -1,

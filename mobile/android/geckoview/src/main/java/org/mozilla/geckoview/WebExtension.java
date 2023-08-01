@@ -1565,6 +1565,9 @@ public class WebExtension {
       /** The extension did not have the expected ID. */
       public static final int ERROR_INVALID_DOMAIN = -8;
 
+      /** The extension is blocklisted. */
+      public static final int ERROR_BLOCKLISTED = -10;
+
       /** The extension install was canceled. */
       public static final int ERROR_USER_CANCELED = -100;
 
@@ -1614,6 +1617,7 @@ public class WebExtension {
           ErrorCodes.ERROR_UNEXPECTED_ADDON_VERSION,
           ErrorCodes.ERROR_INCORRECT_ID,
           ErrorCodes.ERROR_INVALID_DOMAIN,
+          ErrorCodes.ERROR_BLOCKLISTED,
           ErrorCodes.ERROR_USER_CANCELED,
           ErrorCodes.ERROR_POSTPONED,
         })
