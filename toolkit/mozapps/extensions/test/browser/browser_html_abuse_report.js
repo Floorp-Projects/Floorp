@@ -94,9 +94,56 @@ add_task(async function test_abusereport_submitpanel() {
     abuseReportEl,
     "submit"
   );
+  const MozButtonGroup =
+    abuseReportEl.ownerGlobal.customElements.get("moz-button-group");
+
+  ok(MozButtonGroup, "Expect MozButtonGroup custom element to be defined");
+
+  const assertButtonInMozButtonGroup = (
+    btnEl,
+    { expectPrimary = false } = {}
+  ) => {
+    // Let's include the l10n id into the assertion messages,
+    // to make it more likely to be immediately clear which
+    // button hit a failure if any of the following assertion
+    // fails.
+    let l10nId = btnEl.getAttribute("data-l10n-id");
+    is(
+      btnEl.classList.contains("primary"),
+      expectPrimary,
+      `Expect button ${l10nId} to have${
+        expectPrimary ? "" : " NOT"
+      } the primary class set`
+    );
+
+    ok(
+      btnEl.parentElement instanceof MozButtonGroup,
+      `Expect button ${l10nId} to be slotted inside the expected custom element`
+    );
+
+    is(
+      btnEl.getAttribute("slot"),
+      expectPrimary ? "primary" : null,
+      `Expect button ${l10nId} slot to ${
+        expectPrimary ? "" : "NOT "
+      } be set to primary`
+    );
+  };
+
+  // Verify button group from the initial panel.
+  assertButtonInMozButtonGroup(abuseReportEl._btnNext, { expectPrimary: true });
+  assertButtonInMozButtonGroup(abuseReportEl._btnCancel, {
+    expectPrimary: false,
+  });
   await AbuseReportTestUtils.clickPanelButton(abuseReportEl._btnNext);
   await onceUpdated;
-
+  // Verify button group from the submit panel mode.
+  assertButtonInMozButtonGroup(abuseReportEl._btnSubmit, {
+    expectPrimary: true,
+  });
+  assertButtonInMozButtonGroup(abuseReportEl._btnGoBack, {
+    expectPrimary: false,
+  });
   onceUpdated = AbuseReportTestUtils.promiseReportUpdated(
     abuseReportEl,
     "reasons"

@@ -16,7 +16,6 @@
 
   --line-height: 20px;
   --textarea-height: 220px;
-  --button-padding: 52px;
   --listitem-padding-bottom: 14px;
   --list-radio-column-size: 28px;
   --note-font-size: 14px;
@@ -59,9 +58,6 @@ html {
   box-shadow: none;
 }
 
-.addon-abuse-report button {
-  padding: 0 var(--button-padding);
-}
 
 .abuse-report-close-icon {
   /* position the close button in the panel upper-right corner */
