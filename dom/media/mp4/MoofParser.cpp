@@ -532,10 +532,15 @@ Moof::Moof(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
               ? decodeOffset.unwrap() + offsetOffset.unwrap()
               : TimeUnit::Zero(aMvhd.mTimescale);
       TimeUnit decodeDuration = endDecodeTime - mIndex[0].mDecodeTime;
-      double adjust = !presentationDuration.IsZero()
-                          ? (double)decodeDuration.ToMicroseconds() /
-                                (double)presentationDuration.ToMicroseconds()
-                          : 0.;
+      double adjust = 0.;
+      if (!presentationDuration.IsZero()) {
+        double num = decodeDuration.ToSeconds();
+        double denom = presentationDuration.ToSeconds();
+        if (denom != 0.) {
+          adjust = num / denom;
+        }
+      }
+
       TimeUnit dtsOffset = mIndex[0].mDecodeTime;
       TimeUnit compositionDuration(0, aMvhd.mTimescale);
       // Adjust the dts, ensuring that the new adjusted dts will never be
