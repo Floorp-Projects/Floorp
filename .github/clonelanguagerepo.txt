@@ -21,6 +21,7 @@
  hg clone https://hg.mozilla.org/l10n-central/pt-PT
  hg clone https://hg.mozilla.org/l10n-central/ru
  hg clone https://hg.mozilla.org/l10n-central/sv-SE
+ hg clone https://hg.mozilla.org/l10n-central/tr
  hg clone https://hg.mozilla.org/l10n-central/th
  hg clone https://hg.mozilla.org/l10n-central/vi
  hg clone https://hg.mozilla.org/l10n-central/zh-CN
