@@ -1,0 +1,1 @@
+|jit-test| --wasm-tail-calls; test-also=--wasm-compiler=baseline; skip-if: !wasmTailCallsEnabled(); include:wasm.js

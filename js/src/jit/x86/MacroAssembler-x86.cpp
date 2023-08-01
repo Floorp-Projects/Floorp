@@ -1826,4 +1826,20 @@ void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
   bind(&notOk);
 }
 
+#ifdef ENABLE_WASM_TAIL_CALLS
+void MacroAssembler::wasmMarkSlowCall() {
+  static_assert(esi == InstanceReg);
+  or32(esi, esi);
+}
+
+const int32_t SlowCallMarker = 0xf60b;  // OR esi, esi
+
+void MacroAssembler::wasmCheckSlowCallsite(Register ra, Label* notSlow,
+                                           Register temp1, Register temp2) {
+  // Check if RA has slow marker.
+  cmp16(Address(ra, 0), Imm32(SlowCallMarker));
+  j(Assembler::NotEqual, notSlow);
+}
+#endif  // ENABLE_WASM_TAIL_CALLS
+
 //}}} check_macroassembler_style

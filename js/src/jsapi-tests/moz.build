@@ -134,6 +134,7 @@ UNIFIED_SOURCES += [
     "testUncaughtSymbol.cpp",
     "testUTF8.cpp",
     "testWasmLEB128.cpp",
+    "testWasmReturnCalls.cpp",
     "testWeakMap.cpp",
     "testWindowNonConfigurable.cpp",
 ]

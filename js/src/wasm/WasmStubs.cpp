@@ -553,8 +553,6 @@ static const LiveRegisterSet NonVolatileRegs =
                     FloatRegisterSet(FloatRegisters::NonVolatileMask));
 #endif
 
-static const unsigned NumExtraPushed = 2;  // instance and argv
-
 #ifdef JS_CODEGEN_ARM64
 static const unsigned WasmPushSize = 16;
 #else
@@ -793,9 +791,9 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   masm.moveStackPtrTo(FramePointer);
   masm.setFramePushed(0);
 #ifdef JS_CODEGEN_ARM64
-  const size_t FakeFramePushed = 0;
+  DebugOnly<size_t> fakeFramePushed = 0;
 #else
-  const size_t FakeFramePushed = sizeof(void*);
+  DebugOnly<size_t> fakeFramePushed = sizeof(void*);
   masm.Push(scratch);
 #endif
 
@@ -827,14 +825,19 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   // Save 'argv' on the stack so that we can recover it after the call.
   WasmPush(masm, argv);
 
-  MOZ_ASSERT(masm.framePushed() ==
-             NumExtraPushed * WasmPushSize + FakeFramePushed);
+  MOZ_ASSERT(masm.framePushed() == 2 * WasmPushSize + fakeFramePushed,
+             "expected instance, argv, and fake frame");
   uint32_t frameSizeBeforeCall = masm.framePushed();
+
+  // Align (missing) results area to WasmStackAlignment boudary. Return calls
+  // expect arguments to not overlap with results or other slots.
+  unsigned aligned =
+      AlignBytes(masm.framePushed() + FakeFrameSize, WasmStackAlignment);
+  masm.reserveStack(aligned - masm.framePushed() + FakeFrameSize);
 
   // Reserve stack space for the wasm call.
   unsigned argDecrement = StackDecrementForCall(
-      WasmStackAlignment, masm.framePushed() + FakeFrameSize,
-      StackArgBytesForWasmABI(funcType));
+      WasmStackAlignment, aligned, StackArgBytesForWasmABI(funcType));
   masm.reserveStack(argDecrement);
 
   // Copy parameters out of argv and into the wasm ABI registers/stack-slots.

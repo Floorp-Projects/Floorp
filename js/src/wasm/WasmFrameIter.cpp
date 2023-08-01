@@ -1044,7 +1044,7 @@ void ProfilingFrameIterator::initFromExitFP(const Frame* fp) {
   MOZ_ASSERT(!done());
 }
 
-static bool isSignatureCheckFail(uint32_t offsetInCode,
+static bool IsSignatureCheckFail(uint32_t offsetInCode,
                                  const CodeRange* codeRange) {
   if (!codeRange->isFunction()) {
     return false;
@@ -1058,6 +1058,17 @@ static bool isSignatureCheckFail(uint32_t offsetInCode,
   //                        7. function's code
   return offsetInCode < codeRange->funcUncheckedCallEntry() &&
          (offsetInCode - codeRange->funcCheckedCallEntry()) > SetFP;
+}
+
+static bool CanUnwindSignatureCheck(uint8_t* fp) {
+  const auto* frame = Frame::fromUntaggedWasmExitFP(fp);
+  uint8_t* const pc = frame->returnAddress();
+
+  const CodeRange* codeRange;
+  const Code* code = LookupCode(pc, &codeRange);
+  // If a JIT call or JIT/interpreter entry was found,
+  // unwinding is not possible.
+  return code && !codeRange->isEntry();
 }
 
 const Instance* js::wasm::GetNearestEffectiveInstance(const Frame* fp) {
@@ -1309,7 +1320,8 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         AssertMatchesCallSite(fixedPC, fixedFP);
 #endif
       } else {
-        if (isSignatureCheckFail(offsetInCode, codeRange)) {
+        if (IsSignatureCheckFail(offsetInCode, codeRange) &&
+            CanUnwindSignatureCheck(fp)) {
           // Frame has been pushed and FP has been set.
           const auto* frame = Frame::fromUntaggedWasmExitFP(fp);
           fixedFP = frame->rawCaller();

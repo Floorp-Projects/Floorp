@@ -228,7 +228,10 @@ void js::jit::JitActivation::startWasmTrap(wasm::Trap trap,
   bool unwound;
   wasm::UnwindState unwindState;
   MOZ_RELEASE_ASSERT(wasm::StartUnwinding(state, &unwindState, &unwound));
-  MOZ_ASSERT(unwound == (trap == wasm::Trap::IndirectCallBadSig));
+  // With return calls, it is possible to not unwind when there is only an
+  // entry left on the stack, e.g. the return call trampoline that is created
+  // to restore realm before returning to the interpreter entry stub.
+  MOZ_ASSERT_IF(unwound, trap == wasm::Trap::IndirectCallBadSig);
 
   void* pc = unwindState.pc;
   const wasm::Frame* fp = wasm::Frame::fromUntaggedWasmExitFP(unwindState.fp);

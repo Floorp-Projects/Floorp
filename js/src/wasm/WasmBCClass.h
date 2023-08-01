@@ -955,7 +955,8 @@ struct BaseCompiler final {
 
   bool callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
                     const Stk& indexVal, const FunctionCall& call,
-                    CodeOffset* fastCallOffset, CodeOffset* slowCallOffset);
+                    bool tailCall, CodeOffset* fastCallOffset,
+                    CodeOffset* slowCallOffset);
   CodeOffset callImport(unsigned instanceDataOffset, const FunctionCall& call);
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
   void callRef(const Stk& calleeRef, const FunctionCall& call,
@@ -1396,13 +1397,17 @@ struct BaseCompiler final {
     False
   };
 
-  [[nodiscard]] bool emitCallArgs(const ValTypeVector& argTypes,
-                                  const StackResultsLoc& results,
+  // The typename T for emitCallArgs can be one of the following:
+  // NormalCallResults, TailCallResults, or NoCallResults.
+  template <typename T>
+  [[nodiscard]] bool emitCallArgs(const ValTypeVector& argTypes, T results,
                                   FunctionCall* baselineCall,
                                   CalleeOnStack calleeOnStack);
 
   [[nodiscard]] bool emitCall();
+  [[nodiscard]] bool emitReturnCall();
   [[nodiscard]] bool emitCallIndirect();
+  [[nodiscard]] bool emitReturnCallIndirect();
   [[nodiscard]] bool emitUnaryMathBuiltinCall(SymbolicAddress callee,
                                               ValType operandType);
   [[nodiscard]] bool emitGetLocal();

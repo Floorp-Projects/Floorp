@@ -7651,6 +7651,13 @@
     mirror: always
 #endif  // defined(ENABLE_WASM_MEMORY64)
 
+#if defined(ENABLE_WASM_TAIL_CALLS)
+-   name: javascript.options.wasm_tail_calls
+    type: bool
+    value: @IS_NIGHTLY_BUILD@
+    mirror: always
+#endif  // defined(ENABLE_WASM_TAIL_CALLS)
+
 # Support for pretenuring allocations based on their allocation site.
 - name: javascript.options.site_based_pretenuring
   type: bool

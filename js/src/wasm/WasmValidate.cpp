@@ -214,6 +214,27 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(iter.readCallIndirect(&unusedIndex, &unusedIndex2, &nothing,
                                     &unusedArgs));
       }
+#ifdef ENABLE_WASM_TAIL_CALLS
+      case uint16_t(Op::ReturnCall): {
+        if (!env.tailCallsEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        uint32_t unusedIndex;
+        NothingVector unusedArgs{};
+        NothingVector unusedValues{};
+        CHECK(iter.readReturnCall(&unusedIndex, &unusedArgs, &unusedValues));
+      }
+      case uint16_t(Op::ReturnCallIndirect): {
+        if (!env.tailCallsEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        uint32_t unusedIndex, unusedIndex2;
+        NothingVector unusedArgs{};
+        NothingVector unusedValues{};
+        CHECK(iter.readReturnCallIndirect(&unusedIndex, &unusedIndex2, &nothing,
+                                          &unusedArgs, &unusedValues));
+      }
+#endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       case uint16_t(Op::CallRef): {
         if (!env.functionReferencesEnabled()) {

@@ -3419,6 +3419,20 @@ void MacroAssembler::shiftIndex32AndAdd(Register indexTemp32, int shift,
       Operand(ARMRegister(indexTemp32, 64), vixl::LSL, shift));
 }
 
+#ifdef ENABLE_WASM_TAIL_CALLS
+void MacroAssembler::wasmMarkSlowCall() { Mov(x28, x28); }
+
+const int32_t SlowCallMarker = 0xaa1c03fc;
+
+void MacroAssembler::wasmCheckSlowCallsite(Register ra, Label* notSlow,
+                                           Register temp1, Register temp2) {
+  MOZ_ASSERT(ra != temp2);
+  Ldr(W(temp2), MemOperand(X(ra), 0));
+  Cmp(W(temp2), Operand(SlowCallMarker));
+  B(Assembler::NotEqual, notSlow);
+}
+#endif  // ENABLE_WASM_TAIL_CALLS
+
 //}}} check_macroassembler_style
 
 }  // namespace jit

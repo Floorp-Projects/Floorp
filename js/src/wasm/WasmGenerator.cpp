@@ -466,13 +466,24 @@ bool ModuleGenerator::linkCallSites() {
       case CallSiteDesc::LeaveFrame:
       case CallSiteDesc::FuncRef:
       case CallSiteDesc::FuncRefFast:
+      case CallSiteDesc::ReturnStub:
         break;
+      case CallSiteDesc::ReturnFunc:
       case CallSiteDesc::Func: {
+        auto patch = [this, callSite](uint32_t callerOffset,
+                                      uint32_t calleeOffset) {
+          if (callSite.kind() == CallSiteDesc::ReturnFunc) {
+            masm_.patchFarJump(CodeOffset(callerOffset), calleeOffset);
+          } else {
+            MOZ_ASSERT(callSite.kind() == CallSiteDesc::Func);
+            masm_.patchCall(callerOffset, calleeOffset);
+          }
+        };
         if (funcIsCompiled(target.funcIndex())) {
           uint32_t calleeOffset =
               funcCodeRange(target.funcIndex()).funcUncheckedCallEntry();
           if (InRange(callerOffset, calleeOffset)) {
-            masm_.patchCall(callerOffset, calleeOffset);
+            patch(callerOffset, calleeOffset);
             break;
           }
         }
@@ -499,7 +510,7 @@ bool ModuleGenerator::linkCallSites() {
           }
         }
 
-        masm_.patchCall(callerOffset, p->value());
+        patch(callerOffset, p->value());
         break;
       }
     }

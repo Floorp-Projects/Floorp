@@ -294,6 +294,21 @@ struct AllocSiteInput
   explicit AllocSiteInput(Register reg) : Base(reg) {}
 };
 
+#ifdef ENABLE_WASM_TAIL_CALLS
+// Instance slots (including ShadowStackArea) and arguments size information
+// from two neighboring frames.
+// Used in Wasm tail calls to remove frame.
+struct ReturnCallAdjustmentInfo {
+  uint32_t newSlotsAndStackArgBytes;
+  uint32_t oldSlotsAndStackArgBytes;
+
+  ReturnCallAdjustmentInfo(uint32_t newSlotsAndStackArgBytes,
+                           uint32_t oldSlotsAndStackArgBytes)
+      : newSlotsAndStackArgBytes(newSlotsAndStackArgBytes),
+        oldSlotsAndStackArgBytes(oldSlotsAndStackArgBytes) {}
+};
+#endif  // ENABLE_WASM_TAIL_CALLS
+
 // [SMDOC] Code generation invariants (incomplete)
 //
 // ## 64-bit GPRs carrying 32-bit values
@@ -3796,6 +3811,26 @@ class MacroAssembler : public MacroAssemblerSpecific {
   CodeOffset wasmCallImport(const wasm::CallSiteDesc& desc,
                             const wasm::CalleeDesc& callee);
 
+#ifdef ENABLE_WASM_TAIL_CALLS
+  CodeOffset wasmReturnCallImport(const wasm::CallSiteDesc& desc,
+                                  const wasm::CalleeDesc& callee,
+                                  const ReturnCallAdjustmentInfo& retCallInfo);
+
+  CodeOffset wasmReturnCall(const wasm::CallSiteDesc& desc,
+                            uint32_t funcDefIndex,
+                            const ReturnCallAdjustmentInfo& retCallInfo);
+
+  void wasmCollapseFrameSlow(const ReturnCallAdjustmentInfo& retCallInfo,
+                             wasm::CallSiteDesc desc);
+
+  void wasmCollapseFrameFast(const ReturnCallAdjustmentInfo& retCallInfo);
+
+  void wasmCheckSlowCallsite(Register ra, Label* notSlow, Register temp1,
+                             Register temp2) DEFINED_ON(x86, x64, arm, arm64);
+
+  void wasmMarkSlowCall() DEFINED_ON(x86, x64, arm, arm64);
+#endif
+
   // WasmTableCallIndexReg must contain the index of the indirect call.  This is
   // for wasm calls only.
   //
@@ -3814,6 +3849,21 @@ class MacroAssembler : public MacroAssemblerSpecific {
                         Label* nullCheckFailedLabel,
                         mozilla::Maybe<uint32_t> tableSize,
                         CodeOffset* fastCallOffset, CodeOffset* slowCallOffset);
+
+#ifdef ENABLE_WASM_TAIL_CALLS
+  // WasmTableCallIndexReg must contain the index of the indirect call.  This is
+  // for wasm calls only.
+  //
+  // `boundsCheckFailedLabel` is non-null iff a bounds check is required.
+  // `nullCheckFailedLabel` is non-null only on platforms that can't fold the
+  // null check into the rest of the call instructions.
+  void wasmReturnCallIndirect(const wasm::CallSiteDesc& desc,
+                              const wasm::CalleeDesc& callee,
+                              Label* boundsCheckFailedLabel,
+                              Label* nullCheckFailedLabel,
+                              mozilla::Maybe<uint32_t> tableSize,
+                              const ReturnCallAdjustmentInfo& retCallInfo);
+#endif  // ENABLE_WASM_TAIL_CALLS
 
   // This function takes care of loading the callee's instance and address from
   // pinned reg.
