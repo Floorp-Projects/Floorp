@@ -70,7 +70,9 @@ class AudioSampleTypeToFormat<short> {
  * http://blog.bjornroche.com/2009/12/linearity-and-dynamic-range-in-int.html
  */
 inline float AudioSampleToFloat(float aValue) { return aValue; }
-inline float AudioSampleToFloat(int16_t aValue) { return static_cast<float>(aValue) / 32768.0f; }
+inline float AudioSampleToFloat(int16_t aValue) {
+  return static_cast<float>(aValue) / 32768.0f;
+}
 inline float AudioSampleToFloat(int32_t aValue) {
   return static_cast<float>(aValue) / (float)(1U << 31);
 }
