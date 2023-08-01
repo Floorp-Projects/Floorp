@@ -10,8 +10,8 @@ git checkout 37cde570bc2dcd64a15c5d9a37b9fa0d78d84f9f
 All source files match their path from the library's source archive.
 
 Currently, we only use the vp8, vp9, av1 (via libdav1d), mp3, flac, vorbis (via
-libvorbis) portion of the library. If this changes, configuration files will
-most likely need to be updated.
+libvorbis) and PCM portion of the library. If this changes, configuration files
+will most likely need to be updated.
 
 Decoding AV1 via libdav1d and libvorbis is supported, although the decoder
 libraries are vendored separately, `ffvpx` only contains the code to use
