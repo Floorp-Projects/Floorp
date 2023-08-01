@@ -42,6 +42,9 @@ mozilla::LogModule* GetMediaSourceSamplesLog() {
 #define SAMPLE_DEBUG(arg, ...)                                    \
   DDMOZ_LOG(GetMediaSourceSamplesLog(), mozilla::LogLevel::Debug, \
             "::%s: " arg, __func__, ##__VA_ARGS__)
+#define SAMPLE_DEBUGV(arg, ...)                                     \
+  DDMOZ_LOG(GetMediaSourceSamplesLog(), mozilla::LogLevel::Verbose, \
+            "::%s: " arg, __func__, ##__VA_ARGS__)
 
 namespace mozilla {
 
@@ -1848,6 +1851,11 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
     aSample->mTime = aInterval.mStart;
     aSample->mDuration = aInterval.Length();
     aSample->mTrackInfo = trackBuffer.mLastInfo;
+    SAMPLE_DEBUGV(
+        "Add sample [%" PRId64 "%s,%" PRId64 "%s] by interval %s",
+        aSample->mTime.ToMicroseconds(), aSample->mTime.ToString().get(),
+        aSample->GetEndTime().ToMicroseconds(),
+        aSample->GetEndTime().ToString().get(), aInterval.ToString().get());
     MOZ_DIAGNOSTIC_ASSERT(aSample->HasValidTime());
     samplesRange += aInterval;
     sizeNewSamples += aSample->ComputedSizeOfIncludingThis();
@@ -1917,12 +1925,15 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
                                    : timestampOffset + sampleTimecode;
 
     SAMPLE_DEBUG(
-        "Processing %s frame [%" PRId64 ",%" PRId64 "] (adjusted:[%" PRId64
-        ",%" PRId64 "]), dts:%" PRId64 ", duration:%" PRId64 ", kf:%d)",
+        "Processing %s frame [%" PRId64 "%s,%" PRId64 "%s] (adjusted:[%" PRId64
+        "%s,%" PRId64 "%s]), dts:%" PRId64 ", duration:%" PRId64 ", kf:%d)",
         aTrackData.mInfo->mMimeType.get(), sample->mTime.ToMicroseconds(),
-        sample->GetEndTime().ToMicroseconds(),
+        sample->mTime.ToString().get(), sample->GetEndTime().ToMicroseconds(),
+        sample->GetEndTime().ToString().get(),
         sampleInterval.mStart.ToMicroseconds(),
+        sampleInterval.mStart.ToString().get(),
         sampleInterval.mEnd.ToMicroseconds(),
+        sampleInterval.mEnd.ToString().get(),
         sample->mTimecode.ToMicroseconds(), sample->mDuration.ToMicroseconds(),
         sample->mKeyframe);
 
@@ -2021,23 +2032,32 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
         //    support gapless audio splicing.
         TimeInterval intersection = mAppendWindow.Intersection(sampleInterval);
         sample->mOriginalPresentationWindow = Some(sampleInterval);
-        MSE_DEBUGV("will truncate frame from [%" PRId64 ",%" PRId64
-                   "] to [%" PRId64 ",%" PRId64 "]",
+        MSE_DEBUGV("will truncate frame from [%" PRId64 "%s,%" PRId64
+                   "%s] to [%" PRId64 "%s,%" PRId64 "%s]",
                    sampleInterval.mStart.ToMicroseconds(),
+                   sampleInterval.mStart.ToString().get(),
                    sampleInterval.mEnd.ToMicroseconds(),
+                   sampleInterval.mEnd.ToString().get(),
                    intersection.mStart.ToMicroseconds(),
-                   intersection.mEnd.ToMicroseconds());
+                   intersection.mStart.ToString().get(),
+                   intersection.mEnd.ToMicroseconds(),
+                   intersection.mEnd.ToString().get());
         sampleInterval = intersection;
       } else {
         sample->mOriginalPresentationWindow = Some(sampleInterval);
         sample->mTimecode = decodeTimestamp;
         previouslyDroppedSample = sample;
-        MSE_DEBUGV("frame [%" PRId64 ",%" PRId64
-                   "] outside appendWindow [%" PRId64 ",%" PRId64 "] dropping",
+        MSE_DEBUGV("frame [%" PRId64 "%s,%" PRId64
+                   "%s] outside appendWindow [%" PRId64 "%s,%" PRId64
+                   "%s] dropping",
                    sampleInterval.mStart.ToMicroseconds(),
+                   sampleInterval.mStart.ToString().get(),
                    sampleInterval.mEnd.ToMicroseconds(),
+                   sampleInterval.mEnd.ToString().get(),
                    mAppendWindow.mStart.ToMicroseconds(),
-                   mAppendWindow.mEnd.ToMicroseconds());
+                   mAppendWindow.mStart.ToString().get(),
+                   mAppendWindow.mEnd.ToMicroseconds(),
+                   mAppendWindow.mEnd.ToString().get());
         if (samples.Length()) {
           // We are creating a discontinuity in the samples.
           // Insert the samples processed so far.
@@ -3110,3 +3130,4 @@ void TrackBuffersManager::AddSizeOfResources(
 #undef MSE_DEBUG
 #undef MSE_DEBUGV
 #undef SAMPLE_DEBUG
+#undef SAMPLE_DEBUGV
