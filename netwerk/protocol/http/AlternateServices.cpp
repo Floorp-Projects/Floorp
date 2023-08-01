@@ -822,8 +822,8 @@ TransactionObserver::OnDataAvailable(nsIRequest* aRequest,
                                      nsIInputStream* aStream, uint64_t aOffset,
                                      uint32_t aCount) {
   MOZ_ASSERT(NS_IsMainThread());
-  uint32_t oldLen = mWKResponse.Length();
-  uint64_t newLen = aCount + oldLen;
+  uint64_t oldLen = static_cast<uint64_t>(mWKResponse.Length());
+  uint64_t newLen = static_cast<uint64_t>(aCount) + oldLen;
   if (newLen < MAX_WK) {
     auto handleOrErr = mWKResponse.BulkWrite(newLen, oldLen, false);
     if (handleOrErr.isErr()) {
