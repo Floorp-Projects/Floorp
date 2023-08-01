@@ -169,7 +169,7 @@ dictionary MediaStateDebugInfo {
   long demuxEOS = 0;
   long drainState = 0;
   boolean waitingForKey = false;
-  long lastStreamSourceID = 0;
+  long long lastStreamSourceID = 0;
 };
 
 dictionary MediaFrameStats {
