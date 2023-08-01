@@ -158,59 +158,23 @@ static void moz_container_wayland_move_locked(const MutexAutoLock& aProofOfLock,
                              wl_container->subsurface_dy);
 }
 
-static bool moz_container_wayland_egl_window_needs_size_update_locked(
-    const MutexAutoLock& aProofOfLock, MozContainerWayland* wl_container,
-    nsIntSize aSize, int aScale) {
-  if (!wl_container->eglwindow) {
-    return false;
-  }
-  if (wl_container->buffer_scale != aScale) {
-    return true;
-  }
-  nsIntSize recentSize;
-  wl_egl_window_get_attached_size(wl_container->eglwindow, &recentSize.width,
-                                  &recentSize.height);
-  if (aSize != recentSize) {
-    return true;
-  }
-
-  return recentSize.width % aScale != 0 || recentSize.height % aScale != 0;
-}
-
-static int adjust_size_for_scale(int aSize, int aScale) {
-  return aSize - (aSize % aScale);
-}
-
 // This is called from layout/compositor code only with
 // size equal to GL rendering context. Otherwise there are
 // rendering artifacts as wl_egl_window size does not match
 // GL rendering pipeline setup.
 void moz_container_wayland_egl_window_set_size(MozContainer* container,
-                                               nsIntSize aSize, int aScale) {
+                                               nsIntSize aSize) {
   MozContainerWayland* wl_container = &container->wl_container;
   MutexAutoLock lock(*wl_container->container_lock);
-  if (!wl_container->eglwindow) {
-    return;
+  if (wl_container->eglwindow) {
+    LOGCONTAINER(
+        "moz_container_wayland_egl_window_set_size [%p] scaled %d x %d scale "
+        "%d\n",
+        (void*)moz_container_get_nsWindow(container), aSize.width, aSize.height,
+        wl_container->buffer_scale);
+    wl_egl_window_resize(wl_container->eglwindow, aSize.width, aSize.height, 0,
+                         0);
   }
-
-  if (!moz_container_wayland_egl_window_needs_size_update_locked(
-          lock, wl_container, aSize, aScale)) {
-    return;
-  }
-
-  // See Bug 1832760. Width/height has to be divided by scale factor,
-  // we're getting compositor errors otherwise.
-  aSize.width = adjust_size_for_scale(aSize.width, aScale);
-  aSize.height = adjust_size_for_scale(aSize.height, aScale);
-
-  LOGCONTAINER(
-      "moz_container_wayland_egl_window_set_size [%p] %d x %d scale %d "
-      "(unscaled %d x %d)",
-      (void*)moz_container_get_nsWindow(container), aSize.width, aSize.height,
-      aScale, aSize.width / aScale, aSize.height / aScale);
-  wl_egl_window_resize(wl_container->eglwindow, aSize.width, aSize.height, 0,
-                       0);
-  moz_container_wayland_set_scale_factor_locked(lock, container, aScale);
 }
 
 void moz_container_wayland_class_init(MozContainerClass* klass) {
@@ -474,9 +438,7 @@ static gboolean moz_container_wayland_map_event(GtkWidget* widget,
     }
   }
 
-  nsWindow* window = moz_container_get_nsWindow(MOZ_CONTAINER(widget));
-  moz_container_wayland_set_scale_factor_locked(lock, MOZ_CONTAINER(widget),
-                                                window->GdkCeiledScaleFactor());
+  moz_container_wayland_set_scale_factor_locked(lock, MOZ_CONTAINER(widget));
   moz_container_wayland_set_opaque_region_locked(lock, MOZ_CONTAINER(widget));
   moz_container_clear_input_region(MOZ_CONTAINER(widget));
   moz_container_wayland_invalidate(MOZ_CONTAINER(widget));
@@ -531,9 +493,7 @@ void moz_container_wayland_size_allocate(GtkWidget* widget,
         return;
       }
     }
-    nsWindow* window = moz_container_get_nsWindow(container);
-    moz_container_wayland_set_scale_factor_locked(
-        lock, container, window->GdkCeiledScaleFactor());
+    moz_container_wayland_set_scale_factor_locked(lock, container);
     moz_container_wayland_set_opaque_region_locked(lock, container);
     moz_container_wayland_move_locked(lock, container, allocation->x,
                                       allocation->y);
@@ -591,9 +551,6 @@ static void moz_container_wayland_set_opaque_region(MozContainer* container) {
 static void moz_container_wayland_surface_set_scale_locked(
     const MutexAutoLock& aProofOfLock, MozContainerWayland* wl_container,
     int scale) {
-  if (!wl_container->surface) {
-    return;
-  }
   if (wl_container->buffer_scale == scale) {
     return;
   }
@@ -611,7 +568,7 @@ static void moz_container_wayland_surface_set_scale_locked(
 }
 
 void moz_container_wayland_set_scale_factor_locked(
-    const MutexAutoLock& aProofOfLock, MozContainer* container, int aScale) {
+    const MutexAutoLock& aProofOfLock, MozContainer* container) {
   if (gfx::gfxVars::UseWebRenderCompositor()) {
     // the compositor backend handles scaling itself
     return;
@@ -623,9 +580,6 @@ void moz_container_wayland_set_scale_factor_locked(
   nsWindow* window = moz_container_get_nsWindow(container);
   MOZ_DIAGNOSTIC_ASSERT(window);
   if (window->UseFractionalScale()) {
-    if (!wl_container->surface) {
-      return;
-    }
     if (!wl_container->viewport) {
       wl_container->viewport = wp_viewporter_get_viewport(
           WaylandDisplayGet()->GetViewporter(), wl_container->surface);
@@ -636,8 +590,15 @@ void moz_container_wayland_set_scale_factor_locked(
                                 gdk_window_get_width(gdkWindow),
                                 gdk_window_get_height(gdkWindow));
   } else {
-    moz_container_wayland_surface_set_scale_locked(aProofOfLock, wl_container,
-                                                   aScale);
+    moz_container_wayland_surface_set_scale_locked(
+        aProofOfLock, wl_container, window->GdkCeiledScaleFactor());
+  }
+}
+
+void moz_container_wayland_set_scale_factor(MozContainer* container) {
+  MutexAutoLock lock(*container->wl_container.container_lock);
+  if (container->wl_container.surface) {
+    moz_container_wayland_set_scale_factor_locked(lock, container);
   }
 }
 
@@ -749,6 +710,22 @@ void moz_container_wayland_surface_unlock(MozContainer* container,
     *surface = nullptr;
   }
   container->wl_container.container_lock->Unlock();
+}
+
+bool moz_container_wayland_egl_window_needs_size_update(MozContainer* container,
+                                                        nsIntSize aSize,
+                                                        int aScale) {
+  MozContainerWayland* wl_container = &container->wl_container;
+  if (!wl_container->eglwindow) {
+    return false;
+  }
+  if (wl_container->buffer_scale != aScale) {
+    return true;
+  }
+  nsIntSize recentSize;
+  wl_egl_window_get_attached_size(wl_container->eglwindow, &recentSize.width,
+                                  &recentSize.height);
+  return aSize != recentSize;
 }
 
 struct wl_egl_window* moz_container_wayland_get_egl_window(
