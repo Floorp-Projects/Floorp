@@ -26,9 +26,11 @@ jobs:
       display-version: ${{ steps.get.outputs.display-version }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
-        ref: ESR115
+        sparse-checkout: 'browser/config/version_display.txt'
+      # with:
+      #   ref: ESR115
     - name: Get Display Version
       id: get
       run: |
@@ -41,9 +43,11 @@ jobs:
       inside-version: ${{ steps.get.outputs.inside-version }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
-        ref: ESR115
+        sparse-checkout: 'browser/config/version.txt'
+      # with:
+      #   ref: ESR115
     - name: Get Inside Version
       id: get
       run: |
@@ -62,155 +66,38 @@ jobs:
         bdat=`date +"%Y%m%d%I%M%S"`
         echo "bid=${bdat}" >> $GITHUB_OUTPUT
 
-  Windows-x86_64-build-with-enable-profile-generate:
-    name: Windows x86_64 Build with --enable-profile-generate
-    needs: get-display-version
+#TODO! ####################WILL REPLACE S############################
+#? Original branding of the code is official
+#? It seems in PGO build, branding is not important in NOT deploying binary
+  build-win-x86_64-profgen:
+    uses: ./.github/workflows/windows-build.yml
+    with:
+      profgen: true
+      aarch64: false
+      zstd: true
+#TODO! ####################WILL REPLACE E############################
 
-    runs-on: ${{ matrix.runs-on }}
-    strategy:
-      matrix:
-        runs-on: ["ubuntu-latest"]
+  win-x86_64-gen-profdata-and-jarlog:
 
-    steps:
-    - name: Init
-      run: |
-        export RUNNER_USERDIR=`echo ~`
-        echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
-
-    - name: Clean up (Self-hosted only)
-      if: contains(matrix.runs-on, 'self-hosted')
-      run: |
-        rm -rf $RUNNER_USERDIR/output
-        rm -rf $RUNNER_USERDIR/win-cross
-        rm -rf $RUNNER_USERDIR/.mozbuild
-        rm -rf $RUNNER_USERDIR/.cargo
-        rm -rf $RUNNER_USERDIR/l10n-central
-        rm -rf $GITHUB_WORKSPACE
-        mkdir $GITHUB_WORKSPACE
-
-    - name: Change PPA mirror servers
-      run: |
-        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
-        sudo apt update
-
-    - name: Setup Disk & Swap Space 💿
-      if: matrix.runs-on != 'buildjet-16vcpu-ubuntu-2204'
-      run: |
-          echo Before:
-          free -h
-          df -h
-          echo
-          echo
-          sudo swapoff /mnt/swapfile
-          sudo rm /mnt/swapfile
-          sudo fallocate -l 10G /mnt/swapfile
-          sudo chmod 600 /mnt/swapfile
-          sudo mkswap /mnt/swapfile
-          sudo swapon /mnt/swapfile
-          sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-          sudo apt autoremove -y
-          sudo apt clean
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /usr/local/graalvm
-          sudo rm -rf /usr/local/share/powershell
-          sudo rm -rf /usr/local/share/chromium
-          sudo rm -rf /usr/local/lib/node_modules
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/local/share/boost
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          sudo rm -rf /etc/apache2
-          sudo rm -rf /etc/nginx
-          sudo rm -rf /usr/local/share/chrome_driver
-          sudo rm -rf /usr/local/share/edge_driver
-          sudo rm -rf /usr/local/share/gecko_driver
-          sudo rm -rf /usr/share/java
-          sudo fallocate -l 10G /home/runner/swapfile2
-          sudo chmod 600 /home/runner/swapfile2
-          sudo mkswap /home/runner/swapfile2
-          sudo swapon /home/runner/swapfile2
-          echo
-          echo
-          echo After:
-          free -h
-          df -h
-
-    - uses: actions/checkout@v3
-      with:
-        ref: ESR115
-      name: Clone 🧬
-
-    - name: Setup 🪛
-      run: |
-        mkdir -p $RUNNER_USERDIR/win-cross
-
-        cp ./.github/mozconfig_win_x86_64_pgo_base mozconfig
-        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
-        echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
-        sudo apt update
-        sudo apt install zstd p7zip-full
-
-        echo Setup wine
-        aria2c "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-1.toolchains.v3.linux64-wine.latest/artifacts/public%2Fbuild%2Fwine.tar.zst" -o wine.tar.zst
-        tar --zstd -xvf wine.tar.zst -C $RUNNER_USERDIR/win-cross
-        rm wine.tar.zst
-
-        echo Replace rustc
-        aria2c "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.linux64-rust-windows-1.68.latest/artifacts/public%2Fbuild%2Frustc.tar.zst" -o rustc.tar.zst
-        tar --zstd -xvf rustc.tar.zst -C $RUNNER_USERDIR/win-cross
-        echo 'export RUSTC="$RUNNER_USERDIR/win-cross/rustc/bin/rustc"' >> mozconfig
-
-        echo Setup Visual Studio
-        sudo apt install -y msitools python3-pip
-        ./mach python --virtualenv build taskcluster/scripts/misc/get_vs.py build/vs/vs2019.yaml $RUNNER_USERDIR/win-cross/vs2019
-        chmod -R +x "$RUNNER_USERDIR/win-cross/vs2019"
-        echo 'WIN_UCRT_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/Windows Kits/10/Redist/10.0.19041.0/ucrt/DLLs/x64"' >> mozconfig
-        echo 'WIN32_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/VC/Redist/MSVC/14.29.30133/x64/Microsoft.VC142.CRT"' >> mozconfig
-
-        ./mach --no-interactive bootstrap --application-choice browser
-        echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
-        $RUNNER_USERDIR/.cargo/bin/rustup target add x86_64-pc-windows-msvc
-
-        export DISPLAY_VERSION=`cat browser/config/version_display.txt`
-        export UPDATE_CHANNEL="release"
-        echo "DISPLAY_VERSION=$DISPLAY_VERSION" >> $GITHUB_ENV
-        echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
-
-    - name: Build 🔨
-      run: |
-        ./mach build
-
-    - name: Package 📦
-      run: |
-        ./mach package
-
-    - name: Copy 📂
-      run: |
-        mkdir $RUNNER_USERDIR/output
-        cp -r obj-x86_64-pc-mingw32/dist/floorp $RUNNER_USERDIR/output/
-
-    - name: Publish 🎁
-      uses: actions/upload-artifact@master
-      with:
-        name: floorp-windows-x86_64-build-with-enable-profile-generate
-        path: ${{ env.RUNNER_USERDIR }}/output
-
-  Windows-x86_64-generate-profdata-and-jarlog:
-    name: Windows x86_64 Generate profdata and jarlog
-
-    needs: Windows-x86_64-build-with-enable-profile-generate
+    needs: build-win-x86_64-profgen
     runs-on: windows-2022
 
     steps:
     - uses: actions/download-artifact@v3
       name: Download artifact 📥
       with:
-        name: floorp-windows-x86_64-build-with-enable-profile-generate
+        name: floorp-windows-x86_64-build-with-profgen-zstd
         path: C:\artifact
 
+    - name:  Unpack artifact
+      run: |
+        cd C:\artifact
+        zstd -d floorp-*.tar.zst
+        7z x floorp-*.tar
+
     - uses: actions/checkout@v3
-      with:
-        ref: ESR115
+      # with:
+      #   ref: ESR115
       name: Clone 🧬
 
     - name: Setup 🪛
@@ -229,192 +116,60 @@ jobs:
         C:\mozilla-build\start-shell.bat $workspace_dir\mozilla-build-run.sh
 
     - name: Publish 🎁
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@v3
       with:
         name: floorp-windows-x86_64-profdata-and-jarlog
         path: |
           merged.profdata
           en-US.log
 
-  Windows-x86_64-build-with-profdata-and-jarlog:
-    name: Build with profdata and jarlog
+  build-win-x86_64-with-profdata-and-jarlog:
+    needs: [win-x86_64-gen-profdata-and-jarlog,get-buildid]
+    uses: ./.github/workflows/windows-build.yml
+    with:
+      aarch64: false
+      mar: true
+      beta_branding: true
+      use_profdata_jarlog: "floorp-windows-x86_64-profdata-and-jarlog"
+      out_artifact_name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
+      MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
 
-    needs: [Windows-x86_64-generate-profdata-and-jarlog, get-display-version, get-buildid, get-inside-version]
-    runs-on: ${{ matrix.runs-on }}
-    strategy:
-      matrix:
-        runs-on: ["ubuntu-latest"]
-
+  win-x86_64-gen-mar:
+    needs: [get-display-version, get-buildid, get-inside-version,build-win-x86_64-with-profdata-and-jarlog]
+    runs-on: ubuntu-latest
     steps:
-    - name: Init
-      run: |
-        export RUNNER_USERDIR=`echo ~`
-        echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
-
-    - name: Change PPA mirror servers
-      run: |
-        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
-        sudo apt update
-
-    - name: Setup Disk & Swap Space 💿
-      if: matrix.runs-on != 'buildjet-16vcpu-ubuntu-2204'
-      run: |
-         echo Before:
-         free -h
-         df -h
-         echo
-         echo
-         sudo swapoff /mnt/swapfile
-         sudo rm /mnt/swapfile
-         sudo fallocate -l 10G /mnt/swapfile
-         sudo chmod 600 /mnt/swapfile
-         sudo mkswap /mnt/swapfile
-         sudo swapon /mnt/swapfile
-         sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-         sudo apt autoremove -y
-         sudo apt clean
-         sudo rm -rf /usr/share/dotnet
-         sudo rm -rf /usr/local/lib/android
-         sudo rm -rf /usr/local/graalvm
-         sudo rm -rf /usr/local/share/powershell
-         sudo rm -rf /usr/local/share/chromium
-         sudo rm -rf /usr/local/lib/node_modules
-         sudo rm -rf /opt/ghc
-         sudo rm -rf /usr/local/share/boost
-         sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-         sudo rm -rf /etc/apache2
-         sudo rm -rf /etc/nginx
-         sudo rm -rf /usr/local/share/chrome_driver
-         sudo rm -rf /usr/local/share/edge_driver
-         sudo rm -rf /usr/local/share/gecko_driver
-         sudo rm -rf /usr/share/java
-         sudo fallocate -l 10G /home/runner/swapfile2
-         sudo chmod 600 /home/runner/swapfile2
-         sudo mkswap /home/runner/swapfile2
-         sudo swapon /home/runner/swapfile2
-         echo
-         echo
-         echo After:
-         free -h
-         df -h
-
-    - uses: actions/download-artifact@v3
-      name: Download artifact 📥
-      with:
-        name: floorp-windows-x86_64-profdata-and-jarlog
-        path: ${{ env.RUNNER_USERDIR }}/artifact
-
-    - uses: actions/checkout@v3
-      with:
-        ref: ESR115
-      name: Clone 🧬
-
-    - name: Clone l10n-central 🧬
-      run: |
-        git clone --depth 1 -b 11.0.0 https://github.com/Floorp-Projects/l10n-central.git $RUNNER_USERDIR/l10n-central
-
-    - name: Setup 🪛
-      run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-        mkdir -p $RUNNER_USERDIR/win-cross
-
-        cp ./.github/mozconfig_win_x86_64_pgo_base mozconfig
-        echo 'ac_add_options --with-l10n-base=$RUNNER_USERDIR/l10n-central/l10n-central' >> mozconfig
-        echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
-        echo 'ac_add_options --with-pgo-profile-path=$RUNNER_USERDIR/artifact/merged.profdata' >> mozconfig
-        echo 'ac_add_options --with-pgo-jarlog=$RUNNER_USERDIR/artifact/en-US.log' >> mozconfig
-
-        echo 'ac_add_options --with-branding=browser/branding/beta' >> mozconfig
-
-        sudo apt update
-        sudo apt install zstd p7zip-full
-
-        echo Setup wine
-        aria2c "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-1.toolchains.v3.linux64-wine.latest/artifacts/public%2Fbuild%2Fwine.tar.zst" -o wine.tar.zst
-        tar --zstd -xvf wine.tar.zst -C $RUNNER_USERDIR/win-cross
-        rm wine.tar.zst
-
-        echo Replace rustc
-        aria2c "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.linux64-rust-windows-1.68.latest/artifacts/public%2Fbuild%2Frustc.tar.zst" -o rustc.tar.zst
-        tar --zstd -xvf rustc.tar.zst -C $RUNNER_USERDIR/win-cross
-        echo 'export RUSTC="$RUNNER_USERDIR/win-cross/rustc/bin/rustc"' >> mozconfig
-
-        echo Setup Visual Studio
-        sudo apt install -y msitools python3-pip
-        ./mach python --virtualenv build taskcluster/scripts/misc/get_vs.py build/vs/vs2019.yaml $RUNNER_USERDIR/win-cross/vs2019
-        chmod -R +x "$RUNNER_USERDIR/win-cross/vs2019"
-        echo 'WIN_UCRT_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/Windows Kits/10/Redist/10.0.19041.0/ucrt/DLLs/x64"' >> mozconfig
-        echo 'WIN32_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/VC/Redist/MSVC/14.29.30133/x64/Microsoft.VC142.CRT"' >> mozconfig
-
-        ./mach --no-interactive bootstrap --application-choice browser
-        echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
-        $RUNNER_USERDIR/.cargo/bin/rustup target add x86_64-pc-windows-msvc
-
-        export DISPLAY_VERSION=`cat browser/config/version_display.txt`
-        export UPDATE_CHANNEL="release"
-        echo "DISPLAY_VERSION=$DISPLAY_VERSION" >> $GITHUB_ENV
-        echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
-
-    - name: Copy l10n files
-      run: |
-          for dir in $(ls -l $RUNNER_USERDIR/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
-            mkdir -p $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta
-            cp ./browser/branding/beta/locales/en-US/brand.dtd $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.dtd
-            cp ./browser/branding/beta/locales/en-US/brand.ftl $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
-            cp ./browser/branding/beta/locales/en-US/brand.properties $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
-          done
-
-    - name: Change update url
-      run: |
-          sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${{ github.repository }}/releases/download/beta/WINNT-x86_64.xml |g' ./build/application.ini.in
-          sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
-
-    - name: Build 🔨
-      run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-        ./mach build
-
-    - name: Package 📦
-      run: |
-        ./mach package
-        ./mach package-multi-locale --locales ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th tr vi zh-CN zh-TW
-
-    - name: Create MAR artifact 📦
-      run: |
-        mkdir -p output
-        touch "obj-x86_64-pc-mingw32/dist/floorp/precomplete"
-        MAR="obj-x86_64-pc-mingw32/dist/host/bin/mar" MOZ_PRODUCT_VERSION=${{ needs.get-display-version.outputs.display-version }} MAR_CHANNEL_ID=release ./tools/update-packaging/make_full_update.sh ./output "obj-x86_64-pc-mingw32/dist/floorp"
-        mv ./output/*.mar ./output/WINNT-x86_64.mar
-        export WINNT_MAR_SIZE=`stat -c "%s" ./output/WINNT-x86_64.mar`
-        echo "WINNT_MAR_SIZE=$WINNT_MAR_SIZE" >> $GITHUB_ENV
-
-    - name: generate update XML file 
+    - name: generate update XML file
       run: |
         echo '<?xml version="1.0" encoding="UTF-8"?>
           <updates>
-            <update type="minor" displayVersion="${{ needs.get-display-version.outputs.display-version }}" appVersion="${{ needs.get-inside-version.outputs.inside-version }}" platformVersion="${{ needs.get-inside-version.outputs.inside-version }}" buildID="${{ needs.get-buildid.outputs.buildids }}" detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/">
-            <patch type="complete" URL="https://github.com/${{ github.repository }}/releases/download/beta/WINNT-x86_64.mar" size="${{ env.WINNT_MAR_SIZE }}" />
+            <update
+              type="minor"
+              displayVersion="${{ needs.get-display-version.outputs.display-version }}"
+              appVersion="${{ needs.get-inside-version.outputs.inside-version }}"
+              platformVersion="${{ needs.get-inside-version.outputs.inside-version }}"
+              buildID="${{ needs.get-buildid.outputs.buildids }}"
+              detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/"
+            >
+            <patch
+              type="complete"
+              URL="https://github.com/${{ github.repository }}/releases/download/beta/${{needs.build-win-x86_64-with-profdata-and-jarlog.outputs.mar_name}}"
+              size="${{ needs.build-win-x86_64-with-profdata-and-jarlog.outputs.mar_size }}"
+            />
             </update>
-          </updates>' > WINNT-Update.xml
-
-        cp WINNT-Update.xml output/WINNT-x86_64.xml
-
-    - name: Copy 📂
-      run: |
-        cp obj-x86_64-pc-mingw32/dist/install/sea/floorp-*.en-US.win64.installer.exe ./output/floorp.en-US.win64.installer.exe
-        cp obj-x86_64-pc-mingw32/dist/floorp-*.en-US.win64.zip ./output/floorp.en-US.win64.zip
+          </updates>' > WINNT-x86_64.xml
 
     - name: Publish 🎁
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@v3
       with:
-        name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
-        path: output
+        name: update-xml-floorp-win-x86_64
+        path: |
+          WINNT-x86_64.xml
 
 ######################################################## ↑ Windows x86_64 ########################################################
 
-  build-linux-x86_64-with-PGO:
+#TODO! ####################WILL REPLACE S############################
+  build-linux-x86_64-PGO:
     runs-on: ubuntu-latest
-    needs: [get-display-version, get-buildid, get-inside-version]
     steps:
       - name: Init
         run: |
@@ -422,8 +177,8 @@ jobs:
           echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
 
       - uses: actions/checkout@v3
-        with:
-          ref: ESR115
+        # with:
+        #   ref: ESR115
 
       - name: Change PPA mirror servers
         run: |
@@ -441,32 +196,39 @@ jobs:
           echo
           sudo swapoff /mnt/swapfile
           sudo rm /mnt/swapfile
-          sudo fallocate -l 10G /mnt/swapfile
+
+          sudo fallocate -l 8G /mnt/swapfile
           sudo chmod 600 /mnt/swapfile
           sudo mkswap /mnt/swapfile
           sudo swapon /mnt/swapfile
-          sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-          sudo apt autoremove -y
+
           sudo apt clean
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /usr/local/graalvm
-          sudo rm -rf /usr/local/share/powershell
-          sudo rm -rf /usr/local/share/chromium
-          sudo rm -rf /usr/local/lib/node_modules
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/local/share/boost
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          sudo rm -rf /etc/apache2
-          sudo rm -rf /etc/nginx
-          sudo rm -rf /usr/local/share/chrome_driver
-          sudo rm -rf /usr/local/share/edge_driver
-          sudo rm -rf /usr/local/share/gecko_driver
-          sudo rm -rf /usr/share/java
-          sudo fallocate -l 10G /home/runner/swapfile2
-          sudo chmod 600 /home/runner/swapfile2
-          sudo mkswap /home/runner/swapfile2
-          sudo swapon /home/runner/swapfile2
+          sudo apt remove temurin* openjdk*
+          sudo apt remove microsoft-edge* firefox* google-chrome*
+          sudo apt remove mono* libmono* msbuild* dotnet*
+          sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
+          sudo apt remove gfortran* php* julia* r-*
+          sudo apt remove mysql* postgresql*
+          sudo apt remove google-cloud-sdk azure-cli powershell snapd
+
+          sudo rm -rf /usr/share/swift &
+          sudo rm -rf /usr/local/aws-cli &
+          sudo rm -rf /usr/local/aws-sam-cli &
+          sudo rm -rf /usr/local/julia* &
+          sudo rm -rf /usr/local/lib/android &
+          sudo rm -rf /usr/local/lib/node_modules &
+          sudo rm -rf /opt/hostedtoolcache &
+          sudo rm -rf /opt/pipx &
+          sudo rm -rf /snap &
+          wait
+
+          sudo fallocate -l 12G /home/runner/swapfile
+          sudo chmod 600 /home/runner/swapfile
+          sudo mkswap /home/runner/swapfile
+          sudo swapon /home/runner/swapfile
+
+          sudo sysctl vm.swappiness=10
+
           echo
           echo
           echo After:
@@ -488,6 +250,9 @@ jobs:
           echo 'ac_add_options --disable-crashreporter' >> mozconfig
           echo 'ac_add_options --enable-proxy-bypass-protection' >> mozconfig
           echo 'ac_add_options --enable-unverified-updates' >> mozconfig
+
+          #? this is beta builld, but this update-channel does not have any means
+          #? so this always should be release even in beta build
           echo 'ac_add_options --enable-update-channel=release' >> mozconfig
           echo 'ac_add_options --with-mozilla-api-keyfile=$PWD/floorp/apis/api-mozilla-key' >> mozconfig
           echo 'ac_add_options --with-google-location-service-api-keyfile=$PWD/floorp/apis/api-google-location-service-key' >> mozconfig
@@ -536,38 +301,66 @@ jobs:
           mkdir -p output
           cp obj-x86_64-pc-linux-gnu/dist/*.tar.bz2 ./output/floorp.en-US.linux-x86_64.tar.bz2
 
-      - name: Create MAR artifact 📦
-        run: |
-          touch "obj-x86_64-pc-linux-gnu/dist/floorp/precomplete"
-          MAR="obj-x86_64-pc-linux-gnu/dist/host/bin/mar" MOZ_PRODUCT_VERSION=${{ needs.get-display-version.outputs.display-version }} MAR_CHANNEL_ID=release ./tools/update-packaging/make_full_update.sh ./output "obj-x86_64-pc-linux-gnu/dist/floorp"
-          mv ./output/*.mar ./output/LINUX-x86_64.mar
-          stat -c "%s" ./output/LINUX-x86_64.mar > LINUX-MAR-sizes.txt
-          export LINUX_MAR_SIZE=`stat -c "%s" ./output/LINUX-x86_64.mar`
-          echo "LINUX_MAR_SIZE=$LINUX_MAR_SIZE" >> $GITHUB_ENV
-
-      - name: generate update XML file 
-        run: |
-          echo '<?xml version="1.0" encoding="UTF-8"?>
-            <updates>
-            <update type="minor" displayVersion="${{ needs.get-display-version.outputs.display-version }}" appVersion="${{ needs.get-inside-version.outputs.inside-version }}" platformVersion="${{ needs.get-inside-version.outputs.inside-version }}" buildID="${{ needs.get-buildid.outputs.buildids }}" detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/">
-            <patch type="complete" URL="https://github.com/${{ github.repository }}/releases/download/beta/LINUX-x86_64.mar" size="${{ env.LINUX_MAR_SIZE }}" />
-            </update>
-          </updates>' > LINUX-Update.xml
-
-          cp LINUX-Update.xml output/LINUX-x86_64.xml
-
       - name: Publish 🎁
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: floorp-linux-x64
           path: ./output
 
+  #TODO: integrate to linux build like windows-build
+  update-linux-mar:
+    runs-on: 'ubuntu-latest'
+    needs: [build-linux-x86_64-PGO,get-display-version,get-inside-version,get-buildid]
+    steps:
+      - name: Create MAR artifact 📦
+        run: |
+          touch "obj-x86_64-pc-linux-gnu/dist/floorp/precomplete"
+          MAR="obj-x86_64-pc-linux-gnu/dist/host/bin/mar"
+          MOZ_PRODUCT_VERSION=${DISPVER}
+          MAR_CHANNEL_ID=release
+          ./tools/update-packaging/make_full_update.sh ./output "obj-x86_64-pc-linux-gnu/dist/floorp"
+
+          mv ./output/*.mar ./output/LINUX-x86_64.mar
+          stat -c "%s" ./output/LINUX-x86_64.mar > LINUX-MAR-sizes.txt
+          export LINUX_MAR_SIZE=`stat -c "%s" ./output/LINUX-x86_64.mar`
+          echo "LINUX_MAR_SIZE=$LINUX_MAR_SIZE" >> $GITHUB_ENV
+        env:
+          DISPVER: ${{needs.get-display-version.outputs.display-version}}
+
+      - name: generate update XML file
+        run: |
+          echo '<?xml version="1.0" encoding="UTF-8"?>
+            <updates>
+              <update
+                type="minor"
+                displayVersion="${DISPVER}"
+                appVersion="${INSDVER}"
+                platformVersion="${INSDVER}"
+                buildID="${BUILDID}"
+                detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/"
+              >
+              <patch
+                type="complete"
+                URL="https://github.com/${GHREPO}/releases/download/beta/LINUX-x86_64.mar"
+                size="${LINUX_MAR_SIZE}"
+              />
+            </update>
+          </updates>' > output/LINUX-x86_64.xml
+        env:
+          DISPVER: ${{needs.get-display-version.outputs.display-version}}
+          INSDVER: ${{needs.get-inside-version.outputs.inside-version}}
+          BUILDID: ${{needs.get-buildid.outputs.buildids}}
+          GHREPO: ${{github.repository}}
+
+
+
+#TODO! ####################WILL REPLACE E############################
+
 ################################################################ ↑ Linux x86_64 Build ####################################################################################
 
-  build-macOS-AArch64-with-profile-generate:
+#! WANT REPLACE S
+  build-macOS-aarch64-with-profgen:
     runs-on: 'ubuntu-latest'
-
-    needs: [get-buildid]
 
     steps:
     - name: Init
@@ -591,32 +384,34 @@ jobs:
         echo
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
-        sudo fallocate -l 10G /mnt/swapfile
-        sudo chmod 600 /mnt/swapfile
-        sudo mkswap /mnt/swapfile
-        sudo swapon /mnt/swapfile
-        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-        sudo apt autoremove -y
+
         sudo apt clean
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /usr/local/lib/android
-        sudo rm -rf /usr/local/graalvm
-        sudo rm -rf /usr/local/share/powershell
-        sudo rm -rf /usr/local/share/chromium
-        sudo rm -rf /usr/local/lib/node_modules
-        sudo rm -rf /opt/ghc
-        sudo rm -rf /usr/local/share/boost
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-        sudo rm -rf /etc/apache2
-        sudo rm -rf /etc/nginx
-        sudo rm -rf /usr/local/share/chrome_driver
-        sudo rm -rf /usr/local/share/edge_driver
-        sudo rm -rf /usr/local/share/gecko_driver
-        sudo rm -rf /usr/share/java
-        sudo fallocate -l 10G /home/runner/swapfile2
-        sudo chmod 600 /home/runner/swapfile2
-        sudo mkswap /home/runner/swapfile2
-        sudo swapon /home/runner/swapfile2
+        sudo apt remove temurin* openjdk*
+        sudo apt remove microsoft-edge* firefox* google-chrome*
+        sudo apt remove mono* libmono* msbuild* dotnet*
+        sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
+        sudo apt remove gfortran* php* julia* r-*
+        sudo apt remove mysql* postgresql*
+        sudo apt remove google-cloud-sdk azure-cli powershell snapd
+
+        sudo rm -rf /usr/share/swift &
+        sudo rm -rf /usr/local/aws-cli &
+        sudo rm -rf /usr/local/aws-sam-cli &
+        sudo rm -rf /usr/local/julia* &
+        sudo rm -rf /usr/local/lib/android &
+        sudo rm -rf /usr/local/lib/node_modules &
+        sudo rm -rf /opt/hostedtoolcache &
+        sudo rm -rf /opt/pipx &
+        sudo rm -rf /snap &
+        wait
+
+        sudo fallocate -l 20G /home/runner/swapfile
+        sudo chmod 600 /home/runner/swapfile
+        sudo mkswap /home/runner/swapfile
+        sudo swapon /home/runner/swapfile
+
+        sudo sysctl vm.swappiness=10
+
         echo
         echo
         echo After:
@@ -624,8 +419,8 @@ jobs:
         df -h
 
     - uses: actions/checkout@v3
-      with:
-        ref: ESR115
+      # with:
+      #   ref: ESR115
 
     - name: Create environment 🌲
       run: |
@@ -647,7 +442,6 @@ jobs:
         echo '*********************************'
 
         ./mach --no-interactive bootstrap --application-choice browser
-        sudo apt install -y p7zip-full zip tar
 
     - name: setup cross compile environment 📀
       run: |
@@ -667,7 +461,7 @@ jobs:
 
     - name: Package 📦
       run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+        # export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
 
         ./mach package
         tar zcvf aarch64-apple-darwin-output.tar.xz ./obj-aarch64-apple-darwin/dist/floorp
@@ -678,9 +472,8 @@ jobs:
         name: aarch64-apple-darwin
         path: aarch64-apple-darwin-output.tar.xz
 
-  generate-profdata-and-jarlog-AArch64:
-    name: Generate profdata and jarlog for AArch64
-    needs: [build-macOS-AArch64-with-profile-generate, get-buildid]
+  macOS-aarch64-gen-profdata-and-jarlog:
+    needs: [build-macOS-aarch64-with-profgen]
 
     runs-on: self-hosted
     # GitHub doesn't support M1 macs yet, so we need to use a self-hosted runner.
@@ -709,13 +502,11 @@ jobs:
 
       - uses: actions/checkout@v3
         name: Clone 🧬
-        with:
-          ref: ESR115
+        # with:
+        #   ref: ESR115
 
       - name: setup environment 🌲
         run: |
-          export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
           echo -e "ac_add_options --enable-bootstrap" >> mozconfig
 
           echo 'mozconfig: **********************'
@@ -733,22 +524,20 @@ jobs:
 
       - name: Generate Profdata 📊
         run: |
-          export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
           LLVM_PROFDATA=/Users/surapunoyousei/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-aarch64-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
 
       - name: Publish 🎁
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v3
         with:
           name: floorp-aarch64-apple-darwin-profdata-and-jarlog
           path: |
             merged.profdata
             en-US.log
 
-  macOS-AArch64-build-with-profdata-and-jarlog:
+  build-macOS-aarch64-with-profdata-and-jarlog:
     runs-on: 'ubuntu-latest'
 
-    needs: [generate-profdata-and-jarlog-AArch64, get-buildid]
+    needs: [macOS-aarch64-gen-profdata-and-jarlog, get-buildid]
 
     steps:
     - name: Init
@@ -772,32 +561,34 @@ jobs:
         echo
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
-        sudo fallocate -l 10G /mnt/swapfile
-        sudo chmod 600 /mnt/swapfile
-        sudo mkswap /mnt/swapfile
-        sudo swapon /mnt/swapfile
-        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-        sudo apt autoremove -y
+
         sudo apt clean
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /usr/local/lib/android
-        sudo rm -rf /usr/local/graalvm
-        sudo rm -rf /usr/local/share/powershell
-        sudo rm -rf /usr/local/share/chromium
-        sudo rm -rf /usr/local/lib/node_modules
-        sudo rm -rf /opt/ghc
-        sudo rm -rf /usr/local/share/boost
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-        sudo rm -rf /etc/apache2
-        sudo rm -rf /etc/nginx
-        sudo rm -rf /usr/local/share/chrome_driver
-        sudo rm -rf /usr/local/share/edge_driver
-        sudo rm -rf /usr/local/share/gecko_driver
-        sudo rm -rf /usr/share/java
-        sudo fallocate -l 10G /home/runner/swapfile2
-        sudo chmod 600 /home/runner/swapfile2
-        sudo mkswap /home/runner/swapfile2
-        sudo swapon /home/runner/swapfile2
+        sudo apt remove temurin* openjdk*
+        sudo apt remove microsoft-edge* firefox* google-chrome*
+        sudo apt remove mono* libmono* msbuild* dotnet*
+        sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
+        sudo apt remove gfortran* php* julia* r-*
+        sudo apt remove mysql* postgresql*
+        sudo apt remove google-cloud-sdk azure-cli powershell snapd
+
+        sudo rm -rf /usr/share/swift &
+        sudo rm -rf /usr/local/aws-cli &
+        sudo rm -rf /usr/local/aws-sam-cli &
+        sudo rm -rf /usr/local/julia* &
+        sudo rm -rf /usr/local/lib/android &
+        sudo rm -rf /usr/local/lib/node_modules &
+        sudo rm -rf /opt/hostedtoolcache &
+        sudo rm -rf /opt/pipx &
+        sudo rm -rf /snap &
+        wait
+
+        sudo fallocate -l 20G /home/runner/swapfile
+        sudo chmod 600 /home/runner/swapfile
+        sudo mkswap /home/runner/swapfile
+        sudo swapon /home/runner/swapfile
+
+        sudo sysctl vm.swappiness=10
+
         echo
         echo
         echo After:
@@ -805,8 +596,8 @@ jobs:
         df -h
 
     - uses: actions/checkout@v3
-      with:
-        ref: ESR115
+      # with:
+      #   ref: ESR115
 
     - name: download artifact 📥
       uses: actions/download-artifact@v3
@@ -855,7 +646,6 @@ jobs:
         echo '*********************************'
 
         ./mach --no-interactive bootstrap --application-choice browser
-        sudo apt install -y p7zip-full zip tar
 
     - name: setup cross compile environment 📀
       run: |
@@ -891,18 +681,16 @@ jobs:
         tar -czf floorp-aarch64-apple-darwin-with-pgo.tar.gz ./obj-aarch64-apple-darwin/dist/
 
     - name: Publish 🎁
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@v3
       with:
         name: floorp-aarch64-apple-darwin-with-pgo
         path: floorp-aarch64-apple-darwin-with-pgo.tar.gz
 
 ##################################################################### Intel Build #######################################################################################################
 
-  build-macOS-x86_64-with-profile-generate:
+#! WANT REPLACE
+  build-macOS-x86_64-with-profgen:
     runs-on: 'ubuntu-latest'
-
-    needs: get-buildid
-
     steps:
     - name: Init
       run: |
@@ -910,8 +698,8 @@ jobs:
         echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
 
     - uses: actions/checkout@v3
-      with:
-        ref: ESR115
+      # with:
+      #   ref: ESR115
 
     - name: Change PPA mirror servers
       run: |
@@ -928,32 +716,34 @@ jobs:
         echo
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
-        sudo fallocate -l 10G /mnt/swapfile
-        sudo chmod 600 /mnt/swapfile
-        sudo mkswap /mnt/swapfile
-        sudo swapon /mnt/swapfile
-        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-        sudo apt autoremove -y
+
         sudo apt clean
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /usr/local/lib/android
-        sudo rm -rf /usr/local/graalvm
-        sudo rm -rf /usr/local/share/powershell
-        sudo rm -rf /usr/local/share/chromium
-        sudo rm -rf /usr/local/lib/node_modules
-        sudo rm -rf /opt/ghc
-        sudo rm -rf /usr/local/share/boost
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-        sudo rm -rf /etc/apache2
-        sudo rm -rf /etc/nginx
-        sudo rm -rf /usr/local/share/chrome_driver
-        sudo rm -rf /usr/local/share/edge_driver
-        sudo rm -rf /usr/local/share/gecko_driver
-        sudo rm -rf /usr/share/java
-        sudo fallocate -l 10G /home/runner/swapfile2
-        sudo chmod 600 /home/runner/swapfile2
-        sudo mkswap /home/runner/swapfile2
-        sudo swapon /home/runner/swapfile2
+        sudo apt remove temurin* openjdk*
+        sudo apt remove microsoft-edge* firefox* google-chrome*
+        sudo apt remove mono* libmono* msbuild* dotnet*
+        sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
+        sudo apt remove gfortran* php* julia* r-*
+        sudo apt remove mysql* postgresql*
+        sudo apt remove google-cloud-sdk azure-cli powershell snapd
+
+        sudo rm -rf /usr/share/swift &
+        sudo rm -rf /usr/local/aws-cli &
+        sudo rm -rf /usr/local/aws-sam-cli &
+        sudo rm -rf /usr/local/julia* &
+        sudo rm -rf /usr/local/lib/android &
+        sudo rm -rf /usr/local/lib/node_modules &
+        sudo rm -rf /opt/hostedtoolcache &
+        sudo rm -rf /opt/pipx &
+        sudo rm -rf /snap &
+        wait
+
+        sudo fallocate -l 20G /home/runner/swapfile
+        sudo chmod 600 /home/runner/swapfile
+        sudo mkswap /home/runner/swapfile
+        sudo swapon /home/runner/swapfile
+
+        sudo sysctl vm.swappiness=10
+
         echo
         echo
         echo After:
@@ -980,7 +770,6 @@ jobs:
         echo '*********************************'
 
         ./mach --no-interactive bootstrap --application-choice browser
-        sudo apt install -y p7zip-full zip tar
 
     - name: setup cross compile environment 📀
       run: |
@@ -1011,9 +800,8 @@ jobs:
         name: x86_64-apple-darwin
         path: x86_64-apple-darwin.tar.xz
 
-  generate-profdata-and-jarlog-x86_64:
-    name: Generate profdata and jarlog for intel
-    needs: [build-macOS-x86_64-with-profile-generate, get-buildid]
+  macOS-x86_64-gen-profdata-and-jarlog:
+    needs: [build-macOS-x86_64-with-profgen]
 
     runs-on: macos-latest
 
@@ -1033,13 +821,11 @@ jobs:
 
       - uses: actions/checkout@v3
         name: Clone 🧬
-        with:
-          ref: ESR115
+        # with:
+        #   ref: ESR115
 
       - name: setup environment 🌲
         run: |
-          export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
           echo -e "ac_add_options --enable-bootstrap" >> mozconfig
 
           echo 'mozconfig: **********************'
@@ -1057,22 +843,20 @@ jobs:
 
       - name: Generate Profdata 📊
         run: |
-          export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
           LLVM_PROFDATA=$RUNNER_USERDIR/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
 
       - name: Publish 🎁
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v3
         with:
           name: floorp-x86_64-apple-darwin-profdata-and-jarlog
           path: |
             merged.profdata
             en-US.log
 
-  macOS-x86_64-build-with-profdata-and-jarlog:
+  build-macOS-x86_64-with-profdata-and-jarlog:
     runs-on: 'ubuntu-latest'
 
-    needs: [generate-profdata-and-jarlog-x86_64, get-buildid]
+    needs: [macOS-x86_64-gen-profdata-and-jarlog, get-buildid]
 
     steps:
     - name: Init
@@ -1096,32 +880,34 @@ jobs:
         echo
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
-        sudo fallocate -l 10G /mnt/swapfile
-        sudo chmod 600 /mnt/swapfile
-        sudo mkswap /mnt/swapfile
-        sudo swapon /mnt/swapfile
-        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-        sudo apt autoremove -y
+
         sudo apt clean
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /usr/local/lib/android
-        sudo rm -rf /usr/local/graalvm
-        sudo rm -rf /usr/local/share/powershell
-        sudo rm -rf /usr/local/share/chromium
-        sudo rm -rf /usr/local/lib/node_modules
-        sudo rm -rf /opt/ghc
-        sudo rm -rf /usr/local/share/boost
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-        sudo rm -rf /etc/apache2
-        sudo rm -rf /etc/nginx
-        sudo rm -rf /usr/local/share/chrome_driver
-        sudo rm -rf /usr/local/share/edge_driver
-        sudo rm -rf /usr/local/share/gecko_driver
-        sudo rm -rf /usr/share/java
-        sudo fallocate -l 10G /home/runner/swapfile2
-        sudo chmod 600 /home/runner/swapfile2
-        sudo mkswap /home/runner/swapfile2
-        sudo swapon /home/runner/swapfile2
+        sudo apt remove temurin* openjdk*
+        sudo apt remove microsoft-edge* firefox* google-chrome*
+        sudo apt remove mono* libmono* msbuild* dotnet*
+        sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
+        sudo apt remove gfortran* php* julia* r-*
+        sudo apt remove mysql* postgresql*
+        sudo apt remove google-cloud-sdk azure-cli powershell snapd
+
+        sudo rm -rf /usr/share/swift &
+        sudo rm -rf /usr/local/aws-cli &
+        sudo rm -rf /usr/local/aws-sam-cli &
+        sudo rm -rf /usr/local/julia* &
+        sudo rm -rf /usr/local/lib/android &
+        sudo rm -rf /usr/local/lib/node_modules &
+        sudo rm -rf /opt/hostedtoolcache &
+        sudo rm -rf /opt/pipx &
+        sudo rm -rf /snap &
+        wait
+
+        sudo fallocate -l 20G /home/runner/swapfile
+        sudo chmod 600 /home/runner/swapfile
+        sudo mkswap /home/runner/swapfile
+        sudo swapon /home/runner/swapfile
+
+        sudo sysctl vm.swappiness=10
+
         echo
         echo
         echo After:
@@ -1129,8 +915,8 @@ jobs:
         df -h
 
     - uses: actions/checkout@v3
-      with:
-        ref: ESR115
+      # with:
+      #   ref: ESR115
 
     - name: download artifact 📥
       uses: actions/download-artifact@v3
@@ -1179,7 +965,6 @@ jobs:
         echo '*********************************'
 
         ./mach --no-interactive bootstrap --application-choice browser
-        sudo apt install -y p7zip-full zip tar
 
     - name: setup cross compile environment 📀
       run: |
@@ -1222,14 +1007,14 @@ jobs:
 
 ######################################################## Integration #######################################################
 
-  integration:
-    needs: [macOS-x86_64-build-with-profdata-and-jarlog, macOS-AArch64-build-with-profdata-and-jarlog, get-display-version, get-buildid, get-inside-version]
+  macOS-gen-universal-bin:
+    needs: [build-macOS-x86_64-with-profdata-and-jarlog, build-macOS-aarch64-with-profdata-and-jarlog, get-display-version, get-buildid, get-inside-version]
     runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v3
-      with:
-        ref: ESR115
+      # with:
+      #   ref: ESR115
 
     - name: download M1 build artifact 📥
       uses: actions/download-artifact@v3
@@ -1355,10 +1140,10 @@ jobs:
 ##################################################################### Deployments #######################################################################################################
 
   Deployments:
-    needs: [get-display-version, get-buildid, get-inside-version, build-linux-x86_64-with-PGO, Windows-x86_64-build-with-profdata-and-jarlog, integration]
+    needs: [get-display-version, get-buildid, get-inside-version, update-linux-mar, build-win-x86_64-with-profdata-and-jarlog, macOS-gen-universal-bin]
     runs-on: ubuntu-latest
     environment:
-    name: Deploy-to-stable-release
+      name: Deploy-to-stable-release
     steps:
 
     - name: Release version & date📦

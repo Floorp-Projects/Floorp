@@ -28,7 +28,7 @@ jobs:
     - name: Get Display Version
       id: get
       run: |
-       echo "display-version=$(cat browser/config/version_display.txt)" >> $GITHUB_OUTPUT
+        echo "display-version=$(cat browser/config/version_display.txt)" >> $GITHUB_OUTPUT
 
   get-inside-version:
     runs-on: ubuntu-latest
@@ -37,14 +37,15 @@ jobs:
       inside-version: ${{ steps.get.outputs.inside-version }}
 
     steps:
-     - uses: actions/checkout@v2 
-       with:
-        ref: ESR115
-     - name: Get Inside Version
-       id: get
-       run: |
-        echo "inside-version=$(cat browser/config/version.txt)" >> $GITHUB_OUTPUT
-      
+      - uses: actions/checkout@v2
+        with:
+          ref: ESR115
+
+      - name: Get Inside Version
+        id: get
+        run: |
+          echo "inside-version=$(cat browser/config/version.txt)" >> $GITHUB_OUTPUT
+
   Windows-x86_64-build-with-enable-profile-generate:
     name: Windows x86_64 Build with --enable-profile-generate
     needs: get-display-version
@@ -79,44 +80,44 @@ jobs:
     - name: Setup Disk & Swap Space 💿
       if: matrix.runs-on != 'buildjet-16vcpu-ubuntu-2204'
       run: |
-       echo Before:
-       free -h
-       df -h
-       echo
-       echo
-       sudo swapoff /mnt/swapfile
-       sudo rm /mnt/swapfile
-       sudo fallocate -l 10G /mnt/swapfile
-       sudo chmod 600 /mnt/swapfile
-       sudo mkswap /mnt/swapfile
-       sudo swapon /mnt/swapfile
-       sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-       sudo apt autoremove -y
-       sudo apt clean
-       sudo rm -rf /usr/share/dotnet
-       sudo rm -rf /usr/local/lib/android
-       sudo rm -rf /usr/local/graalvm
-       sudo rm -rf /usr/local/share/powershell
-       sudo rm -rf /usr/local/share/chromium
-       sudo rm -rf /usr/local/lib/node_modules
-       sudo rm -rf /opt/ghc
-       sudo rm -rf /usr/local/share/boost
-       sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-       sudo rm -rf /etc/apache2
-       sudo rm -rf /etc/nginx
-       sudo rm -rf /usr/local/share/chrome_driver
-       sudo rm -rf /usr/local/share/edge_driver
-       sudo rm -rf /usr/local/share/gecko_driver
-       sudo rm -rf /usr/share/java
-       sudo fallocate -l 10G /home/runner/swapfile2
-       sudo chmod 600 /home/runner/swapfile2
-       sudo mkswap /home/runner/swapfile2
-       sudo swapon /home/runner/swapfile2
-       echo
-       echo
-       echo After:
-       free -h
-       df -h
+        echo Before:
+        free -h
+        df -h
+        echo
+        echo
+        sudo swapoff /mnt/swapfile
+        sudo rm /mnt/swapfile
+        sudo fallocate -l 10G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+        sudo apt autoremove -y
+        sudo apt clean
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /usr/local/graalvm
+        sudo rm -rf /usr/local/share/powershell
+        sudo rm -rf /usr/local/share/chromium
+        sudo rm -rf /usr/local/lib/node_modules
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo rm -rf /etc/apache2
+        sudo rm -rf /etc/nginx
+        sudo rm -rf /usr/local/share/chrome_driver
+        sudo rm -rf /usr/local/share/edge_driver
+        sudo rm -rf /usr/local/share/gecko_driver
+        sudo rm -rf /usr/share/java
+        sudo fallocate -l 10G /home/runner/swapfile2
+        sudo chmod 600 /home/runner/swapfile2
+        sudo mkswap /home/runner/swapfile2
+        sudo swapon /home/runner/swapfile2
+        echo
+        echo
+        echo After:
+        free -h
+        df -h
 
     - uses: actions/checkout@v3
       name: Clone 🧬
@@ -238,44 +239,44 @@ jobs:
     - name: Setup Disk & Swap Space 💿
       if: matrix.runs-on != 'buildjet-16vcpu-ubuntu-2204'
       run: |
-       echo Before:
-       free -h
-       df -h
-       echo
-       echo
-       sudo swapoff /mnt/swapfile
-       sudo rm /mnt/swapfile
-       sudo fallocate -l 10G /mnt/swapfile
-       sudo chmod 600 /mnt/swapfile
-       sudo mkswap /mnt/swapfile
-       sudo swapon /mnt/swapfile
-       sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-       sudo apt autoremove -y
-       sudo apt clean
-       sudo rm -rf /usr/share/dotnet
-       sudo rm -rf /usr/local/lib/android
-       sudo rm -rf /usr/local/graalvm
-       sudo rm -rf /usr/local/share/powershell
-       sudo rm -rf /usr/local/share/chromium
-       sudo rm -rf /usr/local/lib/node_modules
-       sudo rm -rf /opt/ghc
-       sudo rm -rf /usr/local/share/boost
-       sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-       sudo rm -rf /etc/apache2
-       sudo rm -rf /etc/nginx
-       sudo rm -rf /usr/local/share/chrome_driver
-       sudo rm -rf /usr/local/share/edge_driver
-       sudo rm -rf /usr/local/share/gecko_driver
-       sudo rm -rf /usr/share/java
-       sudo fallocate -l 10G /home/runner/swapfile2
-       sudo chmod 600 /home/runner/swapfile2
-       sudo mkswap /home/runner/swapfile2
-       sudo swapon /home/runner/swapfile2
-       echo
-       echo
-       echo After:
-       free -h
-       df -h
+        echo Before:
+        free -h
+        df -h
+        echo
+        echo
+        sudo swapoff /mnt/swapfile
+        sudo rm /mnt/swapfile
+        sudo fallocate -l 10G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+        sudo apt autoremove -y
+        sudo apt clean
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /usr/local/graalvm
+        sudo rm -rf /usr/local/share/powershell
+        sudo rm -rf /usr/local/share/chromium
+        sudo rm -rf /usr/local/lib/node_modules
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo rm -rf /etc/apache2
+        sudo rm -rf /etc/nginx
+        sudo rm -rf /usr/local/share/chrome_driver
+        sudo rm -rf /usr/local/share/edge_driver
+        sudo rm -rf /usr/local/share/gecko_driver
+        sudo rm -rf /usr/share/java
+        sudo fallocate -l 10G /home/runner/swapfile2
+        sudo chmod 600 /home/runner/swapfile2
+        sudo mkswap /home/runner/swapfile2
+        sudo swapon /home/runner/swapfile2
+        echo
+        echo
+        echo After:
+        free -h
+        df -h
 
     - uses: actions/download-artifact@v3
       name: Download artifact 📥
@@ -1452,85 +1453,85 @@ jobs:
     steps:
     - name: Run GitHub Actions for Release x86_64 Linux MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
-         curl -X POST \
-           -H "Authorization: token ${{ secrets.PAT }}" \
-           -H "Accept: application/vnd.github.v3+json" \
-           "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
-           -d '{
-             "ref": "main",
-             "inputs": {
-               "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-x86_64-${{ needs.get-display-version.outputs.display-version }}.mar",
-               "os": "Linux",
-               "arch": "x86_64"
-             }
-           }'
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+          -d '{
+            "ref": "main",
+            "inputs": {
+              "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-x86_64-${{ needs.get-display-version.outputs.display-version }}.mar",
+              "os": "Linux",
+              "arch": "x86_64"
+            }
+          }'
 
     - name: Run GitHub Actions for Release aarch64 Linux MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
-         curl -X POST \
-           -H "Authorization: token ${{ secrets.PAT }}" \
-           -H "Accept: application/vnd.github.v3+json" \
-           "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
-           -d '{
-             "ref": "main",
-             "inputs": {
-               "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-aarch64-${{ needs.get-display-version.outputs.display-version }}.mar",
-               "os": "Linux",
-               "arch": "aarch64"
-             }
-           }'
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+          -d '{
+            "ref": "main",
+            "inputs": {
+              "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-aarch64-${{ needs.get-display-version.outputs.display-version }}.mar",
+              "os": "Linux",
+              "arch": "aarch64"
+            }
+          }'
 
     - name: Run GitHub Actions for Release x86_64 Darwin MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
-         curl -X POST \
-           -H "Authorization: token ${{ secrets.PAT }}" \
-           -H "Accept: application/vnd.github.v3+json" \
-           "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
-           -d '{
-             "ref": "main",
-             "inputs": {
-               "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal-${{ needs.get-display-version.outputs.display-version }}.mar",
-               "os": "Darwin",
-               "arch": "x86_64",
-               "display-version": "${{ needs.get-display-version.outputs.display-version }}",
-               "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}"
-             }
-           }'
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+          -d '{
+            "ref": "main",
+            "inputs": {
+              "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal-${{ needs.get-display-version.outputs.display-version }}.mar",
+              "os": "Darwin",
+              "arch": "x86_64",
+              "display-version": "${{ needs.get-display-version.outputs.display-version }}",
+              "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}"
+            }
+          }'
 
     - name: Run GitHub Actions for Release aarch64 Darwin MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
-         curl -X POST \
-           -H "Authorization: token ${{ secrets.PAT }}" \
-           -H "Accept: application/vnd.github.v3+json" \
-           "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
-           -d '{
-             "ref": "main",
-             "inputs": {
-               "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal-${{ needs.get-display-version.outputs.display-version }}.mar",
-               "os": "Darwin",
-               "arch": "aarch64",
-               "buildid": "${{ needs.get-buildid.outputs.buildids }}",
-               "display-version": "${{ needs.get-display-version.outputs.display-version }}",
-               "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}"
-             }
-           }'
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+          -d '{
+            "ref": "main",
+            "inputs": {
+              "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal-${{ needs.get-display-version.outputs.display-version }}.mar",
+              "os": "Darwin",
+              "arch": "aarch64",
+              "buildid": "${{ needs.get-buildid.outputs.buildids }}",
+              "display-version": "${{ needs.get-display-version.outputs.display-version }}",
+              "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}"
+            }
+          }'
 
-    -  name: Run GitHub Actions for Release x86_64 Windows MAR "Floorp-Projects/Floorp-Update" 🚀
-       run: |
-         echo "Preparing to run GitHub Actions for Release x86_64 Windows MAR, waiting for 30 seconds"
-         sleep 60
-         curl -X POST \
-           -H "Authorization: token ${{ secrets.PAT }}" \
-           -H "Accept: application/vnd.github.v3+json" \
-           "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
-           -d '{
-             "ref": "main",
-             "inputs": {
-               "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86_64.mar",
-                "os": "WINNT",
-                "arch": "x86_64"
-              }
-            }'
+    - name: Run GitHub Actions for Release x86_64 Windows MAR "Floorp-Projects/Floorp-Update" 🚀
+      run: |
+        echo "Preparing to run GitHub Actions for Release x86_64 Windows MAR, waiting for 30 seconds"
+        sleep 60
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+          -d '{
+            "ref": "main",
+            "inputs": {
+              "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86_64.mar",
+              "os": "WINNT",
+              "arch": "x86_64"
+            }
+          }'
 
     -  name: Run GitHub Actions for Release x86_64 Windows MAR "Floorp-Projects/Floorp-Update" 🚀
        run: |
@@ -1549,13 +1550,13 @@ jobs:
 
     - name: Run GitHub Actions for Release x86_64 Debian PPA Build 🚀
       run: |
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.PAT }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/linux-build-x64-deb.yml/dispatches" \
-            -d '{
-              "ref": "ESR115"
-            }'
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/linux-build-x64-deb.yml/dispatches" \
+          -d '{
+            "ref": "ESR115"
+          }'
 
     - name: Run GitHub Actions for Release x86_64 Debian no PPA Build 🚀
       run: |
@@ -1580,11 +1581,11 @@ jobs:
     steps:
       - name: Run GitHub Actions for update latest.json 🚀
         run: |
-         curl -X POST \
-           -H "Authorization: token ${{ secrets.PAT }}" \
-           -H "Accept: application/vnd.github.v3+json" \
-           "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/linux-build-aarch64-deb.yml/dispatches" \
-           -d '{
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/linux-build-aarch64-deb.yml/dispatches" \
+            -d '{
             "ref": "main",
             "inputs": {
               "display-version": "${{ needs.get-display-version.outputs.display-version }}"

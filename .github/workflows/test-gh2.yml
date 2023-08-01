@@ -1,0 +1,38 @@
+on:
+  workflow_call:
+    inputs:
+      pgo:
+        description: this enables Profile Guided Optimization.
+        type: boolean
+        default: false
+      aarch64:
+        description: enable aarch64 build
+        type: boolean
+        default: false
+
+jobs:
+  hallo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: echo hallo
+        run: |
+          echo ${{github.run_id}}
+          cat $GITHUB_EVENT_PATH
+          echo hallo
+      - name: echo hallo2
+        run: |
+          echo ${{github.run_id}}
+          cat $GITHUB_EVENT_PATH
+          echo hallo2
+  hallo2:
+    runs-on: ubuntu-latest
+    needs: hallo
+    steps:
+      - name: echo hallo
+        run: |
+          echo ${{github.run_id}}
+          cat $GITHUB_EVENT_PATH
+          echo hallo
+      - name: echo hallo2
+        run: |
+          echo hallo2

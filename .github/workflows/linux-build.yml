@@ -29,6 +29,12 @@ on:
       ppa:
         type: boolean
         default: false
+      with_raw:
+        description: "with all files of dist(esp. for make mar)"
+        type: boolean
+        default: false
+
+
 
 # name: Linux Build
 # description: Action of Floorp Linux build (x64, aarch64)
@@ -55,6 +61,11 @@ jobs:
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
 
+        sudo fallocate -l 8G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+
         sudo apt clean
         # dpkg --list |grep "^rc" | cut -d " " -f 3 | xargs sudo dpkg --purge
         sudo apt remove temurin* openjdk*
@@ -76,7 +87,7 @@ jobs:
         sudo rm -rf /snap &
         wait
 
-        sudo fallocate -l 20G /home/runner/swapfile
+        sudo fallocate -l 12G /home/runner/swapfile
         sudo chmod 600 /home/runner/swapfile
         sudo mkswap /home/runner/swapfile
         sudo swapon /home/runner/swapfile
@@ -94,23 +105,6 @@ jobs:
         free -h
         df -h
 
-    # - name: Setup Disk & Swap Space 💿
-    #   #on github runner
-    #   run: |
-    #     #? TODO: hhvm on Ubuntu 22.04 apt? is not available, so if try to remove hhvm, error occurs.
-    #     #? https://github.com/facebook/hhvm/issues/9141
-    #     # sudo apt remove hhvm
-
-    #     sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-    #     sudo apt autoremove -y
-    #     sudo apt clean
-    #     sudo rm -rf /usr/local/graalvm
-    #     sudo rm -rf /usr/local/share/powershell
-    #     sudo rm -rf /usr/local/share/chromium
-    #     sudo rm -rf /usr/local/lib/node_modules
-    #     sudo rm -rf /usr/local/share/boost
-    #     sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-
     - uses: actions/checkout@v3
       name: Clone 🧬
 
@@ -125,13 +119,13 @@ jobs:
       run: |
         sudo apt update
         sudo apt -y install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
-        
+
     - name: setup Rust 🦀
       run: |
         if [[ $GHA_aarch64 == 'true' ]];then
           rustup target add aarch64-unknown-linux-gnu
         fi
-        
+
         #? https://github.com/mozilla/sccache#known-caveats
         export CARGO_INCREMENTAL=0
       env:
@@ -162,8 +156,6 @@ jobs:
           os.system("sudo apt install gzip gpg dpkg-dev")
           os.system("export WORKDIR=`pwd`")
           os.system("echo 'Current Workdir: $WORKDIR'")
-
-
 
         mozconfig = []
 
@@ -305,9 +297,18 @@ jobs:
           echo "OUTPUT=obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2" >> $GITHUB_ENV
           # zip -r dist.zip obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2
         fi
+
+        if [[ $GHA_raw == 'true' ]];then
+          if [[ $GHA_aarch64 != 'true' ]];then
+            zip -r all.zip obj-x86_64-pc-linux-gnu/dist/*
+          else
+            zip -r all.zip obj-aarch64-unknown-linux-gnu/dist/*
+          fi
+        fi
       env:
         GHA_deb: ${{inputs.deb}}
         GHA_aarch64: ${{inputs.aarch64}}
+        GHA_raw: ${{inputs.with_raw}}
 
     #PUBLISH START
     - name: Compress artifacts (deb)🤖
@@ -345,10 +346,16 @@ jobs:
         rm init_script.txt finish_script.txt Floorp_sec.asc
 
     #! Deb && aarch64 may not supported
-    - name: Publish (${{fromJson('["x64","aarch64"]')[inputs.aarch64]}} ${{fromJson('["non-deb","deb"]')[inputs.deb]}})🎁
+    - name: Publish ${{fromJson('["x64","aarch64"]')[inputs.aarch64]}} ${{fromJson('["non-deb","deb"]')[inputs.deb]}}🎁
       uses: actions/upload-artifact@v3
       with:
         name: floorp-${{fromJson('["linux","debian"]')[inputs.deb]}}-${{fromJson('["x64","aarch64"]')[inputs.aarch64]}}
         path: ${{ env.OUTPUT }}
         # path: dist.zip
+    - name: Publish raw (only if with_raw)
+      uses: actions/upload-artifact@v3
+      if: inputs.with_raw
+      with:
+        name: floorp-${{fromJson('["linux","debian"]')[inputs.deb]}}-${{fromJson('["x64","aarch64"]')[inputs.aarch64]}}
+        path: all.zip
     #PUBLISH END

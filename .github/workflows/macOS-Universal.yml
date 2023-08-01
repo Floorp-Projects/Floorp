@@ -10,6 +10,7 @@ name: "(A) ⚒ macOS Universal build"
 on: workflow_dispatch
 
 jobs:
+
   get-buildid:
     runs-on: ubuntu-latest
 
@@ -23,10 +24,9 @@ jobs:
         bdat=`date +"%Y%m%d%I%M%S"`
         echo "bid=${bdat}" >> $GITHUB_OUTPUT
 
+
   build-m1:
     runs-on: 'ubuntu-latest'
-
-    needs: get-buildid
 
     steps:
     - name: Init
@@ -50,32 +50,34 @@ jobs:
         echo
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
-        sudo fallocate -l 10G /mnt/swapfile
-        sudo chmod 600 /mnt/swapfile
-        sudo mkswap /mnt/swapfile
-        sudo swapon /mnt/swapfile
-        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-        sudo apt autoremove -y
+
         sudo apt clean
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /usr/local/lib/android
-        sudo rm -rf /usr/local/graalvm
-        sudo rm -rf /usr/local/share/powershell
-        sudo rm -rf /usr/local/share/chromium
-        sudo rm -rf /usr/local/lib/node_modules
-        sudo rm -rf /opt/ghc
-        sudo rm -rf /usr/local/share/boost
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-        sudo rm -rf /etc/apache2
-        sudo rm -rf /etc/nginx
-        sudo rm -rf /usr/local/share/chrome_driver
-        sudo rm -rf /usr/local/share/edge_driver
-        sudo rm -rf /usr/local/share/gecko_driver
-        sudo rm -rf /usr/share/java
-        sudo fallocate -l 10G /home/runner/swapfile2
-        sudo chmod 600 /home/runner/swapfile2
-        sudo mkswap /home/runner/swapfile2
-        sudo swapon /home/runner/swapfile2
+        sudo apt remove temurin* openjdk*
+        sudo apt remove microsoft-edge* firefox* google-chrome*
+        sudo apt remove mono* libmono* msbuild* dotnet*
+        sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
+        sudo apt remove gfortran* php* julia* r-*
+        sudo apt remove mysql* postgresql*
+        sudo apt remove google-cloud-sdk azure-cli powershell snapd
+
+        sudo rm -rf /usr/share/swift &
+        sudo rm -rf /usr/local/aws-cli &
+        sudo rm -rf /usr/local/aws-sam-cli &
+        sudo rm -rf /usr/local/julia* &
+        sudo rm -rf /usr/local/lib/android &
+        sudo rm -rf /usr/local/lib/node_modules &
+        sudo rm -rf /opt/hostedtoolcache &
+        sudo rm -rf /opt/pipx &
+        sudo rm -rf /snap &
+        wait
+
+        sudo fallocate -l 20G /home/runner/swapfile
+        sudo chmod 600 /home/runner/swapfile
+        sudo mkswap /home/runner/swapfile
+        sudo swapon /home/runner/swapfile
+
+        sudo sysctl vm.swappiness=10
+
         echo
         echo
         echo After:
@@ -93,18 +95,10 @@ jobs:
 
     - name: Create environment 🌲
       run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
         sudo apt update
         sudo apt upgrade -y
 
         cp ./.github/mozconfig_darwin_pgo_base mozconfig
-
-        echo 'export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-        echo 'export MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
 
         echo 'ac_add_options --target=aarch64-apple-darwin' >> mozconfig
         echo 'ac_add_options --enable-optimize="-O3 -mcpu=apple-m1 -w"' >> mozconfig
@@ -124,7 +118,6 @@ jobs:
         echo '*********************************'
 
         ./mach --no-interactive bootstrap --application-choice browser
-        sudo apt install -y p7zip-full zip tar
 
     - name: setup cross compile environment 📀
       run: |
@@ -137,15 +130,11 @@ jobs:
 
     - name: Build 🔨
       run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
         ./mach configure
         ./mach build
 
     - name: Package 📦
       run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
         ./mach package
         tar zcvf aarch64-apple-darwin-output.tar.xz ./obj-aarch64-apple-darwin/dist/floorp
 
@@ -157,7 +146,7 @@ jobs:
 
   generate-profdata-and-jarlog-M1:
     name: Generate profdata and jarlog for M1
-    needs: [build-m1, get-buildid]
+    needs: [build-m1]
 
     runs-on: self-hosted
     # GitHub doesn't support M1 macs yet, so we need to use a self-hosted runner.
@@ -189,14 +178,6 @@ jobs:
 
       - name: setup environment 🌲
         run: |
-          export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
-          echo 'export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-          echo 'MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-          echo 'export MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-          echo 'MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
           echo -e "ac_add_options --enable-bootstrap" >> mozconfig
 
           echo 'mozconfig: **********************'
@@ -214,8 +195,6 @@ jobs:
 
       - name: Generate Profdata 📊
         run: |
-          export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
           LLVM_PROFDATA=/Users/surapunoyousei/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-aarch64-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
 
       - name: Publish 🎁
@@ -253,32 +232,34 @@ jobs:
         echo
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
-        sudo fallocate -l 10G /mnt/swapfile
-        sudo chmod 600 /mnt/swapfile
-        sudo mkswap /mnt/swapfile
-        sudo swapon /mnt/swapfile
-        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-        sudo apt autoremove -y
+
         sudo apt clean
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /usr/local/lib/android
-        sudo rm -rf /usr/local/graalvm
-        sudo rm -rf /usr/local/share/powershell
-        sudo rm -rf /usr/local/share/chromium
-        sudo rm -rf /usr/local/lib/node_modules
-        sudo rm -rf /opt/ghc
-        sudo rm -rf /usr/local/share/boost
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-        sudo rm -rf /etc/apache2
-        sudo rm -rf /etc/nginx
-        sudo rm -rf /usr/local/share/chrome_driver
-        sudo rm -rf /usr/local/share/edge_driver
-        sudo rm -rf /usr/local/share/gecko_driver
-        sudo rm -rf /usr/share/java
-        sudo fallocate -l 10G /home/runner/swapfile2
-        sudo chmod 600 /home/runner/swapfile2
-        sudo mkswap /home/runner/swapfile2
-        sudo swapon /home/runner/swapfile2
+        sudo apt remove temurin* openjdk*
+        sudo apt remove microsoft-edge* firefox* google-chrome*
+        sudo apt remove mono* libmono* msbuild* dotnet*
+        sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
+        sudo apt remove gfortran* php* julia* r-*
+        sudo apt remove mysql* postgresql*
+        sudo apt remove google-cloud-sdk azure-cli powershell snapd
+
+        sudo rm -rf /usr/share/swift &
+        sudo rm -rf /usr/local/aws-cli &
+        sudo rm -rf /usr/local/aws-sam-cli &
+        sudo rm -rf /usr/local/julia* &
+        sudo rm -rf /usr/local/lib/android &
+        sudo rm -rf /usr/local/lib/node_modules &
+        sudo rm -rf /opt/hostedtoolcache &
+        sudo rm -rf /opt/pipx &
+        sudo rm -rf /snap &
+        wait
+
+        sudo fallocate -l 20G /home/runner/swapfile
+        sudo chmod 600 /home/runner/swapfile
+        sudo mkswap /home/runner/swapfile
+        sudo swapon /home/runner/swapfile
+
+        sudo sysctl vm.swappiness=10
+
         echo
         echo
         echo After:
@@ -384,8 +365,6 @@ jobs:
   build-intel:
     runs-on: 'ubuntu-latest'
 
-    needs: get-buildid
-
     steps:
     - name: Init
       run: |
@@ -408,32 +387,34 @@ jobs:
         echo
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
-        sudo fallocate -l 10G /mnt/swapfile
-        sudo chmod 600 /mnt/swapfile
-        sudo mkswap /mnt/swapfile
-        sudo swapon /mnt/swapfile
-        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-        sudo apt autoremove -y
+
         sudo apt clean
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /usr/local/lib/android
-        sudo rm -rf /usr/local/graalvm
-        sudo rm -rf /usr/local/share/powershell
-        sudo rm -rf /usr/local/share/chromium
-        sudo rm -rf /usr/local/lib/node_modules
-        sudo rm -rf /opt/ghc
-        sudo rm -rf /usr/local/share/boost
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-        sudo rm -rf /etc/apache2
-        sudo rm -rf /etc/nginx
-        sudo rm -rf /usr/local/share/chrome_driver
-        sudo rm -rf /usr/local/share/edge_driver
-        sudo rm -rf /usr/local/share/gecko_driver
-        sudo rm -rf /usr/share/java
-        sudo fallocate -l 10G /home/runner/swapfile2
-        sudo chmod 600 /home/runner/swapfile2
-        sudo mkswap /home/runner/swapfile2
-        sudo swapon /home/runner/swapfile2
+        sudo apt remove temurin* openjdk*
+        sudo apt remove microsoft-edge* firefox* google-chrome*
+        sudo apt remove mono* libmono* msbuild* dotnet*
+        sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
+        sudo apt remove gfortran* php* julia* r-*
+        sudo apt remove mysql* postgresql*
+        sudo apt remove google-cloud-sdk azure-cli powershell snapd
+
+        sudo rm -rf /usr/share/swift &
+        sudo rm -rf /usr/local/aws-cli &
+        sudo rm -rf /usr/local/aws-sam-cli &
+        sudo rm -rf /usr/local/julia* &
+        sudo rm -rf /usr/local/lib/android &
+        sudo rm -rf /usr/local/lib/node_modules &
+        sudo rm -rf /opt/hostedtoolcache &
+        sudo rm -rf /opt/pipx &
+        sudo rm -rf /snap &
+        wait
+
+        sudo fallocate -l 20G /home/runner/swapfile
+        sudo chmod 600 /home/runner/swapfile
+        sudo mkswap /home/runner/swapfile
+        sudo swapon /home/runner/swapfile
+
+        sudo sysctl vm.swappiness=10
+
         echo
         echo
         echo After:
@@ -449,18 +430,10 @@ jobs:
 
     - name: Create environment 🌲
       run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
         sudo apt update
         sudo apt upgrade -y
 
         cp ./.github/mozconfig_darwin_pgo_base mozconfig
-
-        echo 'export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-        echo 'export MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
 
         echo 'ac_add_options --target=x86_64-apple-darwin' >> mozconfig
         echo 'ac_add_options --enable-optimize="-O3 -march=nehalem -mtune=haswell -w"' >> mozconfig
@@ -493,15 +466,11 @@ jobs:
 
     - name: Build 🔨
       run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
         ./mach configure
         ./mach build
 
     - name: Package 📦
       run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
         ./mach package
         tar zcvf x86_64-apple-darwin.tar.xz ./obj-x86_64-apple-darwin/dist/floorp
 
@@ -513,7 +482,7 @@ jobs:
 
   generate-profdata-and-jarlog-intel:
     name: Generate profdata and jarlog for intel
-    needs: [build-intel, get-buildid]
+    needs: [build-intel]
 
     runs-on: macos-latest
 
@@ -536,14 +505,6 @@ jobs:
 
       - name: setup environment 🌲
         run: |
-          export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
-          echo 'export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-          echo 'MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-          echo 'export MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-          echo 'MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
           echo -e "ac_add_options --enable-bootstrap" >> mozconfig
 
           echo 'mozconfig: **********************'
@@ -561,8 +522,6 @@ jobs:
 
       - name: Generate Profdata 📊
         run: |
-          export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
           LLVM_PROFDATA=$RUNNER_USERDIR/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
 
       - name: Publish 🎁
@@ -586,7 +545,7 @@ jobs:
 
     - name: Change PPA mirror servers
       run: |
-          sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list 
+          sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
           sudo apt update
           sudo apt upgrade -y
 
@@ -600,32 +559,34 @@ jobs:
         echo
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
-        sudo fallocate -l 10G /mnt/swapfile
-        sudo chmod 600 /mnt/swapfile
-        sudo mkswap /mnt/swapfile
-        sudo swapon /mnt/swapfile
-        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-        sudo apt autoremove -y
+
         sudo apt clean
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /usr/local/lib/android
-        sudo rm -rf /usr/local/graalvm
-        sudo rm -rf /usr/local/share/powershell
-        sudo rm -rf /usr/local/share/chromium
-        sudo rm -rf /usr/local/lib/node_modules
-        sudo rm -rf /opt/ghc
-        sudo rm -rf /usr/local/share/boost
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-        sudo rm -rf /etc/apache2
-        sudo rm -rf /etc/nginx
-        sudo rm -rf /usr/local/share/chrome_driver
-        sudo rm -rf /usr/local/share/edge_driver
-        sudo rm -rf /usr/local/share/gecko_driver
-        sudo rm -rf /usr/share/java
-        sudo fallocate -l 10G /home/runner/swapfile2
-        sudo chmod 600 /home/runner/swapfile2
-        sudo mkswap /home/runner/swapfile2
-        sudo swapon /home/runner/swapfile2
+        sudo apt remove temurin* openjdk*
+        sudo apt remove microsoft-edge* firefox* google-chrome*
+        sudo apt remove mono* libmono* msbuild* dotnet*
+        sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
+        sudo apt remove gfortran* php* julia* r-*
+        sudo apt remove mysql* postgresql*
+        sudo apt remove google-cloud-sdk azure-cli powershell snapd
+
+        sudo rm -rf /usr/share/swift &
+        sudo rm -rf /usr/local/aws-cli &
+        sudo rm -rf /usr/local/aws-sam-cli &
+        sudo rm -rf /usr/local/julia* &
+        sudo rm -rf /usr/local/lib/android &
+        sudo rm -rf /usr/local/lib/node_modules &
+        sudo rm -rf /opt/hostedtoolcache &
+        sudo rm -rf /opt/pipx &
+        sudo rm -rf /snap &
+        wait
+
+        sudo fallocate -l 20G /home/runner/swapfile
+        sudo chmod 600 /home/runner/swapfile
+        sudo mkswap /home/runner/swapfile
+        sudo swapon /home/runner/swapfile
+
+        sudo sysctl vm.swappiness=10
+
         echo
         echo
         echo After:

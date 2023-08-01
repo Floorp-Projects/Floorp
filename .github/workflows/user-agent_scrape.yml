@@ -18,11 +18,13 @@ jobs:
 
     name: Linux
     runs-on: ubuntu-22.04
-    
+
     steps:
     - name: Clone User-Agent_Scraper 🧬
-      run: |
-        git clone --depth 1 https://github.com/Floorp-Projects/User-Agent_Scraper
+      uses: actions/checkout@v3
+      with:
+        repository: Floorp-Projects/User-Agent_Scraper
+        path: User-Agent_Scraper
 
     - name: Setup 🪛
       run: |
@@ -34,7 +36,7 @@ jobs:
     - name: Install browsers 🌐
       run: |
         cd ~
-        
+
         # Firefox
         aria2c -o firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-latest-ssl&os=linux64&lang=en-US"
         tar -xvf firefox.tar.bz2
@@ -74,7 +76,7 @@ jobs:
         npm run --silent start ~/firefox/firefox > user_agent.txt
         export firefox_stable_ua=`cat user_agent.txt`
         echo $firefox_stable_ua
-        
+
         # Chrome
         ~/chrome/chrome &
         sleep 5

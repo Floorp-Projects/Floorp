@@ -18,6 +18,11 @@ on:
 
 
 jobs:
+  test-gh2:
+    uses: ./.github/workflows/test-gh2.yml
+  test-gh2_2:
+    needs: [test-gh2,test]
+    uses: ./.github/workflows/test-gh2.yml
   test:
     runs-on: ubuntu-latest
     steps:
@@ -27,12 +32,20 @@ jobs:
       #     cd /usr/local
       #     tree
       #     cd ~
+      - name: check setup Node.js time
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'
       - name: bash string test
         run: |
+          echo ${{github.run_id}}
+          cat $GITHUB_EVENT_PATH
           a="aa"
           echo b${a}b
       - name: check swappiness
         run: |
+          echo ${{github.run_id}}
+          cat $GITHUB_EVENT_PATH
           echo `cat /proc/sys/vm/swappiness`
           #? https://qiita.com/onodes/items/c41b31e0f88babbb3baf#swappiness
           #? https://gist.github.com/vaughany/1f576b1420a5fa26f6d812ff4182b620

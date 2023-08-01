@@ -10,20 +10,20 @@ name: "(A) ⚒ Windows build"
 on:
   workflow_dispatch:
     inputs:
-      pgo:
+      profgen:
         type: boolean
-        description: Do Profile Guided Optimization
+        description: generate profile for PGO
         required: true
       aarch64:
         type: boolean
         description: Build aarch64; does NOT comportable with pgo
         required: true
 
-run-name: ${{fromJSON('["[no-PGO]","[PGO]"]')[inputs.pgo]}} Windows ${{fromJson('["x86_64","aarch64"]')[inputs.aarch64]}} build
+run-name: ${{fromJSON('["[normal]","[profgen]"]')[inputs.profgen]}} Windows ${{fromJson('["x86_64","aarch64"]')[inputs.aarch64]}} build
 jobs:
   windows-build:
-    name: win-${{fromJson('["no_pgo","pgo"]')[inputs.pgo]}}-x86_64
+    name: win-${{fromJson('["no_pgo","pgo"]')[inputs.profgen]}}-x86_64
     uses: ./.github/workflows/windows-build.yml
     with:
-      pgo: ${{inputs.pgo}}
+      profgen: ${{inputs.profgen}}
       aarch64: ${{inputs.aarch64}}

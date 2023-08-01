@@ -16,19 +16,79 @@
 on:
   workflow_call:
     inputs:
-      pgo:
-        description: this enables Profile Guided Optimization.
+      profgen:
+        description: generate profile for PGO.
         type: boolean
         default: false
       aarch64:
         description: enable aarch64 build
         type: boolean
         default: false
+      zstd:
+        description: enable artifact as zstd fmt
+        type: boolean
+        default: false
+      beta_branding:
+        type: boolean
+        default: false
+      mar:
+        type: boolean
+        default: false
+      #TODO: 名前が不自明
+      use_profdata_jarlog:
+        description: profile artifact name;use profile for PGO;not compartible with profgen
+        type: string
+        default: ""
+      out_artifact_name:
+        type: string
+        default: ""
+      MOZ_BUILD_DATE:
+        type: string
+        default: ""
+    outputs:
+      mar_name:
+        value: ${{jobs.windows-build.outputs.mar_name}}
+      mar_size:
+        value: ${{jobs.windows-build.outputs.mar_size}}
+
 
 jobs:
   windows-build:
     runs-on: ubuntu-latest
+    outputs:
+      mar_name: ${{steps.mar.outputs.MAR_NAME}}
+      mar_size: ${{steps.mar.outputs.MAR_SIZE}}
     steps:
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: "lts/*"
+    - name: Check Argument Compartiability
+      shell: node {0}
+      run: |
+        //profgen and use-profdata is not compartiable
+        if (
+          process.env.GHA_profgen == "true"
+          && process.env.GHA_use_profdata_jarlog != ""
+        ) {process.exit(-1);}
+
+        //aarch64 and (profgen or use_profdata_jarlog) is not compartiable
+        if (
+          process.env.GHA_aarch64 == "true"
+          && (
+            process.env.GHA_profgen == "true"
+            || process.env.GHA_use_profdata_jarlog != ""
+          )
+        ) {process.exit(-1);}
+      env:
+        GHA_profgen: ${{inputs.profgen}}
+        GHA_aarch64: ${{inputs.aarch64}}
+        GHA_zstd: ${{inputs.zstd}}
+        GHA_beta_branding: ${{inputs.beta_branding}}
+        GHA_mar: ${{inputs.mar}}
+        GHA_use_profdata_jarlog: ${{inputs.use_profdata_jarlog}}
+        GHA_out-artifact-name: ${{inputs.out_artifact_name}}
+
     - name: Init
       run: |
         export RUNNER_USERDIR=`echo ~`
@@ -45,8 +105,10 @@ jobs:
         echo Before:
         free -h
         df -h
+
         echo
         echo
+
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
 
@@ -82,15 +144,17 @@ jobs:
 
         sudo sysctl vm.swappiness=10
 
+        echo
+        echo
 
-        echo
-        echo
         echo After:
         free -h
         df -h
 
     - uses: actions/checkout@v3
       name: Clone 🧬
+      # with:
+      #   ref: ESR115
 
     - name: Clone l10n-central 🧬
       uses: actions/checkout@v3
@@ -105,6 +169,13 @@ jobs:
           core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
+    - uses: actions/download-artifact@v3
+      name: Download artifact if use profdata📥
+      if: inputs.use_profdata_jarlog
+      with:
+        name: ${{inputs.use_profdata_jarlog}}
+        path: ${{ env.RUNNER_USERDIR }}/artifact
+
     - name: Setup 🪛
       run: |
         mkdir -p $RUNNER_USERDIR/win-cross
@@ -115,13 +186,25 @@ jobs:
           cp ./.github/mozconfig_win_aarch64_pgo_base mozconfig
         fi
 
-        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
 
-        if [[ $GHA_pgo == 'true' ]]; then
-          echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
+        if [[ $GHA_beta_branding != 'true' ]];then
+          echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
+        else
+          echo 'ac_add_options --with-branding=browser/branding/beta' >> mozconfig
         fi
 
         echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
+
+        if [[ $GHA_profgen == 'true' ]]; then
+          echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
+        elif [[ -n $GHA_use_profdata_jarlog ]]; then
+          echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
+          echo 'ac_add_options --with-pgo-profile-path=$RUNNER_USERDIR/artifact/merged.profdata' >> mozconfig
+          echo 'ac_add_options --with-pgo-jarlog=$RUNNER_USERDIR/artifact/en-US.log' >> mozconfig
+        fi
 
         # SCCACHE START
         echo "mk_add_options 'export RUSTC_WRAPPER=/home/runner/.mozbuild/sccache/sccache'" >> mozconfig
@@ -130,34 +213,32 @@ jobs:
         echo "mk_add_options 'export SCCACHE_GHA_ENABLED=on'" >> mozconfig
         # SCCACHE END
 
-        sudo apt update
-        sudo apt install zstd p7zip-full
-
         echo Setup wine
         aria2c "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-1.toolchains.v3.linux64-wine.latest/artifacts/public%2Fbuild%2Fwine.tar.zst" -o wine.tar.zst
         tar --zstd -xvf wine.tar.zst -C $RUNNER_USERDIR/win-cross
         rm wine.tar.zst
 
-        # echo Replace rustc
-        # aria2c "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.linux64-rust-windows-1.68.latest/artifacts/public%2Fbuild%2Frustc.tar.zst" -o rustc.tar.zst
-        # tar --zstd -xvf rustc.tar.zst -C $RUNNER_USERDIR/win-cross
-        # echo 'export RUSTC="$RUNNER_USERDIR/win-cross/rustc/bin/rustc"' >> mozconfig
-
         echo Setup Visual Studio
         sudo apt install -y msitools python3-pip
         ./mach python --virtualenv build taskcluster/scripts/misc/get_vs.py build/vs/vs2019.yaml $RUNNER_USERDIR/win-cross/vs2019
         chmod -R +x "$RUNNER_USERDIR/win-cross/vs2019"
+        #? from daily-build-with-update
+        #? for resolve some problems relate to VCRuntime
+        echo 'WIN_UCRT_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/Windows Kits/10/Redist/10.0.19041.0/ucrt/DLLs/x64"' >> mozconfig
+        echo 'WIN32_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/VC/Redist/MSVC/14.29.30133/x64/Microsoft.VC142.CRT"' >> mozconfig
+        #? from end
 
         ./mach --no-interactive bootstrap --application-choice browser
         echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
 
-        export DISPLAY_VERSION=`cat browser/config/version_display.txt`
-        export UPDATE_CHANNEL="release"
-        echo "DISPLAY_VERSION=$DISPLAY_VERSION" >> $GITHUB_ENV
-        echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
+        echo "DISPLAY_VERSION=$(cat ./browser/config/version_display.txt)" >> $GITHUB_ENV
+        echo "UPDATE_CHANNEL=release" >> $GITHUB_ENV
       env:
-        GHA_pgo: ${{inputs.pgo}}
+        GHA_profgen: ${{inputs.profgen}}
         GHA_aarch64: ${{inputs.aarch64}}
+        GHA_beta_branding: ${{inputs.beta_branding}}
+        GHA_use_profdata_jarlog : ${{inputs.use_profdata_jarlog}}
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
     - name: setup Rust 🦀
       run: |
@@ -171,6 +252,25 @@ jobs:
         export CARGO_INCREMENTAL=0
       env:
         GHA_aarch64: ${{inputs.aarch64}}
+
+    - name: Change update url if beta
+      if: inputs.beta_branding
+      run: |
+        sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${GH_REPO}/releases/download/beta/WINNT-x86_64.xml |g' ./build/application.ini.in
+        sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
+      env:
+        GH_REPO: ${{github.repository}}
+
+    #On Package, if not copies, error occur
+    - name: Copy l10n files if beta
+      if: inputs.beta_branding
+      run: |
+          for dir in $(ls -l $PWD/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+            mkdir -p $PWD/l10n-central/l10n-central/$dir/browser/branding/beta
+            cp ./browser/branding/beta/locales/en-US/brand.dtd $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.dtd
+            cp ./browser/branding/beta/locales/en-US/brand.ftl $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
+            cp ./browser/branding/beta/locales/en-US/brand.properties $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
+          done
 
     - name: Build 🔨
 
@@ -196,16 +296,52 @@ jobs:
           arch_inst="win64"
         fi
 
-        cp obj-${arch}-pc-windows-msvc/dist/install/sea/floorp-*.en-US.${arch_inst}.installer-stub.exe $RUNNER_USERDIR/output/
-        cp obj-${arch}-pc-windows-msvc/dist/install/sea/floorp-*.en-US.${arch_inst}.installer.exe $RUNNER_USERDIR/output/
-        cp obj-${arch}-pc-windows-msvc/dist/floorp-*.en-US.${arch_inst}.zip $RUNNER_USERDIR/output/
+        if [[ $GHA_zstd != 'true' ]];then
+          cp obj-${arch}-pc-windows-msvc/dist/install/sea/floorp-*.en-US.${arch_inst}.installer-stub.exe $RUNNER_USERDIR/output/
+          cp obj-${arch}-pc-windows-msvc/dist/install/sea/floorp-*.en-US.${arch_inst}.installer.exe $RUNNER_USERDIR/output/
+          cp obj-${arch}-pc-windows-msvc/dist/floorp-*.en-US.${arch_inst}.zip $RUNNER_USERDIR/output/
+        else
+          cp obj-${arch}-pc-windows-msvc/dist/floorp-*.en-US.${arch_inst}.zip $RUNNER_USERDIR/output/
+          7z x $RUNNER_USERDIR/output/floorp-*.en-US.${arch_inst}.zip
+          tar -I "zstd -T4 -10" --remove-files -cvf $RUNNER_USERDIR/output/floorp-115.1.0.en-us.win64.tar.zst floorp
+          rm $RUNNER_USERDIR/output/floorp-*.en-US.${arch_inst}.zip
+        fi
+        #? Original code used in daily b with update
+        # cp -r obj-x86_64-pc-mingw32/dist/floorp $RUNNER_USERDIR/output/
       env:
         GHA_aarch64: ${{inputs.aarch64}}
+        GHA_zstd: ${{inputs.zstd}}
+
+    - name: Create MAR artifact 📦
+      id: gen-mar
+      if : inputs.mar
+      run: |
+        mkdir -p output
+        touch "obj-x86_64-pc-windows-msvc/dist/floorp/precomplete"
+        MAR="obj-x86_64-pc-windows-msvc/dist/host/bin/mar" \
+        MOZ_PRODUCT_VERSION=$(cat browser/config/version_display.txt) \
+        MAR_CHANNEL_ID=release \
+        ./tools/update-packaging/make_full_update.sh ./output "obj-x86_64-pc-windows-msvc/dist/floorp"
+
+        mv ./output/*.mar ./output/WINNT-x86_64.mar
+
+        echo "MAR_NAME=WINNT-x86_64.mar" >> $GITHUB_OUTPUT
+        echo "MAR_SIZE=$(stat -c "%s" ./output/WINNT-x86_64.mar)" >> $GITHUB_OUTPUT
 
     # Publish START
-    - name: Publish ${{fromJson('["no-pgo","pgo"]')[inputs.pgo]}}🎁
-      uses: actions/upload-artifact@master
+    - name: make name of publish archive
+      shell: node {0}
+      run: |
+        const fs = require('fs');
+        let name = process.env.GHA_out_artifact_name ? process.env.GHA_out_artifact_name : process.env.GHA_default_name
+        fs.appendFileSync(process.env.GITHUB_ENV, `ARTIFACT_NAME=${name}`);
+      env:
+        GHA_out_artifact_name : ${{inputs.out_artifact_name}}
+        GHA_default_name: floorp-windows-${{fromJson('["x86_64","aarch64"]')[inputs.aarch64]}}-${{fromJson('["package","build-with-profgen"]')[inputs.profgen]}}${{fromJson('["","-zstd"]')[inputs.zstd]}}
+
+    - name: Publish Package🎁
+      uses: actions/upload-artifact@v3
       with:
-        name: floorp-windows-${{fromJson('["x86_64","aarch64"]')[inputs.aarch64]}}-${{fromJson('["package","build-with-enable-profile-generate"]')[inputs.pgo]}}
+        name: ${{env.ARTIFACT_NAME}}
         path: ${{ env.RUNNER_USERDIR }}/output
     # Publish END
