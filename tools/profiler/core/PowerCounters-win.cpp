@@ -16,36 +16,6 @@
 #define NTDDI_VERSION NTDDI_WINBLUE
 #include <emi.h>
 
-#ifndef NTDDI_WIN10_RS5
-// EMI v2 API exists in SDK 10.0.17763 (Windows 10 1809 / Redstone 5) and later.
-// Our build machines are still on SDK 10.0.17134.
-// Remove this block when updating the SDK (bug 1774628).
-typedef EMI_METADATA EMI_METADATA_V1;
-typedef EMI_MEASUREMENT_DATA EMI_CHANNEL_MEASUREMENT_DATA;
-#  define EMI_VERSION_V2 2
-
-typedef struct {
-  EMI_MEASUREMENT_UNIT MeasurementUnit;
-  USHORT ChannelNameSize;
-  WCHAR ChannelName[ANYSIZE_ARRAY];
-} EMI_CHANNEL_V2;
-
-typedef struct {
-  WCHAR HardwareOEM[EMI_NAME_MAX];
-  WCHAR HardwareModel[EMI_NAME_MAX];
-  USHORT HardwareRevision;
-  USHORT ChannelCount;
-  EMI_CHANNEL_V2 Channels[ANYSIZE_ARRAY];
-} EMI_METADATA_V2;
-
-#  define EMI_CHANNEL_V2_LENGTH(_ChannelNameSize) \
-    (FIELD_OFFSET(EMI_CHANNEL_V2, ChannelName) + (_ChannelNameSize))
-
-#  define EMI_CHANNEL_V2_NEXT_CHANNEL(_Channel) \
-    ((EMI_CHANNEL_V2*)((PUCHAR)(_Channel) +     \
-                       EMI_CHANNEL_V2_LENGTH((_Channel)->ChannelNameSize)))
-#endif
-
 using namespace mozilla;
 
 // This is a counter to collect power utilization during profiling.
