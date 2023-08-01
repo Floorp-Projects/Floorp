@@ -45,12 +45,11 @@ class FFmpegAudioDecoder<LIBAV_VER>
  private:
   MediaResult DoDecode(MediaRawData* aSample, uint8_t* aData, int aSize,
                        bool* aGotFrame, DecodedData& aResults) override;
-  MediaResult DecodeUsingFFmpeg(AVPacket* aPacket, int& aOutBytesConsumed,
-                                bool& aDecoded, MediaRawData* aSample,
-                                DecodedData& aResults, bool* aGotFrame);
+  MediaResult DecodeUsingFFmpeg(AVPacket* aPacket, bool& aDecoded,
+                                MediaRawData* aSample, DecodedData& aResults,
+                                bool* aGotFrame);
   MediaResult PostProcessOutput(bool aDecoded, MediaRawData* aSample,
-                                DecodedData& aResults, bool* aGotFrame,
-                                size_t aSamplePositionOffset);
+                                DecodedData& aResults, bool* aGotFrame);
   const AudioInfo mAudioInfo;
   // True if the audio will be downmixed and rendered in mono.
   bool mDefaultPlaybackDeviceMono;
