@@ -390,9 +390,8 @@ TimeUnit WAVTrackDemuxer::Duration(int64_t aNumDataChunks) const {
   if (!mSamplesPerSecond || !mSamplesPerChunk) {
     return TimeUnit();
   }
-  const double usPerDataChunk =
-      USECS_PER_S * static_cast<double>(mSamplesPerChunk) / mSamplesPerSecond;
-  return TimeUnit::FromMicroseconds(aNumDataChunks * usPerDataChunk);
+  const int64_t frames = mSamplesPerChunk * aNumDataChunks;
+  return TimeUnit(frames, mSamplesPerSecond);
 }
 
 TimeUnit WAVTrackDemuxer::DurationFromBytes(uint32_t aNumBytes) const {
@@ -402,13 +401,7 @@ TimeUnit WAVTrackDemuxer::DurationFromBytes(uint32_t aNumBytes) const {
 
   uint64_t numSamples = aNumBytes * 8 / mChannels / mSampleFormat;
 
-  uint64_t numUSeconds = USECS_PER_S * numSamples / mSamplesPerSecond;
-
-  if (USECS_PER_S * numSamples % mSamplesPerSecond > mSamplesPerSecond / 2) {
-    numUSeconds++;
-  }
-
-  return TimeUnit::FromMicroseconds(numUSeconds);
+  return TimeUnit(numSamples, mSamplesPerSecond);
 }
 
 MediaByteRange WAVTrackDemuxer::FindNextChunk() {
