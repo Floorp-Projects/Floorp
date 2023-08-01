@@ -1025,9 +1025,7 @@ pixman_asm_function pixman_composite_over_n_8888_8888_ca_asm_armv6
         cmp     ip, #-1
         beq     pixman_composite_over_white_8888_8888_ca_asm_armv6
         /* else drop through... */
-#ifndef __clang__
- .endfunc
-#endif
+ pixman_end_asm_function
 generate_composite_function \
     pixman_composite_over_n_8888_8888_ca_asm_armv6_helper, 0, 32, 32 \
     FLAG_DST_READWRITE | FLAG_BRANCH_OVER | FLAG_PROCESS_CORRUPTS_PSR | FLAG_PROCESS_DOES_STORE | FLAG_SPILL_LINE_VARS | FLAG_PROCESS_CORRUPTS_SCRATCH | FLAG_PROCESS_CORRUPTS_WK0 \

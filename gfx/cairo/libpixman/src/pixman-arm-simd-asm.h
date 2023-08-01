@@ -964,9 +964,7 @@
     .unreq  WK3
     .unreq  SCRATCH
     .unreq  ORIG_W
-#ifndef __clang__
-    .endfunc
-#endif
+    pixman_end_asm_function
 .endm
 
 .macro line_saved_regs  x:vararg
