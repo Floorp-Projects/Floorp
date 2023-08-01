@@ -25,11 +25,11 @@ t.step(function() {
       ctx.direction = 'ltr';
       ctx.align = 'left'
       // approx_equals because font metrics may be rounded slightly differently by different platforms/browsers.
-      assert_approx_equals(ctx.measureText('A').fontBoundingBoxAscent, 50 * 1745 / 1024, 1, "unexpected fontBoundingBoxAscent");
-      assert_approx_equals(ctx.measureText('A').fontBoundingBoxDescent, 50 * 805 / 1024, 1, "unexpected fontBoundingBoxDescent");
+      assert_approx_equals(ctx.measureText('A').fontBoundingBoxAscent, 50 * 768 / 1024, 1, "unexpected fontBoundingBoxAscent");
+      assert_approx_equals(ctx.measureText('A').fontBoundingBoxDescent, 50 * 256 / 1024, 1, "unexpected fontBoundingBoxDescent");
 
-      assert_approx_equals(ctx.measureText('ABCD').fontBoundingBoxAscent, 50 * 1745 / 1024, 1, "unexpected fontBoundingBoxAscent");
-      assert_approx_equals(ctx.measureText('ABCD').fontBoundingBoxDescent, 50 * 805 / 1024, 1, "unexpected fontBoundingBoxDescent");
+      assert_approx_equals(ctx.measureText('ABCD').fontBoundingBoxAscent, 50 * 768 / 1024, 1, "unexpected fontBoundingBoxAscent");
+      assert_approx_equals(ctx.measureText('ABCD').fontBoundingBoxDescent, 50 * 256 / 1024, 1, "unexpected fontBoundingBoxDescent");
   }).then(t_pass, t_fail);
 });
 done();
