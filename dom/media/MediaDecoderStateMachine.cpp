@@ -956,10 +956,6 @@ class MediaDecoderStateMachine::LoopingDecodingState
       VideoQueue().Finish();
     }
 
-    if (mWaitingAudioDataFromStart) {
-      mMaster->mMediaSink->EnableTreatAudioUnderrunAsSilence(false);
-    }
-
     // Clear waiting data should be done after marking queue as finished.
     mDataWaitingTimestampAdjustment = nullptr;
 
@@ -981,11 +977,6 @@ class MediaDecoderStateMachine::LoopingDecodingState
 
   void HandleAudioDecoded(AudioData* aAudio) override {
     // TODO : check if we need to update mOriginalDecodedDuration
-
-    if (mWaitingAudioDataFromStart) {
-      mMaster->mMediaSink->EnableTreatAudioUnderrunAsSilence(false);
-      mWaitingAudioDataFromStart = false;
-    }
 
     // After pushing data to the queue, timestamp might be adjusted.
     DecodingState::HandleAudioDecoded(aAudio);
@@ -1698,12 +1689,6 @@ class MediaDecoderStateMachine::LoopingDecodingState
   // determined.
   bool mAudioEndedBeforeEnteringStateWithoutDuration;
   bool mVideoEndedBeforeEnteringStateWithoutDuration;
-
-  // True if the audio has reached EOS, but the data from the start position is
-  // not avalible yet. We use this to determine whether we should enable
-  // appending silence audio frames into audio backend while audio underrun in
-  // order to keep audio clock running.
-  bool mWaitingAudioDataFromStart = false;
 };
 
 /**
@@ -3247,17 +3232,6 @@ void MediaDecoderStateMachine::LoopingDecodingState::HandleError(
     case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
       if (aIsAudio) {
         HandleWaitingForAudio();
-        // Now we won't be able to get new audio from the start position.
-        // This could happen for MSE, because data for the start hasn't been
-        // appended yet. If we can get the data before all queued audio has been
-        // consumed, then nothing special would happen. If not, then the audio
-        // underrun would happen and the audio clock stalls, which means video
-        // playback would also stall. Therefore, in this special situation, we
-        // can treat those audio underrun as silent frames in order to keep
-        // driving the clock. But we would cancel this behavior once the new
-        // audio data comes, or we fallback to the non-seamless looping.
-        mWaitingAudioDataFromStart = true;
-        mMaster->mMediaSink->EnableTreatAudioUnderrunAsSilence(true);
       } else {
         HandleWaitingForVideo();
       }
