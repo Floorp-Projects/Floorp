@@ -596,7 +596,7 @@ export function logEvenNumbers(logger,items) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                107, // fixture_callbacks:uniffi_fixture_callbacks_fn_func_log_even_numbers
+                105, // fixture_callbacks:uniffi_fixture_callbacks_fn_func_log_even_numbers
                 FfiConverterCallbackInterfaceLogger.lower(logger),
                 FfiConverterSequencei32.lower(items),
             )
@@ -630,7 +630,7 @@ export function logEvenNumbersMainThread(logger,items) {
                 throw e;
             }
             return UniFFIScaffolding.callSync(
-                108, // fixture_callbacks:uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread
+                106, // fixture_callbacks:uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread
                 FfiConverterCallbackInterfaceLogger.lower(logger),
                 FfiConverterSequencei32.lower(items),
             )
