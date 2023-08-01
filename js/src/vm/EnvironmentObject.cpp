@@ -1654,6 +1654,15 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
      */
     if (env->is<LexicalEnvironmentObject>() ||
         env->is<VarEnvironmentObject>()) {
+      // Currently consider all non-syntactic top-level lexical bindings to be
+      // aliased.
+      if (env->is<LexicalEnvironmentObject>() &&
+          !env->is<GlobalLexicalEnvironmentObject>() &&
+          env->as<LexicalEnvironmentObject>().isExtensible()) {
+        MOZ_ASSERT(!IsSyntacticEnvironment(env));
+        return true;
+      }
+
       // Currently all vars inside non-strict eval var environments are aliased.
       if (env->is<VarEnvironmentObject>() &&
           env->as<VarEnvironmentObject>().isForNonStrictEval()) {
