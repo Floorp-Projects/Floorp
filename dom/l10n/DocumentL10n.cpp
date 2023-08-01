@@ -318,12 +318,13 @@ void DocumentL10n::InitialTranslationCompleted(bool aL10nCached) {
 
   MaybeRecordTelemetry();
 
-  mDocument->InitialTranslationCompleted(aL10nCached);
+  RefPtr<Document> doc = mDocument;
+  doc->InitialTranslationCompleted(aL10nCached);
 
   // In XUL scenario contentSink is nullptr.
   if (mContentSink) {
-    mContentSink->InitialTranslationCompleted();
-    mContentSink = nullptr;
+    nsCOMPtr<nsIContentSink> sink = mContentSink.forget();
+    sink->InitialTranslationCompleted();
   }
 
   // From now on, the state of Localization is unconditionally

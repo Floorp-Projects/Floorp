@@ -926,7 +926,8 @@ nsDocShellTreeOwner::HandleEvent(Event* aEvent) {
       aEvent->PreventDefault();
     }
   } else if (eventType.EqualsLiteral("drop")) {
-    nsIWebNavigation* webnav = static_cast<nsIWebNavigation*>(mWebBrowser);
+    nsCOMPtr<nsIWebNavigation> webnav =
+        static_cast<nsIWebNavigation*>(mWebBrowser);
 
     // The page might have cancelled the dragover event itself, so check to
     // make sure that the link can be dropped first.
