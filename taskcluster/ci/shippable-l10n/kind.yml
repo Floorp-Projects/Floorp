@@ -2,14 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.multi_dep:loader
-
-group-by: platform
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.l10n:transforms
-    - gecko_taskgraph.transforms.job:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.l10n
+    - gecko_taskgraph.transforms.job
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
     - build
@@ -17,8 +16,6 @@ kind-dependencies:
     - fetch
     - repackage
     - toolchain
-
-primary-dependency: build
 
 only-for-build-platforms:
     - linux64-shippable/opt
@@ -34,166 +31,169 @@ only-for-build-platforms:
     - win64-devedition/opt
     - win64-aarch64-devedition/opt
 
-job-template:
-    description: Localization
-    locales-file: browser/locales/l10n-changesets.json
-    locales-per-chunk: 5
-    run-on-projects: ['release']
-    attributes:
-        shipping_phase: promote
-    ignore-locales:
-        by-build-platform:
-            # OSX has a special locale for japanese
-            macosx64.*: [ja]
-            default: [ja-JP-mac]
-    run-time: 1800
-    fetches:
-        toolchain:
+jobs:
+    shippable-l10n:
+        description: Localization
+        from-deps:
+            group-by: platform
+        locales-file: browser/locales/l10n-changesets.json
+        locales-per-chunk: 5
+        run-on-projects: ['release']
+        attributes:
+            shipping_phase: promote
+        ignore-locales:
             by-build-platform:
-                default: []
+                # OSX has a special locale for japanese
+                macosx64.*: [ja]
+                default: [ja-JP-mac]
+        run-time: 1800
+        fetches:
+            toolchain:
+                by-build-platform:
+                    default: []
+                    macosx64.*:
+                        - linux64-libdmg
+                        - linux64-hfsplus
+                    win.*:
+                        - linux64-wine
+                        - nsis
+            fetch:
+                by-build-platform:
+                    default: []
+                    win.*:
+                        - upx-3.95-win
+        tooltool:
+            by-build-platform:
+                default: internal
+                linux.*: public
+        index:
+            type: shippable-l10n
+            product:
+                by-build-platform:
+                    default: firefox
+                    .*-devedition: devedition
+            job-name:
+                by-build-platform:
+                    linux-shippable: linux-opt
+                    linux64-shippable: linux64-opt
+                    macosx64-shippable: macosx64-opt
+                    win32-shippable: win32-opt
+                    win64-shippable: win64-opt
+                    win64-aarch64-shippable: win64-aarch64-opt
+                    linux-devedition: linux-devedition-opt
+                    linux64-devedition: linux64-devedition-opt
+                    macosx64-devedition: macosx64-devedition-opt
+                    win32-devedition: win32-devedition-opt
+                    win64-devedition: win64-devedition-opt
+                    win64-aarch64-devedition: win64-aarch64-devedition-opt
+        worker-type: b-linux-gcp
+        treeherder:
+            symbol: L10n(B)
+            tier: 1
+            platform:
+                by-build-platform:
+                    linux64-shippable: linux64-shippable/opt
+                    linux-shippable: linux32-shippable/opt
+                    macosx64-shippable: osx-shippable/opt
+                    win32-shippable: windows2012-32-shippable/opt
+                    win64-shippable: windows2012-64-shippable/opt
+                    win64-aarch64-shippable: windows2012-aarch64-shippable/opt
+                    linux64-devedition: linux64-devedition/opt
+                    linux-devedition: linux32-devedition/opt
+                    macosx64-devedition: osx-cross-devedition/opt
+                    win32-devedition: windows2012-32-devedition/opt
+                    win64-devedition: windows2012-64-devedition/opt
+                    win64-aarch64-devedition: windows2012-aarch64-devedition/opt
+        env:
+            by-build-platform:
+                linux.*:    # linux64 and 32 get same treatment here
+                    EN_US_PACKAGE_NAME: target.tar.bz2
+                    EN_US_BINARY_URL:
+                        artifact-reference: <build-signing/{artifact_prefix}>
                 macosx64.*:
-                    - linux64-libdmg
-                    - linux64-hfsplus
+                    EN_US_PACKAGE_NAME: target.dmg
+                    EN_US_BINARY_URL:
+                        artifact-reference: <repackage/{artifact_prefix}>
                 win.*:
-                    - linux64-wine
-                    - nsis
-        fetch:
-            by-build-platform:
-                default: []
-                win.*:
-                    - upx-3.95-win
-    tooltool:
-        by-build-platform:
-            default: internal
-            linux.*: public
-    index:
-        type: shippable-l10n
-        product:
-            by-build-platform:
-                default: firefox
-                .*-devedition: devedition
-        job-name:
-            by-build-platform:
-                linux-shippable: linux-opt
-                linux64-shippable: linux64-opt
-                macosx64-shippable: macosx64-opt
-                win32-shippable: win32-opt
-                win64-shippable: win64-opt
-                win64-aarch64-shippable: win64-aarch64-opt
-                linux-devedition: linux-devedition-opt
-                linux64-devedition: linux64-devedition-opt
-                macosx64-devedition: macosx64-devedition-opt
-                win32-devedition: win32-devedition-opt
-                win64-devedition: win64-devedition-opt
-                win64-aarch64-devedition: win64-aarch64-devedition-opt
-    worker-type: b-linux-gcp
-    treeherder:
-        symbol: L10n(B)
-        tier: 1
-        platform:
-            by-build-platform:
-                linux64-shippable: linux64-shippable/opt
-                linux-shippable: linux32-shippable/opt
-                macosx64-shippable: osx-shippable/opt
-                win32-shippable: windows2012-32-shippable/opt
-                win64-shippable: windows2012-64-shippable/opt
-                win64-aarch64-shippable: windows2012-aarch64-shippable/opt
-                linux64-devedition: linux64-devedition/opt
-                linux-devedition: linux32-devedition/opt
-                macosx64-devedition: osx-cross-devedition/opt
-                win32-devedition: windows2012-32-devedition/opt
-                win64-devedition: windows2012-64-devedition/opt
-                win64-aarch64-devedition: windows2012-aarch64-devedition/opt
-    env:
-        by-build-platform:
-            linux.*:    # linux64 and 32 get same treatment here
-                EN_US_PACKAGE_NAME: target.tar.bz2
-                EN_US_BINARY_URL:
-                    artifact-reference: <build-signing/{artifact_prefix}>
-            macosx64.*:
-                EN_US_PACKAGE_NAME: target.dmg
-                EN_US_BINARY_URL:
-                    artifact-reference: <repackage/{artifact_prefix}>
-            win.*:
-                EN_US_PACKAGE_NAME: target.zip
-                EN_US_BINARY_URL:
-                    artifact-reference: <build-signing/{artifact_prefix}>
-    mozharness:
-        config:
-            by-build-platform:
-                linux-shippable:
-                    - single_locale/firefox.py
-                    - single_locale/linux32.py
-                    - single_locale/tc_common.py
-                    - single_locale/tc_linux_common.py
-                    - taskcluster_nightly.py
-                linux64-shippable:
-                    - single_locale/firefox.py
-                    - single_locale/linux64.py
-                    - single_locale/tc_common.py
-                    - single_locale/tc_linux_common.py
-                    - taskcluster_nightly.py
-                macosx64-shippable:
-                    - single_locale/firefox.py
-                    - single_locale/macosx64.py
-                    - single_locale/tc_common.py
-                    - single_locale/tc_macosx64.py
-                    - taskcluster_nightly.py
-                win32-shippable:
-                    - single_locale/firefox.py
-                    - single_locale/win32.py
-                    - single_locale/tc_common.py
-                    - single_locale/tc_win32.py
-                    - taskcluster_nightly.py
-                win64-shippable:
-                    - single_locale/firefox.py
-                    - single_locale/win64.py
-                    - single_locale/tc_common.py
-                    - single_locale/tc_win64.py
-                    - taskcluster_nightly.py
-                win64-aarch64-shippable:
-                    - single_locale/firefox.py
-                    - single_locale/win64-aarch64.py
-                    - single_locale/tc_common.py
-                    - single_locale/tc_win64.py
-                    - taskcluster_nightly.py
-                linux-devedition:
-                    - single_locale/devedition.py
-                    - single_locale/linux32.py
-                    - single_locale/tc_common.py
-                    - single_locale/tc_linux_common.py
-                    - taskcluster_nightly.py
-                linux64-devedition:
-                    - single_locale/devedition.py
-                    - single_locale/linux64.py
-                    - single_locale/tc_common.py
-                    - single_locale/tc_linux_common.py
-                    - taskcluster_nightly.py
-                macosx64-devedition:
-                    - single_locale/devedition.py
-                    - single_locale/macosx64.py
-                    - single_locale/tc_common.py
-                    - single_locale/tc_macosx64.py
-                    - taskcluster_nightly.py
-                win32-devedition:
-                    - single_locale/devedition.py
-                    - single_locale/win32.py
-                    - single_locale/tc_common.py
-                    - single_locale/tc_win32.py
-                    - taskcluster_nightly.py
-                win64-devedition:
-                    - single_locale/devedition.py
-                    - single_locale/win64.py
-                    - single_locale/tc_common.py
-                    - single_locale/tc_win64.py
-                    - taskcluster_nightly.py
-                win64-aarch64-devedition:
-                    - single_locale/devedition.py
-                    - single_locale/win64-aarch64.py
-                    - single_locale/tc_common.py
-                    - single_locale/tc_win64.py
-                    - taskcluster_nightly.py
-        # no default, so we fail on new entries
-        actions: ['clone-locales', 'list-locales', 'setup', 'repack',
-                  'summary']
-        script: mozharness/scripts/desktop_l10n.py
+                    EN_US_PACKAGE_NAME: target.zip
+                    EN_US_BINARY_URL:
+                        artifact-reference: <build-signing/{artifact_prefix}>
+        mozharness:
+            config:
+                by-build-platform:
+                    linux-shippable:
+                        - single_locale/firefox.py
+                        - single_locale/linux32.py
+                        - single_locale/tc_common.py
+                        - single_locale/tc_linux_common.py
+                        - taskcluster_nightly.py
+                    linux64-shippable:
+                        - single_locale/firefox.py
+                        - single_locale/linux64.py
+                        - single_locale/tc_common.py
+                        - single_locale/tc_linux_common.py
+                        - taskcluster_nightly.py
+                    macosx64-shippable:
+                        - single_locale/firefox.py
+                        - single_locale/macosx64.py
+                        - single_locale/tc_common.py
+                        - single_locale/tc_macosx64.py
+                        - taskcluster_nightly.py
+                    win32-shippable:
+                        - single_locale/firefox.py
+                        - single_locale/win32.py
+                        - single_locale/tc_common.py
+                        - single_locale/tc_win32.py
+                        - taskcluster_nightly.py
+                    win64-shippable:
+                        - single_locale/firefox.py
+                        - single_locale/win64.py
+                        - single_locale/tc_common.py
+                        - single_locale/tc_win64.py
+                        - taskcluster_nightly.py
+                    win64-aarch64-shippable:
+                        - single_locale/firefox.py
+                        - single_locale/win64-aarch64.py
+                        - single_locale/tc_common.py
+                        - single_locale/tc_win64.py
+                        - taskcluster_nightly.py
+                    linux-devedition:
+                        - single_locale/devedition.py
+                        - single_locale/linux32.py
+                        - single_locale/tc_common.py
+                        - single_locale/tc_linux_common.py
+                        - taskcluster_nightly.py
+                    linux64-devedition:
+                        - single_locale/devedition.py
+                        - single_locale/linux64.py
+                        - single_locale/tc_common.py
+                        - single_locale/tc_linux_common.py
+                        - taskcluster_nightly.py
+                    macosx64-devedition:
+                        - single_locale/devedition.py
+                        - single_locale/macosx64.py
+                        - single_locale/tc_common.py
+                        - single_locale/tc_macosx64.py
+                        - taskcluster_nightly.py
+                    win32-devedition:
+                        - single_locale/devedition.py
+                        - single_locale/win32.py
+                        - single_locale/tc_common.py
+                        - single_locale/tc_win32.py
+                        - taskcluster_nightly.py
+                    win64-devedition:
+                        - single_locale/devedition.py
+                        - single_locale/win64.py
+                        - single_locale/tc_common.py
+                        - single_locale/tc_win64.py
+                        - taskcluster_nightly.py
+                    win64-aarch64-devedition:
+                        - single_locale/devedition.py
+                        - single_locale/win64-aarch64.py
+                        - single_locale/tc_common.py
+                        - single_locale/tc_win64.py
+                        - taskcluster_nightly.py
+            # no default, so we fail on new entries
+            actions: ['clone-locales', 'list-locales', 'setup', 'repack',
+                      'summary']
+            script: mozharness/scripts/desktop_l10n.py
