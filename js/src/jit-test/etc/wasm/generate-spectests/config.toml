@@ -119,6 +119,14 @@ excluded_tests = [
 ]
 
 [[repos]]
+name = "tail-call"
+url = "https://github.com/WebAssembly/tail-call"
+branch = "main"
+parent = "spec"
+directive = "; --wasm-tail-calls; skip-if: !wasmTailCallsEnabled()"
+excluded_tests = []
+
+[[repos]]
 name = "multi-memory"
 url = "https://github.com/WebAssembly/multi-memory"
 branch = "main"
