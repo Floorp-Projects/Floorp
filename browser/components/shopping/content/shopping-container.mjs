@@ -102,6 +102,22 @@ export class ShoppingContainer extends MozLitElement {
     return this.getAnalysisDetailsTemplate();
   }
 
+  getLoadingTemplate() {
+    /* Due to limitations with aria-busy for certain screen readers
+     * (see Bug 1682063), mark loading container as a pseudo image and
+     * use aria-label as a workaround. */
+    return html`
+      <div id="loading-wrapper" data-l10n-id="shopping-a11y-loading" role="img">
+        <div class="loading-box medium"></div>
+        <div class="loading-box medium"></div>
+        <div class="loading-box large"></div>
+        <div class="loading-box small"></div>
+        <div class="loading-box large"></div>
+        <div class="loading-box small"></div>
+      </div>
+    `;
+  }
+
   renderContainer(sidebarContent) {
     return html`<link
         rel="stylesheet"
@@ -126,7 +142,7 @@ export class ShoppingContainer extends MozLitElement {
             data-l10n-id="shopping-close-button"
           ></button>
         </div>
-        <div id="content">${sidebarContent}</div>
+        <div id="content" aria-busy=${!this.data}>${sidebarContent}</div>
       </div>`;
   }
 
@@ -135,8 +151,7 @@ export class ShoppingContainer extends MozLitElement {
     if (this.showOnboarding) {
       content = html`<slot name="multi-stage-message-slot"></slot>`;
     } else if (!this.data) {
-      // TODO: Replace with loading UI component (bug 1840161).
-      content = html`<p>Loading UI goes here</p>`;
+      content = this.getLoadingTemplate();
     } else {
       content = html`
         ${this.getContentTemplate()}

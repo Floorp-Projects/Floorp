@@ -12,6 +12,10 @@ shopping-page-title = { -brand-product-name } Shopping
 shopping-main-container-title = Review quality check
 shopping-close-button =
   .title = Close
+# This string is for notifying screen reader users that the
+# sidebar is still loading data.
+shopping-a11y-loading =
+  .aria-label = Loading…
 
 ## Strings for the letter grade component.
 ## For now, we only support letter grades A, B, C, D and F.
