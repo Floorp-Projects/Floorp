@@ -152,7 +152,6 @@ USE_LIBS += [
 ]
 
 USE_LIBS += [
-    "gkcodecs",
     "lgpllibs",
     "nspr",
     "nss",

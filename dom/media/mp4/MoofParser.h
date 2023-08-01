@@ -235,7 +235,7 @@ struct SampleDescriptionEntry {
 // Used to indicate in variants if all tracks should be parsed.
 struct ParseAllTracks {};
 
-using TrackParseMode = Variant<ParseAllTracks, uint32_t>;
+typedef Variant<ParseAllTracks, uint32_t> TrackParseMode;
 
 class Moof final : public Atom {
  public:

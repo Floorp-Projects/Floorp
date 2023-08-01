@@ -139,10 +139,8 @@ static int extract_packet_props(AVCodecInternal *avci, const AVPacket *pkt)
     av_packet_unref(avci->last_pkt_props);
     if (pkt) {
         ret = av_packet_copy_props(avci->last_pkt_props, pkt);
-#if FF_API_FRAME_PKT
         if (!ret)
-            avci->last_pkt_props->stream_index = pkt->size; // Needed for ff_decode_frame_props().
-#endif
+            avci->last_pkt_props->opaque = (void *)(intptr_t)pkt->size; // Needed for ff_decode_frame_props().
     }
     return ret;
 }
@@ -289,12 +287,8 @@ static inline int decode_simple_internal(AVCodecContext *avctx, AVFrame *frame, 
         if (!(codec->caps_internal & FF_CODEC_CAP_SETS_PKT_DTS))
             frame->pkt_dts = pkt->dts;
         if (avctx->codec->type == AVMEDIA_TYPE_VIDEO) {
-#if FF_API_FRAME_PKT
-FF_DISABLE_DEPRECATION_WARNINGS
             if(!avctx->has_b_frames)
                 frame->pkt_pos = pkt->pos;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
             //FIXME these should be under if(!avctx->has_b_frames)
             /* get_buffer is supposed to set frame parameters */
             if (!(avctx->codec->capabilities & AV_CODEC_CAP_DR1)) {
@@ -466,10 +460,8 @@ FF_ENABLE_DEPRECATION_WARNINGS
         pkt->pts                  = AV_NOPTS_VALUE;
         pkt->dts                  = AV_NOPTS_VALUE;
         if (!(codec->caps_internal & FF_CODEC_CAP_SETS_FRAME_PROPS)) {
-#if FF_API_FRAME_PKT
             // See extract_packet_props() comment.
-            avci->last_pkt_props->stream_index = avci->last_pkt_props->stream_index - consumed;
-#endif
+            avci->last_pkt_props->opaque = (void *)((intptr_t)avci->last_pkt_props->opaque - consumed);
             avci->last_pkt_props->pts = AV_NOPTS_VALUE;
             avci->last_pkt_props->dts = AV_NOPTS_VALUE;
         }
@@ -555,7 +547,6 @@ static int decode_receive_frame_internal(AVCodecContext *avctx, AVFrame *frame)
 
     if (codec->cb_type == FF_CODEC_CB_TYPE_RECEIVE_FRAME) {
         ret = codec->cb.receive_frame(avctx, frame);
-        emms_c();
     } else
         ret = decode_simple_receive_frame(avctx, frame);
 
@@ -1321,13 +1312,9 @@ int ff_decode_frame_props_from_pkt(const AVCodecContext *avctx,
     };
 
     frame->pts          = pkt->pts;
-    frame->duration     = pkt->duration;
-#if FF_API_FRAME_PKT
-FF_DISABLE_DEPRECATION_WARNINGS
     frame->pkt_pos      = pkt->pos;
+    frame->duration     = pkt->duration;
     frame->pkt_size     = pkt->size;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
 
     for (int i = 0; i < FF_ARRAY_ELEMS(sd); i++) {
         size_t size;
@@ -1368,11 +1355,7 @@ int ff_decode_frame_props(AVCodecContext *avctx, AVFrame *frame)
         int ret = ff_decode_frame_props_from_pkt(avctx, frame, pkt);
         if (ret < 0)
             return ret;
-#if FF_API_FRAME_PKT
-FF_DISABLE_DEPRECATION_WARNINGS
-        frame->pkt_size = pkt->stream_index;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
+        frame->pkt_size     = (int)(intptr_t)pkt->opaque;
     }
 #if FF_API_REORDERED_OPAQUE
 FF_DISABLE_DEPRECATION_WARNINGS

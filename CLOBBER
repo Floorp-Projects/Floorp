@@ -22,4 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Modified system_headers to use in bug 1823953.
+
+Merge day clobber 2023-07-31

@@ -13,7 +13,6 @@
 #include <stdint.h>
 #include <algorithm>
 #include <opus/opus.h>
-#include <opus/opus_multistream.h>
 
 #include "OggCodecState.h"
 #include "OggRLBox.h"
@@ -22,6 +21,7 @@
 #include "VideoUtils.h"
 #include "XiphExtradata.h"
 #include "nsDebug.h"
+#include "opus/opus_multistream.h"
 
 namespace mozilla {
 
@@ -269,15 +269,15 @@ already_AddRefed<MediaRawData> OggCodecState::PacketOutAsMediaRawData() {
     return nullptr;
   }
 
-  TimeUnit endTimestamp = Time(packet->granulepos);
-  NS_ASSERTION(endTimestamp.IsPositiveOrZero(), "timestamp invalid");
+  int64_t end_tstamp = Time(packet->granulepos);
+  NS_ASSERTION(end_tstamp >= 0, "timestamp invalid");
 
-  TimeUnit duration = PacketDuration(packet.get());
-  NS_ASSERTION(duration.IsPositiveOrZero(), "duration invalid");
+  int64_t duration = PacketDuration(packet.get());
+  NS_ASSERTION(duration >= 0, "duration invalid");
 
-  sample->mTimecode = Time(packet->granulepos);
-  sample->mTime = endTimestamp - duration;
-  sample->mDuration = duration;
+  sample->mTimecode = TimeUnit::FromMicroseconds(packet->granulepos);
+  sample->mTime = TimeUnit::FromMicroseconds(end_tstamp - duration);
+  sample->mDuration = TimeUnit::FromMicroseconds(duration);
   sample->mKeyframe = IsKeyframe(packet.get());
   sample->mEOS = packet->e_o_s;
 
@@ -441,19 +441,18 @@ bool TheoraState::DecodeHeader(OggPacketPtr aPacket) {
     // header packets. Assume bad input.
     // Our caller will deactivate the bitstream.
     return false;
-  }
-  if (ret > 0 && isSetupHeader && mPacketCount == 3) {
+  } else if (ret > 0 && isSetupHeader && mPacketCount == 3) {
     // Successfully read the three header packets.
     mDoneReadingHeaders = true;
   }
   return true;
 }
 
-TimeUnit TheoraState::Time(int64_t aGranulepos) {
+int64_t TheoraState::Time(int64_t granulepos) {
   if (!mActive) {
-    return TimeUnit::Invalid();
+    return -1;
   }
-  return TheoraState::Time(&mTheoraInfo, aGranulepos);
+  return TheoraState::Time(&mTheoraInfo, granulepos);
 }
 
 bool TheoraState::IsHeader(ogg_packet* aPacket) {
@@ -465,9 +464,9 @@ bool TheoraState::IsHeader(ogg_packet* aPacket) {
    (((_info)->version_minor > (_min) || (_info)->version_minor == (_min)) && \
     (_info)->version_subminor >= (_sub)))
 
-TimeUnit TheoraState::Time(th_info* aInfo, int64_t aGranulepos) {
+int64_t TheoraState::Time(th_info* aInfo, int64_t aGranulepos) {
   if (aGranulepos < 0 || aInfo->fps_numerator == 0) {
-    return TimeUnit::Invalid();
+    return -1;
   }
   // Implementation of th_granule_frame inlined here to operate
   // on the th_info structure instead of the theora_state.
@@ -478,38 +477,35 @@ TimeUnit TheoraState::Time(th_info* aInfo, int64_t aGranulepos) {
   CheckedInt64 t =
       ((CheckedInt64(frameno) + 1) * USECS_PER_S) * aInfo->fps_denominator;
   if (!t.isValid()) {
-    return TimeUnit::Invalid();
+    return -1;
   }
   t /= aInfo->fps_numerator;
-  // TODO -- use rationals here
-  return TimeUnit::FromMicroseconds(t.value());
+  return t.isValid() ? t.value() : -1;
 }
 
-TimeUnit TheoraState::StartTime(int64_t aGranulepos) {
-  if (aGranulepos < 0 || !mActive || mTheoraInfo.fps_numerator == 0) {
-    return TimeUnit::Invalid();
+int64_t TheoraState::StartTime(int64_t granulepos) {
+  if (granulepos < 0 || !mActive || mTheoraInfo.fps_numerator == 0) {
+    return -1;
   }
   CheckedInt64 t =
-      (CheckedInt64(th_granule_frame(mCtx, aGranulepos)) * USECS_PER_S) *
+      (CheckedInt64(th_granule_frame(mCtx, granulepos)) * USECS_PER_S) *
       mTheoraInfo.fps_denominator;
   if (!t.isValid()) {
-    return TimeUnit::Invalid();
+    return -1;
   }
-  // TODO -- use rationals here
-  return TimeUnit::FromMicroseconds(t.value() / mTheoraInfo.fps_numerator);
+  return t.value() / mTheoraInfo.fps_numerator;
 }
 
-TimeUnit TheoraState::PacketDuration(ogg_packet* aPacket) {
+int64_t TheoraState::PacketDuration(ogg_packet* aPacket) {
   if (!mActive || mTheoraInfo.fps_numerator == 0) {
-    return TimeUnit::Invalid();
+    return -1;
   }
   CheckedInt64 t = SaferMultDiv(mTheoraInfo.fps_denominator, USECS_PER_S,
                                 mTheoraInfo.fps_numerator);
-  return t.isValid() ? TimeUnit::FromMicroseconds(t.value())
-                     : TimeUnit::Invalid();
+  return t.isValid() ? t.value() : -1;
 }
 
-TimeUnit TheoraState::MaxKeyframeOffset() {
+int64_t TheoraState::MaxKeyframeOffset() {
   // Determine the maximum time in microseconds by which a key frame could
   // offset for the theora bitstream. Theora granulepos encode time as:
   // ((key_frame_number << granule_shift) + frame_offset).
@@ -525,13 +521,13 @@ TimeUnit TheoraState::MaxKeyframeOffset() {
       (mTheoraInfo.fps_denominator * USECS_PER_S) / mTheoraInfo.fps_numerator;
 
   // Total time in usecs keyframe can be offset from any given frame.
-  return TimeUnit::FromMicroseconds(frameDuration * keyframeDiff);
+  return frameDuration * keyframeDiff;
 }
 
-bool TheoraState::IsKeyframe(ogg_packet* aPacket) {
+bool TheoraState::IsKeyframe(ogg_packet* pkt) {
   // first bit of packet is 1 for header, 0 for data
   // second bit of packet is 1 for inter frame, 0 for intra frame
-  return (aPacket->bytes >= 1 && (aPacket->packet[0] & 0x40) == 0x00);
+  return (pkt->bytes >= 1 && (pkt->packet[0] & 0x40) == 0x00);
 }
 
 nsresult TheoraState::PageIn(tainted_opaque_ogg<ogg_page*> aPage) {
@@ -590,8 +586,7 @@ void TheoraState::ReconstructTheoraGranulepos() {
   ogg_int64_t version_3_2_1 = TheoraVersion(&mTheoraInfo, 3, 2, 1);
   ogg_int64_t lastFrame =
       th_granule_frame(mCtx, lastGranulepos) + version_3_2_1;
-  ogg_int64_t firstFrame =
-      AssertedCast<ogg_int64_t>(lastFrame - mUnstamped.Length() + 1);
+  ogg_int64_t firstFrame = lastFrame - mUnstamped.Length() + 1;
 
   // Until we encounter a keyframe, we'll assume that the "keyframe"
   // segment of the granulepos is the first frame, or if that causes
@@ -721,8 +716,7 @@ bool VorbisState::DecodeHeader(OggPacketPtr aPacket) {
     // header packets. Assume bad input. Our caller will deactivate the
     // bitstream.
     return false;
-  }
-  if (!ret && isSetupHeader && mPacketCount == 3) {
+  } else if (!ret && isSetupHeader && mPacketCount == 3) {
     // Successfully read the three header packets.
     // The bitstream remains active.
     mDoneReadingHeaders = true;
@@ -773,32 +767,33 @@ bool VorbisState::Init() {
   return true;
 }
 
-TimeUnit VorbisState::Time(int64_t aGranulepos) {
+int64_t VorbisState::Time(int64_t granulepos) {
   if (!mActive) {
-    return TimeUnit::Invalid();
+    return -1;
   }
 
-  return VorbisState::Time(&mVorbisInfo, aGranulepos);
+  return VorbisState::Time(&mVorbisInfo, granulepos);
 }
 
-TimeUnit VorbisState::Time(vorbis_info* aInfo, int64_t aGranulepos) {
+int64_t VorbisState::Time(vorbis_info* aInfo, int64_t aGranulepos) {
   if (aGranulepos == -1 || aInfo->rate == 0) {
-    return TimeUnit::Invalid();
+    return -1;
   }
-  return TimeUnit(aGranulepos, aInfo->rate);
+  CheckedInt64 t = SaferMultDiv(aGranulepos, USECS_PER_S, aInfo->rate);
+  return t.isValid() ? t.value() : 0;
 }
 
-TimeUnit VorbisState::PacketDuration(ogg_packet* aPacket) {
+int64_t VorbisState::PacketDuration(ogg_packet* aPacket) {
   if (!mActive) {
-    return TimeUnit::Invalid();
+    return -1;
   }
   if (aPacket->granulepos == -1) {
-    return TimeUnit::Invalid();
+    return -1;
   }
   // @FIXME store these in a more stable place
   if (mVorbisPacketSamples.count(aPacket) == 0) {
     // We haven't seen this packet, don't know its size?
-    return TimeUnit::Invalid();
+    return -1;
   }
 
   long samples = mVorbisPacketSamples[aPacket];
@@ -905,8 +900,8 @@ void VorbisState::ReconstructVorbisGranulepos() {
   }
 
   bool unknownGranulepos = last->granulepos == -1;
-  int64_t totalSamples = 0;
-  for (int32_t i = AssertedCast<int32_t>(mUnstamped.Length() - 1); i > 0; i--) {
+  int totalSamples = 0;
+  for (int32_t i = mUnstamped.Length() - 1; i > 0; i--) {
     auto& packet = mUnstamped[i];
     auto& prev = mUnstamped[i - 1];
     ogg_int64_t granulepos = packet->granulepos;
@@ -1030,7 +1025,7 @@ bool OpusState::Init(void) {
   mInfo.mBitDepth = 16;
   // Save preskip & the first header packet for the Opus decoder
   OpusCodecSpecificData opusData;
-  opusData.mContainerCodecDelayFrames = mParser->mPreSkip;
+  opusData.mContainerCodecDelayMicroSeconds = Time(0, mParser->mPreSkip);
 
   if (!mHeaders.PeekFront()) {
     return false;
@@ -1086,22 +1081,22 @@ UniquePtr<MetadataTags> OpusState::GetTags() {
 }
 
 /* Return the timestamp (in microseconds) equivalent to a granulepos. */
-TimeUnit OpusState::Time(int64_t aGranulepos) {
+int64_t OpusState::Time(int64_t aGranulepos) {
   if (!mActive) {
-    return TimeUnit::Invalid();
+    return -1;
   }
 
   return Time(mParser->mPreSkip, aGranulepos);
 }
 
-TimeUnit OpusState::Time(int aPreSkip, int64_t aGranulepos) {
+int64_t OpusState::Time(int aPreSkip, int64_t aGranulepos) {
   if (aGranulepos < 0) {
-    return TimeUnit::Invalid();
+    return -1;
   }
 
-  int64_t offsetGranulePos = aGranulepos - aPreSkip;
   // Ogg Opus always runs at a granule rate of 48 kHz.
-  return TimeUnit(offsetGranulePos, 48000);
+  CheckedInt64 t = SaferMultDiv(aGranulepos - aPreSkip, USECS_PER_S, 48000);
+  return t.isValid() ? t.value() : -1;
 }
 
 bool OpusState::IsHeader(ogg_packet* aPacket) {
@@ -1147,8 +1142,7 @@ nsresult OpusState::PageIn(tainted_opaque_ogg<ogg_page*> aPage) {
 // It even works before we've created the actual Opus decoder.
 static int GetOpusDeltaGP(ogg_packet* packet) {
   int nframes;
-  nframes = opus_packet_get_nb_frames(packet->packet,
-                                      AssertedCast<int32_t>(packet->bytes));
+  nframes = opus_packet_get_nb_frames(packet->packet, packet->bytes);
   if (nframes > 0) {
     return nframes * opus_packet_get_samples_per_frame(packet->packet, 48000);
   }
@@ -1156,8 +1150,9 @@ static int GetOpusDeltaGP(ogg_packet* packet) {
   return nframes;
 }
 
-TimeUnit OpusState::PacketDuration(ogg_packet* aPacket) {
-  return TimeUnit(GetOpusDeltaGP(aPacket), 48000);
+int64_t OpusState::PacketDuration(ogg_packet* aPacket) {
+  CheckedInt64 t = SaferMultDiv(GetOpusDeltaGP(aPacket), USECS_PER_S, 48000);
+  return t.isValid() ? t.value() : -1;
 }
 
 bool OpusState::ReconstructOpusGranulepos(void) {
@@ -1173,9 +1168,8 @@ bool OpusState::ReconstructOpusGranulepos(void) {
     if (mPrevPageGranulepos != -1) {
       // If this file only has one page and the final granule position is
       // smaller than the pre-skip amount, we MUST reject the stream.
-      if (!mDoneReadingHeaders && last->granulepos < mParser->mPreSkip) {
+      if (!mDoneReadingHeaders && last->granulepos < mParser->mPreSkip)
         return false;
-      }
       int64_t last_gp = last->granulepos;
       gp = mPrevPageGranulepos;
       // Loop through the packets forwards, adding the current packet's
@@ -1201,11 +1195,12 @@ bool OpusState::ReconstructOpusGranulepos(void) {
       }
       mPrevPageGranulepos = last_gp;
       return true;
+    } else {
+      NS_WARNING("No previous granule position to use for Opus end trimming.");
+      // If we don't have a previous granule position, fall through.
+      // We simply won't trim any samples from the end.
+      // TODO: Are we guaranteed to have seen a previous page if there is one?
     }
-    NS_WARNING("No previous granule position to use for Opus end trimming.");
-    // If we don't have a previous granule position, fall through.
-    // We simply won't trim any samples from the end.
-    // TODO: Are we guaranteed to have seen a previous page if there is one?
   }
 
   auto& last = mUnstamped.LastElement();
@@ -1268,16 +1263,7 @@ already_AddRefed<MediaRawData> OpusState::PacketOutAsMediaRawData() {
     int64_t startFrame = mPrevPacketGranulepos;
     frames -= std::max<int64_t>(
         0, std::min(endFrame - startFrame, static_cast<int64_t>(frames)));
-    TimeUnit toTrim = TimeUnit(frames, 48000);
-    LOG(LogLevel::Debug,
-        ("Trimming last opus packet: [%s, %s] to [%s, %s]",
-         data->mTime.ToString().get(), data->GetEndTime().ToString().get(),
-         data->mTime.ToString().get(),
-         (data->mTime + data->mDuration - toTrim).ToString().get()));
-
-    data->mOriginalPresentationWindow =
-        Some(media::TimeInterval{data->mTime, data->mTime + data->mDuration});
-    data->mDuration -= toTrim;
+    data->mDiscardPadding = frames;
   }
 
   // Save this packet's granule position in case we need to perform end
@@ -1301,16 +1287,19 @@ bool FlacState::DecodeHeader(OggPacketPtr aPacket) {
   return true;
 }
 
-TimeUnit FlacState::Time(int64_t aGranulepos) {
+int64_t FlacState::Time(int64_t granulepos) {
   if (!mParser.mInfo.IsValid()) {
-    return TimeUnit::Invalid();
+    return -1;
   }
-  return TimeUnit(aGranulepos, mParser.mInfo.mRate);
+  CheckedInt64 t = SaferMultDiv(granulepos, USECS_PER_S, mParser.mInfo.mRate);
+  if (!t.isValid()) {
+    return -1;
+  }
+  return t.value();
 }
 
-TimeUnit FlacState::PacketDuration(ogg_packet* aPacket) {
-  return TimeUnit(mParser.BlockDuration(aPacket->packet, aPacket->bytes),
-                  mParser.mInfo.mRate);
+int64_t FlacState::PacketDuration(ogg_packet* aPacket) {
+  return mParser.BlockDuration(aPacket->packet, aPacket->bytes);
 }
 
 bool FlacState::IsHeader(ogg_packet* aPacket) {
@@ -1368,7 +1357,7 @@ bool FlacState::ReconstructFlacGranulepos(void) {
   // packet's duration from its granulepos to get the value
   // for the current packet.
   for (uint32_t i = mUnstamped.Length() - 1; i > 0; i--) {
-    int64_t offset =
+    int offset =
         mParser.BlockDuration(mUnstamped[i]->packet, mUnstamped[i]->bytes);
     // Check for error (negative offset) and overflow.
     if (offset >= 0) {
@@ -1496,8 +1485,7 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket) {
   int64_t numKeyPoints =
       LittleEndian::readInt64(aPacket->packet + INDEX_NUM_KEYPOINTS_OFFSET);
 
-  TimeUnit endTime = TimeUnit::Zero();
-  TimeUnit startTime = TimeUnit::Zero();
+  int64_t endTime = 0, startTime = 0;
   const unsigned char* p = aPacket->packet;
 
   int64_t timeDenom =
@@ -1511,10 +1499,21 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket) {
 
   // Extract the start time.
   int64_t timeRawInt = LittleEndian::readInt64(p + INDEX_FIRST_NUMER_OFFSET);
-  startTime = TimeUnit(timeRawInt, timeDenom);
+  CheckedInt64 t = SaferMultDiv(timeRawInt, USECS_PER_S, timeDenom);
+  if (!t.isValid()) {
+    return (mActive = false);
+  } else {
+    startTime = t.value();
+  }
+
   // Extract the end time.
   timeRawInt = LittleEndian::readInt64(p + INDEX_LAST_NUMER_OFFSET);
-  endTime = TimeUnit(timeRawInt, timeDenom);
+  t = SaferMultDiv(timeRawInt, USECS_PER_S, timeDenom);
+  if (!t.isValid()) {
+    return (mActive = false);
+  } else {
+    endTime = t.value();
+  }
 
   // Check the numKeyPoints value read, ensure we're not going to run out of
   // memory while trying to decode the index packet.
@@ -1524,10 +1523,8 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket) {
     return (mActive = false);
   }
 
-  int64_t sizeofIndex =
-      AssertedCast<int64_t>(aPacket->bytes - INDEX_KEYPOINT_OFFSET);
-  int64_t maxNumKeyPoints =
-      AssertedCast<int64_t>(sizeofIndex / MIN_KEY_POINT_SIZE);
+  int64_t sizeofIndex = aPacket->bytes - INDEX_KEYPOINT_OFFSET;
+  int64_t maxNumKeyPoints = sizeofIndex / MIN_KEY_POINT_SIZE;
   if (aPacket->bytes < minPacketSize.value() ||
       numKeyPoints > maxNumKeyPoints || numKeyPoints < 0) {
     // Packet size is less than the theoretical minimum size, or the packet is
@@ -1548,7 +1545,7 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket) {
   const unsigned char* limit = aPacket->packet + aPacket->bytes;
   int64_t numKeyPointsRead = 0;
   CheckedInt64 offset = 0;
-  TimeUnit time = TimeUnit::Zero();
+  CheckedInt64 time = 0;
   while (p < limit && numKeyPointsRead < numKeyPoints) {
     int64_t delta = 0;
     p = ReadVariableLengthInt(p, limit, delta);
@@ -1558,15 +1555,19 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket) {
       return (mActive = false);
     }
     p = ReadVariableLengthInt(p, limit, delta);
-    time += TimeUnit(delta, timeDenom);
-    if (!time.IsValid() || time > endTime || time < startTime) {
+    time += delta;
+    if (!time.isValid() || time.value() > endTime || time.value() < startTime) {
       return (mActive = false);
     }
-    keyPoints->Add(offset.value(), time);
+    CheckedInt64 timeUsecs = SaferMultDiv(time.value(), USECS_PER_S, timeDenom);
+    if (!timeUsecs.isValid()) {
+      return (mActive = false);
+    }
+    keyPoints->Add(offset.value(), timeUsecs.value());
     numKeyPointsRead++;
   }
 
-  uint32_t keyPointsRead = keyPoints->Length();
+  int32_t keyPointsRead = keyPoints->Length();
   if (keyPointsRead > 0) {
     mIndex.InsertOrUpdate(serialno, std::move(keyPoints));
   }
@@ -1577,7 +1578,7 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket) {
 }
 
 nsresult SkeletonState::IndexedSeekTargetForTrack(uint32_t aSerialno,
-                                                  const TimeUnit& aTarget,
+                                                  int64_t aTarget,
                                                   nsKeyPoint& aResult) {
   nsKeyFrameIndex* index = nullptr;
   mIndex.Get(aSerialno, &index);
@@ -1588,15 +1589,14 @@ nsresult SkeletonState::IndexedSeekTargetForTrack(uint32_t aSerialno,
   }
 
   // Binary search to find the last key point with time less than target.
-  uint32_t start = 0;
-  uint32_t end = index->Length() - 1;
+  int start = 0;
+  int end = index->Length() - 1;
   while (end > start) {
-    uint32_t mid = start + ((end - start + 1) >> 1);
+    int mid = start + ((end - start + 1) >> 1);
     if (index->Get(mid).mTime == aTarget) {
       start = mid;
       break;
-    }
-    if (index->Get(mid).mTime < aTarget) {
+    } else if (index->Get(mid).mTime < aTarget) {
       start = mid;
     } else {
       end = mid - 1;
@@ -1608,7 +1608,7 @@ nsresult SkeletonState::IndexedSeekTargetForTrack(uint32_t aSerialno,
   return NS_OK;
 }
 
-nsresult SkeletonState::IndexedSeekTarget(const TimeUnit& aTarget,
+nsresult SkeletonState::IndexedSeekTarget(int64_t aTarget,
                                           nsTArray<uint32_t>& aTracks,
                                           nsSeekTarget& aResult) {
   if (!mActive || mVersion < SKELETON_VERSION(4, 0)) {
@@ -1630,20 +1630,21 @@ nsresult SkeletonState::IndexedSeekTarget(const TimeUnit& aTarget,
   if (r.IsNull()) {
     return NS_ERROR_FAILURE;
   }
-  LOG(LogLevel::Debug, ("Indexed seek target for time %s is offset %" PRId64,
-                        aTarget.ToString().get(), r.mKeyPoint.mOffset));
+  LOG(LogLevel::Debug,
+      ("Indexed seek target for time %" PRId64 " is offset %" PRId64, aTarget,
+       r.mKeyPoint.mOffset));
   aResult = r;
   return NS_OK;
 }
 
 nsresult SkeletonState::GetDuration(const nsTArray<uint32_t>& aTracks,
-                                    TimeUnit& aDuration) {
+                                    int64_t& aDuration) {
   if (!mActive || mVersion < SKELETON_VERSION(4, 0) || !HasIndex() ||
       aTracks.Length() == 0) {
     return NS_ERROR_FAILURE;
   }
-  TimeUnit endTime = TimeUnit::FromNegativeInfinity();
-  TimeUnit startTime = TimeUnit::FromInfinity();
+  int64_t endTime = INT64_MIN;
+  int64_t startTime = INT64_MAX;
   for (uint32_t i = 0; i < aTracks.Length(); i++) {
     nsKeyFrameIndex* index = nullptr;
     mIndex.Get(aTracks[i], &index);
@@ -1659,8 +1660,9 @@ nsresult SkeletonState::GetDuration(const nsTArray<uint32_t>& aTracks,
     }
   }
   NS_ASSERTION(endTime > startTime, "Duration must be positive");
-  aDuration = endTime - startTime;
-  return aDuration.IsValid() ? NS_OK : NS_ERROR_FAILURE;
+  CheckedInt64 duration = CheckedInt64(endTime) - startTime;
+  aDuration = duration.isValid() ? duration.value() : 0;
+  return duration.isValid() ? NS_OK : NS_ERROR_FAILURE;
 }
 
 bool SkeletonState::DecodeFisbone(ogg_packet* aPacket) {
@@ -1760,10 +1762,9 @@ bool SkeletonState::DecodeHeader(OggPacketPtr aPacket) {
         aPacket->packet + SKELETON_PRESENTATION_TIME_NUMERATOR_OFFSET);
     int64_t d = LittleEndian::readInt64(
         aPacket->packet + SKELETON_PRESENTATION_TIME_DENOMINATOR_OFFSET);
-    mPresentationTime = d == 0 ? 0
-                               : AssertedCast<int64_t>(static_cast<float>(n) /
-                                                       static_cast<float>(d)) *
-                                     USECS_PER_S;
+    mPresentationTime =
+        d == 0 ? 0
+               : (static_cast<float>(n) / static_cast<float>(d)) * USECS_PER_S;
 
     mVersion = SKELETON_VERSION(verMajor, verMinor);
     // We can only care to parse Skeleton version 4.0+.

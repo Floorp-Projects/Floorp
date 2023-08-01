@@ -54,8 +54,8 @@ class OggDemuxer : public MediaDataDemuxer,
     tainted_opaque_ogg<ogg_sync_state*> mState;
   };
   media::TimeIntervals GetBuffered(TrackInfo::TrackType aType);
-  void FindStartTime(media::TimeUnit& aOutStartTime);
-  void FindStartTime(TrackInfo::TrackType, media::TimeUnit& aOutStartTime);
+  void FindStartTime(int64_t& aOutStartTime);
+  void FindStartTime(TrackInfo::TrackType, int64_t& aOutStartTime);
 
   nsresult SeekInternal(TrackInfo::TrackType aType,
                         const media::TimeUnit& aTarget);
@@ -68,7 +68,7 @@ class OggDemuxer : public MediaDataDemuxer,
     SEEK_FATAL_ERROR  // Error returned by a stream operation.
   };
   IndexedSeekResult SeekToKeyframeUsingIndex(TrackInfo::TrackType aType,
-                                             const media::TimeUnit& aTarget);
+                                             int64_t aTarget);
 
   // Rolls back a seek-using-index attempt, returning a failure error code.
   IndexedSeekResult RollbackIndexedSeek(TrackInfo::TrackType aType,
@@ -80,36 +80,29 @@ class OggDemuxer : public MediaDataDemuxer,
   // (because it's cached).
   class SeekRange {
    public:
-    SeekRange()
-        : mOffsetStart(0),
-          mOffsetEnd(0),
-          mTimeStart(media::TimeUnit::Zero()),
-          mTimeEnd(media::TimeUnit::Zero()) {}
+    SeekRange() : mOffsetStart(0), mOffsetEnd(0), mTimeStart(0), mTimeEnd(0) {}
 
-    SeekRange(int64_t aOffsetStart, int64_t aOffsetEnd,
-              const media::TimeUnit& aTimeStart,
-              const media::TimeUnit& aTimeEnd)
+    SeekRange(int64_t aOffsetStart, int64_t aOffsetEnd, int64_t aTimeStart,
+              int64_t aTimeEnd)
         : mOffsetStart(aOffsetStart),
           mOffsetEnd(aOffsetEnd),
           mTimeStart(aTimeStart),
           mTimeEnd(aTimeEnd) {}
 
     bool IsNull() const {
-      return mOffsetStart == 0 && mOffsetEnd == 0 && mTimeStart.IsZero() &&
-             mTimeEnd.IsZero();
+      return mOffsetStart == 0 && mOffsetEnd == 0 && mTimeStart == 0 &&
+             mTimeEnd == 0;
     }
 
     int64_t mOffsetStart, mOffsetEnd;  // in bytes.
-    media::TimeUnit mTimeStart, mTimeEnd;
+    int64_t mTimeStart, mTimeEnd;      // in usecs.
   };
 
   nsresult GetSeekRanges(TrackInfo::TrackType aType,
                          nsTArray<SeekRange>& aRanges);
   SeekRange SelectSeekRange(TrackInfo::TrackType aType,
-                            const nsTArray<SeekRange>& ranges,
-                            const media::TimeUnit& aTarget,
-                            const media::TimeUnit& aStartTime,
-                            const media::TimeUnit& aEndTime, bool aExact);
+                            const nsTArray<SeekRange>& ranges, int64_t aTarget,
+                            int64_t aStartTime, int64_t aEndTime, bool aExact);
 
   // Seeks to aTarget usecs in the buffered range aRange using bisection search,
   // or to the keyframe prior to aTarget if we have video. aAdjustedTarget is
@@ -117,11 +110,9 @@ class OggDemuxer : public MediaDataDemuxer,
   // necessary. aStartTime must be the presentation time at the start of media,
   // and aEndTime the time at end of media. aRanges must be the time/byte ranges
   // buffered in the media cache as per GetSeekRanges().
-  nsresult SeekInBufferedRange(TrackInfo::TrackType aType,
-                               const media::TimeUnit& aTarget,
-                               media::TimeUnit& aAdjustedTarget,
-                               const media::TimeUnit& aStartTime,
-                               const media::TimeUnit& aEndTime,
+  nsresult SeekInBufferedRange(TrackInfo::TrackType aType, int64_t aTarget,
+                               int64_t aAdjustedTarget, int64_t aStartTime,
+                               int64_t aEndTime,
                                const nsTArray<SeekRange>& aRanges,
                                const SeekRange& aRange);
 
@@ -131,10 +122,8 @@ class OggDemuxer : public MediaDataDemuxer,
   // search space. aStartTime must be the presentation time at the start of
   // media, and aEndTime the time at end of media. aRanges must be the time/byte
   // ranges buffered in the media cache as per GetSeekRanges().
-  nsresult SeekInUnbuffered(TrackInfo::TrackType aType,
-                            const media::TimeUnit& aTarget,
-                            const media::TimeUnit& aStartTime,
-                            const media::TimeUnit& aEndTime,
+  nsresult SeekInUnbuffered(TrackInfo::TrackType aType, int64_t aTarget,
+                            int64_t aStartTime, int64_t aEndTime,
                             const nsTArray<SeekRange>& aRanges);
 
   // Performs a seek bisection to move the media stream's read cursor to the
@@ -143,9 +132,8 @@ class OggDemuxer : public MediaDataDemuxer,
   // i.e. it will only read inside of the aRange's start and end offsets.
   // aFuzz is the number of usecs of leniency we'll allow; we'll terminate the
   // seek when we land in the range (aTime - aFuzz, aTime) usecs.
-  nsresult SeekBisection(TrackInfo::TrackType aType,
-                         const media::TimeUnit& aTarget,
-                         const SeekRange& aRange, const media::TimeUnit& aFuzz);
+  nsresult SeekBisection(TrackInfo::TrackType aType, int64_t aTarget,
+                         const SeekRange& aRange, uint32_t aFuzz);
 
   // Chunk size to read when reading Ogg files. Average Ogg page length
   // is about 4300 bytes, so we read the file in chunks larger than that.
@@ -223,7 +211,7 @@ class OggDemuxer : public MediaDataDemuxer,
 
   // Get the end time of aEndOffset. This is the playback position we'd reach
   // after playback finished at aEndOffset.
-  media::TimeUnit RangeEndTime(TrackInfo::TrackType aType, int64_t aEndOffset);
+  int64_t RangeEndTime(TrackInfo::TrackType aType, int64_t aEndOffset);
 
   // Get the end time of aEndOffset, without reading before aStartOffset.
   // This is the playback position we'd reach after playback finished at
@@ -232,13 +220,13 @@ class OggDemuxer : public MediaDataDemuxer,
   // regular blocking reads from the media stream. If bool aCachedDataOnly
   // is true, this can safely be called on the main thread, otherwise it
   // must be called on the state machine thread.
-  media::TimeUnit RangeEndTime(TrackInfo::TrackType aType, int64_t aStartOffset,
-                               int64_t aEndOffset, bool aCachedDataOnly);
+  int64_t RangeEndTime(TrackInfo::TrackType aType, int64_t aStartOffset,
+                       int64_t aEndOffset, bool aCachedDataOnly);
 
   // Get the start time of the range beginning at aOffset. This is the start
   // time of the first aType sample we'd be able to play if we
   // started playback at aOffset.
-  media::TimeUnit RangeStartTime(TrackInfo::TrackType aType, int64_t aOffset);
+  int64_t RangeStartTime(TrackInfo::TrackType aType, int64_t aOffset);
 
   // All invocations of libogg functionality from the demuxer is sandboxed using
   // wasm library sandboxes on supported platforms. These functions that create
@@ -301,7 +289,7 @@ class OggDemuxer : public MediaDataDemuxer,
   OggStateContext mAudioOggState;
   OggStateContext mVideoOggState;
 
-  Maybe<media::TimeUnit> mStartTime;
+  Maybe<int64_t> mStartTime;
 
   // Booleans to indicate if we have audio and/or video data
   bool HasVideo() const;
@@ -311,8 +299,8 @@ class OggDemuxer : public MediaDataDemuxer,
   }
   bool HaveStartTime() const;
   bool HaveStartTime(TrackInfo::TrackType aType);
-  media::TimeUnit StartTime() const;
-  media::TimeUnit StartTime(TrackInfo::TrackType aType);
+  int64_t StartTime() const;
+  int64_t StartTime(TrackInfo::TrackType aType);
 
   // The picture region inside Theora frame to be displayed, if we have
   // a Theora video track.

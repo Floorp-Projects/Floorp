@@ -49,8 +49,8 @@ using dom::SourceBufferAppendMode;
 using media::TimeInterval;
 using media::TimeIntervals;
 using media::TimeUnit;
-using AppendBufferResult = SourceBufferTask::AppendBufferResult;
-using AppendState = SourceBufferAttributes::AppendState;
+typedef SourceBufferTask::AppendBufferResult AppendBufferResult;
+typedef SourceBufferAttributes::AppendState AppendState;
 
 static const char* AppendStateToStr(AppendState aState) {
   switch (aState) {
@@ -557,7 +557,7 @@ void TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
     if (frame->GetEndTime() >= lowerLimit) {
       break;
     }
-    partialEvict += AssertedCast<int64_t>(frame->ComputedSizeOfIncludingThis());
+    partialEvict += frame->ComputedSizeOfIncludingThis();
   }
 
   const int64_t finalSize = mSizeSourceBuffer - aSizeToEvict;
@@ -596,7 +596,7 @@ void TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
   // Don't evict before the end of the current segment
   TimeUnit upperLimit = futureBuffered[0].mEnd;
   uint32_t evictedFramesStartIndex = buffer.Length();
-  for (uint32_t i = buffer.Length() - 1; i-- > 0;) {
+  for (int32_t i = buffer.Length() - 1; i >= 0; i--) {
     const auto& frame = buffer[i];
     if (frame->mTime <= upperLimit || toEvict < 0) {
       // We've reached a frame that shouldn't be evicted -> Evict after it ->
@@ -605,7 +605,7 @@ void TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
       evictedFramesStartIndex = i + 1;
       break;
     }
-    toEvict -= AssertedCast<int64_t>(frame->ComputedSizeOfIncludingThis());
+    toEvict -= frame->ComputedSizeOfIncludingThis();
   }
   if (evictedFramesStartIndex < buffer.Length()) {
     MSE_DEBUG("Step2. Evicting %" PRId64 " bytes from trailing data",
@@ -616,8 +616,7 @@ void TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
 }
 
 RefPtr<TrackBuffersManager::RangeRemovalPromise>
-TrackBuffersManager::CodedFrameRemovalWithPromise(
-    const TimeInterval& aInterval) {
+TrackBuffersManager::CodedFrameRemovalWithPromise(TimeInterval aInterval) {
   mTaskQueueCapability->AssertOnCurrentThread();
 
   RefPtr<RangeRemovalTask> task = new RangeRemovalTask(aInterval);
@@ -627,7 +626,7 @@ TrackBuffersManager::CodedFrameRemovalWithPromise(
   return p;
 }
 
-bool TrackBuffersManager::CodedFrameRemoval(const TimeInterval& aInterval) {
+bool TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval) {
   MOZ_ASSERT(OnTaskQueue());
   AUTO_PROFILER_LABEL("TrackBuffersManager::CodedFrameRemoval", MEDIA_PLAYBACK);
   MSE_DEBUG("From %.2fs to %.2f", aInterval.mStart.ToSeconds(),
@@ -652,7 +651,7 @@ bool TrackBuffersManager::CodedFrameRemoval(const TimeInterval& aInterval) {
   bool dataRemoved = false;
 
   // 3. For each track buffer in this source buffer, run the following steps:
-  for (auto* track : GetTracksList()) {
+  for (auto track : GetTracksList()) {
     MSE_DEBUGV("Processing %s track", track->mInfo->mMimeType.get());
     // 1. Let remove end timestamp be the current value of duration
     // See bug: https://www.w3.org/Bugs/Public/show_bug.cgi?id=28727
@@ -1625,7 +1624,7 @@ void TrackBuffersManager::MaybeDispatchEncryptedEvent(
 }
 
 void TrackBuffersManager::OnVideoDemuxCompleted(
-    const RefPtr<MediaTrackDemuxer::SamplesHolder>& aSamples) {
+    RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
   mTaskQueueCapability->AssertOnCurrentThread();
   MSE_DEBUG("%zu video samples demuxed", aSamples->GetSamples().Length());
   mVideoTracks.mDemuxRequest.Complete();
@@ -1649,7 +1648,7 @@ void TrackBuffersManager::DoDemuxAudio() {
 }
 
 void TrackBuffersManager::OnAudioDemuxCompleted(
-    const RefPtr<MediaTrackDemuxer::SamplesHolder>& aSamples) {
+    RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
   mTaskQueueCapability->AssertOnCurrentThread();
   MSE_DEBUG("%zu audio samples demuxed", aSamples->GetSamples().Length());
   // When using MSE, it's possible for each fragments to have their own
@@ -1796,7 +1795,7 @@ TimeInterval TrackBuffersManager::PresentationInterval(
       TimeInterval(aSamples[0]->mTime, aSamples[0]->GetEndTime());
 
   for (uint32_t i = 1; i < aSamples.Length(); i++) {
-    const auto& sample = aSamples[i];
+    auto& sample = aSamples[i];
     presentationInterval = presentationInterval.Span(
         TimeInterval(sample->mTime, sample->GetEndTime()));
   }
@@ -2703,7 +2702,7 @@ uint32_t TrackBuffersManager::SkipToNextRandomAccessPoint(
   TimeUnit nextSampleTimecode = trackData.mNextSampleTimecode;
   TimeUnit nextSampleTime = trackData.mNextSampleTime;
   uint32_t i = trackData.mNextGetSampleIndex.ref();
-  uint32_t originalPos = i;
+  int32_t originalPos = i;
 
   for (; i < track.Length(); i++) {
     const MediaRawData* sample =
@@ -2730,7 +2729,7 @@ uint32_t TrackBuffersManager::SkipToNextRandomAccessPoint(
   } else if (i > 0) {
     // Go back to the previous keyframe or the original position so the next
     // demux can succeed and be decoded.
-    for (uint32_t j = i - 1; j-- > originalPos;) {
+    for (int j = i - 1; j >= originalPos; j--) {
       const RefPtr<MediaRawData>& sample = track[j];
       if (sample->mKeyframe) {
         trackData.mNextSampleTimecode = sample->mTimecode;
@@ -2866,12 +2865,11 @@ already_AddRefed<MediaRawData> TrackBuffersManager::GetSample(
 int32_t TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
                                                  const TimeUnit& aFuzz) const {
   MOZ_ASSERT(OnTaskQueue());
-  const auto& trackData = GetTracksData(aTrack);
+  auto& trackData = GetTracksData(aTrack);
   const TrackBuffer& track = GetTrackBuffer(aTrack);
-  int32_t trackLength = AssertedCast<int32_t>(track.Length());
 
   // Perform an exact search first.
-  for (int32_t i = 0; i < trackLength; i++) {
+  for (uint32_t i = 0; i < track.Length(); i++) {
     const RefPtr<MediaRawData>& sample = track[i];
     TimeInterval sampleInterval{sample->mTimecode, sample->GetEndTimecode()};
 
@@ -2885,7 +2883,7 @@ int32_t TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
     }
   }
 
-  for (int32_t i = 0; i < trackLength; i++) {
+  for (uint32_t i = 0; i < track.Length(); i++) {
     const RefPtr<MediaRawData>& sample = track[i];
     TimeInterval sampleInterval{sample->mTimecode, sample->GetEndTimecode(),
                                 aFuzz};
@@ -2902,7 +2900,7 @@ int32_t TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
 
   // We couldn't find our sample by decode timestamp. Attempt to find it using
   // presentation timestamp. There will likely be small jerkiness.
-  for (int32_t i = 0; i < trackLength; i++) {
+  for (uint32_t i = 0; i < track.Length(); i++) {
     const RefPtr<MediaRawData>& sample = track[i];
     TimeInterval sampleInterval{sample->mTime, sample->GetEndTime(), aFuzz};
 
@@ -3027,14 +3025,11 @@ void TrackBuffersManager::GetDebugInfo(
 
   if (HasAudio()) {
     aInfo.mNextSampleTime = mAudioTracks.mNextSampleTime.ToSeconds();
-    aInfo.mNumSamples =
-        AssertedCast<int32_t>(mAudioTracks.mBuffers[0].Length());
-    aInfo.mBufferSize = AssertedCast<int32_t>(mAudioTracks.mSizeBuffer);
-    aInfo.mEvictable = AssertedCast<int32_t>(Evictable(TrackInfo::kAudioTrack));
-    aInfo.mNextGetSampleIndex =
-        AssertedCast<int32_t>(mAudioTracks.mNextGetSampleIndex.valueOr(-1));
-    aInfo.mNextInsertionIndex =
-        AssertedCast<int32_t>(mAudioTracks.mNextInsertionIndex.valueOr(-1));
+    aInfo.mNumSamples = mAudioTracks.mBuffers[0].Length();
+    aInfo.mBufferSize = mAudioTracks.mSizeBuffer;
+    aInfo.mEvictable = Evictable(TrackInfo::kAudioTrack);
+    aInfo.mNextGetSampleIndex = mAudioTracks.mNextGetSampleIndex.valueOr(-1);
+    aInfo.mNextInsertionIndex = mAudioTracks.mNextInsertionIndex.valueOr(-1);
     media::TimeIntervals ranges = SafeBuffered(TrackInfo::kAudioTrack);
     dom::Sequence<dom::BufferRange> items;
     for (uint32_t i = 0; i < ranges.Length(); ++i) {
@@ -3049,14 +3044,11 @@ void TrackBuffersManager::GetDebugInfo(
     aInfo.mRanges = std::move(items);
   } else if (HasVideo()) {
     aInfo.mNextSampleTime = mVideoTracks.mNextSampleTime.ToSeconds();
-    aInfo.mNumSamples =
-        AssertedCast<int32_t>(mVideoTracks.mBuffers[0].Length());
-    aInfo.mBufferSize = AssertedCast<int32_t>(mVideoTracks.mSizeBuffer);
-    aInfo.mEvictable = AssertedCast<int32_t>(Evictable(TrackInfo::kVideoTrack));
-    aInfo.mNextGetSampleIndex =
-        AssertedCast<int32_t>(mVideoTracks.mNextGetSampleIndex.valueOr(-1));
-    aInfo.mNextInsertionIndex =
-        AssertedCast<int32_t>(mVideoTracks.mNextInsertionIndex.valueOr(-1));
+    aInfo.mNumSamples = mVideoTracks.mBuffers[0].Length();
+    aInfo.mBufferSize = mVideoTracks.mSizeBuffer;
+    aInfo.mEvictable = Evictable(TrackInfo::kVideoTrack);
+    aInfo.mNextGetSampleIndex = mVideoTracks.mNextGetSampleIndex.valueOr(-1);
+    aInfo.mNextInsertionIndex = mVideoTracks.mNextInsertionIndex.valueOr(-1);
     media::TimeIntervals ranges = SafeBuffered(TrackInfo::kVideoTrack);
     dom::Sequence<dom::BufferRange> items;
     for (uint32_t i = 0; i < ranges.Length(); ++i) {

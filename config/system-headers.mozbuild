@@ -1012,11 +1012,6 @@ system_headers = [
     'wx/xrc/xmlres.h',
     'xlocale.h',
     'zmouse.h',
-    'vorbis/codec.h',
-    'opus/opus.h',
-    'opus/opus_multistream.h',
-    'ogg/ogg.h',
-    'theora/theoradec.h'
 ]
 
 if CONFIG['MOZ_X11']:

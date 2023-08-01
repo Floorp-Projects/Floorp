@@ -74,11 +74,11 @@ class TrackBuffersManager final
     BUFFER_FULL,
   };
 
-  using TrackType = TrackInfo::TrackType;
-  using MediaType = MediaData::Type;
-  using TrackBuffer = nsTArray<RefPtr<MediaRawData>>;
-  using AppendPromise = SourceBufferTask::AppendPromise;
-  using RangeRemovalPromise = SourceBufferTask::RangeRemovalPromise;
+  typedef TrackInfo::TrackType TrackType;
+  typedef MediaData::Type MediaType;
+  typedef nsTArray<RefPtr<MediaRawData>> TrackBuffer;
+  typedef SourceBufferTask::AppendPromise AppendPromise;
+  typedef SourceBufferTask::RangeRemovalPromise RangeRemovalPromise;
 
   // Interface for SourceBuffer
   TrackBuffersManager(MediaSourceDecoder* aParentDecoder,
@@ -182,7 +182,8 @@ class TrackBuffersManager final
   void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes) const;
 
  private:
-  using CodedFrameProcessingPromise = MozPromise<bool, MediaResult, true>;
+  typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true>
+      CodedFrameProcessingPromise;
 
   ~TrackBuffersManager();
   // All following functions run on the taskqueue.
@@ -205,8 +206,8 @@ class TrackBuffersManager final
   // Called by ResetParserState.
   void CompleteResetParserState() MOZ_REQUIRES(mTaskQueueCapability);
   RefPtr<RangeRemovalPromise> CodedFrameRemovalWithPromise(
-      const media::TimeInterval& aInterval) MOZ_REQUIRES(mTaskQueueCapability);
-  bool CodedFrameRemoval(const media::TimeInterval& aInterval)
+      media::TimeInterval aInterval) MOZ_REQUIRES(mTaskQueueCapability);
+  bool CodedFrameRemoval(media::TimeInterval aInterval)
       MOZ_REQUIRES(mTaskQueueCapability);
   // Removes all coded frames -- this is not to spec and should be used as a
   // last resort to clear buffers only if other methods cannot.
@@ -267,7 +268,7 @@ class TrackBuffersManager final
       MOZ_GUARDED_BY(mTaskQueueCapability);
 
   void OnDemuxerInitDone(const MediaResult& aResult);
-  void OnDemuxerInitFailed(const MediaResult& aError);
+  void OnDemuxerInitFailed(const MediaResult& aFailure);
   void OnDemuxerResetDone(const MediaResult& aResult)
       MOZ_REQUIRES(mTaskQueueCapability);
   MozPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
@@ -275,16 +276,14 @@ class TrackBuffersManager final
   void OnDemuxFailed(TrackType aTrack, const MediaResult& aError)
       MOZ_REQUIRES(mTaskQueueCapability);
   void DoDemuxVideo() MOZ_REQUIRES(mTaskQueueCapability);
-  void OnVideoDemuxCompleted(
-      const RefPtr<MediaTrackDemuxer::SamplesHolder>& aSamples);
+  void OnVideoDemuxCompleted(RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples);
   void OnVideoDemuxFailed(const MediaResult& aError) {
     mVideoTracks.mDemuxRequest.Complete();
     mTaskQueueCapability->AssertOnCurrentThread();
     OnDemuxFailed(TrackType::kVideoTrack, aError);
   }
   void DoDemuxAudio() MOZ_REQUIRES(mTaskQueueCapability);
-  void OnAudioDemuxCompleted(
-      const RefPtr<MediaTrackDemuxer::SamplesHolder>& aSamples);
+  void OnAudioDemuxCompleted(RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples);
   void OnAudioDemuxFailed(const MediaResult& aError) {
     mAudioTracks.mDemuxRequest.Complete();
     mTaskQueueCapability->AssertOnCurrentThread();
@@ -388,8 +387,8 @@ class TrackBuffersManager final
         mEvictable = 0;
         mLastIndex = 0;
       }
-      uint32_t mEvictable = 0;
-      uint32_t mLastIndex = 0;
+      uint32_t mEvictable;
+      uint32_t mLastIndex;
     };
     // Size of data that can be safely evicted during the next eviction
     // cycle.

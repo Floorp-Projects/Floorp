@@ -151,7 +151,6 @@
 @BINPATH@/@DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
 #endif
 @BINPATH@/@DLL_PREFIX@lgpllibs@DLL_SUFFIX@
-@BINPATH@/@DLL_PREFIX@gkcodecs@DLL_SUFFIX@
 #ifdef MOZ_FFVPX
 @BINPATH@/@DLL_PREFIX@mozavutil@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@mozavcodec@DLL_SUFFIX@
@@ -457,7 +456,6 @@ i686/xul.dll
 i686/nss3.dll
 i686/mozglue.dll
 i686/lgpllibs.dll
-i686/gkcodecs.dll
 i686/msvcp140.dll
 i686/vcruntime140.dll
 i686/vcruntime140_1.dll

@@ -248,17 +248,15 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
   nsCString GetCodecName() const override {
     if (mMediaInfoFlag & MediaInfoFlag::VIDEO_H264) {
       return "h264"_ns;
-    }
-    if (mMediaInfoFlag & MediaInfoFlag::VIDEO_VP8) {
+    } else if (mMediaInfoFlag & MediaInfoFlag::VIDEO_VP8) {
       return "vp8"_ns;
-    }
-    if (mMediaInfoFlag & MediaInfoFlag::VIDEO_VP9) {
+    } else if (mMediaInfoFlag & MediaInfoFlag::VIDEO_VP9) {
       return "vp9"_ns;
-    }
-    if (mMediaInfoFlag & MediaInfoFlag::VIDEO_AV1) {
+    } else if (mMediaInfoFlag & MediaInfoFlag::VIDEO_AV1) {
       return "av1"_ns;
+    } else {
+      return "unknown"_ns;
     }
-    return "unknown"_ns;
   }
 
   RefPtr<MediaDataDecoder::DecodePromise> Decode(
@@ -728,11 +726,8 @@ class RemoteAudioDecoder final : public RemoteDataDecoder {
 
     AssertOnThread();
 
-    LOG("ProcessOutput");
-
     if (ShouldDiscardSample(aSample->Session()) || !aBuffer->IsValid()) {
       aSample->Dispose();
-      LOG("Discarding sample");
       return;
     }
 
@@ -757,44 +752,34 @@ class RemoteAudioDecoder final : public RemoteDataDecoder {
     if (!ok ||
         (IsSampleTimeSmallerThanFirstDemuxedSampleTime(presentationTimeUs) &&
          !isEOS)) {
-      LOG("ProcessOutput: decoding error ok[%s], pts[%" PRId64 "], eos[%s]",
-          ok ? "true" : "false", presentationTimeUs, isEOS ? "true" : "false");
       Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
       return;
     }
 
     if (size > 0) {
-      const int32_t sampleSize = sizeof(int16_t);
-      const int32_t numSamples = size / sampleSize;
+#ifdef MOZ_SAMPLE_TYPE_S16
+      const int32_t numSamples = size / 2;
+#else
+#  error We only support 16-bit integer PCM
+#endif
 
-      InflatableShortBuffer audio(numSamples);
+      AlignedAudioBuffer audio(numSamples);
       if (!audio) {
         Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
-        LOG("OOM while allocating temporary output buffer");
         return;
       }
+
       jni::ByteBuffer::LocalRef dest = jni::ByteBuffer::New(audio.get(), size);
       aBuffer->WriteToByteBuffer(dest, offset, size);
-      AlignedFloatBuffer converted = audio.Inflate();
 
-      TimeUnit pts = TimeUnit::FromMicroseconds(presentationTimeUs);
-
-      LOG("Decoded: %u frames of %s audio, pts: %s, %d channels, %" PRId32
-          " Hz",
-          numSamples / mOutputChannels,
-          sampleSize == sizeof(int16_t) ? "int16" : "f32", pts.ToString().get(),
-          mOutputChannels, mOutputSampleRate);
-
-      RefPtr<AudioData> data = new AudioData(
-          0, pts, std::move(converted), mOutputChannels, mOutputSampleRate);
+      RefPtr<AudioData> data =
+          new AudioData(0, TimeUnit::FromMicroseconds(presentationTimeUs),
+                        std::move(audio), mOutputChannels, mOutputSampleRate);
 
       UpdateOutputStatus(std::move(data));
-    } else {
-      LOG("ProcessOutput but size 0");
     }
 
     if (isEOS) {
-      LOG("EOS: drain complete");
       DrainComplete();
     }
   }
@@ -830,8 +815,6 @@ already_AddRefed<MediaDataDecoder> RemoteDataDecoder::CreateAudioDecoder(
       java::sdk::MediaFormat::CreateAudioFormat(config.mMimeType, config.mRate,
                                                 config.mChannels, &format),
       nullptr);
-  // format->SetInteger(java::sdk::MediaFormat::KEY_PCM_ENCODING,
-  //                    java::sdk::AudioFormat::ENCODING_PCM_FLOAT);
 
   RefPtr<MediaDataDecoder> decoder =
       new RemoteAudioDecoder(config, format, aDrmStubId);
@@ -910,7 +893,7 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Drain() {
 }
 
 RefPtr<ShutdownPromise> RemoteDataDecoder::Shutdown() {
-  LOG("Shutdown");
+  LOG("");
   AssertOnThread();
   SetState(State::SHUTDOWN);
   if (mJavaDecoder) {
@@ -1084,14 +1067,10 @@ void RemoteDataDecoder::UpdateInputStatus(int64_t aTimestamp, bool aProcessed) {
 void RemoteDataDecoder::UpdateOutputStatus(RefPtr<MediaData>&& aSample) {
   AssertOnThread();
   if (GetState() == State::SHUTDOWN) {
-    LOG("Update output status, but decoder has been shut down, dropping the "
-        "decoded results");
     return;
   }
   if (IsUsefulData(aSample)) {
     mDecodedData.AppendElement(std::move(aSample));
-  } else {
-    LOG("Decoded data, but not considered useful");
   }
   ReturnDecodedData();
 }

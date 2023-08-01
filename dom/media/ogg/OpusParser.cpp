@@ -10,9 +10,9 @@
 #include "OpusParser.h"
 #include "VideoUtils.h"
 
-#include <opus/opus.h>
+#include "opus/opus.h"
 extern "C" {
-#include <opus/opus_multistream.h>
+#include "opus/opus_multistream.h"
 }
 
 #include <cmath>
@@ -39,7 +39,7 @@ OpusParser::OpusParser()
 }
 
 bool OpusParser::DecodeHeader(unsigned char* aData, size_t aLength) {
-  if (aLength < 19 || memcmp(aData, "OpusHead", 8) != 0) {
+  if (aLength < 19 || memcmp(aData, "OpusHead", 8)) {
     OPUS_LOG(LogLevel::Debug, ("Invalid Opus file: unrecognized header"));
     return false;
   }
@@ -143,9 +143,7 @@ bool OpusParser::DecodeHeader(unsigned char* aData, size_t aLength) {
 }
 
 bool OpusParser::DecodeTags(unsigned char* aData, size_t aLength) {
-  if (aLength < 16 || memcmp(aData, "OpusTags", 8) != 0) {
-    return false;
-  }
+  if (aLength < 16 || memcmp(aData, "OpusTags", 8)) return false;
 
   // Copy out the raw comment lines, but only do basic validation
   // checks against the string packing: too little data, too many

@@ -110,19 +110,19 @@ function audioTestData() {
       expectations: {
         Android: {
           process: "Utility Generic",
-          decoder: "ffvpx audio decoder",
+          decoder: "vorbis audio decoder",
         },
         Linux: {
           process: "Utility Generic",
-          decoder: "ffvpx audio decoder",
+          decoder: "vorbis audio decoder",
         },
         WINNT: {
           process: "Utility Generic",
-          decoder: "ffvpx audio decoder",
+          decoder: "vorbis audio decoder",
         },
         Darwin: {
           process: "Utility Generic",
-          decoder: "ffvpx audio decoder",
+          decoder: "vorbis audio decoder",
         },
       },
     },

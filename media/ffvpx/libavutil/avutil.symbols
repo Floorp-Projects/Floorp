@@ -31,12 +31,10 @@ av_buffer_ref
 av_buffer_unref
 av_calloc
 av_channel_layout_check
-av_channel_layout_compare
 av_channel_layout_copy
-av_channel_layout_default
-av_channel_layout_describe
+av_channel_layout_compare
 av_channel_layout_extract_channel
-av_channel_layout_from_mask
+av_channel_layout_describe
 av_channel_layout_from_mask
 av_channel_layout_uninit
 av_chroma_location_name
@@ -69,8 +67,6 @@ av_dict_set
 av_dict_set_int
 av_dirname
 av_div_q
-av_dynamic_hdr_plus_from_t35
-av_dynamic_hdr_plus_create_side_data
 av_dynarray2_add
 av_dynarray_add
 av_dynarray_add_nofree
@@ -151,6 +147,7 @@ av_get_pix_fmt_name
 av_get_pix_fmt_string
 av_get_planar_sample_fmt
 av_get_sample_fmt
+av_get_sample_fmt_name
 av_get_sample_fmt_string
 av_get_standard_channel_layout
 av_get_time_base_q
@@ -327,4 +324,3 @@ av_hwdevice_ctx_init
 av_hwframe_transfer_get_formats
 av_hwdevice_ctx_create_derived
 av_malloc_array
-av_get_sample_fmt_name

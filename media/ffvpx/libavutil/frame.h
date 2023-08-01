@@ -470,18 +470,7 @@ typedef struct AVFrame {
     int quality;
 
     /**
-     * Frame owner's private data.
-     *
-     * This field may be set by the code that allocates/owns the frame data.
-     * It is then not touched by any library functions, except:
-     * - it is copied to other references by av_frame_copy_props() (and hence by
-     *   av_frame_ref());
-     * - it is set to NULL when the frame is cleared by av_frame_unref()
-     * - on the caller's explicit request. E.g. libavcodec encoders/decoders
-     *   will copy this field to/from @ref AVPacket "AVPackets" if the caller sets
-     *   @ref AV_CODEC_FLAG_COPY_OPAQUE.
-     *
-     * @see opaque_ref the reference-counted analogue
+     * for some private data of the user
      */
     void *opaque;
 
@@ -622,17 +611,12 @@ typedef struct AVFrame {
      */
     int64_t best_effort_timestamp;
 
-#if FF_API_FRAME_PKT
     /**
      * reordered pos from the last AVPacket that has been input into the decoder
      * - encoding: unused
      * - decoding: Read by user.
-     * @deprecated use AV_CODEC_FLAG_COPY_OPAQUE to pass through arbitrary user
-     *             data from packets to frames
      */
-    attribute_deprecated
     int64_t pkt_pos;
-#endif
 
 #if FF_API_PKT_DURATION
     /**
@@ -678,19 +662,14 @@ typedef struct AVFrame {
     int channels;
 #endif
 
-#if FF_API_FRAME_PKT
     /**
      * size of the corresponding packet containing the compressed
      * frame.
      * It is set to a negative value if unknown.
      * - encoding: unused
      * - decoding: set by libavcodec, read by user.
-     * @deprecated use AV_CODEC_FLAG_COPY_OPAQUE to pass through arbitrary user
-     *             data from packets to frames
      */
-    attribute_deprecated
     int pkt_size;
-#endif
 
     /**
      * For hwaccel-format frames, this should be a reference to the
@@ -699,18 +678,13 @@ typedef struct AVFrame {
     AVBufferRef *hw_frames_ctx;
 
     /**
-     * Frame owner's private data.
+     * AVBufferRef for free use by the API user. FFmpeg will never check the
+     * contents of the buffer ref. FFmpeg calls av_buffer_unref() on it when
+     * the frame is unreferenced. av_frame_copy_props() calls create a new
+     * reference with av_buffer_ref() for the target frame's opaque_ref field.
      *
-     * This field may be set by the code that allocates/owns the frame data.
-     * It is then not touched by any library functions, except:
-     * - a new reference to the underlying buffer is propagated by
-     *   av_frame_copy_props() (and hence by av_frame_ref());
-     * - it is unreferenced in av_frame_unref();
-     * - on the caller's explicit request. E.g. libavcodec encoders/decoders
-     *   will propagate a new reference to/from @ref AVPacket "AVPackets" if the
-     *   caller sets @ref AV_CODEC_FLAG_COPY_OPAQUE.
-     *
-     * @see opaque the plain pointer analogue
+     * This is unrelated to the opaque field, although it serves a similar
+     * purpose.
      */
     AVBufferRef *opaque_ref;
 
