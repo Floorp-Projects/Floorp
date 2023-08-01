@@ -626,8 +626,10 @@ class nsWindow final : public nsBaseWidget {
   // probably make GetTitlebarRect() simpler / properly thread-safe.
   mozilla::Atomic<bool, mozilla::Relaxed> mDrawInTitlebar{false};
 
+  mozilla::Mutex mDestroyMutex;
+
   // Has this widget been destroyed yet?
-  bool mIsDestroyed;
+  bool mIsDestroyed MOZ_GUARDED_BY(mDestroyMutex);
   // mIsShown tracks requested visible status from browser perspective, i.e.
   // if the window should be visible or now.
   bool mIsShown : 1;
