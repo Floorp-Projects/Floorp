@@ -9718,16 +9718,11 @@ void nsWindow::SetEGLNativeWindowSize(
   }
 
   gint scale = GdkCeiledScaleFactor();
-  if (moz_container_wayland_egl_window_needs_size_update(
-          mContainer, aEGLWindowSize.ToUnknownSize(), scale)) {
-    LOG("nsWindow::SetEGLNativeWindowSize() %d x %d scale %d (unscaled %d x "
-        "%d)",
-        aEGLWindowSize.width, aEGLWindowSize.height, scale,
-        aEGLWindowSize.width / scale, aEGLWindowSize.height / scale);
-    moz_container_wayland_egl_window_set_size(mContainer,
-                                              aEGLWindowSize.ToUnknownSize());
-    moz_container_wayland_set_scale_factor(mContainer);
-  }
+  LOG("nsWindow::SetEGLNativeWindowSize() %d x %d scale %d (unscaled %d x %d)",
+      aEGLWindowSize.width, aEGLWindowSize.height, scale,
+      aEGLWindowSize.width / scale, aEGLWindowSize.height / scale);
+  moz_container_wayland_egl_window_set_size(
+      mContainer, aEGLWindowSize.ToUnknownSize(), scale);
 }
 #endif
 
