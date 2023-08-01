@@ -645,10 +645,13 @@ ImageBitmap::ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
   MOZ_ASSERT(aData, "aData is null in ImageBitmap constructor.");
 
   StaticMutexAutoLock lock(sShutdownMutex);
-  if (!sShutdownObserver) {
+  if (!sShutdownObserver &&
+      !AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
     sShutdownObserver = new ImageBitmapShutdownObserver();
   }
-  mShutdownRunnable = sShutdownObserver->Track(this);
+  if (sShutdownObserver) {
+    mShutdownRunnable = sShutdownObserver->Track(this);
+  }
 }
 
 ImageBitmap::~ImageBitmap() {
