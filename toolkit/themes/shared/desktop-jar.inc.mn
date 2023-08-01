@@ -40,6 +40,7 @@
   skin/classic/global/notification.css                     (../../shared/notification.css)
   skin/classic/global/numberinput.css                      (../../shared/numberinput.css)
   skin/classic/global/offlineSupportPages.css              (../../shared/offlineSupportPages.css)
+  skin/classic/global/popup.css                            (../../shared/popup.css)
   skin/classic/global/popupnotification.css                (../../shared/popupnotification.css)
   skin/classic/global/tree.css                             (../../shared/tree.css)
   skin/classic/global/dirListing/dirListing.css            (../../shared/dirListing/dirListing.css)
