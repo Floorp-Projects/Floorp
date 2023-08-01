@@ -47,6 +47,7 @@ struct nsCSSValueSharedList;
 
 class gfxFontFeatureValueSet;
 struct gfxFontFeature;
+struct GeckoFontMetrics;
 namespace mozilla {
 namespace gfx {
 struct FontVariation;

@@ -25,6 +25,7 @@
 //! our expectations.
 
 use super::{Context, Length, Percentage, ToComputedValue};
+use crate::gecko_bindings::structs::GeckoFontMetrics;
 use crate::values::animated::{Animate, Procedure, ToAnimatedValue, ToAnimatedZero};
 use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use crate::values::generics::calc::CalcUnits;
@@ -881,6 +882,28 @@ impl specified::CalcLengthPercentage {
         // otherwise it wouldn't have been able to.
         match self.node {
             calc::CalcNode::Leaf(Leaf::Length(NoCalcLength::Absolute(ref l))) => Ok(l.to_px()),
+            _ => Err(()),
+        }
+    }
+
+    /// Compute the value into pixel length as CSSFloat, using the get_font_metrics function
+    /// if provided to resolve font-relative dimensions.
+    pub fn to_computed_pixel_length_with_font_metrics(
+        &self,
+        get_font_metrics: Option<impl Fn() -> GeckoFontMetrics>,
+    ) -> Result<CSSFloat, ()> {
+        use crate::values::specified::calc::Leaf;
+        use crate::values::specified::length::NoCalcLength;
+
+        match self.node {
+            calc::CalcNode::Leaf(Leaf::Length(NoCalcLength::Absolute(ref l))) => Ok(l.to_px()),
+            calc::CalcNode::Leaf(Leaf::Length(NoCalcLength::FontRelative(ref l))) => {
+                if let Some(getter) = get_font_metrics {
+                    l.to_computed_pixel_length_with_font_metrics(getter)
+                } else {
+                    Err(())
+                }
+            },
             _ => Err(()),
         }
     }

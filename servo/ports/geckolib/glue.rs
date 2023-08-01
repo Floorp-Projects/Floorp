@@ -55,6 +55,7 @@ use style::gecko_bindings::bindings::Gecko_GetOrCreateInitialKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateKeyframeAtStart;
 use style::gecko_bindings::bindings::Gecko_HaveSeenPtr;
 use style::gecko_bindings::structs;
+use style::gecko_bindings::structs::GeckoFontMetrics;
 use style::gecko_bindings::structs::gfx::FontPaletteValueSet;
 use style::gecko_bindings::structs::gfxFontFeatureValueSet;
 use style::gecko_bindings::structs::ipc::ByteBuf;
@@ -7802,9 +7803,25 @@ where
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_ParseAbsoluteLength(len: &nsACString, out: &mut f32) -> bool {
+// Parse a length without style context (for canvas2d letterSpacing/wordSpacing attributes).
+// This accepts absolute lengths, and if a font-metrics-getter function is passed, also
+// font-relative ones, but not other units (such as percentages, viewport-relative, etc)
+// that would require a full style context to resolve.
+pub extern "C" fn Servo_ParseLengthWithoutStyleContext(
+    len: &nsACString,
+    out: &mut f32,
+    get_font_metrics: Option<unsafe extern "C" fn(*mut c_void) -> GeckoFontMetrics>,
+    getter_context: *mut c_void
+) -> bool {
+    let metrics_getter = if let Some(getter) = get_font_metrics {
+        Some(move || -> GeckoFontMetrics {
+            unsafe { getter(getter_context) }
+        })
+    } else {
+        None
+    };
     let value = parse_no_context(unsafe { len.as_str_unchecked() }, specified::Length::parse)
-        .and_then(|p| p.to_computed_pixel_length_without_context());
+        .and_then(|p| p.to_computed_pixel_length_with_font_metrics(metrics_getter));
     match value {
         Ok(v) => {
             *out = v;

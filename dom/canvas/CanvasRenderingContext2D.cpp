@@ -129,6 +129,7 @@
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/layers/WebRenderCanvasRenderer.h"
 #include "WindowRenderer.h"
+#include "GeckoBindings.h"
 
 #undef free  // apparently defined by some windows header, clashing with a
              // free() method in SkTypes.h
@@ -2738,6 +2739,32 @@ void CanvasRenderingContext2D::SetWordSpacing(const nsACString& aWordSpacing) {
                CurrentState().wordSpacingStr);
 }
 
+static GeckoFontMetrics GetFontMetricsFromCanvas(void* aContext) {
+  auto* ctx = static_cast<CanvasRenderingContext2D*>(aContext);
+  auto* fontGroup = ctx->GetCurrentFontStyle();
+  if (!fontGroup) {
+    // Shouldn't happen, but just in case... return plausible values for a
+    // 10px font (canvas default size).
+    return {Length::FromPixels(5.0),
+            Length::FromPixels(5.0),
+            Length::FromPixels(8.0),
+            Length::FromPixels(10.0),
+            Length::FromPixels(8.0),
+            Length::FromPixels(10.0),
+            0.0f,
+            0.0f};
+  }
+  auto metrics = fontGroup->GetMetricsForCSSUnits(nsFontMetrics::eHorizontal);
+  return {Length::FromPixels(metrics.xHeight),
+          Length::FromPixels(metrics.zeroWidth),
+          Length::FromPixels(metrics.capHeight),
+          Length::FromPixels(metrics.ideographicWidth),
+          Length::FromPixels(metrics.maxAscent),
+          Length::FromPixels(fontGroup->GetStyle()->size),
+          0.0f,
+          0.0f};
+}
+
 void CanvasRenderingContext2D::ParseSpacing(const nsACString& aSpacing,
                                             float* aValue,
                                             nsACString& aNormalized) {
@@ -2751,7 +2778,8 @@ void CanvasRenderingContext2D::ParseSpacing(const nsACString& aSpacing,
     return;
   }
   float value;
-  if (!Servo_ParseAbsoluteLength(&normalized, &value)) {
+  if (!Servo_ParseLengthWithoutStyleContext(&normalized, &value,
+                                            GetFontMetricsFromCanvas, this)) {
     if (!GetPresShell()) {
       return;
     }
