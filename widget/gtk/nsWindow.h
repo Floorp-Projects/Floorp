@@ -374,7 +374,6 @@ class nsWindow final : public nsBaseWidget {
 
   // HiDPI scale conversion
   gint GdkCeiledScaleFactor();
-  gint GetCachedCeiledScaleFactor() const;
   bool UseFractionalScale() const;
   double FractionalScaleFactor();
 
@@ -476,7 +475,7 @@ class nsWindow final : public nsBaseWidget {
 
   nsCOMPtr<nsIWidget> mParent;
   PopupType mPopupHint{};
-  mozilla::Atomic<int, mozilla::Relaxed> mWindowScaleFactor{1};
+  int mWindowScaleFactor = 1;
 
   void UpdateAlpha(mozilla::gfx::SourceSurface* aSourceSurface,
                    nsIntRect aBoundsRect);
@@ -626,10 +625,8 @@ class nsWindow final : public nsBaseWidget {
   // probably make GetTitlebarRect() simpler / properly thread-safe.
   mozilla::Atomic<bool, mozilla::Relaxed> mDrawInTitlebar{false};
 
-  mozilla::Mutex mDestroyMutex;
-
   // Has this widget been destroyed yet?
-  bool mIsDestroyed MOZ_GUARDED_BY(mDestroyMutex);
+  bool mIsDestroyed;
   // mIsShown tracks requested visible status from browser perspective, i.e.
   // if the window should be visible or now.
   bool mIsShown : 1;
