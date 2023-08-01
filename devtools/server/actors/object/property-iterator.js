@@ -67,6 +67,8 @@ class PropertyIteratorActor extends Actor {
           this.iterator = enumURLSearchParamsEntries(objectActor);
         } else if (cls == "Headers") {
           this.iterator = enumHeadersEntries(objectActor);
+        } else if (cls == "HighlightRegistry") {
+          this.iterator = enumHighlightRegistryEntries(objectActor);
         } else if (cls == "FormData") {
           this.iterator = enumFormDataEntries(objectActor);
         } else if (cls == "MIDIInputMap") {
@@ -440,6 +442,39 @@ function enumHeadersEntries(objectActor) {
   };
 }
 
+function enumHighlightRegistryEntries(objectActor) {
+  const entriesFuncDbgObj = objectActor.obj.getProperty("entries").return;
+  const entriesDbgObj = entriesFuncDbgObj ? entriesFuncDbgObj.call(objectActor.obj).return : null;
+  const entries = entriesDbgObj
+    ? [...waiveXrays( entriesDbgObj.unsafeDereference())]
+    : [];
+
+  return {
+    [Symbol.iterator]: function*() {
+      for (const [key, value] of entries) {
+        yield [key, gripFromEntry(objectActor, value)];
+      }
+    },
+    size: entries.length,
+    propertyName(index) {
+      return index;
+    },
+    propertyDescription(index) {
+      const [key, value] = entries[index];
+      return {
+        enumerable: true,
+        value: {
+          type: "highlightRegistryEntry",
+          preview: {
+            key: key,
+            value: gripFromEntry(objectActor, value),
+          },
+        },
+      };
+    },
+  };
+}
+
 function enumMidiInputMapEntries(objectActor) {
   let raw = objectActor.obj.unsafeDereference();
   // We need to waive `raw` as we can't get the iterator from the Xray for MapLike (See Bug 1173651).
@@ -644,6 +679,7 @@ module.exports = {
   enumURLSearchParamsEntries,
   enumFormDataEntries,
   enumHeadersEntries,
+  enumHighlightRegistryEntries,
   enumWeakMapEntries,
   enumWeakSetEntries,
 };

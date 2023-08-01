@@ -61,9 +61,10 @@ define(function (require, exports, module) {
     }
     return (
       grip &&
-      (grip.type === "mapEntry" ||
+      (grip.type === "formDataEntry" ||
+        grip.type === "highlightRegistryEntry" ||
+        grip.type === "mapEntry" ||
         grip.type === "storageEntry" ||
-        grip.type === "formDataEntry" ||
         grip.type === "urlSearchParamsEntry") &&
       grip.preview
     );
