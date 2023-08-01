@@ -126,6 +126,9 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder(AVDictionary** aOptions) {
 #endif
 
   if (mLib->avcodec_open2(mCodecContext, codec, aOptions) < 0) {
+    if (mCodecContext->extradata) {
+      mLib->av_freep(&mCodecContext->extradata);
+    }
     mLib->av_freep(&mCodecContext);
     FFMPEG_LOG("  Couldn't open avcodec");
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
