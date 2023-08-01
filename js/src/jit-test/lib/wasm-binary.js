@@ -63,6 +63,8 @@ const EndCode          = 0x0b;
 const ReturnCode       = 0x0f;
 const CallCode         = 0x10;
 const CallIndirectCode = 0x11;
+const ReturnCallCode   = 0x12;
+const ReturnCallIndirectCode = 0x13;
 const DelegateCode     = 0x18;
 const DropCode         = 0x1a;
 const SelectCode       = 0x1b;
@@ -173,6 +175,7 @@ const definedOpcodes =
      ...(wasmExceptionsEnabled() ? [0x06, 0x07, 0x08, 0x09] : []),
      0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
      0x10, 0x11,
+     ...(wasmTailCallsEnabled() ? [0x12, 0x13] : []),
      ...(wasmFunctionReferencesEnabled() ? [0x14] : []),
      ...(wasmExceptionsEnabled() ? [0x18, 0x19] : []),
      0x1a, 0x1b, 0x1c,
