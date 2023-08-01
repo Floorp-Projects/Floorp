@@ -5795,10 +5795,12 @@ void ShapeSnapshot::checkSelf(JSContext* cx) const {
     PropertyInfo prop = propSnapshot.prop;
 
     // Skip if the map no longer matches the snapshotted data. This can
-    // only happen for non-configurable dictionary properties.
-    if (PropertySnapshot(propMap, propMapIndex) != propSnapshot) {
+    // only happen for dictionary maps because they can be mutated or compacted
+    // after a shape change.
+    if (!propMap->hasKey(propMapIndex) ||
+        PropertySnapshot(propMap, propMapIndex) != propSnapshot) {
       MOZ_RELEASE_ASSERT(propMap->isDictionary());
-      MOZ_RELEASE_ASSERT(prop.configurable());
+      MOZ_RELEASE_ASSERT(object_->shape() != shape_);
       continue;
     }
 
