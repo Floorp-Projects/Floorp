@@ -76,6 +76,7 @@ use selectors::matching::{ElementSelectorFlags, MatchingContext};
 use selectors::sink::Push;
 use selectors::{Element, OpaqueElement};
 use servo_arc::{Arc, ArcBorrow};
+use std::cell::Cell;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::mem;
@@ -270,17 +271,9 @@ impl<'ln> GeckoNode<'ln> {
         self.flags_atomic().fetch_or(flags, Ordering::Relaxed);
     }
 
-    #[inline]
-    fn flags_atomic(&self) -> &AtomicU32 {
-        use std::cell::Cell;
-        let flags: &Cell<u32> = &(self.0)._base._base_1.mFlags;
-
-        #[allow(dead_code)]
-        fn static_assert() {
-            let _: [u8; std::mem::size_of::<Cell<u32>>()] = [0u8; std::mem::size_of::<AtomicU32>()];
-            let _: [u8; std::mem::align_of::<Cell<u32>>()] =
-                [0u8; std::mem::align_of::<AtomicU32>()];
-        }
+    fn flags_atomic_for(flags: &Cell<u32>) -> &AtomicU32 {
+        const_assert!(std::mem::size_of::<Cell<u32>>() == std::mem::size_of::<AtomicU32>());
+        const_assert!(std::mem::align_of::<Cell<u32>>() == std::mem::align_of::<AtomicU32>());
 
         // Rust doesn't provide standalone atomic functions like GCC/clang do
         // (via the atomic intrinsics) or via std::atomic_ref, but it guarantees
@@ -290,8 +283,23 @@ impl<'ln> GeckoNode<'ln> {
     }
 
     #[inline]
+    fn flags_atomic(&self) -> &AtomicU32 {
+        Self::flags_atomic_for(&self.0._base._base_1.mFlags)
+    }
+
+    #[inline]
     fn flags(&self) -> u32 {
         self.flags_atomic().load(Ordering::Relaxed)
+    }
+
+    #[inline]
+    fn selector_flags_atomic(&self) -> &AtomicU32 {
+        Self::flags_atomic_for(&self.0.mSelectorFlags)
+    }
+
+    #[inline]
+    fn set_selector_flags(&self, flags: u32) {
+        self.selector_flags_atomic().fetch_or(flags, Ordering::Relaxed);
     }
 
     #[inline]
@@ -859,22 +867,22 @@ impl<'le> GeckoElement<'le> {
 /// by Gecko. We could align these and then do this without conditionals, but
 /// it's probably not worth the trouble.
 fn selector_flags_to_node_flags(flags: ElementSelectorFlags) -> u32 {
-    use crate::gecko_bindings::structs::*;
+    use crate::gecko_bindings::structs::NodeSelectorFlags;
     let mut gecko_flags = 0u32;
     if flags.contains(ElementSelectorFlags::HAS_SLOW_SELECTOR) {
-        gecko_flags |= NODE_HAS_SLOW_SELECTOR;
+        gecko_flags |= NodeSelectorFlags::HasSlowSelector.0;
     }
     if flags.contains(ElementSelectorFlags::HAS_SLOW_SELECTOR_LATER_SIBLINGS) {
-        gecko_flags |= NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS;
+        gecko_flags |= NodeSelectorFlags::HasSlowSelectorLaterSiblings.0;
     }
     if flags.contains(ElementSelectorFlags::HAS_SLOW_SELECTOR_NTH_OF) {
-        gecko_flags |= NODE_HAS_SLOW_SELECTOR_NTH_OF;
+        gecko_flags |= NodeSelectorFlags::HasSlowSelectorNthOf.0;
     }
     if flags.contains(ElementSelectorFlags::HAS_EDGE_CHILD_SELECTOR) {
-        gecko_flags |= NODE_HAS_EDGE_CHILD_SELECTOR;
+        gecko_flags |= NodeSelectorFlags::HasEdgeChildSelector.0;
     }
     if flags.contains(ElementSelectorFlags::HAS_EMPTY_SELECTOR) {
-        gecko_flags |= NODE_HAS_EMPTY_SELECTOR;
+        gecko_flags |= NodeSelectorFlags::HasEmptySelector.0;
     }
 
     gecko_flags
@@ -1810,7 +1818,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
         // Handle flags that apply to the element.
         let self_flags = flags.for_self();
         if !self_flags.is_empty() {
-            self.set_flags(selector_flags_to_node_flags(flags))
+            self.as_node().set_selector_flags(selector_flags_to_node_flags(flags))
         }
 
         // Handle flags that apply to the parent.
@@ -1818,7 +1826,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
         if !parent_flags.is_empty() {
             if let Some(p) = self.as_node().parent_node() {
                 if p.is_element() || p.is_shadow_root() {
-                    p.set_flags(selector_flags_to_node_flags(parent_flags));
+                    p.set_selector_flags(selector_flags_to_node_flags(parent_flags));
                 }
             }
         }

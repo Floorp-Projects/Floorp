@@ -40,7 +40,10 @@ class nsWindowRoot;
 // Both sets of flags are 32 bits. On 64-bit platforms, this can cause two
 // wasted 32-bit fields due to alignment requirements. Some compilers are
 // smart enough to coalesce the fields if we make mBoolFlags the first member
-// of nsINode, but others (such as MSVC) are not.
+// of nsINode, but others (such as MSVC, but that's not officially supported
+// by us anymore) are not. Also note that this kind of coalascing tends to
+// interact poorly with rust's bindgen, see:
+// https://github.com/rust-lang/rust-bindgen/issues/380
 //
 // So we just store mBoolFlags directly on nsWrapperCache on 64-bit platforms.
 // This may waste space for some other nsWrapperCache-derived objects that have

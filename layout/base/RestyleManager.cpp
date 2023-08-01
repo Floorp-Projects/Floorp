@@ -94,17 +94,16 @@ void RestyleManager::ContentAppended(nsIContent* aFirstNewContent) {
     }
   }
 #endif
-  uint32_t selectorFlags =
-      container->GetFlags() &
-      (NODE_RESTYLE_SELECTOR_FLAGS & ~NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
-  if (selectorFlags == 0) {
+  const auto selectorFlags = container->GetSelectorFlags() &
+                             NodeSelectorFlags::AllSimpleRestyleFlagsForAppend;
+  if (!selectorFlags) {
     return;
   }
 
   // The container cannot be a document.
   MOZ_ASSERT(container->IsElement() || container->IsShadowRoot());
 
-  if (selectorFlags & NODE_HAS_EMPTY_SELECTOR) {
+  if (selectorFlags & NodeSelectorFlags::HasEmptySelector) {
     // see whether we need to restyle the container
     bool wasEmpty = true;  // :empty or :-moz-only-whitespace
     for (nsIContent* cur = container->GetFirstChild(); cur != aFirstNewContent;
@@ -124,7 +123,7 @@ void RestyleManager::ContentAppended(nsIContent* aFirstNewContent) {
     }
   }
 
-  if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
+  if (selectorFlags & NodeSelectorFlags::HasSlowSelector) {
     if (container->IsElement()) {
       PostRestyleEvent(container->AsElement(), RestyleHint::RestyleSubtree(),
                        nsChangeHint(0));
@@ -136,7 +135,7 @@ void RestyleManager::ContentAppended(nsIContent* aFirstNewContent) {
     return;
   }
 
-  if (selectorFlags & NODE_HAS_EDGE_CHILD_SELECTOR) {
+  if (selectorFlags & NodeSelectorFlags::HasEdgeChildSelector) {
     // restyle the last element child before this node
     for (nsIContent* cur = aFirstNewContent->GetPreviousSibling(); cur;
          cur = cur->GetPreviousSibling()) {
@@ -173,8 +172,8 @@ void RestyleManager::RestyleForEmptyChange(Element* aContainer) {
   // In some cases (:empty + E, :empty ~ E), a change in the content of
   // an element requires restyling its parent's siblings.
   nsIContent* grandparent = aContainer->GetParent();
-  if (!grandparent ||
-      !(grandparent->GetFlags() & NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS)) {
+  if (!grandparent || !(grandparent->GetSelectorFlags() &
+                        NodeSelectorFlags::HasSlowSelectorLaterSiblings)) {
     return;
   }
   RestyleSiblingsStartingWith(aContainer->GetNextSibling());
@@ -182,7 +181,8 @@ void RestyleManager::RestyleForEmptyChange(Element* aContainer) {
 
 void RestyleManager::MaybeRestyleForEdgeChildChange(nsINode* aContainer,
                                                     nsIContent* aChangedChild) {
-  MOZ_ASSERT(aContainer->GetFlags() & NODE_HAS_EDGE_CHILD_SELECTOR);
+  MOZ_ASSERT(aContainer->GetSelectorFlags() &
+             NodeSelectorFlags::HasEdgeChildSelector);
   MOZ_ASSERT(aChangedChild->GetParent() == aContainer);
   // restyle the previously-first element child if it is after this node
   bool passedChild = false;
@@ -264,9 +264,10 @@ void RestyleManager::CharacterDataChanged(
   nsINode* parent = aContent->GetParentNode();
   MOZ_ASSERT(parent, "How were we notified of a stray node?");
 
-  uint32_t slowSelectorFlags = parent->GetFlags() & NODE_RESTYLE_SELECTOR_FLAGS;
-  if (!(slowSelectorFlags &
-        (NODE_HAS_EMPTY_SELECTOR | NODE_HAS_EDGE_CHILD_SELECTOR))) {
+  const auto slowSelectorFlags =
+      parent->GetSelectorFlags() & NodeSelectorFlags::AllSimpleRestyleFlags;
+  if (!(slowSelectorFlags & (NodeSelectorFlags::HasEmptySelector |
+                             NodeSelectorFlags::HasEdgeChildSelector))) {
     // Nothing to do, no other slow selector can change as a result of this.
     return;
   }
@@ -321,7 +322,7 @@ void RestyleManager::CharacterDataChanged(
     return;
   }
 
-  if (slowSelectorFlags & NODE_HAS_EMPTY_SELECTOR) {
+  if (slowSelectorFlags & NodeSelectorFlags::HasEmptySelector) {
     if (!HasAnySignificantSibling(parent->AsElement(), aContent)) {
       // We used to be empty, restyle the parent.
       RestyleForEmptyChange(parent->AsElement());
@@ -329,7 +330,7 @@ void RestyleManager::CharacterDataChanged(
     }
   }
 
-  if (slowSelectorFlags & NODE_HAS_EDGE_CHILD_SELECTOR) {
+  if (slowSelectorFlags & NodeSelectorFlags::HasEdgeChildSelector) {
     MaybeRestyleForEdgeChildChange(parent, aContent);
   }
 }
@@ -344,8 +345,9 @@ void RestyleManager::RestyleForInsertOrChange(nsIContent* aChild) {
   nsINode* container = aChild->GetParentNode();
   MOZ_ASSERT(container);
 
-  uint32_t selectorFlags = container->GetFlags() & NODE_RESTYLE_SELECTOR_FLAGS;
-  if (selectorFlags == 0) {
+  const auto selectorFlags =
+      container->GetSelectorFlags() & NodeSelectorFlags::AllSimpleRestyleFlags;
+  if (!selectorFlags) {
     return;
   }
 
@@ -355,7 +357,8 @@ void RestyleManager::RestyleForInsertOrChange(nsIContent* aChild) {
   // The container cannot be a document.
   MOZ_ASSERT(container->IsElement() || container->IsShadowRoot());
 
-  if (selectorFlags & NODE_HAS_EMPTY_SELECTOR && container->IsElement()) {
+  if (selectorFlags & NodeSelectorFlags::HasEmptySelector &&
+      container->IsElement()) {
     // See whether we need to restyle the container due to :empty /
     // :-moz-only-whitespace.
     const bool wasEmpty =
@@ -369,7 +372,7 @@ void RestyleManager::RestyleForInsertOrChange(nsIContent* aChild) {
     }
   }
 
-  if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
+  if (selectorFlags & NodeSelectorFlags::HasSlowSelector) {
     if (container->IsElement()) {
       PostRestyleEvent(container->AsElement(), RestyleHint::RestyleSubtree(),
                        nsChangeHint(0));
@@ -381,12 +384,12 @@ void RestyleManager::RestyleForInsertOrChange(nsIContent* aChild) {
     return;
   }
 
-  if (selectorFlags & NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS) {
+  if (selectorFlags & NodeSelectorFlags::HasSlowSelectorLaterSiblings) {
     // Restyle all later siblings.
     RestyleSiblingsStartingWith(aChild->GetNextSibling());
   }
 
-  if (selectorFlags & NODE_HAS_EDGE_CHILD_SELECTOR) {
+  if (selectorFlags & NodeSelectorFlags::HasEdgeChildSelector) {
     MaybeRestyleForEdgeChildChange(container, aChild);
   }
 }
@@ -408,8 +411,9 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
     IncrementUndisplayedRestyleGeneration();
   }
 
-  uint32_t selectorFlags = container->GetFlags() & NODE_RESTYLE_SELECTOR_FLAGS;
-  if (selectorFlags == 0) {
+  const auto selectorFlags =
+      container->GetSelectorFlags() & NodeSelectorFlags::AllSimpleRestyleFlags;
+  if (!selectorFlags) {
     return;
   }
 
@@ -424,7 +428,8 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
   // The container cannot be a document.
   MOZ_ASSERT(container->IsElement() || container->IsShadowRoot());
 
-  if (selectorFlags & NODE_HAS_EMPTY_SELECTOR && container->IsElement()) {
+  if (selectorFlags & NodeSelectorFlags::HasEmptySelector &&
+      container->IsElement()) {
     // see whether we need to restyle the container
     bool isEmpty = true;  // :empty or :-moz-only-whitespace
     for (nsIContent* child = container->GetFirstChild(); child;
@@ -444,7 +449,7 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
     }
   }
 
-  if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
+  if (selectorFlags & NodeSelectorFlags::HasSlowSelector) {
     if (container->IsElement()) {
       PostRestyleEvent(container->AsElement(), RestyleHint::RestyleSubtree(),
                        nsChangeHint(0));
@@ -456,12 +461,12 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
     return;
   }
 
-  if (selectorFlags & NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS) {
+  if (selectorFlags & NodeSelectorFlags::HasSlowSelectorLaterSiblings) {
     // Restyle all later siblings.
     RestyleSiblingsStartingWith(aFollowingSibling);
   }
 
-  if (selectorFlags & NODE_HAS_EDGE_CHILD_SELECTOR) {
+  if (selectorFlags & NodeSelectorFlags::HasEdgeChildSelector) {
     // restyle the now-first element child if it was after aOldChild
     bool reachedFollowingSibling = false;
     for (nsIContent* content = container->GetFirstChild(); content;
@@ -3355,8 +3360,8 @@ void RestyleManager::MaybeRestyleForNthOfState(ServoStyleSet& aStyleSet,
                                                ElementState aChangedBits) {
   const auto* parentNode = aChild->GetParentNode();
   MOZ_ASSERT(parentNode);
-  const auto parentFlags = parentNode->GetFlags();
-  if (!(parentFlags & NODE_HAS_SLOW_SELECTOR_NTH_OF)) {
+  const auto parentFlags = parentNode->GetSelectorFlags();
+  if (!(parentFlags & NodeSelectorFlags::HasSlowSelectorNthOf)) {
     return;
   }
 
@@ -3535,20 +3540,21 @@ void RestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
   }
 }
 
-void RestyleManager::RestyleSiblings(
-    Element* aChild, nsBaseContentList::FlagsType aParentFlags) {
+void RestyleManager::RestyleSiblings(Element* aChild,
+                                     NodeSelectorFlags aParentFlags) {
   const DebugOnly<nsINode*> parentNode = aChild->GetParentNode();
   MOZ_ASSERT(parentNode->IsElement() || parentNode->IsShadowRoot());
 
   DebugOnly<bool> restyledSiblings = false;
-  // NODE_HAS_SLOW_SELECTOR typically indicates restyling the parent, but since
-  // we know we're restyling for :nth-last-child(.. of <selector>), we can
-  // restyle only previous siblings without under-invalidating.
-  if (aParentFlags & NODE_HAS_SLOW_SELECTOR) {
+  // NodeSelectorFlags::HasSlowSelector typically indicates restyling the
+  // parent, but since we know we're restyling for :nth-last-child(.. of
+  // <selector>), we can restyle only previous siblings without
+  // under-invalidating.
+  if (aParentFlags & NodeSelectorFlags::HasSlowSelector) {
     RestylePreviousSiblings(aChild->GetPreviousSibling());
     restyledSiblings = true;
   }
-  if (aParentFlags & NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS) {
+  if (aParentFlags & NodeSelectorFlags::HasSlowSelectorLaterSiblings) {
     RestyleSiblingsStartingWith(aChild->GetNextSibling());
     restyledSiblings = true;
   }
@@ -3560,8 +3566,8 @@ void RestyleManager::MaybeRestyleForNthOfAttribute(
     Element* aChild, nsAtom* aAttribute, const nsAttrValue* aOldValue) {
   const auto* parentNode = aChild->GetParentNode();
   MOZ_ASSERT(parentNode);
-  const auto parentFlags = parentNode->GetFlags();
-  if (!(parentFlags & NODE_HAS_SLOW_SELECTOR_NTH_OF)) {
+  const auto parentFlags = parentNode->GetSelectorFlags();
+  if (!(parentFlags & NodeSelectorFlags::HasSlowSelectorNthOf)) {
     return;
   }
   if (!aChild->HasServoData()) {
