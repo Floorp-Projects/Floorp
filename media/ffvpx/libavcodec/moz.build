@@ -62,6 +62,7 @@ SOURCES += [
     'options.c',
     'parser.c',
     'parsers.c',
+    'pcm.c',
     'profiles.c',
     'pthread.c',
     'pthread_frame.c',
