@@ -24,9 +24,6 @@ panel {
     --panel-border-radius: 8px;
     --panel-padding-block: max(0px, var(--panel-border-radius) / 2 - 1px);
 
-    /* Vertically align nested menupopups: the shadow plus the top padding */
-    --nested-margin-top: calc(-1 * (var(--panel-shadow-margin) + var(--panel-padding-block)));
-
     @media (prefers-contrast) {
       --panel-border-color: color-mix(in srgb, currentColor 60%, transparent);
     }
@@ -35,8 +32,6 @@ panel {
   @media (-moz-platform: windows) {
     --panel-border-radius: 4px;
     --panel-padding-block: 4px;
-
-    /* TODO: Somehow unify with linux's --nested-margin-top? */
     --nested-margin: -10px;
   }
 
@@ -110,7 +105,17 @@ panel {
     --panel-padding: var(--panel-padding-block);
   }
   menupopup > menu > menupopup {
-    margin-top: var(--nested-margin-top);
+    /* Vertically align nested menupopups: the shadow plus the top padding */
+    margin-top: calc(-1 * (var(--panel-shadow-margin) + var(--panel-padding-block)));
+  }
+}
+
+@media (-moz-platform: macos) {
+  menupopup {
+    --panel-padding-block: 4px;
+  }
+  menupopup > menu > menupopup {
+    margin-top: -4px;
   }
 }
 
@@ -121,7 +126,7 @@ panel {
     padding-inline-start: 1em;
   }
   menupopup > menu > menupopup {
-    /* Vertically align nested menupopups: the shadow plus the top padding */
+    /* TODO: Somehow unify with Linux and macOS above? */
     margin-top: var(--nested-margin);
     margin-inline-start: var(--nested-margin);
   }
@@ -136,8 +141,6 @@ menulist > menupopup {
   }
 
   @media (-moz-platform: macos) {
-    --panel-padding-block: 4px;
-
     &:not([position]) {
       margin-inline-start: -13px;
       margin-top: -2px;
