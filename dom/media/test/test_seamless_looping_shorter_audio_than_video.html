@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Seamless looping : shorter audio track than video track</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="text/javascript" src="manifest.js"></script>
+</head>
+<script type="application/javascript">
+
+/**
+ * This test is used to check whether we can play and loop a file in which the
+ * audio track is shorter than its video track. The file we used in the test has
+ * audio track (duration 3,001,000us), and video track (duration 3,047,000us)
+ */
+add_task(async function testSeamlessLoopingShorterAudioTrack() {
+  info(`create video and play it`);
+  let video = document.createElement('video');
+  video.loop = true;
+  video.controls = true;
+  video.src = "shorter_audio_than_video_3s.webm";
+  document.body.appendChild(video);
+  await video.play();
+
+  info(`test seamless looping multiples times`);
+  let MAX_LOOPING_COUNT = 1;
+  for (let count = 0; count < MAX_LOOPING_COUNT; count++) {
+    await once(video, "seeking");
+    await once(video, "seeked");
+    ok(true, `the round ${count} of the seamless looping succeeds`);
+  }
+});
+
+</script>
+<body>
+</body>
+</html>
