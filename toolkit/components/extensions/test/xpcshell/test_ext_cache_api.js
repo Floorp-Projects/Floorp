@@ -36,7 +36,7 @@ add_task(async function test_cache_api_http_resource_allowed() {
       await cache.add(BASE_URL);
       browser.test.assertEq(
         "test_ext_cache_api.js",
-        await cache.match(BASE_URL).then(res => res.text()),
+        await cache.match(BASE_URL).then(res => res?.text()),
         "Got the expected content from the cached http url"
       );
 
@@ -101,19 +101,22 @@ add_task(async function test_cache_api_from_ext_shared_worker() {
       worker.port.onmessage = resolve;
       worker.port.postMessage(["worker-cacheapi-test-allowed", BASE_URL_OK]);
     });
-    browser.test.log(
-      `Got result from extension worker for allowed host url: ${JSON.stringify(
-        resultOK
-      )}`
+    browser.test.assertDeepEq(
+      ["worker-cacheapi-test-allowed:result", { success: true }],
+      resultOK,
+      "Got success result from extension worker for allowed host url"
     );
     const { data: resultKO } = await new Promise(resolve => {
       worker.port.onmessage = resolve;
       worker.port.postMessage(["worker-cacheapi-test-disallowed", BASE_URL_KO]);
     });
-    browser.test.log(
-      `Got result from extension worker for disallowed host url: ${JSON.stringify(
-        resultKO
-      )}`
+    browser.test.assertDeepEq(
+      [
+        "worker-cacheapi-test-disallowed:result",
+        { error: "NetworkError when attempting to fetch resource." },
+      ],
+      resultKO,
+      "Got result from extension worker for disallowed host url"
     );
 
     browser.test.assertTrue(
@@ -123,7 +126,7 @@ add_task(async function test_cache_api_from_ext_shared_worker() {
     const cache = await window.caches.open("test-cache-api");
     browser.test.assertEq(
       "test_ext_cache_api.js",
-      await cache.match(BASE_URL_OK).then(res => res.text()),
+      await cache.match(BASE_URL_OK).then(res => res?.text()),
       "Got the expected content from the cached http url"
     );
     browser.test.assertEq(
@@ -132,10 +135,7 @@ add_task(async function test_cache_api_from_ext_shared_worker() {
       "Got no match for the http url that isn't allowed by host permissions"
     );
 
-    browser.test.sendMessage("test-cacheapi-sharedworker:done", {
-      expectAllowed: resultOK,
-      expectDisallowed: resultKO,
-    });
+    browser.test.sendMessage("test-cacheapi-sharedworker:done");
   };
 
   const extension = ExtensionTestUtils.loadExtension({
@@ -167,25 +167,7 @@ add_task(async function test_cache_api_from_ext_shared_worker() {
   });
 
   await extension.startup();
-  const { expectAllowed, expectDisallowed } = await extension.awaitMessage(
-    "test-cacheapi-sharedworker:done"
-  );
-  // Increase the chance to have the error message related to an unexpected
-  // failure to be explicitly mention in the failure message.
-  Assert.deepEqual(
-    expectAllowed,
-    ["worker-cacheapi-test-allowed:result", { success: true }],
-    "Expect worker result to be successfull with the required host permission"
-  );
-  Assert.deepEqual(
-    expectDisallowed,
-    [
-      "worker-cacheapi-test-disallowed:result",
-      { error: "NetworkError when attempting to fetch resource." },
-    ],
-    "Expect worker result to be unsuccessfull without the required host permission"
-  );
-
+  await extension.awaitMessage("test-cacheapi-sharedworker:done");
   await extension.unload();
 });
 
@@ -205,7 +187,7 @@ add_task(async function test_cache_storage_evicted_on_addon_uninstalled() {
       await cache.add(BASE_URL);
       browser.test.assertEq(
         "test_ext_cache_api.js",
-        await cache.match(BASE_URL).then(res => res.text()),
+        await cache.match(BASE_URL).then(res => res?.text()),
         "Got the expected content from the cached http url"
       );
     } catch (err) {
