@@ -4743,8 +4743,8 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
         fontMetrics.maxAscent - baselineAnchor,   // fontBBAscent
         fontMetrics.maxDescent + baselineAnchor,  // fontBBDescent
         actualBoundingBoxAscent, actualBoundingBoxDescent,
-        fontMetrics.emAscent - baselineAnchor,    // emHeightAscent
-        -fontMetrics.emDescent - baselineAnchor,  // emHeightDescent
+        fontMetrics.emAscent - baselineAnchor,   // emHeightAscent
+        fontMetrics.emDescent + baselineAnchor,  // emHeightDescent
         baselines.mHanging - baselineAnchor,
         baselines.mAlphabetic - baselineAnchor,
         baselines.mIdeographic - baselineAnchor);
