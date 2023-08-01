@@ -59,7 +59,7 @@ class BaseHost:
                     "log",
                     "-1",
                     "--date=iso8601-strict",
-                    "--format=%ad",
+                    "--format=%cd",
                     tag,
                 ],
                 stdout=subprocess.PIPE,
