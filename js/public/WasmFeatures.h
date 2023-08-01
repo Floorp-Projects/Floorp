@@ -203,7 +203,17 @@ enum class WasmFeatureStage {
     /* flag predicate     */ true,                                      \
     /* flag force enable  */ false,                                     \
     /* shell flag         */ "test-serialization",                      \
-    /* preference name    */ "test-serialization")
+    /* preference name    */ "test-serialization")                      \
+  FEATURE(                                                              \
+    /* capitalized name   */ FinalTypes,                                \
+    /* lower case name    */ finalTypes,                                \
+    /* stage              */ WasmFeatureStage::Experimental,            \
+    /* compile predicate  */ 1,                                         \
+    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
+    /* flag predicate     */ true,                                      \
+    /* flag force enable  */ false,                                     \
+    /* shell flag         */ "final-types",                             \
+    /* preference name    */ "final_types")
 
 // clang-format on
 
