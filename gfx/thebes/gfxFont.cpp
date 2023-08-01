@@ -4617,33 +4617,40 @@ gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle, FontWeight aWeight,
       noFallbackVariantFeatures(true) {
   MOZ_ASSERT(!std::isnan(size));
 
-  switch (aSizeAdjust.tag) {
-    case FontSizeAdjust::Tag::None:
-      sizeAdjust = 0.0f;
-      break;
-    case FontSizeAdjust::Tag::ExHeight:
-      sizeAdjust = aSizeAdjust.AsExHeight();
-      break;
-    case FontSizeAdjust::Tag::CapHeight:
-      sizeAdjust = aSizeAdjust.AsCapHeight();
-      break;
-    case FontSizeAdjust::Tag::ChWidth:
-      sizeAdjust = aSizeAdjust.AsChWidth();
-      break;
-    case FontSizeAdjust::Tag::IcWidth:
-      sizeAdjust = aSizeAdjust.AsIcWidth();
-      break;
-    case FontSizeAdjust::Tag::IcHeight:
-      sizeAdjust = aSizeAdjust.AsIcHeight();
-      break;
-  }
-  MOZ_ASSERT(!std::isnan(sizeAdjust));
-
   sizeAdjustBasis = uint8_t(aSizeAdjust.tag);
   // sizeAdjustBasis is currently a small bitfield, so let's assert that the
   // tag value was not truncated.
   MOZ_ASSERT(FontSizeAdjust::Tag(sizeAdjustBasis) == aSizeAdjust.tag,
              "gfxFontStyle.sizeAdjustBasis too small?");
+
+  // If we're created with aSizeAdjust holding a FromFont value, we ignore it
+  // here; this is the style system retrieving font metrics in order to resolve
+  // FromFont to an actual ratio, which it can do using the unmodified metrics.
+
+#define HANDLE_TAG(TAG)                                     \
+  case FontSizeAdjust::Tag::TAG:                            \
+    if (aSizeAdjust.As##TAG().IsFromFont()) {               \
+      sizeAdjustBasis = uint8_t(FontSizeAdjust::Tag::None); \
+      sizeAdjust = 0.0f;                                    \
+      break;                                                \
+    }                                                       \
+    sizeAdjust = aSizeAdjust.As##TAG().AsNumber();          \
+    break;
+
+  switch (aSizeAdjust.tag) {
+    case FontSizeAdjust::Tag::None:
+      sizeAdjust = 0.0f;
+      break;
+      HANDLE_TAG(ExHeight)
+      HANDLE_TAG(CapHeight)
+      HANDLE_TAG(ChWidth)
+      HANDLE_TAG(IcWidth)
+      HANDLE_TAG(IcHeight)
+  }
+
+#undef HANDLE_TAG
+
+  MOZ_ASSERT(!std::isnan(sizeAdjust));
 
   if (weight > FontWeight::FromInt(1000)) {
     weight = FontWeight::FromInt(1000);
