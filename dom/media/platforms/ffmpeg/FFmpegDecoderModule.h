@@ -90,7 +90,9 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
     }
 
     AVCodecID videoCodec = FFmpegVideoDecoder<V>::GetCodecId(mimeType);
-    AVCodecID audioCodec = FFmpegAudioDecoder<V>::GetCodecId(mimeType);
+    AVCodecID audioCodec = FFmpegAudioDecoder<V>::GetCodecId(
+        mimeType,
+        trackInfo.GetAsAudioInfo() ? *trackInfo.GetAsAudioInfo() : AudioInfo());
     if (audioCodec == AV_CODEC_ID_NONE && videoCodec == AV_CODEC_ID_NONE) {
       MOZ_LOG(sPDMLog, LogLevel::Debug,
               ("FFmpeg decoder rejects requested type '%s'",
