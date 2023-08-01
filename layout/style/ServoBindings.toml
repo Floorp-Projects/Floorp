@@ -58,6 +58,7 @@ hide-types = [
 bitfield-enums = [
     "nsChangeHint",
     "mozilla::OriginFlags",
+    "NodeSelectorFlags",
 ]
 rusty-enums = [
     "nsCompatibility",
@@ -354,6 +355,7 @@ allowlist-types = [
     "mozilla::dom::MediaList",
     "mozilla::StyleRuleInclusion",
     "nsStyleTransformMatrix::MatrixTransformOperator",
+    "NodeSelectorFlags",
 ]
 opaque-types = [
     "mozilla::StyleThinArc", # https://github.com/rust-lang/rust-bindgen/issues/1557
