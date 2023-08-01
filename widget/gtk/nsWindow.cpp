@@ -8895,7 +8895,13 @@ GtkWindow* nsWindow::GetCurrentTopmostWindow() const {
   return topmostParentWindow;
 }
 
+// We're called from Renderer/Compositor thread where EGL Window size is set.
+// Just return what we have and keep scale update to main thread.
+gint nsWindow::GetCachedCeiledScaleFactor() const { return mWindowScaleFactor; }
+
 gint nsWindow::GdkCeiledScaleFactor() {
+  MOZ_ASSERT(NS_IsMainThread());
+
   // We depend on notify::scale-factor callback which is reliable for toplevel
   // windows only, so don't use scale cache for popup windows.
   if (mWindowType == WindowType::TopLevel && !mWindowScaleFactorChanged) {
@@ -9717,7 +9723,10 @@ void nsWindow::SetEGLNativeWindowSize(
     return;
   }
 
-  gint scale = GdkCeiledScaleFactor();
+  // SetEGLNativeWindowSize() may be called from Renderer/Compositor thread.
+  // In such case use cached scale factor.
+  gint scale =
+      NS_IsMainThread() ? GdkCeiledScaleFactor() : GetCachedCeiledScaleFactor();
   LOG("nsWindow::SetEGLNativeWindowSize() %d x %d scale %d (unscaled %d x %d)",
       aEGLWindowSize.width, aEGLWindowSize.height, scale,
       aEGLWindowSize.width / scale, aEGLWindowSize.height / scale);
