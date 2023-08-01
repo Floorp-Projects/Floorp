@@ -917,9 +917,7 @@ local skip1
     .unreq      PF_DST
     .unreq      PF_MASK
     .unreq      DUMMY
-#ifndef __clang__
-    .endfunc
-#endif
+    pixman_end_asm_function
 .endm
 
 /*
@@ -1094,9 +1092,7 @@ local skip1
     .purgem     fetch_src_pixblock
     .purgem     pixld_src
 
-#ifndef __clang__
-    .endfunc
-#endif
+    pixman_end_asm_function
 .endm
 
 .macro generate_composite_function_single_scanline x:vararg

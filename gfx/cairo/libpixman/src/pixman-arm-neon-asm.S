@@ -3242,9 +3242,7 @@ pixman_asm_function \fname
     .unreq    TMP3
     .unreq    TMP4
     .unreq    STRIDE
-#ifndef __clang__
-.endfunc
-#endif
+pixman_end_asm_function
 
 .endm
 
