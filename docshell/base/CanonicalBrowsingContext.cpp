@@ -331,8 +331,13 @@ void CanonicalBrowsingContext::ReplacedBy(
   txn.SetDisplayMode(GetDisplayMode());
   txn.SetForceDesktopViewport(GetForceDesktopViewport());
   txn.SetIsUnderHiddenEmbedderElement(GetIsUnderHiddenEmbedderElement());
-  txn.SetFullZoom(GetFullZoom());
-  txn.SetTextZoom(GetTextZoom());
+
+  // When using site-specific zoom, we let the front-end manage it, otherwise it
+  // can cause weirdness like bug 1846141.
+  if (!StaticPrefs::browser_zoom_siteSpecific()) {
+    txn.SetFullZoom(GetFullZoom());
+    txn.SetTextZoom(GetTextZoom());
+  }
 
   // Propagate the default load flags so that the TRR mode flags are forwarded
   // to the new browsing context. See bug 1828643.
