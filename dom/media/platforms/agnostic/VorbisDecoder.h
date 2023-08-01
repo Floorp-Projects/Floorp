@@ -10,11 +10,7 @@
 #  include "PlatformDecoderModule.h"
 #  include "mozilla/Maybe.h"
 
-#  ifdef MOZ_TREMOR
-#    include "tremor/ivorbiscodec.h"
-#  else
-#    include <vorbis/codec.h>
-#  endif
+#  include <vorbis/codec.h>
 
 namespace mozilla {
 
