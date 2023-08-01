@@ -46,6 +46,8 @@ SOURCES += [
     'jfdctfst.c',
     'jfdctint.c',
     'jrevdct.c',
+    'libopus.c',
+    'libopusdec.c',
     'libvorbisdec.c',
     'log2_tab.c',
     'mpegaudio.c',
@@ -73,6 +75,7 @@ SOURCES += [
     'utils.c',
     'version.c',
     'vlc.c',
+    'vorbis_data.c',
     'vorbis_parser.c',
     'xiph.c'
 ]
@@ -127,7 +130,10 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
           'mozva'
         ]
 
-LOCAL_INCLUDES += ['/media/libvorbis']
+LOCAL_INCLUDES += [
+    '/media/libopus/include',
+    '/media/libvorbis',
+]
 
 if CONFIG['MOZ_LIBAV_FFT']:
     SOURCES += [
