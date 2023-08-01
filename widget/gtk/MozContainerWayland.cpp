@@ -170,7 +170,15 @@ static bool moz_container_wayland_egl_window_needs_size_update_locked(
   nsIntSize recentSize;
   wl_egl_window_get_attached_size(wl_container->eglwindow, &recentSize.width,
                                   &recentSize.height);
-  return aSize != recentSize;
+  if (aSize != recentSize) {
+    return true;
+  }
+
+  return recentSize.width % aScale != 0 || recentSize.height % aScale != 0;
+}
+
+static int adjust_size_for_scale(int aSize, int aScale) {
+  return aSize - (aSize % aScale);
 }
 
 // This is called from layout/compositor code only with
@@ -189,6 +197,11 @@ void moz_container_wayland_egl_window_set_size(MozContainer* container,
           lock, wl_container, aSize, aScale)) {
     return;
   }
+
+  // See Bug 1832760. Width/height has to be divided by scale factor,
+  // we're getting compositor errors otherwise.
+  aSize.width = adjust_size_for_scale(aSize.width, aScale);
+  aSize.height = adjust_size_for_scale(aSize.height, aScale);
 
   LOGCONTAINER(
       "moz_container_wayland_egl_window_set_size [%p] %d x %d scale %d "
