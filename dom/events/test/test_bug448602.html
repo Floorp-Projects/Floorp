@@ -78,7 +78,16 @@ function runTests() {
   root.addEventListener("click", bubblingListener);
   root.addEventListener("fooevent", capturingListener, true);
   root.addEventListener("fooevent", bubblingListener);
-  infos = els.getListenerInfoFor(root);
+
+  // We now have both "click" and "fooevent" listeners.
+  // Get the new set of listener infos, because we'll want to flip certain
+  // "click" event listeners on and off in the tests below.
+  // The order of event types is not guaranteed by getListenerInfoFor; but the
+  // order of listeners for a single event is guaranteed. So we filter the infos
+  // by event type.
+  const combinedListenerInfos = [...els.getListenerInfoFor(root)];
+  const clickInfos = combinedListenerInfos.filter((info) => info.type == "click");
+
   // Use a child node to dispatch events so that both capturing and bubbling
   // listeners get called.
   l2 = document.getElementById("testlevel2");
@@ -88,29 +97,29 @@ function runTests() {
   ok(bubblingListenerCalled);
   clearListenerStates();
 
-  infos[0].enabled = false;
+  clickInfos[0].enabled = false;
   l2.click();
   ok(!handlerCalled);
   ok(capturingListenerCalled);
   ok(bubblingListenerCalled);
   clearListenerStates();
-  infos[0].enabled = true;
+  clickInfos[0].enabled = true;
 
-  infos[1].enabled = false;
+  clickInfos[1].enabled = false;
   l2.click();
   ok(handlerCalled);
   ok(!capturingListenerCalled);
   ok(bubblingListenerCalled);
   clearListenerStates();
-  infos[1].enabled = true;
+  clickInfos[1].enabled = true;
 
-  infos[2].enabled = false;
+  clickInfos[2].enabled = false;
   l2.click();
   ok(handlerCalled);
   ok(capturingListenerCalled);
   ok(!bubblingListenerCalled);
   clearListenerStates();
-  infos[2].enabled = true;
+  clickInfos[2].enabled = true;
 
   root.removeEventListener("click", capturingListener, true);
   root.removeEventListener("click", bubblingListener);
