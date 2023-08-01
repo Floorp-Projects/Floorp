@@ -45,7 +45,7 @@ struct nsFont final {
   // rendering mode when the alpha component > 0. Only used for text in the
   // chrome.
   mozilla::StyleAbsoluteColor fontSmoothingBackgroundColor =
-      mozilla::StyleAbsoluteColor::TRANSPARENT;
+      mozilla::StyleAbsoluteColor::Transparent();
 
   // Language system tag, to override document language;
   // this is an OpenType "language system" tag represented as a 32-bit integer

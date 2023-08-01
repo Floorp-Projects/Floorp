@@ -51,7 +51,7 @@ ${helpers.single_keyword(
 ${helpers.predefined_type(
     "fill",
     "SVGPaint",
-    "crate::values::computed::SVGPaint::BLACK",
+    "crate::values::computed::SVGPaint::black()",
     engines="gecko",
     animation_value_type="IntermediateSVGPaint",
     boxed=True,
