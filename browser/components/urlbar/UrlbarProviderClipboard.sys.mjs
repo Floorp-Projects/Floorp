@@ -17,13 +17,18 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const RESULT_MENU_COMMANDS = {
   DISMISS: "dismiss",
 };
+const CLIPBOARD_IMPRESSION_LIMIT = 2;
 
 /**
  * A provider that returns a suggested url to the user based
  * on a valid URL stored in the clipboard.
  */
 class ProviderClipboard extends UrlbarProvider {
-  #lastDismissedClipboardText = "";
+  #previousClipboard = {
+    value: "",
+    impressionsLeft: CLIPBOARD_IMPRESSION_LIMIT,
+  };
+
   constructor() {
     super();
   }
@@ -54,11 +59,18 @@ class ProviderClipboard extends UrlbarProvider {
     if (!validUrl) {
       return false;
     }
-    this.urlFromClipboard = validUrl;
-    if (this.#lastDismissedClipboardText == this.urlFromClipboard) {
-      return false;
+
+    if (this.#previousClipboard.value === validUrl) {
+      if (this.#previousClipboard.impressionsLeft <= 0) {
+        return false;
+      }
+    } else {
+      this.#previousClipboard = {
+        value: validUrl,
+        impressionsLeft: CLIPBOARD_IMPRESSION_LIMIT,
+      };
     }
-    this.#lastDismissedClipboardText = ""; // clear the cache since clipboard value has changed
+
     return true;
   }
 
@@ -86,8 +98,8 @@ class ProviderClipboard extends UrlbarProvider {
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       {
-        url: this.urlFromClipboard,
-        title: this.urlFromClipboard,
+        url: this.#previousClipboard.value,
+        title: this.#previousClipboard.value,
         icon: "chrome://global/skin/icons/edit-copy.svg",
       }
     );
@@ -103,10 +115,23 @@ class ProviderClipboard extends UrlbarProvider {
   }
 
   onEngagement(state, queryContext, details, controller) {
+    if (!["engagement", "abandonment"].includes(state)) {
+      return;
+    }
+    const visibleResults = controller.view?.visibleResults ?? [];
+    for (const result of visibleResults) {
+      if (
+        result.providerName === this.name &&
+        result.payload.url === this.#previousClipboard.value
+      ) {
+        this.#previousClipboard.impressionsLeft--; // Clipboard value was suggested
+      }
+    }
+
     if (details.result?.providerName != this.name) {
       return;
     }
-
+    this.#previousClipboard.impressionsLeft = 0; // User has picked the suggested clipboard result
     // Handle commands.
     this.#handlePossibleCommand(
       controller.view,
@@ -119,7 +144,7 @@ class ProviderClipboard extends UrlbarProvider {
     switch (selType) {
       case RESULT_MENU_COMMANDS.DISMISS:
         view.onQueryResultRemoved(result.rowIndex);
-        this.#lastDismissedClipboardText = this.urlFromClipboard;
+        this.#previousClipboard.impressionsLeft = 0;
         break;
     }
   }
