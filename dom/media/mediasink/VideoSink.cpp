@@ -701,8 +701,4 @@ bool VideoSink::InitializeBlankImage() {
   return true;
 }
 
-void VideoSink::EnableTreatAudioUnderrunAsSilence(bool aEnabled) {
-  mAudioSink->EnableTreatAudioUnderrunAsSilence(aEnabled);
-}
-
 }  // namespace mozilla
