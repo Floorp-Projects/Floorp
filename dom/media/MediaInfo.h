@@ -128,11 +128,10 @@ struct Mp3CodecSpecificData {
 
 struct OpusCodecSpecificData {
   bool operator==(const OpusCodecSpecificData& rhs) const {
-    return mContainerCodecDelayMicroSeconds ==
-               rhs.mContainerCodecDelayMicroSeconds &&
+    return mContainerCodecDelayFrames == rhs.mContainerCodecDelayFrames &&
            *mHeadersBinaryBlob == *rhs.mHeadersBinaryBlob;
   }
-  // The codec delay (aka pre-skip) in microseconds.
+  // The codec delay (aka pre-skip) in audio frames.
   // See https://tools.ietf.org/html/rfc7845#section-4.2 for more info.
   // This member should store the codec delay parsed from the container file.
   // In some cases (such as the ogg container), this information is derived
@@ -140,7 +139,7 @@ struct OpusCodecSpecificData {
   // separately redundant. However, other containers store the delay in
   // addition to the header blob, in which case we can check this container
   // delay against the header delay to ensure they're consistent.
-  int64_t mContainerCodecDelayMicroSeconds{-1};
+  int64_t mContainerCodecDelayFrames{-1};
 
   // A binary blob of opus header data, specifically the Identification Header.
   // See https://datatracker.ietf.org/doc/html/rfc7845.html#section-5.1

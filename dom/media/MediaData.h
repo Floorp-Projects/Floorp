@@ -657,10 +657,6 @@ class MediaRawData final : public MediaData {
   // Indicates that this is the last packet of the stream.
   bool mEOS = false;
 
-  // Indicate to the audio decoder that mDiscardPadding frames should be
-  // trimmed.
-  uint32_t mDiscardPadding = 0;
-
   RefPtr<TrackInfoSharedPtr> mTrackInfo;
 
   // May contain the original start time and duration of the frames.

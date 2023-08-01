@@ -146,8 +146,7 @@ bool ArrayOfRemoteMediaRawData::Fill(
     mSamples.AppendElement(RemoteMediaRawData{
         MediaDataIPDL(entry->mOffset, entry->mTime, entry->mTimecode,
                       entry->mDuration, entry->mKeyframe),
-        entry->mEOS, height, entry->mDiscardPadding,
-        entry->mOriginalPresentationWindow,
+        entry->mEOS, height, entry->mOriginalPresentationWindow,
         entry->mCrypto.IsEncrypted() && entry->mShouldCopyCryptoToRemoteRawData
             ? Some(CryptoInfo{
                   entry->mCrypto.mCryptoScheme,
@@ -211,7 +210,6 @@ already_AddRefed<MediaRawData> ArrayOfRemoteMediaRawData::ElementAt(
   rawData->mDuration = sample.mBase.duration();
   rawData->mKeyframe = sample.mBase.keyframe();
   rawData->mEOS = sample.mEOS;
-  rawData->mDiscardPadding = sample.mDiscardPadding;
   rawData->mExtraData = mExtraDatas.MediaByteBufferAt(aIndex);
   if (sample.mCryptoConfig) {
     CryptoSample& cypto = rawData->GetWritableCrypto();
@@ -256,7 +254,6 @@ ipc::IPDLParamTraits<ArrayOfRemoteMediaRawData::RemoteMediaRawData>::Write(
   WriteIPDLParam(aWriter, aActor, aVar.mBase);
   WriteIPDLParam(aWriter, aActor, aVar.mEOS);
   WriteIPDLParam(aWriter, aActor, aVar.mHeight);
-  WriteIPDLParam(aWriter, aActor, aVar.mDiscardPadding);
   WriteIPDLParam(aWriter, aActor, aVar.mOriginalPresentationWindow);
   WriteIPDLParam(aWriter, aActor, aVar.mCryptoConfig);
 }
@@ -268,7 +265,6 @@ ipc::IPDLParamTraits<ArrayOfRemoteMediaRawData::RemoteMediaRawData>::Read(
   return ReadIPDLParam(aReader, aActor, &aVar->mBase) &&
          ReadIPDLParam(aReader, aActor, &aVar->mEOS) &&
          ReadIPDLParam(aReader, aActor, &aVar->mHeight) &&
-         ReadIPDLParam(aReader, aActor, &aVar->mDiscardPadding) &&
          ReadIPDLParam(aReader, aActor, &aVar->mOriginalPresentationWindow) &&
          ReadIPDLParam(aReader, aActor, &aVar->mCryptoConfig);
 };
