@@ -16,6 +16,8 @@ add_task(async function () {
   await pushPref("dom.webmidi.enabled", true);
   await pushPref("midi.prompt.testing", true);
   await pushPref("media.navigator.permission.disabled", true);
+  // enable custom highlight API
+  await pushPref("dom.customHighlightAPI.enabled", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
@@ -33,6 +35,10 @@ add_task(async function () {
       const midiAccess = Cu.waiveXrays(
         await content.wrappedJSObject.navigator.requestMIDIAccess()
       );
+
+      content.CSS.highlights.set("search", new content.Highlight());
+      content.CSS.highlights.set("glow", new content.Highlight());
+      content.CSS.highlights.set("anchor", new content.Highlight());
 
       content.wrappedJSObject.console.log(
         "oi-entries-test",
@@ -63,7 +69,8 @@ add_task(async function () {
         new content.Headers({ a: 1, b: 2, c: 3 }),
         formData,
         midiAccess.inputs,
-        midiAccess.outputs
+        midiAccess.outputs,
+        content.CSS.highlights
       );
 
       return {
@@ -91,7 +98,7 @@ add_task(async function () {
   const objectInspectors = [...node.querySelectorAll(".tree")];
   is(
     objectInspectors.length,
-    11,
+    12,
     "There is the expected number of object inspectors"
   );
 
@@ -107,6 +114,7 @@ add_task(async function () {
     formDataOi,
     midiInputsOi,
     midiOutputsOi,
+    highlightsRegistryOi,
   ] = objectInspectors;
 
   await testSmallMap(smallMapOi);
@@ -120,6 +128,7 @@ add_task(async function () {
   await testFormData(formDataOi);
   await testMidiInputs(midiInputsOi, taskResult.midi.inputs);
   await testMidiOutputs(midiOutputsOi, taskResult.midi.outputs);
+  await testHighlightsRegistry(highlightsRegistryOi);
 });
 
 async function testSmallMap(oi) {
@@ -718,5 +727,105 @@ async function testMidiOutputs(oi, midiOutputs) {
     oiNodes[5].textContent,
     `"${midiOutputs[2].id}": MIDIOutput { id: "${midiOutputs[2].id}", manufacturer: "${midiOutputs[2].manufacturer}", name: "${midiOutputs[2].name}", ${ELLIPSIS} }`,
     "Third entry is displayed as expected"
+  );
+}
+
+async function testHighlightsRegistry(oi) {
+  is(
+    oi.textContent,
+    `HighlightRegistry(3) { search → Highlight, glow → Highlight, anchor → Highlight }`,
+    "HighlightRegistry has expected content"
+  );
+
+  info("Expanding the HighlightRegistry");
+  let onOiMutation = waitForNodeMutation(oi, {
+    childList: true,
+  });
+
+  oi.querySelector(".arrow").click();
+  await onOiMutation;
+
+  ok(
+    oi.querySelector(".arrow").classList.contains("expanded"),
+    "The arrow of the node has the expected class after clicking on it"
+  );
+
+  let oiNodes = oi.querySelectorAll(".node");
+  // There are 4 nodes: the root, size, entries and the proto.
+  is(oiNodes.length, 4, "There is the expected number of nodes in the tree");
+
+  const entriesNode = oiNodes[2];
+  is(
+    entriesNode.textContent,
+    "<entries>",
+    "There is the expected <entries> node"
+  );
+
+  info("Expanding the <entries> leaf of the HighlightRegistry");
+  onOiMutation = waitForNodeMutation(oi, {
+    childList: true,
+  });
+
+  entriesNode.querySelector(".arrow").click();
+  await onOiMutation;
+
+  oiNodes = oi.querySelectorAll(".node");
+  // There are now 7 nodes, the 4 original ones, and the 3 entries.
+  is(oiNodes.length, 7, "There is the expected number of nodes in the tree");
+
+  is(
+    oiNodes[3].textContent,
+    `0: search → Highlight { priority: 0, type: "highlight", size: 0 }`,
+    "First entry is displayed as expected"
+  );
+  is(
+    oiNodes[4].textContent,
+    `1: glow → Highlight { priority: 0, type: "highlight", size: 0 }`,
+    `Second entry is displayed as expected`
+  );
+  is(
+    oiNodes[5].textContent,
+    `2: anchor → Highlight { priority: 0, type: "highlight", size: 0 }`,
+    `Third entry entry is displayed as expected`
+  );
+
+  info("Expand last entry");
+  onOiMutation = waitForNodeMutation(oi, {
+    childList: true,
+  });
+  oiNodes[5].querySelector(".arrow").click();
+  await onOiMutation;
+
+  oiNodes = oi.querySelectorAll(".node");
+  // There are now 9 nodes, the 7 original ones, <key> and <value>
+  is(oiNodes.length, 9, "There is the expected number of nodes in the tree");
+  is(oiNodes[6].textContent, `<key>: "anchor"`, `Got expected key node`);
+  is(
+    oiNodes[7].textContent,
+    `<value>: Highlight { priority: 0, type: "highlight", size: 0 }`,
+    `Got expected value node`
+  );
+
+  info("Expand Highlight object");
+  onOiMutation = waitForNodeMutation(oi, {
+    childList: true,
+  });
+  oiNodes[7].querySelector(".arrow").click();
+  await onOiMutation;
+
+  oiNodes = oi.querySelectorAll(".node");
+  // There are now 13 nodes, the 9 previous ones, and all the properties of the Highlight object
+  is(oiNodes.length, 13, "There is the expected number of nodes in the tree");
+  is(oiNodes[8].textContent, `priority: 0`, `Got expected priority property`);
+  is(oiNodes[9].textContent, `size: 0`, `Got expected size property`);
+  is(
+    oiNodes[10].textContent,
+    `type: "highlight"`,
+    `Got expected type property`
+  );
+  is(
+    oiNodes[11].textContent,
+    `<prototype>: HighlightPrototype { add: add(), clear: clear(), delete: delete(), … }`,
+    `Got expected prototype property`
   );
 }

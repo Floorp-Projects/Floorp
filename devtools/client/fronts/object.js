@@ -24,6 +24,7 @@ const SUPPORT_ENUM_ENTRIES_SET = new Set([
   "FormData",
   "MIDIInputMap",
   "MIDIOutputMap",
+  "HighlightRegistry",
 ]);
 
 /**
@@ -342,13 +343,16 @@ function getAdHocFrontOrPrimitiveGrip(packet, parentFront) {
   // actorID, unless:
   // - it's a Symbol (See Bug 1600299)
   // - it's a mapEntry (the preview.key and preview.value properties can hold actors)
+  // - it's a highlightRegistryEntry (the preview.value properties can hold actors)
   // - or it is already a front (happens when we are using the legacy listeners in the ResourceCommand)
   const isPacketAnObject = packet && typeof packet === "object";
   const isFront = !!packet.typeName;
   if (
     !isPacketAnObject ||
     packet.type == "symbol" ||
-    (packet.type !== "mapEntry" && !packet.actor) ||
+    (packet.type !== "mapEntry" &&
+      packet.type !== "highlightRegistryEntry" &&
+      !packet.actor) ||
     isFront
   ) {
     return packet;
@@ -376,7 +380,10 @@ function getAdHocFrontOrPrimitiveGrip(packet, parentFront) {
     return longStringFront;
   }
 
-  if (type === "mapEntry" && packet.preview) {
+  if (
+    (type === "mapEntry" || type === "highlightRegistryEntry") &&
+    packet.preview
+  ) {
     const { key, value } = packet.preview;
     packet.preview.key = getAdHocFrontOrPrimitiveGrip(
       key,
