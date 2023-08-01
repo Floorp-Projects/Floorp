@@ -293,7 +293,7 @@ use-icon-provider-option-yandex =
 use-icon-provider-option-hatena =
  .label = Hatena (available in China)
 
-memory-and-performance = Memory and Performance Settings
+memory-and-performance = Memory and Performance
 
 min-memory = 
     .label = Minimum Memory Usage (low performance)
@@ -305,7 +305,7 @@ max-memory =
     .label = Best Speed and Performance (high memory usage)
 
 delete-border-and-roundup-option =
-  .label = Round up { -brand-short-name }'s corners
+  .label = Round the corners of pages
 
 ## DualTheme
 dualtheme-enable =
@@ -314,31 +314,31 @@ dualtheme-enable =
 newtab-background = { -brand-short-name } Home Background
 
 newtab-background-random-image =
-    .label = Random Images from Unsplash
+    .label = Random images from Unsplash
 
 newtab-background-gradation =
     .label = Gradient
 
 newtab-background-not-background =
-    .label = Disable Background
+    .label = Disable background
 
 newtab-background-selected-image =
-    .label = Use Images from a Selected Folder
+    .label = Custom folder...
 
-newtab-background-folder = Selected Folder
+newtab-background-folder = Use images from this folder:
 
 newtab-background-folder-reload = 
-  .label = Reload Images
+  .label = Reload images
 
 newtab-background-folder-default = 
-  .label = Restore Default
+  .label = Restore defaults
 
 newtab-background-folder-open = 
-  .label = Open Folder
+  .label = Open folder
 
-newtab-background-folder-choose = Choose Images Folder
+newtab-background-folder-choose = Choose images folder...
 
-newtab-background-extensions = Images' Extensions (Separated by ",")
+newtab-background-extensions = Use images with these file extensions (separated by ",")
 
 disable-blur-on-newtab = 
   .label = Disable blur effect on { -brand-short-name } Home
@@ -348,126 +348,126 @@ disable-blur-on-newtab =
 about-lepton = Customize { -brand-short-name } with Lepton
 
 lepton-preference-button =
-    .label = Lepton Preferences...
+    .label = Lepton Settings...
     .accesskey = L
 
-lepton-header = Lepton Preferences
+lepton-header = Lepton Settings
 
-lepton-preference = Lepton UI Settings
+lepton-preference = Lepton Settings
 photon-mode =
-    .label = Photon Mode
+    .label = Use Photon design
 
 lepton-mode = 
-    .label = Lepton Mode
+    .label = Use Lepton design
 
 protonfix-mode =
-    .label = Protonfix Mode
+    .label = Use tweaked Proton design
 
-autohide-preference = Auto hide elements
+autohide-preference = Automatically hide browser elements
 
 floorp-lepton-enable-tab-autohide =
-    .label = Auto hide tabbar
+    .label = Automatically hide tabs
 floorp-lepton-enable-navbar-autohide =
-    .label = Auto hide navbar
+    .label = Automatically hide toolbar
 floorp-lepton-enable-sidebar-autohide =
-    .label = Auto hide sidebar
+    .label = Automatically hide sidebar
 floorp-lepton-enable-urlbar-autohide =
-    .label = Auto hide URLBar
+    .label = Automatically hide address bar
 floorp-lepton-enable-back-button-autohide =
-    .label = Auto hide back button
+    .label = Automatically hide back button
 floorp-lepton-enable-forward-button-autohide =
-    .label = Auto hide forward button
+    .label = Automatically hide forward button
 floorp-lepton-enable-page-action-button-autohide =
-    .label = Auto hide action button on addressbar
+    .label = Automatically hide buttons on the address bar
 floorp-lepton-enable-toolbar-overlap =
-    .label = Enable Toolbar overlay
+    .label = Show toolbar over website content
 floorp-lepton-enable-toolbar-overlap-allow-layout-shift-autohide =
-    .label = Auto-hide toolbar when displaying "ltr" content
+    .label = Automatically hide toolbar when displaying left-to-right content
 
-hide-preference = Manage display elements
+hide-preference = Manage browser elements
 
 floorp-lepton-enable-tab_icon-hide =
     .label = Hide Tab icons
 floorp-lepton-enable-tabbar-hide =
-    .label = Hide Tabbar
+    .label = Hide Tab Bar
 floorp-lepton-enable-navbar-hide =
-    .label = Hide Navbar
+    .label = Hide Toolbar
 floorp-lepton-enable-sidebar_header-hide =
-    .label = Hide Sidebar Header
+    .label = Hide Sidebar Headers
 floorp-lepton-enable-urlbar_iconbox-hide =
-    .label = Hide URLBar icons
+    .label = Hide address bar icons
 floorp-lepton-enable-bookmarkbar_icon-hide =
-    .label = Hide bookmarks-bar icons
+    .label = Hide bookmarks bar icons
 floorp-lepton-enable-bookmarkbar_label-hide =
-    .label = Hide bookmarks-bar labels
+    .label = Hide bookmarks bar labels
 floorp-lepton-enable-disabled_menu-hide =
-    .label = Hide disabled context menu
+    .label = Hide disabled context menu items
 
 floorp-lepton-disable-userChrome-icon =
-    .label = Disable context menu & panel menu icons
+    .label = Disable Lepton's context menu and panel menu icons
 
-positon-preferences = Position adjustment
+positon-preferences = Position adjustments
 
 floorp-lepton-enable-centered-tab =
-    .label = Centered Tab label
+    .label = Center labels in tabs
 floorp-lepton-enable-centered-urlbar =
-    .label = Centered URLBar
+    .label = Center text in the address bar
 floorp-lepton-enable-centered-bookmarkbar =
-    .label = Centered Bookmark Bar
+    .label = Center Bookmarks Bar items
 
-urlbar-preferences = URLbar
+urlbar-preferences = Address Bar
 
 floorp-lepton-enable-urlbar-icon-move-to-left =
-    .label = Move urlbar icons to the left side
+    .label = Move address bar icons to the left side
 floorp-lepton-enable-urlname-go_button_when_typing =
-    .label = When typing, reduce the urlbar space and show a Go Button
+    .label = When typing, show a Go button
 floorp-lepton-enable-always-show-page_action =
-    .label = Reduce the urlbar space and always show the add-on action button
+    .label = Always show page actions in the address bar
 
-tabbar-preferences = Tabbar
+tabbar-preferences = Tab Bar
 
 floorp-lepton-enable-tabbar-positon-as-titlebar =
-    .label = Tabbar in the titlebar
+    .label = Tab bar in the titlebar
 floorp-lepton-enable-tabbar-as-urlbar =
-    .label = Tabbar in the urlbar
+    .label = Combine tab bar and toolbar
 
 lepton-sidebar-preferences = Sidebar
 floorp-lepton-enable-overlap-sidebar =
-    .label = Show Sidebar Overlap main Viewer
+    .label = Show Sidebar over website content
 
 floorp-home-mode-choice-default =
-    .label = Floorp Home (Default)
-floorp-home-prefs-content-header = Floorp Home Content
-floorp-home-prefs-content-description = Choose the content you want to see on the Floorp Home Page.
+    .label = { -brand-short-name } Home (Default)
+floorp-home-prefs-content-header = { -brand-short-name } Home Content
+floorp-home-prefs-content-description = Choose the content you want to see on the { -brand-short-name } Home Page.
 
 ## Notes
 floorp-notes = { -brand-short-name } Notes
-restore-from-backup = Restore Notes from Backup
+restore-from-backup = Restore Notes from backup
 enable-notes-sync = 
  .label = Enable { -brand-short-name } Notes Sync
 about-notes-backup-tips = Floorp Notes uses Firefox Sync to sync your notes with other devices. If you lose your notes, you can restore them from a backup. A backup is created when you start { -brand-short-name }.
 notes-sync-description = This can solve the problem of losing content due to overwriting notes during synchronization.
-backuped-time = Time of backup
-notes-backup-option = Backup Options
-backup-option-button = Open Backup Options...
+backuped-time = Backed up at
+notes-backup-option = Backup Settings
+backup-option-button = Backup Settings...
 
 restore-from-backup-prompt-title = Floorp Notes Restore Service
-restore-from-this-backup = Restore Notes to the state of this backup ?
+restore-from-this-backup = Restore Notes back to the state they were in this backup?
 
 restore-button = Restore
 
 ## user.js
 header-userjs = user.js
 userjs-customize = Customize { -brand-short-name } with user.js
-about-userjs-customize = user.js is a configuration file that allows you to customize { -brand-short-name }. user.js will download from the Internet and overwrite the original user.js file. Please back up the original user.js file before using it. Сonfig will be applied after restarting { -brand-short-name }.
+about-userjs-customize = user.js is a configuration file that allows you to customize { -brand-short-name }. user.js files are downloaded from the Internet and overwrite your current user.js file. Please back up your current user.js file before continuing. user.js configurations will be applied automatically after restarting { -brand-short-name }.
 
 userjs-label = user.js list
-userjs-prompt = Floorp user.js
-apply-userjs-attention = This will overwrite the original user.js file.
-apply-userjs-attention2 = Please back up the original user.js file before using it.
+userjs-prompt = Apply this user.js?
+apply-userjs-attention = Applying a new user.js will overwrite your current user.js file.
+apply-userjs-attention2 = Please back up your current user.js file before continuing.
 
-userjs-button = Open user.js options...
-userjs-select-option = Select user.js
+userjs-button = user.js Settings...
+userjs-select-option = Manage the user.js currently used in { -brand-short-name } to improve performance and privacy.
 
 apply-userjs-button = Apply
 ## userjs Options
@@ -496,7 +496,7 @@ workspaces-backup-discription = Backup and restore your Workspaces
 
 workspaces-restore-service-title = Floorp Workspaces Backup Service
 workspaces-restore-warning = Warning! Running this operation will cause the browser to freeze temporarily and restart automatically.
-floorp-workspace-settings-button = Open Workspace Settings...
+floorp-workspace-settings-button = Workspace Settings...
 
 change-to-close-workspace-popup-option = 
  .label = Close workspaces popup when selecting a Workspace
@@ -513,7 +513,7 @@ workspaces-reset-service-title = Floorp Workspaces
 workspaces-reset-warning = Warning! Running this operation will delete all your Workspaces and restart the browser.
 
 ## Mouse Gesture
-mouse-gesture = Mouse Gesture
+mouse-gesture = Mouse Gestures
 mouse-gesture-description = Gesturefy must be installed to use mouse gestures with { -brand-short-name }.
 Gesturefy = Gesturefy
 about-Gesturefy = Gesturefy is an extension that adds mouse gestures to your browser. If { -brand-short-name } detects the installation of this add-on, it will add gesture commands to Gesturefy that are only available in { -brand-short-name }. Also, this add-on can work with new tabs!
@@ -534,15 +534,15 @@ Facebook-Container = Facebook Container
 about-Facebook-Container = Prevent Facebook from tracking you around the web. Facebook Container extension helps you take control and isolate your web activity from Facebook.
 
 ## Fingerprint
-fingerprint-header = Resist Fingerprinting & IP address leak
+fingerprint-header = Resist Fingerprinting & IP address leaks
 block-fingerprint = Fingerprinting is a tracking mechanism that relies on the unique features of your browser and operating system. This section contains settings to further enhance this protection beyond the default blocking.
 enable-firefox-fingerprint-protections = Enable strong protection against fingerprinting
 about-firefox-fingerprint-protection = Enabling protection by Firefox includes forced light mode, disabling some APIs, etc. Some sites may be broken.
 fingerprint-Protection =
  .label =  Anti-fingerprinting protections
 html5-canvas-prompt-settings =
- .label =  Automatically approve access confirmation prompts for HTML5 image data
-canvas-prompt = Automatically reject the canvas-reading prompt
+ .label =  Automatically dismiss access confirmation prompts for HTML5 image data
+canvas-prompt = Prevents websites from using the canvas-reading prompt unless manually permitted.
 disable-webgl =
  .label =  Disable WebGL
 about-webgl = WebGL is a Javascript API used to render graphics, which can be used to identify GPU.
@@ -555,26 +555,26 @@ WebRTC =
 ################################################################### browser ###############################################################
 
 rest-mode = Taking a break...
-rest-mode-description = Browser is stopped. Press ENTER or OK to continue.
+rest-mode-description = { -brand-short-name } is currently suspended. Press ENTER or OK to continue.
 
 Sidebar2 =
   .label = Browser Manager Sidebar
-  .tooltiptext = Change Sidebar Visibility
+  .tooltiptext = Change Sidebar visibility
 
 sidebar2-mute-and-unmute =
-  .label = Mute/Unmute this panel
+  .label = Mute/Unmute this Panel
 
 sidebar2-unload-panel =
-  .label = Unload this panel
+  .label = Unload this Panel
 
 sidebar2-change-ua-panel =
-  .label = Switch User agent to Mobile/Desktop version at this panel
+  .label = Toggle Mobile User Agent
 
 sidebar2-delete-panel =
-  .label = Delete this panel
+  .label = Delete this Panel
 
 sidebar2-close-button =
-  .tooltiptext = Close sidebar
+  .tooltiptext = Close Sidebar
 
 sidebar-back-button =
   .tooltiptext = Back
@@ -620,25 +620,25 @@ sidebar-add-button =
   .tooltiptext = { bsb-add }
 
 sidebar-addons-button =
-  .tooltiptext = Open Addon manager
+  .tooltiptext = Add-ons and themes
 
 sidebar-passwords-button =
-  .tooltiptext = Open Password manager
+  .tooltiptext = Passwords
 
 sidebar-preferences-button =
-  .tooltiptext = Open Preferences
+  .tooltiptext = Settings
 
 sidebar-keepWidth-button =
-  .tooltiptext = Keep This Panel Width
+  .tooltiptext = Use this width on this Panel
 
 sidebar2-keep-width-for-global =
-  .label = Set the current panel size for all web panels that do not have a unique size
+  .label = Apply this width to all panels without a custom width
 
 bsb-context-add = 
-  .label = Add This Page on Webpanel
+  .label = Add page to Web Panel...
 
 bsb-context-link-add = 
-  .label = Add Link on Webpanel
+  .label = Add link to Web Panel...
 #################################################################### menu panel ############################################################
 
 open-profile-dir = 
@@ -679,14 +679,14 @@ please-enter-filename = Please enter a file name.
 
 ################################################################### Undo-Closed-Tab ###############################################################
 
-undo-closed-tab = Undo close Tab
+undo-closed-tab = Reopen closed tab
 
 ################################################################### about:addons ###############################################################
 
 # DualTheme
-dual-theme-enable-addon-button = Enable as a sub theme
-dual-theme-disable-addon-button = Disable as a sub theme
-dual-theme-enabled-heading = Enabled as a sub theme
+dual-theme-enable-addon-button = Enable as a sub-theme
+dual-theme-disable-addon-button = Disable as a sub-theme
+dual-theme-enabled-heading = Enabled as a sub-theme
 
 ##################################################################### toolbar ###############################################################
 
@@ -741,7 +741,7 @@ gf-floorp-open-extension-sidebar-settings-list-unknwon = Unknown add-on
 update-portable-notification-found-title = Updates found!
 update-portable-notification-found-message = Downloading updates...
 update-portable-notification-ready-title = Ready to update!
-update-portable-notification-ready-message = The next time the browser is launched, the update will begin.
+update-portable-notification-ready-message = { -brand-short-name } will be updated when it launches next.
 update-portable-notification-success-title = Update succeeded!
 update-portable-notification-success-message = Update succeeded! Hope you enjoy the new version of Floorp!
 update-portable-notification-failed-title = Update failed.
@@ -749,14 +749,14 @@ update-portable-notification-failed-redirector-message = Update failed. Restarti
 update-portable-notification-failed-prepare-message = Failed to prepare update.
 
 ##################################################################### Open link in external ###############################################################
-openInExternal-title = Open in External Browser
+openInExternal-title = Open in external browser
 open-link-in-external-enabled-option =
  .label = Enable "Open in external browser" feature
-open-link-in-external-select-browser-option = Choose the browser you want to open in "Open in external browser"
+open-link-in-external-select-browser-option = Choose what browser will be opened
 open-link-in-external-select-browser-option-default =
  .label = Default browser
 open-link-in-external-tab-context-menu = Open in external browser
-open-link-in-external-tab-dialog-title-error = Error
+open-link-in-external-tab-dialog-title-error = An error occurred
 open-link-in-external-tab-dialog-message-default-browser-not-found = Default browser is not found or is not configured.
 open-link-in-external-tab-dialog-message-selected-browser-not-found = The selected browser does not exist.
 
@@ -771,7 +771,7 @@ save-memo = Save
 memo-welcome-title = Welcome!
 memo-first-tip = Welcome to Floorp Notes! Here are some instructions on how to use it!
 memo-second-tip = Floorp Notes is a notepad that lets you store multiple notes that sync across devices. To enable synchronization, you need to sign in to Floorp with your Firefox account.
-memo-third-tip = Floorp Notes will be saved in your Floorp settings and synchronized across devices using Firefox Sync. Firefox Sync encrypts the contents of the sync with your Firefox account password, so no one but you knows it's contents.
+memo-third-tip = Floorp Notes will be saved in your Floorp settings and synchronized across devices using Firefox Sync. Firefox Sync encrypts the contents of the sync with your Firefox account password, so no one but you knows its contents.
 memo-import-data-tip = Firefox Sync is not a backup service. We recommend you to create backups.
 memo-new-title = New Note
 chage-view-mode = Toggle View/Edit Mode
@@ -784,9 +784,9 @@ default-bookmark-notes = Floorp Notes
 ######################################################################### Like Chrome Download mgr ###############################################################
 
 floorp-delete-all-downloads = 
-  .label = Hide all downloads
+  .label = Clear Downloads
   .accesskey = D
-  .tooltiptext = Hide all downloads
+  .tooltiptext = Clear Downloads
 
 floorp-show-all-downloads =
   .label = Show all downloads
