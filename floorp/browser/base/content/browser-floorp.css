@@ -528,3 +528,20 @@ toolbar #workspace-button:not([disabled="true"], [checked], [open], :active):hov
 {
   display: none !important;
 }
+
+:root[inDOMFullscreen] :is(.browserContainer) > .browserStack > *,
+:root[inFullscreen]:not([macOSNativeFullscreen]) :is(.browserContainer) > .browserStack > * {
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+:root[inFullscreen]:not([macOSNativeFullscreen]) #tabbrowser-tabbox[flex],
+:root[inFullscreen]:not([macOSNativeFullscreen]) #tabbrowser-tabpanels[flex] {
+  clip-path: inset(0px 0px 0px round 0 0) !important;
+  border-radius: 0 !important;
+  border: none !important;
+}
+
+:root[inFullscreen]:not([macOSNativeFullscreen]) .browser-sidebar2[style] {
+  border: none !important;
+}
