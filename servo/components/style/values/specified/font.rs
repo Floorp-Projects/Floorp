@@ -11,9 +11,8 @@ use crate::values::computed::Percentage as ComputedPercentage;
 use crate::values::computed::{font as computed, Length, NonNegativeLength};
 use crate::values::computed::{CSSPixelLength, Context, ToComputedValue};
 use crate::values::generics::font::VariationValue;
-use crate::values::generics::font::{
-    self as generics, FeatureTagValue, FontSettings, FontTag, GenericFontSizeAdjust,
-};
+use crate::values::generics::font::{self as generics, FeatureTagValue, FontSettings, FontTag};
+use crate::values::generics::font::{GenericFontSizeAdjust, GenericNumberOrFromFont};
 use crate::values::generics::NonNegative;
 use crate::values::specified::length::{FontBaseSize, PX_PER_PT};
 use crate::values::specified::{AllowQuirks, Angle, Integer, LengthPercentage};
@@ -700,8 +699,15 @@ impl Parse for FamilyName {
     }
 }
 
-/// Preserve the readability of text when font fallback occurs
-pub type FontSizeAdjust = GenericFontSizeAdjust<NonNegativeNumber>;
+/// A factor for one of the font-size-adjust metrics, which may be either a number
+/// or the `from-font` keyword.
+pub type FontSizeAdjustFactor = GenericNumberOrFromFont<NonNegativeNumber>;
+
+/// Specified value for font-size-adjust, intended to help
+/// preserve the readability of text when font fallback occurs.
+///
+/// https://drafts.csswg.org/css-fonts-5/#font-size-adjust-prop
+pub type FontSizeAdjust = GenericFontSizeAdjust<FontSizeAdjustFactor>;
 
 impl Parse for FontSizeAdjust {
     fn parse<'i, 't>(
@@ -709,26 +715,27 @@ impl Parse for FontSizeAdjust {
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
         let location = input.current_source_location();
-        if let Ok(ident) = input.try_parse(|i| i.expect_ident_cloned()) {
-            let basis = match_ignore_ascii_case! { &ident,
-                "none" => return Ok(Self::None),
-                // Check for size adjustment basis keywords.
-                "ex-height" => Self::ExHeight,
-                "cap-height" => Self::CapHeight,
-                "ch-width" => Self::ChWidth,
-                "ic-width" => Self::IcWidth,
-                "ic-height" => Self::IcHeight,
-                // Unknown keyword.
-                _ => return Err(location.new_custom_error(
-                    SelectorParseErrorKind::UnexpectedIdent(ident)
-                )),
-            };
-            let value = NonNegativeNumber::parse(context, input)?;
-            return Ok(basis(value));
+        // First check if we have an adjustment factor without a metrics-basis keyword.
+        if let Ok(factor) = input.try_parse(|i| FontSizeAdjustFactor::parse(context, i)) {
+            return Ok(Self::ExHeight(factor));
         }
-        // Without a basis keyword, the number refers to the 'ex-height' metric.
-        let value = NonNegativeNumber::parse(context, input)?;
-        Ok(Self::ExHeight(value))
+
+        let ident = input.expect_ident()?;
+        let basis = match_ignore_ascii_case! { &ident,
+            "none" => return Ok(Self::None),
+            // Check for size adjustment basis keywords.
+            "ex-height" => Self::ExHeight,
+            "cap-height" => Self::CapHeight,
+            "ch-width" => Self::ChWidth,
+            "ic-width" => Self::IcWidth,
+            "ic-height" => Self::IcHeight,
+            // Unknown keyword.
+            _ => return Err(location.new_custom_error(
+                SelectorParseErrorKind::UnexpectedIdent(ident.clone())
+            )),
+        };
+
+        Ok(basis(FontSizeAdjustFactor::parse(context, input)?))
     }
 }
 

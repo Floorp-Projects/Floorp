@@ -7136,6 +7136,7 @@ exports.CSS_PROPERTIES = {
     "values": [
       "cap-height",
       "ch-width",
+      "from-font",
       "ic-height",
       "ic-width",
       "inherit",
