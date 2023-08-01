@@ -28,13 +28,13 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::Decode(
     MediaRawData* aSample) {
   MOZ_ASSERT(mThread->IsOnCurrentThread(),
              "We're not on the thread we were first initialized on");
-  RefPtr<MediaRawData> sample = aSample;
-  PrepareTrimmers(sample);
+  LOG("AudioTrimmer::Decode");
+  PrepareTrimmers(aSample);
   RefPtr<AudioTrimmer> self = this;
-  RefPtr<DecodePromise> p = mDecoder->Decode(sample)->Then(
+  RefPtr<DecodePromise> p = mDecoder->Decode(aSample)->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [self, sample](DecodePromise::ResolveOrRejectValue&& aValue) {
-        return self->HandleDecodedResult(std::move(aValue), sample);
+      [self](DecodePromise::ResolveOrRejectValue&& aValue) {
+        return self->HandleDecodedResult(std::move(aValue));
       });
   return p;
 }
@@ -42,6 +42,7 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::Decode(
 RefPtr<MediaDataDecoder::FlushPromise> AudioTrimmer::Flush() {
   MOZ_ASSERT(mThread->IsOnCurrentThread(),
              "We're not on the thread we were first initialized on");
+  LOG("Flushing");
   RefPtr<FlushPromise> p = mDecoder->Flush();
   mTrimmers.Clear();
   return p;
@@ -54,7 +55,7 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::Drain() {
   RefPtr<DecodePromise> p = mDecoder->Drain()->Then(
       GetCurrentSerialEventTarget(), __func__,
       [self = RefPtr{this}](DecodePromise::ResolveOrRejectValue&& aValue) {
-        return self->HandleDecodedResult(std::move(aValue), nullptr);
+        return self->HandleDecodedResult(std::move(aValue));
       });
   return p;
 }
@@ -94,22 +95,21 @@ MediaDataDecoder::ConversionRequired AudioTrimmer::NeedsConversion() const {
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
-    DecodePromise::ResolveOrRejectValue&& aValue, MediaRawData* aRaw) {
+    DecodePromise::ResolveOrRejectValue&& aValue) {
   MOZ_ASSERT(mThread->IsOnCurrentThread(),
              "We're not on the thread we were first initialized on");
   if (aValue.IsReject()) {
     return DecodePromise::CreateAndReject(std::move(aValue.RejectValue()),
                                           __func__);
   }
-  TimeUnit rawStart = aRaw ? aRaw->mTime : TimeUnit::Zero();
-  TimeUnit rawEnd = aRaw ? aRaw->GetEndTime() : TimeUnit::Zero();
   MediaDataDecoder::DecodedData results = std::move(aValue.ResolveValue());
+  LOG("HandleDecodedResults: %zu decoded data, %zu trimmers", results.Length(),
+      mTrimmers.Length());
   if (results.IsEmpty()) {
     // No samples returned, we assume this is due to the latency of the
     // decoder and that the related decoded sample will be returned during
     // the next call to Decode().
-    LOGV("No sample returned for sample[%s, %s]", rawStart.ToString().get(),
-         rawEnd.ToString().get());
+    LOGV("No sample returned -- decoder has latency");
     return DecodePromise::CreateAndResolve(std::move(results), __func__);
   }
 
@@ -125,8 +125,7 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
     if (mTrimmers.IsEmpty()) {
       // mTrimmers being empty can only occurs if the decoder returned more
       // frames than we pushed in. We can't handle this case, abort trimming.
-      LOG("sample[%s, %s] (decoded[%s, %s] no trimming information)",
-          rawStart.ToString().get(), rawEnd.ToString().get(),
+      LOG("decoded buffer [%s, %s] has no trimming information)",
           sampleInterval.mStart.ToString().get(),
           sampleInterval.mEnd.ToString().get());
       i++;
@@ -137,28 +136,23 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
     mTrimmers.RemoveElementAt(0);
     if (!trimmer) {
       // Those frames didn't need trimming.
-      LOGV("sample[%s, %s] (decoded[%s, %s] no trimming needed",
-           rawStart.ToString().get(), rawEnd.ToString().get(),
+      LOGV("decoded buffer [%s, %s] doesn't need trimming",
            sampleInterval.mStart.ToString().get(),
            sampleInterval.mEnd.ToString().get());
       i++;
       continue;
     }
     if (!trimmer->Intersects(sampleInterval)) {
-      LOGV(
-          "sample[%s, %s] (decoded[%s, %s] would be empty after trimming, "
-          "dropping it",
-          rawStart.ToString().get(), rawEnd.ToString().get(),
-          sampleInterval.mStart.ToString().get(),
-          sampleInterval.mEnd.ToString().get());
+      LOGV("decoded buffer [%s, %s] would be empty after trimming, dropping it",
+           sampleInterval.mStart.ToString().get(),
+           sampleInterval.mEnd.ToString().get());
       results.RemoveElementAt(i);
       continue;
     }
-    LOGV("Trimming sample[%s,%s] to [%s,%s] (raw was:[%s, %s])",
+    LOGV("Trimming sample[%s,%s] to [%s,%s]",
          sampleInterval.mStart.ToString().get(),
          sampleInterval.mEnd.ToString().get(), trimmer->mStart.ToString().get(),
-         trimmer->mEnd.ToString().get(), rawStart.ToString().get(),
-         rawEnd.ToString().get());
+         trimmer->mEnd.ToString().get());
 
     TimeInterval trim({std::max(trimmer->mStart, sampleInterval.mStart),
                        std::min(trimmer->mEnd, sampleInterval.mEnd)});
@@ -168,7 +162,8 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
     Unused << ok;
     if (sample->Frames() == 0) {
       LOGV("sample[%s, %s] is empty after trimming, dropping it",
-           rawStart.ToString().get(), rawEnd.ToString().get());
+           sampleInterval.mStart.ToString().get(),
+           sampleInterval.mEnd.ToString().get());
       results.RemoveElementAt(i);
       continue;
     }
@@ -191,7 +186,7 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::DecodeBatch(
           ->Then(GetCurrentSerialEventTarget(), __func__,
                  [self = RefPtr{this}](
                      DecodePromise::ResolveOrRejectValue&& aValue) {
-                   return self->HandleDecodedResult(std::move(aValue), nullptr);
+                   return self->HandleDecodedResult(std::move(aValue));
                  });
   return p;
 }
