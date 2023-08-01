@@ -194,8 +194,8 @@ enum class WasmFeatureStage {
     /* lower case name    */ tailCalls,                                 \
     /* stage              */ WasmFeatureStage::Experimental,            \
     /* compile predicate  */ WASM_TAIL_CALLS_ENABLED,                   \
-    /* compiler predicate */ BaselineAvailable(cx),                     \
-    /* flag predicate     */ !IsFuzzingIon(cx),                         \
+    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
+    /* flag predicate     */ true,                                      \
     /* flag force enable  */ false,                                     \
     /* shell flag         */ "tail-calls",                              \
     /* preference name    */ "tail_calls")                              \

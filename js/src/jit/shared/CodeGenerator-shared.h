@@ -58,6 +58,9 @@ class CodeGeneratorShared : public LElementVisitor {
   // Label for the common return path.
   NonAssertingLabel returnLabel_;
 
+  // Amount of bytes allocated for incoming args. Used for Wasm return calls.
+  uint32_t inboundStackArgBytes_;
+
   js::Vector<CodegenSafepointIndex, 0, SystemAllocPolicy> safepointIndices_;
   js::Vector<OsiIndex, 0, SystemAllocPolicy> osiIndices_;
 

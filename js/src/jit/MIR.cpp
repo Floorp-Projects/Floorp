@@ -5880,6 +5880,23 @@ MWasmCallUncatchable* MWasmCallUncatchable::NewBuiltinInstanceMethodCall(
   return call;
 }
 
+MWasmReturnCall* MWasmReturnCall::New(TempAllocator& alloc,
+                                      const wasm::CallSiteDesc& desc,
+                                      const wasm::CalleeDesc& callee,
+                                      const Args& args,
+                                      uint32_t stackArgAreaSizeUnaligned,
+                                      MDefinition* tableIndexOrRef) {
+  MWasmReturnCall* call =
+      new (alloc) MWasmReturnCall(desc, callee, stackArgAreaSizeUnaligned);
+
+  MOZ_ASSERT_IF(callee.isTable() || callee.isFuncRef(), tableIndexOrRef);
+  if (!call->initWithArgs(alloc, call, args, tableIndexOrRef)) {
+    return nullptr;
+  }
+
+  return call;
+}
+
 void MSqrt::trySpecializeFloat32(TempAllocator& alloc) {
   if (EnsureFloatConsumersAndInputOrConvert(this, alloc)) {
     setResultType(MIRType::Float32);
