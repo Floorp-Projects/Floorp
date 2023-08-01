@@ -201,34 +201,32 @@ export var SiteDataTestUtils = {
     let principal =
       Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
 
-    let cookies;
+    let originAttributes = principal.originAttributes;
+
     if (testPBMCookies) {
+      // Override the origin attributes to set PBM.
       // This needs to be updated when adding support for multiple PBM contexts.
-      let originAttributes = { privateBrowsingId: 1 };
-      cookies = Services.cookies.getCookiesWithOriginAttributes(
-        JSON.stringify(originAttributes)
-      );
-    } else {
-      cookies = Services.cookies.cookies;
+      originAttributes = {
+        ...principal.originAttributes,
+        privateBrowsingId: 1,
+      };
     }
-
-    let filterFn = cookie => {
-      return (
-        ChromeUtils.isOriginAttributesEqual(
-          principal.originAttributes,
-          cookie.originAttributes
-        ) && cookie.host.includes(principal.host)
+    // Need to do an additional filter step since getCookiesFromHost returns all
+    // cookies for the base domain (including subdomains). This method takes an
+    // origin so we need to do an exact host match.
+    let cookies = Services.cookies
+      .getCookiesFromHost(principal.baseDomain, originAttributes)
+      .filter(
+        cookie =>
+          cookie.host == principal.host || cookie.host == `.${principal.host}`
       );
-    };
 
-    // Return on first cookie found for principal.
+    // If we don't have to filter specific testEntries we can return now.
     if (!testEntries) {
-      return cookies.some(filterFn);
+      return !!cookies.length;
     }
 
-    // Collect all cookies that match the principal
-    cookies = cookies.filter(filterFn);
-
+    // Check if the returned cookies match testEntries.
     if (cookies.length < testEntries.length) {
       return false;
     }
