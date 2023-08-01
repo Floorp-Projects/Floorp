@@ -42,7 +42,7 @@ add_setup(async function setup() {
 });
 
 add_task(async function testKill() {
-  await runTest("small-shot.ogg", "Utility Generic", "vorbis audio decoder");
+  await runTest("small-shot.ogg", "Utility Generic", "ffvpx audio decoder");
 
   await cleanUtilityProcessShutdown(
     "audioDecoder_Generic",
@@ -59,7 +59,7 @@ add_task(async function testKill() {
 });
 
 add_task(async function testShutdown() {
-  await runTest("small-shot.ogg", "Utility Generic", "vorbis audio decoder");
+  await runTest("small-shot.ogg", "Utility Generic", "ffvpx audio decoder");
 
   const audioDecoderPid = await findGenericAudioDecoder();
   ok(audioDecoderPid > 0, `Valid PID found: ${audioDecoderPid}`);
