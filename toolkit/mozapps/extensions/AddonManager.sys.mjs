@@ -4659,6 +4659,12 @@ AMRemoteSettings = {
           default:
             throw new Error(`Unexpected type ${typeof prefValue}`);
         }
+
+        // Notify observers about the pref set from AMRemoteSettings.
+        Services.obs.notifyObservers(
+          { entryId, groupName, prefName, prefValue },
+          "am-remote-settings-setpref"
+        );
       } catch (e) {
         logger.error(
           `Failed to process AddonManager RemoteSettings "${entryId}" - "${groupName}": ${prefName}`,

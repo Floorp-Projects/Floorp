@@ -207,3 +207,40 @@ extensions.quarantined_domains:
     data_sensitivity:
       - technical
     telemetry_mirror: EXTENSIONS_QUARANTINEDDOMAINS_LISTSIZE
+
+  listhash:
+    type: string
+    description: >
+      SHA1 cryptographic hash of the quarantined domains string pref.
+    lifetime: application
+    expires: 123
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1841683/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840615#c2
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841683
+    data_sensitivity:
+      - technical
+    telemetry_mirror: EXTENSIONS_QUARANTINEDDOMAINS_LISTHASH
+
+  remotehash:
+    type: string
+    description: >
+      SHA1 cryptographic hash of the quarantined domains string pref as it was
+      set based on the value got synced from the RemoteSettings collection.
+      AMRemoteSettings will be re-processing the entries on the next application
+      startup and so this metric lifetime can be set to application and expect
+      it to be always set to the value got from the RemoteSettings collection.
+    lifetime: application
+    expires: 123
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1841683/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841683
+    data_sensitivity:
+      - technical
+    telemetry_mirror: EXTENSIONS_QUARANTINEDDOMAINS_REMOTEHASH
