@@ -47,6 +47,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/ShutdownPhase.h"
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/StaticPtr.h"
@@ -1923,25 +1924,6 @@ class ScriptCompileTask final : public Task {
 };
 
 class NotifyOffThreadScriptCompletedTask : public Task {
-  // An array of all outstanding script receivers. All reference counting of
-  // these objects happens on the main thread. When we return to the main
-  // thread from script compilation we make sure our receiver is still in
-  // this array (still alive) before proceeding. This array is cleared during
-  // shutdown, potentially before all outstanding script compilations have
-  // finished. We do not need to worry about pointer replay here, because
-  // a) we should not be starting script compilation after clearing this
-  // array and b) in all other cases the receiver will still be alive.
-  static StaticAutoPtr<nsTArray<nsCOMPtr<nsIOffThreadScriptReceiver>>>
-      sReceivers;
-  static bool sSetupClearOnShutdown;
-
-  // Not-owning-pointer for the receiver.
-  //
-  // The pointed nsIOffThreadScriptReceiver is kept alive by sReceivers above.
-  nsIOffThreadScriptReceiver* mReceiver;
-
-  RefPtr<ScriptCompileTask> mCompileTask;
-
  public:
   NotifyOffThreadScriptCompletedTask(nsIOffThreadScriptReceiver* aReceiver,
                                      ScriptCompileTask* aCompileTask)
@@ -1949,37 +1931,18 @@ class NotifyOffThreadScriptCompletedTask : public Task {
         mReceiver(aReceiver),
         mCompileTask(aCompileTask) {}
 
-  static void NoteReceiver(nsIOffThreadScriptReceiver* aReceiver) {
-    if (!sSetupClearOnShutdown) {
-      ClearOnShutdown(&sReceivers);
-      sSetupClearOnShutdown = true;
-      sReceivers = new nsTArray<nsCOMPtr<nsIOffThreadScriptReceiver>>();
-    }
-
-    // If we ever crash here, it's because we tried to lazy compile script
-    // too late in shutdown.
-    sReceivers->AppendElement(aReceiver);
-  }
-
   bool Run() override {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (!sReceivers) {
-      // We've already shut down.
+    if (PastShutdownPhase(ShutdownPhase::XPCOMShutdownFinal)) {
       return true;
     }
-
-    auto index = sReceivers->IndexOf(mReceiver);
-    MOZ_RELEASE_ASSERT(index != sReceivers->NoIndex);
-    nsCOMPtr<nsIOffThreadScriptReceiver> receiver =
-        std::move((*sReceivers)[index]);
-    sReceivers->RemoveElementAt(index);
 
     RefPtr<JS::Stencil> stencil = mCompileTask->StealStencil();
     mCompileTask = nullptr;
 
-    (void)receiver->OnScriptCompileComplete(stencil,
-                                            stencil ? NS_OK : NS_ERROR_FAILURE);
+    (void)mReceiver->OnScriptCompileComplete(
+        stencil, stencil ? NS_OK : NS_ERROR_FAILURE);
 
     return true;
   }
@@ -1990,11 +1953,22 @@ class NotifyOffThreadScriptCompletedTask : public Task {
     return true;
   }
 #endif
-};
 
-StaticAutoPtr<nsTArray<nsCOMPtr<nsIOffThreadScriptReceiver>>>
-    NotifyOffThreadScriptCompletedTask::sReceivers;
-bool NotifyOffThreadScriptCompletedTask::sSetupClearOnShutdown = false;
+ private:
+  // NOTE:
+  // This field is main-thread only, and this task shouldn't be freed off
+  // main thread.
+  //
+  // This is guaranteed by not having off-thread tasks which depends on this
+  // task, or any other pointer from off-thread task to this task, because
+  // otherwise the off-thread task's mDependencies can be the last reference,
+  // which results in freeing this task off main thread.
+  //
+  // If such task is added, this field must be moved to separate storage.
+  nsCOMPtr<nsIOffThreadScriptReceiver> mReceiver;
+
+  RefPtr<ScriptCompileTask> mCompileTask;
+};
 
 nsresult StartOffThreadCompile(JS::CompileOptions& aOptions,
                                UniquePtr<Utf8Unit[], JS::FreePolicy>&& aText,
@@ -2084,8 +2058,6 @@ nsresult nsXULPrototypeScript::CompileMaybeOffThread(
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    NotifyOffThreadScriptCompletedTask::NoteReceiver(aOffThreadReceiver);
   } else {
     JS::SourceText<Utf8Unit> srcBuf;
     if (NS_WARN_IF(!srcBuf.init(cx, aText.get(), aTextLength,
