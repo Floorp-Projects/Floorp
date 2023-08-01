@@ -440,6 +440,7 @@ STATIC_ATOMS = [
     Atom("_false", "false"),
     Atom("farthest", "farthest"),
     Atom("featurePolicyViolation", "feature-policy-violation"),
+    Atom("fetchpriority", "fetchpriority"),
     Atom("field", "field"),
     Atom("fieldset", "fieldset"),
     Atom("file", "file"),
