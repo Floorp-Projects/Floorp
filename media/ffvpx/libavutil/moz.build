@@ -54,6 +54,7 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
         'base64.c',
         'color_utils.c',
         'film_grain_params.c',
+        'hdr_dynamic_metadata.c',
         'integer.c',
         'intmath.c',
         'lls.c',
