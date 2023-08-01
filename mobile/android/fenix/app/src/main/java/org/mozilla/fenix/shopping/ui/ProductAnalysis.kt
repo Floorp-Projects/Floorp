@@ -6,9 +6,12 @@ package org.mozilla.fenix.shopping.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +55,11 @@ fun ProductAnalysis(
             modifier = Modifier.fillMaxWidth(),
         )
 
+        AdjustedProductRatingCard(
+            rating = productAnalysis.adjustedRating,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
         SettingsCard(
             modifier = Modifier.fillMaxWidth(),
             productRecommendationsEnabled = productRecommendationsEnabled,
@@ -76,6 +84,40 @@ private fun ReviewGradeCard(
         Spacer(modifier = Modifier.height(8.dp))
 
         ReviewGradeExpanded(grade = reviewGrade)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun AdjustedProductRatingCard(
+    rating: Float,
+    modifier: Modifier = Modifier,
+) {
+    ReviewQualityCheckCard(modifier = modifier.semantics(mergeDescendants = true) {}) {
+        FlowRow(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                text = stringResource(R.string.review_quality_check_adjusted_rating_title),
+                color = FirefoxTheme.colors.textPrimary,
+                style = FirefoxTheme.typography.headline8,
+                modifier = Modifier.padding(
+                    end = 16.dp,
+                    bottom = 8.dp,
+                ),
+            )
+
+            StarRating(value = rating)
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = stringResource(R.string.review_quality_check_adjusted_rating_description),
+            color = FirefoxTheme.colors.textPrimary,
+            style = FirefoxTheme.typography.caption,
+        )
     }
 }
 

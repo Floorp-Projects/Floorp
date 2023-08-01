@@ -128,4 +128,6 @@
     <string name="review_quality_check_settings_title" translatable="false">Settings</string>
     <string name="review_quality_check_settings_recommended_products" translatable="false">Show products recommended by Firefox</string>
     <string name="review_quality_check_settings_turn_off" translatable="false">Turn off review quality check</string>
+    <string name="review_quality_check_adjusted_rating_title" translatable="false">Adjusted rating</string>
+    <string name="review_quality_check_adjusted_rating_description" translatable="false">Unreliable reviews removed</string>
 </resources>
