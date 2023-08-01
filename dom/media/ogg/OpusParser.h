@@ -32,7 +32,7 @@ class OpusParser {
   int mChannelMapping;  // Channel mapping family.
   int mStreams;         // Number of packed streams in each packet.
   int mCoupledStreams;  // Number of packed coupled streams in each packet.
-  unsigned char mMappingTable[255];  // Channel mapping table.
+  unsigned char mMappingTable[255] = {};  // Channel mapping table.
 
   // Granule position (end sample) of the last decoded Opus packet. This is
   // used to calculate the amount we should trim from the last packet.
