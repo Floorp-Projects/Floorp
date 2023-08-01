@@ -9,7 +9,7 @@
 ${helpers.predefined_type(
     "background-color",
     "Color",
-    "computed::Color::transparent()",
+    "computed::Color::TRANSPARENT",
     engines="gecko servo-2013 servo-2020",
     initial_specified_value="SpecifiedValue::transparent()",
     spec="https://drafts.csswg.org/css-backgrounds/#background-color",
