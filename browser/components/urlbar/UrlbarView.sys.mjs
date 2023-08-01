@@ -1767,6 +1767,18 @@ export class UrlbarView {
       case lazy.UrlbarUtils.RESULT_TYPE.TIP:
         isRowSelectable = false;
         break;
+      case lazy.UrlbarUtils.RESULT_TYPE.URL:
+        if (result.providerName == "UrlbarProviderClipboard") {
+          result.payload.displayUrl = "";
+          actionSetter = () => {
+            this.#setElementL10n(action, {
+              id: "urlbar-result-action-visit-from-your-clipboard",
+            });
+          };
+          title.setAttribute("isurl", "true");
+          break;
+        }
+      // fall-through
       default:
         if (result.heuristic && !result.payload.title) {
           isVisitAction = true;
@@ -2651,6 +2663,7 @@ export class UrlbarView {
       { id: "urlbar-result-action-search-tabs" },
       { id: "urlbar-result-action-switch-tab" },
       { id: "urlbar-result-action-visit" },
+      { id: "urlbar-result-action-visit-from-your-clipboard" },
     ];
 
     if (lazy.UrlbarPrefs.get("groupLabels.enabled")) {

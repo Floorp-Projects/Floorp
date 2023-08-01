@@ -239,6 +239,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether results will include a calculator.
   ["suggest.calculator", false],
 
+  // Whether results will include clipboard results.
+  ["suggest.clipboard", false],
+
   // Whether results will include search engines (e.g. tab-to-search).
   ["suggest.engines", true],
 
