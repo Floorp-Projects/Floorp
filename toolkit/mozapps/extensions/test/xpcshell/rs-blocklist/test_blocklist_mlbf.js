@@ -61,7 +61,8 @@ add_task(async function signed_xpi_initially_unblocked() {
   });
   await ExtensionBlocklistMLBF._onUpdate();
 
-  await promiseInstallFile(SIGNED_ADDON_XPI_FILE);
+  const install = await promiseInstallFile(SIGNED_ADDON_XPI_FILE);
+  Assert.equal(install.error, 0, "Install should not have an error");
 
   let addon = await promiseAddonByID(SIGNED_ADDON_ID);
   Assert.equal(addon.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
@@ -103,7 +104,13 @@ add_task(async function signed_xpi_blocked_on_install() {
   });
   await ExtensionBlocklistMLBF._onUpdate();
 
-  await promiseInstallFile(SIGNED_ADDON_XPI_FILE);
+  const install = await promiseInstallFile(SIGNED_ADDON_XPI_FILE);
+  Assert.equal(
+    install.error,
+    AddonManager.ERROR_BLOCKLISTED,
+    "Install should have an error"
+  );
+
   let addon = await promiseAddonByID(SIGNED_ADDON_ID);
   Assert.equal(addon.blocklistState, Ci.nsIBlocklistService.STATE_BLOCKED);
   Assert.ok(addon.appDisabled, "Blocked add-on is disabled on install");
@@ -183,9 +190,11 @@ add_task(async function privileged_xpi_not_blocked() {
   });
   await ExtensionBlocklistMLBF._onUpdate();
 
-  await promiseInstallFile(
+  const install = await promiseInstallFile(
     do_get_file("../data/signing_checks/privileged.xpi")
   );
+  Assert.equal(install.error, 0, "Install should not have an error");
+
   let addon = await promiseAddonByID("test@tests.mozilla.org");
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_PRIVILEGED);
   Assert.equal(addon.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
@@ -233,7 +242,13 @@ add_task(async function signed_sitepermission_xpi_blocked_on_install() {
   });
   await ExtensionBlocklistMLBF._onUpdate();
 
-  await promiseInstallFile(SIGNED_SITEPERM_XPI_FILE);
+  const install = await promiseInstallFile(SIGNED_SITEPERM_XPI_FILE);
+  Assert.equal(
+    install.error,
+    AddonManager.ERROR_BLOCKLISTED,
+    "Install should have an error"
+  );
+
   let addon = await promiseAddonByID(SIGNED_SITEPERM_ADDON_ID);
   // NOTE: if this assertion fails, then SIGNED_SITEPERM_SIGN_TIME has to be
   // updated accordingly otherwise the addon would not be blocked on install

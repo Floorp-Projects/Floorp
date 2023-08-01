@@ -2161,6 +2161,10 @@ var LocalAddonInstall = class extends AddonInstall {
       this.addon.recordAddonBlockChangeTelemetry("addon_install");
     }
 
+    if (this.addon.blocklistState === nsIBlocklistService.STATE_BLOCKED) {
+      this.error = AddonManager.ERROR_BLOCKLISTED;
+    }
+
     if (!this.addon.isCompatible) {
       this.state = AddonManager.STATE_CHECKING_UPDATE;
 
@@ -2641,6 +2645,10 @@ var DownloadAddonInstall = class extends AddonInstall {
       this.addon.recordAddonBlockChangeTelemetry(
         wasUpdate ? "addon_update" : "addon_install"
       );
+    }
+
+    if (this.addon.blocklistState === nsIBlocklistService.STATE_BLOCKED) {
+      this.error = AddonManager.ERROR_BLOCKLISTED;
     }
 
     if (this._callInstallListeners("onDownloadEnded")) {

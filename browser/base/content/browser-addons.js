@@ -72,6 +72,7 @@ const ERROR_L10N_IDS = new Map([
     ["addon-install-error-not-signed", "addon-local-install-error-not-signed"],
   ],
   [-8, ["addon-install-error-invalid-domain"]],
+  [-10, ["addon-install-error-blocklisted", "addon-install-error-blocklisted"]],
 ]);
 
 customElements.define(
@@ -898,15 +899,8 @@ var gXPInstallObserver = {
             let errorId = ERROR_L10N_IDS.get(install.error)?.[isLocal ? 1 : 0];
             const args = { addonName: install.name };
             if (!errorId) {
-              if (
-                install.addon.blocklistState ==
-                Ci.nsIBlocklistService.STATE_BLOCKED
-              ) {
-                errorId = "addon-install-error-blocklisted";
-              } else {
-                errorId = "addon-install-error-incompatible";
-                args.appVersion = Services.appinfo.version;
-              }
+              errorId = "addon-install-error-incompatible";
+              args.appVersion = Services.appinfo.version;
             }
             messageString = lazy.l10n.formatValueSync(errorId, args);
           }
