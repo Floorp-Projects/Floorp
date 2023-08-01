@@ -44,6 +44,7 @@ class ProviderClipboard extends UrlbarProvider {
   isActive(queryContext, controller) {
     // Return clipboard results only for empty searches.
     if (
+      !lazy.UrlbarPrefs.get("clipboard.featureGate") ||
       !lazy.UrlbarPrefs.get("suggest.clipboard") ||
       queryContext.searchString
     ) {

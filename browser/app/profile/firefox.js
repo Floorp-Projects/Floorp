@@ -395,7 +395,7 @@ pref("browser.urlbar.maxHistoricalSearchSuggestions", 2);
 // The default behavior for the urlbar can be configured to use any combination
 // of the match filters with each additional filter adding more results (union).
 pref("browser.urlbar.suggest.bookmark",             true);
-pref("browser.urlbar.suggest.clipboard",            false);
+pref("browser.urlbar.suggest.clipboard",            true);
 pref("browser.urlbar.suggest.history",              true);
 pref("browser.urlbar.suggest.openpage",             true);
 pref("browser.urlbar.suggest.remotetab",            true);
@@ -425,6 +425,9 @@ pref("browser.urlbar.suggest.calculator",           false);
 
 // Feature gate pref for weather suggestions in the urlbar.
 pref("browser.urlbar.weather.featureGate", false);
+
+// Feature gate pref for clipboard suggestions in the urlbar.
+pref("browser.urlbar.clipboard.featureGate", false);
 
 // When false, the weather suggestion will not be fetched when a VPN is
 // detected. When true, it will be fetched anyway.

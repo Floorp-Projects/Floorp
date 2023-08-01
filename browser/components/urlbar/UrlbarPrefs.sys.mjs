@@ -240,7 +240,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["suggest.calculator", false],
 
   // Whether results will include clipboard results.
-  ["suggest.clipboard", false],
+  ["suggest.clipboard", true],
 
   // Whether results will include search engines (e.g. tab-to-search).
   ["suggest.engines", true],
@@ -448,6 +448,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Feature gate pref for rich suggestions being shown in the urlbar.
   ["richSuggestions.featureGate", false],
+
+  // Feature gate pref for clipboard suggestions in the urlbar.
+  ["clipboard.featureGate", false],
 ]);
 
 const PREF_OTHER_DEFAULTS = new Map([
