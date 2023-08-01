@@ -138,6 +138,9 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
     ArrayObject* indicesTemplate =
         cx->realm()->regExps.getOrCreateMatchResultTemplateObject(
             cx, RegExpRealm::ResultTemplateKind::Indices);
+    if (!indicesTemplate) {
+      return false;
+    }
     indices =
         NewDenseFullyAllocatedArrayWithTemplate(cx, numPairs, indicesTemplate);
     if (!indices) {
