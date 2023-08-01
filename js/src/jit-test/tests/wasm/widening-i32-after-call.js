@@ -40,10 +40,10 @@ case "ion":
     assertEq(wasmDis(ins.exports.instanceCall, {tier:'stable', asString:true}).match(/call.*\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
     break;
 case "baseline":
-    assertEq(wasmDis(ins.exports.wasm2wasm, {tier:'stable', asString:true}).match(/call.*\n.*add.*%rsp\n.*mov %eax, %eax/).length, 1);
-    assertEq(wasmDis(ins.exports.wasm2import, {tier:'stable', asString:true}).match(/call.*\n.*add.*%rsp\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
-    assertEq(wasmDis(ins.exports.wasmIndirect, {tier:'stable', asString:true}).match(/call.*\n.*add.*%rsp\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
-    assertEq(wasmDis(ins.exports.instanceCall, {tier:'stable', asString:true}).match(/call.*\n.*add.*%rsp\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
+    assertEq(wasmDis(ins.exports.wasm2wasm, {tier:'stable', asString:true}).match(/call.*\n.*lea.*%rsp\n.*mov %eax, %eax/).length, 1);
+    assertEq(wasmDis(ins.exports.wasm2import, {tier:'stable', asString:true}).match(/call.*\n.*lea.*%rsp\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
+    assertEq(wasmDis(ins.exports.wasmIndirect, {tier:'stable', asString:true}).match(/call.*\n.*lea.*%rsp\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
+    assertEq(wasmDis(ins.exports.instanceCall, {tier:'stable', asString:true}).match(/call.*\n.*lea.*%rsp\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
     break;
 default:
     throw "Unexpected compile mode";

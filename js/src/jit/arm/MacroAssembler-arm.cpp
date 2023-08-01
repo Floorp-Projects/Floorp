@@ -4306,6 +4306,14 @@ void MacroAssembler::PopStackPtr() {
   adjustFrame(-sizeof(intptr_t));
 }
 
+void MacroAssembler::freeStackTo(uint32_t framePushed) {
+  MOZ_ASSERT(framePushed <= framePushed_);
+  ScratchRegisterScope scratch(*this);
+  ma_sub(FramePointer, Imm32(int32_t(framePushed)), sp, scratch, LeaveCC,
+         Always);
+  framePushed_ = framePushed;
+}
+
 // ===============================================================
 // Simple call functions.
 
