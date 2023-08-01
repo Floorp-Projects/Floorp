@@ -2854,9 +2854,9 @@ def enable_snapshot_fuzzing(value):
         return True
 
 
-@depends("--enable-fuzzing")
-def enable_fuzzing(value):
-    if value:
+@depends("--enable-fuzzing", enable_snapshot_fuzzing)
+def enable_fuzzing(value, snapshot_fuzzing):
+    if value or snapshot_fuzzing:
         return True
 
 
