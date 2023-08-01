@@ -322,7 +322,8 @@ void WindowSurfaceWaylandMB::Commit(
   // aProofOfLock is a kind of substitution of MozContainerSurfaceLock.
   // MozContainer is locked but MozContainerSurfaceLock doen't convert to
   // MutexAutoLock& so we use aProofOfLock here.
-  moz_container_wayland_set_scale_factor_locked(aProofOfLock, container);
+  moz_container_wayland_set_scale_factor_locked(
+      aProofOfLock, container, mWindow->GdkCeiledScaleFactor());
 
   // It's possible that scale factor changed between Lock() and Commit()
   // but window size is the same.
