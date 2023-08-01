@@ -87,25 +87,19 @@ export class ShoppingContainer extends MozLitElement {
   }
 
   getContentTemplate() {
-    return html`${this.warningCardTemplate()}${this.getAnalysisDetailsTemplate()}`;
-  }
-
-  warningCardTemplate() {
-    if (this.data.needs_analysis && this.data.product_id) {
-      return html`<shopping-message-bar type="stale"></shopping-message-bar>`;
-    } else if (!this.data.product_id) {
-      return html`<unanalyzed-product-card
-        productUrl=${ifDefined(this.productUrl)}
-      ></unanalyzed-product-card>`;
+    if (this.data.needs_analysis) {
+      if (!this.data.product_id) {
+        return html`<unanalyzed-product-card
+          productUrl=${ifDefined(this.productUrl)}
+        ></unanalyzed-product-card>`;
+      }
+      return html`
+        <shopping-message-bar type="stale"></shopping-message-bar>
+        ${this.getAnalysisDetailsTemplate()}
+      `;
     }
 
-    if (this.data?.error) {
-      return html`<shopping-message-bar
-        type="generic-error"
-      ></shopping-message-bar>`;
-    }
-
-    return null;
+    return this.getAnalysisDetailsTemplate();
   }
 
   renderContainer(sidebarContent) {
