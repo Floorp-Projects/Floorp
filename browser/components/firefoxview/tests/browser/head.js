@@ -75,6 +75,7 @@ const syncedTabsData1 = [
         url: "https://sinonjs.org/releases/latest/sandbox/",
         icon: "https://sinonjs.org/assets/images/favicon.png",
         lastUsed: 1655391592, // Thu Jun 16 2022 14:59:52 GMT+0000
+        client: 1,
       },
       {
         type: "tab",
@@ -82,6 +83,7 @@ const syncedTabsData1 = [
         url: "https://www.mozilla.org/",
         icon: "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
         lastUsed: 1655730486, // Mon Jun 20 2022 13:08:06 GMT+0000
+        client: 1,
       },
     ],
   },
@@ -98,6 +100,7 @@ const syncedTabsData1 = [
         url: "https://www.theguardian.com/",
         icon: "page-icon:https://www.theguardian.com/",
         lastUsed: 1655291890, // Wed Jun 15 2022 11:18:10 GMT+0000
+        client: 2,
       },
       {
         type: "tab",
@@ -105,6 +108,7 @@ const syncedTabsData1 = [
         url: "https://www.thetimes.co.uk/",
         icon: "page-icon:https://www.thetimes.co.uk/",
         lastUsed: 1655727485, // Mon Jun 20 2022 12:18:05 GMT+0000
+        client: 2,
       },
     ],
   },
@@ -336,11 +340,17 @@ function setupMocks({ fxaDevices = null, state, syncEnabled = true }) {
       }),
     };
   });
+  // This is converting the device list to a client list.
+  // There are two primary differences:
+  // 1. The client list doesn't return the current device.
+  // 2. It uses clientType instead of type.
+  let tabClients = fxaDevices ? [...fxaDevices] : [];
+  for (let client of tabClients) {
+    client.clientType = client.type;
+  }
+  tabClients = tabClients.filter(device => !device.isCurrentDevice);
   sandbox.stub(SyncedTabs, "getTabClients").callsFake(() => {
-    // The real getTabClients does not return the current device
-    return Promise.resolve(
-      fxaDevices.filter(device => !device.isCurrentDevice)
-    );
+    return Promise.resolve(tabClients);
   });
   return sandbox;
 }

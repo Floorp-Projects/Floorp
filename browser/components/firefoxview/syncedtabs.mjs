@@ -37,6 +37,7 @@ class SyncedTabsInView extends ViewPage {
       this.maxTabsLength = -1;
     }
     this.devices = [];
+    this.fullyUpdated = false;
   }
 
   static properties = {
@@ -296,40 +297,42 @@ class SyncedTabsInView extends ViewPage {
     let renderArray = [];
     let renderInfo = {};
     for (let tab of this.currentSyncedTabs) {
-      if (!(tab.device in renderInfo)) {
-        renderInfo[tab.device] = {
+      if (!(tab.client in renderInfo)) {
+        renderInfo[tab.client] = {
+          name: tab.device,
           deviceType: tab.deviceType,
           tabs: [],
         };
       }
-      renderInfo[tab.device].tabs.push(tab);
+      renderInfo[tab.client].tabs.push(tab);
     }
+
     // Add devices without tabs
     for (let device of this.devices) {
-      if (!(device.name in renderInfo)) {
-        renderInfo[device.name] = {
-          deviceType: device.type,
+      if (!(device.id in renderInfo)) {
+        renderInfo[device.id] = {
+          name: device.name,
+          deviceType: device.clientType,
           tabs: [],
         };
       }
     }
-    for (let deviceName in renderInfo) {
-      if (renderInfo[deviceName].tabs.length) {
+
+    for (let id in renderInfo) {
+      if (renderInfo[id].tabs.length) {
         renderArray.push(html`<card-container>
           <h2 slot="header">
             <div
-              class="icon ${renderInfo[deviceName].deviceType}"
+              class="icon ${renderInfo[id].deviceType}"
               role="presentation"
             ></div>
-            ${deviceName}
+            ${renderInfo[id].name}
           </h2>
           <fxview-tab-list
             slot="main"
             class="syncedtabs"
             hasPopup="menu"
-            .tabItems=${ifDefined(
-              this.getTabItems(renderInfo[deviceName].tabs)
-            )}
+            .tabItems=${ifDefined(this.getTabItems(renderInfo[id].tabs))}
             maxTabsLength=${this.maxTabsLength}
             @fxview-tab-list-primary-action=${this.onOpenLink}
             @fxview-tab-list-secondary-action=${this.onContextMenu}
@@ -340,8 +343,8 @@ class SyncedTabsInView extends ViewPage {
       } else {
         renderArray.push(
           this.noDeviceTabsTemplate(
-            deviceName,
-            renderInfo[deviceName].deviceType
+            renderInfo[id].name,
+            renderInfo[id].deviceType
           )
         );
       }
@@ -450,6 +453,10 @@ class SyncedTabsInView extends ViewPage {
     });
 
     this.updateTabsList(tabs);
+  }
+
+  updated() {
+    this.fullyUpdated = true;
   }
 
   sendTabTelemetry(numTabs) {
