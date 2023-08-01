@@ -166,8 +166,6 @@ class InternalHeaders final {
 
   static bool IsPrivilegedNoCorsRequestHeaderName(const nsCString& aName);
 
-  static bool IsSimpleHeader(const nsCString& aName, const nsACString& aValue);
-
   static bool IsRevalidationHeader(const nsCString& aName);
 
   void MaybeSortList();
