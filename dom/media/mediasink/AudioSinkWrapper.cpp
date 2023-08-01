@@ -459,7 +459,10 @@ RefPtr<GenericPromise> AudioSinkWrapper::MaybeAsyncCreateAudioSink(
             MOZ_ASSERT(!mAudioSink);
             TimeUnit switchTime = GetPosition();
             DropAudioPacketsIfNeeded(switchTime);
-
+            if (mTreatUnderrunAsSilence) {
+              audioSink->EnableTreatAudioUnderrunAsSilence(
+                  mTreatUnderrunAsSilence);
+            }
             LOG("AudioSink async, start");
             StartAudioSink(std::move(audioSink), switchTime);
             return GenericPromise::CreateAndResolve(true, __func__);
@@ -490,6 +493,9 @@ nsresult AudioSinkWrapper::SyncCreateAudioSink(const TimeUnit& aStartTime) {
     // is no video.
     mEndedPromiseHolder.RejectIfExists(rv, __func__);
     return rv;
+  }
+  if (mTreatUnderrunAsSilence) {
+    audioSink->EnableTreatAudioUnderrunAsSilence(mTreatUnderrunAsSilence);
   }
   StartAudioSink(std::move(audioSink), aStartTime);
 
@@ -568,6 +574,13 @@ void AudioSinkWrapper::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
   aInfo.mAudioSinkWrapper.mAudioEnded = mAudioEnded;
   if (mAudioSink) {
     mAudioSink->GetDebugInfo(aInfo);
+  }
+}
+
+void AudioSinkWrapper::EnableTreatAudioUnderrunAsSilence(bool aEnabled) {
+  mTreatUnderrunAsSilence = aEnabled;
+  if (mAudioSink) {
+    mAudioSink->EnableTreatAudioUnderrunAsSilence(aEnabled);
   }
 }
 
