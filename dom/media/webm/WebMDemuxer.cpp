@@ -235,7 +235,6 @@ already_AddRefed<MediaTrackDemuxer> WebMDemuxer::GetTrackDemuxer(
 }
 
 void WebMDemuxer::Reset(TrackInfo::TrackType aType) {
-  mProcessedDiscardPadding = false;
   if (aType == TrackInfo::kVideoTrack) {
     mVideoPackets.Reset();
   } else {
@@ -417,12 +416,11 @@ nsresult WebMDemuxer::ReadMetadata() {
         uint64_t codecDelayUs = params.codec_delay / 1000;
         mInfo.mAudio.mMimeType = "audio/opus";
         OpusCodecSpecificData opusCodecSpecificData;
-        opusCodecSpecificData.mContainerCodecDelayFrames =
-            AssertedCast<int64_t>(USECS_PER_S * codecDelayUs / 48000);
+        opusCodecSpecificData.mContainerCodecDelayMicroSeconds =
+            AssertedCast<int64_t>(codecDelayUs);
         mInfo.mAudio.mCodecSpecificConfig =
             AudioCodecSpecificVariant{std::move(opusCodecSpecificData)};
-        WEBM_DEBUG("Preroll for Opus: %" PRIu64 " frames",
-                   opusCodecSpecificData.mContainerCodecDelayFrames);
+        WEBM_DEBUG("Preroll for Opus: %" PRIu64, codecDelayUs);
       }
       mSeekPreroll = params.seek_preroll;
       mInfo.mAudio.mRate = AssertedCast<uint32_t>(params.rate);
@@ -584,7 +582,6 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
   unsigned int count = 0;
   r = nestegg_packet_count(holder->Packet(), &count);
   if (r == -1) {
-    WEBM_DEBUG("nestegg_packet_count: error");
     return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
   }
   int64_t tstamp = holder->Timestamp();
@@ -597,7 +594,6 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
   RefPtr<NesteggPacketHolder> next_holder;
   rv = NextPacket(aType, next_holder);
   if (NS_FAILED(rv) && rv != NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-    WEBM_DEBUG("NextPacket: error");
     return rv;
   }
 
@@ -639,7 +635,6 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
   }
 
   if (mIsMediaSource && next_tstamp == INT64_MIN) {
-    WEBM_DEBUG("WebM is a media source, and next timestamp computation filed.");
     return NS_ERROR_DOM_MEDIA_END_OF_STREAM;
   }
 
@@ -726,13 +721,13 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
       sample = new MediaRawData(data, length, alphaData, alphaLength);
       if ((length && !sample->Data()) ||
           (alphaLength && !sample->AlphaData())) {
-        WEBM_DEBUG("Couldn't allocate MediaRawData: OOM");
+        // OOM.
         return NS_ERROR_OUT_OF_MEMORY;
       }
     } else {
       sample = new MediaRawData(data, length);
       if (length && !sample->Data()) {
-        WEBM_DEBUG("Couldn't allocate MediaRawData: OOM");
+        // OOM.
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
@@ -744,25 +739,20 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
     sample->mOffset = holder->Offset();
     sample->mKeyframe = isKeyframe;
     if (discardPadding && i == count - 1) {
-      sample->mOriginalPresentationWindow =
-          Some(media::TimeInterval{sample->mTime, sample->GetEndTime()});
+      CheckedInt64 discardFrames;
       if (discardPadding < 0) {
-        // This will ensure decoding will error out, and the file is rejected.
-        sample->mDuration = TimeUnit::Invalid();
+        // This is an invalid value as discard padding should never be negative.
+        // Set to maximum value so that the decoder will reject it as it's
+        // greater than the number of frames available.
+        discardFrames = INT32_MAX;
+        WEBM_DEBUG("Invalid negative discard padding");
       } else {
-        TimeUnit padding = TimeUnit::FromNanoseconds(discardPadding);
-        if (padding > sample->mDuration || mProcessedDiscardPadding) {
-          WEBM_DEBUG(
-              "Padding frames larger than packet size, flagging the packet for "
-              "error (padding: %s, duration: %s, already processed: %s)",
-              padding.ToString().get(), sample->mDuration.ToString().get(),
-              mProcessedDiscardPadding ? "true" : "false");
-          sample->mDuration = TimeUnit::Invalid();
-        } else {
-          sample->mDuration -= padding;
-        }
+        discardFrames = TimeUnitToFrames(
+            TimeUnit::FromNanoseconds(discardPadding), mInfo.mAudio.mRate);
       }
-      mProcessedDiscardPadding = true;
+      if (discardFrames.isValid()) {
+        sample->mDiscardPadding = discardFrames.value();
+      }
     }
 
     if (packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED ||
@@ -876,7 +866,6 @@ nsresult WebMDemuxer::NextPacket(TrackInfo::TrackType aType,
   bool hasType = isVideo ? mHasVideo : mHasAudio;
 
   if (!hasType) {
-    WEBM_DEBUG("No media type found");
     return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
   }
 
@@ -898,7 +887,6 @@ nsresult WebMDemuxer::NextPacket(TrackInfo::TrackType aType,
       return rv;
     }
     if (!holder) {
-      WEBM_DEBUG("Couldn't demux packet");
       return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
     }
 
@@ -915,24 +903,20 @@ nsresult WebMDemuxer::DemuxPacket(TrackInfo::TrackType aType,
   int r = nestegg_read_packet(Context(aType), &packet);
   if (r == 0) {
     nestegg_read_reset(Context(aType));
-    WEBM_DEBUG("EOS");
     return NS_ERROR_DOM_MEDIA_END_OF_STREAM;
   } else if (r < 0) {
-    WEBM_DEBUG("nestegg_read_packet: error");
     return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
   }
 
   unsigned int track = 0;
   r = nestegg_packet_track(packet, &track);
   if (r == -1) {
-    WEBM_DEBUG("nestegg_packet_track: error");
     return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
   }
 
   int64_t offset = Resource(aType).Tell();
   RefPtr<NesteggPacketHolder> holder = new NesteggPacketHolder();
   if (!holder->Init(packet, offset, track, false)) {
-    WEBM_DEBUG("NesteggPacketHolder::Init: error");
     return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
   }
 
@@ -1172,7 +1156,6 @@ nsresult WebMTrackDemuxer::NextSample(RefPtr<MediaRawData>& aData) {
     aData = mSamples.PopFront();
     return NS_OK;
   }
-  WEBM_DEBUG("WebMTrackDemuxer::NextSample: error");
   return rv;
 }
 

@@ -1,0 +1,18 @@
+diff -r 55f3224d7513 media/libtremor/lib/tremor_synthesis.c
+--- a/media/libtremor/lib/tremor_synthesis.c	Sat Jan 03 20:02:33 2015 -0800
++++ b/media/libtremor/lib/tremor_synthesis.c	Sun Jan 04 11:17:29 2015 -0800
+@@ -119,13 +119,13 @@ long vorbis_packet_blocksize(vorbis_info
+     while(v>1){
+       modebits++;
+       v>>=1;
+     }
+ 
+     /* read our mode and pre/post windowsize */
+     mode=oggpack_read(&opb,modebits);
+   }
+-  if(mode==-1)return(OV_EBADPACKET);
++  if(mode==-1 || !ci->mode_param[mode])return(OV_EBADPACKET);
+   return(ci->blocksizes[ci->mode_param[mode]->blockflag]);
+ }
+ 
+ 

@@ -22,8 +22,6 @@ if CONFIG['FFVPX_ASFLAGS']:
 
 LOCAL_INCLUDES += ['/media/ffvpx']
 
-USE_LIBS += [ 'gkcodecs' ]
-
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()
 

@@ -15,8 +15,7 @@ EXPORTS.theora += [
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()
 
-FINAL_LIBRARY = 'gkcodecs'
-NoVisibilityFlags()
+FINAL_LIBRARY = 'gkmedias'
 
 # The encoder is currently not included.
 DEFINES['THEORA_DISABLE_ENCODE'] = True

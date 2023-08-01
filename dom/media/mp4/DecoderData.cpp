@@ -172,13 +172,14 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* aTrack,
         mp4ParseSampleCodecSpecific.length >= 12) {
       uint16_t preskip = mozilla::LittleEndian::readUint16(
           mp4ParseSampleCodecSpecific.data + 10);
-      opusCodecSpecificData.mContainerCodecDelayFrames = preskip;
+      opusCodecSpecificData.mContainerCodecDelayMicroSeconds =
+          mozilla::FramesToUsecs(preskip, 48000).value();
       LOG("Opus stream in MP4 container, %" PRId64
           " microseconds of encoder delay (%" PRIu16 ").",
-          opusCodecSpecificData.mContainerCodecDelayFrames, preskip);
+          opusCodecSpecificData.mContainerCodecDelayMicroSeconds, preskip);
     } else {
       // This file will error later as it will be rejected by the opus decoder.
-      opusCodecSpecificData.mContainerCodecDelayFrames = 0;
+      opusCodecSpecificData.mContainerCodecDelayMicroSeconds = 0;
     }
     opusCodecSpecificData.mHeadersBinaryBlob->AppendElements(
         mp4ParseSampleCodecSpecific.data, mp4ParseSampleCodecSpecific.length);

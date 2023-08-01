@@ -799,11 +799,30 @@ set_config("MOZ_FMP4", fmp4)
 set_define("MOZ_FMP4", fmp4)
 
 
-set_config("MOZ_SAMPLE_TYPE_FLOAT32", True)
-set_define("MOZ_SAMPLE_TYPE_FLOAT32", True)
+@depends(target)
+def sample_type_is_s16(target):
+    # Use integers over floats for audio on Android regardless of the CPU
+    # architecture, because audio backends for Android don't support floats.
+    # We also use integers on ARM because it's more efficient.
+    if target.os == "Android" or target.cpu == "arm":
+        return True
 
-set_define("MOZ_VORBIS", True)
-set_config("MOZ_VORBIS", True)
+
+@depends(sample_type_is_s16)
+def sample_type_is_float(t):
+    if not t:
+        return True
+
+
+set_config("MOZ_SAMPLE_TYPE_S16", sample_type_is_s16)
+set_define("MOZ_SAMPLE_TYPE_S16", sample_type_is_s16)
+set_config("MOZ_SAMPLE_TYPE_FLOAT32", sample_type_is_float)
+set_define("MOZ_SAMPLE_TYPE_FLOAT32", sample_type_is_float)
+
+set_define("MOZ_VORBIS", sample_type_is_float)
+set_config("MOZ_VORBIS", sample_type_is_float)
+set_define("MOZ_TREMOR", sample_type_is_s16)
+set_config("MOZ_TREMOR", sample_type_is_s16)
 
 option(
     "--disable-real-time-tracing",

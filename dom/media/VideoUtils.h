@@ -437,8 +437,8 @@ enum class StringListRangeEmptyItems {
 template <typename String,
           StringListRangeEmptyItems empties = StringListRangeEmptyItems::Skip>
 class StringListRange {
-  using CharType = typename String::char_type;
-  using Pointer = const CharType*;
+  typedef typename String::char_type CharType;
+  typedef const CharType* Pointer;
 
  public:
   // Iterator into range, trims items and optionally skips empty items.
@@ -453,7 +453,7 @@ class StringListRange {
     }
     // DereferencedType should be 'const nsDependent[C]String' pointing into
     // mList (which is 'const ns[C]String&').
-    using DereferencedType = decltype(Substring(Pointer(), Pointer()));
+    typedef decltype(Substring(Pointer(), Pointer())) DereferencedType;
     DereferencedType operator*() { return Substring(mStart, mEnd); }
 
    private:

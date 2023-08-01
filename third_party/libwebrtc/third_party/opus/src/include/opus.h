@@ -19,5 +19,5 @@
 // This is a trampoline header meant to redirect from where libwebrtc code
 // expects third_party headers to where those headers exist in the Mozilla
 // Firefox repository.
-#include <opus/opus.h>
+#include "../../media/libopus/include/opus.h"
 

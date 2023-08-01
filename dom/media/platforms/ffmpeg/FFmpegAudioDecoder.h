@@ -25,14 +25,12 @@ class FFmpegAudioDecoder<LIBAV_VER>
     : public FFmpegDataDecoder<LIBAV_VER>,
       public DecoderDoctorLifeLogger<FFmpegAudioDecoder<LIBAV_VER>> {
  public:
-  FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
-                     const CreateDecoderParams& aDecoderParams);
+  FFmpegAudioDecoder(FFmpegLibWrapper* aLib, const AudioInfo& aConfig);
   virtual ~FFmpegAudioDecoder();
 
   RefPtr<InitPromise> Init() override;
   void InitCodecContext() MOZ_REQUIRES(sMutex) override;
-  static AVCodecID GetCodecId(const nsACString& aMimeType,
-                              const AudioInfo& aInfo);
+  static AVCodecID GetCodecId(const nsACString& aMimeType);
   nsCString GetDescriptionName() const override {
 #ifdef USING_MOZFFVPX
     return "ffvpx audio decoder"_ns;
@@ -45,15 +43,21 @@ class FFmpegAudioDecoder<LIBAV_VER>
  private:
   MediaResult DoDecode(MediaRawData* aSample, uint8_t* aData, int aSize,
                        bool* aGotFrame, DecodedData& aResults) override;
-  MediaResult DecodeUsingFFmpeg(AVPacket* aPacket, bool& aDecoded,
-                                MediaRawData* aSample, DecodedData& aResults,
-                                bool* aGotFrame);
-  MediaResult PostProcessOutput(bool aDecoded, MediaRawData* aSample,
-                                DecodedData& aResults, bool* aGotFrame,
-                                int32_t aSubmitted);
-  const AudioInfo mAudioInfo;
-  // True if the audio will be downmixed and rendered in mono.
-  bool mDefaultPlaybackDeviceMono;
+  // This method is to be called only when decoding mp3, in order to correctly
+  // discard padding frames.
+  uint64_t Padding() const;
+  // This method is to be called only when decoding AAC, in order to correctly
+  // discard padding frames, based on the number of frames decoded and the total
+  // frame count of the media.
+  uint64_t TotalFrames() const;
+  // The number of frames of encoder delay, that need to be discarded at the
+  // beginning of the stream.
+  uint32_t mEncoderDelay = 0;
+  // This holds either the encoder padding (when this decoder decodes mp3), or
+  // the total frame count of the media (when this decoder decodes AAC).
+  // It is best accessed via the `Padding` and `TotalFrames` methods, for
+  // clarity.
+  uint64_t mEncoderPaddingOrTotalFrames = 0;
 };
 
 }  // namespace mozilla
