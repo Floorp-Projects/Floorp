@@ -834,7 +834,7 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-neon-asm-bilinear.S b/gfx/cairo/
  
      .unreq    OUT
      .unreq    TOP
-@@ -757,21 +757,23 @@ 3:
+@@ -757,21 +757,21 @@ 3:
      .unreq    UX
      .unreq    WIDTH
      .unreq    TMP1
@@ -848,9 +848,8 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-neon-asm-bilinear.S b/gfx/cairo/
      .unreq    MASK
  .endif
  
-+#ifndef __clang__
- .endfunc
-+#endif
+-.endfunc
++pixman_end_asm_function
  
  .endm
  
@@ -1933,7 +1932,7 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-neon-asm.S b/gfx/cairo/libpixman
      .unreq    OUT
      .unreq    TOP
      .unreq    WT
-@@ -3231,17 +3237,19 @@ 3:
+@@ -3231,17 +3237,17 @@ 3:
      .unreq    UX
      .unreq    WIDTH
      .unreq    TMP1
@@ -1942,9 +1941,8 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-neon-asm.S b/gfx/cairo/libpixman
      .unreq    TMP3
      .unreq    TMP4
      .unreq    STRIDE
-+#ifndef __clang__
- .endfunc
-+#endif
+-.endfunc
++pixman_end_asm_function
  
  .endm
  
@@ -2867,7 +2865,7 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-neon-asm.h b/gfx/cairo/libpixman
      .unreq      SRC
      .unreq      MASK
      .unreq      DST_R
-@@ -910,17 +912,19 @@ 9:
+@@ -910,17 +912,17 @@ 9:
      .unreq      DST_STRIDE
      .unreq      MASK_STRIDE
      .unreq      PF_CTL
@@ -2876,9 +2874,8 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-neon-asm.h b/gfx/cairo/libpixman
      .unreq      PF_DST
      .unreq      PF_MASK
      .unreq      DUMMY
-+#ifndef __clang__
-     .endfunc
-+#endif
+-    .endfunc
++    pixman_end_asm_function
  .endm
  
  /*
@@ -2887,7 +2884,7 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-neon-asm.h b/gfx/cairo/libpixman
   */
  .macro generate_composite_function_scanline        use_nearest_scaling, \
                                                     fname, \
-@@ -934,49 +938,49 @@ 9:
+@@ -934,49 +936,49 @@ 9:
                                                     process_pixblock_head, \
                                                     process_pixblock_tail, \
                                                     process_pixblock_tail_head, \
@@ -2948,7 +2945,7 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-neon-asm.h b/gfx/cairo/libpixman
      .if mask_bpp != 0
      ldr         MASK, [sp, #(24 + 8)]
      .endif
-@@ -986,89 +990,89 @@ 9:
+@@ -986,89 +988,89 @@ 9:
       */
      W           .req        r0      /* width (is updated during processing) */
      DST_W       .req        r1      /* destination buffer pointer for writes */
@@ -3058,7 +3055,7 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-neon-asm.h b/gfx/cairo/libpixman
      .unreq      VX
      .unreq      UNIT_X
      .unreq      TMP1
-@@ -1085,25 +1089,27 @@ 8:
+@@ -1085,25 +1087,25 @@ 8:
      .unreq      DST_R
      .unreq      DST_W
      .unreq      W
@@ -3067,9 +3064,8 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-neon-asm.h b/gfx/cairo/libpixman
      .purgem     fetch_src_pixblock
      .purgem     pixld_src
  
-+#ifndef __clang__
-     .endfunc
-+#endif
+-    .endfunc
++    pixman_end_asm_function
  .endm
  
  .macro generate_composite_function_single_scanline x:vararg
@@ -3088,7 +3084,7 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-neon-asm.h b/gfx/cairo/libpixman
  .endm
  
  .macro default_cleanup
-@@ -1129,56 +1135,56 @@ 8:
+@@ -1129,56 +1131,56 @@ 8:
   * Conversion of 8 r5g6b6 pixels packed in 128-bit register (in)
   * into a planar a8r8g8b8 format (with a, r, g, b color components
   * stored into 64-bit registers out_a, out_r, out_g, out_b respectively).
@@ -3195,7 +3191,7 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-simd-asm-scaled.S b/gfx/cairo/li
  	.text
  	.arch armv6
  	.object_arch armv4
-@@ -57,100 +61,107 @@
+@@ -57,100 +61,105 @@
   *  prefetch_braking_distance - stop prefetching when that many pixels are
   *                              remaining before the end of scanline
   */
@@ -3308,9 +3304,8 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-simd-asm-scaled.S b/gfx/cairo/li
  	/* return */
  	pop	{r4, r5, r6, r7, r8, r10}
  	bx	lr
-+#ifndef __clang__
- .endfunc
-+#endif
+-.endfunc
++pixman_end_asm_function
  .endm
  
  generate_nearest_scanline_func \
@@ -4137,7 +4132,7 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-simd-asm.S b/gfx/cairo/libpixman
  
  generate_composite_function \
      pixman_composite_over_white_8888_8888_ca_asm_armv6, 0, 32, 32 \
-@@ -999,33 +1004,35 @@ 20:     /* No simplifications possible -
+@@ -999,33 +1004,33 @@ 20:     /* No simplifications possible -
          uqadd8  WK0, WK1, WK2            /* followed by 1 stall */
  30:     /* The destination buffer is already in the L1 cache, so
           * there's little point in amalgamating writes */
@@ -4163,9 +4158,8 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-simd-asm.S b/gfx/cairo/libpixman
          cmp     ip, #-1
          beq     pixman_composite_over_white_8888_8888_ca_asm_armv6
          /* else drop through... */
-+#ifndef __clang__
-  .endfunc
-+#endif
+- .endfunc
++ pixman_end_asm_function
  generate_composite_function \
      pixman_composite_over_n_8888_8888_ca_asm_armv6_helper, 0, 32, 32 \
      FLAG_DST_READWRITE | FLAG_BRANCH_OVER | FLAG_PROCESS_CORRUPTS_PSR | FLAG_PROCESS_DOES_STORE | FLAG_SPILL_LINE_VARS | FLAG_PROCESS_CORRUPTS_SCRATCH | FLAG_PROCESS_CORRUPTS_WK0 \
@@ -4174,7 +4168,7 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-simd-asm.S b/gfx/cairo/libpixman
      nop_macro, /* newline */ \
      over_n_8888_8888_ca_cleanup, \
      over_n_8888_8888_ca_process_head, \
-@@ -1040,94 +1047,94 @@ generate_composite_function \
+@@ -1040,94 +1045,94 @@ generate_composite_function \
          uadd8   SCRATCH, MASK, MASK
          /* Offset the source pointer: we only need the alpha bytes */
          add     SRC, SRC, #3
@@ -4310,7 +4304,7 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-simd-asm.S b/gfx/cairo/libpixman
      2, /* prefetch distance */ \
      in_reverse_8888_8888_init, \
      nop_macro, /* newline */ \
-@@ -1144,31 +1151,31 @@ generate_composite_function \
+@@ -1144,31 +1149,31 @@ generate_composite_function \
          /* Hold multiplier for destination in STRIDE_M */
          mov     STRIDE_M, #255
          sub     STRIDE_M, STRIDE_M, SRC, lsr #24
@@ -5183,7 +5177,7 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-simd-asm.h b/gfx/cairo/libpixman
          pop     {r4-r11, pc}  /* exit */
  
   .ltorg
-@@ -927,23 +959,25 @@ 199:
+@@ -927,23 +959,23 @@ 199:
      .unreq  MASK
      .unreq  STRIDE_M
      .unreq  WK0
@@ -5192,9 +5186,8 @@ diff --git a/gfx/cairo/libpixman/src/pixman-arm-simd-asm.h b/gfx/cairo/libpixman
      .unreq  WK3
      .unreq  SCRATCH
      .unreq  ORIG_W
-+#ifndef __clang__
-     .endfunc
-+#endif
+-    .endfunc
++    pixman_end_asm_function
  .endm
  
  .macro line_saved_regs  x:vararg
