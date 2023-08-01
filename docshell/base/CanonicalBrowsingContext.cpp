@@ -1497,7 +1497,7 @@ void CanonicalBrowsingContext::GoBack(
     mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD, ""_ns);
   }
 
-  if (nsDocShell* docShell = nsDocShell::Cast(GetDocShell())) {
+  if (RefPtr<nsDocShell> docShell = nsDocShell::Cast(GetDocShell())) {
     if (aCancelContentJSEpoch.WasPassed()) {
       docShell->SetCancelContentJSEpoch(aCancelContentJSEpoch.Value());
     }
@@ -1523,7 +1523,7 @@ void CanonicalBrowsingContext::GoForward(
     mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD, ""_ns);
   }
 
-  if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
+  if (RefPtr<nsDocShell> docShell = nsDocShell::Cast(GetDocShell())) {
     if (aCancelContentJSEpoch.WasPassed()) {
       docShell->SetCancelContentJSEpoch(aCancelContentJSEpoch.Value());
     }
@@ -1549,7 +1549,7 @@ void CanonicalBrowsingContext::GoToIndex(
     mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD, ""_ns);
   }
 
-  if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
+  if (RefPtr<nsDocShell> docShell = nsDocShell::Cast(GetDocShell())) {
     if (aCancelContentJSEpoch.WasPassed()) {
       docShell->SetCancelContentJSEpoch(aCancelContentJSEpoch.Value());
     }
@@ -1573,7 +1573,7 @@ void CanonicalBrowsingContext::Reload(uint32_t aReloadFlags) {
     mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD, ""_ns);
   }
 
-  if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
+  if (RefPtr<nsDocShell> docShell = nsDocShell::Cast(GetDocShell())) {
     docShell->Reload(aReloadFlags);
   } else if (ContentParent* cp = GetContentParent()) {
     Unused << cp->SendReload(this, aReloadFlags);
