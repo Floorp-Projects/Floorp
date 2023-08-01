@@ -391,7 +391,8 @@ static void GtkWindowSetTransientFor(GtkWindow* aWindow, GtkWindow* aParent) {
   }
 
 nsWindow::nsWindow()
-    : mIsDestroyed(false),
+    : mDestroyMutex("nsWindow::mDestroyMutex"),
+      mIsDestroyed(false),
       mIsShown(false),
       mNeedsShow(false),
       mIsMapped(false),
@@ -590,6 +591,7 @@ void nsWindow::DestroyChildWindows() {
 void nsWindow::Destroy() {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 
+  MutexAutoLock lock(mDestroyMutex);
   if (mIsDestroyed || !mCreated) {
     return;
   }
@@ -3418,6 +3420,13 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
       return nullptr;
     case NS_NATIVE_EGL_WINDOW: {
       void* eglWindow = nullptr;
+
+      // NS_NATIVE_EGL_WINDOW can be called from various threads.
+      // Make sure nsWindow is not destroyed.
+      MutexAutoLock lock(mDestroyMutex);
+      if (mIsDestroyed || !mCreated) {
+        return nullptr;
+      }
 #ifdef MOZ_X11
       if (GdkIsX11Display()) {
         eglWindow = mGdkWindow ? (void*)GDK_WINDOW_XID(mGdkWindow) : nullptr;
@@ -8753,6 +8762,7 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
       "mCompositorWidgetDelegate %p\n",
       delegate, mIsMapped, mCompositorWidgetDelegate);
 
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   if (delegate) {
     mCompositorWidgetDelegate = delegate->AsPlatformSpecificDelegate();
     MOZ_ASSERT(mCompositorWidgetDelegate,
@@ -9719,7 +9729,10 @@ nsWindow* nsWindow::GetFocusedWindow() { return gFocusWindow; }
 #ifdef MOZ_WAYLAND
 void nsWindow::SetEGLNativeWindowSize(
     const LayoutDeviceIntSize& aEGLWindowSize) {
-  if (!mContainer || !GdkIsWaylandDisplay()) {
+  // SetEGLNativeWindowSize() is called from renderer/compositor thread,
+  // make sure nsWindow is not destroyed.
+  MutexAutoLock lock(mDestroyMutex);
+  if (mIsDestroyed || !GdkIsWaylandDisplay() || !mContainer) {
     return;
   }
 
