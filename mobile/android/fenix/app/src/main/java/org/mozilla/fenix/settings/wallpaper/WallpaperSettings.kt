@@ -146,7 +146,7 @@ private fun WallpaperGroupHeading(
             modifier = Modifier.semantics(mergeDescendants = true, properties = headingSemantics),
         ) {
             Text(
-                text = stringResource(R.string.wallpaper_limited_edition_title),
+                text = stringResource(R.string.wallpaper_artist_series_title),
                 color = FirefoxTheme.colors.textSecondary,
                 style = FirefoxTheme.typography.subtitle2,
             )
@@ -154,7 +154,7 @@ private fun WallpaperGroupHeading(
             Spacer(modifier = Modifier.height(2.dp))
 
             if (collection.learnMoreUrl.isNullOrEmpty()) {
-                val text = stringResource(R.string.wallpaper_limited_edition_description)
+                val text = stringResource(R.string.wallpaper_artist_series_description)
                 Text(
                     text = text,
                     color = FirefoxTheme.colors.textSecondary,
@@ -162,7 +162,7 @@ private fun WallpaperGroupHeading(
                 )
             } else {
                 val link = stringResource(R.string.wallpaper_learn_more)
-                val text = stringResource(R.string.wallpaper_limited_edition_description_with_learn_more, link)
+                val text = stringResource(R.string.wallpaper_artist_series_description_with_learn_more, link)
                 val linkStartIndex = text.indexOf(link)
                 val linkEndIndex = linkStartIndex + link.length
 
