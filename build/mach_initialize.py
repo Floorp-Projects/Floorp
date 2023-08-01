@@ -347,15 +347,30 @@ def initialize(topsrcdir, args=()):
         missing_ok = ()
 
     commands_that_need_all_modules_loaded = [
+        "help",
         "mach-commands",
         "mach-completion",
         "mach-debug-commands",
-        "mochitest",
-        "geckoview-junit",
-        "xpcshell-test",
-        "gtest",
-        "help",
     ]
+
+    def commands_to_load(top_level_command: str):
+        visited = set()
+
+        def find_downstream_commands_recursively(command: str):
+            if not MACH_COMMANDS.get(command):
+                return
+
+            if command in visited:
+                return
+
+            visited.add(command)
+
+            for command_dependency in MACH_COMMANDS[command].command_dependencies:
+                find_downstream_commands_recursively(command_dependency)
+
+        find_downstream_commands_recursively(top_level_command)
+
+        return list(visited)
 
     if (
         command_name not in MACH_COMMANDS
@@ -363,7 +378,11 @@ def initialize(topsrcdir, args=()):
     ):
         command_modules_to_load = MACH_COMMANDS
     else:
-        command_modules_to_load = {command_name: MACH_COMMANDS[command_name]}
+        command_names_to_load = commands_to_load(command_name)
+        command_modules_to_load = {
+            command_name: MACH_COMMANDS[command_name]
+            for command_name in command_names_to_load
+        }
 
     load_commands_from_spec(command_modules_to_load, topsrcdir, missing_ok=missing_ok)
 
