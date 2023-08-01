@@ -51,8 +51,8 @@ CheckedInt64 SaferMultDiv(int64_t aValue, uint64_t aMul, uint64_t aDiv) {
   if (aMul > INT64_MAX || aDiv > INT64_MAX) {
     return CheckedInt64(INT64_MAX) + 1;  // Return an invalid checked int.
   }
-  int64_t mul = aMul;
-  int64_t div = aDiv;
+  int64_t mul = AssertedCast<int64_t>(aMul);
+  int64_t div = AssertedCast<int64_t>(aDiv);
   int64_t major = aValue / div;
   int64_t remainder = aValue % div;
   return CheckedInt64(remainder) * mul / div + CheckedInt64(major) * mul;
@@ -95,10 +95,12 @@ static int32_t ConditionDimension(float aValue) {
 void ScaleDisplayByAspectRatio(gfx::IntSize& aDisplay, float aAspectRatio) {
   if (aAspectRatio > 1.0) {
     // Increase the intrinsic width
-    aDisplay.width = ConditionDimension(aAspectRatio * aDisplay.width);
+    aDisplay.width =
+        ConditionDimension(aAspectRatio * AssertedCast<float>(aDisplay.width));
   } else {
     // Increase the intrinsic height
-    aDisplay.height = ConditionDimension(aDisplay.height / aAspectRatio);
+    aDisplay.height =
+        ConditionDimension(AssertedCast<float>(aDisplay.height) / aAspectRatio);
   }
 }
 
@@ -1049,11 +1051,7 @@ bool ParseCodecsString(const nsAString& aCodecs,
     expectMoreTokens = tokenizer.separatorAfterCurrentToken();
     aOutCodecs.AppendElement(token);
   }
-  if (expectMoreTokens) {
-    // Last codec name was empty
-    return false;
-  }
-  return true;
+  return !expectMoreTokens;
 }
 
 bool ParseMIMETypeString(const nsAString& aMIMEType,
