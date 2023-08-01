@@ -1680,6 +1680,35 @@ extensions.quarantinedDomains:
     record_in_processes:
       - main
 
+  listhash:
+    bug_numbers:
+      - 1841683
+    description: >
+      SHA1 cryptographic hash of the quarantined domains string pref.
+    kind: string
+    expires: "123"
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
+  remotehash:
+    bug_numbers:
+      - 1840615
+    description: >
+      SHA1 cryptographic hash of the quarantined domains string pref as it was
+      set based on the value got synced from the RemoteSettings collection.
+    kind: string
+    expires: "123"
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 extensions.startupCache:
   write_byteLength:
     bug_numbers:

@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { computeSha1HashAsString } from "resource://gre/modules/addons/crypto-utils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
@@ -704,7 +705,12 @@ export var QuarantinedDomains = {
 
   PREF_ADDONS_BRANCH_NAME: `extensions.quarantineIgnoredByUser.`,
   PREF_DOMAINSLIST_NAME: `extensions.quarantinedDomains.list`,
+  _initialized: false,
   _init() {
+    if (this._initialized) {
+      return;
+    }
+
     const onUserAllowedPrefChanged = this._onUserAllowedPrefChanged.bind(this);
     Services.prefs.addObserver(
       this.PREF_ADDONS_BRANCH_NAME,
@@ -723,6 +729,24 @@ export var QuarantinedDomains = {
     );
     // Collect it at least once per session (and update it when the pref value changes).
     onUpdatedDomainsListTelemetry();
+
+    const onAMRemoteSettingsSetPref =
+      this._onAMRemoteSettingsSetPref.bind(this);
+    Services.obs.addObserver(
+      onAMRemoteSettingsSetPref,
+      "am-remote-settings-setpref"
+    );
+
+    this._initialized = true;
+  },
+  async _onAMRemoteSettingsSetPref(subject, _topic) {
+    const { prefName, prefValue } = subject?.wrappedJSObject ?? {};
+    if (prefName !== this.PREF_DOMAINSLIST_NAME) {
+      return;
+    }
+    Glean.extensionsQuarantinedDomains.remotehash.set(
+      computeSha1HashAsString(prefValue || "")
+    );
   },
   async _onUserAllowedPrefChanged(_subject, _topic, prefName) {
     let addonId = prefName.slice(this.PREF_ADDONS_BRANCH_NAME.length);
@@ -741,10 +765,17 @@ export var QuarantinedDomains = {
     Glean.extensionsQuarantinedDomains.listsize.set(
       this.currentDomainsList.set.size
     );
+    Glean.extensionsQuarantinedDomains.listhash.set(
+      this.currentDomainsList.hash
+    );
   },
   _transformDomainsListPrefValue(value) {
     try {
       return {
+        // NOTE: using a sha1 hash to make sure the resulting string will fit into the
+        // unified telemetry scalar string the glean metrics is mirrored to (which is
+        // limited to 50 characters).
+        hash: computeSha1HashAsString(value || ""),
         set: new Set(
           value
             .split(",")

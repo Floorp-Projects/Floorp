@@ -12,6 +12,7 @@ AddonTestUtils.createAppInfo(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  computeSha1HashAsString: "resource://gre/modules/addons/crypto-utils.sys.mjs",
   QuarantinedDomains: "resource://gre/modules/ExtensionPermissions.sys.mjs",
 });
 
@@ -34,6 +35,7 @@ add_task(async function test_QuarantinedDomainsList_telemetry() {
     Assert.deepEqual(
       {
         listsize: QuarantinedDomains.currentDomainsList.set.size,
+        listhash: QuarantinedDomains.currentDomainsList.hash,
       },
       expected,
       "Got the expected domains list data computed for the probes"
@@ -41,6 +43,7 @@ add_task(async function test_QuarantinedDomainsList_telemetry() {
     Assert.deepEqual(
       {
         listsize: Glean.extensionsQuarantinedDomains.listsize.testGetValue(),
+        listhash: Glean.extensionsQuarantinedDomains.listhash.testGetValue(),
       },
       expected,
       "Got the expected computed domains list probes recorded by the Glean metrics"
@@ -49,6 +52,7 @@ add_task(async function test_QuarantinedDomainsList_telemetry() {
     Assert.deepEqual(
       {
         listsize: scalars?.["extensions.quarantinedDomains.listsize"],
+        listhash: scalars?.["extensions.quarantinedDomains.listhash"],
       },
       expected,
       "Got the expected metrics mirrored into the unified telemetry scalars"
@@ -63,6 +67,7 @@ add_task(async function test_QuarantinedDomainsList_telemetry() {
     prefValue,
     expected: {
       listsize: 0,
+      listhash: computeSha1HashAsString(prefValue),
     },
   });
 
@@ -74,6 +79,7 @@ add_task(async function test_QuarantinedDomainsList_telemetry() {
     prefValue,
     expected: {
       listsize: 2,
+      listhash: computeSha1HashAsString(prefValue),
     },
   });
 
@@ -85,6 +91,7 @@ add_task(async function test_QuarantinedDomainsList_telemetry() {
     prefValue,
     expected: {
       listsize: 2,
+      listhash: computeSha1HashAsString(prefValue),
     },
   });
 
