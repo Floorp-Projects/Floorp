@@ -374,6 +374,7 @@ class nsWindow final : public nsBaseWidget {
 
   // HiDPI scale conversion
   gint GdkCeiledScaleFactor();
+  gint GetCachedCeiledScaleFactor() const;
   bool UseFractionalScale() const;
   double FractionalScaleFactor();
 
@@ -475,7 +476,7 @@ class nsWindow final : public nsBaseWidget {
 
   nsCOMPtr<nsIWidget> mParent;
   PopupType mPopupHint{};
-  int mWindowScaleFactor = 1;
+  mozilla::Atomic<int, mozilla::Relaxed> mWindowScaleFactor{1};
 
   void UpdateAlpha(mozilla::gfx::SourceSurface* aSourceSurface,
                    nsIntRect aBoundsRect);
