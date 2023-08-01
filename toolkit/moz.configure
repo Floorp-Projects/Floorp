@@ -2707,6 +2707,22 @@ set_config("MOZ_NEW_NOTIFICATION_STORE", True, when=new_notification_store)
 set_define("MOZ_NEW_NOTIFICATION_STORE", True, when=new_notification_store)
 
 
+# Auxiliary files persistence on application close
+# ==============================================================
+
+option(
+    "--enable-disk-remnant-avoidance",
+    help="Prevent persistence of auxiliary files on application close",
+)
+
+
+set_config(
+    "MOZ_AVOID_DISK_REMNANT_ON_CLOSE",
+    True,
+    when="--enable-disk-remnant-avoidance",
+)
+
+
 # Glean SDK Integration Crate
 # ==============================================================
 
