@@ -431,6 +431,11 @@ AVCodecID FFmpegAudioDecoder<LIBAV_VER>::GetCodecId(
     return AV_CODEC_ID_AAC;
   }
   if (aMimeType.EqualsLiteral("audio/vorbis")) {
+#ifdef FFVPX_VERSION
+    if (!StaticPrefs::media_ffvpx_vorbis_enabled()) {
+      return AV_CODEC_ID_NONE;
+    }
+#endif
     return AV_CODEC_ID_VORBIS;
   }
 
