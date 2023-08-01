@@ -108,7 +108,7 @@ void ChildSHistory::SetIndexAndLength(uint32_t aIndex, uint32_t aLength,
 void ChildSHistory::Reload(uint32_t aReloadFlags, ErrorResult& aRv) {
   if (mozilla::SessionHistoryInParent()) {
     if (XRE_IsParentProcess()) {
-      nsISHistory* shistory =
+      nsCOMPtr<nsISHistory> shistory =
           mBrowsingContext->Canonical()->GetSessionHistory();
       if (shistory) {
         aRv = shistory->Reload(aReloadFlags);
@@ -120,7 +120,8 @@ void ChildSHistory::Reload(uint32_t aReloadFlags, ErrorResult& aRv) {
 
     return;
   }
-  aRv = mHistory->Reload(aReloadFlags);
+  nsCOMPtr<nsISHistory> shistory = mHistory;
+  aRv = shistory->Reload(aReloadFlags);
 }
 
 bool ChildSHistory::CanGo(int32_t aOffset) {
@@ -207,7 +208,8 @@ void ChildSHistory::GotoIndex(int32_t aIndex, int32_t aOffset,
     }
 
     nsCOMPtr<nsISHistory> shistory = mHistory;
-    mBrowsingContext->HistoryGo(
+    RefPtr<BrowsingContext> bc = mBrowsingContext;
+    bc->HistoryGo(
         aOffset, mHistoryEpoch, aRequireUserInteraction, aUserActivation,
         [shistory](Maybe<int32_t>&& aRequestedIndex) {
           // FIXME Should probably only do this for non-fission.
@@ -216,7 +218,8 @@ void ChildSHistory::GotoIndex(int32_t aIndex, int32_t aOffset,
           }
         });
   } else {
-    aRv = mHistory->GotoIndex(aIndex, aUserActivation);
+    nsCOMPtr<nsISHistory> shistory = mHistory;
+    aRv = shistory->GotoIndex(aIndex, aUserActivation);
   }
 }
 

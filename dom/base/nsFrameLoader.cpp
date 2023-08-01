@@ -766,7 +766,8 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
   bool tmpState = mNeedsAsyncDestroy;
   mNeedsAsyncDestroy = true;
 
-  rv = GetDocShell()->LoadURI(loadState, false);
+  RefPtr<nsDocShell> docShell = GetDocShell();
+  rv = docShell->LoadURI(loadState, false);
   mNeedsAsyncDestroy = tmpState;
   mURIToLoad = nullptr;
   NS_ENSURE_SUCCESS(rv, rv);
