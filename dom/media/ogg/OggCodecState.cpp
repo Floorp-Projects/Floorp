@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <algorithm>
 #include <opus/opus.h>
+#include <opus/opus_multistream.h>
 
 #include "OggCodecState.h"
 #include "OggRLBox.h"
@@ -21,7 +22,6 @@
 #include "VideoUtils.h"
 #include "XiphExtradata.h"
 #include "nsDebug.h"
-#include "opus/opus_multistream.h"
 
 namespace mozilla {
 

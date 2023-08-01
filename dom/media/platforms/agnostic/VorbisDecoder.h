@@ -13,7 +13,7 @@
 #  ifdef MOZ_TREMOR
 #    include "tremor/ivorbiscodec.h"
 #  else
-#    include "vorbis/codec.h"
+#    include <vorbis/codec.h>
 #  endif
 
 namespace mozilla {
