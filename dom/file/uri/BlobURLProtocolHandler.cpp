@@ -945,6 +945,30 @@ nsresult NS_GetBlobForBlobURISpec(const nsACString& aSpec,
   return NS_OK;
 }
 
+// Blob requests may specify a range header. We parse, validate, and
+// store that info here, and save it on the nsBaseChannel, where it
+// can be accessed by BlobURLInputStream::StoreBlobImplStream.
+nsresult NS_SetChannelContentRangeForBlobURI(nsIChannel* aChannel, nsIURI* aURI,
+                                             nsACString& aRangeHeader) {
+  MOZ_ASSERT(aChannel);
+  MOZ_ASSERT(aURI);
+  RefPtr<mozilla::dom::BlobImpl> blobImpl;
+  if (NS_FAILED(NS_GetBlobForBlobURI(aURI, getter_AddRefs(blobImpl)))) {
+    return NS_BINDING_FAILED;
+  }
+  mozilla::IgnoredErrorResult result;
+  int64_t size = static_cast<int64_t>(blobImpl->GetSize(result));
+  if (result.Failed()) {
+    return NS_ERROR_NO_CONTENT;
+  }
+  nsBaseChannel* bchan = static_cast<nsBaseChannel*>(aChannel);
+  MOZ_ASSERT(bchan);
+  if (!bchan->SetContentRange(aRangeHeader, size)) {
+    return NS_ERROR_NET_PARTIAL_TRANSFER;
+  }
+  return NS_OK;
+}
+
 nsresult NS_GetSourceForMediaSourceURI(nsIURI* aURI,
                                        mozilla::dom::MediaSource** aSource) {
   *aSource = nullptr;

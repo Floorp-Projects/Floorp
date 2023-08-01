@@ -42,7 +42,7 @@ promise_test(async (t) => {
     // We need the number of opening and closing tags to be equal to the number
     // that we calculated above.
     let slice = blob.slice(middle - (test * openTag.length),
-                           middle + (test * closeTag.length));
+                           middle + (test * closeTag.length), blob.type);
 
     let responseXML = await parseBlob(slice);
 
