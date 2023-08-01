@@ -167,19 +167,23 @@ bool AppleDecoderModule::CanCreateHWDecoder(media::MediaCodec aCodec) {
   VideoInfo info(1920, 1080);
   bool checkSupport = false;
 
-  if (!VTIsHardwareDecodeSupported) {
-    return false;
-  }
-  switch (aCodec) {
-    case media::MediaCodec::VP9:
-      info.mMimeType = "video/vp9";
-      VPXDecoder::GetVPCCBox(info.mExtraData, VPXDecoder::VPXStreamInfo());
-      checkSupport = VTIsHardwareDecodeSupported(kCMVideoCodecType_VP9);
-      break;
-    default:
-      // Only support VP9 HW decode for time being
-      checkSupport = false;
-      break;
+  // We must wrap the code within __builtin_available to avoid compilation
+  // warning as VTIsHardwareDecodeSupported is only available from macOS 10.13.
+  if (__builtin_available(macOS 10.13, *)) {
+    if (!VTIsHardwareDecodeSupported) {
+      return false;
+    }
+    switch (aCodec) {
+      case media::MediaCodec::VP9:
+        info.mMimeType = "video/vp9";
+        VPXDecoder::GetVPCCBox(info.mExtraData, VPXDecoder::VPXStreamInfo());
+        checkSupport = VTIsHardwareDecodeSupported(kCMVideoCodecType_VP9);
+        break;
+      default:
+        // Only support VP9 HW decode for time being
+        checkSupport = false;
+        break;
+    }
   }
   // Attempt to create decoder
   if (checkSupport) {
