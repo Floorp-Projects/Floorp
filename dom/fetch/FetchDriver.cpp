@@ -27,6 +27,7 @@
 #include "nsIPipe.h"
 #include "nsIRedirectHistoryEntry.h"
 
+#include "nsBaseChannel.h"
 #include "nsContentPolicyUtils.h"
 #include "nsDataHandler.h"
 #include "nsNetUtil.h"
@@ -843,6 +844,21 @@ nsresult FetchDriver::HttpFetch(
     mObserver->OnNotifyNetworkMonitorAlternateStack(httpChan->ChannelId());
   }
 
+  // Should set a Content-Range header for blob scheme, and also slice the
+  // blob appropriately, so we process the Range header here for later use.
+  if (IsBlobURI(uri)) {
+    ErrorResult result;
+    nsAutoCString range;
+    mRequest->Headers()->Get("Range"_ns, range, result);
+    MOZ_ASSERT(!result.Failed());
+    if (!range.IsVoid()) {
+      rv = NS_SetChannelContentRangeForBlobURI(chan, uri, range);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+  }
+
   // if the preferred alternative data type in InternalRequest is not empty, set
   // the data type on the created channel and also create a
   // AlternativeDataStreamListener to be the stream listener of the channel.
@@ -1057,8 +1073,30 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
     }
     MOZ_ASSERT(!result.Failed());
   } else {
-    response = MakeSafeRefPtr<InternalResponse>(200, "OK"_ns,
-                                                mRequest->GetCredentialsMode());
+    // Should set a Content-Range header for blob scheme
+    // (https://fetch.spec.whatwg.org/#scheme-fetch)
+    nsAutoCString contentRange(VoidCString());
+    nsCOMPtr<nsIURI> uri;
+    channel->GetURI(getter_AddRefs(uri));
+    if (IsBlobURI(uri)) {
+      nsBaseChannel* bchan = static_cast<nsBaseChannel*>(channel.get());
+      MOZ_ASSERT(bchan);
+      Maybe<nsBaseChannel::ContentRange> range = bchan->GetContentRange();
+      if (range.isSome()) {
+        range->AsHeader(contentRange);
+      }
+    }
+
+    response = MakeSafeRefPtr<InternalResponse>(
+        contentRange.IsVoid() ? 200 : 206,
+        contentRange.IsVoid() ? "OK"_ns : "Partial Content"_ns,
+        mRequest->GetCredentialsMode());
+
+    IgnoredErrorResult result;
+    if (!contentRange.IsVoid()) {
+      response->Headers()->Append("Content-Range"_ns, contentRange, result);
+      MOZ_ASSERT(!result.Failed());
+    }
 
     if (!contentType.IsEmpty()) {
       nsAutoCString contentCharset;
@@ -1068,7 +1106,6 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
       }
     }
 
-    IgnoredErrorResult result;
     response->Headers()->Append("Content-Type"_ns, contentType, result);
     MOZ_ASSERT(!result.Failed());
 

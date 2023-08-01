@@ -1,4 +1,4 @@
-// META: script=/common/utils.js
+// See also /fetch/range/blob.any.js
 
 const supportedBlobRange = [
   {
@@ -203,18 +203,23 @@ supportedBlobRange.forEach(({ name, data, type, range, content_length, content_r
     const blob = new Blob(data, { "type" : type });
     const blobURL = URL.createObjectURL(blob);
     t.add_cleanup(() => URL.revokeObjectURL(blobURL));
-    const resp = await fetch(blobURL, {
-      "headers": {
-        "Range": range
-      }
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", blobURL);
+    xhr.responseType = "text";
+    xhr.setRequestHeader("Range", range);
+    await new Promise(resolve => {
+      xhr.onloadend = resolve;
+      xhr.send();
     });
-    assert_equals(resp.status, 206, "HTTP status is 206");
-    assert_equals(resp.type, "basic", "response type is basic");
-    assert_equals(resp.headers.get("Content-Type"), type || "", "Content-Type is " + resp.headers.get("Content-Type"));
-    assert_equals(resp.headers.get("Content-Length"), content_length.toString(), "Content-Length is " + resp.headers.get("Content-Length"));
-    assert_equals(resp.headers.get("Content-Range"), content_range, "Content-Range is " + resp.headers.get("Content-Range"));
-    const text = await resp.text();
-    assert_equals(text, result, "Response's body is correct");
+    assert_equals(xhr.status, 206, "HTTP status is 206");
+    assert_equals(xhr.getResponseHeader("Content-Type"), type || "", "Content-Type is " + xhr.getResponseHeader("Content-Type"));
+    assert_equals(xhr.getResponseHeader("Content-Length"), content_length.toString(), "Content-Length is " + xhr.getResponseHeader("Content-Length"));
+    assert_equals(xhr.getResponseHeader("Content-Range"), content_range, "Content-Range is " + xhr.getResponseHeader("Content-Range"));
+    assert_equals(xhr.responseText, result, "Response's body is correct");
+    const all = xhr.getAllResponseHeaders().toLowerCase();
+    assert_true(all.includes(`content-type: ${type || ""}`), "Expected Content-Type in getAllResponseHeaders()");
+    assert_true(all.includes(`content-length: ${content_length}`), "Expected Content-Length in getAllResponseHeaders()");
+    assert_true(all.includes(`content-range: ${content_range}`), "Expected Content-Range in getAllResponseHeaders()")
   }, name);
 });
 
@@ -223,11 +228,19 @@ unsupportedBlobRange.forEach(({ name, data, type, range }) => {
     const blob = new Blob(data, { "type" : type });
     const blobURL = URL.createObjectURL(blob);
     t.add_cleanup(() => URL.revokeObjectURL(blobURL));
-    const promise = fetch(blobURL, {
-      "headers": {
-        "Range": range
-      }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", blobURL, false);
+    xhr.setRequestHeader("Range", range);
+    assert_throws_dom("NetworkError", () => xhr.send());
+
+    xhr.open("GET", blobURL);
+    xhr.setRequestHeader("Range", range);
+    xhr.responseType = "text";
+    return new Promise((resolve, reject) => {
+      xhr.onload = reject;
+      xhr.onerror = resolve;
+      xhr.send();
     });
-    return promise_rejects_js(t, TypeError, promise);
   }, name);
 });
