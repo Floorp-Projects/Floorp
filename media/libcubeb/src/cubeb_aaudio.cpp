@@ -11,7 +11,6 @@
 #include "cubeb_resampler.h"
 #include "cubeb_triple_buffer.h"
 #include <aaudio/AAudio.h>
-#include <android/api-level.h>
 #include <atomic>
 #include <cassert>
 #include <chrono>
@@ -1229,13 +1228,12 @@ aaudio_stream_init(cubeb * ctx, cubeb_stream ** stream,
     break;
   }
 
-  stm->in_use.store(true);
-
   if (!stm) {
     LOG("Error: maximum number of streams reached");
     return CUBEB_ERROR;
   }
 
+  stm->in_use.store(true);
   stm->context = ctx;
   stm->user_ptr = user_ptr;
   stm->data_callback = data_callback;
@@ -1706,9 +1704,6 @@ const static struct cubeb_ops aaudio_ops = {
 extern "C" /*static*/ int
 aaudio_init(cubeb ** context, char const * /* context_name */)
 {
-  if (android_get_device_api_level() <= 30) {
-    return CUBEB_ERROR;
-  }
   // load api
   void * libaaudio = nullptr;
 #ifndef DISABLE_LIBAAUDIO_DLOPEN
