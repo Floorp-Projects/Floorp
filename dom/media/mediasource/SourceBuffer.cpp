@@ -42,7 +42,7 @@ extern mozilla::LogModule* GetMediaSourceAPILog();
 namespace mozilla {
 
 using media::TimeUnit;
-typedef SourceBufferAttributes::AppendState AppendState;
+using AppendState = SourceBufferAttributes::AppendState;
 
 namespace dom {
 
