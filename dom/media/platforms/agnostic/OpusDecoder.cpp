@@ -12,7 +12,6 @@
 #include "TimeUnits.h"
 #include "VideoUtils.h"
 #include "VorbisDecoder.h"  // For VorbisLayout
-#include "VorbisUtils.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/SyncRunnable.h"

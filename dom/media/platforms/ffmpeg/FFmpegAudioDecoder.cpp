@@ -109,21 +109,6 @@ void FFmpegAudioDecoder<LIBAV_VER>::InitCodecContext() {
   }
   mCodecContext->sample_rate = AssertedCast<int>(mAudioInfo.mRate);
 #endif
-#ifdef FFVPX_VERSION
-  // AudioInfo's layout first 32-bits are bit-per-bit compatible with
-  // WAVEFORMATEXTENSIBLE and FFmpeg's AVChannel enum. We can cast here.
-  mCodecContext->ch_layout.nb_channels =
-      AssertedCast<int>(mAudioInfo.mChannels);
-  if (mAudioInfo.mChannelMap != AudioConfig::ChannelLayout::UNKNOWN_MAP) {
-    mLib->av_channel_layout_from_mask(
-        &mCodecContext->ch_layout,
-        static_cast<uint64_t>(mAudioInfo.mChannelMap));
-  } else {
-    mLib->av_channel_layout_default(&mCodecContext->ch_layout,
-                                    AssertedCast<int>(mAudioInfo.mChannels));
-  }
-  mCodecContext->sample_rate = AssertedCast<int>(mAudioInfo.mRate);
-#endif
 }
 
 static AlignedAudioBuffer CopyAndPackAudio(AVFrame* aFrame,
@@ -134,61 +119,6 @@ static AlignedAudioBuffer CopyAndPackAudio(AVFrame* aFrame,
     return audio;
   }
 
-#ifdef MOZ_SAMPLE_TYPE_S16
-  if (aFrame->format == AV_SAMPLE_FMT_FLT) {
-    // Audio data already packed. Need to convert from 32 bits Float to S16
-    AudioDataValue* tmp = audio.get();
-    float* data = reinterpret_cast<float**>(aFrame->data)[0];
-    for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
-      for (uint32_t channel = 0; channel < aNumChannels; channel++) {
-        *tmp++ = FloatToAudioSample<int16_t>(*data++);
-      }
-    }
-  } else if (aFrame->format == AV_SAMPLE_FMT_FLTP) {
-    // Planar audio data. Convert it from 32 bits float to S16
-    // and pack it into something we can understand.
-    AudioDataValue* tmp = audio.get();
-    float** data = reinterpret_cast<float**>(aFrame->data);
-    for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
-      for (uint32_t channel = 0; channel < aNumChannels; channel++) {
-        *tmp++ = FloatToAudioSample<int16_t>(data[channel][frame]);
-      }
-    }
-  } else if (aFrame->format == AV_SAMPLE_FMT_S16) {
-    // Audio data already packed. No need to do anything other than copy it
-    // into a buffer we own.
-    memcpy(audio.get(), aFrame->data[0],
-           aNumChannels * aNumAFrames * sizeof(AudioDataValue));
-  } else if (aFrame->format == AV_SAMPLE_FMT_S16P) {
-    // Planar audio data. Pack it into something we can understand.
-    AudioDataValue* tmp = audio.get();
-    AudioDataValue** data = reinterpret_cast<AudioDataValue**>(aFrame->data);
-    for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
-      for (uint32_t channel = 0; channel < aNumChannels; channel++) {
-        *tmp++ = data[channel][frame];
-      }
-    }
-  } else if (aFrame->format == AV_SAMPLE_FMT_S32) {
-    // Audio data already packed. Need to convert from S32 to S16
-    AudioDataValue* tmp = audio.get();
-    int32_t* data = reinterpret_cast<int32_t**>(aFrame->data)[0];
-    for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
-      for (uint32_t channel = 0; channel < aNumChannels; channel++) {
-        *tmp++ = *data++ / (1U << 16);
-      }
-    }
-  } else if (aFrame->format == AV_SAMPLE_FMT_S32P) {
-    // Planar audio data. Convert it from S32 to S16
-    // and pack it into something we can understand.
-    AudioDataValue* tmp = audio.get();
-    int32_t** data = reinterpret_cast<int32_t**>(aFrame->data);
-    for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
-      for (uint32_t channel = 0; channel < aNumChannels; channel++) {
-        *tmp++ = data[channel][frame] / (1U << 16);
-      }
-    }
-  }
-#else
   if (aFrame->format == AV_SAMPLE_FMT_FLT) {
     // Audio data already packed. No need to do anything other than copy it
     // into a buffer we own.
@@ -242,7 +172,6 @@ static AlignedAudioBuffer CopyAndPackAudio(AVFrame* aFrame,
       }
     }
   }
-#endif
 
   return audio;
 }

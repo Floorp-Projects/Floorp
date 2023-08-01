@@ -545,15 +545,8 @@ MediaResult AppleATDecoder::SetupDecoder(MediaRawData* aSample) {
   mOutputFormat.mFormatID = kAudioFormatLinearPCM;
   mOutputFormat.mSampleRate = inputFormat.mSampleRate;
   mOutputFormat.mChannelsPerFrame = inputFormat.mChannelsPerFrame;
-#if defined(MOZ_SAMPLE_TYPE_FLOAT32)
   mOutputFormat.mBitsPerChannel = 32;
   mOutputFormat.mFormatFlags = kLinearPCMFormatFlagIsFloat | 0;
-#elif defined(MOZ_SAMPLE_TYPE_S16)
-  mOutputFormat.mBitsPerChannel = 16;
-  mOutputFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | 0;
-#else
-#  error Unknown audio sample type
-#endif
   // Set up the decoder so it gives us one sample per frame
   mOutputFormat.mFramesPerPacket = 1;
   mOutputFormat.mBytesPerPacket = mOutputFormat.mBytesPerFrame =

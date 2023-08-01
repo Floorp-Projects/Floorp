@@ -24,14 +24,10 @@ FINAL_LIBRARY = 'gkmedias'
 DEFINES['OUTSIDE_SPEEX'] = True
 
 DEFINES['EXPORT'] = ''
-
-if CONFIG['MOZ_SAMPLE_TYPE_S16']:
-    DEFINES['FIXED_POINT'] = True
-else:
-    DEFINES['FLOATING_POINT'] = True
+DEFINES['FLOATING_POINT'] = True
 
 # Only use SSE code when using floating point samples, and on x86
-if CONFIG['INTEL_ARCHITECTURE'] and not CONFIG['MOZ_SAMPLE_TYPE_S16']:
+if CONFIG['INTEL_ARCHITECTURE']:
     DEFINES['_USE_SSE'] = True
     DEFINES['_USE_SSE2'] = True
     SOURCES += [

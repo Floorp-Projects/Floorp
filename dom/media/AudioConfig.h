@@ -210,13 +210,7 @@ class AudioConfig {
     FORMAT_S24,
     FORMAT_S32,
     FORMAT_FLT,
-#  if defined(MOZ_SAMPLE_TYPE_FLOAT32)
     FORMAT_DEFAULT = FORMAT_FLT
-#  elif defined(MOZ_SAMPLE_TYPE_S16)
-    FORMAT_DEFAULT = FORMAT_S16
-#  else
-#    error "Not supported audio type"
-#  endif
   };
 
   AudioConfig(const ChannelLayout& aChannelLayout, uint32_t aRate,

@@ -9,5 +9,7 @@
 # We only use constants from KeyStatus
 [android.media.MediaDrm$KeyStatus = skip:true]
 <field> = skip:false
+[android.media.AudioFormat = skip:true]
+<field> = skip:false
 
 [android.media.MediaFormat = exceptionMode:nsresult]

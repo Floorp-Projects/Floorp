@@ -12,7 +12,6 @@
 #include "MediaContainerType.h"
 #include "MediaResource.h"
 #include "TimeUnits.h"
-#include "VorbisUtils.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/SchedulerGroup.h"

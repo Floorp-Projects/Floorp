@@ -7,6 +7,7 @@
 #include "GraphDriver.h"
 
 #include "AudioNodeEngine.h"
+#include "cubeb/cubeb.h"
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/dom/AudioDeviceInfo.h"
 #include "mozilla/dom/BaseAudioContextBinding.h"
@@ -591,14 +592,7 @@ void AudioCallbackDriver::Init() {
              "This is blocking and should never run on the main thread.");
 
   output.rate = mSampleRate;
-
-#ifdef MOZ_SAMPLE_TYPE_S16
-  MOZ_ASSERT(AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16);
-  output.format = CUBEB_SAMPLE_S16NE;
-#else
-  MOZ_ASSERT(AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_FLOAT32);
   output.format = CUBEB_SAMPLE_FLOAT32NE;
-#endif
 
   if (!mOutputChannelCount) {
     LOG(LogLevel::Warning, ("Output number of channels is 0."));
