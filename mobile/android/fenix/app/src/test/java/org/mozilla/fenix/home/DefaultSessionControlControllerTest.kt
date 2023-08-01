@@ -474,6 +474,175 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
+    fun `GIVEN existing tab for url WHEN Default TopSite selected THEN open new tab`() {
+        val url = "mozilla.org"
+        val existingTabForUrl = createTab(url = url)
+
+        store = BrowserStore(
+            BrowserState(
+                tabs = listOf(existingTabForUrl),
+                search = SearchState(
+                    regionSearchEngines = listOf(searchEngine),
+                ),
+            ),
+        )
+
+        val topSite = TopSite.Default(
+            id = 1L,
+            title = "Mozilla",
+            url = url,
+            createdAt = 0,
+        )
+        val controller = spyk(createController())
+
+        every { controller.getAvailableSearchEngines() } returns listOf(searchEngine)
+
+        controller.handleSelectTopSite(topSite, position = 0)
+
+        assertNotNull(TopSites.openInNewTab.testGetValue())
+        assertEquals(1, TopSites.openInNewTab.testGetValue()!!.size)
+        assertNull(TopSites.openInNewTab.testGetValue()!!.single().extra)
+
+        assertNotNull(TopSites.openDefault.testGetValue())
+        assertEquals(1, TopSites.openDefault.testGetValue()!!.size)
+        assertNull(TopSites.openDefault.testGetValue()!!.single().extra)
+
+        verify {
+            tabsUseCases.addTab.invoke(
+                url = topSite.url,
+                selectTab = true,
+                startLoading = true,
+            )
+        }
+        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+    }
+
+    @Test
+    fun `GIVEN existing tab for url WHEN Provided TopSite selected THEN open new tab`() {
+        val url = "mozilla.org"
+        val existingTabForUrl = createTab(url = url)
+
+        store = BrowserStore(
+            BrowserState(
+                tabs = listOf(existingTabForUrl),
+                search = SearchState(
+                    regionSearchEngines = listOf(searchEngine),
+                ),
+            ),
+        )
+
+        val topSite = TopSite.Provided(
+            id = 1L,
+            title = "Mozilla",
+            url = url,
+            clickUrl = "",
+            imageUrl = "",
+            impressionUrl = "",
+            createdAt = 0,
+        )
+        val position = 0
+        val controller = spyk(createController())
+
+        every { controller.getAvailableSearchEngines() } returns listOf(searchEngine)
+
+        controller.handleSelectTopSite(topSite, position)
+
+        assertNotNull(TopSites.openInNewTab.testGetValue())
+        assertEquals(1, TopSites.openInNewTab.testGetValue()!!.size)
+        assertNull(TopSites.openInNewTab.testGetValue()!!.single().extra)
+
+        assertNotNull(TopSites.openContileTopSite.testGetValue())
+        assertEquals(1, TopSites.openContileTopSite.testGetValue()!!.size)
+        assertNull(TopSites.openContileTopSite.testGetValue()!!.single().extra)
+
+        verify {
+            tabsUseCases.addTab.invoke(
+                url = topSite.url,
+                selectTab = true,
+                startLoading = true,
+            )
+        }
+        verify { controller.submitTopSitesImpressionPing(topSite, position) }
+        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+    }
+
+    @Test
+    fun `GIVEN existing tab for url WHEN Frecent TopSite selected THEN navigate to tab`() {
+        val url = "mozilla.org"
+        val existingTabForUrl = createTab(url = url)
+
+        store = BrowserStore(
+            BrowserState(
+                tabs = listOf(existingTabForUrl),
+                search = SearchState(
+                    regionSearchEngines = listOf(searchEngine),
+                ),
+            ),
+        )
+
+        val topSite = TopSite.Frecent(
+            id = 1L,
+            title = "Mozilla",
+            url = url,
+            createdAt = 0,
+        )
+        val controller = spyk(createController())
+
+        every { controller.getAvailableSearchEngines() } returns listOf(searchEngine)
+
+        controller.handleSelectTopSite(topSite, position = 0)
+
+        assertNull(TopSites.openInNewTab.testGetValue())
+
+        assertNotNull(TopSites.openFrecency.testGetValue())
+        assertEquals(1, TopSites.openFrecency.testGetValue()!!.size)
+        assertNull(TopSites.openFrecency.testGetValue()!!.single().extra)
+
+        verify {
+            selectTabUseCase.invoke(existingTabForUrl.id)
+            navController.navigate(R.id.browserFragment)
+        }
+    }
+
+    @Test
+    fun `GIVEN existing tab for url WHEN Pinned TopSite selected THEN navigate to tab`() {
+        val url = "mozilla.org"
+        val existingTabForUrl = createTab(url = url)
+
+        store = BrowserStore(
+            BrowserState(
+                tabs = listOf(existingTabForUrl),
+                search = SearchState(
+                    regionSearchEngines = listOf(searchEngine),
+                ),
+            ),
+        )
+
+        val topSite = TopSite.Pinned(
+            id = 1L,
+            title = "Mozilla",
+            url = url,
+            createdAt = 0,
+        )
+        val controller = spyk(createController())
+
+        every { controller.getAvailableSearchEngines() } returns listOf(searchEngine)
+
+        controller.handleSelectTopSite(topSite, position = 0)
+
+        assertNull(TopSites.openInNewTab.testGetValue())
+
+        assertNotNull(TopSites.openPinned.testGetValue())
+        assertEquals(1, TopSites.openPinned.testGetValue()!!.size)
+        assertNull(TopSites.openPinned.testGetValue()!!.single().extra)
+
+        verify {
+            selectTabUseCase.invoke(existingTabForUrl.id)
+            navController.navigate(R.id.browserFragment)
+        }
+    }
+
+    @Test
     fun handleSelectGoogleDefaultTopSiteUS() {
         val topSite = TopSite.Default(
             id = 1L,

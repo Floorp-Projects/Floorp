@@ -54,20 +54,20 @@ class DefaultRecentBookmarksController(
 ) : RecentBookmarksController {
 
     override fun handleBookmarkClicked(bookmark: RecentBookmark) {
-        val bookmarkTab = browserStore.state.tabs.firstOrNull {
+        val existingTabForBookmark = browserStore.state.tabs.firstOrNull {
             it.content.url == bookmark.url
         }
 
-        if (bookmarkTab != null) {
-            selectTabUseCase.invoke(bookmarkTab.id)
-            navController.navigate(R.id.browserFragment)
-        } else {
+        if (existingTabForBookmark == null) {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = bookmark.url!!,
                 newTab = true,
                 from = BrowserDirection.FromHome,
                 flags = EngineSession.LoadUrlFlags.select(ALLOW_JAVASCRIPT_URL),
             )
+        } else {
+            selectTabUseCase.invoke(existingTabForBookmark.id)
+            navController.navigate(R.id.browserFragment)
         }
 
         RecentBookmarks.bookmarkClicked.add()
