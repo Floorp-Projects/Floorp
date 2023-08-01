@@ -37,7 +37,7 @@ class MetadataTag {
   }
 };
 
-typedef nsTHashMap<nsCStringHashKey, nsCString> MetadataTags;
+using MetadataTags = nsTHashMap<nsCStringHashKey, nsCString>;
 
 // Start codec specific data structs. If modifying these remember to also
 // modify the MediaIPCUtils so that any new members are sent across IPC.
@@ -401,10 +401,10 @@ class VideoInfo : public TrackInfo {
       return imageRect;
     }
 
-    imageRect.x = (imageRect.x * aWidth) / mImage.width;
-    imageRect.y = (imageRect.y * aHeight) / mImage.height;
-    imageRect.SetWidth(w);
-    imageRect.SetHeight(h);
+    imageRect.x = AssertedCast<int>((imageRect.x * aWidth) / mImage.width);
+    imageRect.y = AssertedCast<int>((imageRect.y * aHeight) / mImage.height);
+    imageRect.SetWidth(AssertedCast<int>(w));
+    imageRect.SetHeight(AssertedCast<int>(h));
     return imageRect;
   }
 
@@ -541,7 +541,7 @@ class EncryptionInfo {
     // Encryption data.
     CopyableTArray<uint8_t> mInitData;
   };
-  typedef CopyableTArray<InitData> InitDatas;
+  using InitDatas = CopyableTArray<InitData>;
 
   // True if the stream has encryption metadata
   bool IsEncrypted() const { return mEncrypted; }
