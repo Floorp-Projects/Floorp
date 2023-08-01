@@ -22,7 +22,7 @@ preferences-tabs-newtab-position = New Tab position
 open-new-tab-use-default =
  .label = Open new tabs at default position
 open-new-tab-at-the-end =
- .label = Open new tabs at the end of the tab bar
+ .label = Open new tabs at the end of the Tab Bar
 open-new-tab-next-to-current =
  .label = Open new tabs right of the current tab
 enable-multitab = 
@@ -68,7 +68,7 @@ verticalTab-setting =
  .label = Optimise browser for vertical Tab Bar
 
 move-tabbar-position =
- .label = Display Tab Bar underneath the toolbar
+ .label = Display Tab Bar underneath the Toolbar
 
 tabbar-on-bottom =
  .label = Display Tab Bar at the bottom of the window
@@ -94,13 +94,13 @@ sidebar-reverse-position-toolbar = Show Sidebars on the other side
 
 bookmarks-bar-settings = Bookmarks Toolbar (only one option can be used at a time)
 bookmarks-focus-mode =
- .label = Hide the bookmarks toolbar unless hovering over the navigation bar
+ .label = Hide the Bookmarks Toolbar unless hovering over the navigation bar
 bookmarks-bottom-mode =
- .label = Show the bookmarks toolbar at the bottom of { -brand-short-name }
+ .label = Show the Bookmarks Toolbar at the bottom of { -brand-short-name }
 
 nav-bar-settings = Toolbar
 show-nav-bar-bottom =
- .label = Show the toolbar at the bottom of { -brand-short-name } (experimental)
+ .label = Show the Toolbar at the bottom of { -brand-short-name } (experimental)
 
 material-effect =
  .label = Allow Mica for Everyone to modify the browser design
@@ -368,11 +368,11 @@ autohide-preference = Automatically hide browser elements
 floorp-lepton-enable-tab-autohide =
     .label = Automatically hide tabs
 floorp-lepton-enable-navbar-autohide =
-    .label = Automatically hide toolbar
+    .label = Automatically hide Toolbar
 floorp-lepton-enable-sidebar-autohide =
-    .label = Automatically hide sidebar
+    .label = Automatically hide Sidebar
 floorp-lepton-enable-urlbar-autohide =
-    .label = Automatically hide address bar
+    .label = Automatically hide Address Bar
 floorp-lepton-enable-back-button-autohide =
     .label = Automatically hide back button
 floorp-lepton-enable-forward-button-autohide =
@@ -380,9 +380,9 @@ floorp-lepton-enable-forward-button-autohide =
 floorp-lepton-enable-page-action-button-autohide =
     .label = Automatically hide buttons on the address bar
 floorp-lepton-enable-toolbar-overlap =
-    .label = Show toolbar over website content
+    .label = Show Toolbar over website content
 floorp-lepton-enable-toolbar-overlap-allow-layout-shift-autohide =
-    .label = Automatically hide toolbar when displaying left-to-right content
+    .label = Automatically hide Toolbar when displaying "ltr" content
 
 hide-preference = Manage browser elements
 
@@ -427,9 +427,9 @@ floorp-lepton-enable-always-show-page_action =
 tabbar-preferences = Tab Bar
 
 floorp-lepton-enable-tabbar-positon-as-titlebar =
-    .label = Tab bar in the titlebar
+    .label = Tab Bar in the titlebar
 floorp-lepton-enable-tabbar-as-urlbar =
-    .label = Combine tab bar and toolbar
+    .label = Combine Tab Bar and Toolbar
 
 lepton-sidebar-preferences = Sidebar
 floorp-lepton-enable-overlap-sidebar =
