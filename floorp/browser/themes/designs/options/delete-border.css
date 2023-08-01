@@ -38,6 +38,13 @@
     border-radius: 0 !important;
   }
 
+  :root[inFullscreen]:not([macOSNativeFullscreen]) #tabbrowser-tabbox[flex],
+  :root[inFullscreen]:not([macOSNativeFullscreen]) #tabbrowser-tabpanels[flex] {
+    clip-path: inset(0px 0px 0px round 0 0) !important;
+    border-radius: 0 !important;
+    border: none !important;
+  }
+
    #tabbrowser-tabpanels[flex] {
     background: var(--toolbar-bgcolor) !important;
     background-color: var(--toolbar-bgcolor) !important;
