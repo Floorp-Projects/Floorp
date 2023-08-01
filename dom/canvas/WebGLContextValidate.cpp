@@ -26,10 +26,6 @@
 #include "WebGLValidateStrings.h"
 #include "WebGLVertexArray.h"
 
-#if defined(MOZ_WIDGET_COCOA)
-#  include "nsCocoaFeatures.h"
-#endif
-
 ////////////////////
 // Minimum value constants defined in GLES 2.0.25 $6.2 "State Tables":
 const uint32_t kMinMaxVertexAttribs = 8;            // Page 164
@@ -487,16 +483,6 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
   if (!gl->IsGLES()) {
     gl->fEnable(LOCAL_GL_PROGRAM_POINT_SIZE);
   }
-
-#ifdef XP_MACOSX
-  if (gl->WorkAroundDriverBugs() && gl->Vendor() == gl::GLVendor::ATI &&
-      !nsCocoaFeatures::IsAtLeastVersion(10, 9)) {
-    // The Mac ATI driver, in all known OSX version up to and including
-    // 10.8, renders points sprites upside-down. (Apple bug 11778921)
-    gl->fPointParameterf(LOCAL_GL_POINT_SPRITE_COORD_ORIGIN,
-                         LOCAL_GL_LOWER_LEFT);
-  }
-#endif
 
   if (gl->IsSupported(gl::GLFeature::seamless_cube_map_opt_in)) {
     gl->fEnable(LOCAL_GL_TEXTURE_CUBE_MAP_SEAMLESS);

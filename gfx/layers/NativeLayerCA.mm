@@ -28,7 +28,6 @@
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/webrender/RenderMacIOSurfaceTextureHost.h"
-#include "nsCocoaFeatures.h"
 #include "ScopedGLHelpers.h"
 #include "SDKDeclarations.h"
 
@@ -580,9 +579,6 @@ VideoLowPowerType NativeLayerRootCA::CheckVideoLowPower() {
     // We didn't create a AVSampleBufferDisplayLayer for the top video layer.
     // Try to figure out why by following some of the logic in
     // NativeLayerCA::ShouldSpecializeVideo.
-    if (!nsCocoaFeatures::OnHighSierraOrLater()) {
-      return VideoLowPowerType::FailMacOSVersion;
-    }
 
     if (!StaticPrefs::gfx_core_animation_specialize_video()) {
       return VideoLowPowerType::FailPref;
@@ -874,11 +870,6 @@ bool NativeLayerCA::IsVideoAndLocked(const MutexAutoLock& aProofOfLock) {
 bool NativeLayerCA::ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock) {
   if (!IsVideoAndLocked(aProofOfLock)) {
     // Only videos are eligible.
-    return false;
-  }
-
-  if (!nsCocoaFeatures::OnHighSierraOrLater()) {
-    // We must be on a modern-enough macOS.
     return false;
   }
 

@@ -19,7 +19,6 @@
 #include "gfxFontConstants.h"
 #include "gfxTextRun.h"
 #include "gfxUtils.h"
-#include "nsCocoaFeatures.h"
 #include "AppleUtils.h"
 #include "cairo-quartz.h"
 
@@ -465,8 +464,7 @@ CTFontRef gfxMacFont::CreateCTFontFromCGFontWithVariations(
   //    ctfont_create_exact_copy in SkFontHost_mac.cpp
 
   CTFontRef ctFont;
-  if (nsCocoaFeatures::OnSierraExactly() ||
-      (aInstalledFont && nsCocoaFeatures::OnHighSierraOrLater())) {
+  if (aInstalledFont) {
     AutoCFRelease<CFDictionaryRef> variations = ::CGFontCopyVariations(aCGFont);
     if (variations) {
       AutoCFRelease<CFDictionaryRef> varAttr = ::CFDictionaryCreate(
@@ -613,11 +611,9 @@ bool gfxMacFont::ShouldRoundXOffset(cairo_t* aCairo) const {
 
 bool gfxMacFont::UseNativeColrFontSupport() const {
   /*
-    if (nsCocoaFeatures::OnHighSierraOrLater()) {
-      auto* colr = GetFontEntry()->GetCOLR();
-      if (colr && COLRFonts::GetColrTableVersion(colr) == 0) {
-        return true;
-      }
+    auto* colr = GetFontEntry()->GetCOLR();
+    if (colr && COLRFonts::GetColrTableVersion(colr) == 0) {
+      return true;
     }
   */
   return false;
