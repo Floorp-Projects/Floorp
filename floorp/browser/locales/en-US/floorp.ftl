@@ -512,6 +512,50 @@ workspaces-reset-button = Reset Workspaces
 workspaces-reset-service-title = Floorp Workspaces
 workspaces-reset-warning = Warning! Running this operation will delete all your Workspaces and restart the browser.
 
+manage-workspace-on-bms-option =
+    .label = Manage Workspace on Browser Manager Sidebar
+
+workspaces-manage-title = Manage Workspaces
+workspaces-manage-description = Manage your Workspaces. Change workspace icon.
+workspaces-manage-label =
+    .label = Manage Workspaces
+
+workspaces-manage-button = Open Workspace Manager...
+
+select-workspace = Select Workspace
+workspace-select-icon = Select Workspace Icon
+ .label = Select Workspace Icon
+
+workspace-customize = 
+ .title = Customize Workspace
+
+workspace-icon-briefcase =
+ .label = Job
+workspace-icon-cart =
+ .label = Shopping
+workspace-icon-circle =
+ .label = Circle
+workspace-icon-dollar =
+ .label = Bank
+workspace-icon-fence =
+ .label = Fence
+workspace-icon-fingerprint =
+ .label = Personal
+workspace-icon-gift =
+ .label = Gift
+workspace-icon-vacation =
+ .label = Vacation
+workspace-icon-food =
+ .label = Food
+workspace-icon-fruit =
+ .label = Fruit
+workspace-icon-pet =
+ .label = Pet
+workspace-icon-tree =
+ .label = Tree
+workspace-icon-chill =
+ .label = Private
+
 ## Mouse Gesture
 mouse-gesture = Mouse Gestures
 mouse-gesture-description = Gesturefy must be installed to use mouse gestures with { -brand-short-name }.
@@ -815,6 +859,9 @@ move-tab-another-workspace =
  .label = Move to another Workspace
 workspace-rename = 
   .label = Rename this Workspace...
+
+workspace-delete = 
+  .label = Delete workspace
 
 ######################################################################### menubar item ###############################################################
 

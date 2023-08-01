@@ -5,3 +5,6 @@
 browser.jar:
    content/browser/preferences/dialogs/customURLs.xhtml
    content/browser/preferences/dialogs/customURLs.js
+   content/browser/preferences/dialogs/manageWorkspace.xhtml
+   content/browser/preferences/dialogs/manageWorkspace.js
+   content/browser/preferences/dialogs/manageWorkspace.css

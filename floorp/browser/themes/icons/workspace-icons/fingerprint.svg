@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1024 1024" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs/>
+<g id="レイヤー-1-コピー">
+<path d="M330.888 68.0084L693.112 68.0084C734.659 68.0084 785.179 97.1761 805.952 133.156L987.064 446.852C1007.84 482.832 1007.84 541.168 987.064 577.148L805.952 890.844C785.179 926.824 734.659 955.992 693.112 955.992L330.888 955.992C289.341 955.992 238.821 926.824 218.048 890.844L36.9358 577.148C16.1626 541.168 16.1626 482.832 36.9358 446.852L218.048 133.156C238.821 97.176 289.341 68.0084 330.888 68.0084Z" fill="#36adff" fill-rule="nonzero" opacity="1" stroke="none"/>
+<path d="M469.783 742.794C461.875 755.329 452.681 767.566 442.005 779.254" fill="none" opacity="1" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="50"/>
+<path d="M512 512C512 512 525.278 581.712 504.786 660.626" fill="none" opacity="1" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="50"/>
+<path d="M362.466 742.794C362.466 742.794 431.858 660.626 421.765 519.368C415.827 436.268 479.938 413.829 512 414.508C554.153 415.401 604.18 439.895 610.547 521.877C617.09 606.111 607.551 689.42 559.118 783.014" fill="none" opacity="1" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="50"/>
+<path d="M706.285 317.017C790.724 401.146 787.229 512 787.229 512" fill="none" opacity="1" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="50"/>
+<path d="M278.924 366.711C311.383 314.75 375.258 246.084 492.95 237.625C553.14 233.299 604.173 248.29 644.648 270.712" fill="none" opacity="1" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="50"/>
+<path d="M249.011 595.763C236.661 550.856 232.866 496.861 246.474 442.973" fill="none" opacity="1" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="50"/>
+<path d="M289.118 673.567C362.466 621.464 317.575 558.729 327.9 492.981C346.283 375.921 423.173 338.68 491.708 328.716C572.188 317.017 652.399 353.765 683.045 429.579C711.502 499.975 717.954 626.617 685.877 725.943" fill="none" opacity="1" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="50"/>
+</g>
+</svg>
