@@ -2386,18 +2386,15 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   }
   aTrackData.mSizeBuffer -= sizeRemoved;
 
-  MSE_DEBUG("Removing frames from:%u (frames:%u) ([%f, %f))",
-            firstRemovedIndex.ref(),
-            lastRemovedIndex - firstRemovedIndex.ref() + 1,
-            removedIntervals.GetStart().ToSeconds(),
-            removedIntervals.GetEnd().ToSeconds());
+  nsPrintfCString msg("Removing frames from:%u for %s (frames:%u) ([%f, %f))",
+                      firstRemovedIndex.ref(),
+                      aTrackData.mInfo->mMimeType.get(),
+                      lastRemovedIndex - firstRemovedIndex.ref() + 1,
+                      removedIntervals.GetStart().ToSeconds(),
+                      removedIntervals.GetEnd().ToSeconds());
+  MSE_DEBUG("%s", msg.get());
   if (profiler_thread_is_being_profiled_for_markers()) {
-    nsPrintfCString markerString(
-        "Removing frames from:%u (frames:%u) ([%f, %f))",
-        firstRemovedIndex.ref(), lastRemovedIndex - firstRemovedIndex.ref() + 1,
-        removedIntervals.GetStart().ToSeconds(),
-        removedIntervals.GetEnd().ToSeconds());
-    PROFILER_MARKER_TEXT("RemoveFrames", MEDIA_PLAYBACK, {}, markerString);
+    PROFILER_MARKER_TEXT("RemoveFrames", MEDIA_PLAYBACK, {}, msg);
   }
 
   if (aTrackData.mNextGetSampleIndex.isSome()) {
@@ -2435,6 +2432,9 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   }
 
   // Update our buffered range to exclude the range just removed.
+  MSE_DEBUG("Removing %s from bufferedRange %s",
+            DumpTimeRanges(removedIntervals).get(),
+            DumpTimeRanges(aTrackData.mBufferedRanges).get());
   aTrackData.mBufferedRanges -= removedIntervals;
 
   // Recalculate sanitized buffered ranges.
@@ -2457,6 +2457,14 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
     MutexAutoLock mut(mMutex);
     aTrackData.mHighestStartTimestamp = highestStartTime;
   }
+
+  MSE_DEBUG(
+      "After removing frames, %s data sz=%zu, highestStartTimestamp=% " PRId64
+      ", bufferedRange=%s, sanitizedBufferedRanges=%s",
+      aTrackData.mInfo->mMimeType.get(), data.Length(),
+      aTrackData.mHighestStartTimestamp.ToMicroseconds(),
+      DumpTimeRanges(aTrackData.mBufferedRanges).get(),
+      DumpTimeRanges(aTrackData.mSanitizedBufferedRanges).get());
 
   return firstRemovedIndex.ref();
 }
@@ -2622,6 +2630,8 @@ TimeUnit TrackBuffersManager::Seek(TrackInfo::TrackType aTrack,
   AUTO_PROFILER_LABEL("TrackBuffersManager::Seek", MEDIA_PLAYBACK);
   auto& trackBuffer = GetTracksData(aTrack);
   const TrackBuffersManager::TrackBuffer& track = GetTrackBuffer(aTrack);
+  MSE_DEBUG("Seek, track=%s, target=%" PRId64, TrackTypeToStr(aTrack),
+            aTime.ToMicroseconds());
 
   if (!track.Length()) {
     // This a reset. It will be followed by another valid seek.
