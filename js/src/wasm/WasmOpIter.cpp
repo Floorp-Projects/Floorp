@@ -250,8 +250,12 @@ OpKind wasm::Classify(OpBytes op) {
       return OpKind::TableSet;
     case Op::Call:
       return OpKind::Call;
+    case Op::ReturnCall:
+      return OpKind::ReturnCall;
     case Op::CallIndirect:
       return OpKind::CallIndirect;
+    case Op::ReturnCallIndirect:
+      return OpKind::ReturnCallIndirect;
     case Op::CallRef:
       WASM_FUNCTION_REFERENCES_OP(OpKind::CallRef);
     case Op::Return:

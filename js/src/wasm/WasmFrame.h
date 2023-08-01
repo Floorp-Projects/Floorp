@@ -370,6 +370,10 @@ class FrameWithInstances : public Frame {
     return sizeof(wasm::FrameWithInstances) - sizeof(wasm::Frame);
   }
 
+  constexpr static uint32_t sizeOfInstanceFieldsAndShadowStack() {
+    return sizeOfInstanceFields() + js::jit::ShadowStackSpace;
+  }
+
   constexpr static uint32_t calleeInstanceOffset() {
     return offsetof(FrameWithInstances, calleeInstance_) +
            js::jit::ShadowStackSpace;

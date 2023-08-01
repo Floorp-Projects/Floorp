@@ -77,6 +77,49 @@ uint32_t BaseCompiler::instanceOffsetOfBoundsCheckLimit(
       offsetof(MemoryInstanceData, boundsCheckLimit));
 }
 
+// The results parameter for BaseCompiler::emitCallArgs is used for
+// regular Wasm calls.
+struct NormalCallResults final {
+  const StackResultsLoc& results;
+  explicit NormalCallResults(const StackResultsLoc& results)
+      : results(results) {}
+  inline uint32_t onStackCount() const { return results.count(); }
+  inline StackResults stackResults() const { return results.stackResults(); }
+  inline void getStackResultArea(BaseStackFrame fr, RegPtr dest) const {
+    fr.computeOutgoingStackResultAreaPtr(results, dest);
+  }
+};
+
+// The results parameter for BaseCompiler::emitCallArgs is used for
+// Wasm return/tail calls.
+struct TailCallResults final {
+  bool hasStackResults;
+  explicit TailCallResults(const FuncType& funcType) {
+    hasStackResults =
+        ABIResultIter::HasStackResults(ResultType::Vector(funcType.results()));
+  }
+  inline uint32_t onStackCount() const { return 0; }
+  inline StackResults stackResults() const {
+    return hasStackResults ? StackResults::HasStackResults
+                           : StackResults::NoStackResults;
+  }
+  inline void getStackResultArea(BaseStackFrame fr, RegPtr dest) const {
+    fr.loadIncomingStackResultAreaPtr(dest);
+  }
+};
+
+// The results parameter for BaseCompiler::emitCallArgs is used when
+// no result (area) is expected.
+struct NoCallResults final {
+  inline uint32_t onStackCount() const { return 0; }
+  inline StackResults stackResults() const {
+    return StackResults::NoStackResults;
+  }
+  inline void getStackResultArea(BaseStackFrame fr, RegPtr dest) const {
+    MOZ_CRASH();
+  }
+};
+
 }  // namespace wasm
 }  // namespace js
 

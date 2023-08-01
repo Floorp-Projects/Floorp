@@ -1575,9 +1575,18 @@ class OutOfLineAbortingTrap : public OutOfLineCode {
   }
 };
 
+#ifdef ENABLE_WASM_TAIL_CALLS
+static ReturnCallAdjustmentInfo BuildReturnCallAdjustmentInfo(
+    const FuncType& callerType, const FuncType& calleeType) {
+  return ReturnCallAdjustmentInfo(
+      StackArgAreaSizeUnaligned(ArgTypeVector(calleeType)),
+      StackArgAreaSizeUnaligned(ArgTypeVector(callerType)));
+}
+#endif
+
 bool BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
                                 const Stk& indexVal, const FunctionCall& call,
-                                CodeOffset* fastCallOffset,
+                                bool tailCall, CodeOffset* fastCallOffset,
                                 CodeOffset* slowCallOffset) {
   CallIndirectId callIndirectId =
       CallIndirectId::forFuncType(moduleEnv_, funcTypeIndex);
@@ -1604,8 +1613,19 @@ bool BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
   }
   nullCheckFailed = nullref->entry();
 #endif
-  masm.wasmCallIndirect(desc, callee, oob->entry(), nullCheckFailed,
-                        mozilla::Nothing(), fastCallOffset, slowCallOffset);
+  if (!tailCall) {
+    masm.wasmCallIndirect(desc, callee, oob->entry(), nullCheckFailed,
+                          mozilla::Nothing(), fastCallOffset, slowCallOffset);
+  } else {
+#ifdef ENABLE_WASM_TAIL_CALLS
+    ReturnCallAdjustmentInfo retCallInfo = BuildReturnCallAdjustmentInfo(
+        this->funcType(), (*moduleEnv_.types)[funcTypeIndex].funcType());
+    masm.wasmReturnCallIndirect(desc, callee, oob->entry(), nullCheckFailed,
+                                mozilla::Nothing(), retCallInfo);
+#else
+    MOZ_CRASH("not available");
+#endif
+  }
   return true;
 }
 
@@ -4562,8 +4582,8 @@ bool BaseCompiler::emitReturn() {
   return true;
 }
 
-bool BaseCompiler::emitCallArgs(const ValTypeVector& argTypes,
-                                const StackResultsLoc& results,
+template <typename T>
+bool BaseCompiler::emitCallArgs(const ValTypeVector& argTypes, T results,
                                 FunctionCall* baselineCall,
                                 CalleeOnStack calleeOnStack) {
   MOZ_ASSERT(!deadCode_);
@@ -4574,7 +4594,7 @@ bool BaseCompiler::emitCallArgs(const ValTypeVector& argTypes,
   startCallArgs(StackArgAreaSizeUnaligned(args), baselineCall);
 
   // Args are deeper on the stack than the stack result area, if any.
-  size_t argsDepth = results.count();
+  size_t argsDepth = results.onStackCount();
   // They're deeper than the callee too, for callIndirect.
   if (calleeOnStack == CalleeOnStack::True) {
     argsDepth++;
@@ -4590,11 +4610,11 @@ bool BaseCompiler::emitCallArgs(const ValTypeVector& argTypes,
       ABIArg argLoc = baselineCall->abi.next(MIRType::Pointer);
       if (argLoc.kind() == ABIArg::Stack) {
         ScratchPtr scratch(*this);
-        fr.computeOutgoingStackResultAreaPtr(results, scratch);
+        results.getStackResultArea(fr, scratch);
         masm.storePtr(scratch, Address(masm.getStackPointer(),
                                        argLoc.offsetFromArgBase()));
       } else {
-        fr.computeOutgoingStackResultAreaPtr(results, RegPtr(argLoc.gpr()));
+        results.getStackResultArea(fr, RegPtr(argLoc.gpr()));
       }
     }
   }
@@ -4755,7 +4775,7 @@ bool BaseCompiler::emitCall() {
             import ? RestoreRegisterStateAndRealm::True
                    : RestoreRegisterStateAndRealm::False);
 
-  if (!emitCallArgs(funcType.args(), results, &baselineCall,
+  if (!emitCallArgs(funcType.args(), NormalCallResults(results), &baselineCall,
                     CalleeOnStack::False)) {
     return false;
   }
@@ -4781,6 +4801,59 @@ bool BaseCompiler::emitCall() {
   captureCallResultRegisters(resultType);
   return pushCallResults(baselineCall, resultType, results);
 }
+
+#ifdef ENABLE_WASM_TAIL_CALLS
+bool BaseCompiler::emitReturnCall() {
+  uint32_t funcIndex;
+  BaseNothingVector args_{};
+  BaseNothingVector unused_values{};
+  if (!iter_.readReturnCall(&funcIndex, &args_, &unused_values)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  sync();
+
+  const FuncType& funcType = *moduleEnv_.funcs[funcIndex].type;
+  bool import = moduleEnv_.funcIsImport(funcIndex);
+
+  uint32_t numArgs = funcType.args().length();
+
+  FunctionCall baselineCall{};
+  beginCall(baselineCall, UseABI::Wasm,
+            import ? RestoreRegisterStateAndRealm::True
+                   : RestoreRegisterStateAndRealm::False);
+
+  if (!emitCallArgs(funcType.args(), TailCallResults(funcType), &baselineCall,
+                    CalleeOnStack::False)) {
+    return false;
+  }
+
+  ReturnCallAdjustmentInfo retCallInfo =
+      BuildReturnCallAdjustmentInfo(this->funcType(), funcType);
+
+  if (import) {
+    CallSiteDesc desc(bytecodeOffset(), CallSiteDesc::Import);
+    CalleeDesc callee = CalleeDesc::import(
+        moduleEnv_.offsetOfFuncImportInstanceData(funcIndex));
+    masm.wasmReturnCallImport(desc, callee, retCallInfo);
+  } else {
+    CallSiteDesc desc(bytecodeOffset(), CallSiteDesc::ReturnFunc);
+    masm.wasmReturnCall(desc, funcIndex, retCallInfo);
+  }
+
+  MOZ_ASSERT(stackMapGenerator_.framePushedExcludingOutboundCallArgs.isSome());
+  stackMapGenerator_.framePushedExcludingOutboundCallArgs.reset();
+
+  popValueStackBy(numArgs);
+
+  deadCode_ = true;
+  return true;
+}
+#endif
 
 bool BaseCompiler::emitCallIndirect() {
   uint32_t funcTypeIndex;
@@ -4815,7 +4888,7 @@ bool BaseCompiler::emitCallIndirect() {
   // MacroAssembler::wasmCallIndirect).
   beginCall(baselineCall, UseABI::Wasm, RestoreRegisterStateAndRealm::False);
 
-  if (!emitCallArgs(funcType.args(), results, &baselineCall,
+  if (!emitCallArgs(funcType.args(), NormalCallResults(results), &baselineCall,
                     CalleeOnStack::True)) {
     return false;
   }
@@ -4824,7 +4897,7 @@ bool BaseCompiler::emitCallIndirect() {
   CodeOffset fastCallOffset;
   CodeOffset slowCallOffset;
   if (!callIndirect(funcTypeIndex, tableIndex, callee, baselineCall,
-                    &fastCallOffset, &slowCallOffset)) {
+                    /*tailCall*/ false, &fastCallOffset, &slowCallOffset)) {
     return false;
   }
   if (!createStackMap("emitCallIndirect", fastCallOffset)) {
@@ -4843,6 +4916,58 @@ bool BaseCompiler::emitCallIndirect() {
   captureCallResultRegisters(resultType);
   return pushCallResults(baselineCall, resultType, results);
 }
+
+#ifdef ENABLE_WASM_TAIL_CALLS
+bool BaseCompiler::emitReturnCallIndirect() {
+  uint32_t funcTypeIndex;
+  uint32_t tableIndex;
+  Nothing callee_;
+  BaseNothingVector args_{};
+  BaseNothingVector unused_values{};
+  if (!iter_.readReturnCallIndirect(&funcTypeIndex, &tableIndex, &callee_,
+                                    &args_, &unused_values)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  sync();
+
+  const FuncType& funcType = (*moduleEnv_.types)[funcTypeIndex].funcType();
+
+  // Stack: ... arg1 .. argn callee
+
+  uint32_t numArgs = funcType.args().length() + 1;
+
+  FunctionCall baselineCall{};
+  // State and realm are restored as needed by by callIndirect (really by
+  // MacroAssembler::wasmCallIndirect).
+  beginCall(baselineCall, UseABI::Wasm, RestoreRegisterStateAndRealm::False);
+
+  if (!emitCallArgs(funcType.args(), TailCallResults(funcType), &baselineCall,
+                    CalleeOnStack::True)) {
+    return false;
+  }
+
+  const Stk& callee = peek(0);
+  CodeOffset fastCallOffset;
+  CodeOffset slowCallOffset;
+  if (!callIndirect(funcTypeIndex, tableIndex, callee, baselineCall,
+                    /*tailCall*/ true, &fastCallOffset, &slowCallOffset)) {
+    return false;
+  }
+
+  MOZ_ASSERT(stackMapGenerator_.framePushedExcludingOutboundCallArgs.isSome());
+  stackMapGenerator_.framePushedExcludingOutboundCallArgs.reset();
+
+  popValueStackBy(numArgs);
+
+  deadCode_ = true;
+  return true;
+}
+#endif
 
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
 bool BaseCompiler::emitCallRef() {
@@ -4875,7 +5000,7 @@ bool BaseCompiler::emitCallRef() {
   // MacroAssembler::wasmCallRef).
   beginCall(baselineCall, UseABI::Wasm, RestoreRegisterStateAndRealm::False);
 
-  if (!emitCallArgs(funcType->args(), results, &baselineCall,
+  if (!emitCallArgs(funcType->args(), NormalCallResults(results), &baselineCall,
                     CalleeOnStack::True)) {
     return false;
   }
@@ -4940,12 +5065,11 @@ bool BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee,
   ValType retType = operandType;
   uint32_t numArgs = signature.length();
   size_t stackSpace = stackConsumed(numArgs);
-  StackResultsLoc noStackResults;
 
   FunctionCall baselineCall{};
   beginCall(baselineCall, UseABI::Builtin, RestoreRegisterStateAndRealm::False);
 
-  if (!emitCallArgs(signature, noStackResults, &baselineCall,
+  if (!emitCallArgs(signature, NoCallResults(), &baselineCall,
                     CalleeOnStack::False)) {
     return false;
   }
@@ -9207,6 +9331,18 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(emitCall());
       case uint16_t(Op::CallIndirect):
         CHECK_NEXT(emitCallIndirect());
+#ifdef ENABLE_WASM_TAIL_CALLS
+      case uint16_t(Op::ReturnCall):
+        if (!moduleEnv_.tailCallsEnabled()) {
+          return iter_.unrecognizedOpcode(&op);
+        }
+        CHECK_NEXT(emitReturnCall());
+      case uint16_t(Op::ReturnCallIndirect):
+        if (!moduleEnv_.tailCallsEnabled()) {
+          return iter_.unrecognizedOpcode(&op);
+        }
+        CHECK_NEXT(emitReturnCallIndirect());
+#endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       case uint16_t(Op::CallRef):
         if (!moduleEnv_.functionReferencesEnabled()) {

@@ -85,6 +85,11 @@
 #else
 #  define WASM_MEMORY_CONTROL_ENABLED 0
 #endif
+#ifdef ENABLE_WASM_TAIL_CALLS
+#  define WASM_TAIL_CALLS_ENABLED 1
+#else
+#  define WASM_TAIL_CALLS_ENABLED 0
+#endif
 #ifdef ENABLE_WASM_MOZ_INTGEMM
 #  define WASM_MOZ_INTGEMM_ENABLED 1
 #else
@@ -184,6 +189,16 @@ enum class WasmFeatureStage {
     /* flag force enable  */ false,                                     \
     /* shell flag         */ "multi-memory",                            \
     /* preference name    */ "multi_memory")                            \
+  FEATURE(                                                              \
+    /* capitalized name   */ TailCalls,                                 \
+    /* lower case name    */ tailCalls,                                 \
+    /* stage              */ WasmFeatureStage::Experimental,            \
+    /* compile predicate  */ WASM_TAIL_CALLS_ENABLED,                   \
+    /* compiler predicate */ BaselineAvailable(cx),                     \
+    /* flag predicate     */ !IsFuzzingIon(cx),                         \
+    /* flag force enable  */ false,                                     \
+    /* shell flag         */ "tail-calls",                              \
+    /* preference name    */ "tail_calls")                              \
   FEATURE(                                                              \
     /* capitalized name   */ MozIntGemm,                                \
     /* lower case name    */ mozIntGemm,                                \

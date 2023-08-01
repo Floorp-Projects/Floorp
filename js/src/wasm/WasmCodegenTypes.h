@@ -419,6 +419,8 @@ class CallSiteDesc {
     IndirectFast,  // dynamically determined to be same-instance
     FuncRef,       // call using direct function reference
     FuncRefFast,   // call using direct function reference within same-instance
+    ReturnFunc,    // return call to a specific function
+    ReturnStub,    // return call trampoline
     Symbolic,      // call to a single symbolic callee
     EnterFrame,    // call to a enter frame handler
     LeaveFrame,    // call to a leave frame handler
@@ -443,8 +445,10 @@ class CallSiteDesc {
   bool isImportCall() const { return kind() == CallSiteDesc::Import; }
   bool isIndirectCall() const { return kind() == CallSiteDesc::Indirect; }
   bool isFuncRefCall() const { return kind() == CallSiteDesc::FuncRef; }
+  bool isReturnStub() const { return kind() == CallSiteDesc::ReturnStub; }
   bool mightBeCrossInstance() const {
-    return isImportCall() || isIndirectCall() || isFuncRefCall();
+    return isImportCall() || isIndirectCall() || isFuncRefCall() ||
+           isReturnStub();
   }
 };
 

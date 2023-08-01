@@ -685,6 +685,35 @@ def wasm_function_references(value, no_experimental):
 set_config("ENABLE_WASM_FUNCTION_REFERENCES", wasm_function_references)
 set_define("ENABLE_WASM_FUNCTION_REFERENCES", wasm_function_references)
 
+# Support for WebAssembly tail-calls.
+# ===========================
+
+
+@depends(milestone.is_nightly)
+def default_wasm_tail_calls(is_nightly):
+    if is_nightly:
+        return True
+
+
+option(
+    "--enable-wasm-tail-calls",
+    default=default_wasm_tail_calls,
+    help="{Enable|Disable} WebAssembly tail-calls",
+)
+
+
+@depends("--enable-wasm-tail-calls", target)
+def wasm_tail_calls(value, target):
+    if not value:
+        return
+
+    if target.cpu in ("x86", "x86_64", "arm", "aarch64"):
+        return True
+
+
+set_config("ENABLE_WASM_TAIL_CALLS", wasm_tail_calls)
+set_define("ENABLE_WASM_TAIL_CALLS", wasm_tail_calls)
+
 # Support for WebAssembly GC.
 # ===========================
 

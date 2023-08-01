@@ -161,7 +161,9 @@ enum class OpKind {
   SetGlobal,
   TeeGlobal,
   Call,
+  ReturnCall,
   CallIndirect,
+  ReturnCallIndirect,
 #  ifdef ENABLE_WASM_FUNCTION_REFERENCES
   CallRef,
 #  endif
@@ -685,6 +687,15 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readCallIndirect(uint32_t* funcTypeIndex,
                                       uint32_t* tableIndex, Value* callee,
                                       ValueVector* argValues);
+#ifdef ENABLE_WASM_TAIL_CALLS
+  [[nodiscard]] bool readReturnCall(uint32_t* funcTypeIndex,
+                                    ValueVector* argValues,
+                                    ValueVector* values);
+  [[nodiscard]] bool readReturnCallIndirect(uint32_t* funcTypeIndex,
+                                            uint32_t* tableIndex, Value* callee,
+                                            ValueVector* argValues,
+                                            ValueVector* values);
+#endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
   [[nodiscard]] bool readCallRef(const FuncType** funcType, Value* callee,
                                  ValueVector* argValues);
@@ -2440,6 +2451,44 @@ inline bool OpIter<Policy>::readCall(uint32_t* funcTypeIndex,
   return push(ResultType::Vector(funcType.results()));
 }
 
+#ifdef ENABLE_WASM_TAIL_CALLS
+template <typename Policy>
+inline bool OpIter<Policy>::readReturnCall(uint32_t* funcTypeIndex,
+                                           ValueVector* argValues,
+                                           ValueVector* values) {
+  MOZ_ASSERT(Classify(op_) == OpKind::ReturnCall);
+
+  if (!readVarU32(funcTypeIndex)) {
+    return fail("unable to read call function index");
+  }
+
+  if (*funcTypeIndex >= env_.funcs.length()) {
+    return fail("callee index out of range");
+  }
+
+  const FuncType& funcType = *env_.funcs[*funcTypeIndex].type;
+
+  if (!popCallArgs(funcType.args(), argValues)) {
+    return false;
+  }
+
+  if (!push(ResultType::Vector(funcType.results()))) {
+    return false;
+  }
+
+  Control& body = controlStack_[0];
+  MOZ_ASSERT(body.kind() == LabelKind::Body);
+
+  // Pop function results as the instruction will cause a return.
+  if (!popWithType(body.resultType(), values)) {
+    return false;
+  }
+
+  afterUnconditionalBranch();
+  return true;
+}
+#endif
+
 template <typename Policy>
 inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
                                              uint32_t* tableIndex,
@@ -2486,6 +2535,68 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
 
   return push(ResultType::Vector(funcType.results()));
 }
+
+#ifdef ENABLE_WASM_TAIL_CALLS
+template <typename Policy>
+inline bool OpIter<Policy>::readReturnCallIndirect(uint32_t* funcTypeIndex,
+                                                   uint32_t* tableIndex,
+                                                   Value* callee,
+                                                   ValueVector* argValues,
+                                                   ValueVector* values) {
+  MOZ_ASSERT(Classify(op_) == OpKind::ReturnCallIndirect);
+  MOZ_ASSERT(funcTypeIndex != tableIndex);
+
+  if (!readVarU32(funcTypeIndex)) {
+    return fail("unable to read return_call_indirect signature index");
+  }
+  if (*funcTypeIndex >= env_.numTypes()) {
+    return fail("signature index out of range");
+  }
+
+  if (!readVarU32(tableIndex)) {
+    return fail("unable to read return_call_indirect table index");
+  }
+  if (*tableIndex >= env_.tables.length()) {
+    // Special case this for improved user experience.
+    if (!env_.tables.length()) {
+      return fail("can't return_call_indirect without a table");
+    }
+    return fail("table index out of range for return_call_indirect");
+  }
+  if (!env_.tables[*tableIndex].elemType.isFuncHierarchy()) {
+    return fail("indirect calls must go through a table of 'funcref'");
+  }
+
+  if (!popWithType(ValType::I32, callee)) {
+    return false;
+  }
+
+  const TypeDef& typeDef = env_.types->type(*funcTypeIndex);
+  if (!typeDef.isFuncType()) {
+    return fail("expected signature type");
+  }
+  const FuncType& funcType = typeDef.funcType();
+
+  if (!popCallArgs(funcType.args(), argValues)) {
+    return false;
+  }
+
+  if (!push(ResultType::Vector(funcType.results()))) {
+    return false;
+  }
+
+  Control& body = controlStack_[0];
+  MOZ_ASSERT(body.kind() == LabelKind::Body);
+
+  // Pop function results as the instruction will cause a return.
+  if (!popWithType(body.resultType(), values)) {
+    return false;
+  }
+
+  afterUnconditionalBranch();
+  return true;
+}
+#endif
 
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
 template <typename Policy>
