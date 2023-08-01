@@ -9,7 +9,7 @@
 #  include <stdint.h>
 
 #  include "PlatformDecoderModule.h"
-#  include "theora/theoradec.h"
+#  include <theora/theoradec.h>
 
 namespace mozilla {
 

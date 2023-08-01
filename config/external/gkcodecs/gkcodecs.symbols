@@ -48,3 +48,16 @@ vorbis_synthesis_init
 vorbis_synthesis_pcmout
 vorbis_synthesis_read
 vorbis_synthesis_restart
+th_info_init
+th_setup_free
+th_decode_free
+th_comment_clear
+th_decode_headerin
+th_packet_isheader
+th_granule_frame
+th_decode_packetin
+th_decode_ycbcr_out
+th_comment_init
+th_packet_iskeyframe
+th_info_clear
+th_decode_alloc   
