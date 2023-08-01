@@ -14,7 +14,7 @@ export default {
     type: {
       control: {
         type: "select",
-        options: ["stale", "generic-error"],
+        options: ["stale"],
       },
     },
   },
@@ -24,8 +24,6 @@ export default {
 shopping-message-bar-warning-stale-analysis-title = Updates available
 shopping-message-bar-warning-stale-analysis-message = Re-analyze the reviews for this product, so you have the latest info.
 shopping-message-bar-warning-stale-analysis-link = Re-analyze reviews
-shopping-message-bar-generic-error-title = Something went wrong
-shopping-message-bar-generic-error-message = Couldn't load information. Please try again later.
     `,
   },
 };

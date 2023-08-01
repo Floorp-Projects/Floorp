@@ -9,7 +9,6 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 class ShoppingMessageBar extends MozLitElement {
   #MESSAGE_TYPES_RENDER_TEMPLATE_MAPPING = new Map([
     ["stale", this.getStaleWarningTemplate()],
-    ["generic-error", this.getGenericErrorTemplate()],
   ]);
 
   static properties = {
@@ -36,18 +35,6 @@ class ShoppingMessageBar extends MozLitElement {
     </message-bar>`;
   }
 
-  getGenericErrorTemplate() {
-    return html` <message-bar type="error">
-      <article id="message-bar-container" aria-labelledby="header">
-        <strong
-          id="header"
-          data-l10n-id="shopping-message-bar-generic-error-title"
-        ></strong>
-        <span data-l10n-id="shopping-message-bar-generic-error-message"></span>
-      </article>
-    </message-bar>`;
-  }
-
   render() {
     let messageBarTemplate = this.#MESSAGE_TYPES_RENDER_TEMPLATE_MAPPING.get(
       this.type
@@ -64,7 +51,7 @@ class ShoppingMessageBar extends MozLitElement {
     return null;
   }
 
-  updated() {
+  firstUpdated() {
     // message-bar does not support adding a header and does not align it with the icon.
     // Override styling to make them align.
     let messageBar = this.renderRoot.querySelector("message-bar");
