@@ -12,10 +12,13 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.closeApp
+import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.helpers.TestHelper.verifyKeyboardVisibility
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -44,7 +47,7 @@ class TabbedBrowsingTest {
     private lateinit var mockWebServer: MockWebServer
 
     @get:Rule
-    val activityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides()
+    val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true)
 
     @Rule
     @JvmField
@@ -375,6 +378,50 @@ class TabbedBrowsingTest {
             verifySyncedTabsListWhenUserIsNotSignedIn()
         }.clickSignInToSyncButton {
             verifyTurnOnSyncMenu()
+        }
+    }
+
+    @Test
+    fun privateModeStaysAsDefaultAfterRestartTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.goToHomescreen {
+        }.togglePrivateBrowsingMode()
+        closeApp(activityTestRule)
+        restartApp(activityTestRule)
+        homeScreen {
+            verifyPrivateBrowsingHomeScreen()
+        }.openTabDrawer {
+        }.toggleToNormalTabs {
+            verifyExistingOpenTabs(defaultWebPage.title)
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun privateTabsDoNotPersistAfterClosingAppTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+
+        homeScreen {
+        }.togglePrivateBrowsingMode()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+        }.openTabDrawer {
+        }.openNewTab {
+        }.submitQuery(secondWebPage.url.toString()) {
+        }
+
+        closeApp(activityTestRule)
+        restartApp(activityTestRule)
+
+        homeScreen {
+            verifyPrivateBrowsingHomeScreen()
+        }.openTabDrawer {
+            verifyNoOpenTabsInPrivateBrowsing()
         }
     }
 }

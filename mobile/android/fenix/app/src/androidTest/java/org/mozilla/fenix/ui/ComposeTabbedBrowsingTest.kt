@@ -13,11 +13,14 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
+import org.mozilla.fenix.helpers.TestHelper.closeApp
+import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.helpers.TestHelper.verifyKeyboardVisibility
 import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
 import org.mozilla.fenix.ui.robots.browserScreen
@@ -49,7 +52,8 @@ class ComposeTabbedBrowsingTest {
     @get:Rule(order = 0)
     val composeTestRule =
         AndroidComposeTestRule(
-            HomeActivityTestRule.withDefaultSettingsOverrides(
+            HomeActivityIntentTestRule.withDefaultSettingsOverrides(
+                skipOnboarding = true,
                 tabsTrayRewriteEnabled = true,
             ),
         ) { it.activity }
@@ -386,6 +390,50 @@ class ComposeTabbedBrowsingTest {
             verifySyncedTabsListWhenUserIsNotSignedIn()
         }.clickSignInToSyncButton {
             verifyTurnOnSyncMenu()
+        }
+    }
+
+    @Test
+    fun privateModeStaysAsDefaultAfterRestartTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.goToHomescreen {
+        }.togglePrivateBrowsingMode()
+
+        closeApp(composeTestRule.activityRule)
+        restartApp(composeTestRule.activityRule)
+
+        homeScreen {
+            verifyPrivateBrowsingHomeScreen()
+        }.openComposeTabDrawer(composeTestRule) {
+        }.toggleToNormalTabs {
+            verifyExistingOpenTabs(defaultWebPage.title)
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun privateTabsDoNotPersistAfterClosingAppTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+
+        homeScreen {
+        }.togglePrivateBrowsingMode()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+        }.openComposeTabDrawer(composeTestRule) {
+        }.openNewTab {
+        }.submitQuery(secondWebPage.url.toString()) {
+        }
+        closeApp(composeTestRule.activityRule)
+        restartApp(composeTestRule.activityRule)
+        homeScreen {
+            verifyPrivateBrowsingHomeScreen()
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyNoOpenTabsInPrivateBrowsing()
         }
     }
 }

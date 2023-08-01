@@ -115,6 +115,9 @@ object TestHelper {
         }
     }
 
+    fun closeApp(activity: HomeActivityIntentTestRule) =
+        activity.activity.finishAndRemoveTask()
+
     fun getPermissionAllowID(): String {
         return when
             (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
