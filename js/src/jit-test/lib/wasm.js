@@ -474,11 +474,11 @@ let WasmExternrefValues = [null, ...WasmNonNullExternrefValues];
 
 // Common array utilities
 
-// iota(n) creates an Array of length n with values 0..n-1
-function iota(len) {
+// iota(n,k) creates an Array of length n with values k..k+n-1
+function iota(len, k=0) {
     let xs = [];
     for ( let i=0 ; i < len ; i++ )
-        xs.push(i);
+        xs.push(i+k);
     return xs;
 }
 
@@ -544,3 +544,9 @@ function assertSame(got, expected) {
         assertEq(g, e);
     }
 }
+
+// TailCallIterations is selected to be large enough to trigger
+// "too much recursion", but not to be slow.
+var TailCallIterations = getBuildConfiguration().simulator ? 1000 : 100000;
+// TailCallBallast is selected to spill registers as parameters.
+var TailCallBallast = 30;
