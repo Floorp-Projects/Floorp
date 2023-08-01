@@ -104,6 +104,14 @@ nscolor nsLookAndFeel::ProcessSelectionBackground(nscolor aColor, ColorScheme aS
 nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor& aColor) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK
 
+  if (@available(macOS 10.14, *)) {
+    // No-op. macOS 10.14+ supports dark mode, so currentAppearance can be set
+    // to either Light or Dark.
+  } else {
+    // System colors before 10.14 are always Light.
+    aScheme = ColorScheme::Light;
+  }
+
   NSAppearance.currentAppearance = NSAppearanceForColorScheme(aScheme);
 
   nscolor color = 0;
@@ -240,7 +248,13 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       color = GetColorFromNSColor(NSColor.windowFrameColor);
       break;
     case ColorID::Window: {
-      color = GetColorFromNSColor(NSColor.windowBackgroundColor);
+      if (@available(macOS 10.14, *)) {
+        color = GetColorFromNSColor(NSColor.windowBackgroundColor);
+      } else {
+        // On 10.13 and below, NSColor.windowBackgroundColor is transparent black.
+        // Use a light grey instead (taken from macOS 11.5).
+        color = NS_RGB(0xF6, 0xF6, 0xF6);
+      }
       break;
     }
     case ColorID::Field:
@@ -305,7 +319,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
     case ColorID::MozMacActiveMenuitem:
     case ColorID::MozMacActiveSourceListSelection:
     case ColorID::Accentcolor:
-      color = GetColorFromNSColor([NSColor controlAccentColor]);
+      color = GetColorFromNSColor(ControlAccentColor());
       break;
     case ColorID::Marktext:
     case ColorID::Mark:
@@ -502,10 +516,14 @@ nsresult nsLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
 }
 
 bool nsLookAndFeel::SystemWantsDarkTheme() {
-  // This returns true if the macOS system appearance is set to dark mode, false otherwise.
-  NSAppearanceName aquaOrDarkAqua = [NSApp.effectiveAppearance
-      bestMatchFromAppearancesWithNames:@[ NSAppearanceNameAqua, NSAppearanceNameDarkAqua ]];
-  return [aquaOrDarkAqua isEqualToString:NSAppearanceNameDarkAqua];
+  // This returns true if the macOS system appearance is set to dark mode on
+  // 10.14+, false otherwise.
+  if (@available(macOS 10.14, *)) {
+    NSAppearanceName aquaOrDarkAqua = [NSApp.effectiveAppearance
+        bestMatchFromAppearancesWithNames:@[ NSAppearanceNameAqua, NSAppearanceNameDarkAqua ]];
+    return [aquaOrDarkAqua isEqualToString:NSAppearanceNameDarkAqua];
+  }
+  return false;
 }
 
 /*static*/
@@ -560,11 +578,19 @@ void nsLookAndFeel::RecordAccessibilityTelemetry() {
                                              name:NSSystemColorsDidChangeNotification
                                            object:nil];
 
-  [NSWorkspace.sharedWorkspace.notificationCenter
-      addObserver:self
-         selector:@selector(mediaQueriesChanged)
-             name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
-           object:nil];
+  if (@available(macOS 10.14, *)) {
+    [NSWorkspace.sharedWorkspace.notificationCenter
+        addObserver:self
+           selector:@selector(mediaQueriesChanged)
+               name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
+             object:nil];
+  } else {
+    [NSNotificationCenter.defaultCenter
+        addObserver:self
+           selector:@selector(mediaQueriesChanged)
+               name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
+             object:nil];
+  }
 
   [NSNotificationCenter.defaultCenter addObserver:self
                                          selector:@selector(scrollbarsChanged)

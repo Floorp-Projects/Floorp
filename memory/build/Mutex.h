@@ -86,10 +86,41 @@ struct MOZ_CAPABILITY("mutex") Mutex {
     // from other threads and the OS_UNFAIR_LOCK_ADAPTIVE_SPIN one causes the
     // kernel to spin on a contested lock if the owning thread is running on
     // the same physical core (presumably only on x86 CPUs given that ARM
-    // macs don't have cores capable of SMT).
-    os_unfair_lock_lock_with_options(
-        &mMutex,
-        OS_UNFAIR_LOCK_DATA_SYNCHRONIZATION | OS_UNFAIR_LOCK_ADAPTIVE_SPIN);
+    // macs don't have cores capable of SMT). On versions of macOS older than
+    // 10.15 the latter is not available and we spin in userspace instead.
+    if (Mutex::gSpinInKernelSpace) {
+      os_unfair_lock_lock_with_options(
+          &mMutex,
+          OS_UNFAIR_LOCK_DATA_SYNCHRONIZATION | OS_UNFAIR_LOCK_ADAPTIVE_SPIN);
+    } else {
+#  if defined(__x86_64__)
+      // On older versions of macOS (10.14 and older) the
+      // `OS_UNFAIR_LOCK_ADAPTIVE_SPIN` flag is not supported by the kernel,
+      // we spin in user-space instead like `OSSpinLock` does:
+      // https://github.com/apple/darwin-libplatform/blob/215b09856ab5765b7462a91be7076183076600df/src/os/lock.c#L183-L198
+      // Note that `OSSpinLock` uses 1000 iterations on x86-64:
+      // https://github.com/apple/darwin-libplatform/blob/215b09856ab5765b7462a91be7076183076600df/src/os/lock.c#L93
+      // ...but we only use 100 like it does on ARM:
+      // https://github.com/apple/darwin-libplatform/blob/215b09856ab5765b7462a91be7076183076600df/src/os/lock.c#L90
+      // We choose this value because it yields the same results in our
+      // benchmarks but is less likely to have detrimental effects caused by
+      // excessive spinning.
+      uint32_t retries = 100;
+
+      do {
+        if (os_unfair_lock_trylock(&mMutex)) {
+          return;
+        }
+
+        __asm__ __volatile__("pause");
+      } while (retries--);
+
+      os_unfair_lock_lock_with_options(&mMutex,
+                                       OS_UNFAIR_LOCK_DATA_SYNCHRONIZATION);
+#  else
+      MOZ_CRASH("User-space spin-locks should never be used on ARM");
+#  endif  // defined(__x86_64__)
+    }
 #else
     pthread_mutex_lock(&mMutex);
 #endif
