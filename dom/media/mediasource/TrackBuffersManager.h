@@ -275,14 +275,16 @@ class TrackBuffersManager final
   void OnDemuxFailed(TrackType aTrack, const MediaResult& aError)
       MOZ_REQUIRES(mTaskQueueCapability);
   void DoDemuxVideo() MOZ_REQUIRES(mTaskQueueCapability);
-  void OnVideoDemuxCompleted(const RefPtr<MediaTrackDemuxer::SamplesHolder>& aSamples);
+  void OnVideoDemuxCompleted(
+      const RefPtr<MediaTrackDemuxer::SamplesHolder>& aSamples);
   void OnVideoDemuxFailed(const MediaResult& aError) {
     mVideoTracks.mDemuxRequest.Complete();
     mTaskQueueCapability->AssertOnCurrentThread();
     OnDemuxFailed(TrackType::kVideoTrack, aError);
   }
   void DoDemuxAudio() MOZ_REQUIRES(mTaskQueueCapability);
-  void OnAudioDemuxCompleted(const RefPtr<MediaTrackDemuxer::SamplesHolder>& aSamples);
+  void OnAudioDemuxCompleted(
+      const RefPtr<MediaTrackDemuxer::SamplesHolder>& aSamples);
   void OnAudioDemuxFailed(const MediaResult& aError) {
     mAudioTracks.mDemuxRequest.Complete();
     mTaskQueueCapability->AssertOnCurrentThread();

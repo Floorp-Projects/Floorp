@@ -27,7 +27,6 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(
     : FFmpegDataDecoder(aLib, GetCodecId(aDecoderParams.AudioConfig().mMimeType,
                                          aDecoderParams.AudioConfig())),
       mAudioInfo(aDecoderParams.AudioConfig()) {
-
   MOZ_COUNT_CTOR(FFmpegAudioDecoder);
 
   if (mCodecID == AV_CODEC_ID_AAC &&
@@ -127,7 +126,8 @@ void FFmpegAudioDecoder<LIBAV_VER>::InitCodecContext() {
       AssertedCast<int>(mAudioInfo.mChannels);
   if (mAudioInfo.mChannelMap != AudioConfig::ChannelLayout::UNKNOWN_MAP) {
     mLib->av_channel_layout_from_mask(
-        &mCodecContext->ch_layout, AssertedCast<uint64_t>(mAudioInfo.mChannelMap));
+        &mCodecContext->ch_layout,
+        AssertedCast<uint64_t>(mAudioInfo.mChannelMap));
   } else {
     mLib->av_channel_layout_default(&mCodecContext->ch_layout,
                                     AssertedCast<int>(mAudioInfo.mChannels));
@@ -244,12 +244,11 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::PostProcessOutput(
     FFMPEG_LOG("Got %d more frame from packet", mFrame->nb_samples);
   }
 
-  FFMPEG_LOG(
-      "FFmpegAudioDecoder decoded: [%s,%s] (Duration: %s) [%s]",
-      aSample->mTime.ToString().get(),
-      aSample->GetEndTime().ToString().get(),
-      aSample->mDuration.ToString().get(),
-      mLib->av_get_sample_fmt_name(mFrame->format));
+  FFMPEG_LOG("FFmpegAudioDecoder decoded: [%s,%s] (Duration: %s) [%s]",
+             aSample->mTime.ToString().get(),
+             aSample->GetEndTime().ToString().get(),
+             aSample->mDuration.ToString().get(),
+             mLib->av_get_sample_fmt_name(mFrame->format));
 
   uint32_t numChannels = mCodecContext->channels;
   uint32_t samplingRate = mCodecContext->sample_rate;
@@ -294,17 +293,16 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::PostProcessOutput(
 
 #if LIBAVCODEC_VERSION_MAJOR < 59
 MediaResult FFmpegAudioDecoder<LIBAV_VER>::DecodeUsingFFmpeg(
-    AVPacket* aPacket, bool& aDecoded,
-    MediaRawData* aSample, DecodedData& aResults, bool* aGotFrame) {
+    AVPacket* aPacket, bool& aDecoded, MediaRawData* aSample,
+    DecodedData& aResults, bool* aGotFrame) {
   int decoded = 0;
   int rv =
       mLib->avcodec_decode_audio4(mCodecContext, mFrame, &decoded, aPacket);
   aDecoded = decoded == 1;
   if (rv < 0) {
     NS_WARNING("FFmpeg audio decoder error.");
-    return MediaResult(
-        NS_ERROR_DOM_MEDIA_DECODE_ERR,
-        RESULT_DETAIL("FFmpeg audio error"));
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                       RESULT_DETAIL("FFmpeg audio error"));
   }
   PostProcessOutput(decoded, aSample, aResults, aGotFrame, 0);
   return NS_OK;
@@ -313,8 +311,8 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DecodeUsingFFmpeg(
 #  define AVRESULT_OK 0
 
 MediaResult FFmpegAudioDecoder<LIBAV_VER>::DecodeUsingFFmpeg(
-    AVPacket* aPacket, bool& aDecoded,
-    MediaRawData* aSample, DecodedData& aResults, bool* aGotFrame) {
+    AVPacket* aPacket, bool& aDecoded, MediaRawData* aSample,
+    DecodedData& aResults, bool* aGotFrame) {
   // This in increment whenever avcodec_send_packet succeeds, and decremented
   // whenever avcodec_receive_frame succeeds. Because it is possible to have
   // multiple AVFrames from a single AVPacket, this number can be negative.
@@ -415,8 +413,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
   }
 
   bool decoded = false;
-  auto rv = DecodeUsingFFmpeg(&packet, decoded, aSample,
-                              aResults, aGotFrame);
+  auto rv = DecodeUsingFFmpeg(&packet, decoded, aSample, aResults, aGotFrame);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }

@@ -779,14 +779,14 @@ class RemoteAudioDecoder final : public RemoteDataDecoder {
 
       TimeUnit pts = TimeUnit::FromMicroseconds(presentationTimeUs);
 
-      LOG("Decoded: %u frames of %s audio, pts: %s, %d channels, %" PRId32 " Hz",
+      LOG("Decoded: %u frames of %s audio, pts: %s, %d channels, %" PRId32
+          " Hz",
           numSamples / mOutputChannels,
           sampleSize == sizeof(int16_t) ? "int16" : "f32", pts.ToString().get(),
-          mOutputChannels,
-          mOutputSampleRate);
+          mOutputChannels, mOutputSampleRate);
 
-      RefPtr<AudioData> data =
-          new AudioData(0, pts, std::move(converted), mOutputChannels, mOutputSampleRate);
+      RefPtr<AudioData> data = new AudioData(
+          0, pts, std::move(converted), mOutputChannels, mOutputSampleRate);
 
       UpdateOutputStatus(std::move(data));
     } else {
@@ -1084,7 +1084,8 @@ void RemoteDataDecoder::UpdateInputStatus(int64_t aTimestamp, bool aProcessed) {
 void RemoteDataDecoder::UpdateOutputStatus(RefPtr<MediaData>&& aSample) {
   AssertOnThread();
   if (GetState() == State::SHUTDOWN) {
-    LOG("Update output status, but decoder has been shut down, dropping the decoded results");
+    LOG("Update output status, but decoder has been shut down, dropping the "
+        "decoded results");
     return;
   }
   if (IsUsefulData(aSample)) {
