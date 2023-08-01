@@ -4154,7 +4154,7 @@
 
 - name: dom.textMetrics.emHeight.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: dom.textMetrics.fontBoundingBox.enabled
