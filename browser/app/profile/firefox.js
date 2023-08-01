@@ -1276,9 +1276,6 @@ pref("browser.places.speculativeConnect.enabled", true);
 // if true, use full page zoom instead of text zoom
 pref("browser.zoom.full", true);
 
-// Whether or not to save and restore zoom levels on a per-site basis.
-pref("browser.zoom.siteSpecific", true);
-
 // Whether or not to update background tabs to the current zoom level.
 pref("browser.zoom.updateBackgroundTabs", true);
 
