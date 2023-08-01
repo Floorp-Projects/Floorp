@@ -584,6 +584,7 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
   unsigned int count = 0;
   r = nestegg_packet_count(holder->Packet(), &count);
   if (r == -1) {
+    WEBM_DEBUG("nestegg_packet_count: error");
     return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
   }
   int64_t tstamp = holder->Timestamp();
@@ -596,6 +597,7 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
   RefPtr<NesteggPacketHolder> next_holder;
   rv = NextPacket(aType, next_holder);
   if (NS_FAILED(rv) && rv != NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
+    WEBM_DEBUG("NextPacket: error");
     return rv;
   }
 
@@ -637,6 +639,7 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
   }
 
   if (mIsMediaSource && next_tstamp == INT64_MIN) {
+    WEBM_DEBUG("WebM is a media source, and next timestamp computation filed.");
     return NS_ERROR_DOM_MEDIA_END_OF_STREAM;
   }
 
@@ -723,13 +726,13 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
       sample = new MediaRawData(data, length, alphaData, alphaLength);
       if ((length && !sample->Data()) ||
           (alphaLength && !sample->AlphaData())) {
-        // OOM.
+        WEBM_DEBUG("Couldn't allocate MediaRawData: OOM");
         return NS_ERROR_OUT_OF_MEMORY;
       }
     } else {
       sample = new MediaRawData(data, length);
       if (length && !sample->Data()) {
-        // OOM.
+        WEBM_DEBUG("Couldn't allocate MediaRawData: OOM");
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
@@ -873,6 +876,7 @@ nsresult WebMDemuxer::NextPacket(TrackInfo::TrackType aType,
   bool hasType = isVideo ? mHasVideo : mHasAudio;
 
   if (!hasType) {
+    WEBM_DEBUG("No media type found");
     return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
   }
 
@@ -894,6 +898,7 @@ nsresult WebMDemuxer::NextPacket(TrackInfo::TrackType aType,
       return rv;
     }
     if (!holder) {
+      WEBM_DEBUG("Couldn't demux packet");
       return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
     }
 
@@ -910,20 +915,24 @@ nsresult WebMDemuxer::DemuxPacket(TrackInfo::TrackType aType,
   int r = nestegg_read_packet(Context(aType), &packet);
   if (r == 0) {
     nestegg_read_reset(Context(aType));
+    WEBM_DEBUG("EOS");
     return NS_ERROR_DOM_MEDIA_END_OF_STREAM;
   } else if (r < 0) {
+    WEBM_DEBUG("nestegg_read_packet: error");
     return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
   }
 
   unsigned int track = 0;
   r = nestegg_packet_track(packet, &track);
   if (r == -1) {
+    WEBM_DEBUG("nestegg_packet_track: error");
     return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
   }
 
   int64_t offset = Resource(aType).Tell();
   RefPtr<NesteggPacketHolder> holder = new NesteggPacketHolder();
   if (!holder->Init(packet, offset, track, false)) {
+    WEBM_DEBUG("NesteggPacketHolder::Init: error");
     return NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
   }
 
@@ -1163,6 +1172,7 @@ nsresult WebMTrackDemuxer::NextSample(RefPtr<MediaRawData>& aData) {
     aData = mSamples.PopFront();
     return NS_OK;
   }
+  WEBM_DEBUG("WebMTrackDemuxer::NextSample: error");
   return rv;
 }
 
