@@ -1817,6 +1817,12 @@
   value: true
   mirror: always
 
+# Whether or not to save and restore zoom levels on a per-site basis.
+- name: browser.zoom.siteSpecific
+  type: bool
+  value: @IS_NOT_ANDROID@
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "canvas."
 #---------------------------------------------------------------------------
