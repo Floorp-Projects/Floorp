@@ -22,8 +22,8 @@ namespace dom {
 struct FlushedCmdInfo final {
   size_t flushes = 0;
   // Store a number of flushes since last IPC congestion check.
-  // It is reset to Some(0), when current IPC congestion check is done.
-  Maybe<size_t> flushesSinceLastCongestionCheck;
+  // It is reset to 0, when current IPC congestion check is done.
+  size_t flushesSinceLastCongestionCheck = 0;
   // Incremented for each IPC congestion check.
   size_t congestionCheckGeneration = 0;
   size_t flushedCmdBytes = 0;

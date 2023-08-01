@@ -74,47 +74,46 @@ void WebGLChild::FlushPendingCmds() {
   mFlushedCmdInfo.flushes += 1;
   mFlushedCmdInfo.flushedCmdBytes += byteSize;
   mFlushedCmdInfo.overhead += mPendingCmdsAlignmentOverhead;
-  if (mFlushedCmdInfo.flushesSinceLastCongestionCheck.isSome()) {
-    mFlushedCmdInfo.flushesSinceLastCongestionCheck.ref() += 1;
-    const auto startCongestionCheck = 20;
-    const auto maybeIPCMessageCongestion = 70;
-    const auto eventTarget = GetCurrentSerialEventTarget();
-    MOZ_ASSERT(eventTarget);
-    RefPtr<WebGLChild> self = this;
-    size_t generation = self->mFlushedCmdInfo.congestionCheckGeneration;
 
-    // When ClientWebGLContext uses async remote texture, sync GetFrontBuffer
-    // message is not sent in ClientWebGLContext::GetFrontBuffer(). It causes a
-    // case that a lot of async DispatchCommands messages are sent to
-    // WebGLParent without calling ClientWebGLContext::GetFrontBuffer(). The
-    // sending DispatchCommands messages could be faster than receiving message
-    // at WebGLParent by WebGLParent::RecvDispatchCommands(). If it happens,
-    // pending IPC messages could grow too much until out of resource. To detect
-    // the messages congestion, async Ping message is used. If the Ping response
-    // is not received until maybeIPCMessageCongestion, IPC message might be
-    // congested at WebGLParent. Then sending sync SyncPing flushes all pending
-    // messages.
-    // Due to the async nature of the async ping, it is possible for the flush
-    // check to exceed maybeIPCMessageCongestion, but that it it still bounded.
-    if (mFlushedCmdInfo.flushesSinceLastCongestionCheck.ref() ==
-        startCongestionCheck) {
-      SendPing()->Then(eventTarget, __func__, [self, generation]() {
-        if (generation == self->mFlushedCmdInfo.congestionCheckGeneration) {
-          // Confirmed IPC messages congestion does not happen.
-          // Reset flushesSinceLastCongestionCheck for next congestion check.
-          self->mFlushedCmdInfo.flushesSinceLastCongestionCheck = Some(0);
-          self->mFlushedCmdInfo.congestionCheckGeneration++;
-        }
-      });
-    } else if (mFlushedCmdInfo.flushesSinceLastCongestionCheck.ref() >
-               maybeIPCMessageCongestion) {
-      // IPC messages congestion might happen, send sync SyncPing for flushing
-      // pending messages.
-      SendSyncPing();
-      // Reset flushesSinceLastCongestionCheck for next congestion check.
-      mFlushedCmdInfo.flushesSinceLastCongestionCheck = Some(0);
-      mFlushedCmdInfo.congestionCheckGeneration++;
-    }
+  // Handle flushesSinceLastCongestionCheck
+  mFlushedCmdInfo.flushesSinceLastCongestionCheck += 1;
+  const auto startCongestionCheck = 20;
+  const auto maybeIPCMessageCongestion = 70;
+  const auto eventTarget = GetCurrentSerialEventTarget();
+  MOZ_ASSERT(eventTarget);
+  RefPtr<WebGLChild> self = this;
+  size_t generation = self->mFlushedCmdInfo.congestionCheckGeneration;
+
+  // When ClientWebGLContext uses async remote texture, sync GetFrontBuffer
+  // message is not sent in ClientWebGLContext::GetFrontBuffer(). It causes a
+  // case that a lot of async DispatchCommands messages are sent to
+  // WebGLParent without calling ClientWebGLContext::GetFrontBuffer(). The
+  // sending DispatchCommands messages could be faster than receiving message
+  // at WebGLParent by WebGLParent::RecvDispatchCommands(). If it happens,
+  // pending IPC messages could grow too much until out of resource. To detect
+  // the messages congestion, async Ping message is used. If the Ping response
+  // is not received until maybeIPCMessageCongestion, IPC message might be
+  // congested at WebGLParent. Then sending sync SyncPing flushes all pending
+  // messages.
+  // Due to the async nature of the async ping, it is possible for the flush
+  // check to exceed maybeIPCMessageCongestion, but that it it still bounded.
+  if (mFlushedCmdInfo.flushesSinceLastCongestionCheck == startCongestionCheck) {
+    SendPing()->Then(eventTarget, __func__, [self, generation]() {
+      if (generation == self->mFlushedCmdInfo.congestionCheckGeneration) {
+        // Confirmed IPC messages congestion does not happen.
+        // Reset flushesSinceLastCongestionCheck for next congestion check.
+        self->mFlushedCmdInfo.flushesSinceLastCongestionCheck = 0;
+        self->mFlushedCmdInfo.congestionCheckGeneration++;
+      }
+    });
+  } else if (mFlushedCmdInfo.flushesSinceLastCongestionCheck >
+             maybeIPCMessageCongestion) {
+    // IPC messages congestion might happen, send sync SyncPing for flushing
+    // pending messages.
+    SendSyncPing();
+    // Reset flushesSinceLastCongestionCheck for next congestion check.
+    mFlushedCmdInfo.flushesSinceLastCongestionCheck = 0;
+    mFlushedCmdInfo.congestionCheckGeneration++;
   }
 
   if (gl::GLContext::ShouldSpew()) {
