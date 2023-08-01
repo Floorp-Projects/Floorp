@@ -62,7 +62,7 @@ TimeUnit TimeUnit::FromSeconds(double aValue, int64_t aBase) {
                                aBase, aValue)
                    .get());
   }
-  return TimeUnit(static_cast<int64_t>(inBase), aBase);
+  return TimeUnit(static_cast<int64_t>(std::round(inBase)), aBase);
 }
 
 TimeUnit TimeUnit::FromInfinity() { return TimeUnit(INT64_MAX); }

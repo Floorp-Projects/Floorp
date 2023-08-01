@@ -106,7 +106,7 @@ class MP3DemuxerTest : public ::testing::Test {
       // The tolerance comes from the fact that this file has ID3v1 information
       // at the end, this trips our CBR duration calculation. The file has
       // however the correct duration when decoded / demuxed completely.
-      res.mDuration = Some(MP3Resource::Duration{30093062, 0.00015f});
+      res.mDuration = Some(MP3Resource::Duration{30093063, 0.00015f});
       res.mSeekError = 0.02f;
       res.mSampleRate = 44100;
       res.mSamplesPerFrame = 1152;

@@ -64,7 +64,7 @@ TEST(TimeUnit, BasicArithmetic)
     TimeUnit c = TimeUnit(9001, 90000);
     TimeUnit d = (b - c).ToBase(90000);
     EXPECT_EQ(d.mBase, 90000);
-    EXPECT_EQ(d.mTicks.value(), 530998);
+    EXPECT_EQ(d.mTicks.value(), 530999);
   }
 }
 
@@ -278,4 +278,18 @@ TEST(TimeUnit, BaseConversion)
       frameCount += packetSize;
     } while (pts.ToSeconds() < 36000);
   }
+}
+
+TEST(TimeUnit, MinimumRoundingError)
+{
+  TimeUnit a(448, 48000);  // ≈9333 us
+  TimeUnit b(1, 1000000);  // 1 us
+  TimeUnit rv = a - b;     // should close to 9332 us as much as possible
+  EXPECT_EQ(rv.mTicks.value(), 448);  // ≈9333 us is closer to 9332 us
+  EXPECT_EQ(rv.mBase, 48000);
+
+  TimeUnit c(11, 1000000);  // 11 us
+  rv = a - c;               // should close to 9322 as much as possible
+  EXPECT_EQ(rv.mTicks.value(), 447);  // ≈9312 us is closer to 9322 us
+  EXPECT_EQ(rv.mBase, 48000);
 }
