@@ -588,7 +588,7 @@ RefPtr<MediaDataDecoder::InitPromise> FFmpegVideoDecoder<LIBAV_VER>::Init() {
   }
 #endif  // MOZ_WAYLAND_USE_HWDECODE
 
-  rv = InitDecoder();
+  rv = InitDecoder(nullptr);
   if (NS_SUCCEEDED(rv)) {
     return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
   }
