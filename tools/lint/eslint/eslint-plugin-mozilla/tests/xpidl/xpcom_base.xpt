@@ -2959,38 +2959,6 @@
     "flags": [],
     "methods": [
       {
-        "flags": [],
-        "name": "postIdleTask",
-        "params": [
-          {
-            "flags": [
-              "in"
-            ],
-            "type": {
-              "name": "nsIRunnable",
-              "tag": "TD_INTERFACE_TYPE"
-            }
-          },
-          {
-            "flags": [
-              "in"
-            ],
-            "type": {
-              "tag": "TD_UINT32"
-            }
-          }
-        ]
-      }
-    ],
-    "name": "nsIMessageLoop",
-    "parent": "nsISupports",
-    "uuid": "3e8c58e8-e52c-43e0-8e66-669ca788ff5f"
-  },
-  {
-    "consts": [],
-    "flags": [],
-    "methods": [
-      {
         "flags": [
           "hasretval"
         ],
