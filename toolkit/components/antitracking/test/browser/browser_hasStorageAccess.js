@@ -1,5 +1,3 @@
-/* import-globals-from antitracking_head.js */
-
 // This test ensures HasStorageAccess API returns the right value under different
 // scenarios.
 
@@ -7,31 +5,25 @@ var settings = [
   // same-origin no-tracker
   {
     name: "Test whether same-origin non-tracker frame has storage access",
-    topPage: TEST_TOP_PAGE_HTTPS,
-    thirdPartyPage: TEST_DOMAIN_HTTPS + TEST_PATH + "3rdParty.html",
+    topPage: TEST_TOP_PAGE,
+    thirdPartyPage: TEST_DOMAIN + TEST_PATH + "3rdParty.html",
   },
   // 3rd-party no-tracker
   {
     name: "Test whether 3rd-party non-tracker frame has storage access",
-    topPage: TEST_TOP_PAGE_HTTPS,
-    thirdPartyPage: TEST_4TH_PARTY_PAGE_HTTPS,
+    topPage: TEST_TOP_PAGE,
+    thirdPartyPage: TEST_4TH_PARTY_PAGE,
   },
   // 3rd-party no-tracker with permission
   {
     name: "Test whether 3rd-party non-tracker frame has storage access when storage permission is granted before",
-    topPage: TEST_TOP_PAGE_HTTPS,
-    thirdPartyPage: TEST_4TH_PARTY_PAGE_HTTPS,
+    topPage: TEST_TOP_PAGE,
+    thirdPartyPage: TEST_4TH_PARTY_PAGE,
     setup: () => {
-      let type = "3rdPartyStorage^https://not-tracking.example.com";
+      let type = "3rdPartyFrameStorage^http://example.com";
       let permission = Services.perms.ALLOW_ACTION;
       let expireType = Services.perms.EXPIRE_SESSION;
-      PermissionTestUtils.add(
-        TEST_DOMAIN_HTTPS,
-        type,
-        permission,
-        expireType,
-        0
-      );
+      PermissionTestUtils.add(TEST_DOMAIN, type, permission, expireType, 0);
 
       registerCleanupFunction(_ => {
         Services.perms.removeAll();
@@ -41,25 +33,19 @@ var settings = [
   // 3rd-party tracker
   {
     name: "Test whether 3rd-party tracker frame has storage access",
-    topPage: TEST_TOP_PAGE_HTTPS,
+    topPage: TEST_TOP_PAGE,
     thirdPartyPage: TEST_3RD_PARTY_PAGE,
   },
   // 3rd-party tracker with permission
   {
     name: "Test whether 3rd-party tracker frame has storage access when storage access permission is granted before",
-    topPage: TEST_TOP_PAGE_HTTPS,
+    topPage: TEST_TOP_PAGE,
     thirdPartyPage: TEST_3RD_PARTY_PAGE,
     setup: () => {
       let type = "3rdPartyFrameStorage^https://example.org";
       let permission = Services.perms.ALLOW_ACTION;
       let expireType = Services.perms.EXPIRE_SESSION;
-      PermissionTestUtils.add(
-        TEST_DOMAIN_HTTPS,
-        type,
-        permission,
-        expireType,
-        0
-      );
+      PermissionTestUtils.add(TEST_DOMAIN, type, permission, expireType, 0);
 
       registerCleanupFunction(_ => {
         Services.perms.removeAll();
@@ -69,20 +55,14 @@ var settings = [
   // same-site 3rd-party tracker
   {
     name: "Test whether same-site 3rd-party tracker frame has storage access",
-    topPage: TEST_TOP_PAGE_HTTPS,
-    thirdPartyPage: TEST_ANOTHER_3RD_PARTY_PAGE_HTTPS,
+    topPage: TEST_TOP_PAGE,
+    thirdPartyPage: TEST_ANOTHER_3RD_PARTY_PAGE,
   },
   // same-origin 3rd-party tracker
   {
     name: "Test whether same-origin 3rd-party tracker frame has storage access",
-    topPage: TEST_ANOTHER_3RD_PARTY_DOMAIN_HTTPS + TEST_PATH + "page.html",
-    thirdPartyPage: TEST_ANOTHER_3RD_PARTY_PAGE_HTTPS,
-  },
-  // Insecure 3rd-party tracker
-  {
-    name: "Test whether insecure 3rd-party tracker frame has storage access",
-    topPage: TEST_TOP_PAGE + TEST_PATH + "page.html",
-    thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
+    topPage: TEST_ANOTHER_3RD_PARTY_DOMAIN + TEST_PATH + "page.html",
+    thirdPartyPage: TEST_ANOTHER_3RD_PARTY_PAGE,
   },
 ];
 
@@ -97,7 +77,6 @@ var testCases = [
       true /* 3rd-party tracker with permission */,
       true /* same-site tracker */,
       true /* same-origin tracker */,
-      true /* Insecure context */,
     ],
   },
   {
@@ -114,7 +93,6 @@ var testCases = [
       ) /* 3rd-party non-tracker with permission */,
       true /* same-site tracker */,
       true /* same-origin tracker */,
-      false /* Insecure context */,
     ],
   },
   {
@@ -127,7 +105,6 @@ var testCases = [
       false /* 3rd-party tracker with permission */,
       false /* same-site tracker */,
       false /* same-origin tracker */,
-      false /* Insecure context */,
     ],
   },
   {
@@ -140,7 +117,6 @@ var testCases = [
       false /* 3rd-party tracker with permission */,
       true /* same-site tracker */,
       true /* same-origin tracker */,
-      false /* Insecure context */,
     ],
   },
   {
@@ -153,7 +129,6 @@ var testCases = [
       true /* 3rd-party tracker with permission */,
       true /* same-site tracker */,
       true /* same-origin tracker */,
-      false /* Insecure context */,
     ],
   },
   {
@@ -166,7 +141,6 @@ var testCases = [
       true /* 3rd-party tracker with permission */,
       true /* same-site tracker */,
       true /* same-origin tracker */,
-      false /* Insecure context */,
     ],
   },
 ];
@@ -200,8 +174,6 @@ var testCases = [
             "privacy.partition.always_partition_third_party_non_cookie_storage",
             false,
           ],
-          // Testing Storage Access API grants constrained to secure contexts
-          ["dom.storage_access.dont_grant_insecure_contexts", true],
         ],
         expectedBlockingNotifications: 0,
         runInPrivateWindow: false,
