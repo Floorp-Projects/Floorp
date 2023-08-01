@@ -122,6 +122,7 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
                              void* log_ctx);
   int (*av_image_get_buffer_size)(int pix_fmt, int width, int height,
                                   int align);
+  const char* (*av_get_sample_fmt_name)(int sample_fmt);
 
   // libavutil v55 and later only
   AVFrame* (*av_frame_alloc)();

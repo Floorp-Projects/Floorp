@@ -149,7 +149,6 @@ av_get_pix_fmt_name
 av_get_pix_fmt_string
 av_get_planar_sample_fmt
 av_get_sample_fmt
-av_get_sample_fmt_name
 av_get_sample_fmt_string
 av_get_standard_channel_layout
 av_get_time_base_q
@@ -326,5 +325,4 @@ av_hwdevice_ctx_init
 av_hwframe_transfer_get_formats
 av_hwdevice_ctx_create_derived
 av_malloc_array
-
-
+av_get_sample_fmt_name
