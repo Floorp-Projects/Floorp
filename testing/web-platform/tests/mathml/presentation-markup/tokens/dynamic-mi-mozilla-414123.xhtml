@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
 <head>
-  <title>Testcase for bug 414123</title>
+  <title>Testcase for Mozilla bug 414123</title>
+  <link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=414123"/>
+  <link rel="match" href="dynamic-mi-mozilla-414123-ref.xhtml"/>
 <script>
-function boom() {
+function doTest() {
   var t = document.createTextNode('M')
   document.getElementById('mi1').appendChild(t);
 
@@ -16,10 +18,12 @@ function boom() {
   msup.appendChild(mi);
   msup.appendChild(mn);
   document.getElementById('m').appendChild(msup);
+  document.documentElement.removeAttribute("class");
 }
+document.documentElement.addEventListener("TestRendered", doTest);
 </script>
 </head>
-<body onload="boom()">
+<body>
 
 <math xmlns="http://www.w3.org/1998/Math/MathML">
      <msup>
@@ -38,5 +42,4 @@ function boom() {
 <math id="m" xmlns="http://www.w3.org/1998/Math/MathML"></math>
 
 </body>
-</html> 
-
+</html>

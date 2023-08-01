@@ -2,6 +2,7 @@
 <html class="reftest-wait">
   <head>
     <title>Dynamic mathvariant tests</title>
+    <link rel="match" href="mathvariant-5-ref.html"/>
   </head>
   <body>
     <math>
@@ -64,7 +65,7 @@
 
       document.documentElement.removeAttribute("class");
       }
-      window.addEventListener("MozReftestInvalidate", doTest);
+      document.documentElement.addEventListener("TestRendered", doTest);
     </script>
   </body>
 </html>
