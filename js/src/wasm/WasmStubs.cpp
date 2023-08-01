@@ -791,7 +791,7 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
 #endif
 
   masm.moveStackPtrTo(FramePointer);
-  masm.setFramePushed(FakeFrameSize);
+  masm.setFramePushed(0);
 #ifdef JS_CODEGEN_ARM64
   const size_t FakeFramePushed = 0;
 #else
@@ -828,12 +828,13 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   WasmPush(masm, argv);
 
   MOZ_ASSERT(masm.framePushed() ==
-             NumExtraPushed * WasmPushSize + FakeFrameSize + FakeFramePushed);
+             NumExtraPushed * WasmPushSize + FakeFramePushed);
+  uint32_t frameSizeBeforeCall = masm.framePushed();
 
   // Reserve stack space for the wasm call.
-  unsigned argDecrement =
-      StackDecrementForCall(WasmStackAlignment, masm.framePushed(),
-                            StackArgBytesForWasmABI(funcType));
+  unsigned argDecrement = StackDecrementForCall(
+      WasmStackAlignment, masm.framePushed() + FakeFrameSize,
+      StackArgBytesForWasmABI(funcType));
   masm.reserveStack(argDecrement);
 
   // Copy parameters out of argv and into the wasm ABI registers/stack-slots.
@@ -862,10 +863,8 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   masm.bind(&join);
 
   // Pop the arguments pushed after the dynamic alignment.
-  masm.freeStack(argDecrement);
-
-  masm.setFramePushed(NumExtraPushed * WasmPushSize + FakeFrameSize +
-                      FakeFramePushed);
+  masm.setFramePushed(frameSizeBeforeCall);
+  masm.freeStackTo(frameSizeBeforeCall);
 
   // Recover the 'argv' pointer which was saved before aligning the stack.
   WasmPop(masm, argv);
@@ -875,6 +874,7 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   // Pop the stack pointer to its value right before dynamic alignment.
 #ifdef JS_CODEGEN_ARM64
   static_assert(WasmStackAlignment == 16, "ARM64 SP alignment");
+  masm.setFramePushed(FakeFrameSize);
   masm.freeStack(FakeFrameSize);
 #else
   masm.PopStackPtr();
@@ -1307,7 +1307,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
                  &exception);
 
   // Pop arguments.
-  masm.freeStack(frameSizeExclFP);
+  masm.freeStackTo(frameSize - frameSizeExclFP);
 
   GenPrintf(DebugChannel::Function, masm, "wasm-function[%d]; returns ",
             fe.funcIndex());
@@ -1429,6 +1429,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   // Prepare to throw: reload InstanceReg from the frame.
   masm.bind(&exception);
   masm.setFramePushed(frameSize);
+  masm.freeStackTo(frameSize);
   GenerateJitEntryThrow(masm, frameSize);
 
   return FinishOffsets(masm, offsets);
@@ -1457,16 +1458,20 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   *callOffset = masm.buildFakeExitFrame(scratch);
   // FP := ExitFrameLayout*
   masm.moveStackPtrTo(FramePointer);
+  size_t framePushedAtFakeFrame = masm.framePushed();
+  masm.setFramePushed(0);
   masm.loadJSContext(scratch);
   masm.enterFakeExitFrame(scratch, scratch, ExitFrameType::DirectWasmJitCall);
 
   // Move stack arguments to their final locations.
   unsigned bytesNeeded = StackArgBytesForWasmABI(funcType);
-  bytesNeeded = StackDecrementForCall(WasmStackAlignment, masm.framePushed(),
-                                      bytesNeeded);
+  bytesNeeded = StackDecrementForCall(
+      WasmStackAlignment, framePushedAtFakeFrame + masm.framePushed(),
+      bytesNeeded);
   if (bytesNeeded) {
     masm.reserveStack(bytesNeeded);
   }
+  size_t fakeFramePushed = masm.framePushed();
 
   GenPrintf(DebugChannel::Function, masm, "wasm-function[%d]; arguments ",
             fe.funcIndex());
@@ -1535,7 +1540,8 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
         // The address offsets were valid *before* we pushed our frame.
         Address src = stackArg.addr();
         MOZ_ASSERT(src.base == masm.getStackPointer());
-        src.offset += masm.framePushed() - framePushedAtStart;
+        src.offset += int32_t(framePushedAtFakeFrame + fakeFramePushed -
+                              framePushedAtStart);
         switch (iter.mirType()) {
           case MIRType::Double: {
             ScratchDoubleScope fpscratch(masm);
@@ -1600,6 +1606,7 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   // might be clobbered either by WASM or by any C++ calls within.
   masm.initPseudoStackPtr();
 #endif
+  masm.freeStackTo(fakeFramePushed);
   masm.assertStackAlignment(WasmStackAlignment);
 
   masm.branchPtr(Assembler::Equal, InstanceReg, Imm32(wasm::FailInstanceReg),
@@ -1650,6 +1657,7 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
 
   // Restore the frame pointer.
   masm.loadPtr(Address(FramePointer, 0), FramePointer);
+  masm.setFramePushed(fakeFramePushed + framePushedAtFakeFrame);
 
   // Free args + frame descriptor.
   masm.leaveExitFrame(bytesNeeded + ExitFrameLayout::Size());

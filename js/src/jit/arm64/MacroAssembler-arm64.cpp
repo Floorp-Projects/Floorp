@@ -1295,6 +1295,13 @@ void MacroAssembler::Pop(const ValueOperand& val) {
   adjustFrame(-1 * int64_t(sizeof(int64_t)));
 }
 
+void MacroAssembler::freeStackTo(uint32_t framePushed) {
+  MOZ_ASSERT(framePushed <= framePushed_);
+  Sub(GetStackPointer64(), X(FramePointer), Operand(int32_t(framePushed)));
+  syncStackPtr();
+  framePushed_ = framePushed;
+}
+
 // ===============================================================
 // Simple call functions.
 

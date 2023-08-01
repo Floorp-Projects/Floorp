@@ -669,6 +669,12 @@ void MacroAssembler::PopFlags() {
 
 void MacroAssembler::PopStackPtr() { Pop(StackPointer); }
 
+void MacroAssembler::freeStackTo(uint32_t framePushed) {
+  MOZ_ASSERT(framePushed <= framePushed_);
+  lea(Operand(FramePointer, -int32_t(framePushed)), StackPointer);
+  framePushed_ = framePushed;
+}
+
 // ===============================================================
 // Simple call functions.
 

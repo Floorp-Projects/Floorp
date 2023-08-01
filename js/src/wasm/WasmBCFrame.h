@@ -469,17 +469,15 @@ class BaseStackFrameAllocator {
   // consumed by the call.
 
   void freeArgAreaAndPopBytes(size_t argSize, size_t dropSize) {
+    // The method is called to re-initialize SP after the call. Note that
+    // this operation shall not be optimized for argSize + dropSize == 0.
 #ifdef RABALDR_CHUNKY_STACK
     // Freeing the outgoing arguments and freeing the consumed values have
     // different semantics here, which is why the operation is split.
-    if (argSize) {
-      masm.freeStack(argSize);
-    }
+    masm.freeStackTo(masm.framePushed() - argSize);
     popChunkyBytes(dropSize);
 #else
-    if (argSize + dropSize) {
-      masm.freeStack(argSize + dropSize);
-    }
+    masm.freeStackTo(masm.framePushed() - (argSize + dropSize));
 #endif
   }
 };
