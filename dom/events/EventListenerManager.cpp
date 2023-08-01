@@ -1223,10 +1223,27 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   return result;
 }
 
-nsresult EventListenerManager::HandleEventSubType(Listener* aListener,
-                                                  Event* aDOMEvent,
-                                                  EventTarget* aCurrentTarget) {
+bool EventListenerManager::HandleEventSingleListener(
+    Listener* aListener, WidgetEvent* aEvent, Event* aDOMEvent,
+    EventTarget* aCurrentTarget, bool aItemInShadowTree) {
+  if (!aEvent->mCurrentTarget) {
+    aEvent->mCurrentTarget = aCurrentTarget->GetTargetForDOMEvent();
+    if (!aEvent->mCurrentTarget) {
+      return false;
+    }
+  }
+
+  aEvent->mFlags.mInPassiveListener = aListener->mFlags.mPassive;
+
+  nsCOMPtr<nsPIDOMWindowInner> innerWindow =
+      WindowFromListener(aListener, aItemInShadowTree);
+  mozilla::dom::Event* oldWindowEvent = nullptr;
+  if (innerWindow) {
+    oldWindowEvent = innerWindow->SetEvent(aDOMEvent);
+  }
+
   nsresult result = NS_OK;
+
   // strong ref
   EventListenerHolder listenerHolder(aListener->mListener.Clone());
 
@@ -1258,7 +1275,15 @@ nsresult EventListenerManager::HandleEventSubType(Listener* aListener,
     }
   }
 
-  return result;
+  if (innerWindow) {
+    Unused << innerWindow->SetEvent(oldWindowEvent);
+  }
+
+  if (NS_FAILED(result)) {
+    aEvent->mFlags.mExceptionWasRaised = true;
+  }
+  aEvent->mFlags.mInPassiveListener = false;
+  return !aEvent->mFlags.mImmediatePropagationStopped;
 }
 
 /* static */ EventMessage EventListenerManager::GetLegacyEventMessage(
@@ -1341,11 +1366,6 @@ already_AddRefed<nsPIDOMWindowInner> EventListenerManager::WindowFromListener(
   return innerWindow.forget();
 }
 
-/**
- * Causes a check for event listeners and processing by them if they exist.
- * @param an event listener
- */
-
 void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                                                WidgetEvent* aEvent,
                                                Event** aDOMEvent,
@@ -1363,6 +1383,19 @@ void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
     aEvent->PreventDefault();
   }
 
+  auto ensureDOMEvent = [&]() {
+    if (!*aDOMEvent) {
+      // Lazily create the DOM event.
+      // This is tiny bit slow, but happens only once per event.
+      // Similar code also in EventDispatcher.
+      nsCOMPtr<EventTarget> et = aEvent->mOriginalTarget;
+      RefPtr<Event> event =
+          EventDispatcher::CreateEvent(et, aPresContext, aEvent, u""_ns);
+      event.forget(aDOMEvent);
+    }
+    return *aDOMEvent != nullptr;
+  };
+
   Maybe<AutoHandlingUserInputStatePusher> userInputStatePusher;
   Maybe<AutoPopupStatePusher> popupStatePusher;
   if (mIsMainThreadELM) {
@@ -1373,17 +1406,14 @@ void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
   }
 
   bool hasListener = false;
-  bool hasListenerForCurrentGroup = false;
   bool usingLegacyMessage = false;
   bool hasRemovedListener = false;
   EventMessage eventMessage = aEvent->mMessage;
 
-  while (true) {
+  while (!aEvent->mFlags.mImmediatePropagationStopped) {
     Maybe<EventMessageAutoOverride> legacyAutoOverride;
+    bool hasListenerForCurrentGroup = false;
     for (Listener& listenerRef : mListeners.EndLimitedRange()) {
-      if (aEvent->mFlags.mImmediatePropagationStopped) {
-        break;
-      }
       Listener* listener = &listenerRef;
       if (!listener->MatchesEventMessage(aEvent, eventMessage)) {
         continue;
@@ -1408,31 +1438,7 @@ void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
           !listener->AllowsEventTrustedness(aEvent)) {
         continue;
       }
-      if (!*aDOMEvent) {
-        // Lazily create the DOM event.
-        // This is tiny bit slow, but happens only once per event.
-        // Similar code also in EventDispatcher.
-        nsCOMPtr<EventTarget> et = aEvent->mOriginalTarget;
-        RefPtr<Event> event =
-            EventDispatcher::CreateEvent(et, aPresContext, aEvent, u""_ns);
-        event.forget(aDOMEvent);
-      }
-      if (!*aDOMEvent) {
-        continue;
-      }
-      if (!aEvent->mCurrentTarget) {
-        aEvent->mCurrentTarget = aCurrentTarget->GetTargetForDOMEvent();
-        if (!aEvent->mCurrentTarget) {
-          break;
-        }
-      }
-      if (usingLegacyMessage && !legacyAutoOverride) {
-        // Override the aDOMEvent's event-message (its .type) until we
-        // finish traversing listeners (when legacyAutoOverride destructs)
-        legacyAutoOverride.emplace(*aDOMEvent, eventMessage);
-      }
 
-      aEvent->mFlags.mInPassiveListener = listener->mFlags.mPassive;
       Maybe<Listener> listenerHolder;
       if (listener->mFlags.mOnce) {
         // Move the listener to the stack before handling the event.
@@ -1442,24 +1448,18 @@ void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
         listener = listenerHolder.ptr();
         hasRemovedListener = true;
       }
-
-      nsCOMPtr<nsPIDOMWindowInner> innerWindow =
-          WindowFromListener(listener, aItemInShadowTree);
-      mozilla::dom::Event* oldWindowEvent = nullptr;
-      if (innerWindow) {
-        oldWindowEvent = innerWindow->SetEvent(*aDOMEvent);
+      if (ensureDOMEvent()) {
+        if (usingLegacyMessage && !legacyAutoOverride) {
+          // Override the domEvent's event-message (its .type) until we
+          // finish traversing listeners (when legacyAutoOverride
+          // destructs)
+          legacyAutoOverride.emplace(*aDOMEvent, eventMessage);
+        }
+        if (!HandleEventSingleListener(listener, aEvent, *aDOMEvent,
+                                       aCurrentTarget, aItemInShadowTree)) {
+          break;
+        }
       }
-
-      nsresult rv = HandleEventSubType(listener, *aDOMEvent, aCurrentTarget);
-
-      if (innerWindow) {
-        Unused << innerWindow->SetEvent(oldWindowEvent);
-      }
-
-      if (NS_FAILED(rv)) {
-        aEvent->mFlags.mExceptionWasRaised = true;
-      }
-      aEvent->mFlags.mInPassiveListener = false;
     }
 
     // If we didn't find any matching listeners, and our event has a legacy
