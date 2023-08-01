@@ -248,15 +248,17 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
   nsCString GetCodecName() const override {
     if (mMediaInfoFlag & MediaInfoFlag::VIDEO_H264) {
       return "h264"_ns;
-    } else if (mMediaInfoFlag & MediaInfoFlag::VIDEO_VP8) {
-      return "vp8"_ns;
-    } else if (mMediaInfoFlag & MediaInfoFlag::VIDEO_VP9) {
-      return "vp9"_ns;
-    } else if (mMediaInfoFlag & MediaInfoFlag::VIDEO_AV1) {
-      return "av1"_ns;
-    } else {
-      return "unknown"_ns;
     }
+    if (mMediaInfoFlag & MediaInfoFlag::VIDEO_VP8) {
+      return "vp8"_ns;
+    }
+    if (mMediaInfoFlag & MediaInfoFlag::VIDEO_VP9) {
+      return "vp9"_ns;
+    }
+    if (mMediaInfoFlag & MediaInfoFlag::VIDEO_AV1) {
+      return "av1"_ns;
+    }
+    return "unknown"_ns;
   }
 
   RefPtr<MediaDataDecoder::DecodePromise> Decode(
