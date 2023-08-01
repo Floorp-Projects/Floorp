@@ -10107,6 +10107,15 @@
 #endif
     mirror: always
 
+-   name: media.ffvpx.opus.enabled
+    type: RelaxedAtomicBool
+#ifdef MOZ_FFVPX
+    value: true
+#else
+    value: false
+#endif
+    mirror: always
+
 -   name: media.ffvpx.wav.enabled
     type: RelaxedAtomicBool
 #ifdef MOZ_FFVPX

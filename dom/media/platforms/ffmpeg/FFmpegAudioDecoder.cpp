@@ -65,7 +65,7 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
     }
   }
 
-  // Vorbis is handled by this case.
+  // Vorbis and Opus are handled by this case.
   RefPtr<MediaByteBuffer> audioCodecSpecificBinaryBlob =
       GetAudioCodecSpecificBlob(aInfo.mCodecSpecificConfig);
   if (audioCodecSpecificBinaryBlob && audioCodecSpecificBinaryBlob->Length()) {
@@ -457,6 +457,14 @@ AVCodecID FFmpegAudioDecoder<LIBAV_VER>::GetCodecId(const nsACString& aMimeType,
 #endif
     return AV_CODEC_ID_VORBIS;
   }
+#ifdef FFVPX_VERSION
+  if (aMimeType.EqualsLiteral("audio/opus")) {
+    if (!StaticPrefs::media_ffvpx_opus_enabled()) {
+      return AV_CODEC_ID_NONE;
+    }
+    return AV_CODEC_ID_OPUS;
+  }
+#endif
 #ifdef FFVPX_VERSION
   if (aMimeType.Find("wav") != kNotFound) {
     if (!StaticPrefs::media_ffvpx_wav_enabled()) {
