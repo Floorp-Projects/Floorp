@@ -500,7 +500,7 @@ floorp-workspace-settings-button = Workspace Settings...
 
 change-to-close-workspace-popup-option = 
  .label = Close workspaces popup when selecting a Workspace
-pinned-tabs-exclude--option = 
+pinned-tabs-exclude-workspace-option = 
  .label = Exclude pinned tabs from Workspaces
 
 workspaces-reset-title = Reset Workspaces
