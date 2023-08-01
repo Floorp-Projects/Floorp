@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# mozprocess is typically used as an alternative to the python subprocess module.
-# It has been used in many Mozilla test harnesses with some success -- but also
-# with on-going concerns, especially regarding reliability and exception handling.
+# The mozprocess ProcessHandler and ProcessHandlerMixin are typically used as
+# an alternative to the python subprocess module. They have been used in many
+# Mozilla test harnesses with some success -- but also with on-going concerns,
+# especially regarding reliability and exception handling.
 #
 # New code should try to use the standard subprocess module, and only use
-# mozprocess if absolutely necessary.
+# this ProcessHandler if absolutely necessary.
 
 import codecs
 import errno
@@ -28,13 +29,6 @@ if six.PY2:
 else:
     from queue import Empty, Queue  # Python 3
 
-__all__ = [
-    "ProcessHandlerMixin",
-    "ProcessHandler",
-    "LogOutput",
-    "StoreOutput",
-    "StreamOutput",
-]
 
 # Set the MOZPROCESS_DEBUG environment variable to 1 to see some debugging output
 MOZPROCESS_DEBUG = os.getenv("MOZPROCESS_DEBUG")
