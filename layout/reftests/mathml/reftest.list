@@ -1,4 +1,3 @@
-pref(mathml.legacy_mathvariant_attribute.disabled,false) == 414123.xhtml 414123-ref.xhtml
 == dir-1.html dir-1-ref.html
 == dir-2.html dir-2-ref.html
 random-if(gtkWidget) == dir-3.html dir-3-ref.html # bug 1309426
@@ -11,9 +10,6 @@ random-if(smallScreen&&Android) fuzzy(0-255,0-200) fuzzy-if(geckoview,201-216,20
 != mirror-op-4.html mirror-op-4-ref.html
 == mphantom-1.html mphantom-1-ref.html
 == mphantom-2.html mphantom-2-ref.html
-pref(mathml.legacy_mathvariant_attribute.disabled,false) == mi-mathvariant-1.xhtml mi-mathvariant-1-ref.xhtml
-pref(mathml.legacy_mathvariant_attribute.disabled,false) == mi-mathvariant-2.xhtml mi-mathvariant-2-ref.xhtml
-!= mi-mathvariant-3.html mi-mathvariant-3-ref.html
 != non-spacing-accent-1.xhtml non-spacing-accent-1-ref.xhtml
 == overbar-width-1.xhtml overbar-width-1-ref.xhtml
 != stretchy-underbar-1.xhtml stretchy-underbar-1-ref.xhtml
@@ -92,9 +88,9 @@ fails-if(OSX>=1010) == scale-stretchy-3.xhtml scale-stretchy-3-ref.xhtml
 == mpadded-5.html mpadded-5-ref.html
 == mpadded-1-2.html mpadded-1-2-ref.html
 == mpadded-6.html mpadded-6-ref.html
-pref(mathml.legacy_mathvariant_attribute.disabled,false) random-if(gtkWidget) fails-if(geckoview&&device) == mpadded-7.html mpadded-7-ref.html # bug 1309430
-pref(mathml.legacy_mathvariant_attribute.disabled,false) random-if(gtkWidget) == mpadded-8.html mpadded-8-ref.html # bug 1309430
-pref(mathml.legacy_mathvariant_attribute.disabled,false) random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
+random-if(gtkWidget) fails-if(geckoview&&device) == mpadded-7.html mpadded-7-ref.html # bug 1309430
+random-if(gtkWidget) == mpadded-8.html mpadded-8-ref.html # bug 1309430
+random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
 == scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1-ref.html
 == munderover-align-accent-false.html munderover-align-accent-false-ref.html
 == munderover-align-accent-true.html munderover-align-accent-true-ref.html
@@ -195,13 +191,6 @@ fuzzy-if(d2d,0-7,0-1) == menclose-6-updiagonalstrike.html menclose-6-ref.html
 == menclose-6-phasorangle.html menclose-6-ref.html
 == mmultiscript-align.html mmultiscript-align-ref.html
 fails-if(winWidget) fuzzy-if(gtkWidget,255-255,776226-776226) == subscript-italic-correction.html subscript-italic-correction-ref.html # bug 961482 (Windows), bug 1599640 (Linux)
-pref(mathml.legacy_mathvariant_attribute.disabled,false) fails-if(Android&&emulator) == mathvariant-1a.html mathvariant-1a-ref.html # Bug 1010679, Bug 1392106
-pref(mathml.legacy_mathvariant_attribute.disabled,false) fails-if(Android&&emulator) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679, Bug 1392106
-pref(mathml.legacy_mathvariant_attribute.disabled,false) fails-if(Android&&emulator) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679, Bug 1392106
-pref(mathml.legacy_mathvariant_attribute.disabled,false) == mathvariant-1d.html mathvariant-1d-ref.html
-pref(mathml.legacy_mathvariant_attribute.disabled,false) fails-if(Android&&emulator) == mathvariant-2.html mathvariant-2-ref.html # Bug 1010679
-pref(mathml.legacy_mathvariant_attribute.disabled,false) == mathvariant-4.html mathvariant-4-ref.html
-pref(mathml.legacy_mathvariant_attribute.disabled,false) == mathvariant-5.html mathvariant-5-ref.html
 == dtls-1.html dtls-1-ref.html
 == dtls-2.html dtls-2-ref.html
 pref(mathml.legacy_mathvariant_attribute.disabled,false) == dtls-3.html dtls-3-ref.html
@@ -237,7 +226,7 @@ random-if(gtkWidget) == rowlines-3-2.html rowlines-3-2-ref.html # bug 1309426
 == mfrac-C-2.html mfrac-C-2-ref.html
 == mfrac-D-2.html mfrac-D-2-ref.html
 == mfrac-E-1.html mfrac-E-1-ref.html
-pref(mathml.legacy_mathvariant_attribute.disabled,false) pref(ui.useOverlayScrollbars,1) pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,25) fuzzy-if(!gtkWidget,0-255,0-324) fuzzy-if(gtkWidget,0-255,0-66) == font-inflation-1.html font-inflation-1-ref.html # gtkWidget due to Bug 1607294
+pref(ui.useOverlayScrollbars,1) pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,25) fuzzy-if(!gtkWidget,0-255,0-324) fuzzy-if(gtkWidget,0-255,0-66) == font-inflation-1.html font-inflation-1-ref.html # gtkWidget due to Bug 1607294
 test-pref(font.minimum-size.x-math,40) == default-font.html default-font-ref.html
 != radicalbar-1.html about:blank
 != radicalbar-1a.html about:blank
