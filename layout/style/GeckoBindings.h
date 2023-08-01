@@ -509,6 +509,7 @@ struct GeckoFontMetrics {
   mozilla::Length mCapHeight;  // negatives indicate not found.
   mozilla::Length mIcWidth;    // negatives indicate not found.
   mozilla::Length mAscent;
+  mozilla::Length mComputedEmSize;
   float mScriptPercentScaleDown;        // zero is invalid or means not found.
   float mScriptScriptPercentScaleDown;  // zero is invalid or means not found.
 };
