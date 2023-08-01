@@ -84,7 +84,6 @@ int BaseCheckReservedLock(sqlite3_file* pFile, int* pResOut) {
 }
 
 int BaseFileControl(sqlite3_file* pFile, int op, void* pArg) {
-#ifdef EARLY_BETA_OR_EARLIER
   // Persist auxiliary files (-shm and -wal) on disk, because creating and
   // deleting them may be expensive on slow storage.
   // Only do this when there is a journal size limit, so the journal is
@@ -97,7 +96,6 @@ int BaseFileControl(sqlite3_file* pFile, int op, void* pArg) {
     *static_cast<int*>(pArg) = 1;
     return SQLITE_OK;
   }
-#endif
   BaseFile* p = (BaseFile*)pFile;
   return p->pReal->pMethods->xFileControl(p->pReal, op, pArg);
 }
