@@ -203,8 +203,6 @@ class nsNavHistory final : public nsSupportsWeakReference,
                             const nsACString& aURI, const nsACString& aTitle,
                             uint32_t aAccessCount, PRTime aTime,
                             nsNavHistoryResultNode** aNode);
-  nsresult URIToResultNode(nsIURI* aURI, nsNavHistoryQueryOptions* aOptions,
-                           nsNavHistoryResultNode** aResult);
 
   /**
    * Returns current number of days stored in history.
