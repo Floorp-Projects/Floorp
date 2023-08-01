@@ -338,17 +338,10 @@ nsresult OpusTrackEncoder::Encode(AudioSegment* aSegment) {
       // really predict the output frame count at each call.
       resamplingDest.SetLength(outframes * mChannels);
 
-#if MOZ_SAMPLE_TYPE_S16
-      short* in = reinterpret_cast<short*>(pcm.Elements());
-      short* out = reinterpret_cast<short*>(resamplingDest.Elements());
-      speex_resampler_process_interleaved_int(mResampler, in, &inframes, out,
-                                              &outframes);
-#else
       float* in = reinterpret_cast<float*>(pcm.Elements());
       float* out = reinterpret_cast<float*>(resamplingDest.Elements());
       speex_resampler_process_interleaved_float(mResampler, in, &inframes, out,
                                                 &outframes);
-#endif
 
       MOZ_ASSERT(pcm.Length() >= mResampledLeftover.Length());
       PodCopy(pcm.Elements(), mResampledLeftover.Elements(),
@@ -406,15 +399,9 @@ nsresult OpusTrackEncoder::Encode(AudioSegment* aSegment) {
     frameData->SetLength(MAX_DATA_BYTES);
     // result is returned as opus error code if it is negative.
     result = 0;
-#ifdef MOZ_SAMPLE_TYPE_S16
-    const opus_int16* pcmBuf = static_cast<opus_int16*>(pcm.Elements());
-    result = opus_encode(mEncoder, pcmBuf, NumOutputFramesPerPacket(),
-                         frameData->Elements(), MAX_DATA_BYTES);
-#else
     const float* pcmBuf = static_cast<float*>(pcm.Elements());
     result = opus_encode_float(mEncoder, pcmBuf, NumOutputFramesPerPacket(),
                                frameData->Elements(), MAX_DATA_BYTES);
-#endif
     frameData->SetLength(result >= 0 ? result : 0);
 
     if (result < 0) {
