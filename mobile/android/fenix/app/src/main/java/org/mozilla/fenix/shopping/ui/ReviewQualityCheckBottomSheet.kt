@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.shopping.ui
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -67,26 +68,31 @@ private fun ProductReview(
     onOptOutClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
 ) {
-    when (val productReviewState = state.productReviewState) {
-        is AnalysisPresent -> {
-            ProductAnalysis(
-                productRecommendationsEnabled = state.productRecommendationsPreference,
-                productAnalysis = productReviewState,
-                onOptOutClick = onOptOutClick,
-                onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
-            )
-        }
+    Crossfade(
+        targetState = state.productReviewState,
+        label = "ProductReview-Crossfade",
+    ) { productReviewState ->
+        when (productReviewState) {
+            is AnalysisPresent -> {
+                ProductAnalysis(
+                    productRecommendationsEnabled = state.productRecommendationsPreference,
+                    productAnalysis = productReviewState,
+                    onOptOutClick = onOptOutClick,
+                    onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
+                )
+            }
 
-        is ReviewQualityCheckState.OptedIn.ProductReviewState.Error -> {
-            // Bug 1840113
-        }
+            is ReviewQualityCheckState.OptedIn.ProductReviewState.Error -> {
+                // Bug 1840113
+            }
 
-        is ReviewQualityCheckState.OptedIn.ProductReviewState.Loading -> {
-            // Bug 1845255
-        }
+            is ReviewQualityCheckState.OptedIn.ProductReviewState.Loading -> {
+                ProductReviewLoading()
+            }
 
-        is ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent -> {
-            // Bug 1840333
+            is ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent -> {
+                // Bug 1840333
+            }
         }
     }
 }

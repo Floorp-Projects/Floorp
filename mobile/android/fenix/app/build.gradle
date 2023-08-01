@@ -588,6 +588,7 @@ dependencies {
     implementation ComponentsDependencies.androidx_annotation
     implementation ComponentsDependencies.androidx_compose_ui
     implementation ComponentsDependencies.androidx_compose_ui_tooling_preview
+    implementation ComponentsDependencies.androidx_compose_animation
     implementation ComponentsDependencies.androidx_compose_foundation
     implementation ComponentsDependencies.androidx_compose_material
     implementation FenixDependencies.androidx_legacy
