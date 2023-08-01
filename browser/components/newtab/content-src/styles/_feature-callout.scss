@@ -183,8 +183,8 @@
         border: none;
         padding: 0;
         color: var(--fc-link-color);
-        float: inline-start;
-        margin-inline: 30px 10px;
+        order: -1;
+        margin-inline-end: auto;
         margin-block: 8px;
 
         &:hover {
