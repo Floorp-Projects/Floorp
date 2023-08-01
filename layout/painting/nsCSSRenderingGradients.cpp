@@ -552,7 +552,7 @@ static StyleAbsoluteColor GetSpecifiedColor(
     const StyleGenericGradientItem<StyleColor, T>& aItem,
     const ComputedStyle& aStyle) {
   if (aItem.IsInterpolationHint()) {
-    return StyleAbsoluteColor::Transparent();
+    return StyleAbsoluteColor::TRANSPARENT;
   }
   const StyleColor& c = aItem.IsSimpleColorStop()
                             ? aItem.AsSimpleColorStop()
@@ -1084,7 +1084,7 @@ void nsCSSGradientRenderer::Paint(gfxContext& aContext, const nsRect& aDest,
 
       gfxRect dirtyFillRect = fillRect.Intersect(dirtyAreaToFill);
       gfxRect fillRectRelativeToTile = dirtyFillRect - tileRect.TopLeft();
-      auto edgeColor = StyleAbsoluteColor::Transparent();
+      auto edgeColor = StyleAbsoluteColor::TRANSPARENT;
       if (mGradient->IsLinear() && !isRepeat &&
           RectIsBeyondLinearGradientEdge(fillRectRelativeToTile, matrix, mStops,
                                          gradientStart, gradientEnd,
