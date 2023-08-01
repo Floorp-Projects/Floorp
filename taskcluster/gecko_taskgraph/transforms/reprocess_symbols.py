@@ -10,9 +10,13 @@ taskcluster/ci/reprocess-symbols/job-template.yml into an actual task descriptio
 import logging
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.dependencies import get_dependencies, get_primary_dependency
 from taskgraph.util.treeherder import inherit_treeherder_from_dep, join_symbol
 
-from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
+from gecko_taskgraph.util.attributes import (
+    copy_attributes_from_dependent_job,
+    sorted_unique_list,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -20,22 +24,25 @@ transforms = TransformSequence()
 
 
 @transforms.add
+def gather_required_signoffs(config, jobs):
+    for job in jobs:
+        job.setdefault("attributes", {})["required_signoffs"] = sorted_unique_list(
+            *(
+                dep.attributes.get("required_signoffs", [])
+                for dep in get_dependencies(config, job)
+            )
+        )
+        yield job
+
+
+@transforms.add
 def fill_template(config, tasks):
     for task in tasks:
-        assert len(task["dependent-tasks"]) == 2
-
-        build_dep = task["primary-dependency"]
-        upload_dep = None
-        for dep_idx in task["dependent-tasks"]:
-            dep = task["dependent-tasks"][dep_idx]
-            if dep_idx != build_dep:
-                upload_dep = dep
-
-        task.pop("dependent-tasks", None)
+        dep = get_primary_dependency(config, task)
+        assert dep
 
         # Fill out the dynamic fields in the task description
-        task["label"] = build_dep.label + "-reprocess-symbols"
-        task["dependencies"] = {"build": build_dep.label, "upload": upload_dep.label}
+        task["label"] = dep.label + "-reprocess-symbols"
         task["worker"]["env"]["GECKO_HEAD_REPOSITORY"] = config.params[
             "head_repository"
         ]
@@ -44,12 +51,12 @@ def fill_template(config, tasks):
             "CRASHSTATS_SECRET"
         ].format(level=config.params["level"])
 
-        attributes = copy_attributes_from_dependent_job(build_dep)
+        attributes = copy_attributes_from_dependent_job(dep)
         attributes.update(task.get("attributes", {}))
         task["attributes"] = attributes
 
-        treeherder = inherit_treeherder_from_dep(task, build_dep)
-        th = build_dep.task.get("extra")["treeherder"]
+        treeherder = inherit_treeherder_from_dep(task, dep)
+        th = dep.task["extra"]["treeherder"]
         th_symbol = th.get("symbol")
         th_groupsymbol = th.get("groupSymbol", "?")
 
@@ -58,10 +65,8 @@ def fill_template(config, tasks):
         treeherder.setdefault("symbol", join_symbol(th_groupsymbol, sym))
         task["treeherder"] = treeherder
 
-        task["run-on-projects"] = build_dep.attributes.get("run_on_projects")
+        task["run-on-projects"] = dep.attributes.get("run_on_projects")
         task["optimization"] = {"reprocess-symbols": None}
-        task["if-dependencies"] = ["build"]
-
-        del task["primary-dependency"]
+        task["if-dependencies"] = [task["attributes"]["primary-kind-dependency"]]
 
         yield task
