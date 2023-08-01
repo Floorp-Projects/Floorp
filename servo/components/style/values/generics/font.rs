@@ -213,36 +213,11 @@ pub enum FontStyle<Angle> {
     Oblique(Angle),
 }
 
-/// A generic value that holds either a generic Number or the keyword
-/// `from-font`; used for values of font-size-adjust.
-#[repr(u8)]
-#[derive(
-    Animate,
-    Clone,
-    ComputeSquaredDistance,
-    Copy,
-    Debug,
-    MallocSizeOf,
-    Parse,
-    PartialEq,
-    SpecifiedValueInfo,
-    ToAnimatedValue,
-    ToAnimatedZero,
-    ToComputedValue,
-    ToResolvedValue,
-    ToCss,
-    ToShmem,
-)]
-pub enum GenericNumberOrFromFont<N> {
-    /// An explicitly-specified number.
-    Number(N),
-    /// The from-font keyword: resolve the number from font metrics.
-    FromFont,
-}
-
 /// A generic value for the `font-size-adjust` property.
 ///
-/// https://drafts.csswg.org/css-fonts-5/#font-size-adjust-prop
+/// https://www.w3.org/TR/css-fonts-4/#font-size-adjust-prop
+/// https://github.com/w3c/csswg-drafts/issues/6160
+/// https://github.com/w3c/csswg-drafts/issues/6288
 #[allow(missing_docs)]
 #[repr(u8)]
 #[derive(
@@ -261,22 +236,22 @@ pub enum GenericNumberOrFromFont<N> {
     ToResolvedValue,
     ToShmem,
 )]
-pub enum GenericFontSizeAdjust<Factor> {
+pub enum GenericFontSizeAdjust<Number> {
     #[animation(error)]
     None,
     // 'ex-height' is the implied basis, so the keyword can be omitted
-    ExHeight(Factor),
+    ExHeight(Number),
     #[value_info(starts_with_keyword)]
-    CapHeight(Factor),
+    CapHeight(Number),
     #[value_info(starts_with_keyword)]
-    ChWidth(Factor),
+    ChWidth(Number),
     #[value_info(starts_with_keyword)]
-    IcWidth(Factor),
+    IcWidth(Number),
     #[value_info(starts_with_keyword)]
-    IcHeight(Factor),
+    IcHeight(Number),
 }
 
-impl<Factor: ToCss> ToCss for GenericFontSizeAdjust<Factor> {
+impl<Number: ToCss> ToCss for GenericFontSizeAdjust<Number> {
     fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
     where
         W: Write,

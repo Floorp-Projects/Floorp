@@ -8450,6 +8450,13 @@
   mirror: always
   rust: true
 
+# Is the optional adjustment-basis value for font-size-adjust enabled?
+- name: layout.css.font-size-adjust.basis.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+  rust: true
+
 # Is support for the tech() function in the @font-face src descriptor enabled?
 - name: layout.css.font-tech.enabled
   type: RelaxedAtomicBool
