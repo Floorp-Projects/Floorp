@@ -63,3 +63,69 @@ body {
   gap: 16px;
   padding: 0 16px 16px;
 }
+
+.loading-box {
+  box-shadow: none;
+  border: none;
+  background: var(--in-content-button-background);
+  margin-block: 1rem;
+}
+
+.loading-box.small {
+  height: 2.67rem;
+}
+
+.loading-box.medium {
+  height: 5.34rem;
+}
+
+.loading-box.large {
+  height: 12.8rem;
+}
+
+.loading-box:nth-child(odd) {
+  background-color: var(--in-content-button-background);
+}
+
+.loading-box:nth-child(even) {
+  background-color: var(--in-content-button-background-hover);
+}
+
+@media not (prefers-reduced-motion) {
+  .loading-box {
+    animation-name: fade-in;
+    animation-direction: alternate;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+  }
+
+  /* First box + every 4th box, fifth box + every 4th box */
+  .loading-box:nth-child(4n-3) {
+    animation-delay: -1s;
+  }
+
+  /* Second box + every 4th box, sixth box + every 4th box */
+  .loading-box:nth-child(4n-2) {
+    animation-delay: 0s;
+  }
+
+  /* Third box + every 4th box */
+  .loading-box:nth-child(4n-1) {
+    animation-delay: -1.5s;
+  }
+
+  /* Fourth box + every 4th box */
+  .loading-box:nth-child(4n) {
+    animation-delay: -0.5s;
+  }
+
+  @keyframes fade-in {
+   from {
+     opacity: .25;
+   }
+   to {
+     opacity: 1;
+   }
+ }
+}
