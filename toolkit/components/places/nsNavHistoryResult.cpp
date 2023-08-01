@@ -271,41 +271,6 @@ bool evaluateQueryForNode(const RefPtr<nsNavHistoryQuery>& aQuery,
   return true;
 }
 
-inline bool caseInsensitiveFind(const nsACString& aSearchTerms,
-                                const nsACString& aTarget) {
-  nsACString::const_iterator start, end;
-  aTarget.BeginReading(start);
-  aTarget.EndReading(end);
-  return CaseInsensitiveFindInReadable(aSearchTerms, start, end);
-}
-
-bool isQuerySearchTermsMatching(const RefPtr<nsNavHistoryQuery>& aQuery,
-                                const nsACString& aURI,
-                                const nsACString& aTitle,
-                                const nsAString& aTags) {
-  nsAutoCString searchTerms = NS_ConvertUTF16toUTF8(aQuery->SearchTerms());
-  if ((!aTitle.IsEmpty() && caseInsensitiveFind(searchTerms, aTitle)) ||
-      (!aURI.IsEmpty() && caseInsensitiveFind(searchTerms, aURI))) {
-    return true;
-  }
-
-  if (aTags.IsEmpty()) {
-    return false;
-  }
-  for (const nsACString& tag : NS_ConvertUTF16toUTF8(aTags).Split(',')) {
-    if (caseInsensitiveFind(searchTerms, tag)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool isQuerySearchTermsMatching(const RefPtr<nsNavHistoryQuery>& aQuery,
-                                const RefPtr<nsNavHistoryResultNode>& aNode) {
-  return isQuerySearchTermsMatching(aQuery, aNode->mURI, aNode->mTitle,
-                                    aNode->mTags);
-}
-
 // Emulate string comparison (used for sorting) for PRTime and int.
 inline int32_t ComparePRTime(PRTime a, PRTime b) {
   if (a < b)
@@ -2312,14 +2277,18 @@ nsresult nsNavHistoryQueryResultNode::OnTitleChanged(
     nsresult rv = aURI->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
     RecursiveFindURIs(onlyOneEntry, this, spec, &matches);
-
     if (matches.Count() == 0) {
-      // If we didn't find any matching URI, and the query is filters by search
-      // terms, maybe the new title will match and then we want to Refresh()
-      // contents. Otherwise this will continue being an empty query.
-      return isQuerySearchTermsMatching(mQuery, mURI, newTitle, mTags)
-                 ? Refresh()
-                 : NS_OK;
+      // This could be a new node matching the query, thus we could need
+      // to add it to the result.
+      RefPtr<nsNavHistoryResultNode> node;
+      nsNavHistory* history = nsNavHistory::GetHistoryService();
+      NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+      rv = history->URIToResultNode(aURI, mOptions, getter_AddRefs(node));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (evaluateQueryForNode(mQuery, mOptions, node)) {
+        rv = InsertSortedChild(node);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
     for (int32_t i = 0; i < matches.Count(); ++i) {
       // For each matched node we check if it passes the query filter, if not
@@ -2331,7 +2300,7 @@ nsresult nsNavHistoryQueryResultNode::OnTitleChanged(
 
       nsNavHistory* history = nsNavHistory::GetHistoryService();
       NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-      if (!isQuerySearchTermsMatching(mQuery, node)) {
+      if (!evaluateQueryForNode(mQuery, mOptions, node)) {
         nsNavHistoryContainerResultNode* parent = node->mParent;
         // URI nodes should always have parents
         NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
@@ -2450,11 +2419,22 @@ nsresult nsNavHistoryQueryResultNode::NotifyIfTagsChanged(nsIURI* aURI) {
   bool onlyOneEntry =
       mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI;
 
+  // Find matching URI nodes.
+  RefPtr<nsNavHistoryResultNode> node;
+  nsNavHistory* history = nsNavHistory::GetHistoryService();
+
   nsCOMArray<nsNavHistoryResultNode> matches;
   RecursiveFindURIs(onlyOneEntry, this, spec, &matches);
 
   if (matches.Count() == 0 && mHasSearchTerms) {
-    return isQuerySearchTermsMatching(mQuery, this) ? Refresh() : NS_OK;
+    // A new tag has been added, it's possible it matches our query.
+    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+    rv = history->URIToResultNode(aURI, mOptions, getter_AddRefs(node));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (evaluateQueryForNode(mQuery, mOptions, node)) {
+      rv = InsertSortedChild(node);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   for (int32_t i = 0; i < matches.Count(); ++i) {
@@ -2466,7 +2446,7 @@ nsresult nsNavHistoryQueryResultNode::NotifyIfTagsChanged(nsIURI* aURI) {
     NS_ENSURE_SUCCESS(rv, rv);
     // It's possible now this node does not respect anymore the conditions.
     // In such a case it should be removed.
-    if (mHasSearchTerms && !isQuerySearchTermsMatching(mQuery, node)) {
+    if (mHasSearchTerms && !evaluateQueryForNode(mQuery, mOptions, node)) {
       nsNavHistoryContainerResultNode* parent = node->mParent;
       // URI nodes should always have parents
       NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
