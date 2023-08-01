@@ -235,6 +235,7 @@ already_AddRefed<MediaTrackDemuxer> WebMDemuxer::GetTrackDemuxer(
 }
 
 void WebMDemuxer::Reset(TrackInfo::TrackType aType) {
+  mProcessedDiscardPadding = false;
   if (aType == TrackInfo::kVideoTrack) {
     mVideoPackets.Reset();
   } else {
@@ -416,11 +417,12 @@ nsresult WebMDemuxer::ReadMetadata() {
         uint64_t codecDelayUs = params.codec_delay / 1000;
         mInfo.mAudio.mMimeType = "audio/opus";
         OpusCodecSpecificData opusCodecSpecificData;
-        opusCodecSpecificData.mContainerCodecDelayMicroSeconds =
-            AssertedCast<int64_t>(codecDelayUs);
+        opusCodecSpecificData.mContainerCodecDelayFrames =
+            AssertedCast<int64_t>(USECS_PER_S * codecDelayUs / 48000);
         mInfo.mAudio.mCodecSpecificConfig =
             AudioCodecSpecificVariant{std::move(opusCodecSpecificData)};
-        WEBM_DEBUG("Preroll for Opus: %" PRIu64, codecDelayUs);
+        WEBM_DEBUG("Preroll for Opus: %" PRIu64 " frames",
+                   opusCodecSpecificData.mContainerCodecDelayFrames);
       }
       mSeekPreroll = params.seek_preroll;
       mInfo.mAudio.mRate = AssertedCast<uint32_t>(params.rate);
@@ -739,20 +741,25 @@ nsresult WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
     sample->mOffset = holder->Offset();
     sample->mKeyframe = isKeyframe;
     if (discardPadding && i == count - 1) {
-      CheckedInt64 discardFrames;
+      sample->mOriginalPresentationWindow =
+          Some(media::TimeInterval{sample->mTime, sample->GetEndTime()});
       if (discardPadding < 0) {
-        // This is an invalid value as discard padding should never be negative.
-        // Set to maximum value so that the decoder will reject it as it's
-        // greater than the number of frames available.
-        discardFrames = INT32_MAX;
-        WEBM_DEBUG("Invalid negative discard padding");
+        // This will ensure decoding will error out, and the file is rejected.
+        sample->mDuration = TimeUnit::Invalid();
       } else {
-        discardFrames = TimeUnitToFrames(
-            TimeUnit::FromNanoseconds(discardPadding), mInfo.mAudio.mRate);
+        TimeUnit padding = TimeUnit::FromNanoseconds(discardPadding);
+        if (padding > sample->mDuration || mProcessedDiscardPadding) {
+          WEBM_DEBUG(
+              "Padding frames larger than packet size, flagging the packet for "
+              "error (padding: %s, duration: %s, already processed: %s)",
+              padding.ToString().get(), sample->mDuration.ToString().get(),
+              mProcessedDiscardPadding ? "true" : "false");
+          sample->mDuration = TimeUnit::Invalid();
+        } else {
+          sample->mDuration -= padding;
+        }
       }
-      if (discardFrames.isValid()) {
-        sample->mDiscardPadding = discardFrames.value();
-      }
+      mProcessedDiscardPadding = true;
     }
 
     if (packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED ||

@@ -116,6 +116,11 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
   for (uint32_t i = 0; i < results.Length();) {
     const RefPtr<MediaData>& data = results[i];
     MOZ_ASSERT(data->mType == MediaData::Type::AUDIO_DATA);
+
+    if (!data->mDuration.IsValid()) {
+      return DecodePromise::CreateAndReject(std::move(aValue.RejectValue()),
+                                            __func__);
+    }
     TimeInterval sampleInterval(data->mTime, data->GetEndTime());
     if (mTrimmers.IsEmpty()) {
       // mTrimmers being empty can only occurs if the decoder returned more
