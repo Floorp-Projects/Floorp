@@ -1933,7 +1933,8 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
   aLoadState->AssertProcessCouldTriggerLoadIfSystem();
 
   if (mDocShell) {
-    return mDocShell->LoadURI(aLoadState, aSetNavigating);
+    nsCOMPtr<nsIDocShell> docShell = mDocShell;
+    return docShell->LoadURI(aLoadState, aSetNavigating);
   }
 
   // Note: We do this check both here and in `nsDocShell::InternalLoad`, since
@@ -2030,7 +2031,8 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState) {
   aLoadState->AssertProcessCouldTriggerLoadIfSystem();
 
   if (mDocShell) {
-    return nsDocShell::Cast(mDocShell)->InternalLoad(aLoadState);
+    RefPtr<nsDocShell> docShell = nsDocShell::Cast(mDocShell);
+    return docShell->InternalLoad(aLoadState);
   }
 
   // Note: We do this check both here and in `nsDocShell::InternalLoad`, since
@@ -2092,9 +2094,10 @@ void BrowsingContext::DisplayLoadError(const nsAString& aURI) {
 
   if (mDocShell) {
     bool didDisplayLoadError = false;
-    mDocShell->DisplayLoadError(NS_ERROR_MALFORMED_URI, nullptr,
-                                PromiseFlatString(aURI).get(), nullptr,
-                                &didDisplayLoadError);
+    nsCOMPtr<nsIDocShell> docShell = mDocShell;
+    docShell->DisplayLoadError(NS_ERROR_MALFORMED_URI, nullptr,
+                               PromiseFlatString(aURI).get(), nullptr,
+                               &didDisplayLoadError);
   } else {
     if (ContentParent* cp = Canonical()->GetContentParent()) {
       Unused << cp->SendDisplayLoadError(this, PromiseFlatString(aURI));
@@ -3681,7 +3684,8 @@ void BrowsingContext::HistoryGo(
         [](mozilla::ipc::
                ResponseRejectReason) { /* FIXME Is ignoring this fine? */ });
   } else {
-    aResolver(Canonical()->HistoryGo(
+    RefPtr<CanonicalBrowsingContext> self = Canonical();
+    aResolver(self->HistoryGo(
         aOffset, aHistoryEpoch, aRequireUserInteraction, aUserActivation,
         Canonical()->GetContentParent()
             ? Some(Canonical()->GetContentParent()->ChildID())
