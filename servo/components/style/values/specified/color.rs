@@ -801,7 +801,7 @@ impl Color {
     #[inline]
     pub fn transparent() -> Self {
         // We should probably set authored to "transparent", but maybe it doesn't matter.
-        Self::from_absolute_color(AbsoluteColor::TRANSPARENT)
+        Self::from_absolute_color(AbsoluteColor::transparent())
     }
 
     /// Create a color from an [`AbsoluteColor`].
@@ -974,7 +974,7 @@ impl ToComputedValue for MozFontSmoothingBackgroundColor {
     fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
         self.0
             .to_computed_value(context)
-            .resolve_to_absolute(&AbsoluteColor::TRANSPARENT)
+            .resolve_to_absolute(&AbsoluteColor::transparent())
     }
 
     fn from_computed_value(computed: &Self::ComputedValue) -> Self {

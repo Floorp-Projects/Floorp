@@ -28,25 +28,37 @@ inline StyleAbsoluteColor StyleAbsoluteColor::Srgb(float red, float green,
                             StyleColorSpace::Srgb, StyleColorFlags{0}};
 }
 
+inline StyleAbsoluteColor StyleAbsoluteColor::Transparent() {
+  return StyleAbsoluteColor::Srgb(0.0f, 0.0f, 0.0f, 0.0f);
+}
+
+inline StyleAbsoluteColor StyleAbsoluteColor::Black() {
+  return StyleAbsoluteColor::Srgb(0.0f, 0.0f, 0.0f, 1.0f);
+}
+
+inline StyleAbsoluteColor StyleAbsoluteColor::White() {
+  return StyleAbsoluteColor::Srgb(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
 template <>
 inline StyleColor StyleColor::FromColor(nscolor aColor) {
   return StyleColor::Absolute(StyleAbsoluteColor::FromColor(aColor));
 }
 
-// static
 template <>
-inline const StyleColor StyleColor::TRANSPARENT =
-    StyleColor::Absolute(StyleAbsoluteColor::TRANSPARENT);
+inline StyleColor StyleColor::Black() {
+  return FromColor(NS_RGB(0, 0, 0));
+}
 
-// static
 template <>
-inline const StyleColor StyleColor::BLACK =
-    StyleColor::Absolute(StyleAbsoluteColor::BLACK);
+inline StyleColor StyleColor::White() {
+  return FromColor(NS_RGB(255, 255, 255));
+}
 
-// static
 template <>
-inline const StyleColor StyleColor::WHITE =
-    StyleColor::Absolute(StyleAbsoluteColor::WHITE);
+inline StyleColor StyleColor::Transparent() {
+  return FromColor(NS_RGBA(0, 0, 0, 0));
+}
 
 template <>
 StyleAbsoluteColor StyleColor::ResolveColor(const StyleAbsoluteColor&) const;

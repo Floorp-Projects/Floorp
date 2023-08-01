@@ -10,12 +10,9 @@ header = """/* This Source Code Form is subject to the terms of the Mozilla Publ
 // Work-around silly windows.h define.
 #pragma push_macro("STRICT")
 #undef STRICT
-#pragma push_macro("TRANSPARENT")
-#undef TRANSPARENT
 """
 trailer = """
 #pragma pop_macro("STRICT")
-#pragma pop_macro("TRANSPARENT")
 #pragma GCC diagnostic pop
 #include "mozilla/ServoStyleConstsInlines.h"
 """
@@ -549,12 +546,10 @@ renaming_overrides_prefixing = true
 """
 
 "GenericColor" = """
-  static const StyleGenericColor TRANSPARENT;
-  static const StyleGenericColor BLACK;
-  static const StyleGenericColor WHITE;
-
   static inline StyleGenericColor FromColor(nscolor);
-
+  static inline StyleGenericColor Black();
+  static inline StyleGenericColor White();
+  static inline StyleGenericColor Transparent();
   bool MaybeTransparent() const;
 
   /**
@@ -584,6 +579,10 @@ renaming_overrides_prefixing = true
    * Create a new AbsoluteColor in the sRGB color space.
    */
   static inline StyleAbsoluteColor Srgb(float red, float green, float blue, float alpha);
+
+  static inline StyleAbsoluteColor Transparent();
+  static inline StyleAbsoluteColor Black();
+  static inline StyleAbsoluteColor White();
 
   static inline StyleAbsoluteColor FromColor(nscolor);
 
