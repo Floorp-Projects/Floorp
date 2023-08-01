@@ -5,7 +5,7 @@
 from setuptools import setup
 
 PACKAGE_NAME = "manifestparser"
-PACKAGE_VERSION = "2.2.0"
+PACKAGE_VERSION = "2.2.1"
 
 DEPS = [
     "mozlog >= 6.0",
