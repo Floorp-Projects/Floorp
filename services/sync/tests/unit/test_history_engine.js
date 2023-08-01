@@ -325,3 +325,105 @@ add_task(async function test_history_visit_dedupe_old() {
   await engine.wipeClient();
   await engine.finalize();
 });
+
+add_task(async function test_history_unknown_fields() {
+  let engine = new HistoryEngine(Service);
+  await engine.initialize();
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  engine._tracker.start();
+
+  let id = "aaaaaaaaaaaa";
+  let oneHourMS = 60 * 60 * 1000;
+  // Insert a visit with a non-round microsecond timestamp (e.g. it's not evenly
+  // divisible by 1000). This will typically be the case for visits that occur
+  // during normal navigation.
+  let time = (Date.now() - oneHourMS) * 1000 + 555;
+  // We use the low level history api since it lets us provide microseconds
+  let { count } = await rawAddVisit(
+    id,
+    "https://www.example.com",
+    time,
+    PlacesUtils.history.TRANSITIONS.TYPED
+  );
+  equal(count, 1);
+
+  let collection = server.user("foo").collection("history");
+
+  // Sync the visit up to the server.
+  await sync_engine_and_validate_telem(engine, false);
+
+  collection.updateRecord(
+    id,
+    cleartext => {
+      equal(cleartext.visits[0].date, time);
+
+      // Add unknown fields to an instance of a visit
+      cleartext.visits.push({
+        date: (Date.now() - oneHourMS / 2) * 1000,
+        type: PlacesUtils.history.TRANSITIONS.LINK,
+        unknownVisitField: "an unknown field could show up in a visit!",
+      });
+      cleartext.title = "A page title";
+      // Add unknown fields to the payload for this URL
+      cleartext.unknownStrField = "an unknown str field";
+      cleartext.unknownObjField = { newField: "a field within an object" };
+    },
+    new_timestamp() + 10
+  );
+
+  // Force a remote sync.
+  await engine.setLastSync(new_timestamp() - 30);
+  await sync_engine_and_validate_telem(engine, false);
+
+  // Add a new visit to ensure we're actually putting things back on the server
+  let newTime = (Date.now() - oneHourMS) * 1000 + 555;
+  await rawAddVisit(
+    id,
+    "https://www.example.com",
+    newTime,
+    PlacesUtils.history.TRANSITIONS.LINK
+  );
+
+  // Sync again
+  await engine.setLastSync(new_timestamp() - 30);
+  await sync_engine_and_validate_telem(engine, false);
+
+  let placeInfo = await PlacesSyncUtils.history.fetchURLInfoForGuid(id);
+
+  // Found the place we're looking for
+  Assert.equal(placeInfo.title, "A page title");
+  Assert.equal(placeInfo.url, "https://www.example.com/");
+
+  // It correctly returns any unknownFields that might've been
+  // stored in the moz_places_extra table
+  deepEqual(JSON.parse(placeInfo.unknownFields), {
+    unknownStrField: "an unknown str field",
+    unknownObjField: { newField: "a field within an object" },
+  });
+
+  // Getting visits via SyncUtils also will return unknownFields
+  // via the moz_historyvisits_extra table
+  let visits = await PlacesSyncUtils.history.fetchVisitsForURL(
+    "https://www.example.com"
+  );
+  equal(visits.length, 3);
+
+  // fetchVisitsForURL is a sync method that gets called during upload
+  // so unknown field should already be at the top-level
+  deepEqual(
+    visits[0].unknownVisitField,
+    "an unknown field could show up in a visit!"
+  );
+
+  // Remote history record should have the fields back at the top level
+  let remotePlace = collection.payloads().find(rec => rec.id === id);
+  deepEqual(remotePlace.unknownStrField, "an unknown str field");
+  deepEqual(remotePlace.unknownObjField, {
+    newField: "a field within an object",
+  });
+
+  await engine.wipeClient();
+  await engine.finalize();
+});

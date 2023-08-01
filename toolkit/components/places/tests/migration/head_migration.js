@@ -13,7 +13,7 @@
 
 // Put any other stuff relative to this test folder below.
 
-const CURRENT_SCHEMA_VERSION = 74;
+const CURRENT_SCHEMA_VERSION = 75;
 const FIRST_UPGRADABLE_SCHEMA_VERSION = 43;
 
 async function assertAnnotationsRemoved(db, expectedAnnos) {

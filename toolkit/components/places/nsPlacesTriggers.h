@@ -420,4 +420,25 @@
         "); "                                                          \
         "END")
 
+// since moz_places_extra is really just storing json, there could be a
+// scenario where we have a valid row but empty json -- we should make sure
+// we have triggers to remove any such rows
+#  define CREATE_MOZ_PLACES_EXTRA_AFTERUPDATE_TRIGGER                 \
+    nsLiteralCString(                                                 \
+        "CREATE TEMP TRIGGER moz_places_extra_trigger "               \
+        "AFTER UPDATE ON moz_places_extra FOR EACH ROW "              \
+        "WHEN (NEW.sync_json = '' OR NEW.sync_json = '{}')"           \
+        "BEGIN "                                                      \
+        "DELETE FROM moz_places_extra WHERE place_id = NEW.place_id;" \
+        "END")
+
+#  define CREATE_MOZ_HISTORYVISITS_AFTERUPDATE_TRIGGER                       \
+    nsLiteralCString(                                                        \
+        "CREATE TEMP TRIGGER moz_historyvisits_extra_trigger "               \
+        "AFTER UPDATE ON moz_historyvisits_extra FOR EACH ROW "              \
+        "WHEN (NEW.sync_json = '' OR NEW.sync_json = '{}')"                  \
+        "BEGIN "                                                             \
+        "DELETE FROM moz_historyvisits_extra WHERE visit_id = NEW.visit_id;" \
+        "END")
+
 #endif  // __nsPlacesTriggers_h__

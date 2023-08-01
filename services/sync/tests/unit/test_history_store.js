@@ -83,14 +83,10 @@ add_task(async function test_store() {
     type: Ci.nsINavHistoryService.TRANSITION_TYPED,
   };
   let onVisitObserved = promiseOnVisitObserved();
-  await applyEnsureNoFailures([
-    {
-      id: fxguid,
-      histUri: record.histUri,
-      title: "Hol Dir Firefox!",
-      visits: [record.visits[0], secondvisit],
-    },
-  ]);
+  let updatedRec = await store.createRecord(fxguid);
+  updatedRec.cleartext.title = "Hol Dir Firefox!";
+  updatedRec.cleartext.visits.push(secondvisit);
+  await applyEnsureNoFailures([updatedRec]);
   await onVisitObserved;
   let queryres = await PlacesUtils.history.fetch(fxuri.spec, {
     includeVisits: true,
@@ -114,16 +110,16 @@ add_task(async function test_store_create() {
   tbguid = Utils.makeGUID();
   tburi = CommonUtils.makeURI("http://getthunderbird.com");
   let onVisitObserved = promiseOnVisitObserved();
-  await applyEnsureNoFailures([
-    {
-      id: tbguid,
-      histUri: tburi.spec,
-      title: "The bird is the word!",
-      visits: [
-        { date: TIMESTAMP3, type: Ci.nsINavHistoryService.TRANSITION_TYPED },
-      ],
-    },
-  ]);
+  let record = await store.createRecord(tbguid);
+  record.cleartext = {
+    id: tbguid,
+    histUri: tburi.spec,
+    title: "The bird is the word!",
+    visits: [
+      { date: TIMESTAMP3, type: Ci.nsINavHistoryService.TRANSITION_TYPED },
+    ],
+  };
+  await applyEnsureNoFailures([record]);
   await onVisitObserved;
   Assert.ok(await store.itemExists(tbguid));
   do_check_attribute_count(await store.getAllIDs(), 1);
@@ -146,16 +142,16 @@ add_task(async function test_null_title() {
   );
   let resguid = Utils.makeGUID();
   let resuri = CommonUtils.makeURI("unknown://title");
-  await applyEnsureNoFailures([
-    {
-      id: resguid,
-      histUri: resuri.spec,
-      title: null,
-      visits: [
-        { date: TIMESTAMP3, type: Ci.nsINavHistoryService.TRANSITION_TYPED },
-      ],
-    },
-  ]);
+  let record = await store.createRecord(resguid);
+  record.cleartext = {
+    id: resguid,
+    histUri: resuri.spec,
+    title: null,
+    visits: [
+      { date: TIMESTAMP3, type: Ci.nsINavHistoryService.TRANSITION_TYPED },
+    ],
+  };
+  await applyEnsureNoFailures([record]);
   do_check_attribute_count(await store.getAllIDs(), 1);
 
   let queryres = await PlacesUtils.history.fetch(resuri.spec, {
@@ -331,20 +327,20 @@ add_task(async function test_unknowingly_invalid_records() {
     _("Make sure that when places rejects this record we record it as failed");
     let guid = Utils.makeGUID();
     let countTelemetry = new SyncedRecordsTelemetry();
-    let result = await store.applyIncomingBatch(
-      [
+    let invalidRecord = await store.createRecord(guid);
+    invalidRecord.cleartext = {
+      id: guid,
+      histUri: "javascript:''",
+      title: "javascript:''",
+      visits: [
         {
-          id: guid,
-          histUri: "javascript:''",
-          title: "javascript:''",
-          visits: [
-            {
-              date: TIMESTAMP3,
-              type: Ci.nsINavHistoryService.TRANSITION_EMBED,
-            },
-          ],
+          date: TIMESTAMP3,
+          type: Ci.nsINavHistoryService.TRANSITION_EMBED,
         },
       ],
+    };
+    let result = await store.applyIncomingBatch(
+      [invalidRecord],
       countTelemetry
     );
     deepEqual(result, [guid]);
@@ -357,60 +353,63 @@ add_task(async function test_clamp_visit_dates() {
   let futureVisitTime = Date.now() + 5 * 60 * 1000;
   let recentVisitTime = Date.now() - 5 * 60 * 1000;
 
-  await applyEnsureNoFailures([
-    {
-      id: "visitAAAAAAA",
-      histUri: "http://example.com/a",
-      title: "A",
-      visits: [
-        {
-          date: "invalidDate",
-          type: Ci.nsINavHistoryService.TRANSITION_LINK,
-        },
-      ],
-    },
-    {
-      id: "visitBBBBBBB",
-      histUri: "http://example.com/b",
-      title: "B",
-      visits: [
-        {
-          date: 100,
-          type: Ci.nsINavHistoryService.TRANSITION_TYPED,
-        },
-        {
-          date: 250,
-          type: Ci.nsINavHistoryService.TRANSITION_TYPED,
-        },
-        {
-          date: recentVisitTime * 1000,
-          type: Ci.nsINavHistoryService.TRANSITION_TYPED,
-        },
-      ],
-    },
-    {
-      id: "visitCCCCCCC",
-      histUri: "http://example.com/c",
-      title: "D",
-      visits: [
-        {
-          date: futureVisitTime * 1000,
-          type: Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
-        },
-      ],
-    },
-    {
-      id: "visitDDDDDDD",
-      histUri: "http://example.com/d",
-      title: "D",
-      visits: [
-        {
-          date: recentVisitTime * 1000,
-          type: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
-        },
-      ],
-    },
-  ]);
+  let recordA = await store.createRecord("visitAAAAAAA");
+  recordA.cleartext = {
+    id: "visitAAAAAAA",
+    histUri: "http://example.com/a",
+    title: "A",
+    visits: [
+      {
+        date: "invalidDate",
+        type: Ci.nsINavHistoryService.TRANSITION_LINK,
+      },
+    ],
+  };
+  let recordB = await store.createRecord("visitBBBBBBB");
+  recordB.cleartext = {
+    id: "visitBBBBBBB",
+    histUri: "http://example.com/b",
+    title: "B",
+    visits: [
+      {
+        date: 100,
+        type: Ci.nsINavHistoryService.TRANSITION_TYPED,
+      },
+      {
+        date: 250,
+        type: Ci.nsINavHistoryService.TRANSITION_TYPED,
+      },
+      {
+        date: recentVisitTime * 1000,
+        type: Ci.nsINavHistoryService.TRANSITION_TYPED,
+      },
+    ],
+  };
+  let recordC = await store.createRecord("visitCCCCCCC");
+  recordC.cleartext = {
+    id: "visitCCCCCCC",
+    histUri: "http://example.com/c",
+    title: "D",
+    visits: [
+      {
+        date: futureVisitTime * 1000,
+        type: Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
+      },
+    ],
+  };
+  let recordD = await store.createRecord("visitDDDDDDD");
+  recordD.cleartext = {
+    id: "visitDDDDDDD",
+    histUri: "http://example.com/d",
+    title: "D",
+    visits: [
+      {
+        date: recentVisitTime * 1000,
+        type: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
+      },
+    ],
+  };
+  await applyEnsureNoFailures([recordA, recordB, recordC, recordD]);
 
   let visitsForA = await PlacesSyncUtils.history.fetchVisitsForURL(
     "http://example.com/a"

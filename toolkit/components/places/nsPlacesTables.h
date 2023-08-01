@@ -44,6 +44,28 @@
       ", triggeringPlaceId INTEGER"         \
       ")")
 
+// These two tables were designed to store data with json in mind
+// ideally one column per "consumer" (sync, annotations, etc) to keep
+// concerns separate. Using an UPSERT is the suggested way to update
+// this table vs INSERT OR REPLACE to avoid clearing out any existing properties
+// see PlacesSyncUtils.sys.mjs for an example of how sync does this
+#define CREATE_MOZ_PLACES_EXTRA                                               \
+  nsLiteralCString(                                                           \
+      "CREATE TABLE moz_places_extra ("                                       \
+      "  place_id INTEGER PRIMARY KEY NOT NULL"                               \
+      ", sync_json TEXT"                                                      \
+      ", FOREIGN KEY (place_id) REFERENCES moz_places(id) ON DELETE CASCADE " \
+      ")")
+
+#define CREATE_MOZ_HISTORYVISITS_EXTRA                                \
+  nsLiteralCString(                                                   \
+      "CREATE TABLE moz_historyvisits_extra ("                        \
+      "  visit_id INTEGER PRIMARY KEY NOT NULL"                       \
+      ", sync_json TEXT"                                              \
+      ", FOREIGN KEY (visit_id) REFERENCES moz_historyvisits(id) ON " \
+      "  DELETE CASCADE"                                              \
+      ")")
+
 #define CREATE_MOZ_INPUTHISTORY         \
   nsLiteralCString(                     \
       "CREATE TABLE moz_inputhistory (" \

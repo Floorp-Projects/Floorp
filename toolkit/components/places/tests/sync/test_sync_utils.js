@@ -3072,3 +3072,58 @@ add_task(async function test_history_ensureCurrentSyncId() {
 
   await PlacesSyncUtils.history.reset();
 });
+
+add_task(async function test_updateUnknownFieldsBatch() {
+  // We're just validating we have something where placeId = 1, mainly as a sanity
+  // since moz_places_extra needs a valid foreign key
+  let placeId = await PlacesTestUtils.getDatabaseValue("moz_places", "id", {
+    id: 1,
+  });
+
+  // an example of json with multiple fields in it to test updateUnknownFields
+  // will update ONLY unknown_sync_fields and not override any others
+  const test_json = JSON.stringify({
+    unknown_sync_fields: { unknownStrField: "an old str field " },
+    extra_str_field: "another field within the json",
+    extra_obj_field: { inner: "hi" },
+  });
+
+  // Manually put the inital json in the DB
+  await PlacesUtils.withConnectionWrapper(
+    "test_update_moz_places_extra",
+    async function (db) {
+      await db.executeCached(
+        `
+        INSERT INTO moz_places_extra(place_id, sync_json)
+        VALUES(:placeId, :sync_json)`,
+        { placeId, sync_json: test_json }
+      );
+    }
+  );
+
+  // call updateUnknownFieldsBatch to validate it ONLY updates
+  // the unknown_sync_fields in the sync_json
+  let update = {
+    placeId,
+    unknownFields: JSON.stringify({ unknownStrField: "a new unknownStrField" }),
+  };
+  await PlacesSyncUtils.history.updateUnknownFieldsBatch([update]);
+
+  let updated_sync_json = await PlacesTestUtils.getDatabaseValue(
+    "moz_places_extra",
+    "sync_json",
+    {
+      place_id: placeId,
+    }
+  );
+
+  let updated_data = JSON.parse(updated_sync_json);
+
+  // unknown_sync_fields has been updated
+  deepEqual(JSON.parse(updated_data.unknown_sync_fields), {
+    unknownStrField: "a new unknownStrField",
+  });
+
+  // we didn't override any other fields within
+  deepEqual(updated_data.extra_str_field, "another field within the json");
+});

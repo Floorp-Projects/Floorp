@@ -4,6 +4,11 @@
 
 const HISTORY_TTL = 5184000; // 60 days in milliseconds
 const THIRTY_DAYS_IN_MS = 2592000000; // 30 days in milliseconds
+// Sync may bring new fields from other clients, not yet understood by our engine.
+// Unknown fields outside these fields are aggregated into 'unknownFields' and
+// safely synced to prevent data loss.
+const VALID_HISTORY_FIELDS = ["id", "title", "histUri", "visits"];
+const VALID_VISIT_FIELDS = ["date", "type", "transition"];
 
 import { Async } from "resource://services-common/async.sys.mjs";
 import { CommonUtils } from "resource://services-common/utils.sys.mjs";
@@ -194,6 +199,8 @@ HistoryStore.prototype = {
     let failed = [];
     let toAdd = [];
     let toRemove = [];
+    let pageGuidsWithUnknownFields = new Map();
+    let visitTimesWithUnknownFields = new Map();
     await Async.yieldingForEach(records, async record => {
       if (record.deleted) {
         toRemove.push(record);
@@ -202,6 +209,31 @@ HistoryStore.prototype = {
           let pageInfo = await this._recordToPlaceInfo(record);
           if (pageInfo) {
             toAdd.push(pageInfo);
+
+            // Pull any unknown fields that may have come from other clients
+            let unknownFields = lazy.PlacesSyncUtils.extractUnknownFields(
+              record.cleartext,
+              VALID_HISTORY_FIELDS
+            );
+            if (unknownFields) {
+              pageGuidsWithUnknownFields.set(pageInfo.guid, { unknownFields });
+            }
+
+            // Visits themselves could also contain unknown fields
+            for (const visit of pageInfo.visits) {
+              let unknownVisitFields =
+                lazy.PlacesSyncUtils.extractUnknownFields(
+                  visit,
+                  VALID_VISIT_FIELDS
+                );
+              if (unknownVisitFields) {
+                // Visits don't have an id at the time of sync so we'll need
+                // to use the time instead until it's inserted in the DB
+                visitTimesWithUnknownFields.set(visit.date.getTime(), {
+                  unknownVisitFields,
+                });
+              }
+            }
           }
         } catch (ex) {
           if (Async.isShutdownException(ex)) {
@@ -239,10 +271,33 @@ HistoryStore.prototype = {
         // as they are likely to be spurious. We do supply an onError handler
         // and log the exceptions seen there as they are likely to be
         // informative, but we still never abort the sync based on them.
+        let unknownFieldsToInsert = [];
         try {
           await lazy.PlacesUtils.history.insertMany(
             chunk,
-            null,
+            result => {
+              const placeToUpdate = pageGuidsWithUnknownFields.get(result.guid);
+              // Extract the placeId from this result so we can add the unknownFields
+              // to the proper table
+              if (placeToUpdate) {
+                unknownFieldsToInsert.push({
+                  placeId: result.placeId,
+                  unknownFields: placeToUpdate.unknownFields,
+                });
+              }
+              // same for visits
+              result.visits.forEach(visit => {
+                let visitToUpdate = visitTimesWithUnknownFields.get(
+                  visit.date.getTime()
+                );
+                if (visitToUpdate) {
+                  unknownFieldsToInsert.push({
+                    visitId: visit.visitId,
+                    unknownFields: visitToUpdate.unknownVisitFields,
+                  });
+                }
+              });
+            },
             failedVisit => {
               this._log.info(
                 "Failed to insert a history record",
@@ -256,6 +311,12 @@ HistoryStore.prototype = {
           this._log.info("Failed to insert history records", ex);
           countTelemetry.addIncomingFailedReason(ex.message);
         }
+
+        // All the top level places or visits that had unknown fields are sent
+        // to be added to the appropiate tables
+        await lazy.PlacesSyncUtils.history.updateUnknownFieldsBatch(
+          unknownFieldsToInsert
+        );
       }
     }
 
@@ -478,6 +539,14 @@ HistoryStore.prototype = {
       record.histUri = foo.url;
       record.title = foo.title;
       record.sortindex = foo.frecency;
+
+      // If we had any unknown fields, ensure we put it back on the
+      // top-level record
+      if (foo.unknownFields) {
+        let unknownFields = JSON.parse(foo.unknownFields);
+        Object.assign(record.cleartext, unknownFields);
+      }
+
       try {
         record.visits = await lazy.PlacesSyncUtils.history.fetchVisitsForURL(
           record.histUri

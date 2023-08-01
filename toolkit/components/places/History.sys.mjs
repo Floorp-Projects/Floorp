@@ -1542,8 +1542,10 @@ function mergeUpdateInfoIntoPageInfo(updateInfo, pageInfo = {}) {
   if (!pageInfo.url) {
     pageInfo.url = URL.fromURI(updateInfo.uri);
     pageInfo.title = updateInfo.title;
+    pageInfo.placeId = updateInfo.placeId;
     pageInfo.visits = updateInfo.visits.map(visit => {
       return {
+        visitId: visit.visitId,
         date: lazy.PlacesUtils.toDate(visit.visitDate),
         transition: visit.transitionType,
         referrer: visit.referrerURI ? URL.fromURI(visit.referrerURI) : null,
