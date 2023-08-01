@@ -710,16 +710,15 @@ impl Parse for FontSizeAdjust {
     ) -> Result<Self, ParseError<'i>> {
         let location = input.current_source_location();
         if let Ok(ident) = input.try_parse(|i| i.expect_ident_cloned()) {
-            let basis_enabled = static_prefs::pref!("layout.css.font-size-adjust.basis.enabled");
             let basis = match_ignore_ascii_case! { &ident,
                 "none" => return Ok(Self::None),
-                // Check for size adjustment basis keywords if enabled.
-                "ex-height" if basis_enabled => Self::ExHeight,
-                "cap-height" if basis_enabled => Self::CapHeight,
-                "ch-width" if basis_enabled => Self::ChWidth,
-                "ic-width" if basis_enabled => Self::IcWidth,
-                "ic-height" if basis_enabled => Self::IcHeight,
-                // Unknown (or disabled) keyword.
+                // Check for size adjustment basis keywords.
+                "ex-height" => Self::ExHeight,
+                "cap-height" => Self::CapHeight,
+                "ch-width" => Self::ChWidth,
+                "ic-width" => Self::IcWidth,
+                "ic-height" => Self::IcHeight,
+                // Unknown keyword.
                 _ => return Err(location.new_custom_error(
                     SelectorParseErrorKind::UnexpectedIdent(ident)
                 )),
