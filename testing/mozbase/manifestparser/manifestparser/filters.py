@@ -353,7 +353,7 @@ class chunk_by_runtime(InstanceFilter):
         # pylint: disable=W1633
         avg = round(sum(times) / len(times), 2) if times else 0
         missing = sorted([m for m in manifests if m not in self.runtimes])
-        self.logger.info(
+        self.logger.debug(
             "Applying average runtime of {}s to the following missing manifests:\n{}".format(
                 avg, "  " + "\n  ".join(missing)
             )
@@ -383,7 +383,7 @@ class chunk_by_runtime(InstanceFilter):
         runtime, this_manifests = chunks[self.this_chunk - 1]
         # pylint --py3k W1619
         # pylint: disable=W1633
-        self.logger.info(
+        self.logger.debug(
             "Cumulative test runtime is around {} minutes (average is {} minutes)".format(
                 round(runtime / 60),
                 round(sum([c[0] for c in chunks]) / (60 * len(chunks))),
