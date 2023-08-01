@@ -23,7 +23,7 @@ ChromeUtils.defineESModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "extensionStylesheets", () => {
+ChromeUtils.defineLazyGetter(this, "extensionStylesheets", () => {
   const { ExtensionParent } = ChromeUtils.importESModule(
     "resource://gre/modules/ExtensionParent.sys.mjs"
   );

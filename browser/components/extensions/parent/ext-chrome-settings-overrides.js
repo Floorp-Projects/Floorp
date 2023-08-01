@@ -32,7 +32,7 @@ const HOMEPAGE_CONFIRMED_TYPE = "homepageNotification";
 const HOMEPAGE_SETTING_TYPE = "prefs";
 const HOMEPAGE_SETTING_NAME = "homepage_override";
 
-XPCOMUtils.defineLazyGetter(this, "homepagePopup", () => {
+ChromeUtils.defineLazyGetter(this, "homepagePopup", () => {
   return new ExtensionControlledPopup({
     confirmedType: HOMEPAGE_CONFIRMED_TYPE,
     observerTopic: "browser-open-homepage-start",

@@ -6,7 +6,7 @@
 
 // exercises the server's state-preservation API
 
-XPCOMUtils.defineLazyGetter(this, "URL", function () {
+ChromeUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + srv.identity.primaryPort;
 });
 
@@ -78,7 +78,7 @@ function pathHandler(request, response) {
  * BEGIN TESTS *
  ***************/
 
-XPCOMUtils.defineLazyGetter(this, "tests", function () {
+ChromeUtils.defineLazyGetter(this, "tests", function () {
   return [
     new Test(
       // eslint-disable-next-line no-useless-concat

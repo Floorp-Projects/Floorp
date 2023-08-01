@@ -15,7 +15,7 @@ function contentHandler(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
-XPCOMUtils.defineLazyGetter(this, "uri", function () {
+ChromeUtils.defineLazyGetter(this, "uri", function () {
   return "http://localhost:" + httpserver.identity.primaryPort;
 });
 

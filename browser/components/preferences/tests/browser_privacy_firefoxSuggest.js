@@ -9,7 +9,7 @@ ChromeUtils.defineESModuleGetters(this, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
+ChromeUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
   const { QuickSuggestTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/QuickSuggestTestUtils.sys.mjs"
   );

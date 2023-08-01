@@ -103,7 +103,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CFRPageActions: "resource://activity-stream/lib/CFRPageActions.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
+ChromeUtils.defineLazyGetter(this, "fxAccounts", () => {
   return ChromeUtils.importESModule(
     "resource://gre/modules/FxAccounts.sys.mjs"
   ).getFxAccountsSingleton();
@@ -309,34 +309,34 @@ if (AppConstants.ENABLE_WEBDRIVER) {
   this.RemoteAgent = { running: false };
 }
 
-XPCOMUtils.defineLazyGetter(this, "RTL_UI", () => {
+ChromeUtils.defineLazyGetter(this, "RTL_UI", () => {
   return Services.locale.isAppLocaleRTL;
 });
 
-XPCOMUtils.defineLazyGetter(this, "gBrandBundle", () => {
+ChromeUtils.defineLazyGetter(this, "gBrandBundle", () => {
   return Services.strings.createBundle(
     "chrome://branding/locale/brand.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", () => {
+ChromeUtils.defineLazyGetter(this, "gBrowserBundle", () => {
   return Services.strings.createBundle(
     "chrome://browser/locale/browser.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "gCustomizeMode", () => {
+ChromeUtils.defineLazyGetter(this, "gCustomizeMode", () => {
   let { CustomizeMode } = ChromeUtils.importESModule(
     "resource:///modules/CustomizeMode.sys.mjs"
   );
   return new CustomizeMode(window);
 });
 
-XPCOMUtils.defineLazyGetter(this, "gNavToolbox", () => {
+ChromeUtils.defineLazyGetter(this, "gNavToolbox", () => {
   return document.getElementById("navigator-toolbox");
 });
 
-XPCOMUtils.defineLazyGetter(this, "gURLBar", () => {
+ChromeUtils.defineLazyGetter(this, "gURLBar", () => {
   let urlbar = new UrlbarInput({
     textbox: document.getElementById("urlbar"),
     eventTelemetryCategory: "urlbar",
@@ -379,7 +379,7 @@ XPCOMUtils.defineLazyGetter(this, "gURLBar", () => {
   return urlbar;
 });
 
-XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
+ChromeUtils.defineLazyGetter(this, "ReferrerInfo", () =>
   Components.Constructor(
     "@mozilla.org/referrer-info;1",
     "nsIReferrerInfo",
@@ -388,7 +388,7 @@ XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
 );
 
 // High priority notification bars shown at the top of the window.
-XPCOMUtils.defineLazyGetter(this, "gNotificationBox", () => {
+ChromeUtils.defineLazyGetter(this, "gNotificationBox", () => {
   return new MozElements.NotificationBox(element => {
     element.classList.add("global-notificationbox");
     element.setAttribute("notificationside", "top");
@@ -398,14 +398,14 @@ XPCOMUtils.defineLazyGetter(this, "gNotificationBox", () => {
   });
 });
 
-XPCOMUtils.defineLazyGetter(this, "InlineSpellCheckerUI", () => {
+ChromeUtils.defineLazyGetter(this, "InlineSpellCheckerUI", () => {
   let { InlineSpellChecker } = ChromeUtils.importESModule(
     "resource://gre/modules/InlineSpellChecker.sys.mjs"
   );
   return new InlineSpellChecker();
 });
 
-XPCOMUtils.defineLazyGetter(this, "PopupNotifications", () => {
+ChromeUtils.defineLazyGetter(this, "PopupNotifications", () => {
   // eslint-disable-next-line no-shadow
   let { PopupNotifications } = ChromeUtils.importESModule(
     "resource://gre/modules/PopupNotifications.sys.mjs"
@@ -460,7 +460,7 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", () => {
   }
 });
 
-XPCOMUtils.defineLazyGetter(this, "MacUserActivityUpdater", () => {
+ChromeUtils.defineLazyGetter(this, "MacUserActivityUpdater", () => {
   if (AppConstants.platform != "macosx") {
     return null;
   }
@@ -470,7 +470,7 @@ XPCOMUtils.defineLazyGetter(this, "MacUserActivityUpdater", () => {
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "Win7Features", () => {
+ChromeUtils.defineLazyGetter(this, "Win7Features", () => {
   if (AppConstants.platform != "win") {
     return null;
   }
@@ -2511,7 +2511,7 @@ var gBrowserInit = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   gBrowserInit,
   "_firstContentWindowPaintDeferred",
   () => PromiseUtils.defer()

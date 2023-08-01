@@ -15,13 +15,13 @@ var httpserver = null;
 // Need to randomize, because apparently no one clears our cache
 var randomPath1 = "/redirect-no-store/" + Math.random();
 
-XPCOMUtils.defineLazyGetter(this, "randomURI1", function () {
+ChromeUtils.defineLazyGetter(this, "randomURI1", function () {
   return "http://localhost:" + httpserver.identity.primaryPort + randomPath1;
 });
 
 var randomPath2 = "/redirect-expires-past/" + Math.random();
 
-XPCOMUtils.defineLazyGetter(this, "randomURI2", function () {
+ChromeUtils.defineLazyGetter(this, "randomURI2", function () {
   return "http://localhost:" + httpserver.identity.primaryPort + randomPath2;
 });
 

@@ -6,7 +6,7 @@
 
 // tests the registerFile API
 
-XPCOMUtils.defineLazyGetter(this, "BASE", function () {
+ChromeUtils.defineLazyGetter(this, "BASE", function () {
   return "http://localhost:" + srv.identity.primaryPort;
 });
 
@@ -21,7 +21,7 @@ function onStop(ch, status, data) {
   Assert.equal(data.length, file.fileSize);
 }
 
-XPCOMUtils.defineLazyGetter(this, "test", function () {
+ChromeUtils.defineLazyGetter(this, "test", function () {
   return new Test(BASE + "/foo", null, onStart, onStop);
 });
 

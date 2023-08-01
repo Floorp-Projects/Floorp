@@ -23,7 +23,7 @@ var httpProtocolHandler = Cc[
   "@mozilla.org/network/protocol;1?name=http"
 ].getService(Ci.nsIHttpProtocolHandler);
 
-XPCOMUtils.defineLazyGetter(this, "URL", function () {
+ChromeUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpServer.identity.primaryPort;
 });
 

@@ -9,7 +9,7 @@ const { HttpServer } = ChromeUtils.importESModule(
 
 var httpServer = null;
 
-XPCOMUtils.defineLazyGetter(this, "serverPort", function () {
+ChromeUtils.defineLazyGetter(this, "serverPort", function () {
   return httpServer.identity.primaryPort;
 });
 

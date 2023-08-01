@@ -4,7 +4,7 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyGetter(this, "isXpcshell", function () {
+ChromeUtils.defineLazyGetter(this, "isXpcshell", function () {
   return Services.env.exists("XPCSHELL_TEST_PROFILE_DIR");
 });
 

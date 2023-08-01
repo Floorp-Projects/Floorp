@@ -49,7 +49,7 @@ XPCOMUtils.defineLazyScriptGetter(
   "FullScreen",
   "chrome://fxr/content/fxr-fullScreen.js"
 );
-XPCOMUtils.defineLazyGetter(this, "gSystemPrincipal", () =>
+ChromeUtils.defineLazyGetter(this, "gSystemPrincipal", () =>
   Services.scriptSecurityManager.getSystemPrincipal()
 );
 

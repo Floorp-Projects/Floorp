@@ -8,11 +8,11 @@
  * Tests for correct behavior of the server start() and stop() methods.
  */
 
-XPCOMUtils.defineLazyGetter(this, "PORT", function () {
+ChromeUtils.defineLazyGetter(this, "PORT", function () {
   return srv.identity.primaryPort;
 });
 
-XPCOMUtils.defineLazyGetter(this, "PREPATH", function () {
+ChromeUtils.defineLazyGetter(this, "PREPATH", function () {
   return "http://localhost:" + PORT;
 });
 

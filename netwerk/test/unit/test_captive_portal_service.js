@@ -5,7 +5,7 @@ const { HttpServer } = ChromeUtils.importESModule(
 );
 
 let httpserver = null;
-XPCOMUtils.defineLazyGetter(this, "cpURI", function () {
+ChromeUtils.defineLazyGetter(this, "cpURI", function () {
   return (
     "http://localhost:" + httpserver.identity.primaryPort + "/captive.html"
   );

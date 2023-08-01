@@ -12,7 +12,9 @@ Services.scriptloader.loadSubScript(
 const lazy = {};
 
 /* getLibcConstants is only present on *nix */
-XPCOMUtils.defineLazyGetter(lazy, "LIBC", () => ChromeUtils.getLibcConstants());
+ChromeUtils.defineLazyGetter(lazy, "LIBC", () =>
+  ChromeUtils.getLibcConstants()
+);
 
 /*
  * This test is for executing system calls in content processes to validate

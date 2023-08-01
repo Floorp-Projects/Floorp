@@ -32,7 +32,7 @@ const POPUP_PRELOAD_TIMEOUT_MS = 200;
 // WeakMap[Extension -> BrowserAction]
 const browserActionMap = new WeakMap();
 
-XPCOMUtils.defineLazyGetter(this, "browserAreas", () => {
+ChromeUtils.defineLazyGetter(this, "browserAreas", () => {
   return {
     navbar: CustomizableUI.AREA_NAVBAR,
     menupanel: CustomizableUI.AREA_ADDONS,

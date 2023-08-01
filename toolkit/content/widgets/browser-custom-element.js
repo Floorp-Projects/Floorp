@@ -26,7 +26,7 @@
     RemoteWebNavigation: "resource://gre/modules/RemoteWebNavigation.sys.mjs",
   });
 
-  XPCOMUtils.defineLazyGetter(lazy, "blankURI", () =>
+  ChromeUtils.defineLazyGetter(lazy, "blankURI", () =>
     Services.io.newURI("about:blank")
   );
 
@@ -118,7 +118,7 @@
       this.mIconURL = null;
       this.lastURI = null;
 
-      XPCOMUtils.defineLazyGetter(this, "popupBlocker", () => {
+      ChromeUtils.defineLazyGetter(this, "popupBlocker", () => {
         return new lazy.PopupBlocker(this);
       });
 

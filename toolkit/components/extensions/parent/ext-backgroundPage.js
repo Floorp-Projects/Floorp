@@ -18,7 +18,7 @@ ChromeUtils.defineESModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "serviceWorkerManager", () => {
+ChromeUtils.defineLazyGetter(this, "serviceWorkerManager", () => {
   return Cc["@mozilla.org/serviceworkers/manager;1"].getService(
     Ci.nsIServiceWorkerManager
   );

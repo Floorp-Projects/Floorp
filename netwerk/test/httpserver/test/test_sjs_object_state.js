@@ -8,7 +8,7 @@
  * Tests that the object-state-preservation mechanism works correctly.
  */
 
-XPCOMUtils.defineLazyGetter(this, "PATH", function () {
+ChromeUtils.defineLazyGetter(this, "PATH", function () {
   return "http://localhost:" + srv.identity.primaryPort + "/object-state.sjs";
 });
 

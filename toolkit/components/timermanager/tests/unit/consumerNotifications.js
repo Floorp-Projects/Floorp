@@ -137,7 +137,7 @@ const TESTS = [
 var gUTM;
 var gNextFunc;
 
-XPCOMUtils.defineLazyGetter(this, "gCompReg", function () {
+ChromeUtils.defineLazyGetter(this, "gCompReg", function () {
   return Cm.QueryInterface(Ci.nsIComponentRegistrar);
 });
 

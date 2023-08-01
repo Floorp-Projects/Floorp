@@ -193,7 +193,7 @@ if (AppConstants.MOZ_UPDATER) {
   }
 }
 
-XPCOMUtils.defineLazyGetter(this, "gIsPackagedApp", () => {
+ChromeUtils.defineLazyGetter(this, "gIsPackagedApp", () => {
   return Services.sysinfo.getProperty("isPackagedApp");
 });
 

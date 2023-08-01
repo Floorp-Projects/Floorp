@@ -13,7 +13,7 @@ function root(server) {
   return `${primaryScheme}://${primaryHost}:${primaryPort}/data`;
 }
 
-XPCOMUtils.defineLazyGetter(this, "testserver", () => {
+ChromeUtils.defineLazyGetter(this, "testserver", () => {
   let server = new HttpServer();
   server.start();
   Services.prefs.setCharPref(

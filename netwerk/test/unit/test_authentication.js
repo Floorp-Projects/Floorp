@@ -10,11 +10,11 @@ const { HttpServer } = ChromeUtils.importESModule(
 // Turn off the authentication dialog blocking for this test.
 Services.prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
 
-XPCOMUtils.defineLazyGetter(this, "URL", function () {
+ChromeUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpserv.identity.primaryPort;
 });
 
-XPCOMUtils.defineLazyGetter(this, "PORT", function () {
+ChromeUtils.defineLazyGetter(this, "PORT", function () {
   return httpserv.identity.primaryPort;
 });
 

@@ -114,7 +114,7 @@ const URI_UPDATES_PROPERTIES =
   "chrome://mozapps/locale/update/updates.properties";
 const gUpdateBundle = Services.strings.createBundle(URI_UPDATES_PROPERTIES);
 
-XPCOMUtils.defineLazyGetter(this, "gAUS", function test_gAUS() {
+ChromeUtils.defineLazyGetter(this, "gAUS", function test_gAUS() {
   return Cc["@mozilla.org/updates/update-service;1"]
     .getService(Ci.nsIApplicationUpdateService)
     .QueryInterface(Ci.nsITimerCallback)
@@ -135,11 +135,11 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIUpdateChecker"
 );
 
-XPCOMUtils.defineLazyGetter(this, "gDefaultPrefBranch", function test_gDPB() {
+ChromeUtils.defineLazyGetter(this, "gDefaultPrefBranch", function test_gDPB() {
   return Services.prefs.getDefaultBranch(null);
 });
 
-XPCOMUtils.defineLazyGetter(this, "gPrefRoot", function test_gPR() {
+ChromeUtils.defineLazyGetter(this, "gPrefRoot", function test_gPR() {
   return Services.prefs.getBranch(null);
 });
 

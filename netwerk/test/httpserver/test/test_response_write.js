@@ -6,7 +6,7 @@
 
 // make sure response.write works for strings, and coerces other args to strings
 
-XPCOMUtils.defineLazyGetter(this, "tests", function () {
+ChromeUtils.defineLazyGetter(this, "tests", function () {
   return [
     new Test(
       "http://localhost:" + srv.identity.primaryPort + "/writeString",

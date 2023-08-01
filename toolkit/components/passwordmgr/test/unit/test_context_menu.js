@@ -53,7 +53,7 @@ const HTTP_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1 = authLogin({
   origin: ORIGIN_HTTPS_EXAMPLE_ORG,
 });
 
-XPCOMUtils.defineLazyGetter(this, "_stringBundle", function () {
+ChromeUtils.defineLazyGetter(this, "_stringBundle", function () {
   return Services.strings.createBundle(
     "chrome://passwordmgr/locale/passwordmgr.properties"
   );

@@ -3,7 +3,7 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyGetter(this, "jsonViewStrings", () => {
+ChromeUtils.defineLazyGetter(this, "jsonViewStrings", () => {
   return Services.strings.createBundle(
     "chrome://devtools/locale/jsonview.properties"
   );

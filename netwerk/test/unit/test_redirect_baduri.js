@@ -11,7 +11,7 @@ const { HttpServer } = ChromeUtils.importESModule(
 var httpServer = null;
 
 var BadRedirectPath = "/BadRedirect";
-XPCOMUtils.defineLazyGetter(this, "BadRedirectURI", function () {
+ChromeUtils.defineLazyGetter(this, "BadRedirectURI", function () {
   return (
     "http://localhost:" + httpServer.identity.primaryPort + BadRedirectPath
   );

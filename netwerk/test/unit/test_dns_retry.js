@@ -13,16 +13,16 @@ let CC_IPV4 = "example_cc_ipv4.com";
 let CC_IPV6 = "example_cc_ipv6.com";
 Services.prefs.clearUserPref("network.dns.native-is-localhost");
 
-XPCOMUtils.defineLazyGetter(this, "URL_CC_IPV4", function () {
+ChromeUtils.defineLazyGetter(this, "URL_CC_IPV4", function () {
   return `http://${CC_IPV4}:${httpServerIPv4.identity.primaryPort}${testpath}`;
 });
-XPCOMUtils.defineLazyGetter(this, "URL_CC_IPV6", function () {
+ChromeUtils.defineLazyGetter(this, "URL_CC_IPV6", function () {
   return `http://${CC_IPV6}:${httpServerIPv6.identity.primaryPort}${testpath}`;
 });
-XPCOMUtils.defineLazyGetter(this, "URL6a", function () {
+ChromeUtils.defineLazyGetter(this, "URL6a", function () {
   return `http://example6a.com:${httpServerIPv6.identity.primaryPort}${testpath}`;
 });
-XPCOMUtils.defineLazyGetter(this, "URL6b", function () {
+ChromeUtils.defineLazyGetter(this, "URL6b", function () {
   return `http://example6b.com:${httpServerIPv6.identity.primaryPort}${testpath}`;
 });
 

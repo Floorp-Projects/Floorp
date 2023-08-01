@@ -19,10 +19,10 @@ var sRedirectPromptPref;
 const BUGID = "676059";
 const OTHERBUGID = "696849";
 
-XPCOMUtils.defineLazyGetter(this, "pSame", function () {
+ChromeUtils.defineLazyGetter(this, "pSame", function () {
   return sSame.identity.primaryPort;
 });
-XPCOMUtils.defineLazyGetter(this, "pOther", function () {
+ChromeUtils.defineLazyGetter(this, "pOther", function () {
   return sOther.identity.primaryPort;
 });
 

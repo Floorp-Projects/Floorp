@@ -7,7 +7,7 @@
 // exercise nsIHttpResponse.setStatusLine, ensure its atomicity, and ensure the
 // specified behavior occurs if it's not called
 
-XPCOMUtils.defineLazyGetter(this, "URL", function () {
+ChromeUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + srv.identity.primaryPort;
 });
 
@@ -55,7 +55,7 @@ function checkStatusLine(
  * TESTS *
  *********/
 
-XPCOMUtils.defineLazyGetter(this, "tests", function () {
+ChromeUtils.defineLazyGetter(this, "tests", function () {
   return [
     new Test(URL + "/no/setstatusline", null, startNoSetStatusLine, stop),
     new Test(URL + "/http1_0", null, startHttp1_0, stop),

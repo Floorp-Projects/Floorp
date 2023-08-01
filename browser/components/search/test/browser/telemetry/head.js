@@ -21,11 +21,11 @@ ChromeUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
   return module;
 });
 
-XPCOMUtils.defineLazyGetter(this, "searchCounts", () => {
+ChromeUtils.defineLazyGetter(this, "searchCounts", () => {
   return Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
 });
 
-XPCOMUtils.defineLazyGetter(this, "SEARCH_AD_CLICK_SCALARS", () => {
+ChromeUtils.defineLazyGetter(this, "SEARCH_AD_CLICK_SCALARS", () => {
   const sources = [
     ...BrowserSearchTelemetry.KNOWN_SEARCH_SOURCES.values(),
     "unknown",

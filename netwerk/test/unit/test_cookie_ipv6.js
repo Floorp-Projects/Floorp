@@ -10,7 +10,7 @@
 "use strict";
 
 let ip = "[::1]";
-XPCOMUtils.defineLazyGetter(this, "URL", function () {
+ChromeUtils.defineLazyGetter(this, "URL", function () {
   return `http://${ip}:${httpserver.identity.primaryPort}/`;
 });
 

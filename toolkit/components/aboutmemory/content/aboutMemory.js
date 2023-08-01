@@ -40,17 +40,17 @@ ChromeUtils.defineESModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "nsBinaryStream", () =>
+ChromeUtils.defineLazyGetter(this, "nsBinaryStream", () =>
   CC(
     "@mozilla.org/binaryinputstream;1",
     "nsIBinaryInputStream",
     "setInputStream"
   )
 );
-XPCOMUtils.defineLazyGetter(this, "nsFile", () =>
+ChromeUtils.defineLazyGetter(this, "nsFile", () =>
   CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath")
 );
-XPCOMUtils.defineLazyGetter(this, "nsGzipConverter", () =>
+ChromeUtils.defineLazyGetter(this, "nsGzipConverter", () =>
   CC(
     "@mozilla.org/streamconv;1?from=gzip&to=uncompressed",
     "nsIStreamConverter"

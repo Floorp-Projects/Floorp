@@ -39,7 +39,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "ProfilerPopupBackground", function () {
+ChromeUtils.defineLazyGetter(this, "ProfilerPopupBackground", function () {
   return ChromeUtils.import(
     "resource://devtools/client/performance-new/shared/background.jsm.js"
   );

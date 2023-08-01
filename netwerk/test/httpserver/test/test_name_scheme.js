@@ -10,11 +10,11 @@
 
 var srv;
 
-XPCOMUtils.defineLazyGetter(this, "PREFIX", function () {
+ChromeUtils.defineLazyGetter(this, "PREFIX", function () {
   return "http://localhost:" + srv.identity.primaryPort;
 });
 
-XPCOMUtils.defineLazyGetter(this, "tests", function () {
+ChromeUtils.defineLazyGetter(this, "tests", function () {
   return [
     new Test(PREFIX + "/bar.html^", null, start_bar_html_, null),
     new Test(PREFIX + "/foo.html^", null, start_foo_html_, null),

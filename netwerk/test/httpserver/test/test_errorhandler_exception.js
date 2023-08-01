@@ -7,7 +7,7 @@
 // Request handlers may throw exceptions, and those exception should be caught
 // by the server and converted into the proper error codes.
 
-XPCOMUtils.defineLazyGetter(this, "tests", function () {
+ChromeUtils.defineLazyGetter(this, "tests", function () {
   return [
     new Test(
       "http://localhost:" + srv.identity.primaryPort + "/throws/exception",

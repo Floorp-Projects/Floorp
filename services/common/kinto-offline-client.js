@@ -2600,7 +2600,7 @@ var EXPORTED_SYMBOLS = ["Kinto"];
       // Use standalone kinto-http module landed in FFx.
       KintoHttpClient: "resource://services-common/kinto-http-client.sys.mjs"
   });
-  XPCOMUtils.defineLazyGetter(global, "generateUUID", () => {
+  ChromeUtils.defineLazyGetter(global, "generateUUID", () => {
       const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
       return generateUUID;
   });

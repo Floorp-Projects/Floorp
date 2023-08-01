@@ -16,7 +16,7 @@ add_task(async function () {
   let win = doc.defaultView;
   let dialogURL = "";
   let dialogOpened = false;
-  XPCOMUtils.defineLazyGetter(win, "gSubDialog", () => ({
+  ChromeUtils.defineLazyGetter(win, "gSubDialog", () => ({
     open(aDialogURL, { closingCallback: aCallback }) {
       dialogOpened = true;
       dialogURL = aDialogURL;

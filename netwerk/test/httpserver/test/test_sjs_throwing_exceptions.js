@@ -10,7 +10,7 @@
  * then preventing any file from being opened).
  */
 
-XPCOMUtils.defineLazyGetter(this, "URL", function () {
+ChromeUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + srv.identity.primaryPort;
 });
 
@@ -45,7 +45,7 @@ var lastPassed = false;
 // This hits the open-file limit for me on OS X; your mileage may vary.
 const TEST_RUNS = 250;
 
-XPCOMUtils.defineLazyGetter(this, "tests", function () {
+ChromeUtils.defineLazyGetter(this, "tests", function () {
   var _tests = new Array(TEST_RUNS + 1);
   var _test = new Test(URL + "/thrower.sjs?throw", null, start_thrower);
   for (var i = 0; i < TEST_RUNS; i++) {

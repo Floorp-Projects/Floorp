@@ -7,7 +7,7 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
+ChromeUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
   const { QuickSuggestTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/QuickSuggestTestUtils.sys.mjs"
   );

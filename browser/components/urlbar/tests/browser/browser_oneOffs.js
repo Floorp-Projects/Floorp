@@ -12,7 +12,7 @@ const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 let gMaxResults;
 let engine;
 
-XPCOMUtils.defineLazyGetter(this, "oneOffSearchButtons", () => {
+ChromeUtils.defineLazyGetter(this, "oneOffSearchButtons", () => {
   return UrlbarTestUtils.getOneOffSearchButtons(window);
 });
 

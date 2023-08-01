@@ -1670,13 +1670,13 @@ var DownloadsBlockedSubview = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(DownloadsBlockedSubview, "panelMultiView", () =>
+ChromeUtils.defineLazyGetter(DownloadsBlockedSubview, "panelMultiView", () =>
   document.getElementById("downloadsPanel-multiView")
 );
-XPCOMUtils.defineLazyGetter(DownloadsBlockedSubview, "mainView", () =>
+ChromeUtils.defineLazyGetter(DownloadsBlockedSubview, "mainView", () =>
   document.getElementById("downloadsPanel-mainView")
 );
-XPCOMUtils.defineLazyGetter(DownloadsBlockedSubview, "subview", () =>
+ChromeUtils.defineLazyGetter(DownloadsBlockedSubview, "subview", () =>
   document.getElementById("downloadsPanel-blockedSubview")
 );
 

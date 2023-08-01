@@ -37,11 +37,11 @@ registerCleanupFunction(() => {
 
 let httpserver = null;
 let httpserverv6 = null;
-XPCOMUtils.defineLazyGetter(this, "URL", function () {
+ChromeUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpserver.identity.primaryPort + "/content";
 });
 
-XPCOMUtils.defineLazyGetter(this, "URLv6", function () {
+ChromeUtils.defineLazyGetter(this, "URLv6", function () {
   return "http://[::1]:" + httpserverv6.identity.primaryPort + "/content";
 });
 

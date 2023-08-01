@@ -937,7 +937,7 @@ var FullScreen = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(FullScreen, "_permissionNotificationIDs", () => {
+ChromeUtils.defineLazyGetter(FullScreen, "_permissionNotificationIDs", () => {
   let { PermissionUI } = ChromeUtils.importESModule(
     "resource:///modules/PermissionUI.sys.mjs"
   );
