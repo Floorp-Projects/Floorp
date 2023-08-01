@@ -39,9 +39,6 @@ external_dirs += ["modules/xz-embedded"]
 if CONFIG["MOZ_VORBIS"]:
     external_dirs += ["media/libvorbis"]
 
-if CONFIG["MOZ_TREMOR"]:
-    external_dirs += ["media/libtremor"]
-
 if not CONFIG["MOZ_SYSTEM_LIBVPX"]:
     external_dirs += ["media/libvpx"]
 
