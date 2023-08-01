@@ -9,6 +9,9 @@
 #include "TimeUnits.h"
 #include "VideoUtils.h"
 #include "BufferReader.h"
+#if defined(FFVPX_VERSION)
+#  include "libavutil/channel_layout.h"
+#endif
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Telemetry.h"
 
@@ -17,14 +20,15 @@ namespace mozilla {
 using TimeUnit = media::TimeUnit;
 
 FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
-                                                  const AudioInfo& aConfig)
-    : FFmpegDataDecoder(aLib, GetCodecId(aConfig.mMimeType)) {
+                                                  const AudioInfo& aInfo)
+    : FFmpegDataDecoder(aLib, GetCodecId(aInfo.mMimeType, aInfo)),
+      mAudioInfo(aInfo) {
   MOZ_COUNT_CTOR(FFmpegAudioDecoder);
 
   if (mCodecID == AV_CODEC_ID_AAC &&
-      aConfig.mCodecSpecificConfig.is<AacCodecSpecificData>()) {
+      aInfo.mCodecSpecificConfig.is<AacCodecSpecificData>()) {
     const AacCodecSpecificData& aacCodecSpecificData =
-        aConfig.mCodecSpecificConfig.as<AacCodecSpecificData>();
+        aInfo.mCodecSpecificConfig.as<AacCodecSpecificData>();
     mExtraData = new MediaByteBuffer;
     // Ffmpeg expects the DecoderConfigDescriptor blob.
     mExtraData->AppendElements(
@@ -40,13 +44,13 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
 
   if (mCodecID == AV_CODEC_ID_FLAC) {
     MOZ_DIAGNOSTIC_ASSERT(
-        aConfig.mCodecSpecificConfig.is<FlacCodecSpecificData>());
+        aInfo.mCodecSpecificConfig.is<FlacCodecSpecificData>());
     // Gracefully handle bad data. If don't hit the preceding assert once this
     // has been shipped for awhile, we can remove it and make the following code
     // non-conditional.
-    if (aConfig.mCodecSpecificConfig.is<FlacCodecSpecificData>()) {
+    if (aInfo.mCodecSpecificConfig.is<FlacCodecSpecificData>()) {
       const FlacCodecSpecificData& flacCodecSpecificData =
-          aConfig.mCodecSpecificConfig.as<FlacCodecSpecificData>();
+          aInfo.mCodecSpecificConfig.as<FlacCodecSpecificData>();
       if (flacCodecSpecificData.mStreamInfoBinaryBlob->IsEmpty()) {
         // Flac files without headers will be missing stream info. In this case
         // we don't want to feed ffmpeg empty extra data as it will fail, just
@@ -63,7 +67,7 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
 
   // Vorbis is handled by this case.
   RefPtr<MediaByteBuffer> audioCodecSpecificBinaryBlob =
-      GetAudioCodecSpecificBlob(aConfig.mCodecSpecificConfig);
+      GetAudioCodecSpecificBlob(aInfo.mCodecSpecificConfig);
   if (audioCodecSpecificBinaryBlob && audioCodecSpecificBinaryBlob->Length()) {
     // Use a new MediaByteBuffer as the object will be modified during
     // initialization.
@@ -99,6 +103,21 @@ void FFmpegAudioDecoder<LIBAV_VER>::InitCodecContext() {
   if (mAudioInfo.mChannelMap != AudioConfig::ChannelLayout::UNKNOWN_MAP) {
     mLib->av_channel_layout_from_mask(
         &mCodecContext->ch_layout, AssertedCast<uint64_t>(mAudioInfo.mChannelMap));
+  } else {
+    mLib->av_channel_layout_default(&mCodecContext->ch_layout,
+                                    AssertedCast<int>(mAudioInfo.mChannels));
+  }
+  mCodecContext->sample_rate = AssertedCast<int>(mAudioInfo.mRate);
+#endif
+#ifdef FFVPX_VERSION
+  // AudioInfo's layout first 32-bits are bit-per-bit compatible with
+  // WAVEFORMATEXTENSIBLE and FFmpeg's AVChannel enum. We can cast here.
+  mCodecContext->ch_layout.nb_channels =
+      AssertedCast<int>(mAudioInfo.mChannels);
+  if (mAudioInfo.mChannelMap != AudioConfig::ChannelLayout::UNKNOWN_MAP) {
+    mLib->av_channel_layout_from_mask(
+        &mCodecContext->ch_layout,
+        static_cast<uint64_t>(mAudioInfo.mChannelMap));
   } else {
     mLib->av_channel_layout_default(&mCodecContext->ch_layout,
                                     AssertedCast<int>(mAudioInfo.mChannels));
@@ -414,8 +433,8 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
   return NS_OK;
 }
 
-AVCodecID FFmpegAudioDecoder<LIBAV_VER>::GetCodecId(
-    const nsACString& aMimeType) {
+AVCodecID FFmpegAudioDecoder<LIBAV_VER>::GetCodecId(const nsACString& aMimeType,
+                                                    const AudioInfo& aInfo) {
   if (aMimeType.EqualsLiteral("audio/mpeg")) {
 #ifdef FFVPX_VERSION
     if (!StaticPrefs::media_ffvpx_mp3_enabled()) {
@@ -438,6 +457,49 @@ AVCodecID FFmpegAudioDecoder<LIBAV_VER>::GetCodecId(
 #endif
     return AV_CODEC_ID_VORBIS;
   }
+#ifdef FFVPX_VERSION
+  if (aMimeType.Find("wav") != kNotFound) {
+    if (!StaticPrefs::media_ffvpx_wav_enabled()) {
+      return AV_CODEC_ID_NONE;
+    }
+    if (aMimeType.EqualsLiteral("audio/x-wav") ||
+        aMimeType.EqualsLiteral("audio/wave; codecs=1") ||
+        aMimeType.EqualsLiteral("audio/wave; codecs=65534")) {
+      // find the pcm format
+      switch (aInfo.mBitDepth) {
+        case 8:
+          return AV_CODEC_ID_PCM_U8;
+        case 16:
+          return AV_CODEC_ID_PCM_S16LE;
+        case 24:
+          return AV_CODEC_ID_PCM_S24LE;
+        case 32:
+          return AV_CODEC_ID_PCM_S32LE;
+        case 0:
+          // ::Init will find and use the right type here, this is just
+          // returning something that means that this media type can be decoded.
+          // This happens when attempting to find what decoder to use for a
+          // media type, without actually having looked at the actual
+          // bytestream. This decoder can decode all usual PCM bytestream
+          // anyway.
+          return AV_CODEC_ID_PCM_S16LE;
+        default:
+          return AV_CODEC_ID_NONE;
+      };
+    }
+    if (aMimeType.EqualsLiteral("audio/wave; codecs=3")) {
+      return AV_CODEC_ID_PCM_F32LE;
+    }
+    // A-law
+    if (aMimeType.EqualsLiteral("audio/wave; codecs=6")) {
+      return AV_CODEC_ID_PCM_MULAW;
+    }
+    // Mu-law
+    if (aMimeType.EqualsLiteral("audio/wave; codecs=7")) {
+      return AV_CODEC_ID_PCM_MULAW;
+    }
+  }
+#endif
 
   return AV_CODEC_ID_NONE;
 }
