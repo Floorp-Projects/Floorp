@@ -2493,7 +2493,7 @@ bool FinishDynamicModuleImport_impl(JSContext* cx,
                                     HandleObject moduleRequest,
                                     HandleObject promiseArg) {
   Rooted<ListObject*> resolutionArgs(cx, ListObject::create(cx));
-  if (!resolutionArgs->append(cx, referencingPrivate)) {
+  if (!resolutionArgs || !resolutionArgs->append(cx, referencingPrivate)) {
     return false;
   }
   Rooted<Value> stringValue(
