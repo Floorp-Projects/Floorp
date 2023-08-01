@@ -10,9 +10,9 @@
 #include "OpusParser.h"
 #include "VideoUtils.h"
 
-#include "opus/opus.h"
+#include <opus/opus.h>
 extern "C" {
-#include "opus/opus_multistream.h"
+#include <opus/opus_multistream.h>
 }
 
 #include <cmath>
