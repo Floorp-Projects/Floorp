@@ -7,6 +7,8 @@ apply from: "${topsrcdir}/mobile/android/gradle/mach_env.gradle"
 def commandLine = ["${topsrcdir}/mach", "environment", "--format", "json", "--verbose"]
 if (System.env.GRADLE_MACH_PYTHON) {
     commandLine.addAll(0, [System.env.GRADLE_MACH_PYTHON])
+} else if (System.properties["os.name"].contains("Windows")) {
+    commandLine.addAll(0, ["python"])
 }
 
 def proc = commandLine.execute(machEnv(topsrcdir), new File(topsrcdir))
