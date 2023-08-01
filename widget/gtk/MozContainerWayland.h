@@ -79,9 +79,9 @@ struct wl_egl_window* moz_container_wayland_get_egl_window(
 gboolean moz_container_wayland_has_egl_window(MozContainer* container);
 void moz_container_wayland_egl_window_set_size(MozContainer* container,
                                                nsIntSize aSize, int aScale);
-void moz_container_wayland_set_scale_factor(MozContainer* container);
 void moz_container_wayland_set_scale_factor_locked(
-    const mozilla::MutexAutoLock& aProofOfLock, MozContainer* container);
+    const mozilla::MutexAutoLock& aProofOfLock, MozContainer* container,
+    int aScale);
 bool moz_container_wayland_size_matches_scale_factor_locked(
     const mozilla::MutexAutoLock& aProofOfLock, MozContainer* container,
     int aWidth, int aHeight);
