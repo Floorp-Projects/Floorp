@@ -138,22 +138,24 @@ bool WAVTrackDemuxer::Init() {
     }
   }
 
-  mSamplesPerSecond = mFmtParser.FmtChunk().SampleRate();
-  mChannels = mFmtParser.FmtChunk().Channels();
-  mSampleFormat = mFmtParser.FmtChunk().SampleFormat();
-  if (!mSamplesPerSecond || !mChannels || !mSampleFormat) {
+  mSamplesPerSecond = mFmtChunk.SampleRate();
+  mChannels = mFmtChunk.Channels();
+  if (!mSamplesPerSecond || !mChannels || !mFmtChunk.ValidBitsPerSamples()) {
     return false;
   }
-  mSamplesPerChunk = DATA_CHUNK_SIZE * 8 / mChannels / mSampleFormat;
+  mSamplesPerChunk =
+      DATA_CHUNK_SIZE * 8 / mChannels / mFmtChunk.ValidBitsPerSamples();
+  mSampleFormat = mFmtChunk.ValidBitsPerSamples();
 
   mInfo->mRate = mSamplesPerSecond;
   mInfo->mChannels = mChannels;
-  mInfo->mBitDepth = mSampleFormat;
-  mInfo->mProfile = mFmtParser.FmtChunk().WaveFormat() & 0x00FF;
-  mInfo->mExtendedProfile = (mFmtParser.FmtChunk().WaveFormat() & 0xFF00) >> 8;
+  mInfo->mBitDepth = mFmtChunk.ValidBitsPerSamples();
+  mInfo->mProfile = mFmtChunk.WaveFormat() & 0x00FF;
+  mInfo->mExtendedProfile = mFmtChunk.WaveFormat() & 0xFF00 >> 8;
   mInfo->mMimeType = "audio/wave; codecs=";
-  mInfo->mMimeType.AppendInt(mFmtParser.FmtChunk().WaveFormat());
+  mInfo->mMimeType.AppendInt(mFmtChunk.WaveFormat());
   mInfo->mDuration = Duration();
+  mInfo->mChannelMap = mFmtChunk.ChannelMap();
 
   return mInfo->mDuration.IsPositive();
 }
@@ -183,9 +185,8 @@ bool WAVTrackDemuxer::FmtChunkParserInit() {
   if (!fmtChunk) {
     return false;
   }
-  BufferReader fmtReader(fmtChunk->Data(),
-                         mHeaderParser.GiveHeader().ChunkSize());
-  Unused << mFmtParser.Parse(fmtReader);
+  nsTArray<uint8_t> fmtChunkData(fmtChunk->Data(), fmtChunk->Size());
+  mFmtChunk.Init(std::move(fmtChunkData));
   return true;
 }
 
@@ -345,7 +346,6 @@ void WAVTrackDemuxer::Reset() {
   mParser.Reset();
   mHeaderParser.Reset();
   mRIFFParser.Reset();
-  mFmtParser.Reset();
 }
 
 RefPtr<WAVTrackDemuxer::SkipAccessPointPromise>
@@ -657,71 +657,62 @@ void HeaderParser::ChunkHeader::Update(uint8_t c) {
   }
 }
 
-// FormatParser
+// FormatChunk
 
-Result<uint32_t, nsresult> FormatParser::Parse(BufferReader& aReader) {
-  for (auto res = aReader.ReadU8();
-       res.isOk() && !mFmtChunk.ParseNext(res.unwrap());
-       res = aReader.ReadU8()) {
-  }
+void FormatChunk::Init(nsTArray<uint8_t>&& aData) { mRaw = std::move(aData); }
 
-  if (mFmtChunk.IsValid()) {
-    return FMT_CHUNK_MIN_SIZE;
-  }
+uint16_t FormatChunk::WaveFormat() const { return (mRaw[1] << 8) | (mRaw[0]); }
 
-  return 0;
-}
+uint16_t FormatChunk::Channels() const { return (mRaw[3] << 8) | (mRaw[2]); }
 
-void FormatParser::Reset() { mFmtChunk.Reset(); }
-
-const FormatParser::FormatChunk& FormatParser::FmtChunk() const {
-  return mFmtChunk;
-}
-
-// FormatParser::FormatChunk
-
-FormatParser::FormatChunk::FormatChunk() { Reset(); }
-
-void FormatParser::FormatChunk::Reset() {
-  memset(mRaw, 0, sizeof(mRaw));
-  mPos = 0;
-}
-
-uint16_t FormatParser::FormatChunk::WaveFormat() const {
-  return (mRaw[1] << 8) | (mRaw[0]);
-}
-
-uint16_t FormatParser::FormatChunk::Channels() const {
-  return (mRaw[3] << 8) | (mRaw[2]);
-}
-
-uint32_t FormatParser::FormatChunk::SampleRate() const {
+uint32_t FormatChunk::SampleRate() const {
   return static_cast<uint32_t>((mRaw[7] << 24) | (mRaw[6] << 16) |
                                (mRaw[5] << 8) | (mRaw[4]));
 }
 
-uint16_t FormatParser::FormatChunk::FrameSize() const {
-  return (mRaw[13] << 8) | (mRaw[12]);
+uint16_t FormatChunk::AverageBytesPerSec() const {
+  return static_cast<uint16_t>((mRaw[11] << 24) | (mRaw[10] << 16) |
+                               (mRaw[9] << 8) | (mRaw[8]));
 }
 
-uint16_t FormatParser::FormatChunk::SampleFormat() const {
+uint16_t FormatChunk::BlockAlign() const {
+  return static_cast<uint16_t>(mRaw[13] << 8) | (mRaw[12]);
+}
+
+uint16_t FormatChunk::ValidBitsPerSamples() const {
   return (mRaw[15] << 8) | (mRaw[14]);
 }
 
-bool FormatParser::FormatChunk::ParseNext(uint8_t c) {
-  Update(c);
-  return IsValid();
-}
-
-bool FormatParser::FormatChunk::IsValid() const {
-  return (FrameSize() == SampleRate() * Channels() / 8) &&
-         (mPos >= FMT_CHUNK_MIN_SIZE);
-}
-
-void FormatParser::FormatChunk::Update(uint8_t c) {
-  if (mPos < FMT_CHUNK_MIN_SIZE) {
-    mRaw[mPos++] = c;
+uint16_t FormatChunk::ExtraFormatInfoSize() const {
+  uint16_t value = static_cast<uint16_t>(mRaw[17] << 8) | (mRaw[16]);
+  if (WaveFormat() != 0xFFFE && value != 0) {
+    NS_WARNING(
+        "Found non-zero extra format info length and the wave format"
+        " isn't WAVEFORMATEXTENSIBLE.");
+    return 0;
   }
+  if (WaveFormat() == 0xFFFE && value < 22) {
+    NS_WARNING(
+        "Wave format is WAVEFORMATEXTENSIBLE and extra data size isn't at"
+        " least 22 bytes");
+    return 0;
+  }
+  return value;
+}
+
+AudioConfig::ChannelLayout::ChannelMap FormatChunk::ChannelMap() const {
+  // Integer or float files -- regular mapping
+  if (WaveFormat() == 1 || WaveFormat() == 2) {
+    return AudioConfig::ChannelLayout(Channels()).Map();
+  }
+  if (ExtraFormatInfoSize() < 22) {
+    MOZ_ASSERT(Channels() <= 2);
+    return AudioConfig::ChannelLayout::UNKNOWN_MAP;
+  }
+  // ChannelLayout::ChannelMap is by design bit-per-bit compatible with
+  // WAVEFORMATEXTENSIBLE's dwChannelMask attribute, we can just cast here.
+  return static_cast<AudioConfig::ChannelLayout::ChannelMap>(
+      mRaw[21] | mRaw[20] | mRaw[19] | mRaw[18]);
 }
 
 // DataParser

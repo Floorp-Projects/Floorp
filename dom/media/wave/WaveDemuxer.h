@@ -116,41 +116,24 @@ class HeaderParser {
   ChunkHeader mHeader;
 };
 
-class FormatParser {
- private:
-  class FormatChunk;
-
+class FormatChunk {
  public:
-  const FormatChunk& FmtChunk() const;
+  FormatChunk() = default;
+  void Init(nsTArray<uint8_t>&& aData);
+  bool IsValid() const;
 
-  Result<uint32_t, nsresult> Parse(BufferReader& aReader);
-
-  void Reset();
+  uint16_t WaveFormat() const;
+  uint16_t Channels() const;
+  uint32_t SampleRate() const;
+  uint16_t ExtraFormatInfoSize() const;
+  uint16_t SampleFormat() const;
+  uint16_t AverageBytesPerSec() const;
+  uint16_t BlockAlign() const;
+  uint16_t ValidBitsPerSamples() const;
+  AudioConfig::ChannelLayout::ChannelMap ChannelMap() const;
 
  private:
-  class FormatChunk {
-   public:
-    FormatChunk();
-    void Reset();
-
-    uint16_t WaveFormat() const;
-    uint16_t Channels() const;
-    uint32_t SampleRate() const;
-    uint16_t FrameSize() const;
-    uint16_t SampleFormat() const;
-
-    bool IsValid() const;
-    bool ParseNext(uint8_t c);
-
-   private:
-    void Update(uint8_t c);
-
-    uint8_t mRaw[FMT_CHUNK_MIN_SIZE];
-
-    int mPos;
-  };
-
-  FormatChunk mFmtChunk;
+  nsTArray<uint8_t> mRaw;
 };
 
 class DataParser {
@@ -240,7 +223,7 @@ class WAVTrackDemuxer : public MediaTrackDemuxer,
   RIFFParser mRIFFParser;
   HeaderParser mHeaderParser;
 
-  FormatParser mFmtParser;
+  FormatChunk mFmtChunk;
   // ListChunkParser mListChunkParser;
 
   uint64_t mOffset;
