@@ -16,6 +16,7 @@ import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.support.ktx.kotlin.last4Digits
+import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -183,6 +184,32 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
                     cardType = cardType,
                 ),
             )
+        }
+    }
+
+    @Test
+    fun `GIVEN an invalid credit card entry WHEN onCreditCardSave is called THEN the request is ignored`() {
+        runTest {
+            val billingName = "Jon Doe"
+            val cardNumber = ""
+            val expiryMonth = ""
+            val expiryYear = ""
+            val cardType = "amex"
+
+            val creditCardEntry = CreditCardEntry(
+                name = billingName,
+                number = cardNumber,
+                expiryMonth = expiryMonth,
+                expiryYear = expiryYear,
+                cardType = cardType,
+            )
+
+            delegate.onCreditCardSave(
+                creditCardEntry,
+            )
+
+            verify(storage, times(0)).addCreditCard(any())
+            verify(storage, times(0)).updateCreditCard(any(), any())
         }
     }
 

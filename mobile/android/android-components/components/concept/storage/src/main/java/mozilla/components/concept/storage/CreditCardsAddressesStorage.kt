@@ -275,6 +275,12 @@ data class CreditCardEntry(
             }
         }
 
+    /**
+     * Whether this entry contains all data needed to be considered well-formed.
+     */
+    val isValid: Boolean
+        get() = number.isNotEmpty() && expiryDate.isNotEmpty()
+
     companion object {
         // Date format pattern for the credit card expiry date.
         private const val DATE_PATTERN = "MM/yyyy"

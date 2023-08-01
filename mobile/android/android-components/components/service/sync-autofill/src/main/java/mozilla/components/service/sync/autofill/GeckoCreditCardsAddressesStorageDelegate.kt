@@ -72,6 +72,8 @@ class GeckoCreditCardsAddressesStorageDelegate(
         }
 
     override suspend fun onCreditCardSave(creditCard: CreditCardEntry) {
+        if (!creditCard.isValid) return
+
         scope.launch {
             when (val result = validationDelegate.shouldCreateOrUpdate(creditCard)) {
                 is CreditCardValidationDelegate.Result.CanBeCreated -> {

@@ -9,6 +9,7 @@ import mozilla.components.concept.storage.CreditCard.Companion.ellipsesStart
 import mozilla.components.concept.storage.CreditCard.Companion.ellipsis
 import mozilla.components.support.ktx.kotlin.last4Digits
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class CreditCardEntryTest {
@@ -68,5 +69,26 @@ class CreditCardEntryTest {
         assertEquals("", creditCardWithoutYear.expiryDate)
         assertEquals("", creditCardWithoutMonth.expiryDate)
         assertEquals("", creditCardWithoutFullDate.expiryDate)
+    }
+
+    @Test
+    fun `GIVEN empty number THEN entry is considered invalid`() {
+        val entry = creditCard.copy(number = "")
+
+        assertFalse(entry.isValid)
+    }
+
+    @Test
+    fun `GIVEN empty expiry month THEN entry is considered invalid`() {
+        val entry = creditCard.copy(expiryMonth = "")
+
+        assertFalse(entry.isValid)
+    }
+
+    @Test
+    fun `GIVEN empty expiry year THEN entry is considered invalid`() {
+        val entry = creditCard.copy(expiryYear = "")
+
+        assertFalse(entry.isValid)
     }
 }
