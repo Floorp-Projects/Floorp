@@ -135,6 +135,7 @@ pref("floorp.browser.workspace.tab.enabled",true);
 pref("floorp.browser.workspace.closePopupAfterClick", false);
 pref("floorp.browser.workspace.excludePinnedTabs", false);
 pref("floorp.browser.workspace.info", "[]");
+pref("floorp.browser.workspace.manageOnBMS", false);
 
 //タブバーの背景色
 pref("floorp.titlebar.favicon.color", false);

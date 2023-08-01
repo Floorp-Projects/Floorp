@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyGetter(this, "L10n", () => {
 Preferences.addAll([
   { id: "floorp.browser.workspace.closePopupAfterClick", type: "bool" },
   { id: "floorp.browser.workspace.excludePinnedTabs", type: "bool" },
+  { id: "floorp.browser.workspace.manageOnBMS", type: "bool" },
 ])
 
 function coventToDateAndTime(timestamp) {
@@ -53,6 +54,32 @@ const gWorkspacesPane = {
     this._pane = document.getElementById("paneWorkspaces");
     document.getElementById("backtogeneral-workspaces").addEventListener("command", function () {
       gotoPref("general")
+    });
+
+    const needreboot = document.getElementsByClassName("needreboot");
+    for (let i = 0; i < needreboot.length; i++) {
+      needreboot[i].addEventListener("click", function () {
+        if (!Services.prefs.getBoolPref("floorp.enable.auto.restart", false)) {
+          (async () => {
+            let userConfirm = await confirmRestartPrompt(null)
+            if (userConfirm == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
+              Services.startup.quit(
+                Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
+              );
+            }
+          })()
+        } else {
+          window.setTimeout(function () {
+            Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
+          }, 500);
+        }
+      });
+    }
+
+    document.getElementById("manageWorkspace-button").addEventListener("command", function () {
+      gSubDialog.open(
+        "chrome://browser/content/preferences/dialogs/manageWorkspace.xhtml",
+      );
     });
 
     const resetButton = document.getElementById("reset-workspaces-button");

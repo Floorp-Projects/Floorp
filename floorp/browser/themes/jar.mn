@@ -20,6 +20,21 @@ browser.jar:
   skin/classic/browser/workspace-floorp.png                               (icons/workspace-floorp.png)
   skin/classic/browser/workspace-menu-check.svg                           (icons/menu-check.svg)
 
+# Workspace icons
+  skin/classic/browser/workspace-icons/briefcase.svg                      (icons/workspace-icons/briefcase.svg)
+  skin/classic/browser/workspace-icons/cart.svg                           (icons/workspace-icons/cart.svg)
+  skin/classic/browser/workspace-icons/chill.svg                          (icons/workspace-icons/chill.svg)
+  skin/classic/browser/workspace-icons/circle.svg                         (icons/workspace-icons/circle.svg)
+  skin/classic/browser/workspace-icons/dollar.svg                         (icons/workspace-icons/dollar.svg)
+  skin/classic/browser/workspace-icons/fence.svg                          (icons/workspace-icons/fence.svg)
+  skin/classic/browser/workspace-icons/fingerprint.svg                    (icons/workspace-icons/fingerprint.svg)
+  skin/classic/browser/workspace-icons/food.svg                           (icons/workspace-icons/food.svg)
+  skin/classic/browser/workspace-icons/fruit.svg                          (icons/workspace-icons/fruit.svg)
+  skin/classic/browser/workspace-icons/gift.svg                           (icons/workspace-icons/gift.svg)
+  skin/classic/browser/workspace-icons/pet.svg                            (icons/workspace-icons/pet.svg)
+  skin/classic/browser/workspace-icons/tree.svg                           (icons/workspace-icons/tree.svg)
+  skin/classic/browser/workspace-icons/vacation.svg                       (icons/workspace-icons/vacation.svg)
+
 # options
   skin/classic/browser/options/micaforeveryone.css                        (designs/options/micaforeveryone.css)
   skin/classic/browser/options/move_page_inside_searchbar.css             (designs/options/move_page_inside_searchbar.css)

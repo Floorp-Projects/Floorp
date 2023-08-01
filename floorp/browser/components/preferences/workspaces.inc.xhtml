@@ -25,6 +25,8 @@
               data-l10n-id="pinned-tabs-exclude-workspace-option"/>
     <checkbox preference="floorp.browser.workspace.closePopupAfterClick" 
               data-l10n-id="change-to-close-workspace-popup-option"/>
+    <checkbox preference="floorp.browser.workspace.manageOnBMS" class="needreboot"
+              data-l10n-id="manage-workspace-on-bms-option"/>
 
     <html:h2 data-l10n-id="workspaces-reset-title"/>
     <description class="indent tip-caption" data-l10n-id="workspaces-reset-description"/>
@@ -36,6 +38,19 @@
               class="accessory-button"
               data-l10n-id="workspaces-reset-button"/>
     </hbox>
+
+    <html:h2 data-l10n-id="workspaces-manage-title"/>
+    <description class="indent tip-caption" data-l10n-id="workspaces-manage-description"/>
+    <hbox>
+      <label data-l10n-id="workspaces-manage-label"/>
+      <spacer flex="1"/> 
+      <button id="manageWorkspace-button"
+              is="highlightable-button"
+              class="accessory-button"
+              data-l10n-id="workspaces-manage-button"/>
+    </hbox>
+
+    
 
     <html:h2 data-l10n-id="workspaces-backup-discription"/>
     <richlistbox id="workspaces-backup-list" flex="1" class="backup-list">
