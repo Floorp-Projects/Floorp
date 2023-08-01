@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.9.169';
+    const workerVersion = '3.10.17';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -3268,7 +3268,7 @@ class Page {
         intentPrint = !!(intent & _util.RenderingIntentFlag.PRINT);
       const opListPromises = [];
       for (const annotation of annotations) {
-        if (intentAny || intentDisplay && annotation.mustBeViewed(annotationStorage) || intentPrint && annotation.mustBePrinted(annotationStorage)) {
+        if (intentAny || intentDisplay && annotation.mustBeViewed(annotationStorage, renderForms) || intentPrint && annotation.mustBePrinted(annotationStorage)) {
           opListPromises.push(annotation.getOperatorList(partialEvaluator, task, intent, renderForms, annotationStorage).catch(function (reason) {
             (0, _util.warn)("getOperatorList - ignoring annotation data during " + `"${task.name}" task: "${reason}".`);
             return {
@@ -4640,19 +4640,19 @@ class Annotation {
     return !this._hasFlag(flags, _util.AnnotationFlag.INVISIBLE) && !this._hasFlag(flags, _util.AnnotationFlag.NOVIEW);
   }
   _isPrintable(flags) {
-    return this._hasFlag(flags, _util.AnnotationFlag.PRINT) && !this._hasFlag(flags, _util.AnnotationFlag.INVISIBLE);
+    return this._hasFlag(flags, _util.AnnotationFlag.PRINT) && !this._hasFlag(flags, _util.AnnotationFlag.HIDDEN) && !this._hasFlag(flags, _util.AnnotationFlag.INVISIBLE);
   }
-  mustBeViewed(annotationStorage) {
-    const hidden = annotationStorage?.get(this.data.id)?.hidden;
-    if (hidden !== undefined) {
-      return !hidden;
+  mustBeViewed(annotationStorage, _renderForms) {
+    const noView = annotationStorage?.get(this.data.id)?.noView;
+    if (noView !== undefined) {
+      return !noView;
     }
     return this.viewable && !this._hasFlag(this.flags, _util.AnnotationFlag.HIDDEN);
   }
   mustBePrinted(annotationStorage) {
-    const print = annotationStorage?.get(this.data.id)?.print;
-    if (print !== undefined) {
-      return print;
+    const noPrint = annotationStorage?.get(this.data.id)?.noPrint;
+    if (noPrint !== undefined) {
+      return !noPrint;
     }
     return this.printable;
   }
@@ -5325,7 +5325,7 @@ class WidgetAnnotation extends Annotation {
     }
     data.readOnly = this.hasFieldFlag(_util.AnnotationFieldFlag.READONLY);
     data.required = this.hasFieldFlag(_util.AnnotationFieldFlag.REQUIRED);
-    data.hidden = this._hasFlag(data.annotationFlags, _util.AnnotationFlag.HIDDEN);
+    data.hidden = this._hasFlag(data.annotationFlags, _util.AnnotationFlag.HIDDEN) || this._hasFlag(data.annotationFlags, _util.AnnotationFlag.NOVIEW);
   }
   _decodeFormValue(formValue) {
     if (Array.isArray(formValue)) {
@@ -5339,6 +5339,15 @@ class WidgetAnnotation extends Annotation {
   }
   hasFieldFlag(flag) {
     return !!(this.data.fieldFlags & flag);
+  }
+  _isViewable(flags) {
+    return !this._hasFlag(flags, _util.AnnotationFlag.INVISIBLE);
+  }
+  mustBeViewed(annotationStorage, renderForms) {
+    if (renderForms) {
+      return this.viewable;
+    }
+    return super.mustBeViewed(annotationStorage, renderForms) && !this._hasFlag(this.flags, _util.AnnotationFlag.NOVIEW);
   }
   getRotationMatrix(annotationStorage) {
     let rotation = annotationStorage?.get(this.data.id)?.rotation;
@@ -57805,8 +57814,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.9.169';
-const pdfjsBuild = 'cfd179f23';
+const pdfjsVersion = '3.10.17';
+const pdfjsBuild = '4735ed8f1';
 })();
 
 /******/ 	return __webpack_exports__;

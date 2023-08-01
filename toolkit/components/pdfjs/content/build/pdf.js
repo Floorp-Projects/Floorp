@@ -940,7 +940,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.9.169',
+    apiVersion: '3.10.17',
     data,
     password,
     disableAutoFetch,
@@ -1841,6 +1841,7 @@ class WorkerTransport {
   #methodPromises = new Map();
   #pageCache = new Map();
   #pagePromises = new Map();
+  #passwordCapability = null;
   constructor(messageHandler, loadingTask, networkStream, params, factory) {
     this.messageHandler = messageHandler;
     this.loadingTask = loadingTask;
@@ -1856,7 +1857,6 @@ class WorkerTransport {
     this.standardFontDataFactory = factory.standardFontDataFactory;
     this.destroyed = false;
     this.destroyCapability = null;
-    this._passwordCapability = null;
     this._networkStream = networkStream;
     this._fullReader = null;
     this._lastProgress = null;
@@ -1922,9 +1922,7 @@ class WorkerTransport {
     }
     this.destroyed = true;
     this.destroyCapability = new _util.PromiseCapability();
-    if (this._passwordCapability) {
-      this._passwordCapability.reject(new Error("Worker was destroyed during onPassword callback"));
-    }
+    this.#passwordCapability?.reject(new Error("Worker was destroyed during onPassword callback"));
     const waitOn = [];
     for (const page of this.#pageCache.values()) {
       waitOn.push(page._destroy());
@@ -2078,13 +2076,13 @@ class WorkerTransport {
       loadingTask._capability.reject(reason);
     });
     messageHandler.on("PasswordRequest", exception => {
-      this._passwordCapability = new _util.PromiseCapability();
+      this.#passwordCapability = new _util.PromiseCapability();
       if (loadingTask.onPassword) {
         const updatePassword = password => {
           if (password instanceof Error) {
-            this._passwordCapability.reject(password);
+            this.#passwordCapability.reject(password);
           } else {
-            this._passwordCapability.resolve({
+            this.#passwordCapability.resolve({
               password
             });
           }
@@ -2092,12 +2090,12 @@ class WorkerTransport {
         try {
           loadingTask.onPassword(updatePassword, exception.code);
         } catch (ex) {
-          this._passwordCapability.reject(ex);
+          this.#passwordCapability.reject(ex);
         }
       } else {
-        this._passwordCapability.reject(new _util.PasswordException(exception.message, exception.code));
+        this.#passwordCapability.reject(new _util.PasswordException(exception.message, exception.code));
       }
-      return this._passwordCapability.promise;
+      return this.#passwordCapability.promise;
     });
     messageHandler.on("DataLoaded", data => {
       loadingTask.onProgress?.({
@@ -2317,7 +2315,7 @@ class WorkerTransport {
     return this.messageHandler.sendWithPromise("GetJavaScript", null);
   }
   getDocJSActions() {
-    return this.messageHandler.sendWithPromise("GetDocJSActions", null);
+    return this.#cacheSimpleMethod("GetDocJSActions");
   }
   getPageJSActions(pageIndex) {
     return this.messageHandler.sendWithPromise("GetPageJSActions", {
@@ -2596,9 +2594,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.9.169';
+const version = '3.10.17';
 exports.version = version;
-const build = 'cfd179f23';
+const build = '4735ed8f1';
 exports.build = build;
 
 /***/ }),
@@ -8929,7 +8927,7 @@ class OptionalContentConfig {
     this.#cachedGetHash = null;
   }
   get hasInitialVisibility() {
-    return this.getHash() === this.#initialHash;
+    return this.#initialHash === null || this.getHash() === this.#initialHash;
   }
   getOrder() {
     if (!this.#groups.size) {
@@ -10812,26 +10810,38 @@ class AnnotationElement {
   get _commonActions() {
     const setColor = (jsName, styleName, event) => {
       const color = event.detail[jsName];
-      event.target.style[styleName] = _scripting_utils.ColorConverters[`${color[0]}_HTML`](color.slice(1));
+      const colorType = color[0];
+      const colorArray = color.slice(1);
+      event.target.style[styleName] = _scripting_utils.ColorConverters[`${colorType}_HTML`](colorArray);
+      this.annotationStorage.setValue(this.data.id, {
+        [styleName]: _scripting_utils.ColorConverters[`${colorType}_rgb`](colorArray)
+      });
     };
     return (0, _util.shadow)(this, "_commonActions", {
       display: event => {
-        const hidden = event.detail.display % 2 === 1;
+        const {
+          display
+        } = event.detail;
+        const hidden = display % 2 === 1;
         this.container.style.visibility = hidden ? "hidden" : "visible";
         this.annotationStorage.setValue(this.data.id, {
-          hidden,
-          print: event.detail.display === 0 || event.detail.display === 3
+          noView: hidden,
+          noPrint: display === 1 || display === 2
         });
       },
       print: event => {
         this.annotationStorage.setValue(this.data.id, {
-          print: event.detail.print
+          noPrint: !event.detail.print
         });
       },
       hidden: event => {
-        this.container.style.visibility = event.detail.hidden ? "hidden" : "visible";
+        const {
+          hidden
+        } = event.detail;
+        this.container.style.visibility = hidden ? "hidden" : "visible";
         this.annotationStorage.setValue(this.data.id, {
-          hidden: event.detail.hidden
+          noPrint: hidden,
+          noView: hidden
         });
       },
       focus: event => {
@@ -12925,6 +12935,9 @@ exports.ColorConverters = void 0;
 function makeColorComp(n) {
   return Math.floor(Math.max(0, Math.min(1, n)) * 255).toString(16).padStart(2, "0");
 }
+function scaleAndClamp(x) {
+  return Math.max(0, Math.min(255, 255 * x));
+}
 class ColorConverters {
   static CMYK_G([c, y, m, k]) {
     return ["G", 1 - Math.min(1, 0.3 * c + 0.59 * m + 0.11 * y + k)];
@@ -12935,6 +12948,10 @@ class ColorConverters {
   static G_RGB([g]) {
     return ["RGB", g, g, g];
   }
+  static G_rgb([g]) {
+    g = scaleAndClamp(g);
+    return [g, g, g];
+  }
   static G_HTML([g]) {
     const G = makeColorComp(g);
     return `#${G}${G}${G}`;
@@ -12942,17 +12959,23 @@ class ColorConverters {
   static RGB_G([r, g, b]) {
     return ["G", 0.3 * r + 0.59 * g + 0.11 * b];
   }
-  static RGB_HTML([r, g, b]) {
-    const R = makeColorComp(r);
-    const G = makeColorComp(g);
-    const B = makeColorComp(b);
-    return `#${R}${G}${B}`;
+  static RGB_rgb(color) {
+    return color.map(scaleAndClamp);
+  }
+  static RGB_HTML(color) {
+    return `#${color.map(makeColorComp).join("")}`;
   }
   static T_HTML() {
     return "#00000000";
   }
+  static T_rgb() {
+    return [null];
+  }
   static CMYK_RGB([c, y, m, k]) {
     return ["RGB", 1 - Math.min(1, c + k), 1 - Math.min(1, m + k), 1 - Math.min(1, y + k)];
+  }
+  static CMYK_rgb([c, y, m, k]) {
+    return [scaleAndClamp(1 - Math.min(1, c + k)), scaleAndClamp(1 - Math.min(1, m + k)), scaleAndClamp(1 - Math.min(1, y + k))];
   }
   static CMYK_HTML(components) {
     const rgb = this.CMYK_RGB(components).slice(1);
@@ -13976,8 +13999,8 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.StampEditor = void 0;
-var _editor = __w_pdfjs_require__(4);
 var _util = __w_pdfjs_require__(1);
+var _editor = __w_pdfjs_require__(4);
 var _display_utils = __w_pdfjs_require__(6);
 var _annotation_layer = __w_pdfjs_require__(23);
 class StampEditor extends _editor.AnnotationEditor {
@@ -13996,6 +14019,10 @@ class StampEditor extends _editor.AnnotationEditor {
       name: "stampEditor"
     });
     this.#bitmapUrl = params.bitmapUrl;
+  }
+  static get supportedTypes() {
+    const types = ["apng", "avif", "bmp", "gif", "jpeg", "png", "svg+xml", "webp", "x-icon"];
+    return (0, _util.shadow)(this, "supportedTypes", types.map(type => `image/${type}`).join(","));
   }
   #getBitmap() {
     if (this.#bitmapId) {
@@ -14029,7 +14056,7 @@ class StampEditor extends _editor.AnnotationEditor {
     }
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = "image/*";
+    input.accept = StampEditor.supportedTypes;
     this.#bitmapPromise = new Promise(resolve => {
       input.addEventListener("change", async () => {
         this.#bitmapPromise = null;
@@ -14588,8 +14615,8 @@ var _tools = __w_pdfjs_require__(5);
 var _annotation_layer = __w_pdfjs_require__(23);
 var _worker_options = __w_pdfjs_require__(14);
 var _xfa_layer = __w_pdfjs_require__(25);
-const pdfjsVersion = '3.9.169';
-const pdfjsBuild = 'cfd179f23';
+const pdfjsVersion = '3.10.17';
+const pdfjsBuild = '4735ed8f1';
 })();
 
 /******/ 	return __webpack_exports__;
