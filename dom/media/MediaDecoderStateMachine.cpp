@@ -998,6 +998,41 @@ class MediaDecoderStateMachine::LoopingDecodingState
   void HandleVideoDecoded(VideoData* aVideo) override {
     // TODO : check if we need to update mOriginalDecodedDuration
 
+    // Here sample still keeps its original timestamp.
+
+    // This indicates there is a shorter audio track, and it's the first time in
+    // the looping (audio ends but video is playing) so that we haven't been
+    // able to determine the decoded duration. Therefore, we fill the gap
+    // between two tracks before video ends. Afterward, this adjustment will be
+    // done in `HandleEndOfAudio()`.
+    if (mMaster->mOriginalDecodedDuration == media::TimeUnit::Zero() &&
+        mMaster->mAudioTrackDecodedDuration &&
+        aVideo->GetEndTime() > *mMaster->mAudioTrackDecodedDuration) {
+      media::TimeUnit gap;
+      // First time we fill gap between the video frame to the last audio.
+      if (auto prevVideo = VideoQueue().PeekBack();
+          prevVideo &&
+          prevVideo->GetEndTime() < *mMaster->mAudioTrackDecodedDuration) {
+        gap =
+            aVideo->GetEndTime().ToBase(*mMaster->mAudioTrackDecodedDuration) -
+            *mMaster->mAudioTrackDecodedDuration;
+      }
+      // Then fill the gap for all following videos.
+      else {
+        gap = aVideo->mDuration.ToBase(*mMaster->mAudioTrackDecodedDuration);
+      }
+      SLOG("Longer video %" PRId64 "%s (audio-durtaion=%" PRId64
+           "%s), insert silence to fill the gap %" PRId64 "%s",
+           aVideo->GetEndTime().ToMicroseconds(),
+           aVideo->GetEndTime().ToString().get(),
+           mMaster->mAudioTrackDecodedDuration->ToMicroseconds(),
+           mMaster->mAudioTrackDecodedDuration->ToString().get(),
+           gap.ToMicroseconds(), gap.ToString().get());
+      if (RefPtr<AudioData> data = CreateFakeAudioData(gap)) {
+        HandleAudioDecoded(data);
+      }
+    }
+
     // After pushing data to the queue, timestamp might be adjusted.
     DecodingState::HandleVideoDecoded(aVideo);
     mMaster->mDecodedVideoEndTime =
@@ -1016,6 +1051,32 @@ class MediaDecoderStateMachine::LoopingDecodingState
     if (DetermineOriginalDecodedDurationIfNeeded()) {
       AudioQueue().SetOffset(AudioQueue().GetOffset() +
                              mMaster->mOriginalDecodedDuration);
+    }
+
+    // This indicates that the audio track is shorter than the video track, so
+    // we need to add some silence to fill the gap.
+    if (mMaster->mAudioTrackDecodedDuration &&
+        mMaster->mOriginalDecodedDuration >
+            *mMaster->mAudioTrackDecodedDuration) {
+      MOZ_ASSERT(mMaster->HasVideo());
+      MOZ_ASSERT(mMaster->mVideoTrackDecodedDuration);
+      MOZ_ASSERT(mMaster->mOriginalDecodedDuration ==
+                 *mMaster->mVideoTrackDecodedDuration);
+      auto gap = mMaster->mOriginalDecodedDuration.ToBase(
+                     *mMaster->mAudioTrackDecodedDuration) -
+                 *mMaster->mAudioTrackDecodedDuration;
+      SLOG(
+          "Audio track is shorter than the original decoded duration "
+          "(a=%" PRId64 "%s, t=%" PRId64
+          "%s), insert silence to fill the gap %" PRId64 "%s",
+          mMaster->mAudioTrackDecodedDuration->ToMicroseconds(),
+          mMaster->mAudioTrackDecodedDuration->ToString().get(),
+          mMaster->mOriginalDecodedDuration.ToMicroseconds(),
+          mMaster->mOriginalDecodedDuration.ToString().get(),
+          gap.ToMicroseconds(), gap.ToString().get());
+      if (RefPtr<AudioData> data = CreateFakeAudioData(gap)) {
+        HandleAudioDecoded(data);
+      }
     }
 
     SLOG(
@@ -1496,6 +1557,37 @@ class MediaDecoderStateMachine::LoopingDecodingState
         return aSampleTime > offset.ToMicroseconds();
       });
     }
+  }
+
+  already_AddRefed<AudioData> CreateFakeAudioData(
+      const media::TimeUnit& aDuration) {
+    MOZ_ASSERT(Info().HasAudio());
+    const auto& audioInfo = Info().mAudio;
+    CheckedInt64 frames = aDuration.ToTicksAtRate(audioInfo.mRate);
+    if (!frames.isValid() || !audioInfo.mChannels || !audioInfo.mRate) {
+      NS_WARNING("Can't create fake audio, invalid frames/channel/rate?");
+      return nullptr;
+    }
+    AlignedAudioBuffer samples(frames.value() * audioInfo.mChannels);
+    if (!samples) {
+      NS_WARNING(nsPrintfCString(
+                     "Can't create fake audio, OOM or duration (%s) too short",
+                     aDuration.ToString().get())
+                     .get());
+      return nullptr;
+    }
+    // `mDecodedAudioEndTime` is adjusted time, and we want unadjusted time
+    // otherwise the time would be adjusted twice when pushing sample into the
+    // media queue.
+    media::TimeUnit startTime = mMaster->mDecodedAudioEndTime;
+    if (AudioQueue().GetOffset() != media::TimeUnit::Zero()) {
+      startTime -= AudioQueue().GetOffset();
+    }
+    RefPtr<AudioData> data(new AudioData(0, startTime, std::move(samples),
+                                         audioInfo.mChannels, audioInfo.mRate));
+    SLOG("Created fake silence audio data (duration=%s, expected duration=%s)",
+         data->mDuration.ToString().get(), aDuration.ToString().get());
+    return data.forget();
   }
 
   bool HasDecodedLastAudioFrame() const {
