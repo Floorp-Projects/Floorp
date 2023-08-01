@@ -452,7 +452,7 @@ export function getCustomTypesDemo(demo) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                109, // custom_types:uniffi_custom_types_fn_func_get_custom_types_demo
+                107, // custom_types:uniffi_custom_types_fn_func_get_custom_types_demo
                 FfiConverterOptionalTypeCustomTypesDemo.lower(demo),
             )
         }

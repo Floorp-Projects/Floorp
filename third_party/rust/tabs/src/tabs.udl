@@ -26,12 +26,6 @@ interface TabsStore {
     [Self=ByArc]
     void register_with_sync_manager();
 
-    [Throws=TabsApiError, Self=ByArc]
-    void reset();
-
-    [Throws=TabsApiError, Self=ByArc]
-    string sync(string key_id, string access_token, string sync_key, string tokenserver_url, string local_id);
-
     [Self=ByArc]
     TabsBridgedEngine bridged_engine();
 
