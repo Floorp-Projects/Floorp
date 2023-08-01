@@ -94,30 +94,30 @@ bool WAVTrackDemuxer::Init() {
       return false;
     }
 
-    uint32_t aChunkName = mHeaderParser.GiveHeader().ChunkName();
-    uint32_t aChunkSize = mHeaderParser.GiveHeader().ChunkSize();
+    uint32_t chunkName = mHeaderParser.GiveHeader().ChunkName();
+    uint32_t chunkSize = mHeaderParser.GiveHeader().ChunkSize();
 
-    if (aChunkName == FRMT_CODE) {
+    if (chunkName == FRMT_CODE) {
       if (!FmtChunkParserInit()) {
         return false;
       }
-    } else if (aChunkName == LIST_CODE) {
+    } else if (chunkName == LIST_CODE) {
       mHeaderParser.Reset();
-      uint64_t endOfListChunk = static_cast<uint64_t>(mOffset) + aChunkSize;
+      uint64_t endOfListChunk = static_cast<uint64_t>(mOffset) + chunkSize;
       if (endOfListChunk > UINT32_MAX) {
         return false;
       }
-      if (!ListChunkParserInit(aChunkSize)) {
+      if (!ListChunkParserInit(chunkSize)) {
         mOffset = endOfListChunk;
       }
-    } else if (aChunkName == DATA_CODE) {
-      mDataLength = aChunkSize;
+    } else if (chunkName == DATA_CODE) {
+      mDataLength = chunkSize;
       if (mFirstChunkOffset != mOffset) {
         mFirstChunkOffset = mOffset;
       }
       break;
     } else {
-      mOffset += aChunkSize;  // Skip other irrelevant chunks.
+      mOffset += chunkSize;  // Skip other irrelevant chunks.
     }
     if (mOffset & 1) {
       // Wave files are 2-byte aligned so we need to round up
@@ -173,8 +173,8 @@ bool WAVTrackDemuxer::HeaderParserInit() {
   if (!header) {
     return false;
   }
-  BufferReader HeaderReader(header->Data(), 8);
-  Unused << mHeaderParser.Parse(HeaderReader);
+  BufferReader headerReader(header->Data(), 8);
+  Unused << mHeaderParser.Parse(headerReader);
   return true;
 }
 
