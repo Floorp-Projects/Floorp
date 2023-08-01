@@ -71,7 +71,3 @@ default-features = false
 [build-dependencies.uniffi]
 version = "0.24.1"
 features = ["build"]
-
-[features]
-default = []
-full-sync = ["sync15/standalone-sync"]
