@@ -38,6 +38,8 @@ var localProviderModules = {
     "resource:///modules/UrlbarProviderBookmarkKeywords.sys.mjs",
   UrlbarProviderCalculator:
     "resource:///modules/UrlbarProviderCalculator.sys.mjs",
+  UrlbarProviderClipboard:
+    "resource:///modules/UrlbarProviderClipboard.sys.mjs",
   UrlbarProviderContextualSearch:
     "resource:///modules/UrlbarProviderContextualSearch.sys.mjs",
   UrlbarProviderHeuristicFallback:
@@ -420,7 +422,9 @@ class Query {
         // Not all isActive implementations are async, so wrap the call in a
         // promise so we can be sure we can call `then` on it.  Note that
         // Promise.resolve returns its arg directly if it's already a promise.
-        Promise.resolve(provider.tryMethod("isActive", this.context))
+        Promise.resolve(
+          provider.tryMethod("isActive", this.context, this.controller)
+        )
           .then(isActive => {
             if (isActive && !this.canceled) {
               let priority = provider.tryMethod("getPriority", this.context);

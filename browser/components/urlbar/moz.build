@@ -25,6 +25,7 @@ EXTRA_JS_MODULES += [
     "UrlbarProviderAutofill.sys.mjs",
     "UrlbarProviderBookmarkKeywords.sys.mjs",
     "UrlbarProviderCalculator.sys.mjs",
+    "UrlbarProviderClipboard.sys.mjs",
     "UrlbarProviderContextualSearch.sys.mjs",
     "UrlbarProviderExtension.sys.mjs",
     "UrlbarProviderHeuristicFallback.sys.mjs",
