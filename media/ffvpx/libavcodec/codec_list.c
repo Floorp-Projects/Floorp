@@ -41,4 +41,7 @@ static const FFCodec * const codec_list[] = {
 #if CONFIG_PCM_U8_DECODER
     &ff_pcm_u8_decoder,
 #endif
+#if CONFIG_LIBOPUS_DECODER
+    &ff_libopus_decoder,
+#endif
     NULL };
