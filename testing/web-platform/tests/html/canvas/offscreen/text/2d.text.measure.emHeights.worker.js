@@ -21,16 +21,16 @@ t.step(function() {
   f.load();
   fonts.add(f);
   fonts.ready.then(function() {
-      ctx.font = '50px CanvasTest';
+      ctx.font = '40px CanvasTest';
       ctx.direction = 'ltr';
       ctx.align = 'left'
-      _assertSame(ctx.measureText('A').emHeightAscent, 37.5, "ctx.measureText('A').emHeightAscent", "37.5");
-      _assertSame(ctx.measureText('A').emHeightDescent, 12.5, "ctx.measureText('A').emHeightDescent", "12.5");
-      _assertSame(ctx.measureText('A').emHeightDescent + ctx.measureText('A').emHeightAscent, 50, "ctx.measureText('A').emHeightDescent + ctx.measureText('A').emHeightAscent", "50");
+      _assertSame(ctx.measureText('A').emHeightAscent, 30, "ctx.measureText('A').emHeightAscent", "30");
+      _assertSame(ctx.measureText('A').emHeightDescent, 10, "ctx.measureText('A').emHeightDescent", "10");
+      _assertSame(ctx.measureText('A').emHeightDescent + ctx.measureText('A').emHeightAscent, 40, "ctx.measureText('A').emHeightDescent + ctx.measureText('A').emHeightAscent", "40");
 
-      _assertSame(ctx.measureText('ABCD').emHeightAscent, 37.5, "ctx.measureText('ABCD').emHeightAscent", "37.5");
-      _assertSame(ctx.measureText('ABCD').emHeightDescent, 12.5, "ctx.measureText('ABCD').emHeightDescent", "12.5");
-      _assertSame(ctx.measureText('ABCD').emHeightDescent + ctx.measureText('ABCD').emHeightAscent, 50, "ctx.measureText('ABCD').emHeightDescent + ctx.measureText('ABCD').emHeightAscent", "50");
+      _assertSame(ctx.measureText('ABCD').emHeightAscent, 30, "ctx.measureText('ABCD').emHeightAscent", "30");
+      _assertSame(ctx.measureText('ABCD').emHeightDescent, 10, "ctx.measureText('ABCD').emHeightDescent", "10");
+      _assertSame(ctx.measureText('ABCD').emHeightDescent + ctx.measureText('ABCD').emHeightAscent, 40, "ctx.measureText('ABCD').emHeightDescent + ctx.measureText('ABCD').emHeightAscent", "40");
   }).then(t_pass, t_fail);
 });
 done();
