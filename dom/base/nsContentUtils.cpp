@@ -964,8 +964,7 @@ bool nsContentUtils::IsExternalProtocol(nsIURI* aURI) {
   return NS_SUCCEEDED(rv) && doesNotReturnData;
 }
 
-/* static */
-nsAtom* nsContentUtils::GetEventTypeFromMessage(EventMessage aEventMessage) {
+static nsAtom* GetEventTypeFromMessage(EventMessage aEventMessage) {
   switch (aEventMessage) {
 #define MESSAGE_TO_EVENT(name_, message_, type_, struct_) \
   case message_:                                          \
