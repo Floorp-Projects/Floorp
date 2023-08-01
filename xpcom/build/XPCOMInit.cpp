@@ -66,7 +66,6 @@
 
 #include "nsSystemInfo.h"
 #include "nsMemoryReporterManager.h"
-#include "nsMessageLoop.h"
 #include "nss.h"
 #include "nsNSSComponent.h"
 
