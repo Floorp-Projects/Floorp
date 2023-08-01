@@ -120,8 +120,8 @@ function handlePageShow(persisted) {
   }
 }
 
-// If Fission is disabled, the pref is no-op.
-SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+// We want to test Gecko's zoom handling, not the front-end's.
+SpecialPowers.pushPrefEnv({set: [["browser.zoom.siteSpecific", false]]}, () => {
   window.open('file_zoom_restore_bfcache.html', '_blank', 'noopener');
 });
 </script>
