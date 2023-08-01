@@ -61,7 +61,7 @@ add_task(async function test_signed_in() {
     let syncedTabsComponent = document.querySelector(
       "view-syncedtabs:not([slot=syncedtabs])"
     );
-    await syncedTabsComponent.updateComplete;
+    await TestUtils.waitForCondition(() => syncedTabsComponent.fullyUpdated);
     let emptyState =
       syncedTabsComponent.shadowRoot.querySelector("fxview-empty-state");
     ok(
@@ -101,7 +101,7 @@ add_task(async function test_no_synced_tabs() {
     let syncedTabsComponent = document.querySelector(
       "view-syncedtabs:not([slot=syncedtabs])"
     );
-    await syncedTabsComponent.updateComplete;
+    await TestUtils.waitForCondition(() => syncedTabsComponent.fullyUpdated);
     let emptyState =
       syncedTabsComponent.shadowRoot.querySelector("fxview-empty-state");
     ok(
@@ -121,13 +121,13 @@ add_task(async function test_no_error_for_two_desktop() {
         id: 1,
         name: "This Device",
         isCurrentDevice: true,
-        clientType: "desktop",
+        type: "desktop",
         tabs: [],
       },
       {
         id: 2,
         name: "Other Device",
-        clientType: "desktop",
+        type: "desktop",
         tabs: [],
       },
     ],
@@ -141,9 +141,7 @@ add_task(async function test_no_error_for_two_desktop() {
     let syncedTabsComponent = document.querySelector(
       "view-syncedtabs:not([slot=syncedtabs])"
     );
-    await syncedTabsComponent.updateComplete;
-    // I don't love this, but I'm out of ideas
-    await TestUtils.waitForTick();
+    await TestUtils.waitForCondition(() => syncedTabsComponent.fullyUpdated);
     let emptyState =
       syncedTabsComponent.shadowRoot.querySelector("fxview-empty-state");
     is(emptyState, null, "No empty state should be shown");
@@ -187,9 +185,7 @@ add_task(async function test_empty_state() {
     let syncedTabsComponent = document.querySelector(
       "view-syncedtabs:not([slot=syncedtabs])"
     );
-    await syncedTabsComponent.updateComplete;
-    // I don't love this, but I'm out of ideas
-    await TestUtils.waitForTick();
+    await TestUtils.waitForCondition(() => syncedTabsComponent.fullyUpdated);
     let noTabs = syncedTabsComponent.shadowRoot.querySelectorAll(".notabs");
     is(noTabs.length, 2, "Should be 2 empty devices");
 
@@ -231,9 +227,7 @@ add_task(async function test_tabs() {
     let syncedTabsComponent = document.querySelector(
       "view-syncedtabs:not([slot=syncedtabs])"
     );
-    await syncedTabsComponent.updateComplete;
-    // I don't love this, but I'm out of ideas
-    await TestUtils.waitForTick();
+    await TestUtils.waitForCondition(() => syncedTabsComponent.fullyUpdated);
 
     let headers =
       syncedTabsComponent.shadowRoot.querySelectorAll("h2[slot=header]");
@@ -294,9 +288,7 @@ add_task(async function test_empty_desktop_same_name() {
     let syncedTabsComponent = document.querySelector(
       "view-syncedtabs:not([slot=syncedtabs])"
     );
-    await syncedTabsComponent.updateComplete;
-    // I don't love this, but I'm out of ideas
-    await TestUtils.waitForTick();
+    await TestUtils.waitForCondition(() => syncedTabsComponent.fullyUpdated);
     let noTabs = syncedTabsComponent.shadowRoot.querySelectorAll(".notabs");
     is(noTabs.length, 1, "Should be 1 empty devices");
 
@@ -304,6 +296,58 @@ add_task(async function test_empty_desktop_same_name() {
       syncedTabsComponent.shadowRoot.querySelectorAll("h2[slot=header]");
     ok(
       headers[0].textContent.includes("A Device"),
+      "Text is correct (Desktop)"
+    );
+  });
+  await tearDown(sandbox);
+});
+
+add_task(async function test_empty_desktop_same_name_three() {
+  const sandbox = setupMocks({
+    state: UIState.STATUS_SIGNED_IN,
+    fxaDevices: [
+      {
+        id: 1,
+        name: "A Device",
+        isCurrentDevice: true,
+        type: "desktop",
+        tabs: [],
+      },
+      {
+        id: 2,
+        name: "A Device",
+        type: "desktop",
+        tabs: [],
+      },
+      {
+        id: 3,
+        name: "A Device",
+        type: "desktop",
+        tabs: [],
+      },
+    ],
+  });
+
+  await withFirefoxView({ openNewWindow: true }, async browser => {
+    const { document } = browser.contentWindow;
+    navigateToCategory(document, "syncedtabs");
+    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+
+    let syncedTabsComponent = document.querySelector(
+      "view-syncedtabs:not([slot=syncedtabs])"
+    );
+    await TestUtils.waitForCondition(() => syncedTabsComponent.fullyUpdated);
+    let noTabs = syncedTabsComponent.shadowRoot.querySelectorAll(".notabs");
+    is(noTabs.length, 2, "Should be 2 empty devices");
+
+    let headers =
+      syncedTabsComponent.shadowRoot.querySelectorAll("h2[slot=header]");
+    ok(
+      headers[0].textContent.includes("A Device"),
+      "Text is correct (Desktop)"
+    );
+    ok(
+      headers[1].textContent.includes("A Device"),
       "Text is correct (Desktop)"
     );
   });
