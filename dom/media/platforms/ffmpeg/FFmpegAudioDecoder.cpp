@@ -224,7 +224,7 @@ using ChannelLayout = AudioConfig::ChannelLayout;
 
 MediaResult FFmpegAudioDecoder<LIBAV_VER>::PostProcessOutput(
     bool aDecoded, MediaRawData* aSample, DecodedData& aResults,
-    bool* aGotFrame) {
+    bool* aGotFrame, int32_t aSubmitted) {
   media::TimeUnit pts = aSample->mTime;
 
   if (mFrame->format != AV_SAMPLE_FMT_FLT &&
@@ -238,6 +238,10 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::PostProcessOutput(
     return MediaResult(
         NS_ERROR_DOM_MEDIA_DECODE_ERR,
         RESULT_DETAIL("FFmpeg audio decoder outputs unsupported audio format"));
+  }
+
+  if (aSubmitted < 0) {
+    FFMPEG_LOG("Got %d more frame from packet", mFrame->nb_samples);
   }
 
   FFMPEG_LOG(
@@ -302,7 +306,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DecodeUsingFFmpeg(
         NS_ERROR_DOM_MEDIA_DECODE_ERR,
         RESULT_DETAIL("FFmpeg audio error"));
   }
-  PostProcessOutput(decoded, aSample, aResults, aGotFrame);
+  PostProcessOutput(decoded, aSample, aResults, aGotFrame, 0);
   return NS_OK;
 }
 #else
@@ -311,9 +315,16 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DecodeUsingFFmpeg(
 MediaResult FFmpegAudioDecoder<LIBAV_VER>::DecodeUsingFFmpeg(
     AVPacket* aPacket, bool& aDecoded,
     MediaRawData* aSample, DecodedData& aResults, bool* aGotFrame) {
+  // This in increment whenever avcodec_send_packet succeeds, and decremented
+  // whenever avcodec_receive_frame succeeds. Because it is possible to have
+  // multiple AVFrames from a single AVPacket, this number can be negative.
+  // This is used to ensure that pts and duration are correctly set on the
+  // resulting audio buffers.
+  int32_t submitted = 0;
   int ret = mLib->avcodec_send_packet(mCodecContext, aPacket);
   switch (ret) {
     case AVRESULT_OK:
+      submitted++;
       break;
     case AVERROR(EAGAIN):
       FFMPEG_LOG("  av_codec_send_packet: EAGAIN.");
@@ -329,29 +340,45 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DecodeUsingFFmpeg(
                          RESULT_DETAIL("FFmpeg audio error"));
   }
 
+  MediaResult rv;
+
   while (ret == 0) {
     aDecoded = false;
     ret = mLib->avcodec_receive_frame(mCodecContext, mFrame);
     switch (ret) {
       case AVRESULT_OK:
         aDecoded = true;
+        submitted--;
+        if (submitted < 0) {
+          FFMPEG_LOG("Multiple AVFrame from a single AVPacket");
+        }
         break;
-      case AVERROR(EAGAIN):
-        FFMPEG_LOG("  EAGAIN.");
+      case AVERROR(EAGAIN): {
+        // Quirk of the vorbis decoder -- the first packet doesn't return audio.
+        if (submitted == 1 && mCodecID == AV_CODEC_ID_VORBIS) {
+          AlignedAudioBuffer buf;
+          aResults.AppendElement(
+              new AudioData(0, TimeUnit::Zero(), std::move(buf),
+                            mAudioInfo.mChannels, mAudioInfo.mRate));
+        }
+        FFMPEG_LOG("  EAGAIN (packets submitted: %" PRIu32 ").", submitted);
+        rv = NS_OK;
         break;
+      }
       case AVERROR_EOF: {
         FFMPEG_LOG("  End of stream.");
-        return MediaResult(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
-                           RESULT_DETAIL("End of stream"));
+        rv = MediaResult(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
+                         RESULT_DETAIL("End of stream"));
+        break;
       }
       default:
         FFMPEG_LOG("  avcodec_receive_packet error.");
         NS_WARNING("FFmpeg audio decoder error (avcodec_receive_packet).");
-        return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                           RESULT_DETAIL("FFmpeg audio error"));
+        rv = MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                         RESULT_DETAIL("FFmpeg audio error"));
     }
     if (aDecoded) {
-      PostProcessOutput(aDecoded, aSample, aResults, aGotFrame);
+      PostProcessOutput(aDecoded, aSample, aResults, aGotFrame, submitted);
     }
   }
 
