@@ -1019,9 +1019,7 @@ class MediaDecoderStateMachine::LoopingDecodingState
            mMaster->mAudioTrackDecodedDuration->ToMicroseconds(),
            mMaster->mAudioTrackDecodedDuration->ToString().get(),
            gap.ToMicroseconds(), gap.ToString().get());
-      if (RefPtr<AudioData> data = CreateFakeAudioData(gap)) {
-        HandleAudioDecoded(data);
-      }
+      PushFakeAudioDataIfNeeded(gap);
     }
 
     // After pushing data to the queue, timestamp might be adjusted.
@@ -1065,9 +1063,7 @@ class MediaDecoderStateMachine::LoopingDecodingState
           mMaster->mOriginalDecodedDuration.ToMicroseconds(),
           mMaster->mOriginalDecodedDuration.ToString().get(),
           gap.ToMicroseconds(), gap.ToString().get());
-      if (RefPtr<AudioData> data = CreateFakeAudioData(gap)) {
-        HandleAudioDecoded(data);
-      }
+      PushFakeAudioDataIfNeeded(gap);
     }
 
     SLOG(
@@ -1550,35 +1546,57 @@ class MediaDecoderStateMachine::LoopingDecodingState
     }
   }
 
-  already_AddRefed<AudioData> CreateFakeAudioData(
-      const media::TimeUnit& aDuration) {
+  void PushFakeAudioDataIfNeeded(const media::TimeUnit& aDuration) {
     MOZ_ASSERT(Info().HasAudio());
+
     const auto& audioInfo = Info().mAudio;
     CheckedInt64 frames = aDuration.ToTicksAtRate(audioInfo.mRate);
     if (!frames.isValid() || !audioInfo.mChannels || !audioInfo.mRate) {
       NS_WARNING("Can't create fake audio, invalid frames/channel/rate?");
-      return nullptr;
+      return;
     }
-    AlignedAudioBuffer samples(frames.value() * audioInfo.mChannels);
-    if (!samples) {
-      NS_WARNING(nsPrintfCString(
-                     "Can't create fake audio, OOM or duration (%s) too short",
-                     aDuration.ToString().get())
+
+    if (!frames.value()) {
+      NS_WARNING(nsPrintfCString("Duration (%s) too short, no frame needed",
+                                 aDuration.ToString().get())
                      .get());
-      return nullptr;
+      return;
     }
-    // `mDecodedAudioEndTime` is adjusted time, and we want unadjusted time
-    // otherwise the time would be adjusted twice when pushing sample into the
-    // media queue.
-    media::TimeUnit startTime = mMaster->mDecodedAudioEndTime;
-    if (AudioQueue().GetOffset() != media::TimeUnit::Zero()) {
-      startTime -= AudioQueue().GetOffset();
+
+    // If we can get the last sample, use its frame. Otherwise, use common 1024.
+    int64_t typicalPacketFrameCount = 1024;
+    if (RefPtr<AudioData> audio = AudioQueue().PeekBack()) {
+      typicalPacketFrameCount = audio->Frames();
     }
-    RefPtr<AudioData> data(new AudioData(0, startTime, std::move(samples),
-                                         audioInfo.mChannels, audioInfo.mRate));
-    SLOG("Created fake silence audio data (duration=%s, expected duration=%s)",
-         data->mDuration.ToString().get(), aDuration.ToString().get());
-    return data.forget();
+
+    media::TimeUnit totalDuration = TimeUnit::Zero(audioInfo.mRate);
+    // Generate fake audio in a smaller size of audio chunk.
+    while (frames.value()) {
+      int64_t packetFrameCount =
+          std::min(frames.value(), typicalPacketFrameCount);
+      frames -= packetFrameCount;
+      AlignedAudioBuffer samples(packetFrameCount * audioInfo.mChannels);
+      if (!samples) {
+        NS_WARNING("Can't create audio buffer, OOM?");
+        return;
+      }
+      // `mDecodedAudioEndTime` is adjusted time, and we want unadjusted time
+      // otherwise the time would be adjusted twice when pushing sample into the
+      // media queue.
+      media::TimeUnit startTime = mMaster->mDecodedAudioEndTime;
+      if (AudioQueue().GetOffset() != media::TimeUnit::Zero()) {
+        startTime -= AudioQueue().GetOffset();
+      }
+      RefPtr<AudioData> data(new AudioData(0, startTime, std::move(samples),
+                                           audioInfo.mChannels,
+                                           audioInfo.mRate));
+      SLOG("Created fake audio data (duration=%s, frame-left=%" PRId64 ")",
+           data->mDuration.ToString().get(), frames.value());
+      totalDuration += data->mDuration;
+      HandleAudioDecoded(data);
+    }
+    SLOG("Pushed fake silence audio data in total duration=%" PRId64 "%s",
+         totalDuration.ToMicroseconds(), totalDuration.ToString().get());
   }
 
   bool HasDecodedLastAudioFrame() const {
