@@ -17,4 +17,7 @@ static const FFCodec * const codec_list[] = {
 #if CONFIG_AV1_DECODER
     &ff_av1_decoder,
 #endif
+#if CONFIG_LIBVORBIS_DECODER
+    &ff_libvorbis_decoder,
+#endif
     NULL };
