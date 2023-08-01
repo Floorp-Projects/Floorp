@@ -10502,7 +10502,8 @@ class MWasmCallBase {
 
  public:
   static bool IsWasmCall(MDefinition* def) {
-    return def->isWasmCallCatchable() || def->isWasmCallUncatchable();
+    return def->isWasmCallCatchable() || def->isWasmCallUncatchable() ||
+           def->isWasmReturnCall();
   }
 
   size_t numArgs() const { return argRegs_.length(); }
@@ -10580,6 +10581,33 @@ class MWasmCallUncatchable final : public MVariadicInstruction,
                                    MDefinition* tableIndexOrRef = nullptr);
 
   static MWasmCallUncatchable* NewBuiltinInstanceMethodCall(
+      TempAllocator& alloc, const wasm::CallSiteDesc& desc,
+      const wasm::SymbolicAddress builtin, wasm::FailureMode failureMode,
+      const ABIArg& instanceArg, const Args& args,
+      uint32_t stackArgAreaSizeUnaligned);
+
+  bool possiblyCalls() const override { return true; }
+};
+
+class MWasmReturnCall final : public MVariadicControlInstruction<0>,
+                              public MWasmCallBase,
+                              public NoTypePolicy::Data {
+  MWasmReturnCall(const wasm::CallSiteDesc& desc,
+                  const wasm::CalleeDesc& callee,
+                  uint32_t stackArgAreaSizeUnaligned)
+      : MVariadicControlInstruction(classOpcode),
+        MWasmCallBase(desc, callee, stackArgAreaSizeUnaligned, false, 0) {}
+
+ public:
+  INSTRUCTION_HEADER(WasmReturnCall)
+
+  static MWasmReturnCall* New(TempAllocator& alloc,
+                              const wasm::CallSiteDesc& desc,
+                              const wasm::CalleeDesc& callee, const Args& args,
+                              uint32_t stackArgAreaSizeUnaligned,
+                              MDefinition* tableIndexOrRef = nullptr);
+
+  static MWasmReturnCall* NewBuiltinInstanceMethodCall(
       TempAllocator& alloc, const wasm::CallSiteDesc& desc,
       const wasm::SymbolicAddress builtin, wasm::FailureMode failureMode,
       const ABIArg& instanceArg, const Args& args,

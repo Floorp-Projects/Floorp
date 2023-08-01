@@ -3393,18 +3393,23 @@ class LWasmCall : public LVariadicInstruction<0, 0> {
   }
 
   MWasmCallBase* callBase() const {
-    if (isCatchable()) {
+    if (isCatchable() && !isReturnCall()) {
       return static_cast<MWasmCallBase*>(mirCatchable());
+    }
+    if (isReturnCall()) {
+      return static_cast<MWasmReturnCall*>(mirReturnCall());
     }
     return static_cast<MWasmCallBase*>(mirUncatchable());
   }
   bool isCatchable() const { return mir_->isWasmCallCatchable(); }
+  bool isReturnCall() const { return mir_->isWasmReturnCall(); }
   MWasmCallCatchable* mirCatchable() const {
     return mir_->toWasmCallCatchable();
   }
   MWasmCallUncatchable* mirUncatchable() const {
     return mir_->toWasmCallUncatchable();
   }
+  MWasmReturnCall* mirReturnCall() const { return mir_->toWasmReturnCall(); }
 
   static bool isCallPreserved(AnyRegister reg) {
     // All MWasmCalls preserve the TLS register:

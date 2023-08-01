@@ -8776,6 +8776,7 @@ void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {
 
 void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   const MWasmCallBase* callBase = lir->callBase();
+  bool isReturnCall = lir->isReturnCall();
 
   // If this call is in Wasm try code block, initialise a wasm::TryNote for this
   // call.
@@ -8813,11 +8814,31 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   CodeOffset secondRetOffset;
   switch (callee.which()) {
     case wasm::CalleeDesc::Func:
+#ifdef ENABLE_WASM_TAIL_CALLS
+      if (isReturnCall) {
+        ReturnCallAdjustmentInfo retCallInfo(
+            callBase->stackArgAreaSizeUnaligned(), inboundStackArgBytes_);
+        masm.wasmReturnCall(desc, callee.funcIndex(), retCallInfo);
+        // The rest of the method is unnecessary for a return call.
+        return;
+      }
+#endif
+      MOZ_ASSERT(!isReturnCall);
       retOffset = masm.call(desc, callee.funcIndex());
       reloadRegs = false;
       switchRealm = false;
       break;
     case wasm::CalleeDesc::Import:
+#ifdef ENABLE_WASM_TAIL_CALLS
+      if (isReturnCall) {
+        ReturnCallAdjustmentInfo retCallInfo(
+            callBase->stackArgAreaSizeUnaligned(), inboundStackArgBytes_);
+        masm.wasmReturnCallImport(desc, callee, retCallInfo);
+        // The rest of the method is unnecessary for a return call.
+        return;
+      }
+#endif
+      MOZ_ASSERT(!isReturnCall);
       retOffset = masm.wasmCallImport(desc, callee);
       break;
     case wasm::CalleeDesc::AsmJSTable:
@@ -8832,6 +8853,12 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
                 wasm::Trap::OutOfBounds);
         if (lir->isCatchable()) {
           addOutOfLineCode(ool, lir->mirCatchable());
+        } else if (isReturnCall) {
+#ifdef ENABLE_WASM_TAIL_CALLS
+          addOutOfLineCode(ool, lir->mirReturnCall());
+#else
+          MOZ_CRASH("Return calls are disabled.");
+#endif
         } else {
           addOutOfLineCode(ool, lir->mirUncatchable());
         }
@@ -8846,12 +8873,30 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
                 wasm::Trap::IndirectCallToNull);
         if (lir->isCatchable()) {
           addOutOfLineCode(ool, lir->mirCatchable());
+        } else if (isReturnCall) {
+#  ifdef ENABLE_WASM_TAIL_CALLS
+          addOutOfLineCode(ool, lir->mirReturnCall());
+#  else
+          MOZ_CRASH("Return calls are disabled.");
+#  endif
         } else {
           addOutOfLineCode(ool, lir->mirUncatchable());
         }
         nullCheckFailed = ool->entry();
       }
 #endif
+#ifdef ENABLE_WASM_TAIL_CALLS
+      if (isReturnCall) {
+        ReturnCallAdjustmentInfo retCallInfo(
+            callBase->stackArgAreaSizeUnaligned(), inboundStackArgBytes_);
+        masm.wasmReturnCallIndirect(desc, callee, boundsCheckFailed,
+                                    nullCheckFailed, mozilla::Nothing(),
+                                    retCallInfo);
+        // The rest of the method is unnecessary for a return call.
+        return;
+      }
+#endif
+      MOZ_ASSERT(!isReturnCall);
       masm.wasmCallIndirect(desc, callee, boundsCheckFailed, nullCheckFailed,
                             lir->tableSize(), &retOffset, &secondRetOffset);
       // Register reloading and realm switching are handled dynamically inside
@@ -8883,6 +8928,7 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   }
 
   // Note the assembler offset for the associated LSafePoint.
+  MOZ_ASSERT(!isReturnCall);
   markSafepointAt(retOffset.offset(), lir);
 
   // Now that all the outbound in-memory args are on the stack, note the
@@ -8910,6 +8956,21 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   } else {
     MOZ_ASSERT(!switchRealm);
   }
+
+#ifdef ENABLE_WASM_TAIL_CALLS
+  switch (callee.which()) {
+    case wasm::CalleeDesc::Func:
+    case wasm::CalleeDesc::Import:
+    case wasm::CalleeDesc::WasmTable:
+    case wasm::CalleeDesc::FuncRef:
+      // Stack allocation could change during Wasm (return) calls,
+      // recover pre-call state.
+      masm.freeStackTo(masm.framePushed());
+      break;
+    default:
+      break;
+  }
+#endif  // ENABLE_WASM_TAIL_CALLS
 
   if (inTry) {
     // Set the end of the try note range
@@ -13906,6 +13967,7 @@ bool CodeGenerator::generateWasm(
   JitSpew(JitSpew_Codegen, "# Emitting wasm code");
 
   size_t nInboundStackArgBytes = StackArgAreaSizeUnaligned(argTypes);
+  inboundStackArgBytes_ = nInboundStackArgBytes;
 
   wasm::GenerateFunctionPrologue(masm, callIndirectId, mozilla::Nothing(),
                                  offsets);

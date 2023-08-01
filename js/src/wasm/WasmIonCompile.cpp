@@ -201,6 +201,9 @@ class CallCompileState {
   // nullptr if no stack results.
   MWasmStackResultArea* stackResultArea_ = nullptr;
 
+  // Indicates that the call is a return/tail call.
+  bool returnCall = false;
+
   // Only FunctionCompiler should be directly manipulating CallCompileState.
   friend class FunctionCompiler;
 };
@@ -1962,6 +1965,8 @@ class FunctionCompiler {
     return passArgWorker(argDef, type.toMIRType(), call);
   }
 
+  void markReturnCall(CallCompileState* call) { call->returnCall = true; }
+
   // If the call returns results on the stack, prepare a stack area to receive
   // them, and pass the address of the stack area to the callee as an additional
   // argument.
@@ -1992,7 +1997,9 @@ class FunctionCompiler {
       stackResultArea->initResult(iter.index() - base, loc);
     }
     curBlock_->add(stackResultArea);
-    if (!passArg(stackResultArea, MIRType::Pointer, call)) {
+    MDefinition* def = call->returnCall ? (MDefinition*)stackResultPointer_
+                                        : (MDefinition*)stackResultArea;
+    if (!passArg(def, MIRType::Pointer, call)) {
       return false;
     }
     call->stackResultArea_ = stackResultArea;
@@ -2172,6 +2179,84 @@ class FunctionCompiler {
       return false;
     }
     return collectCallResults(resultType, call.stackResultArea_, results);
+  }
+
+  [[nodiscard]] bool returnCallDirect(const FuncType& funcType,
+                                      uint32_t funcIndex,
+                                      uint32_t lineOrBytecode,
+                                      const CallCompileState& call,
+                                      DefVector* results) {
+    if (inDeadCode()) {
+      return true;
+    }
+
+    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::ReturnFunc);
+    auto callee = CalleeDesc::function(funcIndex);
+    ArgTypeVector args(funcType);
+
+    auto ins = MWasmReturnCall::New(alloc(), desc, callee, call.regArgs_,
+                                    StackArgAreaSizeUnaligned(args), nullptr);
+    if (!ins) {
+      return false;
+    }
+    curBlock_->end(ins);
+    curBlock_ = nullptr;
+    return true;
+  }
+
+  [[nodiscard]] bool returnCallImport(unsigned globalDataOffset,
+                                      uint32_t lineOrBytecode,
+                                      const CallCompileState& call,
+                                      const FuncType& funcType,
+                                      DefVector* results) {
+    if (inDeadCode()) {
+      return true;
+    }
+
+    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Import);
+    auto callee = CalleeDesc::import(globalDataOffset);
+    ArgTypeVector args(funcType);
+
+    auto* ins = MWasmReturnCall::New(alloc(), desc, callee, call.regArgs_,
+                                     StackArgAreaSizeUnaligned(args), nullptr);
+    if (!ins) {
+      return false;
+    }
+    curBlock_->end(ins);
+    curBlock_ = nullptr;
+    return true;
+  }
+
+  [[nodiscard]] bool returnCallIndirect(uint32_t funcTypeIndex,
+                                        uint32_t tableIndex, MDefinition* index,
+                                        uint32_t lineOrBytecode,
+                                        const CallCompileState& call,
+                                        DefVector* results) {
+    if (inDeadCode()) {
+      return true;
+    }
+
+    const FuncType& funcType = (*moduleEnv_.types)[funcTypeIndex].funcType();
+    CallIndirectId callIndirectId =
+        CallIndirectId::forFuncType(moduleEnv_, funcTypeIndex);
+
+    CalleeDesc callee;
+    MOZ_ASSERT(callIndirectId.kind() != CallIndirectIdKind::AsmJS);
+    const TableDesc& table = moduleEnv_.tables[tableIndex];
+    callee =
+        CalleeDesc::wasmTable(moduleEnv_, table, tableIndex, callIndirectId);
+
+    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Indirect);
+    ArgTypeVector args(funcType);
+
+    auto* ins = MWasmReturnCall::New(alloc(), desc, callee, call.regArgs_,
+                                     StackArgAreaSizeUnaligned(args), index);
+    if (!ins) {
+      return false;
+    }
+    curBlock_->end(ins);
+    curBlock_ = nullptr;
+    return true;
   }
 
   [[nodiscard]] bool callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
@@ -4973,6 +5058,80 @@ static bool EmitCallIndirect(FunctionCompiler& f, bool oldStyle) {
   f.iter().setResults(results.length(), results);
   return true;
 }
+
+#ifdef ENABLE_WASM_TAIL_CALLS
+static bool EmitReturnCall(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  uint32_t funcIndex;
+  DefVector args;
+  DefVector unused_values;
+  if (!f.iter().readReturnCall(&funcIndex, &args, &unused_values)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  const FuncType& funcType = *f.moduleEnv().funcs[funcIndex].type;
+
+  CallCompileState call;
+  f.markReturnCall(&call);
+  if (!EmitCallArgs(f, funcType, args, &call)) {
+    return false;
+  }
+
+  DefVector results;
+  if (f.moduleEnv().funcIsImport(funcIndex)) {
+    uint32_t globalDataOffset =
+        f.moduleEnv().offsetOfFuncImportInstanceData(funcIndex);
+    if (!f.returnCallImport(globalDataOffset, lineOrBytecode, call, funcType,
+                            &results)) {
+      return false;
+    }
+  } else {
+    if (!f.returnCallDirect(funcType, funcIndex, lineOrBytecode, call,
+                            &results)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool EmitReturnCallIndirect(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  uint32_t funcTypeIndex;
+  uint32_t tableIndex;
+  MDefinition* callee;
+  DefVector args;
+  DefVector unused_values;
+  if (!f.iter().readReturnCallIndirect(&funcTypeIndex, &tableIndex, &callee,
+                                       &args, &unused_values)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  const FuncType& funcType = (*f.moduleEnv().types)[funcTypeIndex].funcType();
+
+  CallCompileState call;
+  f.markReturnCall(&call);
+  if (!EmitCallArgs(f, funcType, args, &call)) {
+    return false;
+  }
+
+  DefVector results;
+  if (!f.returnCallIndirect(funcTypeIndex, tableIndex, callee, lineOrBytecode,
+                            call, &results)) {
+    return false;
+  }
+  return true;
+}
+#endif
 
 static bool EmitGetLocal(FunctionCompiler& f) {
   uint32_t id;
@@ -7915,6 +8074,21 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         CHECK(EmitSignExtend(f, 2, 8));
       case uint16_t(Op::I64Extend32S):
         CHECK(EmitSignExtend(f, 4, 8));
+
+#ifdef ENABLE_WASM_TAIL_CALLS
+      case uint16_t(Op::ReturnCall): {
+        if (!f.moduleEnv().tailCallsEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        CHECK(EmitReturnCall(f));
+      }
+      case uint16_t(Op::ReturnCallIndirect): {
+        if (!f.moduleEnv().tailCallsEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        CHECK(EmitReturnCallIndirect(f));
+      }
+#endif
 
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       case uint16_t(Op::RefAsNonNull):
