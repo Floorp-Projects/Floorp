@@ -146,11 +146,11 @@ struct ParamTraits<mozilla::OpusCodecSpecificData> {
   using paramType = mozilla::OpusCodecSpecificData;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    WriteParam(aWriter, aParam.mContainerCodecDelayMicroSeconds);
+    WriteParam(aWriter, aParam.mContainerCodecDelayFrames);
     WriteParam(aWriter, *aParam.mHeadersBinaryBlob);
   }
   static bool Read(MessageReader* aReader, paramType* aResult) {
-    return ReadParam(aReader, &aResult->mContainerCodecDelayMicroSeconds) &&
+    return ReadParam(aReader, &aResult->mContainerCodecDelayFrames) &&
            ReadParam(aReader, aResult->mHeadersBinaryBlob.get());
   }
 };
