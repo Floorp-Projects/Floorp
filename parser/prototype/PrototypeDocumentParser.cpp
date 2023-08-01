@@ -8,6 +8,7 @@
 
 #include "nsXULPrototypeCache.h"
 #include "nsXULContentSink.h"
+#include "nsXULPrototypeDocument.h"
 #include "mozilla/Encoding.h"
 #include "nsCharsetSource.h"
 #include "nsParser.h"
@@ -161,7 +162,9 @@ nsresult PrototypeDocumentParser::OnPrototypeLoadDone() {
   MOZ_ASSERT(!mIsComplete, "Should not be called more than once.");
   mIsComplete = true;
 
-  return mOriginalSink->OnPrototypeLoadDone(mCurrentPrototype);
+  RefPtr<PrototypeDocumentContentSink> sink = mOriginalSink;
+  RefPtr<nsXULPrototypeDocument> prototype = mCurrentPrototype;
+  return sink->OnPrototypeLoadDone(prototype);
 }
 
 nsresult PrototypeDocumentParser::PrepareToLoadPrototype(

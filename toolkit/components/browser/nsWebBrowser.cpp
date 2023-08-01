@@ -459,14 +459,16 @@ NS_IMETHODIMP
 nsWebBrowser::GoBack(bool aRequireUserInteraction, bool aUserActivation) {
   NS_ENSURE_STATE(mDocShell);
 
-  return mDocShell->GoBack(aRequireUserInteraction, aUserActivation);
+  RefPtr<nsDocShell> docShell = mDocShell;
+  return docShell->GoBack(aRequireUserInteraction, aUserActivation);
 }
 
 NS_IMETHODIMP
 nsWebBrowser::GoForward(bool aRequireUserInteraction, bool aUserActivation) {
   NS_ENSURE_STATE(mDocShell);
 
-  return mDocShell->GoForward(aRequireUserInteraction, aUserActivation);
+  RefPtr<nsDocShell> docShell = mDocShell;
+  return docShell->GoForward(aRequireUserInteraction, aUserActivation);
 }
 
 nsresult nsWebBrowser::LoadURI(nsIURI* aURI,
@@ -477,7 +479,8 @@ nsresult nsWebBrowser::LoadURI(nsIURI* aURI,
 #endif
   NS_ENSURE_STATE(mDocShell);
 
-  return mDocShell->LoadURI(aURI, aLoadURIOptions);
+  RefPtr<nsDocShell> docShell = mDocShell;
+  return docShell->LoadURI(aURI, aLoadURIOptions);
 }
 
 NS_IMETHODIMP
@@ -501,7 +504,8 @@ nsresult nsWebBrowser::FixupAndLoadURIString(
 #endif
   NS_ENSURE_STATE(mDocShell);
 
-  return mDocShell->FixupAndLoadURIString(aURI, aLoadURIOptions);
+  RefPtr<nsDocShell> docShell = mDocShell;
+  return docShell->FixupAndLoadURIString(aURI, aLoadURIOptions);
 }
 
 NS_IMETHODIMP
@@ -528,14 +532,16 @@ NS_IMETHODIMP
 nsWebBrowser::Reload(uint32_t aReloadFlags) {
   NS_ENSURE_STATE(mDocShell);
 
-  return mDocShell->Reload(aReloadFlags);
+  RefPtr<nsDocShell> docShell = mDocShell;
+  return docShell->Reload(aReloadFlags);
 }
 
 NS_IMETHODIMP
 nsWebBrowser::GotoIndex(int32_t aIndex, bool aUserActivation) {
   NS_ENSURE_STATE(mDocShell);
 
-  return mDocShell->GotoIndex(aIndex, aUserActivation);
+  RefPtr<nsDocShell> docShell = mDocShell;
+  return docShell->GotoIndex(aIndex, aUserActivation);
 }
 
 NS_IMETHODIMP

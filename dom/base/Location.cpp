@@ -544,7 +544,7 @@ void Location::Reload(bool aForceget, nsIPrincipal& aSubjectPrincipal,
     return;
   }
 
-  nsCOMPtr<nsIDocShell> docShell(GetDocShell());
+  RefPtr<nsDocShell> docShell(GetDocShell().downcast<nsDocShell>());
   if (!docShell) {
     return aRv.Throw(NS_ERROR_FAILURE);
   }
@@ -591,7 +591,7 @@ void Location::Reload(bool aForceget, nsIPrincipal& aSubjectPrincipal,
                   nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
   }
 
-  rv = nsDocShell::Cast(docShell)->Reload(reloadFlags);
+  rv = docShell->Reload(reloadFlags);
   if (NS_FAILED(rv) && rv != NS_BINDING_ABORTED) {
     // NS_BINDING_ABORTED is returned when we attempt to reload a POST result
     // and the user says no at the "do you want to reload?" prompt.  Don't

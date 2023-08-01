@@ -1398,7 +1398,9 @@ void nsSHistory::LoadURIOrBFCache(LoadEntryResult& aLoadEntry) {
     }
   }
 
-  aLoadEntry.mBrowsingContext->LoadURI(aLoadEntry.mLoadState, false);
+  RefPtr<BrowsingContext> bc = aLoadEntry.mBrowsingContext;
+  RefPtr<nsDocShellLoadState> loadState = aLoadEntry.mLoadState;
+  bc->LoadURI(loadState, false);
 }
 
 /* static */

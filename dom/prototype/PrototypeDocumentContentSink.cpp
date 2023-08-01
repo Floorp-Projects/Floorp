@@ -675,14 +675,15 @@ nsresult PrototypeDocumentContentSink::DoneWalking() {
   }
 
   mDocument->SetDelayFrameLoaderInitialization(false);
-  mDocument->MaybeInitializeFinalizeFrameLoaders();
+  RefPtr<Document> doc = mDocument;
+  doc->MaybeInitializeFinalizeFrameLoaders();
 
   // If the document we are loading has a reference or it is a
   // frameset document, disable the scroll bars on the views.
 
-  mDocument->SetScrollToRef(mDocument->GetDocumentURI());
+  doc->SetScrollToRef(mDocument->GetDocumentURI());
 
-  mDocument->EndLoad();
+  doc->EndLoad();
 
   return NS_OK;
 }
