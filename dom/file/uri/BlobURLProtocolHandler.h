@@ -134,10 +134,6 @@ extern nsresult NS_GetBlobForBlobURISpec(const nsACString& aSpec,
                                          mozilla::dom::BlobImpl** aBlob,
                                          bool aAlsoIfRevoked = false);
 
-extern nsresult NS_SetChannelContentRangeForBlobURI(nsIChannel* aChannel,
-                                                    nsIURI* aURI,
-                                                    nsACString& aRangeHeader);
-
 extern nsresult NS_GetSourceForMediaSourceURI(
     nsIURI* aURI, mozilla::dom::MediaSource** aSource);
 

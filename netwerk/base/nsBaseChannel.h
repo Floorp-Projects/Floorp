@@ -198,44 +198,6 @@ class nsBaseChannel
     return mPumpingData || mWaitingOnAsyncRedirect;
   }
 
-  // Blob requests may specify a range header. We must parse, validate, and
-  // store that info in a place where BlobURLInputStream::StoreBlobImplStream
-  // can access it. This class helps to encapsulate that logic.
-  class ContentRange {
-   private:
-    uint64_t mStart;
-    uint64_t mEnd;
-    uint64_t mSize;
-
-   public:
-    uint64_t Start() const { return mStart; }
-    uint64_t End() const { return mEnd; }
-    uint64_t Size() const { return mSize; }
-    bool IsValid() const { return mStart < mSize; }
-    ContentRange() : mStart(0), mEnd(0), mSize(0) {}
-    ContentRange(uint64_t aStart, uint64_t aEnd, uint64_t aSize)
-        : mStart(aStart), mEnd(aEnd), mSize(aSize) {}
-    ContentRange(const nsACString& aRangeHeader, uint64_t aSize);
-    void AsHeader(nsACString& aOutString) const;
-  };
-
-  const mozilla::Maybe<ContentRange>& GetContentRange() const {
-    return mContentRange;
-  }
-
-  void SetContentRange(uint64_t aStart, uint64_t aEnd, uint64_t aSize) {
-    mContentRange.emplace(ContentRange(aStart, aEnd, aSize));
-  }
-
-  bool SetContentRange(const nsACString& aRangeHeader, uint64_t aSize) {
-    auto range = ContentRange(aRangeHeader, aSize);
-    if (!range.IsValid()) {
-      return false;
-    }
-    mContentRange.emplace(range);
-    return true;
-  }
-
   // Helper function for querying the channel's notification callbacks.
   template <class T>
   void GetCallback(nsCOMPtr<T>& result) {
@@ -326,7 +288,6 @@ class nsBaseChannel
   bool mWaitingOnAsyncRedirect{false};
   bool mOpenRedirectChannel{false};
   uint32_t mRedirectFlags{0};
-  mozilla::Maybe<ContentRange> mContentRange;
 
  protected:
   nsCString mContentType;

@@ -2761,20 +2761,20 @@ class nsContentUtils {
 
   class ParsedRange {
    public:
-    explicit ParsedRange(mozilla::Maybe<uint64_t> aStart,
-                         mozilla::Maybe<uint64_t> aEnd)
+    explicit ParsedRange(mozilla::Maybe<uint32_t> aStart,
+                         mozilla::Maybe<uint32_t> aEnd)
         : mStart(aStart), mEnd(aEnd) {}
 
-    mozilla::Maybe<uint64_t> Start() const { return mStart; }
-    mozilla::Maybe<uint64_t> End() const { return mEnd; }
+    mozilla::Maybe<uint32_t> Start() const { return mStart; }
+    mozilla::Maybe<uint32_t> End() const { return mEnd; }
 
     bool operator==(const ParsedRange& aOther) const {
       return Start() == aOther.Start() && End() == aOther.End();
     }
 
    private:
-    mozilla::Maybe<uint64_t> mStart;
-    mozilla::Maybe<uint64_t> mEnd;
+    mozilla::Maybe<uint32_t> mStart;
+    mozilla::Maybe<uint32_t> mEnd;
   };
 
   /**

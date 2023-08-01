@@ -47,7 +47,6 @@
 #include "mozilla/dom/XMLHttpRequestEventTarget.h"
 #include "mozilla/dom/XMLHttpRequestString.h"
 #include "mozilla/Encoding.h"
-#include "nsBaseChannel.h"
 
 #ifdef Status
 /* Xlib headers insist on this for some reason... Nuke it because
@@ -508,9 +507,6 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   void ResumeEventDispatching();
 
   void AbortInternal(ErrorResult& aRv);
-
-  Maybe<nsBaseChannel::ContentRange> GetRequestedContentRange() const;
-  void GetContentRangeHeader(nsACString&) const;
 
   struct PendingEvent {
     RefPtr<DOMEventTargetHelper> mTarget;
