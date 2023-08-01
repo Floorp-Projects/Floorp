@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export class ShoppingSidebarParent extends JSWindowActorParent {
+  static SHOPPING_ACTIVE_PREF = "browser.shopping.experience2023.active";
+
   updateProductURL(uri) {
     this.sendAsyncMessage("ShoppingSidebar:UpdateProductURL", {
       url: uri?.spec ?? null,
@@ -20,5 +22,19 @@ export class ShoppingSidebarParent extends JSWindowActorParent {
         return associatedTabbedBrowser.currentURI?.spec ?? null;
     }
     return null;
+  }
+
+  /**
+   * Toggles opening or closing all Shopping sidebars.
+   * Sets the active pref value for all windows to respond to.
+   */
+  static toggleAllSidebars() {
+    let activeState = Services.prefs.getBoolPref(
+      ShoppingSidebarParent.SHOPPING_ACTIVE_PREF
+    );
+    Services.prefs.setBoolPref(
+      ShoppingSidebarParent.SHOPPING_ACTIVE_PREF,
+      !activeState
+    );
   }
 }

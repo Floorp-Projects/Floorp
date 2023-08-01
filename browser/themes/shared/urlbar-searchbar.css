@@ -725,6 +725,17 @@
   display: none;
 }
 
+/* Shopping Sidebar icon */
+
+#shopping-sidebar-button > .urlbar-icon {
+  list-style-image: url(resource://usercontext-content/cart.svg);
+}
+
+#shopping-sidebar-button[shoppingsidebaropen="true"] > .urlbar-icon {
+  fill: var(--toolbarbutton-icon-fill-attention);
+  fill-opacity: 1;
+}
+
 /* Search bar */
 
 #search-container {

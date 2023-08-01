@@ -384,6 +384,15 @@
                 <image class="urlbar-icon" id="translations-button-circle-arrows" />
                 <html:span id="translations-button-locale" aria-hidden="true" />
               </hbox>
+              <hbox id="shopping-sidebar-button"
+                  class="urlbar-page-action"
+                  role="button"
+                  data-l10n-id="shopping-sidebar-open-button"
+                  hidden="true"
+                  onclick="ShoppingSidebarParent.toggleAllSidebars();">
+                <image id="shopping-sidebar-button-icon"
+                       class="urlbar-icon"/>
+              </hbox>
               <toolbarbutton id="urlbar-zoom-button"
                      onclick="FullZoom.reset(); FullZoom.resetScalingZoom();"
                      tooltip="dynamic-shortcut-tooltip"

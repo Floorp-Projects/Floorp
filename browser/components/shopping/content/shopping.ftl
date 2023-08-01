@@ -99,6 +99,13 @@ shopping-analysis-explainer-review-grading-scale-reliable = We believe the revie
 shopping-analysis-explainer-review-grading-scale-mixed = We believe there’s a mix of reliable and unreliable reviews
 shopping-analysis-explainer-review-grading-scale-unreliable = We believe the reviews are unreliable
 
+## Strings for UrlBar button
+
+shopping-sidebar-open-button =
+  .tooltiptext = Open shopping sidebar
+shopping-sidebar-close-button =
+  .tooltiptext = Close shopping sidebar
+
 ## Strings for the unanalyzed product card.
 
 shopping-unanalyzed-product-header = No analysis for these reviews yet

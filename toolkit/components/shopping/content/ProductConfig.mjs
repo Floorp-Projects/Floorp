@@ -31,6 +31,11 @@ const ProductConfig = {
   },
 };
 
+if (Cu.isInAutomation) {
+  // Also allow example.com to allow for testing.
+  ProductConfig.example = ProductConfig.amazon;
+}
+
 Object.freeze(ProductConfig);
 
 export {
