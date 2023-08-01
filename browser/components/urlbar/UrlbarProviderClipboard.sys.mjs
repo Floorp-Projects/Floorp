@@ -14,11 +14,16 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
 
+const RESULT_MENU_COMMANDS = {
+  DISMISS: "dismiss",
+};
+
 /**
  * A provider that returns a suggested url to the user based
  * on a valid URL stored in the clipboard.
  */
 class ProviderClipboard extends UrlbarProvider {
+  #lastDismissedClipboardText = "";
   constructor() {
     super();
   }
@@ -50,6 +55,10 @@ class ProviderClipboard extends UrlbarProvider {
       return false;
     }
     this.urlFromClipboard = validUrl;
+    if (this.#lastDismissedClipboardText == this.urlFromClipboard) {
+      return false;
+    }
+    this.#lastDismissedClipboardText = ""; // clear the cache since clipboard value has changed
     return true;
   }
 
@@ -83,7 +92,48 @@ class ProviderClipboard extends UrlbarProvider {
       }
     );
 
+    if (lazy.UrlbarPrefs.get("resultMenu")) {
+      result.isBlockable = true;
+      result.blockL10n = {
+        id: "urlbar-result-menu-dismiss-firefox-suggest",
+      };
+    }
+
     addCallback(this, result);
+  }
+
+  onEngagement(state, queryContext, details, controller) {
+    if (details.result?.providerName != this.name) {
+      return;
+    }
+
+    // Handle commands.
+    this.#handlePossibleCommand(
+      controller.view,
+      details.result,
+      details.selType
+    );
+  }
+
+  #handlePossibleCommand(view, result, selType) {
+    switch (selType) {
+      case RESULT_MENU_COMMANDS.DISMISS:
+        view.onQueryResultRemoved(result.rowIndex);
+        this.#lastDismissedClipboardText = this.urlFromClipboard;
+        break;
+    }
+  }
+
+  getResultCommands(result) {
+    let commands = [
+      {
+        name: RESULT_MENU_COMMANDS.DISMISS,
+        l10n: {
+          id: "urlbar-result-menu-dismiss-firefox-suggest",
+        },
+      },
+    ];
+    return commands;
   }
 }
 
