@@ -155,6 +155,12 @@ class OggCodecState {
     }
     TimeUnit endTime = Time(aPacket->granulepos);
     TimeUnit duration = PacketDuration(aPacket);
+    // When looping, it's possible to find header packets there because the
+    // demuxing restarts from the beginning of the stream. Just skip and retry
+    // with the next packet.
+    if (!duration.IsValid()) {
+      return TimeUnit::Invalid();
+    }
     if (duration > endTime) {
       // Audio preskip may eat a whole packet or more.
       return TimeUnit::Zero();

@@ -18,6 +18,7 @@
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
+#include "nsDebug.h"
 #include "nsAutoRef.h"
 #include "nsError.h"
 
@@ -1156,6 +1157,12 @@ nsresult OggDemuxer::SeekInternal(TrackInfo::TrackType aType,
     if (packet == nullptr) {
       OGG_DEBUG("End of stream reached before keyframe found in indexed seek");
       break;
+    }
+    // Skip any header packet, this can be the case when looping and not parsing
+    // the headers again.
+    if (state->IsHeader(packet)) {
+      OggPacketPtr drop(state->PacketOut());
+      continue;
     }
     TimeUnit startTstamp = state->PacketStartTime(packet);
     if (foundKeyframe && startTstamp > adjustedTarget) {
