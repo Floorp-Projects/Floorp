@@ -117,12 +117,12 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
 
 #define AV_FUNC_OPTION_SILENT(func, ver)                              \
   if ((ver)&version) {                                                \
-    if (!(func = (decltype(func))PR_FindSymbol(                       \
+    if (!((func) = (decltype(func))PR_FindSymbol(                     \
               ((ver)&AV_FUNC_AVUTIL_MASK) ? mAVUtilLib : mAVCodecLib, \
               #func))) {                                              \
     }                                                                 \
   } else {                                                            \
-    func = (decltype(func))nullptr;                                   \
+    (func) = (decltype(func))nullptr;                                 \
   }
 
 #define AV_FUNC_OPTION(func, ver)                           \
@@ -133,7 +133,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
 
 #define AV_FUNC(func, ver)                              \
   AV_FUNC_OPTION(func, ver)                             \
-  if ((ver)&version && !func) {                         \
+  if ((ver)&version && !(func)) {                       \
     Unlink();                                           \
     return isFFMpeg ? LinkResult::MissingFFMpegFunction \
                     : LinkResult::MissingLibAVFunction; \
@@ -242,9 +242,9 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
 #undef AV_FUNC_OPTION
 
 #ifdef MOZ_WIDGET_GTK
-#  define VA_FUNC_OPTION_SILENT(func)                             \
-    if (!(func = (decltype(func))PR_FindSymbol(mVALib, #func))) { \
-      func = (decltype(func))nullptr;                             \
+#  define VA_FUNC_OPTION_SILENT(func)                               \
+    if (!((func) = (decltype(func))PR_FindSymbol(mVALib, #func))) { \
+      (func) = (decltype(func))nullptr;                             \
     }
 
   // mVALib is optional and may not be present.
@@ -256,9 +256,9 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   }
 #  undef VA_FUNC_OPTION_SILENT
 
-#  define VAD_FUNC_OPTION_SILENT(func)                               \
-    if (!(func = (decltype(func))PR_FindSymbol(mVALibDrm, #func))) { \
-      FFMPEG_LOG("Couldn't load function " #func);                   \
+#  define VAD_FUNC_OPTION_SILENT(func)                                 \
+    if (!((func) = (decltype(func))PR_FindSymbol(mVALibDrm, #func))) { \
+      FFMPEG_LOG("Couldn't load function " #func);                     \
     }
 
   // mVALibDrm is optional and may not be present.
@@ -342,7 +342,7 @@ void FFmpegLibWrapper::LinkVAAPILibs() {
 
 #ifdef MOZ_WIDGET_GTK
 bool FFmpegLibWrapper::IsVAAPIAvailable() {
-#  define VA_FUNC_LOADED(func) (func != nullptr)
+#  define VA_FUNC_LOADED(func) ((func) != nullptr)
   return VA_FUNC_LOADED(avcodec_get_hw_config) &&
          VA_FUNC_LOADED(av_hwdevice_ctx_alloc) &&
          VA_FUNC_LOADED(av_hwdevice_ctx_init) &&
