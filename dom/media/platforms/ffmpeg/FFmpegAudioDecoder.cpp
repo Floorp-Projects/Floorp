@@ -343,12 +343,12 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DecodeUsingFFmpeg(
         FFMPEG_LOG("  End of stream.");
         return MediaResult(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                            RESULT_DETAIL("End of stream"));
-        default:
-          FFMPEG_LOG("  avcodec_receive_packet error.");
-          NS_WARNING("FFmpeg audio decoder error (avcodec_receive_packet).");
-          return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                             RESULT_DETAIL("FFmpeg audio error"));
       }
+      default:
+        FFMPEG_LOG("  avcodec_receive_packet error.");
+        NS_WARNING("FFmpeg audio decoder error (avcodec_receive_packet).");
+        return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                           RESULT_DETAIL("FFmpeg audio error"));
     }
     if (aDecoded) {
       PostProcessOutput(aDecoded, aSample, aResults, aGotFrame);
