@@ -2,20 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.multi_dep:loader
-
-group-by: platform
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.upload_symbols:transforms
-    - gecko_taskgraph.transforms.job:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.upload_symbols
+    - gecko_taskgraph.transforms.job
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
     - build
     - toolchain
-
-primary-dependency: build
 
 not-for-build-platforms:
     # Address Sanitizer builds don't have symbols to upload.
@@ -30,24 +27,27 @@ not-for-build-platforms:
     - win64-geckodriver/opt
     - win64-aarch64-geckodriver/opt
 
-job-template:
-    description: Upload Symbols
-    worker-type: b-linux-gcp
-    use-system-python: false
-    worker:
-        docker-image: {in-tree: "debian11-base"}
-        max-run-time: 1800
-        env:
-            # {level} gets replaced in the upload_symbols transform
-            SYMBOL_SECRET: "project/releng/gecko/build/level-{level}/gecko-symbol-upload"
-            MAKECAB: /builds/worker/fetches/makecab/makecab
-            MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
-    run:
-        using: mach
-        mach: {artifact-reference: "python toolkit/crashreporter/tools/upload_symbols.py <build/public/cidata/target.crashreporter-symbols-full.tar.zst>"}
-        sparse-profile: upload-symbols
-    scopes:
-        - secrets:get:project/releng/gecko/build/level-{level}/gecko-symbol-upload
-    fetches:
-        toolchain:
-            - linux64-makecab
+jobs:
+    upload-symbols:
+        description: Upload Symbols
+        from-deps:
+            group-by: platform
+        worker-type: b-linux-gcp
+        use-system-python: false
+        worker:
+            docker-image: {in-tree: "debian11-base"}
+            max-run-time: 1800
+            env:
+                # {level} gets replaced in the upload_symbols transform
+                SYMBOL_SECRET: "project/releng/gecko/build/level-{level}/gecko-symbol-upload"
+                MAKECAB: /builds/worker/fetches/makecab/makecab
+                MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
+        run:
+            using: mach
+            mach: {artifact-reference: "python toolkit/crashreporter/tools/upload_symbols.py <build/public/cidata/target.crashreporter-symbols-full.tar.zst>"}
+            sparse-profile: upload-symbols
+        scopes:
+            - secrets:get:project/releng/gecko/build/level-{level}/gecko-symbol-upload
+        fetches:
+            toolchain:
+                - linux64-makecab

@@ -2,30 +2,33 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.upload_symbols:transforms
-    - gecko_taskgraph.transforms.job:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.upload_symbols
+    - gecko_taskgraph.transforms.job
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
     - system-symbols
 
-job-template:
-    description: Upload Symbols
-    attributes:
-        cron: true
-    worker-type: b-linux-gcp
-    worker:
-        docker-image: {in-tree: "lint"}
-        max-run-time: 1200
-        env:
-            # {level} gets replaced in the upload_symbols transform
-            SYMBOL_SECRET: "project/releng/gecko/build/level-{level}/gecko-symbol-upload"
-    run:
-        using: mach
-        mach: {artifact-reference: "python toolkit/crashreporter/tools/upload_symbols.py <build/public/build/target.crashreporter-symbols.zip> --ignore-missing"}
-        sparse-profile: upload-symbols
-    scopes:
-        - secrets:get:project/releng/gecko/build/level-{level}/gecko-symbol-upload
+jobs:
+    system-symbols-upload:
+        description: Upload Symbols
+        from-deps: {}
+        attributes:
+            cron: true
+        worker-type: b-linux-gcp
+        worker:
+            docker-image: {in-tree: "lint"}
+            max-run-time: 1200
+            env:
+                # {level} gets replaced in the upload_symbols transform
+                SYMBOL_SECRET: "project/releng/gecko/build/level-{level}/gecko-symbol-upload"
+        run:
+            using: mach
+            mach: {artifact-reference: "python toolkit/crashreporter/tools/upload_symbols.py <build/public/build/target.crashreporter-symbols.zip> --ignore-missing"}
+            sparse-profile: upload-symbols
+        scopes:
+            - secrets:get:project/releng/gecko/build/level-{level}/gecko-symbol-upload
