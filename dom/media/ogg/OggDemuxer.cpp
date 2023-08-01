@@ -8,6 +8,7 @@
 #include "OggRLBox.h"
 #include "MediaDataDemuxer.h"
 #include "OggCodecState.h"
+#include "TimeUnits.h"
 #include "XiphExtradata.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Atomics.h"
@@ -1397,12 +1398,14 @@ RefPtr<OggTrackDemuxer::SeekPromise> OggTrackDemuxer::Seek(
 }
 
 RefPtr<MediaRawData> OggTrackDemuxer::NextSample() {
+  OGG_DEBUG("OggTrackDemuxer::NextSample");
   if (mQueuedSample) {
     RefPtr<MediaRawData> nextSample = mQueuedSample;
     mQueuedSample = nullptr;
     if (mType == TrackInfo::kAudioTrack) {
       nextSample->mTrackInfo = mParent->mSharedAudioTrackInfo;
     }
+    OGG_DEBUG("OggTrackDemuxer::NextSample (queued)");
     return nextSample;
   }
   ogg_packet* packet = mParent->GetNextPacket(mType);
@@ -1435,6 +1438,41 @@ RefPtr<MediaRawData> OggTrackDemuxer::NextSample() {
   if (!data->mTime.IsValid()) {
     return nullptr;
   }
+  TimeUnit mediaStartTime = mParent->mStartTime.valueOr(TimeUnit::Zero());
+  TimeUnit mediaEndTime =
+      mediaStartTime +
+      mParent->mInfo.mMetadataDuration.valueOr(TimeUnit::FromInfinity());
+  // Trim packets that end after the media duration.
+  if (mType == TrackInfo::kAudioTrack) {
+    OGG_DEBUG("Check trimming %s > %s", data->GetEndTime().ToString().get(),
+              mediaEndTime.ToString().get());
+    // Because of a quirk of this demuxer, this needs to be >=. It looks
+    // useless, because `toTrim` is going to be 0, but it allows setting
+    // `mOriginalPresentationWindow`, so that the trimming logic will later
+    // remove extraneous frames.
+    // This demuxer sets the end time of a packet to be the end time that
+    // should be played, not the end time that corresponds to the number of
+    // decoded frames, that we can only have after decoding.
+    // >= allows detecting the last packet, and trimming it appropriately,
+    // after decoding has happened, with the AudioTrimmer.
+    if (data->GetEndTime() >= mediaEndTime) {
+      TimeUnit toTrim = data->GetEndTime() - mediaEndTime;
+      TimeUnit originalDuration = data->mDuration;
+      OGG_DEBUG(
+          "Demuxed past media end time, trimming: packet [%s,%s] to [%s,%s]",
+          data->mTime.ToString().get(), data->GetEndTime().ToString().get(),
+          data->mTime.ToString().get(),
+          (data->mTime + originalDuration).ToString().get());
+      data->mOriginalPresentationWindow =
+          Some(TimeInterval{data->mTime, data->GetEndTime()});
+      data->mDuration -= toTrim;
+    }
+  }
+
+  OGG_DEBUG("OGG packet demuxed: [%s,%s] (duration: %s, type: %s)",
+            data->mTime.ToString().get(), data->GetEndTime().ToString().get(),
+            data->mDuration.ToString().get(),
+            mType == TrackInfo::kAudioTrack ? "audio" : "video");
 
   return data;
 }
