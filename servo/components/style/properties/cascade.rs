@@ -1221,6 +1221,61 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         font.mScriptUnconstrainedSize = NonNegative(new_unconstrained_size);
     }
 
+    /// If font-size-adjust used the from-font value, we need to resolve it to an actual number
+    /// using metrics from the font.
+    fn resolve_font_size_adjust_from_font_if_needed(&mut self) {
+        use crate::values::computed::font::{FontSizeAdjust, FontSizeAdjustFactor as Factor};
+
+        if !self.seen.contains(LonghandId::FontSizeAdjust) {
+            return;
+        }
+
+        let font_metrics = |vertical| {
+            let orient = if vertical {
+                FontMetricsOrientation::MatchContextPreferVertical
+            } else {
+                FontMetricsOrientation::Horizontal
+            };
+            let metrics = self.context.query_font_metrics(FontBaseSize::CurrentStyle, orient, false);
+            let font_size = self.context.style().get_font().clone_font_size().used_size.0;
+            (metrics, font_size)
+        };
+
+        // Macro to resolve a from-font value using the given metric field. If not present,
+        // returns the fallback value, or if that is negative, resolves using ascent instead
+        // of the missing field (this is the fallback for cap-height).
+        macro_rules! resolve {
+            ($basis:ident, $value:expr, $vertical:expr, $field:ident, $fallback:expr) => {
+                {
+                    if $value != Factor::FromFont {
+                        return;
+                    }
+                    let (metrics, font_size) = font_metrics($vertical);
+                    let ratio = if let Some(metric) = metrics.$field {
+                        metric / font_size
+                    } else if $fallback >= 0.0 {
+                        $fallback
+                    } else {
+                        metrics.ascent / font_size
+                    };
+                    FontSizeAdjust::$basis(Factor::new(ratio))
+                }
+            };
+        }
+
+        // If sizeAdjust is currently FromFont, we need to resolve it to a number.
+        let resolved = match self.context.builder.get_font().mFont.sizeAdjust {
+            FontSizeAdjust::None => return,
+            FontSizeAdjust::ExHeight(val) => resolve!(ExHeight, val, false, x_height, 0.5),
+            FontSizeAdjust::CapHeight(val) => resolve!(CapHeight, val, false, cap_height, -1.0 /* fall back to ascent */),
+            FontSizeAdjust::ChWidth(val) => resolve!(ChWidth, val, false, zero_advance_measure, 0.5),
+            FontSizeAdjust::IcWidth(val) => resolve!(IcWidth, val, false, ic_width, 1.0),
+            FontSizeAdjust::IcHeight(val) => resolve!(IcHeight, val, true, ic_width, 1.0),
+        };
+
+        self.context.builder.mutate_font().mFont.sizeAdjust = resolved
+    }
+
     /// Various properties affect how font-size and font-family are computed.
     ///
     /// These need to be handled here, since relative lengths and ex / ch units
@@ -1233,7 +1288,8 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             self.prioritize_user_fonts_if_needed();
             self.recompute_keyword_font_size_if_needed();
             self.recompute_math_font_size_if_needed();
-            self.constrain_font_size_if_needed()
+            self.constrain_font_size_if_needed();
+            self.resolve_font_size_adjust_from_font_if_needed()
         }
     }
 }
