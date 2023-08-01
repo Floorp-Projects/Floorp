@@ -202,6 +202,10 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
                                       AV_FUNC_57 | AV_FUNC_58 | AV_FUNC_59 |
                                       AV_FUNC_60)
   AV_FUNC(av_get_sample_fmt_name, AV_FUNC_AVUTIL_ALL);
+  AV_FUNC(av_dict_set, AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58 |
+                           AV_FUNC_AVUTIL_59 | AV_FUNC_AVUTIL_60)
+  AV_FUNC(av_dict_free, AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58 |
+                            AV_FUNC_AVUTIL_59 | AV_FUNC_AVUTIL_60)
 
 #ifdef MOZ_WIDGET_GTK
   AV_FUNC_OPTION_SILENT(avcodec_get_hw_config,
@@ -229,9 +233,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
                         AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60)
   AV_FUNC_OPTION_SILENT(av_hwframe_ctx_alloc,
                         AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60)
-  AV_FUNC_OPTION_SILENT(av_dict_set, AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60)
-  AV_FUNC_OPTION_SILENT(av_dict_free, AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60)
-  AV_FUNC_OPTION_SILENT(avcodec_get_name, AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60)
+  AV_FUNC_OPTION_SILENT(avcodec_get_name, AV_FUNC_57 | AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60)
   AV_FUNC_OPTION_SILENT(av_get_pix_fmt_string, AV_FUNC_AVUTIL_58 |
                                                    AV_FUNC_AVUTIL_59 |
                                                    AV_FUNC_AVUTIL_60)

@@ -28,6 +28,8 @@ extern "C" {
 #endif  // LIBAVCODEC_VERSION_MAJOR >= 58
 
 #if LIBAVCODEC_VERSION_MAJOR < 55
+// This value is not defined in older version of libavcodec
+#  define CODEC_ID_OPUS 86076
 #  define AV_CODEC_ID_VP6F CODEC_ID_VP6F
 #  define AV_CODEC_ID_H264 CODEC_ID_H264
 #  define AV_CODEC_ID_AAC CODEC_ID_AAC
