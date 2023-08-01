@@ -804,14 +804,17 @@ export class SyncedBookmarksMirror {
       ? Ci.mozISyncedBookmarksMerger.VALIDITY_VALID
       : Ci.mozISyncedBookmarksMerger.VALIDITY_REPLACE;
 
-    let unknownFields = extractUnknownFields(record.cleartext, [
-      "bmkUri",
-      "description",
-      "keyword",
-      "tags",
-      "title",
-      ...COMMON_UNKNOWN_FIELDS,
-    ]);
+    let unknownFields = lazy.PlacesSyncUtils.extractUnknownFields(
+      record.cleartext,
+      [
+        "bmkUri",
+        "description",
+        "keyword",
+        "tags",
+        "title",
+        ...COMMON_UNKNOWN_FIELDS,
+      ]
+    );
     await this.db.executeCached(
       `
       REPLACE INTO items(guid, parentGuid, serverModified, needsMerge, kind,
@@ -930,16 +933,19 @@ export class SyncedBookmarksMirror {
     let dateAdded = determineDateAdded(record);
     let title = validateTitle(record.title);
 
-    let unknownFields = extractUnknownFields(record.cleartext, [
-      "bmkUri",
-      "description",
-      "folderName",
-      "keyword",
-      "queryId",
-      "tags",
-      "title",
-      ...COMMON_UNKNOWN_FIELDS,
-    ]);
+    let unknownFields = lazy.PlacesSyncUtils.extractUnknownFields(
+      record.cleartext,
+      [
+        "bmkUri",
+        "description",
+        "folderName",
+        "keyword",
+        "queryId",
+        "tags",
+        "title",
+        ...COMMON_UNKNOWN_FIELDS,
+      ]
+    );
 
     await this.db.executeCached(
       `
@@ -976,12 +982,10 @@ export class SyncedBookmarksMirror {
     let serverModified = determineServerModified(record);
     let dateAdded = determineDateAdded(record);
     let title = validateTitle(record.title);
-    let unknownFields = extractUnknownFields(record.cleartext, [
-      "children",
-      "description",
-      "title",
-      ...COMMON_UNKNOWN_FIELDS,
-    ]);
+    let unknownFields = lazy.PlacesSyncUtils.extractUnknownFields(
+      record.cleartext,
+      ["children", "description", "title", ...COMMON_UNKNOWN_FIELDS]
+    );
     await this.db.executeCached(
       `
       REPLACE INTO items(guid, parentGuid, serverModified, needsMerge, kind,
@@ -1047,14 +1051,17 @@ export class SyncedBookmarksMirror {
       ? Ci.mozISyncedBookmarksMerger.VALIDITY_VALID
       : Ci.mozISyncedBookmarksMerger.VALIDITY_REPLACE;
 
-    let unknownFields = extractUnknownFields(record.cleartext, [
-      "children",
-      "description",
-      "feedUri",
-      "siteUri",
-      "title",
-      ...COMMON_UNKNOWN_FIELDS,
-    ]);
+    let unknownFields = lazy.PlacesSyncUtils.extractUnknownFields(
+      record.cleartext,
+      [
+        "children",
+        "description",
+        "feedUri",
+        "siteUri",
+        "title",
+        ...COMMON_UNKNOWN_FIELDS,
+      ]
+    );
 
     await this.db.executeCached(
       `
@@ -1085,10 +1092,10 @@ export class SyncedBookmarksMirror {
     );
     let serverModified = determineServerModified(record);
     let dateAdded = determineDateAdded(record);
-    let unknownFields = extractUnknownFields(record.cleartext, [
-      "pos",
-      ...COMMON_UNKNOWN_FIELDS,
-    ]);
+    let unknownFields = lazy.PlacesSyncUtils.extractUnknownFields(
+      record.cleartext,
+      ["pos", ...COMMON_UNKNOWN_FIELDS]
+    );
 
     await this.db.executeCached(
       `
@@ -2600,30 +2607,5 @@ const COMMON_UNKNOWN_FIELDS = [
   "parentName",
   "type",
 ];
-
-// Other clients might have new fields we don't quite understand yet,
-// so we add it to a "unknownFields" field to roundtrip back to the server
-// so other clients don't experience data loss
-function extractUnknownFields(record, validFields) {
-  let { unknownFields, hasUnknownFields } = Object.keys(record).reduce(
-    ({ unknownFields, hasUnknownFields }, key) => {
-      if (validFields.includes(key)) {
-        return { unknownFields, hasUnknownFields };
-      }
-      unknownFields[key] = record[key];
-      return { unknownFields, hasUnknownFields: true };
-    },
-    { unknownFields: {}, hasUnknownFields: false }
-  );
-  // If we found some unknown fields, we stringify it to be able
-  // to properly encrypt it for roundtripping since we can't know if
-  // it contained sensitive fields or not
-  if (hasUnknownFields) {
-    // For simplicity, we store the unknown fields as a string
-    // since we never operate on it and just need it for roundtripping
-    return JSON.stringify(unknownFields);
-  }
-  return null;
-}
 
 // In conclusion, this is why bookmark syncing is hard.

@@ -1286,6 +1286,13 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
       // Firefox 115  uses schema version 74
 
+      if (currentSchemaVersion < 75) {
+        rv = MigrateV75Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 118 uses schema version 75
+
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
       // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
@@ -1302,6 +1309,8 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
     // moz_places.
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_EXTRA);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_URL_HASH);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1322,6 +1331,8 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
     // moz_historyvisits.
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS_EXTRA);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_PLACEDATE);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1719,6 +1730,13 @@ nsresult Database::InitTempEntities() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_METADATA_AFTERDELETE_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create triggers to remove rows with empty json
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_EXTRA_AFTERUPDATE_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv =
+      mMainConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS_AFTERUPDATE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -2542,6 +2560,20 @@ nsresult Database::MigrateV74Up() {
         "ADD COLUMN recalc_alt_frecency INTEGER NOT NULL DEFAULT 0"_ns);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_ALT_FRECENCY);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+nsresult Database::MigrateV75Up() {
+  // Add *_extra tables for moz_places and moz_historyvisits
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(
+      "SELECT sync_json FROM moz_places_extra"_ns, getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    nsresult rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_EXTRA);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS_EXTRA);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
