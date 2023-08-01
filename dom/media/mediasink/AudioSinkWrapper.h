@@ -69,6 +69,8 @@ class AudioSinkWrapper : public MediaSink {
 
   void GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) override;
 
+  void EnableTreatAudioUnderrunAsSilence(bool aEnabled) override;
+
  private:
   // The clock that was in use for the previous position query, allowing to
   // detect clock switches.
@@ -163,6 +165,9 @@ class AudioSinkWrapper : public MediaSink {
   TimeStamp mRetrySinkTime;
   // Number of async AudioSink creation tasks in flight
   uint32_t mAsyncCreateCount = 0;
+  // True if we'd like to treat underrun as silent frames. But that can only be
+  // applied in the special situation for seamless looping.
+  bool mTreatUnderrunAsSilence = false;
 };
 
 }  // namespace mozilla

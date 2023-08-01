@@ -141,6 +141,8 @@ class MediaSink {
 
   virtual void GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {}
 
+  virtual void EnableTreatAudioUnderrunAsSilence(bool aEnabled) {}
+
  protected:
   virtual ~MediaSink() = default;
 };
