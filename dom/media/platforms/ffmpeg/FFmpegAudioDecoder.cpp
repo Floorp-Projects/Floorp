@@ -10,6 +10,7 @@
 #include "TimeUnits.h"
 #include "VideoUtils.h"
 #include "BufferReader.h"
+#include "libavutil/dict.h"
 #include "libavutil/samplefmt.h"
 #if defined(FFVPX_VERSION)
 #  include "libavutil/channel_layout.h"
@@ -79,7 +80,8 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
 }
 
 RefPtr<MediaDataDecoder::InitPromise> FFmpegAudioDecoder<LIBAV_VER>::Init() {
-  MediaResult rv = InitDecoder();
+  AVDictionary* options = nullptr;
+  MediaResult rv = InitDecoder(&options);
 
   return NS_SUCCEEDED(rv)
              ? InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__)
