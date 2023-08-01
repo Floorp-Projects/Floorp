@@ -19,7 +19,10 @@
     <link rel="localization" href="branding/brand.ftl" />
     <link rel="localization" href="toolkit/about/aboutAddons.ftl" />
     <link rel="localization" href="toolkit/about/abuseReports.ftl" />
-
+    <script
+      type="module"
+      src="chrome://global/content/elements/moz-button-group.mjs"
+    ></script>
     <script
       type="module"
       src="chrome://global/content/elements/moz-support-link.mjs"
@@ -65,7 +68,7 @@
           <abuse-report-submit-panel hidden></abuse-report-submit-panel>
         </div>
         <div class="abuse-report-buttons">
-          <div class="abuse-report-reasons-buttons">
+          <moz-button-group class="abuse-report-reasons-buttons">
             <button
               class="abuse-report-cancel"
               type="button"
@@ -76,8 +79,8 @@
               type="button"
               data-l10n-id="abuse-report-next-button"
             ></button>
-          </div>
-          <div class="abuse-report-submit-buttons" hidden>
+          </moz-button-group>
+          <moz-button-group class="abuse-report-submit-buttons" hidden>
             <button
               class="abuse-report-goback"
               type="button"
@@ -88,7 +91,7 @@
               type="button"
               data-l10n-id="abuse-report-submit-button"
             ></button>
-          </div>
+          </moz-button-group>
         </div>
       </form>
     </template>
