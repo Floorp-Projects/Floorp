@@ -205,8 +205,3 @@ if CONFIG["MOZ_NEEDS_LIBATOMIC"]:
     OS_LIBS += ["atomic"]
 
 DEFINES["LZ4LIB_VISIBILITY"] = ""
-
-# This is kind of gross because this is not a subdirectory,
-# but pure_virtual requires mfbt to build and some projects
-# don't use mfbt.
-DIRS += ["../build/pure_virtual"]
