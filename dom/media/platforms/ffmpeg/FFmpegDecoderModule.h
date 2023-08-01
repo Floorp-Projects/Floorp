@@ -52,8 +52,7 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
         media::DecodeSupport::Unsupported) {
       return nullptr;
     }
-    RefPtr<MediaDataDecoder> decoder =
-        new FFmpegAudioDecoder<V>(mLib, aParams.AudioConfig());
+    RefPtr<MediaDataDecoder> decoder = new FFmpegAudioDecoder<V>(mLib, aParams);
     return decoder.forget();
   }
 
