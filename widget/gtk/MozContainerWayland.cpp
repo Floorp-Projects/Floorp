@@ -158,23 +158,46 @@ static void moz_container_wayland_move_locked(const MutexAutoLock& aProofOfLock,
                              wl_container->subsurface_dy);
 }
 
+static bool moz_container_wayland_egl_window_needs_size_update_locked(
+    const MutexAutoLock& aProofOfLock, MozContainerWayland* wl_container,
+    nsIntSize aSize, int aScale) {
+  if (!wl_container->eglwindow) {
+    return false;
+  }
+  if (wl_container->buffer_scale != aScale) {
+    return true;
+  }
+  nsIntSize recentSize;
+  wl_egl_window_get_attached_size(wl_container->eglwindow, &recentSize.width,
+                                  &recentSize.height);
+  return aSize != recentSize;
+}
+
 // This is called from layout/compositor code only with
 // size equal to GL rendering context. Otherwise there are
 // rendering artifacts as wl_egl_window size does not match
 // GL rendering pipeline setup.
 void moz_container_wayland_egl_window_set_size(MozContainer* container,
-                                               nsIntSize aSize) {
+                                               nsIntSize aSize, int aScale) {
   MozContainerWayland* wl_container = &container->wl_container;
   MutexAutoLock lock(*wl_container->container_lock);
-  if (wl_container->eglwindow) {
-    LOGCONTAINER(
-        "moz_container_wayland_egl_window_set_size [%p] scaled %d x %d scale "
-        "%d\n",
-        (void*)moz_container_get_nsWindow(container), aSize.width, aSize.height,
-        wl_container->buffer_scale);
-    wl_egl_window_resize(wl_container->eglwindow, aSize.width, aSize.height, 0,
-                         0);
+  if (!wl_container->eglwindow) {
+    return;
   }
+
+  if (!moz_container_wayland_egl_window_needs_size_update_locked(
+          lock, wl_container, aSize, aScale)) {
+    return;
+  }
+
+  LOGCONTAINER(
+      "moz_container_wayland_egl_window_set_size [%p] %d x %d scale %d "
+      "(unscaled %d x %d)",
+      (void*)moz_container_get_nsWindow(container), aSize.width, aSize.height,
+      aScale, aSize.width / aScale, aSize.height / aScale);
+  wl_egl_window_resize(wl_container->eglwindow, aSize.width, aSize.height, 0,
+                       0);
+  moz_container_wayland_set_scale_factor_locked(lock, container);
 }
 
 void moz_container_wayland_class_init(MozContainerClass* klass) {
@@ -710,22 +733,6 @@ void moz_container_wayland_surface_unlock(MozContainer* container,
     *surface = nullptr;
   }
   container->wl_container.container_lock->Unlock();
-}
-
-bool moz_container_wayland_egl_window_needs_size_update(MozContainer* container,
-                                                        nsIntSize aSize,
-                                                        int aScale) {
-  MozContainerWayland* wl_container = &container->wl_container;
-  if (!wl_container->eglwindow) {
-    return false;
-  }
-  if (wl_container->buffer_scale != aScale) {
-    return true;
-  }
-  nsIntSize recentSize;
-  wl_egl_window_get_attached_size(wl_container->eglwindow, &recentSize.width,
-                                  &recentSize.height);
-  return aSize != recentSize;
 }
 
 struct wl_egl_window* moz_container_wayland_get_egl_window(
