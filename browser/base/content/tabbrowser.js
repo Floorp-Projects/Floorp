@@ -92,7 +92,7 @@
           "nsIMacSharingService",
         ],
       });
-      XPCOMUtils.defineLazyGetter(this, "tabLocalization", () => {
+      ChromeUtils.defineLazyGetter(this, "tabLocalization", () => {
         return new Localization(
           ["browser/tabbrowser.ftl", "branding/brand.ftl"],
           true

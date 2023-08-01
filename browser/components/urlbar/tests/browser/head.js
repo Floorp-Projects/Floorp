@@ -26,7 +26,7 @@ ChromeUtils.defineESModuleGetters(this, {
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "PlacesFrecencyRecalculator", () => {
+ChromeUtils.defineLazyGetter(this, "PlacesFrecencyRecalculator", () => {
   return Cc["@mozilla.org/places/frecency-recalculator;1"].getService(
     Ci.nsIObserver
   ).wrappedJSObject;

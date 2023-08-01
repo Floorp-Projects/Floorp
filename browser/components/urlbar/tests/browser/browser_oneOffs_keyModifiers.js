@@ -10,7 +10,7 @@
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 const SEARCH_STRING = "foo.bar";
 
-XPCOMUtils.defineLazyGetter(this, "oneOffSearchButtons", () => {
+ChromeUtils.defineLazyGetter(this, "oneOffSearchButtons", () => {
   return UrlbarTestUtils.getOneOffSearchButtons(window);
 });
 

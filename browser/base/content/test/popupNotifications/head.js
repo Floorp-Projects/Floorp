@@ -277,7 +277,7 @@ function checkPopup(popup, notifyObj) {
   });
 }
 
-XPCOMUtils.defineLazyGetter(this, "gActiveListeners", () => {
+ChromeUtils.defineLazyGetter(this, "gActiveListeners", () => {
   let listeners = new Map();
   registerCleanupFunction(() => {
     for (let [listener, eventName] of listeners) {

@@ -3,7 +3,7 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyGetter(this, "DevToolsStartup", () => {
+ChromeUtils.defineLazyGetter(this, "DevToolsStartup", () => {
   return Cc["@mozilla.org/devtools/startup-clh;1"].getService(
     Ci.nsICommandLineHandler
   ).wrappedJSObject;

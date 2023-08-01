@@ -98,7 +98,7 @@ const EXPECTED_MERINO_URLBAR_RESULT = {
 
 // `UrlbarProviderQuickSuggest.#merino` is lazily created on the first Merino
 // fetch, so it's easiest to create `gClient` lazily too.
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   this,
   "gClient",
   () => UrlbarProviderQuickSuggest._test_merino

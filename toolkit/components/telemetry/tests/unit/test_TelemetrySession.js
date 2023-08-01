@@ -50,7 +50,7 @@ const DATAREPORTING_DIR = "datareporting";
 const ABORTED_PING_FILE_NAME = "aborted-session-ping";
 const ABORTED_SESSION_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
 
-XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function () {
+ChromeUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function () {
   return PathUtils.join(PathUtils.profileDir, DATAREPORTING_DIR);
 });
 

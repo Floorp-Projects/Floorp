@@ -49,7 +49,7 @@ var httpserv = new HttpServer();
 httpserv.registerPathHandler("/auth", authHandler);
 httpserv.start(-1);
 
-XPCOMUtils.defineLazyGetter(this, "URL", function () {
+ChromeUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpserv.identity.primaryPort;
 });
 

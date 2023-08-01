@@ -7,11 +7,11 @@
 // exercises support for mod_cern_meta-style header/status line modification
 var srv;
 
-XPCOMUtils.defineLazyGetter(this, "PREFIX", function () {
+ChromeUtils.defineLazyGetter(this, "PREFIX", function () {
   return "http://localhost:" + srv.identity.primaryPort;
 });
 
-XPCOMUtils.defineLazyGetter(this, "tests", function () {
+ChromeUtils.defineLazyGetter(this, "tests", function () {
   return [
     new Test(PREFIX + "/test_both.html", null, start_testBoth, null),
     new Test(

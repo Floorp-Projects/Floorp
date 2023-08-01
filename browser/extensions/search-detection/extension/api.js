@@ -21,7 +21,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 // eslint-disable-next-line mozilla/reject-importGlobalProperties
 XPCOMUtils.defineLazyGlobalGetters(this, ["ChannelWrapper"]);
 
-XPCOMUtils.defineLazyGetter(this, "searchInitialized", () => {
+ChromeUtils.defineLazyGetter(this, "searchInitialized", () => {
   if (Services.search.isInitialized) {
     return Promise.resolve();
   }

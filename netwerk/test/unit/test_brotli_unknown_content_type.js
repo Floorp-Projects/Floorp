@@ -21,13 +21,13 @@ const { HttpServer } = ChromeUtils.importESModule(
   "resource://testing-common/httpd.sys.mjs"
 );
 
-XPCOMUtils.defineLazyGetter(this, "URL_EMPTY_BROTLI", function () {
+ChromeUtils.defineLazyGetter(this, "URL_EMPTY_BROTLI", function () {
   return (
     "http://localhost:" + httpServer.identity.primaryPort + "/empty-brotli"
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "URL_LARGE_EMPTY_BROTLI", function () {
+ChromeUtils.defineLazyGetter(this, "URL_LARGE_EMPTY_BROTLI", function () {
   return (
     "http://localhost:" +
     httpServer.identity.primaryPort +

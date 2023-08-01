@@ -14,7 +14,7 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
+ChromeUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
   const { UrlbarTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/UrlbarTestUtils.sys.mjs"
   );

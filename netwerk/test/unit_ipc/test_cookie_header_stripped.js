@@ -5,7 +5,7 @@ const { HttpServer } = ChromeUtils.importESModule(
 );
 
 const TEST_DOMAIN = "www.example.com";
-XPCOMUtils.defineLazyGetter(this, "URL", function () {
+ChromeUtils.defineLazyGetter(this, "URL", function () {
   return (
     "http://" + TEST_DOMAIN + ":" + httpserv.identity.primaryPort + "/path"
   );

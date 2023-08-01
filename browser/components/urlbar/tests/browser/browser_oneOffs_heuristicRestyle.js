@@ -8,7 +8,7 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyGetter(this, "oneOffSearchButtons", () => {
+ChromeUtils.defineLazyGetter(this, "oneOffSearchButtons", () => {
   return UrlbarTestUtils.getOneOffSearchButtons(window);
 });
 

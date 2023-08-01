@@ -9,7 +9,7 @@
 // Other existing autofill tests will, of course, need to be adapted once an
 // algorithm is promoted to be the default.
 
-XPCOMUtils.defineLazyGetter(this, "PlacesFrecencyRecalculator", () => {
+ChromeUtils.defineLazyGetter(this, "PlacesFrecencyRecalculator", () => {
   return Cc["@mozilla.org/places/frecency-recalculator;1"].getService(
     Ci.nsIObserver
   ).wrappedJSObject;

@@ -11,11 +11,11 @@ const { HttpServer } = ChromeUtils.importESModule(
 var prefs = Services.prefs;
 prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
 
-XPCOMUtils.defineLazyGetter(this, "URL", function () {
+ChromeUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpserv.identity.primaryPort;
 });
 
-XPCOMUtils.defineLazyGetter(this, "PORT", function () {
+ChromeUtils.defineLazyGetter(this, "PORT", function () {
   return httpserv.identity.primaryPort;
 });
 

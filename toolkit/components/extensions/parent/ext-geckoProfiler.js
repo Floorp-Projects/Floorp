@@ -15,7 +15,7 @@ const ASYNC_STACKS_ENABLED = Services.prefs.getBoolPref(
 
 var { ExtensionError } = ExtensionUtils;
 
-XPCOMUtils.defineLazyGetter(this, "symbolicationService", () => {
+ChromeUtils.defineLazyGetter(this, "symbolicationService", () => {
   let { createLocalSymbolicationService } = ChromeUtils.import(
     "resource://devtools/client/performance-new/shared/symbolication.jsm.js"
   );

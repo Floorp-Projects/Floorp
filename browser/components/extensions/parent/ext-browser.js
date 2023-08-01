@@ -243,7 +243,7 @@ global.TabContext = class extends EventEmitter {
 // None of the code in the WebExtension modules requests that initialization.
 // It is assumed that it is started at some point. That might never happen,
 // e.g. if the application shuts down before the search service initializes.
-XPCOMUtils.defineLazyGetter(global, "searchInitialized", () => {
+ChromeUtils.defineLazyGetter(global, "searchInitialized", () => {
   if (Services.search.isInitialized) {
     return Promise.resolve();
   }

@@ -18,7 +18,7 @@ if (!window.IS_STORYBOOK) {
   XPCOMUtils = ChromeUtils.importESModule(
     "resource://gre/modules/XPCOMUtils.sys.mjs"
   ).XPCOMUtils;
-  XPCOMUtils.defineLazyGetter(lazy, "relativeTimeFormat", () => {
+  ChromeUtils.defineLazyGetter(lazy, "relativeTimeFormat", () => {
     return new Services.intl.RelativeTimeFormat(undefined, {
       style: "narrow",
     });

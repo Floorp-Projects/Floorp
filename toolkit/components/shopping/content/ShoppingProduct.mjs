@@ -34,7 +34,7 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
   ],
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "decoder", () => new TextDecoder());
+ChromeUtils.defineLazyGetter(lazy, "decoder", () => new TextDecoder());
 
 const StringInputStream = Components.Constructor(
   "@mozilla.org/io/string-input-stream;1",

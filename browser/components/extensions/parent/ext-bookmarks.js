@@ -6,10 +6,6 @@
 
 "use strict";
 
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 ChromeUtils.defineESModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
@@ -26,7 +22,7 @@ const BOOKMARKS_TYPES_TO_API_TYPES_MAP = new Map([
 
 const BOOKMARK_SEPERATOR_URL = "data:";
 
-XPCOMUtils.defineLazyGetter(this, "API_TYPES_TO_BOOKMARKS_TYPES_MAP", () => {
+ChromeUtils.defineLazyGetter(this, "API_TYPES_TO_BOOKMARKS_TYPES_MAP", () => {
   let theMap = new Map();
 
   for (let [code, name] of BOOKMARKS_TYPES_TO_API_TYPES_MAP) {

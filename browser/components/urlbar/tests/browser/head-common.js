@@ -10,7 +10,7 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "TEST_BASE_URL", () =>
+ChromeUtils.defineLazyGetter(this, "TEST_BASE_URL", () =>
   getRootDirectory(gTestPath).replace(
     "chrome://mochitests/content",
     "https://example.com"
@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIClipboardHelper"
 );
 
-XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
+ChromeUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
   const { UrlbarTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/UrlbarTestUtils.sys.mjs"
   );
@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
   return module;
 });
 
-XPCOMUtils.defineLazyGetter(this, "SearchTestUtils", () => {
+ChromeUtils.defineLazyGetter(this, "SearchTestUtils", () => {
   const { SearchTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/SearchTestUtils.sys.mjs"
   );

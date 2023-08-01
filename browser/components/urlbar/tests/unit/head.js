@@ -29,7 +29,7 @@ ChromeUtils.defineESModuleGetters(this, {
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
+ChromeUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
   const { QuickSuggestTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/QuickSuggestTestUtils.sys.mjs"
   );
@@ -37,7 +37,7 @@ XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
   return module;
 });
 
-XPCOMUtils.defineLazyGetter(this, "MerinoTestUtils", () => {
+ChromeUtils.defineLazyGetter(this, "MerinoTestUtils", () => {
   const { MerinoTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/MerinoTestUtils.sys.mjs"
   );
@@ -53,7 +53,7 @@ ChromeUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
   return module;
 });
 
-XPCOMUtils.defineLazyGetter(this, "PlacesFrecencyRecalculator", () => {
+ChromeUtils.defineLazyGetter(this, "PlacesFrecencyRecalculator", () => {
   return Cc["@mozilla.org/places/frecency-recalculator;1"].getService(
     Ci.nsIObserver
   ).wrappedJSObject;

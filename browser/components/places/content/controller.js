@@ -73,7 +73,7 @@ PlacesInsertionPoint.prototype = {
 
 function PlacesController(aView) {
   this._view = aView;
-  XPCOMUtils.defineLazyGetter(this, "profileName", function () {
+  ChromeUtils.defineLazyGetter(this, "profileName", function () {
     return Services.dirsvc.get("ProfD", Ci.nsIFile).leafName;
   });
 

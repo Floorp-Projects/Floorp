@@ -58,7 +58,7 @@ function allowDirectoriesInTest() {
   return cleanup;
 }
 
-XPCOMUtils.defineLazyGetter(this, "gStringBundle", function () {
+ChromeUtils.defineLazyGetter(this, "gStringBundle", function () {
   return Services.strings.createBundle(
     "chrome://mozapps/locale/downloads/downloads.properties"
   );

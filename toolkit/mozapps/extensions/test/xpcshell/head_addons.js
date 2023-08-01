@@ -103,7 +103,7 @@ ExtensionTestUtils.init(this);
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   this,
   "BOOTSTRAP_REASONS",
   () => AddonManagerPrivate.BOOTSTRAP_REASONS

@@ -15,7 +15,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "fetchSMASchema", async () => {
+ChromeUtils.defineLazyGetter(this, "fetchSMASchema", async () => {
   const response = await fetch(
     "resource://testing-common/SpecialMessageActionSchemas.json"
   );

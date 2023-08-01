@@ -13,7 +13,7 @@ const { TelemetryArchive } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryArchive.sys.mjs"
 );
 
-XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function () {
+ChromeUtils.defineLazyGetter(this, "gPingsArchivePath", function () {
   return PathUtils.join(PathUtils.profileDir, "datareporting", "archived");
 });
 

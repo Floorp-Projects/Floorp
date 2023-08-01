@@ -16,7 +16,7 @@ ChromeUtils.defineESModuleGetters(this, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "strBundle", function () {
+ChromeUtils.defineLazyGetter(this, "strBundle", function () {
   return Services.strings.createBundle(
     "chrome://global/locale/extensions.properties"
   );
@@ -28,7 +28,7 @@ const TAB_HIDE_CONFIRMED_TYPE = "tabHideNotification";
 
 const TAB_ID_NONE = -1;
 
-XPCOMUtils.defineLazyGetter(this, "tabHidePopup", () => {
+ChromeUtils.defineLazyGetter(this, "tabHidePopup", () => {
   return new ExtensionControlledPopup({
     confirmedType: TAB_HIDE_CONFIRMED_TYPE,
     anchorId: "alltabs-button",

@@ -5,7 +5,7 @@ const { HttpServer } = ChromeUtils.importESModule(
   "resource://testing-common/httpd.sys.mjs"
 );
 
-XPCOMUtils.defineLazyGetter(this, "URL", function () {
+ChromeUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpServer.identity.primaryPort;
 });
 
@@ -13,7 +13,7 @@ var httpServer = null;
 const testFileName = "test_customConditionalRequest_304";
 const basePath = "/" + testFileName + "/";
 
-XPCOMUtils.defineLazyGetter(this, "baseURI", function () {
+ChromeUtils.defineLazyGetter(this, "baseURI", function () {
   return URL + basePath;
 });
 

@@ -23,7 +23,7 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
+ChromeUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
   const { UrlbarTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/UrlbarTestUtils.sys.mjs"
   );
@@ -31,7 +31,7 @@ XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
   return module;
 });
 
-XPCOMUtils.defineLazyGetter(this, "SearchTestUtils", () => {
+ChromeUtils.defineLazyGetter(this, "SearchTestUtils", () => {
   const { SearchTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/SearchTestUtils.sys.mjs"
   );

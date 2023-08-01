@@ -7,7 +7,7 @@ const { ExtensionUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionUtils.sys.mjs"
 );
 
-XPCOMUtils.defineLazyGetter(this, "resourceProtocol", () =>
+ChromeUtils.defineLazyGetter(this, "resourceProtocol", () =>
   Services.io
     .getProtocolHandler("resource")
     .QueryInterface(Ci.nsIResProtocolHandler)

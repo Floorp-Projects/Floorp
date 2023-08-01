@@ -8,11 +8,11 @@
  * Basic functionality test, from the client programmer's POV.
  */
 
-XPCOMUtils.defineLazyGetter(this, "port", function () {
+ChromeUtils.defineLazyGetter(this, "port", function () {
   return srv.identity.primaryPort;
 });
 
-XPCOMUtils.defineLazyGetter(this, "tests", function () {
+ChromeUtils.defineLazyGetter(this, "tests", function () {
   return [
     new Test(
       "http://localhost:" + port + "/objHandler",

@@ -11,7 +11,7 @@ const { JsonSchema } = ChromeUtils.importESModule(
   "resource://gre/modules/JsonSchema.sys.mjs"
 );
 
-XPCOMUtils.defineLazyGetter(this, "fetchTriggerActionSchema", async () => {
+ChromeUtils.defineLazyGetter(this, "fetchTriggerActionSchema", async () => {
   const response = await fetch(
     "resource://testing-common/TriggerActionSchemas.json"
   );

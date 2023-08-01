@@ -20,7 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SITEPERMS_ADDON_TYPE:
     "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs",
 });
-XPCOMUtils.defineLazyGetter(lazy, "l10n", function () {
+ChromeUtils.defineLazyGetter(lazy, "l10n", function () {
   return new Localization(
     ["browser/addonNotifications.ftl", "branding/brand.ftl"],
     true

@@ -48,7 +48,7 @@ const TEST_PING_TYPE = "test-ping-type";
 
 var gClientID = null;
 
-XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", async function () {
+ChromeUtils.defineLazyGetter(this, "DATAREPORTING_PATH", async function () {
   return PathUtils.join(PathUtils.profileDir, "datareporting");
 });
 

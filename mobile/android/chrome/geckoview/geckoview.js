@@ -25,7 +25,7 @@ ChromeUtils.defineESModuleGetters(this, {
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "WindowEventDispatcher", () =>
+ChromeUtils.defineLazyGetter(this, "WindowEventDispatcher", () =>
   EventDispatcher.for(window)
 );
 

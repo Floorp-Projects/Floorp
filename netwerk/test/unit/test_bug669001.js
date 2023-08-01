@@ -7,7 +7,7 @@ const { HttpServer } = ChromeUtils.importESModule(
 var httpServer = null;
 var path = "/bug699001";
 
-XPCOMUtils.defineLazyGetter(this, "URI", function () {
+ChromeUtils.defineLazyGetter(this, "URI", function () {
   return "http://localhost:" + httpServer.identity.primaryPort + path;
 });
 

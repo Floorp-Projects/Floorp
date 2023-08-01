@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsITrackingDBService"
 );
 
-XPCOMUtils.defineLazyGetter(this, "TRACK_DB_PATH", function () {
+ChromeUtils.defineLazyGetter(this, "TRACK_DB_PATH", function () {
   return PathUtils.join(PathUtils.profileDir, "protections.sqlite");
 });
 

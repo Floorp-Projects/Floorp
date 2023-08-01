@@ -70,7 +70,7 @@ add_setup(async function head_setup() {
   }
 });
 
-XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function () {
+ChromeUtils.defineLazyGetter(this, "SyncPingSchema", function () {
   let { FileUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/FileUtils.sys.mjs"
   );
@@ -97,7 +97,7 @@ XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function () {
   return schema;
 });
 
-XPCOMUtils.defineLazyGetter(this, "SyncPingValidator", function () {
+ChromeUtils.defineLazyGetter(this, "SyncPingValidator", function () {
   const { JsonSchema } = ChromeUtils.importESModule(
     "resource://gre/modules/JsonSchema.sys.mjs"
   );

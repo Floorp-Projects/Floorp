@@ -6,7 +6,7 @@
 
 // tests the registerDirectory API
 
-XPCOMUtils.defineLazyGetter(this, "BASE", function () {
+ChromeUtils.defineLazyGetter(this, "BASE", function () {
   return "http://localhost:" + srv.identity.primaryPort;
 });
 
@@ -47,7 +47,7 @@ function checkFile(ch, status, data) {
   );
 }
 
-XPCOMUtils.defineLazyGetter(this, "tests", function () {
+ChromeUtils.defineLazyGetter(this, "tests", function () {
   return [
     /** *********************
      * without a base path *

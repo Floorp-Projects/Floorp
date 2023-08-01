@@ -81,29 +81,29 @@ class ProtectionCategory {
 
     l10nId = l10nId || id;
     this.strings = {};
-    XPCOMUtils.defineLazyGetter(this.strings, "subViewBlocked", () =>
+    ChromeUtils.defineLazyGetter(this.strings, "subViewBlocked", () =>
       gNavigatorBundle.getString(`contentBlocking.${l10nId}View.blocked.label`)
     );
-    XPCOMUtils.defineLazyGetter(this.strings, "subViewTitleBlocking", () =>
+    ChromeUtils.defineLazyGetter(this.strings, "subViewTitleBlocking", () =>
       gNavigatorBundle.getString(`protections.blocking.${l10nId}.title`)
     );
-    XPCOMUtils.defineLazyGetter(this.strings, "subViewTitleNotBlocking", () =>
+    ChromeUtils.defineLazyGetter(this.strings, "subViewTitleNotBlocking", () =>
       gNavigatorBundle.getString(`protections.notBlocking.${l10nId}.title`)
     );
 
-    XPCOMUtils.defineLazyGetter(this, "subView", () =>
+    ChromeUtils.defineLazyGetter(this, "subView", () =>
       document.getElementById(`protections-popup-${this._id}View`)
     );
 
-    XPCOMUtils.defineLazyGetter(this, "subViewHeading", () =>
+    ChromeUtils.defineLazyGetter(this, "subViewHeading", () =>
       document.getElementById(`protections-popup-${this._id}View-heading`)
     );
 
-    XPCOMUtils.defineLazyGetter(this, "subViewList", () =>
+    ChromeUtils.defineLazyGetter(this, "subViewList", () =>
       document.getElementById(`protections-popup-${this._id}View-list`)
     );
 
-    XPCOMUtils.defineLazyGetter(this, "subViewShimAllowHint", () =>
+    ChromeUtils.defineLazyGetter(this, "subViewShimAllowHint", () =>
       document.getElementById(
         `protections-popup-${this._id}View-shim-allow-hint`
       )
@@ -363,7 +363,7 @@ let TrackingProtection =
       );
 
       // Blocked label has custom key, overwrite the getter.
-      XPCOMUtils.defineLazyGetter(this.strings, "subViewBlocked", () =>
+      ChromeUtils.defineLazyGetter(this.strings, "subViewBlocked", () =>
         gNavigatorBundle.getString("contentBlocking.trackersView.blocked.label")
       );
 
@@ -607,19 +607,22 @@ let ThirdPartyCookies =
         }
       );
 
-      XPCOMUtils.defineLazyGetter(this, "categoryLabel", () =>
+      ChromeUtils.defineLazyGetter(this, "categoryLabel", () =>
         document.getElementById("protections-popup-cookies-category-label")
       );
 
       // Not blocking title has custom key, overwrite the getter.
-      XPCOMUtils.defineLazyGetter(this.strings, "subViewTitleNotBlocking", () =>
-        gNavigatorBundle.getString(
-          "protections.notBlocking.crossSiteTrackingCookies.title"
-        )
+      ChromeUtils.defineLazyGetter(
+        this.strings,
+        "subViewTitleNotBlocking",
+        () =>
+          gNavigatorBundle.getString(
+            "protections.notBlocking.crossSiteTrackingCookies.title"
+          )
       );
 
       // Cookie permission state label.
-      XPCOMUtils.defineLazyGetter(this.strings, "subViewAllowed", () =>
+      ChromeUtils.defineLazyGetter(this.strings, "subViewAllowed", () =>
         gNavigatorBundle.getString("contentBlocking.cookiesView.allowed.label")
       );
 
@@ -1143,24 +1146,24 @@ let cookieBannerHandling = new (class {
       "cookiebanners.ui.desktop.enabled",
       false
     );
-    XPCOMUtils.defineLazyGetter(this, "_cookieBannerSection", () =>
+    ChromeUtils.defineLazyGetter(this, "_cookieBannerSection", () =>
       document.getElementById("protections-popup-cookie-banner-section")
     );
-    XPCOMUtils.defineLazyGetter(this, "_cookieBannerSectionSeparator", () =>
+    ChromeUtils.defineLazyGetter(this, "_cookieBannerSectionSeparator", () =>
       document.getElementById(
         "protections-popup-cookie-banner-section-separator"
       )
     );
-    XPCOMUtils.defineLazyGetter(this, "_cookieBannerSwitch", () =>
+    ChromeUtils.defineLazyGetter(this, "_cookieBannerSwitch", () =>
       document.getElementById("protections-popup-cookie-banner-switch")
     );
-    XPCOMUtils.defineLazyGetter(this, "_cookieBannerSubview", () =>
+    ChromeUtils.defineLazyGetter(this, "_cookieBannerSubview", () =>
       document.getElementById("protections-popup-cookieBannerView")
     );
-    XPCOMUtils.defineLazyGetter(this, "_cookieBannerEnableSite", () =>
+    ChromeUtils.defineLazyGetter(this, "_cookieBannerEnableSite", () =>
       document.getElementById("cookieBannerView-enable-site")
     );
-    XPCOMUtils.defineLazyGetter(this, "_cookieBannerDisableSite", () =>
+    ChromeUtils.defineLazyGetter(this, "_cookieBannerDisableSite", () =>
       document.getElementById("cookieBannerView-disable-site")
     );
   }

@@ -19,7 +19,7 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   this,
   "defaultPreferences",
   () => new Preferences({ defaultBranch: true })

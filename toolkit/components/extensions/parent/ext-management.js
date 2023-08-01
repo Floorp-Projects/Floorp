@@ -6,7 +6,7 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyGetter(this, "strBundle", function () {
+ChromeUtils.defineLazyGetter(this, "strBundle", function () {
   return Services.strings.createBundle(
     "chrome://global/locale/extensions.properties"
   );

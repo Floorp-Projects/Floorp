@@ -10,7 +10,7 @@ const { sinon } = ChromeUtils.importESModule(
 ChromeUtils.defineESModuleGetters(this, {
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
 });
-XPCOMUtils.defineLazyGetter(this, "ExtensionManagement", () => {
+ChromeUtils.defineLazyGetter(this, "ExtensionManagement", () => {
   const { Management } = ChromeUtils.importESModule(
     "resource://gre/modules/Extension.sys.mjs"
   );

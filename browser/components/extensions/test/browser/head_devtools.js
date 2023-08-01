@@ -15,7 +15,7 @@ ChromeUtils.defineESModuleGetters(this, {
   loader: "resource://devtools/shared/loader/Loader.sys.mjs",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
 });
-XPCOMUtils.defineLazyGetter(this, "gDevTools", () => {
+ChromeUtils.defineLazyGetter(this, "gDevTools", () => {
   const { gDevTools } = loader.require("devtools/client/framework/devtools");
   return gDevTools;
 });

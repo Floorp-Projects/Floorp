@@ -10,7 +10,7 @@
 
 var srv, dir, gDirEntries;
 
-XPCOMUtils.defineLazyGetter(this, "BASE_URL", function () {
+ChromeUtils.defineLazyGetter(this, "BASE_URL", function () {
   return "http://localhost:" + srv.identity.primaryPort + "/";
 });
 
@@ -216,7 +216,7 @@ function makeFile(name, isDirectory, parentDir, lst) {
  * TESTS *
  *********/
 
-XPCOMUtils.defineLazyGetter(this, "tests", function () {
+ChromeUtils.defineLazyGetter(this, "tests", function () {
   return [
     new Test(BASE_URL, null, start, stopRootDirectory),
     new Test(BASE_URL + "foo/", null, start, stopFooDirectory),

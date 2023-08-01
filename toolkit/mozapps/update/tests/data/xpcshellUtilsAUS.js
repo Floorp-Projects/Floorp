@@ -1635,61 +1635,65 @@ function getSpecialFolderDir(aCSIDL) {
   return dir;
 }
 
-XPCOMUtils.defineLazyGetter(this, "gInstallDirPathHash", function test_gIDPH() {
-  if (AppConstants.platform != "win") {
-    do_throw("Windows only function called by a different platform!");
-  }
+ChromeUtils.defineLazyGetter(
+  this,
+  "gInstallDirPathHash",
+  function test_gIDPH() {
+    if (AppConstants.platform != "win") {
+      do_throw("Windows only function called by a different platform!");
+    }
 
-  if (!MOZ_APP_BASENAME) {
+    if (!MOZ_APP_BASENAME) {
+      return null;
+    }
+
+    let vendor = MOZ_APP_VENDOR ? MOZ_APP_VENDOR : "Mozilla";
+    let appDir = getApplyDirFile();
+
+    const REG_PATH =
+      "SOFTWARE\\" + vendor + "\\" + MOZ_APP_BASENAME + "\\TaskBarIDs";
+    let regKey = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+      Ci.nsIWindowsRegKey
+    );
+    try {
+      regKey.open(
+        Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+        REG_PATH,
+        Ci.nsIWindowsRegKey.ACCESS_ALL
+      );
+      regKey.writeStringValue(appDir.path, gTestID);
+      return gTestID;
+    } catch (e) {}
+
+    try {
+      regKey.create(
+        Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+        REG_PATH,
+        Ci.nsIWindowsRegKey.ACCESS_ALL
+      );
+      regKey.writeStringValue(appDir.path, gTestID);
+      return gTestID;
+    } catch (e) {
+      logTestInfo(
+        "failed to create registry value. Registry Path: " +
+          REG_PATH +
+          ", Value Name: " +
+          appDir.path +
+          ", Value Data: " +
+          gTestID +
+          ", Exception " +
+          e
+      );
+      do_throw(
+        "Unable to write HKLM or HKCU TaskBarIDs registry value, key path: " +
+          REG_PATH
+      );
+    }
     return null;
   }
+);
 
-  let vendor = MOZ_APP_VENDOR ? MOZ_APP_VENDOR : "Mozilla";
-  let appDir = getApplyDirFile();
-
-  const REG_PATH =
-    "SOFTWARE\\" + vendor + "\\" + MOZ_APP_BASENAME + "\\TaskBarIDs";
-  let regKey = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
-    Ci.nsIWindowsRegKey
-  );
-  try {
-    regKey.open(
-      Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-      REG_PATH,
-      Ci.nsIWindowsRegKey.ACCESS_ALL
-    );
-    regKey.writeStringValue(appDir.path, gTestID);
-    return gTestID;
-  } catch (e) {}
-
-  try {
-    regKey.create(
-      Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-      REG_PATH,
-      Ci.nsIWindowsRegKey.ACCESS_ALL
-    );
-    regKey.writeStringValue(appDir.path, gTestID);
-    return gTestID;
-  } catch (e) {
-    logTestInfo(
-      "failed to create registry value. Registry Path: " +
-        REG_PATH +
-        ", Value Name: " +
-        appDir.path +
-        ", Value Data: " +
-        gTestID +
-        ", Exception " +
-        e
-    );
-    do_throw(
-      "Unable to write HKLM or HKCU TaskBarIDs registry value, key path: " +
-        REG_PATH
-    );
-  }
-  return null;
-});
-
-XPCOMUtils.defineLazyGetter(this, "gLocalAppDataDir", function test_gLADD() {
+ChromeUtils.defineLazyGetter(this, "gLocalAppDataDir", function test_gLADD() {
   if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
@@ -1698,7 +1702,7 @@ XPCOMUtils.defineLazyGetter(this, "gLocalAppDataDir", function test_gLADD() {
   return getSpecialFolderDir(CSIDL_LOCAL_APPDATA);
 });
 
-XPCOMUtils.defineLazyGetter(this, "gCommonAppDataDir", function test_gCDD() {
+ChromeUtils.defineLazyGetter(this, "gCommonAppDataDir", function test_gCDD() {
   if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
@@ -1707,7 +1711,7 @@ XPCOMUtils.defineLazyGetter(this, "gCommonAppDataDir", function test_gCDD() {
   return getSpecialFolderDir(CSIDL_COMMON_APPDATA);
 });
 
-XPCOMUtils.defineLazyGetter(this, "gProgFilesDir", function test_gPFD() {
+ChromeUtils.defineLazyGetter(this, "gProgFilesDir", function test_gPFD() {
   if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
@@ -1777,7 +1781,7 @@ function createWorldWritableAppUpdateDir() {
   }
 }
 
-XPCOMUtils.defineLazyGetter(this, "gUpdatesRootDir", function test_gURD() {
+ChromeUtils.defineLazyGetter(this, "gUpdatesRootDir", function test_gURD() {
   if (AppConstants.platform != "macosx") {
     do_throw("Mac OS X only function called by a different platform!");
   }

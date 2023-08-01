@@ -6,7 +6,7 @@
 
 // tests the registerPrefixHandler API
 
-XPCOMUtils.defineLazyGetter(this, "BASE", function () {
+ChromeUtils.defineLazyGetter(this, "BASE", function () {
   return "http://localhost:" + srv.identity.primaryPort;
 });
 
@@ -28,7 +28,7 @@ function makeCheckOverride(magic) {
   };
 }
 
-XPCOMUtils.defineLazyGetter(this, "tests", function () {
+ChromeUtils.defineLazyGetter(this, "tests", function () {
   return [
     new Test(
       BASE + "/prefix/dummy",

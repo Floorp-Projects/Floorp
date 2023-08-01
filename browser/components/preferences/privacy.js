@@ -49,7 +49,7 @@ const { BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN } = Ci.nsICookieService;
 
 const PASSWORD_MANAGER_PREF_ID = "services.passwordSavingEnabled";
 
-XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function () {
+ChromeUtils.defineLazyGetter(this, "AlertsServiceDND", function () {
   try {
     let alertsService = Cc["@mozilla.org/alerts-service;1"]
       .getService(Ci.nsIAlertsService)

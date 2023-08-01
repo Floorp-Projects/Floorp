@@ -2,17 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
+
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "relativeTimeFormat", () => {
+ChromeUtils.defineLazyGetter(lazy, "relativeTimeFormat", () => {
   return new Services.intl.RelativeTimeFormat(undefined, { style: "narrow" });
 });
 

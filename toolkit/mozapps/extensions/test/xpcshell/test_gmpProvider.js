@@ -15,7 +15,7 @@ const { UpdateUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/UpdateUtils.sys.mjs"
 );
 
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   this,
   "pluginsBundle",
   () => new Localization(["toolkit/about/aboutPlugins.ftl"])

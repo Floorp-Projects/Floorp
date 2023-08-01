@@ -7,7 +7,7 @@ const BASE = getRootDirectory(gTestPath).replace(
   "https://example.com/"
 );
 
-XPCOMUtils.defineLazyGetter(this, "Management", () => {
+ChromeUtils.defineLazyGetter(this, "Management", () => {
   // eslint-disable-next-line no-shadow
   const { Management } = ChromeUtils.importESModule(
     "resource://gre/modules/Extension.sys.mjs"

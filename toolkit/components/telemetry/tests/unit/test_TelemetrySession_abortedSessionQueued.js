@@ -21,7 +21,7 @@ const PING_TYPE_MAIN = "main";
 const REASON_ABORTED_SESSION = "aborted-session";
 const TEST_PING_TYPE = "test-ping-type";
 
-XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function () {
+ChromeUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function () {
   return PathUtils.join(PathUtils.profileDir, DATAREPORTING_DIR);
 });
 

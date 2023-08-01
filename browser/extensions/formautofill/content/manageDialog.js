@@ -13,9 +13,6 @@ const EDIT_CREDIT_CARD_URL =
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { FormAutofill } = ChromeUtils.importESModule(
   "resource://autofill/FormAutofill.sys.mjs"
 );
@@ -31,7 +28,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 const lazy = {};
-XPCOMUtils.defineLazyGetter(
+ChromeUtils.defineLazyGetter(
   lazy,
   "l10n",
   () =>
@@ -42,7 +39,7 @@ XPCOMUtils.defineLazyGetter(
 );
 
 this.log = null;
-XPCOMUtils.defineLazyGetter(this, "log", () =>
+ChromeUtils.defineLazyGetter(this, "log", () =>
   FormAutofill.defineLogGetter(this, "manageAddresses")
 );
 

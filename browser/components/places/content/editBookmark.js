@@ -1218,7 +1218,7 @@ var gEditItemOverlay = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(gEditItemOverlay, "_folderTree", () => {
+ChromeUtils.defineLazyGetter(gEditItemOverlay, "_folderTree", () => {
   if (!customElements.get("places-tree")) {
     Services.scriptloader.loadSubScript(
       "chrome://browser/content/places/places-tree.js",
@@ -1252,7 +1252,7 @@ for (let elt of [
   "tagsField",
 ]) {
   let eltScoped = elt;
-  XPCOMUtils.defineLazyGetter(gEditItemOverlay, `_${eltScoped}`, () =>
+  ChromeUtils.defineLazyGetter(gEditItemOverlay, `_${eltScoped}`, () =>
     gEditItemOverlay._element(eltScoped)
   );
 }

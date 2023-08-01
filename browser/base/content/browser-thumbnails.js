@@ -100,7 +100,7 @@ var gBrowserThumbnails = {
     }
     // Delete the defined property
     delete this._topSiteURLs;
-    XPCOMUtils.defineLazyGetter(this, "_topSiteURLs", getTopSiteURLs);
+    ChromeUtils.defineLazyGetter(this, "_topSiteURLs", getTopSiteURLs);
   },
 
   notify: function Thumbnails_notify(timer) {
@@ -221,4 +221,8 @@ async function getTopSiteURLs() {
   }, []);
 }
 
-XPCOMUtils.defineLazyGetter(gBrowserThumbnails, "_topSiteURLs", getTopSiteURLs);
+ChromeUtils.defineLazyGetter(
+  gBrowserThumbnails,
+  "_topSiteURLs",
+  getTopSiteURLs
+);

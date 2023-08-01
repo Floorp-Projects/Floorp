@@ -4,9 +4,9 @@
 
 "use strict";
 
-/* global ExtensionAPI, Services, XPCOMUtils */
+/* global ExtensionAPI, Services */
 
-XPCOMUtils.defineLazyGetter(this, "l10nStrings", function () {
+ChromeUtils.defineLazyGetter(this, "l10nStrings", function () {
   return Services.strings.createBundle(
     "chrome://report-site-issue/locale/webcompat.properties"
   );
