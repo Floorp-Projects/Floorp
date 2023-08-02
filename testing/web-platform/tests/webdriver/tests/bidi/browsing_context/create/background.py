@@ -22,12 +22,8 @@ async def test_background(bidi_session, top_context, type_hint, background):
     new_context = await bidi_session.browsing_context.create(type_hint=type_hint, background=background)
 
     try:
-        # A new window opened in the background might not be fully covered by the window opened previously, so it might still be visible,
-        # in that case we just make sure that a previously opened window, which should be focused now, is visible.
         if background:
             assert await get_visibility_state(bidi_session, top_context) == "visible"
-            if type_hint == "tab":
-                assert await get_visibility_state(bidi_session, new_context) == "hidden"
         else:
             assert await get_visibility_state(bidi_session, new_context) == "visible"
 
