@@ -16,8 +16,8 @@ use selectors::matching::QuirksMode;
 use servo_arc::Arc;
 use smallvec::SmallVec;
 use style_traits::{
-    arc_slice::ArcSlice, ParseError as StyleParseError, ParsingMode, PropertySyntaxParseError,
-    StyleParseErrorKind,
+    arc_slice::ArcSlice, owned_str::OwnedStr, ParseError as StyleParseError, ParsingMode,
+    PropertySyntaxParseError, StyleParseErrorKind,
 };
 
 #[derive(Clone)]
@@ -51,6 +51,8 @@ pub enum ValueComponent {
     CustomIdent(CustomIdent),
     /// A <transform-list> value
     TransformList(ArcSlice<specified::Transform>),
+    /// A <string> value
+    String(OwnedStr),
 }
 
 /// A parsed property value.
@@ -234,6 +236,10 @@ impl<'a> Parser<'a> {
                     result?;
                 }
                 ValueComponent::TransformList(ArcSlice::from_iter(values.into_iter()))
+            },
+            DataType::String => {
+                let string = input.expect_string()?;
+                ValueComponent::String(string.as_ref().to_owned().into())
             },
         };
         Ok(value)
