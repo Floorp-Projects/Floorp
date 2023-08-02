@@ -2419,9 +2419,6 @@ pref("font.size.monospace.x-math", 13);
   // handling.  If this is set to true, Gecko forcibly use the cache.
   pref("mousewheel.system_settings_cache.force_enabled", false);
 
-  // High resolution scrolling with supported mouse drivers on Vista or later.
-  pref("mousewheel.enable_pixel_scrolling", true);
-
   // If your mouse drive sends WM_*SCROLL messages when you turn your mouse
   // wheel, set this to true.  Then, gecko processes them as mouse wheel
   // messages.
