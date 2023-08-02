@@ -9,6 +9,7 @@
 #include <math.h>
 #include "DrawTargetD2D1.h"
 #include "Logging.h"
+#include "PathHelpers.h"
 
 namespace mozilla {
 namespace gfx {
@@ -168,6 +169,9 @@ void PathBuilderD2D::Close() {
 
 void PathBuilderD2D::Arc(const Point& aOrigin, Float aRadius, Float aStartAngle,
                          Float aEndAngle, bool aAntiClockwise) {
+  ArcToBezier(this, aOrigin, Size(aRadius, aRadius), aStartAngle, aEndAngle,
+              aAntiClockwise);
+#if 0
   MOZ_ASSERT(aRadius >= 0);
 
   if (aAntiClockwise && aStartAngle < aEndAngle) {
@@ -252,6 +256,7 @@ void PathBuilderD2D::Arc(const Point& aOrigin, Float aRadius, Float aStartAngle,
 
   mCurrentPoint = endPoint;
   mFigureEmpty = false;
+#endif
 }
 
 void PathBuilderD2D::EnsureActive(const Point& aPoint) {
