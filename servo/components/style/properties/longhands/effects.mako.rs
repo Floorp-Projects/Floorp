@@ -16,6 +16,7 @@ ${helpers.predefined_type(
     flags="CAN_ANIMATE_ON_COMPOSITOR",
     spec="https://drafts.csswg.org/css-color/#transparency",
     servo_restyle_damage = "reflow_out_of_flow",
+    affects="paint",
 )}
 
 ${helpers.predefined_type(
@@ -31,6 +32,7 @@ ${helpers.predefined_type(
     extra_prefixes="webkit",
     ignored_when_colors_disabled=True,
     spec="https://drafts.csswg.org/css-backgrounds/#box-shadow",
+    affects="overflow",
 )}
 
 ${helpers.predefined_type(
@@ -42,6 +44,7 @@ ${helpers.predefined_type(
     boxed=True,
     allow_quirks="Yes",
     spec="https://drafts.fxtf.org/css-masking/#clip-property",
+    affects="overflow",
 )}
 
 ${helpers.predefined_type(
@@ -57,6 +60,7 @@ ${helpers.predefined_type(
     vector_animation_type="with_zero",
     extra_prefixes="webkit",
     spec="https://drafts.fxtf.org/filters/#propdef-filter",
+    affects="overflow",
 )}
 
 ${helpers.predefined_type(
@@ -72,6 +76,7 @@ ${helpers.predefined_type(
     vector_animation_type="with_zero",
     gecko_pref="layout.css.backdrop-filter.enabled",
     spec="https://drafts.fxtf.org/filter-effects-2/#propdef-backdrop-filter",
+    affects="overflow",
 )}
 
 ${helpers.single_keyword(
@@ -83,4 +88,5 @@ ${helpers.single_keyword(
     gecko_enum_prefix="StyleBlend",
     animation_value_type="discrete",
     spec="https://drafts.fxtf.org/compositing/#propdef-mix-blend-mode",
+    affects="paint",
 )}

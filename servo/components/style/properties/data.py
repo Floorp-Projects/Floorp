@@ -312,6 +312,7 @@ class Longhand(Property):
         simple_vector_bindings=False,
         vector=False,
         servo_restyle_damage="repaint",
+        affects=None,
     ):
         Property.__init__(
             self,
@@ -326,6 +327,9 @@ class Longhand(Property):
             extra_prefixes=extra_prefixes,
             flags=flags,
         )
+
+        self.affects = affects
+        self.flags += self.affects_flags()
 
         self.keyword = keyword
         self.predefined_type = predefined_type
@@ -376,6 +380,29 @@ class Longhand(Property):
 
         # See compute_damage for the various values this can take
         self.servo_restyle_damage = servo_restyle_damage
+
+    def affects_flags(self):
+        # Layout is the stronger hint. This property animation affects layout
+        # or frame construction. `display` or `width` are examples that should
+        # use this.
+        if self.affects == "layout":
+            return ["AFFECTS_LAYOUT"]
+        # This property doesn't affect layout, but affects overflow.
+        # `transform` and co. are examples of this.
+        if self.affects == "overflow":
+            return ["AFFECTS_OVERFLOW"]
+        # This property affects the rendered output but doesn't affect layout.
+        # `opacity`, `color`, or `z-index` are examples of this.
+        if self.affects == "paint":
+            return ["AFFECTS_PAINT"]
+        # This property doesn't affect rendering in any way.
+        # `user-select` is an example of this.
+        assert self.affects == "", (
+            "Property "
+            + self.name
+            + ': affects must be specified and be one of ["layout", "overflow", "paint", ""], see Longhand.affects_flags for documentation'
+        )
+        return []
 
     @staticmethod
     def type():

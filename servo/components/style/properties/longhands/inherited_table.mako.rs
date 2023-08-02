@@ -14,6 +14,7 @@ ${helpers.single_keyword(
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-tables/#propdef-border-collapse",
     servo_restyle_damage = "reflow",
+    affects="layout",
 )}
 
 ${helpers.single_keyword(
@@ -24,6 +25,7 @@ ${helpers.single_keyword(
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-tables/#propdef-empty-cells",
     servo_restyle_damage="rebuild_and_reflow",
+    affects="paint",
 )}
 
 ${helpers.predefined_type(
@@ -34,6 +36,7 @@ ${helpers.predefined_type(
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-tables/#propdef-caption-side",
     servo_restyle_damage="rebuild_and_reflow",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -46,4 +49,5 @@ ${helpers.predefined_type(
     boxed=True,
     spec="https://drafts.csswg.org/css-tables/#propdef-border-spacing",
     servo_restyle_damage="reflow",
+    affects="layout",
 )}

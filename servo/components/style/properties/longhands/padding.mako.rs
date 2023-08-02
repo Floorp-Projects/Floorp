@@ -23,7 +23,8 @@
         logical_group="padding",
         spec=spec,
         allow_quirks="No" if side[1] else "Yes",
-        servo_restyle_damage="reflow rebuild_and_reflow_inline"
+        servo_restyle_damage="reflow rebuild_and_reflow_inline",
+        affects="layout",
     )}
 % endfor
 
@@ -37,5 +38,6 @@
         logical_group="scroll-padding",
         spec="https://drafts.csswg.org/css-scroll-snap-1/#propdef-scroll-padding-%s" % side[0],
         animation_value_type="NonNegativeLengthPercentageOrAuto",
+        affects="",
     )}
 % endfor

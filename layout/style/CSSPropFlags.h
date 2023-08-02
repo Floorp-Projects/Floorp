@@ -11,7 +11,7 @@
 
 namespace mozilla {
 
-enum class CSSPropFlags : uint8_t {
+enum class CSSPropFlags : uint16_t {
   // This property is not parsed. It is only there for internal use like
   // attribute mapping.
   Inaccessible = 1 << 0,
@@ -54,6 +54,11 @@ enum class CSSPropFlags : uint8_t {
   // Whether this shorthand property is unconditionally exposed in
   // getComputedStyle.
   ShorthandUnconditionallyExposedOnGetCS = 1 << 7,
+
+  // Whether this property, when changed, may affect layout, overflow, or paint.
+  AffectsLayout = 1 << 8,
+  AffectsOverflow = 1 << 9,
+  AffectsPaint = 1 << 10,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CSSPropFlags)

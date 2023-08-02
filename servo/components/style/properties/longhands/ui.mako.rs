@@ -19,6 +19,7 @@ ${helpers.single_keyword(
     gecko_ffi_name="mIMEMode",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-ui/#input-method-editor",
+    affects="",
 )}
 
 ${helpers.single_keyword(
@@ -27,7 +28,8 @@ ${helpers.single_keyword(
     engines="gecko",
     gecko_enum_prefix="StyleScrollbarWidth",
     animation_value_type="discrete",
-    spec="https://drafts.csswg.org/css-scrollbars-1/#scrollbar-width"
+    spec="https://drafts.csswg.org/css-scrollbars-1/#scrollbar-width",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -38,6 +40,7 @@ ${helpers.predefined_type(
     extra_prefixes="moz webkit",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-ui-4/#propdef-user-select",
+    affects="",
 )}
 
 // TODO(emilio): This probably should be hidden from content.
@@ -49,6 +52,7 @@ ${helpers.single_keyword(
     gecko_enum_prefix="StyleWindowDragging",
     animation_value_type="discrete",
     spec="None (Nonstandard Firefox-only property)",
+    affects="paint",
 )}
 
 // TODO(emilio): Maybe make shadow behavior on macOS match Linux / Windows, and remove this
@@ -63,6 +67,7 @@ ${helpers.single_keyword(
     animation_value_type="discrete",
     enabled_in="chrome",
     spec="None (Nonstandard internal property)",
+    affects="overflow",
 )}
 
 ${helpers.predefined_type(
@@ -74,6 +79,7 @@ ${helpers.predefined_type(
     animation_value_type="ComputedValue",
     spec="None (Nonstandard internal property)",
     enabled_in="chrome",
+    affects="paint",
 )}
 
 ${helpers.predefined_type(
@@ -84,6 +90,7 @@ ${helpers.predefined_type(
     animation_value_type="ComputedValue",
     spec="None (Nonstandard internal property)",
     enabled_in="chrome",
+    affects="overflow",
 )}
 
 ${helpers.predefined_type(
@@ -96,6 +103,7 @@ ${helpers.predefined_type(
     boxed=True,
     spec="None (Nonstandard internal property)",
     enabled_in="chrome",
+    affects="overflow",
 )}
 
 ${helpers.predefined_type(
@@ -106,10 +114,10 @@ ${helpers.predefined_type(
     animation_value_type="ComputedValue",
     spec="None (Nonstandard internal property)",
     enabled_in="chrome",
+    affects="",
 )}
 
-// Hack to allow chrome to hide stuff only visually (without hiding it from
-// a11y).
+// Hack to allow chrome to hide stuff only visually (without hiding it from a11y).
 ${helpers.predefined_type(
     "-moz-subtree-hidden-only-visually",
     "BoolInteger",
@@ -118,6 +126,7 @@ ${helpers.predefined_type(
     animation_value_type="discrete",
     spec="None (Nonstandard internal property)",
     enabled_in="chrome",
+    affects="paint",
 )}
 
 // TODO(emilio): Probably also should be hidden from content.
@@ -128,6 +137,7 @@ ${helpers.predefined_type(
     engines="gecko",
     animation_value_type="discrete",
     spec="None (Nonstandard Firefox-only property)",
+    affects="layout",
 )}
 
 <% transition_extra_prefixes = "moz:layout.css.prefixes.transitions webkit" %>
@@ -144,6 +154,7 @@ ${helpers.predefined_type(
     animation_value_type="none",
     extra_prefixes=transition_extra_prefixes,
     spec="https://drafts.csswg.org/css-transitions/#propdef-transition-duration",
+    affects="",
 )}
 
 ${helpers.predefined_type(
@@ -157,6 +168,7 @@ ${helpers.predefined_type(
     animation_value_type="none",
     extra_prefixes=transition_extra_prefixes,
     spec="https://drafts.csswg.org/css-transitions/#propdef-transition-timing-function",
+    affects="",
 )}
 
 ${helpers.predefined_type(
@@ -171,6 +183,7 @@ ${helpers.predefined_type(
     animation_value_type="none",
     extra_prefixes=transition_extra_prefixes,
     spec="https://drafts.csswg.org/css-transitions/#propdef-transition-property",
+    affects="",
 )}
 
 ${helpers.predefined_type(
@@ -184,6 +197,7 @@ ${helpers.predefined_type(
     animation_value_type="none",
     extra_prefixes=transition_extra_prefixes,
     spec="https://drafts.csswg.org/css-transitions/#propdef-transition-delay",
+    affects="",
 )}
 
 <% animation_extra_prefixes = "moz:layout.css.prefixes.animations webkit" %>
@@ -200,6 +214,7 @@ ${helpers.predefined_type(
     extra_prefixes=animation_extra_prefixes,
     rule_types_allowed=DEFAULT_RULES_EXCEPT_KEYFRAME,
     spec="https://drafts.csswg.org/css-animations/#propdef-animation-name",
+    affects="",
 )}
 
 ${helpers.predefined_type(
@@ -214,6 +229,7 @@ ${helpers.predefined_type(
     animation_value_type="none",
     extra_prefixes=animation_extra_prefixes,
     spec="https://drafts.csswg.org/css-transitions/#propdef-transition-duration",
+    affects="",
 )}
 
 // animation-timing-function is the exception to the rule for allowed_in_keyframe_block:
@@ -229,6 +245,7 @@ ${helpers.predefined_type(
     animation_value_type="none",
     extra_prefixes=animation_extra_prefixes,
     spec="https://drafts.csswg.org/css-transitions/#propdef-animation-timing-function",
+    affects="",
 )}
 
 ${helpers.predefined_type(
@@ -243,6 +260,7 @@ ${helpers.predefined_type(
     extra_prefixes=animation_extra_prefixes,
     rule_types_allowed=DEFAULT_RULES_EXCEPT_KEYFRAME,
     spec="https://drafts.csswg.org/css-animations/#propdef-animation-iteration-count",
+    affects="",
 )}
 
 <% animation_direction_custom_consts = { "alternate-reverse": "Alternate_reverse" } %>
@@ -259,6 +277,7 @@ ${helpers.single_keyword(
     gecko_inexhaustive=True,
     spec="https://drafts.csswg.org/css-animations/#propdef-animation-direction",
     rule_types_allowed=DEFAULT_RULES_EXCEPT_KEYFRAME,
+    affects="",
 )}
 
 ${helpers.single_keyword(
@@ -272,6 +291,7 @@ ${helpers.single_keyword(
     gecko_enum_prefix="StyleAnimationPlayState",
     spec="https://drafts.csswg.org/css-animations/#propdef-animation-play-state",
     rule_types_allowed=DEFAULT_RULES_EXCEPT_KEYFRAME,
+    affects="",
 )}
 
 ${helpers.single_keyword(
@@ -286,6 +306,7 @@ ${helpers.single_keyword(
     gecko_inexhaustive=True,
     spec="https://drafts.csswg.org/css-animations/#propdef-animation-fill-mode",
     rule_types_allowed=DEFAULT_RULES_EXCEPT_KEYFRAME,
+    affects="",
 )}
 
 ${helpers.single_keyword(
@@ -299,6 +320,7 @@ ${helpers.single_keyword(
     gecko_inexhaustive=True,
     gecko_pref="layout.css.animation-composition.enabled",
     spec="https://drafts.csswg.org/css-animations-2/#animation-composition",
+    affects="",
 )}
 
 ${helpers.predefined_type(
@@ -313,6 +335,7 @@ ${helpers.predefined_type(
     extra_prefixes=animation_extra_prefixes,
     spec="https://drafts.csswg.org/css-animations/#propdef-animation-delay",
     rule_types_allowed=DEFAULT_RULES_EXCEPT_KEYFRAME,
+    affects="",
 )}
 
 ${helpers.predefined_type(
@@ -327,6 +350,7 @@ ${helpers.predefined_type(
     gecko_pref="layout.css.scroll-driven-animations.enabled",
     spec="https://drafts.csswg.org/css-animations-2/#propdef-animation-timeline",
     rule_types_allowed=DEFAULT_RULES_EXCEPT_KEYFRAME,
+    affects="",
 )}
 
 ${helpers.predefined_type(
@@ -340,6 +364,7 @@ ${helpers.predefined_type(
     gecko_pref="layout.css.scroll-driven-animations.enabled",
     spec="https://drafts.csswg.org/scroll-animations-1/#scroll-timeline-name",
     rule_types_allowed=DEFAULT_RULES_EXCEPT_KEYFRAME,
+    affects="",
 )}
 
 ${helpers.predefined_type(
@@ -353,6 +378,7 @@ ${helpers.predefined_type(
     gecko_pref="layout.css.scroll-driven-animations.enabled",
     spec="https://drafts.csswg.org/scroll-animations-1/#scroll-timeline-axis",
     rule_types_allowed=DEFAULT_RULES_EXCEPT_KEYFRAME,
+    affects="",
 )}
 
 ${helpers.predefined_type(
@@ -366,6 +392,7 @@ ${helpers.predefined_type(
     gecko_pref="layout.css.scroll-driven-animations.enabled",
     spec="https://drafts.csswg.org/scroll-animations-1/#view-timeline-name",
     rule_types_allowed=DEFAULT_RULES_EXCEPT_KEYFRAME,
+    affects="",
 )}
 
 ${helpers.predefined_type(
@@ -379,6 +406,7 @@ ${helpers.predefined_type(
     gecko_pref="layout.css.scroll-driven-animations.enabled",
     spec="https://drafts.csswg.org/scroll-animations-1/#view-timeline-axis",
     rule_types_allowed=DEFAULT_RULES_EXCEPT_KEYFRAME,
+    affects="",
 )}
 
 ${helpers.predefined_type(
@@ -392,4 +420,5 @@ ${helpers.predefined_type(
     gecko_pref="layout.css.scroll-driven-animations.enabled",
     spec="https://drafts.csswg.org/scroll-animations-1/#view-timeline-axis",
     rule_types_allowed=DEFAULT_RULES_EXCEPT_KEYFRAME,
+    affects="",
 )}

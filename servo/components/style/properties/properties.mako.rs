@@ -1188,10 +1188,17 @@ bitflags! {
         /* The following flags are currently not used in Rust code, they
          * only need to be listed in corresponding properties so that
          * they can be checked in the C++ side via ServoCSSPropList.h. */
+
         /// This property can be animated on the compositor.
         const CAN_ANIMATE_ON_COMPOSITOR = 0;
         /// This shorthand property is accessible from getComputedStyle.
         const SHORTHAND_IN_GETCS = 0;
+        /// See data.py's documentation about the affects_flags.
+        const AFFECTS_LAYOUT = 0;
+        #[allow(missing_docs)]
+        const AFFECTS_OVERFLOW = 0;
+        #[allow(missing_docs)]
+        const AFFECTS_PAINT = 0;
     }
 }
 

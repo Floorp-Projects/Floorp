@@ -17,6 +17,7 @@ ${helpers.single_keyword(
     animation_value_type="discrete",
     aliases="-webkit-box-align",
     spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/box-align)",
+    affects="layout",
 )}
 
 ${helpers.single_keyword(
@@ -28,6 +29,7 @@ ${helpers.single_keyword(
     animation_value_type="discrete",
     aliases="-webkit-box-direction",
     spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/box-direction)",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -39,6 +41,7 @@ ${helpers.predefined_type(
     animation_value_type="NonNegativeNumber",
     aliases="-webkit-box-flex",
     spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/box-flex)",
+    affects="layout",
 )}
 
 ${helpers.single_keyword(
@@ -51,6 +54,7 @@ ${helpers.single_keyword(
     animation_value_type="discrete",
     aliases="-webkit-box-orient",
     spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/box-orient)",
+    affects="layout",
 )}
 
 ${helpers.single_keyword(
@@ -62,6 +66,7 @@ ${helpers.single_keyword(
     animation_value_type="discrete",
     aliases="-webkit-box-pack",
     spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/box-pack)",
+    affects="layout",
 )}
 
 // NOTE(heycam): Odd that the initial value is 1 yet 0 is a valid value. There
@@ -76,4 +81,5 @@ ${helpers.predefined_type(
     gecko_ffi_name="mBoxOrdinal",
     animation_value_type="discrete",
     spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/-moz-box-ordinal-group)",
+    affects="layout",
 )}
