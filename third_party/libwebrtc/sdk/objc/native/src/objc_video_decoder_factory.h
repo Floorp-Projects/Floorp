@@ -29,8 +29,7 @@ class ObjCVideoDecoderFactory : public VideoDecoderFactory {
   id<RTC_OBJC_TYPE(RTCVideoDecoderFactory)> wrapped_decoder_factory() const;
 
   std::vector<SdpVideoFormat> GetSupportedFormats() const override;
-  std::unique_ptr<VideoDecoder> CreateVideoDecoder(
-      const SdpVideoFormat& format) override;
+  std::unique_ptr<VideoDecoder> CreateVideoDecoder(const SdpVideoFormat& format) override;
 
  private:
   id<RTC_OBJC_TYPE(RTCVideoDecoderFactory)> decoder_factory_;

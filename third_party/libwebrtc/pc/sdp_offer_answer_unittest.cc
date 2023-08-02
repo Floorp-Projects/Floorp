@@ -20,12 +20,21 @@
 #include "api/peer_connection_interface.h"
 #include "api/rtp_transceiver_interface.h"
 #include "api/scoped_refptr.h"
-#include "api/video_codecs/builtin_video_decoder_factory.h"
-#include "api/video_codecs/builtin_video_encoder_factory.h"
+#include "api/video_codecs/video_decoder_factory_template.h"
+#include "api/video_codecs/video_decoder_factory_template_dav1d_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_libvpx_vp8_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_libvpx_vp9_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_open_h264_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template.h"
+#include "api/video_codecs/video_encoder_factory_template_libaom_av1_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_libvpx_vp8_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_libvpx_vp9_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_open_h264_adapter.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "p2p/base/port_allocator.h"
 #include "pc/peer_connection_wrapper.h"
+#include "pc/session_description.h"
 #include "pc/test/fake_audio_capture_module.h"
 #include "pc/test/mock_peer_connection_observers.h"
 #include "rtc_base/rtc_certificate_generator.h"
@@ -59,17 +68,25 @@ class SdpOfferAnswerTest : public ::testing::Test {
       // Note: We use a PeerConnectionFactory with a distinct
       // signaling thread, so that thread handling can be tested.
       : signaling_thread_(CreateAndStartThread()),
-        pc_factory_(
-            CreatePeerConnectionFactory(nullptr,
-                                        nullptr,
-                                        signaling_thread_.get(),
-                                        FakeAudioCaptureModule::Create(),
-                                        CreateBuiltinAudioEncoderFactory(),
-                                        CreateBuiltinAudioDecoderFactory(),
-                                        CreateBuiltinVideoEncoderFactory(),
-                                        CreateBuiltinVideoDecoderFactory(),
-                                        nullptr /* audio_mixer */,
-                                        nullptr /* audio_processing */)) {
+        pc_factory_(CreatePeerConnectionFactory(
+            nullptr,
+            nullptr,
+            signaling_thread_.get(),
+            FakeAudioCaptureModule::Create(),
+            CreateBuiltinAudioEncoderFactory(),
+            CreateBuiltinAudioDecoderFactory(),
+            std::make_unique<
+                VideoEncoderFactoryTemplate<LibvpxVp8EncoderTemplateAdapter,
+                                            LibvpxVp9EncoderTemplateAdapter,
+                                            OpenH264EncoderTemplateAdapter,
+                                            LibaomAv1EncoderTemplateAdapter>>(),
+            std::make_unique<
+                VideoDecoderFactoryTemplate<LibvpxVp8DecoderTemplateAdapter,
+                                            LibvpxVp9DecoderTemplateAdapter,
+                                            OpenH264DecoderTemplateAdapter,
+                                            Dav1dDecoderTemplateAdapter>>(),
+            nullptr /* audio_mixer */,
+            nullptr /* audio_processing */)) {
     webrtc::metrics::Reset();
   }
 
@@ -450,5 +467,84 @@ TEST_F(SdpOfferAnswerTest, RollbackPreservesAddTrackMid) {
   ASSERT_NE(offer2, nullptr);
   EXPECT_EQ(saved_mid, first_transceiver->mid());
 }
+
+#ifdef WEBRTC_HAVE_SCTP
+
+TEST_F(SdpOfferAnswerTest, RejectedDataChannelsDoNotGetReoffered) {
+  auto pc = CreatePeerConnection();
+  EXPECT_TRUE(pc->pc()->CreateDataChannelOrError("dc", nullptr).ok());
+  EXPECT_TRUE(pc->CreateOfferAndSetAsLocal());
+  auto mid = pc->pc()->local_description()->description()->contents()[0].mid();
+
+  // An answer that rejects the datachannel content.
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 4131505339648218884 3 IN IP4 **-----**\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=ice-ufrag:zGWFZ+fVXDeN6UoI/136\r\n"
+      "a=ice-pwd:9AUNgUqRNI5LSIrC1qFD2iTR\r\n"
+      "a=fingerprint:sha-256 "
+      "AD:52:52:E0:B1:37:34:21:0E:15:8E:B7:56:56:7B:B4:39:0E:6D:1C:F5:84:A7:EE:"
+      "B5:27:3E:30:B1:7D:69:42\r\n"
+      "a=setup:passive\r\n"
+      "m=application 0 UDP/DTLS/SCTP webrtc-datachannel\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=sctp-port:5000\r\n"
+      "a=max-message-size:262144\r\n"
+      "a=mid:" +
+      mid + "\r\n";
+  auto answer = CreateSessionDescription(SdpType::kAnswer, sdp);
+  ASSERT_TRUE(pc->SetRemoteDescription(std::move(answer)));
+  // The subsequent offer should not recycle the m-line since the existing data
+  // channel is closed.
+  auto offer = pc->CreateOffer();
+  const auto& offer_contents = offer->description()->contents();
+  ASSERT_EQ(offer_contents.size(), 1u);
+  EXPECT_EQ(offer_contents[0].mid(), mid);
+  EXPECT_EQ(offer_contents[0].rejected, true);
+}
+
+TEST_F(SdpOfferAnswerTest, RejectedDataChannelsDoGetReofferedWhenActive) {
+  auto pc = CreatePeerConnection();
+  EXPECT_TRUE(pc->pc()->CreateDataChannelOrError("dc", nullptr).ok());
+  EXPECT_TRUE(pc->CreateOfferAndSetAsLocal());
+  auto mid = pc->pc()->local_description()->description()->contents()[0].mid();
+
+  // An answer that rejects the datachannel content.
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 4131505339648218884 3 IN IP4 **-----**\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=ice-ufrag:zGWFZ+fVXDeN6UoI/136\r\n"
+      "a=ice-pwd:9AUNgUqRNI5LSIrC1qFD2iTR\r\n"
+      "a=fingerprint:sha-256 "
+      "AD:52:52:E0:B1:37:34:21:0E:15:8E:B7:56:56:7B:B4:39:0E:6D:1C:F5:84:A7:EE:"
+      "B5:27:3E:30:B1:7D:69:42\r\n"
+      "a=setup:passive\r\n"
+      "m=application 0 UDP/DTLS/SCTP webrtc-datachannel\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=sctp-port:5000\r\n"
+      "a=max-message-size:262144\r\n"
+      "a=mid:" +
+      mid + "\r\n";
+  auto answer = CreateSessionDescription(SdpType::kAnswer, sdp);
+  ASSERT_TRUE(pc->SetRemoteDescription(std::move(answer)));
+
+  // The subsequent offer should recycle the m-line when there is a new data
+  // channel.
+  EXPECT_TRUE(pc->pc()->CreateDataChannelOrError("dc2", nullptr).ok());
+  EXPECT_TRUE(pc->pc()->ShouldFireNegotiationNeededEvent(
+      pc->observer()->latest_negotiation_needed_event()));
+
+  auto offer = pc->CreateOffer();
+  const auto& offer_contents = offer->description()->contents();
+  ASSERT_EQ(offer_contents.size(), 1u);
+  EXPECT_EQ(offer_contents[0].mid(), mid);
+  EXPECT_EQ(offer_contents[0].rejected, false);
+}
+
+#endif  // WEBRTC_HAVE_SCTP
 
 }  // namespace webrtc

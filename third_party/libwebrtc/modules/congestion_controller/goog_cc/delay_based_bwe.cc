@@ -78,7 +78,7 @@ DelayBasedBwe::DelayBasedBwe(const FieldTrialsView* key_value_config,
       active_delay_detector_(video_delay_detector_.get()),
       last_seen_packet_(Timestamp::MinusInfinity()),
       uma_recorded_(false),
-      rate_control_(key_value_config, /*send_side=*/true),
+      rate_control_(*key_value_config, /*send_side=*/true),
       prev_bitrate_(DataRate::Zero()),
       prev_state_(BandwidthUsage::kBwNormal) {
   RTC_LOG(LS_INFO)
@@ -198,7 +198,7 @@ void DelayBasedBwe::IncomingPacketFeedback(const PacketResult& packet_feedback,
 DataRate DelayBasedBwe::TriggerOveruse(Timestamp at_time,
                                        absl::optional<DataRate> link_capacity) {
   RateControlInput input(BandwidthUsage::kBwOverusing, link_capacity);
-  return rate_control_.Update(&input, at_time);
+  return rate_control_.Update(input, at_time);
 }
 
 DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
@@ -263,7 +263,7 @@ bool DelayBasedBwe::UpdateEstimate(Timestamp at_time,
                                    absl::optional<DataRate> acked_bitrate,
                                    DataRate* target_rate) {
   const RateControlInput input(active_delay_detector_->State(), acked_bitrate);
-  *target_rate = rate_control_.Update(&input, at_time);
+  *target_rate = rate_control_.Update(input, at_time);
   return rate_control_.ValidEstimate();
 }
 

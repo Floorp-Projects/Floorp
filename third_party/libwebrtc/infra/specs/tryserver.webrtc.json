@@ -5,7 +5,6 @@
     "gtest_tests": [
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -28,7 +27,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -51,7 +49,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -74,7 +71,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -97,7 +93,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -120,7 +115,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -143,7 +137,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -167,7 +160,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -191,7 +183,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -214,7 +205,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -238,7 +228,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -261,7 +250,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -284,7 +272,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -307,7 +294,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -331,7 +317,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -354,7 +339,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -378,7 +362,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -401,7 +384,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -424,7 +406,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -447,7 +428,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -471,7 +451,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -494,7 +473,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -521,7 +499,6 @@
           "--nologs"
         ],
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -570,7 +547,6 @@
     "gtest_tests": [
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -593,7 +569,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -616,7 +591,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -639,7 +613,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -662,7 +635,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -685,7 +657,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -708,7 +679,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -732,7 +702,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -756,7 +725,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -779,7 +747,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -803,7 +770,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -826,7 +792,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -849,7 +814,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -872,7 +836,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -896,7 +859,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -919,7 +881,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -943,7 +904,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -966,7 +926,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -989,7 +948,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1012,7 +970,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1036,7 +993,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1059,7 +1015,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1086,7 +1041,6 @@
           "--nologs"
         ],
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1135,7 +1089,6 @@
     "gtest_tests": [
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1158,7 +1111,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1181,7 +1133,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1204,7 +1155,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1227,7 +1177,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1250,7 +1199,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1273,7 +1221,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1297,7 +1244,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1321,7 +1267,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1344,7 +1289,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1368,7 +1312,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1391,7 +1334,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1414,7 +1356,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1437,7 +1378,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1461,7 +1401,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1484,7 +1423,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1508,7 +1446,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1531,7 +1468,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1554,7 +1490,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1577,7 +1512,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1601,7 +1535,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1624,7 +1557,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1651,7 +1583,6 @@
           "--nologs"
         ],
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1700,7 +1631,6 @@
     "gtest_tests": [
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1728,7 +1658,6 @@
     "gtest_tests": [
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1751,7 +1680,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1774,7 +1702,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1797,7 +1724,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1820,7 +1746,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1843,7 +1768,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1866,7 +1790,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1890,7 +1813,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1914,7 +1836,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1937,7 +1858,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1961,7 +1881,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -1984,7 +1903,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -2007,7 +1925,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -2030,7 +1947,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -2054,7 +1970,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -2077,7 +1992,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -2101,7 +2015,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -2124,7 +2037,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -2147,7 +2059,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -2170,7 +2081,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -2194,7 +2104,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -2217,7 +2126,6 @@
       },
       {
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -2244,7 +2152,6 @@
           "--nologs"
         ],
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
         "resultdb": {
@@ -2308,7 +2215,6 @@
         ],
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -2336,7 +2242,6 @@
         ],
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -2364,7 +2269,6 @@
         ],
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -2392,7 +2296,6 @@
         ],
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -2421,7 +2324,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -2449,7 +2351,6 @@
         ],
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -2477,7 +2378,6 @@
         ],
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -2505,7 +2405,6 @@
         ],
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -2534,7 +2433,6 @@
         ],
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -2562,7 +2460,6 @@
         ],
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -2591,7 +2488,6 @@
         ],
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -2619,7 +2515,6 @@
         ],
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -2659,7 +2554,6 @@
         ],
         "isolate_name": "apprtcmobile_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "apprtcmobile_tests iPhone X 14.5",
@@ -2673,7 +2567,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -2712,7 +2606,6 @@
         ],
         "isolate_name": "apprtcmobile_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "apprtcmobile_tests iPhone X 15.5",
@@ -2726,7 +2619,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -2765,7 +2658,6 @@
         ],
         "isolate_name": "apprtcmobile_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "apprtcmobile_tests iPhone X 16.2",
@@ -2779,7 +2671,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -2817,7 +2709,6 @@
         ],
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests iPhone X 14.5",
@@ -2831,7 +2722,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -2869,7 +2760,6 @@
         ],
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests iPhone X 15.5",
@@ -2883,7 +2773,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -2921,7 +2811,6 @@
         ],
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests iPhone X 16.2",
@@ -2935,7 +2824,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -2973,7 +2862,6 @@
         ],
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests iPhone X 14.5",
@@ -2987,7 +2875,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3025,7 +2913,6 @@
         ],
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests iPhone X 15.5",
@@ -3039,7 +2926,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3077,7 +2964,6 @@
         ],
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests iPhone X 16.2",
@@ -3091,7 +2977,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3129,7 +3015,6 @@
         ],
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests iPhone X 14.5",
@@ -3143,7 +3028,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3181,7 +3066,6 @@
         ],
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests iPhone X 15.5",
@@ -3195,7 +3079,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3233,7 +3117,6 @@
         ],
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests iPhone X 16.2",
@@ -3247,7 +3130,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3285,7 +3168,6 @@
         ],
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests iPhone X 14.5",
@@ -3299,7 +3181,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3337,7 +3219,6 @@
         ],
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests iPhone X 15.5",
@@ -3351,7 +3232,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3389,7 +3270,6 @@
         ],
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests iPhone X 16.2",
@@ -3403,7 +3283,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3441,7 +3321,6 @@
         ],
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests iPhone X 14.5",
@@ -3455,7 +3334,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3494,7 +3373,6 @@
         ],
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests iPhone X 15.5",
@@ -3508,7 +3386,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3547,7 +3425,6 @@
         ],
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests iPhone X 16.2",
@@ -3561,7 +3438,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3600,7 +3477,6 @@
         ],
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests iPhone X 14.5",
@@ -3614,7 +3490,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3654,7 +3530,6 @@
         ],
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests iPhone X 15.5",
@@ -3668,7 +3543,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3708,7 +3583,6 @@
         ],
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests iPhone X 16.2",
@@ -3722,7 +3596,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3762,7 +3636,6 @@
         ],
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests iPhone X 14.5",
@@ -3776,7 +3649,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3814,7 +3687,6 @@
         ],
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests iPhone X 15.5",
@@ -3828,7 +3700,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3866,7 +3738,6 @@
         ],
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests iPhone X 16.2",
@@ -3880,7 +3751,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3918,7 +3789,6 @@
         ],
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests iPhone X 14.5",
@@ -3932,7 +3802,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -3970,7 +3840,6 @@
         ],
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests iPhone X 15.5",
@@ -3984,7 +3853,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4022,7 +3891,6 @@
         ],
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests iPhone X 16.2",
@@ -4036,7 +3904,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4074,7 +3942,6 @@
         ],
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests iPhone X 14.5",
@@ -4088,7 +3955,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4126,7 +3993,6 @@
         ],
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests iPhone X 15.5",
@@ -4140,7 +4006,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4178,7 +4044,6 @@
         ],
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests iPhone X 16.2",
@@ -4192,7 +4057,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4230,7 +4095,6 @@
         ],
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests iPhone X 14.5",
@@ -4244,7 +4108,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4283,7 +4147,6 @@
         ],
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests iPhone X 15.5",
@@ -4297,7 +4160,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4336,7 +4199,6 @@
         ],
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests iPhone X 16.2",
@@ -4350,7 +4212,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4390,7 +4252,6 @@
         ],
         "isolate_name": "sdk_framework_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "sdk_framework_unittests iPhone X 14.5",
@@ -4404,7 +4265,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4443,7 +4304,6 @@
         ],
         "isolate_name": "sdk_framework_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "sdk_framework_unittests iPhone X 15.5",
@@ -4457,7 +4317,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4496,7 +4356,6 @@
         ],
         "isolate_name": "sdk_framework_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "sdk_framework_unittests iPhone X 16.2",
@@ -4510,7 +4369,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4549,7 +4408,6 @@
         ],
         "isolate_name": "sdk_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "sdk_unittests iPhone X 14.5",
@@ -4563,7 +4421,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4602,7 +4460,6 @@
         ],
         "isolate_name": "sdk_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "sdk_unittests iPhone X 15.5",
@@ -4616,7 +4473,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4655,7 +4512,6 @@
         ],
         "isolate_name": "sdk_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "sdk_unittests iPhone X 16.2",
@@ -4669,7 +4525,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4707,7 +4563,6 @@
         ],
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests iPhone X 14.5",
@@ -4721,7 +4576,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4761,7 +4616,6 @@
         ],
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests iPhone X 15.5",
@@ -4775,7 +4629,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4815,7 +4669,6 @@
         ],
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests iPhone X 16.2",
@@ -4829,7 +4682,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4869,7 +4722,6 @@
         ],
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests iPhone X 14.5",
@@ -4883,7 +4735,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4921,7 +4773,6 @@
         ],
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests iPhone X 15.5",
@@ -4935,7 +4786,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -4973,7 +4824,6 @@
         ],
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests iPhone X 16.2",
@@ -4987,7 +4837,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5025,7 +4875,6 @@
         ],
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests iPhone X 14.5",
@@ -5039,7 +4888,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5077,7 +4926,6 @@
         ],
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests iPhone X 15.5",
@@ -5091,7 +4939,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5129,7 +4977,6 @@
         ],
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests iPhone X 16.2",
@@ -5143,7 +4990,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5181,7 +5028,6 @@
         ],
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests iPhone X 14.5",
@@ -5195,7 +5041,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5233,7 +5079,6 @@
         ],
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests iPhone X 15.5",
@@ -5247,7 +5092,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5285,7 +5130,6 @@
         ],
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests iPhone X 16.2",
@@ -5299,7 +5143,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5337,7 +5181,6 @@
         ],
         "isolate_name": "video_capture_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_capture_tests iPhone X 14.5",
@@ -5351,7 +5194,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5389,7 +5232,6 @@
         ],
         "isolate_name": "video_capture_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_capture_tests iPhone X 15.5",
@@ -5403,7 +5245,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5441,7 +5283,6 @@
         ],
         "isolate_name": "video_capture_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_capture_tests iPhone X 16.2",
@@ -5455,7 +5296,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5493,7 +5334,6 @@
         ],
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests iPhone X 14.5",
@@ -5507,7 +5347,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5546,7 +5386,6 @@
         ],
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests iPhone X 15.5",
@@ -5560,7 +5399,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5599,7 +5438,6 @@
         ],
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests iPhone X 16.2",
@@ -5613,7 +5451,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5652,7 +5490,6 @@
         ],
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests iPhone X 14.5",
@@ -5666,7 +5503,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5704,7 +5541,6 @@
         ],
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests iPhone X 15.5",
@@ -5718,7 +5554,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5756,7 +5592,6 @@
         ],
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests iPhone X 16.2",
@@ -5770,7 +5605,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5808,7 +5643,6 @@
         ],
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests iPhone X 14.5",
@@ -5822,7 +5656,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5860,7 +5694,6 @@
         ],
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests iPhone X 15.5",
@@ -5874,7 +5707,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5912,7 +5745,6 @@
         ],
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests iPhone X 16.2",
@@ -5926,7 +5758,7 @@
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1"
+              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
             }
           ],
           "dimension_sets": [
@@ -5957,7 +5789,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -5978,7 +5809,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -5999,7 +5829,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -6020,7 +5849,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -6044,7 +5872,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -6065,7 +5892,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -6087,7 +5913,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -6109,7 +5934,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -6130,7 +5954,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -6152,7 +5975,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -6173,7 +5995,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -6194,7 +6015,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -6215,7 +6035,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -6237,7 +6056,6 @@
       {
         "isolate_name": "shared_screencast_stream_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "shared_screencast_stream_test",
@@ -6258,7 +6076,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -6279,7 +6096,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -6301,7 +6117,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -6322,7 +6137,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -6343,7 +6157,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -6364,7 +6177,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -6386,7 +6198,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -6407,7 +6218,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -6439,7 +6249,6 @@
         "isolate_name": "audio_decoder_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -6461,7 +6270,6 @@
         "isolate_name": "common_audio_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -6483,7 +6291,6 @@
         "isolate_name": "common_video_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -6505,7 +6312,6 @@
         "isolate_name": "dcsctp_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -6530,7 +6336,6 @@
         "isolate_name": "low_bandwidth_audio_test",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -6552,7 +6357,6 @@
         "isolate_name": "modules_tests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -6575,7 +6379,6 @@
         "isolate_name": "modules_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -6598,7 +6401,6 @@
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -6620,7 +6422,6 @@
         "isolate_name": "peerconnection_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -6643,7 +6444,6 @@
         "isolate_name": "rtc_media_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -6665,7 +6465,6 @@
         "isolate_name": "rtc_pc_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -6687,7 +6486,6 @@
         "isolate_name": "rtc_stats_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -6709,7 +6507,6 @@
         "isolate_name": "rtc_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -6732,7 +6529,6 @@
         "isolate_name": "shared_screencast_stream_test",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "shared_screencast_stream_test",
@@ -6754,7 +6550,6 @@
         "isolate_name": "slow_peer_connection_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -6776,7 +6571,6 @@
         "isolate_name": "svc_tests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -6799,7 +6593,6 @@
         "isolate_name": "system_wrappers_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -6821,7 +6614,6 @@
         "isolate_name": "test_support_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -6843,7 +6635,6 @@
         "isolate_name": "tools_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -6865,7 +6656,6 @@
         "isolate_name": "video_capture_tests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_capture_tests",
@@ -6888,7 +6678,6 @@
         "isolate_name": "video_engine_tests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -6911,7 +6700,6 @@
         "isolate_name": "voip_unittests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -6933,7 +6721,6 @@
         "isolate_name": "webrtc_nonparallel_tests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -6960,7 +6747,6 @@
         "isolate_name": "webrtc_perf_tests",
         "isolate_profile_data": true,
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_perf_tests",
@@ -6986,7 +6772,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -7007,7 +6792,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -7028,7 +6812,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -7049,7 +6832,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -7073,7 +6855,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -7094,7 +6875,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -7116,7 +6896,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -7138,7 +6917,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -7159,7 +6937,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -7181,7 +6958,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -7202,7 +6978,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -7223,7 +6998,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -7244,7 +7018,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -7266,7 +7039,6 @@
       {
         "isolate_name": "shared_screencast_stream_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "shared_screencast_stream_test",
@@ -7287,7 +7059,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -7308,7 +7079,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -7330,7 +7100,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -7351,7 +7120,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -7372,7 +7140,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -7393,7 +7160,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -7415,7 +7181,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -7436,7 +7201,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -7462,7 +7226,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -7483,7 +7246,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -7504,7 +7266,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -7525,7 +7286,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -7549,7 +7309,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -7570,7 +7329,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -7592,7 +7350,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -7614,7 +7371,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -7635,7 +7391,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -7657,7 +7412,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -7678,7 +7432,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -7699,7 +7452,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -7720,7 +7472,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -7742,7 +7493,6 @@
       {
         "isolate_name": "shared_screencast_stream_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "shared_screencast_stream_test",
@@ -7763,7 +7513,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -7784,7 +7533,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -7806,7 +7554,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -7827,7 +7574,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -7848,7 +7594,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -7869,7 +7614,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -7891,7 +7635,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -7912,7 +7655,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -7937,7 +7679,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -7963,7 +7704,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -7984,7 +7724,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -8005,7 +7744,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -8026,7 +7764,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -8050,7 +7787,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -8071,7 +7807,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -8093,7 +7828,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -8115,7 +7849,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -8136,7 +7869,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -8158,7 +7890,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -8179,7 +7910,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -8200,7 +7930,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -8221,7 +7950,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -8243,7 +7971,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -8264,7 +7991,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -8286,7 +8012,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -8307,7 +8032,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -8328,7 +8052,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -8349,7 +8072,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -8371,7 +8093,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -8392,7 +8113,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -8417,7 +8137,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -8438,7 +8157,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -8459,7 +8177,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -8480,7 +8197,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -8504,7 +8220,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -8525,7 +8240,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -8547,7 +8261,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -8569,7 +8282,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -8590,7 +8302,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -8612,7 +8323,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -8633,7 +8343,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -8654,7 +8363,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -8675,7 +8383,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -8697,7 +8404,6 @@
       {
         "isolate_name": "shared_screencast_stream_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "shared_screencast_stream_test",
@@ -8718,7 +8424,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -8739,7 +8444,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -8761,7 +8465,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -8782,7 +8485,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -8803,7 +8505,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -8824,7 +8525,6 @@
       {
         "isolate_name": "video_capture_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_capture_tests",
@@ -8846,7 +8546,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -8868,7 +8567,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -8889,7 +8587,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -8915,7 +8612,6 @@
         ],
         "isolate_name": "webrtc_perf_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_perf_tests",
@@ -8941,7 +8637,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -8962,7 +8657,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -8983,7 +8677,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -9004,7 +8697,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -9028,7 +8720,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -9049,7 +8740,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -9071,7 +8761,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -9093,7 +8782,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -9114,7 +8802,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -9136,7 +8823,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -9157,7 +8843,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -9178,7 +8863,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -9199,7 +8883,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -9221,7 +8904,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -9242,7 +8924,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -9264,7 +8945,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -9285,7 +8965,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -9306,7 +8985,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -9327,7 +9005,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -9349,7 +9026,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -9370,7 +9046,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -9395,7 +9070,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -9416,7 +9090,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -9437,7 +9110,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -9458,7 +9130,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -9482,7 +9153,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -9503,7 +9173,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -9525,7 +9194,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -9547,7 +9215,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -9568,7 +9235,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -9590,7 +9256,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -9611,7 +9276,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -9632,7 +9296,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -9653,7 +9316,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -9675,7 +9337,6 @@
       {
         "isolate_name": "shared_screencast_stream_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "shared_screencast_stream_test",
@@ -9696,7 +9357,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -9717,7 +9377,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -9739,7 +9398,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -9760,7 +9418,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -9781,7 +9438,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -9802,7 +9458,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -9824,7 +9479,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -9845,7 +9499,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -9870,7 +9523,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -9891,7 +9543,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -9912,7 +9563,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -9933,7 +9583,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -9957,7 +9606,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -9978,7 +9626,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -10000,7 +9647,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -10022,7 +9668,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -10043,7 +9688,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -10065,7 +9709,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -10086,7 +9729,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -10107,7 +9749,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -10128,7 +9769,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -10150,7 +9790,6 @@
       {
         "isolate_name": "shared_screencast_stream_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "shared_screencast_stream_test",
@@ -10171,7 +9810,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -10192,7 +9830,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -10214,7 +9851,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -10235,7 +9871,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -10256,7 +9891,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -10277,7 +9911,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -10299,7 +9932,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -10320,7 +9952,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -10345,7 +9976,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -10366,7 +9996,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -10387,7 +10016,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -10408,7 +10036,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -10432,7 +10059,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -10453,7 +10079,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -10475,7 +10100,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -10497,7 +10121,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -10518,7 +10141,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -10540,7 +10162,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -10561,7 +10182,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -10582,7 +10202,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -10603,7 +10222,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -10625,7 +10243,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -10646,7 +10263,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -10668,7 +10284,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -10689,7 +10304,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -10710,7 +10324,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -10731,7 +10344,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -10753,7 +10365,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -10774,7 +10385,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -10799,7 +10409,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -10820,7 +10429,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -10841,7 +10449,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -10862,7 +10469,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -10886,7 +10492,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -10907,7 +10512,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -10929,7 +10533,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -10951,7 +10554,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -10972,7 +10574,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -10994,7 +10595,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -11015,7 +10615,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -11036,7 +10635,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -11057,7 +10655,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -11079,7 +10676,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -11100,7 +10696,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -11122,7 +10717,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -11143,7 +10737,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -11164,7 +10757,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -11185,7 +10777,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -11207,7 +10798,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -11228,7 +10818,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -11253,7 +10842,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -11275,7 +10863,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -11297,7 +10884,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -11319,7 +10905,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -11344,7 +10929,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -11366,7 +10950,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -11389,7 +10972,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -11412,7 +10994,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -11434,7 +11015,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -11457,7 +11037,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -11479,7 +11058,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -11501,7 +11079,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -11523,7 +11100,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -11546,7 +11122,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -11568,7 +11143,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -11591,7 +11165,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -11613,7 +11186,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -11635,7 +11207,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -11657,7 +11228,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -11680,7 +11250,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -11702,7 +11271,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -11730,7 +11298,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -11752,7 +11319,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -11774,7 +11340,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -11796,7 +11361,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -11821,7 +11385,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -11843,7 +11406,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -11866,7 +11428,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -11889,7 +11450,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -11911,7 +11471,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -11934,7 +11493,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -11956,7 +11514,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -11978,7 +11535,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -12000,7 +11556,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -12023,7 +11578,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -12045,7 +11599,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -12068,7 +11621,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -12090,7 +11642,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -12112,7 +11663,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -12134,7 +11684,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -12157,7 +11706,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -12179,7 +11727,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -12205,7 +11752,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -12226,7 +11772,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -12247,7 +11792,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -12268,7 +11812,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -12292,7 +11835,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -12313,7 +11855,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -12335,7 +11876,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -12357,7 +11897,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -12378,7 +11917,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -12400,7 +11938,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -12421,7 +11958,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -12442,7 +11978,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -12463,7 +11998,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -12485,7 +12019,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -12506,7 +12039,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -12528,7 +12060,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -12549,7 +12080,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -12570,7 +12100,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -12591,7 +12120,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -12613,7 +12141,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -12634,7 +12161,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -12659,7 +12185,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -12680,7 +12205,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -12701,7 +12225,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -12722,7 +12245,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -12746,7 +12268,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -12767,7 +12288,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -12789,7 +12309,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -12811,7 +12330,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -12832,7 +12350,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -12854,7 +12371,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -12875,7 +12391,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -12896,7 +12411,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -12917,7 +12431,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -12939,7 +12452,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -12960,7 +12472,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -12982,7 +12493,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -13003,7 +12513,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -13024,7 +12533,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -13045,7 +12553,6 @@
       {
         "isolate_name": "video_capture_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_capture_tests",
@@ -13067,7 +12574,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -13089,7 +12595,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -13110,7 +12615,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -13136,7 +12640,6 @@
         ],
         "isolate_name": "webrtc_perf_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_perf_tests",
@@ -13162,7 +12665,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -13183,7 +12685,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -13204,7 +12705,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -13225,7 +12725,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -13249,7 +12748,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -13270,7 +12768,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -13292,7 +12789,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -13314,7 +12810,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -13335,7 +12830,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -13357,7 +12851,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -13378,7 +12871,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -13399,7 +12891,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -13420,7 +12911,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -13442,7 +12932,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -13463,7 +12952,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -13485,7 +12973,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -13506,7 +12993,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -13527,7 +13013,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -13548,7 +13033,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -13570,7 +13054,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -13591,7 +13074,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -13616,7 +13098,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -13637,7 +13118,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -13658,7 +13138,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -13679,7 +13158,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -13703,7 +13181,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -13724,7 +13201,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -13746,7 +13222,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -13768,7 +13243,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -13789,7 +13263,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -13811,7 +13284,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -13832,7 +13304,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -13853,7 +13324,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -13874,7 +13344,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -13896,7 +13365,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -13917,7 +13385,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -13939,7 +13406,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -13960,7 +13426,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -13981,7 +13446,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -14002,7 +13466,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -14024,7 +13487,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -14045,7 +13507,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -14074,7 +13535,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -14095,7 +13555,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -14116,7 +13575,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -14137,7 +13595,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -14161,7 +13618,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -14182,7 +13638,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -14204,7 +13659,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -14226,7 +13680,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -14247,7 +13700,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -14269,7 +13721,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -14290,7 +13741,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -14311,7 +13761,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -14332,7 +13781,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -14354,7 +13802,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -14375,7 +13822,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -14397,7 +13843,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -14418,7 +13863,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -14439,7 +13883,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -14460,7 +13903,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -14482,7 +13924,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -14503,7 +13944,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -14528,7 +13968,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -14549,7 +13988,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -14570,7 +14008,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -14591,7 +14028,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -14615,7 +14051,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -14636,7 +14071,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -14658,7 +14092,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -14680,7 +14113,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -14701,7 +14133,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -14723,7 +14154,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -14744,7 +14174,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -14765,7 +14194,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -14786,7 +14214,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -14808,7 +14235,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -14829,7 +14255,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -14851,7 +14276,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -14872,7 +14296,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -14893,7 +14316,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -14914,7 +14336,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -14936,7 +14357,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -14957,7 +14377,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -14982,7 +14401,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -15003,7 +14421,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -15024,7 +14441,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -15045,7 +14461,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -15069,7 +14484,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -15090,7 +14504,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -15112,7 +14525,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -15134,7 +14546,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -15155,7 +14566,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -15177,7 +14587,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -15198,7 +14607,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -15219,7 +14627,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -15240,7 +14647,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -15262,7 +14668,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -15283,7 +14688,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -15305,7 +14709,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -15326,7 +14729,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -15347,7 +14749,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -15368,7 +14769,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -15390,7 +14790,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -15411,7 +14810,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -15436,7 +14834,6 @@
       {
         "isolate_name": "audio_decoder_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "audio_decoder_unittests",
@@ -15457,7 +14854,6 @@
       {
         "isolate_name": "common_audio_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_audio_unittests",
@@ -15478,7 +14874,6 @@
       {
         "isolate_name": "common_video_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "common_video_unittests",
@@ -15499,7 +14894,6 @@
       {
         "isolate_name": "dcsctp_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "dcsctp_unittests",
@@ -15523,7 +14917,6 @@
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "low_bandwidth_audio_test",
@@ -15544,7 +14937,6 @@
       {
         "isolate_name": "modules_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_tests",
@@ -15566,7 +14958,6 @@
       {
         "isolate_name": "modules_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "modules_unittests",
@@ -15588,7 +14979,6 @@
       {
         "isolate_name": "peer_connection_mediachannel_split_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peer_connection_mediachannel_split_unittests",
@@ -15609,7 +14999,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",
@@ -15631,7 +15020,6 @@
       {
         "isolate_name": "rtc_media_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_media_unittests",
@@ -15652,7 +15040,6 @@
       {
         "isolate_name": "rtc_pc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_pc_unittests",
@@ -15673,7 +15060,6 @@
       {
         "isolate_name": "rtc_stats_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_stats_unittests",
@@ -15694,7 +15080,6 @@
       {
         "isolate_name": "rtc_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "rtc_unittests",
@@ -15716,7 +15101,6 @@
       {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "slow_peer_connection_unittests",
@@ -15737,7 +15121,6 @@
       {
         "isolate_name": "svc_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "svc_tests",
@@ -15759,7 +15142,6 @@
       {
         "isolate_name": "system_wrappers_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "system_wrappers_unittests",
@@ -15780,7 +15162,6 @@
       {
         "isolate_name": "test_support_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "test_support_unittests",
@@ -15801,7 +15182,6 @@
       {
         "isolate_name": "tools_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "tools_unittests",
@@ -15822,7 +15202,6 @@
       {
         "isolate_name": "video_capture_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_capture_tests",
@@ -15844,7 +15223,6 @@
       {
         "isolate_name": "video_engine_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "video_engine_tests",
@@ -15866,7 +15244,6 @@
       {
         "isolate_name": "voip_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "voip_unittests",
@@ -15887,7 +15264,6 @@
       {
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_nonparallel_tests",
@@ -15913,7 +15289,6 @@
         ],
         "isolate_name": "webrtc_perf_tests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "webrtc_perf_tests",
@@ -15939,7 +15314,6 @@
       {
         "isolate_name": "peerconnection_unittests",
         "merge": {
-          "args": [],
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
         "name": "peerconnection_unittests",

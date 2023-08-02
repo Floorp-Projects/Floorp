@@ -31,6 +31,7 @@
 #include "media/engine/internal_encoder_factory.h"
 #include "media/engine/simulcast_encoder_adapter.h"
 #include "modules/audio_coding/include/audio_coding_module.h"
+#include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_device/include/test_audio_device.h"
 #include "modules/audio_mixer/audio_mixer_impl.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
@@ -53,6 +54,7 @@
 #include "test/rtp_rtcp_observer.h"
 #include "test/testsupport/file_utils.h"
 #include "test/video_encoder_proxy_factory.h"
+#include "test/video_test_constants.h"
 #include "video/config/video_encoder_config.h"
 #include "video/transport_adapter.h"
 
@@ -115,7 +117,7 @@ class VideoRtcpAndSyncObserver : public test::RtpRtcpObserver,
   explicit VideoRtcpAndSyncObserver(TaskQueueBase* task_queue,
                                     Clock* clock,
                                     absl::string_view test_label)
-      : test::RtpRtcpObserver(CallPerfTest::kLongTimeout),
+      : test::RtpRtcpObserver(test::VideoTestConstants::kLongTimeout),
         clock_(clock),
         test_label_(test_label),
         creation_time_ms_(clock_->TimeInMilliseconds()),
@@ -206,7 +208,7 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
 
   SendTask(task_queue(), [&]() {
     metrics::Reset();
-    rtc::scoped_refptr<TestAudioDeviceModule> fake_audio_device =
+    rtc::scoped_refptr<AudioDeviceModule> fake_audio_device =
         TestAudioDeviceModule::Create(
             task_queue_factory_.get(),
             TestAudioDeviceModule::CreatePulsedNoiseCapturer(256, 48000),
@@ -273,18 +275,23 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
     audio_send_config.rtp.ssrc = kAudioSendSsrc;
     // TODO(bugs.webrtc.org/14683): Let the tests fail with invalid config.
     audio_send_config.send_codec_spec = AudioSendStream::Config::SendCodecSpec(
-        kAudioSendPayloadType, {"OPUS", 48000, 2});
+        test::VideoTestConstants::kAudioSendPayloadType, {"OPUS", 48000, 2});
     audio_send_config.min_bitrate_bps = 6000;
     audio_send_config.max_bitrate_bps = 510000;
     audio_send_config.encoder_factory = CreateBuiltinAudioEncoderFactory();
     audio_send_stream = sender_call_->CreateAudioSendStream(audio_send_config);
 
-    GetVideoSendConfig()->rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
+    GetVideoSendConfig()->rtp.nack.rtp_history_ms =
+        test::VideoTestConstants::kNackRtpHistoryMs;
     if (fec == FecMode::kOn) {
-      GetVideoSendConfig()->rtp.ulpfec.red_payload_type = kRedPayloadType;
-      GetVideoSendConfig()->rtp.ulpfec.ulpfec_payload_type = kUlpfecPayloadType;
-      video_receive_configs_[0].rtp.red_payload_type = kRedPayloadType;
-      video_receive_configs_[0].rtp.ulpfec_payload_type = kUlpfecPayloadType;
+      GetVideoSendConfig()->rtp.ulpfec.red_payload_type =
+          test::VideoTestConstants::kRedPayloadType;
+      GetVideoSendConfig()->rtp.ulpfec.ulpfec_payload_type =
+          test::VideoTestConstants::kUlpfecPayloadType;
+      video_receive_configs_[0].rtp.red_payload_type =
+          test::VideoTestConstants::kRedPayloadType;
+      video_receive_configs_[0].rtp.ulpfec_payload_type =
+          test::VideoTestConstants::kUlpfecPayloadType;
     }
     video_receive_configs_[0].rtp.nack.rtp_history_ms = 1000;
     video_receive_configs_[0].renderer = observer.get();
@@ -297,7 +304,7 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
     audio_recv_config.sync_group = kSyncGroup;
     audio_recv_config.decoder_factory = audio_decoder_factory_;
     audio_recv_config.decoder_map = {
-        {kAudioSendPayloadType, {"OPUS", 48000, 2}}};
+        {test::VideoTestConstants::kAudioSendPayloadType, {"OPUS", 48000, 2}}};
 
     if (create_first == CreateOrder::kAudioFirst) {
       audio_receive_stream =
@@ -311,9 +318,11 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
     EXPECT_EQ(1u, video_receive_streams_.size());
     observer->set_receive_stream(video_receive_streams_[0]);
     drifting_clock = std::make_unique<DriftingClock>(clock_, video_ntp_speed);
-    CreateFrameGeneratorCapturerWithDrift(drifting_clock.get(), video_rtp_speed,
-                                          kDefaultFramerate, kDefaultWidth,
-                                          kDefaultHeight);
+    CreateFrameGeneratorCapturerWithDrift(
+        drifting_clock.get(), video_rtp_speed,
+        test::VideoTestConstants::kDefaultFramerate,
+        test::VideoTestConstants::kDefaultWidth,
+        test::VideoTestConstants::kDefaultHeight);
 
     Start();
 
@@ -404,7 +413,7 @@ void CallPerfTest::TestCaptureNtpTime(
                            int threshold_ms,
                            int start_time_ms,
                            int run_time_ms)
-        : EndToEndTest(kLongTimeout),
+        : EndToEndTest(test::VideoTestConstants::kLongTimeout),
           net_config_(net_config),
           clock_(Clock::GetRealTimeClock()),
           threshold_ms_(threshold_ms),
@@ -557,7 +566,9 @@ TEST_F(CallPerfTest, ReceivesCpuOveruseAndUnderuse) {
   class LoadObserver : public test::SendTest,
                        public test::FrameGeneratorCapturer::SinkWantsObserver {
    public:
-    LoadObserver() : SendTest(kLongTimeout), test_phase_(TestPhase::kInit) {}
+    LoadObserver()
+        : SendTest(test::VideoTestConstants::kLongTimeout),
+          test_phase_(TestPhase::kInit) {}
 
     void OnFrameGeneratorCapturerCreated(
         test::FrameGeneratorCapturer* frame_generator_capturer) override {
@@ -666,7 +677,7 @@ void CallPerfTest::TestMinTransmitBitrate(bool pad_to_min_bitrate) {
    public:
     explicit BitrateObserver(bool using_min_transmit_bitrate,
                              TaskQueueBase* task_queue)
-        : EndToEndTest(kLongTimeout),
+        : EndToEndTest(test::VideoTestConstants::kLongTimeout),
           send_stream_(nullptr),
           converged_(false),
           pad_to_min_bitrate_(using_min_transmit_bitrate),
@@ -793,7 +804,7 @@ TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
   class BitrateObserver : public test::EndToEndTest, public test::FakeEncoder {
    public:
     explicit BitrateObserver(TaskQueueBase* task_queue)
-        : EndToEndTest(kDefaultTimeout),
+        : EndToEndTest(test::VideoTestConstants::kDefaultTimeout),
           FakeEncoder(Clock::GetRealTimeClock()),
           encoder_inits_(0),
           last_set_bitrate_kbps_(0),
@@ -817,11 +828,11 @@ TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
                 : kInitialBitrateKbps - kInitialBitrateOverheadKpbs;
         EXPECT_EQ(expected_bitrate, config->startBitrate)
             << "Encoder not initialized at expected bitrate.";
-        EXPECT_EQ(kDefaultWidth, config->width);
-        EXPECT_EQ(kDefaultHeight, config->height);
+        EXPECT_EQ(test::VideoTestConstants::kDefaultWidth, config->width);
+        EXPECT_EQ(test::VideoTestConstants::kDefaultHeight, config->height);
       } else if (encoder_inits_ == 2) {
-        EXPECT_EQ(2 * kDefaultWidth, config->width);
-        EXPECT_EQ(2 * kDefaultHeight, config->height);
+        EXPECT_EQ(2 * test::VideoTestConstants::kDefaultWidth, config->width);
+        EXPECT_EQ(2 * test::VideoTestConstants::kDefaultHeight, config->height);
         EXPECT_GE(last_set_bitrate_kbps_, kReconfigureThresholdKbps);
         EXPECT_GT(config->startBitrate, kReconfigureThresholdKbps)
             << "Encoder reconfigured with bitrate too far away from last set.";
@@ -870,9 +881,12 @@ TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
     }
 
     void PerformTest() override {
-      ASSERT_TRUE(time_to_reconfigure_.Wait(kDefaultTimeout))
+      ASSERT_TRUE(
+          time_to_reconfigure_.Wait(test::VideoTestConstants::kDefaultTimeout))
           << "Timed out before receiving an initial high bitrate.";
-      frame_generator_->ChangeResolution(kDefaultWidth * 2, kDefaultHeight * 2);
+      frame_generator_->ChangeResolution(
+          test::VideoTestConstants::kDefaultWidth * 2,
+          test::VideoTestConstants::kDefaultHeight * 2);
       SendTask(task_queue_, [&]() {
         send_stream_->ReconfigureVideoEncoder(encoder_config_.Copy());
       });
@@ -1056,7 +1070,7 @@ void CallPerfTest::TestEncodeFramerate(VideoEncoderFactory* encoder_factory,
                       absl::string_view payload_name,
                       const std::vector<int>& max_framerates,
                       TaskQueueBase* task_queue)
-        : EndToEndTest(kDefaultTimeout),
+        : EndToEndTest(test::VideoTestConstants::kDefaultTimeout),
           clock_(Clock::GetRealTimeClock()),
           encoder_factory_(encoder_factory),
           payload_name_(payload_name),
@@ -1095,7 +1109,8 @@ void CallPerfTest::TestEncodeFramerate(VideoEncoderFactory* encoder_factory,
         VideoEncoderConfig* encoder_config) override {
       send_config->encoder_settings.encoder_factory = encoder_factory_;
       send_config->rtp.payload_name = payload_name_;
-      send_config->rtp.payload_type = test::CallTest::kVideoSendPayloadType;
+      send_config->rtp.payload_type =
+          test::VideoTestConstants::kVideoSendPayloadType;
       encoder_config->video_format.name = payload_name_;
       encoder_config->codec_type = PayloadStringToCodecType(payload_name_);
       encoder_config->max_bitrate_bps = kMaxBitrate.bps();

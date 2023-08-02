@@ -602,8 +602,9 @@ def perf_builder(name, perf_cat, **kwargs):
     properties = make_reclient_properties("rbe-webrtc-trusted")
     properties["builder_group"] = "client.webrtc.perf"
     dimensions = {"pool": "luci.webrtc.perf", "os": "Linux", "cores": "2"}
-    if "Android" in name:
+    if "Android" in name or "Fuchsia" in name:
         # Android perf testers require more performant bots to finish under 3 hours.
+        # Fuchsia perf testers encountered "no space left on device" error on multiple runs.
         dimensions["cores"] = "8"
     return webrtc_builder(
         name = name,
@@ -788,10 +789,10 @@ win_try_job("win_compile_x86_clang_rel", cq = None)
 win_builder("Win64 Builder (Clang)", ci_cat = None, perf_cat = "Win|x64|Builder|")
 perf_builder("Perf Win 10", "Win|x64|Tester|10", triggered_by = ["Win64 Builder (Clang)"])
 win_builder("Win64 Debug (Clang)", "Win Clang|x64|dbg")
-win_try_job("win_x64_clang_dbg", cq = None)
+win_try_job("win_x64_clang_dbg")
 win_try_job("win_compile_x64_clang_dbg")
 win_builder("Win64 Release (Clang)", "Win Clang|x64|rel")
-win_try_job("win_x64_clang_rel", cq = None)
+win_try_job("win_x64_clang_rel")
 win_try_job("win_compile_x64_clang_rel")
 win_builder("Win64 ASan", "Win Clang|x64|asan")
 win_try_job("win_asan")

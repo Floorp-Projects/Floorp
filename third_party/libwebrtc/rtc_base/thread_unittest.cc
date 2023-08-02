@@ -738,11 +738,10 @@ TEST(ThreadPostTaskTest, InvokesAsynchronously) {
   // thread. The second event ensures that the message is processed.
   Event event_set_by_test_thread;
   Event event_set_by_background_thread;
-  background_thread->PostTask(
-      [&event_set_by_test_thread, &event_set_by_background_thread] {
-        WaitAndSetEvent(&event_set_by_test_thread,
-                        &event_set_by_background_thread);
-      });
+  background_thread->PostTask([&event_set_by_test_thread,
+                               &event_set_by_background_thread] {
+    WaitAndSetEvent(&event_set_by_test_thread, &event_set_by_background_thread);
+  });
   event_set_by_test_thread.Set();
   event_set_by_background_thread.Wait(Event::kForever);
 }

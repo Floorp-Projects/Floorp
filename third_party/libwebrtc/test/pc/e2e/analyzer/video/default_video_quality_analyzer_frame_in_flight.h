@@ -34,9 +34,10 @@ struct ReceiverFrameStats {
   Timestamp decode_start_time = Timestamp::MinusInfinity();
   Timestamp decode_end_time = Timestamp::MinusInfinity();
   Timestamp rendered_time = Timestamp::MinusInfinity();
-  Timestamp prev_frame_rendered_time = Timestamp::MinusInfinity();
 
-  TimeDelta time_between_rendered_frames = TimeDelta::Zero();
+  // Will be set if there is frame rendered before this one.
+  absl::optional<Timestamp> prev_frame_rendered_time = absl::nullopt;
+  absl::optional<TimeDelta> time_between_rendered_frames = absl::nullopt;
 
   // Type and encoded size of received frame.
   VideoFrameType frame_type = VideoFrameType::kEmptyFrame;
@@ -68,6 +69,7 @@ class FrameInFlight {
   FrameInFlight(size_t stream,
                 uint16_t frame_id,
                 Timestamp captured_time,
+                absl::optional<TimeDelta> time_between_captured_frames,
                 std::set<size_t> expected_receivers);
 
   size_t stream() const { return stream_; }
@@ -89,6 +91,7 @@ class FrameInFlight {
   void SetPreEncodeTime(Timestamp time) { pre_encode_time_ = time; }
 
   void OnFrameEncoded(Timestamp time,
+                      absl::optional<TimeDelta> time_between_encoded_frames,
                       VideoFrameType frame_type,
                       DataSize encoded_image_size,
                       uint32_t target_encode_bitrate,
@@ -156,14 +159,16 @@ class FrameInFlight {
   // any peer or can be safely deleted. It is responsibility of the user of this
   // object to decide when it should be deleted.
   std::set<size_t> expected_receivers_;
-  // Store frame id separately because `frame_` can be removed when we have too
-  // much memory consuption.
   uint16_t frame_id_ = VideoFrame::kNotSetId;
 
   // Frame events timestamp.
   Timestamp captured_time_;
   Timestamp pre_encode_time_ = Timestamp::MinusInfinity();
   Timestamp encoded_time_ = Timestamp::MinusInfinity();
+
+  absl::optional<TimeDelta> time_between_captured_frames_ = absl::nullopt;
+  absl::optional<TimeDelta> time_between_encoded_frames_ = absl::nullopt;
+
   // Type and encoded size of sent frame.
   VideoFrameType frame_type_ = VideoFrameType::kEmptyFrame;
   DataSize encoded_image_size_ = DataSize::Bytes(0);

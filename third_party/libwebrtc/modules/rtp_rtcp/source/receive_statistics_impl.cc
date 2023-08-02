@@ -33,7 +33,8 @@ constexpr int64_t kStatisticsProcessIntervalMs = 1000;
 
 StreamStatistician::~StreamStatistician() {}
 
-StreamStatisticianImpl::StreamStatisticianImpl(uint32_t ssrc, Clock* clock,
+StreamStatisticianImpl::StreamStatisticianImpl(uint32_t ssrc,
+                                               Clock* clock,
                                                int max_reordering_threshold)
     : ssrc_(ssrc),
       clock_(clock),

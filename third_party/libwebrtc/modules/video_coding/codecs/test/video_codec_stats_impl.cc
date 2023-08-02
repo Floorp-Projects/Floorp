@@ -13,7 +13,7 @@
 #include <algorithm>
 
 #include "api/numerics/samples_stats_counter.h"
-#include "api/test/metrics/global_metrics_logger_and_exporter.h"
+#include "api/test/metrics/metrics_logger.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/time_utils.h"
 
@@ -254,89 +254,6 @@ Stream VideoCodecStatsImpl::Aggregate(const std::vector<Frame>& frames) const {
   }
 
   return stream;
-}
-
-void VideoCodecStatsImpl::LogMetrics(
-    MetricsLogger* logger,
-    const Stream& stream,
-    std::string test_case_name,
-    std::map<std::string, std::string> metadata) const {
-  logger->LogMetric("width", test_case_name, stream.width, Unit::kCount,
-                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
-                    metadata);
-
-  logger->LogMetric("height", test_case_name, stream.height, Unit::kCount,
-                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
-                    metadata);
-
-  logger->LogMetric(
-      "frame_size_bytes", test_case_name, stream.frame_size_bytes, Unit::kBytes,
-      webrtc::test::ImprovementDirection::kNeitherIsBetter, metadata);
-
-  logger->LogMetric("keyframe", test_case_name, stream.keyframe, Unit::kCount,
-                    webrtc::test::ImprovementDirection::kSmallerIsBetter,
-                    metadata);
-
-  logger->LogMetric("qp", test_case_name, stream.qp, Unit::kUnitless,
-                    webrtc::test::ImprovementDirection::kSmallerIsBetter,
-                    metadata);
-
-  logger->LogMetric("encode_time_ms", test_case_name, stream.encode_time_ms,
-                    Unit::kMilliseconds,
-                    webrtc::test::ImprovementDirection::kSmallerIsBetter,
-                    metadata);
-
-  logger->LogMetric("decode_time_ms", test_case_name, stream.decode_time_ms,
-                    Unit::kMilliseconds,
-                    webrtc::test::ImprovementDirection::kSmallerIsBetter,
-                    metadata);
-
-  logger->LogMetric("target_bitrate_kbps", test_case_name,
-                    stream.target_bitrate_kbps, Unit::kKilobitsPerSecond,
-                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
-                    metadata);
-
-  logger->LogMetric("target_framerate_fps", test_case_name,
-                    stream.target_framerate_fps, Unit::kHertz,
-                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
-                    metadata);
-
-  logger->LogMetric("encoded_bitrate_kbps", test_case_name,
-                    stream.encoded_bitrate_kbps, Unit::kKilobitsPerSecond,
-                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
-                    metadata);
-
-  logger->LogMetric("encoded_framerate_fps", test_case_name,
-                    stream.encoded_framerate_fps, Unit::kHertz,
-                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
-                    metadata);
-
-  logger->LogMetric("bitrate_mismatch_pct", test_case_name,
-                    stream.bitrate_mismatch_pct, Unit::kPercent,
-                    webrtc::test::ImprovementDirection::kSmallerIsBetter,
-                    metadata);
-
-  logger->LogMetric("framerate_mismatch_pct", test_case_name,
-                    stream.framerate_mismatch_pct, Unit::kPercent,
-                    webrtc::test::ImprovementDirection::kSmallerIsBetter,
-                    metadata);
-
-  logger->LogMetric("transmission_time_ms", test_case_name,
-                    stream.transmission_time_ms, Unit::kMilliseconds,
-                    webrtc::test::ImprovementDirection::kSmallerIsBetter,
-                    metadata);
-
-  logger->LogMetric("psnr_y_db", test_case_name, stream.psnr.y, Unit::kUnitless,
-                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
-                    metadata);
-
-  logger->LogMetric("psnr_u_db", test_case_name, stream.psnr.u, Unit::kUnitless,
-                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
-                    metadata);
-
-  logger->LogMetric("psnr_v_db", test_case_name, stream.psnr.v, Unit::kUnitless,
-                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
-                    metadata);
 }
 
 void VideoCodecStatsImpl::AddFrame(const Frame& frame) {

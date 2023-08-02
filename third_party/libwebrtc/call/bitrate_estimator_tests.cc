@@ -29,6 +29,7 @@
 #include "test/fake_encoder.h"
 #include "test/frame_generator_capturer.h"
 #include "test/gtest.h"
+#include "test/video_test_constants.h"
 
 namespace webrtc {
 namespace {
@@ -80,7 +81,9 @@ class LogObserver {
       }
     }
 
-    bool Wait() { return done_.Wait(test::CallTest::kDefaultTimeout); }
+    bool Wait() {
+      return done_.Wait(test::VideoTestConstants::kDefaultTimeout);
+    }
 
     void PushExpectedLogLine(absl::string_view expected_log_line) {
       MutexLock lock(&mutex_);
@@ -122,13 +125,15 @@ class BitrateEstimatorTest : public test::CallTest {
                              /*observer=*/nullptr);
 
       VideoSendStream::Config video_send_config(send_transport_.get());
-      video_send_config.rtp.ssrcs.push_back(kVideoSendSsrcs[0]);
+      video_send_config.rtp.ssrcs.push_back(
+          test::VideoTestConstants::kVideoSendSsrcs[0]);
       video_send_config.encoder_settings.encoder_factory =
           &fake_encoder_factory_;
       video_send_config.encoder_settings.bitrate_allocator_factory =
           bitrate_allocator_factory_.get();
       video_send_config.rtp.payload_name = "FAKE";
-      video_send_config.rtp.payload_type = kFakeVideoSendPayloadType;
+      video_send_config.rtp.payload_type =
+          test::VideoTestConstants::kFakeVideoSendPayloadType;
       SetVideoSendConfig(video_send_config);
       VideoEncoderConfig video_encoder_config;
       test::FillEncoderConfiguration(kVideoCodecVP8, 1, &video_encoder_config);
@@ -138,7 +143,8 @@ class BitrateEstimatorTest : public test::CallTest {
           VideoReceiveStreamInterface::Config(receive_transport_.get());
       // receive_config_.decoders will be set by every stream separately.
       receive_config_.rtp.remote_ssrc = GetVideoSendConfig()->rtp.ssrcs[0];
-      receive_config_.rtp.local_ssrc = kReceiverLocalVideoSsrc;
+      receive_config_.rtp.local_ssrc =
+          test::VideoTestConstants::kReceiverLocalVideoSsrc;
     });
   }
 
@@ -173,9 +179,12 @@ class BitrateEstimatorTest : public test::CallTest {
       frame_generator_capturer_ =
           std::make_unique<test::FrameGeneratorCapturer>(
               test->clock_,
-              test::CreateSquareFrameGenerator(kDefaultWidth, kDefaultHeight,
-                                               absl::nullopt, absl::nullopt),
-              kDefaultFramerate, *test->task_queue_factory_);
+              test::CreateSquareFrameGenerator(
+                  test::VideoTestConstants::kDefaultWidth,
+                  test::VideoTestConstants::kDefaultHeight, absl::nullopt,
+                  absl::nullopt),
+              test::VideoTestConstants::kDefaultFramerate,
+              *test->task_queue_factory_);
       frame_generator_capturer_->Init();
       send_stream_->SetSource(frame_generator_capturer_.get(),
                               DegradationPreference::MAINTAIN_FRAMERATE);

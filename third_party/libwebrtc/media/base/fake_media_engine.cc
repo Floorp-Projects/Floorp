@@ -444,7 +444,7 @@ void FakeVideoMediaChannel::GenerateSendKeyFrame(
 FakeVoiceEngine::FakeVoiceEngine() : fail_create_channel_(false) {
   // Add a fake audio codec. Note that the name must not be "" as there are
   // sanity checks against that.
-  SetCodecs({AudioCodec(101, "fake_audio_codec", 0, 0, 1)});
+  SetCodecs({AudioCodec(101, "fake_audio_codec", 8000, 0, 1)});
 }
 void FakeVoiceEngine::Init() {}
 rtc::scoped_refptr<webrtc::AudioState> FakeVoiceEngine::GetAudioState() const {
@@ -544,8 +544,8 @@ FakeVideoEngine::FakeVideoEngine()
     : capture_(false), fail_create_channel_(false) {
   // Add a fake video codec. Note that the name must not be "" as there are
   // sanity checks against that.
-  send_codecs_.push_back(VideoCodec(0, "fake_video_codec"));
-  recv_codecs_.push_back(VideoCodec(0, "fake_video_codec"));
+  send_codecs_.push_back(VideoCodec(111, "fake_video_codec"));
+  recv_codecs_.push_back(VideoCodec(111, "fake_video_codec"));
 }
 bool FakeVideoEngine::SetOptions(const VideoOptions& options) {
   options_ = options;

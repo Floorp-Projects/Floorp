@@ -21,7 +21,6 @@
 #include "api/video/resolution.h"
 #include "api/video/video_frame.h"
 #include "modules/video_coding/codecs/test/video_codec_stats_impl.h"
-#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_queue_for_test.h"
 

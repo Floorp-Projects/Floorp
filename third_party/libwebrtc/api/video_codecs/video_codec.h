@@ -130,8 +130,6 @@ class RTC_EXPORT VideoCodec {
   bool GetFrameDropEnabled() const;
   void SetFrameDropEnabled(bool enabled);
 
-  bool IsSinglecastOrAllNonFirstLayersInactive() const;
-
   // Public variables. TODO(hta): Make them private with accessors.
   VideoCodecType codecType;
 

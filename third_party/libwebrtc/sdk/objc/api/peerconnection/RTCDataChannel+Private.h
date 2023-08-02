@@ -40,10 +40,10 @@ NS_ASSUME_NONNULL_BEGIN
     : (rtc::scoped_refptr<webrtc::DataChannelInterface>)nativeDataChannel NS_DESIGNATED_INITIALIZER;
 
 + (webrtc::DataChannelInterface::DataState)nativeDataChannelStateForState:
-        (RTCDataChannelState)state;
+    (RTCDataChannelState)state;
 
 + (RTCDataChannelState)dataChannelStateForNativeState:
-        (webrtc::DataChannelInterface::DataState)nativeState;
+    (webrtc::DataChannelInterface::DataState)nativeState;
 
 + (NSString *)stringForState:(RTCDataChannelState)state;
 

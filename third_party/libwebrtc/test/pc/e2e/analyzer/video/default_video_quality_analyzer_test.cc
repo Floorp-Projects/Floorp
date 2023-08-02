@@ -2147,9 +2147,11 @@ TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
   // TODO(bugs.webrtc.org/14995): value should exclude pause
   EXPECT_THAT(GetTimeSortedValues(bob_stream_stats.time_between_freezes_ms),
               ElementsAre(2950.0));
-  // TODO(bugs.webrtc.org/14995): Fix capture_frame_rate (has to be ~20.0)
+  EXPECT_THAT(bob_stream_stats.time_between_captured_frames_ms.GetAverage(),
+              50.0);
+  EXPECT_THAT(bob_stream_stats.time_between_encoded_frames_ms.GetAverage(),
+              50.0);
   ExpectRateIs(bob_stream_stats.capture_frame_rate, 13.559322);
-  // TODO(bugs.webrtc.org/14995): Fix encode_frame_rate (has to be ~20.0)
   ExpectRateIs(bob_stream_stats.encode_frame_rate, 13.559322);
   EXPECT_DOUBLE_EQ(bob_stream_stats.harmonic_framerate_fps, 20);
 
@@ -2208,22 +2210,22 @@ TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
   std::map<StatsKey, StreamStats> streams_stats = analyzer.GetStats();
   std::map<StatsKey, FrameCounters> frame_counters =
       analyzer.GetPerStreamCounters();
-  StreamStats bob_stream_stats1 =
+  StreamStats bob_stream_stats_1 =
       streams_stats.at(StatsKey("alice_video_1", "bob"));
   FrameCounters bob_frame_counters1 =
       frame_counters.at(StatsKey("alice_video_1", "bob"));
   EXPECT_THAT(bob_frame_counters1.dropped, Eq(0));
   EXPECT_THAT(bob_frame_counters1.rendered, Eq(40));
-  EXPECT_THAT(GetTimeSortedValues(bob_stream_stats1.freeze_time_ms),
+  EXPECT_THAT(GetTimeSortedValues(bob_stream_stats_1.freeze_time_ms),
               ElementsAre(0.0));
   // TODO(bugs.webrtc.org/14995): value should exclude pause
-  EXPECT_THAT(GetTimeSortedValues(bob_stream_stats1.time_between_freezes_ms),
+  EXPECT_THAT(GetTimeSortedValues(bob_stream_stats_1.time_between_freezes_ms),
               ElementsAre(2950.0));
-  // TODO(bugs.webrtc.org/14995): Fix capture_frame_rate (has to be ~20.0)
-  ExpectRateIs(bob_stream_stats1.capture_frame_rate, 13.559322);
-  // TODO(bugs.webrtc.org/14995): Fix encode_frame_rate (has to be ~20.0)
-  ExpectRateIs(bob_stream_stats1.encode_frame_rate, 13.559322);
-  EXPECT_DOUBLE_EQ(bob_stream_stats1.harmonic_framerate_fps, 20.0);
+  EXPECT_THAT(bob_stream_stats_1.time_between_captured_frames_ms.GetAverage(),
+              50.0);
+  EXPECT_THAT(bob_stream_stats_1.time_between_encoded_frames_ms.GetAverage(),
+              50.0);
+  EXPECT_DOUBLE_EQ(bob_stream_stats_1.harmonic_framerate_fps, 20.0);
 
   // Bob should have 20 fps without freeze on both streams.
   StreamStats bob_stream_stats_2 =
@@ -2237,10 +2239,10 @@ TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
   // TODO(bugs.webrtc.org/14995): value should exclude pause
   EXPECT_THAT(GetTimeSortedValues(bob_stream_stats_2.time_between_freezes_ms),
               ElementsAre(2950.0));
-  // TODO(bugs.webrtc.org/14995): Fix capture_frame_rate (has to be ~20.0)
-  ExpectRateIs(bob_stream_stats_2.capture_frame_rate, 13.559322);
-  // TODO(bugs.webrtc.org/14995): Fix encode_frame_rate (has to be ~20.0)
-  ExpectRateIs(bob_stream_stats_2.encode_frame_rate, 13.559322);
+  EXPECT_THAT(bob_stream_stats_2.time_between_captured_frames_ms.GetAverage(),
+              50.0);
+  EXPECT_THAT(bob_stream_stats_2.time_between_encoded_frames_ms.GetAverage(),
+              50.0);
   EXPECT_DOUBLE_EQ(bob_stream_stats_2.harmonic_framerate_fps, 20.0);
 }
 
@@ -2371,6 +2373,39 @@ TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
   EXPECT_EQ(frame_counters.captured, 10);
   EXPECT_EQ(frame_counters.rendered, 10);
   EXPECT_EQ(frame_counters.dropped, 0);
+}
+
+TEST(DefaultVideoQualityAnalyzerTest, CheckFrameSenderPeerName) {
+  constexpr char kAlice[] = "alice";
+  constexpr char kBob[] = "bob";
+  constexpr char kAliceStreamLabel[] = "alice-video";
+  constexpr char kBobStreamLabel[] = "bob-video";
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(),
+                                       AnalyzerOptionsForTest());
+  analyzer.Start("test_case", std::vector<std::string>{kAlice, kBob},
+                 kAnalyzerMaxThreadsCount);
+
+  VideoFrame frame_alice = NextFrame(frame_generator.get(), /*timestamp_us=*/1);
+  VideoFrame frame_bob = NextFrame(frame_generator.get(), /*timestamp_us=*/2);
+  frame_alice.set_id(
+      analyzer.OnFrameCaptured(kAlice, kAliceStreamLabel, frame_alice));
+  frame_bob.set_id(analyzer.OnFrameCaptured(kBob, kBobStreamLabel, frame_bob));
+  std::string sender_alice = analyzer.GetSenderPeerName(frame_alice.id());
+  std::string sender_bob = analyzer.GetSenderPeerName(frame_bob.id());
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  EXPECT_EQ(sender_alice, kAlice);
+  EXPECT_EQ(sender_bob, kBob);
 }
 
 }  // namespace

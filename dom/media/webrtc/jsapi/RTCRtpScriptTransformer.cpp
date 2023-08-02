@@ -316,7 +316,7 @@ void RTCRtpScriptTransformer::TransformFrame(
         ResolveGenerateKeyFramePromises(videoFrame->GetRid(),
                                         videoFrame->GetTimestamp());
         if (!videoFrame->GetRid().empty() &&
-            videoFrame->GetMetadata().GetSimulcastIdx() == 0) {
+            videoFrame->Metadata().GetSimulcastIdx() == 0) {
           ResolveGenerateKeyFramePromises("", videoFrame->GetTimestamp());
         }
       }

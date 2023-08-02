@@ -37,7 +37,7 @@ index f787b65604..a15321ad48 100644
  
    if (base.length() && base.back() != sep) {
 diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
-index 65d50594b6..909cc744fc 100644
+index 61a3c667ba..c28dbe3a10 100644
 --- a/rtc_base/logging.cc
 +++ b/rtc_base/logging.cc
 @@ -54,6 +54,15 @@ static const int kMaxLogLineSize = 1024 - 60;

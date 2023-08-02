@@ -56,8 +56,6 @@ class TransformableVideoReceiverFrame
     return empty;
   }
 
-  const VideoFrameMetadata& GetMetadata() const override { return metadata_; }
-
   VideoFrameMetadata Metadata() const override { return metadata_; }
 
   void SetMetadata(const VideoFrameMetadata&) override {
@@ -121,13 +119,44 @@ void RtpVideoStreamReceiverFrameTransformerDelegate::OnTransformedFrame(
 void RtpVideoStreamReceiverFrameTransformerDelegate::ManageFrame(
     std::unique_ptr<TransformableFrameInterface> frame) {
   RTC_DCHECK_RUN_ON(&network_sequence_checker_);
-  RTC_CHECK_EQ(frame->GetDirection(),
-               TransformableFrameInterface::Direction::kReceiver);
   if (!receiver_)
     return;
-  auto transformed_frame = absl::WrapUnique(
-      static_cast<TransformableVideoReceiverFrame*>(frame.release()));
-  receiver_->ManageFrame(std::move(*transformed_frame).ExtractFrame());
+  if (frame->GetDirection() ==
+      TransformableFrameInterface::Direction::kReceiver) {
+    auto transformed_frame = absl::WrapUnique(
+        static_cast<TransformableVideoReceiverFrame*>(frame.release()));
+    receiver_->ManageFrame(std::move(*transformed_frame).ExtractFrame());
+  } else {
+    RTC_CHECK_EQ(frame->GetDirection(),
+                 TransformableFrameInterface::Direction::kSender);
+    // This frame is actually an frame encoded locally, to be sent, but has been
+    // fed back into this receiver's insertable stream writer.
+    // Create a reasonable RtpFrameObject as if this frame had been received
+    // over RTP, reusing the frameId as an analog for the RTP sequence number,
+    // and handle it as if it had been received.
+    // TODO(https://crbug.com/1250638): Rewrite the receiver's codepaths after
+    // this transform to be transport-agnostic and not need a faked rtp
+    // sequence number.
+
+    auto transformed_frame = absl::WrapUnique(
+        static_cast<TransformableVideoFrameInterface*>(frame.release()));
+    VideoFrameMetadata metadata = transformed_frame->Metadata();
+    RTPVideoHeader video_header = RTPVideoHeader::FromMetadata(metadata);
+    VideoSendTiming timing;
+    rtc::ArrayView<const uint8_t> data = transformed_frame->GetData();
+    receiver_->ManageFrame(std::make_unique<RtpFrameObject>(
+        /*first_seq_num=*/metadata.GetFrameId().value_or(0),
+        /*last_seq_num=*/metadata.GetFrameId().value_or(0),
+        /*markerBit=*/video_header.is_last_frame_in_picture,
+        /*times_nacked=*/0,
+        /*first_packet_received_time=*/0,
+        /*last_packet_received_time=*/0,
+        /*rtp_timestamp=*/transformed_frame->GetTimestamp(),
+        /*ntp_time_ms=*/0, timing, transformed_frame->GetPayloadType(),
+        metadata.GetCodec(), metadata.GetRotation(), metadata.GetContentType(),
+        video_header, video_header.color_space, RtpPacketInfos(),
+        EncodedImageBuffer::Create(data.data(), data.size())));
+  }
 }
 
 }  // namespace webrtc

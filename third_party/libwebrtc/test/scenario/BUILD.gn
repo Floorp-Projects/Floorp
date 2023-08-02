@@ -69,6 +69,9 @@ if (rtc_include_tests && !build_with_chromium) {
     ]
     deps = [
       ":column_printer",
+      "..:frame_generator_capturer",
+      "..:test_video_capturer",
+      "..:video_test_constants",
       "../:fake_video_codecs",
       "../:fileutils",
       "../:test_common",
@@ -113,8 +116,8 @@ if (rtc_include_tests && !build_with_chromium) {
       "../../media:rtc_internal_video_codecs",
       "../../media:rtc_media_base",
       "../../modules/audio_device",
-      "../../modules/audio_device:audio_device_impl",
       "../../modules/audio_device:mock_audio_device",
+      "../../modules/audio_device:test_audio_device_module",
       "../../modules/audio_mixer:audio_mixer_impl",
       "../../modules/audio_processing",
       "../../modules/congestion_controller/goog_cc:test_goog_cc_printer",

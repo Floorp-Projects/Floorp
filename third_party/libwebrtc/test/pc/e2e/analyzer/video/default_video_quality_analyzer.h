@@ -18,6 +18,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "api/array_view.h"
@@ -88,6 +89,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
 
   void Stop() override;
   std::string GetStreamLabel(uint16_t frame_id) override;
+  std::string GetSenderPeerName(uint16_t frame_id) const override;
   void OnStatsReports(
       absl::string_view pc_label,
       const rtc::scoped_refptr<const RTCStatsReport>& report) override {}
@@ -149,6 +151,8 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   // backward compatibility by metrics naming for 2 peers cases.
   std::string ToMetricName(const InternalStatsKey& key) const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  std::string GetStreamLabelInternal(uint16_t frame_id) const
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   static const uint16_t kStartingFrameId = 1;
 
@@ -178,7 +182,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   // 4. There too many frames in flight for current video stream and X is the
   //    oldest frame id in this stream. In such case only the frame content
   //    will be removed, but the map entry will be preserved.
-  std::map<uint16_t, FrameInFlight> captured_frames_in_flight_
+  std::unordered_map<uint16_t, FrameInFlight> captured_frames_in_flight_
       RTC_GUARDED_BY(mutex_);
   // Global frames count for all video streams.
   FrameCounters frame_counters_ RTC_GUARDED_BY(mutex_);
@@ -190,19 +194,19 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   std::map<InternalStatsKey, FrameCounters> stream_frame_counters_
       RTC_GUARDED_BY(mutex_);
   // Map from stream index in `streams_` to its StreamState.
-  std::map<size_t, StreamState> stream_states_ RTC_GUARDED_BY(mutex_);
+  std::unordered_map<size_t, StreamState> stream_states_ RTC_GUARDED_BY(mutex_);
   // Map from stream index in `streams_` to sender peer index in `peers_`.
-  std::map<size_t, size_t> stream_to_sender_ RTC_GUARDED_BY(mutex_);
+  std::unordered_map<size_t, size_t> stream_to_sender_ RTC_GUARDED_BY(mutex_);
 
   // Stores history mapping between stream index in `streams_` and frame ids.
   // Updated when frame id overlap. It required to properly return stream label
   // after 1st frame from simulcast streams was already rendered and last is
   // still encoding.
-  std::map<size_t, std::set<uint16_t>> stream_to_frame_id_history_
+  std::unordered_map<size_t, std::set<uint16_t>> stream_to_frame_id_history_
       RTC_GUARDED_BY(mutex_);
   // Map from stream index to the list of frames as they were met in the stream.
-  std::map<size_t, std::vector<uint16_t>> stream_to_frame_id_full_history_
-      RTC_GUARDED_BY(mutex_);
+  std::unordered_map<size_t, std::vector<uint16_t>>
+      stream_to_frame_id_full_history_ RTC_GUARDED_BY(mutex_);
   AnalyzerStats analyzer_stats_ RTC_GUARDED_BY(mutex_);
 
   DefaultVideoQualityAnalyzerCpuMeasurer cpu_measurer_;

@@ -98,16 +98,12 @@ TEST(AudioDecoderFactoryTest, MaxNrOfChannels) {
       CreateBuiltinAudioDecoderFactory();
   std::vector<std::string> codecs = {
 #ifdef WEBRTC_CODEC_OPUS
-    "opus",
+      "opus",
 #endif
 #ifdef WEBRTC_CODEC_ILBC
-    "ilbc",
+      "ilbc",
 #endif
-    "pcmu",
-    "pcma",
-    "l16",
-    "G722",
-    "G711",
+      "pcmu", "pcma", "l16", "G722", "G711",
   };
 
   for (auto codec : codecs) {

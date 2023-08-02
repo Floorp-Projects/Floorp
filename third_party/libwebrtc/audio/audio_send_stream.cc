@@ -147,7 +147,6 @@ AudioSendStream::AudioSendStream(
     const FieldTrialsView& field_trials)
     : clock_(clock),
       field_trials_(field_trials),
-      rtp_transport_queue_(rtp_transport->GetWorkerQueue()),
       allocate_audio_without_feedback_(
           field_trials_.IsEnabled("WebRTC-Audio-ABWENoTWCC")),
       enable_audio_alr_probing_(
@@ -164,7 +163,6 @@ AudioSendStream::AudioSendStream(
       rtp_rtcp_module_(channel_send_->GetRtpRtcp()),
       suspended_rtp_state_(suspended_rtp_state) {
   RTC_LOG(LS_INFO) << "AudioSendStream: " << config.rtp.ssrc;
-  RTC_DCHECK(rtp_transport_queue_);
   RTC_DCHECK(audio_state_);
   RTC_DCHECK(channel_send_);
   RTC_DCHECK(bitrate_allocator_);
@@ -182,10 +180,6 @@ AudioSendStream::~AudioSendStream() {
   RTC_LOG(LS_INFO) << "~AudioSendStream: " << config_.rtp.ssrc;
   RTC_DCHECK(!sending_);
   channel_send_->ResetSenderCongestionControlObjects();
-
-  // Blocking call to synchronize state with worker queue to ensure that there
-  // are no pending tasks left that keeps references to audio.
-  rtp_transport_queue_->RunSynchronous([] {});
 }
 
 const webrtc::AudioSendStream::Config& AudioSendStream::GetConfig() const {
@@ -492,7 +486,7 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
 
   stats.report_block_datas = std::move(call_stats.report_block_datas);
 
-  stats.nacks_rcvd = call_stats.nacks_rcvd;
+  stats.nacks_received = call_stats.nacks_received;
 
   return stats;
 }
@@ -511,7 +505,7 @@ void AudioSendStream::DeliverRtcp(const uint8_t* packet, size_t length) {
 }
 
 uint32_t AudioSendStream::OnBitrateUpdated(BitrateAllocationUpdate update) {
-  RTC_DCHECK_RUN_ON(rtp_transport_queue_);
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
 
   // Pick a target bitrate between the constraints. Overrules the allocator if
   // it 1) allocated a bitrate of zero to disable the stream or 2) allocated a
@@ -826,6 +820,7 @@ void AudioSendStream::ReconfigureBitrateObserver(
 }
 
 void AudioSendStream::ConfigureBitrateObserver() {
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   // This either updates the current observer or adds a new observer.
   // TODO(srte): Add overhead compensation here.
   auto constraints = GetMinMaxBitrateConstraints();
@@ -847,30 +842,24 @@ void AudioSendStream::ConfigureBitrateObserver() {
     priority_bitrate += min_overhead;
   }
 
-  if (allocation_settings_.priority_bitrate_raw)
+  if (allocation_settings_.priority_bitrate_raw) {
     priority_bitrate = *allocation_settings_.priority_bitrate_raw;
+  }
 
-  rtp_transport_queue_->RunOrPost([this, constraints, priority_bitrate,
-                                   config_bitrate_priority =
-                                       config_.bitrate_priority] {
-    RTC_DCHECK_RUN_ON(rtp_transport_queue_);
-    bitrate_allocator_->AddObserver(
-        this,
-        MediaStreamAllocationConfig{
-            constraints->min.bps<uint32_t>(), constraints->max.bps<uint32_t>(),
-            0, priority_bitrate.bps(), true,
-            allocation_settings_.bitrate_priority.value_or(
-                config_bitrate_priority)});
-  });
+  bitrate_allocator_->AddObserver(
+      this,
+      MediaStreamAllocationConfig{
+          constraints->min.bps<uint32_t>(), constraints->max.bps<uint32_t>(), 0,
+          priority_bitrate.bps(), true,
+          allocation_settings_.bitrate_priority.value_or(
+              config_.bitrate_priority)});
+
   registered_with_allocator_ = true;
 }
 
 void AudioSendStream::RemoveBitrateObserver() {
   registered_with_allocator_ = false;
-  rtp_transport_queue_->RunSynchronous([this] {
-    RTC_DCHECK_RUN_ON(rtp_transport_queue_);
-    bitrate_allocator_->RemoveObserver(this);
-  });
+  bitrate_allocator_->RemoveObserver(this);
 }
 
 absl::optional<AudioSendStream::TargetAudioBitrateConstraints>
@@ -931,10 +920,7 @@ void AudioSendStream::UpdateCachedTargetAudioBitrateConstraints() {
   if (!new_constraints.has_value()) {
     return;
   }
-  rtp_transport_queue_->RunOrPost([this, new_constraints]() {
-    RTC_DCHECK_RUN_ON(rtp_transport_queue_);
-    cached_constraints_ = new_constraints;
-  });
+  cached_constraints_ = new_constraints;
 }
 
 }  // namespace internal

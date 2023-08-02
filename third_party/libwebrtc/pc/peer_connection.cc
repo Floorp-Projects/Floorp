@@ -24,6 +24,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/jsep_ice_candidate.h"
+#include "api/media_types.h"
 #include "api/rtp_parameters.h"
 #include "api/rtp_transceiver_direction.h"
 #include "api/uma_metrics.h"
@@ -542,6 +543,10 @@ PeerConnection::~PeerConnection() {
     sdp_handler_->PrepareForShutdown();
   }
 
+  // In case `Close()` wasn't called, always make sure the controller cancels
+  // potentially pending operations.
+  data_channel_controller_.PrepareForShutdown();
+
   // Need to stop transceivers before destroying the stats collector because
   // AudioRtpSender has a reference to the LegacyStatsCollector it will update
   // when stopping.
@@ -572,7 +577,7 @@ PeerConnection::~PeerConnection() {
   transport_controller_copy_ = nullptr;
   network_thread()->BlockingCall([this] {
     RTC_DCHECK_RUN_ON(network_thread());
-    TeardownDataChannelTransport_n();
+    TeardownDataChannelTransport_n(RTCError::OK());
     transport_controller_.reset();
     port_allocator_.reset();
     if (network_thread_safety_)
@@ -587,6 +592,8 @@ PeerConnection::~PeerConnection() {
     // The event log must outlive call (and any other object that uses it).
     event_log_.reset();
   });
+
+  data_channel_controller_.PrepareForShutdown();
 }
 
 RTCError PeerConnection::Initialize(
@@ -699,6 +706,7 @@ JsepTransportController* PeerConnection::InitializeTransportController_n(
                               : options_.crypto_options;
   config.transport_observer = this;
   config.rtcp_handler = InitializeRtcpCallback();
+  config.un_demuxable_packet_handler = InitializeUnDemuxablePacketHandler();
   config.event_log = event_log_ptr_;
 #if defined(ENABLE_EXTERNAL_AUTH)
   config.enable_external_auth = true;
@@ -720,16 +728,13 @@ JsepTransportController* PeerConnection::InitializeTransportController_n(
 
   config.field_trials = trials_.get();
 
-  transport_controller_.reset(
-      new JsepTransportController(network_thread(), port_allocator_.get(),
-                                  async_dns_resolver_factory_.get(), config));
+  transport_controller_.reset(new JsepTransportController(
+      network_thread(), port_allocator_.get(),
+      async_dns_resolver_factory_.get(), std::move(config)));
 
   transport_controller_->SubscribeIceConnectionState(
       [this](cricket::IceConnectionState s) {
         RTC_DCHECK_RUN_ON(network_thread());
-        if (s == cricket::kIceConnectionConnected) {
-          ReportTransportStats();
-        }
         signaling_thread()->PostTask(
             SafeTask(signaling_thread_safety_.flag(), [this, s]() {
               RTC_DCHECK_RUN_ON(signaling_thread());
@@ -1392,24 +1397,32 @@ PeerConnection::CreateDataChannelOrError(const std::string& label,
   RTC_DCHECK_RUN_ON(signaling_thread());
   TRACE_EVENT0("webrtc", "PeerConnection::CreateDataChannel");
 
+  if (IsClosed()) {
+    LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_STATE,
+                         "CreateDataChannelOrError: PeerConnection is closed.");
+  }
+
   bool first_datachannel = !data_channel_controller_.HasUsedDataChannels();
 
-  std::unique_ptr<InternalDataChannelInit> internal_config;
+  InternalDataChannelInit internal_config;
   if (config) {
-    internal_config.reset(new InternalDataChannelInit(*config));
-  }
-  // TODO(bugs.webrtc.org/12796): Return a more specific error.
-  rtc::scoped_refptr<DataChannelInterface> channel(
-      data_channel_controller_.InternalCreateDataChannelWithProxy(
-          label, internal_config.get()));
-  if (!channel.get()) {
-    return RTCError(RTCErrorType::INTERNAL_ERROR,
-                    "Data channel creation failed");
+    internal_config = InternalDataChannelInit(*config);
   }
 
-  // Trigger the onRenegotiationNeeded event for
-  // the first SCTP DataChannel.
-  if (first_datachannel) {
+  internal_config.fallback_ssl_role = sdp_handler_->GuessSslRole();
+  RTCErrorOr<rtc::scoped_refptr<DataChannelInterface>> ret =
+      data_channel_controller_.InternalCreateDataChannelWithProxy(
+          label, internal_config);
+  if (!ret.ok()) {
+    return ret.MoveError();
+  }
+
+  rtc::scoped_refptr<DataChannelInterface> channel = ret.MoveValue();
+
+  // Check the onRenegotiationNeeded event (with plan-b backward compat)
+  if (configuration_.sdp_semantics == SdpSemantics::kUnifiedPlan ||
+      (configuration_.sdp_semantics == SdpSemantics::kPlanB_DEPRECATED &&
+       first_datachannel)) {
     sdp_handler_->UpdateNegotiationNeeded();
   }
   NoteUsageEvent(UsageEvent::DATA_ADDED);
@@ -1915,13 +1928,15 @@ void PeerConnection::Close() {
     event_log_.reset();
   });
   ReportUsagePattern();
-  // The .h file says that observer can be discarded after close() returns.
-  // Make sure this is true.
-  observer_ = nullptr;
 
   // Signal shutdown to the sdp handler. This invalidates weak pointers for
   // internal pending callbacks.
   sdp_handler_->PrepareForShutdown();
+  data_channel_controller_.PrepareForShutdown();
+
+  // The .h file says that observer can be discarded after close() returns.
+  // Make sure this is true.
+  observer_ = nullptr;
 }
 
 void PeerConnection::SetIceConnectionState(IceConnectionState new_state) {
@@ -2100,23 +2115,25 @@ absl::optional<std::string> PeerConnection::GetDataMid() const {
   return sctp_mid_s_;
 }
 
-void PeerConnection::SetSctpDataMid(const std::string& mid) {
+void PeerConnection::SetSctpDataInfo(absl::string_view mid,
+                                     absl::string_view transport_name) {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  sctp_mid_s_ = mid;
+  sctp_mid_s_ = std::string(mid);
+  SetSctpTransportName(std::string(transport_name));
 }
 
-void PeerConnection::ResetSctpDataMid() {
+void PeerConnection::ResetSctpDataInfo() {
   RTC_DCHECK_RUN_ON(signaling_thread());
   sctp_mid_s_.reset();
   SetSctpTransportName("");
 }
 
 void PeerConnection::OnSctpDataChannelStateChanged(
-    DataChannelInterface* channel,
+    int channel_id,
     DataChannelInterface::DataState state) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   if (stats_collector_)
-    stats_collector_->OnSctpDataChannelStateChanged(channel, state);
+    stats_collector_->OnSctpDataChannelStateChanged(channel_id, state);
 }
 
 PeerConnection::InitializePortAllocatorResult
@@ -2229,50 +2246,10 @@ void PeerConnection::StopRtcEventLog_w() {
   }
 }
 
-bool PeerConnection::GetSctpSslRole(rtc::SSLRole* role) {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  if (!sctp_mid_s_ || !data_channel_controller_.data_channel_transport()) {
-    RTC_LOG(LS_INFO) << "Non-rejected SCTP m= section is needed to get the "
-                        "SSL Role of the SCTP transport.";
-    return false;
-  }
-
-  absl::optional<rtc::SSLRole> dtls_role = network_thread()->BlockingCall(
-      [this, is_caller = sdp_handler_->is_caller()] {
-        RTC_DCHECK_RUN_ON(network_thread());
-        return GetSctpSslRole_n(is_caller);
-      });
-  if (!dtls_role) {
-    return false;
-  }
-
-  *role = *dtls_role;
-  return true;
-}
-
-absl::optional<rtc::SSLRole> PeerConnection::GetSctpSslRole_n(
-    absl::optional<bool> is_caller) {
+absl::optional<rtc::SSLRole> PeerConnection::GetSctpSslRole_n() {
   RTC_DCHECK_RUN_ON(network_thread());
-  if (!sctp_mid_n_)
-    return absl::nullopt;
-
-  absl::optional<rtc::SSLRole> dtls_role =
-      transport_controller_->GetDtlsRole(*sctp_mid_n_);
-  if (!dtls_role) {
-    if (!is_caller.has_value())
-      return absl::nullopt;
-
-    // This works fine if we are the offerer, but can be a mistake if
-    // we are the answerer and the remote offer is ACTIVE. In that
-    // case, we will guess the role wrong.
-    // TODO(bugs.webrtc.org/13668): Check if this actually happens.
-    RTC_LOG(LS_ERROR)
-        << "Possible risk: DTLS role guesser is active, is_caller is "
-        << *is_caller;
-    dtls_role = *is_caller ? rtc::SSL_SERVER : rtc::SSL_CLIENT;
-  }
-
-  return dtls_role;
+  return sctp_mid_n_ ? transport_controller_->GetDtlsRole(*sctp_mid_n_)
+                     : absl::nullopt;
 }
 
 bool PeerConnection::GetSslRole(const std::string& content_name,
@@ -2313,7 +2290,7 @@ bool PeerConnection::GetTransportDescription(
 }
 
 std::vector<DataChannelStats> PeerConnection::GetDataChannelStats() const {
-  RTC_DCHECK_RUN_ON(signaling_thread());
+  RTC_DCHECK_RUN_ON(network_thread());
   return data_channel_controller_.GetDataChannelStats();
 }
 
@@ -2421,6 +2398,20 @@ void PeerConnection::OnTransportControllerConnectionState(
     case cricket::kIceConnectionConnected:
       RTC_LOG(LS_INFO) << "Changing to ICE connected state because "
                           "all transports are writable.";
+      {
+        std::vector<RtpTransceiverProxyRefPtr> transceivers;
+        if (ConfiguredForMedia()) {
+          transceivers = rtp_manager()->transceivers()->List();
+        }
+
+        network_thread()->PostTask(
+            SafeTask(network_thread_safety_,
+                     [this, transceivers = std::move(transceivers)] {
+                       RTC_DCHECK_RUN_ON(network_thread());
+                       ReportTransportStats(std::move(transceivers));
+                     }));
+      }
+
       SetIceConnectionState(PeerConnectionInterface::kIceConnectionConnected);
       NoteUsageEvent(UsageEvent::ICE_STATE_CONNECTED);
       break;
@@ -2538,40 +2529,35 @@ absl::optional<AudioDeviceModule::Stats> PeerConnection::GetAudioDeviceStats() {
   return absl::nullopt;
 }
 
-bool PeerConnection::SetupDataChannelTransport_n(const std::string& mid) {
+absl::optional<std::string> PeerConnection::SetupDataChannelTransport_n(
+    absl::string_view mid) {
+  sctp_mid_n_ = std::string(mid);
   DataChannelTransportInterface* transport =
-      transport_controller_->GetDataChannelTransport(mid);
+      transport_controller_->GetDataChannelTransport(*sctp_mid_n_);
   if (!transport) {
     RTC_LOG(LS_ERROR)
         << "Data channel transport is not available for data channels, mid="
         << mid;
-    return false;
+    sctp_mid_n_ = absl::nullopt;
+    return absl::nullopt;
   }
-  RTC_LOG(LS_INFO) << "Setting up data channel transport for mid=" << mid;
 
-  data_channel_controller_.set_data_channel_transport(transport);
-  data_channel_controller_.SetupDataChannelTransport_n();
-  sctp_mid_n_ = mid;
+  absl::optional<std::string> transport_name;
   cricket::DtlsTransportInternal* dtls_transport =
-      transport_controller_->GetDtlsTransport(mid);
+      transport_controller_->GetDtlsTransport(*sctp_mid_n_);
   if (dtls_transport) {
-    signaling_thread()->PostTask(
-        SafeTask(signaling_thread_safety_.flag(),
-                 [this, name = dtls_transport->transport_name()] {
-                   RTC_DCHECK_RUN_ON(signaling_thread());
-                   SetSctpTransportName(std::move(name));
-                 }));
+    transport_name = dtls_transport->transport_name();
+  } else {
+    // Make sure we still set a valid string.
+    transport_name = std::string("");
   }
 
-  // Note: setting the data sink and checking initial state must be done last,
-  // after setting up the data channel.  Setting the data sink may trigger
-  // callbacks to PeerConnection which require the transport to be completely
-  // set up (eg. OnReadyToSend()).
-  transport->SetDataSink(&data_channel_controller_);
-  return true;
+  data_channel_controller_.SetupDataChannelTransport_n(transport);
+
+  return transport_name;
 }
 
-void PeerConnection::TeardownDataChannelTransport_n() {
+void PeerConnection::TeardownDataChannelTransport_n(RTCError error) {
   if (sctp_mid_n_) {
     // `sctp_mid_` may still be active through an SCTP transport.  If not, unset
     // it.
@@ -2580,7 +2566,7 @@ void PeerConnection::TeardownDataChannelTransport_n() {
     sctp_mid_n_.reset();
   }
 
-  data_channel_controller_.TeardownDataChannelTransport_n();
+  data_channel_controller_.TeardownDataChannelTransport_n(error);
 }
 
 // Returns false if bundle is enabled and rtcp_mux is disabled.
@@ -2768,20 +2754,18 @@ void PeerConnection::OnTransportControllerGatheringState(
 }
 
 // Runs on network_thread().
-void PeerConnection::ReportTransportStats() {
+void PeerConnection::ReportTransportStats(
+    std::vector<RtpTransceiverProxyRefPtr> transceivers) {
   TRACE_EVENT0("webrtc", "PeerConnection::ReportTransportStats");
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
   std::map<std::string, std::set<cricket::MediaType>>
       media_types_by_transport_name;
-  if (ConfiguredForMedia()) {
-    for (const auto& transceiver :
-         rtp_manager()->transceivers()->UnsafeList()) {
-      if (transceiver->internal()->channel()) {
-        std::string transport_name(
-            transceiver->internal()->channel()->transport_name());
-        media_types_by_transport_name[transport_name].insert(
-            transceiver->media_type());
-      }
+  for (const auto& transceiver : transceivers) {
+    if (transceiver->internal()->channel()) {
+      std::string transport_name(
+          transceiver->internal()->channel()->transport_name());
+      media_types_by_transport_name[transport_name].insert(
+          transceiver->media_type());
     }
   }
 
@@ -3021,6 +3005,23 @@ PeerConnection::InitializeRtcpCallback() {
     worker_thread()->PostTask(SafeTask(worker_thread_safety_, [this, packet]() {
       call_ptr_->Receiver()->DeliverRtcpPacket(packet);
     }));
+  };
+}
+
+std::function<void(const RtpPacketReceived& parsed_packet)>
+PeerConnection::InitializeUnDemuxablePacketHandler() {
+  RTC_DCHECK_RUN_ON(network_thread());
+  return [this](const RtpPacketReceived& parsed_packet) {
+    worker_thread()->PostTask(
+        SafeTask(worker_thread_safety_, [this, parsed_packet]() {
+          // Deliver the packet anyway to Call to allow Call to do BWE.
+          // Even if there is no media receiver, the packet has still
+          // been received on the network and has been correcly parsed.
+          call_ptr_->Receiver()->DeliverRtpPacket(
+              MediaType::ANY, parsed_packet,
+              /*undemuxable_packet_handler=*/
+              [](const RtpPacketReceived& packet) { return false; });
+        }));
   };
 }
 

@@ -15,7 +15,6 @@
 #include <utility>
 
 #include "absl/strings/match.h"
-#include "api/transport/field_trial_based_config.h"
 #include "api/units/timestamp.h"
 #include "logging/rtc_event_log/events/rtc_event_rtp_packet_outgoing.h"
 #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"

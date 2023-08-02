@@ -1,33 +1,42 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Thu, 15 Jun 2023 12:41:00 +0000
-Subject: Bug 1724900: WebRTC backport: PipeWire video capture - set device
- unique ID during initialization r=pehrsons,webrtc-reviewers
+From: Byron Campen <docfaraday@gmail.com>
+Date: Thu, 20 Jul 2023 14:24:00 +0000
+Subject: Bug 1838080: Work around a race in
+ ChannelSendFrameTransformerDelegate. r=pehrsons,webrtc-reviewers
 
-This is a simple backport of an WebRTC upstream change.
+This variable can be null when a ChannelSendFrameTransformerDelegate is in use,
+because that does an async dispatch to the encoder queue in the handling for
+transformed frames. If this is unset while that dispatch is in flight, we
+nullptr crash.
 
-Upstream commit: 4beafa38d546ab6c0bb423c12762f0c4568aa5ce
-
-Differential Revision: https://phabricator.services.mozilla.com/D176626
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/583ba187d9e5e6d5174a728936b7bf6afc5ba326
+Differential Revision: https://phabricator.services.mozilla.com/D180735
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56555ecee7f36ae73abff1cbbd06807c2b65fc19
 ---
- modules/video_capture/linux/video_capture_pipewire.cc | 4 ++++
- 1 file changed, 4 insertions(+)
+ audio/channel_send.cc | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/modules/video_capture/linux/video_capture_pipewire.cc b/modules/video_capture/linux/video_capture_pipewire.cc
-index c1e6aae5ea..99109e00e6 100644
---- a/modules/video_capture/linux/video_capture_pipewire.cc
-+++ b/modules/video_capture/linux/video_capture_pipewire.cc
-@@ -62,6 +62,10 @@ int32_t VideoCaptureModulePipeWire::Init(const char* deviceUniqueId) {
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index f9283c3a00..8a402ca467 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -285,12 +285,16 @@ class RtpPacketSenderProxy : public RtpPacketSender {
+   void EnqueuePackets(
+       std::vector<std::unique_ptr<RtpPacketToSend>> packets) override {
+     MutexLock lock(&mutex_);
+-    rtp_packet_pacer_->EnqueuePackets(std::move(packets));
++    if (rtp_packet_pacer_) {
++      rtp_packet_pacer_->EnqueuePackets(std::move(packets));
++    }
+   }
  
-   node_id_ = id.value();
+   void RemovePacketsForSsrc(uint32_t ssrc) override {
+     MutexLock lock(&mutex_);
+-    rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
++    if (rtp_packet_pacer_) {
++      rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
++    }
+   }
  
-+  const int len = strlen(deviceUniqueId);
-+  _deviceUniqueId = new (std::nothrow) char[len + 1];
-+  memcpy(_deviceUniqueId, deviceUniqueId, len + 1);
-+
-   return 0;
- }
- 
+  private:
 -- 
 2.34.1
 

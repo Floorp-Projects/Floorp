@@ -30,6 +30,7 @@
 #include "rtc_base/time_utils.h"
 #include "test/encoder_settings.h"
 #include "test/gtest.h"
+#include "test/video_test_constants.h"
 
 ABSL_FLAG(std::string,
           ramp_dump_name,
@@ -69,7 +70,7 @@ RampUpTester::RampUpTester(size_t num_video_streams,
                            bool red,
                            bool report_perf_stats,
                            TaskQueueBase* task_queue)
-    : EndToEndTest(test::CallTest::kLongTimeout),
+    : EndToEndTest(test::VideoTestConstants::kLongTimeout),
       clock_(Clock::GetRealTimeClock()),
       num_video_streams_(num_video_streams),
       num_audio_streams_(num_audio_streams),
@@ -163,8 +164,8 @@ void RampUpTester::ModifyVideoConfigs(
     send_config->rtp.payload_name = "VP8";
     encoder_config->codec_type = kVideoCodecVP8;
     std::vector<VideoStream> streams = test::CreateVideoStreams(
-        test::CallTest::kDefaultWidth, test::CallTest::kDefaultHeight,
-        *encoder_config);
+        test::VideoTestConstants::kDefaultWidth,
+        test::VideoTestConstants::kDefaultHeight, *encoder_config);
     // For multi stream rampup until all streams are being sent. That means
     // enough bitrate to send all the target streams plus the min bitrate of
     // the last one.
@@ -174,19 +175,22 @@ void RampUpTester::ModifyVideoConfigs(
     }
   }
 
-  send_config->rtp.nack.rtp_history_ms = test::CallTest::kNackRtpHistoryMs;
+  send_config->rtp.nack.rtp_history_ms =
+      test::VideoTestConstants::kNackRtpHistoryMs;
   send_config->rtp.ssrcs = video_ssrcs_;
   if (rtx_) {
-    send_config->rtp.rtx.payload_type = test::CallTest::kSendRtxPayloadType;
+    send_config->rtp.rtx.payload_type =
+        test::VideoTestConstants::kSendRtxPayloadType;
     send_config->rtp.rtx.ssrcs = video_rtx_ssrcs_;
   }
   if (red_) {
     send_config->rtp.ulpfec.ulpfec_payload_type =
-        test::CallTest::kUlpfecPayloadType;
-    send_config->rtp.ulpfec.red_payload_type = test::CallTest::kRedPayloadType;
+        test::VideoTestConstants::kUlpfecPayloadType;
+    send_config->rtp.ulpfec.red_payload_type =
+        test::VideoTestConstants::kRedPayloadType;
     if (rtx_) {
       send_config->rtp.ulpfec.red_rtx_payload_type =
-          test::CallTest::kRtxRedPayloadType;
+          test::VideoTestConstants::kRtxRedPayloadType;
     }
   }
 
@@ -223,8 +227,9 @@ void RampUpTester::ModifyVideoConfigs(
 
   RTC_DCHECK_LE(num_flexfec_streams_, 1);
   if (num_flexfec_streams_ == 1) {
-    send_config->rtp.flexfec.payload_type = test::CallTest::kFlexfecPayloadType;
-    send_config->rtp.flexfec.ssrc = test::CallTest::kFlexfecSendSsrc;
+    send_config->rtp.flexfec.payload_type =
+        test::VideoTestConstants::kFlexfecPayloadType;
+    send_config->rtp.flexfec.ssrc = test::VideoTestConstants::kFlexfecSendSsrc;
     send_config->rtp.flexfec.protected_media_ssrcs = {video_ssrcs_[0]};
   }
 }
@@ -249,8 +254,10 @@ void RampUpTester::ModifyFlexfecConfigs(
   if (num_flexfec_streams_ == 0)
     return;
   RTC_DCHECK_EQ(1, num_flexfec_streams_);
-  (*receive_configs)[0].payload_type = test::CallTest::kFlexfecPayloadType;
-  (*receive_configs)[0].rtp.remote_ssrc = test::CallTest::kFlexfecSendSsrc;
+  (*receive_configs)[0].payload_type =
+      test::VideoTestConstants::kFlexfecPayloadType;
+  (*receive_configs)[0].rtp.remote_ssrc =
+      test::VideoTestConstants::kFlexfecSendSsrc;
   (*receive_configs)[0].protected_media_ssrcs = {video_ssrcs_[0]};
   (*receive_configs)[0].rtp.local_ssrc = video_ssrcs_[0];
 }

@@ -67,9 +67,10 @@ constexpr SendOptions kSendOptions;
 constexpr size_t kLargeMessageSize = DcSctpOptions::kMaxSafeMTUSize * 20;
 constexpr size_t kSmallMessageSize = 10;
 constexpr int kMaxBurstPackets = 4;
+constexpr DcSctpOptions kDefaultOptions;
 
 MATCHER_P(HasDataChunkWithStreamId, stream_id, "") {
-  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg);
+  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg, kDefaultOptions);
   if (!packet.has_value()) {
     *result_listener << "data didn't parse as an SctpPacket";
     return false;
@@ -96,7 +97,7 @@ MATCHER_P(HasDataChunkWithStreamId, stream_id, "") {
 }
 
 MATCHER_P(HasDataChunkWithPPID, ppid, "") {
-  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg);
+  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg, kDefaultOptions);
   if (!packet.has_value()) {
     *result_listener << "data didn't parse as an SctpPacket";
     return false;
@@ -123,7 +124,7 @@ MATCHER_P(HasDataChunkWithPPID, ppid, "") {
 }
 
 MATCHER_P(HasDataChunkWithSsn, ssn, "") {
-  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg);
+  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg, kDefaultOptions);
   if (!packet.has_value()) {
     *result_listener << "data didn't parse as an SctpPacket";
     return false;
@@ -150,7 +151,7 @@ MATCHER_P(HasDataChunkWithSsn, ssn, "") {
 }
 
 MATCHER_P(HasDataChunkWithMid, mid, "") {
-  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg);
+  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg, kDefaultOptions);
   if (!packet.has_value()) {
     *result_listener << "data didn't parse as an SctpPacket";
     return false;
@@ -177,7 +178,7 @@ MATCHER_P(HasDataChunkWithMid, mid, "") {
 }
 
 MATCHER_P(HasSackWithCumAckTsn, tsn, "") {
-  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg);
+  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg, kDefaultOptions);
   if (!packet.has_value()) {
     *result_listener << "data didn't parse as an SctpPacket";
     return false;
@@ -204,7 +205,7 @@ MATCHER_P(HasSackWithCumAckTsn, tsn, "") {
 }
 
 MATCHER(HasSackWithNoGapAckBlocks, "") {
-  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg);
+  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg, kDefaultOptions);
   if (!packet.has_value()) {
     *result_listener << "data didn't parse as an SctpPacket";
     return false;
@@ -231,7 +232,7 @@ MATCHER(HasSackWithNoGapAckBlocks, "") {
 }
 
 MATCHER_P(HasReconfigWithStreams, streams_matcher, "") {
-  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg);
+  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg, kDefaultOptions);
   if (!packet.has_value()) {
     *result_listener << "data didn't parse as an SctpPacket";
     return false;
@@ -269,7 +270,7 @@ MATCHER_P(HasReconfigWithStreams, streams_matcher, "") {
 }
 
 MATCHER_P(HasReconfigWithResponse, result, "") {
-  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg);
+  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg, kDefaultOptions);
   if (!packet.has_value()) {
     *result_listener << "data didn't parse as an SctpPacket";
     return false;
@@ -328,7 +329,7 @@ std::unique_ptr<PacketObserver> GetPacketObserver(absl::string_view name) {
 
 struct SocketUnderTest {
   explicit SocketUnderTest(absl::string_view name,
-                           const DcSctpOptions& opts = {})
+                           const DcSctpOptions& opts = kDefaultOptions)
       : options(FixupOptions(opts)),
         cb(name),
         socket(name, cb, GetPacketObserver(name), options) {}
@@ -628,8 +629,9 @@ TEST(DcSctpSocketTest, ResendInitAndEstablishConnection) {
 
   a.socket.Connect();
   // INIT is never received by Z.
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket init_packet,
-                              SctpPacket::Parse(a.cb.ConsumeSentPacket()));
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      SctpPacket init_packet,
+      SctpPacket::Parse(a.cb.ConsumeSentPacket(), z.options));
   EXPECT_EQ(init_packet.descriptors()[0].type, InitChunk::kType);
 
   AdvanceTime(a, z, a.options.t1_init_timeout);
@@ -654,16 +656,18 @@ TEST(DcSctpSocketTest, ResendingInitTooManyTimesAborts) {
   a.socket.Connect();
 
   // INIT is never received by Z.
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket init_packet,
-                              SctpPacket::Parse(a.cb.ConsumeSentPacket()));
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      SctpPacket init_packet,
+      SctpPacket::Parse(a.cb.ConsumeSentPacket(), z.options));
   EXPECT_EQ(init_packet.descriptors()[0].type, InitChunk::kType);
 
   for (int i = 0; i < *a.options.max_init_retransmits; ++i) {
     AdvanceTime(a, z, a.options.t1_init_timeout * (1 << i));
 
     // INIT is resent
-    ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket resent_init_packet,
-                                SctpPacket::Parse(a.cb.ConsumeSentPacket()));
+    ASSERT_HAS_VALUE_AND_ASSIGN(
+        SctpPacket resent_init_packet,
+        SctpPacket::Parse(a.cb.ConsumeSentPacket(), z.options));
     EXPECT_EQ(resent_init_packet.descriptors()[0].type, InitChunk::kType);
   }
 
@@ -687,8 +691,9 @@ TEST(DcSctpSocketTest, ResendCookieEchoAndEstablishConnection) {
   a.socket.ReceivePacket(z.cb.ConsumeSentPacket());
 
   // COOKIE_ECHO is never received by Z.
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket init_packet,
-                              SctpPacket::Parse(a.cb.ConsumeSentPacket()));
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      SctpPacket init_packet,
+      SctpPacket::Parse(a.cb.ConsumeSentPacket(), z.options));
   EXPECT_EQ(init_packet.descriptors()[0].type, CookieEchoChunk::kType);
 
   AdvanceTime(a, z, a.options.t1_init_timeout);
@@ -714,16 +719,18 @@ TEST(DcSctpSocketTest, ResendingCookieEchoTooManyTimesAborts) {
   a.socket.ReceivePacket(z.cb.ConsumeSentPacket());
 
   // COOKIE_ECHO is never received by Z.
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket init_packet,
-                              SctpPacket::Parse(a.cb.ConsumeSentPacket()));
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      SctpPacket init_packet,
+      SctpPacket::Parse(a.cb.ConsumeSentPacket(), z.options));
   EXPECT_EQ(init_packet.descriptors()[0].type, CookieEchoChunk::kType);
 
   for (int i = 0; i < *a.options.max_init_retransmits; ++i) {
     AdvanceTime(a, z, a.options.t1_cookie_timeout * (1 << i));
 
     // COOKIE_ECHO is resent
-    ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket resent_init_packet,
-                                SctpPacket::Parse(a.cb.ConsumeSentPacket()));
+    ASSERT_HAS_VALUE_AND_ASSIGN(
+        SctpPacket resent_init_packet,
+        SctpPacket::Parse(a.cb.ConsumeSentPacket(), z.options));
     EXPECT_EQ(resent_init_packet.descriptors()[0].type, CookieEchoChunk::kType);
   }
 
@@ -751,8 +758,9 @@ TEST(DcSctpSocketTest, DoesntSendMorePacketsUntilCookieAckHasBeenReceived) {
   a.socket.ReceivePacket(z.cb.ConsumeSentPacket());
 
   // COOKIE_ECHO is never received by Z.
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket cookie_echo_packet1,
-                              SctpPacket::Parse(a.cb.ConsumeSentPacket()));
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      SctpPacket cookie_echo_packet1,
+      SctpPacket::Parse(a.cb.ConsumeSentPacket(), z.options));
   EXPECT_THAT(cookie_echo_packet1.descriptors(), SizeIs(2));
   EXPECT_EQ(cookie_echo_packet1.descriptors()[0].type, CookieEchoChunk::kType);
   EXPECT_EQ(cookie_echo_packet1.descriptors()[1].type, DataChunk::kType);
@@ -771,8 +779,9 @@ TEST(DcSctpSocketTest, DoesntSendMorePacketsUntilCookieAckHasBeenReceived) {
   AdvanceTime(a, z, a.options.t1_cookie_timeout - a.options.rto_initial);
 
   // And this COOKIE-ECHO and DATA is also lost - never received by Z.
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket cookie_echo_packet2,
-                              SctpPacket::Parse(a.cb.ConsumeSentPacket()));
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      SctpPacket cookie_echo_packet2,
+      SctpPacket::Parse(a.cb.ConsumeSentPacket(), z.options));
   EXPECT_THAT(cookie_echo_packet2.descriptors(), SizeIs(2));
   EXPECT_EQ(cookie_echo_packet2.descriptors()[0].type, CookieEchoChunk::kType);
   EXPECT_EQ(cookie_echo_packet2.descriptors()[1].type, DataChunk::kType);
@@ -836,8 +845,9 @@ TEST(DcSctpSocketTest, ShutdownTimerExpiresTooManyTimeClosesConnection) {
     AdvanceTime(a, z, DurationMs(a.options.rto_initial * (1 << i)));
 
     // Dropping every shutdown chunk.
-    ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet,
-                                SctpPacket::Parse(a.cb.ConsumeSentPacket()));
+    ASSERT_HAS_VALUE_AND_ASSIGN(
+        SctpPacket packet,
+        SctpPacket::Parse(a.cb.ConsumeSentPacket(), z.options));
     EXPECT_EQ(packet.descriptors()[0].type, ShutdownChunk::kType);
     EXPECT_TRUE(a.cb.ConsumeSentPacket().empty());
   }
@@ -847,8 +857,9 @@ TEST(DcSctpSocketTest, ShutdownTimerExpiresTooManyTimeClosesConnection) {
               a.options.rto_initial * (1 << *a.options.max_retransmissions));
 
   EXPECT_EQ(a.socket.state(), SocketState::kClosed);
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet,
-                              SctpPacket::Parse(a.cb.ConsumeSentPacket()));
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      SctpPacket packet,
+      SctpPacket::Parse(a.cb.ConsumeSentPacket(), z.options));
   EXPECT_EQ(packet.descriptors()[0].type, AbortChunk::kType);
   EXPECT_TRUE(a.cb.ConsumeSentPacket().empty());
 }
@@ -956,8 +967,9 @@ TEST_P(DcSctpSocketParametrizedTest, SendingHeartbeatAnswersWithAck) {
   a.socket.ReceivePacket(b.Build());
 
   // HEARTBEAT_ACK is sent as a reply. Capture it.
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket ack_packet,
-                              SctpPacket::Parse(a.cb.ConsumeSentPacket()));
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      SctpPacket ack_packet,
+      SctpPacket::Parse(a.cb.ConsumeSentPacket(), z->options));
   ASSERT_THAT(ack_packet.descriptors(), SizeIs(1));
   ASSERT_HAS_VALUE_AND_ASSIGN(
       HeartbeatAckChunk ack,
@@ -981,7 +993,7 @@ TEST_P(DcSctpSocketParametrizedTest, ExpectHeartbeatToBeSent) {
 
   std::vector<uint8_t> hb_packet_raw = a.cb.ConsumeSentPacket();
   ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket hb_packet,
-                              SctpPacket::Parse(hb_packet_raw));
+                              SctpPacket::Parse(hb_packet_raw, z->options));
   ASSERT_THAT(hb_packet.descriptors(), SizeIs(1));
   ASSERT_HAS_VALUE_AND_ASSIGN(
       HeartbeatRequestChunk hb,
@@ -1018,8 +1030,9 @@ TEST_P(DcSctpSocketParametrizedTest,
     AdvanceTime(a, *z, time_to_next_hearbeat);
 
     // Dropping every heartbeat.
-    ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket hb_packet,
-                                SctpPacket::Parse(a.cb.ConsumeSentPacket()));
+    ASSERT_HAS_VALUE_AND_ASSIGN(
+        SctpPacket hb_packet,
+        SctpPacket::Parse(a.cb.ConsumeSentPacket(), z->options));
     EXPECT_EQ(hb_packet.descriptors()[0].type, HeartbeatRequestChunk::kType);
 
     RTC_LOG(LS_INFO) << "Letting the heartbeat expire.";
@@ -1072,7 +1085,7 @@ TEST_P(DcSctpSocketParametrizedTest, RecoversAfterASuccessfulAck) {
 
   std::vector<uint8_t> hb_packet_raw = a.cb.ConsumeSentPacket();
   ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket hb_packet,
-                              SctpPacket::Parse(hb_packet_raw));
+                              SctpPacket::Parse(hb_packet_raw, z->options));
   ASSERT_THAT(hb_packet.descriptors(), SizeIs(1));
   ASSERT_HAS_VALUE_AND_ASSIGN(
       HeartbeatRequestChunk hb,
@@ -1092,8 +1105,9 @@ TEST_P(DcSctpSocketParametrizedTest, RecoversAfterASuccessfulAck) {
   RTC_LOG(LS_INFO) << "Expecting a new heartbeat";
   AdvanceTime(a, *z, time_to_next_hearbeat);
 
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket another_packet,
-                              SctpPacket::Parse(a.cb.ConsumeSentPacket()));
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      SctpPacket another_packet,
+      SctpPacket::Parse(a.cb.ConsumeSentPacket(), z->options));
   EXPECT_EQ(another_packet.descriptors()[0].type, HeartbeatRequestChunk::kType);
 }
 
@@ -1469,8 +1483,9 @@ TEST_P(DcSctpSocketParametrizedTest, ReceivingUnknownChunkRespondsWithError) {
   a.socket.ReceivePacket(b.Build());
 
   // ERROR is sent as a reply. Capture it.
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket reply_packet,
-                              SctpPacket::Parse(a.cb.ConsumeSentPacket()));
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      SctpPacket reply_packet,
+      SctpPacket::Parse(a.cb.ConsumeSentPacket(), z->options));
   ASSERT_THAT(reply_packet.descriptors(), SizeIs(1));
   ASSERT_HAS_VALUE_AND_ASSIGN(
       ErrorChunk error, ErrorChunk::Parse(reply_packet.descriptors()[0].data));
@@ -1517,7 +1532,7 @@ TEST(DcSctpSocketTest, PassingHighWatermarkWillOnlyAcceptCumAckTsn) {
   a.socket.Connect();
   std::vector<uint8_t> init_data = a.cb.ConsumeSentPacket();
   ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket init_packet,
-                              SctpPacket::Parse(init_data));
+                              SctpPacket::Parse(init_data, z.options));
   ASSERT_HAS_VALUE_AND_ASSIGN(
       InitChunk init_chunk,
       InitChunk::Parse(init_packet.descriptors()[0].data));
@@ -2237,7 +2252,7 @@ TEST(DcSctpSocketTest, ReceiveBothUnorderedAndOrderedWithSameTSN) {
   a.socket.Connect();
   std::vector<uint8_t> init_data = a.cb.ConsumeSentPacket();
   ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket init_packet,
-                              SctpPacket::Parse(init_data));
+                              SctpPacket::Parse(init_data, z.options));
   ASSERT_HAS_VALUE_AND_ASSIGN(
       InitChunk init_chunk,
       InitChunk::Parse(init_packet.descriptors()[0].data));

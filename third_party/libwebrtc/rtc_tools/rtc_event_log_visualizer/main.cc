@@ -399,7 +399,7 @@ int main(int argc, char* argv[]) {
         "Fraction lost (outgoing RTCP)", "Loss rate (percent)", plot);
   });
   auto GetCumulativeLost = [](const webrtc::rtcp::ReportBlock& block) -> float {
-    return block.cumulative_lost_signed();
+    return block.cumulative_lost();
   };
   plots.RegisterPlot("incoming_rtcp_cumulative_lost", [&](Plot* plot) {
     analyzer.CreateSenderAndReceiverReportPlot(

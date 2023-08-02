@@ -110,8 +110,10 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
   std::vector<AudioCodec> CollectCodecs(
       const std::vector<webrtc::AudioCodecSpec>& specs) const;
 
-  webrtc::SequenceChecker signal_thread_checker_;
-  webrtc::SequenceChecker worker_thread_checker_;
+  webrtc::SequenceChecker signal_thread_checker_{
+      webrtc::SequenceChecker::kDetached};
+  webrtc::SequenceChecker worker_thread_checker_{
+      webrtc::SequenceChecker::kDetached};
 
   // The audio device module.
   rtc::scoped_refptr<webrtc::AudioDeviceModule> adm_;
@@ -286,7 +288,8 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
 
   webrtc::TaskQueueBase* const worker_thread_;
   webrtc::ScopedTaskSafety task_safety_;
-  webrtc::SequenceChecker network_thread_checker_;
+  webrtc::SequenceChecker network_thread_checker_{
+      webrtc::SequenceChecker::kDetached};
 
   WebRtcVoiceEngine* const engine_ = nullptr;
   std::vector<AudioCodec> send_codecs_;

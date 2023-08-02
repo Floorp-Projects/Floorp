@@ -815,8 +815,37 @@ bool ContentHasHeaderExtension(const cricket::ContentInfo& content_info,
 
 }  // namespace
 
+void UpdateRtpHeaderExtensionPreferencesFromSdpMunging(
+    const cricket::SessionDescription* description,
+    TransceiverList* transceivers) {
+  // This integrates the RTP Header Extension Control API and local SDP munging
+  // for backward compability reasons. If something was enabled in the local
+  // description via SDP munging, consider it non-stopped in the API as well
+  // so that is shows up in subsequent offers/answers.
+  RTC_DCHECK(description);
+  RTC_DCHECK(transceivers);
+  for (const auto& content : description->contents()) {
+    auto transceiver = transceivers->FindByMid(content.name);
+    if (!transceiver) {
+      continue;
+    }
+    auto extension_capabilities = transceiver->GetHeaderExtensionsToNegotiate();
+    // Set the capability of every extension we see here to "sendrecv".
+    for (auto& ext : content.media_description()->rtp_header_extensions()) {
+      auto it = absl::c_find_if(extension_capabilities,
+                                [&ext](const RtpHeaderExtensionCapability c) {
+                                  return ext.uri == c.uri;
+                                });
+      if (it != extension_capabilities.end()) {
+        it->direction = RtpTransceiverDirection::kSendRecv;
+      }
+    }
+    transceiver->SetHeaderExtensionsToNegotiate(extension_capabilities);
+  }
+}
+
 // This class stores state related to a SetRemoteDescription operation, captures
-// and reports potential errors that migth occur and makes sure to notify the
+// and reports potential errors that might occur and makes sure to notify the
 // observer of the operation and the operations chain of completion.
 class SdpOfferAnswerHandler::RemoteDescriptionOperation {
  public:
@@ -1814,6 +1843,11 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
       local_ice_credentials_to_replace_->SatisfiesIceRestart(
           *current_local_description_)) {
     local_ice_credentials_to_replace_->ClearIceCredentials();
+  }
+
+  if (IsUnifiedPlan()) {
+    UpdateRtpHeaderExtensionPreferencesFromSdpMunging(
+        local_description()->description(), transceivers());
   }
 
   return RTCError::OK();
@@ -3134,7 +3168,7 @@ void SdpOfferAnswerHandler::OnOperationsChainEmpty() {
   }
 }
 
-absl::optional<bool> SdpOfferAnswerHandler::is_caller() {
+absl::optional<bool> SdpOfferAnswerHandler::is_caller() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
   return is_caller_;
 }
@@ -3234,17 +3268,59 @@ void SdpOfferAnswerHandler::AllocateSctpSids() {
     return;
   }
 
-  absl::optional<rtc::SSLRole> role =
-      network_thread()->BlockingCall([this, is_caller = is_caller()] {
+  absl::optional<rtc::SSLRole> guessed_role = GuessSslRole();
+  network_thread()->BlockingCall(
+      [&, data_channel_controller = data_channel_controller()] {
         RTC_DCHECK_RUN_ON(network_thread());
-        return pc_->GetSctpSslRole_n(is_caller);
+        absl::optional<rtc::SSLRole> role = pc_->GetSctpSslRole_n();
+        if (!role)
+          role = guessed_role;
+        if (role)
+          data_channel_controller->AllocateSctpSids(*role);
       });
+}
 
-  if (role) {
-    // TODO(webrtc:11547): Make this call on the network thread too once
-    // `AllocateSctpSids` has been updated.
-    data_channel_controller()->AllocateSctpSids(*role);
-  }
+absl::optional<rtc::SSLRole> SdpOfferAnswerHandler::GuessSslRole() const {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  if (!pc_->sctp_mid())
+    return absl::nullopt;
+
+  // TODO(bugs.webrtc.org/13668): This guesswork is guessing wrong (returning
+  // SSL_CLIENT = ACTIVE) if remote offer has role ACTIVE, but we'll be able
+  // to detect that by looking at the SDP.
+  //
+  // The phases of establishing an SCTP session are:
+  //
+  // Offerer:
+  //
+  // * Before negotiation: Neither is_caller nor sctp_mid exists.
+  // * After setting an offer as local description: is_caller is known (true),
+  //   sctp_mid is known, but we don't know the SSL role for sure (or if we'll
+  //   eventually get an SCTP session).
+  // * After setting an answer as the remote description: We know is_caller,
+  //   sctp_mid and that we'll get the SCTP channel established (m-section
+  //   wasn't rejected).
+  // * Special case: The SCTP  m-section was rejected: Close datachannels.
+  // * We MAY know the SSL role if we offered actpass and got back active or
+  //   passive; if the other end is a webrtc implementation, it will be active.
+  // * After the TLS handshake: We have a definitive answer on the SSL role.
+  //
+  // Answerer:
+  //
+  // * After setting an offer as remote description: We know is_caller (false).
+  // * If there was an SCTP session, we know the SCTP mid. We also know the
+  //   SSL role, since if the remote offer was actpass or passive, we'll answer
+  //   active, and if the remote offer was active, we're passive.
+  // * Special case: No SCTP m= line. We don't know for sure if the remote
+  //   doesn't support it or just didn't offer it. Not sure what we do in this
+  //   case (logic would suggest fire a `negotiationneeded` event and generate a
+  //   subsequent offer, but this needs to be tested).
+  // * After the TLS handshake: We know that TLS obeyed the protocol. There
+  //   should be an error surfaced somewhere if it didn't.
+  // * "Guessing" should always be correct if we get an SCTP session and are not
+  //   the offerer.
+
+  return is_caller() ? rtc::SSL_SERVER : rtc::SSL_CLIENT;
 }
 
 bool SdpOfferAnswerHandler::CheckIfNegotiationIsNeeded() {
@@ -3265,9 +3341,21 @@ bool SdpOfferAnswerHandler::CheckIfNegotiationIsNeeded() {
 
   // 4. If connection has created any RTCDataChannels, and no m= section in
   // description has been negotiated yet for data, return true.
-  if (data_channel_controller()->HasDataChannels()) {
-    if (!cricket::GetFirstDataContent(description->description()->contents()))
+  if (data_channel_controller()->HasUsedDataChannels()) {
+    const cricket::ContentInfo* data_content =
+        cricket::GetFirstDataContent(description->description()->contents());
+    if (!data_content) {
       return true;
+    }
+    // The remote end might have rejected the data content.
+    const cricket::ContentInfo* remote_data_content =
+        current_remote_description()
+            ? current_remote_description()->description()->GetContentByName(
+                  data_content->name)
+            : nullptr;
+    if (remote_data_content && remote_data_content->rejected) {
+      return true;
+    }
   }
   if (!ConfiguredForMedia()) {
     return false;
@@ -3814,14 +3902,9 @@ RTCError SdpOfferAnswerHandler::UpdateDataChannel(
     RTCError error(RTCErrorType::OPERATION_ERROR_WITH_DATA, sb.Release());
     error.set_error_detail(RTCErrorDetailType::DATA_CHANNEL_FAILURE);
     DestroyDataChannelTransport(error);
-  } else {
-    if (!data_channel_controller()->data_channel_transport()) {
-      RTC_LOG(LS_INFO) << "Creating data channel, mid=" << content.mid();
-      if (!CreateDataChannel(content.name)) {
-        return RTCError(RTCErrorType::INTERNAL_ERROR,
-                        "Failed to create data channel.");
-      }
-    }
+  } else if (!CreateDataChannel(content.name)) {
+    return RTCError(RTCErrorType::INTERNAL_ERROR,
+                    "Failed to create data channel.");
   }
   return RTCError::OK();
 }
@@ -4192,10 +4275,28 @@ void SdpOfferAnswerHandler::GetOptionsForUnifiedPlanOffer(
   }
   // Lastly, add a m-section if we have requested local data channels and an
   // m section does not already exist.
-  if (!pc_->GetDataMid() && data_channel_controller()->HasUsedDataChannels()) {
-    session_options->media_description_options.push_back(
-        GetMediaDescriptionOptionsForActiveData(
-            mid_generator_.GenerateString()));
+  if (!pc_->GetDataMid() && data_channel_controller()->HasUsedDataChannels() &&
+      data_channel_controller()->HasDataChannels()) {
+    // Attempt to recycle a stopped m-line.
+    // TODO(crbug.com/1442604): GetDataMid() should return the mid if one was
+    // ever created but rejected.
+    bool recycled = false;
+    for (size_t i = 0; i < session_options->media_description_options.size();
+         i++) {
+      auto media_description = session_options->media_description_options[i];
+      if (media_description.type == cricket::MEDIA_TYPE_DATA &&
+          media_description.stopped) {
+        session_options->media_description_options[i] =
+            GetMediaDescriptionOptionsForActiveData(media_description.mid);
+        recycled = true;
+        break;
+      }
+    }
+    if (!recycled) {
+      session_options->media_description_options.push_back(
+          GetMediaDescriptionOptionsForActiveData(
+              mid_generator_.GenerateString()));
+    }
   }
 }
 
@@ -5005,12 +5106,9 @@ RTCError SdpOfferAnswerHandler::CreateChannels(const SessionDescription& desc) {
   }
 
   const cricket::ContentInfo* data = cricket::GetFirstDataContent(&desc);
-  if (data && !data->rejected &&
-      !data_channel_controller()->data_channel_transport()) {
-    if (!CreateDataChannel(data->name)) {
-      return RTCError(RTCErrorType::INTERNAL_ERROR,
-                      "Failed to create data channel.");
-    }
+  if (data && !data->rejected && !CreateDataChannel(data->name)) {
+    return RTCError(RTCErrorType::INTERNAL_ERROR,
+                    "Failed to create data channel.");
   }
 
   return RTCError::OK();
@@ -5018,35 +5116,33 @@ RTCError SdpOfferAnswerHandler::CreateChannels(const SessionDescription& desc) {
 
 bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  if (!context_->network_thread()->BlockingCall([this, &mid] {
+  if (pc_->sctp_mid().has_value()) {
+    RTC_DCHECK_EQ(mid, *pc_->sctp_mid());
+    return true;  // data channel already created.
+  }
+
+  RTC_LOG(LS_INFO) << "Creating data channel, mid=" << mid;
+
+  absl::optional<std::string> transport_name =
+      context_->network_thread()->BlockingCall([&] {
         RTC_DCHECK_RUN_ON(context_->network_thread());
         return pc_->SetupDataChannelTransport_n(mid);
-      })) {
+      });
+  if (!transport_name)
     return false;
-  }
-  // TODO(tommi): Is this necessary? SetupDataChannelTransport_n() above
-  // will have queued up updating the transport name on the signaling thread
-  // and could update the mid at the same time. This here is synchronous
-  // though, but it changes the state of PeerConnection and makes it be
-  // out of sync (transport name not set while the mid is set).
-  pc_->SetSctpDataMid(mid);
+
+  pc_->SetSctpDataInfo(mid, *transport_name);
   return true;
 }
 
 void SdpOfferAnswerHandler::DestroyDataChannelTransport(RTCError error) {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  const bool has_sctp = pc_->sctp_mid().has_value();
-
-  if (has_sctp)
-    data_channel_controller()->OnTransportChannelClosed(error);
-
-  context_->network_thread()->BlockingCall([this] {
-    RTC_DCHECK_RUN_ON(context_->network_thread());
-    pc_->TeardownDataChannelTransport_n();
-  });
-
-  if (has_sctp)
-    pc_->ResetSctpDataMid();
+  context_->network_thread()->BlockingCall(
+      [&, data_channel_controller = data_channel_controller()] {
+        RTC_DCHECK_RUN_ON(context_->network_thread());
+        pc_->TeardownDataChannelTransport_n(error);
+      });
+  pc_->ResetSctpDataInfo();
 }
 
 void SdpOfferAnswerHandler::DestroyAllChannels() {

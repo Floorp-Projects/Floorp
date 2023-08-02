@@ -23,6 +23,7 @@
 #include "test/gtest.h"
 #include "test/scenario/scenario.h"
 
+using ::testing::IsEmpty;
 using ::testing::NiceMock;
 
 namespace webrtc {
@@ -357,6 +358,28 @@ TEST(GoogCcNetworkControllerTest, ProbeOnRouteChange) {
             kInitialBitrate * 12);
 
   update = controller->OnProcessInterval({.at_time = current_time});
+}
+
+TEST(GoogCcNetworkControllerTest, ProbeAfterRouteChangeWhenTransportWritable) {
+  NetworkControllerTestFixture fixture;
+  std::unique_ptr<NetworkControllerInterface> controller =
+      fixture.CreateController();
+  Timestamp current_time = Timestamp::Millis(123);
+
+  NetworkControlUpdate update = controller->OnNetworkAvailability(
+      {.at_time = current_time, .network_available = false});
+  EXPECT_THAT(update.probe_cluster_configs, IsEmpty());
+
+  update = controller->OnNetworkRouteChange(
+      CreateRouteChange(current_time, 2 * kInitialBitrate, DataRate::Zero(),
+                        20 * kInitialBitrate));
+  // Transport is not writable. So not point in sending a probe.
+  EXPECT_THAT(update.probe_cluster_configs, IsEmpty());
+
+  // Probe is sent when transport becomes writable.
+  update = controller->OnNetworkAvailability(
+      {.at_time = current_time, .network_available = true});
+  EXPECT_THAT(update.probe_cluster_configs, Not(IsEmpty()));
 }
 
 // Bandwidth estimation is updated when feedbacks are received.
@@ -945,9 +968,7 @@ TEST(GoogCcScenario, FallbackToLossBasedBweWithoutPacketFeedback) {
   EXPECT_GE(client->target_rate().kbps(), 500);
 
   // Update the network to create high loss ratio
-  net->UpdateConfig([](NetworkSimulationConfig* c) {
-    c->loss_rate = 0.15;
-  });
+  net->UpdateConfig([](NetworkSimulationConfig* c) { c->loss_rate = 0.15; });
   s.RunFor(TimeDelta::Seconds(20));
 
   // Bandwidth decreases thanks to loss based bwe v0.

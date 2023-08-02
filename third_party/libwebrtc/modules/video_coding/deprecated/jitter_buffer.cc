@@ -7,7 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "modules/video_coding/jitter_buffer.h"
+#include "modules/video_coding/deprecated/jitter_buffer.h"
 
 #include <algorithm>
 #include <limits>
@@ -17,8 +17,6 @@
 #include "modules/video_coding/deprecated/frame_buffer.h"
 #include "modules/video_coding/deprecated/jitter_buffer_common.h"
 #include "modules/video_coding/deprecated/packet.h"
-#include "modules/video_coding/include/video_coding.h"
-#include "modules/video_coding/internal_defines.h"
 #include "modules/video_coding/timing/inter_frame_delay_variation_calculator.h"
 #include "modules/video_coding/timing/jitter_estimator.h"
 #include "rtc_base/checks.h"
@@ -186,6 +184,10 @@ bool VCMJitterBuffer::Running() const {
 
 void VCMJitterBuffer::Flush() {
   MutexLock lock(&mutex_);
+  FlushInternal();
+}
+
+void VCMJitterBuffer::FlushInternal() {
   decodable_frames_.Reset(&free_frames_);
   incomplete_frames_.Reset(&free_frames_);
   last_decoded_state_.Reset();  // TODO(mikhal): sync reset.
@@ -378,7 +380,7 @@ VCMFrameBufferEnum VCMJitterBuffer::InsertPacket(const VCMPacket& packet,
       RTC_LOG(LS_WARNING)
           << num_consecutive_old_packets_
           << " consecutive old packets received. Flushing the jitter buffer.";
-      Flush();
+      FlushInternal();
       return kFlushIndicator;
     }
     return kOldPacket;

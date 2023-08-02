@@ -24,6 +24,7 @@
 #include "test/call_test.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/video_test_constants.h"
 
 using ::testing::Contains;
 
@@ -36,11 +37,11 @@ constexpr int kFramesToObserve = 10;
 
 uint8_t PayloadNameToPayloadType(const std::string& payload_name) {
   if (payload_name == "VP8") {
-    return test::CallTest::kPayloadTypeVP8;
+    return test::VideoTestConstants::kPayloadTypeVP8;
   } else if (payload_name == "VP9") {
-    return test::CallTest::kPayloadTypeVP9;
+    return test::VideoTestConstants::kPayloadTypeVP9;
   } else if (payload_name == "H264") {
-    return test::CallTest::kPayloadTypeH264;
+    return test::VideoTestConstants::kPayloadTypeH264;
   } else {
     RTC_DCHECK_NOTREACHED();
     return 0;
@@ -63,7 +64,8 @@ int RemoveOlderOrEqual(uint32_t timestamp, std::vector<uint32_t>* timestamps) {
 class FrameObserver : public test::RtpRtcpObserver,
                       public rtc::VideoSinkInterface<VideoFrame> {
  public:
-  FrameObserver() : test::RtpRtcpObserver(test::CallTest::kDefaultTimeout) {}
+  FrameObserver()
+      : test::RtpRtcpObserver(test::VideoTestConstants::kDefaultTimeout) {}
 
   void Reset(uint8_t expected_payload_type) {
     MutexLock lock(&mutex_);
@@ -79,7 +81,7 @@ class FrameObserver : public test::RtpRtcpObserver,
 
     RtpPacket rtp_packet;
     EXPECT_TRUE(rtp_packet.Parse(packet, length));
-    EXPECT_EQ(rtp_packet.Ssrc(), test::CallTest::kVideoSendSsrcs[0]);
+    EXPECT_EQ(rtp_packet.Ssrc(), test::VideoTestConstants::kVideoSendSsrcs[0]);
     if (rtp_packet.payload_size() == 0)
       return SEND_PACKET;  // Skip padding, may be sent after OnFrame is called.
 

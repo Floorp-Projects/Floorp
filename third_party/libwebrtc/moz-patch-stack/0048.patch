@@ -20,7 +20,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d0b311007c033e838
  11 files changed, 56 insertions(+), 10 deletions(-)
 
 diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
-index 7430681f45..85fe185d90 100644
+index bde48aacde..0a78e2641d 100644
 --- a/audio/audio_receive_stream.cc
 +++ b/audio/audio_receive_stream.cc
 @@ -39,6 +39,8 @@ std::string AudioReceiveStreamInterface::Config::Rtp::ToString() const {
@@ -43,7 +43,7 @@ index 7430681f45..85fe185d90 100644
  }  // namespace
  
 diff --git a/audio/channel_receive.cc b/audio/channel_receive.cc
-index 9c3f52a651..9697ed0d1a 100644
+index e6435ad1b1..9a1abd5bfa 100644
 --- a/audio/channel_receive.cc
 +++ b/audio/channel_receive.cc
 @@ -102,7 +102,8 @@ class ChannelReceive : public ChannelReceiveInterface,
@@ -93,7 +93,7 @@ index 9c3f52a651..9697ed0d1a 100644
  
  }  // namespace voe
 diff --git a/audio/channel_receive.h b/audio/channel_receive.h
-index d1d24e540f..60cfaa3355 100644
+index 13edf04053..c192039894 100644
 --- a/audio/channel_receive.h
 +++ b/audio/channel_receive.h
 @@ -186,7 +186,8 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
@@ -107,7 +107,7 @@ index d1d24e540f..60cfaa3355 100644
  }  // namespace voe
  }  // namespace webrtc
 diff --git a/call/audio_receive_stream.h b/call/audio_receive_stream.h
-index 64fdf66925..c21a6b3f1f 100644
+index b0e94fee2a..acafff9e32 100644
 --- a/call/audio_receive_stream.h
 +++ b/call/audio_receive_stream.h
 @@ -19,6 +19,7 @@
@@ -181,7 +181,7 @@ index 6e558e1e1d..d95abf7286 100644
  static constexpr size_t kNumMediaTypes = 5;
  enum class RtpPacketMediaType : size_t {
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index a8e99cbd14..39a151bc47 100644
+index 3210e7a9e3..e883668eac 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.cc
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
 @@ -145,6 +145,7 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
@@ -200,7 +200,7 @@ index a8e99cbd14..39a151bc47 100644
        rtcp_intra_frame_observer_(config.intra_frame_callback),
        rtcp_loss_notification_observer_(config.rtcp_loss_notification_observer),
        network_state_estimate_observer_(config.network_state_estimate_observer),
-@@ -823,6 +825,10 @@ bool RTCPReceiver::HandleBye(const CommonHeader& rtcp_block) {
+@@ -812,6 +814,10 @@ bool RTCPReceiver::HandleBye(const CommonHeader& rtcp_block) {
      return false;
    }
  
@@ -211,7 +211,7 @@ index a8e99cbd14..39a151bc47 100644
    // Clear our lists.
    rtts_.erase(bye.sender_ssrc());
    EraseIf(received_report_blocks_, [&](const auto& elem) {
-@@ -1245,12 +1251,20 @@ std::vector<rtcp::TmmbItem> RTCPReceiver::TmmbrReceived() {
+@@ -1234,12 +1240,20 @@ std::vector<rtcp::TmmbItem> RTCPReceiver::TmmbrReceived() {
  }
  
  bool RTCPReceiver::RtcpRrTimeoutLocked(Timestamp now) {
@@ -247,7 +247,7 @@ index 68bb16bd8b..3864aa3144 100644
    RtcpLossNotificationObserver* const rtcp_loss_notification_observer_;
    NetworkStateEstimateObserver* const network_state_estimate_observer_;
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index 3be50835a4..c07e50b5a3 100644
+index b791a5c88d..3211097eeb 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 @@ -73,6 +73,9 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {

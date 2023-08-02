@@ -60,9 +60,19 @@
       'dimensions': {
         'os': 'iOS-12.4.1',
         'pool': 'WebRTC',
-        'id': 'build15-a7',
+        'id': 'mac-254-e504',
       },
     },
+  },
+  'ios_runtime_cache_14_5': {
+    '$mixin_append': {
+      'swarming': {
+        'named_caches': [{
+          'name': 'runtime_ios_14_5',
+          'path': 'Runtime-ios-14.5'
+        }]
+      }
+    }
   },
   'limited-capacity': {
     # Sometimes there are multiple tests that can be run only on one machine.

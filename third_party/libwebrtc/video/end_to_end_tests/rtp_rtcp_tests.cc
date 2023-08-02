@@ -22,6 +22,7 @@
 #include "test/call_test.h"
 #include "test/gtest.h"
 #include "test/rtcp_packet_parser.h"
+#include "test/video_test_constants.h"
 
 namespace webrtc {
 namespace {
@@ -41,7 +42,7 @@ void RtpRtcpEndToEndTest::RespectsRtcpMode(RtcpMode rtcp_mode) {
   class RtcpModeObserver : public test::EndToEndTest {
    public:
     explicit RtcpModeObserver(RtcpMode rtcp_mode)
-        : EndToEndTest(kDefaultTimeout),
+        : EndToEndTest(test::VideoTestConstants::kDefaultTimeout),
           rtcp_mode_(rtcp_mode),
           sent_rtp_(0),
           sent_rtcp_(0) {}
@@ -94,8 +95,10 @@ void RtpRtcpEndToEndTest::RespectsRtcpMode(RtcpMode rtcp_mode) {
         VideoSendStream::Config* send_config,
         std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
         VideoEncoderConfig* encoder_config) override {
-      send_config->rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
-      (*receive_configs)[0].rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
+      send_config->rtp.nack.rtp_history_ms =
+          test::VideoTestConstants::kNackRtpHistoryMs;
+      (*receive_configs)[0].rtp.nack.rtp_history_ms =
+          test::VideoTestConstants::kNackRtpHistoryMs;
       (*receive_configs)[0].rtp.rtcp_mode = rtcp_mode_;
     }
 
@@ -168,12 +171,13 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
   class RtpSequenceObserver : public test::RtpRtcpObserver {
    public:
     explicit RtpSequenceObserver(bool use_rtx)
-        : test::RtpRtcpObserver(kDefaultTimeout),
-          ssrcs_to_observe_(kNumSimulcastStreams) {
-      for (size_t i = 0; i < kNumSimulcastStreams; ++i) {
-        ssrc_is_rtx_[kVideoSendSsrcs[i]] = false;
+        : test::RtpRtcpObserver(test::VideoTestConstants::kDefaultTimeout),
+          ssrcs_to_observe_(test::VideoTestConstants::kNumSimulcastStreams) {
+      for (size_t i = 0; i < test::VideoTestConstants::kNumSimulcastStreams;
+           ++i) {
+        ssrc_is_rtx_[test::VideoTestConstants::kVideoSendSsrcs[i]] = false;
         if (use_rtx)
-          ssrc_is_rtx_[kSendRtxSsrcs[i]] = true;
+          ssrc_is_rtx_[test::VideoTestConstants::kSendRtxSsrcs[i]] = true;
       }
     }
 
@@ -188,7 +192,8 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
                               uint32_t timestamp,
                               bool only_padding)
         RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
-      static const int32_t kMaxTimestampGap = kDefaultTimeout.ms() * 90;
+      static const int32_t kMaxTimestampGap =
+          test::VideoTestConstants::kDefaultTimeout.ms() * 90;
       auto timestamp_it = last_observed_timestamp_.find(ssrc);
       if (timestamp_it == last_observed_timestamp_.end()) {
         EXPECT_FALSE(only_padding);
@@ -285,13 +290,16 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
     CreateCalls();
     CreateSendTransport(BuiltInNetworkBehaviorConfig(), &observer);
     CreateReceiveTransport(BuiltInNetworkBehaviorConfig(), &observer);
-    CreateSendConfig(kNumSimulcastStreams, 0, 0);
+    CreateSendConfig(test::VideoTestConstants::kNumSimulcastStreams, 0, 0);
 
     if (use_rtx) {
-      for (size_t i = 0; i < kNumSimulcastStreams; ++i) {
-        GetVideoSendConfig()->rtp.rtx.ssrcs.push_back(kSendRtxSsrcs[i]);
+      for (size_t i = 0; i < test::VideoTestConstants::kNumSimulcastStreams;
+           ++i) {
+        GetVideoSendConfig()->rtp.rtx.ssrcs.push_back(
+            test::VideoTestConstants::kSendRtxSsrcs[i]);
       }
-      GetVideoSendConfig()->rtp.rtx.payload_type = kSendRtxPayloadType;
+      GetVideoSendConfig()->rtp.rtx.payload_type =
+          test::VideoTestConstants::kSendRtxPayloadType;
     }
 
     GetVideoEncoderConfig()->video_stream_factory =
@@ -341,7 +349,7 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
       GetVideoSendStream()->ReconfigureVideoEncoder(
           GetVideoEncoderConfig()->Copy());
     });
-    observer.ResetExpectedSsrcs(kNumSimulcastStreams);
+    observer.ResetExpectedSsrcs(test::VideoTestConstants::kNumSimulcastStreams);
     EXPECT_TRUE(observer.Wait())
         << "Timed out waiting for all SSRCs to send packets.";
 
@@ -357,7 +365,7 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
       GetVideoSendStream()->ReconfigureVideoEncoder(
           GetVideoEncoderConfig()->Copy());
     });
-    observer.ResetExpectedSsrcs(kNumSimulcastStreams);
+    observer.ResetExpectedSsrcs(test::VideoTestConstants::kNumSimulcastStreams);
     EXPECT_TRUE(observer.Wait())
         << "Timed out waiting for all SSRCs to send packets.";
   }
@@ -387,7 +395,7 @@ TEST_F(RtpRtcpEndToEndTest, DISABLED_TestFlexfecRtpStatePreservation) {
   class RtpSequenceObserver : public test::RtpRtcpObserver {
    public:
     RtpSequenceObserver()
-        : test::RtpRtcpObserver(kDefaultTimeout),
+        : test::RtpRtcpObserver(test::VideoTestConstants::kDefaultTimeout),
           num_flexfec_packets_sent_(0) {}
 
     void ResetPacketCount() {
@@ -405,10 +413,12 @@ TEST_F(RtpRtcpEndToEndTest, DISABLED_TestFlexfecRtpStatePreservation) {
       const uint32_t timestamp = rtp_packet.Timestamp();
       const uint32_t ssrc = rtp_packet.Ssrc();
 
-      if (ssrc == kVideoSendSsrcs[0] || ssrc == kSendRtxSsrcs[0]) {
+      if (ssrc == test::VideoTestConstants::kVideoSendSsrcs[0] ||
+          ssrc == test::VideoTestConstants::kSendRtxSsrcs[0]) {
         return SEND_PACKET;
       }
-      EXPECT_EQ(kFlexfecSendSsrc, ssrc) << "Unknown SSRC sent.";
+      EXPECT_EQ(test::VideoTestConstants::kFlexfecSendSsrc, ssrc)
+          << "Unknown SSRC sent.";
 
       ++num_flexfec_packets_sent_;
 
@@ -476,18 +486,24 @@ TEST_F(RtpRtcpEndToEndTest, DISABLED_TestFlexfecRtpStatePreservation) {
 
     GetVideoSendConfig()->encoder_settings.encoder_factory = &encoder_factory;
     GetVideoSendConfig()->rtp.payload_name = "VP8";
-    GetVideoSendConfig()->rtp.payload_type = kVideoSendPayloadType;
-    GetVideoSendConfig()->rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
-    GetVideoSendConfig()->rtp.rtx.ssrcs.push_back(kSendRtxSsrcs[0]);
-    GetVideoSendConfig()->rtp.rtx.payload_type = kSendRtxPayloadType;
+    GetVideoSendConfig()->rtp.payload_type =
+        test::VideoTestConstants::kVideoSendPayloadType;
+    GetVideoSendConfig()->rtp.nack.rtp_history_ms =
+        test::VideoTestConstants::kNackRtpHistoryMs;
+    GetVideoSendConfig()->rtp.rtx.ssrcs.push_back(
+        test::VideoTestConstants::kSendRtxSsrcs[0]);
+    GetVideoSendConfig()->rtp.rtx.payload_type =
+        test::VideoTestConstants::kSendRtxPayloadType;
     GetVideoEncoderConfig()->codec_type = kVideoCodecVP8;
 
     CreateMatchingReceiveConfigs();
-    video_receive_configs_[0].rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
-    video_receive_configs_[0].rtp.rtx_ssrc = kSendRtxSsrcs[0];
-    video_receive_configs_[0]
-        .rtp.rtx_associated_payload_types[kSendRtxPayloadType] =
-        kVideoSendPayloadType;
+    video_receive_configs_[0].rtp.nack.rtp_history_ms =
+        test::VideoTestConstants::kNackRtpHistoryMs;
+    video_receive_configs_[0].rtp.rtx_ssrc =
+        test::VideoTestConstants::kSendRtxSsrcs[0];
+    video_receive_configs_[0].rtp.rtx_associated_payload_types
+        [test::VideoTestConstants::kSendRtxPayloadType] =
+        test::VideoTestConstants::kVideoSendPayloadType;
 
     // The matching FlexFEC receive config is not created by
     // CreateMatchingReceiveConfigs since this is not a test::BaseTest.
@@ -500,7 +516,8 @@ TEST_F(RtpRtcpEndToEndTest, DISABLED_TestFlexfecRtpStatePreservation) {
         GetVideoSendConfig()->rtp.flexfec.ssrc;
     flexfec_receive_config.protected_media_ssrcs =
         GetVideoSendConfig()->rtp.flexfec.protected_media_ssrcs;
-    flexfec_receive_config.rtp.local_ssrc = kReceiverLocalVideoSsrc;
+    flexfec_receive_config.rtp.local_ssrc =
+        test::VideoTestConstants::kReceiverLocalVideoSsrc;
     flexfec_receive_configs_.push_back(flexfec_receive_config);
 
     CreateFlexfecStreams();

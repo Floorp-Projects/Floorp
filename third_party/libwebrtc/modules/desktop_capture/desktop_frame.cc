@@ -133,6 +133,7 @@ void DesktopFrame::CopyFrameInfoFrom(const DesktopFrame& other) {
   *mutable_updated_region() = other.updated_region();
   set_top_left(other.top_left());
   set_icc_profile(other.icc_profile());
+  set_may_contain_cursor(other.may_contain_cursor());
 }
 
 void DesktopFrame::MoveFrameInfoFrom(DesktopFrame* other) {
@@ -142,6 +143,7 @@ void DesktopFrame::MoveFrameInfoFrom(DesktopFrame* other) {
   mutable_updated_region()->Swap(other->mutable_updated_region());
   set_top_left(other->top_left());
   set_icc_profile(other->icc_profile());
+  set_may_contain_cursor(other->may_contain_cursor());
 }
 
 bool DesktopFrame::FrameDataIsBlack() const {

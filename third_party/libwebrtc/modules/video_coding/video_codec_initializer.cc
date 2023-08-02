@@ -213,7 +213,7 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
     case kVideoCodecVP9: {
       // When the SvcRateAllocator is used, "active" is controlled by
       // `SpatialLayer::active` instead.
-      if (video_codec.IsSinglecastOrAllNonFirstLayersInactive()) {
+      if (video_codec.numberOfSimulcastStreams <= 1) {
         video_codec.simulcastStream[0].active = codec_active;
       }
 
@@ -242,7 +242,7 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
         if (spatial_layers.empty())
           break;
         // Use codec bitrate limits if spatial layering is not requested.
-        if (config.simulcast_layers.size() <= 1 &&
+        if (video_codec.numberOfSimulcastStreams <= 1 &&
             ScalabilityModeToNumSpatialLayers(*scalability_mode) == 1) {
           spatial_layers.back().minBitrate = video_codec.minBitrate;
           spatial_layers.back().targetBitrate = video_codec.maxBitrate;

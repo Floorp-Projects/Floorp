@@ -186,7 +186,7 @@ class TaskQueueMetronome : public webrtc::Metronome {
 
  private:
   const TimeDelta tick_period_;
-  SequenceChecker sequence_checker_;
+  SequenceChecker sequence_checker_{SequenceChecker::kDetached};
   std::vector<absl::AnyInvocable<void() &&>> callbacks_;
   ScopedTaskSafetyDetached safety_;
 };

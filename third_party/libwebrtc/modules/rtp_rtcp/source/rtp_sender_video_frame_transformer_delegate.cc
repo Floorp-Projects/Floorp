@@ -45,7 +45,6 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
         expected_retransmission_time_ms_(expected_retransmission_time_ms),
         ssrc_(ssrc),
         csrcs_(csrcs),
-        metadata_(Metadata()),
         rid_(rid) {
     RTC_DCHECK_GE(payload_type_, 0);
     RTC_DCHECK_LE(payload_type_, 127);
@@ -69,8 +68,6 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
     return frame_type_ == VideoFrameType::kVideoFrameKey;
   }
 
-  const VideoFrameMetadata& GetMetadata() const override { return metadata_; }
-
   VideoFrameMetadata Metadata() const override {
     VideoFrameMetadata metadata = header_.GetAsMetadata();
     metadata.SetSsrc(ssrc_);
@@ -82,9 +79,6 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
     header_.SetFromMetadata(metadata);
     ssrc_ = metadata.GetSsrc();
     csrcs_ = metadata.GetCsrcs();
-    // Cache a copy to allow GetMetadata() to return references.
-    // TODO(crbug.com/webrtc/14709): Remove once GetMetadata() is removed.
-    metadata_ = Metadata();
   }
 
   const RTPVideoHeader& GetHeader() const { return header_; }
@@ -116,12 +110,6 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
 
   uint32_t ssrc_;
   std::vector<uint32_t> csrcs_;
-
-  // This is a copy of the value returned by `Metadata()`, only needed because
-  // the interface says GetMetadata() must return a const ref rather than a
-  // value.
-  // TODO(crbug.com/webrtc/14709): Delete once GetMetdata() is removed.
-  VideoFrameMetadata metadata_;
   const std::string rid_;
 };
 }  // namespace
@@ -191,7 +179,7 @@ void RTPSenderVideoFrameTransformerDelegate::SendVideo(
                      transformed_video_frame->GetData(),
                      transformed_video_frame->GetHeader(),
                      transformed_video_frame->GetExpectedRetransmissionTimeMs(),
-                     transformed_video_frame->GetMetadata().GetCsrcs());
+                     transformed_video_frame->Metadata().GetCsrcs());
 }
 
 void RTPSenderVideoFrameTransformerDelegate::SetVideoStructureUnderLock(

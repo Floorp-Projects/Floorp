@@ -80,7 +80,7 @@ Scenario::~Scenario() {
   if (start_time_.IsFinite())
     Stop();
   for (auto& call_client : clients_) {
-    call_client->transport_->Disconnect();
+    call_client->SendTask([&] { call_client->transport_->Disconnect(); });
     call_client->UnBind();
   }
 }

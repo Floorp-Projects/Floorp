@@ -207,9 +207,9 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/26eee332d844bd3f9
  .../linux/x11/screen_capturer_x11.cc          |   2 +-
  .../linux/x11/window_capturer_x11.cc          |  12 +-
  .../linux/x11/window_capturer_x11.h           |   4 +
- .../desktop_capture/linux/x11/x_error_trap.cc |  70 ++++---
+ .../desktop_capture/linux/x11/x_error_trap.cc |  68 +++---
  .../desktop_capture/linux/x11/x_error_trap.h  |  29 ++-
- .../mouse_cursor_monitor_win.cc               |   7 +-
+ .../mouse_cursor_monitor_win.cc               |   4 +
  .../win/screen_capture_utils.cc               |   3 +-
  .../win/screen_capturer_win_gdi.cc            |   1 +
  .../win/screen_capturer_win_magnifier.cc      |  16 +-
@@ -236,7 +236,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/26eee332d844bd3f9
  modules/video_coding/generic_decoder.cc       |   5 +-
  test/fuzzers/rtp_packet_fuzzer.cc             |   5 +
  test/vcm_capturer.cc                          |   2 +-
- 45 files changed, 652 insertions(+), 134 deletions(-)
+ 45 files changed, 649 insertions(+), 132 deletions(-)
 
 diff --git a/api/rtp_headers.cc b/api/rtp_headers.cc
 index 0573e54684..40d4690397 100644
@@ -289,10 +289,10 @@ index 5d4d4190d5..9868365f24 100644
  struct RTC_EXPORT RTPHeader {
    RTPHeader();
 diff --git a/api/rtp_parameters.cc b/api/rtp_parameters.cc
-index c48b8da02c..c1d12e5d8d 100644
+index 54132bcdbb..cf8b3ad3dc 100644
 --- a/api/rtp_parameters.cc
 +++ b/api/rtp_parameters.cc
-@@ -148,7 +148,8 @@ bool RtpExtension::IsSupportedForAudio(absl::string_view uri) {
+@@ -151,7 +151,8 @@ bool RtpExtension::IsSupportedForAudio(absl::string_view uri) {
           uri == webrtc::RtpExtension::kTransportSequenceNumberV2Uri ||
           uri == webrtc::RtpExtension::kMidUri ||
           uri == webrtc::RtpExtension::kRidUri ||
@@ -303,7 +303,7 @@ index c48b8da02c..c1d12e5d8d 100644
  
  bool RtpExtension::IsSupportedForVideo(absl::string_view uri) {
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index f4c3295ff5..0e52e8fb3f 100644
+index c40cfcf28e..63a3a2d53d 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -20,6 +20,7 @@ rtc_library("call_interfaces") {
@@ -757,25 +757,22 @@ index ac591c272e..cfd29eca66 100644
  
    rtc::scoped_refptr<SharedXDisplay> x_display_;
 diff --git a/modules/desktop_capture/linux/x11/x_error_trap.cc b/modules/desktop_capture/linux/x11/x_error_trap.cc
-index 94e3a03c73..3314dd286c 100644
+index 24c2065111..3314dd286c 100644
 --- a/modules/desktop_capture/linux/x11/x_error_trap.cc
 +++ b/modules/desktop_capture/linux/x11/x_error_trap.cc
-@@ -10,50 +10,60 @@
+@@ -12,48 +12,58 @@
  
- #include "modules/desktop_capture/linux/x11/x_error_trap.h"
- 
--#include <atomic>
--
  #include <stddef.h>
  
--#include "rtc_base/checks.h"
--
--namespace webrtc {
+-#include <atomic>
 +#include <limits>
  
--namespace {
-+#include "rtc_base/checks.h"
+ #include "rtc_base/checks.h"
  
+-namespace webrtc {
+-
+-namespace {
+-
 -static int g_last_xserver_error_code = 0;
 -static std::atomic<Display*> g_display_for_error_handler = nullptr;
  
@@ -906,7 +903,7 @@ index 1f21ab969c..df7e86bf03 100644
  
  }  // namespace webrtc
 diff --git a/modules/desktop_capture/mouse_cursor_monitor_win.cc b/modules/desktop_capture/mouse_cursor_monitor_win.cc
-index c892d59955..18ef43eeb4 100644
+index c892d59955..aa2347423c 100644
 --- a/modules/desktop_capture/mouse_cursor_monitor_win.cc
 +++ b/modules/desktop_capture/mouse_cursor_monitor_win.cc
 @@ -88,6 +88,7 @@ MouseCursorMonitorWin::~MouseCursorMonitorWin() {
@@ -926,17 +923,7 @@ index c892d59955..18ef43eeb4 100644
    RTC_DCHECK(callback_);
  
    CURSORINFO cursor_info;
-@@ -107,7 +110,8 @@ void MouseCursorMonitorWin::Capture() {
-   }
- 
-   if (!IsSameCursorShape(cursor_info, last_cursor_)) {
--    if (cursor_info.flags == CURSOR_SUPPRESSED) {
-+    // Mozilla - CURSOR_SUPPRESSED is win8 and above; so we seem not to be able to see the symbol
-+    if (cursor_info.flags != CURSOR_SHOWING) {
-       // The cursor is intentionally hidden now, send an empty bitmap.
-       last_cursor_ = cursor_info;
-       callback_->OnMouseCursor(new MouseCursor(
-@@ -168,6 +172,7 @@ void MouseCursorMonitorWin::Capture() {
+@@ -168,6 +171,7 @@ void MouseCursorMonitorWin::Capture() {
  }
  
  DesktopRect MouseCursorMonitorWin::GetScreenRect() {
@@ -1937,10 +1924,10 @@ index 60afb986de..0e10a8fa3a 100644
    }
  
 diff --git a/test/vcm_capturer.cc b/test/vcm_capturer.cc
-index a037f9eff6..e02fc722b2 100644
+index 0a9226ef6f..620c1c02f3 100644
 --- a/test/vcm_capturer.cc
 +++ b/test/vcm_capturer.cc
-@@ -81,7 +81,7 @@ void VcmCapturer::Destroy() {
+@@ -83,7 +83,7 @@ void VcmCapturer::Destroy() {
      return;
  
    vcm_->StopCapture();

@@ -45,7 +45,7 @@ class RtpReceiverDelegateAdapter : public RtpReceiverObserverInterface {
 
 + (cricket::MediaType)nativeMediaTypeForMediaType:(RTCRtpMediaType)mediaType;
 
-+ (NSString*)stringForMediaType:(RTCRtpMediaType)mediaType;
++ (NSString *)stringForMediaType:(RTCRtpMediaType)mediaType;
 
 @end
 

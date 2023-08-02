@@ -114,8 +114,8 @@ TEST(VideoDecoderFactoryTemplate, OpenH264) {
 TEST(VideoDecoderFactoryTemplate, Dav1d) {
   VideoDecoderFactoryTemplate<Dav1dDecoderTemplateAdapter> factory;
   auto formats = factory.GetSupportedFormats();
-  EXPECT_THAT(formats.size(), 1);
-  EXPECT_THAT(formats[0], Field(&SdpVideoFormat::name, "AV1"));
+  EXPECT_THAT(formats, Not(IsEmpty()));
+  EXPECT_THAT(formats, Each(Field(&SdpVideoFormat::name, "AV1")));
   EXPECT_THAT(factory.CreateVideoDecoder(formats[0]), Ne(nullptr));
 }
 

@@ -30,7 +30,7 @@ index 1918354009..b23350e6d1 100644
      // single 'timing frame'.
      absl::optional<webrtc::TimingFrameInfo> timing_frame_info;
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index 69fd1f6f07..61df619546 100644
+index 5f53c5823c..77029ffcd9 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.cc
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
 @@ -392,6 +392,13 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
@@ -63,10 +63,10 @@ index 567b5b36f3..0ec14bc8c6 100644
    int32_t RTT(uint32_t remote_ssrc,
                int64_t* last_rtt_ms,
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index c3e5e93223..fbbebceb8d 100644
+index 75fee87deb..7fd56600c7 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-@@ -507,6 +507,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
+@@ -506,6 +506,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
  }
  
  // Received RTCP report.
@@ -93,10 +93,10 @@ index c8e90c25b0..38e20261c5 100644
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
    // Within this list, the ReportBlockData::RTCPReportBlock::source_ssrc(),
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index bbcd5d83b1..cb90ca792f 100644
+index d33ef86169..12c2ee2317 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-@@ -487,6 +487,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
+@@ -486,6 +486,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
  }
  
  // Received RTCP report.
@@ -123,10 +123,10 @@ index e6da54929b..79833288de 100644
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
    // Within this list, the ReportBlockData::RTCPReportBlock::source_ssrc(),
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index d49051be63..6d37898442 100644
+index 66a29c9ddd..7f329ab1a7 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -393,6 +393,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
+@@ -392,6 +392,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
        StreamDataCounters* rtp_counters,
        StreamDataCounters* rtx_counters) const = 0;
  

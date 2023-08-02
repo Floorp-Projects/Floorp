@@ -344,8 +344,15 @@ class RTC_EXPORT StatsReport {
     // TODO(tommi): Move `name` and `display_name` out of the Value struct.
     const StatsValueName name;
 
+   protected:
+#if RTC_DCHECK_IS_ON
+    friend class StatsReport;
+    void DetachSequenceChecker() { thread_checker_.Detach(); }
+    void AttachSequenceChecker() { RTC_DCHECK_RUN_ON(&thread_checker_); }
+#endif
+
    private:
-    webrtc::SequenceChecker thread_checker_;
+    webrtc::SequenceChecker thread_checker_{webrtc::SequenceChecker::kDetached};
     mutable int ref_count_ RTC_GUARDED_BY(thread_checker_) = 0;
 
     const Type type_;
@@ -403,6 +410,19 @@ class RTC_EXPORT StatsReport {
 
   const Value* FindValue(StatsValueName name) const;
 
+#if RTC_DCHECK_IS_ON
+  void DetachSequenceCheckers() {
+    for (auto& v : values_) {
+      v.second->DetachSequenceChecker();
+    }
+  }
+  void AttachSequenceCheckers() {
+    for (auto& v : values_) {
+      v.second->AttachSequenceChecker();
+    }
+  }
+#endif
+
  private:
   // The unique identifier for this object.
   // This is used as a key for this report in ordered containers,
@@ -441,13 +461,16 @@ class StatsCollection {
   StatsReport* FindOrAddNew(const StatsReport::Id& id);
   StatsReport* ReplaceOrAddNew(const StatsReport::Id& id);
 
+  Container DetachCollection();
+  void MergeCollection(Container collection);
+
   // Looks for a report with the given `id`.  If one is not found, null
   // will be returned.
   StatsReport* Find(const StatsReport::Id& id);
 
  private:
   Container list_;
-  webrtc::SequenceChecker thread_checker_;
+  webrtc::SequenceChecker thread_checker_{SequenceChecker::kDetached};
 };
 
 }  // namespace webrtc

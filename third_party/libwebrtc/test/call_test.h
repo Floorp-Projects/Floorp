@@ -26,6 +26,7 @@
 #include "api/units/time_delta.h"
 #include "api/video/video_bitrate_allocator_factory.h"
 #include "call/call.h"
+#include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_device/include/test_audio_device.h"
 #include "test/encoder_settings.h"
 #include "test/fake_decoder.h"
@@ -35,6 +36,7 @@
 #include "test/rtp_rtcp_observer.h"
 #include "test/run_loop.h"
 #include "test/scoped_key_value_config.h"
+#include "test/video_test_constants.h"
 
 namespace webrtc {
 namespace test {
@@ -46,34 +48,6 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
   CallTest();
   virtual ~CallTest();
 
-  static constexpr size_t kNumSsrcs = 6;
-  static const int kNumSimulcastStreams = 3;
-  static const int kDefaultWidth = 320;
-  static const int kDefaultHeight = 180;
-  static const int kDefaultFramerate = 30;
-  static constexpr TimeDelta kDefaultTimeout = TimeDelta::Seconds(30);
-  static constexpr TimeDelta kLongTimeout = TimeDelta::Seconds(120);
-  enum classPayloadTypes : uint8_t {
-    kSendRtxPayloadType = 98,
-    kRtxRedPayloadType = 99,
-    kVideoSendPayloadType = 100,
-    kAudioSendPayloadType = 103,
-    kRedPayloadType = 118,
-    kUlpfecPayloadType = 119,
-    kFlexfecPayloadType = 120,
-    kPayloadTypeH264 = 122,
-    kPayloadTypeVP8 = 123,
-    kPayloadTypeVP9 = 124,
-    kPayloadTypeGeneric = 125,
-    kFakeVideoSendPayloadType = 126,
-  };
-  static const uint32_t kSendRtxSsrcs[kNumSsrcs];
-  static const uint32_t kVideoSendSsrcs[kNumSsrcs];
-  static const uint32_t kAudioSendSsrc;
-  static const uint32_t kFlexfecSendSsrc;
-  static const uint32_t kReceiverLocalVideoSsrc;
-  static const uint32_t kReceiverLocalAudioSsrc;
-  static const int kNackRtpHistoryMs;
   static const std::map<uint8_t, MediaType> payload_type_map_;
 
  protected:
@@ -271,8 +245,8 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
   std::vector<RtpExtension> rtp_extensions_;
   rtc::scoped_refptr<AudioProcessing> apm_send_;
   rtc::scoped_refptr<AudioProcessing> apm_recv_;
-  rtc::scoped_refptr<TestAudioDeviceModule> fake_send_audio_device_;
-  rtc::scoped_refptr<TestAudioDeviceModule> fake_recv_audio_device_;
+  rtc::scoped_refptr<AudioDeviceModule> fake_send_audio_device_;
+  rtc::scoped_refptr<AudioDeviceModule> fake_recv_audio_device_;
 };
 
 class BaseTest : public RtpRtcpObserver {
@@ -290,9 +264,8 @@ class BaseTest : public RtpRtcpObserver {
 
   virtual std::unique_ptr<TestAudioDeviceModule::Capturer> CreateCapturer();
   virtual std::unique_ptr<TestAudioDeviceModule::Renderer> CreateRenderer();
-  virtual void OnFakeAudioDevicesCreated(
-      TestAudioDeviceModule* send_audio_device,
-      TestAudioDeviceModule* recv_audio_device);
+  virtual void OnFakeAudioDevicesCreated(AudioDeviceModule* send_audio_device,
+                                         AudioDeviceModule* recv_audio_device);
 
   virtual void ModifySenderBitrateConfig(BitrateConstraints* bitrate_config);
   virtual void ModifyReceiverBitrateConfig(BitrateConstraints* bitrate_config);

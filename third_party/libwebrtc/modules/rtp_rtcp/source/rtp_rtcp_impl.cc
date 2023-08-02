@@ -21,7 +21,6 @@
 
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "api/transport/field_trial_based_config.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/dlrr.h"
 #include "modules/rtp_rtcp/source/rtcp_sender.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_config.h"

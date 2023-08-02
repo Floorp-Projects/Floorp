@@ -1,42 +1,31 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 9 Jun 2023 19:59:00 +0000
-Subject: Bug 1837647 - limit GetDpiForMonitor to return default value to fix
- Win7 tests. r=dbaker,webrtc-reviewers
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Tue, 4 Jul 2023 08:34:00 +0000
+Subject: Bug 1839829 - WebRTC backport: PipeWire video capture - initialize
+ pw_stream raw pointer member r=webrtc-reviewers,ng
 
-Upstream commit 60795e8c7a added a call to ::GetDpiForMonitor which is only
-supported in Win8 and newer.  This is causing perma-orange on try, so we'll
-disable it for now and fix properly in Bug 1837667.
+This is a simple backport of an WebRTC upstream change.
 
-Differential Revision: https://phabricator.services.mozilla.com/D180460
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/501ade4b55d97797e4cf4416ddf1aa5aca207b9e
+Upstream commit: e21745a78b430ed4f2119b6342acbaa30a52b406
+
+Differential Revision: https://phabricator.services.mozilla.com/D182671
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2174ddbbb4733a8f9b9cef34d2e6c3a1ceb244d4
 ---
- modules/desktop_capture/win/screen_capture_utils.cc | 6 ++++++
- 1 file changed, 6 insertions(+)
+ modules/video_capture/linux/video_capture_pipewire.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/desktop_capture/win/screen_capture_utils.cc b/modules/desktop_capture/win/screen_capture_utils.cc
-index 5409417a88..c0144b0ef3 100644
---- a/modules/desktop_capture/win/screen_capture_utils.cc
-+++ b/modules/desktop_capture/win/screen_capture_utils.cc
-@@ -147,6 +147,11 @@ DesktopRect GetFullscreenRect() {
- }
+diff --git a/modules/video_capture/linux/video_capture_pipewire.h b/modules/video_capture/linux/video_capture_pipewire.h
+index e2c8d1b168..2a58c7d3e0 100644
+--- a/modules/video_capture/linux/video_capture_pipewire.h
++++ b/modules/video_capture/linux/video_capture_pipewire.h
+@@ -48,7 +48,7 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
+   VideoCaptureCapability frameInfo_;
+   bool started_;
  
- DesktopVector GetDpiForMonitor(HMONITOR monitor) {
-+// See Bug 1837647 - upstream commit 60795e8c7a added this method using
-+// ::GetDpiForMonitor which is not available on Win7 machines.  For now,
-+// we'll return the default case of {96, 96} until we can properly
-+// restore the functionality for newer machines (See Bug 1837667).
-+#if 0
-   UINT dpi_x, dpi_y;
-   // MDT_EFFECTIVE_DPI includes the scale factor as well as the system DPI.
-   HRESULT hr = ::GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpi_x, &dpi_y);
-@@ -163,6 +168,7 @@ DesktopVector GetDpiForMonitor(HMONITOR monitor) {
-     ReleaseDC(nullptr, hdc);
-     return dpi;
-   }
-+#endif
- 
-   // If everything fails, then return the default DPI for Windows.
-   return {96, 96};
+-  struct pw_stream* stream_;
++  struct pw_stream* stream_ = nullptr;
+   struct spa_hook stream_listener_;
+ };
+ }  // namespace videocapturemodule
 -- 
 2.34.1
 

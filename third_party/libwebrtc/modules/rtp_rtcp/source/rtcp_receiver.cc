@@ -619,33 +619,23 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   if (!registered_ssrcs_.contains(report_block.source_ssrc()))
     return;
 
-  last_received_rb_ = clock_->CurrentTime();
+  Timestamp now = clock_->CurrentTime();
+  last_received_rb_ = now;
 
   ReportBlockData* report_block_data =
       &received_report_blocks_[report_block.source_ssrc()];
-  RTCPReportBlock rtcp_report_block;
-  rtcp_report_block.sender_ssrc = remote_ssrc;
-  rtcp_report_block.source_ssrc = report_block.source_ssrc();
-  rtcp_report_block.fraction_lost = report_block.fraction_lost();
-  rtcp_report_block.packets_lost = report_block.cumulative_lost_signed();
   if (report_block.extended_high_seq_num() >
       report_block_data->report_block().extended_highest_sequence_number) {
     // We have successfully delivered new RTP packets to the remote side after
     // the last RR was sent from the remote side.
     last_increased_sequence_number_ = last_received_rb_;
   }
-  rtcp_report_block.extended_highest_sequence_number =
-      report_block.extended_high_seq_num();
-  rtcp_report_block.jitter = report_block.jitter();
-  rtcp_report_block.delay_since_last_sender_report =
-      report_block.delay_since_last_sr();
-  rtcp_report_block.last_sender_report_timestamp = report_block.last_sr();
+  NtpTime now_ntp = clock_->ConvertTimestampToNtpTime(now);
   // Number of seconds since 1900 January 1 00:00 GMT (see
   // https://tools.ietf.org/html/rfc868).
   report_block_data->SetReportBlock(
-      rtcp_report_block,
-      (clock_->CurrentNtpInMilliseconds() - rtc::kNtpJan1970Millisecs) *
-          rtc::kNumMicrosecsPerMillisec);
+      remote_ssrc, report_block,
+      Timestamp::Millis(now_ntp.ToMs() - rtc::kNtpJan1970Millisecs));
 
   uint32_t send_time_ntp = report_block.last_sr();
   // RFC3550, section 6.4.1, LSR field discription states:
@@ -655,14 +645,13 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   if (send_time_ntp != 0) {
     uint32_t delay_ntp = report_block.delay_since_last_sr();
     // Local NTP time.
-    uint32_t receive_time_ntp =
-        CompactNtp(clock_->ConvertTimestampToNtpTime(last_received_rb_));
+    uint32_t receive_time_ntp = CompactNtp(now_ntp);
 
     // RTT in 1/(2^16) seconds.
     uint32_t rtt_ntp = receive_time_ntp - delay_ntp - send_time_ntp;
     // Convert to 1/1000 seconds (milliseconds).
     TimeDelta rtt = CompactNtpRttToTimeDelta(rtt_ntp);
-    report_block_data->AddRoundTripTimeSample(rtt.ms());
+    report_block_data->AddRoundTripTimeSample(rtt);
     if (report_block.source_ssrc() == local_media_ssrc()) {
       rtts_[remote_ssrc].AddRtt(rtt);
     }

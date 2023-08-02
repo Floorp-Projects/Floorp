@@ -1,32 +1,41 @@
-From: Jan-Ivar Bruaroey <jib@mozilla.com>
-Date: Wed, 28 Jun 2023 20:45:00 -0400
-Subject: Bug 1839451 - (fix-0f43da2248) Keep mozilla's
- RTCPReceiver::RemoteRTCPSenderInfo function working.
+From: Byron Campen <docfaraday@gmail.com>
+Date: Thu, 20 Jul 2023 14:24:00 +0000
+Subject: Bug 1838080: Ensure that last ref to transformation_queue_ is not
+ released on itself. r=pehrsons,webrtc-reviewers
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/154c9cdb386d0f50c5e1549270e1af6ab4969602
+Differential Revision: https://phabricator.services.mozilla.com/D181699
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/91d9e8b6a5c430a73561ffd2330865f04fcb1a6d
 ---
- modules/rtp_rtcp/source/rtcp_receiver.cc | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ .../rtp_sender_video_frame_transformer_delegate.cc       | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index e00761726c..3cbbb915fe 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.cc
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -399,10 +399,10 @@ void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
-                                         int64_t* ntp_timestamp_ms,
-                                         int64_t* remote_ntp_timestamp_ms) const {
-   MutexLock lock(&rtcp_receiver_lock_);
--  *packet_count = remote_sender_packet_count_;
--  *octet_count = remote_sender_octet_count_;
--  *ntp_timestamp_ms = last_received_sr_ntp_.ToMs();
--  *remote_ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
-+  *packet_count = remote_sender_.packets_sent;
-+  *octet_count = remote_sender_.bytes_sent;
-+  *ntp_timestamp_ms = remote_sender_.last_arrival_timestamp.ToMs();
-+  *remote_ntp_timestamp_ms = remote_sender_.last_remote_timestamp.ToMs();
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+index 71f7db6f70..79ceae5209 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+@@ -17,6 +17,7 @@
+ #include "api/task_queue/task_queue_factory.h"
+ #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
+ #include "rtc_base/checks.h"
++#include "rtc_base/event.h"
+ 
+ namespace webrtc {
+ namespace {
+@@ -202,6 +203,14 @@ void RTPSenderVideoFrameTransformerDelegate::Reset() {
+     MutexLock lock(&sender_lock_);
+     sender_ = nullptr;
+   }
++  // Wait until all pending tasks are executed, to ensure that the last ref
++  // standing is not on the transformation queue.
++  rtc::Event flush;
++  transformation_queue_->PostTask([this, &flush]() {
++    RTC_DCHECK_RUN_ON(transformation_queue_.get());
++    flush.Set();
++  });
++  flush.Wait(rtc::Event::kForever);
  }
  
- std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
+ std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
 -- 
 2.34.1
 

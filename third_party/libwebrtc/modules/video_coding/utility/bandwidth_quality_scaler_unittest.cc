@@ -97,17 +97,16 @@ class BandwidthQualityScalerTest
       : scoped_field_trial_(GetParam()),
         task_queue_("BandwidthQualityScalerTestQueue"),
         handler_(std::make_unique<FakeBandwidthQualityScalerHandler>()) {
-    task_queue_.SendTask(
-        [this] {
-          bandwidth_quality_scaler_ =
-              std::unique_ptr<BandwidthQualityScalerUnderTest>(
-                  new BandwidthQualityScalerUnderTest(handler_.get()));
-          bandwidth_quality_scaler_->SetResolutionBitrateLimits(
-              EncoderInfoSettings::
-                  GetDefaultSinglecastBitrateLimitsWhenQpIsUntrusted());
-          // Only for testing. Set first_timestamp_ in RateStatistics to 0.
-          bandwidth_quality_scaler_->ReportEncodeInfo(0, 0, 0, 0);
-        });
+    task_queue_.SendTask([this] {
+      bandwidth_quality_scaler_ =
+          std::unique_ptr<BandwidthQualityScalerUnderTest>(
+              new BandwidthQualityScalerUnderTest(handler_.get()));
+      bandwidth_quality_scaler_->SetResolutionBitrateLimits(
+          EncoderInfoSettings::
+              GetDefaultSinglecastBitrateLimitsWhenQpIsUntrusted());
+      // Only for testing. Set first_timestamp_ in RateStatistics to 0.
+      bandwidth_quality_scaler_->ReportEncodeInfo(0, 0, 0, 0);
+    });
   }
 
   ~BandwidthQualityScalerTest() {
@@ -150,37 +149,35 @@ class BandwidthQualityScalerTest
 
   void TriggerBandwidthQualityScalerTest(
       const std::vector<FrameConfig>& frame_configs) {
-    task_queue_.SendTask(
-        [frame_configs, this] {
-          RTC_CHECK(!frame_configs.empty());
+    task_queue_.SendTask([frame_configs, this] {
+      RTC_CHECK(!frame_configs.empty());
 
-          int total_frame_nums = 0;
-          for (const FrameConfig& frame_config : frame_configs) {
-            total_frame_nums += frame_config.frame_num;
-          }
+      int total_frame_nums = 0;
+      for (const FrameConfig& frame_config : frame_configs) {
+        total_frame_nums += frame_config.frame_num;
+      }
 
-          EXPECT_EQ(
-              kFramerateFps * kDefaultBitrateStateUpdateInterval.seconds(),
-              total_frame_nums);
+      EXPECT_EQ(kFramerateFps * kDefaultBitrateStateUpdateInterval.seconds(),
+                total_frame_nums);
 
-          uint32_t time_send_to_scaler_ms_ = rtc::TimeMillis();
-          for (size_t i = 0; i < frame_configs.size(); ++i) {
-            const FrameConfig& config = frame_configs[i];
-            absl::optional<VideoEncoder::ResolutionBitrateLimits>
-                suitable_bitrate = GetDefaultSuitableBitrateLimit(
-                    config.actual_width * config.actual_height);
-            EXPECT_TRUE(suitable_bitrate);
-            for (int j = 0; j <= config.frame_num; ++j) {
-              time_send_to_scaler_ms_ += kDefaultEncodeTime.ms();
-              int frame_size_bytes =
-                  GetFrameSizeBytes(config, suitable_bitrate.value());
-              RTC_CHECK(frame_size_bytes > 0);
-              bandwidth_quality_scaler_->ReportEncodeInfo(
-                  frame_size_bytes, time_send_to_scaler_ms_,
-                  config.actual_width, config.actual_height);
-            }
-          }
-        });
+      uint32_t time_send_to_scaler_ms_ = rtc::TimeMillis();
+      for (size_t i = 0; i < frame_configs.size(); ++i) {
+        const FrameConfig& config = frame_configs[i];
+        absl::optional<VideoEncoder::ResolutionBitrateLimits> suitable_bitrate =
+            GetDefaultSuitableBitrateLimit(config.actual_width *
+                                           config.actual_height);
+        EXPECT_TRUE(suitable_bitrate);
+        for (int j = 0; j <= config.frame_num; ++j) {
+          time_send_to_scaler_ms_ += kDefaultEncodeTime.ms();
+          int frame_size_bytes =
+              GetFrameSizeBytes(config, suitable_bitrate.value());
+          RTC_CHECK(frame_size_bytes > 0);
+          bandwidth_quality_scaler_->ReportEncodeInfo(
+              frame_size_bytes, time_send_to_scaler_ms_, config.actual_width,
+              config.actual_height);
+        }
+      }
+    });
   }
 
   test::ScopedFieldTrials scoped_field_trial_;

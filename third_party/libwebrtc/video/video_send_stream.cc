@@ -149,8 +149,7 @@ VideoSendStream::VideoSendStream(
     const std::map<uint32_t, RtpPayloadState>& suspended_payload_states,
     std::unique_ptr<FecController> fec_controller,
     const FieldTrialsView& field_trials)
-    : rtp_transport_queue_(transport->GetWorkerQueue()),
-      transport_(transport),
+    : transport_(transport),
       stats_proxy_(clock, config, encoder_config.content_type, field_trials),
       config_(std::move(config)),
       content_type_(encoder_config.content_type),
@@ -237,12 +236,7 @@ void VideoSendStream::StartPerRtpStream(const std::vector<bool> active_layers) {
   }
   active_layers_string << "}";
   RTC_LOG(LS_INFO) << "StartPerRtpStream: " << active_layers_string.str();
-
-  rtp_transport_queue_->RunOrPost(
-      SafeTask(transport_queue_safety_, [this, active_layers] {
-        send_stream_.StartPerRtpStream(active_layers);
-      }));
-
+  send_stream_.StartPerRtpStream(active_layers);
   running_ = running;
 }
 
@@ -252,13 +246,7 @@ void VideoSendStream::Stop() {
     return;
   RTC_DLOG(LS_INFO) << "VideoSendStream::Stop";
   running_ = false;
-  rtp_transport_queue_->RunOrPost(SafeTask(transport_queue_safety_, [this] {
-    // As the stream can get re-used and implicitly restarted via changing
-    // the state of the active layers, we do not mark the
-    // `transport_queue_safety_` flag with `SetNotAlive()` here. That's only
-    // done when we stop permanently via `StopPermanentlyAndGetRtpStates()`.
-    send_stream_.Stop();
-  }));
+  send_stream_.Stop();
 }
 
 bool VideoSendStream::started() {
@@ -300,9 +288,7 @@ void VideoSendStream::ReconfigureVideoEncoder(VideoEncoderConfig config,
 }
 
 VideoSendStream::Stats VideoSendStream::GetStats() {
-  // TODO(perkj, solenberg): Some test cases in EndToEndTest call GetStats from
-  // a network thread. See comment in Call::GetStats().
-  // RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   return stats_proxy_.GetStats();
 }
 
@@ -320,13 +306,9 @@ void VideoSendStream::StopPermanentlyAndGetRtpStates(
   // Always run these cleanup steps regardless of whether running_ was set
   // or not. This will unregister callbacks before destruction.
   // See `VideoSendStreamImpl::StopVideoSendStream` for more.
-  rtp_transport_queue_->RunSynchronous(
-      [this, rtp_state_map, payload_state_map]() {
-        transport_queue_safety_->SetNotAlive();
-        send_stream_.Stop();
-        *rtp_state_map = send_stream_.GetRtpStates();
-        *payload_state_map = send_stream_.GetRtpPayloadStates();
-      });
+  send_stream_.Stop();
+  *rtp_state_map = send_stream_.GetRtpStates();
+  *payload_state_map = send_stream_.GetRtpPayloadStates();
 }
 
 void VideoSendStream::DeliverRtcp(const uint8_t* packet, size_t length) {
@@ -335,6 +317,7 @@ void VideoSendStream::DeliverRtcp(const uint8_t* packet, size_t length) {
 }
 
 void VideoSendStream::GenerateKeyFrame(const std::vector<std::string>& rids) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   // Map rids to layers. If rids is empty, generate a keyframe for all layers.
   std::vector<VideoFrameType> next_frames(config_.rtp.ssrcs.size(),
                                           VideoFrameType::kVideoFrameKey);

@@ -305,9 +305,6 @@ WebRtcVoiceEngine::WebRtcVoiceEngine(
       audio_frame_processor_(audio_frame_processor),
       minimized_remsampling_on_mobile_trial_enabled_(
           IsEnabled(trials, "WebRTC-Audio-MinimizeResamplingOnMobile")) {
-  // This may be called from any thread, so detach thread checkers.
-  worker_thread_checker_.Detach();
-  signal_thread_checker_.Detach();
   RTC_LOG(LS_INFO) << "WebRtcVoiceEngine::WebRtcVoiceEngine";
   RTC_DCHECK(decoder_factory);
   RTC_DCHECK(encoder_factory);
@@ -1265,7 +1262,6 @@ WebRtcVoiceMediaChannel::WebRtcVoiceMediaChannel(
       audio_config_(config.audio),
       codec_pair_id_(codec_pair_id),
       crypto_options_(crypto_options) {
-  network_thread_checker_.Detach();
   RTC_LOG(LS_VERBOSE) << "WebRtcVoiceMediaChannel::WebRtcVoiceMediaChannel";
   RTC_DCHECK(call);
   SetOptions(options);
@@ -2335,7 +2331,7 @@ bool WebRtcVoiceMediaChannel::GetSendStats(VoiceMediaSendInfo* info) {
     sinfo.retransmitted_packets_sent = stats.retransmitted_packets_sent;
     sinfo.packets_lost = stats.packets_lost;
     sinfo.fraction_lost = stats.fraction_lost;
-    sinfo.nacks_rcvd = stats.nacks_rcvd;
+    sinfo.nacks_received = stats.nacks_received;
     sinfo.target_bitrate = stats.target_bitrate_bps;
     sinfo.codec_name = stats.codec_name;
     sinfo.codec_payload_type = stats.codec_payload_type;
@@ -2391,9 +2387,10 @@ bool WebRtcVoiceMediaChannel::GetReceiveStats(VoiceMediaReceiveInfo* info,
         stream.second->GetStats(get_and_clear_legacy_stats);
     VoiceReceiverInfo rinfo;
     rinfo.add_ssrc(stats.remote_ssrc);
-    rinfo.payload_bytes_rcvd = stats.payload_bytes_rcvd;
-    rinfo.header_and_padding_bytes_rcvd = stats.header_and_padding_bytes_rcvd;
-    rinfo.packets_rcvd = stats.packets_rcvd;
+    rinfo.payload_bytes_received = stats.payload_bytes_received;
+    rinfo.header_and_padding_bytes_received =
+        stats.header_and_padding_bytes_received;
+    rinfo.packets_received = stats.packets_received;
     rinfo.fec_packets_received = stats.fec_packets_received;
     rinfo.fec_packets_discarded = stats.fec_packets_discarded;
     rinfo.packets_lost = stats.packets_lost;

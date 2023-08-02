@@ -487,6 +487,10 @@ class WebrtcVideoConduit
   // Protected by mRendererMonitor
   dom::RTCVideoFrameHistoryInternal mReceivedFrameHistory;
 
+  // Written only on the main thread.  Guarded by mMutex, except for
+  // reads on the main thread.
+  std::vector<webrtc::RtpSource> mRtpSources;
+
   // Thread safe
   Atomic<bool> mTransportActive = Atomic<bool>(false);
   MediaEventProducer<void> mRtcpByeEvent;

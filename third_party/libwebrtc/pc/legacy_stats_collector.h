@@ -165,11 +165,13 @@ class LegacyStatsCollector : public LegacyStatsCollectorInterface {
                                        const StatsReport::Id& channel_report_id,
                                        const cricket::ConnectionInfo& info);
 
-  void ExtractDataInfo();
+  void ExtractDataInfo_n(StatsCollection* reports);
 
   // Returns the `transport_names_by_mid` member from the SessionStats as
-  // gathered and used to populate the stats.
-  std::map<std::string, std::string> ExtractSessionInfo();
+  // gathered and used to populate the stats. Contains one synchronous hop
+  // to the network thread to get this information along with querying data
+  // channel stats at the same time and populating `reports_`.
+  std::map<std::string, std::string> ExtractSessionAndDataInfo();
 
   void ExtractBweInfo();
   void ExtractMediaInfo(
