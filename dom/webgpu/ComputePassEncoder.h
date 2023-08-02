@@ -58,7 +58,8 @@ class ComputePassEncoder final : public ObjectBase,
   // self
   void SetPipeline(const ComputePipeline& aPipeline);
 
-  void DispatchWorkgroups(uint32_t x, uint32_t y, uint32_t z);
+  void DispatchWorkgroups(uint32_t workgroupCountX, uint32_t workgroupCountY,
+                          uint32_t workgroupCountZ);
   void DispatchWorkgroupsIndirect(const Buffer& aIndirectBuffer,
                                   uint64_t aIndirectOffset);
 
