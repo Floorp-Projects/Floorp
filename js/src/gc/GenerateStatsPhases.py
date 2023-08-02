@@ -147,6 +147,9 @@ PhaseKindGraphRoots = [
                     # The following are only used for parallel phase times:
                     addPhaseKind("PARALLEL_MARK_MARK", "Parallel marking work", 79),
                     addPhaseKind("PARALLEL_MARK_WAIT", "Waiting for work", 80),
+                    addPhaseKind(
+                        "PARALLEL_MARK_OTHER", "Parallel marking overhead", 82
+                    ),
                 ],
             ),
         ],
