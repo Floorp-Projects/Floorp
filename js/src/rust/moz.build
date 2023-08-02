@@ -18,6 +18,9 @@ if CONFIG["JS_ENABLE_SMOOSH"]:
 if CONFIG["MOZ_MEMORY"]:
     features += ["moz_memory"]
 
+if CONFIG["MOZ_ICU4X"]:
+    features += ["icu4x"]
+
 RustLibrary("jsrust", features)
 
 if CONFIG["JS_SHARED_LIBRARY"]:

@@ -14,6 +14,7 @@ moz_memory = ['mozglue-static/moz_memory']
 simd-accel = ['jsrust_shared/simd-accel']
 smoosh = ['jsrust_shared/smoosh']
 gluesmith = ['jsrust_shared/gluesmith']
+icu4x = ['jsrust_shared/icu4x']
 
 [dependencies]
 mozilla-central-workspace-hack = { version = "0.1", features = ["jsrust"], optional = true }
