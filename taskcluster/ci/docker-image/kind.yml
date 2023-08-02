@@ -154,12 +154,6 @@ jobs:
         symbol: I(deb11)
         parent: debian11-base
         definition: debian-build
-    debian11-repackage:
-        symbol: I(deb11-rpk)
-        parent: debian11-base
-        definition: debian-repackage
-        packages:
-            - deb11-mercurial
     deb11-toolchain-build:
         symbol: I(deb11-toolchain)
         parent: debian11-base
