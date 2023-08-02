@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <meta charset="utf-8"/>
+    <title>menclose roundedbox</title>
+    <link rel="stylesheet" href="/fonts/ahem.css" />
+    <style>
+      math, #box {
+          font: 25px/1 Ahem;
+      }
+    </style>
+
+    <script type="text/javascript">
+      function doTest()
+      {
+          var box = document.getElementById("roundedbox").getBoundingClientRect();
+          r = document.getElementById("box");
+          r.style.left = `calc(${box.left}px - .25em)`;
+          r.style.top = `calc(${box.top}px - .25em)`
+          r.style.width = `calc(${box.width}px + .5em)`;
+          r.style.height = `calc(${box.height}px + .5em)`;
+          document.documentElement.removeAttribute("class");
+      }
+      document.documentElement.addEventListener("TestRendered",doTest);
+    </script>
+  </head>
+  <body>
+    <div style="position: absolute; left: 20px; top: 20px;">
+      <math>
+        <mphantom>
+          <menclose id="roundedbox" notation="roundedbox">
+            <mspace width="200px" height="100px"></mspace>
+          </menclose>
+        </mphantom>
+      </math>
+    </div>
+
+    <div id="box" style="position: absolute; box-sizing: border-box; border:.5em solid green; border-radius: .5em;"></div>
+</div>
+
+</body>
+</html>
