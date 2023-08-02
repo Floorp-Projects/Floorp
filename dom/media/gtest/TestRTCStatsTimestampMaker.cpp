@@ -9,7 +9,9 @@
 #include "libwebrtcglue/SystemTime.h"
 
 using namespace mozilla;
-using namespace dom;
+using dom::PerformanceService;
+using dom::RTCStatsTimestamp;
+using dom::RTCStatsTimestampMaker;
 
 static constexpr auto kWebrtcTimeOffset = webrtc::Timestamp::Seconds(123456789);
 
