@@ -6,7 +6,7 @@
 #ifndef mozilla_a11y_DocAccessible_h__
 #define mozilla_a11y_DocAccessible_h__
 
-#include "HyperTextAccessibleWrap.h"
+#include "HyperTextAccessible.h"
 #include "AccEvent.h"
 
 #include "nsClassHashtable.h"
@@ -42,7 +42,7 @@ class TNotification;
  * represents a document. Tabs, in-process iframes, and out-of-process iframes
  * all use this class to represent the doc they contain.
  */
-class DocAccessible : public HyperTextAccessibleWrap,
+class DocAccessible : public HyperTextAccessible,
                       public nsIDocumentObserver,
                       public nsSupportsWeakReference {
   NS_DECL_ISUPPORTS_INHERITED

@@ -26,7 +26,7 @@ role HTMLListAccessible::NativeRole() const {
 }
 
 uint64_t HTMLListAccessible::NativeState() const {
-  return HyperTextAccessibleWrap::NativeState() | states::READONLY;
+  return HyperTextAccessible::NativeState() | states::READONLY;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,7 +34,7 @@ uint64_t HTMLListAccessible::NativeState() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 HTMLLIAccessible::HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc)
-    : HyperTextAccessibleWrap(aContent, aDoc) {
+    : HyperTextAccessible(aContent, aDoc) {
   mType = eHTMLLiType;
 }
 
@@ -44,7 +44,7 @@ role HTMLLIAccessible::NativeRole() const {
 }
 
 uint64_t HTMLLIAccessible::NativeState() const {
-  return HyperTextAccessibleWrap::NativeState() | states::READONLY;
+  return HyperTextAccessible::NativeState() | states::READONLY;
 }
 
 nsRect HTMLLIAccessible::BoundsInAppUnits() const {

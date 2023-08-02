@@ -48,7 +48,7 @@ using namespace mozilla::a11y;
 
 HTMLTableCellAccessible::HTMLTableCellAccessible(nsIContent* aContent,
                                                  DocAccessible* aDoc)
-    : HyperTextAccessibleWrap(aContent, aDoc) {
+    : HyperTextAccessible(aContent, aDoc) {
   mType = eHTMLTableCellType;
   mGenericTypes |= eTableCell;
 }
@@ -68,7 +68,7 @@ role HTMLTableCellAccessible::NativeRole() const {
 }
 
 uint64_t HTMLTableCellAccessible::NativeState() const {
-  uint64_t state = HyperTextAccessibleWrap::NativeState();
+  uint64_t state = HyperTextAccessible::NativeState();
 
   nsIFrame* frame = mContent->GetPrimaryFrame();
   NS_ASSERTION(frame, "No frame for valid cell accessible!");
@@ -81,12 +81,11 @@ uint64_t HTMLTableCellAccessible::NativeState() const {
 }
 
 uint64_t HTMLTableCellAccessible::NativeInteractiveState() const {
-  return HyperTextAccessibleWrap::NativeInteractiveState() | states::SELECTABLE;
+  return HyperTextAccessible::NativeInteractiveState() | states::SELECTABLE;
 }
 
 already_AddRefed<AccAttributes> HTMLTableCellAccessible::NativeAttributes() {
-  RefPtr<AccAttributes> attributes =
-      HyperTextAccessibleWrap::NativeAttributes();
+  RefPtr<AccAttributes> attributes = HyperTextAccessible::NativeAttributes();
 
   // We only need to expose table-cell-index to clients. If we're in the content
   // process, we don't need this, so building a CachedTableAccessible is very
@@ -142,8 +141,8 @@ void HTMLTableCellAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
                                                   int32_t aModType,
                                                   const nsAttrValue* aOldValue,
                                                   uint64_t aOldState) {
-  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
-                                               aModType, aOldValue, aOldState);
+  HyperTextAccessible::DOMAttributeChanged(aNameSpaceID, aAttribute, aModType,
+                                           aOldValue, aOldState);
 
   if (aAttribute == nsGkAtoms::headers || aAttribute == nsGkAtoms::abbr ||
       aAttribute == nsGkAtoms::scope) {
@@ -347,8 +346,8 @@ void HTMLTableAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
                                               int32_t aModType,
                                               const nsAttrValue* aOldValue,
                                               uint64_t aOldState) {
-  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
-                                               aModType, aOldValue, aOldState);
+  HyperTextAccessible::DOMAttributeChanged(aNameSpaceID, aAttribute, aModType,
+                                           aOldValue, aOldState);
 
   if (aAttribute == nsGkAtoms::summary) {
     nsAutoString name;

@@ -26,7 +26,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 XULTabAccessible::XULTabAccessible(nsIContent* aContent, DocAccessible* aDoc)
-    : HyperTextAccessibleWrap(aContent, aDoc) {}
+    : HyperTextAccessible(aContent, aDoc) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULTabAccessible: LocalAccessible
@@ -105,7 +105,7 @@ Relation XULTabAccessible::RelationByType(RelationType aType) const {
 }
 
 void XULTabAccessible::ApplyARIAState(uint64_t* aState) const {
-  HyperTextAccessibleWrap::ApplyARIAState(aState);
+  HyperTextAccessible::ApplyARIAState(aState);
   // XUL tab has an implicit ARIA role of tab, so support aria-selected.
   // Don't use aria::MapToState because that will set the SELECTABLE state
   // even if the tab is disabled.

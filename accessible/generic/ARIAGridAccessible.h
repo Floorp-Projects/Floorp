@@ -6,7 +6,7 @@
 #ifndef MOZILLA_A11Y_ARIAGridAccessible_h_
 #define MOZILLA_A11Y_ARIAGridAccessible_h_
 
-#include "HyperTextAccessibleWrap.h"
+#include "HyperTextAccessible.h"
 
 namespace mozilla {
 namespace a11y {
@@ -14,12 +14,12 @@ namespace a11y {
 /**
  * Accessible for ARIA gridcell and rowheader/columnheader.
  */
-class ARIAGridCellAccessible : public HyperTextAccessibleWrap {
+class ARIAGridCellAccessible : public HyperTextAccessible {
  public:
   ARIAGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(ARIAGridCellAccessible,
-                                       HyperTextAccessibleWrap)
+                                       HyperTextAccessible)
 
   // LocalAccessible
   virtual void ApplyARIAState(uint64_t* aState) const override;
