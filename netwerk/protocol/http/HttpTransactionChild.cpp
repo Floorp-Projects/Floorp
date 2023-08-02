@@ -344,6 +344,7 @@ static TimingStructArgs ToTimingStructArgs(TimingStruct aTiming) {
   args.requestStart() = aTiming.requestStart;
   args.responseStart() = aTiming.responseStart;
   args.responseEnd() = aTiming.responseEnd;
+  args.transactionPending() = aTiming.transactionPending;
   return args;
 }
 
@@ -509,6 +510,8 @@ ResourceTimingStructArgs HttpTransactionChild::GetTimingAttributes() {
   args.encodedBodySize() = mLogicalOffset;
   args.redirectStart() = mRedirectStart;
   args.redirectEnd() = mRedirectEnd;
+  args.transferSize() = mTransaction->GetTransferSize();
+  args.transactionPending() = mTransaction->GetPendingTime();
   return args;
 }
 

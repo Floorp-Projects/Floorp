@@ -107,26 +107,26 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   void PrintDiagnostics(nsCString& log);
 
-  // Sets mPendingTime to the current time stamp or to a null time stamp (if now
-  // is false)
+  // Sets mTimings.transactionPending to the current time stamp or to a null
+  // time stamp (if now is false)
   void SetPendingTime(bool now = true) {
     mozilla::MutexAutoLock lock(mLock);
-    if (!now && !mPendingTime.IsNull()) {
+    if (!now && !mTimings.transactionPending.IsNull()) {
       // Remember how long it took. We will use this value to record
       // TRANSACTION_WAIT_TIME_HTTP2_SUP_HTTP3 telemetry, but we need to wait
       // for the response headers.
-      mPendingDurationTime = TimeStamp::Now() - mPendingTime;
+      mPendingDurationTime = TimeStamp::Now() - mTimings.transactionPending;
     }
     // Note that the transaction could be added in to a pending queue multiple
     // times (when the transaction is restarted or moved to a new conn entry due
     // to HTTPS RR), so we should only set the pending time once.
-    if (mPendingTime.IsNull()) {
-      mPendingTime = now ? TimeStamp::Now() : TimeStamp();
+    if (mTimings.transactionPending.IsNull()) {
+      mTimings.transactionPending = now ? TimeStamp::Now() : TimeStamp();
     }
   }
   TimeStamp GetPendingTime() override {
     mozilla::MutexAutoLock lock(mLock);
-    return mPendingTime;
+    return mTimings.transactionPending;
   }
 
   // overload of nsAHttpTransaction::RequestContext()
@@ -477,7 +477,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   Atomic<bool> mRestarted{false};
 
   // The time when the transaction was submitted to the Connection Manager
-  TimeStamp mPendingTime;
   TimeDuration mPendingDurationTime;
 
   uint64_t mBrowserId{0};

@@ -6881,7 +6881,7 @@ nsHttpChannel::GetTransactionPending(TimeStamp* _retval) {
   if (mTransaction) {
     *_retval = mTransaction->GetPendingTime();
   } else {
-    *_retval = mTransactionPendingTime;
+    *_retval = mTransactionTimings.transactionPending;
   }
   return NS_OK;
 }
@@ -7561,7 +7561,6 @@ nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
 
     // at this point, we're done with the transaction
     mTransactionTimings = mTransaction->Timings();
-    mTransactionPendingTime = mTransaction->GetPendingTime();
     mTransaction = nullptr;
     mTransactionPump = nullptr;
 
