@@ -21,6 +21,3 @@ extern crate smoosh;
 
 #[cfg(feature = "gluesmith")]
 extern crate gluesmith;
-
-#[cfg(feature = "icu4x")]
-extern crate icu_capi;

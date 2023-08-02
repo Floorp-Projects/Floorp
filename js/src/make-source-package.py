@@ -142,8 +142,6 @@ rsync_filter_list = """
 - /intl/icu/source/tools
 + /intl/icu/**
 
-+ /intl/icu_testdata/**
-
 - /intl/components/gtest
 + /intl/components/**
 
@@ -286,9 +284,7 @@ def is_mozjs_cargo_member(line):
 def is_mozjs_crates_io_local_patch(line):
     """Checks if the line in patch.crates-io is mozjs-related"""
 
-    return any(
-        f'path = "{p}' in line for p in ("js", "build", "third_party/rust", "intl")
-    )
+    return any(f'path = "{p}' in line for p in ("js", "build", "third_party/rust"))
 
 
 def clean():
