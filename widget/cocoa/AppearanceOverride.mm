@@ -40,19 +40,15 @@ static void ToolbarThemePrefChanged(const char* aPref, void* aUserInfo);
 }
 
 - (NSAppearance*)appearance {
-  if (@available(macOS 10.14, *)) {
-    switch (self.toolbarTheme) {  // Value for browser.theme.toolbar-theme pref
-      case 0:                     // Dark
-        return [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-      case 1:  // Light
-        return [NSAppearance appearanceNamed:NSAppearanceNameAqua];
-      case 2:  // System
-      default:
-        break;
-    }
+  switch (self.toolbarTheme) {  // Value for browser.theme.toolbar-theme pref
+    case 0:                     // Dark
+      return [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+    case 1:  // Light
+      return [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+    case 2:  // System
+    default:
+      return nil;  // nil means "no override".
   }
-  // nil means "no override".
-  return nil;
 }
 
 - (void)setAppearance:(NSAppearance*)aAppearance {
@@ -64,29 +60,22 @@ static void ToolbarThemePrefChanged(const char* aPref, void* aUserInfo);
 }
 
 + (NSSet*)keyPathsForValuesAffectingEffectiveAppearance {
-  if (@available(macOS 10.14, *)) {
-    // Automatically notify any key-value observers of our effectiveAppearance property whenever the
-    // pref or the NSApp's effectiveAppearance change.
-    return [NSSet setWithObjects:@"toolbarTheme", @"_app.effectiveAppearance", nil];
-  }
-  return [NSSet set];
+  // Automatically notify any key-value observers of our effectiveAppearance property whenever the
+  // pref or the NSApp's effectiveAppearance change.
+  return [NSSet setWithObjects:@"toolbarTheme", @"_app.effectiveAppearance", nil];
 }
 
 - (NSAppearance*)effectiveAppearance {
-  if (@available(macOS 10.14, *)) {
-    switch (self.toolbarTheme) {  // Value for browser.theme.toolbar-theme pref
-      case 0:                     // Dark
-        return [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-      case 1:  // Light
-        return [NSAppearance appearanceNamed:NSAppearanceNameAqua];
-      case 2:  // System
-      default:
-        // Use the NSApp effectiveAppearance. This is the system appearance.
-        return NSApp.effectiveAppearance;
-    }
+  switch (self.toolbarTheme) {  // Value for browser.theme.toolbar-theme pref
+    case 0:                     // Dark
+      return [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+    case 1:  // Light
+      return [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+    case 2:  // System
+    default:
+      // Use the NSApp effectiveAppearance. This is the system appearance.
+      return NSApp.effectiveAppearance;
   }
-  // Use aqua on pre-10.14.
-  return [NSAppearance appearanceNamed:NSAppearanceNameAqua];
 }
 
 @end
