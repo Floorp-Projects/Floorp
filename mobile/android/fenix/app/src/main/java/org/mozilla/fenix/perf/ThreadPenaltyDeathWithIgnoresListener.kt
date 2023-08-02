@@ -12,6 +12,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.ManufacturerCodes
 
 private const val FCQN_EDM_STORAGE_PROVIDER_BASE = "com.android.server.enterprise.storage.EdmStorageProviderBase"
+private const val IDS_CONTROLLER_CLASS = "android.app.IdsController"
 private const val INSTRUMENTED_HOOKS_CLASS = "com.android.tools.deploy.instrument.InstrumentationHooks"
 
 /**
@@ -47,7 +48,16 @@ class ThreadPenaltyDeathWithIgnoresListener(
 
     private fun shouldViolationBeIgnored(violation: Violation): Boolean =
         isSamsungLgEdmStorageProviderStartupViolation(violation) ||
-            containsInstrumentedHooksClass(violation)
+            containsInstrumentedHooksClass(violation) ||
+            isSamsungIdsController(violation)
+
+    private fun isSamsungIdsController(violation: Violation): Boolean {
+        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1806469
+        // When launching in debug on a Galaxy S22+ from Android Studio then we hit a DiskReadViolation
+        // IdsController doesn't appear in Android code search so we match against it.
+        // https://cs.android.com/search?q=IdsController
+        return ManufacturerCodes.isSamsung && violation.stackTrace.any { it.className == IDS_CONTROLLER_CLASS }
+    }
 
     private fun isSamsungLgEdmStorageProviderStartupViolation(violation: Violation): Boolean {
         // Root issue: https://github.com/mozilla-mobile/fenix/issues/17920

@@ -49,6 +49,26 @@ class ThreadPenaltyDeathWithIgnoresListenerTest {
     }
 
     @Test
+    fun `GIVEN we're on a Samsung WHEN provided an IdsController violation THEN it will be ignored and logged`() {
+        mockkObject(ManufacturerCodes)
+        every { ManufacturerCodes.isSamsung } returns true
+
+        every { violation.stackTrace } returns getIdsControllerStackTrace()
+        listener.onThreadViolation(violation)
+
+        verify { logger.debug("Ignoring StrictMode ThreadPolicy violation", violation) }
+    }
+
+    @Test(expected = RuntimeException::class)
+    fun `GIVEN we're not on a Samsung WHEN provided an IdsController violation THEN we throw an exception`() {
+        mockkObject(ManufacturerCodes)
+        every { ManufacturerCodes.isSamsung } returns false
+
+        every { violation.stackTrace } returns getIdsControllerStackTrace()
+        listener.onThreadViolation(violation)
+    }
+
+    @Test
     fun `GIVEN we're on a Samsung WHEN provided the EdmStorageProvider violation THEN it will be ignored and logged`() {
         mockkObject(ManufacturerCodes)
         every { ManufacturerCodes.isSamsung } returns true
@@ -81,6 +101,9 @@ class ThreadPenaltyDeathWithIgnoresListenerTest {
     fun `WHEN violation is null THEN we don't throw an exception`() {
         listener.onThreadViolation(null)
     }
+
+    private fun getIdsControllerStackTrace() =
+        StackTraces.getStackTraceFromLogcat("IdsControllerLogcat.txt")
 
     private fun getEdmStorageProviderStackTrace() =
         StackTraces.getStackTraceFromLogcat("EdmStorageProviderBaseLogcat.txt")
