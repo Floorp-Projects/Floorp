@@ -157,6 +157,8 @@ class CacheKey {
   // bool, CacheDomain::Actions
   // Whether this image has a longdesc.
   static constexpr nsStaticAtom* HasLongdesc = nsGkAtoms::longdesc;
+  // nsString, CacheDomain::NameAndDescription
+  static constexpr nsStaticAtom* HTMLPlaceholder = nsGkAtoms::placeholder;
 #ifdef XP_WIN
   // nsString, CacheDomain::InnerHTML
   static constexpr nsStaticAtom* InnerHTML = nsGkAtoms::html;
