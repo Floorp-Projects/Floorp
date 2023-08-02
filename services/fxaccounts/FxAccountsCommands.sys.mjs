@@ -9,19 +9,16 @@ import {
   log,
 } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 
-const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PushCrypto",
-  "resource://gre/modules/PushCrypto.jsm"
-);
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import { Observers } from "resource://services-common/observers.sys.mjs";
 
+const lazy = {};
+
 ChromeUtils.defineESModuleGetters(lazy, {
   BulkKeyBundle: "resource://services-sync/keys.sys.mjs",
   CryptoWrapper: "resource://services-sync/record.sys.mjs",
+  PushCrypto: "resource://gre/modules/PushCrypto.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

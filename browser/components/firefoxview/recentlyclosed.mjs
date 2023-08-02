@@ -253,16 +253,6 @@ class RecentlyClosedTabsInView extends ViewPage {
                 </div>
               `
             : ""}
-          <div
-            slot="footer"
-            name="history"
-            ?hidden=${!this.selectedTab || !this.recentlyClosedTabs.length}
-          >
-            <a
-              href="about:firefoxview-next#history"
-              data-l10n-id="firefoxview-view-more-browsing-history"
-            ></a>
-          </div>
         </card-container>
         ${this.selectedTab
           ? html`
