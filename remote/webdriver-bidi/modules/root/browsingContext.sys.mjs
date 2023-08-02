@@ -119,6 +119,40 @@ class BrowsingContextModule extends Module {
   }
 
   /**
+   * Activates and focuses the given top-level browsing context.
+   *
+   * @param {object=} options
+   * @param {string} options.context
+   *     Id of the browsing context.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchFrameError}
+   *     If the browsing context cannot be found.
+   */
+  async activate(options = {}) {
+    const { context: contextId } = options;
+
+    lazy.assert.string(
+      contextId,
+      `Expected "context" to be a string, got ${contextId}`
+    );
+    const context = this.#getBrowsingContext(contextId);
+
+    if (context.parent) {
+      throw new lazy.error.InvalidArgumentError(
+        `Browsing Context with id ${contextId} is not top-level`
+      );
+    }
+
+    const tab = lazy.TabManager.getTabForBrowsingContext(context);
+    const window = lazy.TabManager.getWindowForTab(tab);
+
+    await lazy.windowManager.focusWindow(window);
+    await lazy.TabManager.selectTab(tab);
+  }
+
+  /**
    * Used as an argument for browsingContext.captureScreenshot command, as one of the available variants
    * {BoxClipRectangle} or {ElementClipRectangle}, to represent a target of the command.
    *
