@@ -73,7 +73,7 @@ fuzzy-if(Android,0-231,0-653) == subpixel-lineheight-1a.html subpixel-lineheight
 == white-space-1b.html white-space-1-ref.html
 == white-space-2.html white-space-2-ref.html
 == white-space-3.html white-space-3-ref.html
-== wordbreak-1.html wordbreak-1-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == wordbreak-1.html wordbreak-1-ref.html
 == wordbreak-3.html wordbreak-3-ref.html
 == wordbreak-4b.html wordbreak-4b-ref.html
 == wordbreak-5.html wordbreak-5-ref.html
@@ -148,7 +148,7 @@ fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1320665-cmap-format-13.ht
 skip-if(!cocoaWidget) != 1349308-1.html 1349308-notref.html # macOS-specific test for -apple-system glyph metrics
 fuzzy-if(Android,0-128,0-233) == 1463020-letter-spacing-text-transform-1.html 1463020-letter-spacing-text-transform-1-ref.html
 fails-if(Android) == 1463020-letter-spacing-text-transform-2.html 1463020-letter-spacing-text-transform-2-ref.html # missing font coverage on Android
-== 1507661-spurious-hyphenation-after-explicit.html 1507661-spurious-hyphenation-after-explicit-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == 1507661-spurious-hyphenation-after-explicit.html 1507661-spurious-hyphenation-after-explicit-ref.html
 fuzzy-if(useDrawSnapshot,255-255,50-50) == 1522857-1.html 1522857-1-ref.html # antialiasing fuzz in non-webrender cases
 != 1637405-pua-shaping-1.html 1637405-pua-shaping-1-notref.html
 fuzzy-if(useDrawSnapshot,255-255,50-50) == 1655364-1.html 1655364-1-ref.html
@@ -334,7 +334,7 @@ pref(layout.css.moz-control-character-visibility.enabled,true) pref(layout.css.c
 == letter-spacing-nolig-1.html letter-spacing-nolig-1-ref.html
 == letter-spacing-nolig-2.html letter-spacing-nolig-2.html
 
-== ethiopic-wordspace.html ethiopic-wordspace-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == ethiopic-wordspace.html ethiopic-wordspace-ref.html
 
 # sub and sup elements should be influenced by their container's line-height - bug 1524897
 == sub-sup-and-line-height.html sub-sup-and-line-height-ref.html
