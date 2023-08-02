@@ -16,7 +16,7 @@ ac_add_options --with-macos-sdk=/Users/username/SDKs/MacOSX11.3.sdk
 
 ## Supported SDKs
 
-First off, Firefox runs on 10.12 and above. This is called the "minimum deployment target" and is
+First off, Firefox runs on 10.15 and above. This is called the "minimum deployment target" and is
 independent of the SDK version.
 
 Our official Firefox builds compiled in CI (continuous integration) currently use the 13.3 SDK (last updated in [bug 1833998](https://bugzilla.mozilla.org/show_bug.cgi?id=1833998)). This is also the minimum supported SDK version for local builds.
