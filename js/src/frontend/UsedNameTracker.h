@@ -251,6 +251,10 @@ class UsedNameTracker {
   // Resets state so that scriptId and scopeId are the innermost script and
   // scope, respectively. Used for rewinding state on syntax parse failure.
   void rewind(RewindToken token);
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dump(ParserAtomsTable& table);
+#endif
 };
 
 }  // namespace frontend
