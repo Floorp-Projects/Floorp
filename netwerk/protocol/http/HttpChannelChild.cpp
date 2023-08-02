@@ -388,6 +388,7 @@ static void ResourceTimingStructArgsToTimingsStruct(
   aTimings.requestStart = aArgs.requestStart();
   aTimings.responseStart = aArgs.responseStart();
   aTimings.responseEnd = aArgs.responseEnd();
+  aTimings.transactionPending = aArgs.transactionPending();
 }
 
 void HttpChannelChild::OnStartRequest(
