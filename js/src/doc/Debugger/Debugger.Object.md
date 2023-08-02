@@ -544,13 +544,21 @@ on objects associated with that debugger will be called during the evaluation.
 ### `executeInGlobalWithBindings(code, bindings, [options])`
 Like `executeInGlobal`, but evaluate <i>code</i> using the referent as the
 variable object, but with a lexical environment extended with bindings
-from the object <i>bindings</i>. For each own enumerable property of
-<i>bindings</i> named <i>name</i> whose value is <i>value</i>, include a
-variable in the lexical environment in which <i>code</i> is evaluated
-named <i>name</i>, whose value is <i>value</i>. Each <i>value</i> must
-be a debuggee value. (This is not like a `with` statement: <i>code</i>
-may access, assign to, and delete the introduced bindings without having
-any effect on the <i>bindings</i> object.)
+from the object <i>bindings</i>.
+
+For each own enumerable property of <i>bindings</i> named <i>name</i> whose
+value is <i>value</i>, include a variable in the lexical environment in which
+<i>code</i> is evaluated named <i>name</i>, whose value is <i>value</i>, as
+long as the <i>name</i> doesn't conflict with any global variable declared in
+the <i>code</i>, or any existing global variable. If <i>name</i> conflicts with
+globals, the binding is ignored.
+
+Each <i>value</i> must be a debuggee value.
+
+This is not like a `with` statement: <i>code</i> may access, assign to, and
+delete the introduced bindings without having any effect on the passed
+<i>bindings</i> object, because the properties are copied to a new object for
+each invocation.
 
 This method allows debugger code to introduce temporary bindings that
 are visible to the given debuggee code and which refer to debugger-held
