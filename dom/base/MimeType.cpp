@@ -5,33 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MimeType.h"
+#include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
-
-namespace {
-template <typename Char>
-constexpr bool IsHTTPTokenPoint(Char aChar) {
-  using UnsignedChar = typename mozilla::detail::MakeUnsignedChar<Char>::Type;
-  auto c = static_cast<UnsignedChar>(aChar);
-  return c == '!' || c == '#' || c == '$' || c == '%' || c == '&' ||
-         c == '\'' || c == '*' || c == '+' || c == '-' || c == '.' ||
-         c == '^' || c == '_' || c == '`' || c == '|' || c == '~' ||
-         mozilla::IsAsciiAlphanumeric(c);
-}
-
-template <typename Char>
-constexpr bool IsHTTPQuotedStringTokenPoint(Char aChar) {
-  using UnsignedChar = typename mozilla::detail::MakeUnsignedChar<Char>::Type;
-  auto c = static_cast<UnsignedChar>(aChar);
-  return c == 0x9 || (c >= ' ' && c <= '~') || mozilla::IsNonAsciiLatin1(c);
-}
-
-template <typename Char>
-constexpr bool IsHTTPWhitespace(Char aChar) {
-  using UnsignedChar = typename mozilla::detail::MakeUnsignedChar<Char>::Type;
-  auto c = static_cast<UnsignedChar>(aChar);
-  return c == 0x9 || c == 0xA || c == 0xD || c == 0x20;
-}
-}  // namespace
 
 template <typename char_type>
 /* static */ mozilla::UniquePtr<TMimeType<char_type>>
@@ -41,20 +16,20 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
   // Steps 1-2
   const char_type* pos = aMimeType.BeginReading();
   const char_type* end = aMimeType.EndReading();
-  while (pos < end && IsHTTPWhitespace(*pos)) {
+  while (pos < end && NS_IsHTTPWhitespace(*pos)) {
     ++pos;
   }
   if (pos == end) {
     return nullptr;
   }
-  while (end > pos && IsHTTPWhitespace(*(end - 1))) {
+  while (end > pos && NS_IsHTTPWhitespace(*(end - 1))) {
     --end;
   }
 
   // Steps 3-4
   const char_type* typeStart = pos;
   while (pos < end && *pos != '/') {
-    if (!IsHTTPTokenPoint(*pos)) {
+    if (!NS_IsHTTPTokenPoint(*pos)) {
       return nullptr;
     }
     ++pos;
@@ -76,14 +51,14 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
   const char_type* subtypeStart = pos;
   const char_type* subtypeEnd = nullptr;
   while (pos < end && *pos != ';') {
-    if (!IsHTTPTokenPoint(*pos)) {
+    if (!NS_IsHTTPTokenPoint(*pos)) {
       // If we hit a whitespace, check that the rest of
       // the subtype is whitespace, otherwise fail.
-      if (IsHTTPWhitespace(*pos)) {
+      if (NS_IsHTTPWhitespace(*pos)) {
         subtypeEnd = pos;
         ++pos;
         while (pos < end && *pos != ';') {
-          if (!IsHTTPWhitespace(*pos)) {
+          if (!NS_IsHTTPWhitespace(*pos)) {
             return nullptr;
           }
           ++pos;
@@ -119,19 +94,39 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
     ++pos;
 
     // Step 11.2
-    while (pos < end && IsHTTPWhitespace(*pos)) {
+    while (pos < end && NS_IsHTTPWhitespace(*pos)) {
       ++pos;
     }
+
+    const char_type* namePos = pos;
 
     // Steps 11.3 and 11.4
     nsTString<char_type> paramName;
     bool paramNameHadInvalidChars = false;
     while (pos < end && *pos != ';' && *pos != '=') {
-      if (!IsHTTPTokenPoint(*pos)) {
+      if (!NS_IsHTTPTokenPoint(*pos)) {
         paramNameHadInvalidChars = true;
       }
       paramName.Append(ToLowerCaseASCII(*pos));
       ++pos;
+    }
+
+    // Might as well check for base64 now
+    if (*pos != '=') {
+      // trim leading and trailing spaces
+      while (namePos < pos && NS_IsHTTPWhitespace(*namePos)) {
+        ++namePos;
+      }
+      if (namePos < pos && ToLowerCaseASCII(*namePos) == 'b' &&
+          ++namePos < pos && ToLowerCaseASCII(*namePos) == 'a' &&
+          ++namePos < pos && ToLowerCaseASCII(*namePos) == 's' &&
+          ++namePos < pos && ToLowerCaseASCII(*namePos) == 'e' &&
+          ++namePos < pos && ToLowerCaseASCII(*namePos) == '6' &&
+          ++namePos < pos && ToLowerCaseASCII(*namePos) == '4') {
+        while (++namePos < pos && NS_IsHTTPWhitespace(*namePos)) {
+        }
+        mimeType->mIsBase64 = namePos == pos;
+      }
     }
 
     // Step 11.5
@@ -160,10 +155,10 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
       while (true) {
         // Step 11.8.2.1
         while (pos < end && *pos != '"' && *pos != '\\') {
-          if (!IsHTTPQuotedStringTokenPoint(*pos)) {
+          if (!NS_IsHTTPQuotedStringTokenPoint(*pos)) {
             paramValueHadInvalidChars = true;
           }
-          if (!IsHTTPTokenPoint(*pos)) {
+          if (!NS_IsHTTPTokenPoint(*pos)) {
             paramValue.mRequiresQuoting = true;
           }
           paramValue.Append(*pos);
@@ -177,10 +172,10 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
 
           // Step 11.8.2.2.2
           if (pos < end) {
-            if (!IsHTTPQuotedStringTokenPoint(*pos)) {
+            if (!NS_IsHTTPQuotedStringTokenPoint(*pos)) {
               paramValueHadInvalidChars = true;
             }
-            if (!IsHTTPTokenPoint(*pos)) {
+            if (!NS_IsHTTPTokenPoint(*pos)) {
               paramValue.mRequiresQuoting = true;
             }
             paramValue.Append(*pos);
@@ -213,7 +208,7 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
       // Step 11.9.2
       const char_type* paramValueLastChar = pos - 1;
       while (paramValueLastChar >= paramValueStart &&
-             IsHTTPWhitespace(*paramValueLastChar)) {
+             NS_IsHTTPWhitespace(*paramValueLastChar)) {
         --paramValueLastChar;
       }
 
@@ -223,10 +218,10 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
       }
 
       for (const char_type* c = paramValueStart; c <= paramValueLastChar; ++c) {
-        if (!IsHTTPQuotedStringTokenPoint(*c)) {
+        if (!NS_IsHTTPQuotedStringTokenPoint(*c)) {
           paramValueHadInvalidChars = true;
         }
-        if (!IsHTTPTokenPoint(*c)) {
+        if (!NS_IsHTTPTokenPoint(*c)) {
           paramValue.mRequiresQuoting = true;
         }
         paramValue.Append(*c);
