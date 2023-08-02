@@ -59,7 +59,7 @@ nsresult nsDataChannel::OpenContentStream(bool async, nsIInputStream** result,
   nsDependentCSubstring dataRange;
   bool lBase64;
   rv = nsDataHandler::ParsePathWithoutRef(path, contentType, &contentCharset,
-                                          lBase64, &dataRange);
+                                          lBase64, &dataRange, &mMimeType);
   if (NS_FAILED(rv)) return rv;
 
   // This will avoid a copy if nothing needs to be unescaped.
