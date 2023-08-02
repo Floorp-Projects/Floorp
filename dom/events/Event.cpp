@@ -36,7 +36,7 @@
 #include "nsCOMPtr.h"
 #include "nsDeviceContext.h"
 #include "nsError.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"

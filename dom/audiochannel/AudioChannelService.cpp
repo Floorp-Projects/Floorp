@@ -14,11 +14,11 @@
 #include "mozilla/dom/Document.h"
 
 #include "nsContentUtils.h"
+#include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsThreadUtils.h"
 #include "nsHashPropertyBag.h"
 #include "nsComponentManagerUtils.h"
-#include "nsGlobalWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 

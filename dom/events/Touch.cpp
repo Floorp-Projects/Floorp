@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/TouchEvent.h"
-#include "nsGlobalWindow.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
 

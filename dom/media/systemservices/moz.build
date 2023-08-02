@@ -103,10 +103,6 @@ IPDL_SOURCES += [
     "PMedia.ipdl",
     "PMediaSystemResourceManager.ipdl",
 ]
-# /dom/base needed for nsGlobalWindow.h in MediaChild.cpp
-LOCAL_INCLUDES += [
-    "/dom/base",
-]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 

@@ -14,7 +14,7 @@
 #include "nsAtom.h"
 #include "nsIContent.h"
 #include "nsLayoutUtils.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsString.h"
 #include "xpcpublic.h"  // For xpc::NativeGlobal
 

@@ -116,7 +116,7 @@
 #include "mozilla/dom/SVGImageElement.h"
 #include "mozilla/dom/TextMetrics.h"
 #include "mozilla/FloatingPoint.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsDeviceContext.h"
 #include "nsFontMetrics.h"
 #include "nsLayoutUtils.h"

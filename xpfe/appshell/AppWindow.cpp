@@ -45,7 +45,6 @@
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindow.h"
 #include "nsXULTooltipListener.h"
 #include "nsXULPopupManager.h"
 #include "nsFocusManager.h"

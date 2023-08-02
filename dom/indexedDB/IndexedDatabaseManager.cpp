@@ -29,7 +29,6 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindow.h"
 #include "mozilla/Logging.h"
 
 #include "ActorsChild.h"

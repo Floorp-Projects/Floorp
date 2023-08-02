@@ -75,7 +75,6 @@ EXPORTS += [
     "nsFrameLoader.h",  # Because binding headers include it.
     "nsFrameLoaderOwner.h",
     "nsFrameMessageManager.h",
-    "nsGlobalWindow.h",  # Because binding headers include it.
     "nsGlobalWindowInner.h",  # Because binding headers include it.
     "nsGlobalWindowOuter.h",  # Because binding headers include it.
     "nsIAnimationObserver.h",

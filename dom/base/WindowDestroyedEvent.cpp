@@ -15,6 +15,8 @@
 #include "nsJSPrincipals.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindowInner.h"
+#include "nsGlobalWindowOuter.h"
 #include "xpcpublic.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/BasePrincipal.h"

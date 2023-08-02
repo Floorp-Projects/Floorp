@@ -28,7 +28,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsAboutProtocolUtils.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIAboutModule.h"
 #include "nsILoadContext.h"
 #include "nsIURI.h"

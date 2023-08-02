@@ -11,7 +11,7 @@
 #include "mozilla/StaticPrefs_intl.h"
 #include "nsCommandManager.h"
 #include "nsCOMPtr.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"

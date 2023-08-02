@@ -97,7 +97,6 @@
 #include "nsIContentPrefService2.h"
 #include "nsIMIMEService.h"
 #include "nsIObserverService.h"
-#include "nsGlobalWindow.h"
 
 // input type=image
 #include "nsImageLoadingContent.h"

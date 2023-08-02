@@ -11,7 +11,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/HighlightRegistry.h"
 #include "mozilla/ServoBindings.h"
-#include "nsGlobalWindow.h"
 #include "mozilla/dom/Document.h"
 #include "nsStyleUtil.h"
 #include "xpcpublic.h"

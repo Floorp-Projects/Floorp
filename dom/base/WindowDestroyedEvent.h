@@ -7,10 +7,12 @@
 #ifndef WindowDestroyedEvent_h
 #define WindowDestroyedEvent_h
 
-#include "nsGlobalWindow.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
+
+class nsGlobalWindowInner;
+class nsGlobalWindowOuter;
 
 namespace mozilla {
 

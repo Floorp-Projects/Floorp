@@ -105,7 +105,7 @@
 #include "nsExceptionHandler.h"
 #include "nsFilePickerProxy.h"
 #include "nsFocusManager.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsIBaseWindow.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIClassifiedChannel.h"
@@ -462,7 +462,7 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
 #endif  // defined(DEBUG)
 
   // Few lines before, baseWindow->Create() will end up creating a new
-  // window root in nsGlobalWindow::SetDocShell.
+  // window root in nsGlobalWindowOuter::SetDocShell.
   // Then this chrome event handler, will be inherited to inner windows.
   // We want to also set it to the docshell so that inner windows
   // and any code that has access to the docshell

@@ -13,7 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/ReferrerInfo.h"

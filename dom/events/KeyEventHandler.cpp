@@ -10,7 +10,6 @@
 #include "nsQueryObject.h"
 #include "KeyEventHandler.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindow.h"
 #include "nsGlobalWindowCommands.h"
 #include "nsIContent.h"
 #include "nsAtom.h"

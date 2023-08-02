@@ -19,7 +19,7 @@
 #include "nsClassHashtable.h"
 #include "nsContentList.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIAnimationObserver.h"
 #include "nsIScriptContext.h"
 #include "nsIVariant.h"

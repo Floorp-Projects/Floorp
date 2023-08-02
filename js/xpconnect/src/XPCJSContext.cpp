@@ -63,7 +63,7 @@
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"
 #include "AccessCheck.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsAboutProtocolUtils.h"
 
 #include "GeckoProfiler.h"

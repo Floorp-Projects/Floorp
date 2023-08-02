@@ -13,7 +13,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_extensions.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "xpcpublic.h"
 
 #include "nsIDocShell.h"

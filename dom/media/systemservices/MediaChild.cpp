@@ -6,8 +6,6 @@
 
 #include "MediaChild.h"
 #include "MediaParent.h"
-
-#include "nsGlobalWindow.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/MediaManager.h"
 #include "mozilla/Logging.h"

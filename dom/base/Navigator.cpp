@@ -64,7 +64,7 @@
 #include "mozilla/StaticPtr.h"
 #include "Connection.h"
 #include "mozilla/dom/Event.h"  // for Event
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIPermissionManager.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
@@ -1734,7 +1734,7 @@ void Navigator::GetActiveVRDisplays(
    * GetActiveVRDisplays should only enumerate displays that
    * are already active without causing any other hardware to be
    * activated.
-   * We must not call nsGlobalWindow::NotifyHasXRSession here,
+   * We must not call nsGlobalWindowInner::NotifyHasXRSession here,
    * as that would cause enumeration and activation of other VR hardware.
    * Activating VR hardware is intrusive to the end user, as it may
    * involve physically powering on devices that the user did not

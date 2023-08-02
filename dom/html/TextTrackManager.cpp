@@ -17,7 +17,7 @@
 #include "mozilla/dom/TextTrack.h"
 #include "mozilla/dom/TextTrackCue.h"
 #include "nsComponentManagerUtils.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIFrame.h"
 #include "nsIWebVTTParserWrapper.h"
 #include "nsVariant.h"

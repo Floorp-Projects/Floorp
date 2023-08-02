@@ -23,7 +23,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsContentPermissionHelper.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "mozilla/dom/Document.h"
 #include "nsINamed.h"
 #include "nsIObserverService.h"

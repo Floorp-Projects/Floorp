@@ -12,7 +12,6 @@
 #include "ChildIterator.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsGkAtoms.h"
-#include "nsGlobalWindow.h"
 #include "nsContentUtils.h"
 #include "ContentParent.h"
 #include "nsPIDOMWindow.h"
