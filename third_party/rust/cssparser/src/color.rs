@@ -16,16 +16,6 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 const OPAQUE: f32 = 1.0;
 
-fn serialize_none_or<T>(dest: &mut impl fmt::Write, value: &Option<T>) -> fmt::Result
-where
-    T: ToCss,
-{
-    match value {
-        Some(v) => v.to_css(dest),
-        None => dest.write_str("none"),
-    }
-}
-
 /// Serialize the alpha copmonent of a color according to the specification.
 /// <https://drafts.csswg.org/css-color-4/#serializing-alpha-values>
 #[inline]
@@ -55,6 +45,34 @@ pub fn serialize_color_alpha(
     rounded_alpha.to_css(dest)
 }
 
+/// A [`ModernComponent`] can serialize to `none`, `nan`, `infinity` and
+/// floating point values.
+struct ModernComponent<'a>(&'a Option<f32>);
+
+impl<'a> ToCss for ModernComponent<'a> {
+    fn to_css<W>(&self, dest: &mut W) -> fmt::Result
+    where
+        W: fmt::Write,
+    {
+        if let Some(value) = self.0 {
+            if value.is_finite() {
+                value.to_css(dest)
+            } else if value.is_nan() {
+                dest.write_str("calc(NaN)")
+            } else {
+                debug_assert!(value.is_infinite());
+                if value.is_sign_negative() {
+                    dest.write_str("calc(-infinity)")
+                } else {
+                    dest.write_str("calc(infinity)")
+                }
+            }
+        } else {
+            dest.write_str("none")
+        }
+    }
+}
+
 // Guaratees hue in [0..360)
 fn normalize_hue(hue: f32) -> f32 {
     // <https://drafts.csswg.org/css-values/#angles>
@@ -64,44 +82,34 @@ fn normalize_hue(hue: f32) -> f32 {
 
 /// A color with red, green, blue, and alpha components, in a byte each.
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub struct RGBA {
+pub struct RgbaLegacy {
     /// The red component.
-    pub red: Option<u8>,
+    pub red: u8,
     /// The green component.
-    pub green: Option<u8>,
+    pub green: u8,
     /// The blue component.
-    pub blue: Option<u8>,
+    pub blue: u8,
     /// The alpha component.
-    pub alpha: Option<f32>,
+    pub alpha: f32,
 }
 
-impl RGBA {
+impl RgbaLegacy {
     /// Constructs a new RGBA value from float components. It expects the red,
     /// green, blue and alpha channels in that order, and all values will be
     /// clamped to the 0.0 ... 1.0 range.
     #[inline]
-    pub fn from_floats(
-        red: Option<f32>,
-        green: Option<f32>,
-        blue: Option<f32>,
-        alpha: Option<f32>,
-    ) -> Self {
+    pub fn from_floats(red: f32, green: f32, blue: f32, alpha: f32) -> Self {
         Self::new(
-            red.map(clamp_unit_f32),
-            green.map(clamp_unit_f32),
-            blue.map(clamp_unit_f32),
-            alpha.map(|a| a.clamp(0.0, OPAQUE)),
+            clamp_unit_f32(red),
+            clamp_unit_f32(green),
+            clamp_unit_f32(blue),
+            alpha.clamp(0.0, OPAQUE),
         )
     }
 
     /// Same thing, but with `u8` values instead of floats in the 0 to 1 range.
     #[inline]
-    pub const fn new(
-        red: Option<u8>,
-        green: Option<u8>,
-        blue: Option<u8>,
-        alpha: Option<f32>,
-    ) -> Self {
+    pub const fn new(red: u8, green: u8, blue: u8, alpha: f32) -> Self {
         Self {
             red,
             green,
@@ -112,7 +120,7 @@ impl RGBA {
 }
 
 #[cfg(feature = "serde")]
-impl Serialize for RGBA {
+impl Serialize for RgbaLegacy {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -122,32 +130,32 @@ impl Serialize for RGBA {
 }
 
 #[cfg(feature = "serde")]
-impl<'de> Deserialize<'de> for RGBA {
+impl<'de> Deserialize<'de> for RgbaLegacy {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
         let (r, g, b, a) = Deserialize::deserialize(deserializer)?;
-        Ok(RGBA::new(r, g, b, a))
+        Ok(RgbaLegacy::new(r, g, b, a))
     }
 }
 
-impl ToCss for RGBA {
+impl ToCss for RgbaLegacy {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
     where
         W: fmt::Write,
     {
-        let has_alpha = self.alpha.unwrap_or(0.0) != OPAQUE;
+        let has_alpha = self.alpha != OPAQUE;
 
         dest.write_str(if has_alpha { "rgba(" } else { "rgb(" })?;
-        self.red.unwrap_or(0).to_css(dest)?;
+        self.red.to_css(dest)?;
         dest.write_str(", ")?;
-        self.green.unwrap_or(0).to_css(dest)?;
+        self.green.to_css(dest)?;
         dest.write_str(", ")?;
-        self.blue.unwrap_or(0).to_css(dest)?;
+        self.blue.to_css(dest)?;
 
         // Legacy syntax does not allow none components.
-        serialize_color_alpha(dest, Some(self.alpha.unwrap_or(0.0)), true)?;
+        serialize_color_alpha(dest, Some(self.alpha), true)?;
 
         dest.write_char(')')
     }
@@ -195,7 +203,7 @@ impl ToCss for Hsl {
             self.lightness.unwrap_or(0.0),
         );
 
-        RGBA::from_floats(Some(red), Some(green), Some(blue), self.alpha).to_css(dest)
+        RgbaLegacy::from_floats(red, green, blue, self.alpha.unwrap_or(OPAQUE)).to_css(dest)
     }
 }
 
@@ -262,7 +270,7 @@ impl ToCss for Hwb {
             self.blackness.unwrap_or(0.0),
         );
 
-        RGBA::from_floats(Some(red), Some(green), Some(blue), self.alpha).to_css(dest)
+        RgbaLegacy::from_floats(red, green, blue, self.alpha.unwrap_or(OPAQUE)).to_css(dest)
     }
 }
 
@@ -363,11 +371,11 @@ macro_rules! impl_lab_like {
             {
                 dest.write_str($fname)?;
                 dest.write_str("(")?;
-                serialize_none_or(dest, &self.lightness)?;
+                ModernComponent(&self.lightness).to_css(dest)?;
                 dest.write_char(' ')?;
-                serialize_none_or(dest, &self.a)?;
+                ModernComponent(&self.a).to_css(dest)?;
                 dest.write_char(' ')?;
-                serialize_none_or(dest, &self.b)?;
+                ModernComponent(&self.b).to_css(dest)?;
                 serialize_color_alpha(dest, self.alpha, false)?;
                 dest.write_char(')')
             }
@@ -454,11 +462,11 @@ macro_rules! impl_lch_like {
             {
                 dest.write_str($fname)?;
                 dest.write_str("(")?;
-                serialize_none_or(dest, &self.lightness)?;
+                ModernComponent(&self.lightness).to_css(dest)?;
                 dest.write_char(' ')?;
-                serialize_none_or(dest, &self.chroma)?;
+                ModernComponent(&self.chroma).to_css(dest)?;
                 dest.write_char(' ')?;
-                serialize_none_or(dest, &self.hue)?;
+                ModernComponent(&self.hue).to_css(dest)?;
                 serialize_color_alpha(dest, self.alpha, false)?;
                 dest.write_char(')')
             }
@@ -579,11 +587,11 @@ impl ToCss for ColorFunction {
         dest.write_str("color(")?;
         self.color_space.to_css(dest)?;
         dest.write_char(' ')?;
-        serialize_none_or(dest, &self.c1)?;
+        ModernComponent(&self.c1).to_css(dest)?;
         dest.write_char(' ')?;
-        serialize_none_or(dest, &self.c2)?;
+        ModernComponent(&self.c2).to_css(dest)?;
         dest.write_char(' ')?;
-        serialize_none_or(dest, &self.c3)?;
+        ModernComponent(&self.c3).to_css(dest)?;
 
         serialize_color_alpha(dest, self.alpha, false)?;
 
@@ -603,7 +611,7 @@ pub enum Color {
     /// The 'currentcolor' keyword.
     CurrentColor,
     /// Specify sRGB colors directly by their red/green/blue/alpha chanels.
-    Rgba(RGBA),
+    Rgba(RgbaLegacy),
     /// Specifies a color in sRGB using hue, saturation and lightness components.
     Hsl(Hsl),
     /// Specifies a color in sRGB using hue, whiteness and blackness components.
@@ -794,7 +802,7 @@ pub trait FromParsedColor {
     fn from_current_color() -> Self;
 
     /// Construct a new color from red, green, blue and alpha components.
-    fn from_rgba(red: Option<u8>, green: Option<u8>, blue: Option<u8>, alpha: Option<f32>) -> Self;
+    fn from_rgba(red: u8, green: u8, blue: u8, alpha: f32) -> Self;
 
     /// Construct a new color from hue, saturation, lightness and alpha components.
     fn from_hsl(
@@ -858,28 +866,28 @@ where
 {
     Ok(match value.len() {
         8 => O::from_rgba(
-            Some(from_hex(value[0])? * 16 + from_hex(value[1])?),
-            Some(from_hex(value[2])? * 16 + from_hex(value[3])?),
-            Some(from_hex(value[4])? * 16 + from_hex(value[5])?),
-            Some((from_hex(value[6])? * 16 + from_hex(value[7])?) as f32 / 255.0),
+            from_hex(value[0])? * 16 + from_hex(value[1])?,
+            from_hex(value[2])? * 16 + from_hex(value[3])?,
+            from_hex(value[4])? * 16 + from_hex(value[5])?,
+            (from_hex(value[6])? * 16 + from_hex(value[7])?) as f32 / 255.0,
         ),
         6 => O::from_rgba(
-            Some(from_hex(value[0])? * 16 + from_hex(value[1])?),
-            Some(from_hex(value[2])? * 16 + from_hex(value[3])?),
-            Some(from_hex(value[4])? * 16 + from_hex(value[5])?),
-            Some(OPAQUE),
+            from_hex(value[0])? * 16 + from_hex(value[1])?,
+            from_hex(value[2])? * 16 + from_hex(value[3])?,
+            from_hex(value[4])? * 16 + from_hex(value[5])?,
+            OPAQUE,
         ),
         4 => O::from_rgba(
-            Some(from_hex(value[0])? * 17),
-            Some(from_hex(value[1])? * 17),
-            Some(from_hex(value[2])? * 17),
-            Some((from_hex(value[3])? * 17) as f32 / 255.0),
+            from_hex(value[0])? * 17,
+            from_hex(value[1])? * 17,
+            from_hex(value[2])? * 17,
+            (from_hex(value[3])? * 17) as f32 / 255.0,
         ),
         3 => O::from_rgba(
-            Some(from_hex(value[0])? * 17),
-            Some(from_hex(value[1])? * 17),
-            Some(from_hex(value[2])? * 17),
-            Some(OPAQUE),
+            from_hex(value[0])? * 17,
+            from_hex(value[1])? * 17,
+            from_hex(value[2])? * 17,
+            OPAQUE,
         ),
         _ => return Err(()),
     })
@@ -917,8 +925,8 @@ impl FromParsedColor for Color {
     }
 
     #[inline]
-    fn from_rgba(red: Option<u8>, green: Option<u8>, blue: Option<u8>, alpha: Option<f32>) -> Self {
-        Color::Rgba(RGBA::new(red, green, blue, alpha))
+    fn from_rgba(red: u8, green: u8, blue: u8, alpha: f32) -> Self {
+        Color::Rgba(RgbaLegacy::new(red, green, blue, alpha))
     }
 
     fn from_hsl(
@@ -991,6 +999,178 @@ impl FromParsedColor for Color {
     }
 }
 
+ascii_case_insensitive_phf_map! {
+    named_colors -> (u8, u8, u8) = {
+        "black" => (0, 0, 0),
+        "silver" => (192, 192, 192),
+        "gray" => (128, 128, 128),
+        "white" => (255, 255, 255),
+        "maroon" => (128, 0, 0),
+        "red" => (255, 0, 0),
+        "purple" => (128, 0, 128),
+        "fuchsia" => (255, 0, 255),
+        "green" => (0, 128, 0),
+        "lime" => (0, 255, 0),
+        "olive" => (128, 128, 0),
+        "yellow" => (255, 255, 0),
+        "navy" => (0, 0, 128),
+        "blue" => (0, 0, 255),
+        "teal" => (0, 128, 128),
+        "aqua" => (0, 255, 255),
+
+        "aliceblue" => (240, 248, 255),
+        "antiquewhite" => (250, 235, 215),
+        "aquamarine" => (127, 255, 212),
+        "azure" => (240, 255, 255),
+        "beige" => (245, 245, 220),
+        "bisque" => (255, 228, 196),
+        "blanchedalmond" => (255, 235, 205),
+        "blueviolet" => (138, 43, 226),
+        "brown" => (165, 42, 42),
+        "burlywood" => (222, 184, 135),
+        "cadetblue" => (95, 158, 160),
+        "chartreuse" => (127, 255, 0),
+        "chocolate" => (210, 105, 30),
+        "coral" => (255, 127, 80),
+        "cornflowerblue" => (100, 149, 237),
+        "cornsilk" => (255, 248, 220),
+        "crimson" => (220, 20, 60),
+        "cyan" => (0, 255, 255),
+        "darkblue" => (0, 0, 139),
+        "darkcyan" => (0, 139, 139),
+        "darkgoldenrod" => (184, 134, 11),
+        "darkgray" => (169, 169, 169),
+        "darkgreen" => (0, 100, 0),
+        "darkgrey" => (169, 169, 169),
+        "darkkhaki" => (189, 183, 107),
+        "darkmagenta" => (139, 0, 139),
+        "darkolivegreen" => (85, 107, 47),
+        "darkorange" => (255, 140, 0),
+        "darkorchid" => (153, 50, 204),
+        "darkred" => (139, 0, 0),
+        "darksalmon" => (233, 150, 122),
+        "darkseagreen" => (143, 188, 143),
+        "darkslateblue" => (72, 61, 139),
+        "darkslategray" => (47, 79, 79),
+        "darkslategrey" => (47, 79, 79),
+        "darkturquoise" => (0, 206, 209),
+        "darkviolet" => (148, 0, 211),
+        "deeppink" => (255, 20, 147),
+        "deepskyblue" => (0, 191, 255),
+        "dimgray" => (105, 105, 105),
+        "dimgrey" => (105, 105, 105),
+        "dodgerblue" => (30, 144, 255),
+        "firebrick" => (178, 34, 34),
+        "floralwhite" => (255, 250, 240),
+        "forestgreen" => (34, 139, 34),
+        "gainsboro" => (220, 220, 220),
+        "ghostwhite" => (248, 248, 255),
+        "gold" => (255, 215, 0),
+        "goldenrod" => (218, 165, 32),
+        "greenyellow" => (173, 255, 47),
+        "grey" => (128, 128, 128),
+        "honeydew" => (240, 255, 240),
+        "hotpink" => (255, 105, 180),
+        "indianred" => (205, 92, 92),
+        "indigo" => (75, 0, 130),
+        "ivory" => (255, 255, 240),
+        "khaki" => (240, 230, 140),
+        "lavender" => (230, 230, 250),
+        "lavenderblush" => (255, 240, 245),
+        "lawngreen" => (124, 252, 0),
+        "lemonchiffon" => (255, 250, 205),
+        "lightblue" => (173, 216, 230),
+        "lightcoral" => (240, 128, 128),
+        "lightcyan" => (224, 255, 255),
+        "lightgoldenrodyellow" => (250, 250, 210),
+        "lightgray" => (211, 211, 211),
+        "lightgreen" => (144, 238, 144),
+        "lightgrey" => (211, 211, 211),
+        "lightpink" => (255, 182, 193),
+        "lightsalmon" => (255, 160, 122),
+        "lightseagreen" => (32, 178, 170),
+        "lightskyblue" => (135, 206, 250),
+        "lightslategray" => (119, 136, 153),
+        "lightslategrey" => (119, 136, 153),
+        "lightsteelblue" => (176, 196, 222),
+        "lightyellow" => (255, 255, 224),
+        "limegreen" => (50, 205, 50),
+        "linen" => (250, 240, 230),
+        "magenta" => (255, 0, 255),
+        "mediumaquamarine" => (102, 205, 170),
+        "mediumblue" => (0, 0, 205),
+        "mediumorchid" => (186, 85, 211),
+        "mediumpurple" => (147, 112, 219),
+        "mediumseagreen" => (60, 179, 113),
+        "mediumslateblue" => (123, 104, 238),
+        "mediumspringgreen" => (0, 250, 154),
+        "mediumturquoise" => (72, 209, 204),
+        "mediumvioletred" => (199, 21, 133),
+        "midnightblue" => (25, 25, 112),
+        "mintcream" => (245, 255, 250),
+        "mistyrose" => (255, 228, 225),
+        "moccasin" => (255, 228, 181),
+        "navajowhite" => (255, 222, 173),
+        "oldlace" => (253, 245, 230),
+        "olivedrab" => (107, 142, 35),
+        "orange" => (255, 165, 0),
+        "orangered" => (255, 69, 0),
+        "orchid" => (218, 112, 214),
+        "palegoldenrod" => (238, 232, 170),
+        "palegreen" => (152, 251, 152),
+        "paleturquoise" => (175, 238, 238),
+        "palevioletred" => (219, 112, 147),
+        "papayawhip" => (255, 239, 213),
+        "peachpuff" => (255, 218, 185),
+        "peru" => (205, 133, 63),
+        "pink" => (255, 192, 203),
+        "plum" => (221, 160, 221),
+        "powderblue" => (176, 224, 230),
+        "rebeccapurple" => (102, 51, 153),
+        "rosybrown" => (188, 143, 143),
+        "royalblue" => (65, 105, 225),
+        "saddlebrown" => (139, 69, 19),
+        "salmon" => (250, 128, 114),
+        "sandybrown" => (244, 164, 96),
+        "seagreen" => (46, 139, 87),
+        "seashell" => (255, 245, 238),
+        "sienna" => (160, 82, 45),
+        "skyblue" => (135, 206, 235),
+        "slateblue" => (106, 90, 205),
+        "slategray" => (112, 128, 144),
+        "slategrey" => (112, 128, 144),
+        "snow" => (255, 250, 250),
+        "springgreen" => (0, 255, 127),
+        "steelblue" => (70, 130, 180),
+        "tan" => (210, 180, 140),
+        "thistle" => (216, 191, 216),
+        "tomato" => (255, 99, 71),
+        "turquoise" => (64, 224, 208),
+        "violet" => (238, 130, 238),
+        "wheat" => (245, 222, 179),
+        "whitesmoke" => (245, 245, 245),
+        "yellowgreen" => (154, 205, 50),
+    }
+}
+
+/// Returns the named color with the given name.
+/// <https://drafts.csswg.org/css-color-4/#typedef-named-color>
+#[inline]
+pub fn parse_named_color<Output>(ident: &str) -> Result<Output, ()>
+where
+    Output: FromParsedColor,
+{
+    let &(r, g, b) = named_colors::get(ident).ok_or(())?;
+    Ok(Output::from_rgba(r, g, b, 1.0))
+}
+
+/// Returns an iterator over all named CSS colors.
+/// <https://drafts.csswg.org/css-color-4/#typedef-named-color>
+#[inline]
+pub fn all_named_colors() -> impl Iterator<Item = (&'static str, (u8, u8, u8))> {
+    named_colors::entries().map(|(k, v)| (*k, *v))
+}
+
 /// Return the named color with the given name.
 ///
 /// Matching is case-insensitive in the ASCII range.
@@ -1001,167 +1181,11 @@ pub fn parse_color_keyword<Output>(ident: &str) -> Result<Output, ()>
 where
     Output: FromParsedColor,
 {
-    ascii_case_insensitive_phf_map! {
-        keyword -> (u8, u8, u8) = {
-            "black" => (0, 0, 0),
-            "silver" => (192, 192, 192),
-            "gray" => (128, 128, 128),
-            "white" => (255, 255, 255),
-            "maroon" => (128, 0, 0),
-            "red" => (255, 0, 0),
-            "purple" => (128, 0, 128),
-            "fuchsia" => (255, 0, 255),
-            "green" => (0, 128, 0),
-            "lime" => (0, 255, 0),
-            "olive" => (128, 128, 0),
-            "yellow" => (255, 255, 0),
-            "navy" => (0, 0, 128),
-            "blue" => (0, 0, 255),
-            "teal" => (0, 128, 128),
-            "aqua" => (0, 255, 255),
-
-            "aliceblue" => (240, 248, 255),
-            "antiquewhite" => (250, 235, 215),
-            "aquamarine" => (127, 255, 212),
-            "azure" => (240, 255, 255),
-            "beige" => (245, 245, 220),
-            "bisque" => (255, 228, 196),
-            "blanchedalmond" => (255, 235, 205),
-            "blueviolet" => (138, 43, 226),
-            "brown" => (165, 42, 42),
-            "burlywood" => (222, 184, 135),
-            "cadetblue" => (95, 158, 160),
-            "chartreuse" => (127, 255, 0),
-            "chocolate" => (210, 105, 30),
-            "coral" => (255, 127, 80),
-            "cornflowerblue" => (100, 149, 237),
-            "cornsilk" => (255, 248, 220),
-            "crimson" => (220, 20, 60),
-            "cyan" => (0, 255, 255),
-            "darkblue" => (0, 0, 139),
-            "darkcyan" => (0, 139, 139),
-            "darkgoldenrod" => (184, 134, 11),
-            "darkgray" => (169, 169, 169),
-            "darkgreen" => (0, 100, 0),
-            "darkgrey" => (169, 169, 169),
-            "darkkhaki" => (189, 183, 107),
-            "darkmagenta" => (139, 0, 139),
-            "darkolivegreen" => (85, 107, 47),
-            "darkorange" => (255, 140, 0),
-            "darkorchid" => (153, 50, 204),
-            "darkred" => (139, 0, 0),
-            "darksalmon" => (233, 150, 122),
-            "darkseagreen" => (143, 188, 143),
-            "darkslateblue" => (72, 61, 139),
-            "darkslategray" => (47, 79, 79),
-            "darkslategrey" => (47, 79, 79),
-            "darkturquoise" => (0, 206, 209),
-            "darkviolet" => (148, 0, 211),
-            "deeppink" => (255, 20, 147),
-            "deepskyblue" => (0, 191, 255),
-            "dimgray" => (105, 105, 105),
-            "dimgrey" => (105, 105, 105),
-            "dodgerblue" => (30, 144, 255),
-            "firebrick" => (178, 34, 34),
-            "floralwhite" => (255, 250, 240),
-            "forestgreen" => (34, 139, 34),
-            "gainsboro" => (220, 220, 220),
-            "ghostwhite" => (248, 248, 255),
-            "gold" => (255, 215, 0),
-            "goldenrod" => (218, 165, 32),
-            "greenyellow" => (173, 255, 47),
-            "grey" => (128, 128, 128),
-            "honeydew" => (240, 255, 240),
-            "hotpink" => (255, 105, 180),
-            "indianred" => (205, 92, 92),
-            "indigo" => (75, 0, 130),
-            "ivory" => (255, 255, 240),
-            "khaki" => (240, 230, 140),
-            "lavender" => (230, 230, 250),
-            "lavenderblush" => (255, 240, 245),
-            "lawngreen" => (124, 252, 0),
-            "lemonchiffon" => (255, 250, 205),
-            "lightblue" => (173, 216, 230),
-            "lightcoral" => (240, 128, 128),
-            "lightcyan" => (224, 255, 255),
-            "lightgoldenrodyellow" => (250, 250, 210),
-            "lightgray" => (211, 211, 211),
-            "lightgreen" => (144, 238, 144),
-            "lightgrey" => (211, 211, 211),
-            "lightpink" => (255, 182, 193),
-            "lightsalmon" => (255, 160, 122),
-            "lightseagreen" => (32, 178, 170),
-            "lightskyblue" => (135, 206, 250),
-            "lightslategray" => (119, 136, 153),
-            "lightslategrey" => (119, 136, 153),
-            "lightsteelblue" => (176, 196, 222),
-            "lightyellow" => (255, 255, 224),
-            "limegreen" => (50, 205, 50),
-            "linen" => (250, 240, 230),
-            "magenta" => (255, 0, 255),
-            "mediumaquamarine" => (102, 205, 170),
-            "mediumblue" => (0, 0, 205),
-            "mediumorchid" => (186, 85, 211),
-            "mediumpurple" => (147, 112, 219),
-            "mediumseagreen" => (60, 179, 113),
-            "mediumslateblue" => (123, 104, 238),
-            "mediumspringgreen" => (0, 250, 154),
-            "mediumturquoise" => (72, 209, 204),
-            "mediumvioletred" => (199, 21, 133),
-            "midnightblue" => (25, 25, 112),
-            "mintcream" => (245, 255, 250),
-            "mistyrose" => (255, 228, 225),
-            "moccasin" => (255, 228, 181),
-            "navajowhite" => (255, 222, 173),
-            "oldlace" => (253, 245, 230),
-            "olivedrab" => (107, 142, 35),
-            "orange" => (255, 165, 0),
-            "orangered" => (255, 69, 0),
-            "orchid" => (218, 112, 214),
-            "palegoldenrod" => (238, 232, 170),
-            "palegreen" => (152, 251, 152),
-            "paleturquoise" => (175, 238, 238),
-            "palevioletred" => (219, 112, 147),
-            "papayawhip" => (255, 239, 213),
-            "peachpuff" => (255, 218, 185),
-            "peru" => (205, 133, 63),
-            "pink" => (255, 192, 203),
-            "plum" => (221, 160, 221),
-            "powderblue" => (176, 224, 230),
-            "rebeccapurple" => (102, 51, 153),
-            "rosybrown" => (188, 143, 143),
-            "royalblue" => (65, 105, 225),
-            "saddlebrown" => (139, 69, 19),
-            "salmon" => (250, 128, 114),
-            "sandybrown" => (244, 164, 96),
-            "seagreen" => (46, 139, 87),
-            "seashell" => (255, 245, 238),
-            "sienna" => (160, 82, 45),
-            "skyblue" => (135, 206, 235),
-            "slateblue" => (106, 90, 205),
-            "slategray" => (112, 128, 144),
-            "slategrey" => (112, 128, 144),
-            "snow" => (255, 250, 250),
-            "springgreen" => (0, 255, 127),
-            "steelblue" => (70, 130, 180),
-            "tan" => (210, 180, 140),
-            "thistle" => (216, 191, 216),
-            "tomato" => (255, 99, 71),
-            "turquoise" => (64, 224, 208),
-            "violet" => (238, 130, 238),
-            "wheat" => (245, 222, 179),
-            "whitesmoke" => (245, 245, 245),
-            "yellowgreen" => (154, 205, 50),
-        }
-    }
-
-    match_ignore_ascii_case! { ident ,
-        "transparent" => Ok(Output::from_rgba(Some(0), Some(0), Some(0), Some(0.0))),
-        "currentcolor" => Ok(Output::from_current_color()),
-        _ => keyword(ident)
-            .map(|(r, g, b)| Output::from_rgba(Some(*r), Some(*g), Some(*b), Some(1.0)))
-            .ok_or(()),
-    }
+    Ok(match_ignore_ascii_case! { ident ,
+        "transparent" => Output::from_rgba(0, 0, 0, 0.0),
+        "currentcolor" => Output::from_current_color(),
+        _ => return parse_named_color(ident),
+    })
 }
 
 #[inline]
@@ -1309,47 +1333,50 @@ where
     // are parsing the legacy syntax.
     let is_legacy_syntax = maybe_red.is_some() && arguments.try_parse(|p| p.expect_comma()).is_ok();
 
-    let red: Option<u8>;
-    let green: Option<u8>;
-    let blue: Option<u8>;
-
-    let alpha = if is_legacy_syntax {
-        match maybe_red.unwrap() {
+    let (red, green, blue, alpha) = if is_legacy_syntax {
+        let (red, green, blue) = match maybe_red.unwrap() {
             NumberOrPercentage::Number { value } => {
-                red = Some(clamp_floor_256_f32(value));
-                green = Some(clamp_floor_256_f32(color_parser.parse_number(arguments)?));
+                let red = clamp_floor_256_f32(value);
+                let green = clamp_floor_256_f32(color_parser.parse_number(arguments)?);
                 arguments.expect_comma()?;
-                blue = Some(clamp_floor_256_f32(color_parser.parse_number(arguments)?));
+                let blue = clamp_floor_256_f32(color_parser.parse_number(arguments)?);
+                (red, green, blue)
             }
             NumberOrPercentage::Percentage { unit_value } => {
-                red = Some(clamp_unit_f32(unit_value));
-                green = Some(clamp_unit_f32(color_parser.parse_percentage(arguments)?));
+                let red = clamp_unit_f32(unit_value);
+                let green = clamp_unit_f32(color_parser.parse_percentage(arguments)?);
                 arguments.expect_comma()?;
-                blue = Some(clamp_unit_f32(color_parser.parse_percentage(arguments)?));
+                let blue = clamp_unit_f32(color_parser.parse_percentage(arguments)?);
+                (red, green, blue)
             }
-        }
+        };
 
-        Some(parse_legacy_alpha(color_parser, arguments)?)
+        let alpha = parse_legacy_alpha(color_parser, arguments)?;
+
+        (red, green, blue, alpha)
     } else {
         #[inline]
-        fn get_component_value(c: Option<NumberOrPercentage>) -> Option<u8> {
+        fn get_component_value(c: Option<NumberOrPercentage>) -> u8 {
             c.map(|c| match c {
                 NumberOrPercentage::Number { value } => clamp_floor_256_f32(value),
                 NumberOrPercentage::Percentage { unit_value } => clamp_unit_f32(unit_value),
             })
+            .unwrap_or(0)
         }
 
-        red = get_component_value(maybe_red);
+        let red = get_component_value(maybe_red);
 
-        green = get_component_value(parse_none_or(arguments, |p| {
+        let green = get_component_value(parse_none_or(arguments, |p| {
             color_parser.parse_number_or_percentage(p)
         })?);
 
-        blue = get_component_value(parse_none_or(arguments, |p| {
+        let blue = get_component_value(parse_none_or(arguments, |p| {
             color_parser.parse_number_or_percentage(p)
         })?);
 
-        parse_modern_alpha(color_parser, arguments)?
+        let alpha = parse_modern_alpha(color_parser, arguments)?.unwrap_or(0.0);
+
+        (red, green, blue, alpha)
     };
 
     Ok(P::Output::from_rgba(red, green, blue, alpha))
@@ -1495,7 +1522,7 @@ where
         P::parse_number_or_percentage,
     )?;
 
-    let lightness = lightness.map(|l| l.value(lightness_range).max(0.0));
+    let lightness = lightness.map(|l| l.value(lightness_range));
     let a = a.map(|a| a.value(a_b_range));
     let b = b.map(|b| b.value(a_b_range));
 
@@ -1521,8 +1548,8 @@ where
         P::parse_angle_or_number,
     )?;
 
-    let lightness = lightness.map(|l| l.value(lightness_range).max(0.0));
-    let chroma = chroma.map(|c| c.value(chroma_range).max(0.0));
+    let lightness = lightness.map(|l| l.value(lightness_range));
+    let chroma = chroma.map(|c| c.value(chroma_range));
     let hue = hue.map(|h| normalize_hue(h.degrees()));
 
     Ok(into_color(lightness, chroma, hue, alpha))
@@ -1590,4 +1617,46 @@ where
     let alpha = parse_modern_alpha(color_parser, input)?;
 
     Ok((r1, r2, r3, alpha))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn serialize_modern_components() {
+        // None.
+        assert_eq!(ModernComponent(&None).to_css_string(), "none".to_string());
+
+        // Finite values.
+        assert_eq!(
+            ModernComponent(&Some(10.0)).to_css_string(),
+            "10".to_string()
+        );
+        assert_eq!(
+            ModernComponent(&Some(-10.0)).to_css_string(),
+            "-10".to_string()
+        );
+        assert_eq!(ModernComponent(&Some(0.0)).to_css_string(), "0".to_string());
+        assert_eq!(
+            ModernComponent(&Some(-0.0)).to_css_string(),
+            "0".to_string()
+        );
+
+        // Infinite values.
+        assert_eq!(
+            ModernComponent(&Some(f32::INFINITY)).to_css_string(),
+            "calc(infinity)".to_string()
+        );
+        assert_eq!(
+            ModernComponent(&Some(f32::NEG_INFINITY)).to_css_string(),
+            "calc(-infinity)".to_string()
+        );
+
+        // NaN.
+        assert_eq!(
+            ModernComponent(&Some(f32::NAN)).to_css_string(),
+            "calc(NaN)".to_string()
+        );
+    }
 }

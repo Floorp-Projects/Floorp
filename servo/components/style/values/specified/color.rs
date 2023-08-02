@@ -447,15 +447,9 @@ impl cssparser::FromParsedColor for Color {
         Color::CurrentColor
     }
 
-    fn from_rgba(red: Option<u8>, green: Option<u8>, blue: Option<u8>, alpha: Option<f32>) -> Self {
+    fn from_rgba(r: u8, g: u8, b: u8, a: f32) -> Self {
         Self::Absolute(Box::new(Absolute {
-            color: AbsoluteColor::new(
-                ColorSpace::Srgb,
-                red.unwrap_or(0),
-                green.unwrap_or(0),
-                blue.unwrap_or(0),
-                alpha.unwrap_or(0.0),
-            ),
+            color: AbsoluteColor::new(ColorSpace::Srgb, r, g, b, a),
             authored: None,
         }))
     }

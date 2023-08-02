@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.63"
 name = "cssparser"
-version = "0.31.2"
+version = "0.32.0"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 exclude = [
     "src/css-parsing-tests/**",
@@ -62,3 +62,4 @@ version = "1.0"
 [features]
 bench = []
 dummy_match_byte = []
+skip_long_tests = []
