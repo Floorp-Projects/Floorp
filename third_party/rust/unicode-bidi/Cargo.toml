@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "unicode-bidi"
-version = "0.3.8"
+version = "0.3.13"
 authors = ["The Servo Project Developers"]
 exclude = [
     "benches/**",
@@ -41,6 +41,11 @@ repository = "https://github.com/servo/unicode-bidi"
 
 [lib]
 name = "unicode_bidi"
+
+[[test]]
+name = "conformance_tests"
+path = "tests/conformance_tests.rs"
+required-features = ["hardcoded-data"]
 
 [dependencies.flame]
 version = "0.2"

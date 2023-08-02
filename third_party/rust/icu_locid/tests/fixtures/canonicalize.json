@@ -1,0 +1,18 @@
+[
+  {
+    "input": "Pl",
+    "output": "pl"
+  },
+  {
+    "input": "eN-uS",
+    "output": "en-US"
+  },
+  {
+    "input": "ZH_hans_hK",
+    "output": "zh-Hans-HK"
+  },
+  {
+    "input": "en-scouse-fonipa",
+    "output": "en-fonipa-scouse"
+  }
+]

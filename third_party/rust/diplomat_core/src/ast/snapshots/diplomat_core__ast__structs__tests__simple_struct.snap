@@ -1,0 +1,32 @@
+---
+source: core/src/ast/structs.rs
+expression: "Struct::new(&syn::parse_quote! {\n                /// Some docs.\n                #[diplomat :: rust_link(foo :: Bar, Struct)] struct\n                MyLocalStruct { a : i32, b : Box < MyLocalStruct > }\n            }, true)"
+---
+name: MyLocalStruct
+docs:
+  - Some docs.
+  - - path:
+        elements:
+          - foo
+          - Bar
+      typ: Struct
+      display: Normal
+lifetimes: {}
+fields:
+  - - a
+    - Primitive: i32
+    - - ""
+      - []
+  - - b
+    - Box:
+        Named:
+          path:
+            elements:
+              - MyLocalStruct
+          lifetimes: []
+    - - ""
+      - []
+methods: []
+output_only: true
+cfg_attrs: []
+

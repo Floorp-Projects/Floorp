@@ -46,8 +46,8 @@ pub fn visual_runs(line: Range<usize>, levels: &[Level]) -> Vec<LevelRun> {
             start = i;
             run_level = new_level;
 
-            min_level = min(run_level, min_level);
-            max_level = max(run_level, max_level);
+            min_level = cmp::min(run_level, min_level);
+            max_level = cmp::max(run_level, max_level);
         }
     }
     runs.push(start..line.end);
