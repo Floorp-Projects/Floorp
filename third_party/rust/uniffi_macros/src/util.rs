@@ -4,17 +4,23 @@
 
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote, ToTokens};
+use std::path::{Path as StdPath, PathBuf};
 use syn::{
     ext::IdentExt,
     parse::{Parse, ParseStream},
     Attribute, Path, Token,
 };
 
+pub fn manifest_path() -> Result<PathBuf, String> {
+    let manifest_dir =
+        std::env::var_os("CARGO_MANIFEST_DIR").ok_or("`CARGO_MANIFEST_DIR` is not set")?;
+
+    Ok(StdPath::new(&manifest_dir).join("Cargo.toml"))
+}
+
 #[cfg(not(feature = "nightly"))]
 pub fn mod_path() -> syn::Result<String> {
     // Without the nightly feature and TokenStream::expand_expr, just return the crate name
-
-    use std::path::Path;
 
     use fs_err as fs;
     use once_cell::sync::Lazy;
@@ -38,11 +44,9 @@ pub fn mod_path() -> syn::Result<String> {
     }
 
     static LIB_CRATE_MOD_PATH: Lazy<Result<String, String>> = Lazy::new(|| {
-        let manifest_dir =
-            std::env::var_os("CARGO_MANIFEST_DIR").ok_or("`CARGO_MANIFEST_DIR` is not set")?;
+        let file = manifest_path()?;
+        let cargo_toml_bytes = fs::read(file).map_err(|e| e.to_string())?;
 
-        let cargo_toml_bytes =
-            fs::read(Path::new(&manifest_dir).join("Cargo.toml")).map_err(|e| e.to_string())?;
         let cargo_toml = toml::from_slice::<CargoToml>(&cargo_toml_bytes)
             .map_err(|e| format!("Failed to parse `Cargo.toml`: {e}"))?;
 

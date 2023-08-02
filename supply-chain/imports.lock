@@ -519,57 +519,57 @@ user-login = "Manishearth"
 user-name = "Manish Goregaokar"
 
 [[publisher.uniffi]]
-version = "0.24.2"
-when = "2023-07-25"
+version = "0.24.3"
+when = "2023-08-01"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.uniffi_bindgen]]
-version = "0.24.2"
-when = "2023-07-25"
+version = "0.24.3"
+when = "2023-08-01"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.uniffi_build]]
-version = "0.24.2"
-when = "2023-07-25"
+version = "0.24.3"
+when = "2023-08-01"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.uniffi_checksum_derive]]
-version = "0.24.2"
-when = "2023-07-25"
+version = "0.24.3"
+when = "2023-08-01"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.uniffi_core]]
-version = "0.24.2"
-when = "2023-07-25"
+version = "0.24.3"
+when = "2023-08-01"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.uniffi_macros]]
-version = "0.24.2"
-when = "2023-07-25"
+version = "0.24.3"
+when = "2023-08-01"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.uniffi_meta]]
-version = "0.24.2"
-when = "2023-07-25"
+version = "0.24.3"
+when = "2023-08-01"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.uniffi_testing]]
-version = "0.24.2"
-when = "2023-07-25"
+version = "0.24.3"
+when = "2023-08-01"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -1160,10 +1160,20 @@ who = "David Cook <dcook@divviup.org>"
 criteria = "safe-to-deploy"
 delta = "1.17.2 -> 1.18.0"
 
+[[audits.isrg.audits.rand_core]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.6.3"
+
 [[audits.isrg.audits.rayon-core]]
 who = "Brandon Pitman <bran@bran.land>"
 criteria = "safe-to-deploy"
 delta = "1.10.2 -> 1.11.0"
+
+[[audits.isrg.audits.sha2]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.10.2"
 
 [[audits.isrg.audits.sha3]]
 who = "David Cook <dcook@divviup.org>"
