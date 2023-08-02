@@ -1,17 +1,21 @@
+#![cfg_attr(not(feature = "std"), no_std)]
 #![allow(dead_code)]
 
-#[macro_use]
-extern crate derive_more;
+#[cfg(not(feature = "std"))]
+extern crate alloc;
 
-use std::path::PathBuf;
-use std::ptr;
+#[cfg(not(feature = "std"))]
+use alloc::{string::String, vec, vec::Vec};
+use core::ptr;
+
+use derive_more::AsRef;
 
 #[derive(AsRef)]
 struct SingleFieldTuple(String);
 
 #[test]
 fn single_field_tuple() {
-    let item = SingleFieldTuple(String::from("test"));
+    let item = SingleFieldTuple("test".into());
 
     assert!(ptr::eq(&item.0, item.as_ref()));
 }
@@ -34,42 +38,49 @@ struct SingleFieldStruct {
 #[test]
 fn single_field_struct() {
     let item = SingleFieldStruct {
-        first: String::from("test"),
+        first: "test".into(),
     };
 
     assert!(ptr::eq(&item.first, item.as_ref()));
 }
 
-#[derive(AsRef)]
-struct MultiFieldTuple(#[as_ref] String, #[as_ref] PathBuf, Vec<usize>);
+#[cfg(feature = "std")]
+mod pathbuf {
+    use std::path::PathBuf;
 
-#[test]
-fn multi_field_tuple() {
-    let item = MultiFieldTuple(String::from("test"), PathBuf::new(), vec![]);
+    use super::*;
 
-    assert!(ptr::eq(&item.0, item.as_ref()));
-    assert!(ptr::eq(&item.1, item.as_ref()));
-}
+    #[derive(AsRef)]
+    struct MultiFieldTuple(#[as_ref] String, #[as_ref] PathBuf, Vec<usize>);
 
-#[derive(AsRef)]
-struct MultiFieldStruct {
-    #[as_ref]
-    first: String,
-    #[as_ref]
-    second: PathBuf,
-    third: Vec<usize>,
-}
+    #[test]
+    fn multi_field_tuple() {
+        let item = MultiFieldTuple("test".into(), PathBuf::new(), vec![]);
 
-#[test]
-fn multi_field_struct() {
-    let item = MultiFieldStruct {
-        first: String::from("test"),
-        second: PathBuf::new(),
-        third: vec![],
-    };
+        assert!(ptr::eq(&item.0, item.as_ref()));
+        assert!(ptr::eq(&item.1, item.as_ref()));
+    }
 
-    assert!(ptr::eq(&item.first, item.as_ref()));
-    assert!(ptr::eq(&item.second, item.as_ref()));
+    #[derive(AsRef)]
+    struct MultiFieldStruct {
+        #[as_ref]
+        first: String,
+        #[as_ref]
+        second: PathBuf,
+        third: Vec<usize>,
+    }
+
+    #[test]
+    fn multi_field_struct() {
+        let item = MultiFieldStruct {
+            first: "test".into(),
+            second: PathBuf::new(),
+            third: vec![],
+        };
+
+        assert!(ptr::eq(&item.first, item.as_ref()));
+        assert!(ptr::eq(&item.second, item.as_ref()));
+    }
 }
 
 #[derive(AsRef)]
@@ -79,9 +90,7 @@ struct SingleFieldGenericStruct<T> {
 
 #[test]
 fn single_field_generic_struct() {
-    let item = SingleFieldGenericStruct {
-        first: String::from("test"),
-    };
+    let item = SingleFieldGenericStruct { first: "test" };
 
     assert!(ptr::eq(&item.first, item.as_ref()));
 }

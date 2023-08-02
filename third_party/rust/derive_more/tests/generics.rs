@@ -1,6 +1,10 @@
+#![cfg_attr(not(feature = "std"), no_std)]
 #![allow(dead_code, non_camel_case_types)]
-#[macro_use]
-extern crate derive_more;
+
+use derive_more::{
+    Add, AddAssign, Constructor, Deref, DerefMut, Display, Error, From, FromStr, Index,
+    IndexMut, IntoIterator, Mul, MulAssign, Not, Sum,
+};
 
 #[derive(
     From,
@@ -34,7 +38,7 @@ struct WrappedDouble<T: Clone, U: Clone>(T, U);
 #[from(forward)]
 struct WrappedDouble2<T: Clone, U: Clone>(T, U);
 
-#[cfg(feature = "nightly")]
+#[cfg(nightly)]
 #[derive(
     From,
     FromStr,
@@ -74,7 +78,7 @@ struct WrappedWithConst<T, const C: u32>(T);
 #[deref(forward)]
 #[deref_mut(forward)]
 #[into_iterator(owned, ref, ref_mut)]
-struct Struct<T: Clone> {
+struct Struct1<T: Clone> {
     t: T,
 }
 
@@ -120,4 +124,141 @@ enum StructEnum<T: Clone, U: Clone> {
 enum StructEnum2<T: Clone, U: Clone, X: Clone> {
     DoubleStruct { t: T, u: U },
     TripleStruct { t: T, u: U, x: X },
+}
+
+#[derive(Debug, Display, Error)]
+enum Enum {}
+
+#[derive(Debug, Display, Error)]
+enum EnumGeneric<E> {
+    Inner(E),
+}
+
+#[derive(Debug, Display, Error)]
+enum EnumConst<const X: usize> {}
+
+#[derive(Debug, Display, Error)]
+enum EnumConstDefault<const X: usize = 42> {}
+
+#[derive(Debug, Display, Error)]
+enum EnumLifetime<'lt: 'static> {
+    Inner(&'lt Enum),
+}
+
+#[derive(Debug, Display, Error)]
+enum EnumConstGeneric<const X: usize, E> {
+    Inner(E),
+}
+
+#[derive(Debug, Display, Error)]
+enum EnumGenericConst<E, const X: usize> {
+    Inner(E),
+}
+
+#[derive(Debug, Display, Error)]
+enum EnumGenericConstDefault<E, const X: usize = 42> {
+    Inner(E),
+}
+
+#[derive(Debug, Display, Error)]
+enum EnumLifetimeGeneric<'lt: 'static, E> {
+    Inner(&'lt E),
+}
+
+#[derive(Debug, Display, Error)]
+enum EnumLifetimeConst<'lt: 'static, const X: usize> {
+    Inner(&'lt EnumConst<X>),
+}
+
+#[derive(Debug, Display, Error)]
+enum EnumLifetimeConstDefault<'lt: 'static, const X: usize = 42> {
+    Inner(&'lt EnumConst<X>),
+}
+
+#[derive(Debug, Display, Error)]
+enum EnumLifetimeConstGeneric<'lt: 'static, const X: usize, E> {
+    Inner(&'lt E),
+}
+
+#[derive(Debug, Display, Error)]
+enum EnumLifetimeGenericConst<'lt: 'static, E, const X: usize> {
+    Inner(&'lt E),
+}
+
+#[derive(Debug, Display, Error)]
+enum EnumLifetimeGenericConstDefault<'lt: 'static, E, const X: usize = 42> {
+    Inner(&'lt E),
+}
+
+#[derive(Debug, Display, Error)]
+struct Struct;
+
+#[derive(Debug, Display, Error)]
+struct StructGeneric<E> {
+    inner: E,
+}
+
+#[derive(Debug, Display, Error)]
+struct StructConst<const X: usize> {}
+
+#[derive(Debug, Display, Error)]
+struct StructConstDefault<const X: usize = 42> {}
+
+#[derive(Debug, Display, Error)]
+struct StructLifetime<'lt: 'static> {
+    inner: &'lt Enum,
+}
+
+#[derive(Debug, Display, Error)]
+struct StructConstGeneric<const X: usize, E> {
+    inner: E,
+}
+
+#[derive(Debug, Display, Error)]
+struct StructGenericConst<E, const X: usize> {
+    inner: E,
+}
+
+#[derive(Debug, Display, Error)]
+struct StructGenericConstDefault<E, const X: usize = 42> {
+    inner: E,
+}
+
+#[derive(Debug, Display, Error)]
+struct StructLifetimeGeneric<'lt: 'static, E> {
+    inner: &'lt E,
+}
+
+#[derive(Debug, Display, Error)]
+struct StructLifetimeConst<'lt: 'static, const X: usize> {
+    inner: &'lt EnumConst<X>,
+}
+
+#[derive(Debug, Display, Error)]
+struct StructLifetimeConstDefault<'lt: 'static, const X: usize = 42> {
+    inner: &'lt EnumConst<X>,
+}
+
+#[derive(Debug, Display, Error)]
+struct StructLifetimeConstGeneric<'lt: 'static, const X: usize, E> {
+    inner: &'lt E,
+}
+
+#[derive(Debug, Display, Error)]
+struct StructLifetimeGenericConst<'lt: 'static, E, const X: usize> {
+    inner: &'lt E,
+}
+
+#[derive(Debug, Display, Error)]
+struct StructLifetimeGenericConstDefault<'lt: 'static, E, const X: usize = 42> {
+    inner: &'lt E,
+}
+
+#[derive(Debug, Display, Error)]
+struct StructLifetimeGenericBoundsConstDefault<
+    'lt: 'static,
+    E: Clone,
+    const X: usize = 42,
+> {
+    inner: &'lt E,
 }

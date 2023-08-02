@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use super::*;
 
 derive_display!(TestErr, T, E);

@@ -1,8 +1,9 @@
+#![cfg_attr(not(feature = "std"), no_std)]
 #![allow(dead_code)]
-use std::marker::PhantomData;
 
-#[macro_use]
-extern crate derive_more;
+use core::marker::PhantomData;
+
+use derive_more::MulAssign;
 
 #[derive(MulAssign)]
 struct MyInt(i32);

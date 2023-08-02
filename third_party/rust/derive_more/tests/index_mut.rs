@@ -1,6 +1,6 @@
 #![allow(dead_code, unused_imports)]
-#[macro_use]
-extern crate derive_more;
+
+use derive_more::IndexMut;
 
 #[derive(IndexMut)]
 struct MyVec(Vec<i32>);

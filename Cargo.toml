@@ -147,6 +147,9 @@ nix = { path = "build/rust/nix" }
 # Patch indexmap 2.0 to 1.0
 indexmap = { path = "build/rust/indexmap" }
 
+# Patch derive_more 0.99 to 1.0.0-beta
+derive_more = { path = "build/rust/derive_more" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 
