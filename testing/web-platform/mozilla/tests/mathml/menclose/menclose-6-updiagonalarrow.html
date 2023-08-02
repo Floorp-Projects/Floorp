@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <title>menclose updiagonalarrow</title>
+    <link rel="match" href="menclose-6-ref.html"/>
+    <script type="text/javascript">
+      function doTest() {
+          document.getElementById('testMenclose').removeAttribute("notation");
+          document.documentElement.removeAttribute("class");
+      }
+      document.documentElement.addEventListener("TestRendered",doTest);
+    </script>
+  </head>
+  <body>
+    <p>
+      <math><menclose id="testMenclose" notation="updiagonalarrow"><mspace width="100px" height="50px" mathbackground="blue"></mspace></menclose></math>
+    </p>
+  </body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <title>menclose updiagonalstrike</title>
+    <meta charset="utf-8"/>
+    <link rel="match" href="menclose-2-updiagonalstrike-ref.html"/>
+    <link rel="stylesheet" href="/fonts/ahem.css" />
+    <style>
+      math, svg {
+          font: 25px/1 Ahem;
+      }
+    </style>
+    <script type="text/javascript">
+      function doTest()
+      {
+          var box = document.getElementById("box").getBoundingClientRect();
+          document.getElementById("path").setAttribute("d",
+                                                       "M" + (box.left + "," + box.bottom) + " " +
+                                                       "l" + (box.width + "," + (-box.height)));
+          document.documentElement.removeAttribute("class");
+      }
+      document.documentElement.addEventListener("TestRendered",doTest);
+    </script>
+  </head>
+  <body>
+
+    <div style="position: absolute; left: 20px; top: 20px;">
+      <math>
+        <menclose id="box" notation="updiagonalstrike">
+          <mspace width="200px" height="100px"></mspace>
+        </menclose>
+      </math>
+    </div>
+
+    <div style="position: absolute; left: 0px; top: 0px;">
+      <svg width="500px" height="500px">
+        <path id="path" style="fill: none; stroke-width: .5em; stroke: green; stroke-linecap: round; shape-rendering: crispEdges;"></path>
+      </svg>
+    </div>
+
+  </body>
+</html>
