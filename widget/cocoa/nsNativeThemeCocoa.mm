@@ -65,10 +65,7 @@ void CUIDraw(CUIRendererRef r, CGRect rect, CGContextRef ctx, CFDictionaryRef op
 }
 
 static bool IsDarkAppearance(NSAppearance* appearance) {
-  if (@available(macOS 10.14, *)) {
-    return [appearance.name isEqualToString:NSAppearanceNameDarkAqua];
-  }
-  return false;
+  return [appearance.name isEqualToString:NSAppearanceNameDarkAqua];
 }
 
 // Workaround for NSCell control tint drawing
@@ -2157,7 +2154,7 @@ void nsNativeThemeCocoa::DrawSourceListSelection(CGContextRef aContext, const CG
   NSColor* fillColor;
   if (aSelectionIsActive) {
     // Active selection, blue or graphite.
-    fillColor = ControlAccentColor();
+    fillColor = [NSColor controlAccentColor];
   } else {
     // Inactive selection, gray.
     if (aWindowIsActive) {
