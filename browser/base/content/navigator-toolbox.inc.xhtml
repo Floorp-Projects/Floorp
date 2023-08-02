@@ -384,6 +384,7 @@
                 <image class="urlbar-icon" id="translations-button-circle-arrows" />
                 <html:span id="translations-button-locale" aria-hidden="true" />
               </hbox>
+#ifdef NIGHTLY_BUILD
               <hbox id="shopping-sidebar-button"
                   class="urlbar-page-action"
                   role="button"
@@ -393,6 +394,7 @@
                 <image id="shopping-sidebar-button-icon"
                        class="urlbar-icon"/>
               </hbox>
+#endif
               <toolbarbutton id="urlbar-zoom-button"
                      onclick="FullZoom.reset(); FullZoom.resetScalingZoom();"
                      tooltip="dynamic-shortcut-tooltip"
