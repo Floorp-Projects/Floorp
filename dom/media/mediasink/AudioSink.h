@@ -92,8 +92,6 @@ class AudioSink : private AudioStream::DataSource {
     mStartTime = aStartTime;
   }
 
-  void EnableTreatAudioUnderrunAsSilence(bool aEnabled);
-
  private:
   // Interface of AudioStream::DataSource.
   // Called on the callback thread of cubeb. Returns the number of frames that
@@ -175,10 +173,6 @@ class AudioSink : private AudioStream::DataSource {
   Atomic<bool> mProcessedQueueFinished;
   MediaQueue<AudioData>& mAudioQueue;
   const float mProcessedQueueThresholdMS;
-
-  // True if we'd like to treat underrun as silent frames. But that can only be
-  // applied in the special situation for seamless looping.
-  bool mTreatUnderrunAsSilence = false;
 };
 
 }  // namespace mozilla
