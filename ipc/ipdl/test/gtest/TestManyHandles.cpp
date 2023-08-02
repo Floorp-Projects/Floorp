@@ -25,7 +25,10 @@ class TestManyHandlesChild : public PTestManyHandlesChild {
       int value;
       const int size = sizeof(value);
 #ifdef XP_WIN
-      EXPECT_TRUE(::ReadFile(handle.get(), &value, size, nullptr, nullptr));
+      DWORD numberOfBytesRead;
+      EXPECT_TRUE(
+          ::ReadFile(handle.get(), &value, size, &numberOfBytesRead, nullptr));
+      EXPECT_EQ(numberOfBytesRead, (DWORD)size);
 #else
       EXPECT_EQ(read(handle.get(), &value, size), size);
 #endif
@@ -55,7 +58,10 @@ IPDL_TEST(TestManyHandles) {
 #ifdef XP_WIN
     ASSERT_TRUE(::CreatePipe(getter_Transfers(readPipe),
                              getter_Transfers(writePipe), nullptr, size));
-    ASSERT_TRUE(::WriteFile(writePipe.get(), &i, size, nullptr, nullptr));
+    DWORD numberOfBytesWritten;
+    ASSERT_TRUE(
+        ::WriteFile(writePipe.get(), &i, size, &numberOfBytesWritten, nullptr));
+    ASSERT_EQ(numberOfBytesWritten, (DWORD)size);
 #else
     int fds[2];
     ASSERT_EQ(pipe(fds), 0);
