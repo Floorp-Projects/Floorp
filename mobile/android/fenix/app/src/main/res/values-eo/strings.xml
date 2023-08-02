@@ -296,51 +296,51 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Ne nun</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Igi %s via ĉefa retumilo</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Igi %s via ĉefa retumilo</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Igu Firefox via norma retumilo</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">%1$s metas personojn antaŭ profiton kaj defendas vian privatecon per blokado de interretejaj spuriloj.\n\nPli da informo en nia %2$s.</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s metas personojn antaŭ profiton kaj defendas vian privatecon per blokado de interretejaj spuriloj.\n\nPli da informo en nia %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox metas personojn antaŭ profiton kaj defendas vian privatecon per blokado de interretejaj spuriloj.\n\nPli da informo en niaj notoj pri privateco.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">rimarko pri privateco</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">rimarko pri privateco</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Difini kiel norman retumilon</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Difini kiel norman retumilon</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Ne nun</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ne nun</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Iru tien kaj reen inter la telefono kaj la komputilo</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Iru tien kaj reen inter la telefono kaj la komputilo</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Prenu viajn langetojn kaj pasvortojn el viaj aliaj aparatoj por daŭrigi el la loko kie vi haltis.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Prenu viajn langetojn kaj pasvortojn el viaj aliaj aparatoj por daŭrigi el la loko kie vi haltis.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Komenci seancon</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Komenci seancon</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Ne nun</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Ne nun</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Sciigoj helpas vin plenumi pli per %s</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Sciigoj helpas vin plenumi pli per %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Sciigoj helpas vin plenumi pli per Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Sendu langetojn inter aparatoj, administru elŝutojn kaj ricevu konsiletojn pri la maniero eltiri la maksimumon el %s.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Sendu langetojn inter aparatoj, administru elŝutojn kaj ricevu konsiletojn pri la maniero eltiri la maksimumon el %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Sendu langetojn inter aparatoj, administru elŝutojn kaj ricevu konsiletojn pri la maniero eltiri la maksimumon el Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Ŝalti sciigojn</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Ŝalti sciigojn</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Ne nun</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Ne nun</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -421,17 +421,11 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Sendi peton</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Redukto de kuketaj anoncoj</string>
-    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Ĉu peti subtenon por tiu ĉi retejo?</string>
-    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">La peto pri subteno de retejo estis sendita.</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text_2">Peto sendita</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Ŝaltita por tiu ĉi retejo</string>
-    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">La peto pri subteno de retejo estis sendita</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Peto pri subteno sendita</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -441,8 +435,6 @@
 
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Ĉu malŝalti la redukton de kuketaj anoncoj en %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Tiu ĉi retejo ne estas subtenata de la redukto de kuketaj anoncoj. Ĉu vi ŝatus ke nia teamo reviziu tiun ĉi retejon, por subteni ĝin estontece?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s ne povas aŭtomate rifuzi kuketojn en tiu ĉi retejo. Vi povas sendi peton por aldoni subtenon por tiu ĉi retejo en la estonteco.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -548,6 +540,11 @@
     <string name="preferences_open_links_in_apps_never">Neniam</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Ekstera administranto de elŝutoj</string>
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Aktivigi registrojn de Gecko</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">Fino de programo pro apliko de ŝanĝoj…</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Aldonaĵoj</string>
 
@@ -1209,8 +1206,14 @@
 
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Konservi kiel PDF</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">Ne eblas krei dosieron PDF</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Ignori</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">Ne eblas presi</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">Presi</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Sendi al aparato</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1507,12 +1510,8 @@
     <string name="etp_settings">Agordoj de protekto</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Plibonigita protekto kontraŭ spurado</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Retumu sen esti observata</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
     <string name="preference_enhanced_tracking_protection_summary">Inkluzivita nun estas la kompleta protekto kontraŭ kuketoj, nia ĝisnuna plej pova barilo kontraŭ interretejaj spuriloj.</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Gardu viajn datumojn por vi mem. %s protektas vin de pluraj el la plej oftaj spuriloj, kiuj sekvas vian retumon.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">%s protektas vin kontraŭ pluraj el la plej oftaj spuriloj, kiuj sekvas kion vi faras dum retumo.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1520,15 +1519,11 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Norma</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Ekvilibrita por privateco kaj efikeco. Paĝoj ŝargiĝos normale.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_5">Paĝoj normale ŝargiĝos, sed malpli da spuriloj estos blokitaj.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Aferoj blokitaj de la norma protekto kontraŭ spurado</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Rigora</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Pli da spuriloj blokitaj signifas ke paĝoj ŝargiĝos pli rapide, sed kelkaj misfunkcioj povus okazi.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_4">Plej bona protekto kontraŭ spurado, kaj plej bona efikeco, sed kelkaj retejoj povus ne bone funkcii.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
@@ -1919,6 +1914,12 @@
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Detaloj de personecigita serĉilo</string>
 
+    <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
+    <string name="search_add_custom_engine_suggest_url_label">API por serĉaj sugestoj (elektebla)</string>
+    <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
+    <string name="search_add_custom_engine_suggest_string_hint">URL de la API por serĉaj sugestoj</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Anstataŭigi serĉon per “%s”. Ekzemplo:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Konservi</string>
 
