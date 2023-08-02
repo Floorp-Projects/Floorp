@@ -9506,9 +9506,10 @@ static void relative_pointer_handle_relative_motion(
 
   WidgetMouseEvent event(true, eMouseMove, window, WidgetMouseEvent::eReal);
 
+  gint scale = window->GdkCeiledScaleFactor();
   event.mRefPoint = window->GetNativePointerLockCenter();
-  event.mRefPoint.x += wl_fixed_to_int(dx_w);
-  event.mRefPoint.y += wl_fixed_to_int(dy_w);
+  event.mRefPoint.x += int(wl_fixed_to_double(dx_w) * scale);
+  event.mRefPoint.y += int(wl_fixed_to_double(dy_w) * scale);
 
   event.AssignEventTime(window->GetWidgetEventTime(time_lo));
   window->DispatchInputEvent(&event);
