@@ -1,0 +1,208 @@
+---
+source: core/src/hir/elision.rs
+expression: tcx
+---
+TypeContext {
+    out_structs: [
+        StructDef {
+            docs: Docs(
+                "",
+                [],
+            ),
+            name: "OutStruct",
+            fields: [
+                StructField {
+                    docs: Docs(
+                        "",
+                        [],
+                    ),
+                    name: "inner",
+                    ty: Opaque(
+                        OpaquePath {
+                            lifetimes: TypeLifetimes {
+                                indices: [
+                                    NonStatic(
+                                        TypeLifetime(
+                                            0,
+                                        ),
+                                    ),
+                                ],
+                            },
+                            optional: Optional(
+                                true,
+                            ),
+                            owner: Own,
+                            tcx_id: OpaqueId(
+                                0,
+                            ),
+                        },
+                    ),
+                },
+            ],
+            methods: [
+                Method {
+                    docs: Docs(
+                        "",
+                        [],
+                    ),
+                    name: "new",
+                    lifetime_env: LifetimeEnv {
+                        nodes: [
+                            Lifetime {
+                                ident: "a",
+                                longer: [],
+                                shorter: [],
+                            },
+                        ],
+                        num_lifetimes: 1,
+                    },
+                    param_self: None,
+                    params: [
+                        Param {
+                            name: "s",
+                            ty: Slice(
+                                Str(
+                                    NonStatic(
+                                        TypeLifetime(
+                                            0,
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        },
+                    ],
+                    output: Infallible(
+                        Some(
+                            OutType(
+                                Struct(
+                                    OutStruct(
+                                        StructPath {
+                                            lifetimes: TypeLifetimes {
+                                                indices: [
+                                                    NonStatic(
+                                                        TypeLifetime(
+                                                            0,
+                                                        ),
+                                                    ),
+                                                ],
+                                            },
+                                            tcx_id: OutStructId(
+                                                0,
+                                            ),
+                                        },
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                },
+            ],
+        },
+    ],
+    structs: [
+        StructDef {
+            docs: Docs(
+                "",
+                [],
+            ),
+            name: "Struct",
+            fields: [
+                StructField {
+                    docs: Docs(
+                        "",
+                        [],
+                    ),
+                    name: "s",
+                    ty: Slice(
+                        Str(
+                            NonStatic(
+                                TypeLifetime(
+                                    0,
+                                ),
+                            ),
+                        ),
+                    ),
+                },
+            ],
+            methods: [
+                Method {
+                    docs: Docs(
+                        "",
+                        [],
+                    ),
+                    name: "rustc_elision",
+                    lifetime_env: LifetimeEnv {
+                        nodes: [
+                            Lifetime {
+                                ident: "a",
+                                longer: [],
+                                shorter: [],
+                            },
+                        ],
+                        num_lifetimes: 2,
+                    },
+                    param_self: Some(
+                        ParamSelf {
+                            ty: Struct(
+                                StructPath {
+                                    lifetimes: TypeLifetimes {
+                                        indices: [
+                                            NonStatic(
+                                                TypeLifetime(
+                                                    0,
+                                                ),
+                                            ),
+                                        ],
+                                    },
+                                    tcx_id: StructId(
+                                        0,
+                                    ),
+                                },
+                            ),
+                        },
+                    ),
+                    params: [
+                        Param {
+                            name: "s",
+                            ty: Slice(
+                                Str(
+                                    NonStatic(
+                                        TypeLifetime(
+                                            1,
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        },
+                    ],
+                    output: Infallible(
+                        Some(
+                            OutType(
+                                Slice(
+                                    Str(
+                                        NonStatic(
+                                            TypeLifetime(
+                                                1,
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                },
+            ],
+        },
+    ],
+    opaques: [
+        OpaqueDef {
+            docs: Docs(
+                "",
+                [],
+            ),
+            name: "Opaque",
+            methods: [],
+        },
+    ],
+    enums: [],
+}

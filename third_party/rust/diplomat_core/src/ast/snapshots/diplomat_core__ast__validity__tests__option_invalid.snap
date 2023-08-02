@@ -1,0 +1,9 @@
+---
+source: core/src/ast/validity.rs
+expression: output
+---
+A non-reference type was found inside an Option<T>: Option<u8>
+A non-reference type was found inside an Option<T>: Option<Option<u16>>
+A non-reference type was found inside an Option<T>: Option<char>
+A non-reference type was found inside an Option<T>: Option<u16>
+

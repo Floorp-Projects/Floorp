@@ -574,6 +574,13 @@ user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
+[[publisher.utf8_iter]]
+version = "1.0.3"
+when = "2022-09-09"
+user-id = 4484
+user-login = "hsivonen"
+user-name = "Henri Sivonen"
+
 [[publisher.walkdir]]
 version = "2.3.2"
 when = "2021-03-22"

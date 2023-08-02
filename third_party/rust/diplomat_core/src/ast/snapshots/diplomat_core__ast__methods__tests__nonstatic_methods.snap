@@ -1,0 +1,33 @@
+---
+source: core/src/ast/methods.rs
+expression: "Method::from_syn(&syn::parse_quote! {\n                fn foo(& self, x : u64, y : MyCustomStruct) {}\n            },\n    PathType::new(Path::empty().sub_path(Ident::from(\"MyStructContainingMethod\"))),\n    None, &[])"
+---
+name: foo
+docs:
+  - ""
+  - []
+full_path_name: MyStructContainingMethod_foo
+self_param:
+  reference:
+    - Anonymous
+    - Immutable
+  path_type:
+    path:
+      elements:
+        - MyStructContainingMethod
+    lifetimes: []
+params:
+  - name: x
+    ty:
+      Primitive: u64
+  - name: y
+    ty:
+      Named:
+        path:
+          elements:
+            - MyCustomStruct
+        lifetimes: []
+return_type: ~
+lifetime_env: {}
+cfg_attrs: []
+
