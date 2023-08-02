@@ -410,8 +410,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   nsGlobalWindowInner* GetCurrentInnerWindowInternal() const;
 
-  nsGlobalWindowInner* EnsureInnerWindowInternal();
-
   bool IsCreatingInnerWindow() const { return mCreatingInnerWindow; }
 
   bool IsChromeWindow() const { return mIsChrome; }
@@ -1155,10 +1153,6 @@ inline nsIScriptContext* nsGlobalWindowOuter::GetContextInternal() {
 inline nsGlobalWindowInner* nsGlobalWindowOuter::GetCurrentInnerWindowInternal()
     const {
   return nsGlobalWindowInner::Cast(mInnerWindow);
-}
-
-inline nsGlobalWindowInner* nsGlobalWindowOuter::EnsureInnerWindowInternal() {
-  return nsGlobalWindowInner::Cast(EnsureInnerWindow());
 }
 
 inline void nsGlobalWindowOuter::MaybeClearInnerWindow(
