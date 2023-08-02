@@ -326,8 +326,8 @@ amManager.prototype = {
   ]),
 };
 
-const BLOCKLIST_JSM = "resource://gre/modules/Blocklist.jsm";
-ChromeUtils.defineModuleGetter(lazy, "Blocklist", BLOCKLIST_JSM);
+const BLOCKLIST_SYS_MJS = "resource://gre/modules/Blocklist.sys.mjs";
+ChromeUtils.defineESModuleGetters(lazy, { Blocklist: BLOCKLIST_SYS_MJS });
 
 export function BlocklistService() {
   this.wrappedJSObject = this;
@@ -339,7 +339,7 @@ BlocklistService.prototype = {
   STATE_BLOCKED: Ci.nsIBlocklistService.STATE_BLOCKED,
 
   get isLoaded() {
-    return Cu.isModuleLoaded(BLOCKLIST_JSM) && lazy.Blocklist.isLoaded;
+    return Cu.isESModuleLoaded(BLOCKLIST_SYS_MJS) && lazy.Blocklist.isLoaded;
   },
 
   observe(...args) {
