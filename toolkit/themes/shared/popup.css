@@ -70,9 +70,10 @@ panel {
     min-width: 0;
     min-height: 0;
 
-    /* Makes popup constraints work */
-    max-height: calc(100% - 2 * var(--panel-shadow-margin));
-    max-width: calc(100% - 2 * var(--panel-shadow-margin));
+    /* Makes popup constraints work. Round up to avoid subpixel rounding
+     * causing overflow, see bug 1846050 */
+    max-height: round(up, 100% - 2 * var(--panel-shadow-margin), 1px);
+    max-width: round(up, 100% - 2 * var(--panel-shadow-margin), 1px);
   }
 
   &[orient=vertical]::part(content) {
