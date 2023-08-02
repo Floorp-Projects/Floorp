@@ -35,6 +35,7 @@
   outline: none;
   color: var(--fc-color);
   accent-color: var(--fc-accent-color);
+  -moz-theme: non-native;
 }
 @media (prefers-color-scheme: dark) {
   .onboardingContainer.featureCallout {
@@ -191,6 +192,7 @@
   pointer-events: none;
 }
 .onboardingContainer.featureCallout, .onboardingContainer.featureCallout .outer-wrapper {
+  --transition: none;
   height: auto;
 }
 .onboardingContainer.featureCallout:dir(rtl) {
@@ -279,10 +281,6 @@
   padding: 1em 0 0;
   font-size: 0.8em;
   color: inherit;
-}
-.onboardingContainer.featureCallout .screen[pos=callout] .multi-select-container input[type=radio] {
-  margin-inline-end: 0.5em;
-  min-width: auto;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .cta-link {
   background: none;

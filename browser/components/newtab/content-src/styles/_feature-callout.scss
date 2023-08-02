@@ -16,6 +16,8 @@
   outline: none;
   color: var(--fc-color);
   accent-color: var(--fc-accent-color);
+  // Make sure HTML content uses non-native theming, even in chrome windows.
+  -moz-theme: non-native;
 
   @media (prefers-color-scheme: dark) {
     @include dark-theme;
@@ -53,6 +55,9 @@
 
   &,
   & .outer-wrapper {
+    // Override the element transitions from aboutwelcome.scss
+    --transition: none;
+
     // auto height to allow for arrow positioning based on height
     height: auto;
   }
@@ -169,11 +174,6 @@
         padding: 1em 0 0;
         font-size: 0.8em;
         color: inherit;
-
-        input[type='radio'] {
-          margin-inline-end: 0.5em;
-          min-width: auto;
-        }
       }
 
       .cta-link {

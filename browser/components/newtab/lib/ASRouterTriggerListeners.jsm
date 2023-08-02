@@ -1141,7 +1141,12 @@ const ASRouterTriggerListeners = new Map([
             {
               win,
               browser,
-              pref: { name: "browser.pdfjs.feature-tour" },
+              pref: {
+                name:
+                  result.message.content?.tour_pref_name ??
+                  "browser.pdfjs.feature-tour",
+                defaultValue: result.message.content?.tour_pref_default_value,
+              },
               location: "pdfjs",
               theme: { preset: "pdfjs", simulateContent: true },
               cleanup: () => {
@@ -1293,7 +1298,12 @@ const ASRouterTriggerListeners = new Map([
             {
               win,
               browser,
-              pref: { name: "browser.newtab.feature-tour" },
+              pref: {
+                name:
+                  result.message.content?.tour_pref_name ??
+                  "browser.newtab.feature-tour",
+                defaultValue: result.message.content?.tour_pref_default_value,
+              },
               location: "newtab",
               theme: { preset: "newtab", simulateContent: true },
               cleanup: () => {
