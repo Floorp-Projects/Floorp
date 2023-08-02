@@ -37,7 +37,13 @@ const OPTIN_DEFAULT = {
         secondary_button: {
           label: "Not Now",
           action: {
-            navigate: true,
+            type: "SET_PREF",
+            data: {
+              pref: {
+                name: "browser.shopping.experience2023.active",
+                value: false,
+              },
+            },
           },
         },
       },
@@ -112,7 +118,6 @@ class Onboarding {
   // TBD: Move windows function setup to child actor. See Bug 1843461
   _setupWindowFunctions() {
     this.win.AWGetFeatureConfig = () => OPTIN_DEFAULT;
-    // TBD: Close side bar using same API call as 'X' button
     this.win.AWFinish = () => {};
   }
 
