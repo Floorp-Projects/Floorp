@@ -124,9 +124,9 @@ class ScriptLoaderInterface : public nsISupports {
  * module map.
  *
  * The module map is made up of two parts. A module that has been requested but
- * has not yet loaded is represented by a promise in the mFetchingModules map. A
- * module which has been loaded is represented by a ModuleScript in the
- * mFetchedModules map.
+ * has not finished fetching is represented by an entry in the mFetchingModules
+ * map. A module which has been fetched and compiled is represented by a
+ * ModuleScript in the mFetchedModules map.
  *
  * Module loading typically works as follows:
  *
@@ -163,13 +163,23 @@ class ScriptLoaderInterface : public nsISupports {
  * 10. The client calls EvaluateModule() to execute the top-level module.
  */
 class ModuleLoaderBase : public nsISupports {
- private:
-  using GenericNonExclusivePromise = mozilla::GenericNonExclusivePromise;
   using GenericPromise = mozilla::GenericPromise;
 
+  /*
+   * The set of requests that are waiting for an ongoing fetch to complete.
+   */
+  class WaitingRequests final : public nsISupports {
+    virtual ~WaitingRequests() = default;
+
+   public:
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(WaitingRequests)
+
+    nsTArray<RefPtr<ModuleLoadRequest>> mWaiting;
+  };
+
   // Module map
-  nsRefPtrHashtable<nsURIHashKey, GenericNonExclusivePromise::Private>
-      mFetchingModules;
+  nsRefPtrHashtable<nsURIHashKey, WaitingRequests> mFetchingModules;
   nsRefPtrHashtable<nsURIHashKey, ModuleScript> mFetchedModules;
 
   // List of dynamic imports that are currently being loaded.
@@ -360,7 +370,7 @@ class ModuleLoaderBase : public nsISupports {
 
   bool ModuleMapContainsURL(nsIURI* aURL) const;
   bool IsModuleFetching(nsIURI* aURL) const;
-  RefPtr<GenericNonExclusivePromise> WaitForModuleFetch(nsIURI* aURL);
+  void WaitForModuleFetch(ModuleLoadRequest* aRequest);
   void SetModuleFetchStarted(ModuleLoadRequest* aRequest);
 
   ModuleScript* GetFetchedModule(nsIURI* aURL) const;
@@ -373,6 +383,8 @@ class ModuleLoaderBase : public nsISupports {
 
   void SetModuleFetchFinishedAndResumeWaitingRequests(
       ModuleLoadRequest* aRequest, nsresult aResult);
+  void ResumeWaitingRequests(WaitingRequests* aWaitingRequests, bool aSuccess);
+  void ResumeWaitingRequest(ModuleLoadRequest* aRequest, bool aSuccess);
 
   void StartFetchingModuleDependencies(ModuleLoadRequest* aRequest);
 
