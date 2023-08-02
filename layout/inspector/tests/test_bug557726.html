@@ -27,6 +27,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=557726
     #div1:after, #div1:before {
       color: red;
     }
+
+    ::selection {
+      background: pink;
+    }
+
+    ::highlight(search) {
+      background: yellow;
+    }
+
+    ::highlight(whatever) {
+      background: tomato;
+    }
   </style>
 </head>
 <body>
@@ -40,7 +52,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=557726
 <script type="application/javascript">
 
 /** Test for Bug 557726 **/
-
 const InspectorUtils = SpecialPowers.InspectorUtils;
 
 function getSelectors (rules) {
@@ -83,6 +94,24 @@ isnot(selectors.indexOf("#div1::before"), -1, "fetched rule for ::before")
 
 selectors = getSelectors(InspectorUtils.getCSSStyleRules(div, ":first-line"));
 is(selectors.length, 0, "valid pseudo-element but no matching rules");
+
+selectors = getSelectors(InspectorUtils.getCSSStyleRules(div, "::selection"));
+is(selectors.length, 1, "::selection pseudo-element has a matching rule");
+is(selectors[0], "::selection", "fetched rule for ::selection");
+
+const range = new Range();
+range.setStart(div.firstChild, 10);
+range.setEnd(div.firstChild, 20);
+const highlight = new Highlight(range);
+CSS.highlights.set("search", highlight);
+
+selectors = getSelectors(InspectorUtils.getCSSStyleRules(div, "::highlight(search)"));
+is(selectors.length, 1, "::highlight(search) pseudo-element has a matching rule");
+is(selectors[0], "::highlight(search)", "fetched ::highlight(search) rule");
+
+selectors = getSelectors(InspectorUtils.getCSSStyleRules(div, "::highlight(whatever)"));
+is(selectors.length, 1, "::highlight(whatever) pseudo-element has a matching rule");
+is(selectors[0], "::highlight(whatever)", "fetched ::highlight(whatever) rule");
 
 </script>
 </pre>
