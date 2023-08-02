@@ -4,7 +4,7 @@
 
 //! Color mixing/interpolation.
 
-use super::{AbsoluteColor, ColorComponents, ColorFlags, ColorSpace};
+use super::{AbsoluteColor, ColorFlags, ColorSpace};
 use crate::parser::{Parse, ParserContext};
 use crate::values::generics::color::ColorMixFlags;
 use cssparser::Parser;
@@ -254,11 +254,7 @@ fn mix_in(
     //        then divide after calculations?
     let alpha = (alpha * 1000.0).round() / 1000.0;
 
-    let mut result = AbsoluteColor::new(
-        color_space,
-        ColorComponents(result[0], result[1], result[2]),
-        alpha,
-    );
+    let mut result = AbsoluteColor::new(color_space, result[0], result[1], result[2], alpha);
 
     result.flags = result_flags;
 

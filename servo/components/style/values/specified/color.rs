@@ -6,7 +6,7 @@
 
 use super::AllowQuirks;
 use crate::color::mix::ColorInterpolationMethod;
-use crate::color::{AbsoluteColor, ColorComponents, ColorFlags, ColorSpace};
+use crate::color::{AbsoluteColor, ColorFlags, ColorSpace};
 use crate::media_queries::Device;
 use crate::parser::{Parse, ParserContext};
 use crate::values::computed::{Color as ComputedColor, Context, ToComputedValue};
@@ -436,28 +436,8 @@ fn new_absolute(
     c3: Option<f32>,
     alpha: Option<f32>,
 ) -> Color {
-    let mut flags = ColorFlags::empty();
-
-    macro_rules! c {
-        ($v:expr,$flag:tt) => {{
-            if let Some(value) = $v {
-                value
-            } else {
-                flags |= ColorFlags::$flag;
-                0.0
-            }
-        }};
-    }
-
-    let c1 = c!(c1, C1_IS_NONE);
-    let c2 = c!(c2, C2_IS_NONE);
-    let c3 = c!(c3, C3_IS_NONE);
-    let alpha = c!(alpha, ALPHA_IS_NONE);
-
-    let mut color = AbsoluteColor::new(color_space, ColorComponents(c1, c2, c3), alpha);
-    color.flags |= flags;
     Color::Absolute(Box::new(Absolute {
-        color,
+        color: AbsoluteColor::new(color_space, c1, c2, c3, alpha),
         authored: None,
     }))
 }
@@ -468,13 +448,16 @@ impl cssparser::FromParsedColor for Color {
     }
 
     fn from_rgba(red: Option<u8>, green: Option<u8>, blue: Option<u8>, alpha: Option<f32>) -> Self {
-        new_absolute(
-            ColorSpace::Srgb,
-            red.map(|r| r as f32 / 255.0),
-            green.map(|g| g as f32 / 255.0),
-            blue.map(|b| b as f32 / 255.0),
-            alpha,
-        )
+        Self::Absolute(Box::new(Absolute {
+            color: AbsoluteColor::new(
+                ColorSpace::Srgb,
+                red.unwrap_or(0),
+                green.unwrap_or(0),
+                blue.unwrap_or(0),
+                alpha.unwrap_or(0.0),
+            ),
+            authored: None,
+        }))
     }
 
     fn from_hsl(
