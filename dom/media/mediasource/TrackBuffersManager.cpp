@@ -2077,12 +2077,10 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
       MSE_DEBUGV("Adding silent frame");
       // This "silent" sample will be added so that it starts exactly before the
       // first usable one. The duration of the actual sample will be adjusted so
-      // that the total duration staty the same.
-      // Setting a dummy presentation window of 1us will cause this sample to be
-      // dropped after decoding by the AudioTrimmer (if audio).
+      // that the total duration stay the same. This sample will be dropped
+      // after decoding by the AudioTrimmer (if audio).
       TimeInterval previouslyDroppedSampleInterval =
-          TimeInterval(sampleInterval.mStart,
-                       sampleInterval.mStart + TimeUnit::FromMicroseconds(1));
+          TimeInterval(sampleInterval.mStart, sampleInterval.mStart);
       addToSamples(previouslyDroppedSample, previouslyDroppedSampleInterval);
       previouslyDroppedSample = nullptr;
       sampleInterval.mStart += previouslyDroppedSampleInterval.Length();
