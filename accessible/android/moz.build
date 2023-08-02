@@ -6,7 +6,6 @@
 
 EXPORTS.mozilla.a11y += [
     "AccessibleWrap.h",
-    "HyperTextAccessibleWrap.h",
     "SessionAccessibility.h",
     "TraversalRule.h",
 ]

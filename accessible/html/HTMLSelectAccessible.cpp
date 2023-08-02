@@ -108,7 +108,7 @@ bool HTMLSelectListAccessible::AttributeChangesState(nsAtom* aAttribute) {
 
 HTMLSelectOptionAccessible::HTMLSelectOptionAccessible(nsIContent* aContent,
                                                        DocAccessible* aDoc)
-    : HyperTextAccessibleWrap(aContent, aDoc) {}
+    : HyperTextAccessible(aContent, aDoc) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLSelectOptionAccessible: LocalAccessible public
@@ -139,8 +139,8 @@ ENameValueFlag HTMLSelectOptionAccessible::NativeName(nsString& aName) const {
 void HTMLSelectOptionAccessible::DOMAttributeChanged(
     int32_t aNameSpaceID, nsAtom* aAttribute, int32_t aModType,
     const nsAttrValue* aOldValue, uint64_t aOldState) {
-  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
-                                               aModType, aOldValue, aOldState);
+  HyperTextAccessible::DOMAttributeChanged(aNameSpaceID, aAttribute, aModType,
+                                           aOldValue, aOldState);
 
   if (aAttribute == nsGkAtoms::label) {
     dom::Element* elm = Elm();
@@ -216,7 +216,7 @@ nsRect HTMLSelectOptionAccessible::RelativeBounds(
     return combobox->RelativeBounds(aBoundingFrame);
   }
 
-  return HyperTextAccessibleWrap::RelativeBounds(aBoundingFrame);
+  return HyperTextAccessible::RelativeBounds(aBoundingFrame);
 }
 
 void HTMLSelectOptionAccessible::ActionNameAt(uint8_t aIndex,

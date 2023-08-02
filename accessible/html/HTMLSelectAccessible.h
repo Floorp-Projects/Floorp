@@ -55,7 +55,7 @@ class HTMLSelectListAccessible : public AccessibleWrap {
 /*
  * Options inside the select, contained within the list
  */
-class HTMLSelectOptionAccessible : public HyperTextAccessibleWrap {
+class HTMLSelectOptionAccessible : public HyperTextAccessible {
  public:
   enum { eAction_Select = 0 };
 

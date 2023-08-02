@@ -8,7 +8,7 @@
 
 #include "AccEvent.h"
 #include "Compatibility.h"
-#include "HyperTextAccessibleWrap.h"
+#include "HyperTextAccessible.h"
 #include "nsWinUtils.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/RemoteAccessible.h"

@@ -6,7 +6,7 @@
 #ifndef mozilla_a11y_HTMLCanvasAccessible_h__
 #define mozilla_a11y_HTMLCanvasAccessible_h__
 
-#include "HyperTextAccessibleWrap.h"
+#include "HyperTextAccessible.h"
 
 namespace mozilla {
 namespace a11y {
@@ -14,13 +14,13 @@ namespace a11y {
 /**
  * HTML canvas accessible (html:canvas).
  */
-class HTMLCanvasAccessible : public HyperTextAccessibleWrap {
+class HTMLCanvasAccessible : public HyperTextAccessible {
  public:
   HTMLCanvasAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLCanvasAccessible,
-                                       HyperTextAccessibleWrap)
+                                       HyperTextAccessible)
 
   // LocalAccessible
   virtual a11y::role NativeRole() const override;

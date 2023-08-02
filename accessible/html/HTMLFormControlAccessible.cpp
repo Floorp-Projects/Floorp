@@ -43,8 +43,8 @@ void HTMLFormAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
                                              int32_t aModType,
                                              const nsAttrValue* aOldValue,
                                              uint64_t aOldState) {
-  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
-                                               aModType, aOldValue, aOldState);
+  HyperTextAccessible::DOMAttributeChanged(aNameSpaceID, aAttribute, aModType,
+                                           aOldValue, aOldState);
   if (aAttribute == nsGkAtoms::autocomplete) {
     dom::HTMLFormElement* formEl = dom::HTMLFormElement::FromNode(mContent);
 
@@ -163,7 +163,7 @@ Relation HTMLRadioButtonAccessible::RelationByType(RelationType aType) const {
 
 HTMLButtonAccessible::HTMLButtonAccessible(nsIContent* aContent,
                                            DocAccessible* aDoc)
-    : HyperTextAccessibleWrap(aContent, aDoc) {
+    : HyperTextAccessible(aContent, aDoc) {
   mGenericTypes |= eButton;
 }
 
@@ -174,7 +174,7 @@ void HTMLButtonAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
 }
 
 uint64_t HTMLButtonAccessible::State() {
-  uint64_t state = HyperTextAccessibleWrap::State();
+  uint64_t state = HyperTextAccessible::State();
   if (state == states::DEFUNCT) return state;
 
   // Inherit states from input@type="file" suitable for the button. Note,
@@ -190,7 +190,7 @@ uint64_t HTMLButtonAccessible::State() {
 }
 
 uint64_t HTMLButtonAccessible::NativeState() const {
-  uint64_t state = HyperTextAccessibleWrap::NativeState();
+  uint64_t state = HyperTextAccessible::NativeState();
 
   ElementState elmState = mContent->AsElement()->State();
   if (elmState.HasState(ElementState::DEFAULT)) state |= states::DEFAULT;
@@ -230,8 +230,8 @@ void HTMLButtonAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
                                                int32_t aModType,
                                                const nsAttrValue* aOldValue,
                                                uint64_t aOldState) {
-  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
-                                               aModType, aOldValue, aOldState);
+  HyperTextAccessible::DOMAttributeChanged(aNameSpaceID, aAttribute, aModType,
+                                           aOldValue, aOldState);
 
   if (aAttribute == nsGkAtoms::value) {
     dom::Element* elm = Elm();
@@ -258,7 +258,7 @@ bool HTMLButtonAccessible::IsWidget() const { return true; }
 
 HTMLTextFieldAccessible::HTMLTextFieldAccessible(nsIContent* aContent,
                                                  DocAccessible* aDoc)
-    : HyperTextAccessibleWrap(aContent, aDoc) {
+    : HyperTextAccessible(aContent, aDoc) {
   mType = mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                                              nsGkAtoms::password, eIgnoreCase)
               ? eHTMLTextPasswordFieldType
@@ -276,8 +276,7 @@ role HTMLTextFieldAccessible::NativeRole() const {
 }
 
 already_AddRefed<AccAttributes> HTMLTextFieldAccessible::NativeAttributes() {
-  RefPtr<AccAttributes> attributes =
-      HyperTextAccessibleWrap::NativeAttributes();
+  RefPtr<AccAttributes> attributes = HyperTextAccessible::NativeAttributes();
 
   // Expose type for text input elements as it gives some useful context,
   // especially for mobile.
@@ -347,12 +346,12 @@ bool HTMLTextFieldAccessible::AttributeChangesState(nsAtom* aAttribute) {
 }
 
 void HTMLTextFieldAccessible::ApplyARIAState(uint64_t* aState) const {
-  HyperTextAccessibleWrap::ApplyARIAState(aState);
+  HyperTextAccessible::ApplyARIAState(aState);
   aria::MapToState(aria::eARIAAutoComplete, mContent->AsElement(), aState);
 }
 
 uint64_t HTMLTextFieldAccessible::NativeState() const {
-  uint64_t state = HyperTextAccessibleWrap::NativeState();
+  uint64_t state = HyperTextAccessible::NativeState();
 
   // Text fields are always editable, even if they are also read only or
   // disabled.
@@ -446,8 +445,8 @@ void HTMLTextFieldAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     mDoc->QueueCacheUpdate(this, CacheDomain::NameAndDescription);
     return;
   }
-  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
-                                               aModType, aOldValue, aOldState);
+  HyperTextAccessible::DOMAttributeChanged(aNameSpaceID, aAttribute, aModType,
+                                           aOldValue, aOldState);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -465,7 +464,7 @@ LocalAccessible* HTMLTextFieldAccessible::ContainerWidget() const {
 
 HTMLFileInputAccessible::HTMLFileInputAccessible(nsIContent* aContent,
                                                  DocAccessible* aDoc)
-    : HyperTextAccessibleWrap(aContent, aDoc) {
+    : HyperTextAccessible(aContent, aDoc) {
   mType = eHTMLFileInputType;
 }
 
@@ -476,7 +475,7 @@ role HTMLFileInputAccessible::NativeRole() const {
 }
 
 nsresult HTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent) {
-  nsresult rv = HyperTextAccessibleWrap::HandleAccEvent(aEvent);
+  nsresult rv = HyperTextAccessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Redirect state change events for inherited states to child controls. Note,
@@ -501,7 +500,7 @@ nsresult HTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent) {
 
 LocalAccessible* HTMLFileInputAccessible::CurrentItem() const {
   // Allow aria-activedescendant to override.
-  if (LocalAccessible* item = HyperTextAccessibleWrap::CurrentItem()) {
+  if (LocalAccessible* item = HyperTextAccessible::CurrentItem()) {
     return item;
   }
 
@@ -624,7 +623,7 @@ bool HTMLRangeAccessible::SetCurValue(double aValue) {
 
 HTMLGroupboxAccessible::HTMLGroupboxAccessible(nsIContent* aContent,
                                                DocAccessible* aDoc)
-    : HyperTextAccessibleWrap(aContent, aDoc) {}
+    : HyperTextAccessible(aContent, aDoc) {}
 
 role HTMLGroupboxAccessible::NativeRole() const { return roles::GROUPING; }
 
@@ -655,7 +654,7 @@ ENameValueFlag HTMLGroupboxAccessible::NativeName(nsString& aName) const {
 }
 
 Relation HTMLGroupboxAccessible::RelationByType(RelationType aType) const {
-  Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
+  Relation rel = HyperTextAccessible::RelationByType(aType);
   // No override for label, so use <legend> for this <fieldset>
   if (aType == RelationType::LABELLED_BY) rel.AppendTarget(mDoc, GetLegend());
 
@@ -668,10 +667,10 @@ Relation HTMLGroupboxAccessible::RelationByType(RelationType aType) const {
 
 HTMLLegendAccessible::HTMLLegendAccessible(nsIContent* aContent,
                                            DocAccessible* aDoc)
-    : HyperTextAccessibleWrap(aContent, aDoc) {}
+    : HyperTextAccessible(aContent, aDoc) {}
 
 Relation HTMLLegendAccessible::RelationByType(RelationType aType) const {
-  Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
+  Relation rel = HyperTextAccessible::RelationByType(aType);
   if (aType != RelationType::LABEL_FOR) return rel;
 
   LocalAccessible* groupbox = LocalParent();
@@ -688,10 +687,10 @@ Relation HTMLLegendAccessible::RelationByType(RelationType aType) const {
 
 HTMLFigureAccessible::HTMLFigureAccessible(nsIContent* aContent,
                                            DocAccessible* aDoc)
-    : HyperTextAccessibleWrap(aContent, aDoc) {}
+    : HyperTextAccessible(aContent, aDoc) {}
 
 ENameValueFlag HTMLFigureAccessible::NativeName(nsString& aName) const {
-  ENameValueFlag nameFlag = HyperTextAccessibleWrap::NativeName(aName);
+  ENameValueFlag nameFlag = HyperTextAccessible::NativeName(aName);
   if (!aName.IsEmpty()) return nameFlag;
 
   nsIContent* captionContent = Caption();
@@ -704,7 +703,7 @@ ENameValueFlag HTMLFigureAccessible::NativeName(nsString& aName) const {
 }
 
 Relation HTMLFigureAccessible::RelationByType(RelationType aType) const {
-  Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
+  Relation rel = HyperTextAccessible::RelationByType(aType);
   if (aType == RelationType::LABELLED_BY) rel.AppendTarget(mDoc, Caption());
 
   return rel;
@@ -728,10 +727,10 @@ nsIContent* HTMLFigureAccessible::Caption() const {
 
 HTMLFigcaptionAccessible::HTMLFigcaptionAccessible(nsIContent* aContent,
                                                    DocAccessible* aDoc)
-    : HyperTextAccessibleWrap(aContent, aDoc) {}
+    : HyperTextAccessible(aContent, aDoc) {}
 
 Relation HTMLFigcaptionAccessible::RelationByType(RelationType aType) const {
-  Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
+  Relation rel = HyperTextAccessible::RelationByType(aType);
   if (aType != RelationType::LABEL_FOR) return rel;
 
   LocalAccessible* figure = LocalParent();

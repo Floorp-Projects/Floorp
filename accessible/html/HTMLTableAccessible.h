@@ -6,7 +6,7 @@
 #ifndef mozilla_a11y_HTMLTableAccessible_h__
 #define mozilla_a11y_HTMLTableAccessible_h__
 
-#include "HyperTextAccessibleWrap.h"
+#include "HyperTextAccessible.h"
 
 class nsITableCellLayout;
 class nsTableCellFrame;
@@ -21,13 +21,13 @@ class HTMLTableAccessible;
 /**
  * HTML table cell accessible (html:td).
  */
-class HTMLTableCellAccessible : public HyperTextAccessibleWrap {
+class HTMLTableCellAccessible : public HyperTextAccessible {
  public:
   HTMLTableCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLTableCellAccessible,
-                                       HyperTextAccessibleWrap)
+                                       HyperTextAccessible)
 
   // LocalAccessible
   virtual a11y::role NativeRole() const override;
@@ -71,16 +71,16 @@ class HTMLTableHeaderCellAccessible : public HTMLTableCellAccessible {
 /**
  * HTML table row accessible (html:tr).
  */
-class HTMLTableRowAccessible : public HyperTextAccessibleWrap {
+class HTMLTableRowAccessible : public HyperTextAccessible {
  public:
   HTMLTableRowAccessible(nsIContent* aContent, DocAccessible* aDoc)
-      : HyperTextAccessibleWrap(aContent, aDoc) {
+      : HyperTextAccessible(aContent, aDoc) {
     mType = eHTMLTableRowType;
     mGenericTypes |= eTableRow;
   }
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLTableRowAccessible,
-                                       HyperTextAccessibleWrap)
+                                       HyperTextAccessible)
 
  protected:
   virtual ~HTMLTableRowAccessible() {}
@@ -98,16 +98,15 @@ class HTMLTableRowAccessible : public HyperTextAccessibleWrap {
 // data vs. layout heuristic
 // #define SHOW_LAYOUT_HEURISTIC
 
-class HTMLTableAccessible : public HyperTextAccessibleWrap {
+class HTMLTableAccessible : public HyperTextAccessible {
  public:
   HTMLTableAccessible(nsIContent* aContent, DocAccessible* aDoc)
-      : HyperTextAccessibleWrap(aContent, aDoc) {
+      : HyperTextAccessible(aContent, aDoc) {
     mType = eHTMLTableType;
     mGenericTypes |= eTable;
   }
 
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLTableAccessible,
-                                       HyperTextAccessibleWrap)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLTableAccessible, HyperTextAccessible)
 
   // HTMLTableAccessible
   LocalAccessible* Caption() const;
@@ -157,10 +156,10 @@ class HTMLTableAccessible : public HyperTextAccessibleWrap {
 /**
  * HTML caption accessible (html:caption).
  */
-class HTMLCaptionAccessible : public HyperTextAccessibleWrap {
+class HTMLCaptionAccessible : public HyperTextAccessible {
  public:
   HTMLCaptionAccessible(nsIContent* aContent, DocAccessible* aDoc)
-      : HyperTextAccessibleWrap(aContent, aDoc) {
+      : HyperTextAccessible(aContent, aDoc) {
     mType = eHTMLCaptionType;
   }
 

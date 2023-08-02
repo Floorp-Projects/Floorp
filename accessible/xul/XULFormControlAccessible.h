@@ -9,7 +9,7 @@
 // NOTE: alphabetically ordered
 #include "AccessibleWrap.h"
 #include "FormControlAccessible.h"
-#include "HyperTextAccessibleWrap.h"
+#include "HyperTextAccessible.h"
 #include "XULSelectControlAccessible.h"
 
 namespace mozilla {

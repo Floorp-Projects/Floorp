@@ -33,13 +33,13 @@ using namespace mozilla::a11y;
 
 XULLabelAccessible::XULLabelAccessible(nsIContent* aContent,
                                        DocAccessible* aDoc)
-    : HyperTextAccessibleWrap(aContent, aDoc) {
+    : HyperTextAccessible(aContent, aDoc) {
   mType = eXULLabelType;
 }
 
 void XULLabelAccessible::Shutdown() {
   mValueTextLeaf = nullptr;
-  HyperTextAccessibleWrap::Shutdown();
+  HyperTextAccessible::Shutdown();
 }
 
 void XULLabelAccessible::DispatchClickEvent(nsIContent* aContent,
@@ -65,11 +65,11 @@ role XULLabelAccessible::NativeRole() const { return roles::LABEL; }
 uint64_t XULLabelAccessible::NativeState() const {
   // Labels and description have read only state
   // They are not focusable or selectable
-  return HyperTextAccessibleWrap::NativeState() | states::READONLY;
+  return HyperTextAccessible::NativeState() | states::READONLY;
 }
 
 Relation XULLabelAccessible::RelationByType(RelationType aType) const {
-  Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
+  Relation rel = HyperTextAccessible::RelationByType(aType);
 
   // The label for xul:groupbox is generated from the first xul:label
   if (aType == RelationType::LABEL_FOR) {
