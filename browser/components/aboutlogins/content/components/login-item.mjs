@@ -272,20 +272,22 @@ export default class LoginItem extends HTMLElement {
   #updateTimeline() {
     let timeline = this.shadowRoot.querySelector("login-timeline");
     timeline.hidden = !this._login.guid;
-    timeline.history = [
-      {
-        actionId: "login-item-timeline-action-created",
-        time: this._login.timeCreated,
-      },
-      {
-        actionId: "login-item-timeline-action-updated",
-        time: this._login.timePasswordChanged,
-      },
-      {
-        actionId: "login-item-timeline-action-used",
-        time: this._login.timeLastUsed,
-      },
-    ];
+    const createdTime = {
+      actionId: "login-item-timeline-action-created",
+      time: this._login.timeCreated,
+    };
+    const lastUpdatedTime = {
+      actionId: "login-item-timeline-action-updated",
+      time: this._login.timePasswordChanged,
+    };
+    const lastUsedTime = {
+      actionId: "login-item-timeline-action-used",
+      time: this._login.timeLastUsed,
+    };
+    timeline.history =
+      this._login.timeCreated == this._login.timePasswordChanged
+        ? [createdTime, lastUsedTime]
+        : [createdTime, lastUpdatedTime, lastUsedTime];
   }
 
   setBreaches(breachesByLoginGUID) {
