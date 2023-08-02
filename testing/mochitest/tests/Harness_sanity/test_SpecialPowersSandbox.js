@@ -2,8 +2,8 @@
 
 /* eslint-disable @microsoft/sdl/no-insecure-url */
 
-const { XPCShellContentUtils } = ChromeUtils.import(
-  "resource://testing-common/XPCShellContentUtils.jsm"
+const { XPCShellContentUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/XPCShellContentUtils.sys.mjs"
 );
 
 XPCShellContentUtils.init(this);
