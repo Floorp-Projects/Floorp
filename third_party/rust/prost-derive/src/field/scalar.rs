@@ -4,9 +4,7 @@ use std::fmt;
 use anyhow::{anyhow, bail, Error};
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens, TokenStreamExt};
-use syn::{
-    parse_str, Ident, Index, Lit, LitByteStr, Meta, MetaList, MetaNameValue, NestedMeta, Path,
-};
+use syn::{parse_str, Expr, ExprLit, Ident, Index, Lit, LitByteStr, Meta, MetaNameValue, Path};
 
 use crate::field::{bool_attr, set_option, tag_attr, Label};
 
@@ -439,29 +437,24 @@ impl Ty {
             Meta::Path(ref name) if name.is_ident("bytes") => Ty::Bytes(BytesTy::Vec),
             Meta::NameValue(MetaNameValue {
                 ref path,
-                lit: Lit::Str(ref l),
+                value:
+                    Expr::Lit(ExprLit {
+                        lit: Lit::Str(ref l),
+                        ..
+                    }),
                 ..
             }) if path.is_ident("bytes") => Ty::Bytes(BytesTy::try_from_str(&l.value())?),
             Meta::NameValue(MetaNameValue {
                 ref path,
-                lit: Lit::Str(ref l),
+                value:
+                    Expr::Lit(ExprLit {
+                        lit: Lit::Str(ref l),
+                        ..
+                    }),
                 ..
             }) if path.is_ident("enumeration") => Ty::Enumeration(parse_str::<Path>(&l.value())?),
-            Meta::List(MetaList {
-                ref path,
-                ref nested,
-                ..
-            }) if path.is_ident("enumeration") => {
-                // TODO(rustlang/rust#23121): slice pattern matching would make this much nicer.
-                if nested.len() == 1 {
-                    if let NestedMeta::Meta(Meta::Path(ref path)) = nested[0] {
-                        Ty::Enumeration(path.clone())
-                    } else {
-                        bail!("invalid enumeration attribute: item must be an identifier");
-                    }
-                } else {
-                    bail!("invalid enumeration attribute: only a single identifier is supported");
-                }
+            Meta::List(ref meta_list) if meta_list.path.is_ident("enumeration") => {
+                Ty::Enumeration(meta_list.parse_args::<Path>()?)
             }
             _ => return Ok(None),
         };
@@ -618,8 +611,12 @@ impl DefaultValue {
     pub fn from_attr(attr: &Meta) -> Result<Option<Lit>, Error> {
         if !attr.path().is_ident("default") {
             Ok(None)
-        } else if let Meta::NameValue(ref name_value) = *attr {
-            Ok(Some(name_value.lit.clone()))
+        } else if let Meta::NameValue(MetaNameValue {
+            value: Expr::Lit(ExprLit { ref lit, .. }),
+            ..
+        }) = *attr
+        {
+            Ok(Some(lit.clone()))
         } else {
             bail!("invalid default value attribute: {:?}", attr)
         }

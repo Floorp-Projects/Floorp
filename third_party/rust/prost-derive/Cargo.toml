@@ -28,20 +28,16 @@ repository = "https://github.com/tokio-rs/prost"
 [lib]
 proc_macro = true
 
-[dependencies.anyhow]
-version = "1.0.1"
+[dependencies]
+anyhow = "1.0.1"
+proc-macro2 = "1"
+quote = "1"
 
 [dependencies.itertools]
 version = "0.10"
 features = ["use_alloc"]
 default-features = false
 
-[dependencies.proc-macro2]
-version = "1"
-
-[dependencies.quote]
-version = "1"
-
 [dependencies.syn]
-version = "1.0.3"
+version = "2"
 features = ["extra-traits"]

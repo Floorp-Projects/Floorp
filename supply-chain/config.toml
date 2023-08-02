@@ -148,6 +148,10 @@ audit-as-crates-io = false
 [policy.peek-poke-derive]
 audit-as-crates-io = false
 
+[policy.prost-derive]
+audit-as-crates-io = true
+notes = "Fork of prost-derive with support for syn 2"
+
 [policy.pulse]
 audit-as-crates-io = false
 notes = "This is a first-party crate which is entirely unrelated to the crates.io package of the same name."
