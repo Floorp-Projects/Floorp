@@ -16,14 +16,9 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 // Tests
 // ------------------------------------------------------------------------------
 
-function callError(message) {
-  return [{ message, type: "CallExpression" }];
+function callError(messageId) {
+  return [{ messageId, type: "CallExpression" }];
 }
-
-const MESSAGE_IMPORT = "Please use ChromeUtils.import instead of Cu.import";
-const MESSAGE_DEFINE =
-  "Please use ChromeUtils.defineModuleGetter instead of " +
-  "XPCOMUtils.defineLazyModuleGetter";
 
 ruleTester.run("use-chromeutils-import", rule, {
   valid: [
@@ -42,24 +37,24 @@ ruleTester.run("use-chromeutils-import", rule, {
     {
       code: `Cu.import("resource://gre/modules/AppConstants.jsm");`,
       output: `ChromeUtils.import("resource://gre/modules/AppConstants.jsm");`,
-      errors: callError(MESSAGE_IMPORT),
+      errors: callError("useChromeUtilsImport"),
     },
     {
       code: `Cu.import("resource://gre/modules/AppConstants.jsm", this);`,
       output: `ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);`,
-      errors: callError(MESSAGE_IMPORT),
+      errors: callError("useChromeUtilsImport"),
     },
     {
       code: `Components.utils.import("resource://gre/modules/AppConstants.jsm");`,
       output: `ChromeUtils.import("resource://gre/modules/AppConstants.jsm");`,
-      errors: callError(MESSAGE_IMPORT),
+      errors: callError("useChromeUtilsImport"),
     },
     {
       code: `XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                                "resource://gre/modules/AppConstants.jsm");`,
       output: `ChromeUtils.defineModuleGetter(this, "AppConstants",
                                                "resource://gre/modules/AppConstants.jsm");`,
-      errors: callError(MESSAGE_DEFINE),
+      errors: callError("useDefineModuleGetter"),
     },
   ],
 });

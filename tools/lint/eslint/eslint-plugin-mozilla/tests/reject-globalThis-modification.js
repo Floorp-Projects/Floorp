@@ -21,8 +21,7 @@ function invalidCall(code) {
     code,
     errors: [
       {
-        message:
-          "`globalThis` shouldn't be passed to function that can modify it. `globalThis` is the shared global inside the system module, and properties defined on it is visible from all modules.",
+        messageId: "rejectPassingGlobalThis",
         type: "CallExpression",
       },
     ],
@@ -34,8 +33,7 @@ function invalidAssignment(code) {
     code,
     errors: [
       {
-        message:
-          "`globalThis` shouldn't be modified. `globalThis` is the shared global inside the system module, and properties defined on it is visible from all modules.",
+        messageId: "rejectModifyGlobalThis",
         type: "AssignmentExpression",
       },
     ],

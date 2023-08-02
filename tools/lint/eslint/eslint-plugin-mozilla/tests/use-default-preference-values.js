@@ -17,8 +17,10 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 // ------------------------------------------------------------------------------
 
 function invalidCode(code) {
-  let message = "provide a default value instead of using a try/catch block";
-  return { code, errors: [{ message, type: "TryStatement" }] };
+  return {
+    code,
+    errors: [{ messageId: "provideDefaultValue", type: "TryStatement" }],
+  };
 }
 
 let types = ["Bool", "Char", "Float", "Int"];

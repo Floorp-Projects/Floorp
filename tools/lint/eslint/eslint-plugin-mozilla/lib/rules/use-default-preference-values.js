@@ -14,6 +14,10 @@ module.exports = {
     docs: {
       url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-default-preference-values.html",
     },
+    messages: {
+      provideDefaultValue:
+        "provide a default value instead of using a try/catch block",
+    },
     schema: [],
     type: "suggestion",
   },
@@ -44,7 +48,7 @@ module.exports = {
 
         context.report({
           node,
-          message: "provide a default value instead of using a try/catch block",
+          messageId: "provideDefaultValue",
         });
       },
     };

@@ -13,6 +13,9 @@ module.exports = {
     docs: {
       url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-ownerGlobal.html",
     },
+    messages: {
+      useOwnerGlobal: "use .ownerGlobal instead of .ownerDocument.defaultView",
+    },
     schema: [],
     type: "suggestion",
   },
@@ -32,7 +35,7 @@ module.exports = {
 
         context.report({
           node,
-          message: "use .ownerGlobal instead of .ownerDocument.defaultView",
+          messageId: "useOwnerGlobal",
         });
       },
     };

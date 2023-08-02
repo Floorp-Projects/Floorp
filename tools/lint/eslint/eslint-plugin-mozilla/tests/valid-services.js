@@ -16,9 +16,8 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 // Tests
 // ------------------------------------------------------------------------------
 
-function invalidCode(code, name) {
-  let message = `Unknown Services member property ${name}`;
-  return { code, errors: [{ message }] };
+function invalidCode(code, alias) {
+  return { code, errors: [{ messageId: "unknownProperty", data: { alias } }] };
 }
 
 ruleTester.run("valid-services", rule, {

@@ -18,8 +18,10 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 // ------------------------------------------------------------------------------
 
 function invalidCode(code) {
-  let message = "JSM should not use the global this";
-  return { code, errors: [{ message, type: "ThisExpression" }] };
+  return {
+    code,
+    errors: [{ messageId: "avoidGlobalThis", type: "ThisExpression" }],
+  };
 }
 
 ruleTester.run("reject-top-level-await", rule, {

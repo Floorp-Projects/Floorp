@@ -30,6 +30,12 @@ module.exports = {
     docs: {
       url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/reject-globalThis-modification.html",
     },
+    messages: {
+      rejectModifyGlobalThis:
+        "`globalThis` shouldn't be modified. `globalThis` is the shared global inside the system module, and properties defined on it is visible from all modules.",
+      rejectPassingGlobalThis:
+        "`globalThis` shouldn't be passed to function that can modify it. `globalThis` is the shared global inside the system module, and properties defined on it is visible from all modules.",
+    },
     schema: [],
     type: "problem",
   },
@@ -44,8 +50,7 @@ module.exports = {
         if (isIdentifier(target, "globalThis")) {
           context.report({
             node,
-            message:
-              "`globalThis` shouldn't be modified. `globalThis` is the shared global inside the system module, and properties defined on it is visible from all modules.",
+            messageId: "rejectModifyGlobalThis",
           });
         }
       },
@@ -59,8 +64,7 @@ module.exports = {
           if (isIdentifier(arg, "globalThis")) {
             context.report({
               node,
-              message:
-                "`globalThis` shouldn't be passed to function that can modify it. `globalThis` is the shared global inside the system module, and properties defined on it is visible from all modules.",
+              messageId: "rejectPassingGlobalThis",
             });
           }
         }

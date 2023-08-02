@@ -17,8 +17,7 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 // ------------------------------------------------------------------------------
 
 function invalidError() {
-  let message = "relative paths are not allowed with require()";
-  return [{ message, type: "CallExpression" }];
+  return [{ messageId: "rejectRelativeRequires", type: "CallExpression" }];
 }
 
 ruleTester.run("reject-relative-requires", rule, {

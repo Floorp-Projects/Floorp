@@ -22,7 +22,11 @@ function invalidCode(code, originalName, newName, output) {
     output,
     errors: [
       {
-        message: `Use ${newName} rather than ${originalName}`,
+        messageId: "useCcEtc",
+        data: {
+          shortName: newName,
+          oldName: originalName,
+        },
         type: "MemberExpression",
       },
     ],
@@ -34,25 +38,25 @@ ruleTester.run("use-cc-etc", rule, {
   invalid: [
     invalidCode(
       "let foo = Components.classes['bar'];",
-      "Components.classes",
+      "classes",
       "Cc",
       "let foo = Cc['bar'];"
     ),
     invalidCode(
       "let bar = Components.interfaces.bar;",
-      "Components.interfaces",
+      "interfaces",
       "Ci",
       "let bar = Ci.bar;"
     ),
     invalidCode(
       "Components.results.NS_ERROR_ILLEGAL_INPUT;",
-      "Components.results",
+      "results",
       "Cr",
       "Cr.NS_ERROR_ILLEGAL_INPUT;"
     ),
     invalidCode(
       "Components.utils.reportError('fake');",
-      "Components.utils",
+      "utils",
       "Cu",
       "Cu.reportError('fake');"
     ),

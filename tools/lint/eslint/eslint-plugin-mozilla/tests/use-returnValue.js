@@ -17,8 +17,18 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 // ------------------------------------------------------------------------------
 
 function invalidCode(code, methodName) {
-  let message = `{Array/String}.${methodName} doesn't modify the instance in-place`;
-  return { code, errors: [{ message, type: "ExpressionStatement" }] };
+  return {
+    code,
+    errors: [
+      {
+        messageId: "useReturnValue",
+        data: {
+          property: methodName,
+        },
+        type: "ExpressionStatement",
+      },
+    ],
+  };
 }
 
 ruleTester.run("use-returnValue", rule, {

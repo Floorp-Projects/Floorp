@@ -17,9 +17,9 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 // ------------------------------------------------------------------------------
 
 function invalidError() {
-  let message =
-    "Ci.nsIScriptableUnicodeConverter is deprecated. You should use TextEncoder or TextDecoder instead.";
-  return [{ message, type: "MemberExpression" }];
+  return [
+    { messageId: "rejectScriptableUnicodeConverter", type: "MemberExpression" },
+  ];
 }
 
 ruleTester.run("reject-scriptableunicodeconverter", rule, {

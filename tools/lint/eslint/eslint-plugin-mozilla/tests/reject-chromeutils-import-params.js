@@ -19,11 +19,11 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 function invalidError(suggested) {
   return [
     {
-      message: "ChromeUtils.import only takes one argument.",
+      messageId: "importOnlyOneArg",
       type: "CallExpression",
       suggestions: [
         {
-          desc: "Remove the unnecessary parameters.",
+          messageId: "importOnlyOneArgSuggestion",
           output: suggested,
         },
       ],

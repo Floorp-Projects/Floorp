@@ -13,6 +13,10 @@ module.exports = {
     docs: {
       url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-returnValue.html",
     },
+    messages: {
+      useReturnValue:
+        "{Array/String}.{{ property }} doesn't modify the instance in-place",
+    },
     schema: [],
     type: "problem",
   },
@@ -33,7 +37,10 @@ module.exports = {
 
         context.report({
           node,
-          message: `{Array/String}.${node.expression.callee.property.name} doesn't modify the instance in-place`,
+          messageId: "useReturnValue",
+          data: {
+            property: node.expression.callee.property.name,
+          },
         });
       },
     };

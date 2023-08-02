@@ -17,8 +17,9 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 // ------------------------------------------------------------------------------
 
 function requirePathError(path) {
-  const message = `require(${path}) is not allowed`;
-  return [{ message, type: "CallExpression" }];
+  return [
+    { messageId: "rejectRequire", data: { path }, type: "CallExpression" },
+  ];
 }
 
 const DEVTOOLS_FORBIDDEN_PATH = "^(resource://)?devtools/forbidden";

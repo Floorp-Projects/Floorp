@@ -19,6 +19,9 @@ module.exports = {
     docs: {
       url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/reject-relative-requires.html",
     },
+    messages: {
+      rejectRelativeRequires: "relative paths are not allowed with require()",
+    },
     schema: [],
     type: "problem",
   },
@@ -30,7 +33,7 @@ module.exports = {
         if (path && isRelativePath(path)) {
           context.report({
             node,
-            message: "relative paths are not allowed with require()",
+            messageId: "rejectRelativeRequires",
           });
         }
       },
