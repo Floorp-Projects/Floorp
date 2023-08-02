@@ -3,43 +3,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  /* Icon */
-  --message-bar-icon-color: var(--icon-color-information);
-  --message-bar-icon-size: var(--size-item-small);
-  --message-bar-icon-close-color: var(--icon-color);
-  --message-bar-icon-close-url: url("chrome://global/skin/icons/close-12.svg");
-
-  /* Button */
-  --message-bar-button-size-ghost: var(--button-min-height);
-  --message-bar-button-border-radius-ghost: var(--button-border-radius);
-  --message-bar-button-background-color-ghost-hover: var(--button-background-color-hover);
-  --message-bar-button-background-color-ghost-active: var(--button-background-color-active);
-
-  /* Container */
-  --message-bar-container-min-height: var(--size-item-large);
-
-  /* Border */
-  --message-bar-border-color: color-mix(in srgb, currentColor 9%, transparent);
-  --message-bar-border-radius: var(--border-radius-small);
-  --message-bar-border-width: var(--border-width);
-
-  /* Text */
-  --message-bar-text-color: var(--text-color);
-  --message-bar-text-line-height: 1.5em;
-
-  /* Background */
-  --message-bar-background-color: var(--color-background-information);
-
-  background-color: var(--message-bar-background-color);
-  border: var(--message-bar-border-width) solid var(--message-bar-border-color);
-  border-radius: var(--message-bar-border-radius);
-  color: var(--message-bar-text-color);
+  --close-icon-url: url("chrome://global/skin/icons/close-12.svg");
+  --close-fill-color: var(--in-content-icon-color);
+  --icon-size: 16px;
+  --close-icon-size: 24px;
 }
 
-@media (prefers-contrast) {
-  :host {
-    --message-bar-border-color: var(--border-color);
-  }
+:host([message-bar-type=infobar]) {
+  --close-icon-size: 24px;
+}
+
+:host {
+  --message-bar-background-color: var(--in-content-box-info-background);
+  --message-bar-text-color: var(--in-content-text-color);
+  /* The default values of --in-content-button* are sufficient, even for dark themes */
+}
+
+
+:host {
+  border: 1px solid transparent;
+  border-radius: 4px;
 }
 
 /* Make the host to behave as a block by default, but allow hidden to hide it. */
@@ -47,148 +30,279 @@
   display: block;
 }
 
-/* MozMessageBar layout */
+::slotted(button) {
+  /* Enforce micro-button width. */
+  min-width: -moz-fit-content !important;
+}
+
+/* MessageBar Grid Layout */
 
 .container {
+  background: var(--message-bar-background-color);
+  color: var(--message-bar-text-color);
+
+  padding: 3px 7px;
+  position: relative;
+
+  border-radius: 4px;
+
   display: flex;
-  gap: 8px;
-  min-height: var(--message-bar-container-min-height);
-  padding-inline: 16px 8px;
-  padding-block: 8px;
+  /* Ensure that the message bar shadow dom elements are vertically aligned. */
+  align-items: center;
+}
+
+:host([align="center"]) .container {
+  justify-content: center;
 }
 
 .content {
-  display: flex;
-  flex-grow: 1;
-  flex-wrap: wrap;
+  margin: 0 4px;
+  display: inline-block;
+  /* Ensure that the message bar content is vertically aligned. */
   align-items: center;
-  gap: 8px 16px;
-  margin-inline-start: 24px;
-}
-
-.text-container {
-  display: flex;
-  gap: 4px 8px;
-  padding-block: calc((var(--message-bar-container-min-height) - var(--message-bar-text-line-height)) / 2);
-}
-
-.text-content {
-  display: inline-flex;
-  gap: 4px 8px;
-  flex-wrap: wrap;
+  /* Ensure that the message bar content is wrapped. */
   word-break: break-word;
-  line-height: var(--message-bar-text-line-height);
 }
 
-/* MozMessageBar icon style */
-
-.icon-container {
-  height: var(--message-bar-text-line-height);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-inline-start: -24px;
-}
+/* MessageBar icon style */
 
 .icon {
-  width: var(--message-bar-icon-size);
-  height: var(--message-bar-icon-size);
+  padding: 4px;
+  width: var(--icon-size);
+  height: var(--icon-size);
   flex-shrink: 0;
   appearance: none;
   -moz-context-properties: fill, stroke;
   fill: currentColor;
   stroke: currentColor;
-  color: var(--message-bar-icon-color);
 }
 
-/* MozMessageBar heading style */
-
-.heading {
-  font-weight: 600;
-}
-
-/* MozMessageBar actions style */
-
-.actions {
-  display: none;
-}
-
-.actions.active {
-  display: inline-flex;
-  gap: 8px;
-}
-
-.actions ::slotted(button) {
-  /* Enforce micro-button width. */
-  min-width: fit-content !important;
-
-  margin: 0 !important;
-  padding: 4px 16px !important;
+/* Use a spacer to position the close button at the end, but also support
+ * centering if required. */
+.spacer {
+  flex-grow: 1;
 }
 
 /* Close icon styles */
 
+:host(:not([dismissable])) .close {
+  display: none;
+}
+
 .close {
-  background-image: var(--message-bar-icon-close-url);
+  background-image: var(--close-icon-url);
   background-repeat: no-repeat;
   background-position: center center;
   -moz-context-properties: fill;
   fill: currentColor;
   min-width: auto;
   min-height: auto;
-  width: var(--message-bar-button-size-ghost);
-  height: var(--message-bar-button-size-ghost);
+  width: var(--close-icon-size);
+  height: var(--close-icon-size);
   margin: 0;
   padding: 0;
   flex-shrink: 0;
 }
 
+@media (prefers-contrast) {
+  :host {
+    border-color: CanvasText;
+  }
+
+  .container.infobar::before {
+    background-color: CanvasText;
+  }
+}
+
 .ghost-button {
-  border-radius: var(--message-bar-button-border-radius-ghost);
+  border: none;
+  border-radius: 4px;
 }
 
 .ghost-button:enabled:hover {
-  background-color: var(--message-bar-button-background-color-ghost-hover);
+  background-color: var(--in-content-button-background-hover);
+  color: var(--in-content-button-text-color-hover);
 }
 
 .ghost-button:enabled:hover:active {
-  background-color: var(--message-bar-button-background-color-ghost-active);
+  background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
 }
 
 @media not (prefers-contrast) {
-  /* MozMessageBar colors by message type */
-  /* Colors from: https://www.figma.com/file/zd3B9UyknB2XNZNdrYLm2W/Outreachy?type=design&node-id=59-1921&mode=design&t=ZYS4e6pAbAlXGvun-4 */
+  /* MessageBar colors by message type */
+  /* Colors from: https://design.firefox.com/photon/components/message-bars.html#type-specific-style */
 
-  :host([type=warning]) {
-    --message-bar-background-color: var(--color-background-warning);
+  :host([type=warning]:not([message-bar-type=infobar])) {
+    --message-bar-background-color: var(--yellow-50);
+    --message-bar-text-color: var(--yellow-90);
+
+    --in-content-button-background: var(--yellow-60);
+    --in-content-button-background-hover: var(--yellow-70);
+    --in-content-button-background-active: var(--yellow-80);
+
+    --close-fill-color: var(--message-bar-text-color);
   }
 
-  :host([type=success]) {
-    --message-bar-background-color: var(--color-background-success);
+  :host([type=success]:not([message-bar-type=infobar])) {
+    --message-bar-background-color: var(--green-50);
+    --message-bar-text-color: var(--green-90);
+
+    --in-content-button-background: var(--green-60);
+    --in-content-button-background-hover: var(--green-70);
+    --in-content-button-background-active: var(--green-80);
   }
 
-  :host([type=error]) {
-    --message-bar-background-color: var(--color-background-critical);
+  :host([type=error]:not([message-bar-type=infobar])) {
+    --message-bar-background-color: var(--red-60);
+    --message-bar-text-color: #ffffff;
+
+    --in-content-button-background: var(--red-70);
+    --in-content-button-background-hover: var(--red-80);
+    --in-content-button-background-active: var(--red-90);
   }
 
-  :host([type=success]) .icon {
-    --message-bar-icon-color: var(--icon-color-success);
+  :host([type=info]) .icon {
+    color: rgb(0,144,237);
   }
 
   :host([type=warning]) .icon {
-    --message-bar-icon-color: var(--icon-color-warning);
+    color: rgb(255,164,54);
   }
 
   :host([type=error]) .icon {
-    --message-bar-icon-color: var(--icon-color-critical);
+    color: rgb(226,40,80);
+  }
+
+  .container.infobar {
+    box-shadow: 0 1px 2px rgba(58, 57, 68, 0.1);
+    background: var(--in-content-page-background);
+  }
+
+  .container.infobar::before {
+    background-image: linear-gradient(0deg, #9059ff 0%, #ff4aa2 52.08%, #ffbd4f 100%);
   }
 
   .close {
-    fill: var(--message-bar-icon-close-color);
+    fill: var(--close-fill-color);
   }
 
   .ghost-button {
-    border: none;
     background-color: transparent;
   }
+
+  @media (prefers-color-scheme: dark) {
+    /* Don't set the background in prefers-contrast mode or macOS can end up
+     * with black on black text. */
+    .container.infobar {
+      background: rgb(66,65,77);
+    }
+
+    :host([type=info]) .icon {
+      color: rgb(128,235,255);
+    }
+
+    :host([type=warning]) .icon {
+      color: rgb(255,189,79);
+    }
+
+    :host([type=error]) .icon {
+      color: rgb(255,154,162);
+    }
+  }
+}
+
+:host([message-bar-type=infobar]:first-of-type) {
+  margin-top: 4px;
+}
+
+:host([message-bar-type=infobar]) {
+  margin: 0 4px 4px;
+}
+
+.container.infobar {
+  /* Don't let lwthemes set a text-shadow. */
+  text-shadow: none;
+  padding: 0;
+}
+
+.container.infobar::before {
+  content: "";
+  display: block;
+  width: 2px;
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  height: 100%;
+  border-start-start-radius: 4px;
+  border-end-start-radius: 4px;
+}
+
+.container.infobar {
+  align-items: flex-start;
+}
+
+/* Infobars styling. */
+.notification-content {
+  margin: 0;
+  margin-inline-start: 8px;
+}
+
+.notification-message {
+  min-height: 16px; /* min-height: 32px with block padding */
+  padding-block: 8px;
+  margin-inline-end: 20px;
+}
+
+.notification-button-container,
+.notification-message {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.container.infobar > .notification-content > .notification-message img.inline-icon {
+  /* Align inline icon images in the message content */
+  vertical-align: bottom;
+  /* Ensure they get the right fill color. */
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.close {
+  margin: 4px 8px;
+  background-size: 12px;
+}
+
+.notification-button {
+  margin: 4px;
+  /* This is supposed to be 6px but then the buttons are 26px tall by default
+   * on Windows. Drop it down to 4px (with the 1px border) */
+  padding-block: 3px;
+}
+
+.notification-button:first-of-type {
+  /* When the buttons wrap to their own line we want to match the 8px on the message. */
+  margin-inline-start: 0;
+}
+
+strong {
+  font-weight: 600;
+}
+
+.text-link:hover {
+  cursor: pointer;
+}
+
+.infobar > .icon {
+  padding: 0;
+  margin: 8px 0;
+}
+
+.infobar > .icon,
+:host([type=system]) .notification-content {
+  margin-inline-start: 16px;
+}
+
+:host([type=system]) .icon {
+  display: none;
 }

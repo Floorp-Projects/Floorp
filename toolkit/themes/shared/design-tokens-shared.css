@@ -7,39 +7,19 @@
   /* Do not use base tokens directly as they don't carry any meaning. Refer to application tokens below. */
   /** Color **/
   --color-white: #ffffff;
-  --color-blue-05: #deeafc;
-  --color-blue-30: #73a7f3;
-  --color-blue-40: #008aee;
+  --color-blue-05: #aaf2ff;
+  --color-blue-10: #80ebff;
+  --color-blue-20: #00ddff;
   --color-blue-50: #0060df;
   --color-blue-60: #0250bb;
   --color-blue-70: #054096;
-  --color-blue-80: #003070;
-  --color-cyan-20: #aaf2ff;
-  --color-cyan-30: #80ebff;
-  --color-cyan-50: #00ddff;
-  --color-gray-05: #fbfbfe;
   --color-gray-50: #bfbfc9;
   --color-gray-60: #8f8f9d;
-  --color-gray-70: #5b5b66;
   --color-gray-90: #1c1b22;
-  --color-gray-100: #15141a;
-  --color-green-05: #d8eedc;
-  --color-green-30: #4dbc87;
-  --color-green-50: #017a40;
-  --color-green-80: #004725;
-  --color-red-05: #ffe8e8;
-  --color-red-30: #f37f98;
-  --color-red-50: #d7264c;
-  --color-red-80: #690f22;
-  --color-yellow-05: #ffebcd;
-  --color-yellow-30: #e49c49;
-  --color-yellow-50: #cd411e;
-  --color-yellow-80: #5a3100;
 
   /* Application tokens */
   /** Border **/
   --border-radius-circle: 9999px;
-  --border-radius-small: 4px;
   --border-width: 1px;
   --border-interactive-color: unset;
 
@@ -47,8 +27,6 @@
   --button-background-color: unset;
   --button-background-color-hover: unset;
   --button-background-color-active: unset;
-  --button-min-height: var(--size-item-large);
-  --button-border-radius: var(--border-radius-small);
 
   /** Link **/
   /* Not using --focus-outline-offset for links because that's intended for
@@ -77,52 +55,10 @@
   --size-item-large: 32px;
 }
 
-@media not (prefers-contrast) {
-  :root {
-    /* Color */
-    --color-background-information: var(--color-blue-05);;
-    --color-background-success: var(--color-green-05);
-    --color-background-warning: var(--color-yellow-05);
-    --color-background-critical: var(--color-red-05);
-
-    /** Icon **/
-    --icon-color: var(--color-gray-70);
-    --icon-color-information: var(--color-blue-50);
-    --icon-color-success: var(--color-green-50);
-    --icon-color-warning: var(--color-yellow-50);
-    --icon-color-critical: var(--color-red-50);
-
-    /* Text */
-    --text-color: var(--color-gray-100);
-  }
-}
-
-@media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
-  :root {
-    /* Color */
-    --color-background-information: var(--color-blue-80);
-    --color-background-success: var(--color-green-80);
-    --color-background-warning: var(--color-yellow-80);
-    --color-background-critical: var(--color-red-80);
-
-    /** Icon **/
-    --icon-color: var(--color-gray-05);
-    --icon-color-information: var(--color-blue-30);
-    --icon-color-success: var(--color-green-30);
-    --icon-color-warning: var(--color-yellow-30);
-    --icon-color-critical: var(--color-red-30);
-
-    /* Text */
-    --text-color: var(--color-gray-05);
-  }
-}
 
 @media (prefers-contrast) {
   :root,
   :host {
-    /* Border */
-    --border-color: var(--text-color);
-
     /* Button */
     --button-background-color: ButtonFace;
     --button-background-color-hover: ButtonFace;
@@ -137,20 +73,8 @@
 
     /* Color */
     --color-canvas: Canvas;
-    --color-background-information: var(--color-canvas);
-    --color-background-success: var(--color-canvas);
-    --color-background-warning: var(--color-canvas);
-    --color-background-critical: var(--color-canvas);
-
-    /** Icon **/
-    --icon-color: var(--text-color);
-    --icon-color-information: var(--icon-color);
-    --icon-color-success: var(--icon-color);
-    --icon-color-warning: var(--icon-color);
-    --icon-color-critical: var(--icon-color);
 
     /* Text */
-    --text-color: CanvasText;
     --text-color-deemphasized: inherit;
   }
 }

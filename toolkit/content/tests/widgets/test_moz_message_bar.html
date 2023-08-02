@@ -11,7 +11,7 @@
 <body>
 <p id="display"></p>
 <div id="content">
-  <moz-message-bar id="infoMessage" heading="Heading" message="Test message"></moz-message-bar>
+  <moz-message-bar id="infoMessage" header="Header" message="Test message"></moz-message-bar>
   <moz-message-bar id="infoMessage2" dismissable message="Test message"></moz-message-bar>
   <moz-message-bar id="warningMessage" type="warning" message="Test message"></moz-message-bar>
   <moz-message-bar id="successMessage" type="success" message="Test message"></moz-message-bar>
@@ -29,31 +29,33 @@
       const iconAlt = icon.alt;
       is(iconAlt, "Info", "Alternate text for the info icon is present.");
 
-      const heading = mozMessageBar.shadowRoot.querySelector(".heading");
-      is(heading.textContent.trim(), "Heading", "Heading is showing up.");
+      const header = mozMessageBar.shadowRoot.querySelector(".header");
+      is(header.textContent.trim(), "Header", "Header is showing up.");
       const message = mozMessageBar.shadowRoot.querySelector(".message");
       is(message.textContent.trim(), "Test message", "Message is showing up.");
     });
 
-    add_task(async function test_heading_display() {
+    add_task(async function test_header_display() {
       const mozMessageBar = document.querySelector("#infoMessage2");
-      let heading = mozMessageBar.shadowRoot.querySelector(".heading");
-      ok(!heading, "The heading element isn't displayed if it hasn't been initialized.");
+      let header = mozMessageBar.shadowRoot.querySelector(".header");
+      ok(!header, "The header element isn't displayed if it hasn't been initialized.");
 
-      mozMessageBar.heading = "Now there's a heading";
+      mozMessageBar.header = "Now there's a header";
       await mozMessageBar.updateComplete;
-      heading = mozMessageBar.renderRoot.querySelector(".heading");
-      is(heading.textContent.trim(), "Now there's a heading", "New heading element is displayed.");
+      header = mozMessageBar.renderRoot.querySelector(".header");
+      is(header.textContent.trim(), "Now there's a header", "New header element is displayed.");
     });
 
     add_task(async function test_close_button() {
       const notDismissableComponent = document.querySelector("#infoMessage");
       let closeButton = notDismissableComponent.shadowRoot.querySelector(".close");
-      ok(!closeButton, "Close button doesn't show when the message bar isn't dismissable.");
+      let closeButtonDislay = window.getComputedStyle(closeButton).display;
+      is(closeButtonDislay, "none", "Close button doesn't show when the message bar isn't dismissable.");
 
       let dismissableComponent = document.querySelector("#infoMessage2");
       closeButton = dismissableComponent.shadowRoot.querySelector(".close");
-      ok(closeButton, "Close button is shown when the message bar is dismissable.");
+      closeButtonDislay = window.getComputedStyle(closeButton).display;
+      is(closeButtonDislay, "block", "Close button is displayed when the message bar is dismissable.");
 
       closeButton.click();
       dismissableComponent = document.querySelector("#infoMessage2");
@@ -73,7 +75,7 @@
       const mozMessageBar = document.querySelector("#successMessage");
       const icon = mozMessageBar.shadowRoot.querySelector(".icon");
       const iconUrl = icon.src;
-      ok(iconUrl.includes("check-filled.svg"), "Success icon is showing up.");
+      ok(iconUrl.includes("check.svg"), "Success icon is showing up.");
       const iconAlt = icon.alt;
       is(iconAlt, "Success", "Alternate text for the success icon is present.");
     });
