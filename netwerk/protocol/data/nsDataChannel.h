@@ -16,9 +16,13 @@ class nsDataChannel : public nsBaseChannel {
  public:
   explicit nsDataChannel(nsIURI* uri) { SetURI(uri); }
 
+  const nsACString& MimeType() const { return mMimeType; }
+
  protected:
   [[nodiscard]] virtual nsresult OpenContentStream(
       bool async, nsIInputStream** result, nsIChannel** channel) override;
+
+  nsCString mMimeType;
 };
 
 #endif /* nsDataChannel_h___ */

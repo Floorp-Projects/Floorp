@@ -29,6 +29,7 @@
 
 #include "nsBaseChannel.h"
 #include "nsContentPolicyUtils.h"
+#include "nsDataChannel.h"
 #include "nsDataHandler.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
@@ -1017,7 +1018,6 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
   bool foundOpaqueRedirect = false;
 
   nsAutoCString contentType;
-  channel->GetContentType(contentType);
 
   int64_t contentLength = InternalResponse::UNKNOWN_BODY_SIZE;
   rv = channel->GetContentLength(&contentLength);
@@ -1025,6 +1025,8 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
                 contentLength == InternalResponse::UNKNOWN_BODY_SIZE);
 
   if (httpChannel) {
+    channel->GetContentType(contentType);
+
     uint32_t responseStatus = 0;
     rv = httpChannel->GetResponseStatus(&responseStatus);
     if (NS_FAILED(rv)) {
@@ -1098,11 +1100,20 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
       MOZ_ASSERT(!result.Failed());
     }
 
-    if (!contentType.IsEmpty()) {
-      nsAutoCString contentCharset;
-      channel->GetContentCharset(contentCharset);
-      if (NS_SUCCEEDED(rv) && !contentCharset.IsEmpty()) {
-        contentType += ";charset="_ns + contentCharset;
+    nsCOMPtr<nsIURI> uri;
+    if (NS_SUCCEEDED(channel->GetURI(getter_AddRefs(uri))) &&
+        uri->SchemeIs("data")) {
+      nsDataChannel* dchan = static_cast<nsDataChannel*>(channel.get());
+      MOZ_ASSERT(dchan);
+      contentType.Assign(dchan->MimeType());
+    } else {
+      channel->GetContentType(contentType);
+      if (!contentType.IsEmpty()) {
+        nsAutoCString contentCharset;
+        channel->GetContentCharset(contentCharset);
+        if (NS_SUCCEEDED(rv) && !contentCharset.IsEmpty()) {
+          contentType += ";charset="_ns + contentCharset;
+        }
       }
     }
 
