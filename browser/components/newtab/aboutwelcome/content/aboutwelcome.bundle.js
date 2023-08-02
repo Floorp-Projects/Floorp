@@ -539,12 +539,33 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     let {
       action
     } = targetContent;
+    action = JSON.parse(JSON.stringify(action));
 
     if (action.collectSelect) {
-      // Populate MULTI_ACTION data actions property with selected checkbox actions from tiles data
-      action.data = {
-        actions: []
-      };
+      var _action$data;
+
+      // Populate MULTI_ACTION data actions property with selected checkbox
+      // actions from tiles data
+      if (action.type !== "MULTI_ACTION") {
+        console.error("collectSelect is only supported for MULTI_ACTION type actions");
+        action.type = "MULTI_ACTION";
+      }
+
+      if (!Array.isArray((_action$data = action.data) === null || _action$data === void 0 ? void 0 : _action$data.actions)) {
+        console.error("collectSelect is only supported for MULTI_ACTION type actions with an array of actions");
+        action.data = {
+          actions: []
+        };
+      } // Prepend the multi-select actions to the CTA's actions array, but keep
+      // the actions in the same order they appear in. This way the CTA action
+      // can go last, after the multi-select actions are processed. For example,
+      // 1. checkbox action 1
+      // 2. checkbox action 2
+      // 3. radio action
+      // 4. CTA action (which perhaps depends on the radio action)
+
+
+      let multiSelectActions = [];
 
       for (const checkbox of ((_props$content = props.content) === null || _props$content === void 0 ? void 0 : (_props$content$tiles2 = _props$content.tiles) === null || _props$content$tiles2 === void 0 ? void 0 : _props$content$tiles2.data) ?? []) {
         var _props$content, _props$content$tiles2, _this$props$activeMul;
@@ -558,10 +579,11 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
         }
 
         if (checkboxAction) {
-          action.data.actions.push(checkboxAction);
+          multiSelectActions.push(checkboxAction);
         }
-      } // Send telemetry with selected checkbox ids
+      }
 
+      action.data.actions.unshift(...multiSelectActions); // Send telemetry with selected checkbox ids
 
       _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, props.activeMultiSelect, "SELECT_CHECKBOX");
     }

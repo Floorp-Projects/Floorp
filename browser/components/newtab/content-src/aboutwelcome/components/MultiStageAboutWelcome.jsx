@@ -383,13 +383,34 @@ export class WelcomeScreen extends React.PureComponent {
     }
 
     let { action } = targetContent;
+    action = JSON.parse(JSON.stringify(action));
 
     if (action.collectSelect) {
-      // Populate MULTI_ACTION data actions property with selected checkbox actions from tiles data
-      action.data = {
-        actions: [],
-      };
+      // Populate MULTI_ACTION data actions property with selected checkbox
+      // actions from tiles data
+      if (action.type !== "MULTI_ACTION") {
+        console.error(
+          "collectSelect is only supported for MULTI_ACTION type actions"
+        );
+        action.type = "MULTI_ACTION";
+      }
+      if (!Array.isArray(action.data?.actions)) {
+        console.error(
+          "collectSelect is only supported for MULTI_ACTION type actions with an array of actions"
+        );
+        action.data = {
+          actions: [],
+        };
+      }
 
+      // Prepend the multi-select actions to the CTA's actions array, but keep
+      // the actions in the same order they appear in. This way the CTA action
+      // can go last, after the multi-select actions are processed. For example,
+      // 1. checkbox action 1
+      // 2. checkbox action 2
+      // 3. radio action
+      // 4. CTA action (which perhaps depends on the radio action)
+      let multiSelectActions = [];
       for (const checkbox of props.content?.tiles?.data ?? []) {
         let checkboxAction;
         if (this.props.activeMultiSelect?.includes(checkbox.id)) {
@@ -399,9 +420,10 @@ export class WelcomeScreen extends React.PureComponent {
         }
 
         if (checkboxAction) {
-          action.data.actions.push(checkboxAction);
+          multiSelectActions.push(checkboxAction);
         }
       }
+      action.data.actions.unshift(...multiSelectActions);
 
       // Send telemetry with selected checkbox ids
       AboutWelcomeUtils.sendActionTelemetry(
