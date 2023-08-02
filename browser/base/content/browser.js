@@ -1887,7 +1887,7 @@ var gBrowserInit = {
 
     FullScreen.init();
 
-    if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+    if (AppConstants.platform == "win") {
       MenuTouchModeObserver.init();
     }
 
@@ -2492,7 +2492,7 @@ var gBrowserInit = {
       );
       Services.obs.removeObserver(gKeywordURIFixup, "keyword-uri-fixup");
 
-      if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+      if (AppConstants.platform == "win") {
         MenuTouchModeObserver.uninit();
       }
       BrowserOffline.uninit();
@@ -6557,14 +6557,14 @@ function updateToggleControlLabel(control) {
 
 var TabletModeUpdater = {
   init() {
-    if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+    if (AppConstants.platform == "win") {
       this.update(WindowsUIUtils.inTabletMode);
       Services.obs.addObserver(this, "tablet-mode-change");
     }
   },
 
   uninit() {
-    if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+    if (AppConstants.platform == "win") {
       Services.obs.removeObserver(this, "tablet-mode-change");
     }
   },
@@ -6653,7 +6653,7 @@ var gUIDensity = {
   getCurrentDensity() {
     // Automatically override the uidensity to touch in Windows tablet mode.
     if (
-      AppConstants.isPlatformAndVersionAtLeast("win", "10") &&
+      AppConstants.platform == "win" &&
       WindowsUIUtils.inTabletMode &&
       Services.prefs.getBoolPref(this.autoTouchModePref)
     ) {
