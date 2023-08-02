@@ -91,8 +91,13 @@ nscoord nsMathMLmfracFrame::CalcLineThickness(nsPresContext* aPresContext,
   // https://w3c.github.io/mathml-core/#dfn-linethickness
   if (!aThicknessAttribute.IsEmpty()) {
     lineThickness = defaultThickness;
-    ParseNumericValue(aThicknessAttribute, &lineThickness, 0, aPresContext,
+    ParseNumericValue(aThicknessAttribute, &lineThickness,
+                      dom::MathMLElement::PARSE_ALLOW_NEGATIVE, aPresContext,
                       aComputedStyle, aFontSizeInflation);
+    // MathML Core says a negative value is interpreted as 0.
+    if (lineThickness < 0) {
+      lineThickness = 0;
+    }
   }
   // use minimum if the lineThickness is a non-zero value less than minimun
   if (lineThickness && lineThickness < minimumThickness)
