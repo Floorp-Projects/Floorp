@@ -378,7 +378,12 @@ add_task(async function test_submit_creditCard_new() {
             TelemetryTestUtils.getProcessScalars("parent"),
             "formautofill.creditCards.autofill_profiles_count",
             expectChanged,
-            "There should be ${expectChanged} profile(s) stored."
+            `There should be ${expectChanged} profile(s) stored and recorded in Legacy Telemetry.`
+          );
+          Assert.equal(
+            expectChanged,
+            Glean.formautofillCreditcards.autofillProfilesCount.testGetValue(),
+            `There should be ${expectChanged} profile(s) stored and recorded in Glean.`
           );
         }
       }
@@ -393,6 +398,7 @@ add_task(async function test_submit_creditCard_new() {
   Services.telemetry.clearEvents();
   Services.telemetry.clearScalars();
   Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
+  Services.fog.testResetFOG();
 
   let expected_content = [
     ccFormArgsv2("detected", buildccFormv2Extra({ cc_exp: "false" }, "true")),
@@ -549,7 +555,12 @@ add_task(async function test_submit_creditCard_update() {
             TelemetryTestUtils.getProcessScalars("parent"),
             "formautofill.creditCards.autofill_profiles_count",
             expectChanged,
-            "There should be ${expectChanged} profile(s) stored."
+            `There should be ${expectChanged} profile(s) stored and recorded in Legacy Telemetry.`
+          );
+          Assert.equal(
+            expectChanged,
+            Glean.formautofillCreditcards.autofillProfilesCount.testGetValue(),
+            `There should be ${expectChanged} profile(s) stored.`
           );
         }
       }
@@ -563,6 +574,7 @@ add_task(async function test_submit_creditCard_update() {
   }
   Services.telemetry.clearEvents();
   Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
+  Services.fog.testResetFOG();
 
   let expected_content = [
     ccFormArgsv2("detected", buildccFormv2Extra({ cc_exp: "false" }, "true")),

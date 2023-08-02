@@ -15,7 +15,6 @@ class AutofillTelemetryBase {
 
   SCALAR_DETECTED_SECTION_COUNT = null;
   SCALAR_SUBMITTED_SECTION_COUNT = null;
-  SCALAR_AUTOFILL_PROFILE_COUNT = null;
 
   HISTOGRAM_NUM_USES = null;
   HISTOGRAM_PROFILE_NUM_USES = null;
@@ -169,11 +168,7 @@ class AutofillTelemetryBase {
   }
 
   recordAutofillProfileCount(count) {
-    if (!this.SCALAR_AUTOFILL_PROFILE_COUNT) {
-      return;
-    }
-
-    Services.telemetry.scalarSet(this.SCALAR_AUTOFILL_PROFILE_COUNT, count);
+    throw new Error("Not implemented.");
   }
 
   recordDetectedSectionCount() {
@@ -290,6 +285,10 @@ export class AddressTelemetry extends AutofillTelemetryBase {
       );
     }
   }
+
+  recordAutofillProfileCount(count) {
+    Services.telemetry.scalarSet(this.SCALAR_AUTOFILL_PROFILE_COUNT, count);
+  }
 }
 
 class CreditCardTelemetry extends AutofillTelemetryBase {
@@ -300,8 +299,6 @@ class CreditCardTelemetry extends AutofillTelemetryBase {
     "formautofill.creditCards.detected_sections_count";
   SCALAR_SUBMITTED_SECTION_COUNT =
     "formautofill.creditCards.submitted_sections_count";
-  SCALAR_AUTOFILL_PROFILE_COUNT =
-    "formautofill.creditCards.autofill_profiles_count";
 
   HISTOGRAM_NUM_USES = "CREDITCARD_NUM_USES";
   HISTOGRAM_PROFILE_NUM_USES = "AUTOFILL_PROFILE_NUM_USES";
@@ -450,6 +447,10 @@ class CreditCardTelemetry extends AutofillTelemetryBase {
     for (let record of records) {
       histogram.add(record.timesUsed);
     }
+  }
+
+  recordAutofillProfileCount(count) {
+    Glean.formautofillCreditcards.autofillProfilesCount.set(count);
   }
 }
 
