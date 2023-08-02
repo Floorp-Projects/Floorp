@@ -426,6 +426,10 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  * NOTE: Debugger.Object.prototype.executeInGlobal uses the object's global
  *       scope only, and it doesn't use any dynamic environment or
  *       non-syntactic scope.
+ * NOTE: If no extra bindings are used by script,
+ *       Debugger.Object.prototype.executeInGlobalWithBindings uses the object's
+ *       global scope only, and it doesn't use any dynamic environment or
+ *       non-syntactic scope.
  *
  */
 // clang-format on

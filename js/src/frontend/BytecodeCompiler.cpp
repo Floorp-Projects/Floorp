@@ -629,6 +629,27 @@ JSScript* frontend::CompileGlobalScriptWithExtraBindings(
       cx, CompileGlobalScriptImpl(cx, fc, options, srcBuf,
                                   ScopeKind::NonSyntactic, &extraBindings));
   if (!script) {
+    if (fc->extraBindingsAreNotUsed()) {
+      // Compile the script as regular global script in global lexical.
+
+      fc->clearNoExtraBindingReferencesFound();
+
+      // Warnings can be reported. Clear them to avoid reporting twice.
+      fc->clearWarnings();
+
+      // No other error should be reported.
+      MOZ_ASSERT(!fc->hadErrors());
+      MOZ_ASSERT(!cx->isExceptionPending());
+
+      env.set(&cx->global()->lexicalEnvironment());
+
+      JS::CompileOptions copiedOptions(nullptr, options);
+      copiedOptions.setNonSyntacticScope(false);
+
+      return CompileGlobalScript(cx, fc, copiedOptions, srcBuf,
+                                 ScopeKind::Global);
+    }
+
     return nullptr;
   }
 
@@ -833,6 +854,34 @@ void SourceAwareCompiler<Unit>::handleParseFailure(
   compilationState_.directives = newDirectives;
 }
 
+static bool UsesExtraBindings(GlobalSharedContext* globalsc,
+                              const ExtraBindingInfoVector& extraBindings,
+                              const UsedNameTracker::UsedNameMap& usedNameMap) {
+  for (const auto& bindingInfo : extraBindings) {
+    if (bindingInfo.isShadowed) {
+      continue;
+    }
+
+    for (auto r = usedNameMap.all(); !r.empty(); r.popFront()) {
+      const auto& item = r.front();
+      const auto& name = item.key();
+      if (bindingInfo.nameIndex != name) {
+        continue;
+      }
+
+      const auto& nameInfo = item.value();
+      if (nameInfo.empty()) {
+        continue;
+      }
+
+      // This name is free, and uses the extra binding.
+      return true;
+    }
+  }
+
+  return false;
+}
+
 template <typename Unit>
 bool ScriptCompiler<Unit>::popupateExtraBindingsFields(
     GlobalSharedContext* globalsc) {
@@ -841,6 +890,7 @@ bool ScriptCompiler<Unit>::popupateExtraBindingsFields(
     return false;
   }
 
+  bool hasNonShadowedBinding = false;
   for (auto& bindingInfo : compilationState_.input.extraBindings()) {
     if (bindingInfo.isShadowed) {
       continue;
@@ -858,6 +908,26 @@ bool ScriptCompiler<Unit>::popupateExtraBindingsFields(
     }
 
     bindingInfo.isShadowed = isShadowed;
+    if (!isShadowed) {
+      hasNonShadowedBinding = true;
+    }
+  }
+
+  if (!hasNonShadowedBinding) {
+    // All bindings are shadowed.
+    this->fc_->reportExtraBindingsAreNotUsed();
+    return false;
+  }
+
+  if (globalsc->hasDirectEval()) {
+    // Direct eval can contain reference.
+    return true;
+  }
+
+  if (!UsesExtraBindings(globalsc, compilationState_.input.extraBindings(),
+                         parser->usedNames().map())) {
+    this->fc_->reportExtraBindingsAreNotUsed();
+    return false;
   }
 
   return true;
