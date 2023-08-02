@@ -486,6 +486,7 @@
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .welcome-text h1 {
   width: auto;
+  text-align: start;
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .action-buttons .primary,
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .action-buttons .secondary {
