@@ -30,7 +30,7 @@ const messageTypeToIconData = {
  *
  * @tagname moz-message-bar
  * @property {string} type - The type of the displayed message.
- * @property {string} header - The header of the message.
+ * @property {string} heading - The heading of the message.
  * @property {string} message - The message text.
  * @fires message-bar:close
  *  Custom event indicating that message bar was closed.
@@ -39,9 +39,14 @@ const messageTypeToIconData = {
  */
 
 export default class MozMessageBar extends MozLitElement {
+  static queries = {
+    actionsSlotEl: "slot[name=actions]",
+    actionsEl: ".actions",
+  };
+
   static properties = {
     type: { type: String },
-    header: { type: String },
+    heading: { type: String },
     message: { type: String },
   };
 
@@ -57,6 +62,11 @@ export default class MozMessageBar extends MozLitElement {
     this.role = "status";
   }
 
+  onSlotchange(e) {
+    let actions = this.actionsSlotEl.assignedNodes();
+    this.actionsEl.classList.toggle("active", actions.length);
+  }
+
   disconnectedCallback() {
     this.dispatchEvent(new CustomEvent("message-bar:close"));
   }
@@ -66,20 +76,22 @@ export default class MozMessageBar extends MozLitElement {
     if (iconData) {
       let { iconSrc, l10nId } = iconData;
       return html`
-        <img
-          class="icon"
-          src=${iconSrc}
-          data-l10n-id=${l10nId}
-          data-l10n-attrs="alt"
-        />
+        <div class="icon-container">
+          <img
+            class="icon"
+            src=${iconSrc}
+            data-l10n-id=${l10nId}
+            data-l10n-attrs="alt"
+          />
+        </div>
       `;
     }
     return "";
   }
 
-  headerTemplate() {
-    if (this.header) {
-      return html`<strong class="header">${this.header}</strong>`;
+  headingTemplate() {
+    if (this.heading) {
+      return html`<strong class="heading">${this.heading}</strong>`;
     }
     return "";
   }
@@ -92,14 +104,19 @@ export default class MozMessageBar extends MozLitElement {
       />
       <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
       <div class="container">
-        ${this.iconTemplate()}
         <div class="content">
-          ${this.headerTemplate()}
-          <span class="message">${ifDefined(this.message)}</span>
-          <slot name="support-link"></slot>
+          <div class="text-container">
+            ${this.iconTemplate()}
+            <div class="text-content">
+              ${this.headingTemplate()}
+              <span class="message">${ifDefined(this.message)}</span>
+              <slot name="support-link"></slot>
+            </div>
+          </div>
+          <span class="actions">
+            <slot name="actions" @slotchange=${this.onSlotchange}></slot>
+          </span>
         </div>
-        <slot name="actions"></slot>
-        <span class="spacer"></span>
         <button
           class="close ghost-button"
           data-l10n-id="moz-message-bar-close-button"

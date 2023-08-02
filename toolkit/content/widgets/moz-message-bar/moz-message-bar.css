@@ -6,10 +6,7 @@
   --close-icon-url: url("chrome://global/skin/icons/close-12.svg");
   --close-fill-color: var(--in-content-icon-color);
   --icon-size: 16px;
-  --close-icon-size: 24px;
-}
-
-:host {
+  --close-button-size: 32px;
   --message-bar-background-color: var(--in-content-box-info-background);
   --message-bar-text-color: var(--in-content-text-color);
   /* The default values of --in-content-button* are sufficient, even for dark themes */
@@ -25,40 +22,57 @@
   display: block;
 }
 
-::slotted(button) {
-  /* Enforce micro-button width. */
-  min-width: -moz-fit-content !important;
-}
-
-/* MessageBar Grid Layout */
+/* MozMessageBar layout */
 
 .container {
+  min-height: 32px;
   background: var(--message-bar-background-color);
   color: var(--message-bar-text-color);
 
-  padding: 3px 7px;
-  position: relative;
+  padding-inline: 16px 8px;
+  padding-block: 8px;
 
   border-radius: 4px;
 
   display: flex;
-  /* Ensure that the message bar shadow dom elements are vertically aligned. */
-  align-items: center;
+  gap: 8px;
 }
 
 .content {
-  margin: 0 4px;
-  display: inline-block;
-  /* Ensure that the message bar content is vertically aligned. */
+  display: flex;
+  gap: 8px 16px;
+  flex-wrap: wrap;
   align-items: center;
-  /* Ensure that the message bar content is wrapped. */
-  word-break: break-word;
+  margin-inline-start: 24px;
+  flex-grow: 1;
 }
 
-/* MessageBar icon style */
+.text-container {
+  display: flex;
+  gap: 4px 8px;
+  padding-block: calc((var(--message-bar-container-min-height) - 1.5em)/2);
+}
+
+.text-content {
+  display: inline-flex;
+  gap: 4px 8px;
+  flex-wrap: wrap;
+  word-break: break-word;
+  align-items: center;
+  line-height: 1.5;
+}
+
+/* MozMessageBar icon style */
+
+.icon-container {
+  height: 1.5em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-inline-start: -24px;
+}
 
 .icon {
-  padding: 4px;
   width: var(--icon-size);
   height: var(--icon-size);
   flex-shrink: 0;
@@ -68,10 +82,29 @@
   stroke: currentColor;
 }
 
-/* Use a spacer to position the close button at the end, but also support
- * centering if required. */
-.spacer {
-  flex-grow: 1;
+/* MozMessageBar heading style */
+
+.heading {
+  font-weight: 600;
+}
+
+/* MozMessageBar actions style */
+
+.actions {
+  display: none;
+}
+
+.actions.active {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.actions ::slotted(button) {
+  /* Enforce micro-button width. */
+  min-width: fit-content !important;
+
+  margin: 0 !important;
+  padding: 4px 16px !important;
 }
 
 /* Close icon styles */
@@ -86,19 +119,14 @@
   background-position: center center;
   -moz-context-properties: fill;
   fill: currentColor;
+  color: currentColor;
   min-width: auto;
   min-height: auto;
-  width: var(--close-icon-size);
-  height: var(--close-icon-size);
+  width: var(--close-button-size);
+  height: var(--close-button-size);
   margin: 0;
   padding: 0;
   flex-shrink: 0;
-}
-
-@media (prefers-contrast) {
-  :host {
-    border-color: CanvasText;
-  }
 }
 
 .ghost-button {
@@ -116,8 +144,14 @@
   color: var(--in-content-button-text-color-active);
 }
 
+@media (prefers-contrast) {
+  :host {
+    border-color: CanvasText;
+  }
+}
+
 @media not (prefers-contrast) {
-  /* MessageBar colors by message type */
+  /* MozMessageBar colors by message type */
   /* Colors from: https://design.firefox.com/photon/components/message-bars.html#type-specific-style */
 
   :host([type=warning]) {
