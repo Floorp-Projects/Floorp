@@ -546,11 +546,12 @@ option(
 set_config("MOZ_UI_LOCALE", depends("--enable-ui-locale")(lambda x: x))
 
 option(
-    "--enable-icu4x",
-    help="An experiment to use ICU4X instead of ICU4C. See intl/ICU4X.md",
+    "--disable-icu4x",
+    help="Disable using ICU4X",
 )
 
 set_config("MOZ_ICU4X", True, when="--enable-icu4x")
+set_define("MOZ_ICU4X", True, when="--enable-icu4x")
 
 # clang-plugin location
 # ==============================================================
