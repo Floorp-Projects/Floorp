@@ -73,8 +73,6 @@ class VideoSink : public MediaSink {
 
   void GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) override;
 
-  void EnableTreatAudioUnderrunAsSilence(bool aEnabled) override;
-
  private:
   virtual ~VideoSink();
 
