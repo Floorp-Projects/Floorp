@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "uniffi_core"
-version = "0.24.2"
+version = "0.24.3"
 authors = ["Firefox Sync Team <sync-team@mozilla.com>"]
 description = "a multi-language bindings generator for rust (runtime support code)"
 homepage = "https://mozilla.github.io/uniffi-rs"
