@@ -30,10 +30,6 @@ LOCAL_INCLUDES += [
     "/tools/profiler/public"
 ]
 
-UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/utility/maybe_worker_thread.cc"
-]
-
 if not CONFIG["MOZ_DEBUG"]:
 
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
@@ -128,20 +124,12 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["_WINDOWS"] = True
     DEFINES["__STD_C"] = True
 
-    OS_LIBS += [
-        "winmm"
-    ]
-
 if CONFIG["CPU_ARCH"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
 if CONFIG["CPU_ARCH"] == "arm":
-
-    CXXFLAGS += [
-        "-mfpu=neon"
-    ]
 
     DEFINES["WEBRTC_ARCH_ARM"] = True
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
@@ -191,6 +179,10 @@ if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
 
 if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
 
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
     OS_LIBS += [
         "android_support",
         "unwind"
@@ -215,10 +207,6 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
-
-    CXXFLAGS += [
-        "-msse2"
-    ]
 
     DEFINES["_GNU_SOURCE"] = True
 

@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Merge day clobber 2023-07-31
+Modified build files in third_party/libwebrtc - Bug 1843113 - Vendor libwebrtc from 8b5bf6dd05
