@@ -16,3 +16,9 @@ user_pref("nglayout.initialpaint.unsuppress_with_no_background", true);
 
 // Disable prefers-reduced-motion to ensure that smooth scrolls can be tested.
 user_pref("general.smoothScroll", true);
+
+// Disable secure context pref for testing storage access API.
+// Related Bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1840902.
+// Plan to remove this pref since all tests must be compliant with the
+// storage access API spec for secure contexts.
+user_pref("dom.storage_access.dont_grant_insecure_contexts", false);

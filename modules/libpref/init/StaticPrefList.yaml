@@ -4019,6 +4019,12 @@
   value: false
   mirror: always
 
+# Only grant storage access to secure contexts.
+- name: dom.storage_access.dont_grant_insecure_contexts
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Whether the Storage API is enabled.
 - name: dom.storageManager.enabled
   type: RelaxedAtomicBool
