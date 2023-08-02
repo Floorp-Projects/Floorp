@@ -11,6 +11,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
+  FeatureCalloutBroker:
+    "resource://activity-stream/lib/FeatureCalloutBroker.sys.mjs",
 });
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   InfoBar: "resource://activity-stream/lib/InfoBar.jsm",
@@ -39,6 +41,18 @@ export class AboutMessagePreviewParent extends JSWindowActorParent {
       message,
       dispatchCFRAction
     );
+  }
+
+  showFeatureCallout(message, browser) {
+    switch (message.trigger.id) {
+      case "featureCalloutCheck":
+        // For messagePreview, force the trigger to be something we can show
+        message.trigger.id = "nthTabClosed";
+        lazy.FeatureCalloutBroker.showFeatureCallout(browser, message);
+        break;
+      default:
+        lazy.FeatureCalloutBroker.showFeatureCallout(browser, message);
+    }
   }
 
   async showMessage(data) {
@@ -73,6 +87,9 @@ export class AboutMessagePreviewParent extends JSWindowActorParent {
         return;
       case "cfr_doorhanger":
         this.showCFR(message, browser);
+        return;
+      case "feature_callout":
+        this.showFeatureCallout(message, browser);
         return;
       default:
         console.error(`Unsupported message template ${message.template}`);
