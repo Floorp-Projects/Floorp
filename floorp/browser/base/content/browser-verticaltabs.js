@@ -36,7 +36,8 @@ function setVerticalTabs() {
       while (list.hasMoreElements()) { if (list.getNext() != window) {return;} }
 
       SessionStore.promiseInitialized.then(() => {
-        window.setTimeout(setWorkspaceLabel, 1500); 
+        window.setTimeout(setWorkspaceLabel, 1500);
+        window.setTimeout(setWorkspaceLabel, 3000);
       });
     }
     checkBrowserIsStartup();
