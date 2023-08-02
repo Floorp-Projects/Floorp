@@ -1857,6 +1857,8 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
         aSample->GetEndTime().ToMicroseconds(),
         aSample->GetEndTime().ToString().get(), aInterval.ToString().get());
     MOZ_DIAGNOSTIC_ASSERT(aSample->HasValidTime());
+    MOZ_DIAGNOSTIC_ASSERT(TimeInterval(aSample->mTime, aSample->GetEndTime()) ==
+                          aInterval);
     samplesRange += aInterval;
     sizeNewSamples += aSample->ComputedSizeOfIncludingThis();
     samples.AppendElement(aSample);
