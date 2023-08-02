@@ -380,7 +380,7 @@ add_task(async function test_submit_autofill_profile_new() {
             TelemetryTestUtils.getProcessScalars("parent"),
             SCALAR_AUTOFILL_PROFILE_COUNT,
             expectChanged,
-            "There should be ${expectChanged} profile(s) stored."
+            `There should be ${expectChanged} profile(s) stored.`
           );
         }
       }
@@ -474,7 +474,7 @@ add_task(async function test_submit_autofill_profile_update() {
             TelemetryTestUtils.getProcessScalars("parent"),
             SCALAR_AUTOFILL_PROFILE_COUNT,
             expectChanged,
-            "There should be ${expectChanged} profile(s) stored."
+            `There should be ${expectChanged} profile(s) stored.`
           );
         }
       }

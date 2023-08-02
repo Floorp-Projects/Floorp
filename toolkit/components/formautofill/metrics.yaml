@@ -1,0 +1,28 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Toolkit :: Form Autofill'
+
+formautofill.creditcards:
+    autofill_profiles_count:
+      type: quantity
+      unit: credit card autofill profiles
+      description: >
+        Count at store time how many credit card autofill profiles the user has.
+      bugs:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=990203
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1834571
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1834571#c2
+      notification_emails:
+        - autofill@lists.mozilla.org
+        - passwords-dev@mozilla.org
+      expires: never
+      telemetry_mirror: FORMAUTOFILL_CREDITCARDS_AUTOFILL_PROFILES_COUNT
