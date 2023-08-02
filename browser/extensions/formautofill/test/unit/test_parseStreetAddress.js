@@ -1,7 +1,7 @@
 "use strict";
 
-const { AddressParser } = ChromeUtils.import(
-  "resource://gre/modules/shared/AddressParser.jsm"
+const { AddressParser } = ChromeUtils.importESModule(
+  "resource://gre/modules/shared/AddressParser.sys.mjs"
 );
 
 // To add a new test entry to a "TESTCASES" variable,

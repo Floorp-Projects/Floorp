@@ -6,8 +6,8 @@
 export async function runBackgroundTask(commandLine) {
   // Exact same behaviour as `unique_profile`, but with a task name
   // that is recognized as a task that should produce no output.
-  const taskModule = ChromeUtils.import(
-    "resource://testing-common/backgroundtasks/BackgroundTask_unique_profile.jsm"
+  const taskModule = ChromeUtils.importESModule(
+    "resource://testing-common/backgroundtasks/BackgroundTask_unique_profile.sys.mjs"
   );
   return taskModule.runBackgroundTask(commandLine);
 }
