@@ -33,7 +33,7 @@ jobs:
         worker-type: b-linux-gcp
         worker:
             docker-image:
-                in-tree: debian11-repackage
+                in-tree: debian12-repackage
         mozharness:
             run-as-root: true
             use-caches: false
