@@ -1091,6 +1091,10 @@ static void ScaleForFrameDPI(LayoutDeviceIntSize* aSize, nsIFrame* aFrame) {
 
 LayoutDeviceIntMargin nsNativeThemeWin::GetWidgetBorder(
     nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
+  if (IsWidgetAlwaysNonNative(aFrame, aAppearance)) {
+    return Theme::GetWidgetBorder(aContext, aFrame, aAppearance);
+  }
+
   LayoutDeviceIntMargin result;
   mozilla::Maybe<nsUXThemeClass> themeClass = GetThemeClass(aAppearance);
   HTHEME theme = NULL;
@@ -1153,7 +1157,7 @@ bool nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
                                         nsIFrame* aFrame,
                                         StyleAppearance aAppearance,
                                         LayoutDeviceIntMargin* aResult) {
-  if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
+  if (IsWidgetAlwaysNonNative(aFrame, aAppearance)) {
     return Theme::GetWidgetPadding(aContext, aFrame, aAppearance, aResult);
   }
 
