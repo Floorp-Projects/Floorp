@@ -1198,33 +1198,6 @@ bool nsCocoaUtils::ShouldMinimizeOnTitlebarDoubleClick() {
   return [ActionOnDoubleClickSystemPref() isEqualToString:@"Minimize"];
 }
 
-// AVAuthorizationStatus is not needed unless we are running on 10.14.
-// However, on pre-10.14 SDK's, AVAuthorizationStatus and its enum values
-// are both defined and prohibited from use by compile-time checks. We
-// define a copy of AVAuthorizationStatus to allow compilation on pre-10.14
-// SDK's. The enum values must match what is defined in the 10.14 SDK.
-// We use ASSERTS for 10.14 SDK builds to check the enum values match.
-enum GeckoAVAuthorizationStatus : NSInteger {
-  GeckoAVAuthorizationStatusNotDetermined = 0,
-  GeckoAVAuthorizationStatusRestricted = 1,
-  GeckoAVAuthorizationStatusDenied = 2,
-  GeckoAVAuthorizationStatusAuthorized = 3
-};
-
-#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
-// Define authorizationStatusForMediaType: as returning
-// GeckoAVAuthorizationStatus instead of AVAuthorizationStatus to allow
-// compilation on pre-10.14 SDK's.
-@interface AVCaptureDevice (GeckoAVAuthorizationStatus)
-+ (GeckoAVAuthorizationStatus)authorizationStatusForMediaType:(AVMediaType)mediaType;
-@end
-
-@interface AVCaptureDevice (WithCompletionHandler)
-+ (void)requestAccessForMediaType:(AVMediaType)mediaType
-                completionHandler:(void (^)(BOOL granted))handler;
-@end
-#endif
-
 static const char* AVMediaTypeToString(AVMediaType aType) {
   if (aType == AVMediaTypeVideo) {
     return "video";
@@ -1241,16 +1214,16 @@ static void LogAuthorizationStatus(AVMediaType aType, int aState) {
   const char* stateString;
 
   switch (aState) {
-    case GeckoAVAuthorizationStatusAuthorized:
+    case AVAuthorizationStatusAuthorized:
       stateString = "AVAuthorizationStatusAuthorized";
       break;
-    case GeckoAVAuthorizationStatusDenied:
+    case AVAuthorizationStatusDenied:
       stateString = "AVAuthorizationStatusDenied";
       break;
-    case GeckoAVAuthorizationStatusNotDetermined:
+    case AVAuthorizationStatusNotDetermined:
       stateString = "AVAuthorizationStatusNotDetermined";
       break;
-    case GeckoAVAuthorizationStatusRestricted:
+    case AVAuthorizationStatusRestricted:
       stateString = "AVAuthorizationStatusRestricted";
       break;
     default:
@@ -1263,22 +1236,22 @@ static void LogAuthorizationStatus(AVMediaType aType, int aState) {
 static nsresult GetPermissionState(AVMediaType aMediaType, uint16_t& aState) {
   MOZ_ASSERT(aMediaType == AVMediaTypeVideo || aMediaType == AVMediaTypeAudio);
 
-  GeckoAVAuthorizationStatus authStatus = static_cast<GeckoAVAuthorizationStatus>(
+  AVAuthorizationStatus authStatus = static_cast<AVAuthorizationStatus>(
       [AVCaptureDevice authorizationStatusForMediaType:aMediaType]);
   LogAuthorizationStatus(aMediaType, authStatus);
 
-  // Convert GeckoAVAuthorizationStatus to nsIOSPermissionRequest const
+  // Convert AVAuthorizationStatus to nsIOSPermissionRequest const
   switch (authStatus) {
-    case GeckoAVAuthorizationStatusAuthorized:
+    case AVAuthorizationStatusAuthorized:
       aState = nsIOSPermissionRequest::PERMISSION_STATE_AUTHORIZED;
       return NS_OK;
-    case GeckoAVAuthorizationStatusDenied:
+    case AVAuthorizationStatusDenied:
       aState = nsIOSPermissionRequest::PERMISSION_STATE_DENIED;
       return NS_OK;
-    case GeckoAVAuthorizationStatusNotDetermined:
+    case AVAuthorizationStatusNotDetermined:
       aState = nsIOSPermissionRequest::PERMISSION_STATE_NOTDETERMINED;
       return NS_OK;
-    case GeckoAVAuthorizationStatusRestricted:
+    case AVAuthorizationStatusRestricted:
       aState = nsIOSPermissionRequest::PERMISSION_STATE_RESTRICTED;
       return NS_OK;
     default:
@@ -1410,20 +1383,6 @@ nsresult nsCocoaUtils::RequestCapturePermission(AVMediaType aType, RefPtr<Promis
                                                 PromiseArray& aPromiseList,
                                                 void (^aHandler)(BOOL granted)) {
   MOZ_ASSERT(aType == AVMediaTypeVideo || aType == AVMediaTypeAudio);
-#if defined(MAC_OS_X_VERSION_10_14)
-  // Ensure our enum constants match. We can only do this when
-  // compiling on 10.14+ because AVAuthorizationStatus is
-  // prohibited by preprocessor checks on earlier OS versions.
-  static_assert(
-      (int)GeckoAVAuthorizationStatusNotDetermined == (int)AVAuthorizationStatusNotDetermined,
-      "GeckoAVAuthorizationStatusNotDetermined  does not match");
-  static_assert((int)GeckoAVAuthorizationStatusRestricted == (int)AVAuthorizationStatusRestricted,
-                "GeckoAVAuthorizationStatusRestricted does not match");
-  static_assert((int)GeckoAVAuthorizationStatusDenied == (int)AVAuthorizationStatusDenied,
-                "GeckoAVAuthorizationStatusDenied does not match");
-  static_assert((int)GeckoAVAuthorizationStatusAuthorized == (int)AVAuthorizationStatusAuthorized,
-                "GeckoAVAuthorizationStatusAuthorized does not match");
-#endif
   LOG("RequestCapturePermission(%s)", AVMediaTypeToString(aType));
 
   sMediaCaptureMutex.Lock();
