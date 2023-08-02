@@ -230,7 +230,6 @@ class nsSliderFrame final : public nsContainerFrame {
   nscoord mThumbMinLength;
 
   static bool gMiddlePref;
-  static int32_t gSnapMultiplier;
 };  // class nsSliderFrame
 
 #endif

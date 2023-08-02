@@ -14233,7 +14233,7 @@
 #else
   value: 0
 #endif
-  mirror: once
+  mirror: always
 
 #---------------------------------------------------------------------------
 # Prefs starting with "storage."
