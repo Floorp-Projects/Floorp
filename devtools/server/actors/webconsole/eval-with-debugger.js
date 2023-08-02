@@ -13,7 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 loader.lazyRequireGetter(
   this,
-  ["getCommandAndArgs", "isCommand"],
+  ["formatCommand", "isCommand"],
   "resource://devtools/server/actors/webconsole/commands/parser.js",
   true
 );
@@ -169,27 +169,16 @@ exports.evalWithDebugger = function (string, options = {}, webConsole) {
 
   let result;
   try {
-    if (isCommand(string)) {
-      try {
-        const { command, args } = getCommandAndArgs(string);
-        const commandFunc = helpers.rawCommands.get(command);
-        result = commandFunc(helpers.rawOwner, args);
-      } catch (e) {
-        console.log(e);
-        return `throw "${e}"`;
-      }
-    } else {
-      const evalString = getEvalInput(string, bindings);
-      result = getEvalResult(
-        dbg,
-        evalString,
-        evalOptions,
-        bindings,
-        frame,
-        dbgGlobal,
-        noSideEffectDebugger
-      );
-    }
+    const evalString = getEvalInput(string, bindings);
+    result = getEvalResult(
+      dbg,
+      evalString,
+      evalOptions,
+      bindings,
+      frame,
+      dbgGlobal,
+      noSideEffectDebugger
+    );
   } finally {
     // We need to be absolutely sure that the sideeffect-free debugger's
     // debuggees are removed because otherwise we risk them terminating
@@ -533,6 +522,15 @@ function getEvalInput(string, bindings) {
   // The help function needs to be easy to guess, so we make the () optional.
   if (bindings?.help && (trimmedString === "help" || trimmedString === "?")) {
     return "help()";
+  }
+  // we support Unix like syntax for commands if it is preceeded by `:`
+  if (isCommand(string)) {
+    try {
+      return formatCommand(string);
+    } catch (e) {
+      console.log(e);
+      return `throw "${e}"`;
+    }
   }
 
   // Add easter egg for console.mihai().
