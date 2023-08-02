@@ -20,6 +20,7 @@
   /* Application tokens */
   /** Border **/
   --border-radius-circle: 9999px;
+  --border-radius-small: 4px;
   --border-width: 1px;
   --border-interactive-color: unset;
 
