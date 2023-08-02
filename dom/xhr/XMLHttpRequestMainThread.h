@@ -477,9 +477,6 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   // set to "text/xml".
   void EnsureChannelContentType();
 
-  // Gets the value of the final content-type header from the channel.
-  bool GetContentType(nsACString& aValue) const;
-
   already_AddRefed<nsIHttpChannel> GetCurrentHttpChannel();
   already_AddRefed<nsIJARChannel> GetCurrentJARChannel();
 
