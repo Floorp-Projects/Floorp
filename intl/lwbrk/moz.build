@@ -42,4 +42,16 @@ else:
         "rulebrk.c",
     ]
 
+if CONFIG["JS_HAS_INTL_API"] and CONFIG["MOZ_ICU4X"]:
+    LOCAL_INCLUDES += [
+        "/third_party/rust/icu_capi/cpp/include",
+    ]
+    # Disable warnings when including C++ headers of ICU4X.
+    # - https://github.com/rust-diplomat/diplomat/issues/277
+    # - https://github.com/rust-diplomat/diplomat/issues/335
+    CXXFLAGS += [
+        "-Wno-mismatched-tags",
+        "-Wno-pessimizing-move",
+    ]
+
 FINAL_LIBRARY = "xul"
