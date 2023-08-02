@@ -186,8 +186,30 @@ pub fn include_scaffolding(component_name: TokenStream) -> TokenStream {
             },
             None,
         );
+
+        let toml_path = match util::manifest_path() {
+            Ok(path) => path.display().to_string(),
+            Err(_) => {
+                return quote! {
+                    compile_error!("This macro assumes the crate has a build.rs script, but $OUT_DIR is not present");
+                }.into();
+            }
+        };
+
         quote! {
             #metadata
+
+            // FIXME(HACK):
+            // Include the `Cargo.toml` file into the build.
+            // That way cargo tracks the file and other tools relying on file
+            // tracking see it as well.
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1846223
+            // In the future we should handle that by using the `track_path::path` API,
+            // see https://github.com/rust-lang/rust/pull/84029
+            #[allow(dead_code)]
+            mod __unused {
+                const _: &[u8] = include_bytes!(#toml_path);
+            }
 
             include!(concat!(env!("OUT_DIR"), "/", #name, ".uniffi.rs"));
         }
