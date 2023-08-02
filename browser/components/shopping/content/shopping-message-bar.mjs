@@ -10,6 +10,7 @@ class ShoppingMessageBar extends MozLitElement {
   #MESSAGE_TYPES_RENDER_TEMPLATE_MAPPING = new Map([
     ["stale", this.getStaleWarningTemplate()],
     ["generic-error", this.getGenericErrorTemplate()],
+    ["not-enough-reviews", this.getNotEnoughReviewsTemplate()],
   ]);
 
   static properties = {
@@ -44,6 +45,20 @@ class ShoppingMessageBar extends MozLitElement {
           data-l10n-id="shopping-message-bar-generic-error-title"
         ></strong>
         <span data-l10n-id="shopping-message-bar-generic-error-message"></span>
+      </article>
+    </message-bar>`;
+  }
+
+  getNotEnoughReviewsTemplate() {
+    return html` <message-bar type="warning">
+      <article id="message-bar-container" aria-labelledby="header">
+        <strong
+          id="header"
+          data-l10n-id="shopping-message-bar-warning-not-enough-reviews-title"
+        ></strong>
+        <span
+          data-l10n-id="shopping-message-bar-warning-not-enough-reviews-message"
+        ></span>
       </article>
     </message-bar>`;
   }
