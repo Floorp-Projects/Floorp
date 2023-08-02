@@ -1278,7 +1278,9 @@ static bool FastStr(JSContext* cx, Handle<Value> v, StringifyContext* scx,
 
   constexpr size_t MAX_STACK_DEPTH = 20;
   Vector<FastStackEntry> stack(cx);
-  MOZ_ALWAYS_TRUE(stack.reserve(MAX_STACK_DEPTH - 1));
+  if (!stack.reserve(MAX_STACK_DEPTH - 1)) {
+    return false;
+  }
   // Construct an iterator for the object,
   // https://262.ecma-international.org/13.0/#sec-serializejsonobject step 6:
   // EnumerableOwnPropertyNames or
