@@ -207,6 +207,7 @@ webext-storage = { git = "https://github.com/mozilla/application-services", rev 
 # ICU4X 1.2 with synstructure 0.13.x / syn 2.x. When updating to next version, this should be removed.
 diplomat = { git = "https://github.com/rust-diplomat/diplomat", rev = "8d125999893fedfdf30595e97334c21ec4b18da9" }
 diplomat-runtime = { git = "https://github.com/rust-diplomat/diplomat", rev = "8d125999893fedfdf30595e97334c21ec4b18da9" }
+icu_provider_macros = { git = "https://github.com/unicode-org/icu4x", rev = "14e9a3a9857be74582abe2dfa7ab799c5eaac873" }
 yoke-derive = { git = "https://github.com/unicode-org/icu4x", rev = "14e9a3a9857be74582abe2dfa7ab799c5eaac873" }
 zerofrom-derive = { git = "https://github.com/unicode-org/icu4x", rev = "14e9a3a9857be74582abe2dfa7ab799c5eaac873" }
 zerovec-derive = { git = "https://github.com/unicode-org/icu4x", rev = "14e9a3a9857be74582abe2dfa7ab799c5eaac873" }

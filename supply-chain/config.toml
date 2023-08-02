@@ -76,6 +76,10 @@ notes = "Used for fuzzing."
 criteria = "safe-to-run"
 notes = "Used for testing."
 
+[policy.icu_provider_macros]
+audit-as-crates-io = true
+notes = "Upstream version not to use syn 1.x"
+
 [policy.icu_testdata]
 audit-as-crates-io = false
 notes = "Customized ICU4X baked data only that Gecko wants"
