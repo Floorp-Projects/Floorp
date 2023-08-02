@@ -539,7 +539,7 @@ const workspaceFunctions = {
         } else {
           gBrowser.hideTab(tab);
 
-          if (excludePinnedTabs) {
+          if (!excludePinnedTabs) {
             tab.setAttribute("hidden", "true");
           }
         }
