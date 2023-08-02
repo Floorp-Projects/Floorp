@@ -1871,6 +1871,11 @@ criteria = "safe-to-deploy"
 version = "1.2.0"
 notes = "This crate is macros for ICU4X's data provider implementer. This has no unsafe code and uses no ambient capabilities."
 
+[[audits.icu_provider_macros]]
+who = "Makoto Kato <m_kato@ga2.so-net.ne.jp>"
+criteria = "safe-to-deploy"
+delta = "1.2.0 -> 1.2.0@git:14e9a3a9857be74582abe2dfa7ab799c5eaac873"
+
 [[audits.icu_segmenter]]
 who = "Makoto Kato <m_kato@ga2.so-net.ne.jp>"
 criteria = "safe-to-deploy"
