@@ -157,16 +157,16 @@ function codemirrorSetStatus(statusMsg, type, customMsg) {
 
 async function runCodeMirrorTest(uri) {
   const actorURI =
-    "chrome://mochitests/content/browser/devtools/client/shared/sourceeditor/test/CodeMirrorTestActors.jsm";
+    "chrome://mochitests/content/browser/devtools/client/shared/sourceeditor/test/CodeMirrorTestActors.sys.mjs";
 
-  const { CodeMirrorTestParent } = ChromeUtils.import(actorURI);
+  const { CodeMirrorTestParent } = ChromeUtils.importESModule(actorURI);
 
   ChromeUtils.registerWindowActor("CodeMirrorTest", {
     parent: {
-      moduleURI: actorURI,
+      esModuleURI: actorURI,
     },
     child: {
-      moduleURI: actorURI,
+      esModuleURI: actorURI,
       events: {
         DOMWindowCreated: {},
       },
