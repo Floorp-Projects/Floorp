@@ -9,7 +9,9 @@
 #include "nsError.h"
 #include "nsIOService.h"
 #include "DataChannelChild.h"
+#include "nsNetUtil.h"
 #include "nsSimpleURI.h"
+#include "nsUnicharUtils.h"
 #include "mozilla/dom/MimeType.h"
 #include "mozilla/StaticPrefs_network.h"
 
@@ -92,37 +94,68 @@ nsDataHandler::AllowPort(int32_t port, const char* scheme, bool* _retval) {
   return NS_OK;
 }
 
-/**
- * Helper that performs a case insensitive match to find the offset of a given
- * pattern in a nsACString.
- * The search is performed starting from the end of the string; if the string
- * contains more than one match, the rightmost (last) match will be returned.
- */
-static bool FindOffsetOf(const nsACString& aPattern, const nsACString& aSrc,
-                         nsACString::size_type& aOffset) {
-  nsACString::const_iterator begin, end;
-  aSrc.BeginReading(begin);
-  aSrc.EndReading(end);
-  if (!RFindInReadable(aPattern, begin, end,
-                       nsCaseInsensitiveCStringComparator)) {
+namespace {
+
+bool TrimSpacesAndBase64(nsACString& aMimeType) {
+  const char* beg = aMimeType.BeginReading();
+  const char* end = aMimeType.EndReading();
+
+  // trim leading and trailing spaces
+  while (beg < end && NS_IsHTTPWhitespace(*beg)) {
+    ++beg;
+  }
+  if (beg == end) {
+    aMimeType.Truncate();
+    return false;
+  }
+  while (end > beg && NS_IsHTTPWhitespace(*(end - 1))) {
+    --end;
+  }
+  if (beg == end) {
+    aMimeType.Truncate();
     return false;
   }
 
-  // FindInReadable updates |begin| and |end| to the match coordinates.
-  aOffset = nsACString::size_type(begin.get() - aSrc.Data());
-  return true;
+  // trim trailing `; base64` (if any) and remember it
+  const char* pos = end - 1;
+  bool foundBase64 = false;
+  if (pos > beg && *pos == '4' && --pos > beg && *pos == '6' && --pos > beg &&
+      ToLowerCaseASCII(*pos) == 'e' && --pos > beg &&
+      ToLowerCaseASCII(*pos) == 's' && --pos > beg &&
+      ToLowerCaseASCII(*pos) == 'a' && --pos > beg &&
+      ToLowerCaseASCII(*pos) == 'b') {
+    while (--pos > beg && NS_IsHTTPWhitespace(*pos)) {
+    }
+    if (pos >= beg && *pos == ';') {
+      end = pos;
+      foundBase64 = true;
+    }
+  }
+
+  // actually trim off the spaces and trailing base64, returning if we found it.
+  const char* s = aMimeType.BeginReading();
+  aMimeType.Assign(Substring(aMimeType, beg - s, end - s));
+  return foundBase64;
 }
 
-nsresult nsDataHandler::ParsePathWithoutRef(
-    const nsACString& aPath, nsCString& aContentType,
-    nsCString* aContentCharset, bool& aIsBase64,
-    nsDependentCSubstring* aDataBuffer) {
-  static constexpr auto kBase64 = "base64"_ns;
+}  // namespace
+
+nsresult nsDataHandler::ParsePathWithoutRef(const nsACString& aPath,
+                                            nsCString& aContentType,
+                                            nsCString* aContentCharset,
+                                            bool& aIsBase64,
+                                            nsDependentCSubstring* aDataBuffer,
+                                            nsCString* aMimeType) {
   static constexpr auto kCharset = "charset"_ns;
+
+  // This implements https://fetch.spec.whatwg.org/#data-url-processor
+  // It also returns the full mimeType in aMimeType so fetch/XHR may access it
+  // for content-length headers. The contentType and charset parameters retain
+  // our legacy behavior, as much Gecko code generally expects GetContentType
+  // to yield only the MimeType's essence, not its full value with parameters.
 
   aIsBase64 = false;
 
-  // First, find the start of the data
   int32_t commaIdx = aPath.FindChar(',');
 
   // This is a hack! When creating a URL using the DOM API we want to ignore
@@ -132,70 +165,45 @@ nsresult nsDataHandler::ParsePathWithoutRef(
   if (aContentCharset && commaIdx == kNotFound) {
     return NS_ERROR_MALFORMED_URI;
   }
-  if (commaIdx == 0 || commaIdx == kNotFound) {
-    // Nothing but data.
+
+  // "Let mimeType be the result of collecting a sequence of code points that
+  // are not equal to U+002C (,), given position."
+  nsCString mimeType(Substring(aPath, 0, commaIdx));
+
+  // "Strip leading and trailing ASCII whitespace from mimeType."
+  // "If mimeType ends with U+003B (;), followed by zero or more U+0020 SPACE,
+  // followed by an ASCII case-insensitive match for "base64", then ..."
+  aIsBase64 = TrimSpacesAndBase64(mimeType);
+
+  // "If mimeType starts with ";", then prepend "text/plain" to mimeType."
+  if (mimeType.Length() > 0 && mimeType.CharAt(0) == ';') {
+    mimeType = "text/plain"_ns + mimeType;
+  }
+
+  // "Let mimeTypeRecord be the result of parsing mimeType."
+  // This also checks for instances of ;base64 in the middle of the MimeType.
+  // This is against the current spec, but we're doing it because we have
+  // historically seen webcompat issues relying on this (see bug 781693).
+  if (mozilla::UniquePtr<CMimeType> parsed = CMimeType::Parse(mimeType)) {
+    parsed->GetFullType(aContentType);
+    if (aContentCharset) {
+      parsed->GetParameterValue(kCharset, *aContentCharset);
+    }
+    if (aMimeType) {
+      parsed->Serialize(*aMimeType);
+    }
+    if (parsed->IsBase64()) {
+      aIsBase64 = true;
+    }
+  } else {
+    // "If mimeTypeRecord is failure, then set mimeTypeRecord to
+    // text/plain;charset=US-ASCII."
     aContentType.AssignLiteral("text/plain");
     if (aContentCharset) {
       aContentCharset->AssignLiteral("US-ASCII");
     }
-  } else {
-    auto mediaType = Substring(aPath, 0, commaIdx);
-
-    // Determine if the data is base64 encoded.
-    nsACString::size_type base64;
-    if (FindOffsetOf(kBase64, mediaType, base64) && base64 > 0) {
-      nsACString::size_type offset = base64 + kBase64.Length();
-      // Per the RFC 2397 grammar, "base64" MUST be at the end of the
-      // non-data part.
-      //
-      // But we also allow it in between parameters so a subsequent ";"
-      // is ok as well (this deals with *broken* data URIs, see bug
-      // 781693 for an example). Anything after "base64" in the non-data
-      // part will be discarded in this case, however.
-      if (offset == mediaType.Length() || mediaType[offset] == ';' ||
-          mediaType[offset] == ' ') {
-        MOZ_DIAGNOSTIC_ASSERT(base64 > 0, "Did someone remove the check?");
-        // Index is on the first character of matched "base64" so we
-        // move to the preceding character
-        base64--;
-        // Skip any preceding spaces, searching for a semicolon
-        while (base64 > 0 && mediaType[base64] == ' ') {
-          base64--;
-        }
-        if (mediaType[base64] == ';') {
-          aIsBase64 = true;
-          // Trim the base64 part off.
-          mediaType.Rebind(aPath, 0, base64);
-        }
-      }
-    }
-
-    // Skip any leading spaces
-    nsACString::size_type startIndex = 0;
-    while (startIndex < mediaType.Length() && mediaType[startIndex] == ' ') {
-      startIndex++;
-    }
-
-    nsAutoCString mediaTypeBuf;
-    // If the mimetype starts with ';' we assume text/plain
-    if (startIndex < mediaType.Length() && mediaType[startIndex] == ';') {
-      mediaTypeBuf.AssignLiteral("text/plain");
-      mediaTypeBuf.Append(mediaType);
-      mediaType.Rebind(mediaTypeBuf, 0, mediaTypeBuf.Length());
-    }
-
-    // Everything else is content type.
-    if (mozilla::UniquePtr<CMimeType> parsed = CMimeType::Parse(mediaType)) {
-      parsed->GetFullType(aContentType);
-      if (aContentCharset) {
-        parsed->GetParameterValue(kCharset, *aContentCharset);
-      }
-    } else {
-      // Mime Type parsing failed
-      aContentType.AssignLiteral("text/plain");
-      if (aContentCharset) {
-        aContentCharset->AssignLiteral("US-ASCII");
-      }
+    if (aMimeType) {
+      aMimeType->AssignLiteral("text/plain;charset=US-ASCII");
     }
   }
 

@@ -46,6 +46,7 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/dom/ProgressEvent.h"
+#include "nsDataChannel.h"
 #include "nsIJARChannel.h"
 #include "nsIJARURI.h"
 #include "nsLayoutCID.h"
@@ -1144,6 +1145,26 @@ bool XMLHttpRequestMainThread::IsSafeHeader(
   return isSafe;
 }
 
+bool XMLHttpRequestMainThread::GetContentType(nsACString& aValue) const {
+  MOZ_ASSERT(mChannel);
+  nsCOMPtr<nsIURI> uri;
+  if (NS_SUCCEEDED(mChannel->GetURI(getter_AddRefs(uri))) &&
+      uri->SchemeIs("data")) {
+    nsDataChannel* dchan = static_cast<nsDataChannel*>(mChannel.get());
+    MOZ_ASSERT(dchan);
+    aValue.Assign(dchan->MimeType());
+    return true;
+  }
+  if (NS_SUCCEEDED(mChannel->GetContentType(aValue))) {
+    nsCString value;
+    if (NS_SUCCEEDED(mChannel->GetContentCharset(value)) && !value.IsEmpty()) {
+      aValue.AppendLiteral(";charset=");
+      aValue.Append(value);
+    }
+    return true;
+  }
+  return false;
+}
 void XMLHttpRequestMainThread::GetAllResponseHeaders(
     nsACString& aResponseHeaders, ErrorResult& aRv) {
   NOT_CALLABLE_IN_SYNC_SEND_RV
@@ -1176,13 +1197,9 @@ void XMLHttpRequestMainThread::GetAllResponseHeaders(
 
   // Even non-http channels supply content type.
   nsAutoCString value;
-  if (NS_SUCCEEDED(mChannel->GetContentType(value))) {
+  if (GetContentType(value)) {
     aResponseHeaders.AppendLiteral("Content-Type: ");
     aResponseHeaders.Append(value);
-    if (NS_SUCCEEDED(mChannel->GetContentCharset(value)) && !value.IsEmpty()) {
-      aResponseHeaders.AppendLiteral(";charset=");
-      aResponseHeaders.Append(value);
-    }
     aResponseHeaders.AppendLiteral("\r\n");
   }
 
@@ -1240,17 +1257,10 @@ void XMLHttpRequestMainThread::GetResponseHeader(const nsACString& header,
 
     // Content Type:
     if (header.LowerCaseEqualsASCII("content-type")) {
-      if (NS_FAILED(mChannel->GetContentType(_retval))) {
+      if (!GetContentType(_retval)) {
         // Means no content type
         _retval.SetIsVoid(true);
         return;
-      }
-
-      nsCString value;
-      if (NS_SUCCEEDED(mChannel->GetContentCharset(value)) &&
-          !value.IsEmpty()) {
-        _retval.AppendLiteral(";charset=");
-        _retval.Append(value);
       }
     }
 
