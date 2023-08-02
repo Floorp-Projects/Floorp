@@ -1,4 +1,3 @@
-== dir-1.html dir-1-ref.html
 random-if(gtkWidget) == dir-3.html dir-3-ref.html # bug 1309426
 == dir-5.html dir-5-ref.html
 fuzzy-if(cocoaWidget,0-135,0-56) == dir-6a.html dir-6a-ref.html
@@ -68,11 +67,9 @@ fails == stretchy-mover-2a.html stretchy-mover-2-ref.html
 == semantics-3.html semantics-3-ref.html
 == semantics-4.html semantics-4-ref.html
 pref(mathml.stixgeneral_operator_stretching.disabled,false) == semantics-5.html semantics-5-ref.html # bug 1309429; bug 1648335
-== mstyle-1.xhtml mstyle-1-ref.xhtml
 == mstyle-2.xhtml mstyle-2-ref.xhtml
 fuzzy-if(OSX,0-16,0-8) == mstyle-3.xhtml mstyle-3-ref.xhtml
 fuzzy-if(OSX,0-1,0-4) == mstyle-4.xhtml mstyle-4-ref.xhtml
-== mstyle-5.xhtml mstyle-5-ref.xhtml
 == scale-stretchy-1.xhtml scale-stretchy-1-ref.xhtml
 != scale-stretchy-2.xhtml scale-stretchy-2-ref.xhtml
 fails-if(OSX>=1010) == scale-stretchy-3.xhtml scale-stretchy-3-ref.xhtml
@@ -95,9 +92,6 @@ random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
 == munderover-align-accent-true.html munderover-align-accent-true-ref.html
 == munder-mover-align-accent-true.html munder-mover-align-accent-true-ref.html
 == munder-mover-align-accent-false.html munder-mover-align-accent-false-ref.html
-== mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
-== mfrac-linethickness-2.xhtml mfrac-linethickness-2-ref.xhtml
-== mfrac-linethickness-3.xhtml mfrac-linethickness-3-ref.xhtml
 == negative-mspace-1.html negative-mspace-1-ref.html
 != link-1.xhtml link-ref.xhtml
 == munderover-empty-scripts.html munderover-empty-scripts-ref.html
@@ -112,8 +106,6 @@ random-if(gtkWidget) == mo-glyph-size.html mo-glyph-size-ref.html # bug 1309426
 random-if(winWidget&&!d2d) == opentype-stretchy.html opentype-stretchy-ref.html
 == opentype-fraction-dynamic-linethickness.html opentype-fraction-dynamic-linethickness-ref.html
 == operator-1.xhtml operator-1-ref.xhtml
-== scriptshift-1.xhtml scriptshift-1-ref.xhtml
-== number-size-1.xhtml number-size-1-ref.xhtml
 fuzzy(0-1,0-80) fuzzy-if(Android,0-255,0-105) fuzzy-if(gtkWidget,0-255,0-136) skip-if(winWidget) == multiscripts-1.html multiscripts-1-ref.html # Windows: bug 1314684; Android: bug 1392254; Linux: bug 1599638
 == mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
