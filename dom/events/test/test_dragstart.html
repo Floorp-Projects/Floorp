@@ -94,6 +94,26 @@ function afterDragTests()
   sendMouseEventsForDrag("undraggable_inside_draggable");
   synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
 
+  sendMouseEventsForDrag("link_to_file");
+  synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
+
+  sendMouseEventsForDrag("broken_file_image");
+  synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
+
+  if (navigator.platform.startsWith("Win")) {
+    sendMouseEventsForDrag("link_to_windows_file");
+    synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
+
+    sendMouseEventsForDrag("broken_windows_file_image");
+    synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
+
+    sendMouseEventsForDrag("link_to_backslash_windows_file");
+    synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
+
+    sendMouseEventsForDrag("broken_backslash_windows_file_image");
+    synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
+  }
+
   if (gExtraDragTests == 7)
     SimpleTest.finish();
 }
@@ -609,6 +629,10 @@ function onDragOverDraggableFalse(event) {
   ok(false, "Triggered dragstart on draggable=false node " + event.target.id);
 }
 
+function onDragStartUnlinkable(event) {
+  ok(false, "Triggered dragstart on undraggable node " + event.target.id);
+}
+
 function expectError(fn, eid, testid)
 {
   var error = "";
@@ -681,5 +705,12 @@ shadow_host_containing_image.attachShadow({ mode: 'open' }).innerHTML =
     This is an undraggable link inside a draggable ancestor.
   </a>
 </div>
+
+<a id="link_to_file" href="file:///" ondragstart="onDragStartUnlinkable(event)">This is an undraggable 'file' link</a>
+<a id="link_to_windows_file" href="c:/Users/" ondragstart="onDragStartUnlinkable(event)">This is an undraggable 'file' link</a>
+<a id="link_to_backslash_windows_file" href="c:\\Users\\" ondragstart="onDragStartUnlinkable(event)">This is an undraggable 'file' link</a>
+<img id="broken_file_image" src="file:///" ondragstart="onDragStartUnlinkable(event)">
+<img id="broken_windows_file_image" src="c:/Users/" ondragstart="onDragStartUnlinkable(event)">
+<img id="broken_backslash_windows_file_image" src="c:\\Users\\" ondragstart="onDragStartUnlinkable(event)">
 </body>
 </html>
