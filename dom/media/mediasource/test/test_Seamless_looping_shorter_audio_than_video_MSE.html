@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: A way shorter audio track for seamless looping</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+/**
+ * This test is used to ensure the media can loop at least twice when its audio
+ * is significantly shorter than its video. We use the different strategy to
+ * fill the silence between tracks for the first looping and the other loopings
+ * happening afterward. The purpose of test is to test the latter one, which
+ * should create a series small chunks of audio data to fill out the gap,
+ * instead of one big audio data which might not be processed by AudioSink due
+ * to its large size.
+ */
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(async (ms, el) => {
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  const videosb = ms.addSourceBuffer("video/mp4");
+  const audiosb = ms.addSourceBuffer("audio/mp4");
+
+  // Here we create a way shorter audio than video.
+  info(`create different length source buffers`);
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 3), ".m4s");
+  audiosb.appendWindowEnd = videosb.buffered.end(0) - 1;
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", ["init"], ".mp4");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(1, 3), ".m4s");
+  ms.endOfStream();
+  await Promise.all([once(el, "durationchange"), once(ms, "sourceended")]);
+  info(`audio=[${audiosb.buffered.start(0)}-${audiosb.buffered.end(0)}], video=[${videosb.buffered.start(0)}-${videosb.buffered.end(0)}]`);
+  ok(true, `endOfStream completed, buffer=[${el.buffered.start(0)}, ${el.buffered.end(0)}]`);
+  ok(videosb.buffered.end(0) > audiosb.buffered.end(0), `video should be longer than audio`);
+
+  info(`start playing`);
+  el.loop = true;
+  el.controls = true;
+  await el.play();
+
+  let seekCounter = 0;
+  el.addEventListener("seeked", _ => {
+    ok(true, `seeked ${++seekCounter} times`);
+    if (seekCounter == 2) {
+      ok(true, "seeked at least two time!");
+      SimpleTest.finish(SimpleTest);
+    }
+  });
+});
+
+</script>
+</body>
+</html>
