@@ -118,4 +118,6 @@ shopping-unanalyzed-product-header = No analysis for these reviews yet
 shopping-unanalyzed-product-message = You’re about 60 seconds away from knowing whether you can trust the reviews for this product.
 shopping-unanalyzed-product-analyze-link = Analyze reviews
 
-##
+## Onboarding message strings.
+
+shopping-onboarding-headline = Shop based on <b>real</b> reviews

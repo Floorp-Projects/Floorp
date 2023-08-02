@@ -14,7 +14,7 @@ const OPTIN_DEFAULT = {
       id: "FS_OPT_IN",
       content: {
         position: "split",
-        title: "Shop Smarter",
+        title: { string_id: "shopping-onboarding-headline" },
         subtitle: `Not all reviews are created equal. To help you find real reviews, from real people, Firefox can use AI technology to analyze this product’s reviews.`,
         cta_paragraph: {
           text: {
