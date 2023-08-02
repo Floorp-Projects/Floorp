@@ -115,11 +115,9 @@ nsresult RadioGroupManager::GetNextRadioButton(const nsAString& aName,
 }
 
 void RadioGroupManager::AddToRadioGroup(const nsAString& aName,
-                                        HTMLInputElement* aRadio,
-                                        nsIContent* aAncestor) {
+                                        HTMLInputElement* aRadio) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
-  nsContentUtils::AddElementToListByTreeOrder(radioGroup->mRadioButtons, aRadio,
-                                              aAncestor);
+  radioGroup->mRadioButtons.AppendElement(aRadio);
 
   if (aRadio->IsRequired()) {
     radioGroup->mRequiredRadioCount++;

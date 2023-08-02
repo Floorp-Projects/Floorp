@@ -255,7 +255,7 @@ class ShadowRoot final : public DocumentFragment,
   }
   void AddToRadioGroup(const nsAString& aName,
                        HTMLInputElement* aRadio) override {
-    DocumentOrShadowRoot::AddToRadioGroup(aName, aRadio, this);
+    DocumentOrShadowRoot::AddToRadioGroup(aName, aRadio);
   }
   void RemoveFromRadioGroup(const nsAString& aName,
                             HTMLInputElement* aRadio) override {
