@@ -56,6 +56,8 @@ var subtests = [
   {"file": "helper_bug1662800.html"},
   // Scrollbar-dragging on subframe with enclosing translation transform
   {"file": "helper_drag_bug1719913.html"},
+  // Scrollbar dragging when pinch-zoomed in does not work with slider.snapMultiplier
+  {"file": "helper_drag_bug1794590.html", "prefs": [["slider.snapMultiplier", 6]]},
   // Scrolling with mouse down on the scrollbar
   {"file": "helper_scrollbartrack_click_overshoot.html",
    "prefs": [["test.events.async.enabled", true], ["apz.test.logging_enabled", true],
