@@ -40,7 +40,7 @@
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsJSEnvironment.h"
 #include "nsJSPrincipals.h"

@@ -38,7 +38,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMNavigationTiming.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
 #include "xpcpublic.h"

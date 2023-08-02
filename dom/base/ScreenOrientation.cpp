@@ -7,7 +7,7 @@
 #include "ScreenOrientation.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsSandboxFlags.h"
 #include "nsScreen.h"
 

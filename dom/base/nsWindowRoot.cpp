@@ -19,7 +19,7 @@
 #include "nsFrameLoaderOwner.h"
 #include "nsFrameLoader.h"
 #include "nsQueryActor.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsFocusManager.h"
 #include "nsIContent.h"
 #include "nsIControllers.h"

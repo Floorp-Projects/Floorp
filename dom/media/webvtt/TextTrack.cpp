@@ -13,7 +13,7 @@
 #include "mozilla/dom/TextTrackRegion.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLTrackElement.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 
 extern mozilla::LazyLogModule gTextTrackLog;
 

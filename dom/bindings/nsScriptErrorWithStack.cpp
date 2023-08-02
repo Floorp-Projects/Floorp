@@ -15,8 +15,10 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "nsGlobalWindow.h"
+#include "js/Wrapper.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsGlobalWindowInner.h"
+#include "nsJSUtils.h"
 
 using namespace mozilla::dom;
 

@@ -13,7 +13,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsIMutableArray.h"

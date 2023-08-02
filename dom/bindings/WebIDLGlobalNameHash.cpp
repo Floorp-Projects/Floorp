@@ -23,7 +23,7 @@
 #include "mozilla/dom/PrototypeList.h"
 #include "mozilla/dom/ProxyHandlerUtils.h"
 #include "mozilla/dom/RegisterBindings.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsTHashtable.h"
 #include "WrapperFactory.h"
 

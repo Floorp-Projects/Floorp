@@ -32,7 +32,6 @@
 #include "mozilla/TimelineMarker.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindow.h"
 #include "nsPresContext.h"
 
 #ifdef XP_WIN

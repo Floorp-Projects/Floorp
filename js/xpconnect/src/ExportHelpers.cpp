@@ -21,7 +21,6 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
 #include "js/Object.h"  // JS::GetCompartment
 

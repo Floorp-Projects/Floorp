@@ -6,7 +6,8 @@
 
 #include "nsWindowMemoryReporter.h"
 #include "nsWindowSizes.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
+#include "nsGlobalWindowOuter.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/ClearOnShutdown.h"

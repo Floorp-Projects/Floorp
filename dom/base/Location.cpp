@@ -22,7 +22,7 @@
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "mozilla/Likely.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/BasePrincipal.h"

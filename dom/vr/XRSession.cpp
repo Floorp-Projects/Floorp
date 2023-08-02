@@ -24,7 +24,7 @@
 #include "XRViewerPose.h"
 #include "VRLayerChild.h"
 #include "XRInputSourceArray.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsRefreshDriver.h"

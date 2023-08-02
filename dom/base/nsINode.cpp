@@ -103,7 +103,7 @@
 #include "nsWrapperCacheInlines.h"
 #include "WrapperFactory.h"
 #include <algorithm>
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "GeometryUtils.h"
 #include "nsIAnimationObserver.h"
 #include "nsChildContentList.h"

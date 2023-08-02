@@ -46,7 +46,7 @@
 #include "nsIException.h"
 #include "nsIScriptError.h"
 #include "nsPIDOMWindow.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsScriptError.h"
 #include "GeckoProfiler.h"
 #include "ProfilerControl.h"

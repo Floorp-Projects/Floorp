@@ -35,7 +35,7 @@
 #include "jsfriendapi.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsHTMLTags.h"
 #include "nsIDOMGlobalPropertyInitializer.h"
 #include "nsINode.h"

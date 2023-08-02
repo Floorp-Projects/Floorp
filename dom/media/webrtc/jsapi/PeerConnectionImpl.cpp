@@ -61,7 +61,7 @@
 #endif  // XP_WIN
 
 #include "mozilla/dom/Document.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsDOMDataChannel.h"
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/Promise.h"

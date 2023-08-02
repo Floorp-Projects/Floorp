@@ -12,7 +12,6 @@
 #include "mozilla/dom/TimeoutManager.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "nsComponentManagerUtils.h"
-#include "nsGlobalWindow.h"
 #include "nsPIDOMWindow.h"
 
 namespace mozilla::dom {

@@ -22,7 +22,7 @@
 #include "mozilla/StaticPtr.h"
 
 #include "nsContentUtils.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"

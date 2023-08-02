@@ -8,7 +8,7 @@
 #include "mozilla/dom/BarPropBinding.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIWebBrowserChrome.h"
 
 namespace mozilla::dom {

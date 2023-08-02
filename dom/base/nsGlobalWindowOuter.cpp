@@ -6,7 +6,8 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/ScopeExit.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowOuter.h"
+#include "nsGlobalWindowInner.h"
 
 #include <algorithm>
 

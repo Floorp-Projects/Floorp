@@ -14,7 +14,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
-#include "nsGlobalWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsThreadUtils.h"
 #include "gfxVR.h"
 #include "VRDisplayClient.h"
