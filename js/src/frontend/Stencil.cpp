@@ -16,6 +16,7 @@
 #include "mozilla/Sprintf.h"                // SprintfLiteral
 
 #include <algorithm>  // std::fill
+#include <string.h>   // strlen
 
 #include "ds/LifoAlloc.h"               // LifoAlloc
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
@@ -24,6 +25,7 @@
 #include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationState, ExtensibleCompilationStencil, CompilationGCOutput, CompilationStencilMerger
 #include "frontend/FrontendContext.h"
 #include "frontend/NameAnalysisTypes.h"  // EnvironmentCoordinate
+#include "frontend/ParserAtom.h"  // ParserAtom, ParserAtomIndex, TaggedParserAtomIndex, ParserAtomsTable, Length{1,2,3}StaticParserString, InstantiateMarkedAtoms, InstantiateMarkedAtomsAsPermanent, GetWellKnownAtom
 #include "frontend/ScopeBindingCache.h"  // ScopeBindingCache
 #include "frontend/SharedContext.h"
 #include "frontend/StencilXdr.h"        // XDRStencilEncoder, XDRStencilDecoder
@@ -1390,6 +1392,28 @@ FunctionSyntaxKind CompilationInput::functionSyntaxKind() const {
     return FunctionSyntaxKind::Arrow;
   }
   return FunctionSyntaxKind::Statement;
+}
+
+bool CompilationInput::internExtraBindings(FrontendContext* fc,
+                                           ParserAtomsTable& parserAtoms) {
+  MOZ_ASSERT(hasExtraBindings());
+
+  for (auto& bindingInfo : *maybeExtraBindings_) {
+    if (bindingInfo.isShadowed) {
+      continue;
+    }
+
+    const char* chars = bindingInfo.nameChars.get();
+    auto index = parserAtoms.internUtf8(
+        fc, reinterpret_cast<const mozilla::Utf8Unit*>(chars), strlen(chars));
+    if (!index) {
+      return false;
+    }
+
+    bindingInfo.nameIndex = index;
+  }
+
+  return true;
 }
 
 void InputScope::trace(JSTracer* trc) {
