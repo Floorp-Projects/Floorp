@@ -48,9 +48,9 @@
     --border-interactive-color: var(--color-gray-50);
 
     /* Color */
-    --brand-color-accent: var(--color-blue-20);
-    --brand-color-accent-hover: var(--color-blue-10);
-    --brand-color-accent-active: var(--color-blue-05);
+    --brand-color-accent: var(--color-cyan-50);
+    --brand-color-accent-hover: var(--color-cyan-30);
+    --brand-color-accent-active: var(--color-cyan-20);
     --color-canvas: var(--color-gray-90);
 
     /* Text */

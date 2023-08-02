@@ -3,20 +3,36 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  --close-icon-url: url("chrome://global/skin/icons/close-12.svg");
-  --close-fill-color: var(--in-content-icon-color);
-  --icon-size: 16px;
-  --close-button-size: 32px;
-  --message-bar-background-color: var(--in-content-box-info-background);
-  --message-bar-text-color: var(--in-content-text-color);
-  /* The default values of --in-content-button* are sufficient, even for dark themes */
+  /* Icon */
+  --message-bar-icon-color: var(--icon-color-information);
+  --message-bar-icon-size: var(--size-item-small);
+  --message-bar-icon-close-color: var(--icon-color);
+  --message-bar-icon-close-url: url("chrome://global/skin/icons/close-12.svg");
 
+  /* Button */
+  --message-bar-button-size-ghost: var(--button-min-height);
+  --message-bar-button-border-radius-ghost: var(--button-border-radius);
+  --message-bar-button-background-color-ghost-hover: var(--button-background-color-hover);
+  --message-bar-button-background-color-ghost-active: var(--button-background-color-active);
+
+  /* Container */
+  --message-bar-container-min-height: var(--size-item-large);
+
+  /* Border */
+  --message-bar-border-color: color-mix(in srgb, currentColor 9%, transparent);
   --message-bar-border-radius: var(--border-radius-small);
-}
+  --message-bar-border-width: var(--border-width);
 
-:host {
-  border: 1px solid transparent;
+  /* Text */
+  --message-bar-text-color: var(--text-color);
+
+  /* Background */
+  --message-bar-background-color: var(--color-background-information);
+
+  background-color: var(--message-bar-background-color);
+  border: var(--message-bar-border-width) solid var(--message-bar-border-color);
   border-radius: var(--message-bar-border-radius);
+  color: var(--message-bar-text-color);
 }
 
 /* Make the host to behave as a block by default, but allow hidden to hide it. */
@@ -27,32 +43,25 @@
 /* MozMessageBar layout */
 
 .container {
-  min-height: 32px;
-  background: var(--message-bar-background-color);
-  color: var(--message-bar-text-color);
-
-  padding-inline: 16px 8px;
-  padding-block: 8px;
-
-  border-radius: var(--message-bar-border-radius);
-
   display: flex;
   gap: 8px;
+  min-height: var(--message-bar-container-min-height);
+  padding-inline: 16px 8px;
+  padding-block: 8px;
 }
 
 .content {
   display: flex;
-  gap: 8px 16px;
+  flex-grow: 1;
   flex-wrap: wrap;
   align-items: center;
+  gap: 12px 16px;
   margin-inline-start: 24px;
-  flex-grow: 1;
 }
 
 .text-container {
   display: flex;
   gap: 4px 8px;
-  padding-block: calc((var(--message-bar-container-min-height) - 1.5em)/2);
 }
 
 .text-content {
@@ -60,7 +69,6 @@
   gap: 4px 8px;
   flex-wrap: wrap;
   word-break: break-word;
-  align-items: center;
   line-height: 1.5;
 }
 
@@ -75,13 +83,14 @@
 }
 
 .icon {
-  width: var(--icon-size);
-  height: var(--icon-size);
+  width: var(--message-bar-icon-size);
+  height: var(--message-bar-icon-size);
   flex-shrink: 0;
   appearance: none;
   -moz-context-properties: fill, stroke;
   fill: currentColor;
   stroke: currentColor;
+  color: var(--message-bar-icon-color);
 }
 
 /* MozMessageBar heading style */
@@ -116,108 +125,66 @@
 }
 
 .close {
-  background-image: var(--close-icon-url);
+  background-image: var(--message-bar-icon-close-url);
   background-repeat: no-repeat;
   background-position: center center;
   -moz-context-properties: fill;
   fill: currentColor;
-  color: currentColor;
   min-width: auto;
   min-height: auto;
-  width: var(--close-button-size);
-  height: var(--close-button-size);
+  width: var(--message-bar-button-size-ghost);
+  height: var(--message-bar-button-size-ghost);
   margin: 0;
   padding: 0;
   flex-shrink: 0;
 }
 
 .ghost-button {
-  border: none;
-  border-radius: var(--border-radius-small);
+  border-radius: var(--message-bar-button-border-radius-ghost);
 }
 
 .ghost-button:enabled:hover {
-  background-color: var(--in-content-button-background-hover);
-  color: var(--in-content-button-text-color-hover);
+  background-color: var(--message-bar-button-background-color-ghost-hover);
 }
 
 .ghost-button:enabled:hover:active {
-  background-color: var(--in-content-button-background-active);
-  color: var(--in-content-button-text-color-active);
-}
-
-@media (prefers-contrast) {
-  :host {
-    border-color: CanvasText;
-  }
+  background-color: var(--message-bar-button-background-color-ghost-active);
 }
 
 @media not (prefers-contrast) {
   /* MozMessageBar colors by message type */
-  /* Colors from: https://design.firefox.com/photon/components/message-bars.html#type-specific-style */
+  /* Colors from: https://www.figma.com/file/zd3B9UyknB2XNZNdrYLm2W/Outreachy?type=design&node-id=59-1921&mode=design&t=ZYS4e6pAbAlXGvun-4 */
 
   :host([type=warning]) {
-    --message-bar-background-color: var(--yellow-50);
-    --message-bar-text-color: var(--yellow-90);
-
-    --in-content-button-background: var(--yellow-60);
-    --in-content-button-background-hover: var(--yellow-70);
-    --in-content-button-background-active: var(--yellow-80);
-
-    --close-fill-color: var(--message-bar-text-color);
+    --message-bar-background-color: var(--color-background-warning);
   }
 
   :host([type=success]) {
-    --message-bar-background-color: var(--green-50);
-    --message-bar-text-color: var(--green-90);
-
-    --in-content-button-background: var(--green-60);
-    --in-content-button-background-hover: var(--green-70);
-    --in-content-button-background-active: var(--green-80);
+    --message-bar-background-color: var(--color-background-success);
   }
 
   :host([type=error]) {
-    --message-bar-background-color: var(--red-60);
-    --message-bar-text-color: #ffffff;
-
-    --in-content-button-background: var(--red-70);
-    --in-content-button-background-hover: var(--red-80);
-    --in-content-button-background-active: var(--red-90);
+    --message-bar-background-color: var(--color-background-critical);
   }
 
-  :host([type=info]) .icon {
-    color: rgb(0,144,237);
+  :host([type=success]) .icon {
+    --message-bar-icon-color: var(--icon-color-success);
   }
 
   :host([type=warning]) .icon {
-    color: rgb(255,164,54);
+    --message-bar-icon-color: var(--icon-color-warning);
   }
 
   :host([type=error]) .icon {
-    color: rgb(226,40,80);
+    --message-bar-icon-color: var(--icon-color-critical);
   }
 
   .close {
-    fill: var(--close-fill-color);
+    fill: var(--message-bar-icon-close-color);
   }
 
   .ghost-button {
+    border: none;
     background-color: transparent;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    /* Don't set the background in prefers-contrast mode or macOS can end up
-     * with black on black text. */
-    :host([type=info]) .icon {
-      color: rgb(128,235,255);
-    }
-
-    :host([type=warning]) .icon {
-      color: rgb(255,189,79);
-    }
-
-    :host([type=error]) .icon {
-      color: rgb(255,154,162);
-    }
   }
 }
