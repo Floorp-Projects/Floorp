@@ -35,7 +35,7 @@ jobs:
         worker-type: b-linux-gcp
         use-system-python: false
         worker:
-            docker-image: {in-tree: "debian11-base"}
+            docker-image: {in-tree: "debian12-base"}
             max-run-time: 1800
             env:
                 # {level} gets replaced in the upload_symbols transform
