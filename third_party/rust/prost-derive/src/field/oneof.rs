@@ -1,7 +1,7 @@
 use anyhow::{bail, Error};
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{parse_str, Lit, Meta, MetaNameValue, NestedMeta, Path};
+use syn::{parse_str, Expr, ExprLit, Ident, Lit, Meta, MetaNameValue, Path};
 
 use crate::field::{set_option, tags_attr};
 
@@ -21,21 +21,14 @@ impl Field {
             if attr.path().is_ident("oneof") {
                 let t = match *attr {
                     Meta::NameValue(MetaNameValue {
-                        lit: Lit::Str(ref lit),
+                        value:
+                            Expr::Lit(ExprLit {
+                                lit: Lit::Str(ref lit),
+                                ..
+                            }),
                         ..
                     }) => parse_str::<Path>(&lit.value())?,
-                    Meta::List(ref list) if list.nested.len() == 1 => {
-                        // TODO(rustlang/rust#23121): slice pattern matching would make this much nicer.
-                        if let NestedMeta::Meta(Meta::Path(ref path)) = list.nested[0] {
-                            if let Some(ident) = path.get_ident() {
-                                Path::from(ident.clone())
-                            } else {
-                                bail!("invalid oneof attribute: item must be an identifier");
-                            }
-                        } else {
-                            bail!("invalid oneof attribute: item must be an identifier");
-                        }
-                    }
+                    Meta::List(ref list) => list.parse_args::<Ident>()?.into(),
                     _ => bail!("invalid oneof attribute: {:?}", attr),
                 };
                 set_option(&mut ty, t, "duplicate oneof attribute")?;

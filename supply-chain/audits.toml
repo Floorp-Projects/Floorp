@@ -2502,6 +2502,12 @@ criteria = "safe-to-deploy"
 delta = "0.8.0 -> 0.11.9"
 notes = "Documentation and internal refactoring changes only"
 
+[[audits.prost-derive]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.11.9 -> 0.11.9@git:95964e9d33df3c2a9c3f14285e262867cab6f96b"
+notes = "Changes against 0.11.9 are mine."
+
 [[audits.qcms]]
 who = "Jeff Muizelaar <jmuizelaar@mozilla.com>"
 criteria = "safe-to-deploy"

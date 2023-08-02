@@ -40,6 +40,11 @@ git = "https://github.com/gfx-rs/wgpu"
 rev = "1161a22f4fbb4fc204eb06f2ac4243f83e0e980d"
 replace-with = "vendored-sources"
 
+[source."git+https://github.com/glandium/prost?rev=95964e9d33df3c2a9c3f14285e262867cab6f96b"]
+git = "https://github.com/glandium/prost"
+rev = "95964e9d33df3c2a9c3f14285e262867cab6f96b"
+replace-with = "vendored-sources"
+
 [source."git+https://github.com/glandium/warp?rev=4af45fae95bc98b0eba1ef0db17e1dac471bb23d"]
 git = "https://github.com/glandium/warp"
 rev = "4af45fae95bc98b0eba1ef0db17e1dac471bb23d"

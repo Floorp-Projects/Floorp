@@ -4243,14 +4243,13 @@ dependencies = [
 [[package]]
 name = "prost-derive"
 version = "0.11.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5d2d8d10f3c6ded6da8b05b5fb3b8a5082514344d56c9f871412d29b4e075b4"
+source = "git+https://github.com/glandium/prost?rev=95964e9d33df3c2a9c3f14285e262867cab6f96b#95964e9d33df3c2a9c3f14285e262867cab6f96b"
 dependencies = [
  "anyhow",
  "itertools",
  "proc-macro2",
  "quote",
- "syn 1.0.107",
+ "syn 2.0.18",
 ]
 
 [[package]]
