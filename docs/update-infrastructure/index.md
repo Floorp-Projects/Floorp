@@ -6,7 +6,7 @@ Firefox, Thunderbird, and Mozilla VPN updates rely on [backend service known as 
 
 Most of the time, an update will take an application directly from whatever version it is currently running to the latest version of that application. This is greatly preferred, both to save time, bandwidth, reduce restarts, and increase security by ensuring we get to the latest version of something as quickly as possible. Unfortunately, sometimes we must route through an intermediate version first, typically the version that is currently running does not provide Balrog with enough information to accurately serve a correct update to the latest version. These are colloquially known as "watershed" updates. (This name comes from the fact that these updates change something about the update process itself, making them a kind of "watershed moment" for updates.)
 
-At the time of writing (May, 2023), we currently have the following watershed updates in place for Firefox's release channel:
+At the time of writing (August, 2023), we currently have the following watershed updates in place for Firefox's release channel:
 * 12.0, all platforms. In this release [we added support for distinguishing the running and supported architectures in macOS builds in the update URL](https://bugzilla.mozilla.org/show_bug.cgi?id=583671).
 * 43.0.1, Windows only. This release was [preparation for desupporting SHA-1 hashes in our Windows builds](https://bugzilla.mozilla.org/show_bug.cgi?id=1234277).
 * 45.0.2, Linux only. We added support for [sending the GTK 3 version to the update URL](https://bugzilla.mozilla.org/show_bug.cgi?id=1227023).
@@ -34,3 +34,5 @@ Below is a list of desupports and moves to `esr` that we've done on the Firefox 
 * <52.0: [Moved Windows XP, Server 2003, and Vista users to esr52](https://bugzilla.mozilla.org/show_bug.cgi?id=1318922)
 * <53.0: [Desupported 32-bit macOS hardware](https://bugzilla.mozilla.org/show_bug.cgi?id=1325584)
 * <77.0: [Moved Darwin 13, 14, and 15](https://bugzilla.mozilla.org/show_bug.cgi?id=1639199) (macOS 10.9, 10.10, and 10.11) to esr78
+* <116.0: [Moved Darwin 16, 17, and 18](https://bugzilla.mozilla.org/show_bug.cgi?id=1836375) (macOS 10.12, 10.13, and 10.14) to esr115
+* <116.0: [Moved Windows 7, 8, and 8.1](https://bugzilla.mozilla.org/show_bug.cgi?id=1594270) to esr115
