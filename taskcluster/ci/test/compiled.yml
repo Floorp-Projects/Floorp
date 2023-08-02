@@ -42,10 +42,7 @@ cppunit:
     tier: default
     run-on-projects:
         by-variant:
-            1proc:
-                by-test-platform:
-                    .*wayland.*: []
-                    default: built-projects
+            1proc: built-projects
             default: []
 
 gtest:
