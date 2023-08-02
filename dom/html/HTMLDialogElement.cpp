@@ -140,7 +140,9 @@ void HTMLDialogElement::FocusDialog() {
     doc->FlushPendingNotifications(FlushType::Frames);
   }
 
-  RefPtr<Element> control = GetFocusDelegate(false /* aWithMouse */);
+  RefPtr<Element> control = HasAttr(nsGkAtoms::autofocus)
+                                ? this
+                                : GetFocusDelegate(false /* aWithMouse */);
 
   // If there isn't one of those either, then let control be subject.
   if (!control) {
@@ -149,6 +151,8 @@ void HTMLDialogElement::FocusDialog() {
 
   FocusCandidate(*control, IsInTopLayer());
 }
+
+int32_t HTMLDialogElement::TabIndexDefault() { return 0; }
 
 void HTMLDialogElement::QueueCancelDialog() {
   // queues an element task on the user interaction task source

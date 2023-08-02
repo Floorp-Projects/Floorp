@@ -7,8 +7,8 @@ export async function runBackgroundTask(commandLine) {
   // Exact same behaviour as `backgroundtask_specific_pref`, but with
   // a task name that is recognized as a task that should not use an
   // ephemeral profile.
-  const taskModule = ChromeUtils.import(
-    "resource://testing-common/backgroundtasks/BackgroundTask_backgroundtask_specific_pref.jsm"
+  const taskModule = ChromeUtils.importESModule(
+    "resource://testing-common/backgroundtasks/BackgroundTask_backgroundtask_specific_pref.sys.mjs"
   );
   return taskModule.runBackgroundTask(commandLine);
 }

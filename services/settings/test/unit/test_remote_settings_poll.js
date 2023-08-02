@@ -13,8 +13,8 @@ const { UptakeTelemetry, Policy } = ChromeUtils.importESModule(
 const { RemoteSettingsClient } = ChromeUtils.importESModule(
   "resource://services-settings/RemoteSettingsClient.sys.mjs"
 );
-const { pushBroadcastService } = ChromeUtils.import(
-  "resource://gre/modules/PushBroadcastService.jsm"
+const { pushBroadcastService } = ChromeUtils.importESModule(
+  "resource://gre/modules/PushBroadcastService.sys.mjs"
 );
 const { SyncHistory } = ChromeUtils.importESModule(
   "resource://services-settings/SyncHistory.sys.mjs"

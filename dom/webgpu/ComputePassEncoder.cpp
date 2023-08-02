@@ -63,10 +63,12 @@ void ComputePassEncoder::SetPipeline(const ComputePipeline& aPipeline) {
   }
 }
 
-void ComputePassEncoder::DispatchWorkgroups(uint32_t x, uint32_t y,
-                                            uint32_t z) {
+void ComputePassEncoder::DispatchWorkgroups(uint32_t workgroupCountX,
+                                            uint32_t workgroupCountY,
+                                            uint32_t workgroupCountZ) {
   if (mValid) {
-    ffi::wgpu_compute_pass_dispatch_workgroups(mPass, x, y, z);
+    ffi::wgpu_compute_pass_dispatch_workgroups(
+        mPass, workgroupCountX, workgroupCountY, workgroupCountZ);
   }
 }
 

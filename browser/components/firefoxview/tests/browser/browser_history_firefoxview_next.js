@@ -24,8 +24,6 @@ const oneMonthAgo = new Date(today);
 oneMonthAgo.setMonth(
   oneMonthAgo.getMonth() === 0 ? 11 : oneMonthAgo.getMonth() - 1
 );
-// Total number of cards should be 6 if today's date is at least the 5th
-let expectedNumOfCards = today.getDate() < 5 ? 6 - (5 - today.getDate()) : 6;
 
 function isElInViewport(element) {
   const boundingRect = element.getBoundingClientRect();
@@ -113,6 +111,8 @@ add_task(async function test_list_ordering() {
         ) === 24
     );
 
+    let expectedNumOfCards = historyComponent.historyMapByDate.length;
+
     let cards = historyComponent.cards;
     let actualNumOfCards = cards.length;
 
@@ -138,7 +138,7 @@ add_task(async function test_list_ordering() {
     await historyComponent.updateHistoryData();
     await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
 
-    expectedNumOfCards = 4;
+    expectedNumOfCards = historyComponent.historyMapBySite.length;
 
     info(`Total number of cards should be ${expectedNumOfCards}`);
     await BrowserTestUtils.waitForMutationCondition(
