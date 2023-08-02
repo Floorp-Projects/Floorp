@@ -53,7 +53,7 @@ class ManifestParser(object):
         rootdir=None,
         finder=None,
         handle_defaults=True,
-        use_toml=True,
+        use_toml=False,
     ):
         """Creates a ManifestParser from the given manifest files.
 
@@ -177,7 +177,7 @@ class ManifestParser(object):
                     if self.use_toml:
                         include_file = toml_name
                     else:
-                        self.logger.info(
+                        self.logger.debug(
                             f"NOTE TOML include file present, but not used: {toml_name}"
                         )
             elif file_ext != ".toml":
@@ -211,17 +211,17 @@ class ManifestParser(object):
                     if self.use_toml:
                         fp, filename = self._get_fp_filename(toml_name)
                         read_fn = read_toml
-                        self.logger.info(f"Reading TOML: {filename}")
+                        self.logger.debug(f"Reading TOML: {filename}")
                     else:
-                        self.logger.info(
+                        self.logger.debug(
                             f"NOTE TOML present, but not used: {toml_name}"
                         )
-                        self.logger.info(f"Reading INI: {filename}")
+                        self.logger.debug(f"Reading INI: {filename}")
                 else:
-                    self.logger.info(f"Reading INI: {filename}")
+                    self.logger.debug(f"Reading INI: {filename}")
             elif file_ext == ".toml":
                 read_fn = read_toml
-                self.logger.info(f"Reading TOML: {filename}")
+                self.logger.debug(f"Reading TOML: {filename}")
             else:
                 raise IOError(f"manfestparser file extension not supported: {filename}")
         defaults["here"] = here
@@ -254,7 +254,7 @@ class ManifestParser(object):
             # TODO: keep track of included file structure:
             # self.manifests = {'manifest.ini': 'relative/path.ini'}
             if section.startswith("include:"):
-                self.logger.info(f"ManifestParser, INCLUDE: {section}")
+                self.logger.debug(f"ManifestParser, INCLUDE: {section}")
                 include_file = read_file("include:")
                 if include_file:
                     include_defaults = data.copy()

@@ -402,10 +402,8 @@ class tags(InstanceFilter):
     section. Tests can have multiple tags, in which case they should be
     whitespace delimited. For example:
 
-    .. code-block:: toml
-
-        ['test_foobar.html']
-        tags = 'foo bar'
+    [test_foobar.html]
+    tags = foo bar
 
     :param tags: A tag or list of tags to filter tests on
     """
@@ -430,10 +428,11 @@ class tags(InstanceFilter):
 
 class failures(InstanceFilter):
     """
-    .. code-block:: toml
+    .. code-block:: ini
 
-        ['test_foobar.html']
-        fail-if = 'keyword' # <comment>
+        [test_foobar.html]
+        fail-if =
+          keyword # <comment>
 
     :param keywords: A keyword to filter tests on
     """
