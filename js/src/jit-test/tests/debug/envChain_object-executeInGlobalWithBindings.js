@@ -61,8 +61,8 @@ JSON.stringify({envs, vars});
 
 assertEq(vars.bindings_prop_var, 60,
          "qualified var should read the value set by the declaration");
-assertEq(vars.bindings_prop_lexical, 71,
-         "TODO: lexical variable cannot read the value set by the declaration, given the name lookup finds the WithEnvironmentObject first");
+assertEq(vars.bindings_prop_lexical, 70,
+         "lexical should read the value set by the declaration");
 assertEq(vars.bindings_prop_lexical2, 70,
          "lexical should read the value set by the assignment");
 assertEq(vars.bindings_prop_unqualified, 80,
@@ -89,22 +89,16 @@ assertEq(env.lexical, false);
 assertEq(env.prop, false);
 assertEq(env.bindings_prop, true, "bindings property must live in the with env for bindings");
 
-assertEq(env.bindings_prop_var, true,
-         "bindings property must live in the with env for bindings");
-assertEq(env.bindings_prop_var_value, 60,
-         "bindings property must be overwritten for var");
-assertEq(env.bindings_prop_lexical, true,
-         "bindings property must live in the with env for bindings");
-assertEq(env.bindings_prop_lexical_value, 71,
-         "bindings property must not be overwritten for lexical declaration");
-assertEq(env.bindings_prop_lexical2, true,
-         "bindings property must live in the with env for bindings");
-assertEq(env.bindings_prop_lexical2_value, 70,
-         "bindings property must be overwritten for assignment on lexical");
+assertEq(env.bindings_prop_var, false,
+         "bindings property must not live in the with env for bindings if it conflicts with global");
+assertEq(env.bindings_prop_lexical, false,
+         "bindings property must not live in the with env for bindings if it conflicts with global");
+assertEq(env.bindings_prop_lexical2, false,
+         "bindings property must not live in the with env for bindings if it conflicts with global");
 assertEq(env.bindings_prop_unqualified, true,
          "bindings property must live in the with env for bindings");
 assertEq(env.bindings_prop_unqualified_value, 80,
-         "bindings property must not be overwritten for unqualified");
+         "bindings property must be overwritten for unqualified");
 
 env = envs[i]; i++;
 assertEq(env.type, "GlobalLexicalEnvironmentObject");
@@ -120,8 +114,8 @@ assertEq(env.bindings_prop_lexical, true,
 assertEq(env.bindings_prop_lexical_value, 70);
 assertEq(env.bindings_prop_lexical2, true,
          "lexical must live in the GlobalLexicalEnvironmentObject even if it conflicts with the bindings object property");
-assertEq(env.bindings_prop_lexical2_value, undefined,
-         "lexical value must not be set by the assignment if it conflicts with the bindings object property");
+assertEq(env.bindings_prop_lexical2_value, 70,
+         "lexical value must be set by the assignment even if it conflicts with the bindings object property");
 assertEq(env.bindings_prop_unqualified, false);
 
 env = envs[i]; i++;
@@ -134,9 +128,8 @@ assertEq(env.bindings_prop, false);
 
 assertEq(env.bindings_prop_var, true,
          "qualified var binding must be created in the global even if it conflicts with the bindings object property");
-assertEq(env.bindings_prop_var_value, undefined,
-         "qualified var value must not be set if it conflicts with the bindings object property");
-assertEq(env.bindings_prop_var_value, undefined);
+assertEq(env.bindings_prop_var_value, 60,
+         "qualified var value must be set even if it conflicts with the bindings object property");
 assertEq(env.bindings_prop_lexical, false);
 assertEq(env.bindings_prop_lexical2, false);
 assertEq(env.bindings_prop_unqualified, false);

@@ -412,16 +412,27 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<Referent*>, HeapPtr<Wrapper*>> {
 class LeaveDebuggeeNoExecute;
 
 class MOZ_RAII EvalOptions {
+ public:
+  enum class EnvKind {
+    Frame,
+    FrameWithExtraBindings,
+    Global,
+    GlobalWithExtraBindings,
+  };
+
+ private:
   JS::UniqueChars filename_;
   unsigned lineno_ = 1;
   bool hideFromDebugger_ = false;
+  EnvKind kind_;
 
  public:
-  EvalOptions() = default;
+  explicit EvalOptions(EnvKind kind) : kind_(kind){};
   ~EvalOptions() = default;
   const char* filename() const { return filename_.get(); }
   unsigned lineno() const { return lineno_; }
   bool hideFromDebugger() const { return hideFromDebugger_; }
+  EnvKind kind() const { return kind_; }
   [[nodiscard]] bool setFilename(JSContext* cx, const char* filename);
   void setLineno(unsigned lineno) { lineno_ = lineno; }
   void setHideFromDebugger(bool hide) { hideFromDebugger_ = hide; }
