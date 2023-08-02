@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.webextension.WebExtensionInstallException
 import mozilla.components.feature.addons.Addon
+import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter
 import mozilla.components.feature.addons.ui.translateName
@@ -157,7 +158,10 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                 lifecycleScope.launch(Dispatchers.Main) {
                     runIfFragmentIsAttached {
                         binding?.let {
-                            showSnackBar(it.root, getString(R.string.mozac_feature_addons_failed_to_query_add_ons))
+                            showSnackBar(
+                                it.root,
+                                getString(R.string.mozac_feature_addons_failed_to_query_add_ons),
+                            )
                         }
                         isInstallationInProgress = false
                         binding?.addOnsProgressBar?.isVisible = false
@@ -184,9 +188,9 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
     }
 
     @VisibleForTesting
-    internal fun showErrorSnackBar(text: String) {
+    internal fun showErrorSnackBar(text: String, anchorView: View? = this.view) {
         runIfFragmentIsAttached {
-            view?.let {
+            anchorView?.let {
                 showSnackBar(it, text, FenixSnackbar.LENGTH_LONG)
             }
         }
@@ -208,8 +212,13 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         )
     }
 
+    @VisibleForTesting
+    internal fun provideAddonManger(): AddonManager {
+        return requireContext().components.addonManager
+    }
+
     internal fun installAddon(addon: Addon) {
-        requireContext().components.addonManager.installAddon(
+        provideAddonManger().installAddon(
             addon,
             onSuccess = {
                 runIfFragmentIsAttached {
@@ -222,13 +231,14 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                     // No need to display an error message if installation was cancelled by the user.
                     if (e !is CancellationException && e !is WebExtensionInstallException.UserCancelled) {
                         val rootView = activity?.getRootView() ?: view
+                        var messageId = R.string.mozac_feature_addons_failed_to_install
+                        if (e is WebExtensionInstallException.Blocklisted) {
+                            messageId = R.string.mozac_feature_addons_blocklisted
+                        }
                         context?.let {
-                            showSnackBar(
-                                rootView,
-                                getString(
-                                    R.string.mozac_feature_addons_failed_to_install,
-                                    addon.translateName(it),
-                                ),
+                            showErrorSnackBar(
+                                text = getString(messageId, addon.translateName(it)),
+                                anchorView = rootView,
                             )
                         }
                     }
