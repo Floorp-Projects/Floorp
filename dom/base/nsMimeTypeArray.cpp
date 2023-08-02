@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/MimeTypeArrayBinding.h"
 #include "mozilla/dom/MimeTypeBinding.h"
-#include "nsGlobalWindowInner.h"
 #include "nsPluginArray.h"
 #include "mozilla/StaticPrefs_pdfjs.h"
 #include "nsContentUtils.h"

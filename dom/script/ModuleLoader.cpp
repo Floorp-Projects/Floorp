@@ -29,7 +29,6 @@
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
-#include "nsGlobalWindowInner.h"
 #include "nsIPrincipal.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Maybe.h"

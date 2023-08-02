@@ -22,6 +22,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/MaybeCrossOriginObject.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindowInner.h"
 #include "nsXULAppAPI.h"
 
 using namespace JS;

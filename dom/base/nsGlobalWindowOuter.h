@@ -408,8 +408,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   nsIScriptContext* GetContextInternal();
 
-  nsGlobalWindowInner* GetCurrentInnerWindowInternal() const;
-
   bool IsCreatingInnerWindow() const { return mCreatingInnerWindow; }
 
   bool IsChromeWindow() const { return mIsChrome; }
@@ -678,7 +676,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // Outer windows only.
   void FinalClose();
 
-  inline void MaybeClearInnerWindow(nsGlobalWindowInner* aExpectedInner);
+  inline void MaybeClearInnerWindow(nsPIDOMWindowInner* aExpectedInner);
 
   // Get the parent, returns null if this is a toplevel window
   nsPIDOMWindowOuter* GetInProcessParentInternal();
@@ -1117,19 +1115,12 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   friend class nsGlobalWindowInner;
 };
 
-// XXX: EWW - This is an awful hack - let's not do this
-#include "nsGlobalWindowInner.h"
-
 inline nsISupports* ToSupports(nsGlobalWindowOuter* p) {
   return static_cast<mozilla::dom::EventTarget*>(p);
 }
 
 inline nsISupports* ToCanonicalSupports(nsGlobalWindowOuter* p) {
   return static_cast<mozilla::dom::EventTarget*>(p);
-}
-
-inline nsIGlobalObject* nsGlobalWindowOuter::GetOwnerGlobal() const {
-  return GetCurrentInnerWindowInternal();
 }
 
 inline nsGlobalWindowOuter* nsGlobalWindowOuter::GetInProcessTopInternal() {
@@ -1150,13 +1141,8 @@ inline nsIScriptContext* nsGlobalWindowOuter::GetContextInternal() {
   return mContext;
 }
 
-inline nsGlobalWindowInner* nsGlobalWindowOuter::GetCurrentInnerWindowInternal()
-    const {
-  return nsGlobalWindowInner::Cast(mInnerWindow);
-}
-
 inline void nsGlobalWindowOuter::MaybeClearInnerWindow(
-    nsGlobalWindowInner* aExpectedInner) {
+    nsPIDOMWindowInner* aExpectedInner) {
   if (mInnerWindow == aExpectedInner) {
     mInnerWindow = nullptr;
   }

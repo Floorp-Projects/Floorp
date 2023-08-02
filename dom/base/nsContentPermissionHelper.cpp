@@ -24,6 +24,7 @@
 #include "nsArrayUtils.h"
 #include "nsIMutableArray.h"
 #include "nsContentPermissionHelper.h"
+#include "nsGlobalWindowInner.h"
 #include "nsJSUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "nsServiceManagerUtils.h"

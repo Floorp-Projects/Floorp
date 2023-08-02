@@ -12,7 +12,6 @@
 
 #include "nsMimeTypeArray.h"
 #include "nsPIDOMWindow.h"
-#include "nsGlobalWindowInner.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla;

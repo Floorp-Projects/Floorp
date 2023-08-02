@@ -55,6 +55,7 @@
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsEscape.h"
+#include "nsGlobalWindowInner.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsHttpChannel.h"
 #include "nsHTTPCompressConv.h"

@@ -15,7 +15,6 @@
 #include "nsIGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIPrincipal.h"
-#include "nsGlobalWindowInner.h"
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 

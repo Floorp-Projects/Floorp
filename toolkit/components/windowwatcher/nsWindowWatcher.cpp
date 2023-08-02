@@ -17,6 +17,7 @@
 #include "nsJSUtils.h"
 
 #include "nsDocShell.h"
+#include "nsGlobalWindowInner.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsHashPropertyBag.h"
 #include "nsIBaseWindow.h"

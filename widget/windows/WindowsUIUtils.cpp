@@ -24,6 +24,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/media/MediaUtils.h"
 #include "nsString.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsIWidget.h"
 #include "nsIWindowMediator.h"
 #include "nsPIDOMWindow.h"

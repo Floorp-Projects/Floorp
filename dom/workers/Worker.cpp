@@ -14,7 +14,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/WorkerTimelineMarker.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindowOuter.h"
+#include "nsGlobalWindowInner.h"
 #include "WorkerPrivate.h"
 #include "EventWithOptionsRunnable.h"
 #include "js/RootingAPI.h"

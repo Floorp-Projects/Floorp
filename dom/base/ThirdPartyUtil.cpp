@@ -30,7 +30,7 @@
 #include "nsDebug.h"
 #include "nsEffectiveTLDService.h"
 #include "nsError.h"
-#include "nsGlobalWindowInner.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsIChannel.h"
 #include "nsIClassifiedChannel.h"
 #include "nsIContentPolicy.h"

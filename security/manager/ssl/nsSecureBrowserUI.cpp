@@ -13,7 +13,6 @@
 #include "nsIChannel.h"
 #include "nsDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsGlobalWindowInner.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsIWebProgress.h"

@@ -10,7 +10,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsPresContext.h"
 #include "nsGlobalWindowInner.h"
-#include "nsGlobalWindowOuter.h"
 
 namespace mozilla::dom {
 

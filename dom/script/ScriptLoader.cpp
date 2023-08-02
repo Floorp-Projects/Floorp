@@ -53,7 +53,6 @@
 #include "nsAboutProtocolUtils.h"
 #include "nsGkAtoms.h"
 #include "nsNetUtil.h"
-#include "nsGlobalWindowInner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsIPrincipal.h"

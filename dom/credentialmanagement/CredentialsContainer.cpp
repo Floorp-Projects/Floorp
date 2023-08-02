@@ -16,7 +16,6 @@
 #include "nsContentUtils.h"
 #include "nsFocusManager.h"
 #include "nsIDocShell.h"
-#include "nsGlobalWindowInner.h"
 
 namespace mozilla::dom {
 

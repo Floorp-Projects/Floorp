@@ -7,7 +7,6 @@
 #include "Timeout.h"
 
 #include "mozilla/dom/TimeoutManager.h"
-#include "nsGlobalWindowInner.h"
 #include "GeckoProfiler.h"
 
 namespace mozilla::dom {
