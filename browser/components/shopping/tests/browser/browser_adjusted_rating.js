@@ -11,10 +11,10 @@ add_task(async function test_adjusted_rating() {
     },
     async browser => {
       const { document } = browser.contentWindow;
-      let rating = MOCK_POPULATED_DATA.adjusted_rating;
+      let rating = MOCK_ANALYZED_PRODUCT_RESPONSE.adjusted_rating;
 
       let shoppingContainer = document.querySelector("shopping-container");
-      shoppingContainer.data = MOCK_POPULATED_DATA;
+      shoppingContainer.data = MOCK_ANALYZED_PRODUCT_RESPONSE;
       await shoppingContainer.updateComplete;
 
       let adjustedRating = shoppingContainer.adjustedRatingEl;

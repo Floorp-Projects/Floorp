@@ -18,7 +18,7 @@ add_task(async function test_review_highlights() {
       const EXPECTED_KEYS = ["price", "quality", "competitiveness"];
 
       let shoppingContainer = document.querySelector("shopping-container");
-      shoppingContainer.data = MOCK_POPULATED_DATA;
+      shoppingContainer.data = MOCK_ANALYZED_PRODUCT_RESPONSE;
       await shoppingContainer.updateComplete;
 
       let reviewHighlights = shoppingContainer.highlightsEl;
@@ -43,7 +43,7 @@ add_task(async function test_review_highlights() {
           ".highlight-details-list"
         ).children.length;
         let expectedNumberOfReviews = Object.values(
-          MOCK_POPULATED_DATA.highlights[key]
+          MOCK_ANALYZED_PRODUCT_RESPONSE.highlights[key]
         ).flat().length;
         is(
           actualNumberOfReviews,
@@ -66,7 +66,7 @@ add_task(async function test_review_highlights_no_highlights() {
     },
     async browser => {
       const { document } = browser.contentWindow;
-      const noHighlightData = MOCK_POPULATED_DATA;
+      const noHighlightData = MOCK_ANALYZED_PRODUCT_RESPONSE;
       noHighlightData.highlights = null;
 
       let shoppingContainer = document.querySelector("shopping-container");
@@ -99,7 +99,7 @@ add_task(async function test_review_highlights_invalid_type() {
     },
     async browser => {
       const { document } = browser.contentWindow;
-      const invalidHighlightData = MOCK_POPULATED_DATA;
+      const invalidHighlightData = MOCK_ANALYZED_PRODUCT_RESPONSE;
       invalidHighlightData.highlights = MOCK_INVALID_KEY_OBJ;
 
       let shoppingContainer = document.querySelector("shopping-container");
