@@ -2,25 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.shopping.state
+package org.mozilla.fenix.shopping.store
 
-import kotlinx.coroutines.CoroutineScope
 import mozilla.components.lib.state.Store
 
 /**
  * Store for review quality check feature.
  *
- * @param reviewQualityCheckPreferences The [ReviewQualityCheckPreferences] instance to use.
- * @param scope The [CoroutineScope] to use for launching coroutines.
+ * @param middleware The list of middlewares to use.
  */
 class ReviewQualityCheckStore(
-    reviewQualityCheckPreferences: ReviewQualityCheckPreferences,
-    scope: CoroutineScope,
+    middleware: List<ReviewQualityCheckMiddleware>,
 ) : Store<ReviewQualityCheckState, ReviewQualityCheckAction>(
     initialState = ReviewQualityCheckState.Initial,
-    middleware = listOf(
-        ReviewQualityCheckPreferencesMiddleware(reviewQualityCheckPreferences, scope),
-    ),
+    middleware = middleware,
     reducer = ::reducer,
 ) {
     init {

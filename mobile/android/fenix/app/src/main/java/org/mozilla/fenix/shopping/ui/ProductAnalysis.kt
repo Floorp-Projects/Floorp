@@ -24,8 +24,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.SwitchWithLabel
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.SecondaryButton
-import org.mozilla.fenix.shopping.state.ReviewQualityCheckState
-import org.mozilla.fenix.shopping.state.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**

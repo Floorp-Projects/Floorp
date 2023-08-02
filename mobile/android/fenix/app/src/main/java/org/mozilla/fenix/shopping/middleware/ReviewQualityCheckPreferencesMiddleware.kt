@@ -2,13 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.shopping.state
+package org.mozilla.fenix.shopping.middleware
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckMiddleware
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 
 /**
  * Middleware for getting and setting review quality check user preferences.
@@ -19,7 +21,7 @@ import mozilla.components.lib.state.Store
 class ReviewQualityCheckPreferencesMiddleware(
     private val reviewQualityCheckPreferences: ReviewQualityCheckPreferences,
     private val scope: CoroutineScope,
-) : Middleware<ReviewQualityCheckState, ReviewQualityCheckAction> {
+) : ReviewQualityCheckMiddleware {
 
     override fun invoke(
         context: MiddlewareContext<ReviewQualityCheckState, ReviewQualityCheckAction>,

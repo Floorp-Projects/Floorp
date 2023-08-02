@@ -10,10 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import mozilla.components.lib.state.ext.observeAsState
-import org.mozilla.fenix.shopping.state.ReviewQualityCheckAction
-import org.mozilla.fenix.shopping.state.ReviewQualityCheckState
-import org.mozilla.fenix.shopping.state.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent
-import org.mozilla.fenix.shopping.state.ReviewQualityCheckStore
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckStore
 
 /**
  * Top-level UI for the Review Quality Check feature.

@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
-import org.mozilla.fenix.shopping.state.ReviewQualityCheckState.Grade
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.Grade
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val height = 24.dp
