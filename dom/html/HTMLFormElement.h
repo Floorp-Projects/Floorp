@@ -379,6 +379,9 @@ class HTMLFormElement final : public nsGenericHTMLElement,
 
   void GetSupportedNames(nsTArray<nsString>& aRetval);
 
+  static int32_t CompareFormControlPosition(Element* aElement1,
+                                            Element* aElement2,
+                                            const nsIContent* aForm);
 #ifdef DEBUG
   static void AssertDocumentOrder(
       const nsTArray<nsGenericHTMLFormElement*>& aControls, nsIContent* aForm);

@@ -1086,6 +1086,44 @@ Element* HTMLFormElement::IndexedGetter(uint32_t aIndex, bool& aFound) {
   return element;
 }
 
+/**
+ * Compares the position of aControl1 and aControl2 in the document
+ * @param aControl1 First control to compare.
+ * @param aControl2 Second control to compare.
+ * @param aForm Parent form of the controls.
+ * @return < 0 if aControl1 is before aControl2,
+ *         > 0 if aControl1 is after aControl2,
+ *         0 otherwise
+ */
+/* static */
+int32_t HTMLFormElement::CompareFormControlPosition(Element* aElement1,
+                                                    Element* aElement2,
+                                                    const nsIContent* aForm) {
+  NS_ASSERTION(aElement1 != aElement2, "Comparing a form control to itself");
+
+  // If an element has a @form, we can assume it *might* be able to not have
+  // a parent and still be in the form.
+  NS_ASSERTION(
+      (aElement1->HasAttr(nsGkAtoms::form) || aElement1->GetParent()) &&
+          (aElement2->HasAttr(nsGkAtoms::form) || aElement2->GetParent()),
+      "Form controls should always have parents");
+
+  // If we pass aForm, we are assuming both controls are form descendants which
+  // is not always the case. This function should work but maybe slower.
+  // However, checking if both elements are form descendants may be slow too...
+  // TODO: remove the prevent asserts fix, see bug 598468.
+#ifdef DEBUG
+  nsLayoutUtils::gPreventAssertInCompareTreePosition = true;
+  int32_t rVal =
+      nsLayoutUtils::CompareTreePosition(aElement1, aElement2, aForm);
+  nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
+
+  return rVal;
+#else   // DEBUG
+  return nsLayoutUtils::CompareTreePosition(aElement1, aElement2, aForm);
+#endif  // DEBUG
+}
+
 #ifdef DEBUG
 /**
  * Checks that all form elements are in document order. Asserts if any pair of
@@ -1168,6 +1206,58 @@ void HTMLFormElement::PostPossibleUsernameEvent() {
   mFormPossibleUsernameEventDispatcher->PostDOMEvent();
 }
 
+namespace {
+
+struct FormComparator {
+  Element* const mChild;
+  HTMLFormElement* const mForm;
+  FormComparator(Element* aChild, HTMLFormElement* aForm)
+      : mChild(aChild), mForm(aForm) {}
+  int operator()(Element* aElement) const {
+    return HTMLFormElement::CompareFormControlPosition(mChild, aElement, mForm);
+  }
+};
+
+}  // namespace
+
+// This function return true if the element, once appended, is the last one in
+// the array.
+template <typename ElementType>
+static bool AddElementToList(nsTArray<ElementType*>& aList, ElementType* aChild,
+                             HTMLFormElement* aForm) {
+  NS_ASSERTION(aList.IndexOf(aChild) == aList.NoIndex,
+               "aChild already in aList");
+
+  const uint32_t count = aList.Length();
+  ElementType* element;
+  bool lastElement = false;
+
+  // Optimize most common case where we insert at the end.
+  int32_t position = -1;
+  if (count > 0) {
+    element = aList[count - 1];
+    position =
+        HTMLFormElement::CompareFormControlPosition(aChild, element, aForm);
+  }
+
+  // If this item comes after the last element, or the elements array is
+  // empty, we append to the end. Otherwise, we do a binary search to
+  // determine where the element should go.
+  if (position >= 0 || count == 0) {
+    // WEAK - don't addref
+    aList.AppendElement(aChild);
+    lastElement = true;
+  } else {
+    size_t idx;
+    BinarySearchIf(aList, 0, count, FormComparator(aChild, aForm), &idx);
+
+    // WEAK - don't addref
+    aList.InsertElementAt(idx, aChild);
+  }
+
+  return lastElement;
+}
+
 nsresult HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
                                      bool aUpdateValidity, bool aNotify) {
   // If an element has a @form, we can assume it *might* be able to not have
@@ -1182,8 +1272,7 @@ nsresult HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
   nsTArray<nsGenericHTMLFormElement*>& controlList =
       childInElements ? mControls->mElements : mControls->mNotInElements;
 
-  bool lastElement =
-      nsContentUtils::AddElementToListByTreeOrder(controlList, aChild, this);
+  bool lastElement = AddElementToList(controlList, aChild, this);
 
 #ifdef DEBUG
   AssertDocumentOrder(controlList, this);
@@ -1219,16 +1308,16 @@ nsresult HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
     // what's in the slot or the child is earlier than the default submit.
     nsGenericHTMLFormElement* oldDefaultSubmit = mDefaultSubmitElement;
     if (!*firstSubmitSlot ||
-        (!lastElement && nsContentUtils::CompareTreePosition(
-                             aChild, *firstSubmitSlot, this) < 0)) {
+        (!lastElement &&
+         CompareFormControlPosition(aChild, *firstSubmitSlot, this) < 0)) {
       // Update mDefaultSubmitElement if it's currently in a valid state.
       // Valid state means either non-null or null because there are in fact
       // no submit elements around.
       if ((mDefaultSubmitElement ||
            (!mFirstSubmitInElements && !mFirstSubmitNotInElements)) &&
           (*firstSubmitSlot == mDefaultSubmitElement ||
-           nsContentUtils::CompareTreePosition(aChild, mDefaultSubmitElement,
-                                               this) < 0)) {
+           CompareFormControlPosition(aChild, mDefaultSubmitElement, this) <
+               0)) {
         mDefaultSubmitElement = aChild;
       }
       *firstSubmitSlot = aChild;
@@ -1359,8 +1448,8 @@ void HTMLFormElement::HandleDefaultSubmitRemoval() {
                  "How did that happen?");
     // Have both; use the earlier one
     mDefaultSubmitElement =
-        nsContentUtils::CompareTreePosition(mFirstSubmitInElements,
-                                            mFirstSubmitNotInElements, this) < 0
+        CompareFormControlPosition(mFirstSubmitInElements,
+                                   mFirstSubmitNotInElements, this) < 0
             ? mFirstSubmitInElements
             : mFirstSubmitNotInElements;
   }
@@ -1708,8 +1797,8 @@ bool HTMLFormElement::IsDefaultSubmitElement(
 
   // We have both kinds of submits.  Check which comes first.
   nsGenericHTMLFormElement* defaultSubmit =
-      nsContentUtils::CompareTreePosition(mFirstSubmitInElements,
-                                          mFirstSubmitNotInElements, this) < 0
+      CompareFormControlPosition(mFirstSubmitInElements,
+                                 mFirstSubmitNotInElements, this) < 0
           ? mFirstSubmitInElements
           : mFirstSubmitNotInElements;
   return aElement == defaultSubmit;
@@ -1922,7 +2011,7 @@ HTMLFormElement::WalkRadioGroup(const nsAString& aName,
 
 void HTMLFormElement::AddToRadioGroup(const nsAString& aName,
                                       HTMLInputElement* aRadio) {
-  RadioGroupManager::AddToRadioGroup(aName, aRadio, this);
+  RadioGroupManager::AddToRadioGroup(aName, aRadio);
 }
 
 void HTMLFormElement::RemoveFromRadioGroup(const nsAString& aName,
@@ -2078,7 +2167,7 @@ nsresult HTMLFormElement::AddElementToTableInternal(
 }
 
 nsresult HTMLFormElement::AddImageElement(HTMLImageElement* aChild) {
-  nsContentUtils::AddElementToListByTreeOrder(mImageElements, aChild, this);
+  AddElementToList(mImageElements, aChild, this);
   return NS_OK;
 }
 

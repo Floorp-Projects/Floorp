@@ -175,7 +175,6 @@
 #include "mozilla/dom/FromParser.h"
 #include "mozilla/dom/HTMLElement.h"
 #include "mozilla/dom/HTMLFormElement.h"
-#include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/IPCBlob.h"
@@ -11225,84 +11224,6 @@ nsIContent* nsContentUtils::GetClosestLinkInFlatTree(nsIContent* aContent) {
   }
   return nullptr;
 }
-
-namespace {
-
-struct TreePositionComparator {
-  Element* const mChild;
-  nsIContent* const mAncestor;
-  TreePositionComparator(Element* aChild, nsIContent* aAncestor)
-      : mChild(aChild), mAncestor(aAncestor) {}
-  int operator()(Element* aElement) const {
-    return nsLayoutUtils::CompareTreePosition(mChild, aElement, mAncestor);
-  }
-};
-
-}  // namespace
-
-/* static */
-int32_t nsContentUtils::CompareTreePosition(nsIContent* aContent1,
-                                            nsIContent* aContent2,
-                                            const nsIContent* aCommonAncestor) {
-  NS_ASSERTION(aContent1 != aContent2, "Comparing content to itself");
-
-  // TODO: remove the prevent asserts fix, see bug 598468.
-#ifdef DEBUG
-  nsLayoutUtils::gPreventAssertInCompareTreePosition = true;
-  int32_t rVal =
-      nsLayoutUtils::CompareTreePosition(aContent1, aContent2, aCommonAncestor);
-  nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
-
-  return rVal;
-#else   // DEBUG
-  return nsLayoutUtils::CompareTreePosition(aContent1, aContent2,
-                                            aCommonAncestor);
-#endif  // DEBUG
-}
-
-/* static */
-template <typename ElementType, typename ElementPtr>
-bool nsContentUtils::AddElementToListByTreeOrder(nsTArray<ElementType>& aList,
-                                                 ElementPtr aChild,
-                                                 nsIContent* aCommonAncestor) {
-  NS_ASSERTION(aList.IndexOf(aChild) == aList.NoIndex,
-               "aChild already in aList");
-
-  const uint32_t count = aList.Length();
-  ElementType element;
-
-  // Optimize most common case where we insert at the end.
-  int32_t position = -1;
-  if (count > 0) {
-    element = aList[count - 1];
-    position = CompareTreePosition(aChild, element, aCommonAncestor);
-  }
-
-  // If this item comes after the last element, or the elements array is
-  // empty, we append to the end. Otherwise, we do a binary search to
-  // determine where the element should go.
-  if (position >= 0 || count == 0) {
-    aList.AppendElement(aChild);
-    return true;
-  }
-
-  size_t idx;
-  BinarySearchIf(aList, 0, count,
-                 TreePositionComparator(aChild, aCommonAncestor), &idx);
-
-  aList.InsertElementAt(idx, aChild);
-  return false;
-}
-
-template bool nsContentUtils::AddElementToListByTreeOrder(
-    nsTArray<nsGenericHTMLFormElement*>& aList,
-    nsGenericHTMLFormElement* aChild, nsIContent* aAncestor);
-template bool nsContentUtils::AddElementToListByTreeOrder(
-    nsTArray<HTMLImageElement*>& aList, HTMLImageElement* aChild,
-    nsIContent* aAncestor);
-template bool nsContentUtils::AddElementToListByTreeOrder(
-    nsTArray<RefPtr<HTMLInputElement>>& aList, HTMLInputElement* aChild,
-    nsIContent* aAncestor);
 
 namespace mozilla {
 std::ostream& operator<<(std::ostream& aOut,
