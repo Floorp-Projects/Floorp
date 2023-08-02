@@ -1221,6 +1221,13 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
 }
 
 void WorkerScriptLoader::TryShutdown() {
+  {
+    MutexAutoLock lock(CleanUpLock());
+    if (CleanedUp()) {
+      return;
+    }
+  }
+
   if (AllScriptsExecuted() && AllModuleRequestsLoaded()) {
     ShutdownScriptLoader(!mExecutionAborted, mMutedErrorFlag);
   }
