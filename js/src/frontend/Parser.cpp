@@ -894,15 +894,12 @@ bool ParserBase::noteUsedNameInternal(TaggedParserAtomIndex name,
   // global scope. It is not incorrect to track them, this is an
   // optimization.
   //
-  // Exceptions:
-  //   (a) Track private name references, as the used names tracker is used to
-  //       provide early errors for undeclared private name references
-  //   (b) If the script has extra bindings, track all references to detect
-  //       references to extra bindings
+  // As an exception however, we continue to track private name references,
+  // as the used names tracker is used to provide early errors for undeclared
+  // private name references
   ParseContext::Scope* scope = pc_->innermostScope();
   if (pc_->sc()->isGlobalContext() && scope == &pc_->varScope() &&
-      visibility == NameVisibility::Public &&
-      !this->compilationState_.input.hasExtraBindings()) {
+      visibility == NameVisibility::Public) {
     return true;
   }
 

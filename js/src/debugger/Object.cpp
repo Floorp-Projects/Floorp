@@ -1121,7 +1121,7 @@ bool DebuggerObject::CallData::executeInGlobalMethod() {
   }
   mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
 
-  EvalOptions options(EvalOptions::EnvKind::Global);
+  EvalOptions options;
   if (!ParseEvalOptions(cx, args.get(1), options)) {
     return false;
   }
@@ -1156,7 +1156,7 @@ bool DebuggerObject::CallData::executeInGlobalWithBindingsMethod() {
     return false;
   }
 
-  EvalOptions options(EvalOptions::EnvKind::GlobalWithExtraBindings);
+  EvalOptions options;
   if (!ParseEvalOptions(cx, args.get(2), options)) {
     return false;
   }

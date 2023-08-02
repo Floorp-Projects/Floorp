@@ -147,11 +147,6 @@ const WebConsoleCommandsManager = {
    *           which executed want to convey to the frontend.
    *           (The return value of commands isn't returned to the client but it only
    *            returned to the code ran from console evaluation)
-   *         - 'rawCommands', a map from command name to command function.
-   *           when a command is called with ':command' style, this function
-   *           should be called with 'rawOwner' parameter and the parameter
-   *           parsed with 'getCommandAndArgs'
-   *         - 'rawOwner', 1st parameter for the command function
    */
   getWebConsoleCommands(
     consoleActor,
@@ -244,8 +239,6 @@ const WebConsoleCommandsManager = {
         return owner.helperResult;
       },
       bindings,
-      rawCommands: commands,
-      rawOwner: owner,
     };
   },
 };

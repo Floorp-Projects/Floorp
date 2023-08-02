@@ -163,7 +163,7 @@ class UsedNameTracker {
     // To allow disambiguating public and private symbols
     bool isPublic() { return visibility_ == NameVisibility::Public; }
 
-    bool empty() const { return uses_.empty(); }
+    bool empty() { return uses_.empty(); }
 
     mozilla::Maybe<TokenPos> pos() { return firstUsePos_; }
 
@@ -251,8 +251,6 @@ class UsedNameTracker {
   // Resets state so that scriptId and scopeId are the innermost script and
   // scope, respectively. Used for rewinding state on syntax parse failure.
   void rewind(RewindToken token);
-
-  const UsedNameMap& map() const { return map_; }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump(ParserAtomsTable& table);

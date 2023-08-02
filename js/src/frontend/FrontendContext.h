@@ -42,20 +42,11 @@ struct FrontendErrors {
   bool outOfMemory = false;
   bool allocationOverflow = false;
 
-  // Set to true if the compilation is initiated with extra bindings, but
-  // the script has no reference to the bindings, and the script should be
-  // compiled without the extra bindings.
-  //
-  // See frontend::CompileGlobalScriptWithExtraBindings.
-  bool extraBindingsAreNotUsed = false;
-
   bool hadErrors() const {
-    return outOfMemory || overRecursed || allocationOverflow ||
-           extraBindingsAreNotUsed || error;
+    return outOfMemory || overRecursed || allocationOverflow || error;
   }
 
   void clearErrors();
-  void clearWarnings();
 };
 
 class FrontendAllocator : public MallocProvider<FrontendAllocator> {
@@ -192,20 +183,8 @@ class FrontendContext {
   bool hadOutOfMemory() const { return errors_.outOfMemory; }
   bool hadOverRecursed() const { return errors_.overRecursed; }
   bool hadAllocationOverflow() const { return errors_.allocationOverflow; }
-  bool extraBindingsAreNotUsed() const {
-    return errors_.extraBindingsAreNotUsed;
-  }
-  void reportExtraBindingsAreNotUsed() {
-    errors_.extraBindingsAreNotUsed = true;
-  }
-  void clearNoExtraBindingReferencesFound() {
-    errors_.extraBindingsAreNotUsed = false;
-  }
   bool hadErrors() const;
-  // Clear errors and warnings.
   void clearErrors();
-  // Clear warnings only.
-  void clearWarnings();
 
 #ifdef __wasi__
   void incWasiRecursionDepth();

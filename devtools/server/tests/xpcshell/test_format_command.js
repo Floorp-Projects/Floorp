@@ -4,7 +4,7 @@
 "use strict";
 
 const {
-  getCommandAndArgs,
+  formatCommand,
 } = require("resource://devtools/server/actors/webconsole/commands/parser.js");
 
 const testcases = [
@@ -96,20 +96,14 @@ const edgecases = [
   },
 ];
 
-function formatArgs(args) {
-  return Object.keys(args).length ? JSON.stringify(args) : "";
-}
-
 function run_test() {
   testcases.forEach(testcase => {
-    const { command, args } = getCommandAndArgs(testcase.input);
-    const argsString = formatArgs(args);
-    Assert.equal(`${command}(${argsString})`, testcase.expectedOutput);
+    Assert.equal(formatCommand(testcase.input), testcase.expectedOutput);
   });
 
   edgecases.forEach(testcase => {
     Assert.throws(
-      () => getCommandAndArgs(testcase.input),
+      () => formatCommand(testcase.input),
       testcase.expectedError,
       `"${testcase.input}" should throw expected error`
     );

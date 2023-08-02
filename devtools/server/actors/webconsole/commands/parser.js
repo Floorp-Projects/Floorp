@@ -28,22 +28,35 @@ const COMMAND_DEFAULT_FLAG = {
 
 /**
  * When given a string that begins with `:` and a unix style string,
- * returns the command name and the arguments.
- * Throws if the command doesn't exist.
+ * format a JS like object.
  * This is intended to be used by the WebConsole actor only.
  *
  * @param String string
  *        A string to format that begins with `:`.
  *
- * @returns Object The command name and the arguments
- *                 { command: String, args: Object }
+ * @returns String formatted as `command({ ..args })`
  */
-function getCommandAndArgs(string) {
+function formatCommand(string) {
   if (!isCommand(string)) {
-    throw Error("getCommandAndArgs was called without `:`");
+    throw Error("formatCommand was called without `:`");
   }
   const tokens = string.trim().split(/\s+/).map(createToken);
-  return parseCommand(tokens);
+  const { command, args } = parseCommand(tokens);
+  const argsString = formatArgs(args);
+  return `${command}(${argsString})`;
+}
+
+/**
+ * collapses the array of arguments from the parsed command into
+ * a single string
+ *
+ * @param Object tree
+ *               A tree object produced by parseCommand
+ *
+ * @returns String formatted as ` { key: value, ... } ` or an empty string
+ */
+function formatArgs(args) {
+  return Object.keys(args).length ? JSON.stringify(args) : "";
 }
 
 /**
@@ -85,7 +98,7 @@ function createToken(string) {
  *                     An array of Token objects
  *
  * @returns Object Tree Object, with the following shape
- *                 { command: String, args: Object }
+ *                 { command: String, args: Array of Strings }
  */
 function parseCommand(tokens) {
   let command = null;
@@ -232,5 +245,5 @@ function getTypedValue(value) {
   return value;
 }
 
-exports.getCommandAndArgs = getCommandAndArgs;
+exports.formatCommand = formatCommand;
 exports.isCommand = isCommand;
