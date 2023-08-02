@@ -179,6 +179,50 @@ void UsedNameTracker::rewind(RewindToken token) {
   }
 }
 
+#if defined(DEBUG) || defined(JS_JITSPEW)
+void UsedNameTracker::dump(ParserAtomsTable& table) {
+  js::Fprinter out(stderr);
+
+  out.printf("Used names:\n");
+
+  for (UsedNameMap::Range r = map_.all(); !r.empty(); r.popFront()) {
+    const auto& item = r.front();
+
+    const auto& name = item.key();
+    const auto& nameInfo = item.value();
+
+    out.put("  ");
+    table.dumpCharsNoQuote(out, name);
+    out.put("\n");
+
+    if (nameInfo.visibility_ == NameVisibility::Private) {
+      out.put("    visibility: private\n");
+    }
+
+    if (nameInfo.firstUsePos_) {
+      const auto& pos = *nameInfo.firstUsePos_;
+      out.printf("    first use pos: %u\n", pos.begin);
+    }
+
+    out.printf("    %zu user(s)", nameInfo.uses_.length());
+    bool first = true;
+    for (const auto& use : nameInfo.uses_) {
+      if (first) {
+        first = false;
+        out.put(" (");
+      } else {
+        out.put(", ");
+      }
+      out.printf("%u/%u", use.scriptId, use.scopeId);
+    }
+    if (!first) {
+      out.put(")");
+    }
+    out.put("\n");
+  }
+}
+#endif
+
 void ParseContext::Scope::dump(ParseContext* pc, ParserBase* parser) {
   fprintf(stdout, "ParseScope %p", this);
 
