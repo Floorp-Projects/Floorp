@@ -16,7 +16,7 @@ gecko = []
 [dependencies]
 app_units = "0.7"
 bitflags = "2"
-cssparser = "0.31"
+cssparser = "0.32"
 euclid = "0.22"
 lazy_static = "1"
 malloc_size_of = { path = "../malloc_size_of" }

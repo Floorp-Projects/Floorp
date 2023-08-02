@@ -44,7 +44,7 @@ pub fn parse_counter_style_name<'i, 't>(
 
                 let location = input.current_source_location();
                 let ident = input.expect_ident()?;
-                if let Some(&lower_cased) = predefined(&ident) {
+                if let Some(&lower_cased) = predefined::get(&ident) {
                     Ok(CustomIdent(Atom::from(lower_cased)))
                 } else {
                     // none is always an invalid <counter-style> value.

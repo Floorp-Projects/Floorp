@@ -458,11 +458,9 @@ impl ToCss for AbsoluteColor {
             ColorSpace::Hwb => self.to_color_space(ColorSpace::Srgb).to_css(dest),
 
             ColorSpace::Srgb if !self.flags.contains(ColorFlags::AS_COLOR_FUNCTION) => {
-                // Althought we are passing Option<_> in here, the to_css fn
-                // knows that the "none" keyword is not supported in the
-                // rgb/rgba legacy syntax.
+                // The "none" keyword is not supported in the rgb/rgba legacy syntax.
                 cssparser::ToCss::to_css(
-                    &cssparser::RGBA::from_floats(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
+                    &cssparser::RgbaLegacy::from_floats(self.components.0, self.components.1, self.components.2, self.alpha),
                     dest,
                 )
             },

@@ -941,6 +941,12 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.31.0 -> 0.31.2"
 
+[[audits.cssparser]]
+who = "Emilio Cobos Álvarez <emilio@crisal.io>"
+criteria = "safe-to-deploy"
+delta = "0.31.2 -> 0.32.0"
+notes = "All changes were either authored or reviewed by Mozilla employees."
+
 [[audits.cssparser-macros]]
 who = "Emilio Cobos Álvarez <emilio@crisal.io>"
 criteria = "safe-to-deploy"
