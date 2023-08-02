@@ -1819,20 +1819,6 @@ bool CanIonCompileScript(JSContext* cx, JSScript* script) {
   return true;
 }
 
-bool CanIonInlineScript(JSScript* script) {
-  if (!script->canIonCompile()) {
-    return false;
-  }
-
-  const char* reason = nullptr;
-  if (!CanIonCompileOrInlineScript(script, &reason)) {
-    JitSpew(JitSpew_Inlining, "Cannot Ion compile script (%s)", reason);
-    return false;
-  }
-
-  return true;
-}
-
 static MethodStatus Compile(JSContext* cx, HandleScript script,
                             BaselineFrame* osrFrame, jsbytecode* osrPc) {
   MOZ_ASSERT(jit::IsIonEnabled(cx));
