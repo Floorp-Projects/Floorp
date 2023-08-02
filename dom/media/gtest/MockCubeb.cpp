@@ -236,8 +236,6 @@ int MockCubebStream::Stop() {
   return rv;
 }
 
-uint64_t MockCubebStream::Position() { return mPosition; }
-
 void MockCubebStream::Destroy() {
   // Dispatch an extra STOPPED state change as produced with audioipc.
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1801190#c1
@@ -369,7 +367,6 @@ void MockCubebStream::Process10Ms() {
   }
   mAudioVerifier.AppendDataInterleaved(mOutputBuffer, outframes,
                                        MAX_OUTPUT_CHANNELS);
-  mPosition += outframes;
 
   mFramesProcessedEvent.Notify(outframes);
   if (mAudioVerifier.PreSilenceEnded()) {
@@ -564,8 +561,6 @@ void MockCubeb::SetSupportDeviceChangeCallback(bool aSupports) {
   mSupportsDeviceCollectionChangedCallback = aSupports;
 }
 
-void MockCubeb::ForceStreamInitError() { mStreamInitErrorState = true; }
-
 void MockCubeb::SetStreamStartFreezeEnabled(bool aEnabled) {
   mStreamStartFreezeEnabled = aEnabled;
 }
@@ -590,11 +585,6 @@ int MockCubeb::StreamInit(cubeb* aContext, cubeb_stream** aStream,
                           cubeb_stream_params* aOutputStreamParams,
                           cubeb_data_callback aDataCallback,
                           cubeb_state_callback aStateCallback, void* aUserPtr) {
-  if (mStreamInitErrorState.compareExchange(true, false)) {
-    mStreamInitEvent.Notify(nullptr);
-    return CUBEB_ERROR_DEVICE_UNAVAILABLE;
-  }
-
   auto mockStream = MakeRefPtr<SmartMockCubebStream>(
       aContext, aInputDevice, aInputStreamParams, aOutputDevice,
       aOutputStreamParams, aDataCallback, aStateCallback, aUserPtr,
