@@ -1861,6 +1861,11 @@ public class GeckoViewActivity extends AppCompatActivity
     }
 
     @Override
+    public void onProductUrl(@NonNull final GeckoSession session) {
+      Log.d("Gecko", "onProductUrl");
+    }
+
+    @Override
     public void onShowDynamicToolbar(final GeckoSession session) {
       final View toolbar = findViewById(R.id.toolbar);
       if (toolbar != null) {
@@ -2118,6 +2123,10 @@ public class GeckoViewActivity extends AppCompatActivity
     return null;
   }
 
+  public void requestAnalysis(@NonNull final GeckoSession session, @NonNull final String url) {
+    session.requestAnalysis(url);
+  }
+
   private class ExampleNavigationDelegate implements GeckoSession.NavigationDelegate {
     @Override
     public void onLocationChange(
@@ -2129,6 +2138,7 @@ public class GeckoViewActivity extends AppCompatActivity
       }
       mTrackingProtectionPermission = getTrackingProtectionPermission(perms);
       mCurrentUri = url;
+      requestAnalysis(session, url);
     }
 
     @Override

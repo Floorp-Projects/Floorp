@@ -528,7 +528,8 @@ public class GeckoSession {
             "GeckoView:CookieBannerEvent:Detected",
             "GeckoView:CookieBannerEvent:Handled",
             "GeckoView:SavePdf",
-            "GeckoView:GetNimbusFeature"
+            "GeckoView:GetNimbusFeature",
+            "GeckoView:OnProductUrl",
           }) {
         @Override
         public void handleMessage(
@@ -627,6 +628,8 @@ public class GeckoSession {
               callback.sendError(
                   "No Nimbus data for the feature " + featureId + ": conversion failed.");
             }
+          } else if ("GeckoView:OnProductUrl".equals(event)) {
+            delegate.onProductUrl(GeckoSession.this);
           }
         }
       };
@@ -2899,6 +2902,21 @@ public class GeckoSession {
     return mEventDispatcher.queryBoolean("GeckoView:ContainsFormData");
   }
 
+  /**
+   * Request analysis of product's reviews for a given product URL.
+   *
+   * @param url The URL of the product page.
+   * @return a {@link GeckoResult} result of review analysis object.
+   */
+  @UiThread
+  public @NonNull GeckoResult<ReviewAnalysis> requestAnalysis(@NonNull final String url) {
+    final GeckoBundle bundle = new GeckoBundle(1);
+    bundle.putString("url", url);
+    return mEventDispatcher
+        .queryBundle("GeckoView:RequestAnalysis", bundle)
+        .map(analysisBundle -> new ReviewAnalysis(analysisBundle.getBundle("analysis")));
+  }
+
   // This is the GeckoDisplay acquired via acquireDisplay(), if any.
   private GeckoDisplay mDisplay;
 
@@ -3392,6 +3410,107 @@ public class GeckoSession {
     }
   }
 
+  /** Contains information about the analysis of a product's reviews. */
+  @AnyThread
+  public static class ReviewAnalysis {
+    @Retention(RetentionPolicy.SOURCE)
+    @StringDef({GRADE_A, GRADE_B, GRADE_C, GRADE_D, GRADE_E})
+    public @interface Grade {}
+
+    public static final String GRADE_A = "A";
+    public static final String GRADE_B = "B";
+    public static final String GRADE_C = "C";
+    public static final String GRADE_D = "D";
+    public static final String GRADE_E = "E";
+
+    /** Analysis URL. */
+    @Nullable public final String analysisURL;
+
+    /** Product identifier (ASIN/SKU). */
+    @Nullable public final String productId;
+
+    /** Reliability grade for the product's reviews. */
+    @Nullable public final @Grade String grade;
+
+    /** Product rating adjusted to exclude untrusted reviews. */
+    @NonNull public final Double adjustedRating;
+
+    /** Boolean indicating if the analysis is stale. */
+    public final boolean needsAnalysis;
+
+    /** Object containing highlights for product. */
+    @Nullable public final Highlight highlights;
+
+    /** Time since the last analysis was performed. */
+    public final int lastAnalysisTime;
+
+    /** Boolean indicating if reported that this product has been deleted. */
+    public final boolean deletedProductReported;
+
+    /** Boolean indicating if this product is now deleted. */
+    public final boolean deletedProduct;
+
+    /* package */ ReviewAnalysis(final GeckoBundle message) {
+      analysisURL = message.getString("analysis_url");
+      productId = message.getString("product_id");
+      grade = message.getString("grade");
+      adjustedRating = message.getDouble("adjusted_rating");
+      needsAnalysis = message.getBoolean("needs_analysis", true);
+      highlights = new Highlight(message.getBundle("highlights"));
+      lastAnalysisTime = message.getInt("last_analysis_time");
+      deletedProductReported = message.getBoolean("deleted_product_reported");
+      deletedProduct = message.getBoolean("deleted_product");
+    }
+
+    /** Empty constructor for tests. */
+    protected ReviewAnalysis() {
+      analysisURL = "";
+      productId = "";
+      grade = null;
+      adjustedRating = 0.0;
+      needsAnalysis = false;
+      highlights = null;
+      lastAnalysisTime = 0;
+      deletedProductReported = false;
+      deletedProduct = false;
+    }
+
+    /** Contains information about highlights of a product's reviews. */
+    public class Highlight {
+      /** Highlights about the quality of a product. */
+      @Nullable public final String[] quality;
+
+      /** Highlights about the price of a product. */
+      @Nullable public final String[] price;
+
+      /** Highlights about the shipping of a product. */
+      @Nullable public final String[] shipping;
+
+      /** Highlights about the appearance of a product. */
+      @Nullable public final String[] appearance;
+
+      /** Highlights about the competitiveness of a product. */
+      @Nullable public final String[] competitiveness;
+
+      /* package */ Highlight(final GeckoBundle message) {
+        quality = message.getStringArray("quality");
+        price = message.getStringArray("price");
+        shipping = message.getStringArray("shipping");
+        appearance = message.getStringArray("appearance");
+        competitiveness = message.getStringArray("competitiveness");
+      }
+
+      /** Empty constructor for tests. */
+      protected Highlight() {
+        quality = null;
+        price = null;
+        shipping = null;
+        appearance = null;
+        competitiveness = null;
+      }
+    }
+  }
+
   public interface ContentDelegate {
     /**
      * A page title was discovered in the content or updated after the content loaded.
@@ -3450,6 +3569,14 @@ public class GeckoSession {
     @UiThread
     default void onMetaViewportFitChange(
         @NonNull final GeckoSession session, @NonNull final String viewportFit) {}
+
+    /**
+     * Session is on a product url.
+     *
+     * @param session The GeckoSession that initiated the callback.
+     */
+    @UiThread
+    default void onProductUrl(@NonNull final GeckoSession session) {}
 
     /** Element details for onContextMenu callbacks. */
     public static class ContextElement {

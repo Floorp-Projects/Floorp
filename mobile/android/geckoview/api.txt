@@ -976,6 +976,7 @@ package org.mozilla.geckoview {
     method @UiThread public void releaseDisplay(@NonNull GeckoDisplay);
     method @AnyThread public void reload();
     method @AnyThread public void reload(int);
+    method @NonNull @UiThread public GeckoResult<GeckoSession.ReviewAnalysis> requestAnalysis(@NonNull String);
     method @AnyThread public void restoreState(@NonNull GeckoSession.SessionState);
     method @AnyThread @NonNull public GeckoResult<InputStream> saveAsPdf();
     method @AnyThread public void setActive(boolean);
@@ -1039,6 +1040,7 @@ package org.mozilla.geckoview {
     method @UiThread default public void onPaintStatusReset(@NonNull GeckoSession);
     method @UiThread default public void onPointerIconChange(@NonNull GeckoSession, @NonNull PointerIcon);
     method @UiThread default public void onPreviewImage(@NonNull GeckoSession, @NonNull String);
+    method @UiThread default public void onProductUrl(@NonNull GeckoSession);
     method @UiThread default public void onShowDynamicToolbar(@NonNull GeckoSession);
     method @Nullable @UiThread default public GeckoResult<SlowScriptResponse> onSlowScript(@NonNull GeckoSession, @NonNull String);
     method @UiThread default public void onTitleChange(@NonNull GeckoSession, @Nullable String);
@@ -1593,6 +1595,36 @@ package org.mozilla.geckoview {
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.RestartReason {
+  }
+
+  @AnyThread public static class GeckoSession.ReviewAnalysis {
+    ctor protected ReviewAnalysis();
+    field public static final String GRADE_A = "A";
+    field public static final String GRADE_B = "B";
+    field public static final String GRADE_C = "C";
+    field public static final String GRADE_D = "D";
+    field public static final String GRADE_E = "E";
+    field @NonNull public final Double adjustedRating;
+    field @Nullable public final String analysisURL;
+    field public final boolean deletedProduct;
+    field public final boolean deletedProductReported;
+    field @Nullable public final String grade;
+    field @Nullable public final GeckoSession.ReviewAnalysis.Highlight highlights;
+    field public final int lastAnalysisTime;
+    field public final boolean needsAnalysis;
+    field @Nullable public final String productId;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.ReviewAnalysis.Grade {
+  }
+
+  public class GeckoSession.ReviewAnalysis.Highlight {
+    ctor protected Highlight();
+    field @Nullable public final String[] appearance;
+    field @Nullable public final String[] competitiveness;
+    field @Nullable public final String[] price;
+    field @Nullable public final String[] quality;
+    field @Nullable public final String[] shipping;
   }
 
   public static interface GeckoSession.ScrollDelegate {
