@@ -30,6 +30,7 @@
 #include "nsNetUtil.h"            // NS_NewURI
 #include "xpcpublic.h"
 
+using mozilla::CycleCollectedJSContext;
 using mozilla::Err;
 using mozilla::Preferences;
 using mozilla::UniquePtr;
@@ -1195,12 +1196,50 @@ nsresult ModuleLoaderBase::InitDebuggerDataForModuleGraph(
 }
 
 void ModuleLoaderBase::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
+  // Instantiate and evaluate the imported module.
+  // See: https://tc39.es/ecma262/#sec-ContinueDynamicImport
+  //
+  // Since this is specced as happening on promise resolution (step 8) this must
+  // at least run as part of a microtask. We don't create the unobservable
+  // promise.
+
+  class DynamicImportMicroTask : public mozilla::MicroTaskRunnable {
+   public:
+    explicit DynamicImportMicroTask(ModuleLoadRequest* aRequest)
+        : MicroTaskRunnable(), mRequest(aRequest) {}
+
+    virtual void Run(mozilla::AutoSlowOperation& aAso) override {
+      mRequest->mLoader->InstantiateAndEvaluateDynamicImport(mRequest);
+      mRequest = nullptr;
+    }
+
+    virtual bool Suppressed() override {
+      return mRequest->mLoader->mGlobalObject->IsInSyncOperation();
+    }
+
+   private:
+    RefPtr<ModuleLoadRequest> mRequest;
+  };
+
   MOZ_ASSERT(aRequest->mLoader == this);
 
-  if (aRequest->mModuleScript) {
-    if (!InstantiateModuleGraph(aRequest)) {
-      aRequest->mModuleScript = nullptr;
-    }
+  if (!aRequest->mModuleScript) {
+    FinishDynamicImportAndReject(aRequest, NS_ERROR_FAILURE);
+    return;
+  }
+
+  CycleCollectedJSContext* context = CycleCollectedJSContext::Get();
+  RefPtr<DynamicImportMicroTask> runnable =
+      new DynamicImportMicroTask(aRequest);
+  context->DispatchToMicroTask(do_AddRef(runnable));
+}
+
+void ModuleLoaderBase::InstantiateAndEvaluateDynamicImport(
+    ModuleLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->mModuleScript);
+
+  if (!InstantiateModuleGraph(aRequest)) {
+    aRequest->mModuleScript = nullptr;
   }
 
   nsresult rv = NS_ERROR_FAILURE;

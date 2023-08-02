@@ -388,6 +388,8 @@ class ModuleLoaderBase : public nsISupports {
   void StartFetchingModuleAndDependencies(ModuleLoadRequest* aParent,
                                           nsIURI* aURI);
 
+  void InstantiateAndEvaluateDynamicImport(ModuleLoadRequest* aRequest);
+
   /**
    * Shorthand Wrapper for JSAPI FinishDynamicImport function for the reject
    * case where we do not have `aEvaluationPromise`. As there is no evaluation
