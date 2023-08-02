@@ -742,6 +742,11 @@ const workspaceFunctions = {
         let label = allWorkspace[i];
         workspaceFunctions.WorkspaceContextMenu.addWorkspaceElemToMenu(label);
       }
+
+      //set workspaces icon
+      let currentWorkspace = Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF);
+      const iconURL = workspaceFunctions.iconFunctions.getWorkspaceIcon(currentWorkspace);
+      document.getElementById("workspace-button").style.listStyleImage = `url(${iconURL})`;
     },
 
     addIconToWorkspace(workspaceName, iconName) {
@@ -955,7 +960,7 @@ const workspaceFunctions = {
         let workspace = workspaceAll[i];
         let menuItem = window.MozXULElement.parseXULToFragment(`
           <menuitem id="workspaceID-${workspace}" class="workspaceContextMenuItems"
-                    label="${workspace}"  oncommand="workspaceFunctions.tabFunctions.moveTabToOtherWorkspace(TabContextMenu.contextTab, '${workspace}');"/>
+                    label="${workspace.replace(/-/g, " ")}"  oncommand="workspaceFunctions.tabFunctions.moveTabToOtherWorkspace(TabContextMenu.contextTab, '${workspace}');"/>
         `);
         let parentElem = document.getElementById("workspaceTabContextMenu");
         if (
@@ -1071,7 +1076,7 @@ const workspaceFunctions = {
         .workspace-item[workspace="${currentWorkspace}"] > .toolbarbutton-icon {
           visibility: inherit !important;
         }
-        .workspace-item-icon[workspace="${currentWorkspace}"] {
+        .workspace-item-icon[workspace="${currentWorkspace.replace(/-/g, " ")}"] {
           border-radius: 2px;
           box-shadow: 0 0 0 1px var(--lwt-accent-color) !important;
           background-color: var(--lwt-accent-color) !important;

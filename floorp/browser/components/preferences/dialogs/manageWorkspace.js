@@ -55,7 +55,7 @@ function setTitle() {
     const workspaceSelect = document.getElementById("workspacesPopup");
     const workspaceNameLabel = document.getElementById("workspaceName");
     for (let i = 0; i < workspaces.length; i++) {
-      const workspace = workspaces[i];
+      const workspace = workspaces[i].replace(/-/g, " ");
 
       const element = window.MozXULElement.parseXULToFragment(`
         <menuitem label="${workspace}" value="${workspace}"></menuitem>
@@ -89,7 +89,7 @@ function setTitle() {
   
   
   function setPref() {
-    const workspaceNameLabel = document.getElementById("workspaceName").value;
+    const workspaceNameLabel = document.getElementById("workspaceName").value.replace(/\s+/g, "-")
     const iconNameLabel = document.getElementById("iconName").value;
 
     // Return object with workspace name and icon name
