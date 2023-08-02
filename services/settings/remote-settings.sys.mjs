@@ -11,15 +11,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Database: "resource://services-settings/Database.sys.mjs",
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.sys.mjs",
+  pushBroadcastService: "resource://gre/modules/PushBroadcastService.sys.mjs",
   RemoteSettingsClient:
     "resource://services-settings/RemoteSettingsClient.sys.mjs",
   SyncHistory: "resource://services-settings/SyncHistory.sys.mjs",
   UptakeTelemetry: "resource://services-common/uptake-telemetry.sys.mjs",
   Utils: "resource://services-settings/Utils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  pushBroadcastService: "resource://gre/modules/PushBroadcastService.jsm",
 });
 
 const PREF_SETTINGS_BRANCH = "services.settings.";
