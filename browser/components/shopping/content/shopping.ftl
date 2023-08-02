@@ -43,6 +43,9 @@ shopping-message-bar-warning-stale-analysis-link = Re-analyze reviews
 shopping-message-bar-generic-error-title = Something went wrong
 shopping-message-bar-generic-error-message = Couldn’t load information. Please try again later.
 
+shopping-message-bar-warning-not-enough-reviews-title = Not enough reviews yet
+shopping-message-bar-warning-not-enough-reviews-message = When this product has more reviews, we’ll be able to analyze them.
+
 ## Strings for the product review snippets card
 
 shopping-highlights-label =

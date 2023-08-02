@@ -87,19 +87,33 @@ export class ShoppingContainer extends MozLitElement {
   }
 
   getContentTemplate() {
-    if (this.data.needs_analysis && this.data.product_id) {
-      return html`<shopping-message-bar type="stale"></shopping-message-bar
-        >${this.getAnalysisDetailsTemplate()}`;
-    } else if (!this.data.product_id) {
-      return html`<unanalyzed-product-card
-        productUrl=${ifDefined(this.productUrl)}
-      ></unanalyzed-product-card>`;
-    }
-
     if (this.data?.error) {
       return html`<shopping-message-bar
         type="generic-error"
       ></shopping-message-bar>`;
+    }
+
+    if (this.data.needs_analysis) {
+      if (!this.data.product_id) {
+        // Product is not yet registered to our db and thus we cannot show any data.
+        return html`<unanalyzed-product-card
+          productUrl=${ifDefined(this.productUrl)}
+        ></unanalyzed-product-card>`;
+      }
+
+      if (!this.data.grade || !this.data.adjusted_rating) {
+        // We already saw and tried to analyze this product before, but there are not enough reviews
+        // to make a detailed analysis.
+        return html`<shopping-message-bar
+          type="not-enough-reviews"
+        ></shopping-message-bar>`;
+      }
+      // We successfully analyzed the product before, but the current analysis is outdated and can be updated
+      // via a re-analysis.
+      return html`
+        <shopping-message-bar type="stale"></shopping-message-bar>
+        ${this.getAnalysisDetailsTemplate()}
+      `;
     }
 
     return this.getAnalysisDetailsTemplate();
