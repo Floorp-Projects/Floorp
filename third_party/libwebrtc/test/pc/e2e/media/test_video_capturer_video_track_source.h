@@ -49,13 +49,27 @@ class TestVideoCapturerVideoTrackSource : public test::TestVideoTrackSource {
 
   void Stop() override { SetState(kMuted); }
 
+  int GetFrameWidth() const override {
+    return video_capturer_->GetFrameWidth();
+  }
+
+  int GetFrameHeight() const override {
+    return video_capturer_->GetFrameHeight();
+  }
+
   bool is_screencast() const override {
     RTC_DCHECK_RUN_ON(&sequence_checker_);
     return is_screencast_;
   }
 
-  void SetDisableAdaptation(bool disable_adaptation) {
-    video_capturer_->SetDisableAdaptation(disable_adaptation);
+  void SetEnableAdaptation(bool enable_adaptation) {
+    video_capturer_->SetEnableAdaptation(enable_adaptation);
+  }
+
+  void OnOutputFormatRequest(int width,
+                             int height,
+                             const absl::optional<int>& max_fps) override {
+    video_capturer_->OnOutputFormatRequest(width, height, max_fps);
   }
 
   void SetScreencast(bool is_screencast) override {

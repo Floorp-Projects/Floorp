@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/jitter_buffer.h"
+#include "modules/video_coding/deprecated/jitter_buffer.h"
 
 #include <list>
 #include <memory>
@@ -19,10 +19,8 @@
 #include "common_video/h264/h264_common.h"
 #include "modules/video_coding/deprecated/frame_buffer.h"
 #include "modules/video_coding/deprecated/packet.h"
-#include "modules/video_coding/media_opt_util.h"
-#include "modules/video_coding/test/stream_generator.h"
+#include "modules/video_coding/deprecated/stream_generator.h"
 #include "system_wrappers/include/clock.h"
-#include "system_wrappers/include/metrics.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/scoped_key_value_config.h"

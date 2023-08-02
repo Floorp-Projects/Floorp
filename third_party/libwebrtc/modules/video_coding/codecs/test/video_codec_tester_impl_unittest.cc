@@ -15,8 +15,6 @@
 #include <utility>
 #include <vector>
 
-#include "api/task_queue/task_queue_factory.h"
-#include "api/task_queue/test/mock_task_queue_base.h"
 #include "api/units/frequency.h"
 #include "api/units/time_delta.h"
 #include "api/video/encoded_image.h"
@@ -135,20 +133,6 @@ class MockEncoder : public Encoder {
   MOCK_METHOD(void, Flush, (), (override));
 };
 
-class MockTaskQueueFactory : public TaskQueueFactory {
- public:
-  explicit MockTaskQueueFactory(TaskQueueBase& task_queue)
-      : task_queue_(task_queue) {}
-
-  std::unique_ptr<TaskQueueBase, TaskQueueDeleter> CreateTaskQueue(
-      absl::string_view name,
-      Priority priority) const override {
-    return std::unique_ptr<TaskQueueBase, TaskQueueDeleter>(&task_queue_);
-  }
-
- protected:
-  TaskQueueBase& task_queue_;
-};
 }  // namespace
 
 class VideoCodecTesterImplPacingTest

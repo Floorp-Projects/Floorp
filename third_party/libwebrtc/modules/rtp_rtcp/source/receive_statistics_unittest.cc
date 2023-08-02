@@ -285,7 +285,7 @@ TEST_P(ReceiveStatisticsTest, SimpleLossComputation) {
 
   // 20% = 51/255.
   EXPECT_EQ(51u, report_blocks[0].fraction_lost());
-  EXPECT_EQ(1, report_blocks[0].cumulative_lost_signed());
+  EXPECT_EQ(1, report_blocks[0].cumulative_lost());
   StreamStatistician* statistician =
       receive_statistics_->GetStatistician(kSsrc1);
   EXPECT_EQ(20, statistician->GetFractionLostInPercent());
@@ -308,7 +308,7 @@ TEST_P(ReceiveStatisticsTest, LossComputationWithReordering) {
 
   // 20% = 51/255.
   EXPECT_EQ(51u, report_blocks[0].fraction_lost());
-  EXPECT_EQ(1, report_blocks[0].cumulative_lost_signed());
+  EXPECT_EQ(1, report_blocks[0].cumulative_lost());
   StreamStatistician* statistician =
       receive_statistics_->GetStatistician(kSsrc1);
   EXPECT_EQ(20, statistician->GetFractionLostInPercent());
@@ -333,7 +333,7 @@ TEST_P(ReceiveStatisticsTest, LossComputationWithDuplicates) {
 
   // 20% = 51/255.
   EXPECT_EQ(51u, report_blocks[0].fraction_lost());
-  EXPECT_EQ(1, report_blocks[0].cumulative_lost_signed());
+  EXPECT_EQ(1, report_blocks[0].cumulative_lost());
   StreamStatistician* statistician =
       receive_statistics_->GetStatistician(kSsrc1);
   EXPECT_EQ(20, statistician->GetFractionLostInPercent());
@@ -359,7 +359,7 @@ TEST_P(ReceiveStatisticsTest, LossComputationWithSequenceNumberWrapping) {
 
   // 20% = 51/255.
   EXPECT_EQ(51u, report_blocks[0].fraction_lost());
-  EXPECT_EQ(1, report_blocks[0].cumulative_lost_signed());
+  EXPECT_EQ(1, report_blocks[0].cumulative_lost());
   StreamStatistician* statistician =
       receive_statistics_->GetStatistician(kSsrc1);
   EXPECT_EQ(20, statistician->GetFractionLostInPercent());
@@ -374,7 +374,7 @@ TEST_P(ReceiveStatisticsTest, LossComputationWithSequenceNumberWrapping) {
 
   // 50% = 127/255.
   EXPECT_EQ(127u, report_blocks[0].fraction_lost());
-  EXPECT_EQ(2, report_blocks[0].cumulative_lost_signed());
+  EXPECT_EQ(2, report_blocks[0].cumulative_lost());
   // 2 packets lost, 7 expected
   EXPECT_EQ(28, statistician->GetFractionLostInPercent());
 }
@@ -396,7 +396,7 @@ TEST_P(ReceiveStatisticsTest, StreamRestartDoesntCountAsLoss) {
   EXPECT_EQ(kSsrc1, report_blocks[0].source_ssrc());
 
   EXPECT_EQ(0, report_blocks[0].fraction_lost());
-  EXPECT_EQ(0, report_blocks[0].cumulative_lost_signed());
+  EXPECT_EQ(0, report_blocks[0].cumulative_lost());
   StreamStatistician* statistician =
       receive_statistics_->GetStatistician(kSsrc1);
   EXPECT_EQ(0, statistician->GetFractionLostInPercent());
@@ -408,7 +408,7 @@ TEST_P(ReceiveStatisticsTest, StreamRestartDoesntCountAsLoss) {
   EXPECT_EQ(kSsrc1, report_blocks[0].source_ssrc());
 
   EXPECT_EQ(0, report_blocks[0].fraction_lost());
-  EXPECT_EQ(0, report_blocks[0].cumulative_lost_signed());
+  EXPECT_EQ(0, report_blocks[0].cumulative_lost());
   EXPECT_EQ(0, statistician->GetFractionLostInPercent());
 }
 
@@ -432,7 +432,7 @@ TEST_P(ReceiveStatisticsTest, CountsLossAfterStreamRestart) {
   ASSERT_THAT(report_blocks, SizeIs(1));
   EXPECT_EQ(kSsrc1, report_blocks[0].source_ssrc());
 
-  EXPECT_EQ(1, report_blocks[0].cumulative_lost_signed());
+  EXPECT_EQ(1, report_blocks[0].cumulative_lost());
 
   StreamStatistician* statistician =
       receive_statistics_->GetStatistician(kSsrc1);
@@ -460,7 +460,7 @@ TEST_P(ReceiveStatisticsTest, StreamCanRestartAtSequenceNumberWrapAround) {
   ASSERT_THAT(report_blocks, SizeIs(1));
   EXPECT_EQ(kSsrc1, report_blocks[0].source_ssrc());
 
-  EXPECT_EQ(1, report_blocks[0].cumulative_lost_signed());
+  EXPECT_EQ(1, report_blocks[0].cumulative_lost());
 }
 
 TEST_P(ReceiveStatisticsTest, StreamRestartNeedsTwoConsecutivePackets) {

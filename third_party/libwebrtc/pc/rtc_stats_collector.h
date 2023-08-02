@@ -91,7 +91,7 @@ class RTCStatsCollector : public rtc::RefCountInterface {
   void WaitForPendingRequest();
 
   // Called by the PeerConnection instance when data channel states change.
-  void OnSctpDataChannelStateChanged(DataChannelInterface* channel,
+  void OnSctpDataChannelStateChanged(int channel_id,
                                      DataChannelInterface::DataState state);
 
  protected:
@@ -186,7 +186,7 @@ class RTCStatsCollector : public rtc::RefCountInterface {
       const std::map<std::string, CertificateStatsPair>& transport_cert_stats,
       RTCStatsReport* report) const;
   // Produces `RTCDataChannelStats`.
-  void ProduceDataChannelStats_s(Timestamp timestamp,
+  void ProduceDataChannelStats_n(Timestamp timestamp,
                                  RTCStatsReport* report) const;
   // Produces `RTCIceCandidatePairStats` and `RTCIceCandidateStats`.
   void ProduceIceCandidateAndPairStats_n(
@@ -321,12 +321,9 @@ class RTCStatsCollector : public rtc::RefCountInterface {
     // before reaching the open state does not affect these counters.
     uint32_t data_channels_opened;
     uint32_t data_channels_closed;
-    // Identifies by address channels that have been opened, which remain in the
-    // set until they have been fully closed.
-    // NOTE: There is no reference held here or any other type of guarantee that
-    // these pointers remain valid. So they MUST NOT be followed; hence, void*
-    // is used and not the explicit type.
-    webrtc::flat_set<void*> opened_data_channels;
+    // Identifies channels that have been opened, whose internal id is stored in
+    // the set until they have been fully closed.
+    webrtc::flat_set<int> opened_data_channels;
   };
   InternalRecord internal_record_;
 };

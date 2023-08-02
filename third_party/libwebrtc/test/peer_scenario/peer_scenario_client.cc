@@ -20,11 +20,20 @@
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/test/create_time_controller.h"
 #include "api/transport/field_trial_based_config.h"
-#include "api/video_codecs/builtin_video_decoder_factory.h"
-#include "api/video_codecs/builtin_video_encoder_factory.h"
+#include "api/video_codecs/video_decoder_factory_template.h"
+#include "api/video_codecs/video_decoder_factory_template_dav1d_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_libvpx_vp8_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_libvpx_vp9_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_open_h264_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template.h"
+#include "api/video_codecs/video_encoder_factory_template_libaom_av1_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_libvpx_vp8_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_libvpx_vp9_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_open_h264_adapter.h"
 #include "media/engine/webrtc_media_engine.h"
 #include "modules/audio_device/include/test_audio_device.h"
 #include "p2p/client/basic_port_allocator.h"
+#include "test/create_frame_generator_capturer.h"
 #include "test/fake_decoder.h"
 #include "test/fake_vp8_encoder.h"
 #include "test/frame_generator_capturer.h"
@@ -263,8 +272,14 @@ PeerScenarioClient::PeerScenarioClient(
     media_deps.video_decoder_factory =
         std::make_unique<FakeVideoDecoderFactory>();
   } else {
-    media_deps.video_encoder_factory = CreateBuiltinVideoEncoderFactory();
-    media_deps.video_decoder_factory = CreateBuiltinVideoDecoderFactory();
+    media_deps.video_encoder_factory =
+        std::make_unique<VideoEncoderFactoryTemplate<
+            LibvpxVp8EncoderTemplateAdapter, LibvpxVp9EncoderTemplateAdapter,
+            OpenH264EncoderTemplateAdapter, LibaomAv1EncoderTemplateAdapter>>();
+    media_deps.video_decoder_factory =
+        std::make_unique<VideoDecoderFactoryTemplate<
+            LibvpxVp8DecoderTemplateAdapter, LibvpxVp9DecoderTemplateAdapter,
+            OpenH264DecoderTemplateAdapter, Dav1dDecoderTemplateAdapter>>();
   }
   media_deps.audio_encoder_factory = CreateBuiltinAudioEncoderFactory();
   media_deps.audio_decoder_factory = CreateBuiltinAudioDecoderFactory();
@@ -317,8 +332,8 @@ PeerScenarioClient::VideoSendTrack PeerScenarioClient::CreateVideo(
     VideoSendTrackConfig config) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   VideoSendTrack res;
-  auto capturer = FrameGeneratorCapturer::Create(clock(), *task_queue_factory_,
-                                                 config.generator);
+  auto capturer = CreateFrameGeneratorCapturer(clock(), *task_queue_factory_,
+                                               config.generator);
   res.capturer = capturer.get();
   capturer->Init();
   res.source = rtc::make_ref_counted<FrameGeneratorCapturerVideoTrackSource>(

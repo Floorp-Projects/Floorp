@@ -15,7 +15,7 @@ namespace cricket {
 const int kVideoCodecClockrate = 90000;
 
 const int kVideoMtu = 1200;
-const int kVideoRtpSendBufferSize = 65536;
+const int kVideoRtpSendBufferSize = 262144;
 const int kVideoRtpRecvBufferSize = 262144;
 
 const float kHighSystemCpuThreshold = 0.85f;

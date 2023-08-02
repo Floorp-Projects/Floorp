@@ -1,66 +1,32 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Tue, 23 May 2023 06:14:00 +0000
-Subject: Bug 1809672 - Refactor TabCapturerWebrtc creation.
- r=ng,webrtc-reviewers
+From: Jan-Ivar Bruaroey <jib@mozilla.com>
+Date: Wed, 28 Jun 2023 20:45:00 -0400
+Subject: Bug 1839451 - (fix-0f43da2248) Keep mozilla's
+ RTCPReceiver::RemoteRTCPSenderInfo function working.
 
-This restores libwebrtc's DesktopCapturer to their upstream state as far as
-the tab capturer is concerned.
-
-Differential Revision: https://phabricator.services.mozilla.com/D174290
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3778b2a0e3f93a2077303b91739cdd2eeb590726
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/154c9cdb386d0f50c5e1549270e1af6ab4969602
 ---
- modules/desktop_capture/desktop_capturer.cc | 11 -----------
- modules/desktop_capture/desktop_capturer.h  |  8 --------
- 2 files changed, 19 deletions(-)
+ modules/rtp_rtcp/source/rtcp_receiver.cc | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index 1af19a1fd2..7f601821fc 100644
---- a/modules/desktop_capture/desktop_capturer.cc
-+++ b/modules/desktop_capture/desktop_capturer.cc
-@@ -128,17 +128,6 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
-   return capturer;
+diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
+index da653cd68a..8e178da67d 100644
+--- a/modules/rtp_rtcp/source/rtcp_receiver.cc
++++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
+@@ -399,10 +399,10 @@ void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
+                                         int64_t* ntp_timestamp_ms,
+                                         int64_t* remote_ntp_timestamp_ms) const {
+   MutexLock lock(&rtcp_receiver_lock_);
+-  *packet_count = remote_sender_packet_count_;
+-  *octet_count = remote_sender_octet_count_;
+-  *ntp_timestamp_ms = last_received_sr_ntp_.ToMs();
+-  *remote_ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
++  *packet_count = remote_sender_.packets_sent;
++  *octet_count = remote_sender_.bytes_sent;
++  *ntp_timestamp_ms = remote_sender_.last_arrival_timestamp.ToMs();
++  *remote_ntp_timestamp_ms = remote_sender_.last_remote_timestamp.ToMs();
  }
  
--// static
--std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateTabCapturer(
--    const DesktopCaptureOptions& options) {
--  std::unique_ptr<DesktopCapturer> capturer = CreateRawTabCapturer(options);
--  if (capturer && options.detect_updated_region()) {
--    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
--  }
--
--  return capturer;
--}
--
- #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
- bool DesktopCapturer::IsRunningUnderWayland() {
-   const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
-diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index 64f3187f51..5efd2efc0f 100644
---- a/modules/desktop_capture/desktop_capturer.h
-+++ b/modules/desktop_capture/desktop_capturer.h
-@@ -191,10 +191,6 @@ class RTC_EXPORT DesktopCapturer {
-   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
-       const DesktopCaptureOptions& options);
- 
--  // Creates a DesktopCapturer instance which targets to capture tab.
--  static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
--      const DesktopCaptureOptions& options);
--
- #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
-   static bool IsRunningUnderWayland();
- 
-@@ -225,10 +221,6 @@ class RTC_EXPORT DesktopCapturer {
-   // capture screens.
-   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
-       const DesktopCaptureOptions& options);
--
--  // Creates a DesktopCapturer instance which targets to capture tabs
--  static std::unique_ptr<DesktopCapturer> CreateRawTabCapturer(
--      const DesktopCaptureOptions& options);
- };
- 
- }  // namespace webrtc
+ std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
 -- 
 2.34.1
 

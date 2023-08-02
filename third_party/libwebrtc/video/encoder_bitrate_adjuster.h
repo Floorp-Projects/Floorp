@@ -73,6 +73,12 @@ class EncoderBitrateAdjuster {
 
   // Minimum bitrates allowed, per spatial layer.
   uint32_t min_bitrates_bps_[kMaxSpatialLayers];
+
+  // Codec type used for encoding.
+  VideoCodecType codec_;
+
+  // Codec mode: { kRealtimeVideo, kScreensharing }.
+  VideoCodecMode codec_mode_;
 };
 
 }  // namespace webrtc

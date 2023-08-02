@@ -503,6 +503,16 @@ if (!build_with_chromium) {
       "api/task_queue",
       "api/task_queue:default_task_queue_factory",
       "api/test/metrics",
+      "api/video_codecs:video_decoder_factory_template",
+      "api/video_codecs:video_decoder_factory_template_dav1d_adapter",
+      "api/video_codecs:video_decoder_factory_template_libvpx_vp8_adapter",
+      "api/video_codecs:video_decoder_factory_template_libvpx_vp9_adapter",
+      "api/video_codecs:video_decoder_factory_template_open_h264_adapter",
+      "api/video_codecs:video_encoder_factory_template",
+      "api/video_codecs:video_encoder_factory_template_libaom_av1_adapter",
+      "api/video_codecs:video_encoder_factory_template_libvpx_vp8_adapter",
+      "api/video_codecs:video_encoder_factory_template_libvpx_vp9_adapter",
+      "api/video_codecs:video_encoder_factory_template_open_h264_adapter",
       "audio",
       "call",
       "common_audio",
@@ -527,6 +537,16 @@ if (!build_with_chromium) {
         "api/task_queue",
         "api/task_queue:default_task_queue_factory",
         "api/test/metrics",
+        "api/video_codecs:video_decoder_factory_template",
+        "api/video_codecs:video_decoder_factory_template_dav1d_adapter",
+        "api/video_codecs:video_decoder_factory_template_libvpx_vp8_adapter",
+        "api/video_codecs:video_decoder_factory_template_libvpx_vp9_adapter",
+        "api/video_codecs:video_decoder_factory_template_open_h264_adapter",
+        "api/video_codecs:video_encoder_factory_template",
+        "api/video_codecs:video_encoder_factory_template_libaom_av1_adapter",
+        "api/video_codecs:video_encoder_factory_template_libvpx_vp8_adapter",
+        "api/video_codecs:video_encoder_factory_template_libvpx_vp9_adapter",
+        "api/video_codecs:video_encoder_factory_template_open_h264_adapter",
         "logging:rtc_event_log_api",
         "p2p:rtc_p2p",
         "pc:libjingle_peerconnection",
@@ -539,13 +559,6 @@ if (!build_with_chromium) {
       deps += [
         "api/audio_codecs:builtin_audio_decoder_factory",
         "api/audio_codecs:builtin_audio_encoder_factory",
-      ]
-    }
-
-    if (rtc_include_builtin_video_codecs) {
-      deps += [
-        "api/video_codecs:builtin_video_decoder_factory",
-        "api/video_codecs:builtin_video_encoder_factory",
       ]
     }
 

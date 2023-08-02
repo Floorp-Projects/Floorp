@@ -339,4 +339,8 @@
   return _workerThread.get();
 }
 
+- (rtc::Thread *)networkThread {
+  return _networkThread.get();
+}
+
 @end

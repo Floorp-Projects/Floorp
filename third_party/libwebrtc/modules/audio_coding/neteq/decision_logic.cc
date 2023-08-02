@@ -69,7 +69,7 @@ bool IsExpand(NetEq::Mode mode) {
 
 DecisionLogic::Config::Config() {
   StructParametersParser::Create(
-      "enable_stable_playout_delay", &enable_stable_playout_delay,    //
+      "enable_stable_delay_mode", &enable_stable_delay_mode,          //
       "combine_concealment_decision", &combine_concealment_decision,  //
       "packet_history_size_ms", &packet_history_size_ms,              //
       "cng_timeout_ms", &cng_timeout_ms,                              //
@@ -78,8 +78,7 @@ DecisionLogic::Config::Config() {
       ->Parse(webrtc::field_trial::FindFullName(
           "WebRTC-Audio-NetEqDecisionLogicConfig"));
   RTC_LOG(LS_INFO) << "NetEq decision logic config:"
-                   << " enable_stable_playout_delay="
-                   << enable_stable_playout_delay
+                   << " enable_stable_delay_mode=" << enable_stable_delay_mode
                    << " combine_concealment_decision="
                    << combine_concealment_decision
                    << " packet_history_size_ms=" << packet_history_size_ms
@@ -117,7 +116,6 @@ void DecisionLogic::SoftReset() {
   delay_manager_->Reset();
   buffer_level_filter_->Reset();
   packet_arrival_history_.Reset();
-  last_playout_delay_ms_ = 0;
 }
 
 void DecisionLogic::SetSampleRate(int fs_hz, size_t output_size_samples) {
@@ -131,10 +129,6 @@ void DecisionLogic::SetSampleRate(int fs_hz, size_t output_size_samples) {
 
 NetEq::Operation DecisionLogic::GetDecision(const NetEqStatus& status,
                                             bool* reset_decoder) {
-  if (!IsExpand(status.last_mode) && !IsCng(status.last_mode)) {
-    last_playout_delay_ms_ = GetPlayoutDelayMs(status);
-  }
-
   prev_time_scale_ = prev_time_scale_ && IsTimestretch(status.last_mode);
   if (prev_time_scale_) {
     timescale_countdown_ = tick_timer_->GetNewCountdown(kMinTimescaleInterval);
@@ -194,7 +188,7 @@ NetEq::Operation DecisionLogic::GetDecision(const NetEqStatus& status,
 
 int DecisionLogic::TargetLevelMs() const {
   int target_delay_ms = delay_manager_->TargetDelayMs();
-  if (!config_.enable_stable_playout_delay) {
+  if (!config_.enable_stable_delay_mode) {
     target_delay_ms =
         std::max(target_delay_ms,
                  static_cast<int>(packet_length_samples_ / sample_rate_khz_));
@@ -207,9 +201,6 @@ int DecisionLogic::UnlimitedTargetLevelMs() const {
 }
 
 int DecisionLogic::GetFilteredBufferLevel() const {
-  if (config_.enable_stable_playout_delay) {
-    return last_playout_delay_ms_ * sample_rate_khz_;
-  }
   return buffer_level_filter_->filtered_current_level();
 }
 
@@ -313,16 +304,20 @@ NetEq::Operation DecisionLogic::ExpectedPacketAvailable(
     NetEqController::NetEqStatus status) {
   if (!disallow_time_stretching_ && status.last_mode != NetEq::Mode::kExpand &&
       !status.play_dtmf) {
-    if (config_.enable_stable_playout_delay) {
+    if (config_.enable_stable_delay_mode) {
       const int playout_delay_ms = GetPlayoutDelayMs(status);
-      if (playout_delay_ms >= HighThreshold() << 2) {
+      const int low_limit = TargetLevelMs();
+      const int high_limit = low_limit +
+                             packet_arrival_history_.GetMaxDelayMs() +
+                             kDelayAdjustmentGranularityMs;
+      if (playout_delay_ms >= high_limit * 4) {
         return NetEq::Operation::kFastAccelerate;
       }
       if (TimescaleAllowed()) {
-        if (playout_delay_ms >= HighThreshold()) {
+        if (playout_delay_ms >= high_limit) {
           return NetEq::Operation::kAccelerate;
         }
-        if (playout_delay_ms < LowThreshold()) {
+        if (playout_delay_ms < low_limit) {
           return NetEq::Operation::kPreemptiveExpand;
         }
       }
@@ -338,7 +333,7 @@ NetEq::Operation DecisionLogic::ExpectedPacketAvailable(
 
       const int buffer_level_samples =
           buffer_level_filter_->filtered_current_level();
-      if (buffer_level_samples >= high_limit << 2)
+      if (buffer_level_samples >= high_limit * 4)
         return NetEq::Operation::kFastAccelerate;
       if (TimescaleAllowed()) {
         if (buffer_level_samples >= high_limit)
@@ -357,10 +352,16 @@ NetEq::Operation DecisionLogic::FuturePacketAvailable(
   // Check if we should continue with an ongoing concealment because the new
   // packet is too far into the future.
   if (config_.combine_concealment_decision || IsCng(status.last_mode)) {
-    const int buffer_delay_ms =
-        status.packet_buffer_info.span_samples / sample_rate_khz_;
-    const bool above_target_delay = buffer_delay_ms > HighThresholdCng();
-    const bool below_target_delay = buffer_delay_ms < LowThresholdCng();
+    const int buffer_delay_samples =
+        config_.combine_concealment_decision
+            ? status.packet_buffer_info.span_samples_wait_time
+            : status.packet_buffer_info.span_samples;
+    const int buffer_delay_ms = buffer_delay_samples / sample_rate_khz_;
+    const int high_limit = TargetLevelMs() + kTargetLevelWindowMs / 2;
+    const int low_limit =
+        std::max(0, TargetLevelMs() - kTargetLevelWindowMs / 2);
+    const bool above_target_delay = buffer_delay_ms > high_limit;
+    const bool below_target_delay = buffer_delay_ms < low_limit;
     if ((PacketTooEarly(status) && !above_target_delay) ||
         (below_target_delay && !config_.combine_concealment_decision)) {
       return NoPacket(status);
@@ -370,8 +371,7 @@ NetEq::Operation DecisionLogic::FuturePacketAvailable(
     if (config_.combine_concealment_decision) {
       if (timestamp_leap != status.generated_noise_samples) {
         // The delay was adjusted, reinitialize the buffer level filter.
-        buffer_level_filter_->SetFilteredBufferLevel(
-            status.packet_buffer_info.span_samples);
+        buffer_level_filter_->SetFilteredBufferLevel(buffer_delay_samples);
       }
     } else {
       time_stretched_cn_samples_ =
@@ -405,7 +405,11 @@ bool DecisionLogic::PostponeDecode(NetEqController::NetEqStatus status) const {
   // running out of data right away again.
   const size_t min_buffer_level_samples =
       TargetLevelMs() * sample_rate_khz_ * kPostponeDecodingLevel / 100;
-  if (status.packet_buffer_info.span_samples >= min_buffer_level_samples) {
+  const size_t buffer_level_samples =
+      config_.combine_concealment_decision
+          ? status.packet_buffer_info.span_samples_wait_time
+          : status.packet_buffer_info.span_samples;
+  if (buffer_level_samples >= min_buffer_level_samples) {
     return false;
   }
   // Don't postpone decoding if there is a future DTX packet in the packet
@@ -448,22 +452,8 @@ bool DecisionLogic::MaxWaitForPacket(
 
 bool DecisionLogic::ShouldContinueExpand(
     NetEqController::NetEqStatus status) const {
-  if (config_.enable_stable_playout_delay) {
-    return GetNextPacketDelayMs(status) < HighThreshold() &&
-           PacketTooEarly(status);
-  }
   return !ReinitAfterExpands(status) && !MaxWaitForPacket(status) &&
          PacketTooEarly(status) && UnderTargetLevel();
-}
-
-int DecisionLogic::GetNextPacketDelayMs(
-    NetEqController::NetEqStatus status) const {
-  if (config_.enable_stable_playout_delay) {
-    return packet_arrival_history_.GetDelayMs(
-        status.next_packet->timestamp,
-        tick_timer_->ticks() * tick_timer_->ms_per_tick());
-  }
-  return status.packet_buffer_info.span_samples / sample_rate_khz_;
 }
 
 int DecisionLogic::GetPlayoutDelayMs(
@@ -472,36 +462,6 @@ int DecisionLogic::GetPlayoutDelayMs(
       status.target_timestamp - status.sync_buffer_samples;
   return packet_arrival_history_.GetDelayMs(
       playout_timestamp, tick_timer_->ticks() * tick_timer_->ms_per_tick());
-}
-
-int DecisionLogic::LowThreshold() const {
-  int target_delay_ms = TargetLevelMs();
-  return std::max(
-      target_delay_ms * 3 / 4,
-      target_delay_ms - config_.deceleration_target_level_offset_ms);
-}
-
-int DecisionLogic::HighThreshold() const {
-  if (config_.enable_stable_playout_delay) {
-    return std::max(TargetLevelMs(), packet_arrival_history_.GetMaxDelayMs()) +
-           kDelayAdjustmentGranularityMs;
-  }
-  return std::max(TargetLevelMs(),
-                  LowThreshold() + kDelayAdjustmentGranularityMs);
-}
-
-int DecisionLogic::LowThresholdCng() const {
-  if (config_.enable_stable_playout_delay) {
-    return LowThreshold();
-  }
-  return std::max(0, TargetLevelMs() - kTargetLevelWindowMs / 2);
-}
-
-int DecisionLogic::HighThresholdCng() const {
-  if (config_.enable_stable_playout_delay) {
-    return HighThreshold();
-  }
-  return TargetLevelMs() + kTargetLevelWindowMs / 2;
 }
 
 }  // namespace webrtc

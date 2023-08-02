@@ -40,6 +40,7 @@
 #include "rtc_base/fake_ssl_identity.h"
 #include "rtc_base/message_digest.h"
 #include "rtc_base/net_helper.h"
+#include "rtc_base/null_socket_server.h"
 #include "rtc_base/rtc_certificate.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/ssl_identity.h"
@@ -328,8 +329,8 @@ void VerifyVoiceReceiverInfoReport(const StatsReport* report,
   EXPECT_EQ(rtc::ToString(info.audio_level), value_in_report);
   EXPECT_TRUE(GetValue(report, StatsReport::kStatsValueNameBytesReceived,
                        &value_in_report));
-  EXPECT_EQ(rtc::ToString(info.payload_bytes_rcvd +
-                          info.header_and_padding_bytes_rcvd),
+  EXPECT_EQ(rtc::ToString(info.payload_bytes_received +
+                          info.header_and_padding_bytes_received),
             value_in_report);
   EXPECT_TRUE(GetValue(report, StatsReport::kStatsValueNameJitterReceived,
                        &value_in_report));
@@ -365,7 +366,7 @@ void VerifyVoiceReceiverInfoReport(const StatsReport* report,
   EXPECT_EQ(rtc::ToString(info.secondary_discarded_rate), value_in_report);
   EXPECT_TRUE(GetValue(report, StatsReport::kStatsValueNamePacketsReceived,
                        &value_in_report));
-  EXPECT_EQ(rtc::ToString(info.packets_rcvd), value_in_report);
+  EXPECT_EQ(rtc::ToString(info.packets_received), value_in_report);
   EXPECT_TRUE(GetValue(report, StatsReport::kStatsValueNameDecodingCTSG,
                        &value_in_report));
   EXPECT_EQ(rtc::ToString(info.decoding_calls_to_silence_generator),
@@ -565,9 +566,9 @@ void UpdateVoiceSenderInfoFromAudioTrack(
 
 void InitVoiceReceiverInfo(cricket::VoiceReceiverInfo* voice_receiver_info) {
   voice_receiver_info->add_ssrc(kSsrcOfTrack);
-  voice_receiver_info->payload_bytes_rcvd = 98;
-  voice_receiver_info->header_and_padding_bytes_rcvd = 12;
-  voice_receiver_info->packets_rcvd = 111;
+  voice_receiver_info->payload_bytes_received = 98;
+  voice_receiver_info->header_and_padding_bytes_received = 12;
+  voice_receiver_info->packets_received = 111;
   voice_receiver_info->packets_lost = 114;
   voice_receiver_info->jitter_ms = 116;
   voice_receiver_info->jitter_buffer_ms = 117;
@@ -846,6 +847,58 @@ class StatsCollectorTrackTest : public LegacyStatsCollectorTest,
   rtc::scoped_refptr<FakeAudioTrack> audio_track_;
 };
 
+TEST(StatsCollectionTest, DetachAndMerge) {
+  StatsCollection collection;
+  ASSERT_EQ(collection.size(), 0u);
+
+  // Create a new report with some information.
+  StatsReport::Id id(
+      StatsReport::NewTypedId(StatsReport::kStatsReportTypeTrack, "track_id"));
+  StatsReport* report = collection.ReplaceOrAddNew(id);
+  report->AddString(StatsReport::kStatsValueNameTrackId, "track_id");
+  ASSERT_TRUE(report);
+  // Check that looking it up, yields the same report.
+  ASSERT_EQ(report, collection.FindOrAddNew(id));
+  // There should be one report now.
+  ASSERT_EQ(collection.size(), 1u);
+
+  // Detach the internal container from the StatsCollection.
+  StatsCollection::Container container = collection.DetachCollection();
+  EXPECT_EQ(container.size(), 1u);
+  EXPECT_EQ(collection.size(), 0u);
+  EXPECT_EQ(nullptr, collection.Find(id));
+
+  // Merge it back and test if we find the same report.
+  collection.MergeCollection(std::move(container));
+  EXPECT_EQ(collection.size(), 1u);
+  EXPECT_EQ(report, collection.Find(id));
+}
+
+// Similar to `DetachAndMerge` above but detaches on one thread, merges on
+// another to test that we don't trigger sequence checker.
+TEST(StatsCollectionTest, DetachAndMergeThreaded) {
+  rtc::Thread new_thread(std::make_unique<rtc::NullSocketServer>());
+  new_thread.Start();
+
+  StatsReport::Id id(
+      StatsReport::NewTypedId(StatsReport::kStatsReportTypeTrack, "track_id"));
+
+  StatsReport* expected_report = nullptr;
+
+  StatsCollection::Container container = new_thread.BlockingCall([&] {
+    StatsCollection collection;
+    expected_report = collection.ReplaceOrAddNew(id);
+    expected_report->AddString(StatsReport::kStatsValueNameTrackId, "track_id");
+    return collection.DetachCollection();
+  });
+
+  StatsCollection collection;
+  collection.MergeCollection(std::move(container));
+  EXPECT_EQ(collection.size(), 1u);
+  EXPECT_EQ(expected_report, collection.Find(id));
+
+  new_thread.Stop();
+}
 TEST_F(LegacyStatsCollectorTest, FilterOutNegativeDataChannelId) {
   auto pc = CreatePeerConnection();
   auto stats = CreateStatsCollector(pc.get());

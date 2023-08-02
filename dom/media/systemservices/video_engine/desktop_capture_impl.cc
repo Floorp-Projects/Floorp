@@ -358,9 +358,6 @@ static DesktopCaptureOptions CreateDesktopCaptureOptions() {
 #if defined(WEBRTC_WIN)
   if (mozilla::StaticPrefs::media_webrtc_capture_allow_directx()) {
     options.set_allow_directx_capturer(true);
-    options.set_allow_use_magnification_api(false);
-  } else {
-    options.set_allow_use_magnification_api(true);
   }
   options.set_allow_cropping_window_capturer(true);
 #  if defined(RTC_ENABLE_WIN_WGC)

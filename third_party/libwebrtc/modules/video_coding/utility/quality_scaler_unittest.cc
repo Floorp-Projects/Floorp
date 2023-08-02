@@ -72,11 +72,10 @@ class QualityScalerTest : public ::testing::Test,
       : scoped_field_trial_(GetParam()),
         task_queue_("QualityScalerTestQueue"),
         handler_(std::make_unique<FakeQpUsageHandler>()) {
-    task_queue_.SendTask(
-        [this] {
-          qs_ = std::unique_ptr<QualityScaler>(new QualityScalerUnderTest(
-              handler_.get(), VideoEncoder::QpThresholds(kLowQp, kHighQp)));
-        });
+    task_queue_.SendTask([this] {
+      qs_ = std::unique_ptr<QualityScaler>(new QualityScalerUnderTest(
+          handler_.get(), VideoEncoder::QpThresholds(kLowQp, kHighQp)));
+    });
   }
 
   ~QualityScalerTest() override {

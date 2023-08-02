@@ -152,13 +152,4 @@ void VideoCodec::SetFrameDropEnabled(bool enabled) {
   frame_drop_enabled_ = enabled;
 }
 
-bool VideoCodec::IsSinglecastOrAllNonFirstLayersInactive() const {
-  for (int i = 1; i < numberOfSimulcastStreams; ++i) {
-    if (simulcastStream[i].active) {
-      return false;
-    }
-  }
-  return true;
-}
-
 }  // namespace webrtc

@@ -15,7 +15,7 @@ Subject: Bug 1766646 - (fix) breakout Call::Stats and SharedModuleThread into
  create mode 100644 call/call_basic_stats.h
 
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 154d2bd445..2bc7aaec92 100644
+index a85ad0c0d4..20e9241a83 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -33,6 +33,12 @@ rtc_library("call_interfaces") {
@@ -32,7 +32,7 @@ index 154d2bd445..2bc7aaec92 100644
    deps = [
      ":audio_sender_interface",
 diff --git a/call/call.cc b/call/call.cc
-index 02f8e71d80..85dbd2adfa 100644
+index 46c1dd3b9e..0421a21ee3 100644
 --- a/call/call.cc
 +++ b/call/call.cc
 @@ -465,19 +465,6 @@ class Call final : public webrtc::Call,
@@ -147,10 +147,10 @@ index 0000000000..98febe9405
 +
 +#endif  // CALL_CALL_BASIC_STATS_H_
 diff --git a/video/video_send_stream.h b/video/video_send_stream.h
-index a7ce112b21..404873fd39 100644
+index 1f4717fbec..55103ac979 100644
 --- a/video/video_send_stream.h
 +++ b/video/video_send_stream.h
-@@ -37,7 +37,6 @@ namespace test {
+@@ -36,7 +36,6 @@ namespace test {
  class VideoSendStreamPeer;
  }  // namespace test
  

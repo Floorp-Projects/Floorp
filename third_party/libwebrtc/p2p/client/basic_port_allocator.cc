@@ -154,21 +154,6 @@ std::string NetworksToString(const std::vector<const rtc::Network*>& networks) {
   return ost.Release();
 }
 
-bool IsDiversifyIpv6InterfacesEnabled(
-    const webrtc::FieldTrialsView* field_trials) {
-  // webrtc:14334: Improve IPv6 network resolution and candidate creation
-  if (field_trials &&
-      field_trials->IsEnabled("WebRTC-IPv6NetworkResolutionFixes")) {
-    webrtc::FieldTrialParameter<bool> diversify_ipv6_interfaces(
-        "DiversifyIpv6Interfaces", false);
-    webrtc::ParseFieldTrial(
-        {&diversify_ipv6_interfaces},
-        field_trials->Lookup("WebRTC-IPv6NetworkResolutionFixes"));
-    return diversify_ipv6_interfaces;
-  }
-  return false;
-}
-
 }  // namespace
 
 const uint32_t DISABLE_ALL_PHASES =
@@ -768,6 +753,10 @@ std::vector<const rtc::Network*> BasicPortAllocatorSession::GetNetworks() {
       networks.insert(networks.end(), any_address_networks.begin(),
                       any_address_networks.end());
     }
+    RTC_LOG(LS_INFO) << "Count of networks: " << networks.size();
+    for (const rtc::Network* network : networks) {
+      RTC_LOG(LS_INFO) << network->ToString();
+    }
   }
   // Filter out link-local networks if needed.
   if (flags() & PORTALLOCATOR_DISABLE_LINK_LOCAL_NETWORKS) {
@@ -809,41 +798,20 @@ std::vector<const rtc::Network*> BasicPortAllocatorSession::GetNetworks() {
   }
 
   // Lastly, if we have a limit for the number of IPv6 network interfaces (by
-  // default, it's 5), remove networks to ensure that limit is satisfied.
-  //
-  // TODO(deadbeef): Instead of just taking the first N arbitrary IPv6
-  // networks, we could try to choose a set that's "most likely to work". It's
-  // hard to define what that means though; it's not just "lowest cost".
-  // Alternatively, we could just focus on making our ICE pinging logic smarter
-  // such that this filtering isn't necessary in the first place.
-  const webrtc::FieldTrialsView* field_trials = allocator_->field_trials();
-  if (IsDiversifyIpv6InterfacesEnabled(field_trials)) {
-    std::vector<const rtc::Network*> ipv6_networks;
-    for (auto it = networks.begin(); it != networks.end();) {
-      if ((*it)->prefix().family() == AF_INET6) {
-        ipv6_networks.push_back(*it);
-        it = networks.erase(it);
-        continue;
-      }
-      ++it;
+  // default, it's 5), pick IPv6 networks from different interfaces in a
+  // priority order and stick to the limit.
+  std::vector<const rtc::Network*> ipv6_networks;
+  for (auto it = networks.begin(); it != networks.end();) {
+    if ((*it)->prefix().family() == AF_INET6) {
+      ipv6_networks.push_back(*it);
+      it = networks.erase(it);
+      continue;
     }
-    ipv6_networks =
-        SelectIPv6Networks(ipv6_networks, allocator_->max_ipv6_networks());
-    networks.insert(networks.end(), ipv6_networks.begin(), ipv6_networks.end());
-  } else {
-    int ipv6_networks = 0;
-    for (auto it = networks.begin(); it != networks.end();) {
-      if ((*it)->prefix().family() == AF_INET6) {
-        if (ipv6_networks >= allocator_->max_ipv6_networks()) {
-          it = networks.erase(it);
-          continue;
-        } else {
-          ++ipv6_networks;
-        }
-      }
-      ++it;
-    }
+    ++it;
   }
+  ipv6_networks =
+      SelectIPv6Networks(ipv6_networks, allocator_->max_ipv6_networks());
+  networks.insert(networks.end(), ipv6_networks.begin(), ipv6_networks.end());
   return networks;
 }
 

@@ -755,8 +755,7 @@ void DcSctpSocket::ReceivePacket(rtc::ArrayView<const uint8_t> data) {
     packet_observer_->OnReceivedPacket(callbacks_.TimeMillis(), data);
   }
 
-  absl::optional<SctpPacket> packet =
-      SctpPacket::Parse(data, options_.disable_checksum_verification);
+  absl::optional<SctpPacket> packet = SctpPacket::Parse(data, options_);
   if (!packet.has_value()) {
     // https://tools.ietf.org/html/rfc4960#section-6.8
     // "The default procedure for handling invalid SCTP packets is to
@@ -798,7 +797,7 @@ void DcSctpSocket::ReceivePacket(rtc::ArrayView<const uint8_t> data) {
 }
 
 void DcSctpSocket::DebugPrintOutgoing(rtc::ArrayView<const uint8_t> payload) {
-  auto packet = SctpPacket::Parse(payload);
+  auto packet = SctpPacket::Parse(payload, options_);
   RTC_DCHECK(packet.has_value());
 
   for (const auto& desc : packet->descriptors()) {

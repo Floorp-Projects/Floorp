@@ -136,7 +136,8 @@ class ProbeController {
   void SetNetworkStateEstimate(webrtc::NetworkStateEstimate estimate);
 
   // Resets the ProbeController to a state equivalent to as if it was just
-  // created EXCEPT for `enable_periodic_alr_probing_`.
+  // created EXCEPT for `enable_periodic_alr_probing_` and
+  // `network_available_`.
   void Reset(Timestamp at_time);
 
   ABSL_MUST_USE_RESULT std::vector<ProbeClusterConfig> Process(

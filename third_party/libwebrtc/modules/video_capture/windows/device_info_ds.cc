@@ -324,12 +324,11 @@ IBaseFilter* DeviceInfoDS::GetDeviceFilter(const char* deviceUniqueIdUTF8,
             deviceFound = true;
             hr =
                 pM->BindToObject(0, 0, IID_IBaseFilter, (void**)&captureFilter);
-            if
-              FAILED(hr) {
-                RTC_LOG(LS_ERROR) << "Failed to bind to the selected "
-                                     "capture device "
-                                  << hr;
-              }
+            if FAILED (hr) {
+              RTC_LOG(LS_ERROR) << "Failed to bind to the selected "
+                                   "capture device "
+                                << hr;
+            }
 
             if (productUniqueIdUTF8 &&
                 productUniqueIdUTF8Length > 0)  // Get the device name

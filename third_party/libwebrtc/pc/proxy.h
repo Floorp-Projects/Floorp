@@ -449,7 +449,31 @@ class ConstMethodCall {
     TRACE_BOILERPLATE(method);               \
     return c_->method();                     \
   }
+// Allows a custom implementation of a method where the otherwise proxied
+// implementation can do a more efficient, yet thread-safe, job than the proxy
+// can do by default or when more flexibility is needed than can be provided
+// by a proxy.
+// Note that calls to these methods should be expected to be made from unknown
+// threads.
+#define BYPASS_PROXY_METHOD0(r, method) \
+  r method() override {                 \
+    TRACE_BOILERPLATE(method);          \
+    return c_->method();                \
+  }
 
+// The 1 argument version of `BYPASS_PROXY_METHOD0`.
+#define BYPASS_PROXY_METHOD1(r, method, t1) \
+  r method(t1 a1) override {                \
+    TRACE_BOILERPLATE(method);              \
+    return c_->method(std::move(a1));       \
+  }
+
+// The 2 argument version of `BYPASS_PROXY_METHOD0`.
+#define BYPASS_PROXY_METHOD2(r, method, t1, t2)      \
+  r method(t1 a1, t2 a2) override {                  \
+    TRACE_BOILERPLATE(method);                       \
+    return c_->method(std::move(a1), std::move(a2)); \
+  }
 }  // namespace webrtc
 
 #endif  //  PC_PROXY_H_

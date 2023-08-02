@@ -56,9 +56,7 @@ int FindFirstMediaStatsIndexByKind(
 }
 
 TaskQueueMetronome::TaskQueueMetronome(TimeDelta tick_period)
-    : tick_period_(tick_period) {
-  sequence_checker_.Detach();
-}
+    : tick_period_(tick_period) {}
 
 TaskQueueMetronome::~TaskQueueMetronome() {
   RTC_DCHECK_RUN_ON(&sequence_checker_);

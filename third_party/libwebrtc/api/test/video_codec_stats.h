@@ -96,6 +96,11 @@ class VideoCodecStats {
       SamplesStatsCounter u;
       SamplesStatsCounter v;
     } psnr;
+
+    // Logs `Stream` metrics to provided `MetricsLogger`.
+    void LogMetrics(MetricsLogger* logger,
+                    std::string test_case_name,
+                    std::map<std::string, std::string> metadata = {}) const;
   };
 
   virtual ~VideoCodecStats() = default;
@@ -107,13 +112,6 @@ class VideoCodecStats {
 
   // Returns video statistics aggregated for given `frames`.
   virtual Stream Aggregate(const std::vector<Frame>& frames) const = 0;
-
-  // Logs `Stream` metrics to provided `MetricsLogger`.
-  virtual void LogMetrics(
-      MetricsLogger* logger,
-      const Stream& stream,
-      std::string test_case_name,
-      std::map<std::string, std::string> metadata = {}) const = 0;
 };
 
 }  // namespace test

@@ -27,7 +27,6 @@
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_impl2.h"
 #include "modules/rtp_rtcp/source/rtp_sender.h"
-#include "modules/utility/maybe_worker_thread.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"

@@ -11,8 +11,8 @@
 #include "modules/audio_device/mac/audio_device_mac.h"
 
 #include <ApplicationServices/ApplicationServices.h>
-#include <mach/mach.h>         // mach_task_self()
-#include <sys/sysctl.h>        // sysctlbyname()
+#include <mach/mach.h>   // mach_task_self()
+#include <sys/sysctl.h>  // sysctlbyname()
 
 #include <memory>
 
@@ -1355,8 +1355,8 @@ int32_t AudioDeviceMac::StopRecording() {
     // rendering has ended before stopping itself.
     if (_recording && captureDeviceIsAlive == 1) {
       _recording = false;
-      _doStop = true;     // Signal to io proc to stop audio device
-      mutex_.Unlock();    // Cannot be under lock, risk of deadlock
+      _doStop = true;   // Signal to io proc to stop audio device
+      mutex_.Unlock();  // Cannot be under lock, risk of deadlock
       if (!_stopEvent.Wait(TimeDelta::Seconds(2))) {
         MutexLock lockScoped(&mutex_);
         RTC_LOG(LS_WARNING) << "Timed out stopping the shared IOProc."
@@ -1465,8 +1465,8 @@ int32_t AudioDeviceMac::StopPlayout() {
     // In the case of a shared device, the IOProc will verify capturing
     // has ended before stopping itself.
     _playing = false;
-    _doStop = true;     // Signal to io proc to stop audio device
-    mutex_.Unlock();    // Cannot be under lock, risk of deadlock
+    _doStop = true;   // Signal to io proc to stop audio device
+    mutex_.Unlock();  // Cannot be under lock, risk of deadlock
     if (!_stopEvent.Wait(TimeDelta::Seconds(2))) {
       MutexLock lockScoped(&mutex_);
       RTC_LOG(LS_WARNING) << "Timed out stopping the render IOProc."

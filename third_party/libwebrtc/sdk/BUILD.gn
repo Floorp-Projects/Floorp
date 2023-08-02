@@ -230,6 +230,9 @@ if (is_ios || is_mac) {
           "objc/native/api/audio_device_module.h",
           "objc/native/api/audio_device_module.mm",
         ]
+        if (is_mac) {
+          frameworks = [ "AudioUnit.framework" ]
+        }
 
         deps = [
           ":audio_device",
@@ -290,6 +293,9 @@ if (is_ios || is_mac) {
         absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
 
         frameworks = [ "AudioToolbox.framework" ]
+        if (is_mac) {
+          frameworks += [ "AudioUnit.framework" ]
+        }
       }
 
       # This target exists to expose :audio_session_objc and
@@ -430,6 +436,9 @@ if (is_ios || is_mac) {
         "../rtc_base:threading",
         "../rtc_base:timeutils",
       ]
+      if (is_mac) {
+        frameworks = [ "AudioUnit.framework" ]
+      }
     }
 
     rtc_library("objc_audio_device_module") {
@@ -447,6 +456,9 @@ if (is_ios || is_mac) {
         "../modules/audio_device:audio_device_api",
         "../rtc_base:logging",
       ]
+      if (is_mac) {
+        frameworks = [ "AudioUnit.framework" ]
+      }
     }
 
     if (!build_with_mozilla) {
@@ -1598,6 +1610,7 @@ if (is_ios || is_mac) {
         "../api/video:video_rtp_headers",
         "../api/video_codecs:video_codecs_api",
         "../common_video",
+        "../pc:video_track_source_proxy",
         "../rtc_base:buffer",
         "../rtc_base:logging",
         "../rtc_base:ssl",

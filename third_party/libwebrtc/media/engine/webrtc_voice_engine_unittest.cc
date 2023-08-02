@@ -678,9 +678,9 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
       const {
     webrtc::AudioReceiveStreamInterface::Stats stats;
     stats.remote_ssrc = 123;
-    stats.payload_bytes_rcvd = 456;
-    stats.header_and_padding_bytes_rcvd = 67;
-    stats.packets_rcvd = 768;
+    stats.payload_bytes_received = 456;
+    stats.header_and_padding_bytes_received = 67;
+    stats.packets_received = 768;
     stats.packets_lost = 101;
     stats.codec_name = "codec_name_recv";
     stats.codec_payload_type = 0;
@@ -719,11 +719,11 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
   void VerifyVoiceReceiverInfo(const cricket::VoiceReceiverInfo& info) {
     const auto stats = GetAudioReceiveStreamStats();
     EXPECT_EQ(info.ssrc(), stats.remote_ssrc);
-    EXPECT_EQ(info.payload_bytes_rcvd, stats.payload_bytes_rcvd);
-    EXPECT_EQ(info.header_and_padding_bytes_rcvd,
-              stats.header_and_padding_bytes_rcvd);
-    EXPECT_EQ(rtc::checked_cast<unsigned int>(info.packets_rcvd),
-              stats.packets_rcvd);
+    EXPECT_EQ(info.payload_bytes_received, stats.payload_bytes_received);
+    EXPECT_EQ(info.header_and_padding_bytes_received,
+              stats.header_and_padding_bytes_received);
+    EXPECT_EQ(rtc::checked_cast<unsigned int>(info.packets_received),
+              stats.packets_received);
     EXPECT_EQ(info.packets_lost, stats.packets_lost);
     EXPECT_EQ(info.codec_name, stats.codec_name);
     EXPECT_EQ(info.codec_payload_type, stats.codec_payload_type);

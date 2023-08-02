@@ -16,20 +16,21 @@
 #include "api/task_queue/task_queue_base.h"
 #include "call/fake_network_pipe.h"
 #include "call/simulated_network.h"
+#include "modules/audio_device/include/test_audio_device.h"
 #include "system_wrappers/include/sleep.h"
 #include "test/gtest.h"
+#include "test/video_test_constants.h"
 
 namespace webrtc {
 namespace test {
 namespace {
-// Wait half a second between stopping sending and stopping receiving audio.
-constexpr int kExtraRecordTimeMs = 500;
 
 constexpr int kSampleRate = 48000;
+
 }  // namespace
 
 AudioEndToEndTest::AudioEndToEndTest()
-    : EndToEndTest(CallTest::kDefaultTimeout) {}
+    : EndToEndTest(VideoTestConstants::kDefaultTimeout) {}
 
 size_t AudioEndToEndTest::GetNumVideoStreams() const {
   return 0;
@@ -54,8 +55,8 @@ AudioEndToEndTest::CreateRenderer() {
 }
 
 void AudioEndToEndTest::OnFakeAudioDevicesCreated(
-    TestAudioDeviceModule* send_audio_device,
-    TestAudioDeviceModule* recv_audio_device) {
+    AudioDeviceModule* send_audio_device,
+    AudioDeviceModule* recv_audio_device) {
   send_audio_device_ = send_audio_device;
 }
 
@@ -66,7 +67,7 @@ void AudioEndToEndTest::ModifyAudioConfigs(
   const webrtc::SdpAudioFormat kDefaultFormat("opus", 48000, 2,
                                               {{"stereo", "1"}});
   send_config->send_codec_spec = AudioSendStream::Config::SendCodecSpec(
-      test::CallTest::kAudioSendPayloadType, kDefaultFormat);
+      test::VideoTestConstants::kAudioSendPayloadType, kDefaultFormat);
   send_config->min_bitrate_bps = 32000;
   send_config->max_bitrate_bps = 32000;
 }
@@ -81,11 +82,5 @@ void AudioEndToEndTest::OnAudioStreamsCreated(
   receive_stream_ = receive_streams[0];
 }
 
-void AudioEndToEndTest::PerformTest() {
-  // Wait until the input audio file is done...
-  send_audio_device_->WaitForRecordingEnd();
-  // and some extra time to account for network delay.
-  SleepMs(GetSendTransportConfig().queue_delay_ms + kExtraRecordTimeMs);
-}
 }  // namespace test
 }  // namespace webrtc

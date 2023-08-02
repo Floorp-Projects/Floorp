@@ -1,88 +1,170 @@
-From: Cosmin Sabou <csabou@mozilla.com>
-Date: Tue, 20 Jun 2023 21:16:00 +0300
-Subject: Backed out changeset 1877c1e6db6f (bug 1837667) for causing windows
- crashes. CLOSED TREE
+From: Michael Froman <mjfroman@mac.com>
+Date: Thu, 27 Jul 2023 12:42:44 -0500
+Subject: Bug 1838080: Store the rid in TransformableVideoSenderFrame.
+ r=ng,webrtc-reviewers
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/bdf8893a3dfdac6fe0ad445625a24e6d18e89fda
+This is necessary to reliably detect what rid a given keyframe is for, for the
+purposes of resolving promises from RTCRtpScriptTransformer.generateKeyFrame.
+
+Differential Revision: https://phabricator.services.mozilla.com/D180737
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2f1a0ba74bf71cfa0bc4e77714b8a5276a70cc36
 ---
- .../win/screen_capture_utils.cc               | 33 ++++---------------
- 1 file changed, 7 insertions(+), 26 deletions(-)
+ api/frame_transformer_interface.h                |  1 +
+ modules/rtp_rtcp/source/rtp_sender.h             |  4 ++++
+ modules/rtp_rtcp/source/rtp_sender_video.cc      |  1 +
+ ...tp_sender_video_frame_transformer_delegate.cc | 16 +++++++++++-----
+ ...rtp_sender_video_frame_transformer_delegate.h |  2 ++
+ ...stream_receiver_frame_transformer_delegate.cc |  5 +++++
+ 6 files changed, 24 insertions(+), 5 deletions(-)
 
-diff --git a/modules/desktop_capture/win/screen_capture_utils.cc b/modules/desktop_capture/win/screen_capture_utils.cc
-index a5b0fc597c..c0144b0ef3 100644
---- a/modules/desktop_capture/win/screen_capture_utils.cc
-+++ b/modules/desktop_capture/win/screen_capture_utils.cc
-@@ -10,17 +10,14 @@
+diff --git a/api/frame_transformer_interface.h b/api/frame_transformer_interface.h
+index 2f7b139f9f..43fedd8595 100644
+--- a/api/frame_transformer_interface.h
++++ b/api/frame_transformer_interface.h
+@@ -57,6 +57,7 @@ class TransformableVideoFrameInterface : public TransformableFrameInterface {
+  public:
+   virtual ~TransformableVideoFrameInterface() = default;
+   virtual bool IsKeyFrame() const = 0;
++  virtual const std::string& GetRid() const = 0;
  
- #include "modules/desktop_capture/win/screen_capture_utils.h"
+   virtual VideoFrameMetadata Metadata() const = 0;
  
--#include <libloaderapi.h>
- #include <shellscalingapi.h>
- #include <windows.h>
--#include <winnt.h>
+diff --git a/modules/rtp_rtcp/source/rtp_sender.h b/modules/rtp_rtcp/source/rtp_sender.h
+index fb6c8001f0..70a5c773ab 100644
+--- a/modules/rtp_rtcp/source/rtp_sender.h
++++ b/modules/rtp_rtcp/source/rtp_sender.h
+@@ -140,6 +140,10 @@ class RTPSender {
  
- #include <string>
- #include <vector>
+   uint32_t SSRC() const RTC_LOCKS_EXCLUDED(send_mutex_) { return ssrc_; }
  
- #include "modules/desktop_capture/desktop_capturer.h"
- #include "modules/desktop_capture/desktop_geometry.h"
--#include "mozilla/WindowsVersion.h"  // See Bug 1837647
- #include "rtc_base/checks.h"
- #include "rtc_base/logging.h"
- #include "rtc_base/string_utils.h"
-@@ -28,28 +25,6 @@
++  const std::string& Rid() const RTC_LOCKS_EXCLUDED(send_mutex_) {
++    return rid_;
++  }
++
+   absl::optional<uint32_t> FlexfecSsrc() const RTC_LOCKS_EXCLUDED(send_mutex_) {
+     return flexfec_ssrc_;
+   }
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video.cc b/modules/rtp_rtcp/source/rtp_sender_video.cc
+index c863db4ccf..adc53d2243 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video.cc
+@@ -169,6 +169,7 @@ RTPSenderVideo::RTPSenderVideo(const Config& config)
+                     config.frame_transformer,
+                     rtp_sender_->SSRC(),
+                     rtp_sender_->Csrcs(),
++                    rtp_sender_->Rid(),
+                     config.task_queue_factory)
+               : nullptr) {
+   if (frame_transformer_delegate_)
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+index 34b4af0ec9..71f7db6f70 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+@@ -31,7 +31,8 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
+       uint32_t rtp_timestamp,
+       absl::optional<int64_t> expected_retransmission_time_ms,
+       uint32_t ssrc,
+-      std::vector<uint32_t> csrcs)
++      std::vector<uint32_t> csrcs,
++      const std::string& rid)
+       : encoded_data_(encoded_image.GetEncodedData()),
+         header_(video_header),
+         frame_type_(encoded_image._frameType),
+@@ -42,7 +43,8 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
+         capture_time_identifier_(encoded_image.CaptureTimeIdentifier()),
+         expected_retransmission_time_ms_(expected_retransmission_time_ms),
+         ssrc_(ssrc),
+-        csrcs_(csrcs) {
++        csrcs_(csrcs),
++        rid_(rid) {
+     RTC_DCHECK_GE(payload_type_, 0);
+     RTC_DCHECK_LE(payload_type_, 127);
+   }
+@@ -92,6 +94,8 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
  
- namespace webrtc {
+   Direction GetDirection() const override { return Direction::kSender; }
  
--// See Bug 1837647 - upstream commit 60795e8c7a added a method using
--// ::GetDpiForMonitor which is not available on Win7 machines.  For Win7,
--// fail as to provoke it to get the system DPI.
--HRESULT TryGetDpiForMonitor(HMONITOR hmonitor,
--                            MONITOR_DPI_TYPE dpiType,
--                            UINT* dpiX,
--                            UINT* dpiY) {
--  static HRESULT (*plat_fn)(HMONITOR, MONITOR_DPI_TYPE, UINT*, UINT*);
--  // Grab a pointer to ::GetDpiForMonitor if that has been loaded.
--  // It is available in Windows 8.1 and up. Can we drop the version check? It
--  // would make upstreaming easier.
--  if (!plat_fn) {
--    if (auto* module = ::GetModuleHandle(L"Shcore.dll"); module) {
--      plat_fn = reinterpret_cast<decltype(plat_fn)>(
--          ::GetProcAddress(module, "GetDpiForMonitor"));
--    }
--  }
--  // Call the function we got or return a failure value in the case that
--  // we didn't manage to get a pointer to ::GetDpiForMonitor
--  return plat_fn ? ((*plat_fn)(hmonitor, dpiType, dpiX, dpiY)) : -1;
--}
--
- bool HasActiveDisplay() {
-   DesktopCapturer::SourceList screens;
++  const std::string& GetRid() const override { return rid_; }
++
+  private:
+   rtc::scoped_refptr<EncodedImageBufferInterface> encoded_data_;
+   RTPVideoHeader header_;
+@@ -105,6 +109,7 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
  
-@@ -172,9 +147,14 @@ DesktopRect GetFullscreenRect() {
+   uint32_t ssrc_;
+   std::vector<uint32_t> csrcs_;
++  const std::string rid_;
+ };
+ }  // namespace
+ 
+@@ -113,11 +118,12 @@ RTPSenderVideoFrameTransformerDelegate::RTPSenderVideoFrameTransformerDelegate(
+     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+     uint32_t ssrc,
+     std::vector<uint32_t> csrcs,
++    const std::string& rid,
+     TaskQueueFactory* task_queue_factory)
+     : sender_(sender),
+       frame_transformer_(std::move(frame_transformer)),
+       ssrc_(ssrc),
+-      csrcs_(csrcs),
++      rid_(rid),
+       transformation_queue_(task_queue_factory->CreateTaskQueue(
+           "video_frame_transformer",
+           TaskQueueFactory::Priority::NORMAL)) {}
+@@ -136,7 +142,7 @@ bool RTPSenderVideoFrameTransformerDelegate::TransformFrame(
+     absl::optional<int64_t> expected_retransmission_time_ms) {
+   frame_transformer_->Transform(std::make_unique<TransformableVideoSenderFrame>(
+       encoded_image, video_header, payload_type, codec_type, rtp_timestamp,
+-      expected_retransmission_time_ms, ssrc_, csrcs_));
++      expected_retransmission_time_ms, ssrc_, csrcs_, rid_));
+   return true;
  }
  
- DesktopVector GetDpiForMonitor(HMONITOR monitor) {
-+// See Bug 1837647 - upstream commit 60795e8c7a added this method using
-+// ::GetDpiForMonitor which is not available on Win7 machines.  For now,
-+// we'll return the default case of {96, 96} until we can properly
-+// restore the functionality for newer machines (See Bug 1837667).
-+#if 0
-   UINT dpi_x, dpi_y;
-   // MDT_EFFECTIVE_DPI includes the scale factor as well as the system DPI.
--  HRESULT hr = TryGetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpi_x, &dpi_y);
-+  HRESULT hr = ::GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpi_x, &dpi_y);
-   if (SUCCEEDED(hr)) {
-     return {static_cast<INT>(dpi_x), static_cast<INT>(dpi_y)};
-   }
-@@ -188,6 +168,7 @@ DesktopVector GetDpiForMonitor(HMONITOR monitor) {
-     ReleaseDC(nullptr, hdc);
-     return dpi;
-   }
-+#endif
+@@ -215,7 +221,7 @@ std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
+       encoded_image, new_header, original->GetPayloadType(), new_header.codec,
+       original->GetTimestamp(),
+       absl::nullopt,  // expected_retransmission_time_ms
+-      original->GetSsrc(), metadata.GetCsrcs());
++      original->GetSsrc(), metadata.GetCsrcs(), original->GetRid());
+ }
  
-   // If everything fails, then return the default DPI for Windows.
-   return {96, 96};
+ }  // namespace webrtc
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.h b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.h
+index a397041811..83a475dc72 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.h
++++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.h
+@@ -57,6 +57,7 @@ class RTPSenderVideoFrameTransformerDelegate : public TransformedFrameCallback {
+       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+       uint32_t ssrc,
+       std::vector<uint32_t> csrcs,
++      const std::string& rid,
+       TaskQueueFactory* send_transport_queue);
+ 
+   void Init();
+@@ -104,6 +105,7 @@ class RTPSenderVideoFrameTransformerDelegate : public TransformedFrameCallback {
+   rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_;
+   const uint32_t ssrc_;
+   std::vector<uint32_t> csrcs_;
++  const std::string rid_;
+   // Used when the encoded frames arrives without a current task queue. This can
+   // happen if a hardware encoder was used.
+   std::unique_ptr<TaskQueueBase, TaskQueueDeleter> transformation_queue_;
+diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
+index ba26b391fe..71e58eab24 100644
+--- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
++++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
+@@ -51,6 +51,11 @@ class TransformableVideoReceiverFrame
+     return frame_->FrameType() == VideoFrameType::kVideoFrameKey;
+   }
+ 
++  const std::string& GetRid() const override {
++    static const std::string empty;
++    return empty;
++  }
++
+   VideoFrameMetadata Metadata() const override { return metadata_; }
+ 
+   void SetMetadata(const VideoFrameMetadata&) override {
 -- 
 2.34.1
 

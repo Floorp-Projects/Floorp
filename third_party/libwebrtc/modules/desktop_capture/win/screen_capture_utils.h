@@ -15,8 +15,8 @@
 // Forward declare HMONITOR in a windows.h compatible way so that we can avoid
 // including windows.h.
 #define WEBRTC_DECLARE_HANDLE(name) \
-struct name##__;                  \
-typedef struct name##__* name
+  struct name##__;                  \
+  typedef struct name##__* name
 WEBRTC_DECLARE_HANDLE(HMONITOR);
 #undef WEBRTC_DECLARE_HANDLE
 #endif

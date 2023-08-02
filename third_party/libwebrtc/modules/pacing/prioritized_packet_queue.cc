@@ -50,10 +50,13 @@ DataSize PrioritizedPacketQueue::QueuedPacket::PacketSize() const {
 }
 
 PrioritizedPacketQueue::StreamQueue::StreamQueue(Timestamp creation_time)
-    : last_enqueue_time_(creation_time) {}
+    : last_enqueue_time_(creation_time), num_keyframe_packets_(0) {}
 
 bool PrioritizedPacketQueue::StreamQueue::EnqueuePacket(QueuedPacket packet,
                                                         int priority_level) {
+  if (packet.packet->is_key_frame()) {
+    ++num_keyframe_packets_;
+  }
   bool first_packet_at_level = packets_[priority_level].empty();
   packets_[priority_level].push_back(std::move(packet));
   return first_packet_at_level;
@@ -64,6 +67,10 @@ PrioritizedPacketQueue::StreamQueue::DequeuePacket(int priority_level) {
   RTC_DCHECK(!packets_[priority_level].empty());
   QueuedPacket packet = std::move(packets_[priority_level].front());
   packets_[priority_level].pop_front();
+  if (packet.packet->is_key_frame()) {
+    RTC_DCHECK_GT(num_keyframe_packets_, 0);
+    --num_keyframe_packets_;
+  }
   return packet;
 }
 
@@ -98,6 +105,7 @@ PrioritizedPacketQueue::StreamQueue::DequeueAll() {
   for (int i = 0; i < kNumPriorityLevels; ++i) {
     packets_by_prio[i].swap(packets_[i]);
   }
+  num_keyframe_packets_ = 0;
   return packets_by_prio;
 }
 
@@ -290,6 +298,14 @@ void PrioritizedPacketQueue::RemovePacketsForSsrc(uint32_t ssrc) {
       }
     }
   }
+}
+
+bool PrioritizedPacketQueue::HasKeyframePackets(uint32_t ssrc) const {
+  auto it = streams_.find(ssrc);
+  if (it != streams_.end()) {
+    return it->second->has_keyframe_packets();
+  }
+  return false;
 }
 
 void PrioritizedPacketQueue::DequeuePacketInternal(QueuedPacket& packet) {

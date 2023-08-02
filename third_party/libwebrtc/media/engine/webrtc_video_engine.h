@@ -613,7 +613,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
   webrtc::TaskQueueBase* const worker_thread_;
   webrtc::ScopedTaskSafety task_safety_;
-  RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker network_thread_checker_;
+  RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker network_thread_checker_{
+      webrtc::SequenceChecker::kDetached};
   RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker thread_checker_;
 
   uint32_t rtcp_receiver_report_ssrc_ RTC_GUARDED_BY(thread_checker_);

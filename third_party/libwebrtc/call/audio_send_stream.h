@@ -74,7 +74,7 @@ class AudioSendStream : public AudioSender {
     // per-pair the ReportBlockData represents the latest Report Block that was
     // received for that pair.
     std::vector<ReportBlockData> report_block_datas;
-    uint32_t nacks_rcvd = 0;
+    uint32_t nacks_received = 0;
   };
 
   struct Config {

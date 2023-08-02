@@ -47,12 +47,14 @@ EncoderBitrateAdjuster::EncoderBitrateAdjuster(const VideoCodec& codec_settings)
     : utilize_bandwidth_headroom_(RateControlSettings::ParseFromFieldTrials()
                                       .BitrateAdjusterCanUseNetworkHeadroom()),
       frames_since_layout_change_(0),
-      min_bitrates_bps_{} {
+      min_bitrates_bps_{},
+      codec_(codec_settings.codecType),
+      codec_mode_(codec_settings.mode) {
   // TODO(https://crbug.com/webrtc/14891): If we want to support simulcast of
   // SVC streams, EncoderBitrateAdjuster needs to be updated to care about both
   // `simulcastStream` and `spatialLayers` at the same time.
   if (codec_settings.codecType == VideoCodecType::kVideoCodecVP9 &&
-      codec_settings.IsSinglecastOrAllNonFirstLayersInactive()) {
+      codec_settings.numberOfSimulcastStreams <= 1) {
     for (size_t si = 0; si < codec_settings.VP9().numberOfSpatialLayers; ++si) {
       if (codec_settings.spatialLayers[si].active) {
         min_bitrates_bps_[si] =
@@ -90,7 +92,9 @@ VideoBitrateAllocation EncoderBitrateAdjuster::AdjustRateAllocation(
         ++active_tls[si];
         if (!overshoot_detectors_[si][ti]) {
           overshoot_detectors_[si][ti] =
-              std::make_unique<EncoderOvershootDetector>(kWindowSizeMs);
+              std::make_unique<EncoderOvershootDetector>(
+                  kWindowSizeMs, codec_,
+                  codec_mode_ == VideoCodecMode::kScreensharing);
           frames_since_layout_change_ = 0;
         }
       } else if (overshoot_detectors_[si][ti]) {

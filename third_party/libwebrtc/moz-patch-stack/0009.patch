@@ -13,10 +13,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/02c038eca65c1218b
  create mode 100644 modules/desktop_capture/screen_capturer_mac.mm
 
 diff --git a/modules/desktop_capture/mac/screen_capturer_mac.h b/modules/desktop_capture/mac/screen_capturer_mac.h
-index d9a5966efa..7be05cc639 100644
+index 7e38b5bd08..e4a2cc2fc9 100644
 --- a/modules/desktop_capture/mac/screen_capturer_mac.h
 +++ b/modules/desktop_capture/mac/screen_capturer_mac.h
-@@ -114,6 +114,13 @@ class ScreenCapturerMac final : public DesktopCapturer {
+@@ -113,6 +113,13 @@ class ScreenCapturerMac final : public DesktopCapturer {
  
    // Start, CaptureFrame and destructor have to called in the same thread.
    SequenceChecker thread_checker_;
@@ -31,10 +31,10 @@ index d9a5966efa..7be05cc639 100644
  
  }  // namespace webrtc
 diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
-index 634849122e..115f6440b1 100644
+index 8f0c68d48b..8b9af35193 100644
 --- a/modules/desktop_capture/mac/screen_capturer_mac.mm
 +++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
-@@ -182,6 +182,7 @@ void ScreenCapturerMac::Start(Callback* callback) {
+@@ -263,6 +263,7 @@ void ScreenCapturerMac::Start(Callback* callback) {
        "webrtc", "ScreenCapturermac::Start", "target display id ", current_display_);
  
    callback_ = callback;
@@ -42,7 +42,7 @@ index 634849122e..115f6440b1 100644
    // Start and operate CGDisplayStream handler all from capture thread.
    if (!RegisterRefreshAndMoveHandlers()) {
      RTC_LOG(LS_ERROR) << "Failed to register refresh and move handlers.";
-@@ -202,7 +203,8 @@ void ScreenCapturerMac::CaptureFrame() {
+@@ -283,7 +284,8 @@ void ScreenCapturerMac::CaptureFrame() {
    }
  
    MacDesktopConfiguration new_config = desktop_config_monitor_->desktop_configuration();

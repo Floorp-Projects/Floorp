@@ -28,7 +28,9 @@ group("examples") {
     deps += [
       ":AppRTCMobile",
       ":AppRTCMobile_test_apk",
-      ":libwebrtc_unity",
+
+      #TODO(https://bugs.webrtc.org/15095) - Fix or remove this target.
+      #":libwebrtc_unity",
       "androidvoip",
     ]
 
@@ -221,7 +223,7 @@ if (is_android) {
       "../sdk/android:peerconnection_java",
       "../sdk/android:video_api_java",
       "../sdk/android:video_java",
-      "//third_party/android_support_test_runner:runner_java",
+      "//third_party/androidx:androidx_test_monitor_java",
       "//third_party/androidx:androidx_test_runner_java",
       "//third_party/junit",
     ]
@@ -754,8 +756,16 @@ if (is_linux || is_chromeos || is_win) {
       "../api/audio_codecs:builtin_audio_encoder_factory",
       "../api/video:video_frame",
       "../api/video:video_rtp_headers",
-      "../api/video_codecs:builtin_video_decoder_factory",
-      "../api/video_codecs:builtin_video_encoder_factory",
+      "../api/video_codecs:video_decoder_factory_template",
+      "../api/video_codecs:video_decoder_factory_template_dav1d_adapter",
+      "../api/video_codecs:video_decoder_factory_template_libvpx_vp8_adapter",
+      "../api/video_codecs:video_decoder_factory_template_libvpx_vp9_adapter",
+      "../api/video_codecs:video_decoder_factory_template_open_h264_adapter",
+      "../api/video_codecs:video_encoder_factory_template",
+      "../api/video_codecs:video_encoder_factory_template_libaom_av1_adapter",
+      "../api/video_codecs:video_encoder_factory_template_libvpx_vp8_adapter",
+      "../api/video_codecs:video_encoder_factory_template_libvpx_vp9_adapter",
+      "../api/video_codecs:video_encoder_factory_template_open_h264_adapter",
       "../media:rtc_audio_video",
       "../modules/audio_device",
       "../modules/audio_processing",
@@ -893,21 +903,22 @@ if (is_android) {
     ]
   }
 
-  dist_jar("libwebrtc_unity") {
-    _target_dir_name = get_label_info(":$target_name", "dir")
-    output = "${root_out_dir}/lib.java${_target_dir_name}/${target_name}.jar"
-    direct_deps_only = false
-    use_interface_jars = false
-    use_unprocessed_jars = false
-    requires_android = true
-    deps = [
-      ":webrtc_unity_java",
-      "../rtc_base:base_java",
-      "../sdk/android:libjingle_peerconnection_java",
-      "../sdk/android:libjingle_peerconnection_metrics_default_java",
-      "//third_party/androidx:androidx_annotation_annotation_java",
-    ]
-  }
+  # TODO(https://bugs.webrtc.org/15095) - Fix or remove this target.
+  #dist_jar("libwebrtc_unity") {
+  #  _target_dir_name = get_label_info(":$target_name", "dir")
+  #  output = "${root_out_dir}/lib.java${_target_dir_name}/${target_name}.jar"
+  #  direct_deps_only = false
+  #  use_interface_jars = false
+  #  use_unprocessed_jars = false
+  #  requires_android = true
+  #  deps = [
+  #    ":webrtc_unity_java",
+  #    "../rtc_base:base_java",
+  #    "../sdk/android:libjingle_peerconnection_java",
+  #    "../sdk/android:libjingle_peerconnection_metrics_default_java",
+  #    "//third_party/androidx:androidx_annotation_annotation_java",
+  #  ]
+  #}
 
   robolectric_binary("android_examples_junit_tests") {
     sources = [

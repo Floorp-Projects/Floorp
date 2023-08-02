@@ -38,8 +38,16 @@
 #include "api/scoped_refptr.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/transport/field_trial_based_config.h"
-#include "api/video_codecs/builtin_video_decoder_factory.h"
-#include "api/video_codecs/builtin_video_encoder_factory.h"
+#include "api/video_codecs/video_decoder_factory_template.h"
+#include "api/video_codecs/video_decoder_factory_template_dav1d_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_libvpx_vp8_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_libvpx_vp9_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_open_h264_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template.h"
+#include "api/video_codecs/video_encoder_factory_template_libaom_av1_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_libvpx_vp8_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_libvpx_vp9_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_open_h264_adapter.h"
 #include "media/base/codec.h"
 #include "media/base/media_config.h"
 #include "media/base/media_engine.h"
@@ -678,9 +686,17 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
             fake_audio_capture_module_),
         webrtc::CreateBuiltinAudioEncoderFactory(),
         webrtc::CreateBuiltinAudioDecoderFactory(),
-        webrtc::CreateBuiltinVideoEncoderFactory(),
-        webrtc::CreateBuiltinVideoDecoderFactory(), nullptr /* audio_mixer */,
-        nullptr /* audio_processing */);
+        std::make_unique<webrtc::VideoEncoderFactoryTemplate<
+            webrtc::LibvpxVp8EncoderTemplateAdapter,
+            webrtc::LibvpxVp9EncoderTemplateAdapter,
+            webrtc::OpenH264EncoderTemplateAdapter,
+            webrtc::LibaomAv1EncoderTemplateAdapter>>(),
+        std::make_unique<webrtc::VideoDecoderFactoryTemplate<
+            webrtc::LibvpxVp8DecoderTemplateAdapter,
+            webrtc::LibvpxVp9DecoderTemplateAdapter,
+            webrtc::OpenH264DecoderTemplateAdapter,
+            webrtc::Dav1dDecoderTemplateAdapter>>(),
+        nullptr /* audio_mixer */, nullptr /* audio_processing */);
     ASSERT_TRUE(pc_factory_);
   }
 
@@ -1389,9 +1405,17 @@ TEST_P(PeerConnectionInterfaceTest,
           rtc::Thread::Current(), fake_audio_capture_module_,
           webrtc::CreateBuiltinAudioEncoderFactory(),
           webrtc::CreateBuiltinAudioDecoderFactory(),
-          webrtc::CreateBuiltinVideoEncoderFactory(),
-          webrtc::CreateBuiltinVideoDecoderFactory(), nullptr /* audio_mixer */,
-          nullptr /* audio_processing */));
+          std::make_unique<webrtc::VideoEncoderFactoryTemplate<
+              webrtc::LibvpxVp8EncoderTemplateAdapter,
+              webrtc::LibvpxVp9EncoderTemplateAdapter,
+              webrtc::OpenH264EncoderTemplateAdapter,
+              webrtc::LibaomAv1EncoderTemplateAdapter>>(),
+          std::make_unique<webrtc::VideoDecoderFactoryTemplate<
+              webrtc::LibvpxVp8DecoderTemplateAdapter,
+              webrtc::LibvpxVp9DecoderTemplateAdapter,
+              webrtc::OpenH264DecoderTemplateAdapter,
+              webrtc::Dav1dDecoderTemplateAdapter>>(),
+          nullptr /* audio_mixer */, nullptr /* audio_processing */));
   PeerConnectionDependencies pc_dependencies(&observer_);
   pc_dependencies.allocator = std::move(port_allocator);
   auto result = pc_factory_->CreatePeerConnectionOrError(
@@ -1987,6 +2011,16 @@ TEST_P(PeerConnectionInterfaceTest, CreateSctpDataChannel) {
   EXPECT_TRUE(channel.ok());
   EXPECT_FALSE(channel.value()->reliable());
   EXPECT_FALSE(observer_.renegotiation_needed_);
+}
+
+TEST_P(PeerConnectionInterfaceTest, CreateSctpDataChannelWhenClosed) {
+  RTCConfiguration rtc_config;
+  CreatePeerConnection(rtc_config);
+  pc_->Close();
+  webrtc::DataChannelInit config;
+  auto ret = pc_->CreateDataChannelOrError("1", &config);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ret.error().type(), RTCErrorType::INVALID_STATE);
 }
 
 // For backwards compatibility, we want people who "unset" maxRetransmits

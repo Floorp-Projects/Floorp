@@ -817,7 +817,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
 
   {
     MutexLock lock(&rtcp_counter_mutex_);
-    stats.nacks_rcvd = rtcp_packet_type_counter_.nack_packets;
+    stats.nacks_received = rtcp_packet_type_counter_.nack_packets;
   }
 
   return stats;
@@ -928,7 +928,7 @@ int64_t ChannelSend::GetRTT() const {
 
   // We don't know in advance the remote ssrc used by the other end's receiver
   // reports, so use the first report block for the RTT.
-  return report_blocks.front().last_rtt_ms();
+  return report_blocks.front().last_rtt().ms();
 }
 
 void ChannelSend::SetFrameEncryptor(

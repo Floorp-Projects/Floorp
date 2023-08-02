@@ -12,6 +12,8 @@
 
 #include <string.h>
 
+#include <utility>
+
 #include "absl/algorithm/container.h"
 #include "api/make_ref_counted.h"
 #include "rtc_base/checks.h"
@@ -783,28 +785,28 @@ const StatsReport::Value* StatsReport::FindValue(StatsValueName name) const {
 StatsCollection::StatsCollection() {}
 
 StatsCollection::~StatsCollection() {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   for (auto* r : list_)
     delete r;
 }
 
 StatsCollection::const_iterator StatsCollection::begin() const {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   return list_.begin();
 }
 
 StatsCollection::const_iterator StatsCollection::end() const {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   return list_.end();
 }
 
 size_t StatsCollection::size() const {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   return list_.size();
 }
 
 StatsReport* StatsCollection::InsertNew(const StatsReport::Id& id) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   RTC_DCHECK(Find(id) == nullptr);
   StatsReport* report = new StatsReport(id);
   list_.push_back(report);
@@ -812,13 +814,13 @@ StatsReport* StatsCollection::InsertNew(const StatsReport::Id& id) {
 }
 
 StatsReport* StatsCollection::FindOrAddNew(const StatsReport::Id& id) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   StatsReport* ret = Find(id);
   return ret ? ret : InsertNew(id);
 }
 
 StatsReport* StatsCollection::ReplaceOrAddNew(const StatsReport::Id& id) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   RTC_DCHECK(id.get());
   Container::iterator it = absl::c_find_if(
       list_,
@@ -832,10 +834,37 @@ StatsReport* StatsCollection::ReplaceOrAddNew(const StatsReport::Id& id) {
   return InsertNew(id);
 }
 
+StatsCollection::Container StatsCollection::DetachCollection() {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+#if RTC_DCHECK_IS_ON
+  for (auto* report : list_)
+    report->DetachSequenceCheckers();
+#endif
+  return std::move(list_);
+}
+
+void StatsCollection::MergeCollection(Container collection) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  for (auto* report : collection) {
+#if RTC_DCHECK_IS_ON
+    report->AttachSequenceCheckers();
+#endif
+    Container::iterator it = absl::c_find_if(list_, [&](const StatsReport* r) {
+      return r->id()->Equals(report->id());
+    });
+    if (it == list_.end()) {
+      list_.push_back(report);
+    } else {
+      delete *it;
+      *it = report;
+    }
+  }
+}
+
 // Looks for a report with the given `id`.  If one is not found, null
 // will be returned.
 StatsReport* StatsCollection::Find(const StatsReport::Id& id) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   Container::iterator it = absl::c_find_if(
       list_,
       [&id](const StatsReport* r) -> bool { return r->id()->Equals(id); });

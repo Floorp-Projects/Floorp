@@ -393,7 +393,7 @@ TEST_F(NetEqImplTest, InsertPacketsUntilBufferIsFull) {
 
   const int kPayloadLengthSamples = 80;
   const size_t kPayloadLengthBytes = 2 * kPayloadLengthSamples;  // PCM 16-bit.
-  const uint8_t kPayloadType = 17;   // Just an arbitrary number.
+  const uint8_t kPayloadType = 17;  // Just an arbitrary number.
   uint8_t payload[kPayloadLengthBytes] = {0};
   RTPHeader rtp_header;
   rtp_header.payloadType = kPayloadType;
@@ -440,7 +440,7 @@ TEST_F(NetEqImplTest, TestDtmfPacketAVT48kHz) {
 // This test verifies that timestamps propagate from the incoming packets
 // through to the sync buffer and to the playout timestamp.
 TEST_F(NetEqImplTest, VerifyTimestampPropagation) {
-  const uint8_t kPayloadType = 17;   // Just an arbitrary number.
+  const uint8_t kPayloadType = 17;  // Just an arbitrary number.
   const int kSampleRateHz = 8000;
   const size_t kPayloadLengthSamples =
       static_cast<size_t>(10 * kSampleRateHz / 1000);  // 10 ms.
@@ -559,7 +559,7 @@ TEST_F(NetEqImplTest, ReorderedPacket) {
   CreateInstance(
       rtc::make_ref_counted<test::AudioDecoderProxyFactory>(&mock_decoder));
 
-  const uint8_t kPayloadType = 17;   // Just an arbitrary number.
+  const uint8_t kPayloadType = 17;  // Just an arbitrary number.
   const int kSampleRateHz = 8000;
   const size_t kPayloadLengthSamples =
       static_cast<size_t>(10 * kSampleRateHz / 1000);  // 10 ms.
@@ -674,7 +674,7 @@ TEST_F(NetEqImplTest, FirstPacketUnknown) {
   UseNoMocks();
   CreateInstance();
 
-  const uint8_t kPayloadType = 17;   // Just an arbitrary number.
+  const uint8_t kPayloadType = 17;  // Just an arbitrary number.
   const int kSampleRateHz = 8000;
   const size_t kPayloadLengthSamples =
       static_cast<size_t>(10 * kSampleRateHz / 1000);  // 10 ms.
@@ -767,7 +767,7 @@ TEST_P(NetEqImplTestSampleRateParameter,
   UseNoMocks();
   CreateInstance();
 
-  const uint8_t kPayloadType = 17;   // Just an arbitrary number.
+  const uint8_t kPayloadType = 17;  // Just an arbitrary number.
   const int kPayloadSampleRateHz = 16000;
   const size_t kPayloadLengthSamples =
       static_cast<size_t>(10 * kPayloadSampleRateHz / 1000);  // 10 ms.
@@ -1004,7 +1004,7 @@ TEST_F(NetEqImplTest, CodecInternalCng) {
   CreateInstance(
       rtc::make_ref_counted<test::AudioDecoderProxyFactory>(&mock_decoder));
 
-  const uint8_t kPayloadType = 17;   // Just an arbitrary number.
+  const uint8_t kPayloadType = 17;  // Just an arbitrary number.
   const int kSampleRateKhz = 48;
   const size_t kPayloadLengthSamples =
       static_cast<size_t>(20 * kSampleRateKhz);  // 20 ms.
@@ -1097,7 +1097,7 @@ TEST_F(NetEqImplTest, UnsupportedDecoder) {
   static const size_t kNetEqMaxFrameSize = 5760;  // 120 ms @ 48 kHz.
   static const size_t kChannels = 2;
 
-  const uint8_t kPayloadType = 17;   // Just an arbitrary number.
+  const uint8_t kPayloadType = 17;  // Just an arbitrary number.
   const int kSampleRateHz = 8000;
 
   const size_t kPayloadLengthSamples =
@@ -1189,7 +1189,7 @@ TEST_F(NetEqImplTest, FloodBufferAndGetNetworkStats) {
 
   const size_t kPayloadLengthSamples = 80;
   const size_t kPayloadLengthBytes = 2 * kPayloadLengthSamples;  // PCM 16-bit.
-  const uint8_t kPayloadType = 17;   // Just an arbitrary number.
+  const uint8_t kPayloadType = 17;  // Just an arbitrary number.
   uint8_t payload[kPayloadLengthBytes] = {0};
   RTPHeader rtp_header;
   rtp_header.payloadType = kPayloadType;
@@ -1222,7 +1222,7 @@ TEST_F(NetEqImplTest, DecodedPayloadTooShort) {
   CreateInstance(
       rtc::make_ref_counted<test::AudioDecoderProxyFactory>(&mock_decoder));
 
-  const uint8_t kPayloadType = 17;   // Just an arbitrary number.
+  const uint8_t kPayloadType = 17;  // Just an arbitrary number.
   const int kSampleRateHz = 8000;
   const size_t kPayloadLengthSamples =
       static_cast<size_t>(10 * kSampleRateHz / 1000);  // 10 ms.
@@ -1281,7 +1281,7 @@ TEST_F(NetEqImplTest, DecodingError) {
   CreateInstance(
       rtc::make_ref_counted<test::AudioDecoderProxyFactory>(&mock_decoder));
 
-  const uint8_t kPayloadType = 17;   // Just an arbitrary number.
+  const uint8_t kPayloadType = 17;  // Just an arbitrary number.
   const int kSampleRateHz = 8000;
   const int kDecoderErrorCode = -97;  // Any negative number.
 

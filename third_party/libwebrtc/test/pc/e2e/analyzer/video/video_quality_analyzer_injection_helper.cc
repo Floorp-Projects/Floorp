@@ -132,19 +132,9 @@ VideoQualityAnalyzerInjectionHelper::CreateFramePreprocessor(
                                     config.width, config.height)));
   }
   sinks_helper_.AddConfig(peer_name, config);
-  {
-    MutexLock lock(&mutex_);
-    known_video_configs_.insert({*config.stream_label, config});
-  }
   return std::make_unique<AnalyzingFramePreprocessor>(
       peer_name, std::move(*config.stream_label), analyzer_.get(),
       std::move(sinks));
-}
-
-std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>
-VideoQualityAnalyzerInjectionHelper::CreateVideoSink(
-    absl::string_view peer_name) {
-  return std::make_unique<AnalyzingVideoSink2>(peer_name, this);
 }
 
 std::unique_ptr<AnalyzingVideoSink>
@@ -163,24 +153,18 @@ void VideoQualityAnalyzerInjectionHelper::Start(
     int max_threads_count) {
   analyzer_->Start(std::move(test_case_name), peer_names, max_threads_count);
   extractor_->Start(peer_names.size());
-  MutexLock lock(&mutex_);
-  peers_count_ = peer_names.size();
 }
 
 void VideoQualityAnalyzerInjectionHelper::RegisterParticipantInCall(
     absl::string_view peer_name) {
   analyzer_->RegisterParticipantInCall(peer_name);
   extractor_->AddParticipantInCall();
-  MutexLock lock(&mutex_);
-  peers_count_++;
 }
 
 void VideoQualityAnalyzerInjectionHelper::UnregisterParticipantInCall(
     absl::string_view peer_name) {
   analyzer_->UnregisterParticipantInCall(peer_name);
   extractor_->RemoveParticipantInCall();
-  MutexLock lock(&mutex_);
-  peers_count_--;
 }
 
 void VideoQualityAnalyzerInjectionHelper::OnStatsReports(
@@ -196,68 +180,6 @@ void VideoQualityAnalyzerInjectionHelper::Stop() {
   }
   video_writers_.clear();
   sinks_helper_.Clear();
-}
-
-void VideoQualityAnalyzerInjectionHelper::OnFrame(absl::string_view peer_name,
-                                                  const VideoFrame& frame) {
-  if (IsDummyFrame(frame)) {
-    // This is dummy frame, so we  don't need to process it further.
-    return;
-  }
-  // Copy entire video frame including video buffer to ensure that analyzer
-  // won't hold any WebRTC internal buffers.
-  VideoFrame frame_copy = frame;
-  frame_copy.set_video_frame_buffer(
-      I420Buffer::Copy(*frame.video_frame_buffer()->ToI420()));
-  analyzer_->OnFrameRendered(peer_name, frame_copy);
-
-  if (frame.id() != VideoFrame::kNotSetId) {
-    std::string stream_label = analyzer_->GetStreamLabel(frame.id());
-    std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>>* sinks =
-        PopulateSinks(ReceiverStream(peer_name, stream_label));
-    if (sinks == nullptr) {
-      return;
-    }
-    for (auto& sink : *sinks) {
-      sink->OnFrame(frame);
-    }
-  }
-}
-
-std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>>*
-VideoQualityAnalyzerInjectionHelper::PopulateSinks(
-    const ReceiverStream& receiver_stream) {
-  MutexLock lock(&mutex_);
-  auto sinks_it = sinks_.find(receiver_stream);
-  if (sinks_it != sinks_.end()) {
-    return &sinks_it->second;
-  }
-  auto it = known_video_configs_.find(receiver_stream.stream_label);
-  RTC_DCHECK(it != known_video_configs_.end())
-      << "No video config for stream " << receiver_stream.stream_label;
-  const VideoConfig& config = it->second;
-
-  std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>> sinks;
-  if (config.output_dump_options.has_value()) {
-    std::unique_ptr<test::VideoFrameWriter> writer =
-        config.output_dump_options->CreateOutputDumpVideoFrameWriter(
-            receiver_stream.stream_label, receiver_stream.peer_name,
-            config.GetResolution());
-    if (config.output_dump_use_fixed_framerate) {
-      writer = std::make_unique<test::FixedFpsVideoFrameWriterAdapter>(
-          config.fps, clock_, std::move(writer));
-    }
-    sinks.push_back(std::make_unique<VideoWriter>(
-        writer.get(), config.output_dump_options->sampling_modulo()));
-    video_writers_.push_back(std::move(writer));
-  }
-  if (config.show_on_screen) {
-    sinks.push_back(absl::WrapUnique(
-        test::VideoRenderer::Create((*config.stream_label + "-render").c_str(),
-                                    config.width, config.height)));
-  }
-  sinks_.insert({receiver_stream, std::move(sinks)});
-  return &(sinks_.find(receiver_stream)->second);
 }
 
 }  // namespace webrtc_pc_e2e

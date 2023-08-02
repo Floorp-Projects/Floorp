@@ -75,7 +75,6 @@ TEST_F(PacketRouterTest, Sanity_NoModuleRegistered_GeneratePadding) {
   EXPECT_TRUE(packet_router_.GeneratePadding(bytes).empty());
 }
 
-
 TEST_F(PacketRouterTest, Sanity_NoModuleRegistered_SendRemb) {
   const std::vector<uint32_t> ssrcs = {1, 2, 3};
   constexpr uint32_t bitrate_bps = 10000;

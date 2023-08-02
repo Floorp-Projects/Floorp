@@ -12,12 +12,12 @@
 #ifndef SDK_OBJC_FRAMEWORK_CLASSES_VIDEOTOOLBOX_NALU_REWRITER_H_
 #define SDK_OBJC_FRAMEWORK_CLASSES_VIDEOTOOLBOX_NALU_REWRITER_H_
 
-#include "modules/video_coding/codecs/h264/include/h264.h"
-
 #include <CoreMedia/CoreMedia.h>
+
 #include <vector>
 
 #include "common_video/h264/h264_common.h"
+#include "modules/video_coding/codecs/h264/include/h264.h"
 #include "rtc_base/buffer.h"
 
 using webrtc::H264::NaluIndex;

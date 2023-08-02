@@ -106,19 +106,6 @@ void ReceiveSideCongestionController::OnReceivedPacket(
   }
 }
 
-void ReceiveSideCongestionController::OnReceivedPacket(
-    int64_t arrival_time_ms,
-    size_t payload_size,
-    const RTPHeader& header) {
-  remote_estimator_proxy_.IncomingPacket(arrival_time_ms, payload_size, header);
-  if (!header.extension.hasTransportSequenceNumber) {
-    // Receive-side BWE.
-    MutexLock lock(&mutex_);
-    PickEstimator(header.extension.hasAbsoluteSendTime);
-    rbe_->IncomingPacket(arrival_time_ms, payload_size, header);
-  }
-}
-
 void ReceiveSideCongestionController::OnBitrateChanged(int bitrate_bps) {
   remote_estimator_proxy_.OnBitrateChanged(bitrate_bps);
 }

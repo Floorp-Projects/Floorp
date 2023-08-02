@@ -453,6 +453,7 @@ message RtpHeaderExtensionConfig {
   optional int32 transport_sequence_number_id = 3;
   optional int32 video_rotation_id = 4;
   optional int32 audio_level_id = 5;
+  optional int32 dependency_descriptor_id = 6;
   // TODO(terelius): Add other header extensions like playout delay?
 }
 

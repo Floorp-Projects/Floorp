@@ -22,6 +22,7 @@ if (!build_with_chromium) {
       ":test_common",
       ":test_renderer",
       ":test_support",
+      ":test_video_capturer",
       ":video_test_common",
     ]
 
@@ -110,6 +111,72 @@ rtc_library("frame_utils") {
   ]
 }
 
+rtc_library("test_video_capturer") {
+  testonly = true
+  sources = [
+    "test_video_capturer.cc",
+    "test_video_capturer.h",
+  ]
+  deps = [
+    "../api:scoped_refptr",
+    "../api/video:video_frame",
+    "../api/video:video_rtp_headers",
+    "../media:rtc_media_base",
+    "../rtc_base/synchronization:mutex",
+  ]
+}
+
+rtc_library("create_frame_generator_capturer") {
+  visibility = [ "*" ]
+  testonly = true
+  sources = [
+    "create_frame_generator_capturer.cc",
+    "create_frame_generator_capturer.h",
+  ]
+  deps = [
+    ":fileutils",
+    ":frame_generator_capturer",
+    "../api:create_frame_generator",
+    "../api:frame_generator_api",
+    "../api/task_queue",
+    "../api/units:time_delta",
+    "../rtc_base:checks",
+    "../system_wrappers",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
+rtc_library("frame_generator_capturer") {
+  visibility = [ "*" ]
+  testonly = true
+  sources = [
+    "frame_generator_capturer.cc",
+    "frame_generator_capturer.h",
+  ]
+  deps = [
+    ":test_video_capturer",
+    "../api:frame_generator_api",
+    "../api/task_queue",
+    "../api/units:time_delta",
+    "../api/video:video_frame",
+    "../api/video:video_rtp_headers",
+    "../rtc_base:checks",
+    "../rtc_base:logging",
+    "../rtc_base:macromagic",
+    "../rtc_base:rtc_task_queue",
+    "../rtc_base/synchronization:mutex",
+    "../rtc_base/task_utils:repeating_task",
+    "../system_wrappers",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
 rtc_library("video_test_common") {
   visibility = [ "*" ]
   testonly = true
@@ -119,12 +186,8 @@ rtc_library("video_test_common") {
     "fake_videorenderer.h",
     "frame_forwarder.cc",
     "frame_forwarder.h",
-    "frame_generator_capturer.cc",
-    "frame_generator_capturer.h",
     "mappable_native_buffer.cc",
     "mappable_native_buffer.h",
-    "test_video_capturer.cc",
-    "test_video_capturer.h",
     "video_codec_settings.h",
     "video_decoder_proxy_factory.h",
     "video_encoder_nullable_proxy_factory.h",
@@ -132,9 +195,11 @@ rtc_library("video_test_common") {
   ]
 
   deps = [
+    ":create_frame_generator_capturer",
     ":fileutils",
     ":frame_utils",
     ":scoped_key_value_config",
+    ":test_video_capturer",
     "../api:array_view",
     "../api:create_frame_generator",
     "../api:frame_generator_api",
@@ -185,6 +250,7 @@ if (!build_with_chromium) {
         "mac_capturer.mm",
       ]
       deps = [
+        ":test_video_capturer",
         ":video_test_common",
         "../api:libjingle_peerconnection_api",
         "../api:media_stream_interface",
@@ -205,7 +271,10 @@ if (!build_with_chromium) {
       "platform_video_capturer.cc",
       "platform_video_capturer.h",
     ]
-    deps = [ ":video_test_common" ]
+    deps = [
+      ":test_video_capturer",
+      ":video_test_common",
+    ]
     absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
     if (is_mac || is_ios) {
       deps += [ ":video_test_mac" ]
@@ -644,11 +713,13 @@ if (rtc_include_tests) {
       deps = [
         ":call_config_utils",
         ":copy_to_file_audio_capturer_unittest",
+        ":create_frame_generator_capturer",
         ":direct_transport",
         ":fake_video_codecs",
         ":fileutils",
         ":fileutils_unittests",
         ":fixed_fps_video_frame_writer_adapter_test",
+        ":frame_generator_capturer",
         ":frame_generator_impl",
         ":perf_test",
         ":rtc_expect_death",
@@ -1001,6 +1072,12 @@ rtc_library("run_loop") {
   absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
 }
 
+rtc_library("video_test_constants") {
+  testonly = true
+  sources = [ "video_test_constants.h" ]
+  deps = [ "../api/units:time_delta" ]
+}
+
 rtc_library("test_common") {
   testonly = true
   sources = [
@@ -1018,11 +1095,13 @@ rtc_library("test_common") {
     ":encoder_settings",
     ":fake_video_codecs",
     ":fileutils",
+    ":frame_generator_capturer",
     ":mock_transport",
     ":run_loop",
     ":scoped_key_value_config",
     ":test_support",
     ":video_test_common",
+    ":video_test_constants",
     "../api:array_view",
     "../api:create_frame_generator",
     "../api:frame_generator_api",
@@ -1048,7 +1127,8 @@ rtc_library("test_common") {
     "../call:simulated_network",
     "../call:simulated_packet_receiver",
     "../call:video_stream_api",
-    "../modules/audio_device:audio_device_impl",
+    "../modules/audio_device:audio_device_api",
+    "../modules/audio_device:test_audio_device_module",
     "../modules/audio_mixer:audio_mixer_impl",
     "../modules/rtp_rtcp",
     "../modules/rtp_rtcp:rtp_rtcp_format",
@@ -1222,7 +1302,7 @@ rtc_library("copy_to_file_audio_capturer") {
   deps = [
     "../api:array_view",
     "../common_audio",
-    "../modules/audio_device:audio_device_impl",
+    "../modules/audio_device:test_audio_device_module",
     "../rtc_base:buffer",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -1235,7 +1315,7 @@ rtc_library("copy_to_file_audio_capturer_unittest") {
     ":copy_to_file_audio_capturer",
     ":fileutils",
     ":test_support",
-    "../modules/audio_device:audio_device_impl",
+    "../modules/audio_device:test_audio_device_module",
   ]
 }
 

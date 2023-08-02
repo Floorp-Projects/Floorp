@@ -294,19 +294,19 @@ class PseudoTcpTest : public PseudoTcpTestBase {
   void ReadData() {
     char block[kBlockSize];
     size_t position;
-    int rcvd;
+    int received;
     do {
-      rcvd = remote_.Recv(block, sizeof(block));
-      if (rcvd != -1) {
+      received = remote_.Recv(block, sizeof(block));
+      if (received != -1) {
         size_t written;
         int error;
         recv_stream_.Write(
-            rtc::MakeArrayView(reinterpret_cast<uint8_t*>(block), rcvd),
+            rtc::MakeArrayView(reinterpret_cast<uint8_t*>(block), received),
             written, error);
         recv_stream_.GetPosition(&position);
         RTC_LOG(LS_VERBOSE) << "Received: " << position;
       }
-    } while (rcvd > 0);
+    } while (received > 0);
   }
   void WriteData(bool* done) {
     size_t position, tosend;
@@ -417,19 +417,20 @@ class PseudoTcpTestPingPong : public PseudoTcpTestBase {
   void ReadData() {
     char block[kBlockSize];
     size_t position;
-    int rcvd;
+    int received;
     do {
-      rcvd = receiver_->Recv(block, sizeof(block));
-      if (rcvd != -1) {
+      received = receiver_->Recv(block, sizeof(block));
+      if (received != -1) {
         size_t written;
         int error;
         recv_stream_.Write(
-            rtc::MakeArrayView(reinterpret_cast<const uint8_t*>(block), rcvd),
+            rtc::MakeArrayView(reinterpret_cast<const uint8_t*>(block),
+                               received),
             written, error);
         recv_stream_.GetPosition(&position);
         RTC_LOG(LS_VERBOSE) << "Received: " << position;
       }
-    } while (rcvd > 0);
+    } while (received > 0);
   }
   void WriteData() {
     size_t position, tosend;
@@ -524,20 +525,20 @@ class PseudoTcpTestReceiveWindow : public PseudoTcpTestBase {
   void ReadUntilIOPending() {
     char block[kBlockSize];
     size_t position;
-    int rcvd;
+    int received;
 
     do {
-      rcvd = remote_.Recv(block, sizeof(block));
-      if (rcvd != -1) {
+      received = remote_.Recv(block, sizeof(block));
+      if (received != -1) {
         size_t written;
         int error;
         recv_stream_.Write(
-            rtc::MakeArrayView(reinterpret_cast<uint8_t*>(block), rcvd),
+            rtc::MakeArrayView(reinterpret_cast<uint8_t*>(block), received),
             written, error);
         recv_stream_.GetPosition(&position);
         RTC_LOG(LS_VERBOSE) << "Received: " << position;
       }
-    } while (rcvd > 0);
+    } while (received > 0);
 
     recv_stream_.GetPosition(&position);
     recv_position_.push_back(position);

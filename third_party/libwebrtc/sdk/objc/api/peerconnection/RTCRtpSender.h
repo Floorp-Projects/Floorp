@@ -21,8 +21,8 @@ RTC_OBJC_EXPORT
 @protocol RTC_OBJC_TYPE
 (RTCRtpSender)<NSObject>
 
-/** A unique identifier for this sender. */
-@property(nonatomic, readonly) NSString *senderId;
+    /** A unique identifier for this sender. */
+    @property(nonatomic, readonly) NSString *senderId;
 
 /** The currently active RTCRtpParameters, as defined in
  *  https://www.w3.org/TR/webrtc/#idl-def-RTCRtpParameters.

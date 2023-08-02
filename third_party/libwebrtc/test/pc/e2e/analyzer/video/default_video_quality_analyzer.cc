@@ -211,6 +211,12 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
     }
     StreamState* state = &stream_states_.at(stream_index);
     state->PushBack(frame_id);
+    absl::optional<TimeDelta> time_between_captured_frames = absl::nullopt;
+    if (state->last_captured_frame_time().has_value()) {
+      time_between_captured_frames =
+          captured_time - *state->last_captured_frame_time();
+    }
+    state->SetLastCapturedFrameTime(captured_time);
     // Update frames in flight info.
     auto it = captured_frames_in_flight_.find(frame_id);
     if (it != captured_frames_in_flight_.end()) {
@@ -247,6 +253,7 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
     }
     captured_frames_in_flight_.emplace(
         frame_id, FrameInFlight(stream_index, frame_id, captured_time,
+                                time_between_captured_frames,
                                 std::move(frame_receivers_indexes)));
     // Store local copy of the frame with frame_id set.
     VideoFrame local_frame(frame);
@@ -337,6 +344,13 @@ void DefaultVideoQualityAnalyzer::OnFrameEncoded(
     }
   }
   Timestamp now = Now();
+  StreamState& state = stream_states_.at(frame_in_flight.stream());
+  absl::optional<TimeDelta> time_between_encoded_frames = absl::nullopt;
+  if (state.last_encoded_frame_time().has_value()) {
+    time_between_encoded_frames = now - *state.last_encoded_frame_time();
+  }
+  state.SetLastEncodedFrameTime(now);
+
   StreamCodecInfo used_encoder;
   used_encoder.codec_name = stats.encoder_name;
   used_encoder.first_frame_id = frame_id;
@@ -350,8 +364,9 @@ void DefaultVideoQualityAnalyzer::OnFrameEncoded(
   size_t stream_index = encoded_image.SpatialIndex().value_or(
       encoded_image.SimulcastIndex().value_or(0));
   frame_in_flight.OnFrameEncoded(
-      now, encoded_image._frameType, DataSize::Bytes(encoded_image.size()),
-      stats.target_encode_bitrate, stream_index, stats.qp, used_encoder);
+      now, time_between_encoded_frames, encoded_image._frameType,
+      DataSize::Bytes(encoded_image.size()), stats.target_encode_bitrate,
+      stream_index, stats.qp, used_encoder);
 
   if (options_.report_infra_metrics) {
     analyzer_stats_.on_frame_encoded_processing_time_ms.AddSample(
@@ -723,14 +738,14 @@ void DefaultVideoQualityAnalyzer::OnPauseAllStreamsFrom(
     absl::string_view sender_peer_name,
     absl::string_view receiver_peer_name) {
   MutexLock lock(&mutex_);
-  RTC_CHECK(peers_->HasName(sender_peer_name));
-  size_t sender_peer_index = peers_->index(sender_peer_name);
-  RTC_CHECK(peers_->HasName(receiver_peer_name));
-  size_t receiver_peer_index = peers_->index(receiver_peer_name);
-
-  for (auto& [unused, stream_state] : stream_states_) {
-    if (stream_state.sender() == sender_peer_index) {
-      stream_state.GetPausableState(receiver_peer_index)->Pause();
+  if (peers_->HasName(sender_peer_name) &&
+      peers_->HasName(receiver_peer_name)) {
+    size_t sender_peer_index = peers_->index(sender_peer_name);
+    size_t receiver_peer_index = peers_->index(receiver_peer_name);
+    for (auto& [unused, stream_state] : stream_states_) {
+      if (stream_state.sender() == sender_peer_index) {
+        stream_state.GetPausableState(receiver_peer_index)->Pause();
+      }
     }
   }
 }
@@ -739,14 +754,14 @@ void DefaultVideoQualityAnalyzer::OnResumeAllStreamsFrom(
     absl::string_view sender_peer_name,
     absl::string_view receiver_peer_name) {
   MutexLock lock(&mutex_);
-  RTC_CHECK(peers_->HasName(sender_peer_name));
-  size_t sender_peer_index = peers_->index(sender_peer_name);
-  RTC_CHECK(peers_->HasName(receiver_peer_name));
-  size_t receiver_peer_index = peers_->index(receiver_peer_name);
-
-  for (auto& [unused, stream_state] : stream_states_) {
-    if (stream_state.sender() == sender_peer_index) {
-      stream_state.GetPausableState(receiver_peer_index)->Resume();
+  if (peers_->HasName(sender_peer_name) &&
+      peers_->HasName(receiver_peer_name)) {
+    size_t sender_peer_index = peers_->index(sender_peer_name);
+    size_t receiver_peer_index = peers_->index(receiver_peer_name);
+    for (auto& [unused, stream_state] : stream_states_) {
+      if (stream_state.sender() == sender_peer_index) {
+        stream_state.GetPausableState(receiver_peer_index)->Resume();
+      }
     }
   }
 }
@@ -828,19 +843,17 @@ void DefaultVideoQualityAnalyzer::Stop() {
 }
 
 std::string DefaultVideoQualityAnalyzer::GetStreamLabel(uint16_t frame_id) {
-  MutexLock lock1(&mutex_);
-  auto it = captured_frames_in_flight_.find(frame_id);
-  if (it != captured_frames_in_flight_.end()) {
-    return streams_.name(it->second.stream());
-  }
-  for (auto hist_it = stream_to_frame_id_history_.begin();
-       hist_it != stream_to_frame_id_history_.end(); ++hist_it) {
-    auto hist_set_it = hist_it->second.find(frame_id);
-    if (hist_set_it != hist_it->second.end()) {
-      return streams_.name(hist_it->first);
-    }
-  }
-  RTC_CHECK(false) << "Unknown frame_id=" << frame_id;
+  MutexLock lock(&mutex_);
+  return GetStreamLabelInternal(frame_id);
+}
+
+std::string DefaultVideoQualityAnalyzer::GetSenderPeerName(
+    uint16_t frame_id) const {
+  MutexLock lock(&mutex_);
+  std::string stream_label = GetStreamLabelInternal(frame_id);
+  size_t stream_index = streams_.index(stream_label);
+  size_t sender_peer_index = stream_states_.at(stream_index).sender();
+  return peers_->name(sender_peer_index);
 }
 
 std::set<StatsKey> DefaultVideoQualityAnalyzer::GetKnownVideoStreams() const {
@@ -1304,6 +1317,22 @@ std::string DefaultVideoQualityAnalyzer::ToMetricName(
   out << stream_label << "_" << peers_->name(key.sender) << "_"
       << peers_->name(key.receiver);
   return out.str();
+}
+
+std::string DefaultVideoQualityAnalyzer::GetStreamLabelInternal(
+    uint16_t frame_id) const {
+  auto it = captured_frames_in_flight_.find(frame_id);
+  if (it != captured_frames_in_flight_.end()) {
+    return streams_.name(it->second.stream());
+  }
+  for (auto hist_it = stream_to_frame_id_history_.begin();
+       hist_it != stream_to_frame_id_history_.end(); ++hist_it) {
+    auto hist_set_it = hist_it->second.find(frame_id);
+    if (hist_set_it != hist_it->second.end()) {
+      return streams_.name(hist_it->first);
+    }
+  }
+  RTC_CHECK(false) << "Unknown frame_id=" << frame_id;
 }
 
 double DefaultVideoQualityAnalyzer::GetCpuUsagePercent() {

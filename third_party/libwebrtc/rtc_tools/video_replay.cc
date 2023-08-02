@@ -40,7 +40,6 @@
 #include "system_wrappers/include/clock.h"
 #include "system_wrappers/include/sleep.h"
 #include "test/call_config_utils.h"
-#include "test/call_test.h"
 #include "test/encoder_settings.h"
 #include "test/fake_decoder.h"
 #include "test/gtest.h"
@@ -52,54 +51,55 @@
 #include "test/testsupport/frame_writer.h"
 #include "test/time_controller/simulated_time_controller.h"
 #include "test/video_renderer.h"
+#include "test/video_test_constants.h"
 
 // Flag for payload type.
 ABSL_FLAG(int,
           media_payload_type,
-          webrtc::test::CallTest::kPayloadTypeVP8,
+          webrtc::test::VideoTestConstants::kPayloadTypeVP8,
           "Media payload type");
 
 // Flag for RED payload type.
 ABSL_FLAG(int,
           red_payload_type,
-          webrtc::test::CallTest::kRedPayloadType,
+          webrtc::test::VideoTestConstants::kRedPayloadType,
           "RED payload type");
 
 // Flag for ULPFEC payload type.
 ABSL_FLAG(int,
           ulpfec_payload_type,
-          webrtc::test::CallTest::kUlpfecPayloadType,
+          webrtc::test::VideoTestConstants::kUlpfecPayloadType,
           "ULPFEC payload type");
 
 // Flag for FLEXFEC payload type.
 ABSL_FLAG(int,
           flexfec_payload_type,
-          webrtc::test::CallTest::kFlexfecPayloadType,
+          webrtc::test::VideoTestConstants::kFlexfecPayloadType,
           "FLEXFEC payload type");
 
 ABSL_FLAG(int,
           media_payload_type_rtx,
-          webrtc::test::CallTest::kSendRtxPayloadType,
+          webrtc::test::VideoTestConstants::kSendRtxPayloadType,
           "Media over RTX payload type");
 
 ABSL_FLAG(int,
           red_payload_type_rtx,
-          webrtc::test::CallTest::kRtxRedPayloadType,
+          webrtc::test::VideoTestConstants::kRtxRedPayloadType,
           "RED over RTX payload type");
 
 // Flag for SSRC and RTX SSRC.
 ABSL_FLAG(uint32_t,
           ssrc,
-          webrtc::test::CallTest::kVideoSendSsrcs[0],
+          webrtc::test::VideoTestConstants::kVideoSendSsrcs[0],
           "Incoming SSRC");
 ABSL_FLAG(uint32_t,
           ssrc_rtx,
-          webrtc::test::CallTest::kSendRtxSsrcs[0],
+          webrtc::test::VideoTestConstants::kSendRtxSsrcs[0],
           "Incoming RTX SSRC");
 
 ABSL_FLAG(uint32_t,
           ssrc_flexfec,
-          webrtc::test::CallTest::kFlexfecSendSsrc,
+          webrtc::test::VideoTestConstants::kFlexfecSendSsrc,
           "Incoming FLEXFEC SSRC");
 
 // Flag for abs-send-time id.

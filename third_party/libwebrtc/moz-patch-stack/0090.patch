@@ -1,69 +1,100 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
 Date: Wed, 10 May 2023 07:06:00 +0000
-Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit ba41b40461.
+Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit 32b64e895c.
  r=webrtc-reviewers,mjf
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-Upstream commit: https://webrtc.googlesource.com/src/+/ba41b40461df191624c61f0c98ae76e69fe1d46b
-    webrtc_libyuv: Add support for more video types for consistency
+Upstream commit: https://webrtc.googlesource.com/src/+/32b64e895c0231fe6891a8f6335d66f1dad4f1f5
+    Improve ergonomics of dealing with pixel formats in v4l2 camera backend
 
     Bug: webrtc:14830
-    Change-Id: I0998fb04a03745131f9f5cca878b0cdb46f3b62b
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291529
-    Reviewed-by: Erik Språng <sprang@webrtc.org>
+    Change-Id: Ib49bf65895fe008e75223abb03867d412c1b5a60
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291531
     Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Reviewed-by: Stefan Holmer <stefan@webrtc.org>
     Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
-    Cr-Commit-Position: refs/heads/main@{#39940}
+    Cr-Commit-Position: refs/heads/main@{#39976}
 
-Differential Revision: https://phabricator.services.mozilla.com/D177229
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b6eaef560895caa06e11cce40083eb87fd8724a8
+Differential Revision: https://phabricator.services.mozilla.com/D177231
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f0afe1a1097f3e02d59fd06d5e83d00a0f4d69ae
 ---
- common_video/libyuv/include/webrtc_libyuv.h | 3 ++-
- common_video/libyuv/webrtc_libyuv.cc        | 4 ++++
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ .../video_capture/linux/device_info_v4l2.cc   |  4 ++-
+ .../video_capture/linux/video_capture_v4l2.cc | 31 +++++++++----------
+ 2 files changed, 17 insertions(+), 18 deletions(-)
 
-diff --git a/common_video/libyuv/include/webrtc_libyuv.h b/common_video/libyuv/include/webrtc_libyuv.h
-index 6d9071bcd5..253a33294d 100644
---- a/common_video/libyuv/include/webrtc_libyuv.h
-+++ b/common_video/libyuv/include/webrtc_libyuv.h
-@@ -32,8 +32,9 @@ enum class VideoType {
-   kI420,
-   kIYUV,
-   kRGB24,
--  kABGR,
-+  kBGR24,
-   kARGB,
-+  kABGR,
-   kARGB4444,
-   kRGB565,
-   kARGB1555,
-diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
-index 4c6911b4a3..05a4b184c2 100644
---- a/common_video/libyuv/webrtc_libyuv.cc
-+++ b/common_video/libyuv/webrtc_libyuv.cc
-@@ -39,9 +39,11 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
-     case VideoType::kUYVY:
-       return width * height * 2;
-     case VideoType::kRGB24:
-+    case VideoType::kBGR24:
-       return width * height * 3;
-     case VideoType::kBGRA:
-     case VideoType::kARGB:
-+    case VideoType::kABGR:
-       return width * height * 4;
-     case VideoType::kMJPEG:
-     case VideoType::kUnknown:
-@@ -93,6 +95,8 @@ int ConvertVideoType(VideoType video_type) {
-       return libyuv::FOURCC_YV12;
-     case VideoType::kRGB24:
-       return libyuv::FOURCC_24BG;
-+    case VideoType::kBGR24:
-+      return libyuv::FOURCC_RAW;
-     case VideoType::kABGR:
-       return libyuv::FOURCC_ABGR;
-     case VideoType::kRGB565:
+diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
+index 7651dd6651..f854c2ccc7 100644
+--- a/modules/video_capture/linux/device_info_v4l2.cc
++++ b/modules/video_capture/linux/device_info_v4l2.cc
+@@ -391,10 +391,10 @@ int32_t DeviceInfoV4l2::FillCapabilities(int fd) {
+   video_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+   video_fmt.fmt.pix.sizeimage = 0;
+ 
+-  int totalFmts = 5;
+   unsigned int videoFormats[] = {V4L2_PIX_FMT_MJPEG, V4L2_PIX_FMT_YUV420,
+                                  V4L2_PIX_FMT_YUYV, V4L2_PIX_FMT_UYVY,
+                                  V4L2_PIX_FMT_NV12};
++  constexpr int totalFmts = sizeof(videoFormats) / sizeof(unsigned int);
+ 
+   int sizes = 13;
+   unsigned int size[][2] = {{128, 96},   {160, 120},  {176, 144},  {320, 240},
+@@ -424,6 +424,8 @@ int32_t DeviceInfoV4l2::FillCapabilities(int fd) {
+             cap.videoType = VideoType::kUYVY;
+           } else if (videoFormats[fmts] == V4L2_PIX_FMT_NV12) {
+             cap.videoType = VideoType::kNV12;
++          } else {
++            RTC_DCHECK_NOTREACHED();
+           }
+ 
+           // get fps of current camera mode
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index c7dcb722bc..baf1916331 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -130,23 +130,18 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   // Supported video formats in preferred order.
+   // If the requested resolution is larger than VGA, we prefer MJPEG. Go for
+   // I420 otherwise.
+-  const int nFormats = 6;
+-  unsigned int fmts[nFormats];
+-  if (capability.width > 640 || capability.height > 480) {
+-    fmts[0] = V4L2_PIX_FMT_MJPEG;
+-    fmts[1] = V4L2_PIX_FMT_YUV420;
+-    fmts[2] = V4L2_PIX_FMT_YUYV;
+-    fmts[3] = V4L2_PIX_FMT_UYVY;
+-    fmts[4] = V4L2_PIX_FMT_NV12;
+-    fmts[5] = V4L2_PIX_FMT_JPEG;
+-  } else {
+-    fmts[0] = V4L2_PIX_FMT_YUV420;
+-    fmts[1] = V4L2_PIX_FMT_YUYV;
+-    fmts[2] = V4L2_PIX_FMT_UYVY;
+-    fmts[3] = V4L2_PIX_FMT_NV12;
+-    fmts[4] = V4L2_PIX_FMT_MJPEG;
+-    fmts[5] = V4L2_PIX_FMT_JPEG;
+-  }
++  unsigned int hdFmts[] = {
++      V4L2_PIX_FMT_MJPEG,  V4L2_PIX_FMT_YUV420, V4L2_PIX_FMT_YUYV,
++      V4L2_PIX_FMT_UYVY,   V4L2_PIX_FMT_NV12,   V4L2_PIX_FMT_JPEG,
++  };
++  unsigned int sdFmts[] = {
++      V4L2_PIX_FMT_YUV420, V4L2_PIX_FMT_YUYV,   V4L2_PIX_FMT_UYVY,
++      V4L2_PIX_FMT_NV12,   V4L2_PIX_FMT_MJPEG,  V4L2_PIX_FMT_JPEG,
++  };
++  const bool isHd = capability.width > 640 || capability.height > 480;
++  unsigned int* fmts = isHd ? hdFmts : sdFmts;
++  static_assert(sizeof(hdFmts) == sizeof(sdFmts));
++  constexpr int nFormats = sizeof(hdFmts) / sizeof(unsigned int);
+ 
+   // Enumerate image formats.
+   struct v4l2_fmtdesc fmt;
+@@ -195,6 +190,8 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG ||
+            video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_JPEG)
+     _captureVideoType = VideoType::kMJPEG;
++  else
++    RTC_DCHECK_NOTREACHED();
+ 
+   // set format and frame size now
+   if (ioctl(_deviceFd, VIDIOC_S_FMT, &video_fmt) < 0) {
 -- 
 2.34.1
 

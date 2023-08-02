@@ -67,7 +67,7 @@ class FakeClockForTest : public rtc::ScopedFakeClock {
     // Some things use a time of "0" as a special value, so we need to start out
     // the fake clock at a nonzero time.
     // TODO(deadbeef): Fix this.
-    AdvanceTime(webrtc::TimeDelta::Seconds(1));
+    AdvanceTime(webrtc::TimeDelta::Seconds(1000));
   }
 
   // Explicit handle.

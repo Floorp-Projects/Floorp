@@ -254,8 +254,6 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
 
   const rtc::scoped_refptr<RTPSenderVideoFrameTransformerDelegate>
       frame_transformer_delegate_;
-
-  const bool include_capture_clock_offset_;
 };
 
 }  // namespace webrtc

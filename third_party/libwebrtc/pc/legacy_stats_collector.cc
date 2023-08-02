@@ -34,7 +34,6 @@
 #include "api/video/video_timing.h"
 #include "call/call.h"
 #include "media/base/media_channel.h"
-#include "media/base/media_channel_impl.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/p2p_constants.h"
@@ -207,7 +206,7 @@ void ExtractStats(const cricket::VoiceReceiverInfo& info,
       {StatsReport::kStatsValueNameJitterBufferMs, info.jitter_buffer_ms},
       {StatsReport::kStatsValueNameJitterReceived, info.jitter_ms},
       {StatsReport::kStatsValueNamePacketsLost, info.packets_lost},
-      {StatsReport::kStatsValueNamePacketsReceived, info.packets_rcvd},
+      {StatsReport::kStatsValueNamePacketsReceived, info.packets_received},
       {StatsReport::kStatsValueNamePreferredJitterBufferMs,
        info.jitter_buffer_preferred_ms},
   };
@@ -225,11 +224,11 @@ void ExtractStats(const cricket::VoiceReceiverInfo& info,
     report->AddInt(StatsReport::kStatsValueNameDecodingCodecPLC,
                    info.decoding_codec_plc);
 
-  int64_t bytes_rcvd = info.payload_bytes_rcvd;
+  int64_t bytes_received = info.payload_bytes_received;
   if (!use_standard_bytes_stats) {
-    bytes_rcvd += info.header_and_padding_bytes_rcvd;
+    bytes_received += info.header_and_padding_bytes_received;
   }
-  report->AddInt64(StatsReport::kStatsValueNameBytesReceived, bytes_rcvd);
+  report->AddInt64(StatsReport::kStatsValueNameBytesReceived, bytes_received);
   if (info.capture_start_ntp_time_ms >= 0) {
     report->AddInt64(StatsReport::kStatsValueNameCaptureStartNtpTimeMs,
                      info.capture_start_ntp_time_ms);
@@ -303,11 +302,11 @@ void ExtractStats(const cricket::VideoReceiverInfo& info,
   ExtractCommonReceiveProperties(info, report);
   report->AddString(StatsReport::kStatsValueNameCodecImplementationName,
                     info.decoder_implementation_name);
-  int64_t bytes_rcvd = info.payload_bytes_rcvd;
+  int64_t bytes_received = info.payload_bytes_received;
   if (!use_standard_bytes_stats) {
-    bytes_rcvd += info.header_and_padding_bytes_rcvd;
+    bytes_received += info.header_and_padding_bytes_received;
   }
-  report->AddInt64(StatsReport::kStatsValueNameBytesReceived, bytes_rcvd);
+  report->AddInt64(StatsReport::kStatsValueNameBytesReceived, bytes_received);
   if (info.capture_start_ntp_time_ms >= 0) {
     report->AddInt64(StatsReport::kStatsValueNameCaptureStartNtpTimeMs,
                      info.capture_start_ntp_time_ms);
@@ -330,14 +329,14 @@ void ExtractStats(const cricket::VideoReceiverInfo& info,
       {StatsReport::kStatsValueNameFrameHeightReceived, info.frame_height},
       {StatsReport::kStatsValueNameFrameRateDecoded, info.framerate_decoded},
       {StatsReport::kStatsValueNameFrameRateOutput, info.framerate_output},
-      {StatsReport::kStatsValueNameFrameRateReceived, info.framerate_rcvd},
+      {StatsReport::kStatsValueNameFrameRateReceived, info.framerate_received},
       {StatsReport::kStatsValueNameFrameWidthReceived, info.frame_width},
       {StatsReport::kStatsValueNameJitterBufferMs, info.jitter_buffer_ms},
       {StatsReport::kStatsValueNameMaxDecodeMs, info.max_decode_ms},
       {StatsReport::kStatsValueNameMinPlayoutDelayMs,
        info.min_playout_delay_ms},
       {StatsReport::kStatsValueNamePacketsLost, info.packets_lost},
-      {StatsReport::kStatsValueNamePacketsReceived, info.packets_rcvd},
+      {StatsReport::kStatsValueNamePacketsReceived, info.packets_received},
       {StatsReport::kStatsValueNamePlisSent, info.plis_sent},
       {StatsReport::kStatsValueNameRenderDelayMs, info.render_delay_ms},
       {StatsReport::kStatsValueNameTargetDelayMs, info.target_delay_ms},
@@ -383,15 +382,15 @@ void ExtractStats(const cricket::VideoSenderInfo& info,
       {StatsReport::kStatsValueNameAvgEncodeMs, info.avg_encode_ms},
       {StatsReport::kStatsValueNameEncodeUsagePercent,
        info.encode_usage_percent},
-      {StatsReport::kStatsValueNameFirsReceived, info.firs_rcvd},
+      {StatsReport::kStatsValueNameFirsReceived, info.firs_received},
       {StatsReport::kStatsValueNameFrameHeightSent, info.send_frame_height},
       {StatsReport::kStatsValueNameFrameRateInput, round(info.framerate_input)},
       {StatsReport::kStatsValueNameFrameRateSent, info.framerate_sent},
       {StatsReport::kStatsValueNameFrameWidthSent, info.send_frame_width},
-      {StatsReport::kStatsValueNameNacksReceived, info.nacks_rcvd},
+      {StatsReport::kStatsValueNameNacksReceived, info.nacks_received},
       {StatsReport::kStatsValueNamePacketsLost, info.packets_lost},
       {StatsReport::kStatsValueNamePacketsSent, info.packets_sent},
-      {StatsReport::kStatsValueNamePlisReceived, info.plis_rcvd},
+      {StatsReport::kStatsValueNamePlisReceived, info.plis_received},
       {StatsReport::kStatsValueNameFramesEncoded, info.frames_encoded},
       {StatsReport::kStatsValueNameHugeFramesSent, info.huge_frames_sent},
   };
@@ -670,7 +669,7 @@ void LegacyStatsCollector::UpdateStats(
   // to fetch stats, then applies them on the signaling thread. See if we need
   // to do this synchronously or if updating the stats without blocking is safe.
   std::map<std::string, std::string> transport_names_by_mid =
-      ExtractSessionInfo();
+      ExtractSessionAndDataInfo();
 
   // TODO(tommi): All of these hop over to the worker thread to fetch
   // information.  We could post a task to run all of these and post
@@ -681,7 +680,6 @@ void LegacyStatsCollector::UpdateStats(
   ExtractBweInfo();
   ExtractMediaInfo(transport_names_by_mid);
   ExtractSenderInfo();
-  ExtractDataInfo();
   UpdateTrackReports();
 }
 
@@ -856,18 +854,25 @@ StatsReport* LegacyStatsCollector::AddCandidateReport(
   return report;
 }
 
-std::map<std::string, std::string> LegacyStatsCollector::ExtractSessionInfo() {
-  TRACE_EVENT0("webrtc", "LegacyStatsCollector::ExtractSessionInfo");
+std::map<std::string, std::string>
+LegacyStatsCollector::ExtractSessionAndDataInfo() {
+  TRACE_EVENT0("webrtc", "LegacyStatsCollector::ExtractSessionAndDataInfo");
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
 
   SessionStats stats;
+  StatsCollection::Container data_report_collection;
   auto transceivers = pc_->GetTransceiversInternal();
   pc_->network_thread()->BlockingCall(
       [&, sctp_transport_name = pc_->sctp_transport_name(),
        sctp_mid = pc_->sctp_mid()]() mutable {
         stats = ExtractSessionInfo_n(
             transceivers, std::move(sctp_transport_name), std::move(sctp_mid));
+        StatsCollection data_reports;
+        ExtractDataInfo_n(&data_reports);
+        data_report_collection = data_reports.DetachCollection();
       });
+
+  reports_.MergeCollection(std::move(data_report_collection));
 
   ExtractSessionInfo_s(stats);
 
@@ -1292,8 +1297,8 @@ void LegacyStatsCollector::ExtractSenderInfo() {
   }
 }
 
-void LegacyStatsCollector::ExtractDataInfo() {
-  RTC_DCHECK_RUN_ON(pc_->signaling_thread());
+void LegacyStatsCollector::ExtractDataInfo_n(StatsCollection* reports) {
+  RTC_DCHECK_RUN_ON(pc_->network_thread());
 
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
@@ -1301,7 +1306,7 @@ void LegacyStatsCollector::ExtractDataInfo() {
   for (const auto& stats : data_stats) {
     StatsReport::Id id(StatsReport::NewTypedIntId(
         StatsReport::kStatsReportTypeDataChannel, stats.id));
-    StatsReport* report = reports_.ReplaceOrAddNew(id);
+    StatsReport* report = reports->ReplaceOrAddNew(id);
     report->set_timestamp(stats_gathering_started_);
     report->AddString(StatsReport::kStatsValueNameLabel, stats.label);
     // Filter out the initial id (-1).

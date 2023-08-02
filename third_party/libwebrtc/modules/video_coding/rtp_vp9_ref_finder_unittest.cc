@@ -157,8 +157,7 @@ class HasFrameMatcher : public MatcherInterface<const FrameVector&> {
  public:
   explicit HasFrameMatcher(int64_t frame_id,
                            const std::vector<int64_t>& expected_refs)
-      : frame_id_(frame_id),
-        expected_refs_(expected_refs) {}
+      : frame_id_(frame_id), expected_refs_(expected_refs) {}
 
   bool MatchAndExplain(const FrameVector& frames,
                        MatchResultListener* result_listener) const override {

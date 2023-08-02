@@ -498,6 +498,7 @@ rtc_source_set("video_quality_analyzer_api") {
   deps = [
     ":array_view",
     ":stats_observer_interface",
+    "../rtc_base:checks",
     "video:encoded_image",
     "video:video_frame",
     "video:video_rtp_headers",
@@ -1049,7 +1050,10 @@ if (rtc_include_tests) {
   rtc_library("video_codec_stats_api") {
     visibility = [ "*" ]
     testonly = true
-    sources = [ "test/video_codec_stats.h" ]
+    sources = [
+      "test/video_codec_stats.cc",
+      "test/video_codec_stats.h",
+    ]
     deps = [
       "../api/numerics:numerics",
       "../api/units:data_rate",
@@ -1113,7 +1117,7 @@ if (rtc_include_tests) {
     ]
     deps = [
       ":video_codec_tester_api",
-      "../modules/video_coding:videocodec_test_impl",
+      "../modules/video_coding:video_codec_tester",
     ]
   }
 

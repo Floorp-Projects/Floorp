@@ -47,10 +47,6 @@ EncoderInfoSettings::GetDefaultSinglecastBitrateLimits(
             {960 * 540, 350000, 30000, 1000000},
             {1280 * 720, 480000, 30000, 1500000}};
   }
-  // Don't override existing AV1 limits with default values.
-  if (codec_type == kVideoCodecAV1) {
-    return {};
-  }
 
   return {{320 * 180, 0, 30000, 300000},
           {480 * 270, 200000, 30000, 500000},

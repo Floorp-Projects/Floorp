@@ -1,41 +1,81 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Tue, 16 May 2023 06:37:00 +0000
-Subject: Bug 1832770 - Cherry-pick upstream libwebrtc commit 7b0d7f48fb.
- r=grulja,webrtc-reviewers,mjf
+Date: Tue, 16 May 2023 06:38:00 +0000
+Subject: Bug 1832804 - cherry-pick upstream webrtc commit a09331a603.
+ r=webrtc-reviewers,mjf
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Upstream commit:
-    PipeWire capturer: fix fcntl call when duplicating a file descriptor
+Upstream commit: https://webrtc.googlesource.com/src/+/a09331a6038bb6191c7662680d8928940463a099
+    Don't write TransmissionOffset when capture time is not set
 
-    The fcntl() call has variable arguments, therefore we need to pass 0 to
-    specify there are no other arguments for this call, otherwise we might
-    end up with an argument that is random garbage.
+    RTX padding packets sent before media packets can legitimately have no
+    timestamps set (they are 0). Writing the TransmissionOffset extension
+    with capture time 0 will overflow once current time exceeds ~3 minutes.
 
-    Bug: webrtc:15174
-    Change-Id: I34f16a942d80913b667d8ade7eed557b0233be01
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/305120
-    Reviewed-by: Alexander Cooper <alcooper@chromium.org>
-    Commit-Queue: Jan Grulich <grulja@gmail.com>
-    Cr-Commit-Position: refs/heads/main@{#40060}
+    Bug: webrtc:15172
+    Change-Id: I4dd1f341802d45016549b330f0e08cd3a00cfa19
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/305020
+    Reviewed-by: Erik Språng <sprang@webrtc.org>
+    Reviewed-by: Per Kjellander <perkj@webrtc.org>
+    Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
+    Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#40055}
 
-Differential Revision: https://phabricator.services.mozilla.com/D178009
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/47978aa145282f737fc77fcdcadc995e80e2a743
+Differential Revision: https://phabricator.services.mozilla.com/D178007
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c303f3d267415184f3d023b022e4bd309d540fec
 ---
- .../desktop_capture/linux/wayland/shared_screencast_stream.cc   | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ modules/rtp_rtcp/source/rtp_sender_egress.cc  |  5 +++--
+ .../source/rtp_sender_egress_unittest.cc      | 20 +++++++++++++++++++
+ 2 files changed, 23 insertions(+), 2 deletions(-)
 
-diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 21863b7d8d..17c895088a 100644
---- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-+++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -450,7 +450,7 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+diff --git a/modules/rtp_rtcp/source/rtp_sender_egress.cc b/modules/rtp_rtcp/source/rtp_sender_egress.cc
+index 88f5d28c78..a9fa071379 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_egress.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_egress.cc
+@@ -209,8 +209,9 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
+   // In case of VideoTimingExtension, since it's present not in every packet,
+   // data after rtp header may be corrupted if these packets are protected by
+   // the FEC.
+-  TimeDelta diff = now - packet->capture_time();
+-  if (packet->HasExtension<TransmissionOffset>()) {
++  if (packet->HasExtension<TransmissionOffset>() &&
++      packet->capture_time() > Timestamp::Zero()) {
++    TimeDelta diff = now - packet->capture_time();
+     packet->SetExtension<TransmissionOffset>(kTimestampTicksPerMs * diff.ms());
+   }
+   if (packet->HasExtension<AbsoluteSendTime>()) {
+diff --git a/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc b/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc
+index cc1c8feb8d..bfaffa1bdb 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc
+@@ -268,6 +268,26 @@ TEST_F(RtpSenderEgressTest,
+   EXPECT_TRUE(transport_.last_packet()->options.included_in_allocation);
+ }
  
-     if (fd >= 0) {
-       pw_core_ = pw_context_connect_fd(
--          pw_context_, fcntl(fd, F_DUPFD_CLOEXEC), nullptr, 0);
-+          pw_context_, fcntl(fd, F_DUPFD_CLOEXEC, 0), nullptr, 0);
-     } else {
-       pw_core_ = pw_context_connect(pw_context_, nullptr, 0);
-     }
++TEST_F(RtpSenderEgressTest,
++       DoesntWriteTransmissionOffsetOnRtxPaddingBeforeMedia) {
++  header_extensions_.RegisterByUri(kTransmissionOffsetExtensionId,
++                                   TransmissionOffset::Uri());
++
++  // Prior to sending media, timestamps are 0.
++  std::unique_ptr<RtpPacketToSend> padding =
++      BuildRtpPacket(/*marker_bit=*/true, /*capture_time_ms=*/0);
++  padding->set_packet_type(RtpPacketMediaType::kPadding);
++  padding->SetSsrc(kRtxSsrc);
++  EXPECT_TRUE(padding->HasExtension<TransmissionOffset>());
++
++  std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
++  sender->SendPacket(std::move(padding), PacedPacketInfo());
++
++  absl::optional<int32_t> offset =
++      transport_.last_packet()->packet.GetExtension<TransmissionOffset>();
++  EXPECT_EQ(offset, 0);
++}
++
+ TEST_F(RtpSenderEgressTest, OnSendSideDelayUpdated) {
+   StrictMock<MockSendSideDelayObserver> send_side_delay_observer;
+   RtpRtcpInterface::Configuration config = DefaultConfig();
 -- 
 2.34.1
 

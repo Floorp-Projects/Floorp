@@ -289,6 +289,10 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   // To track changes needed to mRtpSendBaseSeqs.
   std::map<uint32_t, uint16_t> mRtpSendBaseSeqs_n;
 
+  // Written only on the main thread.  Guarded by mLock, except for
+  // reads on the main thread.
+  std::vector<webrtc::RtpSource> mRtpSources;
+
   // Thread safe
   Atomic<bool> mTransportActive = Atomic<bool>(false);
   MediaEventProducer<void> mRtcpByeEvent;

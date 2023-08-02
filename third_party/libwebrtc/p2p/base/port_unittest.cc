@@ -517,12 +517,10 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
     return &networks_.back();
   }
 
-  rtc::Network* MakeNetworkMultipleAddrs(
-      const SocketAddress& global_addr,
-      const SocketAddress& link_local_addr,
-      const webrtc::FieldTrialsView* field_trials) {
+  rtc::Network* MakeNetworkMultipleAddrs(const SocketAddress& global_addr,
+                                         const SocketAddress& link_local_addr) {
     networks_.emplace_back("unittest", "unittest", global_addr.ipaddr(), 32,
-                           rtc::ADAPTER_TYPE_UNKNOWN, field_trials);
+                           rtc::ADAPTER_TYPE_UNKNOWN);
     networks_.back().AddIP(link_local_addr.ipaddr());
     networks_.back().AddIP(global_addr.ipaddr());
     networks_.back().AddIP(link_local_addr.ipaddr());
@@ -545,12 +543,11 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
   std::unique_ptr<UDPPort> CreateUdpPortMultipleAddrs(
       const SocketAddress& global_addr,
       const SocketAddress& link_local_addr,
-      PacketSocketFactory* socket_factory,
-      const webrtc::test::ScopedKeyValueConfig& field_trials) {
+      PacketSocketFactory* socket_factory) {
     auto port = UDPPort::Create(
         &main_, socket_factory,
-        MakeNetworkMultipleAddrs(global_addr, link_local_addr, &field_trials),
-        0, 0, username_, password_, true, absl::nullopt, &field_trials);
+        MakeNetworkMultipleAddrs(global_addr, link_local_addr), 0, 0, username_,
+        password_, true, absl::nullopt, &field_trials_);
     port->SetIceTiebreaker(kTiebreakerDefault);
     return port;
   }
@@ -1770,9 +1767,6 @@ TEST_F(PortTest, TestUdpSingleAddressV6CrossTypePorts) {
 }
 
 TEST_F(PortTest, TestUdpMultipleAddressesV6CrossTypePorts) {
-  webrtc::test::ScopedKeyValueConfig field_trials(
-      "WebRTC-IPv6NetworkResolutionFixes/"
-      "Enabled,PreferGlobalIPv6Address:true/");
   FakePacketSocketFactory factory;
   std::unique_ptr<Port> ports[5];
   SocketAddress addresses[5] = {
@@ -1782,8 +1776,8 @@ TEST_F(PortTest, TestUdpMultipleAddressesV6CrossTypePorts) {
   for (int i = 0; i < 5; i++) {
     FakeAsyncPacketSocket* socket = new FakeAsyncPacketSocket();
     factory.set_next_udp_socket(socket);
-    ports[i] = CreateUdpPortMultipleAddrs(addresses[i], kLinkLocalIPv6Addr,
-                                          &factory, field_trials);
+    ports[i] =
+        CreateUdpPortMultipleAddrs(addresses[i], kLinkLocalIPv6Addr, &factory);
     ports[i]->SetIceTiebreaker(kTiebreakerDefault);
     socket->set_state(AsyncPacketSocket::STATE_BINDING);
     socket->SignalAddressReady(socket, addresses[i]);

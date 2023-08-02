@@ -17,6 +17,7 @@
 #define SDK_MEDIA_CONSTRAINTS_H_
 
 #include <stddef.h>
+
 #include <string>
 #include <utility>
 #include <vector>
@@ -59,10 +60,10 @@ class MediaConstraints {
   // These keys are google specific.
   static const char kGoogEchoCancellation[];  // googEchoCancellation
 
-  static const char kAutoGainControl[];       // googAutoGainControl
-  static const char kNoiseSuppression[];      // googNoiseSuppression
-  static const char kHighpassFilter[];        // googHighpassFilter
-  static const char kAudioMirroring[];        // googAudioMirroring
+  static const char kAutoGainControl[];   // googAutoGainControl
+  static const char kNoiseSuppression[];  // googNoiseSuppression
+  static const char kHighpassFilter[];    // googHighpassFilter
+  static const char kAudioMirroring[];    // googAudioMirroring
   static const char
       kAudioNetworkAdaptorConfig[];  // googAudioNetworkAdaptorConfig
   static const char kInitAudioRecordingOnSend[];  // InitAudioRecordingOnSend;

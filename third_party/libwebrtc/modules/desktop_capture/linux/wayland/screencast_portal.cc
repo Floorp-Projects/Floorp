@@ -24,12 +24,12 @@ namespace {
 using xdg_portal::kScreenCastInterfaceName;
 using xdg_portal::PrepareSignalHandle;
 using xdg_portal::RequestResponse;
+using xdg_portal::RequestResponseFromPortalResponse;
 using xdg_portal::RequestSessionProxy;
 using xdg_portal::SetupRequestResponseSignal;
 using xdg_portal::SetupSessionRequestHandlers;
 using xdg_portal::StartSessionRequest;
 using xdg_portal::TearDownSession;
-using xdg_portal::RequestResponseFromPortalResponse;
 
 }  // namespace
 

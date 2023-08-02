@@ -13,6 +13,7 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/network_state_predictor.h"
+#include "logging/rtc_event_log/dependency_descriptor_encoder_decoder.h"
 #include "logging/rtc_event_log/encoder/blob_encoding.h"
 #include "logging/rtc_event_log/encoder/delta_encoding.h"
 #include "logging/rtc_event_log/encoder/rtc_event_log_encoder_common.h"
@@ -56,6 +57,7 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/rtpfb.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/sdes.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/sender_report.h"
+#include "modules/rtp_rtcp/source/rtp_dependency_descriptor_extension.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
 #include "rtc_base/checks.h"
@@ -147,6 +149,8 @@ bool ConvertToProtoFormat(const std::vector<RtpExtension>& extensions,
       proto_config->set_transport_sequence_number_id(extension.id);
     } else if (extension.uri == RtpExtension::kVideoRotationUri) {
       proto_config->set_video_rotation_id(extension.id);
+    } else if (extension.uri == RtpExtension::kDependencyDescriptorUri) {
+      proto_config->set_dependency_descriptor_id(extension.id);
     } else {
       ++unknown_extensions;
     }
@@ -454,6 +458,29 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
 
       base_voice_activity = voice_activity;
       proto_batch->set_voice_activity(voice_activity);
+    }
+  }
+
+  {
+    // TODO(webrtc:14975) Remove this kill switch after DD in RTC event log has
+    //                    been rolled out.
+    if (!webrtc::field_trial::IsDisabled(
+            "WebRTC-RtcEventLogEncodeDependencyDescriptor")) {
+      std::vector<rtc::ArrayView<const uint8_t>> raw_dds(batch.size());
+      bool has_dd = false;
+      for (size_t i = 0; i < batch.size(); ++i) {
+        raw_dds[i] =
+            batch[i]
+                ->template GetRawExtension<RtpDependencyDescriptorExtension>();
+        has_dd |= !raw_dds[i].empty();
+      }
+      if (has_dd) {
+        if (auto dd_encoded =
+                RtcEventLogDependencyDescriptorEncoderDecoder::Encode(
+                    raw_dds)) {
+          *proto_batch->mutable_dependency_descriptor() = *dd_encoded;
+        }
+      }
     }
   }
 

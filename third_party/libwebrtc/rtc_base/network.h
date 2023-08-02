@@ -361,6 +361,9 @@ class RTC_EXPORT BasicNetworkManager : public NetworkManagerBase,
   bool sent_first_update_ = true;
   int start_count_ = 0;
 
+  webrtc::AlwaysValidPointer<const webrtc::FieldTrialsView,
+                             webrtc::FieldTrialBasedConfig>
+      field_trials_;
   std::vector<std::string> network_ignore_list_;
   NetworkMonitorFactory* const network_monitor_factory_;
   SocketFactory* const socket_factory_;
@@ -379,21 +382,18 @@ class RTC_EXPORT Network {
   Network(absl::string_view name,
           absl::string_view description,
           const IPAddress& prefix,
-          int prefix_length,
-          const webrtc::FieldTrialsView* field_trials = nullptr)
+          int prefix_length)
       : Network(name,
                 description,
                 prefix,
                 prefix_length,
-                rtc::ADAPTER_TYPE_UNKNOWN,
-                field_trials) {}
+                rtc::ADAPTER_TYPE_UNKNOWN) {}
 
   Network(absl::string_view name,
           absl::string_view description,
           const IPAddress& prefix,
           int prefix_length,
-          AdapterType type,
-          const webrtc::FieldTrialsView* field_trials = nullptr);
+          AdapterType type);
 
   Network(const Network&);
   ~Network();
@@ -442,8 +442,7 @@ class RTC_EXPORT Network {
   // Here is the rule on how we mark the IPv6 address as ignorable for WebRTC.
   // 1) return all global temporary dynamic and non-deprecated ones.
   // 2) if #1 not available, return global ones.
-  // 3) if #2 not available and WebRTC-IPv6NetworkResolutionFixes enabled,
-  // return local link ones.
+  // 3) if #2 not available, return local link ones.
   // 4) if #3 not available, use ULA ipv6 as last resort. (ULA stands for
   // unique local address, which is not route-able in open internet but might
   // be useful for a close WebRTC deployment.
@@ -577,7 +576,6 @@ class RTC_EXPORT Network {
   std::string ToString() const;
 
  private:
-  const webrtc::FieldTrialsView* field_trials_ = nullptr;
   const DefaultLocalAddressProvider* default_local_address_provider_ = nullptr;
   const MdnsResponderProvider* mdns_responder_provider_ = nullptr;
   std::string name_;
