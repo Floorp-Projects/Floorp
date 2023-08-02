@@ -15,6 +15,7 @@ ${helpers.predefined_type(
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-family",
     servo_restyle_damage="rebuild_and_reflow",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -26,6 +27,7 @@ ${helpers.predefined_type(
     animation_value_type="FontStyle",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-style",
     servo_restyle_damage="rebuild_and_reflow",
+    affects="layout",
 )}
 
 <% font_variant_caps_custom_consts= { "small-caps": "SMALLCAPS",
@@ -45,6 +47,7 @@ ${helpers.single_keyword(
     custom_consts=font_variant_caps_custom_consts,
     animation_value_type="discrete",
     servo_restyle_damage="rebuild_and_reflow",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -56,6 +59,7 @@ ${helpers.predefined_type(
     animation_value_type="Number",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-weight",
     servo_restyle_damage="rebuild_and_reflow",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -68,6 +72,7 @@ ${helpers.predefined_type(
     allow_quirks="Yes",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-size",
     servo_restyle_damage="rebuild_and_reflow",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -78,6 +83,7 @@ ${helpers.predefined_type(
     initial_specified_value="specified::FontSizeAdjust::None",
     animation_value_type="FontSizeAdjust",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-size-adjust",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -89,6 +95,7 @@ ${helpers.predefined_type(
     gecko_ffi_name="mFont.synthesisWeight",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-fonts-4/#font-synthesis-weight",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -100,6 +107,7 @@ ${helpers.predefined_type(
     gecko_ffi_name="mFont.synthesisStyle",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-fonts-4/#font-synthesis-style",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -111,6 +119,7 @@ ${helpers.predefined_type(
     gecko_ffi_name="mFont.synthesisSmallCaps",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-fonts-4/#font-synthesis-small-caps",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -122,6 +131,7 @@ ${helpers.predefined_type(
     animation_value_type="Percentage",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-stretch",
     servo_restyle_damage="rebuild_and_reflow",
+    affects="layout",
 )}
 
 ${helpers.single_keyword(
@@ -132,6 +142,7 @@ ${helpers.single_keyword(
     gecko_constant_prefix="NS_FONT_KERNING",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-kerning",
     animation_value_type="discrete",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -142,6 +153,7 @@ ${helpers.predefined_type(
     initial_specified_value="specified::FontVariantAlternates::default()",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-variant-alternates",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -152,6 +164,7 @@ ${helpers.predefined_type(
     initial_specified_value="specified::FontVariantEastAsian::empty()",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-variant-east-asian",
+    affects="layout",
 )}
 
 ${helpers.single_keyword(
@@ -164,6 +177,7 @@ ${helpers.single_keyword(
     gecko_ffi_name="mFont.variantEmoji",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-variant-emoji",
     animation_value_type="discrete",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -174,6 +188,7 @@ ${helpers.predefined_type(
     initial_specified_value="specified::FontVariantLigatures::empty()",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-variant-ligatures",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -184,6 +199,7 @@ ${helpers.predefined_type(
     initial_specified_value="specified::FontVariantNumeric::empty()",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-variant-numeric",
+    affects="layout",
 )}
 
 ${helpers.single_keyword(
@@ -194,6 +210,7 @@ ${helpers.single_keyword(
     gecko_constant_prefix="NS_FONT_VARIANT_POSITION",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-variant-position",
     animation_value_type="discrete",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -205,6 +222,7 @@ ${helpers.predefined_type(
     extra_prefixes="moz:layout.css.prefixes.font-features",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-feature-settings",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -216,7 +234,8 @@ ${helpers.predefined_type(
     initial_value="computed::FontVariationSettings::normal()",
     initial_specified_value="specified::FontVariationSettings::normal()",
     animation_value_type="ComputedValue",
-    spec="https://drafts.csswg.org/css-fonts-4/#propdef-font-variation-settings"
+    spec="https://drafts.csswg.org/css-fonts-4/#propdef-font-variation-settings",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -228,6 +247,7 @@ ${helpers.predefined_type(
     animation_value_type="discrete",
     extra_prefixes="moz:layout.css.prefixes.font-features",
     spec="https://drafts.csswg.org/css-fonts-3/#propdef-font-language-override",
+    affects="layout",
 )}
 
 ${helpers.single_keyword(
@@ -240,6 +260,7 @@ ${helpers.single_keyword(
     gecko_constant_prefix="NS_FONT_OPTICAL_SIZING",
     animation_value_type="discrete",
     spec="https://www.w3.org/TR/css-fonts-4/#font-optical-sizing-def",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -252,6 +273,7 @@ ${helpers.predefined_type(
     gecko_pref="layout.css.font-palette.enabled",
     has_effect_on_gecko_scrollbars=False,
     spec="https://drafts.csswg.org/css-fonts/#font-palette-prop",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -263,6 +285,7 @@ ${helpers.predefined_type(
     enabled_in="",
     has_effect_on_gecko_scrollbars=False,
     spec="Internal (not web-exposed)",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -275,6 +298,7 @@ ${helpers.predefined_type(
     animation_value_type="none",
     enabled_in="ua",
     spec="https://mathml-refresh.github.io/mathml-core/#the-math-script-level-property",
+    affects="",
 )}
 
 ${helpers.single_keyword(
@@ -288,6 +312,7 @@ ${helpers.single_keyword(
     animation_value_type="none",
     enabled_in="ua",
     needs_conversion=True,
+    affects="layout",
 )}
 
 ${helpers.single_keyword(
@@ -304,6 +329,7 @@ ${helpers.single_keyword(
     enabled_in="",
     has_effect_on_gecko_scrollbars=False,
     needs_conversion=True,
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -315,6 +341,7 @@ ${helpers.predefined_type(
     enabled_in="",
     has_effect_on_gecko_scrollbars=False,
     spec="Internal (not web-exposed)",
+    affects="layout",
 )}
 
 % if engine == "gecko":
@@ -440,6 +467,7 @@ ${helpers.single_keyword(
     has_effect_on_gecko_scrollbars=False,
     spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/font-smooth)",
     animation_value_type="discrete",
+    affects="paint",
 )}
 
 ${helpers.predefined_type(
@@ -451,6 +479,7 @@ ${helpers.predefined_type(
     gecko_ffi_name="mFont.fontSmoothingBackgroundColor",
     enabled_in="chrome",
     spec="None (Nonstandard internal property)",
+    affects="paint",
 )}
 
 ${helpers.predefined_type(
@@ -461,4 +490,5 @@ ${helpers.predefined_type(
     animation_value_type="none",
     enabled_in="ua",
     spec="Nonstandard (Internal-only)",
+    affects="layout",
 )}

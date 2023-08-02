@@ -15,6 +15,7 @@ ${helpers.single_keyword(
     gecko_enum_prefix="StyleTableLayout",
     spec="https://drafts.csswg.org/css-tables/#propdef-table-layout",
     servo_restyle_damage="reflow",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -25,4 +26,5 @@ ${helpers.predefined_type(
     spec="Internal-only (for `<col span>` pres attr)",
     animation_value_type="none",
     enabled_in="",
+    affects="layout",
 )}

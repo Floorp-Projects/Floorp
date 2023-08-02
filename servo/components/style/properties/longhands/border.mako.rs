@@ -31,6 +31,7 @@
         logical_group="border-color",
         allow_quirks="No" if is_logical else "Yes",
         ignored_when_colors_disabled=True,
+        affects="paint",
     )}
 
     ${helpers.predefined_type(
@@ -42,6 +43,7 @@
         animation_value_type="discrete" if not is_logical else "none",
         logical=is_logical,
         logical_group="border-style",
+        affects="layout",
     )}
 
     ${helpers.predefined_type(
@@ -55,7 +57,8 @@
         logical=is_logical,
         logical_group="border-width",
         allow_quirks="No" if is_logical else "Yes",
-        servo_restyle_damage="reflow rebuild_and_reflow_inline"
+        servo_restyle_damage="reflow rebuild_and_reflow_inline",
+        affects="layout",
     )}
 % endfor
 
@@ -80,6 +83,7 @@
         animation_value_type="BorderCornerRadius",
         logical_group="border-radius",
         logical=is_logical,
+        affects="paint",
     )}
 % endfor
 
@@ -90,6 +94,7 @@ ${helpers.single_keyword(
     gecko_enum_prefix="StyleBoxDecorationBreak",
     spec="https://drafts.csswg.org/css-break/#propdef-box-decoration-break",
     animation_value_type="discrete",
+    affects="layout",
 )}
 
 ${helpers.single_keyword(
@@ -100,6 +105,7 @@ ${helpers.single_keyword(
     gecko_enum_prefix="StyleFloatEdge",
     spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/-moz-float-edge)",
     animation_value_type="discrete",
+    affects="layout",
 )}
 
 ${helpers.predefined_type(
@@ -112,7 +118,8 @@ ${helpers.predefined_type(
     vector=False,
     animation_value_type="discrete",
     boxed=engine == "servo-2013",
-    ignored_when_colors_disabled=True
+    ignored_when_colors_disabled=True,
+    affects="paint",
 )}
 
 ${helpers.predefined_type(
@@ -124,6 +131,7 @@ ${helpers.predefined_type(
     spec="https://drafts.csswg.org/css-backgrounds/#border-image-outset",
     animation_value_type="NonNegativeLengthOrNumberRect",
     boxed=True,
+    affects="paint",
 )}
 
 ${helpers.predefined_type(
@@ -134,6 +142,7 @@ ${helpers.predefined_type(
     initial_specified_value="specified::BorderImageRepeat::stretch()",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-backgrounds/#the-border-image-repeat",
+    affects="paint",
 )}
 
 ${helpers.predefined_type(
@@ -145,6 +154,7 @@ ${helpers.predefined_type(
     spec="https://drafts.csswg.org/css-backgrounds/#border-image-width",
     animation_value_type="BorderImageWidth",
     boxed=True,
+    affects="paint",
 )}
 
 ${helpers.predefined_type(
@@ -156,4 +166,5 @@ ${helpers.predefined_type(
     spec="https://drafts.csswg.org/css-backgrounds/#border-image-slice",
     animation_value_type="BorderImageSlice",
     boxed=True,
+    affects="paint",
 )}
