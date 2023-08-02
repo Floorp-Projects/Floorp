@@ -1,5 +1,6 @@
-#[macro_use]
-extern crate derive_more;
+#![cfg_attr(not(feature = "std"), no_std)]
+
+use derive_more::Sum;
 
 #[derive(Sum)]
 struct MyInts(i32, i64);

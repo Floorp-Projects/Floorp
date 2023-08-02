@@ -1,10 +1,15 @@
-#[macro_use]
-extern crate derive_more;
+#![cfg_attr(not(feature = "std"), no_std)]
+
+use derive_more::{
+    Add, AddAssign, Binary, BitAnd, BitOr, BitXor, Constructor, Deref, DerefMut,
+    Display, Div, From, FromStr, Index, IndexMut, Into, IntoIterator, Mul, MulAssign,
+    Neg, Not, Octal, Product, Rem, Shl, Shr, Sub, Sum,
+};
 
 #[derive(From)]
 #[derive(Into)]
 #[derive(Constructor)]
-#[derive(Eq, PartialEq, Debug, Clone)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 #[derive(Add)]
 #[derive(Mul)]
 #[derive(Neg)]
@@ -28,7 +33,7 @@ struct MyInt(i32);
 #[mul_assign(forward)]
 struct MyInt2(i32);
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Debug, Eq, PartialEq)]
 #[derive(Index, IndexMut)]
 #[derive(Deref, DerefMut)]
 #[derive(IntoIterator)]
@@ -37,13 +42,13 @@ struct MyInt2(i32);
 #[into_iterator(owned, ref, ref_mut)]
 struct MyVec(Vec<i32>);
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Debug, Eq, PartialEq)]
 #[derive(Deref, DerefMut)]
 #[deref(forward)]
 #[deref_mut(forward)]
 struct MyBoxedInt(Box<i32>);
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Debug, Eq, PartialEq)]
 #[derive(Not)]
 #[derive(From)]
 struct MyBool(bool);
@@ -52,7 +57,7 @@ struct MyBool(bool);
 #[derive(Into)]
 #[derive(Constructor)]
 #[derive(Add)]
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Debug, Eq, PartialEq)]
 #[derive(Mul)]
 #[derive(AddAssign)]
 struct MyUInt(u64, u64);
@@ -61,7 +66,7 @@ struct MyUInt(u64, u64);
 #[derive(Into)]
 #[derive(Constructor)]
 #[derive(FromStr)]
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Debug, Eq, PartialEq)]
 #[derive(Display)]
 struct SimpleStruct {
     int1: u64,
@@ -70,7 +75,7 @@ struct SimpleStruct {
 #[derive(From)]
 #[derive(Constructor)]
 #[derive(Add, Sub, Mul, Div, Rem, BitAnd, BitOr, BitXor, Shr, Shl)]
-#[derive(Eq, PartialEq, Debug, Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[derive(Into)]
 #[derive(AddAssign)]
 #[into(owned, ref, ref_mut)]
@@ -80,10 +85,10 @@ struct NormalStruct {
 }
 
 #[derive(From)]
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Debug, Eq, PartialEq)]
 struct NestedInt(MyInt);
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Debug, Eq, PartialEq)]
 #[derive(From)]
 #[derive(Add, Sub)]
 enum SimpleMyIntEnum {
@@ -92,7 +97,7 @@ enum SimpleMyIntEnum {
     _UnsignedOne(u32),
     _UnsignedTwo(u32),
 }
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Debug, Eq, PartialEq)]
 #[derive(From)]
 #[derive(Neg)]
 enum SimpleSignedIntEnum {
@@ -100,7 +105,7 @@ enum SimpleSignedIntEnum {
     Int2(i16),
 }
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Debug, Eq, PartialEq)]
 #[derive(From)]
 #[derive(Add, Sub)]
 #[derive(Neg)]
@@ -115,7 +120,7 @@ enum SimpleEnum {
     _SomeUnit,
 }
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Debug, Eq, PartialEq)]
 #[derive(From)]
 #[derive(Add, Sub)]
 enum MyIntEnum {
@@ -135,21 +140,20 @@ enum MyIntEnum {
         x: u64,
         y: u64,
     },
-    Nothing,
 }
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Debug, Eq, PartialEq)]
 #[derive(Add, Mul)]
 struct DoubleUInt(u32, u32);
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Debug, Eq, PartialEq)]
 #[derive(Add, Mul)]
 struct DoubleUIntStruct {
     x: u32,
     y: u32,
 }
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Debug, Eq, PartialEq)]
 #[derive(From, Into, Constructor)]
 struct Unit;
 
@@ -175,7 +179,6 @@ fn main() {
     let _: MyIntEnum = 6i64.into();
     let _: MyIntEnum = (5i32, 8i32).into();
     let _: MyIntEnum = (5i64, 8i64).into();
-    let _: MyIntEnum = ().into();
 
     let int_ref: &i32 = (&myint).into();
     assert_eq!(int_ref, &5);
@@ -192,7 +195,7 @@ fn main() {
     assert_eq!(5, MyInt(5).into());
     assert_eq!(MyInt(5), MyInt::new(5));
     assert_eq!(-MyInt(5), (-5).into());
-    assert_eq!("30", format!("{}", MyInt(30)));
+    assert_eq!("30", MyInt(30).to_string());
     assert_eq!("36", format!("{:o}", MyInt(30)));
     assert_eq!("100", format!("{:b}", MyInt(4)));
     assert_eq!(!MyBool(true), false.into());
@@ -201,7 +204,7 @@ fn main() {
     assert_eq!(SimpleStruct { int1: 5 }, 5.into());
     assert_eq!(5u64, SimpleStruct { int1: 5 }.into());
     assert_eq!(Ok(SimpleStruct { int1: 5 }), "5".parse());
-    assert_eq!("5", format!("{}", SimpleStruct { int1: 5 }));
+    assert_eq!("5", SimpleStruct { int1: 5 }.to_string());
     assert_eq!(NormalStruct { int1: 5, int2: 6 }, (5, 6).into());
     assert_eq!(SimpleStruct { int1: 5 }, SimpleStruct::new(5));
     assert_eq!(NormalStruct { int1: 5, int2: 6 }, NormalStruct::new(5, 6));

@@ -357,6 +357,11 @@ criteria = "safe-to-deploy"
 version = "0.6.5"
 criteria = "safe-to-deploy"
 
+[[exemptions.derive_more-impl]]
+version = "1.0.0-beta.2"
+criteria = "safe-to-deploy"
+notes = "The crate is new to version 1.0.x, and derived from older versions of derive_more. The differences against 0.99.17 have been audited, but cargo-vet cannot record this information."
+
 [[exemptions.devd-rs]]
 version = "0.3.4"
 criteria = "safe-to-deploy"

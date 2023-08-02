@@ -10,28 +10,48 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.65.0"
 name = "derive_more"
-version = "0.99.17"
+version = "1.0.0-beta.2"
 authors = ["Jelte Fennema <github-tech@jeltef.nl>"]
-include = ["src/**/*.rs", "Cargo.toml", "LICENSE", "README.md", "CHANGELOG.md", "tests/**/*.rs"]
-autotests = true
+include = [
+    "src/**/*.rs",
+    "Cargo.toml",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md",
+    "tests/**/*.rs",
+]
 description = "Adds #[derive(x)] macros for more traits"
-documentation = "https://jeltef.github.io/derive_more/derive_more/"
+documentation = "https://docs.rs/derive_more"
 readme = "README.md"
-keywords = ["derive", "Add", "From", "Display", "IntoIterator"]
-categories = ["development-tools", "development-tools::procedural-macro-helpers", "no-std"]
+keywords = [
+    "derive",
+    "Add",
+    "From",
+    "Display",
+    "IntoIterator",
+]
+categories = [
+    "development-tools",
+    "development-tools::procedural-macro-helpers",
+    "no-std",
+]
 license = "MIT"
 repository = "https://github.com/JelteF/derive_more"
 
-[lib]
-name = "derive_more"
-proc-macro = true
+[package.metadata.docs.rs]
+features = ["full"]
+rustdoc-args = [
+    "--cfg",
+    "docsrs",
+]
 
 [[example]]
 name = "deny_missing_docs"
 path = "examples/deny_missing_docs.rs"
-required-features = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "from", "from_str", "index", "index_mut", "into", "mul_assign", "mul", "not", "try_into", "is_variant"]
+required-features = ["full"]
 
 [[test]]
 name = "add_assign"
@@ -62,6 +82,11 @@ required-features = ["display"]
 name = "constructor"
 path = "tests/constructor.rs"
 required-features = ["constructor"]
+
+[[test]]
+name = "debug"
+path = "tests/debug.rs"
+required-features = ["debug"]
 
 [[test]]
 name = "deref"
@@ -149,68 +174,109 @@ path = "tests/unwrap.rs"
 required-features = ["unwrap"]
 
 [[test]]
+name = "try_unwrap"
+path = "tests/try_unwrap.rs"
+required-features = ["try_unwrap"]
+
+[[test]]
+name = "compile_fail"
+path = "tests/compile_fail/mod.rs"
+required-features = [
+    "debug",
+    "display",
+    "from",
+    "into",
+]
+
+[[test]]
 name = "no_std"
 path = "tests/no_std.rs"
-required-features = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "from", "from_str", "index", "index_mut", "into", "mul_assign", "mul", "not", "sum", "try_into", "is_variant"]
+required-features = ["full"]
 
 [[test]]
 name = "generics"
 path = "tests/generics.rs"
-required-features = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "from", "from_str", "index", "index_mut", "into", "mul_assign", "mul", "not", "try_into", "is_variant"]
+required-features = ["full"]
 
 [[test]]
 name = "lib"
 path = "tests/lib.rs"
-required-features = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "from", "from_str", "index", "index_mut", "into", "mul_assign", "mul", "not", "try_into", "is_variant"]
-[dependencies.convert_case]
-version = "0.4"
-optional = true
+required-features = ["full"]
 
-[dependencies.proc-macro2]
+[dependencies.derive_more-impl]
+version = "=1.0.0-beta.2"
+
+[dev-dependencies.rustversion]
 version = "1.0"
 
-[dependencies.quote]
-version = "1.0"
+[dev-dependencies.static_assertions]
+version = "1.1"
 
-[dependencies.syn]
-version = "1.0.3"
-[build-dependencies.peg]
-version = "0.5"
-optional = true
+[dev-dependencies.trybuild]
+version = "1.0.56"
 
 [build-dependencies.rustc_version]
 version = "0.4"
 optional = true
 
 [features]
-add = []
-add_assign = []
-as_mut = []
-as_ref = []
-constructor = []
-default = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "error", "from", "from_str", "index", "index_mut", "into", "into_iterator", "iterator", "mul_assign", "mul", "not", "sum", "try_into", "is_variant", "unwrap"]
-deref = []
-deref_mut = []
-display = ["syn/extra-traits"]
-error = ["syn/extra-traits"]
-from = ["syn/extra-traits"]
-from_str = []
-generate-parsing-rs = ["peg"]
-index = []
-index_mut = []
-into = ["syn/extra-traits"]
-into_iterator = []
-is_variant = ["convert_case"]
-iterator = []
-mul = ["syn/extra-traits"]
-mul_assign = ["syn/extra-traits"]
-nightly = []
-not = ["syn/extra-traits"]
-sum = []
-testing-helpers = ["rustc_version"]
-track-caller = []
-try_into = ["syn/extra-traits"]
-unwrap = ["convert_case", "rustc_version"]
+add = ["derive_more-impl/add"]
+add_assign = ["derive_more-impl/add_assign"]
+as_mut = ["derive_more-impl/as_mut"]
+as_ref = ["derive_more-impl/as_ref"]
+constructor = ["derive_more-impl/constructor"]
+debug = ["derive_more-impl/debug"]
+default = ["std"]
+deref = ["derive_more-impl/deref"]
+deref_mut = ["derive_more-impl/deref_mut"]
+display = ["derive_more-impl/display"]
+error = ["derive_more-impl/error"]
+from = ["derive_more-impl/from"]
+from_str = ["derive_more-impl/from_str"]
+full = [
+    "add",
+    "add_assign",
+    "as_mut",
+    "as_ref",
+    "constructor",
+    "debug",
+    "deref",
+    "deref_mut",
+    "display",
+    "error",
+    "from",
+    "from_str",
+    "index",
+    "index_mut",
+    "into",
+    "into_iterator",
+    "is_variant",
+    "mul",
+    "mul_assign",
+    "not",
+    "sum",
+    "try_into",
+    "try_unwrap",
+    "unwrap",
+]
+index = ["derive_more-impl/index"]
+index_mut = ["derive_more-impl/index_mut"]
+into = ["derive_more-impl/into"]
+into_iterator = ["derive_more-impl/into_iterator"]
+is_variant = ["derive_more-impl/is_variant"]
+mul = ["derive_more-impl/mul"]
+mul_assign = ["derive_more-impl/mul_assign"]
+not = ["derive_more-impl/not"]
+std = []
+sum = ["derive_more-impl/sum"]
+testing-helpers = [
+    "derive_more-impl/testing-helpers",
+    "dep:rustc_version",
+]
+try_into = ["derive_more-impl/try_into"]
+try_unwrap = ["derive_more-impl/try_unwrap"]
+unwrap = ["derive_more-impl/unwrap"]
+
 [badges.github]
 repository = "JelteF/derive_more"
 workflow = "CI"

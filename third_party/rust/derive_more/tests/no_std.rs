@@ -1,8 +1,10 @@
 #![no_std]
 #![allow(dead_code)]
 
-#[macro_use]
-extern crate derive_more;
+use derive_more::{
+    Add, AddAssign, Constructor, Deref, DerefMut, Display, From, FromStr, Index,
+    IndexMut, Into, IntoIterator, Mul, MulAssign, Not, Sum, TryInto,
+};
 
 #[derive(
     AddAssign,

@@ -1,0 +1,37 @@
+[package]
+name = "derive_more"
+version = "0.99.999"
+edition = "2021"
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies.derive_more]
+version = "1.0.0-beta.2"
+
+[features]
+add = ["derive_more/add"]
+add_assign = ["derive_more/add_assign"]
+as_mut = ["derive_more/as_mut"]
+as_ref = ["derive_more/as_ref"]
+constructor = ["derive_more/constructor"]
+debug = ["derive_more/debug"]
+default = ["derive_more/default"]
+deref = ["derive_more/deref"]
+deref_mut = ["derive_more/deref_mut"]
+display = ["derive_more/display"]
+error = ["derive_more/error"]
+from = ["derive_more/from"]
+from_str = ["derive_more/from_str"]
+full = ["derive_more/full"]
+index = ["derive_more/index"]
+index_mut = ["derive_more/index_mut"]
+into = ["derive_more/into"]
+into_iterator = ["derive_more/into_iterator"]
+is_variant = ["derive_more/is_variant"]
+iterator = ["derive_more/iterator"]
+mul = ["derive_more/mul"]
+mul_assign = ["derive_more/mul_assign"]
+not = ["derive_more/not"]
+std = ["derive_more/std"]

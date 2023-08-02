@@ -1,6 +1,7 @@
+#![cfg_attr(not(feature = "std"), no_std)]
 #![allow(dead_code)]
-#[macro_use]
-extern crate derive_more;
+
+use derive_more::AddAssign;
 
 #[derive(AddAssign)]
 struct MyInts(i32, i32);
