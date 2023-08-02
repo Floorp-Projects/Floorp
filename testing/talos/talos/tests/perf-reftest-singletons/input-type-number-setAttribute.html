@@ -1,0 +1,29 @@
+<!doctype html>
+<script src="util.js"></script>
+<script>
+  // Test performance of setting attributes on <input type="number">
+  onload = function() {
+    let count = 5000; // About 100ms, after bug 1842027
+    let a = [null, null];
+    perf_start();
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement("input");
+      el.setAttribute("type", "number");
+      el.setAttribute("label", "Segment count weight");
+      el.setAttribute("value", 2.5);
+      el.setAttribute("min", 0.01);
+      el.setAttribute("max", 10);
+      el.setAttribute("step", 0.01);
+      a[0] = el;
+      const el2 = document.createElement("input");
+      el2.setAttribute("type", "number");
+      el2.setAttribute("label", "Grid size");
+      el2.setAttribute("value", 500);
+      el2.setAttribute("min", 100);
+      el2.setAttribute("max", 10000);
+      el2.setAttribute("step", 10);
+      a[1] = el2;
+    }
+    perf_finish();
+  }
+</script>
