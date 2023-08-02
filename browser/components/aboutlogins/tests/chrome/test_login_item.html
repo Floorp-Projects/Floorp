@@ -282,6 +282,29 @@ add_task(async function test_edit_login_cancel() {
   ok(!gLoginItem.dataset.isNewLogin, "loginItem should not be in 'isNewLogin' mode");
 });
 
+add_task(async function test_edit_login_cancel_keyboard_shortcut() {
+  gLoginItem.setLogin(TEST_LOGIN_1);
+  gLoginItem.shadowRoot.querySelector(".edit-button").shadowRoot.querySelector("button").click();
+  await asyncElementRendered();
+
+  ok(gLoginItem.dataset.editing, "loginItem should be in 'edit' mode");
+  is(!!gLoginItem.dataset.isNewLogin, false,
+     "loginItem should not be in 'isNewLogin' mode");
+
+  const event = new KeyboardEvent("keydown", { key: "Escape" });
+  window.dispatchEvent(event);
+
+  gConfirmationDialog.shadowRoot.querySelector(".confirm-button").click();
+
+  await SimpleTest.promiseWaitForCondition(
+    () => gConfirmationDialog.hidden,
+    "waiting for confirmation dialog to hide"
+  );
+
+  ok(!gLoginItem.dataset.editing, "loginItem should not be in 'edit' mode");
+  ok(!gLoginItem.dataset.isNewLogin, "loginItem should not be in 'isNewLogin' mode");
+});
+
 add_task(async function test_reveal_password_change_selected_login() {
   gLoginItem.setLogin(TEST_LOGIN_1);
   let revealCheckbox = gLoginItem.shadowRoot.querySelector(".reveal-password-checkbox");
