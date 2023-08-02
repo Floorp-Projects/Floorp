@@ -184,6 +184,46 @@ macro_rules! color_components_as {
     }};
 }
 
+/// Holds details about each component passed into creating a new [`AbsoluteColor`].
+pub struct ComponentDetails {
+    value: f32,
+    is_none: bool,
+}
+
+impl From<f32> for ComponentDetails {
+    fn from(value: f32) -> Self {
+        Self {
+            value,
+            is_none: false,
+        }
+    }
+}
+
+impl From<u8> for ComponentDetails {
+    fn from(value: u8) -> Self {
+        Self {
+            value: value as f32 / 255.0,
+            is_none: false,
+        }
+    }
+}
+
+impl From<Option<f32>> for ComponentDetails {
+    fn from(value: Option<f32>) -> Self {
+        if let Some(value) = value {
+            Self {
+                value,
+                is_none: false,
+            }
+        } else {
+            Self {
+                value: 0.0,
+                is_none: true,
+            }
+        }
+    }
+}
+
 impl AbsoluteColor {
     /// A fully transparent color in the legacy syntax.
     pub const TRANSPARENT: Self = Self {
@@ -211,8 +251,30 @@ impl AbsoluteColor {
 
     /// Create a new [`AbsoluteColor`] with the given [`ColorSpace`] and
     /// components.
-    pub fn new(color_space: ColorSpace, components: ColorComponents, alpha: f32) -> Self {
-        let mut components = components;
+    pub fn new(
+        color_space: ColorSpace,
+        c1: impl Into<ComponentDetails>,
+        c2: impl Into<ComponentDetails>,
+        c3: impl Into<ComponentDetails>,
+        alpha: impl Into<ComponentDetails>,
+    ) -> Self {
+        let mut flags = ColorFlags::empty();
+
+        macro_rules! cd {
+            ($c:expr,$flag:expr) => {{
+                let component_details = $c.into();
+                if component_details.is_none {
+                    flags |= $flag;
+                }
+                component_details.value
+            }};
+        }
+
+        let mut components = ColorComponents(
+            cd!(c1, ColorFlags::C1_IS_NONE),
+            cd!(c2, ColorFlags::C2_IS_NONE),
+            cd!(c3, ColorFlags::C3_IS_NONE),
+        );
 
         // Lightness must not be less than 0.
         if matches!(
@@ -227,11 +289,13 @@ impl AbsoluteColor {
             components.1 = components.1.max(0.0);
         }
 
+        let alpha = cd!(alpha, ColorFlags::ALPHA_IS_NONE);
+
         Self {
             components,
             alpha: alpha.clamp(0.0, 1.0),
             color_space,
-            flags: ColorFlags::empty(),
+            flags,
         }
     }
 
@@ -244,7 +308,7 @@ impl AbsoluteColor {
 
     /// Create a new [`AbsoluteColor`] from rgba values in the sRGB color space.
     pub fn srgb(red: f32, green: f32, blue: f32, alpha: f32) -> Self {
-        Self::new(ColorSpace::Srgb, ColorComponents(red, green, blue), alpha)
+        Self::new(ColorSpace::Srgb, red, green, blue, alpha)
     }
 
     /// Return all the components of the color in an array.  (Includes alpha)
@@ -283,51 +347,33 @@ impl AbsoluteColor {
         // rounding errors.
         match (self.color_space, color_space) {
             (Srgb, Hsl) => {
-                return Self::new(
-                    color_space,
-                    convert::rgb_to_hsl(&self.components),
-                    self.alpha,
-                );
+                let hsl = convert::rgb_to_hsl(&self.components);
+                return Self::new(color_space, hsl.0, hsl.1, hsl.2, self.alpha);
             },
 
             (Srgb, Hwb) => {
-                return Self::new(
-                    color_space,
-                    convert::rgb_to_hwb(&self.components),
-                    self.alpha,
-                );
+                let hwb = convert::rgb_to_hwb(&self.components);
+                return Self::new(color_space, hwb.0, hwb.1, hwb.2, self.alpha);
             },
 
             (Hsl, Srgb) => {
-                return Self::new(
-                    color_space,
-                    convert::hsl_to_rgb(&self.components),
-                    self.alpha,
-                );
+                let srgb = convert::hsl_to_rgb(&self.components);
+                return Self::new(color_space, srgb.0, srgb.1, srgb.2, self.alpha);
             },
 
             (Hwb, Srgb) => {
-                return Self::new(
-                    color_space,
-                    convert::hwb_to_rgb(&self.components),
-                    self.alpha,
-                );
+                let srgb = convert::hwb_to_rgb(&self.components);
+                return Self::new(color_space, srgb.0, srgb.1, srgb.2, self.alpha);
             },
 
             (Lab, Lch) | (Oklab, Oklch) => {
-                return Self::new(
-                    color_space,
-                    convert::lab_to_lch(&self.components),
-                    self.alpha,
-                );
+                let lch = convert::lab_to_lch(&self.components);
+                return Self::new(color_space, lch.0, lch.1, lch.2, self.alpha);
             },
 
             (Lch, Lab) | (Oklch, Oklab) => {
-                return Self::new(
-                    color_space,
-                    convert::lch_to_lab(&self.components),
-                    self.alpha,
-                );
+                let lab = convert::lch_to_lab(&self.components);
+                return Self::new(color_space, lab.0, lab.1, lab.2, self.alpha);
             },
 
             _ => {},
@@ -367,7 +413,7 @@ impl AbsoluteColor {
             XyzD65 => convert::from_xyz::<convert::XyzD65>(&xyz, white_point),
         };
 
-        Self::new(color_space, result, self.alpha)
+        Self::new(color_space, result.0, result.1, result.2, self.alpha)
     }
 }
 
