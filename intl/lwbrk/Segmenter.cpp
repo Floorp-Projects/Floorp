@@ -11,18 +11,8 @@
 #include "mozilla/intl/LineBreaker.h"
 #include "mozilla/intl/WordBreaker.h"
 #include "mozilla/intl/UnicodeProperties.h"
-#include "mozilla/StaticPrefs_intl.h"
 #include "nsUnicodeProperties.h"
 #include "nsCharTraits.h"
-
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-#  include "ICU4XDataProvider.h"
-#  include "ICU4XGraphemeClusterSegmenter.h"
-#  include "ICU4XLineSegmenter.h"
-#  include "ICU4XSentenceSegmenter.h"
-#  include "ICU4XWordSegmenter.h"
-#  include "mozilla/intl/ICU4XGeckoDataProvider.h"
-#endif
 
 using namespace mozilla::unicode;
 
@@ -40,45 +30,9 @@ Maybe<uint32_t> SegmentIteratorUtf16::Seek(uint32_t aPos) {
 
 LineBreakIteratorUtf16::LineBreakIteratorUtf16(Span<const char16_t> aText,
                                                const LineBreakOptions& aOptions)
-    : SegmentIteratorUtf16(aText), mOptions(aOptions) {
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-  if (!StaticPrefs::intl_icu4x_segmenter_enabled()) {
-    return;
-  }
-  auto result =
-      capi::ICU4XLineSegmenter_create_auto(mozilla::intl::GetDataProvider());
-  MOZ_RELEASE_ASSERT(result.is_ok);
-  mSegmenter = result.ok;
-  mIterator = capi::ICU4XLineSegmenter_segment_utf16(
-      mSegmenter, (const uint16_t*)mText.Elements(), mText.Length());
-#endif
-}
-
-LineBreakIteratorUtf16::~LineBreakIteratorUtf16() {
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-  if (mIterator) {
-    capi::ICU4XLineBreakIteratorUtf16_destroy(mIterator);
-  }
-  if (mSegmenter) {
-    capi::ICU4XLineSegmenter_destroy(mSegmenter);
-  }
-#endif
-}
+    : SegmentIteratorUtf16(aText), mOptions(aOptions) {}
 
 Maybe<uint32_t> LineBreakIteratorUtf16::Next() {
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-  if (mIterator) {
-    const int32_t nextPos = capi::ICU4XLineBreakIteratorUtf16_next(mIterator);
-    if (nextPos < 0) {
-      return Nothing();
-    }
-    if (!nextPos) {
-      return Next();
-    }
-    mPos = nextPos;
-    return Some(mPos);
-  }
-#endif
   const int32_t nextPos =
       LineBreaker::Next(mText.Elements(), mText.Length(), mPos);
   if (nextPos == NS_LINEBREAKER_NEED_MORE_TEXT) {
@@ -88,71 +42,10 @@ Maybe<uint32_t> LineBreakIteratorUtf16::Next() {
   return Some(mPos);
 }
 
-Maybe<uint32_t> LineBreakIteratorUtf16::Seek(uint32_t aPos) {
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-  if (mIterator) {
-    if (mPos >= aPos) {
-      return Next();
-    }
-
-    while (mPos < aPos) {
-      const int32_t nextPos = capi::ICU4XLineBreakIteratorUtf16_next(mIterator);
-      if (nextPos < 0) {
-        return Nothing();
-      }
-      mPos = static_cast<uint32_t>(nextPos);
-    }
-
-    if (aPos < mPos) {
-      return Some(mPos);
-    }
-
-    return Next();
-  }
-#endif
-  return SegmentIteratorUtf16::Seek(aPos);
-}
-
 WordBreakIteratorUtf16::WordBreakIteratorUtf16(Span<const char16_t> aText)
-    : SegmentIteratorUtf16(aText) {
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-  if (!StaticPrefs::intl_icu4x_segmenter_enabled()) {
-    return;
-  }
-  auto result =
-      capi::ICU4XWordSegmenter_create_auto(mozilla::intl::GetDataProvider());
-  MOZ_RELEASE_ASSERT(result.is_ok);
-  mSegmenter = result.ok;
-  mIterator = capi::ICU4XWordSegmenter_segment_utf16(
-      mSegmenter, (const uint16_t*)mText.Elements(), mText.Length());
-#endif
-}
-
-WordBreakIteratorUtf16::~WordBreakIteratorUtf16() {
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-  if (mIterator) {
-    capi::ICU4XWordBreakIteratorUtf16_destroy(mIterator);
-  }
-  if (mSegmenter) {
-    capi::ICU4XWordSegmenter_destroy(mSegmenter);
-  }
-#endif
-}
+    : SegmentIteratorUtf16(aText) {}
 
 Maybe<uint32_t> WordBreakIteratorUtf16::Next() {
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-  if (mIterator) {
-    const int32_t nextPos = capi::ICU4XWordBreakIteratorUtf16_next(mIterator);
-    if (nextPos < 0) {
-      return Nothing();
-    }
-    if (!nextPos) {
-      return Next();
-    }
-    mPos = nextPos;
-    return Some(mPos);
-  }
-#endif
   const int32_t nextPos =
       WordBreaker::Next(mText.Elements(), mText.Length(), mPos);
   if (nextPos == NS_WORDBREAKER_NEED_MORE_TEXT) {
@@ -162,57 +55,9 @@ Maybe<uint32_t> WordBreakIteratorUtf16::Next() {
   return Some(mPos);
 }
 
-Maybe<uint32_t> WordBreakIteratorUtf16::Seek(uint32_t aPos) {
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-  if (mIterator) {
-    if (mPos >= aPos) {
-      return Next();
-    }
-
-    while (mPos < aPos) {
-      const int32_t nextPos = capi::ICU4XWordBreakIteratorUtf16_next(mIterator);
-      if (nextPos < 0) {
-        return Nothing();
-      }
-      mPos = static_cast<uint32_t>(nextPos);
-    }
-
-    if (aPos < mPos) {
-      return Some(mPos);
-    }
-
-    return Next();
-  }
-#endif
-  return SegmentIteratorUtf16::Seek(aPos);
-}
-
 GraphemeClusterBreakIteratorUtf16::GraphemeClusterBreakIteratorUtf16(
     Span<const char16_t> aText)
-    : SegmentIteratorUtf16(aText) {
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-  if (!StaticPrefs::intl_icu4x_segmenter_enabled()) {
-    return;
-  }
-  auto result = capi::ICU4XGraphemeClusterSegmenter_create(
-      mozilla::intl::GetDataProvider());
-  MOZ_RELEASE_ASSERT(result.is_ok);
-  mSegmenter = result.ok;
-  mIterator = capi::ICU4XGraphemeClusterSegmenter_segment_utf16(
-      mSegmenter, (const uint16_t*)mText.Elements(), mText.Length());
-#endif
-}
-
-GraphemeClusterBreakIteratorUtf16::~GraphemeClusterBreakIteratorUtf16() {
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-  if (mIterator) {
-    capi::ICU4XGraphemeClusterBreakIteratorUtf16_destroy(mIterator);
-  }
-  if (mSegmenter) {
-    capi::ICU4XGraphemeClusterSegmenter_destroy(mSegmenter);
-  }
-#endif
-}
+    : SegmentIteratorUtf16(aText) {}
 
 enum HSType {
   HST_NONE = U_HST_NOT_APPLICABLE,
@@ -230,20 +75,6 @@ static HSType GetHangulSyllableType(uint32_t aCh) {
 
 Maybe<uint32_t> GraphemeClusterBreakIteratorUtf16::Next() {
   const auto len = mText.Length();
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-  if (mIterator) {
-    const int32_t nextPos =
-        capi::ICU4XGraphemeClusterBreakIteratorUtf16_next(mIterator);
-    if (nextPos < 0) {
-      return Nothing();
-    }
-    if (!nextPos) {
-      return Next();
-    }
-    mPos = nextPos;
-    return Some(mPos);
-  }
-#endif
   if (mPos >= len) {
     // The iterator has already reached the end.
     return Nothing();
@@ -364,32 +195,6 @@ Maybe<uint32_t> GraphemeClusterBreakIteratorUtf16::Next() {
   return Some(mPos);
 }
 
-Maybe<uint32_t> GraphemeClusterBreakIteratorUtf16::Seek(uint32_t aPos) {
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-  if (mIterator) {
-    if (mPos >= aPos) {
-      return Next();
-    }
-
-    while (mPos < aPos) {
-      const int32_t nextPos =
-          capi::ICU4XGraphemeClusterBreakIteratorUtf16_next(mIterator);
-      if (nextPos < 0) {
-        return Nothing();
-      }
-      mPos = static_cast<uint32_t>(nextPos);
-    }
-
-    if (aPos < mPos) {
-      return Some(mPos);
-    }
-
-    return Next();
-  }
-#endif
-  return SegmentIteratorUtf16::Seek(aPos);
-}
-
 GraphemeClusterBreakReverseIteratorUtf16::
     GraphemeClusterBreakReverseIteratorUtf16(Span<const char16_t> aText)
     : SegmentIteratorUtf16(aText) {
@@ -426,77 +231,12 @@ Maybe<uint32_t> GraphemeClusterBreakReverseIteratorUtf16::Seek(uint32_t aPos) {
   return Next();
 }
 
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-SentenceBreakIteratorUtf16::SentenceBreakIteratorUtf16(
-    Span<const char16_t> aText)
-    : SegmentIteratorUtf16(aText) {
-  auto result =
-      capi::ICU4XSentenceSegmenter_create(mozilla::intl::GetDataProvider());
-  MOZ_RELEASE_ASSERT(result.is_ok);
-  mSegmenter = result.ok;
-  mIterator = capi::ICU4XSentenceSegmenter_segment_utf16(
-      mSegmenter, (const uint16_t*)mText.Elements(), mText.Length());
-}
-
-SentenceBreakIteratorUtf16::~SentenceBreakIteratorUtf16() {
-  if (mIterator) {
-    capi::ICU4XSentenceBreakIteratorUtf16_destroy(mIterator);
-  }
-  if (mSegmenter) {
-    capi::ICU4XSentenceSegmenter_destroy(mSegmenter);
-  }
-}
-
-Maybe<uint32_t> SentenceBreakIteratorUtf16::Seek(uint32_t aPos) {
-  if (!mIterator) {
-    return Nothing();
-  }
-
-  if (mPos >= aPos) {
-    return Next();
-  }
-
-  while (mPos < aPos) {
-    const int32_t nextPos =
-        capi::ICU4XSentenceBreakIteratorUtf16_next(mIterator);
-    if (nextPos < 0) {
-      return Nothing();
-    }
-    mPos = static_cast<uint32_t>(nextPos);
-  }
-
-  if (aPos < mPos) {
-    return Some(mPos);
-  }
-
-  return Next();
-}
-
-Maybe<uint32_t> SentenceBreakIteratorUtf16::Next() {
-  if (!mIterator) {
-    return Nothing();
-  }
-
-  const int32_t nextPos = capi::ICU4XSentenceBreakIteratorUtf16_next(mIterator);
-  if (nextPos < 0) {
-    return Nothing();
-  }
-  if (!nextPos) {
-    return Next();
-  }
-  mPos = nextPos;
-  return Some(mPos);
-}
-#endif
-
 Result<UniquePtr<Segmenter>, ICUError> Segmenter::TryCreate(
     Span<const char> aLocale, const SegmenterOptions& aOptions) {
-#if !defined(MOZ_ICU4X) || !defined(JS_HAS_INTL_API)
   if (aOptions.mGranularity == SegmenterGranularity::Sentence) {
     // Grapheme and Sentence iterator are not yet implemented.
     return Err(ICUError::InternalError);
   }
-#endif
   return MakeUnique<Segmenter>(aLocale, aOptions);
 }
 
@@ -506,11 +246,6 @@ UniquePtr<SegmentIteratorUtf16> Segmenter::Segment(
     case SegmenterGranularity::Grapheme:
       return MakeUnique<GraphemeClusterBreakIteratorUtf16>(aText);
     case SegmenterGranularity::Sentence:
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-      if (StaticPrefs::intl_icu4x_segmenter_enabled()) {
-        return MakeUnique<SentenceBreakIteratorUtf16>(aText);
-      }
-#endif
       MOZ_ASSERT_UNREACHABLE("Unimplemented yet!");
       return nullptr;
     case SegmenterGranularity::Word:

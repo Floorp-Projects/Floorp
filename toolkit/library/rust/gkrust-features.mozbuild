@@ -79,8 +79,5 @@ if CONFIG["MOZ_WEBMIDI_MIDIR_IMPL"]:
 if CONFIG["MOZ_UNIFFI_FIXTURES"]:
     gkrust_features += ['uniffi_fixtures']
 
-if CONFIG["MOZ_ICU4X"]:
-    gkrust_features += ['icu4x']
-
 # This must remain last.
 gkrust_features = ["gkrust-shared/%s" % f for f in gkrust_features]

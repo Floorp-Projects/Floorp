@@ -200,7 +200,7 @@ fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-017.html grid-fragmentation-01
 == grid-fragmentation-018.html grid-fragmentation-018-ref.html
 == grid-fragmentation-019.html grid-fragmentation-019-ref.html
 == grid-fragmentation-020.html grid-fragmentation-020-ref.html
-pref(intl.icu4x.segmenter.enabled,false) == grid-fragmentation-021.html grid-fragmentation-021-ref.html # https://github.com/unicode-org/icu4x/pull/3548
+== grid-fragmentation-021.html grid-fragmentation-021-ref.html
 == grid-fragmentation-022.html grid-fragmentation-007-ref.html
 == grid-fragmentation-023.html grid-fragmentation-023-ref.html
 fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-024.html grid-fragmentation-024-ref.html
@@ -240,11 +240,11 @@ fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-027.html grid-fragmentation-02
 == grid-fragmentation-dyn5-019.html grid-fragmentation-019-ref.html
 == grid-fragmentation-dyn1-020.html grid-fragmentation-020-ref.html
 == grid-fragmentation-dyn2-020.html grid-fragmentation-020-ref.html
-pref(intl.icu4x.segmenter.enabled,false) == grid-fragmentation-dyn1-021.html grid-fragmentation-021-ref.html # https://github.com/unicode-org/icu4x/pull/3548
-pref(intl.icu4x.segmenter.enabled,false) == grid-fragmentation-dyn2-021.html grid-fragmentation-021-ref.html # https://github.com/unicode-org/icu4x/pull/3548
-pref(intl.icu4x.segmenter.enabled,false) == grid-fragmentation-dyn3-021.html grid-fragmentation-021-ref.html # https://github.com/unicode-org/icu4x/pull/3548
-pref(intl.icu4x.segmenter.enabled,false) == grid-fragmentation-dyn4-021.html grid-fragmentation-021-ref.html # https://github.com/unicode-org/icu4x/pull/3548
-pref(intl.icu4x.segmenter.enabled,false) == grid-fragmentation-dyn5-021.html grid-fragmentation-021-ref.html # https://github.com/unicode-org/icu4x/pull/3548
+== grid-fragmentation-dyn1-021.html grid-fragmentation-021-ref.html
+== grid-fragmentation-dyn2-021.html grid-fragmentation-021-ref.html
+== grid-fragmentation-dyn3-021.html grid-fragmentation-021-ref.html
+== grid-fragmentation-dyn4-021.html grid-fragmentation-021-ref.html
+== grid-fragmentation-dyn5-021.html grid-fragmentation-021-ref.html
 == grid-fragmentation-dyn2-022.html grid-fragmentation-007-ref.html
 == grid-fragmentation-dyn1-023.html grid-fragmentation-023-ref.html
 == grid-fragmentation-dyn2-023.html grid-fragmentation-023-ref.html

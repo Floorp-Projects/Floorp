@@ -17,14 +17,7 @@
       SimpleTest.expectAssertions(0, 1);
     }
 
-    async function doTest() {
-      test_common();
-      await test_per_segmenter(false);
-      await test_per_segmenter(true);
-      SimpleTest.finish();
-    }
-
-    function test_common() {
+    function doTest() {
       // "one two"
       testWords("div1", ["one", "two"]);
 
@@ -56,21 +49,38 @@
       testWordAt("div7", 0, "one", kOk);
       testWordAt("div7", 1, "two", kTodo);
 
+      // "one.two"
+      testWordCount("div8", 2, kOk);
+      testWordAt("div8", 0, "one", kTodo);
+      testWordAt("div8", 1, "two", kOk);
+
       // "345"
       testWords("div9", ["345"]);
 
       // "3a A4"
       testWords("div10", ["3a", "A4"]);
 
+      // "3.1416"
+      testWords("div11", ["3.1416"], kTodo);
+
+      // "4,261.01"
+      testWords("div12", ["4,261.01"], kTodo);
+
       // "カタカナ"
       testWords("div13", ["カタカナ"], kOk);
 
+      // "Peter's car"
+      testWords("div14", ["Peter's", "car"], kTodo);
+
+      // "N.A.T.O."
+      testWords("div15", ["N.A.T.O."], kTodo);
+
       // "3+4*5=23"
       testWordCount("div16", 4, kOk);
-      testWordAt("div16", 0, "3", kTodo);
-      testWordAt("div16", 1, "4", kTodo);
-      testWordAt("div16", 2, "5", kTodo);
-      testWordAt("div16", 3, "23", kTodo);
+      testWordAt("div15", 0, "3", kTodo);
+      testWordAt("div15", 1, "4", kTodo);
+      testWordAt("div15", 2, "5", kTodo);
+      testWordAt("div15", 3, "23", kTodo);
 
       // "Hello. Friend, are you here?!"
       testWordCount("div17", 5, kOk);
@@ -81,37 +91,8 @@
       testWordAt("div17", 4, "here", kTodo);
 
       testWords("input_1", ["foo", "bar"]);
-    }
 
-    async function test_per_segmenter(aNewSegmenter) {
-      // If aNewSegmenter is true, use UAX#14/#29 compatible segmenter.
-      await SpecialPowers.pushPrefEnv({"set": [
-        ["intl.icu4x.segmenter.enabled", aNewSegmenter],
-      ]});
-
-      // "one.two"
-      if (aNewSegmenter) {
-        testWordCount("div8", 1, kOk);
-        testWordAt("div8", 0, "one.two", kOk);
-      } else {
-        testWordCount("div8", 2, kOk);
-        testWordAt("div8", 0, "one", kTodo);
-        testWordAt("div8", 1, "two", kOk);
-      }
-
-      // "3.1416"
-      testWords("div11", ["3.1416"], aNewSegmenter ? kOk : kTodo);
-
-      // "4,261.01"
-      testWords("div12", ["4,261.01"], aNewSegmenter ? kOk: kTodo);
-
-      // "Peter's car"
-      testWords("div14", ["Peter's", "car"], aNewSegmenter ? kOk : kTodo);
-
-      // "N.A.T.O."
-      testWords("div15", ["N.A.T.O."], aNewSegmenter ? kOk : kTodo);
-
-      await SpecialPowers.popPrefEnv();
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();

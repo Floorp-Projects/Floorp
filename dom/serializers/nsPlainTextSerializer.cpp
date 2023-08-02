@@ -131,19 +131,7 @@ int32_t nsPlainTextSerializer::CurrentLine::FindWrapIndexForContent(
     // mContent until we find a width less than or equal to wrap column.
     uint32_t width = 0;
     intl::LineBreakIteratorUtf16 lineBreakIter(mContent);
-    while (Maybe<uint32_t> nextGoodSpace = lineBreakIter.Next()) {
-      // Trim space at the tail. UAX#14 doesn't have break opportunity for
-      // ASCII space at the tail.
-      const Maybe<uint32_t> originalNextGoodSpace = nextGoodSpace;
-      while (*nextGoodSpace > 0 &&
-             mContent.CharAt(*nextGoodSpace - 1) == 0x20) {
-        nextGoodSpace = Some(*nextGoodSpace - 1);
-      }
-      if (*nextGoodSpace == 0) {
-        // Restore the original nextGoodSpace.
-        nextGoodSpace = originalNextGoodSpace;
-      }
-
+    while (const Maybe<uint32_t> nextGoodSpace = lineBreakIter.Next()) {
       width += GetUnicharStringWidth(Span<const char16_t>(
           mContent.get() + goodSpace, *nextGoodSpace - goodSpace));
       if (prefixwidth + width > aWrapColumn) {

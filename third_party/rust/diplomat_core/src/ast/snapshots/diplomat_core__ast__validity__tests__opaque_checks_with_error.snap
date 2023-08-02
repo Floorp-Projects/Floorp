@@ -1,7 +1,0 @@
----
-source: core/src/ast/validity.rs
-expression: output
----
-An opaque type crossed the FFI boundary as a value: OpaqueStruct
-An opaque type crossed the FFI boundary as a value: OpaqueStruct
-

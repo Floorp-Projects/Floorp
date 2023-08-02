@@ -1,9 +1,0 @@
----
-source: core/src/ast/validity.rs
-expression: output
----
-A non-opaque type was found behind a Box or reference, these can only be handled by-move as they get converted at the FFI boundary: NonOpaque
-A non-opaque type was found behind a Box or reference, these can only be handled by-move as they get converted at the FFI boundary: NonOpaque
-A non-opaque type was found behind a Box or reference, these can only be handled by-move as they get converted at the FFI boundary: NonOpaque
-A non-opaque type was found behind a Box or reference, these can only be handled by-move as they get converted at the FFI boundary: NonOpaque
-

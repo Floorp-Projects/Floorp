@@ -1,6 +1,0 @@
----
-source: core/src/ast/validity.rs
-expression: output
----
-A non-opaque zero-sized struct or enum has been defined: ffi::NonOpaqueStruct
-

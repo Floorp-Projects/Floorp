@@ -15,19 +15,6 @@
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-namespace capi {
-struct ICU4XLineSegmenter;
-struct ICU4XLineBreakIteratorUtf16;
-struct ICU4XWordSegmenter;
-struct ICU4XWordBreakIteratorUtf16;
-struct ICU4XGraphemeClusterSegmenter;
-struct ICU4XGraphemeClusterBreakIteratorUtf16;
-struct ICU4XSentenceSegmenter;
-struct ICU4XSentenceBreakIteratorUtf16;
-}  // namespace capi
-#endif
-
 namespace mozilla::intl {
 
 enum class SegmenterGranularity : uint8_t {
@@ -117,18 +104,11 @@ class LineBreakIteratorUtf16 final : public SegmentIteratorUtf16 {
  public:
   explicit LineBreakIteratorUtf16(Span<const char16_t> aText,
                                   const LineBreakOptions& aOptions = {});
-  ~LineBreakIteratorUtf16() override;
 
   Maybe<uint32_t> Next() override;
-  Maybe<uint32_t> Seek(uint32_t aPos) override;
 
  private:
   LineBreakOptions mOptions;
-
-#ifdef MOZ_ICU4X
-  capi::ICU4XLineSegmenter* mSegmenter = nullptr;
-  capi::ICU4XLineBreakIteratorUtf16* mIterator = nullptr;
-#endif
 };
 
 /**
@@ -137,16 +117,8 @@ class LineBreakIteratorUtf16 final : public SegmentIteratorUtf16 {
 class WordBreakIteratorUtf16 final : public SegmentIteratorUtf16 {
  public:
   explicit WordBreakIteratorUtf16(Span<const char16_t> aText);
-  ~WordBreakIteratorUtf16() override;
 
   Maybe<uint32_t> Next() override;
-  Maybe<uint32_t> Seek(uint32_t aPos) override;
-
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
- private:
-  capi::ICU4XWordSegmenter* mSegmenter = nullptr;
-  capi::ICU4XWordBreakIteratorUtf16* mIterator = nullptr;
-#endif
 };
 
 /**
@@ -155,16 +127,8 @@ class WordBreakIteratorUtf16 final : public SegmentIteratorUtf16 {
 class GraphemeClusterBreakIteratorUtf16 final : public SegmentIteratorUtf16 {
  public:
   explicit GraphemeClusterBreakIteratorUtf16(Span<const char16_t> aText);
-  ~GraphemeClusterBreakIteratorUtf16() override;
 
   Maybe<uint32_t> Next() override;
-  Maybe<uint32_t> Seek(uint32_t aPos) override;
-
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
- private:
-  capi::ICU4XGraphemeClusterSegmenter* mSegmenter = nullptr;
-  capi::ICU4XGraphemeClusterBreakIteratorUtf16* mIterator = nullptr;
-#endif
 };
 
 /**
@@ -181,24 +145,6 @@ class GraphemeClusterBreakReverseIteratorUtf16 final
   Maybe<uint32_t> Next() override;
   Maybe<uint32_t> Seek(uint32_t aPos) override;
 };
-
-#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
-/**
- * Sentence break iterator for UTF-16 text.
- */
-class SentenceBreakIteratorUtf16 final : public SegmentIteratorUtf16 {
- public:
-  explicit SentenceBreakIteratorUtf16(Span<const char16_t> aText);
-  ~SentenceBreakIteratorUtf16() override;
-
-  Maybe<uint32_t> Next() override;
-  Maybe<uint32_t> Seek(uint32_t aPos) override;
-
- private:
-  capi::ICU4XSentenceSegmenter* mSegmenter = nullptr;
-  capi::ICU4XSentenceBreakIteratorUtf16* mIterator = nullptr;
-};
-#endif
 
 /**
  * This component is a Mozilla-focused API for working with segmenters in
