@@ -47,6 +47,7 @@
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/StaticPrefs_slider.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -59,7 +60,6 @@ using mozilla::layers::ScrollbarData;
 using mozilla::layers::ScrollDirection;
 
 bool nsSliderFrame::gMiddlePref = false;
-int32_t nsSliderFrame::gSnapMultiplier;
 
 // Turn this on if you want to debug slider frames.
 #undef DEBUG_SLIDER
@@ -105,7 +105,6 @@ void nsSliderFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     gotPrefs = true;
 
     gMiddlePref = Preferences::GetBool("middlemouse.scrollbarPosition");
-    gSnapMultiplier = Preferences::GetInt("slider.snapMultiplier");
   }
 
   mCurPos = GetCurrentPosition(aContent);
@@ -699,22 +698,25 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
         // take our current position and subtract the start location
         pos -= mDragStart;
         bool isMouseOutsideThumb = false;
-        if (gSnapMultiplier) {
+        const int32_t snapMultiplier = StaticPrefs::slider_snapMultiplier();
+        if (snapMultiplier) {
           nsSize thumbSize = thumbFrame->GetSize();
           if (isHorizontal) {
             // horizontal scrollbar - check if mouse is above or below thumb
             // XXXbz what about looking at the .y of the thumb's rect?  Is that
             // always zero here?
-            if (eventPoint.y < -gSnapMultiplier * thumbSize.height ||
+            if (eventPoint.y < -snapMultiplier * thumbSize.height ||
                 eventPoint.y >
-                    thumbSize.height + gSnapMultiplier * thumbSize.height)
+                    thumbSize.height + snapMultiplier * thumbSize.height) {
               isMouseOutsideThumb = true;
+            }
           } else {
             // vertical scrollbar - check if mouse is left or right of thumb
-            if (eventPoint.x < -gSnapMultiplier * thumbSize.width ||
+            if (eventPoint.x < -snapMultiplier * thumbSize.width ||
                 eventPoint.x >
-                    thumbSize.width + gSnapMultiplier * thumbSize.width)
+                    thumbSize.width + snapMultiplier * thumbSize.width) {
               isMouseOutsideThumb = true;
+            }
           }
         }
         if (aEvent->mClass == eTouchEventClass) {
