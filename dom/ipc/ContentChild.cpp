@@ -2650,10 +2650,13 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
   } else if (aRemoteType == PRIVILEGEDMOZILLA_REMOTE_TYPE) {
     SetProcessName("Privileged Mozilla"_ns, nullptr, &aProfile);
   } else if (remoteTypePrefix == WITH_COOP_COEP_REMOTE_TYPE) {
+    // The profiler can sanitize out the eTLD+1
+    nsDependentCSubstring etld =
+        Substring(aRemoteType, WITH_COOP_COEP_REMOTE_TYPE.Length() + 1);
 #ifdef NIGHTLY_BUILD
-    SetProcessName("WebCOOP+COEP Content"_ns, nullptr, &aProfile);
+    SetProcessName("WebCOOP+COEP Content"_ns, &etld, &aProfile);
 #else
-    SetProcessName("Isolated Web Content"_ns, nullptr,
+    SetProcessName("Isolated Web Content"_ns, &etld,
                    &aProfile);  // to avoid confusing people
 #endif
   } else if (remoteTypePrefix == FISSION_WEB_REMOTE_TYPE) {
