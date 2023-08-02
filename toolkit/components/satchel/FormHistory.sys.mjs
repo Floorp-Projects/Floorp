@@ -89,6 +89,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 const DB_SCHEMA_VERSION = 5;
@@ -97,6 +98,8 @@ const MAX_SEARCH_TOKENS = 10;
 const DB_FILENAME = "formhistory.sqlite";
 
 var supportsDeletedTable = AppConstants.platform == "android";
+
+const wait = ms => new Promise(res => lazy.setTimeout(res, ms));
 
 var Prefs = {
   _initialized: false,
@@ -764,7 +767,7 @@ var DB = {
   _instance: null,
   // MAX_ATTEMPTS is how many times we'll try to establish a connection
   // or migrate a database before giving up.
-  MAX_ATTEMPTS: 2,
+  MAX_ATTEMPTS: 4,
 
   /** String representing where the FormHistory database is on the filesystem */
   get path() {
@@ -781,8 +784,7 @@ var DB = {
    *        A {@link toolkit/modules/Sqlite.sys.mjs} connection to the database.
    * @throws
    *        If connecting to the database, or migrating the database
-   *        failed after MAX_ATTEMPTS attempts (where each attempt
-   *        backs up and deletes the old database), this will reject
+   *        failed after MAX_ATTEMPTS attempts, this will reject
    *        with the Sqlite.sys.mjs error.
    */
   get conn() {
@@ -818,8 +820,7 @@ var DB = {
    *        A {@link toolkit/modules/Sqlite.sys.mjs} connection to the database.
    * @throws
    *        If connecting to the database, or migrating the database
-   *        failed after MAX_ATTEMPTS attempts (where each attempt
-   *        backs up and deletes the old database), this will reject
+   *        failed after MAX_ATTEMPTS attempts, this will reject
    *        with the Sqlite.sys.mjs error.
    */
   async _establishConn(attemptNum = 0) {
@@ -831,13 +832,23 @@ var DB = {
         conn.close()
       );
     } catch (e) {
-      // Bug 1423729 - We should check the reason for the connection failure,
-      // in case this is due to the disk being full or the database file being
-      // inaccessible due to third-party software (like anti-virus software).
-      // In that case, we should probably fail right away.
+      // retrying.
+      // If error is a db corruption error, backup the database and create a new one.
+      // Else, use an exponential backoff algorithm to restart up to MAX_ATTEMPTS times.
       if (attemptNum < this.MAX_ATTEMPTS) {
-        log("Establishing connection failed.");
-        await this._failover(conn);
+        log(`Establishing connection failed due with error ${e.result}`);
+
+        if (e.result === Cr.NS_ERROR_FILE_CORRUPTED) {
+          log("Corrupt database, resetting database");
+          await this._failover(conn);
+        } else {
+          if (conn) {
+            await conn.close();
+          }
+          // retrying with an exponential backoff
+          await wait(2 ** attemptNum * 10);
+        }
+
         return this._establishConn(++attemptNum);
       }
 
