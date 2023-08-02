@@ -97,7 +97,7 @@ As long as you used `./mach addwidget` correctly, there is no additional setup n
 Stories in `browser/components/storybook/stories` are used for non-design system components, also called domain-specific UI widgets.
 The easiest way to use Storybook for non-design system element is to use `./mach addstory new-component "Your Project"`.
 You can also use `./mach addstory new-component "Your Project" --path browser/components/new-component.mjs` where `--path` is the path to your new components' source.
-[See the Credential Management/Timeline widget for an example.](https://searchfox.org/mozilla-central/rev/2c11f18f89056a806c299a9d06bfa808718c2e84/browser/components/storybook/stories/credential-management.stories.mjs#11)
+[See the Credential Management/Timeline widget for an example.](https://searchfox.org/mozilla-central/rev/2c11f18f89056a806c299a9d06bfa808718c2e84/browser/components/storybook/stories/login-timeline.stories.mjs#11)
 
 If you want to colocate your story with the code it is documenting you will need
 to add to the `stories` array in the `.storybook/main.js` [configuration
@@ -118,7 +118,7 @@ For example, the name `moz-support-link` informs us that this widget is design s
 
 Storybook can also be used to help document and prototype widgets that are specific to a part of the codebase and not intended for more global use.
 Stories for these types of widgets live under the "Domain-Specific UI Widgets" category, while the code can live in any appropriate folder in `mozilla-central`.
-[See the Credential Management folder as an example of a domain specific folder](https://firefoxux.github.io/firefox-desktop-components/?path=/docs/domain-specific-ui-widgets-credential-management-timeline--empty-timeline) and [see the credential-management.stories.mjs for how to make a domain specific folder in Storybook](https://searchfox.org/mozilla-central/source/browser/components/storybook/stories/credential-management.stories.mjs).
+[See the Credential Management folder as an example of a domain specific folder](https://firefoxux.github.io/firefox-desktop-components/?path=/docs/domain-specific-ui-widgets-credential-management-timeline--empty-timeline) and [see the login-timeline.stories.mjs for how to make a domain specific folder in Storybook](https://searchfox.org/mozilla-central/source/browser/components/storybook/stories/login-timeline.stories.mjs).
 [To add a non-team specific widget to the "Domain-specific UI Widgets" section, see the migration-wizard.stories.mjs file](https://searchfox.org/mozilla-central/source/browser/components/storybook/stories/migration-wizard.stories.mjs).
 
 Creating and documenting domain specific UI widgets allows other teams to be aware of and take inspiration from existing UI patterns.
