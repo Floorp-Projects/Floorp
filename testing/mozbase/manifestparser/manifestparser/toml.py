@@ -60,15 +60,12 @@ def read_toml(
         current_section = {}
         for key in manifest[section].keys():
             val = manifest[section][key]
-            if isinstance(val, bool):
-                if val:
-                    val = "true"
-                else:
-                    val = "false"
-            elif isinstance(val, Array):
-                new_val = ""  # stay bug-for-bug compatible witn INI processing
+            if isinstance(val, Array):
+                new_val = ""
                 for v in val:
-                    new_val += os.linesep + str(v)
+                    if len(new_val) > 0:
+                        new_val += os.linesep
+                    new_val += str(v)
                 val = new_val
             else:
                 val = str(val)  # coerce to str
