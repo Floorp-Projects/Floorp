@@ -224,7 +224,7 @@ jobs:
         parent: ubuntu2004-base
     diffoscope:
         symbol: I(diff)
-        parent: debian11-base
+        parent: debian12-base
     partner-repack:
         symbol: I(PR)
         parent: debian11-base
