@@ -59,7 +59,6 @@ regex = { version = "1", default-features = false, features = ["perf"], optional
 semver = { version = "1", features = ["serde"], optional = true }
 serde = { version = "1", features = ["derive"], optional = true }
 syn = { version = "2", features = ["extra-traits", "full", "visit", "visit-mut"] }
-syn1 = { package = "syn", version = "1", features = ["fold", "full", "visit-mut"], optional = true }
 
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3.6"
@@ -155,9 +154,9 @@ features = [
 
 [features]
 builtins-static = ["dep:bindgen", "dep:memchr", "dep:nom", "dep:regex", "dep:serde", "dep:smallvec"]
-defaultagent-static = ["dep:bytes", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:once_cell", "dep:scopeguard", "dep:serde", "dep:serde_json", "dep:smallvec", "dep:syn1", "dep:url"]
+defaultagent-static = ["dep:bytes", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:once_cell", "dep:scopeguard", "dep:serde", "dep:serde_json", "dep:smallvec", "dep:url"]
 geckodriver = ["dep:bytes", "dep:chrono", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:semver", "dep:serde", "dep:serde_json", "dep:smallvec", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url", "dep:uuid"]
-gkrust = ["dep:arrayvec", "dep:bindgen", "dep:bytes", "dep:chrono", "dep:env_logger", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:scopeguard", "dep:semver", "dep:serde", "dep:serde_json", "dep:smallvec", "dep:syn1", "dep:url", "dep:uuid"]
+gkrust = ["dep:arrayvec", "dep:bindgen", "dep:bytes", "dep:chrono", "dep:env_logger", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:scopeguard", "dep:semver", "dep:serde", "dep:serde_json", "dep:smallvec", "dep:url", "dep:uuid"]
 gkrust-gtest = ["gkrust"]
 http3server = ["dep:arrayvec", "dep:bindgen", "dep:bytes", "dep:chrono", "dep:env_logger", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:serde", "dep:serde_json", "dep:smallvec", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url"]
 ipcclientcerts-static = ["dep:bindgen", "dep:memchr", "dep:nom", "dep:regex"]
