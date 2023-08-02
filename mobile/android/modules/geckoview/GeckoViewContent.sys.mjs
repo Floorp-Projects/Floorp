@@ -4,6 +4,12 @@
 
 import { GeckoViewModule } from "resource://gre/modules/GeckoViewModule.sys.mjs";
 
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  isProductURL: "chrome://global/content/shopping/ShoppingProduct.mjs",
+  ShoppingProduct: "chrome://global/content/shopping/ShoppingProduct.mjs",
+});
+
 export class GeckoViewContent extends GeckoViewModule {
   onInit() {
     this.registerListener([
@@ -14,6 +20,7 @@ export class GeckoViewContent extends GeckoViewModule {
       "GeckoView:HasCookieBannerRuleForBrowsingContextTree",
       "GeckoView:RestoreState",
       "GeckoView:ContainsFormData",
+      "GeckoView:RequestAnalysis",
       "GeckoView:ScrollBy",
       "GeckoView:ScrollTo",
       "GeckoView:SetActive",
@@ -184,6 +191,9 @@ export class GeckoViewContent extends GeckoViewModule {
       case "GeckoView:ContainsFormData":
         this._containsFormData(aCallback);
         break;
+      case "GeckoView:RequestAnalysis":
+        this._requestAnalysis(aData, aCallback);
+        break;
       case "GeckoView:IsPdfJs":
         aCallback.onSuccess(this.isPdfJs);
         break;
@@ -298,6 +308,24 @@ export class GeckoViewContent extends GeckoViewModule {
 
   async _containsFormData(aCallback) {
     aCallback.onSuccess(await this.actor.containsFormData());
+  }
+
+  async _requestAnalysis(aData, aCallback) {
+    const url = Services.io.newURI(aData.url);
+    if (!lazy.isProductURL(url)) {
+      aCallback.onError(`Cannot requestAnalysis on a non-product url.`);
+    } else {
+      const product = new lazy.ShoppingProduct(url);
+      const analysis = await product.requestAnalysis();
+      if (!analysis) {
+        aCallback.onError(`Product analysis returned null.`);
+      }
+      var sanitizedGrade = analysis.grade?.toUpperCase();
+      if (!["A", "B", "C", "D", "E"].includes(sanitizedGrade)) {
+        sanitizedGrade = null;
+      }
+      aCallback.onSuccess({ analysis: { ...analysis, grade: sanitizedGrade } });
+    }
   }
 
   async _hasCookieBannerRuleForBrowsingContextTree(aCallback) {

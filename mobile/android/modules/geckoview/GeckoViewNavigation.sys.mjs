@@ -10,6 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.sys.mjs",
+  isProductURL: "chrome://global/content/shopping/ShoppingProduct.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "ReferrerInfo", () =>
@@ -629,6 +630,12 @@ export class GeckoViewNavigation extends GeckoViewModule {
           })
         );
       }
+    }
+
+    if (lazy.isProductURL(aLocationURI)) {
+      this.eventDispatcher.sendRequest({
+        type: "GeckoView:OnProductUrl",
+      });
     }
 
     const message = {

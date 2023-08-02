@@ -16,9 +16,13 @@ exclude: true
 ## v118
 - Added [`ExperimentDelegate`][118.1] to allow GeckoView to send and retrieve experiment information from an embedder.
 - Added [`ERROR_BLOCKLISTED`][118.2] to `WebExtension.InstallException.ErrorCodes`. ([bug 1845745]({{bugzilla}}1845745))
+- Added [`ContentDelegate.onProductUrl`][118.3] to notify the app when on a supported product page.
+- Added [`GeckoSession.requestAnalysis`][118.4] for requesting product review analysis.
 
 [118.1]: {{javadoc_uri}}/ExperimentDelegate.html
 [118.2]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_BLOCKLISTED
+[118.3]:{{javadoc_uri}}/GeckoSession.ContentDelegate.html#onProductUrl(org.mozilla.geckoview.GeckoSession)
+[118.4]: {{javadoc_uri}}/GeckoSession.html#requestAnalysis(String)
 
 ## v116
 - Added [`GeckoSession.didPrintPageContent`][116.1] to included extra print status for a standard print and new `GeckoPrintException.ERROR_NO_PRINT_DELEGATE`
@@ -1399,4 +1403,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 6a5e066595c20e32999f7fce0432ee20d50b05d0
+[api-version]: e06024c20809d282b312123df6c5f78d3a3e07c4
