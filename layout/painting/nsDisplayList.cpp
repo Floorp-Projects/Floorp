@@ -5166,10 +5166,10 @@ bool nsDisplayOwnLayer::IsScrollbarContainer() const {
 }
 
 bool nsDisplayOwnLayer::IsRootScrollbarContainer() const {
-  if (!IsScrollbarContainer()) {
-    return false;
-  }
+  return IsScrollbarContainer() && IsScrollbarLayerForRoot();
+}
 
+bool nsDisplayOwnLayer::IsScrollbarLayerForRoot() const {
   return mFrame->PresContext()->IsRootContentDocumentCrossProcess() &&
          mScrollbarData.mTargetViewId ==
              nsLayoutUtils::ScrollIdForRootScrollFrame(mFrame->PresContext());
@@ -5304,11 +5304,15 @@ bool nsDisplayOwnLayer::UpdateScrollData(WebRenderScrollData* aData,
     aLayerData->SetScrollbarAnimationId(mWrAnimationId);
     LayoutDeviceRect bounds = LayoutDeviceIntRect::FromAppUnits(
         mBounds, mFrame->PresContext()->AppUnitsPerDevPixel());
-    // We use a resolution of 1.0 because this is a WebRender codepath which
-    // always uses containerless scrolling, and so resolution doesn't apply to
-    // scrollbars.
+    // Subframe scrollbars are subject to the pinch-zoom scale,
+    // but root scrollbars are not because they are outside of the
+    // region that is zoomed.
+    const float resolution =
+        IsScrollbarLayerForRoot()
+            ? 1.0f
+            : mFrame->PresContext()->PresShell()->GetCumulativeResolution();
     LayerIntRect layerBounds =
-        RoundedOut(bounds * LayoutDeviceToLayerScale(1.0f));
+        RoundedOut(bounds * LayoutDeviceToLayerScale(resolution));
     aLayerData->SetVisibleRegion(LayerIntRegion(layerBounds));
   }
   return true;

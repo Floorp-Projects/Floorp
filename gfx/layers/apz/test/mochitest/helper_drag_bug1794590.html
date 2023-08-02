@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width; initial-scale=1.0">
+    <title>Test for bug 1794590</title>
+    <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+    <script type="application/javascript" src="apz_test_utils.js"></script>
+    <script src="/tests/SimpleTest/paint_listener.js"></script>
+    <script type="text/javascript">
+
+        const utils = SpecialPowers.getDOMWindowUtils(window);
+
+        async function test() {
+            // Zoom in. This is part of the bug 1794590 STR.
+            let resolution = 3.0;
+            utils.setResolutionAndScaleTo(resolution);
+            await promiseApzFlushedRepaints();
+
+            let scrollPromise = new Promise(resolve => {
+                subframe.addEventListener("scroll", resolve, { once: true });
+            });
+
+            var dragFinisher = await promiseVerticalScrollbarDrag(subframe, 20);
+            if (!dragFinisher) {
+                ok(true, "No scrollbar, can't do this test");
+                return;
+            }
+
+            // the events above might be stuck in APZ input queue for a bit until the
+            // layer is activated, so we wait here until the scroll event listener is
+            // triggered.
+            await scrollPromise;
+
+            await dragFinisher();
+
+            // Flush everything just to be safe
+            await promiseOnlyApzControllerFlushed();
+
+            ok(subframe.scrollTop > 0, "Scrollbar drag resulted in a scroll position of " + subframe.scrollTop);
+        }
+
+        waitUntilApzStable()
+            .then(test)
+            .then(subtestDone, subtestFailed);
+
+    </script>
+    <style>
+        #subframe {
+            width: 200px;
+            height: 100px;
+            margin: 100px;
+            background-color: cyan;
+            overflow: scroll;
+            white-space: pre;
+        }
+        #content {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(green, blue);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="subframe">
+        <div id="content"></div>>
+    </div>
+</body>
+
+</html>

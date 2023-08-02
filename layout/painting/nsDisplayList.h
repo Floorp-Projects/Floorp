@@ -5452,6 +5452,7 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
   bool IsScrollThumbLayer() const;
   bool IsScrollbarContainer() const;
   bool IsRootScrollbarContainer() const;
+  bool IsScrollbarLayerForRoot() const;
   bool IsZoomingLayer() const;
   bool IsFixedPositionLayer() const;
   bool IsStickyPositionLayer() const;
