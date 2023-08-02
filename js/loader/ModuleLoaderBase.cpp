@@ -30,7 +30,6 @@
 #include "nsNetUtil.h"            // NS_NewURI
 #include "xpcpublic.h"
 
-using mozilla::CycleCollectedJSContext;
 using mozilla::Err;
 using mozilla::Preferences;
 using mozilla::UniquePtr;
@@ -52,19 +51,6 @@ mozilla::LazyLogModule ModuleLoaderBase::gModuleLoaderBaseLog(
   MOZ_LOG_TEST(ModuleLoaderBase::gModuleLoaderBaseLog, mozilla::LogLevel::Debug)
 
 //////////////////////////////////////////////////////////////
-// ModuleLoaderBase::WaitingRequests
-//////////////////////////////////////////////////////////////
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ModuleLoaderBase::WaitingRequests)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTION(ModuleLoaderBase::WaitingRequests, mWaiting)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ModuleLoaderBase::WaitingRequests)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(ModuleLoaderBase::WaitingRequests)
-
-//////////////////////////////////////////////////////////////
 // ModuleLoaderBase
 //////////////////////////////////////////////////////////////
 
@@ -72,7 +58,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ModuleLoaderBase)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION(ModuleLoaderBase, mFetchingModules, mFetchedModules,
+NS_IMPL_CYCLE_COLLECTION(ModuleLoaderBase, mFetchedModules,
                          mDynamicImportRequests, mGlobalObject, mEventTarget,
                          mLoader)
 
@@ -422,7 +408,10 @@ nsresult ModuleLoaderBase::StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
 
   if (aRestart == RestartRequest::No && ModuleMapContainsURL(request->mURI)) {
     LOG(("ScriptLoadRequest (%p): Waiting for module fetch", aRequest));
-    WaitForModuleFetch(request);
+    WaitForModuleFetch(request->mURI)
+        ->Then(mEventTarget, __func__, request,
+               &ModuleLoadRequest::ModuleLoaded,
+               &ModuleLoadRequest::LoadFailed);
     return NS_OK;
   }
 
@@ -482,15 +471,17 @@ void ModuleLoaderBase::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsFetching());
   MOZ_ASSERT(!ModuleMapContainsURL(aRequest->mURI));
 
-  mFetchingModules.InsertOrUpdate(aRequest->mURI, nullptr);
+  mFetchingModules.InsertOrUpdate(
+      aRequest->mURI, RefPtr<mozilla::GenericNonExclusivePromise::Private>{});
 }
 
 void ModuleLoaderBase::SetModuleFetchFinishedAndResumeWaitingRequests(
     ModuleLoadRequest* aRequest, nsresult aResult) {
   // Update module map with the result of fetching a single module script.
   //
-  // If any requests for the same URL are waiting on this one to complete, call
-  // ModuleLoaded or LoadFailed to resume or fail them as appropriate.
+  // If any requests for the same URL are waiting on this one to complete, they
+  // will have ModuleLoaded or LoadFailed on them when the promise is
+  // resolved/rejected. This is set up in StartLoad.
 
   MOZ_ASSERT(aRequest->mLoader == this);
 
@@ -499,9 +490,8 @@ void ModuleLoaderBase::SetModuleFetchFinishedAndResumeWaitingRequests(
        "%u)",
        aRequest, aRequest->mModuleScript.get(), unsigned(aResult)));
 
-  RefPtr<WaitingRequests> waitingRequests;
-  if (!mFetchingModules.Remove(aRequest->mURI,
-                               getter_AddRefs(waitingRequests))) {
+  RefPtr<mozilla::GenericNonExclusivePromise::Private> promise;
+  if (!mFetchingModules.Remove(aRequest->mURI, getter_AddRefs(promise))) {
     LOG(
         ("ScriptLoadRequest (%p): Key not found in mFetchingModules, "
          "assuming we have an inline module or have finished fetching already",
@@ -514,47 +504,37 @@ void ModuleLoaderBase::SetModuleFetchFinishedAndResumeWaitingRequests(
 
   mFetchedModules.InsertOrUpdate(aRequest->mURI, RefPtr{moduleScript});
 
-  if (waitingRequests) {
-    LOG(("ScriptLoadRequest (%p): Resuming waiting requests", aRequest));
-    ResumeWaitingRequests(waitingRequests, bool(moduleScript));
-  }
-}
-
-void ModuleLoaderBase::ResumeWaitingRequests(WaitingRequests* aWaitingRequests,
-                                             bool aSuccess) {
-  for (ModuleLoadRequest* request : aWaitingRequests->mWaiting) {
-    ResumeWaitingRequest(request, aSuccess);
-  }
-}
-
-void ModuleLoaderBase::ResumeWaitingRequest(ModuleLoadRequest* aRequest,
-                                            bool aSuccess) {
-  if (aSuccess) {
-    aRequest->ModuleLoaded();
-  } else {
-    aRequest->LoadFailed();
-  }
-}
-
-void ModuleLoaderBase::WaitForModuleFetch(ModuleLoadRequest* aRequest) {
-  nsIURI* uri = aRequest->mURI;
-  MOZ_ASSERT(ModuleMapContainsURL(uri));
-
-  if (auto entry = mFetchingModules.Lookup(uri)) {
-    RefPtr<WaitingRequests> waitingRequests = entry.Data();
-    if (!waitingRequests) {
-      waitingRequests = new WaitingRequests();
-      mFetchingModules.InsertOrUpdate(uri, waitingRequests);
+  if (promise) {
+    if (moduleScript) {
+      LOG(("ScriptLoadRequest (%p):   resolving %p", aRequest, promise.get()));
+      promise->Resolve(true, __func__);
+    } else {
+      LOG(("ScriptLoadRequest (%p):   rejecting %p", aRequest, promise.get()));
+      promise->Reject(aResult, __func__);
     }
+  }
+}
 
-    waitingRequests->mWaiting.AppendElement(aRequest);
-    return;
+RefPtr<mozilla::GenericNonExclusivePromise>
+ModuleLoaderBase::WaitForModuleFetch(nsIURI* aURL) {
+  MOZ_ASSERT(ModuleMapContainsURL(aURL));
+
+  nsURIHashKey key(aURL);
+  if (auto entry = mFetchingModules.Lookup(aURL)) {
+    if (!entry.Data()) {
+      entry.Data() = new mozilla::GenericNonExclusivePromise::Private(__func__);
+    }
+    return entry.Data();
   }
 
   RefPtr<ModuleScript> ms;
-  MOZ_ALWAYS_TRUE(mFetchedModules.Get(uri, getter_AddRefs(ms)));
+  MOZ_ALWAYS_TRUE(mFetchedModules.Get(aURL, getter_AddRefs(ms)));
+  if (!ms) {
+    return mozilla::GenericNonExclusivePromise::CreateAndReject(
+        NS_ERROR_FAILURE, __func__);
+  }
 
-  ResumeWaitingRequest(aRequest, bool(ms));
+  return mozilla::GenericNonExclusivePromise::CreateAndResolve(true, __func__);
 }
 
 ModuleScript* ModuleLoaderBase::GetFetchedModule(nsIURI* aURL) const {
@@ -852,7 +832,7 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
 
   MOZ_ASSERT(aRequest->mModuleScript);
   MOZ_ASSERT(!aRequest->mModuleScript->HasParseError());
-  MOZ_ASSERT(aRequest->IsFetching() || aRequest->IsCompiling());
+  MOZ_ASSERT(!aRequest->IsReadyToRun());
 
   auto visitedSet = aRequest->mVisitedSet;
   MOZ_ASSERT(visitedSet->Contains(aRequest->mURI));
@@ -886,18 +866,26 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
     return;
   }
 
-  MOZ_ASSERT(aRequest->mAwaitingImports == 0);
-  aRequest->mAwaitingImports = urls.Count();
-
   // For each url in urls, fetch a module script graph given url, module
   // script's CORS setting, and module script's settings object.
+  nsTArray<RefPtr<mozilla::GenericPromise>> importsReady;
   for (auto* url : urls) {
-    StartFetchingModuleAndDependencies(aRequest, url);
+    RefPtr<mozilla::GenericPromise> childReady =
+        StartFetchingModuleAndDependencies(aRequest, url);
+    importsReady.AppendElement(childReady);
   }
+
+  // Wait for all imports to become ready.
+  RefPtr<mozilla::GenericPromise::AllPromiseType> allReady =
+      mozilla::GenericPromise::All(mEventTarget, importsReady);
+  allReady->Then(mEventTarget, __func__, aRequest,
+                 &ModuleLoadRequest::DependenciesLoaded,
+                 &ModuleLoadRequest::ModuleErrored);
 }
 
-void ModuleLoaderBase::StartFetchingModuleAndDependencies(
-    ModuleLoadRequest* aParent, nsIURI* aURI) {
+RefPtr<mozilla::GenericPromise>
+ModuleLoaderBase::StartFetchingModuleAndDependencies(ModuleLoadRequest* aParent,
+                                                     nsIURI* aURI) {
   MOZ_ASSERT(aURI);
 
   RefPtr<ModuleLoadRequest> childRequest = CreateStaticImport(aURI, aParent);
@@ -917,38 +905,20 @@ void ModuleLoaderBase::StartFetchingModuleAndDependencies(
          url2.get()));
   }
 
-  MOZ_ASSERT(!childRequest->mWaitingParentRequest);
-  childRequest->mWaitingParentRequest = aParent;
+  RefPtr<mozilla::GenericPromise> ready = childRequest->mReady.Ensure(__func__);
 
   nsresult rv = StartModuleLoad(childRequest);
   if (NS_FAILED(rv)) {
     MOZ_ASSERT(!childRequest->mModuleScript);
     LOG(("ScriptLoadRequest (%p):   rejecting %p", aParent,
-         childRequest.get()));
+         &childRequest->mReady));
 
     mLoader->ReportErrorToConsole(childRequest, rv);
-    childRequest->LoadFailed();
-  }
-}
-
-void ModuleLoadRequest::ChildLoadComplete(bool aSuccess) {
-  RefPtr<ModuleLoadRequest> parent = mWaitingParentRequest;
-  MOZ_ASSERT(parent);
-  MOZ_ASSERT(parent->mAwaitingImports != 0);
-
-  mWaitingParentRequest = nullptr;
-  parent->mAwaitingImports--;
-
-  if (parent->IsReadyToRun()) {
-    MOZ_ASSERT_IF(!aSuccess, parent->IsErrored());
-    return;
+    childRequest->mReady.Reject(rv, __func__);
+    return ready;
   }
 
-  if (!aSuccess) {
-    parent->ModuleErrored();
-  } else if (parent->mAwaitingImports == 0) {
-    parent->DependenciesLoaded();
-  }
+  return ready;
 }
 
 void ModuleLoaderBase::StartDynamicImport(ModuleLoadRequest* aRequest) {
@@ -1047,9 +1017,8 @@ void ModuleLoaderBase::Shutdown() {
   CancelAndClearDynamicImports();
 
   for (const auto& entry : mFetchingModules) {
-    RefPtr<WaitingRequests> waitingRequests(entry.GetData());
-    if (waitingRequests) {
-      ResumeWaitingRequests(waitingRequests, false);
+    if (entry.GetData()) {
+      entry.GetData()->Reject(NS_ERROR_FAILURE, __func__);
     }
   }
 
@@ -1196,50 +1165,12 @@ nsresult ModuleLoaderBase::InitDebuggerDataForModuleGraph(
 }
 
 void ModuleLoaderBase::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
-  // Instantiate and evaluate the imported module.
-  // See: https://tc39.es/ecma262/#sec-ContinueDynamicImport
-  //
-  // Since this is specced as happening on promise resolution (step 8) this must
-  // at least run as part of a microtask. We don't create the unobservable
-  // promise.
-
-  class DynamicImportMicroTask : public mozilla::MicroTaskRunnable {
-   public:
-    explicit DynamicImportMicroTask(ModuleLoadRequest* aRequest)
-        : MicroTaskRunnable(), mRequest(aRequest) {}
-
-    virtual void Run(mozilla::AutoSlowOperation& aAso) override {
-      mRequest->mLoader->InstantiateAndEvaluateDynamicImport(mRequest);
-      mRequest = nullptr;
-    }
-
-    virtual bool Suppressed() override {
-      return mRequest->mLoader->mGlobalObject->IsInSyncOperation();
-    }
-
-   private:
-    RefPtr<ModuleLoadRequest> mRequest;
-  };
-
   MOZ_ASSERT(aRequest->mLoader == this);
 
-  if (!aRequest->mModuleScript) {
-    FinishDynamicImportAndReject(aRequest, NS_ERROR_FAILURE);
-    return;
-  }
-
-  CycleCollectedJSContext* context = CycleCollectedJSContext::Get();
-  RefPtr<DynamicImportMicroTask> runnable =
-      new DynamicImportMicroTask(aRequest);
-  context->DispatchToMicroTask(do_AddRef(runnable));
-}
-
-void ModuleLoaderBase::InstantiateAndEvaluateDynamicImport(
-    ModuleLoadRequest* aRequest) {
-  MOZ_ASSERT(aRequest->mModuleScript);
-
-  if (!InstantiateModuleGraph(aRequest)) {
-    aRequest->mModuleScript = nullptr;
+  if (aRequest->mModuleScript) {
+    if (!InstantiateModuleGraph(aRequest)) {
+      aRequest->mModuleScript = nullptr;
+    }
   }
 
   nsresult rv = NS_ERROR_FAILURE;
