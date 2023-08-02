@@ -903,30 +903,6 @@ bool NS_IsValidHTTPToken(const nsACString& aToken);
  */
 void NS_TrimHTTPWhitespace(const nsACString& aSource, nsACString& aDest);
 
-template <typename Char>
-constexpr bool NS_IsHTTPTokenPoint(Char aChar) {
-  using UnsignedChar = typename mozilla::detail::MakeUnsignedChar<Char>::Type;
-  auto c = static_cast<UnsignedChar>(aChar);
-  return c == '!' || c == '#' || c == '$' || c == '%' || c == '&' ||
-         c == '\'' || c == '*' || c == '+' || c == '-' || c == '.' ||
-         c == '^' || c == '_' || c == '`' || c == '|' || c == '~' ||
-         mozilla::IsAsciiAlphanumeric(c);
-}
-
-template <typename Char>
-constexpr bool NS_IsHTTPQuotedStringTokenPoint(Char aChar) {
-  using UnsignedChar = typename mozilla::detail::MakeUnsignedChar<Char>::Type;
-  auto c = static_cast<UnsignedChar>(aChar);
-  return c == 0x9 || (c >= ' ' && c <= '~') || mozilla::IsNonAsciiLatin1(c);
-}
-
-template <typename Char>
-constexpr bool NS_IsHTTPWhitespace(Char aChar) {
-  using UnsignedChar = typename mozilla::detail::MakeUnsignedChar<Char>::Type;
-  auto c = static_cast<UnsignedChar>(aChar);
-  return c == 0x9 || c == 0xA || c == 0xD || c == 0x20;
-}
-
 /**
  * Return true if the given request must be upgraded to HTTPS.
  * If |aResultCallback| is provided and the storage is not ready to read, the

@@ -50,7 +50,7 @@ class nsDataHandler : public nsIProtocolHandler,
   [[nodiscard]] static nsresult ParsePathWithoutRef(
       const nsACString& aPath, nsCString& aContentType,
       nsCString* aContentCharset, bool& aIsBase64,
-      nsDependentCSubstring* aDataBuffer, nsCString* aMimeType = nullptr);
+      nsDependentCSubstring* aDataBuffer);
 };
 
 #endif /* nsDataHandler_h___ */
