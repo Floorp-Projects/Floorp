@@ -34,11 +34,15 @@ pub enum DataType {
     Resolution,
     /// Any valid `<transform-function>` value
     TransformFunction,
+    /// Any valid `<custom-ident>` value
+    CustomIdent,
     /// A list of valid `<transform-function>` values. Note that "<transform-list>" is a pre-multiplied
     /// data type name equivalent to "<transform-function>+"
     TransformList,
-    /// Any valid `<custom-ident>` value
-    CustomIdent,
+    /// Any valid `<string>` value
+    ///
+    /// <https://github.com/w3c/css-houdini-drafts/issues/1103>
+    String,
 }
 
 impl DataType {
@@ -72,6 +76,7 @@ impl DataType {
             b"transform-function" => DataType::TransformFunction,
             b"custom-ident" => DataType::CustomIdent,
             b"transform-list" => DataType::TransformList,
+            b"string" => DataType::String,
             _ => return None,
         })
     }
