@@ -31,6 +31,8 @@ void FrontendErrors::clearErrors() {
   allocationOverflow = false;
 }
 
+void FrontendErrors::clearWarnings() { warnings.clear(); }
+
 void FrontendAllocator::reportAllocationOverflow() {
   fc_->onAllocationOverflow();
 }
@@ -99,6 +101,8 @@ void FrontendContext::clearErrors() {
   MOZ_ASSERT(!maybeCx_);
   return errors_.clearErrors();
 }
+
+void FrontendContext::clearWarnings() { return errors_.clearWarnings(); }
 
 void* FrontendContext::onOutOfMemory(AllocFunction allocFunc, arena_id_t arena,
                                      size_t nbytes, void* reallocPtr) {
@@ -207,6 +211,9 @@ bool FrontendContext::convertToRuntimeError(
   if (hadAllocationOverflow()) {
     js::ReportAllocationOverflow(cx);
   }
+
+  MOZ_ASSERT(!extraBindingsAreNotUsed(),
+             "extraBindingsAreNotUsed shouldn't escape from FrontendContext");
   return true;
 }
 
