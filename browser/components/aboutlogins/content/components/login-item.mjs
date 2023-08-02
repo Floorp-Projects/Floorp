@@ -85,8 +85,10 @@ export default class LoginItem extends HTMLElement {
     this.render();
 
     this._cancelButton.addEventListener("click", e =>
-      this.handleCancelClick(e)
+      this.handleCancelEvent(e)
     );
+
+    window.addEventListener("keydown", e => this.handleKeydown(e));
 
     // TODO: Using the addEventListener to listen for clicks and pass the event handler due to a CSP error.
     // This will be fixed as login-item itself is converted into a lit component. We will then be able to use the onclick
@@ -332,6 +334,12 @@ export default class LoginItem extends HTMLElement {
     this.render();
   }
 
+  async handleKeydown(e) {
+    if (e.key === "Escape" && this.dataset.editing) {
+      this.handleCancelEvent();
+    }
+  }
+
   async handlePasswordDisplayFocus(e) {
     // TODO(Bug 1838494): Remove this if block
     // This is a temporary fix until Bug 1750072 lands
@@ -421,7 +429,7 @@ export default class LoginItem extends HTMLElement {
     this._recordTelemetryEvent({ object: "password", method });
   }
 
-  async handleCancelClick() {
+  async handleCancelEvent(e) {
     let wasExistingLogin = !!this._login.guid;
     if (wasExistingLogin) {
       if (this.hasPendingChanges()) {
