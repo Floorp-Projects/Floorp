@@ -388,6 +388,8 @@ class TreeMetadataEmitter(LoggingMixin):
                     context, obj, variable, self.STDCXXCOMPAT_NAME[obj.KIND]
                 )
             if obj.KIND == "target":
+                if "pure_virtual" in self._libs:
+                    self._link_library(context, obj, variable, "pure_virtual")
                 for lib in context.config.substs.get("STLPORT_LIBS", []):
                     obj.link_system_library(lib)
 
