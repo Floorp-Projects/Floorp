@@ -1560,6 +1560,19 @@ bool nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
             MOZ_ASSERT(nextWrapPosition.isSome(),
                        "We should've exited the loop when reaching the end of "
                        "text in the previous iteration!");
+
+            // Trim space at the tail. UAX#14 doesn't have break opportunity
+            // for ASCII space at the tail.
+            const Maybe<uint32_t> originalNextWrapPosition = nextWrapPosition;
+            while (*nextWrapPosition > 0 &&
+                   subSeq.at(*nextWrapPosition - 1) == 0x20) {
+              nextWrapPosition = Some(*nextWrapPosition - 1);
+            }
+            if (*nextWrapPosition == 0) {
+              // Restore the original nextWrapPosition.
+              nextWrapPosition = originalNextWrapPosition;
+            }
+
             if (aSequenceStart + *nextWrapPosition > aPos) {
               break;
             }
