@@ -913,6 +913,25 @@ Maybe<bool> StorageAccessAPIHelper::CheckCallingContextDecidesStorageAccessAPI(
     }
   }
 
+  // Check if NodePrincipal is not null
+  if (!aDocument->NodePrincipal()) {
+    return Some(false);
+  }
+
+  // If the document doesn't have a secure context, reject. The Static Pref is
+  // used to pass existing tests that do not fulfil this check.
+  if (StaticPrefs::dom_storage_access_dont_grant_insecure_contexts() &&
+      !aDocument->NodePrincipal()->GetIsOriginPotentiallyTrustworthy()) {
+    // Report the error to the console if we are requesting access
+    if (aRequestingStorageAccess) {
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::errorFlag, nsLiteralCString("requestStorageAccess"),
+          aDocument, nsContentUtils::eDOM_PROPERTIES,
+          "RequestStorageAccessNotSecureContext");
+    }
+    return Some(false);
+  }
+
   // If the document has a null origin, reject.
   if (aDocument->NodePrincipal()->GetIsNullPrincipal()) {
     // Report an error to the console for this case if we are requesting access
