@@ -23,7 +23,6 @@
 #include "gfxPlatform.h"
 
 #include "nsContentUtils.h"
-#include "nsGlobalWindowInner.h"
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
 

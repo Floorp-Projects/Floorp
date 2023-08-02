@@ -40,7 +40,6 @@
 #include "nsIXPConnect.h"
 #include "nsDocShell.h"
 #include "nsGlobalWindowInner.h"
-#include "nsGlobalWindowOuter.h"
 #include "nsMixedContentBlocker.h"
 #include "nsQueryObject.h"
 #include "nsRedirectHistoryEntry.h"

@@ -7,7 +7,6 @@
 #ifndef nsWindowMemoryReporter_h__
 #define nsWindowMemoryReporter_h__
 
-#include "nsGlobalWindowInner.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
@@ -19,6 +18,8 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TimeStamp.h"
+
+class nsGlobalWindowInner;
 
 /**
  * nsWindowMemoryReporter is responsible for the 'explicit/window-objects'

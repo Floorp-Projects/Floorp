@@ -30,7 +30,6 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/LoadInfo.h"
-#include "nsGlobalWindowInner.h"
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/dom/Document.h"
 #include "nsXPCOM.h"

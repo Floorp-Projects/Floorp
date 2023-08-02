@@ -17,7 +17,6 @@
 #include "nsError.h"
 #include "nsContentSecurityManager.h"
 #include "nsDocShellLoadTypes.h"
-#include "nsGlobalWindowOuter.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIMultiPartChannel.h"
 #include "nsWebNavigationInfo.h"

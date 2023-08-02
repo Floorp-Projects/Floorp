@@ -28,7 +28,7 @@
 #include "nsIChannel.h"
 #include "nsIContentPolicy.h"
 #include "mozilla/dom/Document.h"
-#include "nsGlobalWindowOuter.h"
+#include "nsGlobalWindowInner.h"
 #include "nsILoadInfo.h"
 #include "nsIXULRuntime.h"
 #include "nsImportModule.h"

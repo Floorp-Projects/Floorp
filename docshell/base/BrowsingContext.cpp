@@ -71,6 +71,7 @@
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 #include "nsFocusManager.h"
+#include "nsGlobalWindowInner.h"
 #include "nsGlobalWindowOuter.h"
 #include "PresShell.h"
 #include "nsIObserverService.h"

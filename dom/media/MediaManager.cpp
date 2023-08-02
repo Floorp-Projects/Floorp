@@ -48,7 +48,6 @@
 #include "nsArray.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
-#include "nsGlobalWindowOuter.h"
 #include "nsHashPropertyBag.h"
 #include "nsIEventTarget.h"
 #include "nsIPermissionManager.h"

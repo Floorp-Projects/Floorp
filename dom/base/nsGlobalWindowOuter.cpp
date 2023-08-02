@@ -273,40 +273,45 @@ using mozilla::OriginAttributes;
 using mozilla::TimeStamp;
 using mozilla::layout::RemotePrintJobChild;
 
-#define FORWARD_TO_INNER(method, args, err_rval)       \
-  PR_BEGIN_MACRO                                       \
-  if (!mInnerWindow) {                                 \
-    NS_WARNING("No inner window available!");          \
-    return err_rval;                                   \
-  }                                                    \
-  return GetCurrentInnerWindowInternal()->method args; \
+static inline nsGlobalWindowInner* GetCurrentInnerWindowInternal(
+    const nsGlobalWindowOuter* aOuter) {
+  return nsGlobalWindowInner::Cast(aOuter->GetCurrentInnerWindow());
+}
+
+#define FORWARD_TO_INNER(method, args, err_rval)           \
+  PR_BEGIN_MACRO                                           \
+  if (!mInnerWindow) {                                     \
+    NS_WARNING("No inner window available!");              \
+    return err_rval;                                       \
+  }                                                        \
+  return GetCurrentInnerWindowInternal(this)->method args; \
   PR_END_MACRO
 
-#define FORWARD_TO_INNER_VOID(method, args)     \
-  PR_BEGIN_MACRO                                \
-  if (!mInnerWindow) {                          \
-    NS_WARNING("No inner window available!");   \
-    return;                                     \
-  }                                             \
-  GetCurrentInnerWindowInternal()->method args; \
-  return;                                       \
+#define FORWARD_TO_INNER_VOID(method, args)         \
+  PR_BEGIN_MACRO                                    \
+  if (!mInnerWindow) {                              \
+    NS_WARNING("No inner window available!");       \
+    return;                                         \
+  }                                                 \
+  GetCurrentInnerWindowInternal(this)->method args; \
+  return;                                           \
   PR_END_MACRO
 
 // Same as FORWARD_TO_INNER, but this will create a fresh inner if an
 // inner doesn't already exists.
-#define FORWARD_TO_INNER_CREATE(method, args, err_rval) \
-  PR_BEGIN_MACRO                                        \
-  if (!mInnerWindow) {                                  \
-    if (mIsClosed) {                                    \
-      return err_rval;                                  \
-    }                                                   \
-    nsCOMPtr<Document> kungFuDeathGrip = GetDoc();      \
-    ::mozilla::Unused << kungFuDeathGrip;               \
-    if (!mInnerWindow) {                                \
-      return err_rval;                                  \
-    }                                                   \
-  }                                                     \
-  return GetCurrentInnerWindowInternal()->method args;  \
+#define FORWARD_TO_INNER_CREATE(method, args, err_rval)    \
+  PR_BEGIN_MACRO                                           \
+  if (!mInnerWindow) {                                     \
+    if (mIsClosed) {                                       \
+      return err_rval;                                     \
+    }                                                      \
+    nsCOMPtr<Document> kungFuDeathGrip = GetDoc();         \
+    ::mozilla::Unused << kungFuDeathGrip;                  \
+    if (!mInnerWindow) {                                   \
+      return err_rval;                                     \
+    }                                                      \
+  }                                                        \
+  return GetCurrentInnerWindowInternal(this)->method args; \
   PR_END_MACRO
 
 static LazyLogModule gDOMLeakPRLogOuter("DOMLeakOuter");
@@ -1692,7 +1697,7 @@ nsresult nsGlobalWindowOuter::EnsureScriptEnvironment() {
 
   NS_ENSURE_STATE(!mCleanedUp);
 
-  NS_ASSERTION(!GetCurrentInnerWindowInternal(),
+  NS_ASSERTION(!GetCurrentInnerWindowInternal(this),
                "No cached wrapper, but we have an inner window?");
   NS_ASSERTION(!mContext, "Will overwrite mContext!");
 
@@ -2141,7 +2146,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   // Sometimes, WouldReuseInnerWindow() returns true even if there's no inner
   // window (see bug 776497). Be safe.
   bool reUseInnerWindow = (aForceReuseInnerWindow || wouldReuseInnerWindow) &&
-                          GetCurrentInnerWindowInternal();
+                          GetCurrentInnerWindowInternal(this);
 
   nsresult rv;
 
@@ -2166,7 +2171,8 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   mLastOpenedURI = aDocument->GetDocumentURI();
 #endif
 
-  RefPtr<nsGlobalWindowInner> currentInner = GetCurrentInnerWindowInternal();
+  RefPtr<nsGlobalWindowInner> currentInner =
+      GetCurrentInnerWindowInternal(this);
 
   if (currentInner && currentInner->mNavigator) {
     currentInner->mNavigator->OnNavigation();
@@ -2702,7 +2708,7 @@ void nsGlobalWindowOuter::DetachFromDocShell(bool aIsBeingDiscarded) {
 
   NotifyWindowIDDestroyed("outer-window-destroyed");
 
-  nsGlobalWindowInner* currentInner = GetCurrentInnerWindowInternal();
+  nsGlobalWindowInner* currentInner = GetCurrentInnerWindowInternal(this);
 
   if (currentInner) {
     NS_ASSERTION(mDoc, "Must have doc!");
@@ -2736,8 +2742,9 @@ void nsGlobalWindowOuter::DetachFromDocShell(bool aIsBeingDiscarded) {
   if (aIsBeingDiscarded) {
     // If our BrowsingContext is being discarded, make a note that our current
     // inner window was active at the time it went away.
-    if (GetCurrentInnerWindow()) {
-      GetCurrentInnerWindowInternal()->SetWasCurrentInnerWindow();
+    if (nsGlobalWindowInner* currentInner =
+            GetCurrentInnerWindowInternal(this)) {
+      currentInner->SetWasCurrentInnerWindow();
     }
   }
 
@@ -2782,7 +2789,7 @@ void nsGlobalWindowOuter::UpdateParentTarget() {
 }
 
 EventTarget* nsGlobalWindowOuter::GetTargetForEventTargetChain() {
-  return GetCurrentInnerWindowInternal();
+  return GetCurrentInnerWindowInternal(this);
 }
 
 void nsGlobalWindowOuter::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
@@ -2905,7 +2912,7 @@ nsresult nsGlobalWindowOuter::SetArguments(nsIArray* aArguments) {
   // embedding waltz we do here).
   //
   // So we need to demultiplex the two cases here.
-  nsGlobalWindowInner* currentInner = GetCurrentInnerWindowInternal();
+  nsGlobalWindowInner* currentInner = GetCurrentInnerWindowInternal(this);
 
   mArguments = aArguments;
   rv = currentInner->DefineArgumentsProperty(aArguments);
@@ -3165,7 +3172,7 @@ static nsresult GetTopImpl(nsGlobalWindowOuter* aWin, nsIURI* aURIBeingLoaded,
 
     if (aExcludingExtensionAccessibleContentFrames) {
       if (auto* p = nsGlobalWindowOuter::Cast(parent)) {
-        nsGlobalWindowInner* currentInner = p->GetCurrentInnerWindowInternal();
+        nsGlobalWindowInner* currentInner = GetCurrentInnerWindowInternal(p);
         nsIURI* uri = prevParent->GetDocumentURI();
         if (!uri) {
           // If our parent doesn't have a URI yet, we have a document that is in
@@ -5426,7 +5433,7 @@ void nsGlobalWindowOuter::FirePopupBlockedEvent(
   init.mCancelable = true;
   // XXX: This is a different object, but webidl requires an inner window here
   // now.
-  init.mRequestingWindow = GetCurrentInnerWindowInternal();
+  init.mRequestingWindow = GetCurrentInnerWindowInternal(this);
   init.mPopupWindowURI = aPopupURI;
   init.mPopupWindowName = aPopupWindowName;
   init.mPopupWindowFeatures = aPopupWindowFeatures;
@@ -6163,7 +6170,7 @@ nsGlobalWindowOuter* nsGlobalWindowOuter::EnterModalState() {
   if (topWin->mModalStateDepth == 0) {
     topWin->SuppressEventHandling();
 
-    if (nsGlobalWindowInner* inner = topWin->GetCurrentInnerWindowInternal()) {
+    if (nsGlobalWindowInner* inner = GetCurrentInnerWindowInternal(topWin)) {
       inner->Suspend();
     }
   }
@@ -6189,7 +6196,7 @@ void nsGlobalWindowOuter::LeaveModalState() {
   MOZ_ASSERT(IsSuspended());
   mModalStateDepth--;
 
-  nsGlobalWindowInner* inner = GetCurrentInnerWindowInternal();
+  nsGlobalWindowInner* inner = GetCurrentInnerWindowInternal(this);
   if (mModalStateDepth == 0) {
     if (inner) {
       inner->Resume();
@@ -6405,6 +6412,10 @@ nsPIDOMWindowOuter* nsGlobalWindowOuter::GetOwnerGlobalForBindingsInternal() {
   return this;
 }
 
+nsIGlobalObject* nsGlobalWindowOuter::GetOwnerGlobal() const {
+  return GetCurrentInnerWindowInternal(this);
+}
+
 bool nsGlobalWindowOuter::DispatchEvent(Event& aEvent, CallerType aCallerType,
                                         ErrorResult& aRv) {
   FORWARD_TO_INNER(DispatchEvent, (aEvent, aCallerType, aRv), false);
@@ -6473,7 +6484,7 @@ void nsGlobalWindowOuter::SetIsBackground(bool aIsBackground) {
   bool changed = aIsBackground != IsBackground();
   SetIsBackgroundInternal(aIsBackground);
 
-  nsGlobalWindowInner* inner = GetCurrentInnerWindowInternal();
+  nsGlobalWindowInner* inner = GetCurrentInnerWindowInternal(this);
 
   if (inner && changed) {
     inner->UpdateBackgroundState();
@@ -6912,7 +6923,7 @@ nsresult nsGlobalWindowOuter::OpenInternal(
 }
 
 void nsGlobalWindowOuter::MaybeAllowStorageForOpenedWindow(nsIURI* aURI) {
-  nsGlobalWindowInner* inner = GetCurrentInnerWindowInternal();
+  nsGlobalWindowInner* inner = GetCurrentInnerWindowInternal(this);
   if (NS_WARN_IF(!inner)) {
     return;
   }
@@ -7047,7 +7058,7 @@ already_AddRefed<nsISupports> nsGlobalWindowOuter::SaveWindowState() {
     return nullptr;
   }
 
-  nsGlobalWindowInner* inner = GetCurrentInnerWindowInternal();
+  nsGlobalWindowInner* inner = GetCurrentInnerWindowInternal(this);
   NS_ASSERTION(inner, "No inner window to save");
 
   if (WindowContext* wc = inner->GetWindowContext()) {
@@ -7085,7 +7096,7 @@ nsresult nsGlobalWindowOuter::RestoreWindowState(nsISupports* aState) {
           ("restoring window state, state = %p", (void*)holder));
 
   // And we're ready to go!
-  nsGlobalWindowInner* inner = GetCurrentInnerWindowInternal();
+  nsGlobalWindowInner* inner = GetCurrentInnerWindowInternal(this);
 
   // if a link is focused, refocus with the FLAG_SHOWRING flag set. This makes
   // it easy to tell which link was last clicked when going back a page.
@@ -7206,7 +7217,7 @@ ChromeMessageBroadcaster* nsGlobalWindowOuter::GetMessageManager() {
     NS_WARNING("No inner window available!");
     return nullptr;
   }
-  return GetCurrentInnerWindowInternal()->MessageManager();
+  return GetCurrentInnerWindowInternal(this)->MessageManager();
 }
 
 ChromeMessageBroadcaster* nsGlobalWindowOuter::GetGroupMessageManager(
@@ -7215,7 +7226,7 @@ ChromeMessageBroadcaster* nsGlobalWindowOuter::GetGroupMessageManager(
     NS_WARNING("No inner window available!");
     return nullptr;
   }
-  return GetCurrentInnerWindowInternal()->GetGroupMessageManager(aGroup);
+  return GetCurrentInnerWindowInternal(this)->GetGroupMessageManager(aGroup);
 }
 
 void nsGlobalWindowOuter::InitWasOffline() { mWasOffline = NS_IsOffline(); }

@@ -23,7 +23,6 @@
 #include "nsProxyRelease.h"
 #include "nsIScriptError.h"
 #include "nsISupportsPrimitives.h"
-#include "nsGlobalWindowInner.h"
 #include "js/friend/ErrorMessages.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/ContentParent.h"

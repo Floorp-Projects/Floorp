@@ -27,7 +27,6 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsGlobalWindowInner.h"
 
 using namespace JS;
 using namespace mozilla;

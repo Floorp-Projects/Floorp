@@ -107,7 +107,8 @@ WindowDestroyedEvent::Run() {
         } else {
           nsGlobalWindowOuter* outer =
               nsGlobalWindowOuter::FromSupports(window);
-          currentInner = outer->GetCurrentInnerWindowInternal();
+          currentInner =
+              nsGlobalWindowInner::Cast(outer->GetCurrentInnerWindow());
           nukedOuter = outer;
         }
         NS_ENSURE_TRUE(currentInner, NS_OK);

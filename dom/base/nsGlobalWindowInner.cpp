@@ -5773,7 +5773,8 @@ CallState nsGlobalWindowInner::CallOnInProcessDescendantsInternal(
   for (const RefPtr<BrowsingContext>& bc : aBrowsingContext->Children()) {
     if (nsCOMPtr<nsPIDOMWindowOuter> pWin = bc->GetDOMWindow()) {
       auto* win = nsGlobalWindowOuter::Cast(pWin);
-      if (nsGlobalWindowInner* inner = win->GetCurrentInnerWindowInternal()) {
+      if (nsGlobalWindowInner* inner =
+              nsGlobalWindowInner::Cast(win->GetCurrentInnerWindow())) {
         // Call the descendant method using our helper CallDescendant() template
         // method. This allows us to handle both void returning methods and
         // methods that return CallState explicitly.  For void returning methods
@@ -6100,13 +6101,14 @@ bool WindowScriptTimeoutHandler::Call(const char* aExecutionReason) {
 nsGlobalWindowInner* nsGlobalWindowInner::InnerForSetTimeoutOrInterval(
     ErrorResult& aError) {
   nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-  nsGlobalWindowInner* currentInner =
-      outer ? outer->GetCurrentInnerWindowInternal() : this;
+  nsPIDOMWindowInner* currentInner =
+      outer ? outer->GetCurrentInnerWindow() : this;
 
   // If forwardTo is not the window with an active document then we want the
   // call to setTimeout/Interval to be a noop, so return null but don't set an
   // error.
-  return HasActiveDocument() ? currentInner : nullptr;
+  return HasActiveDocument() ? nsGlobalWindowInner::Cast(currentInner)
+                             : nullptr;
 }
 
 int32_t nsGlobalWindowInner::SetTimeout(JSContext* aCx, Function& aFunction,

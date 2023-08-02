@@ -41,6 +41,7 @@
 #include "nsIAppWindow.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsIScriptError.h"
+#include "nsGlobalWindowInner.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsHTMLDocument.h"
 #include "nsPIWindowRoot.h"

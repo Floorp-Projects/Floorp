@@ -48,7 +48,7 @@
 #include "mozilla/fallible.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
-#include "nsGlobalWindowOuter.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsScriptError.h"

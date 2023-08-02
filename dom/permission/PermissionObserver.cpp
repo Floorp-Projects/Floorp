@@ -10,7 +10,6 @@
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/Services.h"
 #include "mozilla/UniquePtr.h"
-#include "nsGlobalWindowInner.h"
 #include "nsIObserverService.h"
 #include "nsIPermission.h"
 #include "PermissionUtils.h"

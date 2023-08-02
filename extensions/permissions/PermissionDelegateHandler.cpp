@@ -6,13 +6,13 @@
 
 #include "mozilla/PermissionDelegateHandler.h"
 
-#include "nsGlobalWindowInner.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPrincipal.h"
 #include "nsContentPermissionHelper.h"
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs_permissions.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/WindowContext.h"

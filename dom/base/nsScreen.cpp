@@ -7,6 +7,8 @@
 #include "nsContentUtils.h"
 #include "nsScreen.h"
 #include "mozilla/dom/Document.h"
+#include "nsGlobalWindowInner.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"

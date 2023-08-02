@@ -14,7 +14,6 @@
 #include "nsContentList.h"
 #include "nsError.h"
 #include "nsQueryContentEventResult.h"
-#include "nsGlobalWindowInner.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsFocusManager.h"
 #include "nsFrameManager.h"

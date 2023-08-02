@@ -16,7 +16,6 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Unused.h"
-#include "nsGlobalWindowInner.h"
 #include "nsIPrincipal.h"
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
 #  include "nsIProtocolHandler.h"

@@ -28,7 +28,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindowInner.h"
 #include "nsIClassifiedChannel.h"
 #include "nsICookiePermission.h"
 #include "nsICookieService.h"

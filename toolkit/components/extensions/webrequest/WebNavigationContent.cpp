@@ -28,7 +28,6 @@
 #include "nsIPropertyBag2.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"
-#include "nsGlobalWindowOuter.h"
 #include "nsQueryObject.h"
 
 namespace mozilla {

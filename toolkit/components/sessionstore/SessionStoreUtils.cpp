@@ -49,7 +49,7 @@
 #include "nsContentList.h"
 #include "nsContentUtils.h"
 #include "nsFocusManager.h"
-#include "nsGlobalWindowOuter.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIContentInlines.h"
 #include "nsIDocShell.h"
 #include "nsIFormControl.h"

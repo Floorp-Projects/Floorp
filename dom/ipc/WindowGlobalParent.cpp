@@ -42,7 +42,6 @@
 #include "nsError.h"
 #include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
-#include "nsGlobalWindowInner.h"
 #include "nsQueryObject.h"
 #include "nsNetUtil.h"
 #include "nsSandboxFlags.h"

@@ -20,7 +20,7 @@
 #include "nsIScriptError.h"
 #include "nsIURI.h"
 #include "nsIOService.h"
-#include "nsGlobalWindowInner.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsJSUtils.h"
 #include "mozIThirdPartyUtil.h"
 

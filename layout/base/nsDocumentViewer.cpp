@@ -78,6 +78,7 @@
 #include "nsIClipboardHelper.h"
 
 #include "nsPIDOMWindow.h"
+#include "nsGlobalWindowInner.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsPIWindowRoot.h"
