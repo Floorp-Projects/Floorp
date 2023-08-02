@@ -43,6 +43,7 @@ tab-sleep-settings-dialog-excludehosts-label-2 = Enter one host per line.
 tab-sleep-tab-context-menu-excludetab = Do not put this tab to sleep
 enable-floorp-workspace =
  .label = Enable Workspaces
+workspace-warring = Workspaces cannot be used with Tab Group add-ons. If you want to use tab group add-ons, please disable Workspace & restart { -brand-short-name }.
 enable-tab-scroll-change =
  .label = Switch tabs by scrolling
 enable-tab-scroll-reverse =
