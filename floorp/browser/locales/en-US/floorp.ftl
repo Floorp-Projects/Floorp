@@ -30,7 +30,7 @@ enable-multitab =
 multirow-tabs-limit = 
  .label = Enable row limit for multi-row tabs
 multirow-tabs-newtab = 
- .label = Display the "Open a new tab" button inside of the lowest row of multi-row tabs
+ .label = Place the "Open a new tab" button at the end of the lowest row of tabs
 multirow-tabs-value = Number of rows when multi-row tabs are enabled
 enable-tab-sleep = 
  .label = Enable Tab Sleep
@@ -74,7 +74,7 @@ tabbar-on-bottom =
  .label = Display Tab Bar at the bottom of the window
 
 tabbar-favicon-color =
- .label = Use favicon color for Tab Bar background color
+ .label = Color the Tab Bar using the current website's favicon color
 
 tabbar-style-preference = Tab Bar Style
 
@@ -103,7 +103,7 @@ show-nav-bar-bottom =
  .label = Show the Toolbar at the bottom of { -brand-short-name } (experimental)
 
 material-effect =
- .label = Allow Mica for Everyone to modify the browser design
+ .label = Allow Mica For Everyone to modify the browser design
 disable-extension-check-compatibility-option =
  .label = Do not check for compatibility with add-ons
 other-preference = Other Preferences
@@ -141,7 +141,7 @@ system-theme-light =
  .label = Light
 
 system-theme-auto =
- .label = Follow my global preference
+ .label = Follow my system appearance
 
 ## user interface prefernces
 
@@ -167,7 +167,7 @@ floorp-fluerialUI =
  .label = Floorp Fluerial UI
 
 floorp-gnomeUI =
- .label = Gnome Theme
+ .label = GNOME Theme
 
 ## download mgr
 download-notification-preferences = Download Notifications
@@ -239,7 +239,7 @@ category-downloads =
 bsb-header = Browser Manager Sidebar
 bsb-context = Use the following Container Tab
 bsb-userAgent-label = 
-  .label = Use Mobile UserAgent in this panel
+  .label = Use Mobile User Agent in this Web Panel
 bsb-width = Width (If set to 0, use global values)
 bsb-page = Page to open
 
