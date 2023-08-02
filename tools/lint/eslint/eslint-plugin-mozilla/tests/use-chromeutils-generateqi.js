@@ -16,19 +16,9 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 // Tests
 // ------------------------------------------------------------------------------
 
-function callError(message) {
-  return [{ message, type: "CallExpression" }];
+function error(messageId, type) {
+  return [{ messageId, type }];
 }
-function error(message, type) {
-  return [{ message, type }];
-}
-
-const MSG_NO_JS_QUERY_INTERFACE =
-  "Please use ChromeUtils.generateQI rather than manually creating " +
-  "JavaScript QueryInterface functions";
-
-const MSG_NO_XPCOMUTILS_GENERATEQI =
-  "Please use ChromeUtils.generateQI instead of XPCOMUtils.generateQI";
 
 /* globals nsIFlug */
 function QueryInterface(iid) {
@@ -52,17 +42,17 @@ ruleTester.run("use-chromeutils-generateqi", rule, {
     {
       code: `X.prototype.QueryInterface = XPCOMUtils.generateQI(["nsIMeh"]);`,
       output: `X.prototype.QueryInterface = ChromeUtils.generateQI(["nsIMeh"]);`,
-      errors: callError(MSG_NO_XPCOMUTILS_GENERATEQI),
+      errors: error("noXpcomUtilsGenerateQI", "CallExpression"),
     },
     {
       code: `X.prototype = { QueryInterface: XPCOMUtils.generateQI(["nsIMeh"]) };`,
       output: `X.prototype = { QueryInterface: ChromeUtils.generateQI(["nsIMeh"]) };`,
-      errors: callError(MSG_NO_XPCOMUTILS_GENERATEQI),
+      errors: error("noXpcomUtilsGenerateQI", "CallExpression"),
     },
     {
       code: `X.prototype = { QueryInterface: ${QueryInterface} };`,
       output: `X.prototype = { QueryInterface: ChromeUtils.generateQI(["nsIMeh", "nsIFlug", "amIFoo"]) };`,
-      errors: error(MSG_NO_JS_QUERY_INTERFACE, "Property"),
+      errors: error("noJSQueryInterface", "Property"),
     },
     {
       code: `X.prototype = { ${String(QueryInterface).replace(
@@ -70,12 +60,12 @@ ruleTester.run("use-chromeutils-generateqi", rule, {
         ""
       )} };`,
       output: `X.prototype = { QueryInterface: ChromeUtils.generateQI(["nsIMeh", "nsIFlug", "amIFoo"]) };`,
-      errors: error(MSG_NO_JS_QUERY_INTERFACE, "Property"),
+      errors: error("noJSQueryInterface", "Property"),
     },
     {
       code: `X.prototype.QueryInterface = ${QueryInterface};`,
       output: `X.prototype.QueryInterface = ChromeUtils.generateQI(["nsIMeh", "nsIFlug", "amIFoo"]);`,
-      errors: error(MSG_NO_JS_QUERY_INTERFACE, "AssignmentExpression"),
+      errors: error("noJSQueryInterface", "AssignmentExpression"),
     },
   ],
 });

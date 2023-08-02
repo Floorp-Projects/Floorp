@@ -17,8 +17,10 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 // ------------------------------------------------------------------------------
 
 function invalidCode(code) {
-  let message = "use .ownerGlobal instead of .ownerDocument.defaultView";
-  return { code, errors: [{ message, type: "MemberExpression" }] };
+  return {
+    code,
+    errors: [{ messageId: "useOwnerGlobal", type: "MemberExpression" }],
+  };
 }
 
 ruleTester.run("use-ownerGlobal", rule, {

@@ -25,6 +25,5 @@ module.exports = {
     "no-undef-init": "error",
     "one-var": ["error", "never"],
     strict: ["error", "global"],
-    "eslint-plugin/prefer-message-ids": "off",
   },
 };

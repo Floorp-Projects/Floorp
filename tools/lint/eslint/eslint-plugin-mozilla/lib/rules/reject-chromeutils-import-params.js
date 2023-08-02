@@ -28,6 +28,10 @@ module.exports = {
       url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/reject-chromeutils-import-params.html",
     },
     hasSuggestions: true,
+    messages: {
+      importOnlyOneArg: "ChromeUtils.import only takes one argument.",
+      importOnlyOneArgSuggestion: "Remove the unnecessary parameters.",
+    },
     schema: [],
     type: "problem",
   },
@@ -43,10 +47,10 @@ module.exports = {
         ) {
           context.report({
             node,
-            message: "ChromeUtils.import only takes one argument.",
+            messageId: "importOnlyOneArg",
             suggest: [
               {
-                desc: "Remove the unnecessary parameters.",
+                messageId: "importOnlyOneArgSuggestion",
                 fix: fixer => {
                   return fixer.removeRange(
                     getRangeAfterArgToEnd(context, 0, node.arguments)

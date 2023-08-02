@@ -27,6 +27,13 @@ module.exports = {
       url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-chromeutils-import.html",
     },
     fixable: "code",
+    messages: {
+      useChromeUtilsImport:
+        "Please use ChromeUtils.import instead of Cu.import",
+      useDefineModuleGetter:
+        "Please use ChromeUtils.defineModuleGetter instead of " +
+        "XPCOMUtils.defineLazyModuleGetter",
+    },
     schema: [],
     type: "suggestion",
   },
@@ -48,7 +55,7 @@ module.exports = {
         ) {
           context.report({
             node,
-            message: "Please use ChromeUtils.import instead of Cu.import",
+            messageId: "useChromeUtilsImport",
             fix(fixer) {
               return fixer.replaceText(callee, "ChromeUtils.import");
             },
@@ -61,9 +68,7 @@ module.exports = {
         ) {
           context.report({
             node,
-            message:
-              "Please use ChromeUtils.defineModuleGetter instead of " +
-              "XPCOMUtils.defineLazyModuleGetter",
+            messageId: "useDefineModuleGetter",
             fix(fixer) {
               return fixer.replaceText(
                 callee,

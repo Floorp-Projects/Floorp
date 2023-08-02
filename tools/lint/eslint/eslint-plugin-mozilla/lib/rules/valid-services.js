@@ -14,6 +14,9 @@ module.exports = {
     docs: {
       url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/valid-services.html",
     },
+    messages: {
+      unknownProperty: "Unknown Services member property {{ alias }}",
+    },
     schema: [],
     type: "problem",
   },
@@ -53,7 +56,10 @@ module.exports = {
         if (!serviceAliases.has(alias)) {
           context.report({
             node,
-            message: `Unknown Services member property ${alias}`,
+            messageId: "unknownProperty",
+            data: {
+              alias,
+            },
           });
         }
       },

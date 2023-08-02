@@ -18,9 +18,7 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 
 const errors = [
   {
-    message:
-      "Please prefer .isInstance() in chrome scripts over the standard instanceof operator for DOM interfaces, " +
-      "since the latter will return false when the object is created from a different context.",
+    messageId: "preferIsInstance",
     type: "BinaryExpression",
   },
 ];

@@ -19,6 +19,9 @@ module.exports = {
     docs: {
       url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/reject-global-this.html",
     },
+    messages: {
+      avoidGlobalThis: "JSM should not use the global this",
+    },
     schema: [],
     type: "problem",
   },
@@ -32,7 +35,7 @@ module.exports = {
 
         context.report({
           node,
-          message: `JSM should not use the global this`,
+          messageId: "avoidGlobalThis",
         });
       },
     };
