@@ -128,10 +128,6 @@
 
 /* Close icon styles */
 
-:host(:not([dismissable])) .close {
-  display: none;
-}
-
 .close {
   background-image: var(--message-bar-icon-close-url);
   background-repeat: no-repeat;

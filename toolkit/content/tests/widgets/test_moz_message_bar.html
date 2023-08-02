@@ -49,13 +49,11 @@
     add_task(async function test_close_button() {
       const notDismissableComponent = document.querySelector("#infoMessage");
       let closeButton = notDismissableComponent.shadowRoot.querySelector(".close");
-      let closeButtonDislay = window.getComputedStyle(closeButton).display;
-      is(closeButtonDislay, "none", "Close button doesn't show when the message bar isn't dismissable.");
+      ok(!closeButton, "Close button doesn't show when the message bar isn't dismissable.");
 
       let dismissableComponent = document.querySelector("#infoMessage2");
       closeButton = dismissableComponent.shadowRoot.querySelector(".close");
-      closeButtonDislay = window.getComputedStyle(closeButton).display;
-      is(closeButtonDislay, "block", "Close button is displayed when the message bar is dismissable.");
+      ok(closeButton, "Close button is shown when the message bar is dismissable.");
 
       closeButton.click();
       dismissableComponent = document.querySelector("#infoMessage2");
