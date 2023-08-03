@@ -41,7 +41,7 @@ test-info-xorigin:
         product: source
         job-name: test-info-xorigin
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian12-amd64-build}
     run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
@@ -51,6 +51,7 @@ test-info-xorigin:
             - linux64-cbindgen
             - linux64-nasm
             - linux64-node
+            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     run:
@@ -69,7 +70,7 @@ test-info-disabled-by-os:
         product: source
         job-name: test-info-disabled-by-os
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian12-amd64-build}
     run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
@@ -79,6 +80,7 @@ test-info-disabled-by-os:
             - linux64-cbindgen
             - linux64-nasm
             - linux64-node
+            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     run:
@@ -100,7 +102,7 @@ test-info-all:
         product: source
         job-name: test-info-all
     worker:
-        docker-image: {in-tree: debian11-amd64-build}
+        docker-image: {in-tree: debian12-amd64-build}
         max-run-time: 5400
     run-on-projects: ['mozilla-central']
     fetches:
@@ -111,6 +113,7 @@ test-info-all:
             - linux64-cbindgen
             - linux64-nasm
             - linux64-node
+            - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
     run:
