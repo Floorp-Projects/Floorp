@@ -594,7 +594,7 @@ pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
 
 pref("toolkit.shopping.useOHTTP", false);
 pref("toolkit.shopping.ohttpConfigURL", "https://stage.ohttp-gateway.nonprod.webservices.mozgcp.net/ohttp-configs");
-pref("toolkit.shopping.ohttpRelayURL", "https://mozilla-ohttp-relay-test.edgecompute.app/");
+pref("toolkit.shopping.ohttpRelayURL", "https://mozilla-ohttp-dev.fastly-edge.com/");
 
 // Controls logging for Sqlite.sys.mjs.
 pref("toolkit.sqlitejsm.loglevel", "Error");
