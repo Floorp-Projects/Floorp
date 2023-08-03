@@ -15049,114 +15049,6 @@
       "last_modified": 1666727865258
     },
     {
-      "schema": 1666727423936,
-      "derHash": "vRFF6shzoD02I0V9mxIekDdgdkD3NjtL106JhxogJUA=",
-      "subject": "CN=E-Tugra Extended Validated CA ECC v3,OU=E-Tugra Trust Center,O=E-Tugra EBG A.S.,L=Ankara,C=TR",
-      "subjectDN": "MIGHMQswCQYDVQQGEwJUUjEPMA0GA1UEBxMGQW5rYXJhMRkwFwYDVQQKExBFLVR1Z3JhIEVCRyBBLlMuMR0wGwYDVQQLExRFLVR1Z3JhIFRydXN0IENlbnRlcjEtMCsGA1UEAxMkRS1UdWdyYSBFeHRlbmRlZCBWYWxpZGF0ZWQgQ0EgRUNDIHYz",
-      "whitelist": false,
-      "attachment": {
-        "hash": "001272df06c00e1b700375aa09653050dc208e1becba5fce55b42a95c93768de",
-        "size": 1398,
-        "filename": "3gWrn-sJP6QrMADFYD3-fdCUvBXa2h7wV2Chkx45ARE=.pem",
-        "location": "security-state-staging/intermediates/8006dacc-94fa-44dd-a8df-d9b5c65107fc.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "3gWrn+sJP6QrMADFYD3+fdCUvBXa2h7wV2Chkx45ARE=",
-      "crlite_enrolled": false,
-      "id": "9c2506c0-6a05-4431-a465-82198c685a85",
-      "last_modified": 1666727865244
-    },
-    {
-      "schema": 1666727386434,
-      "derHash": "nclGzUZivnKzWXBQ7joxfYN6zHwPzlFU1GiF4P70iTk=",
-      "subject": "CN=E-Tugra Domain Validated CA RSA v3,OU=E-Tugra Trust Center,O=E-Tugra EBG A.S.,L=Ankara,C=TR",
-      "subjectDN": "MIGFMQswCQYDVQQGEwJUUjEPMA0GA1UEBxMGQW5rYXJhMRkwFwYDVQQKExBFLVR1Z3JhIEVCRyBBLlMuMR0wGwYDVQQLExRFLVR1Z3JhIFRydXN0IENlbnRlcjErMCkGA1UEAxMiRS1UdWdyYSBEb21haW4gVmFsaWRhdGVkIENBIFJTQSB2Mw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "84e50e31fb0938ee52e0ba09ee4c27c2133c6b30b33c9fff764904e872dea1fb",
-        "size": 2182,
-        "filename": "kaZ3Q6XDSXgieFiRshSCQ65slbFT124-U_monlDiPk0=.pem",
-        "location": "security-state-staging/intermediates/c23c6bd1-fe2e-41d5-bee8-ef23bd048702.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "kaZ3Q6XDSXgieFiRshSCQ65slbFT124+U/monlDiPk0=",
-      "crlite_enrolled": false,
-      "id": "4380671f-b9f0-484f-8c83-4c144d7b58bd",
-      "last_modified": 1666727865231
-    },
-    {
-      "schema": 1666727391057,
-      "derHash": "URAfqpYxKTGaSgd1P7O605Acus9vGQOfoOBWNa+tWPw=",
-      "subject": "CN=E-Tugra Domain Validated CA ECC v3,OU=E-Tugra Trust Center,O=E-Tugra EBG A.S.,L=Ankara,C=TR",
-      "subjectDN": "MIGFMQswCQYDVQQGEwJUUjEPMA0GA1UEBxMGQW5rYXJhMRkwFwYDVQQKExBFLVR1Z3JhIEVCRyBBLlMuMR0wGwYDVQQLExRFLVR1Z3JhIFRydXN0IENlbnRlcjErMCkGA1UEAxMiRS1UdWdyYSBEb21haW4gVmFsaWRhdGVkIENBIEVDQyB2Mw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "4333924dd96b5749bc5d09923bc0d6d37d238e8ea388e7d81607f6578fc5af8e",
-        "size": 1382,
-        "filename": "qmjVMtynM080HgEidSlmS4DuBZmp_wiD2x9UvKVM9x4=.pem",
-        "location": "security-state-staging/intermediates/33210e93-8625-445b-8a01-f0880f97112a.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "qmjVMtynM080HgEidSlmS4DuBZmp/wiD2x9UvKVM9x4=",
-      "crlite_enrolled": false,
-      "id": "54f454f6-90a0-4196-9d46-92ae650cc5e4",
-      "last_modified": 1666727865213
-    },
-    {
-      "schema": 1666727342812,
-      "derHash": "L6Zl2f7LLVs3r1fawYc1fjcaYwe9Eeba5jXYwgRH7Cc=",
-      "subject": "CN=E-Tugra Extended Validated CA RSA v3,OU=E-Tugra Trust Center,O=E-Tugra EBG A.S.,L=Ankara,C=TR",
-      "subjectDN": "MIGHMQswCQYDVQQGEwJUUjEPMA0GA1UEBxMGQW5rYXJhMRkwFwYDVQQKExBFLVR1Z3JhIEVCRyBBLlMuMR0wGwYDVQQLExRFLVR1Z3JhIFRydXN0IENlbnRlcjEtMCsGA1UEAxMkRS1UdWdyYSBFeHRlbmRlZCBWYWxpZGF0ZWQgQ0EgUlNBIHYz",
-      "whitelist": false,
-      "attachment": {
-        "hash": "357c93050b9b99439570b474ef6147a6407237b64ee2e074209835925884ba78",
-        "size": 2198,
-        "filename": "no6iHiwS8xAx9ModGu-tjwDJLuNyRGlYLDGIiz_9qwQ=.pem",
-        "location": "security-state-staging/intermediates/248647df-ed58-4d3b-9e2f-db2885313fe3.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "no6iHiwS8xAx9ModGu+tjwDJLuNyRGlYLDGIiz/9qwQ=",
-      "crlite_enrolled": false,
-      "id": "f579f1ad-ed52-4cd4-ae74-c2016ba2c184",
-      "last_modified": 1666727865192
-    },
-    {
-      "schema": 1666727379784,
-      "derHash": "h+yAtwYgU/5azUq+hLAevzQEpkxrJ86rUx6nUJCqQ/E=",
-      "subject": "CN=E-Tugra Organization Validated CA ECC v3,OU=E-Tugra Trust Center,O=E-Tugra EBG A.S.,L=Ankara,C=TR",
-      "subjectDN": "MIGLMQswCQYDVQQGEwJUUjEPMA0GA1UEBxMGQW5rYXJhMRkwFwYDVQQKExBFLVR1Z3JhIEVCRyBBLlMuMR0wGwYDVQQLExRFLVR1Z3JhIFRydXN0IENlbnRlcjExMC8GA1UEAxMoRS1UdWdyYSBPcmdhbml6YXRpb24gVmFsaWRhdGVkIENBIEVDQyB2Mw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "86876f3a83145f7bea9a73f290de878ca6d7d242ea1a494cc48c9bf9110c5696",
-        "size": 1390,
-        "filename": "8Qd-UPufdyYcogA7m52xpTMq88IlEcz-js1KKQv11uE=.pem",
-        "location": "security-state-staging/intermediates/9554dde2-88c4-4154-8711-aee33427a2cd.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "8Qd+UPufdyYcogA7m52xpTMq88IlEcz+js1KKQv11uE=",
-      "crlite_enrolled": false,
-      "id": "a0deb852-493f-4344-8648-2a96512bd674",
-      "last_modified": 1666727865171
-    },
-    {
-      "schema": 1666727380840,
-      "derHash": "1MTK+aGy4gqvd+k5Ue+2lzo7rJ0mHWdGqsSkngeFqt0=",
-      "subject": "CN=E-Tugra Organization Validated CA RSA v3,OU=E-Tugra Trust Center,O=E-Tugra EBG A.S.,L=Ankara,C=TR",
-      "subjectDN": "MIGLMQswCQYDVQQGEwJUUjEPMA0GA1UEBxMGQW5rYXJhMRkwFwYDVQQKExBFLVR1Z3JhIEVCRyBBLlMuMR0wGwYDVQQLExRFLVR1Z3JhIFRydXN0IENlbnRlcjExMC8GA1UEAxMoRS1UdWdyYSBPcmdhbml6YXRpb24gVmFsaWRhdGVkIENBIFJTQSB2Mw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "cd75bf7397a1e6abd22f42e2e4af653e2193148b6eccd3d69cdd4373756a052b",
-        "size": 2190,
-        "filename": "Cq90riHw4uk1wmJILhyOe1CCbpRq6geoeUD3yTa7ZxU=.pem",
-        "location": "security-state-staging/intermediates/3c491148-8797-4ca7-9c11-b6778e0717ca.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Cq90riHw4uk1wmJILhyOe1CCbpRq6geoeUD3yTa7ZxU=",
-      "crlite_enrolled": false,
-      "id": "c0f3465c-fc37-4557-a1a3-93ada283fa17",
-      "last_modified": 1666727865152
-    },
-    {
       "schema": 1666727439040,
       "derHash": "huh/XKOqljjTIXPm3B3lkZ/mM82XAynTP2llAcBz9b0=",
       "subject": "CN=cnWebTrust OV CA - ECC,O=cnWebTrust Inc,C=CN",
@@ -27955,5 +27847,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1690383423591
+  "timestamp": 1690945023454
 }
