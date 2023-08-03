@@ -14,12 +14,23 @@ splitter {
   align-items: center;
   justify-content: center;
   cursor: ew-resize;
-  border-width: 0 1px;
-  border-style: solid;
-  border-inline-start-color: ThreeDHighlight;
-  border-inline-end-color: ThreeDShadow;
-  min-width: 6px;
-  background-color: ThreeDFace;
+
+  @media (-moz-platform: linux) {
+    appearance: auto;
+    -moz-default-appearance: splitter;
+  }
+  @media (-moz-platform: macos) {
+    min-width: 9px;
+    min-height: 9px;
+  }
+  @media (-moz-platform: windows) {
+    border-width: 0 1px;
+    border-style: solid;
+    border-inline-start-color: ThreeDHighlight;
+    border-inline-end-color: ThreeDShadow;
+    min-width: 6px;
+    background-color: ThreeDFace;
+  }
 }
 
 splitter[state="collapsed"][collapse="before"],
@@ -40,10 +51,13 @@ splitter[state="collapsed"][substate="before"]:-moz-locale-dir(rtl) {
 
 splitter[orient="vertical"] {
   cursor: ns-resize;
-  border-width: 1px 0;
-  border-top-color: ThreeDHighlight;
-  border-bottom-color: ThreeDShadow;
-  min-height: 6px;
+
+  @media (-moz-platform: windows) {
+    border-width: 1px 0;
+    border-top-color: ThreeDHighlight;
+    border-bottom-color: ThreeDShadow;
+    min-height: 6px;
+  }
 }
 
 splitter[orient="vertical"][state="collapsed"][collapse="before"],
