@@ -3733,8 +3733,15 @@ void CanvasRenderingContext2D::SetFont(const nsACString& aFont,
 }
 
 static float QuantizeFontSize(float aSize) {
-  // Round to nearest 0.25px
-  return NS_round(4.0 * aSize) * 0.25;
+  // Based on the Veltkamp-Dekker float-splitting algorithm, see e.g.
+  // https://indico.cern.ch/event/313684/contributions/1687773/attachments/600513/826490/FPArith-Part2.pdf
+  // A 32-bit float has 24 bits of precision (23 stored, plus an implicit 1 bit
+  // at the start of the mantissa).
+  constexpr int bitsToDrop = 17;  // leaving 7 bits of precision
+  constexpr int scale = 1 << bitsToDrop;
+  float d = aSize * (scale + 1);
+  float t = d - aSize;
+  return d - t;
 }
 
 bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
