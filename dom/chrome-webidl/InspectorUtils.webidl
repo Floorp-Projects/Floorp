@@ -30,7 +30,7 @@ namespace InspectorUtils {
   sequence<DOMString> getCSSPropertyNames(optional PropertyNamesOptions options = {});
   sequence<PropertyPref> getCSSPropertyPrefs();
   [Throws] sequence<DOMString> getCSSValuesForProperty(UTF8String property);
-  DOMString rgbToColorName(octet r, octet g, octet b);
+  UTF8String rgbToColorName(octet r, octet g, octet b);
   InspectorRGBATuple? colorToRGBA(UTF8String colorString, optional Document? doc = null);
   boolean isValidCSSColor(UTF8String colorString);
   [Throws] sequence<DOMString> getSubpropertiesForCSSProperty(UTF8String property);

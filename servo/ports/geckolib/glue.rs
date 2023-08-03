@@ -7774,6 +7774,28 @@ pub extern "C" fn Servo_ParseLengthWithoutStyleContext(
     }
 }
 
+#[no_mangle]
+pub extern "C" fn Servo_SlowRgbToColorName(r: u8, g: u8, b: u8, result: &mut nsACString) -> bool {
+    for (name, color) in cssparser::all_named_colors() {
+        if color == (r, g, b) {
+            result.assign(name);
+            return true;
+        }
+    }
+    false
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ColorNameToRgb(name: &nsACString, out: &mut structs::nscolor) -> bool {
+    match cssparser::parse_named_color::<specified::Color>(unsafe { name.as_str_unchecked() }) {
+        Ok(specified::Color::Absolute(ref color)) => {
+            *out = style::gecko::values::convert_absolute_color_to_nscolor(&color.color);
+            true
+        },
+        _ => false,
+    }
+}
+
 #[repr(u8)]
 pub enum RegisterCustomPropertyResult {
     SuccessfullyRegistered,

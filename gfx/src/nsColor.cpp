@@ -9,49 +9,14 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "nsColor.h"
-#include <sys/types.h>     // for int32_t
-#include "nsColorNames.h"  // for nsColorNames
-#include "nsDebug.h"       // for NS_ASSERTION, etc
+#include <sys/types.h>  // for int32_t
+#include "nsDebug.h"    // for NS_ASSERTION, etc
 #include "nsStaticNameTable.h"
 #include "nsString.h"  // for nsAutoCString, nsString, etc
 #include "nscore.h"    // for nsAString, etc
 #include "prtypes.h"   // for PR_BEGIN_MACRO, etc
 
 using namespace mozilla;
-
-// define an array of all color names
-#define GFX_COLOR(_name, _value) #_name,
-static const char* const kColorNames[] = {
-#include "nsColorNameList.h"
-};
-#undef GFX_COLOR
-
-// define an array of all color name values
-#define GFX_COLOR(_name, _value) _value,
-static const nscolor kColors[] = {
-#include "nsColorNameList.h"
-};
-#undef GFX_COLOR
-
-#define eColorName_COUNT (ArrayLength(kColorNames))
-#define eColorName_UNKNOWN (-1)
-
-static nsStaticCaseInsensitiveNameTable* gColorTable = nullptr;
-
-void nsColorNames::AddRefTable(void) {
-  NS_ASSERTION(!gColorTable, "pre existing array!");
-  if (!gColorTable) {
-    gColorTable =
-        new nsStaticCaseInsensitiveNameTable(kColorNames, eColorName_COUNT);
-  }
-}
-
-void nsColorNames::ReleaseTable(void) {
-  if (gColorTable) {
-    delete gColorTable;
-    gColorTable = nullptr;
-  }
-}
 
 static int ComponentValue(const char16_t* aColorSpec, int aLen, int color,
                           int dpc) {
@@ -192,21 +157,6 @@ bool NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult) {
   return true;
 }
 
-bool NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult) {
-  if (!gColorTable) return false;
-
-  int32_t id = gColorTable->Lookup(aColorName);
-  if (eColorName_UNKNOWN < id) {
-    NS_ASSERTION(uint32_t(id) < eColorName_COUNT,
-                 "gColorTable->Lookup messed up");
-    if (aResult) {
-      *aResult = kColors[id];
-    }
-    return true;
-  }
-  return false;
-}
-
 // Fast approximate division by 255. It has the property that
 // for all 0 <= n <= 255*255, FAST_DIVIDE_BY_255(n) == n/255.
 // But it only uses two adds and two shifts instead of an
@@ -249,14 +199,4 @@ nscolor NS_ComposeColors(nscolor aBG, nscolor aFG) {
   MOZ_BLEND(b, NS_GET_B(aBG), NS_GET_B(aFG), blendAlpha);
 
   return NS_RGBA(r, g, b, a);
-}
-
-const char* NS_RGBToColorName(nscolor aColor) {
-  for (size_t idx = 0; idx < ArrayLength(kColors); ++idx) {
-    if (kColors[idx] == aColor) {
-      return kColorNames[idx];
-    }
-  }
-
-  return nullptr;
 }

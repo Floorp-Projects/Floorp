@@ -1693,8 +1693,12 @@ bool nsAttrValue::ParseColor(const nsAString& aString) {
       SetColorValue(color, aString);
       return true;
     }
+  } else if (colorStr.LowerCaseEqualsLiteral("transparent")) {
+    SetColorValue(NS_RGBA(0, 0, 0, 0), aString);
+    return true;
   } else {
-    if (NS_ColorNameToRGB(colorStr, &color)) {
+    const NS_ConvertUTF16toUTF8 colorNameU8(colorStr);
+    if (Servo_ColorNameToRgb(&colorNameU8, &color)) {
       SetColorValue(color, aString);
       return true;
     }
