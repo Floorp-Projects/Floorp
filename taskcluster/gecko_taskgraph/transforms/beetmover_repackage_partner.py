@@ -9,11 +9,11 @@ import logging
 from copy import deepcopy
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
+from taskgraph.util.dependencies import get_primary_dependency
+from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.taskcluster import get_artifact_prefix
 from voluptuous import Any, Optional, Required
 
-from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.beetmover import craft_release_properties
 from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import (
@@ -29,7 +29,7 @@ from gecko_taskgraph.util.scriptworker import (
 logger = logging.getLogger(__name__)
 
 
-beetmover_description_schema = schema.extend(
+beetmover_description_schema = Schema(
     {
         # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
         Optional("label"): str,
@@ -37,13 +37,26 @@ beetmover_description_schema = schema.extend(
         Required("partner-public-path"): Any(None, str),
         Required("partner-private-path"): Any(None, str),
         Optional("extra"): object,
+        Optional("attributes"): task_description_schema["attributes"],
+        Optional("dependencies"): task_description_schema["dependencies"],
         Required("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
         Optional("priority"): task_description_schema["priority"],
+        Optional("job-from"): task_description_schema["job-from"],
     }
 )
 
 transforms = TransformSequence()
+
+
+@transforms.add
+def remove_name(config, jobs):
+    for job in jobs:
+        if "name" in job:
+            del job["name"]
+        yield job
+
+
 transforms.add_validate(beetmover_description_schema)
 
 
@@ -62,7 +75,9 @@ def resolve_keys(config, jobs):
 @transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
-        dep_job = job["primary-dependency"]
+        dep_job = get_primary_dependency(config, job)
+        assert dep_job
+
         repack_id = dep_job.task.get("extra", {}).get("repack_id")
         if not repack_id:
             raise Exception("Cannot find repack id!")
