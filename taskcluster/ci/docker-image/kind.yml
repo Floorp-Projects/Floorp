@@ -117,11 +117,11 @@ jobs:
         parent: debian8-i386-raw
     custom-v8:
         symbol: I(custom-v8)
-        parent: debian11-base
+        parent: debian12-base
     # Chromium-as-Release
     custom-car-linux:
         symbol: I(custom-car-linux)
-        parent: debian11-base
+        parent: debian12-base
     valgrind-build:
         symbol: I(vb)
         parent: debian12-amd64-build
