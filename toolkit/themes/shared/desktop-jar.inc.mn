@@ -42,6 +42,7 @@
   skin/classic/global/offlineSupportPages.css              (../../shared/offlineSupportPages.css)
   skin/classic/global/popup.css                            (../../shared/popup.css)
   skin/classic/global/popupnotification.css                (../../shared/popupnotification.css)
+  skin/classic/global/splitter.css                         (../../shared/splitter.css)
   skin/classic/global/tree.css                             (../../shared/tree.css)
   skin/classic/global/dirListing/dirListing.css            (../../shared/dirListing/dirListing.css)
 #ifdef XP_MACOSX
