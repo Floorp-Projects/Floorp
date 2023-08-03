@@ -2045,6 +2045,7 @@ class HashTable : private AllocPolicy {
     }
 
     if (MOZ_UNLIKELY(aLen > sMaxInit)) {
+      this->reportAllocOverflow();
       return false;
     }
 
