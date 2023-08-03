@@ -96,6 +96,26 @@
   }
 }
 
+@media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
+  :root {
+    /* Color */
+    --color-background-information: var(--color-blue-80);
+    --color-background-success: var(--color-green-80);
+    --color-background-warning: var(--color-yellow-80);
+    --color-background-critical: var(--color-red-80);
+
+    /** Icon **/
+    --icon-color: var(--color-gray-05);
+    --icon-color-information: var(--color-blue-30);
+    --icon-color-success: var(--color-green-30);
+    --icon-color-warning: var(--color-yellow-30);
+    --icon-color-critical: var(--color-red-30);
+
+    /* Text */
+    --text-color: var(--color-gray-05);
+  }
+}
+
 @media (prefers-contrast) {
   :root,
   :host {
