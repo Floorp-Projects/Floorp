@@ -937,13 +937,8 @@ pref("javascript.options.discardSystemSource", false);
 pref("javascript.options.mem.max", -1);
 
 // JSGC_MIN_NURSERY_BYTES / JSGC_MAX_NURSERY_BYTES
-#if defined(ANDROID) || defined(XP_IOS)
-  pref("javascript.options.mem.nursery.min_kb", 256);
-  pref("javascript.options.mem.nursery.max_kb", 4096);
-#else
-  pref("javascript.options.mem.nursery.min_kb", 256);
-  pref("javascript.options.mem.nursery.max_kb", 16384);
-#endif
+pref("javascript.options.mem.nursery.min_kb", 256);
+pref("javascript.options.mem.nursery.max_kb", 16384);
 
 // JSGC_MODE
 pref("javascript.options.mem.gc_per_zone", true);
