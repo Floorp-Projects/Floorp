@@ -91,7 +91,7 @@ task-defaults:
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": ":testops-notify: created by <https://mana.mozilla.org/wiki/x/P_zNBw|Mobile Test Engineering>"
+                            "text": ":testops-notify: created by <https://mozilla-hub.atlassian.net/wiki/spaces/MTE/overview|Mobile Test Engineering>"
                         }
                     ]
                   }
