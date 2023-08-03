@@ -299,8 +299,6 @@ avoid-blacklist-and-whitelist:
         - tools/fuzzing/messagemanager/MessageManagerFuzzer.h
         - tools/lint/eslint/eslint-plugin-mozilla/lib/rules/no-define-cc-etc.js
         - tools/lint/rejected-words.yml
-        - tools/tryselect/selectors/chooser/__init__.py
-        - tools/tryselect/task_config.py
         - widget/android/GfxInfo.cpp
         - widget/GfxInfoBase.cpp
         - widget/gtk/IMContextWrapper.cpp
