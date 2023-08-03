@@ -425,6 +425,9 @@ class BrowsingContextModule extends Module {
       }
     );
 
+    // Force a reflow by accessing `clientHeight` (see Bug 1847044).
+    browser.parentElement.clientHeight;
+
     return {
       context: lazy.TabManager.getIdForBrowser(browser),
     };
