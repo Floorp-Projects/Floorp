@@ -25,6 +25,10 @@ radio {
   appearance: auto;
   -moz-default-appearance: radio;
   margin: 1px 0;
+  /* TODO: This matches what the old native theme did, but maybe we want to
+   * use em-based sizes here. */
+  width: 13px;
+  height: 13px;
 }
 
 .radio-label-box {
