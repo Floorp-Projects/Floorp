@@ -60,7 +60,18 @@ def format_taskgraph_json(taskgraph):
 
 
 def format_taskgraph_yaml(taskgraph):
-    return yaml.safe_dump(taskgraph.to_json(), default_flow_style=False)
+    from mozbuild.util import ReadOnlyDict
+
+    class TGDumper(yaml.SafeDumper):
+        def ignore_aliases(self, data):
+            return True
+
+        def represent_ro_dict(self, data):
+            return self.represent_dict(dict(data))
+
+    TGDumper.add_representer(ReadOnlyDict, TGDumper.represent_ro_dict)
+
+    return yaml.dump(taskgraph.to_json(), Dumper=TGDumper, default_flow_style=False)
 
 
 def get_filtered_taskgraph(taskgraph, tasksregex, exclude_keys):
