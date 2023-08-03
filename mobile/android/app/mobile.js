@@ -143,9 +143,6 @@ pref("browser.search.update", false);
 // disable search suggestions by default
 pref("browser.search.suggest.enabled", false);
 
-// tell the search service that we don't really expose the "current engine"
-pref("browser.search.noCurrentEngine", true);
-
 // Enable sparse localization by setting a few package locale overrides
 pref("chrome.override_package.global", "browser");
 pref("chrome.override_package.mozapps", "browser");
@@ -166,19 +163,11 @@ pref("browser.link.open_newwindow.restriction", 0);
 //pref("content.sink.perf_deflect_count", 1000000);
 //pref("content.sink.perf_parse_time", 50000000);
 
-pref("javascript.options.mem.high_water_mark", 32);
-
 pref("dom.max_script_run_time", 20);
 
 // Absolute path to the devtools unix domain socket file used
 // to communicate with a usb cable via adb forward.
 pref("devtools.debugger.unix-domain-socket", "@ANDROID_PACKAGE_NAME@/firefox-debugger-socket");
-
-pref("devtools.remote.usb.enabled", false);
-pref("devtools.remote.wifi.enabled", false);
-
-// plugins
-pref("plugin.disable", true);
 
 // product URLs
 // The breakpad report server to link to in about:crashes
@@ -203,8 +192,6 @@ pref("app.update.timerMinimumDelay", 30); // seconds
   pref("app.update.channel", "@MOZ_UPDATE_CHANNEL@");
 #endif
 
-pref("layers.async-video.enabled", true);
-
 // APZ physics settings (fling acceleration, fling curving and axis lock) have
 // been reviewed by UX
 pref("apz.axis_lock.breakout_angle", "0.7853982");    // PI / 4 (45 degrees)
@@ -224,8 +211,6 @@ pref("apz.overscroll.enabled", true);
 pref("apz.second_tap_tolerance", "0.3");
 pref("apz.touch_move_tolerance", "0.03");
 pref("apz.touch_start_tolerance", "0.06");
-
-pref("notification.feature.enabled", true);
 
 // prevent tooltips from showing up
 pref("browser.chrome.toolbar_tips", false);
@@ -287,9 +272,6 @@ pref("devtools.console.stdout.chrome", true);
 // network reads and on wifi to mitigate 802.11 Power Save Polling delays
 pref("network.tickle-wifi.enabled", true);
 
-// Hide common parts of URLs like "www." or "http://"
-pref("browser.urlbar.trimURLs", true);
-
 // The mode of home provider syncing.
 // 0: Sync always
 // 1: Sync only when on wifi
@@ -348,10 +330,7 @@ pref("layout.accessiblecaret.extend_selection_for_phone_number", true);
 // click on mobile.  This is to account for some devices being quite slow.
 pref("dom.serviceWorkers.disable_open_click_delay", 5000);
 
-pref("dom.push.debug", false);
 pref("dom.push.maxRecentMessageIDsPerSubscription", 0);
-
-pref("dom.audiochannel.mediaControl", true);
 
 // Ask for permission when enumerating WebRTC devices.
 pref("media.navigator.permission.device", true);

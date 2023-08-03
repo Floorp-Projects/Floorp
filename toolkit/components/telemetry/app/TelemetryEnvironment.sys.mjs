@@ -300,7 +300,6 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["layers.acceleration.force-enabled", { what: RECORD_PREF_VALUE }],
   ["layers.async-pan-zoom.enabled", { what: RECORD_PREF_VALUE }],
   ["layers.async-video-oop.enabled", { what: RECORD_PREF_VALUE }],
-  ["layers.async-video.enabled", { what: RECORD_PREF_VALUE }],
   ["layers.d3d11.disable-warp", { what: RECORD_PREF_VALUE }],
   ["layers.d3d11.force-warp", { what: RECORD_PREF_VALUE }],
   [
