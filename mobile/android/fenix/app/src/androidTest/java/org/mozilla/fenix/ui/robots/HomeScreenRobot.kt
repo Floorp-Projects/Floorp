@@ -948,8 +948,7 @@ private fun assertHomeComponent() =
 private fun threeDotButton() = onView(allOf(withId(R.id.menuButton)))
 
 private fun assertExistingTopSitesList() =
-    onView(allOf(withId(R.id.top_sites_list)))
-        .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
+    assertItemWithResIdExists(itemWithResId("$packageName:id/top_sites_list"))
 
 private fun assertExistingTopSitesTabs(title: String) {
     mDevice.findObject(
