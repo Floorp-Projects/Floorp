@@ -714,16 +714,18 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
     if (aNumVariations > 0) {
       AutoRelease<CFDictionaryRef> varDict(CreateVariationTagDictionaryOrNull(
           font, aNumVariations, aVariations));
-      CFDictionaryRef varAttr = CFDictionaryCreate(
-          nullptr, (const void**)&kCTFontVariationAttribute,
-          (const void**)&varDict, 1, &kCFTypeDictionaryKeyCallBacks,
-          &kCFTypeDictionaryValueCallBacks);
-      AutoRelease<CTFontDescriptorRef> fontDesc(
-          CTFontDescriptorCreateCopyWithAttributes(mFontDesc, varAttr));
-      if (!fontDesc) {
-        return nullptr;
+      if (varDict) {
+        CFDictionaryRef varAttr = CFDictionaryCreate(
+            nullptr, (const void**)&kCTFontVariationAttribute,
+            (const void**)&varDict, 1, &kCFTypeDictionaryKeyCallBacks,
+            &kCFTypeDictionaryValueCallBacks);
+        AutoRelease<CTFontDescriptorRef> fontDesc(
+            CTFontDescriptorCreateCopyWithAttributes(mFontDesc, varAttr));
+        if (!fontDesc) {
+          return nullptr;
+        }
+        font = CTFontCreateWithFontDescriptor(fontDesc, aGlyphSize, nullptr);
       }
-      font = CTFontCreateWithFontDescriptor(fontDesc, aGlyphSize, nullptr);
     }
     scaledFont = new ScaledFontMac(
         font, this, instanceData.mFontSmoothingBackgroundColor,
