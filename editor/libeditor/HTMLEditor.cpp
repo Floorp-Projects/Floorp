@@ -4547,6 +4547,24 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void HTMLEditor::ContentRemoved(
   }
 }
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY void HTMLEditor::CharacterDataChanged(
+    nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
+  if (!mInlineSpellChecker || !aContent->IsEditable() ||
+      !IsInObservedSubtree(aContent) ||
+      GetTopLevelEditSubAction() != EditSubAction::eNone) {
+    return;
+  }
+
+  nsIContent* parent = aContent->GetParent();
+  if (!parent || !parent->InclusiveDescendantMayNeedSpellchecking(this)) {
+    return;
+  }
+
+  RefPtr<nsRange> range = nsRange::Create(aContent);
+  range->SelectNodesInContainer(parent, aContent, aContent);
+  DebugOnly<nsresult> rvIgnored = mInlineSpellChecker->SpellCheckRange(range);
+}
+
 nsresult HTMLEditor::SelectEntireDocument() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
