@@ -1293,6 +1293,14 @@ networking:
       description: The maximum number of DNS threads that can be created to handle any priority DNS requests.
       type: int
       setPref: "network.dns.max_any_priority_threads"
+    preconnect:
+      description: Whether the rel=preconnect feature is enabled
+      type: boolean
+      setPref: "network.preconnect"
+    networkPredictor:
+      description: Whether the Necko predictor is enabled
+      type: boolean
+      setPref: "network.predictor.enabled"
 
 pingsender:
   description: "In-product usage of the pingsender telemetry reporter."
