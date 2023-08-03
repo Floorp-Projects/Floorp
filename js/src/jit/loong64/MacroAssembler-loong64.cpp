@@ -2543,6 +2543,12 @@ void MacroAssembler::PopStackPtr() {
   adjustFrame(-int32_t(sizeof(intptr_t)));
 }
 
+void MacroAssembler::freeStackTo(uint32_t framePushed) {
+  MOZ_ASSERT(framePushed <= framePushed_);
+  ma_sub_d(StackPointer, FramePointer, Imm32(framePushed));
+  framePushed_ = framePushed;
+}
+
 // ===============================================================
 // Simple call functions.
 

@@ -585,7 +585,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Move the stack pointer to the specified position. It assumes the SP
   // register is not valid -- it uses FP to set the position.
-  void freeStackTo(uint32_t framePushed) DEFINED_ON(x86_shared, arm, arm64);
+  void freeStackTo(uint32_t framePushed)
+      DEFINED_ON(x86_shared, arm, arm64, loong64, mips64);
 
   // Warning: This method does not update the framePushed() counter.
   void freeStack(Register amount);
