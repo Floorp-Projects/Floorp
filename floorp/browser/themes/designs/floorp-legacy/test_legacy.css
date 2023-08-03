@@ -1394,6 +1394,9 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
   width: calc(2 * var(--toolbarbutton-inner-padding) + 16px) !important;
   height: calc(2 * var(--toolbarbutton-inner-padding) + 16px) !important;
 }
+.toolbarbutton-badge-stack{
+  white-space: nowrap;
+}
 
 #navigator-toolbox>#PersonalToolbar .toolbarbutton-1>.toolbarbutton-icon,
 #navigator-toolbox .toolbarbutton-1> :-moz-any(.toolbarbutton-icon, .toolbarbutton-badge-stack),
