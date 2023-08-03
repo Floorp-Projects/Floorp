@@ -10,6 +10,8 @@ const mockAddonRepository = ({
   addons = [],
   expectedBrowserID = null,
   expectedExtensionIDs = null,
+  matchedIDs = [],
+  unmatchedIDs = [],
 }) => {
   return {
     async getMappedAddons(browserID, extensionIDs) {
@@ -24,7 +26,11 @@ const mockAddonRepository = ({
         );
       }
 
-      return Promise.resolve(addons);
+      return Promise.resolve({
+        addons,
+        matchedIDs,
+        unmatchedIDs,
+      });
     },
   };
 };
@@ -110,6 +116,12 @@ add_setup(async function setup() {
 
   await AddonTestUtils.promiseStartupManager();
 
+  // FOG needs a profile directory to put its data in.
+  const profileDir = do_get_profile();
+
+  // FOG needs to be initialized in order for data to flow.
+  Services.fog.initializeFOG();
+
   // When we stage installs and then cancel them, `XPIInstall` won't be able to
   // remove the staging directory (which is expected to be empty) until the
   // next restart. This causes an `AddonTestUtils` assertion to fail because we
@@ -120,7 +132,6 @@ add_setup(async function setup() {
   // directory is empty, otherwise an unchaught error will be thrown (on
   // purpose).
   registerCleanupFunction(() => {
-    const profileDir = do_get_profile();
     const stagingDir = profileDir.clone();
     stagingDir.append("extensions");
     stagingDir.append("staged");
@@ -209,6 +220,41 @@ add_task(async function test_stage_and_cancel_installs() {
   );
   await promiseTopic;
   assertStageInstallsResult(result, importedAddonIDs);
+
+  await cancelInstalls(importedAddonIDs);
+});
+
+add_task(async function test_stageInstalls_telemetry() {
+  const browserID = "some-browser-id";
+  const extensionIDs = ["ext-1", "ext-2"];
+  const unmatchedIDs = ["unmatched-1", "unmatched-2"];
+  AMBrowserExtensionsImport._addonRepository = mockAddonRepository({
+    addons: Object.values(ADDON_SEARCH_RESULTS),
+    expectedBrowserID: browserID,
+    expectedExtensionIDs: extensionIDs,
+    matchedIDs: ["ext-1", "ext-2"],
+    unmatchedIDs,
+  });
+  const importedAddonIDs = ["ff@ext-1", "ff@ext-2"];
+
+  const promiseTopic = TestUtils.topicObserved(
+    "webextension-imported-addons-pending"
+  );
+  const result = await AMBrowserExtensionsImport.stageInstalls(
+    browserID,
+    extensionIDs
+  );
+  await promiseTopic;
+  assertStageInstallsResult(result, importedAddonIDs);
+
+  Assert.deepEqual(
+    Glean.browserMigration.matchedExtensions.testGetValue(),
+    extensionIDs
+  );
+  Assert.deepEqual(
+    Glean.browserMigration.unmatchedExtensions.testGetValue(),
+    unmatchedIDs
+  );
 
   await cancelInstalls(importedAddonIDs);
 });

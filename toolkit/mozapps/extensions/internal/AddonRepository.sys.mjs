@@ -510,9 +510,21 @@ export var AddonRepository = {
    * @param extensionIDs
    *        The array of browser (non-Firefox) extension IDs to retrieve
    *        metadata for.
-   * @returns {array<AddonSearchResult>}
+   * @returns {object} result
+   *        The result of the mapping.
+   * @returns {array<AddonSearchResult>} result.addons
+   *        The AddonSearchResults for the addons that were successfully mapped.
+   * @returns {array<string>} result.matchedIDs
+   *        The IDs of the extensions that were successfully matched to
+   *        equivalents that can be installed in this browser. These are
+   *        the IDs before matching to equivalents.
+   * @returns {array<string>} result.unmatchedIDs
+   *        The IDs of the extensions that were not matched to equivalents.
    */
   async getMappedAddons(browserID, extensionIDs) {
+    let matchedExtensionIDs = new Set();
+    let unmatchedExtensionIDs = new Set(extensionIDs);
+
     const addonIds = await this._fetchPaged(
       PREF_GET_BROWSER_MAPPINGS,
       { BROWSER: browserID },
@@ -520,17 +532,31 @@ export var AddonRepository = {
         results
           // Filter out all the entries with an extension ID not in the list
           // passed to the method.
-          .filter(entry => extensionIDs.includes(entry.extension_id))
+          .filter(entry => {
+            if (unmatchedExtensionIDs.has(entry.extension_id)) {
+              unmatchedExtensionIDs.delete(entry.extension_id);
+              matchedExtensionIDs.add(entry.extension_id);
+              return true;
+            }
+            return false;
+          })
           // Return the add-on ID (stored as `guid` on AMO).
           .map(entry => entry.addon_guid)
     );
 
     if (!addonIds.length) {
-      logger.warn("getMappedAddons: no mapped add-ons found");
-      return [];
+      return {
+        addons: [],
+        matchedIDs: [],
+        unmatchedIDs: [...unmatchedExtensionIDs],
+      };
     }
 
-    return this.getAddonsByIDs(addonIds);
+    return {
+      addons: await this.getAddonsByIDs(addonIds),
+      matchedIDs: [...matchedExtensionIDs],
+      unmatchedIDs: [...unmatchedExtensionIDs],
+    };
   },
 
   /**

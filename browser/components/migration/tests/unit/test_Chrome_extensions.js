@@ -56,7 +56,11 @@ const mockAddonRepository = ({ addons = [] } = {}) => {
         ["fake-extension-1", "fake-extension-2"],
         "expected an array of 2 extension IDs"
       );
-      return Promise.resolve(addons);
+      return Promise.resolve({
+        addons,
+        matchedIDs: [],
+        unmatchedIDs: [],
+      });
     },
   };
 };
