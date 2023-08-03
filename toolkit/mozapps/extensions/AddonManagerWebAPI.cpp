@@ -81,8 +81,11 @@ bool AddonManagerWebAPI::IsValidSite(nsIURI* uri) {
   return IsValidHost(host);
 }
 
-#ifndef ANDROID
 bool AddonManagerWebAPI::IsAPIEnabled(JSContext* aCx, JSObject* aGlobal) {
+  if (!StaticPrefs::extensions_webapi_enabled()) {
+    return false;
+  }
+
   MOZ_DIAGNOSTIC_ASSERT(JS_IsGlobalObject(aGlobal));
   nsCOMPtr<nsPIDOMWindowInner> win = xpc::WindowOrNull(aGlobal);
   if (!win) {
@@ -152,11 +155,6 @@ bool AddonManagerWebAPI::IsAPIEnabled(JSContext* aCx, JSObject* aGlobal) {
   // Found a document with no inner window, don't grant access to the API.
   return false;
 }
-#else   // We don't support mozAddonManager on Android
-bool AddonManagerWebAPI::IsAPIEnabled(JSContext* aCx, JSObject* aGlobal) {
-  return false;
-}
-#endif  // ifndef ANDROID
 
 namespace dom {
 
