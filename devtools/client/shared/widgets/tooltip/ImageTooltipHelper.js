@@ -102,7 +102,7 @@ function setImageTooltip(tooltip, doc, imageUrl, options) {
 
     const label = naturalWidth + " \u00D7 " + naturalHeight;
     const span = doc.createElementNS(XHTML_NS, "span");
-    span.classList.add("theme-comment", "devtools-tooltip-caption");
+    span.classList.add("devtools-tooltip-caption");
     span.textContent = label;
     dimensions.appendChild(span);
   }
@@ -131,7 +131,7 @@ function setImageTooltip(tooltip, doc, imageUrl, options) {
  */
 function setBrokenImageTooltip(tooltip, doc) {
   const div = doc.createElementNS(XHTML_NS, "div");
-  div.className = "theme-comment devtools-tooltip-image-broken";
+  div.className = "devtools-tooltip-image-broken";
   const message = L10N.getStr("previewTooltip.image.brokenImage");
   div.textContent = message;
 
