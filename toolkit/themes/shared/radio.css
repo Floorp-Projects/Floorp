@@ -1,0 +1,92 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* ===== radio.css ===================================================
+  == Styles used by the XUL radio element.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: radio ::::: */
+
+radio {
+  align-items: center;
+  margin: 2px 4px;
+
+  @media (-moz-platform: windows) {
+    padding-block: 1px;
+    padding-inline: 4px 2px;
+  }
+
+  &[disabled="true"] {
+    color: GrayText;
+  }
+}
+
+.radio-label {
+  margin: 0;
+}
+
+.radio-check {
+  appearance: auto;
+  -moz-default-appearance: radio;
+  margin: 1px 0;
+
+  @media (-moz-platform: windows) {
+    width: 13px;
+    height: 13px;
+  }
+
+  @media (-moz-platform: linux) {
+    margin: 2px;
+  }
+
+  @media (-moz-platform: macos) {
+    width: 1.3em;
+    height: 1.3em;
+    margin: 0 1px 1px;
+    /* vertical-align tells native theming where to snap to. However, this
+     * doesn't always work reliably because of bug 503833. */
+    vertical-align: bottom;
+  }
+}
+
+@media (-moz-platform: windows) or (-moz-platform: linux) {
+  /* On Linux, native theming should take care of this but it appears to be
+   * broken with some Gtk themes. Bug 1312169. */
+  radiogroup:focus-visible > radio[focused="true"] > .radio-label-box {
+    outline: var(--focus-outline);
+  }
+
+  .radio-icon[src] {
+    margin-inline-end: 2px;
+  }
+}
+
+@media (-moz-platform: windows) {
+  .radio-label-box {
+    margin-inline-start: 2px;
+    padding-bottom: 1px;
+    padding-inline-start: 1px;
+  }
+}
+
+@media (-moz-platform: linux) {
+  /* FIXME: Is this needed given the focused styles above? */
+  .radio-label-box {
+    appearance: auto;
+    -moz-default-appearance: radio-label;
+  }
+}
+
+@media (-moz-platform: macos) {
+  .radio-label,
+  radiogroup {
+    margin: 1px 0;
+  }
+
+  .radio-icon {
+    margin-inline-end: 2px;
+  }
+}

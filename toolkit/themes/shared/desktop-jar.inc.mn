@@ -26,6 +26,7 @@
   skin/classic/global/appPicker.css                        (../../shared/appPicker.css)
   skin/classic/global/arrowscrollbox.css                   (../../shared/arrowscrollbox.css)
   skin/classic/global/checkbox.css                         (../../shared/checkbox.css)
+  skin/classic/global/radio.css                            (../../shared/radio.css)
   skin/classic/global/close-icon.css                       (../../shared/close-icon.css)
   skin/classic/global/commonDialog.css                     (../../shared/commonDialog.css)
   skin/classic/global/datetimeinputpickers.css             (../../shared/datetimeinputpickers.css)
