@@ -31,27 +31,25 @@ pub fn parse_counter_style_name<'i, 't>(
     input: &mut Parser<'i, 't>,
 ) -> Result<CustomIdent, ParseError<'i>> {
     macro_rules! predefined {
-        ($($name: expr,)+) => {
-            {
-                ascii_case_insensitive_phf_map! {
-                    // FIXME: use static atoms https://github.com/rust-lang/rust/issues/33156
-                    predefined -> &'static str = {
-                        $(
-                            $name => $name,
-                        )+
-                    }
-                }
-
-                let location = input.current_source_location();
-                let ident = input.expect_ident()?;
-                if let Some(&lower_cased) = predefined::get(&ident) {
-                    Ok(CustomIdent(Atom::from(lower_cased)))
-                } else {
-                    // none is always an invalid <counter-style> value.
-                    CustomIdent::from_ident(location, ident, &["none"])
+        ($($name: tt,)+) => {{
+            ascii_case_insensitive_phf_map! {
+                predefined -> Atom = {
+                    $(
+                        $name => atom!($name),
+                    )+
                 }
             }
-        }
+
+            let location = input.current_source_location();
+            let ident = input.expect_ident()?;
+            // This effectively performs case normalization only on predefined names.
+            if let Some(lower_case) = predefined::get(&ident) {
+                Ok(CustomIdent(lower_case.clone()))
+            } else {
+                // none is always an invalid <counter-style> value.
+                CustomIdent::from_ident(location, ident, &["none"])
+            }
+        }}
     }
     include!("predefined.rs")
 }
