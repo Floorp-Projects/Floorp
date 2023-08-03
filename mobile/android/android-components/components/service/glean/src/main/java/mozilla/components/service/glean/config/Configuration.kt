@@ -25,6 +25,7 @@ data class Configuration @JvmOverloads constructor(
     val serverEndpoint: String = DEFAULT_TELEMETRY_ENDPOINT,
     val channel: String? = null,
     val maxEvents: Int? = null,
+    val enableEventTimestamps: Boolean = false,
 ) {
     // The following is required to support calling our API from Java.
     companion object {
@@ -38,6 +39,12 @@ data class Configuration @JvmOverloads constructor(
      * @return a [mozilla.telemetry.glean.config.Configuration] instance.
      */
     fun toWrappedConfiguration(): GleanCoreConfiguration {
-        return GleanCoreConfiguration(serverEndpoint, channel, maxEvents, httpClient)
+        return GleanCoreConfiguration(
+            serverEndpoint = serverEndpoint,
+            channel = channel,
+            maxEvents = maxEvents,
+            httpClient = httpClient,
+            enableEventTimestamps = enableEventTimestamps,
+        )
     }
 }
