@@ -12,6 +12,8 @@
 #include "nsIRadioGroupContainer.h"
 #include "nsClassHashtable.h"
 
+class nsIContent;
+
 namespace mozilla {
 
 namespace html {
@@ -37,7 +39,8 @@ class RadioGroupManager {
   nsresult GetNextRadioButton(const nsAString& aName, const bool aPrevious,
                               HTMLInputElement* aFocusedRadio,
                               HTMLInputElement** aRadioOut);
-  void AddToRadioGroup(const nsAString& aName, HTMLInputElement* aRadio);
+  void AddToRadioGroup(const nsAString& aName, HTMLInputElement* aRadio,
+                       nsIContent* aAncestor);
   void RemoveFromRadioGroup(const nsAString& aName, HTMLInputElement* aRadio);
   uint32_t GetRequiredRadioCount(const nsAString& aName) const;
   void RadioRequiredWillChange(const nsAString& aName, bool aRequiredAdded);
