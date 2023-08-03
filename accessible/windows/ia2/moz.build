@@ -12,6 +12,7 @@ EXPORTS += [
     "ia2AccessibleHyperlink.h",
     "ia2AccessibleHypertext.h",
     "ia2AccessibleText.h",
+    "ia2AccessibleTextSelectionContainer.h",
     "ia2AccessibleValue.h",
 ]
 
@@ -26,6 +27,7 @@ UNIFIED_SOURCES += [
     "ia2AccessibleImage.cpp",
     "ia2AccessibleRelation.cpp",
     "ia2AccessibleText.cpp",
+    "ia2AccessibleTextSelectionContainer.cpp",
     "ia2AccessibleValue.cpp",
 ]
 

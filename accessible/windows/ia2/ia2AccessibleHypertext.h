@@ -12,6 +12,7 @@
 
 #include "ia2AccessibleEditableText.h"
 #include "ia2AccessibleText.h"
+#include "ia2AccessibleTextSelectionContainer.h"
 #include "AccessibleHypertext2.h"
 #include "IUnknownImpl.h"
 #include "MsaaAccessible.h"
@@ -23,6 +24,7 @@ class HyperTextAccessibleBase;
 class ia2AccessibleHypertext : public ia2AccessibleText,
                                public IAccessibleHypertext2,
                                public ia2AccessibleEditableText,
+                               public ia2AccessibleTextSelectionContainer,
                                public MsaaAccessible {
  public:
   // IUnknown
