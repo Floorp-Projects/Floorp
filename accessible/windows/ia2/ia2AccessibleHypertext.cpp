@@ -30,15 +30,14 @@ ia2AccessibleHypertext::QueryInterface(REFIID aIID, void** aInstancePtr) {
 
   Accessible* acc = Acc();
   if (acc && acc->IsTextRole()) {
-    bool isLocal = acc->IsLocal();
     if (aIID == IID_IAccessibleText) {
       *aInstancePtr =
           static_cast<IAccessibleText*>(static_cast<ia2AccessibleText*>(this));
     } else if (aIID == IID_IAccessibleHypertext) {
       *aInstancePtr = static_cast<IAccessibleHypertext*>(this);
-    } else if (aIID == IID_IAccessibleHypertext2 && isLocal) {
+    } else if (aIID == IID_IAccessibleHypertext2) {
       *aInstancePtr = static_cast<IAccessibleHypertext2*>(this);
-    } else if (aIID == IID_IAccessibleEditableText && isLocal) {
+    } else if (aIID == IID_IAccessibleEditableText) {
       *aInstancePtr = static_cast<IAccessibleEditableText*>(this);
     }
 
