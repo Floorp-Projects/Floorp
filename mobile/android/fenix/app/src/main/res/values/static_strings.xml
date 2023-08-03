@@ -130,4 +130,13 @@
     <string name="review_quality_check_settings_turn_off" translatable="false">Turn off review quality check</string>
     <string name="review_quality_check_adjusted_rating_title" translatable="false">Adjusted rating</string>
     <string name="review_quality_check_adjusted_rating_description" translatable="false">Unreliable reviews removed</string>
+    <string name="review_quality_check_highlights_caption" translatable="false">Summarized using information provided by Fakespot.com. View full analysis</string>
+    <string name="review_quality_check_highlights_title" translatable="false">Highlights from recent reviews</string>
+    <string name="review_quality_check_highlights_show_less" translatable="false">Show less</string>
+    <string name="review_quality_check_highlights_show_more" translatable="false">Show more</string>
+    <string name="review_quality_check_highlights_type_quality" translatable="false">Quality</string>
+    <string name="review_quality_check_highlights_type_price" translatable="false">Price</string>
+    <string name="review_quality_check_highlights_type_shipping" translatable="false">Shipping</string>
+    <string name="review_quality_check_highlights_type_packaging_appearance" translatable="false">Packaging and appearance</string>
+    <string name="review_quality_check_highlights_type_competitiveness" translatable="false">Competitiveness</string>
 </resources>

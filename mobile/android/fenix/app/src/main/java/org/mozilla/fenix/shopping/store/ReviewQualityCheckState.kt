@@ -5,6 +5,9 @@
 package org.mozilla.fenix.shopping.store
 
 import mozilla.components.lib.state.State
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.HighlightType
+
+private const val NUMBER_OF_HIGHLIGHTS_FOR_COMPACT_MODE = 2
 
 /**
  * UI state of the review quality check feature.
@@ -138,6 +141,15 @@ sealed interface ReviewQualityCheckState : State {
 }
 
 /**
+ * Highlights to display in compact mode that contains first 2 highlights of the first
+ * highlight type.
+ */
+fun Map<HighlightType, List<String>>.forCompactMode(): Map<HighlightType, List<String>> =
+    entries.first().let { entry ->
+        mapOf(entry.key to entry.value.take(NUMBER_OF_HIGHLIGHTS_FOR_COMPACT_MODE))
+    }
+
+/**
  * Fake analysis for showing the UI. To be deleted once the API is integrated.
  */
 private val fakeAnalysis = ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent(
@@ -146,5 +158,31 @@ private val fakeAnalysis = ReviewQualityCheckState.OptedIn.ProductReviewState.An
     needsAnalysis = false,
     adjustedRating = 3.6f,
     productUrl = "123",
-    highlights = null,
+    highlights = mapOf(
+        HighlightType.QUALITY to listOf(
+            "High quality",
+            "Excellent craftsmanship",
+            "Superior materials",
+        ),
+        HighlightType.PRICE to listOf(
+            "Affordable prices",
+            "Great value for money",
+            "Discounted offers",
+        ),
+        HighlightType.SHIPPING to listOf(
+            "Fast and reliable shipping",
+            "Free shipping options",
+            "Express delivery",
+        ),
+        HighlightType.PACKAGING_AND_APPEARANCE to listOf(
+            "Elegant packaging",
+            "Attractive appearance",
+            "Beautiful design",
+        ),
+        HighlightType.COMPETITIVENESS to listOf(
+            "Competitive pricing",
+            "Strong market presence",
+            "Unbeatable deals",
+        ),
+    ),
 )
