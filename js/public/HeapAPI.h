@@ -51,11 +51,7 @@ const size_t PageShift = 12;
 const size_t PageSize = size_t(1) << PageShift;
 constexpr size_t ArenasPerPage = PageSize / ArenaSize;
 
-#ifdef JS_GC_SMALL_CHUNK_SIZE
-const size_t ChunkShift = 18;
-#else
 const size_t ChunkShift = 20;
-#endif
 const size_t ChunkSize = size_t(1) << ChunkShift;
 const size_t ChunkMask = ChunkSize - 1;
 
@@ -162,16 +158,8 @@ const size_t CalculatedChunkPadSize = ChunkSize - CalculatedChunkSizeRequired;
 static_assert(CalculatedChunkPadSize * CHAR_BIT < BitsPerArenaWithHeaders,
               "Calculated ArenasPerChunk is too small");
 
-// Define a macro for the expected number of arenas so its value appears in the
-// error message if the assertion fails.
-#ifdef JS_GC_SMALL_CHUNK_SIZE
-#  define EXPECTED_ARENA_COUNT 63
-#else
-#  define EXPECTED_ARENA_COUNT 252
-#endif
-static_assert(ArenasPerChunk == EXPECTED_ARENA_COUNT,
+static_assert(ArenasPerChunk == 252,
               "Do not accidentally change our heap's density.");
-#undef EXPECTED_ARENA_COUNT
 
 // Mark bitmaps are atomic because they can be written by gray unmarking on the
 // main thread while read by sweeping on a background thread. The former does
