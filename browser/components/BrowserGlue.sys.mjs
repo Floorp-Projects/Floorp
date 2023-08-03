@@ -78,6 +78,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   ShellService: "resource:///modules/ShellService.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
+  ShoppingUtils: "resource:///modules/ShoppingUtils.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
   TRRRacer: "resource:///modules/TRRPerformance.sys.mjs",
@@ -2034,6 +2035,11 @@ BrowserGlue.prototype = {
       () => lazy.NewTabUtils.uninit(),
       () => lazy.Normandy.uninit(),
       () => lazy.RFPHelper.uninit(),
+      () => {
+        if (AppConstants.NIGHTLY_BUILD) {
+          lazy.ShoppingUtils.uninit();
+        }
+      },
       () => lazy.ASRouterNewTabHook.destroy(),
       () => {
         if (AppConstants.MOZ_UPDATER) {
@@ -2929,6 +2935,14 @@ BrowserGlue.prototype = {
           lazy.NimbusFeatures.dapTelemetry.getVariable("enabled"),
         task: () => {
           lazy.DAPTelemetrySender.startup();
+        },
+      },
+
+      {
+        name: "ShoppingUtils.init",
+        condition: AppConstants.NIGHTLY_BUILD,
+        task: () => {
+          lazy.ShoppingUtils.init();
         },
       },
 

@@ -11,6 +11,10 @@ FINAL_TARGET_FILES.actors += [
     "ShoppingSidebarParent.sys.mjs",
 ]
 
+EXTRA_JS_MODULES += [
+    "ShoppingUtils.sys.mjs",
+]
+
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
 with Files("**"):
