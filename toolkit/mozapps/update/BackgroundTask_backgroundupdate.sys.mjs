@@ -46,6 +46,11 @@ export const backgroundTaskTimeoutSec = Services.prefs.getIntPref(
   10 * 60
 );
 
+// Add 65 second minimum run time to account for restartWithSameArgs
+// having a minimum 60 second run time to properly register a restart upon
+// program exit.
+const MINIMUM_RUN_TIME_BEFORE_RESTART_MS = 65 * 1000;
+
 /**
  * Verify that pre-conditions to update this installation (both persistent and
  * transient) are fulfilled, and if they are all fulfilled, pump the update
@@ -53,7 +58,7 @@ export const backgroundTaskTimeoutSec = Services.prefs.getIntPref(
  *
  * This means checking for, downloading, and potentially applying updates.
  *
- * @returns {boolean} - `true` if an update loop was completed.
+ * @returns {any} - Returns AppUpdater status upon update loop exit.
  */
 async function _attemptBackgroundUpdate() {
   let SLUG = "_attemptBackgroundUpdate";
@@ -98,7 +103,7 @@ async function _attemptBackgroundUpdate() {
       )}'`
     );
 
-    return false;
+    return lazy.AppUpdater.STATUS.NEVER_CHECKED;
   }
 
   let result = new Promise(resolve => {
@@ -115,7 +120,7 @@ async function _attemptBackgroundUpdate() {
         );
         appUpdater.removeListener(_appUpdaterListener);
         appUpdater.stop();
-        resolve(true);
+        resolve(status);
       } else if (status == lazy.AppUpdater.STATUS.CHECKING) {
         // The usual initial flow for the Background Update Task is to kick off
         // the update download and immediately exit. For consistency, we are
@@ -152,7 +157,7 @@ async function _attemptBackgroundUpdate() {
 
           appUpdater.removeListener(_appUpdaterListener);
           appUpdater.stop();
-          resolve(true);
+          resolve(status);
         } else {
           lazy.log.debug(`${SLUG}: Download has completed!`);
         }
@@ -194,6 +199,9 @@ export async function maybeSubmitBackgroundUpdatePing() {
 export async function runBackgroundTask(commandLine) {
   let SLUG = "runBackgroundTask";
   lazy.log.error(`${SLUG}: backgroundupdate`);
+  const taskStartTime = new Date().getTime();
+  let registeredRestartFound =
+    -1 !== commandLine.findFlag("registered-restart", false);
 
   // Help debugging.  This is a pared down version of
   // `dataProviders.application` in `Troubleshoot.sys.mjs`.  When adding to this
@@ -372,8 +380,11 @@ export async function runBackgroundTask(commandLine) {
   Glean.backgroundUpdate.states.add(stringStatus);
   Glean.backgroundUpdate.finalState.set(stringStatus);
 
+  let updateStatus = lazy.AppUpdater.STATUS.NEVER_CHECKED;
   try {
-    await _attemptBackgroundUpdate();
+    // Return AppUpdater status from _attemptBackgroundUpdate() to
+    // check if the status is STATUS.READY_FOR_RESTART.
+    updateStatus = await _attemptBackgroundUpdate();
 
     lazy.log.info(`${SLUG}: attempted background update`);
     Glean.backgroundUpdate.exitCodeSuccess.set(true);
@@ -418,6 +429,43 @@ export async function runBackgroundTask(commandLine) {
   // TODO: ensure the update service has persisted its state before we exit.  Bug 1700846.
   // TODO: ensure that Glean's upload mechanism is aware of Gecko shutdown.  Bug 1703572.
   await lazy.ExtensionUtils.promiseTimeout(500);
+
+  // If we're in a staged background update, we need to restart Firefox to complete the update.
+  lazy.log.debug(
+    `${SLUG}: Checking if staged background update is ready for restart`
+  );
+  // If a restart loop is occurring then registeredRestartFound will be true.
+  if (
+    updateStatus === lazy.AppUpdater.STATUS.READY_FOR_RESTART &&
+    !registeredRestartFound
+  ) {
+    lazy.log.debug(
+      `${SLUG}: Registering Firefox restart after staged background update, waiting for program to have a run time greater than 65 seconds`
+    );
+
+    // We need to restart Firefox with the same arguments to ensure
+    // the background update continues from where it was before the restart.
+    // Wait for at least 65 seconds to ensure that the application
+    // has been open for long enough to correctly register a restart.
+    const taskRunTimeMs = new Date().getTime() - taskStartTime;
+    if (taskRunTimeMs < MINIMUM_RUN_TIME_BEFORE_RESTART_MS) {
+      await lazy.ExtensionUtils.promiseTimeout(
+        MINIMUM_RUN_TIME_BEFORE_RESTART_MS - taskRunTimeMs
+      );
+    }
+
+    try {
+      Cc["@mozilla.org/updates/update-processor;1"]
+        .createInstance(Ci.nsIUpdateProcessor)
+        .registerApplicationRestartWithLaunchArgs(["-registered-restart"]);
+      lazy.log.debug(`${SLUG}: register application restart succeeded`);
+    } catch (e) {
+      lazy.log.error(
+        `${SLUG}: caught exception; failed to register application restart`,
+        e
+      );
+    }
+  }
 
   return result;
 }
