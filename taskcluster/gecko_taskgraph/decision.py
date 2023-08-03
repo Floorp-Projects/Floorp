@@ -274,9 +274,7 @@ def taskgraph_decision(options, parameters=None):
         write_artifact("bugbug-push-schedules.json", push_schedules.popitem()[1])
 
     # cache run-task & misc/fetch-content
-    scripts_root_dir = os.path.join(
-        "/builds/worker/checkouts/gecko/taskcluster/scripts"
-    )
+    scripts_root_dir = os.path.join(GECKO, "taskcluster/scripts")
     run_task_file_path = os.path.join(scripts_root_dir, "run-task")
     fetch_content_file_path = os.path.join(scripts_root_dir, "misc/fetch-content")
     shutil.copy2(run_task_file_path, ARTIFACTS_DIR)
