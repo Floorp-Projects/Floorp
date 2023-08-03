@@ -302,52 +302,52 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Ani ko’ág̃a</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Ejapo %s-gui kundahára ehayhuvéva</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Ejapo %s-gui kundahára ehayhuvéva</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Ejapo Firefox-gui kundahára ehayhuvéva</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">%1$s omotenonde avápe viru rovake ha omomba’e nde rekoñemi ojokóvo tapykuehoha tenda pa’ũme.\n\nEñemomaranduve %2$s rupive.</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s omotenonde avápe viru rovake ha omomba’e nde rekoñemi ojokóvo tapykuehoha tenda pa’ũme.\n\nEñemomaranduve %2$s rupive.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox omotenonde avápe viru rovake ha omomba’e nde rekoñemi ojokóvo tapykuehoha tenda pa’ũme.\n\nEñemomaranduve ore ñemurã rupive.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">marandu’i ñemiguáva</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">marandu’i ñemiguáva</string>
 
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">Ejapo kundahára ijypyguávarõ</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Ejapo kundahára ijypyguávarõ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">Ani ko’ág̃a</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ani ko’ág̃a</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Eva pumbyrýgui mohendahápe ha ambueháicha</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Eva pumbyrýgui mohendahápe ha ambueháicha</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Erujey tendayke ha ñe’ẽñemi ambue mba’e’okágui eku’ejey hag̃ua eheja haguégui.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Erujey tendayke ha ñe’ẽñemi ambue mba’e’okágui eku’ejey hag̃ua eheja haguégui.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">Eñemboheraguapy</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Eñemboheraguapy</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">Ani ko’ág̃a</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Ani ko’ág̃a</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">Marandu’i ne pytyvõta ejapove hag̃ua %s ndive</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Marandu’i ne pytyvõta ejapove hag̃ua %s ndive</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Marandu’i ne pytyvõta ejapove hag̃ua Firefox ndive</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Emondo tendayke mba’e’oka pa’ũme, eñangareko ñemboguejýre ha ehecháta ñemoñe’ẽ eipuru porã hag̃ua %s.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Emondo tendayke mba’e’oka pa’ũme, eñangareko ñemboguejýre ha ehecháta ñemoñe’ẽ eipuru porã hag̃ua %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Emondo tendayke mba’e’oka pa’ũme, eñangareko ñemboguejýre ha ehecháta ñemoñe’ẽ eipuru porã hag̃ua Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">Emyandy marandu’i</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Emyandy marandu’i</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">Ani ko’ág̃a</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Ani ko’ág̃a</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -424,8 +424,6 @@
     <string name="reduce_cookie_banner_off_for_site">Ogue ko tendápe</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Heja</string>
-    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button" moz:RemovedIn="115" tools:ignore="UnusedResources">Ejerure pytyvõ</string>
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Emondo mba’ejerure</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -546,6 +544,11 @@
     <string name="preferences_open_links_in_apps_never">Araka’eve</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Mboguejy okaygua ñangarekoha</string>
+
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Embojuruja Gecko jehaikue</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">Asẽma tembipuru’ígui iñambuekuaa hag̃ua…</string>
 
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Moĩmbaha</string>
@@ -1218,8 +1221,12 @@
 
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Eñongatu PDF ramo</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">Nderejapokuaái PDF</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">Mboyke</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">Ndaikatúi embokuatia</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">Mbokuatia</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
@@ -1937,6 +1944,10 @@
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Mba’emimi jehekaha mongu’eha mboavapyre</string>
 
+    <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
+    <string name="search_add_custom_engine_suggest_url_label">API ñemoñe’ẽ jehekarã (ejaposérõ)</string>
+    <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
+    <string name="search_add_custom_engine_suggest_string_hint">API URL ñemoñe’ẽ jehekarã</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Ñongatu</string>
 
