@@ -815,9 +815,6 @@ bool XMLHttpRequestMainThread::IsDeniedCrossSiteCORSRequest() {
 Maybe<nsBaseChannel::ContentRange>
 XMLHttpRequestMainThread::GetRequestedContentRange() const {
   MOZ_ASSERT(mChannel);
-  if (!IsBlobURI(mRequestURL)) {
-    return mozilla::Nothing();
-  }
   nsBaseChannel* baseChan = static_cast<nsBaseChannel*>(mChannel.get());
   if (!baseChan) {
     return mozilla::Nothing();
@@ -826,6 +823,10 @@ XMLHttpRequestMainThread::GetRequestedContentRange() const {
 }
 
 void XMLHttpRequestMainThread::GetContentRangeHeader(nsACString& out) const {
+  if (!IsBlobURI(mRequestURL)) {
+    out.SetIsVoid(true);
+    return;
+  }
   Maybe<nsBaseChannel::ContentRange> range = GetRequestedContentRange();
   if (range.isSome()) {
     range->AsHeader(out);
@@ -891,7 +892,8 @@ uint32_t XMLHttpRequestMainThread::GetStatus(ErrorResult& aRv) {
   nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
   if (!httpChannel) {
     // Pretend like we got a 200/206 response, since our load was successful
-    return GetRequestedContentRange().isSome() ? 206 : 200;
+    return IsBlobURI(mRequestURL) && GetRequestedContentRange().isSome() ? 206
+                                                                         : 200;
   }
 
   uint32_t status;
@@ -1915,7 +1917,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
 
   // If we were asked for a bad range on a blob URL, but we're async,
   // we should throw now in order to fire an error progress event.
-  if (GetRequestedContentRange().isNothing() &&
+  if (IsBlobURI(mRequestURL) && GetRequestedContentRange().isNothing() &&
       mAuthorRequestHeaders.Has("range")) {
     return NS_ERROR_NET_PARTIAL_TRANSFER;
   }
