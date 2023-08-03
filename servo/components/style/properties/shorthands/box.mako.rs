@@ -203,7 +203,7 @@ ${helpers.two_properties_shorthand(
         }).ok();
 
         Ok(expanded! {
-            offset_position: offset_position.unwrap_or(OffsetPosition::auto()),
+            offset_position: offset_position.unwrap_or(OffsetPosition::normal()),
             offset_path: offset_path.unwrap_or(OffsetPath::none()),
             offset_distance: offset_distance.unwrap_or(LengthPercentage::zero()),
             offset_rotate: offset_rotate.unwrap_or(OffsetRotate::auto()),
@@ -218,7 +218,7 @@ ${helpers.two_properties_shorthand(
                 // offset-path group means "offset-path offset-distance offset-rotate".
                 let must_serialize_path = *self.offset_path != OffsetPath::None
                     || (!self.offset_distance.is_zero() || !self.offset_rotate.is_auto());
-                let position_is_default = matches!(offset_position, OffsetPosition::Auto);
+                let position_is_default = matches!(offset_position, OffsetPosition::Normal);
                 if !position_is_default || !must_serialize_path {
                     offset_position.to_css(dest)?;
                 }

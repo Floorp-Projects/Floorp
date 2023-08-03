@@ -2728,6 +2728,7 @@ addAsyncAnimTest(async function() {
 addAsyncAnimTest(async function() {
   new_div("offset-path: ray(90deg); " +
           "offset-distance: 0%; " +
+          "offset-position: auto; " +
           "transition: offset-path 10s linear");
   await waitForPaintsFlushed();
 

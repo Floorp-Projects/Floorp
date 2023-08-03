@@ -237,9 +237,9 @@ pub enum GenericOffsetPosition<H, V> {
 pub use self::GenericOffsetPosition as OffsetPosition;
 
 impl<H, V> OffsetPosition<H, V> {
-    /// Returns the initial value, auto.
+    /// Returns the initial value, normal.
     #[inline]
-    pub fn auto() -> Self {
-        Self::Auto
+    pub fn normal() -> Self {
+        Self::Normal
     }
 }

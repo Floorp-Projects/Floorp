@@ -287,7 +287,7 @@ ${helpers.predefined_type(
 ${helpers.predefined_type(
     "offset-position",
     "OffsetPosition",
-    "computed::OffsetPosition::auto()",
+    "computed::OffsetPosition::normal()",
     engines="gecko",
     animation_value_type="ComputedValue",
     gecko_pref="layout.css.motion-path-offset-position.enabled",

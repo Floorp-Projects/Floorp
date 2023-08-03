@@ -13612,9 +13612,9 @@ if (
     domProp: "offsetPosition",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: ["auto"],
+    initial_values: ["normal"],
     other_values: [
-      "normal",
+      "auto",
       "left bottom",
       "center center",
       "calc(20% + 10px) center",
