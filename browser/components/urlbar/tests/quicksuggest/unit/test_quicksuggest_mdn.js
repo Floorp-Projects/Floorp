@@ -210,6 +210,7 @@ function makeExpectedResult({
       description: isTopPick ? suggestion.description : "",
       icon: "chrome://global/skin/icons/mdn.svg",
       shouldShowUrl: true,
+      bottomTextL10n: { id: "firefox-suggest-mdn-bottom-text" },
     },
   };
 }

@@ -95,6 +95,7 @@ export class MDNSuggestions extends BaseFeature {
       title: [suggestion.title, lazy.UrlbarUtils.HIGHLIGHT.TYPED],
       description: suggestion.description,
       shouldShowUrl: true,
+      bottomTextL10n: { id: "firefox-suggest-mdn-bottom-text" },
     };
 
     return Object.assign(

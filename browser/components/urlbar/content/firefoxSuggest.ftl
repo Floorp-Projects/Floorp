@@ -115,6 +115,17 @@ firefox-suggest-addons-reviews =
 # This string explaining that the add-on suggestion is a recommendation.
 firefox-suggest-addons-recommended = Recommended
 
+## These strings are used for MDN suggestions in the urlbar.
+
+# The term is defined in this file because the feature is en-US only. It should
+# be moved to toolkit/branding/brandings.ftl if the feature is exposed for
+# localization.
+-mdn-brand-name = Mozilla Developer Network
+
+# This string is shown in MDN suggestions and indicates the suggestion is from
+# MDN.
+firefox-suggest-mdn-bottom-text = { -mdn-brand-name }
+
 ## These strings are used for Pocket suggestions in the urlbar.
 
 # This string is shown in Pocket suggestions and indicates the suggestion is
