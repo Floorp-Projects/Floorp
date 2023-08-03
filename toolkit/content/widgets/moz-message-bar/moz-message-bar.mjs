@@ -32,6 +32,7 @@ const messageTypeToIconData = {
  * @property {string} type - The type of the displayed message.
  * @property {string} heading - The heading of the message.
  * @property {string} message - The message text.
+ * @property {boolean} dismissable - Whether or not the element is dismissable.
  * @fires message-bar:close
  *  Custom event indicating that message bar was closed.
  *  @fires message-bar:user-dismissed
@@ -48,6 +49,7 @@ export default class MozMessageBar extends MozLitElement {
     type: { type: String },
     heading: { type: String },
     message: { type: String },
+    dismissable: { type: Boolean },
   };
 
   // Use a relative URL in storybook to get faster reloads on style changes.
@@ -60,6 +62,7 @@ export default class MozMessageBar extends MozLitElement {
     MozXULElement.insertFTLIfNeeded("toolkit/global/mozMessageBar.ftl");
     this.type = "info";
     this.role = "status";
+    this.dismissable = false;
   }
 
   onSlotchange(e) {
@@ -96,6 +99,19 @@ export default class MozMessageBar extends MozLitElement {
     return "";
   }
 
+  closeButtonTemplate() {
+    if (this.dismissable) {
+      return html`
+        <button
+          class="close ghost-button"
+          data-l10n-id="moz-message-bar-close-button"
+          @click=${this.dismiss}
+        ></button>
+      `;
+    }
+    return "";
+  }
+
   render() {
     return html`
       <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
@@ -113,11 +129,7 @@ export default class MozMessageBar extends MozLitElement {
             <slot name="actions" @slotchange=${this.onSlotchange}></slot>
           </span>
         </div>
-        <button
-          class="close ghost-button"
-          data-l10n-id="moz-message-bar-close-button"
-          @click=${this.dismiss}
-        ></button>
+        ${this.closeButtonTemplate()}
       </div>
     `;
   }
