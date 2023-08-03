@@ -33,6 +33,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/CmdLineAndEnvUtils.h"
 
 #ifdef XP_MACOSX
 #  include "nsILocalFileMac.h"
@@ -49,6 +50,7 @@
 #  include <windows.h>
 #  include <shlwapi.h>
 #  include <strsafe.h>
+#  include <shellapi.h>
 #  include "commonupdatedir.h"
 #  include "nsWindowsHelpers.h"
 #  include "pathhash.h"
@@ -952,4 +954,50 @@ nsUpdateProcessor::GetServiceRegKeyExists(bool* aResult) {
   // We got an error we weren't expecting reading the registry.
   return NS_ERROR_NOT_AVAILABLE;
 #endif  // #ifdef XP_WIN
+}
+
+NS_IMETHODIMP
+nsUpdateProcessor::RegisterApplicationRestartWithLaunchArgs(
+    const nsTArray<nsString>& argvExtra) {
+#ifndef XP_WIN
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  // Retrieve current command line arguments for restart
+  // GetCommandLineW() returns a read only pointer to
+  // the arguments the process was launched with.
+  LPWSTR currentCommandLine = GetCommandLineW();
+
+  // Register a restart flag for the application based on the current
+  // command line. The program will then automatically restart
+  // upon termination.
+  // The application must have been running for a minimum of 60
+  // seconds for a restart to be correctly registered.
+  if (currentCommandLine) {
+    // Append additional command line arguments to current command line for
+    // restart
+    nsTArray<const wchar_t*> additionalArgv(argvExtra.Length());
+    for (const nsString& arg : argvExtra) {
+      additionalArgv.AppendElement(static_cast<const wchar_t*>(arg.get()));
+    }
+
+    int currentArgc = 0;
+    LPWSTR* currentCommandLineArgv =
+        CommandLineToArgvW(currentCommandLine, &currentArgc);
+    UniquePtr<LPWSTR, LocalFreeDeleter> uniqueCurrentArgv(
+        currentCommandLineArgv);
+    mozilla::UniquePtr<wchar_t[]> restartCommandLine = mozilla::MakeCommandLine(
+        currentArgc, uniqueCurrentArgv.get(), additionalArgv.Length(),
+        additionalArgv.Elements());
+    ::RegisterApplicationRestart(restartCommandLine.get(),
+                                 RESTART_NO_CRASH | RESTART_NO_HANG);
+
+    MOZ_LOG(sUpdateLog, mozilla::LogLevel::Debug,
+            ("register application restart succeeded"));
+  } else {
+    MOZ_LOG(sUpdateLog, mozilla::LogLevel::Error,
+            ("could not register application restart"));
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  return NS_OK;
+#endif  // #ifndef XP_WIN
 }

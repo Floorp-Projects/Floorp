@@ -655,6 +655,27 @@ interface nsIUpdateProcessor : nsISupports
    *          If this is called on a non-Windows platform.
    */
   bool getServiceRegKeyExists();
+
+  /**
+  * Registers an application restart upon program exit with the same
+  * arguments it was started with, while accepting additional arguments.
+  * The application must have been running for a minimum of 60 seconds
+  * before invoking this function due to limitations in
+  * RegisterApplicationRestart.
+  *
+  * This function should only be called on Windows.
+  *
+  * @param  argvExtra
+  *         An array of strings to be passed to the application upon
+  *         restart as additional arguments.
+  * @throws NS_ERROR_ABORT
+  *         If the application is in a restart loop.
+  * @throws NS_ERROR_NOT_IMPLEMENTED
+  *         If this is called on a non-Windows platform.
+  * @throws NS_ERROR_NOT_AVAILABLE
+  *         If the command line cannot be read.
+  */
+  void registerApplicationRestartWithLaunchArgs(in Array<AString> argvExtra);
 };
 
 /**
