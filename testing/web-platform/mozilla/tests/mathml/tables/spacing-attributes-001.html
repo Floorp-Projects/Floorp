@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test framespacing/rowspacing/columnspacing attributes</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+  <link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=330964"/>
+</head>
+<body>
+
+<math>
+  <mtable framespacing="7px 20px" frame="solid" rowspacing="11px 27px" columnspacing="5px 16px"
+          style="border-width: 2px;" id="mtable0">
+    <mtr>
+      <mtd id="mtd0">
+        <mn>X</mn>
+      </mtd>
+      <mtd id="mtd1">
+        <mn>X</mn>
+      </mtd>
+      <mtd id="mtd2">
+        <mn>X</mn>
+      </mtd>
+    </mtr>
+    <mtr>
+      <mtd id="mtd3">
+        <mn>X</mn>
+      </mtd>
+      <mtd id="mtd4">
+        <mn>X</mn>
+      </mtd>
+      <mtd id="mtd5">
+        <mn>X</mn>
+      </mtd>
+    </mtr>
+    <mtr>
+      <mtd id="mtd6">
+        <mn>X</mn>
+      </mtd>
+      <mtd id="mtd7">
+        <mn>X</mn>
+      </mtd>
+      <mtd id="mtd8">
+        <mn>X</mn>
+      </mtd>
+    </mtr>
+  </mtable>
+</math>
+
+<script type="application/javascript">
+
+  var epsilon = 2;
+
+  rectTable = document.getElementById("mtable0").getBoundingClientRect();
+  rect0 = document.getElementById("mtd0").getBoundingClientRect();
+  rect1 = document.getElementById("mtd1").getBoundingClientRect();
+  rect2 = document.getElementById("mtd2").getBoundingClientRect();
+  rect3 = document.getElementById("mtd3").getBoundingClientRect();
+  rect4 = document.getElementById("mtd4").getBoundingClientRect();
+  rect5 = document.getElementById("mtd5").getBoundingClientRect();
+  rect6 = document.getElementById("mtd6").getBoundingClientRect();
+  rect7 = document.getElementById("mtd7").getBoundingClientRect();
+  rect8 = document.getElementById("mtd8").getBoundingClientRect();
+  test(function() {
+      assert_approx_equals(rect1.left - rect0.right, 5, epsilon);
+      assert_approx_equals(rect2.left - rect1.right, 16, epsilon);
+      assert_approx_equals(rect4.left - rect3.right, 5, epsilon);
+      assert_approx_equals(rect5.left - rect4.right, 16, epsilon);
+      assert_approx_equals(rect7.left - rect6.right, 5, epsilon);
+      assert_approx_equals(rect8.left - rect7.right, 16, epsilon);
+  }, "columnspacing");
+  test(function() {
+      assert_approx_equals(rect3.top - rect0.bottom, 11, epsilon);
+      assert_approx_equals(rect4.top - rect1.bottom, 11, epsilon);
+      assert_approx_equals(rect5.top - rect2.bottom, 11, epsilon);
+      assert_approx_equals(rect6.top - rect3.bottom, 27, epsilon);
+      assert_approx_equals(rect7.top - rect4.bottom, 27, epsilon);
+      assert_approx_equals(rect8.top - rect5.bottom, 27, epsilon);
+  }, "rowspacing");
+  // Remember to subtract border
+  test(function() {
+      assert_approx_equals(rect0.left - rectTable.left - 2, 7, epsilon);
+      assert_approx_equals(rect3.left - rectTable.left - 2, 7, epsilon);
+      assert_approx_equals(rect6.left - rectTable.left - 2, 7, epsilon);
+  }, "framespacing left");
+  test(function() {
+      assert_approx_equals(rect0.top - rectTable.top - 2, 20, epsilon);
+      assert_approx_equals(rect1.top - rectTable.top - 2, 20, epsilon);
+      assert_approx_equals(rect2.top - rectTable.top - 2, 20, epsilon);
+  }, "framespacing top");
+  test(function() {
+      assert_approx_equals(rectTable.bottom - rect6.bottom - 2, 20, epsilon);
+      assert_approx_equals(rectTable.bottom - rect7.bottom - 2, 20, epsilon);
+      assert_approx_equals(rectTable.bottom - rect8.bottom - 2, 20, epsilon);
+  }, "framespacing bottom");
+  test(function() {
+      assert_approx_equals(rectTable.right - rect2.right - 2, 7, epsilon);
+      assert_approx_equals(rectTable.right - rect5.right - 2, 7, epsilon);
+      assert_approx_equals(rectTable.right - rect8.right - 2, 7, epsilon);
+  }, "framespacing right");
+</script>
+</body>
+</html>
