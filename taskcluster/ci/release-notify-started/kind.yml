@@ -17,7 +17,7 @@ job-defaults:
     shipping-phase: promote
     worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: "debian11-base"}
+        docker-image: {in-tree: "debian12-base"}
         max-run-time: 600
     emails:
         by-project:
