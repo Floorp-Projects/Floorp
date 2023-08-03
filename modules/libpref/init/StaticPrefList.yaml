@@ -8158,28 +8158,28 @@
 # Whether the round() function is enabled in calc().
 - name: layout.css.round.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
 # Whether the mod() / rem() functions are enabled in calc().
 - name: layout.css.mod-rem.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
 # Whether exponential functions are enabled in calc().
 - name: layout.css.exp.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
 # Whether sign/abs functions are enabled in calc().
 - name: layout.css.abs-sign.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
