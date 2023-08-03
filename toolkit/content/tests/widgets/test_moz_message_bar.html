@@ -11,7 +11,7 @@
 <body>
 <p id="display"></p>
 <div id="content">
-  <moz-message-bar id="infoMessage" header="Header" message="Test message"></moz-message-bar>
+  <moz-message-bar id="infoMessage" heading="Heading" message="Test message"></moz-message-bar>
   <moz-message-bar id="infoMessage2" dismissable message="Test message"></moz-message-bar>
   <moz-message-bar id="warningMessage" type="warning" message="Test message"></moz-message-bar>
   <moz-message-bar id="successMessage" type="success" message="Test message"></moz-message-bar>
@@ -29,21 +29,21 @@
       const iconAlt = icon.alt;
       is(iconAlt, "Info", "Alternate text for the info icon is present.");
 
-      const header = mozMessageBar.shadowRoot.querySelector(".header");
-      is(header.textContent.trim(), "Header", "Header is showing up.");
+      const heading = mozMessageBar.shadowRoot.querySelector(".heading");
+      is(heading.textContent.trim(), "Heading", "Heading is showing up.");
       const message = mozMessageBar.shadowRoot.querySelector(".message");
       is(message.textContent.trim(), "Test message", "Message is showing up.");
     });
 
-    add_task(async function test_header_display() {
+    add_task(async function test_heading_display() {
       const mozMessageBar = document.querySelector("#infoMessage2");
-      let header = mozMessageBar.shadowRoot.querySelector(".header");
-      ok(!header, "The header element isn't displayed if it hasn't been initialized.");
+      let heading = mozMessageBar.shadowRoot.querySelector(".heading");
+      ok(!heading, "The heading element isn't displayed if it hasn't been initialized.");
 
-      mozMessageBar.header = "Now there's a header";
+      mozMessageBar.heading = "Now there's a heading";
       await mozMessageBar.updateComplete;
-      header = mozMessageBar.renderRoot.querySelector(".header");
-      is(header.textContent.trim(), "Now there's a header", "New header element is displayed.");
+      heading = mozMessageBar.renderRoot.querySelector(".heading");
+      is(heading.textContent.trim(), "Now there's a heading", "New heading element is displayed.");
     });
 
     add_task(async function test_close_button() {

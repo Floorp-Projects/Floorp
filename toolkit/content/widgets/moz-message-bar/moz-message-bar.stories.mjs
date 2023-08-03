@@ -9,7 +9,8 @@ import "../moz-support-link/moz-support-link.mjs";
 
 const fluentStrings = [
   "moz-message-bar-message",
-  "moz-message-bar-message-header",
+  "moz-message-bar-message-heading",
+  "moz-message-bar-message-heading-long",
 ];
 
 export default {
@@ -21,10 +22,10 @@ export default {
       control: { type: "select" },
     },
     l10nId: {
-      options: [fluentStrings[0], fluentStrings[1]],
+      options: fluentStrings,
       control: { type: "select" },
     },
-    header: {
+    heading: {
       table: {
         disable: true,
       },
@@ -40,9 +41,12 @@ export default {
     fluent: `
 moz-message-bar-message =
   .message = For your information message
-moz-message-bar-message-header =
-  .header = Header
+moz-message-bar-message-heading =
+  .heading = Heading
   .message = For your information message
+moz-message-bar-message-heading-long =
+  .heading = A longer heading to check text wrapping in the message bar
+  .message = Some message that we use to check text wrapping. Some message that we use to check text wrapping.
 moz-message-bar-button = Click me!
     `,
   },
@@ -50,7 +54,7 @@ moz-message-bar-button = Click me!
 
 const Template = ({
   type,
-  header,
+  heading,
   message,
   l10nId,
   dismissable,
@@ -59,10 +63,10 @@ const Template = ({
 }) => html`
   <moz-message-bar
     type=${type}
-    header=${ifDefined(header)}
+    heading=${ifDefined(heading)}
     message=${ifDefined(message)}
     data-l10n-id=${ifDefined(l10nId)}
-    data-l10n-attrs="header, message"
+    data-l10n-attrs="heading, message"
     ?dismissable=${dismissable}
   >
     ${hasSupportLink
