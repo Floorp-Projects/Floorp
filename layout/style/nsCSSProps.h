@@ -12,9 +12,7 @@
 #ifndef nsCSSProps_h___
 #define nsCSSProps_h___
 
-#include <limits>
 #include <ostream>
-#include <type_traits>
 
 #include "nsString.h"
 #include "nsCSSPropertyID.h"
@@ -22,10 +20,7 @@
 #include "mozilla/UseCounter.h"
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/CSSPropFlags.h"
-#include "mozilla/EnumTypeTraits.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/gfx/gfxVarReceiver.h"
-#include "nsXULAppAPI.h"
 
 // Length of the "--" prefix on custom names (such as custom property names,
 // and, in the future, custom media query names).
@@ -33,7 +28,10 @@
 
 namespace mozilla {
 class ComputedStyle;
+namespace gfx {
+class gfxVarReceiver;
 }
+}  // namespace mozilla
 
 extern "C" {
 nsCSSPropertyID Servo_ResolveLogicalProperty(nsCSSPropertyID,
@@ -44,11 +42,10 @@ const uint8_t* Servo_Property_GetName(nsCSSPropertyID, uint32_t* aLength);
 
 class nsCSSProps {
  public:
-  typedef mozilla::CSSEnabledState EnabledState;
-  typedef mozilla::CSSPropFlags Flags;
+  using EnabledState = mozilla::CSSEnabledState;
+  using Flags = mozilla::CSSPropFlags;
 
-  static void AddRefTable(void);
-  static void ReleaseTable(void);
+  static void Init();
 
   // Looks up the property with name aProperty and returns its corresponding
   // nsCSSPropertyID value.  If aProperty is the name of a custom property,
@@ -76,7 +73,7 @@ class nsCSSProps {
   }
 
   // Same but for @font-face descriptors
-  static nsCSSFontDesc LookupFontDesc(const nsACString& aProperty);
+  static nsCSSFontDesc LookupFontDesc(const nsACString&);
 
   // The relevant invariants are asserted in Document.cpp
   static mozilla::UseCounter UseCounterFor(nsCSSPropertyID aProperty) {
@@ -89,7 +86,7 @@ class nsCSSProps {
   // Given a property enum, get the string value
   //
   // This string is static.
-  static const nsDependentCSubstring GetStringValue(nsCSSPropertyID aProperty) {
+  static nsDependentCSubstring GetStringValue(nsCSSPropertyID aProperty) {
     uint32_t len;
     const uint8_t* chars = Servo_Property_GetName(aProperty, &len);
     return nsDependentCSubstring(reinterpret_cast<const char*>(chars), len);
@@ -98,7 +95,10 @@ class nsCSSProps {
   static const nsCString& GetStringValue(nsCSSFontDesc aFontDesc);
   static const nsCString& GetStringValue(nsCSSCounterDesc aCounterDesc);
 
-  static bool PropHasFlags(nsCSSPropertyID aProperty, Flags aFlags);
+  static Flags PropFlags(nsCSSPropertyID);
+  static bool PropHasFlags(nsCSSPropertyID aProperty, Flags aFlags) {
+    return (PropFlags(aProperty) & aFlags) == aFlags;
+  }
 
   static nsCSSPropertyID Physicalize(nsCSSPropertyID aProperty,
                                      const mozilla::ComputedStyle& aStyle) {
@@ -145,10 +145,9 @@ class nsCSSProps {
 
  private:
   static bool gPropertyEnabled[eCSSProperty_COUNT_with_aliases];
-
- private:
   // Defined in the generated nsCSSPropsGenerated.inc.
   static const char* const kIDLNameTable[eCSSProperty_COUNT];
+  static const int32_t kIDLNameSortPositionTable[eCSSProperty_COUNT];
 
  public:
   /**
@@ -167,10 +166,6 @@ class nsCSSProps {
     return kIDLNameTable[aProperty];
   }
 
- private:
-  static const int32_t kIDLNameSortPositionTable[eCSSProperty_COUNT];
-
- public:
   /**
    * Returns the position of the specified property in a list of all
    * properties sorted by their IDL name.
@@ -181,7 +176,6 @@ class nsCSSProps {
     return kIDLNameSortPositionTable[aProperty];
   }
 
- public:
   static bool IsEnabled(nsCSSPropertyID aProperty, EnabledState aEnabled) {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_with_aliases,
                "out of range");
@@ -206,7 +200,6 @@ class nsCSSProps {
     return false;
   }
 
- public:
   struct PropertyPref {
     nsCSSPropertyID mPropID;
     const char* mPref;
