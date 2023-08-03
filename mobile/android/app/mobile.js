@@ -115,6 +115,9 @@ pref("extensions.webextOptionalPermissionPrompts", true);
 
 pref("extensions.experiments.enabled", false);
 
+/* The abuse report feature needs some UI that we do not have on mobile. */
+pref("extensions.abuseReport.amWebAPI.enabled", false);
+
 /* block popups by default, and notify the user about blocked popups */
 pref("dom.disable_open_during_load", true);
 pref("privacy.popups.showBrowserMessage", true);
