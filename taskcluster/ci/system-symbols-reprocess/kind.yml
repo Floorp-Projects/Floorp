@@ -38,7 +38,7 @@ jobs:
                 DUMP_SYMS: "/bin/false"
         run:
             using: run-task
-            command: {artifact-reference: "${MOZ_FETCHES_DIR}/symbol-scrapers/reprocess.sh <build/public/build/target.crashreporter-symbols.zip>"}
+            command: {artifact-reference: "${MOZ_FETCHES_DIR}/symbol-scrapers/reprocess.sh <system-symbols/public/build/target.crashreporter-symbols.zip>"}
         fetches:
             fetch:
                 - symbol-scrapers
