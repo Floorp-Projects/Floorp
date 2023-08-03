@@ -1533,6 +1533,16 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
         attributes->SetAttribute(nsGkAtoms::src, std::move(src));
       }
     }
+
+    if (IsTextField()) {
+      nsString placeholder;
+      mCachedFields->GetAttribute(nsGkAtoms::placeholder, placeholder);
+      if (!placeholder.IsEmpty()) {
+        attributes->SetAttribute(nsGkAtoms::placeholder,
+                                 std::move(placeholder));
+        attributes->Remove(nsGkAtoms::aria_placeholder);
+      }
+    }
   }
 
   nsAutoString name;
