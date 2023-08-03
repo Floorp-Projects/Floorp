@@ -194,22 +194,16 @@ var TranslationsPanel = new (class {
   detectedLanguages = null;
 
   /**
-   * Lazily get a console instance. Note that this script is loaded in very early to
-   * the browser loading process, and may run before the console is avialable. In
-   * this case the console will return as `undefined`.
+   * Lazily get a console instance.
    *
-   * @returns {Console | void}
+   * @returns {Console}
    */
   get console() {
     if (!this.#console) {
-      try {
-        this.#console = console.createInstance({
-          maxLogLevelPref: "browser.translations.logLevel",
-          prefix: "Translations",
-        });
-      } catch {
-        // The console may not be initialized yet.
-      }
+      this.#console = console.createInstance({
+        maxLogLevelPref: "browser.translations.logLevel",
+        prefix: "Translations",
+      });
     }
     return this.#console;
   }
@@ -442,7 +436,7 @@ var TranslationsPanel = new (class {
         // Ready to initialize.
         break;
       default:
-        this.console?.error("Unknown langList phase", this.#langListsPhase);
+        this.console.error("Unknown langList phase", this.#langListsPhase);
     }
 
     try {
@@ -483,7 +477,7 @@ var TranslationsPanel = new (class {
 
       this.#langListsPhase = "initialized";
     } catch (error) {
-      this.console?.error(error);
+      this.console.error(error);
       this.#langListsPhase = "error";
     }
   }
@@ -1070,15 +1064,8 @@ var TranslationsPanel = new (class {
     PanelMultiView.openPopup(panel, target, {
       position: "bottomright topright",
       triggerEvent: event,
-    }).catch(error => this.console?.error(error));
+    }).catch(error => this.console.error(error));
   }
-
-  /**
-   * Keeps track of open requests to guard against race conditions.
-   *
-   * @type {Promise<void> | null}
-   */
-  #openPromise = null;
 
   /**
    * Opens the TranslationsPanel.
@@ -1086,23 +1073,6 @@ var TranslationsPanel = new (class {
    * @param {Event} event
    */
   async open(event) {
-    if (this.#openPromise) {
-      // There is already an open event happening, do not open.
-      return;
-    }
-
-    this.#openPromise = this.#openImpl(event);
-    this.#openPromise.finally(() => {
-      this.#openPromise = null;
-    });
-  }
-
-  /**
-   * Implementation function for opening the panel. Prefer TranslationsPanel.open.
-   *
-   * @param {Event} event
-   */
-  async #openImpl(event) {
     event.stopPropagation();
     if (
       (event.type == "click" && event.button != 0) ||
@@ -1120,21 +1090,21 @@ var TranslationsPanel = new (class {
 
     const { button } = this.elements;
 
-    const { requestedTranslationPair, locationChangeId } =
-      this.#getTranslationsActor().languageState;
+    await this.#ensureLangListsBuilt();
 
     // Store this value because it gets modified when #showDefaultView is called below.
     const isFirstUserInteraction = !this._hasShownPanel;
 
-    await this.#ensureLangListsBuilt();
+    const { requestedTranslationPair } =
+      this.#getTranslationsActor().languageState;
 
     if (requestedTranslationPair) {
       await this.#showRevisitView(requestedTranslationPair).catch(error => {
-        this.console?.error(error);
+        this.console.error(error);
       });
     } else {
       await this.#showDefaultView().catch(error => {
-        this.console?.error(error);
+        this.console.error(error);
       });
     }
 
@@ -1145,18 +1115,6 @@ var TranslationsPanel = new (class {
       event.type === "TranslationsParent:OfferTranslation"
         ? button
         : this.elements.appMenuButton;
-
-    if (!TranslationsParent.isActiveLocation(locationChangeId)) {
-      this.console?.log(`A translation panel open request was stale.`, {
-        locationChangeId,
-        newlocationChangeId:
-          this.#getTranslationsActor().languageState.locationChangeId,
-        currentURISpec: gBrowser.currentURI.spec,
-      });
-      return;
-    }
-
-    this.console?.log(`Showing a translation panel`, gBrowser.currentURI.spec);
 
     this.#openPanelPopup(targetButton, { event, isFirstUserInteraction });
   }
