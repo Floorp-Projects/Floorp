@@ -915,6 +915,16 @@ class BrowserRobot {
     fun fillPdfForm(name: String) {
         // Set PDF form text for the text box
         itemWithResId("pdfjs_internal_id_10R").setText(name)
+        mDevice.waitForWindowUpdate(packageName, waitingTime)
+        if (
+            !itemWithResId("pdfjs_internal_id_11R").exists() &&
+            mDevice
+                .executeShellCommand("dumpsys input_method | grep mInputShown")
+                .contains("mInputShown=true")
+        ) {
+            // Close the keyboard
+            mDevice.pressBack()
+        }
         // Click PDF form check box
         itemWithResId("pdfjs_internal_id_11R").click()
     }
