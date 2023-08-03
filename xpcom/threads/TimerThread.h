@@ -12,21 +12,12 @@
 #include "nsIThread.h"
 
 #include "nsTimerImpl.h"
-#include "nsThreadUtils.h"
 
 #include "nsTArray.h"
 
-#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/ProfilerUtils.h"
-#include "mozilla/UniquePtr.h"
-
-#include <algorithm>
-
-namespace mozilla {
-class TimeStamp;
-}  // namespace mozilla
 
 // Enable this to compute lots of interesting statistics and print them out when
 // PrintStatistics() is called.

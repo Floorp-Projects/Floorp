@@ -9,14 +9,12 @@
 
 #include "GeckoProfiler.h"
 #include "nsThreadUtils.h"
-#include "pratom.h"
 
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/ArenaAllocator.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/BinarySearch.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/StaticPrefs_timer.h"
 
@@ -706,24 +704,12 @@ TimerThread::Run() {
 
   mProfilerThreadId = profiler_current_thread_id();
 
-  // We need to know how many microseconds give a positive PRIntervalTime. This
-  // is platform-dependent and we calculate it at runtime, finding a value |v|
-  // such that |PR_MicrosecondsToInterval(v) > 0| and then binary-searching in
-  // the range [0, v) to find the ms-to-interval scale.
-  uint32_t usForPosInterval = 1;
-  while (PR_MicrosecondsToInterval(usForPosInterval) == 0) {
-    usForPosInterval <<= 1;
-  }
+  // TODO: Make mAllowedEarlyFiringMicroseconds const and initialize it in the
+  // constructor.
+  mAllowedEarlyFiringMicroseconds = 250;
+  const TimeDuration allowedEarlyFiring =
+      TimeDuration::FromMicroseconds(mAllowedEarlyFiringMicroseconds);
 
-  size_t usIntervalResolution;
-  BinarySearchIf(MicrosecondsToInterval(), 0, usForPosInterval,
-                 IntervalComparator(), &usIntervalResolution);
-  MOZ_ASSERT(PR_MicrosecondsToInterval(usIntervalResolution - 1) == 0);
-  MOZ_ASSERT(PR_MicrosecondsToInterval(usIntervalResolution) == 1);
-
-  // Half of the amount of microseconds needed to get positive PRIntervalTime.
-  // We use this to decide how to round our wait times later
-  mAllowedEarlyFiringMicroseconds = usIntervalResolution / 2;
   bool forceRunNextTimer = false;
 
   // Queue for tracking of how many timers are fired on each wake-up. We need to
@@ -768,7 +754,8 @@ TimerThread::Run() {
       RemoveLeadingCanceledTimersInternal();
 
       if (!mTimers.IsEmpty()) {
-        if (now >= mTimers[0].Value()->mTimeout || forceRunThisTimer) {
+        if (now + allowedEarlyFiring >= mTimers[0].Value()->mTimeout ||
+            forceRunThisTimer) {
         next:
           // NB: AddRef before the Release under RemoveTimerInternal to avoid
           // mRefCnt passing through zero, in case all other refs than the one
