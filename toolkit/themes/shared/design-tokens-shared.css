@@ -119,6 +119,9 @@
 @media (prefers-contrast) {
   :root,
   :host {
+    /* Border */
+    --border-color: var(--text-color);
+
     /* Button */
     --button-background-color: ButtonFace;
     --button-background-color-hover: ButtonFace;
@@ -133,8 +136,20 @@
 
     /* Color */
     --color-canvas: Canvas;
+    --color-background-information: var(--color-canvas);
+    --color-background-success: var(--color-canvas);
+    --color-background-warning: var(--color-canvas);
+    --color-background-critical: var(--color-canvas);
+
+    /** Icon **/
+    --icon-color: var(--text-color);
+    --icon-color-information: var(--icon-color);
+    --icon-color-success: var(--icon-color);
+    --icon-color-warning: var(--icon-color);
+    --icon-color-critical: var(--icon-color);
 
     /* Text */
+    --text-color: CanvasText;
     --text-color-deemphasized: inherit;
   }
 }
