@@ -10,7 +10,7 @@ use crate::applicable_declarations::{ApplicableDeclarationList, CascadePriority}
 use crate::properties::{LonghandIdSet, PropertyDeclarationBlock};
 use crate::shared_lock::{Locked, StylesheetGuards};
 use crate::stylesheets::layer_rule::LayerOrder;
-use servo_arc::{Arc, ArcBorrow};
+use servo_arc::ArcBorrow;
 use smallvec::SmallVec;
 use std::io::{self, Write};
 
@@ -320,29 +320,6 @@ impl RuleTree {
         let rule = self
             .insert_ordered_rules_from(last.parent().unwrap().clone(), children.drain(..).rev());
         rule
-    }
-
-    /// Returns new rule node by adding animation rules at transition level.
-    /// The additional rules must be appropriate for the transition
-    /// level of the cascade, which is the highest level of the cascade.
-    /// (This is the case for one current caller, the cover rule used
-    /// for CSS transitions.)
-    pub fn add_animation_rules_at_transition_level(
-        &self,
-        path: &StrongRuleNode,
-        pdb: Arc<Locked<PropertyDeclarationBlock>>,
-        guards: &StylesheetGuards,
-    ) -> StrongRuleNode {
-        let mut dummy = false;
-        self.update_rule_at_level(
-            CascadeLevel::Transitions,
-            LayerOrder::root(),
-            Some(pdb.borrow_arc()),
-            path,
-            guards,
-            &mut dummy,
-        )
-        .expect("Should return a valid rule node")
     }
 }
 

@@ -425,15 +425,6 @@ static_assert(!(nsChangeHint_Hints_AlwaysHandledForDescendants &
 #define NS_STYLE_HINT_REFLOW \
   nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_AllReflowHints)
 
-#define nsChangeHint_Hints_CanIgnoreIfNotVisible                            \
-  nsChangeHint(                                                             \
-      NS_STYLE_HINT_VISUAL | nsChangeHint_NeutralChange |                   \
-      nsChangeHint_UpdateOpacityLayer | nsChangeHint_AddOrRemoveTransform | \
-      nsChangeHint_UpdateContainingBlock | nsChangeHint_UpdateOverflow |    \
-      nsChangeHint_UpdatePostTransformOverflow |                            \
-      nsChangeHint_UpdateTransformLayer | nsChangeHint_UpdateUsesOpacity |  \
-      nsChangeHint_UpdateBackgroundPosition | nsChangeHint_VisibilityChange)
-
 // Change hints for added or removed transform style.
 //
 // If we've added or removed the transform property, we need to reconstruct the

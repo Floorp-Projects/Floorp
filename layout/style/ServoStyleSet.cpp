@@ -1091,15 +1091,6 @@ already_AddRefed<ComputedStyle> ServoStyleSet::GetBaseContextForElement(
       .Consume();
 }
 
-already_AddRefed<ComputedStyle>
-ServoStyleSet::ResolveServoStyleByAddingAnimation(
-    Element* aElement, const ComputedStyle* aStyle,
-    StyleAnimationValue* aAnimationValue) {
-  return Servo_StyleSet_GetComputedValuesByAddingAnimation(
-             mRawData.get(), aElement, aStyle, &Snapshots(), aAnimationValue)
-      .Consume();
-}
-
 already_AddRefed<StyleAnimationValue> ServoStyleSet::ComputeAnimationValue(
     Element* aElement, StyleLockedDeclarationBlock* aDeclarations,
     const ComputedStyle* aStyle) {
