@@ -679,7 +679,8 @@ bool gfxDWriteFont::GetForceGDIClassic() const {
          static_cast<gfxDWriteFontEntry*>(mFontEntry.get())
              ->GetForceGDIClassic() &&
          GetAdjustedSize() <= gfxDWriteFontList::PlatformFontList()
-                                  ->GetForceGDIClassicMaxFontSize();
+                                  ->GetForceGDIClassicMaxFontSize() &&
+         GetAdjustedSize() >= 6.0;
 }
 
 DWRITE_MEASURING_MODE
