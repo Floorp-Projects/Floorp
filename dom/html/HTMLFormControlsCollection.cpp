@@ -222,9 +222,9 @@ nsresult HTMLFormControlsCollection::GetSortedControls(
     // Determine which of the two elements should be ordered
     // first and add it to the end of the list.
     nsGenericHTMLFormElement* elementToAdd;
-    if (HTMLFormElement::CompareFormControlPosition(
-            mElements[elementsIdx], mNotInElements[notInElementsIdx], mForm) <
-        0) {
+    if (nsContentUtils::CompareTreePosition(mElements[elementsIdx],
+                                            mNotInElements[notInElementsIdx],
+                                            mForm) < 0) {
       elementToAdd = mElements[elementsIdx];
       ++elementsIdx;
     } else {
