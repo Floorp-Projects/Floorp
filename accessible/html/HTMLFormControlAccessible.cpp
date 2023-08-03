@@ -437,6 +437,19 @@ already_AddRefed<EditorBase> HTMLTextFieldAccessible::GetEditor() const {
   return textEditor.forget();
 }
 
+void HTMLTextFieldAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
+                                                  nsAtom* aAttribute,
+                                                  int32_t aModType,
+                                                  const nsAttrValue* aOldValue,
+                                                  uint64_t aOldState) {
+  if (aAttribute == nsGkAtoms::placeholder) {
+    mDoc->QueueCacheUpdate(this, CacheDomain::NameAndDescription);
+    return;
+  }
+  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
+                                               aModType, aOldValue, aOldState);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTextFieldAccessible: Widgets
 
