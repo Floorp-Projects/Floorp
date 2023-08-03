@@ -1211,35 +1211,6 @@ static gint moz_gtk_combo_box_entry_button_paint(cairo_t* cr,
   return MOZ_GTK_SUCCESS;
 }
 
-static gint moz_gtk_container_paint(cairo_t* cr, GdkRectangle* rect,
-                                    GtkWidgetState* state,
-                                    WidgetNodeType widget_type,
-                                    GtkTextDirection direction) {
-  GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
-  GtkStyleContext* style =
-      GetStyleContext(widget_type, state->image_scale, direction, state_flags);
-  /* this is for drawing a prelight box */
-  if (state_flags & GTK_STATE_FLAG_PRELIGHT) {
-    gtk_render_background(style, cr, rect->x, rect->y, rect->width,
-                          rect->height);
-  }
-
-  return MOZ_GTK_SUCCESS;
-}
-
-static gint moz_gtk_toggle_label_paint(cairo_t* cr, GdkRectangle* rect,
-                                       GtkWidgetState* state, gboolean isradio,
-                                       GtkTextDirection direction) {
-  if (!state->focused) return MOZ_GTK_SUCCESS;
-
-  GtkStyleContext* style = GetStyleContext(
-      isradio ? MOZ_GTK_RADIOBUTTON_CONTAINER : MOZ_GTK_CHECKBUTTON_CONTAINER,
-      state->image_scale, direction, GetStateFlagsFromGtkWidgetState(state));
-  gtk_render_focus(style, cr, rect->x, rect->y, rect->width, rect->height);
-
-  return MOZ_GTK_SUCCESS;
-}
-
 static gint moz_gtk_toolbar_paint(cairo_t* cr, GdkRectangle* rect,
                                   GtkWidgetState* state,
                                   GtkTextDirection direction) {
@@ -1884,18 +1855,6 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_FRAME:
       w = GetWidget(MOZ_GTK_FRAME);
       break;
-    case MOZ_GTK_CHECKBUTTON_CONTAINER:
-    case MOZ_GTK_RADIOBUTTON_CONTAINER: {
-      w = GetWidget(widget);
-      if (w) {
-        style = gtk_widget_get_style_context(w);
-
-        *left = *top = *right = *bottom =
-            gtk_container_get_border_width(GTK_CONTAINER(w));
-        moz_gtk_add_border_padding(style, left, top, right, bottom);
-      }
-      return MOZ_GTK_SUCCESS;
-    }
     case MOZ_GTK_TOOLTIP: {
       // In GTK 3 there are 6 pixels of additional margin around the box.
       // See details there:
@@ -1930,8 +1889,6 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
       return MOZ_GTK_SUCCESS;
     }
     /* These widgets have no borders, since they are not containers. */
-    case MOZ_GTK_CHECKBUTTON_LABEL:
-    case MOZ_GTK_RADIOBUTTON_LABEL:
     case MOZ_GTK_SPLITTER_HORIZONTAL:
     case MOZ_GTK_SPLITTER_VERTICAL:
     case MOZ_GTK_CHECKBUTTON:
@@ -2391,13 +2348,6 @@ gint moz_gtk_widget_paint(WidgetNodeType widget, cairo_t* cr,
     case MOZ_GTK_DROPDOWN_ARROW:
       return moz_gtk_combo_box_entry_button_paint(cr, rect, state, flags,
                                                   direction);
-    case MOZ_GTK_CHECKBUTTON_CONTAINER:
-    case MOZ_GTK_RADIOBUTTON_CONTAINER:
-      return moz_gtk_container_paint(cr, rect, state, widget, direction);
-    case MOZ_GTK_CHECKBUTTON_LABEL:
-    case MOZ_GTK_RADIOBUTTON_LABEL:
-      return moz_gtk_toggle_label_paint(
-          cr, rect, state, (widget == MOZ_GTK_RADIOBUTTON_LABEL), direction);
     case MOZ_GTK_TOOLBAR:
       return moz_gtk_toolbar_paint(cr, rect, state, direction);
     case MOZ_GTK_TOOLBAR_SEPARATOR:

@@ -272,10 +272,10 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       aGtkWidgetType = MOZ_GTK_TOOLBAR_BUTTON;
       break;
     case StyleAppearance::Checkbox:
+      aGtkWidgetType = MOZ_GTK_CHECKBUTTON;
+      break;
     case StyleAppearance::Radio:
-      aGtkWidgetType = (aAppearance == StyleAppearance::Radio)
-                           ? MOZ_GTK_RADIOBUTTON
-                           : MOZ_GTK_CHECKBUTTON;
+      aGtkWidgetType = MOZ_GTK_RADIOBUTTON;
       break;
     case StyleAppearance::Spinner:
       aGtkWidgetType = MOZ_GTK_SPINBUTTON;
@@ -391,18 +391,6 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
         else if (aAppearance == StyleAppearance::ButtonArrowPrevious)
           *aWidgetFlags = GTK_ARROW_LEFT;
       }
-      break;
-    case StyleAppearance::CheckboxContainer:
-      aGtkWidgetType = MOZ_GTK_CHECKBUTTON_CONTAINER;
-      break;
-    case StyleAppearance::RadioContainer:
-      aGtkWidgetType = MOZ_GTK_RADIOBUTTON_CONTAINER;
-      break;
-    case StyleAppearance::CheckboxLabel:
-      aGtkWidgetType = MOZ_GTK_CHECKBUTTON_LABEL;
-      break;
-    case StyleAppearance::RadioLabel:
-      aGtkWidgetType = MOZ_GTK_RADIOBUTTON_LABEL;
       break;
     case StyleAppearance::Toolbar:
       aGtkWidgetType = MOZ_GTK_TOOLBAR;
@@ -1164,10 +1152,6 @@ LayoutDeviceIntSize nsNativeThemeGTK::GetMinimumWidgetSize(
       result.height = metrics->minSizeWithBorderMargin.height;
       break;
     }
-    case StyleAppearance::CheckboxContainer:
-    case StyleAppearance::RadioContainer:
-    case StyleAppearance::CheckboxLabel:
-    case StyleAppearance::RadioLabel:
     case StyleAppearance::Button:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
@@ -1375,10 +1359,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Textarea:
     case StyleAppearance::Range:
     case StyleAppearance::RangeThumb:
-    case StyleAppearance::CheckboxContainer:
-    case StyleAppearance::RadioContainer:
-    case StyleAppearance::CheckboxLabel:
-    case StyleAppearance::RadioLabel:
     case StyleAppearance::Menuarrow:
     case StyleAppearance::Splitter:
     case StyleAppearance::MozWindowButtonBox:
