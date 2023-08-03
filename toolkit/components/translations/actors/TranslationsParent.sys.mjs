@@ -28,6 +28,26 @@ const NEVER_TRANSLATE_LANGS_PREF =
 const lazy = {};
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+
+if (AppConstants.ENABLE_WEBDRIVER) {
+  XPCOMUtils.defineLazyServiceGetter(
+    lazy,
+    "Marionette",
+    "@mozilla.org/remote/marionette;1",
+    "nsIMarionette"
+  );
+
+  XPCOMUtils.defineLazyServiceGetter(
+    lazy,
+    "RemoteAgent",
+    "@mozilla.org/remote/agent;1",
+    "nsIRemoteAgent"
+  );
+} else {
+  lazy.Marionette = { running: false };
+  lazy.RemoteAgent = { running: false };
+}
 
 ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
@@ -304,6 +324,16 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * TODO(Bug 1834306) - Cu.isInAutomation doesn't recognize Marionette and RemoteAgent
+   * tests.
+   */
+  static isInAutomation() {
+    return (
+      Cu.isInAutomation || lazy.Marionette.running || lazy.RemoteAgent.running
+    );
+  }
+
+  /**
    * Offer translations (for instance by automatically opening the popup panel) whenever
    * languages are detected, but only do it once per host per session.
    * @param {LangTags} detectedLanguages
@@ -312,7 +342,10 @@ export class TranslationsParent extends JSWindowActorParent {
     if (!lazy.automaticallyPopupPref) {
       return;
     }
-    if (Cu.isInAutomation && !TranslationsParent.testAutomaticPopup) {
+    if (
+      TranslationsParent.isInAutomation() &&
+      !TranslationsParent.testAutomaticPopup
+    ) {
       // Do not offer translations in automation, as many tests do not expect this
       // behavior.
       return;
@@ -1831,6 +1864,12 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   async queryIdentifyLanguage() {
+    if (
+      TranslationsParent.isInAutomation() &&
+      !TranslationsParent.#mockedLangTag
+    ) {
+      return null;
+    }
     return this.sendQuery("Translations:IdentifyLanguage", {
       useFastText: lazy.useFastTextPref,
     }).catch(error => {

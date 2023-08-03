@@ -56,12 +56,6 @@ export class TranslationsChild extends JSWindowActorChild {
         return this.document.documentElement.lang;
       case "Translations:IdentifyLanguage": {
         try {
-          // Only the fastText engine is set up with mocks for testing, so if we are
-          // in automation but not explicitly directed to use fastText, just return null.
-          if (Cu.isInAutomation && !data.useFastText) {
-            return null;
-          }
-
           // Try to use the fastText engine if directed to do so.
           if (data.useFastText) {
             const engine = await this.getOrCreateLanguageIdEngine();
