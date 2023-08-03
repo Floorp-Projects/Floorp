@@ -53,8 +53,6 @@ radio {
 }
 
 @media (-moz-platform: windows) or (-moz-platform: linux) {
-  /* On Linux, native theming should take care of this but it appears to be
-   * broken with some Gtk themes. Bug 1312169. */
   radiogroup:focus-visible > radio[focused="true"] > .radio-label-box {
     outline: var(--focus-outline);
   }
@@ -69,14 +67,6 @@ radio {
     margin-inline-start: 2px;
     padding-bottom: 1px;
     padding-inline-start: 1px;
-  }
-}
-
-@media (-moz-platform: linux) {
-  /* FIXME: Is this needed given the focused styles above? */
-  .radio-label-box {
-    appearance: auto;
-    -moz-default-appearance: radio-label;
   }
 }
 

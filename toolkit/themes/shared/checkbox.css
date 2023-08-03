@@ -126,8 +126,6 @@ checkbox[native][disabled="true"] {
 
 @media (-moz-platform: windows) or (-moz-platform: linux) {
   checkbox[native]:focus-visible > .checkbox-label-box {
-    /* On Linux, native theming should take care of this but it appears to be
-     * broken with some Gtk themes. Bug 1312169. */
     outline: var(--focus-outline);
   }
 }
@@ -152,14 +150,6 @@ checkbox[native][disabled="true"] {
 
 @media (-moz-platform: linux) {
   checkbox:where([native]) {
-    appearance: auto;
-    -moz-default-appearance: checkbox-container;
     margin: 2px 4px;
-  }
-
-  .checkbox-label-box[native] {
-    /* FIXME: Is this needed given the focus rules above? */
-    appearance: auto;
-    -moz-default-appearance: checkbox-label;
   }
 }
