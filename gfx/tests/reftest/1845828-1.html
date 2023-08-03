@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<style>
+@font-face {
+    font-family: test;
+    src: url("Ahem.ttf");
+}
+</style>
+<canvas id=c></canvas>
+<script>
+document.fonts.load("1px test").then(() => {
+    ctx = c.getContext("2d");
+    ctx.scale(10, 10);
+    ctx.font = "1.0px test";
+    ctx.fillText("10px test", 1, 2);
+    ctx.font = "1.1px test";
+    ctx.fillText("11px test", 1, 4);
+    ctx.font = "1.2px test";
+    ctx.fillText("12px test", 1, 6);
+    ctx.font = "1.3px test";
+    ctx.fillText("13px test", 1, 8);
+    ctx.font = "1.4px test";
+    ctx.fillText("14px test", 1, 10);
+});
+</script>
