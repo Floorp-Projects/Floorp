@@ -1,6 +1,15 @@
 {
   "data": [
     {
+      "name": "Samsung Internet",
+      "schema": 1690982642139,
+      "status": "current",
+      "version": "22.0",
+      "browserid": "samsunginternet_android",
+      "id": "0f7edb64-99cc-41ee-ae73-ec4edfcef9ab",
+      "last_modified": 1690987664600
+    },
+    {
       "name": "Chrome",
       "schema": 1690377890045,
       "status": "beta",
@@ -244,15 +253,6 @@
       "last_modified": 1686662872131
     },
     {
-      "name": "Samsung Internet",
-      "schema": 1685539443809,
-      "status": "current",
-      "version": "21.0",
-      "browserid": "samsunginternet_android",
-      "id": "6c54a46f-80dc-4cee-a1e1-1c26f98ff227",
-      "last_modified": 1685598590162
-    },
-    {
       "name": "Safari on iOS",
       "schema": 1685539443621,
       "status": "current",
@@ -424,5 +424,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1690435975511
+  "timestamp": 1690987664600
 }
