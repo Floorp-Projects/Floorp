@@ -35,6 +35,12 @@
   color: var(--message-bar-text-color);
 }
 
+@media (prefers-contrast) {
+  :host {
+    --message-bar-border-color: var(--border-color);
+  }
+}
+
 /* Make the host to behave as a block by default, but allow hidden to hide it. */
 :host(:not([hidden])) {
   display: block;
