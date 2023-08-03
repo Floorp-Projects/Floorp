@@ -35,18 +35,23 @@ def throwe():
 
 
 def _replace_in_file(file, pattern, replacement, regex=False):
+    def replacer(matchobj: re.Match):
+        if matchobj.group(0) == replacement:
+            print(f"WARNING: {action} replaced '{matchobj.group(0)}' with same.")
+        return replacement
+
     with open(file) as f:
         contents = f.read()
 
-    if regex:
-        newcontents = re.sub(pattern, replacement, contents)
-    else:
-        newcontents = contents.replace(pattern, replacement)
+    action = "replace-in-file-regex"
+    if not regex:
+        pattern = re.escape(pattern)
+        action = "replace-in-file"
 
-    if newcontents == contents:
+    newcontents, count = re.subn(pattern, replacer, contents)
+    if count < 1:
         raise Exception(
-            "Could not find '%s' in %s to %sreplace with '%s'"
-            % (pattern, file, "regex-" if regex else "", replacement)
+            f"{action} could not find '{pattern}' in {file} to replace with '{replacement}'."
         )
 
     with open(file, "w") as f:
