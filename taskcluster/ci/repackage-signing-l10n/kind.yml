@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.name_sanity:transforms
-    - gecko_taskgraph.transforms.repackage_signing:transforms
-    - gecko_taskgraph.transforms.repackage_routes:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.repackage_signing
+    - gecko_taskgraph.transforms.repackage_routes
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
     - repackage-l10n
@@ -23,3 +24,7 @@ only-for-build-platforms:
     - win64-aarch64-shippable/opt
     - win64-aarch64-devedition/opt
     - win64-asan-reporter-shippable/opt
+
+jobs:
+    repackage-signing-l10n:
+        from-deps: {}
