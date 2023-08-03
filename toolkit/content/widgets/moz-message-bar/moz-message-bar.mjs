@@ -15,7 +15,7 @@ const messageTypeToIconData = {
     l10nId: "moz-message-bar-icon-warning",
   },
   success: {
-    iconSrc: "chrome://global/skin/icons/check.svg",
+    iconSrc: "chrome://global/skin/icons/check-filled.svg",
     l10nId: "moz-message-bar-icon-success",
   },
   error: {
@@ -98,10 +98,6 @@ export default class MozMessageBar extends MozLitElement {
 
   render() {
     return html`
-      <link
-        rel="stylesheet"
-        href="chrome://global/skin/in-content/common.css"
-      />
       <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
       <div class="container">
         <div class="content">

@@ -75,7 +75,7 @@
       const mozMessageBar = document.querySelector("#successMessage");
       const icon = mozMessageBar.shadowRoot.querySelector(".icon");
       const iconUrl = icon.src;
-      ok(iconUrl.includes("check.svg"), "Success icon is showing up.");
+      ok(iconUrl.includes("check-filled.svg"), "Success icon is showing up.");
       const iconAlt = icon.alt;
       is(iconAlt, "Success", "Alternate text for the success icon is present.");
     });
