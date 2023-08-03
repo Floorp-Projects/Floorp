@@ -119,7 +119,13 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
         return env
 
     def run_one_test(
-        self, prog, env, symbols_path=None, interactive=False, timeout_factor=1
+        self,
+        prog,
+        env,
+        symbols_path=None,
+        utility_path=None,
+        interactive=False,
+        timeout_factor=1,
     ):
         """
         Run a single C++ unit test program remotely.
