@@ -2917,6 +2917,30 @@ public class GeckoSession {
         .map(analysisBundle -> new ReviewAnalysis(analysisBundle.getBundle("analysis")));
   }
 
+  /**
+   * Request product recommendations given a specific product url.
+   *
+   * @param url The URL of the product page.
+   * @return a {@link GeckoResult} result of product recommendations.
+   */
+  @UiThread
+  public @NonNull GeckoResult<List<Recommendation>> requestRecommendations(
+      @NonNull final String url) {
+    final GeckoBundle bundle = new GeckoBundle(1);
+    bundle.putString("url", url);
+    return mEventDispatcher
+        .queryBundle("GeckoView:RequestRecommendations", bundle)
+        .map(
+            recommendationsBundle -> {
+              final GeckoBundle[] bundles = recommendationsBundle.getBundleArray("recommendations");
+              final ArrayList<Recommendation> recArray = new ArrayList<>(bundles.length);
+              for (final GeckoBundle b : bundles) {
+                recArray.add(new Recommendation(b));
+              }
+              return recArray;
+            });
+  }
+
   // This is the GeckoDisplay acquired via acquireDisplay(), if any.
   private GeckoDisplay mDisplay;
 
@@ -3413,16 +3437,6 @@ public class GeckoSession {
   /** Contains information about the analysis of a product's reviews. */
   @AnyThread
   public static class ReviewAnalysis {
-    @Retention(RetentionPolicy.SOURCE)
-    @StringDef({GRADE_A, GRADE_B, GRADE_C, GRADE_D, GRADE_E})
-    public @interface Grade {}
-
-    public static final String GRADE_A = "A";
-    public static final String GRADE_B = "B";
-    public static final String GRADE_C = "C";
-    public static final String GRADE_D = "D";
-    public static final String GRADE_E = "E";
-
     /** Analysis URL. */
     @Nullable public final String analysisURL;
 
@@ -3430,7 +3444,7 @@ public class GeckoSession {
     @Nullable public final String productId;
 
     /** Reliability grade for the product's reviews. */
-    @Nullable public final @Grade String grade;
+    @Nullable public final String grade;
 
     /** Product rating adjusted to exclude untrusted reviews. */
     @NonNull public final Double adjustedRating;
@@ -3508,6 +3522,67 @@ public class GeckoSession {
         appearance = null;
         competitiveness = null;
       }
+    }
+  }
+
+  /** Contains information about a product recommendation. */
+  @AnyThread
+  public static class Recommendation {
+    /** Analysis URL. */
+    @Nullable public final String analysisUrl;
+
+    /** Adjusted rating. */
+    @Nullable public final Double adjustedRating;
+
+    /** Whether or not it is a sponsored recommendation. */
+    @Nullable public final Boolean sponsored;
+
+    /** Url of product recommendation image. */
+    @Nullable public final String imageUrl;
+
+    /** Unique identifier for the ad entity. */
+    @Nullable public final String aid;
+
+    /** Url of recommended product. */
+    @Nullable public final String url;
+
+    /** Name of recommended product. */
+    @Nullable public final String name;
+
+    /** Grade of recommended product. */
+    @Nullable public final String grade;
+
+    /** Price of recommended product. */
+    @Nullable public final String price;
+
+    /** Currency of recommended product. */
+    @Nullable public final String currency;
+
+    /* package */ Recommendation(@NonNull final GeckoBundle message) {
+      analysisUrl = message.getString("analysis_url");
+      adjustedRating = message.getDouble("adjusted_rating");
+      sponsored = message.getBoolean("sponsored");
+      imageUrl = message.getString("image_url");
+      aid = message.getString("aid");
+      url = message.getString("url");
+      name = message.getString("name");
+      grade = message.getString("grade");
+      price = message.getString("price");
+      currency = message.getString("currency");
+    }
+
+    /** Empty constructor for tests. */
+    protected Recommendation() {
+      analysisUrl = "";
+      adjustedRating = 0.0;
+      sponsored = false;
+      imageUrl = "";
+      aid = "";
+      url = "";
+      name = "";
+      grade = "";
+      price = "";
+      currency = "";
     }
   }
 
