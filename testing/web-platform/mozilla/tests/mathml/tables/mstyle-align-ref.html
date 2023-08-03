@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>align attribute on mstyle/math</title>
+<link rel="match" href="mstyle-align-ref.html" />
+<meta name="assert" content="align attribute on mstyle/math does not apply to mtable descendants." />
+<body>
+  <math align="baseline">
+    <mstyle align="baseline">
+      <mrow>
+        <mtext>_</mtext>
+        <mtable>
+          <mtr>
+            <mtd>
+              <mtext>&#x2015;</mtext>
+            </mtd>
+          </mtr>
+          <mtr>
+            <mtd>
+              <mtext>&#x2015;</mtext>
+            </mtd>
+          </mtr>
+        </mtable>
+        <mtext>_</mtext>
+      </mrow>
+    </mstyle>
+  </math>
+</body>

@@ -29,3 +29,8 @@ any specification:
    [table features](https://www.w3.org/TR/MathML3/chapter3.html#presm.tabmat)
    that are in the initial version of MathML Core.
    See [issue 125](https://github.com/w3c/mathml-core/issues/125).
+
+- `whitespace-trimming`: Tests for
+   [whitespace trimming in token elements](https://www.w3.org/TR/MathML3/chapter2.html#fund.collapse)
+   which is not described in the initial version of MathML Core.
+   See [issue 149](https://github.com/w3c/mathml-core/issues/149).

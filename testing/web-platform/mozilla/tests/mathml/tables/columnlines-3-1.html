@@ -1,0 +1,49 @@
+﻿<!-- -*- mode: HTML; tab-width: 2; indent-tabs-mode: nil; -*- -->
+<!-- vim: set tabstop=2 expandtab shiftwidth=2 textwidth=80:  -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>mtable frame</title>
+    <!-- Copyright (c) 2011 Design Science, Inc.
+         License: Apache License 2.0 -->
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="mismatch" href="columnlines-3-1-ref.html"/>
+  </head>
+
+  <body>
+
+  <!-- We assume there is a gap of more than 1px between dashes. Hence
+       putting two dashed lines with only one pixel of difference in their
+       vertical coordinates should not render the same as one dashed line
+       alone. The opposite is true for continuous line.
+       The red squares allow to ignore the difference at the bounds -->
+
+  <div style="position: absolute; top: 5px; left: 5px;">
+    <math>
+      <mtable  columnlines="dashed">
+        <mtr>
+          <mtd><mspace height="150px"></mspace></mtd>
+          <mtd><mspace height="150px"></mspace></mtd>
+        </mtr>
+      </mtable>
+    </math>
+  </div>
+
+  <div style="position: absolute; top: 6px; left: 5px;">
+    <math>
+      <mtable columnlines="dashed">
+        <mtr>
+          <mtd><mspace height="150px"></mspace></mtd>
+          <mtd><mspace height="150px"></mspace></mtd>
+        </mtr>
+      </mtable>
+    </math>
+  </div>
+
+  <div style="position: absolute; top: 5px; left: 0px;
+              width: 50px; height: 50px; background: red;"></div>
+
+  <div style="position: absolute; top: 115px; left: 0px;
+              width: 50px; height: 55px; background: red;"></div>
+  </body>
+</html>
