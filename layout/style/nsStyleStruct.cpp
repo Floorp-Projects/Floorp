@@ -2184,7 +2184,7 @@ nsStyleDisplay::nsStyleDisplay()
       mOffsetDistance(LengthPercentage::Zero()),
       mOffsetRotate{true, StyleAngle{0.0}},
       mOffsetAnchor(StylePositionOrAuto::Auto()),
-      mOffsetPosition(StyleOffsetPosition::Auto()),
+      mOffsetPosition(StyleOffsetPosition::Normal()),
       mTransformOrigin{LengthPercentage::FromPercentage(0.5),
                        LengthPercentage::FromPercentage(0.5),
                        {0.}},
