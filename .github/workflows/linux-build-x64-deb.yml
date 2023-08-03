@@ -107,13 +107,15 @@ jobs:
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
         export WORKDIR=`pwd`
-        export DISPVER=`cat browser/config/version.txt`
+        export DISPVER=`cat browser/config/version_display.txt`
+        export VER=`cat browser/config/version.txt`
         export DEBWORK=$WORKDIR/floorp-$DISPVER
         mkdir -p $DEBWORK/usr/lib/
         cd $DEBWORK/usr/lib/
         mkdir -p floorp-addons/distribution/extensions
         mkdir floorp-addons/extensions
         mkdir floorp-addons/plugins
+        mv $WORKDIR/obj-x86_64-pc-linux-gnu/dist/floorp-$VER.en-US.linux-x86_64.tar.bz2 $WORKDIR/obj-x86_64-pc-linux-gnu/dist/floorp-$DISPVER.en-US.linux-x86_64.tar.bz2
         tar -xjvf $WORKDIR/obj-x86_64-pc-linux-gnu/dist/floorp-$DISPVER.en-US.linux-x86_64.tar.bz2
         cd ..
         mkdir bin
