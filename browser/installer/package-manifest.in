@@ -108,12 +108,12 @@
 @BINPATH@/@DLL_PREFIX@mozgtk@DLL_SUFFIX@
 #ifdef MOZ_WAYLAND
 @BINPATH@/@DLL_PREFIX@mozwayland@DLL_SUFFIX@
+#endif
 #ifdef MOZ_ENABLE_V4L2
 @BINPATH@/v4l2test
 #endif
 #ifdef MOZ_ENABLE_VAAPI
 @BINPATH@/vaapitest
-#endif
 #endif
 #endif
 
