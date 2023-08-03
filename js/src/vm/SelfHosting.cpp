@@ -2792,6 +2792,13 @@ static bool GetComputedIntrinsic(JSContext* cx, Handle<PropertyName*> name,
     }
     cx->global()->setComputedIntrinsicsHolder(computedIntrinsicsHolder);
 
+    // Disable the interrupt callback while executing the top-level script.
+    // This prevents recursive calls to GetComputedIntrinsic through the
+    // interrupt callback.
+    bool hadInterruptsDisabled = JS_DisableInterruptCallback(cx);
+    auto resetInterrupts = mozilla::MakeScopeExit(
+        [&]() { JS_ResetInterruptCallback(cx, hadInterruptsDisabled); });
+
     // Attempt to execute the top-level script. If they fails to run to
     // successful completion, throw away the holder to avoid a partial
     // initialization state.
