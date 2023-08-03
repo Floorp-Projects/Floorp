@@ -672,7 +672,6 @@ export const LoginHelper = {
    * Strip out things like the userPass portion and handle javascript:.
    */
   getLoginOrigin(uriString, allowJS = false) {
-    let realm = "";
     try {
       const mozProxyRegex = /^moz-proxy:\/\//i;
       const isMozProxy = !!uriString.match(mozProxyRegex);
@@ -685,26 +684,16 @@ export const LoginHelper = {
         );
       }
 
-      let uri = Services.io.newURI(uriString);
-
+      const uri = Services.io.newURI(uriString);
       if (allowJS && uri.scheme == "javascript") {
         return "javascript:";
       }
 
       // Build this manually instead of using prePath to avoid including the userPass portion.
-      realm = uri.scheme + "://" + uri.displayHostPort;
-    } catch (e) {
-      // bug 159484 - disallow url types that don't support a hostPort.
-      // (although we handle "javascript:..." as a special case above.)
-      if (uriString && !uriString.startsWith("data")) {
-        lazy.log.warn(
-          `Couldn't parse specified uri ${uriString} with error ${e.name}`
-        );
-      }
-      realm = null;
+      return uri.scheme + "://" + uri.displayHostPort;
+    } catch {
+      return null;
     }
-
-    return realm;
   },
 
   getFormActionOrigin(form) {
