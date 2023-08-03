@@ -5316,10 +5316,17 @@ AMBrowserExtensionsImport = {
     // might not have as many mapped add-ons as extension IDs because not all
     // browser extensions will be mapped to Firefox add-ons.
     try {
-      importedAddons = await this.addonRepository.getMappedAddons(
-        browserId,
-        extensionIDs
-      );
+      let matchedIDs = [];
+      let unmatchedIDs = [];
+
+      ({
+        addons: importedAddons,
+        matchedIDs,
+        unmatchedIDs,
+      } = await this.addonRepository.getMappedAddons(browserId, extensionIDs));
+
+      Glean.browserMigration.matchedExtensions.set(matchedIDs);
+      Glean.browserMigration.unmatchedExtensions.set(unmatchedIDs);
     } catch (err) {
       Cu.reportError(err);
     }
