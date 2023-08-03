@@ -83,6 +83,9 @@ static int cubeb_mock_stream_start(cubeb_stream* stream);
 
 static int cubeb_mock_stream_stop(cubeb_stream* stream);
 
+static int cubeb_mock_stream_get_position(cubeb_stream* stream,
+                                          uint64_t* position);
+
 static void cubeb_mock_stream_destroy(cubeb_stream* stream);
 
 static char const* cubeb_mock_get_backend_id(cubeb* context);
@@ -119,7 +122,7 @@ cubeb_ops const mock_ops = {
     /*.stream_destroy =*/cubeb_mock_stream_destroy,
     /*.stream_start =*/cubeb_mock_stream_start,
     /*.stream_stop =*/cubeb_mock_stream_stop,
-    /*.stream_get_position =*/NULL,
+    /*.stream_get_position =*/cubeb_mock_stream_get_position,
     /*.stream_get_latency =*/NULL,
     /*.stream_get_input_latency =*/NULL,
     /*.stream_set_volume =*/cubeb_mock_stream_set_volume,
@@ -156,6 +159,7 @@ class MockCubebStream {
 
   int Start();
   int Stop();
+  uint64_t Position();
   void Destroy();
   int RegisterDeviceChangedCallback(
       cubeb_device_changed_callback aDeviceChangedCallback);
@@ -243,6 +247,7 @@ class MockCubebStream {
   std::atomic_bool mFastMode{false};
   std::atomic_bool mForceErrorState{false};
   std::atomic_bool mForceDeviceChanged{false};
+  std::atomic<uint64_t> mPosition{0};
   AudioGenerator<AudioDataValue> mAudioGenerator;
   AudioVerifier<AudioDataValue> mAudioVerifier;
 
@@ -321,6 +326,9 @@ class MockCubeb {
   // collection invalidation callback, to be able to test the fallback path.
   void SetSupportDeviceChangeCallback(bool aSupports);
 
+  // This causes the next stream init with this context to return failure;
+  void ForceStreamInitError();
+
   // Makes MockCubebStreams starting after this point wait for AllowStart().
   // Callers must ensure they get a hold of the stream through StreamInitEvent
   // to be able to start them.
@@ -398,6 +406,7 @@ class MockCubeb {
   // notification via a system callback. If not, Gecko is expected to re-query
   // the list every time.
   bool mSupportsDeviceCollectionChangedCallback = true;
+  Atomic<bool> mStreamInitErrorState;
   // Whether new MockCubebStreams should be frozen on start.
   Atomic<bool> mStreamStartFreezeEnabled{false};
   // Whether the audio thread is forced, i.e., whether it remains active even
@@ -458,6 +467,11 @@ int cubeb_mock_stream_start(cubeb_stream* stream) {
 
 int cubeb_mock_stream_stop(cubeb_stream* stream) {
   return MockCubebStream::AsMock(stream)->Stop();
+}
+
+int cubeb_mock_stream_get_position(cubeb_stream* stream, uint64_t* position) {
+  *position = MockCubebStream::AsMock(stream)->Position();
+  return CUBEB_OK;
 }
 
 void cubeb_mock_stream_destroy(cubeb_stream* stream) {
