@@ -1,0 +1,50 @@
+---
+app_version: 118.0a1
+backstop: true
+base_ref: default
+base_repository: https://hg.mozilla.org/mozilla-unified
+base_rev: b96c0ffb4b796eff3dc03306c87ad7ab13f5d3f3
+build_date: 1691013630
+build_number: 1
+do_not_optimize: []
+enable_always_target:
+    - docker-image
+existing_tasks: {}
+filters:
+    - target_tasks_method
+head_ref: 4e8d25555f9d9253daae12f37e70b494fe6bc018
+head_repository: https://hg.mozilla.org/mozilla-central
+head_rev: 4e8d25555f9d9253daae12f37e70b494fe6bc018
+head_tag: ''
+hg_branch: default
+level: '3'
+message: ''
+moz_build_date: '20230802220030'
+next_version: null
+optimize_strategies: null
+optimize_target_tasks: true
+owner: cron@noreply.mozilla.org
+phabricator_diff: null
+project: mozilla-central
+pushdate: 1691013630
+pushlog_id: '41073'
+release_enable_emefree: false
+release_enable_partner_attribution: false
+release_enable_partner_repack: false
+release_eta: ''
+release_history: {}
+release_partner_build_number: 1
+release_partner_config: {}
+release_partners: []
+release_product: null
+release_type: nightly
+repository_type: hg
+required_signoffs: []
+signoff_urls: {}
+target_tasks_method: system_symbols
+tasks_for: cron
+test_manifest_loader: default
+try_mode: null
+try_options: null
+try_task_config: {}
+version: 118.0a1
