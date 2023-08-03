@@ -10,11 +10,13 @@
   --message-bar-background-color: var(--in-content-box-info-background);
   --message-bar-text-color: var(--in-content-text-color);
   /* The default values of --in-content-button* are sufficient, even for dark themes */
+
+  --message-bar-border-radius: var(--border-radius-small);
 }
 
 :host {
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--message-bar-border-radius);
 }
 
 /* Make the host to behave as a block by default, but allow hidden to hide it. */
@@ -32,7 +34,7 @@
   padding-inline: 16px 8px;
   padding-block: 8px;
 
-  border-radius: 4px;
+  border-radius: var(--message-bar-border-radius);
 
   display: flex;
   gap: 8px;
@@ -131,7 +133,7 @@
 
 .ghost-button {
   border: none;
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
 }
 
 .ghost-button:enabled:hover {
