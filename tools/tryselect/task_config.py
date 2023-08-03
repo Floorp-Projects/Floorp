@@ -104,7 +104,7 @@ class Pernosco(TryConfig):
                 "dest": "pernosco",
                 "action": "store_false",
                 "default": None,
-                "help": "Opt-out of the Pernosco debugging service (if you are on the whitelist).",
+                "help": "Opt-out of the Pernosco debugging service (if you are on the include list).",
             },
         ],
     ]
