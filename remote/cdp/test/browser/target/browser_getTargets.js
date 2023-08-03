@@ -225,17 +225,11 @@ add_task(
     for (const filter of [null, true, 1, "foo", {}]) {
       info(`Checking filter with invalid value: ${filter}`);
 
-      let errorThrown = "";
-      try {
-        await Target.getTargets({
+      await Assert.rejects(
+        Target.getTargets({
           filter,
-        });
-      } catch (e) {
-        errorThrown = e.message;
-      }
-
-      ok(
-        errorThrown.match(/filter: array value expected/),
+        }),
+        /filter: array value expected/,
         `Filter fails for invalid type: ${filter}`
       );
     }
@@ -243,17 +237,11 @@ add_task(
     for (const filterEntry of [null, true, 1, "foo", []]) {
       info(`Checking filter entry with invalid value: ${filterEntry}`);
 
-      let errorThrown = "";
-      try {
-        await Target.getTargets({
+      await Assert.rejects(
+        Target.getTargets({
           filter: [filterEntry],
-        });
-      } catch (e) {
-        errorThrown = e.message;
-      }
-
-      ok(
-        errorThrown.match(/filter: object values expected in array/),
+        }),
+        /filter: object values expected in array/,
         `Filter entry fails for invalid type: ${filterEntry}`
       );
     }
@@ -261,17 +249,11 @@ add_task(
     for (const type of [null, true, 1, [], {}]) {
       info(`Checking filter entry with type as invalid value: ${type}`);
 
-      let errorThrown = "";
-      try {
-        await Target.getTargets({
+      await Assert.rejects(
+        Target.getTargets({
           filter: [{ type }],
-        });
-      } catch (e) {
-        errorThrown = e.message;
-      }
-
-      ok(
-        errorThrown.match(/filter: type: string value expected/),
+        }),
+        /filter: type: string value expected/,
         `Filter entry type fails for invalid type: ${type}`
       );
     }
@@ -279,17 +261,11 @@ add_task(
     for (const exclude of [null, 1, "foo", [], {}]) {
       info(`Checking filter entry with exclude as invalid value: ${exclude}`);
 
-      let errorThrown = "";
-      try {
-        await Target.getTargets({
+      await Assert.rejects(
+        Target.getTargets({
           filter: [{ exclude }],
-        });
-      } catch (e) {
-        errorThrown = e.message;
-      }
-
-      ok(
-        errorThrown.match(/filter: exclude: boolean value expected/),
+        }),
+        /filter: exclude: boolean value expected/,
         `Filter entry exclude for invalid type: ${exclude}`
       );
     }

@@ -10,14 +10,9 @@ add_task(async function objectIdInvalidTypes({ client }) {
   const { DOM } = client;
 
   for (const objectId of [null, true, 1, [], {}]) {
-    let errorThrown = "";
-    try {
-      await DOM.describeNode({ objectId });
-    } catch (e) {
-      errorThrown = e.message;
-    }
-    ok(
-      errorThrown.match(/objectId: string value expected/),
+    await Assert.rejects(
+      DOM.describeNode({ objectId }),
+      /objectId: string value expected/,
       `Fails with invalid type: ${objectId}`
     );
   }
@@ -26,15 +21,10 @@ add_task(async function objectIdInvalidTypes({ client }) {
 add_task(async function objectIdUnknownValue({ client }) {
   const { DOM } = client;
 
-  let errorThrown = "";
-  try {
-    await DOM.describeNode({ objectId: "foo" });
-  } catch (e) {
-    errorThrown = e.message;
-  }
-  ok(
-    errorThrown.match(/Could not find object with given id/),
-    "Fails with unknown objectId"
+  await Assert.rejects(
+    DOM.describeNode({ objectId: "foo" }),
+    /Could not find object with given id/,
+    `Fails with unknown objectId`
   );
 });
 
@@ -46,15 +36,10 @@ add_task(async function objectIdIsNotANode({ client }) {
     expression: "[42]",
   });
 
-  let errorThrown = "";
-  try {
-    await DOM.describeNode({ objectId: result.objectId });
-  } catch (e) {
-    errorThrown = e.message;
-  }
-  ok(
-    errorThrown.match(/Object id doesn't reference a Node/),
-    "Fails if objectId doesn't reference a DOM node"
+  await Assert.rejects(
+    DOM.describeNode({ objectId: result.objectId }),
+    /Object id doesn't reference a Node/,
+    `Fails if objectId doesn't reference a DOM node`
   );
 });
 

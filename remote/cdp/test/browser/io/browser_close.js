@@ -19,28 +19,20 @@ add_task(async function unknownHandle({ client }) {
   const { IO } = client;
   const handle = "1000000";
 
-  try {
-    await IO.close({ handle });
-    ok(false, "Close shouldn't pass");
-  } catch (e) {
-    ok(
-      e.message.startsWith(`Invalid stream handle`),
-      "Error contains expected message"
-    );
-  }
+  await Assert.rejects(
+    IO.close({ handle }),
+    err => err.message.includes(`Invalid stream handle`),
+    "Error contains expected message"
+  );
 });
 
 add_task(async function invalidHandleTypes({ client }) {
   const { IO } = client;
   for (const handle of [null, true, 1, [], {}]) {
-    try {
-      await IO.close({ handle });
-      ok(false, "Close shouldn't pass");
-    } catch (e) {
-      ok(
-        e.message.startsWith(`handle: string value expected`),
-        "Error contains expected message"
-      );
-    }
+    await Assert.rejects(
+      IO.close({ handle }),
+      err => err.message.includes(`handle: string value expected`),
+      "Error contains expected message"
+    );
   }
 });

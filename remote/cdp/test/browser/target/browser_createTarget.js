@@ -10,13 +10,11 @@ add_task(
   async function raisesWithoutArguments({ client }) {
     const { Target } = client;
 
-    let exceptionThrown = false;
-    try {
-      await Target.createTarget();
-    } catch (e) {
-      exceptionThrown = true;
-    }
-    ok(exceptionThrown, "createTarget raised error without a URL");
+    await Assert.rejects(
+      Target.createTarget(),
+      err => err.message.includes("url: string value expected"),
+      "createTarget raised error without a URL"
+    );
   },
   { createTab: false }
 );
@@ -28,17 +26,11 @@ add_task(
     for (const url of [null, true, 1, [], {}]) {
       info(`Checking url with invalid value: ${url}`);
 
-      let errorThrown = "";
-      try {
-        await Target.createTarget({
+      await Assert.rejects(
+        Target.createTarget({
           url,
-        });
-      } catch (e) {
-        errorThrown = e.message;
-      }
-
-      ok(
-        errorThrown.match(/url: string value expected/),
+        }),
+        /url: string value expected/,
         `URL fails for invalid type: ${url}`
       );
     }

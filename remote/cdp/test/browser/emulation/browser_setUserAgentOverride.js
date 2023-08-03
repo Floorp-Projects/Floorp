@@ -10,14 +10,9 @@ add_task(async function invalidPlatform({ client }) {
   const userAgent = "Mozilla/5.0 (rv: 23) Romanesco/42.0\n";
 
   for (const platform of [null, true, 1, [], {}]) {
-    let errorThrown = "";
-    try {
-      await Emulation.setUserAgentOverride({ userAgent, platform });
-    } catch (e) {
-      errorThrown = e.message;
-    }
-    ok(
-      errorThrown.match(/platform: string value expected/),
+    await Assert.rejects(
+      Emulation.setUserAgentOverride({ userAgent, platform }),
+      /platform: string value expected/,
       `Fails with invalid type: ${platform}`
     );
   }
@@ -49,7 +44,8 @@ add_task(async function setAndResetUserAgent({ client }) {
   );
 });
 
-add_task(async function invalidUserAgent({ Emulation }) {
+add_task(async function invalidUserAgent({ client }) {
+  const { Emulation } = client;
   const userAgent = "Mozilla/5.0 (rv: 23) Romanesco/42.0\n";
 
   await loadURL(DOC);
@@ -59,13 +55,11 @@ add_task(async function invalidUserAgent({ Emulation }) {
     "Custom user agent hasn't been set"
   );
 
-  let errorThrown = false;
-  try {
-    await Emulation.setUserAgentOverride({ userAgent });
-  } catch (e) {
-    errorThrown = true;
-  }
-  ok(errorThrown, "Invalid user agent format raised error");
+  await Assert.rejects(
+    Emulation.setUserAgentOverride({ userAgent }),
+    err => err.message.includes("Invalid characters found in userAgent"),
+    "Invalid user agent format raised error"
+  );
 });
 
 add_task(async function setAndResetPlatform({ client }) {

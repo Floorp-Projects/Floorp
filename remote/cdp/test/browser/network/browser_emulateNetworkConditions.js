@@ -36,15 +36,9 @@ function add_networking_task(taskFn) {
 add_networking_task(async function offlineWithoutArguments({ client }) {
   const { Network } = client;
 
-  let errorThrown = "";
-  try {
-    await Network.emulateNetworkConditions();
-  } catch (e) {
-    errorThrown = e.message;
-  }
-
-  ok(
-    errorThrown.match(/offline: boolean value expected/),
+  await Assert.rejects(
+    Network.emulateNetworkConditions(),
+    /offline: boolean value expected/,
     "Fails without any arguments"
   );
 });
@@ -52,15 +46,9 @@ add_networking_task(async function offlineWithoutArguments({ client }) {
 add_networking_task(async function offlineWithEmptyArguments({ client }) {
   const { Network } = client;
 
-  let errorThrown = "";
-  try {
-    await Network.emulateNetworkConditions({});
-  } catch (e) {
-    errorThrown = e.message;
-  }
-
-  ok(
-    errorThrown.match(/offline: boolean value expected/),
+  await Assert.rejects(
+    Network.emulateNetworkConditions({}),
+    /offline: boolean value expected/,
     "Fails with only empty arguments"
   );
 });
@@ -70,17 +58,10 @@ add_networking_task(async function offlineWithInvalidArguments({ client }) {
   const testTable = [null, undefined, 1, "foo", [], {}];
 
   for (const testCase of testTable) {
-    let errorThrown = "";
-    try {
-      await Network.emulateNetworkConditions({ offline: testCase });
-    } catch (e) {
-      errorThrown = e.message;
-    }
-
     const testType = typeof testCase;
-
-    ok(
-      errorThrown.match(/offline: boolean value expected/),
+    await Assert.rejects(
+      Network.emulateNetworkConditions({ offline: testCase }),
+      /offline: boolean value expected/,
       `Fails with ${testType}-type argument for offline`
     );
   }

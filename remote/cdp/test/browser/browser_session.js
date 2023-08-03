@@ -7,16 +7,17 @@ add_task(async function ({ CDP }) {
   const { webSocketDebuggerUrl } = await CDP.Version();
   const client = await CDP({ target: webSocketDebuggerUrl });
 
-  try {
-    await client.send("Hoobaflooba");
-  } catch (e) {
-    ok(e.message.match(/Invalid method format/));
-  }
-  try {
-    await client.send("Hooba.flooba");
-  } catch (e) {
-    ok(e.message.match(/UnknownMethodError/));
-  }
+  await Assert.rejects(
+    client.send("Hoobaflooba"),
+    /Invalid method format/,
+    `Fails with invalid method format`
+  );
+
+  await Assert.rejects(
+    client.send("Hooba.flooba"),
+    /UnknownMethodError/,
+    `Fails with UnknownMethodError`
+  );
 
   await client.close();
 });

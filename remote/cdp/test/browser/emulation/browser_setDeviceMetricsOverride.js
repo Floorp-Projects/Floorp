@@ -210,13 +210,14 @@ add_task(async function failsWithNegativeWidth({ client }) {
     deviceScaleFactor: 1.0,
   };
 
-  let errorThrown = false;
-  try {
-    await Emulation.setDeviceMetricsOverride(overrideSettings);
-  } catch (e) {
-    errorThrown = true;
-  }
-  ok(errorThrown, "Negative width raised error");
+  await Assert.rejects(
+    Emulation.setDeviceMetricsOverride(overrideSettings),
+    err =>
+      err.message.includes(
+        "Width and height values must be positive, not greater than 10000000"
+      ),
+    "Negative width raised error"
+  );
 
   await loadURL(DOC_SMALL);
   const updatedLayoutMetrics = await Page.getLayoutMetrics();
@@ -247,13 +248,14 @@ add_task(async function failsWithTooLargeWidth({ client }) {
     deviceScaleFactor: 1.0,
   };
 
-  let errorThrown = false;
-  try {
-    await Emulation.setDeviceMetricsOverride(overrideSettings);
-  } catch (e) {
-    errorThrown = true;
-  }
-  ok(errorThrown, "Too large width raised error");
+  await Assert.rejects(
+    Emulation.setDeviceMetricsOverride(overrideSettings),
+    err =>
+      err.message.includes(
+        "Width and height values must be positive, not greater than 10000000"
+      ),
+    "Too large width raised error"
+  );
 
   await loadURL(DOC_SMALL);
   const updatedLayoutMetrics = await Page.getLayoutMetrics();
@@ -284,14 +286,14 @@ add_task(async function failsWithNegativeHeight({ client }) {
     deviceScaleFactor: 1.0,
   };
 
-  let errorThrown = false;
-  try {
-    await Emulation.setDeviceMetricsOverride(overrideSettings);
-  } catch (e) {
-    errorThrown = true;
-  }
-  ok(errorThrown, "Negative height raised error");
-
+  await Assert.rejects(
+    Emulation.setDeviceMetricsOverride(overrideSettings),
+    err =>
+      err.message.includes(
+        "Width and height values must be positive, not greater than 10000000"
+      ),
+    "Negative height raised error"
+  );
   await loadURL(DOC_SMALL);
   const updatedLayoutMetrics = await Page.getLayoutMetrics();
 
@@ -320,14 +322,14 @@ add_task(async function failsWithTooLargeHeight({ client }) {
     height: MAX_WINDOW_SIZE + 1,
     deviceScaleFactor: 1.0,
   };
-
-  let errorThrown = false;
-  try {
-    await Emulation.setDeviceMetricsOverride(overrideSettings);
-  } catch (e) {
-    errorThrown = true;
-  }
-  ok(errorThrown, "Too large height raised error");
+  await Assert.rejects(
+    Emulation.setDeviceMetricsOverride(overrideSettings),
+    err =>
+      err.message.includes(
+        "Width and height values must be positive, not greater than 10000000"
+      ),
+    "Too large height raised error"
+  );
 
   await loadURL(DOC_SMALL);
   const updatedLayoutMetrics = await Page.getLayoutMetrics();
@@ -378,13 +380,11 @@ add_task(async function failsWithNegativeRatio({ client }) {
     deviceScaleFactor: -1,
   };
 
-  let errorThrown = false;
-  try {
-    await Emulation.setDeviceMetricsOverride(overrideSettings);
-  } catch (e) {
-    errorThrown = true;
-  }
-  ok(errorThrown, "Negative device scale factor raised error");
+  await Assert.rejects(
+    Emulation.setDeviceMetricsOverride(overrideSettings),
+    err => err.message.includes("deviceScaleFactor: must be positive"),
+    "Negative device scale factor raised error"
+  );
 
   await loadURL(DOC_SMALL);
   const updatedLayoutMetrics = await Page.getLayoutMetrics();

@@ -15,19 +15,19 @@ add_task(async function test_module_error() {
   const rootMessageHandler = createRootMessageHandler("session-id-error");
 
   info("Call a module method which will throw");
-  try {
-    await rootMessageHandler.handleCommand({
+
+  await Assert.rejects(
+    rootMessageHandler.handleCommand({
       moduleName: "commandwindowglobalonly",
       commandName: "testError",
       destination: {
         type: WindowGlobalMessageHandler.type,
         id: browsingContextId,
       },
-    });
-    ok(false, "Error from window global module was not caught");
-  } catch (e) {
-    ok(true, "Error from window global module caught");
-  }
+    }),
+    err => err.message.includes("error-from-module"),
+    "Error from window global module caught"
+  );
 
   rootMessageHandler.destroy();
 });
