@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.chunk_partners:transforms
-    - gecko_taskgraph.transforms.name_sanity:transforms
-    - gecko_taskgraph.transforms.repackage_signing_partner:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.chunk_partners
+    - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.repackage_signing_partner
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
     - release-partner-repack-chunking-dummy  # Linux
@@ -21,3 +22,7 @@ only-for-build-platforms:
     - win32-shippable/opt
     - win64-shippable/opt
     - win64-aarch64-shippable/opt
+
+jobs:
+    release-partner-repack-repackage-signing:
+        from-deps: {}
