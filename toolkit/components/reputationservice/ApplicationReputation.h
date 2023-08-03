@@ -27,9 +27,9 @@ class ApplicationReputationService final
  public:
   static const char* const kNonBinaryExecutables[5];
 #ifdef XP_WIN
-  static const char* const kBinaryFileExtensions[186];
-#else
   static const char* const kBinaryFileExtensions[185];
+#else
+  static const char* const kBinaryFileExtensions[184];
 #endif
 
   static already_AddRefed<ApplicationReputationService> GetSingleton();

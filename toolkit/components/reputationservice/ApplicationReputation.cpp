@@ -510,11 +510,11 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".xar",   // MS Excel
     ".xbap",  // XAML Browser Application
     ".xht", ".xhtm", ".xhtml",
-    ".xip",     // Mac archive
-    ".xla",     // MS Excel
-    ".xlam",    // MS Excel
-    ".xldm",    // MS Excel
-    ".xll",     // MS Excel
+    ".xip",   // Mac archive
+    ".xla",   // MS Excel
+    ".xlam",  // MS Excel
+    ".xldm",  // MS Excel
+    //".xll", exec  // MS Excel
     ".xlm",     // MS Excel
     ".xls",     // MS Excel
     ".xlsb",    // MS Excel
