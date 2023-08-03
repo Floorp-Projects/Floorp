@@ -34,6 +34,15 @@ using namespace mozilla::a11y;
 
 static const VARIANT kVarChildIdSelf = {{{VT_I4}}};
 
+// Used internally to safely get an MsaaAccessible from a COM pointer provided
+// to us by a client.
+static const GUID IID_MsaaAccessible = {
+    /* a94aded3-1a9c-4afc-a32c-d6b5c010046b */
+    0xa94aded3,
+    0x1a9c,
+    0x4afc,
+    {0xa3, 0x2c, 0xd6, 0xb5, 0xc0, 0x10, 0x04, 0x6b}};
+
 MsaaIdGenerator MsaaAccessible::sIDGen;
 ITypeInfo* MsaaAccessible::gTypeInfo = nullptr;
 
@@ -470,6 +479,16 @@ MsaaAccessible* MsaaAccessible::GetFrom(Accessible* aAcc) {
   return static_cast<AccessibleWrap*>(aAcc)->GetMsaa();
 }
 
+/* static */
+Accessible* MsaaAccessible::GetAccessibleFrom(IUnknown* aUnknown) {
+  RefPtr<MsaaAccessible> msaa;
+  aUnknown->QueryInterface(IID_MsaaAccessible, getter_AddRefs(msaa));
+  if (!msaa) {
+    return nullptr;
+  }
+  return msaa->Acc();
+}
+
 // IUnknown methods
 STDMETHODIMP
 MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
@@ -489,6 +508,8 @@ MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
   // even if the Accessible is dead.
   if (IID_IUnknown == iid) {
     *ppv = static_cast<IAccessible*>(this);
+  } else if (IID_MsaaAccessible == iid) {
+    *ppv = static_cast<MsaaAccessible*>(this);
   } else if (IID_IDispatch == iid || IID_IAccessible == iid) {
     *ppv = static_cast<IAccessible*>(this);
   } else if (IID_IServiceProvider == iid) {

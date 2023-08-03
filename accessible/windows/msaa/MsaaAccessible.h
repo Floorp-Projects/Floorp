@@ -59,6 +59,8 @@ class MsaaAccessible : public ia2Accessible,
    */
   static ITypeInfo* GetTI(LCID lcid);
 
+  static Accessible* GetAccessibleFrom(IUnknown* aUnknown);
+
   DECL_IUNKNOWN
 
   // IAccessible
