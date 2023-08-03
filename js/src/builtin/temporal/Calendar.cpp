@@ -2604,9 +2604,6 @@ static bool ISOFieldKeysToIgnore(JSContext* cx, const PropertyVector& keys,
   // Step 1. (Not applicable in our implementation.)
 
   if (!ignoredKeys.reserve(keys.length())) {
-    // NB: GCHashSet::reserve() doesn't report OOM in all cases, so we need to
-    // report it manually.
-    ReportOutOfMemory(cx);
     return false;
   }
 
@@ -2682,9 +2679,6 @@ static PlainObject* BuiltinCalendarMergeFields(
   // Step 12.
   Rooted<PropertyHashSet> ignoredKeys(cx, PropertyHashSet(cx));
   if (!ignoredKeys.reserve(keys.length())) {
-    // NB: GCHashSet::reserve() doesn't report OOM in all cases, so we need to
-    // report it manually.
-    ReportOutOfMemory(cx);
     return nullptr;
   }
 
