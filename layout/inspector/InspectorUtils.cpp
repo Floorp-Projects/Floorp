@@ -534,15 +534,9 @@ void InspectorUtils::GetCSSValuesForProperty(GlobalObject& aGlobalObject,
 }
 
 /* static */
-void InspectorUtils::RgbToColorName(GlobalObject& aGlobalObject, uint8_t aR,
-                                    uint8_t aG, uint8_t aB,
-                                    nsAString& aColorName) {
-  const char* color = NS_RGBToColorName(NS_RGB(aR, aG, aB));
-  if (!color) {
-    aColorName.Truncate();
-  } else {
-    aColorName.AssignASCII(color);
-  }
+void InspectorUtils::RgbToColorName(GlobalObject&, uint8_t aR, uint8_t aG,
+                                    uint8_t aB, nsACString& aColorName) {
+  Servo_SlowRgbToColorName(aR, aG, aB, &aColorName);
 }
 
 /* static */

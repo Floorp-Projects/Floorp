@@ -20,8 +20,6 @@ EXPORTS += [
     "gfxTelemetry.h",
     "nsBoundingMetrics.h",
     "nsColor.h",
-    "nsColorNameList.h",
-    "nsColorNames.h",
     "nsCoord.h",
     "nsDeviceContext.h",
     "nsFont.h",

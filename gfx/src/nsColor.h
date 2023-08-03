@@ -80,15 +80,4 @@ bool NS_LooseHexToRGB(const nsString& aBuf, nscolor* aResult);
 // There is no function to translate a color to a hex string, because
 // the hex-string syntax does not support transparency.
 
-// Translate a color name to a color. Return true if it parses ok,
-// otherwise return false.
-bool NS_ColorNameToRGB(const nsAString& aBuf, nscolor* aResult);
-
-// Return a color name for the given nscolor.  If there is no color
-// name for it, returns null.  If there are multiple possible color
-// names for the given color, the first one in nsColorNameList.h
-// (which is generally the first one in alphabetical order) will be
-// returned.
-const char* NS_RGBToColorName(nscolor aColor);
-
 #endif /* nsColor_h___ */

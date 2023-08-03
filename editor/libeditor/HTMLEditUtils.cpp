@@ -2380,8 +2380,11 @@ bool HTMLEditUtils::MaybeCSSSpecificColorValue(const nsAString& aColorValue) {
     return true;
   }
   nscolor color = NS_RGB(0, 0, 0);
-  if (colorValue.IsEmpty() || colorValue.First() == '#' ||
-      NS_ColorNameToRGB(colorValue, &color)) {
+  if (colorValue.IsEmpty() || colorValue.First() == '#') {
+    return false;
+  }
+  const NS_ConvertUTF16toUTF8 colorU8(colorValue);
+  if (Servo_ColorNameToRgb(&colorU8, &color)) {
     return false;
   }
   if (colorValue.LowerCaseEqualsASCII("initial") ||
@@ -2391,7 +2394,7 @@ bool HTMLEditUtils::MaybeCSSSpecificColorValue(const nsAString& aColorValue) {
       colorValue.LowerCaseEqualsASCII("currentcolor")) {
     return true;
   }
-  return ServoCSSParser::IsValidCSSColor(NS_ConvertUTF16toUTF8(colorValue));
+  return ServoCSSParser::IsValidCSSColor(colorU8);
 }
 
 static bool ComputeColor(const nsAString& aColorValue, nscolor* aColor,
