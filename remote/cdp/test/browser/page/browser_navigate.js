@@ -154,26 +154,19 @@ add_task(async function testNotFound({ client }) {
 
 add_task(async function testInvalidURL({ client }) {
   const { Page } = client;
-  let message = "";
+
   for (let url of ["blah.com", "foo", "https\n//", "http", ""]) {
-    message = "";
-    try {
-      await Page.navigate({ url });
-    } catch (e) {
-      message = e.response.message;
-    }
-    ok(message.includes("invalid URL"), `Invalid url ${url} causes error`);
+    await Assert.rejects(
+      Page.navigate({ url }),
+      err => err.message.includes("invalid URL"),
+      `Invalid url ${url} causes error`
+    );
   }
 
   for (let url of [2, {}, true]) {
-    message = "";
-    try {
-      await Page.navigate({ url });
-    } catch (e) {
-      message = e.response.message;
-    }
-    ok(
-      message.includes("string value expected"),
+    await Assert.rejects(
+      Page.navigate({ url }),
+      err => err.message.includes("string value expected"),
       `Invalid url ${url} causes error`
     );
   }

@@ -9,14 +9,9 @@ add_task(async function invalidEnabledType({ client }) {
   const { Emulation } = client;
 
   for (const enabled of [null, "", 1, [], {}]) {
-    let errorThrown = "";
-    try {
-      await Emulation.setTouchEmulationEnabled({ enabled });
-    } catch (e) {
-      errorThrown = e.message;
-    }
-    ok(
-      errorThrown.match(/enabled: boolean value expected/),
+    await Assert.rejects(
+      Emulation.setTouchEmulationEnabled({ enabled }),
+      /enabled: boolean value expected/,
       `Fails with invalid type: ${enabled}`
     );
   }

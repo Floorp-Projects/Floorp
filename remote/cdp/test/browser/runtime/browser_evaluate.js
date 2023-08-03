@@ -10,13 +10,11 @@ add_task(async function contextIdInvalidValue({ client }) {
 
   await enableRuntime(client);
 
-  let errorThrown = "";
-  try {
-    await Runtime.evaluate({ expression: "", contextId: -1 });
-  } catch (e) {
-    errorThrown = e.message;
-  }
-  ok(errorThrown.includes("Cannot find context with specified id"));
+  await Assert.rejects(
+    Runtime.evaluate({ expression: "", contextId: -1 }),
+    err => err.message.includes("Cannot find context with specified id"),
+    "Cannot find context with specified id"
+  );
 });
 
 add_task(async function contextIdNotSpecified({ client }) {

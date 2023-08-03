@@ -9,14 +9,9 @@ add_task(async function toUnknownEntryId({ client }) {
   const { entries } = await Page.getNavigationHistory();
   const ids = entries.map(entry => entry.id);
 
-  let errorThrown = "";
-  try {
-    await Page.navigateToHistoryEntry({ entryId: Math.max(...ids) + 1 });
-  } catch (e) {
-    errorThrown = e.message;
-  }
-  ok(
-    errorThrown.match(/No entry with passed id/),
+  await Assert.rejects(
+    Page.navigateToHistoryEntry({ entryId: Math.max(...ids) + 1 }),
+    /No entry with passed id/,
     "Unknown entry id raised error"
   );
 });

@@ -176,17 +176,15 @@ add_task(async function returnByValueInvalidTypes({ client }) {
   const { id: executionContextId } = await enableRuntime(client);
 
   for (const returnByValue of [null, 1, "foo", [], {}]) {
-    let errorThrown = "";
-    try {
-      await Runtime.callFunctionOn({
+    await Assert.rejects(
+      Runtime.callFunctionOn({
         functionDeclaration: "",
         executionContextId,
         returnByValue,
-      });
-    } catch (e) {
-      errorThrown = e.message;
-    }
-    ok(errorThrown.includes("returnByValue: boolean value expected"));
+      }),
+      err => err.message.includes("returnByValue: boolean value expected"),
+      "returnByValue: boolean value expected"
+    );
   }
 });
 
@@ -201,17 +199,15 @@ add_task(async function returnByValueCyclicValue({ client }) {
   ];
 
   for (const functionDeclaration of functionDeclarations) {
-    let errorThrown;
-    try {
-      await Runtime.callFunctionOn({
+    await Assert.rejects(
+      Runtime.callFunctionOn({
         functionDeclaration,
         executionContextId,
         returnByValue: true,
-      });
-    } catch (e) {
-      errorThrown = e.message;
-    }
-    ok(errorThrown.includes("Object reference chain is too long"));
+      }),
+      err => err.message.includes("Object reference chain is too long"),
+      "Object reference chain is too long"
+    );
   }
 });
 
@@ -227,17 +223,15 @@ add_task(async function returnByValueNotPossible({ client }) {
   ];
 
   for (const functionDeclaration of functionDeclarations) {
-    let errorThrown;
-    try {
-      await Runtime.callFunctionOn({
+    await Assert.rejects(
+      Runtime.callFunctionOn({
         functionDeclaration,
         executionContextId,
         returnByValue: true,
-      });
-    } catch (e) {
-      errorThrown = e.message;
-    }
-    ok(errorThrown.includes("Object couldn't be returned by value"));
+      }),
+      err => err.message.includes("Object couldn't be returned by value"),
+      "Object couldn't be returned by value"
+    );
   }
 });
 

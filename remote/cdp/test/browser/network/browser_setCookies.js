@@ -9,13 +9,11 @@ const DEFAULT_HOST = "example.org";
 add_task(async function failureWithoutArguments({ client }) {
   const { Network } = client;
 
-  let errorThrown = false;
-  try {
-    await Network.setCookies();
-  } catch (e) {
-    errorThrown = true;
-  }
-  ok(errorThrown, "Fails without any arguments");
+  await Assert.rejects(
+    Network.setCookies(),
+    err => err.message.includes("Invalid parameters (cookies: array expected)"),
+    "Fails without any arguments"
+  );
 });
 
 add_task(async function setCookies({ client }) {
@@ -58,13 +56,9 @@ add_task(async function setCookiesWithInvalidField({ client }) {
     },
   ];
 
-  let errorThrown = false;
-  try {
-    await Network.setCookies({ cookies });
-  } catch (e) {
-    errorThrown = true;
-  } finally {
-    Services.cookies.removeAll();
-  }
-  ok(errorThrown, "Fails with an invalid field");
+  await Assert.rejects(
+    Network.setCookies({ cookies }),
+    err => err.message.includes("Invalid cookie fields"),
+    "Fails with an invalid field"
+  );
 });

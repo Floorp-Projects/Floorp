@@ -42,16 +42,11 @@ add_task(async function test_no_retry() {
     // Reloading the tab will reject the pending query with an AbortError.
     await BrowserTestUtils.reloadTab(tab);
 
-    try {
-      await onBlockedOneTime;
-      ok("false", "onBlockedOneTime should not have resolved");
-    } catch (e) {
-      is(
-        e.name,
-        "AbortError",
-        "Caught the expected abort error when reloading"
-      );
-    }
+    await Assert.rejects(
+      onBlockedOneTime,
+      e => e.name == "AbortError",
+      "Caught the expected abort error when reloading"
+    );
   } finally {
     await cleanup(rootMessageHandler, tab);
   }
@@ -146,19 +141,14 @@ add_task(async function test_retry() {
     info("Reload one more time");
     await BrowserTestUtils.reloadTab(tab);
 
-    try {
-      info(
-        "The call to blockedElevenTimes now exceeds the maximum attempts allowed"
-      );
-      await onBlockedElevenTimes;
-      ok("false", "blockedElevenTimes should not have resolved");
-    } catch (e) {
-      is(
-        e.name,
-        "AbortError",
-        "Caught the expected abort error when reloading"
-      );
-    }
+    info(
+      "The call to blockedElevenTimes now exceeds the maximum attempts allowed"
+    );
+    await Assert.rejects(
+      onBlockedElevenTimes,
+      e => e.name == "AbortError",
+      "Caught the expected abort error when reloading"
+    );
   } finally {
     await cleanup(rootMessageHandler, tab);
   }

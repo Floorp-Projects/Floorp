@@ -21,25 +21,24 @@ registerCleanupFunction(() => {
 add_task(async function failureWithoutArguments({ client }) {
   const { Network } = client;
 
-  let errorThrown = false;
-  try {
-    await Network.deleteCookies();
-  } catch (e) {
-    errorThrown = true;
-  }
-  ok(errorThrown, "Fails without any arguments");
+  await Assert.rejects(
+    Network.deleteCookies(),
+    err => err.message.includes("name: string value expected"),
+    "Fails without any arguments"
+  );
 });
 
 add_task(async function failureWithoutDomainOrURL({ client }) {
   const { Network } = client;
 
-  let errorThrown = false;
-  try {
-    await Network.deleteCookies({ name: "foo" });
-  } catch (e) {
-    errorThrown = true;
-  }
-  ok(errorThrown, "Fails without domain or URL");
+  await Assert.rejects(
+    Network.deleteCookies({ name: "foo" }),
+    err =>
+      err.message.includes(
+        "At least one of the url and domain needs to be specified"
+      ),
+    "Fails without domain or URL"
+  );
 });
 
 add_task(async function failureWithInvalidProtocol({ client }) {
@@ -47,13 +46,11 @@ add_task(async function failureWithInvalidProtocol({ client }) {
 
   const FTP_URL = `ftp://${DEFAULT_HOSTNAME}`;
 
-  let errorThrown = false;
-  try {
-    await Network.deleteCookies({ name: "foo", url: FTP_URL });
-  } catch (e) {
-    errorThrown = true;
-  }
-  ok(errorThrown, "Fails for invalid protocol in URL");
+  await Assert.rejects(
+    Network.deleteCookies({ name: "foo", url: FTP_URL }),
+    err => err.message.includes("An http or https url must be specified"),
+    "Fails for invalid protocol in URL"
+  );
 });
 
 add_task(async function pristineContext({ client }) {

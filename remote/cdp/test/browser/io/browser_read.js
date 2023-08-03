@@ -88,44 +88,32 @@ add_task(async function readAfterClose({ client }) {
 
   ok(!(await IOUtils.exists(stream.path)), "File should no longer exist");
 
-  try {
-    await IO.read({ handle });
-    ok(false, "Read shouldn't pass");
-  } catch (e) {
-    ok(
-      e.message.startsWith(`Invalid stream handle`),
-      "Error contains expected message"
-    );
-  }
+  await Assert.rejects(
+    IO.read({ handle }),
+    err => err.message.includes(`Invalid stream handle`),
+    "Error contains expected message"
+  );
 });
 
 add_task(async function unknownHandle({ client }) {
   const { IO } = client;
   const handle = "1000000";
 
-  try {
-    await IO.read({ handle });
-    ok(false, "Read shouldn't pass");
-  } catch (e) {
-    ok(
-      e.message.startsWith(`Invalid stream handle`),
-      "Error contains expected message"
-    );
-  }
+  await Assert.rejects(
+    IO.read({ handle }),
+    err => err.message.includes(`Invalid stream handle`),
+    "Error contains expected message"
+  );
 });
 
 add_task(async function invalidHandleTypes({ client }) {
   const { IO } = client;
   for (const handle of [null, true, 1, [], {}]) {
-    try {
-      await IO.read({ handle });
-      ok(false, "Read shouldn't pass");
-    } catch (e) {
-      ok(
-        e.message.startsWith(`handle: string value expected`),
-        "Error contains expected message"
-      );
-    }
+    await Assert.rejects(
+      IO.read({ handle }),
+      err => err.message.includes(`handle: string value expected`),
+      "Error contains expected message"
+    );
   }
 });
 
@@ -135,15 +123,11 @@ add_task(async function invalidOffsetTypes({ client }) {
   const { handle } = await registerFileStream(contents);
 
   for (const offset of [null, true, "1", [], {}]) {
-    try {
-      await IO.read({ handle, offset });
-      ok(false, "Read shouldn't pass");
-    } catch (e) {
-      ok(
-        e.message.startsWith(`offset: integer value expected`),
-        "Error contains expected message"
-      );
-    }
+    await Assert.rejects(
+      IO.read({ handle, offset }),
+      err => err.message.includes(`offset: integer value expected`),
+      "Error contains expected message"
+    );
   }
 });
 
@@ -153,14 +137,10 @@ add_task(async function invalidSizeTypes({ client }) {
   const { handle } = await registerFileStream(contents);
 
   for (const size of [null, true, "1", [], {}]) {
-    try {
-      await IO.read({ handle, size });
-      ok(false, "Read shouldn't pass");
-    } catch (e) {
-      ok(
-        e.message.startsWith(`size: integer value expected`),
-        "Error contains expected message"
-      );
-    }
+    await Assert.rejects(
+      IO.read({ handle, size }),
+      err => err.message.includes(`size: integer value expected`),
+      "Error contains expected message"
+    );
   }
 });

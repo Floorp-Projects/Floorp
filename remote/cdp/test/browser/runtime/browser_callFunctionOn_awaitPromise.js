@@ -9,17 +9,15 @@ add_task(async function awaitPromiseInvalidTypes({ client }) {
   const { id: executionContextId } = await enableRuntime(client);
 
   for (const awaitPromise of [null, 1, "foo", [], {}]) {
-    let errorThrown = "";
-    try {
-      await Runtime.callFunctionOn({
+    await Assert.rejects(
+      Runtime.callFunctionOn({
         functionDeclaration: "",
         awaitPromise,
         executionContextId,
-      });
-    } catch (e) {
-      errorThrown = e.message;
-    }
-    ok(errorThrown.includes("awaitPromise: boolean value expected"));
+      }),
+      err => err.message.includes("awaitPromise: boolean value expected"),
+      "awaitPromise: boolean value expected"
+    );
   }
 });
 

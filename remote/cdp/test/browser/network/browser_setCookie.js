@@ -12,51 +12,46 @@ const SECURE_HOST = "example.com";
 add_task(async function failureWithoutArguments({ client }) {
   const { Network } = client;
 
-  let errorThrown = false;
-  try {
-    await Network.setCookie();
-  } catch (e) {
-    errorThrown = true;
-  }
-  ok(errorThrown, "Fails without any arguments");
+  await Assert.rejects(
+    Network.setCookie(),
+    err => err.message.includes("name: string value expected"),
+    "Fails without any arguments"
+  );
 });
 
 add_task(async function failureWithMissingNameAndValue({ client }) {
   const { Network } = client;
 
-  let errorThrown = false;
-  try {
-    await Network.setCookie({
+  await Assert.rejects(
+    Network.setCookie({
       value: "bar",
       domain: "example.org",
-    });
-  } catch (e) {
-    errorThrown = true;
-  }
-  ok(errorThrown, "Fails without name specified");
+    }),
+    err => err.message.includes("name: string value expected"),
+    "Fails without name specified"
+  );
 
-  errorThrown = false;
-  try {
-    await Network.setCookie({
+  await Assert.rejects(
+    Network.setCookie({
       name: "foo",
       domain: "example.org",
-    });
-  } catch (e) {
-    errorThrown = true;
-  }
-  ok(errorThrown, "Fails without value specified");
+    }),
+    err => err.message.includes("value: string value expected"),
+    "Fails without value specified"
+  );
 });
 
 add_task(async function failureWithMissingDomainAndURL({ client }) {
   const { Network } = client;
 
-  let errorThrown = false;
-  try {
-    await Network.setCookie({ name: "foo", value: "bar" });
-  } catch (e) {
-    errorThrown = true;
-  }
-  ok(errorThrown, "Fails without domain and URL specified");
+  await Assert.rejects(
+    Network.setCookie({ name: "foo", value: "bar" }),
+    err =>
+      err.message.includes(
+        "At least one of the url and domain needs to be specified"
+      ),
+    "Fails without domain and URL specified"
+  );
 });
 
 add_task(async function setCookieWithDomain({ client }) {

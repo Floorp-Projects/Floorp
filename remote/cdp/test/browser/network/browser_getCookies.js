@@ -321,15 +321,9 @@ add_task(async function testUrlsInvalidTypes({ client }) {
   const testTable = [null, 1, "foo", true, {}];
 
   for (const testCase of testTable) {
-    let errorThrown = "";
-    try {
-      await Network.getCookies({ urls: testCase });
-    } catch (e) {
-      errorThrown = e.message;
-    }
-
-    ok(
-      errorThrown.match(/urls: array expected/),
+    await Assert.rejects(
+      Network.getCookies({ urls: testCase }),
+      /urls: array expected/,
       `Fails the argument type for urls`
     );
   }
@@ -341,15 +335,9 @@ add_task(async function testUrlsEntriesInvalidTypes({ client }) {
   const testTable = [[null], [1], [true]];
 
   for (const testCase of testTable) {
-    let errorThrown = "";
-    try {
-      await Network.getCookies({ urls: testCase });
-    } catch (e) {
-      errorThrown = e.message;
-    }
-
-    ok(
-      errorThrown.match(/urls: string value expected at index 0/),
+    await Assert.rejects(
+      Network.getCookies({ urls: testCase }),
+      /urls: string value expected at index 0/,
       `Fails the argument type for urls`
     );
   }

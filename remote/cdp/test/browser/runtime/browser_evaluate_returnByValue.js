@@ -9,16 +9,14 @@ add_task(async function returnByValueInvalidTypes({ client }) {
   await enableRuntime(client);
 
   for (const returnByValue of [null, 1, "foo", [], {}]) {
-    let errorThrown = "";
-    try {
-      await Runtime.evaluate({
+    await Assert.rejects(
+      Runtime.evaluate({
         expression: "",
         returnByValue,
-      });
-    } catch (e) {
-      errorThrown = e.message;
-    }
-    ok(errorThrown.includes("returnByValue: boolean value expected"));
+      }),
+      err => err.message.includes("returnByValue: boolean value expected"),
+      "returnByValue: boolean value expected"
+    );
   }
 });
 
@@ -30,16 +28,14 @@ add_task(async function returnByValueCyclicValue({ client }) {
   const expressions = ["const b = { a: 1}; b.b = b; b", "window"];
 
   for (const expression of expressions) {
-    let errorThrown;
-    try {
-      await Runtime.evaluate({
+    await Assert.rejects(
+      Runtime.evaluate({
         expression,
         returnByValue: true,
-      });
-    } catch (e) {
-      errorThrown = e.message;
-    }
-    ok(errorThrown.includes("Object reference chain is too long"));
+      }),
+      err => err.message.includes("Object reference chain is too long"),
+      "Object reference chain is too long"
+    );
   }
 });
 
@@ -51,16 +47,14 @@ add_task(async function returnByValueNotPossible({ client }) {
   const expressions = ["Symbol(42)", "[Symbol(42)]", "{a: Symbol(42)}"];
 
   for (const expression of expressions) {
-    let errorThrown;
-    try {
-      await Runtime.evaluate({
+    await Assert.rejects(
+      Runtime.evaluate({
         expression,
         returnByValue: true,
-      });
-    } catch (e) {
-      errorThrown = e.message;
-    }
-    ok(errorThrown.includes("Object couldn't be returned by value"));
+      }),
+      err => err.message.includes("Object couldn't be returned by value"),
+      "Object couldn't be returned by value"
+    );
   }
 });
 

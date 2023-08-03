@@ -19,15 +19,9 @@ add_task(
     for (const discover of [null, undefined, 1, "foo", [], {}]) {
       info(`Checking discover with invalid value: ${discover}`);
 
-      let errorThrown = "";
-      try {
-        await Target.setDiscoverTargets({ discover });
-      } catch (e) {
-        errorThrown = e.message;
-      }
-
-      ok(
-        errorThrown.match(/discover: boolean value expected/),
+      await Assert.rejects(
+        Target.setDiscoverTargets({ discover }),
+        /discover: boolean value expected/,
         `Discover fails for invalid type: ${discover}`
       );
     }
@@ -42,15 +36,9 @@ add_task(
     for (const filter of [null, true, 1, "foo", {}]) {
       info(`Checking filter with invalid value: ${filter}`);
 
-      let errorThrown = "";
-      try {
-        await Target.setDiscoverTargets({ discover: true, filter });
-      } catch (e) {
-        errorThrown = e.message;
-      }
-
-      ok(
-        errorThrown.match(/filter: array value expected/),
+      await Assert.rejects(
+        Target.setDiscoverTargets({ discover: true, filter }),
+        /filter: array value expected/,
         `Filter fails for invalid type: ${filter}`
       );
     }
@@ -58,18 +46,12 @@ add_task(
     for (const filterEntry of [null, undefined, true, 1, "foo", []]) {
       info(`Checking filter entry with invalid value: ${filterEntry}`);
 
-      let errorThrown = "";
-      try {
-        await Target.setDiscoverTargets({
+      await Assert.rejects(
+        Target.setDiscoverTargets({
           discover: true,
           filter: [filterEntry],
-        });
-      } catch (e) {
-        errorThrown = e.message;
-      }
-
-      ok(
-        errorThrown.match(/filter: object values expected in array/),
+        }),
+        /filter: object values expected in array/,
         `Filter entry fails for invalid type: ${filterEntry}`
       );
     }
@@ -77,18 +59,12 @@ add_task(
     for (const type of [null, true, 1, [], {}]) {
       info(`Checking filter entry with type as invalid value: ${type}`);
 
-      let errorThrown = "";
-      try {
-        await Target.setDiscoverTargets({
+      await Assert.rejects(
+        Target.setDiscoverTargets({
           discover: true,
           filter: [{ type }],
-        });
-      } catch (e) {
-        errorThrown = e.message;
-      }
-
-      ok(
-        errorThrown.match(/filter: type: string value expected/),
+        }),
+        /filter: type: string value expected/,
         `Filter entry type fails for invalid type: ${type}`
       );
     }
@@ -96,18 +72,12 @@ add_task(
     for (const exclude of [null, 1, "foo", [], {}]) {
       info(`Checking filter entry with exclude as invalid value: ${exclude}`);
 
-      let errorThrown = "";
-      try {
-        await Target.setDiscoverTargets({
+      await Assert.rejects(
+        Target.setDiscoverTargets({
           discover: true,
           filter: [{ exclude }],
-        });
-      } catch (e) {
-        errorThrown = e.message;
-      }
-
-      ok(
-        errorThrown.match(/filter: exclude: boolean value expected/),
+        }),
+        /filter: exclude: boolean value expected/,
         `Filter entry exclude for invalid type: ${exclude}`
       );
     }
@@ -120,18 +90,13 @@ add_task(
     const { Target } = client;
 
     // Check filter cannot be given with discover: false
-    let errorThrown = "";
-    try {
-      await Target.setDiscoverTargets({
+
+    await Assert.rejects(
+      Target.setDiscoverTargets({
         discover: false,
         filter: [{}],
-      });
-    } catch (e) {
-      errorThrown = e.message;
-    }
-
-    ok(
-      errorThrown.match(/filter: should not be present when discover is false/),
+      }),
+      /filter: should not be present when discover is false/,
       `Error throw when given filter with discover false`
     );
   },
