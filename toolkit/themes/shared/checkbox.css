@@ -6,7 +6,6 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 checkbox {
-  appearance: none;
   align-items: center;
   margin: 4px 2px;
 }
@@ -37,8 +36,9 @@ checkbox[disabled="true"] {
 }
 
 .checkbox-check:not([native]) {
-  height: 16px;
+  /* TODO: Make this em-based, probably? */
   width: 16px;
+  height: 16px;
 }
 
 checkbox:not([disabled="true"]):hover > .checkbox-check {
@@ -89,76 +89,64 @@ checkbox:not([native]):focus-visible > .checkbox-check {
   }
 }
 
-/* ..... Platform overrides ..... */
-
-@media (-moz-platform: windows) {
-  checkbox:where([native]) {
-    align-items: center;
-    margin: 2px 4px;
-    padding-top: 1px;
-    padding-bottom: 1px;
-    padding-inline-start: 4px;
-    padding-inline-end: 2px;
-  }
-
-  .checkbox-label[native] {
-    margin: 0;
-  }
-
-  /* ..... focused state ..... */
-
-  checkbox[native]:focus-visible > .checkbox-label-box {
-    outline: var(--focus-outline);
-  }
-
-  /* ..... disabled state ..... */
-
-  checkbox[native][disabled="true"] {
-    color: GrayText;
-  }
-
-  /* ::::: checkmark image ::::: */
-
-  .checkbox-check[native] {
-    appearance: auto;
-    -moz-default-appearance: checkbox;
-    align-items: center;
-    margin-inline-end: 5px;
-    /* TODO: This matches what the old native theme did, but maybe we want to
-     * use em-based sizes here. */
-    width: 13px;
-    height: 13px;
-  }
+.checkbox-label[native] {
+  margin: 0;
 }
 
-@media (-moz-platform: macos) {
-  checkbox:where([native]) {
-    align-items: center;
-    margin: 4px 2px;
+.checkbox-check[native] {
+  appearance: auto;
+  -moz-default-appearance: checkbox;
+  align-items: center;
+
+  @media (-moz-platform: windows) {
+    width: 13px;
+    height: 13px;
+    margin-inline-end: 5px;
   }
 
-  .checkbox-label[native] {
-    margin: 1px 0;
+  @media (-moz-platform: linux) {
+    margin: 2px;
+    margin-inline-end: 4px;
   }
 
-  /* ..... disabled state ..... */
-
-  checkbox[native][disabled="true"] {
-    color: GrayText;
-  }
-
-  /* ::::: checkmark image ::::: */
-
-  .checkbox-check[native] {
-    appearance: auto;
-    -moz-default-appearance: checkbox;
+  @media (-moz-platform: macos) {
+    width: 1.3em;
+    height: 1.3em;
     margin-block: 1px 0;
     margin-inline: 1px 3px;
     /* vertical-align tells native theming where to snap to. However, this doesn't
      * always work reliably because of bug 503833. */
     vertical-align: top;
-    width: 1.3em;
-    height: 1.3em;
+  }
+}
+
+checkbox[native][disabled="true"] {
+  color: GrayText;
+}
+
+@media (-moz-platform: windows) or (-moz-platform: linux) {
+  checkbox[native]:focus-visible > .checkbox-label-box {
+    /* On Linux, native theming should take care of this but it appears to be
+     * broken with some Gtk themes. Bug 1312169. */
+    outline: var(--focus-outline);
+  }
+}
+
+@media (-moz-platform: windows) {
+  checkbox:where([native]) {
+    margin: 2px 4px;
+    padding-block: 1px;
+    padding-inline: 4px 2px;
+  }
+}
+
+@media (-moz-platform: macos) {
+  checkbox:where([native]) {
+    margin: 4px 2px;
+  }
+
+  .checkbox-label[native] {
+    margin: 1px 0;
   }
 }
 
@@ -166,39 +154,12 @@ checkbox:not([native]):focus-visible > .checkbox-check {
   checkbox:where([native]) {
     appearance: auto;
     -moz-default-appearance: checkbox-container;
-    align-items: center;
     margin: 2px 4px;
   }
 
   .checkbox-label-box[native] {
+    /* FIXME: Is this needed given the focus rules above? */
     appearance: auto;
     -moz-default-appearance: checkbox-label;
-  }
-
-  .checkbox-label[native] {
-    margin: 0;
-  }
-
-  /* ..... focused state ..... */
-
-  checkbox[native]:focus-visible > .checkbox-label-box {
-    /* Native theming should take care of this but it appears to be broken with
-       some Gtk themes. Bug 1312169. */
-    outline: var(--focus-outline);
-  }
-
-  /* ..... disabled state ..... */
-
-  checkbox[native][disabled="true"] {
-    color: GrayText;
-  }
-
-  /* ::::: checkmark image ::::: */
-
-  .checkbox-check[native] {
-    appearance: auto;
-    -moz-default-appearance: checkbox;
-    margin: 2px;
-    margin-inline-end: 4px;
   }
 }
