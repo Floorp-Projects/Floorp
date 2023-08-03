@@ -501,8 +501,6 @@ var gMainPane = {
     // Initializes the fonts dropdowns displayed in this pane.
     this._rebuildFonts();
 
-    this.updateOnScreenKeyboardVisibility();
-
     // Firefox Translations settings panel
     // TODO (Bug 1817084) Remove this code when we disable the extension
     const fxtranslationsDisabledPrefName = "extensions.translations.disabled";
@@ -2003,28 +2001,6 @@ var gMainPane = {
    */
   showContainerSettings() {
     gotoPref("containers");
-  },
-
-  /**
-   * ui.osk.enabled
-   * - when set to true, subject to other conditions, we may sometimes invoke
-   *   an on-screen keyboard when a text input is focused.
-   *   (Currently Windows-only, and depending on prefs, may be Windows-8-only)
-   */
-  updateOnScreenKeyboardVisibility() {
-    if (AppConstants.platform == "win") {
-      let minVersion = Services.prefs.getBoolPref("ui.osk.require_win10")
-        ? 10
-        : 6.2;
-      if (
-        Services.vc.compare(
-          Services.sysinfo.getProperty("version"),
-          minVersion
-        ) >= 0
-      ) {
-        document.getElementById("useOnScreenKeyboard").hidden = false;
-      }
-    }
   },
 
   updateHardwareAcceleration() {

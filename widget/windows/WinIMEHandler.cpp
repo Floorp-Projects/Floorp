@@ -39,7 +39,6 @@
 
 const char* kOskEnabled = "ui.osk.enabled";
 const char* kOskDetectPhysicalKeyboard = "ui.osk.detect_physical_keyboard";
-const char* kOskRequireWin10 = "ui.osk.require_win10";
 const char* kOskDebugReason = "ui.osk.debug.keyboardDisplayReason";
 
 namespace mozilla {
@@ -703,15 +702,13 @@ bool IMEHandler::IsOnScreenKeyboardSupported() {
     return false;
   }
 
-  // On Windows 10 we require tablet mode, unless the user has set the relevant
-  // Windows setting to enable the on-screen keyboard in desktop mode.
-  // We might be disabled specifically on Win8(.1), so we check that afterwards.
+  // On Windows 11, we ignore tablet mode (see bug 1722208)
   if (!IsWin11OrLater()) {
+    // On Windows 10 we require tablet mode, unless the user has set the
+    // relevant setting to enable the on-screen keyboard in desktop mode.
     if (!IsInTabletMode() && !AutoInvokeOnScreenKeyboardInDesktopMode()) {
       return false;
     }
-  } else if (Preferences::GetBool(kOskRequireWin10, true)) {
-    return false;
   }
 
   return true;
