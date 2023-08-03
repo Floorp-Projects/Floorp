@@ -99,6 +99,7 @@ pref("app.feedback.baseURL", "https://support.ablaze.one/");
 
 // 多段タブ
 pref("floorp.tabbar.style",0);
+pref("floorp.browser.tabs.verticaltab", false);
 pref("floorp.enable.multitab", false);
 pref("floorp.browser.tabbar.multirow.max.enabled", true);
 pref("floorp.browser.tabbar.multirow.newtab-inside.enabled", false);

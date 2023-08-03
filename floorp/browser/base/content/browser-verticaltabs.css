@@ -226,3 +226,14 @@
     color: var(--panel-description-color);
     font-weight: bold;
   }
+
+  #tabbrowser-tabs[is] {
+    padding: 0px !important;
+    --tab-overflow-pinned-tabs-width: 0px !important;
+    margin-inline-start: 0px !important;
+  }
+
+  .tabbrowser-tab[label] {
+    margin-inline-start: 0px !important;
+  }
+  

@@ -6,6 +6,7 @@
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 function setVerticalTabs() {
   if (Services.prefs.getIntPref("floorp.tabbar.style") == 2) {
+    Services.prefs.setBoolPref("floorp.browser.tabs.verticaltab", true);
     window.setTimeout(function () {
       let verticalTabs = document.querySelector(".toolbar-items")
       verticalTabs.id = "toolbar-items-verticaltabs";
@@ -72,6 +73,7 @@ function setVerticalTabs() {
     target.setAttribute("context", "toolbar-context-menu");
 
   } else {
+    Services.prefs.setBoolPref("floorp.browser.tabs.verticaltab", false);
     document.querySelector("#verticalTabsStyle")?.remove()
     let verticalTabs = document.querySelector("#toolbar-items-verticaltabs")
     if(verticalTabs != null){

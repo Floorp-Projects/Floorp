@@ -82,6 +82,7 @@ tabbar-style-preference = Tab Bar Style
 horizontal-tabbar =
  .label = Horizontal Tab Bar
 
+tabbar-style-description = A restart of { -brand-short-name } is required to fully apply this setting.
 multirow-tabbar =
  .label = Multi-Row Tab Bar
 vertical-tabbar =

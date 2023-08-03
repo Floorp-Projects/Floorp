@@ -33,6 +33,7 @@
     }
 
     init() {
+      this._observePinnedTab();
       this.arrowScrollbox = this.querySelector("arrowscrollbox");
       this.arrowScrollbox.addEventListener("wheel", this, true);
 
@@ -1425,11 +1426,12 @@
       this._handleTabSelect(true);
     }
 
+
     _positionPinnedTabs() {
       let tabs = this._getVisibleTabs();
       let numPinned = gBrowser._numPinnedTabs;
       let doPosition =
-        !Services.prefs.getIntPref("floorp.tabbar.style") == 2 &&
+        !Services.prefs.getBoolPref("floorp.browser.tabs.verticaltab") &&
         this.getAttribute("overflow") == "true" &&
         tabs.length > numPinned &&
         numPinned > 0;
@@ -1486,6 +1488,25 @@
         this._lastNumPinned = numPinned;
         this._handleTabSelect(true);
       }
+    }
+
+    _checkPinnedTab() {
+        if(!Services.prefs.getBoolPref("floorp.browser.tabs.verticaltab")) {
+          this._positionPinnedTabs();
+        } else {
+          let tabs = gBrowser.tabs;
+      
+          for (let i = 0; i < tabs.length; i++) {
+            let tab = tabs[i];
+            if (tab.pinned) {
+              tab.style.marginInlineStart = "0px";
+            }
+          }
+        }
+    } 
+
+    _observePinnedTab() {
+      Services.prefs.addObserver("floorp.browser.tabs.verticaltab", this._checkPinnedTab.bind(this));
     }
 
     _animateTabMove(event) {
