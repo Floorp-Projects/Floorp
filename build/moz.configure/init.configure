@@ -728,12 +728,6 @@ def real_target(value, host, shell, project, application):
         project = project[0]
     if not value:
         if project == "mobile/android":
-            if host.raw_os == "mingw32":
-                log.warning(
-                    "Building Firefox for Android on Windows is not fully "
-                    "supported. See https://bugzilla.mozilla.org/show_bug.cgi?"
-                    "id=1169873 for details."
-                )
             return split_triplet("arm-unknown-linux-androideabi")
         return host
     # If --target was only given a cpu arch, expand it with the
