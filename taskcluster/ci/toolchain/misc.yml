@@ -444,10 +444,10 @@ win64-vs2022:
             - build/vs/vs2022.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
 
-linux64-afl-instrumentation-2.5:
-    description: "AFL instrumentation toolchain build"
+linux64-afl-instrumentation-4.0:
+    description: "AFL++ instrumentation toolchain build"
     treeherder:
-        symbol: TL(afl)
+        symbol: TL(afl++)
     worker:
         max-run-time: 3600
     run:
@@ -458,7 +458,7 @@ linux64-afl-instrumentation-2.5:
         toolchain-alias: linux64-afl-instrumentation
     fetches:
         fetch:
-            - afl-2.5
+            - afl-plus-plus-4.0
         toolchain:
             - linux64-clang
             - linux64-toolchain-sysroot
