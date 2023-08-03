@@ -7,7 +7,13 @@
 
 name: Debian x64 Build
 
-on: workflow_dispatch
+on: 
+  workflow_dispatch:
+    inputs:
+      tarball-url-x86-64:
+        type: string
+        required: true
+        description: URL of target tarball file (x86_64)
 
 jobs:
   build:
@@ -17,95 +23,21 @@ jobs:
         runs-on: ['ubuntu-latest']
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout 🛎️
+      uses: actions/checkout@v3
 
     - name: Change PPA mirror servers
       run: |
          sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
          sudo apt update
     
-    - name: Setup Disk & Swap Space 💿
-      if: matrix.runs-on != 'buildjet-16vcpu-ubuntu-2204'
+    - name: download Artifact 📦    
       run: |
-         echo Before:
-         free -h
-         df -h
-         echo
-         echo
-         sudo swapoff /mnt/swapfile
-         sudo rm /mnt/swapfile
-         sudo fallocate -l 10G /mnt/swapfile
-         sudo chmod 600 /mnt/swapfile
-         sudo mkswap /mnt/swapfile
-         sudo swapon /mnt/swapfile
-         sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-         sudo apt autoremove -y
-         sudo apt clean
-         sudo rm -rf /usr/share/dotnet
-         sudo rm -rf /usr/local/lib/android
-         sudo rm -rf /usr/local/graalvm
-         sudo rm -rf /usr/local/share/powershell
-         sudo rm -rf /usr/local/share/chromium
-         sudo rm -rf /usr/local/lib/node_modules
-         sudo rm -rf /opt/ghc
-         sudo rm -rf /usr/local/share/boost
-         sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-         sudo rm -rf /etc/apache2
-         sudo rm -rf /etc/nginx
-         sudo rm -rf /usr/local/share/chrome_driver
-         sudo rm -rf /usr/local/share/edge_driver
-         sudo rm -rf /usr/local/share/gecko_driver
-         sudo rm -rf /usr/share/java
-         sudo fallocate -l 10G /home/runner/swapfile2
-         sudo chmod 600 /home/runner/swapfile2
-         sudo mkswap /home/runner/swapfile2
-         sudo swapon /home/runner/swapfile2
-         echo
-         echo
-         echo After:
-         free -h
-         df -h
-
-    - name: Create environment 🌲
-      run: |
-         sudo apt update
-         sudo apt install xvfb
-         git clone https://github.com/floorp-projects/l10n-central.git
-         ./mach --no-interactive bootstrap --application-choice browser
-         echo 'ac_add_options --with-app-name=floorp' >> mozconfig
-         echo 'ac_add_options --with-app-basename=Floorp' >> mozconfig
-         echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
-         echo 'ac_add_options --disable-crashreporter' >> mozconfig
-         echo 'ac_add_options --enable-proxy-bypass-protection' >> mozconfig
-         echo 'ac_add_options --enable-unverified-updates' >> mozconfig
-         echo 'ac_add_options --enable-update-channel=release' >> mozconfig
-         echo 'ac_add_options --with-mozilla-api-keyfile=$PWD/floorp/apis/api-mozilla-key' >> mozconfig
-         echo 'ac_add_options --with-google-location-service-api-keyfile=$PWD/floorp/apis/api-google-location-service-key' >> mozconfig
-         echo 'ac_add_options --with-google-safebrowsing-api-keyfile=$PWD/floorp/apis/api-google-safe-browsing-key' >> mozconfig
-         echo 'ac_add_options --enable-bootstrap' >> mozconfig
-         echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
-         echo 'ac_add_options --enable-optimize="-O3"' >> mozconfig
-         echo 'ac_add_options --enable-lto' >> mozconfig
-         echo 'ac_add_options MOZ_PGO=1' >> mozconfig
-         echo 'export RUSTC_OPT_LEVEL=2 '>> mozconfig
-         echo 'export MOZ_INCLUDE_SOURCE_INFO=1' >> mozconfig
-         echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
-         echo 'MOZ_DATA_REPORTING=' >> mozconfig
-         echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
-         ./mach configure
-        
-    - name: Build 🔨
-      run: |
-         Xvfb :2 -screen 0 1024x768x24 &
-         export DISPLAY=:2
-         rm -rf ./l10n-central/.git
-         ./mach build
+        mkdir -p /home/runner/artifact
+        wget -P /home/runner/artifact ${{ inputs.tarball-url-x86-64 }}
 
     - name: Package 📦
       run: |
-        export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
-        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
-        AB_CD=multi ./mach package
         export WORKDIR=`pwd`
         export DISPVER=`cat browser/config/version_display.txt`
         export VER=`cat browser/config/version.txt`
@@ -115,8 +47,8 @@ jobs:
         mkdir -p floorp-addons/distribution/extensions
         mkdir floorp-addons/extensions
         mkdir floorp-addons/plugins
-        mv $WORKDIR/obj-x86_64-pc-linux-gnu/dist/floorp-$VER.en-US.linux-x86_64.tar.bz2 $WORKDIR/obj-x86_64-pc-linux-gnu/dist/floorp-$DISPVER.en-US.linux-x86_64.tar.bz2
-        tar -xjvf $WORKDIR/obj-x86_64-pc-linux-gnu/dist/floorp-$DISPVER.en-US.linux-x86_64.tar.bz2
+        cp /home/runner/artifact/*.tar.bz2 $WORKDIR/floorp-$DISPVER.en-US.linux-x86_64.tar.bz2
+        tar -xjvf $WORKDIR/floorp-$DISPVER.en-US.linux-x86_64.tar.bz2
         cd ..
         mkdir bin
         cd bin
