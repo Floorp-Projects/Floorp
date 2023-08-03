@@ -11,6 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   L10nCache: "resource:///modules/UrlbarUtils.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
@@ -39,6 +40,9 @@ const ZERO_PREFIX_HISTOGRAM_DWELL_TIME = "FX_URLBAR_ZERO_PREFIX_DWELL_TIME_MS";
 const ZERO_PREFIX_SCALAR_ABANDONMENT = "urlbar.zeroprefix.abandonment";
 const ZERO_PREFIX_SCALAR_ENGAGEMENT = "urlbar.zeroprefix.engagement";
 const ZERO_PREFIX_SCALAR_EXPOSURE = "urlbar.zeroprefix.exposure";
+
+// The name of the pref enabling rich suggestions relative to `browser.urlbar`.
+const RICH_SUGGESTIONS_PREF = "richSuggestions.featureGate";
 
 const RESULT_MENU_COMMANDS = {
   DISMISS: "dismiss",
@@ -106,6 +110,9 @@ export class UrlbarView {
         addDynamicStylesheet(this.window, viewTemplate.stylesheet);
       }
     }
+
+    lazy.UrlbarPrefs.addObserver(this);
+    lazy.setTimeout(() => this.updateRichSuggestionAttribute());
   }
 
   get oneOffSearchButtons() {
@@ -3206,6 +3213,28 @@ export class UrlbarView {
   on_popupshowing(event) {
     if (event.target == this.resultMenu) {
       this.#populateResultMenu();
+    }
+  }
+
+  /**
+   * Called when a urlbar pref changes.
+   *
+   * @param {string} pref
+   *   The name of the pref relative to `browser.urlbar`.
+   */
+  onPrefChanged(pref) {
+    switch (pref) {
+      case RICH_SUGGESTIONS_PREF:
+        this.updateRichSuggestionAttribute();
+        break;
+    }
+  }
+
+  updateRichSuggestionAttribute() {
+    if (lazy.UrlbarPrefs.get(RICH_SUGGESTIONS_PREF)) {
+      this.input.setAttribute("richSuggestionsEnabled", true);
+    } else {
+      this.input.removeAttribute("richSuggestionsEnabled");
     }
   }
 
