@@ -1160,63 +1160,6 @@ pub extern "C" fn Servo_StyleSet_GetBaseComputedValuesForElement(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleSet_GetComputedValuesByAddingAnimation(
-    raw_style_set: &PerDocumentStyleData,
-    element: &RawGeckoElement,
-    computed_values: &ComputedValues,
-    snapshots: *const ServoElementSnapshotTable,
-    animation_value: &AnimationValue,
-) -> Strong<ComputedValues> {
-    debug_assert!(!snapshots.is_null());
-    let rules = match computed_values.rules {
-        None => return Strong::null(),
-        Some(ref rules) => rules,
-    };
-
-    let global_style_data = &*GLOBAL_STYLE_DATA;
-    let guard = global_style_data.shared_lock.read();
-    let uncomputed_value = animation_value.uncompute();
-    let doc_data = raw_style_set.borrow();
-
-    let with_animations_rules = {
-        let guards = StylesheetGuards::same(&guard);
-        let declarations = Arc::new(global_style_data.shared_lock.wrap(
-            PropertyDeclarationBlock::with_one(uncomputed_value, Importance::Normal),
-        ));
-        doc_data
-            .stylist
-            .rule_tree()
-            .add_animation_rules_at_transition_level(rules, declarations, &guards)
-    };
-
-    let element = GeckoElement(element);
-    if element.borrow_data().is_none() {
-        return Strong::null();
-    }
-
-    let shared = create_shared_context(
-        &global_style_data,
-        &guard,
-        &doc_data.stylist,
-        TraversalFlags::empty(),
-        unsafe { &*snapshots },
-    );
-    let mut tlc: ThreadLocalStyleContext<GeckoElement> = ThreadLocalStyleContext::new();
-    let context = StyleContext {
-        shared: &shared,
-        thread_local: &mut tlc,
-    };
-
-    resolve_rules_for_element_with_context(
-        element,
-        context,
-        with_animations_rules,
-        &computed_values,
-    )
-    .into()
-}
-
-#[no_mangle]
 pub extern "C" fn Servo_ComputedValues_ExtractAnimationValue(
     computed_values: &ComputedValues,
     property_id: nsCSSPropertyID,

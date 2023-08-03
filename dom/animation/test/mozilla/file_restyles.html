@@ -1270,9 +1270,9 @@ waitForAllPaints(() => {
 
       const markers = await observeStyling(5);
 
-      is(markers.length, 5,
+      is(markers.length, 0,
          'Additive animation has no keyframe whose offset is 0 or 1 in an ' +
-         'out-of-view element should not be throttled');
+         'out-of-view element should be throttled');
       await ensureElementRemoval(div);
     }
   );
@@ -1287,9 +1287,9 @@ waitForAllPaints(() => {
 
     const markers = await observeStyling(5);
 
-    is(markers.length, 5,
+    is(markers.length, 0,
        'Discrete animation has has no keyframe whose offset is 0 or 1 in an ' +
-       'out-of-view element should not be throttled');
+       'out-of-view element should be throttled');
     await ensureElementRemoval(div);
   });
 
@@ -1305,10 +1305,9 @@ waitForAllPaints(() => {
       await waitForAnimationReadyToRestyle(animation);
 
       const markers = await observeStyling(5);
-      is(markers.length, 5,
+      is(markers.length, 0,
          'visibility animation has no keyframe whose offset is 0 or 1 in an ' +
-         'out-of-view element and produces change hint other than paint-only ' +
-         'change hint should not be throttled');
+         'out-of-view element should be throttled');
       await ensureElementRemoval(div);
     }
   );

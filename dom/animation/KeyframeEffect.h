@@ -313,7 +313,7 @@ class KeyframeEffect : public AnimationEffect {
 
   // Cumulative change hint on each segment for each property.
   // This is used for deciding the animation is paint-only.
-  void CalculateCumulativeChangeHint(const ComputedStyle* aStyle);
+  void CalculateCumulativeChangesForProperty(const AnimationProperty&);
 
   // Returns true if all of animation properties' change hints
   // can ignore painting if the animation is not visible.
@@ -362,9 +362,7 @@ class KeyframeEffect : public AnimationEffect {
       const Nullable<double>& aProgressOnLastCompose,
       uint64_t aCurrentIterationOnLastCompose);
 
-  bool HasOpacityChange() const {
-    return mCumulativeChangeHint & nsChangeHint_UpdateOpacityLayer;
-  }
+  bool HasOpacityChange() const { return mCumulativeChanges.mOpacity; }
 
  protected:
   ~KeyframeEffect() override = default;
@@ -451,15 +449,6 @@ class KeyframeEffect : public AnimationEffect {
   // EffectSet.
   bool mInEffectSet = false;
 
-  // True if the last time we tried to update the cumulative change hint we
-  // didn't have style data to do so. We set this flag so that the next time
-  // our style context changes we know to update the cumulative change hint even
-  // if our properties haven't changed.
-  bool mNeedsStyleData = false;
-
-  // True if there is any current-color for background color in this keyframes.
-  bool mHasCurrentColor = false;
-
   // The non-animated values for properties in this effect that contain at
   // least one animation value that is composited with the underlying value
   // (i.e. it uses the additive or accumulate composite mode).
@@ -468,7 +457,27 @@ class KeyframeEffect : public AnimationEffect {
   BaseValuesHashmap mBaseValues;
 
  private:
-  nsChangeHint mCumulativeChangeHint = nsChangeHint{0};
+  // The cumulative changes of all the animation segments.
+  struct CumulativeChanges {
+    // Whether the opacity property is changing.
+    bool mOpacity : 1;
+    // Whether the visibility property is changing.
+    bool mVisibility : 1;
+    // Whether layout is changing.
+    bool mLayout : 1;
+    // Whether overflow is changing.
+    bool mOverflow : 1;
+    // True if there is any current-color for background color.
+    bool mHasBackgroundColorCurrentColor : 1;
+
+    CumulativeChanges()
+        : mOpacity(false),
+          mVisibility(false),
+          mLayout(false),
+          mOverflow(false),
+          mHasBackgroundColorCurrentColor(false) {}
+  };
+  CumulativeChanges mCumulativeChanges;
 
   void ComposeStyleRule(StyleAnimationValueMap& aAnimationValues,
                         const AnimationProperty& aProperty,
@@ -510,17 +519,12 @@ class KeyframeEffect : public AnimationEffect {
   // This function is used for updating scroll bars or notifying intersection
   // observers reflected by the transform.
   bool HasPropertiesThatMightAffectOverflow() const {
-    return mCumulativeChangeHint &
-           (nsChangeHint_AddOrRemoveTransform | nsChangeHint_UpdateOverflow |
-            nsChangeHint_UpdatePostTransformOverflow |
-            nsChangeHint_UpdateTransformLayer);
+    return mCumulativeChanges.mOverflow;
   }
 
   // Returns true if this effect causes visibility change.
   // (i.e. 'visibility: hidden' -> 'visibility: visible' and vice versa.)
-  bool HasVisibilityChange() const {
-    return mCumulativeChangeHint & nsChangeHint_VisibilityChange;
-  }
+  bool HasVisibilityChange() const { return mCumulativeChanges.mVisibility; }
 };
 
 }  // namespace dom

@@ -399,21 +399,6 @@ class ServoStyleSet {
   already_AddRefed<ComputedStyle> GetBaseContextForElement(
       dom::Element* aElement, const ComputedStyle* aStyle);
 
-  // Get a ComputedStyle that represents |aStyle|, but as though it additionally
-  // matched the rules of the newly added |aAnimaitonaValue|.
-  //
-  // We use this function to temporarily generate a ComputedStyle for
-  // calculating the cumulative change hints.
-  //
-  // This must hold:
-  //   The additional rules must be appropriate for the transition
-  //   level of the cascade, which is the highest level of the cascade.
-  //   (This is the case for one current caller, the cover rule used
-  //   for CSS transitions.)
-  // Note: |aElement| should be the generated element if it is pseudo.
-  already_AddRefed<ComputedStyle> ResolveServoStyleByAddingAnimation(
-      dom::Element* aElement, const ComputedStyle* aStyle,
-      StyleAnimationValue* aAnimationValue);
   /**
    * Resolve style for a given declaration block with/without the parent style.
    * If the parent style is not specified, the document default computed values

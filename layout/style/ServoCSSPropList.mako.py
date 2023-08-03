@@ -112,6 +112,13 @@ def exposed_on_getcs(prop):
 def rules(prop):
     return ", ".join('"{}"'.format(rule) for rule in prop.rule_types_allowed_names())
 
+RUST_TO_CPP_FLAGS = {
+  "CAN_ANIMATE_ON_COMPOSITOR": "CanAnimateOnCompositor",
+  "AFFECTS_LAYOUT": "AffectsLayout",
+  "AFFECTS_PAINT": "AffectsPaint",
+  "AFFECTS_OVERFLOW": "AffectsOverflow",
+}
+
 def flags(prop):
     result = []
     if prop.explicitly_enabled_in_chrome():
@@ -122,8 +129,9 @@ def flags(prop):
         result.append("Internal")
     if prop.enabled_in == "":
         result.append("Inaccessible")
-    if "CAN_ANIMATE_ON_COMPOSITOR" in prop.flags:
-        result.append("CanAnimateOnCompositor")
+    for (k, v) in RUST_TO_CPP_FLAGS.items():
+        if k in prop.flags:
+            result.append(v)
     if exposed_on_getcs(prop):
         result.append("ExposedOnGetCS")
         if prop.type() == "shorthand" and "SHORTHAND_IN_GETCS" in prop.flags:
