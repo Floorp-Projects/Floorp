@@ -2127,6 +2127,11 @@ public class GeckoViewActivity extends AppCompatActivity
     session.requestAnalysis(url);
   }
 
+  public void requestRecommendations(
+      @NonNull final GeckoSession session, @NonNull final String url) {
+    session.requestRecommendations(url);
+  }
+
   private class ExampleNavigationDelegate implements GeckoSession.NavigationDelegate {
     @Override
     public void onLocationChange(
@@ -2139,6 +2144,7 @@ public class GeckoViewActivity extends AppCompatActivity
       mTrackingProtectionPermission = getTrackingProtectionPermission(perms);
       mCurrentUri = url;
       requestAnalysis(session, url);
+      requestRecommendations(session, url);
     }
 
     @Override

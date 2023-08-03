@@ -977,6 +977,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void reload();
     method @AnyThread public void reload(int);
     method @NonNull @UiThread public GeckoResult<GeckoSession.ReviewAnalysis> requestAnalysis(@NonNull String);
+    method @NonNull @UiThread public GeckoResult<List<GeckoSession.Recommendation>> requestRecommendations(@NonNull String);
     method @AnyThread public void restoreState(@NonNull GeckoSession.SessionState);
     method @AnyThread @NonNull public GeckoResult<InputStream> saveAsPdf();
     method @AnyThread public void setActive(boolean);
@@ -1594,16 +1595,25 @@ package org.mozilla.geckoview {
     field @Nullable public final String message;
   }
 
+  @AnyThread public static class GeckoSession.Recommendation {
+    ctor protected Recommendation();
+    field @Nullable public final Double adjustedRating;
+    field @Nullable public final String aid;
+    field @Nullable public final String analysisUrl;
+    field @Nullable public final String currency;
+    field @Nullable public final String grade;
+    field @Nullable public final String imageUrl;
+    field @Nullable public final String name;
+    field @Nullable public final String price;
+    field @Nullable public final Boolean sponsored;
+    field @Nullable public final String url;
+  }
+
   @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.RestartReason {
   }
 
   @AnyThread public static class GeckoSession.ReviewAnalysis {
     ctor protected ReviewAnalysis();
-    field public static final String GRADE_A = "A";
-    field public static final String GRADE_B = "B";
-    field public static final String GRADE_C = "C";
-    field public static final String GRADE_D = "D";
-    field public static final String GRADE_E = "E";
     field @NonNull public final Double adjustedRating;
     field @Nullable public final String analysisURL;
     field public final boolean deletedProduct;
@@ -1613,9 +1623,6 @@ package org.mozilla.geckoview {
     field public final int lastAnalysisTime;
     field public final boolean needsAnalysis;
     field @Nullable public final String productId;
-  }
-
-  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.ReviewAnalysis.Grade {
   }
 
   public class GeckoSession.ReviewAnalysis.Highlight {
