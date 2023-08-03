@@ -5060,6 +5060,12 @@
   value: false
   mirror: always
 
+# Whether to expose the AddonManager web API.
+- name: extensions.webapi.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NOT_ANDROID@
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "fission."
 #---------------------------------------------------------------------------
