@@ -44,7 +44,11 @@ const ADDON_SEARCH_RESULTS = {};
 const mockAddonRepository = ({ addons = [] }) => {
   return {
     async getMappedAddons(browserID, extensionIDs) {
-      return Promise.resolve(addons);
+      return Promise.resolve({
+        addons,
+        matchedIDs: [],
+        unmatchedIDs: [],
+      });
     },
   };
 };
