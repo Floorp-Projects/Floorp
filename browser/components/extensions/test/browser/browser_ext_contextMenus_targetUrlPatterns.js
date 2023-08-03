@@ -192,6 +192,10 @@ async function testLinkMenuWithoutTargetUrlPatterns(linkUrl) {
 
   await extension.startup();
   await extension.awaitMessage("ready");
+  // Wait for the browser window chrome document to be flushed before
+  // trying to trigger the context menu in the newly created tab,
+  // to prevent intermittent failures (e.g. Bug 1775558).
+  await gBrowser.ownerGlobal.promiseDocumentFlushed(() => {});
   await openExtensionContextMenu("#test_link_element");
   await extension.awaitMessage("done");
   await closeContextMenu();
