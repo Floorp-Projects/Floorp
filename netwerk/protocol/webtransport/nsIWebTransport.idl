@@ -77,7 +77,8 @@ interface WebTransportSessionEventListener : nsISupports {
   // This is used internally to pass the reference of WebTransportSession
   // object to WebTransportSessionProxy.
   void onSessionReadyInternal(in Http3WebTransportSessionPtr aSession);
-  void onSessionClosed(in uint32_t aErrorCode,
+  void onSessionClosed(in bool aCleanly,
+                       in uint32_t aErrorCode,
                        in ACString aReason);
 
   // When a new stream has been received.

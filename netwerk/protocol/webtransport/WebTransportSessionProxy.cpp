@@ -79,7 +79,8 @@ nsresult WebTransportSessionProxy::AsyncConnectWithClient(
   }
   auto cleanup = MakeScopeExit([self = RefPtr<WebTransportSessionProxy>(this)] {
     MutexAutoLock lock(self->mMutex);
-    self->mListener->OnSessionClosed(0, ""_ns);  // TODO: find a better error.
+    self->mListener->OnSessionClosed(false, 0,
+                                     ""_ns);  // TODO: find a better error.
     self->mChannel = nullptr;
     self->mListener = nullptr;
     self->ChangeState(WebTransportSessionProxyState::DONE);
@@ -576,7 +577,7 @@ WebTransportSessionProxy::OnStartRequest(nsIRequest* aRequest) {
     }
   }
   if (listener) {
-    listener->OnSessionClosed(closeStatus, reason);
+    listener->OnSessionClosed(false, closeStatus, reason);
   }
   return NS_OK;
 }
@@ -677,7 +678,7 @@ WebTransportSessionProxy::OnStopRequest(nsIRequest* aRequest,
             }));
       }
     } else {
-      listener->OnSessionClosed(closeStatus,
+      listener->OnSessionClosed(false, closeStatus,
                                 reason);  // TODO: find a better error.
                                           // Currently error code 0 is used.
     }
@@ -879,8 +880,8 @@ WebTransportSessionProxy::OnSessionReady(uint64_t ready) {
 }
 
 NS_IMETHODIMP
-WebTransportSessionProxy::OnSessionClosed(uint32_t status,
-                                          const nsACString& reason) {
+WebTransportSessionProxy::OnSessionClosed(bool aCleanly, uint32_t aStatus,
+                                          const nsACString& aReason) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MutexAutoLock lock(mMutex);
   LOG(
@@ -891,11 +892,12 @@ WebTransportSessionProxy::OnSessionClosed(uint32_t status,
   // OnSessionClosed and OnSessionReady can be racy. If OnStopRequest is not
   // called yet, OnSessionClosed needs to wait.
   if (!mStopRequestCalled) {
-    nsCString closeReason(reason);
-    mPendingEvents.AppendElement(
-        [self = RefPtr{this}, status(status), closeReason(closeReason)]() {
-          Unused << self->OnSessionClosed(status, closeReason);
-        });
+    nsCString closeReason(aReason);
+    mPendingEvents.AppendElement([self = RefPtr{this}, status(aStatus),
+                                  closeReason(closeReason),
+                                  cleanly(aCleanly)]() {
+      Unused << self->OnSessionClosed(cleanly, status, closeReason);
+    });
     return NS_OK;
   }
 
@@ -907,8 +909,9 @@ WebTransportSessionProxy::OnSessionClosed(uint32_t status,
       return NS_ERROR_ABORT;
     case WebTransportSessionProxyState::NEGOTIATING_SUCCEEDED:
     case WebTransportSessionProxyState::ACTIVE: {
-      mCloseStatus = status;
-      mReason = reason;
+      mCleanly = aCleanly;
+      mCloseStatus = aStatus;
+      mReason = aReason;
       mWebTransportSession = nullptr;
       ChangeState(WebTransportSessionProxyState::CLOSE_CALLBACK_PENDING);
       CallOnSessionClosed();
@@ -942,6 +945,7 @@ void WebTransportSessionProxy::CallOnSessionClosed() {
 
   MOZ_ASSERT(mTarget->IsOnCurrentThread());
   nsCOMPtr<WebTransportSessionEventListener> listener;
+  bool cleanly = false;
   nsAutoCString reason;
   uint32_t closeStatus = 0;
 
@@ -956,6 +960,7 @@ void WebTransportSessionProxy::CallOnSessionClosed() {
     case WebTransportSessionProxyState::CLOSE_CALLBACK_PENDING:
       listener = mListener;
       mListener = nullptr;
+      cleanly = mCleanly;
       reason = mReason;
       closeStatus = mCloseStatus;
       ChangeState(WebTransportSessionProxyState::DONE);
@@ -967,7 +972,7 @@ void WebTransportSessionProxy::CallOnSessionClosed() {
   if (listener) {
     // Don't invoke the callback under the lock.
     MutexAutoUnlock unlock(mMutex);
-    listener->OnSessionClosed(closeStatus, reason);
+    listener->OnSessionClosed(cleanly, closeStatus, reason);
   }
 }
 

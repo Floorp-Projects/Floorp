@@ -75,7 +75,8 @@ class WebTransportParent : public PWebTransportParent,
   virtual ~WebTransportParent();
 
  private:
-  void NotifyRemoteClosed(uint32_t aErrorCode, const nsACString& aReason);
+  void NotifyRemoteClosed(bool aCleanly, uint32_t aErrorCode,
+                          const nsACString& aReason);
 
   using ResolveType = std::tuple<const nsresult&, const uint8_t&>;
   nsCOMPtr<nsISerialEventTarget> mSocketThread;
