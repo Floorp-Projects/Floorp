@@ -2310,6 +2310,9 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   Maybe<uint32_t> firstRemovedIndex;
   uint32_t lastRemovedIndex = 0;
 
+  TimeIntervals intervals =
+      aIntervals.ToBase(aTrackData.mHighestStartTimestamp);
+
   // We loop from aStartIndex to avoid removing frames that we inserted earlier
   // and part of the current coded frame group. This is allows to handle step
   // 14 of the coded frame processing algorithm without having to check the
@@ -2323,19 +2326,19 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   //  presentation timestamp:
   //   Remove all coded frames from track buffer that have a presentation
   //   timestamp greater than or equal to highest end timestamp and less than
-  //   frame end timestamp"
-  TimeUnit intervalsEnd = aIntervals.GetEnd();
+  //   frame end timestamp.
+  TimeUnit intervalsEnd = intervals.GetEnd();
   for (uint32_t i = aStartIndex; i < data.Length(); i++) {
     RefPtr<MediaRawData>& sample = data[i];
-    if (aIntervals.ContainsStrict(sample->mTime)) {
+    if (intervals.ContainsStrict(sample->mTime)) {
       // The start of this existing frame will be overwritten, we drop that
       // entire frame.
       MSE_DEBUGV("overridding start of frame [%" PRId64 ",%" PRId64
                  "] with [%" PRId64 ",%" PRId64 "] dropping",
                  sample->mTime.ToMicroseconds(),
                  sample->GetEndTime().ToMicroseconds(),
-                 aIntervals.GetStart().ToMicroseconds(),
-                 aIntervals.GetEnd().ToMicroseconds());
+                 intervals.GetStart().ToMicroseconds(),
+                 intervals.GetEnd().ToMicroseconds());
       if (firstRemovedIndex.isNothing()) {
         firstRemovedIndex = Some(i);
       }
@@ -2344,10 +2347,10 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
     }
     TimeInterval sampleInterval(sample->mTime, sample->GetEndTime());
     if (aMode == RemovalMode::kTruncateFrame &&
-        aIntervals.IntersectsStrict(sampleInterval)) {
+        intervals.IntersectsStrict(sampleInterval)) {
       // The sample to be overwritten is only partially covered.
       TimeIntervals intersection =
-          Intersection(aIntervals, TimeIntervals(sampleInterval));
+          Intersection(intervals, TimeIntervals(sampleInterval));
       bool found = false;
       TimeUnit startTime = intersection.GetStart(&found);
       MOZ_DIAGNOSTIC_ASSERT(found, "Must intersect with added coded frames");
@@ -2365,8 +2368,8 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
                  "[%" PRId64 ",%" PRId64 "]",
                  sampleInterval.mStart.ToMicroseconds(),
                  sampleInterval.mEnd.ToMicroseconds(),
-                 aIntervals.GetStart().ToMicroseconds(),
-                 aIntervals.GetEnd().ToMicroseconds(),
+                 intervals.GetStart().ToMicroseconds(),
+                 intervals.GetEnd().ToMicroseconds(),
                  sample->mTime.ToMicroseconds(),
                  sample->GetEndTime().ToMicroseconds());
       continue;
