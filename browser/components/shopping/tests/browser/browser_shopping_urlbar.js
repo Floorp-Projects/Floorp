@@ -74,7 +74,7 @@ add_task(async function test_button_inactive() {
 });
 
 // Switching Tabs shows and hides the button
-add_task(async function test_button_changes_with_tabswitch() {
+add_task(async function test_button_changes_with_location() {
   Services.prefs.setBoolPref("browser.shopping.experience2023.active", true);
 
   let shoppingButton = document.getElementById("shopping-sidebar-button");
@@ -107,45 +107,41 @@ add_task(async function test_button_changes_with_tabswitch() {
 add_task(async function test_button_toggles_sidebars() {
   Services.prefs.setBoolPref("browser.shopping.experience2023.active", false);
 
-  await BrowserTestUtils.withNewTab(CONTENT_PAGE, async function (browser) {
-    let shoppingButton = document.getElementById("shopping-sidebar-button");
-    let browserPanel = gBrowser.getPanel(browser);
+  let shoppingButton = document.getElementById("shopping-sidebar-button");
+  let browser = gBrowser.selectedBrowser;
+  let browserPanel = gBrowser.getPanel(browser);
 
-    BrowserTestUtils.loadURIString(browser, PRODUCT_PAGE);
-    await BrowserTestUtils.browserLoaded(browser);
+  BrowserTestUtils.loadURIString(browser, PRODUCT_PAGE);
+  await BrowserTestUtils.browserLoaded(browser);
 
-    let sidebar = browserPanel.querySelector("shopping-sidebar");
+  let sidebar = browserPanel.querySelector("shopping-sidebar");
 
-    is(sidebar, null, "Shopping sidebar should be closed");
+  is(sidebar, null, "Shopping sidebar should be closed");
 
-    // open
-    shoppingButton.click();
-    await BrowserTestUtils.waitForMutationCondition(
-      shoppingButton,
-      {
-        attributeFilter: ["shoppingsidebaropen"],
-      },
-      () => shoppingButton.getAttribute("shoppingsidebaropen") == "true"
-    );
+  // open
+  shoppingButton.click();
+  await BrowserTestUtils.waitForMutationCondition(
+    shoppingButton,
+    {
+      attributeFilter: ["shoppingsidebaropen"],
+    },
+    () => shoppingButton.getAttribute("shoppingsidebaropen") == "true"
+  );
 
-    sidebar = browserPanel.querySelector("shopping-sidebar");
-    ok(BrowserTestUtils.is_visible(sidebar), "Shopping sidebar should be open");
+  sidebar = browserPanel.querySelector("shopping-sidebar");
+  ok(BrowserTestUtils.is_visible(sidebar), "Shopping sidebar should be open");
 
-    // close
-    shoppingButton.click();
-    await BrowserTestUtils.waitForMutationCondition(
-      shoppingButton,
-      {
-        attributeFilter: ["shoppingsidebaropen"],
-      },
-      () => shoppingButton.getAttribute("shoppingsidebaropen") == "false"
-    );
+  // close
+  shoppingButton.click();
+  await BrowserTestUtils.waitForMutationCondition(
+    shoppingButton,
+    {
+      attributeFilter: ["shoppingsidebaropen"],
+    },
+    () => shoppingButton.getAttribute("shoppingsidebaropen") == "false"
+  );
 
-    ok(
-      BrowserTestUtils.is_hidden(sidebar),
-      "Shopping sidebar should be closed"
-    );
-  });
+  ok(BrowserTestUtils.is_hidden(sidebar), "Shopping sidebar should be closed");
 });
 
 // Button changes all Windows
@@ -154,7 +150,8 @@ add_task(async function test_button_toggles_all_windows() {
 
   let shoppingButton = document.getElementById("shopping-sidebar-button");
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PRODUCT_PAGE);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, PRODUCT_PAGE);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   let browserPanelA = gBrowser.getPanel(gBrowser.selectedBrowser);
   let sidebarA = browserPanelA.querySelector("shopping-sidebar");
@@ -167,15 +164,12 @@ add_task(async function test_button_toggles_all_windows() {
   );
   await BrowserTestUtils.browserLoaded(newWindow.gBrowser.selectedBrowser);
 
-  let browserPanelB = newWindow.gBrowser.getPanel(
-    newWindow.gBrowser.selectedBrowser
-  );
+  let browserPanelB = gBrowser.getPanel(newWindow.gBrowser.selectedBrowser);
   let sidebarB = browserPanelB.querySelector("shopping-sidebar");
 
-  is(
-    sidebarA,
-    null,
-    "Shopping sidebar should not exist yet for new tab in current window"
+  ok(
+    BrowserTestUtils.is_hidden(sidebarA),
+    "Shopping sidebar should be closed in current window"
   );
   is(sidebarB, null, "Shopping sidebar closed in new window");
 
@@ -218,6 +212,5 @@ add_task(async function test_button_toggles_all_windows() {
     "Shopping sidebar should be closed in new window"
   );
 
-  BrowserTestUtils.removeTab(tab);
   await BrowserTestUtils.closeWindow(newWindow);
 });

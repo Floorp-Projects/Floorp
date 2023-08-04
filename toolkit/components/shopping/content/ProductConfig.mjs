@@ -2,15 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Really const but needs to be overridable for tests.
-let ANALYSIS_API = "https://staging.trustwerty.com/api/v1/fx/analysis";
+const ANALYSIS_API = "https://staging.trustwerty.com/api/v1/fx/analysis";
 const ANALYSIS_RESPONSE_SCHEMA =
   "chrome://global/content/shopping/analysis_response.schema.json";
 const ANALYSIS_REQUEST_SCHEMA =
   "chrome://global/content/shopping/analysis_request.schema.json";
-
-// Really const but needs to be overridable for tests.
-let RECOMMENDATIONS_API =
+const RECOMMENDATIONS_API =
   "https://staging-affiliates.fakespot.io/v1/fx/sp_search";
 const RECOMMENDATIONS_RESPONSE_SCHEMA =
   "chrome://global/content/shopping/recommendations_response.schema.json";
@@ -37,10 +34,6 @@ const ProductConfig = {
 if (Cu.isInAutomation) {
   // Also allow example.com to allow for testing.
   ProductConfig.example = ProductConfig.amazon;
-  ANALYSIS_API =
-    "https://example.com/browser/toolkit/components/shopping/test/browser/analysis.sjs";
-  RECOMMENDATIONS_API =
-    "https://example.com/browser/toolkit/components/shopping/test/browser/sp_search.sjs";
 }
 
 Object.freeze(ProductConfig);

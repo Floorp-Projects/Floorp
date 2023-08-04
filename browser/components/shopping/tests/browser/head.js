@@ -95,79 +95,44 @@ const MOCK_ANALYZED_PRODUCT_RESPONSE = {
 
 function verifyAnalysisDetailsVisible(shoppingContainer) {
   ok(
-    shoppingContainer.reviewReliabilityEl,
+    shoppingContainer.reviewReliabilityEl &&
+      !shoppingContainer.reviewReliabilityEl.hidden,
     "review-reliability should be visible"
   );
-  ok(shoppingContainer.adjustedRatingEl, "adjusted-rating should be visible");
-  ok(shoppingContainer.highlightsEl, "review-highlights should be visible");
   ok(
-    shoppingContainer.analysisExplainerEl,
+    shoppingContainer.adjustedRatingEl &&
+      !shoppingContainer.adjustedRatingEl.hidden,
+    "adjusted-rating should be visible"
+  );
+  ok(
+    shoppingContainer.highlightsEl && !shoppingContainer.highlightsEl.hidden,
+    "review-highlights should be visible"
+  );
+  ok(
+    shoppingContainer.analysisExplainerEl &&
+      !shoppingContainer.analysisExplainerEl.hidden,
     "analysis-explainer should be visible"
   );
 }
 
 function verifyAnalysisDetailsHidden(shoppingContainer) {
   ok(
-    !shoppingContainer.reviewReliabilityEl,
+    !shoppingContainer.reviewReliabilityEl ||
+      shoppingContainer.reviewReliabilityEl.hidden,
     "review-reliability should not be visible"
   );
   ok(
-    !shoppingContainer.adjustedRatingEl,
+    !shoppingContainer.adjustedRatingEl ||
+      shoppingContainer.adjustedRatingEl.hidden,
     "adjusted-rating should not be visible"
   );
   ok(
-    !shoppingContainer.highlightsEl,
+    !shoppingContainer.highlightsEl || shoppingContainer.highlightsEl.hidden,
     "review-highlights should not be visible"
   );
   ok(
-    !shoppingContainer.analysisExplainerEl,
+    !shoppingContainer.analysisExplainerEl ||
+      shoppingContainer.analysisExplainerEl.hidden,
     "analysis-explainer should not be visible"
   );
-}
-
-function getAnalysisDetails(browser, data) {
-  return SpecialPowers.spawn(browser, [data], async mockData => {
-    let shoppingContainer =
-      content.document.querySelector("shopping-container").wrappedJSObject;
-    shoppingContainer.data = Cu.cloneInto(mockData, content);
-    await shoppingContainer.updateComplete;
-    let returnState = {};
-    for (let el of [
-      "unanalyzedProductEl",
-      "reviewReliabilityEl",
-      "analysisExplainerEl",
-      "adjustedRatingEl",
-      "highlightsEl",
-      "settingsEl",
-      "shoppingMessageBarEl",
-    ]) {
-      returnState[el] =
-        !!shoppingContainer[el] &&
-        ContentTaskUtils.is_visible(shoppingContainer[el]);
-    }
-    returnState.shoppingMessageBarType =
-      shoppingContainer.shoppingMessageBarEl?.getAttribute("type");
-    return returnState;
-  });
-}
-
-function getSettingsDetails(browser, data) {
-  return SpecialPowers.spawn(browser, [data], async mockData => {
-    let shoppingContainer =
-      content.document.querySelector("shopping-container").wrappedJSObject;
-    shoppingContainer.data = Cu.cloneInto(mockData, content);
-    await shoppingContainer.updateComplete;
-    let shoppingSettings = shoppingContainer.settingsEl;
-    await shoppingSettings.updateComplete;
-    let returnState = {
-      settingsEl:
-        !!shoppingSettings && ContentTaskUtils.is_visible(shoppingSettings),
-    };
-    for (let el of ["recommendationsToggleEl", "optOutButtonEl"]) {
-      returnState[el] =
-        !!shoppingSettings[el] &&
-        ContentTaskUtils.is_visible(shoppingSettings[el]);
-    }
-    return returnState;
-  });
 }
