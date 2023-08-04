@@ -32,12 +32,8 @@ static const char SandboxPolicySocket[] = R"SANDBOX_LITERAL(
   (moz-deny default)
   ; These are not included in (deny default)
   (moz-deny process-info*)
-  ; This isn't available in some older macOS releases.
-  (if (defined? 'nvram*)
-    (moz-deny nvram*))
-  ; This property requires macOS 10.10+
-  (if (defined? 'file-map-executable)
-    (moz-deny file-map-executable))
+  (moz-deny nvram*)
+  (moz-deny file-map-executable)
 
   (if (string=? should-log "TRUE")
     (debug deny))
@@ -45,18 +41,13 @@ static const char SandboxPolicySocket[] = R"SANDBOX_LITERAL(
   ; Needed for things like getpriority()/setpriority()/pthread_setname()
   (allow process-info-pidinfo process-info-setcontrol (target self))
 
-  (if (defined? 'file-map-executable)
-    (begin
-      (if (string=? isRosettaTranslated "TRUE")
-        (allow file-map-executable (subpath "/private/var/db/oah")))
-      (allow file-map-executable file-read*
-        (subpath "/System/Library")
-        (subpath "/usr/lib")
-        (subpath app-path)))
-    (allow file-read*
-      (subpath "/System/Library")
-      (subpath "/usr/lib")
-      (subpath app-path)))
+  (if (string=? isRosettaTranslated "TRUE")
+    (allow file-map-executable (subpath "/private/var/db/oah")))
+
+  (allow file-map-executable file-read*
+    (subpath "/System/Library")
+    (subpath "/usr/lib")
+    (subpath app-path))
 
   (if (string? crashPort)
     (allow mach-lookup (global-name crashPort)))
