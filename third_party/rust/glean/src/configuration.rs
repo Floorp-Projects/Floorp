@@ -39,7 +39,7 @@ pub struct Configuration {
     /// The internal logging level.
     pub log_level: Option<LevelFilter>,
     /// The rate pings may be uploaded before they are throttled.
-    pub rate_limit: Option<crate::PingRateLimit>,
+    pub rate_limit: Option<glean_core::PingRateLimit>,
 }
 
 /// Configuration builder.
@@ -79,7 +79,7 @@ pub struct Builder {
     pub log_level: Option<LevelFilter>,
     /// Optional: The internal ping upload rate limit.
     /// Default: `None`
-    pub rate_limit: Option<crate::PingRateLimit>,
+    pub rate_limit: Option<glean_core::PingRateLimit>,
 }
 
 impl Builder {

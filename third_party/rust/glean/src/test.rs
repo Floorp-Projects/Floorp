@@ -1319,7 +1319,7 @@ fn configure_ping_throttling() {
         })
         .build();
     let pings_per_interval = 10;
-    cfg.rate_limit = Some(crate::PingRateLimit {
+    cfg.rate_limit = Some(glean_core::PingRateLimit {
         seconds_per_interval: 1,
         pings_per_interval,
     });
