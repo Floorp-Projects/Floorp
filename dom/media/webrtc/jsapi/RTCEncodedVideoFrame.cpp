@@ -48,29 +48,28 @@ RTCEncodedVideoFrame::RTCEncodedVideoFrame(
       static_cast<webrtc::TransformableVideoFrameInterface&>(*mFrame));
   mType = videoFrame.IsKeyFrame() ? RTCEncodedVideoFrameType::Key
                                   : RTCEncodedVideoFrameType::Delta;
+  auto metadata = videoFrame.Metadata();
 
-  if (videoFrame.Metadata().GetFrameId().has_value()) {
-    mMetadata.mFrameId.Construct(*videoFrame.Metadata().GetFrameId());
+  if (metadata.GetFrameId().has_value()) {
+    mMetadata.mFrameId.Construct(*metadata.GetFrameId());
   }
   mMetadata.mDependencies.Construct();
-  for (const auto dep : videoFrame.Metadata().GetFrameDependencies()) {
+  for (const auto dep : metadata.GetFrameDependencies()) {
     Unused << mMetadata.mDependencies.Value().AppendElement(
         static_cast<unsigned long long>(dep), fallible);
   }
-  mMetadata.mWidth.Construct(videoFrame.Metadata().GetWidth());
-  mMetadata.mHeight.Construct(videoFrame.Metadata().GetHeight());
-  if (videoFrame.Metadata().GetSpatialIndex() >= 0) {
-    mMetadata.mSpatialIndex.Construct(
-        videoFrame.Metadata().GetSpatialIndex());
+  mMetadata.mWidth.Construct(metadata.GetWidth());
+  mMetadata.mHeight.Construct(metadata.GetHeight());
+  if (metadata.GetSpatialIndex() >= 0) {
+    mMetadata.mSpatialIndex.Construct(metadata.GetSpatialIndex());
   }
-  if (videoFrame.Metadata().GetTemporalIndex() >= 0) {
-    mMetadata.mTemporalIndex.Construct(
-        videoFrame.Metadata().GetTemporalIndex());
+  if (metadata.GetTemporalIndex() >= 0) {
+    mMetadata.mTemporalIndex.Construct(metadata.GetTemporalIndex());
   }
   mMetadata.mSynchronizationSource.Construct(videoFrame.GetSsrc());
   mMetadata.mPayloadType.Construct(videoFrame.GetPayloadType());
   mMetadata.mContributingSources.Construct();
-  for (const auto csrc : videoFrame.Metadata().GetCsrcs()) {
+  for (const auto csrc : metadata.GetCsrcs()) {
     Unused << mMetadata.mContributingSources.Value().AppendElement(csrc,
                                                                    fallible);
   }
