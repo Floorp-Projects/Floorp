@@ -55,7 +55,8 @@ class Http3WebTransportSession final : public Http3StreamBase,
   nsresult TryActivating();
   void TransactionIsDone(nsresult aResult);
   void CloseSession(uint32_t aStatus, const nsACString& aReason);
-  void OnSessionClosed(uint32_t aStatus, const nsACString& aReason);
+  void OnSessionClosed(bool aCleanly, uint32_t aStatus,
+                       const nsACString& aReason);
 
   void CreateOutgoingBidirectionalStream(
       std::function<void(Result<RefPtr<Http3WebTransportStream>, nsresult>&&)>&&

@@ -321,7 +321,7 @@ nsresult Http3WebTransportSession::OnWriteSegment(char* buf, uint32_t count,
 void Http3WebTransportSession::Close(nsresult aResult) {
   LOG(("Http3WebTransportSession::Close %p", this));
   if (mListener) {
-    mListener->OnSessionClosed(0, ""_ns);
+    mListener->OnSessionClosed(NS_SUCCEEDED(aResult), 0, ""_ns);
     mListener = nullptr;
   }
   if (mTransaction) {
@@ -335,14 +335,14 @@ void Http3WebTransportSession::Close(nsresult aResult) {
   mSession = nullptr;
 }
 
-void Http3WebTransportSession::OnSessionClosed(uint32_t aStatus,
+void Http3WebTransportSession::OnSessionClosed(bool aCleanly, uint32_t aStatus,
                                                const nsACString& aReason) {
   if (mTransaction) {
     mTransaction->Close(NS_BASE_STREAM_CLOSED);
     mTransaction = nullptr;
   }
   if (mListener) {
-    mListener->OnSessionClosed(aStatus, aReason);
+    mListener->OnSessionClosed(aCleanly, aStatus, aReason);
     mListener = nullptr;
   }
   mRecvState = RECV_DONE;

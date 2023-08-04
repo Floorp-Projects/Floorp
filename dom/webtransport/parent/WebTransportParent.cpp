@@ -439,11 +439,12 @@ WebTransportParent::OnSessionReady(uint64_t aSessionId) {
   return NS_OK;
 }
 
-// We recieve this notification from the WebTransportSessionProxy if session
+// We receive this notification from the WebTransportSessionProxy if session
 // creation was unsuccessful at the end of
 // WebTransportSessionProxy::OnStopRequest
 NS_IMETHODIMP
-WebTransportParent::OnSessionClosed(const uint32_t aErrorCode,
+WebTransportParent::OnSessionClosed(const bool aCleanly,
+                                    const uint32_t aErrorCode,
                                     const nsACString& aReason) {
   nsresult rv = NS_OK;
 
@@ -455,6 +456,7 @@ WebTransportParent::OnSessionClosed(const uint32_t aErrorCode,
   // webtransport session and it's subsequent error mapping to DOM.
   // XXX See Bug 1806834
   if (!mSessionReady) {
+    // this is an unclean close (we never got to ready)
     LOG(("webtransport %p session creation failed code= %u, reason= %s", this,
          aErrorCode, PromiseFlatCString(aReason).get()));
     // we know we haven't gone Ready yet
@@ -476,9 +478,10 @@ WebTransportParent::OnSessionClosed(const uint32_t aErrorCode,
       if (mResolver) {
         LOG(("[%p] NotifyRemoteClosed to be called later", this));
         // NotifyRemoteClosed needs to wait until mResolver is invoked.
-        mExecuteAfterResolverCallback = [self = RefPtr{this}, aErrorCode,
+        mExecuteAfterResolverCallback = [self = RefPtr{this}, aCleanly,
+                                         aErrorCode,
                                          reason = nsCString{aReason}]() {
-          self->NotifyRemoteClosed(aErrorCode, reason);
+          self->NotifyRemoteClosed(aCleanly, aErrorCode, reason);
         };
         return NS_OK;
       }
@@ -488,7 +491,7 @@ WebTransportParent::OnSessionClosed(const uint32_t aErrorCode,
     // stream associated with the CONNECT request that initiated
     // transport.[[Session]] is in the "Data Recvd" state. [QUIC]
     // XXX not calculated yet
-    NotifyRemoteClosed(aErrorCode, aReason);
+    NotifyRemoteClosed(aCleanly, aErrorCode, aReason);
   }
 
   return NS_OK;
@@ -525,15 +528,15 @@ NS_IMETHODIMP WebTransportParent::OnResetReceived(uint64_t aStreamId,
   return NS_OK;
 }
 
-void WebTransportParent::NotifyRemoteClosed(uint32_t aErrorCode,
+void WebTransportParent::NotifyRemoteClosed(bool aCleanly, uint32_t aErrorCode,
                                             const nsACString& aReason) {
-  LOG(("webtransport %p session remote closed code= %u, reason= %s", this,
-       aErrorCode, PromiseFlatCString(aReason).get()));
+  LOG(("webtransport %p session remote closed cleanly=%d code= %u, reason= %s",
+       this, aCleanly, aErrorCode, PromiseFlatCString(aReason).get()));
   mSocketThread->Dispatch(NS_NewRunnableFunction(
-      __func__,
-      [self = RefPtr{this}, aErrorCode, reason = nsCString{aReason}]() {
+      __func__, [self = RefPtr{this}, aErrorCode, reason = nsCString{aReason},
+                 aCleanly]() {
         // Tell the content side we were closed by the server
-        Unused << self->SendRemoteClosed(/*XXX*/ true, aErrorCode, reason);
+        Unused << self->SendRemoteClosed(aCleanly, aErrorCode, reason);
         // Let the other end shut down the IPC channel after RecvClose()
       }));
 }

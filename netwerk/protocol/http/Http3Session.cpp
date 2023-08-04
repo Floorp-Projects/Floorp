@@ -746,6 +746,8 @@ nsresult Http3Session::ProcessEvents() {
                 stream->GetHttp3WebTransportSession();
             MOZ_RELEASE_ASSERT(wt, "It must be a WebTransport session");
 
+            bool cleanly = false;
+
             // TODO we do not handle the case when a WebTransport session stream
             // is closed before headers are sent.
             SessionCloseReasonExternal& reasonExternal =
@@ -757,15 +759,17 @@ nsresult Http3Session::ProcessEvents() {
             } else if (reasonExternal.tag ==
                        SessionCloseReasonExternal::Tag::Status) {
               status = reasonExternal.status._0;
+              cleanly = true;
             } else {
               status = reasonExternal.clean._0;
               reason.Assign(reinterpret_cast<const char*>(data.Elements()),
                             data.Length());
+              cleanly = true;
             }
             LOG(("reason.tag=%u err=%u data=%s\n",
                  static_cast<uint32_t>(reasonExternal.tag), status,
                  reason.get()));
-            wt->OnSessionClosed(status, reason);
+            wt->OnSessionClosed(cleanly, status, reason);
 
           } break;
           case WebTransportEventExternal::Tag::NewStream: {
