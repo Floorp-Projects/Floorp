@@ -497,6 +497,8 @@
   font-size: 0.85em;
   color: var(--text-color-deemphasized);
   margin-block: 2px 9px;
+  max-width: 80ch;
+  white-space: normal;
 }
 
 .urlbarView-dynamic-addons-footer {
