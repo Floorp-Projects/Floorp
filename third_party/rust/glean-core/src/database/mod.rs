@@ -1080,7 +1080,7 @@ mod test {
         let metric_id_pattern = "telemetry_test.single_metric";
 
         // Write sample metrics to the database.
-        let lifetimes = vec![Lifetime::User, Lifetime::Ping, Lifetime::Application];
+        let lifetimes = [Lifetime::User, Lifetime::Ping, Lifetime::Application];
 
         for lifetime in lifetimes.iter() {
             for value in &["retain", "delete"] {

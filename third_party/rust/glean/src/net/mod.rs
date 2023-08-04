@@ -138,9 +138,26 @@ impl UploadManager {
                     Ordering::SeqCst,
                     Ordering::SeqCst,
                 );
-            })
-            .expect("Failed to spawn Glean's uploader thread");
-        *handle = Some(thread);
+            });
+
+        match thread {
+            Ok(thread) => *handle = Some(thread),
+            Err(err) => {
+                log::warn!("Failed to spawn Glean's uploader thread. This will be retried on next upload. Error: {err}");
+                // Swapping back the thread state. We're the ones setting it to `Running`, so
+                // should be able to set it back.
+                let state_change = self.inner.thread_running.compare_exchange(
+                    State::Running,
+                    State::Stopped,
+                    Ordering::SeqCst,
+                    Ordering::SeqCst,
+                );
+
+                if state_change.is_err() {
+                    log::warn!("Failed to swap back thread state. Someone else jumped in and changed the state.");
+                }
+            }
+        };
     }
 
     pub(crate) fn shutdown(&self) {

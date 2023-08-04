@@ -45,6 +45,7 @@ pub fn initialize(cfg: Configuration) {
         app_build: "1.0.0".to_string(),
         app_display_version: "1.0.0".to_string(),
         channel: Some("testing".to_string()),
+        locale: Some("xx-XX".to_string()),
     };
 
     glean::initialize(cfg, client_info);
