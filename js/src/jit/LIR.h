@@ -423,7 +423,7 @@ class LStackArea : public LAllocation {
     inline bool done() const;
     inline void next();
     inline LAllocation alloc() const;
-    inline bool isGcPointer() const;
+    inline bool isWasmAnyRef() const;
 
     explicit operator bool() const { return !done(); }
   };
@@ -502,9 +502,10 @@ class LDefinition {
     INT32,    // int32 data (GPR).
     OBJECT,   // Pointer that may be collected as garbage (GPR).
     SLOTS,    // Slots/elements pointer that may be moved by minor GCs (GPR).
-    FLOAT32,  // 32-bit floating-point value (FPU).
-    DOUBLE,   // 64-bit floating-point value (FPU).
-    SIMD128,  // 128-bit SIMD vector (FPU).
+    WASM_ANYREF,   // Tagged pointer that may be collected as garbage (GPR).
+    FLOAT32,       // 32-bit floating-point value (FPU).
+    DOUBLE,        // 64-bit floating-point value (FPU).
+    SIMD128,       // 128-bit SIMD vector (FPU).
     STACKRESULTS,  // A variable-size stack allocation that may contain objects.
 #ifdef JS_NUNBOX32
     // A type virtual register must be followed by a payload virtual
@@ -632,7 +633,6 @@ class LDefinition {
       case MIRType::Symbol:
       case MIRType::BigInt:
       case MIRType::Object:
-      case MIRType::WasmAnyRef:
         return LDefinition::OBJECT;
       case MIRType::Double:
         return LDefinition::DOUBLE;
@@ -645,6 +645,8 @@ class LDefinition {
       case MIRType::Slots:
       case MIRType::Elements:
         return LDefinition::SLOTS;
+      case MIRType::WasmAnyRef:
+        return LDefinition::WASM_ANYREF;
       case MIRType::Pointer:
       case MIRType::IntPtr:
         return LDefinition::GENERAL;
@@ -1464,6 +1466,11 @@ class LSafepoint : public TempObject {
   // List of slots which have slots/elements pointers.
   SlotList slotsOrElementsSlots_;
 
+  // The subset of liveRegs which contains wasm::AnyRef's.
+  LiveGeneralRegisterSet wasmAnyRefRegs_;
+  // List of slots which have wasm::AnyRef's.
+  SlotList wasmAnyRefSlots_;
+
   // Wasm only: with what kind of instruction is this LSafepoint associated?
   // true => wasm trap, false => wasm call.
   bool isWasmTrap_;
@@ -1490,6 +1497,7 @@ class LSafepoint : public TempObject {
     MOZ_ASSERT((valueRegs().bits() & ~liveRegs().gprs().bits()) == 0);
 #endif
     MOZ_ASSERT((gcRegs().bits() & ~liveRegs().gprs().bits()) == 0);
+    MOZ_ASSERT((wasmAnyRefRegs().bits() & ~liveRegs().gprs().bits()) == 0);
   }
 
   explicit LSafepoint(TempAllocator& alloc)
@@ -1502,6 +1510,7 @@ class LSafepoint : public TempObject {
         valueSlots_(alloc),
 #endif
         slotsOrElementsSlots_(alloc),
+        wasmAnyRefSlots_(alloc),
         isWasmTrap_(false),
         framePushedAtStackMapBase_(0) {
     assertInvariants();
@@ -1595,12 +1604,51 @@ class LSafepoint : public TempObject {
     return false;
   }
 
+  void addWasmAnyRefReg(Register reg) {
+    wasmAnyRefRegs_.addUnchecked(reg);
+    assertInvariants();
+  }
+  LiveGeneralRegisterSet wasmAnyRefRegs() const { return wasmAnyRefRegs_; }
+
+  [[nodiscard]] bool addWasmAnyRefSlot(bool stack, uint32_t slot) {
+    bool result = wasmAnyRefSlots_.append(SlotEntry(stack, slot));
+    if (result) {
+      assertInvariants();
+    }
+    return result;
+  }
+  SlotList& wasmAnyRefSlots() { return wasmAnyRefSlots_; }
+
+  [[nodiscard]] bool addWasmAnyRef(LAllocation alloc) {
+    if (alloc.isMemory()) {
+      return addWasmAnyRefSlot(alloc.isStackSlot(), alloc.memorySlot());
+    }
+    if (alloc.isRegister()) {
+      addWasmAnyRefReg(alloc.toRegister().gpr());
+    }
+    assertInvariants();
+    return true;
+  }
+  bool hasWasmAnyRef(LAllocation alloc) const {
+    if (alloc.isRegister()) {
+      return wasmAnyRefRegs().has(alloc.toRegister().gpr());
+    }
+    MOZ_ASSERT(alloc.isMemory());
+    for (size_t i = 0; i < wasmAnyRefSlots_.length(); i++) {
+      if (wasmAnyRefSlots_[i].stack == alloc.isStackSlot() &&
+          wasmAnyRefSlots_[i].slot == alloc.memorySlot()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // Return true if all GC-managed pointers from `alloc` are recorded in this
   // safepoint.
-  bool hasAllGcPointersFromStackArea(LAllocation alloc) const {
+  bool hasAllWasmAnyRefsFromStackArea(LAllocation alloc) const {
     for (LStackArea::ResultIterator iter = alloc.toStackArea()->results(); iter;
          iter.next()) {
-      if (iter.isGcPointer() && !hasGcPointer(iter.alloc())) {
+      if (iter.isWasmAnyRef() && !hasWasmAnyRef(iter.alloc())) {
         return false;
       }
     }

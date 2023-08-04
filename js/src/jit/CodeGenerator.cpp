@@ -3886,6 +3886,7 @@ void CodeGenerator::visitMoveGroup(LMoveGroup* group) {
     switch (type) {
       case LDefinition::OBJECT:
       case LDefinition::SLOTS:
+      case LDefinition::WASM_ANYREF:
 #ifdef JS_NUNBOX32
       case LDefinition::TYPE:
       case LDefinition::PAYLOAD:
@@ -8753,7 +8754,7 @@ void CodeGenerator::visitWasmStackResultArea(LWasmStackResultArea* lir) {
   bool tempInit = false;
   for (auto iter = output->toStackArea()->results(); iter; iter.next()) {
     // Zero out ref stack results.
-    if (iter.isGcPointer()) {
+    if (iter.isWasmAnyRef()) {
       Register temp = ToRegister(lir->temp0());
       if (!tempInit) {
         masm.xorPtr(temp, temp);
@@ -13862,8 +13863,8 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
   bool hasRefs = false;
 
   // REG DUMP AREA, if any.
-  const LiveGeneralRegisterSet gcRegs = safepoint.gcRegs();
-  GeneralRegisterForwardIterator gcRegsIter(gcRegs);
+  const LiveGeneralRegisterSet wasmAnyRefRegs = safepoint.wasmAnyRefRegs();
+  GeneralRegisterForwardIterator wasmAnyRefRegsIter(wasmAnyRefRegs);
   if (safepoint.isWasmTrap()) {
     // Deal with roots in registers.  This can only happen for safepoints
     // associated with a trap.  For safepoints associated with a call, we
@@ -13872,8 +13873,8 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
     if (!vec.appendN(false, trapExitLayoutNumWords)) {
       return false;
     }
-    for (; gcRegsIter.more(); ++gcRegsIter) {
-      Register reg = *gcRegsIter;
+    for (; wasmAnyRefRegsIter.more(); ++wasmAnyRefRegsIter) {
+      Register reg = *wasmAnyRefRegsIter;
       size_t offsetFromTop = trapExitLayout.getOffset(reg);
 
       // If this doesn't hold, the associated register wasn't saved by
@@ -13892,7 +13893,7 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
   } else {
     // This map is associated with a call instruction.  We expect there to be
     // no live ref-carrying registers, and if there are we're in deep trouble.
-    MOZ_RELEASE_ASSERT(!gcRegsIter.more());
+    MOZ_RELEASE_ASSERT(!wasmAnyRefRegsIter.more());
   }
 
   // BODY (GENERAL SPILL) AREA and FRAME and INCOMING ARGS
@@ -13901,21 +13902,21 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
   if (!vec.appendN(false, nNonTrapBytes / sizeof(void*))) {
     return false;
   }
-  const LSafepoint::SlotList& gcSlots = safepoint.gcSlots();
-  for (SafepointSlotEntry gcSlot : gcSlots) {
+  const LSafepoint::SlotList& wasmAnyRefSlots = safepoint.wasmAnyRefSlots();
+  for (SafepointSlotEntry wasmAnyRefSlot : wasmAnyRefSlots) {
     // The following needs to correspond with JitFrameLayout::slotRef
-    // gcSlot.stack == 0 means the slot is in the args area
-    if (gcSlot.stack) {
+    // wasmAnyRefSlot.stack == 0 means the slot is in the args area
+    if (wasmAnyRefSlot.stack) {
       // It's a slot in the body allocation, so .slot is interpreted
       // as an index downwards from the Frame*
-      MOZ_ASSERT(gcSlot.slot <= nBodyBytes);
-      uint32_t offsetInBytes = nBodyBytes - gcSlot.slot;
+      MOZ_ASSERT(wasmAnyRefSlot.slot <= nBodyBytes);
+      uint32_t offsetInBytes = nBodyBytes - wasmAnyRefSlot.slot;
       MOZ_ASSERT(offsetInBytes % sizeof(void*) == 0);
       vec[wordsSoFar + offsetInBytes / sizeof(void*)] = true;
     } else {
       // It's an argument slot
-      MOZ_ASSERT(gcSlot.slot < nInboundStackArgBytes);
-      uint32_t offsetInBytes = nBodyBytes + nFrameBytes + gcSlot.slot;
+      MOZ_ASSERT(wasmAnyRefSlot.slot < nInboundStackArgBytes);
+      uint32_t offsetInBytes = nBodyBytes + nFrameBytes + wasmAnyRefSlot.slot;
       MOZ_ASSERT(offsetInBytes % sizeof(void*) == 0);
       vec[wordsSoFar + offsetInBytes / sizeof(void*)] = true;
     }

@@ -3480,7 +3480,7 @@ inline LAllocation LStackArea::ResultIterator::alloc() const {
   MWasmStackResultArea* area = alloc_.ins()->toWasmStackResultArea()->mir();
   return LStackSlot(area->base() - area->result(idx_).offset());
 }
-inline bool LStackArea::ResultIterator::isGcPointer() const {
+inline bool LStackArea::ResultIterator::isWasmAnyRef() const {
   MOZ_ASSERT(!done());
   MWasmStackResultArea* area = alloc_.ins()->toWasmStackResultArea()->mir();
   MIRType type = area->result(idx_).type();
@@ -3491,7 +3491,7 @@ inline bool LStackArea::ResultIterator::isGcPointer() const {
     return false;
   }
 #endif
-  return LDefinition::TypeFrom(type) == LDefinition::OBJECT;
+  return LDefinition::TypeFrom(type) == LDefinition::WASM_ANYREF;
 }
 
 class LWasmStackResult : public LInstructionHelper<1, 1, 0> {

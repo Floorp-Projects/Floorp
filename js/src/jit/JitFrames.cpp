@@ -1005,6 +1005,15 @@ static void TraceIonJSFrame(JSTracer* trc, const JSJitFrameIter& frame) {
     }
   }
 #endif
+
+  // Skip over slots/elements to get to wasm anyrefs
+  while (safepoint.getSlotsOrElementsSlot(&entry)) {
+  }
+
+  while (safepoint.getWasmAnyRefSlot(&entry)) {
+    wasm::AnyRef* v = (wasm::AnyRef*)layout->slotRef(entry);
+    TraceRoot(trc, v, "ion-wasm-anyref-slot");
+  }
 }
 
 static void TraceBailoutFrame(JSTracer* trc, const JSJitFrameIter& frame) {
