@@ -1478,10 +1478,7 @@ export class UrlbarView {
     item._elements.set("url", url);
 
     let description = this.#createElement("div");
-    description.classList.add(
-      "urlbarView-row-body-description",
-      "urlbarView-overflowable"
-    );
+    description.classList.add("urlbarView-row-body-description");
     body.appendChild(description);
     item._elements.set("description", description);
 
