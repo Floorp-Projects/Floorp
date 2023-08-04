@@ -639,7 +639,7 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
 
         cx->clearPendingException();
         RootedAnyRef ref(cx, AnyRef::null());
-        if (!BoxAnyRef(cx, exn, &ref)) {
+        if (!AnyRef::fromJSValue(cx, exn, &ref)) {
           MOZ_ASSERT(cx->isThrowingOutOfMemory());
           hasCatchableException = false;
           continue;
@@ -865,7 +865,7 @@ static void* BoxValue_Anyref(Value* rawVal) {
   JSContext* cx = TlsContext.get();  // Cold code
   RootedValue val(cx, *rawVal);
   RootedAnyRef result(cx, AnyRef::null());
-  if (!BoxAnyRef(cx, val, &result)) {
+  if (!AnyRef::fromJSValue(cx, val, &result)) {
     return nullptr;
   }
   return result.get().forCompiledCode();
@@ -916,14 +916,14 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, Instance* instance,
       case ValType::Ref: {
         // Guarded against by temporarilyUnsupportedReftypeForEntry()
         MOZ_RELEASE_ASSERT(funcType.args()[i].refType().isExtern());
-        // Leave Object and Null alone, we will unbox inline.  All we need
-        // to do is convert other values to an Object representation.
-        if (!arg.isObjectOrNull()) {
-          RootedAnyRef result(cx, AnyRef::null());
-          if (!BoxAnyRef(cx, arg, &result)) {
+        // Perform any fallible boxing that may need to happen so that the JIT
+        // code does not need to.
+        if (AnyRef::valueNeedsBoxing(arg)) {
+          JSObject* boxedValue = AnyRef::boxValue(cx, arg);
+          if (!boxedValue) {
             return false;
           }
-          argv[i].setObject(*result.get().asJSObject());
+          argv[i] = ObjectOrNullValue(boxedValue);
         }
         break;
       }

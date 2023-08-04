@@ -361,7 +361,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     }
 
     return pushRef(RefType::fromTypeDef(&typeDef, false),
-                   AnyRef::fromJSObject(structObj));
+                   AnyRef::fromJSObject(*structObj));
   }
 
   bool evalStructNewDefault(JSContext* cx, uint32_t typeIndex) {
@@ -373,7 +373,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
 
     const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
     return pushRef(RefType::fromTypeDef(&typeDef, false),
-                   AnyRef::fromJSObject(structObj));
+                   AnyRef::fromJSObject(*structObj));
   }
 
   bool evalArrayNew(JSContext* cx, uint32_t typeIndex) {
@@ -390,7 +390,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
 
     const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
     return pushRef(RefType::fromTypeDef(&typeDef, false),
-                   AnyRef::fromJSObject(arrayObj));
+                   AnyRef::fromJSObject(*arrayObj));
   }
 
   bool evalArrayNewDefault(JSContext* cx, uint32_t typeIndex) {
@@ -403,7 +403,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
 
     const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
     return pushRef(RefType::fromTypeDef(&typeDef, false),
-                   AnyRef::fromJSObject(arrayObj));
+                   AnyRef::fromJSObject(*arrayObj));
   }
 
   bool evalArrayNewFixed(JSContext* cx, uint32_t typeIndex,
@@ -424,7 +424,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
 
     const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
     return pushRef(RefType::fromTypeDef(&typeDef, false),
-                   AnyRef::fromJSObject(arrayObj));
+                   AnyRef::fromJSObject(*arrayObj));
   }
 #endif  // ENABLE_WASM_GC
 };

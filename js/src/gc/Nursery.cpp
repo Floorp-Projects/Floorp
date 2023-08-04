@@ -1507,6 +1507,10 @@ void js::Nursery::traceRoots(AutoGCSession& session, TenuringTracer& mover) {
     sb.traceValues(mover);
     endProfile(ProfileKey::TraceValues);
 
+    startProfile(ProfileKey::TraceWasmAnyRefs);
+    sb.traceWasmAnyRefs(mover);
+    endProfile(ProfileKey::TraceWasmAnyRefs);
+
     startProfile(ProfileKey::TraceCells);
     sb.traceCells(mover);
     endProfile(ProfileKey::TraceCells);

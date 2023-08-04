@@ -150,10 +150,6 @@ class WasmModuleObject : public NativeObject {
 // module exports a global twice, the two exported WasmGlobalObjects are the
 // same.
 
-// TODO/AnyRef-boxing: With boxed immediates and strings, JSObject* is no longer
-// the most appropriate representation for Cell::anyref.
-STATIC_ASSERT_ANYREF_IS_JSOBJECT;
-
 class WasmGlobalObject : public NativeObject {
   static const unsigned MUTABLE_SLOT = 0;
   static const unsigned VAL_SLOT = 1;

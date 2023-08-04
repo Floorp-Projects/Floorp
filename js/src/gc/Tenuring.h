@@ -20,6 +20,10 @@ class NativeObject;
 class Nursery;
 class PlainObject;
 
+namespace wasm {
+class AnyRef;
+}  // namespace wasm
+
 namespace gc {
 
 class RelocationOverlay;
@@ -121,6 +125,7 @@ class TenuringTracer final : public JSTracer {
   size_t getTenuredCells() const;
 
   void traverse(JS::Value* thingp);
+  void traverse(wasm::AnyRef* thingp);
 
   // The store buffers need to be able to call these directly.
   void traceObject(JSObject* obj);

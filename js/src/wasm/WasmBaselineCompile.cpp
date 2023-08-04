@@ -4154,9 +4154,6 @@ bool BaseCompiler::emitCatch() {
 #endif
       }
       case ValType::Ref: {
-        // TODO/AnyRef-boxing: With boxed immediates and strings, this may need
-        // to handle other kinds of values.
-        ASSERT_ANYREF_IS_JSOBJECT;
         RegRef reg = needRef();
         masm.loadPtr(Address(data, offset), reg);
         pushRef(reg);
@@ -6558,15 +6555,11 @@ bool BaseCompiler::emitBarrieredStore(const Maybe<RegRef>& object,
 }
 
 void BaseCompiler::emitBarrieredClear(RegPtr valueAddr) {
-  // TODO/AnyRef-boxing: With boxed immediates and strings, the write
-  // barrier is going to have to be more complicated.
-  ASSERT_ANYREF_IS_JSOBJECT;
-
   // The pre-barrier preserves all allocated registers.
   emitPreBarrier(valueAddr);
 
   // Store null
-  masm.storePtr(ImmWord(0), Address(valueAddr, 0));
+  masm.storePtr(ImmWord(NULLREF_VALUE), Address(valueAddr, 0));
 
   // No post-barrier is needed, as null does not require a store buffer entry
 }

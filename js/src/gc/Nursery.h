@@ -28,6 +28,7 @@
   _(TraceValues, "mkVals")                    \
   _(TraceCells, "mkClls")                     \
   _(TraceSlots, "mkSlts")                     \
+  _(TraceWasmAnyRefs, "mkWars")               \
   _(TraceWholeCells, "mcWCll")                \
   _(TraceGenericEntries, "mkGnrc")            \
   _(CheckHashTables, "ckTbls")                \

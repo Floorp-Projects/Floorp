@@ -169,6 +169,31 @@ void TenuringTracer::traverse(JS::Value* thingp) {
   }
 }
 
+void TenuringTracer::traverse(wasm::AnyRef* thingp) {
+  MOZ_ASSERT(!nursery().isInside(thingp));
+
+  wasm::AnyRef value = *thingp;
+  CheckTracedThing(this, value);
+
+  wasm::AnyRef post = wasm::AnyRef::invalid();
+  switch (value.kind()) {
+    case wasm::AnyRefKind::Object: {
+      JSObject* obj = &value.toJSObject();
+      onObjectEdge(&obj, "value");
+      post = wasm::AnyRef::fromJSObject(*obj);
+      break;
+    }
+    case wasm::AnyRefKind::Null: {
+      // This function must only be called for GC things.
+      MOZ_CRASH();
+    }
+  }
+
+  if (post != value) {
+    *thingp = post;
+  }
+}
+
 template <typename T>
 void js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(TenuringTracer& mover) {
   mozilla::ReentrancyGuard g(*owner_);
@@ -185,6 +210,8 @@ namespace js::gc {
 template void StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>::trace(
     TenuringTracer&);
 template void StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotsEdge>::trace(
+    TenuringTracer&);
+template void StoreBuffer::MonoTypeBuffer<StoreBuffer::WasmAnyRefEdge>::trace(
     TenuringTracer&);
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::StringPtrEdge>;
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::BigIntPtrEdge>;
@@ -407,6 +434,12 @@ void js::gc::StoreBuffer::CellPtrEdge<T>::trace(TenuringTracer& mover) const {
 }
 
 void js::gc::StoreBuffer::ValueEdge::trace(TenuringTracer& mover) const {
+  if (deref()) {
+    mover.traverse(edge);
+  }
+}
+
+void js::gc::StoreBuffer::WasmAnyRefEdge::trace(TenuringTracer& mover) const {
   if (deref()) {
     mover.traverse(edge);
   }

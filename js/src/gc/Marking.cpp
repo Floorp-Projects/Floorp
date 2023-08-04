@@ -224,6 +224,7 @@ JS_FOR_EACH_TRACEKIND(IMPL_CHECK_TRACED_THING);
 #  undef IMPL_CHECK_TRACED_THING
 
 template void CheckTracedThing<Value>(JSTracer*, const Value&);
+template void CheckTracedThing<wasm::AnyRef>(JSTracer*, const wasm::AnyRef&);
 
 }  // namespace js
 
@@ -391,6 +392,7 @@ JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(DEFINE_UNSAFE_TRACE_ROOT_FUNCTION)
 // Also, for the moment, define TraceRoot for internal GC pointer types.
 DEFINE_UNSAFE_TRACE_ROOT_FUNCTION(AbstractGeneratorObject*)
 DEFINE_UNSAFE_TRACE_ROOT_FUNCTION(SavedFrame*)
+DEFINE_UNSAFE_TRACE_ROOT_FUNCTION(wasm::AnyRef)
 
 #undef DEFINE_UNSAFE_TRACE_ROOT_FUNCTION
 
@@ -661,6 +663,10 @@ bool js::gc::TraceEdgeInternal(JSTracer* trc, jsid* thingp, const char* name) {
   return TraceTaggedPtrEdge(trc, thingp, name);
 }
 bool js::gc::TraceEdgeInternal(JSTracer* trc, TaggedProto* thingp,
+                               const char* name) {
+  return TraceTaggedPtrEdge(trc, thingp, name);
+}
+bool js::gc::TraceEdgeInternal(JSTracer* trc, wasm::AnyRef* thingp,
                                const char* name) {
   return TraceTaggedPtrEdge(trc, thingp, name);
 }

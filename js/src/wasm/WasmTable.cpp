@@ -221,19 +221,13 @@ void Table::fillFuncRef(uint32_t index, uint32_t fillCount, FuncRef ref,
 
 AnyRef Table::getAnyRef(uint32_t index) const {
   MOZ_ASSERT(!isFunction());
-  // TODO/AnyRef-boxing: With boxed immediates and strings, the write barrier
-  // is going to have to be more complicated.
-  ASSERT_ANYREF_IS_JSOBJECT;
-  return AnyRef::fromJSObject(objects_[index]);
+  return objects_[index];
 }
 
 void Table::fillAnyRef(uint32_t index, uint32_t fillCount, AnyRef ref) {
   MOZ_ASSERT(!isFunction());
-  // TODO/AnyRef-boxing: With boxed immediates and strings, the write barrier
-  // is going to have to be more complicated.
-  ASSERT_ANYREF_IS_JSOBJECT;
   for (uint32_t i = index, end = index + fillCount; i != end; i++) {
-    objects_[i] = ref.asJSObject();
+    objects_[i] = ref;
   }
 }
 
@@ -321,7 +315,7 @@ bool Table::copy(JSContext* cx, const Table& srcTable, uint32_t dstIndex,
             // OOM, so just pass it on.
             return false;
           }
-          fillAnyRef(dstIndex, 1, AnyRef::fromJSObject(fun));
+          fillAnyRef(dstIndex, 1, AnyRef::fromJSObject(*fun));
           break;
         }
       }

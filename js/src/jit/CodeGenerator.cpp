@@ -18819,7 +18819,7 @@ void CodeGenerator::visitWasmBoxValue(LWasmBoxValue* lir) {
   }
 
   using Fn = JSObject* (*)(JSContext*, HandleValue);
-  OutOfLineCode* oolBoxValue = oolCallVM<Fn, wasm::BoxBoxableValue>(
+  OutOfLineCode* oolBoxValue = oolCallVM<Fn, wasm::AnyRef::boxValue>(
       lir, ArgList(input), StoreRegisterTo(output));
 
   masm.jump(oolBoxValue->entry());
