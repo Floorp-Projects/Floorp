@@ -807,6 +807,27 @@ void nsContentSecurityUtils::NotifyEvalUsage(bool aIsSystemPrincipal,
   console->LogMessage(error);
 }
 
+// If we detect that one of the relevant prefs has been changed, reset
+// sJSHacksChecked to cause us to re-evaluate all the pref values.
+// This will stop us from crashing because a user enabled one of these
+// prefs during a session and then triggered the JavaScript load mitigation
+// (which can cause a crash).
+class JSHackPrefObserver final {
+ public:
+  JSHackPrefObserver() = default;
+  static void PrefChanged(const char* aPref, void* aData);
+
+ protected:
+  ~JSHackPrefObserver() = default;
+};
+
+// static
+void JSHackPrefObserver::PrefChanged(const char* aPref, void* aData) {
+  sJSHacksChecked = false;
+}
+
+static bool sJSHackObserverAdded = false;
+
 /* static */
 void nsContentSecurityUtils::DetectJsHacks() {
   // We can only perform the check of this preference on the Main Thread
@@ -827,6 +848,16 @@ void nsContentSecurityUtils::DetectJsHacks() {
   if (MOZ_LIKELY(sJSHacksChecked || sJSHacksPresent)) {
     return;
   }
+
+  static const char* kObservedPrefs[] = {
+      "xpinstall.signatures.required", "general.config.filename",
+      "autoadmin.global_config_url", "autoadmin.failover_to_cached", nullptr};
+  if (MOZ_UNLIKELY(!sJSHackObserverAdded)) {
+    Preferences::RegisterCallbacks(JSHackPrefObserver::PrefChanged,
+                                   kObservedPrefs);
+    sJSHackObserverAdded = true;
+  }
+
   nsresult rv;
   sJSHacksChecked = true;
 
