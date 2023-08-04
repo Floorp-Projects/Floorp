@@ -299,7 +299,7 @@
 
 - name: WasmTrapIfNull
   operands:
-    object: WordSized
+    ref: WordSized
   mir_op: true
 
 - name: WasmRefIsSubtypeOfConcrete
@@ -3575,12 +3575,17 @@
 - name: IonToWasmCallI64
   gen_boilerplate: false
 
-- name: WasmBoxValue
+- name: WasmAnyRefFromJSValue
   result_type: WordSized
   operands:
     input: BoxedValue
 
 - name: WasmAnyRefFromJSObject
+  result_type: WordSized
+  operands:
+    input: WordSized
+
+- name: WasmAnyRefFromJSString
   result_type: WordSized
   operands:
     input: WordSized

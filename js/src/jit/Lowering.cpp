@@ -3069,8 +3069,9 @@ void LIRGenerator::visitWasmBuiltinTruncateToInt32(
   lowerWasmBuiltinTruncateToInt32(truncate);
 }
 
-void LIRGenerator::visitWasmBoxValue(MWasmBoxValue* ins) {
-  LWasmBoxValue* lir = new (alloc()) LWasmBoxValue(useBox(ins->input()));
+void LIRGenerator::visitWasmAnyRefFromJSValue(MWasmAnyRefFromJSValue* ins) {
+  LWasmAnyRefFromJSValue* lir =
+      new (alloc()) LWasmAnyRefFromJSValue(useBox(ins->input()));
   define(lir, ins);
   assignSafepoint(lir, ins);
 }
@@ -3078,6 +3079,12 @@ void LIRGenerator::visitWasmBoxValue(MWasmBoxValue* ins) {
 void LIRGenerator::visitWasmAnyRefFromJSObject(MWasmAnyRefFromJSObject* ins) {
   LWasmAnyRefFromJSObject* lir =
       new (alloc()) LWasmAnyRefFromJSObject(useRegisterAtStart(ins->input()));
+  define(lir, ins);
+}
+
+void LIRGenerator::visitWasmAnyRefFromJSString(MWasmAnyRefFromJSString* ins) {
+  LWasmAnyRefFromJSString* lir =
+      new (alloc()) LWasmAnyRefFromJSString(useRegisterAtStart(ins->input()));
   define(lir, ins);
 }
 
@@ -3422,7 +3429,7 @@ void LIRGenerator::visitWasmTrap(MWasmTrap* ins) {
 }
 
 void LIRGenerator::visitWasmTrapIfNull(MWasmTrapIfNull* ins) {
-  auto* lir = new (alloc()) LWasmTrapIfNull(useRegister(ins->value()));
+  auto* lir = new (alloc()) LWasmTrapIfNull(useRegister(ins->ref()));
   add(lir, ins);
 }
 

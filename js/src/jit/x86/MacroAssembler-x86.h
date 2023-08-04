@@ -889,6 +889,17 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     movl(payloadOf(src), dest);
   }
 
+  void unboxWasmAnyRefGCThingForGCBarrier(const Address& src, Register dest) {
+    movl(ImmWord(wasm::AnyRef::GCThingMask), dest);
+    andl(Operand(src), dest);
+  }
+
+  void getWasmAnyRefGCThingChunk(Register src, Register dest) {
+    MOZ_ASSERT(src != dest);
+    movl(ImmWord(wasm::AnyRef::GCThingChunkMask), dest);
+    andl(src, dest);
+  }
+
   void notBoolean(const ValueOperand& val) { xorl(Imm32(1), val.payloadReg()); }
 
   template <typename T>

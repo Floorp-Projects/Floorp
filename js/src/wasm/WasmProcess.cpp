@@ -404,7 +404,7 @@ bool wasm::Init() {
   // at compile time.
   uintptr_t pageSize = gc::SystemPageSize();
   MOZ_RELEASE_ASSERT(wasm::NullPtrGuardSize <= pageSize);
-  MOZ_RELEASE_ASSERT(intptr_t(nullptr) == wasm::NULLREF_VALUE);
+  MOZ_RELEASE_ASSERT(intptr_t(nullptr) == AnyRef::NullRefValue);
 
   ConfigureHugeMemory();
 

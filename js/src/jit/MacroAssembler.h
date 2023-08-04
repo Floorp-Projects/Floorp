@@ -1008,6 +1008,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void loadAbiReturnAddress(Register dest) PER_SHARED_ARCH;
 
+  // ===============================================================
+  // Copy instructions
+
+  inline void copy64(const Address& src, const Address& dest, Register scratch);
+
  public:
   // ===============================================================
   // Logical instructions
@@ -1815,9 +1820,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchTestProxyHandlerFamily(Condition cond, Register proxy,
                                            Register scratch,
                                            const void* handlerp, Label* label);
-
-  inline void branchTestObjectIsWasmGcObject(bool isGcObject, Register obj,
-                                             Register scratch, Label* label);
 
   inline void branchTestNeedsIncrementalBarrier(Condition cond, Label* label);
   inline void branchTestNeedsIncrementalBarrierAnyZone(Condition cond,
@@ -3942,6 +3944,40 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                           Register scratch,
                                           uint32_t superTypeDepth, Label* label,
                                           bool onSuccess);
+
+  // Branch if the wasm anyref `src` is or is not the null value.
+  void branchWasmAnyRefIsNull(bool isNull, Register src, Label* label);
+  // Branch if the wasm anyref `src` is or is not a JSObject*.
+  void branchWasmAnyRefIsObjectOrNull(bool isObject, Register src, Label* label);
+  // Branch if the wasm anyref `src` is or is not a GC thing.
+  void branchWasmAnyRefIsGCThing(bool isGCThing, Register src, Label* label);
+  // Branch if the wasm anyref `src` is or is not pointing to a nursery cell.
+  void branchWasmAnyRefIsNurseryCell(Condition cond, Register src,
+                                     Register scratch, Label* label);
+
+  // Branch if the JS value `src` would need to be boxed out of line to be
+  // converted to a wasm anyref.
+  void branchValueConvertsToWasmAnyRefInline(ValueOperand src, Label* label);
+  // Convert a JS value to a wasm anyref. If the value requires boxing, this
+  // will branch to `oolConvert`.
+  void convertValueToWasmAnyRef(ValueOperand src, Register dest,
+                                Label* oolConvert);
+  // Convert a JS object to a wasm anyref. This cannot fail.
+  void convertObjectToWasmAnyRef(Register src, Register dest);
+  // Convert a JS string to a wasm anyref. This cannot fail.
+  void convertStringToWasmAnyRef(Register src, Register dest);
+
+  // Convert a wasm anyref to a JS value. This cannot fail.
+  //
+  // Due to spectre mitigations, these methods may clobber src.
+  void convertWasmAnyRefToValue(Register instance, Register src,
+                                ValueOperand dst, Register scratch);
+  void convertWasmAnyRefToValue(Register instance, Register src,
+                                const Address& dst, Register scratch);
+
+  // Branch if the object `src` is or is not a WasmGcObject.
+  void branchObjectIsWasmGcObject(bool isGcObject, Register src,
+                                  Register scratch, Label* label);
 
   // Compute ptr += (indexTemp32 << shift) where shift can be any value < 32.
   // May destroy indexTemp32.  The value of indexTemp32 must be positive, and it

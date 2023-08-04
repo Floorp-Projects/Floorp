@@ -71,6 +71,9 @@ struct TaggedPtr<wasm::AnyRef> {
   static wasm::AnyRef wrap(JSObject* obj) {
     return wasm::AnyRef::fromJSObjectOrNull(obj);
   }
+  static wasm::AnyRef wrap(JSString* str) {
+    return wasm::AnyRef::fromJSString(str);
+  }
   static wasm::AnyRef empty() { return wasm::AnyRef(); }
 };
 

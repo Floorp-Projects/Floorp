@@ -44,9 +44,7 @@ namespace wasm {
 // host type that the host system allows to flow into and out of wasm
 // transparently.  It is a pointer-sized datum that has the same representation
 // as all its subtypes (funcref, externref, eqref, (ref T), et al) due to the
-// non-coercive subtyping of the wasm type system.  Its current representation
-// is a plain JSObject*, and the private JSObject subtype WasmValueBox is used
-// to box non-object non-null JS values.
+// non-coercive subtyping of the wasm type system.
 //
 // The C++/wasm boundary always uses a 'void*' type to express AnyRef values, to
 // emphasize the pointer-ness of the value.  The C++ code must transform the
@@ -62,13 +60,6 @@ namespace wasm {
 //
 // The lowest bits of the pointer value are used for tagging, to allow for some
 // representation optimizations and to distinguish various types.
-//
-// For version 0, we simply equate AnyRef and JSObject* (this means that there
-// are technically no tags at all yet).  We use a simple boxing scheme that
-// wraps a JS value that is not already JSObject in a distinguishable JSObject
-// that holds the value, see WasmTypes.cpp for details.  Knowledge of this
-// mapping is embedded in CodeGenerator.cpp (in WasmBoxValue and
-// WasmAnyRefFromJSObject) and in WasmStubs.cpp (in functions Box* and Unbox*).
 
 // The kind of value stored in an AnyRef. This is not 1:1 with the pointer tag
 // of AnyRef as this separates the 'Null' and 'Object' cases which are
@@ -76,36 +67,16 @@ namespace wasm {
 enum class AnyRefKind : uint8_t {
   Null,
   Object,
+  String,
 };
 
 // The pointer tag of an AnyRef.
 enum class AnyRefTag : uint8_t {
   // This value is either a JSObject& or a null pointer.
   ObjectOrNull = 0x0,
+  // This value is a JSString*.
+  String = 0x2,
 };
-static constexpr uintptr_t TAG_MASK = 0x3;
-static constexpr uintptr_t TAG_SHIFT = 2;
-static_assert(TAG_SHIFT <= gc::CellAlignShift, "not enough free bits");
-
-static constexpr uintptr_t AddAnyRefTag(uintptr_t value, AnyRefTag tag) {
-  MOZ_ASSERT(!(value & TAG_MASK));
-  return value | uintptr_t(tag);
-}
-static constexpr AnyRefTag GetAnyRefTag(uintptr_t value) {
-  return (AnyRefTag)(value & TAG_MASK);
-}
-static constexpr uintptr_t RemoveAnyRefTag(uintptr_t value) {
-  return value & ~TAG_MASK;
-}
-
-// The representation of a null reference value throughout the compiler for
-// when we need an integer constant. This is asserted to be equivalent to
-// nullptr in wasm::Init.
-static constexpr uintptr_t NULLREF_VALUE = 0;
-static_assert(GetAnyRefTag(NULLREF_VALUE) == AnyRefTag::ObjectOrNull);
-
-static constexpr uintptr_t INVALIDREF_VALUE = UINTPTR_MAX & ~TAG_MASK;
-static_assert(GetAnyRefTag(INVALIDREF_VALUE) == AnyRefTag::ObjectOrNull);
 
 // A reference to any wasm reference type or host (JS) value. AnyRef is
 // optimized for efficient access to wasm GC objects and possibly a tagged
@@ -116,32 +87,64 @@ class AnyRef {
   uintptr_t value_;
 
   // Get the pointer tag stored in value_.
-  AnyRefTag pointerTag() const { return GetAnyRefTag(value_); }
+  AnyRefTag pointerTag() const { return GetUintptrTag(value_); }
 
   explicit AnyRef(uintptr_t value) : value_(value) {}
 
+  static constexpr uintptr_t TagUintptr(uintptr_t value, AnyRefTag tag) {
+    MOZ_ASSERT(!(value & TagMask));
+    return value | uintptr_t(tag);
+  }
+  static constexpr uintptr_t UntagUintptr(uintptr_t value) {
+    return value & ~TagMask;
+  }
+  static constexpr AnyRefTag GetUintptrTag(uintptr_t value) {
+    return (AnyRefTag)(value & TagMask);
+  }
+
  public:
-  explicit AnyRef() : value_(NULLREF_VALUE) {}
-  MOZ_IMPLICIT AnyRef(std::nullptr_t) : value_(NULLREF_VALUE) {}
+  static constexpr uintptr_t TagMask = 0x3;
+  static constexpr uintptr_t TagShift = 2;
+  static_assert(TagShift <= gc::CellAlignShift, "not enough free bits");
+  // A mask for getting the GC thing an AnyRef represents.
+  static constexpr uintptr_t GCThingMask = ~TagMask;
+  // A combined mask for getting the gc::Chunk for an AnyRef that is a GC
+  // thing.
+  static constexpr uintptr_t GCThingChunkMask =
+      GCThingMask & ~js::gc::ChunkMask;
+
+  // The representation of a null reference value throughout the compiler for
+  // when we need an integer constant. This is asserted to be equivalent to
+  // nullptr in wasm::Init.
+  static constexpr uintptr_t NullRefValue = 0;
+  static constexpr uintptr_t InvalidRefValue = UINTPTR_MAX << TagShift;
+
+  explicit AnyRef() : value_(NullRefValue) {}
+  MOZ_IMPLICIT AnyRef(std::nullptr_t) : value_(NullRefValue) {}
 
   // The null AnyRef value.
-  static AnyRef null() { return AnyRef(NULLREF_VALUE); }
+  static AnyRef null() { return AnyRef(NullRefValue); }
 
   // An invalid AnyRef cannot arise naturally from wasm and so can be used as
   // a sentinel value to indicate failure from an AnyRef-returning function.
-  static AnyRef invalid() { return AnyRef(INVALIDREF_VALUE); }
+  static AnyRef invalid() { return AnyRef(InvalidRefValue); }
 
   // Given a JSObject* that comes from JS, turn it into AnyRef.
   static AnyRef fromJSObjectOrNull(JSObject* objectOrNull) {
-    MOZ_ASSERT(GetAnyRefTag((uintptr_t)objectOrNull) ==
+    MOZ_ASSERT(GetUintptrTag((uintptr_t)objectOrNull) ==
                AnyRefTag::ObjectOrNull);
     return AnyRef((uintptr_t)objectOrNull);
   }
 
   // Given a JSObject& that comes from JS, turn it into AnyRef.
   static AnyRef fromJSObject(JSObject& object) {
-    MOZ_ASSERT(GetAnyRefTag((uintptr_t)&object) == AnyRefTag::ObjectOrNull);
+    MOZ_ASSERT(GetUintptrTag((uintptr_t)&object) == AnyRefTag::ObjectOrNull);
     return AnyRef((uintptr_t)&object);
+  }
+
+  // Given a JSString* that comes from JS, turn it into AnyRef.
+  static AnyRef fromJSString(JSString* string) {
+    return AnyRef(TagUintptr((uintptr_t)string, AnyRefTag::String));
   }
 
   // Given a void* that comes from compiled wasm code, turn it into AnyRef.
@@ -156,7 +159,7 @@ class AnyRef {
 
   // Returns whether a JS value will need to be boxed.
   static bool valueNeedsBoxing(JS::HandleValue value) {
-    return !value.isObjectOrNull();
+    return !(value.isObjectOrNull() || value.isString());
   }
 
   // Box a JS Value that needs boxing.
@@ -173,7 +176,7 @@ class AnyRef {
   }
 
   AnyRefKind kind() const {
-    if (value_ == NULLREF_VALUE) {
+    if (value_ == NullRefValue) {
       return AnyRefKind::Null;
     }
     switch (pointerTag()) {
@@ -183,19 +186,23 @@ class AnyRef {
         // We ruled out the null case above
         return AnyRefKind::Object;
       }
+      case AnyRefTag::String: {
+        return AnyRefKind::String;
+      }
       default: {
         MOZ_CRASH("unknown AnyRef tag");
       }
     }
   }
 
-  bool isNull() const { return value_ == NULLREF_VALUE; }
-  bool isGCThing() const { return kind() == AnyRefKind::Object; }
+  bool isNull() const { return value_ == NullRefValue; }
+  bool isGCThing() const { return !isNull(); }
   bool isJSObject() const { return kind() == AnyRefKind::Object; }
+  bool isJSString() const { return kind() == AnyRefKind::String; }
 
   gc::Cell* toGCThing() const {
     MOZ_ASSERT(isGCThing());
-    return (gc::Cell*)RemoveAnyRefTag(value_);
+    return (gc::Cell*)UntagUintptr(value_);
   }
   JSObject& toJSObject() const {
     MOZ_ASSERT(isJSObject());
@@ -203,7 +210,12 @@ class AnyRef {
   }
   JSObject* toJSObjectOrNull() const {
     MOZ_ASSERT(!isInvalid());
+    MOZ_ASSERT(pointerTag() == AnyRefTag::ObjectOrNull);
     return (JSObject*)value_;
+  }
+  JSString* toJSString() const {
+    MOZ_ASSERT(isJSString());
+    return (JSString*)UntagUintptr(value_);
   }
 
   // Convert from AnyRef to a JS Value. This currently does not require any
@@ -252,6 +264,8 @@ auto MapGCThingTyped(const wasm::AnyRef& val, F&& f) {
   switch (val.kind()) {
     case wasm::AnyRefKind::Object:
       return mozilla::Some(f(&val.toJSObject()));
+    case wasm::AnyRefKind::String:
+      return mozilla::Some(f(val.toJSString()));
     case wasm::AnyRefKind::Null: {
       using ReturnType = decltype(f(static_cast<JSObject*>(nullptr)));
       return mozilla::Maybe<ReturnType>();

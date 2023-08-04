@@ -865,6 +865,19 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
     load32(ToPayload(src), dest);
   }
 
+  void unboxWasmAnyRefGCThingForGCBarrier(const Address& src, Register dest) {
+    load32(ToPayload(src), dest);
+    {
+      ScratchRegisterScope scratch(asMasm());
+      ma_and(Imm32(wasm::AnyRef::GCThingMask), dest, scratch);
+    }
+  }
+
+  void getWasmAnyRefGCThingChunk(Register src, Register dest) {
+    ScratchRegisterScope scratch(asMasm());
+    ma_and(Imm32(wasm::AnyRef::GCThingChunkMask), src, dest, scratch);
+  }
+
   void notBoolean(const ValueOperand& val) {
     as_eor(val.payloadReg(), val.payloadReg(), Imm8(1));
   }

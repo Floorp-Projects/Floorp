@@ -9246,14 +9246,9 @@ void CodeGenerator::visitWasmPostWriteBarrier(LWasmPostWriteBarrier* lir) {
       lir, valueBase, temp, lir->valueOffset());
   addOutOfLineCode(ool, lir->mir());
 
-  // If the pointer being stored is null, no barrier.
-  masm.branchTestPtr(Assembler::Zero, value, value, ool->rejoin());
-
-  // If there is a containing object and it is in the nursery, no barrier.
-  masm.branchPtrInNurseryChunk(Assembler::Equal, object, temp, ool->rejoin());
-
-  // If the pointer being stored is to a tenured object, no barrier.
-  masm.branchPtrInNurseryChunk(Assembler::Equal, value, temp, ool->entry());
+  wasm::EmitWasmPostBarrierGuard(masm, mozilla::Some(object), temp, value,
+                                 ool->rejoin());
+  masm.jump(ool->entry());
   masm.bind(ool->rejoin());
 }
 
@@ -17330,9 +17325,9 @@ void CodeGenerator::visitWasmTrapIfNull(LWasmTrapIfNull* lir) {
   MOZ_ASSERT(gen->compilingWasm());
   const MWasmTrapIfNull* mir = lir->mir();
   Label nonNull;
-  Register input = ToRegister(lir->object());
+  Register ref = ToRegister(lir->ref());
 
-  masm.branchTestPtr(Assembler::NonZero, input, input, &nonNull);
+  masm.branchWasmAnyRefIsNull(false, ref, &nonNull);
   masm.wasmTrap(mir->trap(), mir->bytecodeOffset());
   masm.bind(&nonNull);
 }
@@ -18807,44 +18802,27 @@ void CodeGenerator::visitWasmFence(LWasmFence* lir) {
   masm.memoryBarrier(MembarFull);
 }
 
-void CodeGenerator::visitWasmBoxValue(LWasmBoxValue* lir) {
-  ValueOperand input = ToValue(lir, LWasmBoxValue::InputIndex);
+void CodeGenerator::visitWasmAnyRefFromJSValue(LWasmAnyRefFromJSValue* lir) {
+  ValueOperand input = ToValue(lir, LWasmAnyRefFromJSValue::InputIndex);
   Register output = ToRegister(lir->output());
 
-  Label nullValue, objectValue, done;
-  {
-    ScratchTagScope tag(masm, input);
-    masm.splitTagForTest(input, tag);
-    masm.branchTestObject(Assembler::Equal, tag, &objectValue);
-    masm.branchTestNull(Assembler::Equal, tag, &nullValue);
-  }
-
-  using Fn = JSObject* (*)(JSContext*, HandleValue);
+  using Fn = JSObject* (*)(JSContext * cx, HandleValue value);
   OutOfLineCode* oolBoxValue = oolCallVM<Fn, wasm::AnyRef::boxValue>(
       lir, ArgList(input), StoreRegisterTo(output));
-
-  masm.jump(oolBoxValue->entry());
-
-  masm.bind(&nullValue);
-  // See the definition of AnyRef for a discussion of pointer representation.
-  masm.xorPtr(output, output);
-  masm.jump(&done);
-
-  masm.bind(&objectValue);
-  // See the definition of AnyRef for a discussion of pointer representation.
-  masm.unboxObject(input, output);
-
-  masm.bind(&done);
+  masm.convertValueToWasmAnyRef(input, output, oolBoxValue->entry());
   masm.bind(oolBoxValue->rejoin());
 }
 
 void CodeGenerator::visitWasmAnyRefFromJSObject(LWasmAnyRefFromJSObject* lir) {
   Register input = ToRegister(lir->input());
   Register output = ToRegister(lir->output());
-  // See the definition of AnyRef for a discussion of pointer representation.
-  if (input != output) {
-    masm.movePtr(input, output);
-  }
+  masm.convertObjectToWasmAnyRef(input, output);
+}
+
+void CodeGenerator::visitWasmAnyRefFromJSString(LWasmAnyRefFromJSString* lir) {
+  Register input = ToRegister(lir->input());
+  Register output = ToRegister(lir->output());
+  masm.convertStringToWasmAnyRef(input, output);
 }
 
 #ifdef FUZZING_JS_FUZZILLI

@@ -62,6 +62,12 @@ bool AnyRef::fromJSValue(JSContext* cx, HandleValue value,
     return true;
   }
 
+  if (value.isString()) {
+    JSString* string = value.toString();
+    result.set(AnyRef::fromJSString(string));
+    return true;
+  }
+
   if (value.isObject()) {
     JSObject& obj = value.toObject();
     MOZ_ASSERT(!obj.is<WasmValueBox>());
@@ -89,6 +95,8 @@ Value wasm::AnyRef::toJSValue() const {
   Value value;
   if (isNull()) {
     value.setNull();
+  } else if (isJSString()) {
+    value.setString(toJSString());
   } else {
     JSObject& obj = toJSObject();
     if (obj.is<WasmValueBox>()) {

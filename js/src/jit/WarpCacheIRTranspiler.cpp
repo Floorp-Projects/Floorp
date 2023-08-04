@@ -5396,12 +5396,15 @@ MDefinition* WarpCacheIRTranspiler::convertWasmArg(MDefinition* arg,
         case MIRType::Object:
           conversion = MWasmAnyRefFromJSObject::New(alloc(), arg);
           break;
+        case MIRType::String:
+          conversion = MWasmAnyRefFromJSString::New(alloc(), arg);
+          break;
         case MIRType::Null:
           arg->setImplicitlyUsedUnchecked();
           conversion = MWasmNullConstant::New(alloc());
           break;
         default:
-          conversion = MWasmBoxValue::New(alloc(), arg);
+          conversion = MWasmAnyRefFromJSValue::New(alloc(), arg);
           break;
       }
       break;
