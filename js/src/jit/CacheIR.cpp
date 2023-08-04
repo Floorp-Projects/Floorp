@@ -9141,6 +9141,36 @@ AttachDecision InlinableNativeIRGenerator::tryAttachSetHas() {
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachSetSize() {
+  // Ensure |this| is a SetObject.
+  if (!thisval_.isObject() || !thisval_.toObject().is<SetObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Expecting no arguments.
+  if (argc_ != 0) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  initializeInputOperand();
+
+  // Guard callee is the 'size' native function.
+  emitNativeCalleeGuard();
+
+  // Guard |this| is a SetObject.
+  ValOperandId thisValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
+  ObjOperandId objId = writer.guardToObject(thisValId);
+  writer.guardClass(objId, GuardClassKind::Set);
+
+  writer.setSizeResult(objId);
+  writer.returnFromIC();
+
+  trackAttached("SetSize");
+  return AttachDecision::Attach;
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachMapHas() {
   // Ensure |this| is a MapObject.
   if (!thisval_.isObject() || !thisval_.toObject().is<MapObject>()) {
@@ -10918,6 +10948,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
     // Set natives.
     case InlinableNative::SetHas:
       return tryAttachSetHas();
+    case InlinableNative::SetSize:
+      return tryAttachSetSize();
 
     // Map natives.
     case InlinableNative::MapHas:
