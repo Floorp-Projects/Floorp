@@ -128,17 +128,28 @@ translations.panel:
     extra_keys:
       flow_id: *flow_id
       first_interaction: *first_interaction
+      auto_show:
+        type: boolean
+        description: Whether the panel was opened automatically or manually by the user.
+      view_name:
+        type: string
+        description: The type of view shown in the panel.
       opened_from:
         type: string
         description: The method by which the translations panel was opened.
+      document_language:
+        type: string
+        description: The detected BCP-47 language tag of the document.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1835502
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847150
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1835502#c7
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366#c11
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428#c16
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847150#c4
     data_sensitivity:
       - interaction
     notification_emails:

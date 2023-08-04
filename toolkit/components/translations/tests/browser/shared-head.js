@@ -485,6 +485,14 @@ async function loadTestPage({
   BrowserTestUtils.loadURIString(tab.linkedBrowser, page);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
+  if (autoOffer) {
+    info("Waiting for the popup to be automatically shown.");
+    await waitForCondition(() => {
+      const panel = document.getElementById("translations-panel");
+      return panel && panel.state === "open";
+    });
+  }
+
   return {
     tab,
     remoteClients,
