@@ -21,6 +21,10 @@ urlbar-group-best-match =
 urlbar-group-addon =
   .label = { -brand-product-name } extension
 
+# Label shown above a MDN suggestion in the urlbar results.
+urlbar-group-mdn =
+  .label = Recommended resource
+
 # Label shown above a Pocket suggestion in the urlbar results.
 urlbar-group-pocket =
   .label = Recommended reads

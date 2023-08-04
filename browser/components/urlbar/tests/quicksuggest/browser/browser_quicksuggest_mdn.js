@@ -15,6 +15,7 @@ const REMOTE_SETTINGS_DATA = [
         description:
           "The filter() method creates a shallow copy of a portion of a given array, filtered down to just the elements from the given array that pass the test implemented by the provided function.",
         keywords: ["array"],
+        is_top_pick: true,
       },
     ],
   },
@@ -70,6 +71,43 @@ add_task(async function basic() {
   Assert.ok(true, "Expected page is loaded");
 
   await PlacesUtils.history.clear();
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function rowLabel() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.mdn.featureGate", true]],
+  });
+
+  const testCases = [
+    {
+      bestMatch: true,
+      expected: "Recommended resource",
+    },
+    {
+      bestMatch: false,
+      expected: "Firefox Suggest",
+    },
+  ];
+
+  for (const { bestMatch, expected } of testCases) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.bestMatch.enabled", bestMatch]],
+    });
+
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: REMOTE_SETTINGS_DATA[0].attachment[0].keywords[0],
+    });
+    Assert.equal(UrlbarTestUtils.getResultCount(window), 2);
+
+    const { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+    const row = element.row;
+    Assert.equal(row.getAttribute("label"), expected);
+
+    await SpecialPowers.popPrefEnv();
+  }
+
   await SpecialPowers.popPrefEnv();
 });
 
