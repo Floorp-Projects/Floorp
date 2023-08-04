@@ -8,6 +8,7 @@
 
 #include "Accessible2_i.c"
 #include "Accessible2_2_i.c"
+#include "Accessible2_3_i.c"
 #include "AccessibleRole.h"
 #include "AccessibleStates.h"
 
@@ -42,11 +43,12 @@ ia2Accessible::QueryInterface(REFIID iid, void** ppv) {
   // also be added to the IA2 Handler in
   // /accessible/ipc/win/handler/AccessibleHandler.cpp
 
-  if (IID_IAccessible2_2 == iid) {
+  if (IID_IAccessible2_3 == iid)
+    *ppv = static_cast<IAccessible2_3*>(this);
+  else if (IID_IAccessible2_2 == iid)
     *ppv = static_cast<IAccessible2_2*>(this);
-  } else if (IID_IAccessible2 == iid) {
+  else if (IID_IAccessible2 == iid)
     *ppv = static_cast<IAccessible2*>(this);
-  }
 
   if (*ppv) {
     (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
@@ -512,6 +514,46 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType, long aMaxTargets,
 
   for (int32_t i = 0; i < *aNTargets; i++) {
     (*aTargets)[i] = MsaaAccessible::NativeAccessible(targets[i]);
+  }
+
+  return S_OK;
+}
+
+STDMETHODIMP
+ia2Accessible::get_selectionRanges(IA2Range** aRanges, long* aNRanges) {
+  if (!aRanges || !aNRanges) return E_INVALIDARG;
+
+  *aNRanges = 0;
+
+  if (!Acc()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  }
+
+  AutoTArray<TextRange, 1> ranges;
+  acc->Document()->SelectionRanges(&ranges);
+  ranges.RemoveElementsBy([acc](auto& range) { return !range.Crop(acc); });
+
+  *aNRanges = ranges.Length();
+  *aRanges =
+      static_cast<IA2Range*>(::CoTaskMemAlloc(sizeof(IA2Range) * *aNRanges));
+  if (!*aRanges) return E_OUTOFMEMORY;
+
+  for (uint32_t idx = 0; idx < static_cast<uint32_t>(*aNRanges); idx++) {
+    RefPtr<IAccessible2> anchor =
+        MsaaAccessible::GetFrom(ranges[idx].StartContainer());
+    anchor.forget(&(*aRanges)[idx].anchor);
+
+    (*aRanges)[idx].anchorOffset = ranges[idx].StartOffset();
+
+    RefPtr<IAccessible2> active =
+        MsaaAccessible::GetFrom(ranges[idx].EndContainer());
+    active.forget(&(*aRanges)[idx].active);
+
+    (*aRanges)[idx].activeOffset = ranges[idx].EndOffset();
   }
 
   return S_OK;
