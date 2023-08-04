@@ -14,6 +14,7 @@ from collections import defaultdict
 from collections.abc import MutableSequence
 
 from .expression import ParseError, parse
+from .logger import Logger
 from .util import normsep
 
 # built-in filters
@@ -324,12 +325,7 @@ class chunk_by_runtime(InstanceFilter):
         self.this_chunk = this_chunk
         self.total_chunks = total_chunks
         self.runtimes = {normsep(m): r for m, r in runtimes.items()}
-        component = "filters"
-        import mozlog
-
-        self.logger = mozlog.get_default_logger(component)
-        if self.logger is None:
-            self.logger = mozlog.unstructured.getLogger(component)
+        self.logger = Logger()
 
     @classmethod
     def get_manifest(cls, test):

@@ -15,6 +15,7 @@ from io import StringIO
 from .filters import DEFAULT_FILTERS, enabled, filterlist
 from .filters import exists as _exists
 from .ini import read_ini
+from .logger import Logger
 from .toml import read_toml
 
 __all__ = ["ManifestParser", "TestManifest", "convert"]
@@ -90,12 +91,7 @@ class ManifestParser(object):
         self.finder = finder
         self._handle_defaults = handle_defaults
         self.use_toml = use_toml
-        component = "manifestparser"
-        import mozlog
-
-        self.logger = mozlog.get_default_logger(component)
-        if self.logger is None:
-            self.logger = mozlog.unstructured.getLogger(component)
+        self.logger = Logger()
         if manifests:
             self.read(*manifests)
 
