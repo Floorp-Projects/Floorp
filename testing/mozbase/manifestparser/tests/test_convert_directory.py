@@ -134,7 +134,7 @@ class TestDirectoryConversion(unittest.TestCase):
             ManifestParser.populate_directory_manifests(
                 [stub], filename="manifest.ini", ignore=("subdir",)
             )
-            parser = ManifestParser()
+            parser = ManifestParser(use_toml=False)
             parser.read(os.path.join(stub, "manifest.ini"))
             self.assertEqual([i["name"] for i in parser.tests], ["bar", "fleem", "foo"])
             self.assertFalse(
@@ -201,7 +201,7 @@ class TestDirectoryConversion(unittest.TestCase):
             f.write(manifest_contents)
 
         # get the manifest
-        manifest = ManifestParser(manifests=(manifest_file,))
+        manifest = ManifestParser(manifests=(manifest_file,), use_toml=False)
 
         # All of the tests are initially missing:
         paths = [str(i) for i in range(10)]
@@ -240,7 +240,7 @@ class TestDirectoryConversion(unittest.TestCase):
 
         # otherwise empty directory with a manifest file
         newtempdir = create_realpath_tempdir()
-        manifest_file = os.path.join(newtempdir, "manifest.ini")
+        manifest_file = os.path.join(newtempdir, "manifest.toml")
         manifest_contents = str(convert([tempdir], relative_to=tempdir))
         with open(manifest_file, "w") as f:
             f.write(manifest_contents)
@@ -255,14 +255,14 @@ class TestDirectoryConversion(unittest.TestCase):
         # But then we copy one over:
         self.assertEqual(manifest.get("name", name="1"), ["1"])
         manifest.update(tempdir, name="1")
-        self.assertEqual(sorted(os.listdir(newtempdir)), ["1", "manifest.ini"])
+        self.assertEqual(sorted(os.listdir(newtempdir)), ["1", "manifest.toml"])
 
         # Update that one file and copy all the "tests":
         open(os.path.join(tempdir, "1"), "w").write("secret door")
         manifest.update(tempdir)
         self.assertEqual(
             sorted(os.listdir(newtempdir)),
-            ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "manifest.ini"],
+            ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "manifest.toml"],
         )
         self.assertEqual(
             open(os.path.join(newtempdir, "1")).read().strip(), "secret door"

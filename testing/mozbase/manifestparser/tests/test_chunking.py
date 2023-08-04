@@ -176,7 +176,7 @@ class ChunkByRuntime(TestCase):
             for _ in range(num):
                 i += 1
                 name = "test%i" % i
-                manifest = os.path.join(d, "manifest.ini")
+                manifest = os.path.join(d, "manifest.toml")
                 test = {
                     "name": name,
                     "relpath": os.path.join(d, name),

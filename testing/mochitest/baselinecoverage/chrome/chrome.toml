@@ -1,0 +1,5 @@
+[DEFAULT]
+
+['test_baselinecoverage.xhtml']
+run-if = '''
+  ccov && verify'''

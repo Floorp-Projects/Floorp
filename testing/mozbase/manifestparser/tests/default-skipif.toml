@@ -1,22 +1,26 @@
 [DEFAULT]
-skip-if = '''  os == 'win' && debug '''  # a pesky comment
-
+skip-if = '''
+  os == 'win' && debug'''  # a pesky comment
 
 [test1]
-skip-if = '''  debug ''' 
+skip-if = '''
+  debug'''
 
 [test2]
-skip-if = '''  os == 'linux' ''' 
+skip-if = '''
+  os == 'linux''''
 
 [test3]
-skip-if = '''  os == 'win' ''' 
+skip-if = '''
+  os == 'win''''
 
 [test4]
-skip-if = '''  os == 'win' && debug ''' 
+skip-if = '''
+  os == 'win' && debug'''
 
 [test5]
 foo = "bar"
 
 [test6]
-skip-if = '''  debug '''  # a second pesky comment
-
+skip-if = '''
+  debug'''  # a second pesky comment

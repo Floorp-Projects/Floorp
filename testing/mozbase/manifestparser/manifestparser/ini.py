@@ -193,7 +193,7 @@ def combine_fields(global_vars, local_vars):
     field_patterns = {
         "args": "%s %s",
         "prefs": "%s %s",
-        "skip-if": "%s\n%s",
+        "skip-if": "%s\n%s",  # consider implicit logical OR: "%s ||\n%s"
         "support-files": "%s %s",
     }
     final_mapping = global_vars.copy()
