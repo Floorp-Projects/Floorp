@@ -7,11 +7,6 @@ ExtensionTestUtils.failOnSchemaWarnings(false);
 const PREF_SUPPORTED = "extensions.browser_style_mv3.supported";
 const PREF_SAME_AS_MV2 = "extensions.browser_style_mv3.same_as_mv2";
 
-// Set the prefs to the defaults at the end of the deprecation process.
-// TODO bug 1830711: remove these two lines.
-Services.prefs.setBoolPref(PREF_SUPPORTED, false);
-Services.prefs.setBoolPref(PREF_SAME_AS_MV2, false);
-
 function checkBrowserStyleInManifestKey(extension, key, expected) {
   let actual = extension.extension.manifest[key].browser_style;
   Assert.strictEqual(actual, expected, `Expected browser_style of "${key}"`);
