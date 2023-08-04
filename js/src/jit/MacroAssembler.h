@@ -3950,7 +3950,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // Branch if the wasm anyref `src` is or is not an I31.
   void branchWasmAnyRefIsI31(bool isI31, Register src, Label* label);
   // Branch if the wasm anyref `src` is or is not a JSObject*.
-  void branchWasmAnyRefIsObjectOrNull(bool isObject, Register src, Label* label);
+  void branchWasmAnyRefIsObjectOrNull(bool isObject, Register src,
+                                      Label* label);
   // Branch if the wasm anyref `src` is or is not a GC thing.
   void branchWasmAnyRefIsGCThing(bool isGCThing, Register src, Label* label);
   // Branch if the wasm anyref `src` is or is not pointing to a nursery cell.

@@ -246,9 +246,7 @@ class AnyRef {
   bool operator!=(const AnyRef& rhs) const { return !(*this == rhs); }
 
   // Check if this AnyRef is the invalid value.
-  bool isInvalid() const {
-    return *this == AnyRef::invalid();
-  }
+  bool isInvalid() const { return *this == AnyRef::invalid(); }
 
   AnyRefKind kind() const {
     if (value_ == NullRefValue) {

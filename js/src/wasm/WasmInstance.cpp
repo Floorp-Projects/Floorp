@@ -1299,7 +1299,8 @@ static int32_t MemDiscardShared(Instance* instance, I byteOffset, I byteLen,
 /* static */ void Instance::postBarrier(Instance* instance, void** location) {
   MOZ_ASSERT(SASigPostBarrier.failureMode == FailureMode::Infallible);
   MOZ_ASSERT(location);
-  instance->storeBuffer_->putWasmAnyRef(reinterpret_cast<wasm::AnyRef*>(location));
+  instance->storeBuffer_->putWasmAnyRef(
+      reinterpret_cast<wasm::AnyRef*>(location));
 }
 
 /* static */ void Instance::postBarrierPrecise(Instance* instance,
