@@ -24,11 +24,10 @@ async function checkRecord(
   let engine = Service.engineManager.get("passwords");
   let store = engine._store;
 
-  let logins = Services.logins.findLogins(
-    record.hostname,
-    record.formSubmitURL,
-    null
-  );
+  let logins = await Services.logins.searchLoginsAsync({
+    origin: record.hostname,
+    formActionOrigin: record.formSubmitURL,
+  });
 
   _("Record" + name + ":" + JSON.stringify(logins));
   _("Count" + name + ":" + logins.length);
@@ -350,16 +349,15 @@ add_task(async function run_test() {
     );
 
     // Only the good record makes it to Services.logins.
-    let badLogins = Services.logins.findLogins(
-      recordA.hostname,
-      recordA.formSubmitURL,
-      recordA.httpRealm
-    );
-    let goodLogins = Services.logins.findLogins(
-      recordB.hostname,
-      recordB.formSubmitURL,
-      null
-    );
+    let badLogins = await Services.logins.searchLoginsAsync({
+      origin: recordA.hostname,
+      formActionOrigin: recordA.formSubmitURL,
+      httpRealm: recordA.httpRealm,
+    });
+    let goodLogins = await Services.logins.searchLoginsAsync({
+      origin: recordB.hostname,
+      formActionOrigin: recordB.formSubmitURL,
+    });
 
     _("Bad: " + JSON.stringify(badLogins));
     _("Good: " + JSON.stringify(goodLogins));
