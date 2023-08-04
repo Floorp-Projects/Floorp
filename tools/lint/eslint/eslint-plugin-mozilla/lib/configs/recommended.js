@@ -106,6 +106,13 @@ module.exports = {
         "mozilla/reject-importGlobalProperties": "off",
       },
     },
+    {
+      env: {
+        browser: false,
+        worker: true,
+      },
+      files: ["**/*.worker.js", "**/*.worker.mjs"],
+    },
   ],
 
   parserOptions: {

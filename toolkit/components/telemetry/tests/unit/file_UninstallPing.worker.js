@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/. */
 
-/* eslint-env mozilla/chrome-worker */
-
 /* import-globals-from /toolkit/components/workerloader/require.js */
 importScripts("resource://gre/modules/workers/require.js");
 
