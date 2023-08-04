@@ -17493,10 +17493,6 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   }
   RefPtr<Document> self(this);
 
-  // Consume user activation before entering the async part of this method.
-  // This prevents usage of other transient activation-gated APIs.
-  ConsumeTransientUserGestureActivation();
-
   // Step 5. Start an async call to request storage access. This will either
   // perform an automatic decision or notify the user, then perform some follow
   // on work changing state to reflect the result of the API. If it resolves,
@@ -17506,12 +17502,12 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
       ContentBlockingNotifier::eStorageAccessAPI, true)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [self, inner, promise] {
+          [inner, promise] {
             inner->SaveStorageAccessPermissionGranted();
-            self->NotifyUserGestureActivation();
             promise->MaybeResolveWithUndefined();
           },
-          [promise] {
+          [self, promise] {
+            self->ConsumeTransientUserGestureActivation();
             promise->MaybeRejectWithNotAllowedError(
                 "requestStorageAccess not allowed"_ns);
           });
