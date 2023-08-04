@@ -16,6 +16,8 @@
 
   <script type="application/javascript">
   <![CDATA[
+    SimpleTest.requestCompleteLog(); // To help diagnose bug 1845221
+
     function openMenu(aMenuID, aMenuitemID)
     {
       this.menuNode = getNode(aMenuID);
