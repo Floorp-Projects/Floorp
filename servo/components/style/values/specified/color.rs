@@ -5,8 +5,7 @@
 //! Specified color values.
 
 use super::AllowQuirks;
-use crate::color::mix::ColorInterpolationMethod;
-use crate::color::{AbsoluteColor, ColorFlags, ColorSpace};
+use crate::color::{mix::ColorInterpolationMethod, AbsoluteColor, ColorFlags, ColorSpace};
 use crate::media_queries::Device;
 use crate::parser::{Parse, ParserContext};
 use crate::values::computed::{Color as ComputedColor, Context, ToComputedValue};
@@ -15,7 +14,7 @@ use crate::values::generics::color::{
 };
 use crate::values::specified::calc::CalcNode;
 use crate::values::specified::Percentage;
-use crate::values::CustomIdent;
+use crate::values::{normalize, CustomIdent};
 use cssparser::{AngleOrNumber, Color as CSSParserColor, Parser, Token};
 use cssparser::{BasicParseErrorKind, NumberOrPercentage, ParseErrorKind};
 use itoa;
@@ -855,7 +854,26 @@ impl Color {
     pub fn to_computed_color(&self, context: Option<&Context>) -> Option<ComputedColor> {
         Some(match *self {
             Color::CurrentColor => ComputedColor::CurrentColor,
-            Color::Absolute(ref absolute) => ComputedColor::Absolute(absolute.color),
+            Color::Absolute(ref absolute) => {
+                let mut color = absolute.color;
+
+                // Computed lightness values can not be NaN.
+                if matches!(
+                    color.color_space,
+                    ColorSpace::Lab | ColorSpace::Oklab | ColorSpace::Lch | ColorSpace::Oklch
+                ) {
+                    color.components.0 = normalize(color.components.0);
+                }
+
+                // Computed RGB and XYZ components can not be NaN.
+                if !color.is_legacy_syntax() &&
+                    (color.color_space.is_rgb_like() || color.color_space.is_xyz_like())
+                {
+                    color.components = color.components.map(normalize);
+                }
+
+                ComputedColor::Absolute(color)
+            },
             Color::LightDark(ref ld) => ld.compute(context?),
             Color::ColorMix(ref mix) => {
                 use crate::values::computed::percentage::Percentage;

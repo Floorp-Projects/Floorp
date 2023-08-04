@@ -111,6 +111,26 @@ impl ColorSpace {
         matches!(self, Self::Hsl | Self::Hwb | Self::Lch | Self::Oklch)
     }
 
+    /// Returns true if the color has RGB components.
+    #[inline]
+    pub fn is_rgb_like(&self) -> bool {
+        matches!(
+            self,
+            Self::Srgb |
+                Self::SrgbLinear |
+                Self::DisplayP3 |
+                Self::A98Rgb |
+                Self::ProphotoRgb |
+                Self::Rec2020
+        )
+    }
+
+    /// Returns true if the color has RGB components.
+    #[inline]
+    pub fn is_xyz_like(&self) -> bool {
+        matches!(self, Self::XyzD50 | Self::XyzD65)
+    }
+
     /// Returns an index of the hue component in the color space, otherwise
     /// `None`.
     #[inline]
@@ -277,12 +297,16 @@ impl AbsoluteColor {
             cd!(c3, ColorFlags::C3_IS_NONE),
         );
 
-        // Lightness must not be less than 0.
-        if matches!(
-            color_space,
-            ColorSpace::Lab | ColorSpace::Lch | ColorSpace::Oklab | ColorSpace::Oklch
-        ) {
-            components.0 = components.0.max(0.0);
+        let alpha = cd!(alpha, ColorFlags::ALPHA_IS_NONE);
+
+        // Lightness for Lab and Lch is clamped to [0..100].
+        if matches!(color_space, ColorSpace::Lab | ColorSpace::Lch) {
+            components.0 = components.0.clamp(0.0, 100.0);
+        }
+
+        // Lightness for Oklab and Oklch is clamped to [0..1].
+        if matches!(color_space, ColorSpace::Oklab | ColorSpace::Oklch) {
+            components.0 = components.0.clamp(0.0, 1.0);
         }
 
         // Chroma must not be less than 0.
@@ -290,11 +314,12 @@ impl AbsoluteColor {
             components.1 = components.1.max(0.0);
         }
 
-        let alpha = cd!(alpha, ColorFlags::ALPHA_IS_NONE);
+        // Alpha is always clamped to [0..1].
+        let alpha = alpha.clamp(0.0, 1.0);
 
         Self {
             components,
-            alpha: alpha.clamp(0.0, 1.0),
+            alpha,
             color_space,
             flags,
         }
