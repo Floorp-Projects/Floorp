@@ -194,6 +194,9 @@ minidump-writer = { git = "https://github.com/rust-minidump/minidump-writer.git"
 minidump-common = { git = "https://github.com/rust-minidump/rust-minidump", rev = "87a29fba5e19cfae5ebf73a57ba31504a3872545" }
 # warp 0.3.3 + https://github.com/seanmonstar/warp/pull/1007
 warp = { git = "https://github.com/glandium/warp", rev = "4af45fae95bc98b0eba1ef0db17e1dac471bb23d" }
+# Allow webrender to have a versioned dependency on the older crate on crates.io
+# in order to build standalone.
+malloc_size_of_derive = { path = "xpcom/rust/malloc_size_of_derive" }
 
 # application-services overrides to make updating them all simpler.
 interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "25972c388a4cf3a6d8256504f3a09b711db2fc6a" }

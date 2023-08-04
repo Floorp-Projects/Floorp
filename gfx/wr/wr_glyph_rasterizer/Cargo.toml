@@ -18,7 +18,7 @@ gecko = ["firefox-on-glean", "glean"]
 api = { version = "0.62.0", path = "../webrender_api", package = "webrender_api" }
 euclid = { version = "0.22.0", features = ["serde"] }
 malloc_size_of = { version = "0.0.2", path = "../wr_malloc_size_of", package = "wr_malloc_size_of" }
-malloc_size_of_derive = { path = "../../../xpcom/rust/malloc_size_of_derive" }
+malloc_size_of_derive = "0.1"
 rayon = "1"
 smallvec = "1"
 tracy-rs = "0.1.2"
