@@ -5,7 +5,7 @@
 // Copyright (c) 2009 Thomas Robinson <280north.com>
 // MIT license: http://opensource.org/licenses/MIT
 
-/* eslint-env mozilla/chrome-worker, node */
+/* eslint-env worker */
 
 "use strict";
 
