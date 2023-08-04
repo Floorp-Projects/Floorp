@@ -46,7 +46,7 @@ const gUserjsPane = {
         );
         if (result == 0) {
           if (!url) {
-            FileUtils.getFile("ProfD", ["user.js"]).remove(false);
+            try{FileUtils.getFile("ProfD", ["user.js"]).remove(false);} catch(e) {}
           } else {
             setUserJSWithURL(url);
           }
@@ -65,7 +65,7 @@ function setUserJSWithURL(url) {
   fetch(url)
     .then(response => response.text())
     .then(data => {
-      userjs.remove(false);
+      try{userjs.remove(false);} catch(e) {}
       outputStream.write(data, data.length);
       outputStream.close();
       Services.obs.notifyObservers([], "floorp-restart-browser");
