@@ -63,8 +63,8 @@ let chromeScript = runInParent(() => {
     };
   });
 
-  addMessageListener("getTimeLastUsed", () => {
-    let logins = Services.logins.findLogins(mozproxyURL, null, "Proxy Realm");
+  addMessageListener("getTimeLastUsed", async () => {
+    let logins = await Services.logins.searchLoginsAsync({ origin: mozproxyURL, httpRealm: "Proxy Realm"});
     return logins[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
   });
 

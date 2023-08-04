@@ -417,7 +417,10 @@ LoginManagerAuthPrompter.prototype = {
       }
 
       // Look for existing logins.
-      foundLogins = Services.logins.findLogins(origin, null, realm);
+      foundLogins = await Services.logins.searchLoginsAsync({
+        origin,
+        httpRealm: realm,
+      });
 
       // XXX Like the original code, we can't deal with multiple
       // account selection. (bug 227632)
@@ -531,7 +534,10 @@ LoginManagerAuthPrompter.prototype = {
         Services.logins.getLoginSavingEnabled(origin);
       if (!aPassword.value) {
         // Look for existing logins.
-        var foundLogins = Services.logins.findLogins(origin, null, realm);
+        var foundLogins = await Services.logins.searchLoginsAsync({
+          origin,
+          httpRealm: realm,
+        });
 
         // XXX Like the original code, we can't deal with multiple
         // account selection (bug 227632). We can deal with finding the

@@ -464,19 +464,19 @@ export var TPS = {
             break;
           case ACTION_VERIFY:
             lazy.Logger.AssertTrue(
-              passwordOb.Find() != -1,
+              (await passwordOb.Find()) != -1,
               "password not found"
             );
             break;
           case ACTION_VERIFY_NOT:
             lazy.Logger.AssertTrue(
-              passwordOb.Find() == -1,
+              (await passwordOb.Find()) == -1,
               "password found, but it shouldn't exist"
             );
             break;
           case ACTION_DELETE:
             lazy.Logger.AssertTrue(
-              passwordOb.Find() != -1,
+              (await passwordOb.Find()) != -1,
               "password not found"
             );
             passwordOb.Remove();
@@ -484,7 +484,7 @@ export var TPS = {
           case ACTION_MODIFY:
             if (passwordOb.updateProps != null) {
               lazy.Logger.AssertTrue(
-                passwordOb.Find() != -1,
+                (await passwordOb.Find()) != -1,
                 "password not found"
               );
               passwordOb.Update();
