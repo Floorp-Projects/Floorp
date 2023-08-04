@@ -137,6 +137,12 @@ add_task(async function test_first_extension_api_call_in_iframe() {
         // don't need to be careful with avoiding extension API calls in the
         // top-level context. Thus we can now use browser.test APIs here.
         browser.test.assertTrue("os" in info, "extension API called in iframe");
+
+        browser.test.assertTrue(
+          iframe.contentWindow.browser.extension.getBackgroundPage() === window,
+          "extension.getBackgroundPage() returns the top context"
+        );
+
         // Allow stylesheet load to complete, which unblocks DOMContentLoaded
         // and window.onload.
         browser.test.sendMessage("allowStylesheetToLoad");
@@ -276,6 +282,10 @@ add_task(async function test_only_script_execution_in_iframe() {
     // https://searchfox.org/mozilla-central/rev/892475f3ba2b959aeaef19d1d8602494e3f2ae32/toolkit/components/extensions/ExtensionPageChild.sys.mjs#221,223,227-228
     browser.runtime.getPlatformInfo().then(info => {
       browser.test.assertTrue("os" in info, "extension API called in iframe");
+      browser.test.assertTrue(
+        browser.extension.getBackgroundPage() === top,
+        "extension.getBackgroundPage() returns the top context"
+      );
       browser.test.sendMessage("iframe_done");
     });
   }
