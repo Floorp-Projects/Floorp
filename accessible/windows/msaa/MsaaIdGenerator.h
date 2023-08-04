@@ -9,7 +9,6 @@
 
 #include "mozilla/a11y/IDSet.h"
 
-#include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/NotNull.h"
 #include "nsITimer.h"
 
