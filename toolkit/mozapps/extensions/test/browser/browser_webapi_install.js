@@ -509,7 +509,7 @@ add_task(
       },
       { event: "onDownloadProgress" },
       { event: "onDownloadEnded" },
-      { event: "onDownloadCancelled" },
+      { event: "onDownloadCancelled", error: "ERROR_INCOMPATIBLE" },
     ];
 
     await testInstall(

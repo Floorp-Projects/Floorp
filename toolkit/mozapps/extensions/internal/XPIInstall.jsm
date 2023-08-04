@@ -2172,9 +2172,21 @@ var LocalAddonInstall = class extends AddonInstall {
         new UpdateChecker(
           this.addon,
           {
-            onUpdateFinished: aAddon => {
+            onUpdateFinished: (aAddon, aError) => {
               this.state = AddonManager.STATE_DOWNLOADED;
-              this._callInstallListeners("onNewInstall");
+              // If checking for an updated compatibility range fails or the
+              // add-on is still incompatible, then set the expected
+              // `install.error` to `ERROR_INCOMPATIBLE`.
+              if (!this.addon.isCompatible) {
+                this.error = AddonManager.ERROR_INCOMPATIBLE;
+              }
+              if (aError < 0) {
+                logger.warn(
+                  `UpdateChecker failed to download updates for ${this.addon.id}, error code: ${aError}`
+                );
+              } else {
+                this._callInstallListeners("onNewInstall");
+              }
               resolve();
             },
           },
@@ -2649,6 +2661,8 @@ var DownloadAddonInstall = class extends AddonInstall {
 
     if (this.addon.blocklistState === nsIBlocklistService.STATE_BLOCKED) {
       this.error = AddonManager.ERROR_BLOCKLISTED;
+    } else if (!this.addon.isCompatible) {
+      this.error = AddonManager.ERROR_INCOMPATIBLE;
     }
 
     if (this._callInstallListeners("onDownloadEnded")) {
