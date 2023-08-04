@@ -130,9 +130,7 @@ extern bool enableShadowRealms;
 extern bool enableArrayGrouping;
 extern bool enableWellFormedUnicodeStrings;
 extern bool enableArrayBufferTransfer;
-#ifdef ENABLE_NEW_SET_METHODS
 extern bool enableNewSetMethods;
-#endif
 extern bool enableImportAssertions;
 #ifdef JS_GC_ZEAL
 extern uint32_t gZealBits;

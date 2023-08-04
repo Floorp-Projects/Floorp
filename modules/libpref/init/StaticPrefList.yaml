@@ -7480,6 +7480,12 @@
     value: false
     mirror: always
 
+  # Experimental support for New Set methods
+-   name: javascript.options.experimental.new_set_methods
+    type: bool
+    value: false
+    mirror: always
+
   # Experimental support for ArrayBuffer.prototype.transfer{,ToFixedLength}() in JavaScript.
 -   name: javascript.options.experimental.arraybuffer_transfer
     type: bool
@@ -7494,14 +7500,6 @@
     value: false
     mirror: always
 #endif  // NIGHTLY_BUILD
-
-#if defined(ENABLE_NEW_SET_METHODS)
-  # Experimental support for New Set methods
-- name: javascript.options.experimental.enable_new_set_methods
-  type: bool
-  value: false
-  mirror: always
-#endif
 
 - name: javascript.options.wasm_caching
   type: bool
