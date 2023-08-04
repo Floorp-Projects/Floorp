@@ -84,6 +84,9 @@ enum class TypeCode {
   // Type constructor for non-nullable reference types.
   Ref = 0x6b,  // SLEB128(-0x15)
 
+  // A reference to an unboxed 31-bit integer.
+  I31Ref = 0x6a,  // SLEB128(-0x16)
+
   // A null reference in the extern hierarchy.
   NullExternRef = 0x69,  // SLEB128(-0x17)
 
@@ -504,6 +507,11 @@ enum class GcOp {
   ArrayLenWithTypeIndex = 0x17,
   ArrayCopy = 0x18,
   ArrayLen = 0x19,
+
+  // I31 operations
+  I31New = 0x20,
+  I31GetS = 0x21,
+  I31GetU = 0x22,
 
   // Ref operations
   RefTestV5 = 0x44,

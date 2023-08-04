@@ -593,6 +593,26 @@
   congruent_to: if_operands_equal
   alias_set: none
 
+- name: WasmNewI31Ref
+  operands:
+    input: Int32
+  type_policy: none
+  result_type: WasmAnyRef
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+
+- name: WasmI31RefGet
+  operands:
+    input: WasmAnyRef
+  arguments:
+    wideningOp: wasm::FieldWideningOp
+  type_policy: none
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+
 - name: Int32ToIntPtr
   gen_boilerplate: false
 

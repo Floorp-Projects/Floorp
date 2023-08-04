@@ -3579,6 +3579,7 @@
   result_type: WordSized
   operands:
     input: BoxedValue
+  num_temps: 1
 
 - name: WasmAnyRefFromJSObject
   result_type: WordSized
@@ -3589,6 +3590,18 @@
   result_type: WordSized
   operands:
     input: WordSized
+
+- name: WasmNewI31Ref
+  mir_op: true
+  result_type: WordSized
+  operands:
+    value: WordSized
+
+- name: WasmI31RefGet
+  mir_op: true
+  result_type: WordSized
+  operands:
+    value: WordSized
 
 # Constant Simd128
 - name: Simd128

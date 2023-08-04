@@ -1293,6 +1293,7 @@ inline RefTypeHierarchy RefType::hierarchy() const {
       return RefTypeHierarchy::Extern;
     case RefType::Any:
     case RefType::None:
+    case RefType::I31:
     case RefType::Eq:
     case RefType::Struct:
     case RefType::Array:
@@ -1353,6 +1354,11 @@ inline bool RefType::isSubTypeOf(RefType subType, RefType superType) {
 
   // eqref is a subtype of anyref
   if (subType.isEq() && superType.isAny()) {
+    return true;
+  }
+
+  // i31ref is a subtype of eqref
+  if (subType.isI31() && (superType.isAny() || superType.isEq())) {
     return true;
   }
 

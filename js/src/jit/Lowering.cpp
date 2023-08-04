@@ -3071,7 +3071,7 @@ void LIRGenerator::visitWasmBuiltinTruncateToInt32(
 
 void LIRGenerator::visitWasmAnyRefFromJSValue(MWasmAnyRefFromJSValue* ins) {
   LWasmAnyRefFromJSValue* lir =
-      new (alloc()) LWasmAnyRefFromJSValue(useBox(ins->input()));
+      new (alloc()) LWasmAnyRefFromJSValue(useBox(ins->input()), tempDouble());
   define(lir, ins);
   assignSafepoint(lir, ins);
 }
@@ -3085,6 +3085,16 @@ void LIRGenerator::visitWasmAnyRefFromJSObject(MWasmAnyRefFromJSObject* ins) {
 void LIRGenerator::visitWasmAnyRefFromJSString(MWasmAnyRefFromJSString* ins) {
   LWasmAnyRefFromJSString* lir =
       new (alloc()) LWasmAnyRefFromJSString(useRegisterAtStart(ins->input()));
+  define(lir, ins);
+}
+
+void LIRGenerator::visitWasmNewI31Ref(MWasmNewI31Ref* ins) {
+  LWasmNewI31Ref* lir = new (alloc()) LWasmNewI31Ref(useRegister(ins->input()));
+  define(lir, ins);
+}
+
+void LIRGenerator::visitWasmI31RefGet(MWasmI31RefGet* ins) {
+  LWasmI31RefGet* lir = new (alloc()) LWasmI31RefGet(useRegister(ins->input()));
   define(lir, ins);
 }
 

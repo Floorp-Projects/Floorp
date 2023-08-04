@@ -18805,11 +18805,12 @@ void CodeGenerator::visitWasmFence(LWasmFence* lir) {
 void CodeGenerator::visitWasmAnyRefFromJSValue(LWasmAnyRefFromJSValue* lir) {
   ValueOperand input = ToValue(lir, LWasmAnyRefFromJSValue::InputIndex);
   Register output = ToRegister(lir->output());
+  FloatRegister tempFloat = ToFloatRegister(lir->temp0());
 
   using Fn = JSObject* (*)(JSContext * cx, HandleValue value);
   OutOfLineCode* oolBoxValue = oolCallVM<Fn, wasm::AnyRef::boxValue>(
       lir, ArgList(input), StoreRegisterTo(output));
-  masm.convertValueToWasmAnyRef(input, output, oolBoxValue->entry());
+  masm.convertValueToWasmAnyRef(input, output, tempFloat, oolBoxValue->entry());
   masm.bind(oolBoxValue->rejoin());
 }
 
@@ -18823,6 +18824,22 @@ void CodeGenerator::visitWasmAnyRefFromJSString(LWasmAnyRefFromJSString* lir) {
   Register input = ToRegister(lir->input());
   Register output = ToRegister(lir->output());
   masm.convertStringToWasmAnyRef(input, output);
+}
+
+void CodeGenerator::visitWasmNewI31Ref(LWasmNewI31Ref* lir) {
+  Register value = ToRegister(lir->value());
+  Register output = ToRegister(lir->output());
+  masm.truncate32ToWasmI31Ref(value, output);
+}
+
+void CodeGenerator::visitWasmI31RefGet(LWasmI31RefGet* lir) {
+  Register value = ToRegister(lir->value());
+  Register output = ToRegister(lir->output());
+  if (lir->mir()->wideningOp() == wasm::FieldWideningOp::Signed) {
+    masm.convertWasmI31RefTo32Signed(value, output);
+  } else {
+    masm.convertWasmI31RefTo32Unsigned(value, output);
+  }
 }
 
 #ifdef FUZZING_JS_FUZZILLI

@@ -31,6 +31,7 @@ assertSubtype('i64', 'i64');
 assertSubtype('f32', 'f32');
 assertSubtype('f64', 'f64');
 assertSubtype('eqref', 'eqref');
+assertSubtype('i31ref', 'i31ref');
 assertSubtype('funcref', 'funcref');
 
 // No subtyping relation between funcref, anyref, externref. These are our top
@@ -44,6 +45,10 @@ assertNotSubtype('anyref', 'externref');
 
 // eqref is a subtype of anyref
 assertSubtype('anyref', 'eqref');
+
+// i31ref is a subtype of eqref
+assertSubtype('anyref', 'i31ref');
+assertSubtype('eqref', 'i31ref');
 
 // structref is a subtype of eqref and anyref
 assertSubtype('anyref', 'structref');

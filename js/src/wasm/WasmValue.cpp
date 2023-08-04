@@ -138,6 +138,8 @@ bool wasm::CheckRefType(JSContext* cx, RefType targetType, HandleValue v,
       return CheckNullRefValue(cx, v, refval);
     case RefType::Eq:
       return CheckEqRefValue(cx, v, refval);
+    case RefType::I31:
+      return CheckI31RefValue(cx, v, refval);
     case RefType::Struct:
       return CheckStructRefValue(cx, v, refval);
     case RefType::Array:
@@ -177,22 +179,11 @@ bool wasm::CheckFuncRefValue(JSContext* cx, HandleValue v,
 
 bool wasm::CheckAnyRefValue(JSContext* cx, HandleValue v,
                             MutableHandleAnyRef vp) {
-  if (v.isNull()) {
-    vp.set(AnyRef::null());
-    return true;
+  if (!AnyRef::fromJSValue(cx, v, vp)) {
+    MOZ_ASSERT(cx->isThrowingOutOfMemory());
+    return false;
   }
-
-  if (v.isObject()) {
-    JSObject& obj = v.toObject();
-    if (obj.is<WasmGcObject>()) {
-      vp.set(AnyRef::fromJSObject(obj.as<WasmGcObject>()));
-      return true;
-    }
-  }
-
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           JSMSG_WASM_BAD_ANYREF_VALUE);
-  return false;
+  return true;
 }
 
 bool wasm::CheckNullFuncRefValue(JSContext* cx, HandleValue v,
@@ -232,21 +223,34 @@ bool wasm::CheckNullRefValue(JSContext* cx, HandleValue v,
 
 bool wasm::CheckEqRefValue(JSContext* cx, HandleValue v,
                            MutableHandleAnyRef vp) {
-  if (v.isNull()) {
-    vp.set(AnyRef::null());
-    return true;
+  if (!AnyRef::fromJSValue(cx, v, vp)) {
+    MOZ_ASSERT(cx->isThrowingOutOfMemory());
+    return false;
   }
 
-  if (v.isObject()) {
-    JSObject& obj = v.toObject();
-    if (obj.is<WasmGcObject>()) {
-      vp.set(AnyRef::fromJSObject(obj.as<WasmGcObject>()));
-      return true;
-    }
+  if (vp.isNull() || vp.isI31() ||
+      (vp.isJSObject() && vp.toJSObject().is<WasmGcObject>())) {
+    return true;
   }
 
   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                            JSMSG_WASM_BAD_EQREF_VALUE);
+  return false;
+}
+
+bool wasm::CheckI31RefValue(JSContext* cx, HandleValue v,
+                            MutableHandleAnyRef vp) {
+  if (!AnyRef::fromJSValue(cx, v, vp)) {
+    MOZ_ASSERT(cx->isThrowingOutOfMemory());
+    return false;
+  }
+
+  if (vp.isNull() || vp.isI31()) {
+    return true;
+  }
+
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_WASM_BAD_I31REF_VALUE);
   return false;
 }
 
@@ -533,7 +537,35 @@ bool ToWebAssemblyValue_nullref(JSContext* cx, HandleValue val, void** loc,
 template <typename Debug = NoDebug>
 bool ToWebAssemblyValue_eqref(JSContext* cx, HandleValue val, void** loc,
                               bool mustWrite64) {
-  return ToWebAssemblyValue_anyref(cx, val, loc, mustWrite64);
+  RootedAnyRef result(cx, AnyRef::null());
+  if (!CheckEqRefValue(cx, val, &result)) {
+    return false;
+  }
+  loc[0] = result.get().forCompiledCode();
+#ifndef JS_64BIT
+  if (mustWrite64) {
+    loc[1] = nullptr;
+  }
+#endif
+  Debug::print(*loc);
+  return true;
+}
+
+template <typename Debug = NoDebug>
+bool ToWebAssemblyValue_i31ref(JSContext* cx, HandleValue val, void** loc,
+                               bool mustWrite64) {
+  RootedAnyRef result(cx, AnyRef::null());
+  if (!CheckI31RefValue(cx, val, &result)) {
+    return false;
+  }
+  loc[0] = result.get().forCompiledCode();
+#ifndef JS_64BIT
+  if (mustWrite64) {
+    loc[1] = nullptr;
+  }
+#endif
+  Debug::print(*loc);
+  return true;
 }
 
 template <typename Debug = NoDebug>
@@ -659,6 +691,9 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
         case RefType::Eq:
           return ToWebAssemblyValue_eqref<Debug>(cx, val, (void**)loc,
                                                  mustWrite64);
+        case RefType::I31:
+          return ToWebAssemblyValue_i31ref<Debug>(cx, val, (void**)loc,
+                                                  mustWrite64);
         case RefType::Struct:
           return ToWebAssemblyValue_structref<Debug>(cx, val, (void**)loc,
                                                      mustWrite64);

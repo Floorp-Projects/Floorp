@@ -3947,21 +3947,33 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Branch if the wasm anyref `src` is or is not the null value.
   void branchWasmAnyRefIsNull(bool isNull, Register src, Label* label);
+  // Branch if the wasm anyref `src` is or is not an I31.
+  void branchWasmAnyRefIsI31(bool isI31, Register src, Label* label);
   // Branch if the wasm anyref `src` is or is not a JSObject*.
   void branchWasmAnyRefIsObjectOrNull(bool isObject, Register src, Label* label);
   // Branch if the wasm anyref `src` is or is not a GC thing.
   void branchWasmAnyRefIsGCThing(bool isGCThing, Register src, Label* label);
   // Branch if the wasm anyref `src` is or is not pointing to a nursery cell.
-  void branchWasmAnyRefIsNurseryCell(Condition cond, Register src,
+  void branchWasmAnyRefIsNurseryCell(bool isNurseryCell, Register src,
                                      Register scratch, Label* label);
+
+  // Create a wasm i31ref by truncating the 32-bit integer.
+  void truncate32ToWasmI31Ref(Register src, Register dest);
+  // Convert a wasm i31ref to a signed 32-bit integer.
+  void convertWasmI31RefTo32Signed(Register src, Register dest);
+  // Convert a wasm i31ref to an unsigned 32-bit integer.
+  void convertWasmI31RefTo32Unsigned(Register src, Register dest);
 
   // Branch if the JS value `src` would need to be boxed out of line to be
   // converted to a wasm anyref.
-  void branchValueConvertsToWasmAnyRefInline(ValueOperand src, Label* label);
+  void branchValueConvertsToWasmAnyRefInline(ValueOperand src,
+                                             Register scratchInt,
+                                             FloatRegister scratchFloat,
+                                             Label* label);
   // Convert a JS value to a wasm anyref. If the value requires boxing, this
   // will branch to `oolConvert`.
   void convertValueToWasmAnyRef(ValueOperand src, Register dest,
-                                Label* oolConvert);
+                                FloatRegister scratchFloat, Label* oolConvert);
   // Convert a JS object to a wasm anyref. This cannot fail.
   void convertObjectToWasmAnyRef(Register src, Register dest);
   // Convert a JS string to a wasm anyref. This cannot fail.

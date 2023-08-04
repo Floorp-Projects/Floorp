@@ -1661,6 +1661,8 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitArraySet();
   [[nodiscard]] bool emitArrayLen(bool decodeIgnoredTypeIndex);
   [[nodiscard]] bool emitArrayCopy();
+  [[nodiscard]] bool emitI31New();
+  [[nodiscard]] bool emitI31Get(FieldWideningOp wideningOp);
   [[nodiscard]] bool emitRefTestV5();
   [[nodiscard]] bool emitRefCastV5();
   [[nodiscard]] bool emitBrOnCastV5(bool onSuccess);

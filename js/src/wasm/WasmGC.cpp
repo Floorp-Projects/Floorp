@@ -265,7 +265,7 @@ void wasm::EmitWasmPostBarrierGuard(MacroAssembler& masm,
   }
 
   // If the pointer being stored is to a tenured object, no barrier.
-  masm.branchWasmAnyRefIsNurseryCell(Assembler::NotEqual, setValue,
+  masm.branchWasmAnyRefIsNurseryCell(false, setValue,
                                      otherScratch, skipBarrier);
 }
 

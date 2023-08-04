@@ -19,6 +19,8 @@
 #ifndef wasm_anyref_h
 #define wasm_anyref_h
 
+#include "mozilla/FloatingPoint.h"
+
 #include <utility>
 
 #include "js/HeapAPI.h"
@@ -60,6 +62,19 @@ namespace wasm {
 //
 // The lowest bits of the pointer value are used for tagging, to allow for some
 // representation optimizations and to distinguish various types.
+//
+// The current tagging scheme is:
+//   if (pointer == 0) then 'null'
+//   if (pointer & 0x1) then 'i31'
+//   if (pointer & 0x2) then 'string'
+//   else 'object'
+//
+// NOTE: there is sequencing required when checking tags. If bit 0x1 is set,
+// then bit 0x2 is part of the i31 value and does not imply string.
+//
+// An i31ref value has no sign interpretation within wasm, where instructions
+// specify the signedness. When converting to/from a JS value, an i31ref value
+// is treated as a signed 31-bit value.
 
 // The kind of value stored in an AnyRef. This is not 1:1 with the pointer tag
 // of AnyRef as this separates the 'Null' and 'Object' cases which are
@@ -68,19 +83,21 @@ enum class AnyRefKind : uint8_t {
   Null,
   Object,
   String,
+  I31,
 };
 
 // The pointer tag of an AnyRef.
 enum class AnyRefTag : uint8_t {
   // This value is either a JSObject& or a null pointer.
   ObjectOrNull = 0x0,
+  // This value is a 31-bit integer.
+  I31 = 0x1,
   // This value is a JSString*.
   String = 0x2,
 };
 
 // A reference to any wasm reference type or host (JS) value. AnyRef is
-// optimized for efficient access to wasm GC objects and possibly a tagged
-// integer type (in the future).
+// optimized for efficient access to objects, strings, and 31-bit integers.
 //
 // See the above documentation comment for more details.
 class AnyRef {
@@ -99,7 +116,38 @@ class AnyRef {
     return value & ~TagMask;
   }
   static constexpr AnyRefTag GetUintptrTag(uintptr_t value) {
-    return (AnyRefTag)(value & TagMask);
+    // Mask off all but the lowest two-bits (the tag)
+    uintptr_t rawTag = value & TagMask;
+    // If the lowest bit is set, we want to normalize and only return
+    // AnyRefTag::I31. Mask off the high-bit iff the low-bit was set.
+    uintptr_t normalizedI31 = rawTag & ~(value << 1);
+    return AnyRefTag(normalizedI31);
+  }
+
+  // Given a 32-bit signed integer within 31-bit signed bounds, turn it into
+  // an AnyRef.
+  static AnyRef fromInt32(int32_t value) {
+    // The value must be within 31-bit signed bounds for the logic below to
+    // work.
+    MOZ_ASSERT(!int32NeedsBoxing(value));
+    // Extend the value to the native pointer size, and make it unsigned to
+    // avoid undefined behavior.
+    uintptr_t wideValue = (uintptr_t)value;
+    // Left shift the value by 1, truncating the high bit.
+    //
+    // There are four cases here based on the two high bits:
+    //   00 - [0, MaxI31Value]
+    //   01 - (MaxI31Value, INT32_MAX]
+    //   10 - [INT32_MIN, MinI31Value)
+    //   11 - [MinI31Value, -1]
+    //
+    // The middle two cases can be ruled out, because the value is guaranteed
+    // to be within the i31 range. Therefore if we truncate the high bit upon
+    // converting to i31 and perform a signed widening upon converting back to
+    // i32, we can losslessly represent all i31 values.
+    uintptr_t shiftedValue = wideValue << 1;
+    uintptr_t taggedValue = shiftedValue | (uintptr_t)AnyRefTag::I31;
+    return AnyRef(taggedValue);
   }
 
  public:
@@ -118,6 +166,11 @@ class AnyRef {
   // nullptr in wasm::Init.
   static constexpr uintptr_t NullRefValue = 0;
   static constexpr uintptr_t InvalidRefValue = UINTPTR_MAX << TagShift;
+
+  // The inclusive maximum 31-bit signed integer, 2^30 - 1.
+  static constexpr int32_t MaxI31Value = (2 << 29) - 1;
+  // The inclusive minimum 31-bit signed integer, -2^30.
+  static constexpr int32_t MinI31Value = -(2 << 29);
 
   explicit AnyRef() : value_(NullRefValue) {}
   MOZ_IMPLICIT AnyRef(std::nullptr_t) : value_(NullRefValue) {}
@@ -157,9 +210,31 @@ class AnyRef {
   static bool fromJSValue(JSContext* cx, JS::HandleValue value,
                           JS::MutableHandle<AnyRef> result);
 
+  static bool int32NeedsBoxing(int32_t value) {
+    // We can represent every signed 31-bit number without boxing
+    return value < MinI31Value || value > MaxI31Value;
+  }
+
+  static bool doubleNeedsBoxing(double value) {
+    int32_t intValue;
+    if (!mozilla::NumberIsInt32(value, &intValue)) {
+      return true;
+    }
+    return int32NeedsBoxing(value);
+  }
+
   // Returns whether a JS value will need to be boxed.
   static bool valueNeedsBoxing(JS::HandleValue value) {
-    return !(value.isObjectOrNull() || value.isString());
+    if (value.isObjectOrNull() || value.isString()) {
+      return false;
+    }
+    if (value.isInt32()) {
+      return int32NeedsBoxing(value.toInt32());
+    }
+    if (value.isDouble()) {
+      return doubleNeedsBoxing(value.toDouble());
+    }
+    return true;
   }
 
   // Box a JS Value that needs boxing.
@@ -189,6 +264,9 @@ class AnyRef {
       case AnyRefTag::String: {
         return AnyRefKind::String;
       }
+      case AnyRefTag::I31: {
+        return AnyRefKind::I31;
+      }
       default: {
         MOZ_CRASH("unknown AnyRef tag");
       }
@@ -196,9 +274,10 @@ class AnyRef {
   }
 
   bool isNull() const { return value_ == NullRefValue; }
-  bool isGCThing() const { return !isNull(); }
+  bool isGCThing() const { return !isNull() && !isI31(); }
   bool isJSObject() const { return kind() == AnyRefKind::Object; }
   bool isJSString() const { return kind() == AnyRefKind::String; }
+  bool isI31() const { return kind() == AnyRefKind::I31; }
 
   gc::Cell* toGCThing() const {
     MOZ_ASSERT(isGCThing());
@@ -216,6 +295,20 @@ class AnyRef {
   JSString* toJSString() const {
     MOZ_ASSERT(isJSString());
     return (JSString*)UntagUintptr(value_);
+  }
+  // Unpack an i31, interpreting the integer as signed.
+  int32_t toI31() const {
+    MOZ_ASSERT(isI31());
+    // On 64-bit targets, we only care about the low 4-bytes.
+    uint32_t truncatedValue = *reinterpret_cast<const uint32_t*>(&value_);
+    // Perform a right arithmetic shift (see AnyRef::fromI31 for more details),
+    // avoiding undefined behavior by using an unsigned type.
+    uint32_t shiftedValue = value_ >> 1;
+    if ((truncatedValue & (1 << 31)) != 0) {
+      shiftedValue |= (1 << 31);
+    }
+    // Perform a bitwise cast to see the result as a signed value.
+    return *reinterpret_cast<int32_t*>(&shiftedValue);
   }
 
   // Convert from AnyRef to a JS Value. This currently does not require any
@@ -238,13 +331,6 @@ using RootedAnyRef = JS::Rooted<AnyRef>;
 using HandleAnyRef = JS::Handle<AnyRef>;
 using MutableHandleAnyRef = JS::MutableHandle<AnyRef>;
 
-// TODO/AnyRef-boxing: With boxed immediates and strings, these will be defined
-// as MOZ_CRASH or similar so that we can find all locations that need to be
-// fixed.
-
-#define ASSERT_ANYREF_IS_JSOBJECT (void)(0)
-#define STATIC_ASSERT_ANYREF_IS_JSOBJECT static_assert(1, "AnyRef is JSObject")
-
 }  // namespace wasm
 
 template <class Wrapper>
@@ -255,6 +341,9 @@ class WrappedPtrOperations<wasm::AnyRef, Wrapper> {
 
  public:
   bool isNull() const { return value().isNull(); }
+  bool isI31() const { return value().isI31(); }
+  bool isJSObject() const { return value().isJSObject(); }
+  JSObject& toJSObject() const { return value().toJSObject(); }
 };
 
 // If the Value is a GC pointer type, call |f| with the pointer cast to that
@@ -266,6 +355,7 @@ auto MapGCThingTyped(const wasm::AnyRef& val, F&& f) {
       return mozilla::Some(f(&val.toJSObject()));
     case wasm::AnyRefKind::String:
       return mozilla::Some(f(val.toJSString()));
+    case wasm::AnyRefKind::I31:
     case wasm::AnyRefKind::Null: {
       using ReturnType = decltype(f(static_cast<JSObject*>(nullptr)));
       return mozilla::Maybe<ReturnType>();

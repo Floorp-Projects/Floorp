@@ -1075,7 +1075,8 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
       case ValType::Ref: {
         // Guarded against by temporarilyUnsupportedReftypeForEntry()
         MOZ_RELEASE_ASSERT(funcType.args()[i].refType().isExtern());
-        masm.branchValueConvertsToWasmAnyRefInline(scratchV, &next);
+        masm.branchValueConvertsToWasmAnyRefInline(scratchV, scratchG, scratchF,
+                                                   &next);
         masm.jump(&oolCall);
         break;
       }
@@ -1160,7 +1161,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
         // have been taken care of.
         Label join;
         Label fail;
-        masm.convertValueToWasmAnyRef(src, target, &fail);
+        masm.convertValueToWasmAnyRef(src, target, scratchF, &fail);
         masm.jump(&join);
         masm.bind(&fail);
         masm.breakpoint();
@@ -2288,7 +2289,8 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
       case ValType::Ref:
         // Guarded by temporarilyUnsupportedReftypeForExit()
         MOZ_RELEASE_ASSERT(results[0].refType().isExtern());
-        masm.convertValueToWasmAnyRef(JSReturnOperand, ReturnReg, &oolConvert);
+        masm.convertValueToWasmAnyRef(JSReturnOperand, ReturnReg,
+                                      ABINonArgDoubleReg, &oolConvert);
         GenPrintPtr(DebugChannel::Import, masm, ReturnReg);
         break;
     }
