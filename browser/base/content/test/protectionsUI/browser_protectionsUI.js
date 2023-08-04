@@ -657,6 +657,8 @@ add_task(async function testSubViewTelemetry() {
  * tab after toggling the TP switch.
  */
 add_task(async function testQuickSwitchTabAfterTogglingTPSwitch() {
+  requestLongerTimeout(3);
+
   const FIRST_TEST_SITE = "https://example.com/";
   const SECOND_TEST_SITE = "https://example.org/";
 

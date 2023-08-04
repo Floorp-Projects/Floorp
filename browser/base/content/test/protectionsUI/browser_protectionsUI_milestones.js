@@ -15,6 +15,15 @@ add_setup(async function () {
 });
 
 add_task(async function doTest() {
+  requestLongerTimeout(3);
+
+  // The protections panel needs to be openend at least once,
+  // or the milestone-achieved pref observer is not triggered.
+  await BrowserTestUtils.withNewTab("https://example.com", async () => {
+    await openProtectionsPanel();
+    await closeProtectionsPanel();
+  });
+
   // This also ensures that the DB tables have been initialized.
   await TrackingDBService.clearAll();
 

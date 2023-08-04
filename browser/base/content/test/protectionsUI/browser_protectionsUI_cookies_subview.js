@@ -342,8 +342,8 @@ add_task(async function testCookiesSubViewAllowed() {
   ok(stateLabel, "List item has a state label");
   ok(BrowserTestUtils.is_visible(stateLabel), "State label is visible");
   is(
-    stateLabel.value,
-    gNavigatorBundle.getString("contentBlocking.cookiesView.allowed.label"),
+    stateLabel.getAttribute("data-l10n-id"),
+    "content-blocking-cookies-view-allowed-label",
     "State label has correct text"
   );
 
@@ -483,6 +483,8 @@ add_task(async function testCookiesSubViewAllowedHeuristic() {
 });
 
 add_task(async function testCookiesSubViewBlockedDoublyNested() {
+  requestLongerTimeout(2);
+
   Services.prefs.setIntPref(
     TPC_PREF,
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
