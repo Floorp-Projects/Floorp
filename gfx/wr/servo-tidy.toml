@@ -29,6 +29,7 @@ packages = [
     "rand_core",
     # transition to syn 2 is underway.
     "syn",
+    "synstructure",
     # Can be fixed by removing time dependency - see bug 1765324
     "wasi",
 ]
