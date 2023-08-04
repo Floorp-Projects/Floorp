@@ -4621,6 +4621,8 @@ static void MoveDataBlock(MacroAssembler& masm, Register base, int32_t from,
 #  elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_X86)
   static constexpr Register scratch = ABINonArgReg0;
   masm.push(scratch);
+#  elif defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_MIPS64)
+  ScratchRegisterScope scratch(masm);
 #  elif !defined(JS_CODEGEN_NONE)
   const Register scratch = ScratchReg;
 #  else
@@ -4746,7 +4748,11 @@ static void CollapseWasmFrameFast(MacroAssembler& masm,
   static constexpr Register tempForFP = ABINonArgReg3;
 
 #  ifdef JS_USE_LINK_REGISTER
+#    if defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_MIPS64)
+  static constexpr Register tempForRA = ra;
+#    else
   static constexpr Register tempForRA = lr;
+#    endif
 #  else
   static constexpr Register tempForRA = ABINonArgReg2;
   masm.push(tempForRA);
@@ -4852,7 +4858,11 @@ static void CollapseWasmFrameSlow(MacroAssembler& masm,
   masm.reserveStack(reserved);
 
 #  ifdef JS_USE_LINK_REGISTER
+#    if defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_MIPS64)
+  static constexpr Register tempForRA = ra;
+#    else
   static constexpr Register tempForRA = lr;
+#    endif
 #  else
   static constexpr Register tempForRA = ABINonArgReg2;
   masm.push(tempForRA);

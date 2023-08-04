@@ -2856,4 +2856,17 @@ void MacroAssembler::convertUInt64ToFloat32(Register64 src_, FloatRegister dest,
   bind(&done);
 }
 
+#ifdef ENABLE_WASM_TAIL_CALLS
+void MacroAssembler::wasmMarkSlowCall() { mov(ra, ra); }
+
+const int32_t SlowCallMarker = 0x37ff0000;  // ori ra, ra, 0
+
+void MacroAssembler::wasmCheckSlowCallsite(Register ra_, Label* notSlow,
+                                           Register temp1, Register temp2) {
+  MOZ_ASSERT(ra_ != temp2);
+  load32(Address(ra_, 0), temp2);
+  branch32(Assembler::NotEqual, temp2, Imm32(SlowCallMarker), notSlow);
+}
+#endif  // ENABLE_WASM_TAIL_CALLS
+
 //}}} check_macroassembler_style
