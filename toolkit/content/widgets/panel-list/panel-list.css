@@ -41,6 +41,18 @@
   border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
 }
 
+/**
+ * On Linux, unlike Windows and macOS, the widget layer does not draw any
+ * border or box-shadow on its own behind a XUL panel, so we always want
+ * this panel-list border to appear, regardless of whether or not the panel-list
+ * is in a XUL panel or not.
+ */
+@media (-moz-platform: linux) {
+  :host {
+    border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  }
+}
+
 .list {
   margin: 0;
   padding: 0;
