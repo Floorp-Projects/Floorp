@@ -342,17 +342,27 @@ export class TranslationsParent extends JSWindowActorParent {
     if (!lazy.automaticallyPopupPref) {
       return;
     }
+    if (!this.browsingContext.currentWindowGlobal) {
+      return;
+    }
+    const { documentURI } = this.browsingContext.currentWindowGlobal;
+
     if (
       TranslationsParent.isInAutomation() &&
       !TranslationsParent.testAutomaticPopup
     ) {
       // Do not offer translations in automation, as many tests do not expect this
       // behavior.
+      lazy.console.log(
+        "maybeOfferTranslations - Do not offer translations in automation.",
+        documentURI.spec
+      );
       return;
     }
+
     let host;
     try {
-      host = this.browsingContext.currentWindowGlobal.documentURI.host;
+      host = documentURI.host;
     } catch {
       // nsIURI.host can throw if the URI scheme doesn't have a host. In this case
       // do not offer a translation.
@@ -360,6 +370,10 @@ export class TranslationsParent extends JSWindowActorParent {
     }
     if (TranslationsParent.#hostsOffered.has(host)) {
       // This host was already offered a translation.
+      lazy.console.log(
+        "maybeOfferTranslations - Host already offered a translation, so skip.",
+        documentURI.spec
+      );
       return;
     }
     const browser = this.browsingContext.top.embedderElement;
@@ -372,18 +386,34 @@ export class TranslationsParent extends JSWindowActorParent {
     if (
       TranslationsParent.shouldNeverTranslateLanguage(
         detectedLanguages.docLangTag
-      ) ||
-      this.shouldNeverTranslateSite()
+      )
     ) {
+      lazy.console.log(
+        `maybeOfferTranslations - Should never translate language. "${detectedLanguages.docLangTag}"`,
+        documentURI.spec
+      );
+      return;
+    }
+    if (this.shouldNeverTranslateSite()) {
+      lazy.console.log(
+        "maybeOfferTranslations - Should never translate site.",
+        documentURI.spec
+      );
       return;
     }
 
     // Only offer the translation if it's still the current page.
     if (
-      this.browsingContext.currentWindowGlobal.documentURI.spec ===
+      documentURI.spec ===
       this.browsingContext.topChromeWindow.gBrowser.selectedBrowser.documentURI
         .spec
     ) {
+      lazy.console.log(
+        "maybeOfferTranslations - Offering a translation",
+        documentURI.spec,
+        detectedLanguages
+      );
+
       browser.dispatchEvent(
         new CustomEvent("TranslationsParent:OfferTranslation", {
           bubbles: true,
