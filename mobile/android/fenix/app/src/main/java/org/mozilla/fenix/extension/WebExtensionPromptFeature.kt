@@ -90,17 +90,10 @@ class WebExtensionPromptFeature(
     ) {
         if (hasExistingPermissionDialogFragment()) return
 
-        // If the add-on is not found, it is already installed because the install process can only
-        // be triggered for add-ons "known" by Fenix (the add-on is either part of the official list
-        // of supported extensions OR part of the user custom AMO collection).
         if (addon == null) {
             promptRequest.onConfirm(false)
             consumePromptRequest()
-            showSnackBar(
-                view,
-                context.getString(R.string.addon_already_installed),
-                FenixSnackbar.LENGTH_LONG,
-            )
+            showUnsupportedError()
         } else {
             showPermissionDialog(
                 addon,
@@ -150,6 +143,15 @@ class WebExtensionPromptFeature(
                 PERMISSIONS_DIALOG_FRAGMENT_TAG,
             )
         }
+    }
+
+    @VisibleForTesting
+    internal fun showUnsupportedError() {
+        showSnackBar(
+            view,
+            context.getString(R.string.addon_not_supported_error),
+            FenixSnackbar.LENGTH_LONG,
+        )
     }
 
     private fun tryToReAttachButtonHandlersToPreviousDialog() {
@@ -204,7 +206,8 @@ class WebExtensionPromptFeature(
         consumePromptRequest()
     }
 
-    private fun consumePromptRequest() {
+    @VisibleForTesting
+    internal fun consumePromptRequest() {
         store.dispatch(WebExtensionAction.ConsumePromptRequestWebExtensionAction)
     }
 
