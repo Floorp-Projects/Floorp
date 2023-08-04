@@ -1,0 +1,69 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - "Firefox :: Shopping"
+
+shopping.settings:
+  nimbus_disabled_shopping:
+    type: boolean
+    lifetime: application
+    description: |
+      Indicates if Nimbus has disabled the use the shopping component.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845822
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845822
+    data_sensitivity:
+      - interaction
+    expires: 122 
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - metrics
+
+  component_opted_out:
+    type: boolean
+    lifetime: application
+    description: |
+      Indicates if the user has opted out of using the shopping component.
+      Set during shopping component init and updated when changed in browser.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845822
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845822
+    data_sensitivity:
+      - interaction
+    expires: 122 
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - metrics
+
+  has_onboarded:
+    type: boolean
+    lifetime: application
+    description: |
+      Indicates if the user has completed the Shopping product Onboarding
+      experience. Set during shopping component init and updated when changed
+      in browser.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845822
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845822
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - metrics

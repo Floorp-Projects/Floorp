@@ -373,6 +373,8 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Firefox :: Shell Integration':
   description: The Bugzilla component which applies to this object.
+'Firefox :: Shopping':
+  description: The Bugzilla component which applies to this object.
 'Firefox :: Site Identity':
   description: The Bugzilla component which applies to this object.
 'Firefox :: Site Permissions':
