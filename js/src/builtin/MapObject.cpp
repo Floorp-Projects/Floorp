@@ -1736,6 +1736,33 @@ bool SetObject::clear(JSContext* cx, unsigned argc, Value* vp) {
   return CallNonGenericMethod(cx, is, clear_impl, args);
 }
 
+bool SetObject::copy(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  MOZ_ASSERT(SetObject::is(args[0]));
+
+  auto* result = SetObject::create(cx);
+  if (!result) {
+    return false;
+  }
+
+  ValueSet* set = result->getData();
+  MOZ_ASSERT(set);
+
+  auto* from = &args[0].toObject().as<SetObject>();
+  for (auto range = from->getData()->all(); !range.empty(); range.popFront()) {
+    HashableValue value = range.front().get();
+
+    if (!PostWriteBarrier(result, value) || !set->put(value)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
 /*** JS static utility functions ********************************************/
 
 static bool forEach(const char* funcName, JSContext* cx, HandleObject obj,

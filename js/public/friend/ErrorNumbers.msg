@@ -794,6 +794,9 @@ MSG_DEF(JSMSG_BAD_WEAKREF_TARGET,                        0, JSEXN_TYPEERR, "cann
 // Iterator Helpers
 MSG_DEF(JSMSG_NEGATIVE_LIMIT,                            0, JSEXN_RANGEERR, "Iterator limits cannot be negative")
 
+// Set
+MSG_DEF(JSMSG_SET_NEGATIVE_SIZE,                         0, JSEXN_RANGEERR, "Set size must be non-negative")
+
 // Record and Tuple
 MSG_DEF(JSMSG_RECORD_TUPLE_NO_OBJECT,                    0, JSEXN_TYPEERR, "Record and Tuple can only contain primitive values")
 MSG_DEF(JSMSG_RECORD_NO_PROTO,                           0, JSEXN_SYNTAXERR, "__proto__ is not a valid literal key in records")
