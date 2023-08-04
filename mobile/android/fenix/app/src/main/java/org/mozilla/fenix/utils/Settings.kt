@@ -1425,7 +1425,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     var isPullToRefreshEnabledInBrowser by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_website_pull_to_refresh),
-        default = true,
+        default = Config.channel.isNightlyOrDebug,
     )
 
     var isDynamicToolbarEnabled by booleanPreference(
