@@ -76,6 +76,21 @@ bool AnyRef::fromJSValue(JSContext* cx, HandleValue value,
     return true;
   }
 
+  if (value.isInt32() && !int32NeedsBoxing(value.toInt32())) {
+    result.set(AnyRef::fromInt32(value.toInt32()));
+    return true;
+  }
+
+  if (value.isDouble()) {
+    double doubleValue = value.toDouble();
+    int32_t intValue;
+    if (mozilla::NumberIsInt32(doubleValue, &intValue) &&
+        !int32NeedsBoxing(intValue)) {
+      result.set(AnyRef::fromInt32(intValue));
+      return true;
+    }
+  }
+
   JSObject* box = AnyRef::boxValue(cx, value);
   if (!box) {
     return false;
@@ -97,6 +112,8 @@ Value wasm::AnyRef::toJSValue() const {
     value.setNull();
   } else if (isJSString()) {
     value.setString(toJSString());
+  } else if (isI31()) {
+    value.setInt32(toI31());
   } else {
     JSObject& obj = toJSObject();
     if (obj.is<WasmValueBox>()) {

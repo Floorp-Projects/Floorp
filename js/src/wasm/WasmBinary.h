@@ -701,6 +701,7 @@ inline bool Decoder::readPackedType(const TypeContext& types,
 #endif
     }
     case uint8_t(TypeCode::AnyRef):
+    case uint8_t(TypeCode::I31Ref):
     case uint8_t(TypeCode::EqRef):
     case uint8_t(TypeCode::StructRef):
     case uint8_t(TypeCode::ArrayRef):
@@ -760,6 +761,7 @@ inline bool Decoder::readHeapType(const TypeContext& types,
         return true;
 #ifdef ENABLE_WASM_GC
       case uint8_t(TypeCode::AnyRef):
+      case uint8_t(TypeCode::I31Ref):
       case uint8_t(TypeCode::EqRef):
       case uint8_t(TypeCode::StructRef):
       case uint8_t(TypeCode::ArrayRef):

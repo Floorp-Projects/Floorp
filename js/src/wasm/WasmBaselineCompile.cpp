@@ -6527,10 +6527,6 @@ bool BaseCompiler::emitBarrieredStore(const Maybe<RegRef>& object,
                                       RegPtr valueAddr, RegRef value,
                                       PreBarrierKind preBarrierKind,
                                       PostBarrierKind postBarrierKind) {
-  // TODO/AnyRef-boxing: With boxed immediates and strings, the write
-  // barrier is going to have to be more complicated.
-  ASSERT_ANYREF_IS_JSOBJECT;
-
   // The pre-barrier preserves all allocated registers.
   if (preBarrierKind == PreBarrierKind::Normal) {
     emitPreBarrier(valueAddr);
@@ -7469,6 +7465,40 @@ bool BaseCompiler::emitArrayCopy() {
   }
 
   return emitInstanceCall(SASigArrayCopy);
+}
+
+bool BaseCompiler::emitI31New() {
+  Nothing value;
+  if (!iter_.readConversion(ValType::I32, ValType(RefType::i31()), &value)) {
+    return false;
+  }
+
+  RegI32 intValue = popI32();
+  RegRef i31Value = needRef();
+  masm.truncate32ToWasmI31Ref(intValue, i31Value);
+  freeI32(intValue);
+  pushRef(i31Value);
+  return true;
+}
+
+bool BaseCompiler::emitI31Get(FieldWideningOp wideningOp) {
+  MOZ_ASSERT(wideningOp != FieldWideningOp::None);
+
+  Nothing value;
+  if (!iter_.readConversion(ValType(RefType::i31()), ValType::I32, &value)) {
+    return false;
+  }
+
+  RegRef i31Value = popRef();
+  RegI32 intValue = needI32();
+  if (wideningOp == FieldWideningOp::Signed) {
+    masm.convertWasmI31RefTo32Signed(i31Value, intValue);
+  } else {
+    masm.convertWasmI31RefTo32Unsigned(i31Value, intValue);
+  }
+  freeRef(i31Value);
+  pushI32(intValue);
+  return true;
 }
 
 void BaseCompiler::emitRefTestCommon(RefType sourceType, RefType destType) {
@@ -9955,6 +9985,12 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitArrayLen(/*decodeIgnoredTypeIndex=*/false));
           case uint32_t(GcOp::ArrayCopy):
             CHECK_NEXT(emitArrayCopy());
+          case uint32_t(GcOp::I31New):
+            CHECK_NEXT(emitI31New());
+          case uint32_t(GcOp::I31GetS):
+            CHECK_NEXT(emitI31Get(FieldWideningOp::Signed));
+          case uint32_t(GcOp::I31GetU):
+            CHECK_NEXT(emitI31Get(FieldWideningOp::Unsigned));
           case uint32_t(GcOp::RefTestV5):
             CHECK_NEXT(emitRefTestV5());
           case uint32_t(GcOp::RefCastV5):

@@ -924,6 +924,20 @@ class FunctionCompiler {
 
 #endif  // ENABLE_WASM_FUNCTION_REFERENCES
 
+#ifdef ENABLE_WASM_GC
+  MDefinition* i31New(MDefinition* input) {
+    auto* ins = MWasmNewI31Ref::New(alloc(), input);
+    curBlock_->add(ins);
+    return ins;
+  }
+
+  MDefinition* i31Get(MDefinition* input, FieldWideningOp wideningOp) {
+    auto* ins = MWasmI31RefGet::New(alloc(), input, wideningOp);
+    curBlock_->add(ins);
+    return ins;
+  }
+#endif  // ENABLE_WASM_GC
+
 #ifdef ENABLE_WASM_SIMD
   // About Wasm SIMD as supported by Ion:
   //
@@ -7353,6 +7367,34 @@ static bool EmitArrayCopy(FunctionCompiler& f) {
                              numElements, elemSizeDef);
 }
 
+static bool EmitI31New(FunctionCompiler& f) {
+  MDefinition* input;
+  if (!f.iter().readConversion(ValType::I32, ValType(RefType::i31()), &input)) {
+    return false;
+  }
+  MDefinition* output = f.i31New(input);
+  if (!output) {
+    return false;
+  }
+  f.iter().setResult(output);
+  return true;
+}
+
+static bool EmitI31Get(FunctionCompiler& f, FieldWideningOp wideningOp) {
+  MOZ_ASSERT(wideningOp != FieldWideningOp::None);
+
+  MDefinition* input;
+  if (!f.iter().readConversion(ValType(RefType::i31()), ValType::I32, &input)) {
+    return false;
+  }
+  MDefinition* output = f.i31Get(input, wideningOp);
+  if (!output) {
+    return false;
+  }
+  f.iter().setResult(output);
+  return true;
+}
+
 static bool EmitRefTestV5(FunctionCompiler& f) {
   MDefinition* ref;
   RefType sourceType;
@@ -8160,6 +8202,12 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitArrayLen(f, /*decodeIgnoredTypeIndex=*/false));
           case uint32_t(GcOp::ArrayCopy):
             CHECK(EmitArrayCopy(f));
+          case uint32_t(GcOp::I31New):
+            CHECK(EmitI31New(f));
+          case uint32_t(GcOp::I31GetS):
+            CHECK(EmitI31Get(f, FieldWideningOp::Signed));
+          case uint32_t(GcOp::I31GetU):
+            CHECK(EmitI31Get(f, FieldWideningOp::Unsigned));
           case uint32_t(GcOp::RefTestV5):
             CHECK(EmitRefTestV5(f));
           case uint32_t(GcOp::RefCastV5):

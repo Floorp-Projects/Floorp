@@ -443,19 +443,55 @@ if (wasmGcEnabled()) {
     WasmArrayrefValues.push(newArray());
 }
 
+let WasmGcObjectValues = WasmStructrefValues.concat(WasmArrayrefValues);
+
 // Valid values for eqref
 let WasmEqrefValues = [...WasmStructrefValues, ...WasmArrayrefValues];
 
+// Valid values for i31ref
+let MinI31refValue = -1 * Math.pow(2, 30);
+let MaxI31refValue = Math.pow(2, 30) - 1;
+let WasmI31refValues = [
+  // first four 31-bit signed numbers
+  MinI31refValue,
+  MinI31refValue + 1,
+  MinI31refValue + 2,
+  MinI31refValue + 3,
+  // five numbers around zero
+  -2,
+  -1,
+  0,
+  1,
+  2,
+  // last four 31-bit signed numbers
+  MaxI31refValue - 3,
+  MaxI31refValue - 2,
+  MaxI31refValue - 1,
+  MaxI31refValue,
+];
+
 // Valid and invalid values for anyref
-let WasmAnyrefValues = [...WasmEqrefValues];
+let WasmAnyrefValues = [...WasmEqrefValues, ...WasmI31refValues];
 let WasmNonAnyrefValues = [
     undefined,
     true,
     false,
     {x:1337},
     ["abracadabra"],
-    1337,
     13.37,
+    -0,
+    0x7fffffff + 0.1,
+    -0x7fffffff - 0.1,
+    0x80000000 + 0.1,
+    -0x80000000 - 0.1,
+    0xffffffff + 0.1,
+    -0xffffffff - 0.1,
+    Number.EPSILON,
+    Number.MAX_SAFE_INTEGER,
+    Number.MIN_SAFE_INTEGER,
+    Number.MIN_VALUE,
+    Number.MAX_VALUE,
+    Number.NaN,
     "hi",
     37n,
     new Number(42),

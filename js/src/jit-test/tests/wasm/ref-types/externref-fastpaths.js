@@ -22,7 +22,7 @@ var index = 0;
 // `p` will be a register argument on most platforms.
 
 function js_externref_regarg(p) {
-    if (p !== objs[index])
+    if (p !== objs[index] && !Number.isNaN(objs[index]))
         throw new Error("Bad argument at " + index);
 }
 
@@ -33,7 +33,7 @@ function js_externref_regarg(p) {
 // platforms as of 2019.)
 
 function js_externref_stackarg(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, p) {
-    if (p !== objs[index])
+    if (p !== objs[index] && !Number.isNaN(objs[index]))
         throw new Error("Bad argument at " + index);
 }
 
@@ -56,7 +56,7 @@ var ins1 = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
 index = 0;
 for ( let i=0; i < iter; i++ ) {
     let res = ins1.exports.run1(objs[index]);
-    if (res !== objs[index])
+    if (res !== objs[index] && !Number.isNaN(objs[index]))
         throw new Error("Bad return at " + index);
     index = (index + 1) % objs.length;
 }
@@ -64,7 +64,7 @@ for ( let i=0; i < iter; i++ ) {
 index = 0;
 for ( let i=0; i < iter; i++ ) {
     let res = ins1.exports.run2(objs[index]);
-    if (res !== objs[index])
+    if (res !== objs[index] && !Number.isNaN(objs[index]))
         throw new Error("Bad return at " + index);
     index = (index + 1) % objs.length;
 }
@@ -94,7 +94,7 @@ var ins2 = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
 index = 0;
 for ( let i=0; i < iter; i++ ) {
     let res = ins2.exports.run1();
-    if (res !== objs[index])
+    if (res !== objs[index] && !Number.isNaN(objs[index]))
         throw new Error("Bad return at " + index);
     index = (index + 1) % objs.length;
 }

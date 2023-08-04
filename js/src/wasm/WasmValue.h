@@ -380,6 +380,10 @@ using RootedValVectorN = Rooted<ValVectorN<N>>;
 [[nodiscard]] extern bool CheckEqRefValue(JSContext* cx, HandleValue v,
                                           MutableHandleAnyRef vp);
 
+// The same as above for when the target type is 'i31ref'.
+[[nodiscard]] extern bool CheckI31RefValue(JSContext* cx, HandleValue v,
+                                           MutableHandleAnyRef vp);
+
 // The same as above for when the target type is 'structref'.
 [[nodiscard]] extern bool CheckStructRefValue(JSContext* cx, HandleValue v,
                                               MutableHandleAnyRef vp);

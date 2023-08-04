@@ -308,6 +308,7 @@ class RefType {
     NoExtern = uint8_t(TypeCode::NullExternRef),
     None = uint8_t(TypeCode::NullAnyRef),
     Eq = uint8_t(TypeCode::EqRef),
+    I31 = uint8_t(TypeCode::I31Ref),
     Struct = uint8_t(TypeCode::StructRef),
     Array = uint8_t(TypeCode::ArrayRef),
     TypeRef = uint8_t(AbstractTypeRefCode)
@@ -356,6 +357,7 @@ class RefType {
       case TypeCode::ExternRef:
       case TypeCode::AnyRef:
       case TypeCode::EqRef:
+      case TypeCode::I31Ref:
       case TypeCode::StructRef:
       case TypeCode::ArrayRef:
       case TypeCode::NullFuncRef:
@@ -376,6 +378,7 @@ class RefType {
   static RefType noextern() { return RefType(NoExtern, true); }
   static RefType none() { return RefType(None, true); }
   static RefType eq() { return RefType(Eq, true); }
+  static RefType i31() { return RefType(I31, true); }
   static RefType struct_() { return RefType(Struct, true); }
   static RefType array() { return RefType(Array, true); }
 
@@ -386,6 +389,7 @@ class RefType {
   bool isNoExtern() const { return kind() == RefType::NoExtern; }
   bool isNone() const { return kind() == RefType::None; }
   bool isEq() const { return kind() == RefType::Eq; }
+  bool isI31() const { return kind() == RefType::I31; }
   bool isStruct() const { return kind() == RefType::Struct; }
   bool isArray() const { return kind() == RefType::Array; }
   bool isTypeRef() const { return kind() == RefType::TypeRef; }
@@ -451,6 +455,7 @@ class FieldTypeTraits {
 #ifdef ENABLE_WASM_GC
       case TypeCode::AnyRef:
       case TypeCode::EqRef:
+      case TypeCode::I31Ref:
       case TypeCode::StructRef:
       case TypeCode::ArrayRef:
       case TypeCode::NullFuncRef:
@@ -527,6 +532,7 @@ class ValTypeTraits {
 #ifdef ENABLE_WASM_GC
       case TypeCode::AnyRef:
       case TypeCode::EqRef:
+      case TypeCode::I31Ref:
       case TypeCode::StructRef:
       case TypeCode::ArrayRef:
       case TypeCode::NullFuncRef:
@@ -694,6 +700,8 @@ class PackedType : public T {
   bool isNone() const { return tc_.typeCode() == TypeCode::NullAnyRef; }
 
   bool isEqRef() const { return tc_.typeCode() == TypeCode::EqRef; }
+
+  bool isI31Ref() const { return tc_.typeCode() == TypeCode::I31Ref; }
 
   bool isStructRef() const { return tc_.typeCode() == TypeCode::StructRef; }
 
