@@ -111,9 +111,13 @@ const workspaceFunctions = {
         }, 400);
       },
 
+      handleTabObeserver() {
+        workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
+      },
+      
       handleTabSelect() {
         workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
-        workspaceFunctions.tabFunctions.addLastShowedWorkspaceTab();
+        workspaceFunctions.tabFunctions.addLastShowedWorkspaceTab();        
       },
 
       handleTabMove() {
@@ -1409,6 +1413,83 @@ const setEvenyListeners = function () {
   gBrowser.tabContainer.addEventListener(
     "TabSelect",
     workspaceFunctions.eventListeners.tabAddEventListeners.handleTabSelect
+  );
+
+  gBrowser.tabContainer.addEventListener(
+    "TabAttrModified",
+    workspaceFunctions.eventListeners.tabAddEventListeners.handleTabObeserver
+  );
+
+  gBrowser.tabContainer.addEventListener(
+    "TabHide",
+    workspaceFunctions.eventListeners.tabAddEventListeners.handleTabObeserver
+  );
+
+  gBrowser.tabContainer.addEventListener(
+    "TabShow",
+    workspaceFunctions.eventListeners.tabAddEventListeners.handleTabObeserver
+  );
+
+  gBrowser.tabContainer.addEventListener(
+    "TabPinned",
+    workspaceFunctions.eventListeners.tabAddEventListeners.handleTabObeserver
+  );
+
+  gBrowser.tabContainer.addEventListener(
+    "TabUnpinned",
+    workspaceFunctions.eventListeners.tabAddEventListeners.handleTabObeserver
+  );
+
+  gBrowser.tabContainer.addEventListener(
+    "transitionend",
+    workspaceFunctions.eventListeners.tabAddEventListeners.handleTabObeserver
+  );
+
+  gBrowser.tabContainer.addEventListener(
+    "dblclick",
+    workspaceFunctions.eventListeners.tabAddEventListeners.handleTabObeserver
+  );
+
+  gBrowser.tabContainer.addEventListener(
+    "click",
+    workspaceFunctions.eventListeners.tabAddEventListeners.handleTabObeserver
+  );
+
+  gBrowser.tabContainer.addEventListener(
+    "click",
+    workspaceFunctions.eventListeners.tabAddEventListeners.handleTabObeserver,
+    true
+  );
+
+  gBrowser.tabContainer.addEventListener(
+    "keydown",
+    workspaceFunctions.eventListeners.tabAddEventListeners.handleTabObeserver,
+    { mozSystemGroup: true }
+  );
+
+  gBrowser.tabContainer.addEventListener(
+    "dragstart",
+    workspaceFunctions.eventListeners.tabAddEventListeners.handleTabObeserver
+  );
+
+  gBrowser.tabContainer.addEventListener(
+    "dragover",
+    workspaceFunctions.eventListeners.tabAddEventListeners.handleTabObeserver
+  );
+
+  gBrowser.tabContainer.addEventListener(
+    "drop",
+    workspaceFunctions.eventListeners.tabAddEventListeners.handleTabObeserver
+  );
+
+  gBrowser.tabContainer.addEventListener(
+    "dragend",
+    workspaceFunctions.eventListeners.tabAddEventListeners.handleTabObeserver
+  );
+
+  gBrowser.tabContainer.addEventListener(
+    "dragleave",
+    workspaceFunctions.eventListeners.tabAddEventListeners.handleTabObeserver
   );
 
   Services.prefs.addObserver(
