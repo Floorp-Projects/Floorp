@@ -928,8 +928,9 @@ var TranslationsPanel = new (class {
 
     await this.#showDefaultView(true /* force this view to be shown */);
 
-    this.#openPanelPopup(this.elements.appMenuButton, {
+    await this.#openPanelPopup(this.elements.appMenuButton, {
       event,
+      viewName: "defaultView",
       maintainFlow: true,
     });
   }
@@ -1046,22 +1047,36 @@ var TranslationsPanel = new (class {
    * Opens the Translations panel popup at the given target.
    *
    * @param {object} target - The target element at which to open the popup.
-   * @param {object} data
-   * @param {string} data.event
+   * @param {object} telemetryData
+   * @param {string} telemetryData.event
    *   The trigger event for opening the popup.
-   * @param {boolean} data.maintainFlow
+   * @param {string} telemetryData.viewName
+   *   The name of the view shown by the panel.
+   * @param {boolean} telemetryData.autoShow
+   *   True if the panel was automatically opened, otherwise false.
+   * @param {boolean} telemetryData.maintainFlow
    *   Whether or not to maintain the flow of telemetry.
-   * @param {boolean} data.isFirstUserInteraction
+   * @param {boolean} telemetryData.isFirstUserInteraction
    *   Whether or not this is the first user interaction with the panel.
    */
-  #openPanelPopup(
+  async #openPanelPopup(
     target,
-    { event = null, maintainFlow = false, isFirstUserInteraction = null }
+    {
+      event = null,
+      viewName = null,
+      autoShow = false,
+      maintainFlow = false,
+      isFirstUserInteraction = null,
+    }
   ) {
     const { panel, appMenuButton } = this.elements;
     const openedFromAppMenu = target.id === appMenuButton.id;
+    const { docLangTag } = await this.#getCachedDetectedLanguages();
 
     TranslationsParent.telemetry().panel().onOpen({
+      viewName,
+      autoShow,
+      docLangTag,
       maintainFlow,
       openedFromAppMenu,
       isFirstUserInteraction,
@@ -1084,14 +1099,16 @@ var TranslationsPanel = new (class {
    * Opens the TranslationsPanel.
    *
    * @param {Event} event
+   * @param {boolean} reportAsAutoShow
+   *   True to report to telemetry that the panel was opened automatically, otherwise false.
    */
-  async open(event) {
+  async open(event, reportAsAutoShow = false) {
     if (this.#openPromise) {
       // There is already an open event happening, do not open.
       return;
     }
 
-    this.#openPromise = this.#openImpl(event);
+    this.#openPromise = this.#openImpl(event, reportAsAutoShow);
     this.#openPromise.finally(() => {
       this.#openPromise = null;
     });
@@ -1102,7 +1119,7 @@ var TranslationsPanel = new (class {
    *
    * @param {Event} event
    */
-  async #openImpl(event) {
+  async #openImpl(event, reportAsAutoShow) {
     event.stopPropagation();
     if (
       (event.type == "click" && event.button != 0) ||
@@ -1158,7 +1175,13 @@ var TranslationsPanel = new (class {
 
     this.console?.log(`Showing a translation panel`, gBrowser.currentURI.spec);
 
-    this.#openPanelPopup(targetButton, { event, isFirstUserInteraction });
+    await this.#openPanelPopup(targetButton, {
+      event,
+      autoShow: reportAsAutoShow,
+      viewName: requestedTranslationPair ? "revisitView" : "defaultView",
+      maintainFlow: false,
+      isFirstUserInteraction,
+    });
   }
 
   /**
@@ -1356,7 +1379,7 @@ var TranslationsPanel = new (class {
     switch (event.type) {
       case "TranslationsParent:OfferTranslation": {
         if (Services.wm.getMostRecentBrowserWindow()?.gBrowser === gBrowser) {
-          this.open(event);
+          this.open(event, /* reportAsAutoShow */ true);
         }
         break;
       }
@@ -1483,7 +1506,11 @@ var TranslationsPanel = new (class {
               : button;
 
             // Re-open the menu on an error.
-            this.#openPanelPopup(targetButton, { maintainFlow: true });
+            await this.#openPanelPopup(targetButton, {
+              autoShow: true,
+              viewName: "errorView",
+              maintainFlow: true,
+            });
             break;
           default:
             console.error("Unknown translation error", error);

@@ -45,7 +45,10 @@ add_task(async function test_translations_telemetry_switch_from_language() {
       expectedEventCount: 1,
       expectNewFlowId: true,
       finalValuePredicates: [
+        value => value.extra.auto_show === "false",
+        value => value.extra.view_name === "defaultView",
         value => value.extra.opened_from === "translationsButton",
+        value => value.extra.document_language === "es",
       ],
     }
   );
@@ -144,7 +147,10 @@ add_task(async function test_translations_telemetry_switch_to_language() {
       expectedEventCount: 1,
       expectNewFlowId: true,
       finalValuePredicates: [
+        value => value.extra.auto_show === "false",
+        value => value.extra.view_name === "defaultView",
         value => value.extra.opened_from === "translationsButton",
+        value => value.extra.document_language === "es",
       ],
     }
   );
