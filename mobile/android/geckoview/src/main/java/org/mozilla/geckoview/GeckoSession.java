@@ -1447,7 +1447,6 @@ public class GeckoSession {
                     addMarker.run();
                   },
                   ex -> {
-                    // This is incredibly ugly and unreadable because checkstyle sucks.
                     res.complete(false);
                     addMarker.run();
                   });
