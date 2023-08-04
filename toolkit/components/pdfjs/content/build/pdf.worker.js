@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.10.17';
+    const workerVersion = '3.10.27';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -351,9 +351,6 @@ class WorkerMessageHandler {
     });
     handler.on("GetAttachments", function (data) {
       return pdfManager.ensureCatalog("attachments");
-    });
-    handler.on("GetJavaScript", function (data) {
-      return pdfManager.ensureCatalog("javaScript");
     });
     handler.on("GetDocJSActions", function (data) {
       return pdfManager.ensureCatalog("jsActions");
@@ -44134,7 +44131,9 @@ class Catalog {
         return;
       }
       js = (0, _util.stringToPDFString)(js).replaceAll("\x00", "");
-      (javaScript ||= new Map()).set(name, js);
+      if (js) {
+        (javaScript ||= new Map()).set(name, js);
+      }
     }
     if (obj instanceof _primitives.Dict && obj.has("JavaScript")) {
       const nameTree = new _name_number_tree.NameTree(obj.getRaw("JavaScript"), this.xref);
@@ -44148,17 +44147,11 @@ class Catalog {
     }
     return javaScript;
   }
-  get javaScript() {
-    const javaScript = this._collectJavaScript();
-    return (0, _util.shadow)(this, "javaScript", javaScript ? [...javaScript.values()] : null);
-  }
   get jsActions() {
     const javaScript = this._collectJavaScript();
     let actions = (0, _core_utils.collectActions)(this.xref, this._catDict, _util.DocumentActionEventType);
     if (javaScript) {
-      if (!actions) {
-        actions = Object.create(null);
-      }
+      actions ||= Object.create(null);
       for (const [key, val] of javaScript) {
         if (key in actions) {
           actions[key].push(val);
@@ -57814,8 +57807,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.10.17';
-const pdfjsBuild = '4735ed8f1';
+const pdfjsVersion = '3.10.27';
+const pdfjsBuild = '399475247';
 })();
 
 /******/ 	return __webpack_exports__;

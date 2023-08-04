@@ -1511,7 +1511,7 @@ const PDFViewerApplication = {
     };
   },
   async _initializeAutoPrint(pdfDocument, openActionPromise) {
-    const [openAction, javaScript] = await Promise.all([openActionPromise, !this.pdfViewer.enableScripting ? pdfDocument.getJavaScript() : null]);
+    const [openAction, jsActions] = await Promise.all([openActionPromise, !this.pdfViewer.enableScripting ? pdfDocument.getJSActions() : null]);
     if (pdfDocument !== this.pdfDocument) {
       return;
     }
@@ -1519,22 +1519,14 @@ const PDFViewerApplication = {
     if (openAction?.action === "Print") {
       triggerAutoPrint = true;
     }
-    if (javaScript) {
-      javaScript.some(js => {
-        if (!js) {
-          return false;
-        }
-        console.warn("Warning: JavaScript support is not enabled");
-        return true;
-      });
-      if (!triggerAutoPrint) {
-        for (const js of javaScript) {
-          if (js && _ui_utils.AutoPrintRegExp.test(js)) {
-            triggerAutoPrint = true;
-            break;
-          }
+    if (jsActions) {
+      for (const name in jsActions) {
+        if (jsActions[name]) {
+          console.warn("Warning: JavaScript support is not enabled");
+          break;
         }
       }
+      triggerAutoPrint ||= !!(jsActions.OpenAction && _ui_utils.AutoPrintRegExp.test(jsActions.OpenAction));
     }
     if (triggerAutoPrint) {
       this.triggerPrinting();
@@ -6099,7 +6091,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.10.17';
+    const viewerVersion = '3.10.27';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -6487,7 +6479,7 @@ class PDFViewer {
         if (pdfDocument.isPureXfa) {
           console.warn("Warning: XFA-editing is not implemented.");
         } else if (isValidAnnotationEditorMode(mode)) {
-          this.#annotationEditorUIManager = new _pdfjsLib.AnnotationEditorUIManager(this.container, this.eventBus, pdfDocument, this.pageColors);
+          this.#annotationEditorUIManager = new _pdfjsLib.AnnotationEditorUIManager(this.container, this.viewer, this.eventBus, pdfDocument, this.pageColors);
           if (mode !== _pdfjsLib.AnnotationEditorType.NONE) {
             this.#annotationEditorUIManager.updateMode(mode);
           }
@@ -9723,8 +9715,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.10.17';
-const pdfjsBuild = '4735ed8f1';
+const pdfjsVersion = '3.10.27';
+const pdfjsBuild = '399475247';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
