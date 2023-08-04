@@ -467,6 +467,17 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
       getSettings().setAllowInsecureConnections(level);
       return this;
     }
+
+    /**
+     * Sets whether the Add-on Manager web API (`mozAddonManager`) is enabled.
+     *
+     * @param flag True if the web API should be enabled, false otherwise.
+     * @return This Builder instance.
+     */
+    public @NonNull Builder extensionsWebAPIEnabled(final boolean flag) {
+      getSettings().mExtensionsWebAPIEnabled.set(flag);
+      return this;
+    }
   }
 
   private GeckoRuntime mRuntime;
@@ -515,6 +526,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
   /* package */ final Pref<Boolean> mHttpsOnlyPrivateMode =
       new Pref<Boolean>("dom.security.https_only_mode_pbm", false);
   /* package */ final Pref<Integer> mProcessCount = new Pref<>("dom.ipc.processCount", 2);
+  /* package */ final Pref<Boolean> mExtensionsWebAPIEnabled =
+      new Pref<>("extensions.webapi.enabled", false);
 
   /* package */ int mPreferredColorScheme = COLOR_SCHEME_SYSTEM;
 
@@ -784,6 +797,26 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
   public void setLocales(final @Nullable String[] requestedLocales) {
     mRequestedLocales = requestedLocales;
     commitLocales();
+  }
+
+  /**
+   * Gets whether the Add-on Manager web API (`mozAddonManager`) is enabled.
+   *
+   * @return True when the web API is enabled, false otherwise.
+   */
+  public boolean getExtensionsWebAPIEnabled() {
+    return mExtensionsWebAPIEnabled.get();
+  }
+
+  /**
+   * Sets whether the Add-on Manager web API (`mozAddonManager`) is enabled.
+   *
+   * @param flag True if the web API should be enabled, false otherwise.
+   * @return This GeckoRuntimeSettings instance.
+   */
+  public @NonNull GeckoRuntimeSettings setExtensionsWebAPIEnabled(final boolean flag) {
+    mExtensionsWebAPIEnabled.commit(flag);
+    return this;
   }
 
   private void commitLocales() {
