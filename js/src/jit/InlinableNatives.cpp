@@ -271,6 +271,7 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::NumberToString:
     case InlinableNative::ReflectGetPrototypeOf:
     case InlinableNative::SetHas:
+    case InlinableNative::SetSize:
     case InlinableNative::String:
     case InlinableNative::StringToString:
     case InlinableNative::StringValueOf:

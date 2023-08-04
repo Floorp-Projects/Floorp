@@ -127,6 +127,7 @@
   _(GetFirstDollarIndex)                           \
                                                    \
   _(SetHas)                                        \
+  _(SetSize)                                       \
                                                    \
   _(String)                                        \
   _(StringToString)                                \
