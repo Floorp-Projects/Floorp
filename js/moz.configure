@@ -693,7 +693,7 @@ def wasm_tail_calls(value, target):
     if not value:
         return
 
-    if target.cpu in ("x86", "x86_64", "arm", "aarch64"):
+    if target.cpu in ("x86", "x86_64", "arm", "aarch64", "loongarch64", "mips64"):
         return True
 
 

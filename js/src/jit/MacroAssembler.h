@@ -3829,9 +3829,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void wasmCollapseFrameFast(const ReturnCallAdjustmentInfo& retCallInfo);
 
   void wasmCheckSlowCallsite(Register ra, Label* notSlow, Register temp1,
-                             Register temp2) DEFINED_ON(x86, x64, arm, arm64);
+                             Register temp2)
+      DEFINED_ON(x86, x64, arm, arm64, loong64, mips64);
 
-  void wasmMarkSlowCall() DEFINED_ON(x86, x64, arm, arm64);
+  void wasmMarkSlowCall() DEFINED_ON(x86, x64, arm, arm64, loong64, mips64);
 #endif
 
   // WasmTableCallIndexReg must contain the index of the indirect call.  This is
