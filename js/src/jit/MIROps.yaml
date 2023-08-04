@@ -575,7 +575,7 @@
 - name: WasmBoxValue
   operands:
     def: Value
-  result_type: RefOrNull
+  result_type: WasmAnyRef
   congruent_to: if_operands_equal
   alias_set: none
 
@@ -583,7 +583,7 @@
   operands:
     def: Object
   type_policy: none
-  result_type: RefOrNull
+  result_type: WasmAnyRef
   congruent_to: if_operands_equal
   alias_set: none
 

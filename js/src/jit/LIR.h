@@ -632,7 +632,7 @@ class LDefinition {
       case MIRType::Symbol:
       case MIRType::BigInt:
       case MIRType::Object:
-      case MIRType::RefOrNull:
+      case MIRType::WasmAnyRef:
         return LDefinition::OBJECT;
       case MIRType::Double:
         return LDefinition::DOUBLE;

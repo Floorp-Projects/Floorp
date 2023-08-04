@@ -1468,7 +1468,7 @@ class MConstant : public MNullaryInstruction {
 
 class MWasmNullConstant : public MNullaryInstruction {
   explicit MWasmNullConstant() : MNullaryInstruction(classOpcode) {
-    setResultType(MIRType::RefOrNull);
+    setResultType(MIRType::WasmAnyRef);
     setMovable();
   }
 
@@ -2783,7 +2783,7 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
     Compare_BigInt_String,
 
     // Wasm Ref/AnyRef/NullRef compared to Ref/AnyRef/NullRef
-    Compare_RefOrNull,
+    Compare_WasmAnyRef,
   };
 
  private:
@@ -2818,7 +2818,7 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
                compareType == Compare_Int64 || compareType == Compare_UInt64 ||
                compareType == Compare_Double ||
                compareType == Compare_Float32 ||
-               compareType == Compare_RefOrNull);
+               compareType == Compare_WasmAnyRef);
     auto* ins = MCompare::New(alloc, left, right, jsop, compareType);
     ins->setResultType(MIRType::Int32);
     return ins;
@@ -2902,7 +2902,7 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
       case Compare_Int64:
       case Compare_UInt64:
       case Compare_UIntPtr:
-      case Compare_RefOrNull:
+      case Compare_WasmAnyRef:
         return false;
     }
     MOZ_CRASH("unexpected compare type");
@@ -2960,8 +2960,8 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
       case Compare_BigInt_String:
         ty = "BigInt_String";
         break;
-      case Compare_RefOrNull:
-        ty = "RefOrNull";
+      case Compare_WasmAnyRef:
+        ty = "WasmAnyRef";
         break;
       default:
         ty = "!!unknown!!";
@@ -9366,7 +9366,7 @@ class MWasmLoadInstance : public MUnaryInstruction, public NoTypePolicy::Data {
 
     // The only types supported at the moment.
     MOZ_ASSERT(type == MIRType::Pointer || type == MIRType::Int32 ||
-               type == MIRType::Int64 || type == MIRType::RefOrNull);
+               type == MIRType::Int64 || type == MIRType::WasmAnyRef);
 
     setMovable();
     setResultType(type);
@@ -9409,7 +9409,7 @@ class MWasmStoreInstance : public MBinaryInstruction,
 
     // The only types supported at the moment.
     MOZ_ASSERT(type == MIRType::Pointer || type == MIRType::Int32 ||
-               type == MIRType::Int64 || type == MIRType::RefOrNull);
+               type == MIRType::Int64 || type == MIRType::WasmAnyRef);
   }
 
  public:
@@ -9940,7 +9940,7 @@ class MWasmLoadInstanceDataField : public MUnaryInstruction,
         instanceDataOffset_(instanceDataOffset),
         isConstant_(isConstant) {
     MOZ_ASSERT(IsNumberType(type) || type == MIRType::Simd128 ||
-               type == MIRType::Pointer || type == MIRType::RefOrNull);
+               type == MIRType::Pointer || type == MIRType::WasmAnyRef);
     setResultType(type);
     setMovable();
   }
@@ -9995,7 +9995,7 @@ class MWasmLoadTableElement : public MBinaryInstruction,
                               public NoTypePolicy::Data {
   MWasmLoadTableElement(MDefinition* elements, MDefinition* index)
       : MBinaryInstruction(classOpcode, elements, index) {
-    setResultType(MIRType::RefOrNull);
+    setResultType(MIRType::WasmAnyRef);
     setMovable();
   }
 
@@ -10171,7 +10171,7 @@ class MWasmStoreRef : public MAryInstruction<3>, public NoTypePolicy::Data {
     MOZ_ASSERT(valueOffset <= INT32_MAX);
     MOZ_ASSERT(valueBase->type() == MIRType::Pointer ||
                valueBase->type() == MIRType::StackResults);
-    MOZ_ASSERT(value->type() == MIRType::RefOrNull);
+    MOZ_ASSERT(value->type() == MIRType::WasmAnyRef);
     initOperand(0, instance);
     initOperand(1, valueBase);
     initOperand(2, value);
@@ -11325,7 +11325,7 @@ class MWasmStoreFieldKA : public MTernaryInstruction,
         aliases_(aliases),
         maybeTrap_(maybeTrap) {
     MOZ_ASSERT(offset <= INT32_MAX);
-    MOZ_ASSERT(value->type() != MIRType::RefOrNull);
+    MOZ_ASSERT(value->type() != MIRType::WasmAnyRef);
     // "if you want to narrow the value when it is stored, the source type
     // must be Int32".
     MOZ_ASSERT_IF(narrowingOp != MNarrowingOp::None,
@@ -11388,9 +11388,9 @@ class MWasmStoreFieldRefKA : public MAryInstruction<4>,
         preBarrierKind_(preBarrierKind) {
     MOZ_ASSERT(obj->type() == TargetWordMIRType() ||
                obj->type() == MIRType::Pointer ||
-               obj->type() == MIRType::RefOrNull);
+               obj->type() == MIRType::WasmAnyRef);
     MOZ_ASSERT(offset <= INT32_MAX);
-    MOZ_ASSERT(value->type() == MIRType::RefOrNull);
+    MOZ_ASSERT(value->type() == MIRType::WasmAnyRef);
     MOZ_ASSERT(
         aliases.flags() ==
             AliasSet::Store(AliasSet::WasmStructInlineDataArea).flags() ||

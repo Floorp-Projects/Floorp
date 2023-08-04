@@ -106,7 +106,7 @@ void CodeGenerator::visitCompare(LCompare* comp) {
   if (mir->compareType() == MCompare::Compare_Object ||
       mir->compareType() == MCompare::Compare_Symbol ||
       mir->compareType() == MCompare::Compare_UIntPtr ||
-      mir->compareType() == MCompare::Compare_RefOrNull) {
+      mir->compareType() == MCompare::Compare_WasmAnyRef) {
     if (right->isConstant()) {
       MOZ_ASSERT(mir->compareType() == MCompare::Compare_UIntPtr);
       masm.cmpPtrSet(cond, ToRegister(left), Imm32(ToInt32(right)),
@@ -139,7 +139,7 @@ void CodeGenerator::visitCompareAndBranch(LCompareAndBranch* comp) {
   if (mir->compareType() == MCompare::Compare_Object ||
       mir->compareType() == MCompare::Compare_Symbol ||
       mir->compareType() == MCompare::Compare_UIntPtr ||
-      mir->compareType() == MCompare::Compare_RefOrNull) {
+      mir->compareType() == MCompare::Compare_WasmAnyRef) {
     if (comp->right()->isConstant()) {
       MOZ_ASSERT(mir->compareType() == MCompare::Compare_UIntPtr);
       emitBranch(ToRegister(comp->left()), Imm32(ToInt32(comp->right())), cond,
@@ -1897,7 +1897,7 @@ void CodeGenerator::visitWasmSelect(LWasmSelect* ins) {
   Register cond = ToRegister(ins->condExpr());
   const LAllocation* falseExpr = ins->falseExpr();
 
-  if (mirType == MIRType::Int32 || mirType == MIRType::RefOrNull) {
+  if (mirType == MIRType::Int32 || mirType == MIRType::WasmAnyRef) {
     Register out = ToRegister(ins->output());
     MOZ_ASSERT(ToRegister(ins->trueExpr()) == out,
                "true expr input is reused for output");

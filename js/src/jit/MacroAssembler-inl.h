@@ -78,9 +78,9 @@ inline DynFn JitPreWriteBarrier(MIRType type) {
       using Fn = void (*)(JSRuntime * rt, Shape * *shapep);
       return DynamicFunction<Fn>(JitShapePreWriteBarrier);
     }
-    case MIRType::RefOrNull: {
+    case MIRType::WasmAnyRef: {
       using Fn = void (*)(JSRuntime * rt, wasm::AnyRef * refp);
-      return DynamicFunction<Fn>(JitRefOrNullPreWriteBarrier);
+      return DynamicFunction<Fn>(JitWasmAnyRefPreWriteBarrier);
     }
     default:
       MOZ_CRASH();

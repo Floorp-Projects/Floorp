@@ -85,7 +85,7 @@ uint32_t js::wasm::MIRTypeToABIResultSize(jit::MIRType type) {
       return ABIResult::StackSizeOfV128;
 #endif
     case MIRType::Pointer:
-    case MIRType::RefOrNull:
+    case MIRType::WasmAnyRef:
       return ABIResult::StackSizeOfPtr;
     default:
       MOZ_CRASH("MIRTypeToABIResultSize - unhandled case");
@@ -382,7 +382,7 @@ static void SetupABIArguments(MacroAssembler& masm, const FuncExport& fe,
           masm.load32(src, iter->gpr());
         } else if (type == MIRType::Int64) {
           masm.load64(src, iter->gpr64());
-        } else if (type == MIRType::RefOrNull) {
+        } else if (type == MIRType::WasmAnyRef) {
           masm.loadPtr(src, iter->gpr());
         } else if (type == MIRType::StackResults) {
           MOZ_ASSERT(args.isSyntheticStackResultPointerArg(iter.index()));
@@ -438,7 +438,7 @@ static void SetupABIArguments(MacroAssembler& masm, const FuncExport& fe,
             Move64(masm, src, Address(sp, iter->offsetFromArgBase()), scratch);
             break;
           }
-          case MIRType::RefOrNull:
+          case MIRType::WasmAnyRef:
             masm.loadPtr(src, scratch);
             masm.storePtr(scratch, Address(masm.getStackPointer(),
                                            iter->offsetFromArgBase()));
@@ -1275,7 +1275,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
         }
         break;
       }
-      case MIRType::RefOrNull: {
+      case MIRType::WasmAnyRef: {
         Register target = isStackArg ? ScratchIonEntry : iter->gpr();
         masm.unboxObjectOrNull(argv, target);
         GenPrintPtr(DebugChannel::Function, masm, target);
@@ -1499,7 +1499,7 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
         case MIRType::Double:
           GenPrintF64(DebugChannel::Function, masm, iter->fpu());
           break;
-        case MIRType::RefOrNull:
+        case MIRType::WasmAnyRef:
           GenPrintPtr(DebugChannel::Function, masm, iter->gpr());
           break;
         case MIRType::StackResults:
@@ -1568,7 +1568,7 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
             masm.storePtr(scratch, dst);
             break;
           }
-          case MIRType::RefOrNull: {
+          case MIRType::WasmAnyRef: {
             masm.loadPtr(src, scratch);
             GenPrintPtr(DebugChannel::Function, masm, scratch);
             masm.storePtr(scratch, dst);
@@ -1692,7 +1692,7 @@ static void StackCopy(MacroAssembler& masm, MIRType type, Register scratch,
     GenPrintIsize(DebugChannel::Import, masm, scratch);
     masm.store64(scratch64, dst);
 #endif
-  } else if (type == MIRType::RefOrNull || type == MIRType::Pointer ||
+  } else if (type == MIRType::WasmAnyRef || type == MIRType::Pointer ||
              type == MIRType::StackResults) {
     masm.loadPtr(src, scratch);
     GenPrintPtr(DebugChannel::Import, masm, scratch);
@@ -1746,7 +1746,7 @@ static void FillArgumentArrayForInterpExit(MacroAssembler& masm,
         } else if (type == MIRType::Int64) {
           GenPrintI64(DebugChannel::Import, masm, i->gpr64());
           masm.store64(i->gpr64(), dst);
-        } else if (type == MIRType::RefOrNull) {
+        } else if (type == MIRType::WasmAnyRef) {
           GenPrintPtr(DebugChannel::Import, masm, i->gpr());
           masm.storePtr(i->gpr(), dst);
         } else if (type == MIRType::StackResults) {
@@ -1846,7 +1846,7 @@ static void FillArgumentArrayForJitExit(MacroAssembler& masm, Register instance,
           // FuncType::canHaveJitExit should prevent this.  Also see comments
           // at GenerateBigIntInitialization.
           MOZ_CRASH("Should not happen");
-        } else if (type == MIRType::RefOrNull) {
+        } else if (type == MIRType::WasmAnyRef) {
           // This works also for FuncRef because it is distinguishable from
           // a boxed AnyRef.
           masm.movePtr(i->gpr(), scratch2);
@@ -1910,7 +1910,7 @@ static void FillArgumentArrayForJitExit(MacroAssembler& masm, Register instance,
           // FuncType::canHaveJitExit should prevent this.  Also see comments
           // at GenerateBigIntInitialization.
           MOZ_CRASH("Should not happen");
-        } else if (type == MIRType::RefOrNull) {
+        } else if (type == MIRType::WasmAnyRef) {
           // This works also for FuncRef because it is distinguishable from a
           // boxed AnyRef.
           masm.loadPtr(src, scratch);

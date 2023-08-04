@@ -76,7 +76,7 @@ void BaseLocalIter::settle() {
       case MIRType::Int64:
       case MIRType::Double:
       case MIRType::Float32:
-      case MIRType::RefOrNull:
+      case MIRType::WasmAnyRef:
 #ifdef ENABLE_WASM_SIMD
       case MIRType::Simd128:
 #endif

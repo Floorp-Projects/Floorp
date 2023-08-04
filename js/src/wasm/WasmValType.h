@@ -621,7 +621,7 @@ class PackedType : public T {
       case jit::MIRType::Simd128:
         return PackedType::V128;
         break;
-      case jit::MIRType::RefOrNull:
+      case jit::MIRType::WasmAnyRef:
         return PackedType::Ref;
       default:
         MOZ_CRASH("fromMIRType: unexpected type");
@@ -811,7 +811,7 @@ class PackedType : public T {
       case TypeCode::V128:
         return jit::MIRType::Simd128;
       case AbstractReferenceTypeCode:
-        return jit::MIRType::RefOrNull;
+        return jit::MIRType::WasmAnyRef;
       default:
         MOZ_CRASH("bad type");
     }

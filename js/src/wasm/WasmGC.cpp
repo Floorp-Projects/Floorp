@@ -132,7 +132,7 @@ bool wasm::CreateStackMapForFunctionEntryTrap(
   for (WasmABIArgIter i(argTypes); !i.done(); i++) {
     ABIArg argLoc = *i;
     if (argLoc.kind() == ABIArg::Stack &&
-        argTypes[i.index()] == MIRType::RefOrNull) {
+        argTypes[i.index()] == MIRType::WasmAnyRef) {
       uint32_t offset = argLoc.offsetFromArgBase();
       MOZ_ASSERT(offset < nInboundStackArgBytes);
       MOZ_ASSERT(offset % sizeof(void*) == 0);
@@ -180,7 +180,7 @@ bool wasm::GenerateStackmapEntriesForTrapExit(
   }
 
   for (WasmABIArgIter i(args); !i.done(); i++) {
-    if (!i->argInRegister() || i.mirType() != MIRType::RefOrNull) {
+    if (!i->argInRegister() || i.mirType() != MIRType::WasmAnyRef) {
       continue;
     }
 

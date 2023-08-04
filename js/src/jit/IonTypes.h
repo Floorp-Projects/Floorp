@@ -515,7 +515,7 @@ enum class MIRType : uint8_t {
   Slots,         // A slots vector
   Elements,      // An elements vector
   Pointer,       // An opaque pointer that receives no special treatment
-  RefOrNull,     // Wasm Ref/AnyRef/NullRef: a raw JSObject* or a raw (void*)0
+  WasmAnyRef,     // Wasm Ref/AnyRef/NullRef: a raw JSObject* or a raw (void*)0
   StackResults,  // Wasm multi-value stack result area, which may contain refs
   Shape,         // A Shape pointer.
   Last = Shape
@@ -605,7 +605,7 @@ static inline size_t MIRTypeToSize(MIRType type) {
     case MIRType::Simd128:
       return 16;
     case MIRType::Pointer:
-    case MIRType::RefOrNull:
+    case MIRType::WasmAnyRef:
       return sizeof(uintptr_t);
     default:
       MOZ_CRASH("MIRTypeToSize - unhandled case");
@@ -656,8 +656,8 @@ static inline const char* StringFromMIRType(MIRType type) {
       return "Elements";
     case MIRType::Pointer:
       return "Pointer";
-    case MIRType::RefOrNull:
-      return "RefOrNull";
+    case MIRType::WasmAnyRef:
+      return "WasmAnyRef";
     case MIRType::StackResults:
       return "StackResults";
     case MIRType::Shape:
