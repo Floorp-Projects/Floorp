@@ -9,7 +9,7 @@ var { ExtensionParent } = ChromeUtils.importESModule(
 );
 var {
   HiddenExtensionPage,
-  promiseExtensionViewLoaded,
+  promiseBackgroundViewLoaded,
   watchExtensionWorkerContextLoaded,
 } = ExtensionParent;
 
@@ -123,7 +123,7 @@ class BackgroundPage extends HiddenExtensionPage {
 
       extensions.emit("extension-browser-inserted", this.browser);
 
-      let contextPromise = promiseExtensionViewLoaded(this.browser);
+      let contextPromise = promiseBackgroundViewLoaded(this.browser);
       this.browser.fixupAndLoadURIString(this.url, {
         triggeringPrincipal: extension.principal,
       });
