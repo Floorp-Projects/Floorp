@@ -2621,7 +2621,6 @@ hbox[anonid="findbar-textbox-wrapper"] {
 }
 
 #TabsToolbar {
-    --toolbarbutton-inner-padding: var(--toolbarbutton-inner-padding) !important;
 	background-color: var(--gnome-tabbar-background) !important;
 	border-bottom: 0 !important;
 	padding: 0 !important;
@@ -3641,3 +3640,9 @@ toolbarspring {
 	 }
  }
  
+#workspace-button > .toolbarbutton-icon {
+	width: 16px !important;
+	height: 16px !important;
+	min-height: 16px !important;
+	min-width: 16px !important;
+}
