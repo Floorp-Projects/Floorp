@@ -1594,18 +1594,19 @@ shopping2023:
       description: True if the experience is enabled
       type: boolean
       fallbackPref: browser.shopping.experience2023.enabled
-    useOHTTP:
-      description: True if we prefer using OHTTP for these requests.
-      type: boolean
-      fallbackPref: toolkit.shopping.useOHTTP
+shoppingOHTTP:
+  description: Prefs to control the OHTTP URLs used for shopping.
+  owner: gijs@mozilla.com
+  hasExposure: false
+  variables:
     ohttpRelayURL:
       description: What OHTTP relay URL to use
       type: string
-      fallbackPref: toolkit.shopping.ohttpRelayURL
+      setPref: toolkit.shopping.ohttpRelayURL
     ohttpConfigURL:
       description: URL for the OHTTP config to use
       type: string
-      fallbackPref: toolkit.shopping.ohttpConfigURL
+      setPref: toolkit.shopping.ohttpConfigURL
 
 opaqueResponseBlocking:
   description: Prefs to enable Opaque Response Blocking

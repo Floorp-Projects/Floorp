@@ -18,7 +18,6 @@ let { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   OHTTPConfigManager: "resource://gre/modules/OHTTPConfigManager.sys.mjs",
   ProductValidator: "chrome://global/content/shopping/ProductValidator.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
@@ -370,9 +369,15 @@ export class ShoppingProduct {
     };
 
     let requestPromise;
-    let { useOHTTP, ohttpRelayURL, ohttpConfigURL } =
-      lazy.NimbusFeatures.shopping2023.getAllVariables();
-    if (useOHTTP && ohttpRelayURL && ohttpConfigURL) {
+    let ohttpRelayURL = Services.prefs.getStringPref(
+      "toolkit.shopping.ohttpRelayURL",
+      ""
+    );
+    let ohttpConfigURL = Services.prefs.getStringPref(
+      "toolkit.shopping.ohttpConfigURL",
+      ""
+    );
+    if (ohttpRelayURL && ohttpConfigURL) {
       let config = await this.getOHTTPConfig(ohttpConfigURL);
       // In the time it took to fetch the OHTTP config, we might have been
       // aborted...
