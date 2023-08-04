@@ -463,6 +463,14 @@ export class SearchService {
     this.#initializationStatus = status;
   }
 
+  /**
+   * Test only variable to indicate an error should occur during
+   * search service initialization.
+   *
+   * @type {boolean}
+   */
+  willThrowErrorDuringInitInTest = false;
+
   // Test-only function to reset just the engine selector so that it can
   // load a different configuration.
   resetEngineSelector() {
@@ -1326,6 +1334,13 @@ export class SearchService {
 
     let result = Cr.NS_OK;
     try {
+      if (
+        Services.env.exists("XPCSHELL_TEST_PROFILE_DIR") &&
+        this.willThrowErrorDuringInitInTest
+      ) {
+        throw new Error("Fake error during search service initialization.");
+      }
+
       // Create the search engine selector.
       this.#engineSelector = new lazy.SearchEngineSelector(
         this.#handleConfigurationUpdated.bind(this)
