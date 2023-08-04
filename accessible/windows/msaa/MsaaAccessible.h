@@ -13,7 +13,6 @@
 #include "ia2AccessibleValue.h"
 #include "IUnknownImpl.h"
 #include "mozilla/a11y/MsaaIdGenerator.h"
-#include "mozilla/dom/ipc/IdType.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla {
