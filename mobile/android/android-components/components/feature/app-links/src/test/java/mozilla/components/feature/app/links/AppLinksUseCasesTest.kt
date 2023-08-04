@@ -630,4 +630,18 @@ class AppLinksUseCasesTest {
         assertNotNull(result)
         assertEquals(result?.`package`, "org.mozilla.test")
     }
+
+    @Test
+    fun `WHEN launch in app is updated to true THEN should redirect`() {
+        val context = createContext(Triple(appUrl, appPackage, ""))
+        val subject = AppLinksUseCases(context, { false })
+
+        var redirect = subject.interceptedAppLinkRedirect(appUrl)
+        assertFalse(redirect.isRedirect())
+
+        AppLinksUseCases.clearRedirectCache()
+        subject.updateLaunchInApp { true }
+        redirect = subject.interceptedAppLinkRedirect(appUrl)
+        assertTrue(redirect.isRedirect())
+    }
 }

@@ -137,6 +137,7 @@ class AppLinksInterceptorTest {
         assertEquals(null, response)
 
         appLinksInterceptor.updateLaunchInApp { true }
+        verify(mockUseCases).updateLaunchInApp(any())
         val response2 = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, null, true, false, false, false, false)
         assert(response2 is RequestInterceptor.InterceptionResponse.AppIntent)
     }

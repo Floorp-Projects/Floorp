@@ -58,8 +58,7 @@ class AppLinksInterceptor(
     private var launchInApp: () -> Boolean = { false },
     private val useCases: AppLinksUseCases = AppLinksUseCases(
         context,
-        // passing launchInApp() in the lambda to make sure it will always get the updated value
-        { launchInApp() },
+        launchInApp,
         alwaysDeniedSchemes = alwaysDeniedSchemes,
     ),
     private val launchFromInterceptor: Boolean = false,
@@ -71,6 +70,7 @@ class AppLinksInterceptor(
      */
     fun updateLaunchInApp(launchInApp: () -> Boolean) {
         this.launchInApp = launchInApp
+        useCases.updateLaunchInApp(launchInApp)
     }
 
     @Suppress("ComplexMethod", "ReturnCount")
