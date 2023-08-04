@@ -408,7 +408,7 @@ static void ResolveMidpoints(nsTArray<ColorStop>& stops) {
       const float alpha =
           srgb1.alpha + multiplier * (srgb2.alpha - srgb1.alpha);
 
-      newStop.mColor = StyleAbsoluteColor::Srgb(red, green, blue, alpha);
+      newStop.mColor = StyleAbsoluteColor::SrgbLegacy(red, green, blue, alpha);
     }
 
     stops.ReplaceElementsAt(x, 1, newStops, 9);
