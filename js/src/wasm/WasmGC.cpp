@@ -219,9 +219,9 @@ void wasm::EmitWasmPreBarrierGuard(MacroAssembler& masm, Register instance,
                 wasm::TrapSite(masm.currentOffset(), *trapOffset));
   }
 
-  // If the previous value is null, we don't need the barrier.
+  // If the previous value is not a GC thing, we don't need the barrier.
   masm.loadPtr(Address(valueAddr, valueOffset), scratch);
-  masm.branchTestPtr(Assembler::Zero, scratch, scratch, skipBarrier);
+  masm.branchWasmAnyRefIsGCThing(false, scratch, skipBarrier);
 }
 
 void wasm::EmitWasmPreBarrierCall(MacroAssembler& masm, Register instance,
@@ -258,9 +258,6 @@ void wasm::EmitWasmPostBarrierGuard(MacroAssembler& masm,
                                     const Maybe<Register>& object,
                                     Register otherScratch, Register setValue,
                                     Label* skipBarrier) {
-  // If the pointer being stored is null, no barrier.
-  masm.branchTestPtr(Assembler::Zero, setValue, setValue, skipBarrier);
-
   // If there is a containing object and it is in the nursery, no barrier.
   if (object) {
     masm.branchPtrInNurseryChunk(Assembler::Equal, *object, otherScratch,
@@ -268,8 +265,8 @@ void wasm::EmitWasmPostBarrierGuard(MacroAssembler& masm,
   }
 
   // If the pointer being stored is to a tenured object, no barrier.
-  masm.branchPtrInNurseryChunk(Assembler::NotEqual, setValue, otherScratch,
-                               skipBarrier);
+  masm.branchWasmAnyRefIsNurseryCell(Assembler::NotEqual, setValue,
+                                     otherScratch, skipBarrier);
 }
 
 #ifdef DEBUG

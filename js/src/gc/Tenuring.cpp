@@ -183,6 +183,12 @@ void TenuringTracer::traverse(wasm::AnyRef* thingp) {
       post = wasm::AnyRef::fromJSObject(*obj);
       break;
     }
+    case wasm::AnyRefKind::String: {
+      JSString* str = value.toJSString();
+      onStringEdge(&str, "string");
+      post = wasm::AnyRef::fromJSString(str);
+      break;
+    }
     case wasm::AnyRefKind::Null: {
       // This function must only be called for GC things.
       MOZ_CRASH();

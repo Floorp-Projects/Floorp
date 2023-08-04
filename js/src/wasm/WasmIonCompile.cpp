@@ -839,21 +839,21 @@ class FunctionCompiler {
     curBlock_->setSlot(info().localSlot(slot), def);
   }
 
-  MDefinition* compareIsNull(MDefinition* value, JSOp compareOp) {
+  MDefinition* compareIsNull(MDefinition* ref, JSOp compareOp) {
     MDefinition* nullVal = constantNullRef();
     if (!nullVal) {
       return nullptr;
     }
-    return compare(value, nullVal, compareOp, MCompare::Compare_WasmAnyRef);
+    return compare(ref, nullVal, compareOp, MCompare::Compare_WasmAnyRef);
   }
 
-  [[nodiscard]] bool refAsNonNull(MDefinition* value) {
+  [[nodiscard]] bool refAsNonNull(MDefinition* ref) {
     if (inDeadCode()) {
       return true;
     }
 
     auto* ins = MWasmTrapIfNull::New(
-        alloc(), value, wasm::Trap::NullPointerDereference, bytecodeOffset());
+        alloc(), ref, wasm::Trap::NullPointerDereference, bytecodeOffset());
 
     curBlock_->add(ins);
     return true;
@@ -6800,12 +6800,12 @@ static bool EmitStoreLaneSimd128(FunctionCompiler& f, uint32_t laneSize) {
 
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
 static bool EmitRefAsNonNull(FunctionCompiler& f) {
-  MDefinition* value;
-  if (!f.iter().readRefAsNonNull(&value)) {
+  MDefinition* ref;
+  if (!f.iter().readRefAsNonNull(&ref)) {
     return false;
   }
 
-  return f.refAsNonNull(value);
+  return f.refAsNonNull(ref);
 }
 
 static bool EmitBrOnNull(FunctionCompiler& f) {

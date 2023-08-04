@@ -1449,7 +1449,17 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
         Operand(JS::detail::ValueGCThingPayloadMask));
   }
 
+  void unboxWasmAnyRefGCThingForGCBarrier(const Address& src, Register dest) {
+    loadPtr(src, dest);
+    And(ARMRegister(dest, 64), ARMRegister(dest, 64),
+        Operand(wasm::AnyRef::GCThingMask));
+  }
+
   // Like unboxGCThingForGCBarrier, but loads the GC thing's chunk base.
+  void getGCThingValueChunk(Register src, Register dest) {
+    And(ARMRegister(src, 64), ARMRegister(dest, 64),
+        Operand(JS::detail::ValueGCThingPayloadChunkMask));
+  }
   void getGCThingValueChunk(const Address& src, Register dest) {
     loadPtr(src, dest);
     And(ARMRegister(dest, 64), ARMRegister(dest, 64),
@@ -1458,6 +1468,11 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void getGCThingValueChunk(const ValueOperand& src, Register dest) {
     And(ARMRegister(dest, 64), ARMRegister(src.valueReg(), 64),
         Operand(JS::detail::ValueGCThingPayloadChunkMask));
+  }
+
+  void getWasmAnyRefGCThingChunk(Register src, Register dest) {
+    And(ARMRegister(dest, 64), ARMRegister(src, 64),
+        Operand(wasm::AnyRef::GCThingChunkMask));
   }
 
   inline void unboxValue(const ValueOperand& src, AnyRegister dest,
