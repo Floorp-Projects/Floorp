@@ -1809,11 +1809,27 @@ void nsLookAndFeel::PerThemeData::Init() {
   // We special-case the header bar color in Adwaita, Yaru and Breeze to be the
   // titlebar color, because it looks better and matches what apps do by
   // default, see bug 1838460.
-  // For breeze we read the KDE colors directly, if available.
-  // For most other themes, we use the menubar.
+  //
+  // We only do this in the relevant desktop environments, however, since in
+  // other cases we don't really know if the DE's titlebars are going to match.
+  //
+  // For breeze, additionally we read the KDE colors directly, if available,
+  // since these are user-configurable.
+  //
+  // For most other themes or those in unknown DEs, we use the menubar colors.
+  //
   // FIXME(emilio): Can we do something a bit less special-case-y?
-  if (mFamily == ThemeFamily::Adwaita || mFamily == ThemeFamily::Yaru ||
-      mFamily == ThemeFamily::Breeze) {
+  const bool shouldUseTitlebarColorsForHeaderBar = [&] {
+    if (mFamily == ThemeFamily::Adwaita || mFamily == ThemeFamily::Yaru) {
+      return IsGnomeDesktopEnvironment();
+    }
+    if (mFamily == ThemeFamily::Breeze) {
+      return IsKdeDesktopEnvironment();
+    }
+    return false;
+  }();
+
+  if (shouldUseTitlebarColorsForHeaderBar) {
     mHeaderBar = mTitlebar;
     mHeaderBarInactive = mTitlebarInactive;
     if (mFamily == ThemeFamily::Breeze) {
