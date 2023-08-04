@@ -282,7 +282,7 @@ msix:
 http3:
     description: "{description} with http3 server"
     component: "Testing::General"
-    expiration: "2023-09-01"
+    expiration: "2024-03-01"
     suffix: "http3"
     merge:
         mozharness:
@@ -292,7 +292,7 @@ http3:
 http2:
     description: "{description} with http2 server"
     component: "Testing::General"
-    expiration: "2023-12-01"
+    expiration: "2024-03-01"
     suffix: "http2"
     merge:
         mozharness:
