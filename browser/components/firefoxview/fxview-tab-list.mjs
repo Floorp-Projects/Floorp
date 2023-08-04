@@ -388,7 +388,13 @@ export class FxviewTabRow extends MozLitElement {
       // display it directly. Otherwise we go through the page-icon
       // protocol to try to get a cached version. We don't load
       // favicons directly.
-      if (icon?.startsWith("http")) {
+      if (!icon) {
+        if (targetURI.startsWith("moz-extension")) {
+          return "chrome://mozapps/skin/extensions/extension.svg";
+        }
+        return "chrome://mozapps/skin/extensions/defaultFavicon.svg";
+      }
+      if (icon.startsWith("http")) {
         return `page-icon:${targetURI}`;
       }
       return icon;
