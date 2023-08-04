@@ -199,8 +199,11 @@ bool MathMLElement::ParseNamedSpaceValue(const nsString& aString,
     }
   }
   if (0 != i) {
+    AutoTArray<nsString, 1> params;
+    params.AppendElement(aString);
     aDocument.WarnOnceAbout(
-        dom::DeprecatedOperations::eMathML_DeprecatedMathSpaceValue);
+        dom::DeprecatedOperations::eMathML_DeprecatedMathSpaceValue2, false,
+        params);
     aCSSValue.SetFloatValue(float(i) / float(18), eCSSUnit_EM);
     return true;
   }
