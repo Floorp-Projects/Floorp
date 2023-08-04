@@ -394,14 +394,19 @@ ExtensionPageChild = {
       global,
       "DOMContentLoaded",
       true,
-      event => event.target.location != "about:blank"
+      event =>
+        event.target.location != "about:blank" &&
+        // Ignore DOMContentLoaded bubbled from child frames:
+        event.target.defaultView === global.content
     ).then(() => {
       let windowId = getInnerWindowID(global.content);
       let context = this.extensionContexts.get(windowId);
-
-      global.sendAsyncMessage("Extension:ExtensionViewLoaded", {
-        childId: context && context.childManager.id,
-      });
+      // This initializes ChildAPIManager (and creation of ProxyContextParent)
+      // if they don't exist already at this point.
+      let childId = context?.childManager.id;
+      if (viewType === "background") {
+        global.sendAsyncMessage("Extension:BackgroundViewLoaded", { childId });
+      }
     });
   },
 
@@ -440,11 +445,13 @@ ExtensionPageChild = {
     let data = mm.sendSyncMessage("Extension:GetFrameData")[0];
     if (!data) {
       let policy = WebExtensionPolicy.getByHostname(uri.host);
+      // TODO bug 1749116: Handle this unexpected result, because data
+      // (viewType in particular) should never be void for extension documents.
       Cu.reportError(`FrameData missing for ${policy?.id} page ${uri.spec}`);
     }
     let { viewType, tabId, devtoolsToolboxInfo } = data ?? {};
 
-    if (viewType) {
+    if (viewType && contentWindow.top === contentWindow) {
       ExtensionPageChild.expectViewLoad(mm, viewType);
     }
 

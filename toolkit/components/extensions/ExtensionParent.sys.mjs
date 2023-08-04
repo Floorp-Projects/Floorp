@@ -1781,10 +1781,10 @@ function promiseMessageFromChild(messageManager, messageName) {
 }
 
 // This should be called before browser.loadURI is invoked.
-async function promiseExtensionViewLoaded(browser) {
+async function promiseBackgroundViewLoaded(browser) {
   let { childId } = await promiseMessageFromChild(
     browser.messageManager,
-    "Extension:ExtensionViewLoaded"
+    "Extension:BackgroundViewLoaded"
   );
   if (childId) {
     return ParentAPIManager.getContextById(childId);
@@ -2232,7 +2232,7 @@ export var ExtensionParent = {
   StartupCache,
   WebExtensionPolicy,
   apiManager,
-  promiseExtensionViewLoaded,
+  promiseBackgroundViewLoaded,
   watchExtensionProxyContextLoad,
   watchExtensionWorkerContextLoaded,
   DebugUtils,
