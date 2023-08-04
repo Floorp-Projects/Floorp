@@ -43,7 +43,7 @@ if CONFIG["MOZ_ENABLE_VAAPI"] or CONFIG["MOZ_ENABLE_V4L2"]:
     UNIFIED_SOURCES += ["../FFmpegVideoFramePool.cpp"]
     LOCAL_INCLUDES += ["/third_party/drm/drm/include/libdrm/"]
     USE_LIBS += ["mozva"]
-    DEFINES["MOZ_WAYLAND_USE_HWDECODE"] = 1
+    DEFINES["MOZ_USE_HWDECODE"] = 1
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
