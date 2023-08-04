@@ -363,6 +363,8 @@ static const char* DefTypeName(LDefinition::Type type) {
       return "o";
     case LDefinition::SLOTS:
       return "s";
+    case LDefinition::WASM_ANYREF:
+      return "wr";
     case LDefinition::FLOAT32:
       return "f";
     case LDefinition::DOUBLE:
