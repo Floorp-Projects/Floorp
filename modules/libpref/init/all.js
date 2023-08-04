@@ -1879,11 +1879,8 @@ pref("extensions.manifestV3.enabled", true);
 // Install origins restriction.
 pref("extensions.install_origins.enabled", false);
 
-// browser_style deprecation - bug 1827910.
-// TODO bug 1830711: set to false.
-// TODO bug 1830712: remove pref.
-pref("extensions.browser_style_mv3.supported", true);
-// TODO bug 1830712: remove pref.
+// TODO: bug 1830712: remove prefs related to browser_style deprecation.
+pref("extensions.browser_style_mv3.supported", false);
 pref("extensions.browser_style_mv3.same_as_mv2", false);
 
 // Middle-mouse handling
