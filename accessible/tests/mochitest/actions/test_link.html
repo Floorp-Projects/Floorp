@@ -16,6 +16,8 @@
           src="../actions.js"></script>
 
   <script type="application/javascript">
+    SimpleTest.requestCompleteLog(); // To help diagnose bug 1845221
+
     function getAnchorTargetDocumentAcc() {
       var thisTabDocAcc = getTabDocAccessible();
       var thisDocTabPanelAcc = thisTabDocAcc.parent.parent;
