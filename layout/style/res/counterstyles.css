@@ -169,14 +169,14 @@
 }
 
 @counter-style cjk-heavenly-stem {
-  system: alphabetic;
+  system: fixed;
   symbols: '\7532' '\4E59' '\4E19' '\4E01' '\620A' '\5DF1' '\5E9A' '\8F9B' '\58EC' '\7678';
   fallback: cjk-decimal;
   suffix: '\3001';
 }
 
 @counter-style cjk-earthly-branch {
-  system: alphabetic;
+  system: fixed;
   symbols: '\5B50' '\4E11' '\5BC5' '\536F' '\8FB0' '\5DF3' '\5348' '\672A' '\7533' '\9149' '\620C' '\4EA5';
   fallback: cjk-decimal;
   suffix: '\3001';
