@@ -27,6 +27,7 @@ class CardContainer extends MozLitElement {
   static properties = {
     sectionLabel: { type: String },
     hideHeader: { type: Boolean },
+    isExpanded: { type: Boolean },
     isInnerCard: { type: Boolean },
     preserveCollapseState: { type: Boolean },
     viewAllPage: { type: String },
@@ -81,7 +82,13 @@ class CardContainer extends MozLitElement {
             ?hidden=${ifDefined(this.hideHeader)}
             ?withViewAll=${ifDefined(this.viewAllPage)}
           >
-            <span class="icon chevron-icon" aria-role="presentation"></span>
+            <span
+              class="icon chevron-icon"
+              aria-role="presentation"
+              data-l10n-id="firefoxview-collapse-button-${this.isExpanded
+                ? "hide"
+                : "show"}"
+            ></span>
             <slot name="header"></slot>
           </summary>
           <a
