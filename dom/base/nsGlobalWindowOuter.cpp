@@ -5138,7 +5138,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
       }
     }
 
-    AutoPrintEventDispatcher dispatcher(*docToPrint, ps, /* aIsTop = */ true);
+    AutoPrintEventDispatcher dispatcher(*docToPrint);
 
     nsAutoScriptBlocker blockScripts;
     RefPtr<Document> clone = docToPrint->CreateStaticClone(

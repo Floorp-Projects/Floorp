@@ -935,8 +935,7 @@ nsresult BrowserChild::CloneDocumentTreeIntoSelf(
 
   RefPtr<Document> clone;
   {
-    AutoPrintEventDispatcher dispatcher(*sourceDocument, printSettings,
-                                        /* aIsTop = */ false);
+    AutoPrintEventDispatcher dispatcher(*sourceDocument);
     nsAutoScriptBlocker scriptBlocker;
     bool hasInProcessCallbacks = false;
     clone = sourceDocument->CreateStaticClone(ourDocShell, cv, printSettings,
