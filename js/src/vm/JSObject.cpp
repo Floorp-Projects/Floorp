@@ -2213,7 +2213,7 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
   }
 #endif
 
-#ifdef ENABLE_NEW_SET_METHODS
+#ifdef NIGHTLY_BUILD
   if (key == JSProto_Set &&
       !cx->realm()->creationOptions().getNewSetMethodsEnabled() &&
       (id == NameToId(cx->names().union_) ||

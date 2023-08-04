@@ -31,5 +31,4 @@ user_pref("browser.webapps.checkForUpdates", 0);
 user_pref("javascript.options.weakrefs", true);
 user_pref("javascript.options.experimental.weakrefs.expose_cleanupSome", true);
 user_pref("javascript.options.experimental.iterator_helpers", true);
-user_pref("javascript.options.experimental.enable_new_set_methods", false);
 user_pref("javascript.options.experimental.import_assertions", true);

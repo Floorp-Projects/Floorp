@@ -206,7 +206,7 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   }
 #endif
 
-#ifdef ENABLE_NEW_SET_METHODS
+#ifdef NIGHTLY_BUILD
   bool newSetMethods = cx->realm()->creationOptions().getNewSetMethodsEnabled();
   if (!JS_SetProperty(cx, info, "enableNewSetMethods",
                       newSetMethods ? TrueHandleValue : FalseHandleValue)) {
@@ -558,15 +558,6 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
 
   value.setInt32(sizeof(void*));
   if (!JS_SetProperty(cx, info, "pointer-byte-size", value)) {
-    return false;
-  }
-
-#ifdef ENABLE_NEW_SET_METHODS
-  value = BooleanValue(true);
-#else
-  value = BooleanValue(false);
-#endif
-  if (!JS_SetProperty(cx, info, "new-set-methods", value)) {
     return false;
   }
 

@@ -1312,7 +1312,7 @@ const JSFunctionSpec SetObject::methods[] = {
     JS_FN("entries", entries, 0, 0),
     JS_FN("clear", clear, 0, 0),
     JS_SELF_HOSTED_FN("forEach", "SetForEach", 2, 0),
-#ifdef ENABLE_NEW_SET_METHODS
+#ifdef NIGHTLY_BUILD
     JS_SELF_HOSTED_FN("union", "SetUnion", 1, 0),
     JS_SELF_HOSTED_FN("difference", "SetDifference", 1, 0),
     JS_SELF_HOSTED_FN("intersection", "SetIntersection", 1, 0),
