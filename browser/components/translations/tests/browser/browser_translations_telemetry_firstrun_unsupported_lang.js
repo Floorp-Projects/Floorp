@@ -35,7 +35,12 @@ add_task(
         expectedEventCount: 1,
         expectNewFlowId: true,
         expectFirstInteraction: true,
-        finalValuePredicates: [value => value.extra.opened_from === "appMenu"],
+        finalValuePredicates: [
+          value => value.extra.auto_show === "false",
+          value => value.extra.view_name === "defaultView",
+          value => value.extra.opened_from === "appMenu",
+          value => value.extra.document_language === "es",
+        ],
       }
     );
 
@@ -88,7 +93,12 @@ add_task(
         expectedEventCount: 2,
         expectNewFlowId: false,
         expectFirstInteraction: true,
-        finalValuePredicates: [value => value.extra.opened_from === "appMenu"],
+        finalValuePredicates: [
+          value => value.extra.auto_show === "false",
+          value => value.extra.view_name === "defaultView",
+          value => value.extra.opened_from === "appMenu",
+          value => value.extra.document_language === "es",
+        ],
       }
     );
 
@@ -133,7 +143,12 @@ add_task(
         expectedEventCount: 3,
         expectNewFlowId: true,
         expectFirstInteraction: false,
-        finalValuePredicates: [value => value.extra.opened_from === "appMenu"],
+        finalValuePredicates: [
+          value => value.extra.auto_show === "false",
+          value => value.extra.view_name === "defaultView",
+          value => value.extra.opened_from === "appMenu",
+          value => value.extra.document_language === "es",
+        ],
       }
     );
 

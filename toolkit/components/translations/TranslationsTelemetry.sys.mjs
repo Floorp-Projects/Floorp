@@ -143,11 +143,17 @@ class Panel {
    * Records a telemetry event when the translations panel is opened.
    *
    * @param {object} data
+   * @param {string} data.viewName
+   * @param {string} data.docLangTag
+   * @param {boolean} data.autoShow
    * @param {boolean} data.maintainFlow
    * @param {boolean} data.openedFromAppMenu
    * @param {boolean} data.isFirstUserInteraction
    */
   static onOpen({
+    viewName = null,
+    autoShow = null,
+    docLangTag = null,
     maintainFlow = false,
     openedFromAppMenu = false,
     isFirstUserInteraction = null,
@@ -159,10 +165,17 @@ class Panel {
       flow_id: maintainFlow
         ? TranslationsTelemetry.getOrCreateFlowId()
         : TranslationsTelemetry.createFlowId(),
+      auto_show: autoShow,
+      view_name: viewName,
+      document_language: docLangTag,
       first_interaction: Panel.isFirstUserInteraction(),
       opened_from: openedFromAppMenu ? "appMenu" : "translationsButton",
     });
-    TranslationsTelemetry.logEventToConsole("onOpen");
+    TranslationsTelemetry.logEventToConsole(
+      `onOpen[${autoShow ? "auto" : "manual"}, ${
+        openedFromAppMenu ? "appMenu" : "translationsButton"
+      }, ${viewName ? viewName : "NULL"}](${docLangTag})`
+    );
   }
 
   static onClose() {
