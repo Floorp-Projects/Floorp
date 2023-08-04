@@ -498,10 +498,11 @@ LoginManagerStorage.prototype = {
       if (!this._isLoggedIn) {
         return false;
       }
-      let logins = await Services.logins.searchLoginsAsync({
-        origin: FXA_PWDMGR_HOST,
-        httpRealm: FXA_PWDMGR_REALM,
-      });
+      let logins = Services.logins.findLogins(
+        FXA_PWDMGR_HOST,
+        null,
+        FXA_PWDMGR_REALM
+      );
       for (let login of logins) {
         Services.logins.removeLogin(login);
       }
@@ -553,10 +554,11 @@ LoginManagerStorage.prototype = {
         ""
       ); // aPasswordField
 
-      let existingLogins = await Services.logins.searchLoginsAsync({
-        origin: FXA_PWDMGR_HOST,
-        httpRealm: FXA_PWDMGR_REALM,
-      });
+      let existingLogins = Services.logins.findLogins(
+        FXA_PWDMGR_HOST,
+        null,
+        FXA_PWDMGR_REALM
+      );
       if (existingLogins.length) {
         Services.logins.modifyLogin(existingLogins[0], login);
       } else {
@@ -588,10 +590,11 @@ LoginManagerStorage.prototype = {
         throw new this.STORAGE_LOCKED();
       }
 
-      let logins = await Services.logins.searchLoginsAsync({
-        origin: FXA_PWDMGR_HOST,
-        httpRealm: FXA_PWDMGR_REALM,
-      });
+      let logins = Services.logins.findLogins(
+        FXA_PWDMGR_HOST,
+        null,
+        FXA_PWDMGR_REALM
+      );
       if (!logins.length) {
         // This could happen if the MP was locked when we wrote the data.
         log.info("Can't find any credentials in the login manager");

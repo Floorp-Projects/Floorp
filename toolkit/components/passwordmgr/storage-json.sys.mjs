@@ -286,12 +286,12 @@ export class LoginManagerStorage_json {
     const resultLogins = [];
     for (const [login, encryptedLogin] of encryptedLogins) {
       // check for duplicates
-      let loginData = {
-        origin: login.origin,
-        httpRealm: login.httpRealm,
-      };
-      const existingLogins = await Services.logins.searchLoginsAsync(loginData);
-
+      const { origin, formActionOrigin, httpRealm } = login;
+      const existingLogins = this.findLogins(
+        origin,
+        formActionOrigin,
+        httpRealm
+      );
       const matchingLogin = existingLogins.find(l => login.matches(l, true));
       if (matchingLogin) {
         if (continueOnDuplicates) {
@@ -372,13 +372,10 @@ export class LoginManagerStorage_json {
 
     // Look for an existing entry in case key properties changed.
     if (!newLogin.matches(oldLogin, true)) {
-      let loginData = {
-        origin: newLogin.origin,
-        httpRealm: newLogin.httpRealm,
-      };
-
-      let logins = this.searchLogins(
-        lazy.LoginHelper.newPropertyBag(loginData)
+      let logins = this.findLogins(
+        newLogin.origin,
+        newLogin.formActionOrigin,
+        newLogin.httpRealm
       );
 
       let matchingLogin = logins.find(login => newLogin.matches(login, true));
