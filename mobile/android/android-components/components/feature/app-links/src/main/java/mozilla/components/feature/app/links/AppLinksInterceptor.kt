@@ -12,7 +12,6 @@ import android.os.SystemClock
 import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
-import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ALWAYS_ALLOW_SCHEMES
 import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ALWAYS_DENY_SCHEMES
 import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ENGINE_SUPPORTED_SCHEMES
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
@@ -55,7 +54,6 @@ class AppLinksInterceptor(
     private val context: Context,
     private val interceptLinkClicks: Boolean = false,
     private val engineSupportedSchemes: Set<String> = ENGINE_SUPPORTED_SCHEMES,
-    private val alwaysAllowedSchemes: Set<String> = ALWAYS_ALLOW_SCHEMES,
     private val alwaysDeniedSchemes: Set<String> = ALWAYS_DENY_SCHEMES,
     private var launchInApp: () -> Boolean = { false },
     private val useCases: AppLinksUseCases = AppLinksUseCases(
@@ -113,7 +111,7 @@ class AppLinksInterceptor(
         }
 
         val redirect = useCases.interceptedAppLinkRedirect(uri)
-        val result = handleRedirect(redirect, uri, alwaysAllowedSchemes.contains(uriScheme))
+        val result = handleRedirect(redirect, uri)
 
         if (inUserDoNotIntercept(uri, redirect.appIntent)) {
             return null
@@ -137,15 +135,10 @@ class AppLinksInterceptor(
     internal fun handleRedirect(
         redirect: AppLinkRedirect,
         uri: String,
-        isAlwaysAllowedScheme: Boolean,
     ): RequestInterceptor.InterceptionResponse? {
         if (!launchInApp()) {
             redirect.fallbackUrl?.let {
                 return RequestInterceptor.InterceptionResponse.Url(it)
-            }
-
-            if (!isAlwaysAllowedScheme) {
-                return null
             }
         }
 
