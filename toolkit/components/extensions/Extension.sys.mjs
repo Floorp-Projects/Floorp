@@ -2875,10 +2875,7 @@ export class Extension extends ExtensionData {
 
   get backgroundContext() {
     for (let view of this.views) {
-      if (
-        view.viewType === "background" ||
-        view.viewType === "background_worker"
-      ) {
+      if (view.isBackgroundContext) {
         return view;
       }
     }

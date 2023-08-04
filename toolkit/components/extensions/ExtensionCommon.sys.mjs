@@ -54,8 +54,6 @@ function getConsole() {
   });
 }
 
-const BACKGROUND_SCRIPTS_VIEW_TYPES = ["background", "background_worker"];
-
 export var ExtensionCommon;
 
 // Run a function and report exceptions.
@@ -487,7 +485,14 @@ class BaseContext {
   }
 
   get isBackgroundContext() {
-    return BACKGROUND_SCRIPTS_VIEW_TYPES.includes(this.viewType);
+    if (this.viewType === "background") {
+      if (this.isProxyContextParent) {
+        return !!this.isTopContext; // Set in ExtensionPageContextParent.
+      }
+      const { contentWindow } = this;
+      return !!contentWindow && contentWindow.top === contentWindow;
+    }
+    return this.viewType === "background_worker";
   }
 
   /**
