@@ -3,32 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var gLogfileOutputStream;
-
-const PREF_APP_UPDATE_LOG = "app.update.log";
-const PREF_APP_UPDATE_LOG_FILE = "app.update.log.file";
-const KEY_PROFILE_DIR = "ProfD";
-const FILE_UPDATE_MESSAGES = "update_messages.log";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  UpdateLog: "resource://gre/modules/UpdateLog.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
-ChromeUtils.defineLazyGetter(lazy, "gLogEnabled", function aus_gLogEnabled() {
-  return (
-    Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false) ||
-    Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false)
-  );
-});
-ChromeUtils.defineLazyGetter(
-  lazy,
-  "gLogfileEnabled",
-  function aus_gLogfileEnabled() {
-    return Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false);
-  }
-);
 
 const PREF_APP_UPDATE_CANCELATIONS_OSX = "app.update.cancelations.osx";
 const PREF_APP_UPDATE_ELEVATE_NEVER = "app.update.elevate.never";
@@ -137,9 +118,6 @@ export class AppUpdater {
         "nsIObserver",
         "nsISupportsWeakReference",
       ]);
-
-      // This one call observes PREF_APP_UPDATE_LOG and PREF_APP_UPDATE_LOG_FILE
-      Services.prefs.addObserver(PREF_APP_UPDATE_LOG, this, /* ownWeak */ true);
     } catch (e) {
       this.#onException(e);
     }
@@ -745,17 +723,6 @@ export class AppUpdater {
         // observer.
         this.#handleUpdateSwap();
         break;
-      case "nsPref:changed":
-        if (
-          status == PREF_APP_UPDATE_LOG ||
-          status == PREF_APP_UPDATE_LOG_FILE
-        ) {
-          lazy.gLogEnabled; // Assigning this before it is lazy-loaded is an error.
-          lazy.gLogEnabled =
-            Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false) ||
-            Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false);
-        }
-        break;
     }
   }
 
@@ -909,29 +876,5 @@ AppUpdater.STATUS = {
  *          The string to write to the error console.
  */
 function LOG(string) {
-  if (lazy.gLogEnabled) {
-    dump("*** AUS:AUM " + string + "\n");
-    if (!Cu.isInAutomation) {
-      Services.console.logStringMessage("AUS:AUM " + string);
-    }
-
-    if (lazy.gLogfileEnabled) {
-      if (!gLogfileOutputStream) {
-        let logfile = Services.dirsvc.get(KEY_PROFILE_DIR, Ci.nsIFile);
-        logfile.append(FILE_UPDATE_MESSAGES);
-        gLogfileOutputStream = FileUtils.openAtomicFileOutputStream(logfile);
-      }
-
-      try {
-        let encoded = new TextEncoder().encode(string + "\n");
-        gLogfileOutputStream.write(encoded, encoded.length);
-        gLogfileOutputStream.flush();
-      } catch (e) {
-        dump("*** AUS:AUM Unable to write to messages file: " + e + "\n");
-        Services.console.logStringMessage(
-          "AUS:AUM Unable to write to messages file: " + e
-        );
-      }
-    }
-  }
+  lazy.UpdateLog.logPrefixedString("AUS:AUM", string);
 }

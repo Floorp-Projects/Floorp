@@ -23,6 +23,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   CertUtils: "resource://gre/modules/CertUtils.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+  UpdateLog: "resource://gre/modules/UpdateLog.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
   ctypes: "resource://gre/modules/ctypes.sys.mjs",
@@ -93,8 +94,6 @@ const PREF_APP_UPDATE_ELEVATE_ATTEMPTS = "app.update.elevate.attempts";
 const PREF_APP_UPDATE_ELEVATE_MAXATTEMPTS = "app.update.elevate.maxAttempts";
 const PREF_APP_UPDATE_LANGPACK_ENABLED = "app.update.langpack.enabled";
 const PREF_APP_UPDATE_LANGPACK_TIMEOUT = "app.update.langpack.timeout";
-const PREF_APP_UPDATE_LOG = "app.update.log";
-const PREF_APP_UPDATE_LOG_FILE = "app.update.log.file";
 const PREF_APP_UPDATE_NOTIFYDURINGDOWNLOAD = "app.update.notifyDuringDownload";
 const PREF_APP_UPDATE_NO_WINDOW_AUTO_RESTART_ENABLED =
   "app.update.noWindowAutoRestart.enabled";
@@ -116,7 +115,6 @@ const URI_UPDATES_PROPERTIES =
   "chrome://mozapps/locale/update/updates.properties";
 
 const KEY_EXECUTABLE = "XREExeF";
-const KEY_PROFILE_DIR = "ProfD";
 const KEY_UPDROOT = "UpdRootD";
 const KEY_OLD_UPDROOT = "OldUpdRootD";
 
@@ -134,7 +132,6 @@ const FILE_UPDATE_MAR = "update.mar";
 const FILE_UPDATE_STATUS = "update.status";
 const FILE_UPDATE_TEST = "update.test";
 const FILE_UPDATE_VERSION = "update.version";
-const FILE_UPDATE_MESSAGES = "update_messages.log";
 
 const STATE_NONE = "null";
 const STATE_DOWNLOADING = "downloading";
@@ -309,8 +306,6 @@ const STAGING_POLLING_ATTEMPTS_PER_INTERVAL = 5;
 const STAGING_POLLING_MAX_DURATION_MS = 1 * 60 * 60 * 1000; // 1 hour
 
 var gUpdateMutexHandle = null;
-// This is the file stream used for the log file.
-var gLogfileOutputStream;
 // This value will be set to true if it appears that BITS is being used by
 // another user to download updates. We don't really want two users using BITS
 // at once. Computers with many users (ex: a school computer), should not end
@@ -341,21 +336,6 @@ class SelfContainedPromise {
 // This will contain a `SelfContainedPromise` that will be used to back
 // `nsIApplicationUpdateService.stateTransition`.
 var gStateTransitionPromise = new SelfContainedPromise();
-
-ChromeUtils.defineLazyGetter(lazy, "gLogEnabled", function aus_gLogEnabled() {
-  return (
-    Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false) ||
-    Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false)
-  );
-});
-
-ChromeUtils.defineLazyGetter(
-  lazy,
-  "gLogfileEnabled",
-  function aus_gLogfileEnabled() {
-    return Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false);
-  }
-);
 
 ChromeUtils.defineLazyGetter(
   lazy,
@@ -1023,31 +1003,7 @@ function getCanUseBits(transient = true) {
  *          The string to write to the error console.
  */
 function LOG(string) {
-  if (lazy.gLogEnabled) {
-    dump("*** AUS:SVC " + string + "\n");
-    if (!Cu.isInAutomation) {
-      Services.console.logStringMessage("AUS:SVC " + string);
-    }
-
-    if (lazy.gLogfileEnabled) {
-      if (!gLogfileOutputStream) {
-        let logfile = Services.dirsvc.get(KEY_PROFILE_DIR, Ci.nsIFile);
-        logfile.append(FILE_UPDATE_MESSAGES);
-        gLogfileOutputStream = FileUtils.openAtomicFileOutputStream(logfile);
-      }
-
-      try {
-        let encoded = new TextEncoder().encode(string + "\n");
-        gLogfileOutputStream.write(encoded, encoded.length);
-        gLogfileOutputStream.flush();
-      } catch (e) {
-        dump("*** AUS:SVC Unable to write to messages file: " + e + "\n");
-        Services.console.logStringMessage(
-          "AUS:SVC Unable to write to messages file: " + e
-        );
-      }
-    }
-  }
+  lazy.UpdateLog.logPrefixedString("AUS:SVC", string);
 }
 
 /**
@@ -2674,8 +2630,9 @@ export function UpdateService() {
   // profile-before-change since nsIUpdateManager uses profile-before-change
   // to shutdown and write the update xml files.
   Services.obs.addObserver(this, "quit-application");
-  // This one call observes PREF_APP_UPDATE_LOG and PREF_APP_UPDATE_LOG_FILE
-  Services.prefs.addObserver(PREF_APP_UPDATE_LOG, this);
+  lazy.UpdateLog.addConfigChangeListener(() => {
+    this._logStatus();
+  });
 
   this._logStatus();
 }
@@ -2758,28 +2715,8 @@ UpdateService.prototype = {
       case "network:offline-status-changed":
         await this._offlineStatusChanged(data);
         break;
-      case "nsPref:changed":
-        if (data == PREF_APP_UPDATE_LOG || data == PREF_APP_UPDATE_LOG_FILE) {
-          lazy.gLogEnabled; // Assigning this before it is lazy-loaded is an error.
-          lazy.gLogEnabled =
-            Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false) ||
-            Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false);
-        }
-        if (data == PREF_APP_UPDATE_LOG_FILE) {
-          lazy.gLogfileEnabled; // Assigning this before it is lazy-loaded is an
-          // error.
-          lazy.gLogfileEnabled = Services.prefs.getBoolPref(
-            PREF_APP_UPDATE_LOG_FILE,
-            false
-          );
-          if (lazy.gLogfileEnabled) {
-            this._logStatus();
-          }
-        }
-        break;
       case "quit-application":
         Services.obs.removeObserver(this, topic);
-        Services.prefs.removeObserver(PREF_APP_UPDATE_LOG, this);
 
         if (AppConstants.platform == "win" && gUpdateMutexHandle) {
           // If we hold the update mutex, let it go!
@@ -2810,10 +2747,6 @@ UpdateService.prototype = {
         this._downloader = null;
         // In case any update checks are in progress.
         lazy.CheckSvc.stopAllChecks();
-
-        if (gLogfileOutputStream) {
-          gLogfileOutputStream.close();
-        }
         break;
       case "test-close-handle-update-mutex":
         if (Cu.isInAutomation) {
@@ -4201,7 +4134,7 @@ UpdateService.prototype = {
   },
 
   _logStatus: function AUS__logStatus() {
-    if (!lazy.gLogEnabled) {
+    if (!lazy.UpdateLog.enabled) {
       return;
     }
     if (this.disabled) {
