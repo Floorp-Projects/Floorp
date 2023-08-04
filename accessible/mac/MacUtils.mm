@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #import "MacUtils.h"
+#include "mozAccessible.h"
 
 #include "LocalAccessible.h"
 #include "DocAccessible.h"
@@ -83,6 +84,12 @@ static NSColor* ColorFromColor(const Color& aColor) {
 NSDictionary* StringAttributesFromAccAttributes(AccAttributes* aAttributes,
                                                 Accessible* aContainer) {
   if (!aAttributes) {
+    if (mozAccessible* mozAcc = GetNativeFromGeckoAccessible(aContainer)) {
+      // If we don't have attributes provided this is probably a control like
+      // a button or empty entry. Just provide the accessible as an
+      // AXAttachment.
+      return @{@"AXAttachment" : mozAcc};
+    }
     return @{};
   }
 
