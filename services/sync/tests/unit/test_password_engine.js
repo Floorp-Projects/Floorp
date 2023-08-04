@@ -168,9 +168,7 @@ add_task(async function test_password_engine() {
     );
     await Services.logins.addLoginAsync(login);
 
-    let logins = await Services.logins.searchLoginsAsync({
-      origin: "https://example.com",
-    });
+    let logins = Services.logins.findLogins("https://example.com", "", "");
     equal(logins.length, 1, "Should find new login in login manager");
     newLogin = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
 
@@ -210,9 +208,7 @@ add_task(async function test_password_engine() {
     props.setProperty("timePasswordChanged", localPasswordChangeTime);
     Services.logins.modifyLogin(login, props);
 
-    let logins = await Services.logins.searchLoginsAsync({
-      origin: "https://mozilla.com",
-    });
+    let logins = Services.logins.findLogins("https://mozilla.com", "", "");
     equal(logins.length, 1, "Should find old login in login manager");
     oldLogin = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
     equal(oldLogin.timePasswordChanged, localPasswordChangeTime);
@@ -244,9 +240,7 @@ add_task(async function test_password_engine() {
       "Should update remote password for newer login"
     );
 
-    let logins = await Services.logins.searchLoginsAsync({
-      origin: "https://mozilla.com",
-    });
+    let logins = Services.logins.findLogins("https://mozilla.com", "", "");
     equal(
       logins[0].password,
       "n3wpa55",
@@ -378,6 +372,7 @@ add_task(async function test_sync_outgoing() {
     _("Remove the login");
     equal(collection.count(), 1);
     equal(Services.logins.countLogins("", "", ""), 2);
+    equal(Services.logins.findLogins("", "", "").length, 2);
     equal((await Services.logins.getAllLogins()).length, 2);
     ok(await engine._store.itemExists(guid));
 
@@ -406,6 +401,7 @@ add_task(async function test_sync_outgoing() {
 
     // All of these should not include the deleted login. Only the FxA password should exist.
     equal(Services.logins.countLogins("", "", ""), 1);
+    equal(Services.logins.findLogins("", "", "").length, 1);
     equal((await Services.logins.getAllLogins()).length, 1);
     ok(!(await engine._store.itemExists(guid)));
 
@@ -461,9 +457,7 @@ add_task(async function test_sync_incoming() {
     _("Perform sync when remote login has been added");
     await sync_engine_and_validate_telem(engine, false);
 
-    let logins = await Services.logins.searchLoginsAsync({
-      origin: "https://www.example.com",
-    });
+    let logins = Services.logins.findLogins("https://www.example.com", "", "");
     equal(logins.length, 1);
 
     equal(logins[0].QueryInterface(Ci.nsILoginMetaInfo).guid, guid1);
@@ -488,9 +482,7 @@ add_task(async function test_sync_incoming() {
     await engine.setLastSync(newTime / 1000 - 30);
     await sync_engine_and_validate_telem(engine, false);
 
-    logins = await Services.logins.searchLoginsAsync({
-      origin: "https://www.example.com",
-    });
+    logins = Services.logins.findLogins("https://www.example.com", "", "");
     equal(logins.length, 1);
 
     details.password = "alpaca";
@@ -516,9 +508,7 @@ add_task(async function test_sync_incoming() {
     await engine.setLastSync(newTime / 1000 - 30);
     await sync_engine_and_validate_telem(engine, false);
 
-    logins = await Services.logins.searchLoginsAsync({
-      origin: "https://www.example.com",
-    });
+    logins = Services.logins.findLogins("https://www.example.com", "", "");
     equal(logins.length, 1);
 
     details.username = "guanaco";
@@ -544,9 +534,7 @@ add_task(async function test_sync_incoming() {
     await engine.setLastSync(newTime / 1000 - 30);
     await sync_engine_and_validate_telem(engine, false);
 
-    logins = await Services.logins.searchLoginsAsync({
-      origin: "https://www.example.com",
-    });
+    logins = Services.logins.findLogins("https://www.example.com", "", "");
     equal(logins.length, 0);
   } finally {
     await cleanup(engine, server);
@@ -586,9 +574,7 @@ add_task(async function test_sync_incoming_deleted() {
     _("Perform sync when remote login has been deleted");
     await sync_engine_and_validate_telem(engine, false);
 
-    let logins = await Services.logins.searchLoginsAsync({
-      origin: "https://www.example.com",
-    });
+    let logins = Services.logins.findLogins("https://www.example.org", "", "");
     equal(logins.length, 0);
     ok(!(await engine._store.getAllIDs())[guid1]);
     ok(!(await engine._store.itemExists(guid1)));
@@ -645,9 +631,7 @@ add_task(async function test_sync_incoming_deleted_localchanged_remotenewer() {
     );
     await sync_engine_and_validate_telem(engine, false);
 
-    let logins = await Services.logins.searchLoginsAsync({
-      origin: "https://mozilla.com",
-    });
+    let logins = Services.logins.findLogins("http://mozilla.com", "", "");
     equal(logins.length, 0);
     ok(await engine._store.getAllIDs());
   } finally {
@@ -703,9 +687,7 @@ add_task(async function test_sync_incoming_deleted_localchanged_localnewer() {
     );
     await sync_engine_and_validate_telem(engine, false);
 
-    let logins = await Services.logins.searchLoginsAsync({
-      origin: "http://www.mozilla.com",
-    });
+    let logins = Services.logins.findLogins("http://www.mozilla.com", "", "");
     equal(logins.length, 1);
     equal(logins[0].password, "cheetah");
     equal(logins[0].syncCounter, 0);
@@ -752,9 +734,7 @@ add_task(async function test_password_dupe() {
     _("Perform sync");
     await sync_engine_and_validate_telem(engine, true);
 
-    let logins = await Services.logins.searchLoginsAsync({
-      origin: "https://www.example.com",
-    });
+    let logins = Services.logins.findLogins("https://www.example.com", "", "");
 
     equal(logins.length, 1);
     equal(logins[0].QueryInterface(Ci.nsILoginMetaInfo).guid, guid2);
@@ -808,9 +788,11 @@ add_task(async function test_updated_null_password_sync() {
     _("Perform sync");
     await sync_engine_and_validate_telem(engine, false);
 
-    let logins = await Services.logins.searchLoginsAsync({
-      origin: "https://www.nullupdateexample.com",
-    });
+    let logins = Services.logins.findLogins(
+      "https://www.nullupdateexample.com",
+      "",
+      ""
+    );
 
     equal(logins.length, 1);
     equal(logins[0].QueryInterface(Ci.nsILoginMetaInfo).guid, guid1);
@@ -863,9 +845,11 @@ add_task(async function test_updated_undefined_password_sync() {
     _("Perform sync");
     await sync_engine_and_validate_telem(engine, false);
 
-    let logins = await Services.logins.searchLoginsAsync({
-      origin: "https://www.undefinedupdateexample.com",
-    });
+    let logins = Services.logins.findLogins(
+      "https://www.undefinedupdateexample.com",
+      "",
+      ""
+    );
 
     equal(logins.length, 1);
     equal(logins[0].QueryInterface(Ci.nsILoginMetaInfo).guid, guid1);
@@ -903,9 +887,7 @@ add_task(async function test_new_null_password_sync() {
     _("Perform sync");
     await sync_engine_and_validate_telem(engine, false);
 
-    let logins = await Services.logins.searchLoginsAsync({
-      origin: "https://www.example.com",
-    });
+    let logins = Services.logins.findLogins("https://www.example.com", "", "");
 
     equal(logins.length, 1);
     notEqual(logins[0].QueryInterface(Ci.nsILoginMetaInfo).username, null);
@@ -945,9 +927,7 @@ add_task(async function test_new_undefined_password_sync() {
     _("Perform sync");
     await sync_engine_and_validate_telem(engine, false);
 
-    let logins = await Services.logins.searchLoginsAsync({
-      origin: "https://www.example.com",
-    });
+    let logins = Services.logins.findLogins("https://www.example.com", "", "");
 
     equal(logins.length, 1);
     notEqual(logins[0].QueryInterface(Ci.nsILoginMetaInfo).username, null);
@@ -1022,9 +1002,7 @@ add_task(async function test_roundtrip_unknown_fields() {
     props.setProperty("timePasswordChanged", localPasswordChangeTime);
     Services.logins.modifyLogin(login, props);
 
-    let logins = await Services.logins.searchLoginsAsync({
-      origin: "https://mozilla.com",
-    });
+    let logins = Services.logins.findLogins("https://mozilla.com", "", "");
     equal(logins.length, 1, "Should find old login in login manager");
     oldLogin = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
     equal(oldLogin.timePasswordChanged, localPasswordChangeTime);
@@ -1054,9 +1032,7 @@ add_task(async function test_roundtrip_unknown_fields() {
   try {
     await sync_engine_and_validate_telem(engine, false);
 
-    let logins = await Services.logins.searchLoginsAsync({
-      origin: "https://mozilla.com",
-    });
+    let logins = Services.logins.findLogins("https://mozilla.com", "", "");
     equal(
       logins[0].password,
       "n3wpa55",

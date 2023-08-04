@@ -17,8 +17,8 @@ const gLooksLikeUUIDRegex = /^\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$/;
  * the given nsILoginInfo.  In case there is more than one login for the
  * origin, the test fails.
  */
-async function retrieveOriginMatching(origin) {
-  let logins = await Services.logins.searchLoginsAsync({ origin });
+function retrieveLoginMatching(aLoginInfo) {
+  let logins = Services.logins.findLogins(aLoginInfo.origin, "", "");
   Assert.equal(logins.length, 1);
   return logins[0].QueryInterface(Ci.nsILoginMetaInfo);
 }
@@ -94,7 +94,7 @@ add_task(async function test_addLogin_metainfo() {
   Assert.equal(gLoginInfo1.timesUsed, 0);
 
   // A login with valid metadata should have been stored.
-  gLoginMetaInfo1 = await retrieveOriginMatching(gLoginInfo1.origin);
+  gLoginMetaInfo1 = retrieveLoginMatching(gLoginInfo1);
   Assert.ok(gLooksLikeUUIDRegex.test(gLoginMetaInfo1.guid));
   let creationTime = gLoginMetaInfo1.timeCreated;
   LoginTestUtils.assertTimeIsAboutNow(creationTime);
@@ -110,12 +110,12 @@ add_task(async function test_addLogin_metainfo() {
   assertMetaInfoEqual(gLoginInfo2, originalLogin);
 
   // A login with the provided metadata should have been stored.
-  gLoginMetaInfo2 = await retrieveOriginMatching(gLoginInfo2.origin);
+  gLoginMetaInfo2 = retrieveLoginMatching(gLoginInfo2);
   assertMetaInfoEqual(gLoginMetaInfo2, gLoginInfo2);
 
   // Add an authentication login to the database before continuing.
   await Services.logins.addLoginAsync(gLoginInfo3);
-  gLoginMetaInfo3 = await retrieveOriginMatching(gLoginInfo3.origin);
+  gLoginMetaInfo3 = retrieveLoginMatching(gLoginInfo3);
   await LoginTestUtils.checkLogins([gLoginInfo1, gLoginInfo2, gLoginInfo3]);
 });
 
@@ -140,7 +140,7 @@ add_task(async function test_addLogin_metainfo_duplicate() {
  * Tests that the existing metadata is not changed when modifyLogin is called
  * with an nsILoginInfo argument.
  */
-add_task(async function test_modifyLogin_nsILoginInfo_metainfo_ignored() {
+add_task(function test_modifyLogin_nsILoginInfo_metainfo_ignored() {
   let newLoginInfo = gLoginInfo1.clone().QueryInterface(Ci.nsILoginMetaInfo);
   newLoginInfo.guid = Services.uuid.generateUUID().toString();
   newLoginInfo.timeCreated = Date.now();
@@ -149,14 +149,14 @@ add_task(async function test_modifyLogin_nsILoginInfo_metainfo_ignored() {
   newLoginInfo.timesUsed = 12;
   Services.logins.modifyLogin(gLoginInfo1, newLoginInfo);
 
-  newLoginInfo = await retrieveOriginMatching(gLoginInfo1.origin);
+  newLoginInfo = retrieveLoginMatching(gLoginInfo1);
   assertMetaInfoEqual(newLoginInfo, gLoginMetaInfo1);
 });
 
 /**
  * Tests the modifyLogin function with an nsIProperyBag argument.
  */
-add_task(async function test_modifyLogin_nsIProperyBag_metainfo() {
+add_task(function test_modifyLogin_nsIProperyBag_metainfo() {
   // Use a new reference time that is two minutes from now.
   let newTimeMs = Date.now() + 120000;
   let newUUIDValue = Services.uuid.generateUUID().toString();
@@ -173,7 +173,7 @@ add_task(async function test_modifyLogin_nsIProperyBag_metainfo() {
     })
   );
 
-  gLoginMetaInfo1 = await retrieveOriginMatching(gLoginInfo1.origin);
+  gLoginMetaInfo1 = retrieveLoginMatching(gLoginInfo1);
   Assert.equal(gLoginMetaInfo1.guid, newUUIDValue);
   Assert.equal(gLoginMetaInfo1.timeCreated, newTimeMs);
   Assert.equal(gLoginMetaInfo1.timeLastUsed, newTimeMs + 2);
@@ -190,7 +190,7 @@ add_task(async function test_modifyLogin_nsIProperyBag_metainfo() {
   );
   gLoginInfo2.password = "new password";
 
-  gLoginMetaInfo2 = await retrieveOriginMatching(gLoginInfo2.origin);
+  gLoginMetaInfo2 = retrieveLoginMatching(gLoginInfo2);
   Assert.equal(gLoginMetaInfo2.password, gLoginInfo2.password);
   Assert.equal(gLoginMetaInfo2.timeCreated, originalLogin.timeCreated);
   Assert.equal(gLoginMetaInfo2.timeLastUsed, originalLogin.timeLastUsed);
@@ -207,7 +207,7 @@ add_task(async function test_modifyLogin_nsIProperyBag_metainfo() {
   );
   gLoginInfo2.password = "other password";
 
-  gLoginMetaInfo2 = await retrieveOriginMatching(gLoginInfo2.origin);
+  gLoginMetaInfo2 = retrieveLoginMatching(gLoginInfo2);
   Assert.equal(gLoginMetaInfo2.password, gLoginInfo2.password);
   Assert.equal(gLoginMetaInfo2.timeCreated, originalLogin.timeCreated);
   Assert.equal(gLoginMetaInfo2.timeLastUsed, originalLogin.timeLastUsed);
@@ -221,7 +221,7 @@ add_task(async function test_modifyLogin_nsIProperyBag_metainfo() {
     })
   );
 
-  gLoginMetaInfo2 = await retrieveOriginMatching(gLoginInfo2.origin);
+  gLoginMetaInfo2 = retrieveLoginMatching(gLoginInfo2);
   Assert.equal(gLoginMetaInfo2.timeCreated, originalLogin.timeCreated);
   Assert.equal(gLoginMetaInfo2.timeLastUsed, originalLogin.timeLastUsed);
   Assert.equal(gLoginMetaInfo2.timePasswordChanged, newTimeMs);
@@ -289,16 +289,7 @@ add_task(async function test_storage_metainfo() {
   await LoginTestUtils.reloadData();
   await LoginTestUtils.checkLogins([gLoginInfo1, gLoginInfo2, gLoginInfo3]);
 
-  assertMetaInfoEqual(
-    await retrieveOriginMatching(gLoginInfo1.origin),
-    gLoginMetaInfo1
-  );
-  assertMetaInfoEqual(
-    await retrieveOriginMatching(gLoginInfo2.origin),
-    gLoginMetaInfo2
-  );
-  assertMetaInfoEqual(
-    await retrieveOriginMatching(gLoginInfo3.origin),
-    gLoginMetaInfo3
-  );
+  assertMetaInfoEqual(retrieveLoginMatching(gLoginInfo1), gLoginMetaInfo1);
+  assertMetaInfoEqual(retrieveLoginMatching(gLoginInfo2), gLoginMetaInfo2);
+  assertMetaInfoEqual(retrieveLoginMatching(gLoginInfo3), gLoginMetaInfo3);
 });
