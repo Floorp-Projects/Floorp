@@ -1,3 +1,20 @@
+commit 6784271c1c6273a1be0b6a2dad9ac7b921521ad8
+Author: Shahbaz Youssefi <syoussefi@chromium.org>
+Date:   Tue Mar 28 11:43:23 2023 -0400
+
+    Translator: Limit the size of private variables in WebGL shaders
+    
+    As a follow up to
+    https://chromium-review.googlesource.com/c/angle/angle/+/3023033, the
+    limit to shader-private variables (locals and globals) is further
+    reduced to 1MB.  A variable that large will not fit in GPU registers and
+    will spill to memory, killing performance.
+    
+    Bug: chromium:1427865
+    Change-Id: I77314d4b891c591cd9a83ad2aebb77d7256f3ada
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/4377639
+    Reviewed-by: Kenneth Russell <kbr@chromium.org>
+
 commit 23347851217a581f3b9d877af203a0dcc4b7b6e9
 Author: Kelsey Gilbert <kelsey.gilbert@mozilla.com>
 Date:   Wed Mar 29 16:13:39 2023 -0700
