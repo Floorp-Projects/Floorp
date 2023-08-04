@@ -20,6 +20,24 @@ ESLint also supports the ``--fix`` option to autofix most errors raised from mos
 
 See the `Usage guide`_ for more options.
 
+Custom Configurations
+---------------------
+
+Our ESLint configuration has a number of custom configurations that define
+globals and rules for various code based on the pattern file path and names.
+
+Using the correct patterns helps ESLint to know about the correct details, so
+that you don't get warnings about undefined or unused variables.
+
+* ``.mjs`` - A module file.
+* ``.sys.mjs`` - A system module, this is typically a singleton in the process it is loaded into.
+* ``.worker.(m)js`` - A file that is a web worker.
+
+  * Workers that use ctypes should use ``/* eslint-env mozilla/chrome-worker */``
+
+* Test files, see the section on :ref:`adding tests <adding-tests>`
+
+
 Understanding Rules and Errors
 ------------------------------
 
@@ -85,14 +103,6 @@ this is `difficult for ESLint to handle`_. Currently this may cause:
 * Extra definitions for globals in tests which means that the no undefined variables
   rule does not get triggered in some cases.
 
-I'm using an ES module
-^^^^^^^^^^^^^^^^^^^^^^
-
-* Use a ``.mjs`` extension for the file. ESLint will pick this up and automatically
-  treat it as a module.
-* If it is a system module (e.g. component definition or other non-frontend code),
-  use a ``.sys.mjs`` extension.
-
 This code should neither be linted nor formatted
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -123,11 +133,6 @@ I have valid code that is failing the ``no-undef`` rule or can't be parsed
 * If you are writing a script loaded into special environment (e.g. frame script) you may need to tell ESLint to use the `environment definitions`_ for each case:
 
   * ``/* eslint-env mozilla/frame-script */``
-
-* If you are writing a worker, then you may need to use the worker or chrome-worker environment:
-
-  * ``/* eslint-env worker */``
-  * ``/* eslint-env mozilla/chrome-worker */``
 
 * I use ``Services.scriptloader.loadSubScript``:
 
