@@ -91,20 +91,35 @@ export class TranslationsTelemetry {
    * Records a telemetry event when a translation request is sent.
    *
    * @param {object} data
+   * @param {string} data.docLangTag
    * @param {string} data.fromLanguage
    * @param {string} data.toLanguage
+   * @param {string} data.topPreferredLanguage
    * @param {boolean} data.autoTranslate
    */
   static onTranslate(data) {
+    const {
+      docLangTag,
+      fromLanguage,
+      toLanguage,
+      autoTranslate,
+      topPreferredLanguage,
+    } = data;
     Glean.translations.requestsCount.add(1);
     Glean.translations.translationRequest.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       first_interaction: Panel.isFirstUserInteraction(),
-      from_language: data.fromLanguage,
-      to_language: data.toLanguage,
-      auto_translate: data.autoTranslate,
+      from_language: fromLanguage,
+      to_language: toLanguage,
+      auto_translate: autoTranslate,
+      document_language: docLangTag,
+      top_preferred_language: topPreferredLanguage,
     });
-    TranslationsTelemetry.logEventToConsole("onTranslate");
+    TranslationsTelemetry.logEventToConsole(
+      `onTranslate[page(${docLangTag}), preferred(${topPreferredLanguage})](${
+        autoTranslate ? "auto" : "manual"
+      }, ${fromLanguage}-${toLanguage})`
+    );
   }
 
   static onRestorePage() {

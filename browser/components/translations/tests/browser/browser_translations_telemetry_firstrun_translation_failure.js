@@ -136,6 +136,8 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
         value => value.extra.from_language === "es",
         value => value.extra.to_language === "en",
         value => value.extra.auto_translate === "false",
+        value => value.extra.document_language === "es",
+        value => value.extra.top_preferred_language === "en",
       ],
     }
   );

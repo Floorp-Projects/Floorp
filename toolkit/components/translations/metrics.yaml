@@ -82,7 +82,13 @@ translations:
         description: The language being translated from.
       to_language:
         type: string
-        description: The language being translated into.
+        description: The language being translated to.
+      document_language:
+        type: string
+        description: The detected BCP-47 language tag of the document.
+      top_preferred_language:
+        type: string
+        description: The top preferred language for this user.
       auto_translate:
         type: boolean
         description: >
@@ -93,10 +99,12 @@ translations:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836381
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847150
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836381#c4
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366#c11
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428#c16
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847150#c4
     data_sensitivity:
       - interaction
     notification_emails:

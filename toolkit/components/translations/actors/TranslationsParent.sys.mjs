@@ -1833,13 +1833,21 @@ export class TranslationsParent extends JSWindowActorParent {
       TranslationsParent.#translateOnPageReload = { fromLanguage, toLanguage };
       this.restorePage(fromLanguage);
     } else {
+      const { docLangTag } = this.languageState.detectedLanguages;
+      const preferredLanguages = TranslationsParent.getPreferredLanguages();
+      const topPreferredLanguage =
+        preferredLanguages && preferredLanguages.length
+          ? preferredLanguages[0]
+          : null;
       this.languageState.requestedTranslationPair = {
         fromLanguage,
         toLanguage,
       };
       TranslationsParent.telemetry().onTranslate({
+        docLangTag,
         fromLanguage,
         toLanguage,
+        topPreferredLanguage,
         autoTranslate: reportAsAutoTranslate,
       });
       this.sendAsyncMessage("Translations:TranslatePage", {
