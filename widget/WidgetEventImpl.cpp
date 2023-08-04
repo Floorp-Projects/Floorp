@@ -906,7 +906,6 @@ bool WidgetKeyboardEvent::ShouldCauseKeypressEvents() const {
     // case KEY_NAME_INDEX_Hyper:
     case KEY_NAME_INDEX_Meta:
     case KEY_NAME_INDEX_NumLock:
-    case KEY_NAME_INDEX_OS:
     case KEY_NAME_INDEX_ScrollLock:
     case KEY_NAME_INDEX_Shift:
     // case KEY_NAME_INDEX_Super:
@@ -1299,12 +1298,12 @@ uint32_t WidgetKeyboardEvent::ComputeLocationFromCodeValue(
   switch (aCodeNameIndex) {
     case CODE_NAME_INDEX_AltLeft:
     case CODE_NAME_INDEX_ControlLeft:
-    case CODE_NAME_INDEX_OSLeft:
+    case CODE_NAME_INDEX_MetaLeft:
     case CODE_NAME_INDEX_ShiftLeft:
       return eKeyLocationLeft;
     case CODE_NAME_INDEX_AltRight:
     case CODE_NAME_INDEX_ControlRight:
-    case CODE_NAME_INDEX_OSRight:
+    case CODE_NAME_INDEX_MetaRight:
     case CODE_NAME_INDEX_ShiftRight:
       return eKeyLocationRight;
     case CODE_NAME_INDEX_Numpad0:
@@ -1422,10 +1421,6 @@ uint32_t WidgetKeyboardEvent::ComputeKeyCodeFromKeyNameIndex(
       return dom::KeyboardEvent_Binding::DOM_VK_INSERT;
     case KEY_NAME_INDEX_Delete:
       return dom::KeyboardEvent_Binding::DOM_VK_DELETE;
-    case KEY_NAME_INDEX_OS:
-      // case KEY_NAME_INDEX_Super:
-      // case KEY_NAME_INDEX_Hyper:
-      return dom::KeyboardEvent_Binding::DOM_VK_WIN;
     case KEY_NAME_INDEX_ContextMenu:
       return dom::KeyboardEvent_Binding::DOM_VK_CONTEXT_MENU;
     case KEY_NAME_INDEX_Standby:
@@ -1489,7 +1484,11 @@ uint32_t WidgetKeyboardEvent::ComputeKeyCodeFromKeyNameIndex(
     case KEY_NAME_INDEX_AudioVolumeUp:
       return dom::KeyboardEvent_Binding::DOM_VK_VOLUME_UP;
     case KEY_NAME_INDEX_Meta:
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+      return dom::KeyboardEvent_Binding::DOM_VK_WIN;
+#else
       return dom::KeyboardEvent_Binding::DOM_VK_META;
+#endif
     case KEY_NAME_INDEX_AltGraph:
       return dom::KeyboardEvent_Binding::DOM_VK_ALTGR;
     case KEY_NAME_INDEX_Process:
@@ -1573,22 +1572,8 @@ CodeNameIndex WidgetKeyboardEvent::ComputeCodeNameIndexFromKeyNameIndex(
                        : CODE_NAME_INDEX_ControlLeft;
       case KEY_NAME_INDEX_Shift:
         return isRight ? CODE_NAME_INDEX_ShiftRight : CODE_NAME_INDEX_ShiftLeft;
-#if defined(XP_WIN)
       case KEY_NAME_INDEX_Meta:
-        return CODE_NAME_INDEX_UNKNOWN;
-      case KEY_NAME_INDEX_OS:  // win key.
-        return isRight ? CODE_NAME_INDEX_OSRight : CODE_NAME_INDEX_OSLeft;
-#elif defined(XP_MACOSX) || defined(ANDROID)
-      case KEY_NAME_INDEX_Meta:  // command key.
-        return isRight ? CODE_NAME_INDEX_OSRight : CODE_NAME_INDEX_OSLeft;
-      case KEY_NAME_INDEX_OS:
-        return CODE_NAME_INDEX_UNKNOWN;
-#else
-      case KEY_NAME_INDEX_Meta:  // Alt + Shift.
-        return isRight ? CODE_NAME_INDEX_AltRight : CODE_NAME_INDEX_AltLeft;
-      case KEY_NAME_INDEX_OS:  // Super/Hyper key.
-        return isRight ? CODE_NAME_INDEX_OSRight : CODE_NAME_INDEX_OSLeft;
-#endif
+        return isRight ? CODE_NAME_INDEX_MetaRight : CODE_NAME_INDEX_MetaLeft;
       default:
         return CODE_NAME_INDEX_UNKNOWN;
     }
