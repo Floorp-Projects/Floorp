@@ -27,7 +27,7 @@ class TestManifestParser(unittest.TestCase):
     def test_sanity(self):
         """Ensure basic parser is sane"""
 
-        parser = ManifestParser()
+        parser = ManifestParser(use_toml=False)
         mozmill_example = os.path.join(here, "mozmill-example.ini")
         parser.read(mozmill_example)
         tests = parser.tests
@@ -113,7 +113,7 @@ class TestManifestParser(unittest.TestCase):
         """Illustrate how include works"""
 
         include_example = os.path.join(here, "include-example.ini")
-        parser = ManifestParser(manifests=(include_example,))
+        parser = ManifestParser(manifests=(include_example,), use_toml=False)
 
         # All of the tests should be included, in order:
         self.assertEqual(parser.get("name"), ["crash-handling", "fleem", "flowers"])
@@ -281,7 +281,7 @@ yellow = submarine"""  # noqa
         foo_path = os.path.join(here, "include", "foo.ini")
 
         parser = ManifestParser(
-            manifests=(include_example, noinclude_example), rootdir=here
+            manifests=(include_example, noinclude_example), rootdir=here, use_toml=False
         )
 
         # Standalone manifests must be appear as-is.
@@ -327,9 +327,9 @@ yellow = submarine"""  # noqa
         # that included the manifest.
         self.assertFalse(bar_path in parser.manifest_defaults)
         self.assertFalse(foo_path in parser.manifest_defaults)
-        ancestor_ini = os.path.relpath(include_example, parser.rootdir)
-        self.assertTrue((ancestor_ini, bar_path) in parser.manifest_defaults)
-        self.assertTrue((ancestor_ini, foo_path) in parser.manifest_defaults)
+        ancestor_toml = os.path.relpath(include_example, parser.rootdir)
+        self.assertTrue((ancestor_toml, bar_path) in parser.manifest_defaults)
+        self.assertTrue((ancestor_toml, foo_path) in parser.manifest_defaults)
 
         # manifests() must only return file paths (strings).
         manifests = parser.manifests()
@@ -348,7 +348,7 @@ yellow = submarine"""  # noqa
         foo_path = os.path.join(here, "include", "foo.ini")
 
         parser = ManifestParser(
-            manifests=(manifest,), handle_defaults=False, rootdir=here
+            manifests=(manifest,), handle_defaults=False, rootdir=here, use_toml=False
         )
         ancestor_ini = os.path.relpath(manifest, parser.rootdir)
 
@@ -435,7 +435,9 @@ yellow = submarine
 
 """
 
-        parser = ManifestParser(manifests=(include_example, included_foo), rootdir=here)
+        parser = ManifestParser(
+            manifests=(include_example, included_foo), rootdir=here, use_toml=False
+        )
         self.assertEqual(
             parser.get("name"), ["crash-handling", "fleem", "flowers", "flowers"]
         )
@@ -459,7 +461,9 @@ yellow = submarine
         )
 
         # Same tests, but with the load order of the manifests swapped.
-        parser = ManifestParser(manifests=(included_foo, include_example), rootdir=here)
+        parser = ManifestParser(
+            manifests=(included_foo, include_example), rootdir=here, use_toml=False
+        )
         self.assertEqual(
             parser.get("name"), ["flowers", "crash-handling", "fleem", "flowers"]
         )
@@ -619,7 +623,7 @@ yellow = submarine
 
         tempdir = tempfile.mkdtemp()
         include_example = os.path.join(here, "include-example.ini")
-        manifest = ManifestParser(manifests=(include_example,))
+        manifest = ManifestParser(manifests=(include_example,), use_toml=False)
         manifest.copy(tempdir)
         self.assertEqual(
             sorted(os.listdir(tempdir)), ["fleem", "include", "include-example.ini"]
@@ -803,7 +807,7 @@ yellow = submarine
         itself from the manifests() method.
         """
 
-        parser = ManifestParser()
+        parser = ManifestParser(use_toml=False)
         manifest = os.path.join(here, "no-tests.ini")
         parser.read(manifest)
         self.assertEqual(len(parser.tests), 0)

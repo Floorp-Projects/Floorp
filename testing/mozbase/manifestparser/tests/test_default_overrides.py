@@ -5,6 +5,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import re
 import unittest
 
 import mozunit
@@ -13,56 +14,70 @@ from manifestparser import ManifestParser, combine_fields
 here = os.path.dirname(os.path.abspath(__file__))
 
 
+def deepstrip(txt):
+    "Collapses all repeated blanks to one blank, and strips"
+    return re.sub(r"  +", " ", txt).strip()
+
+
 class TestDefaultSkipif(unittest.TestCase):
     """Tests applying a skip-if condition in [DEFAULT] and || with the value for the test"""
 
     def test_defaults(self):
 
         default = os.path.join(here, "default-skipif.ini")
-        parser = ManifestParser(manifests=(default,))
+        parser = ManifestParser(manifests=(default,), use_toml=False)
         for test in parser.tests:
             if test["name"] == "test1":
-                self.assertEqual(test["skip-if"], "os == 'win' && debug\ndebug")
+                self.assertEqual(
+                    deepstrip(test["skip-if"]), "os == 'win' && debug\ndebug"
+                )
             elif test["name"] == "test2":
-                self.assertEqual(test["skip-if"], "os == 'win' && debug\nos == 'linux'")
+                self.assertEqual(
+                    deepstrip(test["skip-if"]), "os == 'win' && debug\nos == 'linux'"
+                )
             elif test["name"] == "test3":
-                self.assertEqual(test["skip-if"], "os == 'win' && debug\nos == 'win'")
+                self.assertEqual(
+                    deepstrip(test["skip-if"]), "os == 'win' && debug\nos == 'win'"
+                )
             elif test["name"] == "test4":
                 self.assertEqual(
-                    test["skip-if"], "os == 'win' && debug\nos == 'win' && debug"
+                    deepstrip(test["skip-if"]),
+                    "os == 'win' && debug\nos == 'win' && debug",
                 )
             elif test["name"] == "test5":
-                self.assertEqual(test["skip-if"], "os == 'win' && debug")
+                self.assertEqual(deepstrip(test["skip-if"]), "os == 'win' && debug")
             elif test["name"] == "test6":
-                self.assertEqual(test["skip-if"], "os == 'win' && debug\ndebug")
+                self.assertEqual(
+                    deepstrip(test["skip-if"]), "os == 'win' && debug\ndebug"
+                )
 
     def test_defaults_toml(self):
 
-        default = os.path.join(here, "default-skipif.ini")
+        default = os.path.join(here, "default-skipif.toml")
         parser = ManifestParser(manifests=(default,), use_toml=True)
         for test in parser.tests:
             if test["name"] == "test1":
                 self.assertEqual(
-                    test["skip-if"].strip(), "os == 'win' && debug \n  debug"
+                    deepstrip(test["skip-if"]), "os == 'win' && debug\ndebug"
                 )
             elif test["name"] == "test2":
                 self.assertEqual(
-                    test["skip-if"].strip(), "os == 'win' && debug \n  os == 'linux'"
+                    deepstrip(test["skip-if"]), "os == 'win' && debug\nos == 'linux'"
                 )
             elif test["name"] == "test3":
                 self.assertEqual(
-                    test["skip-if"].strip(), "os == 'win' && debug \n  os == 'win'"
+                    deepstrip(test["skip-if"]), "os == 'win' && debug\nos == 'win'"
                 )
             elif test["name"] == "test4":
                 self.assertEqual(
-                    test["skip-if"].strip(),
-                    "os == 'win' && debug \n  os == 'win' && debug",
+                    deepstrip(test["skip-if"]),
+                    "os == 'win' && debug\nos == 'win' && debug",
                 )
             elif test["name"] == "test5":
-                self.assertEqual(test["skip-if"].strip(), "os == 'win' && debug")
+                self.assertEqual(deepstrip(test["skip-if"]), "os == 'win' && debug")
             elif test["name"] == "test6":
                 self.assertEqual(
-                    test["skip-if"].strip(), "os == 'win' && debug \n  debug"
+                    deepstrip(test["skip-if"]), "os == 'win' && debug\ndebug"
                 )
 
 
@@ -72,7 +87,7 @@ class TestDefaultSupportFiles(unittest.TestCase):
     def test_defaults(self):
 
         default = os.path.join(here, "default-suppfiles.ini")
-        parser = ManifestParser(manifests=(default,))
+        parser = ManifestParser(manifests=(default,), use_toml=False)
         expected_supp_files = {
             "test7": "foo.js",
             "test8": "foo.js bar.js",
@@ -84,7 +99,7 @@ class TestDefaultSupportFiles(unittest.TestCase):
 
     def test_defaults_toml(self):
 
-        default = os.path.join(here, "default-suppfiles.ini")
+        default = os.path.join(here, "default-suppfiles.toml")
         parser = ManifestParser(manifests=(default,), use_toml=True)
         expected_supp_files = {
             "test7": "foo.js",
@@ -104,7 +119,9 @@ class TestOmitDefaults(unittest.TestCase):
             os.path.join(here, "default-suppfiles.ini"),
             os.path.join(here, "default-skipif.ini"),
         )
-        parser = ManifestParser(manifests=manifests, handle_defaults=False)
+        parser = ManifestParser(
+            manifests=manifests, handle_defaults=False, use_toml=False
+        )
         expected_supp_files = {
             "test8": "bar.js",
         }
@@ -124,7 +141,7 @@ class TestOmitDefaults(unittest.TestCase):
                 if not expected:
                     self.assertNotIn(field, test)
                 else:
-                    self.assertEqual(test[field], expected)
+                    self.assertEqual(test[field].strip(), expected)
 
         expected_defaults = {
             os.path.join(here, "default-suppfiles.ini"): {
@@ -139,7 +156,7 @@ class TestOmitDefaults(unittest.TestCase):
             actual_defaults = parser.manifest_defaults[path]
             for key, value in defaults.items():
                 self.assertIn(key, actual_defaults)
-                self.assertEqual(value, actual_defaults[key])
+                self.assertEqual(value, actual_defaults[key].strip())
 
     def test_defaults_toml(self):
         manifests = (
@@ -192,7 +209,9 @@ class TestSubsuiteDefaults(unittest.TestCase):
 
     def test_subsuite_defaults(self):
         manifest = os.path.join(here, "default-subsuite.ini")
-        parser = ManifestParser(manifests=(manifest,), handle_defaults=False)
+        parser = ManifestParser(
+            manifests=(manifest,), handle_defaults=False, use_toml=False
+        )
         expected_subsuites = {
             "test1": "baz",
             "test2": "foo",

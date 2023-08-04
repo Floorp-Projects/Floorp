@@ -284,7 +284,7 @@ def test_pathprefix(create_tests):
         (
             "other/test4",
             {
-                "manifest": "manifest-common.ini",
+                "manifest": "manifest-common.toml",
                 "ancestor_manifest": "other/manifest.ini",
             },
         ),

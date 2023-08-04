@@ -6,4 +6,3 @@ support-files = "foo.js" # a comment
 support-files = "bar.js" # another comment
 [test9]
 foo = "bar"
-
