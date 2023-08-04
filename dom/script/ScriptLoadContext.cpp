@@ -157,8 +157,7 @@ bool ScriptLoadContext::IsPreload() const {
 }
 
 bool ScriptLoadContext::CompileStarted() const {
-  return mRequest->IsCompiling() ||
-         (mRequest->IsReadyToRun() && mWasCompiledOMT);
+  return mRequest->IsCompiling() || (mRequest->IsFinished() && mWasCompiledOMT);
 }
 
 nsIScriptElement* ScriptLoadContext::GetScriptElement() const {

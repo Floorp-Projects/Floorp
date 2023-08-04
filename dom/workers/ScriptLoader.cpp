@@ -804,7 +804,7 @@ void WorkerScriptLoader::MaybeMoveToLoadedList(ScriptLoadRequest* aRequest) {
     ScriptLoadRequest* request = mLoadingRequests.getFirst();
     // We need to move requests in post order. If prior requests have not
     // completed, delay execution.
-    if (!request->IsReadyToRun()) {
+    if (!request->IsFinished()) {
       break;
     }
 
@@ -1116,7 +1116,7 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
   WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
 
   NS_ASSERTION(!loadContext->mChannel, "Should no longer have a channel!");
-  NS_ASSERTION(aRequest->IsReadyToRun(), "Should be scheduled!");
+  NS_ASSERTION(aRequest->IsFinished(), "Should be scheduled!");
 
   MOZ_ASSERT(!mRv.Failed(), "Who failed it and why?");
   mRv.MightThrowJSException();

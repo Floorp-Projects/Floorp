@@ -1061,7 +1061,7 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
 
   if (request->GetScriptLoadContext()->IsAsyncScript()) {
     AddAsyncRequest(request);
-    if (request->IsReadyToRun()) {
+    if (request->IsFinished()) {
       // The script is available already. Run it ASAP when the event
       // loop gets a chance to spin.
 
@@ -1077,7 +1077,7 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     // http://lists.w3.org/Archives/Public/public-html/2010Oct/0088.html
     request->GetScriptLoadContext()->mIsNonAsyncScriptInserted = true;
     mNonAsyncExternalScriptInsertedRequests.AppendElement(request);
-    if (request->IsReadyToRun()) {
+    if (request->IsFinished()) {
       // The script is available already. Run it ASAP when the event
       // loop gets a chance to spin.
       ProcessPendingRequestsAsync();
@@ -1107,7 +1107,7 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
                  "Parser-blocking scripts and XSLT scripts in the same doc!");
     request->GetScriptLoadContext()->mIsXSLT = true;
     mXSLTRequests.AppendElement(request);
-    if (request->IsReadyToRun()) {
+    if (request->IsFinished()) {
       // The script is available already. Run it ASAP when the event
       // loop gets a chance to spin.
       ProcessPendingRequestsAsync();
@@ -1115,7 +1115,7 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     return true;
   }
 
-  if (request->IsReadyToRun() && ReadyToExecuteParserBlockingScripts()) {
+  if (request->IsFinished() && ReadyToExecuteParserBlockingScripts()) {
     // The request has already been loaded and there are no pending style
     // sheets. If the script comes from the network stream, cheat for
     // performance reasons and avoid a trip through the event loop.
@@ -1515,7 +1515,7 @@ nsresult ScriptLoader::AttemptOffThreadScriptCompile(
   // If speculative parsing is enabled, the request may not be ready to run if
   // the element is not yet available.
   MOZ_ASSERT_IF(!SpeculativeOMTParsingEnabled() && !aRequest->IsModuleRequest(),
-                aRequest->IsReadyToRun());
+                aRequest->IsFinished());
   MOZ_ASSERT(!aRequest->GetScriptLoadContext()->mWasCompiledOMT);
   MOZ_ASSERT(aCouldCompileOut && !*aCouldCompileOut);
 
@@ -1801,7 +1801,7 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
 
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
                "Processing requests when running scripts is unsafe.");
-  NS_ASSERTION(aRequest->IsReadyToRun(),
+  NS_ASSERTION(aRequest->IsFinished(),
                "Processing a request that is not ready to run.");
 
   NS_ENSURE_ARG(aRequest);
@@ -2174,7 +2174,7 @@ static nsresult ExecuteCompiledScript(JSContext* aCx, JSExecutionContext& aExec,
 
 nsresult ScriptLoader::EvaluateScriptElement(ScriptLoadRequest* aRequest) {
   using namespace mozilla::Telemetry;
-  MOZ_ASSERT(aRequest->IsReadyToRun());
+  MOZ_ASSERT(aRequest->IsFinished());
 
   // We need a document to evaluate scripts.
   if (!mDocument) {
@@ -2744,7 +2744,7 @@ void ScriptLoader::ProcessPendingRequestsAsync() {
 void ScriptLoader::ProcessPendingRequests() {
   RefPtr<ScriptLoadRequest> request;
 
-  if (mParserBlockingRequest && mParserBlockingRequest->IsReadyToRun() &&
+  if (mParserBlockingRequest && mParserBlockingRequest->IsFinished() &&
       ReadyToExecuteParserBlockingScripts()) {
     request.swap(mParserBlockingRequest);
     UnblockParser(request);
@@ -2753,7 +2753,7 @@ void ScriptLoader::ProcessPendingRequests() {
   }
 
   while (ReadyToExecuteParserBlockingScripts() && !mXSLTRequests.isEmpty() &&
-         mXSLTRequests.getFirst()->IsReadyToRun()) {
+         mXSLTRequests.getFirst()->IsFinished()) {
     request = mXSLTRequests.StealFirst();
     ProcessRequest(request);
   }
@@ -2769,7 +2769,7 @@ void ScriptLoader::ProcessPendingRequests() {
 
   while (ReadyToExecuteScripts() &&
          !mNonAsyncExternalScriptInsertedRequests.isEmpty() &&
-         mNonAsyncExternalScriptInsertedRequests.getFirst()->IsReadyToRun()) {
+         mNonAsyncExternalScriptInsertedRequests.getFirst()->IsFinished()) {
     // Violate the HTML5 spec and execute these in the insertion order in
     // order to make LABjs and the "order" plug-in for RequireJS work with
     // their Gecko-sniffed code path. See
@@ -2780,7 +2780,7 @@ void ScriptLoader::ProcessPendingRequests() {
 
   if (mDeferCheckpointReached && mXSLTRequests.isEmpty()) {
     while (ReadyToExecuteScripts() && !mDeferRequests.isEmpty() &&
-           mDeferRequests.getFirst()->IsReadyToRun()) {
+           mDeferRequests.getFirst()->IsFinished()) {
       request = mDeferRequests.StealFirst();
       ProcessRequest(request);
     }
@@ -3640,7 +3640,7 @@ void ScriptLoader::AddAsyncRequest(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(!aRequest->GetScriptLoadContext()->mInCompilingList);
 
   aRequest->GetScriptLoadContext()->mInAsyncList = true;
-  if (aRequest->IsReadyToRun()) {
+  if (aRequest->IsFinished()) {
     mLoadedAsyncRequests.AppendElement(aRequest);
   } else {
     mLoadingAsyncRequests.AppendElement(aRequest);
@@ -3648,7 +3648,7 @@ void ScriptLoader::AddAsyncRequest(ScriptLoadRequest* aRequest) {
 }
 
 void ScriptLoader::MaybeMoveToLoadedList(ScriptLoadRequest* aRequest) {
-  MOZ_ASSERT(aRequest->IsReadyToRun());
+  MOZ_ASSERT(aRequest->IsFinished());
   MOZ_ASSERT(aRequest->IsTopLevel());
 
   // If it's async, move it to the loaded list.
