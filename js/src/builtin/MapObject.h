@@ -320,6 +320,8 @@ class SetObject : public NativeObject {
   [[nodiscard]] static bool delete_(JSContext* cx, HandleObject obj,
                                     HandleValue key, bool* rval);
 
+  [[nodiscard]] static bool copy(JSContext* cx, unsigned argc, Value* vp);
+
   using UnbarrieredTable =
       OrderedHashSet<Value, UnbarrieredHashPolicy, CellAllocPolicy>;
   friend class OrderedHashTableRef<SetObject>;
