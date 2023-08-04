@@ -119,7 +119,7 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   void CancelImports();
   void CheckModuleDependenciesLoaded();
 
-  void AssertAllImportsReady() const;
+  void AssertAllImportsFinished() const;
   void AssertAllImportsCancelled() const;
 
  public:

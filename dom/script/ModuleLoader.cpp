@@ -128,7 +128,7 @@ nsresult ModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
 }
 
 void ModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
-  MOZ_ASSERT(aRequest->IsReadyToRun());
+  MOZ_ASSERT(aRequest->IsFinished());
 
   if (aRequest->IsTopLevel()) {
     if (aRequest->GetScriptLoadContext()->mIsInline &&

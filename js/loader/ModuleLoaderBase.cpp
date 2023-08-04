@@ -939,7 +939,7 @@ void ModuleLoadRequest::ChildLoadComplete(bool aSuccess) {
   mWaitingParentRequest = nullptr;
   parent->mAwaitingImports--;
 
-  if (parent->IsReadyToRun()) {
+  if (parent->IsFinished()) {
     MOZ_ASSERT_IF(!aSuccess, parent->IsErrored());
     return;
   }

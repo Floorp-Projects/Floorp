@@ -222,12 +222,13 @@ class ScriptLoadRequest
   bool IsFetching() const { return mState == State::Fetching; }
   bool IsCompiling() const { return mState == State::Compiling; }
   bool IsLoadingImports() const { return mState == State::LoadingImports; }
+  bool IsCanceled() const { return mState == State::Canceled; }
 
-  bool IsReadyToRun() const {
+  // Return whether the request has been completed, either successfully or
+  // otherwise.
+  bool IsFinished() const {
     return mState == State::Ready || mState == State::Canceled;
   }
-
-  bool IsCanceled() const { return mState == State::Canceled; }
 
   // Type of data provided by the nsChannel.
   enum class DataType : uint8_t { eUnknown, eTextSource, eBytecode };

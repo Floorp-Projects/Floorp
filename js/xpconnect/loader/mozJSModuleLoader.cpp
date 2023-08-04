@@ -1832,7 +1832,7 @@ nsresult mozJSModuleLoader::ImportESModule(
     return rv;
   }
 
-  MOZ_ASSERT(request->IsReadyToRun());
+  MOZ_ASSERT(request->IsFinished());
   if (!request->mModuleScript) {
     mModuleLoader->MaybeReportLoadError(aCx);
     return NS_ERROR_FAILURE;
