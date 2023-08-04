@@ -758,6 +758,11 @@
 .urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-bottom {
   font-size: var(--urlbarView-small-font-size);
   color: var(--urlbar-popup-action-color);
+  white-space: normal;
+}
+
+.urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-description {
+  max-width: 80ch;
 }
 
 .urlbarView-row[rich-suggestion][selected] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-description,
@@ -793,11 +798,6 @@
 
 .urlbarView-row[type$=_pocket][icon-size="24"]:is([selected], :hover) > .urlbarView-row-inner > .urlbarView-favicon {
   background-color: var(--urlbarView-result-button-selected-background-color);
-}
-
-.urlbarView-row[type$=_pocket] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-description,
-.urlbarView-row[type$=_pocket] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-bottom {
-  white-space: normal;
 }
 
 /* Search one-offs */
