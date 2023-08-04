@@ -2495,8 +2495,12 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   // If all frames are removed, both buffer and buffered range should be empty.
   MOZ_DIAGNOSTIC_ASSERT_IF(data.IsEmpty(),
                            aTrackData.mBufferedRanges.IsEmpty());
+  TimeUnit duration = TimeUnit::Zero(aTrackData.mHighestStartTimestamp);
+  for (const auto& sample : data) {
+    duration += sample->mDuration;
+  }
   MOZ_DIAGNOSTIC_ASSERT_IF(aTrackData.mBufferedRanges.IsEmpty(),
-                           data.IsEmpty());
+                           duration.IsZero());
 
   return firstRemovedIndex.ref();
 }
