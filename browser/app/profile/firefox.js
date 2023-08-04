@@ -1067,7 +1067,7 @@ pref("browser.history_swipe_animation.disabled", false);
   pref("mousewheel.with_alt.action", 2);
 #endif
 
-pref("mousewheel.with_win.action", 1);
+pref("mousewheel.with_meta.action", 1);
 
 pref("browser.xul.error_pages.expert_bad_cert", false);
 pref("browser.xul.error_pages.show_safe_browsing_details_on_load", false);

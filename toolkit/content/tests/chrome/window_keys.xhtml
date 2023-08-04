@@ -11,48 +11,46 @@
 <script>
 <![CDATA[
 
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+
 SimpleTest.waitForExplicitFinish();
 
 var gExpected = null;
 
-const kIsWin = navigator.platform.includes("Win");
 
-// Only on Windows, osKey state is ignored when there is no shortcut key handler
-// which exactly matches with osKey state.
+const kIsWin = AppConstants.platform == "win";
+const kIsMac = AppConstants.platform == "macosx";
+
+// Only on Windows, metaKey state is ignored when there is no shortcut key handler
+// which exactly matches with metaKey state.  Therefore the following tests
+// checks kIsWin in some cases which has metaKey.
 var keysToTest = [
   ["k-v", "V", { } ],
   ["", "V", { shiftKey: true } ],
   ["k-v-scy", "V", { ctrlKey: true } ],
   ["", "V", { altKey: true } ],
-  ["", "V", { metaKey: true } ],
-  [kIsWin ? "k-v" : "", "V", { osKey: true } ],
+  [kIsWin ? "k-v" : "", "V", { metaKey: true } ],
   ["k-v-scy", "V", { shiftKey: true, ctrlKey: true } ],
   ["", "V", { shiftKey: true, ctrlKey: true, altKey: true } ],
   ["k-e-y", "E", { } ],
   ["", "E", { shiftKey: true } ],
   ["", "E", { ctrlKey: true } ],
   ["", "E", { altKey: true } ],
-  ["", "E", { metaKey: true } ],
-  [kIsWin ? "k-e-y" : "", "E", { osKey: true } ],
+  [kIsWin ? "k-e-y" : "", "E", { metaKey: true } ],
   ["k-d-a", "D", { altKey: true } ],
   ["k-8-m", "8", { metaKey: true } ],
-  [kIsWin ? "k-8-m" : "", "8", { metaKey: true, osKey: true } ],
-  ["k-a-o", "A", { osKey: true } ],
-  ["", "A", { osKey: true, metaKey: true } ],
   ["", "B", {} ],
-  ["k-b-myo", "B", { osKey: true } ],
-  ["k-b-myo", "B", { osKey: true, metaKey: true } ],
-  ["k-f-oym", "F", { metaKey: true } ],
-  ["k-f-oym", "F", { metaKey: true, osKey: true } ],
   ["k-c-scaym", "C", { metaKey: true } ],
   ["k-c-scaym", "C", { shiftKey: true, ctrlKey: true, altKey: true, metaKey: true } ],
-  [kIsWin ? "k-c-scaym" : "", "C", { shiftKey: true, ctrlKey: true, altKey: true, metaKey: true, osKey: true } ],
   ["", "V", { shiftKey: true, ctrlKey: true, altKey: true } ],
   ["k-h-l", "H", { accelKey: true } ],
+  [kIsWin || kIsMac ? "k-h-l" : "", "H", { accelKey: true, metaKey: true } ],
 //  ["k-j-s", "J", { accessKey: true } ],
   ["", "T", { } ],
   ["k-g-c", "G", { ctrlKey: true } ],
-  ["k-g-co", "G", { ctrlKey: true, osKey: true } ],
+  ["k-g-cm", "G", { ctrlKey: true, metaKey: true } ],
   ["scommand", "Y", { } ],
   ["", "U", { } ],
   ["k-z-c", "Z", { ctrlKey: true } ],
@@ -172,15 +170,12 @@ SimpleTest.waitForFocus(runTest);
   <key id="k-v-scy" key="v" modifiers="shift any control" oncommand="checkKey(event)"/>
   <key id="k-e-y" key="e" modifiers="any" oncommand="checkKey(event)"/>
   <key id="k-8-m" key="8" modifiers="meta" oncommand="checkKey(event)"/>
-  <key id="k-a-o" key="a" modifiers="os" oncommand="checkKey(event)"/>
-  <key id="k-b-myo" key="b" modifiers="meta any os" oncommand="checkKey(event)"/>
-  <key id="k-f-oym" key="f" modifiers="os any meta" oncommand="checkKey(event)"/>
   <key id="k-c-scaym" key="c" modifiers="shift control alt any meta" oncommand="checkKey(event)"/>
   <key id="k-h-l" key="h" modifiers="accel" oncommand="checkKey(event)"/>
   <key id="k-j-s" key="j" modifiers="access" oncommand="checkKey(event)"/>
   <key id="k-t-y" disabled="true" key="t" oncommand="checkKey(event)"/>
   <key id="k-g-c" key="g" modifiers="control" oncommand="checkKey(event)"/>
-  <key id="k-g-co" key="g" modifiers="control os" oncommand="checkKey(event)"/>
+  <key id="k-g-cm" key="g" modifiers="control meta" oncommand="checkKey(event)"/>
   <key id="k-y" key="y" command="scommand"/>
   <key id="k-u" key="u" command="scommand-disabled"/>
   <key id="k-z-c" key="z" modifiers="control"/>

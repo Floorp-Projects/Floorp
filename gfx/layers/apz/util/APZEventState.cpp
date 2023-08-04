@@ -85,9 +85,6 @@ int32_t WidgetModifiersToDOMModifiers(mozilla::Modifiers aModifiers) {
   if (aModifiers & mozilla::MODIFIER_SYMBOLLOCK) {
     result |= nsIDOMWindowUtils::MODIFIER_SYMBOLLOCK;
   }
-  if (aModifiers & mozilla::MODIFIER_OS) {
-    result |= nsIDOMWindowUtils::MODIFIER_OS;
-  }
   return result;
 }
 

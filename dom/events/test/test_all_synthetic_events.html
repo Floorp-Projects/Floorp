@@ -455,7 +455,7 @@ function test() {
       continue;
     }
     if (typeof(event.getModifierState) == "function") {
-      const kModifiers = [ "Shift", "Control", "Alt", "AltGr", "Meta", "CapsLock", "ScrollLock", "NumLock", "OS", "Fn", "FnLock", "Symbol", "SymbolLock" ];
+      const kModifiers = [ "Shift", "Control", "Alt", "AltGr", "Meta", "CapsLock", "ScrollLock", "NumLock", "Fn", "FnLock", "Symbol", "SymbolLock" ];
       for (var j = 0; j < kModifiers.length; j++) {
         ok(true, "Calling " + props[i] + ".getModifierState(" + kModifiers[j] + ")...");
         var modifierState = event.getModifierState(kModifiers[j]);

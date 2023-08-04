@@ -134,10 +134,6 @@ function runTests() {
     synthesizeKey("KEY_Backspace", {metaKey: true});
     check(aDescription + "Meta+Backspace", true, true, aIsReadonly || kIsMac);
 
-    reset("");
-    synthesizeKey("KEY_Backspace", {osKey: true});
-    check(aDescription + "OS+Backspace", true, true, aIsReadonly || kIsMac);
-
     // Delete key:
     //   If native key bindings map the key combination to something, it's consumed.
     //   If editor is readonly, it doesn't consume.
@@ -178,11 +174,6 @@ function runTests() {
     check(aDescription + "Meta+Delete",
           true, true, kIsLinux);
 
-    reset("");
-    synthesizeKey("KEY_Delete", {osKey: true});
-    check(aDescription + "OS+Delete",
-          true, true, kIsMac);
-
     // XXX input.value returns "\n" when it's empty, so, we should use dummy
     // value ("a") for the following tests.
 
@@ -219,11 +210,6 @@ function runTests() {
     synthesizeKey("KEY_Enter", {metaKey: true});
     check(aDescription + "Meta+Return", true, true, false);
     is(aElement.value, "a", aDescription + "Meta+Return");
-
-    reset("a");
-    synthesizeKey("KEY_Enter", {osKey: true});
-    check(aDescription + "OS+Return", true, true, false);
-    is(aElement.value, "a", aDescription + "OS+Return");
 
     // Tab key:
     //   Editor consumes tab key event unless any modifier keys are pressed.
@@ -265,13 +251,6 @@ function runTests() {
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Meta+Tab)");
 
-    reset("a");
-    synthesizeKey("KEY_Tab", {osKey: true});
-    check(aDescription + "OS+Tab", true, true, false);
-    is(aElement.value, "a", aDescription + "OS+Tab");
-    is(SpecialPowers.unwrap(fm.focusedElement), aElement,
-       aDescription + "focus moved unexpectedly (OS+Tab)");
-
     // Esc key:
     //   In all cases, esc key events are not consumed
     reset("abc");
@@ -293,10 +272,6 @@ function runTests() {
     reset("abc");
     synthesizeKey("KEY_Escape", {metaKey: true});
     check(aDescription + "Meta+Esc", true, true, false);
-
-    reset("abc");
-    synthesizeKey("KEY_Escape", {osKey: true});
-    check(aDescription + "OS+Esc", true, true, false);
 
     // typical typing tests:
     reset("");

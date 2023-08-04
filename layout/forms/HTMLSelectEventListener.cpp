@@ -524,7 +524,14 @@ nsresult HTMLSelectEventListener::KeyPress(dom::Event* aKeyEvent) {
     mControlSelectMode = false;
   }
 
-  bool isControlOrMeta = keyEvent->IsControl() || keyEvent->IsMeta();
+  const bool isControlOrMeta =
+      keyEvent->IsControl()
+#if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
+      // Ignore Windows Logo key press in Win/Linux because it's not a usual
+      // modifier for applications.  Here wants to check "Accel" like modifier.
+      || keyEvent->IsMeta()
+#endif
+      ;
   if (isControlOrMeta && keyEvent->mCharCode != ' ') {
     return NS_OK;
   }
@@ -707,7 +714,14 @@ nsresult HTMLSelectEventListener::KeyDown(dom::Event* aKeyEvent) {
   // this is the new index to set
   int32_t newIndex = kNothingSelected;
 
-  bool isControlOrMeta = keyEvent->IsControl() || keyEvent->IsMeta();
+  bool isControlOrMeta =
+      keyEvent->IsControl()
+#if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
+      // Ignore Windows Logo key press in Win/Linux because it's not a usual
+      // modifier for applications.  Here wants to check "Accel" like modifier.
+      || keyEvent->IsMeta()
+#endif
+      ;
   // Don't try to handle multiple-select pgUp/pgDown in single-select lists.
   if (isControlOrMeta && !mElement->Multiple() &&
       (keyEvent->mKeyCode == NS_VK_PAGE_UP ||

@@ -392,7 +392,7 @@ void NativeKeyBindings::GetEditCommandsForTests(
     const Maybe<WritingMode>& aWritingMode, nsTArray<CommandInt>& aCommands) {
   MOZ_DIAGNOSTIC_ASSERT(aEvent.IsTrusted());
 
-  if (aEvent.IsAlt() || aEvent.IsMeta() || aEvent.IsOS()) {
+  if (aEvent.IsAlt() || aEvent.IsMeta()) {
     return;
   }
 

@@ -522,7 +522,7 @@ bool EventStateManager::IsKeyboardEventUserActivity(WidgetEvent* aEvent) {
     return true;
   }
   if (!keyEvent->CanTreatAsUserInput() || keyEvent->IsControl() ||
-      keyEvent->IsMeta() || keyEvent->IsOS() || keyEvent->IsAlt()) {
+      keyEvent->IsMeta() || keyEvent->IsAlt()) {
     return false;
   }
   // Deal with function keys:
@@ -1329,11 +1329,7 @@ void EventStateManager::GetAccessKeyLabelPrefix(Element* aElement,
     aPrefix.Append(modifierText + separator);
   }
   if (modifiers & MODIFIER_META) {
-    nsContentUtils::GetMetaText(modifierText);
-    aPrefix.Append(modifierText + separator);
-  }
-  if (modifiers & MODIFIER_OS) {
-    nsContentUtils::GetOSText(modifierText);
+    nsContentUtils::GetCommandOrWinText(modifierText);
     aPrefix.Append(modifierText + separator);
   }
   if (modifiers & MODIFIER_ALT) {
@@ -6472,9 +6468,8 @@ EventStateManager::WheelPrefs::Index EventStateManager::WheelPrefs::GetIndexFor(
     return INDEX_DEFAULT;
   }
 
-  Modifiers modifiers =
-      (aEvent->mModifiers & (MODIFIER_ALT | MODIFIER_CONTROL | MODIFIER_META |
-                             MODIFIER_SHIFT | MODIFIER_OS));
+  Modifiers modifiers = (aEvent->mModifiers & (MODIFIER_ALT | MODIFIER_CONTROL |
+                                               MODIFIER_META | MODIFIER_SHIFT));
 
   switch (modifiers) {
     case MODIFIER_ALT:
@@ -6485,8 +6480,6 @@ EventStateManager::WheelPrefs::Index EventStateManager::WheelPrefs::GetIndexFor(
       return INDEX_META;
     case MODIFIER_SHIFT:
       return INDEX_SHIFT;
-    case MODIFIER_OS:
-      return INDEX_OS;
     default:
       // If two or more modifier keys are pressed, we should use default
       // settings.
@@ -6509,9 +6502,6 @@ void EventStateManager::WheelPrefs::GetBasePrefName(
       break;
     case INDEX_SHIFT:
       aBasePrefName.AppendLiteral("with_shift.");
-      break;
-    case INDEX_OS:
-      aBasePrefName.AppendLiteral("with_win.");
       break;
     case INDEX_DEFAULT:
     default:
