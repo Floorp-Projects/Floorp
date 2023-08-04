@@ -370,6 +370,14 @@ class BrowsingContextModule extends Module {
     );
 
     let browser;
+
+    // Since each tab in GeckoView has its own Gecko instance running,
+    // which means also its own window object, for Android we will need to focus
+    // a previously focused window in case of opening the tab in the background.
+    const previousWindow = Services.wm.getMostRecentBrowserWindow();
+    const previousTab =
+      lazy.TabManager.getTabBrowser(previousWindow).selectedTab;
+
     switch (type) {
       case "window":
         const newWindow = await lazy.windowManager.openBrowserWindow({
@@ -424,6 +432,16 @@ class BrowsingContextModule extends Module {
         unloadTimeout: 5000,
       }
     );
+
+    // The tab on Android is always opened in the foreground,
+    // so we need to select the previous tab,
+    // and we have to wait until is fully loaded.
+    // TODO: Bug 1845559. This workaround can be removed,
+    // when the API to create a tab for Android supports the background option.
+    if (lazy.AppInfo.isAndroid && background) {
+      await lazy.windowManager.focusWindow(previousWindow);
+      await lazy.TabManager.selectTab(previousTab);
+    }
 
     // Force a reflow by accessing `clientHeight` (see Bug 1847044).
     browser.parentElement.clientHeight;

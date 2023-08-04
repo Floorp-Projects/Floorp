@@ -29,9 +29,6 @@ export class MobileTabBrowser {
       throw new Error("GeckoView only supports a single tab");
     }
 
-    // At the moment we don't have an API in `GeckoViewTabUtil` to select the tab,
-    // something might be added in the scope of bug 1845559.
-
     // Synthesize a custom TabSelect event to indicate that a tab has been
     // selected even when we don't change it.
     const event = this.window.CustomEvent("TabSelect", {

@@ -116,7 +116,8 @@ export var TabManager = {
    * @param {object} options
    * @param {boolean=} options.focus
    *     Set to true if the new tab should be focused (selected). Defaults to
-   *     false.
+   *     false. `false` value is not properly supported on Android, additional
+   *     focus of previously selected tab is required after initial navigation.
    * @param {Tab=} options.referenceTab
    *     The reference tab after which the new tab will be added. If no
    *     reference tab is provided, the new tab will be added after all the
