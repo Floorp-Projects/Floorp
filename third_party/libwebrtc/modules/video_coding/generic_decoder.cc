@@ -32,10 +32,7 @@ namespace webrtc {
 
 namespace {
 
-// Changed from 10 to 30 in Mozilla Bug 989944: Increase decode
-// timestamp map to handle delayed decode on 8x10.  The map is
-// now a deque (as of libwebrtc upstream commit 1c51ec4d74).
-constexpr size_t kDecoderFrameMemoryLength = 30;
+constexpr size_t kDecoderFrameMemoryLength = 10;
 
 }
 
