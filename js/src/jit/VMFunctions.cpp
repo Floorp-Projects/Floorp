@@ -1373,6 +1373,13 @@ void JitShapePreWriteBarrier(JSRuntime* rt, Shape** shapep) {
   gc::PreWriteBarrier(*shapep);
 }
 
+void JitRefOrNullPreWriteBarrier(JSRuntime* rt, wasm::AnyRef* refp) {
+  AutoUnsafeCallWithABI unsafe;
+  MOZ_ASSERT(refp->isGCThing());
+  MOZ_ASSERT(!(*refp).toGCThing()->isMarkedBlack());
+  gc::WasmAnyRefPreWriteBarrier(*refp);
+}
+
 bool ThrowRuntimeLexicalError(JSContext* cx, unsigned errorNumber) {
   ScriptFrameIter iter(cx);
   RootedScript script(cx, iter.script());

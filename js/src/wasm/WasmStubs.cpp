@@ -645,7 +645,7 @@ static void UnboxAnyrefIntoValue(MacroAssembler& masm, Register instance,
   masm.jump(&done);
 
   masm.bind(&mustUnbox);
-  Move64(masm, Address(src, WasmValueBox::offsetOfValue()), dst, scratch);
+  Move64(masm, Address(src, AnyRef::valueBoxOffsetOfValue()), dst, scratch);
 
   masm.bind(&done);
 }
@@ -682,7 +682,7 @@ static void UnboxAnyrefIntoValueReg(MacroAssembler& masm, Register instance,
   masm.jump(&done);
 
   masm.bind(&mustUnbox);
-  masm.loadValue(Address(src, WasmValueBox::offsetOfValue()), dst);
+  masm.loadValue(Address(src, AnyRef::valueBoxOffsetOfValue()), dst);
 
   masm.bind(&done);
 }
@@ -701,6 +701,8 @@ static void BoxValueIntoAnyref(MacroAssembler& masm, ValueOperand src,
   }
 
   masm.bind(&nullValue);
+  // See the definition of AnyRef for a discussion of pointer representation.
+  static_assert(wasm::NULLREF_VALUE == 0);
   masm.xorPtr(dest, dest);
   masm.jump(&done);
 
@@ -1645,7 +1647,6 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
         GenPrintF64(DebugChannel::Function, masm, ReturnDoubleReg);
         break;
       case wasm::ValType::Ref:
-        STATIC_ASSERT_ANYREF_IS_JSOBJECT;
         // The call to wasm above preserves the InstanceReg, we don't
         // need to reload it here.
         UnboxAnyrefIntoValueReg(masm, InstanceReg, ReturnReg, JSReturnOperand,

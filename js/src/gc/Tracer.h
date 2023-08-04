@@ -21,6 +21,9 @@ using CompartmentSet =
 namespace js {
 
 class TaggedProto;
+namespace wasm {
+class AnyRef;
+}  // namespace wasm
 
 // Internal Tracing API
 //
@@ -109,6 +112,7 @@ JS_FOR_EACH_TRACEKIND(DEFINE_TRACE_FUNCTION)
 bool TraceEdgeInternal(JSTracer* trc, Value* thingp, const char* name);
 bool TraceEdgeInternal(JSTracer* trc, jsid* thingp, const char* name);
 bool TraceEdgeInternal(JSTracer* trc, TaggedProto* thingp, const char* name);
+bool TraceEdgeInternal(JSTracer* trc, wasm::AnyRef* thingp, const char* name);
 
 template <typename T>
 void TraceRangeInternal(JSTracer* trc, size_t len, T* vec, const char* name);

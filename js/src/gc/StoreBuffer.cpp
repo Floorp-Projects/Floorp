@@ -84,6 +84,7 @@ StoreBuffer::StoreBuffer(JSRuntime* rt, Nursery& nursery)
       bufBigIntCell(this, JS::GCReason::FULL_CELL_PTR_BIGINT_BUFFER),
       bufObjCell(this, JS::GCReason::FULL_CELL_PTR_OBJ_BUFFER),
       bufferSlot(this, JS::GCReason::FULL_SLOT_BUFFER),
+      bufferWasmAnyRef(this, JS::GCReason::FULL_WASM_ANYREF_BUFFER),
       bufferWholeCell(this),
       bufferGeneric(this),
       runtime_(rt),
@@ -104,8 +105,8 @@ void StoreBuffer::checkEmpty() const { MOZ_ASSERT(isEmpty()); }
 bool StoreBuffer::isEmpty() const {
   return bufferVal.isEmpty() && bufStrCell.isEmpty() &&
          bufBigIntCell.isEmpty() && bufObjCell.isEmpty() &&
-         bufferSlot.isEmpty() && bufferWholeCell.isEmpty() &&
-         bufferGeneric.isEmpty();
+         bufferSlot.isEmpty() && bufferWasmAnyRef.isEmpty() &&
+         bufferWholeCell.isEmpty() && bufferGeneric.isEmpty();
 }
 
 bool StoreBuffer::enable() {
@@ -148,6 +149,7 @@ void StoreBuffer::clear() {
   bufBigIntCell.clear();
   bufObjCell.clear();
   bufferSlot.clear();
+  bufferWasmAnyRef.clear();
   bufferWholeCell.clear();
   bufferGeneric.clear();
 }
@@ -167,6 +169,8 @@ void StoreBuffer::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
                              bufBigIntCell.sizeOfExcludingThis(mallocSizeOf) +
                              bufObjCell.sizeOfExcludingThis(mallocSizeOf);
   sizes->storeBufferSlots += bufferSlot.sizeOfExcludingThis(mallocSizeOf);
+  sizes->storeBufferWasmAnyRefs +=
+      bufferWasmAnyRef.sizeOfExcludingThis(mallocSizeOf);
   sizes->storeBufferWholeCells +=
       bufferWholeCell.sizeOfExcludingThis(mallocSizeOf);
   sizes->storeBufferGenerics += bufferGeneric.sizeOfExcludingThis(mallocSizeOf);
@@ -240,6 +244,7 @@ void StoreBuffer::WholeCellBuffer::clear() {
 
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>;
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotsEdge>;
+template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::WasmAnyRefEdge>;
 
 void js::gc::PostWriteBarrierCell(Cell* cell, Cell* prev, Cell* next) {
   if (!next || !cell->isTenured()) {

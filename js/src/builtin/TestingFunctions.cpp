@@ -1468,7 +1468,7 @@ static bool WasmGlobalToString(JSContext* cx, unsigned argc, Value* vp) {
       break;
     }
     case wasm::ValType::Ref: {
-      result = JS_smprintf("ref:%p", globalVal.ref().asJSObject());
+      result = JS_smprintf("ref:%" PRIxPTR, globalVal.ref().rawValue());
       break;
     }
     default:

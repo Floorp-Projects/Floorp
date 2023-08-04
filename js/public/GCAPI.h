@@ -603,7 +603,7 @@ namespace JS {
   D(DISABLE_GENERATIONAL_GC, 24)                                       \
   D(FINISH_GC, 25)                                                     \
   D(PREPARE_FOR_TRACING, 26)                                           \
-  D(UNUSED4, 27)                                                       \
+  D(FULL_WASM_ANYREF_BUFFER, 27)                                       \
   D(FULL_CELL_PTR_STR_BUFFER, 28)                                      \
   D(TOO_MUCH_JIT_CODE, 29)                                             \
   D(FULL_CELL_PTR_BIGINT_BUFFER, 30)                                   \

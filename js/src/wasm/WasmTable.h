@@ -32,13 +32,9 @@ namespace wasm {
 // A table of FuncRef holds FunctionTableElems, which are (code*,instance*)
 // pairs, where the instance must be traced.
 //
-// A table of AnyRef holds JSObject pointers, which must be traced.
+// A table of AnyRef holds pointers, which must be traced.
 
-// TODO/AnyRef-boxing: With boxed immediates and strings, JSObject* is no longer
-// the most appropriate representation for Cell::anyref.
-STATIC_ASSERT_ANYREF_IS_JSOBJECT;
-
-using TableAnyRefVector = GCVector<HeapPtr<JSObject*>, 0, SystemAllocPolicy>;
+using TableAnyRefVector = GCVector<HeapPtr<AnyRef>, 0, SystemAllocPolicy>;
 
 class Table : public ShareableBase<Table> {
   using InstanceSet = JS::WeakCache<GCHashSet<

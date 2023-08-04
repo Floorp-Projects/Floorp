@@ -21,6 +21,7 @@
 #include "js/AllocPolicy.h"
 #include "js/UniquePtr.h"
 #include "threading/Mutex.h"
+#include "wasm/WasmAnyRef.h"
 
 namespace JS {
 struct GCSizes;
@@ -398,6 +399,36 @@ class StoreBuffer {
     };
   };
 
+  struct WasmAnyRefEdge {
+    wasm::AnyRef* edge;
+
+    WasmAnyRefEdge() : edge(nullptr) {}
+    explicit WasmAnyRefEdge(wasm::AnyRef* v) : edge(v) {}
+    bool operator==(const WasmAnyRefEdge& other) const {
+      return edge == other.edge;
+    }
+    bool operator!=(const WasmAnyRefEdge& other) const {
+      return edge != other.edge;
+    }
+
+    Cell* deref() const {
+      return edge->isGCThing() ? static_cast<Cell*>(edge->toGCThing())
+                               : nullptr;
+      return nullptr;
+    }
+
+    bool maybeInRememberedSet(const Nursery& nursery) const {
+      MOZ_ASSERT(IsInsideNursery(deref()));
+      return !nursery.isInside(edge);
+    }
+
+    void trace(TenuringTracer& mover) const;
+
+    explicit operator bool() const { return edge != nullptr; }
+
+    using Hasher = PointerEdgeHasher<WasmAnyRefEdge>;
+  };
+
 #ifdef DEBUG
   void checkAccess() const;
 #else
@@ -433,6 +464,7 @@ class StoreBuffer {
   MonoTypeBuffer<BigIntPtrEdge> bufBigIntCell;
   MonoTypeBuffer<ObjectPtrEdge> bufObjCell;
   MonoTypeBuffer<SlotsEdge> bufferSlot;
+  MonoTypeBuffer<WasmAnyRefEdge> bufferWasmAnyRef;
   WholeCellBuffer bufferWholeCell;
   GenericBuffer bufferGeneric;
 
@@ -495,6 +527,13 @@ class StoreBuffer {
     }
   }
 
+  void putWasmAnyRef(wasm::AnyRef* vp) {
+    put(bufferWasmAnyRef, WasmAnyRefEdge(vp));
+  }
+  void unputWasmAnyRef(wasm::AnyRef* vp) {
+    unput(bufferWasmAnyRef, WasmAnyRefEdge(vp));
+  }
+
   inline void putWholeCell(Cell* cell);
   inline void putWholeCellDontCheckLast(Cell* cell);
   const void* addressOfLastBufferedWholeCell() {
@@ -517,6 +556,9 @@ class StoreBuffer {
     bufObjCell.trace(mover);
   }
   void traceSlots(TenuringTracer& mover) { bufferSlot.trace(mover); }
+  void traceWasmAnyRefs(TenuringTracer& mover) {
+    bufferWasmAnyRef.trace(mover);
+  }
   void traceWholeCells(TenuringTracer& mover) { bufferWholeCell.trace(mover); }
   void traceGenericEntries(JSTracer* trc) { bufferGeneric.trace(trc); }
 

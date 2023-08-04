@@ -1294,32 +1294,31 @@ static int32_t MemDiscardShared(Instance* instance, I byteOffset, I byteLen,
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// Object support.
+// AnyRef support.
 
-/* static */ void Instance::postBarrier(Instance* instance,
-                                        gc::Cell** location) {
+/* static */ void Instance::postBarrier(Instance* instance, void** location) {
   MOZ_ASSERT(SASigPostBarrier.failureMode == FailureMode::Infallible);
   MOZ_ASSERT(location);
-  instance->storeBuffer_->putCell(reinterpret_cast<JSObject**>(location));
+  instance->storeBuffer_->putWasmAnyRef(reinterpret_cast<wasm::AnyRef*>(location));
 }
 
 /* static */ void Instance::postBarrierPrecise(Instance* instance,
-                                               JSObject** location,
-                                               JSObject* prev) {
+                                               void** location, void* prev) {
   MOZ_ASSERT(SASigPostBarrierPrecise.failureMode == FailureMode::Infallible);
   postBarrierPreciseWithOffset(instance, location, /*offset=*/0, prev);
 }
 
 /* static */ void Instance::postBarrierPreciseWithOffset(Instance* instance,
-                                                         JSObject** base,
+                                                         void** base,
                                                          uint32_t offset,
-                                                         JSObject* prev) {
+                                                         void* prev) {
   MOZ_ASSERT(SASigPostBarrierPreciseWithOffset.failureMode ==
              FailureMode::Infallible);
   MOZ_ASSERT(base);
-  JSObject** location = (JSObject**)(uintptr_t(base) + size_t(offset));
-  JSObject* next = *location;
-  JSObject::postWriteBarrier(location, prev, next);
+  wasm::AnyRef* location = (wasm::AnyRef*)(uintptr_t(base) + size_t(offset));
+  wasm::AnyRef next = *location;
+  InternalBarrierMethods<AnyRef>::postBarrier(
+      location, wasm::AnyRef::fromCompiledCode(prev), next);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1663,23 +1662,26 @@ template void* Instance::arrayNew<false>(Instance* instance,
   return 0;
 }
 
-/* static */ void* Instance::exceptionNew(Instance* instance, JSObject* tag) {
+/* static */ void* Instance::exceptionNew(Instance* instance, void* tagArg) {
   MOZ_ASSERT(SASigExceptionNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
-  Rooted<WasmTagObject*> tagObj(cx, &tag->as<WasmTagObject>());
+  AnyRef tag = AnyRef::fromCompiledCode(tagArg);
+  Rooted<WasmTagObject*> tagObj(cx, &tag.toJSObject().as<WasmTagObject>());
   RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmException));
   RootedObject stack(cx, nullptr);
-  return AnyRef::fromJSObject(
+  // An OOM will result in null which will be caught on the wasm side.
+  return AnyRef::fromJSObjectOrNull(
              WasmExceptionObject::create(cx, tagObj, stack, proto))
       .forCompiledCode();
 }
 
 /* static */ int32_t Instance::throwException(Instance* instance,
-                                              JSObject* exn) {
+                                              void* exceptionArg) {
   MOZ_ASSERT(SASigThrowException.failureMode == FailureMode::FailOnNegI32);
 
   JSContext* cx = instance->cx();
-  RootedValue exnVal(cx, UnboxAnyRef(AnyRef::fromJSObject(exn)));
+  AnyRef exception = AnyRef::fromCompiledCode(exceptionArg);
+  RootedValue exnVal(cx, exception.toJSValue());
   cx->setPendingException(exnVal, nullptr);
 
   // By always returning -1, we trigger a wasmTrap(Trap::ThrowReported),
@@ -1734,7 +1736,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       jsJitExceptionHandler_(
           cx->runtime()->jitRuntime()->getExceptionTail().value),
       preBarrierCode_(
-          cx->runtime()->jitRuntime()->preBarrier(MIRType::Object).value),
+          cx->runtime()->jitRuntime()->preBarrier(MIRType::RefOrNull).value),
       storeBuffer_(&cx->runtime()->gc.storeBuffer()),
       object_(object),
       code_(std::move(code)),
@@ -1783,7 +1785,7 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
   MOZ_ASSERT(tables_.length() == metadata().tables.length());
 
   cx_ = cx;
-  valueBoxClass_ = &WasmValueBox::class_;
+  valueBoxClass_ = AnyRef::valueBoxClass();
   resetInterrupt(cx);
   jumpTable_ = code_->tieringJumpTable();
   debugFilter_ = nullptr;
@@ -2080,7 +2082,7 @@ Instance::~Instance() {
   }
 
   // Any pending exceptions should have been consumed.
-  MOZ_ASSERT(!pendingException_);
+  MOZ_ASSERT(pendingException_.isNull());
 }
 
 void Instance::setInterrupt() {
@@ -2159,7 +2161,7 @@ void Instance::tracePrivate(JSTracer* trc) {
         global.isIndirect()) {
       continue;
     }
-    GCPtr<JSObject*>* obj = (GCPtr<JSObject*>*)(data() + global.offset());
+    GCPtr<AnyRef>* obj = (GCPtr<AnyRef>*)(data() + global.offset());
     TraceNullableEdge(trc, obj, "wasm reference-typed global");
   }
 
@@ -2248,18 +2250,8 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
       continue;
     }
 
-    // TODO/AnyRef-boxing: With boxed immediates and strings, the value may
-    // not be a traceable JSObject*.
-    ASSERT_ANYREF_IS_JSOBJECT;
-
-    // This assertion seems at least moderately effective in detecting
-    // discrepancies or misalignments between the map and reality.
-    MOZ_ASSERT(js::gc::IsCellPointerValidOrNull((const void*)stackWords[i]));
-
-    if (stackWords[i]) {
-      TraceRoot(trc, (JSObject**)&stackWords[i],
-                "Instance::traceWasmFrame: normal word");
-    }
+    TraceNullableRoot(trc, (AnyRef*)&stackWords[i],
+                      "Instance::traceWasmFrame: normal word");
   }
 
   // Finally, deal with any GC-managed fields in the DebugFrame, if it is
@@ -2268,15 +2260,11 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
     DebugFrame* debugFrame = DebugFrame::from(frame);
     char* debugFrameP = (char*)debugFrame;
 
-    // TODO/AnyRef-boxing: With boxed immediates and strings, the value may
-    // not be a traceable JSObject*.
-    ASSERT_ANYREF_IS_JSOBJECT;
-
     for (size_t i = 0; i < MaxRegisterResults; i++) {
       if (debugFrame->hasSpilledRegisterRefResult(i)) {
         char* resultRefP = debugFrameP + DebugFrame::offsetOfRegisterResult(i);
         TraceNullableRoot(
-            trc, (JSObject**)resultRefP,
+            trc, (AnyRef*)resultRefP,
             "Instance::traceWasmFrame: DebugFrame::resultResults_");
       }
     }
@@ -2497,7 +2485,7 @@ class MOZ_RAII ReturnToJSResultCollector {
         const ABIResult& result = iter.cur();
         if (result.onStack() && result.type().isRefRepr()) {
           char* loc = collector_.stackResultsArea_.get() + result.stackOffset();
-          JSObject** refLoc = reinterpret_cast<JSObject**>(loc);
+          AnyRef* refLoc = reinterpret_cast<AnyRef*>(loc);
           TraceNullableRoot(trc, refLoc, "StackResultsRooter::trace");
         }
       }
@@ -2593,8 +2581,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
     return false;
   }
 
-  ASSERT_ANYREF_IS_JSOBJECT;
-  Rooted<GCVector<JSObject*, 8, SystemAllocPolicy>> refs(cx);
+  Rooted<GCVector<AnyRef, 8, SystemAllocPolicy>> refs(cx);
 
   DebugCodegen(DebugChannel::Function, "wasm-function[%d] arguments [",
                funcIndex);
@@ -2616,8 +2603,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
       void* ptr = *reinterpret_cast<void**>(rawArgLoc);
       // Store in rooted array until no more GC is possible.
       RootedAnyRef ref(cx, AnyRef::fromCompiledCode(ptr));
-      ASSERT_ANYREF_IS_JSOBJECT;
-      if (!refs.emplaceBack(ref.get().asJSObject())) {
+      if (!refs.emplaceBack(ref.get())) {
         return false;
       }
       DebugCodegen(DebugChannel::Function, "/(#%d)", int(refs.length() - 1));
@@ -2635,10 +2621,10 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
       size_t naturalIdx = argTypes.naturalIndex(i);
       ValType type = funcType->arg(naturalIdx);
       if (type.isRefRepr()) {
-        void** rawArgLoc = (void**)&exportArgs[i];
+        AnyRef* rawArgLoc = (AnyRef*)&exportArgs[i];
         *rawArgLoc = refs[nextRef++];
         DebugCodegen(DebugChannel::Function, " ref(#%d) := %p ",
-                     int(nextRef - 1), *rawArgLoc);
+                     int(nextRef - 1), *(void**)rawArgLoc);
       }
     }
     refs.clear();
@@ -2647,7 +2633,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
   DebugCodegen(DebugChannel::Function, "]\n");
 
   // Ensure pending exception is cleared before and after (below) call.
-  MOZ_ASSERT(!pendingException_);
+  MOZ_ASSERT(pendingException_.isNull());
 
   {
     JitActivation activation(cx);
@@ -2659,7 +2645,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
     }
   }
 
-  MOZ_ASSERT(!pendingException_);
+  MOZ_ASSERT(pendingException_.isNull());
 
   if (isAsmJS() && args.isConstructing()) {
     // By spec, when a JS function is called as a constructor and this
@@ -2688,14 +2674,22 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
   return true;
 }
 
-static JSObject* GetExceptionTag(JSObject* exn) {
-  return exn->is<WasmExceptionObject>() ? &exn->as<WasmExceptionObject>().tag()
-                                        : nullptr;
+static AnyRef GetExceptionTag(AnyRef exn) {
+  if (!exn.isJSObject()) {
+    return nullptr;
+  }
+
+  JSObject& exnObj = exn.toJSObject();
+  if (!exnObj.is<WasmExceptionObject>()) {
+    return nullptr;
+  }
+
+  return AnyRef::fromJSObject(exnObj.as<WasmExceptionObject>().tag());
 }
 
 void Instance::setPendingException(HandleAnyRef exn) {
-  pendingException_ = exn.get().asJSObject();
-  pendingExceptionTag_ = GetExceptionTag(exn.get().asJSObject());
+  pendingException_ = exn.get();
+  pendingExceptionTag_ = GetExceptionTag(exn.get());
 }
 
 void Instance::constantGlobalGet(uint32_t globalIndex,

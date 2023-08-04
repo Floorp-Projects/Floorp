@@ -101,7 +101,7 @@ namespace jit {
   _(BindVarOperation, js::BindVarOperation)                                    \
   _(BlockLexicalEnvironmentObjectCreateWithoutEnclosing,                       \
     js::BlockLexicalEnvironmentObject::createWithoutEnclosing)                 \
-  _(BoxBoxableValue, js::wasm::BoxBoxableValue)                                \
+  _(BoxBoxableValue, js::wasm::AnyRef::boxValue)                               \
   _(BoxNonStrictThis, js::BoxNonStrictThis)                                    \
   _(BuiltinObjectOperation, js::BuiltinObjectOperation)                        \
   _(CallDOMGetter, js::jit::CallDOMGetter)                                     \

@@ -188,10 +188,6 @@ enum class Trap {
   Limit
 };
 
-// The representation of a null reference value throughout the compiler.
-
-static const intptr_t NULLREF_VALUE = intptr_t((void*)nullptr);
-
 enum class DefinitionKind {
   Function = 0x00,
   Table = 0x01,

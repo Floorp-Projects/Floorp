@@ -400,8 +400,11 @@ void ConfigureHugeMemory() {
 bool wasm::Init() {
   MOZ_RELEASE_ASSERT(!sProcessCodeSegmentMap);
 
+  // Assert invariants that should universally hold true, but cannot be checked
+  // at compile time.
   uintptr_t pageSize = gc::SystemPageSize();
   MOZ_RELEASE_ASSERT(wasm::NullPtrGuardSize <= pageSize);
+  MOZ_RELEASE_ASSERT(intptr_t(nullptr) == wasm::NULLREF_VALUE);
 
   ConfigureHugeMemory();
 

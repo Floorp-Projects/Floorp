@@ -316,6 +316,7 @@ struct GCSizes {
   MACRO(_, MallocHeap, storeBufferVals)           \
   MACRO(_, MallocHeap, storeBufferCells)          \
   MACRO(_, MallocHeap, storeBufferSlots)          \
+  MACRO(_, MallocHeap, storeBufferWasmAnyRefs)    \
   MACRO(_, MallocHeap, storeBufferWholeCells)     \
   MACRO(_, MallocHeap, storeBufferGenerics)
 

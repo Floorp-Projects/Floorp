@@ -324,6 +324,11 @@ inline void CellPtrPreWriteBarrier(JS::GCCellPtr thing) {
   PreWriteBarrierImpl(thing.asCell());
 }
 
+inline void WasmAnyRefPreWriteBarrier(const wasm::AnyRef& v) {
+  MOZ_ASSERT(v.isGCThing());
+  PreWriteBarrierImpl(v.toGCThing());
+}
+
 }  // namespace gc
 
 #ifdef DEBUG

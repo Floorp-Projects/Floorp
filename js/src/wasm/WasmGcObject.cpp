@@ -506,9 +506,9 @@ void WasmArrayObject::obj_trace(JSTracer* trc, JSObject* object) {
   MOZ_ASSERT(numElements > 0);
   uint32_t elemSize = arrayType.elementType_.size();
   for (uint32_t i = 0; i < numElements; i++) {
-    GCPtr<JSObject*>* objectPtr =
-        reinterpret_cast<GCPtr<JSObject*>*>(data + i * elemSize);
-    TraceNullableEdge(trc, objectPtr, "reference-obj");
+    AnyRef* elementPtr =
+        reinterpret_cast<AnyRef*>(data + i * elemSize);
+    TraceManuallyBarrieredEdge(trc, elementPtr, "wasm-array-element");
   }
 }
 
@@ -620,14 +620,14 @@ void WasmStructObject::obj_trace(JSTracer* trc, JSObject* object) {
 
   const auto& structType = structObj.typeDef().structType();
   for (uint32_t offset : structType.inlineTraceOffsets_) {
-    GCPtr<JSObject*>* objectPtr =
-        reinterpret_cast<GCPtr<JSObject*>*>(&structObj.inlineData_[0] + offset);
-    TraceNullableEdge(trc, objectPtr, "reference-obj");
+    AnyRef* fieldPtr =
+        reinterpret_cast<AnyRef*>(&structObj.inlineData_[0] + offset);
+    TraceManuallyBarrieredEdge(trc, fieldPtr, "wasm-struct-field");
   }
   for (uint32_t offset : structType.outlineTraceOffsets_) {
-    GCPtr<JSObject*>* objectPtr =
-        reinterpret_cast<GCPtr<JSObject*>*>(structObj.outlineData_ + offset);
-    TraceNullableEdge(trc, objectPtr, "reference-obj");
+    AnyRef* fieldPtr =
+        reinterpret_cast<AnyRef*>(structObj.outlineData_ + offset);
+    TraceManuallyBarrieredEdge(trc, fieldPtr, "wasm-struct-field");
   }
 }
 
