@@ -490,6 +490,7 @@
 .urlbarView-dynamic-addons-header {
   grid-area: header;
   display: flex;
+  overflow: hidden;
 }
 
 .urlbarView-dynamic-addons-description {
@@ -499,6 +500,11 @@
   margin-block: 2px 9px;
   max-width: 80ch;
   white-space: normal;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-y: hidden;
 }
 
 .urlbarView-dynamic-addons-footer {
