@@ -282,9 +282,6 @@ var allowlist = [
   { file: "chrome://browser/content/screenshots/download.svg" },
   { file: "chrome://browser/content/screenshots/download-white.svg" },
 
-  // FIXME: Bug 1840396 - The moz-message-bar component isn't in use yet.
-  { file: "chrome://global/content/elements/moz-message-bar.mjs" },
-
   // FIXME: Bug 1836386: PromiseWorker with ESM is going to be used by newtab.
   { file: "resource://gre/modules/workers/PromiseWorker.mjs" },
 ];
