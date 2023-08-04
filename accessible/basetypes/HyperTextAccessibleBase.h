@@ -215,12 +215,6 @@ class HyperTextAccessibleBase {
   virtual void SelectionRanges(nsTArray<TextRange>* aRanges) const = 0;
 
   /**
-   * Return text selection ranges cropped to this Accessible (rather than for
-   * the entire text control or document). This also excludes collapsed ranges.
-   */
-  void CroppedSelectionRanges(nsTArray<TextRange>& aRanges) const;
-
-  /**
    * Return selected regions count within the accessible.
    */
   virtual int32_t SelectionCount();
@@ -303,6 +297,12 @@ class HyperTextAccessibleBase {
   void AdjustOriginIfEndBoundary(TextLeafPoint& aOrigin,
                                  AccessibleTextBoundary aBoundaryType,
                                  bool aAtOffset = false) const;
+
+  /**
+   * Return text selection ranges cropped to this Accessible (rather than for
+   * the entire text control or document). This also excludes collapsed ranges.
+   */
+  virtual void CroppedSelectionRanges(nsTArray<TextRange>& aRanges) const;
 };
 
 }  // namespace mozilla::a11y
