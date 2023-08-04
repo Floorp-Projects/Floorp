@@ -167,7 +167,7 @@ const workspaceFunctions = {
         workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
 
         */
-      }
+      },
     },
 
     keyboradEventListeners: {
@@ -436,6 +436,14 @@ const workspaceFunctions = {
         );
       }
 
+      //add icon to workspace
+      const oldIcon = workspaceFunctions.iconFunctions.getWorkspaceIcon(label);
+      workspaceFunctions.manageWorkspaceFunctions.addIconToWorkspace(
+        input.value,
+        oldIcon
+      );
+      workspaceFunctions.iconFunctions.deleteIcon(label);
+
       //rebuild workspace menu
       workspaceFunctions.manageWorkspaceFunctions.rebuildWorkspaceMenu();
     },
@@ -561,8 +569,11 @@ const workspaceFunctions = {
       lastTab?.setAttribute("floorp-lastVisibleTab", "true");
 
       //set workspaces icon
-      const iconURL = workspaceFunctions.iconFunctions.getWorkspaceIcon(currentWorkspace);
-      document.getElementById("workspace-button").style.listStyleImage = `url(${iconURL})`;
+      const iconURL =
+        workspaceFunctions.iconFunctions.getWorkspaceIcon(currentWorkspace);
+      document.getElementById(
+        "workspace-button"
+      ).style.listStyleImage = `url(${iconURL})`;
     },
 
     saveWorkspaceState() {
@@ -728,7 +739,9 @@ const workspaceFunctions = {
     },
 
     rebuildWorkspaceMenu() {
-      const allWorkspace = Services.prefs.getStringPref(WORKSPACE_ALL_PREF).split(",");
+      const allWorkspace = Services.prefs
+        .getStringPref(WORKSPACE_ALL_PREF)
+        .split(",");
       const workspaceMenu = document.getElementById("workspace-menu");
 
       while (workspaceMenu.firstChild) {
@@ -744,14 +757,18 @@ const workspaceFunctions = {
       }
 
       //set workspaces icon
-      let currentWorkspace = Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF);
-      const iconURL = workspaceFunctions.iconFunctions.getWorkspaceIcon(currentWorkspace);
-      document.getElementById("workspace-button").style.listStyleImage = `url(${iconURL})`;
+      let currentWorkspace = Services.prefs.getStringPref(
+        WORKSPACE_CURRENT_PREF
+      );
+      const iconURL =
+        workspaceFunctions.iconFunctions.getWorkspaceIcon(currentWorkspace);
+      document.getElementById(
+        "workspace-button"
+      ).style.listStyleImage = `url(${iconURL})`;
     },
 
     addIconToWorkspace(workspaceName, iconName) {
-
-      if(workspaceName.wrappedJSObject) {
+      if (workspaceName.wrappedJSObject) {
         iconName = workspaceName.wrappedJSObject.icon;
         workspaceName = workspaceName.wrappedJSObject.name;
       }
@@ -795,7 +812,7 @@ const workspaceFunctions = {
         WORKSPACE_INFO_PREF,
         JSON.stringify(settings)
       );
-      
+
       //rebuild workspace menu
       workspaceFunctions.manageWorkspaceFunctions.rebuildWorkspaceMenu();
     },
@@ -817,33 +834,58 @@ const workspaceFunctions = {
         workspaceFunctions.manageWorkspaceFunctions.checkWorkspaceInfoExist(
           workspaceName
         );
-      if (targetWorkspaceNumber === false) {
+      if (
+        targetWorkspaceNumber === false ||
+        settings[targetWorkspaceNumber][workspaceName].icon == "" ||
+        settings[targetWorkspaceNumber][workspaceName].icon == undefined
+      ) {
         return "chrome://browser/skin/workspace-floorp.png";
       }
       return settings[targetWorkspaceNumber][workspaceName].icon;
     },
 
+    deleteIcon(workspaceName) {
+      const settings = JSON.parse(
+        Services.prefs.getStringPref(WORKSPACE_INFO_PREF)
+      );
+      const targetWorkspaceNumber =
+        workspaceFunctions.manageWorkspaceFunctions.checkWorkspaceInfoExist(
+          workspaceName
+        );
+      if (targetWorkspaceNumber === false) {
+        return;
+      }
+      delete settings[targetWorkspaceNumber][workspaceName].icon;
+      Services.prefs.setStringPref(
+        WORKSPACE_INFO_PREF,
+        JSON.stringify(settings)
+      );
+    },
+
     setWorkspaceFromPrompt(label) {
-      let parentWindow = Services.wm.getMostRecentWindow("navigator:browser")
+      let parentWindow = Services.wm.getMostRecentWindow("navigator:browser");
       let object = { workspaceName: label };
       if (
-          parentWindow?.document.documentURI ==
-          "chrome://browser/content/hiddenWindowMac.xhtml"
+        parentWindow?.document.documentURI ==
+        "chrome://browser/content/hiddenWindowMac.xhtml"
       ) {
-          parentWindow = null;
+        parentWindow = null;
       }
       if (parentWindow?.gDialogBox) {
-          parentWindow.gDialogBox.open("chrome://browser/content/preferences/dialogs/manageWorkspace.xhtml", object);
+        parentWindow.gDialogBox.open(
+          "chrome://browser/content/preferences/dialogs/manageWorkspace.xhtml",
+          object
+        );
       } else {
-          Services.ww.openWindow(
-              parentWindow,
-              "chrome://browser/content/preferences/dialogs/manageWorkspace.xhtml",
-              null,
-              "chrome,titlebar,dialog,centerscreen,modal",
-              object
-          );
+        Services.ww.openWindow(
+          parentWindow,
+          "chrome://browser/content/preferences/dialogs/manageWorkspace.xhtml",
+          null,
+          "chrome,titlebar,dialog,centerscreen,modal",
+          object
+        );
       }
-    }
+    },
   },
 
   tabFunctions: {
@@ -960,7 +1002,10 @@ const workspaceFunctions = {
         let workspace = workspaceAll[i];
         let menuItem = window.MozXULElement.parseXULToFragment(`
           <menuitem id="workspaceID-${workspace}" class="workspaceContextMenuItems"
-                    label="${workspace.replace(/-/g, " ")}"  oncommand="workspaceFunctions.tabFunctions.moveTabToOtherWorkspace(TabContextMenu.contextTab, '${workspace}');"/>
+                    label="${workspace.replace(
+                      /-/g,
+                      " "
+                    )}"  oncommand="workspaceFunctions.tabFunctions.moveTabToOtherWorkspace(TabContextMenu.contextTab, '${workspace}');"/>
         `);
         let parentElem = document.getElementById("workspaceTabContextMenu");
         if (
@@ -1076,7 +1121,10 @@ const workspaceFunctions = {
         .workspace-item[workspace="${currentWorkspace}"] > .toolbarbutton-icon {
           visibility: inherit !important;
         }
-        .workspace-item-icon[workspace="${currentWorkspace.replace(/-/g, " ")}"] {
+        .workspace-item-icon[workspace="${currentWorkspace.replace(
+          /-/g,
+          " "
+        )}"] {
           border-radius: 2px;
           box-shadow: 0 0 0 1px var(--lwt-accent-color) !important;
           background-color: var(--lwt-accent-color) !important;
@@ -1093,7 +1141,10 @@ const workspaceFunctions = {
       const movedAfterElem = document.getElementById("panelBox");
 
       movedAfterElem.before(document.getElementById(moveTargetElemID));
-      workspaceFunctions.bmsWorkspaceFunctions.changeElementTag(moveTargetElemID, "vbox");
+      workspaceFunctions.bmsWorkspaceFunctions.changeElementTag(
+        moveTargetElemID,
+        "vbox"
+      );
 
       const styleElem = document.createElement("style");
       const modifyCSS = `
@@ -1174,7 +1225,7 @@ const workspaceFunctions = {
 
       const spacer = window.MozXULElement.parseXULToFragment(`
         <spacer flex="1" id="workspace-spacer"/>
-      `)
+      `);
 
       document.getElementById(moveTargetElemID).after(spacer);
     },
@@ -1184,30 +1235,33 @@ const workspaceFunctions = {
       const appendElem = document.getElementById("workspace-button");
 
       appendElem.appendChild(document.getElementById(moveTargetElemID));
-      workspaceFunctions.bmsWorkspaceFunctions.changeElementTag(moveTargetElemID, "menupopup");
+      workspaceFunctions.bmsWorkspaceFunctions.changeElementTag(
+        moveTargetElemID,
+        "menupopup"
+      );
       document.getElementById("workspaceManagerBMSStyle").remove();
     },
-    
+
     changeElementTag(elementId, newTagName) {
       const originalElement = document.getElementById(elementId);
-    
+
       if (!originalElement) {
         console.error(`Element with id "${elementId}" not found.`);
         return;
       }
-    
+
       const newTag = document.createElement(newTagName);
-    
+
       for (const attr of originalElement.attributes) {
         newTag.setAttribute(attr.name, attr.value);
       }
-    
+
       while (originalElement.firstChild) {
         newTag.appendChild(originalElement.firstChild);
       }
-    
+
       originalElement.parentNode.replaceChild(newTag, originalElement);
-    }
+    },
   },
 
   Backup: {
@@ -1431,17 +1485,19 @@ const tabGroupAddonID = [
   "{3c078156-979c-498b-8990-85f7987dd929}",
   "panorama-tab-groups@example.com",
   "{60e27487-c779-464c-8698-ad481b718d5f}",
-  "{3c078156-979c-498b-8990-85f7987dd929}"
+  "{3c078156-979c-498b-8990-85f7987dd929}",
 ];
 
 async function checkTabGroupAddonInstalledAndStartWorkspace() {
-  const workspaceTabEnabled = Services.prefs.getBoolPref(WORKSPACE_TAB_ENABLED_PREF);
+  const workspaceTabEnabled = Services.prefs.getBoolPref(
+    WORKSPACE_TAB_ENABLED_PREF
+  );
   for (let i = 0; i < tabGroupAddonID.length; i++) {
     let addon = await AddonManager.getAddonByID(tabGroupAddonID[i]);
     if (addon === null) {
       continue;
     } else if (addon.isActive && workspaceTabEnabled) {
-      return; 
+      return;
     }
   }
   startWorkspace();
