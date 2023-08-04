@@ -14541,7 +14541,7 @@
   value: -1
   mirror: always
 
-# Use 17 for Ctrl, 18 for Alt, 224 for Meta, 91 for Win, 0 for none.
+# Use 17 for Ctrl, 18 for Alt, 91 or 224 for Meta, 0 for none.
 - name: ui.key.accelKey
   type: uint32_t
 #ifdef XP_MACOSX
@@ -14568,8 +14568,7 @@
   # 0 = disabled, 1 = Shift, 2 = Ctrl, 4 = Alt, 3 =  ctrl+shift, 8 = Meta
   value: 2
 #else
-  # 0 = disabled, 1 = Shift, 2 = Ctrl, 4 = Alt, 5 =  Alt+Shift,
-  # 8 = Meta, 16 = Win
+  # 0 = disabled, 1 = Shift, 2 = Ctrl, 4 = Alt, 5 =  Alt+Shift, 8 = Win
   value: 4
 #endif
   mirror: always
@@ -14581,8 +14580,7 @@
   # 0 = disabled, 1 = Shift, 2 = Ctrl, 4 = Alt, 3 = ctrl+shift, 8 = Meta
   value: 6
 #else
-  # 0 = disabled, 1 = Shift, 2 = Ctrl, 4 = Alt, 5 =  Alt+Shift,
-  # 8 = Meta, 16 = Win
+  # 0 = disabled, 1 = Shift, 2 = Ctrl, 4 = Alt, 5 =  Alt+Shift, 8 = Win
   value: 5
 #endif
   mirror: always

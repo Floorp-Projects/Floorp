@@ -446,6 +446,7 @@ function* runKeyEventTests()
             case "Alt":
             case "AltGraph":
             case "Meta":
+            case "OS":
             case "CapsLock":
             case "NumLock":
               // XXX To check modifier state of modifiers, we need to check
@@ -458,7 +459,7 @@ function* runKeyEventTests()
               is(e.shiftKey, !!(aEvent.modifiers.shiftKey || aEvent.modifiers.shiftRightKey),
                  currentTestName + ", Shift of " + e.type + " of " + e.code + " mismatch");
               is(e.metaKey, !!(aEvent.modifiers.metaKey || aEvent.modifiers.metaRightKey),
-                 currentTestName + ", Command of " + e.type + " of " + e.code + " mismatch");
+                 currentTestName + ", Meta of " + e.type + " of " + e.code + " mismatch");
               var isControlPressed = !!(aEvent.modifiers.ctrlKey || aEvent.modifiers.ctrlRightKey);
               var isAltPressed = !!(aEvent.modifiers.altKey || aEvent.modifiers.altRightKey);
               var isAltGraphExpected =
@@ -2995,10 +2996,10 @@ function* runKeyEventTests()
 
     // Win keys
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_LWIN,
-                   modifiers:{}, chars:""},
+                   modifiers:{metaKey:1}, chars:""},
                   "OS" /* bug 1232918 */, "OSLeft", KeyboardEvent.DOM_VK_WIN, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_LEFT);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_RWIN,
-                   modifiers:{}, chars:""},
+                   modifiers:{metaRightKey:1}, chars:""},
                   "OS" /* bug 1232918 */, "OSRight", KeyboardEvent.DOM_VK_WIN, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_RIGHT);
 
     // all keys on keyboard (keyCode test)

@@ -377,9 +377,9 @@ bool GlobalKeyListener::WalkHandlersAndExecute(
   // shortcut keys even if the key is pressed.  Therefore, if there is no
   // shortcut key which exactly matches current modifier state, we should
   // retry to look for a shortcut key without the Windows-Logo key press.
-  if (!aIgnoreModifierState.mOS && widgetKeyboardEvent->IsOS()) {
+  if (!aIgnoreModifierState.mMeta && widgetKeyboardEvent->IsMeta()) {
     IgnoreModifierState ignoreModifierState(aIgnoreModifierState);
-    ignoreModifierState.mOS = true;
+    ignoreModifierState.mMeta = true;
     return WalkHandlersAndExecute(aKeyEvent, aCharCode, ignoreModifierState,
                                   aExecute);
   }

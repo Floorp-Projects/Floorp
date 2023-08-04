@@ -56,13 +56,9 @@ add_task(async function TestModifier() {
   let tests = [ [ 'a', { altKey: true }, false],
                 [ 'a', { ctrlKey: true }, false],
                 [ 'a', { metaKey: true }, false],
-                [ 'a', { osKey: true }, false],
                 [ 'c', { altKey: true }, false ],
-                [ 'c', { osKey: true }, false ],
                 [ 'v', { altKey: true }, false ],
-                [ 'v', { osKey: true }, false ],
                 [ 'x', { altKey: true }, false ],
-                [ 'x', { osKey: true }, false ],
                 // Treat as user input
                 [ 'a', { altGraphKey: true }, true ],
                 [ 'a', { fnKey: true }, true ],

@@ -554,11 +554,7 @@ bool IsCtrlShiftPressed(const WidgetKeyboardEvent* aKeyboardEvent,
 
   // Scan the key status to find pressed keys. We should abandon changing the
   // text direction when there are other pressed keys.
-  if (aKeyboardEvent->IsAlt() || aKeyboardEvent->IsOS()) {
-    return false;
-  }
-
-  return true;
+  return !aKeyboardEvent->IsAlt() && !aKeyboardEvent->IsMeta();
 }
 
 // This logic is mostly borrowed from Chromium's

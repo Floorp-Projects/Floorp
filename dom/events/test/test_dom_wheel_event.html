@@ -135,38 +135,33 @@ function* testDeltaMultiplierPrefs()
   const kModifierControl = 0x02;
   const kModifierMeta    = 0x04;
   const kModifierShift   = 0x08;
-  const kModifierWin     = 0x10;
 
   const kTests = [
     { name: "default",
       expected: [ 0, kModifierShift | kModifierAlt, kModifierShift | kModifierControl,
-                     kModifierShift | kModifierMeta, kModifierShift | kModifierWin,
+                     kModifierShift | kModifierMeta,
                      kModifierControl | kModifierAlt, kModifierMeta | kModifierAlt ],
-      unexpected: [ kModifierAlt, kModifierControl, kModifierMeta, kModifierShift, kModifierWin ] },
+      unexpected: [ kModifierAlt, kModifierControl, kModifierMeta, kModifierShift ] },
     { name: "with_alt",
       expected: [ kModifierAlt ],
-      unexpected: [0, kModifierControl, kModifierMeta, kModifierShift, kModifierWin,
+      unexpected: [0, kModifierControl, kModifierMeta, kModifierShift,
                       kModifierShift | kModifierAlt, kModifierControl | kModifierAlt,
                       kModifierMeta | kModifierAlt ] },
     { name: "with_control",
       expected: [ kModifierControl ],
-      unexpected: [0, kModifierAlt, kModifierMeta, kModifierShift, kModifierWin,
+      unexpected: [0, kModifierAlt, kModifierMeta, kModifierShift,
                       kModifierShift | kModifierControl, kModifierControl | kModifierAlt,
                       kModifierMeta | kModifierControl ] },
     { name: "with_meta",
       expected: [ kModifierMeta ],
-      unexpected: [0, kModifierAlt, kModifierControl, kModifierShift, kModifierWin,
+      unexpected: [0, kModifierAlt, kModifierControl, kModifierShift,
                       kModifierShift | kModifierMeta, kModifierControl | kModifierMeta,
                       kModifierMeta | kModifierAlt ] },
     { name: "with_shift",
       expected: [ kModifierShift ],
-      unexpected: [0, kModifierAlt, kModifierControl, kModifierMeta, kModifierWin,
+      unexpected: [0, kModifierAlt, kModifierControl, kModifierMeta,
                       kModifierShift | kModifierAlt, kModifierControl | kModifierShift,
                       kModifierMeta | kModifierShift ] },
-    { name: "with_win",
-      expected: [ kModifierWin ],
-      unexpected: [0, kModifierAlt, kModifierControl, kModifierMeta, kModifierShift,
-                      kModifierShift | kModifierWin ] },
   ];
 
   // Note that this test doesn't support complicated lineOrPageDelta values which are computed with
@@ -332,7 +327,6 @@ function* testDeltaMultiplierPrefs()
       currentEvent.ctrlKey  = (currentModifiers & kModifierControl) != 0;
       currentEvent.altKey   = (currentModifiers & kModifierAlt) != 0;
       currentEvent.metaKey  = (currentModifiers & kModifierMeta) != 0;
-      currentEvent.osKey    = (currentModifiers & kModifierWin) != 0;
       var modifierList = "";
       if (currentEvent.shiftKey) {
         modifierList += "Shift ";
@@ -345,9 +339,6 @@ function* testDeltaMultiplierPrefs()
       }
       if (currentEvent.metaKey) {
         modifierList += "Meta ";
-      }
-      if (currentEvent.osKey) {
-        modifierList += "Win ";
       }
 
       for (var j = 0; j < kPrefValues.length; j++) {
@@ -836,9 +827,6 @@ function runTest()
     ["mousewheel.with_shift.delta_multiplier_x", 100],
     ["mousewheel.with_shift.delta_multiplier_y", 100],
     ["mousewheel.with_shift.delta_multiplier_z", 100],
-    ["mousewheel.with_win.delta_multiplier_x", 100],
-    ["mousewheel.with_win.delta_multiplier_y", 100],
-    ["mousewheel.with_win.delta_multiplier_z", 100],
     // TODO: Need to add passive to SpecialPowers.addSystemEventListener
     // somehow.
     ["dom.event.default_to_passive_wheel_listeners", false],
