@@ -255,8 +255,7 @@ add_task(async function test_first_extension_api_call_in_iframe() {
   await extension.awaitMessage("top_and_frame_done");
   Assert.equal(
     extension.extension.backgroundContext?.uri?.spec,
-    // TODO: background-subframe.html should be background.html
-    `moz-extension://${extension.uuid}/background-subframe.html`,
+    `moz-extension://${extension.uuid}/background.html`,
     `extension.backgroundContext should exist and point to the main background`
   );
   Assert.equal(bgWatcher.bgViewCount, 1, "Background has loaded once");
