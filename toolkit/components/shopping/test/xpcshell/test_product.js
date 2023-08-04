@@ -44,6 +44,9 @@ const API_ERROR_BAD_REQUEST = "http://example.com/errors/bad_request.json";
 const API_ERROR_UNPROCESSABLE =
   "http://example.com/errors/unprocessable_entity.json";
 
+// Start with OHTTP disabled.
+disableOHTTP();
+
 const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/api/", do_get_file("/data"));
 
