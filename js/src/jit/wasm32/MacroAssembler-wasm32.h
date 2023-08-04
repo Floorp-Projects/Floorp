@@ -440,9 +440,7 @@ class MacroAssemblerWasm32 : public Assembler {
     MOZ_CRASH();
   }
 
-  void getWasmAnyRefGCThingChunk(Register, Register) {
-    MOZ_CRASH();
-  }
+  void getWasmAnyRefGCThingChunk(Register, Register) { MOZ_CRASH(); }
 
   template <typename T>
   void unboxObjectOrNull(const T& src, Register dest) {

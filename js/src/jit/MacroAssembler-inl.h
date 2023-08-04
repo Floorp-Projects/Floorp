@@ -63,23 +63,23 @@ DynFn DynamicFunction(Sig fun) {
 inline DynFn JitPreWriteBarrier(MIRType type) {
   switch (type) {
     case MIRType::Value: {
-      using Fn = void (*)(JSRuntime * rt, Value * vp);
+      using Fn = void (*)(JSRuntime* rt, Value* vp);
       return DynamicFunction<Fn>(JitValuePreWriteBarrier);
     }
     case MIRType::String: {
-      using Fn = void (*)(JSRuntime * rt, JSString * *stringp);
+      using Fn = void (*)(JSRuntime* rt, JSString** stringp);
       return DynamicFunction<Fn>(JitStringPreWriteBarrier);
     }
     case MIRType::Object: {
-      using Fn = void (*)(JSRuntime * rt, JSObject * *objp);
+      using Fn = void (*)(JSRuntime* rt, JSObject** objp);
       return DynamicFunction<Fn>(JitObjectPreWriteBarrier);
     }
     case MIRType::Shape: {
-      using Fn = void (*)(JSRuntime * rt, Shape * *shapep);
+      using Fn = void (*)(JSRuntime* rt, Shape** shapep);
       return DynamicFunction<Fn>(JitShapePreWriteBarrier);
     }
     case MIRType::WasmAnyRef: {
-      using Fn = void (*)(JSRuntime * rt, wasm::AnyRef * refp);
+      using Fn = void (*)(JSRuntime* rt, wasm::AnyRef* refp);
       return DynamicFunction<Fn>(JitWasmAnyRefPreWriteBarrier);
     }
     default:

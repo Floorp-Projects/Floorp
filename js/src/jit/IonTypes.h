@@ -515,7 +515,7 @@ enum class MIRType : uint8_t {
   Slots,         // A slots vector
   Elements,      // An elements vector
   Pointer,       // An opaque pointer that receives no special treatment
-  WasmAnyRef,     // Wasm Ref/AnyRef/NullRef: a raw JSObject* or a raw (void*)0
+  WasmAnyRef,    // Wasm Ref/AnyRef/NullRef: a raw JSObject* or a raw (void*)0
   StackResults,  // Wasm multi-value stack result area, which may contain refs
   Shape,         // A Shape pointer.
   Last = Shape

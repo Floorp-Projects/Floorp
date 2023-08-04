@@ -18807,7 +18807,7 @@ void CodeGenerator::visitWasmAnyRefFromJSValue(LWasmAnyRefFromJSValue* lir) {
   Register output = ToRegister(lir->output());
   FloatRegister tempFloat = ToFloatRegister(lir->temp0());
 
-  using Fn = JSObject* (*)(JSContext * cx, HandleValue value);
+  using Fn = JSObject* (*)(JSContext* cx, HandleValue value);
   OutOfLineCode* oolBoxValue = oolCallVM<Fn, wasm::AnyRef::boxValue>(
       lir, ArgList(input), StoreRegisterTo(output));
   masm.convertValueToWasmAnyRef(input, output, tempFloat, oolBoxValue->entry());

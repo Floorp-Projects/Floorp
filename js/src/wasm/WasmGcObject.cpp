@@ -506,8 +506,7 @@ void WasmArrayObject::obj_trace(JSTracer* trc, JSObject* object) {
   MOZ_ASSERT(numElements > 0);
   uint32_t elemSize = arrayType.elementType_.size();
   for (uint32_t i = 0; i < numElements; i++) {
-    AnyRef* elementPtr =
-        reinterpret_cast<AnyRef*>(data + i * elemSize);
+    AnyRef* elementPtr = reinterpret_cast<AnyRef*>(data + i * elemSize);
     TraceManuallyBarrieredEdge(trc, elementPtr, "wasm-array-element");
   }
 }
