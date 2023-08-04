@@ -25,41 +25,6 @@ function IteratorNext(iteratorRecord, value) {
   return result;
 }
 
-/**
- * ES2022 draft rev c5f683e61d5dce703650f1c90d2309c46f8c157a
- *
- * GetIterator ( obj [ , hint [ , method ] ] )
- * https://tc39.es/ecma262/#sec-getiterator
- *
- * Optimized for single argument
- */
-function GetIteratorSync(obj) {
-  // Steps 1 & 2 skipped as we know we want the sync iterator method
-  var method = GetMethod(obj, GetBuiltinSymbol("iterator"));
-
-  // Step 3. Let iterator be ? Call(method, obj).
-  var iterator = callContentFunction(method, obj);
-
-  // Step 4. If Type(iterator) is not Object, throw a TypeError exception.
-  if (!IsObject(iterator)) {
-    ThrowTypeError(JSMSG_NOT_ITERABLE, obj === null ? "null" : typeof obj);
-  }
-
-  // Step 5. Let nextMethod be ? GetV(iterator, "next").
-  var nextMethod = iterator.next;
-
-  // Step 6. Let iteratorRecord be the Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
-  var iteratorRecord = {
-    __proto__: null,
-    iterator,
-    nextMethod,
-    done: false
-  };
-
-  // Step 7. Return iteratorRecord.
-  return iteratorRecord;
-}
-
 // https://tc39.es/ecma262/#sec-getiterator
 function GetIterator(obj, isAsync, method) {
   // Step 1. If hint is not present, set hint to sync.
