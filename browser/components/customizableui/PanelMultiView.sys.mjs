@@ -709,9 +709,7 @@ export var PanelMultiView = class extends AssociatedToNode {
 
     // Provide visual feedback while navigation is in progress, starting before
     // the transition starts and ending when the previous view is invisible.
-    if (anchor) {
-      anchor.setAttribute("open", "true");
-    }
+    anchor?.setAttribute("open", "true");
     try {
       // If the ViewShowing event cancels the operation we have to re-enable
       // keyboard navigation, but this must be avoided if the panel was closed.
@@ -734,9 +732,24 @@ export var PanelMultiView = class extends AssociatedToNode {
       // reset all the properties that may be set on a subview.
       nextPanelView.mainview = false;
       // The header may change based on how the subview was opened.
-      nextPanelView.headerText =
-        viewNode.getAttribute("title") ||
-        (anchor && anchor.getAttribute("label"));
+      let title =
+        viewNode.getAttribute("title") || anchor?.getAttribute("label");
+      if (!title) {
+        const l10nId = viewNode.getAttribute("data-l10n-id");
+        if (l10nId) {
+          // The view's title is not yet set by DOM localization.
+          const [msg] = await viewNode.ownerDocument.l10n.formatMessages([
+            l10nId,
+          ]);
+          for (let { name, value } of msg.attributes) {
+            if (name === "title") {
+              title = value;
+              viewNode.setAttribute("title", value);
+            }
+          }
+        }
+      }
+      nextPanelView.headerText = title;
       // The constrained width of subviews may also vary between panels.
       nextPanelView.minMaxWidth = prevPanelView.knownWidth;
       let lockPanelVertical =
@@ -751,9 +764,7 @@ export var PanelMultiView = class extends AssociatedToNode {
 
       await this._transitionViews(prevPanelView.node, viewNode, false);
     } finally {
-      if (anchor) {
-        anchor.removeAttribute("open");
-      }
+      anchor?.removeAttribute("open");
     }
 
     nextPanelView.focusWhenActive = doingKeyboardActivation;

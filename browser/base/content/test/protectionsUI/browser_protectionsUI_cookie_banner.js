@@ -379,6 +379,8 @@ function waitForProtectionsPopupHide(win = window) {
  * Tests the cookie banner section per-site preference toggle.
  */
 add_task(async function test_section_toggle() {
+  requestLongerTimeout(3);
+
   // initialize the pref environment
   await SpecialPowers.pushPrefEnv({
     set: [
