@@ -269,6 +269,18 @@ class TimeIntervals : public IntervalSet<TimeUnit> {
     return Length() == 1 && Start(0).IsNegInf() && End(0).IsNegInf();
   }
 
+  // Returns the same interval, with a given base resolution.
+  TimeIntervals ToBase(const TimeUnit& aBase) const {
+    TimeIntervals output;
+    for (const auto& interval : mIntervals) {
+      TimeInterval convertedInterval{interval.mStart.ToBase(aBase),
+                                     interval.mEnd.ToBase(aBase),
+                                     interval.mFuzz.ToBase(aBase)};
+      output += convertedInterval;
+    }
+    return output;
+  }
+
   // Returns the same interval, with a microsecond resolution. This is used to
   // compare TimeUnits internal to demuxers (that use a base from the container)
   // to floating point numbers in seconds from content.
