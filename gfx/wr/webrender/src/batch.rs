@@ -14,7 +14,7 @@ use crate::gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders, ZBufferId, Z
 use crate::gpu_types::{SplitCompositeInstance, QuadInstance};
 use crate::gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
-use crate::gpu_types::{ImageBrushData, get_shader_opacity, BoxShadowData};
+use crate::gpu_types::{ImageBrushData, get_shader_opacity, BoxShadowData, MaskInstance};
 use crate::gpu_types::{ClipMaskInstanceCommon, ClipMaskInstanceImage, ClipMaskInstanceRect, ClipMaskInstanceBoxShadow};
 use crate::internal_types::{FastHashMap, Swizzle, TextureSource, Filter};
 use crate::picture::{Picture3DContext, PictureCompositeMode, calculate_screen_uv};
@@ -3378,6 +3378,28 @@ impl BrushBatchParameters {
                     specific_resource_address,
                 }
             ),
+        }
+    }
+}
+
+/// A list of clip instances to be drawn into a target.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct ClipMaskInstanceList {
+    pub mask_instances_fast: Vec<MaskInstance>,
+    pub mask_instances_slow: Vec<MaskInstance>,
+
+    pub mask_instances_fast_with_scissor: FastHashMap<DeviceIntRect, Vec<MaskInstance>>,
+    pub mask_instances_slow_with_scissor: FastHashMap<DeviceIntRect, Vec<MaskInstance>>,
+}
+
+impl ClipMaskInstanceList {
+    pub fn new() -> Self {
+        ClipMaskInstanceList {
+            mask_instances_fast: Vec::new(),
+            mask_instances_slow: Vec::new(),
+            mask_instances_fast_with_scissor: FastHashMap::default(),
+            mask_instances_slow_with_scissor: FastHashMap::default(),
         }
     }
 }

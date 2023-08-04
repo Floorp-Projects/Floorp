@@ -3584,11 +3584,11 @@ impl Renderer {
         self.handle_prims(
             &draw_target,
             &target.prim_instances,
-            &target.mask_instances_fast,
-            &target.mask_instances_slow,
+            &target.clip_masks.mask_instances_fast,
+            &target.clip_masks.mask_instances_slow,
             &target.prim_instances_with_scissor,
-            &target.mask_instances_fast_with_scissor,
-            &target.mask_instances_slow_with_scissor,
+            &target.clip_masks.mask_instances_fast_with_scissor,
+            &target.clip_masks.mask_instances_slow_with_scissor,
             projection,
             stats,
         );
