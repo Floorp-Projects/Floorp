@@ -25,6 +25,10 @@ button {
   padding: var(--fxviewcategorynav-button-padding);
 }
 
+button:hover {
+  cursor: pointer;
+}
+
 button[selected] {
   text-decoration: underline;
   color: var(--in-content-accent-color);
