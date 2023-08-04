@@ -894,7 +894,7 @@ mod test {
             },
             execution_counter: None,
         };
-        let timestamps = [20, 40, 200];
+        let timestamps = vec![20, 40, 200];
         let not_glean_restarted = StoredEvent {
             event: RecordedEvent {
                 timestamp: timestamps[0],
@@ -970,8 +970,8 @@ mod test {
 
         // This scenario represents a run of three events followed by an hour between runs,
         // followed by one final event.
-        let timestamps = [20, 40, 200, 12];
-        let ecs = [0, 1];
+        let timestamps = vec![20, 40, 200, 12];
+        let ecs = vec![0, 1];
         let some_hour = 16;
         let startup_date = FixedOffset::east(0)
             .ymd(2022, 11, 24)
@@ -1095,8 +1095,8 @@ mod test {
 
         // This scenario represents a run of two events followed by negative one hours between runs,
         // followed by two more events.
-        let timestamps = [20, 40, 12, 200];
-        let ecs = [0, 1];
+        let timestamps = vec![20, 40, 12, 200];
+        let ecs = vec![0, 1];
         let some_hour = 10;
         let startup_date = FixedOffset::east(0)
             .ymd(2022, 11, 25)

@@ -47,7 +47,6 @@ fn setup_glean(tempdir: Option<tempfile::TempDir>) -> tempfile::TempDir {
         app_build: "test-build".into(),
         app_display_version: "1.2.3".into(),
         channel: None,
-        locale: None,
     };
 
     glean::test_reset_glean(cfg, client_info, true);
