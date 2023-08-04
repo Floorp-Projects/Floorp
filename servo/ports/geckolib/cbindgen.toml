@@ -581,9 +581,9 @@ renaming_overrides_prefixing = true
 
 "AbsoluteColor" = """
   /**
-   * Create a new AbsoluteColor in the sRGB color space.
+   * Create a new AbsoluteColor in the sRGB color space in legacy color syntax.
    */
-  static inline StyleAbsoluteColor Srgb(float red, float green, float blue, float alpha);
+  static inline StyleAbsoluteColor SrgbLegacy(float red, float green, float blue, float alpha);
 
   static inline StyleAbsoluteColor FromColor(nscolor);
 

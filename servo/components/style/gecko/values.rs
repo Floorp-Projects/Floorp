@@ -28,12 +28,17 @@ pub fn convert_absolute_color_to_nscolor(color: &AbsoluteColor) -> u32 {
 /// Convert a given `nscolor` to a Servo AbsoluteColor value.
 pub fn convert_nscolor_to_absolute_color(color: u32) -> AbsoluteColor {
     let [r, g, b, a] = color.to_le_bytes();
-    AbsoluteColor::srgb(
-        r as f32 / 255.0,
-        g as f32 / 255.0,
-        b as f32 / 255.0,
-        a as f32 / 255.0,
-    )
+    AbsoluteColor::srgb_legacy(r, g, b, a as f32 / 255.0)
+}
+
+#[test]
+fn convert_ns_color_to_absolute_color_should_be_in_legacy_syntax() {
+    use crate::color::ColorFlags;
+
+    let result = convert_nscolor_to_absolute_color(0x336699CC);
+    assert!(result.flags.contains(ColorFlags::IS_LEGACY_SRGB));
+
+    assert!(result.is_legacy_syntax());
 }
 
 impl CounterStyle {

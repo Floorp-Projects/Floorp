@@ -16,16 +16,26 @@
 namespace mozilla {
 
 inline StyleAbsoluteColor StyleAbsoluteColor::FromColor(nscolor aColor) {
-  return StyleAbsoluteColor::Srgb(
+  return StyleAbsoluteColor::SrgbLegacy(
       NS_GET_R(aColor) / 255.0f, NS_GET_G(aColor) / 255.0f,
       NS_GET_B(aColor) / 255.0f, NS_GET_A(aColor) / 255.0f);
 }
 
 // static
-inline StyleAbsoluteColor StyleAbsoluteColor::Srgb(float red, float green,
-                                                   float blue, float alpha) {
-  return StyleAbsoluteColor{StyleColorComponents{red, green, blue}, alpha,
-                            StyleColorSpace::Srgb, StyleColorFlags{0}};
+inline StyleAbsoluteColor StyleAbsoluteColor::SrgbLegacy(float red, float green,
+                                                         float blue,
+                                                         float alpha) {
+  const auto ToLegacyComponent = [](float aF) {
+    if (MOZ_UNLIKELY(!std::isfinite(aF))) {
+      return 0.0f;
+    }
+    return aF;
+  };
+
+  return StyleAbsoluteColor{
+      StyleColorComponents{ToLegacyComponent(red), ToLegacyComponent(green),
+                           ToLegacyComponent(blue)},
+      alpha, StyleColorSpace::Srgb, StyleColorFlags::IS_LEGACY_SRGB};
 }
 
 template <>
