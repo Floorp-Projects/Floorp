@@ -128,27 +128,43 @@ static void BitwiseOrIntoChunkMarkBits(JSRuntime* runtime, Bitmap& bitmap) {
 void AtomMarkingRuntime::markAtomsUsedByUncollectedZones(JSRuntime* runtime) {
   MOZ_ASSERT(CurrentThreadIsPerformingGC());
 
-  // Try to compute a simple union of the zone atom bitmaps before updating
-  // the chunk mark bitmaps. If this allocation fails then fall back to
-  // updating the chunk mark bitmaps separately for each zone.
-  DenseBitmap markedUnion;
-  if (markedUnion.ensureSpace(allocatedWords)) {
-    for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
-      // We only need to update the chunk mark bits for zones which were
-      // not collected in the current GC. Atoms which are referenced by
-      // collected zones have already been marked.
-      if (!zone->isCollectingFromAnyThread()) {
-        zone->markedAtoms().bitwiseOrInto(markedUnion);
-      }
+  size_t uncollectedZones = 0;
+  for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
+    if (!zone->isCollecting()) {
+      uncollectedZones++;
     }
-    BitwiseOrIntoChunkMarkBits(runtime, markedUnion);
-  } else {
+  }
+
+  // If there are no uncollected non-atom zones then there's no work to do.
+  if (uncollectedZones == 0) {
+    return;
+  }
+
+  // If there is more than one zone then try to compute a simple union of the
+  // zone atom bitmaps before updating the chunk mark bitmaps. If there is only
+  // one zone or this allocation fails then update the chunk mark bitmaps
+  // separately for each zone.
+
+  DenseBitmap markedUnion;
+  if (uncollectedZones == 1 || !markedUnion.ensureSpace(allocatedWords)) {
     for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
-      if (!zone->isCollectingFromAnyThread()) {
+      if (!zone->isCollecting()) {
         BitwiseOrIntoChunkMarkBits(runtime, zone->markedAtoms());
       }
     }
+    return;
   }
+
+  for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
+    // We only need to update the chunk mark bits for zones which were
+    // not collected in the current GC. Atoms which are referenced by
+    // collected zones have already been marked.
+    if (!zone->isCollecting()) {
+      zone->markedAtoms().bitwiseOrInto(markedUnion);
+    }
+  }
+
+  BitwiseOrIntoChunkMarkBits(runtime, markedUnion);
 }
 
 template <typename T>
