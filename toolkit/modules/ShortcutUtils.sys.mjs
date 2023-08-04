@@ -51,10 +51,6 @@ export var ShortcutUtils = {
     return elemString + key;
   },
 
-  metaKeyIsCommandKey() {
-    return AppConstants.platform == "macosx";
-  },
-
   getModifierString(elemMod) {
     let elemString = "";
     let haveCloverLeaf = false;
@@ -79,9 +75,9 @@ export var ShortcutUtils = {
           lazy.PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
       }
     }
-    if (elemMod.match("meta") && !this.metaKeyIsCommandKey()) {
+    if (elemMod.match("os")) {
       elemString +=
-        lazy.PlatformKeys.GetStringFromName("VK_COMMAND_OR_WIN") +
+        lazy.PlatformKeys.GetStringFromName("VK_WIN") +
         lazy.PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
     if (elemMod.match("shift")) {
@@ -99,15 +95,15 @@ export var ShortcutUtils = {
         lazy.PlatformKeys.GetStringFromName("VK_CONTROL") +
         lazy.PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
-    if (elemMod.match("meta") && this.metaKeyIsCommandKey()) {
+    if (elemMod.match("meta")) {
       elemString +=
-        lazy.PlatformKeys.GetStringFromName("VK_COMMAND_OR_WIN") +
+        lazy.PlatformKeys.GetStringFromName("VK_META") +
         lazy.PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
 
     if (haveCloverLeaf) {
       elemString +=
-        lazy.PlatformKeys.GetStringFromName("VK_COMMAND_OR_WIN") +
+        lazy.PlatformKeys.GetStringFromName("VK_META") +
         lazy.PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
 
@@ -310,14 +306,9 @@ export var ShortcutUtils = {
    */
   // eslint-disable-next-line complexity
   getSystemActionForEvent(event, { rtl } = {}) {
-    // On Windows, Win key state is not strictly checked so that we can ignore
-    // Win key state to check the other modifier state.
-    const meaningfulMetaKey = event.metaKey && AppConstants.platform != "win";
-    // This is set to true only when the Meta key is accel key on the platform.
-    const accelMetaKey = event.metaKey && this.metaKeyIsCommandKey();
     switch (event.keyCode) {
       case event.DOM_VK_TAB:
-        if (event.ctrlKey && !event.altKey && !meaningfulMetaKey) {
+        if (event.ctrlKey && !event.altKey && !event.metaKey) {
           return ShortcutUtils.CYCLE_TABS;
         }
         break;
@@ -332,7 +323,7 @@ export var ShortcutUtils = {
           event.ctrlKey &&
           !event.shiftKey &&
           !event.altKey &&
-          !meaningfulMetaKey
+          !event.metaKey
         ) {
           return ShortcutUtils.PREVIOUS_TAB;
         }
@@ -340,7 +331,7 @@ export var ShortcutUtils = {
           event.ctrlKey &&
           event.shiftKey &&
           !event.altKey &&
-          !meaningfulMetaKey
+          !event.metaKey
         ) {
           return ShortcutUtils.MOVE_TAB_BACKWARD;
         }
@@ -350,7 +341,7 @@ export var ShortcutUtils = {
           event.ctrlKey &&
           !event.shiftKey &&
           !event.altKey &&
-          !meaningfulMetaKey
+          !event.metaKey
         ) {
           return ShortcutUtils.NEXT_TAB;
         }
@@ -358,18 +349,28 @@ export var ShortcutUtils = {
           event.ctrlKey &&
           event.shiftKey &&
           !event.altKey &&
-          !meaningfulMetaKey
+          !event.metaKey
         ) {
           return ShortcutUtils.MOVE_TAB_FORWARD;
         }
         break;
       case event.DOM_VK_LEFT:
-        if (accelMetaKey && event.altKey && !event.shiftKey && !event.ctrlKey) {
+        if (
+          event.metaKey &&
+          event.altKey &&
+          !event.shiftKey &&
+          !event.ctrlKey
+        ) {
           return ShortcutUtils.PREVIOUS_TAB;
         }
         break;
       case event.DOM_VK_RIGHT:
-        if (accelMetaKey && event.altKey && !event.shiftKey && !event.ctrlKey) {
+        if (
+          event.metaKey &&
+          event.altKey &&
+          !event.shiftKey &&
+          !event.ctrlKey
+        ) {
           return ShortcutUtils.NEXT_TAB;
         }
         break;
@@ -396,6 +397,7 @@ export var ShortcutUtils = {
       if (
         event.ctrlKey &&
         !event.shiftKey &&
+        !event.metaKey &&
         event.keyCode == KeyEvent.DOM_VK_F4
       ) {
         return ShortcutUtils.CLOSE_TAB;

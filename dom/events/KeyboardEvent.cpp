@@ -42,7 +42,8 @@ bool KeyboardEvent::IsMenuAccessKeyPressed() const {
 }
 
 static constexpr Modifiers kPossibleModifiersForAccessKey =
-    MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META;
+    MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META |
+    MODIFIER_OS;
 
 Modifiers KeyboardEvent::GetModifiersForMenuAccessKey() const {
   const WidgetInputEvent* inputEvent = WidgetEventPtr()->AsInputEvent();
@@ -134,6 +135,7 @@ void KeyboardEvent::GetInitDict(KeyboardEventInit& aParam) {
   aParam.mModifierFn = internalEvent->IsFn();
   aParam.mModifierFnLock = internalEvent->IsFnLocked();
   aParam.mModifierNumLock = internalEvent->IsNumLocked();
+  aParam.mModifierOS = internalEvent->IsOS();
   aParam.mModifierScrollLock = internalEvent->IsScrollLocked();
   aParam.mModifierSymbol = internalEvent->IsSymbol();
   aParam.mModifierSymbolLock = internalEvent->IsSymbolLocked();

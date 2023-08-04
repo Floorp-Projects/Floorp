@@ -2474,7 +2474,8 @@ class nsContentUtils {
 
   static void GetShiftText(nsAString& text);
   static void GetControlText(nsAString& text);
-  static void GetCommandOrWinText(nsAString& text);
+  static void GetMetaText(nsAString& text);
+  static void GetOSText(nsAString& text);
   static void GetAltText(nsAString& text);
   static void GetModifierSeparatorText(nsAString& text);
 
@@ -3566,7 +3567,8 @@ class nsContentUtils {
 
   static nsString* sShiftText;
   static nsString* sControlText;
-  static nsString* sCommandOrWinText;
+  static nsString* sMetaText;
+  static nsString* sOSText;
   static nsString* sAltText;
   static nsString* sModifierSeparator;
 

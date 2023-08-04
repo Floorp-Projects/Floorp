@@ -1053,6 +1053,7 @@ enum Modifier {
   MODIFIER_SHIFT = 0x0200,
   MODIFIER_SYMBOL = 0x0400,
   MODIFIER_SYMBOLLOCK = 0x0800,
+  MODIFIER_OS = 0x1000
 };
 
 /******************************************************************************
@@ -1129,6 +1130,10 @@ class MOZ_STACK_CLASS GetModifiersName final : public nsAutoCString {
       MaybeAppendSeparator();
       AppendLiteral(NS_DOM_KEYNAME_SYMBOLLOCK);
     }
+    if (aModifiers & MODIFIER_OS) {
+      MaybeAppendSeparator();
+      AppendLiteral(NS_DOM_KEYNAME_OS);
+    }
     if (IsEmpty()) {
       AssignLiteral("none");
     }
@@ -1192,9 +1197,11 @@ class WidgetInputEvent : public WidgetGUIEvent {
   bool IsControl() const { return ((mModifiers & MODIFIER_CONTROL) != 0); }
   // true indicates the alt key is down
   bool IsAlt() const { return ((mModifiers & MODIFIER_ALT) != 0); }
-  // true indicates the meta key is down (Command key on macOS, Windows logo key
-  // on Windows, Super/Hyper key on Linux, Meta key on Android).
+  // true indicates the meta key is down (or, on Mac, the Command key)
   bool IsMeta() const { return ((mModifiers & MODIFIER_META) != 0); }
+  // true indicates the win key is down on Windows. Or the Super or Hyper key
+  // is down on Linux.
+  bool IsOS() const { return ((mModifiers & MODIFIER_OS) != 0); }
   // true indicates the alt graph key is down
   // NOTE: on Mac, the option key press causes both IsAlt() and IsAltGrpah()
   //       return true.

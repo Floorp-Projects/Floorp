@@ -176,7 +176,7 @@ const KEY_DATA = {
   "\uE03B": { code: "F11", key: "F11", printable: false },
   "\uE03C": { code: "F12", key: "F12", printable: false },
   "\uE03D": {
-    code: "MetaLeft",
+    code: "OSLeft",
     key: "Meta",
     location: 1,
     modifier: "metaKey",
@@ -205,7 +205,7 @@ const KEY_DATA = {
     printable: false,
   },
   "\uE053": {
-    code: "MetaRight",
+    code: "OSRight",
     key: "Meta",
     location: 2,
     modifier: "metaKey",

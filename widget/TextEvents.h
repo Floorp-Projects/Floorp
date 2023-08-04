@@ -124,10 +124,10 @@ struct ShortcutKeyCandidate {
 struct IgnoreModifierState {
   // When mShift is true, Shift key state will be ignored.
   bool mShift;
-  // When mMeta is true, Meta key state will be ignored.
-  bool mMeta;
+  // When mOS is true, OS key state will be ignored.
+  bool mOS;
 
-  IgnoreModifierState() : mShift(false), mMeta(false) {}
+  IgnoreModifierState() : mShift(false), mOS(false) {}
 };
 
 /******************************************************************************
@@ -235,12 +235,13 @@ class WidgetKeyboardEvent final : public WidgetInputEvent {
                               // option key is used as AltGraph key on macOS.
                               MODIFIER_ALT |
 #endif  // #ifndef XP_MAXOSX
-                              MODIFIER_CONTROL | MODIFIER_META));
+                              MODIFIER_CONTROL | MODIFIER_META | MODIFIER_OS));
   }
 
   bool IsInputtingLineBreak() const {
     return mMessage == eKeyPress && mKeyNameIndex == KEY_NAME_INDEX_Enter &&
-           !(mModifiers & (MODIFIER_ALT | MODIFIER_CONTROL | MODIFIER_META));
+           !(mModifiers &
+             (MODIFIER_ALT | MODIFIER_CONTROL | MODIFIER_META | MODIFIER_OS));
   }
 
   /**
@@ -258,7 +259,8 @@ class WidgetKeyboardEvent final : public WidgetInputEvent {
     // So, for compatibility with them, we should fire keypress event for
     // Ctrl + Enter too.
     return mMessage == eKeyPress && mKeyNameIndex == KEY_NAME_INDEX_Enter &&
-           !(mModifiers & (MODIFIER_ALT | MODIFIER_META | MODIFIER_SHIFT));
+           !(mModifiers &
+             (MODIFIER_ALT | MODIFIER_META | MODIFIER_OS | MODIFIER_SHIFT));
   }
 
   WidgetEvent* Duplicate() const override {
@@ -287,7 +289,7 @@ class WidgetKeyboardEvent final : public WidgetInputEvent {
     // demonstrate user's intent to play media.
     const bool isCombiningWithOperationKeys = (IsControl() && !IsAltGraph()) ||
                                               (IsAlt() && !IsAltGraph()) ||
-                                              IsMeta();
+                                              IsMeta() || IsOS();
     const bool isEnterOrSpaceKey =
         mKeyNameIndex == KEY_NAME_INDEX_Enter || mKeyCode == NS_VK_SPACE;
     return (PseudoCharCode() || isEnterOrSpaceKey) &&
@@ -344,6 +346,8 @@ class WidgetKeyboardEvent final : public WidgetInputEvent {
       // legacy modifier keys:
       case KEY_NAME_INDEX_Hyper:
       case KEY_NAME_INDEX_Super:
+      // obsolete modifier key:
+      case KEY_NAME_INDEX_OS:
         return false;
       default:
         return true;
@@ -706,6 +710,7 @@ class WidgetKeyboardEvent final : public WidgetInputEvent {
       case KEY_NAME_INDEX_Alt:
       case KEY_NAME_INDEX_Control:
       case KEY_NAME_INDEX_Meta:
+      case KEY_NAME_INDEX_OS:
       case KEY_NAME_INDEX_Shift:
         return true;
       default:

@@ -123,10 +123,10 @@ function eventToString(aEvent)
     name += " [Right Alt]";
   }
   if (aEvent.modifiers.metaKey) {
-    name += ` [${IS_MAC ? "Command" : "Win"}]`;
+    name += " [Command]";
   }
   if (aEvent.modifiers.metaRightKey) {
-    name += ` [Right ${IS_MAC ? "Command" : "Win"}]`;
+    name += " [Right Command]";
   }
 
   return name;  
@@ -458,7 +458,7 @@ function* runKeyEventTests()
               is(e.shiftKey, !!(aEvent.modifiers.shiftKey || aEvent.modifiers.shiftRightKey),
                  currentTestName + ", Shift of " + e.type + " of " + e.code + " mismatch");
               is(e.metaKey, !!(aEvent.modifiers.metaKey || aEvent.modifiers.metaRightKey),
-                 currentTestName + ", Meta of " + e.type + " of " + e.code + " mismatch");
+                 currentTestName + ", Command of " + e.type + " of " + e.code + " mismatch");
               var isControlPressed = !!(aEvent.modifiers.ctrlKey || aEvent.modifiers.ctrlRightKey);
               var isAltPressed = !!(aEvent.modifiers.altKey || aEvent.modifiers.altRightKey);
               var isAltGraphExpected =
@@ -668,16 +668,16 @@ function* runKeyEventTests()
     // Command/RightCommand key event
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_Command,
                    modifiers:{metaKey:1}, chars:"", unmodifiedChars:""},
-                  "Meta", "MetaLeft", KeyboardEvent.DOM_VK_META, "", SHOULD_DELIVER_KEYDOWN, KeyboardEvent.DOM_KEY_LOCATION_LEFT);
+                  "Meta", "OSLeft", KeyboardEvent.DOM_VK_META, "", SHOULD_DELIVER_KEYDOWN, KeyboardEvent.DOM_KEY_LOCATION_LEFT);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_Command,
                    modifiers:{metaKey:0}, chars:"", unmodifiedChars:""},
-                  "Meta", "MetaLeft", KeyboardEvent.DOM_VK_META, "", SHOULD_DELIVER_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_LEFT);
+                  "Meta", "OSLeft", KeyboardEvent.DOM_VK_META, "", SHOULD_DELIVER_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_LEFT);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_RightCommand,
                    modifiers:{metaRightKey:1}, chars:"", unmodifiedChars:""},
-                  "Meta", "MetaRight", KeyboardEvent.DOM_VK_META, "", SHOULD_DELIVER_KEYDOWN, KeyboardEvent.DOM_KEY_LOCATION_RIGHT);
+                  "Meta", "OSRight", KeyboardEvent.DOM_VK_META, "", SHOULD_DELIVER_KEYDOWN, KeyboardEvent.DOM_KEY_LOCATION_RIGHT);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_RightCommand,
                    modifiers:{metaRightKey:0}, chars:"", unmodifiedChars:""},
-                  "Meta", "MetaRight", KeyboardEvent.DOM_VK_META, "", SHOULD_DELIVER_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_RIGHT);
+                  "Meta", "OSRight", KeyboardEvent.DOM_VK_META, "", SHOULD_DELIVER_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_RIGHT);
 
     // all keys on keyboard (keyCode test)
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_Tab,
@@ -2995,11 +2995,11 @@ function* runKeyEventTests()
 
     // Win keys
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_LWIN,
-                   modifiers:{metaKey:1}, chars:""},
-                  "Meta", "MetaLeft", KeyboardEvent.DOM_VK_WIN, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_LEFT);
+                   modifiers:{}, chars:""},
+                  "OS" /* bug 1232918 */, "OSLeft", KeyboardEvent.DOM_VK_WIN, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_LEFT);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_RWIN,
-                   modifiers:{metaRightKey:1}, chars:""},
-                  "Meta", "MetaRight", KeyboardEvent.DOM_VK_WIN, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_RIGHT);
+                   modifiers:{}, chars:""},
+                  "OS" /* bug 1232918 */, "OSRight", KeyboardEvent.DOM_VK_WIN, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_RIGHT);
 
     // all keys on keyboard (keyCode test)
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_BACK,

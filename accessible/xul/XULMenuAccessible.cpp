@@ -167,8 +167,10 @@ KeyBinding XULMenuitemAccessible::AccessKey() const {
           modifierKey = KeyBinding::kAlt;
           break;
         case dom::KeyboardEvent_Binding::DOM_VK_META:
-        case dom::KeyboardEvent_Binding::DOM_VK_WIN:
           modifierKey = KeyBinding::kMeta;
+          break;
+        case dom::KeyboardEvent_Binding::DOM_VK_WIN:
+          modifierKey = KeyBinding::kOS;
           break;
       }
     }
@@ -208,6 +210,7 @@ KeyBinding XULMenuitemAccessible::KeyboardShortcut() const {
   if (modifiersStr.Find(u"shift") != -1) modifierMask |= KeyBinding::kShift;
   if (modifiersStr.Find(u"alt") != -1) modifierMask |= KeyBinding::kAlt;
   if (modifiersStr.Find(u"meta") != -1) modifierMask |= KeyBinding::kMeta;
+  if (modifiersStr.Find(u"os") != -1) modifierMask |= KeyBinding::kOS;
   if (modifiersStr.Find(u"control") != -1) modifierMask |= KeyBinding::kControl;
   if (modifiersStr.Find(u"accel") != -1) {
     modifierMask |= KeyBinding::AccelModifier();

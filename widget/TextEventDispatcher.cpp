@@ -667,7 +667,7 @@ bool TextEventDispatcher::DispatchKeyboardEventInternal(
   keyEvent.mAlternativeCharCodes.Clear();
   if ((aMessage == eKeyDown || aMessage == eKeyPress) &&
       (aNeedsCallback || keyEvent.IsControl() || keyEvent.IsAlt() ||
-       keyEvent.IsMeta())) {
+       keyEvent.IsMeta() || keyEvent.IsOS())) {
     nsCOMPtr<TextEventDispatcherListener> listener =
         do_QueryReferent(mListener);
     if (listener) {

@@ -246,6 +246,7 @@ static const ModifierPair kPairs[] = {
   { MODIFIER_SHIFT,      NS_DOM_KEYNAME_SHIFT },
   { MODIFIER_SYMBOL,     NS_DOM_KEYNAME_SYMBOL },
   { MODIFIER_SYMBOLLOCK, NS_DOM_KEYNAME_SYMBOLLOCK },
+  { MODIFIER_OS,         NS_DOM_KEYNAME_OS }
     // clang-format on
 };
 
@@ -314,6 +315,7 @@ void UIEvent::InitModifiers(const EventModifierInit& aParam) {
   SET_MODIFIER(ModifierFn, MODIFIER_FN)
   SET_MODIFIER(ModifierFnLock, MODIFIER_FNLOCK)
   SET_MODIFIER(ModifierNumLock, MODIFIER_NUMLOCK)
+  SET_MODIFIER(ModifierOS, MODIFIER_OS)
   SET_MODIFIER(ModifierScrollLock, MODIFIER_SCROLLLOCK)
   SET_MODIFIER(ModifierSymbol, MODIFIER_SYMBOL)
   SET_MODIFIER(ModifierSymbolLock, MODIFIER_SYMBOLLOCK)

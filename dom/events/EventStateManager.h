@@ -688,16 +688,17 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
       INDEX_CONTROL,
       INDEX_META,
       INDEX_SHIFT,
+      INDEX_OS,
       COUNT_OF_MULTIPLIERS
     };
 
     /**
      * GetIndexFor() returns the index of the members which should be used for
      * the aEvent.  When only one modifier key of MODIFIER_ALT,
-     * MODIFIER_CONTROL, MODIFIER_META or MODIFIER_SHIFT is pressed, returns the
-     * index for the modifier.  Otherwise, this return the default index which
-     * is used at either no modifier key is pressed or two or modifier keys are
-     * pressed.
+     * MODIFIER_CONTROL, MODIFIER_META, MODIFIER_SHIFT or MODIFIER_OS is
+     * pressed, returns the index for the modifier.  Otherwise, this return the
+     * default index which is used at either no modifier key is pressed or
+     * two or modifier keys are pressed.
      */
     Index GetIndexFor(const WidgetWheelEvent* aEvent);
 

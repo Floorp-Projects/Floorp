@@ -86,8 +86,8 @@ pref("general.warnOnAboutConfig", true);
 pref("general.autoscroll.prevent_to_start.shiftKey", true); // Shift
 pref("general.autoscroll.prevent_to_start.ctrlKey", false); // Control
 pref("general.autoscroll.prevent_to_start.altKey", false);  // Alt
-// Command on macOS, Windows key on Windows or Super key on Linux
-pref("general.autoscroll.prevent_to_start.metaKey", false);
+pref("general.autoscroll.prevent_to_start.metaKey", false); // Command on macOS
+pref("general.autoscroll.prevent_to_start.osKey", false);   // Windows key on Windows or Super key on Linux
 
 // When this pref is set to true, middle click on non-editable content keeps
 // selected range rather than collapsing selection at the clicked position.
@@ -1915,9 +1915,9 @@ pref("middlemouse.scrollbarPosition", false);
 pref("mousewheel.default.action", 1);
 pref("mousewheel.with_alt.action", 2);
 pref("mousewheel.with_control.action", 3);
-// Command key on Mac, Windows log key on Windows and Linux
-pref("mousewheel.with_meta.action", 1);
+pref("mousewheel.with_meta.action", 1);  // command key on Mac
 pref("mousewheel.with_shift.action", 4);
+pref("mousewheel.with_win.action", 1);
 
 // mousewheel.*.action.override_x will override the action
 // when the mouse wheel is rotated along the x direction.
@@ -1928,9 +1928,9 @@ pref("mousewheel.with_shift.action", 4);
 pref("mousewheel.default.action.override_x", -1);
 pref("mousewheel.with_alt.action.override_x", -1);
 pref("mousewheel.with_control.action.override_x", -1);
-// Command key on Mac, Windows log key on Windows and Linux
-pref("mousewheel.with_meta.action.override_x", -1);
+pref("mousewheel.with_meta.action.override_x", -1);  // command key on Mac
 pref("mousewheel.with_shift.action.override_x", -1);
+pref("mousewheel.with_win.action.override_x", -1);
 
 // mousewheel.*.delta_multiplier_* can specify the value muliplied by the delta
 // value.  The values will be used after divided by 100.  I.e., 100 means 1.0,
@@ -1945,13 +1945,15 @@ pref("mousewheel.with_alt.delta_multiplier_z", 100);
 pref("mousewheel.with_control.delta_multiplier_x", 100);
 pref("mousewheel.with_control.delta_multiplier_y", 100);
 pref("mousewheel.with_control.delta_multiplier_z", 100);
-// Command key on Mac, Windows log key on Windows and Linux
-pref("mousewheel.with_meta.delta_multiplier_x", 100);
-pref("mousewheel.with_meta.delta_multiplier_y", 100);
-pref("mousewheel.with_meta.delta_multiplier_z", 100);
+pref("mousewheel.with_meta.delta_multiplier_x", 100);  // command key on Mac
+pref("mousewheel.with_meta.delta_multiplier_y", 100);  // command key on Mac
+pref("mousewheel.with_meta.delta_multiplier_z", 100);  // command key on Mac
 pref("mousewheel.with_shift.delta_multiplier_x", 100);
 pref("mousewheel.with_shift.delta_multiplier_y", 100);
 pref("mousewheel.with_shift.delta_multiplier_z", 100);
+pref("mousewheel.with_win.delta_multiplier_x", 100);
+pref("mousewheel.with_win.delta_multiplier_y", 100);
+pref("mousewheel.with_win.delta_multiplier_z", 100);
 
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
