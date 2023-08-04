@@ -733,6 +733,11 @@ struct RoleDescrComparator {
 - (NSString*)moxMozDebugDescription {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
+  if (!mGeckoAccessible) {
+    return [NSString stringWithFormat:@"<%@: %p mGeckoAccessible=null>",
+                                      NSStringFromClass([self class]), self];
+  }
+
   NSMutableString* domInfo = [NSMutableString string];
   if (NSString* tagName = utils::GetAccAttr(self, nsGkAtoms::tag)) {
     [domInfo appendFormat:@" %@", tagName];
