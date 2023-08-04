@@ -124,7 +124,7 @@ void CodeGeneratorX86Shared::emitCompare(MCompare::CompareType type,
 #ifdef JS_CODEGEN_X64
   if (type == MCompare::Compare_Object || type == MCompare::Compare_Symbol ||
       type == MCompare::Compare_UIntPtr ||
-      type == MCompare::Compare_RefOrNull) {
+      type == MCompare::Compare_WasmAnyRef) {
     if (right->isConstant()) {
       MOZ_ASSERT(type == MCompare::Compare_UIntPtr);
       masm.cmpPtr(ToRegister(left), Imm32(ToInt32(right)));
@@ -304,7 +304,7 @@ void CodeGenerator::visitWasmSelect(LWasmSelect* ins) {
 
   masm.test32(cond, cond);
 
-  if (mirType == MIRType::Int32 || mirType == MIRType::RefOrNull) {
+  if (mirType == MIRType::Int32 || mirType == MIRType::WasmAnyRef) {
     Register out = ToRegister(ins->output());
     MOZ_ASSERT(ToRegister(ins->trueExpr()) == out,
                "true expr input is reused for output");

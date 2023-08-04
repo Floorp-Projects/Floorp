@@ -104,7 +104,7 @@ void CodeGenerator::visitCompare(LCompare* comp) {
 
   if (type == MCompare::Compare_Object || type == MCompare::Compare_Symbol ||
       type == MCompare::Compare_UIntPtr ||
-      type == MCompare::Compare_RefOrNull) {
+      type == MCompare::Compare_WasmAnyRef) {
     if (right->isConstant()) {
       MOZ_ASSERT(type == MCompare::Compare_UIntPtr);
       masm.cmpPtrSet(cond, leftreg, Imm32(ToInt32(right)), defreg);
@@ -129,7 +129,7 @@ void CodeGenerator::visitCompareAndBranch(LCompareAndBranch* comp) {
 
   if (type == MCompare::Compare_Object || type == MCompare::Compare_Symbol ||
       type == MCompare::Compare_UIntPtr ||
-      type == MCompare::Compare_RefOrNull) {
+      type == MCompare::Compare_WasmAnyRef) {
     if (right->isConstant()) {
       MOZ_ASSERT(type == MCompare::Compare_UIntPtr);
       masm.cmpPtr(ToRegister(left), Imm32(ToInt32(right)));
@@ -2417,7 +2417,7 @@ void CodeGenerator::visitWasmSelect(LWasmSelect* lir) {
 
   switch (mirType) {
     case MIRType::Int32:
-    case MIRType::RefOrNull: {
+    case MIRType::WasmAnyRef: {
       Register outReg = ToRegister(lir->output());
       Register trueReg = ToRegister(lir->trueExpr());
       Register falseReg = ToRegister(lir->falseExpr());

@@ -506,7 +506,7 @@ void JitValuePreWriteBarrier(JSRuntime* rt, Value* vp);
 void JitStringPreWriteBarrier(JSRuntime* rt, JSString** stringp);
 void JitObjectPreWriteBarrier(JSRuntime* rt, JSObject** objp);
 void JitShapePreWriteBarrier(JSRuntime* rt, Shape** shapep);
-void JitRefOrNullPreWriteBarrier(JSRuntime* rt, wasm::AnyRef* refp);
+void JitWasmAnyRefPreWriteBarrier(JSRuntime* rt, wasm::AnyRef* refp);
 
 bool ObjectIsCallable(JSObject* obj);
 bool ObjectIsConstructor(JSObject* obj);

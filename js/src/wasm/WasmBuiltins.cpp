@@ -69,7 +69,7 @@ static const unsigned BUILTIN_THUNK_LIFO_SIZE = 64 * 1024;
 #define _I32 MIRType::Int32
 #define _I64 MIRType::Int64
 #define _PTR MIRType::Pointer
-#define _RoN MIRType::RefOrNull
+#define _RoN MIRType::WasmAnyRef
 #define _VOID MIRType::None
 #define _END MIRType::None
 #define _Infallible FailureMode::Infallible
@@ -425,7 +425,7 @@ ABIArgType ToABIType(MIRType type) {
     case MIRType::Int64:
       return ArgType_Int64;
     case MIRType::Pointer:
-    case MIRType::RefOrNull:
+    case MIRType::WasmAnyRef:
       return ArgType_General;
     case MIRType::Float32:
       return ArgType_Float32;

@@ -9080,7 +9080,7 @@ void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
       masm.loadDouble(addr, dst.fpu());
       break;
     case MIRType::Pointer:
-    case MIRType::RefOrNull:
+    case MIRType::WasmAnyRef:
       MOZ_ASSERT(wideningOp == MWideningOp::None);
       masm.loadPtr(addr, dst.gpr());
       break;
@@ -9131,7 +9131,7 @@ void CodeGenerator::visitWasmStoreSlot(LWasmStoreSlot* ins) {
     case MIRType::Pointer:
       // This could be correct, but it would be a new usage, so check carefully.
       MOZ_CRASH("Unexpected type in visitWasmStoreSlot.");
-    case MIRType::RefOrNull:
+    case MIRType::WasmAnyRef:
       MOZ_CRASH("Bad type in visitWasmStoreSlot. Use LWasmStoreRef.");
 #ifdef ENABLE_WASM_SIMD
     case MIRType::Simd128:
@@ -17507,7 +17507,7 @@ void CodeGenerator::visitWasmAlignmentCheck64(LWasmAlignmentCheck64* ins) {
 
 void CodeGenerator::visitWasmLoadInstance(LWasmLoadInstance* ins) {
   switch (ins->mir()->type()) {
-    case MIRType::RefOrNull:
+    case MIRType::WasmAnyRef:
     case MIRType::Pointer:
       masm.loadPtr(Address(ToRegister(ins->instance()), ins->mir()->offset()),
                    ToRegister(ins->output()));

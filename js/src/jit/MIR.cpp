@@ -1380,7 +1380,7 @@ bool MWasmFloatConstant::congruentTo(const MDefinition* ins) const {
 }
 
 HashNumber MWasmNullConstant::valueHash() const {
-  return ConstantValueHash(MIRType::RefOrNull, 0);
+  return ConstantValueHash(MIRType::WasmAnyRef, 0);
 }
 
 #ifdef JS_JITSPEW

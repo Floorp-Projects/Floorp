@@ -89,7 +89,7 @@ void BaseCompiler::loadMemRef(const Stk& src, RegRef dest) {
 }
 
 void BaseCompiler::loadLocalRef(const Stk& src, RegRef dest) {
-  fr.loadLocalRef(localFromSlot(src.slot(), MIRType::RefOrNull), dest);
+  fr.loadLocalRef(localFromSlot(src.slot(), MIRType::WasmAnyRef), dest);
 }
 
 void BaseCompiler::loadRegisterRef(const Stk& src, RegRef dest) {

@@ -370,7 +370,7 @@ bool BaseCompiler::beginFunction() {
   for (WasmABIArgIter i(args); !i.done(); i++) {
     ABIArg argLoc = *i;
     if (argLoc.kind() == ABIArg::Stack &&
-        args[i.index()] == MIRType::RefOrNull) {
+        args[i.index()] == MIRType::WasmAnyRef) {
       uint32_t offset = argLoc.offsetFromArgBase();
       MOZ_ASSERT(offset < inboundStackArgBytes);
       MOZ_ASSERT(offset % sizeof(void*) == 0);
@@ -443,7 +443,7 @@ bool BaseCompiler::beginFunction() {
   for (const Local& l : localInfo_) {
     // Locals that are stack arguments were already added to the stackmap
     // before pushing the frame.
-    if (l.type == MIRType::RefOrNull && !l.isStackArgument()) {
+    if (l.type == MIRType::WasmAnyRef && !l.isStackArgument()) {
       uint32_t offs = fr.localOffsetFromSp(l);
       MOZ_ASSERT(0 == (offs % sizeof(void*)));
       stackMapGenerator_.machineStackTracker.setGCPointer(offs / sizeof(void*));
@@ -483,7 +483,7 @@ bool BaseCompiler::beginFunction() {
       case MIRType::Int64:
         fr.storeLocalI64(RegI64(i->gpr64()), l);
         break;
-      case MIRType::RefOrNull: {
+      case MIRType::WasmAnyRef: {
         DebugOnly<uint32_t> offs = fr.localOffsetFromSp(l);
         MOZ_ASSERT(0 == (offs % sizeof(void*)));
         fr.storeLocalRef(RegRef(i->gpr()), l);
@@ -1533,7 +1533,7 @@ void BaseCompiler::passArg(ValType type, const Stk& arg, FunctionCall* call) {
       break;
     }
     case ValType::Ref: {
-      ABIArg argLoc = call->abi.next(MIRType::RefOrNull);
+      ABIArg argLoc = call->abi.next(MIRType::WasmAnyRef);
       if (argLoc.kind() == ABIArg::Stack) {
         ScratchRef scratch(*this);
         loadRef(arg, scratch);
@@ -4652,7 +4652,7 @@ void BaseCompiler::pushReturnValueOfCall(const FunctionCall& call,
       break;
     }
 #endif
-    case MIRType::RefOrNull: {
+    case MIRType::WasmAnyRef: {
       RegRef rv = captureReturnedRef();
       pushRef(rv);
       break;
@@ -5346,7 +5346,7 @@ bool BaseCompiler::emitSetOrTeeLocal(uint32_t slot) {
     case ValType::Ref: {
       RegRef rv = popRef();
       syncLocal(slot);
-      fr.storeLocalRef(rv, localFromSlot(slot, MIRType::RefOrNull));
+      fr.storeLocalRef(rv, localFromSlot(slot, MIRType::WasmAnyRef));
       if (isSetLocal) {
         freeRef(rv);
       } else {
@@ -5834,7 +5834,7 @@ bool BaseCompiler::emitInstanceCall(const SymbolicAddressSignature& builtin) {
       case MIRType::Float32:
         t = ValType::F32;
         break;
-      case MIRType::RefOrNull:
+      case MIRType::WasmAnyRef:
         t = RefType::extern_();
         break;
       case MIRType::Pointer:
