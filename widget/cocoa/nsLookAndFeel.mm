@@ -447,15 +447,9 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::PrefersReducedTransparency:
       aResult = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceTransparency;
       break;
-    case IntID::InvertedColors: {
-      Boolean exists;
-      // Cannot use accessibilityDisplayShouldInvertColors as that matches Smart Invert, we want
-      // Classic Invert
-      Boolean val = CFPreferencesGetAppBooleanValue(CFSTR("AXSClassicInvertColorsPreference"),
-                                                    CFSTR("com.apple.Accessibility"), &exists);
-      aResult = exists && val;
+    case IntID::InvertedColors:
+      aResult = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldInvertColors;
       break;
-    }
     case IntID::UseAccessibilityTheme:
       aResult = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldIncreaseContrast;
       break;
