@@ -80,6 +80,7 @@ class KeyBinding {
   static const uint32_t kControl = 2;
   static const uint32_t kAlt = 4;
   static const uint32_t kMeta = 8;
+  static const uint32_t kOS = 16;
 
   static uint32_t AccelModifier();
 

@@ -615,8 +615,10 @@ Modifier WidgetInputEvent::AccelModifier() {
   if (sAccelModifier == MODIFIER_NONE) {
     switch (StaticPrefs::ui_key_accelKey()) {
       case dom::KeyboardEvent_Binding::DOM_VK_META:
-      case dom::KeyboardEvent_Binding::DOM_VK_WIN:
         sAccelModifier = MODIFIER_META;
+        break;
+      case dom::KeyboardEvent_Binding::DOM_VK_WIN:
+        sAccelModifier = MODIFIER_OS;
         break;
       case dom::KeyboardEvent_Binding::DOM_VK_ALT:
         sAccelModifier = MODIFIER_ALT;
@@ -906,6 +908,7 @@ bool WidgetKeyboardEvent::ShouldCauseKeypressEvents() const {
     // case KEY_NAME_INDEX_Hyper:
     case KEY_NAME_INDEX_Meta:
     case KEY_NAME_INDEX_NumLock:
+    case KEY_NAME_INDEX_OS:
     case KEY_NAME_INDEX_ScrollLock:
     case KEY_NAME_INDEX_Shift:
     // case KEY_NAME_INDEX_Super:
@@ -1078,6 +1081,7 @@ void WidgetKeyboardEvent::GetAccessKeyCandidates(
 #define NS_MODIFIER_CONTROL 2
 #define NS_MODIFIER_ALT 4
 #define NS_MODIFIER_META 8
+#define NS_MODIFIER_OS 16
 
 static Modifiers PrefFlagsToModifiers(int32_t aPrefFlags) {
   Modifiers result = 0;
@@ -1093,6 +1097,9 @@ static Modifiers PrefFlagsToModifiers(int32_t aPrefFlags) {
   if (aPrefFlags & NS_MODIFIER_META) {
     result |= MODIFIER_META;
   }
+  if (aPrefFlags & NS_MODIFIER_OS) {
+    result |= MODIFIER_OS;
+  }
   return result;
 }
 
@@ -1105,8 +1112,9 @@ bool WidgetKeyboardEvent::ModifiersMatchWithAccessKey(
 }
 
 Modifiers WidgetKeyboardEvent::ModifiersForAccessKeyMatching() const {
-  static const Modifiers kModifierMask =
-      MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META;
+  static const Modifiers kModifierMask = MODIFIER_SHIFT | MODIFIER_CONTROL |
+                                         MODIFIER_ALT | MODIFIER_META |
+                                         MODIFIER_OS;
   return mModifiers & kModifierMask;
 }
 
@@ -1122,8 +1130,9 @@ Modifiers WidgetKeyboardEvent::AccessKeyModifiers(AccessKeyType aType) {
     case NS_VK_ALT:
       return MODIFIER_ALT;
     case NS_VK_META:
-    case NS_VK_WIN:
       return MODIFIER_META;
+    case NS_VK_WIN:
+      return MODIFIER_OS;
     default:
       return MODIFIER_NONE;
   }
@@ -1298,12 +1307,12 @@ uint32_t WidgetKeyboardEvent::ComputeLocationFromCodeValue(
   switch (aCodeNameIndex) {
     case CODE_NAME_INDEX_AltLeft:
     case CODE_NAME_INDEX_ControlLeft:
-    case CODE_NAME_INDEX_MetaLeft:
+    case CODE_NAME_INDEX_OSLeft:
     case CODE_NAME_INDEX_ShiftLeft:
       return eKeyLocationLeft;
     case CODE_NAME_INDEX_AltRight:
     case CODE_NAME_INDEX_ControlRight:
-    case CODE_NAME_INDEX_MetaRight:
+    case CODE_NAME_INDEX_OSRight:
     case CODE_NAME_INDEX_ShiftRight:
       return eKeyLocationRight;
     case CODE_NAME_INDEX_Numpad0:
@@ -1421,6 +1430,10 @@ uint32_t WidgetKeyboardEvent::ComputeKeyCodeFromKeyNameIndex(
       return dom::KeyboardEvent_Binding::DOM_VK_INSERT;
     case KEY_NAME_INDEX_Delete:
       return dom::KeyboardEvent_Binding::DOM_VK_DELETE;
+    case KEY_NAME_INDEX_OS:
+      // case KEY_NAME_INDEX_Super:
+      // case KEY_NAME_INDEX_Hyper:
+      return dom::KeyboardEvent_Binding::DOM_VK_WIN;
     case KEY_NAME_INDEX_ContextMenu:
       return dom::KeyboardEvent_Binding::DOM_VK_CONTEXT_MENU;
     case KEY_NAME_INDEX_Standby:
@@ -1484,11 +1497,7 @@ uint32_t WidgetKeyboardEvent::ComputeKeyCodeFromKeyNameIndex(
     case KEY_NAME_INDEX_AudioVolumeUp:
       return dom::KeyboardEvent_Binding::DOM_VK_VOLUME_UP;
     case KEY_NAME_INDEX_Meta:
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-      return dom::KeyboardEvent_Binding::DOM_VK_WIN;
-#else
       return dom::KeyboardEvent_Binding::DOM_VK_META;
-#endif
     case KEY_NAME_INDEX_AltGraph:
       return dom::KeyboardEvent_Binding::DOM_VK_ALTGR;
     case KEY_NAME_INDEX_Process:
@@ -1572,8 +1581,22 @@ CodeNameIndex WidgetKeyboardEvent::ComputeCodeNameIndexFromKeyNameIndex(
                        : CODE_NAME_INDEX_ControlLeft;
       case KEY_NAME_INDEX_Shift:
         return isRight ? CODE_NAME_INDEX_ShiftRight : CODE_NAME_INDEX_ShiftLeft;
+#if defined(XP_WIN)
       case KEY_NAME_INDEX_Meta:
-        return isRight ? CODE_NAME_INDEX_MetaRight : CODE_NAME_INDEX_MetaLeft;
+        return CODE_NAME_INDEX_UNKNOWN;
+      case KEY_NAME_INDEX_OS:  // win key.
+        return isRight ? CODE_NAME_INDEX_OSRight : CODE_NAME_INDEX_OSLeft;
+#elif defined(XP_MACOSX) || defined(ANDROID)
+      case KEY_NAME_INDEX_Meta:  // command key.
+        return isRight ? CODE_NAME_INDEX_OSRight : CODE_NAME_INDEX_OSLeft;
+      case KEY_NAME_INDEX_OS:
+        return CODE_NAME_INDEX_UNKNOWN;
+#else
+      case KEY_NAME_INDEX_Meta:  // Alt + Shift.
+        return isRight ? CODE_NAME_INDEX_AltRight : CODE_NAME_INDEX_AltLeft;
+      case KEY_NAME_INDEX_OS:  // Super/Hyper key.
+        return isRight ? CODE_NAME_INDEX_OSRight : CODE_NAME_INDEX_OSLeft;
+#endif
       default:
         return CODE_NAME_INDEX_UNKNOWN;
     }
@@ -1840,6 +1863,8 @@ Modifier WidgetKeyboardEvent::GetModifierForKeyName(
       return MODIFIER_META;
     case KEY_NAME_INDEX_NumLock:
       return MODIFIER_NUMLOCK;
+    case KEY_NAME_INDEX_OS:
+      return MODIFIER_OS;
     case KEY_NAME_INDEX_ScrollLock:
       return MODIFIER_SCROLLLOCK;
     case KEY_NAME_INDEX_Shift:

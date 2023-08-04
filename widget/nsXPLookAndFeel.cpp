@@ -1535,8 +1535,9 @@ Modifiers LookAndFeel::GetMenuAccessKeyModifiers() {
     case dom::KeyboardEvent_Binding::DOM_VK_ALT:
       return MODIFIER_ALT;
     case dom::KeyboardEvent_Binding::DOM_VK_META:
-    case dom::KeyboardEvent_Binding::DOM_VK_WIN:
       return MODIFIER_META;
+    case dom::KeyboardEvent_Binding::DOM_VK_WIN:
+      return MODIFIER_OS;
     default:
       return 0;
   }

@@ -866,7 +866,7 @@ void ModifierKeyState::Update() {
     }
   }
   if (IS_VK_DOWN(VK_LWIN) || IS_VK_DOWN(VK_RWIN)) {
-    mModifiers |= MODIFIER_META;
+    mModifiers |= MODIFIER_OS;
   }
   if (::GetKeyState(VK_CAPITAL) & 1) {
     mModifiers |= MODIFIER_CAPSLOCK;
@@ -944,9 +944,7 @@ bool ModifierKeyState::IsAlt() const {
   return (mModifiers & MODIFIER_ALT) != 0;
 }
 
-bool ModifierKeyState::IsWin() const {
-  return (mModifiers & MODIFIER_META) != 0;
-}
+bool ModifierKeyState::IsWin() const { return (mModifiers & MODIFIER_OS) != 0; }
 
 bool ModifierKeyState::MaybeMatchShortcutKey() const {
   // If Windows key is pressed, even if both Ctrl key and Alt key are pressed,

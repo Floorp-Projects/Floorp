@@ -1341,7 +1341,8 @@ nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
       // insert a horizontal tabulation.
       if (IsPlaintextMailComposer()) {
         if (aKeyboardEvent->IsShift() || aKeyboardEvent->IsControl() ||
-            aKeyboardEvent->IsAlt() || aKeyboardEvent->IsMeta()) {
+            aKeyboardEvent->IsAlt() || aKeyboardEvent->IsMeta() ||
+            aKeyboardEvent->IsOS()) {
           return NS_OK;
         }
 
@@ -1356,7 +1357,7 @@ nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
       // Otherwise, e.g., we're an embedding editor in chrome, we can handle
       // "Tab" key as an input.
       if (aKeyboardEvent->IsControl() || aKeyboardEvent->IsAlt() ||
-          aKeyboardEvent->IsMeta()) {
+          aKeyboardEvent->IsMeta() || aKeyboardEvent->IsOS()) {
         return NS_OK;
       }
 

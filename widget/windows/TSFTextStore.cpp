@@ -635,6 +635,10 @@ static nsCString GetModifiersName(Modifiers aModifiers) {
     ADD_SEPARATOR_IF_NECESSARY(names);
     names += NS_DOM_KEYNAME_SYMBOLLOCK;
   }
+  if (aModifiers & MODIFIER_OS) {
+    ADD_SEPARATOR_IF_NECESSARY(names);
+    names += NS_DOM_KEYNAME_OS;
+  }
   return names;
 }
 

@@ -516,6 +516,9 @@ function _parseModifiers(aEvent, aWindow = window) {
   if (aEvent.symbolLockKey) {
     mval |= nsIDOMWindowUtils.MODIFIER_SYMBOLLOCK;
   }
+  if (aEvent.osKey) {
+    mval |= nsIDOMWindowUtils.MODIFIER_OS;
+  }
 
   return mval;
 }
@@ -1370,8 +1373,8 @@ function synthesizeAndWaitNativeMouseMove(
  *
  * @description
  * ``accelKey``, ``altKey``, ``altGraphKey``, ``ctrlKey``, ``capsLockKey``,
- * ``fnKey``, ``fnLockKey``, ``numLockKey``, ``metaKey``, ``scrollLockKey``,
- * ``shiftKey``, ``symbolKey``, ``symbolLockKey``
+ * ``fnKey``, ``fnLockKey``, ``numLockKey``, ``metaKey``, ``osKey``,
+ * ``scrollLockKey``, ``shiftKey``, ``symbolKey``, ``symbolLockKey``
  * Basically, you shouldn't use these attributes.  nsITextInputProcessor
  * manages modifier key state when you synthesize modifier key events.
  * However, if some of these attributes are true, this function activates
@@ -2164,6 +2167,7 @@ function _emulateToActivateModifiers(aTIP, aKeyEvent, aWindow = window) {
       { key: "Control", attr: "ctrlKey" },
       { key: "Fn", attr: "fnKey" },
       { key: "Meta", attr: "metaKey" },
+      { key: "OS", attr: "osKey" },
       { key: "Shift", attr: "shiftKey" },
       { key: "Symbol", attr: "symbolKey" },
       { key: _EU_isMac(aWindow) ? "Meta" : "Control", attr: "accelKey" },
