@@ -832,6 +832,7 @@ package org.mozilla.geckoview {
     method public boolean getDoubleTapZoomingEnabled();
     method public boolean getEnterpriseRootsEnabled();
     method @AnyThread @Nullable public ExperimentDelegate getExperimentDelegate();
+    method public boolean getExtensionsWebAPIEnabled();
     method @NonNull public Bundle getExtras();
     method public boolean getFontInflationEnabled();
     method public float getFontSizeFactor();
@@ -857,6 +858,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings setConsoleOutputEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setDoubleTapZoomingEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setEnterpriseRootsEnabled(boolean);
+    method @NonNull public GeckoRuntimeSettings setExtensionsWebAPIEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setFontInflationEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setFontSizeFactor(float);
     method @NonNull public GeckoRuntimeSettings setForceEnableAccessibility(boolean);
@@ -895,6 +897,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder doubleTapZoomingEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder enterpriseRootsEnabled(boolean);
     method @AnyThread @NonNull public GeckoRuntimeSettings.Builder experimentDelegate(@Nullable ExperimentDelegate);
+    method @NonNull public GeckoRuntimeSettings.Builder extensionsWebAPIEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder extras(@NonNull Bundle);
     method @NonNull public GeckoRuntimeSettings.Builder fontInflation(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder fontSizeFactor(float);
