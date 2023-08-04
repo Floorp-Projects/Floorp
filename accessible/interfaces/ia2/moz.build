@@ -29,6 +29,7 @@ midl_interfaces = [
     "AccessibleTableCell",
     "AccessibleText",
     "AccessibleText2",
+    "AccessibleTextSelectionContainer",
     "AccessibleValue",
 ]
 
