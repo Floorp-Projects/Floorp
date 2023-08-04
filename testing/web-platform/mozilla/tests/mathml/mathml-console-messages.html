@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test MathML console messages</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=553917"/>
+<link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=827713"/>
+<link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1845461"/>
+<body>
+  <script>
+    const MessageLevel = {
+        ERROR: 0,
+        WARNING: 1,
+    };
+
+    function retrieveConsoleMessagesFor(markup) {
+        return new Promise(resolve => {
+            const iframe = document.createElement('iframe');
+            iframe.srcdoc = `<!DOCTYPE html>
+<script>let messages = [];
+  SpecialPowers.registerConsoleListener(msg => {
+    if (msg.message == "SENTINEL") {
+      window.parent.postMessage(messages);
+    } else if (msg.isScriptError) {
+      messages.push(msg);
+    }
+  });
+  window.addEventListener("load", () => SpecialPowers.postConsoleSentinel());
+<\/script>
+<body>${markup}</body>`;
+            window.addEventListener("message", event => {
+                iframe.remove();
+                resolve(event.data);
+            }, {once: true});
+            document.body.appendChild(iframe);
+        });
+    }
+
+    function testMessageForMarkup(markup, regexp, level) {
+        promise_test(async function() {
+            let messages = await retrieveConsoleMessagesFor(markup);
+
+            // Sometimes MathML messages are logged several times, so just
+            // ensure there is at least one.
+            assert_greater_than_equal(messages.length, 1);
+
+            // Compare against the regexp.
+            assert_regexp_match(messages[0].errorMessage, regexp);
+
+            // Check whether this is a warning or an error.
+            assert_equals(messages[0].isWarning, level == MessageLevel.WARNING);
+        }, `Message for ${markup}`);
+    }
+
+    function testNoMessageForMarkup(markup) {
+        promise_test(async function() {
+            let messages = await retrieveConsoleMessagesFor(markup);
+            assert_equals(messages.length, 0);
+        }, `No message for ${markup}`);
+    }
+
+    // ChildCountIncorrect
+    [
+        "mroot",
+        "msub",
+        "msup",
+        "mfrac",
+        "msubsup",
+        "munderover",
+    ].forEach(tag => {
+        testMessageForMarkup(
+            `<math><${tag}></${tag}></math>`,
+            new RegExp(`Incorrect number of children for <${tag}/>`),
+            MessageLevel.ERROR);
+    });
+
+    // AttributeParsingError
+    [
+        "width",
+        "height",
+        "voffset",
+    ].forEach(attribute => {
+        testMessageForMarkup(
+            `<math><mpadded ${attribute}="BAD!"></mpadded></math>`,
+            new RegExp(`Error in parsing the value ‘BAD!’ for ‘${attribute}’ attribute`),
+            MessageLevel.ERROR);
+    });
+
+    // LengthParsingError
+    [
+        '<math><mo rspace="2..0px">+</mo></math>',
+        '<math><mo minsize="1.5notaunit">+</mo></math>',
+        '<math><mspace width="2"/></math>',
+        '<math><mo lspace="BADlspace">+</mo></math>',
+        '<math><mspace height="BADheight"/></math>',
+        '<math><mspace depth="BADdepth"/></math>',
+        '<math><mfrac linethickness="thin"><mn>1</mn><mn>2</mn></mfrac></math>',
+        '<math><mfrac linethickness="medium"><mn>1</mn><mn>2</mn></mfrac></math>',
+        '<math><mfrac linethickness="thick"><mn>1</mn><mn>2</mn></mfrac></math>',
+        '<math><mstyle mathsize="small"></mstyle></math>',
+        '<math><mstyle mathsize="normal"></mstyle></math>',
+        '<math><mstyle mathsize="big"></mstyle></math>',
+        '<math><mspace width="12345."/></math>',
+        '<math><mo minsize="17">+</mo></math>',
+    ].forEach(markup => {
+        const value = /="([a-zA-Z0-9.]+)"/.exec(markup)[1];
+        testMessageForMarkup(
+            markup,
+            new RegExp(`Error in parsing MathML attribute value ‘${value}’`),
+            MessageLevel.ERROR);
+    });
+
+    // MathML_DeprecatedMathSpaceValueWarning
+    [
+        '<math><mspace width="mediummathspace"></mspace></math>',
+        '<math><mspace width="negativemediummathspace"></mspace></math>',
+        '<math><mspace width="negativethickmathspace"></mspace></math>',
+        '<math><mspace width="negativethinmathspace"></mspace></math>',
+        '<math><mspace width="negativeverythickmathspace"></mspace></math>',
+        '<math><mspace width="negativeverythinmathspace"></mspace></math>',
+        '<math><mspace width="negativeveryverythickmathspace"></mspace></math>',
+        '<math><mspace width="negativeveryverythinmathspace"></mspace></math>',
+        '<math><mspace width="thickmathspace"></mspace></math>',
+        '<math><mspace width="thinmathspace"></mspace></math>',
+        '<math><mspace width="verythickmathspace"></mspace></math>',
+        '<math><mspace width="verythinmathspace"></mspace></math>',
+        '<math><mspace width="veryverythickmathspace"></mspace></math>',
+        '<math><mspace width="veryverythinmathspace"></mspace></math>',
+    ].forEach(markup => {
+        const value = /="([a-zA-Z0-9.]+)"/.exec(markup)[1];
+        testMessageForMarkup(
+            markup,
+            new RegExp(`MathML length value “${value}” is deprecated`),
+            MessageLevel.WARNING);
+    });
+
+    // InvalidChild
+    [
+        `<math>
+          <msubsup>
+            <mprescripts/>
+          </msubsup>
+         </math>`,
+        `<math>
+           <msubsup>
+             <mprescripts/>
+             <mprescripts/>
+           </msubsup>
+         </math>`,
+        `<math>
+           <msub>
+           <mtext>a</mtext>
+             <mprescripts/>
+             <mtext>a</mtext>
+           <mprescripts/>
+           </msub>
+         </math>`,
+        '<math><msub><mn>0</mn><mprescripts/></msub></math>',
+        '<math><msup><mn>0</mn><mprescripts/></msup></math>',
+        '<math><msubsup><mn>0</mn><mn>1</mn><mprescripts/></msubsup></math>',
+    ].forEach(markup => {
+        const tag = /<math>\s*<([a-z]+)>/.exec(markup)[1];
+        testMessageForMarkup(
+            markup,
+            new RegExp(`<mprescripts> is not allowed as a child of <${tag}>`),
+            MessageLevel.ERROR);
+    });
+
+    // NoBase
+    testMessageForMarkup(
+        `<math><mmultiscripts></mmultiscripts></math>`,
+        /Expected exactly one Base element/,
+        MessageLevel.ERROR
+    );
+
+    // AttributeParsingErrorNoTag
+    testMessageForMarkup(
+        `<math scriptlevel="BAD!"></math>`,
+        /Error in parsing the value ‘BAD!’ for ‘scriptlevel’ attribute/,
+        MessageLevel.ERROR
+    );
+
+    // DuplicateMprescripts
+    testMessageForMarkup(
+        `<math>
+           <mmultiscripts>
+             <mprescripts/>
+             <mprescripts/>
+           </mmultiscripts>
+         </math>`,
+        /More than one <mprescripts\/>/,
+        MessageLevel.ERROR);
+
+    // SubSupMismatch
+    [
+        `<math>
+           <mmultiscripts>
+             <mi>x</mi>
+             <mi>y</mi>
+           </mmultiscripts>
+          </math>`,
+        `<math>
+           <mmultiscripts>
+             <mtext>b</mtext>
+             <mtext>c</mtext>
+             <mprescripts/>
+            <mtext>a</mtext>
+           </mmultiscripts>
+         </math>`,
+    ].forEach(markup => {
+        testMessageForMarkup(
+            markup,
+            /Incomplete subscript\/superscript pair/,
+            MessageLevel.ERROR);
+    });
+
+
+    // MathML_DeprecatedMathVariantWarning
+    testNoMessageForMarkup('<math><mi mathvariant="normal">A</mi></math>');
+    [
+        "bold",
+        "italic",
+        "bold-italic",
+        "script",
+        "bold-script",
+        "fraktur",
+        "double-struck",
+        "bold-fraktur",
+        "sans-serif",
+        "bold-sans-serif",
+        "sans-serif-italic",
+        "sans-serif-bold-italic",
+        "monospace",
+        "initial",
+        "tailed",
+        "looped",
+        "stretched"
+    ].forEach((value) => {
+        testMessageForMarkup(
+            `<math><mi mathvariant="${value}">A</mi></math>`,
+            new RegExp(`mathvariant='${value}'” .* deprecated`),
+            MessageLevel.WARNING);
+    });
+  </script>
+</body>

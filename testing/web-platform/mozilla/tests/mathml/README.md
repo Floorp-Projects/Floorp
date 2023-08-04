@@ -13,6 +13,9 @@ any specification:
 - `fonts`: font-related tests, such as OpenType features not handled yet in
   MathML Core or other Gecko-specific behavior.
 
+- `mathml-console-messages.html`: Tests for Gecko-specific console warning and
+  error messages triggered by MathML markup.
+
 - `mathspaces_names`: Tests for
   [MathML3 namedspaces](https://www.w3.org/TR/MathML3/chapter2.html#type.namedspace)
   which are removed from MathML Core. See
