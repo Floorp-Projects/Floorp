@@ -360,6 +360,18 @@ export class TranslationsParent extends JSWindowActorParent {
       return;
     }
 
+    if (
+      !detectedLanguages.docLangTag ||
+      !detectedLanguages.userLangTag ||
+      !detectedLanguages.isDocLangTagSupported
+    ) {
+      lazy.console.log(
+        "maybeOfferTranslations - The detected languages were not supported.",
+        detectedLanguages
+      );
+      return;
+    }
+
     let host;
     try {
       host = documentURI.host;
@@ -1957,7 +1969,7 @@ export class TranslationsParent extends JSWindowActorParent {
       isDocLangTagSupported: false,
     };
     if (!TranslationsParent.getIsTranslationsEngineSupported()) {
-      return langTags;
+      return null;
     }
 
     if (documentElementLang === undefined) {
