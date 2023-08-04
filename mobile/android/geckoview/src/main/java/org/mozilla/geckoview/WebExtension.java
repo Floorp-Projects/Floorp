@@ -1556,7 +1556,7 @@ public class WebExtension {
       /** The downloaded extension had a different type than expected. */
       public static final int ERROR_UNEXPECTED_ADDON_TYPE = -6;
 
-      /** The downloaded extension had a different version than expected */
+      /** The downloaded extension had a different version than expected. */
       public static final int ERROR_UNEXPECTED_ADDON_VERSION = -9;
 
       /** The extension did not have the expected ID. */
@@ -1567,6 +1567,9 @@ public class WebExtension {
 
       /** The extension is blocklisted. */
       public static final int ERROR_BLOCKLISTED = -10;
+
+      /** The extension is incompatible. */
+      public static final int ERROR_INCOMPATIBLE = -11;
 
       /** The extension install was canceled. */
       public static final int ERROR_USER_CANCELED = -100;
@@ -1618,6 +1621,7 @@ public class WebExtension {
           ErrorCodes.ERROR_INCORRECT_ID,
           ErrorCodes.ERROR_INVALID_DOMAIN,
           ErrorCodes.ERROR_BLOCKLISTED,
+          ErrorCodes.ERROR_INCOMPATIBLE,
           ErrorCodes.ERROR_USER_CANCELED,
           ErrorCodes.ERROR_POSTPONED,
         })

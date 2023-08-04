@@ -581,6 +581,14 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
+    fun installExtensionIncompatible() {
+        testInstallError(
+            "dummy-incompatible.xpi",
+            WebExtension.InstallException.ErrorCodes.ERROR_INCOMPATIBLE,
+        )
+    }
+
+    @Test
     fun installDeny() {
         mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()

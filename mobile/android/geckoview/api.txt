@@ -2354,6 +2354,7 @@ package org.mozilla.geckoview {
     field public static final int ERROR_BLOCKLISTED = -10;
     field public static final int ERROR_CORRUPT_FILE = -3;
     field public static final int ERROR_FILE_ACCESS = -4;
+    field public static final int ERROR_INCOMPATIBLE = -11;
     field public static final int ERROR_INCORRECT_HASH = -2;
     field public static final int ERROR_INCORRECT_ID = -7;
     field public static final int ERROR_INVALID_DOMAIN = -8;
