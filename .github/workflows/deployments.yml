@@ -1567,7 +1567,7 @@ jobs:
            -d '{
              "ref": "ESR115",
               "inputs": {
-                "options": "Release",
+                "choice": "Release",
                 "version": "${{ needs.get-display-version.outputs.display-version }}"
               }
            }'
