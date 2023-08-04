@@ -35,7 +35,7 @@ fxhash = "0.2.1"
 gleam = "0.15.0"
 lazy_static = "1"
 log = "0.4"
-malloc_size_of_derive = { path = "../../../xpcom/rust/malloc_size_of_derive" }
+malloc_size_of_derive = "0.1"
 num-traits = "0.2"
 plane-split = "0.18"
 png = { optional = true, version = "0.16" }

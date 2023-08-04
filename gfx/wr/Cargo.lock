@@ -1565,11 +1565,13 @@ dependencies = [
 
 [[package]]
 name = "malloc_size_of_derive"
-version = "0.1.3"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "632647502a8bfa82458c07134791fffa7a719f00427d1afd79c3cb6d4960a982"
 dependencies = [
  "proc-macro2",
- "syn 2.0.25",
- "synstructure",
+ "syn 1.0.91",
+ "synstructure 0.12.6",
 ]
 
 [[package]]
@@ -1979,7 +1981,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.25",
- "synstructure",
+ "synstructure 0.13.0",
  "unicode-xid",
 ]
 
@@ -2546,6 +2548,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "synstructure"
+version = "0.12.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f36bdaa60a83aca3921b5259d5400cbf5e90fc51931376a9bd4a0eb79aa7210f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.91",
+ "unicode-xid",
 ]
 
 [[package]]
