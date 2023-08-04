@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
+  <link rel="match" href="dtls-3-ref.html"/>
   <style type="text/css" media="screen, print">
     @font-face {
       font-family: "dtls-1";
-      src: url(../fonts/math/dtls-1.otf);
+      src: url(dtls-1.otf);
     }
   </style>
   </head>
@@ -210,7 +211,7 @@
 
         document.documentElement.removeAttribute("class");
       }
-      window.addEventListener("MozReftestInvalidate", doTest);
+      document.documentElement.addEventListener("TestRendered", doTest);
     </script>
   </body>
 </html>
