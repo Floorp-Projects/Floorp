@@ -2,6 +2,7 @@
 <html class="reftest-wait">
   <head>
     <title>Dynamic OpenType 'math' script tests</title>
+    <link rel="match" href="mathscript-2-ref.html"/>
     <!-- See mathscript-1-ref.html for an explanation of this font -->
     <style type="text/css" media="screen, print">
     @font-face {
@@ -32,7 +33,7 @@
       document.getElementById("mo0").appendChild(document.createTextNode("A"));
       document.documentElement.removeAttribute("class");
     }
-    window.addEventListener("MozReftestInvalidate", doTest);
+    document.documentElement.addEventListener("TestRendered", doTest);
   </script>
 
   </body>

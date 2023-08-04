@@ -10,6 +10,9 @@ any specification:
   mostly used for Tor browser's "high security" mode, see
   [bug 1173199](https://bugzilla.mozilla.org/1173199).
 
+- `fonts`: font-related tests, such as OpenType features not handled yet in
+  MathML Core or other Gecko-specific behavior.
+
 - `mathspaces_names`: Tests for
   [MathML3 namedspaces](https://www.w3.org/TR/MathML3/chapter2.html#type.namedspace)
   which are removed from MathML Core. See

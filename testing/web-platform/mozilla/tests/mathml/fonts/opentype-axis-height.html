@@ -2,9 +2,9 @@
 <html>
   <head>
     <title>Open Type MATH - axis-height</title>
-    <script src="/tests/SimpleTest/SimpleTest.js"></script>
-    <script src="/tests/SimpleTest/EventUtils.js"></script>
-    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script src="/resources/testharness.js"></script>
+    <script src="/resources/testharnessreport.js"></script>
+    <link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=961365"/>
     <meta charset="utf-8"/>
     <style type="text/css">
       math {
@@ -12,38 +12,31 @@
       }
       @font-face {
         font-family: axis-height-1;
-        src: url(/tests/fonts/math/axis-height-1.otf);
+        src: url(axis-height-1.otf);
       }
       @font-face {
         font-family: axis-height-2;
-        src: url(/tests/fonts/math/axis-height-2.otf);
+        src: url(axis-height-2.otf);
       }
     </style>
     <script type="application/javascript">
-      SimpleTest.waitForExplicitFinish();
+      setup({explicit_done : true});
 
       var epsilon = 5;
-      function almostEqual(x, y) { return Math.abs(x - y) < epsilon; }
 
       function getBox(aId) {
         return document.getElementById(aId).getBoundingClientRect();
       }
 
       function doTest() {
-        ok(almostEqual(getBox("plus1").top - getBox("plus2").top, 10 * 20),
-           "Bad AxisHeight");
-
-        SimpleTest.finish();
+        test(function() {
+            assert_approx_equals(getBox("plus1").top - getBox("plus2").top, 10 * 20, epsilon);
+        }, "AxisHeight");
+        done();
       }
     </script>
   </head>
   <body onload="doTest()">
-    <a target="_blank"
-       href="https://bugzilla.mozilla.org/show_bug.cgi?id=961365">
-      Mozilla Bug 961365
-    </a>
-
-    <p id="display"></p>
 
     <p>
       <math style="font-family: axis-height-1;">

@@ -90,21 +90,12 @@ random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
 == mo-invisibleoperators.html mo-invisibleoperators-ref.html
 == mo-invisibleoperators-2.html mo-invisibleoperators-2-ref.html
 random-if(gtkWidget) == mo-glyph-size.html mo-glyph-size-ref.html # bug 1309426
-random-if(winWidget&&!d2d) == opentype-stretchy.html opentype-stretchy-ref.html
-== opentype-fraction-dynamic-linethickness.html opentype-fraction-dynamic-linethickness-ref.html
 == operator-1.xhtml operator-1-ref.xhtml
 fuzzy(0-1,0-80) fuzzy-if(Android,0-255,0-105) fuzzy-if(gtkWidget,0-255,0-136) skip-if(winWidget) == multiscripts-1.html multiscripts-1-ref.html # Windows: bug 1314684; Android: bug 1392254; Linux: bug 1599638
 == mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
 == mmultiscript-align.html mmultiscript-align-ref.html
 fails-if(winWidget) fuzzy-if(gtkWidget,255-255,776226-776226) == subscript-italic-correction.html subscript-italic-correction-ref.html # bug 961482 (Windows), bug 1599640 (Linux)
-== dtls-1.html dtls-1-ref.html
-== dtls-2.html dtls-2-ref.html
-pref(mathml.legacy_mathvariant_attribute.disabled,false) == dtls-3.html dtls-3-ref.html
-== ssty-1.html ssty-1-ref.html
-== ssty-2.html ssty-2-ref.html
-== mathscript-1.html mathscript-1-ref.html
-== mathscript-2.html mathscript-2-ref.html
 == mo-accent-dynamic.html mo-accent-dynamic-ref.html
 == mo-movablelimits-dynamic.html mo-movablelimits-dynamic-ref.html
 == munderover-accent-dynamic.html munderover-accent-dynamic-ref.html
@@ -119,8 +110,6 @@ pref(mathml.legacy_mathvariant_attribute.disabled,false) == dtls-3.html dtls-3-r
 == mfrac-C-2.html mfrac-C-2-ref.html
 == mfrac-D-2.html mfrac-D-2-ref.html
 == mfrac-E-1.html mfrac-E-1-ref.html
-pref(ui.useOverlayScrollbars,1) pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,25) fuzzy-if(!gtkWidget,0-255,0-324) fuzzy-if(gtkWidget,0-255,0-66) == font-inflation-1.html font-inflation-1-ref.html # gtkWidget due to Bug 1607294
-test-pref(font.minimum-size.x-math,40) == default-font.html default-font-ref.html
 != radicalbar-1.html about:blank
 != radicalbar-1a.html about:blank
 != radicalbar-1b.html about:blank
