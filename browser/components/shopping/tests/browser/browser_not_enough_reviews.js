@@ -11,22 +11,21 @@
 add_task(async function test_not_enough_reviews() {
   await BrowserTestUtils.withNewTab(
     {
-      url: "chrome://browser/content/shopping/shopping.html",
+      url: "about:shoppingsidebar",
       gBrowser,
     },
     async browser => {
-      const { document } = browser.contentWindow;
-
-      let shoppingContainer = document.querySelector("shopping-container");
-      shoppingContainer.data = MOCK_NOT_ENOUGH_REVIEWS_PRODUCT_RESPONSE;
-      await shoppingContainer.updateComplete;
+      let shoppingContainer = await getAnalysisDetails(
+        browser,
+        MOCK_NOT_ENOUGH_REVIEWS_PRODUCT_RESPONSE
+      );
 
       ok(
         shoppingContainer.shoppingMessageBarEl,
         "Got shopping-message-bar element"
       );
       is(
-        shoppingContainer.shoppingMessageBarEl.getAttribute("type"),
+        shoppingContainer.shoppingMessageBarType,
         "not-enough-reviews",
         "shopping-message-bar type should be correct"
       );
