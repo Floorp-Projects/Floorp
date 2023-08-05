@@ -117,13 +117,18 @@ void FrameRecorder::StopFrameTimeRecording(uint32_t aStartIndex,
 
 already_AddRefed<PersistentBufferProvider>
 WindowRenderer::CreatePersistentBufferProvider(
-    const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat) {
+    const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat,
+    bool aWillReadFrequently) {
   RefPtr<PersistentBufferProviderBasic> bufferProvider;
   // If we are using remote canvas we don't want to use acceleration in
   // non-remote layer managers, so we always use the fallback software one.
-  if (!gfxPlatform::UseRemoteCanvas() ||
-      !gfxPlatform::IsBackendAccelerated(
-          gfxPlatform::GetPlatform()->GetPreferredCanvasBackend())) {
+  // If will-read-frequently is set, avoid using the preferred backend in
+  // favor of the fallback backend in case the preferred backend provides
+  // acceleration.
+  if (!aWillReadFrequently &&
+      (!gfxPlatform::UseRemoteCanvas() ||
+       !gfxPlatform::IsBackendAccelerated(
+           gfxPlatform::GetPlatform()->GetPreferredCanvasBackend()))) {
     bufferProvider = PersistentBufferProviderBasic::Create(
         aSize, aFormat,
         gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
