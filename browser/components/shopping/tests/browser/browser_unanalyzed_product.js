@@ -10,14 +10,15 @@
 add_task(async function test_unanalyzed_product() {
   await BrowserTestUtils.withNewTab(
     {
-      url: "about:shoppingsidebar",
+      url: "chrome://browser/content/shopping/shopping.html",
       gBrowser,
     },
     async browser => {
-      let shoppingContainer = await getAnalysisDetails(
-        browser,
-        MOCK_UNANALYZED_PRODUCT_RESPONSE
-      );
+      const { document } = browser.contentWindow;
+
+      let shoppingContainer = document.querySelector("shopping-container");
+      shoppingContainer.data = MOCK_UNANALYZED_PRODUCT_RESPONSE;
+      await shoppingContainer.updateComplete;
 
       ok(
         shoppingContainer.unanalyzedProductEl,
@@ -38,14 +39,15 @@ add_task(async function test_unanalyzed_product() {
 add_task(async function test_analyzed_product() {
   await BrowserTestUtils.withNewTab(
     {
-      url: "about:shoppingsidebar",
+      url: "chrome://browser/content/shopping/shopping.html",
       gBrowser,
     },
     async browser => {
-      let shoppingContainer = await getAnalysisDetails(
-        browser,
-        MOCK_ANALYZED_PRODUCT_RESPONSE
-      );
+      const { document } = browser.contentWindow;
+
+      let shoppingContainer = document.querySelector("shopping-container");
+      shoppingContainer.data = MOCK_ANALYZED_PRODUCT_RESPONSE;
+      await shoppingContainer.updateComplete;
 
       ok(
         !shoppingContainer.unanalyzedProductEl,

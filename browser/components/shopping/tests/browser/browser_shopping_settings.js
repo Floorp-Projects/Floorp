@@ -9,15 +9,19 @@
 add_task(async function test_shopping_settings() {
   await BrowserTestUtils.withNewTab(
     {
-      url: "about:shoppingsidebar",
+      url: "chrome://browser/content/shopping/shopping.html",
       gBrowser,
     },
     async browser => {
-      let shoppingSettings = await getSettingsDetails(
-        browser,
-        MOCK_POPULATED_DATA
-      );
-      ok(shoppingSettings.settingsEl, "Got the shopping-settings element");
+      const { document } = browser.contentWindow;
+
+      let shoppingContainer = document.querySelector("shopping-container");
+      shoppingContainer.data = MOCK_POPULATED_DATA;
+      await shoppingContainer.updateComplete;
+
+      let shoppingSettings = shoppingContainer.settingsEl;
+      await shoppingSettings.updateComplete;
+      ok(shoppingSettings, "Got the shopping-settings element");
 
       let toggle = shoppingSettings.recommendationsToggleEl;
       ok(toggle, "There should be a toggle");

@@ -6,56 +6,44 @@
 add_task(async function test_adjusted_rating() {
   await BrowserTestUtils.withNewTab(
     {
-      url: "about:shoppingsidebar",
+      url: "chrome://browser/content/shopping/shopping.html",
       gBrowser,
     },
     async browser => {
-      await SpecialPowers.spawn(
-        browser,
-        [MOCK_ANALYZED_PRODUCT_RESPONSE],
-        async mockData => {
-          let rating = mockData.adjusted_rating;
+      const { document } = browser.contentWindow;
+      let rating = MOCK_ANALYZED_PRODUCT_RESPONSE.adjusted_rating;
 
-          let shoppingContainer =
-            content.document.querySelector(
-              "shopping-container"
-            ).wrappedJSObject;
-          shoppingContainer.data = Cu.cloneInto(mockData, content);
-          await shoppingContainer.updateComplete;
+      let shoppingContainer = document.querySelector("shopping-container");
+      shoppingContainer.data = MOCK_ANALYZED_PRODUCT_RESPONSE;
+      await shoppingContainer.updateComplete;
 
-          let adjustedRating = shoppingContainer.adjustedRatingEl;
-          await adjustedRating.updateComplete;
+      let adjustedRating = shoppingContainer.adjustedRatingEl;
+      await adjustedRating.updateComplete;
 
-          let mozFiveStar = adjustedRating.ratingEl;
-          ok(mozFiveStar, "The moz-five-star element exists");
+      let mozFiveStar = adjustedRating.ratingEl;
+      ok(mozFiveStar, "The moz-five-star element exists");
 
-          is(
-            mozFiveStar.rating,
-            rating,
-            `The moz-five-star rating is ${rating}`
-          );
-          is(
-            adjustedRating.rating,
-            rating,
-            `The adjusted rating "rating" is ${rating}`
-          );
+      is(mozFiveStar.rating, rating, `The moz-five-star rating is ${rating}`);
+      is(
+        adjustedRating.rating,
+        rating,
+        `The adjusted rating "rating" is ${rating}`
+      );
 
-          rating = 2.55;
-          adjustedRating.rating = rating;
+      rating = 2.55;
+      adjustedRating.rating = rating;
 
-          await adjustedRating.updateComplete;
+      await adjustedRating.updateComplete;
 
-          is(
-            mozFiveStar.rating,
-            rating,
-            `The moz-five-star rating is now ${rating}`
-          );
-          is(
-            adjustedRating.rating,
-            rating,
-            `The adjusted rating "rating" is now ${rating}`
-          );
-        }
+      is(
+        mozFiveStar.rating,
+        rating,
+        `The moz-five-star rating is now ${rating}`
+      );
+      is(
+        adjustedRating.rating,
+        rating,
+        `The adjusted rating "rating" is now ${rating}`
       );
     }
   );
