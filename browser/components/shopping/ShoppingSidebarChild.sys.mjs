@@ -75,6 +75,10 @@ export class ShoppingSidebarChild extends RemotePageChild {
     this.updateContent();
   }
 
+  getProductURI() {
+    return this.#productURI;
+  }
+
   async updateContent() {
     this.#product?.uninit();
     // We are called either because the URL has changed or because the opt-in
