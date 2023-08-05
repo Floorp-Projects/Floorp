@@ -179,13 +179,9 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
       let CSS = this.readCSS[aFile];
       if (!CSS) {
         CSS = this.readCSS[aFile] = new CSSEntry(aFile, folder);
-        if (
-          decodeURIComponent(
-            Services.prefs.getStringPref("UserCSSLoader.disabled_list")
-          ).includes(aFile)
-        ) {
-          CSS.enabled = true;
-        }
+        CSS.enabled = !decodeURIComponent(
+          Services.prefs.getStringPref("UserCSSLoader.disabled_list","")
+        ).includes(aFile);
       } else if (CSS.enabled) {
         CSS.enabled = true;
       }
