@@ -168,10 +168,13 @@
 
 	@ Define the function and make it external.
 	.global	\name
+#ifndef __clang__
 	.func	\name
+#endif
 	.section	.text.\name,"ax",%progbits
 	.arch armv7-a
 	.fpu neon
+	.syntax unified
 	.object_arch armv4
 	.align	2
 \name :		
@@ -203,7 +206,9 @@
 	@ Restore any saved R or D registers.
 	_M_RET
 	.fnend	
+#ifndef __clang__
 	.endfunc
+#endif
         @ Reset the global stack tracking variables back to their
 	@ initial values.
 	.set _SBytes, 0

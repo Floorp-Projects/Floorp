@@ -47,9 +47,3 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
     DEFINES['BIG_FFT_TABLE'] = True
 
     FINAL_LIBRARY = 'xul'
-
-    if CONFIG['CC_TYPE'] == 'clang':
-        ASFLAGS += [
-            '-no-integrated-as',
-        ]
-    

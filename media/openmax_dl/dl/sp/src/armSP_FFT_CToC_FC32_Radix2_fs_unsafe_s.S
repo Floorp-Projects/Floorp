@@ -67,10 +67,10 @@
 
 @// Neon Registers
 
-#define dX0     D0.F32
-#define dX1     D1.F32
-#define dY0     D2.F32
-#define dY1     D3.F32
+#define dX0     D0
+#define dX1     D1
+#define dY0     D2
+#define dY1     D3
 
 
         .MACRO FFTSTAGE scaled, inverse, name
@@ -99,16 +99,16 @@
 
 grpZeroSetLoop\name :
 
-        VLD1    dX0,[pSrc],pointStep
-        VLD1    dX1,[pSrc],step                   @// step = -pointStep + 8
+        VLD1.F32    dX0,[pSrc],pointStep
+        VLD1.F32    dX1,[pSrc],step                   @// step = -pointStep + 8
         SUBS    setCount,setCount,#1
 
-        VADD    dY0,dX0,dX1
-        VSUB    dY1,dX0,dX1
+        VADD.F32    dY0,dX0,dX1
+        VSUB.F32    dY1,dX0,dX1
 
-        VST1    dY0,[pDst],outPointStep
+        VST1.F32    dY0,[pDst],outPointStep
         @// dstStep =  step = -pointStep + 8
-        VST1    dY1,[pDst],dstStep
+        VST1.F32    dY1,[pDst],dstStep
 
         BGT     grpZeroSetLoop\name
 

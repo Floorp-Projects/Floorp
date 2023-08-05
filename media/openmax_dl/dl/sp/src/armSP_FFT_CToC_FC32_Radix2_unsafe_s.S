@@ -69,17 +69,17 @@
 
 @// Neon Registers
 
-#define dW      D0.F32
-#define dX0     D2.F32
-#define dX1     D3.F32
-#define dX2     D4.F32
-#define dX3     D5.F32
-#define dY0     D6.F32
-#define dY1     D7.F32
-#define dY2     D8.F32
-#define dY3     D9.F32
-#define qT0     D10.F32
-#define qT1     D11.F32
+#define dW      D0
+#define dX0     D2
+#define dX1     D3
+#define dX2     D4
+#define dX3     D5
+#define dY0     D6
+#define dY1     D7
+#define dY2     D8
+#define dY3     D9
+#define qT0     D10
+#define qT1     D11
 
 
         .MACRO FFTSTAGE scaled, inverse, name
@@ -115,7 +115,7 @@
 
 radix2GrpLoop\name :
         MOV      setCount,pointStep,LSR #3
-        VLD1     dW,[pTwiddle],pointStep                @//[wi | wr]
+        VLD1.F32     dW,[pTwiddle],pointStep                @//[wi | wr]
 
 
         @// Loop on the sets
@@ -125,35 +125,35 @@ radix2SetLoop\name :
 
 
         @// point0: dX0-real part dX1-img part
-        VLD2    {dX0,dX1},[pSrc],pointStep
+        VLD2.F32    {dX0,dX1},[pSrc],pointStep
         @// point1: dX2-real part dX3-img part
-        VLD2    {dX2,dX3},[pSrc],step
+        VLD2.F32    {dX2,dX3},[pSrc],step
 
         SUBS    setCount,setCount,#2
 
         .ifeqs  "\inverse", "TRUE"
-            VMUL   qT0,dX2,dW[0]
-            VMLA   qT0,dX3,dW[1]                       @// real part
-            VMUL   qT1,dX3,dW[0]
-            VMLS   qT1,dX2,dW[1]                       @// imag part
+            VMUL.F32   qT0,dX2,dW[0]
+            VMLA.F32   qT0,dX3,dW[1]                       @// real part
+            VMUL.F32   qT1,dX3,dW[0]
+            VMLS.F32   qT1,dX2,dW[1]                       @// imag part
 
         .else
 
-            VMUL   qT0,dX2,dW[0]
-            VMLS   qT0,dX3,dW[1]                       @// real part
-            VMUL   qT1,dX3,dW[0]
-            VMLA   qT1,dX2,dW[1]                       @// imag part
+            VMUL.F32   qT0,dX2,dW[0]
+            VMLS.F32   qT0,dX3,dW[1]                       @// real part
+            VMUL.F32   qT1,dX3,dW[0]
+            VMLA.F32   qT1,dX2,dW[1]                       @// imag part
 
         .endif
 
-        VSUB    dY0,dX0,qT0
-        VSUB    dY1,dX1,qT1
-        VADD    dY2,dX0,qT0
-        VADD    dY3,dX1,qT1
+        VSUB.F32    dY0,dX0,qT0
+        VSUB.F32    dY1,dX1,qT1
+        VADD.F32    dY2,dX0,qT0
+        VADD.F32    dY3,dX1,qT1
 
-        VST2    {dY0,dY1},[pDst],outPointStep
+        VST2.F32    {dY0,dY1},[pDst],outPointStep
         @// dstStep = -outPointStep + 16
-        VST2    {dY2,dY3},[pDst],dstStep
+        VST2.F32    {dY2,dY3},[pDst],dstStep
 
         BGT     radix2SetLoop\name
 
