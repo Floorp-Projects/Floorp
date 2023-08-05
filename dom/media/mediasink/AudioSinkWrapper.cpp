@@ -405,19 +405,13 @@ RefPtr<GenericPromise> AudioSinkWrapper::MaybeAsyncCreateAudioSink(
           [self = RefPtr<AudioSinkWrapper>(this), audioDevice = mAudioDevice,
            this](Promise::ResolveOrRejectValue&& aValue) mutable {
             LOG("AudioSink async init done, back on MDSM thread");
+            // Decrement on return so that GetPosition() doesn't create
+            // another AudioSink.
+            ScopeExit decr([&] { --mAsyncCreateCount; });
             UniquePtr<AudioSink> audioSink;
-            auto switchTime = TimeUnit::Invalid();
             if (aValue.IsResolve()) {
               audioSink = std::move(aValue.ResolveValue());
-              // GetPosition() might detect the end of audio, so call this
-              // before checking whether an AudioSink is needed.
-              if (audioSink && !mAudioSink) {
-                switchTime = GetPosition();
-              }
             }
-            // Decrement after the GetPosition() call above so that it doesn't
-            // create another AudioSink.
-            --mAsyncCreateCount;
             // It's possible that the newly created AudioSink isn't needed at
             // this point, in some cases:
             // 1. An AudioSink was created synchronously while this
@@ -461,6 +455,10 @@ RefPtr<GenericPromise> AudioSinkWrapper::MaybeAsyncCreateAudioSink(
               // retry task yet to be created by GetPosition().
               return GenericPromise::CreateAndResolve(true, __func__);
             }
+
+            MOZ_ASSERT(!mAudioSink);
+            TimeUnit switchTime = GetPosition();
+            DropAudioPacketsIfNeeded(switchTime);
 
             LOG("AudioSink async, start");
             StartAudioSink(std::move(audioSink), switchTime);
