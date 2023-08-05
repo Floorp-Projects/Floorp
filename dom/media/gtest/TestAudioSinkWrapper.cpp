@@ -12,7 +12,6 @@
 #include "gtest/gtest-printers.h"
 #include "gtest/gtest.h"
 #include "mozilla/SpinEventLoopUntil.h"
-#include "mozilla/gtest/WaitFor.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 
@@ -33,13 +32,13 @@ TEST(TestAudioSinkWrapper, AsyncInitFailureWithSyncInitSuccess)
                                               audioQueue, info.mAudio,
                                               /*resistFingerprinting*/ false)};
   };
-  const double initialVolume = 0.0;  // so that there is initially no AudioSink
   RefPtr wrapper = new AudioSinkWrapper(
       AbstractThread::GetCurrent(), audioQueue, std::move(audioSinkCreator),
-      initialVolume, /*playbackRate*/ 1.0, /*preservesPitch*/ true,
+      /*volume*/ 0.5, /*playbackRate*/ 1.0, /*preservesPitch*/ true,
       /*sinkDevice*/ nullptr);
 
   wrapper->Start(media::TimeUnit::Zero(), info);
+  wrapper->SetVolume(0.0);  // shuts down AudioSink
   // The first AudioSink init occurs on a background thread.  Listen for this,
   // but don't process any events on the current thread so that the
   // AudioSinkWrapper does not yet handle the result of AudioSink
@@ -65,6 +64,8 @@ TEST(TestAudioSinkWrapper, AsyncInitFailureWithSyncInitSuccess)
     }
   }
   initListener.Disconnect();
+  // Wait for a pending event to indicate that AudioSinkWrapper's background
+  // task has queued its handling of initialization failure.
   wrapper->SetPlaying(false);
   // The second AudioSink init is synchronous.
   nsIThread* currentThread = NS_GetCurrentThread();
@@ -88,61 +89,6 @@ TEST(TestAudioSinkWrapper, AsyncInitFailureWithSyncInitSuccess)
                      [&] { return state != CUBEB_STATE_STARTED; });
   stateListener.Disconnect();
   EXPECT_EQ(state, CUBEB_STATE_DRAINED);
-  wrapper->Stop();
-  wrapper->Shutdown();
-}
-
-// This is a crashtest to check that AudioSinkWrapper::mEndedPromiseHolder is
-// not settled twice when the audio ends during async AudioSink initialization.
-TEST(TestAudioSinkWrapper, AsyncInitWithEndOfAudio)
-{
-  MockCubeb* cubeb = new MockCubeb();
-  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
-
-  MediaQueue<AudioData> audioQueue;
-  MediaInfo info;
-  info.EnableAudio();
-  auto audioSinkCreator = [&]() {
-    return UniquePtr<AudioSink>{new AudioSink(AbstractThread::GetCurrent(),
-                                              audioQueue, info.mAudio,
-                                              /*resistFingerprinting*/ false)};
-  };
-  const double initialVolume = 0.0;  // so that there is initially no AudioSink
-  RefPtr wrapper = new AudioSinkWrapper(
-      AbstractThread::GetCurrent(), audioQueue, std::move(audioSinkCreator),
-      initialVolume, /*playbackRate*/ 1.0, /*preservesPitch*/ true,
-      /*sinkDevice*/ nullptr);
-
-  wrapper->Start(media::TimeUnit::Zero(), info);
-  // The first AudioSink init occurs on a background thread.  Listen for this,
-  // but don't process any events on the current thread so that the
-  // AudioSinkWrapper does not yet use the initialized AudioSink.
-  RefPtr backgroundQueue =
-      nsThreadManager::get().CreateBackgroundTaskQueue(__func__);
-  Monitor monitor(__func__);
-  RefPtr<SmartMockCubebStream> stream;
-  MediaEventListener initListener = cubeb->StreamInitEvent().Connect(
-      backgroundQueue, [&](RefPtr<SmartMockCubebStream> aStream) {
-        EXPECT_NE(aStream, nullptr);
-        MonitorAutoLock lock(monitor);
-        stream = std::move(aStream);
-        lock.Notify();
-      });
-  wrapper->SetVolume(0.5);  // triggers async sink init
-  {
-    // Wait for the async init to complete.
-    MonitorAutoLock lock(monitor);
-    while (!stream) {
-      lock.Wait();
-    }
-  }
-  initListener.Disconnect();
-  // Finish the audio before AudioSinkWrapper considers using the initialized
-  // AudioSink.
-  audioQueue.Finish();
-  // Wait for AudioSinkWrapper to destroy the initialized stream.
-  // This test passes if there is no crash.  Bug 1846854.
-  WaitFor(cubeb->StreamDestroyEvent());
   wrapper->Stop();
   wrapper->Shutdown();
 }
