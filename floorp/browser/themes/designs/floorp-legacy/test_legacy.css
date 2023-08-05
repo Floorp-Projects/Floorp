@@ -1390,7 +1390,7 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
   box-shadow: none !important;
 }
 
-#navigator-toolbox .toolbarbutton-1> :-moz-any(.toolbarbutton-icon, .toolbarbutton-badge-stack) {
+#navigator-toolbox .toolbarbutton-1> :-moz-any(.toolbarbutton-icon, .toolbarbutton-badge-stack):not(#workspace-icon image) {
   width: calc(2 * var(--toolbarbutton-inner-padding) + 16px) !important;
   height: calc(2 * var(--toolbarbutton-inner-padding) + 16px) !important;
 }
@@ -1398,14 +1398,18 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
   white-space: nowrap;
 }
 
-#navigator-toolbox>#PersonalToolbar .toolbarbutton-1>.toolbarbutton-icon,
+:is(#navigator-toolbox>#PersonalToolbar .toolbarbutton-1>.toolbarbutton-icon,
 #navigator-toolbox .toolbarbutton-1> :-moz-any(.toolbarbutton-icon, .toolbarbutton-badge-stack),
 /* no ::part workaround - may have side effects */
 #scrollbutton-up[part="scrollbutton-up"]:not(.menupopup-scrollbutton)>.toolbarbutton-icon,
-#scrollbutton-down[part="scrollbutton-down"]:not(.menupopup-scrollbutton)>.toolbarbutton-icon {
+#scrollbutton-down[part="scrollbutton-down"]:not(.menupopup-scrollbutton)>.toolbarbutton-icon):not(#workspace-icon image) {
   background: 0 !important;
   padding: 6px !important;
   width: auto !important;
+  height: auto !important;
+}
+#workspace-icon image{
+    width: auto !important;
   height: auto !important;
 }
 /* #endregion*/
@@ -2122,20 +2126,16 @@ menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [type="che
   mask-image: linear-gradient(to left, black 70%, transparent) !important;
 }
 
-
-.tab-content[pinned] {
+.tab-content[pinned]:not(#browser *){
+  padding-inline-start: 10px !important;
+  padding-inline-end: 0 !important;
   padding: 0 12px !important;
   justify-content: center !important;
   width: 36px !important;
 }
 
-.tab-content[pinned]:not(#browser *){
-  padding-inline-start: 10px !important;
-  padding-inline-end: 0 !important;
-}
-
-.tab-label-container[pinned],
-.tab-close-button[pinned] {
+:is(.tab-label-container[pinned],
+.tab-close-button[pinned]):not(#browser *) {
   visibility: hidden !important;
 }
 
