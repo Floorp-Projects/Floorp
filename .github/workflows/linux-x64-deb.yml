@@ -5,7 +5,7 @@
 # Please write our copyright if you use this file.
 # © 2023 Floorp Projects & Contributors
 
-name: Debian x64 Build
+name: "(d) 📦 linux x86_64 deb(-ppa) pack"
 
 on:
   workflow_dispatch:
@@ -14,6 +14,10 @@ on:
         type: string
         required: true
         description: URL of target tarball file (x86_64)
+      ppa:
+        type: boolean
+        required: true
+        description: Do upload deb to ppa
 
 jobs:
   build:

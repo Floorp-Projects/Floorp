@@ -10,24 +10,17 @@ name: "(A) ⚒ Linux build"
 on:
   workflow_dispatch:
     inputs:
-      arch:
-        description: select build type
-        type: choice
-        options:
-          - x64_raw
-          - x64_deb
-          - x64_deb_ppa
-          - aarch64
+      aarch64:
+        description: enable aarch64 build
+        type: boolean
+        default: false
 
 run-name: >
-  ${{fromJSON('["[raw","[deb"]')[inputs.arch == 'x64_deb' || inputs.arch == 'x64_deb_ppa']}}${{fromJson('["]"," ppa]"]')[inputs.arch == 'x64_deb_ppa']}}
-  Linux ${{fromJson('["x64","aarch64"]')[inputs.arch == 'aarch64']}} Build
+  Linux ${{fromJson('["x64","aarch64"]')[inputs.aarch64]}} Build
 
 jobs:
   linux-build:
-    name: linux-${{fromJson('["raw","deb"]')[inputs.arch == 'x64_deb' || inputs.arch == 'x64_deb_ppa']}}-${{fromJson('["no_ppa","ppa"]')[inputs.arch == 'x86_deb_ppa']}}-${{fromJson('["x86_64","aarch64"]')[inputs.arch == 'aarch64']}}
+    name: linux-${{fromJson('["x86_64","aarch64"]')[inputs.aarch64]}}
     uses: ./.github/workflows/linux-build.yml
     with:
-      aarch64: ${{inputs.arch == 'aarch64'}}
-      deb: ${{inputs.arch == 'x64_deb' || inputs.arch == 'x64_deb_ppa'}}
-      ppa: ${{inputs.arch == 'x86_deb_ppa'}}
+      aarch64: ${{inputs.aarch64}}

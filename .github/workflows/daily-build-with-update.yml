@@ -169,143 +169,11 @@ jobs:
 
 #TODO! ####################WILL REPLACE S############################
   build-linux-x86_64-PGO:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Init
-        run: |
-          export RUNNER_USERDIR=`echo ~`
-          echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
-
-      - uses: actions/checkout@v3
-        # with:
-        #   ref: ESR115
-
-      - name: Change PPA mirror servers
-        run: |
-          sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
-          sudo apt update
-
-
-      - name: Setup Disk & Swap Space 💿
-        if: runner.name != 'buildjet-16vcpu-ubuntu-2204'
-        run: |
-          echo Before:
-          free -h
-          df -h
-          echo
-          echo
-          sudo swapoff /mnt/swapfile
-          sudo rm /mnt/swapfile
-
-          sudo fallocate -l 8G /mnt/swapfile
-          sudo chmod 600 /mnt/swapfile
-          sudo mkswap /mnt/swapfile
-          sudo swapon /mnt/swapfile
-
-          sudo apt clean
-          sudo apt remove temurin* openjdk*
-          sudo apt remove microsoft-edge* firefox* google-chrome*
-          sudo apt remove mono* libmono* msbuild* dotnet*
-          sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
-          sudo apt remove gfortran* php* julia* r-*
-          sudo apt remove mysql* postgresql*
-          sudo apt remove google-cloud-sdk azure-cli powershell snapd
-
-          sudo rm -rf /usr/share/swift &
-          sudo rm -rf /usr/local/aws-cli &
-          sudo rm -rf /usr/local/aws-sam-cli &
-          sudo rm -rf /usr/local/julia* &
-          sudo rm -rf /usr/local/lib/android &
-          sudo rm -rf /usr/local/lib/node_modules &
-          sudo rm -rf /opt/hostedtoolcache &
-          sudo rm -rf /opt/pipx &
-          sudo rm -rf /snap &
-          wait
-
-          sudo fallocate -l 12G /home/runner/swapfile
-          sudo chmod 600 /home/runner/swapfile
-          sudo mkswap /home/runner/swapfile
-          sudo swapon /home/runner/swapfile
-
-          sudo sysctl vm.swappiness=10
-
-          echo
-          echo
-          echo After:
-          free -h
-          df -h
-
-      - name: Clone l10n-central 🧬
-        run: |
-          git clone --depth 1 https://github.com/Floorp-Projects/l10n-central.git $RUNNER_USERDIR/l10n-central
-
-      - name: Create environment 🌲
-        run: |
-          export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-          sudo apt update
-          sudo apt install xvfb
-          ./mach --no-interactive bootstrap --application-choice browser
-          echo 'ac_add_options --with-app-name=floorp' >> mozconfig
-          echo 'ac_add_options --with-app-basename=Floorp' >> mozconfig
-          echo 'ac_add_options --disable-crashreporter' >> mozconfig
-          echo 'ac_add_options --enable-proxy-bypass-protection' >> mozconfig
-          echo 'ac_add_options --enable-unverified-updates' >> mozconfig
-
-          #? this is beta builld, but this update-channel does not have any means
-          #? so this always should be release even in beta build
-          echo 'ac_add_options --enable-update-channel=release' >> mozconfig
-          echo 'ac_add_options --with-mozilla-api-keyfile=$PWD/floorp/apis/api-mozilla-key' >> mozconfig
-          echo 'ac_add_options --with-google-location-service-api-keyfile=$PWD/floorp/apis/api-google-location-service-key' >> mozconfig
-          echo 'ac_add_options --with-google-safebrowsing-api-keyfile=$PWD/floorp/apis/api-google-safe-browsing-key' >> mozconfig
-          echo 'ac_add_options --enable-bootstrap' >> mozconfig
-          echo 'ac_add_options --enable-optimize="-O3"' >> mozconfig
-          echo 'ac_add_options --enable-lto' >> mozconfig
-          echo 'ac_add_options MOZ_PGO=1' >> mozconfig
-          echo 'export RUSTC_OPT_LEVEL=2 '>> mozconfig
-          echo 'export MOZ_INCLUDE_SOURCE_INFO=1' >> mozconfig
-          echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
-          echo 'MOZ_DATA_REPORTING=' >> mozconfig
-          echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
-
-          echo 'ac_add_options --with-l10n-base=$RUNNER_USERDIR/l10n-central/l10n-central' >> mozconfig
-          echo 'ac_add_options --with-branding=browser/branding/beta' >> mozconfig
-
-          ./mach configure
-
-      - name: Copy l10n files
-        run: |
-          for dir in $(ls -l $RUNNER_USERDIR/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
-            mkdir -p $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta
-            cp ./browser/branding/beta/locales/en-US/brand.dtd $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.dtd
-            cp ./browser/branding/beta/locales/en-US/brand.ftl $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
-            cp ./browser/branding/beta/locales/en-US/brand.properties $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
-          done
-
-      - name: Change update url
-        run: |
-          sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${{ github.repository }}/releases/download/beta/LINUX-x86_64.xml |g' ./build/application.ini.in
-          sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
-
-      - name: Build 🔨
-        run: |
-          export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-          Xvfb :2 -screen 0 1024x768x24 &
-          export DISPLAY=:2
-          rm -rf ./l10n-central/.git
-          ./mach build
-
-      - name: Package 📦
-        run: |
-          ./mach package
-          ./mach package-multi-locale --locales ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th tr vi zh-CN zh-TW
-          mkdir -p output
-          cp obj-x86_64-pc-linux-gnu/dist/*.tar.bz2 ./output/floorp.en-US.linux-x86_64.tar.bz2
-
-      - name: Publish 🎁
-        uses: actions/upload-artifact@v3
-        with:
-          name: floorp-linux-x64
-          path: ./output
+    needs: [win-x86_64-gen-profdata-and-jarlog,get-buildid]
+    uses: ./.github/workflows/linux-build.yml
+    with:
+      aarch64: false
+      beta: true
 
   #TODO: integrate to linux build like windows-build
   update-linux-mar:
@@ -380,10 +248,17 @@ jobs:
         echo Before:
         free -h
         df -h
+
         echo
         echo
+
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
+
+        sudo fallocate -l 8G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
 
         sudo apt clean
         sudo apt remove temurin* openjdk*
@@ -405,7 +280,7 @@ jobs:
         sudo rm -rf /snap &
         wait
 
-        sudo fallocate -l 20G /home/runner/swapfile
+        sudo fallocate -l 12G /home/runner/swapfile
         sudo chmod 600 /home/runner/swapfile
         sudo mkswap /home/runner/swapfile
         sudo swapon /home/runner/swapfile
@@ -414,13 +289,12 @@ jobs:
 
         echo
         echo
+
         echo After:
         free -h
         df -h
 
     - uses: actions/checkout@v3
-      # with:
-      #   ref: ESR115
 
     - name: Create environment 🌲
       run: |
@@ -557,10 +431,17 @@ jobs:
         echo Before:
         free -h
         df -h
+
         echo
         echo
+
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
+
+        sudo fallocate -l 8G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
 
         sudo apt clean
         sudo apt remove temurin* openjdk*
@@ -582,7 +463,7 @@ jobs:
         sudo rm -rf /snap &
         wait
 
-        sudo fallocate -l 20G /home/runner/swapfile
+        sudo fallocate -l 12G /home/runner/swapfile
         sudo chmod 600 /home/runner/swapfile
         sudo mkswap /home/runner/swapfile
         sudo swapon /home/runner/swapfile
@@ -591,6 +472,7 @@ jobs:
 
         echo
         echo
+
         echo After:
         free -h
         df -h
@@ -712,10 +594,17 @@ jobs:
         echo Before:
         free -h
         df -h
+
         echo
         echo
+
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
+
+        sudo fallocate -l 8G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
 
         sudo apt clean
         sudo apt remove temurin* openjdk*
@@ -737,7 +626,7 @@ jobs:
         sudo rm -rf /snap &
         wait
 
-        sudo fallocate -l 20G /home/runner/swapfile
+        sudo fallocate -l 12G /home/runner/swapfile
         sudo chmod 600 /home/runner/swapfile
         sudo mkswap /home/runner/swapfile
         sudo swapon /home/runner/swapfile
@@ -746,6 +635,7 @@ jobs:
 
         echo
         echo
+
         echo After:
         free -h
         df -h
@@ -876,10 +766,17 @@ jobs:
         echo Before:
         free -h
         df -h
+
         echo
         echo
+
         sudo swapoff /mnt/swapfile
         sudo rm /mnt/swapfile
+
+        sudo fallocate -l 8G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
 
         sudo apt clean
         sudo apt remove temurin* openjdk*
@@ -901,7 +798,7 @@ jobs:
         sudo rm -rf /snap &
         wait
 
-        sudo fallocate -l 20G /home/runner/swapfile
+        sudo fallocate -l 12G /home/runner/swapfile
         sudo chmod 600 /home/runner/swapfile
         sudo mkswap /home/runner/swapfile
         sudo swapon /home/runner/swapfile
@@ -910,6 +807,7 @@ jobs:
 
         echo
         echo
+
         echo After:
         free -h
         df -h

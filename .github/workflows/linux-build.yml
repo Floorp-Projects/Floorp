@@ -7,8 +7,9 @@
 
 #! SELF HOST DOES NOT SUPPORTED
 #TODO! buildjet config not implemented
-#! Deb && aarch64 may not supported
 #TODO: separate Publish to other workflow
+
+#? On linux x86_64 build, pgo build is enabled on default.
 
 #? In GitHub, boolean DOES NOT return `true`, DOES return `'true'`
 #? So, In `if:`(github) or `if [];then`(bash), you may SHOULD write like
@@ -19,7 +20,7 @@ on:
   workflow_call:
     inputs:
       disable-updater:
-        description: disable updator esp. for deb
+        description: disable updater esp. for deb
         type: boolean
         default: false
       aarch64:
@@ -30,7 +31,9 @@ on:
         description: "with all files of dist(esp. for make mar)"
         type: boolean
         default: false
-
+      beta:
+        type: boolean
+        default: false
 
 
 # name: Linux Build
@@ -41,67 +44,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Change PPA mirror servers
-      run: |
-        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
-        sudo apt update
-
-
-    #! ON UBUNTU RUNNER
-    - name: Setup Disk & Swap Space 💿
-      run: |
-        echo Before:
-        free -h
-        df -h
-        echo
-        echo
-        sudo swapoff /mnt/swapfile
-        sudo rm /mnt/swapfile
-
-        sudo fallocate -l 8G /mnt/swapfile
-        sudo chmod 600 /mnt/swapfile
-        sudo mkswap /mnt/swapfile
-        sudo swapon /mnt/swapfile
-
-        sudo apt clean
-        # dpkg --list |grep "^rc" | cut -d " " -f 3 | xargs sudo dpkg --purge
-        sudo apt remove temurin* openjdk*
-        sudo apt remove microsoft-edge* firefox* google-chrome*
-        sudo apt remove mono* libmono* msbuild* dotnet*
-        sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
-        sudo apt remove gfortran* php* julia* r-*
-        sudo apt remove mysql* postgresql*
-        sudo apt remove google-cloud-sdk azure-cli powershell snapd
-
-        sudo rm -rf /usr/share/swift &
-        sudo rm -rf /usr/local/aws-cli &
-        sudo rm -rf /usr/local/aws-sam-cli &
-        sudo rm -rf /usr/local/julia* &
-        sudo rm -rf /usr/local/lib/android &
-        sudo rm -rf /usr/local/lib/node_modules &
-        sudo rm -rf /opt/hostedtoolcache &
-        sudo rm -rf /opt/pipx &
-        sudo rm -rf /snap &
-        wait
-
-        sudo fallocate -l 12G /home/runner/swapfile
-        sudo chmod 600 /home/runner/swapfile
-        sudo mkswap /home/runner/swapfile
-        sudo swapon /home/runner/swapfile
-        # sudo fallocate -l 10G /home/runner/swapfile2
-        # sudo chmod 600 /home/runner/swapfile2
-        # sudo mkswap /home/runner/swapfile2
-        # sudo swapon /home/runner/swapfile2
-
-        sudo sysctl vm.swappiness=10
-
-
-        echo
-        echo
-        echo After:
-        free -h
-        df -h
-
     - uses: actions/checkout@v3
       name: Clone 🧬
 
@@ -110,6 +52,17 @@ jobs:
       with:
         repository: Floorp-Projects/l10n-central
         path: l10n-central
+
+    - name: Change PPA mirror servers
+      run: |
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
+
+    #! ON UBUNTU RUNNER
+    - name: Setup Disk & Swap Space 💿
+      run: |
+        chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
+        .github/workflows/src/disk_swap_for_github_runner.sh
 
     - name: Prepare cross compiler (aarch64)⚒
       if: ${{ inputs.aarch64 && !inputs.deb }}
@@ -143,6 +96,7 @@ jobs:
 
         disable_updater = os.environ["GHA_disable_updater"] == "true"
         aarch64 = os.environ["GHA_aarch64"] == "true"
+        beta= os.environ["GHA_beta"] == "true"
 
         os.system("sudo apt update")
         os.system("sudo apt install xvfb")
@@ -151,6 +105,11 @@ jobs:
         # os.system("cp ./.github/mozconfig_linux_base ./mozconfig")
 
         mozconfig = []
+
+        if beta:
+          mozconfig.append('ac_add_options --with-branding=browser/branding/beta')
+        else:
+          mozconfig.append('ac_add_options --with-branding=browser/branding/official')
 
         if disable_updater:
           mozconfig.append('ac_add_options --disable-updater')
@@ -181,26 +140,39 @@ jobs:
         os.system("./mach --no-interactive bootstrap --application-choice browser")
 
       env:
+        # `-` character sometimes bugs on env esp. nodejs
         GHA_disable_updater: ${{inputs.disable-updater}}
         GHA_aarch64: ${{inputs.aarch64}}
+        GHA_beta: ${{inputs.beta}}
       shell: python3 {0}
 
-    - name: Build 🔨
 
+    - name: Copy l10n files if beta
+      if: inputs.beta
       run: |
-        if [[ $GHA_aarch64 != 'true' ]]; then
-          rm -rf ./l10n-central/.git
-        fi
+        for dir in $(ls -l $RUNNER_USERDIR/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+          mkdir -p $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta
+          cp ./browser/branding/beta/locales/en-US/brand.dtd $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.dtd
+          cp ./browser/branding/beta/locales/en-US/brand.ftl $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
+          cp ./browser/branding/beta/locales/en-US/brand.properties $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
+        done
+
+    - name: Change update url if beta
+      if: inputs.beta
+      run: |
+        sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${{ github.repository }}/releases/download/beta/LINUX-x86_64.xml |g' ./build/application.ini.in
+        sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
+
+    - name: Build 🔨
+      run: |
+        rm -rf ./l10n-central/.git
 
         Xvfb :2 -screen 0 1024x768x24 &
         export DISPLAY=:2
 
         export WORKDIR=`pwd`
         echo "Current Workdir: $WORKDIR"
-        ./mach configure
         ./mach build
-      env:
-        GHA_aarch64: ${{inputs.aarch64}}
 
     - name: Package 1 - mach 🎁
       run: |
@@ -208,22 +180,8 @@ jobs:
 
         ./mach package-multi-locale --locales ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW
 
-    - name: Package 2 - deb or zip 📦
-
+    - name: Package 2 - zip 📦
       run: |
-        # export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
-        # for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
-        # AB_CD=multi ./mach package
-        # ./mach package-multi-locale --locales ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW
-
-        # wait
-
-        # FOR DEBUG 1 START
-
-        sudo apt install tree
-
-        #FOR DEBUG 1 END
-
         if [[ $GHA_aarch64 != 'true' ]];then
           echo "OUTPUT=obj-x86_64-pc-linux-gnu/dist/*.tar.bz2" >> $GITHUB_ENV
           # zip -r dist.zip obj-x86_64-pc-linux-gnu/dist/*.tar.bz2
@@ -245,8 +203,6 @@ jobs:
         GHA_raw: ${{inputs.with_raw}}
 
     #PUBLISH START
-
-    #! Deb && aarch64 may not supported
     - name: Publish🎁
       uses: actions/upload-artifact@v3
       with:

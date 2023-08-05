@@ -99,68 +99,20 @@ jobs:
         sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
         sudo apt update
 
-    #! ON UBUNTU RUNNER
-    - name: Setup Disk & Swap Space 💿
-      run: |
-        echo Before:
-        free -h
-        df -h
-
-        echo
-        echo
-
-        sudo swapoff /mnt/swapfile
-        sudo rm /mnt/swapfile
-
-        sudo apt clean
-        # dpkg --list |grep "^rc" | cut -d " " -f 3 | xargs sudo dpkg --purge
-        sudo apt remove temurin* openjdk*
-        sudo apt remove microsoft-edge* firefox* google-chrome*
-        sudo apt remove mono* libmono* msbuild* dotnet*
-        sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
-        sudo apt remove gfortran* php* julia* r-*
-        sudo apt remove mysql* postgresql*
-        sudo apt remove google-cloud-sdk azure-cli powershell snapd
-
-        sudo rm -rf /usr/share/swift &
-        sudo rm -rf /usr/local/aws-cli &
-        sudo rm -rf /usr/local/aws-sam-cli &
-        sudo rm -rf /usr/local/julia* &
-        sudo rm -rf /usr/local/lib/android &
-        sudo rm -rf /usr/local/lib/node_modules &
-        sudo rm -rf /opt/hostedtoolcache &
-        sudo rm -rf /opt/pipx &
-        sudo rm -rf /snap &
-        wait
-
-        sudo fallocate -l 20G /home/runner/swapfile
-        sudo chmod 600 /home/runner/swapfile
-        sudo mkswap /home/runner/swapfile
-        sudo swapon /home/runner/swapfile
-        # sudo fallocate -l 10G /home/runner/swapfile2
-        # sudo chmod 600 /home/runner/swapfile2
-        # sudo mkswap /home/runner/swapfile2
-        # sudo swapon /home/runner/swapfile2
-
-        sudo sysctl vm.swappiness=10
-
-        echo
-        echo
-
-        echo After:
-        free -h
-        df -h
-
     - uses: actions/checkout@v3
       name: Clone 🧬
-      # with:
-      #   ref: ESR115
 
     - name: Clone l10n-central 🧬
       uses: actions/checkout@v3
       with:
         repository: Floorp-Projects/l10n-central
         path: l10n-central
+
+    #! ON UBUNTU RUNNER
+    - name: Setup Disk & Swap Space 💿
+      run: |
+        chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
+        .github/workflows/src/disk_swap_for_github_runner.sh
 
     - name: Configure sccache
       uses: actions/github-script@v6
@@ -303,7 +255,7 @@ jobs:
         else
           cp obj-${arch}-pc-windows-msvc/dist/floorp-*.en-US.${arch_inst}.zip $RUNNER_USERDIR/output/
           7z x $RUNNER_USERDIR/output/floorp-*.en-US.${arch_inst}.zip
-          tar -I "zstd -T4 -10" --remove-files -cvf $RUNNER_USERDIR/output/floorp-115.1.0.en-us.win64.tar.zst floorp
+          tar -I "zstd -T4 -10" --remove-files -cvf $RUNNER_USERDIR/output/floorp-${cat browser/config/version.txt}.en-us.win64.tar.zst floorp
           rm $RUNNER_USERDIR/output/floorp-*.en-US.${arch_inst}.zip
         fi
         #? Original code used in daily b with update
