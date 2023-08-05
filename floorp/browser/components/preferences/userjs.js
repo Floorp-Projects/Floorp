@@ -24,7 +24,7 @@ const gUserjsPane = {
 
     let buttons = document.getElementsByClassName("apply-userjs-button");
     for (let button of buttons) {
-      button.addEventListener("click", function (event) {
+      button.addEventListener("click", async function (event) {
         let url = event.target.getAttribute("data-url");
         const prompts = Services.prompt;
         const check = { value: false };
@@ -46,9 +46,16 @@ const gUserjsPane = {
         );
         if (result == 0) {
           if (!url) {
-            try{FileUtils.getFile("ProfD", ["user.js"]).remove(false);} catch(e) {}
+            await resetPreferences();
+            window.setTimeout(async function () {
+              try{FileUtils.getFile("ProfD", ["user.js"]).remove(false);} catch(e) {};
+              Services.obs.notifyObservers([], "floorp-restart-browser");
+            }, 3000);
           } else {
-            setUserJSWithURL(url);
+            await resetPreferences();
+            window.setTimeout(async function () {
+              await setUserJSWithURL(url);
+            }, 3000);
           }
         }
       });
@@ -56,18 +63,53 @@ const gUserjsPane = {
   },
 };
 
-const userjs = FileUtils.getFile("ProfD", ["user.js"]);
-const outputStream = FileUtils.openFileOutputStream(
-  userjs,
-  FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_APPEND
-);
-function setUserJSWithURL(url) {
+
+async function setUserJSWithURL(url) {
+  try{userjs.remove(false);} catch(e) {}
   fetch(url)
     .then(response => response.text())
-    .then(data => {
-      try{userjs.remove(false);} catch(e) {}
-      outputStream.write(data, data.length);
-      outputStream.close();
+    .then(async data => {
+      const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+      const userjs = PathUtils.join(PROFILE_DIR, "user.js");
+      const encoder = new TextEncoder("UTF-8");
+      const writeData = encoder.encode(data);
+
+      await IOUtils.write(userjs, writeData);
       Services.obs.notifyObservers([], "floorp-restart-browser");
     });
+}
+
+
+async function resetPreferences() {
+  const FileUtilsPath = FileUtils.getFile("ProfD", ["user.js"]);
+  const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+
+  if (!FileUtilsPath.exists()) {
+    console.log("user.js does not exist");
+    const path = PathUtils.join(PROFILE_DIR, "user.js");
+    const encoder = new TextEncoder("UTF-8");
+    const data = encoder.encode("fake data");
+    await IOUtils.write(path, data);
+  }
+
+  const decoder = new TextDecoder("UTF-8");
+  const path = PathUtils.join(PROFILE_DIR, "user.js");
+  let read = await IOUtils.read(path);
+  let inputStream = decoder.decode(read);
+
+  const prefPattern = /user_pref\("([^"]+)",\s*(true|false|\d+|"[^"]*")\);/g;
+  let match;
+  while ((match = prefPattern.exec(inputStream)) !== null) {
+    if (!match[0].startsWith("//")) {
+      const settingName = match[1];
+      await new Promise(resolve => {
+        setTimeout(() => {
+          Services.prefs.clearUserPref(settingName);
+          console.info("resetting " + settingName);
+        }, 100);
+        resolve();
+      });
+    }
+  }
+
 }
