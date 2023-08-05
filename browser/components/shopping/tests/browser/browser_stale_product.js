@@ -10,21 +10,22 @@
 add_task(async function test_stale_product() {
   await BrowserTestUtils.withNewTab(
     {
-      url: "about:shoppingsidebar",
+      url: "chrome://browser/content/shopping/shopping.html",
       gBrowser,
     },
     async browser => {
-      let shoppingContainer = await getAnalysisDetails(
-        browser,
-        MOCK_STALE_PRODUCT_RESPONSE
-      );
+      const { document } = browser.contentWindow;
+
+      let shoppingContainer = document.querySelector("shopping-container");
+      shoppingContainer.data = MOCK_STALE_PRODUCT_RESPONSE;
+      await shoppingContainer.updateComplete;
 
       ok(
         shoppingContainer.shoppingMessageBarEl,
         "Got shopping-message-bar element"
       );
       is(
-        shoppingContainer.shoppingMessageBarType,
+        shoppingContainer.shoppingMessageBarEl.getAttribute("type"),
         "stale",
         "shopping-message-bar type should be correct"
       );

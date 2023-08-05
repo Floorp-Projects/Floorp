@@ -9970,9 +9970,6 @@ var ShoppingSidebarManager = {
   },
 
   _updateVisibility() {
-    if (window.closed) {
-      return;
-    }
     let optedOut = this.optedInPref === 2;
     let isPBM = PrivateBrowsingUtils.isWindowPrivate(window);
 
