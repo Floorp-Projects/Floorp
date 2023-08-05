@@ -1683,8 +1683,9 @@ bool CanvasRenderingContext2D::TrySharedTarget(
     return false;
   }
 
-  aOutProvider =
-      renderer->CreatePersistentBufferProvider(GetSize(), GetSurfaceFormat());
+  aOutProvider = renderer->CreatePersistentBufferProvider(
+      GetSize(), GetSurfaceFormat(),
+      !mAllowAcceleration || mWillReadFrequently);
 
   if (!aOutProvider) {
     return false;

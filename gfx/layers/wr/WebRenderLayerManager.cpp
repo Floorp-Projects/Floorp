@@ -749,8 +749,12 @@ void WebRenderLayerManager::ScheduleComposite(wr::RenderReasons aReasons) {
 
 already_AddRefed<PersistentBufferProvider>
 WebRenderLayerManager::CreatePersistentBufferProvider(
-    const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat) {
-  if (!gfxPlatform::UseRemoteCanvas()) {
+    const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
+    bool aWillReadFrequently) {
+  // Only initialize devices if hardware acceleration may possibly be used.
+  // Remoting moves hardware usage out-of-process, while will-read-frequently
+  // avoids hardware acceleration entirely.
+  if (!aWillReadFrequently && !gfxPlatform::UseRemoteCanvas()) {
 #ifdef XP_WIN
     // Any kind of hardware acceleration is incompatible with Win32k Lockdown
     // We don't initialize devices here so that PersistentBufferProviderShared
@@ -765,8 +769,8 @@ WebRenderLayerManager::CreatePersistentBufferProvider(
   }
 
   RefPtr<PersistentBufferProvider> provider =
-      PersistentBufferProviderShared::Create(aSize, aFormat,
-                                             AsKnowsCompositor());
+      PersistentBufferProviderShared::Create(
+          aSize, aFormat, AsKnowsCompositor(), aWillReadFrequently);
   if (provider) {
     return provider.forget();
   }
