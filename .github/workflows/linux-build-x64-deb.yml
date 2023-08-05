@@ -7,7 +7,7 @@
 
 name: Debian x64 Build
 
-on: 
+on:
   workflow_dispatch:
     inputs:
       tarball-url-x86-64:
@@ -28,10 +28,10 @@ jobs:
 
     - name: Change PPA mirror servers
       run: |
-         sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
-         sudo apt update
-    
-    - name: download Artifact 📦    
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
+
+    - name: download Artifact 📦
       run: |
         mkdir -p /home/runner/artifact
         wget -P /home/runner/artifact ${{ inputs.tarball-url-x86-64 }}
