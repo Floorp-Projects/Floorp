@@ -9,9 +9,6 @@ User Exposed
 ------------
 These preferences are exposed through the Firefox UI
 
-browser.search.hiddenOneOffs (string, default: "")
-  A comma-separated list of search engines names that are hidden on the toolbar.
-
 browser.search.widget.inNavBar (boolean, default: false)
   Whether the search bar widget is displayed in the navigation bar.
 
