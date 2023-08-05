@@ -76,48 +76,48 @@
 
 @// Neon Registers
 
-#define dW1     D0.F32
-#define dW2     D1.F32
-#define dW3     D2.F32
+#define dW1     D0
+#define dW2     D1
+#define dW3     D2
 
-#define dXr0    D4.F32
-#define dXi0    D5.F32
-#define dXr1    D6.F32
-#define dXi1    D7.F32
-#define dXr2    D8.F32
-#define dXi2    D9.F32
-#define dXr3    D10.F32
-#define dXi3    D11.F32
-#define dYr0    D12.F32
-#define dYi0    D13.F32
-#define dYr1    D14.F32
-#define dYi1    D15.F32
-#define dYr2    D16.F32
-#define dYi2    D17.F32
-#define dYr3    D18.F32
-#define dYi3    D19.F32
-#define qT0     d16.f32
-#define qT1     d18.f32
-#define qT2     d12.f32
-#define qT3     d14.f32
-#define dZr0    D20.F32
-#define dZi0    D21.F32
-#define dZr1    D22.F32
-#define dZi1    D23.F32
-#define dZr2    D24.F32
-#define dZi2    D25.F32
-#define dZr3    D26.F32
-#define dZi3    D27.F32
+#define dXr0    D4
+#define dXi0    D5
+#define dXr1    D6
+#define dXi1    D7
+#define dXr2    D8
+#define dXi2    D9
+#define dXr3    D10
+#define dXi3    D11
+#define dYr0    D12
+#define dYi0    D13
+#define dYr1    D14
+#define dYi1    D15
+#define dYr2    D16
+#define dYi2    D17
+#define dYr3    D18
+#define dYi3    D19
+#define qT0     d16
+#define qT1     d18
+#define qT2     d12
+#define qT3     d14
+#define dZr0    D20
+#define dZi0    D21
+#define dZr1    D22
+#define dZi1    D23
+#define dZr2    D24
+#define dZi2    D25
+#define dZr3    D26
+#define dZi3    D27
 
-#define qY0     Q6.F32
-#define qY1     Q7.F32
-#define qY2     Q8.F32
-#define qY3     Q9.F32
-#define qX0     Q2.F32
-#define qZ0     Q10.F32
-#define qZ1     Q11.F32
-#define qZ2     Q12.F32
-#define qZ3     Q13.F32
+#define qY0     Q6
+#define qY1     Q7
+#define qY2     Q8
+#define qY3     Q9
+#define qX0     Q2
+#define qZ0     Q10
+#define qZ1     Q11
+#define qZ2     Q12
+#define qZ3     Q13
 
         .MACRO FFTSTAGE scaled, inverse , name
 
@@ -131,7 +131,7 @@
         LSR     subFFTNum,subFFTNum,#2
         MOV     subFFTSize,grpCount
 
-        VLD1     dW1,[pTwiddle]                    @//[wi | wr]
+        VLD1.F32     dW1,[pTwiddle]                    @//[wi | wr]
         @// pT0+1 increments pT0 by 8 bytes
         @// pT0+pointStep = increment of 8*pointStep bytes = 2*grpSize bytes
         MOV     pointStep,subFFTNum,LSL #1
@@ -142,11 +142,11 @@
         @//   = 2*size bytes
 
         MOV     stepTwiddle,#0
-        VLD1     dW2,[pTwiddle]                    @//[wi | wr]
+        VLD1.F32     dW2,[pTwiddle]                    @//[wi | wr]
         SMULBB  outPointStep,grpCount,pointStep
         LSL     pointStep,pointStep,#2             @// 2*grpSize
 
-        VLD1     dW3,[pTwiddle]                    @//[wi | wr]
+        VLD1.F32     dW3,[pTwiddle]                    @//[wi | wr]
         MOV     srcStep,pointStep,LSL #1           @// srcStep = 2*pointStep
         ADD     setStep,srcStep,pointStep          @// setStep = 3*pointStep
 
@@ -162,16 +162,16 @@
 
 radix4GrpLoop\name :
 
-        VLD2    {dXr0,dXi0},[pSrc],pointStep       @//  data[0]
+        VLD2.F32    {dXr0,dXi0},[pSrc],pointStep       @//  data[0]
         ADD      stepTwiddle,stepTwiddle,pointStep
-        VLD2    {dXr1,dXi1},[pSrc],pointStep       @//  data[1]
+        VLD2.F32    {dXr1,dXi1},[pSrc],pointStep       @//  data[1]
         @// set pTwiddle to the first point
         ADD      pTwiddle,pTwiddle,stepTwiddle
-        VLD2    {dXr2,dXi2},[pSrc],pointStep       @//  data[2]
+        VLD2.F32    {dXr2,dXi2},[pSrc],pointStep       @//  data[2]
         MOV      twStep,stepTwiddle,LSL #2
 
         @//  data[3] & update pSrc for the next set
-        VLD2    {dXr3,dXi3},[pSrc],setStep
+        VLD2.F32    {dXr3,dXi3},[pSrc],setStep
         SUB      twStep,stepTwiddle,twStep         @// twStep = -3*stepTwiddle
 
         MOV      setCount,pointStep,LSR #3
@@ -188,49 +188,49 @@ radix4SetLoop\name :
 
 
         .ifeqs  "\inverse", "TRUE"
-            VMUL   dZr1,dXr1,dW1[0]
-            VMUL   dZi1,dXi1,dW1[0]
-            VMUL   dZr2,dXr2,dW2[0]
-            VMUL   dZi2,dXi2,dW2[0]
-            VMUL   dZr3,dXr3,dW3[0]
-            VMUL   dZi3,dXi3,dW3[0]
+            VMUL.F32   dZr1,dXr1,dW1[0]
+            VMUL.F32   dZi1,dXi1,dW1[0]
+            VMUL.F32   dZr2,dXr2,dW2[0]
+            VMUL.F32   dZi2,dXi2,dW2[0]
+            VMUL.F32   dZr3,dXr3,dW3[0]
+            VMUL.F32   dZi3,dXi3,dW3[0]
 
-            VMLA   dZr1,dXi1,dW1[1]                @// real part
-            VMLS   dZi1,dXr1,dW1[1]                @// imag part
+            VMLA.F32   dZr1,dXi1,dW1[1]                @// real part
+            VMLS.F32   dZi1,dXr1,dW1[1]                @// imag part
 
             @//  data[1] for next iteration
-            VLD2    {dXr1,dXi1},[pSrc],pointStep
+            VLD2.F32    {dXr1,dXi1},[pSrc],pointStep
 
-            VMLA   dZr2,dXi2,dW2[1]                @// real part
-            VMLS   dZi2,dXr2,dW2[1]                @// imag part
+            VMLA.F32   dZr2,dXi2,dW2[1]                @// real part
+            VMLS.F32   dZi2,dXr2,dW2[1]                @// imag part
 
             @//  data[2] for next iteration
-            VLD2    {dXr2,dXi2},[pSrc],pointStep
+            VLD2.F32    {dXr2,dXi2},[pSrc],pointStep
 
-            VMLA   dZr3,dXi3,dW3[1]                @// real part
-            VMLS   dZi3,dXr3,dW3[1]                @// imag part
+            VMLA.F32   dZr3,dXi3,dW3[1]                @// real part
+            VMLS.F32   dZi3,dXr3,dW3[1]                @// imag part
         .else
-            VMUL   dZr1,dXr1,dW1[0]
-            VMUL   dZi1,dXi1,dW1[0]
-            VMUL   dZr2,dXr2,dW2[0]
-            VMUL   dZi2,dXi2,dW2[0]
-            VMUL   dZr3,dXr3,dW3[0]
-            VMUL   dZi3,dXi3,dW3[0]
+            VMUL.F32   dZr1,dXr1,dW1[0]
+            VMUL.F32   dZi1,dXi1,dW1[0]
+            VMUL.F32   dZr2,dXr2,dW2[0]
+            VMUL.F32   dZi2,dXi2,dW2[0]
+            VMUL.F32   dZr3,dXr3,dW3[0]
+            VMUL.F32   dZi3,dXi3,dW3[0]
 
-            VMLS   dZr1,dXi1,dW1[1]                @// real part
-            VMLA   dZi1,dXr1,dW1[1]                @// imag part
+            VMLS.F32   dZr1,dXi1,dW1[1]                @// real part
+            VMLA.F32   dZi1,dXr1,dW1[1]                @// imag part
 
             @//  data[1] for next iteration
-            VLD2    {dXr1,dXi1},[pSrc],pointStep
+            VLD2.F32    {dXr1,dXi1},[pSrc],pointStep
 
-            VMLS   dZr2,dXi2,dW2[1]                @// real part
-            VMLA   dZi2,dXr2,dW2[1]                @// imag part
+            VMLS.F32   dZr2,dXi2,dW2[1]                @// real part
+            VMLA.F32   dZi2,dXr2,dW2[1]                @// imag part
 
             @//  data[2] for next iteration
-            VLD2    {dXr2,dXi2},[pSrc],pointStep
+            VLD2.F32    {dXr2,dXi2},[pSrc],pointStep
 
-            VMLS   dZr3,dXi3,dW3[1]                @// real part
-            VMLA   dZi3,dXr3,dW3[1]                @// imag part
+            VMLS.F32   dZr3,dXi3,dW3[1]                @// real part
+            VMLA.F32   dZi3,dXr3,dW3[1]                @// imag part
         .endif
 
         @//  data[3] & update pSrc to data[0]
@@ -241,54 +241,54 @@ radix4SetLoop\name :
         @// These are executed only if both grpCount = 4 and setCount = 2       
         addeq   pSrc, pSrc, setStep
         beq     radix4SkipRead\name
-        VLD2    {dXr3,dXi3},[pSrc],setStep
+        VLD2.F32    {dXr3,dXi3},[pSrc],setStep
 radix4SkipRead\name:
         SUBS    setCount,setCount,#2
 
         @// finish first stage of 4 point FFT
-        VADD    qY0,qX0,qZ2
-        VSUB    qY2,qX0,qZ2
+        VADD.F32    qY0,qX0,qZ2
+        VSUB.F32    qY2,qX0,qZ2
 
         @//  data[0] for next iteration
-        VLD2    {dXr0,dXi0},[pSrc, :128]!
-        VADD    qY1,qZ1,qZ3
-        VSUB    qY3,qZ1,qZ3
+        VLD2.F32    {dXr0,dXi0},[pSrc, :128]!
+        VADD.F32    qY1,qZ1,qZ3
+        VSUB.F32    qY3,qZ1,qZ3
 
         @// finish second stage of 4 point FFT
 
-        VSUB    qZ0,qY2,qY1
+        VSUB.F32    qZ0,qY2,qY1
 
 
         .ifeqs  "\inverse", "TRUE"
 
-            VADD    dZr3,dYr0,dYi3
-            VST2    {dZr0,dZi0},[pDst, :128],outPointStep
-            VSUB    dZi3,dYi0,dYr3
+            VADD.F32    dZr3,dYr0,dYi3
+            VST2.F32    {dZr0,dZi0},[pDst, :128],outPointStep
+            VSUB.F32    dZi3,dYi0,dYr3
 
-            VADD    qZ2,qY2,qY1
-            VST2    {dZr3,dZi3},[pDst, :128],outPointStep
+            VADD.F32    qZ2,qY2,qY1
+            VST2.F32    {dZr3,dZi3},[pDst, :128],outPointStep
 
-            VSUB    dZr1,dYr0,dYi3
-            VST2    {dZr2,dZi2},[pDst, :128],outPointStep
-            VADD    dZi1,dYi0,dYr3
+            VSUB.F32    dZr1,dYr0,dYi3
+            VST2.F32    {dZr2,dZi2},[pDst, :128],outPointStep
+            VADD.F32    dZi1,dYi0,dYr3
 
-            VST2    {dZr1,dZi1},[pDst, :128],dstStep
+            VST2.F32    {dZr1,dZi1},[pDst, :128],dstStep
 
 
         .else
 
-            VSUB    dZr1,dYr0,dYi3
-            VST2    {dZr0,dZi0},[pDst, :128],outPointStep
-            VADD    dZi1,dYi0,dYr3
+            VSUB.F32    dZr1,dYr0,dYi3
+            VST2.F32    {dZr0,dZi0},[pDst, :128],outPointStep
+            VADD.F32    dZi1,dYi0,dYr3
 
-            VADD    qZ2,qY2,qY1
-            VST2    {dZr1,dZi1},[pDst, :128],outPointStep
+            VADD.F32    qZ2,qY2,qY1
+            VST2.F32    {dZr1,dZi1},[pDst, :128],outPointStep
 
-            VADD    dZr3,dYr0,dYi3
-            VST2    {dZr2,dZi2},[pDst, :128],outPointStep
-            VSUB    dZi3,dYi0,dYr3
+            VADD.F32    dZr3,dYr0,dYi3
+            VST2.F32    {dZr2,dZi2},[pDst, :128],outPointStep
+            VSUB.F32    dZi3,dYi0,dYr3
 
-            VST2    {dZr3,dZi3},[pDst, :128],dstStep
+            VST2.F32    {dZr3,dZi3},[pDst, :128],dstStep
 
 
         .endif
@@ -298,13 +298,13 @@ radix4SkipRead\name:
         BGT     radix4SetLoop\name
 
 
-        VLD1     dW1,[pTwiddle, :64],stepTwiddle    @//[wi | wr]
+        VLD1.F32     dW1,[pTwiddle, :64],stepTwiddle    @//[wi | wr]
         @// subtract 4 since grpCount multiplied by 4
         SUBS    grpCount,grpCount,#4
-        VLD1     dW2,[pTwiddle, :64],stepTwiddle    @//[wi | wr]
+        VLD1.F32     dW2,[pTwiddle, :64],stepTwiddle    @//[wi | wr]
         @// increment pSrc for the next grp
         ADD     pSrc,pSrc,srcStep
-        VLD1     dW3,[pTwiddle, :64],twStep         @//[wi | wr]
+        VLD1.F32     dW3,[pTwiddle, :64],twStep         @//[wi | wr]
         BGT     radix4GrpLoop\name
 
 

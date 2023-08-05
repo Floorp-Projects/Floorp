@@ -100,45 +100,45 @@
 
 @// Neon registers
 
-#define dX0     D0.F32
-#define dShift  D1.F32
-#define dX1     D1.F32
-#define dY0     D2.F32
-#define dY1     D3.F32
-#define dX0r    D0.F32
-#define dX0i    D1.F32
-#define dX1r    D2.F32
-#define dX1i    D3.F32
-#define dW0r    D4.F32
-#define dW0i    D5.F32
-#define dW1r    D6.F32
-#define dW1i    D7.F32
-#define dT0     D8.F32
-#define dT1     D9.F32
-#define dT2     D10.F32
-#define dT3     D11.F32
-#define qT0     d12.F32
-#define qT1     d14.F32
-#define qT2     d16.F32
-#define qT3     d18.F32
-#define dY0r    D4.F32
-#define dY0i    D5.F32
-#define dY1r    D6.F32
-#define dY1i    D7.F32
-#define dzero   D20.F32
+#define dX0     D0
+#define dShift  D1
+#define dX1     D1
+#define dY0     D2
+#define dY1     D3
+#define dX0r    D0
+#define dX0i    D1
+#define dX1r    D2
+#define dX1i    D3
+#define dW0r    D4
+#define dW0i    D5
+#define dW1r    D6
+#define dW1i    D7
+#define dT0     D8
+#define dT1     D9
+#define dT2     D10
+#define dT3     D11
+#define qT0     d12
+#define qT1     d14
+#define qT2     d16
+#define qT3     d18
+#define dY0r    D4
+#define dY0i    D5
+#define dY1r    D6
+#define dY1i    D7
+#define dzero   D20
 
-#define dY2     D4.F32
-#define dY3     D5.F32
-#define dW0     D6.F32
-#define dW1     D7.F32
-#define dW0Tmp  D10.F32
-#define dW1Neg  D11.F32
+#define dY2     D4
+#define dY3     D5
+#define dW0     D6
+#define dW1     D7
+#define dW0Tmp  D10
+#define dW1Neg  D11
 
 #define sN      S0.S32
-#define fN      S1.F32
+#define fN      S1
 @// two must be the same as dScale[0]!
-#define dScale  D2.F32
-#define two S4.F32
+#define dScale  D2
+#define two S4
 
 
     @// Allocate stack memory required by the function
@@ -165,8 +165,8 @@
         @//  N=1 Treat seperately
         CMP     N,#1
         BGT     sizeGreaterThanOne
-        VLD1    dX0[0],[pSrc]
-        VST1    dX0[0],[pDst]
+        VLD1.F32    dX0[0],[pSrc]
+        VST1.F32    dX0[0],[pDst]
 
         B       End
 
@@ -195,8 +195,8 @@ complexIFFT:
         CMP     order,#1
         BGE     orderGreaterthan0                   @// order > 0
 
-        VLD1    dX0,[pSrc]
-        VST1    dX0,[pDst]
+        VLD1.F32    dX0,[pSrc]
+        VST1.F32    dX0,[pDst]
         MOV     pSrc,pDst
         BLT     FFTEnd
 
@@ -260,14 +260,14 @@ lastStageUnscaledRadix4:
 
 FFTEnd:                                               @// Does only the scaling
         @ Scale inverse FFT result by 2 for consistency with other FFTs
-        VMOV    two, 2.0                   @ two = dScale[0]
+        VMOV.F32    two, #2.0                   @ two = dScale[0]
 
         @// N = subFFTSize  ; dataptr = pDst
 scaleFFTData:
-        VLD1    {dX0},[pSrc]            @// pSrc contains pDst pointer
+        VLD1.F32    {dX0},[pSrc]            @// pSrc contains pDst pointer
         SUBS    subFFTSize,subFFTSize,#1
-        VMUL    dX0, dX0, dScale[0]
-        VST1    {dX0},[pSrc]!
+        VMUL.F32    dX0, dX0, dScale[0]
+        VST1.F32    {dX0},[pSrc]!
 
         BGT     scaleFFTData
 

@@ -60,18 +60,18 @@
 
 @// Neon Registers
 
-#define dWr     d0.f32
-#define dWi     d1.f32
-#define dXr0    d2.f32
-#define dXi0    d3.f32
-#define dXr1    d4.f32
-#define dXi1    d5.f32
-#define dYr0    d6.f32
-#define dYi0    d7.f32
-#define dYr1    d8.f32
-#define dYi1    d9.f32
-#define qT0     d10.f32
-#define qT1     d12.f32
+#define dWr     d0
+#define dWi     d1
+#define dXr0    d2
+#define dXi0    d3
+#define dXr1    d4
+#define dXi1    d5
+#define dYr0    d6
+#define dYi0    d7
+#define dYr1    d8
+#define dYi1    d9
+#define qT0     d10
+#define qT1     d12
 
         .MACRO FFTSTAGE scaled, inverse, name
 
@@ -93,37 +93,37 @@
 radix2lsGrpLoop\name :
         @ dWr = [pTwiddle[0].Re, pTwiddle[1].Re]
         @ dWi = [pTwiddle[0].Im, pTwiddle[1].Im]
-        VLD2    {dWr,dWi},[pTwiddle, :64]!
+        VLD2.F32    {dWr,dWi},[pTwiddle, :64]!
 
         @ dXr0 = [pSrc[0].Re, pSrc[2].Re]
         @ dXi0 = [pSrc[0].Im, pSrc[2].Im]
         @ dXr1 = [pSrc[1].Re, pSrc[3].Re]
         @ dXi1 = [pSrc[1].Im, pSrc[3].Im]
-        VLD4    {dXr0,dXi0,dXr1,dXi1},[pSrc, :128]!
+        VLD4.F32    {dXr0,dXi0,dXr1,dXi1},[pSrc, :128]!
         SUBS    grpCount,grpCount,#4                   @// grpCount is multiplied by 2
 
         .ifeqs  "\inverse", "TRUE"
-            VMUL   qT0,dWr,dXr1
-            VMLA   qT0,dWi,dXi1                       @// real part
-            VMUL   qT1,dWr,dXi1
-            VMLS   qT1,dWi,dXr1                       @// imag part
+            VMUL.F32   qT0,dWr,dXr1
+            VMLA.F32   qT0,dWi,dXi1                       @// real part
+            VMUL.F32   qT1,dWr,dXi1
+            VMLS.F32   qT1,dWi,dXr1                       @// imag part
 
         .else
 
-            VMUL   qT0,dWr,dXr1
-            VMLS   qT0,dWi,dXi1                       @// real part
-            VMUL   qT1,dWr,dXi1
-            VMLA   qT1,dWi,dXr1                       @// imag part
+            VMUL.F32   qT0,dWr,dXr1
+            VMLS.F32   qT0,dWi,dXi1                       @// real part
+            VMUL.F32   qT1,dWr,dXi1
+            VMLA.F32   qT1,dWi,dXr1                       @// imag part
 
         .endif
 
-        VSUB    dYr0,dXr0,qT0
-        VSUB    dYi0,dXi0,qT1
-        VADD    dYr1,dXr0,qT0
-        VADD    dYi1,dXi0,qT1
+        VSUB.F32    dYr0,dXr0,qT0
+        VSUB.F32    dYi0,dXi0,qT1
+        VADD.F32    dYr1,dXr0,qT0
+        VADD.F32    dYi1,dXi0,qT1
 
-        VST2    {dYr0,dYi0},[pDst],outPointStep
-        VST2    {dYr1,dYi1},[pDst],dstStep                  @// dstStep =  step = -outPointStep + 16
+        VST2.F32    {dYr0,dYi0},[pDst],outPointStep
+        VST2.F32    {dYr1,dYi1},[pDst],dstStep                  @// dstStep =  step = -outPointStep + 16
 
         BGT     radix2lsGrpLoop\name
 

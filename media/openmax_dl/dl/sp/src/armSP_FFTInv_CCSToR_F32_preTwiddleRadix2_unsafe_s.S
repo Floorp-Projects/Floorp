@@ -85,40 +85,40 @@
 
 @// Neon registers
 
-#define dX0     D0.F32
-#define dShift  D1.F32
-#define dX1     D1.F32
-#define dY0     D2.F32
-#define dY1     D3.F32
-#define dX0r    D0.F32
-#define dX0i    D1.F32
-#define dX1r    D2.F32
-#define dX1i    D3.F32
-#define dW0r    D4.F32
-#define dW0i    D5.F32
-#define dW1r    D6.F32
-#define dW1i    D7.F32
-#define dT0     D8.F32
-#define dT1     D9.F32
-#define dT2     D10.F32
-#define dT3     D11.F32
-#define qT0     D12.F32
-#define qT1     D14.F32
-#define qT2     D16.F32
-#define qT3     D18.F32
-#define dY0r    D4.F32
-#define dY0i    D5.F32
-#define dY1r    D6.F32
-#define dY1i    D7.F32
+#define dX0     D0
+#define dShift  D1
+#define dX1     D1
+#define dY0     D2
+#define dY1     D3
+#define dX0r    D0
+#define dX0i    D1
+#define dX1r    D2
+#define dX1i    D3
+#define dW0r    D4
+#define dW0i    D5
+#define dW1r    D6
+#define dW1i    D7
+#define dT0     D8
+#define dT1     D9
+#define dT2     D10
+#define dT3     D11
+#define qT0     D12
+#define qT1     D14
+#define qT2     D16
+#define qT3     D18
+#define dY0r    D4
+#define dY0i    D5
+#define dY1r    D6
+#define dY1i    D7
 
-#define dY2     D4.F32
-#define dY3     D5.F32
-#define dW0     D6.F32
-#define dW1     D7.F32
-#define dW0Tmp  D10.F32
-#define dW1Neg  D11.F32
+#define dY2     D4
+#define dY3     D5
+#define dW0     D6
+#define dW1     D7
+#define dW0Tmp  D10
+#define dW1Neg  D11
 
-#define half    D13.F32
+#define half    D13
 
 @ Structure offsets for the FFTSpec
         .set    ARMsFFTSpec_N, 0
@@ -135,7 +135,7 @@
         LDR     pTwiddle, [pFFTSpec, #ARMsFFTSpec_pTwiddle]
         LDR     pOut, [pFFTSpec, #ARMsFFTSpec_pBuf]
 
-        VMOV    half, 0.5
+        VMOV.F32    half, #0.5
 
 
         MOV     size,N,ASR #1                 @// preserve the contents of N
@@ -149,33 +149,33 @@
         @// Z(0) : no need of twiddle multiply
         @// Z(0) = 1/2 { [F(0) +  F'(N/2)] +j [F(0) -  F'(N/2)] }
 
-        VLD1    dX0,[pSrc],step
+        VLD1.F32    dX0,[pSrc],step
         ADD     pOut1,pOut,step               @// pOut1 = pOut+ N/2*8 bytes
 
-        VLD1    dX1,[pSrc]!
+        VLD1.F32    dX1,[pSrc]!
         @// twStep = 3N/8 * 8 bytes pointing to W^1
         SUB     twStep,step,size,LSL #1
 
         MOV     step1,size,LSL #2             @// step1 = N/4 * 8 = N/2*4 bytes
         SUB     step1,step1,#8                @// (N/4-1)*8 bytes
 
-        VADD    dY0,dX0,dX1                   @// [b+d | a+c]
-        VSUB    dY1,dX0,dX1                   @// [b-d | a-c]
-        VMUL    dY0, dY0, half[0]
-        VMUL    dY1, dY1, half[0]
+        VADD.F32    dY0,dX0,dX1                   @// [b+d | a+c]
+        VSUB.F32    dY1,dX0,dX1                   @// [b-d | a-c]
+        VMUL.F32    dY0, dY0, half[0]
+        VMUL.F32    dY1, dY1, half[0]
 
         @// dY0= [a-c | a+c] ;dY1= [b-d | b+d]
-        VZIP    dY0,dY1
+        VZIP.F32    dY0,dY1
 
-        VSUB   dX0,dY0,dY1
+        VSUB.F32   dX0,dY0,dY1
         SUBS   size,size,#2
-        VADD   dX1,dY0,dY1
+        VADD.F32   dX1,dY0,dY1
 
         SUB     pSrc,pSrc,step
 
-        VST1    dX0[0],[pOut1]!
+        VST1.F32    dX0[0],[pOut1]!
         ADD     pTwiddleTmp,pTwiddle,#8       @// W^2
-        VST1    dX1[1],[pOut1]!
+        VST1.F32    dX1[1],[pOut1]!
         ADD     argTwiddle1,pTwiddle,twStep   @// W^1
 
 
@@ -195,65 +195,65 @@
 evenOddButterflyLoop\name :
 
 
-        VLD1    dW0r,[argTwiddle1],step1
-        VLD1    dW1r,[argTwiddle1]!
+        VLD1.F32    dW0r,[argTwiddle1],step1
+        VLD1.F32    dW1r,[argTwiddle1]!
 
-        VLD2    {dX0r,dX0i},[pSrc],step
+        VLD2.F32    {dX0r,dX0i},[pSrc],step
         SUB     argTwiddle1,argTwiddle1,step1
-        VLD2    {dX1r,dX1i},[pSrc]!
+        VLD2.F32    {dX1r,dX1i},[pSrc]!
 
         SUB     step1,step1,#8                @// (N/4-2)*8 bytes
-        VLD1    dW0i,[pTwiddleTmp],step1
-        VLD1    dW1i,[pTwiddleTmp]!
+        VLD1.F32    dW0i,[pTwiddleTmp],step1
+        VLD1.F32    dW1i,[pTwiddleTmp]!
         SUB     pSrc,pSrc,step
 
         SUB     pTwiddleTmp,pTwiddleTmp,step1
-        VREV64  dX1r,dX1r
-        VREV64  dX1i,dX1i
+        VREV64.F32  dX1r,dX1r
+        VREV64.F32  dX1i,dX1i
         SUBS    size,size,#4
 
 
-        VSUB    dT2,dX0r,dX1r                 @// a-c
-        VADD    dT3,dX0i,dX1i                 @// b+d
-        VADD    dT0,dX0r,dX1r                 @// a+c
-        VSUB    dT1,dX0i,dX1i                 @// b-d
+        VSUB.F32    dT2,dX0r,dX1r                 @// a-c
+        VADD.F32    dT3,dX0i,dX1i                 @// b+d
+        VADD.F32    dT0,dX0r,dX1r                 @// a+c
+        VSUB.F32    dT1,dX0i,dX1i                 @// b-d
         SUB     step1,step1,#8
 
-        VMUL    dT2, dT2, half[0]
-        VMUL    dT3, dT3, half[0]
+        VMUL.F32    dT2, dT2, half[0]
+        VMUL.F32    dT3, dT3, half[0]
 
-        VMUL    dT0, dT0, half[0]
-        VMUL    dT1, dT1, half[0]
+        VMUL.F32    dT0, dT0, half[0]
+        VMUL.F32    dT1, dT1, half[0]
 
-        VZIP    dW1r,dW1i
-        VZIP    dW0r,dW0i
-
-
-        VMUL   dX1r,dW1r,dT2
-        VMUL   dX1i,dW1r,dT3
-        VMUL   dX0r,dW0r,dT2
-        VMUL   dX0i,dW0r,dT3
-
-        VMLS   dX1r,dW1i,dT3
-        VMLA   dX1i,dW1i,dT2
-
-        VMLA   dX0r,dW0i,dT3
-        VMLS   dX0i,dW0i,dT2
+        VZIP.F32    dW1r,dW1i
+        VZIP.F32    dW0r,dW0i
 
 
-        VADD    dY1r,dT0,dX1i                 @// F(N/2 -1)
-        VSUB    dY1i,dX1r,dT1
+        VMUL.F32   dX1r,dW1r,dT2
+        VMUL.F32   dX1i,dW1r,dT3
+        VMUL.F32   dX0r,dW0r,dT2
+        VMUL.F32   dX0i,dW0r,dT3
 
-        VREV64  dY1r,dY1r
-        VREV64  dY1i,dY1i
+        VMLS.F32   dX1r,dW1i,dT3
+        VMLA.F32   dX1i,dW1i,dT2
+
+        VMLA.F32   dX0r,dW0i,dT3
+        VMLS.F32   dX0i,dW0i,dT2
 
 
-        VADD    dY0r,dT0,dX0i                 @// F(1)
-        VSUB    dY0i,dT1,dX0r
+        VADD.F32    dY1r,dT0,dX1i                 @// F(N/2 -1)
+        VSUB.F32    dY1i,dX1r,dT1
+
+        VREV64.F32  dY1r,dY1r
+        VREV64.F32  dY1i,dY1i
 
 
-        VST2    {dY0r,dY0i},[pOut1],step
-        VST2    {dY1r,dY1i},[pOut1]!
+        VADD.F32    dY0r,dT0,dX0i                 @// F(1)
+        VSUB.F32    dY0i,dT1,dX0r
+
+
+        VST2.F32    {dY0r,dY0i},[pOut1],step
+        VST2.F32    {dY1r,dY1i},[pOut1]!
         SUB     pOut1,pOut1,step
         SUB     step,step,#32                 @// (N/2-4)*8 bytes
 
@@ -274,11 +274,11 @@ evenOddButterflyLoop\name :
         @// Since (c,d) = (0,1) for the last element, result is just (a,-b)
 
 lastElement\name :
-        VLD1    dX0r,[pSrc]
+        VLD1.F32    dX0r,[pSrc]
 
-        VST1    dX0r[0],[pOut1]!
-        VNEG    dX0r,dX0r
-        VST1    dX0r[1],[pOut1]
+        VST1.F32    dX0r[0],[pOut1]!
+        VNEG.F32    dX0r,dX0r
+        VST1.F32    dX0r[1],[pOut1]
 
 
 
