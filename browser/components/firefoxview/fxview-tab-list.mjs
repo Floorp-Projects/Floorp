@@ -383,17 +383,23 @@ export class FxviewTabRow extends MozLitElement {
   }
 
   getImageUrl(icon, targetURI) {
-    if (!window.IS_STORYBOOK) {
-      // If the icon is not for website (doesn't begin with http), we
-      // display it directly. Otherwise we go through the page-icon
-      // protocol to try to get a cached version. We don't load
-      // favicons directly.
-      if (icon?.startsWith("http")) {
-        return `page-icon:${targetURI}`;
-      }
-      return icon;
+    if (window.IS_STORYBOOK) {
+      return `chrome://global/skin/icons/defaultFavicon.svg`;
     }
-    return `chrome://global/skin/icons/defaultFavicon.svg`;
+    if (!icon) {
+      if (targetURI?.startsWith("moz-extension")) {
+        return "chrome://mozapps/skin/extensions/extension.svg";
+      }
+      return `chrome://global/skin/icons/defaultFavicon.svg`;
+    }
+    // If the icon is not for website (doesn't begin with http), we
+    // display it directly. Otherwise we go through the page-icon
+    // protocol to try to get a cached version. We don't load
+    // favicons directly.
+    if (icon.startsWith("http")) {
+      return `page-icon:${targetURI}`;
+    }
+    return icon;
   }
 
   primaryActionHandler(event) {
