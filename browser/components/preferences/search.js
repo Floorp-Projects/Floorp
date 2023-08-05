@@ -15,7 +15,6 @@ Preferences.addAll([
   { id: "browser.search.suggest.enabled", type: "bool" },
   { id: "browser.urlbar.suggest.searches", type: "bool" },
   { id: "browser.search.suggest.enabled.private", type: "bool" },
-  { id: "browser.search.hiddenOneOffs", type: "unichar" },
   { id: "browser.search.widget.inNavBar", type: "bool" },
   { id: "browser.urlbar.showSearchSuggestionsFirst", type: "bool" },
   { id: "browser.urlbar.showSearchTerms.enabled", type: "bool" },
@@ -620,9 +619,6 @@ function onDragEngineStart(event) {
 }
 
 function EngineStore() {
-  let pref = Preferences.get("browser.search.hiddenOneOffs").value;
-  this.hiddenList = pref ? pref.split(",") : [];
-
   this._engines = [];
   this._defaultEngines = [];
   Promise.all([
