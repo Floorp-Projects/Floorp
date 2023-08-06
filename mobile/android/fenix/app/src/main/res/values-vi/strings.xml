@@ -420,8 +420,6 @@
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Hủy bỏ</string>
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button" moz:RemovedIn="115" tools:ignore="UnusedResources">Yêu cầu hỗ trợ</string>
-    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Gửi yêu cầu</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Yêu cầu hỗ trợ cho trang web này?</string>
@@ -1894,6 +1892,12 @@
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Chi tiết công cụ tìm kiếm tùy chỉnh</string>
 
+    <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
+    <string name="search_add_custom_engine_suggest_url_label">API gợi ý tìm kiếm (không bắt buộc)</string>
+    <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
+    <string name="search_add_custom_engine_suggest_string_hint">URL API gợi ý tìm kiếm</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Thay thế truy vấn bằng “%s”. Ví dụ:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Lưu</string>
 
