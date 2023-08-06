@@ -74,6 +74,19 @@
       <checkbox preference="floorp.verticaltab.hover.enabled" id="hoverVerticalTab" data-l10n-id="hover-vertical-tab"
         class="verticalTabs" />
     </radiogroup>
+
+    <vbox class="TST ContentBlockBox">
+    <html:h3 class="TST addonRecommend-header" data-l10n-id="TST"/>
+    <hbox class="addonRecommend-box">
+      <image id="TSTImg" class="addonRecommend-img" style="background-image: url('https://addons.mozilla.org/user-media/addon_icons/5/5890-64.png?modified=8e6d26d4');"/>
+      <vbox class="addonRecommend-label-box">
+       <description id="AddonRecommend" data-l10n-id="about-TST"/>
+       <label class="AMO-Link" is="text-link" href="https://addons.mozilla.org/firefox/addon/tree-style-tab/" data-l10n-id="view-at-AMO"></label>
+      </vbox>
+     </hbox>
+   </vbox>
+   <checkbox preference="floorp.Tree-type.verticaltab.optimization" id="treestyletabSettings"
+             data-l10n-id="treestyletab-Settings" style="visibility: hidden;"/>
   </groupbox>
 
   <groupbox data-category="paneDesign" id="tabbbarGroup" hidden="true">

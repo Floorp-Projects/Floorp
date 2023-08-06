@@ -19,6 +19,7 @@ Preferences.addAll([
   { id: "floorp.browser.tabbar.multirow.newtab-inside.enabled", type: "bool"},
   { id: "floorp.verticaltab.hover.enabled", type: "bool" },
   { id: "floorp.titlebar.favicon.color", type: "bool" },
+  { id: "floorp.Tree-type.verticaltab.optimization", type: "bool" },
 ])
 var gDesign = {
   _pane: null,
@@ -63,3 +64,23 @@ var gDesign = {
         AppearanceChooser.init();
   },
 };
+
+const TSTStatus = async (addonID, className) => {
+  const addon = await AddonManager.getAddonByID(addonID);
+  if (addon !== null) {
+    const addontag = document.createElement("style");
+    addontag.setAttribute("id", className);
+    addontag.innerText = `
+      .${className} {
+        display: none !important;
+      }
+
+      #treestyletabSettings {
+        visibility: visible !important;
+      }
+      `;
+    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend", addontag);
+  }
+};
+
+TSTStatus("treestyletab@piro.sakura.ne.jp", "TST");
