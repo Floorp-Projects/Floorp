@@ -28,9 +28,11 @@ on:
         description: enable artifact as zstd fmt
         type: boolean
         default: false
-      beta_branding:
+      beta:
         type: boolean
         default: false
+      #! does not compartible with aarch64
+      #? maybe light change needed to fix
       mar:
         type: boolean
         default: false
@@ -56,8 +58,8 @@ jobs:
   windows-build:
     runs-on: ubuntu-latest
     outputs:
-      mar_name: ${{steps.mar.outputs.MAR_NAME}}
-      mar_size: ${{steps.mar.outputs.MAR_SIZE}}
+      mar_name: ${{steps.gen-mar.outputs.MAR_NAME}}
+      mar_size: ${{steps.gen-mar.outputs.MAR_SIZE}}
     steps:
     - name: Use Node.js
       uses: actions/setup-node@v3
@@ -84,15 +86,10 @@ jobs:
         GHA_profgen: ${{inputs.profgen}}
         GHA_aarch64: ${{inputs.aarch64}}
         GHA_zstd: ${{inputs.zstd}}
-        GHA_beta_branding: ${{inputs.beta_branding}}
+        GHA_beta: ${{inputs.beta}}
         GHA_mar: ${{inputs.mar}}
         GHA_use_profdata_jarlog: ${{inputs.use_profdata_jarlog}}
         GHA_out-artifact-name: ${{inputs.out_artifact_name}}
-
-    - name: Init
-      run: |
-        export RUNNER_USERDIR=`echo ~`
-        echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
 
     - name: Change PPA mirror servers
       run: |
@@ -126,11 +123,11 @@ jobs:
       if: inputs.use_profdata_jarlog
       with:
         name: ${{inputs.use_profdata_jarlog}}
-        path: ${{ env.RUNNER_USERDIR }}/artifact
+        path: ~/artifact
 
     - name: Setup 🪛
       run: |
-        mkdir -p $RUNNER_USERDIR/win-cross
+        mkdir -p ~/win-cross
 
         if [[ $GHA_aarch64 != 'true' ]];then
           cp ./.github/mozconfig_win_x86_64_pgo_base mozconfig
@@ -142,7 +139,7 @@ jobs:
           export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
         fi
 
-        if [[ $GHA_beta_branding != 'true' ]];then
+        if [[ $GHA_beta != 'true' ]];then
           echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
         else
           echo 'ac_add_options --with-branding=browser/branding/beta' >> mozconfig
@@ -154,8 +151,8 @@ jobs:
           echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
         elif [[ -n $GHA_use_profdata_jarlog ]]; then
           echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
-          echo 'ac_add_options --with-pgo-profile-path=$RUNNER_USERDIR/artifact/merged.profdata' >> mozconfig
-          echo 'ac_add_options --with-pgo-jarlog=$RUNNER_USERDIR/artifact/en-US.log' >> mozconfig
+          echo 'ac_add_options --with-pgo-profile-path=~/artifact/merged.profdata' >> mozconfig
+          echo 'ac_add_options --with-pgo-jarlog=~/artifact/en-US.log' >> mozconfig
         fi
 
         # SCCACHE START
@@ -167,28 +164,28 @@ jobs:
 
         echo Setup wine
         aria2c "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-1.toolchains.v3.linux64-wine.latest/artifacts/public%2Fbuild%2Fwine.tar.zst" -o wine.tar.zst
-        tar --zstd -xvf wine.tar.zst -C $RUNNER_USERDIR/win-cross
+        tar --zstd -xvf wine.tar.zst -C ~/win-cross
         rm wine.tar.zst
 
         echo Setup Visual Studio
         sudo apt install -y msitools python3-pip
-        ./mach python --virtualenv build taskcluster/scripts/misc/get_vs.py build/vs/vs2019.yaml $RUNNER_USERDIR/win-cross/vs2019
-        chmod -R +x "$RUNNER_USERDIR/win-cross/vs2019"
+        ./mach python --virtualenv build taskcluster/scripts/misc/get_vs.py build/vs/vs2019.yaml ~/win-cross/vs2019
+        chmod -R +x ~/win-cross/vs2019
         #? from daily-build-with-update
         #? for resolve some problems relate to VCRuntime
-        echo 'WIN_UCRT_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/Windows Kits/10/Redist/10.0.19041.0/ucrt/DLLs/x64"' >> mozconfig
-        echo 'WIN32_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/VC/Redist/MSVC/14.29.30133/x64/Microsoft.VC142.CRT"' >> mozconfig
+        echo 'WIN_UCRT_REDIST_DIR="~/win-cross/vs2019/Windows Kits/10/Redist/10.0.19041.0/ucrt/DLLs/x64"' >> mozconfig
+        echo 'WIN32_REDIST_DIR="~/win-cross/vs2019/VC/Redist/MSVC/14.29.30133/x64/Microsoft.VC142.CRT"' >> mozconfig
         #? from end
 
         ./mach --no-interactive bootstrap --application-choice browser
-        echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
+        echo "export LIB=\"$(cd ~/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
 
         echo "DISPLAY_VERSION=$(cat ./browser/config/version_display.txt)" >> $GITHUB_ENV
         echo "UPDATE_CHANNEL=release" >> $GITHUB_ENV
       env:
         GHA_profgen: ${{inputs.profgen}}
         GHA_aarch64: ${{inputs.aarch64}}
-        GHA_beta_branding: ${{inputs.beta_branding}}
+        GHA_beta: ${{inputs.beta}}
         GHA_use_profdata_jarlog : ${{inputs.use_profdata_jarlog}}
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
@@ -206,7 +203,7 @@ jobs:
         GHA_aarch64: ${{inputs.aarch64}}
 
     - name: Change update url if beta
-      if: inputs.beta_branding
+      if: inputs.beta
       run: |
         sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${GH_REPO}/releases/download/beta/WINNT-x86_64.xml |g' ./build/application.ini.in
         sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
@@ -215,7 +212,7 @@ jobs:
 
     #On Package, if not copies, error occur
     - name: Copy l10n files if beta
-      if: inputs.beta_branding
+      if: inputs.beta
       run: |
           for dir in $(ls -l $PWD/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
             mkdir -p $PWD/l10n-central/l10n-central/$dir/browser/branding/beta
@@ -239,7 +236,7 @@ jobs:
     - name: Copy 📂
 
       run: |
-        mkdir $RUNNER_USERDIR/output
+        mkdir ~/output
         if [[ $GHA_aarch64 == 'true' ]];then
           arch="aarch64"
           arch_inst="win64-aarch64"
@@ -249,17 +246,17 @@ jobs:
         fi
 
         if [[ $GHA_zstd != 'true' ]];then
-          cp obj-${arch}-pc-windows-msvc/dist/install/sea/floorp-*.en-US.${arch_inst}.installer-stub.exe $RUNNER_USERDIR/output/
-          cp obj-${arch}-pc-windows-msvc/dist/install/sea/floorp-*.en-US.${arch_inst}.installer.exe $RUNNER_USERDIR/output/
-          cp obj-${arch}-pc-windows-msvc/dist/floorp-*.en-US.${arch_inst}.zip $RUNNER_USERDIR/output/
+          cp obj-${arch}-pc-windows-msvc/dist/install/sea/floorp-*.en-US.${arch_inst}.installer-stub.exe ~/output/
+          cp obj-${arch}-pc-windows-msvc/dist/install/sea/floorp-*.en-US.${arch_inst}.installer.exe ~/output/
+          cp obj-${arch}-pc-windows-msvc/dist/floorp-*.en-US.${arch_inst}.zip ~/output/
         else
-          cp obj-${arch}-pc-windows-msvc/dist/floorp-*.en-US.${arch_inst}.zip $RUNNER_USERDIR/output/
-          7z x $RUNNER_USERDIR/output/floorp-*.en-US.${arch_inst}.zip
-          tar -I "zstd -T4 -10" --remove-files -cvf $RUNNER_USERDIR/output/floorp-${cat browser/config/version.txt}.en-us.win64.tar.zst floorp
-          rm $RUNNER_USERDIR/output/floorp-*.en-US.${arch_inst}.zip
+          cp obj-${arch}-pc-windows-msvc/dist/floorp-*.en-US.${arch_inst}.zip ~/output/
+          7z x ~/output/floorp-*.en-US.${arch_inst}.zip
+          tar -I "zstd -T4 -10" --remove-files -cvf ~/output/floorp-$(cat browser/config/version.txt).en-us.win64.tar.zst floorp
+          rm ~/output/floorp-*.en-US.${arch_inst}.zip
         fi
         #? Original code used in daily b with update
-        # cp -r obj-x86_64-pc-mingw32/dist/floorp $RUNNER_USERDIR/output/
+        # cp -r obj-x86_64-pc-mingw32/dist/floorp ~/output/
       env:
         GHA_aarch64: ${{inputs.aarch64}}
         GHA_zstd: ${{inputs.zstd}}
@@ -268,17 +265,17 @@ jobs:
       id: gen-mar
       if : inputs.mar
       run: |
-        mkdir -p output
+        # mkdir -p output
         touch "obj-x86_64-pc-windows-msvc/dist/floorp/precomplete"
         MAR="obj-x86_64-pc-windows-msvc/dist/host/bin/mar" \
         MOZ_PRODUCT_VERSION=$(cat browser/config/version_display.txt) \
         MAR_CHANNEL_ID=release \
-        ./tools/update-packaging/make_full_update.sh ./output "obj-x86_64-pc-windows-msvc/dist/floorp"
+        ./tools/update-packaging/make_full_update.sh ~/output "obj-x86_64-pc-windows-msvc/dist/floorp"
 
-        mv ./output/*.mar ./output/WINNT-x86_64.mar
+        mv ~/output/*.mar ~/output/WINNT-x86_64.mar
 
         echo "MAR_NAME=WINNT-x86_64.mar" >> $GITHUB_OUTPUT
-        echo "MAR_SIZE=$(stat -c "%s" ./output/WINNT-x86_64.mar)" >> $GITHUB_OUTPUT
+        echo "MAR_SIZE=$(stat -c "%s" ~/output/WINNT-x86_64.mar)" >> $GITHUB_OUTPUT
 
     # Publish START
     - name: make name of publish archive
@@ -295,5 +292,5 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: ${{env.ARTIFACT_NAME}}
-        path: ${{ env.RUNNER_USERDIR }}/output
+        path: ~/output
     # Publish END

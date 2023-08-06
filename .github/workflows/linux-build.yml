@@ -34,6 +34,16 @@ on:
       beta:
         type: boolean
         default: false
+      #! does not compartible with aarch64
+      #? maybe light change needed to fix
+      mar:
+        type: boolean
+        default: false
+    outputs:
+      mar_name:
+        value: ${{jobs.linux-build.outputs.mar_name}}
+      mar_size:
+        value: ${{jobs.linux-build.outputs.mar_size}}
 
 
 # name: Linux Build
@@ -42,6 +52,9 @@ on:
 jobs:
   linux-build:
     runs-on: ubuntu-latest
+    outputs:
+      mar_name: ${{steps.gen-mar.outputs.MAR_NAME}}
+      mar_size: ${{steps.gen-mar.outputs.MAR_SIZE}}
     steps:
 
     - uses: actions/checkout@v3
@@ -146,22 +159,22 @@ jobs:
         GHA_beta: ${{inputs.beta}}
       shell: python3 {0}
 
-
-    - name: Copy l10n files if beta
-      if: inputs.beta
-      run: |
-        for dir in $(ls -l $RUNNER_USERDIR/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
-          mkdir -p $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta
-          cp ./browser/branding/beta/locales/en-US/brand.dtd $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.dtd
-          cp ./browser/branding/beta/locales/en-US/brand.ftl $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
-          cp ./browser/branding/beta/locales/en-US/brand.properties $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
-        done
-
     - name: Change update url if beta
       if: inputs.beta
       run: |
         sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${{ github.repository }}/releases/download/beta/LINUX-x86_64.xml |g' ./build/application.ini.in
         sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
+
+    #On Package, if not copies, error occur
+    - name: Copy l10n files if beta
+      if: inputs.beta
+      run: |
+          for dir in $(ls -l $PWD/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+            mkdir -p $PWD/l10n-central/l10n-central/$dir/browser/branding/beta
+            cp ./browser/branding/beta/locales/en-US/brand.dtd $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.dtd
+            cp ./browser/branding/beta/locales/en-US/brand.ftl $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
+            cp ./browser/branding/beta/locales/en-US/brand.properties $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
+          done
 
     - name: Build 🔨
       run: |
@@ -182,12 +195,15 @@ jobs:
 
     - name: Package 2 - zip 📦
       run: |
+        mkdir ~/output
         if [[ $GHA_aarch64 != 'true' ]];then
-          echo "OUTPUT=obj-x86_64-pc-linux-gnu/dist/*.tar.bz2" >> $GITHUB_ENV
+          cp obj-x86_64-pc-linux-gnu/dist/*.tar.bz2 ~/output
+          # echo "OUTPUT=obj-x86_64-pc-linux-gnu/dist/*.tar.bz2" >> $GITHUB_ENV
           # zip -r dist.zip obj-x86_64-pc-linux-gnu/dist/*.tar.bz2
         else
           #aarch64
-          echo "OUTPUT=obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2" >> $GITHUB_ENV
+          cp obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2 ~/output
+          # echo "OUTPUT=obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2" >> $GITHUB_ENV
           # zip -r dist.zip obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2
         fi
 
@@ -202,12 +218,27 @@ jobs:
         GHA_aarch64: ${{inputs.aarch64}}
         GHA_raw: ${{inputs.with_raw}}
 
+    - name: Create MAR artifact if mar📦
+      id: gen-mar
+      if: inputs.mar
+      run: |
+        touch "obj-x86_64-pc-linux-gnu/dist/floorp/precomplete"
+        MAR="obj-x86_64-pc-linux-gnu/dist/host/bin/mar" \
+        MOZ_PRODUCT_VERSION=$(cat browser/config/version_display.txt) \
+        MAR_CHANNEL_ID=release \
+        ./tools/update-packaging/make_full_update.sh ~/output "obj-x86_64-pc-linux-gnu/dist/floorp"
+
+        mv ~/output/*.mar ~/output/LINUX-x86_64.mar
+
+        echo "MAR_NAME=LINUX-x86_64.mar" >> $GITHUB_OUTPUT
+        echo "MAR_SIZE=$(stat -c "%s" ~/output/LINUX-x86_64.mar)" >> $GITHUB_OUTPUT
+
     #PUBLISH START
     - name: Publish🎁
       uses: actions/upload-artifact@v3
       with:
         name: floorp-linux-${{fromJson('["x64","aarch64"]')[inputs.aarch64]}}
-        path: ${{ env.OUTPUT }}
+        path: ~/output
         # path: dist.zip
     - name: Publish raw (only if with_raw)
       uses: actions/upload-artifact@v3

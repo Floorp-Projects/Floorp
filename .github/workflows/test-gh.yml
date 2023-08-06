@@ -23,8 +23,18 @@ jobs:
   test-gh2_2:
     needs: [test-gh2,test]
     uses: ./.github/workflows/test-gh2.yml
+  test_1:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - name: hi
+        run: |
+          echo ${{needs.test.outputs.test}}
+
   test:
     runs-on: ubuntu-latest
+    outputs:
+      test: ${{steps.test.outputs.A_A}}
     steps:
       # - name: tree inst
       #   run: |
@@ -36,9 +46,30 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 'lts/*'
-      - name: bash string test
+      - name: install octokit/rest.js
         run: |
+          npm install @octokit/rest
+
+      - name: get workflow
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.actions
+              .getWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: context.runId,
+              })
+              .then((res) => {
+                console.log(res);
+              });
+
+      - name: bash string test
+        id: test
+        run: |
+          echo ~
           echo ${{github.run_id}}
+          echo "A_A=A.mar" >> $GITHUB_OUTPUT
           cat $GITHUB_EVENT_PATH
           a="aa"
           echo b${a}b
@@ -55,7 +86,7 @@ jobs:
       - name: Check storage usage 1
         run: |
           df -h
-          
+
           #? https://stackoverflow.com/questions/11231937/bash-ignoring-error-for-a-particular-command
           sudo du -shc /* || true
           sudo du -shc /opt/* || true
@@ -63,7 +94,7 @@ jobs:
           sudo du -shc /usr/share/* || true
           sudo du -shc /usr/local/* || true
           sudo du -shc /usr/local/lib/* || true
-          
+
       - name: package remove
         run: |
           sudo apt clean
