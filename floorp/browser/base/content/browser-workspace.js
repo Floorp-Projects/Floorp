@@ -904,7 +904,9 @@ const workspaceFunctions = {
       }
 
       let willMoveWorkspace = workspace;
-      tab.setAttribute("floorp-workspace", willMoveWorkspace);
+      for (let i = 0; i < gBrowser.selectedTabs.length; i++) {
+        gBrowser.selectedTabs[i].setAttribute("floorp-workspace", willMoveWorkspace);
+      }
 
       workspaceFunctions.manageWorkspaceFunctions.saveWorkspaceState();
       workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
