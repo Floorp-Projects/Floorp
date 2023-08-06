@@ -45,6 +45,11 @@ const MOCK_POPULATED_DATA = {
         "I've avoided getting a smartwatch for so long due to short battery life on most of them.",
       ],
     },
+    "packaging/appearance": {
+      positive: ["Great cardboard box."],
+      negative: [],
+      neutral: [],
+    },
     shipping: {
       positive: [],
       negative: [],
