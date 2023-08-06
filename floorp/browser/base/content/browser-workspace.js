@@ -1571,6 +1571,7 @@ const tabGroupAddonID = [
   "panorama-tab-groups@example.com",
   "{60e27487-c779-464c-8698-ad481b718d5f}",
   "{3c078156-979c-498b-8990-85f7987dd929}",
+  "treestyletab@piro.sakura.ne.jp",
 ];
 
 async function checkTabGroupAddonInstalledAndStartWorkspace() {
@@ -1588,4 +1589,26 @@ async function checkTabGroupAddonInstalledAndStartWorkspace() {
   startWorkspace();
 }
 
-checkTabGroupAddonInstalledAndStartWorkspace();
+const tempDisabled = "floorp.browser.workspaces.disabledBySystem"
+async function disableWorkspacesByDefaultCheck(){
+  const allWorkspaces = Services.prefs.getStringPref(WORKSPACE_ALL_PREF).split(",");
+  if(allWorkspaces.length > 1){
+    console.log("Workspaces will enable");
+    Services.prefs.setBoolPref(tempDisabled, false);
+    await checkTabGroupAddonInstalledAndStartWorkspace();
+  } else if(tempDisabled && !Services.prefs.prefHasUserValue(tempDisabled)){
+    console.log("Workspaces will disable");
+    Services.prefs.setBoolPref(WORKSPACE_TAB_ENABLED_PREF, false);
+
+    Services.prefs.addObserver(WORKSPACE_TAB_ENABLED_PREF, function(){
+      Services.prefs.setBoolPref(tempDisabled, false);
+      Services.prefs.removeObserver(WORKSPACE_TAB_ENABLED_PREF);
+    });
+  } else {
+    console.log("Workspaces will enable");
+    Services.prefs.setBoolPref(tempDisabled, false);
+    await checkTabGroupAddonInstalledAndStartWorkspace();
+  }
+}
+
+disableWorkspacesByDefaultCheck();

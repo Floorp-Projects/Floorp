@@ -138,6 +138,10 @@ pref("floorp.browser.workspace.excludePinnedTabs", false);
 pref("floorp.browser.workspace.info", "[]");
 pref("floorp.browser.workspace.manageOnBMS", false);
 
+
+//temp
+pref("floorp.browser.workspaces.disabledBySystem", true);
+
 //タブバーの背景色
 pref("floorp.titlebar.favicon.color", false);
 
