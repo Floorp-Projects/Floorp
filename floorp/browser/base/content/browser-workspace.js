@@ -1,5 +1,7 @@
 /* eslint-disable no-undef */
 
+"use strict";
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1519,7 +1521,7 @@ const setEvenyListeners = function () {
   );
 };
 
-startWorkspace = function () {
+const startWorkspace = function () {
   let list = Services.wm.getEnumerator("navigator:browser");
   while (list.hasMoreElements()) {
     if (list.getNext() != window) {
