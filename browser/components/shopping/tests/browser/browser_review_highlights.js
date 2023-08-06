@@ -18,7 +18,12 @@ add_task(async function test_review_highlights() {
         browser,
         [MOCK_ANALYZED_PRODUCT_RESPONSE],
         async mockData => {
-          const EXPECTED_KEYS = ["price", "quality", "competitiveness"];
+          const EXPECTED_KEYS = [
+            "price",
+            "quality",
+            "competitiveness",
+            "packaging/appearance",
+          ];
 
           let shoppingContainer =
             content.document.querySelector(
@@ -42,7 +47,9 @@ add_task(async function test_review_highlights() {
 
           // Verify number of reviews for each available highlight
           for (let key of EXPECTED_KEYS) {
-            let highlightEl = highlightsList.querySelector(`#${key}`);
+            let highlightEl = highlightsList.querySelector(
+              `#${content.CSS.escape(key)}`
+            );
             ok(highlightEl, "highlight-item for " + key + " exists");
 
             let actualNumberOfReviews = highlightEl.shadowRoot.querySelector(

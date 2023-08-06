@@ -17,7 +17,7 @@ const VALID_HIGHLIGHT_L10N_IDs = new Map([
   ["quality", "shopping-highlight-quality"],
   ["shipping", "shopping-highlight-shipping"],
   ["competitiveness", "shopping-highlight-competitiveness"],
-  ["packaging", "shopping-highlight-packaging"],
+  ["packaging/appearance", "shopping-highlight-packaging"],
 ]);
 
 /**
