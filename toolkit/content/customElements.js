@@ -822,6 +822,8 @@
           return import(
             "chrome://global/content/elements/moz-button-group.mjs"
           );
+        case "moz-message-bar":
+          return import("chrome://global/content/elements/moz-message-bar.mjs");
         case "moz-support-link":
           return import(
             "chrome://global/content/elements/moz-support-link.mjs"
