@@ -4259,7 +4259,7 @@ nsGlobalWindowInner::GetExistingDebuggerNotificationManager() {
 
 Location* nsGlobalWindowInner::Location() {
   if (!mLocation) {
-    mLocation = new dom::Location(this, GetBrowsingContext());
+    mLocation = new dom::Location(this);
   }
 
   return mLocation;

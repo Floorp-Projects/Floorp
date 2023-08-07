@@ -9,6 +9,7 @@
 
 #include "js/TypeDecls.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/LocationBase.h"
 #include "nsCycleCollectionParticipant.h"
@@ -28,11 +29,12 @@ namespace mozilla::dom {
 
 class Location final : public nsISupports,
                        public LocationBase,
-                       public nsWrapperCache {
+                       public nsWrapperCache,
+                       public LinkedListElement<Location> {
  public:
   typedef BrowsingContext::LocationProxy RemoteProxy;
 
-  Location(nsPIDOMWindowInner* aWindow, BrowsingContext* aBrowsingContext);
+  explicit Location(nsPIDOMWindowInner* aWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Location)
@@ -110,11 +112,13 @@ class Location final : public nsISupports,
 
   nsresult ToString(nsAString& aString) { return GetHref(aString); }
 
+  void ClearCachedValues();
+
  protected:
   virtual ~Location();
 
   BrowsingContext* GetBrowsingContext() override;
-  already_AddRefed<nsIDocShell> GetDocShell() override;
+  nsIDocShell* GetDocShell() override;
 
   // In the case of jar: uris, we sometimes want the place the jar was
   // fetched from as the URI instead of the jar: uri itself.  Pass in
@@ -127,7 +131,6 @@ class Location final : public nsISupports,
 
   nsString mCachedHash;
   nsCOMPtr<nsPIDOMWindowInner> mInnerWindow;
-  uint64_t mBrowsingContextId = 0;
 };
 
 }  // namespace mozilla::dom
