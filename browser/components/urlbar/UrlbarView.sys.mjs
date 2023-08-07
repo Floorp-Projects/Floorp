@@ -11,7 +11,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   L10nCache: "resource:///modules/UrlbarUtils.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
-  setTimeout: "resource://gre/modules/Timer.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
@@ -112,7 +111,7 @@ export class UrlbarView {
     }
 
     lazy.UrlbarPrefs.addObserver(this);
-    lazy.setTimeout(() => this.updateRichSuggestionAttribute());
+    this.window.setTimeout(() => this.#updateRichSuggestionAttribute());
   }
 
   get oneOffSearchButtons() {
@@ -3224,17 +3223,16 @@ export class UrlbarView {
   onPrefChanged(pref) {
     switch (pref) {
       case RICH_SUGGESTIONS_PREF:
-        this.updateRichSuggestionAttribute();
+        this.#updateRichSuggestionAttribute();
         break;
     }
   }
 
-  updateRichSuggestionAttribute() {
-    if (lazy.UrlbarPrefs.get(RICH_SUGGESTIONS_PREF)) {
-      this.input.setAttribute("richSuggestionsEnabled", true);
-    } else {
-      this.input.removeAttribute("richSuggestionsEnabled");
-    }
+  #updateRichSuggestionAttribute() {
+    this.input.toggleAttribute(
+      "richSuggestionsEnabled",
+      lazy.UrlbarPrefs.get(RICH_SUGGESTIONS_PREF)
+    );
   }
 
   /**
