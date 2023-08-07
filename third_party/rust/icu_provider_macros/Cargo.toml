@@ -33,14 +33,20 @@ repository = "https://github.com/unicode-org/icu4x"
 path = "src/lib.rs"
 proc-macro = true
 
-[dependencies.proc-macro2]
-version = "1.0.27"
-
-[dependencies.quote]
-version = "1.0.9"
+[dependencies]
+proc-macro2 = "1.0.27"
+quote = "1.0.9"
 
 [dependencies.syn]
-version = "1.0.73"
-features = ["full"]
+version = "2"
+features = [
+    "full",
+    "parsing",
+]
 
-[dev-dependencies]
+[dev-dependencies.icu]
+path = "../../components/icu"
+
+[dev-dependencies.icu_provider]
+path = "../core"
+features = ["macros"]
