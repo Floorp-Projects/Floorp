@@ -141,8 +141,13 @@ fun ListItemTabSurface(
     onClick: (() -> Unit)? = null,
     tabDetails: @Composable () -> Unit,
 ) {
-    var modifier = Modifier.size(ITEM_WIDTH.dp, ITEM_HEIGHT.dp)
-    if (onClick != null) modifier = modifier.then(Modifier.clickable { onClick() })
+    val modifier = Modifier
+        .size(ITEM_WIDTH.dp, ITEM_HEIGHT.dp)
+        .clickable {
+            if (onClick != null) {
+                onClick()
+            }
+        }
 
     Card(
         modifier = modifier,
