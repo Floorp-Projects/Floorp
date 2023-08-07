@@ -1329,16 +1329,6 @@
       testElm("samp_container", obj);
 
       // ////////////////////////////////////////////////////////////////////////
-      // HTML:search
-
-      obj = {
-        role: ROLE_LANDMARK,
-        attributes: { "xml-roles": "search" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
-      };
-      testElm("search", obj);
-
-      // ////////////////////////////////////////////////////////////////////////
       // HTML:section without an accessible name
 
       obj = {
@@ -2001,7 +1991,6 @@
 
   <p id="s_container">normal<s>Removed</s></p>
   <p id="samp_container">normal<samp>sample</samp></p>
-  <search id="search">search</search>
   <section id="section">section</section>
   <section id="named_section" aria-label="foo">named section</section>
   <p id="small_container">normal<small>small</small></p>
