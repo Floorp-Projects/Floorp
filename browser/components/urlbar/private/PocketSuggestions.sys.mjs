@@ -189,7 +189,11 @@ export class PocketSuggestions extends BaseFeature {
           originalUrl: suggestion.url,
           title: [suggestion.title, lazy.UrlbarUtils.HIGHLIGHT.TYPED],
           description: isBestMatch ? suggestion.description : "",
-          icon: "chrome://global/skin/icons/pocket.svg",
+          // Use the favicon for non-best matches so the icon exactly matches
+          // the Pocket favicon in the user's history and tabs.
+          icon: isBestMatch
+            ? "chrome://global/skin/icons/pocket.svg"
+            : "chrome://global/skin/icons/pocket-favicon.ico",
           shouldShowUrl: true,
           bottomTextL10n: {
             id: "firefox-suggest-pocket-bottom-text",
