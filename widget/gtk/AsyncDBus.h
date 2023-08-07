@@ -6,8 +6,6 @@
 #ifndef mozilla_widget_AsyncDBus_h
 #define mozilla_widget_AsyncDBus_h
 
-#include <dbus/dbus-glib.h>
-
 #include "mozilla/GRefPtr.h"
 #include "mozilla/GUniquePtr.h"
 #include "mozilla/MozPromise.h"
