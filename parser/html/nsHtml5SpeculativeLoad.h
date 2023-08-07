@@ -169,7 +169,7 @@ class nsHtml5SpeculativeLoad {
   inline void InitScript(nsHtml5String aUrl, nsHtml5String aCharset,
                          nsHtml5String aType, nsHtml5String aCrossOrigin,
                          nsHtml5String aMedia, nsHtml5String aNonce,
-                         nsHtml5String aFetchPriority, nsHtml5String aIntegrity,
+                         nsHtml5String aIntegrity,
                          nsHtml5String aReferrerPolicy, bool aParserInHead,
                          bool aAsync, bool aDefer, bool aNoModule,
                          bool aLinkPreload) {
@@ -189,7 +189,6 @@ class nsHtml5SpeculativeLoad {
     aCrossOrigin.ToString(mCrossOrigin);
     aMedia.ToString(mMedia);
     aNonce.ToString(mNonce);
-    aFetchPriority.ToString(mFetchPriority);
     aIntegrity.ToString(mReferrerPolicyOrIntegrity);
     nsAutoString referrerPolicy;
     aReferrerPolicy.ToString(referrerPolicy);
@@ -416,12 +415,6 @@ class nsHtml5SpeculativeLoad {
    * of the "nonce" attribute.
    */
   nsString mNonce;
-  /**
-   * If mOpCode is eSpeculativeLoadNoModuleScript[FromHead] or
-   * eSpeculativeLoadScript[FromHead] this represents the value of the
-   * "fetchpriority" attribute.
-   */
-  nsString mFetchPriority;
   /**
    * If mOpCode is eSpeculativeLoadScript[FromHead] this represents the value
    * of the "referrerpolicy" attribute. This field holds one of the values

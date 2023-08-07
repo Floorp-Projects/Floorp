@@ -6,7 +6,6 @@
 
 #include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileModuleScriptToStencil, JS::InstantiateModuleStencil
 #include "js/loader/ModuleLoadRequest.h"
-#include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/WorkerLoadContext.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/workerinternals/ScriptLoader.h"
@@ -118,8 +117,8 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
     ReferrerPolicy referrerPolicy = workerPrivate->GetReferrerPolicy();
     options = new ScriptFetchOptions(
         CORSMode::CORS_NONE, referrerPolicy,
-        /* aNonce = */ u""_ns, RequestPriority::Auto,
-        JS::loader::ParserMetadata::NotParserInserted, nullptr);
+        /* aNonce = */ u""_ns, JS::loader::ParserMetadata::NotParserInserted,
+        nullptr);
     baseURL = GetBaseURI();
   }
 

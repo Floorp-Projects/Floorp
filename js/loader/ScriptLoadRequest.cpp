@@ -37,13 +37,11 @@ NS_IMPL_CYCLE_COLLECTION(ScriptFetchOptions, mTriggeringPrincipal, mElement)
 
 ScriptFetchOptions::ScriptFetchOptions(
     mozilla::CORSMode aCORSMode, mozilla::dom::ReferrerPolicy aReferrerPolicy,
-    const nsAString& aNonce, mozilla::dom::RequestPriority aFetchPriority,
-    const ParserMetadata aParserMetadata, nsIPrincipal* aTriggeringPrincipal,
-    mozilla::dom::Element* aElement)
+    const nsAString& aNonce, const ParserMetadata aParserMetadata,
+    nsIPrincipal* aTriggeringPrincipal, mozilla::dom::Element* aElement)
     : mCORSMode(aCORSMode),
       mReferrerPolicy(aReferrerPolicy),
       mNonce(aNonce),
-      mFetchPriority(aFetchPriority),
       mParserMetadata(aParserMetadata),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mElement(aElement) {}

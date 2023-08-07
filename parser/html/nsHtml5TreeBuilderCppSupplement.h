@@ -6,10 +6,7 @@
 
 #include "ErrorList.h"
 #include "nsError.h"
-#include "nsHtml5AttributeName.h"
-#include "nsHtml5String.h"
 #include "nsNetUtil.h"
-#include "mozilla/dom/FetchPriority.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Likely.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -254,8 +251,6 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
             nsHtml5String nonce =
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_NONCE);
-            const nsHtml5String fetchPriority =
-                aAttributes->getValue(nsHtml5AttributeName::ATTR_FETCHPRIORITY);
             nsHtml5String integrity =
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
             nsHtml5String referrerPolicy = aAttributes->getValue(
@@ -268,9 +263,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 aAttributes->contains(nsHtml5AttributeName::ATTR_NOMODULE);
             mSpeculativeLoadQueue.AppendElement()->InitScript(
                 url, charset, type, crossOrigin, /* aMedia = */ nullptr, nonce,
-                fetchPriority, integrity, referrerPolicy,
-                mode == nsHtml5TreeBuilder::IN_HEAD, async, defer, noModule,
-                false);
+                integrity, referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
+                async, defer, noModule, false);
             mCurrentHtmlScriptIsAsyncOrDefer = async || defer;
           }
         } else if (nsGkAtoms::link == aName) {
@@ -338,14 +332,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 if (as.LowerCaseEqualsASCII("script")) {
                   nsHtml5String type =
                       aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
-                  // Bug 1839315: pass "fetchpriority"'s value, see
-                  // <https://html.spec.whatwg.org/multipage/links.html#link-type-preload:attr-link-fetchpriority>.
-                  const nsHtml5String fetchPriority =
-                      nsHtml5String::FromLiteral(
-                          mozilla::dom::kFetchPriorityAttributeValueAuto);
                   mSpeculativeLoadQueue.AppendElement()->InitScript(
-                      url, charset, type, crossOrigin, media, nonce,
-                      /* aFetchPriority */ fetchPriority, integrity,
+                      url, charset, type, crossOrigin, media, nonce, integrity,
                       referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
                       false, false, false, true);
                 } else if (as.LowerCaseEqualsASCII("style")) {
@@ -395,14 +383,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                       nsHtml5AttributeName::ATTR_INTEGRITY);
                   nsHtml5String referrerPolicy = aAttributes->getValue(
                       nsHtml5AttributeName::ATTR_REFERRERPOLICY);
-                  // Bug 1839315: pass "fetchpriority" attribute's value, see
-                  // <https://html.spec.whatwg.org/multipage/links.html#link-type-modulepreload:fetch-and-process-the-linked-resource-2>.
-                  const nsHtml5String fetchPriority =
-                      nsHtml5String::FromLiteral(
-                          mozilla::dom::kFetchPriorityAttributeValueAuto);
                   mSpeculativeLoadQueue.AppendElement()->InitScript(
-                      url, charset, type, crossOrigin, media, nonce,
-                      /* aFetchPriority */ fetchPriority, integrity,
+                      url, charset, type, crossOrigin, media, nonce, integrity,
                       referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
                       false, false, false, true);
                 }
@@ -497,20 +479,14 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
             nsHtml5String nonce =
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_NONCE);
-            // SVG's "script" element doesn't define a "fetchpriority"
-            // attribute:
-            // <https://svgwg.org/svg2-draft/interact.html#ScriptElement.
-            const nsHtml5String fetchPriority = nsHtml5String::FromLiteral(
-                mozilla::dom::kFetchPriorityAttributeValueAuto);
             nsHtml5String integrity =
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
             nsHtml5String referrerPolicy = aAttributes->getValue(
                 nsHtml5AttributeName::ATTR_REFERRERPOLICY);
             mSpeculativeLoadQueue.AppendElement()->InitScript(
                 url, nullptr, type, crossOrigin, /* aMedia = */ nullptr, nonce,
-                fetchPriority, integrity, referrerPolicy,
-                mode == nsHtml5TreeBuilder::IN_HEAD, false, false, false,
-                false);
+                integrity, referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
+                false, false, false, false);
           }
         } else if (nsGkAtoms::style == aName) {
           mImportScanner.Start();

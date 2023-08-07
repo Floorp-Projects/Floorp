@@ -9,10 +9,6 @@
 #include "ScriptTrace.h"
 #include "ModuleLoader.h"
 
-#include "mozilla/Assertions.h"
-#include "mozilla/dom/FetchPriority.h"
-#include "mozilla/dom/HTMLScriptElement.h"
-#include "mozilla/dom/RequestBinding.h"
 #include "nsIChildChannel.h"
 #include "zlib.h"
 
@@ -839,31 +835,16 @@ static bool CSPAllowsInlineScript(nsIScriptElement* aElement,
   return NS_SUCCEEDED(rv) && allowInlineScript;
 }
 
-namespace {
-constexpr RequestPriority FetchPriorityToRequestPriority(
-    const FetchPriority aFetchPriority) {
-  switch (aFetchPriority) {
-    case FetchPriority::High:
-      return RequestPriority::High;
-    case FetchPriority::Low:
-      return RequestPriority::Low;
-    case FetchPriority::Auto:
-      return RequestPriority::Auto;
-  }
-}
-}  // namespace
-
 already_AddRefed<ScriptLoadRequest> ScriptLoader::CreateLoadRequest(
     ScriptKind aKind, nsIURI* aURI, nsIScriptElement* aElement,
     nsIPrincipal* aTriggeringPrincipal, CORSMode aCORSMode,
-    const nsAString& aNonce, RequestPriority aRequestPriority,
-    const SRIMetadata& aIntegrity, ReferrerPolicy aReferrerPolicy,
-    ParserMetadata aParserMetadata) {
+    const nsAString& aNonce, const SRIMetadata& aIntegrity,
+    ReferrerPolicy aReferrerPolicy, ParserMetadata aParserMetadata) {
   nsIURI* referrer = mDocument->GetDocumentURIAsReferrer();
   nsCOMPtr<Element> domElement = do_QueryInterface(aElement);
-  RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
-      aCORSMode, aReferrerPolicy, aNonce, aRequestPriority, aParserMetadata,
-      aTriggeringPrincipal, domElement);
+  RefPtr<ScriptFetchOptions> fetchOptions =
+      new ScriptFetchOptions(aCORSMode, aReferrerPolicy, aNonce,
+                             aParserMetadata, aTriggeringPrincipal, domElement);
   RefPtr<ScriptLoadContext> context = new ScriptLoadContext();
 
   if (aKind == ScriptKind::eClassic || aKind == ScriptKind::eImportMap) {
@@ -1038,14 +1019,12 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     }
 
     CORSMode ourCORSMode = aElement->GetCORSMode();
-    const FetchPriority fetchPriority = aElement->GetFetchPriority();
     ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
     ParserMetadata parserMetadata = GetParserMetadata(aElement);
 
     request = CreateLoadRequest(aScriptKind, scriptURI, aElement, principal,
-                                ourCORSMode, nonce,
-                                FetchPriorityToRequestPriority(fetchPriority),
-                                sriMetadata, referrerPolicy, parserMetadata);
+                                ourCORSMode, nonce, sriMetadata, referrerPolicy,
+                                parserMetadata);
     request->GetScriptLoadContext()->mIsInline = false;
     request->GetScriptLoadContext()->SetScriptMode(
         aElement->GetScriptDeferred(), aElement->GetScriptAsync(), false);
@@ -1212,18 +1191,12 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   if (aScriptKind == ScriptKind::eModule) {
     corsMode = aElement->GetCORSMode();
   }
-  // <https://html.spec.whatwg.org/multipage/scripting.html#prepare-the-script-element>
-  // step 29 specifies to use the fetch priority. Presumably it has no effect
-  // for inline scripts.
-  const auto fetchPriority = aElement->GetFetchPriority();
-
   ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
   ParserMetadata parserMetadata = GetParserMetadata(aElement);
 
   RefPtr<ScriptLoadRequest> request =
       CreateLoadRequest(aScriptKind, mDocument->GetDocumentURI(), aElement,
                         mDocument->NodePrincipal(), corsMode, nonce,
-                        FetchPriorityToRequestPriority(fetchPriority),
                         SRIMetadata(),  // SRI doesn't apply
                         referrerPolicy, parserMetadata);
   request->GetScriptLoadContext()->mIsInline = true;
@@ -3571,9 +3544,8 @@ void ScriptLoader::ParsingComplete(bool aTerminated) {
 void ScriptLoader::PreloadURI(
     nsIURI* aURI, const nsAString& aCharset, const nsAString& aType,
     const nsAString& aCrossOrigin, const nsAString& aNonce,
-    const nsAString& aFetchPriority, const nsAString& aIntegrity,
-    bool aScriptFromHead, bool aAsync, bool aDefer, bool aNoModule,
-    bool aLinkPreload, const ReferrerPolicy aReferrerPolicy,
+    const nsAString& aIntegrity, bool aScriptFromHead, bool aAsync, bool aDefer,
+    bool aNoModule, bool aLinkPreload, const ReferrerPolicy aReferrerPolicy,
     uint64_t aEarlyHintPreloaderId) {
   NS_ENSURE_TRUE_VOID(mDocument);
   // Check to see if scripts has been turned off.
@@ -3605,9 +3577,6 @@ void ScriptLoader::PreloadURI(
   SRIMetadata sriMetadata;
   GetSRIMetadata(aIntegrity, &sriMetadata);
 
-  const auto requestPriority = FetchPriorityToRequestPriority(
-      HTMLScriptElement::ToFetchPriority(aFetchPriority));
-
   // For link type "modulepreload":
   // https://html.spec.whatwg.org/multipage/links.html#link-type-modulepreload
   // Step 11. Let options be a script fetch options whose cryptographic nonce is
@@ -3621,7 +3590,7 @@ void ScriptLoader::PreloadURI(
   RefPtr<ScriptLoadRequest> request =
       CreateLoadRequest(scriptKind, aURI, nullptr, mDocument->NodePrincipal(),
                         Element::StringToCORSMode(aCrossOrigin), aNonce,
-                        requestPriority, sriMetadata, aReferrerPolicy,
+                        sriMetadata, aReferrerPolicy,
                         aLinkPreload ? ParserMetadata::NotParserInserted
                                      : ParserMetadata::ParserInserted);
   request->GetScriptLoadContext()->mIsInline = false;
