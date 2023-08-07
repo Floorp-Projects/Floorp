@@ -5,5 +5,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_HARNESS_FILES.testing.mochitest.manifests += [
-    "emulator-jb.ini",
+    "emulator-jb.toml",
 ]
