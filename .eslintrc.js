@@ -1936,7 +1936,6 @@ module.exports = {
         "toolkit/components/places/tests/browser/browser_visituri.js",
         "toolkit/components/places/tests/browser/browser_visituri_nohistory.js",
         "toolkit/components/places/tests/browser/browser_visituri_privatebrowsing_perwindowpb.js",
-        "toolkit/components/places/tests/browser/previews/browser_thumbnails.js",
         "toolkit/components/places/tests/browser/redirect_once.sjs",
         "toolkit/components/places/tests/chrome/test_371798.xhtml",
         "toolkit/components/places/tests/chrome/test_favicon_annotations.xhtml",
