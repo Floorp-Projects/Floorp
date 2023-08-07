@@ -214,18 +214,30 @@ const workspaceFunctions = {
           Services.prefs.getStringPref(WORKSPACE_TABS_PREF)
         );
 
+        let arryURLs = [];
+        for(let i = 0; i < tabsStates.length; i++) {
+          arryURLs.push(tabsStates[i][i].url);
+        }
+
         for (let i = 0; i < tabs.length; i++) {
           let tab = tabs[i];
-          let state =
-            tabsStates[i] && tabsStates[i][i] && tabsStates[i][i].workspace;
+          let tabURL = tab.linkedBrowser.currentURI.spec;
+          let state = tabsStates[i][i].workspace;
+          let stateURL= arryURLs[i];
 
-          if (state !== undefined && state !== null && state !== "") {
+          if (tabURL == stateURL) {
             tab.setAttribute("floorp-workspace", state);
+          } else if (arryURLs.includes(tabURL)) {
+            let index = arryURLs.indexOf(tabURL);
+            tab.setAttribute("floorp-workspace", tabsStates[i][index].workspace);
+            arryURLs.splice(index, 1);
+            console.info(`Tab ${i} has been set to workspace ${tabsStates[i][index].workspace} because of unmatch URL. Seems matching URL is ${tabsStates[i][index].url}`);
           } else {
             tab.setAttribute(
               "floorp-workspace",
               Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
             );
+            console.info(`Tab ${i} has been set to workspace ${Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)} because of missing URL.`);
           }
         }
       }
@@ -608,10 +620,12 @@ const workspaceFunctions = {
         let tabState = {
           [i]: {
             workspace: tab.getAttribute("floorp-workspace"),
+            url: tab.linkedBrowser.currentURI.spec
           },
         };
         tabStateObject.push(tabState);
       }
+
       Services.prefs.setStringPref(
         WORKSPACE_TABS_PREF,
         JSON.stringify(tabStateObject)
@@ -1589,15 +1603,14 @@ async function checkTabGroupAddonInstalledAndStartWorkspace() {
   startWorkspace();
 }
 
+// If you want to enable workspaces by default, Remove these lines. "checkTabGroupAddonInstalledAndStartWorkspace();" is enough.
 const tempDisabled = "floorp.browser.workspaces.disabledBySystem"
 async function disableWorkspacesByDefaultCheck(){
   const allWorkspaces = Services.prefs.getStringPref(WORKSPACE_ALL_PREF).split(",");
   if(allWorkspaces.length > 1){
-    console.log("Workspaces will enable");
     Services.prefs.setBoolPref(tempDisabled, false);
     await checkTabGroupAddonInstalledAndStartWorkspace();
   } else if(tempDisabled && !Services.prefs.prefHasUserValue(tempDisabled)){
-    console.log("Workspaces will disable");
     Services.prefs.setBoolPref(WORKSPACE_TAB_ENABLED_PREF, false);
 
     Services.prefs.addObserver(WORKSPACE_TAB_ENABLED_PREF, function(){
@@ -1605,7 +1618,6 @@ async function disableWorkspacesByDefaultCheck(){
       Services.prefs.removeObserver(WORKSPACE_TAB_ENABLED_PREF);
     });
   } else {
-    console.log("Workspaces will enable");
     Services.prefs.setBoolPref(tempDisabled, false);
     await checkTabGroupAddonInstalledAndStartWorkspace();
   }
