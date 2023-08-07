@@ -15,6 +15,8 @@ const TRANSLATIONS_TESTER_EN =
   URL_COM_PREFIX + DIR_PATH + "translations-tester-en.html";
 const TRANSLATIONS_TESTER_ES =
   URL_COM_PREFIX + DIR_PATH + "translations-tester-es.html";
+const TRANSLATIONS_TESTER_FR =
+  URL_COM_PREFIX + DIR_PATH + "translations-tester-fr.html";
 const TRANSLATIONS_TESTER_ES_2 =
   URL_COM_PREFIX + DIR_PATH + "translations-tester-es-2.html";
 const TRANSLATIONS_TESTER_ES_DOT_ORG =
