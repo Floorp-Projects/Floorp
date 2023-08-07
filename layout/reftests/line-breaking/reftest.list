@@ -1,14 +1,14 @@
 == between-whitespaces.html between-whitespaces-ref.html
-== chemical-1.html chemical-1-ref.html
-== conservative-range-1.html conservative-range-1-ref.html
-== conservative-range-2.html conservative-range-2-ref.html
-== currency-1.html currency-1-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == chemical-1.html chemical-1-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == conservative-range-1.html conservative-range-1-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == conservative-range-2.html conservative-range-2-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == currency-1.html currency-1-ref.html
 == currency-2.html currency-2-ref.html
-== datetime-1.html datetime-1-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == datetime-1.html datetime-1-ref.html
 pref(gfx.font_rendering.fallback.async,false) == emoji-1.html emoji-1-ref.html
-pref(gfx.font_rendering.fallback.async,false) == emoji-2.html emoji-2-ref.html
-== hyphens-1.html hyphens-1-ref.html
-== hyphens-2.html hyphens-2-ref.html
+pref(gfx.font_rendering.fallback.async,false) pref(intl.icu4x.segmenter.enabled,false) == emoji-2.html emoji-2-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == hyphens-1.html hyphens-1-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == hyphens-2.html hyphens-2-ref.html
 # The following three tests may fail if rendering with Core Text (see bug 389074)
 # due to subpixel glyph positioning differences between the reference cases with <br>
 # and the automatically-wrapped lines in the test file
@@ -16,30 +16,30 @@ pref(gfx.font_rendering.fallback.async,false) == emoji-2.html emoji-2-ref.html
 == ja-2.html ja-2-ref.html
 == ja-3.html ja-3-ref.html
 == khmer-1.html khmer-1-ref.html
-== leaders-1.html leaders-1-ref.html
-== markup-src-1.html markup-src-1-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == leaders-1.html leaders-1-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == markup-src-1.html markup-src-1-ref.html
 == non-breakable-1.html non-breakable-1-ref.html
 == non-breakable-2.html non-breakable-2-ref.html
 == numerics-1.html numerics-1-ref.html
-== parentheses-1.html parentheses-1-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == parentheses-1.html parentheses-1-ref.html
 == punctuation-open-1.html punctuation-open-1-ref.html
 == punctuation-open-2.html punctuation-open-2-ref.html
 == punctuation-open-3.html punctuation-open-3-ref.html
 == punctuation-open-4.html punctuation-open-4-ref.html
-== quotationmarks-1.html quotationmarks-1-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == quotationmarks-1.html quotationmarks-1-ref.html
 # The following is currently disabled on Linux because of a rendering issue with missing-glyph
 # representations on the test boxes. See bug #450088 for discussion.
-skip-if(gtkWidget) == quotationmarks-cjk-1.html quotationmarks-cjk-1-ref.html
-== smileys-1.html smileys-1-ref.html
-== smileys-2.html smileys-2-ref.html
+pref(intl.icu4x.segmenter.enabled,false) skip-if(gtkWidget) == quotationmarks-cjk-1.html quotationmarks-cjk-1-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == smileys-1.html smileys-1-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == smileys-2.html smileys-2-ref.html
 == space-cluster-1.html space-cluster-1-ref.html
 random-if(cocoaWidget) == space-cluster-2.html space-cluster-2-ref.html # harfbuzz vs coretext, different positioning of stray diacritics
 == surrogates-1.html surrogates-1-ref.html
-== surrogates-2.html surrogates-2-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == surrogates-2.html surrogates-2-ref.html
 == surrogates-3.html surrogates-3-ref.html
-== surrogates-4.html surrogates-4-ref.html
-== url-1.html url-1-ref.html
-== url-2.html url-2-ref.html
-== url-3.html url-3-ref.html
-== winpath-1.html winpath-1-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == surrogates-4.html surrogates-4-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == url-1.html url-1-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == url-2.html url-2-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == url-3.html url-3-ref.html
+pref(intl.icu4x.segmenter.enabled,false) == winpath-1.html winpath-1-ref.html
 == zwnbsp-1.html zwnbsp-1-ref.html

@@ -36,7 +36,11 @@ var editor = document.getElementById("editor");
 function setPrefs(eat_space, stop_at_punctuation, callback) {
   eatSpace = eat_space;
   stopAtPunctuation = stop_at_punctuation;
-  SpecialPowers.pushPrefEnv({"set": [["layout.word_select.eat_space_to_next_word", eat_space], ["layout.word_select.stop_at_punctuation", stop_at_punctuation]]}, callback);
+  SpecialPowers.pushPrefEnv({
+    "set": [["layout.word_select.eat_space_to_next_word", eat_space],
+	    ["layout.word_select.stop_at_punctuation", stop_at_punctuation],
+	    ["intl.icu4x.segmenter.enabled", true]]
+  }, callback);
 }
 
 function errString(dir) {
@@ -149,9 +153,11 @@ function test1() {
   editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 5);
   testRight(editor.firstChild, 6);
   testRight(editor.firstChild, 8);
   testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 5);
   testLeft(editor.firstChild, 2);
   testLeft(editor.firstChild, 0);
 
@@ -167,19 +173,27 @@ function test1() {
   editor.innerHTML = KatakanaChars + HiraganaChars + KatakanaChars;
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 7);
   testRight(editor.firstChild, 8);
   testRight(editor.firstChild, 12);
   testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 7);
   testLeft(editor.firstChild, 4);
   testLeft(editor.firstChild, 0);
 
   editor.innerHTML = HiraganaChars + JapaneseComma + HiraganaChars + JapaneseFullStop + HiraganaChars;
   sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 3);
   testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 8);
   testRight(editor.firstChild, 10);
+  testRight(editor.firstChild, 13);
   testRight(editor.firstChild, 14);
+  testLeft(editor.firstChild, 13);
   testLeft(editor.firstChild, 10);
+  testLeft(editor.firstChild, 8);
   testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 3);
   testLeft(editor.firstChild, 0);
 
   editor.innerHTML = KatakanaChars + JapaneseComma + KatakanaChars + JapaneseFullStop + KatakanaChars;
@@ -227,9 +241,11 @@ function test1() {
   // Latin words separated by an emoji symbol
   editor.innerHTML = "hello" + Emoji + "world";
   sel.collapse(editor.firstChild, 0);
-//  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 7);
   testRight(editor.firstChild, 12);
-//  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 5);
   testLeft(editor.firstChild, 0);
 
   // Emoji and Chinese
@@ -263,21 +279,21 @@ function test1() {
   // with Plane 2 Chinese characters
   editor.innerHTML = "hello" + ChineseCharsPlane2 + "world";
   sel.collapse(editor.firstChild, 0);
-//  testRight(editor.firstChild, 5);
-//  testRight(editor.firstChild, 9);
+  testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 9);
   testRight(editor.firstChild, 14);
-//  testLeft(editor.firstChild, 9);
-//  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 9);
+  testLeft(editor.firstChild, 5);
   testLeft(editor.firstChild, 0);
 
   // Plane 1 Deseret and Plane 2 Chinese characters
   editor.innerHTML = DeseretChars + ChineseCharsPlane2 + DeseretChars;
   sel.collapse(editor.firstChild, 0);
-//  testRight(editor.firstChild, 4);
-//  testRight(editor.firstChild, 8);
+  testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 8);
   testRight(editor.firstChild, 12);
-//  testLeft(editor.firstChild, 8);
-//  testLeft(editor.firstChild, 4);
+  testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 4);
   testLeft(editor.firstChild, 0);
 
   // test basic word movement with eat_space_next_to_word true.
@@ -347,9 +363,11 @@ function test2() {
   editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 5);
   testRight(editor.firstChild, 6);
   testRight(editor.firstChild, 8);
   testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 5);
   testLeft(editor.firstChild, 2);
   testLeft(editor.firstChild, 0);
 
@@ -365,19 +383,27 @@ function test2() {
   editor.innerHTML = KatakanaChars + HiraganaChars + KatakanaChars;
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 7);
   testRight(editor.firstChild, 8);
   testRight(editor.firstChild, 12);
   testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 7);
   testLeft(editor.firstChild, 4);
   testLeft(editor.firstChild, 0);
 
   editor.innerHTML = HiraganaChars + JapaneseComma + HiraganaChars + JapaneseFullStop + HiraganaChars;
   sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 3);
   testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 8);
   testRight(editor.firstChild, 10);
+  testRight(editor.firstChild, 13);
   testRight(editor.firstChild, 14);
+  testLeft(editor.firstChild, 13);
   testLeft(editor.firstChild, 10);
+  testLeft(editor.firstChild, 8);
   testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 3);
   testLeft(editor.firstChild, 0);
 
   editor.innerHTML = KatakanaChars + JapaneseComma + KatakanaChars + JapaneseFullStop + KatakanaChars;
@@ -464,9 +490,11 @@ function test3() {
   editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 5);
   testRight(editor.firstChild, 6);
   testRight(editor.firstChild, 8);
   testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 5);
   testLeft(editor.firstChild, 2);
   testLeft(editor.firstChild, 0);
 
@@ -482,15 +510,23 @@ function test3() {
   editor.innerHTML = KatakanaChars + HiraganaChars + KatakanaChars;
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 7);
   testRight(editor.firstChild, 8);
   testRight(editor.firstChild, 12);
   testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 7);
   testLeft(editor.firstChild, 4);
   testLeft(editor.firstChild, 0);
 
   editor.innerHTML = HiraganaChars + JapaneseComma + HiraganaChars + JapaneseFullStop + HiraganaChars;
   sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 3);
+  testRight(editor.firstChild, 8);
+  testRight(editor.firstChild, 13);
   testRight(editor.firstChild, 14);
+  testLeft(editor.firstChild, 13);
+  testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 3);
   testLeft(editor.firstChild, 0);
 
   editor.innerHTML = KatakanaChars + JapaneseComma + KatakanaChars + JapaneseFullStop + KatakanaChars;
@@ -569,9 +605,11 @@ function test4() {
   editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 5);
   testRight(editor.firstChild, 6);
   testRight(editor.firstChild, 8);
   testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 5);
   testLeft(editor.firstChild, 2);
   testLeft(editor.firstChild, 0);
 
@@ -587,15 +625,23 @@ function test4() {
   editor.innerHTML = KatakanaChars + HiraganaChars + KatakanaChars;
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 7);
   testRight(editor.firstChild, 8);
   testRight(editor.firstChild, 12);
   testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 7);
   testLeft(editor.firstChild, 4);
   testLeft(editor.firstChild, 0);
 
   editor.innerHTML = HiraganaChars + JapaneseComma + HiraganaChars + JapaneseFullStop + HiraganaChars;
   sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 3);
+  testRight(editor.firstChild, 8);
+  testRight(editor.firstChild, 13);
   testRight(editor.firstChild, 14);
+  testLeft(editor.firstChild, 13);
+  testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 3);
   testLeft(editor.firstChild, 0);
 
   editor.innerHTML = KatakanaChars + JapaneseComma + KatakanaChars + JapaneseFullStop + KatakanaChars;
