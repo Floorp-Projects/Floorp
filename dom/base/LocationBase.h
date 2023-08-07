@@ -36,7 +36,7 @@ class LocationBase {
 
  protected:
   virtual BrowsingContext* GetBrowsingContext() = 0;
-  virtual already_AddRefed<nsIDocShell> GetDocShell() = 0;
+  virtual nsIDocShell* GetDocShell() = 0;
 
   void SetURI(nsIURI* aURL, nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv,
               bool aReplace = false);
