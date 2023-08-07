@@ -9,7 +9,7 @@ add_task(async function () {
     },
     incognitoOverride: "spanning",
     async background() {
-      const URL = "http://example.com/";
+      const URL = "https://example.com/";
       let mainWindow = await browser.windows.getCurrent();
       let newWindow = await browser.windows.create({
         url: [URL, URL],

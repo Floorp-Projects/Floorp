@@ -7,7 +7,7 @@ add_task(async function moveMultiple() {
   for (let k of [1, 2, 3, 4]) {
     let tab = await BrowserTestUtils.openNewForegroundTab(
       window.gBrowser,
-      `http://example.com/?${k}`
+      `https://example.com/?${k}`
     );
     tabs.push(tab);
   }
@@ -20,7 +20,7 @@ add_task(async function moveMultiple() {
       }
 
       async function check(expected) {
-        let tabs = await browser.tabs.query({ url: "http://example.com/*" });
+        let tabs = await browser.tabs.query({ url: "https://example.com/*" });
         let endings = tabs.map(tab => num(tab.url));
         browser.test.assertTrue(
           expected.every((v, i) => v === endings[i]),
@@ -29,7 +29,7 @@ add_task(async function moveMultiple() {
       }
 
       async function reset() {
-        let tabs = await browser.tabs.query({ url: "http://example.com/*" });
+        let tabs = await browser.tabs.query({ url: "https://example.com/*" });
         await browser.tabs.move(
           tabs.sort((a, b) => num(a.url) - num(b.url)).map(tab => tab.id),
           { index: 0 }
@@ -37,7 +37,7 @@ add_task(async function moveMultiple() {
       }
 
       async function move(moveIndexes, moveTo) {
-        let tabs = await browser.tabs.query({ url: "http://example.com/*" });
+        let tabs = await browser.tabs.query({ url: "https://example.com/*" });
         await browser.tabs.move(
           moveIndexes.map(e => tabs[e - 1].id),
           {
@@ -69,7 +69,7 @@ add_task(async function moveMultiple() {
 
       let firstId = (
         await browser.tabs.query({
-          url: "http://example.com/*",
+          url: "https://example.com/*",
         })
       )[0].id;
       // Assuming that tab.id of 12345 does not exist.

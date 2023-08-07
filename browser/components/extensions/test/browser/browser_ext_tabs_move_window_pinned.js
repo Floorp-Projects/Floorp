@@ -9,7 +9,7 @@ add_task(async function () {
     },
 
     async background() {
-      const URL = "http://example.com/";
+      const URL = "https://example.com/";
 
       let mainWin = await browser.windows.getCurrent();
       let tab = await browser.tabs.create({ url: URL });
