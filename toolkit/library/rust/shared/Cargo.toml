@@ -143,6 +143,7 @@ uniffi_fixtures = [
     "uniffi-fixture-external-types",
 ]
 webmidi_midir_impl = ["midir_impl"]
+icu4x = ["jsrust_shared/icu4x"]
 
 [lib]
 path = "lib.rs"

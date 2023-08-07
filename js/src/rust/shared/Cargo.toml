@@ -15,9 +15,11 @@ encoding_c_mem = "0.2.4"
 smoosh = { path = "../../frontend/smoosh", optional = true }
 mozglue-static = { path = "../../../../mozglue/static/rust" }
 gluesmith = { path = "../../fuzz-tests/gluesmith", optional = true }
+icu_capi = { version = "1.2.2", optional = true, default-features= false, features = ["any_provider", "icu_segmenter", "provider_test"] }
 
 [features]
 simd-accel = ['encoding_c/simd-accel']
+icu4x = ['icu_capi']
 
 # Uncomment this to enable perf support in release mode.
 #[profile.release]

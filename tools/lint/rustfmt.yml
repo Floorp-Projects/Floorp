@@ -9,6 +9,7 @@ rust:
         - gfx/wr/peek-poke/
         - gfx/wr/webrender_build/
         - gfx/wr/wr_malloc_size_of/
+        - intl/icu_testdata/
         - media/mp4parse-rust/
         - servo/
         - '**/*.mako.rs'
