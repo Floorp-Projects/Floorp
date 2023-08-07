@@ -64,53 +64,68 @@ class PrimaryPanes extends Component {
 
   renderTabList() {
     return [
-      <Tab
-        className={classnames("tab sources-tab", {
-          active: this.props.selectedTab === primaryPaneTabs.SOURCES,
-        })}
-        key="sources-tab"
-      >
-        {formatKeyShortcut(L10N.getStr("sources.header"))}
-      </Tab>,
-      <Tab
-        className={classnames("tab outline-tab", {
-          active: this.props.selectedTab === primaryPaneTabs.OUTLINE,
-        })}
-        key="outline-tab"
-      >
-        {formatKeyShortcut(L10N.getStr("outline.header"))}
-      </Tab>,
-      <Tab
-        className={classnames("tab search-tab", {
-          active: this.props.selectedTab === primaryPaneTabs.PROJECT_SEARCH,
-        })}
-        key="search-tab"
-      >
-        {formatKeyShortcut(L10N.getStr("search.header"))}
-      </Tab>,
+      React.createElement(
+        Tab,
+        {
+          className: classnames("tab sources-tab", {
+            active: this.props.selectedTab === primaryPaneTabs.SOURCES,
+          }),
+          key: "sources-tab",
+        },
+        formatKeyShortcut(L10N.getStr("sources.header"))
+      ),
+      React.createElement(
+        Tab,
+        {
+          className: classnames("tab outline-tab", {
+            active: this.props.selectedTab === primaryPaneTabs.OUTLINE,
+          }),
+          key: "outline-tab",
+        },
+        formatKeyShortcut(L10N.getStr("outline.header"))
+      ),
+      React.createElement(
+        Tab,
+        {
+          className: classnames("tab search-tab", {
+            active: this.props.selectedTab === primaryPaneTabs.PROJECT_SEARCH,
+          }),
+          key: "search-tab",
+        },
+        formatKeyShortcut(L10N.getStr("search.header"))
+      ),
     ];
   }
 
   render() {
     const { selectedTab } = this.props;
-    return (
-      <Tabs
-        activeIndex={tabs.indexOf(selectedTab)}
-        className="sources-panel"
-        onActivateTab={this.onActivateTab}
-      >
-        <TabList className="source-outline-tabs">
-          {this.renderTabList()}
-        </TabList>
-        <TabPanels className="source-outline-panel" hasFocusableContent>
-          <SourcesTree />
-          <Outline
-            alphabetizeOutline={this.state.alphabetizeOutline}
-            onAlphabetizeClick={this.onAlphabetizeClick}
-          />
-          <ProjectSearch />
-        </TabPanels>
-      </Tabs>
+    return React.createElement(
+      Tabs,
+      {
+        activeIndex: tabs.indexOf(selectedTab),
+        className: "sources-panel",
+        onActivateTab: this.onActivateTab,
+      },
+      React.createElement(
+        TabList,
+        {
+          className: "source-outline-tabs",
+        },
+        this.renderTabList()
+      ),
+      React.createElement(
+        TabPanels,
+        {
+          className: "source-outline-panel",
+          hasFocusableContent: true,
+        },
+        React.createElement(SourcesTree, null),
+        React.createElement(Outline, {
+          alphabetizeOutline: this.state.alphabetizeOutline,
+          onAlphabetizeClick: this.onAlphabetizeClick,
+        }),
+        React.createElement(ProjectSearch, null)
+      )
     );
   }
 }
