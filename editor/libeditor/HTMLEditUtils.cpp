@@ -954,7 +954,7 @@ bool HTMLEditUtils::ShouldInsertLinefeedCharacter(
 // address, applet, article, aside, blockquote, button, center, del, details,
 // dialog, dir, div, dl, fieldset, figure, footer, form, h1, h2, h3, h4, h5,
 // h6, header, hgroup, hr, iframe, ins, main, map, menu, nav, noframes,
-// noscript, object, ol, p, pre, table, section, summary, ul
+// noscript, object, ol, p, pre, table, search, section, summary, ul
 #define GROUP_BLOCK (1 << 7)
 
 // frame, frameset
@@ -1155,6 +1155,7 @@ static const ElementInfo kElements[eHTMLTag_userdefined] = {
     ELEM(s, true, true, GROUP_FONTSTYLE, GROUP_INLINE_ELEMENT),
     ELEM(samp, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
     ELEM(script, true, false, GROUP_HEAD_CONTENT | GROUP_SPECIAL, GROUP_LEAF),
+    ELEM(search, true, true, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
     ELEM(section, true, true, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
     ELEM(select, true, false, GROUP_FORMCONTROL, GROUP_SELECT_CONTENT),
     ELEM(small, true, true, GROUP_FONTSTYLE, GROUP_INLINE_ELEMENT),
