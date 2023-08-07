@@ -58,6 +58,11 @@ class WindowsDllDetourPatcherPrimitive {
 #if defined(_M_IX86)
     target.WriteByte(0xe9);     // jmp
     target.WriteDisp32(aDest);  // hook displacement
+    while (target.GetOffset() < target.GetNumBytes()) {
+      // bug 1816936 - need to pad to the end of the last overwritten
+      // instruction with noops.
+      target.WriteByte(0x90);
+    }
 #elif defined(_M_X64)
     // mov r11, address
     target.WriteByte(0x49);
@@ -68,6 +73,11 @@ class WindowsDllDetourPatcherPrimitive {
     target.WriteByte(0x41);
     target.WriteByte(0xff);
     target.WriteByte(0xe3);
+    while (target.GetOffset() < target.GetNumBytes()) {
+      // bug 1816936 - need to pad to the end of the last overwritten
+      // instruction with noops.
+      target.WriteByte(0x90);
+    }
 #elif defined(_M_ARM64)
     // The default patch requires 16 bytes
     // LDR x16, .+8
@@ -895,6 +905,11 @@ class WindowsDllDetourPatcher final
     target.WriteByte(BuildModRmByte(kModReg, kRegAx, kRegAx));
     target.WriteByte(0xFF);                                // JMP /4
     target.WriteByte(BuildModRmByte(kModReg, 4, kRegAx));  // rax
+    while (target.GetOffset() < target.GetNumBytes()) {
+      // bug 1816936 - need to pad to the end of the last overwritten
+      // instruction with noops.
+      target.WriteByte(0x90);
+    }
 
     return true;
   }

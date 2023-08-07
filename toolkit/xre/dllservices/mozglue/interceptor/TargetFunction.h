@@ -373,6 +373,8 @@ class MOZ_STACK_CLASS WritableTargetFunction final {
   }
 
   uintptr_t GetCurrentAddress() const { return mFunc + mOffset; }
+  size_t GetNumBytes() const { return mNumBytes; }
+  uint32_t GetOffset() const { return mOffset; }
 
  private:
   const MMPolicy& mMMPolicy;
