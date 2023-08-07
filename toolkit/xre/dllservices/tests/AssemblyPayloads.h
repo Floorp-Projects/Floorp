@@ -229,6 +229,32 @@ __declspec(dllexport) __attribute__((naked)) void UnsupportedOp() {
       "nop;nop;nop;nop;nop;nop;nop;nop;"
       "nop;nop;nop;nop;nop;nop;nop;nop;");
 }
+
+// bug 1816936
+// Make sure no instruction ends at 5 (for x86) or 13 (for x64) bytes
+__declspec(dllexport) __attribute__((naked)) void SpareBytesAfterDetour() {
+  asm volatile(
+      "incl %eax;"                // 2 bytes on x64, 1 byte on x86
+      "mov $0x01234567, %eax;"    // 5 bytes
+      "mov $0xfedcba98, %eax;"    // 5 bytes
+      "mov $0x01234567, %eax;"    // 5 bytes
+      "mov $0xfedcba98, %eax;");  // 5 bytes
+}
+
+// bug 1816936
+// Make sure no instruction ends at 10 (for x64) bytes
+// This is slightly different than SpareBytesAfterDetour so the compiler doesn't
+// combine them, which would make the test that detours this one behave
+// unexpectedly since it is already detoured.
+__declspec(dllexport)
+    __attribute__((naked)) void SpareBytesAfterDetourFor10BytePatch() {
+  asm volatile(
+      "incl %eax;"                // 2 bytes
+      "mov $0x01234567, %ecx;"    // 5 bytes
+      "mov $0xfedcba98, %ebx;"    // 5 bytes
+      "mov $0x01234567, %eax;"    // 5 bytes
+      "mov $0xfedcba98, %edx;");  // 5 bytes
+}
 #  endif  // !defined(_M_ARM64)
 
 #endif  // defined(__clang__)

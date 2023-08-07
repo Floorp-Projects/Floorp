@@ -301,6 +301,17 @@ class RedirectionResolver : public interceptor::WindowsDllPatcherBase<
 
 #endif  // _M_X64
 
+void PrintFunctionBytes(FARPROC aFuncAddr, uint32_t aNumBytesToDump) {
+  printf("\tFirst %u bytes of function:\n\t", aNumBytesToDump);
+  auto code = reinterpret_cast<const uint8_t*>(aFuncAddr);
+  for (uint32_t i = 0; i < aNumBytesToDump; ++i) {
+    char suffix = (i < (aNumBytesToDump - 1)) ? ' ' : '\n';
+    printf("%02hhX%c", code[i], suffix);
+  }
+
+  fflush(stdout);
+}
+
 // Hook the function and optionally attempt calling it
 template <typename OrigFuncT, size_t N, typename PredicateT, typename... Args>
 bool TestHook(const char (&dll)[N], const char* func, PredicateT&& aPred,
@@ -424,16 +435,7 @@ bool TestHook(const char (&dll)[N], const char* func, PredicateT&& aPred,
     if (funcAddr) {
       const uint32_t kNumBytesToDump =
           WindowsDllInterceptor::GetWorstCaseRequiredBytesToPatch();
-
-      printf("\tFirst %u bytes of function:\n\t", kNumBytesToDump);
-
-      auto code = reinterpret_cast<const uint8_t*>(funcAddr);
-      for (uint32_t i = 0; i < kNumBytesToDump; ++i) {
-        char suffix = (i < (kNumBytesToDump - 1)) ? ' ' : '\n';
-        printf("%02hhX%c", code[i], suffix);
-      }
-
-      fflush(stdout);
+      PrintFunctionBytes(funcAddr, kNumBytesToDump);
     }
     return false;
   }
@@ -1192,6 +1194,112 @@ bool TestDetouredCallUnwindInfo() {
 }
 #endif  // defined(_M_X64) && !defined(MOZ_CODE_COVERAGE)
 
+#if defined(_M_X64) || defined(_M_IX86)
+bool TestSpareBytesAfterDetour() {
+  WindowsDllInterceptor interceptor;
+  interceptor.Init("TestDllInterceptor.exe");
+  InterceptorFunction& interceptorFunc = InterceptorFunction::Create();
+  auto orig_func(
+      mozilla::MakeUnique<WindowsDllInterceptor::FuncHookType<void (*)()>>());
+
+  bool successful = orig_func->Set(
+      interceptor, "SpareBytesAfterDetour",
+      reinterpret_cast<void (*)()>(interceptorFunc.GetFunction()));
+  if (!successful) {
+    printf(
+        "TEST-FAILED | WindowsDllInterceptor | "
+        "Failed to detour SpareBytesAfterDetour.\n");
+    return false;
+  }
+  FARPROC funcAddr =
+      ::GetProcAddress(GetModuleHandleW(nullptr), "SpareBytesAfterDetour");
+  if (!funcAddr) {
+    printf(
+        "TEST-FAILED | WindowsDllInterceptor | "
+        "Failed to GetProcAddress() for SpareBytesAfterDetour.\n");
+    return false;
+  }
+  uint8_t* funcBytes = reinterpret_cast<uint8_t*>(funcAddr);
+#  if defined(_M_X64)
+  // patch is 13 bytes
+  // the next instruction ends after 17 bytes
+  if (*(funcBytes + 13) != 0x90 || *(funcBytes + 14) != 0x90 ||
+      *(funcBytes + 15) != 0x90 || *(funcBytes + 16) != 0x90) {
+    printf(
+        "TEST-FAILED | WindowsDllInterceptor | "
+        "SpareBytesAfterDetour doesn't have nop's after the patch.\n");
+    PrintFunctionBytes(funcAddr, 17);
+    return false;
+  }
+  printf(
+      "TEST-PASS | WindowsDllInterceptor | "
+      "SpareBytesAfterDetour has correct nop bytes after the patch.\n");
+#  elif defined(_M_IX86)
+  // patch is 5 bytes
+  // the next instruction ends after 6 bytes
+  if (*(funcBytes + 5) != 0x90) {
+    printf(
+        "TEST-FAILED | WindowsDllInterceptor | "
+        "SpareBytesAfterDetour doesn't have nop's after the patch.\n");
+    PrintFunctionBytes(funcAddr, 6);
+    return false;
+  }
+  printf(
+      "TEST-PASS | WindowsDllInterceptor | "
+      "SpareBytesAfterDetour has correct nop bytes after the patch.\n");
+#  endif
+
+  return true;
+}
+#endif  // defined(_M_X64) || defined(_M_IX86)
+
+#if defined(_M_X64)
+bool TestSpareBytesAfterDetourFor10BytePatch() {
+  ShortInterceptor interceptor;
+  interceptor.TestOnlyDetourInit(
+      L"TestDllInterceptor.exe",
+      mozilla::interceptor::DetourFlags::eTestOnlyForceShortPatch);
+  InterceptorFunction& interceptorFunc = InterceptorFunction::Create();
+
+  auto orig_func(
+      mozilla::MakeUnique<ShortInterceptor::FuncHookType<void (*)()>>());
+  bool successful = orig_func->SetDetour(
+      interceptor, "SpareBytesAfterDetourFor10BytePatch",
+      reinterpret_cast<void (*)()>(interceptorFunc.GetFunction()));
+  if (!successful) {
+    printf(
+        "TEST-FAILED | WindowsDllInterceptor | "
+        "Failed to detour SpareBytesAfterDetourFor10BytePatch.\n");
+    return false;
+  }
+  FARPROC funcAddr = ::GetProcAddress(GetModuleHandleW(nullptr),
+                                      "SpareBytesAfterDetourFor10BytePatch");
+  if (!funcAddr) {
+    printf(
+        "TEST-FAILED | WindowsDllInterceptor | "
+        "Failed to GetProcAddress() for "
+        "SpareBytesAfterDetourFor10BytePatch.\n");
+    return false;
+  }
+  uint8_t* funcBytes = reinterpret_cast<uint8_t*>(funcAddr);
+  // patch is 10 bytes
+  // the next instruction ends after 12 bytes
+  if (*(funcBytes + 10) != 0x90 || *(funcBytes + 11) != 0x90) {
+    printf(
+        "TEST-FAILED | WindowsDllInterceptor | "
+        "SpareBytesAfterDetourFor10BytePatch doesn't have nop's after the "
+        "patch.\n");
+    PrintFunctionBytes(funcAddr, 12);
+    return false;
+  }
+  printf(
+      "TEST-PASS | WindowsDllInterceptor | "
+      "SpareBytesAfterDetourFor10BytePatch has correct nop bytes after the "
+      "patch.\n");
+  return true;
+}
+#endif
+
 bool TestDynamicCodePolicy() {
   PROCESS_MITIGATION_DYNAMIC_CODE_POLICY policy = {};
   policy.ProhibitDynamicCode = true;
@@ -1430,6 +1538,12 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
 #if defined(_M_X64) && !defined(MOZ_CODE_COVERAGE)
       TestDetouredCallUnwindInfo() &&
 #endif  // defined(_M_X64) && !defined(MOZ_CODE_COVERAGE)
+#if defined(_M_X64) || defined(_M_IX86)
+      TestSpareBytesAfterDetour() &&
+#  if defined(_M_X64)
+      TestSpareBytesAfterDetourFor10BytePatch() &&
+#  endif  // defined(_M_X64)
+#endif    // defined(_M_X64) || defined(_M_IX86)
       // Run TestDynamicCodePolicy() at the end because the policy is
       // irreversible.
       TestDynamicCodePolicy()) {
