@@ -520,7 +520,7 @@ nsresult nsXMLContentSink::CreateElement(
       aNodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_SVG)) {
     if (auto* linkStyle = LinkStyle::FromNode(*content)) {
       if (aFromParser) {
-        linkStyle->SetEnableUpdates(false);
+        linkStyle->DisableUpdates();
       }
       if (!aNodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML)) {
         linkStyle->SetLineNumber(aFromParser ? aLineNumber : 0);
@@ -595,9 +595,8 @@ nsresult nsXMLContentSink::CloseElement(nsIContent* aContent) {
       nodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_XHTML) ||
       nodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_SVG)) {
     if (auto* linkStyle = LinkStyle::FromNode(*aContent)) {
-      linkStyle->SetEnableUpdates(true);
-      auto updateOrError =
-          linkStyle->UpdateStyleSheet(mRunsToCompletion ? nullptr : this);
+      auto updateOrError = linkStyle->EnableUpdatesAndUpdateStyleSheet(
+          mRunsToCompletion ? nullptr : this);
       if (updateOrError.isErr()) {
         rv = updateOrError.unwrapErr();
       } else if (updateOrError.unwrap().ShouldBlock() && !mRunsToCompletion) {
@@ -1181,7 +1180,7 @@ nsXMLContentSink::HandleProcessingInstruction(const char16_t* aTarget,
 
   auto* linkStyle = LinkStyle::FromNode(*node);
   if (linkStyle) {
-    linkStyle->SetEnableUpdates(false);
+    linkStyle->DisableUpdates();
     mPrettyPrintXML = false;
   }
 
@@ -1192,9 +1191,8 @@ nsXMLContentSink::HandleProcessingInstruction(const char16_t* aTarget,
   if (linkStyle) {
     // This is an xml-stylesheet processing instruction... but it might not be
     // a CSS one if the type is set to something else.
-    linkStyle->SetEnableUpdates(true);
-    auto updateOrError =
-        linkStyle->UpdateStyleSheet(mRunsToCompletion ? nullptr : this);
+    auto updateOrError = linkStyle->EnableUpdatesAndUpdateStyleSheet(
+        mRunsToCompletion ? nullptr : this);
     if (updateOrError.isErr()) {
       return updateOrError.unwrapErr();
     }

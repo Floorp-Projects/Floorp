@@ -474,7 +474,7 @@ nsIContent* nsHtml5TreeOperation::CreateHTMLElement(
 
   if (willExecuteScript) {  // This will cause custom element constructors to
                             // run
-    mozilla::dom::AutoSetThrowOnDynamicMarkupInsertionCounter
+    AutoSetThrowOnDynamicMarkupInsertionCounter
         throwOnDynamicMarkupInsertionCounter(document);
     nsHtml5AutoPauseUpdate autoPauseContentUpdate(aBuilder);
     { nsAutoMicroTask mt; }
@@ -491,7 +491,7 @@ nsIContent* nsHtml5TreeOperation::CreateHTMLElement(
 
     if (MOZ_UNLIKELY(aName == nsGkAtoms::style || aName == nsGkAtoms::link)) {
       if (auto* linkStyle = dom::LinkStyle::FromNode(*newContent)) {
-        linkStyle->SetEnableUpdates(false);
+        linkStyle->DisableUpdates();
       }
     }
 
@@ -517,7 +517,7 @@ nsIContent* nsHtml5TreeOperation::CreateHTMLElement(
 
     if (MOZ_UNLIKELY(aName == nsGkAtoms::style || aName == nsGkAtoms::link)) {
       if (auto* linkStyle = dom::LinkStyle::FromNode(*newContent)) {
-        linkStyle->SetEnableUpdates(false);
+        linkStyle->DisableUpdates();
       }
     }
 
@@ -564,7 +564,7 @@ nsIContent* nsHtml5TreeOperation::CreateSVGElement(
 
   if (MOZ_UNLIKELY(aName == nsGkAtoms::style)) {
     if (auto* linkStyle = dom::LinkStyle::FromNode(*newContent)) {
-      linkStyle->SetEnableUpdates(false);
+      linkStyle->DisableUpdates();
     }
   }
 

@@ -281,8 +281,8 @@ nsresult txMozillaXMLOutput::endElement() {
   if (mCreatingNewDocument) {
     // Handle all sorts of stylesheets
     if (auto* linkStyle = LinkStyle::FromNode(*mCurrentNode)) {
-      linkStyle->SetEnableUpdates(true);
-      auto updateOrError = linkStyle->UpdateStyleSheet(mNotifier);
+      auto updateOrError =
+          linkStyle->EnableUpdatesAndUpdateStyleSheet(mNotifier);
       if (mNotifier && updateOrError.isOk() &&
           updateOrError.unwrap().ShouldBlock()) {
         mNotifier->AddPendingStylesheet();
@@ -345,7 +345,7 @@ nsresult txMozillaXMLOutput::processingInstruction(const nsString& aTarget,
   if (mCreatingNewDocument) {
     linkStyle = LinkStyle::FromNode(*pi);
     if (linkStyle) {
-      linkStyle->SetEnableUpdates(false);
+      linkStyle->DisableUpdates();
     }
   }
 
@@ -356,8 +356,7 @@ nsresult txMozillaXMLOutput::processingInstruction(const nsString& aTarget,
   }
 
   if (linkStyle) {
-    linkStyle->SetEnableUpdates(true);
-    auto updateOrError = linkStyle->UpdateStyleSheet(mNotifier);
+    auto updateOrError = linkStyle->EnableUpdatesAndUpdateStyleSheet(mNotifier);
     if (mNotifier && updateOrError.isOk() &&
         updateOrError.unwrap().ShouldBlock()) {
       mNotifier->AddPendingStylesheet();
@@ -487,7 +486,7 @@ nsresult txMozillaXMLOutput::startElementInternal(nsAtom* aPrefix,
   if (mCreatingNewDocument) {
     // Handle all sorts of stylesheets
     if (auto* linkStyle = LinkStyle::FromNodeOrNull(mOpenedElement)) {
-      linkStyle->SetEnableUpdates(false);
+      linkStyle->DisableUpdates();
     }
   }
 

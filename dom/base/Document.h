@@ -4761,10 +4761,6 @@ class Document : public nsINode,
   // Whether we have a designmode.css stylesheet in the style set.
   bool mDesignModeSheetAdded : 1;
 
-  // Keeps track of whether we have a pending
-  // 'style-sheet-applicable-state-changed' notification.
-  bool mSSApplicableStateNotificationPending : 1;
-
   // True if this document has ever had an HTML or SVG <title> element
   // bound to it
   bool mMayHaveTitleElement : 1;

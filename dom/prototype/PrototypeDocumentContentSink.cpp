@@ -381,7 +381,7 @@ nsresult PrototypeDocumentContentSink::InsertXMLStylesheetPI(
     XMLStylesheetProcessingInstruction* aPINode) {
   // We want to be notified when the style sheet finishes loading, so
   // disable style sheet loading for now.
-  aPINode->SetEnableUpdates(false);
+  aPINode->DisableUpdates();
   aPINode->OverrideBaseURI(mCurrentPrototype->GetURI());
 
   ErrorResult rv;
@@ -391,11 +391,9 @@ nsresult PrototypeDocumentContentSink::InsertXMLStylesheetPI(
     return rv.StealNSResult();
   }
 
-  aPINode->SetEnableUpdates(true);
-
   // load the stylesheet if necessary, passing ourselves as
   // nsICSSObserver
-  auto result = aPINode->UpdateStyleSheet(this);
+  auto result = aPINode->EnableUpdatesAndUpdateStyleSheet(this);
   if (result.isErr()) {
     // Ignore errors from UpdateStyleSheet; we don't want failure to
     // do that to break the XUL document load.  But do propagate out

@@ -63,9 +63,7 @@ LinkStyle::SheetInfo::SheetInfo(
 }
 
 LinkStyle::SheetInfo::~SheetInfo() = default;
-
-LinkStyle::LinkStyle()
-    : mUpdatesEnabled(true), mLineNumber(1), mColumnNumber(1) {}
+LinkStyle::LinkStyle() = default;
 
 LinkStyle::~LinkStyle() { LinkStyle::SetStyleSheet(nullptr); }
 
@@ -195,6 +193,14 @@ Result<LinkStyle::Update, nsresult> LinkStyle::UpdateStyleSheetInternal(
     ForceUpdate aForceUpdate) {
   return DoUpdateStyleSheet(aOldDocument, aOldShadowRoot, nullptr,
                             aForceUpdate);
+}
+
+void LinkStyle::BindToTree() {
+  if (mUpdatesEnabled) {
+    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+        "LinkStyle::BindToTree",
+        [this, pin = RefPtr{&AsContent()}] { UpdateStyleSheetInternal(); }));
+  }
 }
 
 Result<LinkStyle::Update, nsresult> LinkStyle::DoUpdateStyleSheet(

@@ -1361,7 +1361,6 @@ Document::Document(const char* aContentType)
       mQuirkSheetAdded(false),
       mContentEditableSheetAdded(false),
       mDesignModeSheetAdded(false),
-      mSSApplicableStateNotificationPending(false),
       mMayHaveTitleElement(false),
       mDOMLoadingSet(false),
       mDOMInteractiveSet(false),
@@ -7427,17 +7426,6 @@ void Document::StyleSheetApplicableStateChanged(StyleSheet& aSheet) {
       RemoveStyleSheetFromStyleSets(aSheet);
     }
   }
-
-  PostStyleSheetApplicableStateChangeEvent(aSheet);
-
-  if (!mSSApplicableStateNotificationPending) {
-    MOZ_RELEASE_ASSERT(NS_IsMainThread());
-    nsCOMPtr<nsIRunnable> notification = NewRunnableMethod(
-        "Document::NotifyStyleSheetApplicableStateChanged", this,
-        &Document::NotifyStyleSheetApplicableStateChanged);
-    mSSApplicableStateNotificationPending =
-        NS_SUCCEEDED(Dispatch(TaskCategory::Other, notification.forget()));
-  }
 }
 
 void Document::PostStyleSheetApplicableStateChangeEvent(StyleSheet& aSheet) {
@@ -7460,16 +7448,6 @@ void Document::PostStyleSheetApplicableStateChangeEvent(StyleSheet& aSheet) {
       new AsyncEventDispatcher(this, event);
   asyncDispatcher->mOnlyChromeDispatch = ChromeOnlyDispatch::eYes;
   asyncDispatcher->PostDOMEvent();
-}
-
-void Document::NotifyStyleSheetApplicableStateChanged() {
-  mSSApplicableStateNotificationPending = false;
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  if (observerService) {
-    observerService->NotifyObservers(
-        ToSupports(this), "style-sheet-applicable-state-changed", nullptr);
-  }
 }
 
 static int32_t FindSheet(const nsTArray<RefPtr<StyleSheet>>& aSheets,
