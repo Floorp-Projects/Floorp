@@ -16,6 +16,12 @@
 #  include "mozilla/jni/Utils.h"
 #endif
 
+#if defined(ANDROID)
+namespace webrtc {
+int32_t SetCaptureAndroidVM(JavaVM* javaVM);
+}
+#endif
+
 namespace mozilla::camera {
 
 #undef LOG
