@@ -6,6 +6,8 @@ const HTTPS_PATH = getRootDirectory(gTestPath).replace(
 );
 const HTTP_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
+  // Disable eslint, since we explicitly need a insecure URL here for this test.
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com"
 );
 
@@ -30,6 +32,14 @@ function checkCookies(expectedCookies = {}) {
 
 add_task(async function bug1748693() {
   waitForExplicitFinish();
+
+  // HTTPS-First would interfere with this test. We want to check wether
+  // cookies orignally set on a secure site without a "Secure" attribute
+  // get loaded on a insecure site. For that, we need to visit a
+  // insecure site, which would otherwise be upgraded by HTTPS-First.
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first", false]],
+  });
 
   let loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   BrowserTestUtils.loadURIString(

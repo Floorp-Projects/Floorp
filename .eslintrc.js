@@ -1519,7 +1519,6 @@ module.exports = {
         "dom/security/test/csp/test_upgrade_insecure.html",
         "dom/security/test/csp/test_upgrade_insecure_navigation.html",
         "dom/security/test/csp/test_websocket_self.html",
-        "dom/security/test/general/browser_same_site_cookies_bug1748693.js",
         "dom/security/test/general/browser_test_data_download.js",
         "dom/security/test/general/browser_test_data_text_csv.js",
         "dom/security/test/general/browser_test_toplevel_data_navigations.js",
