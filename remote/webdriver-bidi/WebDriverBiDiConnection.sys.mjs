@@ -89,6 +89,7 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
     const webDriverError = lazy.error.wrap(err);
 
     this.send({
+      type: "error",
       id,
       error: webDriverError.status,
       message: webDriverError.message,
@@ -106,7 +107,7 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
    *     A JSON-serializable object, which is the payload of this event.
    */
   sendEvent(method, params) {
-    this.send({ method, params });
+    this.send({ type: "event", method, params });
 
     if (Services.profiler?.IsActive()) {
       ChromeUtils.addProfilerMarker(
@@ -128,7 +129,7 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
    */
   sendResult(id, result) {
     result = typeof result !== "undefined" ? result : {};
-    this.send({ id, result });
+    this.send({ type: "success", id, result });
   }
 
   observe(subject, topic) {
