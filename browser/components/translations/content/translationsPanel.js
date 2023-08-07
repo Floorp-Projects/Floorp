@@ -570,6 +570,18 @@ var TranslationsPanel = new (class {
   }
 
   /**
+   * Returns true if the panel is currently showing the default view, otherwise false.
+   *
+   * @returns {boolean}
+   */
+  #isShowingDefaultView() {
+    const { multiview } = this.elements;
+    return (
+      multiview.getAttribute("mainViewId") === "translations-panel-view-default"
+    );
+  }
+
+  /**
    * Show the default view of choosing a source and target language.
    *
    * @param {boolean} force - Force the page to show translation options.
@@ -823,6 +835,9 @@ var TranslationsPanel = new (class {
    */
   async #showRevisitView({ fromLanguage, toLanguage }) {
     const { fromMenuList, toMenuList, intro } = this.elements;
+    if (!this.#isShowingDefaultView()) {
+      await this.#showDefaultView();
+    }
     intro.hidden = true;
     fromMenuList.value = fromLanguage;
     toMenuList.value = toLanguage;
