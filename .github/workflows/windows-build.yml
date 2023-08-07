@@ -151,8 +151,8 @@ jobs:
           echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
         elif [[ -n $GHA_use_profdata_jarlog ]]; then
           echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
-          echo 'ac_add_options --with-pgo-profile-path=~/artifact/merged.profdata' >> mozconfig
-          echo 'ac_add_options --with-pgo-jarlog=~/artifact/en-US.log' >> mozconfig
+          echo 'ac_add_options --with-pgo-profile-path=$(echo ~)/artifact/merged.profdata' >> mozconfig
+          echo 'ac_add_options --with-pgo-jarlog$(echo ~)/artifact/en-US.log' >> mozconfig
         fi
 
         # SCCACHE START
@@ -173,12 +173,12 @@ jobs:
         chmod -R +x ~/win-cross/vs2019
         #? from daily-build-with-update
         #? for resolve some problems relate to VCRuntime
-        echo 'WIN_UCRT_REDIST_DIR="~/win-cross/vs2019/Windows Kits/10/Redist/10.0.19041.0/ucrt/DLLs/x64"' >> mozconfig
-        echo 'WIN32_REDIST_DIR="~/win-cross/vs2019/VC/Redist/MSVC/14.29.30133/x64/Microsoft.VC142.CRT"' >> mozconfig
+        echo 'WIN_UCRT_REDIST_DIR="$(echo ~)/win-cross/vs2019/Windows Kits/10/Redist/10.0.19041.0/ucrt/DLLs/x64"' >> mozconfig
+        echo 'WIN32_REDIST_DIR="$(echo ~)/win-cross/vs2019/VC/Redist/MSVC/14.29.30133/x64/Microsoft.VC142.CRT"' >> mozconfig
         #? from end
 
         ./mach --no-interactive bootstrap --application-choice browser
-        echo "export LIB=\"$(cd ~/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
+        echo "export LIB=\"$(cd $(echo ~)/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
 
         echo "DISPLAY_VERSION=$(cat ./browser/config/version_display.txt)" >> $GITHUB_ENV
         echo "UPDATE_CHANNEL=release" >> $GITHUB_ENV
