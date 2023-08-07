@@ -404,8 +404,8 @@ nsresult ContentEventHandler::Init(WidgetQueryContentEvent* aEvent) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv =
-      InitCommon(aEvent->mMessage, selectionType, aEvent->NeedsToFlushLayout());
+  nsresult rv = InitCommon(aEvent->mMessage, selectionType,
+                           aEvent->AllowFlushingPendingNotifications());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Be aware, WidgetQueryContentEvent::mInput::mOffset should be made absolute
