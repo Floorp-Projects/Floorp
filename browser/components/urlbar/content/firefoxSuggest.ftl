@@ -124,7 +124,7 @@ firefox-suggest-addons-recommended = Recommended
 # The term is defined in this file because the feature is en-US only. It should
 # be moved to toolkit/branding/brandings.ftl if the feature is exposed for
 # localization.
--mdn-brand-name = Mozilla Developer Network
+-mdn-brand-name = MDN Web Docs
 
 # This string is shown in MDN suggestions and indicates the suggestion is from
 # MDN.
