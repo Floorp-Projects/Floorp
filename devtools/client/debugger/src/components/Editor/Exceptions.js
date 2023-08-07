@@ -30,18 +30,17 @@ class Exceptions extends Component {
     }
 
     const doc = getDocument(selectedSource.id);
-
-    return (
-      <>
-        {exceptions.map(exc => (
-          <Exception
-            exception={exc}
-            doc={doc}
-            key={`${exc.sourceActorId}:${exc.lineNumber}`}
-            selectedSource={selectedSource}
-          />
-        ))}
-      </>
+    return React.createElement(
+      React.Fragment,
+      null,
+      exceptions.map(exception =>
+        React.createElement(Exception, {
+          exception,
+          doc,
+          key: `${exception.sourceActorId}:${exception.lineNumber}`,
+          selectedSource,
+        })
+      )
     );
   }
 }

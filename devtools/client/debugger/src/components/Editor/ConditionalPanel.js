@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import React, { PureComponent } from "react";
+import { PureComponent } from "react";
+import { div, textarea } from "react-dom-factories";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
@@ -220,19 +221,25 @@ export class ConditionalPanel extends PureComponent {
 
     const panel = document.createElement("div");
     ReactDOM.render(
-      <div
-        className={classnames("conditional-breakpoint-panel", {
-          "log-point": log,
-        })}
-        onClick={() => this.keepFocusOnInput()}
-        ref={node => (this.panelNode = node)}
-      >
-        <div className="prompt">»</div>
-        <textarea
-          defaultValue={defaultValue}
-          ref={input => this.createEditor(input)}
-        />
-      </div>,
+      div(
+        {
+          className: classnames("conditional-breakpoint-panel", {
+            "log-point": log,
+          }),
+          onClick: () => this.keepFocusOnInput(),
+          ref: node => (this.panelNode = node),
+        },
+        div(
+          {
+            className: "prompt",
+          },
+          "»"
+        ),
+        textarea({
+          defaultValue,
+          ref: input => this.createEditor(input),
+        })
+      ),
       panel
     );
     return panel;

@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import { div } from "react-dom-factories";
 import PropTypes from "prop-types";
 import InlinePreviewRow from "./InlinePreviewRow";
 import { connect } from "../../utils/connect";
@@ -47,19 +48,15 @@ class InlinePreviews extends Component {
     editor.codeMirror.operation(() => {
       inlinePreviewRows = Object.keys(previewsObj).map(line => {
         const lineNum = parseInt(line, 10);
-
-        return (
-          <InlinePreviewRow
-            editor={editor}
-            key={line}
-            line={lineNum}
-            previews={previewsObj[line]}
-          />
-        );
+        return React.createElement(InlinePreviewRow, {
+          editor: editor,
+          key: line,
+          line: lineNum,
+          previews: previewsObj[line],
+        });
       });
     });
-
-    return <div>{inlinePreviewRows}</div>;
+    return div(null, inlinePreviewRows);
   }
 }
 
