@@ -1580,54 +1580,24 @@ impl DeviceRef {
     }
 
     pub fn is_low_power(&self) -> bool {
-        unsafe {
-            match msg_send![self, isLowPower] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, isLowPower] }
     }
 
     pub fn is_headless(&self) -> bool {
-        unsafe {
-            match msg_send![self, isHeadless] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, isHeadless] }
     }
 
     pub fn is_removable(&self) -> bool {
-        unsafe {
-            match msg_send![self, isRemovable] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, isRemovable] }
     }
 
     /// Only available on (macos(11.0), ios(14.0))
     pub fn supports_raytracing(&self) -> bool {
-        unsafe {
-            match msg_send![self, supportsRaytracing] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supportsRaytracing] }
     }
 
     pub fn has_unified_memory(&self) -> bool {
-        unsafe {
-            match msg_send![self, hasUnifiedMemory] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send![self, hasUnifiedMemory] }
     }
 
     pub fn recommended_max_working_set_size(&self) -> u64 {
@@ -1639,95 +1609,41 @@ impl DeviceRef {
     }
 
     pub fn supports_feature_set(&self, feature: MTLFeatureSet) -> bool {
-        unsafe {
-            match msg_send![self, supportsFeatureSet: feature] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supportsFeatureSet: feature] }
     }
 
     pub fn supports_family(&self, family: MTLGPUFamily) -> bool {
-        unsafe {
-            match msg_send![self, supportsFamily: family] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supportsFamily: family] }
     }
 
     pub fn supports_vertex_amplification_count(&self, count: NSUInteger) -> bool {
-        unsafe {
-            match msg_send![self, supportsVertexAmplificationCount: count] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supportsVertexAmplificationCount: count] }
     }
 
     pub fn supports_texture_sample_count(&self, count: NSUInteger) -> bool {
-        unsafe {
-            match msg_send![self, supportsTextureSampleCount: count] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supportsTextureSampleCount: count] }
     }
 
     pub fn supports_shader_barycentric_coordinates(&self) -> bool {
-        unsafe {
-            match msg_send![self, supportsShaderBarycentricCoordinates] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supportsShaderBarycentricCoordinates] }
     }
 
     pub fn supports_function_pointers(&self) -> bool {
-        unsafe {
-            match msg_send![self, supportsFunctionPointers] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supportsFunctionPointers] }
     }
 
     /// Only available on (macos(11.0), ios(14.0))
     pub fn supports_dynamic_libraries(&self) -> bool {
-        unsafe {
-            match msg_send![self, supportsDynamicLibraries] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supportsDynamicLibraries] }
     }
 
     /// Only available on (macos(11.0), ios(14.0))
     pub fn supports_counter_sampling(&self, sampling_point: MTLCounterSamplingPoint) -> bool {
-        unsafe {
-            match msg_send![self, supportsCounterSampling: sampling_point] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supportsCounterSampling: sampling_point] }
     }
 
     pub fn d24_s8_supported(&self) -> bool {
-        unsafe {
-            match msg_send![self, isDepth24Stencil8PixelFormatSupported] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, isDepth24Stencil8PixelFormatSupported] }
     }
 
     pub fn new_fence(&self) -> Fence {
@@ -2066,68 +1982,32 @@ impl DeviceRef {
     }
 
     pub fn raster_order_groups_supported(&self) -> bool {
-        unsafe {
-            match msg_send![self, rasterOrderGroupsSupported] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, rasterOrderGroupsSupported] }
     }
 
     /// Only available on (macos(11.0), ios(14.0))
     pub fn supports_32bit_float_filtering(&self) -> bool {
-        unsafe {
-            match msg_send![self, supports32BitFloatFiltering] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supports32BitFloatFiltering] }
     }
 
     /// Only available on (macos(11.0), ios(14.0))
     pub fn supports_32bit_MSAA(&self) -> bool {
-        unsafe {
-            match msg_send![self, supports32BitMSAA] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supports32BitMSAA] }
     }
 
     /// Only available on (macos(11.0), ios(14.0))
     pub fn supports_query_texture_LOD(&self) -> bool {
-        unsafe {
-            match msg_send![self, supportsQueryTextureLOD] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supportsQueryTextureLOD] }
     }
 
     /// Only available on (macos(11.0), ios(14.0))
     pub fn supports_BC_texture_compression(&self) -> bool {
-        unsafe {
-            match msg_send![self, supportsBCTextureCompression] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supportsBCTextureCompression] }
     }
 
     /// Only available on (macos(11.0), ios(14.0))
     pub fn supports_pull_model_interpolation(&self) -> bool {
-        unsafe {
-            match msg_send![self, supportsPullModelInterpolation] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supportsPullModelInterpolation] }
     }
 
     pub fn new_argument_encoder(

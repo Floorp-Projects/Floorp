@@ -177,12 +177,6 @@ impl ResourceRef {
 
     /// Only available on macos(10.13), ios(10.0)
     pub fn is_aliasable(&self) -> bool {
-        unsafe {
-            match msg_send![self, isAliasable] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, isAliasable] }
     }
 }

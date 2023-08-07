@@ -266,13 +266,7 @@ impl ArgumentRef {
     }
 
     pub fn is_active(&self) -> bool {
-        unsafe {
-            match msg_send![self, isActive] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, isActive] }
     }
 
     pub fn buffer_alignment(&self) -> NSUInteger {
