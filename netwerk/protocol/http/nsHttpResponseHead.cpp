@@ -7,6 +7,7 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Unused.h"
 #include "nsHttpResponseHead.h"
 #include "nsIHttpHeaderVisitor.h"
@@ -594,6 +595,14 @@ nsresult nsHttpResponseHead::ParseHeaderLine_locked(
           line, &hdr, &headerNameOriginal, &val))) {
     return NS_OK;
   }
+
+  // reject the header if there are 0x00 bytes in the value.
+  // (see https://github.com/httpwg/http-core/issues/215 for details).
+  if (StaticPrefs::network_http_reject_NULs_in_response_header_values() &&
+      val.FindChar('\0') >= 0) {
+    return NS_ERROR_DOM_INVALID_HEADER_VALUE;
+  }
+
   nsresult rv;
   if (originalFromNetHeaders) {
     rv = mHeaders.SetHeaderFromNet(hdr, headerNameOriginal, val, true);
