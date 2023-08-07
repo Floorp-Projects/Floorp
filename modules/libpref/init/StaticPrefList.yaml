@@ -7307,7 +7307,7 @@
 # If true, we use UAX14/29 compatible segmenter rules using ICU4X
 - name: intl.icu4x.segmenter.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 #---------------------------------------------------------------------------
