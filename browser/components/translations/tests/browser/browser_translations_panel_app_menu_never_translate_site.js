@@ -39,9 +39,9 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
   );
   await openTranslationsSettingsMenuViaTranslationsButton();
 
-  await assertIsNeverTranslateSite(SPANISH_PAGE_URL, false);
+  await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
   await toggleNeverTranslateSite();
-  await assertIsNeverTranslateSite(SPANISH_PAGE_URL, true);
+  await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
 
   info(
     "Simulate clicking always-translate-language in the settings menu, " +
@@ -49,9 +49,9 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
   );
   await openTranslationsSettingsMenuViaAppMenu();
 
-  await assertIsNeverTranslateSite(SPANISH_PAGE_URL, true);
+  await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
   await toggleNeverTranslateSite();
-  await assertIsNeverTranslateSite(SPANISH_PAGE_URL, false);
+  await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
 
   await cleanup();
 });
@@ -100,13 +100,13 @@ add_task(
     );
     await openTranslationsSettingsMenuViaTranslationsButton();
 
-    await assertIsAlwaysTranslateLanguage("es", true);
-    await assertIsNeverTranslateSite(SPANISH_PAGE_URL, false);
+    await assertIsAlwaysTranslateLanguage("es", { checked: true });
+    await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
 
     await toggleNeverTranslateSite();
 
-    await assertIsAlwaysTranslateLanguage("es", true);
-    await assertIsNeverTranslateSite(SPANISH_PAGE_URL, true);
+    await assertIsAlwaysTranslateLanguage("es", { checked: true });
+    await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
 
     info("The page should still be in its original, untranslated form");
     await runInPage(async TranslationsTest => {
@@ -124,13 +124,13 @@ add_task(
     );
     await openTranslationsSettingsMenuViaAppMenu();
 
-    await assertIsAlwaysTranslateLanguage("es", true);
-    await assertIsNeverTranslateSite(SPANISH_PAGE_URL, true);
+    await assertIsAlwaysTranslateLanguage("es", { checked: true });
+    await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
 
     await toggleNeverTranslateSite();
 
-    await assertIsAlwaysTranslateLanguage("es", true);
-    await assertIsNeverTranslateSite(SPANISH_PAGE_URL, false);
+    await assertIsAlwaysTranslateLanguage("es", { checked: true });
+    await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
 
     is(locale.innerText, "en", "The English language tag is shown.");
 

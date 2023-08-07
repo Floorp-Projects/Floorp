@@ -9,6 +9,25 @@ Services.scriptloader.loadSubScript(
 );
 
 /**
+ * Returns the intl display name of a given language tag.
+ *
+ * @param {string} langTag - The BCP-47 language tag.
+ */
+const getIntlDisplayName = (() => {
+  let displayNames = null;
+
+  return langTag => {
+    if (!displayNames) {
+      displayNames = new Services.intl.DisplayNames(undefined, {
+        type: "language",
+        fallback: "none",
+      });
+    }
+    return displayNames.of(langTag);
+  };
+})();
+
+/**
  * Assert some property about the translations button.
  *
  * @param {Record<string, boolean>} visibleAssertions
@@ -184,12 +203,17 @@ async function toggleNeverTranslateSite() {
  * Asserts that the always-translate-language checkbox matches the expected checked state.
  *
  * @param {string} langTag - A BCP-47 language tag
- * @param {boolean} expectChecked - Whether the checkbox should be checked
+ * @param {object} expectations
+ * @param {boolean} expectations.checked - Whether the checkbox is expected to be checked.
+ * @param {boolean} expectations.disabled - Whether the menuitem is expected to be disabled.
  */
-async function assertIsAlwaysTranslateLanguage(langTag, expectChecked) {
+async function assertIsAlwaysTranslateLanguage(
+  langTag,
+  { checked = true, disabled = false }
+) {
   await assertCheckboxState(
     "translations-panel-settings-always-translate-language",
-    expectChecked
+    { langTag, checked, disabled }
   );
 }
 
@@ -197,12 +221,17 @@ async function assertIsAlwaysTranslateLanguage(langTag, expectChecked) {
  * Asserts that the never-translate-language checkbox matches the expected checked state.
  *
  * @param {string} langTag - A BCP-47 language tag
- * @param {boolean} expectChecked - Whether the checkbox should be checked
+ * @param {object} expectations
+ * @param {boolean} expectations.checked - Whether the checkbox is expected to be checked.
+ * @param {boolean} expectations.disabled - Whether the menuitem is expected to be disabled.
  */
-async function assertIsNeverTranslateLanguage(langTag, expectChecked) {
+async function assertIsNeverTranslateLanguage(
+  langTag,
+  { checked = true, disabled = false }
+) {
   await assertCheckboxState(
     "translations-panel-settings-never-translate-language",
-    expectChecked
+    { langTag, checked, disabled }
   );
 }
 
@@ -210,12 +239,17 @@ async function assertIsNeverTranslateLanguage(langTag, expectChecked) {
  * Asserts that the never-translate-site checkbox matches the expected checked state.
  *
  * @param {string} url - The url of a website
- * @param {boolean} expectChecked - Whether the checkbox should be checked
+ * @param {object} expectations
+ * @param {boolean} expectations.checked - Whether the checkbox is expected to be checked.
+ * @param {boolean} expectations.disabled - Whether the menuitem is expected to be disabled.
  */
-async function assertIsNeverTranslateSite(url, expectChecked) {
+async function assertIsNeverTranslateSite(
+  url,
+  { checked = true, disabled = false }
+) {
   await assertCheckboxState(
     "translations-panel-settings-never-translate-site",
-    expectChecked
+    { checked, disabled }
   );
 }
 
@@ -224,19 +258,39 @@ async function assertIsNeverTranslateSite(url, expectChecked) {
  * checked or not, based on the value of expected being true or false.
  *
  * @param {string} dataL10nId - The data-l10n-id of the checkbox.
- * @param {boolean} expectChecked - Whether the checkbox should be checked.
+ * @param {object} expectations
+ * @param {string} expectations.langTag - The BCP-47 language tag.
+ * @param {boolean} expectations.checked - Whether the checkbox is expected to be checked.
+ * @param {boolean} expectations.disabled - Whether the menuitem is expected to be disabled.
  */
-async function assertCheckboxState(dataL10nId, expectChecked) {
+async function assertCheckboxState(
+  dataL10nId,
+  { langTag = null, checked = true, disabled = false }
+) {
   const menuItems = getAllByL10nId(dataL10nId);
   for (const menuItem of menuItems) {
+    if (langTag) {
+      const {
+        args: { language },
+      } = document.l10n.getAttributes(menuItem);
+      is(
+        language,
+        getIntlDisplayName(langTag),
+        `Should match expected language display name for ${dataL10nId}`
+      );
+    }
+    is(
+      menuItem.disabled,
+      disabled,
+      `Should match expected disabled state for ${dataL10nId}`
+    );
     await waitForCondition(
-      () =>
-        menuItem.getAttribute("checked") === (expectChecked ? "true" : "false"),
+      () => menuItem.getAttribute("checked") === (checked ? "true" : "false"),
       "Waiting for checkbox state"
     );
     is(
       menuItem.getAttribute("checked"),
-      expectChecked ? "true" : "false",
+      checked ? "true" : "false",
       `Should match expected checkbox state for ${dataL10nId}`
     );
   }
