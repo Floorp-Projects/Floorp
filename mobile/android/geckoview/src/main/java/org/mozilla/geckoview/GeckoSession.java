@@ -7542,6 +7542,8 @@ public class GeckoSession {
       final @Nullable Long browsingContextId) {
     final GeckoResult<InputStream> geckoResult = new GeckoResult<>();
     if (browsingContextId == null) {
+      // Ensures the canonical browsing context is available
+      setFocused(true);
       this.mWindow.printToPdf(geckoResult);
     } else {
       this.mWindow.printToPdf(geckoResult, browsingContextId);

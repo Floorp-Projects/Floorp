@@ -322,4 +322,25 @@ class PrintDelegateTest : BaseSessionTest() {
             )
         }
     }
+
+    @NullDelegate(Autofill.Delegate::class)
+    @Test
+    fun availableCanonicalBrowsingContext() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.enable_window_print" to true))
+        activityRule.scenario.onActivity { activity ->
+            // CSS rules render this blue on screen and orange on print
+            mainSession.loadTestPath(ORANGE_PDF_PATH)
+            mainSession.waitForPageStop()
+            // Setting to the default delegate (test rules changed it)
+            mainSession.printDelegate = activity.view.printDelegate
+            mainSession.setFocused(false)
+            mainSession.printPageContent()
+            val centerPixel = printCenterPixelColor()
+            val orange = rgb(255, 113, 57)
+            assertTrue(
+                "Android print opened and rendered.",
+                sessionRule.waitForResult(centerPixel) == orange,
+            )
+        }
+    }
 }
