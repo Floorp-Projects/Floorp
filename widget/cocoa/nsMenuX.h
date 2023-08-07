@@ -34,7 +34,6 @@ class nsIWidget;
 - (id)initWithGeckoMenu:(nsMenuX*)geckoMenu;
 - (void)runBlockWhenOpen:(void (^)())block;
 - (void)menu:(NSMenu*)menu willActivateItem:(NSMenuItem*)item;
-@property BOOL menuIsInMenubar;
 @end
 
 class nsMenuXObserver {
