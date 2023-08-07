@@ -19,10 +19,10 @@ use core::cmp::Ordering::{Equal, Greater, Less};
 
 #[cfg(feature = "hardcoded-data")]
 use self::tables::bidi_class_table;
+use crate::data_source::BidiMatchedOpeningBracket;
 use crate::BidiClass::*;
 #[cfg(feature = "hardcoded-data")]
 use crate::BidiDataSource;
-
 /// Hardcoded Bidi data that ships with the unicode-bidi crate.
 ///
 /// This can be enabled with the default `hardcoded-data` Cargo feature.
@@ -40,6 +40,22 @@ impl BidiDataSource for HardcodedBidiData {
 #[cfg(feature = "hardcoded-data")]
 pub fn bidi_class(c: char) -> BidiClass {
     bsearch_range_value_table(c, bidi_class_table)
+}
+
+/// If this character is a bracket according to BidiBrackets.txt,
+/// return the corresponding *normalized* *opening bracket* of the pair,
+/// and whether or not it itself is an opening bracket.
+pub(crate) fn bidi_matched_opening_bracket(c: char) -> Option<BidiMatchedOpeningBracket> {
+    for pair in self::tables::bidi_pairs_table {
+        if pair.0 == c || pair.1 == c {
+            let skeleton = pair.2.unwrap_or(pair.0);
+            return Some(BidiMatchedOpeningBracket {
+                opening: skeleton,
+                is_open: pair.0 == c,
+            });
+        }
+    }
+    None
 }
 
 pub fn is_rtl(bidi_class: BidiClass) -> bool {

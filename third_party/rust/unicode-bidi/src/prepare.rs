@@ -89,12 +89,35 @@ pub fn isolating_run_sequences(
         .map(|sequence: Vec<LevelRun>| {
             assert!(!sequence.is_empty());
 
-            let start_of_seq = sequence[0].start;
-            let end_of_seq = sequence[sequence.len() - 1].end;
-            let seq_level = levels[start_of_seq];
+            let mut result = IsolatingRunSequence {
+                runs: sequence,
+                sos: L,
+                eos: L,
+            };
+
+            let start_of_seq = result.runs[0].start;
+            let runs_len = result.runs.len();
+            let end_of_seq = result.runs[runs_len - 1].end;
+
+            // > (not counting characters removed by X9)
+            let seq_level = result
+                .iter_forwards_from(start_of_seq, 0)
+                .filter(|i| not_removed_by_x9(&original_classes[*i]))
+                .map(|i| levels[i])
+                .next()
+                .unwrap_or(levels[start_of_seq]);
+
+            // XXXManishearth the spec talks of a start and end level,
+            // but for a given IRS the two should be equivalent, yes?
+            let end_level = result
+                .iter_backwards_from(end_of_seq, runs_len - 1)
+                .filter(|i| not_removed_by_x9(&original_classes[*i]))
+                .map(|i| levels[i])
+                .next()
+                .unwrap_or(levels[end_of_seq - 1]);
 
             #[cfg(test)]
-            for run in sequence.clone() {
+            for run in result.runs.clone() {
                 for idx in run {
                     if not_removed_by_x9(&original_classes[idx]) {
                         assert_eq!(seq_level, levels[idx]);
@@ -111,8 +134,19 @@ pub fn isolating_run_sequences(
                 None => para_level,
             };
 
+            // Get the last non-removed character to check if it is an isolate initiator.
+            // The spec calls for an unmatched one, but matched isolate initiators
+            // will never be at the end of a level run (otherwise there would be more to the run).
+            // We unwrap_or(BN) because BN marks removed classes and it won't matter for the check.
+            let last_non_removed = original_classes[..end_of_seq]
+                .iter()
+                .copied()
+                .rev()
+                .find(not_removed_by_x9)
+                .unwrap_or(BN);
+
             // Get the level of the next non-removed char after the runs.
-            let succ_level = if let RLI | LRI | FSI = original_classes[end_of_seq - 1] {
+            let succ_level = if let RLI | LRI | FSI = last_non_removed {
                 para_level
             } else {
                 match original_classes[end_of_seq..]
@@ -124,13 +158,61 @@ pub fn isolating_run_sequences(
                 }
             };
 
-            IsolatingRunSequence {
-                runs: sequence,
-                sos: max(seq_level, pred_level).bidi_class(),
-                eos: max(seq_level, succ_level).bidi_class(),
-            }
+            result.sos = max(seq_level, pred_level).bidi_class();
+            result.eos = max(end_level, succ_level).bidi_class();
+            result
         })
         .collect()
+}
+
+impl IsolatingRunSequence {
+    /// Returns the full range of text represented by this isolating run sequence
+    pub(crate) fn text_range(&self) -> Range<usize> {
+        if let (Some(start), Some(end)) = (self.runs.first(), self.runs.last()) {
+            start.start..end.end
+        } else {
+            return 0..0;
+        }
+    }
+
+    /// Given a text-relative position `pos` and an index of the level run it is in,
+    /// produce an iterator of all characters after and pos (`pos..`) that are in this
+    /// run sequence
+    pub(crate) fn iter_forwards_from(
+        &self,
+        pos: usize,
+        level_run_index: usize,
+    ) -> impl Iterator<Item = usize> + '_ {
+        let runs = &self.runs[level_run_index..];
+
+        // Check that it is in range
+        // (we can't use contains() since we want an inclusive range)
+        #[cfg(feature = "std")]
+        debug_assert!(runs[0].start <= pos && pos <= runs[0].end);
+
+        (pos..runs[0].end).chain(runs[1..].iter().flat_map(Clone::clone))
+    }
+
+    /// Given a text-relative position `pos` and an index of the level run it is in,
+    /// produce an iterator of all characters before and excludingpos (`..pos`) that are in this
+    /// run sequence
+    pub(crate) fn iter_backwards_from(
+        &self,
+        pos: usize,
+        level_run_index: usize,
+    ) -> impl Iterator<Item = usize> + '_ {
+        let prev_runs = &self.runs[..level_run_index];
+        let current = &self.runs[level_run_index];
+
+        // Check that it is in range
+        // (we can't use contains() since we want an inclusive range)
+        #[cfg(feature = "std")]
+        debug_assert!(current.start <= pos && pos <= current.end);
+
+        (current.start..pos)
+            .rev()
+            .chain(prev_runs.iter().rev().flat_map(Clone::clone))
+    }
 }
 
 /// Finds the level runs in a paragraph.

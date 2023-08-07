@@ -1,0 +1,8 @@
+# Additional sentence breaking tests, not in SentenceBreakTest.txt
+#
+# https://github.com/unicode-org/icu4x/issues/3118
+÷ 0061 × 002E ÷ # [Lower] [ATerm]
+÷ 0061 × 002E × 000D × 000A ÷ # [Lower] [ATerm] [ParaSep] [ParaSep]
+÷ 0061 × 002E × 000D × 000A ÷ 0020 ÷ # [Lower] [ATerm] [ParaSep] [ParaSep] [Sp]
+÷ 0061 × 002E × 000D × 000A ÷ 0061 ÷ # [Lower] [ATerm] [ParaSep] [ParaSep] [Lower]
+÷ 0041 × 002E × 000D × 000A ÷ 0041 ÷ # [Upper] [ATerm] [ParaSep] [ParaSep] [Upper]

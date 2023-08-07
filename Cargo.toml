@@ -207,6 +207,13 @@ tabs = { git = "https://github.com/mozilla/application-services", rev = "25972c3
 viaduct = { git = "https://github.com/mozilla/application-services", rev = "25972c388a4cf3a6d8256504f3a09b711db2fc6a" }
 webext-storage = { git = "https://github.com/mozilla/application-services", rev = "25972c388a4cf3a6d8256504f3a09b711db2fc6a" }
 
+# ICU4X 1.2 with synstructure 0.13.x / syn 2.x. When updating to next version, this should be removed.
+diplomat = { git = "https://github.com/rust-diplomat/diplomat", rev = "8d125999893fedfdf30595e97334c21ec4b18da9" }
+diplomat-runtime = { git = "https://github.com/rust-diplomat/diplomat", rev = "8d125999893fedfdf30595e97334c21ec4b18da9" }
+yoke-derive = { git = "https://github.com/unicode-org/icu4x", rev = "14e9a3a9857be74582abe2dfa7ab799c5eaac873" }
+zerofrom-derive = { git = "https://github.com/unicode-org/icu4x", rev = "14e9a3a9857be74582abe2dfa7ab799c5eaac873" }
+zerovec-derive = { git = "https://github.com/unicode-org/icu4x", rev = "14e9a3a9857be74582abe2dfa7ab799c5eaac873" }
+
 # Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.
 [patch.crates-io.mio]
