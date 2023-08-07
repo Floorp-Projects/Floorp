@@ -6,7 +6,7 @@ exports[`ExceptionOption renders with values 1`] = `
   onClick={[Function]}
 >
   <input
-    checked="checked"
+    checked={true}
     onChange={[Function]}
     type="checkbox"
   />
