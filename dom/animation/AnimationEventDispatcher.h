@@ -108,14 +108,46 @@ struct CSSTransitionMarker {
 namespace mozilla {
 
 struct AnimationEventInfo {
-  RefPtr<dom::EventTarget> mTarget;
+  struct CssAnimationOrTransitionData {
+    OwningAnimationTarget mTarget;
+    const EventMessage mMessage;
+    const double mElapsedTime;
+    // FIXME(emilio): is this needed? This preserves behavior from before
+    // bug 1847200, but it's unclear what the timeStamp of the event should be.
+    // See also https://github.com/w3c/csswg-drafts/issues/9167
+    const TimeStamp mEventEnqueueTimeStamp{TimeStamp::Now()};
+  };
+
+  struct CssAnimationData : public CssAnimationOrTransitionData {
+    const RefPtr<nsAtom> mAnimationName;
+  };
+
+  struct CssTransitionData : public CssAnimationOrTransitionData {
+    // For transition events only.
+    const nsCSSPropertyID mPropertyId = eCSSProperty_UNKNOWN;
+  };
+
+  struct WebAnimationData {
+    RefPtr<dom::AnimationPlaybackEvent> mEvent;
+  };
+
+  using Data = Variant<CssAnimationData, CssTransitionData, WebAnimationData>;
+
   RefPtr<dom::Animation> mAnimation;
   TimeStamp mScheduledEventTimeStamp;
+  Data mData;
 
-  typedef Variant<InternalTransitionEvent, InternalAnimationEvent,
-                  RefPtr<dom::AnimationPlaybackEvent>>
-      EventVariant;
-  EventVariant mEvent;
+  OwningAnimationTarget* GetOwningAnimationTarget() {
+    if (mData.is<CssAnimationData>()) {
+      return &mData.as<CssAnimationData>().mTarget;
+    }
+    if (mData.is<CssTransitionData>()) {
+      return &mData.as<CssTransitionData>().mTarget;
+    }
+    return nullptr;
+  }
+
+  void MaybeAddMarker() const;
 
   // For CSS animation events
   AnimationEventInfo(nsAtom* aAnimationName,
@@ -123,58 +155,14 @@ struct AnimationEventInfo {
                      EventMessage aMessage, double aElapsedTime,
                      const TimeStamp& aScheduledEventTimeStamp,
                      dom::Animation* aAnimation)
-      : mTarget(aTarget.mElement),
-        mAnimation(aAnimation),
+      : mAnimation(aAnimation),
         mScheduledEventTimeStamp(aScheduledEventTimeStamp),
-        mEvent(EventVariant(InternalAnimationEvent(true, aMessage))) {
-    InternalAnimationEvent& event = mEvent.as<InternalAnimationEvent>();
-
-    aAnimationName->ToString(event.mAnimationName);
-    // XXX Looks like nobody initialize WidgetEvent::time
-    event.mElapsedTime = aElapsedTime;
-    event.mPseudoElement =
-        nsCSSPseudoElements::PseudoTypeAsString(aTarget.mPseudoType);
-
-    if ((aMessage == eAnimationCancel || aMessage == eAnimationEnd ||
-         aMessage == eAnimationIteration) &&
-        profiler_thread_is_being_profiled_for_markers()) {
-      nsAutoCString name;
-      aAnimationName->ToUTF8String(name);
-
-      const TimeStamp startTime = [&] {
-        if (aMessage == eAnimationIteration) {
-          if (auto* effect = aAnimation->GetEffect()) {
-            return aScheduledEventTimeStamp -
-                   TimeDuration(effect->GetComputedTiming().mDuration);
-          }
-        }
-        return aScheduledEventTimeStamp -
-               TimeDuration::FromSeconds(aElapsedTime);
-      }();
-
-      nsCSSPropertyIDSet propertySet;
-      nsAutoString target;
-      if (dom::AnimationEffect* effect = aAnimation->GetEffect()) {
-        if (dom::KeyframeEffect* keyFrameEffect = effect->AsKeyframeEffect()) {
-          keyFrameEffect->GetTarget()->Describe(target, true);
-          for (const AnimationProperty& property :
-               keyFrameEffect->Properties()) {
-            propertySet.AddProperty(property.mProperty);
-          }
-        }
-      }
-
-      PROFILER_MARKER(
-          aMessage == eAnimationIteration
-              ? ProfilerString8View("CSS animation iteration")
-              : ProfilerString8View("CSS animation"),
-          DOM,
-          MarkerOptions(
-              MarkerTiming::Interval(startTime, aScheduledEventTimeStamp),
-              aAnimation->GetOwner()
-                  ? MarkerInnerWindowId(aAnimation->GetOwner()->WindowID())
-                  : MarkerInnerWindowId::NoId()),
-          CSSAnimationMarker, name, NS_ConvertUTF16toUTF8(target), propertySet);
+        mData(CssAnimationData{
+            {OwningAnimationTarget(aTarget.mElement, aTarget.mPseudoType),
+             aMessage, aElapsedTime},
+            aAnimationName}) {
+    if (profiler_thread_is_being_profiled_for_markers()) {
+      MaybeAddMarker();
     }
   }
 
@@ -184,115 +172,77 @@ struct AnimationEventInfo {
                      EventMessage aMessage, double aElapsedTime,
                      const TimeStamp& aScheduledEventTimeStamp,
                      dom::Animation* aAnimation)
-      : mTarget(aTarget.mElement),
-        mAnimation(aAnimation),
+      : mAnimation(aAnimation),
         mScheduledEventTimeStamp(aScheduledEventTimeStamp),
-        mEvent(EventVariant(InternalTransitionEvent(true, aMessage))) {
-    InternalTransitionEvent& event = mEvent.as<InternalTransitionEvent>();
-
-    event.mPropertyName =
-        NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty));
-    // XXX Looks like nobody initialize WidgetEvent::time
-    event.mElapsedTime = aElapsedTime;
-    event.mPseudoElement =
-        nsCSSPseudoElements::PseudoTypeAsString(aTarget.mPseudoType);
-
-    if ((aMessage == eTransitionEnd || aMessage == eTransitionCancel) &&
-        profiler_thread_is_being_profiled_for_markers()) {
-      nsAutoString target;
-      if (dom::AnimationEffect* effect = aAnimation->GetEffect()) {
-        if (dom::KeyframeEffect* keyFrameEffect = effect->AsKeyframeEffect()) {
-          keyFrameEffect->GetTarget()->Describe(target, true);
-        }
-      }
-      PROFILER_MARKER(
-          "CSS transition", DOM,
-          MarkerOptions(
-              MarkerTiming::Interval(
-                  aScheduledEventTimeStamp -
-                      TimeDuration::FromSeconds(aElapsedTime),
-                  aScheduledEventTimeStamp),
-              aAnimation->GetOwner()
-                  ? MarkerInnerWindowId(aAnimation->GetOwner()->WindowID())
-                  : MarkerInnerWindowId::NoId()),
-          CSSTransitionMarker, NS_ConvertUTF16toUTF8(target), aProperty,
-          aMessage == eTransitionCancel);
+        mData(CssTransitionData{
+            {OwningAnimationTarget(aTarget.mElement, aTarget.mPseudoType),
+             aMessage, aElapsedTime},
+            aProperty}) {
+    if (profiler_thread_is_being_profiled_for_markers()) {
+      MaybeAddMarker();
     }
   }
 
   // For web animation events
-  AnimationEventInfo(const nsAString& aName,
-                     RefPtr<dom::AnimationPlaybackEvent>&& aEvent,
+  AnimationEventInfo(RefPtr<dom::AnimationPlaybackEvent>&& aEvent,
                      TimeStamp&& aScheduledEventTimeStamp,
                      dom::Animation* aAnimation)
-      : mTarget(aAnimation),
-        mAnimation(aAnimation),
+      : mAnimation(aAnimation),
         mScheduledEventTimeStamp(std::move(aScheduledEventTimeStamp)),
-        mEvent(std::move(aEvent)) {}
+        mData(WebAnimationData{std::move(aEvent)}) {}
 
   AnimationEventInfo(const AnimationEventInfo& aOther) = delete;
   AnimationEventInfo& operator=(const AnimationEventInfo& aOther) = delete;
+
   AnimationEventInfo(AnimationEventInfo&& aOther) = default;
   AnimationEventInfo& operator=(AnimationEventInfo&& aOther) = default;
 
-  bool IsWebAnimationEvent() const {
-    return mEvent.is<RefPtr<dom::AnimationPlaybackEvent>>();
-  }
-
-#ifdef DEBUG
-  bool IsStale() const {
-    const WidgetEvent* widgetEvent = AsWidgetEvent();
-    return widgetEvent->mFlags.mIsBeingDispatched ||
-           widgetEvent->mFlags.mDispatchedAtLeastOnce;
-  }
-
-  const WidgetEvent* AsWidgetEvent() const {
-    return const_cast<AnimationEventInfo*>(this)->AsWidgetEvent();
-  }
-#endif
-
-  WidgetEvent* AsWidgetEvent() {
-    if (mEvent.is<InternalTransitionEvent>()) {
-      return &mEvent.as<InternalTransitionEvent>();
-    }
-    if (mEvent.is<InternalAnimationEvent>()) {
-      return &mEvent.as<InternalAnimationEvent>();
-    }
-    if (mEvent.is<RefPtr<dom::AnimationPlaybackEvent>>()) {
-      return mEvent.as<RefPtr<dom::AnimationPlaybackEvent>>()->WidgetEventPtr();
-    }
-
-    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected event type");
-    return nullptr;
-  }
+  bool IsWebAnimationEvent() const { return mData.is<WebAnimationData>(); }
 
   // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void Dispatch(nsPresContext* aPresContext) {
-    RefPtr<dom::EventTarget> target = mTarget;
-    if (mEvent.is<RefPtr<dom::AnimationPlaybackEvent>>()) {
-      auto playbackEvent = mEvent.as<RefPtr<dom::AnimationPlaybackEvent>>();
+    if (mData.is<WebAnimationData>()) {
+      RefPtr playbackEvent = mData.as<WebAnimationData>().mEvent;
+      RefPtr target = mAnimation;
       EventDispatcher::DispatchDOMEvent(target, nullptr /* WidgetEvent */,
                                         playbackEvent, aPresContext,
                                         nullptr /* nsEventStatus */);
       return;
     }
 
-    MOZ_ASSERT(mEvent.is<InternalTransitionEvent>() ||
-               mEvent.is<InternalAnimationEvent>());
-
-    if (mEvent.is<InternalTransitionEvent>() && target->IsNode()) {
-      nsPIDOMWindowInner* inner =
-          target->AsNode()->OwnerDoc()->GetInnerWindow();
-      if (inner && !inner->HasTransitionEventListeners()) {
-        MOZ_ASSERT(AsWidgetEvent()->mMessage == eTransitionStart ||
-                   AsWidgetEvent()->mMessage == eTransitionRun ||
-                   AsWidgetEvent()->mMessage == eTransitionEnd ||
-                   AsWidgetEvent()->mMessage == eTransitionCancel);
+    if (mData.is<CssTransitionData>()) {
+      const auto& data = mData.as<CssTransitionData>();
+      nsPIDOMWindowInner* win =
+          data.mTarget.mElement->OwnerDoc()->GetInnerWindow();
+      if (win && !win->HasTransitionEventListeners()) {
+        MOZ_ASSERT(data.mMessage == eTransitionStart ||
+                   data.mMessage == eTransitionRun ||
+                   data.mMessage == eTransitionEnd ||
+                   data.mMessage == eTransitionCancel);
         return;
       }
+
+      InternalTransitionEvent event(true, data.mMessage);
+      CopyUTF8toUTF16(nsCSSProps::GetStringValue(data.mPropertyId),
+                      event.mPropertyName);
+      event.mElapsedTime = data.mElapsedTime;
+      event.mPseudoElement =
+          nsCSSPseudoElements::PseudoTypeAsString(data.mTarget.mPseudoType);
+      event.AssignEventTime(WidgetEventTime(data.mEventEnqueueTimeStamp));
+      RefPtr target = data.mTarget.mElement;
+      EventDispatcher::Dispatch(target, aPresContext, &event);
+      return;
     }
 
-    EventDispatcher::Dispatch(target, aPresContext, AsWidgetEvent());
+    const auto& data = mData.as<CssAnimationData>();
+    InternalAnimationEvent event(true, data.mMessage);
+    data.mAnimationName->ToString(event.mAnimationName);
+    event.mElapsedTime = data.mElapsedTime;
+    event.mPseudoElement =
+        nsCSSPseudoElements::PseudoTypeAsString(data.mTarget.mPseudoType);
+    event.AssignEventTime(WidgetEventTime(data.mEventEnqueueTimeStamp));
+    RefPtr target = data.mTarget.mElement;
+    EventDispatcher::Dispatch(target, aPresContext, &event);
   }
 };
 
@@ -323,7 +273,6 @@ class AnimationEventDispatcher final {
     // mIsSorted will be set to true by SortEvents above, and we leave it
     // that way since mPendingEvents is now empty
     for (AnimationEventInfo& info : events) {
-      MOZ_ASSERT(!info.IsStale(), "The event shouldn't be stale");
       info.Dispatch(mPresContext);
 
       // Bail out if our mPresContext was nullified due to destroying the pres
@@ -360,9 +309,8 @@ class AnimationEventDispatcher final {
         if (a.mScheduledEventTimeStamp.IsNull() ||
             b.mScheduledEventTimeStamp.IsNull()) {
           return a.mScheduledEventTimeStamp.IsNull();
-        } else {
-          return a.mScheduledEventTimeStamp < b.mScheduledEventTimeStamp;
         }
+        return a.mScheduledEventTimeStamp < b.mScheduledEventTimeStamp;
       }
 
       // Events in the Web Animations spec are prior to CSS events.
