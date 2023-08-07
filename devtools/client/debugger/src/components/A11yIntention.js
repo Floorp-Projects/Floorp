@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import React from "react";
+import { Component } from "react";
+import { div } from "react-dom-factories";
 import PropTypes from "prop-types";
 import "./A11yIntention.css";
 
-export default class A11yIntention extends React.Component {
+export default class A11yIntention extends Component {
   static get propTypes() {
     return {
       children: PropTypes.array.isRequired,
@@ -24,14 +25,13 @@ export default class A11yIntention extends React.Component {
   };
 
   render() {
-    return (
-      <div
-        className={this.state.keyboard ? "A11y-keyboard" : "A11y-mouse"}
-        onKeyDown={this.handleKeyDown}
-        onMouseDown={this.handleMouseDown}
-      >
-        {this.props.children}
-      </div>
+    return div(
+      {
+        className: this.state.keyboard ? "A11y-keyboard" : "A11y-mouse",
+        onKeyDown: this.handleKeyDown,
+        onMouseDown: this.handleMouseDown,
+      },
+      this.props.children
     );
   }
 }
