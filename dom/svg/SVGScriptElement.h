@@ -43,7 +43,6 @@ class SVGScriptElement final : public SVGScriptElementBase,
   void GetScriptCharset(nsAString& charset) override;
   void FreezeExecutionAttrs(const Document* aOwnerDoc) override;
   CORSMode GetCORSMode() const override;
-  FetchPriority GetFetchPriority() const override;
 
   // ScriptElement
   bool HasScriptContent() override;

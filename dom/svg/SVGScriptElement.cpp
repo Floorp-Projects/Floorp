@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/SVGScriptElement.h"
 
-#include "mozilla/dom/FetchPriority.h"
 #include "nsGkAtoms.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
@@ -213,11 +212,6 @@ bool SVGScriptElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 
 CORSMode SVGScriptElement::GetCORSMode() const {
   return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
-}
-
-FetchPriority SVGScriptElement::GetFetchPriority() const {
-  // <https://github.com/w3c/svgwg/issues/916>.
-  return FetchPriority::Auto;
 }
 
 }  // namespace mozilla::dom

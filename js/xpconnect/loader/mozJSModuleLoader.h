@@ -78,7 +78,7 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
                   JS::MutableHandleObject aModuleExports,
                   bool aIgnoreExports = false);
 
-  // Synchronously load an ES6 module and all its dependencies.
+  // Load an ES6 module and all its dependencies.
   nsresult ImportESModule(
       JSContext* aCx, const nsACString& aResourceURI,
       JS::MutableHandleObject aModuleNamespace,
