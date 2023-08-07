@@ -157,8 +157,7 @@ export class IdentityCredentialPromptService {
         const data = {
           id: providerIndex,
           icon: iconResult.value,
-          name: providerNames[providerIndex],
-          domain: displayDomain,
+          name: displayDomain,
         };
         providers.push(data);
       }
@@ -545,12 +544,6 @@ export class IdentityCredentialPromptService {
       {}
     );
 
-    let headerIconResult = await this.loadIconFromManifest(
-      providerManifest,
-      BEST_HEADER_ICON_SIZE,
-      "chrome://global/skin/icons/defaultFavicon.svg"
-    );
-
     if (AppConstants.platform === "android") {
       const accounts = [];
 
@@ -572,14 +565,8 @@ export class IdentityCredentialPromptService {
         console.log(data);
       }
 
-      const provider = {
-        name: providerName || displayDomain,
-        domain: displayDomain,
-        icon: headerIconResult,
-      };
-
       const result = {
-        provider,
+        provider: displayDomain,
         accounts,
       };
 
@@ -661,6 +648,12 @@ export class IdentityCredentialPromptService {
       // Add the item to the DOM!
       listBox.append(newItem);
     }
+
+    let headerIconResult = await this.loadIconFromManifest(
+      providerManifest,
+      BEST_HEADER_ICON_SIZE,
+      "chrome://global/skin/icons/defaultFavicon.svg"
+    );
 
     // Create a new promise to wrap the callbacks of the popup buttons
     return new Promise(function (resolve, reject) {
