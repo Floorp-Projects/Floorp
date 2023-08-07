@@ -864,10 +864,10 @@ class PromptFeature private constructor(
                     } else {
                         positiveButtonTitle
                     }
-                    val negativeButton = if (positiveButtonTitle.isEmpty()) {
+                    val negativeButton = if (negativeButtonTitle.isEmpty()) {
                         container.getString(R.string.mozac_feature_prompts_cancel)
                     } else {
-                        positiveButtonTitle
+                        negativeButtonTitle
                     }
 
                     MultiButtonDialogFragment.newInstance(
