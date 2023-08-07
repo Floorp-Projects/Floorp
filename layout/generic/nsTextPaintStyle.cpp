@@ -263,12 +263,9 @@ bool nsTextPaintStyle::GetCustomHighlightBackgroundColor(nsAtom* aHighlightName,
 void nsTextPaintStyle::GetURLSecondaryColor(nscolor* aForeColor) {
   NS_ASSERTION(aForeColor, "aForeColor is null");
 
-  nscolor textColor = GetTextColor();
-  textColor = NS_RGBA(NS_GET_R(textColor), NS_GET_G(textColor),
-                      NS_GET_B(textColor), (uint8_t)(255 * 0.5f));
-  // Don't use true alpha color for readability.
-  InitCommonColors();
-  *aForeColor = NS_ComposeColors(mFrameBackgroundColor, textColor);
+  const nscolor textColor = GetTextColor();
+  *aForeColor = NS_RGBA(NS_GET_R(textColor), NS_GET_G(textColor),
+                        NS_GET_B(textColor), 127);
 }
 
 void nsTextPaintStyle::GetIMESelectionColors(int32_t aIndex,
