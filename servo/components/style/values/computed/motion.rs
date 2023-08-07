@@ -5,6 +5,7 @@
 //! Computed types for CSS values that are related to motion path.
 
 use crate::values::computed::basic_shape::BasicShape;
+use crate::values::computed::url::ComputedUrl;
 use crate::values::computed::{Angle, LengthPercentage, Position};
 use crate::values::generics::motion::{
     GenericOffsetPath, GenericOffsetPathFunction, GenericOffsetPosition, GenericRayFunction,
@@ -15,7 +16,7 @@ use crate::Zero;
 pub type RayFunction = GenericRayFunction<Angle, Position>;
 
 /// The computed value of <offset-path>.
-pub type OffsetPathFunction = GenericOffsetPathFunction<BasicShape, RayFunction>;
+pub type OffsetPathFunction = GenericOffsetPathFunction<BasicShape, RayFunction, ComputedUrl>;
 
 /// The computed value of `offset-path`.
 pub type OffsetPath = GenericOffsetPath<OffsetPathFunction>;

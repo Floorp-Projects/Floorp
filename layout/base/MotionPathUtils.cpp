@@ -404,6 +404,19 @@ static already_AddRefed<gfx::Path> BuildSimpleInsetPath(
                                    aPathBuilder);
 }
 
+// Create a path for `path("m 0 0")`, which is the default URL path.
+// https://drafts.fxtf.org/motion-1/#valdef-offset-path-url
+static already_AddRefed<gfx::Path> BuildDefaultPathForURL(
+    gfx::PathBuilder* aBuilder) {
+  if (!aBuilder) {
+    return nullptr;
+  }
+
+  Array<const StylePathCommand, 1> array(StylePathCommand::MoveTo(
+      StyleCoordPair(gfx::Point{0.0, 0.0}), StyleIsAbsolute::No));
+  return SVGPathData::BuildPath(array, aBuilder, StyleStrokeLinecap::Butt, 0.0);
+}
+
 // Generate data for motion path on the main thread.
 static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
   const StyleOffsetPath& offsetPath = aFrame->StyleDisplay()->mOffsetPath;
@@ -439,6 +452,19 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
     return OffsetPathData::Shape(gfxPath.forget(), {}, IsClosedPath(pathData));
   }
 
+  RefPtr<gfx::PathBuilder> builder = MotionPathUtils::GetPathBuilder();
+
+  if (offsetPath.IsUrl()) {
+    // TODO: Finish this in the following patches.
+
+    // Note: This behaves as path("m 0 0") (a <basic-shape>).
+    RefPtr<gfx::Path> path = BuildDefaultPathForURL(builder);
+    // FIXME: Bug 1836847. Once we support "at <position>" for path(), we have
+    // to give it the current box position.
+    return path ? OffsetPathData::Shape(path.forget(), {}, false)
+                : OffsetPathData::None();
+  }
+
   // The rest part is to handle "<basic-shape> || <coord-box>".
   MOZ_ASSERT(offsetPath.IsBasicShapeOrCoordBox());
 
@@ -448,10 +474,8 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
   if (!containingFrame || coordBox.IsEmpty()) {
     return OffsetPathData::None();
   }
-
-  const nsStyleDisplay* disp = aFrame->StyleDisplay();
   nsPoint currentPosition = aFrame->GetOffsetTo(containingFrame);
-  RefPtr<gfx::PathBuilder> builder = MotionPathUtils::GetPathBuilder();
+  const nsStyleDisplay* disp = aFrame->StyleDisplay();
   RefPtr<gfx::Path> path =
       disp->mOffsetPath.IsCoordBox()
           ? BuildSimpleInsetPath(containingFrame->StyleBorder()->mBorderRadius,

@@ -9362,6 +9362,7 @@ exports.CSS_PROPERTIES = {
       "stroke-box",
       "top",
       "unset",
+      "url",
       "view-box",
       "xywh"
     ]
@@ -9425,6 +9426,7 @@ exports.CSS_PROPERTIES = {
       "revert-layer",
       "stroke-box",
       "unset",
+      "url",
       "view-box",
       "xywh"
     ]

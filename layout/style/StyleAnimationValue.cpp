@@ -116,6 +116,10 @@ const mozilla::StyleOffsetPosition& AnimationValue::GetOffsetPositionProperty()
   return *Servo_AnimationValue_GetOffsetPosition(mServo);
 }
 
+bool AnimationValue::IsOffsetPathUrl() const {
+  return mServo && Servo_AnimationValue_IsOffsetPathUrl(mServo);
+}
+
 MatrixScales AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
   using namespace nsStyleTransformMatrix;
 

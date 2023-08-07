@@ -868,6 +868,19 @@ pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetPosition(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_IsOffsetPathUrl(
+    value: &AnimationValue,
+) -> bool {
+    use style::values::generics::motion::{GenericOffsetPath, GenericOffsetPathFunction};
+    if let AnimationValue::OffsetPath(ref op) = value {
+        if let GenericOffsetPath::OffsetPath { path, coord_box: _ } = op {
+            return matches!(**path, GenericOffsetPathFunction::Url(_));
+        }
+    }
+    false
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn Servo_AnimationValue_Rotate(
     r: &computed::Rotate,
 ) -> Strong<AnimationValue> {

@@ -7,6 +7,7 @@
 use crate::values::animated::ToAnimatedZero;
 use crate::values::generics::position::{GenericPosition, GenericPositionOrAuto};
 use crate::values::specified::motion::CoordBox;
+use serde::Deserializer;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
 
@@ -106,6 +107,22 @@ where
     }
 }
 
+/// Return error if we try to deserialize the url, for Gecko IPC purposes.
+// Note: we cannot use #[serde(skip_deserializing)] variant attribute, which may cause the fatal
+// error when trying to read the parameters because it cannot deserialize the input byte buffer,
+// even if the type of OffsetPathFunction is not an url(), in our tests. This may be an issue of
+// #[serde(skip_deserializing)] on enum, at least in the version (1.0) we are using. So we have to
+// manually implement this deseriailzing function, but return error.
+// FIXME: Bug 1847620, fiure out this is a serde issue or a gecko bug.
+fn deserialize_url<'de, D, T>(_deserializer: D) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    use crate::serde::de::Error;
+    // Return Err() so the IPC will catch it and assert this as a fetal error.
+    Err(<D as Deserializer>::Error::custom("we don't support the deserializing for url"))
+}
+
 /// The <offset-path> value.
 /// <offset-path> = <ray()> | <url> | <basic-shape>
 ///
@@ -126,15 +143,21 @@ where
     ToResolvedValue,
     ToShmem,
 )]
+#[animation(no_bound(U))]
 #[repr(C, u8)]
-pub enum GenericOffsetPathFunction<Shapes, RayFunction> {
+pub enum GenericOffsetPathFunction<Shapes, RayFunction, U> {
     /// ray() function, which defines a path in the polar coordinate system.
     /// Use Box<> to make sure the size of offset-path is not too large.
     #[css(function)]
     Ray(RayFunction),
+    /// A URL reference to an SVG shape element. If the URL does not reference a shape element,
+    /// this behaves as path("m 0 0") instead.
+    #[animation(error)]
+    #[serde(deserialize_with = "deserialize_url")]
+    #[serde(skip_serializing)]
+    Url(U),
     /// The <basic-shape> value.
     Shape(Shapes),
-    // FIXME: Bug 1598158. Support <url>.
 }
 
 pub use self::GenericOffsetPathFunction as OffsetPathFunction;

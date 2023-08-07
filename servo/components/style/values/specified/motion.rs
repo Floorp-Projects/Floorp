@@ -10,6 +10,7 @@ use crate::values::computed::{Context, ToComputedValue};
 use crate::values::generics::motion as generics;
 use crate::values::specified::basic_shape::BasicShape;
 use crate::values::specified::position::{HorizontalPosition, VerticalPosition};
+use crate::values::specified::url::SpecifiedUrl;
 use crate::values::specified::{Angle, Position};
 use crate::Zero;
 use cssparser::Parser;
@@ -19,7 +20,8 @@ use style_traits::{ParseError, StyleParseErrorKind};
 pub type RayFunction = generics::GenericRayFunction<Angle, Position>;
 
 /// The specified value of <offset-path>.
-pub type OffsetPathFunction = generics::GenericOffsetPathFunction<BasicShape, RayFunction>;
+pub type OffsetPathFunction =
+    generics::GenericOffsetPathFunction<BasicShape, RayFunction, SpecifiedUrl>;
 
 /// The specified value of `offset-path`.
 pub type OffsetPath = generics::GenericOffsetPath<OffsetPathFunction>;
@@ -158,6 +160,12 @@ impl Parse for OffsetPathFunction {
         if static_prefs::pref!("layout.css.motion-path-ray.enabled") {
             if let Ok(ray) = input.try_parse(|i| RayFunction::parse(context, i)) {
                 return Ok(OffsetPathFunction::Ray(ray));
+            }
+        }
+
+        if static_prefs::pref!("layout.css.motion-path-url.enabled") {
+            if let Ok(url) = input.try_parse(|i| SpecifiedUrl::parse(context, i)) {
+                return Ok(OffsetPathFunction::Url(url));
             }
         }
 

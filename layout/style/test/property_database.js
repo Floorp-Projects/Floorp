@@ -13557,6 +13557,10 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
     );
   }
 
+  if (IsCSSPropertyPrefEnabled("layout.css.motion-path-url.enabled")) {
+    gCSSProperties["offset-path"]["other_values"].push("url(#svgPath)");
+  }
+
   gCSSProperties["offset-distance"] = {
     domProp: "offsetDistance",
     inherited: false,
