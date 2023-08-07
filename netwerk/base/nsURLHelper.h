@@ -226,6 +226,12 @@ bool net_IsValidIPv4Addr(const nsACString& aAddr);
  */
 bool net_IsValidIPv6Addr(const nsACString& aAddr);
 
+/**
+ * Returns the default status text for a given HTTP status code (useful if HTTP2
+ * does not provide one, for instance).
+ */
+bool net_GetDefaultStatusTextForCode(uint16_t aCode, nsACString& aOutText);
+
 namespace mozilla {
 /**
  * A class for handling form-urlencoded query strings.
