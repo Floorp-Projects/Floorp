@@ -631,6 +631,25 @@ struct CompilationAtomCache {
   }
 };
 
+// Information associated with an extra binding provided to a global script.
+// See frontend::CompileGlobalScriptWithExtraBindings.
+struct ExtraBindingInfo {
+  // UTF-8 encoded name of the binding.
+  UniqueChars nameChars;
+
+  TaggedParserAtomIndex nameIndex;
+
+  // If the binding conflicts with global variable or global lexical variable,
+  // the binding is shadowed.
+  bool isShadowed = false;
+
+  ExtraBindingInfo(UniqueChars&& nameChars, bool isShadowed)
+      : nameChars(std::move(nameChars)), isShadowed(isShadowed) {}
+};
+
+using ExtraBindingInfoVector =
+    js::Vector<ExtraBindingInfo, 0, js::SystemAllocPolicy>;
+
 // Input of the compilation, including source and enclosing context.
 struct CompilationInput {
   enum class CompilationTarget {
@@ -650,6 +669,9 @@ struct CompilationInput {
 
  private:
   InputScript lazy_ = InputScript(nullptr);
+
+  // Extra bindings for the global script.
+  ExtraBindingInfoVector* maybeExtraBindings_ = nullptr;
 
  public:
   RefPtr<ScriptSource> source;
@@ -676,6 +698,14 @@ struct CompilationInput {
  public:
   bool initForGlobal(FrontendContext* fc) {
     target = CompilationTarget::Global;
+    return initScriptSource(fc);
+  }
+
+  bool initForGlobalWithExtraBindings(
+      FrontendContext* fc, ExtraBindingInfoVector* maybeExtraBindings) {
+    MOZ_ASSERT(maybeExtraBindings);
+    target = CompilationTarget::Global;
+    maybeExtraBindings_ = maybeExtraBindings;
     return initScriptSource(fc);
   }
 
@@ -790,6 +820,13 @@ struct CompilationInput {
   // Whether this CompilationInput is parsing a specific function with already
   // pre-parsed contextual information.
   bool isDelazifying() { return target == CompilationTarget::Delazification; }
+
+  bool hasExtraBindings() const { return !!maybeExtraBindings_; }
+  ExtraBindingInfoVector& extraBindings() { return *maybeExtraBindings_; }
+  const ExtraBindingInfoVector& extraBindings() const {
+    return *maybeExtraBindings_;
+  }
+  bool internExtraBindings(FrontendContext* fc, ParserAtomsTable& parserAtoms);
 
   void trace(JSTracer* trc);
 

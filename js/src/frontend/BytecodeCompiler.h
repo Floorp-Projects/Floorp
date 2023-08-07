@@ -17,9 +17,12 @@
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ScriptIndex.h"         // ScriptIndex
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions, JS::PrefableCompileOptions
+#include "js/GCVector.h"    // JS::StackGCVector
+#include "js/Id.h"          // JS::PropertyKey
 #include "js/RootingAPI.h"  // JS::Handle
 #include "js/SourceText.h"  // JS::SourceText
 #include "js/UniquePtr.h"   // js::UniquePtr
+#include "js/Value.h"       // JS::Value
 #include "vm/ScopeKind.h"   // js::ScopeKind
 
 /*
@@ -158,6 +161,27 @@ extern JSScript* CompileGlobalScript(JSContext* cx, FrontendContext* fc,
                                      const JS::ReadOnlyCompileOptions& options,
                                      JS::SourceText<mozilla::Utf8Unit>& srcBuf,
                                      ScopeKind scopeKind);
+
+// Compile a script with a list of known extra bindings.
+//
+// Bindings should be passed by a pair of unwrappedBindingKeys and
+// unwrappedBindingValues.
+//
+// A WithEnvironmentObject is created for the bindings and returned via env out
+// parameter. The same env must be used to evaluate the script.
+//
+// Both unwrappedBindingKeys and unwrappedBindingValues can come from different
+// realm than the current realm.
+//
+// If a binding is shadowed by the global variables declared by the script,
+// or the existing global variables, the binding is not stored into the
+// resulting WithEnvironmentObject.
+extern JSScript* CompileGlobalScriptWithExtraBindings(
+    JSContext* cx, FrontendContext* fc,
+    const JS::ReadOnlyCompileOptions& options, JS::SourceText<char16_t>& srcBuf,
+    JS::Handle<JS::StackGCVector<JS::PropertyKey>> unwrappedBindingKeys,
+    JS::Handle<JS::StackGCVector<JS::Value>> unwrappedBindingValues,
+    JS::MutableHandle<JSObject*> env);
 
 // Compile a script for eval of the given source using the given options and
 // enclosing scope/environment.
