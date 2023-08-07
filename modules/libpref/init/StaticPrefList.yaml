@@ -11699,6 +11699,13 @@
   value: false
   mirror: always
 
+# Indicates whether the `fetchpriority` attribute for elements which support it
+# (e.g. `<script>`) is enabled.
+- name: network.fetchpriority.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Enables `<link rel="preload">` tag and `Link: rel=preload` response header
 # handling.
 - name: network.preload
