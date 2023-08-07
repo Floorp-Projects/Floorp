@@ -4,8 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AsyncDBus.h"
-
-#include <dbus/dbus-glib-lowlevel.h>
 #include "mozilla/UniquePtrExtensions.h"
 
 namespace mozilla::widget {
