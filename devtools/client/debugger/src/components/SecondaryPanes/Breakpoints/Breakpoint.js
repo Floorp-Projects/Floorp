@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { PureComponent } from "react";
+import { div, input, span } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../../../utils/connect";
 import { createSelector } from "reselect";
@@ -40,6 +41,8 @@ class Breakpoint extends PureComponent {
       source: PropTypes.object.isRequired,
       blackboxedRangesForSource: PropTypes.array.isRequired,
       checkSourceOnIgnoreList: PropTypes.func.isRequired,
+      isBreakpointLineBlackboxed: PropTypes.bool,
+      showBreakpointContextMenu: PropTypes.func.isRequired,
     };
   }
 
@@ -130,48 +133,55 @@ class Breakpoint extends PureComponent {
     const { breakpoint, editor, isBreakpointLineBlackboxed } = this.props;
     const text = this.getBreakpointText();
     const labelId = `${breakpoint.id}-label`;
-
-    return (
-      <div
-        className={classnames({
+    return div(
+      {
+        className: classnames({
           breakpoint,
           paused: this.isCurrentlyPausedAtBreakpoint(),
           disabled: breakpoint.disabled,
           "is-conditional": !!breakpoint.options.condition,
           "is-log": !!breakpoint.options.logValue,
-        })}
-        onClick={this.selectBreakpoint}
-        onDoubleClick={this.onDoubleClick}
-        onContextMenu={this.onContextMenu}
-      >
-        <input
-          id={breakpoint.id}
-          type="checkbox"
-          className="breakpoint-checkbox"
-          checked={!breakpoint.disabled}
-          disabled={isBreakpointLineBlackboxed}
-          onChange={this.handleBreakpointCheckbox}
-          onClick={this.stopClicks}
-          aria-labelledby={labelId}
-        />
-        <span
-          id={labelId}
-          className="breakpoint-label cm-s-mozilla devtools-monospace"
-          onClick={this.selectBreakpoint}
-          title={text}
-        >
-          <span dangerouslySetInnerHTML={this.highlightText(text, editor)} />
-        </span>
-        <div className="breakpoint-line-close">
-          <div className="breakpoint-line devtools-monospace">
-            {this.getBreakpointLocation()}
-          </div>
-          <CloseButton
-            handleClick={this.removeBreakpoint}
-            tooltip={L10N.getStr("breakpoints.removeBreakpointTooltip")}
-          />
-        </div>
-      </div>
+        }),
+        onClick: this.selectBreakpoint,
+        onDoubleClick: this.onDoubleClick,
+        onContextMenu: this.onContextMenu,
+      },
+      input({
+        id: breakpoint.id,
+        type: "checkbox",
+        className: "breakpoint-checkbox",
+        checked: !breakpoint.disabled,
+        disabled: isBreakpointLineBlackboxed,
+        onChange: this.handleBreakpointCheckbox,
+        onClick: this.stopClicks,
+        "aria-labelledby": labelId,
+      }),
+      span(
+        {
+          id: labelId,
+          className: "breakpoint-label cm-s-mozilla devtools-monospace",
+          onClick: this.selectBreakpoint,
+          title: text,
+        },
+        span({
+          dangerouslySetInnerHTML: this.highlightText(text, editor),
+        })
+      ),
+      div(
+        {
+          className: "breakpoint-line-close",
+        },
+        div(
+          {
+            className: "breakpoint-line devtools-monospace",
+          },
+          this.getBreakpointLocation()
+        ),
+        React.createElement(CloseButton, {
+          handleClick: this.removeBreakpoint,
+          tooltip: L10N.getStr("breakpoints.removeBreakpointTooltip"),
+        })
+      )
     );
   }
 }
