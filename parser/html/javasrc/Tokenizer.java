@@ -698,15 +698,6 @@ public class Tokenizer implements Locator, Locator2 {
     }
 
     /**
-     * Gets the errorProfile.
-     *
-     * @param errorProfile
-     */
-    public HashMap getErrorProfile() {
-        return null;
-    }
-
-    /**
      * Sets the commentPolicy.
      *
      * @param commentPolicy

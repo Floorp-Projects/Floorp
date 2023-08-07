@@ -554,10 +554,6 @@ nsStaticAtom* Accessible::LandmarkRole() const {
     }
   }
 
-  if (tagName == nsGkAtoms::search) {
-    return nsGkAtoms::search;
-  }
-
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   return roleMapEntry && roleMapEntry->IsOfType(eLandmark)
              ? roleMapEntry->roleAtom

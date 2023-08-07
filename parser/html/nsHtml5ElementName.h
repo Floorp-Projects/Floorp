@@ -290,7 +290,6 @@ class nsHtml5ElementName {
   static nsHtml5ElementName* ELT_MPATH;
   static nsHtml5ElementName* ELT_PATH;
   static nsHtml5ElementName* ELT_TH;
-  static nsHtml5ElementName* ELT_SEARCH;
   static nsHtml5ElementName* ELT_SWITCH;
   static nsHtml5ElementName* ELT_TEXTPATH;
   static nsHtml5ElementName* ELT_LI;
