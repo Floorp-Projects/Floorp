@@ -128,6 +128,14 @@ class HTMLScriptElement final : public nsGenericHTMLElement,
     GetEnumAttr(nsGkAtoms::referrerpolicy, "", aReferrerPolicy);
   }
 
+  void GetFetchPriority(nsAString& aFetchPriority) {
+    // TODO: impl.
+  }
+
+  void SetFetchPriority(const nsAString& aFetchPriority) {
+    // TODO: impl.
+  }
+
   [[nodiscard]] static bool Supports(const GlobalObject& aGlobal,
                                      const nsAString& aType);
 
