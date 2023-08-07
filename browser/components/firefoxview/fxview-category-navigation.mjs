@@ -134,7 +134,12 @@ export class FxviewCategoryButton extends MozLitElement {
   render() {
     return html`
       <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
-      <button tabindex="-1" ?selected=${this.selected} @click=${this.activate}>
+      <button
+        aria-hidden="true"
+        tabindex="-1"
+        ?selected=${this.selected}
+        @click=${this.activate}
+      >
         <span class="category-icon" part="icon"></span>
         <slot></slot>
       </button>
