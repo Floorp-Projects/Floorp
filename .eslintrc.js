@@ -1763,7 +1763,6 @@ module.exports = {
         "netwerk/cookie/test/browser/browser_sameSiteConsole.js",
         "netwerk/test/browser/browser_103_assets.js",
         "netwerk/test/browser/browser_103_preload.js",
-        "netwerk/test/browser/browser_103_telemetry.js",
         "netwerk/test/browser/browser_cookie_filtering_subdomain.js",
         "netwerk/test/browser/browser_test_favicon.js",
         "netwerk/test/browser/cookie_filtering_helper.jsm",
