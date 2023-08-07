@@ -46,5 +46,6 @@ module.exports = {
     ...sharedJestConfig.moduleNameMapper,
     "\\.css$": "<rootDir>/../shared/test-helpers/jest-fixtures/empty-module",
     "\\.svg$": "<rootDir>/../shared/test-helpers/jest-fixtures/svgMock.js",
+    "react-dom-factories": "<rootDir>/../shared/vendor/react-dom-factories.js",
   },
 };

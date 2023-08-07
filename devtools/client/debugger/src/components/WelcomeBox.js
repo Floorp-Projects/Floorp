@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import React, { Component } from "react";
+import { Component } from "react";
+import { div, p, span } from "react-dom-factories";
 import PropTypes from "prop-types";
 
 import { connect } from "../utils/connect";
@@ -41,43 +42,83 @@ export class WelcomeBox extends Component {
     const searchSourcesLabel = L10N.getStr("welcome.search2").substring(2);
     const searchProjectLabel = L10N.getStr("welcome.findInFiles2").substring(2);
 
-    return (
-      <div className="welcomebox">
-        <div className="alignlabel">
-          <div className="shortcutFunction">
-            <p
-              className="welcomebox__searchSources"
-              role="button"
-              tabIndex="0"
-              onClick={() => this.props.openQuickOpen()}
-            >
-              <span className="shortcutKey">{searchSourcesShortcut}</span>
-              <span className="shortcutLabel">{searchSourcesLabel}</span>
-            </p>
-            <p
-              className="welcomebox__searchProject"
-              role="button"
-              tabIndex="0"
-              onClick={() => {
+    return div(
+      {
+        className: "welcomebox",
+      },
+      div(
+        {
+          className: "alignlabel",
+        },
+        div(
+          {
+            className: "shortcutFunction",
+          },
+          p(
+            {
+              className: "welcomebox__searchSources",
+              role: "button",
+              tabIndex: "0",
+              onClick: () => this.props.openQuickOpen(),
+            },
+            span(
+              {
+                className: "shortcutKey",
+              },
+              searchSourcesShortcut
+            ),
+            span(
+              {
+                className: "shortcutLabel",
+              },
+              searchSourcesLabel
+            )
+          ),
+          p(
+            {
+              className: "welcomebox__searchProject",
+              role: "button",
+              tabIndex: "0",
+              onClick: () => {
                 this.props.setActiveSearch(primaryPaneTabs.PROJECT_SEARCH);
                 this.props.setPrimaryPaneTab(primaryPaneTabs.PROJECT_SEARCH);
-              }}
-            >
-              <span className="shortcutKey">{searchProjectShortcut}</span>
-              <span className="shortcutLabel">{searchProjectLabel}</span>
-            </p>
-            <p
-              className="welcomebox__allShortcuts"
-              role="button"
-              tabIndex="0"
-              onClick={() => this.props.toggleShortcutsModal()}
-            >
-              <span className="shortcutKey">{allShortcutsShortcut}</span>
-              <span className="shortcutLabel">{allShortcutsLabel}</span>
-            </p>
-          </div>
-        </div>
-      </div>
+              },
+            },
+            span(
+              {
+                className: "shortcutKey",
+              },
+              searchProjectShortcut
+            ),
+            span(
+              {
+                className: "shortcutLabel",
+              },
+              searchProjectLabel
+            )
+          ),
+          p(
+            {
+              className: "welcomebox__allShortcuts",
+              role: "button",
+              tabIndex: "0",
+              onClick: () => this.props.toggleShortcutsModal(),
+            },
+            span(
+              {
+                className: "shortcutKey",
+              },
+              allShortcutsShortcut
+            ),
+            span(
+              {
+                className: "shortcutLabel",
+              },
+              allShortcutsLabel
+            )
+          )
+        )
+      )
     );
   }
 }

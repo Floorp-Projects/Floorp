@@ -3,13 +3,12 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import { div } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../utils/connect";
 import { prefs } from "../utils/prefs";
 import { primaryPaneTabs } from "../constants";
 import actions from "../actions";
-import A11yIntention from "./A11yIntention";
-import { ShortcutsModal } from "./ShortcutsModal";
 
 import {
   getSelectedSource,
@@ -18,8 +17,8 @@ import {
   getQuickOpenEnabled,
   getOrientation,
 } from "../selectors";
-
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
+
 const SplitBox = require("devtools/client/shared/components/splitter/SplitBox");
 const AppErrorBoundary = require("devtools/client/shared/components/AppErrorBoundary");
 
@@ -32,9 +31,10 @@ const verticalLayoutBreakpoint = window.matchMedia(
 
 import "./variables.css";
 import "./App.css";
-
 import "./shared/menu.css";
 
+import A11yIntention from "./A11yIntention";
+import { ShortcutsModal } from "./ShortcutsModal";
 import PrimaryPanes from "./PrimaryPanes";
 import Editor from "./Editor";
 import SecondaryPanes from "./SecondaryPanes";
@@ -208,25 +208,33 @@ class App extends Component {
     const { startPanelCollapsed, endPanelCollapsed } = this.props;
     const { endPanelSize, startPanelSize } = this.state;
     const horizontal = this.isHorizontal();
-
-    return (
-      <div className="editor-pane">
-        <div className="editor-container">
-          <EditorTabs
-            startPanelCollapsed={startPanelCollapsed}
-            endPanelCollapsed={endPanelCollapsed}
-            horizontal={horizontal}
-          />
-          <Editor startPanelSize={startPanelSize} endPanelSize={endPanelSize} />
-          {!this.props.selectedSource ? (
-            <WelcomeBox
-              horizontal={horizontal}
-              toggleShortcutsModal={() => this.toggleShortcutsModal()}
-            />
-          ) : null}
-          <EditorFooter horizontal={horizontal} />
-        </div>
-      </div>
+    return div(
+      {
+        className: "editor-pane",
+      },
+      div(
+        {
+          className: "editor-container",
+        },
+        React.createElement(EditorTabs, {
+          startPanelCollapsed: startPanelCollapsed,
+          endPanelCollapsed: endPanelCollapsed,
+          horizontal: horizontal,
+        }),
+        React.createElement(Editor, {
+          startPanelSize: startPanelSize,
+          endPanelSize: endPanelSize,
+        }),
+        !this.props.selectedSource
+          ? React.createElement(WelcomeBox, {
+              horizontal,
+              toggleShortcutsModal: () => this.toggleShortcutsModal(),
+            })
+          : null,
+        React.createElement(EditorFooter, {
+          horizontal,
+        })
+      )
     );
   };
 
@@ -248,64 +256,71 @@ class App extends Component {
   renderLayout = () => {
     const { startPanelCollapsed, endPanelCollapsed } = this.props;
     const horizontal = this.isHorizontal();
-
-    return (
-      <SplitBox
-        style={{ width: "100vw" }}
-        initialSize={prefs.endPanelSize}
-        minSize={30}
-        maxSize="70%"
-        splitterSize={1}
-        vert={horizontal}
-        onResizeEnd={num => {
-          prefs.endPanelSize = num;
-          this.triggerEditorPaneResize();
-        }}
-        startPanel={
-          <SplitBox
-            style={{ width: "100vw" }}
-            initialSize={prefs.startPanelSize}
-            minSize={30}
-            maxSize="85%"
-            splitterSize={1}
-            onResizeEnd={num => {
-              prefs.startPanelSize = num;
-            }}
-            startPanelCollapsed={startPanelCollapsed}
-            startPanel={<PrimaryPanes horizontal={horizontal} />}
-            endPanel={this.renderEditorPane()}
-          />
-        }
-        endPanelControl={true}
-        endPanel={<SecondaryPanes horizontal={horizontal} />}
-        endPanelCollapsed={endPanelCollapsed}
-      />
-    );
+    return React.createElement(SplitBox, {
+      style: {
+        width: "100vw",
+      },
+      initialSize: prefs.endPanelSize,
+      minSize: 30,
+      maxSize: "70%",
+      splitterSize: 1,
+      vert: horizontal,
+      onResizeEnd: num => {
+        prefs.endPanelSize = num;
+        this.triggerEditorPaneResize();
+      },
+      startPanel: React.createElement(SplitBox, {
+        style: {
+          width: "100vw",
+        },
+        initialSize: prefs.startPanelSize,
+        minSize: 30,
+        maxSize: "85%",
+        splitterSize: 1,
+        onResizeEnd: num => {
+          prefs.startPanelSize = num;
+        },
+        startPanelCollapsed: startPanelCollapsed,
+        startPanel: React.createElement(PrimaryPanes, {
+          horizontal,
+        }),
+        endPanel: this.renderEditorPane(),
+      }),
+      endPanelControl: true,
+      endPanel: React.createElement(SecondaryPanes, {
+        horizontal,
+      }),
+      endPanelCollapsed: endPanelCollapsed,
+    });
   };
 
   render() {
     const { quickOpenEnabled } = this.props;
-    return (
-      <div className="debugger">
-        <AppErrorBoundary
-          componentName="Debugger"
-          panel={L10N.getStr("ToolboxDebugger.label")}
-        >
-          <A11yIntention>
-            {this.renderLayout()}
-            {quickOpenEnabled === true && (
-              <QuickOpenModal
-                shortcutsModalEnabled={this.state.shortcutsModalEnabled}
-                toggleShortcutsModal={() => this.toggleShortcutsModal()}
-              />
-            )}
-            <ShortcutsModal
-              enabled={this.state.shortcutsModalEnabled}
-              handleClose={() => this.toggleShortcutsModal()}
-            />
-          </A11yIntention>
-        </AppErrorBoundary>
-      </div>
+    return div(
+      {
+        className: "debugger",
+      },
+      React.createElement(
+        AppErrorBoundary,
+        {
+          componentName: "Debugger",
+          panel: L10N.getStr("ToolboxDebugger.label"),
+        },
+        React.createElement(
+          A11yIntention,
+          {},
+          this.renderLayout(),
+          quickOpenEnabled === true &&
+            React.createElement(QuickOpenModal, {
+              shortcutsModalEnabled: this.state.shortcutsModalEnabled,
+              toggleShortcutsModal: () => this.toggleShortcutsModal(),
+            }),
+          React.createElement(ShortcutsModal, {
+            enabled: this.state.shortcutsModalEnabled,
+            handleClose: () => this.toggleShortcutsModal(),
+          })
+        )
+      )
     );
   }
 }
