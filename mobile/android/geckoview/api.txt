@@ -1512,9 +1512,10 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor public AccountSelectorPrompt(@NonNull String, @NonNull GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Account[], GeckoSession.PromptDelegate.BasePrompt.Observer);
+    ctor public AccountSelectorPrompt(@NonNull String, @NonNull GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Account[], @NonNull GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Provider, GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull int);
     field @NonNull public final GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Account[] accounts;
+    field @NonNull public final GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Provider provider;
   }
 
   public static class GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Account {
@@ -1525,11 +1526,18 @@ package org.mozilla.geckoview {
     field @NonNull public final String name;
   }
 
+  public static class GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Provider {
+    ctor public Provider(@NonNull String, @NonNull String, @Nullable String);
+    field @NonNull public final String domain;
+    field @Nullable public final String icon;
+    field @NonNull public final String name;
+  }
+
   public static class GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.ProviderAccounts {
-    ctor public ProviderAccounts(int, @Nullable String, @NonNull GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Account[]);
+    ctor public ProviderAccounts(int, @Nullable GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Provider, @NonNull GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Account[]);
     field @NonNull public final GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Account[] accounts;
     field public final int id;
-    field @Nullable public final String provider;
+    field @Nullable public final GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Provider provider;
   }
 
   public static class GeckoSession.PromptDelegate.IdentityCredential.PrivacyPolicyPrompt extends GeckoSession.PromptDelegate.BasePrompt {
@@ -1549,7 +1557,8 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt.Provider {
-    ctor public Provider(int, @NonNull String, @Nullable String);
+    ctor public Provider(int, @NonNull String, @Nullable String, @NonNull String);
+    field @NonNull public final String domain;
     field @Nullable public final String icon;
     field public final int id;
     field @NonNull public final String name;
