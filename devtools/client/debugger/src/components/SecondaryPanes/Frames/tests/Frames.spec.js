@@ -18,9 +18,14 @@ function render(overrides = {}) {
   };
 
   const props = { ...defaultProps, ...overrides };
-  const component = shallow(<Frames.WrappedComponent {...props} />, {
-    context: { l10n: L10N },
-  });
+  const component = shallow(
+    React.createElement(Frames.WrappedComponent, props),
+    {
+      context: {
+        l10n: L10N,
+      },
+    }
+  );
 
   return component;
 }

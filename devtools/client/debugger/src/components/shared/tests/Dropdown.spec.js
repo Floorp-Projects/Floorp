@@ -8,7 +8,12 @@ import { shallow } from "enzyme";
 import Dropdown from "../Dropdown";
 
 describe("Dropdown", () => {
-  const wrapper = shallow(<Dropdown panel={<div />} icon="✅" />);
+  const wrapper = shallow(
+    React.createElement(Dropdown, {
+      panel: React.createElement("div", null),
+      icon: "✅",
+    })
+  );
   it("render", () => expect(wrapper).toMatchSnapshot());
   wrapper.find(".dropdown").simulate("click");
   it("handle toggleDropdown", () =>

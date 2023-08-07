@@ -7,7 +7,11 @@ import { shallow } from "enzyme";
 import PreviewFunction from "../PreviewFunction";
 
 function render(props) {
-  return shallow(<PreviewFunction {...props} />, { context: { l10n: L10N } });
+  return shallow(React.createElement(PreviewFunction, props), {
+    context: {
+      l10n: L10N,
+    },
+  });
 }
 
 describe("PreviewFunction", () => {

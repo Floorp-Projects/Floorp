@@ -12,27 +12,31 @@ describe("Accordion", () => {
     {
       header: "Test Accordion Item 1",
       className: "accordion-item-1",
-      component: <div />,
+      component: React.createElement("div", null),
       opened: false,
       onToggle: jest.fn(),
     },
     {
       header: "Test Accordion Item 2",
       className: "accordion-item-2",
-      component: <div />,
-      buttons: <button />,
+      component: React.createElement("div", null),
+      buttons: React.createElement("button", null),
       opened: false,
       onToggle: jest.fn(),
     },
     {
       header: "Test Accordion Item 3",
       className: "accordion-item-3",
-      component: <div />,
+      component: React.createElement("div", null),
       opened: true,
       onToggle: jest.fn(),
     },
   ];
-  const wrapper = shallow(<Accordion items={testItems} />);
+  const wrapper = shallow(
+    React.createElement(Accordion, {
+      items: testItems,
+    })
+  );
   it("basic render", () => expect(wrapper).toMatchSnapshot());
   wrapper.find(".accordion-item-1 ._header").simulate("click");
   it("handleClick and onToggle", () =>

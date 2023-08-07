@@ -16,23 +16,23 @@ describe("SearchInput", () => {
     ui: { mutableSearchOptions: { "foo-search": {} } },
   });
   const wrapper = shallow(
-    <SearchInput
-      store={store}
-      query=""
-      count={5}
-      placeholder="A placeholder"
-      summaryMsg="So many results"
-      showErrorEmoji={false}
-      isLoading={false}
-      onChange={() => {}}
-      onKeyDown={() => {}}
-      searchKey="foo-search"
-      showSearchModifiers={false}
-      showExcludePatterns={false}
-      showClose={true}
-      handleClose={jest.fn()}
-      setSearchOptions={jest.fn()}
-    />
+    React.createElement(SearchInput, {
+      store: store,
+      query: "",
+      count: 5,
+      placeholder: "A placeholder",
+      summaryMsg: "So many results",
+      showErrorEmoji: false,
+      isLoading: false,
+      onChange: () => {},
+      onKeyDown: () => {},
+      searchKey: "foo-search",
+      showSearchModifiers: false,
+      showExcludePatterns: false,
+      showClose: true,
+      handleClose: jest.fn(),
+      setSearchOptions: jest.fn(),
+    })
   ).dive();
 
   it("renders", () => expect(wrapper).toMatchSnapshot());

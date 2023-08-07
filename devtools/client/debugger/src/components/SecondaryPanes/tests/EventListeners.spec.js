@@ -37,7 +37,9 @@ function generateDefaults(overrides = {}) {
 
 function render(overrides = {}) {
   const props = generateDefaults(overrides);
-  const component = shallow(<EventListeners.WrappedComponent {...props} />);
+  const component = shallow(
+    React.createElement(EventListeners.WrappedComponent, props)
+  );
   return { component, props };
 }
 

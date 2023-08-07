@@ -57,7 +57,7 @@ function render(log, line, column, condition, logValue, overrides = {}) {
     logValue
   );
   const props = { ...defaults, ...overrides };
-  const wrapper = mount(<ConditionalPanel {...props} />);
+  const wrapper = mount(React.createElement(ConditionalPanel, props));
   return { wrapper, props };
 }
 

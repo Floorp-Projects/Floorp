@@ -46,7 +46,7 @@ function generateDefaultState(propsOverride) {
 function renderXHRBreakpointsComponent(propsOverride) {
   const props = generateDefaultState(propsOverride);
   const xhrBreakpointsComponent = mount(
-    <XHRBreakpoints.WrappedComponent {...props} />
+    React.createElement(XHRBreakpoints.WrappedComponent, props)
   );
   return xhrBreakpointsComponent;
 }

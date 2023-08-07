@@ -8,9 +8,11 @@ import A11yIntention from "../A11yIntention";
 
 function render() {
   return shallow(
-    <A11yIntention>
-      <span>hello world</span>
-    </A11yIntention>
+    React.createElement(
+      A11yIntention,
+      null,
+      React.createElement("span", null, "hello world")
+    )
   );
 }
 

@@ -52,9 +52,12 @@ function render(overrides = {}) {
   const doc = createMockDocument(clear);
   setDocument("foo", doc);
 
-  const component = shallow(<DebugLine.WrappedComponent {...props} />, {
-    lifecycleExperimental: true,
-  });
+  const component = shallow(
+    React.createElement(DebugLine.WrappedComponent, props),
+    {
+      lifecycleExperimental: true,
+    }
+  );
   return { component, props, clear, editor, doc };
 }
 

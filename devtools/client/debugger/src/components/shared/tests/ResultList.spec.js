@@ -29,19 +29,18 @@ const payload = {
 
 describe("Result list", () => {
   it("should call onClick function", () => {
-    const wrapper = shallow(<ResultList {...payload} />);
-
+    const wrapper = shallow(React.createElement(ResultList, payload));
     wrapper.childAt(selectedIndex).simulate("click");
     expect(selectItem).toHaveBeenCalled();
   });
 
   it("should render the component", () => {
-    const wrapper = shallow(<ResultList {...payload} />);
+    const wrapper = shallow(React.createElement(ResultList, payload));
     expect(wrapper).toMatchSnapshot();
   });
 
   it("selected index should have 'selected class'", () => {
-    const wrapper = shallow(<ResultList {...payload} />);
+    const wrapper = shallow(React.createElement(ResultList, payload));
     const childHasClass = wrapper.childAt(selectedIndex).hasClass("selected");
 
     expect(childHasClass).toEqual(true);

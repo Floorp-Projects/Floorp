@@ -35,7 +35,9 @@ function generateDefaults(overrides) {
 
 function render(overrides = {}) {
   const props = generateDefaults(overrides);
-  const component = shallow(<Expressions.WrappedComponent {...props} />);
+  const component = shallow(
+    React.createElement(Expressions.WrappedComponent, props)
+  );
   return { component, props };
 }
 

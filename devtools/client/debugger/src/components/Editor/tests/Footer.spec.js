@@ -42,9 +42,12 @@ function render(overrides = {}, position = { line: 0, column: 0 }) {
   const doc = createMockDocument(clear, position);
   setDocument(props.selectedSource.id, doc);
 
-  const component = shallow(<SourceFooter.WrappedComponent {...props} />, {
-    lifecycleExperimental: true,
-  });
+  const component = shallow(
+    React.createElement(SourceFooter.WrappedComponent, props),
+    {
+      lifecycleExperimental: true,
+    }
+  );
   return { component, props, clear, doc };
 }
 

@@ -22,7 +22,9 @@ describe("CommandBar", () => {
     // the shortcuts.on function
     const context = { shortcuts: { on: jest.fn() } };
 
-    shallow(<CommandBar.WrappedComponent {...props} />, { context });
+    shallow(React.createElement(CommandBar.WrappedComponent, props), {
+      context,
+    });
 
     // get the keyboard event listeners recorded from the "on" spy.
     // this will be an array where each item is itself a two item array
@@ -55,7 +57,9 @@ describe("CommandBar", () => {
     // the shortcuts.on function
     const context = { shortcuts: { on: jest.fn() } };
 
-    shallow(<CommandBar.WrappedComponent {...props} />, { context });
+    shallow(React.createElement(CommandBar.WrappedComponent, props), {
+      context,
+    });
 
     // get the keyboard event listeners recorded from the "on" spy.
     // this will be an array where each item is itself a two item array
