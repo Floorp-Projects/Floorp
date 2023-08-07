@@ -24,16 +24,16 @@
 
 extern crate proc_macro;
 use proc_macro::TokenStream;
+use proc_macro2::Span;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
+use syn::parenthesized;
+use syn::parse::{self, Parse, ParseStream};
 use syn::parse_macro_input;
+use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
-use syn::AttributeArgs;
 use syn::DeriveInput;
-use syn::Lit;
-use syn::Meta;
-use syn::NestedMeta;
-
+use syn::{Ident, LitStr, Path, Token};
 #[cfg(test)]
 mod tests;
 
@@ -92,12 +92,172 @@ mod tests;
 /// implement it on the markers.
 pub fn data_struct(attr: TokenStream, item: TokenStream) -> TokenStream {
     TokenStream::from(data_struct_impl(
-        parse_macro_input!(attr as AttributeArgs),
+        parse_macro_input!(attr as DataStructArgs),
         parse_macro_input!(item as DeriveInput),
     ))
 }
 
-fn data_struct_impl(attr: AttributeArgs, input: DeriveInput) -> TokenStream2 {
+pub(crate) struct DataStructArgs {
+    args: Punctuated<DataStructArg, Token![,]>,
+}
+
+impl Parse for DataStructArgs {
+    fn parse(input: ParseStream<'_>) -> parse::Result<Self> {
+        let args = input.parse_terminated(DataStructArg::parse, Token![,])?;
+        Ok(Self { args })
+    }
+}
+struct DataStructArg {
+    marker_name: Path,
+    key_lit: Option<LitStr>,
+    fallback_by: Option<LitStr>,
+    extension_key: Option<LitStr>,
+    fallback_supplement: Option<LitStr>,
+}
+
+impl DataStructArg {
+    fn new(marker_name: Path) -> Self {
+        Self {
+            marker_name,
+            key_lit: None,
+            fallback_by: None,
+            extension_key: None,
+            fallback_supplement: None,
+        }
+    }
+}
+
+impl Parse for DataStructArg {
+    fn parse(input: ParseStream<'_>) -> parse::Result<Self> {
+        let path: Path = input.parse()?;
+
+        fn at_most_one_option<T>(
+            o: &mut Option<T>,
+            new: T,
+            name: &str,
+            span: Span,
+        ) -> parse::Result<()> {
+            if o.replace(new).is_some() {
+                Err(parse::Error::new(
+                    span,
+                    format!("marker() cannot contain multiple {name}s"),
+                ))
+            } else {
+                Ok(())
+            }
+        }
+
+        if path.is_ident("marker") {
+            let content;
+            let paren = parenthesized!(content in input);
+            let mut marker_name: Option<Path> = None;
+            let mut key_lit: Option<LitStr> = None;
+            let mut fallback_by: Option<LitStr> = None;
+            let mut extension_key: Option<LitStr> = None;
+            let mut fallback_supplement: Option<LitStr> = None;
+            let punct = content.parse_terminated(DataStructMarkerArg::parse, Token![,])?;
+
+            for entry in punct.into_iter() {
+                match entry {
+                    DataStructMarkerArg::Path(path) => {
+                        at_most_one_option(&mut marker_name, path, "marker", input.span())?;
+                    }
+                    DataStructMarkerArg::NameValue(name, value) => {
+                        if name == "fallback_by" {
+                            at_most_one_option(
+                                &mut fallback_by,
+                                value,
+                                "fallback_by",
+                                paren.span.join(),
+                            )?;
+                        } else if name == "extension_key" {
+                            at_most_one_option(
+                                &mut extension_key,
+                                value,
+                                "extension_key",
+                                paren.span.join(),
+                            )?;
+                        } else if name == "fallback_supplement" {
+                            at_most_one_option(
+                                &mut fallback_supplement,
+                                value,
+                                "fallback_supplement",
+                                paren.span.join(),
+                            )?;
+                        } else {
+                            return Err(parse::Error::new(
+                                name.span(),
+                                format!("unknown option {name} in marker()"),
+                            ));
+                        }
+                    }
+                    DataStructMarkerArg::Lit(lit) => {
+                        at_most_one_option(&mut key_lit, lit, "literal key", input.span())?;
+                    }
+                }
+            }
+            let marker_name = if let Some(marker_name) = marker_name {
+                marker_name
+            } else {
+                return Err(parse::Error::new(
+                    input.span(),
+                    "marker() must contain a marker!",
+                ));
+            };
+
+            Ok(Self {
+                marker_name,
+                key_lit,
+                fallback_by,
+                extension_key,
+                fallback_supplement,
+            })
+        } else {
+            let mut this = DataStructArg::new(path);
+            let lookahead = input.lookahead1();
+            if lookahead.peek(Token![=]) {
+                let _t: Token![=] = input.parse()?;
+                let lit: LitStr = input.parse()?;
+                this.key_lit = Some(lit);
+                Ok(this)
+            } else {
+                Ok(this)
+            }
+        }
+    }
+}
+
+/// A single argument to `marker()` in `#[data_struct(..., marker(...), ...)]
+enum DataStructMarkerArg {
+    Path(Path),
+    NameValue(Ident, LitStr),
+    Lit(LitStr),
+}
+impl Parse for DataStructMarkerArg {
+    fn parse(input: ParseStream<'_>) -> parse::Result<Self> {
+        let lookahead = input.lookahead1();
+        if lookahead.peek(LitStr) {
+            Ok(DataStructMarkerArg::Lit(input.parse()?))
+        } else {
+            let path: Path = input.parse()?;
+            let lookahead = input.lookahead1();
+            if lookahead.peek(Token![=]) {
+                let _tok: Token![=] = input.parse()?;
+                let ident = path.get_ident().ok_or_else(|| {
+                    parse::Error::new(path.span(), "Expected identifier before `=`, found path")
+                })?;
+                Ok(DataStructMarkerArg::NameValue(
+                    ident.clone(),
+                    input.parse()?,
+                ))
+            } else {
+                Ok(DataStructMarkerArg::Path(path))
+            }
+        }
+    }
+}
+
+fn data_struct_impl(attr: DataStructArgs, input: DeriveInput) -> TokenStream2 {
     if input.generics.type_params().count() > 0 {
         return syn::Error::new(
             input.generics.span(),
@@ -126,7 +286,7 @@ fn data_struct_impl(attr: AttributeArgs, input: DeriveInput) -> TokenStream2 {
     let bake_derive = input
         .attrs
         .iter()
-        .find(|a| a.path.is_ident("databake"))
+        .find(|a| a.path().is_ident("databake"))
         .map(|a| {
             quote! {
                 #[derive(databake::Bake)]
@@ -137,74 +297,22 @@ fn data_struct_impl(attr: AttributeArgs, input: DeriveInput) -> TokenStream2 {
 
     let mut result = TokenStream2::new();
 
-    for single_attr in attr.into_iter() {
-        let mut marker_name: Option<syn::Path> = None;
-        let mut key_lit: Option<syn::LitStr> = None;
-        let mut fallback_by: Option<syn::LitStr> = None;
-        let mut extension_key: Option<syn::LitStr> = None;
-        let mut fallback_supplement: Option<syn::LitStr> = None;
+    for single_attr in attr.args.into_iter() {
+        let DataStructArg {
+            marker_name,
+            key_lit,
+            fallback_by,
+            extension_key,
+            fallback_supplement,
+        } = single_attr;
 
-        match single_attr {
-            NestedMeta::Meta(Meta::List(meta_list)) => {
-                match meta_list.path.get_ident() {
-                    Some(ident) if ident.to_string().as_str() == "marker" => (),
-                    _ => panic!("Meta list must be `marker(...)`"),
-                }
-                for inner_meta in meta_list.nested.into_iter() {
-                    match inner_meta {
-                        NestedMeta::Meta(Meta::Path(path)) => {
-                            marker_name = Some(path);
-                        }
-                        NestedMeta::Lit(Lit::Str(lit_str)) => {
-                            key_lit = Some(lit_str);
-                        }
-                        NestedMeta::Meta(Meta::NameValue(name_value)) => {
-                            let lit_str = match name_value.lit {
-                                Lit::Str(lit_str) => lit_str,
-                                _ => panic!("Values in marker() must be strings"),
-                            };
-                            let name_ident_str = match name_value.path.get_ident() {
-                                Some(ident) => ident.to_string(),
-                                None => panic!("Names in marker() must be identifiers"),
-                            };
-                            match name_ident_str.as_str() {
-                                "fallback_by" => fallback_by = Some(lit_str),
-                                "extension_key" => extension_key = Some(lit_str),
-                                "fallback_supplement" => fallback_supplement = Some(lit_str),
-                                _ => panic!("Invalid argument name in marker()"),
-                            }
-                        }
-                        _ => panic!("Invalid argument in marker()"),
-                    }
-                }
-            }
-            NestedMeta::Meta(Meta::NameValue(name_value)) => {
-                marker_name = Some(name_value.path);
-                match name_value.lit {
-                    syn::Lit::Str(lit_str) => key_lit = Some(lit_str),
-                    _ => panic!("Key must be a string"),
-                };
-            }
-            NestedMeta::Meta(Meta::Path(path)) => {
-                marker_name = Some(path);
-            }
-            _ => {
-                panic!("Invalid attribute to #[data_struct]")
-            }
-        }
-
-        let marker_name = match marker_name {
-            Some(path) => path,
-            None => panic!("#[data_struct] arguments must include a marker name"),
-        };
-
-        let docs = if let Some(key_lit) = &key_lit {
-            let fallback_by_docs_str = match &fallback_by {
-                Some(fallback_by) => fallback_by.value(),
+        let docs = if let Some(ref key_lit) = key_lit {
+            let fallback_by_docs_str = match fallback_by {
+                Some(ref fallback_by) => fallback_by.value(),
                 None => "language (default)".to_string(),
             };
-            let extension_key_docs_str = match &extension_key {
-                Some(extension_key) => extension_key.value(),
+            let extension_key_docs_str = match extension_key {
+                Some(ref extension_key) => extension_key.value(),
                 None => "none (default)".to_string(),
             };
             format!("Marker type for [`{}`]: \"{}\"\n\n- Fallback priority: {}\n- Extension keyword: {}", name, key_lit.value(), fallback_by_docs_str, extension_key_docs_str)
@@ -221,7 +329,7 @@ fn data_struct_impl(attr: AttributeArgs, input: DeriveInput) -> TokenStream2 {
             }
         ));
 
-        if let Some(key_lit) = &key_lit {
+        if let Some(key_lit) = key_lit {
             let key_str = key_lit.value();
             let fallback_by_expr = if let Some(fallback_by_lit) = fallback_by {
                 match fallback_by_lit.value().as_str() {

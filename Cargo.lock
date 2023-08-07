@@ -2666,12 +2666,11 @@ dependencies = [
 [[package]]
 name = "icu_provider_macros"
 version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd8b728b9421e93eff1d9f8681101b78fa745e0748c95c655c83f337044a7e10"
+source = "git+https://github.com/unicode-org/icu4x?rev=14e9a3a9857be74582abe2dfa7ab799c5eaac873#14e9a3a9857be74582abe2dfa7ab799c5eaac873"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 1.0.107",
+ "syn",
 ]
 
 [[package]]

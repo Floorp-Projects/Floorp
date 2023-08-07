@@ -5,16 +5,9 @@
 use crate::data_struct_impl;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{DeriveInput, NestedMeta};
 
-fn check(attr: Vec<TokenStream2>, item: TokenStream2, expected: TokenStream2) {
-    let actual = data_struct_impl(
-        attr.into_iter()
-            .map(syn::parse2)
-            .collect::<syn::parse::Result<Vec<NestedMeta>>>()
-            .unwrap(),
-        syn::parse2::<DeriveInput>(item).unwrap(),
-    );
+fn check(attr: TokenStream2, item: TokenStream2, expected: TokenStream2) {
+    let actual = data_struct_impl(syn::parse2(attr).unwrap(), syn::parse2(item).unwrap());
     assert_eq!(expected.to_string(), actual.to_string());
 }
 
@@ -23,7 +16,7 @@ fn check(attr: Vec<TokenStream2>, item: TokenStream2, expected: TokenStream2) {
 fn test_basic() {
     // #[data_struct]
     check(
-        vec![],
+        quote!(),
         quote!(
             pub struct FooV1;
         ),
@@ -38,7 +31,7 @@ fn test_basic() {
 fn test_data_marker() {
     // #[data_struct(FooV1Marker)]
     check(
-        vec![quote!(FooV1Marker)],
+        quote!(FooV1Marker),
         quote!(
             pub struct FooV1;
         ),
@@ -58,7 +51,7 @@ fn test_data_marker() {
 fn test_keyed_data_marker() {
     // #[data_struct(BarV1Marker = "demo/bar@1")]
     check(
-        vec![quote!(BarV1Marker = "demo/bar@1")],
+        quote!(BarV1Marker = "demo/bar@1"),
         quote!(
             pub struct FooV1;
         ),
@@ -87,10 +80,10 @@ fn test_keyed_data_marker() {
 fn test_multi_named_keyed_data_marker() {
     // #[data_struct(FooV1Marker, BarV1Marker = "demo/bar@1", BazV1Marker = "demo/baz@1")]
     check(
-        vec![
-            quote!(FooV1Marker),
-            quote!(BarV1Marker = "demo/bar@1"),
-            quote!(BazV1Marker = "demo/baz@1"),
+        quote![
+            FooV1Marker,
+            BarV1Marker = "demo/bar@1",
+            BazV1Marker = "demo/baz@1",
         ],
         quote!(
             pub struct FooV1<'data>;
@@ -138,7 +131,7 @@ fn test_multi_named_keyed_data_marker() {
 #[test]
 fn test_databake() {
     check(
-        vec![quote!(BarV1Marker = "demo/bar@1")],
+        quote!(BarV1Marker = "demo/bar@1"),
         quote!(
             #[databake(path = test::path)]
             pub struct FooV1;
@@ -171,15 +164,15 @@ fn test_databake() {
 fn test_attributes() {
     // #[data_struct(FooV1Marker, marker(BarV1Marker, "demo/bar@1", fallback_by = "region", extension_kw = "ca"))]
     check(
-        vec![
-            quote!(FooV1Marker),
-            quote!(marker(
+        quote![
+            FooV1Marker,
+            marker(
                 BarV1Marker,
                 "demo/bar@1",
                 fallback_by = "region",
                 extension_key = "ca",
                 fallback_supplement = "collation"
-            )),
+            ),
         ],
         quote!(
             pub struct FooV1<'data>;
