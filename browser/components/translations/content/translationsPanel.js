@@ -711,38 +711,28 @@ var TranslationsPanel = new (class {
       ".never-translate-language-menuitem"
     );
 
-    if (
-      !docLangTag ||
-      !isDocLangTagSupported ||
-      docLangTag === new Intl.Locale(Services.locale.appLocaleAsBCP47).language
-    ) {
-      for (const menuitem of alwaysTranslateMenuItems) {
-        menuitem.disabled = true;
-      }
-      for (const menuitem of neverTranslateMenuItems) {
-        menuitem.disabled = true;
-      }
-      return;
-    }
-
     const alwaysTranslateLanguage =
       TranslationsParent.shouldAlwaysTranslateLanguage(docLangTag);
     const neverTranslateLanguage =
       TranslationsParent.shouldNeverTranslateLanguage(docLangTag);
+    const shouldDisable =
+      !docLangTag ||
+      !isDocLangTagSupported ||
+      docLangTag === new Intl.Locale(Services.locale.appLocaleAsBCP47).language;
 
     for (const menuitem of alwaysTranslateMenuItems) {
       menuitem.setAttribute(
         "checked",
         alwaysTranslateLanguage ? "true" : "false"
       );
-      menuitem.disabled = false;
+      menuitem.disabled = shouldDisable;
     }
     for (const menuitem of neverTranslateMenuItems) {
       menuitem.setAttribute(
         "checked",
         neverTranslateLanguage ? "true" : "false"
       );
-      menuitem.disabled = false;
+      menuitem.disabled = shouldDisable;
     }
   }
 
