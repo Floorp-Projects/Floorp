@@ -98,6 +98,15 @@ if [[ $(uname -o) == "Msys" ]]; then
   python3 build/util/lastchange.py -o build/util/LASTCHANGE
 fi
 
+if [[ $(uname -s) == "Linux" ]] || [[ $(uname -s) == "Darwin" ]]; then
+  # Bug 1847210
+  # Modifications to how the dirname and depot_tools and other env variables
+  # change how cipd is setup for Mac and Linux.
+  # Easily resolved by just running the setup script.
+  source ./third_party/depot_tools/cipd_bin_setup.sh
+  cipd_bin_setup
+fi
+
 # now we can run hooks and fetch PGO + everything else
 gclient runhooks
 
