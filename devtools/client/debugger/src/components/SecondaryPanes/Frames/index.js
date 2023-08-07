@@ -45,6 +45,8 @@ class Frames extends Component {
       selectFrame: PropTypes.func.isRequired,
       selectLocation: PropTypes.func,
       selectedFrame: PropTypes.object,
+      showFrameContextMenu: PropTypes.func,
+      shouldDisplayOriginalLocation: PropTypes.bool,
     };
   }
 
@@ -106,39 +108,39 @@ class Frames extends Component {
     // We're not using a <ul> because it adds new lines before and after when
     // the user copies the trace. Needed for the console which has several
     // places where we don't want to have those new lines.
-    return (
-      <div role="list">
-        {framesOrGroups.map(frameOrGroup =>
-          frameOrGroup.id ? (
-            <FrameComponent
-              frame={frameOrGroup}
-              showFrameContextMenu={showFrameContextMenu}
-              selectFrame={selectFrame}
-              selectLocation={selectLocation}
-              selectedFrame={selectedFrame}
-              shouldDisplayOriginalLocation={shouldDisplayOriginalLocation}
-              key={String(frameOrGroup.id)}
-              displayFullUrl={displayFullUrl}
-              getFrameTitle={getFrameTitle}
-              disableContextMenu={disableContextMenu}
-              panel={panel}
-            />
-          ) : (
-            <Group
-              group={frameOrGroup}
-              showFrameContextMenu={showFrameContextMenu}
-              selectFrame={selectFrame}
-              selectLocation={selectLocation}
-              selectedFrame={selectedFrame}
-              key={frameOrGroup[0].id}
-              displayFullUrl={displayFullUrl}
-              getFrameTitle={getFrameTitle}
-              disableContextMenu={disableContextMenu}
-              panel={panel}
-            />
-          )
-        )}
-      </div>
+    return React.createElement(
+      "div",
+      {
+        role: "list",
+      },
+      framesOrGroups.map(frameOrGroup =>
+        frameOrGroup.id
+          ? React.createElement(FrameComponent, {
+              frame: frameOrGroup,
+              showFrameContextMenu: showFrameContextMenu,
+              selectFrame: selectFrame,
+              selectLocation: selectLocation,
+              selectedFrame: selectedFrame,
+              shouldDisplayOriginalLocation: shouldDisplayOriginalLocation,
+              key: String(frameOrGroup.id),
+              displayFullUrl: displayFullUrl,
+              getFrameTitle: getFrameTitle,
+              disableContextMenu: disableContextMenu,
+              panel: panel,
+            })
+          : React.createElement(Group, {
+              group: frameOrGroup,
+              showFrameContextMenu: showFrameContextMenu,
+              selectFrame: selectFrame,
+              selectLocation: selectLocation,
+              selectedFrame: selectedFrame,
+              key: frameOrGroup[0].id,
+              displayFullUrl: displayFullUrl,
+              getFrameTitle: getFrameTitle,
+              disableContextMenu: disableContextMenu,
+              panel: panel,
+            })
+      )
     );
   }
 
@@ -152,13 +154,19 @@ class Frames extends Component {
     if (frames.length <= NUM_FRAMES_SHOWN) {
       return null;
     }
-
-    return (
-      <div className="show-more-container">
-        <button className="show-more" onClick={this.toggleFramesDisplay}>
-          {buttonMessage}
-        </button>
-      </div>
+    return React.createElement(
+      "div",
+      {
+        className: "show-more-container",
+      },
+      React.createElement(
+        "button",
+        {
+          className: "show-more",
+          onClick: this.toggleFramesDisplay,
+        },
+        buttonMessage
+      )
     );
   }
 
@@ -166,20 +174,27 @@ class Frames extends Component {
     const { frames, disableFrameTruncate } = this.props;
 
     if (!frames) {
-      return (
-        <div className="pane frames">
-          <div className="pane-info empty">
-            {L10N.getStr("callStack.notPaused")}
-          </div>
-        </div>
+      return React.createElement(
+        "div",
+        {
+          className: "pane frames",
+        },
+        React.createElement(
+          "div",
+          {
+            className: "pane-info empty",
+          },
+          L10N.getStr("callStack.notPaused")
+        )
       );
     }
-
-    return (
-      <div className="pane frames">
-        {this.renderFrames(frames)}
-        {disableFrameTruncate ? null : this.renderToggleButton(frames)}
-      </div>
+    return React.createElement(
+      "div",
+      {
+        className: "pane frames",
+      },
+      this.renderFrames(frames),
+      disableFrameTruncate ? null : this.renderToggleButton(frames)
     );
   }
 }

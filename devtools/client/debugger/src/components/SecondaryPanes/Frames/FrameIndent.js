@@ -5,9 +5,13 @@
 import React from "react";
 
 export default function FrameIndent() {
-  return (
-    <span className="frame-indent clipboard-only">
-      &nbsp;&nbsp;&nbsp;&nbsp;
-    </span>
+  // \xA0 represents the non breakable space &nbsp;
+  const nonBreakableSpaces = "\xA0\xA0\xA0\xA0";
+  return React.createElement(
+    "span",
+    {
+      className: "frame-indent clipboard-only",
+    },
+    nonBreakableSpaces
   );
 }

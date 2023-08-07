@@ -37,7 +37,7 @@ exports[`XHR Breakpoints should render with 0 expressions passed from props 1`] 
         onClick={[Function]}
       >
         <input
-          checked=""
+          checked={false}
           onChange={[Function]}
           type="checkbox"
         />
@@ -233,7 +233,7 @@ exports[`XHR Breakpoints should render with 8 expressions passed from props 1`] 
         onClick={[Function]}
       >
         <input
-          checked=""
+          checked={false}
           onChange={[Function]}
           type="checkbox"
         />
