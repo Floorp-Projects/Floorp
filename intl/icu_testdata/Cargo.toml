@@ -1,0 +1,39 @@
+# This crate is replacement crates to use baked data provider in ICU4X's
+# c_capi crate.
+#
+# To generate baked data, run /intl/update-icu4x.sh
+
+[package]
+name = "icu_testdata"
+version = "1.2.0"
+authors = ["The ICU4X Project Developers"]
+edition = "2021"
+license = "MPL-2.0"
+categories = ["internationalization"]
+# Keep this in sync with other crates unless there are exceptions
+include = [
+    "src/**/*",
+    "Cargo.toml",
+    "data/**/*",
+]
+
+[package.metadata.docs.rs]
+all-features = true
+
+[dependencies]
+icu_provider = { version = "1.2.0" }
+icu_provider_adapters = { version = "1.2.0" }
+
+# databake deps
+icu_locid = { version = "1.2.0" }
+icu_collections = { version = "1.2.0" }
+icu_segmenter = { version = "1.2.1" }
+zerovec = { version = "0.9.4" }
+
+[dev-dependencies]
+criterion = "0.4"
+
+[features]
+default = []
+std = []
+icu_segmenter = []
