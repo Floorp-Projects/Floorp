@@ -30,7 +30,7 @@ interface HTMLScriptElement : HTMLElement {
   attribute DOMString referrerPolicy;
   [CEReactions, Throws]
   attribute DOMString text;
-  [CEReactions]
+  [Pref="network.fetchpriority.enabled", CEReactions]
   attribute DOMString fetchPriority;
 
   static boolean supports(DOMString type);
