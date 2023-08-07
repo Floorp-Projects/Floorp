@@ -1,0 +1,25 @@
+---
+source: core/src/hir/elision.rs
+expression: map
+---
+{
+    Static: [
+        "this.name",
+        "_s",
+    ],
+    NonStatic(
+        MethodLifetime(
+            0,
+        ),
+    ): [
+        "this.p_data",
+    ],
+    NonStatic(
+        MethodLifetime(
+            1,
+        ),
+    ): [
+        "this.q_data",
+        "this.inner.more_data",
+    ],
+}

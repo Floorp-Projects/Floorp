@@ -115,6 +115,11 @@ git = "https://github.com/mozilla/uniffi-rs.git"
 rev = "c0e64b839018728d8153ce1758d391b7782e2e21"
 replace-with = "vendored-sources"
 
+[source."git+https://github.com/rust-diplomat/diplomat?rev=8d125999893fedfdf30595e97334c21ec4b18da9"]
+git = "https://github.com/rust-diplomat/diplomat"
+rev = "8d125999893fedfdf30595e97334c21ec4b18da9"
+replace-with = "vendored-sources"
+
 [source."git+https://github.com/rust-minidump/minidump-writer.git?rev=a15bd5cab6a3de251c0c23264be14b977c0af09c"]
 git = "https://github.com/rust-minidump/minidump-writer.git"
 rev = "a15bd5cab6a3de251c0c23264be14b977c0af09c"
@@ -123,6 +128,11 @@ replace-with = "vendored-sources"
 [source."git+https://github.com/rust-minidump/rust-minidump?rev=87a29fba5e19cfae5ebf73a57ba31504a3872545"]
 git = "https://github.com/rust-minidump/rust-minidump"
 rev = "87a29fba5e19cfae5ebf73a57ba31504a3872545"
+replace-with = "vendored-sources"
+
+[source."git+https://github.com/unicode-org/icu4x?rev=14e9a3a9857be74582abe2dfa7ab799c5eaac873"]
+git = "https://github.com/unicode-org/icu4x"
+rev = "14e9a3a9857be74582abe2dfa7ab799c5eaac873"
 replace-with = "vendored-sources"
 
 
