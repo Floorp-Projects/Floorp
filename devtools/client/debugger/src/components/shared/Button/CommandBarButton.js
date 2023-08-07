@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React from "react";
+import { button } from "react-dom-factories";
 import PropTypes from "prop-types";
 
 import AccessibleImage from "../AccessibleImage";
@@ -19,31 +20,31 @@ export function debugBtn(
   disabled = false,
   ariaPressed = false
 ) {
-  return (
-    <CommandBarButton
-      className={classnames(type, className)}
-      disabled={disabled}
-      key={type}
-      onClick={onClick}
-      pressed={ariaPressed}
-      title={tooltip}
-    >
-      <AccessibleImage className={type} />
-    </CommandBarButton>
+  return React.createElement(
+    CommandBarButton,
+    {
+      className: classnames(type, className),
+      disabled: disabled,
+      key: type,
+      onClick: onClick,
+      pressed: ariaPressed,
+      title: tooltip,
+    },
+    React.createElement(AccessibleImage, {
+      className: type,
+    })
   );
 }
-
 const CommandBarButton = props => {
   const { children, className, pressed = false, ...rest } = props;
 
-  return (
-    <button
-      aria-pressed={pressed}
-      className={classnames("command-bar-button", className)}
-      {...rest}
-    >
-      {children}
-    </button>
+  return button(
+    {
+      "aria-pressed": pressed,
+      className: classnames("command-bar-button", className),
+      ...rest,
+    },
+    children
   );
 };
 

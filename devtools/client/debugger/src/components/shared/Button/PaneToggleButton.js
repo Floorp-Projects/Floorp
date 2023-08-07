@@ -40,20 +40,19 @@ class PaneToggleButton extends PureComponent {
 
   render() {
     const { position, collapsed, horizontal, handleClick } = this.props;
-
-    return (
-      <CommandBarButton
-        className={classnames("toggle-button", position, {
+    return React.createElement(
+      CommandBarButton,
+      {
+        className: classnames("toggle-button", position, {
           collapsed,
           vertical: !horizontal,
-        })}
-        onClick={() => handleClick(position, !collapsed)}
-        title={this.label(position, collapsed)}
-      >
-        <AccessibleImage
-          className={collapsed ? "pane-expand" : "pane-collapse"}
-        />
-      </CommandBarButton>
+        }),
+        onClick: () => handleClick(position, !collapsed),
+        title: this.label(position, collapsed),
+      },
+      React.createElement(AccessibleImage, {
+        className: collapsed ? "pane-expand" : "pane-collapse",
+      })
     );
   }
 }
