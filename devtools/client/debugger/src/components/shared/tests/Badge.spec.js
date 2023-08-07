@@ -9,5 +9,11 @@ import Badge from "../Badge";
 
 describe("Badge", () => {
   it("render", () =>
-    expect(shallow(<Badge badgeText={3} />)).toMatchSnapshot());
+    expect(
+      shallow(
+        React.createElement(Badge, {
+          badgeText: 3,
+        })
+      )
+    ).toMatchSnapshot());
 });

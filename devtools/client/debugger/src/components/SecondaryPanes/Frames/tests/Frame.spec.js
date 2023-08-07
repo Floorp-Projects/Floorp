@@ -33,7 +33,7 @@ function render(frameToSelect = {}, overrides = {}, propsOverrides = {}) {
   const selectedFrame = { ...frame, ...frameToSelect };
 
   const props = frameProperties(frame, selectedFrame, propsOverrides);
-  const component = shallow(<Frame {...props} />);
+  const component = shallow(React.createElement(Frame, props));
   return { component, props };
 }
 
@@ -66,7 +66,7 @@ describe("Frame", () => {
     const frame = makeMockFrame("1", source, undefined, 10, "renderFoo");
 
     const props = frameProperties(frame, null);
-    const component = mount(<Frame {...props} />);
+    const component = mount(React.createElement(Frame, props));
     expect(component.text()).toBe("    renderFoo foo-view.js:10");
   });
 
@@ -76,7 +76,7 @@ describe("Frame", () => {
     const frame = makeMockFrame("1", source, undefined, 10, "renderFoo");
 
     const props = frameProperties(frame, null, { displayFullUrl: true });
-    const component = mount(<Frame {...props} />);
+    const component = mount(React.createElement(Frame, props));
     expect(component.text()).toBe(`    renderFoo ${url}:10`);
   });
 
@@ -87,7 +87,9 @@ describe("Frame", () => {
     frame.asyncCause = "setTimeout handler";
 
     const props = frameProperties(frame);
-    const component = mount(<Frame {...props} />, { context: { l10n: L10N } });
+    const component = mount(React.createElement(Frame, props), {
+      context: { l10n: L10N },
+    });
     expect(component.find(".location-async-cause").text()).toBe(
       `    (Async: setTimeout handler)`
     );
@@ -101,7 +103,7 @@ describe("Frame", () => {
     const props = frameProperties(frame, null, {
       getFrameTitle: x => `Jump to ${x}`,
     });
-    const component = shallow(<Frame {...props} />);
+    const component = shallow(React.createElement(Frame, props));
     expect(component.prop("title")).toBe(`Jump to ${url}:10`);
     expect(component).toMatchSnapshot();
   });

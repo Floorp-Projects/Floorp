@@ -9,23 +9,37 @@ import { Modal } from "../Modal";
 
 describe("Modal", () => {
   it("renders", () => {
-    const wrapper = shallow(<Modal handleClose={() => {}} status="entering" />);
+    const wrapper = shallow(
+      React.createElement(Modal, {
+        handleClose: () => {},
+        status: "entering",
+      })
+    );
     expect(wrapper).toMatchSnapshot();
   });
 
   it("handles close modal click", () => {
     const handleCloseSpy = jest.fn();
     const wrapper = shallow(
-      <Modal handleClose={handleCloseSpy} status="entering" />
+      React.createElement(Modal, {
+        handleClose: handleCloseSpy,
+        status: "entering",
+      })
     );
     wrapper.find(".modal-wrapper").simulate("click");
     expect(handleCloseSpy).toHaveBeenCalled();
   });
 
   it("renders children", () => {
-    const children = <div className="aChild" />;
+    const children = React.createElement("div", {
+      className: "aChild",
+    });
     const wrapper = shallow(
-      <Modal children={children} handleClose={() => {}} status="entering" />
+      React.createElement(Modal, {
+        children: children,
+        handleClose: () => {},
+        status: "entering",
+      })
     );
     expect(wrapper.find(".aChild")).toHaveLength(1);
   });
@@ -33,18 +47,23 @@ describe("Modal", () => {
   it("passes additionalClass to child div class", () => {
     const additionalClass = "testAddon";
     const wrapper = shallow(
-      <Modal
-        additionalClass={additionalClass}
-        handleClose={() => {}}
-        status="entering"
-      />
+      React.createElement(Modal, {
+        additionalClass: additionalClass,
+        handleClose: () => {},
+        status: "entering",
+      })
     );
     expect(wrapper.find(`.modal-wrapper .${additionalClass}`)).toHaveLength(1);
   });
 
   it("passes status to child div class", () => {
     const status = "testStatus";
-    const wrapper = shallow(<Modal status={status} handleClose={() => {}} />);
+    const wrapper = shallow(
+      React.createElement(Modal, {
+        status: status,
+        handleClose: () => {},
+      })
+    );
     expect(wrapper.find(`.modal-wrapper .${status}`)).toHaveLength(1);
   });
 });

@@ -18,8 +18,7 @@ function render(overrides = {}) {
     setPrimaryPaneTab: jest.fn(),
     ...overrides,
   };
-  const component = shallow(<WelcomeBox {...props} />);
-
+  const component = shallow(React.createElement(WelcomeBox, props));
   return { component, props };
 }
 

@@ -10,14 +10,21 @@ describe("CloseButton", () => {
   it("renders with tooltip", () => {
     const tooltip = "testTooltip";
     const wrapper = shallow(
-      <CloseButton tooltip={tooltip} handleClick={() => {}} />
+      React.createElement(CloseButton, {
+        tooltip: tooltip,
+        handleClick: () => {},
+      })
     );
     expect(wrapper).toMatchSnapshot();
   });
 
   it("handles click event", () => {
     const handleClickSpy = jest.fn();
-    const wrapper = shallow(<CloseButton handleClick={handleClickSpy} />);
+    const wrapper = shallow(
+      React.createElement(CloseButton, {
+        handleClick: handleClickSpy,
+      })
+    );
     wrapper.simulate("click");
     expect(handleClickSpy).toHaveBeenCalled();
   });

@@ -10,12 +10,12 @@ import ExceptionOption from "../ExceptionOption";
 describe("ExceptionOption renders", () => {
   it("with values", () => {
     const component = shallow(
-      <ExceptionOption
-        label="testLabel"
-        isChecked={true}
-        onChange={() => null}
-        className="testClassName"
-      />
+      React.createElement(ExceptionOption, {
+        label: "testLabel",
+        isChecked: true,
+        onChange: () => null,
+        className: "testClassName",
+      })
     );
     expect(component).toMatchSnapshot();
   });

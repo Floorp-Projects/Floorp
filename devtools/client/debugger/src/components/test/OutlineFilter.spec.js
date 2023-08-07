@@ -16,7 +16,7 @@ function generateDefaults(overrides) {
 
 function render(overrides = {}) {
   const props = generateDefaults(overrides);
-  const component = shallow(<OutlineFilter {...props} />);
+  const component = shallow(React.createElement(OutlineFilter, props));
   const instance = component.instance();
   return { component, props, instance };
 }

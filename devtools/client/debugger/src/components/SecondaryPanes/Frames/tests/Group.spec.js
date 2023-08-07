@@ -25,7 +25,7 @@ function render(overrides = {}) {
   };
 
   const props = { ...defaultProps, ...overrides };
-  const component = shallow(<Group {...props} />, {
+  const component = shallow(React.createElement(Group, props), {
     context: { l10n: L10N },
   });
   return { component, props };
