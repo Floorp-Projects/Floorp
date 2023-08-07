@@ -18,7 +18,9 @@
     <p>I <input value="deceived you">, mom.</p>
     <script>
       "use strict";
-      window.EXPECTED = [
+      // eslint-disable-next-line no-unused-vars
+      function getExpected(useNewSegmenter) {
+        return [
         { style: "Bob Loblaw Lobs Law Bomb",
           paragraph: "Bob Loblaw Lobs Law Bomb",
           lines: ["Bob Loblaw Lobs Law Bomb",
@@ -1907,7 +1909,7 @@
           lines: ["Do not order the Skip's Scramble",
                   "Do not order the Skip's Scramble",
                   "Do not order the Skip's Scramble"],
-          words: [" ", "Skip'"],
+          words: useNewSegmenter ? [" ", "Skip's"] : [" ", "Skip'"],
           element: ["AXStaticText",
                     "Do not order the Skip's Scramble",
                     "Do not order the Skip's Scramble"] },
@@ -1916,7 +1918,7 @@
           lines: ["Do not order the Skip's Scramble",
                   "Do not order the Skip's Scramble",
                   "Do not order the Skip's Scramble"],
-          words: ["Skip'", "Skip'"],
+          words: useNewSegmenter ? ["Skip's", "Skip's"] : ["Skip'", "Skip'"],
           element: ["AXStaticText",
                     "Do not order the Skip's Scramble",
                     "Do not order the Skip's Scramble"] },
@@ -1925,7 +1927,7 @@
           lines: ["Do not order the Skip's Scramble",
                   "Do not order the Skip's Scramble",
                   "Do not order the Skip's Scramble"],
-          words: ["Skip'", "Skip'"],
+          words: useNewSegmenter ? ["Skip's", "Skip's"] : ["Skip'", "Skip'"],
           element: ["AXStaticText",
                     "Do not order the Skip's Scramble",
                     "Do not order the Skip's Scramble"] },
@@ -1934,7 +1936,7 @@
           lines: ["Do not order the Skip's Scramble",
                   "Do not order the Skip's Scramble",
                   "Do not order the Skip's Scramble"],
-          words: ["Skip'", "Skip'"],
+          words: useNewSegmenter ? ["Skip's", "Skip's"] : ["Skip'", "Skip'"],
           element: ["AXStaticText",
                     "Do not order the Skip's Scramble",
                     "Do not order the Skip's Scramble"] },
@@ -1943,7 +1945,7 @@
           lines: ["Do not order the Skip's Scramble",
                   "Do not order the Skip's Scramble",
                   "Do not order the Skip's Scramble"],
-          words: ["Skip'", "Skip'"],
+          words: useNewSegmenter ? ["Skip's", "Skip's"] : ["Skip'", "Skip'"],
           element: ["AXStaticText",
                     "Do not order the Skip's Scramble",
                     "Do not order the Skip's Scramble"] },
@@ -1952,7 +1954,7 @@
           lines: ["Do not order the Skip's Scramble",
                   "Do not order the Skip's Scramble",
                   "Do not order the Skip's Scramble"],
-          words: ["Skip'", "s"],
+          words: useNewSegmenter ? ["Skip's", "Skip's"] : ["Skip'", "s"],
           element: ["AXStaticText",
                     "Do not order the Skip's Scramble",
                     "Do not order the Skip's Scramble"] },
@@ -1961,7 +1963,7 @@
           lines: ["Do not order the Skip's Scramble",
                   "Do not order the Skip's Scramble",
                   "Do not order the Skip's Scramble"],
-          words: ["s", " "],
+          words: useNewSegmenter ? ["Skip's", " "] : ["s", " "],
           element: ["AXStaticText",
                     "Do not order the Skip's Scramble",
                     "Do not order the Skip's Scramble"] },
@@ -2419,6 +2421,7 @@
           lines: ["I deceived you, mom.", "I deceived you, mom.", "I deceived you, mom."],
           words: ["mom.", ""],
           element: ["AXStaticText", ", mom.", ", mom."] }];
+      }
     </script>
   </body>
 </html>

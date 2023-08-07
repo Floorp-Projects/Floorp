@@ -245,12 +245,33 @@ function testMarkerIntegrity(accDoc, expectedMarkerValues) {
   is(count, 0, "Iterated backward through all text markers");
 }
 
+// Run tests with old word segmenter
 addAccessibleTask("mac/doc_textmarker_test.html", async (browser, accDoc) => {
+  await SpecialPowers.pushPrefEnv({
+    set: [["intl.icu4x.segmenter.enabled", false]],
+  });
+
   const expectedValues = await SpecialPowers.spawn(browser, [], async () => {
-    return content.wrappedJSObject.EXPECTED;
+    return content.wrappedJSObject.getExpected(false);
   });
 
   testMarkerIntegrity(accDoc, expectedValues);
+
+  await SpecialPowers.popPrefEnv();
+});
+
+addAccessibleTask("mac/doc_textmarker_test.html", async (browser, accDoc) => {
+  await SpecialPowers.pushPrefEnv({
+    set: [["intl.icu4x.segmenter.enabled", true]],
+  });
+
+  const expectedValues = await SpecialPowers.spawn(browser, [], async () => {
+    return content.wrappedJSObject.getExpected(true);
+  });
+
+  testMarkerIntegrity(accDoc, expectedValues);
+
+  await SpecialPowers.popPrefEnv();
 });
 
 // Test text marker lesser-than operator
