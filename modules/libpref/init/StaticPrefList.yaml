@@ -12642,12 +12642,6 @@
   value: 5
   mirror: always
 
-  # If true, requests will be canceled if any of the response headers values has a NUL character
-- name: network.http.reject_NULs_in_response_header_values
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
   # If true, remove the resumption token when 0RTT failed.
 - name: network.http.remove_resumption_token_when_early_data_failed
   type: RelaxedAtomicBool

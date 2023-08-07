@@ -752,8 +752,6 @@ with modules["DOM"]:
     # https://html.spec.whatwg.org/multipage/origin.html#cross-origin-opener-policies
     errors["NS_ERROR_DOM_COOP_FAILED"] = FAILURE(1041)
 
-    errors["NS_ERROR_DOM_INVALID_HEADER_VALUE"] = FAILURE(1042)
-
     # May be used to indicate when e.g. setting a property value didn't
     # actually change the value, like for obj.foo = "bar"; obj.foo = "bar";
     # the second assignment throws NS_SUCCESS_DOM_NO_OPERATION.
