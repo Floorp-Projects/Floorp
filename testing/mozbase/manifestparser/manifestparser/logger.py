@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
+
 
 class Logger(object):
     """
@@ -17,7 +19,7 @@ class Logger(object):
     The test:
     `testing/mochitest/tests/python/test_mochitest_integration.py::test_output_testfile_in_dupe_manifests`
     creates two ManifestParser instances and runs them at the same
-    trippping over the condition (above) resulting in this exception:
+    tripping over the condition (above) resulting in this exception:
 
     [task 2023-08-02T17:16:41.636Z]   File "/builds/worker/checkouts/gecko/testing/mozbase/mozlog/mozlog/handlers/base.py", line 113, in __call__
     [task 2023-08-02T17:16:41.636Z]     self.stream.write(formatted)
@@ -25,6 +27,7 @@ class Logger(object):
     """
 
     logger = None
+    CI = False  # True if we are running in CI
 
     def __init__(self):
         "Lazily will create an instance of mozlog"
@@ -32,6 +35,10 @@ class Logger(object):
 
     def _initialize(self):
         "Creates an instance of mozlog, if needed"
+        if "TASK_ID" in os.environ:
+            Logger.CI = True  # We are running in CI
+        else:
+            Logger.CI = False
         if Logger.logger is None:
             component = "manifestparser"
             import mozlog
@@ -47,6 +54,14 @@ class Logger(object):
     def debug(self, *args, **kwargs):
         self._initialize()
         Logger.logger.debug(*args, **kwargs)
+
+    def debug_ci(self, *args, **kwargs):
+        "Log to INFO level in CI else DEBUG level"
+        self._initialize()
+        if Logger.CI:
+            Logger.logger.info(*args, **kwargs)
+        else:
+            Logger.logger.debug(*args, **kwargs)
 
     def error(self, *args, **kwargs):
         self._initialize()
