@@ -481,9 +481,7 @@ class SyncedTabsInView extends ViewPage {
         </card-container>`
       );
     } else {
-      renderArray.push(
-        html`<div class="cards-container">${this.generateCardContent()}</div>`
-      );
+      renderArray.push(this.generateCardContent());
     }
     return renderArray;
   }
