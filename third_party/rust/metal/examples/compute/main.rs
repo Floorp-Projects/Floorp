@@ -3,9 +3,13 @@ use objc::rc::autoreleasepool;
 use std::path::PathBuf;
 
 const NUM_SAMPLES: u64 = 2;
-const NUM_ELEMENTS: u64 = 64 * 64;
 
 fn main() {
+    let num_elements = std::env::args()
+        .nth(1)
+        .map(|s| s.parse::<u32>().unwrap())
+        .unwrap_or(64 * 64);
+
     autoreleasepool(|| {
         let device = Device::system_default().expect("No device found");
         let mut cpu_start = 0;
@@ -26,29 +30,29 @@ fn main() {
 
         let compute_pass_descriptor = ComputePassDescriptor::new();
         handle_compute_pass_sample_buffer_attachment(
-            &compute_pass_descriptor,
+            compute_pass_descriptor,
             &counter_sample_buffer,
         );
         let encoder =
-            command_buffer.compute_command_encoder_with_descriptor(&compute_pass_descriptor);
+            command_buffer.compute_command_encoder_with_descriptor(compute_pass_descriptor);
 
         let pipeline_state = create_pipeline_state(&device);
         encoder.set_compute_pipeline_state(&pipeline_state);
 
-        let (buffer, sum) = create_input_and_output_buffers(&device);
+        let (buffer, sum) = create_input_and_output_buffers(&device, num_elements);
         encoder.set_buffer(0, Some(&buffer), 0);
         encoder.set_buffer(1, Some(&sum), 0);
 
-        let width = 16;
+        let num_threads = pipeline_state.thread_execution_width();
 
         let thread_group_count = MTLSize {
-            width,
+            width: ((num_elements as NSUInteger + num_threads) / num_threads),
             height: 1,
             depth: 1,
         };
 
         let thread_group_size = MTLSize {
-            width: (NUM_ELEMENTS + width) / width,
+            width: num_threads,
             height: 1,
             depth: 1,
         };
@@ -56,7 +60,7 @@ fn main() {
         encoder.dispatch_thread_groups(thread_group_count, thread_group_size);
         encoder.end_encoding();
 
-        resolve_samples_into_buffer(&command_buffer, &counter_sample_buffer, &destination_buffer);
+        resolve_samples_into_buffer(command_buffer, &counter_sample_buffer, &destination_buffer);
 
         command_buffer.commit();
         command_buffer.wait_until_completed();
@@ -68,7 +72,7 @@ fn main() {
         println!("Compute shader sum: {}", unsafe { *ptr });
 
         unsafe {
-            assert_eq!(NUM_ELEMENTS as u32, *ptr);
+            assert_eq!(num_elements, *ptr);
         }
 
         handle_timestamps(&destination_buffer, cpu_start, cpu_end, gpu_start, gpu_end);
@@ -100,7 +104,7 @@ fn handle_compute_pass_sample_buffer_attachment(
         .object_at(0)
         .unwrap();
 
-    sample_buffer_attachment_descriptor.set_sample_buffer(&counter_sample_buffer);
+    sample_buffer_attachment_descriptor.set_sample_buffer(counter_sample_buffer);
     sample_buffer_attachment_descriptor.set_start_of_encoder_sample_index(0);
     sample_buffer_attachment_descriptor.set_end_of_encoder_sample_index(1);
 }
@@ -112,9 +116,9 @@ fn resolve_samples_into_buffer(
 ) {
     let blit_encoder = command_buffer.new_blit_command_encoder();
     blit_encoder.resolve_counters(
-        &counter_sample_buffer,
+        counter_sample_buffer,
         crate::NSRange::new(0_u64, NUM_SAMPLES),
-        &destination_buffer,
+        destination_buffer,
         0_u64,
     );
     blit_encoder.end_encoding();
@@ -152,15 +156,18 @@ fn create_counter_sample_buffer(device: &Device) -> CounterSampleBuffer {
     let timestamp_counter = counter_sets.iter().find(|cs| cs.name() == "timestamp");
 
     counter_sample_buffer_desc
-        .set_counter_set(&timestamp_counter.expect("No timestamp counter found"));
+        .set_counter_set(timestamp_counter.expect("No timestamp counter found"));
 
     device
         .new_counter_sample_buffer_with_descriptor(&counter_sample_buffer_desc)
         .unwrap()
 }
 
-fn create_input_and_output_buffers(device: &Device) -> (metal::Buffer, metal::Buffer) {
-    let data = [1u32; 64 * 64];
+fn create_input_and_output_buffers(
+    device: &Device,
+    num_elements: u32,
+) -> (metal::Buffer, metal::Buffer) {
+    let data = vec![1u32; num_elements as usize];
 
     let buffer = device.new_buffer_with_data(
         unsafe { std::mem::transmute(data.as_ptr()) },
@@ -183,6 +190,5 @@ fn create_input_and_output_buffers(device: &Device) -> (metal::Buffer, metal::Bu
 fn microseconds_between_begin(begin: u64, end: u64, gpu_time_span: u64, cpu_time_span: u64) -> f64 {
     let time_span = (end as f64) - (begin as f64);
     let nanoseconds = time_span / (gpu_time_span as f64) * (cpu_time_span as f64);
-    let microseconds = nanoseconds / 1000.0;
-    return microseconds;
+    nanoseconds / 1000.0
 }

@@ -125,13 +125,7 @@ impl ComputePipelineDescriptorRef {
     }
 
     pub fn thread_group_size_is_multiple_of_thread_execution_width(&self) -> bool {
-        unsafe {
-            match msg_send![self, threadGroupSizeIsMultipleOfThreadExecutionWidth] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, threadGroupSizeIsMultipleOfThreadExecutionWidth] }
     }
 
     pub fn set_thread_group_size_is_multiple_of_thread_execution_width(
@@ -158,13 +152,7 @@ impl ComputePipelineDescriptorRef {
 
     /// API_AVAILABLE(ios(13.0),macos(11.0));
     pub fn support_indirect_command_buffers(&self) -> bool {
-        unsafe {
-            match msg_send![self, supportIndirectCommandBuffers] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supportIndirectCommandBuffers] }
     }
 
     /// API_AVAILABLE(ios(13.0),macos(11.0));
@@ -174,13 +162,7 @@ impl ComputePipelineDescriptorRef {
 
     /// API_AVAILABLE(macos(11.0), ios(14.0));
     pub fn support_adding_binary_functions(&self) -> bool {
-        unsafe {
-            match msg_send![self, supportAddingBinaryFunctions] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supportAddingBinaryFunctions] }
     }
 
     /// API_AVAILABLE(macos(11.0), ios(14.0));
@@ -305,13 +287,7 @@ impl ComputePipelineStateRef {
 
     /// Only available on (ios(13.0), macos(11.0))
     pub fn support_indirect_command_buffers(&self) -> bool {
-        unsafe {
-            match msg_send![self, supportIndirectCommandBuffers] {
-                YES => true,
-                NO => false,
-                _ => unreachable!(),
-            }
-        }
+        unsafe { msg_send_bool![self, supportIndirectCommandBuffers] }
     }
 
     /// Only available on (macos(11.0), ios(14.0))

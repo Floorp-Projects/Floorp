@@ -306,6 +306,8 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
   if (aOptions.mPowerPreference.WasPassed()) {
     options.power_preference = static_cast<ffi::WGPUPowerPreference>(
         aOptions.mPowerPreference.Value());
+  } else {
+    options.power_preference = ffi::WGPUPowerPreference_LowPower;
   }
   options.force_fallback_adapter = aOptions.mForceFallbackAdapter;
 
