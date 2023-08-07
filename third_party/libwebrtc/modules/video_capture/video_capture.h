@@ -34,10 +34,6 @@ protected:
     virtual ~VideoInputFeedBack(){}
 };
 
-#if defined(ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
-  int32_t SetCaptureAndroidVM(JavaVM* javaVM);
-#endif
-
 class VideoCaptureModule : public rtc::RefCountInterface {
  public:
   // Interface for receiving information about available camera devices.
