@@ -76,13 +76,6 @@ int32_t VideoCaptureModuleV4L2::Init(const char* deviceUniqueIdUTF8) {
     memcpy(_deviceUniqueId, deviceUniqueIdUTF8, len + 1);
   }
 
-  int device_index;
-  if (sscanf(deviceUniqueIdUTF8,"fake_%d", &device_index) == 1)
-  {
-    _deviceId = device_index;
-    return 0;
-  }
-
   int fd;
   char device[32];
   bool found = false;
