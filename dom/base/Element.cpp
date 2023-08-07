@@ -1201,7 +1201,7 @@ bool Element::CanAttachShadowDOM() const {
    * If context object's local name is not
    *    a valid custom element name, "article", "aside", "blockquote",
    *    "body", "div", "footer", "h1", "h2", "h3", "h4", "h5", "h6",
-   *    "header", "main" "nav", "p", "section", or "span",
+   *    "header", "main" "nav", "p", "section", "search", or "span",
    *  return false.
    */
   nsAtom* nameAtom = NodeInfo()->NameAtom();
@@ -1215,7 +1215,8 @@ bool Element::CanAttachShadowDOM() const {
         nameAtom == nsGkAtoms::h5 || nameAtom == nsGkAtoms::h6 ||
         nameAtom == nsGkAtoms::header || nameAtom == nsGkAtoms::main ||
         nameAtom == nsGkAtoms::nav || nameAtom == nsGkAtoms::p ||
-        nameAtom == nsGkAtoms::section || nameAtom == nsGkAtoms::span)) {
+        nameAtom == nsGkAtoms::section || nameAtom == nsGkAtoms::search ||
+        nameAtom == nsGkAtoms::span)) {
     return false;
   }
 
