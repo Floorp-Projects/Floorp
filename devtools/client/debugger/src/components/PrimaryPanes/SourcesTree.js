@@ -3,7 +3,8 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Dependencies
-import React, { Component } from "react";
+import React, { Component, Fragment } from "react";
+import { div, button, span, footer } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 
@@ -216,10 +217,12 @@ class SourcesTree extends Component {
   }
 
   renderEmptyElement(message) {
-    return (
-      <div key="empty" className="no-sources-message">
-        {message}
-      </div>
+    return div(
+      {
+        key: "empty",
+        className: "no-sources-message",
+      },
+      message
     );
   }
 
@@ -293,37 +296,46 @@ class SourcesTree extends Component {
     if (!projectRootName) {
       return null;
     }
-
-    return (
-      <div key="root" className="sources-clear-root-container">
-        <button
-          className="sources-clear-root"
-          onClick={() => this.props.clearProjectDirectoryRoot()}
-          title={L10N.getStr("removeDirectoryRoot.label")}
-        >
-          <AccessibleImage className="home" />
-          <AccessibleImage className="breadcrumb" />
-          <span className="sources-clear-root-label">{projectRootName}</span>
-        </button>
-      </div>
+    return div(
+      {
+        key: "root",
+        className: "sources-clear-root-container",
+      },
+      button(
+        {
+          className: "sources-clear-root",
+          onClick: () => this.props.clearProjectDirectoryRoot(),
+          title: L10N.getStr("removeDirectoryRoot.label"),
+        },
+        React.createElement(AccessibleImage, {
+          className: "home",
+        }),
+        React.createElement(AccessibleImage, {
+          className: "breadcrumb",
+        }),
+        span(
+          {
+            className: "sources-clear-root-label",
+          },
+          projectRootName
+        )
+      )
     );
   }
 
   renderItem = (item, depth, focused, _, expanded) => {
     const { mainThreadHost } = this.props;
-    return (
-      <SourcesTreeItem
-        item={item}
-        depth={depth}
-        focused={focused}
-        autoExpand={shouldAutoExpand(item, mainThreadHost)}
-        expanded={expanded}
-        focusItem={this.onFocus}
-        selectSourceItem={this.selectSourceItem}
-        setExpanded={this.setExpanded}
-        getParent={this.getParent}
-      />
-    );
+    return React.createElement(SourcesTreeItem, {
+      item,
+      depth,
+      focused,
+      autoExpand: shouldAutoExpand(item, mainThreadHost),
+      expanded,
+      focusItem: this.onFocus,
+      selectSourceItem: this.selectSourceItem,
+      setExpanded: this.setExpanded,
+      getParent: this.getParent,
+    });
   };
 
   renderTree() {
@@ -350,38 +362,37 @@ class SourcesTree extends Component {
       renderItem: this.renderItem,
       preventBlur: true,
     };
-
-    return <Tree {...treeProps} />;
+    return React.createElement(Tree, treeProps);
   }
 
   renderPane(child) {
     const { projectRoot } = this.props;
-
-    return (
-      <div
-        key="pane"
-        className={classnames("sources-pane", {
+    return div(
+      {
+        key: "pane",
+        className: classnames("sources-pane", {
           "sources-list-custom-root": !!projectRoot,
-        })}
-      >
-        {child}
-      </div>
+        }),
+      },
+      child
     );
   }
 
   renderFooter() {
     if (this.props.hideIgnoredSources) {
-      return (
-        <footer className="source-list-footer">
-          {L10N.getStr("ignoredSourcesHidden")}
-          <button
-            className="devtools-togglebutton"
-            onClick={() => this.props.setHideOrShowIgnoredSources(false)}
-            title={L10N.getStr("showIgnoredSources.tooltip.label")}
-          >
-            {L10N.getStr("showIgnoredSources")}
-          </button>
-        </footer>
+      return footer(
+        {
+          className: "source-list-footer",
+        },
+        L10N.getStr("ignoredSourcesHidden"),
+        button(
+          {
+            className: "devtools-togglebutton",
+            onClick: () => this.props.setHideOrShowIgnoredSources(false),
+            title: L10N.getStr("showIgnoredSources.tooltip.label"),
+          },
+          L10N.getStr("showIgnoredSources")
+        )
       );
     }
     return null;
@@ -389,23 +400,22 @@ class SourcesTree extends Component {
 
   render() {
     const { projectRoot } = this.props;
-    return (
-      <div
-        key="pane"
-        className={classnames("sources-list", {
+    return div(
+      {
+        key: "pane",
+        className: classnames("sources-list", {
           "sources-list-custom-root": !!projectRoot,
-        })}
-      >
-        {this.isEmpty() ? (
-          this.renderEmptyElement(L10N.getStr("noSourcesText"))
-        ) : (
-          <>
-            {this.renderProjectRootHeader()}
-            {this.renderTree()}
-            {this.renderFooter()}
-          </>
-        )}
-      </div>
+        }),
+      },
+      this.isEmpty()
+        ? this.renderEmptyElement(L10N.getStr("noSourcesText"))
+        : React.createElement(
+            Fragment,
+            null,
+            this.renderProjectRootHeader(),
+            this.renderTree(),
+            this.renderFooter()
+          )
     );
   }
 }

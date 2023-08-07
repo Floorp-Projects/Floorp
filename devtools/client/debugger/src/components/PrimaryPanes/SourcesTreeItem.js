@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import { div, span } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 
@@ -72,11 +73,15 @@ class SourceTreeItem extends Component {
 
   renderItemArrow() {
     const { item, expanded } = this.props;
-    return item.type != "source" ? (
-      <AccessibleImage className={classnames("arrow", { expanded })} />
-    ) : (
-      <span className="img no-arrow" />
-    );
+    return item.type != "source"
+      ? React.createElement(AccessibleImage, {
+          className: classnames("arrow", {
+            expanded,
+          }),
+        })
+      : span({
+          className: "img no-arrow",
+        });
   }
 
   renderIcon(item) {
@@ -84,47 +89,55 @@ class SourceTreeItem extends Component {
       const icon = item.thread.targetType.includes("worker")
         ? "worker"
         : "window";
-      return <AccessibleImage className={classnames(icon)} />;
+      return React.createElement(AccessibleImage, {
+        className: classnames(icon),
+      });
     }
     if (item.type == "group") {
       if (item.groupName === "Webpack") {
-        return <AccessibleImage className="webpack" />;
+        return React.createElement(AccessibleImage, {
+          className: "webpack",
+        });
       } else if (item.groupName === "Angular") {
-        return <AccessibleImage className="angular" />;
+        return React.createElement(AccessibleImage, {
+          className: "angular",
+        });
       }
       // Check if the group relates to an extension.
       // This happens when a webextension injects a content script.
       if (item.isForExtensionSource) {
-        return <AccessibleImage className="extension" />;
+        return React.createElement(AccessibleImage, {
+          className: "extension",
+        });
       }
-
-      return <AccessibleImage className="globe-small" />;
+      return React.createElement(AccessibleImage, {
+        className: "globe-small",
+      });
     }
     if (item.type == "directory") {
-      return <AccessibleImage className="folder" />;
+      return React.createElement(AccessibleImage, {
+        className: "folder",
+      });
     }
     if (item.type == "source") {
       const { source, sourceActor } = item;
-      return (
-        <SourceIcon
-          location={createLocation({ source, sourceActor })}
-          modifier={icon => {
-            // In the SourceTree, extension files should use the file-extension based icon,
-            // whereas we use the extension icon in other Components (eg. source tabs and breakpoints pane).
-            if (icon === "extension") {
-              return (
-                sourceTypes[source.displayURL.fileExtension] || "javascript"
-              );
-            }
-            return icon + (this.props.isOverridden ? " override" : "");
-          }}
-        />
-      );
+      return React.createElement(SourceIcon, {
+        location: createLocation({
+          source,
+          sourceActor,
+        }),
+        modifier: icon => {
+          // In the SourceTree, extension files should use the file-extension based icon,
+          // whereas we use the extension icon in other Components (eg. source tabs and breakpoints pane).
+          if (icon === "extension") {
+            return sourceTypes[source.displayURL.fileExtension] || "javascript";
+          }
+          return icon + (this.props.isOverridden ? " override" : "");
+        },
+      });
     }
-
     return null;
   }
-
   renderItemName() {
     const { item } = this.props;
 
@@ -180,28 +193,34 @@ class SourceTreeItem extends Component {
     if (hideIgnoredSources && item.isBlackBoxed) {
       return null;
     }
-    const suffix = hasMatchingGeneratedSource ? (
-      <span className="suffix">{L10N.getStr("sourceFooter.mappedSuffix")}</span>
-    ) : null;
-
-    return (
-      <div
-        className={classnames("node", {
+    const suffix = hasMatchingGeneratedSource
+      ? span(
+          {
+            className: "suffix",
+          },
+          L10N.getStr("sourceFooter.mappedSuffix")
+        )
+      : null;
+    return div(
+      {
+        className: classnames("node", {
           focused,
           blackboxed: item.type == "source" && item.isBlackBoxed,
-        })}
-        key={item.path}
-        onClick={this.onClick}
-        onContextMenu={this.onContextMenu}
-        title={this.renderItemTooltip()}
-      >
-        {this.renderItemArrow()}
-        {this.renderIcon(item)}
-        <span className="label">
-          {this.renderItemName()}
-          {suffix}
-        </span>
-      </div>
+        }),
+        key: item.path,
+        onClick: this.onClick,
+        onContextMenu: this.onContextMenu,
+        title: this.renderItemTooltip(),
+      },
+      this.renderItemArrow(),
+      this.renderIcon(item),
+      span(
+        {
+          className: "label",
+        },
+        this.renderItemName(),
+        suffix
+      )
     );
   }
 }

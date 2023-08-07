@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import { div, span } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 import actions from "../../actions";
@@ -105,19 +106,31 @@ export class ProjectSearch extends Component {
   highlightMatches = lineMatch => {
     const { value, matchIndex, match } = lineMatch;
     const len = match.length;
-
-    return (
-      <span className="line-value">
-        <span className="line-match" key={0}>
-          {value.slice(0, matchIndex)}
-        </span>
-        <span className="query-match" key={1}>
-          {value.substr(matchIndex, len)}
-        </span>
-        <span className="line-match" key={2}>
-          {value.slice(matchIndex + len, value.length)}
-        </span>
-      </span>
+    return span(
+      {
+        className: "line-value",
+      },
+      span(
+        {
+          className: "line-match",
+          key: 0,
+        },
+        value.slice(0, matchIndex)
+      ),
+      span(
+        {
+          className: "query-match",
+          key: 1,
+        },
+        value.substr(matchIndex, len)
+      ),
+      span(
+        {
+          className: "line-match",
+          key: 2,
+        },
+        value.slice(matchIndex + len, value.length)
+      )
     );
   };
 
@@ -136,7 +149,9 @@ export class ProjectSearch extends Component {
   };
 
   onHistoryScroll = query => {
-    this.setState({ inputValue: query });
+    this.setState({
+      inputValue: query,
+    });
   };
 
   onEnterPress = () => {
@@ -151,7 +166,9 @@ export class ProjectSearch extends Component {
 
   onFocus = item => {
     if (this.state.focusedItem !== item) {
-      this.setState({ focusedItem: item });
+      this.setState({
+        focusedItem: item,
+      });
     }
   };
 
@@ -167,34 +184,54 @@ export class ProjectSearch extends Component {
   renderFile = (file, focused, expanded) => {
     const matchesLength = file.matches.length;
     const matches = ` (${matchesLength} match${matchesLength > 1 ? "es" : ""})`;
-    return (
-      <div
-        className={classnames("file-result", { focused })}
-        key={file.location.source.id}
-      >
-        <AccessibleImage className={classnames("arrow", { expanded })} />
-        <AccessibleImage className="file" />
-        <span className="file-path">
-          {file.location.source.url
-            ? getRelativePath(file.location.source.url)
-            : getFormattedSourceId(file.location.source.id)}
-        </span>
-        <span className="matches-summary">{matches}</span>
-      </div>
+    return div(
+      {
+        className: classnames("file-result", {
+          focused,
+        }),
+        key: file.location.source.id,
+      },
+      React.createElement(AccessibleImage, {
+        className: classnames("arrow", {
+          expanded,
+        }),
+      }),
+      React.createElement(AccessibleImage, {
+        className: "file",
+      }),
+      span(
+        {
+          className: "file-path",
+        },
+        file.location.source.url
+          ? getRelativePath(file.location.source.url)
+          : getFormattedSourceId(file.location.source.id)
+      ),
+      span(
+        {
+          className: "matches-summary",
+        },
+        matches
+      )
     );
   };
 
   renderMatch = (match, focused) => {
-    return (
-      <div
-        className={classnames("result", { focused })}
-        onClick={() => setTimeout(() => this.selectMatchItem(match), 50)}
-      >
-        <span className="line-number" key={match.location.line}>
-          {match.location.line}
-        </span>
-        {this.highlightMatches(match)}
-      </div>
+    return div(
+      {
+        className: classnames("result", {
+          focused,
+        }),
+        onClick: () => setTimeout(() => this.selectMatchItem(match), 50),
+      },
+      span(
+        {
+          className: "line-number",
+          key: match.location.line,
+        },
+        match.location.line
+      ),
+      this.highlightMatches(match)
     );
   };
 
@@ -211,41 +248,48 @@ export class ProjectSearch extends Component {
       return null;
     }
     if (results.length) {
-      return (
-        <Tree
-          getRoots={() => results}
-          getChildren={file => file.matches || []}
-          itemHeight={24}
-          autoExpandAll={true}
-          autoExpandDepth={1}
-          autoExpandNodeChildrenLimit={100}
-          getParent={item => null}
-          getPath={getFilePath}
-          renderItem={this.renderItem}
-          focused={this.state.focusedItem}
-          onFocus={this.onFocus}
-          isExpanded={item => {
-            return this.state.expanded.has(item);
-          }}
-          onExpand={item => {
-            const { expanded } = this.state;
-            expanded.add(item);
-            this.setState({ expanded });
-          }}
-          onCollapse={item => {
-            const { expanded } = this.state;
-            expanded.delete(item);
-            this.setState({ expanded });
-          }}
-          getKey={getFilePath}
-        />
-      );
+      return React.createElement(Tree, {
+        getRoots: () => results,
+        getChildren: file => file.matches || [],
+        itemHeight: 24,
+        autoExpandAll: true,
+        autoExpandDepth: 1,
+        autoExpandNodeChildrenLimit: 100,
+        getParent: item => null,
+        getPath: getFilePath,
+        renderItem: this.renderItem,
+        focused: this.state.focusedItem,
+        onFocus: this.onFocus,
+        isExpanded: item => {
+          return this.state.expanded.has(item);
+        },
+        onExpand: item => {
+          const { expanded } = this.state;
+          expanded.add(item);
+          this.setState({
+            expanded,
+          });
+        },
+        onCollapse: item => {
+          const { expanded } = this.state;
+          expanded.delete(item);
+          this.setState({
+            expanded,
+          });
+        },
+        getKey: getFilePath,
+      });
     }
     const msg =
       status === statusType.fetching
         ? L10N.getStr("loadingText")
         : L10N.getStr("projectTextSearch.noResults");
-    return <div className="no-result-msg absolute-center">{msg}</div>;
+    return div(
+      {
+        className: "no-result-msg absolute-center",
+      },
+      msg
+    );
   };
 
   renderSummary = () => {
@@ -263,45 +307,57 @@ export class ProjectSearch extends Component {
 
   renderInput() {
     const { status } = this.props;
-
-    return (
-      <SearchInput
-        query={this.state.inputValue}
-        count={this.getResultCount()}
-        placeholder={L10N.getStr("projectTextSearch.placeholder")}
-        size="small"
-        showErrorEmoji={this.shouldShowErrorEmoji()}
-        summaryMsg={this.renderSummary()}
-        isLoading={status === statusType.fetching}
-        onChange={this.inputOnChange}
-        onFocus={() => this.setState({ inputFocused: true })}
-        onBlur={() => this.setState({ inputFocused: false })}
-        onKeyDown={this.onKeyDown}
-        onHistoryScroll={this.onHistoryScroll}
-        showClose={false}
-        showExcludePatterns={true}
-        excludePatternsLabel={L10N.getStr(
-          "projectTextSearch.excludePatterns.label"
-        )}
-        excludePatternsPlaceholder={L10N.getStr(
-          "projectTextSearch.excludePatterns.placeholder"
-        )}
-        ref="searchInput"
-        showSearchModifiers={true}
-        searchKey={searchKeys.PROJECT_SEARCH}
-        onToggleSearchModifier={() => this.doSearch(this.state.inputValue)}
-      />
-    );
+    return React.createElement(SearchInput, {
+      query: this.state.inputValue,
+      count: this.getResultCount(),
+      placeholder: L10N.getStr("projectTextSearch.placeholder"),
+      size: "small",
+      showErrorEmoji: this.shouldShowErrorEmoji(),
+      summaryMsg: this.renderSummary(),
+      isLoading: status === statusType.fetching,
+      onChange: this.inputOnChange,
+      onFocus: () =>
+        this.setState({
+          inputFocused: true,
+        }),
+      onBlur: () =>
+        this.setState({
+          inputFocused: false,
+        }),
+      onKeyDown: this.onKeyDown,
+      onHistoryScroll: this.onHistoryScroll,
+      showClose: false,
+      showExcludePatterns: true,
+      excludePatternsLabel: L10N.getStr(
+        "projectTextSearch.excludePatterns.label"
+      ),
+      excludePatternsPlaceholder: L10N.getStr(
+        "projectTextSearch.excludePatterns.placeholder"
+      ),
+      ref: "searchInput",
+      showSearchModifiers: true,
+      searchKey: searchKeys.PROJECT_SEARCH,
+      onToggleSearchModifier: () => this.doSearch(this.state.inputValue),
+    });
   }
 
   render() {
-    return (
-      <div className="search-container">
-        <div className="project-text-search">
-          <div className="header">{this.renderInput()}</div>
-          {this.renderResults()}
-        </div>
-      </div>
+    return div(
+      {
+        className: "search-container",
+      },
+      div(
+        {
+          className: "project-text-search",
+        },
+        div(
+          {
+            className: "header",
+          },
+          this.renderInput()
+        ),
+        this.renderResults()
+      )
     );
   }
 }

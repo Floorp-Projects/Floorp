@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import { div, ul, li, span, h2, button } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 import { score as fuzzaldrinScore } from "fuzzaldrin-plus";
@@ -152,13 +153,20 @@ export class Outline extends Component {
     const placeholderMessage = this.props.selectedSource
       ? L10N.getStr("outline.noFunctions")
       : L10N.getStr("outline.noFileSelected");
-
-    return <div className="outline-pane-info">{placeholderMessage}</div>;
+    return div(
+      {
+        className: "outline-pane-info",
+      },
+      placeholderMessage
+    );
   }
 
   renderLoading() {
-    return (
-      <div className="outline-pane-info">{L10N.getStr("loadingText")}</div>
+    return div(
+      {
+        className: "outline-pane-info",
+      },
+      L10N.getStr("loadingText")
     );
   }
 
@@ -166,30 +174,46 @@ export class Outline extends Component {
     const { focusedItem } = this.state;
     const { name, location, parameterNames } = func;
     const isFocused = focusedItem === func;
-
-    return (
-      <li
-        key={`${name}:${location.start.line}:${location.start.column}`}
-        className={classnames("outline-list__element", { focused: isFocused })}
-        ref={el => {
+    return li(
+      {
+        key: `${name}:${location.start.line}:${location.start.column}`,
+        className: classnames("outline-list__element", {
+          focused: isFocused,
+        }),
+        ref: el => {
           if (isFocused) {
             this.focusedElRef = el;
           }
-        }}
-        onClick={() => this.selectItem(func)}
-        onContextMenu={e => this.onContextMenu(e, func)}
-      >
-        <span className="outline-list__element-icon">λ</span>
-        <PreviewFunction func={{ name, parameterNames }} />
-      </li>
+        },
+        onClick: () => this.selectItem(func),
+        onContextMenu: e => this.onContextMenu(e, func),
+      },
+      span(
+        {
+          className: "outline-list__element-icon",
+        },
+        "λ"
+      ),
+      React.createElement(PreviewFunction, {
+        func: {
+          name,
+          parameterNames,
+        },
+      })
     );
   }
 
   renderClassHeader(klass) {
-    return (
-      <div>
-        <span className="keyword">class</span> {klass}
-      </div>
+    return div(
+      null,
+      span(
+        {
+          className: "keyword",
+        },
+        "class"
+      ),
+      " ",
+      klass
     );
   }
 
@@ -208,28 +232,33 @@ export class Outline extends Component {
     const item = classFunc || classInfo;
     const isFocused = focusedItem === item;
 
-    return (
-      <li
-        className="outline-list__class"
-        ref={el => {
+    return li(
+      {
+        className: "outline-list__class",
+        ref: el => {
           if (isFocused) {
             this.focusedElRef = el;
           }
-        }}
-        key={klass}
-      >
-        <h2
-          className={classnames("", { focused: isFocused })}
-          onClick={() => this.selectItem(item)}
-        >
-          {classFunc
-            ? this.renderFunction(classFunc)
-            : this.renderClassHeader(klass)}
-        </h2>
-        <ul className="outline-list__class-list">
-          {classFunctions.map(func => this.renderFunction(func))}
-        </ul>
-      </li>
+        },
+        key: klass,
+      },
+      h2(
+        {
+          className: classnames({
+            focused: isFocused,
+          }),
+          onClick: () => this.selectItem(item),
+        },
+        classFunc
+          ? this.renderFunction(classFunc)
+          : this.renderClassHeader(klass)
+      ),
+      ul(
+        {
+          className: "outline-list__class-list",
+        },
+        classFunctions.map(func => this.renderFunction(func))
+      )
     );
   }
 
@@ -240,7 +269,6 @@ export class Outline extends Component {
       ({ name, klass }) =>
         filterOutlineItem(name, filter) && !klass && !classes.includes(name)
     );
-
     const classFunctions = functions.filter(
       ({ name, klass }) => filterOutlineItem(name, filter) && !!klass
     );
@@ -251,29 +279,29 @@ export class Outline extends Component {
       classes = classes.sort();
       classFunctions.sort(sortByName);
     }
-
-    return (
-      <ul
-        ref="outlineList"
-        className="outline-list devtools-monospace"
-        dir="ltr"
-      >
-        {namedFunctions.map(func => this.renderFunction(func))}
-        {classes.map(klass => this.renderClassFunctions(klass, classFunctions))}
-      </ul>
+    return ul(
+      {
+        ref: "outlineList",
+        className: "outline-list devtools-monospace",
+        dir: "ltr",
+      },
+      namedFunctions.map(func => this.renderFunction(func)),
+      classes.map(klass => this.renderClassFunctions(klass, classFunctions))
     );
   }
 
   renderFooter() {
-    return (
-      <div className="outline-footer">
-        <button
-          onClick={this.props.onAlphabetizeClick}
-          className={this.props.alphabetizeOutline ? "active" : ""}
-        >
-          {L10N.getStr("outline.sortLabel")}
-        </button>
-      </div>
+    return div(
+      {
+        className: "outline-footer",
+      },
+      button(
+        {
+          onClick: this.props.onAlphabetizeClick,
+          className: this.props.alphabetizeOutline ? "active" : "",
+        },
+        L10N.getStr("outline.sortLabel")
+      )
     );
   }
 
@@ -297,14 +325,19 @@ export class Outline extends Component {
       return this.renderPlaceholder();
     }
 
-    return (
-      <div className="outline">
-        <div>
-          <OutlineFilter filter={filter} updateFilter={this.updateFilter} />
-          {this.renderFunctions(symbolsToDisplay)}
-          {this.renderFooter()}
-        </div>
-      </div>
+    return div(
+      {
+        className: "outline",
+      },
+      div(
+        null,
+        React.createElement(OutlineFilter, {
+          filter: filter,
+          updateFilter: this.updateFilter,
+        }),
+        this.renderFunctions(symbolsToDisplay),
+        this.renderFooter()
+      )
     );
   }
 }
