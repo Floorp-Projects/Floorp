@@ -16,7 +16,6 @@
 #include "nsContentUtils.h"
 #include "nsWrapperCache.h"
 #include "Device.h"
-#include "mozilla/webgpu/ffi/wgpu.h"
 
 namespace mozilla::webgpu {
 
@@ -71,52 +70,35 @@ already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
 
   bool hasMapFlags = aDesc.mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
                                      dom::GPUBufferUsage_Binding::MAP_READ);
-
-  bool allocSucceeded = false;
   if (hasMapFlags || aDesc.mMappedAtCreation) {
-    // If shmem allocation fails, we continue and provide the parent side with
-    // an empty shmem which it will interpret as an OOM situtation.
     const auto checked = CheckedInt<size_t>(aDesc.mSize);
-    const size_t maxSize = WGPUMAX_BUFFER_SIZE;
-    if (checked.isValid() && checked.value() > 0 && checked.value() < maxSize) {
-      size_t size = checked.value();
+    if (!checked.isValid()) {
+      aRv.ThrowRangeError("Mappable size is too large");
+      return nullptr;
+    }
+    size_t size = checked.value();
 
-      auto maybeShmem = ipc::UnsafeSharedMemoryHandle::CreateAndMap(size);
+    auto maybeShmem = ipc::UnsafeSharedMemoryHandle::CreateAndMap(size);
 
-      if (maybeShmem.isSome()) {
-        allocSucceeded = true;
-        handle = std::move(maybeShmem.ref().first);
-        mapping = std::move(maybeShmem.ref().second);
-
-        MOZ_RELEASE_ASSERT(mapping.Size() >= size);
-
-        // zero out memory
-        memset(mapping.Bytes().data(), 0, size);
-      }
+    if (maybeShmem.isNothing()) {
+      aRv.ThrowRangeError(
+          nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, size));
+      return nullptr;
     }
 
-    if (checked.value() == 0) {
-      // Zero-sized buffers is a special case. We don't create a shmem since
-      // allocating the memory would not make sense, however mappable null
-      // buffers are allowed by the spec so we just pass the null handle which
-      // in practice deserializes into a null handle on the parent side and
-      // behaves like a zero-sized allocation.
-      allocSucceeded = true;
-    }
-  }
+    handle = std::move(maybeShmem.ref().first);
+    mapping = std::move(maybeShmem.ref().second);
 
-  // If mapped at creation and the shmem allocation failed, immediately throw
-  // a range error and don't attempt to create the buffer.
-  if (aDesc.mMappedAtCreation && !allocSucceeded) {
-    aRv.ThrowRangeError("Allocation failed");
-    return nullptr;
+    MOZ_RELEASE_ASSERT(mapping.Size() >= size);
+
+    // zero out memory
+    memset(mapping.Bytes().data(), 0, size);
   }
 
   RawId id = actor->DeviceCreateBuffer(aDeviceId, aDesc, std::move(handle));
 
   RefPtr<Buffer> buffer =
       new Buffer(aDevice, id, aDesc.mSize, aDesc.mUsage, std::move(mapping));
-
   if (aDesc.mMappedAtCreation) {
     // Mapped at creation's raison d'être is write access, since the buffer is
     // being created and there isn't anything interesting to read in it yet.
