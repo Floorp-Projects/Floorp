@@ -8,8 +8,6 @@
 
 "use strict";
 
-const LEGACY_ACTORS_PREF = "devtools.storage.test.forceLegacyActors";
-
 /**
  * This generator function opens the given url in a new tab, then sets up the
  * page by waiting for all cookies, indexedDB items etc. to be created.
@@ -19,11 +17,6 @@ const LEGACY_ACTORS_PREF = "devtools.storage.test.forceLegacyActors";
  * @return {Promise} A promise that resolves after storage inspector is ready
  */
 async function openTabAndSetupStorage(url) {
-  // Enable testing prefs
-  SpecialPowers.pushPrefEnv({
-    set: [[LEGACY_ACTORS_PREF, true]],
-  });
-
   await addTab(url);
 
   // Setup the async storages in main window and for all its iframes
