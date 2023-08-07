@@ -1502,6 +1502,11 @@ var TranslationsPanel = new (class {
             this.elements.error.hidden = true;
             break;
           case "engine-load-failure":
+            if (!this.#isShowingDefaultView()) {
+              await this.#showDefaultView().catch(e => {
+                this.console?.error(e);
+              });
+            }
             this.elements.error.hidden = false;
             this.#showError({
               message: "translations-panel-error-translating",
