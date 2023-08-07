@@ -2468,7 +2468,7 @@ JSStructuredCloneReader::JSStructuredCloneReader(
 
 JSStructuredCloneReader::~JSStructuredCloneReader() {
   JS::RemoveGCNurseryCollectionCallback(in.context(),
-                                        &NurseryCollectionCallback);
+                                        &NurseryCollectionCallback, this);
 }
 
 /* static */
