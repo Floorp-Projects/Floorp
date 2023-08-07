@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import React, { Component } from "react";
+import { Component } from "react";
+import { span, button } from "react-dom-factories";
 import PropTypes from "prop-types";
 
 import { formatDisplayName } from "../../utils/pause/frames";
@@ -21,7 +22,12 @@ export default class PreviewFunction extends Component {
   renderFunctionName(func) {
     const { l10n } = this.context;
     const name = formatDisplayName(func, undefined, l10n);
-    return <span className="function-name">{name}</span>;
+    return span(
+      {
+        className: "function-name",
+      },
+      name
+    );
   }
 
   renderParams(func) {
@@ -31,16 +37,24 @@ export default class PreviewFunction extends Component {
       .filter(Boolean)
       .map((param, i, arr) => {
         const elements = [
-          <span className="param" key={param}>
-            {param}
-          </span>,
+          span(
+            {
+              className: "param",
+              key: param,
+            },
+            param
+          ),
         ];
         // if this isn't the last param, add a comma
         if (i !== arr.length - 1) {
           elements.push(
-            <span className="delimiter" key={i}>
-              {", "}
-            </span>
+            span(
+              {
+                className: "delimiter",
+                key: i,
+              },
+              ", "
+            )
           );
         }
         return elements;
@@ -56,27 +70,38 @@ export default class PreviewFunction extends Component {
     }
 
     const lastIndex = location.url.lastIndexOf("/");
-    return (
-      <button
-        className="jump-definition"
-        draggable="false"
-        title={`${location.url.slice(lastIndex + 1)}:${location.line}`}
-      />
-    );
+    return button({
+      className: "jump-definition",
+      draggable: "false",
+      title: `${location.url.slice(lastIndex + 1)}:${location.line}`,
+    });
   }
 
   render() {
     const { func } = this.props;
-    return (
-      <span className="function-signature">
-        {this.renderFunctionName(func)}
-        <span className="paren">(</span>
-        {this.renderParams(func)}
-        <span className="paren">)</span>
-        {this.jumpToDefinitionButton(func)}
-      </span>
+    return span(
+      {
+        className: "function-signature",
+      },
+      this.renderFunctionName(func),
+      span(
+        {
+          className: "paren",
+        },
+        "("
+      ),
+      this.renderParams(func),
+      span(
+        {
+          className: "paren",
+        },
+        ")"
+      ),
+      this.jumpToDefinitionButton(func)
     );
   }
 }
 
-PreviewFunction.contextTypes = { l10n: PropTypes.object };
+PreviewFunction.contextTypes = {
+  l10n: PropTypes.object,
+};

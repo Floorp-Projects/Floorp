@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import { li, div, ul } from "react-dom-factories";
 import PropTypes from "prop-types";
 
 import AccessibleImage from "./AccessibleImage";
@@ -36,7 +37,7 @@ export default class ResultList extends Component {
     const props = {
       onClick: event => selectItem(event, item, index),
       key: `${item.id}${item.value}${index}`,
-      ref: String(index),
+      ref: React.createRef(),
       title: item.value,
       "aria-labelledby": `${item.id}-title`,
       "aria-describedby": `${item.id}-subtitle`,
@@ -46,37 +47,45 @@ export default class ResultList extends Component {
       }),
     };
 
-    return (
-      <li {...props}>
-        {item.icon && (
-          <div className="icon">
-            <AccessibleImage className={item.icon} />
-          </div>
-        )}
-        <div id={`${item.id}-title`} className="title">
-          {item.title}
-        </div>
-        {item.subtitle != item.title ? (
-          <div id={`${item.id}-subtitle`} className="subtitle">
-            {item.subtitle}
-          </div>
-        ) : null}
-      </li>
+    return li(
+      props,
+      item.icon &&
+        div(
+          {
+            className: "icon",
+          },
+          React.createElement(AccessibleImage, {
+            className: item.icon,
+          })
+        ),
+      div(
+        {
+          id: `${item.id}-title`,
+          className: "title",
+        },
+        item.title
+      ),
+      item.subtitle != item.title
+        ? div(
+            {
+              id: `${item.id}-subtitle`,
+              className: "subtitle",
+            },
+            item.subtitle
+          )
+        : null
     );
   };
-
   render() {
     const { size, items, role } = this.props;
-
-    return (
-      <ul
-        className={classnames("result-list", size)}
-        id="result-list"
-        role={role}
-        aria-live="polite"
-      >
-        {items.map(this.renderListItem)}
-      </ul>
+    return ul(
+      {
+        className: classnames("result-list", size),
+        id: "result-list",
+        role: role,
+        "aria-live": "polite",
+      },
+      items.map(this.renderListItem)
     );
   }
 }

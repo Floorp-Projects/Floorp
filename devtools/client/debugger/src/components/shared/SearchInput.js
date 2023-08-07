@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import { button, div, label, input, span } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 import { CloseButton } from "./Button";
@@ -23,11 +24,11 @@ const arrowBtn = (onClick, type, className, tooltip) => {
     title: tooltip,
     type,
   };
-
-  return (
-    <button {...props}>
-      <AccessibleImage className={type} />
-    </button>
+  return button(
+    props,
+    React.createElement(AccessibleImage, {
+      className: type,
+    })
   );
 };
 
@@ -94,16 +95,16 @@ export class SearchInput extends Component {
 
   setFocus() {
     if (this.$input) {
-      const input = this.$input;
-      input.focus();
+      const _input = this.$input;
+      _input.focus();
 
-      if (!input.value) {
+      if (!_input.value) {
         return;
       }
 
       // omit prefix @:# from being selected
       const selectStartPos = this.props.hasPrefix ? 1 : 0;
-      input.setSelectionRange(selectStartPos, input.value.length + 1);
+      _input.setSelectionRange(selectStartPos, _input.value.length + 1);
     }
   }
 
@@ -204,8 +205,12 @@ export class SearchInput extends Component {
     if (!summaryMsg) {
       return null;
     }
-
-    return <div className="search-field-summary">{summaryMsg}</div>;
+    return div(
+      {
+        className: "search-field-summary",
+      },
+      summaryMsg
+    );
   }
 
   renderSpinner() {
@@ -213,7 +218,9 @@ export class SearchInput extends Component {
     if (!isLoading) {
       return null;
     }
-    return <AccessibleImage className="loader spin" />;
+    return React.createElement(AccessibleImage, {
+      className: "loader spin",
+    });
   }
 
   renderNav() {
@@ -221,9 +228,11 @@ export class SearchInput extends Component {
     if ((!handleNext && !handlePrev) || !count || count == 1) {
       return null;
     }
-
-    return (
-      <div className="search-nav-buttons">{this.renderArrowButtons()}</div>
+    return div(
+      {
+        className: "search-nav-buttons",
+      },
+      this.renderArrowButtons()
     );
   }
 
@@ -231,32 +240,33 @@ export class SearchInput extends Component {
     if (!this.props.showSearchModifiers) {
       return null;
     }
-    return (
-      <SearchModifiers
-        modifiers={this.props.searchOptions}
-        onToggleSearchModifier={updatedOptions => {
-          this.props.setSearchOptions(this.props.searchKey, updatedOptions);
-          this.props.onToggleSearchModifier();
-        }}
-      />
-    );
+    return React.createElement(SearchModifiers, {
+      modifiers: this.props.searchOptions,
+      onToggleSearchModifier: updatedOptions => {
+        this.props.setSearchOptions(this.props.searchKey, updatedOptions);
+        this.props.onToggleSearchModifier();
+      },
+    });
   }
 
   renderExcludePatterns() {
     if (!this.props.showExcludePatterns) {
       return null;
     }
-
-    return (
-      <div className={classnames("exclude-patterns-field", this.props.size)}>
-        <label>{this.props.excludePatternsLabel}</label>
-        <input
-          placeholder={this.props.excludePatternsPlaceholder}
-          value={this.state.excludePatterns}
-          onKeyDown={this.onExcludeKeyDown}
-          onChange={e => this.setState({ excludePatterns: e.target.value })}
-        />
-      </div>
+    return div(
+      {
+        className: classnames("exclude-patterns-field", this.props.size),
+      },
+      label(null, this.props.excludePatternsLabel),
+      input({
+        placeholder: this.props.excludePatternsPlaceholder,
+        value: this.state.excludePatterns,
+        onKeyDown: this.onExcludeKeyDown,
+        onChange: e =>
+          this.setState({
+            excludePatterns: e.target.value,
+          }),
+      })
     );
   }
 
@@ -264,14 +274,16 @@ export class SearchInput extends Component {
     if (!this.props.showClose) {
       return null;
     }
-    return (
-      <React.Fragment>
-        <span className="pipe-divider" />
-        <CloseButton
-          handleClick={this.props.handleClose}
-          buttonClass={this.props.size}
-        />
-      </React.Fragment>
+    return React.createElement(
+      React.Fragment,
+      null,
+      span({
+        className: "pipe-divider",
+      }),
+      React.createElement(CloseButton, {
+        handleClick: this.props.handleClose,
+        buttonClass: this.props.size,
+      })
     );
   }
 
@@ -305,28 +317,34 @@ export class SearchInput extends Component {
       spellCheck: false,
       ref: c => (this.$input = c),
     };
-
-    return (
-      <div className="search-outline">
-        <div
-          className={classnames("search-field", size)}
-          role="combobox"
-          aria-haspopup="listbox"
-          aria-owns="result-list"
-          aria-expanded={expanded}
-        >
-          <AccessibleImage className="search" />
-          <input {...inputProps} />
-          {this.renderSpinner()}
-          {this.renderSummaryMsg()}
-          {this.renderNav()}
-          <div className="search-buttons-bar">
-            {this.renderSearchModifiers()}
-            {this.renderClose()}
-          </div>
-        </div>
-        {this.renderExcludePatterns()}
-      </div>
+    return div(
+      {
+        className: "search-outline",
+      },
+      div(
+        {
+          className: classnames("search-field", size),
+          role: "combobox",
+          "aria-haspopup": "listbox",
+          "aria-owns": "result-list",
+          "aria-expanded": expanded,
+        },
+        React.createElement(AccessibleImage, {
+          className: "search",
+        }),
+        input(inputProps),
+        this.renderSpinner(),
+        this.renderSummaryMsg(),
+        this.renderNav(),
+        div(
+          {
+            className: "search-buttons-bar",
+          },
+          this.renderSearchModifiers(),
+          this.renderClose()
+        )
+      ),
+      this.renderExcludePatterns()
     );
   }
 }

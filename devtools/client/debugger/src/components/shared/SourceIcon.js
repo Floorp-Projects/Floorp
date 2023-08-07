@@ -35,8 +35,9 @@ class SourceIcon extends PureComponent {
       }
       iconClass = modified;
     }
-
-    return <AccessibleImage className={`source-icon ${iconClass}`} />;
+    return React.createElement(AccessibleImage, {
+      className: `source-icon ${iconClass}`,
+    });
   }
 }
 

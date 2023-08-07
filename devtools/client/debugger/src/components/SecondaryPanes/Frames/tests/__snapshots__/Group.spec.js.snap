@@ -152,9 +152,9 @@ exports[`Group displays a group 1`] = `
     >
        
     </span>
-    <Badge>
-      1
-    </Badge>
+    <Badge
+      badgeText={1}
+    />
     <br
       className="clipboard-only"
     />
@@ -314,9 +314,9 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
     >
        
     </span>
-    <Badge>
-      3
-    </Badge>
+    <Badge
+      badgeText={3}
+    />
     <br
       className="clipboard-only"
     />
@@ -1302,9 +1302,9 @@ exports[`Group renders group with anonymous functions 1`] = `
     >
        
     </span>
-    <Badge>
-      3
-    </Badge>
+    <Badge
+      badgeText={3}
+    />
     <br
       className="clipboard-only"
     />
@@ -1464,9 +1464,9 @@ exports[`Group renders group with anonymous functions 2`] = `
     >
        
     </span>
-    <Badge>
-      3
-    </Badge>
+    <Badge
+      badgeText={3}
+    />
     <br
       className="clipboard-only"
     />
