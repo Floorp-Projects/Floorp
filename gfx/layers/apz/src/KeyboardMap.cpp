@@ -104,9 +104,10 @@ bool KeyboardShortcut::MatchesModifiers(
     const KeyboardInput& aInput, const IgnoreModifierState& aIgnore) const {
   Modifiers modifiersMask = mModifiersMask;
 
-  // If we are ignoring Shift or OS, then unset that part of the mask
-  if (aIgnore.mOS) {
-    modifiersMask &= ~MODIFIER_OS;
+  // If we are ignoring Shift or Meta (Windows key), then unset that part of the
+  // mask
+  if (aIgnore.mMeta) {
+    modifiersMask &= ~MODIFIER_META;
   }
   if (aIgnore.mShift) {
     modifiersMask &= ~MODIFIER_SHIFT;
@@ -156,9 +157,9 @@ Maybe<KeyboardShortcut> KeyboardMap::FindMatchInternal(
   // shortcut keys even if the key is pressed.  Therefore, if there is no
   // shortcut key which exactly matches current modifier state, we should
   // retry to look for a shortcut key without the Windows-Logo key press.
-  if (!aIgnore.mOS && (aEvent.modifiers & MODIFIER_OS)) {
+  if (!aIgnore.mMeta && (aEvent.modifiers & MODIFIER_META)) {
     IgnoreModifierState ignoreModifierState(aIgnore);
-    ignoreModifierState.mOS = true;
+    ignoreModifierState.mMeta = true;
     return FindMatchInternal(aEvent, ignoreModifierState, aOverrideCharCode);
   }
 #endif

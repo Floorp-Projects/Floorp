@@ -29,6 +29,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=935501
 <pre id="test">
 <script>
 
+const { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+
 /**
  * Test for Bug 935501
  * This test checks how the value of <input type=number> changes in response to
@@ -39,6 +43,9 @@ SimpleTest.requestFlakyTimeout("untriaged");
 SimpleTest.waitForFocus(function() {
   test();
 });
+
+const kIsWin = AppConstants.platform == "win";
+const kIsLinux = AppConstants.platform == "linux";
 
 var input = document.getElementById("input");
 var inputRect = input.getBoundingClientRect();
@@ -75,7 +82,10 @@ function test() {
   is(input.value, "0", "Test mouseup on spin-down button");
 
   // Test clicks with modifiers that mean we should ignore the click:
-  var modifiersIgnore = ["altGrKey", "fnKey", "osKey"];
+  var modifiersIgnore = ["altGrKey", "fnKey"];
+  if (kIsWin || kIsLinux) {
+    modifiersIgnore.push("metaKey");
+  }
   for (var modifier of modifiersIgnore) {
     input.value = 0;
     var eventParams = { type: "mousedown" };
@@ -86,7 +96,10 @@ function test() {
   }
 
   // Test clicks with modifiers that mean we should allow the click:
-  var modifiersAllow = ["shiftKey", "ctrlKey", "altKey", "metaKey"];
+  var modifiersAllow = ["shiftKey", "ctrlKey", "altKey"];
+  if (!modifiersIgnore.includes("metaKey")) {
+    modifiersAllow.push("metaKey");
+  }
   for (var modifier of modifiersAllow) {
     input.value = 0;
     var eventParams = { type: "mousedown" };

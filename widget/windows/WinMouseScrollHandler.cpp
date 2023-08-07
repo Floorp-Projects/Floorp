@@ -336,7 +336,7 @@ ModifierKeyState MouseScrollHandler::GetModifierKeyState(UINT aMessage) {
   // MouseScrollHandler::Device::Elantech::HandleKeyMessage().)
   if ((aMessage == MOZ_WM_MOUSEVWHEEL || aMessage == WM_MOUSEWHEEL) &&
       !result.IsControl() && Device::Elantech::IsZooming()) {
-    // XXX Do we need to unset MODIFIER_SHIFT, MODIFIER_ALT, MODIFIER_OS too?
+    // XXX Do we need to unset MODIFIER_SHIFT, MODIFIER_ALT, MODIFIER_META too?
     //     If one of them are true, the default action becomes not zooming.
     result.Unset(MODIFIER_ALTGRAPH);
     result.Set(MODIFIER_CONTROL);

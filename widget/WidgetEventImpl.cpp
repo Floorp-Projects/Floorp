@@ -615,10 +615,8 @@ Modifier WidgetInputEvent::AccelModifier() {
   if (sAccelModifier == MODIFIER_NONE) {
     switch (StaticPrefs::ui_key_accelKey()) {
       case dom::KeyboardEvent_Binding::DOM_VK_META:
-        sAccelModifier = MODIFIER_META;
-        break;
       case dom::KeyboardEvent_Binding::DOM_VK_WIN:
-        sAccelModifier = MODIFIER_OS;
+        sAccelModifier = MODIFIER_META;
         break;
       case dom::KeyboardEvent_Binding::DOM_VK_ALT:
         sAccelModifier = MODIFIER_ALT;
@@ -1081,7 +1079,6 @@ void WidgetKeyboardEvent::GetAccessKeyCandidates(
 #define NS_MODIFIER_CONTROL 2
 #define NS_MODIFIER_ALT 4
 #define NS_MODIFIER_META 8
-#define NS_MODIFIER_OS 16
 
 static Modifiers PrefFlagsToModifiers(int32_t aPrefFlags) {
   Modifiers result = 0;
@@ -1097,9 +1094,6 @@ static Modifiers PrefFlagsToModifiers(int32_t aPrefFlags) {
   if (aPrefFlags & NS_MODIFIER_META) {
     result |= MODIFIER_META;
   }
-  if (aPrefFlags & NS_MODIFIER_OS) {
-    result |= MODIFIER_OS;
-  }
   return result;
 }
 
@@ -1112,9 +1106,8 @@ bool WidgetKeyboardEvent::ModifiersMatchWithAccessKey(
 }
 
 Modifiers WidgetKeyboardEvent::ModifiersForAccessKeyMatching() const {
-  static const Modifiers kModifierMask = MODIFIER_SHIFT | MODIFIER_CONTROL |
-                                         MODIFIER_ALT | MODIFIER_META |
-                                         MODIFIER_OS;
+  static const Modifiers kModifierMask =
+      MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META;
   return mModifiers & kModifierMask;
 }
 
@@ -1130,9 +1123,8 @@ Modifiers WidgetKeyboardEvent::AccessKeyModifiers(AccessKeyType aType) {
     case NS_VK_ALT:
       return MODIFIER_ALT;
     case NS_VK_META:
-      return MODIFIER_META;
     case NS_VK_WIN:
-      return MODIFIER_OS;
+      return MODIFIER_META;
     default:
       return MODIFIER_NONE;
   }
@@ -1863,8 +1855,6 @@ Modifier WidgetKeyboardEvent::GetModifierForKeyName(
       return MODIFIER_META;
     case KEY_NAME_INDEX_NumLock:
       return MODIFIER_NUMLOCK;
-    case KEY_NAME_INDEX_OS:
-      return MODIFIER_OS;
     case KEY_NAME_INDEX_ScrollLock:
       return MODIFIER_SCROLLLOCK;
     case KEY_NAME_INDEX_Shift:

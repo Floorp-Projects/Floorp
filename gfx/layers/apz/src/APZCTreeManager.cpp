@@ -1438,9 +1438,9 @@ void APZCTreeManager::MarkAsDetached(LayersId aLayersId) {
 }
 
 static bool HasNonLockModifier(Modifiers aModifiers) {
-  return (aModifiers & (MODIFIER_ALT | MODIFIER_ALTGRAPH | MODIFIER_CONTROL |
-                        MODIFIER_FN | MODIFIER_META | MODIFIER_SHIFT |
-                        MODIFIER_SYMBOL | MODIFIER_OS)) != 0;
+  return (aModifiers &
+          (MODIFIER_ALT | MODIFIER_ALTGRAPH | MODIFIER_CONTROL | MODIFIER_FN |
+           MODIFIER_META | MODIFIER_SHIFT | MODIFIER_SYMBOL)) != 0;
 }
 
 APZEventResult APZCTreeManager::ReceiveInputEvent(
