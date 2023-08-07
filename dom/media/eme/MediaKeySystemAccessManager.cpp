@@ -18,9 +18,6 @@
 #ifdef XP_WIN
 #  include "mozilla/WindowsVersion.h"
 #endif
-#ifdef XP_MACOSX
-#  include "nsCocoaFeatures.h"
-#endif
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsTHashMap.h"
