@@ -1,2 +1,2 @@
-['include:../tests/dom/media/test/mochitest.toml']
+["include:../tests/dom/media/test/mochitest.ini"]
 # NOTE: translated from INI: included file does not exist
