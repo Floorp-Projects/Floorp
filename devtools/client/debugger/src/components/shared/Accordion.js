@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { cloneElement, Component } from "react";
+import { li, h2, span, div, ul } from "react-dom-factories";
 import PropTypes from "prop-types";
 import AccessibleImage from "./AccessibleImage";
 
@@ -37,36 +38,52 @@ class Accordion extends Component {
 
   renderContainer = (item, i) => {
     const { opened } = item;
-
-    return (
-      <li className={item.className} key={i}>
-        <h2
-          className="_header"
-          tabIndex="0"
-          onKeyDown={e => this.onHandleHeaderKeyDown(e, i)}
-          onClick={() => this.handleHeaderClick(i)}
-        >
-          <AccessibleImage className={`arrow ${opened ? "expanded" : ""}`} />
-          <span className="header-label">{item.header}</span>
-          {item.buttons ? (
-            <div className="header-buttons" tabIndex="-1">
-              {item.buttons}
-            </div>
-          ) : null}
-        </h2>
-        {opened && (
-          <div className="_content">
-            {cloneElement(item.component, item.componentProps || {})}
-          </div>
-        )}
-      </li>
+    return li(
+      {
+        className: item.className,
+        key: i,
+      },
+      h2(
+        {
+          className: "_header",
+          tabIndex: "0",
+          onKeyDown: e => this.onHandleHeaderKeyDown(e, i),
+          onClick: () => this.handleHeaderClick(i),
+        },
+        React.createElement(AccessibleImage, {
+          className: `arrow ${opened ? "expanded" : ""}`,
+        }),
+        span(
+          {
+            className: "header-label",
+          },
+          item.header
+        ),
+        item.buttons
+          ? div(
+              {
+                className: "header-buttons",
+                tabIndex: "-1",
+              },
+              item.buttons
+            )
+          : null
+      ),
+      opened &&
+        div(
+          {
+            className: "_content",
+          },
+          cloneElement(item.component, item.componentProps || {})
+        )
     );
   };
   render() {
-    return (
-      <ul className="accordion">
-        {this.props.items.map(this.renderContainer)}
-      </ul>
+    return ul(
+      {
+        className: "accordion",
+      },
+      this.props.items.map(this.renderContainer)
     );
   }
 }

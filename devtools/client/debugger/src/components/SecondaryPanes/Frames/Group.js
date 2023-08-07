@@ -142,7 +142,7 @@ export default class Group extends Component {
         {this.isSelectable && <FrameIndent />}
         <FrameLocation frame={frame} expanded={expanded} />
         {this.isSelectable && <span className="clipboard-only"> </span>}
-        <Badge>{this.props.group.length}</Badge>
+        <Badge badgeText={this.props.group.length} />
         {this.isSelectable && <br className="clipboard-only" />}
       </div>
     );

@@ -10,11 +10,10 @@ const classnames = require("devtools/client/shared/classnames.js");
 import "./AccessibleImage.css";
 
 const AccessibleImage = props => {
-  props = {
+  return React.createElement("span", {
     ...props,
     className: classnames("img", props.className),
-  };
-  return <span {...props} />;
+  });
 };
 
 AccessibleImage.propTypes = {

@@ -4,6 +4,7 @@
 
 import PropTypes from "prop-types";
 import React from "react";
+import { div } from "react-dom-factories";
 import Transition from "react-transition-group/Transition";
 const classnames = require("devtools/client/shared/classnames.js");
 import "./Modal.css";
@@ -26,16 +27,18 @@ export class Modal extends React.Component {
 
   render() {
     const { additionalClass, children, handleClose, status } = this.props;
-
-    return (
-      <div className="modal-wrapper" onClick={handleClose}>
-        <div
-          className={classnames("modal", additionalClass, status)}
-          onClick={this.onClick}
-        >
-          {children}
-        </div>
-      </div>
+    return div(
+      {
+        className: "modal-wrapper",
+        onClick: handleClose,
+      },
+      div(
+        {
+          className: classnames("modal", additionalClass, status),
+          onClick: this.onClick,
+        },
+        children
+      )
     );
   }
 }
@@ -50,18 +53,23 @@ export default function Slide({
   additionalClass,
   handleClose,
 }) {
-  return (
-    <Transition in={inProp} timeout={transitionTimeout} appear>
-      {status => (
-        <Modal
-          status={status}
-          additionalClass={additionalClass}
-          handleClose={handleClose}
-        >
-          {children}
-        </Modal>
-      )}
-    </Transition>
+  return React.createElement(
+    Transition,
+    {
+      in: inProp,
+      timeout: transitionTimeout,
+      appear: true,
+    },
+    status =>
+      React.createElement(
+        Modal,
+        {
+          status,
+          additionalClass,
+          handleClose,
+        },
+        children
+      )
   );
 }
 
