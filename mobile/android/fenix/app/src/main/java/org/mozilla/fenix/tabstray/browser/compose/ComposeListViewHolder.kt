@@ -72,10 +72,6 @@ class ComposeListViewHolder(
         interactor.onTabSelected(tab, featureName)
     }
 
-    private fun onLongClick(tab: TabSessionState) {
-        interactor.onTabLongClicked(tab)
-    }
-
     @Composable
     override fun Content(tab: TabSessionState) {
         val multiSelectionEnabled = tabsTrayStore.observeAsComposableState {
@@ -95,7 +91,6 @@ class ComposeListViewHolder(
             onCloseClick = ::onCloseClicked,
             onMediaClick = interactor::onMediaClicked,
             onClick = ::onClick,
-            onLongClick = ::onLongClick,
         )
     }
 

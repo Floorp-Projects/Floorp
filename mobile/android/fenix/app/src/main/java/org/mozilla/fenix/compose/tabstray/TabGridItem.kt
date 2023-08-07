@@ -9,6 +9,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -82,12 +83,13 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * enabled.
  * @param multiSelectionSelected Indicates if the item should be render as multi selection selected
  * option.
+ * @param shouldClickListen Whether or not the item should stop listening to click events.
  * @param onCloseClick Callback to handle the click event of the close button.
  * @param onMediaClick Callback to handle when the media item is clicked.
  * @param onClick Callback to handle when item is clicked.
- * @param onLongClick Callback to handle when item is long clicked.
+ * @param onLongClick Optional callback to handle when item is long clicked.
  */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 @Suppress("MagicNumber", "LongParameterList", "LongMethod")
 fun TabGridItem(
@@ -97,10 +99,11 @@ fun TabGridItem(
     isSelected: Boolean = false,
     multiSelectionEnabled: Boolean = false,
     multiSelectionSelected: Boolean = false,
+    shouldClickListen: Boolean = true,
     onCloseClick: (tab: TabSessionState) -> Unit,
     onMediaClick: (tab: TabSessionState) -> Unit,
     onClick: (tab: TabSessionState) -> Unit,
-    onLongClick: (tab: TabSessionState) -> Unit,
+    onLongClick: ((tab: TabSessionState) -> Unit)? = null,
 ) {
     val tabBorderModifier = if (isSelected) {
         Modifier.border(
@@ -143,6 +146,26 @@ fun TabGridItem(
                 .wrapContentSize()
                 .testTag(TabsTrayTestTag.tabItemRoot),
         ) {
+            val clickableModifier = if (onLongClick == null) {
+                Modifier.clickable(
+                    enabled = shouldClickListen,
+                    interactionSource = interactionSource,
+                    indication = rememberRipple(
+                        color = clickableColor(),
+                    ),
+                    onClick = { onClick(tab) },
+                )
+            } else {
+                Modifier.combinedClickable(
+                    enabled = shouldClickListen,
+                    interactionSource = interactionSource,
+                    indication = rememberRipple(
+                        color = clickableColor(),
+                    ),
+                    onLongClick = { onLongClick(tab) },
+                    onClick = { onClick(tab) },
+                )
+            }
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -150,17 +173,7 @@ fun TabGridItem(
                     .padding(4.dp)
                     .then(tabBorderModifier)
                     .padding(4.dp)
-                    .combinedClickable(
-                        interactionSource = interactionSource,
-                        indication = rememberRipple(
-                            color = when (isSystemInDarkTheme()) {
-                                true -> PhotonColors.White
-                                false -> PhotonColors.Black
-                            },
-                        ),
-                        onLongClick = { onLongClick(tab) },
-                        onClick = { onClick(tab) },
-                    ),
+                    .then(clickableModifier),
                 elevation = 0.dp,
                 shape = RoundedCornerShape(dimensionResource(id = R.dimen.tab_tray_grid_item_border_radius)),
                 border = BorderStroke(1.dp, FirefoxTheme.colors.borderPrimary),
@@ -251,6 +264,12 @@ fun TabGridItem(
     }
 }
 
+@Composable
+private fun clickableColor() = when (isSystemInDarkTheme()) {
+    true -> PhotonColors.White
+    false -> PhotonColors.Black
+}
+
 /**
  * Thumbnail specific for the [TabGridItem], which can be selected.
  *
@@ -320,7 +339,6 @@ private fun TabGridItemPreview() {
             onCloseClick = {},
             onMediaClick = {},
             onClick = {},
-            onLongClick = {},
         )
     }
 }

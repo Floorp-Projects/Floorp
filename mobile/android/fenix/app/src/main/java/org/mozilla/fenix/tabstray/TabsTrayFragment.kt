@@ -304,6 +304,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                         onTabAutoCloseBannerShown = {
                             requireContext().settings().lastCfrShownTimeInMillis = System.currentTimeMillis()
                         },
+                        onMove = tabsTrayInteractor::onTabsMove,
                     )
                 }
             }

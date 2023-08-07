@@ -69,10 +69,6 @@ class ComposeGridViewHolder(
         interactor.onTabSelected(tab, featureName)
     }
 
-    private fun onLongClick(tab: TabSessionState) {
-        interactor.onTabLongClicked(tab)
-    }
-
     @Composable
     override fun Content(tab: TabSessionState) {
         val multiSelectionEnabled = store.observeAsComposableState { state ->
@@ -91,7 +87,6 @@ class ComposeGridViewHolder(
             onCloseClick = ::onCloseClicked,
             onMediaClick = interactor::onMediaClicked,
             onClick = ::onClick,
-            onLongClick = ::onLongClick,
         )
     }
 
