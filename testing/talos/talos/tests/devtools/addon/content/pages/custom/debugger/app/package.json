@@ -1,0 +1,25 @@
+{
+  "name": "create-reate-test-app",
+  "description": "A test app forked from meta's create-react-app and modified to test sourcemap debugging scenarios",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "./",
+  "dependencies": {
+    "eslint": "^4.17.0",
+    "eslint-config-react-app": "2.0.1",
+    "eslint-loader": "1.9.0",
+    "eslint-plugin-flowtype": "2.39.1",
+    "immutable": "^3.8.2",
+    "lodash": "^4.17.5",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "react-scripts": "1.0.17"
+  },
+  "scripts": {
+    "build": "node ./scripts/build; rm ./build/service-worker.js ./build/asset-manifest.json",
+    "clean-build": "rm -r ./build && rm -r ./node_modules",
+    "clean-old-assets": "rm -r ../app-build || true",
+    "copy-assets": "yarn clean-old-assets; yarn build; cp -r ./build ../app-build; yarn clean-build",
+    "copy-assets-windows": "yarn build; cp -r ./build ../app-build"
+  }
+}
