@@ -18,6 +18,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/SVGClipPathFrame.h"
+#include "mozilla/SVGGeometryFrame.h"
 #include "mozilla/SVGMaskFrame.h"
 #include "mozilla/SVGTextFrame.h"
 #include "mozilla/SVGUtils.h"
@@ -1215,6 +1216,8 @@ NS_DECLARE_FRAME_PROPERTY_DELETABLE(BackgroundImageProperty,
                                     URIObserverHashtable)
 NS_DECLARE_FRAME_PROPERTY_RELEASABLE(BackgroundClipObserverProperty,
                                      BackgroundClipRenderingObserver)
+NS_DECLARE_FRAME_PROPERTY_RELEASABLE(OffsetPathProperty,
+                                     SVGRenderingObserverProperty)
 
 template <class T>
 static T* GetEffectProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
@@ -1401,6 +1404,35 @@ SVGObserverUtils::ReferenceState SVGObserverUtils::GetAndObserveClipPath(
   return frame ? eHasRefsAllValid : eHasNoRefs;
 }
 
+static SVGRenderingObserverProperty* GetOrCreateGeometryObserver(
+    nsIFrame* aFrame) {
+  // Now only offset-path property uses this. See MotionPathUtils.cpp.
+  const nsStyleDisplay* disp = aFrame->StyleDisplay();
+  if (!disp->mOffsetPath.IsUrl()) {
+    return nullptr;
+  }
+  const auto& url = disp->mOffsetPath.AsUrl();
+  RefPtr<URLAndReferrerInfo> pathURI = ResolveURLUsingLocalRef(aFrame, url);
+  return GetEffectProperty(pathURI, aFrame, OffsetPathProperty());
+}
+
+SVGGeometryElement* SVGObserverUtils::GetAndObserveGeometry(nsIFrame* aFrame) {
+  SVGRenderingObserverProperty* observers = GetOrCreateGeometryObserver(aFrame);
+  if (!observers) {
+    return nullptr;
+  }
+
+  bool frameTypeOK = true;
+  SVGGeometryFrame* frame =
+      do_QueryFrame(observers->GetAndObserveReferencedFrame(
+          LayoutFrameType::SVGGeometry, &frameTypeOK));
+  if (!frameTypeOK || !frame) {
+    return nullptr;
+  }
+
+  return static_cast<dom::SVGGeometryElement*>(frame->GetContent());
+}
+
 static SVGMaskObserverList* GetOrCreateMaskObserverList(
     nsIFrame* aMaskedFrame) {
   MOZ_ASSERT(!aMaskedFrame->GetPrevContinuation(),
@@ -1539,6 +1571,7 @@ void SVGObserverUtils::InitiateResourceDocLoads(nsIFrame* aFrame) {
   // make aFrame start observing the referenced frames.
   Unused << GetOrCreateFilterObserverListForCSS(aFrame);
   Unused << GetOrCreateClipPathObserver(aFrame);
+  Unused << GetOrCreateGeometryObserver(aFrame);
   Unused << GetOrCreateMaskObserverList(aFrame);
 }
 

@@ -7,12 +7,14 @@
 #include "mozilla/MotionPathUtils.h"
 
 #include "gfxPlatform.h"
+#include "mozilla/dom/SVGGeometryElement.h"
 #include "mozilla/dom/SVGPathData.h"
 #include "mozilla/dom/SVGViewportElement.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/layers/LayersMessages.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SVGObserverUtils.h"
 #include "mozilla/ShapeUtils.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
@@ -294,7 +296,6 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
       // is 0, used offset distance is also 0.
       usedDistance = pathLength > 0.0 ? fmod(usedDistance, pathLength) : 0.0;
       // We make sure |usedDistance| is 0.0 or a positive value.
-      // https://github.com/w3c/fxtf-drafts/issues/339
       if (usedDistance < 0.0) {
         usedDistance += pathLength;
       }
@@ -404,7 +405,8 @@ static already_AddRefed<gfx::Path> BuildSimpleInsetPath(
                                    aPathBuilder);
 }
 
-// Create a path for `path("m 0 0")`, which is the default URL path.
+// Create a path for `path("m 0 0")`, which is the default URL path if we cannot
+// resolve a SVG shape element.
 // https://drafts.fxtf.org/motion-1/#valdef-offset-path-url
 static already_AddRefed<gfx::Path> BuildDefaultPathForURL(
     gfx::PathBuilder* aBuilder) {
@@ -452,22 +454,6 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
     return OffsetPathData::Shape(gfxPath.forget(), {}, IsClosedLoop(pathData));
   }
 
-  RefPtr<gfx::PathBuilder> builder = MotionPathUtils::GetPathBuilder();
-
-  if (offsetPath.IsUrl()) {
-    // TODO: Finish this in the following patches.
-
-    // Note: This behaves as path("m 0 0") (a <basic-shape>).
-    RefPtr<gfx::Path> path = BuildDefaultPathForURL(builder);
-    // FIXME: Bug 1836847. Once we support "at <position>" for path(), we have
-    // to give it the current box position.
-    return path ? OffsetPathData::Shape(path.forget(), {}, false)
-                : OffsetPathData::None();
-  }
-
-  // The rest part is to handle "<basic-shape> || <coord-box>".
-  MOZ_ASSERT(offsetPath.IsBasicShapeOrCoordBox());
-
   nsRect coordBox;
   const nsIFrame* containingFrame =
       MotionPathUtils::GetOffsetPathReferenceBox(aFrame, coordBox);
@@ -475,6 +461,44 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
     return OffsetPathData::None();
   }
   nsPoint currentPosition = aFrame->GetOffsetTo(containingFrame);
+  RefPtr<gfx::PathBuilder> builder = MotionPathUtils::GetPathBuilder();
+
+  if (offsetPath.IsUrl()) {
+    dom::SVGGeometryElement* element =
+        SVGObserverUtils::GetAndObserveGeometry(const_cast<nsIFrame*>(aFrame));
+    if (!element) {
+      // Note: This behaves as path("m 0 0") (a <basic-shape>).
+      RefPtr<gfx::Path> path = BuildDefaultPathForURL(builder);
+      // FIXME: Bug 1836847. Once we support "at <position>" for path(), we have
+      // to give it the current box position.
+      return path ? OffsetPathData::Shape(path.forget(), {}, false)
+                  : OffsetPathData::None();
+    }
+
+    // We just need this path to calculate the specific point and direction
+    // angle, so use measuring function and get the benefit of caching the path
+    // in the SVG shape element.
+    RefPtr<gfx::Path> path = element->GetOrBuildPathForMeasuring();
+
+    // The built |path| from SVG shape element doesn't take |coordBox| into
+    // account. It uses the SVG viewport as its coordinate system. So after
+    // mapping it into the CSS layout, we should use |coordBox| as its viewport
+    // and user coordinate system. |currentPosition| is based on the border-box
+    // of the containing block. Therefore, we have to apply an extra translation
+    // to put it at the correct position based on |coordBox|.
+    //
+    // Note: we reuse |OffsetPathData::ShapeData::mCurrentPosition| to include
+    // this extra translation, so we don't have to add an extra field.
+    nsPoint positionInCoordBox = currentPosition - coordBox.TopLeft();
+    return path ? OffsetPathData::Shape(path.forget(),
+                                        std::move(positionInCoordBox),
+                                        element->IsClosedLoop())
+                : OffsetPathData::None();
+  }
+
+  // The rest part is to handle "<basic-shape> || <coord-box>".
+  MOZ_ASSERT(offsetPath.IsBasicShapeOrCoordBox());
+
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
   RefPtr<gfx::Path> path =
       disp->mOffsetPath.IsCoordBox()
