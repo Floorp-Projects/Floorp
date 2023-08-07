@@ -75,6 +75,7 @@ packaging_description_schema = schema.extend(
                 "shipping-product",
                 str,
             ),
+            Optional("vendor"): str,
         },
         # All l10n jobs use mozharness
         Required("mozharness"): {
@@ -150,6 +151,8 @@ PACKAGE_FORMATS = {
             "{msix-publisher-display-name}",
             "--identity-name",
             "{msix-identity-name}",
+            "--vendor",
+            "{msix-vendor}",
             "--arch",
             "{architecture}",
             # For langpacks.  Ignored if directory does not exist.
@@ -175,6 +178,8 @@ PACKAGE_FORMATS = {
             "{msix-publisher-display-name}",
             "--identity-name",
             "{msix-identity-name}",
+            "--vendor",
+            "{msix-vendor}",
             "--arch",
             "{architecture}",
             # For langpacks.  Ignored if directory does not exist.
@@ -475,6 +480,7 @@ def make_job_description(config, jobs):
                 "identity-name",
                 "publisher",
                 "publisher-display-name",
+                "vendor",
             ):
                 resolve_keyed_by(
                     item=temp_job,
