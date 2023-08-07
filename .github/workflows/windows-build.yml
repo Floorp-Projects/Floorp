@@ -65,16 +65,16 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: "lts/*"
-    - name: Check Argument Compartiability
+    - name: Check Argument Compatibility
       shell: node {0}
       run: |
-        //profgen and use-profdata is not compartiable
+        //profgen and use-profdata is not compatible
         if (
           process.env.GHA_profgen == "true"
           && process.env.GHA_use_profdata_jarlog != ""
         ) {process.exit(-1);}
 
-        //aarch64 and (profgen or use_profdata_jarlog) is not compartiable
+        //aarch64 and (profgen or use_profdata_jarlog) is not compatible
         if (
           process.env.GHA_aarch64 == "true"
           && (
@@ -152,7 +152,7 @@ jobs:
         elif [[ -n $GHA_use_profdata_jarlog ]]; then
           echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
           echo 'ac_add_options --with-pgo-profile-path=$(echo ~)/artifact/merged.profdata' >> mozconfig
-          echo 'ac_add_options --with-pgo-jarlog$(echo ~)/artifact/en-US.log' >> mozconfig
+          echo 'ac_add_options --with-pgo-jarlog=$(echo ~)/artifact/en-US.log' >> mozconfig
         fi
 
         # SCCACHE START
@@ -170,7 +170,7 @@ jobs:
         echo Setup Visual Studio
         sudo apt install -y msitools python3-pip
         ./mach python --virtualenv build taskcluster/scripts/misc/get_vs.py build/vs/vs2019.yaml ~/win-cross/vs2019
-        chmod -R +x ~/win-cross/vs2019
+        chmod -R +x "$(echo ~)/win-cross/vs2019"
         #? from daily-build-with-update
         #? for resolve some problems relate to VCRuntime
         echo 'WIN_UCRT_REDIST_DIR="$(echo ~)/win-cross/vs2019/Windows Kits/10/Redist/10.0.19041.0/ucrt/DLLs/x64"' >> mozconfig
@@ -178,7 +178,7 @@ jobs:
         #? from end
 
         ./mach --no-interactive bootstrap --application-choice browser
-        echo "export LIB=\"$(cd $(echo ~)/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
+        echo "export LIB=\"$(cd ~/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
 
         echo "DISPLAY_VERSION=$(cat ./browser/config/version_display.txt)" >> $GITHUB_ENV
         echo "UPDATE_CHANNEL=release" >> $GITHUB_ENV
