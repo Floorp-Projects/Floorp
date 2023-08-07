@@ -1670,6 +1670,13 @@ bool KeyframeEffect::CanAnimateTransformOnCompositor(
 bool KeyframeEffect::ShouldBlockAsyncTransformAnimations(
     const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet,
     AnimationPerformanceWarning::Type& aPerformanceWarning /* out */) const {
+  // If we depend on the SVG url (no matter whether there are any offset-path
+  // animations), we cannot run any transform-like animations in the compositor
+  // because we cannot resolve the url in the compositor if its style uses url.
+  if (aFrame->StyleDisplay()->mOffsetPath.IsUrl()) {
+    return true;
+  }
+
   EffectSet* effectSet = EffectSet::Get(mTarget.mElement, mTarget.mPseudoType);
   // The various transform properties ('transform', 'scale' etc.) get combined
   // on the compositor.
@@ -1725,6 +1732,17 @@ bool KeyframeEffect::ShouldBlockAsyncTransformAnimations(
             .HasProperty(property.mProperty)) {
       if (!CanAnimateTransformOnCompositor(aFrame, aPerformanceWarning)) {
         return true;
+      }
+    }
+
+    // If there are any offset-path animations whose animation values are url(),
+    // we have to sync with the main thread when resolving it.
+    if (property.mProperty == eCSSProperty_offset_path) {
+      for (const auto& seg : property.mSegments) {
+        if (seg.mFromValue.IsOffsetPathUrl() ||
+            seg.mToValue.IsOffsetPathUrl()) {
+          return true;
+        }
       }
     }
   }

@@ -8611,6 +8611,13 @@
   mirror: always
   rust: true
 
+# Is support for motion-path url enabled?
+- name: layout.css.motion-path-url.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Pref to control whether the ::marker property restrictions defined in [1]
 # apply.
 #

@@ -994,6 +994,15 @@ renaming_overrides_prefixing = true
     return AsOffsetPath().path->AsRay();
   }
 
+  // Return true if the <offset-path> is url().
+  bool IsUrl() const {
+    return IsOffsetPath() && AsOffsetPath().path->IsUrl();
+  }
+
+  const StyleComputedUrl& AsUrl() const {
+    return AsOffsetPath().path->AsUrl();
+  }
+
   // Return true if the <basic-shape> is path().
   bool IsPath() const {
     return IsOffsetPath() && AsOffsetPath().path->IsShape() &&

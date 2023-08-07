@@ -85,6 +85,7 @@ struct AnimationValue {
   const mozilla::StyleOffsetRotate& GetOffsetRotateProperty() const;
   const mozilla::StylePositionOrAuto& GetOffsetAnchorProperty() const;
   const mozilla::StyleOffsetPosition& GetOffsetPositionProperty() const;
+  bool IsOffsetPathUrl() const;
 
   // Return the scale for mServo, which is calculated with reference to aFrame.
   mozilla::gfx::MatrixScales GetScaleValue(const nsIFrame* aFrame) const;
