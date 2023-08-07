@@ -118,7 +118,6 @@ const TEST_CASES = [
 ];
 
 add_setup(async () => {
-  Services.fog.testResetFOG();
   await Services.logins.addLoginAsync(gLogin);
 });
 
@@ -134,6 +133,9 @@ async function verifyAutofillResults(testCase) {
     await Services.logins.addLoginAsync(testCase.extra_login);
   }
 
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+
   let formProcessed = listenForTestNotification(
     "FormProcessed",
     testCase.form_processed_count ?? 1
@@ -147,6 +149,8 @@ async function verifyAutofillResults(testCase) {
   await formProcessed;
 
   await Services.fog.testFlushAllChildren();
+
+  gBrowser.removeTab(tab);
 
   gAutofillLabels.forEach(label => {
     if (label != testCase.autofill_result) {
@@ -166,8 +170,6 @@ async function verifyAutofillResults(testCase) {
     }
   });
 
-  gBrowser.removeTab(tab);
-
   if (testCase.extra_login) {
     await Services.logins.removeLogin(testCase.extra_login);
   }
@@ -175,8 +177,6 @@ async function verifyAutofillResults(testCase) {
   if (testCase.prefs) {
     await SpecialPowers.popPrefEnv();
   }
-
-  Services.fog.testResetFOG();
 }
 
 add_task(async function test_autofill_results() {
