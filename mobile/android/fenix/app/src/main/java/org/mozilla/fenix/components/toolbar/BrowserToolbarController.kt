@@ -29,6 +29,7 @@ import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeScreenViewModel
 
 /**
@@ -47,6 +48,11 @@ interface BrowserToolbarController {
      * @see [BrowserToolbarInteractor.onHomeButtonClicked]
      */
     fun handleHomeButtonClick()
+
+    /**
+     * @see [BrowserToolbarInteractor.onEraseButtonClicked]
+     */
+    fun handleEraseButtonClick()
 }
 
 @Suppress("LongParameterList")
@@ -178,6 +184,12 @@ class DefaultBrowserToolbarController(
                 BrowserFragmentDirections.actionGlobalHome(),
             )
         }
+    }
+
+    override fun handleEraseButtonClick() {
+        homeViewModel.sessionToDelete = HomeFragment.ALL_PRIVATE_TABS
+        val directions = BrowserFragmentDirections.actionGlobalHome()
+        navController.navigate(directions)
     }
 
     companion object {

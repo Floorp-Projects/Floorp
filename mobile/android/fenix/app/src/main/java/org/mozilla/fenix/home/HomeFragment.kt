@@ -664,7 +664,11 @@ class HomeFragment : Fragment() {
         }
 
         val snackbarMessage = if (sessionCode == ALL_PRIVATE_TABS) {
-            getString(R.string.snackbar_private_tabs_closed)
+            if (requireContext().settings().feltPrivateBrowsingEnabled) {
+                getString(R.string.snackbar_private_data_deleted)
+            } else {
+                getString(R.string.snackbar_private_tabs_closed)
+            }
         } else {
             getString(R.string.snackbar_tabs_closed)
         }
