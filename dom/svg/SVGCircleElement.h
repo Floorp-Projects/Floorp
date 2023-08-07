@@ -42,6 +42,7 @@ class SVGCircleElement final : public SVGCircleElementBase {
       const Matrix& aToBoundsSpace,
       const Matrix* aToNonScalingStrokeSpace = nullptr) override;
   already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
+  bool IsClosedLoop() const override { return true; }
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

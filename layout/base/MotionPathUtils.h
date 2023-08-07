@@ -48,7 +48,9 @@ struct OffsetPathData {
     // The current position of this transfromed box in the coordinate system of
     // its containing block.
     nsPoint mCurrentPosition;
-    bool mIsClosedIntervals;
+    // True if it is a closed loop; false if it is a unclosed interval.
+    // https://drafts.fxtf.org/motion/#path-distance
+    bool mIsClosedLoop;
   };
 
   struct RayData {

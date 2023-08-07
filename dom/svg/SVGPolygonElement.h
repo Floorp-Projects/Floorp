@@ -30,6 +30,7 @@ class SVGPolygonElement final : public SVGPolygonElementBase {
   // SVGGeometryElement methods:
   void GetMarkPoints(nsTArray<SVGMark>* aMarks) override;
   already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
+  bool IsClosedLoop() const override { return true; }
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
