@@ -51,8 +51,7 @@ CONTROL(Escape,      Escape,      dom::KeyboardEvent_Binding::DOM_VK_ESCAPE)
 // Leaving "Help" key unimplemented; it only appears in some keyboard in Linux.
 CONTROL(Home,        Home,        dom::KeyboardEvent_Binding::DOM_VK_HOME)
 CONTROL(Insert,      Insert,      dom::KeyboardEvent_Binding::DOM_VK_INSERT)
-CONTROL(Meta,        OSLeft,      dom::KeyboardEvent_Binding::DOM_VK_WIN)
-CONTROL(OS,          OSLeft,      dom::KeyboardEvent_Binding::DOM_VK_WIN)
+CONTROL(Meta,        MetaLeft,    dom::KeyboardEvent_Binding::DOM_VK_WIN)
 CONTROL(PageDown,    PageDown,    dom::KeyboardEvent_Binding::DOM_VK_PAGE_DOWN)
 CONTROL(PageUp,      PageUp,      dom::KeyboardEvent_Binding::DOM_VK_PAGE_UP)
 // Leaving "Pause", "PrintScreen" and "ScrollLock" keys unimplemented; they are
