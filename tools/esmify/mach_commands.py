@@ -63,7 +63,7 @@ excluded_from_imports_prefix = list(
             "devtools/client/shared/source-map-loader/test/browser/fixtures/bundle.js",
             "layout/style/test/property_database.js",
             "services/fxaccounts/FxAccountsPairingChannel.js",
-            "testing/talos/talos/tests/devtools/addon/content/pages/custom/debugger/static/js/main.js",  # noqa E501
+            "testing/talos/talos/tests/devtools/addon/content/pages/custom/debugger/app-build/static/js/main.js",  # noqa E501
             "testing/web-platform/",
             # Unrelated testcases that has edge case syntax.
             "browser/components/sessionstore/test/unit/data/",

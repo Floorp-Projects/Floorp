@@ -36,14 +36,14 @@ const IFRAME_BASE_URL =
 const EXPECTED = {
   sources: 107,
   file: "App.js",
-  sourceURL: `${IFRAME_BASE_URL}custom/debugger/static/js/App.js`,
+  sourceURL: `${IFRAME_BASE_URL}custom/debugger/app-build/static/js/App.js`,
   text: "import React, { Component } from 'react';",
   threadsCount: 2,
 };
 
 const EXPECTED_FUNCTION = "window.hitBreakpoint()";
 
-const TEST_URL = PAGES_BASE_URL + "custom/debugger/index.html";
+const TEST_URL = PAGES_BASE_URL + "custom/debugger/app-build/index.html";
 
 module.exports = async function () {
   const tab = await testSetup(TEST_URL, { disableCache: true });
@@ -169,7 +169,7 @@ async function testPreview(dbg, tab, testFunction) {
 
 async function testOpeningLargeMinifiedFile(dbg, tab) {
   dump("Add minified.js (large minified file)\n");
-  const file = `${IFRAME_BASE_URL}custom/debugger/static/js/minified.js`;
+  const file = `${IFRAME_BASE_URL}custom/debugger/app-build/static/js/minified.js`;
 
   const messageManager = tab.linkedBrowser.messageManager;
 
@@ -217,7 +217,7 @@ async function testPrettyPrint(dbg) {
   // Disable source map so we can prettyprint main.js
   await dbg.actions.toggleSourceMapsEnabled(false);
 
-  const fileUrl = `${IFRAME_BASE_URL}custom/debugger/static/js/main.js`;
+  const fileUrl = `${IFRAME_BASE_URL}custom/debugger/app-build/static/js/main.js`;
   const formattedFileUrl = `${fileUrl}:formatted`;
 
   dump("Select minified file\n");
