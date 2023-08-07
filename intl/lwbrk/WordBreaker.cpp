@@ -10,6 +10,14 @@
 #include "nsTArray.h"
 #include "nsUnicodeProperties.h"
 
+#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
+#  include "ICU4XDataProvider.h"
+#  include "ICU4XWordBreakIteratorUtf16.hpp"
+#  include "ICU4XWordSegmenter.hpp"
+#  include "mozilla/intl/ICU4XGeckoDataProvider.h"
+#  include "mozilla/StaticPrefs_intl.h"
+#endif
+
 using mozilla::intl::Script;
 using mozilla::intl::UnicodeProperties;
 using mozilla::intl::WordBreaker;
@@ -102,8 +110,33 @@ WordRange WordBreaker::FindWord(const char16_t* aText, uint32_t aLen,
     return {aLen, aLen};
   }
 
-  WordBreakClass c = GetClass(aText[aPos]);
   WordRange range{0, aLen};
+
+#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
+  if (StaticPrefs::intl_icu4x_segmenter_enabled()) {
+    auto result =
+        capi::ICU4XWordSegmenter_create_auto(mozilla::intl::GetDataProvider());
+    MOZ_ASSERT(result.is_ok);
+    ICU4XWordSegmenter segmenter(result.ok);
+    ICU4XWordBreakIteratorUtf16 iterator =
+        segmenter.segment_utf16(diplomat::span((const uint16_t*)aText, aLen));
+
+    uint32_t previousPos = 0;
+    while (true) {
+      const int32_t nextPos = iterator.next();
+      if (nextPos < 0) {
+        return {previousPos, aLen};
+      }
+      if ((uint32_t)nextPos > aPos) {
+        return {previousPos, (uint32_t)nextPos};
+      }
+
+      previousPos = nextPos;
+    }
+  }
+#endif
+
+  WordBreakClass c = GetClass(aText[aPos]);
 
   // Scan forward
   for (uint32_t i = aPos + 1; i <= aLen; i++) {
