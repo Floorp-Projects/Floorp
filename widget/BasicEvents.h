@@ -841,6 +841,10 @@ class WidgetEvent : public WidgetEventTime {
    */
   bool IsBlockedForFingerprintingResistance() const;
   /**
+   * Whether the event handler can flush pending notifications or not.
+   */
+  bool AllowFlushingPendingNotifications() const;
+  /**
    * Initialize mComposed
    */
   void SetDefaultComposed() {

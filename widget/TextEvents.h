@@ -980,7 +980,7 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
         mWithFontRanges(false),
         mNeedsToFlushLayout(aOtherEvent.mNeedsToFlushLayout) {}
 
-  virtual WidgetEvent* Duplicate() const override {
+  WidgetEvent* Duplicate() const override {
     // This event isn't an internal event of any DOM event.
     NS_ASSERTION(!IsAllowedToDispatchDOMEvent(),
                  "WidgetQueryContentEvent needs to support Duplicate()");
@@ -1054,8 +1054,6 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
     mInput.mLength = aLength;
     Init(aOptions);
   }
-
-  bool NeedsToFlushLayout() const { return mNeedsToFlushLayout; }
 
   void RequestFontRanges() {
     MOZ_ASSERT(mMessage == eQueryTextContent);

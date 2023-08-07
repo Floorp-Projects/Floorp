@@ -523,6 +523,17 @@ bool WidgetEvent::IsBlockedForFingerprintingResistance() const {
   }
 }
 
+bool WidgetEvent::AllowFlushingPendingNotifications() const {
+  if (mClass != eQueryContentEventClass) {
+    return true;
+  }
+  // If the dispatcher does not want a flush of pending notifications, it may
+  // be caused by that it's unsafe.  Therefore, we should allow handlers to
+  // flush pending things only when the dispatcher requires the latest content
+  // layout.
+  return AsQueryContentEvent()->mNeedsToFlushLayout;
+}
+
 /******************************************************************************
  * mozilla::WidgetEvent
  *
