@@ -31,6 +31,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=846380
 <pre id="test">
 <script type="application/javascript">
 
+const { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+
 /**
  * Test for Bug 846380
  * This test checks how the value of <input type=range> changes in response to
@@ -42,6 +46,9 @@ SimpleTest.waitForFocus(function() {
   test(synthesizeTouch, "tap", "touchstart", "touchmove", "touchend");
   SimpleTest.finish();
 });
+
+const kIsWin = AppConstants.platform == "win";
+const kIsLinux = AppConstants.platform == "linux";
 
 const MIDDLE_OF_RANGE = "50";
 const MINIMUM_OF_RANGE = "0";
@@ -135,7 +142,10 @@ function test(synthesizeFunc, clickOrTap, startName, moveName, endName) {
   flush();
 
   // Test mouse/touch events with certain modifiers are ignored:
-  var modifiersIgnore = ["ctrlKey", "altGrKey", "fnKey", "osKey"];
+  var modifiersIgnore = ["ctrlKey", "altGrKey", "fnKey"];
+  if (kIsWin || kIsLinux) {
+    modifiersIgnore.push("metaKey");
+  }
   for (var modifier of modifiersIgnore) {
     elem.value = QUARTER_OF_RANGE;
     var eventParams = {};
@@ -145,7 +155,10 @@ function test(synthesizeFunc, clickOrTap, startName, moveName, endName) {
   }
 
   // Test mouse/touch events with certain modifiers are allowed:
-  var modifiersAllow = ["shiftKey", "altKey", "metaKey"];
+  var modifiersAllow = ["shiftKey", "altKey"];
+  if (!modifiersIgnore.includes("metaKey")) {
+    modifiersAllow.push("metaKey");
+  }
   for (var modifier of modifiersAllow) {
     elem.value = QUARTER_OF_RANGE;
     var eventParams = {};

@@ -657,8 +657,6 @@ uint32_t KeyBinding::AccelModifier() {
       return kControl;
     case MODIFIER_META:
       return kMeta;
-    case MODIFIER_OS:
-      return kOS;
     default:
       MOZ_CRASH("Handle the new result of WidgetInputEvent::AccelModifier()");
       return 0;

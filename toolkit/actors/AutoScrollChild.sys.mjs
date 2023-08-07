@@ -357,12 +357,6 @@ export class AutoScrollChild extends JSWindowActorChild {
         return false;
       }
     }
-    if (
-      event.getModifierState("OS") &&
-      Services.prefs.getBoolPref("general.autoscroll.prevent_to_start.osKey")
-    ) {
-      return false;
-    }
     return true;
   }
 
