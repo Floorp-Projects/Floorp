@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import { div } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../../../utils/connect";
 
@@ -88,12 +89,10 @@ export class Popup extends Component {
   }
 
   renderExceptionPreview(exception) {
-    return (
-      <ExceptionPopup
-        exception={exception}
-        mouseout={this.props.clearPreview}
-      />
-    );
+    return React.createElement(ExceptionPopup, {
+      exception: exception,
+      clearPreview: this.props.clearPreview,
+    });
   }
 
   renderPreview() {
@@ -108,35 +107,38 @@ export class Popup extends Component {
       return this.renderExceptionPreview(exception);
     }
 
-    return (
-      <div
-        className="preview-popup"
-        style={{ maxHeight: this.calculateMaxHeight() }}
-      >
-        <ObjectInspector
-          roots={[root]}
-          autoExpandDepth={1}
-          autoReleaseObjectActors={false}
-          mode={usesCustomFormatter ? MODE.LONG : null}
-          disableWrap={true}
-          focusable={false}
-          openLink={this.props.openLink}
-          defaultRep={Grip}
-          createElement={this.createElement}
-          onDOMNodeClick={grip => this.props.openElementInInspector(grip)}
-          onInspectIconClick={grip => this.props.openElementInInspector(grip)}
-          onDOMNodeMouseOver={grip => this.props.highlightDomElement(grip)}
-          onDOMNodeMouseOut={grip => this.props.unHighlightDomElement(grip)}
-          mayUseCustomFormatter={true}
-          onViewSourceInDebugger={() =>
+    return div(
+      {
+        className: "preview-popup",
+        style: {
+          maxHeight: this.calculateMaxHeight(),
+        },
+      },
+      React.createElement(ObjectInspector, {
+        roots: [root],
+        autoExpandDepth: 1,
+        autoReleaseObjectActors: false,
+        mode: usesCustomFormatter ? MODE.LONG : null,
+        disableWrap: true,
+        focusable: false,
+        openLink: this.props.openLink,
+        defaultRep: Grip,
+        createElement: this.createElement,
+        onDOMNodeClick: grip => this.props.openElementInInspector(grip),
+        onInspectIconClick: grip => this.props.openElementInInspector(grip),
+        onDOMNodeMouseOver: grip => this.props.highlightDomElement(grip),
+        onDOMNodeMouseOut: grip => this.props.unHighlightDomElement(grip),
+        mayUseCustomFormatter: true,
+        onViewSourceInDebugger: () => {
+          return (
             resultGrip.location &&
             this.props.selectSourceURL(resultGrip.location.url, {
               line: resultGrip.location.line,
               column: resultGrip.location.column,
             })
-          }
-        />
-      </div>
+          );
+        },
+      })
     );
   }
 
@@ -165,16 +167,16 @@ export class Popup extends Component {
     }
 
     const type = this.getPreviewType();
-    return (
-      <Popover
-        targetPosition={cursorPos}
-        type={type}
-        editorRef={editorRef}
-        target={this.props.preview.target}
-        mouseout={this.props.clearPreview}
-      >
-        {this.renderPreview()}
-      </Popover>
+    return React.createElement(
+      Popover,
+      {
+        targetPosition: cursorPos,
+        type: type,
+        editorRef: editorRef,
+        target: this.props.preview.target,
+        mouseout: this.props.clearPreview,
+      },
+      this.renderPreview()
     );
   }
 }

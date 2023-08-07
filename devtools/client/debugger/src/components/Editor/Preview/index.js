@@ -26,6 +26,7 @@ class Preview extends PureComponent {
       editorRef: PropTypes.object.isRequired,
       isPaused: PropTypes.bool.isRequired,
       getExceptionPreview: PropTypes.func.isRequired,
+      getPreview: PropTypes.func,
     };
   }
 
@@ -106,15 +107,12 @@ class Preview extends PureComponent {
     if (!preview || this.state.selecting) {
       return null;
     }
-
-    return (
-      <Popup
-        preview={preview}
-        editor={this.props.editor}
-        editorRef={this.props.editorRef}
-        clearPreview={this.clearPreview}
-      />
-    );
+    return React.createElement(Popup, {
+      preview: preview,
+      editor: this.props.editor,
+      editorRef: this.props.editorRef,
+      clearPreview: this.clearPreview,
+    });
   }
 }
 
