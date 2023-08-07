@@ -570,7 +570,9 @@ function makeExpectedResult({
       displayUrl: url.href.replace(/^https:\/\//, ""),
       originalUrl: suggestion.url,
       description: isTopPick ? suggestion.description : "",
-      icon: "chrome://global/skin/icons/pocket.svg",
+      icon: isTopPick
+        ? "chrome://global/skin/icons/pocket.svg"
+        : "chrome://global/skin/icons/pocket-favicon.ico",
       helpUrl: QuickSuggest.HELP_URL,
       shouldShowUrl: true,
       bottomTextL10n: {
