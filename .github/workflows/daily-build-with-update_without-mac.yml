@@ -129,23 +129,23 @@ jobs:
     steps:
     - name: generate update XML file
       run: |
-        echo '<?xml version="1.0" encoding="UTF-8"?>
+        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
           <updates>
             <update
-              type="minor"
-              displayVersion="${DISPVER}"
-              appVersion="${INSDVER}"
-              platformVersion="${INSDVER}"
-              buildID="${BUILDID}"
-              detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/"
+              type=\"minor\"
+              displayVersion=\"${DISPVER}\"
+              appVersion=\"${INSDVER}\"
+              platformVersion=\"${INSDVER}\"
+              buildID=\"${BUILDID}\"
+              detailsURL=\"https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/\"
             >
             <patch
-              type="complete"
-              URL="https://github.com/${GHREPO}/releases/download/beta/${MAR_NAME}"
-              size="${MAR_SIZE}"
+              type=\"complete\"
+              URL=\"https://github.com/${GHREPO}/releases/download/beta/${MAR_NAME}\"
+              size=\"${MAR_SIZE}\"
             />
             </update>
-          </updates>' > WINNT-x86_64.xml
+          </updates>" > WINNT-x86_64.xml
       env:
         DISPVER: ${{needs.get-display-version.outputs.display-version}}
         INSDVER: ${{needs.get-inside-version.outputs.inside-version}}
@@ -176,23 +176,23 @@ jobs:
     steps:
       - name: generate update XML file
         run: |
-          echo '<?xml version="1.0" encoding="UTF-8"?>
+          echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
             <updates>
               <update
-                type="minor"
-                displayVersion="${DISPVER}"
-                appVersion="${INSDVER}"
-                platformVersion="${INSDVER}"
-                buildID="${BUILDID}"
-                detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/"
+                type=\"minor\"
+                displayVersion=\"${DISPVER}\"
+                appVersion=\"${INSDVER}\"
+                platformVersion=\"${INSDVER}\"
+                buildID=\"${BUILDID}\"
+                detailsURL=\"https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/\"
               >
               <patch
-                type="complete"
-                URL="https://github.com/${GHREPO}/releases/download/beta/${LINUX_MAR_NAME}"
-                size="${MAR_SIZE}"
+                type=\"complete\"
+                URL=\"https://github.com/${GHREPO}/releases/download/beta/${MAR_NAME}\"
+                size=\"${MAR_SIZE}\"
               />
             </update>
-          </updates>' > LINUX-x86_64.xml
+          </updates>" > LINUX-x86_64.xml
         env:
           DISPVER: ${{needs.get-display-version.outputs.display-version}}
           INSDVER: ${{needs.get-inside-version.outputs.inside-version}}
