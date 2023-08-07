@@ -29,7 +29,8 @@ class Lifetime(enum.Enum):
 class DataSensitivity(enum.Enum):
     technical = 1
     interaction = 2
-    web_activity = 3
+    stored_content = 3
+    web_activity = 3  # Old, deprecated name
     highly_sensitive = 4
 
 

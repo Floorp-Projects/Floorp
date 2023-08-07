@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.62"
 name = "glean-core"
-version = "53.1.0"
+version = "53.2.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -33,10 +33,9 @@ readme = "README.md"
 keywords = ["telemetry"]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/glean"
-resolver = "1"
 
 [package.metadata.glean]
-glean-parser = "7.1.0"
+glean-parser = "8.1.0"
 
 [dependencies.bincode]
 version = "1.2.1"

@@ -136,7 +136,7 @@ fn snapshot_correctly_clears_the_stores() {
     let snapshot2 = glean
         .event_storage()
         .snapshot_as_json(&glean, "store2", false);
-    for s in vec![snapshot, snapshot2] {
+    for s in [snapshot, snapshot2] {
         assert!(s.is_some());
         let s = s.unwrap();
         assert_eq!(1, s.as_array().unwrap().len());

@@ -36,8 +36,8 @@ pub use configuration::{Builder as ConfigurationBuilder, Configuration};
 pub use core_metrics::ClientInfoMetrics;
 pub use glean_core::{
     metrics::{Datetime, DistributionData, MemoryUnit, Rate, RecordedEvent, TimeUnit, TimerId},
-    traits, CommonMetricData, Error, ErrorType, Glean, HistogramType, Lifetime, RecordedExperiment,
-    Result,
+    traits, CommonMetricData, Error, ErrorType, Glean, HistogramType, Lifetime, PingRateLimit,
+    RecordedExperiment, Result,
 };
 
 mod configuration;

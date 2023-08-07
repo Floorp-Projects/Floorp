@@ -27,7 +27,11 @@ from . import tags
 from . import util
 
 
+# Yield only an error message
 LintGenerator = Generator[str, None, None]
+
+# Yield fully constructed GlinterNits
+NitGenerator = Generator["GlinterNit", None, None]
 
 
 class CheckType(enum.Enum):
@@ -304,6 +308,40 @@ def check_redundant_ping(
             yield ("The word 'custom' is redundant.")
 
 
+def check_unknown_ping(
+    check_name: str,
+    check_type: CheckType,
+    all_pings: Dict[str, pings.Ping],
+    metrics: Dict[str, metrics.Metric],
+    parser_config: Dict[str, Any],
+) -> NitGenerator:
+    """
+    Check that all pings in `send_in_pings` for all metrics are either a builtin ping
+    or in the list of defined custom pings.
+    """
+    available_pings = [p for p in all_pings]
+
+    for _, metric in metrics.items():
+        if check_name in metric.no_lint:
+            continue
+
+        send_in_pings = metric.send_in_pings
+        for target_ping in send_in_pings:
+            if target_ping in pings.RESERVED_PING_NAMES:
+                continue
+
+            if target_ping not in available_pings:
+                msg = f"Ping `{target_ping} `in `send_in_pings` is unknown."
+                name = ".".join([metric.category, metric.name])
+                nit = GlinterNit(
+                    check_name,
+                    name,
+                    msg,
+                    check_type,
+                )
+                yield nit
+
+
 # The checks that operate on an entire category of metrics:
 #    {NAME: (function, is_error)}
 CATEGORY_CHECKS: Dict[
@@ -339,6 +377,20 @@ PING_CHECKS: Dict[
     "BUG_NUMBER": (check_bug_number, CheckType.error),
     "TAGS_REQUIRED": (check_tags_required, CheckType.error),
     "REDUNDANT_PING": (check_redundant_ping, CheckType.error),
+}
+
+ALL_OBJECT_CHECKS: Dict[
+    str,
+    Tuple[
+        Callable[
+            # check name, check type, pings, metrics, config
+            [str, CheckType, dict, dict, dict],
+            NitGenerator,
+        ],
+        CheckType,
+    ],
+] = {
+    "UNKNOWN_PING_REFERENCED": (check_unknown_ping, CheckType.error),
 }
 
 
@@ -410,6 +462,29 @@ def _lint_pings(
     return nits
 
 
+def _lint_all_objects(
+    objects: Dict[str, Dict[str, Union[metrics.Metric, pings.Ping, tags.Tag]]],
+    parser_config: Dict[str, Any],
+) -> List[GlinterNit]:
+    nits: List[GlinterNit] = []
+
+    pings = objects.get("pings")
+    if not pings:
+        return []
+
+    metrics = objects.get("all_metrics")
+    if not metrics:
+        return []
+
+    for check_name, (check_func, check_type) in ALL_OBJECT_CHECKS.items():
+        new_nits = list(
+            check_func(check_name, check_type, pings, metrics, parser_config)
+        )
+        nits.extend(new_nits)
+
+    return nits
+
+
 def lint_metrics(
     objs: metrics.ObjectTree,
     parser_config: Optional[Dict[str, Any]] = None,
@@ -427,6 +502,9 @@ def lint_metrics(
 
     nits: List[GlinterNit] = []
     valid_tag_names = [tag for tag in objs.get("tags", [])]
+
+    nits.extend(_lint_all_objects(objs, parser_config))
+
     for category_name, category in sorted(list(objs.items())):
         if category_name == "pings":
             nits.extend(_lint_pings(category, parser_config, valid_tag_names))
@@ -493,15 +571,6 @@ def lint_metrics(
         )
 
     return nits
-
-
-def lint_yaml_files(
-    input_filepaths: Iterable[Path],
-    file=sys.stderr,
-    parser_config: Optional[Dict[str, Any]] = None,
-) -> List:
-    """Always empty."""
-    return []
 
 
 def glinter(

@@ -14,7 +14,7 @@ ecdsa==0.15
 esprima==4.0.1
 fluent.migrate==0.12.0
 fluent.syntax==0.19.0
-glean_parser==7.2.1
+glean_parser==8.1.0
 importlib-metadata==6.0.0
 jsmin==3.0.0
 json-e==2.7.0

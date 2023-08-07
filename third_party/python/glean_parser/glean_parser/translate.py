@@ -18,6 +18,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional
 from . import lint
 from . import parser
 from . import javascript
+from . import javascript_server
 from . import kotlin
 from . import markdown
 from . import metrics
@@ -54,6 +55,8 @@ class Outputter:
 OUTPUTTERS = {
     "javascript": Outputter(javascript.output_javascript, []),
     "typescript": Outputter(javascript.output_typescript, []),
+    "javascript_server": Outputter(javascript_server.output_javascript, []),
+    "typescript_server": Outputter(javascript_server.output_typescript, []),
     "kotlin": Outputter(kotlin.output_kotlin, ["*.kt"]),
     "markdown": Outputter(markdown.output_markdown, []),
     "swift": Outputter(swift.output_swift, ["*.swift"]),
