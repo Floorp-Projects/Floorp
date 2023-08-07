@@ -20,11 +20,13 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.MatcherHelper
+import org.mozilla.fenix.helpers.MockBrowserDataHelper.createTabItem
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.setCustomSearchEngine
 import org.mozilla.fenix.helpers.SearchDispatcher
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
+import org.mozilla.fenix.helpers.TestHelper.verifyKeyboardVisibility
 import org.mozilla.fenix.ui.robots.clickContextMenuItem
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -609,6 +611,63 @@ class ComposeSearchTest {
                 openSearchGroup(queryString)
                 verifyHistoryItemExists(shouldExist = true, item = Constants.searchEngineCodes["DuckDuckGo"]!!)
             }
+        }
+    }
+
+    @Test
+    fun verifySearchTabsItemsTest() {
+        navigationToolbar {
+        }.clickUrlbar {
+            clickSearchSelectorButton()
+            selectTemporarySearchMethod("Tabs")
+            verifyKeyboardVisibility(isExpectedToBeVisible = true)
+            verifyScanButtonVisibility(visible = false)
+            verifyVoiceSearchButtonVisibility(enabled = true)
+            verifySearchBarPlaceholder(text = "Search tabs")
+        }
+    }
+
+    @Test
+    fun verifySearchTabsWithoutOpenTabsTest() {
+        navigationToolbar {
+        }.clickUrlbar {
+            clickSearchSelectorButton()
+            selectTemporarySearchMethod(searchEngineName = "Tabs")
+            typeSearch(searchTerm = "Mozilla")
+            verifyNoSuggestionsAreDisplayed(rule = activityTestRule, "Mozilla")
+            clickClearButton()
+            verifySearchBarPlaceholder("Search tabs")
+        }
+    }
+
+    @Test
+    fun verifySearchTabsWithOpenTabsTest() {
+        val firstPageUrl = TestAssetHelper.getGenericAsset(searchMockServer, 1)
+        val secondPageUrl = TestAssetHelper.getGenericAsset(searchMockServer, 2)
+
+        createTabItem(firstPageUrl.url.toString())
+        createTabItem(secondPageUrl.url.toString())
+
+        navigationToolbar {
+        }.clickUrlbar {
+            clickSearchSelectorButton()
+            selectTemporarySearchMethod(searchEngineName = "Tabs")
+            typeSearch(searchTerm = "Mozilla")
+            verifyNoSuggestionsAreDisplayed(rule = activityTestRule, "Mozilla")
+            clickClearButton()
+            typeSearch(searchTerm = "generic")
+            verifyTypedToolbarText("generic")
+            verifyFirefoxSuggestResults(
+                rule = activityTestRule,
+                searchTerm = "generic",
+                firstPageUrl.url.toString(),
+                secondPageUrl.url.toString(),
+            )
+        }.clickSearchSuggestion(firstPageUrl.url.toString()) {
+            verifyTabCounter("2")
+        }.openComposeTabDrawer(activityTestRule) {
+            verifyOpenTabsOrder(position = 1, title = firstPageUrl.url.toString())
+            verifyOpenTabsOrder(position = 2, title = secondPageUrl.url.toString())
         }
     }
 }

@@ -6,8 +6,10 @@
 
 package org.mozilla.fenix.ui.robots
 
+import androidx.compose.ui.test.assertAny
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollToNode
 import androidx.test.espresso.Espresso.onView
@@ -139,10 +141,11 @@ class SearchRobot {
     fun verifyNoSuggestionsAreDisplayed(rule: ComposeTestRule, vararg searchSuggestions: String) {
         rule.waitForIdle()
         for (searchSuggestion in searchSuggestions) {
-            assertTrue(
-                mDevice.findObject(UiSelector().textContains(searchSuggestion))
-                    .waitUntilGone(waitingTimeLong),
-            )
+            rule.onAllNodesWithTag("mozac.awesomebar.suggestions")
+                .assertAny(
+                    hasText(searchSuggestion)
+                        .not(),
+                )
         }
     }
 

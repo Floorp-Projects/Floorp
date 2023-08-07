@@ -89,6 +89,20 @@ class TabDrawerRobot {
     fun clickSyncedTabsButton() = syncedTabsButton().click()
 
     fun verifyExistingOpenTabs(vararg titles: String) = assertExistingOpenTabs(*titles)
+
+    fun verifyOpenTabsOrder(position: Int, title: String) {
+        mDevice.findObject(
+            UiSelector()
+                .resourceId("$packageName:id/tab_item")
+                .childSelector(
+                    UiSelector().textContains(title),
+                ),
+        ).getFromParent(
+            UiSelector()
+                .resourceId("$packageName:id/tab_tray_grid_item")
+                .index(position - 1),
+        )
+    }
     fun verifyNoExistingOpenTabs(vararg titles: String) = assertNoExistingOpenTabs(*titles)
     fun verifyCloseTabsButton(title: String) = assertCloseTabsButton(title)
 

@@ -15,10 +15,12 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.filter
 import androidx.compose.ui.test.hasAnyChild
 import androidx.compose.ui.test.hasParent
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onChildAt
 import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -97,6 +99,12 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
             composeTestRule.tabItem(title).assertExists()
         }
     }
+
+    fun verifyOpenTabsOrder(title: String, position: Int) =
+        composeTestRule.normalTabsList()
+            .onChildAt(position - 1)
+            .assert(hasTestTag(TabsTrayTestTag.tabItemRoot))
+            .assert(hasAnyChild(hasText(title)))
 
     fun verifyNoExistingOpenTabs(vararg titles: String) {
         titles.forEach { title ->
