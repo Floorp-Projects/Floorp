@@ -81,6 +81,8 @@
     <dimen name="home_item_vertical_margin">8dp</dimen>
     <dimen name="wordmark_text_height">18dp</dimen>
     <dimen name="wordmark_text_margin_top">10dp</dimen>
+    <dimen name="wordmark_text_height_felt_privacy">32dp</dimen>
+    <dimen name="wordmark_text_margin_top_felt_privacy">4dp</dimen>
 
     <!-- Browser Fragment -->
     <!--The size of the gap between the tab preview and content layout.-->

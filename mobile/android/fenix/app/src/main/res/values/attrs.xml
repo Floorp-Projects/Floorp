@@ -69,6 +69,8 @@
     <attr name="fenixLogo" format="reference" />
     <attr name="fenixWordmarkText" format="reference" />
     <attr name="fenixWordmarkLogo" format="reference" />
+    <attr name="fenixWordmarkTextHeight" format="reference"/>
+    <attr name="fenixWordmarkTextMarginTop" format="reference"/>
     <attr name="toolbarStartGradient" format="reference"/>
     <attr name="toolbarCenterGradient" format="reference"/>
     <attr name="toolbarEndGradient" format="reference"/>
