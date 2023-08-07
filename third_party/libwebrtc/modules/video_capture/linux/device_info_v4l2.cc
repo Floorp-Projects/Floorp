@@ -239,9 +239,8 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
   int fd = -1;
   bool found = false;
   struct v4l2_capability cap;
-  int device_index;
-  for (device_index = 0; device_index < 64; device_index++) {
-    sprintf(device, "/dev/video%d", device_index);
+  for (int n = 0; n < 64; n++) {
+    snprintf(device, sizeof(device), "/dev/video%d", n);
     if ((fd = open(device, O_RDONLY)) != -1) {
       // query device capabilities and make sure this is a video capture device
       if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 || !IsVideoCaptureDevice(&cap)) {
@@ -293,15 +292,8 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
       RTC_LOG(LS_INFO) << "buffer passed is too small";
       return -1;
     }
-  } else {
-    // if there's no bus info to use for uniqueId, invent one - and it has to be repeatable
-    if (snprintf(deviceUniqueIdUTF8,
-                 deviceUniqueIdUTF8Length, "fake_%u", device_index) >=
-        (int) deviceUniqueIdUTF8Length)
-    {
-      return -1;
-    }
   }
+
   return 0;
 }
 
