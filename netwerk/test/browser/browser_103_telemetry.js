@@ -7,11 +7,11 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
 Services.prefs.setCharPref("dom.securecontext.allowlist", "example.com");
 
 var kTest103 =
-  "http://example.com/browser/netwerk/test/browser/103_preload.html";
+  "https://example.com/browser/netwerk/test/browser/103_preload.html";
 var kTestNo103 =
-  "http://example.com/browser/netwerk/test/browser/no_103_preload.html";
+  "https://example.com/browser/netwerk/test/browser/no_103_preload.html";
 var kTest404 =
-  "http://example.com/browser/netwerk/test/browser/103_preload_and_404.html";
+  "https://example.com/browser/netwerk/test/browser/103_preload_and_404.html";
 
 add_task(async function () {
   let hist_hints = TelemetryTestUtils.getAndClearHistogram(
