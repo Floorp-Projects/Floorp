@@ -39,9 +39,9 @@ add_task(async function test_toggle_never_translate_language_menuitem() {
   );
   await openTranslationsSettingsMenuViaTranslationsButton();
 
-  await assertIsNeverTranslateLanguage("es", false);
+  await assertIsNeverTranslateLanguage("es", { checked: false });
   await toggleNeverTranslateLanguage();
-  await assertIsNeverTranslateLanguage("es", true);
+  await assertIsNeverTranslateLanguage("es", { checked: true });
 
   info(
     "The page should still be in its original, untranslated form because " +
@@ -164,9 +164,9 @@ add_task(
     );
     await openTranslationsSettingsMenuViaTranslationsButton();
 
-    await assertIsNeverTranslateLanguage("es", false);
+    await assertIsNeverTranslateLanguage("es", { checked: false });
     await toggleNeverTranslateLanguage();
-    await assertIsNeverTranslateLanguage("es", true);
+    await assertIsNeverTranslateLanguage("es", { checked: true });
 
     info(
       "The page should still be in its original, untranslated form because " +
@@ -229,13 +229,13 @@ add_task(
     );
     await openTranslationsSettingsMenuViaTranslationsButton();
 
-    await assertIsAlwaysTranslateLanguage("es", false);
-    await assertIsNeverTranslateLanguage("es", false);
+    await assertIsAlwaysTranslateLanguage("es", { checked: false });
+    await assertIsNeverTranslateLanguage("es", { checked: false });
 
     await toggleAlwaysTranslateLanguage();
 
-    await assertIsAlwaysTranslateLanguage("es", true);
-    await assertIsNeverTranslateLanguage("es", false);
+    await assertIsAlwaysTranslateLanguage("es", { checked: true });
+    await assertIsNeverTranslateLanguage("es", { checked: false });
 
     await assertTranslationsButton(
       { button: true, circleArrows: true, locale: false, icon: true },
@@ -267,13 +267,13 @@ add_task(
     );
     await openTranslationsSettingsMenuViaTranslationsButton();
 
-    await assertIsAlwaysTranslateLanguage("es", true);
-    await assertIsNeverTranslateLanguage("es", false);
+    await assertIsAlwaysTranslateLanguage("es", { checked: true });
+    await assertIsNeverTranslateLanguage("es", { checked: false });
 
     await toggleNeverTranslateLanguage();
 
-    await assertIsAlwaysTranslateLanguage("es", false);
-    await assertIsNeverTranslateLanguage("es", true);
+    await assertIsAlwaysTranslateLanguage("es", { checked: false });
+    await assertIsNeverTranslateLanguage("es", { checked: true });
 
     info(
       "The page should still be in its original, untranslated form because " +
