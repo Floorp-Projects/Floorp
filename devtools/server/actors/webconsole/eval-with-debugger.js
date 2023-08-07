@@ -153,11 +153,15 @@ exports.evalWithDebugger = function (string, options = {}, webConsole) {
     evalOptions.lineNumber = options.lineNumber;
   }
 
-  // When we are disabling breakpoints for a given evaluation,
-  // also prevent spawning related Debugger.Source object to avoid showing it
-  // in the debugger UI
   if (options.disableBreaks) {
+    // When we are disabling breakpoints for a given evaluation,
+    // also prevent spawning related Debugger.Source object to avoid showing it
+    // in the debugger UI
     evalOptions.hideFromDebugger = true;
+
+    // disableBreaks is used for all non-user-provided code, and in this case
+    // extra bindings shouldn't be shadowed.
+    evalOptions.useInnerBindings = true;
   }
 
   updateConsoleInputEvaluation(dbg, webConsole);

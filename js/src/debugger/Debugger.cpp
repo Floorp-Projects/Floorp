@@ -394,6 +394,15 @@ bool js::ParseEvalOptions(JSContext* cx, HandleValue value,
   }
   options.setHideFromDebugger(ToBoolean(v));
 
+  if (options.kind() == EvalOptions::EnvKind::GlobalWithExtraOuterBindings) {
+    if (!JS_GetProperty(cx, opts, "useInnerBindings", &v)) {
+      return false;
+    }
+    if (ToBoolean(v)) {
+      options.setUseInnerBindings();
+    }
+  }
+
   return true;
 }
 
