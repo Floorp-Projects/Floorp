@@ -139,4 +139,20 @@
     <string name="review_quality_check_highlights_type_shipping" translatable="false">Shipping</string>
     <string name="review_quality_check_highlights_type_packaging_appearance" translatable="false">Packaging and appearance</string>
     <string name="review_quality_check_highlights_type_competitiveness" translatable="false">Competitiveness</string>
+    <string name="review_quality_check_info_title" translatable="false">How reliable are the reviews?</string>
+    <string name="review_quality_check_info_overview" translatable="false">Firefox uses AI technology from Fakespot to analyze the quality and reliability of product reviews. This is only provided to help you assess review quality, not product quality.\n
+                        \n
+                        We assign each product’s reviews a letter grade from A to F.\n
+                        \n
+                        A higher grade means we believe the reviews are likely from real customers who left honest, unbiased reviews. \n
+                        A lower grade means we believe the reviews are likely from paid or biased reviewers.
+                        \n\nThe adjusted rating is based on review quality, with unreliable reviews removed.
+                        \n\nHelpful snippets are pulled from recent Amazon reviews (from the last 80 days), that we believe to be reliable.</string>
+    <string name="review_quality_check_info_learn_more" translatable="false">Learn more about %s</string>
+    <string name="review_quality_check_info_learn_more_link" translatable="false">how Fakespot determines review quality.</string>
+    <string name="review_quality_check_info_review_grade_header" translatable="false">Review grading scale:</string>
+    <string name="review_quality_check_info_grade_info_AB" translatable="false">We believe the reviews to be reliable</string>
+    <string name="review_quality_check_info_grade_info_C" translatable="false">We believe there’s a mix of reliable and unreliable reviews</string>
+    <string name="review_quality_check_info_grade_info_DF" translatable="false">We believe the reviews are unreliable</string>
+
 </resources>

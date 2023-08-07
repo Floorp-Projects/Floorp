@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.ClickableSubstringLink
 import org.mozilla.fenix.compose.SwitchWithLabel
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.SecondaryButton
@@ -51,6 +52,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onOptOutClick Invoked when the user opts out of the review quality check feature.
  * @param onProductRecommendationsEnabledStateChange Invoked when the user changes the product
  * recommendations toggle state.
+ * @param onReviewGradeLearnMoreClick Invoked when the user clicks to learn more about review grades.
  * @param modifier The modifier to be applied to the Composable.
  */
 @Composable
@@ -59,6 +61,7 @@ fun ProductAnalysis(
     productAnalysis: AnalysisPresent,
     onOptOutClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
+    onReviewGradeLearnMoreClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -90,6 +93,16 @@ fun ProductAnalysis(
                 color = FirefoxTheme.colors.textPrimary,
                 style = FirefoxTheme.typography.caption,
                 modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+
+        ReviewQualityCheckExpandableCard(
+            title = stringResource(id = R.string.review_quality_check_info_title),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            ReviewQualityInfo(
+                modifier = Modifier.fillMaxWidth(),
+                onLearnMoreClick = onReviewGradeLearnMoreClick,
             )
         }
 
@@ -307,6 +320,95 @@ private fun SettingsCard(
     }
 }
 
+@Composable
+private fun ReviewQualityInfo(
+    modifier: Modifier = Modifier,
+    onLearnMoreClick: () -> Unit,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+    ) {
+        // Any and all text formatting (bullets, inline substring bolding, etc.) will be handled as
+        // follow-up when the copy is finalized.
+        // Bug 1848219
+        Text(
+            text = stringResource(id = R.string.review_quality_check_info_overview),
+            color = FirefoxTheme.colors.textPrimary,
+            style = FirefoxTheme.typography.body2,
+        )
+
+        val link = stringResource(R.string.review_quality_check_info_learn_more_link)
+        val text = stringResource(R.string.review_quality_check_info_learn_more, link)
+        val linkStartIndex = text.indexOf(link)
+        val linkEndIndex = linkStartIndex + link.length
+        ClickableSubstringLink(
+            text = text,
+            textStyle = FirefoxTheme.typography.body2,
+            clickableStartIndex = linkStartIndex,
+            clickableEndIndex = linkEndIndex,
+            onClick = onLearnMoreClick,
+        )
+
+        Text(
+            text = stringResource(id = R.string.review_quality_check_info_review_grade_header),
+            color = FirefoxTheme.colors.textPrimary,
+            style = FirefoxTheme.typography.body2,
+        )
+
+        ReviewGradingScaleInfo(
+            reviewGrades = listOf(
+                ReviewQualityCheckState.Grade.A,
+                ReviewQualityCheckState.Grade.B,
+            ),
+            info = stringResource(id = R.string.review_quality_check_info_grade_info_AB),
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        ReviewGradingScaleInfo(
+            reviewGrades = listOf(ReviewQualityCheckState.Grade.C),
+            info = stringResource(id = R.string.review_quality_check_info_grade_info_C),
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        ReviewGradingScaleInfo(
+            reviewGrades = listOf(
+                ReviewQualityCheckState.Grade.D,
+                ReviewQualityCheckState.Grade.F,
+            ),
+            info = stringResource(id = R.string.review_quality_check_info_grade_info_DF),
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun ReviewGradingScaleInfo(
+    reviewGrades: List<ReviewQualityCheckState.Grade>,
+    info: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.semantics(mergeDescendants = true) {},
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        reviewGrades.forEach { grade ->
+            ReviewGradeCompact(grade = grade)
+        }
+
+        if (reviewGrades.size == 1) {
+            Spacer(modifier = Modifier.width(24.dp))
+        }
+
+        Text(
+            text = info,
+            color = FirefoxTheme.colors.textPrimary,
+            style = FirefoxTheme.typography.body2,
+        )
+    }
+}
+
 private fun HighlightType.toHighlight() =
     when (this) {
         HighlightType.QUALITY -> Highlight.QUALITY
@@ -392,6 +494,25 @@ private fun ProductAnalysisPreview() {
                 onProductRecommendationsEnabledStateChange = {
                     productRecommendationsEnabled.value = it
                 },
+                onReviewGradeLearnMoreClick = {},
+            )
+        }
+    }
+}
+
+@Composable
+@LightDarkPreview
+private fun ReviewQualityInfoPreview() {
+    FirefoxTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(color = FirefoxTheme.colors.layer1)
+                .padding(all = 16.dp),
+        ) {
+            ReviewQualityInfo(
+                modifier = Modifier.fillMaxWidth(),
+                onLearnMoreClick = {},
             )
         }
     }

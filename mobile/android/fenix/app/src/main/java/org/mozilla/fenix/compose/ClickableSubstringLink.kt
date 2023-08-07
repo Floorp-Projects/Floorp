@@ -12,10 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -32,6 +32,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Composable
 fun ClickableSubstringLink(
     text: String,
+    textStyle: TextStyle = FirefoxTheme.typography.caption,
     textColor: Color = FirefoxTheme.colors.textPrimary,
     linkTextColor: Color = FirefoxTheme.colors.textAccent,
     linkTextDecoration: TextDecoration? = null,
@@ -63,12 +64,6 @@ fun ClickableSubstringLink(
             end = text.length,
         )
 
-        addStyle(
-            SpanStyle(fontSize = 12.sp),
-            start = 0,
-            end = clickableEndIndex,
-        )
-
         addStringAnnotation(
             tag = "link",
             annotation = "",
@@ -79,6 +74,7 @@ fun ClickableSubstringLink(
 
     ClickableText(
         text = annotatedText,
+        style = textStyle,
         onClick = {
             annotatedText
                 .getStringAnnotations("link", it, it)

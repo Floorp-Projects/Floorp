@@ -54,6 +54,9 @@ fun ReviewQualityCheckBottomSheet(
                     onProductRecommendationsEnabledStateChange = {
                         store.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation)
                     },
+                    onReviewGradeLearnMoreClick = {
+                        // Bug 1847740
+                    },
                 )
             }
 
@@ -67,6 +70,7 @@ private fun ProductReview(
     state: ReviewQualityCheckState.OptedIn,
     onOptOutClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
+    onReviewGradeLearnMoreClick: () -> Unit,
 ) {
     Crossfade(
         targetState = state.productReviewState,
@@ -79,6 +83,7 @@ private fun ProductReview(
                     productAnalysis = productReviewState,
                     onOptOutClick = onOptOutClick,
                     onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
+                    onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
                 )
             }
 
