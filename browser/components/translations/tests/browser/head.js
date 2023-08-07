@@ -391,7 +391,7 @@ async function waitForTranslationsPopupEvent(eventName, callback) {
     throw new Error("Unable to find the translations panel element.");
   }
   const promise = BrowserTestUtils.waitForEvent(panel, eventName);
-  callback();
+  await callback();
   info("Waiting for the translations panel popup to be shown");
   await promise;
   // Wait a single tick on the event loop.
