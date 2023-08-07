@@ -10,9 +10,8 @@ const urlPath = "/browser/netwerk/cookie/test/browser/file_empty.html";
 const baseDomain = "example.com";
 
 // eslint doesn't like http
-/* eslint-disable */
+// eslint-disable-next-line @microsoft/sdl/no-insecure-url
 const URL_INSECURE_COM = "http://" + baseDomain + urlPath;
-/* eslint-enable */
 const URL_SECURE_COM = "https://" + baseDomain + urlPath;
 
 // common cookie strings
@@ -30,6 +29,9 @@ registerCleanupFunction(() => {
 });
 
 async function setup() {
+  // HTTPS-First would interfere with this test.
+  Services.prefs.setBoolPref("dom.security.https_first", false);
+
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
 
   Services.prefs.setBoolPref(
