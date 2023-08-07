@@ -50,6 +50,7 @@ glob:**/tooltool-manifests/**
 # For test chunking
 glob:**/*.ini
 glob:**/*.list
+glob:**/*.toml
 path:testing/mozbase/manifestparser
 path:testing/runtimes
 path:testing/web-platform/tests/
