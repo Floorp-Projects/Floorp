@@ -127,7 +127,6 @@
 #include "nsSize.h"
 #include "nsThreadUtils.h"
 #include "nsURIHashKey.h"
-#include "nsURLHelper.h"
 #include "nsVideoFrame.h"
 #include "ReferrerInfo.h"
 #include "TimeUnits.h"
@@ -1306,10 +1305,6 @@ HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest) {
     Unused << hc->GetResponseStatus(&responseStatus);
     nsAutoCString statusText;
     Unused << hc->GetResponseStatusText(statusText);
-    // we need status text for resist fingerprinting mode's message allowlist
-    if (statusText.IsEmpty()) {
-      net_GetDefaultStatusTextForCode(responseStatus, statusText);
-    }
     element->NotifyLoadError(
         nsPrintfCString("%u: %s", responseStatus, statusText.get()));
 
