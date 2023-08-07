@@ -13,6 +13,8 @@ pub struct ClientInfoMetrics {
     pub app_display_version: String,
     /// The product-provided release channel (e.g. "beta").
     pub channel: Option<String>,
+    /// The locale of the application during initialization (e.g. "es-ES").
+    pub locale: Option<String>,
 }
 
 impl ClientInfoMetrics {
@@ -22,6 +24,7 @@ impl ClientInfoMetrics {
             app_build: "Unknown".to_string(),
             app_display_version: "Unknown".to_string(),
             channel: None,
+            locale: None,
         }
     }
 }
@@ -32,6 +35,7 @@ impl From<ClientInfoMetrics> for glean_core::ClientInfoMetrics {
             app_build: metrics.app_build,
             app_display_version: metrics.app_display_version,
             channel: metrics.channel,
+            locale: metrics.locale,
             os_version: system::get_os_version(),
             windows_build_number: system::get_windows_build_number(),
             architecture: system::ARCH.to_string(),

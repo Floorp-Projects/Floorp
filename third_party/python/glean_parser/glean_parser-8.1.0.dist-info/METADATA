@@ -1,13 +1,11 @@
 Metadata-Version: 2.1
 Name: glean-parser
-Version: 7.2.1
+Version: 8.1.0
 Summary: Parser tools for Mozilla's Glean telemetry
 Home-page: https://github.com/mozilla/glean_parser
 Author: The Glean Team
 Author-email: glean-team@mozilla.com
-License: UNKNOWN
 Keywords: glean_parser
-Platform: UNKNOWN
 Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: Natural Language :: English
@@ -19,6 +17,8 @@ Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
 Description-Content-Type: text/markdown
+License-File: LICENSE
+License-File: AUTHORS.md
 Requires-Dist: appdirs (>=1.4)
 Requires-Dist: Click (>=7)
 Requires-Dist: diskcache (>=4)
@@ -85,6 +85,17 @@ $ glean_parser check < ping.json
 # Changelog
 
 ## Unreleased
+
+## 8.1.0
+
+- Increased the maximum metric name length in version 2.0.0 schema ([#596](https://github.com/mozilla/glean_parser/pull/596))
+
+## 8.0.0
+
+- BREAKING CHANGE: Remove exposed `lint_yaml_files` function ([#580](https://github.com/mozilla/glean_parser/pull/580))
+- Rust: Removed `__glean_metric_maps` from the Rust Jinja template. This functionality is better placed downstream ([Bug 1816526](https://bugzilla.mozilla.org/show_bug.cgi?id=1816526))
+- New lint: check that all referenced pings are known ([#584](https://github.com/mozilla/glean_parser/pull/584))
+- Add experimental server-side JavaScript outputter ([FXA-7922](https://mozilla-hub.atlassian.net/browse/FXA-7922))
 
 ## 7.2.1
 
@@ -722,5 +733,3 @@ $ glean_parser check < ping.json
 ## 0.1.0 (2018-10-15)
 
 - First release on PyPI.
-
-
