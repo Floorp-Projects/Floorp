@@ -1,12 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Test the "Store as global variable" menu item of the webconsole is enabled only when
-// clicking on messages that are associated with an object actor.
+// Test the "Store as global variable" menu item works even if the page
+// has a global variable conflicts with extra bindings.
 
 "use strict";
 
 const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html><script>
+  /* Verify a conflicting global doesn't break the feature. */
+  var _self = "wrong value";
+
   window.bar = { baz: 1 };
   console.log("foo");
   console.log("foo", window.bar);

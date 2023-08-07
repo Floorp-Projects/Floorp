@@ -57,16 +57,18 @@ while (env) {
   env = getEnclosingEnvironmentObject(env);
 }
 JSON.stringify({envs, vars});
-`, bindings).return);
+`, bindings, {
+  useInnerBindings: true,
+}).return);
 
 assertEq(vars.bindings_prop_var, 60,
          "qualified var should read the value set by the declaration");
-assertEq(vars.bindings_prop_lexical, 70,
-         "lexical should read the value set by the declaration");
+assertEq(vars.bindings_prop_lexical, 71,
+         "lexical is shadowed by extra bindings");
 assertEq(vars.bindings_prop_lexical2, 70,
-         "lexical should read the value set by the assignment");
+         "lexical is shadowed by extra bindings");
 assertEq(vars.bindings_prop_unqualified, 80,
-         "unqualified name should read the value set by the assignment");
+         "unqualified name is shadowed by extra bindings");
 
 assertEq(bindings.bindings_prop_var, 61,
          "the original bindings property must not be overwritten for var");
@@ -89,12 +91,12 @@ assertEq(env.lexical, false);
 assertEq(env.prop, false);
 assertEq(env.bindings_prop, true, "bindings property must live in the with env for bindings");
 
-assertEq(env.bindings_prop_var, false,
-         "bindings property must not live in the with env for bindings if it conflicts with global");
-assertEq(env.bindings_prop_lexical, false,
-         "bindings property must not live in the with env for bindings if it conflicts with global");
-assertEq(env.bindings_prop_lexical2, false,
-         "bindings property must not live in the with env for bindings if it conflicts with global");
+assertEq(env.bindings_prop_var, true,
+         "bindings property must live in the with env for bindings");
+assertEq(env.bindings_prop_lexical, true,
+         "bindings property must live in the with env for bindings");
+assertEq(env.bindings_prop_lexical2, true,
+         "bindings property must live in the with env for bindings");
 assertEq(env.bindings_prop_unqualified, true,
          "bindings property must live in the with env for bindings");
 assertEq(env.bindings_prop_unqualified_value, 80,
@@ -114,8 +116,8 @@ assertEq(env.bindings_prop_lexical, true,
 assertEq(env.bindings_prop_lexical_value, 70);
 assertEq(env.bindings_prop_lexical2, true,
          "lexical must live in the GlobalLexicalEnvironmentObject even if it conflicts with the bindings object property");
-assertEq(env.bindings_prop_lexical2_value, 70,
-         "lexical value must be set by the assignment even if it conflicts with the bindings object property");
+assertEq(env.bindings_prop_lexical2_value, undefined,
+         "lexical must be shadowed");
 assertEq(env.bindings_prop_unqualified, false);
 
 env = envs[i]; i++;
@@ -128,8 +130,8 @@ assertEq(env.bindings_prop, false);
 
 assertEq(env.bindings_prop_var, true,
          "qualified var binding must be created in the global even if it conflicts with the bindings object property");
-assertEq(env.bindings_prop_var_value, 60,
-         "qualified var value must be set even if it conflicts with the bindings object property");
+assertEq(env.bindings_prop_var_value, undefined,
+         "qualified var must be shadowed");
 assertEq(env.bindings_prop_lexical, false);
 assertEq(env.bindings_prop_lexical2, false);
 assertEq(env.bindings_prop_unqualified, false);

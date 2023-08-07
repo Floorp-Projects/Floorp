@@ -413,26 +413,36 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  * Debugger.Object.prototype.executeInGlobalWithBindings uses
  * WithEnvironmentObject for given bindings, and the object's global scope.
  *
- * If qualified 'var's or unqualified names conflict with the bindings object's
- * properties, they go to the WithEnvironmentObject.
+ * If `options.useInnerBindings` is not true, if bindings conflict with
+ * qualified 'var's or global lexicals, those bindings are shadowed and not
+ * stored into the bindings object wrapped by WithEnvironmentObject.
  *
  *   global (qualified 'var's and unqualified names)
  *       |
- *   GlobalLexicalEnvironmentObject[this=global] (lexical vars and conflicting)
+ *   GlobalLexicalEnvironmentObject[this=global] (lexical vars)
  *       |
- *   WithEnvironmentObject wrapping bindings (conflicting 'var's and names)
+ *   WithEnvironmentObject wrapping object with not-conflicting bindings
  *
- * TODO:
- * If lexical variable names conflict with the bindings object's
- * properties, the write on them within declarations is done for the
- * GlobalLexicalEnvironmentObject,
- * but the write within assignments and the read on lexicals are done from the
- * WithEnvironmentObject (bug 1841964).
+ * If `options.useInnerBindings` is true, all bindings are stored into the
+ * bindings object wrapped by WithEnvironmentObject, and they shadow globals
+ *
+ *   global (qualified 'var's and unqualified names)
+ *       |
+ *   GlobalLexicalEnvironmentObject[this=global] (lexical vars)
+ *       |
+ *   WithEnvironmentObject wrapping object with all bindings
+ *
+ * NOTE: If `options.useInnerBindings` is true, and if lexical variable names
+ *       conflict with the bindings object's properties, the write on them
+ *       within declarations is done for the GlobalLexicalEnvironmentObject,
+ *       but the write within assignments and the read on lexicals are done
+ *       from the WithEnvironmentObject (bug 1841964 and bug 1847219).
  *
  *   // bindings = { x: 10, y: 20 };
  *
  *   let x = 11; // written to GlobalLexicalEnvironmentObject
  *   x;          // read from WithEnvironmentObject
+ *   let y;
  *   y = 21;     // written to WithEnvironmentObject
  *   y;          // read from WithEnvironmentObject
  *
