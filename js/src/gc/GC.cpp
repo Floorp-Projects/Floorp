@@ -1379,21 +1379,38 @@ bool GCRuntime::updateMarkersVector() {
   return true;
 }
 
+template <typename F>
+static bool EraseCallback(CallbackVector<F>& vector, F callback) {
+  for (Callback<F>* p = vector.begin(); p != vector.end(); p++) {
+    if (p->op == callback) {
+      vector.erase(p);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+template <typename F>
+static bool EraseCallback(CallbackVector<F>& vector, F callback, void* data) {
+  for (Callback<F>* p = vector.begin(); p != vector.end(); p++) {
+    if (p->op == callback && p->data == data) {
+      vector.erase(p);
+      return true;
+    }
+  }
+
+  return false;
+}
+
 bool GCRuntime::addBlackRootsTracer(JSTraceDataOp traceOp, void* data) {
   AssertHeapIsIdle();
-  return !!blackRootTracers.ref().append(
-      Callback<JSTraceDataOp>(traceOp, data));
+  return blackRootTracers.ref().append(Callback<JSTraceDataOp>(traceOp, data));
 }
 
 void GCRuntime::removeBlackRootsTracer(JSTraceDataOp traceOp, void* data) {
   // Can be called from finalizers
-  for (size_t i = 0; i < blackRootTracers.ref().length(); i++) {
-    Callback<JSTraceDataOp>* e = &blackRootTracers.ref()[i];
-    if (e->op == traceOp && e->data == data) {
-      blackRootTracers.ref().erase(e);
-      break;
-    }
-  }
+  MOZ_ALWAYS_TRUE(EraseCallback(blackRootTracers.ref(), traceOp));
 }
 
 void GCRuntime::setGrayRootsTracer(JSGrayRootsTracer traceOp, void* data) {
@@ -1435,30 +1452,8 @@ bool GCRuntime::addFinalizeCallback(JSFinalizeCallback callback, void* data) {
       Callback<JSFinalizeCallback>(callback, data));
 }
 
-template <typename F>
-static void EraseCallback(CallbackVector<F>& vector, F callback) {
-  for (Callback<F>* p = vector.begin(); p != vector.end(); p++) {
-    if (p->op == callback) {
-      vector.erase(p);
-      return;
-    }
-  }
-}
-
-template <typename F>
-static bool EraseCallback(CallbackVector<F>& vector, F callback, void* data) {
-  for (Callback<F>* p = vector.begin(); p != vector.end(); p++) {
-    if (p->op == callback && p->data == data) {
-      vector.erase(p);
-      return true;
-    }
-  }
-
-  return false;
-}
-
 void GCRuntime::removeFinalizeCallback(JSFinalizeCallback callback) {
-  EraseCallback(finalizeCallbacks.ref(), callback);
+  MOZ_ALWAYS_TRUE(EraseCallback(finalizeCallbacks.ref(), callback));
 }
 
 void GCRuntime::callFinalizeCallbacks(JS::GCContext* gcx,
@@ -1490,7 +1485,8 @@ bool GCRuntime::addWeakPointerZonesCallback(JSWeakPointerZonesCallback callback,
 
 void GCRuntime::removeWeakPointerZonesCallback(
     JSWeakPointerZonesCallback callback) {
-  EraseCallback(updateWeakPointerZonesCallbacks.ref(), callback);
+  MOZ_ALWAYS_TRUE(
+      EraseCallback(updateWeakPointerZonesCallbacks.ref(), callback));
 }
 
 void GCRuntime::callWeakPointerZonesCallbacks(JSTracer* trc) const {
@@ -1507,7 +1503,8 @@ bool GCRuntime::addWeakPointerCompartmentCallback(
 
 void GCRuntime::removeWeakPointerCompartmentCallback(
     JSWeakPointerCompartmentCallback callback) {
-  EraseCallback(updateWeakPointerCompartmentCallbacks.ref(), callback);
+  MOZ_ALWAYS_TRUE(
+      EraseCallback(updateWeakPointerCompartmentCallbacks.ref(), callback));
 }
 
 void GCRuntime::callWeakPointerCompartmentCallbacks(
