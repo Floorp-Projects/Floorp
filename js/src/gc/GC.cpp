@@ -1445,6 +1445,18 @@ static void EraseCallback(CallbackVector<F>& vector, F callback) {
   }
 }
 
+template <typename F>
+static bool EraseCallback(CallbackVector<F>& vector, F callback, void* data) {
+  for (Callback<F>* p = vector.begin(); p != vector.end(); p++) {
+    if (p->op == callback && p->data == data) {
+      vector.erase(p);
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void GCRuntime::removeFinalizeCallback(JSFinalizeCallback callback) {
   EraseCallback(finalizeCallbacks.ref(), callback);
 }
@@ -1516,8 +1528,9 @@ bool GCRuntime::addNurseryCollectionCallback(
 }
 
 void GCRuntime::removeNurseryCollectionCallback(
-    JS::GCNurseryCollectionCallback callback) {
-  EraseCallback(nurseryCollectionCallbacks.ref(), callback);
+    JS::GCNurseryCollectionCallback callback, void* data) {
+  MOZ_ALWAYS_TRUE(
+      EraseCallback(nurseryCollectionCallbacks.ref(), callback, data));
 }
 
 void GCRuntime::callNurseryCollectionCallbacks(JS::GCNurseryProgress progress,

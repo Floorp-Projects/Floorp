@@ -478,8 +478,8 @@ class GCRuntime {
   JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
   bool addNurseryCollectionCallback(JS::GCNurseryCollectionCallback callback,
                                     void* data);
-  void removeNurseryCollectionCallback(
-      JS::GCNurseryCollectionCallback callback);
+  void removeNurseryCollectionCallback(JS::GCNurseryCollectionCallback callback,
+                                       void* data);
   JS::DoCycleCollectionCallback setDoCycleCollectionCallback(
       JS::DoCycleCollectionCallback callback);
   void callNurseryCollectionCallbacks(JS::GCNurseryProgress progress,

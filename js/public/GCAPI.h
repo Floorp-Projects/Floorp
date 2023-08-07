@@ -933,7 +933,7 @@ using GCNurseryCollectionCallback = void (*)(JSContext* cx,
 extern JS_PUBLIC_API bool AddGCNurseryCollectionCallback(
     JSContext* cx, GCNurseryCollectionCallback callback, void* data);
 extern JS_PUBLIC_API void RemoveGCNurseryCollectionCallback(
-    JSContext* cx, GCNurseryCollectionCallback callback);
+    JSContext* cx, GCNurseryCollectionCallback callback, void* data);
 
 typedef void (*DoCycleCollectionCallback)(JSContext* cx);
 

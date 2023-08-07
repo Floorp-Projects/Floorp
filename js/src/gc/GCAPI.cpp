@@ -423,8 +423,8 @@ JS_PUBLIC_API bool JS::AddGCNurseryCollectionCallback(
 }
 
 JS_PUBLIC_API void JS::RemoveGCNurseryCollectionCallback(
-    JSContext* cx, GCNurseryCollectionCallback callback) {
-  return cx->runtime()->gc.removeNurseryCollectionCallback(callback);
+    JSContext* cx, GCNurseryCollectionCallback callback, void* data) {
+  return cx->runtime()->gc.removeNurseryCollectionCallback(callback, data);
 }
 
 JS_PUBLIC_API void JS::SetLowMemoryState(JSContext* cx, bool newState) {

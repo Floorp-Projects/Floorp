@@ -774,7 +774,8 @@ void CycleCollectedJSRuntime::Shutdown(JSContext* aCx) {
   JS_SetDestroyZoneCallback(aCx, nullptr);
 
   if (NS_IsMainThread()) {
-    JS::RemoveGCNurseryCollectionCallback(aCx, GCNurseryCollectionCallback);
+    JS::RemoveGCNurseryCollectionCallback(aCx, GCNurseryCollectionCallback,
+                                          nullptr);
   }
 }
 
