@@ -29,7 +29,6 @@
 #endif
 
 #if defined(XP_MACOSX)
-#  include "nsCocoaFeatures.h"
 #  include "MacWifiScanner.h"
 #endif
 

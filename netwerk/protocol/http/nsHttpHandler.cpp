@@ -103,7 +103,6 @@
 
 #if defined(XP_MACOSX)
 #  include <CoreServices/CoreServices.h>
-#  include "nsCocoaFeatures.h"
 #endif
 
 //-----------------------------------------------------------------------------
