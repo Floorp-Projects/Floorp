@@ -27,17 +27,23 @@ add_task(async function () {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
+  const onCspViolationMessage = waitForMessageByType(
+    hud,
+    CSP_VIOLATION_MSG,
+    ".error"
+  ).then(() => info("Got violation message."));
+
   const onCspTooManyReportsMessage = waitForMessageByType(
     hud,
     CSP_TOO_MANY_REPORTS_MSG,
     ".error"
-  );
+  ).then(() => info("Got too many reports message."));
 
   info("Load a page with CSP warnings.");
   await navigateTo(TEST_VIOLATIONS);
 
-  await waitFor(() => findMessageByType(hud, CSP_VIOLATION_MSG, ".error"));
-  await onCspTooManyReportsMessage;
+  info("Waiting for console messages.");
+  await Promise.all([onCspViolationMessage, onCspTooManyReportsMessage]);
   ok(true, "Got error about too many reports");
 
   await clearOutput(hud);
