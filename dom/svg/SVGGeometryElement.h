@@ -203,6 +203,20 @@ class SVGGeometryElement : public SVGGeometryElementBase {
   virtual already_AddRefed<Path> GetOrBuildPathForMeasuring();
 
   /**
+   * If this shape element is a closed loop, this returns true. If it is an
+   * unclosed interval, this returns false. This function is used for motion
+   * path especially.
+   *
+   * 1. SVG Paths are closed loops only if the final command in the path list is
+   *    a closepath command ("z" or "Z"), otherwise they are unclosed intervals.
+   * 2. SVG circles, ellipses, polygons and rects are closed loops.
+   * 3. SVG lines and polylines are unclosed intervals.
+   *
+   * https://drafts.fxtf.org/motion/#path-distance
+   */
+  virtual bool IsClosedLoop() const { return false; }
+
+  /**
    * Return |true| if some geometry properties (|x|, |y|, etc) are changed
    * because of CSS change.
    */

@@ -68,6 +68,8 @@ class SVGPathElement final : public SVGPathElementBase {
   bool GetDistancesFromOriginToEndsOfVisibleSegments(
       FallibleTArray<double>* aOutput) override;
 
+  bool IsClosedLoop() const override;
+
   // nsIContent interface
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

@@ -288,7 +288,7 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
     gfx::Float pathLength = path->ComputeLength();
     gfx::Float usedDistance =
         aDistance.ResolveToCSSPixels(CSSCoord(pathLength));
-    if (data.mIsClosedIntervals) {
+    if (data.mIsClosedLoop) {
       // Per the spec, let used offset distance be equal to offset distance
       // modulus the total length of the path. If the total length of the path
       // is 0, used offset distance is also 0.
@@ -379,7 +379,7 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
                                      angle, shift});
 }
 
-static inline bool IsClosedPath(const StyleSVGPathData& aPathData) {
+static inline bool IsClosedLoop(const StyleSVGPathData& aPathData) {
   return !aPathData._0.AsSpan().empty() &&
          aPathData._0.AsSpan().rbegin()->IsClosePath();
 }
@@ -449,7 +449,7 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
                "Should have a valid cached gfx::Path or an empty path string");
     // FIXME: Bug 1836847. Once we support "at <position>" for path(), we have
     // to give it the current box position.
-    return OffsetPathData::Shape(gfxPath.forget(), {}, IsClosedPath(pathData));
+    return OffsetPathData::Shape(gfxPath.forget(), {}, IsClosedLoop(pathData));
   }
 
   RefPtr<gfx::PathBuilder> builder = MotionPathUtils::GetPathBuilder();
@@ -541,7 +541,7 @@ static OffsetPathData GenerateOffsetPathData(
     }
     // FIXME: Bug 1836847. Once we support "at <position>" for path(), we have
     // to give it the current box position.
-    return OffsetPathData::Shape(path.forget(), {}, IsClosedPath(pathData));
+    return OffsetPathData::Shape(path.forget(), {}, IsClosedLoop(pathData));
   }
 
   // The rest part is to handle "<basic-shape> || <coord-box>".
