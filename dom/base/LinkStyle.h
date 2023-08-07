@@ -171,13 +171,16 @@ class LinkStyle {
   Result<Update, nsresult> UpdateStyleSheet(nsICSSLoaderObserver*);
 
   /**
-   * Tells this element whether to update the stylesheet when the
-   * element's properties change.
-   *
-   * @param aEnableUpdates update on changes or not.
+   * Tells this element whether to update the stylesheet when the element's
+   * properties change. This is used by the parser until it has all content etc,
+   * and to guarantee that the right observer is used.
    */
-  void SetEnableUpdates(bool aEnableUpdates) {
-    mUpdatesEnabled = aEnableUpdates;
+  void DisableUpdates() { mUpdatesEnabled = false; }
+  Result<Update, nsresult> EnableUpdatesAndUpdateStyleSheet(
+      nsICSSLoaderObserver* aObserver) {
+    MOZ_ASSERT(!mUpdatesEnabled);
+    mUpdatesEnabled = true;
+    return UpdateStyleSheet(aObserver);
   }
 
   /**
@@ -275,11 +278,13 @@ class LinkStyle {
                                               nsICSSLoaderObserver*,
                                               ForceUpdate);
 
+  void BindToTree();
+
   RefPtr<mozilla::StyleSheet> mStyleSheet;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
-  bool mUpdatesEnabled;
-  uint32_t mLineNumber;
-  uint32_t mColumnNumber;
+  bool mUpdatesEnabled = true;
+  uint32_t mLineNumber = 1;
+  uint32_t mColumnNumber = 1;
 };
 
 }  // namespace mozilla::dom

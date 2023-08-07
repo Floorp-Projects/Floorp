@@ -90,10 +90,7 @@ nsresult HTMLLinkElement::BindToTree(BindContext& aContext, nsINode& aParent) {
     TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender();
   }
 
-  void (HTMLLinkElement::*update)() =
-      &HTMLLinkElement::UpdateStyleSheetInternal;
-  nsContentUtils::AddScriptRunner(
-      NewRunnableMethod("dom::HTMLLinkElement::BindToTree", this, update));
+  LinkStyle::BindToTree();
 
   if (IsInUncomposedDoc() &&
       AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel, nsGkAtoms::localization,
