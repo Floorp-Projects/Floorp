@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import { div } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 
@@ -20,13 +21,16 @@ export class Threads extends Component {
 
   render() {
     const { threads } = this.props;
-
-    return (
-      <div className="pane threads-list">
-        {threads.map(thread => (
-          <Thread thread={thread} key={thread.actor} />
-        ))}
-      </div>
+    return div(
+      {
+        className: "pane threads-list",
+      },
+      threads.map(thread =>
+        React.createElement(Thread, {
+          thread: thread,
+          key: thread.actor,
+        })
+      )
     );
   }
 }
