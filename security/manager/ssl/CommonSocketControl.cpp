@@ -61,7 +61,7 @@ CommonSocketControl::CommonSocketControl(const nsCString& aHostName,
       mResumed(false),
       mIsBuiltCertChainRootBuiltInRoot(false),
       mPeerId() {
-#ifdef DEBUG
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   mOwningThread = PR_GetCurrentThread();
 #endif
 }
