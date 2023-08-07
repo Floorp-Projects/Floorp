@@ -360,7 +360,15 @@ static bool ComputeBinarySearchMid(FallbackStubs stubs, uint32_t pcOffset,
 
 ICEntry& ICScript::icEntryFromPCOffset(uint32_t pcOffset) {
   size_t mid;
-  MOZ_ALWAYS_TRUE(ComputeBinarySearchMid(FallbackStubs(this), pcOffset, &mid));
+  bool success = ComputeBinarySearchMid(FallbackStubs(this), pcOffset, &mid);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  if (!success) {
+    MOZ_CRASH_UNSAFE_PRINTF("Missing icEntry for offset %d (max offset: %d)",
+                            int(pcOffset),
+                            int(fallbackStub(numICEntries() - 1)->pcOffset()));
+  }
+#endif
+  MOZ_ALWAYS_TRUE(success);
 
   MOZ_ASSERT(mid < numICEntries());
 
