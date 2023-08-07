@@ -135,17 +135,17 @@ class SyncedTabsInView extends ViewPage {
 
   async observe(subject, topic, errorState) {
     if (topic == TOPIC_SETUPSTATE_CHANGED) {
-      this.updateStates({ errorState });
+      this.updateStates(errorState);
     }
     if (topic == SYNCED_TABS_CHANGED) {
       this.getSyncedTabData();
     }
   }
 
-  updateStates({
-    stateIndex = TabsSetupFlowManager.uiStateIndex,
-    errorState = SyncedTabsErrorHandler.getErrorType(),
-  } = {}) {
+  updateStates(errorState) {
+    let stateIndex = TabsSetupFlowManager.uiStateIndex;
+    errorState = errorState || SyncedTabsErrorHandler.getErrorType();
+
     if (stateIndex == 4 && this._currentSetupStateIndex !== stateIndex) {
       // trigger an initial request for the synced tabs list
       this.getSyncedTabData();
