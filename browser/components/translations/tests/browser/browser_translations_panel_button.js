@@ -18,14 +18,14 @@ add_task(async function test_button_visible_navigation() {
     "The button should be visible since the page can be translated from Spanish."
   );
 
-  navigate(ENGLISH_PAGE_URL, "Navigate to an English page.");
+  await navigate(ENGLISH_PAGE_URL, "Navigate to an English page.");
 
   await assertTranslationsButton(
     { button: false },
     "The button should be invisible since the page is in English."
   );
 
-  navigate(SPANISH_PAGE_URL, "Navigate back to a Spanish page.");
+  await navigate(SPANISH_PAGE_URL, "Navigate back to a Spanish page.");
 
   await assertTranslationsButton(
     { button: true },
