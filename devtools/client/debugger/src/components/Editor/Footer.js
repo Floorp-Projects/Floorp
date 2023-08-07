@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { PureComponent } from "react";
+import { div, button, span } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 import { createLocation } from "../../utils/location";
@@ -93,33 +94,38 @@ class SourceFooter extends PureComponent {
     }
 
     if (!sourceLoaded && selectedSource.isPrettyPrinted) {
-      return (
-        <div className="action" key="pretty-loader">
-          <AccessibleImage className="loader spin" />
-        </div>
+      return div(
+        {
+          className: "action",
+          key: "pretty-loader",
+        },
+        React.createElement(AccessibleImage, {
+          className: "loader spin",
+        })
       );
     }
 
     const type = "prettyPrint";
-    return (
-      <button
-        onClick={() => {
+    return button(
+      {
+        onClick: () => {
           if (!canPrettyPrint) {
             return;
           }
           togglePrettyPrint(selectedSource.id);
-        }}
-        className={classnames("action", type, {
+        },
+        className: classnames("action", type, {
           active: sourceLoaded && canPrettyPrint,
           pretty: isPretty(selectedSource),
-        })}
-        key={type}
-        title={prettyPrintMessage}
-        aria-label={prettyPrintMessage}
-        disabled={!canPrettyPrint}
-      >
-        <AccessibleImage className={type} />
-      </button>
+        }),
+        key: type,
+        title: prettyPrintMessage,
+        "aria-label": prettyPrintMessage,
+        disabled: !canPrettyPrint,
+      },
+      React.createElement(AccessibleImage, {
+        className: type,
+      })
     );
   }
 
@@ -145,21 +151,21 @@ class SourceFooter extends PureComponent {
     }
 
     const type = "black-box";
-
-    return (
-      <button
-        onClick={() => toggleBlackBox(selectedSource)}
-        className={classnames("action", type, {
+    return button(
+      {
+        onClick: () => toggleBlackBox(selectedSource),
+        className: classnames("action", type, {
           active: sourceLoaded,
           blackboxed: isSelectedSourceBlackBoxed || isSourceOnIgnoreList,
-        })}
-        key={type}
-        title={tooltip}
-        aria-label={tooltip}
-        disabled={isSourceOnIgnoreList}
-      >
-        <AccessibleImage className="blackBox" />
-      </button>
+        }),
+        key: type,
+        title: tooltip,
+        "aria-label": tooltip,
+        disabled: isSourceOnIgnoreList,
+      },
+      React.createElement(AccessibleImage, {
+        className: "blackBox",
+      })
     );
   }
 
@@ -167,16 +173,13 @@ class SourceFooter extends PureComponent {
     if (this.props.horizontal) {
       return null;
     }
-
-    return (
-      <PaneToggleButton
-        key="toggle"
-        collapsed={this.props.endPanelCollapsed}
-        horizontal={this.props.horizontal}
-        handleClick={this.props.togglePaneCollapse}
-        position="end"
-      />
-    );
+    return React.createElement(PaneToggleButton, {
+      key: "toggle",
+      collapsed: this.props.endPanelCollapsed,
+      horizontal: this.props.horizontal,
+      handleClick: this.props.togglePaneCollapse,
+      position: "end",
+    });
   }
 
   renderCommands() {
@@ -184,7 +187,14 @@ class SourceFooter extends PureComponent {
       Boolean
     );
 
-    return commands.length ? <div className="commands">{commands}</div> : null;
+    return commands.length
+      ? div(
+          {
+            className: "commands",
+          },
+          commands
+        )
+      : null;
   }
 
   renderSourceSummary() {
@@ -205,17 +215,15 @@ class SourceFooter extends PureComponent {
       line: 1,
       column: 1,
     });
-    return (
-      <button
-        className="mapped-source"
-        onClick={() => jumpToMappedLocation(mappedSourceLocation)}
-        title={tooltip}
-      >
-        <span>{title}</span>
-      </button>
+    return button(
+      {
+        className: "mapped-source",
+        onClick: () => jumpToMappedLocation(mappedSourceLocation),
+        title: tooltip,
+      },
+      span(null, title)
     );
   }
-
   onCursorChange = event => {
     const { line, ch } = event.doc.getCursor();
     this.setState({ cursorPosition: { line, column: ch } });
@@ -238,23 +246,34 @@ class SourceFooter extends PureComponent {
       line + 1,
       column + 1
     );
-    return (
-      <div className="cursor-position" title={title}>
-        {text}
-      </div>
+    return div(
+      {
+        className: "cursor-position",
+        title,
+      },
+      text
     );
   }
 
   render() {
-    return (
-      <div className="source-footer">
-        <div className="source-footer-start">{this.renderCommands()}</div>
-        <div className="source-footer-end">
-          {this.renderSourceSummary()}
-          {this.renderCursorPosition()}
-          {this.renderToggleButton()}
-        </div>
-      </div>
+    return div(
+      {
+        className: "source-footer",
+      },
+      div(
+        {
+          className: "source-footer-start",
+        },
+        this.renderCommands()
+      ),
+      div(
+        {
+          className: "source-footer-end",
+        },
+        this.renderSourceSummary(),
+        this.renderCursorPosition(),
+        this.renderToggleButton()
+      )
     );
   }
 }

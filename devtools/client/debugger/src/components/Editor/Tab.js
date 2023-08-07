@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { PureComponent } from "react";
+import { div, span } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 
@@ -87,38 +88,40 @@ class Tab extends PureComponent {
 
     const path = getDisplayPath(source, tabSources);
     const query = getSourceQueryString(source);
-
-    return (
-      <div
-        draggable
-        onDragOver={onDragOver}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-        className={className}
-        data-index={index}
-        data-source-id={sourceId}
-        onClick={handleTabClick}
+    return div(
+      {
+        draggable: true,
+        onDragOver: onDragOver,
+        onDragStart: onDragStart,
+        onDragEnd: onDragEnd,
+        className: className,
+        "data-index": index,
+        "data-source-id": sourceId,
+        onClick: handleTabClick,
         // Accommodate middle click to close tab
-        onMouseUp={e => e.button === 1 && closeTab(source)}
-        onContextMenu={this.onContextMenu}
-        title={getFileURL(source, false)}
-      >
-        <SourceIcon
-          location={createLocation({ source, sourceActor })}
-          forTab={true}
-          modifier={icon =>
-            ["file", "javascript"].includes(icon) ? null : icon
-          }
-        />
-        <div className="filename">
-          {getTruncatedFileName(source, query)}
-          {path && <span>{`../${path}/..`}</span>}
-        </div>
-        <CloseButton
-          handleClick={onClickClose}
-          tooltip={L10N.getStr("sourceTabs.closeTabButtonTooltip")}
-        />
-      </div>
+        onMouseUp: e => e.button === 1 && closeTab(source),
+        onContextMenu: this.onContextMenu,
+        title: getFileURL(source, false),
+      },
+      React.createElement(SourceIcon, {
+        location: createLocation({
+          source,
+          sourceActor,
+        }),
+        forTab: true,
+        modifier: icon => (["file", "javascript"].includes(icon) ? null : icon),
+      }),
+      div(
+        {
+          className: "filename",
+        },
+        getTruncatedFileName(source, query),
+        path && span(null, `../${path}/..`)
+      ),
+      React.createElement(CloseButton, {
+        handleClick: onClickClose,
+        tooltip: L10N.getStr("sourceTabs.closeTabButtonTooltip"),
+      })
     );
   }
 }

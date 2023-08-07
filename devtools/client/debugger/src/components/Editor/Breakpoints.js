@@ -4,6 +4,7 @@
 
 import PropTypes from "prop-types";
 import React, { Component } from "react";
+import { div } from "react-dom-factories";
 import Breakpoint from "./Breakpoint";
 
 import { getSelectedSource, getFirstVisibleBreakpoints } from "../../selectors";
@@ -17,6 +18,10 @@ class Breakpoints extends Component {
       breakpoints: PropTypes.array,
       editor: PropTypes.object,
       selectedSource: PropTypes.object,
+      removeBreakpointsAtLine: PropTypes.func,
+      toggleBreakpointsAtLine: PropTypes.func,
+      continueToHere: PropTypes.func,
+      showEditorEditBreakpointContextMenu: PropTypes.func,
     };
   }
   render() {
@@ -33,26 +38,20 @@ class Breakpoints extends Component {
     if (!selectedSource || !breakpoints) {
       return null;
     }
-
-    return (
-      <div>
-        {breakpoints.map(bp => {
-          return (
-            <Breakpoint
-              key={makeBreakpointId(bp.location)}
-              breakpoint={bp}
-              selectedSource={selectedSource}
-              showEditorEditBreakpointContextMenu={
-                showEditorEditBreakpointContextMenu
-              }
-              continueToHere={continueToHere}
-              toggleBreakpointsAtLine={toggleBreakpointsAtLine}
-              removeBreakpointsAtLine={removeBreakpointsAtLine}
-              editor={editor}
-            />
-          );
-        })}
-      </div>
+    return div(
+      null,
+      breakpoints.map(breakpoint => {
+        return React.createElement(Breakpoint, {
+          key: makeBreakpointId(breakpoint.location),
+          breakpoint,
+          selectedSource,
+          showEditorEditBreakpointContextMenu,
+          continueToHere,
+          toggleBreakpointsAtLine,
+          removeBreakpointsAtLine,
+          editor,
+        });
+      })
     );
   }
 }

@@ -4,6 +4,7 @@
 
 import PropTypes from "prop-types";
 import React, { Component } from "react";
+import { div } from "react-dom-factories";
 import { connect } from "../../utils/connect";
 import actions from "../../actions";
 import {
@@ -313,34 +314,34 @@ class SearchInFileBar extends Component {
     } = this.state;
 
     if (!searchInFileEnabled) {
-      return <div />;
+      return div(null);
     }
-
-    return (
-      <div className="search-bar">
-        <SearchInput
-          query={this.state.query}
-          count={count}
-          placeholder={L10N.getStr("sourceSearch.search.placeholder2")}
-          summaryMsg={this.buildSummaryMsg()}
-          isLoading={false}
-          onChange={this.onChange}
-          onFocus={this.onFocus}
-          onBlur={this.onBlur}
-          showErrorEmoji={this.shouldShowErrorEmoji()}
-          onKeyDown={this.onKeyDown}
-          onHistoryScroll={this.onHistoryScroll}
-          handleNext={e => this.traverseResults(e, false)}
-          handlePrev={e => this.traverseResults(e, true)}
-          shouldFocus={this.state.inputFocused}
-          showClose={true}
-          showExcludePatterns={false}
-          handleClose={this.closeSearch}
-          showSearchModifiers={true}
-          searchKey={searchKeys.FILE_SEARCH}
-          onToggleSearchModifier={() => this.doSearch(this.state.query)}
-        />
-      </div>
+    return div(
+      {
+        className: "search-bar",
+      },
+      React.createElement(SearchInput, {
+        query: this.state.query,
+        count: count,
+        placeholder: L10N.getStr("sourceSearch.search.placeholder2"),
+        summaryMsg: this.buildSummaryMsg(),
+        isLoading: false,
+        onChange: this.onChange,
+        onFocus: this.onFocus,
+        onBlur: this.onBlur,
+        showErrorEmoji: this.shouldShowErrorEmoji(),
+        onKeyDown: this.onKeyDown,
+        onHistoryScroll: this.onHistoryScroll,
+        handleNext: e => this.traverseResults(e, false),
+        handlePrev: e => this.traverseResults(e, true),
+        shouldFocus: this.state.inputFocused,
+        showClose: true,
+        showExcludePatterns: false,
+        handleClose: this.closeSearch,
+        showSearchModifiers: true,
+        searchKey: searchKeys.FILE_SEARCH,
+        onToggleSearchModifier: () => this.doSearch(this.state.query),
+      })
     );
   }
 }

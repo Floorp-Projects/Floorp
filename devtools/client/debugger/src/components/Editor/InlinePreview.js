@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { PureComponent } from "react";
+import { span } from "react-dom-factories";
 import PropTypes from "prop-types";
 import Reps from "devtools/client/shared/components/reps/index";
 
@@ -41,24 +42,31 @@ class InlinePreview extends PureComponent {
     } = this.props;
 
     const mode = isElement(value) ? MODE.TINY : MODE.SHORT;
-
-    return (
-      <span
-        className="inline-preview-outer"
-        onClick={() => this.showInScopes(variable)}
-      >
-        <span className="inline-preview-label">{variable}:</span>
-        <span className="inline-preview-value">
-          <Rep
-            object={value}
-            mode={mode}
-            onDOMNodeClick={grip => openElementInInspector(grip)}
-            onInspectIconClick={grip => openElementInInspector(grip)}
-            onDOMNodeMouseOver={grip => highlightDomElement(grip)}
-            onDOMNodeMouseOut={grip => unHighlightDomElement(grip)}
-          />
-        </span>
-      </span>
+    return span(
+      {
+        className: "inline-preview-outer",
+        onClick: () => this.showInScopes(variable),
+      },
+      span(
+        {
+          className: "inline-preview-label",
+        },
+        variable,
+        ":"
+      ),
+      span(
+        {
+          className: "inline-preview-value",
+        },
+        React.createElement(Rep, {
+          object: value,
+          mode,
+          onDOMNodeClick: grip => openElementInInspector(grip),
+          onInspectIconClick: grip => openElementInInspector(grip),
+          onDOMNodeMouseOver: grip => highlightDomElement(grip),
+          onDOMNodeMouseOut: grip => unHighlightDomElement(grip),
+        })
+      )
     );
   }
 }

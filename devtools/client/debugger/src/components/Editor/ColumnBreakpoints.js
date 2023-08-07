@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
+import { div } from "react-dom-factories";
 import PropTypes from "prop-types";
 
 import ColumnBreakpoint from "./ColumnBreakpoint";
@@ -24,6 +25,11 @@ class ColumnBreakpoints extends Component {
       columnBreakpoints: PropTypes.array.isRequired,
       editor: PropTypes.object.isRequired,
       selectedSource: PropTypes.object,
+      addBreakpoint: PropTypes.func,
+      removeBreakpoint: PropTypes.func,
+      toggleDisabledBreakpoint: PropTypes.func,
+      showEditorCreateBreakpointContextMenu: PropTypes.func,
+      showEditorEditBreakpointContextMenu: PropTypes.func,
     };
   }
 
@@ -45,25 +51,21 @@ class ColumnBreakpoints extends Component {
 
     let breakpoints;
     editor.codeMirror.operation(() => {
-      breakpoints = columnBreakpoints.map(breakpoint => (
-        <ColumnBreakpoint
-          key={makeBreakpointId(breakpoint.location)}
-          columnBreakpoint={breakpoint}
-          editor={editor}
-          source={selectedSource}
-          showEditorCreateBreakpointContextMenu={
-            showEditorCreateBreakpointContextMenu
-          }
-          showEditorEditBreakpointContextMenu={
-            showEditorEditBreakpointContextMenu
-          }
-          toggleDisabledBreakpoint={toggleDisabledBreakpoint}
-          removeBreakpoint={removeBreakpoint}
-          addBreakpoint={addBreakpoint}
-        />
-      ));
+      breakpoints = columnBreakpoints.map(columnBreakpoint =>
+        React.createElement(ColumnBreakpoint, {
+          key: makeBreakpointId(columnBreakpoint.location),
+          columnBreakpoint,
+          editor,
+          source: selectedSource,
+          showEditorCreateBreakpointContextMenu,
+          showEditorEditBreakpointContextMenu,
+          toggleDisabledBreakpoint,
+          removeBreakpoint,
+          addBreakpoint,
+        })
+      );
     });
-    return <div>{breakpoints}</div>;
+    return div(null, breakpoints);
   }
 }
 
