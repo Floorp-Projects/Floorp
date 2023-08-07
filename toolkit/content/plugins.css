@@ -6,12 +6,6 @@
    == Styles used by the about:plugins page.
    ======================================================================= */
 
-body {
-  background-color: Field;
-  color: FieldText;
-  font: message-box;
-}
-
 div#outside {
  text-align: justify;
  width: 90%;

@@ -98,6 +98,8 @@ class Linter(visitor.Visitor):
             "searchbuttonlabel",
             # Used in toolbar customization.
             "toolbarname",
+            # Used in moz-message-bar.
+            "message",
             # Used in dialogs (should be moved to using fluent IDs though)
             "buttonlabelaccept",
             "buttonaccesskeyaccept",

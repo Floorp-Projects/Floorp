@@ -18,6 +18,8 @@ navigator.plugins.refresh(false);
 RPMSendQuery("RequestPlugins", {}).then(aPlugins => {
   var fragment = document.createDocumentFragment();
 
+  window.ensureCustomElements("moz-message-bar");
+
   // "Installed plugins"
   var id, label;
   if (aPlugins.length) {
@@ -32,12 +34,13 @@ RPMSendQuery("RequestPlugins", {}).then(aPlugins => {
   document.l10n.setAttributes(enabledplugins, label);
   fragment.appendChild(enabledplugins);
 
-  let deprecation = document.createElement("message-bar");
+  let deprecation = document.createElement("moz-message-bar");
   let deprecationLink = document.createElement("a", { is: "moz-support-link" });
-  deprecationLink.setAttribute("data-l10n-name", "deprecation-link");
   deprecationLink.setAttribute("support-page", "npapi");
+  deprecationLink.setAttribute("slot", "support-link");
   deprecation.appendChild(deprecationLink);
-  document.l10n.setAttributes(deprecation, "deprecation-description");
+  deprecation.setAttribute("data-l10n-attrs", "message");
+  document.l10n.setAttributes(deprecation, "deprecation-description2");
   fragment.appendChild(deprecation);
 
   var stateNames = {};
