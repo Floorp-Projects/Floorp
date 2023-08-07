@@ -73,16 +73,16 @@ FINAL_TARGET_FILES.content.tests.BrowserTestUtils += [
 ]
 
 MOCHITEST_MANIFESTS += [
-    "baselinecoverage/plain/mochitest.ini",
-    "tests/MochiKit-1.4.2/tests/mochitest.ini",
+    "baselinecoverage/plain/mochitest.toml",
+    "tests/MochiKit-1.4.2/tests/mochitest.toml",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
-    "baselinecoverage/chrome/chrome.ini",
-    "chrome/chrome.ini",
+    "baselinecoverage/chrome/chrome.toml",
+    "chrome/chrome.toml",
 ]
 
-BROWSER_CHROME_MANIFESTS += ["baselinecoverage/browser_chrome/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["baselinecoverage/browser_chrome/browser.toml"]
 
 TEST_HARNESS_FILES.testing.mochitest += [
     "/build/pgo/server-locations.txt",
