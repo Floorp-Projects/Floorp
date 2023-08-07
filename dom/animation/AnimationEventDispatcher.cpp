@@ -18,9 +18,15 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AnimationEventDispatcher)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AnimationEventDispatcher)
   for (auto& info : tmp->mPendingEvents) {
-    ImplCycleCollectionTraverse(
-        cb, info.mTarget,
-        "mozilla::AnimationEventDispatcher.mPendingEvents.mTarget");
+    if (OwningAnimationTarget* target = info.GetOwningAnimationTarget()) {
+      ImplCycleCollectionTraverse(
+          cb, target->mElement,
+          "mozilla::AnimationEventDispatcher.mPendingEvents.mTarget");
+    } else {
+      ImplCycleCollectionTraverse(
+          cb, info.mData.as<AnimationEventInfo::WebAnimationData>().mEvent,
+          "mozilla::AnimationEventDispatcher.mPendingEvents.mEvent");
+    }
     ImplCycleCollectionTraverse(
         cb, info.mAnimation,
         "mozilla::AnimationEventDispatcher.mPendingEvents.mAnimation");
@@ -57,6 +63,81 @@ void AnimationEventDispatcher::ScheduleDispatch() {
     mPresContext->RefreshDriver()->ScheduleAnimationEventDispatch(this);
     mIsObserving = true;
   }
+}
+
+void AnimationEventInfo::MaybeAddMarker() const {
+  if (mData.is<CssAnimationData>()) {
+    const auto& data = mData.as<CssAnimationData>();
+    const EventMessage message = data.mMessage;
+    if (message != eAnimationCancel && message != eAnimationEnd &&
+        message != eAnimationIteration) {
+      return;
+    }
+    nsAutoCString name;
+    data.mAnimationName->ToUTF8String(name);
+    const TimeStamp startTime = [&] {
+      if (message == eAnimationIteration) {
+        if (auto* effect = mAnimation->GetEffect()) {
+          return mScheduledEventTimeStamp -
+                 TimeDuration(effect->GetComputedTiming().mDuration);
+        }
+      }
+      return mScheduledEventTimeStamp -
+             TimeDuration::FromSeconds(data.mElapsedTime);
+    }();
+
+    nsCSSPropertyIDSet propertySet;
+    nsAutoString target;
+    if (dom::AnimationEffect* effect = mAnimation->GetEffect()) {
+      if (dom::KeyframeEffect* keyFrameEffect = effect->AsKeyframeEffect()) {
+        keyFrameEffect->GetTarget()->Describe(target, true);
+        for (const AnimationProperty& property : keyFrameEffect->Properties()) {
+          propertySet.AddProperty(property.mProperty);
+        }
+      }
+    }
+    PROFILER_MARKER(
+        message == eAnimationIteration
+            ? ProfilerString8View("CSS animation iteration")
+            : ProfilerString8View("CSS animation"),
+        DOM,
+        MarkerOptions(
+            MarkerTiming::Interval(startTime, mScheduledEventTimeStamp),
+            mAnimation->GetOwner()
+                ? MarkerInnerWindowId(mAnimation->GetOwner()->WindowID())
+                : MarkerInnerWindowId::NoId()),
+        CSSAnimationMarker, name, NS_ConvertUTF16toUTF8(target), propertySet);
+    return;
+  }
+
+  if (!mData.is<CssTransitionData>()) {
+    return;
+  }
+
+  const auto& data = mData.as<CssTransitionData>();
+  const EventMessage message = data.mMessage;
+  if (message != eTransitionEnd && message != eTransitionCancel) {
+    return;
+  }
+
+  nsAutoString target;
+  if (dom::AnimationEffect* effect = mAnimation->GetEffect()) {
+    if (dom::KeyframeEffect* keyFrameEffect = effect->AsKeyframeEffect()) {
+      keyFrameEffect->GetTarget()->Describe(target, true);
+    }
+  }
+  PROFILER_MARKER(
+      "CSS transition", DOM,
+      MarkerOptions(
+          MarkerTiming::Interval(
+              mScheduledEventTimeStamp -
+                  TimeDuration::FromSeconds(data.mElapsedTime),
+              mScheduledEventTimeStamp),
+          mAnimation->GetOwner()
+              ? MarkerInnerWindowId(mAnimation->GetOwner()->WindowID())
+              : MarkerInnerWindowId::NoId()),
+      CSSTransitionMarker, NS_ConvertUTF16toUTF8(target), data.mPropertyId,
+      message == eTransitionCancel);
 }
 
 }  // namespace mozilla
