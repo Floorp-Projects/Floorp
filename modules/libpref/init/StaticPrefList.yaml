@@ -5801,11 +5801,6 @@
   value: true # Match naive behavior, but hopefully we can stop soon!
   mirror: always
 
-- name: gfx.compositor.clearstate
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Whether GL contexts can be migrated to a different GPU (to match the one the
 # OS is using for composition).
 #

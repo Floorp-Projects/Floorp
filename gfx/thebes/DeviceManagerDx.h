@@ -119,10 +119,6 @@ class DeviceManagerDx final {
   // was successful.
   bool MaybeResetAndReacquireDevices();
 
-  // Test whether we can acquire a DXGI 1.2-compatible adapter. This should
-  // only be called on startup before devices are initialized.
-  bool CheckRemotePresentSupport();
-
   // Device reset helpers.
   bool HasDeviceReset(DeviceResetReason* aOutReason = nullptr);
 
