@@ -1165,7 +1165,7 @@ starttagloop:
             case P:
             case DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU:
             case UL_OR_OL_OR_DL:
-            case ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY: {
+            case ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SEARCH_OR_SECTION_OR_SUMMARY: {
               implicitlyCloseP();
               appendToCurrentNodeAndPushElementMayFoster(elementName,
                                                          attributes);
@@ -2680,7 +2680,7 @@ void nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName) {
           case PRE_OR_LISTING:
           case FIELDSET:
           case BUTTON:
-          case ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY: {
+          case ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SEARCH_OR_SECTION_OR_SUMMARY: {
             eltPos = findLastInScope(name);
             if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               errStrayEndTag(name);

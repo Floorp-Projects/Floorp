@@ -425,3 +425,5 @@ MARKUPMAP(
       return new HTMLMeterAccessible(aElement, aContext->Document());
     },
     roles::METER)
+
+MARKUPMAP(search, New_HyperText, roles::LANDMARK)
