@@ -2410,22 +2410,6 @@ impl PropertyDeclaration {
         }
     }
 
-    /// Return whether the value is stored as it was in the CSS source,
-    /// preserving whitespace (as opposed to being parsed into a more abstract
-    /// data structure).
-    ///
-    /// This is the case of custom properties and values that contain
-    /// unsubstituted variables.
-    pub fn value_is_unparsed(&self) -> bool {
-        match *self {
-            PropertyDeclaration::WithVariables(..) => true,
-            PropertyDeclaration::Custom(ref declaration) => {
-                matches!(declaration.value, CustomDeclarationValue::Value(..))
-            }
-            _ => false,
-        }
-    }
-
     /// Returns true if this property declaration is for one of the animatable
     /// properties.
     pub fn is_animatable(&self) -> bool {

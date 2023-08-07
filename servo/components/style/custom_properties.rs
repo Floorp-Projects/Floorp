@@ -297,7 +297,7 @@ impl VariableValue {
         input: &Parser<'i, '_>,
         variable: &ComputedValue,
     ) -> Result<(), ParseError<'i>> {
-        debug_assert!(!variable.has_references());
+        debug_assert!(!variable.has_references(), "{}", variable.css);
         self.push(
             input,
             &variable.css,
@@ -680,21 +680,17 @@ impl<'a> CustomPropertiesBuilder<'a> {
                 // If the variable value has no references and it has an environment variable here,
                 // perform substitution here instead of forcing a full traversal in
                 // `substitute_all` afterwards.
-                let value = if !has_custom_property_references &&
-                    unparsed_value.references.environment
-                {
-                    let result = substitute_references_in_value(unparsed_value, &map, &self.device);
-                    match result {
-                        Ok(new_value) => new_value,
-                        Err(..) => {
-                            map.remove(name);
-                            return;
-                        },
-                    }
-                } else {
-                    (*unparsed_value).clone()
-                };
-                map.insert(name.clone(), value);
+                if !has_custom_property_references && unparsed_value.references.environment {
+                    substitute_references_in_value_and_apply(
+                        name,
+                        unparsed_value,
+                        map,
+                        self.inherited.map(|m| &**m),
+                        &self.device,
+                    );
+                    return;
+                }
+                map.insert(name.clone(), Arc::clone(unparsed_value));
             },
             CustomDeclarationValue::CSSWideKeyword(keyword) => match keyword {
                 CSSWideKeyword::RevertLayer | CSSWideKeyword::Revert => {
@@ -777,7 +773,12 @@ impl<'a> CustomPropertiesBuilder<'a> {
         };
 
         if self.may_have_cycles {
-            substitute_all(&mut map, &self.seen, self.device);
+            substitute_all(
+                &mut map,
+                self.inherited.map(|m| &**m),
+                &self.seen,
+                self.device,
+            );
         }
 
         // Some pages apply a lot of redundant custom properties, see e.g.
@@ -799,6 +800,7 @@ impl<'a> CustomPropertiesBuilder<'a> {
 /// It does cycle dependencies removal at the same time as substitution.
 fn substitute_all(
     custom_properties_map: &mut CustomPropertiesMap,
+    inherited: Option<&CustomPropertiesMap>,
     seen: &PrecomputedHashSet<&Name>,
     device: &Device,
 ) {
@@ -837,6 +839,8 @@ fn substitute_all(
         /// all unfinished strong connected components.
         stack: SmallVec<[usize; 5]>,
         map: &'a mut CustomPropertiesMap,
+        /// The inherited custom properties to handle wide keywords.
+        inherited: Option<&'a CustomPropertiesMap>,
         /// To resolve the environment to substitute `env()` variables.
         device: &'a Device,
     }
@@ -970,19 +974,15 @@ fn substitute_all(
             return None;
         }
 
-        // Now we have shown that this variable is not in a loop, and all of its
-        // dependencies should have been resolved. We can start substitution
-        // now.
-        let result = substitute_references_in_value(&value, &context.map, &context.device);
-        match result {
-            Ok(computed_value) => {
-                context.map.insert(name, computed_value);
-            },
-            Err(..) => {
-                // This is invalid, reset it to the guaranteed-invalid value.
-                context.map.remove(&name);
-            },
-        }
+        // Now we have shown that this variable is not in a loop, and all of its dependencies
+        // should have been resolved. We can perform substitution now.
+        substitute_references_in_value_and_apply(
+            &name,
+            &value,
+            &mut context.map,
+            context.inherited,
+            &context.device,
+        );
 
         // All resolved, so return the signal value.
         None
@@ -998,6 +998,7 @@ fn substitute_all(
             stack: SmallVec::new(),
             var_info: SmallVec::new(),
             map: custom_properties_map,
+            inherited,
             device,
         };
         traverse(name, &mut context);
@@ -1005,29 +1006,81 @@ fn substitute_all(
 }
 
 /// Replace `var()` and `env()` functions in a pre-existing variable value.
-fn substitute_references_in_value<'i>(
-    value: &'i VariableValue,
-    custom_properties: &CustomPropertiesMap,
+fn substitute_references_in_value_and_apply(
+    name: &Name,
+    value: &VariableValue,
+    custom_properties: &mut CustomPropertiesMap,
+    inherited: Option<&CustomPropertiesMap>,
     device: &Device,
-) -> Result<Arc<ComputedValue>, ParseError<'i>> {
+) {
     debug_assert!(value.has_references());
 
-    let mut input = ParserInput::new(&value.css);
-    let mut input = Parser::new(&mut input);
-    let mut position = (input.position(), value.first_token_type);
     let mut computed_value = ComputedValue::empty();
 
-    let last_token_type = substitute_block(
-        &mut input,
-        &mut position,
-        &mut computed_value,
-        custom_properties,
-        device,
-    )?;
+    {
+        let mut input = ParserInput::new(&value.css);
+        let mut input = Parser::new(&mut input);
+        let mut position = (input.position(), value.first_token_type);
 
-    computed_value.push_from(&input, position, last_token_type)?;
-    computed_value.css.shrink_to_fit();
-    Ok(Arc::new(computed_value))
+        let last_token_type = substitute_block(
+            &mut input,
+            &mut position,
+            &mut computed_value,
+            custom_properties,
+            device,
+        );
+
+        let last_token_type = match last_token_type {
+            Ok(t) => t,
+            Err(..) => {
+                // Invalid at computed value time.
+                custom_properties.remove(name);
+                return;
+            },
+        };
+
+        if computed_value
+            .push_from(&input, position, last_token_type)
+            .is_err()
+        {
+            custom_properties.remove(name);
+            return;
+        }
+    }
+
+    // If variable fallback results in a wide keyword, deal with it now.
+    let wide_keyword = {
+        let mut input = ParserInput::new(&computed_value.css);
+        let mut input = Parser::new(&mut input);
+        input.try_parse(CSSWideKeyword::parse)
+    };
+
+    if let Ok(kw) = wide_keyword {
+        match kw {
+            CSSWideKeyword::Initial => {
+                custom_properties.remove(name);
+            },
+            CSSWideKeyword::Revert |
+            CSSWideKeyword::RevertLayer |
+            CSSWideKeyword::Inherit |
+            CSSWideKeyword::Unset => {
+                // TODO: It's unclear what this should do for revert / revert-layer, see
+                // https://github.com/w3c/csswg-drafts/issues/9131. For now treating as unset
+                // seems fine?
+                match inherited.and_then(|map| map.get(name)) {
+                    Some(value) => {
+                        custom_properties.insert(name.clone(), Arc::clone(value));
+                    },
+                    None => {
+                        custom_properties.remove(name);
+                    },
+                };
+            },
+        }
+    } else {
+        computed_value.css.shrink_to_fit();
+        custom_properties.insert(name.clone(), Arc::new(computed_value));
+    }
 }
 
 /// Replace `var()` functions in an arbitrary bit of input.
