@@ -28,8 +28,6 @@
 #include "nsWeakReference.h"
 #include "nsNetCID.h"
 
-#define NS_N(x) (sizeof(x) / sizeof(*(x)))
-
 // We don't want to expose this observer topic.
 // Intended internal use only for remoting offline/inline events.
 // See Bug 552829

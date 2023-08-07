@@ -88,8 +88,6 @@ using mozilla::dom::ServiceWorkerDescriptor;
 #define NETWORK_DNS_PREF "network.dns."
 #define FORCE_EXTERNAL_PREF_PREFIX "network.protocol-handler.external."
 
-#define MAX_RECURSION_COUNT 50
-
 nsIOService* gIOService;
 static bool gHasWarnedUploadChannel2;
 static bool gCaptivePortalEnabled = false;
@@ -987,15 +985,6 @@ nsIOService::GetDefaultPort(const char* scheme, int32_t* defaultPort) {
       LookupProtocolHandler(nsDependentCString(scheme)).DefaultPort();
   return NS_OK;
 }
-
-class AutoIncrement {
- public:
-  explicit AutoIncrement(uint32_t* var) : mVar(var) { ++*var; }
-  ~AutoIncrement() { --*mVar; }
-
- private:
-  uint32_t* mVar;
-};
 
 nsresult nsIOService::NewURI(const nsACString& aSpec, const char* aCharset,
                              nsIURI* aBaseURI, nsIURI** result) {
