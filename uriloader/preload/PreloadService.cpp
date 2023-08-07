@@ -8,6 +8,7 @@
 #include "FetchPreloader.h"
 #include "PreloaderBase.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/dom/FetchPriority.h"
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/ReferrerInfo.h"
@@ -72,8 +73,8 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
     return nullptr;
   }
 
-  nsAutoString as, charset, crossOrigin, integrity, referrerPolicy, rel, srcset,
-      sizes, type, url;
+  nsAutoString as, charset, crossOrigin, integrity, referrerPolicy,
+      fetchPriority, rel, srcset, sizes, type, url;
 
   nsCOMPtr<nsIURI> uri = aLinkElement->GetURI();
   aLinkElement->GetCharset(charset);
@@ -83,6 +84,8 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
   aLinkElement->GetCrossOrigin(crossOrigin);
   aLinkElement->GetIntegrity(integrity);
   aLinkElement->GetReferrerPolicy(referrerPolicy);
+  // Bug 1839315: get "fetchpriority"'s value from the link element instead,
+  fetchPriority = NS_ConvertUTF8toUTF16(dom::kFetchPriorityAttributeValueAuto);
   aLinkElement->GetRel(rel);
 
   nsAutoString nonce;
@@ -101,7 +104,8 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
 
   auto result = PreloadOrCoalesce(uri, url, aPolicyType, as, type, charset,
                                   srcset, sizes, nonce, integrity, crossOrigin,
-                                  referrerPolicy, /* aFromHeader = */ false, 0);
+                                  referrerPolicy, fetchPriority,
+                                  /* aFromHeader = */ false, 0);
 
   if (!result.mPreloader) {
     NotifyNodeEvent(aLinkElement, result.mAlreadyComplete);
@@ -127,8 +131,12 @@ void PreloadService::PreloadLinkHeader(
     return;
   }
 
+  // Bug 1839315: which fetch priority to use here?
+  const nsAutoString fetchPriority =
+      NS_ConvertUTF8toUTF16(dom::kFetchPriorityAttributeValueAuto);
   PreloadOrCoalesce(aURI, aURL, aPolicyType, aAs, aType, u""_ns, aSrcset,
                     aSizes, aNonce, aIntegrity, aCORS, aReferrerPolicy,
+                    fetchPriority,
                     /* aFromHeader = */ true, aEarlyHintPreloaderId);
 }
 
@@ -137,8 +145,8 @@ PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
     const nsAString& aAs, const nsAString& aType, const nsAString& aCharset,
     const nsAString& aSrcset, const nsAString& aSizes, const nsAString& aNonce,
     const nsAString& aIntegrity, const nsAString& aCORS,
-    const nsAString& aReferrerPolicy, bool aFromHeader,
-    uint64_t aEarlyHintPreloaderId) {
+    const nsAString& aReferrerPolicy, const nsAString& aFetchPriority,
+    bool aFromHeader, uint64_t aEarlyHintPreloaderId) {
   if (!aURI) {
     MOZ_ASSERT_UNREACHABLE("Should not pass null nsIURI");
     return {nullptr, false};
@@ -179,7 +187,7 @@ PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
 
   if (aAs.LowerCaseEqualsASCII("script")) {
     PreloadScript(uri, aType, aCharset, aCORS, aReferrerPolicy, aNonce,
-                  aIntegrity, true /* isInHead - TODO */,
+                  aFetchPriority, aIntegrity, true /* isInHead - TODO */,
                   aEarlyHintPreloaderId);
   } else if (aAs.LowerCaseEqualsASCII("style")) {
     auto status = mDocument->PreloadStyle(
@@ -214,12 +222,13 @@ PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
 void PreloadService::PreloadScript(
     nsIURI* aURI, const nsAString& aType, const nsAString& aCharset,
     const nsAString& aCrossOrigin, const nsAString& aReferrerPolicy,
-    const nsAString& aNonce, const nsAString& aIntegrity, bool aScriptFromHead,
+    const nsAString& aNonce, const nsAString& aFetchPriority,
+    const nsAString& aIntegrity, bool aScriptFromHead,
     uint64_t aEarlyHintPreloaderId) {
   mDocument->ScriptLoader()->PreloadURI(
-      aURI, aCharset, aType, aCrossOrigin, aNonce, aIntegrity, aScriptFromHead,
-      false, false, false, true, PreloadReferrerPolicy(aReferrerPolicy),
-      aEarlyHintPreloaderId);
+      aURI, aCharset, aType, aCrossOrigin, aNonce, aFetchPriority, aIntegrity,
+      aScriptFromHead, false, false, false, true,
+      PreloadReferrerPolicy(aReferrerPolicy), aEarlyHintPreloaderId);
 }
 
 void PreloadService::PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,
