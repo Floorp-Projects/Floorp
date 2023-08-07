@@ -4792,17 +4792,26 @@ public class GeckoSession {
           /** The id of the provider. */
           public final int id;
 
+          /** The domain of the provider */
+          public final @NonNull String domain;
+
           /**
            * Creates a new {@link Provider} with the given parameters.
            *
            * @param id The identification for this prompt.
            * @param icon A string base64 icon.
            * @param name The name of the {@link Provider}.
+           * @param domain The domain of the {@link Provider}.
            */
-          public Provider(final int id, final @NonNull String name, final @Nullable String icon) {
+          public Provider(
+              final int id,
+              final @NonNull String name,
+              final @Nullable String icon,
+              final @NonNull String domain) {
             this.id = id;
             this.icon = icon;
             this.name = name;
+            this.domain = domain;
           }
 
           /* package */
@@ -4810,7 +4819,8 @@ public class GeckoSession {
             final int id = bundle.getInt("providerIndex");
             final String icon = bundle.getString("icon");
             final String name = bundle.getString("name");
-            return new Provider(id, name, icon);
+            final String domain = bundle.getString("domain");
+            return new Provider(id, name, icon, domain);
           }
         }
       }
@@ -4823,17 +4833,25 @@ public class GeckoSession {
         /** The accounts from which the user could select. */
         public final @NonNull Account[] accounts;
 
+        /** The name of the provider the user is trying to login with */
+        public final @NonNull Provider provider;
+
         /**
          * Creates a new {@link AccountSelectorPrompt} with the given parameters.
          *
          * @param id The identification for this prompt.
          * @param accounts The accounts from which the user could select.
+         * @param provider The provider on which the user is trying to log in.
          * @param observer A callback to notify when the prompt has been completed.
          */
         public AccountSelectorPrompt(
-            @NonNull final String id, @NonNull final Account[] accounts, final Observer observer) {
+            @NonNull final String id,
+            @NonNull final Account[] accounts,
+            @NonNull final Provider provider,
+            final Observer observer) {
           super(id, null, observer);
           this.accounts = accounts;
+          this.provider = provider;
         }
 
         /**
@@ -4853,7 +4871,7 @@ public class GeckoSession {
         /** A representation of an Identity Credential Provider Accounts. */
         public static class ProviderAccounts {
           /** The name of the provider. */
-          public final @Nullable String provider;
+          public final @Nullable Provider provider;
 
           /** The accounts available for this provider. */
           public final @NonNull Account[] accounts;
@@ -4869,7 +4887,7 @@ public class GeckoSession {
            * @param accounts The list of {@link Account}s available for this provider.
            */
           public ProviderAccounts(
-              final int id, @Nullable final String provider, @NonNull final Account[] accounts) {
+              final int id, @Nullable final Provider provider, @NonNull final Account[] accounts) {
             this.id = id;
             this.provider = provider;
             this.accounts = accounts;
@@ -4878,7 +4896,8 @@ public class GeckoSession {
           /* package */
           static @NonNull ProviderAccounts fromBundle(final @NonNull GeckoBundle bundle) {
             final int id = bundle.getInt("accountIndex");
-            final String provider = bundle.getString("provider");
+            final Provider provider = Provider.fromBundle(bundle.getBundle("provider"));
+
             final GeckoBundle[] accountsBundle = bundle.getBundleArray("accounts");
             if (accountsBundle == null) {
               return new ProviderAccounts(id, provider, new Account[0]);
@@ -4932,6 +4951,42 @@ public class GeckoSession {
             final String name = bundle.getString("name");
             final String email = bundle.getString("email");
             return new Account(id, email, name, icon);
+          }
+        }
+
+        /** A representation of an Identity Credential Provider for an Account Selector Prompt */
+        public static class Provider {
+          /** The name of the provider */
+          public final @NonNull String name;
+
+          /** The domain of the provider */
+          public final @NonNull String domain;
+
+          /** A base64 string for given icon for the provider; may be null. */
+          public final @Nullable String icon;
+
+          /**
+           * Creates a new {@link Provider} with the given parameters
+           *
+           * @param name the name of the Provider
+           * @param favicon A string base64 icon for the provider
+           * @param domain A string base64 icon for the provider
+           */
+          public Provider(
+              @NonNull final String name,
+              @NonNull final String domain,
+              @Nullable final String favicon) {
+            this.name = name;
+            this.domain = domain;
+            this.icon = favicon;
+          }
+
+          /* package */
+          static @NonNull Provider fromBundle(final @NonNull GeckoBundle bundle) {
+            final String name = bundle.getString("name");
+            final String domain = bundle.getString("domain");
+            final String icon = bundle.getString("icon");
+            return new Provider(name, domain, icon);
           }
         }
       }
