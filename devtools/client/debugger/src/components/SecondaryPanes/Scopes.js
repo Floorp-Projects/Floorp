@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { PureComponent } from "react";
+import { div, button } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { showMenu } from "../../context-menu/menu";
 import { connect } from "../../utils/connect";
@@ -59,6 +60,7 @@ class Scopes extends PureComponent {
       toggleMapScopes: PropTypes.func.isRequired,
       unHighlightDomElement: PropTypes.func.isRequired,
       why: PropTypes.object.isRequired,
+      selectedFrame: PropTypes.object,
     };
   }
 
@@ -181,16 +183,14 @@ class Scopes extends PureComponent {
     }
 
     const { watchpoint } = item.contents;
-    return (
-      <button
-        className={`remove-watchpoint-${watchpoint}`}
-        title={L10N.getStr("watchpoints.removeWatchpointTooltip")}
-        onClick={e => {
-          e.stopPropagation();
-          removeWatchpoint(item);
-        }}
-      />
-    );
+    return button({
+      className: `remove-watchpoint-${watchpoint}`,
+      title: L10N.getStr("watchpoints.removeWatchpointTooltip"),
+      onClick: e => {
+        e.stopPropagation();
+        removeWatchpoint(item);
+      },
+    });
   };
 
   renderScopesList() {
@@ -215,32 +215,32 @@ class Scopes extends PureComponent {
     }
 
     if (scopes && !!scopes.length && !isLoading) {
-      return (
-        <div className="pane scopes-list">
-          <ObjectInspector
-            roots={scopes}
-            autoExpandAll={false}
-            autoExpandDepth={1}
-            client={clientCommands}
-            createElement={tagName => document.createElement(tagName)}
-            disableWrap={true}
-            dimTopLevelWindow={true}
-            frame={selectedFrame}
-            mayUseCustomFormatter={true}
-            openLink={openLink}
-            onDOMNodeClick={grip => openElementInInspector(grip)}
-            onInspectIconClick={grip => openElementInInspector(grip)}
-            onDOMNodeMouseOver={grip => highlightDomElement(grip)}
-            onDOMNodeMouseOut={grip => unHighlightDomElement(grip)}
-            onContextMenu={this.onContextMenu}
-            setExpanded={(path, expand) =>
-              setExpandedScope(selectedFrame, path, expand)
-            }
-            initiallyExpanded={initiallyExpanded}
-            renderItemActions={this.renderWatchpointButton}
-            shouldRenderTooltip={true}
-          />
-        </div>
+      return div(
+        {
+          className: "pane scopes-list",
+        },
+        React.createElement(ObjectInspector, {
+          roots: scopes,
+          autoExpandAll: false,
+          autoExpandDepth: 1,
+          client: clientCommands,
+          createElement: tagName => document.createElement(tagName),
+          disableWrap: true,
+          dimTopLevelWindow: true,
+          frame: selectedFrame,
+          mayUseCustomFormatter: true,
+          openLink: openLink,
+          onDOMNodeClick: grip => openElementInInspector(grip),
+          onInspectIconClick: grip => openElementInInspector(grip),
+          onDOMNodeMouseOver: grip => highlightDomElement(grip),
+          onDOMNodeMouseOut: grip => unHighlightDomElement(grip),
+          onContextMenu: this.onContextMenu,
+          setExpanded: (path, expand) =>
+            setExpandedScope(selectedFrame, path, expand),
+          initiallyExpanded: initiallyExpanded,
+          renderItemActions: this.renderWatchpointButton,
+          shouldRenderTooltip: true,
+        })
       );
     }
 
@@ -252,16 +252,26 @@ class Scopes extends PureComponent {
         stateText = L10N.getStr("scopes.notAvailable");
       }
     }
-
-    return (
-      <div className="pane scopes-list">
-        <div className="pane-info">{stateText}</div>
-      </div>
+    return div(
+      {
+        className: "pane scopes-list",
+      },
+      div(
+        {
+          className: "pane-info",
+        },
+        stateText
+      )
     );
   }
 
   render() {
-    return <div className="scopes-content">{this.renderScopesList()}</div>;
+    return div(
+      {
+        className: "scopes-content",
+      },
+      this.renderScopesList()
+    );
   }
 }
 
