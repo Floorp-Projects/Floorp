@@ -167,8 +167,10 @@ extern JSScript* CompileGlobalScript(JSContext* cx, FrontendContext* fc,
 // Bindings should be passed by a pair of unwrappedBindingKeys and
 // unwrappedBindingValues.
 //
-// A WithEnvironmentObject is created for the bindings and returned via env out
-// parameter. The same env must be used to evaluate the script.
+// If any of the bindings are accessed by the script, a WithEnvironmentObject
+// is created for the bindings and returned via env out parameter. Otherwise,
+// global lexical is returned. In both case, the same env must be used to
+// evaluate the script.
 //
 // Both unwrappedBindingKeys and unwrappedBindingValues can come from different
 // realm than the current realm.
