@@ -126,6 +126,7 @@ DOM4_MSG_DEF(NotSupportedError, "The media resource indicated by the src attribu
 
 DOM4_MSG_DEF(SyntaxError, "The URI is malformed.", NS_ERROR_DOM_MALFORMED_URI)
 DOM4_MSG_DEF(SyntaxError, "Invalid header name.", NS_ERROR_DOM_INVALID_HEADER_NAME)
+DOM4_MSG_DEF(SyntaxError, "Invalid header value.", NS_ERROR_DOM_INVALID_HEADER_VALUE)
 
 /* XMLHttpRequest errors. */
 DOM4_MSG_DEF(InvalidStateError, "XMLHttpRequest has an invalid context.", NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT)
