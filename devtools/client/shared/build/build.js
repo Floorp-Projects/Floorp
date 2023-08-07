@@ -14,7 +14,7 @@ const Babel = require("./babel");
 const fs = require("fs");
 const _path = require("path");
 
-const defaultPlugins = ["proposal-class-properties", "transform-react-jsx"];
+const defaultPlugins = ["proposal-class-properties"];
 
 function transform(filePath) {
   // Use the extra plugins only for the debugger
