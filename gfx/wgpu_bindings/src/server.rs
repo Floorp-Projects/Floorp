@@ -18,15 +18,12 @@ use std::borrow::Cow;
 use std::slice;
 use std::sync::atomic::{AtomicU32, Ordering};
 
-// The seemingly redundant u64 suffixes help cbindgen with generating the right C++ code.
-// See https://github.com/mozilla/cbindgen/issues/849.
-
 /// We limit the size of buffer allocations for stability reason.
 /// We can reconsider this limit in the future. Note that some drivers (mesa for example),
 /// have issues when the size of a buffer, mapping or copy command does not fit into a
 /// signed 32 bits integer, so beyond a certain size, large allocations will need some form
 /// of driver allow/blocklist.
-pub const MAX_BUFFER_SIZE: wgt::BufferAddress = 1u64 << 30u64;
+const MAX_BUFFER_SIZE: wgt::BufferAddress = 1 << 30;
 // Mesa has issues with height/depth that don't fit in a 16 bits signed integers.
 const MAX_TEXTURE_EXTENT: u32 = std::i16::MAX as u32;
 
@@ -282,7 +279,6 @@ pub extern "C" fn wgpu_server_device_create_buffer(
     size: wgt::BufferAddress,
     usage: u32,
     mapped_at_creation: bool,
-    shm_allocation_failed: bool,
     mut error_buf: ErrorBuffer,
 ) {
     let utf8_label = label.map(|utf16| utf16.to_string());
@@ -290,7 +286,7 @@ pub extern "C" fn wgpu_server_device_create_buffer(
     let usage = wgt::BufferUsages::from_bits_retain(usage);
 
     // Don't trust the graphics driver with buffer sizes larger than our conservative max texture size.
-    if shm_allocation_failed || size > MAX_BUFFER_SIZE {
+    if size > MAX_BUFFER_SIZE {
         error_buf.init(ErrMsg {
             message: "Out of memory",
             r#type: ErrorBufferType::OutOfMemory,
