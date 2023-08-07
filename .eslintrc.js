@@ -1610,7 +1610,6 @@ module.exports = {
         "dom/tests/browser/browser_frame_elements.js",
         "dom/tests/browser/browser_hasbeforeunload.js",
         "dom/tests/browser/browser_localStorage_e10s.js",
-        "dom/tests/browser/browser_localStorage_snapshotting.js",
         "dom/tests/browser/browser_test_toolbars_visibility.js",
         "dom/tests/browser/browser_windowProxy_transplant.js",
         "dom/tests/mochitest/beacon/file_beaconSafelist.html",
