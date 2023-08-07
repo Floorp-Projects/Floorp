@@ -225,6 +225,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
         reviewQualityCheckFeature.set(
             feature = ReviewQualityCheckFeature(
+                browserStore = context.components.core.store,
                 onAvailabilityChange = { reviewQualityCheckAvailable = it },
             ),
             owner = this,

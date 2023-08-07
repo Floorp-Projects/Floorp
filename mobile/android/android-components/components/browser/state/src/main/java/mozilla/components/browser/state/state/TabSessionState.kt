@@ -95,6 +95,7 @@ fun createTab(
     lastMediaAccessState: LastMediaAccessState = LastMediaAccessState(),
     source: SessionState.Source = SessionState.Source.Internal.None,
     restored: Boolean = false,
+    isProductUrl: Boolean = false,
     engineSession: EngineSession? = null,
     engineSessionState: EngineSessionState? = null,
     crashed: Boolean = false,
@@ -126,6 +127,7 @@ fun createTab(
         lastMediaAccessState = lastMediaAccessState,
         source = source,
         restored = restored,
+        isProductUrl = isProductUrl,
         engineState = EngineState(
             engineSession = engineSession,
             engineSessionState = engineSessionState,
