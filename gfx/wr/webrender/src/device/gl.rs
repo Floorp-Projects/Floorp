@@ -1845,11 +1845,10 @@ impl Device {
             // We have encountered rendering errors on a variety of Adreno GPUs specifically on
             // driver version V@0490, so block this extension on that driver version. See bug 1828248.
             false
-        } else if renderer_name == "Adreno (TM) 308"
-            && (version_string.contains("V@331") || version_string.contains("V@415"))
-        {
+        } else if renderer_name == "Adreno (TM) 308" {
             // And specifically on Areno 308 GPUs we have encountered rendering errors on driver
-            // versions V@331 and V@415. See bug 1843749.
+            // versions V@331, V@415, and V@0502. We presume this therefore affects all driver
+            // versions. See bug 1843749 and bug 1847319.
             false
         } else {
             supports_extension(&extensions, "GL_QCOM_tiled_rendering")
