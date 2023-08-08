@@ -11,7 +11,6 @@
 #include "cubeb_resampler.h"
 #include "cubeb_triple_buffer.h"
 #include <aaudio/AAudio.h>
-#include <android/api-level.h>
 #include <atomic>
 #include <cassert>
 #include <chrono>
@@ -1260,14 +1259,14 @@ aaudio_stream_init(cubeb * ctx, cubeb_stream ** stream,
 
   // This is ok: the thread is marked as being in use
   lock.unlock();
-  lock_guard guard(stm->mutex);
+  int err;
 
-  int err = aaudio_stream_init_impl(stm, guard);
+  {
+    lock_guard guard(stm->mutex);
+    err = aaudio_stream_init_impl(stm, guard);
+  }
+
   if (err != CUBEB_OK) {
-    // This is needed since aaudio_stream_destroy will lock the mutex again.
-    // It's no problem that there is a gap in between as the stream isn't
-    // actually in use.
-    lock.unlock();
     aaudio_stream_destroy(stm);
     return err;
   }
@@ -1705,9 +1704,6 @@ const static struct cubeb_ops aaudio_ops = {
 extern "C" /*static*/ int
 aaudio_init(cubeb ** context, char const * /* context_name */)
 {
-  if (android_get_device_api_level() <= 30) {
-    return CUBEB_ERROR;
-  }
   // load api
   void * libaaudio = nullptr;
 #ifndef DISABLE_LIBAAUDIO_DLOPEN
