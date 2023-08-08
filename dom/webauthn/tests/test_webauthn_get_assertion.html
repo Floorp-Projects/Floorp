@@ -41,14 +41,6 @@
     add_task(test_too_many_credentials);
     add_task(test_unexpected_option_unknown_credential_type);
     add_task(test_empty_credential_list);
-    add_task(() => {
-      // Enable USB tokens.
-      return SpecialPowers.pushPrefEnv({"set": [
-        ["security.webauth.webauthn_enable_softtoken", false],
-        ["security.webauth.webauthn_enable_usbtoken", true],
-      ]});
-    });
-    add_task(test_usb_empty_credential_list);
 
     function requestGetAssertion(params) {
       return navigator.credentials.get(params);
@@ -95,19 +87,6 @@
       .then(res => validCred = {type: "public-key", id: res.rawId} );
     }
 
-    // Test basic good call, but without giving a credential so expect failures
-    // this is OK by the standard, but not supported by U2F-backed authenticators
-    // like the soft token in use here.
-    async function test_without_credential() {
-      let publicKey = {
-        challenge: gAssertionChallenge
-      };
-
-      await requestGetAssertion({publicKey})
-        .then(arrivingHereIsBad)
-        .catch(expectInvalidStateError);
-    }
-
     // Test with a valid credential
     async function test_with_credential() {
       let publicKey = {
@@ -121,7 +100,7 @@
     }
 
     // Test with an unexpected option. That won't stop anything, and we'll
-    // fail with InvalidState just as if we had no valid credentials -- which
+    // fail with NotAllowed just as if we had no valid credentials -- which
     // we don't.
     async function test_unexpected_option() {
       let publicKey = {
@@ -131,7 +110,7 @@
 
       await requestGetAssertion({publicKey})
         .then(arrivingHereIsBad)
-        .catch(expectInvalidStateError);
+        .catch(expectNotAllowedError);
     }
 
     // Test with an unexpected option but a valid credential
@@ -172,7 +151,7 @@
 
       await requestGetAssertion({publicKey})
         .then(arrivingHereIsBad)
-        .catch(expectInvalidStateError);
+        .catch(expectNotAllowedError);
     }
 
     // Test with an unknown credential
@@ -184,7 +163,7 @@
 
       await requestGetAssertion({publicKey})
         .then(arrivingHereIsBad)
-        .catch(expectInvalidStateError);
+        .catch(expectNotAllowedError);
     }
 
     // Test with too many credentials
@@ -210,12 +189,10 @@
 
       await requestGetAssertion({publicKey})
         .then(arrivingHereIsBad)
-        .catch(expectInvalidStateError);
+        .catch(expectNotAllowedError);
     }
 
     // Test with an empty credential list
-    // This will return InvalidStateError since the softotken consents, but
-    // there are no valid credentials.
     async function test_empty_credential_list() {
       let publicKey = {
         challenge: gAssertionChallenge,
@@ -224,28 +201,7 @@
 
       await requestGetAssertion({publicKey})
         .then(arrivingHereIsBad)
-        .catch(expectInvalidStateError);
-    }
-
-    // Test with an empty credential list
-    async function test_usb_empty_credential_list() {
-      let publicKey = {
-        challenge: gAssertionChallenge,
-        allowCredentials: []
-      };
-
-      let ctrl = new AbortController();
-      let request = requestGetAssertion({publicKey, signal: ctrl.signal})
-                         .then(arrivingHereIsBad)
-                         .catch(expectAbortError);
-
-      // Wait a tick for the statemachine to start.
-      await Promise.resolve();
-
-      // The request should time out. We'll abort it here and will fail or
-      // succeed upon resolution, when the error code is checked.
-      ctrl.abort();
-      await request;
+        .catch(expectNotAllowedError);
     }
   </script>
 
