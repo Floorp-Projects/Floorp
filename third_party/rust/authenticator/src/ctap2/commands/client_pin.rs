@@ -3,15 +3,15 @@
 //       The current version of `bitflags` doesn't seem to allow
 //       to set this for an individual bitflag-struct.
 use super::{get_info::AuthenticatorInfo, Command, CommandError, RequestCtap2, StatusCode};
-use crate::crypto::{COSEKey, CryptoError, PinUvAuthProtocol, PinUvAuthToken, SharedSecret};
+use crate::crypto::{COSEKey, CryptoError, PinUvAuthProtocol, SharedSecret};
 use crate::transport::errors::HIDError;
-use crate::u2ftypes::U2FDevice;
+use crate::transport::{FidoDevice, VirtualFidoDevice};
 use serde::{
     de::{Error as SerdeError, IgnoredAny, MapAccess, Visitor},
     ser::SerializeMap,
     Deserialize, Deserializer, Serialize, Serializer,
 };
-use serde_bytes::ByteBuf;
+use serde_bytes::{ByteBuf, Bytes};
 use serde_cbor::de::from_slice;
 use serde_cbor::ser::to_vec;
 use serde_cbor::Value;
@@ -55,14 +55,14 @@ impl Default for PinUvAuthTokenPermission {
 
 #[derive(Debug)]
 pub struct ClientPIN {
-    pin_protocol: Option<PinUvAuthProtocol>,
-    subcommand: PINSubcommand,
-    key_agreement: Option<COSEKey>,
-    pin_auth: Option<ByteBuf>,
-    new_pin_enc: Option<ByteBuf>,
-    pin_hash_enc: Option<ByteBuf>,
-    permissions: Option<u8>,
-    rp_id: Option<String>,
+    pub pin_protocol: Option<PinUvAuthProtocol>,
+    pub subcommand: PINSubcommand,
+    pub key_agreement: Option<COSEKey>,
+    pub pin_auth: Option<Vec<u8>>,
+    pub new_pin_enc: Option<Vec<u8>>,
+    pub pin_hash_enc: Option<Vec<u8>>,
+    pub permissions: Option<u8>,
+    pub rp_id: Option<String>,
 }
 
 impl Default for ClientPIN {
@@ -120,13 +120,13 @@ impl Serialize for ClientPIN {
             map.serialize_entry(&3, key_agreement)?;
         }
         if let Some(ref pin_auth) = self.pin_auth {
-            map.serialize_entry(&4, pin_auth)?;
+            map.serialize_entry(&4, Bytes::new(pin_auth))?;
         }
         if let Some(ref new_pin_enc) = self.new_pin_enc {
-            map.serialize_entry(&5, new_pin_enc)?;
+            map.serialize_entry(&5, Bytes::new(new_pin_enc))?;
         }
         if let Some(ref pin_hash_enc) = self.pin_hash_enc {
-            map.serialize_entry(&6, pin_hash_enc)?;
+            map.serialize_entry(&6, Bytes::new(pin_hash_enc))?;
         }
         if let Some(ref permissions) = self.permissions {
             map.serialize_entry(&9, permissions)?;
@@ -145,13 +145,14 @@ pub trait ClientPINSubCommand {
     fn parse_response_payload(&self, input: &[u8]) -> Result<Self::Output, CommandError>;
 }
 
-struct ClientPinResponse {
-    key_agreement: Option<COSEKey>,
-    pin_token: Option<EncryptedPinToken>,
+#[derive(Default, Debug, PartialEq, Eq)]
+pub struct ClientPinResponse {
+    pub key_agreement: Option<COSEKey>,
+    pub pin_token: Option<Vec<u8>>,
     /// Number of PIN attempts remaining before lockout.
-    pin_retries: Option<u8>,
-    power_cycle_state: Option<bool>,
-    uv_retries: Option<u8>,
+    pub pin_retries: Option<u8>,
+    pub power_cycle_state: Option<bool>,
+    pub uv_retries: Option<u8>,
 }
 
 impl<'de> Deserialize<'de> for ClientPinResponse {
@@ -189,7 +190,8 @@ impl<'de> Deserialize<'de> for ClientPinResponse {
                             if pin_token.is_some() {
                                 return Err(SerdeError::duplicate_field("pin_token"));
                             }
-                            pin_token = map.next_value()?;
+                            let value: ByteBuf = map.next_value()?;
+                            pin_token = Some(value.into_vec());
                         }
                         0x03 => {
                             if pin_retries.is_some() {
@@ -241,7 +243,7 @@ impl GetKeyAgreement {
 }
 
 impl ClientPINSubCommand for GetKeyAgreement {
-    type Output = KeyAgreement;
+    type Output = ClientPinResponse;
 
     fn as_client_pin(&self) -> Result<ClientPIN, CommandError> {
         Ok(ClientPIN {
@@ -252,19 +254,12 @@ impl ClientPINSubCommand for GetKeyAgreement {
     }
 
     fn parse_response_payload(&self, input: &[u8]) -> Result<Self::Output, CommandError> {
-        let value: Value = from_slice(input).map_err(CommandError::Deserializing)?;
-        debug!("GetKeyAgreement::parse_response_payload {:?}", value);
-
         let get_pin_response: ClientPinResponse =
             from_slice(input).map_err(CommandError::Deserializing)?;
-        if let Some(key_agreement) = get_pin_response.key_agreement {
-            Ok(KeyAgreement {
-                pin_protocol: self.pin_protocol.clone(),
-                peer_key: key_agreement,
-            })
-        } else {
-            Err(CommandError::MissingRequiredField("key_agreement"))
+        if get_pin_response.key_agreement.is_none() {
+            return Err(CommandError::MissingRequiredField("key_agreement"));
         }
+        Ok(get_pin_response)
     }
 }
 
@@ -283,7 +278,7 @@ impl<'sc, 'pin> GetPinToken<'sc, 'pin> {
 }
 
 impl<'sc, 'pin> ClientPINSubCommand for GetPinToken<'sc, 'pin> {
-    type Output = PinUvAuthToken;
+    type Output = ClientPinResponse;
 
     fn as_client_pin(&self) -> Result<ClientPIN, CommandError> {
         let input = self.pin.for_pin_token();
@@ -295,30 +290,18 @@ impl<'sc, 'pin> ClientPINSubCommand for GetPinToken<'sc, 'pin> {
             pin_protocol: Some(self.shared_secret.pin_protocol.clone()),
             subcommand: PINSubcommand::GetPINToken,
             key_agreement: Some(self.shared_secret.client_input().clone()),
-            pin_hash_enc: Some(ByteBuf::from(pin_hash_enc)),
+            pin_hash_enc: Some(pin_hash_enc),
             ..ClientPIN::default()
         })
     }
 
     fn parse_response_payload(&self, input: &[u8]) -> Result<Self::Output, CommandError> {
-        let value: Value = from_slice(input).map_err(CommandError::Deserializing)?;
-        debug!("GetKeyAgreement::parse_response_payload {:?}", value);
-
         let get_pin_response: ClientPinResponse =
             from_slice(input).map_err(CommandError::Deserializing)?;
-        match get_pin_response.pin_token {
-            Some(encrypted_pin_token) => {
-                // CTAP 2.1 spec:
-                // If authenticatorClientPIN's getPinToken subcommand is invoked, default permissions
-                // of `mc` and `ga` (value 0x03) are granted for the returned pinUvAuthToken.
-                let default_permissions = PinUvAuthTokenPermission::default();
-                let pin_token = self
-                    .shared_secret
-                    .decrypt_pin_token(default_permissions, encrypted_pin_token.as_ref())?;
-                Ok(pin_token)
-            }
-            None => Err(CommandError::MissingRequiredField("key_agreement")),
+        if get_pin_response.pin_token.is_none() {
+            return Err(CommandError::MissingRequiredField("pin_token"));
         }
+        Ok(get_pin_response)
     }
 }
 
@@ -347,7 +330,7 @@ impl<'sc, 'pin> GetPinUvAuthTokenUsingPinWithPermissions<'sc, 'pin> {
 }
 
 impl<'sc, 'pin> ClientPINSubCommand for GetPinUvAuthTokenUsingPinWithPermissions<'sc, 'pin> {
-    type Output = PinUvAuthToken;
+    type Output = ClientPinResponse;
 
     fn as_client_pin(&self) -> Result<ClientPIN, CommandError> {
         let input = self.pin.for_pin_token();
@@ -357,7 +340,7 @@ impl<'sc, 'pin> ClientPINSubCommand for GetPinUvAuthTokenUsingPinWithPermissions
             pin_protocol: Some(self.shared_secret.pin_protocol.clone()),
             subcommand: PINSubcommand::GetPinUvAuthTokenUsingPinWithPermissions,
             key_agreement: Some(self.shared_secret.client_input().clone()),
-            pin_hash_enc: Some(ByteBuf::from(pin_hash_enc)),
+            pin_hash_enc: Some(pin_hash_enc),
             permissions: Some(self.permissions.bits()),
             rp_id: self.rp_id.clone(), /* TODO: This could probably be done less wasteful with
                                         * &str all the way */
@@ -366,29 +349,18 @@ impl<'sc, 'pin> ClientPINSubCommand for GetPinUvAuthTokenUsingPinWithPermissions
     }
 
     fn parse_response_payload(&self, input: &[u8]) -> Result<Self::Output, CommandError> {
-        let value: Value = from_slice(input).map_err(CommandError::Deserializing)?;
-        debug!(
-            "GetPinUvAuthTokenUsingPinWithPermissions::parse_response_payload {:?}",
-            value
-        );
-
         let get_pin_response: ClientPinResponse =
             from_slice(input).map_err(CommandError::Deserializing)?;
-        match get_pin_response.pin_token {
-            Some(encrypted_pin_token) => {
-                let pin_token = self
-                    .shared_secret
-                    .decrypt_pin_token(self.permissions, encrypted_pin_token.as_ref())?;
-                Ok(pin_token)
-            }
-            None => Err(CommandError::MissingRequiredField("key_agreement")),
+        if get_pin_response.pin_token.is_none() {
+            return Err(CommandError::MissingRequiredField("pin_token"));
         }
+        Ok(get_pin_response)
     }
 }
 
 macro_rules! implementRetries {
     ($name:ident, $getter:ident) => {
-        #[derive(Debug)]
+        #[derive(Debug, Default)]
         pub struct $name {}
 
         impl $name {
@@ -398,7 +370,7 @@ macro_rules! implementRetries {
         }
 
         impl ClientPINSubCommand for $name {
-            type Output = u8;
+            type Output = ClientPinResponse;
 
             fn as_client_pin(&self) -> Result<ClientPIN, CommandError> {
                 Ok(ClientPIN {
@@ -408,15 +380,12 @@ macro_rules! implementRetries {
             }
 
             fn parse_response_payload(&self, input: &[u8]) -> Result<Self::Output, CommandError> {
-                let value: Value = from_slice(input).map_err(CommandError::Deserializing)?;
-                debug!("{}::parse_response_payload {:?}", stringify!($name), value);
-
                 let get_pin_response: ClientPinResponse =
                     from_slice(input).map_err(CommandError::Deserializing)?;
-                match get_pin_response.$getter {
-                    Some($getter) => Ok($getter),
-                    None => Err(CommandError::MissingRequiredField(stringify!($getter))),
+                if get_pin_response.$getter.is_none() {
+                    return Err(CommandError::MissingRequiredField(stringify!($getter)));
                 }
+                Ok(get_pin_response)
             }
         }
     };
@@ -447,7 +416,7 @@ impl<'sc> GetPinUvAuthTokenUsingUvWithPermissions<'sc> {
 }
 
 impl<'sc> ClientPINSubCommand for GetPinUvAuthTokenUsingUvWithPermissions<'sc> {
-    type Output = PinUvAuthToken;
+    type Output = ClientPinResponse;
 
     fn as_client_pin(&self) -> Result<ClientPIN, CommandError> {
         Ok(ClientPIN {
@@ -462,20 +431,12 @@ impl<'sc> ClientPINSubCommand for GetPinUvAuthTokenUsingUvWithPermissions<'sc> {
     }
 
     fn parse_response_payload(&self, input: &[u8]) -> Result<Self::Output, CommandError> {
-        let value: Value = from_slice(input).map_err(CommandError::Deserializing)?;
-        debug!("GetKeyAgreement::parse_response_payload {:?}", value);
-
         let get_pin_response: ClientPinResponse =
             from_slice(input).map_err(CommandError::Deserializing)?;
-        match get_pin_response.pin_token {
-            Some(encrypted_pin_token) => {
-                let pin_token = self
-                    .shared_secret
-                    .decrypt_pin_token(self.permissions, encrypted_pin_token.as_ref())?;
-                Ok(pin_token)
-            }
-            None => Err(CommandError::MissingRequiredField("key_agreement")),
+        if get_pin_response.pin_token.is_none() {
+            return Err(CommandError::MissingRequiredField("pin_token"));
         }
+        Ok(get_pin_response)
     }
 }
 
@@ -495,7 +456,7 @@ impl<'sc, 'pin> SetNewPin<'sc, 'pin> {
 }
 
 impl<'sc, 'pin> ClientPINSubCommand for SetNewPin<'sc, 'pin> {
-    type Output = ();
+    type Output = ClientPinResponse;
 
     fn as_client_pin(&self) -> Result<ClientPIN, CommandError> {
         if self.new_pin.as_bytes().len() > 63 {
@@ -518,20 +479,18 @@ impl<'sc, 'pin> ClientPINSubCommand for SetNewPin<'sc, 'pin> {
             pin_protocol: Some(self.shared_secret.pin_protocol.clone()),
             subcommand: PINSubcommand::SetPIN,
             key_agreement: Some(self.shared_secret.client_input().clone()),
-            new_pin_enc: Some(ByteBuf::from(new_pin_enc)),
-            pin_auth: Some(ByteBuf::from(pin_auth)),
+            new_pin_enc: Some(new_pin_enc),
+            pin_auth: Some(pin_auth),
             ..ClientPIN::default()
         })
     }
 
     fn parse_response_payload(&self, input: &[u8]) -> Result<Self::Output, CommandError> {
         // Should be an empty response or a valid cbor-value (which we ignore)
-        if input.is_empty() {
-            Ok(())
-        } else {
+        if !input.is_empty() {
             let _: Value = from_slice(input).map_err(CommandError::Deserializing)?;
-            Ok(())
         }
+        Ok(ClientPinResponse::default())
     }
 }
 
@@ -560,7 +519,7 @@ impl<'sc, 'pin> ChangeExistingPin<'sc, 'pin> {
 }
 
 impl<'sc, 'pin> ClientPINSubCommand for ChangeExistingPin<'sc, 'pin> {
-    type Output = ();
+    type Output = ClientPinResponse;
 
     fn as_client_pin(&self) -> Result<ClientPIN, CommandError> {
         if self.new_pin.as_bytes().len() > 63 {
@@ -587,9 +546,9 @@ impl<'sc, 'pin> ClientPINSubCommand for ChangeExistingPin<'sc, 'pin> {
             pin_protocol: Some(self.shared_secret.pin_protocol.clone()),
             subcommand: PINSubcommand::ChangePIN,
             key_agreement: Some(self.shared_secret.client_input().clone()),
-            new_pin_enc: Some(ByteBuf::from(new_pin_enc)),
-            pin_hash_enc: Some(ByteBuf::from(pin_hash_enc)),
-            pin_auth: Some(ByteBuf::from(pin_auth)),
+            new_pin_enc: Some(new_pin_enc),
+            pin_hash_enc: Some(pin_hash_enc),
+            pin_auth: Some(pin_auth),
             permissions: None,
             rp_id: None,
         })
@@ -597,18 +556,16 @@ impl<'sc, 'pin> ClientPINSubCommand for ChangeExistingPin<'sc, 'pin> {
 
     fn parse_response_payload(&self, input: &[u8]) -> Result<Self::Output, CommandError> {
         // Should be an empty response or a valid cbor-value (which we ignore)
-        if input.is_empty() {
-            Ok(())
-        } else {
+        if !input.is_empty() {
             let _: Value = from_slice(input).map_err(CommandError::Deserializing)?;
-            Ok(())
         }
+        Ok(ClientPinResponse::default())
     }
 }
 
 impl<T> RequestCtap2 for T
 where
-    T: ClientPINSubCommand,
+    T: ClientPINSubCommand<Output = ClientPinResponse>,
     T: fmt::Debug,
 {
     type Output = <T as ClientPINSubCommand>::Output;
@@ -625,14 +582,11 @@ where
         Ok(output)
     }
 
-    fn handle_response_ctap2<Dev>(
+    fn handle_response_ctap2<Dev: FidoDevice>(
         &self,
         _dev: &mut Dev,
         input: &[u8],
-    ) -> Result<Self::Output, HIDError>
-    where
-        Dev: U2FDevice,
-    {
+    ) -> Result<Self::Output, HIDError> {
         trace!("Client pin subcomand response:{:04X?}", &input);
         if input.is_empty() {
             return Err(CommandError::InputTooSmall.into());
@@ -653,26 +607,12 @@ where
             Err(CommandError::StatusCode(status, add_data).into())
         }
     }
-}
 
-#[derive(Debug)]
-pub struct KeyAgreement {
-    pin_protocol: PinUvAuthProtocol,
-    peer_key: COSEKey,
-}
-
-impl KeyAgreement {
-    pub fn shared_secret(&self) -> Result<SharedSecret, CommandError> {
-        Ok(self.pin_protocol.encapsulate(&self.peer_key)?)
-    }
-}
-
-#[derive(Debug, Deserialize)]
-pub struct EncryptedPinToken(ByteBuf);
-
-impl AsRef<[u8]> for EncryptedPinToken {
-    fn as_ref(&self) -> &[u8] {
-        self.0.as_ref()
+    fn send_to_virtual_device<Dev: VirtualFidoDevice>(
+        &self,
+        dev: &mut Dev,
+    ) -> Result<ClientPinResponse, HIDError> {
+        dev.client_pin(&self.as_client_pin()?)
     }
 }
 
@@ -765,5 +705,144 @@ impl StdErrorT for PinError {}
 impl From<CryptoError> for PinError {
     fn from(e: CryptoError) -> Self {
         PinError::Crypto(e)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::ClientPinResponse;
+    use crate::crypto::{COSEAlgorithm, COSEEC2Key, COSEKey, COSEKeyType, Curve};
+    use serde_cbor::de::from_slice;
+
+    #[test]
+    fn test_get_key_agreement() {
+        let reference = [
+            161, 1, 165, 1, 2, 3, 56, 24, 32, 1, 33, 88, 32, 115, 222, 167, 5, 88, 238, 119, 202,
+            121, 23, 241, 150, 9, 48, 197, 136, 174, 0, 17, 90, 190, 83, 65, 103, 237, 97, 41, 213,
+            128, 111, 7, 106, 34, 88, 32, 248, 204, 9, 26, 82, 96, 25, 72, 5, 82, 251, 185, 22, 39,
+            246, 149, 54, 246, 255, 225, 52, 102, 67, 221, 113, 194, 236, 213, 199, 147, 180, 81,
+        ];
+        let expected = ClientPinResponse {
+            key_agreement: Some(COSEKey {
+                alg: COSEAlgorithm::ECDH_ES_HKDF256,
+                key: COSEKeyType::EC2(COSEEC2Key {
+                    curve: Curve::SECP256R1,
+                    x: vec![
+                        115, 222, 167, 5, 88, 238, 119, 202, 121, 23, 241, 150, 9, 48, 197, 136,
+                        174, 0, 17, 90, 190, 83, 65, 103, 237, 97, 41, 213, 128, 111, 7, 106,
+                    ],
+                    y: vec![
+                        248, 204, 9, 26, 82, 96, 25, 72, 5, 82, 251, 185, 22, 39, 246, 149, 54,
+                        246, 255, 225, 52, 102, 67, 221, 113, 194, 236, 213, 199, 147, 180, 81,
+                    ],
+                }),
+            }),
+            pin_token: None,
+            pin_retries: None,
+            power_cycle_state: None,
+            uv_retries: None,
+        };
+        let result: ClientPinResponse =
+            from_slice(&reference).expect("could not deserialize reference");
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_get_pin_retries() {
+        let reference = [161, 3, 7];
+        let expected = ClientPinResponse {
+            key_agreement: None,
+            pin_token: None,
+            pin_retries: Some(7),
+            power_cycle_state: None,
+            uv_retries: None,
+        };
+        let result: ClientPinResponse =
+            from_slice(&reference).expect("could not deserialize reference");
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_get_uv_retries() {
+        let reference = [161, 5, 2];
+        let expected = ClientPinResponse {
+            key_agreement: None,
+            pin_token: None,
+            pin_retries: None,
+            power_cycle_state: None,
+            uv_retries: Some(2),
+        };
+        let result: ClientPinResponse =
+            from_slice(&reference).expect("could not deserialize reference");
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_get_pin_token() {
+        let reference = [
+            161, 2, 88, 48, 173, 244, 214, 87, 128, 57, 25, 99, 142, 140, 41, 25, 94, 60, 75, 163,
+            240, 187, 211, 138, 11, 208, 74, 117, 180, 181, 97, 31, 79, 252, 191, 244, 49, 13, 201,
+            217, 204, 219, 122, 3, 101, 4, 70, 26, 14, 41, 150, 148,
+        ];
+        let expected = ClientPinResponse {
+            key_agreement: None,
+            pin_token: Some(vec![
+                173, 244, 214, 87, 128, 57, 25, 99, 142, 140, 41, 25, 94, 60, 75, 163, 240, 187,
+                211, 138, 11, 208, 74, 117, 180, 181, 97, 31, 79, 252, 191, 244, 49, 13, 201, 217,
+                204, 219, 122, 3, 101, 4, 70, 26, 14, 41, 150, 148,
+            ]),
+            pin_retries: None,
+            power_cycle_state: None,
+            uv_retries: None,
+        };
+        let result: ClientPinResponse =
+            from_slice(&reference).expect("could not deserialize reference");
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_get_puat_using_uv() {
+        let reference = [
+            161, 2, 88, 48, 94, 109, 192, 236, 90, 161, 77, 153, 23, 146, 179, 189, 133, 106, 76,
+            150, 17, 238, 155, 102, 107, 201, 98, 232, 184, 33, 153, 224, 203, 87, 147, 10, 21, 20,
+            85, 184, 109, 61, 240, 58, 236, 198, 171, 48, 242, 165, 221, 214,
+        ];
+        let expected = ClientPinResponse {
+            key_agreement: None,
+            pin_token: Some(vec![
+                94, 109, 192, 236, 90, 161, 77, 153, 23, 146, 179, 189, 133, 106, 76, 150, 17, 238,
+                155, 102, 107, 201, 98, 232, 184, 33, 153, 224, 203, 87, 147, 10, 21, 20, 85, 184,
+                109, 61, 240, 58, 236, 198, 171, 48, 242, 165, 221, 214,
+            ]),
+            pin_retries: None,
+            power_cycle_state: None,
+            uv_retries: None,
+        };
+        let result: ClientPinResponse =
+            from_slice(&reference).expect("could not deserialize reference");
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_get_puat_using_pin() {
+        let reference = [
+            161, 2, 88, 48, 143, 174, 68, 241, 186, 39, 106, 238, 129, 15, 181, 102, 112, 130, 239,
+            96, 106, 235, 3, 10, 61, 173, 106, 252, 38, 236, 44, 112, 91, 34, 218, 136, 139, 118,
+            162, 178, 172, 227, 82, 103, 136, 91, 136, 178, 170, 233, 156, 62,
+        ];
+        let expected = ClientPinResponse {
+            key_agreement: None,
+            pin_token: Some(vec![
+                143, 174, 68, 241, 186, 39, 106, 238, 129, 15, 181, 102, 112, 130, 239, 96, 106,
+                235, 3, 10, 61, 173, 106, 252, 38, 236, 44, 112, 91, 34, 218, 136, 139, 118, 162,
+                178, 172, 227, 82, 103, 136, 91, 136, 178, 170, 233, 156, 62,
+            ]),
+            pin_retries: None,
+            power_cycle_state: None,
+            uv_retries: None,
+        };
+        let result: ClientPinResponse =
+            from_slice(&reference).expect("could not deserialize reference");
+        assert_eq!(expected, result);
     }
 }

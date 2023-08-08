@@ -20,15 +20,10 @@ fn print_usage(program: &str, opts: Options) {
 }
 
 fn interactive_status_callback(status_rx: Receiver<StatusUpdate>) {
-    let mut num_of_devices = 0;
     loop {
         match status_rx.recv() {
-            Ok(StatusUpdate::InteractiveManagement((tx, dev_info, auth_info))) => {
-                debug!(
-                    "STATUS: interactive management: {:#}, {:#?}",
-                    dev_info, auth_info
-                );
-                println!("Device info {:#}", dev_info);
+            Ok(StatusUpdate::InteractiveManagement((tx, auth_info))) => {
+                debug!("STATUS: interactive management: {:#?}", auth_info);
                 let mut change_pin = false;
                 if let Some(info) = auth_info {
                     println!("Authenticator Info {:#?}", info);
@@ -98,27 +93,9 @@ fn interactive_status_callback(status_rx: Receiver<StatusUpdate>) {
                     println!("Device only supports CTAP1 and can't be managed.");
                 }
             }
-            Ok(StatusUpdate::DeviceAvailable { dev_info }) => {
-                num_of_devices += 1;
-                debug!(
-                    "STATUS: New device #{} available: {}",
-                    num_of_devices, dev_info
-                );
-            }
-            Ok(StatusUpdate::DeviceUnavailable { dev_info }) => {
-                num_of_devices -= 1;
-                if num_of_devices <= 0 {
-                    println!("No more devices left. Please plug in a device!");
-                }
-                debug!("STATUS: Device became unavailable: {}", dev_info)
-            }
-            Ok(StatusUpdate::Success { dev_info }) => {
-                println!("STATUS: success using device: {}", dev_info);
-            }
             Ok(StatusUpdate::SelectDeviceNotice) => {
                 println!("STATUS: Please select a device by touching one of them.");
             }
-            Ok(StatusUpdate::DeviceSelected(_dev_info)) => {}
             Ok(StatusUpdate::PresenceRequired) => {
                 println!("STATUS: waiting for user presence");
             }

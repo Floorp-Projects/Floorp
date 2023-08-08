@@ -6,7 +6,7 @@ use serde::{
     ser::SerializeMap,
     Deserialize, Deserializer, Serialize, Serializer,
 };
-use serde_bytes::ByteBuf;
+use serde_bytes::{ByteBuf, Bytes};
 use sha2::{Digest, Sha256};
 use std::convert::{Into, TryFrom};
 use std::fmt;
@@ -225,7 +225,7 @@ impl Serialize for PublicKeyCredentialDescriptor {
         //           so we'll leave it out for the moment
         let mut map = serializer.serialize_map(Some(2))?;
         // let mut map = serializer.serialize_map(Some(3))?;
-        map.serialize_entry("id", &ByteBuf::from(self.id.clone()))?;
+        map.serialize_entry("id", Bytes::new(&self.id))?;
         map.serialize_entry("type", "public-key")?;
         // map.serialize_entry("transports", &self.transports)?;
         map.end()
