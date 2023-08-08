@@ -130,8 +130,10 @@ class DefaultTopSitesStorage(
             topSites.addAll(frecentSites)
         }
 
-        emitTopSitesCountFact(pinnedSites.size)
-        cachedTopSites = topSites
+        if (topSites != cachedTopSites) {
+            emitTopSitesCountFact(pinnedSites.size)
+            cachedTopSites = topSites
+        }
 
         return topSites
     }
