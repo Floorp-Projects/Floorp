@@ -4,33 +4,50 @@
 
 "use strict";
 
+function getCenterY(acc) {
+  const y = {};
+  const h = {};
+  acc.getBounds({}, y, {}, h);
+  return y.value + h.value / 2;
+}
+
 /**
  * Test nsIAccessible::scrollTo.
  */
 addAccessibleTask(
   `
-<div id="scroller" style="height: 1px; overflow: scroll;">
-  <p id="p1">a</p>
-  <p id="p2">b</p>
+<div id="scroller" style="height: 100vh; overflow: scroll;">
+  <hr style="height: 100vh;">
+  <p id="p1" style="height: 10vh;">a</p>
+  <hr style="height: 100vh;">
+  <p id="p2" style="height: 10vh;">b</p>
+  <hr style="height: 100vh;">
 </div>
   `,
   async function (browser, docAcc) {
     const scroller = findAccessibleChildByID(docAcc, "scroller");
-    // scroller can only fit one of p1 or p2, not both.
-    // p1 is on screen already.
-    const p2 = findAccessibleChildByID(docAcc, "p2");
-    info("scrollTo p2");
+    const scrollerY = getCenterY(scroller);
+    // scroller can only show one of p1 or p2, not both.
+    const p1 = findAccessibleChildByID(docAcc, "p1");
+    info("scrollTo p1");
     let scrolled = waitForEvent(
       nsIAccessibleEvent.EVENT_SCROLLING_END,
       scroller
     );
+    p1.scrollTo(SCROLL_TYPE_ANYWHERE);
+    await scrolled;
+    isWithin(getCenterY(p1), scrollerY, 10, "p1 scrolled to center");
+    const p2 = findAccessibleChildByID(docAcc, "p2");
+    info("scrollTo p2");
+    scrolled = waitForEvent(nsIAccessibleEvent.EVENT_SCROLLING_END, scroller);
     p2.scrollTo(SCROLL_TYPE_ANYWHERE);
     await scrolled;
-    const p1 = findAccessibleChildByID(docAcc, "p1");
+    isWithin(getCenterY(p2), scrollerY, 10, "p2 scrolled to center");
     info("scrollTo p1");
     scrolled = waitForEvent(nsIAccessibleEvent.EVENT_SCROLLING_END, scroller);
     p1.scrollTo(SCROLL_TYPE_ANYWHERE);
     await scrolled;
+    isWithin(getCenterY(p1), scrollerY, 10, "p1 scrolled to center");
   },
   { topLevel: true, iframe: true, remoteIframe: true, chrome: true }
 );
