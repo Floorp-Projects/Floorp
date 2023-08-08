@@ -233,7 +233,8 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
                         AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60)
   AV_FUNC_OPTION_SILENT(av_hwframe_ctx_alloc,
                         AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60)
-  AV_FUNC_OPTION_SILENT(avcodec_get_name, AV_FUNC_57 | AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60)
+  AV_FUNC_OPTION_SILENT(avcodec_get_name,
+                        AV_FUNC_57 | AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60)
   AV_FUNC_OPTION_SILENT(av_get_pix_fmt_string, AV_FUNC_AVUTIL_58 |
                                                    AV_FUNC_AVUTIL_59 |
                                                    AV_FUNC_AVUTIL_60)

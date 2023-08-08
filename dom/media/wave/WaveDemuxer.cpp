@@ -514,7 +514,8 @@ uint64_t WAVTrackDemuxer::ChunkIndexFromTime(
   if (!mSamplesPerChunk || !mSamplesPerSecond) {
     return 0;
   }
-  double chunkDurationS =  mSamplesPerChunk / static_cast<double>(mSamplesPerSecond);
+  double chunkDurationS =
+      mSamplesPerChunk / static_cast<double>(mSamplesPerSecond);
   int64_t chunkIndex = std::floor(aTime.ToSeconds() / chunkDurationS);
   return chunkIndex;
 }
