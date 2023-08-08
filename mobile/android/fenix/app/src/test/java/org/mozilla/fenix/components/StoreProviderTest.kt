@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components
 
 import androidx.fragment.app.Fragment
+import kotlinx.coroutines.CoroutineScope
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
@@ -51,7 +52,7 @@ class StoreProviderTest {
         val fragment = createAddedTestFragment { Fragment() }
 
         var createCalled = false
-        val createStore = {
+        val createStore: (CoroutineScope) -> Store<BasicState, Action> = {
             createCalled = true
             basicStore
         }
@@ -69,7 +70,7 @@ class StoreProviderTest {
         val fragment = createAddedTestFragment { Fragment() }
 
         var createCalled = false
-        val createStore = {
+        val createStore: (CoroutineScope) -> Store<BasicState, Action> = {
             createCalled = true
             basicStore
         }
