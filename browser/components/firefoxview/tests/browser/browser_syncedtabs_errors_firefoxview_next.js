@@ -70,7 +70,7 @@ add_task(async function test_network_offline() {
       "view-syncedtabs:not([slot=syncedtabs])"
     );
     await BrowserTestUtils.waitForMutationCondition(
-      syncedTabsComponent.shadowRoot,
+      syncedTabsComponent.shadowRoot.querySelector(".cards-container"),
       { childList: true },
       () => syncedTabsComponent.shadowRoot.innerHTML.includes("network-offline")
     );
@@ -121,7 +121,7 @@ add_task(async function test_sync_error() {
       "view-syncedtabs:not([slot=syncedtabs])"
     );
     await BrowserTestUtils.waitForMutationCondition(
-      syncedTabsComponent.shadowRoot,
+      syncedTabsComponent.shadowRoot.querySelector(".cards-container"),
       { childList: true },
       () => syncedTabsComponent.shadowRoot.innerHTML.includes("sync-error")
     );
