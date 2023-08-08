@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use authenticator::authenticatorservice::{AuthenticatorTransport, RegisterArgs, SignArgs};
+use authenticator::authenticatorservice::{RegisterArgs, SignArgs};
 use authenticator::crypto::{ecdsa_p256_sha256_sign_raw, COSEAlgorithm, COSEKey, SharedSecret};
 use authenticator::ctap2::{
     attestation::{
@@ -11,7 +11,7 @@ use authenticator::ctap2::{
     },
     client_data::ClientDataHash,
     commands::{
-        client_pin::{ClientPIN, ClientPinResponse, PINSubcommand, Pin},
+        client_pin::{ClientPIN, ClientPinResponse, PINSubcommand},
         get_assertion::{Assertion, GetAssertion, GetAssertionResponse, GetAssertionResult},
         get_info::{AuthenticatorInfo, AuthenticatorOptions, AuthenticatorVersion},
         get_version::{GetVersion, U2FInfo},
@@ -30,13 +30,12 @@ use authenticator::{RegisterResult, SignResult, StatusUpdate};
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_INVALID_ARG, NS_ERROR_NOT_IMPLEMENTED, NS_OK};
 use nsstring::{nsACString, nsCString};
 use rand::{thread_rng, RngCore};
-use runloop::RunLoop;
 use std::cell::{Ref, RefCell};
 use std::collections::{hash_map::Entry, HashMap};
 use std::ops::{Deref, DerefMut};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::mpsc::Sender;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use thin_vec::ThinVec;
 use xpcom::interfaces::nsICredentialParameters;
 use xpcom::{xpcom_method, RefPtr};
@@ -549,18 +548,6 @@ impl VirtualFidoDevice for TestToken {
     }
 }
 
-pub(crate) struct TestTokenManagerState {
-    tokens: HashMap<u64, TestToken>,
-}
-
-impl TestTokenManagerState {
-    pub fn new() -> Arc<Mutex<TestTokenManagerState>> {
-        Arc::new(Mutex::new(TestTokenManagerState {
-            tokens: HashMap::new(),
-        }))
-    }
-}
-
 #[xpcom(implement(nsICredentialParameters), atomic)]
 struct CredentialParameters {
     credential_id: Vec<u8>,
@@ -603,13 +590,14 @@ impl CredentialParameters {
     }
 }
 
+#[derive(Default)]
 pub(crate) struct TestTokenManager {
-    state: Arc<Mutex<TestTokenManagerState>>,
+    state: Mutex<HashMap<u64, TestToken>>,
 }
 
 impl TestTokenManager {
-    pub fn new(state: Arc<Mutex<TestTokenManagerState>>) -> Self {
-        Self { state }
+    pub fn new() -> Self {
+        Default::default()
     }
 
     pub fn add_virtual_authenticator(
@@ -630,7 +618,7 @@ impl TestTokenManager {
         );
         loop {
             let id = rand::random::<u64>() & 0x1f_ffff_ffff_ffffu64; // Make the id safe for JS (53 bits)
-            match guard.deref_mut().tokens.entry(id) {
+            match guard.deref_mut().entry(id) {
                 Entry::Occupied(_) => continue,
                 Entry::Vacant(v) => {
                     v.insert(token);
@@ -644,7 +632,6 @@ impl TestTokenManager {
         let mut guard = self.state.lock().map_err(|_| NS_ERROR_FAILURE)?;
         guard
             .deref_mut()
-            .tokens
             .remove(&authenticator_id)
             .ok_or(NS_ERROR_INVALID_ARG)?;
         Ok(())
@@ -663,7 +650,6 @@ impl TestTokenManager {
         let mut guard = self.state.lock().map_err(|_| NS_ERROR_FAILURE)?;
         let token = guard
             .deref_mut()
-            .tokens
             .get_mut(&authenticator_id)
             .ok_or(NS_ERROR_INVALID_ARG)?;
         let rp = RelyingParty {
@@ -688,7 +674,6 @@ impl TestTokenManager {
     ) -> Result<ThinVec<Option<RefPtr<nsICredentialParameters>>>, nsresult> {
         let mut guard = self.state.lock().map_err(|_| NS_ERROR_FAILURE)?;
         let token = guard
-            .tokens
             .get_mut(&authenticator_id)
             .ok_or(NS_ERROR_INVALID_ARG)?;
         let credentials = token.get_credentials();
@@ -719,7 +704,6 @@ impl TestTokenManager {
         let mut guard = self.state.lock().map_err(|_| NS_ERROR_FAILURE)?;
         let token = guard
             .deref_mut()
-            .tokens
             .get_mut(&authenticator_id)
             .ok_or(NS_ERROR_INVALID_ARG)?;
         if token.delete_credential(id) {
@@ -733,7 +717,6 @@ impl TestTokenManager {
         let mut guard = self.state.lock().map_err(|_| NS_ERROR_FAILURE)?;
         let token = guard
             .deref_mut()
-            .tokens
             .get_mut(&authenticator_id)
             .ok_or(NS_ERROR_INVALID_ARG)?;
         token.delete_all_credentials();
@@ -746,158 +729,74 @@ impl TestTokenManager {
         is_user_verified: bool,
     ) -> Result<(), nsresult> {
         let mut guard = self.state.lock().map_err(|_| NS_ERROR_FAILURE)?;
-        let mut token = guard
+        let token = guard
             .deref_mut()
-            .tokens
             .get_mut(&authenticator_id)
             .ok_or(NS_ERROR_INVALID_ARG)?;
         token.is_user_verified = is_user_verified;
         Ok(())
     }
-}
 
-pub(crate) struct TestTokenTransport {
-    state: Arc<Mutex<TestTokenManagerState>>,
-    queue: Option<RunLoop>,
-}
-
-impl TestTokenTransport {
-    pub fn new(state: Arc<Mutex<TestTokenManagerState>>) -> Self {
-        Self { state, queue: None }
-    }
-}
-
-impl Drop for TestTokenTransport {
-    fn drop(&mut self) {
-        if let Some(queue) = self.queue.take() {
-            queue.cancel();
-        }
-    }
-}
-
-impl AuthenticatorTransport for TestTokenTransport {
-    fn register(
-        &mut self,
-        timeout: u64,
+    pub fn register(
+        &self,
+        _timeout: u64,
         ctap_args: RegisterArgs,
         status: Sender<StatusUpdate>,
         callback: StateCallback<Result<RegisterResult, AuthenticatorError>>,
-    ) -> Result<(), AuthenticatorError> {
-        if let Some(queue) = self.queue.take() {
-            queue.cancel();
-        }
-
+    ) {
         if !static_prefs::pref!("security.webauth.webauthn_enable_softtoken") {
-            return Ok(());
+            return;
         }
 
-        let state = self.state.clone();
-        let queue = RunLoop::new_with_timeout(
-            move |alive| {
-                let mut state_obj = state.lock().unwrap();
+        let mut state_obj = self.state.lock().unwrap();
 
-                for token in state_obj.tokens.values_mut() {
-                    let _ = token.init();
-                    if ctap2::register(
-                        token,
-                        ctap_args.clone(),
-                        status.clone(),
-                        callback.clone(),
-                        alive,
-                    ) {
-                        // callback was called
-                        return;
-                    }
-                }
-                // Send an error, if the callback wasn't called already.
-                callback.call(Err(AuthenticatorError::U2FToken(U2FTokenError::NotAllowed)));
-            },
-            timeout,
-        )
-        .map_err(|_| AuthenticatorError::Platform)?;
+        // We query the tokens sequentially since the register operation will not block.
+        for token in state_obj.values_mut() {
+            let _ = token.init();
+            if ctap2::register(
+                token,
+                ctap_args.clone(),
+                status.clone(),
+                callback.clone(),
+                &|| true,
+            ) {
+                // callback was called
+                return;
+            }
+        }
 
-        self.queue = Some(queue);
-
-        Ok(())
+        // Send an error, if the callback wasn't called already.
+        callback.call(Err(AuthenticatorError::U2FToken(U2FTokenError::NotAllowed)));
     }
 
-    fn sign(
-        &mut self,
-        timeout: u64,
+    pub fn sign(
+        &self,
+        _timeout: u64,
         ctap_args: SignArgs,
         status: Sender<StatusUpdate>,
         callback: StateCallback<Result<SignResult, AuthenticatorError>>,
-    ) -> Result<(), AuthenticatorError> {
-        if let Some(queue) = self.queue.take() {
-            queue.cancel();
-        }
-
+    ) {
         if !static_prefs::pref!("security.webauth.webauthn_enable_softtoken") {
-            return Ok(());
+            return;
         }
 
-        let state = self.state.clone();
-        let queue = RunLoop::new_with_timeout(
-            move |alive| {
-                let mut state_obj = state.lock().unwrap();
+        let mut state_obj = self.state.lock().unwrap();
 
-                for token in state_obj.tokens.values_mut() {
-                    let _ = token.init();
-                    if ctap2::sign(
-                        token,
-                        ctap_args.clone(),
-                        status.clone(),
-                        callback.clone(),
-                        alive,
-                    ) {
-                        // callback was called
-                        return;
-                    }
-                }
-                // Send an error, if the callback wasn't called already.
-                callback.call(Err(AuthenticatorError::U2FToken(U2FTokenError::NotAllowed)));
-            },
-            timeout,
-        )
-        .map_err(|_| AuthenticatorError::Platform)?;
-
-        self.queue = Some(queue);
-
-        Ok(())
-    }
-
-    fn cancel(&mut self) -> Result<(), AuthenticatorError> {
-        if let Some(r) = self.queue.take() {
-            r.cancel();
+        // We query the tokens sequentially since the sign operation will not block.
+        for token in state_obj.values_mut() {
+            let _ = token.init();
+            if ctap2::sign(
+                token,
+                ctap_args.clone(),
+                status.clone(),
+                callback.clone(),
+                &|| true,
+            ) {
+                // callback was called
+                return;
+            }
         }
-        Ok(())
-    }
-
-    fn reset(
-        &mut self,
-        _timeout: u64,
-        _status: Sender<StatusUpdate>,
-        _callback: StateCallback<Result<(), AuthenticatorError>>,
-    ) -> Result<(), AuthenticatorError> {
-        unimplemented!();
-    }
-
-    fn set_pin(
-        &mut self,
-        _timeout: u64,
-        _new_pin: Pin,
-        _status: Sender<StatusUpdate>,
-        _callback: StateCallback<Result<(), AuthenticatorError>>,
-    ) -> Result<(), AuthenticatorError> {
-        unimplemented!();
-    }
-
-    fn manage(
-        &mut self,
-        _timeout: u64,
-        _status: Sender<StatusUpdate>,
-        _callback: StateCallback<Result<(), AuthenticatorError>>,
-    ) -> Result<(), AuthenticatorError> {
-        unimplemented!();
+        // Send an error, if the callback wasn't called already.
+        callback.call(Err(AuthenticatorError::U2FToken(U2FTokenError::NotAllowed)));
     }
 }
