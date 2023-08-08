@@ -1312,7 +1312,6 @@ void RemoteAccessible::Announce(const nsString& aAnnouncement,
                                 uint16_t aPriority) {
   Unused << mDoc->SendAnnounce(mID, aAnnouncement, aPriority);
 }
-#endif  // !defined(XP_WIN)
 
 void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
                                               int32_t aEndOffset,
@@ -1321,6 +1320,7 @@ void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
   Unused << mDoc->SendScrollSubstringToPoint(mID, aStartOffset, aEndOffset,
                                              aCoordinateType, aX, aY);
 }
+#endif  // !defined(XP_WIN)
 
 RefPtr<const AccAttributes> RemoteAccessible::GetCachedTextAttributes() {
   MOZ_ASSERT(IsText() || IsHyperText());

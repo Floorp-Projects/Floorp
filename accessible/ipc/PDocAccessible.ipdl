@@ -136,11 +136,13 @@ child:
   async ScrollTextLeafRangeIntoView(uint64_t aStartID, int32_t aStartOffset,
                                     uint64_t aEndID, int32_t aEndOffset,
                                     uint32_t aScrollType);
+#ifndef XP_WIN
   async ScrollSubstringToPoint(uint64_t aID,
                                int32_t aStartOffset,
                                int32_t aEndOffset,
                                uint32_t aCoordinateType,
                                int32_t aX, int32_t aY);
+#endif
 
   async ReplaceText(uint64_t aID, nsString aText);
   async InsertText(uint64_t aID, nsString aText, int32_t aPosition);

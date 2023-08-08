@@ -340,8 +340,17 @@ xpcAccessibleHyperText::ScrollSubstringToPoint(int32_t aStartOffset,
                                                int32_t aX, int32_t aY) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  Intl()->ScrollSubstringToPoint(aStartOffset, aEndOffset, aCoordinateType, aX,
-                                 aY);
+  if (mIntl->IsLocal()) {
+    IntlLocal()->ScrollSubstringToPoint(aStartOffset, aEndOffset,
+                                        aCoordinateType, aX, aY);
+  } else {
+#if defined(XP_WIN)
+    return NS_ERROR_NOT_IMPLEMENTED;
+#else
+    mIntl->AsRemote()->ScrollSubstringToPoint(aStartOffset, aEndOffset,
+                                              aCoordinateType, aX, aY);
+#endif
+  }
   return NS_OK;
 }
 

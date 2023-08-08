@@ -170,9 +170,11 @@ class HyperTextAccessible : public AccessibleWrap,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual bool RemoveFromSelection(
       int32_t aSelectionNum) override;
 
-  virtual void ScrollSubstringToPoint(int32_t aStartOffset, int32_t aEndOffset,
-                                      uint32_t aCoordinateType, int32_t aX,
-                                      int32_t aY) override;
+  /**
+   * Scroll the given text range to the given point.
+   */
+  void ScrollSubstringToPoint(int32_t aStartOffset, int32_t aEndOffset,
+                              uint32_t aCoordinateType, int32_t aX, int32_t aY);
 
   virtual void SelectionRanges(nsTArray<TextRange>* aRanges) const override;
 
