@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">Wedi gosod %1$s yn llwyddiannus</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Wedi methu gosod %1$s</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted">Nid oedd modd gosod %1$s oherwydd bod risg uchel o achosi problemau sefydlogrwydd neu ddiogelwch</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Wedi galluogi %1$s yn llwyddiannus</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

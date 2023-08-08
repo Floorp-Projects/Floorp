@@ -607,11 +607,11 @@
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">‏%s سنتی</string>
     <!-- Text for limited edition wallpapers title. -->
-    <string name="wallpaper_limited_edition_title">ویراست محدود</string>
+    <string name="wallpaper_limited_edition_title" moz:RemovedIn="118" tools:ignore="UnusedResources">ویراست محدود</string>
     <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
-    <string name="wallpaper_limited_edition_description_with_learn_more">مجموعهٔ آواهای مستقل جدید. %s</string>
+    <string name="wallpaper_limited_edition_description_with_learn_more" moz:RemovedIn="118" tools:ignore="UnusedResources">مجموعهٔ آواهای مستقل جدید. %s</string>
     <!-- Description text for the limited edition wallpapers. -->
-    <string name="wallpaper_limited_edition_description">مجموعهٔ آواهای مستقل جدید.</string>
+    <string name="wallpaper_limited_edition_description" moz:RemovedIn="118" tools:ignore="UnusedResources">مجموعهٔ آواهای مستقل جدید.</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">یک رنگ پاشیده شده را بیازمایید</string>
     <!-- Wallpaper onboarding dialog body text. -->
@@ -1902,8 +1902,6 @@
     <string name="search_add_custom_engine_suggest_url_label">API پیشنهاد جستجوی (اختیاری)</string>
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">نشانی اینترنتی API پیشنهادی جستجو</string>
-    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">پرس و جو را با ”%s“ جایگزین کنید. مثال: \nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">ذخیره</string>
 

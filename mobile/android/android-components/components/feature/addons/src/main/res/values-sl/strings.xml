@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">%1$s je bil uspešno nameščen</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Dodatka %1$s ni bilo mogoče namestiti</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted">%1$s ni bilo mogoče namestiti, ker predstavlja veliko tveganje za težave z varnostjo ali zanesljivostjo</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s je bil uspešno omogočen</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

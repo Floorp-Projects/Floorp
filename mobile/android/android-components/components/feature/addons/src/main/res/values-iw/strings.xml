@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">התוספת %1$s הותקנה בהצלחה</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">התקנת התוספת %1$s נכשלה</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted">לא ניתן היה להתקין את %1$s מכיוון שבתוספת זו סיכון גבוה לגרימת בעיות יציבות או אבטחה</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">התוספת %1$s הופעלה בהצלחה</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

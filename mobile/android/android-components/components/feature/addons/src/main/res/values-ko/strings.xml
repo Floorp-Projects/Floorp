@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">%1$s 부가 기능 설치에 성공했습니다</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">%1$s 부가 기능 설치에 실패했습니다</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted">%1$s 부가 기능은 안정성 또는 보안 문제를 일으킬 위험이 높기 때문에 설치할 수 없습니다</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s 부가 기능 활성화에 성공했습니다</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
