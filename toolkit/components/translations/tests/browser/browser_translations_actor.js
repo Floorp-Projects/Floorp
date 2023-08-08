@@ -17,18 +17,27 @@ add_task(async function test_pivot_language_behavior() {
     "Expect 4 console.error messages notifying of the lack of a pivot language."
   );
 
+  const fromLanguagePairs = [
+    { fromLang: "en", toLang: "es" },
+    { fromLang: "es", toLang: "en" },
+    { fromLang: "en", toLang: "yue" },
+    { fromLang: "yue", toLang: "en" },
+    // This is not a bi-directional translation.
+    { fromLang: "is", toLang: "en" },
+    // These are non-pivot languages.
+    { fromLang: "zh", toLang: "ja" },
+    { fromLang: "ja", toLang: "zh" },
+  ];
+
+  // Sort the language pairs, as the order is not guaranteed.
+  function sort(list) {
+    return list.sort((a, b) =>
+      `${a.fromLang}-${a.toLang}`.localeCompare(`${b.fromLang}-${b.toLang}`)
+    );
+  }
+
   const { cleanup } = await setupActorTest({
-    languagePairs: [
-      { fromLang: "en", toLang: "es" },
-      { fromLang: "es", toLang: "en" },
-      { fromLang: "en", toLang: "yue" },
-      { fromLang: "yue", toLang: "en" },
-      // This is not a bi-directional translation.
-      { fromLang: "is", toLang: "en" },
-      // These are non-pivot languages.
-      { fromLang: "zh", toLang: "ja" },
-      { fromLang: "ja", toLang: "zh" },
-    ],
+    languagePairs: fromLanguagePairs,
   });
 
   const { languagePairs } = await TranslationsParent.getSupportedLanguages();
@@ -40,17 +49,25 @@ add_task(async function test_pivot_language_behavior() {
     )
   );
 
-  Assert.deepEqual(
-    languagePairs,
-    [
-      { fromLang: "en", toLang: "es" },
-      { fromLang: "en", toLang: "yue" },
-      { fromLang: "es", toLang: "en" },
-      { fromLang: "is", toLang: "en" },
-      { fromLang: "yue", toLang: "en" },
-    ],
-    "Non-pivot languages were removed."
-  );
+  if (SpecialPowers.isDebugBuild) {
+    Assert.deepEqual(
+      sort(languagePairs),
+      sort([
+        { fromLang: "en", toLang: "es" },
+        { fromLang: "en", toLang: "yue" },
+        { fromLang: "es", toLang: "en" },
+        { fromLang: "is", toLang: "en" },
+        { fromLang: "yue", toLang: "en" },
+      ]),
+      "Non-pivot languages were removed on debug builds."
+    );
+  } else {
+    Assert.deepEqual(
+      sort(languagePairs),
+      sort(fromLanguagePairs),
+      "Non-pivot languages are retained on non-debug builds."
+    );
+  }
 
   return cleanup();
 });
