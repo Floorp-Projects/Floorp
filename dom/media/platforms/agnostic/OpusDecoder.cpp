@@ -102,14 +102,14 @@ RefPtr<MediaDataDecoder::InitPromise> OpusDataDecoder::Init() {
   mSkip = mOpusParser->mPreSkip;
   mPaddingDiscarded = false;
 
-  if (opusCodecSpecificData.mContainerCodecDelayMicroSeconds !=
-      FramesToUsecs(mOpusParser->mPreSkip, mOpusParser->mRate).value()) {
+  if (opusCodecSpecificData.mContainerCodecDelayFrames !=
+      mOpusParser->mPreSkip) {
     NS_WARNING(
         "Invalid Opus header: container CodecDelay and Opus pre-skip do not "
         "match!");
   }
-  OPUS_DEBUG("Opus preskip in extradata: %" PRId64 "us",
-             opusCodecSpecificData.mContainerCodecDelayMicroSeconds);
+  OPUS_DEBUG("Opus preskip in extradata: %" PRId64 " frames",
+             opusCodecSpecificData.mContainerCodecDelayFrames);
 
   if (mInfo.mRate != (uint32_t)mOpusParser->mRate) {
     NS_WARNING("Invalid Opus header: container and codec rate do not match!");
@@ -273,25 +273,6 @@ RefPtr<MediaDataDecoder::DecodePromise> OpusDataDecoder::Decode(
     aSample->mDuration -= media::TimeUnit(skipFrames, 48000);
     OPUS_DEBUG("Adjusted frame after trimming pre-roll: [%lf, %lf]",
                aSample->mTime.ToSeconds(), aSample->GetEndTime().ToSeconds());
-  }
-
-  if (aSample->mDiscardPadding > 0) {
-    OPUS_DEBUG("Opus decoder discarding %u of %d frames",
-               aSample->mDiscardPadding, frames);
-    // Padding discard is only supposed to happen on the final packet.
-    // Record the discard so we can return an error if another packet is
-    // decoded.
-    if (aSample->mDiscardPadding > uint32_t(frames)) {
-      // Discarding more than the entire packet is invalid.
-      OPUS_DEBUG("Opus error, discard padding larger than packet");
-      return DecodePromise::CreateAndReject(
-          MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                      RESULT_DETAIL("Discard padding larger than packet")),
-          __func__);
-    }
-
-    mPaddingDiscarded = true;
-    frames = frames - aSample->mDiscardPadding;
   }
 
   // Apply the header gain if one was specified.
