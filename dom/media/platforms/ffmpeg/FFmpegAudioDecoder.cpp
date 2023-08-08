@@ -223,9 +223,7 @@ using ChannelLayout = AudioConfig::ChannelLayout;
 
 MediaResult FFmpegAudioDecoder<LIBAV_VER>::PostProcessOutput(
     bool aDecoded, MediaRawData* aSample, DecodedData& aResults,
-    bool* aGotFrame, size_t aSamplePositionOffset) {
-  int64_t samplePosition =
-      AssertedCast<int64_t>(aSample->mOffset + aSamplePositionOffset);
+    bool* aGotFrame) {
   media::TimeUnit pts = aSample->mTime;
 
   if (mFrame->format != AV_SAMPLE_FMT_FLT &&
@@ -242,8 +240,8 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::PostProcessOutput(
   }
 
   FFMPEG_LOG(
-      "FFmpegAudioDecoder decoded: %zu bytes, [%s,%s] (Duration: %s) [%s]",
-      aSamplePositionOffset, aSample->mTime.ToString().get(),
+      "FFmpegAudioDecoder decoded: [%s,%s] (Duration: %s) [%s]",
+      aSample->mTime.ToString().get(),
       aSample->GetEndTime().ToString().get(),
       aSample->mDuration.ToString().get(),
       mLib->av_get_sample_fmt_name(mFrame->format));
@@ -276,7 +274,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::PostProcessOutput(
   }
 
   RefPtr<AudioData> data =
-      new AudioData(samplePosition, pts, std::move(audio), numChannels,
+      new AudioData(aSample->mOffset, pts, std::move(audio), numChannels,
                     samplingRate, mCodecContext->channel_layout);
   MOZ_ASSERT(duration == data->mDuration, "must be equal");
   aResults.AppendElement(std::move(data));
@@ -291,7 +289,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::PostProcessOutput(
 
 #if LIBAVCODEC_VERSION_MAJOR < 59
 MediaResult FFmpegAudioDecoder<LIBAV_VER>::DecodeUsingFFmpeg(
-    AVPacket* aPacket, int& aOutBytesConsumed, bool& aDecoded,
+    AVPacket* aPacket, bool& aDecoded, MediaRawData* aSample,
     MediaRawData* aSample, DecodedData& aResults, bool* aGotFrame) {
   int decoded = 0;
   int rv =
@@ -301,26 +299,24 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DecodeUsingFFmpeg(
     NS_WARNING("FFmpeg audio decoder error.");
     return MediaResult(
         NS_ERROR_DOM_MEDIA_DECODE_ERR,
-        RESULT_DETAIL("FFmpeg audio error:%d", aOutBytesConsumed));
+        RESULT_DETAIL("FFmpeg audio error"));
   }
-  PostProcessOutput(decoded, aSample, aResults, aGotFrame, aOutBytesConsumed);
-  aOutBytesConsumed += rv;
+  PostProcessOutput(decoded, aSample, aResults, aGotFrame);
   return NS_OK;
 }
 #else
 #  define AVRESULT_OK 0
 
 MediaResult FFmpegAudioDecoder<LIBAV_VER>::DecodeUsingFFmpeg(
-    AVPacket* aPacket, int& aOutBytesConsumed, bool& aDecoded,
+    AVPacket* aPacket, bool& aDecoded, MediaRawData* aSample,
     MediaRawData* aSample, DecodedData& aResults, bool* aGotFrame) {
   int ret = mLib->avcodec_send_packet(mCodecContext, aPacket);
-  int consumed = 0;
   switch (ret) {
     case AVRESULT_OK:
-      consumed = aPacket->size;
       break;
     case AVERROR(EAGAIN):
       FFMPEG_LOG("  av_codec_send_packet: EAGAIN.");
+      MOZ_ASSERT(false, "EAGAIN");
       break;
     case AVERROR_EOF:
       FFMPEG_LOG("  End of stream.");
@@ -332,20 +328,18 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DecodeUsingFFmpeg(
                          RESULT_DETAIL("FFmpeg audio error"));
   }
 
-  while (ret >= 0) {
+  while (ret == 0) {
+    aDecoded = false;
     ret = mLib->avcodec_receive_frame(mCodecContext, mFrame);
     switch (ret) {
       case AVRESULT_OK:
         aDecoded = true;
-        aOutBytesConsumed += consumed;
         break;
       case AVERROR(EAGAIN):
-        aOutBytesConsumed += consumed;
         FFMPEG_LOG("  EAGAIN.");
         break;
       case AVERROR_EOF: {
         FFMPEG_LOG("  End of stream.");
-        aOutBytesConsumed += consumed;
         return MediaResult(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                            RESULT_DETAIL("End of stream"));
         default:
@@ -356,8 +350,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DecodeUsingFFmpeg(
       }
     }
     if (aDecoded) {
-      PostProcessOutput(aDecoded, aSample, aResults, aGotFrame,
-                        aOutBytesConsumed);
+      PostProcessOutput(aDecoded, aSample, aResults, aGotFrame);
     }
   }
 
@@ -393,17 +386,9 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
         RESULT_DETAIL("FFmpeg audio decoder failed to allocate frame"));
   }
 
-  while (packet.size > 0) {
-    bool decoded = false;
-    int bytesConsumed = 0;
-    auto rv = DecodeUsingFFmpeg(&packet, bytesConsumed, decoded, aSample,
-                                aResults, aGotFrame);
-    NS_ENSURE_SUCCESS(rv, rv);
-    // If the packet wasn't sent to ffmpeg, another attempt will happen next
-    // iteration.
-    packet.data += bytesConsumed;
-    packet.size -= bytesConsumed;
-  }
+  bool decoded = false;
+  auto rv = DecodeUsingFFmpeg(&packet, decoded, aSample, aResults, aGotFrame);
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
