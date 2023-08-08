@@ -150,8 +150,9 @@ bool WAVTrackDemuxer::Init() {
   mInfo->mRate = mSamplesPerSecond;
   mInfo->mChannels = mChannels;
   mInfo->mBitDepth = mFmtChunk.ValidBitsPerSamples();
-  mInfo->mProfile = mFmtChunk.WaveFormat() & 0x00FF;
-  mInfo->mExtendedProfile = mFmtChunk.WaveFormat() & 0xFF00 >> 8;
+  mInfo->mProfile = AssertedCast<int8_t>(mFmtChunk.WaveFormat() & 0x00FF);
+  mInfo->mExtendedProfile =
+      AssertedCast<int8_t>(mFmtChunk.WaveFormat() & 0xFF00 >> 8);
   mInfo->mMimeType = "audio/wave; codecs=";
   mInfo->mMimeType.AppendInt(mFmtChunk.WaveFormat());
   mInfo->mDuration = Duration();
@@ -354,7 +355,9 @@ WAVTrackDemuxer::SkipToNextRandomAccessPoint(const TimeUnit& aTimeThreshold) {
       SkipFailureHolder(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, 0), __func__);
 }
 
-int64_t WAVTrackDemuxer::GetResourceOffset() const { return mOffset; }
+int64_t WAVTrackDemuxer::GetResourceOffset() const {
+  return AssertedCast<int64_t>(mOffset);
+}
 
 TimeIntervals WAVTrackDemuxer::GetBuffered() {
   TimeUnit duration = Duration();
@@ -407,9 +410,8 @@ TimeUnit WAVTrackDemuxer::DurationFromBytes(uint32_t aNumBytes) const {
 MediaByteRange WAVTrackDemuxer::FindNextChunk() {
   if (mOffset + DATA_CHUNK_SIZE < mFirstChunkOffset + mDataLength) {
     return {mOffset, mOffset + DATA_CHUNK_SIZE};
-  } else {
-    return {mOffset, mFirstChunkOffset + mDataLength};
   }
+  return {mOffset, mFirstChunkOffset + mDataLength};
 }
 
 MediaByteRange WAVTrackDemuxer::FindChunkHeader() {
@@ -449,8 +451,8 @@ already_AddRefed<MediaRawData> WAVTrackDemuxer::GetNextChunk(
     return nullptr;
   }
 
-  const uint32_t read =
-      Read(chunkWriter->Data(), datachunk->mOffset, datachunk->Size());
+  const uint32_t read = Read(chunkWriter->Data(), datachunk->mOffset,
+                             AssertedCast<int64_t>(datachunk->Size()));
 
   if (read != aRange.Length()) {
     return nullptr;
@@ -491,8 +493,8 @@ already_AddRefed<MediaRawData> WAVTrackDemuxer::GetFileHeader(
     return nullptr;
   }
 
-  const uint32_t read =
-      Read(headerWriter->Data(), fileHeader->mOffset, fileHeader->Size());
+  const uint32_t read = Read(headerWriter->Data(), fileHeader->mOffset,
+                             AssertedCast<int64_t>(fileHeader->Size()));
 
   if (read != aRange.Length()) {
     return nullptr;
@@ -512,8 +514,8 @@ uint64_t WAVTrackDemuxer::ChunkIndexFromTime(
   if (!mSamplesPerChunk || !mSamplesPerSecond) {
     return 0;
   }
-  uint64_t chunkIndex =
-      (aTime.ToSeconds() * mSamplesPerSecond / mSamplesPerChunk) - 1;
+  double chunkDurationS =  mSamplesPerChunk / static_cast<double>(mSamplesPerSecond);
+  int64_t chunkIndex = std::floor(aTime.ToSeconds() / chunkDurationS);
   return chunkIndex;
 }
 
@@ -523,12 +525,12 @@ void WAVTrackDemuxer::UpdateState(const MediaByteRange& aRange) {
   mTotalChunkLen += static_cast<uint64_t>(aRange.Length());
 }
 
-uint32_t WAVTrackDemuxer::Read(uint8_t* aBuffer, int64_t aOffset,
-                               int32_t aSize) {
+int64_t WAVTrackDemuxer::Read(uint8_t* aBuffer, int64_t aOffset,
+                              int64_t aSize) {
   const int64_t streamLen = StreamLength();
   if (mInfo && streamLen > 0) {
     int64_t max = streamLen > aOffset ? streamLen - aOffset : 0;
-    aSize = std::min<int64_t>(aSize, max);
+    aSize = std::min(aSize, max);
   }
   uint32_t read = 0;
   const nsresult rv = mSource.ReadAt(aOffset, reinterpret_cast<char*>(aBuffer),
@@ -580,11 +582,11 @@ bool RIFFParser::RIFFHeader::ParseNext(uint8_t c) {
 bool RIFFParser::RIFFHeader::IsValid(int aPos) const {
   if (aPos > -1 && aPos < 4) {
     return RIFF[aPos] == mRaw[aPos];
-  } else if (aPos > 7 && aPos < 12) {
-    return WAVE[aPos - 8] == mRaw[aPos];
-  } else {
-    return true;
   }
+  if (aPos > 7 && aPos < 12) {
+    return WAVE[aPos - 8] == mRaw[aPos];
+  }
+  return true;
 }
 
 bool RIFFParser::RIFFHeader::IsValid() const { return mPos >= RIFF_CHUNK_SIZE; }

@@ -73,9 +73,9 @@ class RIFFParser {
    private:
     bool Update(uint8_t c);
 
-    uint8_t mRaw[RIFF_CHUNK_SIZE];
+    uint8_t mRaw[RIFF_CHUNK_SIZE] = {};
 
-    int mPos;
+    int mPos = 0;
   };
 
   RIFFHeader mRiffHeader;
@@ -108,9 +108,9 @@ class HeaderParser {
    private:
     void Update(uint8_t c);
 
-    uint8_t mRaw[CHUNK_HEAD_SIZE];
+    uint8_t mRaw[CHUNK_HEAD_SIZE] = {};
 
-    int mPos;
+    int mPos = 0;
   };
 
   ChunkHeader mHeader;
@@ -153,7 +153,7 @@ class DataParser {
     void Reset();
 
    private:
-    int mPos;  // To Check Alignment
+    int mPos = 0;  // To Check Alignment
   };
 
   DataChunk mChunk;
@@ -215,7 +215,7 @@ class WAVTrackDemuxer : public MediaTrackDemuxer,
   uint64_t OffsetFromChunkIndex(uint32_t aChunkIndex) const;
   uint64_t ChunkIndexFromTime(const media::TimeUnit& aTime) const;
 
-  uint32_t Read(uint8_t* aBuffer, int64_t aOffset, int32_t aSize);
+  int64_t Read(uint8_t* aBuffer, int64_t aOffset, int64_t aSize);
 
   MediaResourceIndex mSource;
 
