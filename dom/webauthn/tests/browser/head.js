@@ -93,6 +93,7 @@ function promiseWebAuthnMakeCredential(
         .create({ publicKey })
         .then(credential => {
           return {
+            clientDataJSON: credential.response.clientDataJSON,
             attObj: credential.response.attestationObject,
             rawId: credential.rawId,
           };
