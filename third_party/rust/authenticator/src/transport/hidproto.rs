@@ -9,12 +9,12 @@
     allow(clippy::cast_lossless, clippy::needless_lifetimes)
 )]
 
-#[cfg(any(target_os = "linux"))]
+#[cfg(target_os = "linux")]
 use std::io;
 use std::mem;
 
 use crate::consts::{FIDO_USAGE_PAGE, FIDO_USAGE_U2FHID};
-#[cfg(any(target_os = "linux"))]
+#[cfg(target_os = "linux")]
 use crate::consts::{INIT_HEADER_SIZE, MAX_HID_RPT_SIZE};
 
 // The 4 MSBs (the tag) are set when it's a long item.
@@ -181,7 +181,7 @@ pub fn has_fido_usage(desc: ReportDescriptor) -> bool {
     false
 }
 
-#[cfg(any(target_os = "linux"))]
+#[cfg(target_os = "linux")]
 pub fn read_hid_rpt_sizes(desc: ReportDescriptor) -> io::Result<(usize, usize)> {
     let mut in_rpt_count = None;
     let mut out_rpt_count = None;
