@@ -11,7 +11,6 @@ moz_task = { path = "../../../xpcom/rust/moz_task" }
 nserror = { path = "../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../xpcom/rust/nsstring" }
 rand = "0.8"
-runloop = "0.1.0"
 serde_cbor = "0.11"
 static_prefs = { path = "../../../modules/libpref/init/static_prefs" }
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
