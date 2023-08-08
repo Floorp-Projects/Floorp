@@ -16,9 +16,9 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/SyncRunnable.h"
-#include "opus/opus.h"
+#include <opus/opus.h>
 extern "C" {
-#include "opus/opus_multistream.h"
+#include <opus/opus_multistream.h>
 }
 
 #define OPUS_DEBUG(arg, ...)                                           \

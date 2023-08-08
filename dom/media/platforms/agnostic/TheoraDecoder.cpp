@@ -7,6 +7,7 @@
 #include "TheoraDecoder.h"
 
 #include <algorithm>
+#include <ogg/ogg.h>
 
 #include "ImageContainer.h"
 #include "TimeUnits.h"
