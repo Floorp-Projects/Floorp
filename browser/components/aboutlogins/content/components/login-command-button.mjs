@@ -47,11 +47,9 @@ export default class LoginCommandButton extends MozLitElement {
       would require us to use background-image in the css which defeats the objective to make the
       component reusable. -->
 
-      <!-- this.title attribute comes from fluent applying the title attribute (if it exists) 
-      to the login-command-button. -->
       <button
         class=${this.variant}
-        title=${ifDefined(this.title)}
+        title=${ifDefined(this.tooltip)}
         ?disabled=${this.disabled}
         @click=${ifDefined(this.onClick)}
       >
