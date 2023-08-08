@@ -1263,7 +1263,16 @@ already_AddRefed<MediaRawData> OpusState::PacketOutAsMediaRawData() {
     int64_t startFrame = mPrevPacketGranulepos;
     frames -= std::max<int64_t>(
         0, std::min(endFrame - startFrame, static_cast<int64_t>(frames)));
-    data->mDiscardPadding = frames;
+    TimeUnit toTrim = TimeUnit(frames, 48000);
+    LOG(LogLevel::Debug,
+        ("Trimming last opus packet: [%s, %s] to [%s, %s]",
+         data->mTime.ToString().get(), data->GetEndTime().ToString().get(),
+         data->mTime.ToString().get(),
+         (data->mTime + data->mDuration - toTrim).ToString().get()));
+
+    data->mOriginalPresentationWindow =
+        Some(media::TimeInterval{data->mTime, data->mTime + data->mDuration});
+    data->mDuration -= toTrim;
   }
 
   // Save this packet's granule position in case we need to perform end

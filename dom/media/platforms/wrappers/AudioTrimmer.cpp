@@ -110,7 +110,9 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
     // the next call to Decode().
     LOGV("No sample returned for sample[%s, %s]", rawStart.ToString().get(),
          rawEnd.ToString().get());
+    return DecodePromise::CreateAndResolve(std::move(results), __func__);
   }
+
   for (uint32_t i = 0; i < results.Length();) {
     const RefPtr<MediaData>& data = results[i];
     MOZ_ASSERT(data->mType == MediaData::Type::AUDIO_DATA);
@@ -184,11 +186,6 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::DecodeBatch(
           ->Then(GetCurrentSerialEventTarget(), __func__,
                  [self = RefPtr{this}](
                      DecodePromise::ResolveOrRejectValue&& aValue) {
-                   // If the decoder returned less samples than what we fed it.
-                   // We can assume that this is due to the decoder encoding
-                   // delay and that all decoded frames have been shifted by n =
-                   // compressedSamples.Length() - decodedSamples.Length() and
-                   // that the first n compressed samples returned nothing.
                    return self->HandleDecodedResult(std::move(aValue), nullptr);
                  });
   return p;
