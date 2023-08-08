@@ -188,15 +188,69 @@ interface nsIWebAuthnController : nsIU2FTokenManager
     [noscript] void finishSign(in uint64_t aTransactionId, in Array<nsICtapSignResult> aResult);
 };
 
+[scriptable, uuid(6c4ecd9f-57c0-4d7d-8080-bf6e4d499f8f)]
+interface nsICredentialParameters : nsISupports
+{
+    readonly attribute ACString credentialId;
+    readonly attribute bool isResidentCredential;
+    readonly attribute ACString rpId;
+    readonly attribute ACString privateKey;
+    readonly attribute ACString userHandle;
+    readonly attribute uint32_t signCount;
+};
+
 // The nsIWebAuthnTransport interface allows a C++ implemented nsIWebAuthnController to interact
 // with authenticators written in both Rust and C++
-[uuid(e236a9b4-a26f-11ed-b6cc-07a9834e19b1)]
+[scriptable, uuid(e236a9b4-a26f-11ed-b6cc-07a9834e19b1)]
 interface nsIWebAuthnTransport : nsISupports
 {
     attribute nsIWebAuthnController controller;
 
     void makeCredential(in uint64_t aTransactionId, in uint64_t browsingContextId, in nsICtapRegisterArgs args);
     void getAssertion(in uint64_t aTransactionId, in uint64_t browsingContextId, in nsICtapSignArgs args);
+
+    // Adds a virtual (software) authenticator for use in tests (particularly
+    // tests run via WebDriver). See
+    // https://w3c.github.io/webauthn/#sctn-automation-add-virtual-authenticator.
+    uint64_t addVirtualAuthenticator(
+        in ACString protocol,
+        in ACString transport,
+        in bool hasResidentKey,
+        in bool hasUserVerification,
+        in bool isUserConsenting,
+        in bool isUserVerified);
+
+    // Removes a previously-added virtual authenticator, as identified by its
+    // id. See
+    // https://w3c.github.io/webauthn/#sctn-automation-remove-virtual-authenticator
+    void removeVirtualAuthenticator(in uint64_t authenticatorId);
+
+    // Adds a credential to a previously-added authenticator. See
+    // https://w3c.github.io/webauthn/#sctn-automation-add-credential
+    void addCredential(
+        in uint64_t authenticatorId,
+        in ACString credentialId,
+        in bool isResidentCredential,
+        in ACString rpId,
+        in ACString privateKey,
+        in ACString userHandle,
+        in uint32_t signCount);
+
+    // Gets all credentials that have been added to a virtual authenticator.
+    // See https://w3c.github.io/webauthn/#sctn-automation-get-credentials
+    Array<nsICredentialParameters> getCredentials(in uint64_t authenticatorId);
+
+    // Removes a credential from a virtual authenticator. See
+    // https://w3c.github.io/webauthn/#sctn-automation-remove-credential
+    void removeCredential(in uint64_t authenticatorId, in ACString credentialId);
+
+    // Removes all credentials from a virtual authenticator. See
+    // https://w3c.github.io/webauthn/#sctn-automation-remove-all-credentials
+    void removeAllCredentials(in uint64_t authenticatorId);
+
+    // Sets the "isUserVerified" bit on a virtual authenticator. See
+    // https://w3c.github.io/webauthn/#sctn-automation-set-user-verified
+    void setUserVerified(in uint64_t authenticatorId, in bool isUserVerified);
 
     // These are prompt callbacks but they're not intended to be called directly from
     // JavaScript---they are proxied through the nsIWebAuthnController first.

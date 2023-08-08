@@ -18,11 +18,16 @@
       "Due to the nature of this test, there's no way for the window we're opening to signal " +
       "that it's done (the `document.writeln('')` is essential and basically clears any state " +
       "we could use). So, we have to wait at least 15 seconds for the webauthn call to time out.");
-    let win = window.open("https://example.com/tests/dom/webauthn/tests/get_assertion_dead_object.html");
-    setTimeout(() => {
-      win.close();
-      SimpleTest.finish();
-    }, 20000);
+    SpecialPowers.pushPrefEnv({"set": [
+      ["security.webauth.webauthn_enable_softtoken", false],
+      ["security.webauth.webauthn_enable_usbtoken", true],
+    ]}).then(() => {
+      let win = window.open("https://example.com/tests/dom/webauthn/tests/get_assertion_dead_object.html");
+      setTimeout(() => {
+        win.close();
+        SimpleTest.finish();
+      }, 20000);
+    });
   </script>
 
 </body>

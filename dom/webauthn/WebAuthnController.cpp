@@ -18,6 +18,7 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIThread.h"
+#include "nsServiceManagerUtils.h"
 #include "nsTextFormatter.h"
 #include "mozilla/Telemetry.h"
 
@@ -177,7 +178,8 @@ nsCOMPtr<nsIWebAuthnTransport> WebAuthnController::GetTransportImpl() {
     return mTransportImpl;
   }
 
-  nsCOMPtr<nsIWebAuthnTransport> transport = NewAuthrsTransport();
+  nsCOMPtr<nsIWebAuthnTransport> transport(
+      do_GetService("@mozilla.org/webauthn/transport;1"));
   transport->SetController(this);
   return transport;
 }
