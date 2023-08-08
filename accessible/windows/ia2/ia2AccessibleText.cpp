@@ -11,8 +11,6 @@
 
 #include "AccessibleText_i.c"
 
-#include "HyperTextAccessible.h"
-#include "HyperTextAccessible-inl.h"
 #include "mozilla/ClearOnShutdown.h"
 
 using namespace mozilla::a11y;
@@ -27,21 +25,6 @@ HyperTextAccessibleBase* ia2AccessibleText::TextAcc() {
   auto hyp = static_cast<ia2AccessibleHypertext*>(this);
   Accessible* acc = hyp->Acc();
   return acc ? acc->AsHyperTextBase() : nullptr;
-}
-
-std::pair<HyperTextAccessible*, HRESULT> ia2AccessibleText::LocalTextAcc() {
-  auto hyp = static_cast<ia2AccessibleHypertext*>(this);
-  Accessible* acc = hyp->Acc();
-  if (!acc) {
-    return {nullptr, CO_E_OBJNOTCONNECTED};
-  }
-  LocalAccessible* localAcc = acc->AsLocal();
-  if (!localAcc) {
-    return {nullptr, E_NOTIMPL};
-  }
-  HyperTextAccessible* hypAcc = localAcc->AsHyperText();
-  MOZ_ASSERT(hypAcc);
-  return {hypAcc, S_OK};
 }
 
 // IAccessibleText
@@ -397,18 +380,17 @@ STDMETHODIMP
 ia2AccessibleText::scrollSubstringToPoint(long aStartIndex, long aEndIndex,
                                           enum IA2CoordinateType aCoordType,
                                           long aX, long aY) {
+  HyperTextAccessibleBase* textAcc = TextAcc();
+  if (!textAcc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  if (!textAcc->IsValidRange(aStartIndex, aEndIndex)) {
+    return E_INVALIDARG;
+  }
   uint32_t geckoCoordType =
       (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE)
           ? nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE
           : nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
-
-  auto [textAcc, hr] = LocalTextAcc();
-  if (!textAcc) {
-    return hr;
-  }
-
-  if (!textAcc->IsValidRange(aStartIndex, aEndIndex)) return E_INVALIDARG;
-
   textAcc->ScrollSubstringToPoint(aStartIndex, aEndIndex, geckoCoordType, aX,
                                   aY);
   return S_OK;

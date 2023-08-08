@@ -504,25 +504,18 @@ static gboolean scrollSubstringToCB(AtkText* aText, gint aStartOffset,
 static gboolean scrollSubstringToPointCB(AtkText* aText, gint aStartOffset,
                                          gint aEndOffset, AtkCoordType aCoords,
                                          gint aX, gint aY) {
-  AtkObject* atkObject = ATK_OBJECT(aText);
-  AccessibleWrap* accWrap = GetAccessibleWrap(atkObject);
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole() ||
-        !text->IsValidRange(aStartOffset, aEndOffset)) {
-      return FALSE;
-    }
-    text->ScrollSubstringToPoint(aStartOffset, aEndOffset, aCoords, aX, aY);
-    return TRUE;
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aText));
+  if (!acc) {
+    return FALSE;
   }
 
-  RemoteAccessible* proxy = GetProxy(atkObject);
-  if (proxy) {
-    proxy->ScrollSubstringToPoint(aStartOffset, aEndOffset, aCoords, aX, aY);
-    return TRUE;
+  HyperTextAccessibleBase* text = acc->AsHyperTextBase();
+  if (!text) {
+    return FALSE;
   }
 
-  return FALSE;
+  text->ScrollSubstringToPoint(aStartOffset, aEndOffset, aCoords, aX, aY);
+  return TRUE;
 }
 }
 
