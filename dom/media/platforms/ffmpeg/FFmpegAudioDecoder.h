@@ -25,12 +25,13 @@ class FFmpegAudioDecoder<LIBAV_VER>
     : public FFmpegDataDecoder<LIBAV_VER>,
       public DecoderDoctorLifeLogger<FFmpegAudioDecoder<LIBAV_VER>> {
  public:
-  FFmpegAudioDecoder(FFmpegLibWrapper* aLib, const AudioInfo& aConfig);
+  FFmpegAudioDecoder(FFmpegLibWrapper* aLib, const AudioInfo& aInfo);
   virtual ~FFmpegAudioDecoder();
 
   RefPtr<InitPromise> Init() override;
   void InitCodecContext() MOZ_REQUIRES(sMutex) override;
-  static AVCodecID GetCodecId(const nsACString& aMimeType);
+  static AVCodecID GetCodecId(const nsACString& aMimeType,
+                              const AudioInfo& aInfo);
   nsCString GetDescriptionName() const override {
 #ifdef USING_MOZFFVPX
     return "ffvpx audio decoder"_ns;
@@ -49,6 +50,7 @@ class FFmpegAudioDecoder<LIBAV_VER>
   MediaResult PostProcessOutput(bool aDecoded, MediaRawData* aSample,
                                 DecodedData& aResults, bool* aGotFrame,
                                 size_t aSamplePositionOffset);
+  const AudioInfo mAudioInfo;
 };
 
 }  // namespace mozilla
