@@ -608,10 +608,6 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
       allowList.AppendElement(c);
     }
   }
-  if (allowList.Length() == 0 && aOptions.mAllowCredentials.Length() != 0) {
-    promise->MaybeReject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
-    return promise.forget();
-  }
 
   if (!MaybeCreateBackgroundActor()) {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);

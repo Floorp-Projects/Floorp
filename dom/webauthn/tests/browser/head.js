@@ -22,26 +22,6 @@ for (let script of scripts) {
   );
 }
 
-function add_virtual_authenticator(autoremove = true) {
-  let webauthnTransport = Cc["@mozilla.org/webauthn/transport;1"].getService(
-    Ci.nsIWebAuthnTransport
-  );
-  let id = webauthnTransport.addVirtualAuthenticator(
-    "ctap2",
-    "internal",
-    true,
-    true,
-    true,
-    true
-  );
-  if (autoremove) {
-    registerCleanupFunction(() => {
-      webauthnTransport.removeVirtualAuthenticator(id);
-    });
-  }
-  return id;
-}
-
 function memcmp(x, y) {
   let xb = new Uint8Array(x);
   let yb = new Uint8Array(y);
@@ -113,7 +93,6 @@ function promiseWebAuthnMakeCredential(
         .create({ publicKey })
         .then(credential => {
           return {
-            clientDataJSON: credential.response.clientDataJSON,
             attObj: credential.response.attestationObject,
             rawId: credential.rawId,
           };

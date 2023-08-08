@@ -4,8 +4,6 @@
 
 "use strict";
 
-add_virtual_authenticator();
-
 let expectSecurityError = expectError("Security");
 
 add_task(async function test_setup() {
