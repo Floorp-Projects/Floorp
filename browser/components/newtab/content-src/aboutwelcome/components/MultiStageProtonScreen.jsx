@@ -395,9 +395,6 @@ export class ProtonScreen extends React.PureComponent {
               </Localized>
               <div className="spacer-bottom" />
             </div>
-            <Localized text={content.help_text}>
-              <span className="attrib-text" />
-            </Localized>
           </React.Fragment>
         )}
       </div>
@@ -541,6 +538,9 @@ export class ProtonScreen extends React.PureComponent {
           </div>
           {content.dismiss_button ? this.renderDismissButton() : null}
         </div>
+        <Localized text={content.info_text}>
+          <span className="info-text" />
+        </Localized>
       </main>
     );
   }

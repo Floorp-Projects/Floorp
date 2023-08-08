@@ -392,31 +392,6 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.property(data, "skipFxA", true);
       assert.notProperty(data.screens[0].content, "secondary_button_top");
     });
-    it("should remove the caption if deleteIfNotEn is true", async () => {
-      sandbox.stub(global.Services.locale, "appLocaleAsBCP47").value("de");
-
-      const data = await prepConfig({
-        id: "DEFAULT_ABOUTWELCOME_PROTON",
-        template: "multistage",
-        transitions: true,
-        background_url:
-          "chrome://activity-stream/content/data/content/assets/confetti.svg",
-        screens: [
-          {
-            id: "AW_PIN_FIREFOX",
-            content: {
-              position: "corner",
-              help_text: {
-                deleteIfNotEn: true,
-                string_id: "mr1-onboarding-welcome-image-caption",
-              },
-            },
-          },
-        ],
-      });
-
-      assert.notProperty(data.screens[0].content, "help_text");
-    });
   });
 
   describe("AboutWelcomeDefaults for MR split template proton", () => {

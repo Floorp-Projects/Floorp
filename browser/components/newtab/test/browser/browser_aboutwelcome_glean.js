@@ -36,9 +36,6 @@ const TEST_DEFAULT_CONTENT = [
           data: { entrypoint: "test" },
         },
       },
-      help_text: {
-        text: "Here's some sample help text",
-      },
     },
   },
   {

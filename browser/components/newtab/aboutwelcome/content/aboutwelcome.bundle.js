@@ -1115,10 +1115,6 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       text: content.hero_text
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: "spacer-bottom"
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-      text: content.help_text
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
-      className: "attrib-text"
     }))));
   }
 
@@ -1199,7 +1195,11 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       addonName: this.props.addonName,
       handleAction: this.props.handleAction,
       activeMultiSelect: this.props.activeMultiSelect
-    })), !hideStepsIndicator ? this.renderStepsIndicator() : null), content.dismiss_button ? this.renderDismissButton() : null));
+    })), !hideStepsIndicator ? this.renderStepsIndicator() : null), content.dismiss_button ? this.renderDismissButton() : null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
+      text: content.info_text
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+      className: "info-text"
+    })));
   }
 
 }

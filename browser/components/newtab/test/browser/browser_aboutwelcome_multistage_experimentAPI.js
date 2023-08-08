@@ -31,9 +31,6 @@ const TEST_PROTON_CONTENT = [
           data: { entrypoint: "test" },
         },
       },
-      help_text: {
-        text: "Here's some sample help text",
-      },
       has_noodles: true,
     },
   },

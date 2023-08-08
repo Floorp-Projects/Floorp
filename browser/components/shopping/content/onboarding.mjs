@@ -46,6 +46,9 @@ const OPTIN_DEFAULT = {
             },
           },
         },
+        info_text: {
+          raw: "Review quality check is available when you shop on Amazon, Best Buy, and Walmart.",
+        },
       },
     },
   ],
