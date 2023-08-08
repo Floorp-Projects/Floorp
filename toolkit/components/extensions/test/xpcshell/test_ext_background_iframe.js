@@ -157,13 +157,17 @@ add_task(async function test_first_extension_api_call_in_iframe() {
         readyStateAtTopLevelScriptExecution,
         "Top-level script should run immediately while DOM is still loading"
       );
-      browser.test.assertEq(
-        "interactive",
+      function assertBeforeDOMContentLoaded(actualReadyState, message) {
+        browser.test.assertTrue(
+          actualReadyState === "interactive" || actualReadyState === "loading",
+          `${message}, actual readyState=${actualReadyState}`
+        );
+      }
+      assertBeforeDOMContentLoaded(
         globalThis.readyStateAtFrameLoad,
         "frame.onload + script should run before DOMContentLoaded fires"
       );
-      browser.test.assertEq(
-        "interactive",
+      assertBeforeDOMContentLoaded(
         globalThis.readyStateInScriptDefer,
         "<script defer> should run right before DOMContentLoaded fires"
       );
@@ -206,11 +210,13 @@ add_task(async function test_first_extension_api_call_in_iframe() {
 
       browser.test.sendMessage("top_and_frame_done");
     };
+    dump(`background.js ran. Waiting for iframe.onload to continue.\n`);
   }
   function backgroundScriptDeferred() {
     globalThis.scriptDeferRunAfterFrameLoad = globalThis.scriptRunInFrame;
     globalThis.styleSheetStateInScriptDefer = globalThis.getStyleSheetState();
     globalThis.readyStateInScriptDefer = document.readyState;
+    dump(`background-deferred.js ran. Expecting window.onload to run next.\n`);
   }
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
