@@ -5,7 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
-    - android_taskgraph.transforms.build_apk:transforms
+    - android_taskgraph.transforms.build_android_app:transforms
     - android_taskgraph.transforms.gradle_optimization:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
@@ -20,31 +20,6 @@ task-defaults:
         name: 'public/build/target.{abi}.apk'
         github-name: '{gradle_build}-{version}-{abi}.apk'
         path: '/builds/worker/checkouts/vcs/{source_project_name}/app/build/outputs/apk/{gradle_build}/{gradle_build_type}/{fileName}'
-    fetches:
-        toolchain:
-            - android-sdk-linux
-        external-gradle-dependencies:
-            - external-gradle-dependencies.tar.xz
-    optimization:
-        by-tasks-for:
-            github-pu(sh|ll-request.*):
-                skip-unless-changed: [] # Paths are dynamically added by transforms
-            default: {}
-    run:
-        using: gradlew
-        use-caches: false
-        workdir: '/builds/worker'
-    run-on-tasks-for: []
-    treeherder:
-        kind: build
-        symbol: B
-        platform: focus-android-all/opt
-        tier: 1
-    worker-type: b-android-large
-    worker:
-        docker-image: {in-tree: base}
-        max-run-time: 7200
-        chain-of-trust: true
 
 
 tasks:
@@ -66,6 +41,7 @@ tasks:
         source-project-name: "focus-android"
         treeherder:
             symbol: focus-debug(Bf)
+            platform: focus-android-all/opt
 
     klar-debug:
         attributes:
@@ -85,6 +61,7 @@ tasks:
         source-project-name: "focus-android"
         treeherder:
             symbol: focus-debug(Bkl)
+            platform: focus-android-all/opt
 
     fenix-debug:
         attributes:
@@ -116,7 +93,6 @@ tasks:
             shipping-product: focus
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
-        run-on-tasks-for: []
         include-shippable-secrets: true
         include-release-version: true
         run:
@@ -127,6 +103,7 @@ tasks:
         source-project-name: "focus-android"
         treeherder:
             symbol: focus-release(Bf)
+            platform: focus-android-all/opt
 
     klar-release:
         description: 'Release Klar build'
@@ -135,7 +112,6 @@ tasks:
             shipping-product: focus
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
-        run-on-tasks-for: []
         include-shippable-secrets: true
         include-release-version: true
         run:
@@ -146,6 +122,7 @@ tasks:
         source-project-name: "focus-android"
         treeherder:
             symbol: focus-release(Bkl)
+            platform: focus-android-all/opt
 
     fenix-release:
         description: 'Release Fenix build'
@@ -154,7 +131,6 @@ tasks:
             shipping-product: fenix
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
-        run-on-tasks-for: []
         include-shippable-secrets: true
         include-release-version: true
         run:
@@ -177,7 +153,6 @@ tasks:
             shipping-product: focus
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
-        run-on-tasks-for: []
         include-shippable-secrets: true
         include-nightly-version: true
         run:
@@ -187,6 +162,7 @@ tasks:
         source-project-name: "focus-android"
         treeherder:
             symbol: focus-nightly(B)
+            platform: focus-android-all/opt
 
     fenix-nightly:
         description: 'Nightly fenix build'
@@ -197,7 +173,6 @@ tasks:
             shipping-product: fenix
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
-        run-on-tasks-for: []
         include-shippable-secrets: true
         include-nightly-version: true
         source-project-name: "fenix"
@@ -217,7 +192,6 @@ tasks:
             shipping-product: focus
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
-        run-on-tasks-for: []
         include-shippable-secrets: true
         include-release-version: true
         run:
@@ -228,6 +202,7 @@ tasks:
         source-project-name: "focus-android"
         treeherder:
             symbol: focus-beta(B)
+            platform: focus-android-all/opt
 
     fenix-beta:
         description: 'Beta fenix build'
@@ -236,7 +211,6 @@ tasks:
             shipping-product: fenix
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
-        run-on-tasks-for: []
         include-shippable-secrets: true
         include-release-version: true
         run:
@@ -267,6 +241,7 @@ tasks:
         source-project-name: "focus-android"
         treeherder:
             symbol: focus-nightly(Bf)
+            platform: focus-android-all/opt
 
     fenix-nightly-firebase:
         attributes:
@@ -304,6 +279,7 @@ tasks:
         source-project-name: "focus-android"
         treeherder:
             symbol: focus-beta(Bf)
+            platform: focus-android-all/opt
 
     fenix-beta-firebase:
         attributes:
@@ -346,6 +322,7 @@ tasks:
             path: '/builds/worker/checkouts/vcs/focus-android/app/build/outputs/apk/androidTest/focus/debug/app-focus-debug-androidTest.apk'
         treeherder:
             symbol: focus-debug(Bat)
+            platform: focus-android-all/opt
 
     fenix-android-test-debug:
         attributes:
@@ -397,6 +374,7 @@ tasks:
             path: '/builds/worker/checkouts/vcs/focus-android/app/build/outputs/apk/androidTest/focus/nightly/app-focus-nightly-androidTest.apk'
         treeherder:
             symbol: focus-nightly(Bat)
+            platform: focus-android-all/opt
 
     # android-test-nightly and android-test-beta, while still being debug builds, are meant to be signed
     # with the nightly/beta key. The Firebase testing infrastructure requires both the androidTest APK
@@ -449,6 +427,7 @@ tasks:
             path: '/builds/worker/checkouts/vcs/focus-android/app/build/outputs/apk/androidTest/focus/beta/app-focus-beta-androidTest.apk'
         treeherder:
             symbol: focus-beta(Bat)
+            platform: focus-android-all/opt
 
     fenix-android-test-beta:
         attributes:

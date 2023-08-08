@@ -2,16 +2,54 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
-Apply some defaults and minor modifications to the jobs defined in the build
-kind.
+Apply some defaults and minor modifications to the jobs defined in the
+build-apk and build-bundle kinds.
 """
 
 
 from android_taskgraph.build_config import get_variant
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import resolve_keyed_by
 
 transforms = TransformSequence()
+
+
+@transforms.add
+def add_common_config(config, tasks):
+    for task in tasks:
+        fetches = task.setdefault("fetches", {})
+        fetches["toolchain"] = ["android-sdk-linux"]
+        fetches["external-gradle-dependencies"] = [
+            "external-gradle-dependencies.tar.xz"
+        ]
+
+        optimization = task.setdefault("optimization", {})
+        if config.params["tasks_for"] == "github-push" or config.params[
+            "tasks_for"
+        ].startswith("github-pull-request"):
+            optimization[
+                "skip-unless-changed"
+            ] = []  # Paths are dynamically added by transforms
+
+        task.setdefault("run-on-tasks-for", [])
+
+        run = task.setdefault("run", {})
+        run["using"] = "gradlew"
+        run["use-caches"] = False
+        run["workdir"] = "/builds/worker"
+
+        treeherder = task.setdefault("treeherder", {})
+        treeherder["kind"] = "build"
+        treeherder["tier"] = 1
+
+        task["worker-type"] = "b-android-large"
+
+        worker = task.setdefault("worker", {})
+        worker["docker-image"] = {}
+        worker["docker-image"]["in-tree"] = "base"
+        worker["max-run-time"] = 7200
+        worker["chain-of-trust"] = True
+
+        yield task
 
 
 @transforms.add
@@ -20,22 +58,6 @@ def add_variant_config(config, tasks):
         attributes = task.setdefault("attributes", {})
         if not attributes.get("build-type"):
             attributes["build-type"] = task["name"]
-        yield task
-
-
-@transforms.add
-def resolve_keys(config, tasks):
-    for task in tasks:
-        for field in ("optimization",):
-            resolve_keyed_by(
-                task,
-                field,
-                item_name=task["name"],
-                **{
-                    "tasks-for": config.params["tasks_for"],
-                },
-            )
-
         yield task
 
 
@@ -128,9 +150,10 @@ def build_gradle_command(config, tasks):
         variant_config = get_variant(gradle_build_type, gradle_build_name)
         variant_name = variant_config["name"][0].upper() + variant_config["name"][1:]
 
+        package_command = task["run"].pop("gradle-package-command", "assemble")
         gradle_command = [
             "clean",
-            f"assemble{variant_name}",
+            f"{package_command}{variant_name}",
         ]
 
         if task["run"].pop("track-apk-size", False):
@@ -229,5 +252,21 @@ def add_artifacts(config, tasks):
                         **apk,
                     ),
                 }
+        elif "aab-artifact-template" in task:
+            variant_name = variant_config["name"]
+            artifact_template = task.pop("aab-artifact-template")
+            artifacts.append(
+                {
+                    "type": artifact_template["type"],
+                    "name": artifact_template["name"],
+                    "path": artifact_template["path"].format(
+                        gradle_build_type=gradle_build_type,
+                        gradle_build=gradle_build,
+                        source_project_name=source_project_name,
+                        variant_name=variant_name,
+                    ),
+                }
+            )
+            task["attributes"]["aab"] = artifact_template["name"]
 
         yield task
