@@ -14,10 +14,6 @@
   <script class="testbody" type="text/javascript">
     "use strict";
 
-    add_task(async () => {
-      await addVirtualAuthenticator();
-    });
-
     function arrivingHereIsGood(aResult) {
       ok(true, "Good result! Received a: " + aResult);
     }
@@ -121,15 +117,15 @@
       }]).then(arrivingHereIsGood)
          .catch(arrivingHereIsBad);
 
-      // Request an assertion for a random credential. This should be
-      // indistinguishable from the user denying consent for a known
-      // credential, so expect a NotAllowedError.
+      // Request an assertion for a random credential. The token indicates
+      // consent even though this credential doesn't exist, so expect an
+      // InvalidStateError.
       await requestGetAssertion([{
         type: "public-key",
         id: crypto.getRandomValues(new Uint8Array(16)),
         transports: ["usb"],
       }]).then(arrivingHereIsBad)
-         .catch(expectNotAllowedError);
+         .catch(expectInvalidStateError);
 
       // Request an assertion for gCredential with transport=nfc.
       // The softoken pretends to support all transports.

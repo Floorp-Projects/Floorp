@@ -35,21 +35,6 @@ valid_data = [
         "accept",
         None,
     ]),
-    ("webauthn:extension:credBlob", [
-        False, None,
-    ]),
-    ("webauthn:extension:largeBlob", [
-        False, None,
-    ]),
-    ("webauthn:extension:prf", [
-        False, None,
-    ]),
-    ("webauthn:extension:uvm", [
-        False, None,
-    ]),
-    ("webauthn:virtualAuthenticators", [
-        False, None,
-    ]),
     ("test:extension", [
         None, False, "abc", 123, [],
         {"key": "value"},
@@ -123,7 +108,7 @@ invalid_data = [
         "Accept",
         " dismiss",
         "dismiss ",
-    ]),
+    ])
 ]
 
 invalid_extensions = [

@@ -18,11 +18,14 @@ use crate::ctap2::server::{
     PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
     RelyingPartyWrapper, RpIdHash, User, UserVerificationRequirement,
 };
-use crate::ctap2::utils::{read_byte, serde_parse_err};
 use crate::errors::AuthenticatorError;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
-use crate::transport::{FidoDevice, VirtualFidoDevice};
-use crate::u2ftypes::CTAP1RequestAPDU;
+use crate::u2ftypes::{CTAP1RequestAPDU, U2FDevice};
+use nom::{
+    bytes::complete::{tag, take},
+    error::VerboseError,
+    number::complete::be_u8,
+};
 #[cfg(test)]
 use serde::Deserialize;
 use serde::{
@@ -31,7 +34,8 @@ use serde::{
     Serialize, Serializer,
 };
 use serde_cbor::{self, de::from_slice, ser, Value};
-use std::io::{Cursor, Read};
+use std::fmt;
+use std::io;
 
 #[derive(Debug)]
 pub struct MakeCredentialsResult(pub AttestationObject);
@@ -41,35 +45,30 @@ impl MakeCredentialsResult {
         input: &[u8],
         rp_id_hash: &RpIdHash,
     ) -> Result<MakeCredentialsResult, CommandError> {
-        let mut data = Cursor::new(input);
-        let magic_num = read_byte(&mut data).map_err(CommandError::Deserializing)?;
-        if magic_num != 0x05 {
-            error!("error while parsing registration: magic header not 0x05, but {magic_num}");
-            return Err(CommandError::Deserializing(DesError::invalid_value(
-                serde::de::Unexpected::Unsigned(magic_num as u64),
-                &"0x05",
-            )));
-        }
-        let mut public_key = [0u8; 65];
-        data.read_exact(&mut public_key)
-            .map_err(|_| CommandError::Deserializing(serde_parse_err("PublicKey")))?;
+        let parse_register = |input| {
+            let (rest, _) = tag(&[0x05])(input)?;
+            let (rest, public_key) = take(65u8)(rest)?;
+            let (rest, key_handle_len) = be_u8(rest)?;
+            let (rest, key_handle) = take(key_handle_len)(rest)?;
+            Ok((rest, public_key, key_handle))
+        };
 
-        let credential_id_len = read_byte(&mut data).map_err(CommandError::Deserializing)?;
-        let mut credential_id = vec![0u8; credential_id_len as usize];
-        data.read_exact(&mut credential_id)
-            .map_err(|_| CommandError::Deserializing(serde_parse_err("CredentialId")))?;
+        let (rest, public_key, key_handle) =
+            parse_register(input).map_err(|e: nom::Err<VerboseError<_>>| {
+                error!("error while parsing registration: {:?}", e);
+                CommandError::Deserializing(DesError::custom("unable to parse registration"))
+            })?;
 
-        let cert_and_sig = parse_u2f_der_certificate(&data.get_ref()[data.position() as usize..])
-            .map_err(|err| {
-            CommandError::Deserializing(serde_parse_err(&format!(
-                "Certificate and Signature: {err:?}",
-            )))
+        let cert_and_sig = parse_u2f_der_certificate(rest).map_err(|e| {
+            error!("error while parsing registration: {:?}", e);
+            CommandError::Deserializing(DesError::custom("unable to parse registration"))
         })?;
 
-        let credential_ec2_key = COSEEC2Key::from_sec1_uncompressed(Curve::SECP256R1, &public_key)
-            .map_err(|err| {
-                CommandError::Deserializing(serde_parse_err(&format!("EC2 Key: {err:?}",)))
-            })?;
+        let credential_ec2_key = COSEEC2Key::from_sec1_uncompressed(Curve::SECP256R1, public_key)
+            .map_err(|e| {
+            error!("error while parsing registration: {:?}", e);
+            CommandError::Deserializing(DesError::custom("unable to parse registration"))
+        })?;
 
         let credential_public_key = COSEKey {
             alg: COSEAlgorithm::ES256,
@@ -86,7 +85,7 @@ impl MakeCredentialsResult {
             counter: 0,
             credential_data: Some(AttestedCredentialData {
                 aaguid: AAGuid::default(),
-                credential_id,
+                credential_id: Vec::from(key_handle),
                 credential_public_key,
             }),
             extensions: Default::default(),
@@ -153,12 +152,12 @@ impl MakeCredentialsExtensions {
 
 #[derive(Debug, Clone)]
 pub struct MakeCredentials {
-    pub client_data_hash: ClientDataHash,
-    pub rp: RelyingPartyWrapper,
+    pub(crate) client_data_hash: ClientDataHash,
+    pub(crate) rp: RelyingPartyWrapper,
     // Note(baloo): If none -> ctap1
-    pub user: Option<User>,
-    pub pub_cred_params: Vec<PublicKeyCredentialParameters>,
-    pub exclude_list: Vec<PublicKeyCredentialDescriptor>,
+    pub(crate) user: Option<User>,
+    pub(crate) pub_cred_params: Vec<PublicKeyCredentialParameters>,
+    pub(crate) exclude_list: Vec<PublicKeyCredentialDescriptor>,
 
     // https://www.w3.org/TR/webauthn/#client-extension-input
     // The client extension input, which is a value that can be encoded in JSON,
@@ -166,11 +165,11 @@ pub struct MakeCredentials {
     // create() call, while the CBOR authenticator extension input is passed
     // from the client to the authenticator for authenticator extensions during
     // the processing of these calls.
-    pub extensions: MakeCredentialsExtensions,
-    pub options: MakeCredentialsOptions,
-    pub pin: Option<Pin>,
-    pub pin_uv_auth_param: Option<PinUvAuthParam>,
-    pub enterprise_attestation: Option<u64>,
+    pub(crate) extensions: MakeCredentialsExtensions,
+    pub(crate) options: MakeCredentialsOptions,
+    pub(crate) pin: Option<Pin>,
+    pub(crate) pin_uv_auth_param: Option<PinUvAuthParam>,
+    pub(crate) enterprise_attestation: Option<u64>,
 }
 
 impl MakeCredentials {
@@ -362,13 +361,6 @@ impl RequestCtap1 for MakeCredentials {
             .map_err(HIDError::Command)
             .map_err(Retryable::Error)
     }
-
-    fn send_to_virtual_device<Dev: VirtualFidoDevice>(
-        &self,
-        dev: &mut Dev,
-    ) -> Result<Self::Output, HIDError> {
-        dev.make_credentials(self)
-    }
 }
 
 impl RequestCtap2 for MakeCredentials {
@@ -382,11 +374,14 @@ impl RequestCtap2 for MakeCredentials {
         Ok(ser::to_vec(&self).map_err(CommandError::Serializing)?)
     }
 
-    fn handle_response_ctap2<Dev: FidoDevice>(
+    fn handle_response_ctap2<Dev>(
         &self,
         _dev: &mut Dev,
         input: &[u8],
-    ) -> Result<Self::Output, HIDError> {
+    ) -> Result<Self::Output, HIDError>
+    where
+        Dev: U2FDevice + io::Read + io::Write + fmt::Debug,
+    {
         if input.is_empty() {
             return Err(HIDError::Command(CommandError::InputTooSmall));
         }
@@ -409,13 +404,6 @@ impl RequestCtap2 for MakeCredentials {
         } else {
             Err(HIDError::Command(CommandError::StatusCode(status, None)))
         }
-    }
-
-    fn send_to_virtual_device<Dev: VirtualFidoDevice>(
-        &self,
-        dev: &mut Dev,
-    ) -> Result<Self::Output, HIDError> {
-        dev.make_credentials(self)
     }
 }
 
@@ -443,7 +431,7 @@ pub(crate) fn dummy_make_credentials_cmd() -> MakeCredentials {
             ..Default::default()
         }),
         vec![PublicKeyCredentialParameters {
-            alg: COSEAlgorithm::ES256,
+            alg: crate::COSEAlgorithm::ES256,
         }],
         vec![],
         MakeCredentialsOptions::default(),
@@ -474,7 +462,7 @@ pub mod test {
     };
     use crate::transport::device_selector::Device;
     use crate::transport::hid::HIDDevice;
-    use crate::transport::{FidoDevice, FidoProtocol};
+    use serde_bytes::ByteBuf;
 
     fn create_attestation_obj() -> AttestationObject {
         AttestationObject {
@@ -518,14 +506,14 @@ pub mod test {
             },
             att_statement: AttestationStatement::Packed(AttestationStatementPacked {
                 alg: COSEAlgorithm::ES256,
-                sig: Signature(vec![
+                sig: Signature(ByteBuf::from([
                     0x30, 0x45, 0x02, 0x20, 0x13, 0xf7, 0x3c, 0x5d, 0x9d, 0x53, 0x0e, 0x8c, 0xc1,
                     0x5c, 0xc9, 0xbd, 0x96, 0xad, 0x58, 0x6d, 0x39, 0x36, 0x64, 0xe4, 0x62, 0xd5,
                     0xf0, 0x56, 0x12, 0x35, 0xe6, 0x35, 0x0f, 0x2b, 0x72, 0x89, 0x02, 0x21, 0x00,
                     0x90, 0x35, 0x7f, 0xf9, 0x10, 0xcc, 0xb5, 0x6a, 0xc5, 0xb5, 0x96, 0x51, 0x19,
                     0x48, 0x58, 0x1c, 0x8f, 0xdd, 0xb4, 0xa2, 0xb7, 0x99, 0x59, 0x94, 0x80, 0x78,
                     0xb0, 0x9f, 0x4b, 0xdc, 0x62, 0x29,
-                ]),
+                ])),
                 attestation_cert: vec![AttestationCertificate(vec![
                     0x30, 0x82, 0x01, 0x93, 0x30, 0x82, 0x01, 0x38, 0xa0, 0x03, 0x02, 0x01, 0x02,
                     0x02, 0x09, 0x00, 0x85, 0x9b, 0x72, 0x6c, 0xb2, 0x4b, 0x4c, 0x29, 0x30, 0x0a,
@@ -609,7 +597,6 @@ pub mod test {
         );
 
         let mut device = Device::new("commands/make_credentials").unwrap(); // not really used (all functions ignore it)
-        assert_eq!(device.get_protocol(), FidoProtocol::CTAP2);
         let req_serialized = req
             .wire_format()
             .expect("Failed to serialize MakeCredentials request");
@@ -719,14 +706,14 @@ pub mod test {
                 extensions: Default::default(),
             },
             att_statement: AttestationStatement::FidoU2F(AttestationStatementFidoU2F {
-                sig: Signature(vec![
+                sig: Signature(ByteBuf::from([
                     0x30, 0x45, 0x02, 0x20, 0x32, 0x47, 0x79, 0xC6, 0x8F, 0x33, 0x80, 0x28, 0x8A,
                     0x11, 0x97, 0xB6, 0x09, 0x5F, 0x7A, 0x6E, 0xB9, 0xB1, 0xB1, 0xC1, 0x27, 0xF6,
                     0x6A, 0xE1, 0x2A, 0x99, 0xFE, 0x85, 0x32, 0xEC, 0x23, 0xB9, 0x02, 0x21, 0x00,
                     0xE3, 0x95, 0x16, 0xAC, 0x4D, 0x61, 0xEE, 0x64, 0x04, 0x4D, 0x50, 0xB4, 0x15,
                     0xA6, 0xA4, 0xD4, 0xD8, 0x4B, 0xA6, 0xD8, 0x95, 0xCB, 0x5A, 0xB7, 0xA1, 0xAA,
                     0x7D, 0x08, 0x1D, 0xE3, 0x41, 0xFA,
-                ]),
+                ])),
                 attestation_cert: vec![AttestationCertificate(vec![
                     0x30, 0x82, 0x02, 0x4A, 0x30, 0x82, 0x01, 0x32, 0xA0, 0x03, 0x02, 0x01, 0x02,
                     0x02, 0x04, 0x04, 0x6C, 0x88, 0x22, 0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48,

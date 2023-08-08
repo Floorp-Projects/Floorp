@@ -7,7 +7,7 @@ use crate::crypto::PinUvAuthToken;
 use crate::ctap2::server::{PublicKeyCredentialDescriptor, RelyingPartyWrapper};
 use crate::errors::AuthenticatorError;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
-use crate::transport::{FidoDevice, VirtualFidoDevice};
+use crate::transport::FidoDevice;
 use crate::u2ftypes::CTAP1RequestAPDU;
 use sha2::{Digest, Sha256};
 
@@ -17,7 +17,7 @@ use sha2::{Digest, Sha256};
 /// should send to the token. Or before a MakeCredential command, to determine
 /// if this token is already registered or not.
 #[derive(Debug)]
-pub struct CheckKeyHandle<'assertion> {
+pub(crate) struct CheckKeyHandle<'assertion> {
     pub(crate) key_handle: &'assertion [u8],
     pub(crate) client_data_hash: &'assertion [u8],
     pub(crate) rp: &'assertion RelyingPartyWrapper,
@@ -64,13 +64,6 @@ impl<'assertion> RequestCtap1 for CheckKeyHandle<'assertion> {
             Ok(_) | Err(ApduErrorStatus::ConditionsNotSatisfied) => Ok(()),
             Err(e) => Err(Retryable::Error(HIDError::ApduStatus(e))),
         }
-    }
-
-    fn send_to_virtual_device<Dev: VirtualFidoDevice>(
-        &self,
-        dev: &mut Dev,
-    ) -> Result<Self::Output, HIDError> {
-        dev.check_key_handle(self)
     }
 }
 

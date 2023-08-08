@@ -22,7 +22,6 @@ add_task(test_register_direct_cancel);
 add_task(test_tab_switching);
 add_task(test_window_switching);
 add_task(async function test_setup_softtoken() {
-  add_virtual_authenticator();
   return SpecialPowers.pushPrefEnv({
     set: [
       ["security.webauth.webauthn_enable_softtoken", true],
@@ -58,32 +57,23 @@ function triggerMainPopupCommand(popup) {
 
 let expectNotAllowedError = expectError("NotAllowed");
 
-function verifyAnonymizedCertificate(aResult) {
-  return webAuthnDecodeCBORAttestation(aResult.attObj).then(
-    ({ fmt, attStmt }) => {
-      is(fmt, "none", "Is a None Attestation");
-      is(typeof attStmt, "object", "attStmt is a map");
-      is(Object.keys(attStmt).length, 0, "attStmt is empty");
-    }
-  );
+function verifyAnonymizedCertificate(result) {
+  let { attObj, rawId } = result;
+  return webAuthnDecodeCBORAttestation(attObj).then(({ fmt, attStmt }) => {
+    is("none", fmt, "Is a None Attestation");
+    is("object", typeof attStmt, "attStmt is a map");
+    is(0, Object.keys(attStmt).length, "attStmt is empty");
+  });
 }
 
-async function verifyDirectCertificate(aResult) {
-  let clientDataHash = await crypto.subtle
-    .digest("SHA-256", aResult.clientDataJSON)
-    .then(digest => new Uint8Array(digest));
-  let { fmt, attStmt, authData, authDataObj } =
-    await webAuthnDecodeCBORAttestation(aResult.attObj);
-  is(fmt, "packed", "Is a Packed Attestation");
-  let signedData = new Uint8Array(authData.length + clientDataHash.length);
-  signedData.set(authData);
-  signedData.set(clientDataHash, authData.length);
-  let valid = await verifySignature(
-    authDataObj.publicKeyHandle,
-    signedData,
-    new Uint8Array(attStmt.sig)
-  );
-  ok(valid, "Signature is valid.");
+function verifyDirectCertificate(result) {
+  let { attObj, rawId } = result;
+  return webAuthnDecodeCBORAttestation(attObj).then(({ fmt, attStmt }) => {
+    is("fido-u2f", fmt, "Is a FIDO U2F Attestation");
+    is("object", typeof attStmt, "attStmt is a map");
+    ok(attStmt.hasOwnProperty("x5c"), "attStmt.x5c exists");
+    ok(attStmt.hasOwnProperty("sig"), "attStmt.sig exists");
+  });
 }
 
 async function test_register() {
