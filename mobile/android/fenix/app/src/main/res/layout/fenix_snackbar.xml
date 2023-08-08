@@ -27,6 +27,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:letterSpacing="0.05"
+            android:minHeight="46dp"
             android:maxLines="2"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"

@@ -311,7 +311,7 @@ class SaveToPDFMiddlewareTest {
             appStore.dispatch(
                 AppAction.UpdateStandardSnackbarErrorAction(
                     StandardSnackbarError(
-                        testContext.getString(R.string.unable_to_print_error),
+                        testContext.getString(R.string.unable_to_print_page_error),
                     ),
                 ),
             )
@@ -354,7 +354,7 @@ class SaveToPDFMiddlewareTest {
             appStore.dispatch(
                 AppAction.UpdateStandardSnackbarErrorAction(
                     StandardSnackbarError(
-                        testContext.getString(R.string.unable_to_print_error),
+                        testContext.getString(R.string.unable_to_print_page_error),
                     ),
                 ),
             )

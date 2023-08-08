@@ -78,7 +78,7 @@ class SaveToPDFMiddleware(
                 context.components.appStore.dispatch(
                     AppAction.UpdateStandardSnackbarErrorAction(
                         StandardSnackbarError(
-                            context.getString(R.string.unable_to_print_error),
+                            context.getString(R.string.unable_to_print_page_error),
                         ),
                     ),
                 )
