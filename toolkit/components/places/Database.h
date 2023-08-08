@@ -16,10 +16,6 @@
 #include "Shutdown.h"
 #include "nsCategoryCache.h"
 
-// This is the schema version. Update it at any schema change and add a
-// corresponding migrateVxx method below.
-#define DATABASE_SCHEMA_VERSION 75
-
 // Fired after Places inited.
 #define TOPIC_PLACES_INIT_COMPLETE "places-init-complete"
 // This topic is received when the profile is about to be lost.  Places does
@@ -295,16 +291,9 @@ class Database final : public nsIObserver, public nsSupportsWeakReference {
 
   /**
    * Helpers used by schema upgrades.
+   * When adding a new function remember to bump up the schema version in
+   * nsINavHistoryService.
    */
-  nsresult MigrateV44Up();
-  nsresult MigrateV45Up();
-  nsresult MigrateV46Up();
-  nsresult MigrateV47Up();
-  nsresult MigrateV48Up();
-  nsresult MigrateV49Up();
-  nsresult MigrateV50Up();
-  nsresult MigrateV51Up();
-  nsresult MigrateV52Up();
   nsresult MigrateV53Up();
   nsresult MigrateV54Up();
   nsresult MigrateV55Up();
@@ -321,14 +310,11 @@ class Database final : public nsIObserver, public nsSupportsWeakReference {
   nsresult MigrateV74Up();
   nsresult MigrateV75Up();
 
-  void MigrateV52OriginFrecencies();
-
   nsresult UpdateBookmarkRootTitles();
 
   friend class ConnectionShutdownBlocker;
 
   int64_t CreateMobileRoot();
-  nsresult ConvertOldStyleQuery(nsCString& aURL);
 
  private:
   ~Database();
