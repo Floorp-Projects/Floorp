@@ -22,6 +22,7 @@ add_task(test_register_direct_cancel);
 add_task(test_tab_switching);
 add_task(test_window_switching);
 add_task(async function test_setup_softtoken() {
+  add_virtual_authenticator();
   return SpecialPowers.pushPrefEnv({
     set: [
       ["security.webauth.webauthn_enable_softtoken", true],

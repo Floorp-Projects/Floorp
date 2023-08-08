@@ -22,9 +22,9 @@
       is(aResult.code, DOMException.ABORT_ERR, "Expecting an AbortError");
     }
 
-    add_task(() => {
+    add_task(async () => {
       // Enable USB tokens.
-      return SpecialPowers.pushPrefEnv({"set": [
+      await SpecialPowers.pushPrefEnv({"set": [
         ["security.webauth.webauthn_enable_softtoken", false],
         ["security.webauth.webauthn_enable_usbtoken", true],
       ]});
