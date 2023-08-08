@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-
 import { MigrationUtils } from "resource:///modules/MigrationUtils.sys.mjs";
 import { MigratorBase } from "resource:///modules/MigratorBase.sys.mjs";
 import { MSMigrationUtils } from "resource:///modules/MSMigrationUtils.sys.mjs";
@@ -574,14 +572,11 @@ export class EdgeProfileMigrator extends MigratorBase {
 
   /**
    * @returns {Array|null}
-   *   Somewhat counterintuitively, this returns:
-   *   - |null| to indicate "There is only 1 (default) profile" (on win10+)
-   *   - |[]| to indicate "There are no profiles" (on <=win8.1) which will avoid
-   *     using this migrator.
+   *   Somewhat counterintuitively, this returns
+   *   |null| to indicate "There is only 1 (default) profile".
    *   See MigrationUtils.sys.mjs for slightly more info on how sourceProfiles is used.
    */
   getSourceProfiles() {
-    let isWin10OrHigher = AppConstants.isPlatformAndVersionAtLeast("win", "10");
-    return isWin10OrHigher ? null : [];
+    return null;
   }
 }
