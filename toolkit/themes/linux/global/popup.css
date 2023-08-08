@@ -61,8 +61,8 @@ menupopup > menu > menupopup {
   min-height: 0;
 
   /* Makes popup constraints work */
-  max-height: calc(100% - 2 * var(--panel-shadow-margin));
-  max-width: calc(100% - 2 * var(--panel-shadow-margin));
+  max-height: round(up, 100% - 2 * var(--panel-shadow-margin), 1px);
+  max-width: round(up, 100% - 2 * var(--panel-shadow-margin), 1px);
 
   box-shadow: var(--panel-shadow);
   margin: var(--panel-shadow-margin);
