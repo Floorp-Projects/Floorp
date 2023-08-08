@@ -11,18 +11,247 @@ $tags:
   - 'Toolkit :: Form Autofill'
 
 formautofill.creditcards:
-    autofill_profiles_count:
-      type: quantity
-      unit: credit card autofill profiles
+  autofill_profiles_count:
+    type: quantity
+    unit: credit card autofill profiles
+    description: >
+      Count at store time how many credit card autofill profiles the user has.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=990203
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1834571
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1834571#c2
+    notification_emails:
+      - autofill@lists.mozilla.org
+      - passwords-dev@mozilla.org
+    expires: never
+    telemetry_mirror: FORMAUTOFILL_CREDITCARDS_AUTOFILL_PROFILES_COUNT
+
+  form_detected:
+      type: event
       description: >
-        Count at store time how many credit card autofill profiles the user has.
+        Recorded when a form is recognized as a credit card form.
+        The possible value of cc_* are "autocomplete", "undetected", "regexp" or an integer between 0-100:
+          - When the value is "autocomplete", the field is identified via autocomplete attribute
+          - When the value is "undetected", the field is not detected in the form
+          - When the value is "regexp", then the field is identified by regexp-based heuristic
+          - When the value is an integer greater than 0, the value indicates the confidence value from fathom (normalized to 0-100)
+        The flow id points to an interaction session with a credit card form and is shared across cc_form events .
       bugs:
-        - https://bugzilla.mozilla.org/show_bug.cgi?id=990203
-        - https://bugzilla.mozilla.org/show_bug.cgi?id=1834571
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1653162
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1720608
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1767907
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1757731
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1834570
       data_reviews:
-        - https://bugzilla.mozilla.org/show_bug.cgi?id=1834571#c2
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073#c5
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073#c7
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1720608#c5
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1757731#c5
       notification_emails:
         - autofill@lists.mozilla.org
         - passwords-dev@mozilla.org
       expires: never
-      telemetry_mirror: FORMAUTOFILL_CREDITCARDS_AUTOFILL_PROFILES_COUNT
+      extra_keys:
+        flow_id:
+          description: Flow id of an interaction session with a credit card form
+          type: string
+        cc_name:
+          description: Credit card cardholder name field result
+          type: string
+        cc_number:
+          description: Credit card number field result
+          type: string
+        cc_type:
+          description: Credit card type result
+          type: string
+        cc_exp:
+          description: Credit card expiration date result
+          type: string
+        cc_exp_month:
+          description: Credit card expiration month result
+          type: string
+        cc_exp_year:
+          description: Credit card expiration year result
+          type: string
+
+  form_popup_shown:
+    type: event
+    description: >
+      Recorded when autofill popup is shown for a credit card form.
+      The flow id indicates an interaction session with the a form and is shared across cc_form events.
+      The field_name is used to record the field that triggers this event.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653162
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1720608
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1767907
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1757731
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1834570
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073#c5
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073#c7
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1720608#c5
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1757731#c5
+    notification_emails:
+      - autofill@lists.mozilla.org
+      - passwords-dev@mozilla.org
+    expires: never
+    extra_keys:
+      flow_id:
+        description: Flow id of an interaction session with a credit card form
+        type: string
+      field_name:
+        description: Name of the field being affected by the event
+        type: string
+
+  form_filled:
+    type: event
+    description: >
+      Recorded when a credit card form is autofilled.
+      The flow id indicates an interaction session with the a form and is shared across cc_form events.
+      The possible value of cc_* are `filled`, `not_filled`, `user_filled` or `unavailable`
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653162
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1720608
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1767907
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1757731
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1834570
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073#c5
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073#c7
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1720608#c5
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1757731#c5
+    notification_emails:
+      - autofill@lists.mozilla.org
+      - passwords-dev@mozilla.org
+    expires: never
+    extra_keys:
+      flow_id:
+        description: Flow id of an interaction session with a credit card form
+        type: string
+      cc_name:
+        description: Credit card cardholder name field result
+        type: string
+      cc_number:
+        description: Credit card number field result
+        type: string
+      cc_type:
+        description: Credit card type result
+        type: string
+      cc_exp:
+        description: Credit card expiration date result
+        type: string
+      cc_exp_month:
+        description: Credit card expiration month result
+        type: string
+      cc_exp_year:
+        description: Credit card expiration year result
+        type: string
+
+  form_filled_modified:
+    type: event
+    description: >
+      Recorded when a field in a credit card form is autofilled and then modified by the user.
+      The flow id indicates an interaction session with the a form and is shared across cc_form events.
+      The field_name is used to record the field that triggers this event.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653162
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1720608
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1767907
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1757731
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1834570
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073#c5
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073#c7
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1720608#c5
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1757731#c5
+    notification_emails:
+      - autofill@lists.mozilla.org
+      - passwords-dev@mozilla.org
+    expires: never
+    extra_keys:
+      flow_id:
+        description: Flow id of an interaction session with a credit card form
+        type: string
+      field_name:
+        description: Name of the field being affected by the event
+        type: string
+
+  form_submitted:
+    type: event
+    description: >
+      Recorded when a credit card form is submitted.
+      The flow id indicates an interaction session with the a form and is shared across cc_form events.
+      The possible value of cc_* are `autofilled`, `user_filled` or `unavailable`
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653162
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1720608
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1767907
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1757731
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1834570
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073#c5
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073#c7
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1720608#c5
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1757731#c5
+    notification_emails:
+      - autofill@lists.mozilla.org
+      - passwords-dev@mozilla.org
+    expires: never
+    extra_keys:
+      flow_id:
+        description: Flow id of an interaction session with a credit card form
+        type: string
+      cc_name:
+        description: Credit card cardholder name field result
+        type: string
+      cc_number:
+        description: Credit card number field result
+        type: string
+      cc_type:
+        description: Credit card type result
+        type: string
+      cc_exp:
+        description: Credit card expiration date result
+        type: string
+      cc_exp_month:
+        description: Credit card expiration month result
+        type: string
+      cc_exp_year:
+        description: Credit card expiration year result
+        type: string
+
+  form_cleared:
+    type: event
+    description: >
+      Recorded when a credit card form is cleared .
+      The flow id indicates an interaction session with the a form and is shared across cc_form events.
+      The field_name is used to record the field that triggers this event
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653162
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1720608
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1767907
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1757731
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1834570
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073#c5
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1653073#c7
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1720608#c5
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1757731#c5
+    notification_emails:
+      - autofill@lists.mozilla.org
+      - passwords-dev@mozilla.org
+    expires: never
+    extra_keys:
+      flow_id:
+        description: Flow id of an interaction session with a credit card form
+        type: string
+      field_name:
+        description: Name of the field being affected by the event
+        type: string
