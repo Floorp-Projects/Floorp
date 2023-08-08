@@ -486,13 +486,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     }
     return nullptr;
   }
-  void SetOpener(BrowsingContext* aOpener) {
-    MOZ_DIAGNOSTIC_ASSERT(!aOpener || aOpener->Group() == Group());
-    MOZ_DIAGNOSTIC_ASSERT(!aOpener || aOpener->mType == mType);
-
-    MOZ_ALWAYS_SUCCEEDS(SetOpenerId(aOpener ? aOpener->Id() : 0));
-  }
-
+  void SetOpener(BrowsingContext* aOpener);
   bool HasOpener() const;
 
   bool HadOriginalOpener() const { return GetHadOriginalOpener(); }
