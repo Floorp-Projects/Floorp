@@ -757,24 +757,29 @@ class RemoteAudioDecoder final : public RemoteDataDecoder {
     }
 
     if (size > 0) {
-#ifdef MOZ_SAMPLE_TYPE_S16
-      const int32_t numSamples = size / 2;
-#else
-#  error We only support 16-bit integer PCM
-#endif
+      const int32_t sampleSize = sizeof(int16_t);
+      const int32_t numSamples = size / sampleSize;
 
-      AlignedAudioBuffer audio(numSamples);
+      InflatableShortBuffer audio(numSamples);
       if (!audio) {
         Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
+        LOG("OOM while allocating temporary output buffer");
         return;
       }
-
       jni::ByteBuffer::LocalRef dest = jni::ByteBuffer::New(audio.get(), size);
       aBuffer->WriteToByteBuffer(dest, offset, size);
+      AlignedFloatBuffer converted = audio.Inflate();
+
+      TimeUnit pts = TimeUnit::FromMicroseconds(presentationTimeUs);
+
+      LOG("Decoded: %u frames of %s audio, pts: %s, %d channels, %" PRId32
+          " Hz",
+          numSamples / mOutputChannels,
+          sampleSize == sizeof(int16_t) ? "int16" : "f32", pts.ToString().get(),
+          mOutputChannels, mOutputSampleRate);
 
       RefPtr<AudioData> data =
-          new AudioData(0, TimeUnit::FromMicroseconds(presentationTimeUs),
-                        std::move(audio), mOutputChannels, mOutputSampleRate);
+          0, pts, std::move(converted), mOutputChannels, mOutputSampleRate);
 
       UpdateOutputStatus(std::move(data));
     }
@@ -815,6 +820,8 @@ already_AddRefed<MediaDataDecoder> RemoteDataDecoder::CreateAudioDecoder(
       java::sdk::MediaFormat::CreateAudioFormat(config.mMimeType, config.mRate,
                                                 config.mChannels, &format),
       nullptr);
+  // format->SetInteger(java::sdk::MediaFormat::KEY_PCM_ENCODING,
+  //                    java::sdk::AudioFormat::ENCODING_PCM_FLOAT);
 
   RefPtr<MediaDataDecoder> decoder =
       new RemoteAudioDecoder(config, format, aDrmStubId);
