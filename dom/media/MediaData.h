@@ -83,7 +83,7 @@ class AlignedBuffer {
   AlignedBuffer(const AlignedBuffer& aOther)
       : AlignedBuffer(aOther.Data(), aOther.Length()) {}
 
-  AlignedBuffer(AlignedBuffer&& aOther)
+  AlignedBuffer(AlignedBuffer&& aOther) noexcept
       : mData(aOther.mData),
         mLength(aOther.mLength),
         mBuffer(std::move(aOther.mBuffer)),
@@ -93,7 +93,7 @@ class AlignedBuffer {
     aOther.mCapacity = 0;
   }
 
-  AlignedBuffer& operator=(AlignedBuffer&& aOther) {
+  AlignedBuffer& operator=(AlignedBuffer&& aOther) noexcept {
     this->~AlignedBuffer();
     new (this) AlignedBuffer(std::move(aOther));
     return *this;
@@ -246,10 +246,10 @@ class AlignedBuffer {
   size_t mCapacity{};  // in bytes
 };
 
-typedef AlignedBuffer<uint8_t> AlignedByteBuffer;
-typedef AlignedBuffer<float> AlignedFloatBuffer;
-typedef AlignedBuffer<int16_t> AlignedShortBuffer;
-typedef AlignedBuffer<AudioDataValue> AlignedAudioBuffer;
+using AlignedByteBuffer = AlignedBuffer<uint8_t>;
+using AlignedFloatBuffer = AlignedBuffer<float>;
+using AlignedShortBuffer = AlignedBuffer<int16_t>;
+using AlignedAudioBuffer = AlignedBuffer<AudioDataValue>;
 
 // Container that holds media samples.
 class MediaData {
@@ -416,16 +416,16 @@ class VideoInfo;
 // Holds a decoded video frame, in YCbCr format. These are queued in the reader.
 class VideoData : public MediaData {
  public:
-  typedef gfx::IntRect IntRect;
-  typedef gfx::IntSize IntSize;
-  typedef gfx::ColorDepth ColorDepth;
-  typedef gfx::ColorRange ColorRange;
-  typedef gfx::YUVColorSpace YUVColorSpace;
-  typedef gfx::ColorSpace2 ColorSpace2;
-  typedef gfx::ChromaSubsampling ChromaSubsampling;
-  typedef layers::ImageContainer ImageContainer;
-  typedef layers::Image Image;
-  typedef layers::PlanarYCbCrImage PlanarYCbCrImage;
+  using IntRect = gfx::IntRect;
+  using IntSize = gfx::IntSize;
+  using ColorDepth = gfx::ColorDepth;
+  using ColorRange = gfx::ColorRange;
+  using YUVColorSpace = gfx::YUVColorSpace;
+  using ColorSpace2 = gfx::ColorSpace2;
+  using ChromaSubsampling = gfx::ChromaSubsampling;
+  using ImageContainer = layers::ImageContainer;
+  using Image = layers::Image;
+  using PlanarYCbCrImage = layers::PlanarYCbCrImage;
 
   static const Type sType = Type::VIDEO_DATA;
   static const char* sTypeName;
@@ -443,7 +443,7 @@ class VideoData : public MediaData {
       uint32_t mSkip;
     };
 
-    Plane mPlanes[3];
+    Plane mPlanes[3]{};
     YUVColorSpace mYUVColorSpace = YUVColorSpace::Identity;
     ColorSpace2 mColorPrimaries = ColorSpace2::UNKNOWN;
     ColorDepth mColorDepth = ColorDepth::COLOR_8;
