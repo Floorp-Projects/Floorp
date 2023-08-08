@@ -468,25 +468,24 @@ nsresult nsXMLContentSink::CreateElement(
   nsresult rv = NS_OK;
 
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-  RefPtr<Element> content;
+  RefPtr<Element> element;
 
   const char16_t* is = nullptr;
   if ((aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML) ||
        aNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) &&
       FindIsAttrValue(aAtts, &is)) {
     const nsDependentString isStr(is);
-    rv = NS_NewElement(getter_AddRefs(content), ni.forget(), aFromParser,
+    rv = NS_NewElement(getter_AddRefs(element), ni.forget(), aFromParser,
                        &isStr);
   } else {
-    rv = NS_NewElement(getter_AddRefs(content), ni.forget(), aFromParser);
+    rv = NS_NewElement(getter_AddRefs(element), ni.forget(), aFromParser);
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML) ||
       aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_SVG)) {
-    nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
-    if (sele) {
+    if (nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(element)) {
       sele->SetScriptLineNumber(aLineNumber);
       sele->SetScriptColumnNumber(aColumnNumber);
       sele->SetCreatorParser(GetParser());
@@ -509,28 +508,22 @@ nsresult nsXMLContentSink::CreateElement(
     }
 
     if (!aNodeInfo->NamespaceEquals(kNameSpaceID_SVG)) {
-      content.forget(aResult);
-
+      element.forget(aResult);
       return NS_OK;
     }
   }
 
-  if (aNodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML) ||
-      aNodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_XHTML) ||
-      aNodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_SVG)) {
-    if (auto* linkStyle = LinkStyle::FromNode(*content)) {
-      if (aFromParser) {
-        linkStyle->DisableUpdates();
-      }
-      if (!aNodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML)) {
-        linkStyle->SetLineNumber(aFromParser ? aLineNumber : 0);
-        linkStyle->SetColumnNumber(aFromParser ? aColumnNumber : 0);
-      }
+  if (auto* linkStyle = LinkStyle::FromNode(*element)) {
+    if (aFromParser) {
+      linkStyle->DisableUpdates();
+    }
+    if (!aNodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML)) {
+      linkStyle->SetLineNumber(aFromParser ? aLineNumber : 0);
+      linkStyle->SetColumnNumber(aFromParser ? aColumnNumber : 0);
     }
   }
 
-  content.forget(aResult);
-
+  element.forget(aResult);
   return NS_OK;
 }
 
@@ -591,18 +584,14 @@ nsresult nsXMLContentSink::CloseElement(nsIContent* aContent) {
   }
 
   nsresult rv = NS_OK;
-  if (nodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML) ||
-      nodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_XHTML) ||
-      nodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_SVG)) {
-    if (auto* linkStyle = LinkStyle::FromNode(*aContent)) {
-      auto updateOrError = linkStyle->EnableUpdatesAndUpdateStyleSheet(
-          mRunsToCompletion ? nullptr : this);
-      if (updateOrError.isErr()) {
-        rv = updateOrError.unwrapErr();
-      } else if (updateOrError.unwrap().ShouldBlock() && !mRunsToCompletion) {
-        ++mPendingSheetCount;
-        mScriptLoader->AddParserBlockingScriptExecutionBlocker();
-      }
+  if (auto* linkStyle = LinkStyle::FromNode(*aContent)) {
+    auto updateOrError = linkStyle->EnableUpdatesAndUpdateStyleSheet(
+        mRunsToCompletion ? nullptr : this);
+    if (updateOrError.isErr()) {
+      rv = updateOrError.unwrapErr();
+    } else if (updateOrError.unwrap().ShouldBlock() && !mRunsToCompletion) {
+      ++mPendingSheetCount;
+      mScriptLoader->AddParserBlockingScriptExecutionBlocker();
     }
   }
 

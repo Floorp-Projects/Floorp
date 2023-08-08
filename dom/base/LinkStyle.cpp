@@ -18,6 +18,8 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FragmentOrElement.h"
 #include "mozilla/dom/HTMLLinkElement.h"
+#include "mozilla/dom/HTMLStyleElement.h"
+#include "mozilla/dom/SVGStyleElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/Preferences.h"
@@ -193,6 +195,27 @@ Result<LinkStyle::Update, nsresult> LinkStyle::UpdateStyleSheetInternal(
     ForceUpdate aForceUpdate) {
   return DoUpdateStyleSheet(aOldDocument, aOldShadowRoot, nullptr,
                             aForceUpdate);
+}
+
+LinkStyle* LinkStyle::FromNode(Element& aElement) {
+  nsAtom* name = aElement.NodeInfo()->NameAtom();
+  if (name == nsGkAtoms::link) {
+    MOZ_ASSERT(aElement.IsHTMLElement() == !!aElement.AsLinkStyle());
+    return aElement.IsHTMLElement() ? static_cast<HTMLLinkElement*>(&aElement)
+                                    : nullptr;
+  }
+  if (name == nsGkAtoms::style) {
+    if (aElement.IsHTMLElement()) {
+      MOZ_ASSERT(aElement.AsLinkStyle());
+      return static_cast<HTMLStyleElement*>(&aElement);
+    }
+    if (aElement.IsSVGElement()) {
+      MOZ_ASSERT(aElement.AsLinkStyle());
+      return static_cast<SVGStyleElement*>(&aElement);
+    }
+  }
+  MOZ_ASSERT(!aElement.AsLinkStyle());
+  return nullptr;
 }
 
 void LinkStyle::BindToTree() {
