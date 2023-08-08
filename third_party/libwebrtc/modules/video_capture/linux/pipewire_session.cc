@@ -232,7 +232,10 @@ PipeWireSession::~PipeWireSession() {
 }
 
 void PipeWireSession::Init(VideoCaptureOptions::Callback* callback, int fd) {
-  callback_ = callback;
+  {
+    webrtc::MutexLock lock(&callback_lock_);
+    callback_ = callback;
+  }
 
   if (fd != -1) {
     InitPipeWire(fd);
@@ -374,6 +377,8 @@ void PipeWireSession::OnRegistryGlobalRemove(void* data, uint32_t id) {
 }
 
 void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
+  webrtc::MutexLock lock(&callback_lock_);
+
   if (callback_) {
     callback_->OnInitialized(status);
     callback_ = nullptr;
@@ -381,6 +386,9 @@ void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
 }
 
 void PipeWireSession::Cleanup() {
+  webrtc::MutexLock lock(&callback_lock_);
+  callback_ = nullptr;
+
   StopPipeWire();
 }
 
