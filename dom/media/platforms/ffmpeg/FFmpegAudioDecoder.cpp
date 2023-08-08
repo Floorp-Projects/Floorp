@@ -457,6 +457,49 @@ AVCodecID FFmpegAudioDecoder<LIBAV_VER>::GetCodecId(const nsACString& aMimeType,
 #endif
     return AV_CODEC_ID_VORBIS;
   }
+#ifdef FFVPX_VERSION
+  if (aMimeType.Find("wav") != kNotFound) {
+    if (!StaticPrefs::media_ffvpx_wav_enabled()) {
+      return AV_CODEC_ID_NONE;
+    }
+    if (aMimeType.EqualsLiteral("audio/x-wav") ||
+        aMimeType.EqualsLiteral("audio/wave; codecs=1") ||
+        aMimeType.EqualsLiteral("audio/wave; codecs=65534")) {
+      // find the pcm format
+      switch (aInfo.mBitDepth) {
+        case 8:
+          return AV_CODEC_ID_PCM_U8;
+        case 16:
+          return AV_CODEC_ID_PCM_S16LE;
+        case 24:
+          return AV_CODEC_ID_PCM_S24LE;
+        case 32:
+          return AV_CODEC_ID_PCM_S32LE;
+        case 0:
+          // ::Init will find and use the right type here, this is just
+          // returning something that means that this media type can be decoded.
+          // This happens when attempting to find what decoder to use for a
+          // media type, without actually having looked at the actual
+          // bytestream. This decoder can decode all usual PCM bytestream
+          // anyway.
+          return AV_CODEC_ID_PCM_S16LE;
+        default:
+          return AV_CODEC_ID_NONE;
+      };
+    }
+    if (aMimeType.EqualsLiteral("audio/wave; codecs=3")) {
+      return AV_CODEC_ID_PCM_F32LE;
+    }
+    // A-law
+    if (aMimeType.EqualsLiteral("audio/wave; codecs=6")) {
+      return AV_CODEC_ID_PCM_MULAW;
+    }
+    // Mu-law
+    if (aMimeType.EqualsLiteral("audio/wave; codecs=7")) {
+      return AV_CODEC_ID_PCM_MULAW;
+    }
+  }
+#endif
 
   return AV_CODEC_ID_NONE;
 }
