@@ -380,7 +380,8 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal(
               local.mPacketsLost.Construct(audioStats->packets_lost);
               local.mPacketsReceived.Construct(audioStats->packets_received);
               local.mPacketsDiscarded.Construct(audioStats->packets_discarded);
-              local.mBytesReceived.Construct(audioStats->payload_bytes_received);
+              local.mBytesReceived.Construct(
+                  audioStats->payload_bytes_received);
               // Always missing from libwebrtc stats
               // if (audioStats->estimated_playout_ntp_timestamp_ms) {
               //   local.mEstimatedPlayoutTimestamp.Construct(
