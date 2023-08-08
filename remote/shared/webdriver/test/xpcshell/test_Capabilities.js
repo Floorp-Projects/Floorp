@@ -470,6 +470,51 @@ add_task(function test_Capabilities_fromJSON() {
   caps = fromJSON({ webSocketUrl: true });
   equal(true, caps.get("webSocketUrl"));
 
+  caps = fromJSON({ "webauthn:virtualAuthenticators": true });
+  equal(true, caps.get("webauthn:virtualAuthenticators"));
+  caps = fromJSON({ "webauthn:virtualAuthenticators": false });
+  equal(false, caps.get("webauthn:virtualAuthenticators"));
+  Assert.throws(
+    () => fromJSON({ "webauthn:virtualAuthenticators": "foo" }),
+    /InvalidArgumentError/
+  );
+
+  caps = fromJSON({ "webauthn:extension:uvm": true });
+  equal(true, caps.get("webauthn:extension:uvm"));
+  caps = fromJSON({ "webauthn:extension:uvm": false });
+  equal(false, caps.get("webauthn:extension:uvm"));
+  Assert.throws(
+    () => fromJSON({ "webauthn:extension:uvm": "foo" }),
+    /InvalidArgumentError/
+  );
+
+  caps = fromJSON({ "webauthn:extension:prf": true });
+  equal(true, caps.get("webauthn:extension:prf"));
+  caps = fromJSON({ "webauthn:extension:prf": false });
+  equal(false, caps.get("webauthn:extension:prf"));
+  Assert.throws(
+    () => fromJSON({ "webauthn:extension:prf": "foo" }),
+    /InvalidArgumentError/
+  );
+
+  caps = fromJSON({ "webauthn:extension:largeBlob": true });
+  equal(true, caps.get("webauthn:extension:largeBlob"));
+  caps = fromJSON({ "webauthn:extension:largeBlob": false });
+  equal(false, caps.get("webauthn:extension:largeBlob"));
+  Assert.throws(
+    () => fromJSON({ "webauthn:extension:largeBlob": "foo" }),
+    /InvalidArgumentError/
+  );
+
+  caps = fromJSON({ "webauthn:extension:credBlob": true });
+  equal(true, caps.get("webauthn:extension:credBlob"));
+  caps = fromJSON({ "webauthn:extension:credBlob": false });
+  equal(false, caps.get("webauthn:extension:credBlob"));
+  Assert.throws(
+    () => fromJSON({ "webauthn:extension:credBlob": "foo" }),
+    /InvalidArgumentError/
+  );
+
   caps = fromJSON({ "moz:accessibilityChecks": true });
   equal(true, caps.get("moz:accessibilityChecks"));
   caps = fromJSON({ "moz:accessibilityChecks": false });
