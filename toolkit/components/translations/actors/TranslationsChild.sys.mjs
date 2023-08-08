@@ -55,6 +55,14 @@ export class TranslationsChild extends JSWindowActorChild {
       case "Translations:GetDocumentElementLang":
         return this.document.documentElement.lang;
       case "Translations:IdentifyLanguage": {
+        // Wait for idle callback as the page will be more settled if it has
+        // dynamic content, like on a React app.
+        if (this.contentWindow) {
+          await new Promise(resolve => {
+            this.contentWindow.requestIdleCallback(resolve);
+          });
+        }
+
         try {
           // Try to use the fastText engine if directed to do so.
           if (data.useFastText) {
