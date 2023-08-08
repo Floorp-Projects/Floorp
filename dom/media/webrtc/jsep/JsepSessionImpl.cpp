@@ -287,7 +287,7 @@ nsresult JsepSessionImpl::CreateOfferMsection(const JsepOfferOptions& options,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (transceiver.IsStopped()) {
+  if (transceiver.IsStopping() || transceiver.IsStopped()) {
     SdpHelper::DisableMsection(local, msection);
     return NS_OK;
   }
@@ -410,7 +410,7 @@ JsepSession::Result JsepSessionImpl::CreateOffer(
 
   SetupBundle(sdp.get());
 
-  if (mCurrentLocalDescription) {
+  if (mCurrentLocalDescription && GetAnswer()) {
     rv = CopyPreviousTransportParams(*GetAnswer(), *mCurrentLocalDescription,
                                      *sdp, sdp.get());
     NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
@@ -623,9 +623,7 @@ nsresult JsepSessionImpl::CreateAnswerMsection(
   nsresult rv = mSdpHelper.CopyStickyParams(remoteMsection, &msection);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mSdpHelper.MsectionIsDisabled(remoteMsection) ||
-      // JS might have stopped this
-      transceiver.IsStopped()) {
+  if (mSdpHelper.MsectionIsDisabled(remoteMsection)) {
     SdpHelper::DisableMsection(sdp, &msection);
     return NS_OK;
   }
@@ -1097,15 +1095,19 @@ nsresult JsepSessionImpl::HandleNegotiatedSession(
       return NS_ERROR_FAILURE;
     }
 
+    if (mSdpHelper.MsectionIsDisabled(local->GetMediaSection(i))) {
+      transceiver->SetRemoved();
+    }
+
     // Skip disabled m-sections.
     if (answer.GetMediaSection(i).GetPort() == 0) {
       transceiver->mTransport.Close();
-      transceiver->Stop();
+      transceiver->SetStopped();
       transceiver->Disassociate();
       transceiver->ClearBundleLevel();
       transceiver->mSendTrack.SetActive(false);
       transceiver->mRecvTrack.SetActive(false);
-      transceiver->SetCanRecycle();
+      transceiver->SetCanRecycleMyMsection();
       SetTransceiver(*transceiver);
       // Do not clear mLevel yet! That will happen on the next negotiation.
       continue;
@@ -1141,15 +1143,15 @@ nsresult JsepSessionImpl::MakeNegotiatedTransceiver(
   bool sending = false;
   bool receiving = false;
 
-  // JS could stop the transceiver after the answer was created.
-  if (!transceiver.IsStopped()) {
-    if (*mIsPendingOfferer) {
-      receiving = answer.IsSending();
-      sending = answer.IsReceiving();
-    } else {
-      sending = answer.IsSending();
-      receiving = answer.IsReceiving();
-    }
+  // We do not pay any attention to whether the transceiver is stopped here,
+  // because that is only a signal to the JSEP engine to _attempt_ to reject
+  // the corresponding m-section the next time we're the offerer.
+  if (*mIsPendingOfferer) {
+    receiving = answer.IsSending();
+    sending = answer.IsReceiving();
+  } else {
+    sending = answer.IsSending();
+    receiving = answer.IsReceiving();
   }
 
   MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: Negotiated m= line"
@@ -1524,7 +1526,7 @@ Maybe<JsepTransceiver> JsepSessionImpl::GetTransceiverForMid(
 
 Maybe<JsepTransceiver> JsepSessionImpl::GetTransceiverForLocal(size_t level) {
   if (Maybe<JsepTransceiver> transceiver = GetTransceiverForLevel(level)) {
-    if (transceiver->CanRecycle() &&
+    if (transceiver->CanRecycleMyMsection() &&
         transceiver->GetMediaType() != SdpMediaSection::kApplication) {
       // Attempt to recycle. If this fails, the old transceiver stays put.
       transceiver->Disassociate();
@@ -1546,10 +1548,11 @@ Maybe<JsepTransceiver> JsepSessionImpl::GetTransceiverForLocal(size_t level) {
 
   // There is no transceiver for |level| right now.
 
-  // Look for an RTP transceiver
+  // Look for an RTP transceiver (spec requires us to give the lower levels to
+  // new RTP transceivers)
   for (auto& transceiver : mTransceivers) {
     if (transceiver.GetMediaType() != SdpMediaSection::kApplication &&
-        !transceiver.IsStopped() && !transceiver.HasLevel()) {
+        transceiver.IsFreeToUse()) {
       transceiver.SetLevel(level);
       return Some(transceiver);
     }
@@ -1557,7 +1560,7 @@ Maybe<JsepTransceiver> JsepSessionImpl::GetTransceiverForLocal(size_t level) {
 
   // Ok, look for a datachannel
   for (auto& transceiver : mTransceivers) {
-    if (!transceiver.IsStopped() && !transceiver.HasLevel()) {
+    if (transceiver.IsFreeToUse()) {
       transceiver.SetLevel(level);
       return Some(transceiver);
     }
@@ -1571,7 +1574,7 @@ Maybe<JsepTransceiver> JsepSessionImpl::GetTransceiverForRemote(
   size_t level = msection.GetLevel();
   Maybe<JsepTransceiver> transceiver = GetTransceiverForLevel(level);
   if (transceiver) {
-    if (!transceiver->CanRecycle()) {
+    if (!transceiver->CanRecycleMyMsection()) {
       return transceiver;
     }
     transceiver->Disassociate();
@@ -1633,10 +1636,10 @@ nsresult JsepSessionImpl::UpdateTransceiversFromRemoteDescription(
         mUsedMids.insert(transceiver->GetMid());
       }
     } else {
+      // We do not disassociate here, that happens when negotiation completes
+      // These things cannot be rolled back.
       transceiver->mTransport.Close();
-      transceiver->Disassociate();
-      // This cannot be rolled back.
-      transceiver->Stop();
+      transceiver->SetStopped();
       SetTransceiver(*transceiver);
       continue;
     }
@@ -1673,7 +1676,7 @@ Maybe<JsepTransceiver> JsepSessionImpl::FindUnassociatedTransceiver(
       transceiver.RestartDatachannelTransceiver();
       return Some(transceiver);
     }
-    if (!transceiver.IsStopped() && !transceiver.HasLevel() &&
+    if (transceiver.IsFreeToUse() &&
         (!magic || transceiver.HasAddTrackMagic()) &&
         (transceiver.GetMediaType() == type)) {
       return Some(transceiver);
@@ -1711,17 +1714,25 @@ void JsepSessionImpl::RollbackRemoteOffer() {
       continue;
     }
 
-    // New transceiver!
-    // We rollback even for transceivers we will remove, just to ensure we end
-    // up at the starting state.
-    JsepTransceiver temp(transceiver.GetMediaType(), *mUuidGen);
-    InitTransceiver(temp);
-    transceiver.Rollback(temp, true);
+    if (transceiver.HasLevel()) {
+      // New transceiver, that was either created by the remote offer, or
+      // attached to the remote offer.
+      // We rollback even for transceivers we will remove, just to ensure we end
+      // up at the starting state.
+      JsepTransceiver temp(transceiver.GetMediaType(), *mUuidGen);
+      InitTransceiver(temp);
+      transceiver.Rollback(temp, true);
 
-    if (transceiver.OnlyExistsBecauseOfSetRemote()) {
-      transceiver.Stop();
-      transceiver.SetRemoved();
-    }
+      if (transceiver.OnlyExistsBecauseOfSetRemote()) {
+        transceiver.SetStopped();
+        transceiver.Disassociate();
+        transceiver.SetRemoved();
+      } else {
+        // Oof. This hangs around because of addTrack. Make it magic!
+        transceiver.SetAddTrackMagic();
+      }
+    }  // else, _we_ added this and it is not attached to the remote offer yet
+
     mOldTransceivers.push_back(transceiver);
   }
 
@@ -2345,21 +2356,26 @@ bool JsepSessionImpl::CheckNegotiationNeeded() const {
 
   for (const auto& transceiver : mTransceivers) {
     if (transceiver.IsStopped()) {
-      if (transceiver.IsAssociated()) {
-        MOZ_MTLOG(ML_DEBUG, "[" << mName
-                                << "]: Negotiation needed because of "
-                                   "stopped transceiver that still has a mid.");
-        return true;
-      }
+      // Nothing to do with this
       continue;
+    }
+
+    if (transceiver.IsStopping()) {
+      MOZ_MTLOG(ML_DEBUG, "[" << mName
+                              << "]: Negotiation needed because of "
+                                 "transceiver we need to stop");
+      return true;
     }
 
     if (!transceiver.IsAssociated()) {
       MOZ_MTLOG(ML_DEBUG, "[" << mName
                               << "]: Negotiation needed because of "
-                                 "unassociated (but not stopped) transceiver.");
+                                 "transceiver we need to associate.");
       return true;
     }
+
+    MOZ_ASSERT(transceiver.IsAssociated() && !transceiver.IsStopping() &&
+               !transceiver.IsStopped());
 
     if (!mCurrentLocalDescription || !mCurrentRemoteDescription) {
       MOZ_CRASH(

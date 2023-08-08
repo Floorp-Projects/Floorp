@@ -2028,11 +2028,10 @@ TEST_P(JsepSessionTest, RenegotiationAnswererStopsTransceiver) {
   std::vector<JsepTransceiver> origAnswererTransceivers =
       GetTransceivers(*mSessionAns);
 
-  // Avoid bundle transport side effects; don't stop the BUNDLE-tag!
   GetTransceivers(*mSessionAns).back().Stop();
-  JsepTrack removedTrack(GetTransceivers(*mSessionAns).back().mSendTrack);
 
   OfferAnswer(CHECK_SUCCESS);
+  ASSERT_TRUE(mSessionAns->CheckNegotiationNeeded());
 
   // Last m-section should be sendrecv
   auto offer = GetParsedLocalDescription(*mSessionOff);
@@ -2042,11 +2041,12 @@ TEST_P(JsepSessionTest, RenegotiationAnswererStopsTransceiver) {
   ASSERT_TRUE(msection->IsReceiving());
   ASSERT_TRUE(msection->IsSending());
 
-  // Last m-section should be disabled
+  // Last m-section should be sendrecv; answerer does not reject!
   auto answer = GetParsedLocalDescription(*mSessionAns);
   msection = &answer->GetMediaSection(answer->GetMediaSectionCount() - 1);
   ASSERT_TRUE(msection);
-  ValidateDisabledMSection(msection);
+  ASSERT_TRUE(msection->IsReceiving());
+  ASSERT_TRUE(msection->IsSending());
 
   auto newOffererTransceivers = GetTransceivers(*mSessionOff);
   auto newAnswererTransceivers = GetTransceivers(*mSessionAns);
@@ -2054,11 +2054,10 @@ TEST_P(JsepSessionTest, RenegotiationAnswererStopsTransceiver) {
   ASSERT_EQ(origOffererTransceivers.size(), newOffererTransceivers.size());
 
   ASSERT_FALSE(origOffererTransceivers.back().IsStopped());
-  ASSERT_TRUE(newOffererTransceivers.back().IsStopped());
+  ASSERT_FALSE(newOffererTransceivers.back().IsStopped());
   ASSERT_FALSE(origAnswererTransceivers.back().IsStopped());
-  ASSERT_TRUE(newAnswererTransceivers.back().IsStopped());
-  RemoveLastN(origOffererTransceivers, 1);   // Ignore this one
-  RemoveLastN(newOffererTransceivers, 1);    // Ignore this one
+  ASSERT_TRUE(newAnswererTransceivers.back().IsStopping());
+  ASSERT_FALSE(newAnswererTransceivers.back().IsStopped());
   RemoveLastN(origAnswererTransceivers, 1);  // Ignore this one
   RemoveLastN(newAnswererTransceivers, 1);   // Ignore this one
 
@@ -2085,8 +2084,12 @@ TEST_P(JsepSessionTest, RenegotiationBothStopSameTransceiver) {
   JsepTrack removedTrackOffer(GetTransceivers(*mSessionOff).back().mSendTrack);
   GetTransceivers(*mSessionAns).back().Stop();
   JsepTrack removedTrackAnswer(GetTransceivers(*mSessionAns).back().mSendTrack);
+  ASSERT_TRUE(mSessionOff->CheckNegotiationNeeded());
+  ASSERT_TRUE(mSessionAns->CheckNegotiationNeeded());
 
   OfferAnswer(CHECK_SUCCESS);
+  ASSERT_FALSE(mSessionOff->CheckNegotiationNeeded());
+  ASSERT_FALSE(mSessionAns->CheckNegotiationNeeded());
 
   // Last m-section should be disabled
   auto offer = GetParsedLocalDescription(*mSessionOff);
@@ -2559,7 +2562,7 @@ TEST_P(JsepSessionTest, RenegotiationOffererDisablesBundleTransport) {
   }
 }
 
-TEST_P(JsepSessionTest, RenegotiationAnswererDisablesBundleTransport) {
+TEST_P(JsepSessionTest, RenegotiationAnswererDoesNotRejectStoppedTransceiver) {
   AddTracks(*mSessionOff);
   AddTracks(*mSessionAns);
 
@@ -2577,11 +2580,15 @@ TEST_P(JsepSessionTest, RenegotiationAnswererDisablesBundleTransport) {
   auto stopped = GetTransceiverByLevel(*mSessionAns, 0);
   stopped->Stop();
   mSessionAns->SetTransceiver(*stopped);
+  ASSERT_TRUE(mSessionAns->CheckNegotiationNeeded());
 
   OfferAnswer(CHECK_SUCCESS);
+  ASSERT_TRUE(mSessionAns->CheckNegotiationNeeded());
 
   auto newOffererTransceivers = GetTransceivers(*mSessionOff);
   auto newAnswererTransceivers = GetTransceivers(*mSessionAns);
+
+  DumpTransceivers(*mSessionAns);
 
   ASSERT_EQ(newOffererTransceivers.size(), newAnswererTransceivers.size());
   ASSERT_EQ(origOffererTransceivers.size(), newOffererTransceivers.size());
@@ -2590,51 +2597,28 @@ TEST_P(JsepSessionTest, RenegotiationAnswererDisablesBundleTransport) {
   Maybe<JsepTransceiver> ot0 = GetTransceiverByLevel(newOffererTransceivers, 0);
   Maybe<JsepTransceiver> at0 =
       GetTransceiverByLevel(newAnswererTransceivers, 0);
-  ASSERT_FALSE(ot0->HasBundleLevel());
-  ASSERT_FALSE(at0->HasBundleLevel());
+  ASSERT_TRUE(ot0->HasBundleLevel());
+  ASSERT_TRUE(at0->HasBundleLevel());
 
-  ASSERT_FALSE(
+  ASSERT_TRUE(
       Equals(ot0->mTransport,
              GetTransceiverByLevel(origOffererTransceivers, 0)->mTransport));
-  ASSERT_FALSE(
+  ASSERT_TRUE(
       Equals(at0->mTransport,
              GetTransceiverByLevel(origAnswererTransceivers, 0)->mTransport));
 
-  ASSERT_EQ(0U, ot0->mTransport.mComponents);
-  ASSERT_EQ(0U, at0->mTransport.mComponents);
-
-  // With bundle-policy "balanced", this ends up being somewhat complicated.
-  // The first m-section of each type is _not_ marked bundle-only,
-  // but subsequent m-sections of that type are. This means that if there is
-  // more than one type, there is more than one transport, which means there's
-  // a fallback when the bundle-tag is disabled (the first such transport). We
-  // should be using that fallback when it exists.
-  Maybe<size_t> fallbackTransport;
-  for (size_t level = 1; level != types.size(); ++level) {
-    if (types[level] != types[0]) {
-      fallbackTransport = Some(level);
-      break;
-    }
-  }
+  ASSERT_EQ(1U, ot0->mTransport.mComponents);
+  ASSERT_EQ(1U, at0->mTransport.mComponents);
 
   for (size_t i = 1; i < newOffererTransceivers.size(); ++i) {
     auto ot = GetTransceiverByLevel(newOffererTransceivers, i);
     auto at = GetTransceiverByLevel(newAnswererTransceivers, i);
-    // If there is no fallback, the bundle level will be left pointing at the
-    // dead transport at index 0.
-    size_t expectedBundleLevel = fallbackTransport.valueOr(0);
-    auto otWithTransport =
-        GetTransceiverByLevel(newOffererTransceivers, expectedBundleLevel);
-    auto atWithTransport =
-        GetTransceiverByLevel(newAnswererTransceivers, expectedBundleLevel);
+    auto otWithTransport = GetTransceiverByLevel(newOffererTransceivers, 0);
+    auto atWithTransport = GetTransceiverByLevel(newAnswererTransceivers, 0);
     ASSERT_TRUE(ot->HasBundleLevel());
     ASSERT_TRUE(at->HasBundleLevel());
-    ASSERT_EQ(expectedBundleLevel, ot->BundleLevel());
-    ASSERT_EQ(expectedBundleLevel, at->BundleLevel());
-    // TODO: When creating an answer where we have rejected the bundle
-    // transport, we do not do a good job of creating a sensible SDP. Mainly,
-    // when we remove the rejected mid from the bundle group, we can leave a
-    // bundle-only mid as the first one when others are available.
+    ASSERT_EQ(0U, ot->BundleLevel());
+    ASSERT_EQ(0U, at->BundleLevel());
     ASSERT_TRUE(Equals(otWithTransport->mTransport, ot->mTransport));
     ASSERT_TRUE(Equals(atWithTransport->mTransport, at->mTransport));
   }
@@ -6531,9 +6515,11 @@ TEST_F(JsepSessionTest, OffererRecycle) {
   GetTransceivers(*mSessionOff)[0].Stop();
   AddTracks(*mSessionOff, "audio");
   ASSERT_EQ(3U, GetTransceivers(*mSessionOff).size());
+  ASSERT_TRUE(mSessionOff->CheckNegotiationNeeded());
 
   OfferAnswer(CHECK_SUCCESS);
 
+  ASSERT_FALSE(mSessionOff->CheckNegotiationNeeded());
   // It is too soon to recycle msection 0, so the new track should have been
   // given a new msection.
   ASSERT_EQ(3U, GetTransceivers(*mSessionOff).size());
@@ -6597,9 +6583,40 @@ TEST_F(JsepSessionTest, RecycleAnswererStopsTransceiver) {
   ASSERT_EQ(2U, GetTransceivers(*mSessionOff).size());
   ASSERT_EQ(2U, GetTransceivers(*mSessionAns).size());
   GetTransceivers(*mSessionAns)[0].Stop();
+  ASSERT_TRUE(mSessionAns->CheckNegotiationNeeded());
 
   OfferAnswer(CHECK_SUCCESS);
 
+  // Answerer is not allowed to handle Stop(); it needs to be done in an offer
+  ASSERT_TRUE(mSessionAns->CheckNegotiationNeeded());
+  ASSERT_EQ(2U, GetTransceivers(*mSessionOff).size());
+  ASSERT_EQ(0U, GetTransceivers(*mSessionOff)[0].GetLevel());
+  // webrtc-pc pulled a fast one and modified JSEP to say that the answerer
+  // does not reject when it has a stopped transceiver. That's an offerer thing
+  // only.
+  ASSERT_FALSE(GetTransceivers(*mSessionOff)[0].IsStopped());
+  ASSERT_EQ(1U, GetTransceivers(*mSessionOff)[1].GetLevel());
+  ASSERT_FALSE(GetTransceivers(*mSessionOff)[1].IsStopped());
+
+  ASSERT_EQ(2U, GetTransceivers(*mSessionAns).size());
+  ASSERT_EQ(0U, GetTransceivers(*mSessionAns)[0].GetLevel());
+  ASSERT_TRUE(GetTransceivers(*mSessionAns)[0].IsStopping());
+  ASSERT_FALSE(GetTransceivers(*mSessionAns)[0].IsStopped());
+  ASSERT_EQ(1U, GetTransceivers(*mSessionAns)[1].GetLevel());
+  ASSERT_FALSE(GetTransceivers(*mSessionAns)[1].IsStopping());
+  ASSERT_FALSE(GetTransceivers(*mSessionAns)[1].IsStopped());
+
+  auto offer = GetParsedLocalDescription(*mSessionOff);
+  ASSERT_EQ(2U, offer->GetMediaSectionCount());
+
+  auto answer = GetParsedLocalDescription(*mSessionAns);
+  ASSERT_EQ(2U, answer->GetMediaSectionCount());
+
+  // Switching roles and renegotiating will cause the m-section to be rejected
+  SwapOfferAnswerRoles();
+  OfferAnswer();
+
+  ASSERT_FALSE(mSessionAns->CheckNegotiationNeeded());
   ASSERT_EQ(2U, GetTransceivers(*mSessionOff).size());
   ASSERT_EQ(0U, GetTransceivers(*mSessionOff)[0].GetLevel());
   ASSERT_TRUE(GetTransceivers(*mSessionOff)[0].IsStopped());
@@ -6612,11 +6629,14 @@ TEST_F(JsepSessionTest, RecycleAnswererStopsTransceiver) {
   ASSERT_EQ(1U, GetTransceivers(*mSessionAns)[1].GetLevel());
   ASSERT_FALSE(GetTransceivers(*mSessionAns)[1].IsStopped());
 
-  UniquePtr<Sdp> offer = GetParsedLocalDescription(*mSessionOff);
+  offer = GetParsedLocalDescription(*mSessionOff);
   ASSERT_EQ(2U, offer->GetMediaSectionCount());
 
-  UniquePtr<Sdp> answer = GetParsedLocalDescription(*mSessionAns);
+  answer = GetParsedLocalDescription(*mSessionAns);
   ASSERT_EQ(2U, answer->GetMediaSectionCount());
+
+  ValidateDisabledMSection(&offer->GetMediaSection(0));
+  ValidateDisabledMSection(&offer->GetMediaSection(0));
   ValidateDisabledMSection(&answer->GetMediaSection(0));
 
   // Renegotiating should recycle m-section 0.
@@ -6694,6 +6714,7 @@ TEST_F(JsepSessionTest, OffererRecycleNoMagicAnswererStopsTransceiver) {
   ASSERT_EQ(2U, GetTransceivers(*mSessionAns).size());
   GetTransceivers(*mSessionAns)[0].Stop();
 
+  SwapOfferAnswerRoles();
   OfferAnswer(CHECK_SUCCESS);
 
   // Ok. Now renegotiating should recycle m-section 0.
@@ -7048,11 +7069,12 @@ TEST_F(JsepSessionTest, ComplicatedRemoteRollback) {
   ASSERT_FALSE(GetTransceivers(*mSessionAns)[1].IsRemoved());
 
   // First audio transceiver, kept because AddTrack touched it, even though we
-  // removed the send track after.
+  // removed the send track after. Gets magic because that's what other browsers
+  // do (ugh).
   ASSERT_FALSE(GetTransceivers(*mSessionAns)[2].HasLevel());
   ASSERT_FALSE(GetTransceivers(*mSessionAns)[2].IsStopped());
   ASSERT_FALSE(GetTransceivers(*mSessionAns)[2].IsAssociated());
-  ASSERT_FALSE(GetTransceivers(*mSessionAns)[2].HasAddTrackMagic());
+  ASSERT_TRUE(GetTransceivers(*mSessionAns)[2].HasAddTrackMagic());
   ASSERT_FALSE(GetTransceivers(*mSessionAns)[2].OnlyExistsBecauseOfSetRemote());
   ASSERT_TRUE(IsNull(GetTransceivers(*mSessionAns)[2].mSendTrack));
   ASSERT_FALSE(GetTransceivers(*mSessionAns)[2].IsRemoved());
@@ -7108,17 +7130,19 @@ TEST_F(JsepSessionTest, JsStopsTransceiverBeforeAnswer) {
   std::string answer = CreateAnswer();
   SetLocalAnswer(answer, CHECK_SUCCESS);
 
-  // Now JS decides to stop a transceiver. Make sure transport stuff is still
-  // ready to go when the answer is set. This should only prevent the flow of
-  // media for that transceiver.
+  // Now JS decides to stop a transceiver. This should have absolutely no effect
+  // on JSEP this negotiation. Any effects will be on the JS side of things.
+  // JSEP _will_ advertise that negotiation is needed.
 
   GetTransceivers(*mSessionOff)[0].Stop();
   SetRemoteAnswer(answer, CHECK_SUCCESS);
 
-  ASSERT_TRUE(GetTransceivers(*mSessionOff)[0].IsStopped());
+  ASSERT_TRUE(GetTransceivers(*mSessionOff)[0].IsStopping());
+  ASSERT_FALSE(GetTransceivers(*mSessionOff)[0].IsStopped());
   ASSERT_EQ(1U, GetTransceivers(*mSessionOff)[0].mTransport.mComponents);
-  ASSERT_FALSE(GetTransceivers(*mSessionOff)[0].mSendTrack.GetActive());
-  ASSERT_FALSE(GetTransceivers(*mSessionOff)[0].mRecvTrack.GetActive());
+  ASSERT_TRUE(GetTransceivers(*mSessionOff)[0].mSendTrack.GetActive());
+  ASSERT_TRUE(GetTransceivers(*mSessionOff)[0].mRecvTrack.GetActive());
+  ASSERT_TRUE(mSessionOff->CheckNegotiationNeeded());
 }
 
 TEST_F(JsepSessionTest, TestOfferPTAsymmetryRtxApt) {

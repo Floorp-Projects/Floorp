@@ -258,8 +258,6 @@ class JsepSessionImpl : public JsepSession, public JsepSessionCopyableStuff {
 
   nsresult GetNegotiatedBundledMids(SdpHelper::BundledMids* bundledMids);
 
-  nsresult EnableOfferMsection(SdpMediaSection* msection);
-
   mozilla::Sdp* GetParsedLocalDescription(
       JsepDescriptionPendingOrCurrent type) const;
   mozilla::Sdp* GetParsedRemoteDescription(

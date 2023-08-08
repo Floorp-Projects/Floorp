@@ -165,7 +165,7 @@ class RTCRtpSender : public nsISupports,
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PeerConnectionImpl> mPc;
   RefPtr<dom::MediaStreamTrack> mSenderTrack;
-  bool mAddTrackCalled = false;
+  bool mSenderTrackSetByAddTrack = false;
   RTCRtpSendParameters mParameters;
   Maybe<RTCRtpSendParameters> mPendingParameters;
   uint32_t mNumSetParametersCalls = 0;

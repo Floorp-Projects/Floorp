@@ -1919,9 +1919,7 @@ export class PeerConnectionObserver {
     switch (state) {
       case "IceConnectionState":
         let connState = this._dompc._pc.iceConnectionState;
-        this._dompc._queueTaskWithClosedCheck(() => {
-          this.handleIceConnectionStateChange(connState);
-        });
+        this.handleIceConnectionStateChange(connState);
         break;
 
       case "IceGatheringState":

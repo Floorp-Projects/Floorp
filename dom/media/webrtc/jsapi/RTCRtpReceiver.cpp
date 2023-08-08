@@ -850,8 +850,10 @@ void RTCRtpReceiver::UpdateAudioConduit() {
 }
 
 void RTCRtpReceiver::Stop() {
-  MOZ_ASSERT(mTransceiver->Stopped());
+  MOZ_ASSERT(mTransceiver->Stopped() || mTransceiver->Stopping());
   mReceiving = false;
+  GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+      __func__, [trackSource = mTrackSource] { trackSource->ForceEnded(); }));
 }
 
 bool RTCRtpReceiver::HasTrack(const dom::MediaStreamTrack* aTrack) const {
