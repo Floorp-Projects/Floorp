@@ -771,6 +771,10 @@ void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
     }
   }
 
+  // If we've made it this far, we've got a rewritable embed. Log it in
+  // telemetry.
+  thisContent->OwnerDoc()->SetUseCounter(eUseCounter_custom_YouTubeFlashEmbed);
+
   // If we're pref'd off, return after telemetry has been logged.
   if (!Preferences::GetBool(kPrefYoutubeRewrite)) {
     return;
