@@ -7,7 +7,9 @@ use crate::capabilities::{
     BrowserCapabilities, Capabilities, CapabilitiesMatching, LegacyNewSessionParameters,
     SpecNewSessionParameters,
 };
-use crate::common::{Date, FrameId, LocatorStrategy, ShadowRoot, WebElement, MAX_SAFE_INTEGER};
+use crate::common::{
+    CredentialParameters, Date, FrameId, LocatorStrategy, ShadowRoot, WebElement, MAX_SAFE_INTEGER,
+};
 use crate::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use crate::httpapi::{Route, VoidWebDriverExtensionRoute, WebDriverExtensionRoute};
 use crate::Parameters;
@@ -79,6 +81,13 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     Print(PrintParameters),
     Status,
     Extension(T),
+    WebAuthnAddVirtualAuthenticator(AuthenticatorParameters),
+    WebAuthnRemoveVirtualAuthenticator,
+    WebAuthnAddCredential(CredentialParameters),
+    WebAuthnGetCredentials,
+    WebAuthnRemoveCredential,
+    WebAuthnRemoveAllCredentials,
+    WebAuthnSetUserVerified(UserVerificationParameters),
 }
 
 pub trait WebDriverExtensionCommand: Clone + Send {
@@ -401,6 +410,21 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
             Route::Print => WebDriverCommand::Print(serde_json::from_str(raw_body)?),
             Route::Status => WebDriverCommand::Status,
             Route::Extension(ref extension) => extension.command(params, &body_data)?,
+            Route::WebAuthnAddVirtualAuthenticator => {
+                WebDriverCommand::WebAuthnAddVirtualAuthenticator(serde_json::from_str(raw_body)?)
+            }
+            Route::WebAuthnRemoveVirtualAuthenticator => {
+                WebDriverCommand::WebAuthnRemoveVirtualAuthenticator
+            }
+            Route::WebAuthnAddCredential => {
+                WebDriverCommand::WebAuthnAddCredential(serde_json::from_str(raw_body)?)
+            }
+            Route::WebAuthnGetCredentials => WebDriverCommand::WebAuthnGetCredentials,
+            Route::WebAuthnRemoveCredential => WebDriverCommand::WebAuthnRemoveCredential,
+            Route::WebAuthnRemoveAllCredentials => WebDriverCommand::WebAuthnRemoveAllCredentials,
+            Route::WebAuthnSetUserVerified => {
+                WebDriverCommand::WebAuthnSetUserVerified(serde_json::from_str(raw_body)?)
+            }
         };
         Ok(WebDriverMessage::new(session_id, command))
     }
@@ -628,6 +652,52 @@ impl Default for PrintMargins {
             right: 1.0,
         }
     }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub enum WebAuthnProtocol {
+    #[serde(rename = "ctap1/u2f")]
+    Ctap1U2f,
+    #[serde(rename = "ctap2")]
+    Ctap2,
+    #[serde(rename = "ctap2_1")]
+    Ctap2_1,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+pub enum AuthenticatorTransport {
+    Usb,
+    Nfc,
+    Ble,
+    SmartCard,
+    Hybrid,
+    Internal,
+}
+
+fn default_as_true() -> bool {
+    true
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct AuthenticatorParameters {
+    pub protocol: WebAuthnProtocol,
+    pub transport: AuthenticatorTransport,
+    #[serde(default)]
+    pub has_resident_key: bool,
+    #[serde(default)]
+    pub has_user_verification: bool,
+    #[serde(default = "default_as_true")]
+    pub is_user_consenting: bool,
+    #[serde(default)]
+    pub is_user_verified: bool,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct UserVerificationParameters {
+    #[serde(rename = "isUserVerified")]
+    pub is_user_verified: bool,
 }
 
 fn deserialize_to_positive_f64<'de, D>(deserializer: D) -> Result<f64, D::Error>
@@ -1308,6 +1378,47 @@ mod tests {
     #[test]
     fn test_json_scale_invalid() {
         assert!(serde_json::from_value::<PrintParameters>(json!({"scale": 3})).is_err());
+    }
+
+    #[test]
+    fn test_json_authenticator() {
+        let params = AuthenticatorParameters {
+            protocol: "ctap1/u2f".to_string(),
+            transport: "usb".to_string(),
+            has_resident_key: false,
+            has_user_verification: false,
+            is_user_consenting: false,
+            is_user_verified: false,
+        };
+        assert_de(
+            &params,
+            json!({"protocol": "ctap1/u2f", "transport": "usb", "hasResidentKey": false, "hasUserVerification": false, "isUserConsenting": false, "isUserVerified": false}),
+        );
+    }
+
+    #[test]
+    fn test_json_credential() {
+        let encoded_string = base64::encode_config(b"hello internet~", base64::URL_SAFE);
+        let params = CredentialParameters {
+            credential_id: r"c3VwZXIgcmVhZGVy".to_string(),
+            is_resident_credential: true,
+            rp_id: "valid.rpid".to_string(),
+            private_key: encoded_string.clone(),
+            user_handle: encoded_string.clone(),
+            sign_count: 0,
+        };
+        assert_de(
+            &params,
+            json!({"credentialId": r"c3VwZXIgcmVhZGVy", "isResidentCredential": true, "rpId": "valid.rpid", "privateKey": encoded_string, "userHandle": encoded_string, "signCount": 0}),
+        );
+    }
+
+    #[test]
+    fn test_json_user_verification() {
+        let params = UserVerificationParameters {
+            is_user_verified: false,
+        };
+        assert_de(&params, json!({"isUserVerified": false}));
     }
 
     #[test]
