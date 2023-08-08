@@ -2135,6 +2135,13 @@ DocumentLoadListener::RedirectToRealChannel(
       args.timing() = std::move(mTiming);
     }
 
+    auto loadInfo = args.loadInfo();
+
+    if (loadInfo.isNothing()) {
+      return PDocumentChannelParent::RedirectToRealChannelPromise::
+          CreateAndReject(ipc::ResponseRejectReason::SendError, __func__);
+    }
+
     cp->TransmitBlobDataIfBlobURL(args.uri());
 
     if (CanonicalBrowsingContext* bc = GetDocumentBrowsingContext()) {
