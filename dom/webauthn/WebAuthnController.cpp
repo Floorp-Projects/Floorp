@@ -323,6 +323,9 @@ WebAuthnController::ResumeRegister(uint64_t aTransactionId,
       &WebAuthnController::RunResumeRegister, aTransactionId,
       aForceNoneAttestation));
 
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
   return gWebAuthnBackgroundThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
@@ -354,6 +357,9 @@ WebAuthnController::FinishRegister(uint64_t aTransactionId,
 
   if (!gWebAuthnBackgroundThread) {
     return NS_ERROR_FAILURE;
+  }
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
   return gWebAuthnBackgroundThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
@@ -493,6 +499,9 @@ WebAuthnController::FinishSign(
   if (!gWebAuthnBackgroundThread) {
     return NS_ERROR_FAILURE;
   }
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
   return gWebAuthnBackgroundThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
@@ -589,6 +598,9 @@ WebAuthnController::SignatureSelectionCallback(uint64_t aTransactionId,
   if (!gWebAuthnBackgroundThread) {
     return NS_ERROR_FAILURE;
   }
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
   return gWebAuthnBackgroundThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
@@ -666,6 +678,9 @@ WebAuthnController::PinCallback(uint64_t aTransactionId,
   if (!gWebAuthnBackgroundThread) {
     return NS_ERROR_FAILURE;
   }
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
   return gWebAuthnBackgroundThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
@@ -689,6 +704,9 @@ WebAuthnController::Cancel(uint64_t aTransactionId) {
 
   if (!gWebAuthnBackgroundThread) {
     return NS_ERROR_FAILURE;
+  }
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
   return gWebAuthnBackgroundThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
