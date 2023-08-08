@@ -319,6 +319,15 @@ var gPermissionManager = {
         }
         principals.push(principal);
       } catch (ex) {
+        // If the `input_url` already starts with http:// or https://, it is
+        // definetely invalid here and can't be fixed by prefixing it with
+        // http:// or https://.
+        if (
+          input_url.startsWith("http://") ||
+          input_url.startsWith("https://")
+        ) {
+          throw ex;
+        }
         this._addNewPrincipalToList(
           principals,
           Services.io.newURI("http://" + input_url)
