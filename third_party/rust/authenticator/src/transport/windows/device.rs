@@ -3,13 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::winapi::DeviceCapabilities;
-use crate::consts::{
-    Capability, CID_BROADCAST, FIDO_USAGE_PAGE, FIDO_USAGE_U2FHID, MAX_HID_RPT_SIZE,
-};
+use crate::consts::{CID_BROADCAST, FIDO_USAGE_PAGE, FIDO_USAGE_U2FHID, MAX_HID_RPT_SIZE};
 use crate::ctap2::commands::get_info::AuthenticatorInfo;
 use crate::transport::hid::HIDDevice;
-use crate::transport::{FidoDevice, FidoProtocol, HIDError, SharedSecret};
-use crate::u2ftypes::U2FDeviceInfo;
+use crate::transport::{FidoDevice, HIDError, SharedSecret};
+use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
 use std::fs::{File, OpenOptions};
 use std::hash::{Hash, Hasher};
 use std::io::{self, Read, Write};
@@ -23,7 +21,6 @@ pub struct Device {
     dev_info: Option<U2FDeviceInfo>,
     secret: Option<SharedSecret>,
     authenticator_info: Option<AuthenticatorInfo>,
-    protocol: FidoProtocol,
 }
 
 impl PartialEq for Device {
@@ -62,37 +59,7 @@ impl Write for Device {
     }
 }
 
-impl HIDDevice for Device {
-    type BuildParameters = String;
-    type Id = String;
-
-    fn new(path: String) -> Result<Self, (HIDError, Self::Id)> {
-        debug!("Opening device {:?}", path);
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .open(&path)
-            .map_err(|e| (HIDError::IO(Some(path.clone().into()), e), path.clone()))?;
-        let mut res = Self {
-            path,
-            file,
-            cid: CID_BROADCAST,
-            dev_info: None,
-            secret: None,
-            authenticator_info: None,
-            protocol: FidoProtocol::CTAP2,
-        };
-        if res.is_u2f() {
-            info!("new device {:?}", res.path);
-            Ok(res)
-        } else {
-            Err((HIDError::DeviceNotSupported, res.path))
-        }
-    }
-
-    fn id(&self) -> Self::Id {
-        self.path.clone()
-    }
+impl U2FDevice for Device {
     fn get_cid(&self) -> &[u8; 4] {
         &self.cid
     }
@@ -124,20 +91,40 @@ impl HIDDevice for Device {
     }
 }
 
-impl FidoDevice for Device {
-    fn pre_init(&mut self) -> Result<(), HIDError> {
-        HIDDevice::pre_init(self)
-    }
+impl HIDDevice for Device {
+    type BuildParameters = String;
+    type Id = String;
 
-    fn should_try_ctap2(&self) -> bool {
-        HIDDevice::get_device_info(self)
-            .cap_flags
-            .contains(Capability::CBOR)
+    fn new(path: String) -> Result<Self, (HIDError, Self::Id)> {
+        debug!("Opening device {:?}", path);
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(&path)
+            .map_err(|e| (HIDError::IO(Some(path.clone().into()), e), path.clone()))?;
+        let mut res = Self {
+            path,
+            file,
+            cid: CID_BROADCAST,
+            dev_info: None,
+            secret: None,
+            authenticator_info: None,
+        };
+        if res.is_u2f() {
+            info!("new device {:?}", res.path);
+            Ok(res)
+        } else {
+            Err((HIDError::DeviceNotSupported, res.path))
+        }
     }
 
     fn initialized(&self) -> bool {
         // During successful init, the broadcast channel id gets repplaced by an actual one
         self.cid != CID_BROADCAST
+    }
+
+    fn id(&self) -> Self::Id {
+        self.path.clone()
     }
 
     fn is_u2f(&mut self) -> bool {
@@ -162,12 +149,6 @@ impl FidoDevice for Device {
     fn set_authenticator_info(&mut self, authenticator_info: AuthenticatorInfo) {
         self.authenticator_info = Some(authenticator_info);
     }
-
-    fn get_protocol(&self) -> FidoProtocol {
-        self.protocol
-    }
-
-    fn downgrade_to_ctap1(&mut self) {
-        self.protocol = FidoProtocol::CTAP1;
-    }
 }
+
+impl FidoDevice for Device {}

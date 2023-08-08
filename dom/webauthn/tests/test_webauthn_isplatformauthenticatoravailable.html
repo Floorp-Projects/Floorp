@@ -18,6 +18,9 @@
 <script class="testbody" type="text/javascript">
 "use strict";
 
+// Execute the full-scope test
+SimpleTest.waitForExplicitFinish();
+
 add_task(async function test_is_platform_available() {
   // This test ensures that isUserVerifyingPlatformAuthenticatorAvailable()
   // is a callable method, but with the softtoken enabled, it's not useful to

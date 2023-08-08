@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::common::{Cookie, CredentialParameters};
+use crate::common::Cookie;
 use serde::ser::{Serialize, Serializer};
 use serde_json::Value;
 
@@ -16,8 +16,6 @@ pub enum WebDriverResponse {
     DeleteSession,
     ElementRect(ElementRectResponse),
     Generic(ValueResponse),
-    WebAuthnAddVirtualAuthenticator(u64),
-    WebAuthnGetCredentials(GetCredentialsResponse),
     NewSession(NewSessionResponse),
     Timeouts(TimeoutsResponse),
     Void,
@@ -79,9 +77,6 @@ pub struct ElementRectResponse {
     /// [bounding rectangle]: https://drafts.fxtf.org/geometry/#rectangle
     pub height: f64,
 }
-
-#[derive(Debug, PartialEq, Serialize)]
-pub struct GetCredentialsResponse(pub Vec<CredentialParameters>);
 
 #[derive(Debug, PartialEq, Serialize)]
 pub struct NewSessionResponse {

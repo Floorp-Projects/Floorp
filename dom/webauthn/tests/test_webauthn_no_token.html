@@ -29,7 +29,7 @@ let assertionChallenge;
 let credentialId;
 
 // Setup test env
-add_task(async () => {
+add_task(() => {
   credentialChallenge = new Uint8Array(16);
   window.crypto.getRandomValues(credentialChallenge);
   assertionChallenge = new Uint8Array(16);
@@ -38,7 +38,7 @@ add_task(async () => {
   window.crypto.getRandomValues(credentialId);
   credm = navigator.credentials;
   // Turn off all tokens. This should result in "not allowed" failures
-  await SpecialPowers.pushPrefEnv({"set": [
+  return SpecialPowers.pushPrefEnv({"set": [
     ["security.webauth.webauthn_enable_softtoken", false],
     ["security.webauth.webauthn_enable_usbtoken", false],
   ]});

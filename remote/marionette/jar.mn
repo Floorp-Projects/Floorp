@@ -36,7 +36,6 @@ remote.jar:
   content/marionette/sync.sys.mjs (sync.sys.mjs)
   content/marionette/transport.sys.mjs (transport.sys.mjs)
   content/marionette/web-reference.sys.mjs (web-reference.sys.mjs)
-  content/marionette/webauthn.sys.mjs (webauthn.sys.mjs)
 #ifdef ENABLE_TESTS
   content/marionette/test_dialog.dtd (chrome/test_dialog.dtd)
   content/marionette/test_dialog.properties (chrome/test_dialog.properties)

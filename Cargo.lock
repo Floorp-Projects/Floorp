@@ -296,9 +296,9 @@ dependencies = [
 
 [[package]]
 name = "authenticator"
-version = "0.4.0-alpha.18"
+version = "0.4.0-alpha.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3306d207a3ea11a3b63595f0efda36a2c64e2986b1b93a55f14f7fcd40f112a"
+checksum = "aa0e182b77b6b19eaf9c7b69fddf3be970169ec6d34eca3f5d682ab948727e57"
 dependencies = [
  "base64 0.13.999",
  "bitflags 1.3.2",
@@ -309,6 +309,7 @@ dependencies = [
  "libudev",
  "log",
  "memoffset 0.8.999",
+ "nom",
  "nss-gk-api",
  "pkcs11-bindings",
  "rand",
@@ -330,7 +331,6 @@ dependencies = [
  "moz_task",
  "nserror",
  "nsstring",
- "rand",
  "serde_cbor",
  "static_prefs",
  "thin-vec",
@@ -3903,9 +3903,9 @@ dependencies = [
 
 [[package]]
 name = "nss-gk-api"
-version = "0.3.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c17aec6d4e1822c023689899f09311592a36cbf6de8f85dfaf5f01976790d8d"
+checksum = "1a689b62ba71fda80458a77b6ace9371d6e6a5473300901383ebd101659b3352"
 dependencies = [
  "bindgen 0.66.1",
  "mozbuild",

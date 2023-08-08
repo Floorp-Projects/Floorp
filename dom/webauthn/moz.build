@@ -9,10 +9,6 @@ with Files("**"):
 
 IPDL_SOURCES += ["PWebAuthnTransaction.ipdl"]
 
-XPCOM_MANIFESTS += [
-    "components.conf",
-]
-
 XPIDL_SOURCES += ["nsIU2FTokenManager.idl", "nsIWebAuthnController.idl"]
 
 XPIDL_MODULE = "dom_webauthn"
@@ -42,7 +38,9 @@ UNIFIED_SOURCES += [
     "cbor-cpp/src/encoder.cpp",
     "cbor-cpp/src/output_dynamic.cpp",
     "CtapArgs.cpp",
+    "CtapResults.cpp",
     "PublicKeyCredential.cpp",
+    "U2FSoftTokenTransport.cpp",
     "U2FTokenManager.cpp",
     "WebAuthnCBORUtil.cpp",
     "WebAuthnController.cpp",

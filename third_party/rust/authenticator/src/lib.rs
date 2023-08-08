@@ -9,13 +9,13 @@
 #[macro_use]
 mod util;
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux"))]
 extern crate libudev;
 
-#[cfg(target_os = "freebsd")]
+#[cfg(any(target_os = "freebsd"))]
 extern crate devd_rs;
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos"))]
 extern crate core_foundation;
 
 extern crate libc;
@@ -27,26 +27,32 @@ extern crate runloop;
 #[macro_use]
 extern crate bitflags;
 
+pub mod authenticatorservice;
 mod consts;
-mod manager;
 mod statemachine;
-mod status_update;
-mod transport;
 mod u2fprotocol;
 mod u2ftypes;
 
-pub mod authenticatorservice;
-pub mod crypto;
+mod manager;
+
 pub mod ctap2;
+pub use ctap2::attestation::AttestationObject;
+pub use ctap2::client_data::CollectedClientData;
+pub use ctap2::commands::client_pin::{Pin, PinError};
+pub use ctap2::commands::get_assertion::Assertion;
+pub use ctap2::commands::get_info::AuthenticatorInfo;
+pub use ctap2::GetAssertionResult;
+
 pub mod errors;
 pub mod statecallback;
-pub use ctap2::attestation::AttestationObject;
-pub use ctap2::commands::client_pin::{Pin, PinError};
-pub use ctap2::commands::get_assertion::{Assertion, GetAssertionResult};
-pub use ctap2::commands::get_info::AuthenticatorInfo;
-pub use statemachine::StateMachine;
-pub use status_update::{InteractiveRequest, StatusPinUv, StatusUpdate};
-pub use transport::{FidoDevice, FidoDeviceIO, FidoProtocol, VirtualFidoDevice};
+mod transport;
+mod virtualdevices;
+
+mod status_update;
+pub use status_update::*;
+
+mod crypto;
+pub use crypto::COSEAlgorithm;
 
 // Keep this in sync with the constants in u2fhid-capi.h.
 bitflags! {

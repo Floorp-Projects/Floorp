@@ -13800,7 +13800,6 @@
   type: RelaxedAtomicBool
   value: false
   mirror: always
-  rust: true
 
 # Dispatch WebAuthn requests to the Android platform API
 - name: security.webauth.webauthn_enable_android_fido2
@@ -13819,12 +13818,17 @@
   type: RelaxedAtomicBool
   value: @IS_NOT_ANDROID@
   mirror: always
-  rust: true
 
 # Skip direct attestation consent prompts (for tests).
 - name: security.webauth.webauthn_testing_allow_direct_attestation
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+# Global counter for U2F soft token operations
+- name: security.webauth.softtoken_counter
+  type: RelaxedAtomicUint32
+  value: 0
   mirror: always
 
 # Block Worker/SharedWorker scripts with wrong MIME type.

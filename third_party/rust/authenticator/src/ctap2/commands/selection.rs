@@ -1,6 +1,6 @@
 use super::{Command, CommandError, RequestCtap2, StatusCode};
 use crate::transport::errors::HIDError;
-use crate::transport::{FidoDevice, VirtualFidoDevice};
+use crate::u2ftypes::U2FDevice;
 use serde_cbor::{de::from_slice, Value};
 
 #[derive(Debug, Default)]
@@ -17,11 +17,14 @@ impl RequestCtap2 for Selection {
         Ok(Vec::new())
     }
 
-    fn handle_response_ctap2<Dev: FidoDevice>(
+    fn handle_response_ctap2<Dev>(
         &self,
         _dev: &mut Dev,
         input: &[u8],
-    ) -> Result<Self::Output, HIDError> {
+    ) -> Result<Self::Output, HIDError>
+    where
+        Dev: U2FDevice,
+    {
         if input.is_empty() {
             return Err(CommandError::InputTooSmall.into());
         }
@@ -40,13 +43,6 @@ impl RequestCtap2 for Selection {
             Err(CommandError::StatusCode(status, msg).into())
         }
     }
-
-    fn send_to_virtual_device<Dev: VirtualFidoDevice>(
-        &self,
-        dev: &mut Dev,
-    ) -> Result<Self::Output, HIDError> {
-        dev.selection(self)
-    }
 }
 
 #[cfg(test)]
@@ -54,13 +50,13 @@ pub mod tests {
     use super::*;
     use crate::consts::HIDCmd;
     use crate::transport::device_selector::Device;
-    use crate::transport::{hid::HIDDevice, FidoDevice, FidoDeviceIO, FidoProtocol};
+    use crate::transport::{hid::HIDDevice, FidoDevice};
+    use crate::u2ftypes::U2FDevice;
     use rand::{thread_rng, RngCore};
     use serde_cbor::{de::from_slice, Value};
 
     fn issue_command_and_get_response(cmd: u8, add: &[u8]) -> Result<(), HIDError> {
         let mut device = Device::new("commands/selection").unwrap();
-        assert_eq!(device.get_protocol(), FidoProtocol::CTAP2);
         // ctap2 request
         let mut cid = [0u8; 4];
         thread_rng().fill_bytes(&mut cid);
