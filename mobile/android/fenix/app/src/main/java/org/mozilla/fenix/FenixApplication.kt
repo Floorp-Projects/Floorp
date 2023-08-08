@@ -51,6 +51,7 @@ import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
+import mozilla.components.service.sync.logins.LoginsApiException
 import mozilla.components.support.base.ext.areNotificationsEnabledSafe
 import mozilla.components.support.base.ext.isNotificationChannelEnabled
 import mozilla.components.support.base.facts.register
@@ -463,7 +464,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         // We need the push feature setup here to deliver messages in the case where the service
         // starts up the app first.
         components.push.feature?.let {
-            Logger.info("AutoPushFeature is configured, initializing it...")
+            logger.info("AutoPushFeature is configured, initializing it...")
 
             // Install the AutoPush singleton to receive messages.
             PushProcessor.install(it)
@@ -671,7 +672,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                 onUpdatePermissionRequest = components.addonUpdater::onUpdatePermissionRequest,
             )
         } catch (e: UnsupportedOperationException) {
-            Logger.error("Failed to initialize web extension support", e)
+            logger.error("Failed to initialize web extension support", e)
         }
     }
 
@@ -840,8 +841,12 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             Addresses.savedAll.set(autoFillStorage.getAllAddresses().size.toLong())
             CreditCards.savedAll.set(autoFillStorage.getAllCreditCards().size.toLong())
 
-            val lazyPasswordStorage = applicationContext.components.core.lazyPasswordsStorage
-            Logins.savedAll.set(lazyPasswordStorage.value.list().size.toLong())
+            try {
+                val passwordsStorage = applicationContext.components.core.passwordsStorage
+                Logins.savedAll.set(passwordsStorage.list().size.toLong())
+            } catch (e: LoginsApiException) {
+                logger.error("Failed to fetch list of logins", e)
+            }
         }
     }
 
