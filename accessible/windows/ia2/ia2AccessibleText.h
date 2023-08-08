@@ -19,6 +19,7 @@ template <class T>
 class StaticRefPtr;
 
 namespace a11y {
+class HyperTextAccessible;
 class HyperTextAccessibleBase;
 
 class ia2AccessibleText : public IAccessibleText {
@@ -138,6 +139,14 @@ class ia2AccessibleText : public IAccessibleText {
   AccessibleTextBoundary GetGeckoTextBoundary(
       enum IA2TextBoundaryType coordinateType);
   HyperTextAccessibleBase* TextAcc();
+
+  /**
+   * This can return null for two reasons. The HRESULT indicates the reason:
+   * CO_E_OBJNOTCONNECTED: The Accessible is dead.
+   * E_NOTIMPL: It isn't a LocalAccessible (so we can't support the method
+   * being called yet).
+   */
+  std::pair<HyperTextAccessible*, HRESULT> LocalTextAcc();
 };
 
 }  // namespace a11y
