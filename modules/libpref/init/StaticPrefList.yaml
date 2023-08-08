@@ -13827,12 +13827,6 @@
   value: false
   mirror: always
 
-# Global counter for U2F soft token operations
-- name: security.webauth.softtoken_counter
-  type: RelaxedAtomicUint32
-  value: 0
-  mirror: always
-
 # Block Worker/SharedWorker scripts with wrong MIME type.
 - name: security.block_Worker_with_wrong_mime
   type: bool
