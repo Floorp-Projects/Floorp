@@ -34,7 +34,6 @@ class MediaEnginePrefs {
         mHPFOn(false),
         mNoiseOn(false),
         mTransientOn(false),
-        mResidualEchoOn(false),
         mAgc2Forced(false),
         mAgc(0),
         mNoise(0),
@@ -50,7 +49,6 @@ class MediaEnginePrefs {
   bool mHPFOn;
   bool mNoiseOn;
   bool mTransientOn;
-  bool mResidualEchoOn;
   bool mAgc2Forced;
   int32_t mAgc;
   int32_t mNoise;
