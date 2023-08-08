@@ -10,6 +10,7 @@ import android.graphics.Bitmap
 import android.os.Parcelable
 import androidx.core.net.toUri
 import kotlinx.parcelize.Parcelize
+import mozilla.components.concept.engine.webextension.WebExtension
 
 /**
  * Represents an add-on based on the AMO store:
@@ -226,6 +227,35 @@ data class Addon(
             }
 
             return localizedNormalPermissions + localizedUrlAccessPermissions
+        }
+
+        /**
+         * Creates an [Addon] object from a [WebExtension] one. The resulting object might have an installed state when
+         * the second method's argument is used.
+         *
+         * @param extension a WebExtension instance.
+         * @param installedState optional - an installed state.
+         */
+        fun newFromWebExtension(extension: WebExtension, installedState: InstalledState? = null): Addon {
+            val name = extension.getMetadata()?.name ?: extension.id
+            val description = extension.getMetadata()?.description ?: extension.id
+            val permissions = extension.getMetadata()?.permissions.orEmpty() +
+                extension.getMetadata()?.hostPermissions.orEmpty()
+
+            return Addon(
+                id = extension.id,
+                version = extension.getMetadata()?.version.orEmpty(),
+                permissions = permissions,
+                downloadUrl = extension.url,
+                siteUrl = extension.url,
+                translatableName = mapOf(Addon.DEFAULT_LOCALE to name),
+                translatableDescription = mapOf(Addon.DEFAULT_LOCALE to description),
+                // We don't have a summary when we create an add-on from a WebExtension instance so let's
+                // re-use description...
+                translatableSummary = mapOf(Addon.DEFAULT_LOCALE to description),
+                updatedAt = "1970-01-01T00:00:00Z",
+                installedState = installedState,
+            )
         }
 
         @Suppress("MaxLineLength")

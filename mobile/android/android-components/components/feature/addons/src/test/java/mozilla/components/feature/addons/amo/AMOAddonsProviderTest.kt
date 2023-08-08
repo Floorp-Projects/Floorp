@@ -26,6 +26,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import java.io.File
@@ -795,6 +796,8 @@ class AMOAddonsProviderTest {
         assertEquals(4.4096F, addon.rating!!.average, 0.4096F)
         assertEquals(1233, addon.rating!!.reviews)
 
+        assertEquals(addon, provider.installedAddons[addon.id])
+
         verify(mockedClient).fetch(
             Request(
                 url = "https://services.addons.mozilla.org/api/v4/addons/search/?guid=" +
@@ -817,6 +820,112 @@ class AMOAddonsProviderTest {
                 readTimeout = Pair(5, TimeUnit.SECONDS),
             ),
         )
+    }
+
+    @Test
+    fun `getAddonsByGUIDs - read from the in-memory cache`() = runTest {
+        val mockedClient = prepareClient(loadResourceAsString("/amo_search_single_result.json"))
+        val provider = AMOAddonsProvider(testContext, client = mockedClient)
+
+        // In-memory cache should be empty by default.
+        assertEquals(0, provider.installedAddons.size)
+
+        // Add an add-on to the in-memory cache.
+        val addon = Addon(
+            id = "uBlock0@raymondhill.net",
+            translatableName = mapOf("fr" to "ublock"),
+        )
+        provider.installedAddons[addon.id] = addon
+
+        val addons = provider.getAddonsByGUIDs(guids = listOf("uBlock0@raymondhill.net"), language = "fr")
+
+        assertEquals(1, addons.size)
+        // The resulting add-on should be the one from the cache.
+        assertEquals(addon, addons.first())
+        // Make sure the in-memory cache has been updated.
+        assertEquals(1, provider.installedAddons.size)
+
+        verify(mockedClient, times(0)).fetch(
+            Request(
+                url = "https://services.addons.mozilla.org/api/v4/addons/search/?guid=uBlock0@raymondhill.net&lang=fr",
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+            ),
+        )
+        provider.installedAddons.clear()
+    }
+
+    @Test
+    fun `getAddonsByGUIDs - skip in-memory cache when add-on doesn't have the right translation`() = runTest {
+        val mockedClient = prepareClient(loadResourceAsString("/amo_search_single_result.json"))
+        val provider = AMOAddonsProvider(testContext, client = mockedClient)
+
+        // In-memory cache should be empty by default.
+        assertEquals(0, provider.installedAddons.size)
+
+        // Add an add-on to the in-memory cache, which does not have a translatable name for `Addon.DEFAULT_LOCALE`.
+        val addon = Addon(
+            id = "uBlock0@raymondhill.net",
+            translatableName = mapOf("fr" to "bloqueur de pubs"),
+        )
+        provider.installedAddons[addon.id] = addon
+
+        val addons = provider.getAddonsByGUIDs(listOf("uBlock0@raymondhill.net"), language = "en-us")
+
+        assertEquals(1, addons.size)
+        assertEquals(addon.id, addons.first().id)
+        // The name should be coming from the API response, not from the cached add-on.
+        assertEquals(
+            "uBlock Origin",
+            addons.first().translatableName["en-us"],
+        )
+        // Make sure the in-memory cache has been updated.
+        assertEquals(1, provider.installedAddons.size)
+
+        verify(mockedClient).fetch(
+            Request(
+                url = "https://services.addons.mozilla.org/api/v4/addons/search/?guid=uBlock0@raymondhill.net&lang=en-us",
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+            ),
+        )
+        provider.installedAddons.clear()
+    }
+
+    @Test
+    fun `getAddonsByGUIDs - skip in-memory cache when we don't have all the add-ons`() = runTest {
+        val mockedClient = prepareClient(loadResourceAsString("/amo_search_multiple_results.json"))
+        val provider = AMOAddonsProvider(testContext, client = mockedClient)
+        val guids = listOf<String>(
+            "uBlock0@raymondhill.net",
+            // Google Search Fixer
+            "{58c32ac4-0d6c-4d6f-ae2c-96aaf8ffcb66}",
+        )
+
+        // In-memory cache should be empty by default.
+        assertEquals(0, provider.installedAddons.size)
+
+        // Only the first add-on is cached.
+        val addon = Addon(
+            id = guids.first(),
+            translatableName = mapOf(Addon.DEFAULT_LOCALE to "ublock"),
+        )
+        provider.installedAddons[addon.id] = addon
+
+        val addons = provider.getAddonsByGUIDs(guids)
+
+        assertEquals(2, addons.size)
+        assertEquals("uBlock0@raymondhill.net", addons.first().id)
+        assertEquals("{58c32ac4-0d6c-4d6f-ae2c-96aaf8ffcb66}", addons.last().id)
+        // Make sure the in-memory cache has been updated.
+        assertEquals(2, provider.installedAddons.size)
+
+        verify(mockedClient).fetch(
+            Request(
+                url = "https://services.addons.mozilla.org/api/v4/addons/search/?guid=" +
+                    "uBlock0@raymondhill.net,{58c32ac4-0d6c-4d6f-ae2c-96aaf8ffcb66}",
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+            ),
+        )
+        provider.installedAddons.clear()
     }
 
     private fun assertAddonIsUBlockOrigin(addon: Addon) {

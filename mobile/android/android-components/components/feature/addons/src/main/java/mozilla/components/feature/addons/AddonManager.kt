@@ -47,7 +47,7 @@ class AddonManager(
     internal val pendingAddonActions = newSetFromMap(ConcurrentHashMap<CompletableDeferred<Unit>, Boolean>())
 
     /**
-     * Returns the list of all installed and recommended add-ons.
+     * Returns the list of all installed and featured add-ons.
      *
      * @param waitForPendingActions whether or not to wait (suspend, but not
      * block) until all pending add-on actions (install/uninstall/enable/disable)
@@ -70,55 +70,50 @@ class AddonManager(
                 pendingAddonActions.awaitAll()
             }
 
-            // Get all available/supported addons from provider and add state if installed.
+            // Get all the featured addons from provider and add state if installed.
             // NB: We're keeping translations only for the default locale.
             val userLanguage = Locale.getDefault().language
             val locales = listOf(userLanguage)
-            val supportedAddons = addonsProvider.getFeaturedAddons(allowCache, language = userLanguage)
-                .map {
-                        addon ->
-                    addon.filterTranslations(locales)
-                }
+            val featuredAddons = addonsProvider.getFeaturedAddons(allowCache, language = userLanguage)
+                .map { addon -> addon.filterTranslations(locales) }
                 .map { addon ->
                     installedExtensions[addon.id]?.let {
                         addon.copy(installedState = it.toInstalledState())
                     } ?: addon
                 }
 
-            val supportedAddonIds = supportedAddons.map { it.id }
-
-            // Get all installed addons that are not yet supported.
-            val unsupportedAddons = installedExtensions
-                .filterKeys { !supportedAddonIds.contains(it) }
+            // Build a list of installed extensions that are not built-in extensions AND not any of the featured
+            // extensions.
+            val featuredAddonIds = featuredAddons.map { it.id }
+            val otherInstalledExtensions = installedExtensions
+                .filterKeys { !featuredAddonIds.contains(it) }
                 .filterValues { !it.isBuiltIn() }
-                .map { extensionEntry ->
-                    val extension: WebExtension = extensionEntry.value
-                    val name = extension.getMetadata()?.name ?: extension.id
-                    val description = extension.getMetadata()?.description ?: extension.id
 
-                    // Temporary add-ons should be treated as supported
-                    val installedState = if (extension.getMetadata()?.temporary == true) {
-                        val icon = withContext(getIconDispatcher()) {
-                            extension.loadIcon(TEMPORARY_ADDON_ICON_SIZE)
-                        }
-                        extension.toInstalledState().copy(icon = icon)
-                    } else {
-                        extension.toInstalledState().copy(enabled = false, supported = false)
+            // We now want to build a list of add-on instances for these other installed extensions. We first retrieve
+            // the add-on GUIDs, and then we ask the add-ons provider to retrieve the metadata for these add-ons. After
+            // that, we add the installed state on each add-on instance.
+            //
+            // NB: We're keeping translations only for the default locale.
+            val installedAddonGUIDs = otherInstalledExtensions
+                .filterValues { it.getMetadata()?.temporary == false }
+                .map { extensionEntry -> extensionEntry.value.id }
+            val installedAddons = addonsProvider.getAddonsByGUIDs(installedAddonGUIDs, language = userLanguage)
+                .map { addon -> addon.filterTranslations(locales) }
+                .map { addon -> addon.copy(installedState = installedExtensions[addon.id]?.toInstalledState()) }
+            // Last but not least, we build the list of temporarily loaded extensions.
+            val temporarilyInstalledAddons = otherInstalledExtensions
+                .filterValues { it.getMetadata()?.temporary == true }
+                .map {
+                    val extension: WebExtension = it.value
+                    val icon = withContext(getIconDispatcher()) {
+                        extension.loadIcon(TEMPORARY_ADDON_ICON_SIZE)
                     }
+                    val installedState = extension.toInstalledState().copy(icon = icon)
 
-                    Addon(
-                        id = extension.id,
-                        translatableName = mapOf(Addon.DEFAULT_LOCALE to name),
-                        translatableDescription = mapOf(Addon.DEFAULT_LOCALE to description),
-                        // We don't have a summary for unsupported add-ons, let's re-use description
-                        translatableSummary = mapOf(Addon.DEFAULT_LOCALE to description),
-                        siteUrl = extension.url,
-                        installedState = installedState,
-                        updatedAt = "1970-01-01T00:00:00Z",
-                    )
+                    Addon.newFromWebExtension(extension, installedState)
                 }
 
-            return supportedAddons + unsupportedAddons
+            return featuredAddons + installedAddons + temporarilyInstalledAddons
         } catch (throwable: Throwable) {
             throw AddonManagerException(throwable)
         }

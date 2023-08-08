@@ -39,6 +39,8 @@ interface AddonsProvider {
      * Provides a list of [Addon] based on the list of GUIDs passed to it.
      *
      * @param guids list of add-on GUIDs to retrieve.
+     * @param allowCache whether or not the result may be provided from a previously cached response,
+     * defaults to true.
      * @param readTimeoutInSeconds optional timeout in seconds to use when fetching the add-ons.
      * @param language indicates in which language the translatable fields should be in, if no
      * matching language is found then a fallback translation is returned using the default language.
@@ -46,6 +48,7 @@ interface AddonsProvider {
      */
     suspend fun getAddonsByGUIDs(
         guids: List<String>,
+        allowCache: Boolean = true,
         readTimeoutInSeconds: Long? = null,
         language: String? = null,
     ): List<Addon>

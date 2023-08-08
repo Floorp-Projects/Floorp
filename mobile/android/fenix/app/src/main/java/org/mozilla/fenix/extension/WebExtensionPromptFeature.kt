@@ -6,7 +6,6 @@ package org.mozilla.fenix.extension
 
 import android.content.Context
 import android.view.Gravity
-import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
@@ -23,8 +22,6 @@ import mozilla.components.feature.addons.ui.PermissionsDialogFragment
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.fenix.R
-import org.mozilla.fenix.addons.showSnackBar
-import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.ThemeManager
 import java.lang.ref.WeakReference
@@ -34,9 +31,7 @@ import java.lang.ref.WeakReference
  */
 class WebExtensionPromptFeature(
     private val store: BrowserStore,
-    private val provideAddons: suspend () -> List<Addon>,
     private val context: Context,
-    private val snackBarParentView: View,
     private val fragmentManager: FragmentManager,
     private val onAddonChanged: (Addon) -> Unit = {},
 ) : LifecycleAwareFeature {
@@ -56,9 +51,11 @@ class WebExtensionPromptFeature(
             flow.mapNotNull { state ->
                 state.webExtensionPromptRequest
             }.distinctUntilChanged().collect { promptRequest ->
-                val addon = provideAddons().find { addon ->
-                    addon.id == promptRequest.extension.id
-                }
+                // The install flow in Fenix relies on an [Addon] object so let's convert the (GeckoView)
+                // extension into a minimal add-on. The missing metadata will be fetched when the user
+                // opens the add-ons manager.
+                val addon = Addon.newFromWebExtension(promptRequest.extension)
+
                 when (promptRequest) {
                     is WebExtensionPromptRequest.Permissions -> handlePermissionRequest(
                         addon,
@@ -66,7 +63,7 @@ class WebExtensionPromptFeature(
                     )
 
                     is WebExtensionPromptRequest.PostInstallation -> handlePostInstallationRequest(
-                        addon?.copy(installedState = promptRequest.extension.toInstalledState()),
+                        addon.copy(installedState = promptRequest.extension.toInstalledState()),
                     )
                 }
             }
@@ -75,31 +72,20 @@ class WebExtensionPromptFeature(
     }
 
     private fun handlePostInstallationRequest(
-        addon: Addon?,
+        addon: Addon,
     ) {
-        if (addon == null) {
-            consumePromptRequest()
-            return
-        }
         showPostInstallationDialog(addon)
     }
 
     private fun handlePermissionRequest(
-        addon: Addon?,
+        addon: Addon,
         promptRequest: WebExtensionPromptRequest.Permissions,
     ) {
-        if (hasExistingPermissionDialogFragment()) return
-
-        if (addon == null) {
-            promptRequest.onConfirm(false)
-            consumePromptRequest()
-            showUnsupportedError()
-        } else {
-            showPermissionDialog(
-                addon,
-                promptRequest,
-            )
+        if (hasExistingPermissionDialogFragment()) {
+            return
         }
+
+        showPermissionDialog(addon, promptRequest)
     }
 
     /**
@@ -143,15 +129,6 @@ class WebExtensionPromptFeature(
                 PERMISSIONS_DIALOG_FRAGMENT_TAG,
             )
         }
-    }
-
-    @VisibleForTesting
-    internal fun showUnsupportedError() {
-        showSnackBar(
-            snackBarParentView,
-            context.getString(R.string.addon_not_supported_error),
-            FenixSnackbar.LENGTH_LONG,
-        )
     }
 
     private fun tryToReAttachButtonHandlersToPreviousDialog() {

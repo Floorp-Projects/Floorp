@@ -27,6 +27,7 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 internal const val API_VERSION = "api/v4"
@@ -67,6 +68,10 @@ class AMOAddonsProvider(
     private val sortOption: SortOption = SortOption.POPULARITY_DESC,
     private val maxCacheAgeInMinutes: Long = -1,
 ) : AddonsProvider {
+
+    // This map acts as an in-memory cache for the installed add-ons.
+    @VisibleForTesting
+    internal val installedAddons = ConcurrentHashMap<String, Addon>()
 
     private val logger = Logger("AMOAddonsProvider")
 
@@ -140,6 +145,8 @@ class AMOAddonsProvider(
      * See: https://addons-server.readthedocs.io/en/latest/topics/api/addons.html#search
      *
      * @param guids list of add-on GUIDs to retrieve.
+     * @param allowCache whether or not the result may be provided from a previously cached response,
+     * defaults to true.
      * @param readTimeoutInSeconds optional timeout in seconds to use when fetching available
      * add-ons from a remote endpoint. If not specified [DEFAULT_READ_TIMEOUT_IN_SECONDS] will
      * be used.
@@ -150,14 +157,25 @@ class AMOAddonsProvider(
      * a connectivity problem or a timeout.
      */
     @Throws(IOException::class)
+    @Suppress("NestedBlockDepth")
     override suspend fun getAddonsByGUIDs(
         guids: List<String>,
+        allowCache: Boolean,
         readTimeoutInSeconds: Long?,
         language: String?,
     ): List<Addon> {
         if (guids.isEmpty()) {
             logger.warn("Attempted to retrieve add-ons with an empty list of GUIDs")
             return emptyList()
+        }
+
+        if (allowCache && installedAddons.isNotEmpty()) {
+            val cachedAddons = installedAddons.findAddonsBy(guids, language ?: Locale.getDefault().language)
+            // We should only return the cached add-ons when all the requested
+            // GUIDs have been found in the cache.
+            if (cachedAddons.size == guids.size) {
+                return cachedAddons
+            }
         }
 
         val langParam = if (!language.isNullOrEmpty()) {
@@ -176,7 +194,11 @@ class AMOAddonsProvider(
                 if (response.isSuccess) {
                     val responseBody = response.body.string(Charsets.UTF_8)
                     return try {
-                        JSONObject(responseBody).getAddonsFromSearchResults(language)
+                        val addons = JSONObject(responseBody).getAddonsFromSearchResults(language)
+                        addons.forEach {
+                            installedAddons[it.id] = it
+                        }
+                        addons
                     } catch (e: JSONException) {
                         throw IOException(e)
                     }
@@ -359,6 +381,19 @@ enum class SortOption(val value: String) {
     NAME_DESC("-name"),
     DATE_ADDED("added"),
     DATE_ADDED_DESC("-added"),
+}
+
+internal fun Map<String, Addon>.findAddonsBy(
+    guids: List<String>,
+    language: String,
+): List<Addon> {
+    return if (isNotEmpty()) {
+        filter {
+            guids.contains(it.key) && it.value.translatableName.containsKey(language)
+        }.map { it.value }
+    } else {
+        emptyList()
+    }
 }
 
 internal fun JSONObject.getAddonsFromSearchResults(language: String? = null): List<Addon> {

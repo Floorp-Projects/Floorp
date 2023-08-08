@@ -78,10 +78,8 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         webExtensionPromptFeature.set(
             feature = WebExtensionPromptFeature(
                 store = requireComponents.core.store,
-                provideAddons = { addons },
                 context = requireContext(),
                 fragmentManager = parentFragmentManager,
-                snackBarParentView = view,
                 onAddonChanged = {
                     runIfFragmentIsAttached {
                         adapter?.updateAddon(it)

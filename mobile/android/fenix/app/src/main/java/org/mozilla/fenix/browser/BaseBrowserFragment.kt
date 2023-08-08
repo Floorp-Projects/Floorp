@@ -62,7 +62,6 @@ import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.accounts.FxaCapability
 import mozilla.components.feature.accounts.FxaWebChannelFeature
-import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.app.links.AppLinksFeature
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
@@ -138,7 +137,6 @@ import org.mozilla.fenix.downloads.ThirdPartyDownloadDialog
 import org.mozilla.fenix.ext.accessibilityManager
 import org.mozilla.fenix.ext.breadcrumb
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getFenixAddons
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.nav
@@ -918,10 +916,8 @@ abstract class BaseBrowserFragment :
         webExtensionPromptFeature.set(
             feature = WebExtensionPromptFeature(
                 store = requireComponents.core.store,
-                provideAddons = ::provideAddons,
                 context = requireContext(),
                 fragmentManager = parentFragmentManager,
-                snackBarParentView = binding.dynamicSnackbarContainer,
             ),
             owner = this,
             view = view,
@@ -1652,14 +1648,5 @@ abstract class BaseBrowserFragment :
         val isSameTab = downloadState.sessionId == getCurrentTab()?.id ?: false
 
         return isValidStatus && isSameTab
-    }
-
-    private suspend fun provideAddons(): List<Addon> {
-        return withContext(IO) {
-            // We deactivated the cache to get the most up-to-date list of add-ons to match against.
-            // as this will be used to install add-ons from AMO.
-            val addons = requireContext().components.addonManager.getFenixAddons(allowCache = false)
-            addons
-        }
     }
 }

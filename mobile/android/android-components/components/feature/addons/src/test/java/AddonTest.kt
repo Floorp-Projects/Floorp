@@ -5,7 +5,12 @@
 package mozilla.components.feature.addons
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.concept.engine.webextension.DisabledFlags
+import mozilla.components.concept.engine.webextension.Metadata
+import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -348,5 +353,37 @@ class AddonTest {
             val stringId = Addon.localizeURLAccessPermission(it)
             assertEquals(R.string.mozac_feature_addons_permissions_all_urls_description, stringId)
         }
+    }
+
+    @Test
+    fun `newFromWebExtension - must return an Addon instance`() {
+        val version = "1.2.3"
+        val permissions = listOf("scripting", "activeTab")
+        val hostPermissions = listOf("https://example.org/")
+        val name = "some name"
+        val description = "some description"
+        val extension: WebExtension = mock()
+        val metadata: Metadata = mock()
+        whenever(extension.id).thenReturn("some-id")
+        whenever(extension.url).thenReturn("some-url")
+        whenever(extension.getMetadata()).thenReturn(metadata)
+        whenever(metadata.version).thenReturn(version)
+        whenever(metadata.permissions).thenReturn(permissions)
+        whenever(metadata.hostPermissions).thenReturn(hostPermissions)
+        whenever(metadata.name).thenReturn(name)
+        whenever(metadata.description).thenReturn(description)
+        whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(0))
+        whenever(metadata.baseUrl).thenReturn("some-base-url")
+
+        val addon = Addon.newFromWebExtension(extension)
+
+        assertEquals("some-id", addon.id)
+        assertEquals("some-url", addon.siteUrl)
+        assertEquals("some-url", addon.downloadUrl)
+        assertEquals(permissions + hostPermissions, addon.permissions)
+        assertEquals("1970-01-01T00:00:00Z", addon.updatedAt)
+        assertEquals("some name", addon.translatableName[Addon.DEFAULT_LOCALE])
+        assertEquals("some description", addon.translatableDescription[Addon.DEFAULT_LOCALE])
+        assertEquals("some description", addon.translatableSummary[Addon.DEFAULT_LOCALE])
     }
 }
