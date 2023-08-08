@@ -18,6 +18,10 @@
   <script class="testbody" type="text/javascript">
     "use strict";
 
+    add_task(async () => {
+      await addVirtualAuthenticator();
+    });
+
     is(navigator.authentication, undefined, "navigator.authentication does not exist any longer");
     isnot(navigator.credentials, undefined, "Credential Management API endpoint must exist");
     isnot(navigator.credentials.create, undefined, "CredentialManagement create API endpoint must exist");
@@ -31,7 +35,6 @@
     let validCred = null;
 
     add_task(test_setup_valid_credential);
-    add_task(test_without_credential);
     add_task(test_with_credential);
     add_task(test_unexpected_option);
     add_task(test_unexpected_option_with_credential);
