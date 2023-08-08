@@ -452,6 +452,27 @@ CoderResult CodePackedTypeCode(Coder<mode>& coder,
 }
 
 template <CoderMode mode>
+CoderResult CodeTypeDefRef(Coder<mode>& coder,
+                           CoderArg<mode, const TypeDef*> item) {
+  static constexpr uint32_t NullTypeIndex = UINT32_MAX;
+  static_assert(NullTypeIndex > MaxTypes, "invariant");
+
+  if constexpr (mode == MODE_DECODE) {
+    uint32_t typeIndex;
+    MOZ_TRY(CodePod(coder, &typeIndex));
+    if (typeIndex != NullTypeIndex) {
+      *item = &coder.types_->type(typeIndex);
+    }
+    return Ok();
+  } else if constexpr (mode == MODE_SIZE) {
+    return coder.writeBytes(nullptr, sizeof(uint32_t));
+  } else {
+    uint32_t typeIndex = !*item ? NullTypeIndex : coder.types_->indexOf(**item);
+    return CodePod(coder, &typeIndex);
+  }
+}
+
+template <CoderMode mode>
 CoderResult CodeValType(Coder<mode>& coder, CoderArg<mode, ValType> item) {
   return CodePackedTypeCode(coder, item->addressOfPacked());
 }
@@ -537,6 +558,7 @@ CoderResult CodeArrayType(Coder<mode>& coder, CoderArg<mode, ArrayType> item) {
 template <CoderMode mode>
 CoderResult CodeTypeDef(Coder<mode>& coder, CoderArg<mode, TypeDef> item) {
   WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TypeDef, 376);
+  MOZ_TRY(CodeTypeDefRef(coder, &item->superTypeDef_));
   MOZ_TRY(CodePod(coder, &item->subTypingDepth_));
   MOZ_TRY(CodePod(coder, &item->isFinal_));
   // TypeDef is a tagged union containing kind = None. This implies that
