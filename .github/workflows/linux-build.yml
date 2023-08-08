@@ -39,6 +39,11 @@ on:
       mar:
         type: boolean
         default: false
+      #? If you want to ALWAYS build with buildjet, do default to true
+      buildjet:
+        type: boolean
+        default: false
+      #? buildjet cache also is, but idk how to use on sccache
     outputs:
       mar_name:
         value: ${{jobs.linux-build.outputs.mar_name}}
@@ -51,7 +56,7 @@ on:
 
 jobs:
   linux-build:
-    runs-on: ubuntu-latest
+    runs-on: ${{fromJson('["ubuntu-latest","buildjet-16vcpu-ubuntu-2204"]')[inputs.buildjet]}}
     outputs:
       mar_name: ${{steps.gen-mar.outputs.MAR_NAME}}
       mar_size: ${{steps.gen-mar.outputs.MAR_SIZE}}
@@ -73,6 +78,7 @@ jobs:
 
     #! ON UBUNTU RUNNER
     - name: Setup Disk & Swap Space 💿
+      if: ${{runner.name == 'ubuntu-latest'}}
       run: |
         chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
         .github/workflows/src/disk_swap_for_github_runner.sh

@@ -47,16 +47,21 @@ on:
       MOZ_BUILD_DATE:
         type: string
         default: ""
+      #? If you want to ALWAYS build with buildjet, do default to true
+      buildjet:
+        type: boolean
+        default: false
+      #? buildjet cache also is, but idk how to use on sccache
     outputs:
       mar_name:
-        value: ${{jobs.windows-build.outputs.mar_name}}
+        value: ${{jobs.win-build.outputs.mar_name}}
       mar_size:
-        value: ${{jobs.windows-build.outputs.mar_size}}
+        value: ${{jobs.win-build.outputs.mar_size}}
 
 
 jobs:
-  windows-build:
-    runs-on: ubuntu-latest
+  win-build:
+    runs-on: ${{fromJson('["ubuntu-latest","buildjet-16vcpu-ubuntu-2204"]')[inputs.buildjet]}}
     outputs:
       mar_name: ${{steps.gen-mar.outputs.MAR_NAME}}
       mar_size: ${{steps.gen-mar.outputs.MAR_SIZE}}
@@ -107,6 +112,7 @@ jobs:
 
     #! ON UBUNTU RUNNER
     - name: Setup Disk & Swap Space 💿
+      if: ${{runner.name == 'ubuntu-latest'}}
       run: |
         chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
         .github/workflows/src/disk_swap_for_github_runner.sh
@@ -205,10 +211,8 @@ jobs:
     - name: Change update url if beta
       if: inputs.beta
       run: |
-        sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${GH_REPO}/releases/download/beta/WINNT-x86_64.xml |g' ./build/application.ini.in
+        sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${{github.repository}}/releases/download/beta/WINNT-x86_64.xml |g' ./build/application.ini.in
         sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
-      env:
-        GH_REPO: ${{github.repository}}
 
     #On Package, if not copies, error occur
     - name: Copy l10n files if beta
