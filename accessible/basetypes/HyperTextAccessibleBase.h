@@ -262,6 +262,13 @@ class HyperTextAccessibleBase {
                                                      int32_t aEndOffset,
                                                      uint32_t aScrollType);
 
+  /**
+   * Scroll the given text range to the given point.
+   */
+  virtual void ScrollSubstringToPoint(int32_t aStartOffset, int32_t aEndOffset,
+                                      uint32_t aCoordinateType, int32_t aX,
+                                      int32_t aY) = 0;
+
   //////////////////////////////////////////////////////////////////////////////
   // EditableTextAccessible
 
