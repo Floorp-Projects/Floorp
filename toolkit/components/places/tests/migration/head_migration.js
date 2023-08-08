@@ -13,8 +13,8 @@
 
 // Put any other stuff relative to this test folder below.
 
-const CURRENT_SCHEMA_VERSION = Ci.nsINavHistoryService.DATABASE_SCHEMA_VERSION;
-const FIRST_UPGRADABLE_SCHEMA_VERSION = 52;
+const CURRENT_SCHEMA_VERSION = 75;
+const FIRST_UPGRADABLE_SCHEMA_VERSION = 43;
 
 async function assertAnnotationsRemoved(db, expectedAnnos) {
   for (let anno of expectedAnnos) {

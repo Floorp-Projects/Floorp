@@ -16,24 +16,37 @@ const ALL_ROOT_GUIDS = [
   PlacesUtils.bookmarks.mobileGuid,
 ];
 
-add_task(async function setup() {
-  await setupPlacesDatabase([
-    "migration",
-    `places_v${Ci.nsINavHistoryService.DATABASE_SCHEMA_VERSION}.sqlite`,
-  ]);
+const INITIAL_ROOT_GUIDS = [
+  PlacesUtils.bookmarks.menuGuid,
+  PlacesUtils.bookmarks.tagsGuid,
+  PlacesUtils.bookmarks.unfiledGuid,
+];
 
-  // Prepare database contents by removing the tolbar and mobile folders.
+add_task(async function setup() {
+  // This file has the toolbar and mobile folders missing.
+  await setupPlacesDatabase("missingBuiltIn.sqlite");
+
+  // Check database contents to be migrated.
   let path = PathUtils.join(PathUtils.profileDir, DB_FILENAME);
   let db = await Sqlite.openConnection({ path });
-  await db.execute(
+
+  let rows = await db.execute(
     `
-    DELETE FROM moz_bookmarks WHERE guid IN(:toolbar, :mobile)
-    `,
+    SELECT guid FROM moz_bookmarks
+    WHERE parent = (SELECT id from moz_bookmarks WHERE guid = :guid)
+  `,
     {
-      toolbar: PlacesUtils.bookmarks.toolbarGuid,
-      mobile: PlacesUtils.bookmarks.mobileGuid,
+      guid: PlacesUtils.bookmarks.rootGuid,
     }
   );
+
+  let guids = rows.map(row => row.getResultByName("guid"));
+  Assert.deepEqual(
+    guids,
+    INITIAL_ROOT_GUIDS,
+    "Initial database should have only the expected GUIDs"
+  );
+
   await db.close();
 });
 
