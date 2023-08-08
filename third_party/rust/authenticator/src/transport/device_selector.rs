@@ -1,13 +1,11 @@
 use crate::transport::hid::HIDDevice;
+
 pub use crate::transport::platform::device::Device;
+
 use runloop::RunLoop;
 use std::collections::{HashMap, HashSet};
 use std::sync::mpsc::{channel, RecvTimeoutError, Sender};
 use std::time::Duration;
-
-// This import is used, but Rust 1.68 gives a warning
-#[allow(unused_imports)]
-use crate::u2ftypes::U2FDevice;
 
 pub type DeviceID = <Device as HIDDevice>::Id;
 pub type DeviceBuildParameters = <Device as HIDDevice>::BuildParameters;
@@ -186,6 +184,7 @@ pub mod tests {
     use crate::{
         consts::Capability,
         ctap2::commands::get_info::{AuthenticatorInfo, AuthenticatorOptions},
+        transport::FidoDevice,
         u2ftypes::U2FDeviceInfo,
     };
 
