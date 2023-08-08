@@ -211,13 +211,6 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
 
   mAudioProcessingConfig.high_pass_filter.enabled = aPrefs.mHPFOn;
 
-  // See https://bugs.chromium.org/p/webrtc/issues/detail?id=11539 for more
-  // info.  Our pref defaults to false, and if this is truly as unhelpful
-  // as the upstream bug claim, we could delete the pref that drive this:
-  // media.getusermedia.residual_echo_enabled.  See Bug 1779498.
-  // mAudioProcessingConfig.residual_echo_detector.enabled =
-  //    aPrefs.mResidualEchoOn;
-
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   CubebUtils::AudioDeviceID deviceID = mDeviceInfo->DeviceID();
   NS_DispatchToMainThread(NS_NewRunnableFunction(
@@ -991,8 +984,6 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
       AddIfValue("%lf", divergent_filter_fraction);
       AddIfValue("%d", delay_median_ms);
       AddIfValue("%d", delay_standard_deviation_ms);
-      AddIfValue("%lf", residual_echo_likelihood);
-      AddIfValue("%lf", residual_echo_likelihood_recent_max);
       AddIfValue("%d", delay_ms);
 #undef AddIfValue
       LOG("AudioProcessing statistics: %s", msg);

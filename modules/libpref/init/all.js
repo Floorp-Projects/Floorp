@@ -352,7 +352,6 @@ pref("media.peerconnection.dtls.version.min", 771);
   pref("media.getusermedia.aec_enabled", true);
   pref("media.getusermedia.aec", 1); // kModerateSuppression
   pref("media.getusermedia.use_aec_mobile", false);
-  pref("media.getusermedia.residual_echo_enabled", false);
   pref("media.getusermedia.noise_enabled", true);
   pref("media.getusermedia.noise", 2); // kHigh
   pref("media.getusermedia.agc_enabled", true);

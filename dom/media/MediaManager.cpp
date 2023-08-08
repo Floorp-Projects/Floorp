@@ -2082,7 +2082,6 @@ MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
   mPrefs.mHPFOn = false;
   mPrefs.mNoiseOn = false;
   mPrefs.mTransientOn = false;
-  mPrefs.mResidualEchoOn = false;
   mPrefs.mAgc2Forced = false;
 #ifdef MOZ_WEBRTC
   mPrefs.mAgc =
@@ -2105,13 +2104,12 @@ MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
   }
   LOG("%s: default prefs: %dx%d @%dfps, %dHz test tones, aec: %s,"
       "agc: %s, hpf: %s, noise: %s, agc level: %d, agc version: %s, noise "
-      "level: %d, transient: %s, residual echo: %s, channels %d",
+      "level: %d, transient: %s, channels %d",
       __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mFreq,
       mPrefs.mAecOn ? "on" : "off", mPrefs.mAgcOn ? "on" : "off",
       mPrefs.mHPFOn ? "on" : "off", mPrefs.mNoiseOn ? "on" : "off", mPrefs.mAgc,
       mPrefs.mAgc2Forced ? "2" : "1", mPrefs.mNoise,
-      mPrefs.mTransientOn ? "on" : "off", mPrefs.mResidualEchoOn ? "on" : "off",
-      mPrefs.mChannels);
+      mPrefs.mTransientOn ? "on" : "off", mPrefs.mChannels);
 }
 
 NS_IMPL_ISUPPORTS(MediaManager, nsIMediaManagerService, nsIMemoryReporter,
@@ -3330,8 +3328,6 @@ void MediaManager::GetPrefs(nsIPrefBranch* aBranch, const char* aData) {
               &mPrefs.mNoiseOn);
   GetPrefBool(aBranch, "media.getusermedia.transient_enabled", aData,
               &mPrefs.mTransientOn);
-  GetPrefBool(aBranch, "media.getusermedia.residual_echo_enabled", aData,
-              &mPrefs.mResidualEchoOn);
   GetPrefBool(aBranch, "media.getusermedia.agc2_forced", aData,
               &mPrefs.mAgc2Forced);
   GetPref(aBranch, "media.getusermedia.agc", aData, &mPrefs.mAgc);
