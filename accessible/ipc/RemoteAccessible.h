@@ -370,13 +370,14 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
 
 #if !defined(XP_WIN)
   void Announce(const nsString& aAnnouncement, uint16_t aPriority);
-
-  void ScrollSubstringToPoint(int32_t aStartOffset, int32_t aEndOffset,
-                              uint32_t aCoordinateType, int32_t aX, int32_t aY);
 #endif  // !defined(XP_WIN)
 
   // HyperTextAccessibleBase
   virtual already_AddRefed<AccAttributes> DefaultTextAttributes() override;
+
+  virtual void ScrollSubstringToPoint(int32_t aStartOffset, int32_t aEndOffset,
+                                      uint32_t aCoordinateType, int32_t aX,
+                                      int32_t aY) override;
 
   /**
    * Invalidate cached HyperText offsets. This should be called whenever a
