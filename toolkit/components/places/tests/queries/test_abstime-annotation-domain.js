@@ -261,7 +261,7 @@ add_task(async function test_abstime_annotation_domain() {
   ];
   await task_populateDB(addItem);
   info("Adding item foo.com/i-am-added.html");
-  Assert.equal(isInResult(addItem, root), true);
+  Assert.ok(nodeInResult(addItem, root));
 
   // Let's update something by title
   var change1 = [
@@ -274,7 +274,7 @@ add_task(async function test_abstime_annotation_domain() {
   ];
   await task_populateDB(change1);
   info("LiveUpdate by changing title");
-  Assert.equal(isInResult(change1, root), true);
+  Assert.ok(nodeInResult(change1, root));
 
   // Let's update something by annotation
   // Updating a page by removing an annotation does not cause it to join this
@@ -286,7 +286,7 @@ add_task(async function test_abstime_annotation_domain() {
                   annoName: "text/mozilla", annoVal: "test"}];
   yield task_populateDB(change2);
   do_print("LiveUpdate by removing annotation");
-  do_check_eq(isInResult(change2, root), true);*/
+  do_check_eq(nodeInResult(change2, root), true);*/
 
   // Let's update by adding a visit in the time range for an existing URI
   var change3 = [
@@ -299,7 +299,7 @@ add_task(async function test_abstime_annotation_domain() {
   ];
   await task_populateDB(change3);
   info("LiveUpdate by adding visit within timerange");
-  Assert.equal(isInResult(change3, root), true);
+  Assert.ok(nodeInResult(change3, root));
 
   // And delete something from the result set - using annotation
   // Once again, bug 424050 prevents this from passing
@@ -307,7 +307,7 @@ add_task(async function test_abstime_annotation_domain() {
                   annoVal: "test", annoName: badAnnoName}];
   yield task_populateDB(change4);
   do_print("LiveUpdate by deleting item from set by adding annotation");
-  do_check_eq(isInResult(change4, root), false);*/
+  do_check_eq(nodeInResult(change4, root), false);*/
 
   // Delete something by changing the title
   var change5 = [
@@ -315,7 +315,7 @@ add_task(async function test_abstime_annotation_domain() {
   ];
   await task_populateDB(change5);
   info("LiveUpdate by deleting item by changing title");
-  Assert.equal(isInResult(change5, root), false);
+  Assert.ok(!nodeInResult(change5, root));
 
   root.containerOpen = false;
 });

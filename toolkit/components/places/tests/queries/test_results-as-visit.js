@@ -116,7 +116,7 @@ add_task(async function test_results_as_visit() {
     { isVisit: true, title: "moz", uri: "http://foo.mail.com/changeme2.html" },
   ];
   await task_populateDB(change2);
-  Assert.ok(isInResult(change2, root));
+  Assert.ok(nodeInResult(change2, root));
 
   // Update some visits - add one and take one out of query set, and simply
   // change one so that it still applies to the query.
@@ -138,8 +138,8 @@ add_task(async function test_results_as_visit() {
     },
   ];
   await task_populateDB(change3);
-  Assert.ok(!isInResult({ uri: "http://foo.mail.com/changeme1.html" }, root));
-  Assert.ok(isInResult({ uri: "http://foo.mail.com/changeme3.html" }, root));
+  Assert.ok(!nodeInResult({ uri: "http://foo.mail.com/changeme1.html" }, root));
+  Assert.ok(nodeInResult({ uri: "http://foo.mail.com/changeme3.html" }, root));
 
   // And now, delete one
   info("Delete item outside of batch");
@@ -152,7 +152,7 @@ add_task(async function test_results_as_visit() {
     },
   ];
   await task_populateDB(change4);
-  Assert.ok(!isInResult(change4, root));
+  Assert.ok(!nodeInResult(change4, root));
 
   root.containerOpen = false;
 });
