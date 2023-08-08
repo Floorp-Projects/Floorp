@@ -48,11 +48,10 @@ from .protocol import (AccessibilityProtocolPart,
 
 
 def do_delayed_imports():
-    global errors, marionette, Addons, WebAuthn
+    global errors, marionette, Addons
 
     from marionette_driver import marionette, errors
     from marionette_driver.addons import Addons
-    from marionette_driver.webauthn import WebAuthn
 
 
 def _switch_to_window(marionette, handle):
@@ -591,28 +590,28 @@ class MarionetteGenerateTestReportProtocolPart(GenerateTestReportProtocolPart):
 
 class MarionetteVirtualAuthenticatorProtocolPart(VirtualAuthenticatorProtocolPart):
     def setup(self):
-        self.webauthn = WebAuthn(self.parent.marionette)
+        self.marionette = self.parent.marionette
 
     def add_virtual_authenticator(self, config):
-        return self.webauthn.add_virtual_authenticator(config)
+        raise NotImplementedError("add_virtual_authenticator not yet implemented")
 
     def remove_virtual_authenticator(self, authenticator_id):
-        self.webauthn.remove_virtual_authenticator(authenticator_id)
+        raise NotImplementedError("remove_virtual_authenticator not yet implemented")
 
     def add_credential(self, authenticator_id, credential):
-        self.webauthn.add_credential(authenticator_id, credential)
+        raise NotImplementedError("add_credential not yet implemented")
 
     def get_credentials(self, authenticator_id):
-        return self.webauthn.get_credentials(authenticator_id)
+        raise NotImplementedError("get_credentials not yet implemented")
 
     def remove_credential(self, authenticator_id, credential_id):
-        self.webauthn.remove_credential(authenticator_id, credential_id)
+        raise NotImplementedError("remove_credential not yet implemented")
 
     def remove_all_credentials(self, authenticator_id):
-        self.webauthn.remove_all_credentials(authenticator_id)
+        raise NotImplementedError("remove_all_credentials not yet implemented")
 
     def set_user_verified(self, authenticator_id, uv):
-        self.webauthn.set_user_verified(authenticator_id, uv)
+        raise NotImplementedError("set_user_verified not yet implemented")
 
 
 class MarionetteSetPermissionProtocolPart(SetPermissionProtocolPart):

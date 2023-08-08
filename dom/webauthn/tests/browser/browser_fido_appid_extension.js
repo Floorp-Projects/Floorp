@@ -10,8 +10,6 @@ let expectNotSupportedError = expectError("NotSupported");
 let expectInvalidStateError = expectError("InvalidState");
 let expectSecurityError = expectError("Security");
 
-add_virtual_authenticator();
-
 add_task(async function test_appid_unused() {
   // Open a new tab.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
@@ -40,7 +38,7 @@ add_task(async function test_appid_unused() {
     new Uint8Array(authenticatorData)
   );
   is(
-    "" + (attestation.flags & flag_TUP),
+    "" + attestation.flags,
     "" + flag_TUP,
     "Assertion's user presence byte set correctly"
   );

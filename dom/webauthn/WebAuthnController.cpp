@@ -18,12 +18,13 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIThread.h"
-#include "nsServiceManagerUtils.h"
 #include "nsTextFormatter.h"
 #include "mozilla/Telemetry.h"
 
 #include "AuthrsTransport.h"
 #include "CtapArgs.h"
+#include "CtapResults.h"
+#include "U2FSoftTokenTransport.h"
 #include "WebAuthnEnumStrings.h"
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -120,6 +121,7 @@ void WebAuthnController::ClearTransaction(bool cancel_prompt) {
                            mTransaction.ref().mTransactionId);
   }
   mTransactionParent = nullptr;
+  mTransportImpl = nullptr;
 
   // Forget any pending registration.
   mPendingRegisterInfo.reset();
@@ -178,10 +180,39 @@ nsCOMPtr<nsIWebAuthnTransport> WebAuthnController::GetTransportImpl() {
     return mTransportImpl;
   }
 
-  nsCOMPtr<nsIWebAuthnTransport> transport(
-      do_GetService("@mozilla.org/webauthn/transport;1"));
-  transport->SetController(this);
-  return transport;
+/* Enable in Bug 1819414 */
+#if 0
+#  ifdef MOZ_WIDGET_ANDROID
+  // On Android, prefer the platform support if enabled.
+  if (StaticPrefs::security_webauth_webauthn_enable_android_fido2()) {
+    nsCOMPtr<nsIWebAuthnTransport> transport = AndroidWebAuthnTokenManager::GetInstance();
+    transport->SetController(this);
+    return transport;
+  }
+#  endif
+#endif
+
+  // Prefer the HW token, even if the softtoken is enabled too.
+  // We currently don't support soft and USB tokens enabled at the
+  // same time as the softtoken would always win the race to register.
+  // We could support it for signing though...
+  if (StaticPrefs::security_webauth_webauthn_enable_usbtoken()) {
+    nsCOMPtr<nsIWebAuthnTransport> transport = NewAuthrsTransport();
+    transport->SetController(this);
+    return transport;
+  }
+
+  if (StaticPrefs::security_webauth_webauthn_enable_softtoken()) {
+    nsCOMPtr<nsIWebAuthnTransport> transport = new U2FSoftTokenTransport(
+        StaticPrefs::security_webauth_softtoken_counter());
+    transport->SetController(this);
+    return transport;
+  }
+
+  // TODO Use WebAuthnRequest to aggregate results from all transports,
+  //      once we have multiple HW transport types.
+
+  return nullptr;
 }
 
 void WebAuthnController::Cancel(PWebAuthnTransactionParent* aTransactionParent,
@@ -226,7 +257,7 @@ void WebAuthnController::Register(
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // We haven't set mTransaction yet, so we can't use AbortTransaction
     Unused << mTransactionParent->SendAbort(aTransactionId,
-                                            NS_ERROR_DOM_NOT_ALLOWED_ERR);
+                                            NS_ERROR_DOM_UNKNOWN_ERR);
     return;
   }
 
@@ -302,8 +333,7 @@ void WebAuthnController::DoRegister(const WebAuthnMakeCredentialInfo& aInfo,
   nsresult rv = mTransportImpl->MakeCredential(
       mTransaction.ref().mTransactionId, aInfo.BrowsingContextId(), args);
   if (NS_FAILED(rv)) {
-    AbortTransaction(mTransaction.ref().mTransactionId,
-                     NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+    AbortTransaction(mTransaction.ref().mTransactionId, rv, true);
     return;
   }
 }
@@ -323,9 +353,6 @@ WebAuthnController::ResumeRegister(uint64_t aTransactionId,
       &WebAuthnController::RunResumeRegister, aTransactionId,
       aForceNoneAttestation));
 
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
-    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-  }
   return gWebAuthnBackgroundThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
@@ -358,9 +385,6 @@ WebAuthnController::FinishRegister(uint64_t aTransactionId,
   if (!gWebAuthnBackgroundThread) {
     return NS_ERROR_FAILURE;
   }
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
-    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-  }
   return gWebAuthnBackgroundThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
@@ -376,16 +400,14 @@ void WebAuthnController::RunFinishRegister(
   nsresult status;
   nsresult rv = aResult->GetStatus(&status);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
     return;
   }
   if (NS_FAILED(status)) {
     bool shouldCancelActiveDialog = true;
-    if (status == NS_ERROR_DOM_INVALID_STATE_ERR) {
+    if (status == NS_ERROR_DOM_OPERATION_ERR) {
       // PIN-related errors. Let the dialog show to inform the user
       shouldCancelActiveDialog = false;
-    } else {
-      status = NS_ERROR_DOM_NOT_ALLOWED_ERR;
     }
     Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                          u"CTAPRegisterAbort"_ns, 1);
@@ -398,14 +420,14 @@ void WebAuthnController::RunFinishRegister(
   nsTArray<uint8_t> attObj;
   rv = aResult->GetAttestationObject(attObj);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
     return;
   }
 
   nsTArray<uint8_t> credentialId;
   rv = aResult->GetCredentialId(credentialId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
     return;
   }
 
@@ -477,8 +499,7 @@ void WebAuthnController::Sign(PWebAuthnTransactionParent* aTransactionParent,
   rv = mTransportImpl->GetAssertion(mTransaction.ref().mTransactionId,
                                     aInfo.BrowsingContextId(), args.get());
   if (NS_FAILED(rv)) {
-    AbortTransaction(mTransaction.ref().mTransactionId,
-                     NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+    AbortTransaction(mTransaction.ref().mTransactionId, rv, true);
     return;
   }
 }
@@ -499,9 +520,6 @@ WebAuthnController::FinishSign(
   if (!gWebAuthnBackgroundThread) {
     return NS_ERROR_FAILURE;
   }
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
-    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-  }
   return gWebAuthnBackgroundThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
@@ -517,7 +535,7 @@ void WebAuthnController::RunFinishSign(
   if (aResult.Length() == 0) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                          u"CTAPSignAbort"_ns, 1);
-    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_UNKNOWN_ERR, true);
     return;
   }
 
@@ -525,20 +543,19 @@ void WebAuthnController::RunFinishSign(
     nsresult status;
     nsresult rv = aResult[0]->GetStatus(&status);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+      AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
       return;
     }
     if (NS_FAILED(status)) {
       bool shouldCancelActiveDialog = true;
-      if (status == NS_ERROR_DOM_INVALID_STATE_ERR) {
+      if (status == NS_ERROR_DOM_OPERATION_ERR) {
         // PIN-related errors, e.g. blocked token. Let the dialog show to inform
         // the user
         shouldCancelActiveDialog = false;
       }
       Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                            u"CTAPSignAbort"_ns, 1);
-      AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR,
-                       shouldCancelActiveDialog);
+      AbortTransaction(aTransactionId, status, shouldCancelActiveDialog);
       return;
     }
     mPendingSignResults = aResult.Clone();
@@ -551,13 +568,13 @@ void WebAuthnController::RunFinishSign(
     nsresult status;
     nsresult rv = assertion->GetStatus(&status);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+      AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
       return;
     }
     if (NS_WARN_IF(NS_FAILED(status))) {
       Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                            u"CTAPSignAbort"_ns, 1);
-      AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+      AbortTransaction(aTransactionId, status, true);
       return;
     }
   }
@@ -598,9 +615,6 @@ WebAuthnController::SignatureSelectionCallback(uint64_t aTransactionId,
   if (!gWebAuthnBackgroundThread) {
     return NS_ERROR_FAILURE;
   }
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
-    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-  }
   return gWebAuthnBackgroundThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
@@ -621,28 +635,28 @@ void WebAuthnController::RunResumeWithSelectedSignResult(
   nsTArray<uint8_t> credentialId;
   nsresult rv = selected->GetCredentialId(credentialId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
     return;
   }
 
   nsTArray<uint8_t> signature;
   rv = selected->GetSignature(signature);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
     return;
   }
 
   nsTArray<uint8_t> authenticatorData;
   rv = selected->GetAuthenticatorData(authenticatorData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
     return;
   }
 
   nsTArray<uint8_t> rpIdHash;
   rv = selected->GetRpIdHash(rpIdHash);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
     return;
   }
 
@@ -678,9 +692,6 @@ WebAuthnController::PinCallback(uint64_t aTransactionId,
   if (!gWebAuthnBackgroundThread) {
     return NS_ERROR_FAILURE;
   }
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
-    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-  }
   return gWebAuthnBackgroundThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
@@ -704,9 +715,6 @@ WebAuthnController::Cancel(uint64_t aTransactionId) {
 
   if (!gWebAuthnBackgroundThread) {
     return NS_ERROR_FAILURE;
-  }
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
-    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
   return gWebAuthnBackgroundThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }

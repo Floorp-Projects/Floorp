@@ -1,17 +1,23 @@
-use super::utils::{from_slice_stream, read_be_u16, read_be_u32, read_byte};
+use super::utils::from_slice_stream;
 use crate::crypto::COSEAlgorithm;
 use crate::ctap2::commands::CommandError;
 use crate::ctap2::server::RpIdHash;
-use crate::ctap2::utils::serde_parse_err;
 use crate::{crypto::COSEKey, errors::AuthenticatorError};
+use nom::{
+    bytes::complete::take,
+    combinator::{cond, map},
+    error::Error as NomError,
+    number::complete::{be_u16, be_u32, be_u8},
+    Err as NomErr, IResult,
+};
 use serde::ser::{Error as SerError, SerializeMap, Serializer};
 use serde::{
     de::{Error as SerdeError, MapAccess, Visitor},
     Deserialize, Deserializer, Serialize,
 };
+use serde_bytes::ByteBuf;
 use serde_cbor;
 use std::fmt;
-use std::io::{Cursor, Read};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum HmacSecretResponse {
@@ -78,6 +84,10 @@ impl Extension {
     fn has_some(&self) -> bool {
         self.pin_min_length.is_some() || self.hmac_secret.is_some()
     }
+}
+
+fn parse_extensions(input: &[u8]) -> IResult<&[u8], Extension, NomError<&[u8]>> {
+    serde_to_nom(input)
 }
 
 #[derive(Serialize, PartialEq, Default, Eq, Clone)]
@@ -162,23 +172,34 @@ pub struct AttestedCredentialData {
     pub credential_public_key: COSEKey,
 }
 
-fn parse_attested_cred_data<R: Read, E: SerdeError>(
-    data: &mut R,
-) -> Result<AttestedCredentialData, E> {
-    let mut aaguid_raw = [0u8; 16];
-    data.read_exact(&mut aaguid_raw)
-        .map_err(|_| serde_parse_err("AAGuid"))?;
-    let aaguid = AAGuid(aaguid_raw);
-    let cred_len = read_be_u16(data)?;
-    let mut credential_id = vec![0u8; cred_len as usize];
-    data.read_exact(&mut credential_id)
-        .map_err(|_| serde_parse_err("CredentialId"))?;
-    let credential_public_key = from_slice_stream(data)?;
-    Ok(AttestedCredentialData {
-        aaguid,
-        credential_id,
-        credential_public_key,
-    })
+fn serde_to_nom<'a, Output>(input: &'a [u8]) -> IResult<&'a [u8], Output>
+where
+    Output: Deserialize<'a>,
+{
+    from_slice_stream(input)
+        .map_err(|_e| nom::Err::Error(nom::error::make_error(input, nom::error::ErrorKind::NoneOf)))
+    // can't use custom errorkind because of error type mismatch in parse_attested_cred_data
+    //.map_err(|e| NomErr::Error(Context::Code(input, ErrorKind::Custom(e))))
+    //         .map_err(|_| NomErr::Error(Context::Code(input, ErrorKind::Custom(42))))
+}
+
+fn parse_attested_cred_data(
+    input: &[u8],
+) -> IResult<&[u8], AttestedCredentialData, NomError<&[u8]>> {
+    let (rest, aaguid_res) = map(take(16u8), AAGuid::from)(input)?;
+    // // We can unwrap here, since we _know_ the input will be 16 bytes error out before calling from()
+    let aaguid = aaguid_res.unwrap();
+    let (rest, cred_len) = be_u16(rest)?;
+    let (rest, credential_id) = map(take(cred_len), Vec::from)(rest)?;
+    let (rest, credential_public_key) = serde_to_nom(rest)?;
+    Ok((
+        rest,
+        (AttestedCredentialData {
+            aaguid,
+            credential_id,
+            credential_public_key,
+        }),
+    ))
 }
 
 bitflags! {
@@ -205,6 +226,36 @@ pub struct AuthenticatorData {
     pub extensions: Extension,
 }
 
+fn parse_ad(input: &[u8]) -> IResult<&[u8], AuthenticatorData, NomError<&[u8]>> {
+    let (rest, rp_id_hash_res) = map(take(32u8), RpIdHash::from)(input)?;
+    // We can unwrap here, since we _know_ the input to from() will be 32 bytes or error out before calling from()
+    let rp_id_hash = rp_id_hash_res.unwrap();
+    // preserve the flags, even if some reserved values are set.
+    let (rest, flags) = map(be_u8, AuthenticatorDataFlags::from_bits_truncate)(rest)?;
+    let (rest, counter) = be_u32(rest)?;
+    let (rest, credential_data) = cond(
+        flags.contains(AuthenticatorDataFlags::ATTESTED),
+        parse_attested_cred_data,
+    )(rest)?;
+    let (rest, extensions) = cond(
+        flags.contains(AuthenticatorDataFlags::EXTENSION_DATA),
+        parse_extensions,
+    )(rest)?;
+    // TODO(baloo): we should check for end of buffer and raise a parse
+    //              parse error if data is still in the buffer
+    //eof!() >>
+    Ok((
+        rest,
+        AuthenticatorData {
+            rp_id_hash,
+            flags,
+            counter,
+            credential_data,
+            extensions: extensions.unwrap_or_default(),
+        },
+    ))
+}
+
 impl<'de> Deserialize<'de> for AuthenticatorData {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -219,40 +270,23 @@ impl<'de> Deserialize<'de> for AuthenticatorData {
                 formatter.write_str("a byte array")
             }
 
-            fn visit_bytes<E>(self, input: &[u8]) -> Result<Self::Value, E>
+            fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
             where
                 E: SerdeError,
             {
-                let mut cursor = Cursor::new(input);
-                let mut rp_id_hash_raw = [0u8; 32];
-                cursor
-                    .read_exact(&mut rp_id_hash_raw)
-                    .map_err(|_| serde_parse_err("32 bytes"))?;
-                let rp_id_hash = RpIdHash(rp_id_hash_raw);
-
-                // preserve the flags, even if some reserved values are set.
-                let flags = AuthenticatorDataFlags::from_bits_truncate(read_byte(&mut cursor)?);
-                let counter = read_be_u32(&mut cursor)?;
-                let mut credential_data = None;
-                if flags.contains(AuthenticatorDataFlags::ATTESTED) {
-                    credential_data = Some(parse_attested_cred_data(&mut cursor)?);
-                }
-
-                let extensions = if flags.contains(AuthenticatorDataFlags::EXTENSION_DATA) {
-                    from_slice_stream(&mut cursor)?
-                } else {
-                    Default::default()
-                };
-
-                // TODO(baloo): we should check for end of buffer and raise a parse
-                //              parse error if data is still in the buffer
-                Ok(AuthenticatorData {
-                    rp_id_hash,
-                    flags,
-                    counter,
-                    credential_data,
-                    extensions,
-                })
+                parse_ad(v)
+                    .map(|(_input, value)| value)
+                    .map_err(|e| match e {
+                        NomErr::Incomplete(nom::Needed::Size(len)) => {
+                            E::invalid_length(v.len(), &format!("{}", v.len() + len.get()).as_ref())
+                        }
+                        NomErr::Incomplete(nom::Needed::Unknown) => {
+                            E::invalid_length(v.len(), &"unknown") // We don't know the expected value
+                        }
+                        // TODO(baloo): is that enough? should we be more
+                        //              specific on the error type?
+                        e => E::custom(e.to_string()),
+                    })
             }
         }
 
@@ -308,7 +342,7 @@ impl AuthenticatorData {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 /// x509 encoded attestation certificate
-pub struct AttestationCertificate(#[serde(with = "serde_bytes")] pub Vec<u8>);
+pub struct AttestationCertificate(#[serde(with = "serde_bytes")] pub(crate) Vec<u8>);
 
 impl AsRef<[u8]> for AttestationCertificate {
     fn as_ref(&self) -> &[u8] {
@@ -317,7 +351,7 @@ impl AsRef<[u8]> for AttestationCertificate {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq)]
-pub struct Signature(#[serde(with = "serde_bytes")] pub Vec<u8>);
+pub struct Signature(#[serde(with = "serde_bytes")] pub(crate) ByteBuf);
 
 impl fmt::Debug for Signature {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -329,12 +363,6 @@ impl fmt::Debug for Signature {
 impl AsRef<[u8]> for Signature {
     fn as_ref(&self) -> &[u8] {
         self.0.as_ref()
-    }
-}
-
-impl From<&[u8]> for Signature {
-    fn from(sig: &[u8]) -> Signature {
-        Signature(sig.to_vec())
     }
 }
 
@@ -405,7 +433,7 @@ impl AttestationStatementFidoU2F {
     pub fn new(cert: &[u8], signature: &[u8]) -> Self {
         AttestationStatementFidoU2F {
             attestation_cert: vec![AttestationCertificate(Vec::from(cert))],
-            sig: Signature::from(signature),
+            sig: Signature(ByteBuf::from(signature)),
         }
     }
 }
@@ -777,21 +805,12 @@ mod test {
         let v: Vec<u8> = vec![
             0x66, 0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72, 0x66, 0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72,
         ];
-        let mut data = Cursor::new(v);
-        let value: String = from_slice_stream::<_, _, serde_cbor::Error>(&mut data).unwrap();
+        let (rest, value): (&[u8], String) = from_slice_stream(&v).unwrap();
         assert_eq!(value, "foobar");
-        let mut remaining = Vec::new();
-        data.read_to_end(&mut remaining).unwrap();
-        assert_eq!(
-            remaining.as_slice(),
-            &[0x66, 0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72]
-        );
-        let mut data = Cursor::new(remaining);
-        let value: String = from_slice_stream::<_, _, serde_cbor::Error>(&mut data).unwrap();
+        assert_eq!(rest, &[0x66, 0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72]);
+        let (rest, value): (&[u8], String) = from_slice_stream(rest).unwrap();
         assert_eq!(value, "foobar");
-        let mut remaining = Vec::new();
-        data.read_to_end(&mut remaining).unwrap();
-        assert!(remaining.is_empty());
+        assert!(rest.is_empty());
     }
 
     #[test]
