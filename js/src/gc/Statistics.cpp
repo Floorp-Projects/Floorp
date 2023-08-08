@@ -1127,8 +1127,7 @@ void Statistics::sendGCTelemetry() {
     TimeDuration parallelMarkTime =
         sumTotalParallelTime(PhaseKind::PARALLEL_MARK_MARK);
     TimeDuration parallelRunTime =
-        parallelMarkTime + sumTotalParallelTime(PhaseKind::PARALLEL_MARK_WAIT) +
-        sumTotalParallelTime(PhaseKind::PARALLEL_MARK_OTHER);
+        parallelMarkTime + sumTotalParallelTime(PhaseKind::PARALLEL_MARK_OTHER);
     if (wallTime && parallelMarkTime) {
       uint32_t threadCount = gc->markers.length();
       double speedup = parallelMarkTime / wallTime;
