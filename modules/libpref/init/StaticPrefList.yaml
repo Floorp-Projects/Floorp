@@ -13800,6 +13800,7 @@
   type: RelaxedAtomicBool
   value: false
   mirror: always
+  rust: true
 
 # Dispatch WebAuthn requests to the Android platform API
 - name: security.webauth.webauthn_enable_android_fido2
@@ -13818,6 +13819,7 @@
   type: RelaxedAtomicBool
   value: @IS_NOT_ANDROID@
   mirror: always
+  rust: true
 
 # Skip direct attestation consent prompts (for tests).
 - name: security.webauth.webauthn_testing_allow_direct_attestation
