@@ -88,7 +88,7 @@ async function assertSitesListed(blocked) {
 
   let listItem = listItems.find(
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    item => item.querySelector("label").value == "https://trackertest.org"
+    item => item.querySelector("label").value == "http://trackertest.org"
   );
   ok(listItem, "Has an item for trackertest.org");
   ok(BrowserTestUtils.is_visible(listItem), "List item is visible");

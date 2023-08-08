@@ -13,22 +13,14 @@ Services.scriptloader.loadSubScript(
 );
 
 this.PartitionedStorageHelper = {
-  runTestInNormalAndPrivateMode(
-    name,
-    callback,
-    cleanupFunction,
-    extraPrefs,
-    runInSecure = true
-  ) {
+  runTestInNormalAndPrivateMode(name, callback, cleanupFunction, extraPrefs) {
     // Normal mode
     this.runTest(name, callback, cleanupFunction, extraPrefs, {
-      runInSecureContext: runInSecure,
       runInPrivateWindow: false,
     });
 
     // Private mode
     this.runTest(name, callback, cleanupFunction, extraPrefs, {
-      runInSecureContext: runInSecure,
       runInPrivateWindow: true,
     });
   },
@@ -38,7 +30,7 @@ this.PartitionedStorageHelper = {
     callback,
     cleanupFunction,
     extraPrefs,
-    { runInPrivateWindow = false, runInSecureContext = true } = {}
+    { runInPrivateWindow = false, runInSecureContext = false } = {}
   ) {
     DynamicFPIHelper.runTest(
       name,

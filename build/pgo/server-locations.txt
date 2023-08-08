@@ -213,7 +213,6 @@ https://tracking.example.org:443
 https://another-tracking.example.net:443
 https://social-tracking.example.org:443
 https://email-tracking.example.org:443
-https://trackertest.org:443
 
 #
 # Used while testing flash blocking (Bug 1307604)

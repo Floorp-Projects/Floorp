@@ -58,7 +58,7 @@ onmessage = event => {
     case "image":
       createImage(
         // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-        "https://trackertest.org/browser/browser/base/content/test/protectionsUI/cookieServer.sjs?type=image-no-cookie"
+        "http://trackertest.org/browser/browser/base/content/test/protectionsUI/cookieServer.sjs?type=image-no-cookie"
       );
       break;
     case "window-open":
