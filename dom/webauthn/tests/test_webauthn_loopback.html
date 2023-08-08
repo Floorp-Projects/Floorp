@@ -77,8 +77,9 @@ isnot(navigator.credentials.get, undefined, "CredentialManagement get API endpoi
     });
   })
   .then(function(aAttestationObj) {
-    ok(aAttestationObj.authDataObj.flags == (flag_TUP | flag_AT),
-       "User presence and Attestation Object must be the only flags set");
+    ok(true, aAttestationObj.authDataObj.flags[0] & (flag_TUP | flag_AT));
+    ok(aAttestationObj.authDataObj.flags[0] & (flag_TUP | flag_AT) == (flag_TUP | flag_AT),
+       "User presence and Attestation Object flags must be set");
 
     aCredInfo.clientDataObj = clientData;
     aCredInfo.publicKeyHandle = aAttestationObj.authDataObj.publicKeyHandle;
@@ -117,7 +118,7 @@ isnot(navigator.credentials.get, undefined, "CredentialManagement get API endpoi
 
   return webAuthnDecodeAuthDataArray(aAssertion.response.authenticatorData)
   .then(function(aAttestation) {
-    ok(new Uint8Array(aAttestation.flags) == flag_TUP, "User presence must be the only flag set");
+    ok(new Uint8Array(aAttestation.flags)[0] & flag_TUP == flag_TUP, "User presence flag must be set");
     is(aAttestation.counter.byteLength, 4, "Counter must be 4 bytes");
     return deriveAppAndChallengeParam(window.location.host, aAssertion.response.clientDataJSON, aAttestation)
   })

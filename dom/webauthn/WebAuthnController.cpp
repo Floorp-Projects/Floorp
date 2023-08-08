@@ -121,7 +121,6 @@ void WebAuthnController::ClearTransaction(bool cancel_prompt) {
                            mTransaction.ref().mTransactionId);
   }
   mTransactionParent = nullptr;
-  mTransportImpl = nullptr;
 
   // Forget any pending registration.
   mPendingRegisterInfo.reset();
@@ -180,39 +179,9 @@ nsCOMPtr<nsIWebAuthnTransport> WebAuthnController::GetTransportImpl() {
     return mTransportImpl;
   }
 
-/* Enable in Bug 1819414 */
-#if 0
-#  ifdef MOZ_WIDGET_ANDROID
-  // On Android, prefer the platform support if enabled.
-  if (StaticPrefs::security_webauth_webauthn_enable_android_fido2()) {
-    nsCOMPtr<nsIWebAuthnTransport> transport = AndroidWebAuthnTokenManager::GetInstance();
-    transport->SetController(this);
-    return transport;
-  }
-#  endif
-#endif
-
-  // Prefer the HW token, even if the softtoken is enabled too.
-  // We currently don't support soft and USB tokens enabled at the
-  // same time as the softtoken would always win the race to register.
-  // We could support it for signing though...
-  if (StaticPrefs::security_webauth_webauthn_enable_usbtoken()) {
-    nsCOMPtr<nsIWebAuthnTransport> transport = NewAuthrsTransport();
-    transport->SetController(this);
-    return transport;
-  }
-
-  if (StaticPrefs::security_webauth_webauthn_enable_softtoken()) {
-    nsCOMPtr<nsIWebAuthnTransport> transport = new U2FSoftTokenTransport(
-        StaticPrefs::security_webauth_softtoken_counter());
-    transport->SetController(this);
-    return transport;
-  }
-
-  // TODO Use WebAuthnRequest to aggregate results from all transports,
-  //      once we have multiple HW transport types.
-
-  return nullptr;
+  nsCOMPtr<nsIWebAuthnTransport> transport = NewAuthrsTransport();
+  transport->SetController(this);
+  return transport;
 }
 
 void WebAuthnController::Cancel(PWebAuthnTransactionParent* aTransactionParent,
@@ -333,7 +302,8 @@ void WebAuthnController::DoRegister(const WebAuthnMakeCredentialInfo& aInfo,
   nsresult rv = mTransportImpl->MakeCredential(
       mTransaction.ref().mTransactionId, aInfo.BrowsingContextId(), args);
   if (NS_FAILED(rv)) {
-    AbortTransaction(mTransaction.ref().mTransactionId, rv, true);
+    AbortTransaction(mTransaction.ref().mTransactionId,
+                     NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
     return;
   }
 }
@@ -499,7 +469,8 @@ void WebAuthnController::Sign(PWebAuthnTransactionParent* aTransactionParent,
   rv = mTransportImpl->GetAssertion(mTransaction.ref().mTransactionId,
                                     aInfo.BrowsingContextId(), args.get());
   if (NS_FAILED(rv)) {
-    AbortTransaction(mTransaction.ref().mTransactionId, rv, true);
+    AbortTransaction(mTransaction.ref().mTransactionId,
+                     NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
     return;
   }
 }
