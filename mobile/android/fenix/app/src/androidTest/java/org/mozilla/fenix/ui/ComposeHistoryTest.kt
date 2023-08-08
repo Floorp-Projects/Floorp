@@ -408,7 +408,7 @@ class ComposeHistoryTest {
         }.clickSearchButton {
             // Search for a valid term
             typeSearch(firstWebPage.title)
-            verifySearchEngineSuggestionResults(activityTestRule, firstWebPage.url.toString())
+            verifySearchEngineSuggestionResults(activityTestRule, firstWebPage.url.toString(), searchTerm = firstWebPage.title)
             verifyNoSuggestionsAreDisplayed(activityTestRule, secondWebPage.url.toString())
             clickClearButton()
             // Search for invalid term
@@ -447,7 +447,7 @@ class ComposeHistoryTest {
             typeSearch("generic")
             verifyNoSuggestionsAreDisplayed(activityTestRule, firstWebPage.url.toString())
             verifyNoSuggestionsAreDisplayed(activityTestRule, secondWebPage.url.toString())
-            verifySearchEngineSuggestionResults(activityTestRule, thirdWebPage.url.toString())
+            verifySearchEngineSuggestionResults(activityTestRule, thirdWebPage.url.toString(), searchTerm = "generic")
             pressBack()
         }
         historyMenu {

@@ -133,11 +133,9 @@ class NavigationToolbarRobot {
     // New unified search UI selector
     fun verifyDefaultSearchEngine(engineName: String) =
         assertTrue(
-            mDevice.findObject(
-                UiSelector()
-                    .resourceId("$packageName:id/search_selector")
-                    .childSelector(UiSelector().description(engineName)),
-            ).waitForExists(waitingTime),
+            searchSelectorButton
+                .getChild(UiSelector().description(engineName))
+                .waitForExists(waitingTime),
         )
 
     fun verifyTextSelectionOptions(vararg textSelectionOptions: String) {
@@ -355,6 +353,14 @@ class NavigationToolbarRobot {
             SearchRobot().interact()
             return SearchRobot.Transition()
         }
+
+        fun clickSearchSelectorButton(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
+            searchSelectorButton.waitForExists(waitingTime)
+            searchSelectorButton.click()
+
+            SearchRobot().interact()
+            return SearchRobot.Transition()
+        }
     }
 }
 
@@ -441,6 +447,9 @@ private fun assertCloseReaderViewDetected(visible: Boolean) {
         },
     )
 }
+
+private val searchSelectorButton =
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/search_selector"))
 
 inline fun runWithIdleRes(ir: IdlingResource?, pendingCheck: () -> Unit) {
     try {

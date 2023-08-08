@@ -406,7 +406,7 @@ class HistoryTest {
         }.clickSearchButton {
             // Search for a valid term
             typeSearch("generic")
-            verifySearchEngineSuggestionResults(activityTestRule, firstWebPage.url.toString())
+            verifySearchEngineSuggestionResults(activityTestRule, firstWebPage.url.toString(), searchTerm = "generic")
             verifyNoSuggestionsAreDisplayed(activityTestRule, secondWebPage.url.toString())
         }.dismissSearchBar {}
         historyMenu {
@@ -450,7 +450,11 @@ class HistoryTest {
             typeSearch("generic")
             verifyNoSuggestionsAreDisplayed(activityTestRule, firstWebPage.url.toString())
             verifyNoSuggestionsAreDisplayed(activityTestRule, secondWebPage.url.toString())
-            verifySearchEngineSuggestionResults(activityTestRule, thirdWebPage.url.toString())
+            verifySearchEngineSuggestionResults(
+                activityTestRule,
+                thirdWebPage.url.toString(),
+                searchTerm = "generic",
+            )
             pressBack()
         }
         historyMenu {

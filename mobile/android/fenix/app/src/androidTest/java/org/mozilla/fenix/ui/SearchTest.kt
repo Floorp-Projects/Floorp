@@ -55,7 +55,7 @@ import org.mozilla.fenix.ui.robots.searchScreen
  */
 
 class SearchTest {
-    lateinit var searchMockServer: MockWebServer
+    private lateinit var searchMockServer: MockWebServer
     private var queryString = "firefox"
     private val generalEnginesList = listOf("DuckDuckGo", "Google", "Bing")
     private val topicEnginesList = listOf("Amazon.com", "Wikipedia", "eBay")
@@ -567,7 +567,13 @@ class SearchTest {
         }.openThreeDotMenu {
         }.openHistory {
             // Full URL no longer visible in the nav bar, so we'll check the history record
-            verifyHistoryItemExists(shouldExist = true, searchEngineCodes["Google"]!!)
+            // A search group is sometimes created when searching with Google (probably redirects)
+            try {
+                verifyHistoryItemExists(shouldExist = true, searchEngineCodes["Google"]!!)
+            } catch (e: AssertionError) {
+                openSearchGroup(queryString)
+                verifyHistoryItemExists(shouldExist = true, searchEngineCodes["Google"]!!)
+            }
         }
     }
 
@@ -665,11 +671,14 @@ class SearchTest {
             clickClearButton()
             typeSearch(searchTerm = "generic")
             verifyTypedToolbarText("generic")
-            verifyFirefoxSuggestResults(
+            verifySearchEngineSuggestionResults(
                 rule = activityTestRule,
+                searchSuggestions = arrayOf(
+                    "Firefox Suggest",
+                    firstPageUrl.url.toString(),
+                    secondPageUrl.url.toString(),
+                ),
                 searchTerm = "generic",
-                firstPageUrl.url.toString(),
-                secondPageUrl.url.toString(),
             )
         }.clickSearchSuggestion(firstPageUrl.url.toString()) {
             verifyTabCounter("2")

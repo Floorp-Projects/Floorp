@@ -152,11 +152,11 @@ class SettingsSearchTest {
         homeScreen {
         }.openSearch {
             typeSearch("test")
-            verifyFirefoxSuggestResults(
+            verifySearchEngineSuggestionResults(
                 activityTestRule,
-                "test",
                 "Firefox Suggest",
-                "Test_Page_1",
+                page1.title,
+                searchTerm = "test",
             )
         }.clickSearchSuggestion("Test_Page_1") {
             verifyUrl(page1.url.toString())
@@ -207,11 +207,11 @@ class SettingsSearchTest {
         homeScreen {
         }.openSearch {
             typeSearch("test")
-            verifyFirefoxSuggestResults(
+            verifySearchEngineSuggestionResults(
                 activityTestRule,
-                "test",
                 "Firefox Suggest",
-                "Test_Page_1",
+                website.title,
+                searchTerm = "test",
             )
         }.clickSearchSuggestion("Test_Page_1") {
             verifyUrl(website.url.toString())
@@ -236,7 +236,7 @@ class SettingsSearchTest {
             verifyNoSuggestionsAreDisplayed(
                 activityTestRule,
                 "Firefox Suggest",
-                "Test_Page_1",
+                website.title,
             )
         }
     }
@@ -455,8 +455,12 @@ class SettingsSearchTest {
     fun toggleSearchSuggestionsTest() {
         homeScreen {
         }.openSearch {
-            typeSearch("mozilla")
-            verifySearchEngineSuggestionResults(activityTestRule, "mozilla firefox")
+            typeSearch("mozilla ")
+            verifySearchEngineSuggestionResults(
+                activityTestRule,
+                "mozilla firefox",
+                searchTerm = "mozilla ",
+            )
         }.dismissSearchBar {
         }.openThreeDotMenu {
         }.openSettings {
@@ -492,7 +496,11 @@ class SettingsSearchTest {
             typeSearch("mozilla")
             verifyAllowSuggestionsInPrivateModeDialog()
             allowSuggestionsInPrivateMode()
-            verifySearchEngineSuggestionResults(activityTestRule, "mozilla firefox")
+            verifySearchEngineSuggestionResults(
+                activityTestRule,
+                "mozilla firefox",
+                searchTerm = "mozilla",
+            )
         }.dismissSearchBar {
         }.openThreeDotMenu {
         }.openSettings {
