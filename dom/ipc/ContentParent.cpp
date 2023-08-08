@@ -4709,7 +4709,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAddSecurityState(
 
 already_AddRefed<PExternalHelperAppParent>
 ContentParent::AllocPExternalHelperAppParent(
-    nsIURI* uri, const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
+    nsIURI* uri, const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
     const nsACString& aMimeContentType, const nsACString& aContentDisposition,
     const uint32_t& aContentDispositionHint,
     const nsAString& aContentDispositionFilename, const bool& aForceSave,
@@ -4724,7 +4724,7 @@ ContentParent::AllocPExternalHelperAppParent(
 
 mozilla::ipc::IPCResult ContentParent::RecvPExternalHelperAppConstructor(
     PExternalHelperAppParent* actor, nsIURI* uri,
-    const LoadInfoArgs& loadInfoArgs, const nsACString& aMimeContentType,
+    const Maybe<LoadInfoArgs>& loadInfoArgs, const nsACString& aMimeContentType,
     const nsACString& aContentDisposition,
     const uint32_t& aContentDispositionHint,
     const nsAString& aContentDispositionFilename, const bool& aForceSave,
@@ -5073,14 +5073,19 @@ mozilla::ipc::IPCResult ContentParent::RecvConsoleMessage(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvReportFrameTimingData(
-    const LoadInfoArgs& loadInfoArgs, const nsAString& entryName,
-    const nsAString& initiatorType, UniquePtr<PerformanceTimingData>&& aData) {
+    const mozilla::Maybe<LoadInfoArgs>& loadInfoArgs,
+    const nsAString& entryName, const nsAString& initiatorType,
+    UniquePtr<PerformanceTimingData>&& aData) {
   if (!aData) {
     return IPC_FAIL(this, "aData should not be null");
   }
 
+  if (loadInfoArgs.isNothing()) {
+    return IPC_FAIL(this, "loadInfoArgs should not be null");
+  }
+
   RefPtr<WindowGlobalParent> parent =
-      WindowGlobalParent::GetByInnerWindowId(loadInfoArgs.innerWindowID());
+      WindowGlobalParent::GetByInnerWindowId(loadInfoArgs->innerWindowID());
   if (!parent || !parent->GetContentParent()) {
     return IPC_OK();
   }
