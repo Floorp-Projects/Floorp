@@ -312,9 +312,9 @@ void nsCoreUtils::ConvertScrollTypeToPercents(uint32_t aScrollType,
       whenX = WhenToScroll::Always;
       break;
     default:
-      whereY = WhereToScroll::Nearest;
+      whereY = WhereToScroll::Center;
       whenY = WhenToScroll::IfNotFullyVisible;
-      whereX = WhereToScroll::Nearest;
+      whereX = WhereToScroll::Center;
       whenX = WhenToScroll::IfNotFullyVisible;
   }
   *aVertical = ScrollAxis(whereY, whenY);
