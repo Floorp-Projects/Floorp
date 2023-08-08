@@ -20,6 +20,7 @@ import android.content.Intent.EXTRA_TITLE
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.hardware.camera2.CameraManager
+import android.net.Uri
 import android.os.Build
 import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
@@ -36,7 +37,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
@@ -151,7 +151,6 @@ class ContextTest {
     }
 
     @Test
-    @Ignore("Robolectric does not support API level >=29")
     @Config(shadows = [ShadowFileProvider::class], sdk = [Build.VERSION_CODES.Q])
     fun `shareMedia will show a thumbnail starting with Android 10`() {
         val context = spy(testContext)
@@ -292,7 +291,7 @@ class ContextTest {
 
 @Implements(FileProvider::class)
 object ShadowFileProvider {
-    val FAKE_URI_RESULT = "fakeUri".toUri()
+    val FAKE_URI_RESULT: Uri = "fakeUri".toUri()
 
     @Implementation
     @JvmStatic

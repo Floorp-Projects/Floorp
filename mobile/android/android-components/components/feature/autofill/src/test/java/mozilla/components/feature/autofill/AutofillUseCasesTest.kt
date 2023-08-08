@@ -11,7 +11,6 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
@@ -22,7 +21,6 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidJUnit4::class)
 class AutofillUseCasesTest {
     @Test
-    @Ignore("Requires updated Robolectric and Mockito with Java 11: https://github.com/mozilla-mobile/android-components/issues/10550")
     fun testIsSupported() {
         val context: Context = mock()
         val autofillManager: AutofillManager = mock()
@@ -43,7 +41,6 @@ class AutofillUseCasesTest {
     }
 
     @Test
-    @Ignore("Requires updated Robolectric and Mockito with Java 11: https://github.com/mozilla-mobile/android-components/issues/10550")
     fun testIsNotSupported() {
         val context: Context = mock()
         val autofillManager: AutofillManager = mock()
@@ -63,7 +60,6 @@ class AutofillUseCasesTest {
     }
 
     @Test
-    @Ignore("Requires updated Robolectric and Mockito with Java 11: https://github.com/mozilla-mobile/android-components/issues/10550")
     fun testIsEnabled() {
         val context: Context = mock()
         val autofillManager: AutofillManager = mock()
@@ -84,7 +80,6 @@ class AutofillUseCasesTest {
     }
 
     @Test
-    @Ignore("Requires updated Robolectric and Mockito with Java 11: https://github.com/mozilla-mobile/android-components/issues/10550")
     fun testIsNotEnabled() {
         val context: Context = mock()
         val autofillManager: AutofillManager = mock()
@@ -149,7 +144,6 @@ class AutofillUseCasesTest {
     }
 
     @Test
-    @Ignore("Requires updated Robolectric and Mockito with Java 11: https://github.com/mozilla-mobile/android-components/issues/10550")
     fun testDisable() {
         val context: Context = mock()
         val autofillManager: AutofillManager = mock()

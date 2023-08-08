@@ -12,7 +12,6 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UIdentifier
 import org.jetbrains.uast.getContainingUClass
-import org.junit.Ignore
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -23,7 +22,6 @@ import org.mockito.Mockito.`when`
 class LintLogChecksTest {
 
     @Test
-    @Ignore("With Java 11 Mockito fails to mock some of the Android classes here")
     fun `report log error in components code only`() {
         val evaluator = mock(JavaEvaluator::class.java)
         val context = mock(JavaContext::class.java)
