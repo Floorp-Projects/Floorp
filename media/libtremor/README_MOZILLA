@@ -1,7 +1,0 @@
-The source from this directory was copied from the libtremor
-subversion repository using the update.sh script. The only changes
-made were those applied by update.sh and the addition/upate of
-Makefile.in files for the Mozilla build system.
-
-The upstream release used was http://svn.xiph.org/trunk/Tremor/
-The subversion revision used was r17547.

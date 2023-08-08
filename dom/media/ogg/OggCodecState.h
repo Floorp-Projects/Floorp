@@ -16,11 +16,7 @@
 #  include <nsClassHashtable.h>
 
 #  include <theora/theoradec.h>
-#  ifdef MOZ_TREMOR
-#    include <tremor/ivorbiscodec.h>
-#  else
-#    include <vorbis/codec.h>
-#  endif
+#  include <vorbis/codec.h>
 
 // Uncomment the following to validate that we're predicting the number
 // of Vorbis samples in each packet correctly.
