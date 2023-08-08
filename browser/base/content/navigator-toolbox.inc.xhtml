@@ -390,13 +390,13 @@
                   role="button"
                   data-l10n-id="shopping-sidebar-open-button"
                   hidden="true"
-                  onclick="ShoppingSidebarParent.toggleAllSidebars();">
+                  onclick="ShoppingSidebarParent.urlbarButtonClick(event);">
                 <image id="shopping-sidebar-button-icon"
                        class="urlbar-icon"/>
               </hbox>
 #endif
               <toolbarbutton id="urlbar-zoom-button"
-                     onclick="FullZoom.reset(); FullZoom.resetScalingZoom();"
+                     onclick="FullZoom.resetFromURLBar(event);"
                      tooltip="dynamic-shortcut-tooltip"
                      hidden="true"/>
               <hbox id="pageActionButton"
