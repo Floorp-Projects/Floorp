@@ -81,7 +81,10 @@ export class FirefoxViewPlacesQuery extends PlacesQuery {
     visit.primaryL10nArgs = JSON.stringify({
       targetURI: visit.url,
     });
-    visit.secondaryL10nId = "fxviewtabrow-open-menu-button";
+    visit.secondaryL10nId = "fxviewtabrow-options-menu-button";
+    visit.secondaryL10nArgs = JSON.stringify({
+      tabTitle: visit.title || visit.url,
+    });
   }
 
   async fetchHistory() {

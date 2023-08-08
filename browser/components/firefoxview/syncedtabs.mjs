@@ -501,7 +501,8 @@ class SyncedTabsInView extends ViewPage {
       url: tab.url,
       primaryL10nId: "firefoxview-tabs-list-tab-button",
       primaryL10nArgs: JSON.stringify({ targetURI: tab.url }),
-      secondaryL10nId: "firefoxview-close-button",
+      secondaryL10nId: "fxviewtabrow-options-menu-button",
+      secondaryL10nArgs: JSON.stringify({ tabTitle: tab.title }),
     }));
   }
 

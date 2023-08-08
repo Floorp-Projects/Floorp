@@ -96,7 +96,8 @@ const tabItems = [
     time: 1678141738136,
     primaryL10nId: "fxviewtabrow-tabs-list-tab",
     primaryL10nArgs: JSON.stringify({ targetURI: "example.net" }),
-    secondaryL10nId: "fxviewtabrow-open-menu-button",
+    secondaryL10nId: "fxviewtabrow-options-menu-button",
+    secondaryL10nArgs: JSON.stringify({ tabTitle: "Example Domain" }),
   },
   {
     icon: "chrome://global/skin/icons/defaultFavicon.svg",
@@ -105,7 +106,8 @@ const tabItems = [
     time: 1678141738136,
     primaryL10nId: "fxviewtabrow-tabs-list-tab",
     primaryL10nArgs: JSON.stringify({ targetURI: "example.org" }),
-    secondaryL10nId: "fxviewtabrow-open-menu-button",
+    secondaryL10nId: "fxviewtabrow-options-menu-button",
+    secondaryL10nArgs: JSON.stringify({ tabTitle: "Example Domain" }),
   },
   {
     icon: "chrome://global/skin/icons/defaultFavicon.svg",
@@ -114,7 +116,8 @@ const tabItems = [
     time: 1678141738136,
     primaryL10nId: "fxviewtabrow-tabs-list-tab",
     primaryL10nArgs: JSON.stringify({ targetURI: "example.com" }),
-    secondaryL10nId: "fxviewtabrow-open-menu-button",
+    secondaryL10nId: "fxviewtabrow-options-menu-button",
+    secondaryL10nArgs: JSON.stringify({ tabTitle: "Example Domain" }),
   },
 ];
 const recentlyClosedItems = [
