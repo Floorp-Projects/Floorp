@@ -34,6 +34,9 @@ you're going to want to write some automated tests.
 * You may see values from previous tests persist across tests because the profile directory was shared between test cases.
     * You can reset Glean before your test by calling
       `Services.fog.testResetFOG()` (in JS).
+        * If your instrumentation isn't on the parent process,
+          you should call `await Services.fog.testFlushAllChildren()` before `testResetFOG`.
+          That will ensure all pending data makes it to the parent process to be cleared.
     * You shouldn't have to do this in C++ or Rust since there you should use the
       `FOGFixture` test fixture.
 * If your metric is based on timing (`timespan`, `timing_distribution`),
