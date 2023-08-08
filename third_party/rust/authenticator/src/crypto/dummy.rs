@@ -37,3 +37,21 @@ pub fn sha256(_data: &[u8]) -> Result<Vec<u8>> {
 pub fn random_bytes(_count: usize) -> Result<Vec<u8>> {
     unimplemented!()
 }
+
+pub fn gen_p256() -> Result<(Vec<u8>, Vec<u8>)> {
+    unimplemented!()
+}
+
+pub fn ecdsa_p256_sha256_sign_raw(_private: &[u8], _data: &[u8]) -> Result<Vec<u8>> {
+    unimplemented!()
+}
+
+#[allow(dead_code)]
+#[cfg(test)]
+pub fn test_ecdsa_p256_sha256_verify_raw(
+    _public: &[u8],
+    _signature: &[u8],
+    _data: &[u8],
+) -> Result<()> {
+    unimplemented!()
+}
