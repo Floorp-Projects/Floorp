@@ -238,6 +238,11 @@ class WebMDemuxer : public MediaDataDemuxer,
   // as nestegg only performs 1-byte read at a time.
   int64_t mLastWebMBlockOffset;
   const bool mIsMediaSource;
+  // Discard padding in WebM cannot occur more than once. This is set to true if
+  // a discard padding element has been found and processed, and the decoding is
+  // expected to error out if another discard padding element is found
+  // subsequently in the byte stream.
+  bool mProcessedDiscardPadding = false;
 
   EncryptionInfo mCrypto;
 };
