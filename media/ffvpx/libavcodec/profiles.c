@@ -36,13 +36,25 @@ const AVProfile ff_aac_profiles[] = {
 };
 
 const AVProfile ff_dca_profiles[] = {
-    { FF_PROFILE_DTS,         "DTS"         },
-    { FF_PROFILE_DTS_ES,      "DTS-ES"      },
-    { FF_PROFILE_DTS_96_24,   "DTS 96/24"   },
-    { FF_PROFILE_DTS_HD_HRA,  "DTS-HD HRA"  },
-    { FF_PROFILE_DTS_HD_MA,   "DTS-HD MA"   },
-    { FF_PROFILE_DTS_EXPRESS, "DTS Express" },
+    { FF_PROFILE_DTS,                "DTS"                    },
+    { FF_PROFILE_DTS_ES,             "DTS-ES"                 },
+    { FF_PROFILE_DTS_96_24,          "DTS 96/24"              },
+    { FF_PROFILE_DTS_HD_HRA,         "DTS-HD HRA"             },
+    { FF_PROFILE_DTS_HD_MA,          "DTS-HD MA"              },
+    { FF_PROFILE_DTS_HD_MA_X,        "DTS-HD MA + DTS:X"      },
+    { FF_PROFILE_DTS_HD_MA_X_IMAX,   "DTS-HD MA + DTS:X IMAX" },
+    { FF_PROFILE_DTS_EXPRESS,        "DTS Express"            },
     { FF_PROFILE_UNKNOWN },
+};
+
+const AVProfile ff_eac3_profiles[] = {
+  { FF_PROFILE_EAC3_DDP_ATMOS, "Dolby Digital Plus + Dolby Atmos"},
+  { FF_PROFILE_UNKNOWN },
+};
+
+const AVProfile ff_truehd_profiles[] = {
+  { FF_PROFILE_TRUEHD_ATMOS,   "Dolby TrueHD + Dolby Atmos"},
+  { FF_PROFILE_UNKNOWN },
 };
 
 const AVProfile ff_dnxhd_profiles[] = {
