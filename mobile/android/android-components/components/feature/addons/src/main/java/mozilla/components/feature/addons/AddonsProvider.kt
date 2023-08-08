@@ -34,4 +34,19 @@ interface AddonsProvider {
      * @param addon the add-on for which we want to retrieve its icon as a decoded bitmap
      */
     suspend fun getAddonIconBitmap(addon: Addon): Bitmap?
+
+    /**
+     * Provides a list of [Addon] based on the list of GUIDs passed to it.
+     *
+     * @param guids list of add-on GUIDs to retrieve.
+     * @param readTimeoutInSeconds optional timeout in seconds to use when fetching the add-ons.
+     * @param language indicates in which language the translatable fields should be in, if no
+     * matching language is found then a fallback translation is returned using the default language.
+     * When it is null all translations available will be returned.
+     */
+    suspend fun getAddonsByGUIDs(
+        guids: List<String>,
+        readTimeoutInSeconds: Long? = null,
+        language: String? = null,
+    ): List<Addon>
 }
