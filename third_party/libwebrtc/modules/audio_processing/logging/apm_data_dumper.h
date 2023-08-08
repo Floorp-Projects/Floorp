@@ -26,6 +26,7 @@
 #if WEBRTC_APM_DEBUG_DUMP == 1
 #include "common_audio/wav_file.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/string_utils.h"
 #endif
 
@@ -395,7 +396,7 @@ class ApmDataDumper {
       // Cheat and use aec_near as a stand-in for "size of the largest file"
       // in the dump.  We're looking to limit the total time, and that's a
       // reasonable stand-in.
-      if (strcmp(name, "aec_near") == 0) {
+      if (strcmp(name.data(), "aec_near") == 0) {
        updateDebugWritten(v_length * sizeof(float));
       }
     }
@@ -439,7 +440,7 @@ class ApmDataDumper {
 
   void updateDebugWritten(uint32_t amount) {
     debug_written_ += amount;
-    if (debug_written_ >= webrtc::Trace::aec_debug_size()) {
+    if (debug_written_ >= rtc::LogMessage::aec_debug_size()) {
       SetActivated(false);
     }
   }
