@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <title>XMLHttpRequest: responseXML content-type test</title>
+    <script src="/resources/testharness.js"></script>
+    <script src="/resources/testharnessreport.js"></script>
+    <link rel="help" href="https://xhr.spec.whatwg.org/#dom-xmlhttprequest-responsexml"/>
+  </head>
+  <body>
+  </body>
+  <script>
+
+function parseBlob(blob) {
+  return new Promise(resolve => {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", URL.createObjectURL(blob));
+    xhr.onload = () => {
+      resolve(xhr.responseXML);
+    }
+    xhr.send();
+  });
+}
+
+promise_test(async function() {
+  let blob = new Blob(["<x></x>"]);
+  let responseXML = await parseBlob(blob);
+  assert_not_equals(responseXML, null);
+}, "Empty MIME type should be equivalent to text/xml")
+
+promise_test(async function() {
+  let blob = new Blob(["<x></x>"], {type: "text/html"});
+  let responseXML = await parseBlob(blob);
+  assert_equals(responseXML, null);
+}, "HTML content type should return null")
+
+promise_test(async function() {
+  let blob = new Blob(["<x></x>"], {type: "text/plain"});
+  let responseXML = await parseBlob(blob);
+  assert_equals(responseXML, null);
+}, "Non XML or HTML content type should return null")
+
+promise_test(async function() {
+  let blob = new Blob(["<x></x>"], {type: "text/xml"});
+  let responseXML = await parseBlob(blob);
+  assert_not_equals(responseXML, null);
+}, "XML content type should parse")
+
+  </script>
+</html>
