@@ -94,9 +94,17 @@ class RTCRtpTransceiver : public nsISupports, public nsWrapperCache {
   RTCDtlsTransport* GetDtlsTransport() const { return mDtlsTransport; }
   void GetKind(nsAString& aKind) const;
   void GetMid(nsAString& aMid) const;
-  RTCRtpTransceiverDirection Direction() const { return mDirection; }
+  RTCRtpTransceiverDirection Direction() const {
+    if (mStopping) {
+      return RTCRtpTransceiverDirection::Stopped;
+    }
+    return mDirection;
+  }
   void SetDirection(RTCRtpTransceiverDirection aDirection, ErrorResult& aRv);
   Nullable<RTCRtpTransceiverDirection> GetCurrentDirection() {
+    if (mStopped) {
+      return RTCRtpTransceiverDirection::Stopped;
+    }
     return mCurrentDirection;
   }
   void Stop(ErrorResult& aRv);
@@ -105,6 +113,7 @@ class RTCRtpTransceiver : public nsISupports, public nsWrapperCache {
 
   bool CanSendDTMF() const;
   bool Stopped() const { return mStopped; }
+  bool Stopping() const { return mStopping; }
   void SyncToJsep(JsepSession& aSession) const;
   void SyncFromJsep(const JsepSession& aSession);
   std::string GetMidAscii() const;
@@ -184,6 +193,7 @@ class RTCRtpTransceiver : public nsISupports, public nsWrapperCache {
   void InitVideo(const TrackingId& aRecvTrackingId);
   void InitConduitControl();
   void StopImpl();
+  void StopTransceiving();
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PeerConnectionImpl> mPc;
@@ -210,6 +220,7 @@ class RTCRtpTransceiver : public nsISupports, public nsWrapperCache {
   RTCRtpTransceiverDirection mDirection = RTCRtpTransceiverDirection::Sendrecv;
   Nullable<RTCRtpTransceiverDirection> mCurrentDirection;
   bool mStopped = false;
+  bool mStopping = false;
   bool mShutdown = false;
   bool mHasBeenUsedToSend = false;
   PrincipalPrivacy mPrincipalPrivacy;

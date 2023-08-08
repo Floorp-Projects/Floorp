@@ -1387,6 +1387,9 @@ void PeerConnectionImpl::SyncFromJsep() {
         }
 
         if (!transceiver) {
+          if (jsepTransceiver.IsRemoved()) {
+            return;
+          }
           CSFLogDebug(LOGTAG, "%s: No match, making new", __FUNCTION__);
           dom::RTCRtpTransceiverInit init;
           init.mDirection = RTCRtpTransceiverDirection::Recvonly;
@@ -2016,7 +2019,26 @@ void PeerConnectionImpl::OnDtlsStateChange(const std::string& aTransportId,
   if (it != mTransportIdToRTCDtlsTransport.end()) {
     it->second->UpdateState(aState);
   }
-  UpdateConnectionState();
+  // Whenever the state of an RTCDtlsTransport changes or when the [[IsClosed]]
+  // slot turns true, the user agent MUST update the connection state by
+  // queueing a task that runs the following steps:
+  // NOTE: The business about [[IsClosed]] here is probably a bug, because the
+  // rest of the spec makes it very clear that events should never fire when
+  // [[IsClosed]] is true. See https://github.com/w3c/webrtc-pc/issues/2865
+  GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+      __func__, [this, self = RefPtr<PeerConnectionImpl>(this)] {
+        // Let connection be this RTCPeerConnection object.
+        // Let newState be the value of deriving a new state value as described
+        // by the RTCPeerConnectionState enum.
+        // If connection.[[ConnectionState]] is equal to newState, abort these
+        // steps.
+        // Set connection.[[ConnectionState]] to newState.
+        if (UpdateConnectionState()) {
+          // Fire an event named connectionstatechange at connection.
+          JSErrorResult jrv;
+          mPCObserver->OnStateChange(PCObserverStateType::ConnectionState, jrv);
+        }
+      }));
 }
 
 RTCPeerConnectionState PeerConnectionImpl::GetNewConnectionState() const {
@@ -2033,28 +2055,23 @@ RTCPeerConnectionState PeerConnectionImpl::GetNewConnectionState() const {
     statesFound.insert(dtlsTransport->State());
   }
 
-  // failed 	The previous state doesn't apply and any RTCIceTransports are
-  // in the "failed" state or any RTCDtlsTransports are in the "failed" state.
-  // NOTE: "any RTCIceTransports are in the failed state" is equivalent to
-  // mIceConnectionState == Failed
+  // failed 	The previous state doesn't apply, and either
+  // [[IceConnectionState]] is "failed" or any RTCDtlsTransports are in the
+  // "failed" state.
   if (mIceConnectionState == RTCIceConnectionState::Failed ||
       statesFound.count(RTCDtlsTransportState::Failed)) {
     return RTCPeerConnectionState::Failed;
   }
 
-  // disconnected 	None of the previous states apply and any
-  // RTCIceTransports are in the "disconnected" state.
-  // NOTE: "any RTCIceTransports are in the disconnected state" is equivalent to
-  // mIceConnectionState == Disconnected.
+  // disconnected 	None of the previous states apply, and
+  // [[IceConnectionState]] is "disconnected".
   if (mIceConnectionState == RTCIceConnectionState::Disconnected) {
     return RTCPeerConnectionState::Disconnected;
   }
 
-  // new 	None of the previous states apply and all RTCIceTransports are
-  // in the "new" or "closed" state, and all RTCDtlsTransports are in the "new"
-  // or "closed" state, or there are no transports.
-  // NOTE: "all RTCIceTransports are in the new or closed state" is equivalent
-  // to mIceConnectionState == New.
+  // new 	None of the previous states apply, and either
+  // [[IceConnectionState]] is "new", and all RTCDtlsTransports are in the
+  // "new" or "closed" state...
   if (mIceConnectionState == RTCIceConnectionState::New &&
       !statesFound.count(RTCDtlsTransportState::Connecting) &&
       !statesFound.count(RTCDtlsTransportState::Connected) &&
@@ -2062,29 +2079,14 @@ RTCPeerConnectionState PeerConnectionImpl::GetNewConnectionState() const {
     return RTCPeerConnectionState::New;
   }
 
-  // No transports
+  // ...or there are no transports.
   if (statesFound.empty()) {
     return RTCPeerConnectionState::New;
   }
 
-  // connecting 	None of the previous states apply and any
-  // RTCIceTransport is in the "new" or "checking" state or any
-  // RTCDtlsTransport is in the "new" or "connecting" state.
-  // NOTE: "None of the previous states apply and any RTCIceTransport is in the
-  // "new" or "checking" state" is equivalent to mIceConnectionState ==
-  // Checking.
-  if (mIceConnectionState == RTCIceConnectionState::Checking ||
-      statesFound.count(RTCDtlsTransportState::New) ||
-      statesFound.count(RTCDtlsTransportState::Connecting)) {
-    return RTCPeerConnectionState::Connecting;
-  }
-
-  // connected 	None of the previous states apply and all RTCIceTransports are
-  // in the "connected", "completed" or "closed" state, and all
-  // RTCDtlsTransports are in the "connected" or "closed" state.
-  // NOTE: "None of the previous states apply and all RTCIceTransports are in
-  // the "connected", "completed" or "closed" state" is equivalent to
-  // mIceConnectionState == Connected.
+  // connected 	None of the previous states apply,
+  // [[IceConnectionState]] is "connected", and all RTCDtlsTransports are in
+  // the "connected" or "closed" state.
   if (mIceConnectionState == RTCIceConnectionState::Connected &&
       !statesFound.count(RTCDtlsTransportState::New) &&
       !statesFound.count(RTCDtlsTransportState::Failed) &&
@@ -2092,41 +2094,11 @@ RTCPeerConnectionState PeerConnectionImpl::GetNewConnectionState() const {
     return RTCPeerConnectionState::Connected;
   }
 
-  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  // THERE IS NO CATCH-ALL NONE-OF-THE-ABOVE IN THE SPEC! THIS IS REALLY BAD! !!
-  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-  // Let's try to figure out how bad, precisely.
-  // Any one of these will cause us to bail above.
-  MOZ_ASSERT(mIceConnectionState != RTCIceConnectionState::Failed &&
-             mIceConnectionState != RTCIceConnectionState::Disconnected &&
-             mIceConnectionState != RTCIceConnectionState::Checking);
-  MOZ_ASSERT(!statesFound.count(RTCDtlsTransportState::New) &&
-             !statesFound.count(RTCDtlsTransportState::Connecting) &&
-             !statesFound.count(RTCDtlsTransportState::Failed));
-
-  // One of these must be set, or the empty() check would have failed above.
-  MOZ_ASSERT(statesFound.count(RTCDtlsTransportState::Connected) ||
-             statesFound.count(RTCDtlsTransportState::Closed));
-
-  // Here are our remaining possibilities:
-  // ICE connected, !statesFound.count(Connected), statesFound.count(Closed)
-  // ICE connected, statesFound.count(Connected), !statesFound.count(Closed)
-  // ICE connected, statesFound.count(Connected), statesFound.count(Closed)
-  //    All three of these would result in returning Connected above.
-
-  // ICE new, !statesFound.count(Connected), statesFound.count(Closed)
-  //    This results in returning New above. Whew.
-
-  // ICE new, statesFound.count(Connected), !statesFound.count(Closed)
-  // ICE new, statesFound.count(Connected), statesFound.count(Closed)
-  //    These would make it all the way here! Very weird state though, for all
-  //    ICE transports to be new/closed, but having a connected DTLS transport.
-  //    Handle this as a non-transition, just in case.
-  return mConnectionState;
+  // connecting 	None of the previous states apply.
+  return RTCPeerConnectionState::Connecting;
 }
 
-void PeerConnectionImpl::UpdateConnectionState() {
+bool PeerConnectionImpl::UpdateConnectionState() {
   auto newState = GetNewConnectionState();
   if (newState != mConnectionState) {
     CSFLogDebug(LOGTAG, "%s: %d -> %d (%p)", __FUNCTION__,
@@ -2134,10 +2106,11 @@ void PeerConnectionImpl::UpdateConnectionState() {
                 this);
     mConnectionState = newState;
     if (mConnectionState != RTCPeerConnectionState::Closed) {
-      JSErrorResult jrv;
-      mPCObserver->OnStateChange(PCObserverStateType::ConnectionState, jrv);
+      return true;
     }
   }
+
+  return false;
 }
 
 void PeerConnectionImpl::OnMediaError(const std::string& aError) {
@@ -3108,87 +3081,103 @@ void PeerConnectionImpl::DoSetDescriptionSuccessPostProcessing(
           UpdateNegotiationNeeded();
         }
 
-        // Spec does not actually tell us to do this, but that is probably a
-        // spec bug.
-        UpdateConnectionState();
-
-        JSErrorResult jrv;
+        bool signalingStateChanged = false;
         if (newSignalingState != mSignalingState) {
           mSignalingState = newSignalingState;
-          mPCObserver->OnStateChange(PCObserverStateType::SignalingState, jrv);
+          signalingStateChanged = true;
         }
 
+        // Spec does not actually tell us to do this, but that is probably a
+        // spec bug.
+        // https://github.com/w3c/webrtc-pc/issues/2817
+        bool connectionStateChanged = UpdateConnectionState();
+
+        // This only gets populated for remote descriptions
+        dom::RTCRtpReceiver::StreamAssociationChanges changes;
         if (aRemote) {
-          dom::RTCRtpReceiver::StreamAssociationChanges changes;
           for (const auto& transceiver : mTransceivers) {
             transceiver->Receiver()->UpdateStreams(&changes);
           }
+        }
 
-          for (const auto& receiver : changes.mReceiversToMute) {
-            // This sets the muted state for the recv track and all its clones.
-            receiver->SetTrackMuteFromRemoteSdp();
+        // Make sure to wait until after we've calculated track changes before
+        // doing this.
+        for (size_t i = 0; i < mTransceivers.Length();) {
+          auto& transceiver = mTransceivers[i];
+          if (transceiver->ShouldRemove()) {
+            mTransceivers[i]->Close();
+            mTransceivers[i]->SetRemovedFromPc();
+            mTransceivers.RemoveElementAt(i);
+          } else {
+            ++i;
+          }
+        }
+
+        // JS callbacks happen below. DO NOT TOUCH STATE AFTER THIS UNLESS SPEC
+        // EXPLICITLY SAYS TO, OTHERWISE STATES THAT ARE NOT SUPPOSED TO BE
+        // OBSERVABLE TO JS WILL BE!
+
+        JSErrorResult jrv;
+        RefPtr<PeerConnectionObserver> pcObserver(mPCObserver);
+        if (signalingStateChanged) {
+          pcObserver->OnStateChange(PCObserverStateType::SignalingState, jrv);
+        }
+
+        if (connectionStateChanged) {
+          pcObserver->OnStateChange(PCObserverStateType::ConnectionState, jrv);
+        }
+
+        for (const auto& receiver : changes.mReceiversToMute) {
+          // This sets the muted state for the recv track and all its clones.
+          receiver->SetTrackMuteFromRemoteSdp();
+        }
+
+        for (const auto& association : changes.mStreamAssociationsRemoved) {
+          RefPtr<DOMMediaStream> stream =
+              GetReceiveStream(association.mStreamId);
+          if (stream && stream->HasTrack(*association.mTrack)) {
+            stream->RemoveTrackInternal(association.mTrack);
+          }
+        }
+
+        // TODO(Bug 1241291): For legacy event, remove eventually
+        std::vector<RefPtr<DOMMediaStream>> newStreams;
+
+        for (const auto& association : changes.mStreamAssociationsAdded) {
+          RefPtr<DOMMediaStream> stream =
+              GetReceiveStream(association.mStreamId);
+          if (!stream) {
+            stream = CreateReceiveStream(association.mStreamId);
+            newStreams.push_back(stream);
           }
 
-          for (const auto& association : changes.mStreamAssociationsRemoved) {
-            RefPtr<DOMMediaStream> stream =
-                GetReceiveStream(association.mStreamId);
-            if (stream && stream->HasTrack(*association.mTrack)) {
-              stream->RemoveTrackInternal(association.mTrack);
-            }
+          if (!stream->HasTrack(*association.mTrack)) {
+            stream->AddTrackInternal(association.mTrack);
           }
+        }
 
-          // TODO(Bug 1241291): For legacy event, remove eventually
-          std::vector<RefPtr<DOMMediaStream>> newStreams;
-
-          for (const auto& association : changes.mStreamAssociationsAdded) {
-            RefPtr<DOMMediaStream> stream =
-                GetReceiveStream(association.mStreamId);
+        for (const auto& trackEvent : changes.mTrackEvents) {
+          dom::Sequence<OwningNonNull<DOMMediaStream>> streams;
+          for (const auto& id : trackEvent.mStreamIds) {
+            RefPtr<DOMMediaStream> stream = GetReceiveStream(id);
             if (!stream) {
-              stream = CreateReceiveStream(association.mStreamId);
-              newStreams.push_back(stream);
+              MOZ_ASSERT(false);
+              continue;
             }
-
-            if (!stream->HasTrack(*association.mTrack)) {
-              stream->AddTrackInternal(association.mTrack);
-            }
-          }
-
-          // Make sure to wait until after we've calculated track changes before
-          // doing this.
-          for (size_t i = 0; i < mTransceivers.Length();) {
-            auto& transceiver = mTransceivers[i];
-            if (transceiver->ShouldRemove()) {
-              mTransceivers[i]->Close();
-              mTransceivers[i]->SetRemovedFromPc();
-              mTransceivers.RemoveElementAt(i);
-            } else {
-              ++i;
+            if (!streams.AppendElement(*stream, fallible)) {
+              // XXX(Bug 1632090) Instead of extending the array 1-by-1 (which
+              // might involve multiple reallocations) and potentially
+              // crashing here, SetCapacity could be called outside the loop
+              // once.
+              mozalloc_handle_oom(0);
             }
           }
+          pcObserver->FireTrackEvent(*trackEvent.mReceiver, streams, jrv);
+        }
 
-          for (const auto& trackEvent : changes.mTrackEvents) {
-            dom::Sequence<OwningNonNull<DOMMediaStream>> streams;
-            for (const auto& id : trackEvent.mStreamIds) {
-              RefPtr<DOMMediaStream> stream = GetReceiveStream(id);
-              if (!stream) {
-                MOZ_ASSERT(false);
-                continue;
-              }
-              if (!streams.AppendElement(*stream, fallible)) {
-                // XXX(Bug 1632090) Instead of extending the array 1-by-1 (which
-                // might involve multiple reallocations) and potentially
-                // crashing here, SetCapacity could be called outside the loop
-                // once.
-                mozalloc_handle_oom(0);
-              }
-            }
-            mPCObserver->FireTrackEvent(*trackEvent.mReceiver, streams, jrv);
-          }
-
-          // TODO(Bug 1241291): Legacy event, remove eventually
-          for (const auto& stream : newStreams) {
-            mPCObserver->FireStreamEvent(*stream, jrv);
-          }
+        // TODO(Bug 1241291): Legacy event, remove eventually
+        for (const auto& stream : newStreams) {
+          pcObserver->FireStreamEvent(*stream, jrv);
         }
         aP->MaybeResolveWithUndefined();
       }));
@@ -3366,9 +3355,13 @@ void PeerConnectionImpl::IceConnectionStateChange(
       MOZ_ASSERT_UNREACHABLE("Unexpected mIceConnectionState!");
   }
 
+  bool connectionStateChanged = UpdateConnectionState();
   WrappableJSErrorResult rv;
-  mPCObserver->OnStateChange(PCObserverStateType::IceConnectionState, rv);
-  UpdateConnectionState();
+  RefPtr<PeerConnectionObserver> pcObserver(mPCObserver);
+  pcObserver->OnStateChange(PCObserverStateType::IceConnectionState, rv);
+  if (connectionStateChanged) {
+    pcObserver->OnStateChange(PCObserverStateType::ConnectionState, rv);
+  }
 }
 
 void PeerConnectionImpl::OnCandidateFound(const std::string& aTransportId,

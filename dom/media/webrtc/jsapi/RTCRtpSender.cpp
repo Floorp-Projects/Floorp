@@ -587,10 +587,11 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
     return p.forget();
   }
 
-  // If transceiver.[[Stopped]] is true, return a promise rejected with a newly
+  // If transceiver.[[Stopping]] is true, return a promise rejected with a newly
   // created InvalidStateError.
-  if (mTransceiver->Stopped()) {
-    p->MaybeRejectWithInvalidStateError("This sender's transceiver is stopped");
+  if (mTransceiver->Stopping()) {
+    p->MaybeRejectWithInvalidStateError(
+        "This sender's transceiver is stopping/stopped");
     return p.forget();
   }
 
@@ -1187,18 +1188,18 @@ ReplaceTrackOperation::ReplaceTrackOperation(
 
 RefPtr<dom::Promise> ReplaceTrackOperation::CallImpl(ErrorResult& aError) {
   RefPtr<RTCRtpSender> sender = mTransceiver->Sender();
-  // If transceiver.[[Stopped]] is true, return a promise rejected with a newly
-  // created InvalidStateError.
-  if (mTransceiver->Stopped()) {
+  // If transceiver.[[Stopping]] is true, return a promise rejected with a
+  // newly created InvalidStateError.
+  if (mTransceiver->Stopped() || mTransceiver->Stopping()) {
     RefPtr<dom::Promise> error = sender->MakePromise(aError);
     if (aError.Failed()) {
       return nullptr;
     }
     MOZ_LOG(gSenderLog, LogLevel::Debug,
-            ("%s Cannot call replaceTrack when transceiver is stopped",
+            ("%s Cannot call replaceTrack when transceiver is stopping",
              __FUNCTION__));
     error->MaybeRejectWithInvalidStateError(
-        "Cannot call replaceTrack when transceiver is stopped");
+        "Cannot call replaceTrack when transceiver is stopping");
     return error;
   }
 
@@ -1291,13 +1292,16 @@ bool RTCRtpSender::SeamlessTrackSwitch(
 
 void RTCRtpSender::SetTrack(const RefPtr<MediaStreamTrack>& aTrack) {
   // Used for RTCPeerConnection.removeTrack and RTCPeerConnection.addTrack
+  if (mTransceiver->Stopping()) {
+    return;
+  }
   mSenderTrack = aTrack;
   SeamlessTrackSwitch(aTrack);
   if (aTrack) {
     // RFC says (in the section on remote rollback):
     // However, an RtpTransceiver MUST NOT be removed if a track was attached
     // to the RtpTransceiver via the addTrack method.
-    mAddTrackCalled = true;
+    mSenderTrackSetByAddTrack = true;
   }
 }
 
@@ -1447,7 +1451,7 @@ void RTCRtpSender::SyncToJsep(JsepTransceiver& aJsepTransceiver) const {
     aJsepTransceiver.mSendTrack.SetMaxEncodings(1);
   }
 
-  if (mAddTrackCalled) {
+  if (mSenderTrackSetByAddTrack) {
     aJsepTransceiver.SetOnlyExistsBecauseOfSetRemote(false);
   }
 }
@@ -1676,8 +1680,6 @@ void RTCRtpSender::ApplyVideoConfig(const VideoConfig& aConfig) {
 }
 
 void RTCRtpSender::ApplyAudioConfig(const AudioConfig& aConfig) {
-  mTransmitting = false;
-
   mSsrcs = aConfig.mSsrcs;
   mCname = aConfig.mCname;
   mLocalRtpExtensions = aConfig.mLocalRtpExtensions;
@@ -1692,7 +1694,7 @@ void RTCRtpSender::ApplyAudioConfig(const AudioConfig& aConfig) {
 }
 
 void RTCRtpSender::Stop() {
-  MOZ_ASSERT(mTransceiver->Stopped());
+  MOZ_ASSERT(mTransceiver->Stopping());
   mTransmitting = false;
 }
 
