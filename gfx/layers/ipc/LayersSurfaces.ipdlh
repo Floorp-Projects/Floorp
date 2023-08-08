@@ -38,6 +38,7 @@ namespace layers {
   IntSize size;
   ColorSpace2 colorSpace;
   ColorRange colorRange;
+  bool hasKeyedMutex;
 };
 
 [Comparable] struct SurfaceDescriptorDXGIYCbCr {
