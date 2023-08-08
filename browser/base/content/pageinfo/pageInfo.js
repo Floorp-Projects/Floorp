@@ -13,20 +13,6 @@ ChromeUtils.defineESModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
 });
 
-// Inherit color scheme overrides from parent window. This is to inherit the
-// color scheme of dark themed PBM windows.
-{
-  let openerColorSchemeOverride =
-    window.opener?.browsingContext?.top.prefersColorSchemeOverride;
-  if (
-    openerColorSchemeOverride &&
-    window.browsingContext == window.browsingContext.top
-  ) {
-    window.browsingContext.prefersColorSchemeOverride =
-      openerColorSchemeOverride;
-  }
-}
-
 // define a js object to implement nsITreeView
 function pageInfoTreeView(treeid, copycol) {
   // copycol is the index number for the column that we want to add to

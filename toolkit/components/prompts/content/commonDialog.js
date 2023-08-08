@@ -11,20 +11,6 @@ const { CommonDialog } = ChromeUtils.importESModule(
 
 var propBag, args, Dialog;
 
-// Inherit color scheme overrides from parent window. This is to inherit the
-// color scheme of dark themed PBM windows.
-{
-  let openerColorSchemeOverride =
-    window.opener?.browsingContext?.top.prefersColorSchemeOverride;
-  if (
-    openerColorSchemeOverride &&
-    window.browsingContext == window.browsingContext.top
-  ) {
-    window.browsingContext.prefersColorSchemeOverride =
-      openerColorSchemeOverride;
-  }
-}
-
 function commonDialogOnLoad() {
   propBag = window.arguments[0]
     .QueryInterface(Ci.nsIWritablePropertyBag2)

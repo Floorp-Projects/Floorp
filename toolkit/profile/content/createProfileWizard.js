@@ -24,18 +24,6 @@ var gProfileDisplay;
 
 // Called once when the wizard is opened.
 function initWizard() {
-  // Inherit color scheme overrides from parent window. This is to inherit the
-  // color scheme of dark themed PBM windows.
-  let openerColorSchemeOverride =
-    window.opener?.browsingContext?.top.prefersColorSchemeOverride;
-  if (
-    openerColorSchemeOverride &&
-    window.browsingContext == window.browsingContext.top
-  ) {
-    window.browsingContext.prefersColorSchemeOverride =
-      openerColorSchemeOverride;
-  }
-
   try {
     gProfileService = C[ToolkitProfileService].getService(
       I.nsIToolkitProfileService
