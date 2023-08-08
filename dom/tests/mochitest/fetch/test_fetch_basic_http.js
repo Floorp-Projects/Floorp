@@ -1,5 +1,7 @@
 var path = "/tests/dom/xhr/tests/";
 
+var is_http2 = location.href.includes("http2");
+
 var passFiles = [
   ["file_XHR_pass1.xml", "GET", 200, "OK", "text/xml"],
   ["file_XHR_pass2.txt", "GET", 200, "OK", "text/plain"],
@@ -17,8 +19,13 @@ function testURL() {
       is(res.status, entry[2], "Status should match expected for " + entry[0]);
       is(
         res.statusText,
-        entry[3],
-        "Status text should match expected for " + entry[0]
+        is_http2 ? "" : entry[3],
+        "Status text should match expected for " +
+          entry[0] +
+          " " +
+          is_http2 +
+          " " +
+          location.href
       );
       if (entry[0] != "file_XHR_pass3.txt") {
         ok(
@@ -77,8 +84,13 @@ function testRequestGET() {
       is(res.status, entry[2], "Status should match expected for " + entry[0]);
       is(
         res.statusText,
-        entry[3],
-        "Status text should match expected for " + entry[0]
+        is_http2 ? "" : entry[3],
+        "Status text should match expected for " +
+          entry[0] +
+          " " +
+          is_http2 +
+          " " +
+          location.href
       );
       if (entry[0] != "file_XHR_pass3.txt") {
         ok(
