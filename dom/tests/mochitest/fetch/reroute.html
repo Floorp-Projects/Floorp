@@ -14,5 +14,9 @@
 if (!navigator.serviceWorker.controller.scriptURL.endsWith('empty.js')) {
   window.isSWPresent = true;
 }
-testScript(location.search.substring(1) + ".js");
+
+var searchParams = new URL(location.href).searchParams;
+var mode = searchParams.get("mode");
+var script = searchParams.get("script");
+testScript(`${script}.js?mode=${mode}`);
 </script>

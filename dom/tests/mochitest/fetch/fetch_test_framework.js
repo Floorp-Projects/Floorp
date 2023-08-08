@@ -1,6 +1,7 @@
 function testScript(script) {
+  var mode = location.href.includes("http2") ? "?mode=http2&" : "?";
   function makeWrapperUrl(wrapper) {
-    return wrapper + "?script=" + script;
+    return wrapper + mode + "script=" + script;
   }
   let workerWrapperUrl = makeWrapperUrl("worker_wrapper.js");
 
