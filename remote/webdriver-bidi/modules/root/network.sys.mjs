@@ -220,14 +220,14 @@ class NetworkModule extends Module {
     // onBeforeRequestSent might be too early for the NavigationManager.
     // TODO: Bug 1835704 to detect navigations earlier and avoid this.
     if (navigation && !navigation.finished) {
-      return navigation.id;
+      return navigation.navigationId;
     }
 
     // No ongoing navigation for this browsing context, create a new one.
     return lazy.notifyNavigationStarted({
       contextDetails: { context: browsingContext },
       url,
-    }).id;
+    }).navigationId;
   }
 
   #onBeforeRequestSent = (name, data) => {
@@ -290,7 +290,7 @@ class NetworkModule extends Module {
 
     const baseParameters = {
       context: contextId,
-      navigation: navigation ? navigation.id : null,
+      navigation: navigation ? navigation.navigationId : null,
       redirectCount,
       request: requestData,
       timestamp,

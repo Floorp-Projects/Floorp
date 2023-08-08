@@ -46,7 +46,7 @@ add_task(async function testClosedPort() {
   assertNavigationEvents(
     events,
     TEST_URL_CLOSED_PORT,
-    firstNavigation.id,
+    firstNavigation.navigationId,
     navigableId
   );
 
@@ -89,7 +89,7 @@ add_task(async function testWrongURI() {
   assertNavigationEvents(
     events,
     TEST_URL_WRONG_URI,
-    firstNavigation.id,
+    firstNavigation.navigationId,
     navigableId
   );
 

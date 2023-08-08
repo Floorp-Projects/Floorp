@@ -77,7 +77,12 @@ add_task(async function test_notifyNavigationStartedStopped() {
   );
 
   is(events.length, 2, "Two events recorded");
-  assertNavigationEvents(events, SECOND_URL, navigation.id, navigableId);
+  assertNavigationEvents(
+    events,
+    SECOND_URL,
+    navigation.navigationId,
+    navigableId
+  );
 
   info("Attempt to stop an already stopped navigation");
   const alreadyStoppedNavigation = notifyNavigationStopped({
@@ -152,7 +157,12 @@ add_task(async function test_notifyNavigationWithContextDetails() {
   );
 
   is(events.length, 2, "Two events recorded");
-  assertNavigationEvents(events, SECOND_URL, navigation.id, navigableId);
+  assertNavigationEvents(
+    events,
+    SECOND_URL,
+    navigation.navigationId,
+    navigableId
+  );
 
   navigationManager.off("navigation-started", onEvent);
   navigationManager.off("navigation-stopped", onEvent);

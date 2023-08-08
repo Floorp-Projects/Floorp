@@ -32,7 +32,11 @@ function addTab(browser, url) {
 function assertNavigation(navigation, expectedUrl) {
   ok(!!navigation, "Retrieved a navigation");
   is(navigation.url, expectedUrl, "Navigation has the expected URL");
-  is(typeof navigation.id, "string", "Navigation has a string id");
+  is(
+    typeof navigation.navigationId,
+    "string",
+    "Navigation has a string navigationId"
+  );
 }
 
 /**
@@ -44,21 +48,29 @@ function assertNavigation(navigation, expectedUrl) {
  *     The pair of events to validate.
  * @param {string} url
  *     The expected url for the navigation.
- * @param {string} id
+ * @param {string} navigationId
  *     The expected navigation id.
  * @param {string} navigableId
  *     The expected navigable id.
  * @param {boolean} isSameDocument
  *     If the navigation should be a same document navigation.
  */
-function assertNavigationEvents(events, url, id, navigableId, isSameDocument) {
+function assertNavigationEvents(
+  events,
+  url,
+  navigationId,
+  navigableId,
+  isSameDocument
+) {
   const expectedEvents = isSameDocument ? 3 : 2;
 
-  const navigationEvents = events.filter(e => e.data.id == id);
+  const navigationEvents = events.filter(
+    e => e.data.navigationId == navigationId
+  );
   is(
     navigationEvents.length,
     expectedEvents,
-    `Found ${expectedEvents} events for id ${id}`
+    `Found ${expectedEvents} events for navigationId ${navigationId}`
   );
 
   const started = navigationEvents.find(e => e.name === "navigation-started");
@@ -96,7 +108,7 @@ function assertNavigationEvents(events, url, id, navigableId, isSameDocument) {
  *     The navigations to validate.
  */
 function assertUniqueNavigationIds(...navigations) {
-  const ids = navigations.map(navigation => navigation.id);
+  const ids = navigations.map(navigation => navigation.navigationId);
   is(new Set(ids).size, ids.length, "Navigation ids are all different");
 }
 

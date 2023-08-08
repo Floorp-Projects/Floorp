@@ -48,7 +48,12 @@ add_task(async function testSimpleNavigation() {
   assertNavigation(firstNavigation, SECOND_URL);
 
   is(events.length, 2, "Two events recorded");
-  assertNavigationEvents(events, SECOND_URL, firstNavigation.id, navigableId);
+  assertNavigationEvents(
+    events,
+    SECOND_URL,
+    firstNavigation.navigationId,
+    navigableId
+  );
 
   await loadURL(browser, THIRD_URL);
 
@@ -59,7 +64,12 @@ add_task(async function testSimpleNavigation() {
   assertUniqueNavigationIds(firstNavigation, secondNavigation);
 
   is(events.length, 4, "Two new events recorded");
-  assertNavigationEvents(events, THIRD_URL, secondNavigation.id, navigableId);
+  assertNavigationEvents(
+    events,
+    THIRD_URL,
+    secondNavigation.navigationId,
+    navigableId
+  );
 
   navigationManager.stopMonitoring();
 
@@ -107,14 +117,14 @@ add_task(async function test_loadTwoTabsSimultaneously() {
     browser1.browsingContext
   );
   assertNavigation(nav1, FIRST_URL);
-  assertNavigationEvents(events, FIRST_URL, nav1.id, navigableId1);
+  assertNavigationEvents(events, FIRST_URL, nav1.navigationId, navigableId1);
 
   info("Check navigation monitored for tab2");
   const nav2 = navigationManager.getNavigationForBrowsingContext(
     browser2.browsingContext
   );
   assertNavigation(nav2, SECOND_URL);
-  assertNavigationEvents(events, SECOND_URL, nav2.id, navigableId2);
+  assertNavigationEvents(events, SECOND_URL, nav2.navigationId, navigableId2);
   assertUniqueNavigationIds(nav1, nav2);
 
   info("Reload the two tabs simultaneously");
@@ -130,14 +140,14 @@ add_task(async function test_loadTwoTabsSimultaneously() {
     browser1.browsingContext
   );
   assertNavigation(nav3, FIRST_URL);
-  assertNavigationEvents(events, FIRST_URL, nav3.id, navigableId1);
+  assertNavigationEvents(events, FIRST_URL, nav3.navigationId, navigableId1);
 
   info("Check the second navigation monitored for tab2");
   const nav4 = navigationManager.getNavigationForBrowsingContext(
     browser2.browsingContext
   );
   assertNavigation(nav4, SECOND_URL);
-  assertNavigationEvents(events, SECOND_URL, nav4.id, navigableId2);
+  assertNavigationEvents(events, SECOND_URL, nav4.navigationId, navigableId2);
   assertUniqueNavigationIds(nav1, nav2, nav3, nav4);
 
   navigationManager.off("navigation-started", onEvent);
@@ -172,7 +182,7 @@ add_task(async function test_loadPageWithIframes() {
 
     const url = context.currentWindowGlobal.documentURI.spec;
     assertNavigation(navigation, url);
-    assertNavigationEvents(events, url, navigation.id, navigable);
+    assertNavigationEvents(events, url, navigation.navigationId, navigable);
     navigations.push(navigation);
   }
   assertUniqueNavigationIds(...navigations);
@@ -189,7 +199,7 @@ add_task(async function test_loadPageWithIframes() {
 
     const url = context.currentWindowGlobal.documentURI.spec;
     assertNavigation(navigation, url);
-    assertNavigationEvents(events, url, navigation.id, navigable);
+    assertNavigationEvents(events, url, navigation.navigationId, navigable);
     navigations.push(navigation);
   }
   assertUniqueNavigationIds(...navigations);
@@ -225,7 +235,7 @@ add_task(async function test_loadPageWithCoop() {
   assertNavigationEvents(
     events,
     SECOND_COOP_URL,
-    coopNavigation.id,
+    coopNavigation.navigationId,
     navigableId
   );
 
@@ -265,7 +275,7 @@ add_task(async function testSameDocumentNavigation() {
   assertNavigationEvents(
     events,
     url + "#hash",
-    hashNavigation.id,
+    hashNavigation.navigationId,
     navigableId,
     true
   );
@@ -277,7 +287,12 @@ add_task(async function testSameDocumentNavigation() {
     browser.browsingContext
   );
   is(events.length, 5, "Recorded 2 additional navigation events");
-  assertNavigationEvents(events, url, regularNavigation.id, navigableId);
+  assertNavigationEvents(
+    events,
+    url,
+    regularNavigation.navigationId,
+    navigableId
+  );
 
   info("Perform another same-document navigation");
   onNavigationStopped = navigationManager.once("navigation-stopped");
@@ -303,7 +318,7 @@ add_task(async function testSameDocumentNavigation() {
   assertNavigationEvents(
     events,
     url + "#foo",
-    sameHashNavigation.id,
+    sameHashNavigation.navigationId,
     navigableId,
     true
   );

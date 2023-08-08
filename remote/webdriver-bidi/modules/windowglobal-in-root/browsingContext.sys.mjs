@@ -28,7 +28,7 @@ class BrowsingContextModule extends Module {
         this.messageHandler.navigationManager.getNavigationForBrowsingContext(
           browsingContext
         );
-      payload.navigation = navigation ? navigation.id : null;
+      payload.navigation = navigation ? navigation.navigationId : null;
     }
 
     return payload;
