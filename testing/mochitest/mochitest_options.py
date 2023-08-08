@@ -582,7 +582,7 @@ class MochitestArguments(ArgumentContainer):
                 "action": "store_true",
                 "default": False,
                 "dest": "a11y_checks",
-                "help": "Run tests with accessibility checks disabled.",
+                "help": "Run tests with accessibility checks enabled.",
             },
         ],
         [
