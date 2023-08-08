@@ -221,3 +221,24 @@ add_task(async function test_button_toggles_all_windows() {
   BrowserTestUtils.removeTab(tab);
   await BrowserTestUtils.closeWindow(newWindow);
 });
+
+add_task(async function test_button_right_click_doesnt_affect_sidebars() {
+  Services.prefs.setBoolPref("browser.shopping.experience2023.active", false);
+
+  await BrowserTestUtils.withNewTab(CONTENT_PAGE, async function (browser) {
+    let shoppingButton = document.getElementById("shopping-sidebar-button");
+    let browserPanel = gBrowser.getPanel(browser);
+
+    BrowserTestUtils.loadURIString(browser, PRODUCT_PAGE);
+    await BrowserTestUtils.browserLoaded(browser);
+
+    let sidebar = browserPanel.querySelector("shopping-sidebar");
+
+    is(sidebar, null, "Shopping sidebar should be closed");
+    EventUtils.synthesizeMouseAtCenter(shoppingButton, { button: 1 });
+    // Wait a tick.
+    await new Promise(executeSoon);
+    sidebar = browserPanel.querySelector("shopping-sidebar");
+    is(sidebar, null, "Shopping sidebar should still be closed");
+  });
+});

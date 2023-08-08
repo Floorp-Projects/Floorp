@@ -25,6 +25,16 @@ export class ShoppingSidebarParent extends JSWindowActorParent {
   }
 
   /**
+   * Called when the user clicks the URL bar button.
+   */
+  static urlbarButtonClick(event) {
+    if (event.button > 0) {
+      return;
+    }
+    this.toggleAllSidebars();
+  }
+
+  /**
    * Toggles opening or closing all Shopping sidebars.
    * Sets the active pref value for all windows to respond to.
    */

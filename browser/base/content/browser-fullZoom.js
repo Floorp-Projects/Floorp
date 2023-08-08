@@ -482,6 +482,19 @@ var FullZoom = {
     return result;
   },
 
+  /**
+   * Called from the URL bar's inline zoom reset indicator button.
+   *
+   * @param {Event} event the click/keyboard event that triggered the call.
+   */
+  resetFromURLBar(event) {
+    if (event.button > 0) {
+      return;
+    }
+    this.reset();
+    this.resetScalingZoom();
+  },
+
   resetScalingZoom: function FullZoom_resetScaling(
     browser = gBrowser.selectedBrowser
   ) {
