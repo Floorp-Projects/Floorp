@@ -19,9 +19,9 @@ namespace Module {
 // Note: This must be kept in sync with the selector matching in
 // nsComponentManager.cpp.
 enum ProcessSelector {
-  ANY_PROCESS = 0x0,
-  MAIN_PROCESS_ONLY = 0x1,
-  CONTENT_PROCESS_ONLY = 0x2,
+  ANY_PROCESS = 0,
+  MAIN_PROCESS_ONLY = 1 << 0,
+  CONTENT_PROCESS_ONLY = 1 << 1,
 
   /**
    * By default, modules are not loaded in the GPU, VR, Socket, RDD, Utility
@@ -31,11 +31,11 @@ enum ProcessSelector {
    * NOTE: IPDLUnitTest does not have its own flag, and will only load a
    * module if it is enabled in all processes.
    */
-  ALLOW_IN_GPU_PROCESS = 0x4,
-  ALLOW_IN_VR_PROCESS = 0x8,
-  ALLOW_IN_SOCKET_PROCESS = 0x10,
-  ALLOW_IN_RDD_PROCESS = 0x20,
-  ALLOW_IN_UTILITY_PROCESS = 0x30,
+  ALLOW_IN_GPU_PROCESS = 1 << 2,
+  ALLOW_IN_VR_PROCESS = 1 << 3,
+  ALLOW_IN_SOCKET_PROCESS = 1 << 4,
+  ALLOW_IN_RDD_PROCESS = 1 << 5,
+  ALLOW_IN_UTILITY_PROCESS = 1 << 6,
   ALLOW_IN_GPU_AND_MAIN_PROCESS = ALLOW_IN_GPU_PROCESS | MAIN_PROCESS_ONLY,
   ALLOW_IN_GPU_AND_VR_PROCESS = ALLOW_IN_GPU_PROCESS | ALLOW_IN_VR_PROCESS,
   ALLOW_IN_GPU_AND_SOCKET_PROCESS =
