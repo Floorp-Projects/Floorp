@@ -2,4 +2,4 @@ issuer: Mochitest Test CA
 subject: Mochitest Test Cert
 validity:20220101-20320101
 extension:extKeyUsage:serverAuth
-extension:subjectAlternativeName:mochi.test,example.com,*.example.com,example.net,*.example.net,example.org,*.example.org,*.itisatrap.org,*.xn--jxalpdlp,itisatracker.org,w3c-test.org,*.w3c-test.org,mochitest.youtube.com,localhost,127.0.0.2
+extension:subjectAlternativeName:mochi.test,example.com,*.example.com,example.net,*.example.net,example.org,*.example.org,*.itisatrap.org,*.xn--jxalpdlp,itisatracker.org,w3c-test.org,*.w3c-test.org,mochitest.youtube.com,localhost,127.0.0.2,trackertest.org

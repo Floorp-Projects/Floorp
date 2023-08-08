@@ -428,7 +428,7 @@ PartitionedStorageHelper.runTest(
     );
     is(
       res.value,
-      "http://not-tracking.example.com/browser/toolkit/components/antitracking/test/browser/empty.js",
+      "https://not-tracking.example.com/browser/toolkit/components/antitracking/test/browser/empty.js",
       "The first-party service worker received fetch event."
     );
     res = await sendAndWaitWorkerMessage(
@@ -463,7 +463,7 @@ PartitionedStorageHelper.runTest(
     );
     is(
       res.value,
-      "http://not-tracking.example.com/browser/toolkit/components/antitracking/test/browser/empty.js",
+      "https://not-tracking.example.com/browser/toolkit/components/antitracking/test/browser/empty.js",
       "The third-party service worker received fetch event."
     );
   },
