@@ -1044,7 +1044,12 @@ Result<Ok, nsresult> Edts::Parse(Box& aBox) {
     if (media_time == -1 && i) {
       LOG_WARN(Edts, "Multiple empty edit, not handled");
     } else if (media_time == -1) {
-      mEmptyOffset = segment_duration;
+      if (segment_duration > std::numeric_limits<int64_t>::max()) {
+        NS_WARNING("Segment duration higher than int64_t max.");
+        mEmptyOffset = std::numeric_limits<int64_t>::max();
+      } else {
+        mEmptyOffset = static_cast<int64_t>(segment_duration);
+      }
       emptyEntry = true;
     } else if (i > 1 || (i > 0 && !emptyEntry)) {
       LOG_WARN(Edts,
