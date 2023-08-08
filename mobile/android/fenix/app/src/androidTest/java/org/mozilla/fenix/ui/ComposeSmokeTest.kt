@@ -326,6 +326,7 @@ class ComposeSmokeTest {
         }
     }
 
+    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1846941")
     @Test
     fun tabMediaControlButtonTest() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
