@@ -218,6 +218,7 @@ RefPtr<MediaDataDecoder::DecodePromise> FFmpegDataDecoder<LIBAV_VER>::Drain() {
 RefPtr<MediaDataDecoder::DecodePromise>
 FFmpegDataDecoder<LIBAV_VER>::ProcessDrain() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+  FFMPEG_LOG("FFmpegDataDecoder: draining buffers");
   RefPtr<MediaRawData> empty(new MediaRawData());
   empty->mTimecode = mLastInputDts;
   bool gotFrame = false;
