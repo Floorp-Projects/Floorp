@@ -602,6 +602,41 @@ export class Capabilities extends Map {
           }
           break;
 
+        case "webauthn:virtualAuthenticators":
+          lazy.assert.boolean(
+            v,
+            lazy.pprint`Expected ${k} to be a boolean, got ${v}`
+          );
+          break;
+
+        case "webauthn:extension:uvm":
+          lazy.assert.boolean(
+            v,
+            lazy.pprint`Expected ${k} to be a boolean, got ${v}`
+          );
+          break;
+
+        case "webauthn:extension:prf":
+          lazy.assert.boolean(
+            v,
+            lazy.pprint`Expected ${k} to be a boolean, got ${v}`
+          );
+          break;
+
+        case "webauthn:extension:largeBlob":
+          lazy.assert.boolean(
+            v,
+            lazy.pprint`Expected ${k} to be a boolean, got ${v}`
+          );
+          break;
+
+        case "webauthn:extension:credBlob":
+          lazy.assert.boolean(
+            v,
+            lazy.pprint`Expected ${k} to be a boolean, got ${v}`
+          );
+          break;
+
         case "moz:accessibilityChecks":
           lazy.assert.boolean(
             v,
@@ -728,6 +763,27 @@ export class Capabilities extends Map {
             lazy.pprint`Expected ${name} to be true, got ${value}`
           );
         }
+        return value;
+
+      case "webauthn:virtualAuthenticators":
+        lazy.assert.boolean(
+          value,
+          lazy.pprint`Expected ${name} to be a boolean, got ${value}`
+        );
+        return value;
+
+      case "webauthn:extension:uvm":
+        lazy.assert.boolean(
+          value,
+          lazy.pprint`Expected ${name} to be a boolean, got ${value}`
+        );
+        return value;
+
+      case "webauthn:extension:largeBlob":
+        lazy.assert.boolean(
+          value,
+          lazy.pprint`Expected ${name} to be a boolean, got ${value}`
+        );
         return value;
 
       case "moz:firefoxOptions":
