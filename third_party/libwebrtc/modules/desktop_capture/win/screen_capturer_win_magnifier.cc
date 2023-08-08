@@ -49,25 +49,17 @@ ScreenCapturerWinMagnifier::ScreenCapturerWinMagnifier() = default;
 ScreenCapturerWinMagnifier::~ScreenCapturerWinMagnifier() {
   // DestroyWindow must be called before MagUninitialize. magnifier_window_ is
   // destroyed automatically when host_window_ is destroyed.
-  if (host_window_) {
+  if (host_window_)
     DestroyWindow(host_window_);
-    host_window_ = NULL;
-  }
 
-  if (magnifier_initialized_) {
+  if (magnifier_initialized_)
     mag_uninitialize_func_();
-    magnifier_initialized_ = false;
-  }
 
-  if (mag_lib_handle_) {
+  if (mag_lib_handle_)
     FreeLibrary(mag_lib_handle_);
-    mag_lib_handle_ = NULL;
-  }
 
-  if (desktop_dc_) {
+  if (desktop_dc_)
     ReleaseDC(NULL, desktop_dc_);
-    desktop_dc_ = NULL;
-  }
 }
 
 void ScreenCapturerWinMagnifier::Start(Callback* callback) {
