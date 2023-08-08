@@ -928,7 +928,7 @@ class BrowsingContextModule extends Module {
         webProgress.browsingContext
       );
     return {
-      navigation: navigation ? navigation.id : null,
+      navigation: navigation ? navigation.navigationId : null,
       url,
     };
   }
@@ -1037,7 +1037,7 @@ class BrowsingContextModule extends Module {
   };
 
   #onLocationChange = async (eventName, data) => {
-    const { id, navigableId, url } = data;
+    const { navigationId, navigableId, url } = data;
     const context = this.#getBrowsingContext(navigableId);
 
     if (this.#subscribedEvents.has("browsingContext.fragmentNavigated")) {
@@ -1049,7 +1049,7 @@ class BrowsingContextModule extends Module {
         "browsingContext.fragmentNavigated",
         {
           context: navigableId,
-          navigation: id,
+          navigation: navigationId,
           timestamp: Date.now(),
           url,
         },
