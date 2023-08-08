@@ -13,7 +13,7 @@ AntiTracking._createTask({
     await callRequestStorageAccess();
 
     const TRACKING_PAGE =
-      "https://another-tracking.example.net/browser/browser/base/content/test/protectionsUI/trackingPage.html";
+      "http://another-tracking.example.net/browser/browser/base/content/test/protectionsUI/trackingPage.html";
     async function runChecks(name) {
       let iframe = document.createElement("iframe");
       iframe.src = TRACKING_PAGE;
@@ -44,11 +44,11 @@ AntiTracking._createTask({
   iframeSandbox: null,
   accessRemoval: null,
   callbackAfterRemoval: null,
-  thirdPartyPage: TEST_3RD_PARTY_PAGE,
+  thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
   errorMessageDomains: [
-    "https://tracking.example.org",
-    "https://tracking.example.org",
-    "https://tracking.example.org",
+    "http://tracking.example.org",
+    "http://tracking.example.org",
+    "http://tracking.example.org",
   ],
 });
 
@@ -79,10 +79,10 @@ AntiTracking._createTask({
   iframeSandbox: null,
   accessRemoval: null,
   callbackAfterRemoval: null,
-  thirdPartyPage: TEST_3RD_PARTY_PAGE,
+  thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
   errorMessageDomains: [
-    "https://tracking.example.org",
-    "https://tracking.example.org",
+    "http://tracking.example.org",
+    "http://tracking.example.org",
   ],
 });
 
@@ -110,10 +110,10 @@ AntiTracking._createTask({
   iframeSandbox: null,
   accessRemoval: null,
   callbackAfterRemoval: null,
-  thirdPartyPage: TEST_3RD_PARTY_PAGE,
+  thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
   errorMessageDomains: [
-    "https://tracking.example.org",
-    "https://tracking.example.org",
+    "http://tracking.example.org",
+    "http://tracking.example.org",
   ],
 });
 
@@ -141,10 +141,10 @@ AntiTracking._createTask({
   iframeSandbox: null,
   accessRemoval: null,
   callbackAfterRemoval: null,
-  thirdPartyPage: TEST_3RD_PARTY_PAGE,
+  thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
   errorMessageDomains: [
-    "https://tracking.example.org",
-    "https://tracking.example.org",
+    "http://tracking.example.org",
+    "http://tracking.example.org",
   ],
 });
 
