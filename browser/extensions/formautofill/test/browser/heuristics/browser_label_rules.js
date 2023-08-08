@@ -33,4 +33,26 @@ add_heuristic_tests([
       },
     ],
   },
+  {
+    fixtureData: `
+        <html>
+        <body>
+          <form>
+            <input type="text" id="name" autocomplete="name"/>
+            <input type="text" id="country" autocomplete="country"/>
+            <input type="text" id="test" aria-label="street-address"/>
+          </form>
+        </body>
+        </html>`,
+    expectedResult: [
+      {
+        description: `keywords are in aria-label`,
+        fields: [
+          { fieldName: "name", reason: "autocomplete" },
+          { fieldName: "country", reason: "autocomplete" },
+          { fieldName: "street-address", reason: "regex-heuristic" },
+        ],
+      },
+    ],
+  },
 ]);
