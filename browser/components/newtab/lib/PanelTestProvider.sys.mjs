@@ -238,9 +238,6 @@ const MESSAGES = () => [
             hero_text: {
               string_id: "fx100-thank-you-hero-text",
             },
-            help_text: {
-              text: "Some sample help text",
-            },
             primary_button: {
               label: {
                 string_id: "mr2022-onboarding-pin-primary-button-label",

@@ -773,13 +773,6 @@ async function prepareContentForReact(content) {
     content.skipFxA = true;
   }
 
-  // Remove the English-only image caption.
-  if (Services.locale.appLocaleAsBCP47.split("-")[0] !== "en") {
-    delete content.screens?.find(
-      screen => screen.content?.help_text?.deleteIfNotEn
-    )?.content.help_text;
-  }
-
   let shouldRemoveLanguageMismatchScreen = true;
   if (content.languageMismatchEnabled) {
     const screen = content?.screens?.find(s => s.id === "AW_LANGUAGE_MISMATCH");

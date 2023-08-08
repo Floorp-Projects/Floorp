@@ -360,10 +360,6 @@ describe("MultiStageAboutWelcome module", () => {
         content: {
           title: "test title",
           subtitle: "test subtitle",
-          help_text: {
-            text: "test help text",
-            position: "default",
-          },
         },
       };
       it("should render ImportScreen", () => {

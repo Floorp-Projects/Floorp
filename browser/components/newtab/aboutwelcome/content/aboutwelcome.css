@@ -478,6 +478,7 @@
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main {
   width: auto;
+  margin: 0 auto;
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content {
   border-radius: 0;
@@ -492,6 +493,17 @@
 }
 .onboardingContainer.shopping .screen[pos=split] .section-secondary {
   display: none;
+}
+.onboardingContainer.shopping .screen[pos=split] .info-text {
+  color: #5B5B66;
+  font-size: 0.69em;
+  margin: 10px auto;
+  line-height: 1.5;
+}
+@media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
+  .onboardingContainer.shopping .screen[pos=split] .info-text {
+    color: #CFCFD8;
+  }
 }
 
 html {
@@ -1711,8 +1723,7 @@ html {
   color: var(--grey-subtitle-1);
   margin: 0 4px;
 }
-.onboardingContainer .message-text,
-.onboardingContainer .attrib-text {
+.onboardingContainer .message-text {
   transition: var(--transition);
 }
 .onboardingContainer .helptext {

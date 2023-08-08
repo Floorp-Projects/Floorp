@@ -7,6 +7,7 @@
 
   .section-main {
     width: auto;
+    margin: 0 auto;
 
     .main-content {
       border-radius: 0;
@@ -27,5 +28,16 @@
 
   .section-secondary {
     display: none;
+  }
+
+  .info-text {
+    color: #5B5B66;
+    font-size: 0.69em;
+    margin: 10px auto;
+    line-height: 1.5;
+
+    @media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
+      color: #CFCFD8;
+    }
   }
 }

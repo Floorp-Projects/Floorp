@@ -27,8 +27,8 @@ const TEST_DEFAULT_CONTENT = [
           data: { entrypoint: "test" },
         },
       },
-      help_text: {
-        text: "Here's some sample help text",
+      info_text: {
+        raw: "Here's some sample help text",
       },
     },
   },
@@ -141,10 +141,10 @@ add_task(async function test_multistage_aboutwelcome_default() {
       "main.AW_STEP1",
       "div.onboardingContainer",
       "div.section-secondary",
-      "span.attrib-text",
       "div.secondary-cta.top",
       "div.steps",
       "div.indicator.current",
+      "span.info-text",
     ],
     // Unexpected selectors:
     [
@@ -270,6 +270,7 @@ add_task(async function test_Multistage_About_Welcome_navigation() {
       "div.secondary-cta.top",
       "button[value='secondary_button']",
       "button[value='secondary_button_top']",
+      "span.info-text",
     ],
     // Unexpected selectors:
     ["main.AW_STEP2", "main.AW_STEP3"]
