@@ -117,7 +117,7 @@ jobs:
       aarch64: false
       mar: true
       beta: true
-      use_profdata_jarlog: "floorp-windows-x86_64-profdata-and-jarlog"
+      profdata_jarlog_artifact_name: "floorp-windows-x86_64-profdata-and-jarlog"
       out_artifact_name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
 
@@ -125,39 +125,39 @@ jobs:
     needs: [get-display-version, get-buildid, get-inside-version,build-win-x86_64-with-profdata-and-jarlog]
     runs-on: ubuntu-latest
     steps:
-    - name: generate update XML file
-      run: |
-        echo '<?xml version="1.0" encoding="UTF-8"?>
-          <updates>
-            <update
-              type="minor"
-              displayVersion="${DISPVER}"
-              appVersion="${INSDVER}"
-              platformVersion="${INSDVER}"
-              buildID="${BUILDID}"
-              detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/"
-            >
-            <patch
-              type="complete"
-              URL="https://github.com/${GHREPO}/releases/download/beta/${MAR_NAME}"
-              size="${MAR_SIZE}"
-            />
-            </update>
-          </updates>' > WINNT-x86_64.xml
-      env:
-        DISPVER: ${{needs.get-display-version.outputs.display-version}}
-        INSDVER: ${{needs.get-inside-version.outputs.inside-version}}
-        BUILDID: ${{needs.get-buildid.outputs.buildids}}
-        GHREPO: ${{github.repository}}
-        MAR_NAME: ${{needs.build-win-x86_64-with-profdata-and-jarlog.outputs.mar_name}}
-        MAR_SIZE: ${{needs.build-win-x86_64-with-profdata-and-jarlog.outputs.mar_size}}
+      - name: generate update XML file
+        run: |
+          echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+            <updates>
+              <update
+                type=\"minor\"
+                displayVersion=\"${DISPVER}\"
+                appVersion=\"${INSDVER}\"
+                platformVersion=\"${INSDVER}\"
+                buildID=\"${BUILDID}\"
+                detailsURL=\"https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/\"
+              >
+              <patch
+                type=\"complete\"
+                URL=\"https://github.com/${GHREPO}/releases/download/beta/${MAR_NAME}\"
+                size=\"${MAR_SIZE}\"
+              />
+              </update>
+            </updates>" > WINNT-x86_64.xml
+        env:
+          DISPVER: ${{needs.get-display-version.outputs.display-version}}
+          INSDVER: ${{needs.get-inside-version.outputs.inside-version}}
+          BUILDID: ${{needs.get-buildid.outputs.buildids}}
+          GHREPO: ${{github.repository}}
+          MAR_NAME: ${{needs.build-win-x86_64-with-profdata-and-jarlog.outputs.mar_name}}
+          MAR_SIZE: ${{needs.build-win-x86_64-with-profdata-and-jarlog.outputs.mar_size}}
 
-    - name: Publish 🎁
-      uses: actions/upload-artifact@v3
-      with:
-        name: update-xml-floorp-win-x86_64
-        path: |
-          WINNT-x86_64.xml
+      - name: Publish 🎁
+        uses: actions/upload-artifact@v3
+        with:
+          name: update-xml-floorp-win-x86_64
+          path: |
+            WINNT-x86_64.xml
 
 ######################################################## ↑ Windows x86_64 ########################################################
 #----------------------------------------- LINUX -----------------------------------------#
@@ -174,23 +174,23 @@ jobs:
     steps:
       - name: generate update XML file
         run: |
-          echo '<?xml version="1.0" encoding="UTF-8"?>
+          echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
             <updates>
               <update
-                type="minor"
-                displayVersion="${DISPVER}"
-                appVersion="${INSDVER}"
-                platformVersion="${INSDVER}"
-                buildID="${BUILDID}"
-                detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/"
+                type=\"minor\"
+                displayVersion=\"${DISPVER}\"
+                appVersion=\"${INSDVER}\"
+                platformVersion=\"${INSDVER}\"
+                buildID=\"${BUILDID}\"
+                detailsURL=\"https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/\"
               >
               <patch
-                type="complete"
-                URL="https://github.com/${GHREPO}/releases/download/beta/${LINUX_MAR_NAME}"
-                size="${MAR_SIZE}"
+                type=\"complete\"
+                URL=\"https://github.com/${GHREPO}/releases/download/beta/${MAR_NAME}\"
+                size=\"${MAR_SIZE}\"
               />
             </update>
-          </updates>' > LINUX-x86_64.xml
+          </updates>" > LINUX-x86_64.xml
         env:
           DISPVER: ${{needs.get-display-version.outputs.display-version}}
           INSDVER: ${{needs.get-inside-version.outputs.inside-version}}

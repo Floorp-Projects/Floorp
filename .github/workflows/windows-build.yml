@@ -36,8 +36,8 @@ on:
       mar:
         type: boolean
         default: false
-      #TODO: 名前が不自明
-      use_profdata_jarlog:
+      #? if set this, use profdata, jarlog in build
+      profdata_jarlog_artifact_name:
         description: profile artifact name;use profile for PGO;not compartible with profgen
         type: string
         default: ""
@@ -76,15 +76,15 @@ jobs:
         //profgen and use-profdata is not compatible
         if (
           process.env.GHA_profgen == "true"
-          && process.env.GHA_use_profdata_jarlog != ""
+          && process.env.GHA_profdata_jarlog_artifact_name != ""
         ) {process.exit(-1);}
 
-        //aarch64 and (profgen or use_profdata_jarlog) is not compatible
+        //aarch64 and (profgen or profdata_jarlog_artifact_name) is not compatible
         if (
           process.env.GHA_aarch64 == "true"
           && (
             process.env.GHA_profgen == "true"
-            || process.env.GHA_use_profdata_jarlog != ""
+            || process.env.GHA_profdata_jarlog_artifact_name != ""
           )
         ) {process.exit(-1);}
       env:
@@ -93,7 +93,7 @@ jobs:
         GHA_zstd: ${{inputs.zstd}}
         GHA_beta: ${{inputs.beta}}
         GHA_mar: ${{inputs.mar}}
-        GHA_use_profdata_jarlog: ${{inputs.use_profdata_jarlog}}
+        GHA_profdata_jarlog_artifact_name: ${{inputs.profdata_jarlog_artifact_name}}
         GHA_out-artifact-name: ${{inputs.out_artifact_name}}
 
     - name: Change PPA mirror servers
@@ -126,9 +126,9 @@ jobs:
 
     - uses: actions/download-artifact@v3
       name: Download artifact if use profdata📥
-      if: inputs.use_profdata_jarlog
+      if: inputs.profdata_jarlog_artifact_name
       with:
-        name: ${{inputs.use_profdata_jarlog}}
+        name: ${{inputs.profdata_jarlog_artifact_name}}
         path: ~/artifact
 
     - name: Setup 🪛
@@ -155,7 +155,7 @@ jobs:
 
         if [[ $GHA_profgen == 'true' ]]; then
           echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
-        elif [[ -n $GHA_use_profdata_jarlog ]]; then
+        elif [[ -n $GHA_profdata_jarlog_artifact_name ]]; then
           echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
           echo 'ac_add_options --with-pgo-profile-path=$(echo ~)/artifact/merged.profdata' >> mozconfig
           echo 'ac_add_options --with-pgo-jarlog=$(echo ~)/artifact/en-US.log' >> mozconfig
@@ -192,7 +192,7 @@ jobs:
         GHA_profgen: ${{inputs.profgen}}
         GHA_aarch64: ${{inputs.aarch64}}
         GHA_beta: ${{inputs.beta}}
-        GHA_use_profdata_jarlog : ${{inputs.use_profdata_jarlog}}
+        GHA_profdata_jarlog_artifact_name : ${{inputs.profdata_jarlog_artifact_name}}
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
     - name: setup Rust 🦀

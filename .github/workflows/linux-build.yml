@@ -27,10 +27,6 @@ on:
         description: "aarch64 option is not compartiable with deb option"
         type: boolean
         default: false
-      with_raw:
-        description: "with all files of dist(esp. for make mar)"
-        type: boolean
-        default: false
       beta:
         type: boolean
         default: false
@@ -212,17 +208,8 @@ jobs:
           # echo "OUTPUT=obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2" >> $GITHUB_ENV
           # zip -r dist.zip obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2
         fi
-
-        if [[ $GHA_raw == 'true' ]];then
-          if [[ $GHA_aarch64 != 'true' ]];then
-            zip -r all.zip obj-x86_64-pc-linux-gnu/dist/*
-          else
-            zip -r all.zip obj-aarch64-unknown-linux-gnu/dist/*
-          fi
-        fi
       env:
         GHA_aarch64: ${{inputs.aarch64}}
-        GHA_raw: ${{inputs.with_raw}}
 
     - name: Create MAR artifact if mar📦
       id: gen-mar
@@ -246,10 +233,4 @@ jobs:
         name: floorp-linux-${{fromJson('["x64","aarch64"]')[inputs.aarch64]}}
         path: ~/output
         # path: dist.zip
-    - name: Publish raw (only if with_raw)
-      uses: actions/upload-artifact@v3
-      if: inputs.with_raw
-      with:
-        name: floorp-linux-${{fromJson('["x64","aarch64"]')[inputs.aarch64]}}
-        path: all.zip
     #PUBLISH END

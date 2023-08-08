@@ -119,7 +119,7 @@ jobs:
       aarch64: false
       mar: true
       beta: true
-      use_profdata_jarlog: "floorp-windows-x86_64-profdata-and-jarlog"
+      profdata_jarlog_artifact_name: "floorp-windows-x86_64-profdata-and-jarlog"
       out_artifact_name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
 
