@@ -9,6 +9,10 @@ with Files("**"):
 
 IPDL_SOURCES += ["PWebAuthnTransaction.ipdl"]
 
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
 XPIDL_SOURCES += ["nsIU2FTokenManager.idl", "nsIWebAuthnController.idl"]
 
 XPIDL_MODULE = "dom_webauthn"
