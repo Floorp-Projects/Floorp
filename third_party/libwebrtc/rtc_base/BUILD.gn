@@ -425,6 +425,12 @@ rtc_library("logging") {
     "//third_party/abseil-cpp/absl/types:optional",
   ]
 
+  # Added to allow including apm_data_dumper.h in rtc_base/logging.cc
+  # for Mozilla controlling aec logging from about:webrtc.
+  if (build_with_mozilla) {
+    configs += [ "../modules/audio_processing:apm_debug_dump" ]
+  }
+
   if (build_with_chromium) {
     # Dependency on chromium's logging (in //base).
     deps += [ "//base" ]

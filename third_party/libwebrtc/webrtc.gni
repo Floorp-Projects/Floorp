@@ -132,7 +132,7 @@ declare_args() {
 
   # Selects whether debug dumps for the audio processing module
   # should be generated.
-  apm_debug_dump = false
+  apm_debug_dump = build_with_mozilla
 
   # Selects whether the audio processing module should be excluded.
   rtc_exclude_audio_processing_module = false
