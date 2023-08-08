@@ -5,10 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FFmpegAudioDecoder.h"
+#include "AudioSampleFormat.h"
 #include "FFmpegLog.h"
 #include "TimeUnits.h"
 #include "VideoUtils.h"
 #include "BufferReader.h"
+#include "libavutil/samplefmt.h"
 #if defined(FFVPX_VERSION)
 #  include "libavutil/channel_layout.h"
 #endif
@@ -171,6 +173,25 @@ static AlignedAudioBuffer CopyAndPackAudio(AVFrame* aFrame,
         *tmp++ = AudioSampleToFloat(data[channel][frame]);
       }
     }
+  } else if (aFrame->format == AV_SAMPLE_FMT_U8) {
+    // Interleaved audio data. Convert it from u8 to the expected sample-format
+    AudioDataValue* tmp = audio.get();
+    uint8_t* data = reinterpret_cast<uint8_t**>(aFrame->data)[0];
+    for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
+      for (uint32_t channel = 0; channel < aNumChannels; channel++) {
+        *tmp++ = UInt8bitToAudioSample<AudioDataValue>(*data++);
+      }
+    }
+  } else if (aFrame->format == AV_SAMPLE_FMT_U8P) {
+    // Planar audio data. Convert it from u8 to the expected sample-format
+    // and pack it into something we can understand.
+    AudioDataValue* tmp = audio.get();
+    uint8_t** data = reinterpret_cast<uint8_t**>(aFrame->data);
+    for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
+      for (uint32_t channel = 0; channel < aNumChannels; channel++) {
+        *tmp++ = UInt8bitToAudioSample<AudioDataValue>(data[channel][frame]);
+      }
+    }
   }
 
   return audio;
@@ -190,7 +211,9 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::PostProcessOutput(
       mFrame->format != AV_SAMPLE_FMT_S16 &&
       mFrame->format != AV_SAMPLE_FMT_S16P &&
       mFrame->format != AV_SAMPLE_FMT_S32 &&
-      mFrame->format != AV_SAMPLE_FMT_S32P) {
+      mFrame->format != AV_SAMPLE_FMT_S32P &&
+      mFrame->format != AV_SAMPLE_FMT_U8 &&
+      mFrame->format != AV_SAMPLE_FMT_U8P) {
     return MediaResult(
         NS_ERROR_DOM_MEDIA_DECODE_ERR,
         RESULT_DETAIL("FFmpeg audio decoder outputs unsupported audio format"));
