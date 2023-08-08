@@ -165,10 +165,12 @@ jobs:
 #----------------------------------------- LINUX -----------------------------------------#
   build-linux-x86_64-PGO:
     uses: ./.github/workflows/linux-build.yml
+    needs: [get-buildid]
     with:
       aarch64: false
       beta: true
       mar: true
+      MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
 
   linux-x86_64-gen-update-xml:
     runs-on: 'ubuntu-latest'

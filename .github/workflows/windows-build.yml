@@ -112,7 +112,7 @@ jobs:
 
     #! ON UBUNTU RUNNER
     - name: Setup Disk & Swap Space 💿
-      if: ${{runner.name == 'ubuntu-latest'}}
+      if: ${{!inputs.buildjet}}
       run: |
         chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
         .github/workflows/src/disk_swap_for_github_runner.sh
@@ -228,14 +228,26 @@ jobs:
     - name: Build 🔨
 
       run: |
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
+
         ./mach build
+      env:
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
     - name: Package 📦
 
       run: |
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
         ./mach package
 
         ./mach package-multi-locale --locales ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW
+
+      env:
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
     - name: Copy 📂
 

@@ -40,6 +40,9 @@ on:
         type: boolean
         default: false
       #? buildjet cache also is, but idk how to use on sccache
+      MOZ_BUILD_DATE:
+        type: string
+        default: ""
     outputs:
       mar_name:
         value: ${{jobs.linux-build.outputs.mar_name}}
@@ -74,13 +77,13 @@ jobs:
 
     #! ON UBUNTU RUNNER
     - name: Setup Disk & Swap Space 💿
-      if: ${{runner.name == 'ubuntu-latest'}}
+      if: ${{ !inputs.buildjet }}
       run: |
         chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
         .github/workflows/src/disk_swap_for_github_runner.sh
 
     - name: Prepare cross compiler (aarch64)⚒
-      if: ${{ inputs.aarch64 && !inputs.deb }}
+      if: ${{ inputs.aarch64 }}
       run: |
         sudo apt update
         sudo apt -y install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
@@ -112,12 +115,15 @@ jobs:
         disable_updater = os.environ["GHA_disable_updater"] == "true"
         aarch64 = os.environ["GHA_aarch64"] == "true"
         beta= os.environ["GHA_beta"] == "true"
+        MOZ_BUILD_DATE= os.environ["GHA_MOZ_BUILD_DATE"]
 
         os.system("sudo apt update")
         os.system("sudo apt install xvfb")
 
         shutil.copyfile("./.github/mozconfig_linux_base","./mozconfig")
         # os.system("cp ./.github/mozconfig_linux_base ./mozconfig")
+        if MOZ_BUILD_DATE != "":
+          os.system("export MOZ_BUILD_DATE="+MOZ_BUILD_DATE)
 
         mozconfig = []
 
@@ -159,6 +165,7 @@ jobs:
         GHA_disable_updater: ${{inputs.disable-updater}}
         GHA_aarch64: ${{inputs.aarch64}}
         GHA_beta: ${{inputs.beta}}
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
       shell: python3 {0}
 
     - name: Change update url if beta
@@ -180,6 +187,9 @@ jobs:
 
     - name: Build 🔨
       run: |
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
         rm -rf ./l10n-central/.git
 
         Xvfb :2 -screen 0 1024x768x24 &
@@ -188,12 +198,19 @@ jobs:
         export WORKDIR=`pwd`
         echo "Current Workdir: $WORKDIR"
         ./mach build
+      env:
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
     - name: Package 1 - mach 🎁
       run: |
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
         ./mach package
 
         ./mach package-multi-locale --locales ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW
+      env:
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
     - name: Package 2 - zip 📦
       run: |
