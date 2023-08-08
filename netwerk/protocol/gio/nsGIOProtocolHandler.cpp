@@ -890,12 +890,7 @@ void nsGIOProtocolHandler::InitSupportedProtocolsPref(nsIPrefBranch* prefs) {
     prefValue.StripWhitespace();
     ToLowerCase(prefValue);
   } else {
-    prefValue.AssignLiteral(
-#ifdef MOZ_PROXY_BYPASS_PROTECTION
-        ""  // use none
-#else
-        "sftp:"  // use defaults (comma separated list)
-#endif
+    prefValue.AssignLiteral(""  // use none by default
     );
   }
   LOG(("gio: supported protocols \"%s\"\n", prefValue.get()));
