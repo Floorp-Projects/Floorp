@@ -25,7 +25,8 @@ class FFmpegAudioDecoder<LIBAV_VER>
     : public FFmpegDataDecoder<LIBAV_VER>,
       public DecoderDoctorLifeLogger<FFmpegAudioDecoder<LIBAV_VER>> {
  public:
-  FFmpegAudioDecoder(FFmpegLibWrapper* aLib, const AudioInfo& aInfo);
+  FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
+                     const CreateDecoderParams& aDecoderParams);
   virtual ~FFmpegAudioDecoder();
 
   RefPtr<InitPromise> Init() override;
