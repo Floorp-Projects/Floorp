@@ -22,6 +22,11 @@ def test_sessionid(new_session, add_browser_capabilities):
     ("timeouts", dict),
     ("strictFileInteractability", bool),
     ("unhandledPromptBehavior", str),
+    ("webauthn:extension:credBlob", bool),
+    ("webauthn:extension:largeBlob", bool),
+    ("webauthn:extension:prf", bool),
+    ("webauthn:extension:uvm", bool),
+    ("webauthn:virtualAuthenticators", bool),
 ])
 def test_capability_type(session, capability, type):
     assert isinstance(session.capabilities, dict)
@@ -37,6 +42,11 @@ def test_capability_type(session, capability, type):
     ("timeouts", {"implicit": 0, "pageLoad": 300000, "script": 30000}),
     ("strictFileInteractability", False),
     ("unhandledPromptBehavior", "dismiss and notify"),
+    ("webauthn:extension:credBlob", False),
+    ("webauthn:extension:largeBlob", False),
+    ("webauthn:extension:prf", False),
+    ("webauthn:extension:uvm", False),
+    ("webauthn:virtualAuthenticators", False),
 ])
 def test_capability_default_value(session, capability, default_value):
     assert isinstance(session.capabilities, dict)

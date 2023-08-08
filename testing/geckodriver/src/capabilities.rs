@@ -184,6 +184,26 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
         Ok(true)
     }
 
+    fn webauthn_virtual_authenticators(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
+        Ok(true)
+    }
+
+    fn webauthn_extension_uvm(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
+        Ok(false)
+    }
+
+    fn webauthn_extension_prf(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
+        Ok(false)
+    }
+
+    fn webauthn_extension_large_blob(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
+        Ok(false)
+    }
+
+    fn webauthn_extension_cred_blob(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
+        Ok(false)
+    }
+
     fn validate_custom(&mut self, name: &str, value: &Value) -> WebDriverResult<()> {
         if !name.starts_with("moz:") {
             return Ok(());
