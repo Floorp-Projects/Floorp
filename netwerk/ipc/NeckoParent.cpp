@@ -93,14 +93,9 @@ static PBOverrideStatus PBOverrideStatusFromLoadContext(
 }
 
 static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(
-    const Maybe<LoadInfoArgs>& aOptionalLoadInfoArgs) {
-  if (aOptionalLoadInfoArgs.isNothing()) {
-    return nullptr;
-  }
-
-  const LoadInfoArgs& loadInfoArgs = aOptionalLoadInfoArgs.ref();
+    const LoadInfoArgs& aLoadInfoArgs) {
   const Maybe<PrincipalInfo>& optionalPrincipalInfo =
-      loadInfoArgs.requestingPrincipalInfo();
+      aLoadInfoArgs.requestingPrincipalInfo();
 
   if (optionalPrincipalInfo.isNothing()) {
     return nullptr;
@@ -794,7 +789,7 @@ mozilla::ipc::IPCResult NeckoParent::RecvEnsureHSTSData(
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvGetPageThumbStream(
-    nsIURI* aURI, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
+    nsIURI* aURI, const LoadInfoArgs& aLoadInfoArgs,
     GetPageThumbStreamResolver&& aResolver) {
   // Only the privileged about content process is allowed to access
   // things over the moz-page-thumb protocol. Any other content process
@@ -839,7 +834,7 @@ mozilla::ipc::IPCResult NeckoParent::RecvGetPageThumbStream(
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvGetPageIconStream(
-    nsIURI* aURI, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
+    nsIURI* aURI, const LoadInfoArgs& aLoadInfoArgs,
     GetPageIconStreamResolver&& aResolver) {
 #ifdef MOZ_PLACES
   const nsACString& remoteType =
@@ -853,10 +848,6 @@ mozilla::ipc::IPCResult NeckoParent::RecvGetPageIconStream(
   // likely-compromised content process.
   if (remoteType != PRIVILEGEDABOUT_REMOTE_TYPE) {
     return IPC_FAIL(this, "Wrong process type");
-  }
-
-  if (aLoadInfoArgs.isNothing()) {
-    return IPC_FAIL(this, "Page-icon request must include loadInfo");
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo;
