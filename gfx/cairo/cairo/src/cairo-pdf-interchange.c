@@ -450,13 +450,24 @@ cairo_pdf_interchange_write_link_action (cairo_pdf_surface_t   *surface,
 	    return status;
 
     } else if (link_attrs->link_type == TAG_LINK_URI) {
+	status = _cairo_utf8_to_pdf_string (link_attrs->uri, &dest);
+	if (unlikely (status))
+	    return status;
+
+	if (dest[0] != '(') {
+	    free (dest);
+	    return _cairo_tag_error ("Link attribute: \"url=%s\" URI may only contain ASCII characters",
+				     link_attrs->uri);
+	}
+
 	_cairo_output_stream_printf (surface->object_stream.stream,
 				     "   /A <<\n"
 				     "      /Type /Action\n"
 				     "      /S /URI\n"
-				     "      /URI (%s)\n"
+				     "      /URI %s\n"
 				     "   >>\n",
-				     link_attrs->uri);
+				     dest);
+	free (dest);
     } else if (link_attrs->link_type == TAG_LINK_FILE) {
 	_cairo_output_stream_printf (surface->object_stream.stream,
 				     "   /A <<\n"
