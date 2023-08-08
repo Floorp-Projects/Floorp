@@ -342,6 +342,12 @@ var snapshotFormatters = {
   },
 
   securitySoftware(data) {
+    if (AppConstants.platform !== "win") {
+      $("security-software").hidden = true;
+      $("security-software-table").hidden = true;
+      return;
+    }
+
     $("security-software-antivirus").textContent = data.registeredAntiVirus;
     $("security-software-antispyware").textContent = data.registeredAntiSpyware;
     $("security-software-firewall").textContent = data.registeredFirewall;
