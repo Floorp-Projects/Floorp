@@ -24,7 +24,7 @@ RenderDXGITextureHost::RenderDXGITextureHost(
     Maybe<layers::GpuProcessTextureId>& aGpuProcessTextureId,
     uint32_t aArrayIndex, gfx::SurfaceFormat aFormat,
     gfx::ColorSpace2 aColorSpace, gfx::ColorRange aColorRange,
-    gfx::IntSize aSize)
+    gfx::IntSize aSize, bool aHasKeyedMutex)
     : mHandle(aHandle),
       mGpuProcessTextureId(aGpuProcessTextureId),
       mArrayIndex(aArrayIndex),
@@ -35,6 +35,7 @@ RenderDXGITextureHost::RenderDXGITextureHost(
       mColorSpace(aColorSpace),
       mColorRange(aColorRange),
       mSize(aSize),
+      mHasKeyedMutex(aHasKeyedMutex),
       mLocked(false) {
   MOZ_COUNT_CTOR_INHERITED(RenderDXGITextureHost, RenderTextureHost);
   MOZ_ASSERT((mFormat != gfx::SurfaceFormat::NV12 &&
@@ -221,6 +222,11 @@ bool RenderDXGITextureHost::EnsureD3D11Texture2D(ID3D11Device* aDevice) {
   }
   MOZ_ASSERT(mTexture.get());
   mTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mKeyedMutex));
+
+  MOZ_ASSERT(mHasKeyedMutex == !!mKeyedMutex);
+  if (mHasKeyedMutex != !!mKeyedMutex) {
+    gfxCriticalNoteOnce << "KeyedMutex mismatch";
+  }
   return true;
 }
 
@@ -428,6 +434,10 @@ gfx::IntSize RenderDXGITextureHost::GetSize(uint8_t aChannelIndex) const {
     // The CbCr channel size is a half of Y channel size in NV12 format.
     return mSize / 2;
   }
+}
+
+bool RenderDXGITextureHost::SyncObjectNeeded() {
+  return mGpuProcessTextureId.isNothing() && !mHasKeyedMutex;
 }
 
 RenderDXGIYCbCrTextureHost::RenderDXGIYCbCrTextureHost(

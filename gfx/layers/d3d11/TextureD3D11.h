@@ -141,7 +141,7 @@ class D3D11TextureData final : public TextureData {
  private:
   gfx::ColorRange mColorRange = gfx::ColorRange::LIMITED;
   bool mNeedsClear = false;
-  const bool mHasSynchronization;
+  const bool mHasKeyedMutex;
 
   RefPtr<ID3D11Texture2D> mTexture;
   Maybe<GpuProcessTextureId> mGpuProcessTextureId;
@@ -391,6 +391,7 @@ class DXGITextureHostD3D11 : public TextureHost {
   gfx::IntSize mSize;
   WindowsHandle mHandle;
   gfx::SurfaceFormat mFormat;
+  bool mHasKeyedMutex;
 
  public:
   const gfx::ColorSpace2 mColorSpace;

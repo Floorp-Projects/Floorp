@@ -290,7 +290,7 @@ D3D11TextureData::D3D11TextureData(ID3D11Texture2D* aTexture,
     : mSize(aSize),
       mFormat(aFormat),
       mNeedsClear(aFlags & ALLOC_CLEAR_BUFFER),
-      mHasSynchronization(HasKeyedMutex(aTexture)),
+      mHasKeyedMutex(HasKeyedMutex(aTexture)),
       mTexture(aTexture),
       mArrayIndex(aArrayIndex),
       mAllocationFlags(aFlags) {
@@ -370,11 +370,11 @@ void D3D11TextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = mSize;
   aInfo.format = mFormat;
   aInfo.supportsMoz2D = true;
-  aInfo.hasSynchronization = mHasSynchronization;
+  aInfo.hasSynchronization = mHasKeyedMutex;
 }
 
 void D3D11TextureData::SyncWithObject(RefPtr<SyncObjectClient> aSyncObject) {
-  if (!aSyncObject || mHasSynchronization) {
+  if (!aSyncObject || mHasKeyedMutex) {
     // When we have per texture synchronization we sync using the keyed mutex.
     return;
   }
@@ -400,9 +400,9 @@ bool D3D11TextureData::SerializeSpecific(
       return false;
     }
   }
-  *aOutDesc = SurfaceDescriptorD3D10((WindowsHandle)sharedHandle,
-                                     mGpuProcessTextureId, mArrayIndex, mFormat,
-                                     mSize, mColorSpace, mColorRange);
+  *aOutDesc = SurfaceDescriptorD3D10(
+      (WindowsHandle)sharedHandle, mGpuProcessTextureId, mArrayIndex, mFormat,
+      mSize, mColorSpace, mColorRange, /* hasKeyedMutex */ mHasKeyedMutex);
   return true;
 }
 
@@ -804,6 +804,7 @@ DXGITextureHostD3D11::DXGITextureHostD3D11(
       mSize(aDescriptor.size()),
       mHandle(aDescriptor.handle()),
       mFormat(aDescriptor.format()),
+      mHasKeyedMutex(aDescriptor.hasKeyedMutex()),
       mColorSpace(aDescriptor.colorSpace()),
       mColorRange(aDescriptor.colorRange()),
       mIsLocked(false) {}
@@ -951,9 +952,9 @@ void DXGITextureHostD3D11::UnlockInternal() {
 
 void DXGITextureHostD3D11::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  RefPtr<wr::RenderDXGITextureHost> texture =
-      new wr::RenderDXGITextureHost(mHandle, mGpuProcessTextureId, mArrayIndex,
-                                    mFormat, mColorSpace, mColorRange, mSize);
+  RefPtr<wr::RenderDXGITextureHost> texture = new wr::RenderDXGITextureHost(
+      mHandle, mGpuProcessTextureId, mArrayIndex, mFormat, mColorSpace,
+      mColorRange, mSize, mHasKeyedMutex);
   if (mFlags & TextureFlags::SOFTWARE_DECODED_VIDEO) {
     texture->SetIsSoftwareDecodedVideo();
   }
