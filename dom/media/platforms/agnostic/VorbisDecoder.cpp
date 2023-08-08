@@ -7,7 +7,6 @@
 #include "VorbisDecoder.h"
 
 #include "VideoUtils.h"
-#include "VorbisUtils.h"
 #include "XiphExtradata.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PodOperations.h"
@@ -179,7 +178,7 @@ RefPtr<MediaDataDecoder::DecodePromise> VorbisDataDecoder::Decode(
     LOG(LogLevel::Warning, ("vorbis_synthesis_blockin returned an error"));
   }
 
-  VorbisPCMValue** pcm = 0;
+  float** pcm = nullptr;
   int32_t frames = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm);
   if (frames == 0) {
     return DecodePromise::CreateAndResolve(DecodedData(), __func__);
@@ -196,9 +195,9 @@ RefPtr<MediaDataDecoder::DecodePromise> VorbisDataDecoder::Decode(
           MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
     }
     for (uint32_t j = 0; j < channels; ++j) {
-      VorbisPCMValue* channel = pcm[j];
+      float* channel = pcm[j];
       for (uint32_t i = 0; i < uint32_t(frames); ++i) {
-        buffer[i * channels + j] = MOZ_CONVERT_VORBIS_SAMPLE(channel[i]);
+        buffer[i * channels + j] = channel[i];
       }
     }
 
