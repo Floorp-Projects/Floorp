@@ -5639,7 +5639,7 @@ void HttpBaseChannel::MaybeReportTimingData() {
       return;
     }
 
-    Maybe<LoadInfoArgs> loadInfoArgs;
+    LoadInfoArgs loadInfoArgs;
     mozilla::ipc::LoadInfoToLoadInfoArgs(mLoadInfo, &loadInfoArgs);
     child->SendReportFrameTimingData(loadInfoArgs, entryName, initiatorType,
                                      std::move(performanceTimingData));

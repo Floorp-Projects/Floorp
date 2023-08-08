@@ -60,7 +60,7 @@ ExternalHelperAppParent::ExternalHelperAppParent(
 }
 
 bool ExternalHelperAppParent::Init(
-    const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
+    const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
     const nsACString& aMimeContentType, const bool& aForceSave,
     nsIURI* aReferrer, BrowsingContext* aContext,
     const bool& aShouldCloseWindow) {

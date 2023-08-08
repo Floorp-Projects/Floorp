@@ -38,7 +38,7 @@ parent:
                   bool aClientSetPingInterval,
                   uint32_t aPingTimeout,
                   bool aClientSetPingTimeout,
-                  LoadInfoArgs? aLoadInfoArgs,
+                  LoadInfoArgs aLoadInfoArgs,
                   PTransportProvider? aProvider,
                   nsCString aNegotiatedExtensions);
   async Close(uint16_t code, nsCString reason);

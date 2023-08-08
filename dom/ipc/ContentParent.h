@@ -938,7 +938,7 @@ class ContentParent final : public PContentParent,
   bool DeallocPScriptCacheParent(PScriptCacheParent* shell);
 
   already_AddRefed<PExternalHelperAppParent> AllocPExternalHelperAppParent(
-      nsIURI* aUri, const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
+      nsIURI* aUri, const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
       const nsACString& aMimeContentType, const nsACString& aContentDisposition,
       const uint32_t& aContentDispositionHint,
       const nsAString& aContentDispositionFilename, const bool& aForceSave,
@@ -948,8 +948,8 @@ class ContentParent final : public PContentParent,
 
   mozilla::ipc::IPCResult RecvPExternalHelperAppConstructor(
       PExternalHelperAppParent* actor, nsIURI* uri,
-      const Maybe<LoadInfoArgs>& loadInfoArgs,
-      const nsACString& aMimeContentType, const nsACString& aContentDisposition,
+      const LoadInfoArgs& loadInfoArgs, const nsACString& aMimeContentType,
+      const nsACString& aContentDisposition,
       const uint32_t& aContentDispositionHint,
       const nsAString& aContentDispositionFilename, const bool& aForceSave,
       const int64_t& aContentLength, const bool& aWasFileChannel,
@@ -1073,9 +1073,8 @@ class ContentParent final : public PContentParent,
       const uint64_t& aInnerWindowId, const bool& aIsFromChromeContext);
 
   mozilla::ipc::IPCResult RecvReportFrameTimingData(
-      const mozilla::Maybe<LoadInfoArgs>& loadInfoArgs,
-      const nsAString& entryName, const nsAString& initiatorType,
-      UniquePtr<PerformanceTimingData>&& aData);
+      const LoadInfoArgs& loadInfoArgs, const nsAString& entryName,
+      const nsAString& initiatorType, UniquePtr<PerformanceTimingData>&& aData);
 
   mozilla::ipc::IPCResult RecvScriptErrorWithStack(
       const nsAString& aMessage, const nsAString& aSourceName,
