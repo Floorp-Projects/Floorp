@@ -445,8 +445,7 @@ nsresult txMozillaXMLOutput::startElementInternal(nsAtom* aPrefix,
     return NS_OK;
   }
 
-  nsresult rv = closePrevious(true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(closePrevious(true));
 
   // Push and init state
   if (mTreeDepth == MAX_REFLOW_DEPTH) {
@@ -475,17 +474,14 @@ nsresult txMozillaXMLOutput::startElementInternal(nsAtom* aPrefix,
                 mCreatingNewDocument ? FROM_PARSER_XSLT : FROM_PARSER_FRAGMENT);
 
   // Set up the element and adjust state
-  if (!mNoFixup) {
-    if (aNsID == kNameSpaceID_XHTML) {
-      mOpenedElementIsHTML = (mOutputFormat.mMethod == eHTMLOutput);
-      rv = startHTMLElement(mOpenedElement, mOpenedElementIsHTML);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+  if (!mNoFixup && aNsID == kNameSpaceID_XHTML) {
+    mOpenedElementIsHTML = (mOutputFormat.mMethod == eHTMLOutput);
+    MOZ_TRY(startHTMLElement(mOpenedElement, mOpenedElementIsHTML));
   }
 
   if (mCreatingNewDocument) {
     // Handle all sorts of stylesheets
-    if (auto* linkStyle = LinkStyle::FromNodeOrNull(mOpenedElement)) {
+    if (auto* linkStyle = LinkStyle::FromNode(*mOpenedElement)) {
       linkStyle->DisableUpdates();
     }
   }
@@ -496,7 +492,6 @@ nsresult txMozillaXMLOutput::startElementInternal(nsAtom* aPrefix,
 nsresult txMozillaXMLOutput::closePrevious(bool aFlushText) {
   TX_ENSURE_CURRENTNODE;
 
-  nsresult rv;
   if (mOpenedElement) {
     bool currentIsDoc = mCurrentNode == mDocument;
     if (currentIsDoc && mRootContentCreated) {
@@ -504,8 +499,7 @@ nsresult txMozillaXMLOutput::closePrevious(bool aFlushText) {
       // As a workaround, create a wrapper object and use that as the
       // document element.
 
-      rv = createTxWrapper();
-      NS_ENSURE_SUCCESS(rv, rv);
+      MOZ_TRY(createTxWrapper());
     }
 
     ErrorResult error;
@@ -531,14 +525,12 @@ nsresult txMozillaXMLOutput::closePrevious(bool aFlushText) {
         return NS_OK;
       }
 
-      rv = createTxWrapper();
-      NS_ENSURE_SUCCESS(rv, rv);
+      MOZ_TRY(createTxWrapper());
     }
     RefPtr<nsTextNode> text =
         new (mNodeInfoManager) nsTextNode(mNodeInfoManager);
 
-    rv = text->SetText(mText, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_TRY(text->SetText(mText, false));
 
     ErrorResult error;
     mCurrentNode->AppendChildTo(text, true, error);
@@ -557,9 +549,8 @@ nsresult txMozillaXMLOutput::createTxWrapper() {
                "creating wrapper when document isn't parent");
 
   int32_t namespaceID;
-  nsresult rv = nsNameSpaceManager::GetInstance()->RegisterNameSpace(
-      nsLiteralString(kTXNameSpaceURI), namespaceID);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(nsNameSpaceManager::GetInstance()->RegisterNameSpace(
+      nsLiteralString(kTXNameSpaceURI), namespaceID));
 
   nsCOMPtr<Element> wrapper =
       mDocument->CreateElem(nsDependentAtomString(nsGkAtoms::result),
@@ -611,8 +602,6 @@ nsresult txMozillaXMLOutput::createTxWrapper() {
 
 nsresult txMozillaXMLOutput::startHTMLElement(nsIContent* aElement,
                                               bool aIsHTML) {
-  nsresult rv = NS_OK;
-
   if ((!aElement->IsHTMLElement(nsGkAtoms::tr) || !aIsHTML) &&
       NS_PTR_TO_INT32(mTableStateStack.peek()) == ADDED_TBODY) {
     MOZ_ASSERT(!mCurrentNodeStack.IsEmpty(), "empty stack");
@@ -629,8 +618,7 @@ nsresult txMozillaXMLOutput::startHTMLElement(nsIContent* aElement,
   } else if (aElement->IsHTMLElement(nsGkAtoms::tr) && aIsHTML &&
              NS_PTR_TO_INT32(mTableStateStack.peek()) == TABLE) {
     RefPtr<Element> tbody;
-    rv = createHTMLElement(nsGkAtoms::tbody, getter_AddRefs(tbody));
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_TRY(createHTMLElement(nsGkAtoms::tbody, getter_AddRefs(tbody)));
 
     ErrorResult error;
     mCurrentNode->AppendChildTo(tbody, true, error);
@@ -647,20 +635,17 @@ nsresult txMozillaXMLOutput::startHTMLElement(nsIContent* aElement,
     // Insert META tag, according to spec, 16.2, like
     // <META http-equiv="Content-Type" content="text/html; charset=EUC-JP">
     RefPtr<Element> meta;
-    rv = createHTMLElement(nsGkAtoms::meta, getter_AddRefs(meta));
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_TRY(createHTMLElement(nsGkAtoms::meta, getter_AddRefs(meta)));
 
-    rv = meta->SetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv,
-                       u"Content-Type"_ns, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_TRY(meta->SetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv,
+                          u"Content-Type"_ns, false));
 
     nsAutoString metacontent;
     CopyUTF8toUTF16(mOutputFormat.mMediaType, metacontent);
     metacontent.AppendLiteral("; charset=");
     metacontent.Append(mOutputFormat.mEncoding);
-    rv = meta->SetAttr(kNameSpaceID_None, nsGkAtoms::content, metacontent,
-                       false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_TRY(meta->SetAttr(kNameSpaceID_None, nsGkAtoms::content, metacontent,
+                          false));
 
     // No need to notify since aElement hasn't been inserted yet
     NS_ASSERTION(!aElement->IsInUncomposedDoc(), "should not be in doc");
@@ -693,19 +678,15 @@ nsresult txMozillaXMLOutput::createResultDocument(const nsAString& aName,
                                                   int32_t aNsID,
                                                   Document* aSourceDocument,
                                                   bool aLoadedAsData) {
-  nsresult rv;
-
   // Create the document
   if (mOutputFormat.mMethod == eHTMLOutput) {
-    rv = NS_NewHTMLDocument(getter_AddRefs(mDocument), nullptr, nullptr,
-                            aLoadedAsData);
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_TRY(NS_NewHTMLDocument(getter_AddRefs(mDocument), nullptr, nullptr,
+                               aLoadedAsData));
   } else {
     // We should check the root name/namespace here and create the
     // appropriate document
-    rv = NS_NewXMLDocument(getter_AddRefs(mDocument), nullptr, nullptr,
-                           aLoadedAsData);
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_TRY(NS_NewXMLDocument(getter_AddRefs(mDocument), nullptr, nullptr,
+                              aLoadedAsData));
   }
   // This should really be handled by Document::BeginLoad
   MOZ_ASSERT(
@@ -776,18 +757,13 @@ nsresult txMozillaXMLOutput::createResultDocument(const nsAString& aName,
   }
 
   if (mNotifier) {
-    rv = mNotifier->SetOutputDocument(mDocument);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mDocument->InitFeaturePolicy(mDocument->GetChannel());
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_TRY(mNotifier->SetOutputDocument(mDocument));
+    MOZ_TRY(mDocument->InitFeaturePolicy(mDocument->GetChannel()));
   }
 
   // Do this after calling OnDocumentCreated to ensure that the
   // PresShell/PresContext has been hooked up and get notified.
-  if (mDocument) {
-    mDocument->SetCompatibilityMode(eCompatibility_FullStandards);
-  }
+  mDocument->SetCompatibilityMode(eCompatibility_FullStandards);
 
   // Add a doc-type if requested
   if (!mOutputFormat.mSystemId.IsEmpty()) {

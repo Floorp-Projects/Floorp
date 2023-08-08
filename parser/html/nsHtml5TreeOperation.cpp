@@ -475,10 +475,8 @@ nsIContent* nsHtml5TreeOperation::CreateHTMLElement(
     Element* element = newElement.get();
     aBuilder->HoldElement(newElement.forget());
 
-    if (MOZ_UNLIKELY(aName == nsGkAtoms::style || aName == nsGkAtoms::link)) {
-      if (auto* linkStyle = LinkStyle::FromNode(*element)) {
-        linkStyle->DisableUpdates();
-      }
+    if (auto* linkStyle = LinkStyle::FromNode(*element)) {
+      linkStyle->DisableUpdates();
     }
 
     if (!aAttributes) {

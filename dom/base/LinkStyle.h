@@ -92,11 +92,18 @@ class LinkStyle {
     return aNode.AsLinkStyle();
   }
 
-  static LinkStyle* FromNodeOrNull(nsINode* aNode) {
+  static LinkStyle* FromNode(Element&);
+  static const LinkStyle* FromNode(const Element& aElement) {
+    return FromNode(const_cast<Element&>(aElement));
+  }
+
+  template <typename T>
+  static LinkStyle* FromNodeOrNull(T* aNode) {
     return aNode ? FromNode(*aNode) : nullptr;
   }
 
-  static const LinkStyle* FromNodeOrNull(const nsINode* aNode) {
+  template <typename T>
+  static const LinkStyle* FromNodeOrNull(const T* aNode) {
     return aNode ? FromNode(*aNode) : nullptr;
   }
 
