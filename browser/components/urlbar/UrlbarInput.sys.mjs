@@ -3348,7 +3348,16 @@ export class UrlbarInput {
       if (fixedURI) {
         try {
           let expectedURI = Services.io.newURI(this._untrimmedValue);
-          untrim = fixedURI.displaySpec != expectedURI.displaySpec;
+          if (
+            lazy.UrlbarPrefs.get("trimHttps") &&
+            this._untrimmedValue.startsWith("https://")
+          ) {
+            untrim =
+              fixedURI.displaySpec.replace("http://", "https://") !=
+              expectedURI.displaySpec; // FIXME bug 1847723: Figure out a way to do this without manually messing with the fixed up URI.
+          } else {
+            untrim = fixedURI.displaySpec != expectedURI.displaySpec;
+          }
         } catch (ex) {
           untrim = true;
         }
