@@ -277,12 +277,12 @@ function compareArrayToResult(aArray, aRoot) {
  * result set.  It can accept either a queryData object or an array of queryData
  * objects.  If it gets an array, it only compares the first object in the array
  * to see if it is in the result set.
- * Returns: True if item is in query set, and false if item is not in query set
- *          If input is an array, returns True if FIRST object in array is in
- *          query set.  To compare entire array, use the function above.
+ * @returns {nsINavHistoryResultNode}: Either the node, if found, or null.
+ *          If input is an array, returns a result only for the first node.
+ *          To compare entire array, use the function above.
  */
-function isInResult(aQueryData, aRoot) {
-  var rv = false;
+function nodeInResult(aQueryData, aRoot) {
+  var rv = null;
   var uri;
   var wasOpen = aRoot.containerOpen;
   if (!wasOpen) {
@@ -298,8 +298,9 @@ function isInResult(aQueryData, aRoot) {
   }
 
   for (var i = 0; i < aRoot.childCount; i++) {
-    if (uri == aRoot.getChild(i).uri) {
-      rv = true;
+    let node = aRoot.getChild(i);
+    if (uri == node.uri) {
+      rv = node;
       break;
     }
   }

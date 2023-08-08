@@ -179,96 +179,74 @@ nsresult asciiHostNameFromHostString(const nsACString& aHostName,
   return NS_OK;
 }
 
-/**
- * This runs the node through the given query to see if satisfies the
- * query conditions. Not every query parameters are handled by this code,
- * but we handle the most common ones so that performance is better.
- * We assume that the time on the node is the time that we want to compare.
- * This is not necessarily true because URL nodes have the last access time,
- * which is not necessarily the same. However, since this is being called
- * to update the list, we assume that the last access time is the current
- * access time that we are being asked to compare so it works out.
- * Returns true if node matches the query, false if not.
- */
-bool evaluateQueryForNode(const RefPtr<nsNavHistoryQuery>& aQuery,
-                          const RefPtr<nsNavHistoryQueryOptions>& aOptions,
-                          const RefPtr<nsNavHistoryResultNode>& aNode) {
-  // Hidden
-  if (aNode->mHidden && !aOptions->IncludeHidden()) return false;
-
-  bool hasIt;
-  // Begin time
-  aQuery->GetHasBeginTime(&hasIt);
-  if (hasIt) {
-    PRTime beginTime = nsNavHistory::NormalizeTime(aQuery->BeginTimeReference(),
-                                                   aQuery->BeginTime());
-    if (aNode->mTime < beginTime) return false;
-  }
-
-  // End time
-  aQuery->GetHasEndTime(&hasIt);
-  if (hasIt) {
-    PRTime endTime = nsNavHistory::NormalizeTime(aQuery->EndTimeReference(),
-                                                 aQuery->EndTime());
-    if (aNode->mTime > endTime) return false;
-  }
-
-  // Search terms
-  if (!aQuery->SearchTerms().IsEmpty()) {
-    // we can use the existing filtering code, just give it our one object in
-    // an array.
-    nsCOMArray<nsNavHistoryResultNode> inputSet;
-    inputSet.AppendObject(aNode);
-    nsCOMArray<nsNavHistoryResultNode> filteredSet;
-    nsresult rv = nsNavHistory::FilterResultSet(nullptr, inputSet, &filteredSet,
-                                                aQuery, aOptions);
-    if (NS_FAILED(rv)) return false;
-    if (!filteredSet.Count()) return false;
-  }
-
-  // Domain/host
-  if (!aQuery->Domain().IsVoid()) {
-    nsCOMPtr<nsIURI> nodeUri;
-    if (NS_FAILED(NS_NewURI(getter_AddRefs(nodeUri), aNode->mURI)))
-      return false;
-    nsAutoCString asciiRequest;
-    if (NS_FAILED(asciiHostNameFromHostString(aQuery->Domain(), asciiRequest)))
-      return false;
-    if (aQuery->DomainIsHost()) {
-      nsAutoCString host;
-      if (NS_FAILED(nodeUri->GetAsciiHost(host))) return false;
-
-      if (!asciiRequest.Equals(host)) return false;
-    }
-    // check domain names.
-    nsNavHistory* history = nsNavHistory::GetHistoryService();
-    if (!history) return false;
-    nsAutoCString domain;
-    history->DomainNameFromURI(nodeUri, domain);
-    if (!asciiRequest.Equals(domain)) return false;
-  }
-
-  // URI
-  if (aQuery->Uri()) {
-    nsCOMPtr<nsIURI> nodeUri;
-    if (NS_FAILED(NS_NewURI(getter_AddRefs(nodeUri), aNode->mURI)))
-      return false;
-    bool equals;
-    nsresult rv = aQuery->Uri()->Equals(nodeUri, &equals);
-    NS_ENSURE_SUCCESS(rv, false);
-    if (!equals) return false;
-  }
-
-  // Transitions
-  const nsTArray<uint32_t>& transitions = aQuery->Transitions();
-  if (aNode->mTransitionType > 0 && transitions.Length() &&
-      !transitions.Contains(aNode->mTransitionType)) {
+bool isQueryMatchingVisitDetails(
+    const RefPtr<nsNavHistoryQuery>& query,
+    const RefPtr<nsNavHistoryQueryOptions>& options, bool hidden,
+    PRTime visitTime, uint32_t transition, nsIURI* uri) {
+  if (hidden && !options->IncludeHidden()) {
     return false;
   }
 
-  // If we ever make it to the bottom, that means it passed all the tests for
-  // the given query.
+  bool hasIt;
+  if (NS_SUCCEEDED(query->GetHasBeginTime(&hasIt)) && hasIt) {
+    PRTime beginTime = nsNavHistory::NormalizeTime(query->BeginTimeReference(),
+                                                   query->BeginTime());
+    if (visitTime < beginTime) {
+      return false;
+    }
+  }
+  if (NS_SUCCEEDED(query->GetHasEndTime(&hasIt)) && hasIt) {
+    PRTime endTime = nsNavHistory::NormalizeTime(query->EndTimeReference(),
+                                                 query->EndTime());
+    if (visitTime > endTime) {
+      return false;
+    }
+  }
+
+  const nsTArray<uint32_t>& transitions = query->Transitions();
+  if (transition > 0 && transitions.Length() &&
+      !transitions.Contains(transition)) {
+    return false;
+  }
+
+  if (!query->Domain().IsVoid()) {
+    nsAutoCString asciiRequest;
+    if (NS_FAILED(asciiHostNameFromHostString(query->Domain(), asciiRequest))) {
+      return false;
+    }
+    if (query->DomainIsHost()) {
+      // Exact domain match.
+      nsAutoCString host;
+      if (NS_FAILED(uri->GetAsciiHost(host)) || !asciiRequest.Equals(host)) {
+        return false;
+      }
+    } else {
+      // Wildcard domain match, subdomains are included.
+      nsNavHistory* history = nsNavHistory::GetHistoryService();
+      if (history) {
+        nsAutoCString domain;
+        history->DomainNameFromURI(uri, domain);
+        if (!asciiRequest.Equals(domain)) {
+          return false;
+        }
+      }
+    }
+  }
+
+  if (query->Uri()) {
+    bool equals;
+    if (NS_FAILED(query->Uri()->Equals(uri, &equals)) || !equals) {
+      return false;
+    }
+  }
+
   return true;
+}
+
+inline bool isTimeFilteredQuery(const RefPtr<nsNavHistoryQuery>& query) {
+  bool hasIt;
+  return (NS_SUCCEEDED(query->GetHasBeginTime(&hasIt)) && hasIt) ||
+         (NS_SUCCEEDED(query->GetHasEndTime(&hasIt)) && hasIt);
 }
 
 inline bool caseInsensitiveFind(const nsACString& aSearchTerms,
@@ -1715,8 +1693,8 @@ bool nsNavHistoryQueryResultNode::IsContainersQuery() {
 /**
  * Here we do not want to call ContainerResultNode::OnRemoving since our own
  * ClearChildren will do the same thing and more (unregister the observers).
- * The base ResultNode::OnRemoving will clear some regular node stats, so it
- * is OK.
+ * The base ResultNode::OnRemoving will clear some regular node stats, so it is
+ * OK.
  */
 void nsNavHistoryQueryResultNode::OnRemoving() {
   nsNavHistoryResultNode::OnRemoving();
@@ -2096,7 +2074,9 @@ static nsresult setHistoryDetailsCallback(nsNavHistoryResultNode* aNode,
       static_cast<const nsNavHistoryResultNode*>(aClosure);
 
   aNode->mAccessCount = updatedNode->mAccessCount;
-  aNode->mTime = updatedNode->mTime;
+  if (aNode->mTime < updatedNode->mTime) {
+    aNode->mTime = updatedNode->mTime;
+  }
   aNode->mFrecency = updatedNode->mFrecency;
   aNode->mHidden = updatedNode->mHidden;
 
@@ -2113,12 +2093,11 @@ nsresult nsNavHistoryQueryResultNode::OnVisit(
     nsIURI* aURI, int64_t aVisitId, PRTime aTime, uint32_t aTransitionType,
     const nsACString& aGUID, bool aHidden, uint32_t aVisitCount,
     const nsAString& aLastKnownTitle, int64_t aFrecency, uint32_t* aAdded) {
-  if (aHidden && !mOptions->IncludeHidden()) return NS_OK;
-  // Skip the notification if the query is filtered by specific transition types
-  // and this visit has a different one.
-  if (mTransitions.Length() > 0 && !mTransitions.Contains(aTransitionType))
+  // Skip the notification if the visit details are filtered out by the query.
+  if (!isQueryMatchingVisitDetails(mQuery, mOptions, aHidden, aTime,
+                                   aTransitionType, aURI)) {
     return NS_OK;
-
+  }
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_STATE(result);
   if (result->IsBatching() &&
@@ -2195,13 +2174,10 @@ nsresult nsNavHistoryQueryResultNode::OnVisit(
         addition->mVisitId = aVisitId;
       }
 
-      if (!evaluateQueryForNode(mQuery, mOptions, addition))
-        return NS_OK;  // don't need to include in our query
-
       // Optimization for a common case: if the query has maxResults and is
-      // sorted by date, get the current boundaries and check if the added visit
-      // would fit.
-      // Later, we may have to remove the last child to respect maxResults.
+      // sorted by date, get the current boundaries and check if the added
+      // visit would fit. Later, we may have to remove the last child to
+      // respect maxResults.
       if (mOptions->MaxResults() &&
           static_cast<uint32_t>(mChildren.Count()) >= mOptions->MaxResults()) {
         uint16_t sortType = GetSortType();
@@ -2221,6 +2197,10 @@ nsresult nsNavHistoryQueryResultNode::OnVisit(
           nsNavHistoryQueryOptions::RESULTS_AS_VISIT) {
         // If this is a visit type query, just insert the new visit.  We never
         // update visits, only add or remove them.
+        // If the query has search terms, ensure the new visit is matching them.
+        if (mHasSearchTerms && !isQuerySearchTermsMatching(mQuery, addition)) {
+          return NS_OK;
+        }
         rv = InsertSortedChild(addition);
         NS_ENSURE_SUCCESS(rv, rv);
       } else {
@@ -2234,12 +2214,17 @@ nsresult nsNavHistoryQueryResultNode::OnVisit(
             sortType == nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING ||
             sortType == nsINavHistoryQueryOptions::SORT_BY_FRECENCY_ASCENDING ||
             sortType == nsINavHistoryQueryOptions::SORT_BY_FRECENCY_DESCENDING;
-
         if (!UpdateURIs(
                 false, true, updateSorting, addition->mURI,
                 setHistoryDetailsCallback,
                 const_cast<void*>(static_cast<void*>(addition.get())))) {
-          // Couldn't find a node to update.
+          // Couldn't find a node to update, we may want to add one.
+          // If the query has search terms, ensure the new visit is matching
+          // them.
+          if (mHasSearchTerms &&
+              !isQuerySearchTermsMatching(mQuery, addition)) {
+            return NS_OK;
+          }
           rv = InsertSortedChild(addition);
           NS_ENSURE_SUCCESS(rv, rv);
         }
@@ -2427,6 +2412,14 @@ nsresult nsNavHistoryQueryResultNode::OnPageRemovedVisits(
     // query this is equivalent to a OnPageRemovedFromStore notification.
     nsresult rv = OnPageRemovedFromStore(aURI, aGUID, aReason);
     NS_ENSURE_SUCCESS(rv, rv);
+  } else if (aReason == PlacesVisitRemoved_Binding::REASON_DELETED &&
+             isTimeFilteredQuery(mQuery)) {
+    // If the query has time filters we must Refresh because we don't know
+    // which visits have been removed, it could be all the visits in the
+    // filtered timeframe.
+    // We skip this for expired visits, to avoid surprising the user with pages
+    // disappearing from the UI.
+    return Refresh();
   }
   if (aTransitionType > 0) {
     // All visits for aTransitionType have been removed, if the query is
@@ -3419,7 +3412,9 @@ nsresult nsNavHistoryFolderResultNode::OnItemVisited(nsIURI* aURI,
     nsNavHistoryResultNode* node = nodes[i];
     uint32_t nodeOldAccessCount = node->mAccessCount;
     PRTime nodeOldTime = node->mTime;
-    node->mTime = aTime;
+    if (node->mTime < aTime) {
+      node->mTime = aTime;
+    }
     ++node->mAccessCount;
     node->mFrecency = aFrecency;
 

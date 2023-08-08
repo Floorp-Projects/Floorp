@@ -116,10 +116,10 @@ add_task(async function test_searchterms_uri() {
   var change1 = [{ isDetails: true, uri: "http://foo.com/", title: "mo" }];
   await task_populateDB(change1);
 
-  Assert.ok(!isInResult({ uri: "http://foo.com/" }, root));
+  Assert.ok(!nodeInResult({ uri: "http://foo.com/" }, root));
   var change2 = [{ isDetails: true, uri: "http://foo.com/", title: "moz" }];
   await task_populateDB(change2);
-  Assert.ok(isInResult({ uri: "http://foo.com/" }, root));
+  Assert.ok(nodeInResult({ uri: "http://foo.com/" }, root));
 
   root.containerOpen = false;
 });

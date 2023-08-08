@@ -16,16 +16,17 @@ var endTimeDate = new Date(2008, 0, 15, 21, 30, 0, 0);
 var beginTime = beginTimeDate.getTime();
 var endTime = endTimeDate.getTime();
 
-// Some range dates inside our query - mult by 1000 to convert to PRTIME
-var jan7_800 = (beginTime + DAY_MSEC) * 1000;
-var jan6_815 = (beginTime + MIN_MSEC * 15) * 1000;
-var jan14_2130 = (endTime - DAY_MSEC) * 1000;
-var jan15_2045 = (endTime - MIN_MSEC * 45) * 1000;
-var jan12_1730 = (endTime - DAY_MSEC * 3 - HOUR_MSEC * 4) * 1000;
+// Some range dates inside our query
+var now = PlacesUtils.toPRTime(Date.now());
+var jan7_8_00 = PlacesUtils.toPRTime(beginTime + DAY_MSEC);
+var jan6_8_15 = PlacesUtils.toPRTime(beginTime + MIN_MSEC * 15);
+var jan14_21_30 = PlacesUtils.toPRTime(endTime - DAY_MSEC);
+var jan15_20_45 = PlacesUtils.toPRTime(endTime - MIN_MSEC * 45);
+var jan12_17_30 = PlacesUtils.toPRTime(endTime - DAY_MSEC * 3 - HOUR_MSEC * 4);
 
-// Dates outside our query - mult by 1000 to convert to PRTIME
-var jan6_700 = (beginTime - HOUR_MSEC) * 1000;
-var dec27_800 = (beginTime - DAY_MSEC * 10) * 1000;
+// Dates outside our query
+var jan6_7_00 = PlacesUtils.toPRTime(beginTime - HOUR_MSEC);
+var dec27_8_00 = PlacesUtils.toPRTime(beginTime - DAY_MSEC * 10);
 
 /**
  * Array of objects to build our test database
@@ -47,7 +48,7 @@ var testData = [
     uri: "http://foo.com/",
     annoName: goodAnnoName,
     annoVal: val,
-    lastVisit: jan14_2130,
+    lastVisit: jan14_21_30,
     title: "moz",
   },
 
@@ -61,7 +62,7 @@ var testData = [
     uri: "http://www.foo.com/yiihah",
     annoName: goodAnnoName,
     annoVal: val,
-    lastVisit: jan7_800,
+    lastVisit: jan7_8_00,
     title: "moz",
   },
 
@@ -72,7 +73,7 @@ var testData = [
     isDetails: true,
     uri: "http://mail.foo.com/yiihah",
     title: "moz",
-    lastVisit: jan6_815,
+    lastVisit: jan6_8_15,
   },
 
   // Test https protocol
@@ -82,7 +83,7 @@ var testData = [
     isDetails: true,
     title: "moz",
     uri: "https://foo.com/",
-    lastVisit: jan15_2045,
+    lastVisit: jan15_20_45,
   },
 
   // Test ftp protocol
@@ -91,7 +92,7 @@ var testData = [
     isVisit: true,
     isDetails: true,
     uri: "ftp://foo.com/ftp",
-    lastVisit: jan12_1730,
+    lastVisit: jan12_17_30,
     title: "hugelongconfmozlagurationofwordswithasearchtermsinit whoo-hoo",
   },
 
@@ -102,7 +103,7 @@ var testData = [
     isDetails: true,
     title: "moz",
     uri: "http://foo.com/tooearly.php",
-    lastVisit: jan6_700,
+    lastVisit: jan6_7_00,
   },
 
   // Test Bad Annotation
@@ -113,7 +114,7 @@ var testData = [
     isPageAnnotation: true,
     title: "moz",
     uri: "http://foo.com/badanno.htm",
-    lastVisit: jan12_1730,
+    lastVisit: jan12_17_30,
     annoName: badAnnoName,
     annoVal: val,
   },
@@ -125,7 +126,7 @@ var testData = [
     isDetails: true,
     title: "changeme",
     uri: "http://foo.com/changeme1.htm",
-    lastVisit: jan12_1730,
+    lastVisit: jan12_17_30,
   },
 
   // Test invalid title
@@ -135,7 +136,7 @@ var testData = [
     isDetails: true,
     title: "changeme2",
     uri: "http://foo.com/changeme2.htm",
-    lastVisit: jan7_800,
+    lastVisit: jan7_8_00,
   },
 
   // Test changing the lastVisit
@@ -145,7 +146,7 @@ var testData = [
     isDetails: true,
     title: "moz",
     uri: "http://foo.com/changeme3.htm",
-    lastVisit: dec27_800,
+    lastVisit: dec27_8_00,
   },
 ];
 
@@ -163,8 +164,8 @@ add_task(async function test_abstime_annotation_uri() {
   // Query
   var query = PlacesUtils.history.getNewQuery();
   // So that we can easily use these too, convert them to PRTIME
-  query.beginTime = beginTime * 1000;
-  query.endTime = endTime * 1000;
+  query.beginTime = PlacesUtils.toPRTime(beginTime);
+  query.endTime = PlacesUtils.toPRTime(endTime);
   query.beginTimeReference = PlacesUtils.history.TIME_RELATIVE_EPOCH;
   query.endTimeReference = PlacesUtils.history.TIME_RELATIVE_EPOCH;
   query.searchTerms = "moz";
@@ -190,23 +191,29 @@ add_task(async function test_abstime_annotation_uri() {
 
   // live update.
   info("change title");
-  var change1 = [{ isDetails: true, uri: "http://foo.com/", title: "mo" }];
+  var change1 = [
+    { isDetails: true, uri: "http://foo.com/", title: "mo", lastVisit: now },
+  ];
   await task_populateDB(change1);
-  Assert.ok(!isInResult({ uri: "http://foo.com/" }, root));
+  Assert.ok(!nodeInResult({ uri: "http://foo.com/" }, root));
 
   var change2 = [
     {
       isDetails: true,
       uri: "http://foo.com/",
       title: "moz",
-      lastVisit: (endTime + 1) * 1000,
+      lastVisit: PlacesUtils.toPRTime(endTime + 1),
     },
   ];
   await task_populateDB(change2);
-  dump_table("moz_places");
-  // TODO: In bug 1845456, should check that the time of this item should be
-  //       last visit time.
-  Assert.ok(isInResult({ uri: "http://foo.com/" }, root));
+
+  let node = nodeInResult({ uri: "http://foo.com/" }, root);
+  Assert.ok(node);
+  Assert.equal(
+    node.time,
+    now,
+    "The node time should be the absolute last visit date"
+  );
 
   // Let's delete something from the result set - using annotation
   var change3 = [
@@ -219,9 +226,13 @@ add_task(async function test_abstime_annotation_uri() {
   ];
   await task_populateDB(change3);
   info("LiveUpdate by removing annotation");
-  // TODO: In bug 1845456, should check that the time of this item should be
-  //       last visit time.
-  Assert.ok(isInResult({ uri: "http://foo.com/" }, root));
+  node = nodeInResult({ uri: "http://foo.com/" }, root);
+  Assert.ok(node);
+  Assert.equal(
+    node.time,
+    now,
+    "The node time should be the last visit date, future dates are capped to now"
+  );
 
   root.containerOpen = false;
 });
