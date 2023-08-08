@@ -17,7 +17,8 @@ EXPORTS.opus += [
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()
 
-FINAL_LIBRARY = "gkmedias"
+FINAL_LIBRARY = "gkcodecs"
+NoVisibilityFlags()
 
 DEFINES["OPUS_BUILD"] = True
 DEFINES["OPUS_VERSION"] = "5023249b5c935545fb02dbfe845cae996ecfc8bb"
@@ -58,6 +59,11 @@ if CONFIG["OS_ARCH"] == "SunOS":
 if not CONFIG["MOZ_SAMPLE_TYPE_FLOAT32"]:
     DEFINES["FIXED_POINT"] = 1
     DEFINES["DISABLE_FLOAT_API"] = True
+
+if CONFIG["OS_ARCH"] == "Linux":
+    OS_LIBS += [
+        "m",
+    ]
 
 LOCAL_INCLUDES += [
     "celt",
