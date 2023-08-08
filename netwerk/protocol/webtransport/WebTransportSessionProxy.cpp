@@ -894,7 +894,7 @@ WebTransportSessionProxy::OnSessionClosed(bool aCleanly, uint32_t aStatus,
   if (!mStopRequestCalled) {
     nsCString closeReason(aReason);
     mPendingEvents.AppendElement([self = RefPtr{this}, status(aStatus),
-                                  closeReason(closeReason),
+                                  closeReason(std::move(closeReason)),
                                   cleanly(aCleanly)]() {
       Unused << self->OnSessionClosed(cleanly, status, closeReason);
     });
