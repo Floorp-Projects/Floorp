@@ -56,7 +56,7 @@ struct MetadataHolder {
   UniquePtr<MetadataTags> mTags;
 };
 
-typedef void* MediaDecoderOwnerID;
+using MediaDecoderOwnerID = void *;
 
 struct MOZ_STACK_CLASS MediaFormatReaderInit {
   MediaResource* mResource = nullptr;
@@ -75,8 +75,8 @@ class MediaFormatReader final
     : public SupportsThreadSafeWeakPtr<MediaFormatReader>,
       public DecoderDoctorLifeLogger<MediaFormatReader> {
   static const bool IsExclusive = true;
-  typedef TrackInfo::TrackType TrackType;
-  typedef MozPromise<bool, MediaResult, IsExclusive> NotifyDataArrivedPromise;
+  using TrackType = TrackInfo::TrackType;
+  using NotifyDataArrivedPromise = MozPromise<bool, MediaResult, IsExclusive>;
 
  public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(MediaFormatReader)
@@ -161,7 +161,7 @@ class MediaFormatReader final
   //
   // aParam is a set of TrackInfo::TrackType enums specifying which
   // queues need to be reset, defaulting to both audio and video tracks.
-  nsresult ResetDecode(TrackSet aTracks);
+  nsresult ResetDecode(const TrackSet& aTracks);
 
   // Destroys the decoding state. The reader cannot be made usable again.
   // This is different from ReleaseMediaResources() as it is irreversable,
@@ -501,31 +501,34 @@ class MediaFormatReader final
         // if we have too many, or if warnings should be treated as errors.
         return mNumOfConsecutiveDecodingError > mMaxConsecutiveDecodingError ||
                StaticPrefs::media_playback_warnings_as_errors();
-      } else if (mError.ref() == NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER) {
+      }
+      if (mError.ref() == NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER) {
         // If the caller asked for a new decoder we shouldn't treat
         // it as fatal.
         return false;
-      } else if (mError.ref() ==
+      }
+      if (mError.ref() ==
                  NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_RDD_OR_GPU_ERR) {
         // Allow RDD crashes to be non-fatal, but give up
         // if we have too many, or if warnings should be treated as errors.
         return mNumOfConsecutiveRDDOrGPUCrashes >
                    mMaxConsecutiveRDDOrGPUCrashes ||
                StaticPrefs::media_playback_warnings_as_errors();
-      } else if (mError.ref() ==
+      }
+      if (mError.ref() ==
                  NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_UTILITY_ERR) {
         bool tooManyConsecutiveCrashes =
             mNumOfConsecutiveUtilityCrashes > mMaxConsecutiveUtilityCrashes;
         // TODO: Telemetry?
         return tooManyConsecutiveCrashes ||
                StaticPrefs::media_playback_warnings_as_errors();
-      } else if (mError.ref() ==
+      }
+      if (mError.ref() ==
                  NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_MF_CDM_ERR) {
         return false;
-      } else {
-        // All other error types are fatal
-        return true;
       }
+      // All other error types are fatal
+      return true;
     }
 
     // If set, all decoded samples prior mTimeThreshold will be dropped.
@@ -650,7 +653,8 @@ class MediaFormatReader final
         if (aValue == media::TimeUnit::Zero()) {
           return;
         }
-        mMean += (1.0f / aValue.ToSeconds() - mMean) / ++mCount;
+        mMean += static_cast<float>((1.0f / aValue.ToSeconds() - mMean) /
+                                    static_cast<double>(++mCount));
       }
 
       void Reset() {
@@ -734,13 +738,13 @@ class MediaFormatReader final
   void OnDemuxFailed(TrackType aTrack, const MediaResult& aError);
 
   void DoDemuxVideo();
-  void OnVideoDemuxCompleted(RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples);
+  void OnVideoDemuxCompleted(const RefPtr<MediaTrackDemuxer::SamplesHolder>& aSamples);
   void OnVideoDemuxFailed(const MediaResult& aError) {
     OnDemuxFailed(TrackType::kVideoTrack, aError);
   }
 
   void DoDemuxAudio();
-  void OnAudioDemuxCompleted(RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples);
+  void OnAudioDemuxCompleted(const RefPtr<MediaTrackDemuxer::SamplesHolder>& aSamples);
   void OnAudioDemuxFailed(const MediaResult& aError) {
     OnDemuxFailed(TrackType::kAudioTrack, aError);
   }
@@ -819,7 +823,7 @@ class MediaFormatReader final
   MediaEventListener mOnTrackWaitingForKeyListener;
 
   void OnFirstDemuxCompleted(TrackInfo::TrackType aType,
-                             RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples);
+                             const RefPtr<MediaTrackDemuxer::SamplesHolder>& aSamples);
 
   void OnFirstDemuxFailed(TrackInfo::TrackType aType,
                           const MediaResult& aError);
