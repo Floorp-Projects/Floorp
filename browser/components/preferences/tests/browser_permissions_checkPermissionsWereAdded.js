@@ -36,7 +36,8 @@ const _checkCookiesDialog = (dialog, buttonIds) => {
 const _addWebsiteAddressToPermissionBox = (
   websiteAddress,
   dialog,
-  buttonId
+  buttonId,
+  expectError
 ) => {
   let url = dialog.document.getElementById("url");
   let buttonDialog = dialog.document.getElementById(buttonId);
@@ -50,7 +51,11 @@ const _addWebsiteAddressToPermissionBox = (
   buttonDialog.click();
   let permissionsBox = dialog.document.getElementById("permissionsBox");
   let children = permissionsBox.getElementsByAttribute("origin", "*");
-  is(!children.length, false, "Website added in url should be in the list");
+  is(
+    !!children.length,
+    !expectError,
+    "Website added in url should be in the list"
+  );
 };
 
 const _checkIfPermissionsWereAdded = (dialog, expectedResult) => {
@@ -61,17 +66,20 @@ const _checkIfPermissionsWereAdded = (dialog, expectedResult) => {
   }
 };
 
-const _removesAllSitesInPermissionBox = dialog => {
+const _removesAllSitesInPermissionBox = (dialog, shouldBePossible) => {
   let removeAllWebsitesButton = dialog.document.getElementById(
     "removeAllPermissions"
   );
   ok(removeAllWebsitesButton, "removeAllWebsitesButton found");
+  const isDisabled = removeAllWebsitesButton.hasAttribute("disabled");
   is(
-    removeAllWebsitesButton.hasAttribute("disabled"),
-    false,
+    !removeAllWebsitesButton.hasAttribute("disabled"),
+    shouldBePossible,
     "There should be websites in the list"
   );
-  removeAllWebsitesButton.click();
+  if (!isDisabled) {
+    removeAllWebsitesButton.click();
+  }
 };
 
 add_task(async function checkCookiePermissions() {
@@ -95,10 +103,6 @@ add_task(async function checkCookiePermissions() {
       expectedResult: ["https://google.com"],
     },
     {
-      inputWebsite: "http://",
-      expectedResult: ["http://http", "https://http"],
-    },
-    {
       inputWebsite: "s3.eu-central-1.amazonaws.com",
       expectedResult: [
         "http://s3.eu-central-1.amazonaws.com",
@@ -113,13 +117,31 @@ add_task(async function checkCookiePermissions() {
       inputWebsite: "about:config",
       expectedResult: ["about:config"],
     },
+    // Invalid inputs, expected to not be added
+    {
+      inputWebsite: "http://",
+      expectedResult: [],
+    },
+    {
+      inputWebsite: "*.example.com",
+      expectedResult: [],
+    },
+    {
+      inputWebsite: "http://*.example.com",
+      expectedResult: [],
+    },
   ];
 
   for (let buttonId of buttonIds) {
     for (let test of tests) {
-      _addWebsiteAddressToPermissionBox(test.inputWebsite, dialog, buttonId);
+      _addWebsiteAddressToPermissionBox(
+        test.inputWebsite,
+        dialog,
+        buttonId,
+        test.expectedResult.length === 0
+      );
       _checkIfPermissionsWereAdded(dialog, test.expectedResult);
-      _removesAllSitesInPermissionBox(dialog);
+      _removesAllSitesInPermissionBox(dialog, !!test.expectedResult.length);
     }
   }
 
