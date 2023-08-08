@@ -36,28 +36,64 @@ class AutofillTelemetryBase {
     extra[this.SUPPORTED_FIELDS[key]] = value;
   }
 
-  recordFormDetected(section) {
-    let extra = this.#initFormEventExtra("false");
+  /**
+   * Building the extra keys object that is included in the Legacy Telemetry event `cc_form_v2`
+   * or `address_form` event and the Glean event `cc_form`, and `address_form`.
+   * It indicates the detected credit card or address fields and which method (autocomplete property, regular expression heuristics or fathom) identified them.
+   *
+   * @param {object} section Using section.fieldDetails to extract which fields were identified and how
+   * @param {string} undetected Default value when a field is not detected: 'undetected' (Glean) and 'false' in (Legacy)
+   * @param {string} autocomplete Value when a field is identified with autocomplete property: 'autocomplete' (Glean), 'true' (Legacy)
+   * @param {string} regexp Value when a field is identified with regex expression heuristics: 'regexp' (Glean), '0' (Legacy)
+   * @returns {object} Extra keys to include in the form event
+   */
+  #buildFormDetectedEventExtra(section, undetected, autocomplete, regexp) {
+    let extra = this.#initFormEventExtra(undetected);
+
     let identified = new Set();
     section.fieldDetails.forEach(detail => {
       identified.add(detail.fieldName);
 
       if (detail.reason == "autocomplete") {
-        this.#setFormEventExtra(extra, detail.fieldName, "true");
+        this.#setFormEventExtra(extra, detail.fieldName, autocomplete);
       } else {
         // confidence exists only when a field is identified by fathom.
         let confidence =
           detail.confidence > 0 ? Math.floor(100 * detail.confidence) / 100 : 0;
-        this.#setFormEventExtra(extra, detail.fieldName, confidence.toString());
+
+        this.#setFormEventExtra(
+          extra,
+          detail.fieldName,
+          confidence ? confidence.toString() : regexp
+        );
       }
     });
+    return extra;
+  }
 
-    this.recordFormEvent("detected", section.flowId, extra);
+  recordFormDetected(section) {
+    this.recordFormEvent(
+      "detected",
+      section.flowId,
+      this.#buildFormDetectedEventExtra(section, "false", "true", "0")
+    );
+
+    this.recordGleanFormEvent(
+      "formDetected",
+      section.flowId,
+      this.#buildFormDetectedEventExtra(
+        section,
+        "undetected",
+        "autocomplete",
+        "regexp"
+      )
+    );
   }
 
   recordPopupShown(section, fieldName) {
     const extra = { field_name: fieldName };
     this.recordFormEvent("popup_shown", section.flowId, extra);
+    this.recordGleanFormEvent("formPopupShown", section.flowId, extra);
   }
 
   recordFormFilled(section, profile) {
@@ -79,11 +115,13 @@ class AutofillTelemetryBase {
     }
 
     this.recordFormEvent("filled", section.flowId, extra);
+    this.recordGleanFormEvent("formFilled", section.flowId, extra);
   }
 
   recordFilledModified(section, fieldName) {
     const extra = { field_name: fieldName };
     this.recordFormEvent("filled_modified", section.flowId, extra);
+    this.recordGleanFormEvent("formFilledModified", section.flowId, extra);
   }
 
   recordFormSubmitted(section, record, form) {
@@ -109,6 +147,7 @@ class AutofillTelemetryBase {
     }
 
     this.recordFormEvent("submitted", section.flowId, extra);
+    this.recordGleanFormEvent("formSubmitted", section.flowId, extra);
   }
 
   recordFormCleared(section, fieldName) {
@@ -117,6 +156,7 @@ class AutofillTelemetryBase {
     // Note that when a form is cleared, we also record `filled_modified` events
     // for all the fields that have been cleared.
     this.recordFormEvent("cleared", section.flowId, extra);
+    this.recordGleanFormEvent("formCleared", section.flowId, extra);
   }
 
   recordFormEvent(method, flowId, extra) {
@@ -127,6 +167,10 @@ class AutofillTelemetryBase {
       flowId,
       extra
     );
+  }
+
+  recordGleanFormEvent(eventName, flowId, extra) {
+    throw new Error("Not implemented.");
   }
 
   recordFormInteractionEvent(
@@ -256,6 +300,10 @@ export class AddressTelemetry extends AutofillTelemetryBase {
     "tel",
   ];
 
+  recordGleanFormEvent(eventName, flowId, extra) {
+    // To be implemented when migrating the legacy event address.address_form to Glean
+  }
+
   recordFormEvent(method, flowId, extra) {
     let extExtra = {};
     if (["detected", "filled", "submitted"].includes(method)) {
@@ -323,6 +371,11 @@ class CreditCardTelemetry extends AutofillTelemetryBase {
       flowId,
       extra
     );
+  }
+
+  recordGleanFormEvent(eventName, flowId, extra) {
+    extra.flow_id = flowId;
+    Glean.formautofillCreditcards[eventName].record(extra);
   }
 
   recordFormDetected(section) {

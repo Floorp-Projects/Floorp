@@ -923,6 +923,23 @@ function verifySectionFieldDetails(sections, expectedSectionsInfo) {
     );
   });
 }
+
+/**
+ * Discards all recorded Glean telemetry in parent and child processes
+ * and resets FOG and the Glean SDK.
+ *
+ * @param {boolean} onlyInParent Whether we only discard the metric data in the parent process
+ *
+ * Since the current method Services.fog.testResetFOG only discards metrics recorded in the parent process,
+ * we would like to keep this option in our method as well.
+ */
+async function clearGleanTelemetry(onlyInParent = false) {
+  if (!onlyInParent) {
+    await Services.fog.testFlushAllChildren();
+  }
+  Services.fog.testResetFOG();
+}
+
 /**
  * Runs heuristics test for form autofill on given patterns.
  *
