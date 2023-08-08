@@ -433,21 +433,15 @@ void nsHtml5TreeOperation::SetHTMLElementAttributes(
 }
 
 nsIContent* nsHtml5TreeOperation::CreateHTMLElement(
-    nsAtom* aName, nsHtml5HtmlAttributes* aAttributes,
-    mozilla::dom::FromParser aFromParser, nsNodeInfoManager* aNodeInfoManager,
-    nsHtml5DocumentBuilder* aBuilder,
-    mozilla::dom::HTMLContentCreatorFunction aCreator) {
-  RefPtr<dom::NodeInfo> nodeInfo = aNodeInfoManager->GetNodeInfo(
+    nsAtom* aName, nsHtml5HtmlAttributes* aAttributes, FromParser aFromParser,
+    nsNodeInfoManager* aNodeInfoManager, nsHtml5DocumentBuilder* aBuilder,
+    HTMLContentCreatorFunction aCreator) {
+  RefPtr<NodeInfo> nodeInfo = aNodeInfoManager->GetNodeInfo(
       aName, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
   NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
 
-  dom::Element* newContent = nullptr;
   Document* document = nodeInfo->GetDocument();
-  bool willExecuteScript = false;
-  bool isCustomElement = false;
   RefPtr<nsAtom> isAtom;
-  dom::CustomElementDefinition* definition = nullptr;
-
   if (aAttributes) {
     nsHtml5String is = aAttributes->getValue(nsHtml5AttributeName::ATTR_IS);
     if (is) {
@@ -457,78 +451,56 @@ nsIContent* nsHtml5TreeOperation::CreateHTMLElement(
     }
   }
 
-  isCustomElement = (aCreator == NS_NewCustomElement || isAtom);
-  if (isCustomElement && aFromParser != dom::FROM_PARSER_FRAGMENT) {
+  const bool isCustomElement = aCreator == NS_NewCustomElement || isAtom;
+  CustomElementDefinition* customElementDefinition = nullptr;
+  if (isCustomElement && aFromParser != FROM_PARSER_FRAGMENT) {
     RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
     RefPtr<nsAtom> typeAtom =
-        (aCreator == NS_NewCustomElement) ? tagAtom : isAtom;
+        aCreator == NS_NewCustomElement ? tagAtom : isAtom;
 
     MOZ_ASSERT(nodeInfo->NameAtom()->Equals(nodeInfo->LocalName()));
-    definition = nsContentUtils::LookupCustomElementDefinition(
+    customElementDefinition = nsContentUtils::LookupCustomElementDefinition(
         document, nodeInfo->NameAtom(), nodeInfo->NamespaceID(), typeAtom);
-
-    if (definition) {
-      willExecuteScript = true;
-    }
   }
 
-  if (willExecuteScript) {  // This will cause custom element constructors to
-                            // run
+  auto DoCreateElement = [&](HTMLContentCreatorFunction aCreator) -> Element* {
+    nsCOMPtr<Element> newElement;
+    if (aCreator) {
+      newElement = aCreator(nodeInfo.forget(), aFromParser);
+    } else {
+      NS_NewHTMLElement(getter_AddRefs(newElement), nodeInfo.forget(),
+                        aFromParser, isAtom, customElementDefinition);
+    }
+
+    MOZ_ASSERT(newElement, "Element creation created null pointer.");
+    Element* element = newElement.get();
+    aBuilder->HoldElement(newElement.forget());
+
+    if (MOZ_UNLIKELY(aName == nsGkAtoms::style || aName == nsGkAtoms::link)) {
+      if (auto* linkStyle = LinkStyle::FromNode(*element)) {
+        linkStyle->DisableUpdates();
+      }
+    }
+
+    if (!aAttributes) {
+      return element;
+    }
+
+    SetHTMLElementAttributes(element, aName, aAttributes);
+    return element;
+  };
+
+  if (customElementDefinition) {
+    // This will cause custom element constructors to run.
     AutoSetThrowOnDynamicMarkupInsertionCounter
         throwOnDynamicMarkupInsertionCounter(document);
     nsHtml5AutoPauseUpdate autoPauseContentUpdate(aBuilder);
     { nsAutoMicroTask mt; }
-    dom::AutoCEReaction autoCEReaction(
+    AutoCEReaction autoCEReaction(
         document->GetDocGroup()->CustomElementReactionsStack(), nullptr);
-
-    nsCOMPtr<dom::Element> newElement;
-    NS_NewHTMLElement(getter_AddRefs(newElement), nodeInfo.forget(),
-                      aFromParser, isAtom, definition);
-
-    MOZ_ASSERT(newElement, "Element creation created null pointer.");
-    newContent = newElement;
-    aBuilder->HoldElement(newElement.forget());
-
-    if (MOZ_UNLIKELY(aName == nsGkAtoms::style || aName == nsGkAtoms::link)) {
-      if (auto* linkStyle = dom::LinkStyle::FromNode(*newContent)) {
-        linkStyle->DisableUpdates();
-      }
-    }
-
-    if (!aAttributes) {
-      return newContent;
-    }
-
-    SetHTMLElementAttributes(newContent, aName, aAttributes);
-  } else {
-    nsCOMPtr<dom::Element> newElement;
-
-    if (isCustomElement) {
-      NS_NewHTMLElement(getter_AddRefs(newElement), nodeInfo.forget(),
-                        aFromParser, isAtom, definition);
-    } else {
-      newElement = aCreator(nodeInfo.forget(), aFromParser);
-    }
-
-    MOZ_ASSERT(newElement, "Element creation created null pointer.");
-
-    newContent = newElement;
-    aBuilder->HoldElement(newElement.forget());
-
-    if (MOZ_UNLIKELY(aName == nsGkAtoms::style || aName == nsGkAtoms::link)) {
-      if (auto* linkStyle = dom::LinkStyle::FromNode(*newContent)) {
-        linkStyle->DisableUpdates();
-      }
-    }
-
-    if (!aAttributes) {
-      return newContent;
-    }
-
-    SetHTMLElementAttributes(newContent, aName, aAttributes);
+    return DoCreateElement(nullptr);
   }
-
-  return newContent;
+  return DoCreateElement(isCustomElement ? nullptr : aCreator);
 }
 
 nsIContent* nsHtml5TreeOperation::CreateSVGElement(
