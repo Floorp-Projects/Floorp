@@ -22,9 +22,8 @@ use authenticator::{
 use moz_task::RunnableBuilder;
 use nserror::{
     nsresult, NS_ERROR_DOM_INVALID_STATE_ERR, NS_ERROR_DOM_NOT_ALLOWED_ERR,
-    NS_ERROR_DOM_NOT_SUPPORTED_ERR, NS_ERROR_DOM_OPERATION_ERR, NS_ERROR_DOM_UNKNOWN_ERR,
-    NS_ERROR_FAILURE, NS_ERROR_NOT_AVAILABLE, NS_ERROR_NOT_IMPLEMENTED, NS_ERROR_NULL_POINTER,
-    NS_OK,
+    NS_ERROR_DOM_NOT_SUPPORTED_ERR, NS_ERROR_DOM_UNKNOWN_ERR, NS_ERROR_FAILURE,
+    NS_ERROR_NOT_AVAILABLE, NS_ERROR_NOT_IMPLEMENTED, NS_ERROR_NULL_POINTER, NS_OK,
 };
 use nsstring::{nsACString, nsCString, nsString};
 use serde_cbor;
@@ -75,12 +74,12 @@ fn authrs_to_nserror(e: &AuthenticatorError) -> nsresult {
         AuthenticatorError::U2FToken(U2FTokenError::NotSupported) => NS_ERROR_DOM_NOT_SUPPORTED_ERR,
         AuthenticatorError::U2FToken(U2FTokenError::InvalidState) => NS_ERROR_DOM_INVALID_STATE_ERR,
         AuthenticatorError::U2FToken(U2FTokenError::NotAllowed) => NS_ERROR_DOM_NOT_ALLOWED_ERR,
-        AuthenticatorError::PinError(PinError::PinRequired) => NS_ERROR_DOM_OPERATION_ERR,
-        AuthenticatorError::PinError(PinError::InvalidPin(_)) => NS_ERROR_DOM_OPERATION_ERR,
-        AuthenticatorError::PinError(PinError::PinAuthBlocked) => NS_ERROR_DOM_OPERATION_ERR,
-        AuthenticatorError::PinError(PinError::PinBlocked) => NS_ERROR_DOM_OPERATION_ERR,
-        AuthenticatorError::PinError(PinError::PinNotSet) => NS_ERROR_DOM_OPERATION_ERR,
-        AuthenticatorError::CredentialExcluded => NS_ERROR_DOM_OPERATION_ERR,
+        AuthenticatorError::PinError(PinError::PinRequired) => NS_ERROR_DOM_INVALID_STATE_ERR,
+        AuthenticatorError::PinError(PinError::InvalidPin(_)) => NS_ERROR_DOM_INVALID_STATE_ERR,
+        AuthenticatorError::PinError(PinError::PinAuthBlocked) => NS_ERROR_DOM_INVALID_STATE_ERR,
+        AuthenticatorError::PinError(PinError::PinBlocked) => NS_ERROR_DOM_INVALID_STATE_ERR,
+        AuthenticatorError::PinError(PinError::PinNotSet) => NS_ERROR_DOM_INVALID_STATE_ERR,
+        AuthenticatorError::CredentialExcluded => NS_ERROR_DOM_INVALID_STATE_ERR,
         _ => NS_ERROR_DOM_UNKNOWN_ERR,
     }
 }
@@ -497,12 +496,10 @@ impl AuthrsTransport {
         unsafe { args.GetUserVerification(&mut *user_verification) }.to_result()?;
         let user_verification_req = if user_verification.eq("required") {
             UserVerificationRequirement::Required
-        } else if user_verification.eq("preferred") {
-            UserVerificationRequirement::Preferred
         } else if user_verification.eq("discouraged") {
             UserVerificationRequirement::Discouraged
         } else {
-            return Err(NS_ERROR_FAILURE);
+            UserVerificationRequirement::Preferred
         };
 
         let mut authenticator_attachment = nsString::new();
@@ -650,12 +647,10 @@ impl AuthrsTransport {
         unsafe { args.GetUserVerification(&mut *user_verification) }.to_result()?;
         let user_verification_req = if user_verification.eq("required") {
             UserVerificationRequirement::Required
-        } else if user_verification.eq("preferred") {
-            UserVerificationRequirement::Preferred
         } else if user_verification.eq("discouraged") {
             UserVerificationRequirement::Discouraged
         } else {
-            return Err(NS_ERROR_FAILURE);
+            UserVerificationRequirement::Preferred
         };
 
         let mut alternate_rp_id = None;
