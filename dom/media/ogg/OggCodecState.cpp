@@ -441,7 +441,8 @@ bool TheoraState::DecodeHeader(OggPacketPtr aPacket) {
     // header packets. Assume bad input.
     // Our caller will deactivate the bitstream.
     return false;
-  } else if (ret > 0 && isSetupHeader && mPacketCount == 3) {
+  }
+  if (ret > 0 && isSetupHeader && mPacketCount == 3) {
     // Successfully read the three header packets.
     mDoneReadingHeaders = true;
   }
@@ -527,10 +528,10 @@ TimeUnit TheoraState::MaxKeyframeOffset() {
   return TimeUnit::FromMicroseconds(frameDuration * keyframeDiff);
 }
 
-bool TheoraState::IsKeyframe(ogg_packet* pkt) {
+bool TheoraState::IsKeyframe(ogg_packet* aPacket) {
   // first bit of packet is 1 for header, 0 for data
   // second bit of packet is 1 for inter frame, 0 for intra frame
-  return (pkt->bytes >= 1 && (pkt->packet[0] & 0x40) == 0x00);
+  return (aPacket->bytes >= 1 && (aPacket->packet[0] & 0x40) == 0x00);
 }
 
 nsresult TheoraState::PageIn(tainted_opaque_ogg<ogg_page*> aPage) {
@@ -589,7 +590,8 @@ void TheoraState::ReconstructTheoraGranulepos() {
   ogg_int64_t version_3_2_1 = TheoraVersion(&mTheoraInfo, 3, 2, 1);
   ogg_int64_t lastFrame =
       th_granule_frame(mCtx, lastGranulepos) + version_3_2_1;
-  ogg_int64_t firstFrame = lastFrame - mUnstamped.Length() + 1;
+  ogg_int64_t firstFrame =
+      AssertedCast<ogg_int64_t>(lastFrame - mUnstamped.Length() + 1);
 
   // Until we encounter a keyframe, we'll assume that the "keyframe"
   // segment of the granulepos is the first frame, or if that causes
@@ -719,7 +721,8 @@ bool VorbisState::DecodeHeader(OggPacketPtr aPacket) {
     // header packets. Assume bad input. Our caller will deactivate the
     // bitstream.
     return false;
-  } else if (!ret && isSetupHeader && mPacketCount == 3) {
+  }
+  if (!ret && isSetupHeader && mPacketCount == 3) {
     // Successfully read the three header packets.
     // The bitstream remains active.
     mDoneReadingHeaders = true;
@@ -902,8 +905,8 @@ void VorbisState::ReconstructVorbisGranulepos() {
   }
 
   bool unknownGranulepos = last->granulepos == -1;
-  int totalSamples = 0;
-  for (int32_t i = mUnstamped.Length() - 1; i > 0; i--) {
+  int64_t totalSamples = 0;
+  for (int32_t i = AssertedCast<int32_t>(mUnstamped.Length() - 1); i > 0; i--) {
     auto& packet = mUnstamped[i];
     auto& prev = mUnstamped[i - 1];
     ogg_int64_t granulepos = packet->granulepos;
@@ -1144,7 +1147,8 @@ nsresult OpusState::PageIn(tainted_opaque_ogg<ogg_page*> aPage) {
 // It even works before we've created the actual Opus decoder.
 static int GetOpusDeltaGP(ogg_packet* packet) {
   int nframes;
-  nframes = opus_packet_get_nb_frames(packet->packet, packet->bytes);
+  nframes = opus_packet_get_nb_frames(packet->packet,
+                                      AssertedCast<int32_t>(packet->bytes));
   if (nframes > 0) {
     return nframes * opus_packet_get_samples_per_frame(packet->packet, 48000);
   }
@@ -1169,8 +1173,9 @@ bool OpusState::ReconstructOpusGranulepos(void) {
     if (mPrevPageGranulepos != -1) {
       // If this file only has one page and the final granule position is
       // smaller than the pre-skip amount, we MUST reject the stream.
-      if (!mDoneReadingHeaders && last->granulepos < mParser->mPreSkip)
+      if (!mDoneReadingHeaders && last->granulepos < mParser->mPreSkip) {
         return false;
+      }
       int64_t last_gp = last->granulepos;
       gp = mPrevPageGranulepos;
       // Loop through the packets forwards, adding the current packet's
@@ -1196,12 +1201,11 @@ bool OpusState::ReconstructOpusGranulepos(void) {
       }
       mPrevPageGranulepos = last_gp;
       return true;
-    } else {
-      NS_WARNING("No previous granule position to use for Opus end trimming.");
-      // If we don't have a previous granule position, fall through.
-      // We simply won't trim any samples from the end.
-      // TODO: Are we guaranteed to have seen a previous page if there is one?
     }
+    NS_WARNING("No previous granule position to use for Opus end trimming.");
+    // If we don't have a previous granule position, fall through.
+    // We simply won't trim any samples from the end.
+    // TODO: Are we guaranteed to have seen a previous page if there is one?
   }
 
   auto& last = mUnstamped.LastElement();
@@ -1364,7 +1368,7 @@ bool FlacState::ReconstructFlacGranulepos(void) {
   // packet's duration from its granulepos to get the value
   // for the current packet.
   for (uint32_t i = mUnstamped.Length() - 1; i > 0; i--) {
-    int offset =
+    int64_t offset =
         mParser.BlockDuration(mUnstamped[i]->packet, mUnstamped[i]->bytes);
     // Check for error (negative offset) and overflow.
     if (offset >= 0) {
@@ -1520,8 +1524,10 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket) {
     return (mActive = false);
   }
 
-  int64_t sizeofIndex = aPacket->bytes - INDEX_KEYPOINT_OFFSET;
-  int64_t maxNumKeyPoints = sizeofIndex / MIN_KEY_POINT_SIZE;
+  int64_t sizeofIndex =
+      AssertedCast<int64_t>(aPacket->bytes - INDEX_KEYPOINT_OFFSET);
+  int64_t maxNumKeyPoints =
+      AssertedCast<int64_t>(sizeofIndex / MIN_KEY_POINT_SIZE);
   if (aPacket->bytes < minPacketSize.value() ||
       numKeyPoints > maxNumKeyPoints || numKeyPoints < 0) {
     // Packet size is less than the theoretical minimum size, or the packet is
@@ -1560,7 +1566,7 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket) {
     numKeyPointsRead++;
   }
 
-  int32_t keyPointsRead = keyPoints->Length();
+  uint32_t keyPointsRead = keyPoints->Length();
   if (keyPointsRead > 0) {
     mIndex.InsertOrUpdate(serialno, std::move(keyPoints));
   }
@@ -1582,14 +1588,15 @@ nsresult SkeletonState::IndexedSeekTargetForTrack(uint32_t aSerialno,
   }
 
   // Binary search to find the last key point with time less than target.
-  int start = 0;
-  int end = index->Length() - 1;
+  uint32_t start = 0;
+  uint32_t end = index->Length() - 1;
   while (end > start) {
-    int mid = start + ((end - start + 1) >> 1);
+    uint32_t mid = start + ((end - start + 1) >> 1);
     if (index->Get(mid).mTime == aTarget) {
       start = mid;
       break;
-    } else if (index->Get(mid).mTime < aTarget) {
+    }
+    if (index->Get(mid).mTime < aTarget) {
       start = mid;
     } else {
       end = mid - 1;
@@ -1753,9 +1760,10 @@ bool SkeletonState::DecodeHeader(OggPacketPtr aPacket) {
         aPacket->packet + SKELETON_PRESENTATION_TIME_NUMERATOR_OFFSET);
     int64_t d = LittleEndian::readInt64(
         aPacket->packet + SKELETON_PRESENTATION_TIME_DENOMINATOR_OFFSET);
-    mPresentationTime =
-        d == 0 ? 0
-               : (static_cast<float>(n) / static_cast<float>(d)) * USECS_PER_S;
+    mPresentationTime = d == 0 ? 0
+                               : AssertedCast<int64_t>(static_cast<float>(n) /
+                                                       static_cast<float>(d)) *
+                                     USECS_PER_S;
 
     mVersion = SKELETON_VERSION(verMajor, verMinor);
     // We can only care to parse Skeleton version 4.0+.

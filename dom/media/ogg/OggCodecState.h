@@ -100,7 +100,7 @@ class OggPacketQueue : private nsDeque<ogg_packet> {
 // converting granulepos to timestamps.
 class OggCodecState {
  public:
-  typedef mozilla::MetadataTags MetadataTags;
+  using MetadataTags = mozilla::MetadataTags;
   // Ogg types we know about
   enum CodecType {
     TYPE_VORBIS = 0,
@@ -326,10 +326,10 @@ class VorbisState : public OggCodecState {
 
  private:
   AudioInfo mInfo;
-  vorbis_info mVorbisInfo;
-  vorbis_comment mComment;
-  vorbis_dsp_state mDsp;
-  vorbis_block mBlock;
+  vorbis_info mVorbisInfo = {};
+  vorbis_comment mComment = {};
+  vorbis_dsp_state mDsp = {};
+  vorbis_block mBlock = {};
   OggPacketQueue mHeaders;
 
   // Returns the end time that a granulepos represents.
@@ -406,8 +406,8 @@ class TheoraState : public OggCodecState {
   // Returns the end time that a granulepos represents.
   static TimeUnit Time(th_info* aInfo, int64_t aGranulePos);
 
-  th_info mTheoraInfo;
-  th_comment mComment;
+  th_info mTheoraInfo = {};
+  th_comment mComment = {};
   th_setup_info* mSetup;
   th_dec_ctx* mCtx;
 
