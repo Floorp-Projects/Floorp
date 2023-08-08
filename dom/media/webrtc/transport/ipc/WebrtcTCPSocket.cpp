@@ -399,7 +399,6 @@ nsresult WebrtcTCPSocket::OpenWithHttpProxy() {
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo;
-  Maybe<net::LoadInfoArgs> loadInfoArgs = Some(mProxyConfig->loadInfoArgs());
 
   // FIXME: We don't know the remote type of the process which provided these
   // LoadInfoArgs. Pass in `NOT_REMOTE_TYPE` as the origin process to blindly
@@ -407,8 +406,8 @@ nsresult WebrtcTCPSocket::OpenWithHttpProxy() {
   // using it for security checks here.
   // If this code ever starts checking the triggering remote type, this needs to
   // be changed.
-  rv = ipc::LoadInfoArgsToLoadInfo(loadInfoArgs, NOT_REMOTE_TYPE,
-                                   getter_AddRefs(loadInfo));
+  rv = ipc::LoadInfoArgsToLoadInfo(mProxyConfig->loadInfoArgs(),
+                                   NOT_REMOTE_TYPE, getter_AddRefs(loadInfo));
   if (NS_FAILED(rv)) {
     LOG(("WebrtcTCPSocket %p: could not init load info\n", this));
     return rv;

@@ -135,27 +135,26 @@ nsresult RHEntryToRHEntryInfo(
 /**
  * Convert a LoadInfo to LoadInfoArgs struct.
  */
-nsresult LoadInfoToLoadInfoArgs(
-    nsILoadInfo* aLoadInfo,
-    Maybe<mozilla::net::LoadInfoArgs>* outOptionalLoadInfoArgs);
+nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
+                                mozilla::net::LoadInfoArgs* outLoadInfoArgs);
 
 /**
  * Convert LoadInfoArgs to a LoadInfo.
  */
-nsresult LoadInfoArgsToLoadInfo(
-    const Maybe<mozilla::net::LoadInfoArgs>& aOptionalLoadInfoArgs,
-    const nsACString& aOriginRemoteType, nsILoadInfo** outLoadInfo);
-nsresult LoadInfoArgsToLoadInfo(
-    const Maybe<mozilla::net::LoadInfoArgs>& aOptionalLoadInfoArgs,
-    const nsACString& aOriginRemoteType, nsINode* aCspToInheritLoadingContext,
-    nsILoadInfo** outLoadInfo);
-nsresult LoadInfoArgsToLoadInfo(
-    const Maybe<net::LoadInfoArgs>& aOptionalLoadInfoArgs,
-    const nsACString& aOriginRemoteType, mozilla::net::LoadInfo** outLoadInfo);
-nsresult LoadInfoArgsToLoadInfo(
-    const Maybe<net::LoadInfoArgs>& aOptionalLoadInfoArgs,
-    const nsACString& aOriginRemoteType, nsINode* aCspToInheritLoadingContext,
-    mozilla::net::LoadInfo** outLoadInfo);
+nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
+                                const nsACString& aOriginRemoteType,
+                                nsILoadInfo** outLoadInfo);
+nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
+                                const nsACString& aOriginRemoteType,
+                                nsINode* aCspToInheritLoadingContext,
+                                nsILoadInfo** outLoadInfo);
+nsresult LoadInfoArgsToLoadInfo(const net::LoadInfoArgs& aLoadInfoArgs,
+                                const nsACString& aOriginRemoteType,
+                                mozilla::net::LoadInfo** outLoadInfo);
+nsresult LoadInfoArgsToLoadInfo(const net::LoadInfoArgs& aLoadInfoArgs,
+                                const nsACString& aOriginRemoteType,
+                                nsINode* aCspToInheritLoadingContext,
+                                mozilla::net::LoadInfo** outLoadInfo);
 
 /**
  * Fills ParentLoadInfoForwarderArgs with properties we want to carry to child

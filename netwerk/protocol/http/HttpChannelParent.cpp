@@ -390,7 +390,7 @@ bool HttpChannelParent::DoAsyncOpen(
     const uint64_t& startPos, const nsCString& entityID, const bool& allowSpdy,
     const bool& allowHttp3, const bool& allowAltSvc, const bool& beConservative,
     const bool& bypassProxy, const uint32_t& tlsFlags,
-    const Maybe<LoadInfoArgs>& aLoadInfoArgs, const uint32_t& aCacheKey,
+    const LoadInfoArgs& aLoadInfoArgs, const uint32_t& aCacheKey,
     const uint64_t& aRequestContextID,
     const Maybe<CorsPreflightArgs>& aCorsPreflightArgs,
     const uint32_t& aInitialRwin, const bool& aBlockAuthPrompt,
