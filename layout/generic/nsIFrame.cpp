@@ -694,18 +694,6 @@ void nsIFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
   }
 
-  if (disp->IsContainLayout() && GetContainSizeAxes().IsBoth()) {
-    // In general, frames that have contain:layout+size can be reflow roots.
-    // (One exception: table-wrapper frames don't work well as reflow roots,
-    // because their inner-table ReflowInput init path tries to reuse & deref
-    // the wrapper's containing block's reflow input, which may be null if we
-    // initiate reflow from the table-wrapper itself.)
-    //
-    // Changes to `contain` force frame reconstructions, so this bit can be set
-    // for the whole lifetime of this frame.
-    AddStateBits(NS_FRAME_REFLOW_ROOT);
-  }
-
   if (nsLayoutUtils::FontSizeInflationEnabled(PresContext()) ||
       !GetParent()
 #ifdef DEBUG
@@ -2434,10 +2422,6 @@ static inline bool IsIntrinsicKeyword(const SizeOrMaxSize& aSize) {
 }
 
 bool nsIFrame::CanBeDynamicReflowRoot() const {
-  if (!StaticPrefs::layout_dynamic_reflow_roots_enabled()) {
-    return false;
-  }
-
   const auto& display = *StyleDisplay();
   if (IsFrameOfType(nsIFrame::eLineParticipant) || display.mDisplay.IsRuby() ||
       display.IsInnerTableStyle() ||
@@ -2446,6 +2430,29 @@ bool nsIFrame::CanBeDynamicReflowRoot() const {
     // width or height (i.e., the size depends on content).
     MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_DYNAMIC_REFLOW_ROOT),
                "should not have dynamic reflow root bit");
+    return false;
+  }
+
+  // In general, frames that have contain:layout+size can be reflow roots.
+  // (One exception: table-wrapper frames don't work well as reflow roots,
+  // because their inner-table ReflowInput init path tries to reuse & deref
+  // the wrapper's containing block's reflow input, which may be null if we
+  // initiate reflow from the table-wrapper itself.)
+  //
+  // Changes to `contain` force frame reconstructions, so we used to use
+  // NS_FRAME_REFLOW_ROOT, this bit could be set for the whole lifetime of
+  // this frame. But after the support of `content-visibility: auto` which
+  // is with contain layout + size when it's not relevant to user, and only
+  // with contain layout when it is relevant. The frame does not reconstruct
+  // when the relevancy changes. So we use NS_FRAME_DYNAMIC_REFLOW_ROOT instead.
+  //
+  // We place it above the pref check on purpose, to make sure it works for
+  // containment even with the pref disabled.
+  if (display.IsContainLayout() && GetContainSizeAxes().IsBoth()) {
+    return true;
+  }
+
+  if (!StaticPrefs::layout_dynamic_reflow_roots_enabled()) {
     return false;
   }
 
