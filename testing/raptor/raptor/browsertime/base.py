@@ -388,6 +388,13 @@ class Browsertime(Perftest):
                 ["--browsertime.secondary_url", test.get("secondary_url")]
             )
 
+        # These options can have multiple entries in a browsertime command
+        MULTI_OPTS = [
+            "--firefox.android.intentArgument",
+            "--firefox.args",
+            "--firefox.preference",
+        ]
+
         # In this code block we check if any priority 2 argument is in conflict with a priority
         # 3 arg if so we overwrite the value with the priority 2 argument, and otherwise we
         # simply add the priority 2 arg
@@ -400,8 +407,8 @@ class Browsertime(Perftest):
                         "One of the browsertime_args from the test was not split properly. "
                         f"Expecting a --flag, or a --option=value pairing. Found: {split_arg}"
                     )
-                if pairing[0] in browsertime_options:
-                    # If it's a flag, don't re-add it
+                if pairing[0] in browsertime_options and pairing[0] not in MULTI_OPTS:
+                    # If it's not a flag, then overwrite the existing value
                     if len(pairing) > 1:
                         ind = browsertime_options.index(pairing[0])
                         browsertime_options[ind + 1] = pairing[1]
@@ -547,11 +554,6 @@ class Browsertime(Perftest):
 
         # In this code block we check if any priority 1 arguments are in conflict with a
         # priority 2/3/4 argument
-        MULTI_OPTS = [
-            "--firefox.android.intentArgument",
-            "--firefox.args",
-            "--firefox.preference",
-        ]
         for index, argument in list(enumerate(priority1_options)):
             if argument in MULTI_OPTS:
                 browsertime_options.extend([argument, priority1_options[index + 1]])
