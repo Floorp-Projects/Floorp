@@ -439,6 +439,7 @@ mod foreign {
                 DeviceError::Invalid => ErrorBufferType::Validation,
                 DeviceError::Lost => ErrorBufferType::None,
                 DeviceError::OutOfMemory => ErrorBufferType::OutOfMemory,
+                DeviceError::ResourceCreationFailed => ErrorBufferType::Internal,
             }
         }
     }

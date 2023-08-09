@@ -30,9 +30,9 @@ git = "https://github.com/gfx-rs/naga"
 rev = "bac2d82a430fbfcf100ee22b7c3bc12f3d593079"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/gfx-rs/wgpu?rev=09b010b26af6876ce84991576a168a572172f08d"]
+[source."git+https://github.com/gfx-rs/wgpu?rev=7c6b85756237f77bfe8d6231dfc7a1412ff662b6"]
 git = "https://github.com/gfx-rs/wgpu"
-rev = "09b010b26af6876ce84991576a168a572172f08d"
+rev = "7c6b85756237f77bfe8d6231dfc7a1412ff662b6"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/glandium/prost?rev=95964e9d33df3c2a9c3f14285e262867cab6f96b"]
