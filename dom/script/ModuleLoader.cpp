@@ -137,7 +137,7 @@ void ModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
       GetScriptLoader()->RunScriptWhenSafe(aRequest);
     } else {
       GetScriptLoader()->MaybeMoveToLoadedList(aRequest);
-      GetScriptLoader()->ProcessPendingRequests();
+      GetScriptLoader()->ProcessPendingRequestsAsync();
     }
   }
 
