@@ -74,11 +74,6 @@ export class ShoppingSidebarChild extends RemotePageChild {
     return lazy.optedIn === 1;
   }
 
-  get canFetchAndShowAd() {
-    // TODO: Bug 1840520 will add the pref that toggles showing ads
-    return true;
-  }
-
   optedInStateChanged() {
     // Force re-fetching things if needed by clearing the last product URI:
     this.#productURI = null;
@@ -129,7 +124,6 @@ export class ShoppingSidebarChild extends RemotePageChild {
     this.sendToContent("Update", {
       showOnboarding: !this.canFetchAndShowData,
       data: null,
-      recommendationData: null,
     });
     if (this.canFetchAndShowData) {
       if (!this.#productURI) {
@@ -161,27 +155,6 @@ export class ShoppingSidebarChild extends RemotePageChild {
         showOnboarding: false,
         data,
         productUrl: this.#productURI.spec,
-      });
-
-      if (!this.canFetchAndShowAd || data.error) {
-        return;
-      }
-      this.#product.requestRecommendations().then(recommendationData => {
-        // Check if the product URI or opt in changed while we waited.
-        if (
-          uri != this.#productURI ||
-          !this.canFetchAndShowData ||
-          !this.canFetchAndShowAd
-        ) {
-          return;
-        }
-
-        this.sendToContent("Update", {
-          showOnboarding: false,
-          data,
-          productUrl: this.#productURI.spec,
-          recommendationData,
-        });
       });
     }
   }

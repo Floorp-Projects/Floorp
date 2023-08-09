@@ -7,7 +7,6 @@
 ### and strings are likely to change often.
 
 shopping-page-title = { -brand-product-name } Shopping
-
 # Title for page showing where a user can check the
 # review quality of online shopping product reviews
 shopping-main-container-title = Review quality check
@@ -17,9 +16,6 @@ shopping-close-button =
 # sidebar is still loading data.
 shopping-a11y-loading =
   .aria-label = Loading…
-
-recommended-by-fakespot-ad-label =
-  .label = Recommended by { -fakespot-brand-name }
 
 ## Strings for the letter grade component.
 ## For now, we only support letter grades A, B, C, D and F.

@@ -21,15 +21,12 @@ import "chrome://browser/content/shopping/analysis-explainer.mjs";
 import "chrome://browser/content/shopping/shopping-message-bar.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/shopping/unanalyzed.mjs";
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://browser/content/shopping/recommended-ad.mjs";
 
 export class ShoppingContainer extends MozLitElement {
   static properties = {
     data: { type: Object },
     showOnboarding: { type: Boolean },
     productUrl: { type: String },
-    recommendationData: { type: Object },
   };
 
   static get queries() {
@@ -61,14 +58,13 @@ export class ShoppingContainer extends MozLitElement {
     );
   }
 
-  async _update({ data, showOnboarding, productUrl, recommendationData }) {
+  async _update({ data, showOnboarding, productUrl }) {
     // If we're not opted in or there's no shopping URL in the main browser,
     // the actor will pass `null`, which means this will clear out any existing
     // content in the sidebar.
     this.data = data;
     this.showOnboarding = showOnboarding;
     this.productUrl = productUrl;
-    this.recommendationData = recommendationData;
   }
 
   handleEvent(event) {
@@ -87,7 +83,6 @@ export class ShoppingContainer extends MozLitElement {
         .highlights=${this.data.highlights}
       ></review-highlights>
       <analysis-explainer></analysis-explainer>
-      ${this.recommendationTemplate()}
     `;
   }
 
@@ -122,15 +117,6 @@ export class ShoppingContainer extends MozLitElement {
     }
 
     return this.getAnalysisDetailsTemplate();
-  }
-
-  recommendationTemplate() {
-    if (this.recommendationData?.length) {
-      return html`<recommended-ad
-        .product=${this.recommendationData[0]}
-      ></recommended-ad>`;
-    }
-    return null;
   }
 
   getLoadingTemplate() {
