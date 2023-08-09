@@ -170,7 +170,6 @@ DesktopVector GetDpiForMonitor(HMONITOR monitor) {
 
 DesktopRect GetScreenRect(const DesktopCapturer::SourceId screen,
                           const std::wstring& device_key) {
-  RTC_DCHECK(IsGUIThread(false));
   if (screen == kFullDesktopScreenId) {
     return GetFullscreenRect();
   }
