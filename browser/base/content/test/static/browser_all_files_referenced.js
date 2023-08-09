@@ -901,8 +901,6 @@ add_task(async function checkAllTheFiles() {
   let devtoolsPrefixes = [
     "chrome://devtools",
     "resource://devtools/",
-    "resource://devtools-client-jsonview/",
-    "resource://devtools-client-shared/",
     "resource://devtools-shared-images/",
     "resource://devtools-highlighter-styles/",
     "resource://app/modules/devtools",
