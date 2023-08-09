@@ -705,6 +705,9 @@ void TISInputSourceWrapper::InitByLayoutID(SInt32 aLayoutID, bool aOverrideKeybo
     case 12:
       InitByInputSourceID("com.apple.keylayout.Spanish");
       break;
+    case 13:
+      InitByInputSourceID("com.apple.keylayout.French-PC");
+      break;
     default:
       Clear();
       break;

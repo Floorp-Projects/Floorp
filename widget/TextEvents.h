@@ -104,14 +104,43 @@ struct AlternativeCharCode {
  ******************************************************************************/
 
 struct ShortcutKeyCandidate {
-  ShortcutKeyCandidate() : mCharCode(0), mIgnoreShift(0) {}
-  ShortcutKeyCandidate(uint32_t aCharCode, bool aIgnoreShift)
-      : mCharCode(aCharCode), mIgnoreShift(aIgnoreShift) {}
+  enum class ShiftState : bool {
+    // Can ignore `Shift` modifier state when comparing the key combination.
+    // E.g., Ctrl + Shift + `:` in the US keyboard layout may match with
+    // Ctrl + `:` shortcut.
+    Ignorable,
+    // `Shift` modifier state should be respected.  I.e., Ctrl + `;` in the US
+    // keyboard layout never matches with Ctrl + Shift + `;` shortcut.
+    MatchExactly,
+  };
+
+  enum class SkipIfEarlierHandlerDisabled : bool {
+    // Even if an earlier handler is disabled, this may match with another
+    // handler for avoiding inaccessible shortcut with the active keyboard
+    // layout.
+    No,
+    // If an earlier handler (i.e., preferred handler) is disabled, this should
+    // not try to match.  E.g., Ctrl + `-` in the French keyboard layout when
+    // the zoom level is the minimum value, it should not match with Ctrl + `6`
+    // shortcut (French keyboard layout introduces `-` when pressing Digit6 key
+    // without Shift, and Shift + Digit6 introduces `6`).
+    Yes,
+  };
+
+  ShortcutKeyCandidate() = default;
+  ShortcutKeyCandidate(
+      uint32_t aCharCode, ShiftState aShiftState,
+      SkipIfEarlierHandlerDisabled aSkipIfEarlierHandlerDisabled)
+      : mCharCode(aCharCode),
+        mShiftState(aShiftState),
+        mSkipIfEarlierHandlerDisabled(aSkipIfEarlierHandlerDisabled) {}
+
   // The mCharCode value which must match keyboard shortcut definition.
-  uint32_t mCharCode;
-  // true if Shift state can be ignored.  Otherwise, Shift key state must
-  // match keyboard shortcut definition.
-  bool mIgnoreShift;
+  uint32_t mCharCode = 0;
+
+  ShiftState mShiftState = ShiftState::MatchExactly;
+  SkipIfEarlierHandlerDisabled mSkipIfEarlierHandlerDisabled =
+      SkipIfEarlierHandlerDisabled::No;
 };
 
 /******************************************************************************

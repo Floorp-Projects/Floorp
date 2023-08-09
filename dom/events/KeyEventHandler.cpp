@@ -6,6 +6,7 @@
 
 #include "mozilla/ArrayUtils.h"
 
+#include "ErrorList.h"
 #include "nsCOMPtr.h"
 #include "nsQueryObject.h"
 #include "KeyEventHandler.h"
@@ -319,7 +320,7 @@ nsresult KeyEventHandler::DispatchXULKeyCommand(dom::Event* aEvent) {
   if (handlerElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
                                   nsGkAtoms::_true, eCaseMatters)) {
     // Don't dispatch command events for disabled keys.
-    return NS_OK;
+    return NS_SUCCESS_DOM_NO_OPERATION;
   }
 
   aEvent->PreventDefault();

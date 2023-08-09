@@ -952,20 +952,28 @@ void WidgetKeyboardEvent::GetShortcutKeyCandidates(
     ShortcutKeyCandidateArray& aCandidates) const {
   MOZ_ASSERT(aCandidates.IsEmpty(), "aCandidates must be empty");
 
+  using ShiftState = ShortcutKeyCandidate::ShiftState;
+  using SkipIfEarlierHandlerDisabled =
+      ShortcutKeyCandidate::SkipIfEarlierHandlerDisabled;
+
   // ShortcutKeyCandidate::mCharCode is a candidate charCode.
-  // ShortcutKeyCandidate::mIgnoreShift means the mCharCode should be tried to
-  // execute a command with/without shift key state. If this is TRUE, the
-  // shifted key state should be ignored. Otherwise, don't ignore the state.
+  // ShortcutKeyCandidate::mShiftState means the mCharCode should be tried to
+  // execute a command with/without shift key state. If this is Ignorable,
+  // the shifted key state should be ignored. Otherwise, don't ignore the state.
   // the priority of the charCodes are (shift key is not pressed):
-  //   0: PseudoCharCode()/false,
-  //   1: unshiftedCharCodes[0]/false, 2: unshiftedCharCodes[1]/false...
+  //   0: PseudoCharCode()/ShiftState::MatchExactly,
+  //   1: unshiftedCharCodes[0]/ShiftState::MatchExactly,
+  //   2: unshiftedCharCodes[1]/ShiftState::MatchExactly...
   // the priority of the charCodes are (shift key is pressed):
-  //   0: PseudoCharCode()/false,
-  //   1: shiftedCharCodes[0]/false, 2: shiftedCharCodes[0]/true,
-  //   3: shiftedCharCodes[1]/false, 4: shiftedCharCodes[1]/true...
+  //   0: PseudoCharCode()/ShiftState::MatchExactly,
+  //   1: shiftedCharCodes[0]/ShiftState::MatchExactly,
+  //   2: shiftedCharCodes[0]/ShiftState::Ignorable,
+  //   3: shiftedCharCodes[1]/ShiftState::MatchExactly,
+  //   4: shiftedCharCodes[1]/ShiftState::Ignorable...
   uint32_t pseudoCharCode = PseudoCharCode();
   if (pseudoCharCode) {
-    ShortcutKeyCandidate key(pseudoCharCode, false);
+    ShortcutKeyCandidate key(pseudoCharCode, ShiftState::MatchExactly,
+                             SkipIfEarlierHandlerDisabled::No);
     aCandidates.AppendElement(key);
   }
 
@@ -976,7 +984,8 @@ void WidgetKeyboardEvent::GetShortcutKeyCandidates(
       if (!ch || ch == pseudoCharCode) {
         continue;
       }
-      ShortcutKeyCandidate key(ch, false);
+      ShortcutKeyCandidate key(ch, ShiftState::MatchExactly,
+                               SkipIfEarlierHandlerDisabled::No);
       aCandidates.AppendElement(key);
     }
     // If unshiftedCharCodes doesn't have numeric but shiftedCharCode has it,
@@ -987,7 +996,11 @@ void WidgetKeyboardEvent::GetShortcutKeyCandidates(
       for (uint32_t i = 0; i < len; ++i) {
         uint32_t ch = mAlternativeCharCodes[i].mShiftedCharCode;
         if (ch >= '0' && ch <= '9') {
-          ShortcutKeyCandidate key(ch, false);
+          ShortcutKeyCandidate key(
+              ch, ShiftState::MatchExactly,
+              // Ctrl + `-` in the French keyboard layout should not match with
+              // Ctrl + `6` shortcut when it's already fully zoomed out.
+              SkipIfEarlierHandlerDisabled::Yes);
           aCandidates.AppendElement(key);
           break;
         }
@@ -1001,7 +1014,8 @@ void WidgetKeyboardEvent::GetShortcutKeyCandidates(
       }
 
       if (ch != pseudoCharCode) {
-        ShortcutKeyCandidate key(ch, false);
+        ShortcutKeyCandidate key(ch, ShiftState::MatchExactly,
+                                 SkipIfEarlierHandlerDisabled::No);
         aCandidates.AppendElement(key);
       }
 
@@ -1024,7 +1038,8 @@ void WidgetKeyboardEvent::GetShortcutKeyCandidates(
 
       // Setting the alternative charCode candidates for retry without shift
       // key state only when the shift key is pressed.
-      ShortcutKeyCandidate key(ch, true);
+      ShortcutKeyCandidate key(ch, ShiftState::Ignorable,
+                               SkipIfEarlierHandlerDisabled::No);
       aCandidates.AppendElement(key);
     }
   }
@@ -1036,7 +1051,8 @@ void WidgetKeyboardEvent::GetShortcutKeyCandidates(
   // shouldn't work as a space key.
   if (mKeyNameIndex == KEY_NAME_INDEX_USE_STRING &&
       mCodeNameIndex == CODE_NAME_INDEX_Space && pseudoCharCode != ' ') {
-    ShortcutKeyCandidate spaceKey(' ', false);
+    ShortcutKeyCandidate spaceKey(' ', ShiftState::MatchExactly,
+                                  SkipIfEarlierHandlerDisabled::No);
     aCandidates.AppendElement(spaceKey);
   }
 }
