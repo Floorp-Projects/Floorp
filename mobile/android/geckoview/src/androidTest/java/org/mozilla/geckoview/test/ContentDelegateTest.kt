@@ -11,6 +11,7 @@ import android.view.Surface
 import androidx.annotation.AnyThread
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import junit.framework.TestCase.assertTrue
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.json.JSONObject
 import org.junit.Assume.assumeThat
@@ -675,6 +676,25 @@ class ContentDelegateTest : BaseSessionTest() {
     fun requestAnalysis() {
         // TODO: bug1845760 replace with static example.com product page and enable in automation
         if (!sessionRule.env.isAutomation) {
+            // verify a non product page
+            val nonProductPageResult = mainSession.requestAnalysis("https://www.amazon.com/").accept {
+                assertTrue("Should not return analysis", false)
+            }
+            try {
+                sessionRule.waitForResult(nonProductPageResult)
+            } catch (e: Exception) {
+                assertTrue("Should have an exception", true)
+            }
+
+            // verify product with no analysis data
+            val noAnalysisResult = mainSession.requestAnalysis("https://www.amazon.com/Travel-Self-Inflatable-Sleeping-Airplane-Adjustable/dp/B0B8NVW9YX")
+            sessionRule.waitForResult(noAnalysisResult).let {
+                assertThat("Product grade should match", it.grade, equalTo(null))
+                assertThat("Product id should match", it.productId, equalTo(null))
+                assertThat("Product adjusted rating should match", it.adjustedRating, equalTo(0.0))
+                assertThat("Product highlights should match", it.highlights, equalTo(null))
+            }
+
             val result = mainSession.requestAnalysis("https://www.amazon.com/Furmax-Electric-Adjustable-Standing-Computer/dp/B09TJGHL5F/")
             sessionRule.waitForResult(result).let {
                 assertThat("Product grade should match", it.grade, equalTo("A"))
@@ -690,6 +710,20 @@ class ContentDelegateTest : BaseSessionTest() {
     fun requestRecommendations() {
         // TODO: bug1845760 replace with static example.com product page
         if (!sessionRule.env.isAutomation) {
+            // verify a non product page
+            val nonProductPageResult = mainSession.requestRecommendations("https://www.amazon.com/").accept {
+                assertTrue("Should not return recommendation", false)
+            }
+            try {
+                sessionRule.waitForResult(nonProductPageResult)
+            } catch (e: Exception) {
+                assertTrue("Should have an exception", true)
+            }
+
+            // verify product with no recommendations
+            val noRecResult = mainSession.requestRecommendations("https://www.amazon.com/Travel-Self-Inflatable-Sleeping-Airplane-Adjustable/dp/B0B8NVW9YX")
+            assertThat("Product recommendations should be empty", sessionRule.waitForResult(noRecResult).size, equalTo(0))
+
             val result = mainSession.requestRecommendations("https://www.amazon.com/Furmax-Electric-Adjustable-Standing-Computer/dp/B09TJGHL5F/")
             sessionRule.waitForResult(result)
                 .let {
