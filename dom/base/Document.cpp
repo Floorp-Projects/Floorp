@@ -17318,10 +17318,12 @@ Document::CreatePermissionGrantPromise(
                   if (!autoGrant) {
                     p->Resolve(choice, __func__);
                   } else {
+                    // We capture sapr here to prevent it from destructing
+                    // before the callbacks complete.
                     sapr->MaybeDelayAutomaticGrants()->Then(
                         GetCurrentSerialEventTarget(), __func__,
-                        [p, choice] { p->Resolve(choice, __func__); },
-                        [p] { p->Reject(false, __func__); });
+                        [p, sapr, choice] { p->Resolve(choice, __func__); },
+                        [p, sapr] { p->Reject(false, __func__); });
                   }
                   return;
                 }
