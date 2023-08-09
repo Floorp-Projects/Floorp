@@ -260,6 +260,9 @@ class MOZ_RAII AutoProfilerTracing {
         mMarkerName(aMarkerName),
         mCategoryPair(aCategoryPair),
         mInnerWindowID(aInnerWindowID) {
+    if (!profiler_thread_is_being_profiled_for_markers()) {
+      return;
+    }
     profiler_add_marker(
         mozilla::ProfilerString8View::WrapNullTerminatedString(mMarkerName),
         mCategoryPair,
@@ -279,6 +282,9 @@ class MOZ_RAII AutoProfilerTracing {
         mMarkerName(aMarkerName),
         mCategoryPair(aCategoryPair),
         mInnerWindowID(aInnerWindowID) {
+    if (!profiler_thread_is_being_profiled_for_markers()) {
+      return;
+    }
     profiler_add_marker(
         mozilla::ProfilerString8View::WrapNullTerminatedString(mMarkerName),
         mCategoryPair,
@@ -291,6 +297,9 @@ class MOZ_RAII AutoProfilerTracing {
   }
 
   ~AutoProfilerTracing() {
+    if (!profiler_thread_is_being_profiled_for_markers()) {
+      return;
+    }
     profiler_add_marker(
         mozilla::ProfilerString8View::WrapNullTerminatedString(mMarkerName),
         mCategoryPair,
