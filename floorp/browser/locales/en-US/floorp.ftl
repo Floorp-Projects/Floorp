@@ -802,7 +802,7 @@ update-portable-notification-failed-prepare-message = Failed to prepare update.
 ##################################################################### Open link in external ###############################################################
 openInExternal-title = Open in external browser
 open-link-in-external-enabled-option =
- .label = Enable "Open in external browser" feature
+ .label = Enable the "Open in external browser" feature
 open-link-in-external-select-browser-option = Choose what browser will be opened
 open-link-in-external-select-browser-option-default =
  .label = Default browser
