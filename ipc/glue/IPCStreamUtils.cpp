@@ -90,7 +90,7 @@ static bool SerializeLazyInputStream(nsIInputStream* aStream,
     return false;
   }
 
-  aValue.stream() = RemoteLazyInputStreamParams(lazyStream);
+  aValue.stream() = RemoteLazyInputStreamParams(WrapNotNull(lazyStream));
 
   return true;
 }

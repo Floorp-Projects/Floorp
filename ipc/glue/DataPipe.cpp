@@ -679,7 +679,7 @@ void DataPipeReceiver::SerializedComplexity(uint32_t aMaxSize,
 void DataPipeReceiver::Serialize(InputStreamParams& aParams, uint32_t aMaxSize,
                                  uint32_t* aSizeUsed) {
   *aSizeUsed = 0;
-  aParams = DataPipeReceiverStreamParams(this);
+  aParams = DataPipeReceiverStreamParams(WrapNotNull(this));
 }
 
 bool DataPipeReceiver::Deserialize(const InputStreamParams& aParams) {

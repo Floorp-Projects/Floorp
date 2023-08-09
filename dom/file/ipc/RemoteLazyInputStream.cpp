@@ -932,7 +932,7 @@ void RemoteLazyInputStream::SerializedComplexity(uint32_t aMaxSize,
 void RemoteLazyInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
                                       uint32_t aMaxSize, uint32_t* aSizeUsed) {
   *aSizeUsed = 0;
-  aParams = mozilla::ipc::RemoteLazyInputStreamParams(this);
+  aParams = mozilla::ipc::RemoteLazyInputStreamParams(WrapNotNull(this));
 }
 
 bool RemoteLazyInputStream::Deserialize(
