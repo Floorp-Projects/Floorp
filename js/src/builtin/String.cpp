@@ -4538,11 +4538,11 @@ static bool BuildFlatMatchArray(JSContext* cx, HandleString str,
   arr->setDenseInitializedLength(1);
   arr->initDenseElement(0, StringValue(pattern));
 
-  // Set the |index| property. (TemplateObject positions it in slot 0).
-  arr->setSlot(0, Int32Value(match));
+  // Set the |index| property.
+  arr->initSlot(RegExpRealm::MatchResultObjectIndexSlot, Int32Value(match));
 
-  // Set the |input| property. (TemplateObject positions it in slot 1).
-  arr->setSlot(1, StringValue(str));
+  // Set the |input| property.
+  arr->initSlot(RegExpRealm::MatchResultObjectInputSlot, StringValue(str));
 
 #ifdef DEBUG
   RootedValue test(cx);
