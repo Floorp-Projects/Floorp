@@ -23,8 +23,6 @@
 
 #include "AuthrsTransport.h"
 #include "CtapArgs.h"
-#include "CtapResults.h"
-#include "U2FSoftTokenTransport.h"
 #include "WebAuthnEnumStrings.h"
 
 #ifdef MOZ_WIDGET_ANDROID
