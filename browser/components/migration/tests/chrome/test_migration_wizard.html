@@ -1366,6 +1366,59 @@
         errorText = gShadowRoot.querySelector("#file-import-error-message").textContent;
         is(errorText, "");
       });
+
+      /**
+       * Tests that the variant of the wizard can be forced via
+       * attributes on the migration-wizard element.
+       */
+      add_task(async function force_show_import_all() {
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.SELECTION,
+          migrators: MIGRATOR_PROFILE_INSTANCES,
+          showImportAll: true,
+        });
+
+        let selectionPage = gShadowRoot.querySelector("div[name='page-selection']");
+        ok(
+          selectionPage.hasAttribute("show-import-all"),
+          "Should be paying attention to showImportAll=true on state object"
+        );
+
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.SELECTION,
+          migrators: MIGRATOR_PROFILE_INSTANCES,
+          showImportAll: false,
+        });
+
+        ok(
+          !selectionPage.hasAttribute("show-import-all"),
+          "Should be paying attention to showImportAll=false on state object"
+        );
+
+        gWiz.setAttribute("force-show-import-all", "false");
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.SELECTION,
+          migrators: MIGRATOR_PROFILE_INSTANCES,
+          showImportAll: true,
+        });
+        ok(
+          !selectionPage.hasAttribute("show-import-all"),
+          "Should be paying attention to force-show-import-all=false on DOM node"
+        );
+
+        gWiz.setAttribute("force-show-import-all", "true");
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.SELECTION,
+          migrators: MIGRATOR_PROFILE_INSTANCES,
+          showImportAll: false,
+        });
+        ok(
+          selectionPage.hasAttribute("show-import-all"),
+          "Should be paying attention to force-show-import-all=true on DOM node"
+        );
+
+        gWiz.removeAttribute("force-show-import-all");
+      });
     </script>
   </head>
   <body>
