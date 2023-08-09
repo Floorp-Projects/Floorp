@@ -238,6 +238,11 @@ NS_IMETHODIMP DefaultURI::GetQuery(nsACString& aQuery) {
   return NS_OK;
 }
 
+NS_IMETHODIMP DefaultURI::GetHasQuery(bool* aHasQuery) {
+  *aHasQuery = mURL->HasQuery();
+  return NS_OK;
+}
+
 NS_IMETHODIMP DefaultURI::GetDisplayHost(nsACString& aDisplayHost) {
   // At the moment it doesn't seem useful to decode the hostname if it happens
   // to contain punycode.

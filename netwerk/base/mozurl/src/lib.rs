@@ -249,6 +249,11 @@ pub extern "C" fn mozurl_has_fragment(url: &MozURL) -> bool {
 }
 
 #[no_mangle]
+pub extern "C" fn mozurl_has_query(url: &MozURL) -> bool {
+    url.query().is_some()
+}
+
+#[no_mangle]
 pub extern "C" fn mozurl_directory(url: &MozURL) -> SpecSlice {
     if let Some(position) = url.path().rfind('/') {
         url.path()[..position + 1].into()

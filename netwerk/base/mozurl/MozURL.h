@@ -58,6 +58,7 @@ class MozURL final {
   nsDependentCSubstring FilePath() const { return mozurl_filepath(this); }
   nsDependentCSubstring Path() const { return mozurl_path(this); }
   nsDependentCSubstring Query() const { return mozurl_query(this); }
+  bool HasQuery() const { return mozurl_has_query(this); }
   nsDependentCSubstring Ref() const { return mozurl_fragment(this); }
   bool HasFragment() const { return mozurl_has_fragment(this); }
   nsDependentCSubstring Directory() const { return mozurl_directory(this); }
