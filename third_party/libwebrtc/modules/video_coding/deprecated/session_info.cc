@@ -210,16 +210,26 @@ size_t VCMSessionInfo::InsertBuffer(uint8_t* frame_buffer,
   if (h264 && h264->packetization_type == kH264StapA) {
     size_t required_length = 0;
     const uint8_t* nalu_ptr = packet_buffer + kH264NALHeaderLengthInBytes;
-    while (nalu_ptr < packet_buffer + packet.sizeBytes) {
+    // Must check that incoming data length doesn't extend past end of buffer.
+    // We allow for 100 bytes of expansion due to startcodes being longer than
+    // length fields.
+    while (nalu_ptr + kLengthFieldLength <= packet_buffer + packet.sizeBytes) {
       size_t length = BufferToUWord16(nalu_ptr);
-      required_length +=
+      if (nalu_ptr + kLengthFieldLength + length <= packet_buffer + packet.sizeBytes) {
+        required_length +=
           length + (packet.insertStartCode ? kH264StartCodeLengthBytes : 0);
-      nalu_ptr += kLengthFieldLength + length;
+        nalu_ptr += kLengthFieldLength + length;
+      } else {
+        // Something is very wrong!
+        RTC_LOG(LS_ERROR) << "Failed to insert packet due to corrupt H264 STAP-A";
+        return 0;
+      }
     }
     ShiftSubsequentPackets(packet_it, required_length);
     nalu_ptr = packet_buffer + kH264NALHeaderLengthInBytes;
     uint8_t* frame_buffer_ptr = frame_buffer + offset;
-    while (nalu_ptr < packet_buffer + packet.sizeBytes) {
+    // we already know we won't go past end-of-buffer
+    while (nalu_ptr + kLengthFieldLength <= packet_buffer + packet.sizeBytes) {
       size_t length = BufferToUWord16(nalu_ptr);
       nalu_ptr += kLengthFieldLength;
       frame_buffer_ptr += Insert(nalu_ptr, length, packet.insertStartCode,
@@ -447,12 +457,23 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
     return -2;
 
   if (packet.codec() == kVideoCodecH264) {
-    frame_type_ = packet.video_header.frame_type;
+    // H.264 can have leading or trailing non-VCL (Video Coding Layer)
+    // NALUs, such as SPS/PPS/SEI and others.  Also, the RTP marker bit is
+    // not reliable for the last packet of a frame (RFC 6184 5.1 - "Decoders
+    // [] MUST NOT rely on this property"), so allow out-of-order packets to
+    // update the first and last seq# range.  Also mark as a key frame if
+    // any packet is of that type.
+    if (frame_type_ != VideoFrameType::kVideoFrameKey) {
+      frame_type_ = packet.video_header.frame_type;
+    }
     if (packet.is_first_packet_in_frame() &&
         (first_packet_seq_num_ == -1 ||
          IsNewerSequenceNumber(first_packet_seq_num_, packet.seqNum))) {
       first_packet_seq_num_ = packet.seqNum;
     }
+    // Note: the code does *not* currently handle the Marker bit being totally
+    // absent from a frame.  It does not, however, depend on it being on the last
+    // packet of the 'frame'/'session'.
     if (packet.markerBit &&
         (last_packet_seq_num_ == -1 ||
          IsNewerSequenceNumber(packet.seqNum, last_packet_seq_num_))) {
@@ -499,7 +520,6 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
 
   size_t returnLength = InsertBuffer(frame_buffer, packet_list_it);
   UpdateCompleteSession();
-
   return static_cast<int>(returnLength);
 }
 
