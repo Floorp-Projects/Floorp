@@ -534,7 +534,16 @@ export class MigrationWizard extends HTMLElement {
     );
 
     let details = this.#shadowRoot.querySelector("details");
-    selectionPage.toggleAttribute("show-import-all", state.showImportAll);
+
+    if (this.hasAttribute("force-show-import-all")) {
+      selectionPage.toggleAttribute(
+        "show-import-all",
+        this.getAttribute("force-show-import-all") == "true"
+      );
+    } else {
+      selectionPage.toggleAttribute("show-import-all", state.showImportAll);
+    }
+
     details.open = !state.showImportAll;
 
     this.#expandedDetails = false;
