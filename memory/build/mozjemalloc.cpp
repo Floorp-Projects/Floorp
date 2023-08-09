@@ -2444,6 +2444,8 @@ static inline arena_t* choose_arena(size_t size) {
   } else {
     // Check TLS to see if our thread has requested a pinned arena.
     ret = thread_arena.get();
+    // If ret is non-null, it must not be in the first page.
+    MOZ_DIAGNOSTIC_ASSERT_IF(ret, (size_t)ret >= gPageSize);
     if (!ret) {
       // Nothing in TLS. Pin this thread to the default arena.
       ret = thread_local_arena(false);
@@ -4499,6 +4501,8 @@ inline void* BaseAllocator::malloc(size_t aSize) {
   if (aSize == 0) {
     aSize = 1;
   }
+  // If mArena is non-null, it must not be in the first page.
+  MOZ_DIAGNOSTIC_ASSERT_IF(mArena, (size_t)mArena >= gPageSize);
   arena = mArena ? mArena : choose_arena(aSize);
   ret = arena->Malloc(aSize, /* aZero = */ false);
 
