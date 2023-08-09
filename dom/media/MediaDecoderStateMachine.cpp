@@ -3739,7 +3739,9 @@ void MediaDecoderStateMachine::UpdatePlaybackPositionInternal(
   MOZ_ASSERT(OnTaskQueue());
   LOGV("UpdatePlaybackPositionInternal(%" PRId64 ")", aTime.ToMicroseconds());
 
-  mCurrentPosition = aTime;
+  // Ensure the position has a precision that matches other TimeUnit such as
+  // buffering ranges and duration.
+  mCurrentPosition = aTime.ToBase(1000000);
   NS_ASSERTION(mCurrentPosition.Ref() >= TimeUnit::Zero(),
                "CurrentTime should be positive!");
   if (mDuration.Ref().ref() < mCurrentPosition.Ref()) {
