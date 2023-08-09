@@ -2434,7 +2434,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvUpdateNativeWindowHandle(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvDestroy() {
-  MOZ_ASSERT(!mDestroyed);
+  MOZ_ASSERT(mDestroyed == false);
   mDestroyed = true;
 
   nsTArray<PContentPermissionRequestChild*> childArray =
@@ -2444,7 +2444,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvDestroy() {
   // Need to close undeleted ContentPermissionRequestChilds before tab is
   // closed.
   for (auto& permissionRequestChild : childArray) {
-    auto* child = static_cast<RemotePermissionRequest*>(permissionRequestChild);
+    auto child = static_cast<RemotePermissionRequest*>(permissionRequestChild);
     child->Destroy();
   }
 
@@ -2715,7 +2715,7 @@ void BrowserChild::InitAPZState() {
   if (!mCompositorOptions->UseAPZ()) {
     return;
   }
-  auto* cbc = CompositorBridgeChild::Get();
+  auto cbc = CompositorBridgeChild::Get();
 
   // Initialize the ApzcTreeManager. This takes multiple casts because of ugly
   // multiple inheritance.
@@ -2747,7 +2747,7 @@ IPCResult BrowserChild::RecvUpdateEffects(const EffectsInfo& aEffects) {
   bool needInvalidate = false;
   if (mEffectsInfo.IsVisible() && aEffects.IsVisible() &&
       mEffectsInfo != aEffects) {
-    // If we are staying visible and either the visrect or scale changed we need
+    // if we are staying visible and either the visrect or scale changed we need
     // to invalidate
     needInvalidate = true;
   }
@@ -2756,12 +2756,14 @@ IPCResult BrowserChild::RecvUpdateEffects(const EffectsInfo& aEffects) {
   UpdateVisibility();
 
   if (needInvalidate) {
-    if (nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation())) {
+    nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+    if (docShell) {
       // We don't use BrowserChildBase::GetPresShell() here because that would
       // create a content viewer if one doesn't exist yet. Creating a content
       // viewer can cause JS to run, which we want to avoid.
       // nsIDocShell::GetPresShell returns null if no content viewer exists yet.
-      if (RefPtr<PresShell> presShell = docShell->GetPresShell()) {
+      RefPtr<PresShell> presShell = docShell->GetPresShell();
+      if (presShell) {
         if (nsIFrame* root = presShell->GetRootFrame()) {
           root->InvalidateFrame();
         }
@@ -2777,38 +2779,15 @@ bool BrowserChild::IsVisible() {
 }
 
 void BrowserChild::UpdateVisibility() {
-  const bool shouldBeVisible = [&] {
-    // If we're known to be visibility: hidden / display: none, just return
-    // false here, we're pretty sure we don't want to be considered visible
-    // here.
-    if (mBrowsingContext && mBrowsingContext->IsUnderHiddenEmbedderElement()) {
-      return false;
-    }
-    // For OOP iframes, include viewport visibility. For top-level <browser>
-    // elements we don't use this, because the front-end relies on using
-    // `mRenderLayers` when invisible for tab warming purposes.
-    //
-    // An alternative, maybe more consistent approach would be to add an opt-in
-    // into this behavior for top-level tabs managed by the tab-switcher
-    // instead...
-    if (!mIsTopLevel && !mEffectsInfo.IsVisible()) {
-      return false;
-    }
-    // If we're explicitly told not to render layers, we're also invisible.
-    if (!mRenderLayers) {
-      return false;
-    }
-    return true;
-  }();
+  bool shouldBeVisible = mIsTopLevel ? mRenderLayers : mEffectsInfo.IsVisible();
+  bool isVisible = IsVisible();
 
-  const bool isVisible = IsVisible();
-  if (shouldBeVisible == isVisible) {
-    return;
-  }
-  if (shouldBeVisible) {
-    MakeVisible();
-  } else {
-    MakeHidden();
+  if (shouldBeVisible != isVisible) {
+    if (shouldBeVisible) {
+      MakeVisible();
+    } else {
+      MakeHidden();
+    }
   }
 }
 

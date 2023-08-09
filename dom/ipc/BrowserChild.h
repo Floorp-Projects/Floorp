@@ -190,7 +190,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   // Let managees query if it is safe to send messages.
   bool IsDestroyed() const { return mDestroyed; }
 
-  TabId GetTabId() const {
+  const TabId GetTabId() const {
     MOZ_ASSERT(mUniqueId != 0);
     return mUniqueId;
   }
@@ -456,8 +456,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
    * activated widget, retained layer tree, etc.  (Respectively,
    * made not visible.)
    */
-  void UpdateVisibility();
-  void MakeVisible();
+  MOZ_CAN_RUN_SCRIPT void UpdateVisibility();
+  MOZ_CAN_RUN_SCRIPT void MakeVisible();
   void MakeHidden();
   void PresShellActivenessMaybeChanged();
 

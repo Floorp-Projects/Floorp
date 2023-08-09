@@ -16,9 +16,6 @@
 <iframe id="display-none-http" style="display: none" src="https://example.com/tests/dom/base/test/file_bug1639328.html"></iframe>
 <iframe id="display-none-https" style="display: none" src="https://example.com/tests/dom/base/test/file_bug1639328.html"></iframe>
 <iframe id="display-none-same-origin" style="display: none" src="file_bug1639328.html"></iframe>
-<iframe id="vis-hidden-http" style="visibility: hidden" src="https://example.com/tests/dom/base/test/file_bug1639328.html"></iframe>
-<iframe id="vis-hidden-https" style="visibility: hidden" src="https://example.com/tests/dom/base/test/file_bug1639328.html"></iframe>
-<iframe id="vis-hidden-same-origin" style="visibility: hidden" src="file_bug1639328.html"></iframe>
 <script>
 SimpleTest.waitForExplicitFinish();
 
@@ -51,30 +48,19 @@ async function checkFrame(frame, shouldThrottle) {
   is(message.throttledFrameRequests, shouldThrottle, frame.id);
 }
 
-function shouldThrottle(frame) {
-  return frame.style.display == "none" || frame.style.visibility == "hidden";
-}
-
 onload = async function() {
   await SimpleTest.promiseFocus(window);
   await ticks(2);
   is(SpecialPowers.DOMWindowUtils.effectivelyThrottlesFrameRequests, false, "Should not be throttling main page");
   for (let frame of document.querySelectorAll("iframe")) {
-    let originalShouldThrottle = shouldThrottle(frame);
-    await checkFrame(frame, originalShouldThrottle);
-    for (let prop of ["display", "visibility"]) {
-      info(`Switching ${prop} of ${frame.id}`);
-      let orig = frame.style[prop];
-      let throttledValue = prop == "display" ? "none" : "hidden";
-      frame.style[prop] = orig == throttledValue ? "" : throttledValue;
-      if (orig != throttledValue) {
-        is(shouldThrottle(frame), true, `Should throttle for ${prop}: ${throttledValue}`);
-      }
-      await checkFrame(frame, shouldThrottle(frame));
-      info(`Switching ${prop} back for ${frame.id}`);
-      frame.style[prop] = orig;
-      await checkFrame(frame, originalShouldThrottle);
-    }
+    let shouldThrottle = frame.style.display == "none";
+    await checkFrame(frame, shouldThrottle);
+    info("Switching display of " + frame.id);
+    frame.style.display = shouldThrottle ? "" : "none";
+    await checkFrame(frame, !shouldThrottle);
+    info("And switching display back for " + frame.id);
+    frame.style.display = shouldThrottle ? "none" : "";
+    await checkFrame(frame, shouldThrottle);
   }
 
   SimpleTest.finish();
