@@ -26,8 +26,6 @@
 #include "mozilla/TimeStamp.h"
 #include "nsString.h"
 
-static const uint32_t kMinTelemetryNotifyObserversLatencyMs = 1;
-
 // Log module for nsObserverService logging...
 //
 // To enable logging (see prlog.h for full details):
@@ -279,8 +277,6 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
 
   MOZ_ASSERT(AppShutdown::IsNoOrLegalShutdownTopic(aTopic));
 
-  mozilla::TimeStamp start = TimeStamp::Now();
-
   AUTO_PROFILER_MARKER_TEXT("NotifyObservers", OTHER, MarkerStack::Capture(),
                             nsDependentCString(aTopic));
   AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE(
@@ -289,12 +285,6 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
   nsObserverList* observerList = mObserverTopicTable.GetEntry(aTopic);
   if (observerList) {
     observerList->NotifyObservers(aSubject, aTopic, aSomeData);
-  }
-
-  uint32_t latencyMs = round((TimeStamp::Now() - start).ToMilliseconds());
-  if (latencyMs >= kMinTelemetryNotifyObserversLatencyMs) {
-    Telemetry::Accumulate(Telemetry::NOTIFY_OBSERVERS_LATENCY_MS,
-                          nsDependentCString(aTopic), latencyMs);
   }
 
   return NS_OK;
