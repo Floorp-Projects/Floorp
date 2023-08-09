@@ -194,8 +194,9 @@ class WidgetKeyboardEvent final : public WidgetInputEvent {
 
   WidgetKeyboardEvent(bool aIsTrusted, EventMessage aMessage,
                       nsIWidget* aWidget,
-                      EventClassID aEventClassID = eKeyboardEventClass)
-      : WidgetInputEvent(aIsTrusted, aMessage, aWidget, aEventClassID),
+                      EventClassID aEventClassID = eKeyboardEventClass,
+                      const WidgetEventTime* aTime = nullptr)
+      : WidgetInputEvent(aIsTrusted, aMessage, aWidget, aEventClassID, aTime),
         mNativeKeyEvent(nullptr),
         mKeyCode(0),
         mCharCode(0),
@@ -294,8 +295,8 @@ class WidgetKeyboardEvent final : public WidgetInputEvent {
     MOZ_ASSERT(mClass == eKeyboardEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
-    WidgetKeyboardEvent* result =
-        new WidgetKeyboardEvent(false, mMessage, nullptr);
+    WidgetKeyboardEvent* result = new WidgetKeyboardEvent(
+        false, mMessage, nullptr, eKeyboardEventClass, this);
     result->AssignKeyEventData(*this, true);
     result->mEditCommandsForSingleLineEditor =
         mEditCommandsForSingleLineEditor.Clone();
@@ -887,8 +888,10 @@ class WidgetCompositionEvent : public WidgetGUIEvent {
   virtual WidgetCompositionEvent* AsCompositionEvent() override { return this; }
 
   WidgetCompositionEvent(bool aIsTrusted, EventMessage aMessage,
-                         nsIWidget* aWidget)
-      : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eCompositionEventClass),
+                         nsIWidget* aWidget,
+                         const WidgetEventTime* aTime = nullptr)
+      : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eCompositionEventClass,
+                       aTime),
         mNativeIMEContext(aWidget),
         mOriginalMessage(eVoidEvent) {}
 
@@ -897,7 +900,7 @@ class WidgetCompositionEvent : public WidgetGUIEvent {
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetCompositionEvent* result =
-        new WidgetCompositionEvent(false, mMessage, nullptr);
+        new WidgetCompositionEvent(false, mMessage, nullptr, this);
     result->AssignCompositionEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -1431,8 +1434,10 @@ class InternalEditorInputEvent : public InternalUIEvent {
   }
 
   InternalEditorInputEvent(bool aIsTrusted, EventMessage aMessage,
-                           nsIWidget* aWidget = nullptr)
-      : InternalUIEvent(aIsTrusted, aMessage, aWidget, eEditorInputEventClass),
+                           nsIWidget* aWidget = nullptr,
+                           const WidgetEventTime* aTime = nullptr)
+      : InternalUIEvent(aIsTrusted, aMessage, aWidget, eEditorInputEventClass,
+                        aTime),
         mData(VoidString()),
         mInputType(EditorInputType::eUnknown) {}
 
@@ -1441,7 +1446,7 @@ class InternalEditorInputEvent : public InternalUIEvent {
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     InternalEditorInputEvent* result =
-        new InternalEditorInputEvent(false, mMessage, nullptr);
+        new InternalEditorInputEvent(false, mMessage, nullptr, this);
     result->AssignEditorInputEventData(*this, true);
     result->mFlags = mFlags;
     return result;
