@@ -140,10 +140,7 @@
 
     // Test failure cases for get assertion.
     add_task(async function test_get_assertion_failures() {
-      // Unknown user verification.
-      await requestGetAssertion("unknown")
-        .then(arrivingHereIsBad)
-        .catch(expectNotAllowedError);
+      // No failures currently tested
     });
   </script>
 

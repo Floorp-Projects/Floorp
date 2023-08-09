@@ -226,7 +226,7 @@ void WebAuthnController::Register(
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // We haven't set mTransaction yet, so we can't use AbortTransaction
     Unused << mTransactionParent->SendAbort(aTransactionId,
-                                            NS_ERROR_DOM_UNKNOWN_ERR);
+                                            NS_ERROR_DOM_NOT_ALLOWED_ERR);
     return;
   }
 
@@ -370,14 +370,16 @@ void WebAuthnController::RunFinishRegister(
   nsresult status;
   nsresult rv = aResult->GetStatus(&status);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
     return;
   }
   if (NS_FAILED(status)) {
     bool shouldCancelActiveDialog = true;
-    if (status == NS_ERROR_DOM_OPERATION_ERR) {
+    if (status == NS_ERROR_DOM_INVALID_STATE_ERR) {
       // PIN-related errors. Let the dialog show to inform the user
       shouldCancelActiveDialog = false;
+    } else {
+      status = NS_ERROR_DOM_NOT_ALLOWED_ERR;
     }
     Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                          u"CTAPRegisterAbort"_ns, 1);
@@ -390,14 +392,14 @@ void WebAuthnController::RunFinishRegister(
   nsTArray<uint8_t> attObj;
   rv = aResult->GetAttestationObject(attObj);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
     return;
   }
 
   nsTArray<uint8_t> credentialId;
   rv = aResult->GetCredentialId(credentialId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
     return;
   }
 
@@ -506,7 +508,7 @@ void WebAuthnController::RunFinishSign(
   if (aResult.Length() == 0) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                          u"CTAPSignAbort"_ns, 1);
-    AbortTransaction(aTransactionId, NS_ERROR_DOM_UNKNOWN_ERR, true);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
     return;
   }
 
@@ -514,19 +516,20 @@ void WebAuthnController::RunFinishSign(
     nsresult status;
     nsresult rv = aResult[0]->GetStatus(&status);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
+      AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
       return;
     }
     if (NS_FAILED(status)) {
       bool shouldCancelActiveDialog = true;
-      if (status == NS_ERROR_DOM_OPERATION_ERR) {
+      if (status == NS_ERROR_DOM_INVALID_STATE_ERR) {
         // PIN-related errors, e.g. blocked token. Let the dialog show to inform
         // the user
         shouldCancelActiveDialog = false;
       }
       Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                            u"CTAPSignAbort"_ns, 1);
-      AbortTransaction(aTransactionId, status, shouldCancelActiveDialog);
+      AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR,
+                       shouldCancelActiveDialog);
       return;
     }
     mPendingSignResults = aResult.Clone();
@@ -539,13 +542,13 @@ void WebAuthnController::RunFinishSign(
     nsresult status;
     nsresult rv = assertion->GetStatus(&status);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
+      AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
       return;
     }
     if (NS_WARN_IF(NS_FAILED(status))) {
       Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                            u"CTAPSignAbort"_ns, 1);
-      AbortTransaction(aTransactionId, status, true);
+      AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
       return;
     }
   }
@@ -606,28 +609,28 @@ void WebAuthnController::RunResumeWithSelectedSignResult(
   nsTArray<uint8_t> credentialId;
   nsresult rv = selected->GetCredentialId(credentialId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
     return;
   }
 
   nsTArray<uint8_t> signature;
   rv = selected->GetSignature(signature);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
     return;
   }
 
   nsTArray<uint8_t> authenticatorData;
   rv = selected->GetAuthenticatorData(authenticatorData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
     return;
   }
 
   nsTArray<uint8_t> rpIdHash;
   rv = selected->GetRpIdHash(rpIdHash);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
     return;
   }
 
