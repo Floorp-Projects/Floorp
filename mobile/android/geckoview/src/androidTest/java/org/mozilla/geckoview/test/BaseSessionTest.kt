@@ -20,6 +20,7 @@ import org.junit.rules.RuleChain
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
+import org.mozilla.geckoview.test.util.TestServer
 import kotlin.reflect.KClass
 
 /**
@@ -29,6 +30,7 @@ import kotlin.reflect.KClass
 open class BaseSessionTest(
     noErrorCollector: Boolean = false,
     serverCustomHeaders: Map<String, String>? = null,
+    responseModifiers: Map<String, TestServer.ResponseModifier>? = null,
 ) {
     companion object {
         const val RESUBMIT_CONFIRM = "/assets/www/resubmit.html"
@@ -139,7 +141,7 @@ open class BaseSessionTest(
         const val TEST_PORT = GeckoSessionTestRule.TEST_PORT
     }
 
-    val sessionRule = GeckoSessionTestRule(serverCustomHeaders)
+    val sessionRule = GeckoSessionTestRule(serverCustomHeaders, responseModifiers)
 
     // Override this to include more `evaluate` rules in the chain
     @get:Rule

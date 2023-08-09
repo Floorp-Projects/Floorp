@@ -730,7 +730,7 @@ export class IdentityCredentialPromptService {
    */
   close(browsingContext) {
     let browser = browsingContext.top.embedderElement;
-    if (!browser) {
+    if (!browser || AppConstants.platform === "android") {
       return;
     }
     let notification = browser.ownerGlobal.PopupNotifications.getNotification(

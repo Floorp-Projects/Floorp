@@ -868,6 +868,7 @@ public class GeckoSessionTestRule implements TestRule {
   protected boolean mIgnoreCrash;
 
   @Nullable private Map<String, String> mServerCustomHeaders = null;
+  @Nullable private Map<String, TestServer.ResponseModifier> mResponseModifiers = null;
 
   public GeckoSessionTestRule() {
     mDefaultSettings = new GeckoSessionSettings.Builder().build();
@@ -876,6 +877,14 @@ public class GeckoSessionTestRule implements TestRule {
   public GeckoSessionTestRule(@Nullable Map<String, String> mServerCustomHeaders) {
     this();
     this.mServerCustomHeaders = mServerCustomHeaders;
+  }
+
+  public GeckoSessionTestRule(
+      @Nullable Map<String, String> serverCustomHeaders,
+      @Nullable Map<String, TestServer.ResponseModifier> responseModifiers) {
+    this();
+    this.mServerCustomHeaders = serverCustomHeaders;
+    this.mResponseModifiers = responseModifiers;
   }
 
   /**
@@ -1481,7 +1490,8 @@ public class GeckoSessionTestRule implements TestRule {
         mServer =
             new TestServer(
                 InstrumentationRegistry.getInstrumentation().getTargetContext(),
-                mServerCustomHeaders);
+                mServerCustomHeaders,
+                mResponseModifiers);
 
         mInstrumentation.runOnMainSync(
             () -> {
