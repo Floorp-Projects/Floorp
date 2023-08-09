@@ -20,7 +20,6 @@
 "use strict";
 
 const {
-  PSEUDO_ELEMENTS,
   CSS_PROPERTIES,
 } = require("resource://devtools/shared/css/generated/properties-db.js");
 const PREFERENCES = InspectorUtils.getCSSPropertyPrefs();
@@ -38,14 +37,6 @@ function run_test() {
     "CSS properties on the platform. To fix this " +
     "assertion run `mach devtools-css-db` to re-generate " +
     "the client side properties.";
-
-  // Check that the platform and client match for pseudo elements.
-  deepEqual(
-    PSEUDO_ELEMENTS,
-    InspectorUtils.getCSSPseudoElementNames(),
-    "The pseudo elements match on the client and platform. " +
-      propertiesErrorMessage
-  );
 
   /**
    * Check that the platform and client match for the details on their CSS properties.

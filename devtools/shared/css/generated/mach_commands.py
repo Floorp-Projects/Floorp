@@ -52,7 +52,6 @@ def generate_css_db(command_context):
         command_context,
         {
             "cssProperties": stringify(db["cssProperties"]),
-            "pseudoElements": stringify(db["pseudoElements"]),
         },
     )
 

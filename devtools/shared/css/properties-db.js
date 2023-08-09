@@ -24,16 +24,8 @@ try {
   );
   db = {
     CSS_PROPERTIES: {},
-    PSEUDO_ELEMENTS: [],
   };
 }
-
-/**
- * The list of all CSS Pseudo Elements.
- *
- * This list can be updated with `mach devtools-css-db`.
- */
-exports.PSEUDO_ELEMENTS = db.PSEUDO_ELEMENTS;
 
 /**
  * A list of CSS Properties and their various characteristics. This is used on the
@@ -49,5 +41,4 @@ exports.CSS_PROPERTIES = db.CSS_PROPERTIES;
 
 exports.CSS_PROPERTIES_DB = {
   properties: db.CSS_PROPERTIES,
-  pseudoElements: db.PSEUDO_ELEMENTS,
 };
