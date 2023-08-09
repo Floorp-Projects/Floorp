@@ -25,6 +25,3 @@ browser.jar:
     content/browser/shopping/analysis-explainer.mjs (content/analysis-explainer.mjs)
     content/browser/shopping/unanalyzed.css (content/unanalyzed.css)
     content/browser/shopping/unanalyzed.mjs (content/unanalyzed.mjs)
-    content/browser/shopping/recommended-ad.css (content/recommended-ad.css)
-    content/browser/shopping/recommended-ad.mjs (content/recommended-ad.mjs)
-    
