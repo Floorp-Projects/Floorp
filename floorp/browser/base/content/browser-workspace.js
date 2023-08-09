@@ -227,9 +227,10 @@ const workspaceFunctions = {
             tab.setAttribute("floorp-workspace", state);
           } else if (arryURLs.includes(tabURL)) {
             let index = arryURLs.indexOf(tabURL);
-            tab.setAttribute("floorp-workspace", tabsStates[i][index].workspace);
+            let value = tabsStates[index][index].workspace;
+            console.info(`Tab ${i} has been set to workspace ${value} because of matching URL(${stateURL}).`);
+            tab.setAttribute("floorp-workspace", value);
             arryURLs.splice(index, 1);
-            console.info(`Tab ${i} has been set to workspace ${tabsStates[i][index].workspace} because of unmatch URL. Seems matching URL is ${tabsStates[i][index].url}`);
           } else {
             tab.setAttribute(
               "floorp-workspace",
