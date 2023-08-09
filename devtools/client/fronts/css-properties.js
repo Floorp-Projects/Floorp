@@ -81,7 +81,6 @@ class CssPropertiesFront extends FrontClassWithSpec(cssPropertiesSpec) {
  */
 function CssProperties(db) {
   this.properties = db.properties;
-  this.pseudoElements = db.pseudoElements;
 
   this.isKnown = this.isKnown.bind(this);
   this.isInherited = this.isInherited.bind(this);

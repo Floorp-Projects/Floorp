@@ -24,7 +24,6 @@ dump("DEVTOOLS_CSS_DB_DELIMITER");
 dump(
   JSON.stringify({
     cssProperties: cssProperties(),
-    pseudoElements: pseudoElements(),
   })
 );
 
@@ -49,11 +48,4 @@ function cssProperties() {
     }
   }
   return properties;
-}
-
-/**
- * The list of all CSS Pseudo Elements.
- */
-function pseudoElements() {
-  return InspectorUtils.getCSSPseudoElementNames();
 }

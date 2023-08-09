@@ -14,8 +14,3 @@
  * A list of CSS Properties and their various characteristics.
  */
 exports.CSS_PROPERTIES = ${cssProperties};
-
-/**
- * A list of the pseudo elements.
- */
-exports.PSEUDO_ELEMENTS = ${pseudoElements};

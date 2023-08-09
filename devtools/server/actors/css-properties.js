@@ -25,9 +25,8 @@ class CssPropertiesActor extends Actor {
 
   getCSSDatabase() {
     const properties = generateCssProperties();
-    const pseudoElements = InspectorUtils.getCSSPseudoElementNames();
 
-    return { properties, pseudoElements };
+    return { properties };
   }
 }
 exports.CssPropertiesActor = CssPropertiesActor;
