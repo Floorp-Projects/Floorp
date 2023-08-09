@@ -35,10 +35,10 @@ def executor_kwargs(test_type, test_environment, run_info_data, **kwargs):
         executor_kwargs["reftest_screenshot"] = kwargs["reftest_screenshot"]
 
     if test_type == "wdspec":
-        executor_kwargs["binary"] = kwargs.get("binary")
-        executor_kwargs["binary_args"] = kwargs.get("args")
-        executor_kwargs["webdriver_binary"] = kwargs.get("webdriver_binary")
-        executor_kwargs["webdriver_args"] = kwargs.get("webdriver_args")
+        executor_kwargs["binary"] = kwargs["binary"]
+        executor_kwargs["binary_args"] = kwargs["binary_args"].copy()
+        executor_kwargs["webdriver_binary"] = kwargs["webdriver_binary"]
+        executor_kwargs["webdriver_args"] = kwargs["webdriver_args"].copy()
 
     # By default the executor may try to cleanup windows after a test (to best
     # associate any problems with the test causing them). If the user might
