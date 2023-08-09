@@ -2,22 +2,22 @@
   "data": [
     {
       "schemaVersion": "1.12.0",
-      "slug": "android-default-toolbar-placement",
-      "id": "android-default-toolbar-placement",
+      "slug": "android-default-toolbar-placement-treatment-a-rollout",
+      "id": "android-default-toolbar-placement-treatment-a-rollout",
       "arguments": {},
       "application": "org.mozilla.firefox",
       "appName": "fenix",
       "appId": "org.mozilla.firefox",
       "channel": "release",
-      "userFacingName": "Android default toolbar placement",
+      "userFacingName": "Android default toolbar placement - Treatment A Rollout",
       "userFacingDescription": "Testing default position of toolbar.",
-      "isEnrollmentPaused": true,
-      "isRollout": false,
+      "isEnrollmentPaused": false,
+      "isRollout": true,
       "bucketConfig": {
         "randomizationUnit": "nimbus_id",
-        "namespace": "fenix-toolbar-release-1",
+        "namespace": "fenix-toolbar-release-mobile_first_run-rollout-1",
         "start": 0,
-        "count": 8800,
+        "count": 10000,
         "total": 10000
       },
       "featureIds": [
@@ -26,24 +26,6 @@
       "probeSets": [],
       "outcomes": [],
       "branches": [
-        {
-          "slug": "control",
-          "ratio": 1,
-          "feature": {
-            "featureId": "this-is-included-for-mobile-pre-96-support",
-            "enabled": false,
-            "value": {}
-          },
-          "features": [
-            {
-              "featureId": "toolbar",
-              "enabled": true,
-              "value": {
-                "toolbar-position-top": false
-              }
-            }
-          ]
-        },
         {
           "slug": "treatment-a",
           "ratio": 1,
@@ -63,13 +45,13 @@
           ]
         }
       ],
-      "targeting": "((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('115.!') >= 0)))",
-      "startDate": "2023-06-26",
-      "enrollmentEndDate": "2023-07-12",
+      "targeting": "((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('116.!') >= 0)))",
+      "startDate": "2023-08-09",
+      "enrollmentEndDate": "2023-08-22",
       "endDate": null,
-      "proposedDuration": 36,
-      "proposedEnrollment": 8,
-      "referenceBranch": "control",
+      "proposedDuration": 28,
+      "proposedEnrollment": 7,
+      "referenceBranch": "treatment-a",
       "featureValidationOptOut": false,
       "localizations": null,
       "locales": null
@@ -151,6 +133,100 @@
     },
     {
       "schemaVersion": "1.12.0",
+      "slug": "felt-privacy-android",
+      "id": "felt-privacy-android",
+      "arguments": {},
+      "application": "org.mozilla.firefox",
+      "appName": "fenix",
+      "appId": "org.mozilla.firefox",
+      "channel": "release",
+      "userFacingName": "Felt Privacy - Android",
+      "userFacingDescription": "Copy focused on privacy",
+      "isEnrollmentPaused": false,
+      "isRollout": false,
+      "bucketConfig": {
+        "randomizationUnit": "nimbus_id",
+        "namespace": "fenix-juno-onboarding-release-4",
+        "start": 0,
+        "count": 10000,
+        "total": 10000
+      },
+      "featureIds": [
+        "juno-onboarding"
+      ],
+      "probeSets": [],
+      "outcomes": [
+        {
+          "slug": "default-browser",
+          "priority": "secondary"
+        }
+      ],
+      "branches": [
+        {
+          "slug": "control",
+          "ratio": 1,
+          "feature": {
+            "featureId": "this-is-included-for-mobile-pre-96-support",
+            "enabled": false,
+            "value": {}
+          },
+          "features": [
+            {
+              "featureId": "juno-onboarding",
+              "enabled": true,
+              "value": {
+                "enabled": true
+              }
+            }
+          ]
+        },
+        {
+          "slug": "treatment-a",
+          "ratio": 1,
+          "feature": {
+            "featureId": "this-is-included-for-mobile-pre-96-support",
+            "enabled": false,
+            "value": {}
+          },
+          "features": [
+            {
+              "featureId": "juno-onboarding",
+              "enabled": true,
+              "value": {
+                "enabled": true,
+                "cards": {
+                  "default-browser": {
+                    "title": "We love keeping you safe",
+                    "body": "Our non-profit backed browser helps stop companies from secretly following you around the web.\n\nLearn more in our privacy notice.",
+                    "link-text": "privacy notice"
+                  },
+                  "sync-sign-in": {
+                    "title": "Stay encrypted when you hop between devices",
+                    "body": "When you’re signed in and synced, you’re safer. Firefox encrypts your passwords, bookmarks, and more."
+                  },
+                  "notification-permission": {
+                    "title": "Notifications help you stay safer with Firefox",
+                    "body": "Securely send tabs between your devices and discover other privacy features in Firefox."
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "targeting": "((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('116.!') >= 0) && (language in ['en'])))",
+      "startDate": "2023-08-09",
+      "enrollmentEndDate": "2023-08-29",
+      "endDate": null,
+      "proposedDuration": 28,
+      "proposedEnrollment": 14,
+      "referenceBranch": "control",
+      "featureValidationOptOut": false,
+      "localizations": null,
+      "locales": null
+    },
+    {
+      "schemaVersion": "1.12.0",
       "slug": "fx-release-android-re-engagement-notifications-114-rollout-v2",
       "id": "fx-release-android-re-engagement-notifications-114-rollout-v2",
       "arguments": {},
@@ -217,7 +293,7 @@
       "channel": "release",
       "userFacingName": "On-boarding Challenge the Default",
       "userFacingDescription": "Testing copy and images in the first run onboarding that is consistent with marketing messaging.",
-      "isEnrollmentPaused": false,
+      "isEnrollmentPaused": true,
       "isRollout": false,
       "bucketConfig": {
         "randomizationUnit": "nimbus_id",
@@ -294,7 +370,7 @@
       ],
       "targeting": "((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('115.!') >= 0) && (language in ['de']) && (region in ['DE'])))",
       "startDate": "2023-06-21",
-      "enrollmentEndDate": "2023-07-18",
+      "enrollmentEndDate": "2023-08-09",
       "endDate": null,
       "proposedDuration": 30,
       "proposedEnrollment": 14,
@@ -375,7 +451,7 @@
       "channel": "release",
       "userFacingName": "Splash screen max duration test",
       "userFacingDescription": "Testing a splashscreen on app launch.",
-      "isEnrollmentPaused": false,
+      "isEnrollmentPaused": true,
       "isRollout": false,
       "bucketConfig": {
         "randomizationUnit": "nimbus_id",
@@ -469,7 +545,7 @@
       ],
       "targeting": "((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('116.!') >= 0) && (region in ['AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AW', 'AX', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BQ', 'BR', 'BS', 'BT', 'BV', 'BW', 'BY', 'BZ', 'CA', 'CC', 'CD', 'CF', 'CG', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CW', 'CX', 'CY', 'CZ', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'EH', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD', 'GE', 'GF', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GS', 'GT', 'GU', 'GW', 'GY', 'HK', 'HM', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM', 'IN', 'IO', 'IQ', 'IR', 'IS', 'IT', 'JE', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MF', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NF', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PN', 'PR', 'PS', 'PT', 'PW', 'PY', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'SS', 'ST', 'SV', 'SX', 'SY', 'SZ', 'TC', 'TD', 'TF', 'TG', 'TH', 'TJ', 'TK', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'UM', 'US', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU', 'WF', 'WS', 'YE', 'YT', 'ZA', 'ZM', 'ZW'])))",
       "startDate": "2023-07-24",
-      "enrollmentEndDate": "2023-08-15",
+      "enrollmentEndDate": "2023-08-09",
       "endDate": null,
       "proposedDuration": 42,
       "proposedEnrollment": 14,
