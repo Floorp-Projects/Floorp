@@ -170,14 +170,6 @@ class LinkStyle {
   void SetStyleSheet(StyleSheet* aStyleSheet);
 
   /**
-   * Tells this element to update the stylesheet.
-   *
-   * @param aObserver    observer to notify once the stylesheet is loaded.
-   *                     This will be passed to the CSSLoader
-   */
-  Result<Update, nsresult> UpdateStyleSheet(nsICSSLoaderObserver*);
-
-  /**
    * Tells this element whether to update the stylesheet when the element's
    * properties change. This is used by the parser until it has all content etc,
    * and to guarantee that the right observer is used.
@@ -187,7 +179,7 @@ class LinkStyle {
       nsICSSLoaderObserver* aObserver) {
     MOZ_ASSERT(!mUpdatesEnabled);
     mUpdatesEnabled = true;
-    return UpdateStyleSheet(aObserver);
+    return DoUpdateStyleSheet(nullptr, nullptr, aObserver, ForceUpdate::No);
   }
 
   /**

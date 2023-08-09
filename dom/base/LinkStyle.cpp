@@ -185,11 +185,6 @@ uint32_t LinkStyle::ParseLinkTypes(const nsAString& aTypes) {
   return linkMask;
 }
 
-Result<LinkStyle::Update, nsresult> LinkStyle::UpdateStyleSheet(
-    nsICSSLoaderObserver* aObserver) {
-  return DoUpdateStyleSheet(nullptr, nullptr, aObserver, ForceUpdate::No);
-}
-
 Result<LinkStyle::Update, nsresult> LinkStyle::UpdateStyleSheetInternal(
     Document* aOldDocument, ShadowRoot* aOldShadowRoot,
     ForceUpdate aForceUpdate) {
