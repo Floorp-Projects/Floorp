@@ -88,7 +88,6 @@ MouseCursorMonitorWin::~MouseCursorMonitorWin() {
 void MouseCursorMonitorWin::Init(Callback* callback, Mode mode) {
   RTC_DCHECK(!callback_);
   RTC_DCHECK(callback);
-  RTC_DCHECK(IsGUIThread(false));
 
   callback_ = callback;
   mode_ = mode;
@@ -97,8 +96,6 @@ void MouseCursorMonitorWin::Init(Callback* callback, Mode mode) {
 }
 
 void MouseCursorMonitorWin::Capture() {
-// TODO: Bug 1666266. Commented out to pass new tests added in bug 1634044.
-//  RTC_DCHECK(IsGUIThread(false));
   RTC_DCHECK(callback_);
 
   CURSORINFO cursor_info;
@@ -171,7 +168,6 @@ void MouseCursorMonitorWin::Capture() {
 }
 
 DesktopRect MouseCursorMonitorWin::GetScreenRect() {
-  RTC_DCHECK(IsGUIThread(false));
   RTC_DCHECK_NE(screen_, kInvalidScreenId);
   if (screen_ == kFullDesktopScreenId) {
     return DesktopRect::MakeXYWH(GetSystemMetrics(SM_XVIRTUALSCREEN),
