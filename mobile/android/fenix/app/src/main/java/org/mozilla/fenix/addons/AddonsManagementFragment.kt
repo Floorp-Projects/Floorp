@@ -10,6 +10,7 @@ import android.graphics.fonts.FontStyle.FONT_WEIGHT_MEDIUM
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -36,6 +37,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.extension.WebExtensionPromptFeature
 import org.mozilla.fenix.theme.ThemeManager
@@ -217,13 +219,22 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         return requireContext().components.addonManager
     }
 
+    internal fun provideAccessibilityServicesEnabled(): Boolean {
+        return requireContext().settings().accessibilityServicesEnabled
+    }
+
     internal fun installAddon(addon: Addon) {
-        provideAddonManger().installAddon(
+        binding?.addonProgressOverlay?.overlayCardView?.visibility = View.VISIBLE
+        if (provideAccessibilityServicesEnabled()) {
+            binding?.let { announceForAccessibility(it.addonProgressOverlay.addOnsOverlayText.text) }
+        }
+        val installOperation = provideAddonManger().installAddon(
             addon,
             onSuccess = {
                 runIfFragmentIsAttached {
                     isInstallationInProgress = false
                     adapter?.updateAddon(it)
+                    binding?.addonProgressOverlay?.overlayCardView?.visibility = View.GONE
                 }
             },
             onError = { _, e ->
@@ -242,10 +253,39 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                             )
                         }
                     }
+                    binding?.addonProgressOverlay?.overlayCardView?.visibility = View.GONE
                     isInstallationInProgress = false
                 }
             },
         )
+        binding?.addonProgressOverlay?.cancelButton?.setOnClickListener {
+            lifecycleScope.launch(Dispatchers.Main) {
+                val safeBinding = binding
+                // Hide the installation progress overlay once cancellation is successful.
+                if (installOperation.cancel().await()) {
+                    safeBinding?.addonProgressOverlay?.overlayCardView?.visibility = View.GONE
+                }
+            }
+        }
+    }
+
+    private fun announceForAccessibility(announcementText: CharSequence) {
+        val event = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            AccessibilityEvent(AccessibilityEvent.TYPE_ANNOUNCEMENT)
+        } else {
+            @Suppress("DEPRECATION")
+            AccessibilityEvent.obtain(AccessibilityEvent.TYPE_ANNOUNCEMENT)
+        }
+
+        binding?.addonProgressOverlay?.overlayCardView?.onInitializeAccessibilityEvent(event)
+        event.text.add(announcementText)
+        event.contentDescription = null
+        binding?.addonProgressOverlay?.overlayCardView?.let {
+            it.parent?.requestSendAccessibilityEvent(
+                it,
+                event,
+            )
+        }
     }
 
     companion object {

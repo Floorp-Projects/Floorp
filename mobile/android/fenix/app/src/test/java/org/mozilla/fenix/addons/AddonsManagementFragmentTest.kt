@@ -72,6 +72,7 @@ class AddonsManagementFragmentTest {
             addon.translateName(context),
         )
 
+        every { fragment.provideAccessibilityServicesEnabled() } returns false
         every { fragment.provideAddonManger() } returns addonManger
         every { addonManger.installAddon(addon, any(), capture(onError)) } returns mockk()
 
