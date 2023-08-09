@@ -456,8 +456,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
    * activated widget, retained layer tree, etc.  (Respectively,
    * made not visible.)
    */
-  MOZ_CAN_RUN_SCRIPT void UpdateVisibility();
-  MOZ_CAN_RUN_SCRIPT void MakeVisible();
+  void UpdateVisibility();
+  void MakeVisible();
   void MakeHidden();
   void PresShellActivenessMaybeChanged();
 
