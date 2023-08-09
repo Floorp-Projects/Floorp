@@ -331,7 +331,6 @@ dependencies = [
  "nserror",
  "nsstring",
  "rand",
- "runloop",
  "serde_cbor",
  "static_prefs",
  "thin-vec",
