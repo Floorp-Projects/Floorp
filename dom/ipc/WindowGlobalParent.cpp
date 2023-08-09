@@ -1288,6 +1288,10 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvReloadWithHttpsOnlyException() {
   nsresult rv;
   nsCOMPtr<nsIURI> currentUri = BrowsingContext()->Top()->GetCurrentURI();
 
+  if (!currentUri) {
+    return IPC_FAIL(this, "HTTPS-only mode: Failed to get current URI");
+  }
+
   bool isViewSource = currentUri->SchemeIs("view-source");
 
   nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(currentUri);
