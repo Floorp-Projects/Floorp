@@ -405,9 +405,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Remove redundant portions from URLs.
   ["trimURLs", true],
 
-  // Remove 'https://' from url when urlbar is focused.
-  ["trimHttps", true],
-
   // If true, top sites may include sponsored ones.
   ["sponsoredTopSites", false],
 

@@ -40,16 +40,12 @@ async function testVal(urlFormatString, clobberedURLString = null) {
 }
 
 add_task(async function () {
-  const PREF_FORMATTING = "browser.urlbar.formatting.enabled";
-  const PREF_TRIM_HTTPS = "browser.urlbar.trimHttps";
+  const prefname = "browser.urlbar.formatting.enabled";
 
   registerCleanupFunction(function () {
-    Services.prefs.clearUserPref(PREF_FORMATTING);
-    Services.prefs.clearUserPref(PREF_TRIM_HTTPS);
+    Services.prefs.clearUserPref(prefname);
     gURLBar.setURI();
   });
-
-  Services.prefs.setBoolPref(PREF_TRIM_HTTPS, false);
 
   gBrowser.selectedBrowser.focus();
 
@@ -156,7 +152,7 @@ add_task(async function () {
   await testVal("foo-://mozilla.org/");
 
   // Disable formatting.
-  Services.prefs.setBoolPref(PREF_FORMATTING, false);
+  Services.prefs.setBoolPref(prefname, false);
 
   await testVal("https://mozilla.org");
 });
