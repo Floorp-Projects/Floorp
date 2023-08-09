@@ -116,6 +116,10 @@ fxview-tab-list.syncedtabs::part(secondary-button) {
     var(--fxview-background-color) 95%,
     transparent 100%
   );
+  /* When you use HCM or set custom colors, you can't use a gradient. */
+  @media (forced-colors) {
+    background: var(--fxview-background-color);
+  }
 }
 
 .cards-container {
