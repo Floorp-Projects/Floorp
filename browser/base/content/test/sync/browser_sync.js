@@ -550,6 +550,37 @@ add_task(async function test_app_menu_fxa_disabled() {
   await BrowserTestUtils.closeWindow(newWin);
 });
 
+add_task(
+  // Can't open the history menu in tests on Mac.
+  () => AppConstants.platform != "mac",
+  async function test_history_menu_fxa_disabled() {
+    const newWin = await BrowserTestUtils.openNewBrowserWindow();
+
+    Services.prefs.setBoolPref("identity.fxaccounts.enabled", true);
+    newWin.gSync.onFxaDisabled();
+
+    const historyMenubarItem = window.document.getElementById("history-menu");
+    const historyMenu = window.document.getElementById("historyMenuPopup");
+    const syncedTabsItem = historyMenu.querySelector("#sync-tabs-menuitem");
+    const menuShown = BrowserTestUtils.waitForEvent(historyMenu, "popupshown");
+    historyMenubarItem.openMenu(true);
+    await menuShown;
+
+    Assert.equal(
+      syncedTabsItem.hidden,
+      true,
+      "Synced Tabs item should not be displayed when FxAccounts is disabled"
+    );
+    const menuHidden = BrowserTestUtils.waitForEvent(
+      historyMenu,
+      "popuphidden"
+    );
+    historyMenu.hidePopup();
+    await menuHidden;
+    await BrowserTestUtils.closeWindow(newWin);
+  }
+);
+
 function checkPanelUIStatusBar({
   description,
   title,
