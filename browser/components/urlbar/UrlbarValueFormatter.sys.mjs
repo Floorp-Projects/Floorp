@@ -269,8 +269,12 @@ export class UrlbarValueFormatter {
 
     let { domain, origin, preDomain, schemeWSlashes, trimmedLength, url } =
       urlMetaData;
-    // We strip http, so we should not show the scheme box for it.
-    if (!lazy.UrlbarPrefs.get("trimURLs") || schemeWSlashes != "http://") {
+
+    // When the scheme has been stripped, don't show the box for it.
+    if (
+      !lazy.UrlbarPrefs.get("trimURLs") ||
+      schemeWSlashes != lazy.BrowserUIUtils.trimURLProtocol
+    ) {
       this.scheme.value = schemeWSlashes;
       this.inputField.style.setProperty(
         "--urlbar-scheme-size",

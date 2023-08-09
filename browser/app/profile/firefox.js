@@ -516,6 +516,8 @@ pref("browser.urlbar.maxCharsForSearchSuggestions", 100);
 
 pref("browser.urlbar.trimURLs", true);
 
+pref("browser.urlbar.trimHttps", false);
+
 // If changed to true, copying the entire URL from the location bar will put the
 // human readable (percent-decoded) URL on the clipboard.
 pref("browser.urlbar.decodeURLsOnCopy", false);

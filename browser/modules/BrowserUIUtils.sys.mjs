@@ -5,6 +5,13 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
+const lazy = {};
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "trimHttps",
+  "browser.urlbar.trimHttps"
+);
 export var BrowserUIUtils = {
   /**
    * Check whether a page can be considered as 'empty', that its URI
@@ -141,24 +148,24 @@ export var BrowserUIUtils = {
     return aURL.replace(/^((?:http|https|ftp):\/\/[^/]+)\/$/, "$1");
   },
 
+  get trimURLProtocol() {
+    return lazy.trimHttps ? "https://" : "http://";
+  },
+
   /**
-   * Returns a URL which has been trimmed by removing 'http://' and any
-   * trailing slash (in http/https/ftp urls).
-   * Note that a trimmed url may not load the same page as the original url, so
-   * before loading it, it must be passed through URIFixup, to check trimming
-   * doesn't change its destination. We don't run the URIFixup check here,
-   * because trimURL is in the page load path (see onLocationChange), so it
-   * must be fast and simple.
+   * Returns a URL which has been trimmed by removing 'http://' or 'https://',
+   * when the pref 'trimHttps' is set to true, and any trailing slash
+   * (in http/https/ftp urls). Note that a trimmed url may not load the same
+   * page as the original url, so before loading it, it must be passed through
+   * URIFixup, to check trimming doesn't change its destination. We don't run
+   * the URIFixup check here, because trimURL is in the page load path
+   * (see onLocationChange), so it must be fast and simple.
    *
    * @param {string} aURL The URL to trim.
    * @returns {string} The trimmed string.
    */
-  get trimURLProtocol() {
-    return "http://";
-  },
   trimURL(aURL) {
     let url = this.removeSingleTrailingSlashFromURL(aURL);
-    // Remove "http://" prefix.
     return url.startsWith(this.trimURLProtocol)
       ? url.substring(this.trimURLProtocol.length)
       : url;
