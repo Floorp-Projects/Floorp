@@ -1860,12 +1860,7 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
     MOZ_DIAGNOSTIC_ASSERT(aSample->HasValidTime());
     MOZ_DIAGNOSTIC_ASSERT(TimeInterval(aSample->mTime, aSample->GetEndTime()) ==
                           aInterval);
-    auto oldRangeEnd = samplesRange.GetEnd();
     samplesRange += aInterval;
-    // For debug purpose, if the sample range grows, it should match the
-    // sample's end time.
-    MOZ_DIAGNOSTIC_ASSERT_IF(samplesRange.GetEnd() > oldRangeEnd,
-                             samplesRange.GetEnd() == aSample->GetEndTime());
     sizeNewSamples += aSample->ComputedSizeOfIncludingThis();
     samples.AppendElement(aSample);
   };
@@ -2289,13 +2284,6 @@ void TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
 
   // Update our buffered range with new sample interval.
   trackBuffer.mBufferedRanges += aIntervals;
-
-  MSE_DEBUG("Inserted %s frame:%s, buffered-range:%s, mHighestEndTimestamp=%s",
-            aTrackData.mInfo->mMimeType.get(), DumpTimeRanges(aIntervals).get(),
-            DumpTimeRanges(trackBuffer.mBufferedRanges).get(),
-            trackBuffer.mHighestEndTimestamp
-                ? trackBuffer.mHighestEndTimestamp->ToString().get()
-                : "none");
   // We allow a fuzz factor in our interval of half a frame length,
   // as fuzz is +/- value, giving an effective leeway of a full frame
   // length.
