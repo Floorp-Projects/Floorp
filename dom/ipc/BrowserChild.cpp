@@ -2777,15 +2777,38 @@ bool BrowserChild::IsVisible() {
 }
 
 void BrowserChild::UpdateVisibility() {
-  bool shouldBeVisible = mIsTopLevel ? mRenderLayers : mEffectsInfo.IsVisible();
-  bool isVisible = IsVisible();
-
-  if (shouldBeVisible != isVisible) {
-    if (shouldBeVisible) {
-      MakeVisible();
-    } else {
-      MakeHidden();
+  const bool shouldBeVisible = [&] {
+    // If we're known to be visibility: hidden / display: none, just return
+    // false here, we're pretty sure we don't want to be considered visible
+    // here.
+    if (mBrowsingContext && mBrowsingContext->IsUnderHiddenEmbedderElement()) {
+      return false;
     }
+    // For OOP iframes, include viewport visibility. For top-level <browser>
+    // elements we don't use this, because the front-end relies on using
+    // `mRenderLayers` when invisible for tab warming purposes.
+    //
+    // An alternative, maybe more consistent approach would be to add an opt-in
+    // into this behavior for top-level tabs managed by the tab-switcher
+    // instead...
+    if (!mIsTopLevel && !mEffectsInfo.IsVisible()) {
+      return false;
+    }
+    // If we're explicitly told not to render layers, we're also invisible.
+    if (!mRenderLayers) {
+      return false;
+    }
+    return true;
+  }();
+
+  const bool isVisible = IsVisible();
+  if (shouldBeVisible == isVisible) {
+    return;
+  }
+  if (shouldBeVisible) {
+    MakeVisible();
+  } else {
+    MakeHidden();
   }
 }
 
