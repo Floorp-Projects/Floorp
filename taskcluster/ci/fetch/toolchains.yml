@@ -613,7 +613,7 @@ symbol-scrapers:
     fetch:
         type: git
         repo: http://github.com/mozilla/symbol-scrapers
-        revision: 91cb0fb5f4a4eb5f64f255d54cd287123758c0f1
+        revision: 1f82450ec821ce4466501b771cc93004968a4f66
 
 cpython-3.8.10:
     description: cpython 3.8.10 source code
