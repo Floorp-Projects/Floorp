@@ -2266,7 +2266,10 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
         if (!GetProperty(cx, env, env, id, &initialVal)) {
           return false;
         }
-        if (initialVal.isMagic(JS_UNINITIALIZED_LEXICAL)) {
+        // Note: initialVal could be JS_OPTIMIZED_OUT, which is why we don't use
+        // .whyMagic(JS_UNINITALIZED_LEXICAL).
+        if (initialVal.isMagic() &&
+            initialVal.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
           ReportRuntimeLexicalErrorId(cx, JSMSG_UNINITIALIZED_LEXICAL, id);
           return false;
         }
