@@ -26,17 +26,6 @@
       ]});
     });
 
-    function getAttestationCertFromAttestationBuffer(aAttestationBuffer) {
-      return webAuthnDecodeCBORAttestation(aAttestationBuffer)
-      .then((aAttestationObj) => {
-        is(aAttestationObj.fmt, "fido-u2f", "Is a FIDO U2F Attestation");
-        let attestationCertDER = aAttestationObj.attStmt.x5c[0];
-        let certDERBuffer = attestationCertDER.slice(0, attestationCertDER.byteLength).buffer;
-        let certAsn1 = org.pkijs.fromBER(certDERBuffer);
-        return new org.pkijs.simpl.CERT({ schema: certAsn1.result });
-      });
-    }
-
     function verifyAnonymizedCertificate(aResult) {
       return webAuthnDecodeCBORAttestation(aResult.response.attestationObject)
       .then(({fmt, attStmt}) => {
@@ -46,12 +35,16 @@
       });
     }
 
-    function verifyDirectCertificate(aResult) {
-      return getAttestationCertFromAttestationBuffer(aResult.response.attestationObject)
-      .then((attestationCert) => {
-        let subject = attestationCert.subject.types_and_values[0].value.value_block.value;
-        is(subject, "Firefox U2F Soft Token", "Subject name matches the direct Soft Token")
-      });
+    async function verifyDirectCertificate(aResult) {
+      let clientDataHash = await crypto.subtle.digest("SHA-256", aResult.response.clientDataJSON)
+          .then(digest => new Uint8Array(digest));
+      let {fmt, attStmt, authData, authDataObj} = await webAuthnDecodeCBORAttestation(aResult.response.attestationObject);
+      is(fmt, "packed", "Is a Packed Attestation");
+      let signedData = new Uint8Array(authData.length + clientDataHash.length);
+      signedData.set(authData);
+      signedData.set(clientDataHash, authData.length);
+      let valid = await verifySignature(authDataObj.publicKeyHandle, signedData, new Uint8Array(attStmt.sig));
+      ok(valid, "Signature is valid.");
     }
 
     function arrivingHereIsBad(aResult) {

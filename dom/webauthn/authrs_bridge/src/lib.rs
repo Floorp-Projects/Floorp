@@ -38,6 +38,9 @@ use xpcom::interfaces::{
 };
 use xpcom::{xpcom_method, RefPtr};
 
+mod test_token;
+use test_token::TestTokenManager;
+
 fn make_prompt(action: &str, tid: u64, origin: &str, browsing_context_id: u64) -> String {
     format!(
         r#"{{"is_ctap2":true,"action":"{action}","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id}}}"#,
@@ -475,7 +478,7 @@ impl AuthrsTransport {
         unsafe { args.GetCoseAlgs(&mut cose_algs) }.to_result()?;
         let pub_cred_params = cose_algs
             .iter()
-            .map(|alg| PublicKeyCredentialParameters::try_from(*alg).unwrap())
+            .filter_map(|alg| PublicKeyCredentialParameters::try_from(*alg).ok())
             .collect();
 
         let mut resident_key = nsString::new();
@@ -501,6 +504,16 @@ impl AuthrsTransport {
         } else {
             return Err(NS_ERROR_FAILURE);
         };
+
+        let mut authenticator_attachment = nsString::new();
+        if unsafe { args.GetAuthenticatorAttachment(&mut *authenticator_attachment) }
+            .to_result()
+            .is_ok()
+        {
+            if authenticator_attachment.eq("platform") {
+                return Err(NS_ERROR_FAILURE);
+            }
+        }
 
         let mut attestation_conveyance_preference = nsString::new();
         unsafe { args.GetAttestationConveyancePreference(&mut *attestation_conveyance_preference) }
@@ -747,7 +760,17 @@ pub extern "C" fn authrs_transport_constructor(
         Ok(auth_service) => auth_service,
         _ => return NS_ERROR_FAILURE,
     };
-    auth_service.add_detected_transports();
+
+    let enable_usb_transports = static_prefs::pref!("security.webauth.webauthn_enable_usbtoken");
+    if enable_usb_transports {
+        auth_service.add_u2f_usb_hid_platform_transports();
+    }
+
+    match TestTokenManager::new() {
+        Ok(transport) => auth_service.add_transport(Box::new(transport)),
+        Err(_) => return NS_ERROR_FAILURE,
+    }
+
     let wrapper = AuthrsTransport::allocate(InitAuthrsTransport {
         auth_service: RefCell::new(auth_service),
         controller: Controller(RefCell::new(std::ptr::null())),
