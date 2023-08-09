@@ -863,18 +863,15 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(
   MOZ_ASSERT(!matchResultTemplateObjects_[kind]);
 
   /* Create template array object */
-  Rooted<ArrayObject*> templateObject(
-      cx,
-      NewDenseUnallocatedArray(cx, RegExpObject::MaxPairCount, TenuredObject));
+  Rooted<ArrayObject*> templateObject(cx, NewTenuredDenseEmptyArray(cx));
   if (!templateObject) {
     return nullptr;
   }
 
   if (kind == ResultTemplateKind::Indices) {
     /* The |indices| array only has a |groups| property. */
-    RootedValue groupsVal(cx, UndefinedValue());
     if (!NativeDefineDataProperty(cx, templateObject, cx->names().groups,
-                                  groupsVal, JSPROP_ENUMERATE)) {
+                                  UndefinedHandleValue, JSPROP_ENUMERATE)) {
       return nullptr;
     }
     MOZ_ASSERT(templateObject->getLastProperty().slot() == IndicesGroupsSlot);
@@ -884,27 +881,24 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(
   }
 
   /* Set dummy index property */
-  RootedValue index(cx, Int32Value(0));
-  if (!NativeDefineDataProperty(cx, templateObject, cx->names().index, index,
-                                JSPROP_ENUMERATE)) {
+  if (!NativeDefineDataProperty(cx, templateObject, cx->names().index,
+                                UndefinedHandleValue, JSPROP_ENUMERATE)) {
     return nullptr;
   }
   MOZ_ASSERT(templateObject->getLastProperty().slot() ==
              MatchResultObjectIndexSlot);
 
   /* Set dummy input property */
-  RootedValue inputVal(cx, StringValue(cx->runtime()->emptyString));
-  if (!NativeDefineDataProperty(cx, templateObject, cx->names().input, inputVal,
-                                JSPROP_ENUMERATE)) {
+  if (!NativeDefineDataProperty(cx, templateObject, cx->names().input,
+                                UndefinedHandleValue, JSPROP_ENUMERATE)) {
     return nullptr;
   }
   MOZ_ASSERT(templateObject->getLastProperty().slot() ==
              MatchResultObjectInputSlot);
 
   /* Set dummy groups property */
-  RootedValue groupsVal(cx, UndefinedValue());
   if (!NativeDefineDataProperty(cx, templateObject, cx->names().groups,
-                                groupsVal, JSPROP_ENUMERATE)) {
+                                UndefinedHandleValue, JSPROP_ENUMERATE)) {
     return nullptr;
   }
   MOZ_ASSERT(templateObject->getLastProperty().slot() ==
@@ -912,9 +906,8 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(
 
   if (kind == ResultTemplateKind::WithIndices) {
     /* Set dummy indices property */
-    RootedValue indicesVal(cx, UndefinedValue());
     if (!NativeDefineDataProperty(cx, templateObject, cx->names().indices,
-                                  indicesVal, JSPROP_ENUMERATE)) {
+                                  UndefinedHandleValue, JSPROP_ENUMERATE)) {
       return nullptr;
     }
     MOZ_ASSERT(templateObject->getLastProperty().slot() ==
