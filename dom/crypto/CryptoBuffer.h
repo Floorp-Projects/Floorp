@@ -37,7 +37,6 @@ class CryptoBuffer : public FallibleTArray<uint8_t> {
   bool ToSECItem(PLArenaPool* aArena, SECItem* aItem) const;
   JSObject* ToUint8Array(JSContext* aCx) const;
   JSObject* ToArrayBuffer(JSContext* aCx) const;
-  bool ToNewUnsignedBuffer(uint8_t** aBuf, uint32_t* aBufLen) const;
 
   bool GetBigIntValue(unsigned long& aRetVal);
 
