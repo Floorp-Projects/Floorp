@@ -9,7 +9,7 @@ extern crate log;
 extern crate xpcom;
 
 use authenticator::{
-    authenticatorservice::{AuthenticatorService, RegisterArgs, SignArgs},
+    authenticatorservice::{RegisterArgs, SignArgs},
     ctap2::attestation::AttestationStatement,
     ctap2::commands::get_info::AuthenticatorVersion,
     ctap2::server::{
@@ -18,7 +18,7 @@ use authenticator::{
     },
     errors::{AuthenticatorError, PinError, U2FTokenError},
     statecallback::StateCallback,
-    Assertion, Pin, RegisterResult, SignResult, StatusPinUv, StatusUpdate,
+    Assertion, Pin, RegisterResult, SignResult, StateMachine, StatusPinUv, StatusUpdate,
 };
 use moz_task::RunnableBuilder;
 use nserror::{
@@ -40,7 +40,7 @@ use xpcom::interfaces::{
 use xpcom::{xpcom_method, RefPtr};
 
 mod test_token;
-use test_token::{TestTokenManager, TestTokenManagerState, TestTokenTransport};
+use test_token::TestTokenManager;
 
 fn make_prompt(action: &str, tid: u64, origin: &str, browsing_context_id: u64) -> String {
     format!(
@@ -396,10 +396,10 @@ fn status_callback(
 // 2) a channel through which to receive a pin callback.
 #[xpcom(implement(nsIWebAuthnTransport), atomic)]
 pub struct AuthrsTransport {
-    auth_service: RefCell<AuthenticatorService>, // interior mutable for use in XPCOM methods
+    usb_token_manager: RefCell<StateMachine>, // interior mutable for use in XPCOM methods
+    test_token_manager: TestTokenManager,
     controller: Controller,
     pin_receiver: Arc<Mutex<PinReceiver>>,
-    test_token_manager: TestTokenManager,
 }
 
 impl AuthrsTransport {
@@ -408,6 +408,10 @@ impl AuthrsTransport {
         Err(NS_ERROR_NOT_IMPLEMENTED)
     }
 
+    // # Safety
+    //
+    // This will mutably borrow the controller pointer through a RefCell. The caller must ensure
+    // that at most one WebAuthn transaction is active at any given time.
     xpcom_method!(set_controller => SetController(aController: *const nsIWebAuthnController));
     fn set_controller(&self, controller: *const nsIWebAuthnController) -> Result<(), nsresult> {
         self.controller.init(controller)
@@ -428,6 +432,10 @@ impl AuthrsTransport {
         }
     }
 
+    // # Safety
+    //
+    // This will mutably borrow usb_token_manager through a RefCell. The caller must ensure that at
+    // most one WebAuthn transaction is active at any given time.
     xpcom_method!(make_credential => MakeCredential(aTid: u64, aBrowsingContextId: u64, aArgs: *const nsICtapRegisterArgs));
     fn make_credential(
         &self,
@@ -604,12 +612,35 @@ impl AuthrsTransport {
             }),
         );
 
-        self.auth_service
-            .borrow_mut()
-            .register(timeout_ms as u64, info.into(), status_tx, state_callback)
-            .or(Err(NS_ERROR_FAILURE))
+        // The authenticator crate provides an `AuthenticatorService` which can dispatch a request
+        // in parallel to any number of transports. We only support the USB transport in production
+        // configurations, so we do not need the full generality of `AuthenticatorService` here.
+        // We disable the USB transport in tests that use virtual devices.
+        if static_prefs::pref!("security.webauth.webauthn_enable_usbtoken") {
+            self.usb_token_manager.borrow_mut().register(
+                timeout_ms as u64,
+                info.into(),
+                status_tx,
+                state_callback,
+            );
+        } else if static_prefs::pref!("security.webauth.webauthn_enable_softtoken") {
+            self.test_token_manager.register(
+                timeout_ms as u64,
+                info.into(),
+                status_tx,
+                state_callback,
+            );
+        } else {
+            return Err(NS_ERROR_FAILURE);
+        }
+
+        Ok(())
     }
 
+    // # Safety
+    //
+    // This will mutably borrow usb_token_manager through a RefCell. The caller must ensure that at
+    // most one WebAuthn transaction is active at any given time.
     xpcom_method!(get_assertion => GetAssertion(aTid: u64, aBrowsingContextId: u64, aArgs: *const nsICtapSignArgs));
     fn get_assertion(
         &self,
@@ -731,22 +762,37 @@ impl AuthrsTransport {
             use_ctap1_fallback,
         };
 
-        self.auth_service
-            .borrow_mut()
-            .sign(timeout_ms as u64, info.into(), status_tx, state_callback)
-            .or(Err(NS_ERROR_FAILURE))
+        // As in `register`, we are intentionally avoiding `AuthenticatorService` here.
+        if static_prefs::pref!("security.webauth.webauthn_enable_usbtoken") {
+            self.usb_token_manager.borrow_mut().sign(
+                timeout_ms as u64,
+                info.into(),
+                status_tx,
+                state_callback,
+            );
+        } else if static_prefs::pref!("security.webauth.webauthn_enable_softtoken") {
+            self.test_token_manager
+                .sign(timeout_ms as u64, info.into(), status_tx, state_callback);
+        } else {
+            return Err(NS_ERROR_FAILURE);
+        }
+
+        Ok(())
     }
 
+    // # Safety
+    //
+    // This will mutably borrow usb_token_manager through a RefCell. The caller must ensure that at
+    // most one WebAuthn transaction is active at any given time.
     xpcom_method!(cancel => Cancel());
-    fn cancel(&self) -> Result<nsresult, nsresult> {
+    fn cancel(&self) -> Result<(), nsresult> {
         // We may be waiting for a pin. Drop the channel to release the
         // state machine from `ask_user_for_pin`.
         drop(self.pin_receiver.lock().or(Err(NS_ERROR_FAILURE))?.take());
 
-        match &self.auth_service.borrow_mut().cancel() {
-            Ok(_) => Ok(NS_OK),
-            Err(e) => Err(authrs_to_nserror(e)),
-        }
+        self.usb_token_manager.borrow_mut().cancel();
+
+        Ok(())
     }
 
     xpcom_method!(
@@ -862,25 +908,11 @@ impl AuthrsTransport {
 pub extern "C" fn authrs_transport_constructor(
     result: *mut *const nsIWebAuthnTransport,
 ) -> nsresult {
-    let mut auth_service = match AuthenticatorService::new() {
-        Ok(auth_service) => auth_service,
-        _ => return NS_ERROR_FAILURE,
-    };
-
-    let enable_usb_transports = static_prefs::pref!("security.webauth.webauthn_enable_usbtoken");
-    if enable_usb_transports {
-        auth_service.add_u2f_usb_hid_platform_transports();
-    }
-
-    let test_token_manager_state = TestTokenManagerState::new();
-    let transport = TestTokenTransport::new(Arc::clone(&test_token_manager_state));
-    auth_service.add_transport(Box::new(transport));
-
     let wrapper = AuthrsTransport::allocate(InitAuthrsTransport {
-        auth_service: RefCell::new(auth_service),
+        usb_token_manager: RefCell::new(StateMachine::new()),
+        test_token_manager: TestTokenManager::new(),
         controller: Controller(RefCell::new(std::ptr::null())),
         pin_receiver: Arc::new(Mutex::new(None)),
-        test_token_manager: TestTokenManager::new(test_token_manager_state),
     });
     unsafe {
         RefPtr::new(wrapper.coerce::<nsIWebAuthnTransport>()).forget(&mut *result);
