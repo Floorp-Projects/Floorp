@@ -27,7 +27,6 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.allOf
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
@@ -112,7 +111,7 @@ class ThreeDotMenuMainRobot {
         assertItemContainingTextExists(
             settingsButton(),
         )
-        if (FeatureFlags.print && FxNimbus.features.print.value().browserPrintEnabled) {
+        if (FxNimbus.features.print.value().browserPrintEnabled) {
             assertItemContainingTextExists(printContentButton)
         }
         assertItemWithDescriptionExists(

@@ -64,11 +64,6 @@ object FeatureFlags {
     const val unifiedSearchSettings = true
 
     /**
-     * Enables printing from the share and primary menu.
-     */
-    val print = Config.channel.isNightlyOrDebug
-
-    /**
      * Enables the lib-state HistoryFragment refactor
      */
     val historyFragmentLibStateRefactor = Config.channel.isNightlyOrDebug

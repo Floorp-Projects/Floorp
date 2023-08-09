@@ -23,7 +23,6 @@ import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.feature.accounts.push.SendTabUseCases
 import mozilla.components.feature.share.RecentAppsStorage
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.databinding.FragmentShareBinding
@@ -134,7 +133,7 @@ class ShareFragment : AppCompatDialogFragment() {
         }
 
         FxNimbus.features.print.recordExposure()
-        if (FeatureFlags.print && FxNimbus.features.print.value().sharePrintEnabled) {
+        if (FxNimbus.features.print.value().sharePrintEnabled) {
             binding.print.setContent {
                 FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
                     PrintItem {

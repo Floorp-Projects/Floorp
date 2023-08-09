@@ -35,7 +35,6 @@ import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixAccountManager
 import org.mozilla.fenix.ext.components
@@ -393,7 +392,7 @@ open class DefaultToolbarMenu(
                 installToHomescreen.apply { visible = ::canInstall },
                 if (shouldShowTopSites) addRemoveTopSitesItem else null,
                 saveToCollectionItem,
-                if (FeatureFlags.print && FxNimbus.features.print.value().browserPrintEnabled) printPageItem else null,
+                if (FxNimbus.features.print.value().browserPrintEnabled) printPageItem else null,
                 BrowserMenuDivider(),
                 settingsItem,
                 if (shouldDeleteDataOnQuit) deleteDataOnQuit else null,
