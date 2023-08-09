@@ -494,7 +494,7 @@ WebSocketChannelChild::AsyncOpenNative(
   AddIPDLReference();
 
   nsCOMPtr<nsIURI> uri;
-  LoadInfoArgs loadInfoArgs;
+  Maybe<LoadInfoArgs> loadInfoArgs;
   Maybe<NotNull<PTransportProviderChild*>> transportProvider;
 
   if (!mIsServerSide) {

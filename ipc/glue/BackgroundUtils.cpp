@@ -399,7 +399,7 @@ nsresult RHEntryToRHEntryInfo(nsIRedirectHistoryEntry* aRHEntry,
 }
 
 nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
-                                LoadInfoArgs* outLoadInfoArgs) {
+                                Maybe<LoadInfoArgs>* aOptionalLoadInfoArgs) {
   nsresult rv = NS_OK;
   Maybe<PrincipalInfo> loadingPrincipalInfo;
   if (nsIPrincipal* loadingPrin = aLoadInfo->GetLoadingPrincipal()) {
@@ -541,7 +541,7 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
         redirectChain, interceptionInfo->FromThirdParty()));
   }
 
-  *outLoadInfoArgs = LoadInfoArgs(
+  *aOptionalLoadInfoArgs = Some(LoadInfoArgs(
       loadingPrincipalInfo, triggeringPrincipalInfo, principalToInheritInfo,
       topLevelPrincipalInfo, optionalResultPrincipalURI, triggeringRemoteType,
       aLoadInfo->GetSandboxedNullPrincipalID(), aLoadInfo->GetSecurityFlags(),
@@ -584,23 +584,23 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetStoragePermission(), aLoadInfo->GetIsMetaRefresh(),
       aLoadInfo->GetLoadingEmbedderPolicy(),
       aLoadInfo->GetIsOriginTrialCoepCredentiallessEnabledForTopLevel(),
-      unstrippedURI, interceptionInfoArg);
+      unstrippedURI, interceptionInfoArg));
 
   return NS_OK;
 }
 
-nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& aLoadInfoArgs,
-                                const nsACString& aOriginRemoteType,
-                                nsILoadInfo** outLoadInfo) {
-  return LoadInfoArgsToLoadInfo(aLoadInfoArgs, aOriginRemoteType, nullptr,
-                                outLoadInfo);
+nsresult LoadInfoArgsToLoadInfo(
+    const Maybe<LoadInfoArgs>& aOptionalLoadInfoArgs,
+    const nsACString& aOriginRemoteType, nsILoadInfo** outLoadInfo) {
+  return LoadInfoArgsToLoadInfo(aOptionalLoadInfoArgs, aOriginRemoteType,
+                                nullptr, outLoadInfo);
 }
-nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& aLoadInfoArgs,
-                                const nsACString& aOriginRemoteType,
-                                nsINode* aCspToInheritLoadingContext,
-                                nsILoadInfo** outLoadInfo) {
+nsresult LoadInfoArgsToLoadInfo(
+    const Maybe<LoadInfoArgs>& aOptionalLoadInfoArgs,
+    const nsACString& aOriginRemoteType, nsINode* aCspToInheritLoadingContext,
+    nsILoadInfo** outLoadInfo) {
   RefPtr<LoadInfo> loadInfo;
-  nsresult rv = LoadInfoArgsToLoadInfo(aLoadInfoArgs, aOriginRemoteType,
+  nsresult rv = LoadInfoArgsToLoadInfo(aOptionalLoadInfoArgs, aOriginRemoteType,
                                        aCspToInheritLoadingContext,
                                        getter_AddRefs(loadInfo));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -609,16 +609,23 @@ nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& aLoadInfoArgs,
   return NS_OK;
 }
 
-nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& aLoadInfoArgs,
-                                const nsACString& aOriginRemoteType,
-                                LoadInfo** outLoadInfo) {
-  return LoadInfoArgsToLoadInfo(aLoadInfoArgs, aOriginRemoteType, nullptr,
-                                outLoadInfo);
+nsresult LoadInfoArgsToLoadInfo(
+    const Maybe<LoadInfoArgs>& aOptionalLoadInfoArgs,
+    const nsACString& aOriginRemoteType, LoadInfo** outLoadInfo) {
+  return LoadInfoArgsToLoadInfo(aOptionalLoadInfoArgs, aOriginRemoteType,
+                                nullptr, outLoadInfo);
 }
-nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& loadInfoArgs,
-                                const nsACString& aOriginRemoteType,
-                                nsINode* aCspToInheritLoadingContext,
-                                LoadInfo** outLoadInfo) {
+nsresult LoadInfoArgsToLoadInfo(
+    const Maybe<LoadInfoArgs>& aOptionalLoadInfoArgs,
+    const nsACString& aOriginRemoteType, nsINode* aCspToInheritLoadingContext,
+    LoadInfo** outLoadInfo) {
+  if (aOptionalLoadInfoArgs.isNothing()) {
+    *outLoadInfo = nullptr;
+    return NS_OK;
+  }
+
+  const LoadInfoArgs& loadInfoArgs = aOptionalLoadInfoArgs.ref();
+
   nsCOMPtr<nsIPrincipal> loadingPrincipal;
   if (loadInfoArgs.requestingPrincipalInfo().isSome()) {
     auto loadingPrincipalOrErr =
