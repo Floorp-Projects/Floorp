@@ -6,29 +6,23 @@
 importScripts("/resources/testharness.js");
 importScripts("/html/canvas/resources/canvas-tests.js");
 
-var t = async_test("Testing fontBoundingBox for OffscreenCanvas with reduced ascent metric");
-var t_pass = t.done.bind(t);
-var t_fail = t.step_func(function(reason) {
-    throw reason;
-});
-t.step(function() {
+promise_test(async t => {
 
   var canvas = new OffscreenCanvas(100, 50);
   var ctx = canvas.getContext('2d');
 
   var f = new FontFace("CanvasTest-ascent256", "url('/fonts/CanvasTest-ascent256.ttf')");
-  let fonts = (self.fonts ? self.fonts : document.fonts);
   f.load();
-  fonts.add(f);
-  fonts.ready.then(function() {
-      ctx.font = '40px CanvasTest-ascent256';
-      ctx.direction = 'ltr';
-      ctx.align = 'left'
-      _assertSame(ctx.measureText('A').fontBoundingBoxAscent, 10, "ctx.measureText('A').fontBoundingBoxAscent", "10");
-      _assertSame(ctx.measureText('A').fontBoundingBoxDescent, 10, "ctx.measureText('A').fontBoundingBoxDescent", "10");
+  self.fonts.add(f);
+  await self.fonts.ready;
+  ctx.font = '40px CanvasTest-ascent256';
+  ctx.direction = 'ltr';
+  ctx.align = 'left'
+  _assertSame(ctx.measureText('A').fontBoundingBoxAscent, 10, "ctx.measureText('A').fontBoundingBoxAscent", "10");
+  _assertSame(ctx.measureText('A').fontBoundingBoxDescent, 10, "ctx.measureText('A').fontBoundingBoxDescent", "10");
 
-      _assertSame(ctx.measureText('ABCD').fontBoundingBoxAscent, 10, "ctx.measureText('ABCD').fontBoundingBoxAscent", "10");
-      _assertSame(ctx.measureText('ABCD').fontBoundingBoxDescent, 10, "ctx.measureText('ABCD').fontBoundingBoxDescent", "10");
-  }).then(t_pass, t_fail);
-});
+  _assertSame(ctx.measureText('ABCD').fontBoundingBoxAscent, 10, "ctx.measureText('ABCD').fontBoundingBoxAscent", "10");
+  _assertSame(ctx.measureText('ABCD').fontBoundingBoxDescent, 10, "ctx.measureText('ABCD').fontBoundingBoxDescent", "10");
+  t.done();
+}, "Testing fontBoundingBox for OffscreenCanvas with reduced ascent metric");
 done();
