@@ -317,26 +317,26 @@
   margin-inline: 4px;
   -moz-context-properties: fill, fill-opacity;
   border-radius: 100%;
-}
 
-.urlbarView-button[selected] {
-  outline: var(--focus-outline);
-  outline-color: var(--autocomplete-popup-highlight-color);
-  outline-offset: 1px;
-}
+  &[selected] {
+    outline: var(--focus-outline);
+    outline-color: var(--autocomplete-popup-highlight-color);
+    outline-offset: 1px;
+  }
 
-.urlbarView-row:is([row-selectable]:hover, [selected]) > .urlbarView-button:not(:hover, [open]) {
-  color: var(--urlbarView-result-button-selected-color);
-  background-color: var(--urlbarView-result-button-selected-background-color);
-}
+  .urlbarView-row:is([row-selectable]:hover, [selected]) > &:not(:hover, [open]) {
+    color: var(--urlbarView-result-button-selected-color);
+    background-color: var(--urlbarView-result-button-selected-background-color);
+  }
 
-.urlbarView-button:is(:hover, [open]) {
-  color: var(--urlbarView-result-button-hover-color);
-  background-color: var(--urlbarView-result-button-hover-background-color);
-}
+  &:is(:hover, [open]) {
+    color: var(--urlbarView-result-button-hover-color);
+    background-color: var(--urlbarView-result-button-hover-background-color);
+  }
 
-.urlbarView-button + .urlbarView-button {
-  margin-inline-start: 0;
+  & + & {
+    margin-inline-start: 0;
+  }
 }
 
 .urlbarView-button-block {
