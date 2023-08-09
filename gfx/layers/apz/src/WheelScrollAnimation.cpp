@@ -30,17 +30,11 @@ static ScrollOrigin OriginForDeltaType(
   return ScrollOrigin::MouseWheel;
 }
 
-static ScrollAnimationBezierPhysicsSettings SettingsForDeltaType(
-    ScrollWheelInput::ScrollDeltaType aDeltaType) {
-  return apz::ComputeBezierAnimationSettingsForOrigin(
-      OriginForDeltaType(aDeltaType));
-}
-
 WheelScrollAnimation::WheelScrollAnimation(
     AsyncPanZoomController& aApzc, const nsPoint& aInitialPosition,
     ScrollWheelInput::ScrollDeltaType aDeltaType)
     : GenericScrollAnimation(aApzc, aInitialPosition,
-                             SettingsForDeltaType(aDeltaType)) {
+                             OriginForDeltaType(aDeltaType)) {
   mDirectionForcedToOverscroll =
       mApzc.mScrollMetadata.GetDisregardedDirection();
 }

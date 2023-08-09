@@ -11,7 +11,6 @@
 
 namespace mozilla {
 
-struct ScrollAnimationBezierPhysicsSettings;
 class ScrollAnimationPhysics;
 
 namespace layers {
@@ -21,8 +20,7 @@ class AsyncPanZoomController;
 class GenericScrollAnimation : public AsyncPanZoomAnimation {
  public:
   GenericScrollAnimation(AsyncPanZoomController& aApzc,
-                         const nsPoint& aInitialPosition,
-                         const ScrollAnimationBezierPhysicsSettings& aSettings);
+                         const nsPoint& aInitialPosition, ScrollOrigin aOrigin);
 
   bool DoSample(FrameMetrics& aFrameMetrics,
                 const TimeDuration& aDelta) override;
