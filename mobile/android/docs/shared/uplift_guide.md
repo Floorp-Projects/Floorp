@@ -30,7 +30,7 @@ For Beta and Release, the following steps outline the process:
 - NOTE: The developer should choose beta or release depending on which channel the targeted version is currently on.
 - NOTE: There can be a window of time around RC week where approval-mozilla-beta is requested, but no further beta builds are planned. In this scenario, the release manager will take care of changing the pending beta approval request to a release request instead.
 7. The developer provides details for the approval request and clicks Submit.
-- [Video Example of adding a uplift request](https://video.chevrel.org/demos/upliftRequestForm.mp4]) 📺
+- [Video Example of adding a uplift request](https://video.chevrel.org/demos/upliftRequestForm.mp4) 📺
 8. The approval flag is added to the attachment and the information from the form is added as a comment in the bug.
 9. The release manager regularly checks Bugzilla for uplift requests.
 10. The release manager reviews the uplift approval request on the bug. If approved, they will change the approval status flag from ‘?’ to ‘+’ and add a comment indicating the next build that will include that change.
