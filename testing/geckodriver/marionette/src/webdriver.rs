@@ -129,6 +129,52 @@ impl Default for PrintMargins {
     }
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub enum WebAuthnProtocol {
+    #[serde(rename = "ctap1/u2f")]
+    Ctap1U2f,
+    #[serde(rename = "ctap2")]
+    Ctap2,
+    #[serde(rename = "ctap2_1")]
+    Ctap2_1,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+pub enum AuthenticatorTransport {
+    Usb,
+    Nfc,
+    Ble,
+    SmartCard,
+    Hybrid,
+    Internal,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct AuthenticatorParameters {
+    pub protocol: WebAuthnProtocol,
+    pub transport: AuthenticatorTransport,
+    pub has_resident_key: bool,
+    pub has_user_verification: bool,
+    pub is_user_consenting: bool,
+    pub is_user_verified: bool,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct CredentialParameters {
+    pub credential_id: String,
+    pub is_resident_credential: bool,
+    pub rp_id: String,
+    pub private_key: String,
+    pub user_handle: String,
+    pub sign_count: u64,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct UserVerificationParameters {
+    pub is_user_verified: bool,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ScreenshotOptions {
     pub id: Option<String>,
@@ -296,6 +342,20 @@ pub enum Command {
     TakeFullScreenshot(ScreenshotOptions),
     #[serde(rename = "WebDriver:TakeScreenshot")]
     TakeScreenshot(ScreenshotOptions),
+    #[serde(rename = "WebAuthn:AddVirtualAuthenticator")]
+    WebAuthnAddVirtualAuthenticator(AuthenticatorParameters),
+    #[serde(rename = "WebAuthn:RemoveVirtualAuthenticator")]
+    WebAuthnRemoveVirtualAuthenticator,
+    #[serde(rename = "WebAuthn:AddCredential")]
+    WebAuthnAddCredential(CredentialParameters),
+    #[serde(rename = "WebAuthn:GetCredentials")]
+    WebAuthnGetCredentials,
+    #[serde(rename = "WebAuthn:RemoveCredential")]
+    WebAuthnRemoveCredential,
+    #[serde(rename = "WebAuthn:RemoveAllCredentials")]
+    WebAuthnRemoveAllCredentials,
+    #[serde(rename = "WebAuthn:SetUserVerified")]
+    WebAuthnSetUserVerified(UserVerificationParameters),
 }
 
 #[cfg(test)]
