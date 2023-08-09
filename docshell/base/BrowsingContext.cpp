@@ -3557,7 +3557,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsUnderHiddenEmbedderElement>,
     }
 
     bool embedderFrameIsHidden = true;
-    if (auto embedderFrame = embedderElement->GetPrimaryFrame()) {
+    if (auto* embedderFrame = embedderElement->GetPrimaryFrame()) {
       embedderFrameIsHidden = !embedderFrame->StyleVisibility()->IsVisible();
     }
 
