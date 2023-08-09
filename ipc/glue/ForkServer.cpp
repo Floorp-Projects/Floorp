@@ -1,21 +1,24 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set ts=8 sts=4 et sw=4 tw=80: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "mozilla/ipc/ForkServer.h"
-#include "mozilla/Logging.h"
+
 #include "chrome/common/chrome_switches.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/BlockingResourceBase.h"
-#include "mozilla/ipc/ProtocolMessageUtils.h"
+#include "mozilla/Logging.h"
+#include "mozilla/Omnijar.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
-#include "ipc/IPCMessageUtilsSpecializations.h"
+#include "mozilla/ipc/ProtocolMessageUtils.h"
 #include "nsTraceRefcnt.h"
 
+#include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxLaunch.h"
@@ -38,6 +41,16 @@ void ForkServer::InitProcess(int* aArgc, char*** aArgv) {
 
   mTcver = MakeUnique<MiniTransceiver>(kClientPipeFd,
                                        DataBufferClear::AfterReceiving);
+}
+
+/**
+ * Preload any resources that the forked child processes might need,
+ * and which might change incompatibly or become unavailable by the
+ * time they're started.  For example: the omnijar files, or certain
+ * shared libraries.
+ */
+static void ForkServerPreload(int& aArgc, char** aArgv) {
+  Omnijar::ChildProcessInit(aArgc, aArgv);
 }
 
 /**
@@ -251,6 +264,7 @@ bool ForkServer::RunForkServer(int* aArgc, char*** aArgv) {
   XRE_SetProcessType("forkserver");
   NS_LogInit();
   mozilla::LogModule::Init(0, nullptr);
+  ForkServerPreload(*aArgc, *aArgv);
   MOZ_LOG(gForkServiceLog, LogLevel::Verbose, ("Start a fork server"));
   {
     DebugOnly<base::ProcessHandle> forkserver_pid = base::GetCurrentProcId();
