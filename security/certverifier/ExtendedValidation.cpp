@@ -1168,6 +1168,30 @@ static const struct EVInfo kEVInfos[] = {
     "VEhPUklUWTEdMBsGA1UEAwwUQkpDQSBHbG9iYWwgUm9vdCBDQTI=",
     "LBcIfWQqwP6FGFkGz7RK6w==",
   },
+  {
+    // CN=Sectigo Public Server Authentication Root E46,O=Sectigo Limited,C=GB
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0xC9, 0x0F, 0x26, 0xF0, 0xFB, 0x1B, 0x40, 0x18, 0xB2, 0x22, 0x27,
+      0x51, 0x9B, 0x5C, 0xA2, 0xB5, 0x3E, 0x2C, 0xA5, 0xB3, 0xBE, 0x5C,
+      0xF1, 0x8E, 0xFE, 0x1B, 0xEF, 0x47, 0x38, 0x0C, 0x53, 0x83 },
+    "MF8xCzAJBgNVBAYTAkdCMRgwFgYDVQQKEw9TZWN0aWdvIExpbWl0ZWQxNjA0BgNV"
+    "BAMTLVNlY3RpZ28gUHVibGljIFNlcnZlciBBdXRoZW50aWNhdGlvbiBSb290IEU0"
+    "Ng==",
+    "QvLM2htpN0RfFf51KBC49A==",
+  },
+  {
+    // CN=Sectigo Public Server Authentication Root R46,O=Sectigo Limited,C=GB
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x7B, 0xB6, 0x47, 0xA6, 0x2A, 0xEE, 0xAC, 0x88, 0xBF, 0x25, 0x7A,
+      0xA5, 0x22, 0xD0, 0x1F, 0xFE, 0xA3, 0x95, 0xE0, 0xAB, 0x45, 0xC7,
+      0x3F, 0x93, 0xF6, 0x56, 0x54, 0xEC, 0x38, 0xF2, 0x5A, 0x06 },
+    "MF8xCzAJBgNVBAYTAkdCMRgwFgYDVQQKEw9TZWN0aWdvIExpbWl0ZWQxNjA0BgNV"
+    "BAMTLVNlY3RpZ28gUHVibGljIFNlcnZlciBBdXRoZW50aWNhdGlvbiBSb290IFI0"
+    "Ng==",
+    "dY39i658BwD6qSWn4cetFA==",
+  },
     // clang-format on
 };
 
