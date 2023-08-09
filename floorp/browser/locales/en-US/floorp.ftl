@@ -90,7 +90,7 @@ vertical-tabbar =
 native-tabbar-tip = Sidebar add-ons and in-built sidebars cannot be used at the same time as vertical tabs as this leverages the Firefox sidebar.
 
 hover-vertical-tab =
- .label = Collapse vertical Tab Bar
+ .label = Collapse Vertical Tab Bar
 
 TST = Tree Style Tab
 about-TST = Tree Style Tab is a popular add-on that allows you to display tabs in a tree structure. Floorp 10 has a built-in this add-on. Please install the add-on restore Floorp 10's built-in Tree Style Tab.
