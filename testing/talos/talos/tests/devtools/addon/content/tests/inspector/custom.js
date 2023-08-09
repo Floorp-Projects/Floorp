@@ -34,6 +34,8 @@ module.exports = async function () {
 
   await selectNodeWithManyVariablesAndLog(toolbox);
 
+  await selectNodeWithDeeplyNestedRuleAndLog(toolbox, tab);
+
   await collapseExpandAllAndLog(toolbox);
 
   await closeToolboxAndLog("custom.inspector", toolbox);
@@ -162,6 +164,66 @@ async function selectNodeWithManyVariablesAndLog(toolbox) {
   let test = runTest("custom.inspector.manycssvariables.selectnode");
   await selectNodeFront(inspector, testNodeFront);
   test.done();
+
+  await selectNodeFront(inspector, initialNodeFront);
+}
+
+/**
+ * Measure the time necessary to select a node and display the rule view when a rule is
+ * deeply nested
+ */
+async function selectNodeWithDeeplyNestedRuleAndLog(toolbox, tab) {
+  let inspector = toolbox.getPanel("inspector");
+  let initialNodeFront = inspector.selection.nodeFront;
+
+  // Retrieve the node front for the test node.
+  let root = await getRootNodeFront(inspector);
+  let testNodeFront = await root.walkerFront.querySelector(
+    root,
+    ".deeply-nested"
+  );
+
+  const nestedRuleDepth = 19;
+  const deeplyNestedRule = `section {
+      ${`&.nesting , &.non-matching-selector {`.repeat(nestedRuleDepth)}
+        .deeply-nested {
+          color: tomato;
+        }
+      ${`}`.repeat(nestedRuleDepth)}
+    }`;
+
+  // Load a frame script using a data URI so we can run a script inside of the content process
+  const messageManager = tab.linkedBrowser.messageManager;
+  await messageManager.loadFrameScript(
+    "data:,(" +
+      encodeURIComponent(`
+        function () {
+          const iframe = content.document.querySelector("iframe");
+          const win = iframe.contentWindow;
+          const doc = win.document;
+
+          const style = doc.createElement("style");
+          style.appendChild(doc.createTextNode(\`${deeplyNestedRule}\`));
+          doc.head.appendChild(style);
+        }`) +
+      ")()",
+    false
+  );
+
+  // Select test node and measure the time to display the rule view with deeply nested rule.
+  dump("Selecting .deeply-nested test node front\n");
+  const selectNodeTest = runTest(
+    "custom.inspector.deeplynestedrule.selectnode"
+  );
+  await selectNodeFront(inspector, testNodeFront);
+  selectNodeTest.done();
+
+  // Resize window and measure the time it takes for the rule view to refresh.
+  const onRuleViewRefreshed = inspector.once("rule-view-refreshed");
+  const refreshTest = runTest("custom.inspector.deeplynestedrule.refresh");
+  toolbox.topWindow.resizeBy(null, 10);
+  await onRuleViewRefreshed;
+  refreshTest.done();
 
   await selectNodeFront(inspector, initialNodeFront);
 }
