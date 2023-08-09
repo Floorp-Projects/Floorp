@@ -44,6 +44,9 @@
 
  ******/
 
+#pragma push_macro("small")
+#undef small
+
 #define HTML_HTMLELEMENT_TAG(_tag) HTML_TAG(_tag, , )
 
 HTML_TAG(a, Anchor, Anchor)
@@ -197,3 +200,5 @@ HTML_OTHER(markupDecl)
 HTML_OTHER(instruction)
 
 #undef HTML_HTMLELEMENT_TAG
+
+#pragma pop_macro("small")
