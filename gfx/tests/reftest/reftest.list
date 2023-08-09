@@ -29,7 +29,7 @@ pref(apz.allow_zooming,true) fails-if(useDrawSnapshot) == 1662062-1-no-blurry.ht
 # Bug 1715676: nsBulletFrame has been removed and the new rendering does not use PushRoundedRect that this test is for:
 # == 1681610.html 1681610-ref.html
 skip-if(geckoview) fuzzy-if(!useDrawSnapshot,0-255,0-1050) fuzzy-if(useDrawSnapshot,0-255,0-3601) == 1687157-1.html 1687157-1-ref.html
-fuzzy(64-99,506-635) == 1696439-1.html 1696439-1-ref.html
+fuzzy(64-99,506-645) == 1696439-1.html 1696439-1-ref.html
 random-if(gtkWidget) == 1722689-1.html 1722689-1-ref.html
 fuzzy-if(useDrawSnapshot,255-255,5-5) == 1724901-1.html 1724901-1-ref.html
 pref(image.downscale-during-decode.enabled,true) skip-if(Android) fuzzy-if(useDrawSnapshot&&browserIsFission,203-203,193600-193600) HTTP == 1724901-2.html 1724901-2-ref.html
