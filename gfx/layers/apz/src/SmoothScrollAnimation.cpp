@@ -16,7 +16,9 @@ namespace layers {
 SmoothScrollAnimation::SmoothScrollAnimation(AsyncPanZoomController& aApzc,
                                              const nsPoint& aInitialPosition,
                                              ScrollOrigin aOrigin)
-    : GenericScrollAnimation(aApzc, aInitialPosition, aOrigin),
+    : GenericScrollAnimation(
+          aApzc, aInitialPosition,
+          apz::ComputeBezierAnimationSettingsForOrigin(aOrigin)),
       mOrigin(aOrigin),
       mTriggeredByScript(ScrollTriggeredByScript::No) {}
 
