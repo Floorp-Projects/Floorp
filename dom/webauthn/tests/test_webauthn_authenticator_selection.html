@@ -81,8 +81,18 @@
         .then(arrivingHereIsGood)
         .catch(arrivingHereIsBad);
 
+      // Require a resident key.
+      await requestMakeCredential({requireResidentKey: true})
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+
       // Don't require a resident key.
       await requestMakeCredential({requireResidentKey: false})
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+
+      // Require user verification.
+      await requestMakeCredential({userVerification: "required"})
         .then(arrivingHereIsGood)
         .catch(arrivingHereIsBad);
 
@@ -104,6 +114,11 @@
         .then(arrivingHereIsGood)
         .catch(arrivingHereIsBad);
 
+      // Require user verification.
+      await requestGetAssertion("required")
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+
       // Prefer user verification.
       await requestGetAssertion("preferred")
         .then(arrivingHereIsGood)
@@ -121,22 +136,12 @@
       await requestMakeCredential({authenticatorAttachment: "platform"})
         .then(arrivingHereIsBad)
         .catch(expectNotAllowedError);
-
-      // Require a resident key.
-      await requestMakeCredential({requireResidentKey: true})
-        .then(arrivingHereIsBad)
-        .catch(expectNotAllowedError);
-
-      // Require user verification.
-      await requestMakeCredential({userVerification: "required"})
-        .then(arrivingHereIsBad)
-        .catch(expectNotAllowedError);
     });
 
     // Test failure cases for get assertion.
     add_task(async function test_get_assertion_failures() {
-      // Require user verification.
-      await requestGetAssertion("required")
+      // Unknown user verification.
+      await requestGetAssertion("unknown")
         .then(arrivingHereIsBad)
         .catch(expectNotAllowedError);
     });
