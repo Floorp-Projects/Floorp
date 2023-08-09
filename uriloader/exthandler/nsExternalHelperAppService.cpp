@@ -676,7 +676,7 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
   nsCOMPtr<nsIURI> referrer;
   NS_GetReferrerFromChannel(channel, getter_AddRefs(referrer));
 
-  mozilla::net::LoadInfoArgs loadInfoArgs;
+  Maybe<mozilla::net::LoadInfoArgs> loadInfoArgs;
   MOZ_ALWAYS_SUCCEEDS(LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
 
   nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(aRequest));

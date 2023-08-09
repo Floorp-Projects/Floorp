@@ -45,7 +45,7 @@ class GIOChannelParent final : public PGIOChannelParent,
   bool DoAsyncOpen(const URIParams& aURI, const uint64_t& aStartPos,
                    const nsCString& aEntityID,
                    const Maybe<mozilla::ipc::IPCStream>& aUploadStream,
-                   const LoadInfoArgs& aLoadInfoArgs,
+                   const Maybe<LoadInfoArgs>& aLoadInfoArgs,
                    const uint32_t& aLoadFlags);
 
   // used to connect redirected-to channel in parent with just created

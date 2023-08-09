@@ -4284,10 +4284,14 @@ mozilla::ipc::IPCResult ContentChild::RecvScriptError(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvReportFrameTimingData(
-    const LoadInfoArgs& loadInfoArgs, const nsString& entryName,
+    const mozilla::Maybe<LoadInfoArgs>& loadInfoArgs, const nsString& entryName,
     const nsString& initiatorType, UniquePtr<PerformanceTimingData>&& aData) {
   if (!aData) {
     return IPC_FAIL(this, "aData should not be null");
+  }
+
+  if (loadInfoArgs.isNothing()) {
+    return IPC_FAIL(this, "loadInfoArgs should not be null");
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo;

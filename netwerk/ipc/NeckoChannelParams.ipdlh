@@ -328,7 +328,7 @@ struct HttpChannelOpenArgs
   nsCString                   contentTypeHint;
   nsString                    integrityMetadata;
   IPCStream?                  uploadStream;
-  LoadInfoArgs                loadInfo;
+  LoadInfoArgs?               loadInfo;
   uint32_t                    loadFlags;
   uint32_t                    thirdPartyFlags;
   uint32_t                    tlsFlags;
@@ -478,7 +478,7 @@ struct RedirectToRealChannelArgs {
   nullable nsIURI uri;
   uint32_t newLoadFlags;
   ReplacementChannelConfigInit? init;
-  LoadInfoArgs loadInfo;
+  LoadInfoArgs? loadInfo;
   uint64_t channelId;
   nullable nsIURI originalURI;
   uint32_t redirectMode;
@@ -585,7 +585,7 @@ struct GIOChannelOpenArgs
   uint64_t                  startPos;
   nsCString                 entityID;
   IPCStream?                uploadStream;
-  LoadInfoArgs              loadInfo;
+  LoadInfoArgs?             loadInfo;
   uint32_t                  loadFlags;
 };
 
