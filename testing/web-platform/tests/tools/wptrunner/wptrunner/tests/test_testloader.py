@@ -248,14 +248,14 @@ def test_loader_filter_tags():
         loader = TestLoader({manifest: {"metadata_path": metadata_path}}, ["testharness"], None)
         assert len(loader.tests["testharness"]) == 4
 
-        # Check: specifying a single `test-include` inclusion yields `/a/bar`
+        # Check: specifying a single `test-include` inclusion yields `/a/bar` and `/b/baz`
         loader = TestLoader({manifest: {"metadata_path": metadata_path}}, ["testharness"], None,
-                            test_filters=[TagFilter({"test-include"})])
-        assert len(loader.tests["testharness"]) == 1
+                            test_filters=[TagFilter({"test-include"}, {})])
+        assert len(loader.tests["testharness"]) == 2
         assert loader.tests["testharness"][0].id == "/a/bar.html"
         assert loader.tests["testharness"][0].tags == {"dir:a", "test-include"}
         assert loader.tests["testharness"][1].id == "/b/baz.html"
-        assert loader.tests["testharness"][1].tags == {"dir:b", "test-include"}
+        assert loader.tests["testharness"][1].tags == {"dir:b", "test-include", "test-exclude"}
 
         # Check: specifying a single `test-exclude` exclusion rejects only `/b/baz`
         loader = TestLoader({manifest: {"metadata_path": metadata_path}}, ["testharness"], None,
@@ -274,15 +274,11 @@ def test_loader_filter_tags():
 
         loader = TestLoader({manifest: {"metadata_path": metadata_path}}, ["testharness"], None,
                             test_filters=[TagFilter({"test-include"}, {"test-include"})])
-        assert (len(loader.tests["testharness"] == 0))
+        assert len(loader.tests["testharness"]) == 0
 
         loader = TestLoader({manifest: {"metadata_path": metadata_path}}, ["testharness"], None,
-                            test_filters=[
-                                TagFilter({"test-include", "test-exclude"}, {"test-include"})
-                            ])
-        assert len(loader.tests["testharness"]) == 1
-        assert loader.tests["testharness"][0].id == "/b/baz.html"
-        assert loader.tests["testharness"][0].tags == {"dir:b", "test-include", "test-exclude"}
+                            test_filters=[TagFilter({"test-include", "test-exclude"}, {"test-include"})])
+        assert len(loader.tests["testharness"]) == 0
 
 
 def test_chunk_hash(manifest):
