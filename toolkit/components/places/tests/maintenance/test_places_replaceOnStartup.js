@@ -6,7 +6,7 @@
 
 add_task(async function () {
   await test_database_replacement(
-    ["migration", "places_v43.sqlite"],
+    ["migration", "places_v52.sqlite"],
     "places.sqlite",
     false,
     PlacesUtils.history.DATABASE_STATUS_CORRUPT

@@ -1,6 +1,6 @@
 add_task(async function setup() {
   // Since this migration doesn't affect places.sqlite, we can reuse v43.
-  await setupPlacesDatabase("places_v43.sqlite");
+  await setupPlacesDatabase("places_v52.sqlite");
   await setupPlacesDatabase("favicons_v41.sqlite", "favicons.sqlite");
 });
 
