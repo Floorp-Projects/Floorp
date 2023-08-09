@@ -73,7 +73,11 @@ def get_failures(task_id, task_definition):
                         test_path = test_path.split(":")[-1]
 
                     # edge case where a crash on shutdown has a "test" name == group name
-                    if test_path.endswith(".ini") or test_path.endswith(".list"):
+                    if (
+                        test_path.endswith(".toml")
+                        or test_path.endswith(".ini")
+                        or test_path.endswith(".list")
+                    ):
                         continue
 
                     # edge cases with missing test names
@@ -102,7 +106,11 @@ def get_failures(task_id, task_definition):
                         test_path = test_path.split(" ")[0]
 
                     # edge case where a crash on shutdown has a "test" name == group name
-                    if test_path.endswith(".ini") or test_path.endswith(".list"):
+                    if (
+                        test_path.endswith(".toml")
+                        or test_path.endswith(".ini")
+                        or test_path.endswith(".list")
+                    ):
                         continue
 
                     # edge cases with missing test names

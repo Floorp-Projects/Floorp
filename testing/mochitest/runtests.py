@@ -1944,8 +1944,12 @@ toolbar#nav-bar {
             assert manifestFileAbs.startswith(SCRIPT_DIR)
             manifest = TestManifest([manifestFileAbs], strict=False)
         else:
-            masterName = self.normflavor(options.flavor) + ".ini"
+            masterName = self.normflavor(options.flavor) + ".toml"
             masterPath = os.path.join(SCRIPT_DIR, self.testRoot, masterName)
+
+            if not os.path.exists(masterPath):
+                masterName = self.normflavor(options.flavor) + ".ini"
+                masterPath = os.path.join(SCRIPT_DIR, self.testRoot, masterName)
 
             if os.path.exists(masterPath):
                 manifest = TestManifest([masterPath], strict=False)

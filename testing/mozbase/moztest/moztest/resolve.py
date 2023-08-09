@@ -752,7 +752,7 @@ class TestResolver(MozbuildObject):
                 continue
 
             # If the path is a manifest, add all tests defined in that manifest.
-            if any(path.endswith(e) for e in (".ini", ".list")):
+            if any(path.endswith(e) for e in (".toml", ".ini", ".list")):
                 key = "manifest" if os.path.isabs(path) else "manifest_relpath"
                 candidate_paths |= {
                     t["file_relpath"]
