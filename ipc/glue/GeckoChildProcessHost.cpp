@@ -1255,7 +1255,9 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
 
   mChildArgv.insert(mChildArgv.end(), mExtraOpts.begin(), mExtraOpts.end());
 
-  if (mProcessType == GeckoProcessType_Content && Omnijar::IsInitialized()) {
+  if ((mProcessType == GeckoProcessType_Content ||
+       mProcessType == GeckoProcessType_ForkServer) &&
+      Omnijar::IsInitialized()) {
     // Make sure that child processes can find the omnijar, if they
     // use full XPCOM.  See Omnijar::ChildProcessInit and its callers.
     nsAutoCString path;

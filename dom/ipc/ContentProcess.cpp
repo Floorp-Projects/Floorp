@@ -151,8 +151,11 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
     return false;
   }
 
-  // Handle the -greomni/-appomni flags
-  Omnijar::ChildProcessInit(aArgc, aArgv);
+  // Handle the -greomni/-appomni flags (unless the forkserver already
+  // preloaded the jar(s)).
+  if (!Omnijar::IsInitialized()) {
+    Omnijar::ChildProcessInit(aArgc, aArgv);
+  }
 
   rv = NS_InitXPCOM(nullptr, xpcomAppDir, &mDirProvider);
   if (NS_FAILED(rv)) {
