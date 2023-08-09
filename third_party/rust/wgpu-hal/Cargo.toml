@@ -158,15 +158,12 @@ features = [
 
 [target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies]
 core-graphics-types = "0.1"
+metal = "0.26.0"
 objc = "0.2.5"
 
 [target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies.block]
 version = "0.1"
 optional = true
-
-[target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies.metal]
-version = "0.26.0"
-default_features = false
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.ash]
 version = "0.37.3"

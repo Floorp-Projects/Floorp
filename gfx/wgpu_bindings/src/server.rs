@@ -11,8 +11,8 @@ use crate::{
 
 use nsstring::{nsACString, nsCString, nsString};
 
-use wgc::{pipeline::CreateShaderModuleError, resource::BufferAccessError};
 use wgc::{gfx_select, id};
+use wgc::{pipeline::CreateShaderModuleError, resource::BufferAccessError};
 
 use std::borrow::Cow;
 use std::slice;
@@ -565,10 +565,15 @@ impl Global {
                     error_buf.init(err);
                 }
             }
-            CommandEncoderAction::RunComputePass { base } => {
-                if let Err(err) =
-                    self.command_encoder_run_compute_pass_impl::<A>(self_id, base.as_ref())
-                {
+            CommandEncoderAction::RunComputePass {
+                base,
+                timestamp_writes,
+            } => {
+                if let Err(err) = self.command_encoder_run_compute_pass_impl::<A>(
+                    self_id,
+                    base.as_ref(),
+                    timestamp_writes.as_ref(),
+                ) {
                     error_buf.init(err);
                 }
             }
@@ -604,12 +609,16 @@ impl Global {
                 base,
                 target_colors,
                 target_depth_stencil,
+                timestamp_writes,
+                occlusion_query_set_id,
             } => {
                 if let Err(err) = self.command_encoder_run_render_pass_impl::<A>(
                     self_id,
                     base.as_ref(),
                     &target_colors,
                     target_depth_stencil.as_ref(),
+                    timestamp_writes.as_ref(),
+                    occlusion_query_set_id,
                 ) {
                     error_buf.init(err);
                 }
