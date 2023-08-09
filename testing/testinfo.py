@@ -292,8 +292,8 @@ class TestInfoReport(TestInfo):
         return os.path.join("js", "src", "jit-test", "tests", path)
 
     def path_mod_xpcshell(self, path):
-        # <manifest>.ini:<path> -> "<path>"
-        path = path.split(".ini:")[-1]
+        # <manifest>.{ini|toml}:<path> -> "<path>"
+        path = path.split(":")[-1]
         return path
 
     def description(
