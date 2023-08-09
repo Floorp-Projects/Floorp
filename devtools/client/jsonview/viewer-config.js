@@ -26,12 +26,9 @@ define("CustomFormatterMock", () => ({}));
  * of the code base, so it's consistent and modules can be easily reused.
  */
 require.config({
-  baseUrl: "resource://devtools-client-jsonview/",
+  baseUrl: "resource://devtools/client/jsonview/",
   paths: {
-    "devtools/client/jsonview": "resource://devtools-client-jsonview",
-    "devtools/client/shared": "resource://devtools-client-shared",
-    "devtools/shared": "resource://devtools/shared",
-    Services: "resource://devtools-client-shared/vendor/react-prop-types",
+    devtools: "resource://devtools",
   },
   map: {
     "*": {

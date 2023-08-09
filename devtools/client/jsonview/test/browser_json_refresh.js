@@ -42,12 +42,10 @@ add_task(async function () {
         "sanity: correct triggeringPrincipal"
       );
       const principalToInherit = channel.loadInfo.principalToInherit;
-      ok(
-        principalToInherit.isNullPrincipal,
-        "sanity: correct principalToInherit"
-      );
-      ok(
-        content.document.nodePrincipal.isNullPrincipal,
+      ok(!principalToInherit, "sanity: no principalToInherit");
+      is(
+        content.document.nodePrincipal.origin,
+        "resource://devtools",
         "sanity: correct doc.nodePrincipal"
       );
     }
@@ -84,12 +82,10 @@ add_task(async function () {
         "reloaded: correct triggeringPrincipal"
       );
       const principalToInherit = channel.loadInfo.principalToInherit;
-      ok(
-        principalToInherit.isNullPrincipal,
-        "reloaded: correct principalToInherit"
-      );
-      ok(
-        content.document.nodePrincipal.isNullPrincipal,
+      ok(!principalToInherit, "reloaded: no principalToInherit");
+      is(
+        content.document.nodePrincipal.origin,
+        "resource://devtools",
         "reloaded: correct doc.nodePrincipal"
       );
     }

@@ -4,6 +4,13 @@
 
 "use strict";
 
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
+
 const {
   getTheme,
   addThemeObserver,
@@ -84,6 +91,17 @@ Converter.prototype = {
     request.QueryInterface(Ci.nsIChannel);
     request.contentType = "text/html";
 
+    // Tweak the request's principal in order to allow the related HTML document
+    // used to display raw JSON to be able to load resource://devtools files
+    // from the jsonview document.
+    const uri = lazy.NetUtil.newURI("resource://devtools/client/jsonview/");
+    const resourcePrincipal =
+      Services.scriptSecurityManager.createContentPrincipal(
+        uri,
+        request.loadInfo.originAttributes
+      );
+    request.owner = resourcePrincipal;
+
     const headers = getHttpHeaders(request);
 
     // Enforce strict CSP:
@@ -106,11 +124,6 @@ Converter.prototype = {
     // Changing the content type breaks saving functionality. Fix it.
     fixSave(request);
 
-    // Because content might still have a reference to this window,
-    // force setting it to a null principal to avoid it being same-
-    // origin with (other) content.
-    request.loadInfo.resetPrincipalToInheritToNullPrincipal();
-
     // Start the request.
     this.listener.onStartRequest(request);
 
@@ -123,7 +136,7 @@ Converter.prototype = {
     // We compare actual pointer identities here rather than using .equals(),
     // because if things went correctly then the document must have exactly
     // the principal we reset it to above. If not, something went wrong.
-    if (win.document.nodePrincipal != request.loadInfo.principalToInherit) {
+    if (win.document.nodePrincipal != resourcePrincipal) {
       // Whatever that document is, it's not ours.
       request.cancel(Cr.NS_BINDING_ABORTED);
       return;
@@ -319,7 +332,7 @@ function initialHTML(doc) {
     os = "linux";
   }
 
-  const baseURI = "resource://devtools-client-jsonview/";
+  const baseURI = "resource://devtools/client/jsonview/";
 
   return (
     "<!DOCTYPE html>\n" +
