@@ -1255,18 +1255,21 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
 
   mChildArgv.insert(mChildArgv.end(), mExtraOpts.begin(), mExtraOpts.end());
 
-  if (mProcessType != GeckoProcessType_GMPlugin) {
-#  if defined(MOZ_WIDGET_ANDROID)
-    if (Omnijar::IsInitialized()) {
-      // Make sure that child processes can find the omnijar
-      // See XRE_InitCommandLine in nsAppRunner.cpp
-      nsAutoCString path;
-      nsCOMPtr<nsIFile> file = Omnijar::GetPath(Omnijar::GRE);
-      if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
-        geckoargs::sGREOmni.Put(path.get(), mChildArgv);
-      }
+  if (mProcessType == GeckoProcessType_Content && Omnijar::IsInitialized()) {
+    // Make sure that child processes can find the omnijar, if they
+    // use full XPCOM.  See Omnijar::ChildProcessInit and its callers.
+    nsAutoCString path;
+    nsCOMPtr<nsIFile> greFile = Omnijar::GetPath(Omnijar::GRE);
+    if (greFile && NS_SUCCEEDED(greFile->GetNativePath(path))) {
+      geckoargs::sGREOmni.Put(path.get(), mChildArgv);
     }
-#  endif
+    nsCOMPtr<nsIFile> appFile = Omnijar::GetPath(Omnijar::APP);
+    if (appFile && NS_SUCCEEDED(appFile->GetNativePath(path))) {
+      geckoargs::sAppOmni.Put(path.get(), mChildArgv);
+    }
+  }
+
+  if (mProcessType != GeckoProcessType_GMPlugin) {
     // Add the application directory path (-appdir path)
 #  ifdef XP_MACOSX
     AddAppDirToCommandLine(mChildArgv, mAppDir, mProfileDir);

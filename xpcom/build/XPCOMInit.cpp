@@ -354,6 +354,11 @@ NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
   nsDirectoryService::gService->Set(NS_XPCOM_LIBRARY_FILE, xpcomLib);
 
   if (!mozilla::Omnijar::IsInitialized()) {
+    // If you added a new process type that uses NS_InitXPCOM, and you're
+    // *sure* you don't want NS_InitMinimalXPCOM: in addition to everything
+    // else you'll probably have to do, please add it to the case in
+    // GeckoChildProcessHost.cpp which sets the greomni/appomni flags.
+    MOZ_ASSERT(XRE_IsParentProcess() || XRE_IsContentProcess());
     mozilla::Omnijar::Init();
   }
 
