@@ -1558,7 +1558,6 @@ with only_when("--enable-compile-environment"):
         extra_toolchain_flags,
         linker_ldflags,
         readelf,
-        configure_cache,
         when=may_use_pack_relative_relocs,
     )
     @checking("for -z pack-relative-relocs option to ld", bool)
@@ -1571,7 +1570,6 @@ with only_when("--enable-compile-environment"):
         extra_toolchain_flags,
         linker_ldflags,
         readelf,
-        configure_cache,
     ):
         try:
             fd, path = mkstemp(prefix="conftest.")
@@ -1580,7 +1578,9 @@ with only_when("--enable-compile-environment"):
             pack_rel_relocs = ["-Wl,-z,pack-relative-relocs"]
             if (
                 try_invoke_compiler(
-                    configure_cache,
+                    # No configure_cache because it would not create the
+                    # expected output file.
+                    None,
                     [c_compiler.compiler] + c_compiler.flags,
                     c_compiler.language,
                     # The resulting binary is expected to have relative
