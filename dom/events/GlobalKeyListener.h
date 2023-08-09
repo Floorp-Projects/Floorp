@@ -56,18 +56,31 @@ class GlobalKeyListener : public nsIDOMEventListener {
   MOZ_CAN_RUN_SCRIPT
   void WalkHandlers(dom::KeyboardEvent* aKeyEvent);
 
+  enum class Purpose {
+    ExecuteCommand,
+    LookForCommand,
+  };
+  struct MOZ_STACK_CLASS WalkHandlersResult {
+    // Set to true if it found a command matches with given keyboard event and
+    // it's available.
+    bool mMeaningfulHandlerFound = false;
+    // Set to true if the command which is found or executed is reserved for
+    // chrome.
+    bool mReservedHandlerForChromeFound = false;
+    // Set to true if found handler is disabled.
+    bool mDisabledHandlerFound = false;
+  };
+
   // walk the handlers, looking for one to handle the event
   MOZ_CAN_RUN_SCRIPT
-  bool WalkHandlersInternal(dom::KeyboardEvent* aKeyEvent, bool aExecute,
-                            bool* aOutReservedForChrome = nullptr);
+  WalkHandlersResult WalkHandlersInternal(Purpose aPurpose,
+                                          dom::KeyboardEvent* aKeyEvent);
 
-  // walk the handlers for aEvent, aCharCode and aIgnoreModifierState. Execute
-  // it if aExecute = true.
+  // Walk the handlers for aEvent, aCharCode and aIgnoreModifierState.
   MOZ_CAN_RUN_SCRIPT
-  bool WalkHandlersAndExecute(dom::KeyboardEvent* aKeyEvent, uint32_t aCharCode,
-                              const IgnoreModifierState& aIgnoreModifierState,
-                              bool aExecute,
-                              bool* aOutReservedForChrome = nullptr);
+  WalkHandlersResult WalkHandlersAndExecute(
+      Purpose aPurpose, dom::KeyboardEvent* aKeyEvent, uint32_t aCharCode,
+      const IgnoreModifierState& aIgnoreModifierState);
 
   // HandleEvent function for the capturing phase in the default event group.
   MOZ_CAN_RUN_SCRIPT
@@ -80,8 +93,7 @@ class GlobalKeyListener : public nsIDOMEventListener {
   // whether the command handler for the event is marked with the "reserved"
   // attribute.
   MOZ_CAN_RUN_SCRIPT
-  bool HasHandlerForEvent(dom::KeyboardEvent* aEvent,
-                          bool* aOutReservedForChrome = nullptr);
+  WalkHandlersResult HasHandlerForEvent(dom::KeyboardEvent* aEvent);
 
   // Returns true if the key would be reserved for the given handler. A reserved
   // key is not sent to a content process or single-process equivalent.
