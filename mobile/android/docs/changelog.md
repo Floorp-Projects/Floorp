@@ -17,6 +17,7 @@ permalink: /changelog/
 * **feature-addons**
   * ⚠️ **This is a breaking change**: the method `getAvailableAddons()` in `AddonsProvider` has been renamed to `getFeaturedAddons()`.
   * ⚠️ **This is a breaking change**: the `AddonCollectionProvider` has been renamed to `AMOAddonsProvider`.
+  * ⚠️ **This is a breaking change**: add new method `getAddonIconBitmap()` to `AddonsProvider`.
 
 # 117.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v116..main)

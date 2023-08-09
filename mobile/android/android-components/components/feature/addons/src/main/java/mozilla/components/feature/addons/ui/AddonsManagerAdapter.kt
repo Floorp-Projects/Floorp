@@ -30,8 +30,8 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
+import mozilla.components.feature.addons.AddonsProvider
 import mozilla.components.feature.addons.R
-import mozilla.components.feature.addons.amo.AMOAddonsProvider
 import mozilla.components.feature.addons.ui.CustomViewHolder.AddonViewHolder
 import mozilla.components.feature.addons.ui.CustomViewHolder.SectionViewHolder
 import mozilla.components.feature.addons.ui.CustomViewHolder.UnsupportedSectionViewHolder
@@ -49,15 +49,15 @@ private const val VIEW_HOLDER_TYPE_ADDON = 2
  * an add-on such as recommended, unsupported or installed. In addition, it will perform actions
  * such as installing an add-on.
  *
- * @property addonsProvider Provider of AMO collection API.
+ * @property addonsProvider An add-ons provider.
  * @property addonsManagerDelegate Delegate that will provides method for handling the add-on items.
- * @param addons The list of add-on based on the AMO store.
+ * @param addons The list of add-ons to display.
  * @property style Indicates how items should look like.
  * @property excludedAddonIDs The list of add-on IDs to be excluded from the recommended section.
  */
 @Suppress("LargeClass")
 class AddonsManagerAdapter(
-    private val addonsProvider: AMOAddonsProvider,
+    private val addonsProvider: AddonsProvider,
     private val addonsManagerDelegate: AddonsManagerAdapterDelegate,
     addons: List<Addon>,
     private val style: Style? = null,

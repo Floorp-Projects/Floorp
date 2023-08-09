@@ -178,7 +178,7 @@ class AMOAddonsProvider(
      * a connectivity problem or a timeout.
      */
     @Throws(IOException::class)
-    suspend fun getAddonIconBitmap(addon: Addon): Bitmap? {
+    override suspend fun getAddonIconBitmap(addon: Addon): Bitmap? {
         var bitmap: Bitmap? = null
         if (addon.iconUrl != "") {
             client.fetch(

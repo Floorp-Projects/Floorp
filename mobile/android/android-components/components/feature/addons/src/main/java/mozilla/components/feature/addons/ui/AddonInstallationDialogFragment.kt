@@ -33,8 +33,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
+import mozilla.components.feature.addons.AddonsProvider
 import mozilla.components.feature.addons.R
-import mozilla.components.feature.addons.amo.AMOAddonsProvider
 import mozilla.components.feature.addons.databinding.MozacFeatureAddonsFragmentDialogAddonInstalledBinding
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.appName
@@ -74,9 +74,9 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
     var onDismissed: (() -> Unit)? = null
 
     /**
-     * Reference to the application's [AMOAddonsProvider] to fetch add-on icons.
+     * Reference to the application's [AddonsProvider] to fetch add-on icons.
      */
-    var addonsProvider: AMOAddonsProvider? = null
+    var addonsProvider: AddonsProvider? = null
 
     private val safeArguments get() = requireNotNull(arguments)
 
@@ -267,13 +267,14 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
         /**
          * Returns a new instance of [AddonInstallationDialogFragment].
          * @param addon The addon to show in the dialog.
+         * @param addonsProvider An add-ons provider.
          * @param promptsStyling Styling properties for the dialog.
          * @param onDismissed A lambda called when the dialog is dismissed.
          * @param onConfirmButtonClicked A lambda called when the confirm button is clicked.
          */
         fun newInstance(
             addon: Addon,
-            addonsProvider: AMOAddonsProvider,
+            addonsProvider: AddonsProvider,
             promptsStyling: PromptsStyling? = PromptsStyling(
                 gravity = Gravity.BOTTOM,
                 shouldWidthMatchParent = true,
