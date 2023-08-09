@@ -378,9 +378,13 @@ impl VirtualFidoDevice for TestToken {
         } else {
             // 12. Discoverable credential case
             // return any number of assertions from credentials bound to this RP ID
+            // TODO(Bug 1838932) Until we have conditional mediation we actually don't want to
+            // return a list of credentials here. The UI to select one of the results blocks
+            // testing.
             for credential in eligible_cred_iter.filter(|x| x.is_discoverable_credential) {
                 let assertion = credential.assert(&req.client_data_hash, flags).into();
                 assertions.push(assertion);
+                break;
             }
         }
 
