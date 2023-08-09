@@ -20,10 +20,11 @@
   <script class="testbody" type="text/javascript">
     "use strict";
 
-    add_task(() => {
-      return SpecialPowers.pushPrefEnv({"set": [
+    add_task(async () => {
+      await SpecialPowers.pushPrefEnv({"set": [
         ["security.webauth.webauthn_testing_allow_direct_attestation", true],
       ]});
+      await addVirtualAuthenticator();
     });
 
     function verifyAnonymizedCertificate(aResult) {

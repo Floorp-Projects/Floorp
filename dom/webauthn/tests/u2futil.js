@@ -20,6 +20,32 @@ var { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
+async function addVirtualAuthenticator() {
+  let id = await SpecialPowers.spawnChrome([], () => {
+    let webauthnTransport = Cc["@mozilla.org/webauthn/transport;1"].getService(
+      Ci.nsIWebAuthnTransport
+    );
+    let id = webauthnTransport.addVirtualAuthenticator(
+      "ctap2",
+      "internal",
+      true,
+      true,
+      true,
+      true
+    );
+    return id;
+  });
+
+  SimpleTest.registerCleanupFunction(async () => {
+    await SpecialPowers.spawnChrome([id], id => {
+      let webauthnTransport = Cc[
+        "@mozilla.org/webauthn/transport;1"
+      ].getService(Ci.nsIWebAuthnTransport);
+      webauthnTransport.removeVirtualAuthenticator(id);
+    });
+  });
+}
+
 function handleEventMessage(event) {
   if ("test" in event.data) {
     let summary = event.data.test + ": " + event.data.msg;

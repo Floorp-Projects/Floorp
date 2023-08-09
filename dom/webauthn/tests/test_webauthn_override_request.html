@@ -17,8 +17,8 @@
     // Last request status.
     let status = "";
 
-    add_task(() => {
-      return SpecialPowers.pushPrefEnv({"set": [
+    add_task(async () => {
+      await SpecialPowers.pushPrefEnv({"set": [
         ["security.webauth.webauthn_enable_softtoken", false],
         ["security.webauth.webauthn_enable_usbtoken", true],
       ]});

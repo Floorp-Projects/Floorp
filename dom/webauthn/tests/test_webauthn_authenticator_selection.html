@@ -15,6 +15,10 @@
   <script class="testbody" type="text/javascript">
     "use strict";
 
+    add_task(async () => {
+      await addVirtualAuthenticator();
+    });
+
     function arrivingHereIsGood(aResult) {
       ok(true, "Good result! Received a: " + aResult);
     }
