@@ -2933,8 +2933,10 @@ public class GeckoSession {
             recommendationsBundle -> {
               final GeckoBundle[] bundles = recommendationsBundle.getBundleArray("recommendations");
               final ArrayList<Recommendation> recArray = new ArrayList<>(bundles.length);
-              for (final GeckoBundle b : bundles) {
-                recArray.add(new Recommendation(b));
+              if (recArray != null) {
+                for (final GeckoBundle b : bundles) {
+                  recArray.add(new Recommendation(b));
+                }
               }
               return recArray;
             });
@@ -3469,7 +3471,11 @@ public class GeckoSession {
       grade = message.getString("grade");
       adjustedRating = message.getDouble("adjusted_rating");
       needsAnalysis = message.getBoolean("needs_analysis", true);
-      highlights = new Highlight(message.getBundle("highlights"));
+      if (message.getBundle("highlights") == null) {
+        highlights = null;
+      } else {
+        highlights = new Highlight(message.getBundle("highlights"));
+      }
       lastAnalysisTime = message.getInt("last_analysis_time");
       deletedProductReported = message.getBoolean("deleted_product_reported");
       deletedProduct = message.getBoolean("deleted_product");
