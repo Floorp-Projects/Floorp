@@ -82,9 +82,6 @@ with Files("toolkit.mozbuild"):
 with Files("library/**"):
     BUG_COMPONENT = ("Firefox Build System", "General")
 
-with Files("mozapps/installer/windows/**"):
-    BUG_COMPONENT = ("Toolkit", "NSIS Installer")
-
 with Files("mozapps/preferences/**"):
     BUG_COMPONENT = ("Toolkit", "Preferences")
 
