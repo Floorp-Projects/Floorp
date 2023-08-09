@@ -43,7 +43,6 @@ EXPORTS.mozilla += [
 EXPORTS.mozilla.dom += [
     "ConstraintValidation.h",
     "ElementInternals.h",
-    "FetchPriority.h",
     "HTMLAllCollection.h",
     "HTMLAnchorElement.h",
     "HTMLAreaElement.h",
@@ -128,7 +127,6 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     "ConstraintValidation.cpp",
     "ElementInternals.cpp",
-    "FetchPriority.cpp",
     "HTMLAllCollection.cpp",
     "HTMLAnchorElement.cpp",
     "HTMLAreaElement.cpp",

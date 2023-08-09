@@ -63,33 +63,33 @@ void nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor) {
       aExecutor->PreloadScript(
           mUrlOrSizes, mCharsetOrSrcset,
           mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
-          mCrossOrigin, mMedia, mNonce, mFetchPriority,
-          mReferrerPolicyOrIntegrity, mScriptReferrerPolicy, false, mIsAsync,
-          mIsDefer, false, mIsLinkPreload);
+          mCrossOrigin, mMedia, mNonce, mReferrerPolicyOrIntegrity,
+          mScriptReferrerPolicy, false, mIsAsync, mIsDefer, false,
+          mIsLinkPreload);
       break;
     case eSpeculativeLoadScriptFromHead:
       aExecutor->PreloadScript(
           mUrlOrSizes, mCharsetOrSrcset,
           mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
-          mCrossOrigin, mMedia, mNonce, mFetchPriority,
-          mReferrerPolicyOrIntegrity, mScriptReferrerPolicy, true, mIsAsync,
-          mIsDefer, false, mIsLinkPreload);
+          mCrossOrigin, mMedia, mNonce, mReferrerPolicyOrIntegrity,
+          mScriptReferrerPolicy, true, mIsAsync, mIsDefer, false,
+          mIsLinkPreload);
       break;
     case eSpeculativeLoadNoModuleScript:
       aExecutor->PreloadScript(
           mUrlOrSizes, mCharsetOrSrcset,
           mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
-          mCrossOrigin, mMedia, mNonce, mFetchPriority,
-          mReferrerPolicyOrIntegrity, mScriptReferrerPolicy, false, mIsAsync,
-          mIsDefer, true, mIsLinkPreload);
+          mCrossOrigin, mMedia, mNonce, mReferrerPolicyOrIntegrity,
+          mScriptReferrerPolicy, false, mIsAsync, mIsDefer, true,
+          mIsLinkPreload);
       break;
     case eSpeculativeLoadNoModuleScriptFromHead:
       aExecutor->PreloadScript(
           mUrlOrSizes, mCharsetOrSrcset,
           mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
-          mCrossOrigin, mMedia, mNonce, mFetchPriority,
-          mReferrerPolicyOrIntegrity, mScriptReferrerPolicy, true, mIsAsync,
-          mIsDefer, true, mIsLinkPreload);
+          mCrossOrigin, mMedia, mNonce, mReferrerPolicyOrIntegrity,
+          mScriptReferrerPolicy, true, mIsAsync, mIsDefer, true,
+          mIsLinkPreload);
       break;
     case eSpeculativeLoadStyle:
       aExecutor->PreloadStyle(

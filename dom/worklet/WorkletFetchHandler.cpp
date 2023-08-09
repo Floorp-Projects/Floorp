@@ -9,7 +9,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/Request.h"
-#include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptLoader.h"
@@ -95,7 +94,7 @@ NS_IMETHODIMP StartModuleLoadRunnable::RunOnWorkletThread() {
   // policy is the empty string, and fetch priority is "auto".
   RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
       CORSMode::CORS_NONE, ReferrerPolicy::_empty, /* aNonce = */ u""_ns,
-      RequestPriority::Auto, ParserMetadata::NotParserInserted,
+      ParserMetadata::NotParserInserted,
       /*triggeringPrincipal*/ nullptr);
 
   WorkletModuleLoader* moduleLoader =
