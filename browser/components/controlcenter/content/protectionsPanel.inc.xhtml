@@ -45,19 +45,8 @@
       <vbox id="protections-popup-main-body" class="panel-subview-body">
         <vbox id="protections-popup-tp-switch-section" class="protections-popup-section protections-popup-switch-section">
           <hbox id="protections-popup-tp-switch-section-header" class="protections-popup-switch-section-header">
-            <vbox class="protections-popup-tp-switch-label-box" flex="1" align="start">
-              <label class="protections-popup-switch-header protections-popup-tp-switch-on-header"
-                     role="heading"
-                     aria-level="2" data-l10n-id="protections-panel-etp-on-header"></label>
-              <label class="protections-popup-switch-header protections-popup-tp-switch-off-header"
-                     role="heading"
-                     aria-level="2" data-l10n-id="protections-panel-etp-off-header"></label>
-            </vbox>
-            <vbox class="protections-popup-tp-switch-box">
-              <toolbarbutton id="protections-popup-tp-switch"
-                             class="protections-popup-tp-switch"
-                             enabled="false"
-                             oncommand="gProtectionsHandler.onTPSwitchCommand();" />
+            <vbox class="protections-popup-tp-switch-box" flex="1" align="stretch">
+              <html:moz-toggle id="protections-popup-tp-switch" data-l10n-attrs="label, description"></html:moz-toggle>
             </vbox>
           </hbox>
           <hbox id="protections-popup-tp-switch-section-footer">
@@ -193,19 +182,8 @@
                role="document"
                data-l10n-id="protections-panel-site-not-working-view">
         <hbox id="protections-popup-siteNotWorkingView-header">
-          <vbox class="protections-popup-tp-switch-label-box" flex="1">
-            <label class="protections-popup-switch-header protections-popup-tp-switch-on-header"
-                   role="heading"
-                   aria-level="1" data-l10n-id="protections-panel-etp-on-header"></label>
-            <label class="protections-popup-switch-header protections-popup-tp-switch-off-header"
-                   role="heading"
-                   aria-level="1" data-l10n-id="protections-panel-etp-off-header"></label>
-          </vbox>
-          <vbox class="protections-popup-tp-switch-box">
-            <toolbarbutton id="protections-popup-siteNotWorking-tp-switch"
-                           class="protections-popup-tp-switch"
-                           enabled="false"
-                           oncommand="gProtectionsHandler.onTPSwitchCommand();" />
+          <vbox class="protections-popup-tp-switch-box" flex="1" align="stretch">
+            <html:moz-toggle id="protections-popup-siteNotWorking-tp-switch" data-l10n-attrs="label, description"></html:moz-toggle>
           </vbox>
         </hbox>
         <toolbarseparator></toolbarseparator>

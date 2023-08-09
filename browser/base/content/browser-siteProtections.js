@@ -1594,6 +1594,8 @@ var gProtectionsHandler = {
 
     // Add an observer to observe that the history has been cleared.
     Services.obs.addObserver(this, "browser:purge-session-history");
+
+    window.ensureCustomElements("moz-button-group", "moz-toggle");
   },
 
   uninit() {
@@ -1729,11 +1731,14 @@ var gProtectionsHandler = {
 
   onPopupShown(event) {
     if (event.target == this._protectionsPopup) {
-      window.ensureCustomElements("moz-button-group");
-
       PopupNotifications.suppressWhileOpen(this._protectionsPopup);
 
       window.addEventListener("focus", this, true);
+      this._protectionsPopupTPSwitch.addEventListener("toggle", this);
+      this._protectionsPopupSiteNotWorkingTPSwitch.addEventListener(
+        "toggle",
+        this
+      );
 
       // Insert the info message if needed. This will be shown once and then
       // remain collapsed.
@@ -1752,6 +1757,11 @@ var gProtectionsHandler = {
   onPopupHidden(event) {
     if (event.target == this._protectionsPopup) {
       window.removeEventListener("focus", this, true);
+      this._protectionsPopupTPSwitch.removeEventListener("toggle", this);
+      this._protectionsPopupSiteNotWorkingTPSwitch.removeEventListener(
+        "toggle",
+        this
+      );
     }
   },
 
@@ -2025,20 +2035,30 @@ var gProtectionsHandler = {
 
   // We handle focus here when the panel is shown.
   handleEvent(event) {
-    let elem = document.activeElement;
-    let position = elem.compareDocumentPosition(this._protectionsPopup);
+    switch (event.type) {
+      case "focus": {
+        let elem = document.activeElement;
+        let position = elem.compareDocumentPosition(this._protectionsPopup);
 
-    if (
-      !(
-        position &
-        (Node.DOCUMENT_POSITION_CONTAINS | Node.DOCUMENT_POSITION_CONTAINED_BY)
-      ) &&
-      !this._protectionsPopup.hasAttribute("noautohide")
-    ) {
-      // Hide the panel when focusing an element that is
-      // neither an ancestor nor descendant unless the panel has
-      // @noautohide (e.g. for a tour).
-      PanelMultiView.hidePopup(this._protectionsPopup);
+        if (
+          !(
+            position &
+            (Node.DOCUMENT_POSITION_CONTAINS |
+              Node.DOCUMENT_POSITION_CONTAINED_BY)
+          ) &&
+          !this._protectionsPopup.hasAttribute("noautohide")
+        ) {
+          // Hide the panel when focusing an element that is
+          // neither an ancestor nor descendant unless the panel has
+          // @noautohide (e.g. for a tour).
+          PanelMultiView.hidePopup(this._protectionsPopup);
+        }
+        break;
+      }
+      case "toggle": {
+        this.onTPSwitchCommand(event);
+        break;
+      }
     }
   },
 
@@ -2067,12 +2087,7 @@ var gProtectionsHandler = {
 
     let currentlyEnabled = !this.hasException;
 
-    for (let tpSwitch of [
-      this._protectionsPopupTPSwitch,
-      this._protectionsPopupSiteNotWorkingTPSwitch,
-    ]) {
-      tpSwitch.toggleAttribute("enabled", currentlyEnabled);
-    }
+    this.updateProtectionsToggles(currentlyEnabled);
 
     this._notBlockingWhyLink.setAttribute(
       "tooltip",
@@ -2083,13 +2098,6 @@ var gProtectionsHandler = {
 
     // Toggle the breakage link according to the current enable state.
     this.toggleBreakageLink();
-
-    // Give the button an accessible label for screen readers.
-    document.l10n.setAttributes(
-      this._protectionsPopupTPSwitch,
-      currentlyEnabled ? "protections-disable" : "protections-enable",
-      { host }
-    );
 
     // Update the tooltip of the blocked tracker counter.
     this.maybeUpdateEarliestRecordedDateTooltip();
@@ -2109,6 +2117,31 @@ var gProtectionsHandler = {
     this._protectionsPopup.toggleAttribute("detected", this.anyDetected);
     this._protectionsPopup.toggleAttribute("blocking", this.anyBlocking);
     this._protectionsPopup.toggleAttribute("hasException", this.hasException);
+  },
+
+  /**
+   * Updates the "pressed" state and labels for both toggles in the different
+   * panel subviews.
+   *
+   * @param {boolean} isPressed - Whether or not the toggles should be pressed.
+   *  True if ETP is enabled for a given site.
+   */
+  updateProtectionsToggles(isPressed) {
+    let host = gIdentityHandler.getHostForDisplay();
+    for (let toggle of [
+      this._protectionsPopupTPSwitch,
+      this._protectionsPopupSiteNotWorkingTPSwitch,
+    ]) {
+      toggle.toggleAttribute("pressed", isPressed);
+      toggle.toggleAttribute("disabled", !!this._TPSwitchCommanding);
+      document.l10n.setAttributes(
+        toggle,
+        isPressed
+          ? "protections-panel-etp-on-toggle"
+          : "protections-panel-etp-off-toggle",
+        { host }
+      );
+    }
   },
 
   /*
@@ -2203,12 +2236,8 @@ var gProtectionsHandler = {
     // styling after toggling the TP switch.
     let newExceptionState =
       this._protectionsPopup.toggleAttribute("hasException");
-    for (let tpSwitch of [
-      this._protectionsPopupTPSwitch,
-      this._protectionsPopupSiteNotWorkingTPSwitch,
-    ]) {
-      tpSwitch.toggleAttribute("enabled", !newExceptionState);
-    }
+
+    this.updateProtectionsToggles(!newExceptionState);
 
     // Toggle the breakage link if needed.
     this.toggleBreakageLink();
@@ -2452,11 +2481,11 @@ var gProtectionsHandler = {
     this._protectionsPopupTPSwitchBreakageLink.hidden =
       ContentBlockingAllowList.includes(gBrowser.selectedBrowser) ||
       !this.anyBlocking ||
-      !this._protectionsPopupTPSwitch.hasAttribute("enabled");
+      !this._protectionsPopupTPSwitch.hasAttribute("pressed");
     // The "Site Fixed?" link behaves similarly but for the opposite state.
     this._protectionsPopupTPSwitchBreakageFixedLink.hidden =
       !ContentBlockingAllowList.includes(gBrowser.selectedBrowser) ||
-      this._protectionsPopupTPSwitch.hasAttribute("enabled");
+      this._protectionsPopupTPSwitch.hasAttribute("pressed");
   },
 
   submitBreakageReport(uri) {

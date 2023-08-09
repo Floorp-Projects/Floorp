@@ -26,6 +26,20 @@ protections-panel-etp-more-info =
 protections-panel-etp-on-header = Enhanced Tracking Protection is ON for this site
 protections-panel-etp-off-header = Enhanced Tracking Protection is OFF for this site
 
+## Text for the toggles shown when ETP is enabled/disabled for a given site.
+## .description is transferred into a separate paragraph by the moz-toggle
+## custom element code.
+##   $host (String): the hostname of the site that is being displayed.
+
+protections-panel-etp-on-toggle =
+  .label = Enhanced Tracking Protection
+  .description = On for this site
+  .aria-label = Disable protections for { $host }
+protections-panel-etp-off-toggle =
+  .label = Enhanced Tracking Protection
+  .description = Off for this site
+  .aria-label = Enable protections for { $host }
+
 # The link to be clicked to open the sub-panel view
 protections-panel-site-not-working = Site not working?
 
