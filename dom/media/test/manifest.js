@@ -161,8 +161,7 @@ var gProgressTests = [
 
 // Used by test_played.html
 var gPlayedTests = [
-  // Bug 1826382
-  // { name: "big-short.wav", type: "audio/x-wav", duration: 1.11 },
+  { name: "big-short.wav", type: "audio/x-wav", duration: 1.11 },
   { name: "seek-short.ogv", type: "video/ogg", duration: 1.03 },
   { name: "seek-short.webm", type: "video/webm", duration: 0.23 },
   { name: "gizmo-short.mp4", type: "video/mp4", duration: 0.27 },
