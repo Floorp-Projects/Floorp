@@ -1343,8 +1343,8 @@ const JsonView = {
       chrome.saveBrowser(browser);
     } else {
       if (
-        !message.data.startsWith("blob:null") ||
-        !browser.contentPrincipal.isNullPrincipal
+        !message.data.startsWith("blob:resource://devtools/") ||
+        browser.contentPrincipal.origin != "resource://devtools"
       ) {
         console.error("Got invalid request to save JSON data");
         return;

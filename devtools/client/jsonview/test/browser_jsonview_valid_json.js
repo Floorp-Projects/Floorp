@@ -10,9 +10,10 @@ add_task(async function () {
 
   const tab = await addJsonViewTab(TEST_JSON_URL);
 
-  ok(
-    tab.linkedBrowser.contentPrincipal.isNullPrincipal,
-    "Should have null principal"
+  is(
+    tab.linkedBrowser.contentPrincipal.origin,
+    "resource://devtools",
+    "JSON document ends up having a privileged principal in order to load DevTools URIs"
   );
 
   is(await countRows(), 3, "There must be three rows");
