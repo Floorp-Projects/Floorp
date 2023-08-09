@@ -680,7 +680,7 @@ sidebar-preferences-button =
   .tooltiptext = Settings
 
 sidebar-keepWidth-button =
-  .tooltiptext = Use this width on this Panel
+  .tooltiptext = Keep using this width on this Panel
 
 sidebar2-keep-width-for-global =
   .label = Apply this width to all panels without a custom width
