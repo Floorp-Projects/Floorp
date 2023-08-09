@@ -217,9 +217,9 @@ def try_invoke_compiler(
 ):
     compiler_path = compiler[0]
     compiler = wrapper + compiler
-    use_cache = True
+    use_cache = configure_cache is not None
 
-    if compiler_path not in configure_cache.version_checked_compilers:
+    if use_cache and compiler_path not in configure_cache.version_checked_compilers:
         try:
             version_info = subprocess.check_output(
                 [compiler_path, "--version"],
