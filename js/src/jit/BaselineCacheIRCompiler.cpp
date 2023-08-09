@@ -3716,9 +3716,9 @@ bool BaselineCacheIRCompiler::emitNewArrayObjectResult(uint32_t arrayLength,
   Label done;
   Label fail;
 
-  masm.createArrayWithFixedElements(result, shape, scratch, arrayLength,
-                                    arrayCapacity, allocKind, gc::Heap::Default,
-                                    &fail, AllocSiteInput(site));
+  masm.createArrayWithFixedElements(
+      result, shape, scratch, InvalidReg, arrayLength, arrayCapacity, 0, 0,
+      allocKind, gc::Heap::Default, &fail, AllocSiteInput(site));
   masm.jump(&done);
 
   {

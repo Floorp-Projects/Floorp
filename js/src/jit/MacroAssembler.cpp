@@ -496,28 +496,35 @@ void MacroAssembler::createPlainGCObject(
 }
 
 void MacroAssembler::createArrayWithFixedElements(
-    Register result, Register shape, Register temp, uint32_t arrayLength,
-    uint32_t arrayCapacity, gc::AllocKind allocKind, gc::Heap initialHeap,
+    Register result, Register shape, Register temp, Register dynamicSlotsTemp,
+    uint32_t arrayLength, uint32_t arrayCapacity, uint32_t numUsedDynamicSlots,
+    uint32_t numDynamicSlots, gc::AllocKind allocKind, gc::Heap initialHeap,
     Label* fail, const AllocSiteInput& allocSite) {
   MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
   MOZ_ASSERT(shape != temp, "shape can overlap with temp2, but not temp");
   MOZ_ASSERT(result != temp);
 
   // This only supports allocating arrays with fixed elements and does not
-  // support any dynamic slots or elements.
+  // support any dynamic elements.
   MOZ_ASSERT(arrayCapacity >= arrayLength);
   MOZ_ASSERT(gc::GetGCKindSlots(allocKind) >=
              arrayCapacity + ObjectElements::VALUES_PER_HEADER);
 
+  MOZ_ASSERT(numUsedDynamicSlots <= numDynamicSlots);
+
   // Allocate object.
-  allocateObject(result, temp, allocKind, 0, initialHeap, fail, allocSite);
+  allocateObject(result, temp, allocKind, numDynamicSlots, initialHeap, fail,
+                 allocSite);
 
   // Initialize shape field.
   storePtr(shape, Address(result, JSObject::offsetOfShape()));
 
-  // There are no dynamic slots.
-  storePtr(ImmPtr(emptyObjectSlots),
-           Address(result, NativeObject::offsetOfSlots()));
+  // If the object has dynamic slots, allocateObject will initialize
+  // the slots field. If not, we must initialize it now.
+  if (numDynamicSlots == 0) {
+    storePtr(ImmPtr(emptyObjectSlots),
+             Address(result, NativeObject::offsetOfSlots()));
+  }
 
   // Initialize elements pointer for fixed (inline) elements.
   computeEffectiveAddress(
@@ -531,6 +538,15 @@ void MacroAssembler::createArrayWithFixedElements(
   store32(Imm32(arrayCapacity),
           Address(temp, ObjectElements::offsetOfCapacity()));
   store32(Imm32(arrayLength), Address(temp, ObjectElements::offsetOfLength()));
+
+  // Initialize dynamic slots.
+  if (numUsedDynamicSlots > 0) {
+    MOZ_ASSERT(dynamicSlotsTemp != temp);
+    MOZ_ASSERT(dynamicSlotsTemp != InvalidReg);
+    loadPtr(Address(result, NativeObject::offsetOfSlots()), dynamicSlotsTemp);
+    fillSlotsWithUndefined(Address(dynamicSlotsTemp, 0), temp, 0,
+                           numUsedDynamicSlots);
+  }
 }
 
 // Inline version of Nursery::allocateString.
