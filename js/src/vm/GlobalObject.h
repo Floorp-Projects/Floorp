@@ -462,9 +462,9 @@ class GlobalObject : public NativeObject {
    * complete the minimal initialization to make the returned object safe to
    * touch.
    */
-  static NativeObject* createBlankPrototype(
-      JSContext* cx, Handle<GlobalObject*> global, const JSClass* clasp,
-      ObjectFlags objFlags = ObjectFlags());
+  static NativeObject* createBlankPrototype(JSContext* cx,
+                                            Handle<GlobalObject*> global,
+                                            const JSClass* clasp);
 
   /*
    * Identical to createBlankPrototype, but uses proto as the [[Prototype]]
@@ -481,9 +481,8 @@ class GlobalObject : public NativeObject {
   }
 
   template <typename T>
-  static T* createBlankPrototype(JSContext* cx, Handle<GlobalObject*> global,
-                                 ObjectFlags objFlags = ObjectFlags()) {
-    NativeObject* res = createBlankPrototype(cx, global, &T::class_, objFlags);
+  static T* createBlankPrototype(JSContext* cx, Handle<GlobalObject*> global) {
+    NativeObject* res = createBlankPrototype(cx, global, &T::class_);
     return res ? &res->template as<T>() : nullptr;
   }
 

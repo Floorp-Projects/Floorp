@@ -1117,11 +1117,6 @@ static void TraceBaselineStubFrame(JSTracer* trc, const JSJitFrameIter& frame) {
     } else {
       MOZ_ASSERT(stub->toCacheIRStub()->makesGCCalls());
       stub->toCacheIRStub()->trace(trc);
-
-      for (int i = 0; i < stub->jitCode()->localTracingSlots(); ++i) {
-        TraceRoot(trc, layout->locallyTracedValuePtr(i),
-                  "baseline-local-tracing-slot");
-      }
     }
   }
 }
@@ -1143,11 +1138,6 @@ static void TraceIonICCallFrame(JSTracer* trc, const JSJitFrameIter& frame) {
   MOZ_ASSERT(frame.type() == FrameType::IonICCall);
   IonICCallFrameLayout* layout = (IonICCallFrameLayout*)frame.fp();
   TraceRoot(trc, layout->stubCode(), "ion-ic-call-code");
-
-  for (int i = 0; i < (*layout->stubCode())->localTracingSlots(); ++i) {
-    TraceRoot(trc, layout->locallyTracedValuePtr(i),
-              "ion-ic-local-tracing-slot");
-  }
 }
 
 #if defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32)

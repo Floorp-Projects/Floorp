@@ -26,14 +26,12 @@
 #include "jit/Simulator.h"
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit, js::ReportOverRecursed
 #include "js/Utility.h"
-#include "proxy/ScriptedProxyHandler.h"
 #include "util/Memory.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JitActivation.h"
 
 #include "jit/JitFrames-inl.h"
-#include "vm/JSAtomUtils-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/JSScript-inl.h"
 
@@ -370,15 +368,6 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     return true;
   }
 
-  [[nodiscard]] bool peekLastValue(Value* result) {
-    if (bufferUsed_ < sizeof(Value)) {
-      return false;
-    }
-
-    memcpy(result, header_->copyStackBottom, sizeof(Value));
-    return true;
-  }
-
   [[nodiscard]] bool maybeWritePadding(size_t alignment, size_t after,
                                        const char* info) {
     MOZ_ASSERT(framePushed_ % sizeof(Value) == 0);
@@ -421,10 +410,6 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     return reinterpret_cast<uint8_t*>(frame_) + (offset - bufferUsed_);
   }
 };
-
-void BaselineBailoutInfo::trace(JSTracer* trc) {
-  TraceRoot(trc, &tempId, "BaselineBailoutInfo::tempId");
-}
 
 BaselineStackBuilder::BaselineStackBuilder(JSContext* cx,
                                            const JSJitFrameIter& frameIter,
@@ -809,7 +794,6 @@ bool BaselineStackBuilder::fixUpCallerArgs(
 bool BaselineStackBuilder::buildExpressionStack() {
   JitSpew(JitSpew_BaselineBailouts, "      pushing %u expression stack slots",
           exprStackSlots());
-
   for (uint32_t i = 0; i < exprStackSlots(); i++) {
     Value v;
     // If we are in the middle of propagating an exception from Ion by
@@ -828,48 +812,6 @@ bool BaselineStackBuilder::buildExpressionStack() {
     if (!writeValue(v, "StackValue")) {
       return false;
     }
-  }
-
-  if (resumeMode() == ResumeMode::ResumeAfterCheckProxyGetResult) {
-    JitSpew(JitSpew_BaselineBailouts,
-            "      Checking that the proxy's get trap result matches "
-            "expectations.");
-    Value returnVal;
-    if (peekLastValue(&returnVal) && !returnVal.isMagic(JS_OPTIMIZED_OUT)) {
-      Value idVal = iter_.read();
-      Value targetVal = iter_.read();
-
-      MOZ_RELEASE_ASSERT(!idVal.isMagic());
-      MOZ_RELEASE_ASSERT(targetVal.isObject());
-      RootedObject target(cx_, &targetVal.toObject());
-      RootedValue rootedIdVal(cx_, idVal);
-      RootedId id(cx_);
-      if (!PrimitiveValueToId<CanGC>(cx_, rootedIdVal, &id)) {
-        return false;
-      }
-      RootedValue value(cx_, returnVal);
-
-      auto validation =
-          ScriptedProxyHandler::checkGetTrapResult(cx_, target, id, value);
-      if (validation != ScriptedProxyHandler::GetTrapValidationResult::OK) {
-        header_->tempId = id.get();
-
-        JitSpew(
-            JitSpew_BaselineBailouts,
-            "      Proxy get trap result mismatch! Overwriting bailout kind");
-        if (validation == ScriptedProxyHandler::GetTrapValidationResult::
-                              MustReportSameValue) {
-          bailoutKind_ = BailoutKind::ThrowProxyTrapMustReportSameValue;
-        } else if (validation == ScriptedProxyHandler::GetTrapValidationResult::
-                                     MustReportUndefined) {
-          bailoutKind_ = BailoutKind::ThrowProxyTrapMustReportUndefined;
-        } else {
-          return false;
-        }
-      }
-    }
-
-    return true;
   }
 
   if (resumeMode() == ResumeMode::ResumeAfterCheckIsObject) {
@@ -1807,13 +1749,13 @@ enum class BailoutAction {
 bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
   JitSpew(JitSpew_BaselineBailouts, "  Done restoring frames");
 
-  JSContext* cx = TlsContext.get();
-  // Use UniquePtr to free the bailoutInfo before we return, and root it for
-  // the tempId field.
-  Rooted<UniquePtr<BaselineBailoutInfo>> bailoutInfo(cx, bailoutInfoArg);
+  // Use UniquePtr to free the bailoutInfo before we return.
+  UniquePtr<BaselineBailoutInfo> bailoutInfo(bailoutInfoArg);
   bailoutInfoArg = nullptr;
 
   MOZ_DIAGNOSTIC_ASSERT(*bailoutInfo->bailoutKind != BailoutKind::Unreachable);
+
+  JSContext* cx = TlsContext.get();
 
   // jit::Bailout(), jit::InvalidationBailout(), and jit::HandleException()
   // should have reset the counter to zero.
@@ -2104,20 +2046,6 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::ThrowCheckIsObject:
       MOZ_ASSERT(!cx->isExceptionPending());
       return ThrowCheckIsObject(cx, CheckIsObjectKind::IteratorReturn);
-
-    case BailoutKind::ThrowProxyTrapMustReportSameValue:
-    case BailoutKind::ThrowProxyTrapMustReportUndefined: {
-      MOZ_ASSERT(!cx->isExceptionPending());
-      RootedId rootedId(cx, bailoutInfo->tempId);
-      ScriptedProxyHandler::reportGetTrapValidationError(
-          cx, rootedId,
-          bailoutKind == BailoutKind::ThrowProxyTrapMustReportSameValue
-              ? ScriptedProxyHandler::GetTrapValidationResult::
-                    MustReportSameValue
-              : ScriptedProxyHandler::GetTrapValidationResult::
-                    MustReportUndefined);
-      return false;
-    }
 
     case BailoutKind::IonExceptionDebugMode:
       // Return false to resume in HandleException with reconstructed
