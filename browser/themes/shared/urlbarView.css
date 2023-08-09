@@ -179,7 +179,7 @@
 /* Wrap the url to a second line when the window is narrow. Do not wrap when the
    window is also short, because fewer results will be shown. */
 @media screen and (min-height: 600px) {
-  .urlbarView-results[wrap] > .urlbarView-row:where(:not([rich-suggestion=with-icon])) > .urlbarView-row-inner {
+  .urlbarView-results[wrap] > .urlbarView-row:where(:not([rich-suggestion])) > .urlbarView-row-inner {
     flex-wrap: wrap;
   }
   .urlbarView-results[wrap] > .urlbarView-row > .urlbarView-row-inner > .urlbarView-no-wrap {
@@ -690,11 +690,6 @@
 .urlbarView-row[rich-suggestion] > .urlbarView-row-inner {
   align-items: center;
   justify-content: start;
-}
-
-.urlbarView-row[rich-suggestion] > .urlbarView-row-inner,
-.urlbarView-results[wrap] > .urlbarView-row[rich-suggestion] > .urlbarView-row-inner {
-  flex-wrap: nowrap;
 }
 
 .urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-favicon {
