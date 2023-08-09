@@ -41,6 +41,12 @@ add_setup(async function () {
   });
 });
 
+async function clickToggle(toggle) {
+  let changed = BrowserTestUtils.waitForEvent(toggle, "toggle");
+  await EventUtils.synthesizeMouseAtCenter(toggle.buttonEl, {});
+  await changed;
+}
+
 add_task(async function testToggleSwitch() {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -117,15 +123,15 @@ add_task(async function testToggleSwitch() {
   await viewShown;
 
   ok(
-    gProtectionsHandler._protectionsPopupTPSwitch.hasAttribute("enabled"),
-    "TP Switch should be enabled"
+    gProtectionsHandler._protectionsPopupTPSwitch.hasAttribute("pressed"),
+    "TP Switch should be on"
   );
   let popuphiddenPromise = BrowserTestUtils.waitForEvent(
     gProtectionsHandler._protectionsPopup,
     "popuphidden"
   );
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  gProtectionsHandler._protectionsPopupTPSwitch.click();
+  await clickToggle(gProtectionsHandler._protectionsPopupTPSwitch);
 
   // The 'Site not working?' link should be hidden after clicking the TP switch.
   ok(
@@ -165,8 +171,8 @@ add_task(async function testToggleSwitch() {
 
   await openProtectionsPanel();
   ok(
-    !gProtectionsHandler._protectionsPopupTPSwitch.hasAttribute("enabled"),
-    "TP Switch should be disabled"
+    !gProtectionsHandler._protectionsPopupTPSwitch.hasAttribute("pressed"),
+    "TP Switch should be off"
   );
 
   // The 'Site not working?' link should be hidden if the TP is off.
@@ -199,7 +205,7 @@ add_task(async function testToggleSwitch() {
   // Click the TP switch again and check the visibility of the 'Site not
   // Working?'. It should be hidden after toggling the TP switch.
   browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  gProtectionsHandler._protectionsPopupTPSwitch.click();
+  await clickToggle(gProtectionsHandler._protectionsPopupTPSwitch);
 
   ok(
     BrowserTestUtils.is_hidden(
@@ -398,7 +404,7 @@ add_task(async function testToggleSwitchFlow() {
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   // Click the TP switch, from On -> Off.
-  gProtectionsHandler._protectionsPopupTPSwitch.click();
+  await clickToggle(gProtectionsHandler._protectionsPopupTPSwitch);
 
   // Check that the icon state has been changed.
   ok(
@@ -444,7 +450,7 @@ add_task(async function testToggleSwitchFlow() {
     "popupshown"
   );
   browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  gProtectionsHandler._protectionsPopupTPSwitch.click();
+  await clickToggle(gProtectionsHandler._protectionsPopupTPSwitch);
 
   // Check that the icon state has been changed.
   ok(
@@ -686,7 +692,7 @@ add_task(async function testQuickSwitchTabAfterTogglingTPSwitch() {
   );
 
   // Toggle the TP state and switch tab without waiting it to be finished.
-  gProtectionsHandler._protectionsPopupTPSwitch.click();
+  await clickToggle(gProtectionsHandler._protectionsPopupTPSwitch);
   gBrowser.selectedTab = tabOne;
 
   // Wait for the second tab to be reloaded.

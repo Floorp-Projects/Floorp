@@ -550,11 +550,6 @@
   background-color: var(--button-active-bgcolor)
 }
 
-#protections-popup[hasException] .protections-popup-tp-switch-on-header,
-#protections-popup:not([hasException]) .protections-popup-tp-switch-off-header {
-  display: none;
-}
-
 #protections-popup-cookie-banner-section[hasException] .protections-popup-cookie-banner-switch-on-header,
 #protections-popup-cookie-banner-section:not([hasException]) .protections-popup-cookie-banner-switch-off-header {
   display: none;
@@ -570,67 +565,8 @@
   display: revert;
 }
 
-.protections-popup-tp-switch-label-box,
-.protections-popup-tp-switch-box {
-  justify-content: center;
-}
-
-.protections-popup-switch-section-header {
-  min-height: 40px;
-}
-
 .protections-popup-switch-header {
   font-weight: 600;
-}
-
-.protections-popup-tp-switch {
-  appearance: none;
-  box-sizing: border-box;
-  min-width: 30px;
-  border-radius: 10px;
-  background-color: var(--button-bgcolor);
-  border: 1px solid hsla(210,4%,10%,.14);
-  margin-block: 4px;
-  margin-inline-start: 1px;
-  padding: 2px;
-  padding-inline-end: 0;
-  transition: padding .2s ease;
-}
-
-.protections-popup-tp-switch::before {
-  position: relative;
-  display: block;
-  content: "";
-  width: 10px;
-  height: 10px;
-  border-radius: 10px;
-  background: white;
-  outline: 1px solid var(--panel-separator-color);
-}
-
-.protections-popup-tp-switch[enabled] {
-  background-color: var(--button-primary-bgcolor);
-  border-color: var(--button-primary-hover-bgcolor);
-  /* Push the toggle to the right. */
-  padding-inline-start: 16px;
-}
-
-.protections-popup-tp-switch[enabled]:hover {
-  background-color: var(--button-primary-hover-bgcolor);
-  border-color: var(--button-primary-active-bgcolor);
-}
-
-.protections-popup-tp-switch[enabled]:hover:active {
-  background-color: var(--button-primary-active-bgcolor);
-  border-color: var(--button-primary-active-bgcolor);
-}
-
-.protections-popup-tp-switch:not([enabled]):hover {
-  background-color: var(--button-hover-bgcolor);
-}
-
-.protections-popup-tp-switch:not([enabled]):hover:active {
-  background-color: var(--button-active-bgcolor);
 }
 
 #protections-popup-siteNotWorkingView-body-issue-list {
@@ -759,11 +695,6 @@
   .permission-popup-permission-remove-button > .button-box {
     appearance: none;
   }
-}
-
-.protections-popup-tp-switch:focus-visible {
-  outline: var(--focus-outline);
-  outline-offset: var(--focus-outline-offset);
 }
 
 #blocked-popup-indicator-item,

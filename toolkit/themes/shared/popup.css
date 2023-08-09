@@ -20,6 +20,9 @@ panel {
   --panel-shadow-margin: 0px;
   --panel-shadow: 0 0 var(--panel-shadow-margin) hsla(0,0%,0%,.2);
 
+  /* Panel design token theming */
+  --color-canvas: var(--panel-background);
+
   @media (-moz-platform: linux) {
     --panel-border-radius: 8px;
     --panel-padding-block: max(0px, var(--panel-border-radius) / 2 - 1px);
