@@ -507,6 +507,11 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
 
   already_AddRefed<nsXMLHttpRequestXPCOMifier> EnsureXPCOMifier();
 
+  void SuspendOtherChannels(
+      nsTObserverArray<nsCOMPtr<nsIChannel>>& aOutSuspendedChannels);
+  void ResumeOtherChannels(
+      nsTObserverArray<nsCOMPtr<nsIChannel>>& aSuspendedChannels);
+
   void SuspendEventDispatching();
   void ResumeEventDispatching();
 

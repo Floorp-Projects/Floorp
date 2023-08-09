@@ -12756,6 +12756,13 @@
   value: true
   mirror: always
 
+# When a synchronous XMLHttpRequest is made, suspend other requests in
+# the same document-group, as is done on other browsers (see bz697151)
+- name: network.sync_xmlhttprequest_suspends_other_requests
+  type: bool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
