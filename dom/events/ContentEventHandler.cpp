@@ -31,6 +31,7 @@
 #include "nsFocusManager.h"
 #include "nsFontMetrics.h"
 #include "nsFrameSelection.h"
+#include "nsHTMLTags.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
@@ -706,34 +707,56 @@ bool ContentEventHandler::ShouldBreakLineBefore(const nsIContent& aContent,
     return false;
   }
 
-  // If the element is <br>, we need to check if the <br> is caused by web
-  // content.  Otherwise, i.e., it's caused by internal reason of Gecko,
-  // it shouldn't be exposed as a line break to flatten text.
-  if (aContent.IsHTMLElement(nsGkAtoms::br)) {
-    return IsContentBR(aContent);
+  switch (
+      nsHTMLTags::CaseSensitiveAtomTagToId(aContent.NodeInfo()->NameAtom())) {
+    case eHTMLTag_br:
+      // If the element is <br>, we need to check if the <br> is caused by web
+      // content.  Otherwise, i.e., it's caused by internal reason of Gecko,
+      // it shouldn't be exposed as a line break to flatten text.
+      return IsContentBR(aContent);
+    case eHTMLTag_a:
+    case eHTMLTag_abbr:
+    case eHTMLTag_acronym:
+    case eHTMLTag_b:
+    case eHTMLTag_bdi:
+    case eHTMLTag_bdo:
+    case eHTMLTag_big:
+    case eHTMLTag_cite:
+    case eHTMLTag_code:
+    case eHTMLTag_data:
+    case eHTMLTag_del:
+    case eHTMLTag_dfn:
+    case eHTMLTag_em:
+    case eHTMLTag_font:
+    case eHTMLTag_i:
+    case eHTMLTag_ins:
+    case eHTMLTag_kbd:
+    case eHTMLTag_mark:
+    case eHTMLTag_s:
+    case eHTMLTag_samp:
+    case eHTMLTag_small:
+    case eHTMLTag_span:
+    case eHTMLTag_strike:
+    case eHTMLTag_strong:
+    case eHTMLTag_sub:
+    case eHTMLTag_sup:
+    case eHTMLTag_time:
+    case eHTMLTag_tt:
+    case eHTMLTag_u:
+    case eHTMLTag_var:
+      // Note that ideally, we should refer the style of the primary frame of
+      // aContent for deciding if it's an inline.  However, it's difficult
+      // IMEContentObserver to notify IME of text change caused by style change.
+      // Therefore, currently, we should check only from the tag for now.
+      return false;
+    case eHTMLTag_userdefined:
+    case eHTMLTag_unknown:
+      // If the element is unknown element, we shouldn't insert line breaks
+      // before it since unknown elements should be ignored.
+      return false;
+    default:
+      return true;
   }
-
-  // Note that ideally, we should refer the style of the primary frame of
-  // aContent for deciding if it's an inline.  However, it's difficult
-  // IMEContentObserver to notify IME of text change caused by style change.
-  // Therefore, currently, we should check only from the tag for now.
-  if (aContent.IsAnyOfHTMLElements(
-          nsGkAtoms::a, nsGkAtoms::abbr, nsGkAtoms::acronym, nsGkAtoms::b,
-          nsGkAtoms::bdi, nsGkAtoms::bdo, nsGkAtoms::big, nsGkAtoms::cite,
-          nsGkAtoms::code, nsGkAtoms::data, nsGkAtoms::del, nsGkAtoms::dfn,
-          nsGkAtoms::em, nsGkAtoms::font, nsGkAtoms::i, nsGkAtoms::ins,
-          nsGkAtoms::kbd, nsGkAtoms::mark, nsGkAtoms::s, nsGkAtoms::samp,
-          nsGkAtoms::small, nsGkAtoms::span, nsGkAtoms::strike,
-          nsGkAtoms::strong, nsGkAtoms::sub, nsGkAtoms::sup, nsGkAtoms::time,
-          nsGkAtoms::tt, nsGkAtoms::u, nsGkAtoms::var)) {
-    return false;
-  }
-
-  // If the element is unknown element, we shouldn't insert line breaks before
-  // it since unknown elements should be ignored.
-  RefPtr<HTMLUnknownElement> unknownHTMLElement =
-      do_QueryObject(const_cast<nsIContent*>(&aContent));
-  return !unknownHTMLElement;
 }
 
 nsresult ContentEventHandler::GenerateFlatTextContent(
