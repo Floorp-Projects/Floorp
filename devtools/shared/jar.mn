@@ -6,8 +6,6 @@ devtools.jar:
 %   content devtools %content/
     content/shared/webextension-fallback.html (webextension-fallback.html)
 %   resource devtools %modules/devtools/
-%   resource devtools-client-jsonview resource://devtools/client/jsonview/ contentaccessible=yes
-%   resource devtools-client-shared resource://devtools/client/shared/ contentaccessible=yes
 %   resource devtools-highlighter-styles resource://devtools/server/actors/highlighters/css/ contentaccessible=yes
 %   resource devtools-shared-images resource://devtools/shared/images/ contentaccessible=true
 %   content devtools-jsonview-styles %modules/devtools/client/jsonview/css/ contentaccessible=yes
