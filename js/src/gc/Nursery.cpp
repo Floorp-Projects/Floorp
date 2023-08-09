@@ -1118,7 +1118,8 @@ inline bool js::Nursery::isUnderused() const {
   // have idle time. This allows the nursery to shrink when it's not being
   // used. There are other heuristics we could use for this, but this is the
   // simplest.
-  TimeDuration timeSinceLastCollection = TimeStamp::Now() - previousGC.endTime;
+  TimeDuration timeSinceLastCollection =
+      TimeStamp::NowLoRes() - previousGC.endTime;
   return timeSinceLastCollection > tunables().nurseryTimeoutForIdleCollection();
 }
 
