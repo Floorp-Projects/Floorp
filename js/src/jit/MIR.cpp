@@ -3416,6 +3416,17 @@ AliasSet MGuardArgumentsObjectFlags::getAliasSet() const {
   return AliasSet::Load(AliasSet::FixedSlot);
 }
 
+MDefinition* MIdToStringOrSymbol::foldsTo(TempAllocator& alloc) {
+  if (idVal()->isBox()) {
+    MIRType idType = idVal()->toBox()->input()->type();
+    if (idType == MIRType::String || idType == MIRType::Symbol) {
+      return idVal();
+    }
+  }
+
+  return this;
+}
+
 MDefinition* MReturnFromCtor::foldsTo(TempAllocator& alloc) {
   MDefinition* rval = value();
   if (rval->isBox()) {

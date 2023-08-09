@@ -1145,7 +1145,8 @@ static void TraceIonICCallFrame(JSTracer* trc, const JSJitFrameIter& frame) {
   TraceRoot(trc, layout->stubCode(), "ion-ic-call-code");
 
   for (int i = 0; i < (*layout->stubCode())->localTracingSlots(); ++i) {
-    TraceRoot(trc, layout->locallyTracedValuePtr(i), "TODO");
+    TraceRoot(trc, layout->locallyTracedValuePtr(i),
+              "ion-ic-local-tracing-slot");
   }
 }
 

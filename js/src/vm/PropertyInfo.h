@@ -32,11 +32,9 @@ enum class PropertyFlag : uint8_t {
   Enumerable = 1 << 1,
   Writable = 1 << 2,
 
-  // Whether this property is an accessor property and has a getter
-  HasGetter = 1 << 3,
-
-  // Whether this property is an accessor property and has a setter
-  HasSetter = 1 << 4,
+  // Whether this is an accessor property. Accessor properties have a slot that
+  // stores a GetterSetter instance.
+  AccessorProperty = 1 << 3,
 
   // If set, this is a custom data property. The property is exposed as a data
   // property to JS code and PropertyDescriptor, but instead of an object slot
@@ -46,7 +44,7 @@ enum class PropertyFlag : uint8_t {
   // properties.
   //
   // This flag is deprecated (we don't want to add more uses).
-  CustomDataProperty = 1 << 5,
+  CustomDataProperty = 1 << 4,
 };
 
 class PropertyFlags : public EnumFlags<PropertyFlag> {
@@ -70,9 +68,9 @@ class PropertyFlags : public EnumFlags<PropertyFlag> {
   bool isDataProperty() const {
     return !isAccessorProperty() && !isCustomDataProperty();
   }
-  bool isAccessorProperty() const { return hasGetter() || hasSetter(); }
-  bool hasGetter() const { return hasFlag(PropertyFlag::HasGetter); }
-  bool hasSetter() const { return hasFlag(PropertyFlag::HasSetter); }
+  bool isAccessorProperty() const {
+    return hasFlag(PropertyFlag::AccessorProperty);
+  }
   bool isCustomDataProperty() const {
     return hasFlag(PropertyFlag::CustomDataProperty);
   }
