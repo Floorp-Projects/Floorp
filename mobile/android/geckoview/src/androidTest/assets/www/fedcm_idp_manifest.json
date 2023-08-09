@@ -1,6 +1,6 @@
 {
   "accounts_endpoint": "fedcm_accounts_endpoint.json",
-  "client_metadata_endpoint": "fedcm_accounts_endpoint.json",
+  "client_metadata_endpoint": "fedcm_idp_metadata.json",
   "id_assertion_endpoint": "fedcm_idtokens_endpoint.json",
   "id_token_endpoint": "fedcm_idtokens_endpoint.json",
   "revocation_endpoint": "revocation_endpoint",
@@ -9,7 +9,7 @@
     "color": "0xffffff",
     "icons": [
       {
-        "url": "url",
+        "url": "http://localhost:4245/assets/www/images/test.gif",
         "size": 256
       }
     ],
