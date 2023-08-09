@@ -45,6 +45,10 @@ button {
   font-weight: 600;
 }
 
+#content {
+  align-self: stretch;
+}
+
 #footer {
   display: flex;
   align-items: center;
