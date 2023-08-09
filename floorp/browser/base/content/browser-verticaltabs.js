@@ -62,6 +62,8 @@ function setVerticalTabs() {
     Tag.textContent = `@import url("chrome://browser/content/browser-verticaltabs.css");`;
     document.head.appendChild(Tag);
 
+    Services.prefs.setIntPref("floorp.browser.tabbar.settings", 2);
+
     if(document.getElementById("floorp-vthover") == null && Services.prefs.getBoolPref("floorp.verticaltab.hover.enabled")){
      Tag = document.createElement("style");
      Tag.innerText = `@import url(chrome://browser/skin/options/native-verticaltab-hover.css)`;
@@ -74,6 +76,7 @@ function setVerticalTabs() {
 
   } else {
     Services.prefs.setBoolPref("floorp.browser.tabs.verticaltab", false);
+    Services.prefs.setIntPref("floorp.browser.tabbar.settings", 0);
     document.querySelector("#verticalTabsStyle")?.remove()
     let verticalTabs = document.querySelector("#toolbar-items-verticaltabs")
     if(verticalTabs != null){

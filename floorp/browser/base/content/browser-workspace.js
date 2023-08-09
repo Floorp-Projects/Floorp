@@ -220,10 +220,10 @@ const workspaceFunctions = {
         for (let i = 0; i < tabs.length; i++) {
           let tab = tabs[i];
           let tabURL = tab.linkedBrowser.currentURI.spec;
-          let state = tabsStates[i][i].workspace;
           let stateURL= arryURLs[i];
 
-          if (tabURL == stateURL) {
+          if (tabURL == stateURL && tabsStates[i][i].workspace != undefined && tabsStates[i][i].workspace != null && tabsStates[i][i].workspace != "") {
+            let state = tabsStates[i][i].workspace;
             tab.setAttribute("floorp-workspace", state);
           } else if (arryURLs.includes(tabURL)) {
             let index = arryURLs.indexOf(tabURL);
@@ -235,7 +235,7 @@ const workspaceFunctions = {
               "floorp-workspace",
               Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
             );
-            console.info(`Tab ${i} has been set to workspace ${Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)} because of missing URL.`);
+            console.info(`Tab ${i} has been set to workspace ${Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)} because of missing URL(${stateURL}).`);
           }
         }
       }

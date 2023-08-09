@@ -50,6 +50,9 @@ const tabbarDisplayStyleFunctions = {
           #toolbar-menubar > .titlebar-buttonbox-container {
             display: none !important;
           }
+          #titlebar {
+            appearance: none !important;
+          }
         `;
         document.querySelector("head").appendChild(tabbarContents.modifyCSS);
         tabbarDisplayStyleFunctions.setWorkspaceLabelToNavbar();
