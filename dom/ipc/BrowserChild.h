@@ -190,7 +190,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   // Let managees query if it is safe to send messages.
   bool IsDestroyed() const { return mDestroyed; }
 
-  const TabId GetTabId() const {
+  TabId GetTabId() const {
     MOZ_ASSERT(mUniqueId != 0);
     return mUniqueId;
   }
