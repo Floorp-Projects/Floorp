@@ -114,10 +114,10 @@ const workspaceFunctions = {
       handleTabObeserver() {
         workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
       },
-      
+
       handleTabSelect() {
         workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
-        workspaceFunctions.tabFunctions.addLastShowedWorkspaceTab();        
+        workspaceFunctions.tabFunctions.addLastShowedWorkspaceTab();
       },
 
       handleTabMove() {
@@ -213,22 +213,34 @@ const workspaceFunctions = {
         );
 
         let arryURLs = [];
-        for(let i = 0; i < tabsStates.length; i++) {
+        for (let i = 0; i < tabsStates.length; i++) {
           arryURLs.push(tabsStates[i][i].url);
         }
 
         for (let i = 0; i < tabs.length; i++) {
           let tab = tabs[i];
           let tabURL = tab.linkedBrowser.currentURI.spec;
-          let stateURL= arryURLs[i];
+          let stateURL = arryURLs[i];
 
-          if (tabURL == stateURL && tabsStates[i][i].workspace != undefined && tabsStates[i][i].workspace != null && tabsStates[i][i].workspace != "") {
+          if (
+            tabURL == stateURL &&
+            tabsStates[i][i].workspace != undefined &&
+            tabsStates[i][i].workspace != null &&
+            tabsStates[i][i].workspace != ""
+          ) {
             let state = tabsStates[i][i].workspace;
             tab.setAttribute("floorp-workspace", state);
-          } else if (arryURLs.includes(tabURL) && tabURL != undefined && tabURL != null && tabURL != "") {
+          } else if (
+            arryURLs.includes(tabURL) &&
+            tabURL != undefined &&
+            tabURL != null &&
+            tabURL != ""
+          ) {
             let index = arryURLs.indexOf(tabURL);
             let value = tabsStates[index][index].workspace;
-            console.info(`Tab ${i} has been set to workspace ${value} because of matching URL(${tabURL}).`);
+            console.info(
+              `Tab ${i} has been set to workspace ${value} because of matching URL(${tabURL}).`
+            );
             tab.setAttribute("floorp-workspace", value);
             arryURLs.splice(index, 1);
           } else {
@@ -236,7 +248,11 @@ const workspaceFunctions = {
               "floorp-workspace",
               Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
             );
-            console.info(`Tab ${i} has been set to workspace ${Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)} because of missing URL(${stateURL}).`);
+            console.info(
+              `Tab ${i} has been set to workspace ${Services.prefs.getStringPref(
+                WORKSPACE_CURRENT_PREF
+              )} because of missing URL(${stateURL}).`
+            );
           }
         }
       }
@@ -619,7 +635,7 @@ const workspaceFunctions = {
         let tabState = {
           [i]: {
             workspace: tab.getAttribute("floorp-workspace"),
-            url: tab.linkedBrowser.currentURI.spec
+            url: tab.linkedBrowser.currentURI.spec,
           },
         };
         tabStateObject.push(tabState);
@@ -920,7 +936,10 @@ const workspaceFunctions = {
 
       let willMoveWorkspace = workspace;
       for (let i = 0; i < gBrowser.selectedTabs.length; i++) {
-        gBrowser.selectedTabs[i].setAttribute("floorp-workspace", willMoveWorkspace);
+        gBrowser.selectedTabs[i].setAttribute(
+          "floorp-workspace",
+          willMoveWorkspace
+        );
       }
 
       workspaceFunctions.manageWorkspaceFunctions.saveWorkspaceState();
@@ -1603,16 +1622,18 @@ async function checkTabGroupAddonInstalledAndStartWorkspace() {
 }
 
 // If you want to enable workspaces by default, Remove these lines. "checkTabGroupAddonInstalledAndStartWorkspace();" is enough.
-const tempDisabled = "floorp.browser.workspaces.disabledBySystem"
-async function disableWorkspacesByDefaultCheck(){
-  const allWorkspaces = Services.prefs.getStringPref(WORKSPACE_ALL_PREF).split(",");
-  if(allWorkspaces.length > 1){
+const tempDisabled = "floorp.browser.workspaces.disabledBySystem";
+async function disableWorkspacesByDefaultCheck() {
+  const allWorkspaces = Services.prefs
+    .getStringPref(WORKSPACE_ALL_PREF)
+    .split(",");
+  if (allWorkspaces.length > 1) {
     Services.prefs.setBoolPref(tempDisabled, false);
     await checkTabGroupAddonInstalledAndStartWorkspace();
-  } else if(tempDisabled && !Services.prefs.prefHasUserValue(tempDisabled)){
+  } else if (tempDisabled && !Services.prefs.prefHasUserValue(tempDisabled)) {
     Services.prefs.setBoolPref(WORKSPACE_TAB_ENABLED_PREF, false);
 
-    Services.prefs.addObserver(WORKSPACE_TAB_ENABLED_PREF, function(){
+    Services.prefs.addObserver(WORKSPACE_TAB_ENABLED_PREF, function () {
       Services.prefs.setBoolPref(tempDisabled, false);
       Services.prefs.removeObserver(WORKSPACE_TAB_ENABLED_PREF);
     });
