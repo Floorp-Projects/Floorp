@@ -269,6 +269,41 @@ class StyleRuleActor extends Actor {
     return sheet.associatedDocument;
   }
 
+  /**
+   * When a rule is nested in another non-at-rule (aka CSS Nesting), the client
+   * will need its desugared selector, i.e. the full selector, which includes ancestor
+   * selectors, that is computed by the platform when applying the rule.
+   * To compute it, the parent selector (&) is recursively replaced by the parent
+   * rule selector wrapped in `:is()`.
+   * For example, with the following nested rule: `body { & > main {} }`,
+   * the desugared selector will be `:is(body) > main`.
+   * See https://www.w3.org/TR/css-nesting-1/#nest-selector for more information.
+   *
+   * Returns an array of the desugared selectors. For example, if rule is:
+   *
+   * body {
+   *   & > main, & section {
+   *   }
+   * }
+   *
+   * this will return:
+   *
+   * [
+   *   `:is(body) > main`,
+   *   `:is(body) section`,
+   * ]
+   *
+   * @returns Array<String>
+   */
+  getDesugaredSelectors() {
+    // Cache the desugared selectors as it can be expensive to compute
+    if (!this._desugaredSelectors) {
+      this._desugaredSelectors = CssLogic.getSelectors(this.rawRule, true);
+    }
+
+    return this._desugaredSelectors;
+  }
+
   toString() {
     return "[StyleRuleActor for " + this.rawRule + "]";
   }
@@ -309,15 +344,7 @@ class StyleRuleActor extends Actor {
       case CSSRule.STYLE_RULE:
         form.selectors = CssLogic.getSelectors(this.rawRule);
         if (computeDesugaredSelector) {
-          // When a rule is nested in another non-at-rule (aka CSS Nesting), the client
-          // will need its desugared selector, i.e. the full selector, which includes ancestor
-          // selectors, that is computed by the platform when applying the rule.
-          // To compute it, the parent selector (&) is recursively replaced by the parent
-          // rule selector wrapped in `:is()`.
-          // For example, with the following nested rule: `body { & > main {} }`,
-          // the desugared selector will be `:is(body) > main`.
-          // See https://www.w3.org/TR/css-nesting-1/#nest-selector for more information.
-          form.desugaredSelectors = CssLogic.getSelectors(this.rawRule, true);
+          form.desugaredSelectors = this.getDesugaredSelectors();
         }
         form.cssText = this.rawStyle.cssText || "";
         break;
@@ -1094,6 +1121,9 @@ class StyleRuleActor extends Actor {
     if (this.type === ELEMENT_STYLE || this.rawRule.selectorText === value) {
       return { ruleProps: null, isMatching: true };
     }
+
+    // Nullify cached desugared selectors as it might be outdated
+    this._desugaredSelectors = null;
 
     // The rule's previous selector is lost after calling _addNewSelector(). Save it now.
     const oldValue = this.rawRule.selectorText;

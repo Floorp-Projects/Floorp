@@ -844,7 +844,7 @@ class PageStyleActor extends Actor {
         }
 
         const domRule = entry.rule.rawRule;
-        const desugaredSelectors = CssLogic.getSelectors(domRule, true);
+        const desugaredSelectors = entry.rule.getDesugaredSelectors();
         const element = entry.inherited
           ? entry.inherited.rawNode
           : node.rawNode;
