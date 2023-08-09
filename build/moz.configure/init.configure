@@ -776,6 +776,11 @@ set_config("HAVE_64BIT_BUILD", have_64_bit)
 set_define("HAVE_64BIT_BUILD", have_64_bit)
 add_old_configure_assignment("HAVE_64BIT_BUILD", have_64_bit)
 
+# Some third-party code bases depend on this being set for big-endians.
+set_define(
+    "WORDS_BIGENDIAN", True, when=depends(target.endianness)(lambda e: e == "big")
+)
+
 
 # Autoconf needs these set
 
