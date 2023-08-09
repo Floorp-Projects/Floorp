@@ -84,6 +84,7 @@ buildscript {
     // intermediate variable which can pull from FenixDependenciesPlugin.kt and be used later.
     ext {
         detekt_plugin = Versions.detekt
+        ksp_plugin = Versions.ksp_plugin
         protobuf_plugin = FenixVersions.protobuf_plugin
         python_envs_plugin = Versions.python_envs_plugin
     }
@@ -91,6 +92,7 @@ buildscript {
 
 plugins {
     id("io.gitlab.arturbosch.detekt").version("$detekt_plugin")
+    id("com.google.devtools.ksp").version("$ksp_plugin")
 }
 
 allprojects {

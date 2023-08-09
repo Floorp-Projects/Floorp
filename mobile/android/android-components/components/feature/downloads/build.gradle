@@ -6,7 +6,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
 
-apply plugin: 'kotlin-kapt'
+apply plugin: 'com.google.devtools.ksp'
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -16,10 +16,8 @@ android {
         targetSdkVersion config.targetSdkVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        kapt {
-            arguments {
-                arg("room.schemaLocation", "$projectDir/schemas".toString())
-            }
+        ksp {
+            arg("room.schemaLocation", "$projectDir/schemas".toString())
         }
     }
 
@@ -66,7 +64,7 @@ dependencies {
     implementation ComponentsDependencies.kotlin_coroutines
 
     implementation ComponentsDependencies.androidx_room_runtime
-    kapt ComponentsDependencies.androidx_room_compiler
+    ksp ComponentsDependencies.androidx_room_compiler
 
     testImplementation ComponentsDependencies.androidx_test_core
     testImplementation ComponentsDependencies.androidx_test_junit

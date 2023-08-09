@@ -50,6 +50,7 @@ object Versions {
 
     const val material = "1.9.0"
     const val ksp = "1.0.11"
+    val ksp_plugin = "$kotlin-$ksp"
 
     // see https://android-developers.googleblog.com/2022/06/independent-versioning-of-Jetpack-Compose-libraries.html
     // for Jetpack Compose libraries versioning
@@ -166,7 +167,6 @@ object ComponentsDependencies {
 
     const val google_material = "com.google.android.material:material:${Versions.material}"
 
-    const val plugin_ksp = "com.google.devtools.ksp:symbol-processing-gradle-plugin:${Versions.kotlin}-${Versions.ksp}"
     const val plugin_serialization = "org.jetbrains.kotlin.plugin.serialization:org.jetbrains.kotlin.plugin.serialization.gradle.plugin:${Versions.kotlin}"
 
     const val leakcanary = "com.squareup.leakcanary:leakcanary-android:${Versions.leakcanary}"

@@ -6,7 +6,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
 
-apply plugin: 'kotlin-kapt'
+apply plugin: 'com.google.devtools.ksp'
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -15,10 +15,8 @@ android {
         minSdkVersion config.minSdkVersion
         targetSdkVersion config.targetSdkVersion
 
-        kapt {
-            arguments {
-                arg("room.schemaLocation", "$projectDir/schemas".toString())
-            }
+        ksp {
+            arg("room.schemaLocation", "$projectDir/schemas".toString())
         }
 
         javaCompileOptions {
@@ -63,7 +61,7 @@ dependencies {
     implementation ComponentsDependencies.androidx_work_runtime
 
     implementation ComponentsDependencies.androidx_room_runtime
-    kapt ComponentsDependencies.androidx_room_compiler
+    ksp ComponentsDependencies.androidx_room_compiler
 
     implementation project(':ui-colors')
     implementation project(':ui-icons')
