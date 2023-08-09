@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <type_traits>
 
+#include "mozilla/dom/RequestBinding.h"
 #include "nsIChannel.h"
 #include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
@@ -653,7 +654,7 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
   // policy is the empty string, and fetch priority is "auto".
   RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
       CORSMode::CORS_NONE, referrerPolicy, /* aNonce = */ u""_ns,
-      ParserMetadata::NotParserInserted, nullptr);
+      RequestPriority::Auto, ParserMetadata::NotParserInserted, nullptr);
 
   RefPtr<ScriptLoadRequest> request = nullptr;
   // Bug 1817259 - For now the debugger scripts are always loaded a Classic.

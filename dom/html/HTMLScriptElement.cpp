@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsAttrValue.h"
+#include "nsAttrValueOrString.h"
+#include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "mozilla/dom/Document.h"
@@ -22,6 +24,7 @@
 #include "mozilla/dom/FetchPriority.h"
 #include "mozilla/dom/HTMLScriptElement.h"
 #include "mozilla/dom/HTMLScriptElementBinding.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/StaticPrefs_dom.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Script)
@@ -89,9 +92,7 @@ bool HTMLScriptElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
 
     if (aAttribute == nsGkAtoms::fetchpriority) {
-      aResult.ParseEnumValue(aValue, kFetchPriorityEnumTable,
-                             false /* aCaseSensitive */,
-                             kFetchPriorityEnumTableInvalidValueDefault);
+      HTMLScriptElement::ParseFetchPriority(aValue, aResult);
       return true;
     }
   }
@@ -224,6 +225,17 @@ CORSMode HTMLScriptElement::GetCORSMode() const {
   return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
 }
 
+FetchPriority HTMLScriptElement::GetFetchPriority() const {
+  const nsAttrValue* fetchpriorityAttribute =
+      GetParsedAttr(nsGkAtoms::fetchpriority);
+  if (fetchpriorityAttribute) {
+    MOZ_ASSERT(fetchpriorityAttribute->Type() == nsAttrValue::eEnum);
+    return FetchPriority(fetchpriorityAttribute->GetEnumValue());
+  }
+
+  return FetchPriority::Auto;
+}
+
 mozilla::dom::ReferrerPolicy HTMLScriptElement::GetReferrerPolicy() {
   return GetReferrerPolicyAsEnum();
 }
@@ -239,6 +251,14 @@ void HTMLScriptElement::GetFetchPriority(nsAString& aFetchPriority) const {
               aFetchPriority);
 }
 
+/* static */
+FetchPriority HTMLScriptElement::ToFetchPriority(const nsAString& aValue) {
+  nsAttrValue attrValue;
+  HTMLScriptElement::ParseFetchPriority(aValue, attrValue);
+  MOZ_ASSERT(attrValue.Type() == nsAttrValue::eEnum);
+  return FetchPriority(attrValue.GetEnumValue());
+}
+
 // https://html.spec.whatwg.org/multipage/scripting.html#dom-script-supports
 /* static */
 bool HTMLScriptElement::Supports(const GlobalObject& aGlobal,
@@ -247,6 +267,14 @@ bool HTMLScriptElement::Supports(const GlobalObject& aGlobal,
   return aType.EqualsLiteral("classic") || aType.EqualsLiteral("module") ||
          (StaticPrefs::dom_importMaps_enabled() &&
           aType.EqualsLiteral("importmap"));
+}
+
+/* static */
+void HTMLScriptElement::ParseFetchPriority(const nsAString& aValue,
+                                           nsAttrValue& aResult) {
+  aResult.ParseEnumValue(aValue, kFetchPriorityEnumTable,
+                         false /* aCaseSensitive */,
+                         kFetchPriorityEnumTableInvalidValueDefault);
 }
 
 }  // namespace mozilla::dom
