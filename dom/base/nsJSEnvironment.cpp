@@ -1752,7 +1752,8 @@ void nsJSContext::LowMemoryGC() {
 
 // static
 void nsJSContext::MaybePokeCC() {
-  sScheduler.MaybePokeCC(TimeStamp::Now(), nsCycleCollector_suspectedCount());
+  sScheduler.MaybePokeCC(TimeStamp::NowLoRes(),
+                         nsCycleCollector_suspectedCount());
 }
 
 static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
