@@ -657,7 +657,7 @@ sidebar2-history-sidebar = History
 show-history-sidebar =
   .tooltiptext = Show { sidebar2-history-sidebar } Sidebar
 
-sidebar2-download-sidebar = Download
+sidebar2-download-sidebar = Downloads
 
 show-download-sidebar =
   .tooltiptext = Show { sidebar2-download-sidebar } Sidebar
