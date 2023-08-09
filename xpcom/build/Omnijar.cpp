@@ -8,6 +8,7 @@
 
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
+#include "mozilla/GeckoArgs.h"
 #include "nsIFile.h"
 #include "nsZipArchive.h"
 #include "nsNetUtil.h"
@@ -193,6 +194,38 @@ nsresult Omnijar::GetURIString(Type aType, nsACString& aResult) {
   }
   aResult += "/";
   return NS_OK;
+}
+
+void Omnijar::ChildProcessInit(int& aArgc, char** aArgv) {
+  nsCOMPtr<nsIFile> greOmni, appOmni;
+
+  if (auto greOmniStr = geckoargs::sGREOmni.Get(aArgc, aArgv)) {
+    if (NS_WARN_IF(NS_FAILED(
+            XRE_GetFileFromPath(*greOmniStr, getter_AddRefs(greOmni))))) {
+      greOmni = nullptr;
+    }
+  }
+  if (auto appOmniStr = geckoargs::sAppOmni.Get(aArgc, aArgv)) {
+    if (NS_WARN_IF(NS_FAILED(
+            XRE_GetFileFromPath(*appOmniStr, getter_AddRefs(appOmni))))) {
+      appOmni = nullptr;
+    }
+  }
+
+  // If we're unified, then only the -greomni flag is present
+  // (reflecting the state of sPath in the parent process) but that
+  // path should be used for both (not nullptr, which will try to
+  // invoke the directory service, which probably isn't up yet.)
+  if (!appOmni) {
+    appOmni = greOmni;
+  }
+
+  if (greOmni) {
+    Init(greOmni, appOmni);
+  } else {
+    // We should never have an appOmni without a greOmni.
+    MOZ_ASSERT(!appOmni);
+  }
 }
 
 } /* namespace mozilla */
