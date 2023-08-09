@@ -905,6 +905,8 @@ void HttpChannelChild::OnStopRequest(
   mCacheReadStart = aTiming.cacheReadStart();
   mCacheReadEnd = aTiming.cacheReadEnd();
 
+  const TimeStamp now = TimeStamp::Now();
+
   if (profiler_thread_is_being_profiled_for_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
@@ -916,14 +918,14 @@ void HttpChannelChild::OnStopRequest(
     GetPriority(&priority);
     profiler_add_network_marker(
         mURI, requestMethod, priority, mChannelId, NetworkLoadType::LOAD_STOP,
-        mLastStatusReported, TimeStamp::Now(), mTransferSize, kCacheUnknown,
+        mLastStatusReported, now, mTransferSize, kCacheUnknown,
         mLoadInfo->GetInnerWindowID(),
         mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0,
         &mTransactionTimings, std::move(mSource),
         Some(nsDependentCString(contentType.get())));
   }
 
-  TimeDuration channelCompletionDuration = TimeStamp::Now() - mAsyncOpenTime;
+  TimeDuration channelCompletionDuration = now - mAsyncOpenTime;
   if (mIsFromCache) {
     PerfStats::RecordMeasurement(PerfStats::Metric::HttpChannelCompletion_Cache,
                                  channelCompletionDuration);
@@ -940,10 +942,10 @@ void HttpChannelChild::OnStopRequest(
     ClassOfService::ToString(mClassOfService, cosString);
     Telemetry::AccumulateTimeDelta(
         Telemetry::NETWORK_RESPONSE_END_PARENT_TO_CONTENT_MS, cosString,
-        aTiming.responseEnd(), TimeStamp::Now());
+        aTiming.responseEnd(), now);
     PerfStats::RecordMeasurement(
         PerfStats::Metric::HttpChannelResponseEndParentToContent,
-        TimeStamp::Now() - aTiming.responseEnd());
+        now - aTiming.responseEnd());
   }
 
   mResponseTrailers = MakeUnique<nsHttpHeaderArray>(aResponseTrailers);
