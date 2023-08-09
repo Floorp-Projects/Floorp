@@ -2869,6 +2869,12 @@ nsStandardURL::GetQuery(nsACString& result) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsStandardURL::GetHasQuery(bool* result) {
+  *result = (mQuery.mLen >= 0);
+  return NS_OK;
+}
+
 // result may contain unescaped UTF-8 characters
 NS_IMETHODIMP
 nsStandardURL::GetRef(nsACString& result) {

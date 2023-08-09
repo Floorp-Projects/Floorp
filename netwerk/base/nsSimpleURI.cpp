@@ -705,6 +705,12 @@ nsSimpleURI::GetQuery(nsACString& aQuery) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSimpleURI::GetHasQuery(bool* result) {
+  *result = mIsQueryValid;
+  return NS_OK;
+}
+
 nsresult nsSimpleURI::SetQuery(const nsACString& aQuery) {
   if (StaticPrefs::network_url_max_length() &&
       aQuery.Length() > StaticPrefs::network_url_max_length()) {

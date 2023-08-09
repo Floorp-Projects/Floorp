@@ -144,6 +144,12 @@ nsMozIconURI::GetHasRef(bool* result) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMozIconURI::GetHasQuery(bool* result) {
+  *result = false;
+  return NS_OK;
+}
+
 NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsMozIconURI::Mutator, nsIURISetters,
                                 nsIURIMutator, nsISerializable)
 

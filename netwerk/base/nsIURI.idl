@@ -272,6 +272,11 @@ interface nsIURI : nsISupports
     readonly attribute AUTF8String query;
 
     /**
+     * Returns if there is a query portion (the part after the "?") of the URI.
+     */
+    readonly attribute boolean hasQuery;
+
+    /**
      * If the URI has a punycode encoded hostname, this will hold the UTF8
      * representation of that hostname (if that representation doesn't contain
      * blacklisted characters, and the network.IDN_show_punycode pref is false)
