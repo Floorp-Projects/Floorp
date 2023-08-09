@@ -9,6 +9,13 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
+var overshoot_prefs = [
+    ["test.events.async.enabled", true],
+    ["apz.test.logging_enabled", true],
+    ["ui.useOverlayScrollbars", 0],
+    ["layout.scrollbars.click_and_hold_track.continue_to_end", false]
+];
+
 var subtests = [
   // Sanity test to synthesize a mouse click
   {"file": "helper_click.html?dtc=false"},
@@ -60,9 +67,11 @@ var subtests = [
   {"file": "helper_drag_bug1794590.html", "prefs": [["slider.snapMultiplier", 6]]},
   // Scrolling with mouse down on the scrollbar
   {"file": "helper_scrollbartrack_click_overshoot.html",
-   "prefs": [["test.events.async.enabled", true], ["apz.test.logging_enabled", true],
-             ["ui.useOverlayScrollbars", 0],
-             ["layout.scrollbars.click_and_hold_track.continue_to_end", false]]},
+   "prefs": [...overshoot_prefs,
+       ["general.smoothScroll", true]]},
+  {"file": "helper_scrollbartrack_click_overshoot.html",
+   "prefs": [...overshoot_prefs,
+       ["general.smoothScroll", false]]},
   {"file": "helper_bug1756814.html", "prefs": [
     ["ui.useOverlayScrollbars", 0]
   ]},

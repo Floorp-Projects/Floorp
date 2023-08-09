@@ -38,6 +38,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_general.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/SVGIntegrationUtils.h"
 #include "mozilla/Telemetry.h"
@@ -1541,7 +1542,10 @@ void nsSliderFrame::PageScroll(bool aClickAndHold) {
       pos.y += distance;
     }
 
-    sf->ScrollTo(pos, ScrollMode::SmoothMsd, nullptr, scrollSnapFlags);
+    sf->ScrollTo(pos,
+                 StaticPrefs::general_smoothScroll() ? ScrollMode::SmoothMsd
+                                                     : ScrollMode::Instant,
+                 nullptr, scrollSnapFlags);
 
     return;
   }
