@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">Asennettiin onnistuneesti %1$s</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Lisäosan %1$s asennus epäonnistui</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted">Laajennusta %1$s ei voitu asentaa, koska sen riski aiheuttaa epävakautta tai tietoturvaongelmia on suuri</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Otettiin käyttöön onnistuneesti %1$s</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

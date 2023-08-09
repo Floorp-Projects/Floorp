@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">%1$s сәтті орнатылды</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">%1$s орнату сәтсіз аяқталды</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted">%1$s орнату мүмкін емес, өйткені ол тұрақтылық немесе қауіпсіздік мәселелерін туғызуы мүмкін</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s іске сәтті қосылды</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

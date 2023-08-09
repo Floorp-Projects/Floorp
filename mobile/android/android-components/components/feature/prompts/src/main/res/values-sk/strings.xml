@@ -84,7 +84,7 @@
     <!-- Title of the time picker dialog. -->
     <string name="mozac_feature_prompts_set_time">Nastaviť čas</string>
     <!-- Option in expanded select login prompt that links to login settings -->
-    <string name="mozac_feature_prompts_manage_logins">Správa prihlasovacích údajov</string>
+    <string name="mozac_feature_prompts_manage_logins">Spravovať prihlasovacie údaje</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
     <string name="mozac_feature_prompts_expand_logins_content_description">Rozbaliť navrhované prihlasovacie údaje</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->

@@ -3,4 +3,24 @@
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Assaya arta</string>
 
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Ny Yllir Kowlwul Govyn</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+ <p>Nyns yw kavadow kedhlow ynwedhek war an kudyn po gwall ma.</p>
+ ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Fyllis Junyans Servyer</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+ <ul>
+ <li>Ny yllir diskwedhes dhis an folen may fynn\'ta drehedhes drefen na allas gwirhe gwiryonder an deur resevys.</li>
+ <li>Mar pleg kestav orth perghenogyon an wiasva dhe dherivas orta an kudyn ma.</li>
+ </ul>
+  ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Junyans Diogel a Fyllis</string>
+
     </resources>
