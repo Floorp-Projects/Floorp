@@ -219,7 +219,7 @@ use-custom-useragent-mode =
 download-mgr-UI =
  .label = Enable a simple downloads management interface
 downloading-red-color =
- .label = Use red downloads icon when downloading
+ .label = Use a red downloads icon when downloading
 
 sidebar-preferences = Sidebar
 
