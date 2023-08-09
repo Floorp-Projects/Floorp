@@ -138,32 +138,6 @@ function testFastPath() {
     failures += checkFast(Number.NaN, "PRIMITIVE");
     failures += checkFast(undefined, "PRIMITIVE");
 
-    // Array has enumerated indexed + non-indexed slots.
-    const nonElements = [];
-    Object.defineProperty(nonElements, 0, { value: "hi", enumerated: true });
-    nonElements.named = 7;
-    failures += checkFast(nonElements, "INELIGIBLE_OBJECT");
-
-    // Array's prototype has indexed slot and/or inherited element.
-    const proto = {};
-    Object.defineProperty(proto, "0", { value: 1, enumerable: false });
-    const holy = [, , 3];
-    Object.setPrototypeOf(holy, proto);
-    failures += checkFast(holy, "INELIGIBLE_OBJECT");
-    Object.setPrototypeOf(holy, { 1: true });
-    failures += checkFast(holy, "INELIGIBLE_OBJECT");
-
-    // This is probably redundant with one of the above, but it was
-    // found by a fuzzer at one point.
-    const accessorProto = Object.create(Array.prototype);
-    Object.defineProperty(accessorProto, "0", {
-        get() { return 2; }, set() { }
-    });
-    const child = [];
-    Object.setPrototypeOf(child, accessorProto);
-    child.push(1);
-    failures += checkFast(child, "INELIGIBLE_OBJECT");
-
     failures += checkFast({ get x() { return 1; } }, "NON_DATA_PROPERTY");
 
     const self = {};
@@ -185,10 +159,10 @@ function testFastPath() {
     middle[2] = ouroboros;
     failures += checkFast(ouroboros, "DEEP_RECURSION"); // Cyclic after 10 recursions
 
-    failures += checkFast({ 0: true, 1: true, 10000: true }, "INELIGIBLE_OBJECT");
+    failures += checkFast({ 0: true, 1: true, 10000: true }, "SPARSE_INDEX");
     const arr = [1, 2, 3];
     arr[10000] = 4;
-    failures += checkFast(arr, "INELIGIBLE_OBJECT");
+    failures += checkFast(arr, "SPARSE_INDEX");
 
     failures += checkFast({ x: 12n }, "BIGINT");
 
