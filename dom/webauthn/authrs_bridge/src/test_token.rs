@@ -2,20 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use runloop::RunLoop;
-use std::{
-    io,
-    ops::DerefMut,
-    sync::{Arc, Mutex},
-};
-
 use authenticator::authenticatorservice::{AuthenticatorTransport, RegisterArgs, SignArgs};
-use authenticator::{RegisterResult, SignResult, StatusUpdate};
-
-use authenticator::errors::{AuthenticatorError, CommandError, HIDError, U2FTokenError};
-
-use authenticator::{FidoDevice, FidoDeviceIO, FidoProtocol, VirtualFidoDevice};
-
 use authenticator::crypto::{ecdsa_p256_sha256_sign_raw, COSEAlgorithm, COSEKey, SharedSecret};
 use authenticator::ctap2::{
     attestation::{
@@ -34,17 +21,25 @@ use authenticator::ctap2::{
         Request, RequestCtap1, RequestCtap2, StatusCode,
     },
     preflight::CheckKeyHandle,
-    server::{PublicKeyCredentialDescriptor, RelyingPartyWrapper, User},
+    server::{PublicKeyCredentialDescriptor, RelyingParty, RelyingPartyWrapper, User},
 };
-
+use authenticator::errors::{AuthenticatorError, CommandError, HIDError, U2FTokenError};
 use authenticator::{ctap2, statecallback::StateCallback};
-
+use authenticator::{FidoDevice, FidoDeviceIO, FidoProtocol, VirtualFidoDevice};
+use authenticator::{RegisterResult, SignResult, StatusUpdate};
+use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_INVALID_ARG, NS_ERROR_NOT_IMPLEMENTED, NS_OK};
+use nsstring::{nsACString, nsCString};
 use rand::{thread_rng, RngCore};
-use std::cell::RefCell;
-use std::sync::{
-    atomic::{AtomicU32, Ordering},
-    mpsc::Sender,
-};
+use runloop::RunLoop;
+use std::cell::{Ref, RefCell};
+use std::collections::{hash_map::Entry, HashMap};
+use std::ops::{Deref, DerefMut};
+use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::mpsc::Sender;
+use std::sync::{Arc, Mutex};
+use thin_vec::ThinVec;
+use xpcom::interfaces::nsICredentialParameters;
+use xpcom::{xpcom_method, RefPtr};
 
 // All TestTokens use this fixed, randomly generated, AAGUID
 const VIRTUAL_TOKEN_AAGUID: AAGuid = AAGuid([
@@ -52,13 +47,13 @@ const VIRTUAL_TOKEN_AAGUID: AAGuid = AAGuid([
 ]);
 
 #[derive(Debug)]
-pub struct TestTokenCredential {
-    pub id: Vec<u8>,
-    pub privkey: Vec<u8>,
-    pub user_handle: Vec<u8>,
-    pub sign_count: AtomicU32,
-    pub is_discoverable_credential: bool,
-    pub rp: RelyingPartyWrapper,
+struct TestTokenCredential {
+    id: Vec<u8>,
+    privkey: Vec<u8>,
+    user_handle: Vec<u8>,
+    sign_count: AtomicU32,
+    is_discoverable_credential: bool,
+    rp: RelyingPartyWrapper,
 }
 
 impl TestTokenCredential {
@@ -99,53 +94,45 @@ impl TestTokenCredential {
 }
 
 #[derive(Debug)]
-pub struct TestToken {
-    pub id: u64,
-    pub protocol: FidoProtocol,
-    pub versions: Vec<AuthenticatorVersion>,
-    pub transport: String,
-    pub is_user_consenting: bool,
-    pub has_user_verification: bool,
-    pub is_user_verified: bool,
-    pub has_resident_key: bool,
+struct TestToken {
+    protocol: FidoProtocol,
+    versions: Vec<AuthenticatorVersion>,
+    has_resident_key: bool,
+    has_user_verification: bool,
+    is_user_consenting: bool,
+    is_user_verified: bool,
     // This is modified in `make_credentials` which takes a &TestToken, but we only allow one transaction at a time.
-    pub credentials: RefCell<Vec<TestTokenCredential>>,
-    pub pin_token: [u8; 32],
-    pub shared_secret: Option<SharedSecret>,
-    pub authenticator_info: Option<AuthenticatorInfo>,
-    pub counter: AtomicU32,
+    credentials: RefCell<Vec<TestTokenCredential>>,
+    pin_token: [u8; 32],
+    shared_secret: Option<SharedSecret>,
+    authenticator_info: Option<AuthenticatorInfo>,
 }
 
 impl TestToken {
-    pub fn new(
-        id: u64,
+    fn new(
         versions: Vec<AuthenticatorVersion>,
-        transport: String,
-        is_user_consenting: bool,
-        has_user_verification: bool,
-        is_user_verified: bool,
         has_resident_key: bool,
+        has_user_verification: bool,
+        is_user_consenting: bool,
+        is_user_verified: bool,
     ) -> TestToken {
         let mut pin_token = [0u8; 32];
         thread_rng().fill_bytes(&mut pin_token);
         Self {
-            id,
             protocol: FidoProtocol::CTAP2,
             versions,
-            transport,
-            is_user_consenting,
-            has_user_verification,
-            is_user_verified,
             has_resident_key,
+            has_user_verification,
+            is_user_consenting,
+            is_user_verified,
             credentials: RefCell::new(vec![]),
             pin_token,
             shared_secret: None,
             authenticator_info: None,
-            counter: AtomicU32::new(0),
         }
     }
 
-    pub fn insert_credential(
+    fn insert_credential(
         &self,
         id: &[u8],
         privkey: &[u8],
@@ -171,8 +158,11 @@ impl TestToken {
         }
     }
 
-    #[allow(dead_code)]
-    pub fn delete_credential(&mut self, id: &[u8]) -> bool {
+    fn get_credentials(&self) -> Ref<Vec<TestTokenCredential>> {
+        self.credentials.borrow()
+    }
+
+    fn delete_credential(&mut self, id: &[u8]) -> bool {
         let mut credlist = self.credentials.borrow_mut();
         if let Ok(idx) = credlist.binary_search_by_key(&id, |probe| &probe.id) {
             credlist.remove(idx);
@@ -182,7 +172,11 @@ impl TestToken {
         false
     }
 
-    pub(crate) fn has_credential(&self, id: &[u8]) -> bool {
+    fn delete_all_credentials(&mut self) {
+        self.credentials.borrow_mut().clear();
+    }
+
+    fn has_credential(&self, id: &[u8]) -> bool {
         self.credentials
             .borrow()
             .binary_search_by_key(&id, |probe| &probe.id)
@@ -555,44 +549,225 @@ impl VirtualFidoDevice for TestToken {
     }
 }
 
-pub struct ManagerState {
-    pub tokens: Vec<TestToken>,
+pub(crate) struct TestTokenManagerState {
+    tokens: HashMap<u64, TestToken>,
 }
 
-impl ManagerState {
-    pub fn new() -> Arc<Mutex<ManagerState>> {
-        Arc::new(Mutex::new(ManagerState { tokens: vec![] }))
+impl TestTokenManagerState {
+    pub fn new() -> Arc<Mutex<TestTokenManagerState>> {
+        Arc::new(Mutex::new(TestTokenManagerState {
+            tokens: HashMap::new(),
+        }))
     }
 }
 
-pub struct TestTokenManager {
-    state: Arc<Mutex<ManagerState>>,
-    queue: Option<RunLoop>,
+#[xpcom(implement(nsICredentialParameters), atomic)]
+struct CredentialParameters {
+    credential_id: Vec<u8>,
+    is_resident_credential: bool,
+    rp_id: String,
+    private_key: Vec<u8>,
+    user_handle: Vec<u8>,
+    sign_count: u32,
+}
+
+impl CredentialParameters {
+    xpcom_method!(get_credential_id => GetCredentialId() -> nsACString);
+    fn get_credential_id(&self) -> Result<nsCString, nsresult> {
+        Ok(nsCString::from(&self.credential_id))
+    }
+
+    xpcom_method!(get_is_resident_credential => GetIsResidentCredential() -> bool);
+    fn get_is_resident_credential(&self) -> Result<bool, nsresult> {
+        Ok(self.is_resident_credential)
+    }
+
+    xpcom_method!(get_rp_id => GetRpId() -> nsACString);
+    fn get_rp_id(&self) -> Result<nsCString, nsresult> {
+        Ok(nsCString::from(&self.rp_id))
+    }
+
+    xpcom_method!(get_private_key => GetPrivateKey() -> nsACString);
+    fn get_private_key(&self) -> Result<nsCString, nsresult> {
+        Ok(nsCString::from(&self.private_key))
+    }
+
+    xpcom_method!(get_user_handle => GetUserHandle() -> nsACString);
+    fn get_user_handle(&self) -> Result<nsCString, nsresult> {
+        Ok(nsCString::from(&self.user_handle))
+    }
+
+    xpcom_method!(get_sign_count => GetSignCount() -> u32);
+    fn get_sign_count(&self) -> Result<u32, nsresult> {
+        Ok(self.sign_count)
+    }
+}
+
+pub(crate) struct TestTokenManager {
+    state: Arc<Mutex<TestTokenManagerState>>,
 }
 
 impl TestTokenManager {
-    pub fn new() -> io::Result<Self> {
-        let state = ManagerState::new();
-        {
-            // Bug 1838894: Remove this when we can add/remove authenticators
-            // dynamically
-            let mut guard = state.lock().unwrap();
-            guard.deref_mut().tokens.push(TestToken::new(
-                /* id */ 0,
-                /* versions */ vec![AuthenticatorVersion::FIDO_2_1],
-                /* transport */ "usb".to_string(),
-                /* is_user_consenting */ true,
-                /* has_user_verification */ true,
-                /* is_user_verified */ true,
-                /* has_resident_key */ true,
-            ));
-        }
+    pub fn new(state: Arc<Mutex<TestTokenManagerState>>) -> Self {
+        Self { state }
+    }
 
-        Ok(Self { state, queue: None })
+    pub fn add_virtual_authenticator(
+        &self,
+        protocol: AuthenticatorVersion,
+        has_resident_key: bool,
+        has_user_verification: bool,
+        is_user_consenting: bool,
+        is_user_verified: bool,
+    ) -> Result<u64, nsresult> {
+        let mut guard = self.state.lock().map_err(|_| NS_ERROR_FAILURE)?;
+        let token = TestToken::new(
+            vec![protocol],
+            has_resident_key,
+            has_user_verification,
+            is_user_consenting,
+            is_user_verified,
+        );
+        loop {
+            let id = rand::random::<u64>() & 0x1f_ffff_ffff_ffffu64; // Make the id safe for JS (53 bits)
+            match guard.deref_mut().tokens.entry(id) {
+                Entry::Occupied(_) => continue,
+                Entry::Vacant(v) => {
+                    v.insert(token);
+                    return Ok(id);
+                }
+            };
+        }
+    }
+
+    pub fn remove_virtual_authenticator(&self, authenticator_id: u64) -> Result<(), nsresult> {
+        let mut guard = self.state.lock().map_err(|_| NS_ERROR_FAILURE)?;
+        guard
+            .deref_mut()
+            .tokens
+            .remove(&authenticator_id)
+            .ok_or(NS_ERROR_INVALID_ARG)?;
+        Ok(())
+    }
+
+    pub fn add_credential(
+        &self,
+        authenticator_id: u64,
+        id: &[u8],
+        privkey: &[u8],
+        user_handle: &[u8],
+        sign_count: u32,
+        rp_id: String,
+        is_resident_credential: bool,
+    ) -> Result<(), nsresult> {
+        let mut guard = self.state.lock().map_err(|_| NS_ERROR_FAILURE)?;
+        let token = guard
+            .deref_mut()
+            .tokens
+            .get_mut(&authenticator_id)
+            .ok_or(NS_ERROR_INVALID_ARG)?;
+        let rp = RelyingParty {
+            id: rp_id,
+            name: None,
+            icon: None,
+        };
+        token.insert_credential(
+            id,
+            privkey,
+            &RelyingPartyWrapper::Data(rp),
+            is_resident_credential,
+            user_handle,
+            sign_count,
+        );
+        Ok(())
+    }
+
+    pub fn get_credentials(
+        &self,
+        authenticator_id: u64,
+    ) -> Result<ThinVec<Option<RefPtr<nsICredentialParameters>>>, nsresult> {
+        let mut guard = self.state.lock().map_err(|_| NS_ERROR_FAILURE)?;
+        let token = guard
+            .tokens
+            .get_mut(&authenticator_id)
+            .ok_or(NS_ERROR_INVALID_ARG)?;
+        let credentials = token.get_credentials();
+        let mut credentials_parameters = ThinVec::with_capacity(credentials.len());
+        for credential in credentials.deref() {
+            // CTAP1 credentials are not currently supported here.
+            let rp_id = credential
+                .rp
+                .id()
+                .map(|id| id.clone())
+                .ok_or(NS_ERROR_NOT_IMPLEMENTED)?;
+            let credential_parameters = CredentialParameters::allocate(InitCredentialParameters {
+                credential_id: credential.id.clone(),
+                is_resident_credential: credential.is_discoverable_credential,
+                rp_id,
+                private_key: credential.privkey.clone(),
+                user_handle: credential.user_handle.clone(),
+                sign_count: credential.sign_count.load(Ordering::Relaxed),
+            })
+            .query_interface::<nsICredentialParameters>()
+            .ok_or(NS_ERROR_FAILURE)?;
+            credentials_parameters.push(Some(credential_parameters));
+        }
+        Ok(credentials_parameters)
+    }
+
+    pub fn remove_credential(&self, authenticator_id: u64, id: &[u8]) -> Result<(), nsresult> {
+        let mut guard = self.state.lock().map_err(|_| NS_ERROR_FAILURE)?;
+        let token = guard
+            .deref_mut()
+            .tokens
+            .get_mut(&authenticator_id)
+            .ok_or(NS_ERROR_INVALID_ARG)?;
+        if token.delete_credential(id) {
+            Ok(())
+        } else {
+            Err(NS_ERROR_INVALID_ARG)
+        }
+    }
+
+    pub fn remove_all_credentials(&self, authenticator_id: u64) -> Result<(), nsresult> {
+        let mut guard = self.state.lock().map_err(|_| NS_ERROR_FAILURE)?;
+        let token = guard
+            .deref_mut()
+            .tokens
+            .get_mut(&authenticator_id)
+            .ok_or(NS_ERROR_INVALID_ARG)?;
+        token.delete_all_credentials();
+        Ok(())
+    }
+
+    pub fn set_user_verified(
+        &self,
+        authenticator_id: u64,
+        is_user_verified: bool,
+    ) -> Result<(), nsresult> {
+        let mut guard = self.state.lock().map_err(|_| NS_ERROR_FAILURE)?;
+        let mut token = guard
+            .deref_mut()
+            .tokens
+            .get_mut(&authenticator_id)
+            .ok_or(NS_ERROR_INVALID_ARG)?;
+        token.is_user_verified = is_user_verified;
+        Ok(())
     }
 }
 
-impl Drop for TestTokenManager {
+pub(crate) struct TestTokenTransport {
+    state: Arc<Mutex<TestTokenManagerState>>,
+    queue: Option<RunLoop>,
+}
+
+impl TestTokenTransport {
+    pub fn new(state: Arc<Mutex<TestTokenManagerState>>) -> Self {
+        Self { state, queue: None }
+    }
+}
+
+impl Drop for TestTokenTransport {
     fn drop(&mut self) {
         if let Some(queue) = self.queue.take() {
             queue.cancel();
@@ -600,7 +775,7 @@ impl Drop for TestTokenManager {
     }
 }
 
-impl AuthenticatorTransport for TestTokenManager {
+impl AuthenticatorTransport for TestTokenTransport {
     fn register(
         &mut self,
         timeout: u64,
@@ -621,7 +796,7 @@ impl AuthenticatorTransport for TestTokenManager {
             move |alive| {
                 let mut state_obj = state.lock().unwrap();
 
-                for token in state_obj.tokens.deref_mut() {
+                for token in state_obj.tokens.values_mut() {
                     let _ = token.init();
                     if ctap2::register(
                         token,
@@ -666,7 +841,7 @@ impl AuthenticatorTransport for TestTokenManager {
             move |alive| {
                 let mut state_obj = state.lock().unwrap();
 
-                for token in state_obj.tokens.deref_mut() {
+                for token in state_obj.tokens.values_mut() {
                     let _ = token.init();
                     if ctap2::sign(
                         token,

@@ -18,8 +18,9 @@
   <script class="testbody" type="text/javascript">
     "use strict";
 
-    // Execute the full-scope test
-    SimpleTest.waitForExplicitFinish();
+    add_task(async () => {
+      await addVirtualAuthenticator();
+    });
 
     var gTrackedCredential = {};
 

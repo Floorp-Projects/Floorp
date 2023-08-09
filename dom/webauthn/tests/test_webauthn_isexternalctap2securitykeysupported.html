@@ -18,9 +18,6 @@
 <script class="testbody" type="text/javascript">
 "use strict";
 
-// Execute the full-scope test
-SimpleTest.waitForExplicitFinish();
-
 add_task(async function test_external_key_support() {
   PublicKeyCredential.isExternalCTAP2SecurityKeySupported()
   .then(aResult => ok(true, `Should always return either true or false: ${aResult}`))

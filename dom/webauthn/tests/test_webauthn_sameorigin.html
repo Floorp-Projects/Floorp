@@ -18,8 +18,9 @@
   <script class="testbody" type="text/javascript">
     "use strict";
 
-    // Execute the full-scope test
-    SimpleTest.waitForExplicitFinish();
+    add_task(async () => {
+      await addVirtualAuthenticator();
+    });
 
     is(navigator.authentication, undefined, "navigator.authentication does not exist any longer");
     isnot(navigator.credentials, undefined, "Credential Management API endpoint must exist");

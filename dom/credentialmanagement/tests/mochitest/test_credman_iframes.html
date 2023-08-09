@@ -22,35 +22,67 @@
 <script class="testbody" type="text/javascript">
 "use strict";
 
-SimpleTest.waitForExplicitFinish();
-
 var _countCompletes = 0;
 var _expectedCompletes = 2; // 2 iframes
 
-function handleEventMessage(event) {
-  if ("test" in event.data) {
-    let summary = event.data.test + ": " + event.data.msg;
-    ok(event.data.status, summary);
-  } else if ("done" in event.data) {
-    _countCompletes += 1;
-    if (_countCompletes == _expectedCompletes) {
-      console.log("Test compeleted. Finished.");
-      SimpleTest.finish();
+var _done = new Promise((resolve) => {
+  function handleEventMessage(event) {
+    if ("test" in event.data) {
+      let summary = event.data.test + ": " + event.data.msg;
+      ok(event.data.status, summary);
+    } else if ("done" in event.data) {
+      _countCompletes += 1;
+      if (_countCompletes == _expectedCompletes) {
+        console.log("Test compeleted. Finished.");
+        resolve();
+      }
+    } else {
+      ok(false, "Unexpected message in the test harness: " + event.data);
     }
-  } else {
-    ok(false, "Unexpected message in the test harness: " + event.data);
   }
+
+  window.addEventListener("message", handleEventMessage);
+});
+
+async function addVirtualAuthenticator() {
+  let id = await SpecialPowers.spawnChrome([], () => {
+    let webauthnTransport = Cc["@mozilla.org/webauthn/transport;1"].getService(
+      Ci.nsIWebAuthnTransport
+    );
+    return webauthnTransport.addVirtualAuthenticator(
+      "ctap2",
+      "internal",
+      true,
+      true,
+      true,
+      true
+    );
+  });
+
+  SimpleTest.registerCleanupFunction(async () => {
+    await SpecialPowers.spawnChrome([id], (authenticatorId) => {
+      let webauthnTransport = Cc["@mozilla.org/webauthn/transport;1"].getService(
+        Ci.nsIWebAuthnTransport
+      );
+      webauthnTransport.removeVirtualAuthenticator(authenticatorId);
+    });
+  });
 }
 
-window.addEventListener("message", handleEventMessage);
-SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
-                                   ["security.webauth.webauthn_enable_softtoken", true],
-                                   ["security.webauth.webauthn_enable_usbtoken", false],
-                                   ["security.webauth.webauthn_enable_android_fido2", false]]},
-function() {
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
+                                           ["security.webauth.webauthn_enable_softtoken", true],
+                                           ["security.webauth.webauthn_enable_usbtoken", false],
+                                           ["security.webauth.webauthn_enable_android_fido2", false]]});
+  await addVirtualAuthenticator();
+});
+
+add_task(async () => {
   document.getElementById("frame_top").src = "https://example.com/tests/dom/credentialmanagement/tests/mochitest/frame_credman_iframes.html";
 
   document.getElementById("frame_bottom").src = "https://test1.example.com/tests/dom/credentialmanagement/tests/mochitest/frame_credman_iframes.html";
+
+  await _done;
 });
 </script>
 </body>
