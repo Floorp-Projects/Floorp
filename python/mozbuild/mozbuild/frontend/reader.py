@@ -17,6 +17,7 @@ It does this by examining specific variables populated during execution.
 """
 
 import ast
+import functools
 import inspect
 import logging
 import os
@@ -32,9 +33,7 @@ from itertools import chain
 from multiprocessing import cpu_count
 
 import mozpack.path as mozpath
-import six
 from mozpack.files import FileFinder
-from six import string_types
 
 from mozbuild.backend.configenvironment import ConfigEnvironment
 from mozbuild.base import ExecutionSummary
@@ -65,11 +64,6 @@ from .sandbox import (
     SandboxLoadError,
     default_finder,
 )
-
-if six.PY2:
-    type_type = types.TypeType
-else:
-    type_type = type
 
 
 def log(logger, level, action, params, formatter):
@@ -410,15 +404,14 @@ class TemplateFunction(object):
         # When using a custom dictionary for function globals/locals, Cpython
         # actually never calls __getitem__ and __setitem__, so we need to
         # modify the AST so that accesses to globals are properly directed
-        # to a dict. AST wants binary_type for this in Py2 and text_type for
-        # this in Py3, so cast to str.
-        self._global_name = str("_data")
+        # to a dict.
+        self._global_name = "_data"
         # In case '_data' is a name used for a variable in the function code,
         # prepend more underscores until we find an unused name.
         while (
             self._global_name in code.co_names or self._global_name in code.co_varnames
         ):
-            self._global_name += str("_")
+            self._global_name += "_"
         func_ast = self.RewriteName(sandbox, self._global_name).visit(func_ast)
 
         # Execute the rewritten code. That code now looks like:
@@ -460,10 +453,6 @@ class TemplateFunction(object):
         def __init__(self, sandbox, global_name):
             self._sandbox = sandbox
             self._global_name = global_name
-
-        def visit_Str(self, node):
-            node.s = six.ensure_text(node.s)
-            return node
 
         def visit_Name(self, node):
             # Modify uppercase variable references and names known to the
@@ -598,10 +587,7 @@ class BuildReaderError(Exception):
             s.write("the execution. The reported error is:\n")
             s.write("\n")
             s.write(
-                "".join(
-                    "    %s\n" % l
-                    for l in six.text_type(self.validation_error).splitlines()
-                )
+                "".join("    %s\n" % l for l in str(self.validation_error).splitlines())
             )
             s.write("\n")
         else:
@@ -613,7 +599,7 @@ class BuildReaderError(Exception):
             for l in traceback.format_exception(
                 type(self.other), self.other, self.trace
             ):
-                s.write(six.ensure_text(l))
+                s.write(str(l))
 
         return s.getvalue()
 
@@ -810,7 +796,7 @@ class BuildReaderError(Exception):
         s.write("\n")
         s.write("This variable expects the following type(s):\n")
         s.write("\n")
-        if type(inner.args[4]) == type_type:
+        if type(inner.args[4]) == type:
             s.write("    %s\n" % inner.args[4].__name__)
         else:
             for t in inner.args[4]:
@@ -974,7 +960,7 @@ class BuildReader(object):
             defined if the variable is an object, otherwise it is `None`.
         """
 
-        if isinstance(variables, string_types):
+        if isinstance(variables, str):
             variables = [variables]
 
         def assigned_variable(node):
@@ -1192,7 +1178,7 @@ class BuildReader(object):
                     raise SandboxValidationError("Cannot find %s." % source, context)
                 non_unified_sources.add(source)
             action_overrides = {}
-            for action, script in six.iteritems(gyp_dir.action_overrides):
+            for action, script in gyp_dir.action_overrides.items():
                 action_overrides[action] = SourcePath(context, script)
 
             gyp_processor = GypProcessor(
@@ -1365,7 +1351,7 @@ class BuildReader(object):
 
         result = {}
         for path, paths in path_mozbuilds.items():
-            result[path] = six.moves.reduce(
+            result[path] = functools.reduce(
                 lambda x, y: x + y, (contexts[p] for p in paths), []
             )
 
