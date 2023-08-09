@@ -5258,14 +5258,12 @@ ArrayObject* js::NewDenseCopiedArrayWithProto(JSContext* cx, uint32_t length,
   return arr;
 }
 
-ArrayObject* js::NewDenseFullyAllocatedArrayWithTemplate(
-    JSContext* cx, uint32_t length, ArrayObject* templateObject) {
+ArrayObject* js::NewDenseFullyAllocatedArrayWithShape(
+    JSContext* cx, uint32_t length, Handle<SharedShape*> shape) {
   AutoSetNewObjectMetadata metadata(cx);
   gc::AllocKind allocKind = GuessArrayGCKind(length);
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
   allocKind = ForegroundToBackgroundAllocKind(allocKind);
-
-  Rooted<SharedShape*> shape(cx, templateObject->sharedShape());
 
   gc::Heap heap = GetInitialHeap(GenericObject, &ArrayObject::class_);
   ArrayObject* arr = ArrayObject::create(cx, allocKind, heap, shape, length,

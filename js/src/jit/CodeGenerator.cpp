@@ -2443,14 +2443,10 @@ static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
   Address flagsSlot(regexp, RegExpObject::offsetOfFlags());
   Address lastIndexSlot(regexp, RegExpObject::offsetOfLastIndex());
 
-  ArrayObject* templateObject =
-      cx->realm()->regExps.getOrCreateMatchResultTemplateObject(cx);
-  if (!templateObject) {
+  SharedShape* shape = cx->realm()->regExps.getOrCreateMatchResultShape(cx);
+  if (!shape) {
     return nullptr;
   }
-  TemplateObject templateObj(templateObject);
-  const TemplateNativeObject& nativeTemplateObj =
-      templateObj.asTemplateNativeObject();
 
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jcx(cx);
@@ -2507,7 +2503,7 @@ static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
     // Load the array length in temp2 and the shape in temp3.
     Label allocated;
     masm.load32(pairCountAddress, temp2);
-    masm.movePtr(ImmGCPtr(nativeTemplateObj.shape()), temp3);
+    masm.movePtr(ImmGCPtr(shape), temp3);
 
     auto emitAllocObject = [&](size_t elementCapacity) {
       gc::AllocKind kind = GuessArrayGCKind(elementCapacity);
@@ -2521,12 +2517,10 @@ static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
       MOZ_ASSERT(usedSlots == GetGCKindSlots(kind));
 #endif
 
-      constexpr size_t numUsedDynamicSlots = 3;
-      constexpr size_t numDynamicSlots = 6;
-      MOZ_ASSERT(nativeTemplateObj.numFixedSlots() == 0);
-      MOZ_ASSERT(nativeTemplateObj.numDynamicSlots() == numDynamicSlots);
-      MOZ_ASSERT(nativeTemplateObj.slotSpan() == numUsedDynamicSlots);
-
+      constexpr size_t numUsedDynamicSlots =
+          RegExpRealm::MatchResultObjectSlotSpan;
+      constexpr size_t numDynamicSlots =
+          RegExpRealm::MatchResultObjectNumDynamicSlots;
       constexpr size_t arrayLength = 1;
       masm.createArrayWithFixedElements(object, temp3, temp2, temp3,
                                         arrayLength, elementCapacity,

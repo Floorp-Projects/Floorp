@@ -82,9 +82,9 @@ extern ArrayObject* NewDenseCopiedArrayWithProto(JSContext* cx, uint32_t length,
                                                  const Value* values,
                                                  HandleObject proto);
 
-// Create a dense array based on templateObject with the given length.
-extern ArrayObject* NewDenseFullyAllocatedArrayWithTemplate(
-    JSContext* cx, uint32_t length, ArrayObject* templateObject);
+// Create a dense array with the given shape and length.
+extern ArrayObject* NewDenseFullyAllocatedArrayWithShape(
+    JSContext* cx, uint32_t length, Handle<SharedShape*> shape);
 
 extern ArrayObject* NewArrayWithShape(JSContext* cx, uint32_t length,
                                       Handle<Shape*> shape);

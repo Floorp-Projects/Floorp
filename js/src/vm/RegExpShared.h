@@ -317,15 +317,14 @@ class RegExpZone {
 
 class RegExpRealm {
  public:
-  enum ResultTemplateKind { Normal, WithIndices, Indices, NumKinds };
+  enum ResultShapeKind { Normal, WithIndices, Indices, NumKinds };
 
  private:
   /*
-   * The template objects that the result of re.exec() is based on, if
-   * there is a result. These are used in CreateRegExpMatchResult.
-   * There are three template objects, each of which is an ArrayObject
-   * with some additional properties. We decide which to use based on
-   * the |hasIndices| (/d) flag.
+   * The shapes used for the result object of re.exec(), if there is a result.
+   * These are used in CreateRegExpMatchResult. There are three shapes, each of
+   * which is an ArrayObject shape with some additional properties. We decide
+   * which to use based on the |hasIndices| (/d) flag.
    *
    *  Normal: Has |index|, |input|, and |groups| properties.
    *          Used for the result object if |hasIndices| is not set.
@@ -336,8 +335,7 @@ class RegExpRealm {
    *  Indices: Has a |groups| property. If |hasIndices| is set, used
    *           for the |.indices| property of the result object.
    */
-  WeakHeapPtr<ArrayObject*>
-      matchResultTemplateObjects_[ResultTemplateKind::NumKinds];
+  WeakHeapPtr<SharedShape*> matchResultShapes_[ResultShapeKind::NumKinds];
 
   /*
    * The shape of RegExp.prototype object that satisfies following:
@@ -361,8 +359,7 @@ class RegExpRealm {
    */
   WeakHeapPtr<Shape*> optimizableRegExpInstanceShape_;
 
-  ArrayObject* createMatchResultTemplateObject(JSContext* cx,
-                                               ResultTemplateKind kind);
+  SharedShape* createMatchResultShape(JSContext* cx, ResultShapeKind kind);
 
  public:
   explicit RegExpRealm();
@@ -373,6 +370,11 @@ class RegExpRealm {
   static const size_t MatchResultObjectInputSlot = 1;
   static const size_t MatchResultObjectGroupsSlot = 2;
   static const size_t MatchResultObjectIndicesSlot = 3;
+
+  // Number of used and allocated dynamic slots for a Normal match result
+  // object. These values are checked in createMatchResultShape.
+  static const size_t MatchResultObjectSlotSpan = 3;
+  static const size_t MatchResultObjectNumDynamicSlots = 6;
 
   static const size_t IndicesGroupsSlot = 0;
 
@@ -389,13 +391,13 @@ class RegExpRealm {
     return sizeof(Value) * MatchResultObjectIndicesSlot;
   }
 
-  /* Get or create template object used to base the result of .exec() on. */
-  ArrayObject* getOrCreateMatchResultTemplateObject(
-      JSContext* cx, ResultTemplateKind kind = ResultTemplateKind::Normal) {
-    if (matchResultTemplateObjects_[kind]) {
-      return matchResultTemplateObjects_[kind];
+  /* Get or create the shape used for the result of .exec(). */
+  SharedShape* getOrCreateMatchResultShape(
+      JSContext* cx, ResultShapeKind kind = ResultShapeKind::Normal) {
+    if (matchResultShapes_[kind]) {
+      return matchResultShapes_[kind];
     }
-    return createMatchResultTemplateObject(cx, kind);
+    return createMatchResultShape(cx, kind);
   }
 
   Shape* getOptimizableRegExpPrototypeShape() {
