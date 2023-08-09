@@ -109,6 +109,8 @@ inline void CommandLineArg<uint64_t>::Put(uint64_t aValue,
 static CommandLineArg<const char*> sParentBuildID{"-parentBuildID",
                                                   "parentbuildid"};
 static CommandLineArg<const char*> sAppDir{"-appDir", "appdir"};
+static CommandLineArg<const char*> sGREOmni{"-greomni", "greomni"};
+static CommandLineArg<const char*> sAppOmni{"-appomni", "appomni"};
 static CommandLineArg<const char*> sProfile{"-profile", "profile"};
 
 static CommandLineArg<uint64_t> sJsInitHandle{"-jsInitHandle", "jsinithandle"};

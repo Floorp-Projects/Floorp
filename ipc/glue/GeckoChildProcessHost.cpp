@@ -1263,8 +1263,7 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
       nsAutoCString path;
       nsCOMPtr<nsIFile> file = Omnijar::GetPath(Omnijar::GRE);
       if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
-        mChildArgv.push_back("-greomni");
-        mChildArgv.push_back(path.get());
+        geckoargs::sGREOmni.Put(path.get(), mChildArgv);
       }
     }
 #  endif
