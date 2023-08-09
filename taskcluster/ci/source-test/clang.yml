@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
+    run-on-projects: ["trunk"]
     platform: linux64/debug
     worker-type: t-linux-xlarge-source
     attributes:
