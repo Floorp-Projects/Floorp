@@ -807,7 +807,7 @@ open-link-in-external-select-browser-option = Choose what browser will be opened
 open-link-in-external-select-browser-option-default =
  .label = Default browser
 open-link-in-external-tab-context-menu = Open in external browser
-open-link-in-external-tab-dialog-title-error = An error occurred.
+open-link-in-external-tab-dialog-title-error = An error occurred:
 open-link-in-external-tab-dialog-message-default-browser-not-found = Default browser is not found or is not configured.
 open-link-in-external-tab-dialog-message-selected-browser-not-found = The selected browser does not exist.
 
@@ -849,7 +849,7 @@ floorp-show-all-downloads =
 workspace-prompt-title = Floorp Workspace
 please-enter-workspace-name = Please enter the Workspace's new name.
 please-enter-workspace-name-2 = The Workspace's name cannot contain symbols and spaces.
-workspace-error = An error occurred.
+workspace-error = An error occurred:
 workspace-error-discription = Either a Workspace with this name exists or the name is invalid.
 
 workspace-button = Workspaces
