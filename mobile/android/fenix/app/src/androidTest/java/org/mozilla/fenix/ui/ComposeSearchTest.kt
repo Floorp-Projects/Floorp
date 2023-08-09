@@ -621,6 +621,30 @@ class ComposeSearchTest {
         }
     }
 
+    // Test that verifies the Firefox Suggest results in a general search context
+    @Test
+    fun firefoxSuggestHeaderForBrowsingDataSuggestionsTest() {
+        val firstPage = TestAssetHelper.getGenericAsset(searchMockServer, 1)
+        val secondPage = TestAssetHelper.getGenericAsset(searchMockServer, 2)
+
+        createTabItem(firstPage.url.toString())
+        createBookmarkItem(secondPage.url.toString(), secondPage.title, 1u)
+
+        homeScreen {
+        }.openSearch {
+            typeSearch("generic")
+            verifySearchEngineSuggestionResults(
+                rule = activityTestRule,
+                searchSuggestions = arrayOf(
+                    "Firefox Suggest",
+                    firstPage.url.toString(),
+                    secondPage.url.toString(),
+                ),
+                searchTerm = "generic",
+            )
+        }
+    }
+
     @Test
     fun verifySearchTabsItemsTest() {
         navigationToolbar {

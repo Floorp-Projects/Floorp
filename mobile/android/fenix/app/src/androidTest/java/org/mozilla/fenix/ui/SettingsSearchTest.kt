@@ -12,6 +12,8 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.addCustomSearchEngine
+import org.mozilla.fenix.helpers.MockBrowserDataHelper.createBookmarkItem
+import org.mozilla.fenix.helpers.MockBrowserDataHelper.createHistoryItem
 import org.mozilla.fenix.helpers.SearchDispatcher
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.appContext
@@ -23,7 +25,6 @@ import org.mozilla.fenix.helpers.TestHelper.setTextToClipBoard
 import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
 import org.mozilla.fenix.ui.robots.EngineShortcut
 import org.mozilla.fenix.ui.robots.homeScreen
-import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.searchScreen
 import java.util.Locale
 
@@ -138,31 +139,11 @@ class SettingsSearchTest {
         }
     }
 
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
     @Test
-    fun toggleSearchHistoryTest() {
-        val page1 = getGenericAsset(mockWebServer, 1)
+    fun toggleOffHistorySearchSuggestionsTest() {
+        val websiteURL = getGenericAsset(mockWebServer, 1).url.toString()
 
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(page1.url) {
-        }.openTabDrawer {
-            closeTab()
-        }
-
-        homeScreen {
-        }.openSearch {
-            typeSearch("test")
-            verifySearchEngineSuggestionResults(
-                activityTestRule,
-                "Firefox Suggest",
-                page1.title,
-                searchTerm = "test",
-            )
-        }.clickSearchSuggestion("Test_Page_1") {
-            verifyUrl(page1.url.toString())
-        }.openTabDrawer {
-            closeTab()
-        }
+        createHistoryItem(websiteURL)
 
         homeScreen {
         }.openThreeDotMenu {
@@ -178,46 +159,16 @@ class SettingsSearchTest {
             verifyNoSuggestionsAreDisplayed(
                 activityTestRule,
                 "Firefox Suggest",
-                "Test_Page_1",
+                websiteURL,
             )
         }
     }
 
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
     @Test
-    fun toggleSearchBookmarksTest() {
+    fun toggleOffBookmarksSearchSuggestionsTest() {
         val website = getGenericAsset(mockWebServer, 1)
 
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(website.url) {
-        }.openThreeDotMenu {
-        }.bookmarkPage {
-        }.openTabDrawer {
-            closeTab()
-        }
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openHistory {
-            verifyHistoryListExists()
-            clickDeleteHistoryButton("Test_Page_1")
-            exitMenu()
-        }
-
-        homeScreen {
-        }.openSearch {
-            typeSearch("test")
-            verifySearchEngineSuggestionResults(
-                activityTestRule,
-                "Firefox Suggest",
-                website.title,
-                searchTerm = "test",
-            )
-        }.clickSearchSuggestion("Test_Page_1") {
-            verifyUrl(website.url.toString())
-        }.openTabDrawer {
-            closeTab()
-        }
+        createBookmarkItem(website.url.toString(), website.title, 1u)
 
         homeScreen {
         }.openThreeDotMenu {
