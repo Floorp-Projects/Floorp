@@ -138,7 +138,7 @@ floorp-update-latest =
 
 ## system theme color
 
-system-color-settings = This theme supports both light and dark mode - choose what mode you'd like the theme to use.
+system-color-settings = Some themes have both light and dark variants - choose which variant you'd like these themes to use.
 preferences-theme-appearance-header = Theme Mode
 
 system-theme-dark =
