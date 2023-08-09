@@ -1,60 +1,60 @@
 use crate::consts::{HIDCmd, CID_BROADCAST};
-use crate::crypto::SharedSecret;
-use crate::ctap2::commands::get_info::AuthenticatorInfo;
-use crate::transport::{errors::HIDError, Nonce};
-use crate::u2ftypes::{U2FDevice, U2FDeviceInfo, U2FHIDCont, U2FHIDInit, U2FHIDInitResp};
+
+use crate::ctap2::commands::{
+    CommandError, Request, RequestCtap1, RequestCtap2, Retryable, StatusCode,
+};
+use crate::transport::errors::{ApduErrorStatus, HIDError};
+use crate::transport::{FidoDevice, FidoDeviceIO, FidoProtocol};
+use crate::u2ftypes::{U2FDeviceInfo, U2FHIDCont, U2FHIDInit, U2FHIDInitResp};
+use crate::util::io_err;
 use rand::{thread_rng, RngCore};
 use std::cmp::Eq;
 use std::fmt;
 use std::hash::Hash;
 use std::io;
+use std::io::{Read, Write};
+use std::thread;
+use std::time::Duration;
 
-pub trait HIDDevice
-where
-    Self: io::Read,
-    Self: io::Write,
-    Self: U2FDevice,
-    Self: Sized,
-    Self: fmt::Debug,
-{
+pub trait HIDDevice: FidoDevice + Read + Write {
     type BuildParameters: Sized;
     type Id: fmt::Debug + PartialEq + Eq + Hash + Sized;
 
     // Open device, verify that it is indeed a CTAP device and potentially read initial values
     fn new(parameters: Self::BuildParameters) -> Result<Self, (HIDError, Self::Id)>;
     fn id(&self) -> Self::Id;
-    fn initialized(&self) -> bool;
-    // Check if the device is actually a token
-    fn is_u2f(&mut self) -> bool;
-    fn get_authenticator_info(&self) -> Option<&AuthenticatorInfo>;
-    fn set_authenticator_info(&mut self, authenticator_info: AuthenticatorInfo);
-    fn set_shared_secret(&mut self, secret: SharedSecret);
-    fn get_shared_secret(&self) -> Option<&SharedSecret>;
+
+    fn get_device_info(&self) -> U2FDeviceInfo;
+    fn set_device_info(&mut self, dev_info: U2FDeviceInfo);
+
+    // Channel ID management
+    fn get_cid(&self) -> &[u8; 4];
+    fn set_cid(&mut self, cid: [u8; 4]);
+
+    // HID report sizes
+    fn in_rpt_size(&self) -> usize;
+    fn out_rpt_size(&self) -> usize;
+
+    fn get_property(&self, prop_name: &str) -> io::Result<String>;
 
     // Initialize on a protocol-level
-    fn initialize(&mut self, noncecmd: Nonce) -> Result<(), HIDError> {
+    fn pre_init(&mut self) -> Result<(), HIDError> {
         if self.initialized() {
             return Ok(());
         }
 
-        let nonce = match noncecmd {
-            Nonce::Use(x) => x,
-            Nonce::CreateRandom => {
-                let mut nonce = [0u8; 8];
-                thread_rng().fill_bytes(&mut nonce);
-                nonce
-            }
-        };
+        let mut nonce = [0u8; 8];
+        thread_rng().fill_bytes(&mut nonce);
 
         // Send Init to broadcast address to create a new channel
         self.set_cid(CID_BROADCAST);
-        let (cmd, raw) = self.sendrecv(HIDCmd::Init, &nonce, &|| true)?;
+        let (cmd, raw) = HIDDevice::sendrecv(self, HIDCmd::Init, &nonce, &|| true)?;
         if cmd != HIDCmd::Init {
             return Err(HIDError::DeviceError);
         }
 
         let rsp = U2FHIDInitResp::read(&raw, &nonce)?;
-        // Get the new Channel ID
+        // Set the new Channel ID
         self.set_cid(rsp.cid);
 
         let vendor = self
@@ -91,11 +91,17 @@ where
         send: &[u8],
         keep_alive: &dyn Fn() -> bool,
     ) -> io::Result<(HIDCmd, Vec<u8>)> {
-        let cmd: u8 = cmd.into();
-        self.u2f_write(cmd, send)?;
+        self.u2f_write(cmd.into(), send)?;
+        debug!("sent to Device {:?} cmd={:?}: {:?}", self.id(), cmd, send);
         loop {
             let (cmd, data) = self.u2f_read()?;
             if cmd != HIDCmd::Keepalive {
+                debug!(
+                    "got from Device {:?} status={:?}: {:?}",
+                    self.id(),
+                    cmd,
+                    data
+                );
                 return Ok((cmd, data));
             }
             // The authenticator might send us HIDCmd::Keepalive messages indefinitely, e.g. if
@@ -108,7 +114,7 @@ where
 
         // If this is a CTAP2 device we can tell the authenticator to cancel the transaction on its
         // side as well. There's nothing to do for U2F/CTAP1 devices.
-        if self.get_authenticator_info().is_some() {
+        if self.get_protocol() == FidoProtocol::CTAP2 {
             self.u2f_write(u8::from(HIDCmd::Cancel), &[])?;
         }
         // For CTAP2 devices we expect to read
@@ -149,5 +155,85 @@ where
         };
         trace!("u2f_read({:?}) cmd={:?}: {:04X?}", self.id(), cmd, &data);
         Ok((cmd, data))
+    }
+}
+
+impl<T: HIDDevice> FidoDeviceIO for T {
+    fn send_msg_cancellable<Out, Req: Request<Out>>(
+        &mut self,
+        msg: &Req,
+        keep_alive: &dyn Fn() -> bool,
+    ) -> Result<Out, HIDError> {
+        if !self.initialized() {
+            return Err(HIDError::DeviceNotInitialized);
+        }
+
+        match self.get_protocol() {
+            FidoProtocol::CTAP1 => self.send_ctap1_cancellable(msg, keep_alive),
+            FidoProtocol::CTAP2 => self.send_cbor_cancellable(msg, keep_alive),
+        }
+    }
+
+    fn send_cbor_cancellable<Req: RequestCtap2>(
+        &mut self,
+        msg: &Req,
+        keep_alive: &dyn Fn() -> bool,
+    ) -> Result<Req::Output, HIDError> {
+        debug!("sending {:?} to {:?}", msg, self);
+
+        let mut data = msg.wire_format()?;
+        let mut buf: Vec<u8> = Vec::with_capacity(data.len() + 1);
+        // CTAP2 command
+        buf.push(Req::command() as u8);
+        // payload
+        buf.append(&mut data);
+        let buf = buf;
+
+        let (cmd, resp) = self.sendrecv(HIDCmd::Cbor, &buf, keep_alive)?;
+        if cmd == HIDCmd::Cbor {
+            Ok(msg.handle_response_ctap2(self, &resp)?)
+        } else {
+            Err(HIDError::UnexpectedCmd(cmd.into()))
+        }
+    }
+
+    fn send_ctap1_cancellable<Req: RequestCtap1>(
+        &mut self,
+        msg: &Req,
+        keep_alive: &dyn Fn() -> bool,
+    ) -> Result<Req::Output, HIDError> {
+        debug!("sending {:?} to {:?}", msg, self);
+        let (data, add_info) = msg.ctap1_format()?;
+
+        while keep_alive() {
+            // sendrecv will not block with a CTAP1 device
+            let (cmd, mut data) = self.sendrecv(HIDCmd::Msg, &data, &|| true)?;
+            if cmd == HIDCmd::Msg {
+                if data.len() < 2 {
+                    return Err(io_err("Unexpected Response: shorter than expected").into());
+                }
+                let split_at = data.len() - 2;
+                let status = data.split_off(split_at);
+                // This will bubble up error if status != no error
+                let status = ApduErrorStatus::from([status[0], status[1]]);
+
+                match msg.handle_response_ctap1(status, &data, &add_info) {
+                    Ok(out) => return Ok(out),
+                    Err(Retryable::Retry) => {
+                        // sleep 100ms then loop again
+                        // TODO(baloo): meh, use tokio instead?
+                        thread::sleep(Duration::from_millis(100));
+                    }
+                    Err(Retryable::Error(e)) => return Err(e),
+                }
+            } else {
+                return Err(HIDError::UnexpectedCmd(cmd.into()));
+            }
+        }
+
+        Err(HIDError::Command(CommandError::StatusCode(
+            StatusCode::KeepaliveCancel,
+            None,
+        )))
     }
 }

@@ -43,6 +43,13 @@ user-id = 175410
 user-login = "jschanck"
 user-name = "John Schanck"
 
+[[publisher.authenticator]]
+version = "0.4.0-alpha.18"
+when = "2023-06-20"
+user-id = 175410
+user-login = "jschanck"
+user-name = "John Schanck"
+
 [[publisher.bhttp]]
 version = "0.3.1"
 when = "2023-02-23"
@@ -294,6 +301,13 @@ when = "2019-11-27"
 user-id = 10
 user-login = "carllerche"
 user-name = "Carl Lerche"
+
+[[publisher.nss-gk-api]]
+version = "0.3.0"
+when = "2023-06-14"
+user-id = 175410
+user-login = "jschanck"
+user-name = "John Schanck"
 
 [[publisher.num_cpus]]
 version = "1.15.0"
