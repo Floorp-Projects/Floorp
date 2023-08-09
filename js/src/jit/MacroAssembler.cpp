@@ -4578,31 +4578,6 @@ void MacroAssembler::branchIfObjectNotExtensible(Register obj, Register scratch,
                Imm32(uint32_t(ObjectFlag::NotExtensible)), label);
 }
 
-void MacroAssembler::branchTestObjectNeedsProxyResultValidation(
-    Condition cond, Register obj, Register scratch, Label* label) {
-  MOZ_ASSERT(cond == Assembler::Zero || cond == Assembler::NonZero);
-
-  Label done;
-  Label* needsValidation = cond == NonZero ? label : &done;
-
-  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
-  branchTest32(Assembler::Zero,
-               Address(scratch, Shape::offsetOfImmutableFlags()),
-               Imm32(Shape::isNativeBit()), needsValidation);
-  static_assert(sizeof(ObjectFlags) == sizeof(uint16_t));
-  load16ZeroExtend(Address(scratch, Shape::offsetOfObjectFlags()), scratch);
-  branchTest32(Assembler::NonZero, scratch,
-               Imm32(uint32_t(ObjectFlag::NeedsProxyGetSetResultValidation)),
-               needsValidation);
-
-  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
-  loadPtr(Address(scratch, Shape::offsetOfBaseShape()), scratch);
-  loadPtr(Address(scratch, offsetof(JSClass, cOps)), scratch);
-  loadPtr(Address(scratch, offsetof(JSClassOps, resolve)), scratch);
-  branchTestPtr(Assembler::NonZero, scratch, scratch, needsValidation);
-  bind(&done);
-}
-
 void MacroAssembler::wasmTrap(wasm::Trap trap,
                               wasm::BytecodeOffset bytecodeOffset) {
   uint32_t trapOffset = wasmTrapInstruction().offset();

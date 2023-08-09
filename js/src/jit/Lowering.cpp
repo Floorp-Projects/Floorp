@@ -4422,21 +4422,6 @@ void LIRGenerator::visitStoreTypedArrayElementHole(
   }
 }
 
-void LIRGenerator::visitLoadScriptedProxyHandler(
-    MLoadScriptedProxyHandler* ins) {
-  LLoadScriptedProxyHandler* lir = new (alloc())
-      LLoadScriptedProxyHandler(useRegisterAtStart(ins->object()));
-  define(lir, ins);
-}
-
-void LIRGenerator::visitIdToStringOrSymbol(MIdToStringOrSymbol* ins) {
-  LIdToStringOrSymbol* lir =
-      new (alloc()) LIdToStringOrSymbol(useBoxAtStart(ins->idVal()), temp());
-  assignSnapshot(lir, ins->bailoutKind());
-  defineBox(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitLoadFixedSlot(MLoadFixedSlot* ins) {
   MDefinition* obj = ins->object();
   MOZ_ASSERT(obj->type() == MIRType::Object);
@@ -4917,15 +4902,6 @@ void LIRGenerator::visitGuardIsTypedArray(MGuardIsTypedArray* ins) {
 
   auto* lir =
       new (alloc()) LGuardIsTypedArray(useRegister(ins->object()), temp());
-  assignSnapshot(lir, ins->bailoutKind());
-  add(lir, ins);
-  redefine(ins, ins->object());
-}
-
-void LIRGenerator::visitGuardHasProxyHandler(MGuardHasProxyHandler* ins) {
-  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-
-  auto* lir = new (alloc()) LGuardHasProxyHandler(useRegister(ins->object()));
   assignSnapshot(lir, ins->bailoutKind());
   add(lir, ins);
   redefine(ins, ins->object());
@@ -6135,21 +6111,6 @@ void LIRGenerator::visitCheckIsObj(MCheckIsObj* ins) {
   define(lir, ins);
   assignSafepoint(lir, ins);
 }
-
-#ifdef JS_PUNBOX64
-void LIRGenerator::visitCheckScriptedProxyGetResult(
-    MCheckScriptedProxyGetResult* ins) {
-  MDefinition* target = ins->target();
-  MDefinition* id = ins->id();
-  MDefinition* value = ins->value();
-
-  LCheckScriptedProxyGetResult* lir =
-      new (alloc()) LCheckScriptedProxyGetResult(useBox(target), useBox(id),
-                                                 useBox(value), temp(), temp());
-  add(lir, ins);
-  assignSafepoint(lir, ins);
-}
-#endif
 
 void LIRGenerator::visitCheckObjCoercible(MCheckObjCoercible* ins) {
   MDefinition* checkVal = ins->checkValue();
