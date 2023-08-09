@@ -447,8 +447,8 @@ diff --git a/s_trunc.cpp b/s_trunc.cpp
 --- a/s_scalbnf.cpp
 +++ b/s_scalbnf.cpp
 @@ -32,10 +34,8 @@
- 		if (n < -126)
- 			n = -126;
+ 			if (n < -126)
+ 				n = -126;
  		}
  	}
  	u.i = (uint32_t)(0x7f+n)<<23;
