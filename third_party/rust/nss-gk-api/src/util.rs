@@ -98,6 +98,26 @@ impl SECItem {
     }
 }
 
+unsafe fn destroy_secitem(item: *mut SECItem) {
+    SECITEM_FreeItem(item, PRBool::from(true));
+}
+scoped_ptr!(ScopedSECItem, SECItem, destroy_secitem);
+
+impl ScopedSECItem {
+    /// This dereferences the pointer held by the item and makes a copy of the
+    /// content that is referenced there.
+    ///
+    /// # Safety
+    /// This dereferences two pointers.  It doesn't get much less safe.
+    pub unsafe fn into_vec(self) -> Vec<u8> {
+        let b = self.ptr.as_ref().unwrap();
+        // Sanity check the type, as some types don't count bytes in `Item::len`.
+        assert_eq!(b.type_, SECItemType::siBuffer);
+        let slc = std::slice::from_raw_parts(b.data, usize::try_from(b.len).unwrap());
+        Vec::from(slc)
+    }
+}
+
 /// An owned SECItem.
 ///
 /// The SECItem structure is allocated by Rust. The buffer referenced by the

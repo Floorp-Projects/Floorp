@@ -4,12 +4,12 @@
 
 extern crate libc;
 
-use crate::consts::{CID_BROADCAST, MAX_HID_RPT_SIZE};
+use crate::consts::{Capability, CID_BROADCAST, MAX_HID_RPT_SIZE};
 use crate::ctap2::commands::get_info::AuthenticatorInfo;
 use crate::transport::hid::HIDDevice;
 use crate::transport::platform::uhid;
-use crate::transport::{FidoDevice, HIDError, SharedSecret};
-use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
+use crate::transport::{FidoDevice, FidoProtocol, HIDError, SharedSecret};
+use crate::u2ftypes::U2FDeviceInfo;
 use crate::util::from_unix_result;
 use crate::util::io_err;
 use std::ffi::{CString, OsString};
@@ -26,6 +26,7 @@ pub struct Device {
     dev_info: Option<U2FDeviceInfo>,
     secret: Option<SharedSecret>,
     authenticator_info: Option<AuthenticatorInfo>,
+    protocol: FidoProtocol,
 }
 
 impl Device {
@@ -121,7 +122,36 @@ impl Write for Device {
     }
 }
 
-impl U2FDevice for Device {
+impl HIDDevice for Device {
+    type BuildParameters = OsString;
+    type Id = OsString;
+
+    fn new(path: OsString) -> Result<Self, (HIDError, Self::Id)> {
+        let cstr =
+            CString::new(path.as_bytes()).map_err(|_| (HIDError::DeviceError, path.clone()))?;
+        let fd = unsafe { libc::open(cstr.as_ptr(), libc::O_RDWR) };
+        let fd = from_unix_result(fd).map_err(|e| (e.into(), path.clone()))?;
+        let mut res = Self {
+            path,
+            fd,
+            cid: CID_BROADCAST,
+            dev_info: None,
+            secret: None,
+            authenticator_info: None,
+            protocol: FidoProtocol::CTAP2,
+        };
+        if res.is_u2f() {
+            info!("new device {:?}", res.path);
+            Ok(res)
+        } else {
+            Err((HIDError::DeviceNotSupported, res.path.clone()))
+        }
+    }
+
+    fn id(&self) -> Self::Id {
+        self.path.clone()
+    }
+
     fn get_cid(&self) -> &[u8; 4] {
         &self.cid
     }
@@ -153,38 +183,20 @@ impl U2FDevice for Device {
     }
 }
 
-impl HIDDevice for Device {
-    type BuildParameters = OsString;
-    type Id = OsString;
+impl FidoDevice for Device {
+    fn pre_init(&mut self) -> Result<(), HIDError> {
+        HIDDevice::pre_init(self)
+    }
 
-    fn new(path: OsString) -> Result<Self, (HIDError, Self::Id)> {
-        let cstr =
-            CString::new(path.as_bytes()).map_err(|_| (HIDError::DeviceError, path.clone()))?;
-        let fd = unsafe { libc::open(cstr.as_ptr(), libc::O_RDWR) };
-        let fd = from_unix_result(fd).map_err(|e| (e.into(), path.clone()))?;
-        let mut res = Self {
-            path,
-            fd,
-            cid: CID_BROADCAST,
-            dev_info: None,
-            secret: None,
-            authenticator_info: None,
-        };
-        if res.is_u2f() {
-            info!("new device {:?}", res.path);
-            Ok(res)
-        } else {
-            Err((HIDError::DeviceNotSupported, res.path.clone()))
-        }
+    fn should_try_ctap2(&self) -> bool {
+        HIDDevice::get_device_info(self)
+            .cap_flags
+            .contains(Capability::CBOR)
     }
 
     fn initialized(&self) -> bool {
         // During successful init, the broadcast channel id gets repplaced by an actual one
         self.cid != CID_BROADCAST
-    }
-
-    fn id(&self) -> Self::Id {
-        self.path.clone()
     }
 
     fn is_u2f(&mut self) -> bool {
@@ -212,6 +224,12 @@ impl HIDDevice for Device {
     fn set_authenticator_info(&mut self, authenticator_info: AuthenticatorInfo) {
         self.authenticator_info = Some(authenticator_info);
     }
-}
 
-impl FidoDevice for Device {}
+    fn get_protocol(&self) -> FidoProtocol {
+        self.protocol
+    }
+
+    fn downgrade_to_ctap1(&mut self) {
+        self.protocol = FidoProtocol::CTAP1;
+    }
+}
