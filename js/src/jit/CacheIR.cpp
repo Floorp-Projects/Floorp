@@ -1058,6 +1058,16 @@ static void EmitCallDOMGetterResult(JSContext* cx, CacheIRWriter& writer,
   EmitCallDOMGetterResultNoGuards(writer, holder, prop, objId);
 }
 
+static ValOperandId EmitLoadSlot(CacheIRWriter& writer, NativeObject* holder,
+                                 ObjOperandId holderId, uint32_t slot) {
+  if (holder->isFixedSlot(slot)) {
+    return writer.loadFixedSlot(holderId,
+                                NativeObject::getFixedSlotOffset(slot));
+  }
+  size_t dynamicSlotIndex = holder->dynamicSlotIndex(slot);
+  return writer.loadDynamicSlot(holderId, dynamicSlotIndex);
+}
+
 void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
                                                      jsid id) {
   MOZ_ASSERT(mode_ == ICState::Mode::Megamorphic);
@@ -1563,14 +1573,8 @@ AttachDecision GetPropIRGenerator::tryAttachScriptedProxy(
     JSFunction* trapFn = &trapObj->as<JSFunction>();
     EmitReadSlotGuard(writer, nHandlerObj, trapHolder, handlerObjId);
 
-    ValOperandId fnValId;
-    if (trapHolder->isFixedSlot(trapSlot)) {
-      fnValId = writer.loadFixedSlot(
-          handlerObjId, NativeObject::getFixedSlotOffset(trapSlot));
-    } else {
-      size_t dynamicSlotIndex = trapHolder->dynamicSlotIndex(trapSlot);
-      fnValId = writer.loadDynamicSlot(handlerObjId, dynamicSlotIndex);
-    }
+    ValOperandId fnValId =
+        EmitLoadSlot(writer, trapHolder, handlerObjId, trapSlot);
     ObjOperandId fnObjId = writer.guardToObject(fnValId);
     writer.guardSpecificFunction(fnObjId, trapFn);
     ValOperandId targetValId = writer.boxObject(targetObjId);
@@ -3344,18 +3348,6 @@ static bool NeedEnvironmentShapeGuard(JSContext* cx, JSObject* envObj) {
   return false;
 }
 
-static ValOperandId EmitLoadEnvironmentSlot(CacheIRWriter& writer,
-                                            NativeObject* holder,
-                                            ObjOperandId holderId,
-                                            uint32_t slot) {
-  if (holder->isFixedSlot(slot)) {
-    return writer.loadFixedSlot(holderId,
-                                NativeObject::getFixedSlotOffset(slot));
-  }
-  size_t dynamicSlotIndex = holder->dynamicSlotIndex(slot);
-  return writer.loadDynamicSlot(holderId, dynamicSlotIndex);
-}
-
 AttachDecision GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
                                                             HandleId id) {
   if (IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope()) {
@@ -3414,8 +3406,7 @@ AttachDecision GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
     env = env->enclosingEnvironment();
   }
 
-  ValOperandId resId =
-      EmitLoadEnvironmentSlot(writer, holder, lastObjId, prop->slot());
+  ValOperandId resId = EmitLoadSlot(writer, holder, lastObjId, prop->slot());
   if (holder->is<EnvironmentObject>()) {
     writer.guardIsNotUninitializedLexical(resId);
   }
@@ -3560,8 +3551,7 @@ AttachDecision BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   }
 
   if (prop.isSome() && holder->is<EnvironmentObject>()) {
-    ValOperandId valId =
-        EmitLoadEnvironmentSlot(writer, holder, lastObjId, prop->slot());
+    ValOperandId valId = EmitLoadSlot(writer, holder, lastObjId, prop->slot());
     writer.guardIsNotUninitializedLexical(valId);
   }
 
@@ -13371,14 +13361,7 @@ AttachDecision CloseIterIRGenerator::tryAttachScriptedReturn() {
   ObjOperandId holderId =
       EmitReadSlotGuard(writer, &iter_->as<NativeObject>(), holder, objId);
 
-  ValOperandId calleeValId;
-  if (holder->isFixedSlot(slot)) {
-    size_t offset = NativeObject::getFixedSlotOffset(slot);
-    calleeValId = writer.loadFixedSlot(holderId, offset);
-  } else {
-    size_t index = holder->dynamicSlotIndex(slot);
-    calleeValId = writer.loadDynamicSlot(holderId, index);
-  }
+  ValOperandId calleeValId = EmitLoadSlot(writer, holder, holderId, slot);
   ObjOperandId calleeId = writer.guardToObject(calleeValId);
   emitCalleeGuard(calleeId, callee);
 
