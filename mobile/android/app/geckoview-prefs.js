@@ -19,6 +19,7 @@ pref("privacy.trackingprotection.pbmode.enabled", false);
 
 pref("browser.tabs.remote.autostart", true);
 pref("dom.ipc.keepProcessesAlive.web", 1);
+pref("dom.ipc.keepProcessesAlive.extension", 1);
 
 pref("dom.ipc.processPrelaunch.enabled", false);
 
