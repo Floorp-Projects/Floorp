@@ -184,7 +184,7 @@ bool nsRFPService::IsRFPEnabledFor(RFPTarget aTarget) {
     if (aTarget == RFPTarget::IsAlwaysEnabledForPrecompute) {
       return true;
     }
-    return sEnabledFingerintingProtections & uint32_t(aTarget);
+    return sEnabledFingerintingProtections & uint64_t(aTarget);
   }
 
   return false;
