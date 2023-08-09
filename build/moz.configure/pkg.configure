@@ -57,16 +57,18 @@ def pkg_config_base_flags(is_pkgconf, pkg_config_version, target_sysroot_bootstr
 @imports(_from="os", _import="pathsep")
 def pkg_config_vars(target, sysroot_path, multiarch_dir):
     if sysroot_path and target.kernel != "Darwin":
+        pkgconfig_dirs = [
+            "usr/lib/pkgconfig",
+            "usr/lib/{}/pkgconfig".format(multiarch_dir),
+            "usr/share/pkgconfig",
+        ]
+        if target.bitness == 64:
+            pkgconfig_dirs.insert(0, "usr/lib64/pkgconfig")
         return namespace(
             PKG_CONFIG_PATH="",
             PKG_CONFIG_SYSROOT_DIR=sysroot_path,
             PKG_CONFIG_LIBDIR=pathsep.join(
-                os.path.join(sysroot_path, d)
-                for d in (
-                    "usr/lib/pkgconfig",
-                    "usr/lib/{}/pkgconfig".format(multiarch_dir),
-                    "usr/share/pkgconfig",
-                )
+                os.path.join(sysroot_path, d) for d in pkgconfig_dirs
             ),
         )
 
