@@ -39,7 +39,7 @@ class WebExtensionPromptFeatureTest {
                 store = store,
                 provideAddons = { emptyList() },
                 context = testContext,
-                view = mockk(relaxed = true),
+                snackBarParentView = mockk(relaxed = true),
                 fragmentManager = mockk(relaxed = true),
             ),
         )

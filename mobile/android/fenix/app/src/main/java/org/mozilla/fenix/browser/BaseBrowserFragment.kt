@@ -920,7 +920,7 @@ abstract class BaseBrowserFragment :
                 provideAddons = ::provideAddons,
                 context = requireContext(),
                 fragmentManager = parentFragmentManager,
-                view = view,
+                snackBarParentView = binding.dynamicSnackbarContainer,
             ),
             owner = this,
             view = view,

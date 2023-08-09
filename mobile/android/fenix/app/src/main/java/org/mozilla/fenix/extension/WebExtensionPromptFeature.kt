@@ -36,7 +36,7 @@ class WebExtensionPromptFeature(
     private val store: BrowserStore,
     private val provideAddons: suspend () -> List<Addon>,
     private val context: Context,
-    private val view: View,
+    private val snackBarParentView: View,
     private val fragmentManager: FragmentManager,
     private val onAddonChanged: (Addon) -> Unit = {},
 ) : LifecycleAwareFeature {
@@ -148,7 +148,7 @@ class WebExtensionPromptFeature(
     @VisibleForTesting
     internal fun showUnsupportedError() {
         showSnackBar(
-            view,
+            snackBarParentView,
             context.getString(R.string.addon_not_supported_error),
             FenixSnackbar.LENGTH_LONG,
         )
