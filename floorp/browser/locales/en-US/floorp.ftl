@@ -87,7 +87,7 @@ multirow-tabbar =
  .label = Multi-Row Tab Bar
 vertical-tabbar =
  .label = Vertical Tab Bar (experimental)
-native-tabbar-tip = Sidebar add-ons and in-built sidebars cannot be used at the same time as vertical tabs as this leverages the Firefox sidebar.
+native-tabbar-tip = Sidebar add-ons and in-built sidebars cannot be used at the same time as Vertical Tabs as this leverages the Firefox sidebar.
 
 hover-vertical-tab =
  .label = Collapse Vertical Tab Bar
