@@ -507,8 +507,8 @@
   position: absolute;
   bottom: 0.72em;
   font-size: var(--urlbarView-small-font-size);
-  margin-inline-start: var(--urlbarView-item-inline-padding);
-  padding-inline-start: calc(var(--urlbarView-favicon-width) + 6px);
+  margin-inline-start: calc(var(--urlbarView-item-inline-padding) + var(--urlbarView-icon-margin-start));
+  padding-inline-start: calc(var(--urlbarView-favicon-width) + var(--urlbarView-icon-margin-end));
   background-image: url("chrome://branding/content/icon32.png");
   background-repeat: no-repeat;
   background-position: 0 center;
