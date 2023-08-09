@@ -644,7 +644,7 @@ void GeckoMediaPluginServiceParent::SendFlushFOGData(
   MutexAutoLock lock(mMutex);
 
   for (const RefPtr<GMPParent>& gmp : mPlugins) {
-    if (gmp->State() != GMPState::GMPStateLoaded) {
+    if (gmp->State() != GMPState::Loaded) {
       // Plugins that are not in the Loaded state have no process attached to
       // them, and any IPC we would attempt to send them would be ignored (or
       // result in a warning on debug builds).
@@ -682,7 +682,7 @@ GeckoMediaPluginServiceParent::TestTriggerMetrics() {
   {
     MutexAutoLock lock(mMutex);
     for (const RefPtr<GMPParent>& gmp : mPlugins) {
-      if (gmp->State() != GMPState::GMPStateLoaded) {
+      if (gmp->State() != GMPState::Loaded) {
         // Plugins that are not in the Loaded state have no process attached to
         // them, and any IPC we would attempt to send them would be ignored (or
         // result in a warning on debug builds).
@@ -1008,7 +1008,7 @@ void GeckoMediaPluginServiceParent::RemoveOnGMPThread(
     }
 
     RefPtr<GMPParent> gmp = mPlugins[i];
-    if (aDeleteFromDisk && gmp->State() != GMPStateNotLoaded) {
+    if (aDeleteFromDisk && gmp->State() != GMPState::NotLoaded) {
       // We have to wait for the child process to release its lib handle
       // before we can delete the GMP.
       inUse = true;
@@ -1019,7 +1019,7 @@ void GeckoMediaPluginServiceParent::RemoveOnGMPThread(
       }
     }
 
-    if (gmp->State() == GMPStateNotLoaded || !aCanDefer) {
+    if (gmp->State() == GMPState::NotLoaded || !aCanDefer) {
       // GMP not in use or shutdown is being forced; can shut it down now.
       deadPlugins.AppendElement(gmp);
       mPlugins.RemoveElementAt(i);
