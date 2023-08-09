@@ -1239,12 +1239,7 @@ static PropertyFlags ComputePropertyFlags(const PropertyDescriptor& desc) {
     flags.setFlag(PropertyFlag::Writable, desc.writable());
   } else {
     MOZ_ASSERT(desc.isAccessorDescriptor());
-    if (desc.hasGetter()) {
-      flags.setFlag(PropertyFlag::HasGetter);
-    }
-    if (desc.hasSetter()) {
-      flags.setFlag(PropertyFlag::HasSetter);
-    }
+    flags.setFlag(PropertyFlag::AccessorProperty);
   }
 
   return flags;
